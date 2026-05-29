@@ -3,5 +3,7 @@
 # 添加到 PATH 或运行: workspace <command>
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-export PYTHONPATH="$PROJECT_ROOT${PYTHONPATH:+:$PYTHONPATH}"
-exec /opt/homebrew/bin/python3.14 -m wksp "$@"
+KAIRON_DIR="$PROJECT_ROOT/projects/kairon"
+
+# 通过 kairon monorepo 的 UV workspace 运行 wksp CLI
+cd "$KAIRON_DIR" && uv run -m wksp "$@"

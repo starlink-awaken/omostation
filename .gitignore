@@ -8,6 +8,9 @@ projects/SharedBrain/
 projects/agentmesh/
 projects/gbrain/
 projects/_archived/
+
+# ---- 遗留根目录残留 ----
+SharedBrain/
 SharedBrain/data/
 
 # ---- 构建产物 ----
@@ -44,5 +47,6 @@ data/**/*.sqlite3
 .omc/state/subagent-tracking.json
 .omc/state/sessions/
 .omc/state/checkpoints/
+.omc/sessions/
 .omo/plans/
 .omo/run-continuation/

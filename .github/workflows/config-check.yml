@@ -1,7 +1,7 @@
 name: Config Check
 on:
   push:
-    paths: ["agora/agora-services.json"]
+    paths: ["projects/kairon/packages/agora/agora-services.json"]
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -10,4 +10,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.14"
-      - run: make -C agora check-config
+      - name: Validate agora config
+        run: python3 -c "import json; json.load(open('projects/kairon/packages/agora/agora-services.json')); print('Config valid ✅')"

@@ -12,6 +12,8 @@ echo "║ 协议: pipeline:json v1.1 (chain mode)                         ║"
 echo "╚══════════════════════════════════════════════════════════════════╝"
 echo ""
 
+KAIRON=$ROOT/projects/kairon/packages
+
 # 步骤 1: 验证 pipeline:json 协议定义
 echo "▸ Step 1/5: pipeline:json v1.1 协议完整性"
 python3 -c "
@@ -74,7 +76,7 @@ assert step2['pipeline']['version'] == '1.1'
 assert step2['meta_type'] == 'INFERENCE'
 assert len(step2['data']['items']) == 5
 # 验证 eidos validate 的 CLI 支持
-cli_path = '/Users/xiamingxing/Workspace/eidos/src/eidos/cli.py'
+cli_path = '$KAIRON/eidos/src/eidos/cli.py'
 with open(cli_path) as f:
     cli_code = f.read()
 checks = [
@@ -92,7 +94,7 @@ print('  Step 3 PASS')
 echo ""
 echo "▸ Step 4/5: KOS consensus 记录"
 python3 -c "
-import sys, json
+import sys, json, os
 # 模拟 pipeline:json → KOS 共识写入
 consensus_entry = {
     'entity_id': 'inf-1',
@@ -105,8 +107,7 @@ consensus_entry = {
 valid = all(k in consensus_entry for k in ['entity_id', 'agreed_by', 'agreement', 'status'])
 print(f\"  {'✅' if valid else '❌'} consensus entry: {len(consensus_entry['agreed_by'])} agents\")
 # 检查 KOS consensus MCP 存在
-import os
-consensus_dir = '/Users/xiamingxing/Workspace/kos/kos/consensus'
+consensus_dir = '$KAIRON/kos/kos/consensus'
 exists = os.path.isdir(consensus_dir)
 print(f\"  {'✅' if exists else '❌'} KOS consensus module: {'exists' if exists else 'missing'}\")
 if not exists: sys.exit(1)
@@ -116,7 +117,7 @@ print('  Step 4 PASS')
 # 步骤 5: 验证 PipelineTracer 可记录完整管线
 echo ""
 echo "▸ Step 5/5: PipelineTracer 全链路追踪"
-cd /Users/xiamingxing/Workspace/agentmesh
+cd $ROOT/projects/agentmesh
 bun test packages/engine/src/observability/__tests__/pipeline-tracer.test.ts 2>&1 | tail -3
 echo ""
 

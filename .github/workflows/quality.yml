@@ -8,13 +8,13 @@ on:
 
 jobs:
   ruff-lint:
-    name: Ruff lint (all Python projects)
+    name: Ruff lint (kairon packages)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/ruff-action@v3
         with:
-          src: "./ontoderive/src ./pallas/src ./sophia/src ./minerva/src ./agora/src ./gateway/src ./eidos/src ./kronos/src ./SSOT/src ./Forge/src ./codeanalyze/src ./MetaOS/src"
+          src: "./projects/kairon/packages"
 
   prettier:
     name: Pre-commit hooks check
