@@ -1,0 +1,150 @@
+{
+  "events": [
+    {
+      "id": "evt_1779618410_8f32d2",
+      "time": "2026-05-24T10:26:50Z",
+      "source": "test",
+      "type": "test:unit",
+      "trace_id": "",
+      "payload": {
+        "msg": "hello"
+      }
+    },
+    {
+      "id": "evt_1779618410_a72cad",
+      "time": "2026-05-24T10:26:50Z",
+      "source": "dashboard",
+      "type": "test:persist",
+      "trace_id": "",
+      "payload": {}
+    },
+    {
+      "id": "evt_1779618661_1d9ca1",
+      "time": "2026-05-24T10:31:01Z",
+      "source": "test",
+      "type": "test:unit",
+      "trace_id": "",
+      "payload": {
+        "msg": "hello"
+      }
+    },
+    {
+      "id": "evt_1779618661_16bb2d",
+      "time": "2026-05-24T10:31:01Z",
+      "source": "dashboard",
+      "type": "test:persist",
+      "trace_id": "",
+      "payload": {}
+    },
+    {
+      "id": "evt_1779618895_90fd47",
+      "time": "2026-05-24T10:34:55Z",
+      "source": "test",
+      "type": "test:unit",
+      "trace_id": "",
+      "payload": {
+        "msg": "hello"
+      }
+    },
+    {
+      "id": "evt_1779618895_bb72e0",
+      "time": "2026-05-24T10:34:55Z",
+      "source": "dashboard",
+      "type": "test:persist",
+      "trace_id": "",
+      "payload": {}
+    },
+    {
+      "id": "evt_1779618929_7735fa",
+      "time": "2026-05-24T10:35:29Z",
+      "source": "mcp-test",
+      "type": "test:mcp",
+      "trace_id": "",
+      "payload": {
+        "msg": "hello"
+      }
+    },
+    {
+      "id": "evt_1779619079_9d5f21",
+      "time": "2026-05-24T10:37:59Z",
+      "source": "test",
+      "type": "test:unit",
+      "trace_id": "",
+      "payload": {
+        "msg": "hello"
+      }
+    },
+    {
+      "id": "evt_1779619079_9c91a7",
+      "time": "2026-05-24T10:37:59Z",
+      "source": "dashboard",
+      "type": "test:persist",
+      "trace_id": "",
+      "payload": {}
+    },
+    {
+      "id": "evt_1779619424_44b791",
+      "time": "2026-05-24T10:43:44Z",
+      "source": "test",
+      "type": "test:unit",
+      "trace_id": "",
+      "payload": {
+        "msg": "hello"
+      }
+    },
+    {
+      "id": "evt_1779619424_f6a5ed",
+      "time": "2026-05-24T10:43:44Z",
+      "source": "dashboard",
+      "type": "test:persist",
+      "trace_id": "",
+      "payload": {}
+    },
+    {
+      "id": "evt_1779619548_26bf3f",
+      "time": "2026-05-24T10:45:48Z",
+      "source": "test",
+      "type": "test:unit",
+      "trace_id": "",
+      "payload": {
+        "msg": "hello"
+      }
+    },
+    {
+      "id": "evt_1779619548_73fd9a",
+      "time": "2026-05-24T10:45:48Z",
+      "source": "dashboard",
+      "type": "test:persist",
+      "trace_id": "",
+      "payload": {}
+    },
+    {
+      "id": "evt_1779619704_ad9ce1",
+      "time": "2026-05-24T10:48:24Z",
+      "source": "test",
+      "type": "test:unit",
+      "trace_id": "",
+      "payload": {
+        "msg": "hello"
+      }
+    },
+    {
+      "id": "evt_1779619704_f2d98a",
+      "time": "2026-05-24T10:48:24Z",
+      "source": "dashboard",
+      "type": "test:persist",
+      "trace_id": "",
+      "payload": {}
+    }
+  ],
+  "subscriptions": [
+    {
+      "id": "sub_08170a6a",
+      "service": "mcp-caller",
+      "pattern": "test:*",
+      "callback_url": "",
+      "created": "2026-05-24T10:35:29Z"
+    }
+  ],
+  "max_events": 1000
+}

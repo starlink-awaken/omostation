@@ -1,0 +1,5 @@
+# Convergence tracking for workspace governance
+last_updated: "2026-05-28"
+tracked_projects: 24
+convergence_status: "stable"
+notes: "All 4+1+3 architecture layers functional. See .omo/summaries/ for detail."

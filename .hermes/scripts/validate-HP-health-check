@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+"""HP-01 /healthz 统一健康检查验证脚本.
+
+验证所有 HTTP 服务的 /healthz 端点符合统一格式:
+  {"status": "ok"|"degraded"|"down", "service": "...", "version": "...", "dependencies": [...]}
+
+Usage:
+  python3 validate-HP-health-check          # 全部检查
+  python3 validate-HP-health-check --verbose # 显示详细响应
+  python3 validate-HP-health-check --service agentmesh  # 单服务检查
+"""
+
+import json
+import os
+import subprocess
+import sys
+import urllib.error
+import urllib.request
+
+SERVICES = [
+    {
+        "name": "agentmesh-gateway",
+        "url": "http://127.0.0.1:3000/healthz",
+    },
+    {
+        "name": "agora",
+        "url": "http://127.0.0.1:7430/healthz",
+    },
+    {
+        "name": "minerva",
+        "url": "http://127.0.0.1:8765/healthz",
+    },
+    {
+        "name": "hermes-webui",
+        "url": "http://127.0.0.1:8787/healthz",
+    },
+]
+
+REQUIRED_FIELDS = {"status", "service", "version", "dependencies"}
+VALID_STATUSES = {"ok", "degraded", "down"}
+
+
+def check_service(name, url, verbose=False):
+    """Check /healthz for a single service. Returns (pass: bool, detail: str)."""
+    try:
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            body = json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:
+        return False, f"HTTP {e.code}: {e.reason}"
+    except urllib.error.URLError as e:
+        return False, f"Connection failed: {e.reason}"
+    except json.JSONDecodeError:
+        return False, "Response is not valid JSON"
+    except Exception as e:
+        return False, f"Unexpected error: {e}"
+
+    # 检查 required fields
+    missing = REQUIRED_FIELDS - set(body.keys())
+    if missing:
+        return False, f"Missing required fields: {', '.join(sorted(missing))}"
+
+    # 检查 status 值
+    if body.get("status") not in VALID_STATUSES:
+        return (
+            False,
+            f"Invalid status '{body.get('status')}', expected one of {VALID_STATUSES}",
+        )
+
+    # 检查 service 值
+    if body.get("service") != name:
+        return False, f"Service name mismatch: got '{body.get('service')}', expected '{name}'"
+
+    # 检查 version
+    if not isinstance(body.get("version"), str) or not body["version"]:
+        return False, f"Invalid or empty version: '{body.get('version')}'"
+
+    # 检查 dependencies
+    deps = body.get("dependencies", [])
+    if not isinstance(deps, list):
+        return False, f"dependencies must be a list, got {type(deps).__name__}"
+    for dep in deps:
+        if not isinstance(dep, dict):
+            return False, f"Each dependency must be an object, got {type(dep).__name__}"
+        if "name" not in dep:
+            return False, f"Dependency missing 'name': {dep}"
+        if dep.get("status") not in ("ok", "down"):
+            return False, f"Dependency '{dep.get('name')}' has invalid status: '{dep.get('status')}'"
+
+    if verbose:
+        return True, json.dumps(body, indent=2, ensure_ascii=False)
+    return True, "PASS"
+
+
+def main():
+    verbose = "--verbose" in sys.argv or "-v" in sys.argv
+    service_filter = None
+    for i, arg in enumerate(sys.argv):
+        if arg == "--service" and i + 1 < len(sys.argv):
+            service_filter = sys.argv[i + 1]
+
+    passed = 0
+    failed = 0
+
+    for svc in SERVICES:
+        if service_filter and svc["name"] != service_filter:
+            continue
+
+        ok, detail = check_service(svc["name"], svc["url"], verbose=verbose)
+        status_str = "PASS" if ok else "FAIL"
+        icon = "✅" if ok else "❌"
+        print(f"  {icon} {svc['name']:20s}  {status_str}")
+        if not ok or verbose:
+            for line in detail.split("\n"):
+                print(f"       {line}")
+
+        if ok:
+            passed += 1
+        else:
+            failed += 1
+
+    print()
+    total = passed + failed
+    if total == 0:
+        print("  ⚠️  No services matched the filter.")
+        return 0
+    print(f"  Results: {passed}/{total} passed, {failed} failed")
+    return 0 if failed == 0 else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
