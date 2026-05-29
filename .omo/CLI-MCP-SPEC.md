@@ -1,5 +1,9 @@
 # CLI & MCP 标准化规范 v1
 
+> **架构更新**: 所有包现位于 `projects/kairon/packages/<name>/` 下。
+> CLI 入口通过 UV workspace 的 `[project.scripts]` 统一注册，不再依赖独立 .venv。
+> 本规范内容（命名/输出/退出码/协议）仍然有效。
+
 ## 一、CLI 通用规范
 
 ### 1.1 入口命名

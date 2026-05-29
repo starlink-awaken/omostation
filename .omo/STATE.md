@@ -1,89 +1,97 @@
-# 治理计划状态追踪
+# 工作区状态
 
-> 自动更新。每个 task 变更时更新此处。
+> omostation — Personal AI Operating System
+> 最后更新: 2026-05-29
 
 ---
 
-## 全局状态
-
-| 维度 | 当前值 |
-|------|--------|
-| **活跃 Phase** | **架构收敛+债务治理完成** ✅ 🔧 |
-| **总体进度** | **94% (251/268)** — 6个债务缺口全部修复 |
-
-## 完成统计
+## 架构概览
 
 ```text
-Phase 1:  [██████████] 100% (27/27) — 基础设施清理 ✅
-Phase 2:  [██████████] 100% (14/14) — 核心链路闭环 ✅
-Phase 3:  [██████████] 100% (12/12) — 统一入口 ✅
-Phase 4:  [██████████] 100% (9/9)  — 能力增强 ✅
-Phase 5:  [██████████] 100% (21/21) — Self-Collab-Consensus 架构落地 ✅
-Phase 6:  [██████████] 100% (15/15) — 验证·复盘·迭代·纠偏 ✅
-Phase 7:  [██████████] 100% (12/12) — 让工具跑起来 ✅
-Phase 8:  [██████████] 100% (11/11) — 多Agent协作 ✅
-Phase 9:  [██████████] 100% (12/12) — 多人多组织 ✅
-Phase 10: [██████████] 100% (25/25) — 记忆进化与成本优化 ✅
-Phase 11: [██████████] 100% (10/10) — 蜂群智能初版 ✅
-Phase 12: [██████████] 100% (10/10) — 跨域信任与生态成熟 ✅
-Phase 13+:[░░░░░░░░░░]   0% (10/10) — 终极进化 ⏳
-总体:    [█████████░]  95% (241/251) 🎯
+omostation/                        ← 根 git 仓库（starlink-awaken/omostation）
+├── projects/kairon/               ← Python monorepo（UV workspace, 17 包）
+│   ├── agora                      MCP 服务融合 Hub（65 src .py）
+│   ├── agent-runtime              Agent 运行时（7 src .py）
+│   ├── codeanalyze                代码/文档分析（63 src .py）
+│   ├── core-models                核心数据模型（6 src .py）
+│   ├── cron-service               定时任务服务（11 src .py）
+│   ├── ecos                       外化认知 OS（18 src .py）
+│   ├── eidos                      元模型本体/Schema（28 src .py）
+│   ├── forge                      内部工具注册（22 src .py）
+│   ├── iris                       知识平台连接器（46 src .py）
+│   ├── kos                        知识 OS（63 src .py）
+│   ├── kronos                     知识摄取管线（14 src .py）
+│   ├── metaos                     元操作系统（27 src .py）
+│   ├── minerva                    深度研究系统（63 src .py）
+│   ├── ontoderive                 知识工程引擎（src 空, 引擎在 engine/）
+│   ├── sophia                     符号化研究范式（9 src .py）
+│   ├── ssot                       单一真相源（49 src .py）
+│   └── wksp                       CLI 工作台（53 src .py）
+│
+├── projects/SharedBrain/          ← 数字化生命 OS（83,778 .py 文件）
+├── projects/agentmesh/            ← Agent SDK（5,148 .ts 文件）
+├── projects/gbrain/               ← 知识脑（1,257 .ts 文件）
+├── projects/_archived/            ← 已迁移旧项目归档（22 项）
+│
+├── AGENTS.md            → 项目治理边界
+├── convergence.yaml     → 融合治理状态
+├── README.md            → 项目总览
+├── Makefile             → 跨项目命令
+├── CONTRIBUTING.md      → 贡献指南
+├── LICENSE (MIT)        → 开源许可
+├── CODE_OF_CONDUCT.md   → 行为准则
+│
+├── .omo/                → 治理知识库（89 跟踪文件）
+└── docker-compose.yml   → 服务编排
 ```
 
-## 当前健康评分 (架构收敛后重评)
+## 架构演进里程碑
 
-```text
-综合健康评分: 82.8/100 🟢 (重评)
-  D1 愿景达成度:  92/100 🟢 — 12层→4+1+3完全对齐, 蜂群智能初版已实现
-  D2 场景覆盖度:  88/100 🟢 — 单人全链路+多Agent+跨组织+跨域信任
-  D3 故事完整度:  78/100 🟡 — 缺外部Agent端到端验证
-  D4 功能成熟度:  82/100 🟢 — 大部分模块有测试, 全链路E2E已通过
-  D5 架构成熟度:  85/100 🟢 — 递归Agora+降级+多实例+WoT+实时协作
-  D6 熵增情况:    85/100 🟡 — 保鲜Cron+进化引擎+自回收运行中
-  D7 安全质量:    85/100 🟡 — 门禁collab.* enforce, 其余pass-through
-  D8 债务情况:    72/100 🟡 — py3.9修复, 8个DB碎片化未合并
-  D9 成本资源:    78/100 🟡 — usage.db+TokenJuice+模型路由就绪
+| 阶段 | 日期 | 变更 |
+|------|------|------|
+| **前身** | ~2026-05-20 | 43+ 独立 git 仓库，硬编码路径耦合 |
+| **收敛 1** | 2026-05-24 | 17 个 Python 包合并入 kairon UV workspace monorepo |
+| **汇聚 2** | 2026-05-29 | 统一根 repo omostation，projects/ 结构成型，清理 12K+ 行旧文件 |
+| **当前** | 2026-05-29 | 5 项目（kairon + SharedBrain + agentmesh + gbrain + _archived），omostation 做统一入口 |
+
+## 关键统计
+
+| 维度 | 数值 |
+|------|------|
+| 根仓库 | omostation（starlink-awaken/omostation） |
+| 嵌入式子仓库 | 5（kairon, SharedBrain, agentmesh, gbrain, _archived） |
+| kairon 包数 | 17 |
+| kairon 源码 | ~600+ .py 文件（各 packages/*/src/） |
+| SharedBrain | 83,778 .py 文件，71K 行 |
+| agentmesh | 5,148 .ts 文件，monorepo（7 packages） |
+| gbrain | 1,257 .ts 文件 |
+| .omo 文件 | 89 跟踪 / 140 磁盘 / 51 忽略 |
+| 已归档项目 | 22 项（projects/_archived/） |
+
+## 跨项目通信
+
+```
+Kairon (内部 pip 依赖):  UV workspace source dependencies
+Kairon → SharedBrain:     CLI subprocess / MCP
+Kairon → agentmesh:       MCP / HTTP
+agentmesh → gbrain:       Postgres (TypeORM)
+SharedBrain → Kairon:     subprocess / hard-coded path（待治理）
 ```
 
-## 架构全貌
+## 当前焦点
 
-```text
-L4 自我层     ✅ 3 MCP工具 + Hermes自动加载
-L3 协作层     ✅ 6 MCP工具 + TaskOrchestrator + 跨组织scope
-L2 能力总线   ✅ 13个项目 + Memory MCP + Skill MCP + Identity CA (Phase 9)
-L1 契约层     ✅ Eidos + SSOT + 5核心契约 + IdentityEnvelope + CapabilityGrant (Phase 9)
-X1 治理安全   ✅ Identity签发/验证 + CapabilityGrant授权门禁 + Agora→A2A降级
-X2 抗熵进化   ✅ 保鲜Cron + 结构化报告
-X3 价值堆栈   ✅ 15实体类型 + 三级共识 + 跨组织共识 (Phase 9)
-```
+1. **kairon 统一构建/测试** — UV workspace 全量测试
+2. **硬编码路径清理** — SharedBrain 中遗留的旧项目绝对路径
+3. **.omo 知识库更新** — 已完成 INDEX.md + STATE.md + PROJECTS.yaml + INVENTORY.md + ONBOARDING.md
+4. **CI/CD 构建** — sharedbrain-kairon-integration.yml 工作流
 
-## 全景路线图
+## 已知债务
 
-```text
-Phase 1-8: 个人AI OS + 多Agent协作建成 ✅ (当前)
-  ↓
-Phase 9: 多人多组织 (Identity/CapGrant做实)
-  ↓
-Phase 10: 蜂群智能 (递归架构/进化闭环/跨域信任)
-```
+- SharedBrain 部分脚本仍硬编码旧项目绝对路径
+- ontoderive 使用 flat 布局（engine/）而非 src/ 布局
+- 部分包测试覆盖率不足
+- 跨项目集成测试未系统化
 
-## 最近变更
+---
 
-| 时间 | Task | 变更 | By |
-|------|------|------|-----|
-| 2026-05-25 | — | **Phase 10完成!** 25/25: 记忆树+TokenJuice+进化引擎+债务清零+混沌测试 | atlas |
-| 2026-05-25 | T146 | **Phase 11启动!** Wave 11.1递归Agora | atlas |
-| 2026-05-25 | T122-T133 | Phase 9 完成! 12/12: Identity CA + Authorizer + 跨组织E2E + 宪法 | laowang |
-| 2026-05-25 | T111-T121 | Phase 8 完成! 11/11: TaskOrchestrator + Memory/Skill MCP + Agora Fallback + E2E | laowang |
-| 2026-05-25 | T099-T110 | Phase 7 完成 (12/12): Hermes插件+共识标记+成本追踪+保鲜报告 | laowang |
-| 2026-05-25 | T093-T098 | Phase 6 完成: 修正+归档 | laowang |
-| 2026-05-25 | T063-T083 | Phase 5: Self-Collab-Consensus 21个Task | laowang |
-| 2026-05-25 | T084-T092 | Phase 6 门禁+复盘 | hermes |
-| 2026-05-25 | — | 架构方案+omo体系+复盘报告+全景路线图 | atlas |
-
-## 关键指标
-
-```text
-Phase 8: [██████████] 100% (11/11) — 多Agent协作 ✅
-总进度: [██████████] 100% (121/121) 🎉
-```
+*维护: 2026-05-29 · 基于 omostation unified repo 架构*

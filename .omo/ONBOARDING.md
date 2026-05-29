@@ -1,38 +1,76 @@
 # Workspace Onboarding
 
-> 新人上手指南 — 5 分钟了解全系统
+> 新人上手指南 — 5 分钟了解 omostation
 
 ## 快速开始
+
 ```bash
-git clone {this-repo}
-cd workspace
-make setup    # 安装依赖
-make test     # 全部测试
-make build    # 构建所有项目
+git clone git@github.com:starlink-awaken/omostation.git
+cd omostation
+make setup       # 安装依赖
+make test        # 运行 kairon 全量测试
 ```
 
 ## 架构总览
-24 个项目，按 4+1+3 架构分层:
-  P0 产品界面   4 项目
-  L4 自我层     2 项目
-  L3 协作层     3 项目
-  L2 能力层     11 项目
-  L1 契约层     2 项目
-  X1/X2/X3 治理 3 项目 + 运维中心
 
-核心链路: pallas → minerva → ontoderive → sophia → eidos → KOS
-运维中心: hermes-ops (20+ MCP tools)
+5 个项目，分两层：
 
-## 常用命令
-```bash
-make test        # 运行所有测试
-make build       # 构建所有项目
-make lint        # 代码检查
-hermes-ops --help  # 运维中心 CLI
+**omostation 根仓库**（统一入口 + 治理 + CI/CD）
+```
+omostation/
+├── projects/
+│   ├── kairon/          ← Python monorepo, 17 包
+│   ├── SharedBrain/     ← 数字化生命 OS, 71K 行
+│   ├── agentmesh/       ← Agent SDK, TS monorepo
+│   ├── gbrain/          ← 知识脑, Postgres
+│   └── _archived/       ← 22 项备份
+├── README.md / AGENTS.md / Makefile / convergence.yaml
+└── .omo/                ← 治理知识库
 ```
 
+**核心链路**: kairon（内部 pip 依赖）+ SharedBrain（MCP/subprocess）+ agentmesh（MCP/HTTP）+ gbrain（Postgres）
+
+## 常用命令
+
+```bash
+# kairon 全量测试
+cd projects/kairon && make test
+
+# 单个包测试
+cd projects/kairon/packages/<name> && python -m pytest tests/ -q
+
+# Docker 服务
+docker compose up -d
+
+# 治理知识库
+cd .omo/ && ls  # 探索治理文档
+```
+
+## 项目结构
+
+| 命令 | 作用 |
+|------|------|
+| `make setup` | 全量安装依赖 |
+| `make test` | 运行 kairon 17 包测试 |
+| `make lint` | ruff 代码检查 |
+| `make clean` | 清理缓存 |
+| `docker compose up -d` | 启动服务 |
+
 ## 关键文档
-- .omo/summaries/workspace-architecture-final.md  — 完整架构
-- .omo/diagrams/4-plus-1-3-architecture.md          — 架构图
-- .omo/CLEANUP.md                                    — 清理策略
-- AGENTS.md                                          — 项目治理
+
+- `.omo/INDEX.md` — 治理知识库导航
+- `.omo/STATE.md` — 当前架构状态
+- `.omo/INVENTORY.md` — 全系统资产清单
+- `.omo/CLI-MCP-SPEC.md` — CLI & MCP 规范
+- `AGENTS.md` — 项目治理边界
+- `README.md` — 项目总览
+
+## 历史背景
+
+2026-05 中旬，原系统由 43+ 独立 git 仓库组成，硬编码路径耦合严重。
+经过两轮收敛（kairon monorepo + omostation 统一入口），
+当前为 5 项目的清晰结构，每项目为独立 git 仓库，通过 omostation 协调。
+
+---
+
+*维护: 2026-05-29*
