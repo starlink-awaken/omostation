@@ -1,0 +1,32 @@
+name: Constraint Validation
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  arcnode-validate:
+    name: arcnode validate --all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml pygithub
+
+      - name: Install hermes-agent (for validation scripts)
+        run: |
+          pip install hermes-agent
+          # bin/arcnode-validate 会自动发现验证脚本位置
+          # 脚本位于 ~/.hermes/scripts/validate-*（本地开发机）
+          # CI 中由 hermes-agent pip 包提供（如包含）
+
+      - name: Run arcnode constraint validation
+        run: python3 bin/arcnode-validate --all

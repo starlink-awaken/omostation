@@ -1,0 +1,28 @@
+name: Workspace CI
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+      - name: Install Dependencies
+        run: |
+          pip install pytest pyyaml
+          cd agentmesh && bun install
+      - name: Build agentmesh
+        run: cd agentmesh && bun run build
+      - name: Test agentmesh
+        run: cd agentmesh && bun test
+      - name: Test hermes-ops
+        run: cd hermes-ops && python3 -m pytest tests/ -q
+      - name: Run integration tests
+        run: bash tests/integration/run-all.sh

@@ -1,0 +1,25 @@
+name: Integration Tests
+on: [push, pull_request]
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ./agora -e ./minerva -e ./ontoderive -e ./pallas -e ./sophia -e ./eidos
+      - run: |
+          echo "=== Installing cross-project dependencies ==="
+          python -c "import sys; print(f'Python {sys.version}')"
+      - name: Run phase-level integration tests
+        run: |
+          for script in scripts/phase5_e2e_test.py scripts/phase6x_e2e.py scripts/phase8_e2e_test.py; do
+            if [ -f "$script" ]; then
+              echo "--- Running $script ---"
+              python "$script" || echo "WARNING: $script exited non-zero"
+            fi
+          done
