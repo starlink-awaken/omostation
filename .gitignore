@@ -1,32 +1,18 @@
 # === omostation root .gitignore ===
-# This repo tracks only enterprise docs, governance, and integration tests.
-# Project code lives in separate git repos for each project.
+# 根仓库只追踪元配置和文档。
+# 项目代码在各子仓库中独立管理。
 
-# ---- Project directories (independent git repos) ----
-agentmesh/
-Agora/
-DigitalBrainOS/
-eidos/
-Forge/
-gbrain-repo/
-hermes-webui/
-Iris/
-KOS/  # Actually iris/ and kos/ — adjust casing
-MetaOS/
-minerva/
-ontoderive/
-pallas/
-sophia/
-SSOT/
-SharedBrain/
-ops/
-agent-runtime/
-hermes-ops/
+# ---- 项目目录（独立 git 仓库） ----
+projects/kairon/
+projects/SharedBrain/
+projects/agentmesh/
+projects/gbrain/
+projects/_archived/
 
-# ---- Infrastructure ----
-bin/arcnode-validate  # Managed via ~/.hermes/scripts/
+# ---- 基础设施 ----
+bin/arcnode-validate
 
-# ---- Build artifacts ----
+# ---- 构建产物 ----
 .env
 __pycache__/
 *.pyc
@@ -35,18 +21,18 @@ dist/
 *.egg-info/
 *.so
 
-# ---- Data ----
-data/
-backups/
-agora.db*
-agora-audit.db*
+# ---- 数据 ----
+projects/data/
+projects/_archived/*/data/
 
-# ---- Logs ----
+# ---- 日志 ----
 *.log
-~/.hermes/logs/
 
 # ---- macOS ----
 .DS_Store
 
-# ---- Archive ----
-_archived/
+# ---- 缓存 ----
+.pytest_cache/
+.ruff_cache/
+.coverage
+.runtime/

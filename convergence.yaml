@@ -1,5 +1,11 @@
 # Convergence tracking for workspace governance
-last_updated: "2026-05-28"
-tracked_projects: 24
+last_updated: "2026-05-29"
+tracked_projects: 5
 convergence_status: "stable"
-notes: "All 4+1+3 architecture layers functional. See .omo/summaries/ for detail."
+projects:
+  kairon: "17 包 monorepo — 全部测试通过"
+  SharedBrain: "独立 71K 行，通过 pypi 引用 core-models"
+  agentmesh: "TS monorepo，独立生态"
+  gbrain: "Postgres 知识脑，MCP 对接"
+  _archived: "22 项已迁移旧项目备份"
+notes: "Workspace 已完成收敛。所有 Python 知识工程包集中在 kairon。"

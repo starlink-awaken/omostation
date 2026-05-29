@@ -1,0 +1,41 @@
+# PROJECTS.yaml — 全系统项目注册表
+# 根目录下所有项目的注册信息。未注册的目录应移入 projects/ 或 _archived/
+
+runtime:
+  agentmesh: { path: agentmesh, status: active }
+  KOS: { path: KOS, status: active }
+  ops: { path: ops, status: active }
+  Agora: { path: Agora, status: active }
+  SharedBrain: { path: SharedBrain, status: active }
+  Forge: { path: Forge, status: active }
+
+tool:
+  kronos: { path: kronos, status: active }
+  Iris: { path: Iris, status: active }
+  eidos: { path: eidos, status: active }
+  ontoderive: { path: ontoderive, status: active }
+  minerva: { path: minerva, status: active }
+  sophia: { path: sophia, status: active }
+  SSOT: { path: SSOT, status: active }
+  gbrain-repo: { path: gbrain-repo, status: active }
+  MetaOS: { path: MetaOS, status: active }
+  codeanalyze: { path: codeanalyze, status: active }
+  gstack: { path: gstack, status: active }
+
+infrastructure:
+  bin: { path: bin, status: active }
+  tests: { path: tests, status: active }
+  .hermes: { path: .hermes, status: active }
+  .omo: { path: .omo, status: active }
+
+unknown:
+  kairon: { path: kairon, status: unclassified }
+  cron-service: { path: cron-service, status: unclassified }
+  scripts: { path: scripts, status: unclassified }
+  wksp: { path: wksp, status: unclassified }
+  DigitalBrainOS: { path: DigitalBrainOS, status: unclassified }
+  eCOS: { path: eCOS, status: unclassified }
+
+archived:
+  crush: { path: _archived/crush, status: archived }
+  gstack_old: { path: _archived/gstack, status: archived }

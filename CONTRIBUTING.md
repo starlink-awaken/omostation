@@ -1,19 +1,39 @@
-# Contributing to Workspace
+# Contributing to omostation
 
-欢迎贡献代码、文档或想法。
+欢迎贡献。
 
-## 开发流程
-1. Fork 本仓库
-2. 创建功能分支 (`git checkout -b feat/xxx`)
-3. 提交变更 (`git commit -m 'feat(xxx): description'`)
-4. 推送到分支 (`git push origin feat/xxx`)
-5. 创建 Pull Request
+## 项目范围
+
+当前活跃项目主要在 `projects/kairon/`（Python monorepo）。  
+其他项目（SharedBrain、agentmesh、gbrain）各自独立演进。
+
+## kairon 开发流程
+
+```bash
+cd projects/kairon
+
+# 安装依赖
+uv sync
+
+# 运行全部测试
+make test
+
+# 单包测试
+uv run --package ontoderive python -m pytest tests/ -q
+
+# lint 检查
+ruff check packages/
+```
 
 ## 提交规范
-遵循 Conventional Commits:
+
+遵循 Conventional Commits：
+
 - `feat(xxx):` 新功能
 - `fix(xxx):` 修复
 - `refactor(xxx):` 重构
 - `docs(xxx):` 文档
 - `test(xxx):` 测试
 - `chore(xxx):` 运维
+
+xxx 为包名或模块名，如 `fix(ontoderive):`、`feat(agora):`。

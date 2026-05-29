@@ -1,11 +1,10 @@
 version: "3.8"
 services:
   agentmesh-gateway:
-    build: ./agentmesh
+    build: ./projects/agentmesh
     ports: ["3000:3000"]
-    env_file: ./agentmesh/packages/gateway/.env
+    env_file: ./projects/agentmesh/packages/gateway/.env
 
   agora:
-    build: ./Agora
+    build: ./projects/kairon/packages/agora
     ports: ["7430:7430"]
-    env_file: ./Agora/.env
