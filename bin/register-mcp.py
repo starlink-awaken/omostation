@@ -12,7 +12,7 @@ from pathlib import Path
 
 CONFIG_PATH = Path.home() / ".hermes" / "config.yaml"
 VENV_PYTHON = "/Users/xiamingxing/.hermes/hermes-agent/venv/bin/python3.11"
-WORKDIR = "/Users/xiamingxing/Workspace/cron-service"
+WORKDIR = "/Users/xiamingxing/Workspace/projects/kairon/packages/cron-service"
 
 MCP_ENTRY = {
     "cron-service": {

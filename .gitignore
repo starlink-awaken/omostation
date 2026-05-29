@@ -8,6 +8,7 @@ projects/SharedBrain/
 projects/agentmesh/
 projects/gbrain/
 projects/_archived/
+SharedBrain/data/
 
 # ---- 构建产物 ----
 .env
@@ -26,3 +27,22 @@ dist/
 .ruff_cache/
 .coverage
 .runtime/
+
+# ---- 运行时数据 ----
+data/backups/
+data/**/*.db
+data/**/*.db-shm
+data/**/*.db-wal
+data/**/*.sqlite
+data/**/*.sqlite3
+
+# ---- 工具运行时状态 ----
+.omc/state/
+.omc/project-memory.json
+.omc/state/agent-replay-*.jsonl
+.omc/state/last-tool-error.json
+.omc/state/subagent-tracking.json
+.omc/state/sessions/
+.omc/state/checkpoints/
+.omo/plans/
+.omo/run-continuation/

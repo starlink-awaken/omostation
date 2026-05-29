@@ -3,10 +3,13 @@
 WORKSPACE="/Users/xiamingxing/Workspace"
 
 PROJECTS=(
-  "SharedBrain" "kos" "minerva" "agentmesh" "gstack" "wps-skills"
-  "Forge" "codeanalyze" "MetaOS" "agora" "sophia" "kronos"
-  "eCOS" "ontoderive" "pallas" "eidos" "iris" "hermes-webui"
-  "gbrain-repo" "wksp" "gateway" "bos-skill-cli" "agent-runtime"
+  "kairon/packages/agora" "kairon/packages/codeanalyze" "kairon/packages/kronos"
+  "kairon/packages/eidos" "kairon/packages/minerva" "kairon/packages/agora"
+  "kairon/packages/sophia" "kairon/packages/ontoderive" "kairon/packages/forge"
+  "kairon/packages/kos" "kairon/packages/iris" "kairon/packages/ssot-kernel"
+  "kairon/packages/agent-runtime" "kairon/packages/wksp"
+  "kairon/packages/metaos" "kairon/packages/ecos" "kairon/packages/cron-service"
+  "SharedBrain" "agentmesh" "gbrain"
 )
 
 EXCLUDE="-not -path '*/.git/*' -not -path '*/__pycache__/*' -not -path '*/node_modules/*' -not -path '*/.venv/*' -not -path '*/venv/*' -not -path '*.egg-info/*' -not -path '*/dist/*' -not -path '*/build/*' -not -path '*/_archived/*'"
