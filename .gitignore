@@ -1,5 +1,5 @@
 # === omostation root .gitignore ===
-# 根仓库只追踪元配置和文档。
+# 根仓库只追踪元配置、基础设施和文档。
 # 项目代码在各子仓库中独立管理。
 
 # ---- 项目目录（独立 git 仓库） ----
@@ -9,9 +9,6 @@ projects/agentmesh/
 projects/gbrain/
 projects/_archived/
 
-# ---- 基础设施 ----
-bin/arcnode-validate
-
 # ---- 构建产物 ----
 .env
 __pycache__/
@@ -20,13 +17,6 @@ node_modules/
 dist/
 *.egg-info/
 *.so
-
-# ---- 数据 ----
-projects/data/
-projects/_archived/*/data/
-
-# ---- 日志 ----
-*.log
 
 # ---- macOS ----
 .DS_Store
