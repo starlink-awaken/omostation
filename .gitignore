@@ -1,9 +1,52 @@
+# === omostation root .gitignore ===
+# This repo tracks only enterprise docs, governance, and integration tests.
+# Project code lives in separate git repos for each project.
+
+# ---- Project directories (independent git repos) ----
+agentmesh/
+Agora/
+DigitalBrainOS/
+eidos/
+Forge/
+gbrain-repo/
+hermes-webui/
+Iris/
+KOS/  # Actually iris/ and kos/ — adjust casing
+MetaOS/
+minerva/
+ontoderive/
+pallas/
+sophia/
+SSOT/
+SharedBrain/
+ops/
+agent-runtime/
+hermes-ops/
+
+# ---- Infrastructure ----
+bin/arcnode-validate  # Managed via ~/.hermes/scripts/
+
+# ---- Build artifacts ----
 .env
 __pycache__/
 *.pyc
 node_modules/
 dist/
 *.egg-info/
-.data/
+*.so
+
+# ---- Data ----
+data/
+backups/
+agora.db*
+agora-audit.db*
+
+# ---- Logs ----
 *.log
+~/.hermes/logs/
+
+# ---- macOS ----
 .DS_Store
+
+# ---- Archive ----
+_archived/
