@@ -96,7 +96,17 @@ def test_omo_agent_documents_debt_refresh_flow() -> None:
     assert "executed_item_count" in content
     assert "approval_coverage_rate" in content
     assert "execution_completion_rate" in content
-    assert "owner trends" in content.lower()
+    assert "owner trend" in content.lower()
+    assert "owners_trend_status" in content
+    assert "owners_trend_available" in content
+    assert "no_shared_owners" in content
+    assert "shared_owner_count" in content
+    assert "owners_excluded_count" in content
+    assert "shared-owner only" in content.lower()
+    assert "selected window" in content.lower()
+    assert "item_count" in content
+    assert "owners stays null" in content.lower()
+    assert "sparse gaps" in content.lower()
     assert "slope math" in content.lower()
     assert "refresh -> dispatch -> campaign -> report -> sync -> verify" in content.lower()
     assert "drift" in content.lower()

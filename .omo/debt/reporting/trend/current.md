@@ -1,6 +1,6 @@
 # Debt Reporting Trend
 
-Generated at: 2026-06-02T13:32:55Z
+Generated at: 2026-06-02T13:57:49Z
 Trend status: insufficient_history
 Oldest run: 2026-06-10T00-00-00Z
 Latest run: 2026-06-10T00-00-00Z

@@ -290,7 +290,12 @@ Interpretation rules:
 - `trend_status` is explicit: `insufficient_history` for fewer than two runs, `trend_available` when at least two runs exist
 - Version 1 trend metrics stay fixed to `total_items`, `executed_item_count`, `approval_coverage_rate`, and `execution_completion_rate`
 - `report-trend` fails closed if any run in the selected history window has missing reporting metadata instead of silently skipping incomplete runs
-- Owner trends, burndown projections, and slope math remain deferred
+- `report-trend` can now add an owner trend block by following each selected run's `reporting_ref`; summary trend still comes from history, while owner detail comes from the already-derived per-run reporting artifact
+- Owner trend is shared-owner only in Version 1: the shared-owner intersection is computed over the selected window only, so wider windows may surface fewer owners
+- `owners_trend_status` is explicit: `owners_trend_available` when at least one shared owner exists, `no_shared_owners` when the selected multi-run window has none, and owners stays null when `trend_status` is `insufficient_history`
+- Owner trend metrics are owner-scoped: `item_count`, `executed_item_count`, `approval_coverage_rate`, and `execution_completion_rate`
+- `shared_owner_count` reports how many owners survive the selected window intersection, and `owners_excluded_count` reports owners that appear somewhere in the selected window but not in every run
+- Sparse gaps, burndown projections, and slope math remain deferred
 - Schedule command template: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at <NEXT_REVIEW_AT>`
 - Schedule shell example: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at 2026-06-17T00:00:00Z`
 - Review packets must expose sections for `Due Now`, `Escalation Candidates`, `Upcoming Window`, and `Unscheduled Debts`
