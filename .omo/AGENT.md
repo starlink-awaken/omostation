@@ -256,6 +256,11 @@ Interpretation rules:
 - Generate the latest run-level coordination packet with `python3 scripts/omo_debt.py campaign --omo-dir .omo`; pass `--run-ref <RUN_REF>` when you need to inspect a specific dispatch run instead of the latest one
 - Campaign packets are derived from dispatch, approval, and execution facts and live at `.omo/debt/campaign/current.yaml` plus `.omo/debt/campaign/runs/<RUN_STAMP>/current.yaml`
 - Campaign state meanings stay narrow in Version 1: `pending_approval` means a gate item lacks matching approval for the run, `ready_to_execute` means the run still has executable work, and `executed` means immutable execution evidence already exists for that run/item pair
+- Generate the latest-run compact rollup with `python3 scripts/omo_debt.py report --omo-dir .omo`; pass `--run-ref <RUN_REF>` when you need reporting for a selected run instead of the latest one
+- Reporting packets are derived from the same dispatch, approval, and execution facts and live at `.omo/debt/reporting/current.yaml` plus `.omo/debt/reporting/runs/<RUN_STAMP>/current.yaml`
+- Surface boundary: dashboard = debt health, campaign = coordination detail, reporting = compact progress rollup
+- Reporting is the latest-run compact rollup, not cross-run history; use it for one selected run's approval coverage and execution completion snapshot
+- Approval coverage and execution completion in reporting always refer to the selected run, so operators can confirm how much of that surfaced packet is approved and how much is already executed
 - Schedule command template: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at <NEXT_REVIEW_AT>`
 - Schedule shell example: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at 2026-06-17T00:00:00Z`
 - Review packets must expose sections for `Due Now`, `Escalation Candidates`, `Upcoming Window`, and `Unscheduled Debts`

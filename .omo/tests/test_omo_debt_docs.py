@@ -46,3 +46,13 @@ def test_omo_agent_documents_debt_refresh_flow() -> None:
     assert "pending_approval" in content
     assert "ready_to_execute" in content
     assert "executed" in content
+    assert "python3 scripts/omo_debt.py report --omo-dir .omo" in content
+    assert ".omo/debt/reporting/current.yaml" in content
+    assert ".omo/debt/reporting/runs/<RUN_STAMP>/current.yaml" in content
+    assert "dashboard = debt health" in content.lower()
+    assert "campaign = coordination detail" in content.lower()
+    assert "reporting = compact progress rollup" in content.lower()
+    assert "approval coverage" in content.lower()
+    assert "execution completion" in content.lower()
+    assert "latest-run compact rollup" in content.lower()
+    assert "not cross-run history" in content.lower()
