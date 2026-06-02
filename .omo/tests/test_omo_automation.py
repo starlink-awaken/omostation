@@ -1426,6 +1426,32 @@ def test_task_promote_apply_rolls_back_when_sync_fails(tmp_path: Path, monkeypat
     ).exists()
 
 
+def test_task_promotion_history_command_writes_current_surfaces(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "runs" / "TASK-A-promotion-2026-06-03T00-00-00Z.yaml",
+        {
+            "promotion_id": "TASK-A-promotion-2026-06-03T00-00-00Z",
+            "task_id": "TASK-A",
+            "promoted_at": "2026-06-03T00:00:00Z",
+            "promoted_by": "copilot-cli",
+            "task_ref_before": ".omo/tasks/planned/TASK-A.yaml",
+            "task_ref_after": ".omo/tasks/active/TASK-A.yaml",
+            "approval": {"required": False, "approval_ref": None},
+            "phase_gate": {"target_phase": 17},
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["omo", "task", "promotion-history", "--omo-dir", ".omo"])
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+
+    assert "promotion_count=1" in output
+    assert (tmp_path / ".omo" / "workers" / "promotion" / "current.yaml").exists()
+    assert (tmp_path / ".omo" / "workers" / "promotion" / "current.md").exists()
+
+
 def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Path):
     root = tmp_path
     omo = root / ".omo"
