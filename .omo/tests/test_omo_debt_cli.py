@@ -1475,3 +1475,106 @@ def test_debt_report_trend_fails_closed_on_missing_history_reporting_metadata(tm
 
     assert result.returncode != 0
     assert "missing reporting trend metadata for run: 2026-06-01T00-00-00Z" in result.stderr
+
+
+def test_debt_report_trend_accepts_last_window_override(tmp_path: Path) -> None:
+    debt_dir = tmp_path / ".omo" / "debt"
+    debt_dir.mkdir(parents=True, exist_ok=True)
+    history_path = debt_dir / "reporting" / "history" / "current.yaml"
+    history_path.parent.mkdir(parents=True, exist_ok=True)
+    history_path.write_text(
+        yaml.safe_dump(
+            {
+                "generated_at": "2026-06-12T00:00:00Z",
+                "latest_run_stamp": "2026-06-10T00-00-00Z",
+                "prior_run_stamp": "2026-06-01T00-00-00Z",
+                "run_count": 3,
+                "runs": [
+                    {
+                        "run_stamp": "2026-06-10T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-06-10T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-06-10T00:00:00Z",
+                        "total_items": 9,
+                        "executed_item_count": 0,
+                        "approval_coverage_rate": 0.0,
+                        "execution_completion_rate": 0.0,
+                    },
+                    {
+                        "run_stamp": "2026-06-01T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-01T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-06-01T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-06-01T00:00:00Z",
+                        "total_items": 9,
+                        "executed_item_count": 1,
+                        "approval_coverage_rate": 1.0,
+                        "execution_completion_rate": 1 / 9,
+                    },
+                    {
+                        "run_stamp": "2026-05-20T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-05-20T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-05-20T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-05-20T00:00:00Z",
+                        "total_items": 10,
+                        "executed_item_count": 0,
+                        "approval_coverage_rate": 0.0,
+                        "execution_completion_rate": 0.0,
+                    },
+                ],
+            },
+            sort_keys=False,
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-trend",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+            "--last",
+            "2",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    packet = yaml.safe_load((debt_dir / "reporting" / "trend" / "current.yaml").read_text(encoding="utf-8"))
+
+    assert result.returncode == 0, result.stderr
+    assert packet["window_requested"] == 2
+    assert packet["window_run_count"] == 2
+    assert [entry["run_stamp"] for entry in packet["runs"]] == [
+        "2026-06-01T00-00-00Z",
+        "2026-06-10T00-00-00Z",
+    ]
+
+
+def test_debt_report_trend_rejects_non_positive_last_window(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
+    shutil.copytree(source, tmp_path / ".omo" / "debt")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-trend",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+            "--last",
+            "0",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    assert result.returncode != 0
+    assert "value must be >= 1" in result.stderr
