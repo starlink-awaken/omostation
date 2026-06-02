@@ -66,6 +66,12 @@ def test_omo_agent_documents_debt_refresh_flow() -> None:
     assert "latest run" in content.lower()
     assert "prior run" in content.lower()
     assert "prerequisite for later diff work" in content.lower()
+    assert "python3 scripts/omo_debt.py report-diff --omo-dir .omo" in content
+    assert ".omo/debt/reporting/diff/current.yaml" in content
+    assert ".omo/debt/reporting/diff/current.md" in content
+    assert "no_prior_run" in content
+    assert "owners: null" in content.lower()
+    assert "summary-only diff" in content.lower()
     assert "refresh -> dispatch -> campaign -> report -> sync -> verify" in content.lower()
     assert "drift" in content.lower()
     assert "silent success" in content.lower()
