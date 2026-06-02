@@ -1,5 +1,5 @@
 overlay_id: GOV-OVERLAY-2026-06
-generated_at: '2026-06-03T06:40:00Z'
+generated_at: '2026-06-03T07:03:00Z'
 status: active
 autopilot_mode: full_omo_autopilot
 intake_scope: future_planned_debt
@@ -9,6 +9,28 @@ success_target: future roadmap, planned queue, and debt watchlist are governed t
   the overlay lane
 eligible_count: 0
 blocked_count: 2
+active_roadmap_item:
+  id: GOV-M1-EXECUTION-HARDENING
+  title: Execution hardening and E2E debt closure
+  type: task-bundle
+  priority: P0
+active_target_states:
+- target_ref: .omo/tasks/planned/D2-CI-E2E-TEST-ENV.yaml
+  task_id: D2-CI-E2E-TEST-ENV
+  state: active_in_progress
+  detail: task currently exists in tasks/active/ with status in_progress
+- target_ref: .omo/tasks/planned/D3-EU-PRICING-TEST.yaml
+  task_id: D3-EU-PRICING-TEST
+  state: active_in_progress
+  detail: task currently exists in tasks/active/ with status in_progress
+- target_ref: .omo/tasks/planned/P25-W1-E2E-INTEGRATION.yaml
+  task_id: P25-W1-E2E-INTEGRATION
+  state: planned_pending
+  detail: task currently exists in tasks/planned/
+- target_ref: .omo/tasks/planned/P25-W2-DOCS-DEBT-CLOSURE.yaml
+  task_id: P25-W2-DOCS-DEBT-CLOSURE
+  state: planned_pending
+  detail: task currently exists in tasks/planned/
 autopilot_candidates: []
 blocked_items:
 - id: GOV-M2-SHAREDBRAIN-DEBT
@@ -21,7 +43,7 @@ blocked_items:
   reason: unmet_dependencies
   depends_on:
   - GOV-M2-SHAREDBRAIN-DEBT
-next_action: idle
+next_action: monitor:GOV-M1-EXECUTION-HARDENING
 policy:
   autopilot_mode: full_omo_autopilot
   auto_select: true

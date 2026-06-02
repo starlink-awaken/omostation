@@ -184,3 +184,11 @@ Canonical governance overlay autopilot loop:
 4. this reuses `promotion-request-approval` or `promote-apply` semantics instead of bypassing existing gates
 5. this writes `.omo/workers/runs/governance-overlay-<STAMP>.yaml`
 6. and refreshes `.omo/workers/governance-overlay/current.yaml`
+
+When the current roadmap item is already `in_progress`, `governance-overlay-run-next` no longer scans a new pending candidate first. It continues the current active roadmap item, writes `mode: continue_active` into the run artifact, and can close a finished roadmap item and advance control state.
+
+Within `continue_active` mode, the canonical overlay status may now recommend:
+
+1. `dispatch:<TASK_ID>` when an active task is still `pending` and safe preclaim/dispatch should happen next
+2. `verify:<TASK_ID>` when an active task has reached `review` and the coordinator should verify/close it next
+3. `monitor:<ROADMAP_ITEM_ID>` while active work is still in flight

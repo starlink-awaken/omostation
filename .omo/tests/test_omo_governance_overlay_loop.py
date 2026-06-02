@@ -158,3 +158,62 @@ def test_plan_governance_overlay_cycle_blocks_unsupported_target_ref(tmp_path: P
     assert result["run"]["target_results"][0]["action"] == "mark_blocked"
     assert result["run"]["target_results"][0]["result"] == "unsupported_target_ref"
     assert result["run"]["summary"] == "blocked"
+
+
+def test_plan_governance_overlay_cycle_closes_done_active_item(tmp_path: Path):
+    _write_yaml(
+        tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
+        {
+            "overlay_id": "GOV-OVERLAY-2026-06",
+            "status": "active",
+            "autopilot_mode": "full_omo_autopilot",
+            "intake_scope": "future_planned_debt",
+            "current_milestone": "GOV-M1-EXECUTION-HARDENING",
+            "next_milestone": "GOV-M2-SHAREDBRAIN-DEBT",
+            "success_target": "future roadmap governed through overlay lane",
+            "updated_at": "2026-06-03T06:35:00Z",
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "autopilot-policy.yaml",
+        {
+            "autopilot_mode": "full_omo_autopilot",
+            "auto_select": True,
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml",
+        {
+            "items": [
+                {
+                    "id": "GOV-M1-EXECUTION-HARDENING",
+                    "type": "task-bundle",
+                    "title": "Execution hardening",
+                    "priority": "P0",
+                    "status": "in_progress",
+                    "depends_on": [],
+                    "source_refs": [".omo/MASTER-BLUEPRINT.md"],
+                    "target_refs": [".omo/tasks/planned/TASK-A.yaml"],
+                    "success_criteria": ["execution hardening closed"],
+                },
+                {
+                    "id": "GOV-M2-SHAREDBRAIN-DEBT",
+                    "type": "debt-bundle",
+                    "title": "SharedBrain debt",
+                    "priority": "P1",
+                    "status": "pending",
+                    "depends_on": ["GOV-M1-EXECUTION-HARDENING"],
+                    "source_refs": [".omo/debt/registry.yaml"],
+                    "target_refs": [".omo/debt/dashboard/current.yaml"],
+                    "success_criteria": ["debt closed"],
+                },
+            ]
+        },
+    )
+    _write_yaml(tmp_path / ".omo" / "tasks" / "done" / "TASK-A.yaml", {"id": "TASK-A", "status": "done"})
+
+    result = plan_governance_overlay_cycle(tmp_path, omo_dir=".omo", actor="copilot-cli", now="2026-06-03T06:50:00Z")
+
+    assert result["run"]["mode"] == "continue_active"
+    assert result["run"]["summary"] == "close_ready"
+    assert result["run"]["roadmap_item_id"] == "GOV-M1-EXECUTION-HARDENING"

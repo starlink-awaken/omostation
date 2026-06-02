@@ -4,5 +4,6 @@ autopilot_mode: full_omo_autopilot
 intake_scope: future_planned_debt
 current_milestone: GOV-M1-EXECUTION-HARDENING
 next_milestone: GOV-M2-SHAREDBRAIN-DEBT
-success_target: future roadmap, planned queue, and debt watchlist are governed through the overlay lane
-updated_at: "2026-06-03T06:35:00Z"
+success_target: future roadmap, planned queue, and debt watchlist are governed through
+  the overlay lane
+updated_at: '2026-06-03T06:35:00Z'

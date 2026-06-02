@@ -281,6 +281,26 @@ def test_worker_docs_describe_governance_overlay_run_next_surface():
     assert "governance-overlay-run-next" in tasks_text
 
 
+def test_worker_docs_describe_governance_overlay_active_item_continuation():
+    workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+
+    assert "continue_active" in workers_text
+    assert "close a finished roadmap item and advance control state" in workers_text
+    assert "current active roadmap item" in agent_text
+
+
+def test_worker_docs_describe_governance_overlay_dispatch_and_verify_actions():
+    workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
+
+    assert "dispatch:<TASK_ID>" in workers_text
+    assert "verify:<TASK_ID>" in workers_text
+    assert "dispatch or verify the current active roadmap item" in agent_text
+    assert "dispatch:<TASK_ID>" in tasks_text
+
+
 def test_standards_registry_tracks_active_and_legacy_merged_docs():
     standards_readme = (OMO / "standards" / "README.md").read_text(encoding="utf-8")
 

@@ -797,6 +797,65 @@ def test_dispatch_task_and_worker_status_use_custom_omo_root(tmp_path: Path):
     assert status["runs"][0]["task_id"] == "TASK-CUSTOM-OMO"
 
 
+def test_dispatch_task_uses_supplied_now_for_dispatch_identity_and_start_time(tmp_path: Path):
+    root = tmp_path
+    omo = root / ".omo"
+
+    _write_yaml(
+        omo / "tasks" / "active" / "timed.yaml",
+        {
+            "id": "TASK-TIMED",
+            "title": "Deterministic dispatch timestamp",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": [".omo/plans/source.md"],
+            "risk_level": "L0",
+            "allowed_operation_level": "L0",
+            "human_approval_required": False,
+            "entry_gate": [],
+            "evidence_required": ["dispatch timestamp deterministic"],
+            "test_plan": ["inspect dispatch artifacts"],
+            "started_at": None,
+            "completed_at": None,
+            "blocked_by": None,
+            "retry_count": 0,
+        },
+    )
+    _write_yaml(
+        omo / "workers" / "registry.yaml",
+        {
+            "workers": [
+                {
+                    "id": "mockworker",
+                    "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}},
+                }
+            ]
+        },
+    )
+
+    result = dispatch_task(
+        root,
+        "TASK-TIMED",
+        "mockworker",
+        ["src/app.py"],
+        launch=False,
+        now="2026-06-03T07:05:00Z",
+    )
+
+    task = _load_yaml(omo / "tasks" / "active" / "timed.yaml")
+    dispatch = _load_yaml(root / result["dispatch_path"])
+
+    assert result["dispatch_id"].endswith("20260603-070500")
+    assert dispatch["launched_at"] == "2026-06-03T07:05:00Z"
+    assert task["started_at"] == "2026-06-03T07:05:00Z"
+
+
 def test_install_all_bridges_defaults_to_wrapper_only_without_running_legacy_installers(tmp_path: Path):
     home = tmp_path / "home"
     workspace = home / "Workspace" / "demo" / "scripts"
@@ -2381,6 +2440,295 @@ def test_task_governance_overlay_run_next_writes_run_artifact(tmp_path: Path, mo
     assert run_packet["target_results"][0]["result"] == "promoted"
     assert roadmap["items"][0]["status"] == "in_progress"
     assert (tmp_path / ".omo" / "tasks" / "active" / "TASK-A.yaml").exists()
+
+
+def test_task_governance_overlay_run_next_closes_done_active_item_and_advances_control(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(
+        tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
+        {
+            "overlay_id": "GOV-OVERLAY-2026-06",
+            "status": "active",
+            "autopilot_mode": "full_omo_autopilot",
+            "intake_scope": "future_planned_debt",
+            "current_milestone": "GOV-M1-EXECUTION-HARDENING",
+            "next_milestone": "GOV-M2-SHAREDBRAIN-DEBT",
+            "success_target": "future roadmap governed through overlay lane",
+            "updated_at": "2026-06-03T06:35:00Z",
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "autopilot-policy.yaml",
+        {
+            "autopilot_mode": "full_omo_autopilot",
+            "auto_select": True,
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml",
+        {
+            "items": [
+                {
+                    "id": "GOV-M1-EXECUTION-HARDENING",
+                    "type": "task-bundle",
+                    "title": "Execution hardening",
+                    "priority": "P0",
+                    "status": "in_progress",
+                    "depends_on": [],
+                    "source_refs": [".omo/MASTER-BLUEPRINT.md"],
+                    "target_refs": [".omo/tasks/planned/TASK-A.yaml"],
+                    "success_criteria": ["execution hardening closed"],
+                },
+                {
+                    "id": "GOV-M2-SHAREDBRAIN-DEBT",
+                    "type": "debt-bundle",
+                    "title": "SharedBrain debt",
+                    "priority": "P1",
+                    "status": "pending",
+                    "depends_on": ["GOV-M1-EXECUTION-HARDENING"],
+                    "source_refs": [".omo/debt/registry.yaml"],
+                    "target_refs": [".omo/debt/dashboard/current.yaml"],
+                    "success_criteria": ["debt closed"],
+                },
+            ]
+        },
+    )
+    _write_yaml(tmp_path / ".omo" / "tasks" / "done" / "TASK-A.yaml", {"id": "TASK-A", "status": "done"})
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "governance-overlay-run-next", "--omo-dir", ".omo", "--actor", "copilot-cli", "--now", "2026-06-03T06:50:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    control = _load_yaml(tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml")
+    roadmap = _load_yaml(tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml")
+    run_packet = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T06-50-00Z.yaml")
+
+    assert "summary=closed" in output
+    assert control["current_milestone"] == "GOV-M2-SHAREDBRAIN-DEBT"
+    assert control["next_milestone"] is None
+    assert roadmap["items"][0]["status"] == "done"
+    assert run_packet["mode"] == "continue_active"
+
+
+def test_task_governance_overlay_run_next_dispatches_first_active_pending_target(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(
+        tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
+        {
+            "overlay_id": "GOV-OVERLAY-2026-06",
+            "status": "active",
+            "autopilot_mode": "full_omo_autopilot",
+            "intake_scope": "future_planned_debt",
+            "current_milestone": "GOV-M1-EXECUTION-HARDENING",
+            "next_milestone": "GOV-M2-SHAREDBRAIN-DEBT",
+            "success_target": "future roadmap governed through overlay lane",
+            "updated_at": "2026-06-03T06:35:00Z",
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "autopilot-policy.yaml",
+        {
+            "autopilot_mode": "full_omo_autopilot",
+            "auto_select": True,
+            "auto_dispatch_when_safe": True,
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml",
+        {
+            "items": [
+                {
+                    "id": "GOV-M1-EXECUTION-HARDENING",
+                    "type": "task-bundle",
+                    "title": "Execution hardening",
+                    "priority": "P0",
+                    "status": "in_progress",
+                    "depends_on": [],
+                    "source_refs": [".omo/MASTER-BLUEPRINT.md"],
+                    "target_refs": [".omo/tasks/planned/TASK-A.yaml", ".omo/tasks/planned/TASK-B.yaml"],
+                    "success_criteria": ["execution hardening closed"],
+                }
+            ]
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "active" / "TASK-A.yaml",
+        {
+            "id": "TASK-A",
+            "phase": 17,
+            "milestone": "GOV-M1",
+            "priority": "P0",
+            "title": "Task A",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": [".omo/MASTER-BLUEPRINT.md"],
+            "deliverables": [".omo/evidence/task-a/output.md"],
+            "depends_on": [],
+            "entry_gate": ["overlay active"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "human_approval_required": False,
+            "evidence_required": ["dispatch packet created"],
+            "test_plan": [".omo/tests/test_omo_automation.py"],
+            "started_at": None,
+            "completed_at": None,
+            "blocked_by": None,
+            "retry_count": 0,
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "active" / "TASK-B.yaml",
+        {
+            "id": "TASK-B",
+            "phase": 17,
+            "milestone": "GOV-M1",
+            "priority": "P0",
+            "title": "Task B",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": [".omo/MASTER-BLUEPRINT.md"],
+            "depends_on": [],
+            "entry_gate": ["overlay active"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "human_approval_required": False,
+            "evidence_required": ["dispatch packet created"],
+            "test_plan": [".omo/tests/test_omo_automation.py"],
+            "started_at": None,
+            "completed_at": None,
+            "blocked_by": None,
+            "retry_count": 0,
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "registry.yaml",
+        {
+            "workers": [
+                {
+                    "id": "mockworker",
+                    "enabled": True,
+                    "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}},
+                }
+            ]
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "governance-overlay-run-next", "--omo-dir", ".omo", "--actor", "copilot-cli", "--now", "2026-06-03T06:58:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    task_a = _load_yaml(tmp_path / ".omo" / "tasks" / "active" / "TASK-A.yaml")
+    run_packet = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T06-58-00Z.yaml")
+
+    assert "summary=dispatched" in output
+    assert task_a["status"] == "in_progress"
+    assert task_a["assigned_to"] == "mockworker"
+    assert run_packet["target_results"][0]["result"] == "dispatched"
+
+
+def test_task_governance_overlay_run_next_marks_verify_ready_for_active_review_target(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(
+        tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
+        {
+            "overlay_id": "GOV-OVERLAY-2026-06",
+            "status": "active",
+            "autopilot_mode": "full_omo_autopilot",
+            "intake_scope": "future_planned_debt",
+            "current_milestone": "GOV-M1-EXECUTION-HARDENING",
+            "next_milestone": "GOV-M2-SHAREDBRAIN-DEBT",
+            "success_target": "future roadmap governed through overlay lane",
+            "updated_at": "2026-06-03T06:35:00Z",
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "autopilot-policy.yaml",
+        {
+            "autopilot_mode": "full_omo_autopilot",
+            "auto_select": True,
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml",
+        {
+            "items": [
+                {
+                    "id": "GOV-M1-EXECUTION-HARDENING",
+                    "type": "task-bundle",
+                    "title": "Execution hardening",
+                    "priority": "P0",
+                    "status": "in_progress",
+                    "depends_on": [],
+                    "source_refs": [".omo/MASTER-BLUEPRINT.md"],
+                    "target_refs": [".omo/tasks/planned/TASK-A.yaml"],
+                    "success_criteria": ["execution hardening closed"],
+                }
+            ]
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "active" / "TASK-A.yaml",
+        {
+            "id": "TASK-A",
+            "phase": 17,
+            "milestone": "GOV-M1",
+            "priority": "P0",
+            "title": "Task A",
+            "status": "review",
+            "assigned_to": "mockworker",
+            "dispatch_id": "task-a-mockworker-123",
+            "run_ref": ".omo/workers/runs/task-a-mockworker-123-dispatch.yaml",
+            "approval_ref": None,
+            "review_ref": ".omo/workers/runs/task-a-mockworker-123-review.md",
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": [".omo/MASTER-BLUEPRINT.md"],
+            "depends_on": [],
+            "entry_gate": ["overlay active"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "human_approval_required": False,
+            "evidence_required": ["review ready"],
+            "test_plan": [".omo/tests/test_omo_automation.py"],
+            "started_at": None,
+            "completed_at": None,
+            "blocked_by": None,
+            "retry_count": 0,
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "governance-overlay-run-next", "--omo-dir", ".omo", "--actor", "copilot-cli", "--now", "2026-06-03T07:01:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    run_packet = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T07-01-00Z.yaml")
+
+    assert "summary=verify_ready" in output
+    assert run_packet["target_results"][0]["state"] == "active_review"
 
 
 def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Path):

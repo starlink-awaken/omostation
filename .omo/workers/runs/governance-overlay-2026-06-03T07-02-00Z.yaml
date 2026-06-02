@@ -1,0 +1,35 @@
+run_id: governance-overlay-2026-06-03T07-02-00Z
+overlay_id: GOV-OVERLAY-2026-06
+actor: copilot-cli
+started_at: '2026-06-03T07:02:00Z'
+completed_at: '2026-06-03T07:02:00Z'
+mode: continue_active
+next_action_before_run: dispatch:D2-CI-E2E-TEST-ENV
+roadmap_item_id: GOV-M1-EXECUTION-HARDENING
+summary: dispatched
+target_results:
+- target_ref: .omo/tasks/planned/D2-CI-E2E-TEST-ENV.yaml
+  task_id: D2-CI-E2E-TEST-ENV
+  state: active_pending
+  detail: active pending task was preclaimed into worker dispatch flow
+  result: dispatched
+  dispatch_id: d2-ci-e2e-test-env-codebuddy-20260602-230142
+  dispatch_path: .omo/workers/runs/d2-ci-e2e-test-env-codebuddy-20260602-230142-dispatch.yaml
+- target_ref: .omo/tasks/planned/D3-EU-PRICING-TEST.yaml
+  task_id: D3-EU-PRICING-TEST
+  state: active_pending
+  detail: task currently exists in tasks/active/ with status pending
+- target_ref: .omo/tasks/planned/P25-W1-E2E-INTEGRATION.yaml
+  task_id: P25-W1-E2E-INTEGRATION
+  state: planned_pending
+  detail: task currently exists in tasks/planned/
+- target_ref: .omo/tasks/planned/P25-W2-DOCS-DEBT-CLOSURE.yaml
+  task_id: P25-W2-DOCS-DEBT-CLOSURE
+  state: planned_pending
+  detail: task currently exists in tasks/planned/
+target_state_summary:
+  active_pending: 2
+  planned_pending: 2
+control_updates:
+  current_milestone: GOV-M2-SHAREDBRAIN-DEBT
+  next_milestone: GOV-M3-FUTURE-PROMOTION-OPERATIONS

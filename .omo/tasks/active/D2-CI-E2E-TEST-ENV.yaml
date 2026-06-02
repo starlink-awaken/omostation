@@ -3,15 +3,20 @@ phase: 17
 milestone: M17.1
 priority: P0
 title: CI E2E 测试环境容器化 (Resolve D2 debt)
-status: pending
-assigned_to: null
-dispatch_id: null
-run_ref: null
+status: in_progress
+assigned_to: codebuddy
+dispatch_id: d2-ci-e2e-test-env-codebuddy-20260602-230142
+run_ref: .omo/workers/runs/d2-ci-e2e-test-env-codebuddy-20260602-230142-dispatch.yaml
 approval_ref: null
-review_ref: null
-knowledge_refs: []
+review_ref: .omo/workers/runs/d2-ci-e2e-test-env-codebuddy-20260602-230142-review.md
+knowledge_refs:
+- _knowledge/management/debt-systems-analysis-and-governance.md
+- _knowledge/design/debt-cleanup-plan.md
 handoff_refs:
 - .omo/workers/runs/D2-CI-E2E-TEST-ENV-promotion-2026-06-03T06-40-00Z.yaml
+- .omo/workers/runs/d2-ci-e2e-test-env-codebuddy-20260602-230142-envelope.yaml
+- .omo/workers/runs/d2-ci-e2e-test-env-codebuddy-20260602-230142-prompt.md
+- .omo/workers/runs/d2-ci-e2e-test-env-codebuddy-20260602-230142-checkpoint.md
 source_docs:
 - _knowledge/management/debt-systems-analysis-and-governance.md
 - _knowledge/design/debt-cleanup-plan.md
@@ -33,3 +38,4 @@ acceptance_criteria:
 - CI E2E 测试可在容器化环境中运行
 - 不依赖外部正在运行的服务实例
 - 健康分 debt_weight 因子确认
+started_at: '2026-06-02T23:01:42Z'
