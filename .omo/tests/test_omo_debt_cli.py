@@ -909,3 +909,115 @@ def test_debt_report_reflects_approval_and_execution_facts(tmp_path: Path) -> No
     assert report.returncode == 0, report.stderr
     assert packet["summary"]["approval_coverage_rate"] == 1.0
     assert packet["summary"]["execution_completion_rate"] == 1 / 9
+
+
+def test_debt_report_history_requires_dispatch_runs(tmp_path: Path) -> None:
+    debt_dir = tmp_path / ".omo" / "debt"
+    debt_dir.mkdir(parents=True, exist_ok=True)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-history",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    assert result.returncode != 0
+    assert "dispatch/runs" in result.stderr
+
+
+def test_debt_report_history_writes_latest_and_prior_run_metadata(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
+    shutil.copytree(source, tmp_path / ".omo" / "debt")
+
+    older_dispatch = tmp_path / ".omo" / "debt" / "dispatch" / "runs" / "2026-06-01T00-00-00Z.yaml"
+    older_reporting = tmp_path / ".omo" / "debt" / "reporting" / "runs" / "2026-06-01T00-00-00Z" / "current.yaml"
+    older_dispatch.parent.mkdir(parents=True, exist_ok=True)
+    older_dispatch.write_text("dispatched_at: '2026-06-01T00:00:00Z'\n", encoding="utf-8")
+    older_reporting.parent.mkdir(parents=True, exist_ok=True)
+    older_reporting.write_text(
+        yaml.safe_dump(
+            {
+                "generated_at": "2026-06-01T02:00:00Z",
+                "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-01T00-00-00Z.yaml",
+                "run_stamp": "2026-06-01T00-00-00Z",
+                "summary": {
+                    "owner_count": 4,
+                    "total_items": 9,
+                    "state_counts": {"pending_approval": 1, "ready_to_execute": 8, "executed": 0},
+                    "gate_item_count": 1,
+                    "approved_gate_item_count": 0,
+                    "approval_coverage_rate": 0.0,
+                    "executed_item_count": 0,
+                    "execution_completion_rate": 0.0,
+                },
+                "owners": [],
+            },
+            sort_keys=False,
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-history",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    packet = yaml.safe_load(
+        (tmp_path / ".omo" / "debt" / "reporting" / "history" / "current.yaml").read_text(encoding="utf-8")
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "generated debt reporting history packet"
+    assert packet["latest_run_stamp"] == "2026-06-10T00-00-00Z"
+    assert packet["prior_run_stamp"] == "2026-06-01T00-00-00Z"
+    assert [entry["run_stamp"] for entry in packet["runs"]] == [
+        "2026-06-10T00-00-00Z",
+        "2026-06-01T00-00-00Z",
+    ]
+
+
+def test_debt_report_history_keeps_run_when_reporting_artifact_is_missing(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
+    shutil.copytree(source, tmp_path / ".omo" / "debt")
+
+    older_dispatch = tmp_path / ".omo" / "debt" / "dispatch" / "runs" / "2026-06-01T00-00-00Z.yaml"
+    older_dispatch.parent.mkdir(parents=True, exist_ok=True)
+    older_dispatch.write_text("dispatched_at: '2026-06-01T00:00:00Z'\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-history",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    packet = yaml.safe_load(
+        (tmp_path / ".omo" / "debt" / "reporting" / "history" / "current.yaml").read_text(encoding="utf-8")
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert packet["prior_run_stamp"] == "2026-06-01T00-00-00Z"
+    assert packet["runs"][1]["reporting_exists"] is False
+    assert packet["runs"][1]["reporting_ref"] is None
