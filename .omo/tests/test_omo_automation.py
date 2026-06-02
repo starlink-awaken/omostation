@@ -2230,6 +2230,66 @@ def test_task_promotion_approval_analytics_writes_current_surfaces(tmp_path: Pat
     assert (tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "analytics" / "current.md").exists()
 
 
+def test_task_governance_overlay_status_writes_current_surfaces(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(
+        tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
+        {
+            "overlay_id": "GOV-OVERLAY-2026-06",
+            "status": "active",
+            "autopilot_mode": "full_omo_autopilot",
+            "intake_scope": "future_planned_debt",
+            "current_milestone": "GOV-M1",
+            "next_milestone": "GOV-M2",
+            "success_target": "future roadmap governed through overlay lane",
+            "updated_at": "2026-06-03T06:30:00Z",
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "autopilot-policy.yaml",
+        {
+            "autopilot_mode": "full_omo_autopilot",
+            "auto_select": True,
+            "auto_promote_when_safe": True,
+            "human_gate_on_high_risk": True,
+            "retry_on_blocked": "explicit",
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml",
+        {
+            "items": [
+                {
+                    "id": "GOV-M1-ROADMAP-E2E",
+                    "type": "task-bundle",
+                    "title": "E2E and pricing debt closure",
+                    "priority": "P0",
+                    "status": "pending",
+                    "depends_on": [],
+                    "source_refs": [".omo/MASTER-BLUEPRINT.md"],
+                    "target_refs": [".omo/tasks/planned/D2-CI-E2E-TEST-ENV.yaml"],
+                    "success_criteria": ["D2 promoted and closed"],
+                }
+            ]
+        },
+    )
+    _write_yaml(tmp_path / ".omo" / "tasks" / "planned" / "D2-CI-E2E-TEST-ENV.yaml", {"id": "D2-CI-E2E-TEST-ENV"})
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "governance-overlay-status", "--omo-dir", ".omo", "--now", "2026-06-03T06:35:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "current.yaml")
+
+    assert "eligible_count=1" in output
+    assert packet["next_action"] == "advance:GOV-M1-ROADMAP-E2E"
+    assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "current.md").exists()
+
+
 def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Path):
     root = tmp_path
     omo = root / ".omo"

@@ -1,0 +1,9 @@
+autopilot_mode: full_omo_autopilot
+auto_select: true
+auto_promote_when_safe: true
+auto_dispatch_when_safe: true
+auto_verify_when_safe: true
+human_gate_on_high_risk: true
+retry_on_blocked: explicit
+blocked_requeue_policy: write-blocked-and-continue
+success_condition: continue iterating milestone-by-milestone until all overlay roadmap items are closed or explicitly human-blocked

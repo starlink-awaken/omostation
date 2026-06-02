@@ -166,3 +166,12 @@ Canonical promotion approval analytics surface:
 3. this reads `.omo/workers/promotion/approvals/history/current.yaml`
 4. this writes `.omo/workers/promotion/approvals/analytics/current.yaml`
 5. and `.omo/workers/promotion/approvals/analytics/current.md`
+
+Canonical governance overlay surface:
+
+1. `python3 scripts/omo_worker.py task governance-overlay-status --omo-dir .omo [--now <ISO8601>]`
+2. this reads `.omo/_control/governance-overlay/current.yaml`
+3. this reads `.omo/_truth/governance-overlay/roadmap.yaml`
+4. this reads `.omo/_truth/governance-overlay/autopilot-policy.yaml`
+5. this writes `.omo/workers/governance-overlay/current.yaml`
+6. and `.omo/workers/governance-overlay/current.md`
