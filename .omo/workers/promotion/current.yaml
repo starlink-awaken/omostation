@@ -1,0 +1,17 @@
+generated_at: '2026-06-02T19:06:29Z'
+latest_promotion_id: ORPHANED-TASKS-STRUCTURED-REGISTRY-promotion-2026-06-03T00-00-00Z
+latest_promotion_ref: .omo/workers/runs/ORPHANED-TASKS-STRUCTURED-REGISTRY-promotion-2026-06-03T00-00-00Z.yaml
+prior_promotion_id: null
+prior_promotion_ref: null
+promotion_count: 1
+promotions:
+- promotion_id: ORPHANED-TASKS-STRUCTURED-REGISTRY-promotion-2026-06-03T00-00-00Z
+  promotion_ref: .omo/workers/runs/ORPHANED-TASKS-STRUCTURED-REGISTRY-promotion-2026-06-03T00-00-00Z.yaml
+  task_id: ORPHANED-TASKS-STRUCTURED-REGISTRY
+  promoted_at: '2026-06-03T00:00:00Z'
+  promoted_by: copilot-cli
+  task_ref_before: .omo/tasks/planned/ORPHANED-TASKS-STRUCTURED-REGISTRY.yaml
+  task_ref_after: .omo/tasks/active/ORPHANED-TASKS-STRUCTURED-REGISTRY.yaml
+  approval_required: false
+  approval_ref: null
+  target_phase: 17
