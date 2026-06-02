@@ -1452,6 +1452,41 @@ def test_task_promotion_history_command_writes_current_surfaces(tmp_path: Path, 
     assert (tmp_path / ".omo" / "workers" / "promotion" / "current.md").exists()
 
 
+def test_task_promotion_history_command_accepts_deterministic_now(tmp_path: Path, monkeypatch):
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "runs" / "TASK-A-promotion-2026-06-03T00-00-00Z.yaml",
+        {
+            "promotion_id": "TASK-A-promotion-2026-06-03T00-00-00Z",
+            "task_id": "TASK-A",
+            "promoted_at": "2026-06-03T00:00:00Z",
+            "promoted_by": "copilot-cli",
+            "task_ref_before": ".omo/tasks/planned/TASK-A.yaml",
+            "task_ref_after": ".omo/tasks/active/TASK-A.yaml",
+            "approval": {"required": False, "approval_ref": None},
+            "phase_gate": {"target_phase": 17},
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "omo",
+            "task",
+            "promotion-history",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T00:00:00Z",
+        ],
+    )
+
+    assert omo_worker_main() == 0
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "current.yaml")
+    assert packet["generated_at"] == "2026-06-03T00:00:00Z"
+
+
 def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Path):
     root = tmp_path
     omo = root / ".omo"
