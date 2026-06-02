@@ -300,6 +300,13 @@ Interpretation rules:
 - `owner_presence.window_run_count` mirrors the selected multi-run window, and each entry exposes `owner`, `run_count`, `first_window_run`, `last_window_run`, `in_first_window_run`, and `in_last_window_run`
 - `owner_presence` is window-scoped only: it says where excluded owners appear inside the selected window, not whether they globally appeared or disappeared across the whole system
 - In a two-run window this can overlap conceptually with `report-diff`, but `owner_presence` still reports selected-window presence facts rather than pairwise diff labels
+- `execution_progress` is a parallel summary block inside `report-trend`; it is not a forecast and it is intentionally not named `burndown`
+- `open_item_count` is derived as `total_items - executed_item_count`, so it measures unfinished items rather than total scope
+- `execution_progress` anchors to the oldest selected run via `anchor_run_stamp` and `baseline_open_item_count`
+- `execution_progress` uses explicit statuses: `progress_available` for a normal non-zero baseline and `baseline_fully_executed` when the baseline open count is already zero
+- `open_item_delta_vs_baseline` is sign-explicit: negative means progress, zero means unchanged, and positive means more unfinished items than the baseline run
+- `open_item_ratio_vs_baseline` is `null` when `baseline_open_item_count` is zero; that state is reported as `baseline_fully_executed`
+- `execution_progress` can move upward when scope growth occurs; use `intervals[*].total_items_delta` to inspect adjacent scope movement
 - Sparse gaps, burndown projections, and slope math remain deferred
 - Schedule command template: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at <NEXT_REVIEW_AT>`
 - Schedule shell example: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at 2026-06-17T00:00:00Z`

@@ -1541,6 +1541,33 @@ def test_debt_report_trend_fails_closed_on_missing_history_reporting_metadata(tm
         encoding="utf-8",
     )
 
+    _write_reporting_run_artifact(
+        debt_dir,
+        run_stamp="2026-06-10T00-00-00Z",
+        pending_approval=0,
+        ready_to_execute=5,
+        executed=3,
+        gate_item_count=1,
+        approved_gate_item_count=1,
+        approval_coverage_rate=1.0,
+        executed_item_count=3,
+        execution_completion_rate=3 / 8,
+        owners=[],
+    )
+    _write_reporting_run_artifact(
+        debt_dir,
+        run_stamp="2026-06-01T00-00-00Z",
+        pending_approval=1,
+        ready_to_execute=7,
+        executed=1,
+        gate_item_count=1,
+        approved_gate_item_count=1,
+        approval_coverage_rate=1.0,
+        executed_item_count=1,
+        execution_completion_rate=1 / 9,
+        owners=[],
+    )
+
     result = subprocess.run(
         [
             sys.executable,
@@ -1897,6 +1924,127 @@ def test_debt_report_trend_writes_owner_presence_for_selected_last_window(tmp_pa
                 "in_first_window_run": False,
                 "in_last_window_run": True,
             }
+        ],
+    }
+
+
+def test_debt_report_trend_writes_execution_progress_for_selected_last_window(tmp_path: Path) -> None:
+    debt_dir = tmp_path / ".omo" / "debt"
+    debt_dir.mkdir(parents=True, exist_ok=True)
+    history_path = debt_dir / "reporting" / "history" / "current.yaml"
+    history_path.parent.mkdir(parents=True, exist_ok=True)
+    history_path.write_text(
+        yaml.safe_dump(
+            {
+                "generated_at": "2026-06-12T00:00:00Z",
+                "latest_run_stamp": "2026-06-10T00-00-00Z",
+                "prior_run_stamp": "2026-06-01T00-00-00Z",
+                "run_count": 3,
+                "runs": [
+                    {
+                        "run_stamp": "2026-06-10T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-06-10T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-06-10T00:00:00Z",
+                        "total_items": 8,
+                        "executed_item_count": 3,
+                        "approval_coverage_rate": 1.0,
+                        "execution_completion_rate": 3 / 8,
+                    },
+                    {
+                        "run_stamp": "2026-06-01T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-01T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-06-01T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-06-01T00:00:00Z",
+                        "total_items": 9,
+                        "executed_item_count": 1,
+                        "approval_coverage_rate": 1.0,
+                        "execution_completion_rate": 1 / 9,
+                    },
+                    {
+                        "run_stamp": "2026-05-20T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-05-20T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-05-20T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-05-20T00:00:00Z",
+                        "total_items": 10,
+                        "executed_item_count": 0,
+                        "approval_coverage_rate": 0.0,
+                        "execution_completion_rate": 0.0,
+                    },
+                ],
+            },
+            sort_keys=False,
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+
+    _write_reporting_run_artifact(
+        debt_dir,
+        run_stamp="2026-06-10T00-00-00Z",
+        pending_approval=0,
+        ready_to_execute=5,
+        executed=3,
+        gate_item_count=1,
+        approved_gate_item_count=1,
+        approval_coverage_rate=1.0,
+        executed_item_count=3,
+        execution_completion_rate=3 / 8,
+        owners=[],
+    )
+    _write_reporting_run_artifact(
+        debt_dir,
+        run_stamp="2026-06-01T00-00-00Z",
+        pending_approval=1,
+        ready_to_execute=7,
+        executed=1,
+        gate_item_count=1,
+        approved_gate_item_count=1,
+        approval_coverage_rate=1.0,
+        executed_item_count=1,
+        execution_completion_rate=1 / 9,
+        owners=[],
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-trend",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+            "--last",
+            "2",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    packet = yaml.safe_load((debt_dir / "reporting" / "trend" / "current.yaml").read_text(encoding="utf-8"))
+
+    assert result.returncode == 0, result.stderr
+    assert packet["window_requested"] == 2
+    assert packet["execution_progress"] == {
+        "progress_status": "progress_available",
+        "anchor_run_stamp": "2026-06-01T00-00-00Z",
+        "baseline_open_item_count": 8,
+        "runs": [
+            {
+                "run_stamp": "2026-06-01T00-00-00Z",
+                "open_item_count": 8,
+                "open_item_delta_vs_baseline": 0,
+                "open_item_ratio_vs_baseline": 1.0,
+            },
+            {
+                "run_stamp": "2026-06-10T00-00-00Z",
+                "open_item_count": 5,
+                "open_item_delta_vs_baseline": -3,
+                "open_item_ratio_vs_baseline": 0.625,
+            },
         ],
     }
 

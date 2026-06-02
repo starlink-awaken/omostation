@@ -119,6 +119,17 @@ def test_omo_agent_documents_debt_refresh_flow() -> None:
     assert "two-run" in content.lower()
     assert "report-diff" in content
     assert "owner_presence stays null" in content.lower()
+    assert "execution_progress" in content
+    assert "open_item_count" in content
+    assert "open_item_delta_vs_baseline" in content
+    assert "open_item_ratio_vs_baseline" in content
+    assert "baseline_open_item_count" in content
+    assert "anchor_run_stamp" in content
+    assert "progress_available" in content
+    assert "baseline_fully_executed" in content
+    assert "not a forecast" in content.lower()
+    assert "negative means progress" in content.lower()
+    assert "scope growth" in content.lower()
     assert "sparse gaps" in content.lower()
     assert "slope math" in content.lower()
     assert "refresh -> dispatch -> campaign -> report -> sync -> verify" in content.lower()

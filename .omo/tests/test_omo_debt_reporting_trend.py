@@ -142,6 +142,219 @@ def test_build_reporting_trend_packet_reorders_runs_oldest_to_newest() -> None:
     ]
 
 
+def test_build_reporting_trend_packet_adds_execution_progress_from_oldest_selected_run() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 3,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=8,
+                executed_item_count=3,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=3 / 8,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=9,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1 / 9,
+            ),
+            _history_entry(
+                "2026-05-20T00-00-00Z",
+                total_items=10,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+        ],
+    }
+
+    packet = build_reporting_trend_packet(
+        generated_at="2026-06-12T01:00:00Z",
+        history_packet=history_packet,
+    )
+
+    assert packet["execution_progress"] == {
+        "progress_status": "progress_available",
+        "anchor_run_stamp": "2026-05-20T00-00-00Z",
+        "baseline_open_item_count": 10,
+        "runs": [
+            {
+                "run_stamp": "2026-05-20T00-00-00Z",
+                "open_item_count": 10,
+                "open_item_delta_vs_baseline": 0,
+                "open_item_ratio_vs_baseline": 1.0,
+            },
+            {
+                "run_stamp": "2026-06-01T00-00-00Z",
+                "open_item_count": 8,
+                "open_item_delta_vs_baseline": -2,
+                "open_item_ratio_vs_baseline": 0.8,
+            },
+            {
+                "run_stamp": "2026-06-10T00-00-00Z",
+                "open_item_count": 5,
+                "open_item_delta_vs_baseline": -5,
+                "open_item_ratio_vs_baseline": 0.5,
+            },
+        ],
+    }
+
+
+def test_build_reporting_trend_packet_marks_execution_progress_baseline_fully_executed() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 2,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=4,
+                executed_item_count=2,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=0.5,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=3,
+                executed_item_count=3,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1.0,
+            ),
+        ],
+    }
+
+    packet = build_reporting_trend_packet(
+        generated_at="2026-06-12T01:00:00Z",
+        history_packet=history_packet,
+    )
+
+    assert packet["execution_progress"] == {
+        "progress_status": "baseline_fully_executed",
+        "anchor_run_stamp": "2026-06-01T00-00-00Z",
+        "baseline_open_item_count": 0,
+        "runs": [
+            {
+                "run_stamp": "2026-06-01T00-00-00Z",
+                "open_item_count": 0,
+                "open_item_delta_vs_baseline": 0,
+                "open_item_ratio_vs_baseline": None,
+            },
+            {
+                "run_stamp": "2026-06-10T00-00-00Z",
+                "open_item_count": 2,
+                "open_item_delta_vs_baseline": 2,
+                "open_item_ratio_vs_baseline": None,
+            },
+        ],
+    }
+
+
+def test_build_reporting_trend_packet_keeps_execution_progress_unchanged_at_baseline() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 2,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=8,
+                executed_item_count=2,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=0.25,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=7,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1 / 7,
+            ),
+        ],
+    }
+
+    packet = build_reporting_trend_packet(
+        generated_at="2026-06-12T01:00:00Z",
+        history_packet=history_packet,
+    )
+
+    assert packet["execution_progress"]["runs"][-1] == {
+        "run_stamp": "2026-06-10T00-00-00Z",
+        "open_item_count": 6,
+        "open_item_delta_vs_baseline": 0,
+        "open_item_ratio_vs_baseline": 1.0,
+    }
+
+
+def test_build_reporting_trend_packet_surfaces_execution_progress_increase_vs_baseline() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 2,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=10,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=0.1,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=8,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=0.125,
+            ),
+        ],
+    }
+
+    packet = build_reporting_trend_packet(
+        generated_at="2026-06-12T01:00:00Z",
+        history_packet=history_packet,
+    )
+
+    assert packet["execution_progress"]["runs"][-1] == {
+        "run_stamp": "2026-06-10T00-00-00Z",
+        "open_item_count": 9,
+        "open_item_delta_vs_baseline": 2,
+        "open_item_ratio_vs_baseline": 9 / 7,
+    }
+
+
+def test_build_reporting_trend_packet_leaves_execution_progress_null_when_history_is_insufficient() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": None,
+        "run_count": 1,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=9,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1 / 9,
+            )
+        ],
+    }
+
+    packet = build_reporting_trend_packet(
+        generated_at="2026-06-12T01:00:00Z",
+        history_packet=history_packet,
+    )
+
+    assert packet["trend_status"] == "insufficient_history"
+    assert packet["execution_progress"] is None
+
+
 def test_build_reporting_trend_packet_adds_shared_owner_series() -> None:
     history_packet = {
         "generated_at": "2026-06-12T00:00:00Z",
@@ -1458,3 +1671,49 @@ def test_render_reporting_trend_markdown_includes_owner_presence_section() -> No
     assert "### Presence Owner: late-owner" in markdown
     assert "run_count=1" in markdown
     assert "in_last_window_run=True" in markdown
+
+
+def test_render_reporting_trend_markdown_includes_execution_progress_section() -> None:
+    packet = {
+        "generated_at": "2026-06-12T01:00:00Z",
+        "trend_status": "trend_available",
+        "window_requested": None,
+        "from_run_stamp_requested": None,
+        "to_run_stamp_requested": None,
+        "window_run_count": 3,
+        "oldest_run_stamp": "2026-05-20T00-00-00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "runs": [],
+        "intervals": [],
+        "owners": None,
+        "owner_presence": None,
+        "execution_progress": {
+            "progress_status": "progress_available",
+            "anchor_run_stamp": "2026-05-20T00-00-00Z",
+            "baseline_open_item_count": 10,
+            "runs": [
+                {
+                    "run_stamp": "2026-05-20T00-00-00Z",
+                    "open_item_count": 10,
+                    "open_item_delta_vs_baseline": 0,
+                    "open_item_ratio_vs_baseline": 1.0,
+                },
+                {
+                    "run_stamp": "2026-06-10T00-00-00Z",
+                    "open_item_count": 5,
+                    "open_item_delta_vs_baseline": -5,
+                    "open_item_ratio_vs_baseline": 0.5,
+                },
+            ],
+        },
+    }
+
+    markdown = render_reporting_trend_markdown(packet)
+
+    assert "## Execution Progress" in markdown
+    assert "progress_status=progress_available" in markdown
+    assert "anchor_run_stamp=2026-05-20T00-00-00Z" in markdown
+    assert "baseline_open_item_count=10" in markdown
+    assert "### Progress Run: 2026-06-10T00-00-00Z" in markdown
+    assert "open_item_delta_vs_baseline=-5" in markdown
+    assert "open_item_ratio_vs_baseline=0.5" in markdown
