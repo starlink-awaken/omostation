@@ -84,3 +84,25 @@ US-003 complete:
 Current closure candidate:
 - The system no longer stops at `contract_gap` with no repair path.
 - It can now request explicit deliverables, route them through governance proposal approval/apply, and re-evaluate into `launch:<TASK_ID>` without guessing write scope.
+
+Reviewer + deslop + final regression:
+- Architect reviewer verdict for this Ralph slice: APPROVED against US-001 / US-002 / US-003 acceptance criteria.
+- Reviewer confirmed the chosen approach is the minimal safe path: reuse request + governance proposal flow rather than inventing a second SSOT or guessing write scope from prose.
+- Bounded ai-slop-cleaner pass over the Ralph changed-file set was a no-op by design:
+  - no dead code worth deleting
+  - no duplicate helper that could be collapsed without reducing the intentional symmetry with `omo_promotion_request.py`
+  - no boundary leak beyond the deliberate reuse of `propose_truth_mutation(...)`
+- Post-deslop regression evidence:
+  - `python3 -m pytest .omo/tests/test_omo_contract_request.py .omo/tests/test_omo_governance_overlay.py .omo/tests/test_omo_automation.py .omo/tests/test_worker_mechanism_consistency.py -q -k 'contract_request or contract_declare_deliverables or contract_declaration_apply_advances_overlay_from_contract_gap_to_launch or launch_contract_actions or contract_gap_for_dispatched_empty_scope or surfaces_launch_for_dispatched_ready_scope'` -> `10 passed`
+
+Changed files in this Ralph slice:
+- scripts/omo_contract_request.py
+- scripts/omo_worker.py
+- .omo/tests/test_omo_contract_request.py
+- .omo/tests/test_omo_automation.py
+- .omo/tests/test_worker_mechanism_consistency.py
+- .omo/AGENT.md
+- .omo/tasks/README.md
+- .omo/workers/README.md
+- .omc/prd.json
+- .omc/progress.txt

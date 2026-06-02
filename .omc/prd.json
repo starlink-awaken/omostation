@@ -38,7 +38,7 @@
       "id": "US-VERIFY",
       "title": "验证 contract repair flow 已闭合并记录 Ralph learnings",
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "fresh focused verification 至少运行 `.omo/tests/test_omo_governance_overlay.py`、`.omo/tests/test_omo_automation.py`、`.omo/tests/test_worker_mechanism_consistency.py`，且相关筛选全部通过",
         "progress.txt 追加记录本轮实现内容、变更文件、为何选择 proposal flow 而不是直接猜测 deliverables",
