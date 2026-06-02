@@ -1,4 +1,4 @@
-generated_at: '2026-06-02T14:49:42Z'
+generated_at: '2026-06-02T15:31:35Z'
 trend_status: insufficient_history
 window_requested: null
 from_run_stamp_requested: 2026-06-10T00-00-00Z
@@ -18,3 +18,4 @@ intervals: []
 owners: null
 owner_presence: null
 execution_progress: null
+state_progress: null

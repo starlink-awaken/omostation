@@ -135,3 +135,11 @@ def test_omo_agent_documents_debt_refresh_flow() -> None:
     assert "refresh -> dispatch -> campaign -> report -> sync -> verify" in content.lower()
     assert "drift" in content.lower()
     assert "silent success" in content.lower()
+    assert "state_progress" in content
+    assert "state_progress_status" in content
+    assert "state_progress_available" in content
+    assert "artifacts_unavailable" in content
+    assert "baseline_pending_approval" in content
+    assert "pending_approval_delta_vs_baseline" in content
+    assert "ready_to_execute is derived" in content.lower()
+    assert "same oldest selected run anchor" in content.lower()

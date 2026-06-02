@@ -308,6 +308,14 @@ Interpretation rules:
 - `open_item_ratio_vs_baseline` is `null` when `baseline_open_item_count` is zero; that state is reported as `baseline_fully_executed`
 - `execution_progress` can move upward when scope growth occurs; use `intervals[*].total_items_delta` to inspect adjacent scope movement
 - Sparse gaps, burndown projections, and slope math remain deferred
+- `state_progress` is a parallel summary block inside `report-trend`; it is not a forecast and it is intentionally narrower than projection work
+- `state_progress_status` uses explicit statuses: `state_progress_available` when selected reporting artifacts are available for the whole window, and `artifacts_unavailable` as the helper-level semantic when they are not
+- `state_progress` shares the same oldest selected run anchor as `execution_progress` via `anchor_run_stamp`
+- `baseline_pending_approval` comes from the oldest selected run's reporting artifact `summary.state_counts.pending_approval`
+- `pending_approval` comes from each selected run's reporting artifact summary state counts, while `executed` stays aligned with history `executed_item_count`
+- ready_to_execute is derived as total_items minus pending_approval minus executed, so the block stays internally consistent with summary totals
+- `pending_approval_delta_vs_baseline` is sign-explicit: negative means fewer approval-blocked items than baseline, zero means unchanged, and positive means more approval-blocked items than baseline
+- `state_progress` stays null when `trend_status` is `insufficient_history`; there is no silent success path for missing selected-run artifacts
 - Schedule command template: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at <NEXT_REVIEW_AT>`
 - Schedule shell example: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at 2026-06-17T00:00:00Z`
 - Review packets must expose sections for `Due Now`, `Escalation Candidates`, `Upcoming Window`, and `Unscheduled Debts`
