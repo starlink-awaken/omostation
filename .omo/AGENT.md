@@ -214,6 +214,49 @@ The following are partial checks only and must not be mistaken for full `.omo` v
 - `make governance-validate`
 - `make governance-index-check`
 
+### Debt governance refresh
+
+Use this when you need to refresh the first-class debt ledger surfaces before reading debt state:
+
+1. `python3 scripts/omo_debt.py refresh --omo-dir .omo --now 2026-06-10T00:00:00Z`
+2. `python3 scripts/omo_debt.py dispatch --omo-dir .omo --now 2026-06-10T00:00:00Z`
+3. `python3 scripts/sync_omo_state.py --omo-dir .omo`
+4. `bash bin/verify-omo.sh`
+
+Interpretation rules:
+
+- `.omo/debt/registry.yaml` is the canonical debt index
+- `.omo/debt/items/*.yaml` are the canonical debt objects
+- `state/system.yaml` carries only derived debt summary fields and pointers
+- `.omo/debt/dashboard/current.yaml`, `.omo/debt/review-queue/current.yaml`, `.omo/debt/reviews/current.md`, `.omo/debt/action-packet/current.yaml`, and `.omo/debt/action-packet/current.md` are generated outputs, not hand-edited truth
+- Refresh outputs must still surface the overdue review count and next-review queue preview derived from `next_review_at`
+- Dispatch is the formal surfaced handoff after refresh; publish from the refreshed truth, then sync and verify the workspace
+- `.omo/debt/dispatch/current.yaml` is the machine-readable dispatch handoff surface
+- `.omo/debt/dispatch/current.md` is the human-readable dispatch handoff packet
+- `.omo/debt/dispatch/runs/` stores immutable dispatch run snapshots for audit and replay
+- Dispatch freezes commands to dispatched_at so operators execute the surfaced packet against a stable timestamp, not a later local clock
+- Duplicate timestamp dispatch attempts fail closed with a duplicate timestamp / no overwrite policy; rerun with a new `--now` value instead of replacing an existing surfaced handoff
+- `.omo/debt/review-queue/current.yaml` is the operator-facing queue surface for due-now work, escalation candidates, upcoming work, and unscheduled debts
+- `.omo/debt/action-packet/current.yaml` is the machine-readable next-action surface; `.omo/debt/action-packet/current.md` is the human-readable operator packet
+- `.omo/debt/action-packet/current.yaml` remains the owner-neutral next-action surface
+- `.omo/debt/owner-routing/current.yaml` is the machine-readable owner execution surface
+- `.omo/debt/owner-routing/current.md` is the human-readable owner execution packet
+- Action-packet lanes use deterministic first-match routing: `Revalidate Now` for stale due/escalated debts, `Schedule Now` for unscheduled debts, `Escalate Now` for overdue escalation work, `Continue Mitigation` for active mitigation that still needs follow-up, and `Watch Only` for upcoming awareness-only items
+- Owner routing preserves one primary lane per debt item and adds priority flags such as `initial_review_required`, `gate_attention`, and `escalation_watch`
+- Revalidate and schedule entries now publish an execution-safe command template plus a shell example so operators can fill in timestamps without editing generated files by hand
+- Revalidate command template: `python3 scripts/omo_debt.py revalidate --omo-dir .omo --id <ID> --reviewed-at <RUN_AT>`
+- Revalidate shell example: `python3 scripts/omo_debt.py revalidate --omo-dir .omo --id <ID> --reviewed-at $(date -u +%Y-%m-%dT%H:%M:%SZ)`
+- Gate-level dispatched revalidate items require approval; approval is required only for gate-level dispatched revalidate items, not every review-queue or schedule action
+- Approvals are recorded at `.omo/debt/approvals/<ITEM_ID>/current.yaml` and are created with `python3 scripts/omo_debt.py approve --omo-dir .omo --id <ITEM_ID> --approved-by <OWNER> --scope execute_revalidate --approved-at <APPROVED_AT>`
+- The approval seam binds the approval to the dispatch run binding for the surfaced packet and to the `execute_revalidate` scope so operators cannot replay an approval against a different handoff
+- Execute only from the dispatched packet that produced the approval: a stale approval mismatch between the approval record and the current dispatch run must fail closed and require a fresh dispatch-bound approval before execution
+- Dispatched `revalidate` commands now carry `--dispatch-run-ref .omo/debt/dispatch/runs/<timestamp>.yaml`; use the frozen dispatch command rather than reconstructing it by hand
+- If a newer dispatch run supersedes the surfaced packet, stale dispatched commands fail closed until the operator reruns from the latest dispatch packet
+- Successful dispatched execution writes immutable evidence under `.omo/debt/dispatch/executions/<RUN_STAMP>/<ITEM_ID>.yaml`
+- Schedule command template: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at <NEXT_REVIEW_AT>`
+- Schedule shell example: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at 2026-06-17T00:00:00Z`
+- Review packets must expose sections for `Due Now`, `Escalation Candidates`, `Upcoming Window`, and `Unscheduled Debts`
+
 ---
 
 ## 七、常见场景速查
