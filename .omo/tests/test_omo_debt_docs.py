@@ -76,6 +76,19 @@ def test_omo_agent_documents_debt_refresh_flow() -> None:
     assert "shared owners" in content.lower()
     assert "added owners" in content.lower()
     assert "removed owners" in content.lower()
+    assert "python3 scripts/omo_debt.py report-trend --omo-dir .omo" in content
+    assert ".omo/debt/reporting/trend/current.yaml" in content
+    assert ".omo/debt/reporting/trend/current.md" in content
+    assert "trend_status" in content
+    assert "insufficient_history" in content
+    assert "trend_available" in content
+    assert "oldest-to-newest" in content.lower()
+    assert "total_items" in content
+    assert "executed_item_count" in content
+    assert "approval_coverage_rate" in content
+    assert "execution_completion_rate" in content
+    assert "owner trends" in content.lower()
+    assert "slope math" in content.lower()
     assert "refresh -> dispatch -> campaign -> report -> sync -> verify" in content.lower()
     assert "drift" in content.lower()
     assert "silent success" in content.lower()

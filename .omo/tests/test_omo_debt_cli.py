@@ -1270,3 +1270,208 @@ def test_debt_report_diff_writes_owner_diff_from_rederived_run_facts(tmp_path: P
         {"owner": "platform-governance"},
     ]
     assert packet["owners"]["removed"] == [{"owner": "retired-governance"}]
+
+
+def test_debt_report_trend_requires_history_packet(tmp_path: Path) -> None:
+    debt_dir = tmp_path / ".omo" / "debt"
+    debt_dir.mkdir(parents=True, exist_ok=True)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-trend",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    assert result.returncode != 0
+    assert "reporting/history/current.yaml" in result.stderr
+
+
+def test_debt_report_trend_writes_insufficient_history_packet_for_single_history_run(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
+    shutil.copytree(source, tmp_path / ".omo" / "debt")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-trend",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    packet = yaml.safe_load((tmp_path / ".omo" / "debt" / "reporting" / "trend" / "current.yaml").read_text(encoding="utf-8"))
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "generated debt reporting trend packet"
+    assert packet["trend_status"] == "insufficient_history"
+    assert packet["window_run_count"] == 1
+    assert packet["oldest_run_stamp"] == "2026-06-10T00-00-00Z"
+    assert packet["latest_run_stamp"] == "2026-06-10T00-00-00Z"
+    assert [entry["run_stamp"] for entry in packet["runs"]] == ["2026-06-10T00-00-00Z"]
+    assert packet["intervals"] == []
+
+
+def test_debt_report_trend_reads_history_summary_metadata_not_raw_facts(tmp_path: Path) -> None:
+    debt_dir = tmp_path / ".omo" / "debt"
+    debt_dir.mkdir(parents=True, exist_ok=True)
+    history_path = debt_dir / "reporting" / "history" / "current.yaml"
+    history_path.parent.mkdir(parents=True, exist_ok=True)
+    history_path.write_text(
+        yaml.safe_dump(
+            {
+                "generated_at": "2026-06-12T00:00:00Z",
+                "latest_run_stamp": "2026-06-10T00-00-00Z",
+                "prior_run_stamp": "2026-06-01T00-00-00Z",
+                "run_count": 3,
+                "runs": [
+                    {
+                        "run_stamp": "2026-06-10T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-06-10T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-06-10T00:00:00Z",
+                        "total_items": 9,
+                        "executed_item_count": 0,
+                        "approval_coverage_rate": 0.0,
+                        "execution_completion_rate": 0.0,
+                    },
+                    {
+                        "run_stamp": "2026-06-01T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-01T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-06-01T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-06-01T00:00:00Z",
+                        "total_items": 9,
+                        "executed_item_count": 1,
+                        "approval_coverage_rate": 1.0,
+                        "execution_completion_rate": 1 / 9,
+                    },
+                    {
+                        "run_stamp": "2026-05-20T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-05-20T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-05-20T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-05-20T00:00:00Z",
+                        "total_items": 10,
+                        "executed_item_count": 0,
+                        "approval_coverage_rate": 0.0,
+                        "execution_completion_rate": 0.0,
+                    },
+                ],
+            },
+            sort_keys=False,
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-trend",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    packet = yaml.safe_load((debt_dir / "reporting" / "trend" / "current.yaml").read_text(encoding="utf-8"))
+
+    assert result.returncode == 0, result.stderr
+    assert [entry["run_stamp"] for entry in packet["runs"]] == [
+        "2026-05-20T00-00-00Z",
+        "2026-06-01T00-00-00Z",
+        "2026-06-10T00-00-00Z",
+    ]
+    assert packet["intervals"] == [
+        {
+            "from_run_stamp": "2026-05-20T00-00-00Z",
+            "to_run_stamp": "2026-06-01T00-00-00Z",
+            "total_items_delta": -1,
+            "executed_item_count_delta": 1,
+            "approval_coverage_rate_delta": 1.0,
+            "execution_completion_rate_delta": 1 / 9,
+        },
+        {
+            "from_run_stamp": "2026-06-01T00-00-00Z",
+            "to_run_stamp": "2026-06-10T00-00-00Z",
+            "total_items_delta": 0,
+            "executed_item_count_delta": -1,
+            "approval_coverage_rate_delta": -1.0,
+            "execution_completion_rate_delta": -(1 / 9),
+        },
+    ]
+
+
+def test_debt_report_trend_fails_closed_on_missing_history_reporting_metadata(tmp_path: Path) -> None:
+    debt_dir = tmp_path / ".omo" / "debt"
+    debt_dir.mkdir(parents=True, exist_ok=True)
+    history_path = debt_dir / "reporting" / "history" / "current.yaml"
+    history_path.parent.mkdir(parents=True, exist_ok=True)
+    history_path.write_text(
+        yaml.safe_dump(
+            {
+                "generated_at": "2026-06-12T00:00:00Z",
+                "latest_run_stamp": "2026-06-10T00-00-00Z",
+                "prior_run_stamp": "2026-06-01T00-00-00Z",
+                "run_count": 2,
+                "runs": [
+                    {
+                        "run_stamp": "2026-06-10T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-06-10T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-06-10T00:00:00Z",
+                        "total_items": 9,
+                        "executed_item_count": 0,
+                        "approval_coverage_rate": 0.0,
+                        "execution_completion_rate": 0.0,
+                    },
+                    {
+                        "run_stamp": "2026-06-01T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-01T00-00-00Z.yaml",
+                        "reporting_ref": None,
+                        "reporting_exists": False,
+                        "report_generated_at": None,
+                        "total_items": None,
+                        "executed_item_count": None,
+                        "approval_coverage_rate": None,
+                        "execution_completion_rate": None,
+                    },
+                ],
+            },
+            sort_keys=False,
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-trend",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    assert result.returncode != 0
+    assert "missing reporting trend metadata for run: 2026-06-01T00-00-00Z" in result.stderr

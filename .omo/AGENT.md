@@ -278,7 +278,13 @@ Interpretation rules:
 - If only one run exists, `report-diff` writes a valid `no_prior_run` packet instead of failing
 - When a prior run exists, `summary_diff` stays compact and `owners` expands into `owners.compared`, `owners.added`, and `owners.removed`
 - `owners.compared` covers shared owners only; added owners and removed owners are surfaced explicitly instead of being silently dropped
-- Burndown and wider trend analytics remain deferred
+- Generate the multi-run trend surface with `python3 scripts/omo_debt.py report-trend --omo-dir .omo`
+- Reporting trend lives at `.omo/debt/reporting/trend/current.yaml` plus `.omo/debt/reporting/trend/current.md`
+- `report-trend` reads `reporting/history/current.yaml` as the canonical input surface, orders runs oldest-to-newest, and does not re-derive historical runs from raw dispatch facts
+- `trend_status` is explicit: `insufficient_history` for fewer than two runs, `trend_available` when at least two runs exist
+- Version 1 trend metrics stay fixed to `total_items`, `executed_item_count`, `approval_coverage_rate`, and `execution_completion_rate`
+- `report-trend` fails closed if any run in the selected history window has missing reporting metadata instead of silently skipping incomplete runs
+- Owner trends, burndown projections, and slope math remain deferred
 - Schedule command template: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at <NEXT_REVIEW_AT>`
 - Schedule shell example: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at 2026-06-17T00:00:00Z`
 - Review packets must expose sections for `Due Now`, `Escalation Candidates`, `Upcoming Window`, and `Unscheduled Debts`
