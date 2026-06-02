@@ -27,7 +27,7 @@
 >
 > **Promotion readiness**：如需查看当前 planned queue 里哪些 packet 可以晋升、哪些仍被 gate 挡住，先运行 `python3 scripts/omo_worker.py task promotion-readiness --omo-dir .omo`，再以 `.omo/workers/promotion/readiness.yaml` 作为 canonical read surface。
 >
-> **Promotion approval**：`future-active-l2l3-pending-approval-*.md` 这类共享 backlog-presence note 只说明未来 backlog presence，does not authorize promotion；对 `human_approval_required: true` 的 planned packet，`approval_ref` 必须指向 task-specific promotion approval YAML。需要发起请求时，先运行 `python3 scripts/omo_worker.py task promotion-request-approval <TASK_ID> --requested-by <ACTOR> --now <ISO8601> --omo-dir .omo`；只要 approval record 仍是 `requested`，readiness 继续保持 `approval_invalid`。
+> **Promotion approval**：`future-active-l2l3-pending-approval-*.md` 这类共享 backlog-presence note 只说明未来 backlog presence，does not authorize promotion；对 `human_approval_required: true` 的 planned packet，`approval_ref` 必须指向 task-specific promotion approval YAML。需要发起请求时，先运行 `python3 scripts/omo_worker.py task promotion-request-approval <TASK_ID> --requested-by <ACTOR> --now <ISO8601> --omo-dir .omo`；需要查看 closure lifecycle 时，运行 `python3 scripts/omo_worker.py task promotion-approval-status --omo-dir .omo [--task-id <TASK_ID>] [--now <ISO8601>]`；真正 mutation 继续走 `python3 scripts/omo_governance.py approve <PROPOSAL_ID> --approver <ACTOR> --now <ISO8601>` + `python3 scripts/omo_governance.py apply <PROPOSAL_ID> --now <ISO8601>`；只要 approval record 仍是 `requested`，readiness 继续保持 `approval_invalid`。
 
 ---
 

@@ -227,6 +227,17 @@ def test_worker_docs_describe_promotion_request_workflow():
     assert "promotion-request-approval" in tasks_text
 
 
+def test_worker_docs_describe_promotion_approval_closure_surface():
+    workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
+
+    assert "promotion-approval-status" in workers_text
+    assert "promotion-approval-status" in agent_text
+    assert "promotion-approval-status" in tasks_text
+    assert "omo_governance.py approve" in workers_text
+
+
 def test_standards_registry_tracks_active_and_legacy_merged_docs():
     standards_readme = (OMO / "standards" / "README.md").read_text(encoding="utf-8")
 

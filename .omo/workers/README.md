@@ -145,3 +145,10 @@ Human-approved planned packets need a task-specific promotion approval record:
 3. request a task-specific record with `python3 scripts/omo_worker.py task promotion-request-approval <TASK_ID> --requested-by <ACTOR> --now <ISO8601> --omo-dir .omo`
 4. the command writes `.omo/workers/runs/<TASK_ID>-promotion-approval-<STAMP>.yaml` and `.omo/_truth/task-center/proposals/<APPROVAL_ID>-proposal.yaml`
 5. while that record stays `approval_status: requested`, readiness continues to report `approval_invalid`
+
+Canonical promotion approval closure surface:
+
+1. `python3 scripts/omo_worker.py task promotion-approval-status --omo-dir .omo [--task-id <TASK_ID>] [--now <ISO8601>]`
+2. operators then run `python3 scripts/omo_governance.py approve <PROPOSAL_ID> --approver <ACTOR> --now <ISO8601>`
+3. then run `python3 scripts/omo_governance.py apply <PROPOSAL_ID> --now <ISO8601>`
+4. after apply, re-run `promotion-readiness` to confirm the approval blocker is gone

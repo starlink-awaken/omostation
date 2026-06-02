@@ -9,6 +9,7 @@ from pathlib import Path
 import yaml
 import pytest
 
+from scripts.omo_governance import approve_truth_mutation, apply_truth_mutation
 from scripts.omo_handoff_index import write_handoff_index
 from scripts.omo_metrics import write_worker_utilization_summary
 from scripts.omo_io import write_text_atomic, write_yaml_atomic
@@ -1899,6 +1900,231 @@ def test_task_promotion_request_approval_rejects_duplicate_task_specific_request
 
     with pytest.raises(ValueError, match="task already points to a task-specific promotion approval"):
         omo_worker_main()
+
+
+def test_task_promotion_approval_status_rejects_task_without_task_specific_request(tmp_path: Path, monkeypatch):
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-READY.yaml",
+        {
+            "id": "P17-W1-READY",
+            "phase": 17,
+            "milestone": "M17.1",
+            "priority": "P1",
+            "title": "Ready packet",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["phase16_completed"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "human_approval_required": False,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "promotion-approval-status", "--task-id", "P17-W1-READY", "--omo-dir", ".omo"],
+    )
+
+    with pytest.raises(ValueError, match="task does not point to a task-specific promotion approval"):
+        omo_worker_main()
+
+
+def test_task_promotion_approval_status_writes_current_surfaces(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-NEEDS-APPROVAL.yaml",
+        {
+            "id": "P17-W1-NEEDS-APPROVAL",
+            "phase": 17,
+            "milestone": "M17.1",
+            "priority": "P1",
+            "title": "Approval-gated packet",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": ".omo/workers/runs/P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z.yaml",
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["phase16_completed"],
+            "risk_level": "L2",
+            "allowed_operation_level": "L2",
+            "human_approval_required": True,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "runs" / "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z.yaml",
+        {
+            "version": 1,
+            "approval_id": "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z",
+            "task_id": "P17-W1-NEEDS-APPROVAL",
+            "approval_status": "requested",
+            "requested_operation_level": "L2",
+            "approval_scope": "task.promote_apply",
+            "requested_at": "2026-06-03T00:00:00Z",
+            "approved_at": None,
+            "expires_at": None,
+            "approver": None,
+            "refs": {
+                "task_ref": ".omo/tasks/planned/P17-W1-NEEDS-APPROVAL.yaml",
+                "readiness_ref": ".omo/workers/promotion/readiness.yaml",
+            },
+            "evidence": {"request_evidence": [], "approval_evidence": []},
+        },
+    )
+    _write_yaml(
+        tmp_path
+        / ".omo"
+        / "_truth"
+        / "task-center"
+        / "proposals"
+        / "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z-proposal.yaml",
+        {
+            "id": "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z-proposal",
+            "status": "proposed",
+            "target": {
+                "ref": ".omo/workers/runs/P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z.yaml"
+            },
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "promotion-approval-status", "--omo-dir", ".omo", "--now", "2026-06-03T00:00:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "current.yaml")
+
+    assert "approval_task_count=1" in output
+    assert packet["requested_count"] == 1
+    assert packet["tasks"][0]["proposal_status"] == "proposed"
+    assert (tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "current.md").exists()
+
+
+def test_governance_apply_clears_promotion_approval_invalid_blocker(tmp_path: Path, monkeypatch):
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-NEEDS-APPROVAL.yaml",
+        {
+            "id": "P17-W1-NEEDS-APPROVAL",
+            "phase": 17,
+            "milestone": "M17.1",
+            "priority": "P1",
+            "title": "Approval-gated packet",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": ".omo/workers/runs/P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z.yaml",
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["phase16_completed"],
+            "risk_level": "L2",
+            "allowed_operation_level": "L2",
+            "human_approval_required": True,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "runs" / "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z.yaml",
+        {
+            "version": 1,
+            "approval_id": "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z",
+            "task_id": "P17-W1-NEEDS-APPROVAL",
+            "approval_status": "requested",
+            "requested_operation_level": "L2",
+            "approval_scope": "task.promote_apply",
+            "requested_at": "2026-06-03T00:00:00Z",
+            "approved_at": None,
+            "expires_at": None,
+            "approver": None,
+            "refs": {
+                "task_ref": ".omo/tasks/planned/P17-W1-NEEDS-APPROVAL.yaml",
+                "readiness_ref": ".omo/workers/promotion/readiness.yaml",
+            },
+            "evidence": {"request_evidence": [], "approval_evidence": []},
+        },
+    )
+    _write_yaml(
+        tmp_path
+        / ".omo"
+        / "_truth"
+        / "task-center"
+        / "proposals"
+        / "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z-proposal.yaml",
+        {
+            "id": "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z-proposal",
+            "title": "Grant promotion approval for P17-W1-NEEDS-APPROVAL",
+            "operation_level": "L2",
+            "requested_by": "copilot-cli",
+            "target": {
+                "ref": ".omo/workers/runs/P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z.yaml"
+            },
+            "changes": {"set": {"approval_status": "granted"}},
+            "change_summary": "Grant promotion approval",
+            "impact": "Releases a planned task into the promotion approval chain.",
+            "verification_plan": [
+                "python3 scripts/omo_worker.py task promote-eval P17-W1-NEEDS-APPROVAL --omo-dir .omo"
+            ],
+            "rollback_plan": ["restore requested state"],
+            "secret_refs": [],
+            "trace_id": "trace-demo",
+            "status": "proposed",
+            "requested_at": "2026-06-03T00:00:00Z",
+            "approved_at": None,
+            "applied_at": None,
+            "verified_at": None,
+        },
+    )
+
+    approve_truth_mutation(
+        tmp_path,
+        "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z-proposal",
+        approver="copilot-cli",
+        now="2026-06-03T00:10:00Z",
+    )
+    apply_truth_mutation(
+        tmp_path,
+        "P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z-proposal",
+        now="2026-06-03T00:15:00Z",
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "promotion-readiness", "--omo-dir", ".omo", "--now", "2026-06-03T00:15:00Z"],
+    )
+    assert omo_worker_main() == 0
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "readiness.yaml")
+
+    assert packet["tasks"][0]["blockers"] == []
 
 
 def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Path):
