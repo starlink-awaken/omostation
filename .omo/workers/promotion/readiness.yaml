@@ -1,0 +1,551 @@
+generated_at: '2026-06-03T00:00:00Z'
+current_phase: 16
+target_phase: 17
+ready_count: 6
+blocked_count: 23
+tasks:
+- task_id: D2-CI-E2E-TEST-ENV
+  task_ref: .omo/tasks/planned/D2-CI-E2E-TEST-ENV.yaml
+  phase: 17
+  status: pending
+  risk_level: L1
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: null
+  eligible: true
+  blockers: []
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: true
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: D3-EU-PRICING-TEST
+  task_ref: .omo/tasks/planned/D3-EU-PRICING-TEST.yaml
+  phase: 17
+  status: pending
+  risk_level: L1
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: null
+  eligible: true
+  blockers: []
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: true
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P17-W1-ARCHITECTURE-FOUNDATION
+  task_ref: .omo/tasks/planned/P17-W1-ARCHITECTURE-FOUNDATION.yaml
+  phase: 17
+  status: pending
+  risk_level: L1
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: null
+  eligible: true
+  blockers: []
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: true
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P17-W2-SHAREDBRAIN-PROTOCOLS-V1
+  task_ref: .omo/tasks/planned/P17-W2-SHAREDBRAIN-PROTOCOLS-V1.yaml
+  phase: 17
+  status: pending
+  risk_level: L1
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: null
+  eligible: true
+  blockers: []
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: true
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P17-W3-METAOS-GAP-ANALYSIS
+  task_ref: .omo/tasks/planned/P17-W3-METAOS-GAP-ANALYSIS.yaml
+  phase: 17
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: true
+  blockers: []
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: true
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P17-W4-AGENTMESH-AUDIT
+  task_ref: .omo/tasks/planned/P17-W4-AGENTMESH-AUDIT.yaml
+  phase: 17
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: true
+  blockers: []
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: true
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P18-W1-NEURAL-CENTER
+  task_ref: .omo/tasks/planned/P18-W1-NEURAL-CENTER.yaml
+  phase: 18
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P18-W2-CIRCUIT-ENGINE
+  task_ref: .omo/tasks/planned/P18-W2-CIRCUIT-ENGINE.yaml
+  phase: 18
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P18-W3-NEURON-POOL
+  task_ref: .omo/tasks/planned/P18-W3-NEURON-POOL.yaml
+  phase: 18
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P18-W4-CLEANUP-DWINDOW-REFS
+  task_ref: .omo/tasks/planned/P18-W4-CLEANUP-DWINDOW-REFS.yaml
+  phase: 18
+  status: pending
+  risk_level: L1
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: null
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P19-W1-AGENT-RUNTIME-ENHANCE
+  task_ref: .omo/tasks/planned/P19-W1-AGENT-RUNTIME-ENHANCE.yaml
+  phase: 19
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P19-W2-AGENT-HUB-CREATE
+  task_ref: .omo/tasks/planned/P19-W2-AGENT-HUB-CREATE.yaml
+  phase: 19
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P19-W3-ARCHIVE-TS
+  task_ref: .omo/tasks/planned/P19-W3-ARCHIVE-TS.yaml
+  phase: 19
+  status: pending
+  risk_level: L1
+  allowed_operation_level: L1
+  human_approval_required: true
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P20-W1-ECONOMY-EXTRACTION
+  task_ref: .omo/tasks/planned/P20-W1-ECONOMY-EXTRACTION.yaml
+  phase: 20
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P20-W2-KI-KOS-MERGE
+  task_ref: .omo/tasks/planned/P20-W2-KI-KOS-MERGE.yaml
+  phase: 20
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P20-W3-EXTENSION-FORGE
+  task_ref: .omo/tasks/planned/P20-W3-EXTENSION-FORGE.yaml
+  phase: 20
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P20-W4-HARNESS-DISPERSAL
+  task_ref: .omo/tasks/planned/P20-W4-HARNESS-DISPERSAL.yaml
+  phase: 20
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P21-W1-IMMUNITY-METAOS
+  task_ref: .omo/tasks/planned/P21-W1-IMMUNITY-METAOS.yaml
+  phase: 21
+  status: pending
+  risk_level: L3
+  allowed_operation_level: L2
+  human_approval_required: true
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P21-W2-GENESIS-TRIAGE
+  task_ref: .omo/tasks/planned/P21-W2-GENESIS-TRIAGE.yaml
+  phase: 21
+  status: pending
+  risk_level: L3
+  allowed_operation_level: L2
+  human_approval_required: true
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P21-W3-OBSERVABILITY-CREATE
+  task_ref: .omo/tasks/planned/P21-W3-OBSERVABILITY-CREATE.yaml
+  phase: 21
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P21-W4-GC-ENGINE-CREATE
+  task_ref: .omo/tasks/planned/P21-W4-GC-ENGINE-CREATE.yaml
+  phase: 21
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P22-W1-PONTUS-DSL-SCHEDULER
+  task_ref: .omo/tasks/planned/P22-W1-PONTUS-DSL-SCHEDULER.yaml
+  phase: 22
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P22-W2-PONTUS-QUALITY
+  task_ref: .omo/tasks/planned/P22-W2-PONTUS-QUALITY.yaml
+  phase: 22
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P23-W1-HERMES-SCAFFOLD
+  task_ref: .omo/tasks/planned/P23-W1-HERMES-SCAFFOLD.yaml
+  phase: 23
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P23-W2-HERMES-DASHBOARD
+  task_ref: .omo/tasks/planned/P23-W2-HERMES-DASHBOARD.yaml
+  phase: 23
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P24-W1-BASEMEMBRANE-ZERO
+  task_ref: .omo/tasks/planned/P24-W1-BASEMEMBRANE-ZERO.yaml
+  phase: 24
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P24-W2-NUCLEUS-REPLACE
+  task_ref: .omo/tasks/planned/P24-W2-NUCLEUS-REPLACE.yaml
+  phase: 24
+  status: pending
+  risk_level: L3
+  allowed_operation_level: L2
+  human_approval_required: true
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P25-W1-E2E-INTEGRATION
+  task_ref: .omo/tasks/planned/P25-W1-E2E-INTEGRATION.yaml
+  phase: 25
+  status: pending
+  risk_level: L2
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
+- task_id: P25-W2-DOCS-DEBT-CLOSURE
+  task_ref: .omo/tasks/planned/P25-W2-DOCS-DEBT-CLOSURE.yaml
+  phase: 25
+  status: pending
+  risk_level: L1
+  allowed_operation_level: L1
+  human_approval_required: false
+  approval_ref: null
+  eligible: false
+  blockers:
+  - phase_mismatch
+  checks:
+    queue_membership_ok: true
+    status_ok: true
+    phase_ok: false
+    approval_ready: true
+    target_path_clear: true
+    active_schema_ready: true
+  errors: []
