@@ -190,5 +190,9 @@ When the current roadmap item is already `in_progress`, `governance-overlay-run-
 Within `continue_active` mode, the canonical overlay status may now recommend:
 
 1. `dispatch:<TASK_ID>` when an active task is still `pending` and safe preclaim/dispatch should happen next
-2. `verify:<TASK_ID>` when an active task has reached `review` and the coordinator should verify/close it next
-3. `monitor:<ROADMAP_ITEM_ID>` while active work is still in flight
+2. `contract:<TASK_ID>` when an active task already has a dispatch packet or active lifecycle presence, but still lacks explicit task `deliverables` / launch-ready write scope
+3. `launch:<TASK_ID>` when an active task already has a dispatch packet and the task-declared write scope is explicit enough for autonomous worker start
+4. `verify:<TASK_ID>` when an active task has reached `review` and the coordinator should verify/close it next
+5. `monitor:<ROADMAP_ITEM_ID>` while active work is still in flight
+
+Autonomous launch requires explicit task deliverables. If `deliverables` is empty or derives an empty write scope, the coordinator may record dispatch/contract-gap state, but it must fail closed instead of auto-launching the worker.

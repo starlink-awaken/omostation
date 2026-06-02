@@ -131,7 +131,11 @@ planned -> active promotion 补充约定：
 - governance overlay 是 control-plane 的未来 roadmap 治理层；它引用现有 task/debt truth，不创建第二套 task SSOT。
 - `governance-overlay-run-next` 会从 governance overlay shell 里拿 top eligible roadmap item，并只对 `.omo/tasks/planned/*.yaml` target refs 自动触发 `promotion-request-approval` 或 `promote-apply`，不会绕过现有 promotion gate。
 - 一旦某个 roadmap item 已经变成 `in_progress`，`governance-overlay-run-next` 会优先继续这条 current active roadmap item，而不是直接跳到新的 pending candidate。
-- active roadmap item 的 canonical next action 现在可能是 `dispatch:<TASK_ID>`、`verify:<TASK_ID>`、`monitor:<ROADMAP_ITEM_ID>`；其中 `dispatch:<TASK_ID>` 表示 coordinator safe preclaim/dispatch，`verify:<TASK_ID>` 表示 review-ready closeout。
+- active roadmap item 的 canonical next action 现在可能是 `dispatch:<TASK_ID>`、`contract:<TASK_ID>`、`launch:<TASK_ID>`、`verify:<TASK_ID>`、`monitor:<ROADMAP_ITEM_ID>`。
+- `dispatch:<TASK_ID>` 表示 coordinator safe preclaim/dispatch。
+- `contract:<TASK_ID>` 表示任务已进入 active lifecycle，但 task packet 尚未声明足够明确的 `deliverables` / write scope，因此必须先收口合同，不能直接自动执行。
+- `launch:<TASK_ID>` 表示 dispatch packet 已存在且 task-declared write scope 完整，coordinator 可以安全启动外部 worker。
+- autonomous launch requires explicit task deliverables；空 `deliverables` 只能进入 contract-gap / fail-closed 路径，不能自动放行代码执行。
 - future-phase pending packet 只有带 promotion envelope ref 时，才允许出现在 `tasks/active/`。
 - 对 `human_approval_required: true` 的 planned packet，`approval_ref` 必须指向 task-specific promotion approval YAML。
 - 像 `future-active-l2l3-pending-approval-*.md` 这样的 shared backlog-presence note 不授权 promotion；非 YAML、错 scope、错 task、或仍处于 `approval_status: requested` 的 ref 一律按 `approval_invalid` fail closed。

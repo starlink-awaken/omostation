@@ -301,6 +301,17 @@ def test_worker_docs_describe_governance_overlay_dispatch_and_verify_actions():
     assert "dispatch:<TASK_ID>" in tasks_text
 
 
+def test_worker_docs_describe_governance_overlay_launch_contract_actions():
+    workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
+
+    assert "contract:<TASK_ID>" in workers_text
+    assert "launch:<TASK_ID>" in workers_text
+    assert "autonomous launch requires explicit task deliverables" in agent_text
+    assert "contract:<TASK_ID>" in tasks_text
+
+
 def test_standards_registry_tracks_active_and_legacy_merged_docs():
     standards_readme = (OMO / "standards" / "README.md").read_text(encoding="utf-8")
 

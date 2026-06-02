@@ -1,5 +1,5 @@
 overlay_id: GOV-OVERLAY-2026-06
-generated_at: '2026-06-03T07:03:00Z'
+generated_at: '2026-06-03T07:36:00Z'
 status: active
 autopilot_mode: full_omo_autopilot
 intake_scope: future_planned_debt
@@ -17,12 +17,12 @@ active_roadmap_item:
 active_target_states:
 - target_ref: .omo/tasks/planned/D2-CI-E2E-TEST-ENV.yaml
   task_id: D2-CI-E2E-TEST-ENV
-  state: active_in_progress
-  detail: task currently exists in tasks/active/ with status in_progress
+  state: active_dispatch_blocked
+  detail: dispatch exists but task has no launch-ready write scope
 - target_ref: .omo/tasks/planned/D3-EU-PRICING-TEST.yaml
   task_id: D3-EU-PRICING-TEST
-  state: active_in_progress
-  detail: task currently exists in tasks/active/ with status in_progress
+  state: active_dispatch_blocked
+  detail: dispatch exists but task has no launch-ready write scope
 - target_ref: .omo/tasks/planned/P25-W1-E2E-INTEGRATION.yaml
   task_id: P25-W1-E2E-INTEGRATION
   state: planned_pending
@@ -43,7 +43,7 @@ blocked_items:
   reason: unmet_dependencies
   depends_on:
   - GOV-M2-SHAREDBRAIN-DEBT
-next_action: monitor:GOV-M1-EXECUTION-HARDENING
+next_action: contract:D2-CI-E2E-TEST-ENV
 policy:
   autopilot_mode: full_omo_autopilot
   auto_select: true
