@@ -272,12 +272,13 @@ Interpretation rules:
 - Reporting history lives at `.omo/debt/reporting/history/current.yaml` plus `.omo/debt/reporting/history/current.md`
 - The history surface resolves the latest run and prior run (`latest_run_stamp` / `prior_run_stamp`) from dispatch-run identity and is the prerequisite for later diff work, including latest-vs-prior slices
 - `report-history` enumerates known dispatch runs, attaches per-run reporting artifacts when present, and keeps missing reporting artifacts visible instead of silently dropping those runs
-- Generate the latest-vs-prior summary diff with `python3 scripts/omo_debt.py report-diff --omo-dir .omo`
+- Generate the latest-vs-prior diff with `python3 scripts/omo_debt.py report-diff --omo-dir .omo`
 - Reporting diff lives at `.omo/debt/reporting/diff/current.yaml` plus `.omo/debt/reporting/diff/current.md`
 - `report-diff` uses `reporting/history/current.yaml` only to select the latest/prior run pair, then re-derives both runs from dispatch, approval, and execution facts before comparing them
 - If only one run exists, `report-diff` writes a valid `no_prior_run` packet instead of failing
-- Version 1 diff remains summary-only diff coverage and keeps `owners: null`; owner-level deltas and burndown remain deferred
-- Cross-run diff and burndown still remain deferred in this slice
+- When a prior run exists, `summary_diff` stays compact and `owners` expands into `owners.compared`, `owners.added`, and `owners.removed`
+- `owners.compared` covers shared owners only; added owners and removed owners are surfaced explicitly instead of being silently dropped
+- Burndown and wider trend analytics remain deferred
 - Schedule command template: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at <NEXT_REVIEW_AT>`
 - Schedule shell example: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at 2026-06-17T00:00:00Z`
 - Review packets must expose sections for `Due Now`, `Escalation Candidates`, `Upcoming Window`, and `Unscheduled Debts`

@@ -70,8 +70,12 @@ def test_omo_agent_documents_debt_refresh_flow() -> None:
     assert ".omo/debt/reporting/diff/current.yaml" in content
     assert ".omo/debt/reporting/diff/current.md" in content
     assert "no_prior_run" in content
-    assert "owners: null" in content.lower()
-    assert "summary-only diff" in content.lower()
+    assert "owners.compared" in content
+    assert "owners.added" in content
+    assert "owners.removed" in content
+    assert "shared owners" in content.lower()
+    assert "added owners" in content.lower()
+    assert "removed owners" in content.lower()
     assert "refresh -> dispatch -> campaign -> report -> sync -> verify" in content.lower()
     assert "drift" in content.lower()
     assert "silent success" in content.lower()
