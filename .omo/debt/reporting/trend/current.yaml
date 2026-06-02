@@ -1,0 +1,14 @@
+generated_at: '2026-06-02T12:55:51Z'
+trend_status: insufficient_history
+window_run_count: 1
+oldest_run_stamp: 2026-06-10T00-00-00Z
+latest_run_stamp: 2026-06-10T00-00-00Z
+runs:
+- run_stamp: 2026-06-10T00-00-00Z
+  dispatch_run_ref: .omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml
+  reporting_ref: .omo/debt/reporting/runs/2026-06-10T00-00-00Z/current.yaml
+  total_items: 9
+  executed_item_count: 0
+  approval_coverage_rate: 0.0
+  execution_completion_rate: 0.0
+intervals: []
