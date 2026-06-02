@@ -233,7 +233,7 @@ tasks:
   risk_level: L1
   allowed_operation_level: L1
   human_approval_required: true
-  approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+  approval_ref: .omo/workers/runs/P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z.yaml
   eligible: false
   blockers:
   - phase_mismatch
