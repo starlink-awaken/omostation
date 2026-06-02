@@ -794,3 +794,118 @@ def test_debt_campaign_reflects_approval_and_execution_facts(tmp_path: Path) -> 
     assert entries["SB_UNTESTED_PKGS"]["execution_record_ref"] == (
         ".omo/debt/dispatch/executions/2026-06-10T00-00-00Z/SB_UNTESTED_PKGS.yaml"
     )
+
+
+def test_debt_report_requires_dispatch_packet_when_run_ref_missing(tmp_path: Path) -> None:
+    debt_dir = tmp_path / ".omo" / "debt"
+    debt_dir.mkdir(parents=True, exist_ok=True)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    assert result.returncode != 0
+    assert "dispatch/current.yaml" in result.stderr
+
+
+def test_debt_report_writes_latest_run_outputs(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
+    shutil.copytree(source, tmp_path / ".omo" / "debt")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    current_yaml = yaml.safe_load((tmp_path / ".omo" / "debt" / "reporting" / "current.yaml").read_text(encoding="utf-8"))
+    run_yaml = yaml.safe_load(
+        (tmp_path / ".omo" / "debt" / "reporting" / "runs" / "2026-06-10T00-00-00Z" / "current.yaml").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert current_yaml == run_yaml
+    assert current_yaml["summary"]["approval_coverage_rate"] == 0.0
+    assert current_yaml["summary"]["execution_completion_rate"] == 0.0
+
+
+def test_debt_report_reflects_approval_and_execution_facts(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
+    shutil.copytree(source, tmp_path / ".omo" / "debt")
+
+    approve = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "approve",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+            "--id",
+            "SB_DECOMPOSITION",
+            "--approved-by",
+            "omo-governance",
+            "--scope",
+            "execute_revalidate",
+            "--approved-at",
+            "2026-06-11T00:00:00Z",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    execute = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "revalidate",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+            "--id",
+            "SB_UNTESTED_PKGS",
+            "--reviewed-at",
+            "2026-06-11T12:00:00Z",
+            "--dispatch-run-ref",
+            ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    report = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    packet = yaml.safe_load((tmp_path / ".omo" / "debt" / "reporting" / "current.yaml").read_text(encoding="utf-8"))
+
+    assert approve.returncode == 0, approve.stderr
+    assert execute.returncode == 0, execute.stderr
+    assert report.returncode == 0, report.stderr
+    assert packet["summary"]["approval_coverage_rate"] == 1.0
+    assert packet["summary"]["execution_completion_rate"] == 1 / 9
