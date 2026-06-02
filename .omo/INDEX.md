@@ -34,7 +34,7 @@
 - **实时 active / blocked queue**: [tasks/active/](tasks/active/) · [tasks/blocked/](tasks/blocked/)
 - **future backlog / planned queue**: [tasks/planned/](tasks/planned/)
 - **当前完成基线**: [phase14-closeout.md](summaries/phase14-closeout.md)
-- **当前执行焦点**: Phase 17 governance gate packets are active; future backlog lives under `tasks/planned/`
+- **当前执行焦点**: Phase 17 governance gate packets are active; future backlog lives under `tasks/planned/`, and planned packets become active only through promotion
 - **架构基线**: [_knowledge/design/system-design-baseline.md](_knowledge/design/system-design-baseline.md)
 - **Phase 15 planning gate**: [phase15-autonomous-governance-preplanning.md](plans/phase15-autonomous-governance-preplanning.md)
 - **外部 OMO 方法系统 canonical home**: [_knowledge/reference/OMO-METHODOLOGY-CANON.md](_knowledge/reference/OMO-METHODOLOGY-CANON.md)

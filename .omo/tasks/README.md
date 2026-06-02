@@ -76,12 +76,15 @@ candidate ──→ pending ──→ in_progress ──→ review ──→ don
 1. 只从 `active/` 认领任务；不要从旧 `TASK_POOL.md` 或历史计划中直接开工。
 2. `tasks/planned/` 只存放 future backlog / not-yet-promoted packet surface，不是执行队列。
 3. `active/` 是 current executable queue；planned packet 只有在正式晋升后才进入 `active/`。
-4. 接任务前：检查同名任务是否已 `in_progress`，避免重复。
-5. 开始执行：由 **coordinator 预占 lease**，先更新 `status: in_progress`、`assigned_to`、`started_at`、`dispatch_id`、`run_ref`。
-6. 完成实现后：先进入 `review`，补充 `evidence`。
-7. 验收通过：更新 `status: done`、`completed_at`，移到 `done/`。
-8. 遇到阻塞：更新 `status: blocked`、`blocked_by`、`next_check_at`，移到 `blocked/`。
-9. 写入方式：只写自己的任务文件，不修改其他 Agent 的文件。
+4. coordinator 如需评估 planned packet 是否可晋升，先运行 `python3 scripts/omo_worker.py task promote-eval <TASK_ID> --omo-dir .omo`。
+5. 真正晋升时运行 `python3 scripts/omo_worker.py task promote-apply <TASK_ID> --promoted-by <ACTOR> --now <ISO8601> --omo-dir .omo`。
+6. 被晋升的 pending packet 必须把 promotion envelope ref 写入 `handoff_refs`；没有该 evidence 的 future-phase pending packet 仍视为非法 backlog 回流。
+7. 接任务前：检查同名任务是否已 `in_progress`，避免重复。
+8. 开始执行：由 **coordinator 预占 lease**，先更新 `status: in_progress`、`assigned_to`、`started_at`、`dispatch_id`、`run_ref`。
+9. 完成实现后：先进入 `review`，补充 `evidence`。
+10. 验收通过：更新 `status: done`、`completed_at`，移到 `done/`。
+11. 遇到阻塞：更新 `status: blocked`、`blocked_by`、`next_check_at`，移到 `blocked/`。
+12. 写入方式：只写自己的任务文件，不修改其他 Agent 的文件。
 
 ## 必须遵循的标准
 
@@ -111,6 +114,12 @@ python3 scripts/omo_worker.py task validate --all-planned
 - 如声明 `deliverables`，必须是明确可写的输出列表
 - L2/L3 或需要人工批准的任务必须具备 `approval_ref`
 - `in_progress` / `review` 状态下的 `dispatch_id / run_ref / review_ref / started_at` 等链路字段必须完整
+
+planned -> active promotion 补充约定：
+
+- `promote-eval` 只做 eligibility 检查，不移动任务。
+- `promote-apply` 会写 promotion envelope、把该 envelope ref 追加到 task 的 `handoff_refs`，然后再执行 queue move。
+- future-phase pending packet 只有带 promotion envelope ref 时，才允许出现在 `tasks/active/`。
 
 ### 外部 Agent CLI Worker 补充规则
 

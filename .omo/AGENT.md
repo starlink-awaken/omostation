@@ -21,7 +21,7 @@
 
 > **启动检查**：读完上面 6 步后，你应该知道：系统在哪一阶段、状态是否健康、还有哪些任务可做。
 >
-> **Queue contract**：采用 `strict-active-only` 规则；只有 `tasks/active/` 是当前可执行队列，`tasks/planned/` 只是 future backlog / not-yet-promoted packet surface。
+> **Queue contract**：采用 `strict-active-only` 规则；只有 `tasks/active/` 是当前可执行队列，`tasks/planned/` 只是 future backlog / not-yet-promoted packet surface。coordinator 如需让 planned packet 进入 active，必须先走 `task promote-eval` / `task promote-apply`，并留下 promotion envelope 作为 handoff evidence。
 
 ---
 

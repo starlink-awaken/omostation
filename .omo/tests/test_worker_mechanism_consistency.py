@@ -71,14 +71,17 @@ def test_all_active_tasks_pass_current_task_schema():
     assert not failures, failures
 
 
-def test_pending_future_phase_packets_live_in_planned_queue():
+def test_future_phase_pending_packets_in_active_require_promotion_handoff_ref():
     goals = _load_yaml(OMO / "goals" / "current.yaml")
     current_phase = goals["phase"]
     failures = []
 
     for task_file in _task_files("active"):
         task = _load_yaml(task_file)
-        if task.get("phase", 0) > current_phase and task.get("status") == "pending":
+        if task.get("phase", 0) <= current_phase or task.get("status") != "pending":
+            continue
+        has_promotion_ref = any("-promotion-" in ref for ref in task.get("handoff_refs", []))
+        if not has_promotion_ref:
             failures.append(task["id"])
 
     assert failures == [], failures
@@ -170,6 +173,18 @@ def test_task_docs_distinguish_active_and_planned_queues():
     assert "[tasks/planned/](tasks/planned/)" in index_text
     assert "planned/" in doc_arch_text
     assert "planned queue" in tests_text
+
+
+def test_task_docs_describe_planned_to_active_promotion_workflow():
+    tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    index_text = (OMO / "INDEX.md").read_text(encoding="utf-8")
+
+    assert "promote-eval" in tasks_text
+    assert "promote-apply" in tasks_text
+    assert "handoff_refs" in tasks_text
+    assert "promote-apply" in agent_text
+    assert "planned packets become active only through promotion" in index_text
 
 
 def test_standards_registry_tracks_active_and_legacy_merged_docs():
