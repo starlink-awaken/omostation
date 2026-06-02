@@ -152,3 +152,9 @@ Canonical promotion approval closure surface:
 2. operators then run `python3 scripts/omo_governance.py approve <PROPOSAL_ID> --approver <ACTOR> --now <ISO8601>`
 3. then run `python3 scripts/omo_governance.py apply <PROPOSAL_ID> --now <ISO8601>`
 4. after apply, re-run `promotion-readiness` to confirm the approval blocker is gone
+
+Canonical promotion approval history/index surface:
+
+1. `python3 scripts/omo_worker.py task promotion-approval-history --omo-dir .omo [--now <ISO8601>]`
+2. this writes `.omo/workers/promotion/approvals/history/current.yaml`
+3. and `.omo/workers/promotion/approvals/history/current.md`

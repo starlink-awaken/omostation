@@ -82,13 +82,14 @@ candidate ──→ pending ──→ in_progress ──→ review ──→ don
 7. 如需为 `human_approval_required: true` 的 planned packet 发起 task-specific promotion approval request，运行 `python3 scripts/omo_worker.py task promotion-request-approval <TASK_ID> --requested-by <ACTOR> --now <ISO8601> --omo-dir .omo`。
 8. 如需看 request / proposal / granted 的 closure lifecycle，运行 `python3 scripts/omo_worker.py task promotion-approval-status --omo-dir .omo [--task-id <TASK_ID>] [--now <ISO8601>]`。
 9. promotion approval 的 mutation 继续走 generic governance：先 `python3 scripts/omo_governance.py approve <PROPOSAL_ID> --approver <ACTOR> --now <ISO8601>`，再 `python3 scripts/omo_governance.py apply <PROPOSAL_ID> --now <ISO8601>`。
-10. 被晋升的 pending packet 必须把 promotion envelope ref 写入 `handoff_refs`；没有该 evidence 的 future-phase pending packet 仍视为非法 backlog 回流。
-11. 接任务前：检查同名任务是否已 `in_progress`，避免重复。
-12. 开始执行：由 **coordinator 预占 lease**，先更新 `status: in_progress`、`assigned_to`、`started_at`、`dispatch_id`、`run_ref`。
-13. 完成实现后：先进入 `review`，补充 `evidence`。
-14. 验收通过：更新 `status: done`、`completed_at`，移到 `done/`。
-15. 遇到阻塞：更新 `status: blocked`、`blocked_by`、`next_check_at`，移到 `blocked/`。
-16. 写入方式：只写自己的任务文件，不修改其他 Agent 的文件。
+10. 如需看所有 task-specific promotion approval artifacts 的 canonical history/index，运行 `python3 scripts/omo_worker.py task promotion-approval-history --omo-dir .omo [--now <ISO8601>]`。
+11. 被晋升的 pending packet 必须把 promotion envelope ref 写入 `handoff_refs`；没有该 evidence 的 future-phase pending packet 仍视为非法 backlog 回流。
+12. 接任务前：检查同名任务是否已 `in_progress`，避免重复。
+13. 开始执行：由 **coordinator 预占 lease**，先更新 `status: in_progress`、`assigned_to`、`started_at`、`dispatch_id`、`run_ref`。
+14. 完成实现后：先进入 `review`，补充 `evidence`。
+15. 验收通过：更新 `status: done`、`completed_at`，移到 `done/`。
+16. 遇到阻塞：更新 `status: blocked`、`blocked_by`、`next_check_at`，移到 `blocked/`。
+17. 写入方式：只写自己的任务文件，不修改其他 Agent 的文件。
 
 ## 必须遵循的标准
 
@@ -125,6 +126,7 @@ planned -> active promotion 补充约定：
 - `promote-apply` 会写 promotion envelope、把该 envelope ref 追加到 task 的 `handoff_refs`，然后再执行 queue move。
 - `promotion-request-approval` 会把 planned task 的 `approval_ref` 从 shared backlog note 切到 task-specific requested approval YAML，并同时写 governance proposal。
 - `promotion-approval-status` 是 promotion approval 的 canonical read-side lifecycle surface，用来查看 request / proposal / granted 当前走到哪一步。
+- `promotion-approval-history` 是 promotion approval artifacts 的 canonical history/index surface，用来查看所有 task-specific approval records，而不是只看当前 closure state。
 - future-phase pending packet 只有带 promotion envelope ref 时，才允许出现在 `tasks/active/`。
 - 对 `human_approval_required: true` 的 planned packet，`approval_ref` 必须指向 task-specific promotion approval YAML。
 - 像 `future-active-l2l3-pending-approval-*.md` 这样的 shared backlog-presence note 不授权 promotion；非 YAML、错 scope、错 task、或仍处于 `approval_status: requested` 的 ref 一律按 `approval_invalid` fail closed。

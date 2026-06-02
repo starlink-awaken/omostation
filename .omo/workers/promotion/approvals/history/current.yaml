@@ -1,0 +1,23 @@
+generated_at: '2026-06-03T00:15:00Z'
+latest_approval_id: P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z
+latest_approval_ref: .omo/workers/runs/P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z.yaml
+prior_approval_id: null
+prior_approval_ref: null
+approval_count: 1
+requested_count: 0
+approved_pending_apply_count: 0
+granted_count: 1
+approvals:
+- approval_id: P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z
+  approval_ref: .omo/workers/runs/P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z.yaml
+  task_id: P19-W3-ARCHIVE-TS
+  task_ref: .omo/tasks/planned/P19-W3-ARCHIVE-TS.yaml
+  requested_at: '2026-06-03T00:00:00Z'
+  approval_status: granted
+  proposal_id: P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z-proposal
+  proposal_ref: .omo/_truth/task-center/proposals/P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z-proposal.yaml
+  proposal_status: verified
+  approver: null
+  approved_at: null
+  applied_at: '2026-06-03T00:15:00Z'
+  readiness_ref: .omo/workers/promotion/readiness.yaml
