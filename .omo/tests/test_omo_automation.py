@@ -1058,6 +1058,106 @@ def test_validate_task_file_rejects_l2_task_without_approval_reference(tmp_path:
     assert "approval_ref is required for L2/L3 tasks" in errors
 
 
+def test_validate_task_file_allows_planned_packet_without_approval_ref(tmp_path: Path):
+    task_path = tmp_path / ".omo" / "tasks" / "planned" / "planned.yaml"
+    _write_yaml(
+        task_path,
+        {
+            "id": "TASK-PLANNED",
+            "title": "Planned task",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": [".omo/plans/example.md"],
+            "risk_level": "L3",
+            "allowed_operation_level": "L3",
+            "human_approval_required": True,
+            "entry_gate": ["approval required before activation"],
+            "evidence_required": ["planned packet reviewed"],
+            "test_plan": ["python3 -m pytest .omo/tests/test_omo_automation.py -q"],
+        },
+    )
+
+    assert validate_task_file(task_path) == []
+
+
+def test_validate_task_file_rejects_planned_packet_with_live_dispatch_chain(tmp_path: Path):
+    task_path = tmp_path / ".omo" / "tasks" / "planned" / "planned.yaml"
+    _write_yaml(
+        task_path,
+        {
+            "id": "TASK-PLANNED-LIVE",
+            "title": "Planned task with live fields",
+            "status": "in_progress",
+            "assigned_to": "mockworker",
+            "dispatch_id": "dispatch-123",
+            "run_ref": ".omo/workers/runs/dispatch-123.yaml",
+            "approval_ref": None,
+            "review_ref": ".omo/workers/runs/dispatch-123-review.md",
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": [".omo/plans/example.md"],
+            "risk_level": "L2",
+            "allowed_operation_level": "L2",
+            "human_approval_required": True,
+            "entry_gate": ["approval required before activation"],
+            "evidence_required": ["planned packet reviewed"],
+            "test_plan": ["python3 -m pytest .omo/tests/test_omo_automation.py -q"],
+            "started_at": "2026-06-02T00:00:00Z",
+        },
+    )
+
+    assert validate_task_file(task_path) == [
+        "planned tasks must use candidate or pending status",
+        "planned tasks must not set assigned_to",
+        "planned tasks must not set dispatch_id",
+        "planned tasks must not set run_ref",
+        "planned tasks must not set review_ref",
+        "planned tasks must not set started_at",
+    ]
+
+
+def test_worker_validate_command_reports_all_planned_errors(tmp_path: Path, monkeypatch, capsys):
+    task_path = tmp_path / ".omo" / "tasks" / "planned" / "planned.yaml"
+    _write_yaml(
+        task_path,
+        {
+            "id": "TASK-PLANNED-LIVE",
+            "title": "Planned task with live fields",
+            "status": "review",
+            "assigned_to": "mockworker",
+            "dispatch_id": "dispatch-123",
+            "run_ref": ".omo/workers/runs/dispatch-123.yaml",
+            "approval_ref": None,
+            "review_ref": ".omo/workers/runs/dispatch-123-review.md",
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": [".omo/plans/example.md"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "human_approval_required": False,
+            "entry_gate": [],
+            "evidence_required": ["planned packet reviewed"],
+            "test_plan": ["python3 -m pytest .omo/tests/test_omo_automation.py -q"],
+            "started_at": "2026-06-02T00:00:00Z",
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["omo", "task", "validate", "--all-planned"])
+
+    assert omo_worker_main() == 1
+    output = capsys.readouterr().out
+
+    assert str(task_path) in output
+    assert "planned tasks must use candidate or pending status" in output
+
+
 def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Path):
     root = tmp_path
     omo = root / ".omo"
