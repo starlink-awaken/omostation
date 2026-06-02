@@ -126,3 +126,14 @@ This writes:
 
 1. `.omo/workers/promotion/current.yaml`
 2. `.omo/workers/promotion/current.md`
+
+Generate the canonical promotion readiness surface:
+
+```bash
+python3 scripts/omo_worker.py task promotion-readiness --omo-dir .omo
+```
+
+This writes:
+
+1. `.omo/workers/promotion/readiness.yaml`
+2. `.omo/workers/promotion/readiness.md`

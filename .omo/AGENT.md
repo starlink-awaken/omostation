@@ -24,6 +24,8 @@
 > **Queue contract**：采用 `strict-active-only` 规则；只有 `tasks/active/` 是当前可执行队列，`tasks/planned/` 只是 future backlog / not-yet-promoted packet surface。coordinator 如需让 planned packet 进入 active，必须先走 `task promote-eval` / `task promote-apply`，并留下 promotion envelope 作为 handoff evidence。
 >
 > **Promotion history**：如需查看最近有哪些 planned packet 被正式晋升，不要直接 glob `workers/runs/*-promotion-*.yaml`；先运行 `python3 scripts/omo_worker.py task promotion-history --omo-dir .omo`，再以 `.omo/workers/promotion/current.yaml` 作为 canonical read surface。
+>
+> **Promotion readiness**：如需查看当前 planned queue 里哪些 packet 可以晋升、哪些仍被 gate 挡住，先运行 `python3 scripts/omo_worker.py task promotion-readiness --omo-dir .omo`，再以 `.omo/workers/promotion/readiness.yaml` 作为 canonical read surface。
 
 ---
 

@@ -1487,6 +1487,90 @@ def test_task_promotion_history_command_accepts_deterministic_now(tmp_path: Path
     assert packet["generated_at"] == "2026-06-03T00:00:00Z"
 
 
+def test_task_promotion_readiness_command_writes_readiness_surfaces(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-READY.yaml",
+        {
+            "id": "P17-W1-READY",
+            "phase": 17,
+            "milestone": "M17.1",
+            "priority": "P1",
+            "title": "Ready packet",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["phase16_completed"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "human_approval_required": False,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P18-W1-BLOCKED.yaml",
+        {
+            "id": "P18-W1-BLOCKED",
+            "phase": 18,
+            "milestone": "M18.1",
+            "priority": "P1",
+            "title": "Blocked packet",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["phase17_completed"],
+            "risk_level": "L2",
+            "allowed_operation_level": "L1",
+            "human_approval_required": False,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "omo",
+            "task",
+            "promotion-readiness",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T00:00:00Z",
+        ],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "readiness.yaml")
+
+    assert "ready_count=1" in output
+    assert packet["generated_at"] == "2026-06-03T00:00:00Z"
+    assert packet["current_phase"] == 16
+    assert packet["target_phase"] == 17
+    assert packet["ready_count"] == 1
+    assert packet["blocked_count"] == 1
+    assert [entry["task_id"] for entry in packet["tasks"]] == ["P17-W1-READY", "P18-W1-BLOCKED"]
+    assert (tmp_path / ".omo" / "workers" / "promotion" / "readiness.md").exists()
+
+
 def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Path):
     root = tmp_path
     omo = root / ".omo"

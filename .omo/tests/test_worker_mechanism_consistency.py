@@ -196,6 +196,17 @@ def test_worker_docs_describe_promotion_history_surface():
     assert "promotion/current.yaml" in agent_text
 
 
+def test_worker_docs_describe_promotion_readiness_surface():
+    workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
+
+    assert "promotion-readiness" in workers_text
+    assert ".omo/workers/promotion/readiness.yaml" in workers_text
+    assert "promotion/readiness.yaml" in agent_text
+    assert "promotion-readiness" in tasks_text
+
+
 def test_standards_registry_tracks_active_and_legacy_merged_docs():
     standards_readme = (OMO / "standards" / "README.md").read_text(encoding="utf-8")
 
