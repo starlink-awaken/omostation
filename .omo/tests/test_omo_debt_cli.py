@@ -42,7 +42,7 @@ def test_debt_register_creates_new_item(tmp_path: Path) -> None:
     (debt_dir / "dashboard").mkdir(parents=True, exist_ok=True)
     (debt_dir / "reviews").mkdir(parents=True, exist_ok=True)
     (debt_dir / "registry.yaml").write_text(
-        "version: 1\nitems_dir: .omo/debt/items\ndashboard_ref: .omo/debt/dashboard/current.yaml\nreview_pack_ref: .omo/debt/reviews/current.md\nreview_queue_ref: .omo/debt/review-queue/current.yaml\naction_packet_ref: .omo/debt/action-packet/current.yaml\nowner_routing_ref: .omo/debt/owner-routing/current.yaml\ndispatch_ref: .omo/debt/dispatch/current.yaml\nseed_items: []\n",
+        "version: 1\nitems_dir: .omo/debt/items\ndashboard_ref: .omo/debt/dashboard/current.yaml\nreview_pack_ref: .omo/debt/reviews/current.md\nreview_queue_ref: .omo/debt/review-queue/current.yaml\naction_packet_ref: .omo/debt/action-packet/current.yaml\nowner_routing_ref: .omo/debt/owner-routing/current.yaml\ndispatch_ref: .omo/debt/dispatch/current.yaml\ncampaign_ref: .omo/debt/campaign/current.yaml\nreporting_ref: .omo/debt/reporting/current.yaml\nseed_items: []\n",
         encoding="utf-8",
     )
 

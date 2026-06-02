@@ -1,0 +1,20 @@
+version: 1
+items_dir: .omo/debt/items
+dashboard_ref: .omo/debt/dashboard/current.yaml
+review_pack_ref: .omo/debt/reviews/current.md
+review_queue_ref: .omo/debt/review-queue/current.yaml
+action_packet_ref: .omo/debt/action-packet/current.yaml
+owner_routing_ref: .omo/debt/owner-routing/current.yaml
+dispatch_ref: .omo/debt/dispatch/current.yaml
+campaign_ref: .omo/debt/campaign/current.yaml
+reporting_ref: .omo/debt/reporting/current.yaml
+seed_items:
+  - .omo/debt/items/D2_CI_E2E.yaml
+  - .omo/debt/items/D3_EU_PRICING.yaml
+  - .omo/debt/items/SB_DECOMPOSITION.yaml
+  - .omo/debt/items/SB_UNTESTED_PKGS.yaml
+  - .omo/debt/items/SB_ORPHANED_TASKS.yaml
+  - .omo/debt/items/SB_ROOT_CLEANUP.yaml
+  - .omo/debt/items/SB_BRIDGE_FIX.yaml
+  - .omo/debt/items/SB_PROJECTS_YAML.yaml
+  - .omo/debt/items/SB_PHASE17_PLAN.yaml
