@@ -481,6 +481,7 @@ def _apply_task_promotion(root: Path, task_id: str, promoted_by: str, now: str, 
     task["handoff_refs"] = _append_unique(original_handoffs, [str(envelope_rel)])
     _write_yaml(planned_path, task)
 
+    active_path.parent.mkdir(parents=True, exist_ok=True)
     planned_path.replace(active_path)
     try:
         _sync_omo_state(root, omo_dir)
@@ -552,9 +553,9 @@ Expected: one `scripts` commit and one root commit, both limited to the apply sl
 - Modify: `.omo/AGENT.md`
 - Modify: `.omo/INDEX.md`
 
-- [ ] **Step 1: Write the failing repo-state/doc tests**
+- [ ] **Step 1: Replace the old repo-state test and add the new failing doc test**
 
-Replace the old repo-state assertion in `.omo/tests/test_worker_mechanism_consistency.py` and add one doc regression:
+Delete `test_pending_future_phase_packets_live_in_planned_queue()` from `.omo/tests/test_worker_mechanism_consistency.py` and replace it with the governed-promotion version below. Then add the doc regression:
 
 ```python
 def test_future_phase_pending_packets_in_active_require_promotion_handoff_ref():
