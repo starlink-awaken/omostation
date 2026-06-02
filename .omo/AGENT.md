@@ -280,10 +280,13 @@ Interpretation rules:
 - `owners.compared` covers shared owners only; added owners and removed owners are surfaced explicitly instead of being silently dropped
 - Generate the multi-run trend surface with `python3 scripts/omo_debt.py report-trend --omo-dir .omo`
 - Generate a bounded multi-run trend surface with `python3 scripts/omo_debt.py report-trend --omo-dir .omo --last <N>`
+- Generate an identity-bounded trend surface with `python3 scripts/omo_debt.py report-trend --omo-dir .omo --from-run-stamp <STAMP> --to-run-stamp <STAMP>`
 - Reporting trend lives at `.omo/debt/reporting/trend/current.yaml` plus `.omo/debt/reporting/trend/current.md`
 - `report-trend` reads `reporting/history/current.yaml` as the canonical input surface, orders runs oldest-to-newest, and does not re-derive historical runs from raw dispatch facts
 - `window_requested` records the requested bounded history window, or `null` when the full visible history is used
+- `from_run_stamp_requested` and `to_run_stamp_requested` record the explicit closed interval when range mode is used
 - `--last <N>` selects the most recent N runs from `reporting/history/current.yaml` before oldest-to-newest rendering
+- Range mode is inclusive and cannot be combined with --last
 - `trend_status` is explicit: `insufficient_history` for fewer than two runs, `trend_available` when at least two runs exist
 - Version 1 trend metrics stay fixed to `total_items`, `executed_item_count`, `approval_coverage_rate`, and `execution_completion_rate`
 - `report-trend` fails closed if any run in the selected history window has missing reporting metadata instead of silently skipping incomplete runs

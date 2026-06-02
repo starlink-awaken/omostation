@@ -297,6 +297,175 @@ def test_build_reporting_trend_packet_rejects_missing_reporting_metadata_inside_
         )
 
 
+def test_build_reporting_trend_packet_selects_inclusive_range_by_run_stamp() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 5,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=9,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=9,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1 / 9,
+            ),
+            _history_entry(
+                "2026-05-20T00-00-00Z",
+                total_items=10,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+            _history_entry(
+                "2026-05-10T00-00-00Z",
+                total_items=11,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+            _history_entry(
+                "2026-05-01T00-00-00Z",
+                total_items=12,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+        ],
+    }
+
+    packet = build_reporting_trend_packet(
+        generated_at="2026-06-12T01:00:00Z",
+        history_packet=history_packet,
+        from_run_stamp_requested="2026-05-20T00-00-00Z",
+        to_run_stamp_requested="2026-06-10T00-00-00Z",
+    )
+
+    assert packet["window_requested"] is None
+    assert packet["from_run_stamp_requested"] == "2026-05-20T00-00-00Z"
+    assert packet["to_run_stamp_requested"] == "2026-06-10T00-00-00Z"
+    assert packet["window_run_count"] == 3
+    assert [entry["run_stamp"] for entry in packet["runs"]] == [
+        "2026-05-20T00-00-00Z",
+        "2026-06-01T00-00-00Z",
+        "2026-06-10T00-00-00Z",
+    ]
+
+
+def test_build_reporting_trend_packet_rejects_invalid_requested_range_stamp() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 2,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=9,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=9,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1 / 9,
+            ),
+        ],
+    }
+
+    with pytest.raises(ValueError, match="invalid from-run-stamp: 2026-06-01T00:00:00Z"):
+        build_reporting_trend_packet(
+            generated_at="2026-06-12T01:00:00Z",
+            history_packet=history_packet,
+            from_run_stamp_requested="2026-06-01T00:00:00Z",
+            to_run_stamp_requested="2026-06-10T00-00-00Z",
+        )
+
+
+def test_build_reporting_trend_packet_rejects_missing_requested_range_stamp() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 2,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=9,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=9,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1 / 9,
+            ),
+        ],
+    }
+
+    with pytest.raises(ValueError, match="from-run-stamp not in history: 2026-05-20T00-00-00Z"):
+        build_reporting_trend_packet(
+            generated_at="2026-06-12T01:00:00Z",
+            history_packet=history_packet,
+            from_run_stamp_requested="2026-05-20T00-00-00Z",
+            to_run_stamp_requested="2026-06-10T00-00-00Z",
+        )
+
+
+def test_build_reporting_trend_packet_rejects_reversed_semantic_range() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 3,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=9,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=9,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1 / 9,
+            ),
+            _history_entry(
+                "2026-05-20T00-00-00Z",
+                total_items=10,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+        ],
+    }
+
+    with pytest.raises(ValueError, match="from-run-stamp must not be newer than to-run-stamp"):
+        build_reporting_trend_packet(
+            generated_at="2026-06-12T01:00:00Z",
+            history_packet=history_packet,
+            from_run_stamp_requested="2026-06-10T00-00-00Z",
+            to_run_stamp_requested="2026-05-20T00-00-00Z",
+        )
+
+
 def test_render_reporting_trend_markdown_shows_trend_and_insufficient_history_states() -> None:
     trend_packet = build_reporting_trend_packet(
         generated_at="2026-06-12T01:00:00Z",
