@@ -2164,6 +2164,72 @@ def test_task_promotion_approval_history_writes_current_surfaces(tmp_path: Path,
     assert (tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "history" / "current.md").exists()
 
 
+def test_task_promotion_approval_analytics_writes_current_surfaces(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "current.yaml",
+        {
+            "generated_at": "2026-06-03T06:00:00Z",
+            "approval_task_count": 1,
+            "requested_count": 1,
+            "approved_pending_apply_count": 0,
+            "granted_count": 0,
+            "tasks": [
+                {
+                    "task_id": "TASK-A",
+                    "task_ref": ".omo/tasks/planned/TASK-A.yaml",
+                    "approval_ref": ".omo/workers/runs/TASK-A-promotion-approval-2026-06-03T05-00-00Z.yaml",
+                    "approval_id": "TASK-A-promotion-approval-2026-06-03T05-00-00Z",
+                    "approval_status": "requested",
+                    "proposal_id": "TASK-A-promotion-approval-2026-06-03T05-00-00Z-proposal",
+                    "proposal_status": "proposed",
+                    "eligible": False,
+                    "blockers": ["approval_invalid"],
+                }
+            ],
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "history" / "current.yaml",
+        {
+            "generated_at": "2026-06-03T06:00:00Z",
+            "approval_count": 1,
+            "approvals": [
+                {
+                    "approval_id": "TASK-A-promotion-approval-2026-06-03T05-00-00Z",
+                    "task_id": "TASK-A",
+                    "requested_at": "2026-06-03T05:00:00Z",
+                    "approval_status": "requested",
+                    "proposal_status": "proposed",
+                }
+            ],
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "promotion" / "readiness.yaml",
+        {
+            "generated_at": "2026-06-03T06:00:00Z",
+            "blocked_count": 1,
+            "ready_count": 0,
+            "tasks": [{"task_id": "TASK-A", "blockers": ["approval_invalid"]}],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "promotion-approval-analytics", "--omo-dir", ".omo", "--now", "2026-06-03T06:00:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "analytics" / "current.yaml")
+
+    assert "approval_task_count=1" in output
+    assert packet["action_queues"]["approve_now"][0]["task_id"] == "TASK-A"
+    assert (tmp_path / ".omo" / "workers" / "promotion" / "approvals" / "analytics" / "current.md").exists()
+
+
 def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Path):
     root = tmp_path
     omo = root / ".omo"

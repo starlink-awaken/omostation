@@ -158,3 +158,11 @@ Canonical promotion approval history/index surface:
 1. `python3 scripts/omo_worker.py task promotion-approval-history --omo-dir .omo [--now <ISO8601>]`
 2. this writes `.omo/workers/promotion/approvals/history/current.yaml`
 3. and `.omo/workers/promotion/approvals/history/current.md`
+
+Canonical promotion approval analytics surface:
+
+1. `python3 scripts/omo_worker.py task promotion-approval-analytics --omo-dir .omo [--now <ISO8601>]`
+2. this reads `.omo/workers/promotion/approvals/current.yaml`
+3. this reads `.omo/workers/promotion/approvals/history/current.yaml`
+4. this writes `.omo/workers/promotion/approvals/analytics/current.yaml`
+5. and `.omo/workers/promotion/approvals/analytics/current.md`

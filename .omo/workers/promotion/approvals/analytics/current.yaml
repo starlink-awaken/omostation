@@ -1,0 +1,40 @@
+generated_at: '2026-06-03T06:00:00Z'
+approval_task_count: 1
+history_approval_count: 1
+requested_count: 0
+approved_pending_apply_count: 0
+granted_count: 1
+missing_proposal_count: 0
+eligible_after_approval_count: 0
+blocked_after_approval_count: 1
+action_queues:
+  approve_now: []
+  apply_now: []
+  check_readiness:
+  - task_id: P19-W3-ARCHIVE-TS
+    approval_id: P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z
+    proposal_id: P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z-proposal
+    blockers: &id001
+    - phase_mismatch
+blocker_histogram:
+  phase_mismatch: 1
+proposal_status_histogram:
+  proposed: 0
+  approved: 0
+  verified: 1
+  missing: 0
+  invalid: 0
+approval_age_buckets:
+  lt_1d: 0
+  d1_to_d3: 0
+  d3_plus: 0
+tasks:
+- task_id: P19-W3-ARCHIVE-TS
+  approval_id: P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z
+  approval_status: granted
+  proposal_status: verified
+  requested_at: '2026-06-03T00:00:00Z'
+  task_age_bucket: null
+  eligible: false
+  blockers: *id001
+  next_action: check_readiness
