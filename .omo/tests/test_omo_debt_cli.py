@@ -1021,3 +1021,159 @@ def test_debt_report_history_keeps_run_when_reporting_artifact_is_missing(tmp_pa
     assert packet["prior_run_stamp"] == "2026-06-01T00-00-00Z"
     assert packet["runs"][1]["reporting_exists"] is False
     assert packet["runs"][1]["reporting_ref"] is None
+
+
+def test_debt_report_diff_requires_history_packet(tmp_path: Path) -> None:
+    debt_dir = tmp_path / ".omo" / "debt"
+    debt_dir.mkdir(parents=True, exist_ok=True)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-diff",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    assert result.returncode != 0
+    assert "reporting/history/current.yaml" in result.stderr
+
+
+def test_debt_report_diff_writes_no_prior_run_packet_for_single_history_run(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
+    shutil.copytree(source, tmp_path / ".omo" / "debt")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-diff",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    packet = yaml.safe_load((tmp_path / ".omo" / "debt" / "reporting" / "diff" / "current.yaml").read_text(encoding="utf-8"))
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "generated debt reporting diff packet"
+    assert packet["diff_status"] == "no_prior_run"
+    assert packet["latest_run_stamp"] == "2026-06-10T00-00-00Z"
+    assert packet["prior_run_stamp"] is None
+    assert packet["owners"] is None
+    assert packet["summary_diff"]["total_items"]["latest"] == 9
+    assert packet["summary_diff"]["total_items"]["prior"] is None
+
+
+def test_debt_report_diff_rederives_metrics_from_facts_not_history_metadata(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
+    shutil.copytree(source, tmp_path / ".omo" / "debt")
+
+    older_dispatch = tmp_path / ".omo" / "debt" / "dispatch" / "runs" / "2026-06-01T00-00-00Z.yaml"
+    older_dispatch.parent.mkdir(parents=True, exist_ok=True)
+    older_dispatch.write_text(
+        (tmp_path / ".omo" / "debt" / "dispatch" / "runs" / "2026-06-10T00-00-00Z.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    approval_dir = tmp_path / ".omo" / "debt" / "approvals" / "SB_DECOMPOSITION"
+    approval_dir.mkdir(parents=True, exist_ok=True)
+    approval_dir.joinpath("current.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "item_id": "SB_DECOMPOSITION",
+                "approved_by": "omo-governance",
+                "approved_at": "2026-06-01T01:00:00Z",
+                "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-01T00-00-00Z.yaml",
+                "approval_scope": "execute_revalidate",
+            },
+            sort_keys=False,
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+
+    execution_dir = tmp_path / ".omo" / "debt" / "dispatch" / "executions" / "2026-06-01T00-00-00Z"
+    execution_dir.mkdir(parents=True, exist_ok=True)
+    execution_dir.joinpath("SB_UNTESTED_PKGS.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "item_id": "SB_UNTESTED_PKGS",
+                "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-01T00-00-00Z.yaml",
+                "executed_at": "2026-06-01T02:00:00Z",
+                "reviewed_at": "2026-06-01T02:00:00Z",
+            },
+            sort_keys=False,
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+
+    history_path = tmp_path / ".omo" / "debt" / "reporting" / "history" / "current.yaml"
+    history_path.parent.mkdir(parents=True, exist_ok=True)
+    history_path.write_text(
+        yaml.safe_dump(
+            {
+                "generated_at": "2026-06-12T00:00:00Z",
+                "latest_run_stamp": "2026-06-10T00-00-00Z",
+                "prior_run_stamp": "2026-06-01T00-00-00Z",
+                "run_count": 2,
+                "runs": [
+                    {
+                        "run_stamp": "2026-06-10T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-06-10T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-06-02T10:52:31Z",
+                        "total_items": 999,
+                        "executed_item_count": 999,
+                        "approval_coverage_rate": 999.0,
+                        "execution_completion_rate": 999.0,
+                    },
+                    {
+                        "run_stamp": "2026-06-01T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-01T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-06-01T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-06-01T02:00:00Z",
+                        "total_items": 999,
+                        "executed_item_count": 999,
+                        "approval_coverage_rate": 999.0,
+                        "execution_completion_rate": 999.0,
+                    },
+                ],
+            },
+            sort_keys=False,
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-diff",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    packet = yaml.safe_load((tmp_path / ".omo" / "debt" / "reporting" / "diff" / "current.yaml").read_text(encoding="utf-8"))
+
+    assert result.returncode == 0, result.stderr
+    assert packet["diff_status"] == "diff_available"
+    assert packet["summary_diff"]["total_items"] == {"latest": 9, "prior": 9, "delta": 0}
+    assert packet["summary_diff"]["approval_coverage_rate"] == {"latest": 0.0, "prior": 1.0, "delta": -1.0}
+    assert packet["summary_diff"]["executed_item_count"] == {"latest": 0, "prior": 1, "delta": -1}
