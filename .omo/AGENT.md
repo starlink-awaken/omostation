@@ -26,6 +26,8 @@
 > **Promotion history**：如需查看最近有哪些 planned packet 被正式晋升，不要直接 glob `workers/runs/*-promotion-*.yaml`；先运行 `python3 scripts/omo_worker.py task promotion-history --omo-dir .omo`，再以 `.omo/workers/promotion/current.yaml` 作为 canonical read surface。
 >
 > **Promotion readiness**：如需查看当前 planned queue 里哪些 packet 可以晋升、哪些仍被 gate 挡住，先运行 `python3 scripts/omo_worker.py task promotion-readiness --omo-dir .omo`，再以 `.omo/workers/promotion/readiness.yaml` 作为 canonical read surface。
+>
+> **Promotion approval**：`future-active-l2l3-pending-approval-*.md` 这类共享 backlog-presence note 只说明未来 backlog presence，does not authorize promotion；对 `human_approval_required: true` 的 planned packet，`approval_ref` 必须指向 task-specific promotion approval YAML。
 
 ---
 

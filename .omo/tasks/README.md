@@ -121,6 +121,8 @@ planned -> active promotion 补充约定：
 - `promote-eval` 只做 eligibility 检查，不移动任务。
 - `promote-apply` 会写 promotion envelope、把该 envelope ref 追加到 task 的 `handoff_refs`，然后再执行 queue move。
 - future-phase pending packet 只有带 promotion envelope ref 时，才允许出现在 `tasks/active/`。
+- 对 `human_approval_required: true` 的 planned packet，`approval_ref` 必须指向 task-specific promotion approval YAML。
+- 像 `future-active-l2l3-pending-approval-*.md` 这样的 shared backlog-presence note 不授权 promotion；非 YAML、错 scope 或错 task 的 ref 一律按 `approval_invalid` fail closed。
 
 ### 外部 Agent CLI Worker 补充规则
 

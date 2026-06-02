@@ -1302,6 +1302,48 @@ def test_task_promote_eval_rejects_missing_required_approval_ref(tmp_path: Path,
     assert "approval_missing" in output
 
 
+def test_task_promote_eval_rejects_shared_backlog_presence_ref_for_human_approval_task(tmp_path: Path, monkeypatch, capsys):
+    approval_note = tmp_path / ".omo" / "workers" / "runs" / "future-active-l2l3-pending-approval-2026-06-02.md"
+    approval_note.parent.mkdir(parents=True, exist_ok=True)
+    approval_note.write_text("# planning backlog presence only\n", encoding="utf-8")
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 18})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P19-W3-ARCHIVE-TS.yaml",
+        {
+            "id": "P19-W3-ARCHIVE-TS",
+            "phase": 19,
+            "milestone": "M19.3",
+            "priority": "P1",
+            "title": "Archive TS",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": ".omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md",
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["phase18_completed"],
+            "risk_level": "L2",
+            "allowed_operation_level": "L1",
+            "human_approval_required": True,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["omo", "task", "promote-eval", "P19-W3-ARCHIVE-TS", "--omo-dir", ".omo"])
+
+    assert omo_worker_main() == 1
+    output = capsys.readouterr().out
+
+    assert "eligible=false" in output
+    assert "approval_invalid" in output
+
+
 def test_task_promote_apply_moves_task_and_writes_envelope(tmp_path: Path, monkeypatch, capsys):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
@@ -1569,6 +1611,51 @@ def test_task_promotion_readiness_command_writes_readiness_surfaces(tmp_path: Pa
     assert packet["blocked_count"] == 1
     assert [entry["task_id"] for entry in packet["tasks"]] == ["P17-W1-READY", "P18-W1-BLOCKED"]
     assert (tmp_path / ".omo" / "workers" / "promotion" / "readiness.md").exists()
+
+
+def test_task_promotion_readiness_reports_approval_invalid_for_future_human_approval_packets(tmp_path: Path, monkeypatch):
+    approval_note = tmp_path / ".omo" / "workers" / "runs" / "future-active-l2l3-pending-approval-2026-06-02.md"
+    approval_note.parent.mkdir(parents=True, exist_ok=True)
+    approval_note.write_text("# planning backlog presence only\n", encoding="utf-8")
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P19-W3-ARCHIVE-TS.yaml",
+        {
+            "id": "P19-W3-ARCHIVE-TS",
+            "phase": 19,
+            "milestone": "M19.3",
+            "priority": "P1",
+            "title": "Archive TS",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": ".omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md",
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["phase18_completed"],
+            "risk_level": "L2",
+            "allowed_operation_level": "L1",
+            "human_approval_required": True,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "promotion-readiness", "--omo-dir", ".omo", "--now", "2026-06-03T00:00:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "readiness.yaml")
+
+    assert packet["tasks"][0]["blockers"] == ["phase_mismatch", "approval_invalid"]
 
 
 def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Path):

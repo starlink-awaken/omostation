@@ -207,6 +207,16 @@ def test_worker_docs_describe_promotion_readiness_surface():
     assert "promotion-readiness" in tasks_text
 
 
+def test_worker_docs_distinguish_backlog_presence_approval_from_promotion_approval():
+    workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
+
+    assert "worker-promotion-approval.yaml" in workers_text
+    assert "does not authorize promotion" in agent_text
+    assert "approval_invalid" in tasks_text
+
+
 def test_standards_registry_tracks_active_and_legacy_merged_docs():
     standards_readme = (OMO / "standards" / "README.md").read_text(encoding="utf-8")
 

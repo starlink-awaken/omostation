@@ -137,3 +137,8 @@ This writes:
 
 1. `.omo/workers/promotion/readiness.yaml`
 2. `.omo/workers/promotion/readiness.md`
+
+Human-approved planned packets need a task-specific promotion approval record:
+
+1. `.omo/workers/templates/worker-promotion-approval.yaml`
+2. shared backlog-presence notes are informative only and do not authorize promotion
