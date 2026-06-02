@@ -190,7 +190,25 @@ Trend must therefore:
 
 This makes interval deltas intuitive: later progress appears as the delta from one older run to the next newer run.
 
-### 6.6 Fixed metric set for Version 1
+### 6.6 Missing reporting metadata fails closed
+
+Trend must not silently skip runs whose reporting metadata is incomplete.
+
+Required rule:
+
+1. every run used by `report-trend` must have `reporting_exists: true`
+2. every run used by `report-trend` must have non-null values for the four Version 1 trend metrics
+3. if any run in the history window is missing those fields, `report-trend` should fail closed with a clear error naming the offending run
+
+This is intentionally stricter than `report-history`.
+
+Reason:
+
+1. the history index exists to make missing reporting artifacts visible
+2. trend should not silently rewrite history by skipping incomplete runs
+3. introducing “skip missing runs” semantics would be a wider analytics design choice and should be a later explicit slice if ever needed
+
+### 6.7 Fixed metric set for Version 1
 
 Version 1 trend should use exactly these four metrics already present in the history index:
 
@@ -208,7 +226,7 @@ Do **not** add:
 
 Those would require either widening the history index first or re-deriving from raw facts, both of which are outside this slice.
 
-### 6.7 No slope math in Version 1
+### 6.8 No slope math in Version 1
 
 Do **not** compute slopes yet.
 
@@ -364,13 +382,15 @@ Required unit coverage:
 1. oldest-to-newest ordering is correct even when history input is newest-to-oldest
 2. interval deltas are computed correctly
 3. `insufficient_history` produces a valid packet with one run and no intervals
-4. Markdown renders trend and insufficient-history states clearly
+4. missing reporting metadata fails closed with a clear run-specific error
+5. Markdown renders trend and insufficient-history states clearly
 
 Required CLI/integration coverage:
 
 1. `report-trend` requires the history packet
 2. `report-trend` reads trend inputs from history summary metadata rather than re-deriving from raw facts
-3. synthetic history fixtures can prove multi-run ordering and interval delta behavior
+3. `report-trend` fails closed when history includes a run with `reporting_exists: false` or null trend metrics
+4. synthetic history fixtures can prove multi-run ordering and interval delta behavior
 
 Canonical verify remains:
 
