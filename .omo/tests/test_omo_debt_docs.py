@@ -60,6 +60,12 @@ def test_omo_agent_documents_debt_refresh_flow() -> None:
     assert "execution completion" in content.lower()
     assert "latest-run compact rollup" in content.lower()
     assert "not cross-run history" in content.lower()
+    assert "python3 scripts/omo_debt.py report-history --omo-dir .omo" in content
+    assert ".omo/debt/reporting/history/current.yaml" in content
+    assert ".omo/debt/reporting/history/current.md" in content
+    assert "latest run" in content.lower()
+    assert "prior run" in content.lower()
+    assert "prerequisite for later diff work" in content.lower()
     assert "refresh -> dispatch -> campaign -> report -> sync -> verify" in content.lower()
     assert "drift" in content.lower()
     assert "silent success" in content.lower()

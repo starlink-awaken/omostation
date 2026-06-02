@@ -268,6 +268,11 @@ Interpretation rules:
 - Surface boundary: dashboard = debt health, campaign = coordination detail, reporting = compact progress rollup
 - Reporting is the latest-run compact rollup, not cross-run history; use it for one selected run's approval coverage and execution completion snapshot
 - Approval coverage and execution completion in reporting always refer to the selected run, so operators can confirm how much of that surfaced packet is approved and how much is already executed
+- Generate the cross-run history index with `python3 scripts/omo_debt.py report-history --omo-dir .omo`
+- Reporting history lives at `.omo/debt/reporting/history/current.yaml` plus `.omo/debt/reporting/history/current.md`
+- The history surface resolves the latest run and prior run (`latest_run_stamp` / `prior_run_stamp`) from dispatch-run identity and is the prerequisite for later diff work, including latest-vs-prior slices
+- `report-history` enumerates known dispatch runs, attaches per-run reporting artifacts when present, and keeps missing reporting artifacts visible instead of silently dropping those runs
+- Cross-run diff and burndown still remain deferred in this slice
 - Schedule command template: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at <NEXT_REVIEW_AT>`
 - Schedule shell example: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at 2026-06-17T00:00:00Z`
 - Review packets must expose sections for `Due Now`, `Escalation Candidates`, `Upcoming Window`, and `Unscheduled Debts`
