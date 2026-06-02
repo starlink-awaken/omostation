@@ -1302,6 +1302,130 @@ def test_task_promote_eval_rejects_missing_required_approval_ref(tmp_path: Path,
     assert "approval_missing" in output
 
 
+def test_task_promote_apply_moves_task_and_writes_envelope(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-READY.yaml",
+        {
+            "id": "P17-W1-READY",
+            "phase": 17,
+            "milestone": "M17.1",
+            "priority": "P1",
+            "title": "Ready packet",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["phase16_completed"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "human_approval_required": False,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        "scripts.omo_worker.subprocess.run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, "", ""),
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "omo",
+            "task",
+            "promote-apply",
+            "P17-W1-READY",
+            "--promoted-by",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T00:00:00Z",
+            "--omo-dir",
+            ".omo",
+        ],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    active_task = _load_yaml(tmp_path / ".omo" / "tasks" / "active" / "P17-W1-READY.yaml")
+
+    assert "promotion_ref=.omo/workers/runs/P17-W1-READY-promotion-2026-06-03T00-00-00Z.yaml" in output
+    assert active_task["status"] == "pending"
+    assert active_task["handoff_refs"] == [
+        ".omo/workers/runs/P17-W1-READY-promotion-2026-06-03T00-00-00Z.yaml"
+    ]
+    assert (tmp_path / ".omo" / "workers" / "runs" / "P17-W1-READY-promotion-2026-06-03T00-00-00Z.yaml").exists()
+    assert not (tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-READY.yaml").exists()
+
+
+def test_task_promote_apply_rolls_back_when_sync_fails(tmp_path: Path, monkeypatch):
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-ROLLBACK.yaml",
+        {
+            "id": "P17-W1-ROLLBACK",
+            "phase": 17,
+            "milestone": "M17.1",
+            "priority": "P1",
+            "title": "Rollback packet",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["phase16_completed"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "human_approval_required": False,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+
+    def _fail_sync(*args, **kwargs):
+        raise subprocess.CalledProcessError(1, args[0])
+
+    monkeypatch.setattr("scripts.omo_worker.subprocess.run", _fail_sync)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "omo",
+            "task",
+            "promote-apply",
+            "P17-W1-ROLLBACK",
+            "--promoted-by",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T00:00:00Z",
+            "--omo-dir",
+            ".omo",
+        ],
+    )
+
+    assert omo_worker_main() == 1
+    assert (tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-ROLLBACK.yaml").exists()
+    assert not (tmp_path / ".omo" / "tasks" / "active" / "P17-W1-ROLLBACK.yaml").exists()
+    assert not (
+        tmp_path / ".omo" / "workers" / "runs" / "P17-W1-ROLLBACK-promotion-2026-06-03T00-00-00Z.yaml"
+    ).exists()
+
+
 def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Path):
     root = tmp_path
     omo = root / ".omo"
