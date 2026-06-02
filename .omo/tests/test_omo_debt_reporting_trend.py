@@ -443,6 +443,240 @@ def test_build_reporting_trend_packet_adds_state_progress_from_selected_reportin
     }
 
 
+def test_build_reporting_trend_packet_keeps_state_progress_null_for_insufficient_history() -> None:
+    packet = build_reporting_trend_packet(
+        generated_at="2026-06-12T01:00:00Z",
+        history_packet={
+            "generated_at": "2026-06-12T00:00:00Z",
+            "latest_run_stamp": "2026-06-10T00-00-00Z",
+            "prior_run_stamp": None,
+            "run_count": 1,
+            "runs": [
+                _history_entry(
+                    "2026-06-10T00-00-00Z",
+                    total_items=8,
+                    executed_item_count=3,
+                    approval_coverage_rate=1.0,
+                    execution_completion_rate=3 / 8,
+                )
+            ],
+        },
+    )
+
+    assert packet["state_progress"] is None
+
+
+def test_build_reporting_trend_packet_aligns_state_progress_anchor_with_execution_progress() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 2,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=8,
+                executed_item_count=3,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=3 / 8,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=9,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1 / 9,
+            ),
+        ],
+    }
+    reporting_packets_by_run = {
+        "2026-06-01T00-00-00Z": _owner_reporting_packet("2026-06-01T00-00-00Z", owners=[]),
+        "2026-06-10T00-00-00Z": _owner_reporting_packet("2026-06-10T00-00-00Z", owners=[]),
+    }
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 2,
+        "ready_to_execute": 6,
+        "executed": 1,
+    }
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 4,
+        "ready_to_execute": 1,
+        "executed": 3,
+    }
+
+    packet = build_reporting_trend_packet(
+        generated_at="2026-06-12T01:00:00Z",
+        history_packet=history_packet,
+        reporting_packets_by_run=reporting_packets_by_run,
+    )
+
+    assert packet["state_progress"]["anchor_run_stamp"] == packet["execution_progress"]["anchor_run_stamp"]
+    assert [run["run_stamp"] for run in packet["state_progress"]["runs"]] == [
+        run["run_stamp"] for run in packet["execution_progress"]["runs"]
+    ]
+
+
+def test_build_reporting_trend_packet_keeps_state_progress_unchanged_at_baseline() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 2,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=8,
+                executed_item_count=3,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=3 / 8,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=9,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1 / 9,
+            ),
+        ],
+    }
+    reporting_packets_by_run = {
+        "2026-06-01T00-00-00Z": _owner_reporting_packet("2026-06-01T00-00-00Z", owners=[]),
+        "2026-06-10T00-00-00Z": _owner_reporting_packet("2026-06-10T00-00-00Z", owners=[]),
+    }
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 2,
+        "ready_to_execute": 6,
+        "executed": 1,
+    }
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 2,
+        "ready_to_execute": 3,
+        "executed": 3,
+    }
+
+    packet = build_reporting_trend_packet(
+        generated_at="2026-06-12T01:00:00Z",
+        history_packet=history_packet,
+        reporting_packets_by_run=reporting_packets_by_run,
+    )
+
+    assert packet["state_progress"]["runs"] == [
+        {
+            "run_stamp": "2026-06-01T00-00-00Z",
+            "pending_approval": 2,
+            "ready_to_execute": 6,
+            "executed": 1,
+            "pending_approval_delta_vs_baseline": 0,
+        },
+        {
+            "run_stamp": "2026-06-10T00-00-00Z",
+            "pending_approval": 2,
+            "ready_to_execute": 3,
+            "executed": 3,
+            "pending_approval_delta_vs_baseline": 0,
+        },
+    ]
+
+
+def test_build_reporting_trend_packet_reports_state_progress_increase_vs_baseline() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 2,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=8,
+                executed_item_count=2,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=0.25,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=8,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=0.125,
+            ),
+        ],
+    }
+    reporting_packets_by_run = {
+        "2026-06-01T00-00-00Z": _owner_reporting_packet("2026-06-01T00-00-00Z", owners=[]),
+        "2026-06-10T00-00-00Z": _owner_reporting_packet("2026-06-10T00-00-00Z", owners=[]),
+    }
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 1,
+        "ready_to_execute": 6,
+        "executed": 1,
+    }
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 3,
+        "ready_to_execute": 3,
+        "executed": 2,
+    }
+
+    packet = build_reporting_trend_packet(
+        generated_at="2026-06-12T01:00:00Z",
+        history_packet=history_packet,
+        reporting_packets_by_run=reporting_packets_by_run,
+    )
+
+    assert packet["state_progress"]["runs"][-1] == {
+        "run_stamp": "2026-06-10T00-00-00Z",
+        "pending_approval": 3,
+        "ready_to_execute": 3,
+        "executed": 2,
+        "pending_approval_delta_vs_baseline": 2,
+    }
+
+
+def test_build_reporting_trend_packet_fails_closed_when_state_counts_do_not_match_total_items() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 2,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=8,
+                executed_item_count=3,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=3 / 8,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=9,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1 / 9,
+            ),
+        ],
+    }
+    reporting_packets_by_run = {
+        "2026-06-01T00-00-00Z": _owner_reporting_packet("2026-06-01T00-00-00Z", owners=[]),
+        "2026-06-10T00-00-00Z": _owner_reporting_packet("2026-06-10T00-00-00Z", owners=[]),
+    }
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 2,
+        "ready_to_execute": 99,
+        "executed": 1,
+    }
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 1,
+        "ready_to_execute": 4,
+        "executed": 3,
+    }
+
+    with pytest.raises(ValueError, match="invalid state progress counts for run: 2026-06-01T00-00-00Z"):
+        build_reporting_trend_packet(
+            generated_at="2026-06-12T01:00:00Z",
+            history_packet=history_packet,
+            reporting_packets_by_run=reporting_packets_by_run,
+        )
+
+
 def test_build_reporting_trend_packet_adds_shared_owner_series() -> None:
     history_packet = {
         "generated_at": "2026-06-12T00:00:00Z",
@@ -467,49 +701,61 @@ def test_build_reporting_trend_packet_adds_shared_owner_series() -> None:
         ],
     }
 
+    reporting_packets_by_run = {
+        "2026-06-10T00-00-00Z": _owner_reporting_packet(
+            "2026-06-10T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "commerce-governance",
+                    item_count=2,
+                    executed_item_count=0,
+                    approval_coverage_rate=1.0,
+                    execution_completion_rate=0.0,
+                ),
+                _owner_entry(
+                    "omo-governance",
+                    item_count=3,
+                    executed_item_count=1,
+                    approval_coverage_rate=1.0,
+                    execution_completion_rate=1 / 3,
+                ),
+            ],
+        ),
+        "2026-06-01T00-00-00Z": _owner_reporting_packet(
+            "2026-06-01T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "omo-governance",
+                    item_count=2,
+                    executed_item_count=0,
+                    approval_coverage_rate=1.0,
+                    execution_completion_rate=0.0,
+                ),
+                _owner_entry(
+                    "commerce-governance",
+                    item_count=1,
+                    executed_item_count=0,
+                    approval_coverage_rate=0.0,
+                    execution_completion_rate=0.0,
+                ),
+            ],
+        ),
+    }
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 8,
+        "executed": 1,
+    }
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 9,
+        "executed": 0,
+    }
+
     packet = build_reporting_trend_packet(
         generated_at="2026-06-12T01:00:00Z",
         history_packet=history_packet,
-        reporting_packets_by_run={
-            "2026-06-10T00-00-00Z": _owner_reporting_packet(
-                "2026-06-10T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "commerce-governance",
-                        item_count=2,
-                        executed_item_count=0,
-                        approval_coverage_rate=1.0,
-                        execution_completion_rate=0.0,
-                    ),
-                    _owner_entry(
-                        "omo-governance",
-                        item_count=3,
-                        executed_item_count=1,
-                        approval_coverage_rate=1.0,
-                        execution_completion_rate=1 / 3,
-                    ),
-                ],
-            ),
-            "2026-06-01T00-00-00Z": _owner_reporting_packet(
-                "2026-06-01T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "omo-governance",
-                        item_count=2,
-                        executed_item_count=0,
-                        approval_coverage_rate=1.0,
-                        execution_completion_rate=0.0,
-                    ),
-                    _owner_entry(
-                        "commerce-governance",
-                        item_count=1,
-                        executed_item_count=0,
-                        approval_coverage_rate=0.0,
-                        execution_completion_rate=0.0,
-                    ),
-                ],
-            ),
-        },
+        reporting_packets_by_run=reporting_packets_by_run,
     )
 
     assert packet["trend_status"] == "trend_available"
@@ -556,48 +802,65 @@ def test_build_reporting_trend_packet_computes_shared_owners_relative_to_selecte
         ],
     }
 
+    reporting_packets_by_run = {
+        "2026-06-10T00-00-00Z": _owner_reporting_packet(
+            "2026-06-10T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "shared-owner",
+                    item_count=2,
+                    executed_item_count=1,
+                    approval_coverage_rate=1.0,
+                    execution_completion_rate=0.5,
+                )
+            ],
+        ),
+        "2026-06-01T00-00-00Z": _owner_reporting_packet(
+            "2026-06-01T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "shared-owner",
+                    item_count=1,
+                    executed_item_count=0,
+                    approval_coverage_rate=0.0,
+                    execution_completion_rate=0.0,
+                )
+            ],
+        ),
+        "2026-05-20T00-00-00Z": _owner_reporting_packet(
+            "2026-05-20T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "older-only",
+                    item_count=3,
+                    executed_item_count=0,
+                    approval_coverage_rate=0.0,
+                    execution_completion_rate=0.0,
+                )
+            ],
+        ),
+    }
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 8,
+        "executed": 1,
+    }
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 9,
+        "executed": 0,
+    }
+    reporting_packets_by_run["2026-05-20T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 9,
+        "executed": 0,
+    }
+
     packet = build_reporting_trend_packet(
         generated_at="2026-06-12T01:00:00Z",
         history_packet=history_packet,
         window_requested=2,
-        reporting_packets_by_run={
-            "2026-06-10T00-00-00Z": _owner_reporting_packet(
-                "2026-06-10T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "shared-owner",
-                        item_count=2,
-                        executed_item_count=1,
-                        approval_coverage_rate=1.0,
-                        execution_completion_rate=0.5,
-                    )
-                ],
-            ),
-            "2026-06-01T00-00-00Z": _owner_reporting_packet(
-                "2026-06-01T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "shared-owner",
-                        item_count=1,
-                        executed_item_count=0,
-                        approval_coverage_rate=0.0,
-                        execution_completion_rate=0.0,
-                    )
-                ],
-            ),
-            "2026-05-20T00-00-00Z": _owner_reporting_packet(
-                "2026-05-20T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "older-only",
-                        item_count=3,
-                        executed_item_count=0,
-                        approval_coverage_rate=0.0,
-                        execution_completion_rate=0.0,
-                    )
-                ],
-            ),
-        },
+        reporting_packets_by_run=reporting_packets_by_run,
     )
 
     assert [entry["owner"] for entry in packet["owners"]["compared"]] == ["shared-owner"]
@@ -628,35 +891,47 @@ def test_build_reporting_trend_packet_writes_no_shared_owners_state() -> None:
         ],
     }
 
+    reporting_packets_by_run = {
+        "2026-06-10T00-00-00Z": _owner_reporting_packet(
+            "2026-06-10T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "new-owner",
+                    item_count=2,
+                    executed_item_count=1,
+                    approval_coverage_rate=1.0,
+                    execution_completion_rate=0.5,
+                )
+            ],
+        ),
+        "2026-06-01T00-00-00Z": _owner_reporting_packet(
+            "2026-06-01T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "old-owner",
+                    item_count=1,
+                    executed_item_count=0,
+                    approval_coverage_rate=0.0,
+                    execution_completion_rate=0.0,
+                )
+            ],
+        ),
+    }
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 8,
+        "executed": 1,
+    }
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 9,
+        "executed": 0,
+    }
+
     packet = build_reporting_trend_packet(
         generated_at="2026-06-12T01:00:00Z",
         history_packet=history_packet,
-        reporting_packets_by_run={
-            "2026-06-10T00-00-00Z": _owner_reporting_packet(
-                "2026-06-10T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "new-owner",
-                        item_count=2,
-                        executed_item_count=1,
-                        approval_coverage_rate=1.0,
-                        execution_completion_rate=0.5,
-                    )
-                ],
-            ),
-            "2026-06-01T00-00-00Z": _owner_reporting_packet(
-                "2026-06-01T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "old-owner",
-                        item_count=1,
-                        executed_item_count=0,
-                        approval_coverage_rate=0.0,
-                        execution_completion_rate=0.0,
-                    )
-                ],
-            ),
-        },
+        reporting_packets_by_run=reporting_packets_by_run,
     )
 
     assert packet["trend_status"] == "trend_available"
@@ -699,54 +974,71 @@ def test_build_reporting_trend_packet_surfaces_excluded_owner_presence_at_window
         ],
     }
 
+    reporting_packets_by_run = {
+        "2026-06-10T00-00-00Z": _owner_reporting_packet(
+            "2026-06-10T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "shared-owner",
+                    item_count=2,
+                    executed_item_count=1,
+                    approval_coverage_rate=1.0,
+                    execution_completion_rate=0.5,
+                ),
+                _owner_entry(
+                    "late-owner",
+                    item_count=1,
+                    executed_item_count=0,
+                    approval_coverage_rate=1.0,
+                    execution_completion_rate=0.0,
+                ),
+            ],
+        ),
+        "2026-06-01T00-00-00Z": _owner_reporting_packet(
+            "2026-06-01T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "shared-owner",
+                    item_count=1,
+                    executed_item_count=0,
+                    approval_coverage_rate=0.0,
+                    execution_completion_rate=0.0,
+                )
+            ],
+        ),
+        "2026-05-20T00-00-00Z": _owner_reporting_packet(
+            "2026-05-20T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "shared-owner",
+                    item_count=1,
+                    executed_item_count=0,
+                    approval_coverage_rate=0.0,
+                    execution_completion_rate=0.0,
+                )
+            ],
+        ),
+    }
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 8,
+        "executed": 1,
+    }
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 9,
+        "executed": 0,
+    }
+    reporting_packets_by_run["2026-05-20T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 10,
+        "executed": 0,
+    }
+
     packet = build_reporting_trend_packet(
         generated_at="2026-06-12T01:00:00Z",
         history_packet=history_packet,
-        reporting_packets_by_run={
-            "2026-06-10T00-00-00Z": _owner_reporting_packet(
-                "2026-06-10T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "shared-owner",
-                        item_count=2,
-                        executed_item_count=1,
-                        approval_coverage_rate=1.0,
-                        execution_completion_rate=0.5,
-                    ),
-                    _owner_entry(
-                        "late-owner",
-                        item_count=1,
-                        executed_item_count=0,
-                        approval_coverage_rate=1.0,
-                        execution_completion_rate=0.0,
-                    ),
-                ],
-            ),
-            "2026-06-01T00-00-00Z": _owner_reporting_packet(
-                "2026-06-01T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "shared-owner",
-                        item_count=1,
-                        executed_item_count=0,
-                        approval_coverage_rate=0.0,
-                        execution_completion_rate=0.0,
-                    )
-                ],
-            ),
-            "2026-05-20T00-00-00Z": _owner_reporting_packet(
-                "2026-05-20T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "shared-owner",
-                        item_count=1,
-                        executed_item_count=0,
-                        approval_coverage_rate=0.0,
-                        execution_completion_rate=0.0,
-                    )
-                ],
-            ),
-        },
+        reporting_packets_by_run=reporting_packets_by_run,
     )
 
     assert packet["owners"]["owners_excluded_count"] == 1
@@ -797,54 +1089,71 @@ def test_build_reporting_trend_packet_surfaces_excluded_owner_presence_at_window
         ],
     }
 
+    reporting_packets_by_run = {
+        "2026-06-10T00-00-00Z": _owner_reporting_packet(
+            "2026-06-10T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "shared-owner",
+                    item_count=2,
+                    executed_item_count=1,
+                    approval_coverage_rate=1.0,
+                    execution_completion_rate=0.5,
+                )
+            ],
+        ),
+        "2026-06-01T00-00-00Z": _owner_reporting_packet(
+            "2026-06-01T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "shared-owner",
+                    item_count=1,
+                    executed_item_count=0,
+                    approval_coverage_rate=0.0,
+                    execution_completion_rate=0.0,
+                )
+            ],
+        ),
+        "2026-05-20T00-00-00Z": _owner_reporting_packet(
+            "2026-05-20T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "shared-owner",
+                    item_count=1,
+                    executed_item_count=0,
+                    approval_coverage_rate=0.0,
+                    execution_completion_rate=0.0,
+                ),
+                _owner_entry(
+                    "early-owner",
+                    item_count=2,
+                    executed_item_count=0,
+                    approval_coverage_rate=0.0,
+                    execution_completion_rate=0.0,
+                ),
+            ],
+        ),
+    }
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 8,
+        "executed": 1,
+    }
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 9,
+        "executed": 0,
+    }
+    reporting_packets_by_run["2026-05-20T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 10,
+        "executed": 0,
+    }
+
     packet = build_reporting_trend_packet(
         generated_at="2026-06-12T01:00:00Z",
         history_packet=history_packet,
-        reporting_packets_by_run={
-            "2026-06-10T00-00-00Z": _owner_reporting_packet(
-                "2026-06-10T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "shared-owner",
-                        item_count=2,
-                        executed_item_count=1,
-                        approval_coverage_rate=1.0,
-                        execution_completion_rate=0.5,
-                    )
-                ],
-            ),
-            "2026-06-01T00-00-00Z": _owner_reporting_packet(
-                "2026-06-01T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "shared-owner",
-                        item_count=1,
-                        executed_item_count=0,
-                        approval_coverage_rate=0.0,
-                        execution_completion_rate=0.0,
-                    )
-                ],
-            ),
-            "2026-05-20T00-00-00Z": _owner_reporting_packet(
-                "2026-05-20T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "shared-owner",
-                        item_count=1,
-                        executed_item_count=0,
-                        approval_coverage_rate=0.0,
-                        execution_completion_rate=0.0,
-                    ),
-                    _owner_entry(
-                        "early-owner",
-                        item_count=2,
-                        executed_item_count=0,
-                        approval_coverage_rate=0.0,
-                        execution_completion_rate=0.0,
-                    ),
-                ],
-            ),
-        },
+        reporting_packets_by_run=reporting_packets_by_run,
     )
 
     assert packet["owner_presence"] == {
@@ -894,54 +1203,71 @@ def test_build_reporting_trend_packet_surfaces_excluded_owner_presence_in_middle
         ],
     }
 
+    reporting_packets_by_run = {
+        "2026-06-10T00-00-00Z": _owner_reporting_packet(
+            "2026-06-10T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "shared-owner",
+                    item_count=2,
+                    executed_item_count=1,
+                    approval_coverage_rate=1.0,
+                    execution_completion_rate=0.5,
+                )
+            ],
+        ),
+        "2026-06-01T00-00-00Z": _owner_reporting_packet(
+            "2026-06-01T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "shared-owner",
+                    item_count=1,
+                    executed_item_count=0,
+                    approval_coverage_rate=0.0,
+                    execution_completion_rate=0.0,
+                ),
+                _owner_entry(
+                    "middle-owner",
+                    item_count=1,
+                    executed_item_count=0,
+                    approval_coverage_rate=0.0,
+                    execution_completion_rate=0.0,
+                ),
+            ],
+        ),
+        "2026-05-20T00-00-00Z": _owner_reporting_packet(
+            "2026-05-20T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "shared-owner",
+                    item_count=1,
+                    executed_item_count=0,
+                    approval_coverage_rate=0.0,
+                    execution_completion_rate=0.0,
+                )
+            ],
+        ),
+    }
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 8,
+        "executed": 1,
+    }
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 9,
+        "executed": 0,
+    }
+    reporting_packets_by_run["2026-05-20T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 10,
+        "executed": 0,
+    }
+
     packet = build_reporting_trend_packet(
         generated_at="2026-06-12T01:00:00Z",
         history_packet=history_packet,
-        reporting_packets_by_run={
-            "2026-06-10T00-00-00Z": _owner_reporting_packet(
-                "2026-06-10T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "shared-owner",
-                        item_count=2,
-                        executed_item_count=1,
-                        approval_coverage_rate=1.0,
-                        execution_completion_rate=0.5,
-                    )
-                ],
-            ),
-            "2026-06-01T00-00-00Z": _owner_reporting_packet(
-                "2026-06-01T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "shared-owner",
-                        item_count=1,
-                        executed_item_count=0,
-                        approval_coverage_rate=0.0,
-                        execution_completion_rate=0.0,
-                    ),
-                    _owner_entry(
-                        "middle-owner",
-                        item_count=1,
-                        executed_item_count=0,
-                        approval_coverage_rate=0.0,
-                        execution_completion_rate=0.0,
-                    ),
-                ],
-            ),
-            "2026-05-20T00-00-00Z": _owner_reporting_packet(
-                "2026-05-20T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "shared-owner",
-                        item_count=1,
-                        executed_item_count=0,
-                        approval_coverage_rate=0.0,
-                        execution_completion_rate=0.0,
-                    )
-                ],
-            ),
-        },
+        reporting_packets_by_run=reporting_packets_by_run,
     )
 
     assert packet["owner_presence"] == {
@@ -984,35 +1310,47 @@ def test_build_reporting_trend_packet_writes_no_excluded_owner_presence_state() 
         ],
     }
 
+    reporting_packets_by_run = {
+        "2026-06-10T00-00-00Z": _owner_reporting_packet(
+            "2026-06-10T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "shared-owner",
+                    item_count=2,
+                    executed_item_count=1,
+                    approval_coverage_rate=1.0,
+                    execution_completion_rate=0.5,
+                )
+            ],
+        ),
+        "2026-06-01T00-00-00Z": _owner_reporting_packet(
+            "2026-06-01T00-00-00Z",
+            owners=[
+                _owner_entry(
+                    "shared-owner",
+                    item_count=1,
+                    executed_item_count=0,
+                    approval_coverage_rate=0.0,
+                    execution_completion_rate=0.0,
+                )
+            ],
+        ),
+    }
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 8,
+        "executed": 1,
+    }
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 0,
+        "ready_to_execute": 9,
+        "executed": 0,
+    }
+
     packet = build_reporting_trend_packet(
         generated_at="2026-06-12T01:00:00Z",
         history_packet=history_packet,
-        reporting_packets_by_run={
-            "2026-06-10T00-00-00Z": _owner_reporting_packet(
-                "2026-06-10T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "shared-owner",
-                        item_count=2,
-                        executed_item_count=1,
-                        approval_coverage_rate=1.0,
-                        execution_completion_rate=0.5,
-                    )
-                ],
-            ),
-            "2026-06-01T00-00-00Z": _owner_reporting_packet(
-                "2026-06-01T00-00-00Z",
-                owners=[
-                    _owner_entry(
-                        "shared-owner",
-                        item_count=1,
-                        executed_item_count=0,
-                        approval_coverage_rate=0.0,
-                        execution_completion_rate=0.0,
-                    )
-                ],
-            ),
-        },
+        reporting_packets_by_run=reporting_packets_by_run,
     )
 
     assert packet["owners"]["owners_excluded_count"] == 0
