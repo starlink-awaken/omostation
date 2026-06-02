@@ -1,0 +1,36 @@
+id: P18-W1-NEURAL-CENTER
+phase: 18
+milestone: M18.1
+priority: P0
+title: 实现NeuralCenter — 服务注册表+拓扑图+信号路由器+健康感知
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- MASTER-BLUEPRINT.md
+depends_on:
+- P17-W2-SHAREDBRAIN-PROTOCOLS-V1
+entry_gate:
+- phase17_completed
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- sharedbrain/neural_center.py 实现完成(编译通过)
+- '服务注册API: POST /neural/register'
+- '服务发现API: GET /neural/services'
+- 健康感知器可探测已注册服务
+- 单元测试覆盖核心路由逻辑
+acceptance_criteria:
+- NeuralCenter可同时注册≥10个服务
+- 信号路由延迟 <10ms
+- 健康探测间隔可配置
+test_plan:
+- 实现后验证服务注册、拓扑路由与健康感知覆盖 acceptance_criteria
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'

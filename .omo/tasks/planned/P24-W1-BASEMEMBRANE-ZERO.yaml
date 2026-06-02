@@ -1,0 +1,33 @@
+id: P24-W1-BASEMEMBRANE-ZERO
+phase: 24
+milestone: M24.1
+priority: P0
+title: 'BaseMembrane清零: 475实例→0 (分文件逐个清除)'
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- MASTER-BLUEPRINT.md
+depends_on: []
+entry_gate:
+- phase23_completed
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- rg BaseMembrane在SharedBrain/organs/中返回0
+- 每个清除文件编译通过
+- 测试通过率不退化
+acceptance_criteria:
+- SharedBrain活跃代码中BaseMembrane=0
+- 所有相关测试通过
+- 编译无错误
+test_plan:
+- 逐文件清零 BaseMembrane 实例后核对剩余引用数归零
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'

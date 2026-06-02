@@ -1,0 +1,35 @@
+id: P23-W2-HERMES-DASHBOARD
+phase: 23
+milestone: M23.2
+priority: P0
+title: 'Hermes Console: 知识仪表盘+Agent交互+系统运维面板'
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- MASTER-BLUEPRINT.md
+depends_on:
+- P23-W1-HERMES-SCAFFOLD
+entry_gate:
+- phase22_completed
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- 知识图谱可视化(D3/Cytoscape)
+- Agent对话+任务管理+结果审查
+- 系统健康仪表盘
+- 管线管理UI
+acceptance_criteria:
+- 知识图谱可交互浏览
+- Agent对话界面可发送/接收消息
+- 健康状态实时刷新
+test_plan:
+- 补齐 Hermes 面板后验证知识仪表盘、Agent 交互与运维视图
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'

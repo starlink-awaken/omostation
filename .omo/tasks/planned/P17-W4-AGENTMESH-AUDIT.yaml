@@ -1,0 +1,37 @@
+id: P17-W4-AGENTMESH-AUDIT
+phase: 17
+milestone: M17.4
+priority: P1
+title: agentmesh能力清单 — 逐包映射到kairon
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- _knowledge/design/omostation-strategic-architecture-v2.md
+depends_on:
+- P17-W1-ARCHITECTURE-FOUNDATION
+entry_gate:
+- phase16_completed
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- agentmesh/agents → agent-hub 映射文档
+- agentmesh/engine → agent-runtime 映射文档
+- agentmesh/gateway → agora 重叠分析
+- agentmesh/toolkit → forge 重叠分析
+- agentmesh/model-orchestrator → llm-gateway 重叠分析
+- agentmesh/core-types → core-models 重叠分析
+acceptance_criteria:
+- agentmesh每个包有明确的目标kairon包
+- 重叠功能标记为"合并"vs"TS实现归档"
+- 无遗漏的能力映射
+test_plan:
+- 完成 agentmesh→kairon 能力映射清单并逐项核对缺口
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'

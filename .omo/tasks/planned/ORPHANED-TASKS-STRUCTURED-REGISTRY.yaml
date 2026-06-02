@@ -1,0 +1,34 @@
+id: ORPHANED-TASKS-STRUCTURED-REGISTRY
+phase: 17
+milestone: M17.1
+priority: P1
+title: "Orphaned_tasks blob 拆分为结构化 registry"
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+  - "_knowledge/management/debt-systems-analysis-and-governance.md"
+  - "_knowledge/design/debt-cleanup-plan.md"
+  - "_knowledge/management/omo-convergence-audit-2026-05-31.md"
+depends_on: []
+entry_gate: [phase16_completed]
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+  - "tasks/registry/ 目录创建"
+  - "每个 orphaned task 独立 YAML 文件"
+  - "state/system.yaml 不再包含大段 backlog 列表"
+test_plan:
+  - "验证 state/system.yaml 的 orphaned_tasks 字段改为指针引用"
+accepted: null
+opened_at: "2026-06-01T10:30:00Z"
+acceptance_criteria:
+  - "orphaned_tasks 从 system.yaml blob 迁移到结构化 registry"
+  - "每个 task 有独立 YAML"
+  - "system.yaml 仅保留指针引用"

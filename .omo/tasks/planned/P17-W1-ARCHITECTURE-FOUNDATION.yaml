@@ -1,0 +1,36 @@
+id: P17-W1-ARCHITECTURE-FOUNDATION
+phase: 17
+milestone: M17.1
+priority: P0
+title: 战略架构文档交叉审阅与修订 — 确立SharedBrain协议化路线
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- _knowledge/design/omostation-strategic-architecture-v2.md
+- _knowledge/design/sharedbrain-architecture-governance-plan.md
+depends_on:
+- SHAREDBRAIN-FORMAL-DECISION
+entry_gate:
+- phase16_completed
+- organ_extraction_completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- omostation-strategic-architecture-v2.md 交叉审阅通过
+- 15个架构决策(D-001~D-015)全部文档化
+- 9器官迁移方案的目标/步骤/验收完整
+acceptance_criteria:
+- 战略文档无未解决的Open Questions
+- 每个架构决策有明确理由和日期
+- 每个器官迁移方案有可执行步骤
+test_plan:
+- 交叉审阅战略架构文档并逐项核对 acceptance_criteria 与 evidence_required
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'
