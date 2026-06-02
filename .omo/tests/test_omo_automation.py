@@ -1658,6 +1658,249 @@ def test_task_promotion_readiness_reports_approval_invalid_for_future_human_appr
     assert packet["tasks"][0]["blockers"] == ["phase_mismatch", "approval_invalid"]
 
 
+def test_task_promotion_request_approval_rejects_non_human_approval_task(tmp_path: Path, monkeypatch):
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-READY.yaml",
+        {
+            "id": "P17-W1-READY",
+            "phase": 17,
+            "milestone": "M17.1",
+            "priority": "P1",
+            "title": "Ready packet",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["phase16_completed"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "human_approval_required": False,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "omo",
+            "task",
+            "promotion-request-approval",
+            "P17-W1-READY",
+            "--requested-by",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T00:00:00Z",
+            "--omo-dir",
+            ".omo",
+        ],
+    )
+
+    with pytest.raises(ValueError, match="task does not require human approval"):
+        omo_worker_main()
+
+
+def test_task_promotion_request_approval_writes_requested_record_and_governance_proposal(
+    tmp_path: Path, monkeypatch, capsys
+):
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P19-W3-ARCHIVE-TS.yaml",
+        {
+            "id": "P19-W3-ARCHIVE-TS",
+            "phase": 19,
+            "milestone": "M19.3",
+            "priority": "P1",
+            "title": "Archive TS",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": ".omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md",
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["phase18_completed"],
+            "risk_level": "L2",
+            "allowed_operation_level": "L1",
+            "human_approval_required": True,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "omo",
+            "task",
+            "promotion-request-approval",
+            "P19-W3-ARCHIVE-TS",
+            "--requested-by",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T00:00:00Z",
+            "--omo-dir",
+            ".omo",
+        ],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    task_packet = _load_yaml(tmp_path / ".omo" / "tasks" / "planned" / "P19-W3-ARCHIVE-TS.yaml")
+    approval_ref = ".omo/workers/runs/P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z.yaml"
+    proposal_ref = ".omo/_truth/task-center/proposals/P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z-proposal.yaml"
+
+    assert f"approval_ref={approval_ref}" in output
+    assert f"proposal_ref={proposal_ref}" in output
+    assert task_packet["approval_ref"] == approval_ref
+    assert (tmp_path / approval_ref).exists()
+    assert (tmp_path / proposal_ref).exists()
+
+
+def test_task_promotion_request_approval_keeps_readiness_blocked_until_granted(tmp_path: Path, monkeypatch):
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-NEEDS-APPROVAL.yaml",
+        {
+            "id": "P17-W1-NEEDS-APPROVAL",
+            "phase": 17,
+            "milestone": "M17.1",
+            "priority": "P1",
+            "title": "Approval-gated packet",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": ".omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md",
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["phase16_completed"],
+            "risk_level": "L2",
+            "allowed_operation_level": "L2",
+            "human_approval_required": True,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "omo",
+            "task",
+            "promotion-request-approval",
+            "P17-W1-NEEDS-APPROVAL",
+            "--requested-by",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T00:00:00Z",
+            "--omo-dir",
+            ".omo",
+        ],
+    )
+    assert omo_worker_main() == 0
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "promotion-readiness", "--omo-dir", ".omo", "--now", "2026-06-03T00:00:00Z"],
+    )
+    assert omo_worker_main() == 0
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "readiness.yaml")
+
+    assert packet["tasks"][0]["approval_ref"] == (
+        ".omo/workers/runs/P17-W1-NEEDS-APPROVAL-promotion-approval-2026-06-03T00-00-00Z.yaml"
+    )
+    assert packet["tasks"][0]["blockers"] == ["approval_invalid"]
+
+
+def test_task_promotion_request_approval_rejects_duplicate_task_specific_request(tmp_path: Path, monkeypatch):
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "runs" / "P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z.yaml",
+        {
+            "version": 1,
+            "approval_id": "P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z",
+            "task_id": "P19-W3-ARCHIVE-TS",
+            "approval_status": "requested",
+            "requested_operation_level": "L2",
+            "approval_scope": "task.promote_apply",
+            "requested_at": "2026-06-03T00:00:00Z",
+            "approved_at": None,
+            "expires_at": None,
+            "approver": None,
+            "refs": {
+                "task_ref": ".omo/tasks/planned/P19-W3-ARCHIVE-TS.yaml",
+                "readiness_ref": ".omo/workers/promotion/readiness.yaml",
+            },
+            "evidence": {"request_evidence": [], "approval_evidence": []},
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P19-W3-ARCHIVE-TS.yaml",
+        {
+            "id": "P19-W3-ARCHIVE-TS",
+            "phase": 19,
+            "milestone": "M19.3",
+            "priority": "P1",
+            "title": "Archive TS",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": ".omo/workers/runs/P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z.yaml",
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["phase18_completed"],
+            "risk_level": "L2",
+            "allowed_operation_level": "L1",
+            "human_approval_required": True,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "omo",
+            "task",
+            "promotion-request-approval",
+            "P19-W3-ARCHIVE-TS",
+            "--requested-by",
+            "copilot-cli",
+            "--now",
+            "2026-06-04T00:00:00Z",
+            "--omo-dir",
+            ".omo",
+        ],
+    )
+
+    with pytest.raises(ValueError, match="task already points to a task-specific promotion approval"):
+        omo_worker_main()
+
+
 def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Path):
     root = tmp_path
     omo = root / ".omo"

@@ -142,3 +142,6 @@ Human-approved planned packets need a task-specific promotion approval record:
 
 1. `.omo/workers/templates/worker-promotion-approval.yaml`
 2. shared backlog-presence notes are informative only and do not authorize promotion
+3. request a task-specific record with `python3 scripts/omo_worker.py task promotion-request-approval <TASK_ID> --requested-by <ACTOR> --now <ISO8601> --omo-dir .omo`
+4. the command writes `.omo/workers/runs/<TASK_ID>-promotion-approval-<STAMP>.yaml` and `.omo/_truth/task-center/proposals/<APPROVAL_ID>-proposal.yaml`
+5. while that record stays `approval_status: requested`, readiness continues to report `approval_invalid`

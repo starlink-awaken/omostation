@@ -79,6 +79,7 @@ candidate ──→ pending ──→ in_progress ──→ review ──→ don
 4. coordinator 如需评估 planned packet 是否可晋升，先运行 `python3 scripts/omo_worker.py task promote-eval <TASK_ID> --omo-dir .omo`。
 5. 真正晋升时运行 `python3 scripts/omo_worker.py task promote-apply <TASK_ID> --promoted-by <ACTOR> --now <ISO8601> --omo-dir .omo`。
 6. 如需查看整个 planned queue 的 readiness，而不是单看一个 task，运行 `python3 scripts/omo_worker.py task promotion-readiness --omo-dir .omo`。
+7. 如需为 `human_approval_required: true` 的 planned packet 发起 task-specific promotion approval request，运行 `python3 scripts/omo_worker.py task promotion-request-approval <TASK_ID> --requested-by <ACTOR> --now <ISO8601> --omo-dir .omo`。
 7. 被晋升的 pending packet 必须把 promotion envelope ref 写入 `handoff_refs`；没有该 evidence 的 future-phase pending packet 仍视为非法 backlog 回流。
 8. 接任务前：检查同名任务是否已 `in_progress`，避免重复。
 9. 开始执行：由 **coordinator 预占 lease**，先更新 `status: in_progress`、`assigned_to`、`started_at`、`dispatch_id`、`run_ref`。
@@ -120,9 +121,10 @@ planned -> active promotion 补充约定：
 
 - `promote-eval` 只做 eligibility 检查，不移动任务。
 - `promote-apply` 会写 promotion envelope、把该 envelope ref 追加到 task 的 `handoff_refs`，然后再执行 queue move。
+- `promotion-request-approval` 会把 planned task 的 `approval_ref` 从 shared backlog note 切到 task-specific requested approval YAML，并同时写 governance proposal。
 - future-phase pending packet 只有带 promotion envelope ref 时，才允许出现在 `tasks/active/`。
 - 对 `human_approval_required: true` 的 planned packet，`approval_ref` 必须指向 task-specific promotion approval YAML。
-- 像 `future-active-l2l3-pending-approval-*.md` 这样的 shared backlog-presence note 不授权 promotion；非 YAML、错 scope 或错 task 的 ref 一律按 `approval_invalid` fail closed。
+- 像 `future-active-l2l3-pending-approval-*.md` 这样的 shared backlog-presence note 不授权 promotion；非 YAML、错 scope、错 task、或仍处于 `approval_status: requested` 的 ref 一律按 `approval_invalid` fail closed。
 
 ### 外部 Agent CLI Worker 补充规则
 

@@ -217,6 +217,16 @@ def test_worker_docs_distinguish_backlog_presence_approval_from_promotion_approv
     assert "approval_invalid" in tasks_text
 
 
+def test_worker_docs_describe_promotion_request_workflow():
+    workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
+
+    assert "promotion-request-approval" in workers_text
+    assert "promotion-request-approval" in agent_text
+    assert "promotion-request-approval" in tasks_text
+
+
 def test_standards_registry_tracks_active_and_legacy_merged_docs():
     standards_readme = (OMO / "standards" / "README.md").read_text(encoding="utf-8")
 
