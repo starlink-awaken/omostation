@@ -355,6 +355,94 @@ def test_build_reporting_trend_packet_leaves_execution_progress_null_when_histor
     assert packet["execution_progress"] is None
 
 
+def test_build_reporting_trend_packet_adds_state_progress_from_selected_reporting_artifacts() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 3,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=8,
+                executed_item_count=3,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=3 / 8,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=9,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1 / 9,
+            ),
+            _history_entry(
+                "2026-05-20T00-00-00Z",
+                total_items=10,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+        ],
+    }
+
+    reporting_packets_by_run = {
+        "2026-05-20T00-00-00Z": _owner_reporting_packet("2026-05-20T00-00-00Z", owners=[]),
+        "2026-06-01T00-00-00Z": _owner_reporting_packet("2026-06-01T00-00-00Z", owners=[]),
+        "2026-06-10T00-00-00Z": _owner_reporting_packet("2026-06-10T00-00-00Z", owners=[]),
+    }
+    reporting_packets_by_run["2026-05-20T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 4,
+        "ready_to_execute": 6,
+        "executed": 0,
+    }
+    reporting_packets_by_run["2026-06-01T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 2,
+        "ready_to_execute": 6,
+        "executed": 1,
+    }
+    reporting_packets_by_run["2026-06-10T00-00-00Z"]["summary"]["state_counts"] = {
+        "pending_approval": 1,
+        "ready_to_execute": 4,
+        "executed": 3,
+    }
+
+    packet = build_reporting_trend_packet(
+        generated_at="2026-06-12T01:00:00Z",
+        history_packet=history_packet,
+        reporting_packets_by_run=reporting_packets_by_run,
+    )
+
+    assert packet["state_progress"] == {
+        "state_progress_status": "state_progress_available",
+        "anchor_run_stamp": "2026-05-20T00-00-00Z",
+        "baseline_pending_approval": 4,
+        "runs": [
+            {
+                "run_stamp": "2026-05-20T00-00-00Z",
+                "pending_approval": 4,
+                "ready_to_execute": 6,
+                "executed": 0,
+                "pending_approval_delta_vs_baseline": 0,
+            },
+            {
+                "run_stamp": "2026-06-01T00-00-00Z",
+                "pending_approval": 2,
+                "ready_to_execute": 6,
+                "executed": 1,
+                "pending_approval_delta_vs_baseline": -2,
+            },
+            {
+                "run_stamp": "2026-06-10T00-00-00Z",
+                "pending_approval": 1,
+                "ready_to_execute": 4,
+                "executed": 3,
+                "pending_approval_delta_vs_baseline": -3,
+            },
+        ],
+    }
+
+
 def test_build_reporting_trend_packet_adds_shared_owner_series() -> None:
     history_packet = {
         "generated_at": "2026-06-12T00:00:00Z",
