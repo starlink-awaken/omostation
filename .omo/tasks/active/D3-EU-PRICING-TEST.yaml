@@ -1,0 +1,35 @@
+id: D3-EU-PRICING-TEST
+phase: 17
+milestone: M17.1
+priority: P0
+title: eu-pricing 独立测试覆盖 (Resolve D3 debt)
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs:
+- .omo/workers/runs/D3-EU-PRICING-TEST-promotion-2026-06-03T06-40-00Z.yaml
+source_docs:
+- _knowledge/management/debt-systems-analysis-and-governance.md
+- _knowledge/design/debt-cleanup-plan.md
+depends_on: []
+entry_gate:
+- phase16_completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- 独立测试目录 tests/eu-pricing/
+- mock 环境配置
+- pytest 测试通过率 >= 80%
+test_plan:
+- 运行 `pytest tests/eu-pricing/ -q --tb=short`
+accepted: null
+opened_at: '2026-06-01T10:30:00Z'
+acceptance_criteria:
+- eu-pricing 有独立的测试目录
+- 不依赖实际计价服务运行
+- 测试通过率 >= 80%

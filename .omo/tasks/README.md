@@ -129,6 +129,7 @@ planned -> active promotion 补充约定：
 - `promotion-approval-history` 是 promotion approval artifacts 的 canonical history/index surface，用来查看所有 task-specific approval records，而不是只看当前 closure state。
 - `promotion-approval-analytics` 是 promotion approval 的 canonical analytics / rollup surface，用来查看 approve/apply/check-readiness 三类 action queues、blocker histogram 与 open-request age buckets。
 - governance overlay 是 control-plane 的未来 roadmap 治理层；它引用现有 task/debt truth，不创建第二套 task SSOT。
+- `governance-overlay-run-next` 会从 governance overlay shell 里拿 top eligible roadmap item，并只对 `.omo/tasks/planned/*.yaml` target refs 自动触发 `promotion-request-approval` 或 `promote-apply`，不会绕过现有 promotion gate。
 - future-phase pending packet 只有带 promotion envelope ref 时，才允许出现在 `tasks/active/`。
 - 对 `human_approval_required: true` 的 planned packet，`approval_ref` 必须指向 task-specific promotion approval YAML。
 - 像 `future-active-l2l3-pending-approval-*.md` 这样的 shared backlog-presence note 不授权 promotion；非 YAML、错 scope、错 task、或仍处于 `approval_status: requested` 的 ref 一律按 `approval_invalid` fail closed。

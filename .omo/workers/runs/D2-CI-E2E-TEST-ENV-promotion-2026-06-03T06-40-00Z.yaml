@@ -1,0 +1,28 @@
+version: 1
+promotion_id: D2-CI-E2E-TEST-ENV-promotion-2026-06-03T06-40-00Z
+task_id: D2-CI-E2E-TEST-ENV
+task_ref_before: .omo/tasks/planned/D2-CI-E2E-TEST-ENV.yaml
+task_ref_after: .omo/tasks/active/D2-CI-E2E-TEST-ENV.yaml
+promotion_status: approved
+promoted_by: copilot-cli
+promoted_at: '2026-06-03T06:40:00Z'
+phase_gate:
+  current_phase: 16
+  target_phase: 17
+  allowed_by_rule: true
+approval:
+  required: false
+  approval_ref: null
+checks:
+  queue_membership_ok: true
+  status_ok: true
+  phase_ok: true
+  approval_ready: true
+  target_path_clear: true
+  active_schema_ready: true
+rollback:
+  supported: true
+  rollback_action: move task back to planned and rerun sync
+refs:
+  state_ref: .omo/state/system.yaml
+  goals_ref: .omo/goals/current.yaml

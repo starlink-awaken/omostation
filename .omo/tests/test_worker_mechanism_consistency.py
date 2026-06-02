@@ -271,6 +271,16 @@ def test_worker_docs_describe_governance_overlay_surface():
     assert "governance overlay" in tasks_text.lower()
 
 
+def test_worker_docs_describe_governance_overlay_run_next_surface():
+    workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
+
+    assert "governance-overlay-run-next" in workers_text
+    assert "governance-overlay-run-next" in agent_text
+    assert "governance-overlay-run-next" in tasks_text
+
+
 def test_standards_registry_tracks_active_and_legacy_merged_docs():
     standards_readme = (OMO / "standards" / "README.md").read_text(encoding="utf-8")
 

@@ -2290,6 +2290,99 @@ def test_task_governance_overlay_status_writes_current_surfaces(tmp_path: Path, 
     assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "current.md").exists()
 
 
+def test_task_governance_overlay_run_next_writes_run_artifact(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(
+        tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
+        {
+            "overlay_id": "GOV-OVERLAY-2026-06",
+            "status": "active",
+            "autopilot_mode": "full_omo_autopilot",
+            "intake_scope": "future_planned_debt",
+            "current_milestone": "GOV-M1-EXECUTION-HARDENING",
+            "next_milestone": "GOV-M2-SHAREDBRAIN-DEBT",
+            "success_target": "future roadmap governed through overlay lane",
+            "updated_at": "2026-06-03T06:35:00Z",
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "autopilot-policy.yaml",
+        {
+            "autopilot_mode": "full_omo_autopilot",
+            "auto_select": True,
+            "auto_promote_when_safe": True,
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml",
+        {
+            "items": [
+                {
+                    "id": "GOV-M1-EXECUTION-HARDENING",
+                    "type": "task-bundle",
+                    "title": "Execution hardening",
+                    "priority": "P0",
+                    "status": "pending",
+                    "depends_on": [],
+                    "source_refs": [".omo/MASTER-BLUEPRINT.md"],
+                    "target_refs": [".omo/tasks/planned/TASK-A.yaml"],
+                    "success_criteria": ["TASK-A advanced"],
+                }
+            ]
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "TASK-A.yaml",
+        {
+            "id": "TASK-A",
+            "phase": 17,
+            "milestone": "GOV-M1",
+            "priority": "P0",
+            "title": "Task A",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": [".omo/MASTER-BLUEPRINT.md"],
+            "depends_on": [],
+            "entry_gate": ["overlay active"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "human_approval_required": False,
+            "evidence_required": ["promotion path triggered"],
+            "test_plan": [".omo/tests/test_omo_governance_overlay_loop.py"],
+            "started_at": None,
+            "completed_at": None,
+            "blocked_by": None,
+            "retry_count": 0,
+        },
+    )
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16, "status": "completed", "goals": []})
+    _write_yaml(tmp_path / ".omo" / "state" / "system.yaml", {"current_phase": 16, "health_score": 0.0})
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("scripts.omo_worker._sync_omo_state", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "governance-overlay-run-next", "--omo-dir", ".omo", "--actor", "copilot-cli", "--now", "2026-06-03T06:40:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    run_packet = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T06-40-00Z.yaml")
+    roadmap = _load_yaml(tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml")
+
+    assert "summary=advanced" in output
+    assert run_packet["roadmap_item_id"] == "GOV-M1-EXECUTION-HARDENING"
+    assert run_packet["target_results"][0]["result"] == "promoted"
+    assert roadmap["items"][0]["status"] == "in_progress"
+    assert (tmp_path / ".omo" / "tasks" / "active" / "TASK-A.yaml").exists()
+
+
 def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Path):
     root = tmp_path
     omo = root / ".omo"

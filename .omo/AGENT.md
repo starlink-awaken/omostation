@@ -31,7 +31,7 @@
 >
 > **Promotion approval analytics**：如需看当前 approval queue 的 action rollup、blocker histogram 与 request aging，运行 `python3 scripts/omo_worker.py task promotion-approval-analytics --omo-dir .omo [--now <ISO8601>]`；该命令读取 approval current/history/readiness 三个 canonical surfaces，并输出 `.omo/workers/promotion/approvals/analytics/current.yaml`。
 >
-> **Governance overlay**：如需看未来 roadmap / milestone / planned queue / debt watchlist 的统一治理入口，不要改 `current_phase`；运行 `python3 scripts/omo_worker.py task governance-overlay-status --omo-dir .omo [--now <ISO8601>]`，并以 `.omo/workers/governance-overlay/current.yaml` 作为 canonical read surface。
+> **Governance overlay**：如需看未来 roadmap / milestone / planned queue / debt watchlist 的统一治理入口，不要改 `current_phase`；运行 `python3 scripts/omo_worker.py task governance-overlay-status --omo-dir .omo [--now <ISO8601>]`，并以 `.omo/workers/governance-overlay/current.yaml` 作为 canonical read surface。如需让 OMO 自动推进 overlay 的下一个 planned-task roadmap item，运行 `python3 scripts/omo_worker.py task governance-overlay-run-next --omo-dir .omo --actor <ACTOR> [--now <ISO8601>]`；第一版只支持 `.omo/tasks/planned/*.yaml` target refs，debt bundle 仍保持 read-only。
 
 ---
 

@@ -175,3 +175,12 @@ Canonical governance overlay surface:
 4. this reads `.omo/_truth/governance-overlay/autopilot-policy.yaml`
 5. this writes `.omo/workers/governance-overlay/current.yaml`
 6. and `.omo/workers/governance-overlay/current.md`
+
+Canonical governance overlay autopilot loop:
+
+1. `python3 scripts/omo_worker.py task governance-overlay-run-next --omo-dir .omo --actor <ACTOR> [--now <ISO8601>]`
+2. this reads the governance overlay current control/policy/roadmap inputs
+3. this only advances `.omo/tasks/planned/*.yaml` target refs in v1
+4. this reuses `promotion-request-approval` or `promote-apply` semantics instead of bypassing existing gates
+5. this writes `.omo/workers/runs/governance-overlay-<STAMP>.yaml`
+6. and refreshes `.omo/workers/governance-overlay/current.yaml`
