@@ -62,3 +62,25 @@ US-001 complete:
 Learnings:
 - The cleanest repair path is to reuse promotion/admission's request + governance proposal pattern.
 - The proposal should target the original task YAML directly via `changes.set.deliverables`, which preserves task SSOT and avoids a second write-scope registry.
+
+US-002 complete:
+- Extended `scripts/omo_worker.py` with `task contract-declare-deliverables <TASK_ID> --deliverables <PATH>... --actor <ACTOR> --now <ISO8601> --omo-dir .omo`.
+- Added fail-closed validation so only `active_dispatch_blocked` tasks may enter this request flow.
+- The command now writes:
+  - `.omo/workers/runs/<TASK_ID>-contract-request-<STAMP>.yaml`
+  - `.omo/_truth/task-center/proposals/<REQUEST_ID>-proposal.yaml`
+- Fresh evidence:
+  - `python3 -m pytest .omo/tests/test_omo_automation.py -q -k 'contract_declare_deliverables'` -> `2 passed`
+
+US-003 complete:
+- Added regression showing request -> approve/apply -> overlay reevaluation advances a task from `active_dispatch_blocked` to `active_dispatched` and `next_action=launch:<TASK_ID>`.
+- Updated operator docs in:
+  - `.omo/AGENT.md`
+  - `.omo/tasks/README.md`
+  - `.omo/workers/README.md`
+- Fresh evidence:
+  - `python3 -m pytest .omo/tests/test_omo_contract_request.py .omo/tests/test_omo_automation.py .omo/tests/test_worker_mechanism_consistency.py -q -k 'contract_request or contract_declare_deliverables or contract_declaration_apply_advances_overlay_from_contract_gap_to_launch or launch_contract_actions'` -> `8 passed`
+
+Current closure candidate:
+- The system no longer stops at `contract_gap` with no repair path.
+- It can now request explicit deliverables, route them through governance proposal approval/apply, and re-evaluate into `launch:<TASK_ID>` without guessing write scope.

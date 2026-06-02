@@ -136,6 +136,7 @@ planned -> active promotion 补充约定：
 - `contract:<TASK_ID>` 表示任务已进入 active lifecycle，但 task packet 尚未声明足够明确的 `deliverables` / write scope，因此必须先收口合同，不能直接自动执行。
 - `launch:<TASK_ID>` 表示 dispatch packet 已存在且 task-declared write scope 完整，coordinator 可以安全启动外部 worker。
 - autonomous launch requires explicit task deliverables；空 `deliverables` 只能进入 contract-gap / fail-closed 路径，不能自动放行代码执行。
+- 当 control-plane 给出 `contract:<TASK_ID>` 时，使用 `python3 scripts/omo_worker.py task contract-declare-deliverables <TASK_ID> --deliverables <PATH>... --actor <ACTOR> --now <ISO8601> --omo-dir .omo` 生成 contract request artifact 与 governance proposal；approve/apply 之后再重新评估 overlay。
 - future-phase pending packet 只有带 promotion envelope ref 时，才允许出现在 `tasks/active/`。
 - 对 `human_approval_required: true` 的 planned packet，`approval_ref` 必须指向 task-specific promotion approval YAML。
 - 像 `future-active-l2l3-pending-approval-*.md` 这样的 shared backlog-presence note 不授权 promotion；非 YAML、错 scope、错 task、或仍处于 `approval_status: requested` 的 ref 一律按 `approval_invalid` fail closed。

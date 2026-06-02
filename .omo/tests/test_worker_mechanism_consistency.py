@@ -310,6 +310,9 @@ def test_worker_docs_describe_governance_overlay_launch_contract_actions():
     assert "launch:<TASK_ID>" in workers_text
     assert "autonomous launch requires explicit task deliverables" in agent_text
     assert "contract:<TASK_ID>" in tasks_text
+    assert "contract-declare-deliverables" in workers_text
+    assert "contract-declare-deliverables" in agent_text
+    assert "contract-declare-deliverables" in tasks_text
 
 
 def test_standards_registry_tracks_active_and_legacy_merged_docs():

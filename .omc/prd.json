@@ -16,7 +16,7 @@
       "id": "US-002",
       "title": "为 contract declaration flow 增加 coordinator CLI 与 fail-closed 校验",
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "命令 `python3 scripts/omo_worker.py task contract-declare-deliverables <TASK_ID> --deliverables <PATH>... --actor <ACTOR> --now <ISO8601>` 可执行",
         "该命令只允许处于 `active_dispatch_blocked` / `contract:<TASK_ID>` 语义下的 task 进入 request flow；非 contract-gap task 会明确失败",
@@ -27,7 +27,7 @@
       "id": "US-003",
       "title": "证明 contract proposal apply 后 overlay 会从 contract_gap 推进到 launch-ready",
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "自动化测试证明：对 contract-gap task 运行 contract declaration command，再 approve/apply proposal 后，`governance-overlay-status` 会把该 task 从 `active_dispatch_blocked` 推进为 `active_dispatched`",
         "自动化测试证明：proposal apply 后，overlay `next_action` 从 `contract:<TASK_ID>` 变为 `launch:<TASK_ID>`",

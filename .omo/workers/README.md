@@ -196,3 +196,10 @@ Within `continue_active` mode, the canonical overlay status may now recommend:
 5. `monitor:<ROADMAP_ITEM_ID>` while active work is still in flight
 
 Autonomous launch requires explicit task deliverables. If `deliverables` is empty or derives an empty write scope, the coordinator may record dispatch/contract-gap state, but it must fail closed instead of auto-launching the worker.
+
+When the overlay emits `contract:<TASK_ID>`, the operator path is:
+
+1. run `python3 scripts/omo_worker.py task contract-declare-deliverables <TASK_ID> --deliverables <PATH>... --actor <ACTOR> --now <ISO8601> --omo-dir .omo`
+2. approve/apply the resulting governance proposal
+3. re-run `governance-overlay-status` or `governance-overlay-run-next`
+4. confirm the task advances from `contract:<TASK_ID>` to `launch:<TASK_ID>`
