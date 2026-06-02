@@ -220,8 +220,15 @@ Use this when you need to refresh the first-class debt ledger surfaces before re
 
 1. `python3 scripts/omo_debt.py refresh --omo-dir .omo --now 2026-06-10T00:00:00Z`
 2. `python3 scripts/omo_debt.py dispatch --omo-dir .omo --now 2026-06-10T00:00:00Z`
-3. `python3 scripts/sync_omo_state.py --omo-dir .omo`
-4. `bash bin/verify-omo.sh`
+3. `python3 scripts/omo_debt.py campaign --omo-dir .omo`
+4. `python3 scripts/omo_debt.py report --omo-dir .omo`
+5. `python3 scripts/sync_omo_state.py --omo-dir .omo`
+6. `bash bin/verify-omo.sh`
+
+- `.omo/debt/registry.yaml` now publishes `campaign_ref` and `reporting_ref` as the canonical debt entrypoints for run-level coordination and compact run progress
+- `state/system.yaml` promotes `debt_reporting_ref` as the high-level debt progress pointer; campaign remains registry-only because it is still operator-detail
+- Canonical refresh -> dispatch -> campaign -> report -> sync -> verify flow: `refresh` -> `dispatch` -> `campaign` -> `report` -> `sync_omo_state.py` -> `bash bin/verify-omo.sh`
+- Missing generated files behind `campaign_ref` or `reporting_ref` are debt-control-plane drift, not silent success
 
 Interpretation rules:
 
