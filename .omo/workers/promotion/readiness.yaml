@@ -237,11 +237,12 @@ tasks:
   eligible: false
   blockers:
   - phase_mismatch
+  - approval_invalid
   checks:
     queue_membership_ok: true
     status_ok: true
     phase_ok: false
-    approval_ready: true
+    approval_ready: false
     target_path_clear: true
     active_schema_ready: true
   errors: []
@@ -332,11 +333,12 @@ tasks:
   eligible: false
   blockers:
   - phase_mismatch
+  - approval_invalid
   checks:
     queue_membership_ok: true
     status_ok: true
     phase_ok: false
-    approval_ready: true
+    approval_ready: false
     target_path_clear: true
     active_schema_ready: true
   errors: []
@@ -351,11 +353,12 @@ tasks:
   eligible: false
   blockers:
   - phase_mismatch
+  - approval_invalid
   checks:
     queue_membership_ok: true
     status_ok: true
     phase_ok: false
-    approval_ready: true
+    approval_ready: false
     target_path_clear: true
     active_schema_ready: true
   errors: []
@@ -503,11 +506,12 @@ tasks:
   eligible: false
   blockers:
   - phase_mismatch
+  - approval_invalid
   checks:
     queue_membership_ok: true
     status_ok: true
     phase_ok: false
-    approval_ready: true
+    approval_ready: false
     target_path_clear: true
     active_schema_ready: true
   errors: []

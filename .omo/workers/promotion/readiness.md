@@ -82,7 +82,7 @@ blockers=phase_mismatch
 
 task_ref=.omo/tasks/planned/P19-W3-ARCHIVE-TS.yaml
 phase=19
-blockers=phase_mismatch
+blockers=phase_mismatch,approval_invalid
 
 ## Blocked: P20-W1-ECONOMY-EXTRACTION
 
@@ -112,13 +112,13 @@ blockers=phase_mismatch
 
 task_ref=.omo/tasks/planned/P21-W1-IMMUNITY-METAOS.yaml
 phase=21
-blockers=phase_mismatch
+blockers=phase_mismatch,approval_invalid
 
 ## Blocked: P21-W2-GENESIS-TRIAGE
 
 task_ref=.omo/tasks/planned/P21-W2-GENESIS-TRIAGE.yaml
 phase=21
-blockers=phase_mismatch
+blockers=phase_mismatch,approval_invalid
 
 ## Blocked: P21-W3-OBSERVABILITY-CREATE
 
@@ -166,7 +166,7 @@ blockers=phase_mismatch
 
 task_ref=.omo/tasks/planned/P24-W2-NUCLEUS-REPLACE.yaml
 phase=24
-blockers=phase_mismatch
+blockers=phase_mismatch,approval_invalid
 
 ## Blocked: P25-W1-E2E-INTEGRATION
 
