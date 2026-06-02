@@ -106,6 +106,19 @@ def test_omo_agent_documents_debt_refresh_flow() -> None:
     assert "selected window" in content.lower()
     assert "item_count" in content
     assert "owners stays null" in content.lower()
+    assert "owner_presence" in content
+    assert "presence_status" in content
+    assert "presence_available" in content
+    assert "no_excluded_owners" in content
+    assert "window_run_count" in content
+    assert "excluded owners" in content.lower()
+    assert "first_window_run" in content
+    assert "last_window_run" in content
+    assert "in_first_window_run" in content
+    assert "in_last_window_run" in content
+    assert "two-run" in content.lower()
+    assert "report-diff" in content
+    assert "owner_presence stays null" in content.lower()
     assert "sparse gaps" in content.lower()
     assert "slope math" in content.lower()
     assert "refresh -> dispatch -> campaign -> report -> sync -> verify" in content.lower()

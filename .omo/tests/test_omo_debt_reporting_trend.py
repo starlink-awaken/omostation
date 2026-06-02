@@ -367,6 +367,361 @@ def test_build_reporting_trend_packet_writes_no_shared_owners_state() -> None:
     }
 
 
+def test_build_reporting_trend_packet_surfaces_excluded_owner_presence_at_window_end() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 3,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=9,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1 / 9,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=9,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+            _history_entry(
+                "2026-05-20T00-00-00Z",
+                total_items=10,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+        ],
+    }
+
+    packet = build_reporting_trend_packet(
+        generated_at="2026-06-12T01:00:00Z",
+        history_packet=history_packet,
+        reporting_packets_by_run={
+            "2026-06-10T00-00-00Z": _owner_reporting_packet(
+                "2026-06-10T00-00-00Z",
+                owners=[
+                    _owner_entry(
+                        "shared-owner",
+                        item_count=2,
+                        executed_item_count=1,
+                        approval_coverage_rate=1.0,
+                        execution_completion_rate=0.5,
+                    ),
+                    _owner_entry(
+                        "late-owner",
+                        item_count=1,
+                        executed_item_count=0,
+                        approval_coverage_rate=1.0,
+                        execution_completion_rate=0.0,
+                    ),
+                ],
+            ),
+            "2026-06-01T00-00-00Z": _owner_reporting_packet(
+                "2026-06-01T00-00-00Z",
+                owners=[
+                    _owner_entry(
+                        "shared-owner",
+                        item_count=1,
+                        executed_item_count=0,
+                        approval_coverage_rate=0.0,
+                        execution_completion_rate=0.0,
+                    )
+                ],
+            ),
+            "2026-05-20T00-00-00Z": _owner_reporting_packet(
+                "2026-05-20T00-00-00Z",
+                owners=[
+                    _owner_entry(
+                        "shared-owner",
+                        item_count=1,
+                        executed_item_count=0,
+                        approval_coverage_rate=0.0,
+                        execution_completion_rate=0.0,
+                    )
+                ],
+            ),
+        },
+    )
+
+    assert packet["owners"]["owners_excluded_count"] == 1
+    assert packet["owner_presence"] == {
+        "presence_status": "presence_available",
+        "window_run_count": 3,
+        "entries": [
+            {
+                "owner": "late-owner",
+                "run_count": 1,
+                "first_window_run": "2026-06-10T00-00-00Z",
+                "last_window_run": "2026-06-10T00-00-00Z",
+                "in_first_window_run": False,
+                "in_last_window_run": True,
+            }
+        ],
+    }
+
+
+def test_build_reporting_trend_packet_surfaces_excluded_owner_presence_at_window_start() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 3,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=9,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1 / 9,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=9,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+            _history_entry(
+                "2026-05-20T00-00-00Z",
+                total_items=10,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+        ],
+    }
+
+    packet = build_reporting_trend_packet(
+        generated_at="2026-06-12T01:00:00Z",
+        history_packet=history_packet,
+        reporting_packets_by_run={
+            "2026-06-10T00-00-00Z": _owner_reporting_packet(
+                "2026-06-10T00-00-00Z",
+                owners=[
+                    _owner_entry(
+                        "shared-owner",
+                        item_count=2,
+                        executed_item_count=1,
+                        approval_coverage_rate=1.0,
+                        execution_completion_rate=0.5,
+                    )
+                ],
+            ),
+            "2026-06-01T00-00-00Z": _owner_reporting_packet(
+                "2026-06-01T00-00-00Z",
+                owners=[
+                    _owner_entry(
+                        "shared-owner",
+                        item_count=1,
+                        executed_item_count=0,
+                        approval_coverage_rate=0.0,
+                        execution_completion_rate=0.0,
+                    )
+                ],
+            ),
+            "2026-05-20T00-00-00Z": _owner_reporting_packet(
+                "2026-05-20T00-00-00Z",
+                owners=[
+                    _owner_entry(
+                        "shared-owner",
+                        item_count=1,
+                        executed_item_count=0,
+                        approval_coverage_rate=0.0,
+                        execution_completion_rate=0.0,
+                    ),
+                    _owner_entry(
+                        "early-owner",
+                        item_count=2,
+                        executed_item_count=0,
+                        approval_coverage_rate=0.0,
+                        execution_completion_rate=0.0,
+                    ),
+                ],
+            ),
+        },
+    )
+
+    assert packet["owner_presence"] == {
+        "presence_status": "presence_available",
+        "window_run_count": 3,
+        "entries": [
+            {
+                "owner": "early-owner",
+                "run_count": 1,
+                "first_window_run": "2026-05-20T00-00-00Z",
+                "last_window_run": "2026-05-20T00-00-00Z",
+                "in_first_window_run": True,
+                "in_last_window_run": False,
+            }
+        ],
+    }
+
+
+def test_build_reporting_trend_packet_surfaces_excluded_owner_presence_in_middle_runs() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 3,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=9,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1 / 9,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=9,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+            _history_entry(
+                "2026-05-20T00-00-00Z",
+                total_items=10,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+        ],
+    }
+
+    packet = build_reporting_trend_packet(
+        generated_at="2026-06-12T01:00:00Z",
+        history_packet=history_packet,
+        reporting_packets_by_run={
+            "2026-06-10T00-00-00Z": _owner_reporting_packet(
+                "2026-06-10T00-00-00Z",
+                owners=[
+                    _owner_entry(
+                        "shared-owner",
+                        item_count=2,
+                        executed_item_count=1,
+                        approval_coverage_rate=1.0,
+                        execution_completion_rate=0.5,
+                    )
+                ],
+            ),
+            "2026-06-01T00-00-00Z": _owner_reporting_packet(
+                "2026-06-01T00-00-00Z",
+                owners=[
+                    _owner_entry(
+                        "shared-owner",
+                        item_count=1,
+                        executed_item_count=0,
+                        approval_coverage_rate=0.0,
+                        execution_completion_rate=0.0,
+                    ),
+                    _owner_entry(
+                        "middle-owner",
+                        item_count=1,
+                        executed_item_count=0,
+                        approval_coverage_rate=0.0,
+                        execution_completion_rate=0.0,
+                    ),
+                ],
+            ),
+            "2026-05-20T00-00-00Z": _owner_reporting_packet(
+                "2026-05-20T00-00-00Z",
+                owners=[
+                    _owner_entry(
+                        "shared-owner",
+                        item_count=1,
+                        executed_item_count=0,
+                        approval_coverage_rate=0.0,
+                        execution_completion_rate=0.0,
+                    )
+                ],
+            ),
+        },
+    )
+
+    assert packet["owner_presence"] == {
+        "presence_status": "presence_available",
+        "window_run_count": 3,
+        "entries": [
+            {
+                "owner": "middle-owner",
+                "run_count": 1,
+                "first_window_run": "2026-06-01T00-00-00Z",
+                "last_window_run": "2026-06-01T00-00-00Z",
+                "in_first_window_run": False,
+                "in_last_window_run": False,
+            }
+        ],
+    }
+
+
+def test_build_reporting_trend_packet_writes_no_excluded_owner_presence_state() -> None:
+    history_packet = {
+        "generated_at": "2026-06-12T00:00:00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "prior_run_stamp": "2026-06-01T00-00-00Z",
+        "run_count": 2,
+        "runs": [
+            _history_entry(
+                "2026-06-10T00-00-00Z",
+                total_items=9,
+                executed_item_count=1,
+                approval_coverage_rate=1.0,
+                execution_completion_rate=1 / 9,
+            ),
+            _history_entry(
+                "2026-06-01T00-00-00Z",
+                total_items=9,
+                executed_item_count=0,
+                approval_coverage_rate=0.0,
+                execution_completion_rate=0.0,
+            ),
+        ],
+    }
+
+    packet = build_reporting_trend_packet(
+        generated_at="2026-06-12T01:00:00Z",
+        history_packet=history_packet,
+        reporting_packets_by_run={
+            "2026-06-10T00-00-00Z": _owner_reporting_packet(
+                "2026-06-10T00-00-00Z",
+                owners=[
+                    _owner_entry(
+                        "shared-owner",
+                        item_count=2,
+                        executed_item_count=1,
+                        approval_coverage_rate=1.0,
+                        execution_completion_rate=0.5,
+                    )
+                ],
+            ),
+            "2026-06-01T00-00-00Z": _owner_reporting_packet(
+                "2026-06-01T00-00-00Z",
+                owners=[
+                    _owner_entry(
+                        "shared-owner",
+                        item_count=1,
+                        executed_item_count=0,
+                        approval_coverage_rate=0.0,
+                        execution_completion_rate=0.0,
+                    )
+                ],
+            ),
+        },
+    )
+
+    assert packet["owners"]["owners_excluded_count"] == 0
+    assert packet["owner_presence"] == {
+        "presence_status": "no_excluded_owners",
+        "window_run_count": 2,
+        "entries": [],
+    }
+
+
 def test_build_reporting_trend_packet_writes_insufficient_history_state() -> None:
     history_packet = {
         "generated_at": "2026-06-12T00:00:00Z",
@@ -435,6 +790,7 @@ def test_build_reporting_trend_packet_omits_owner_block_for_insufficient_history
 
     assert packet["trend_status"] == "insufficient_history"
     assert packet["owners"] is None
+    assert packet["owner_presence"] is None
 
 
 def test_build_reporting_trend_packet_rejects_missing_reporting_metadata() -> None:
@@ -968,3 +1324,137 @@ def test_render_reporting_trend_markdown_includes_owner_trend_section() -> None:
     assert "### Owner: omo-governance" in markdown
     assert "item_count=2" in markdown
     assert "item_count_delta=1" in markdown
+
+
+def test_render_reporting_trend_markdown_includes_owner_presence_section() -> None:
+    packet = {
+        "generated_at": "2026-06-12T01:00:00Z",
+        "trend_status": "trend_available",
+        "window_requested": None,
+        "from_run_stamp_requested": None,
+        "to_run_stamp_requested": None,
+        "window_run_count": 3,
+        "oldest_run_stamp": "2026-05-20T00-00-00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "runs": [
+            {
+                "run_stamp": "2026-05-20T00-00-00Z",
+                "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-05-20T00-00-00Z.yaml",
+                "reporting_ref": ".omo/debt/reporting/runs/2026-05-20T00-00-00Z/current.yaml",
+                "total_items": 10,
+                "executed_item_count": 0,
+                "approval_coverage_rate": 0.0,
+                "execution_completion_rate": 0.0,
+            },
+            {
+                "run_stamp": "2026-06-01T00-00-00Z",
+                "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-01T00-00-00Z.yaml",
+                "reporting_ref": ".omo/debt/reporting/runs/2026-06-01T00-00-00Z/current.yaml",
+                "total_items": 9,
+                "executed_item_count": 0,
+                "approval_coverage_rate": 0.0,
+                "execution_completion_rate": 0.0,
+            },
+            {
+                "run_stamp": "2026-06-10T00-00-00Z",
+                "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml",
+                "reporting_ref": ".omo/debt/reporting/runs/2026-06-10T00-00-00Z/current.yaml",
+                "total_items": 9,
+                "executed_item_count": 1,
+                "approval_coverage_rate": 1.0,
+                "execution_completion_rate": 1 / 9,
+            },
+        ],
+        "intervals": [
+            {
+                "from_run_stamp": "2026-05-20T00-00-00Z",
+                "to_run_stamp": "2026-06-01T00-00-00Z",
+                "total_items_delta": -1,
+                "executed_item_count_delta": 0,
+                "approval_coverage_rate_delta": 0.0,
+                "execution_completion_rate_delta": 0.0,
+            },
+            {
+                "from_run_stamp": "2026-06-01T00-00-00Z",
+                "to_run_stamp": "2026-06-10T00-00-00Z",
+                "total_items_delta": 0,
+                "executed_item_count_delta": 1,
+                "approval_coverage_rate_delta": 1.0,
+                "execution_completion_rate_delta": 1 / 9,
+            },
+        ],
+        "owners": {
+            "owners_trend_status": "owners_trend_available",
+            "shared_owner_count": 1,
+            "owners_excluded_count": 1,
+            "compared": [
+                {
+                    "owner": "omo-governance",
+                    "runs": [
+                        {
+                            "run_stamp": "2026-05-20T00-00-00Z",
+                            "item_count": 1,
+                            "executed_item_count": 0,
+                            "approval_coverage_rate": 0.0,
+                            "execution_completion_rate": 0.0,
+                        },
+                        {
+                            "run_stamp": "2026-06-01T00-00-00Z",
+                            "item_count": 2,
+                            "executed_item_count": 0,
+                            "approval_coverage_rate": 0.0,
+                            "execution_completion_rate": 0.0,
+                        },
+                        {
+                            "run_stamp": "2026-06-10T00-00-00Z",
+                            "item_count": 3,
+                            "executed_item_count": 1,
+                            "approval_coverage_rate": 1.0,
+                            "execution_completion_rate": 1 / 3,
+                        },
+                    ],
+                    "intervals": [
+                        {
+                            "from_run_stamp": "2026-05-20T00-00-00Z",
+                            "to_run_stamp": "2026-06-01T00-00-00Z",
+                            "item_count_delta": 1,
+                            "executed_item_count_delta": 0,
+                            "approval_coverage_rate_delta": 0.0,
+                            "execution_completion_rate_delta": 0.0,
+                        },
+                        {
+                            "from_run_stamp": "2026-06-01T00-00-00Z",
+                            "to_run_stamp": "2026-06-10T00-00-00Z",
+                            "item_count_delta": 1,
+                            "executed_item_count_delta": 1,
+                            "approval_coverage_rate_delta": 1.0,
+                            "execution_completion_rate_delta": 1 / 3,
+                        },
+                    ],
+                }
+            ],
+        },
+        "owner_presence": {
+            "presence_status": "presence_available",
+            "window_run_count": 3,
+            "entries": [
+                {
+                    "owner": "late-owner",
+                    "run_count": 1,
+                    "first_window_run": "2026-06-10T00-00-00Z",
+                    "last_window_run": "2026-06-10T00-00-00Z",
+                    "in_first_window_run": False,
+                    "in_last_window_run": True,
+                }
+            ],
+        },
+    }
+
+    markdown = render_reporting_trend_markdown(packet)
+
+    assert "## Owner Presence" in markdown
+    assert "presence_status=presence_available" in markdown
+    assert "window_run_count=3" in markdown
+    assert "### Presence Owner: late-owner" in markdown
+    assert "run_count=1" in markdown
+    assert "in_last_window_run=True" in markdown

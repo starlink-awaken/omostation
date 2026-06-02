@@ -1727,6 +1727,180 @@ def test_debt_report_trend_writes_owner_block_from_reporting_run_artifacts(tmp_p
     ]
 
 
+def test_debt_report_trend_writes_owner_presence_for_selected_last_window(tmp_path: Path) -> None:
+    debt_dir = tmp_path / ".omo" / "debt"
+    debt_dir.mkdir(parents=True, exist_ok=True)
+    history_path = debt_dir / "reporting" / "history" / "current.yaml"
+    history_path.parent.mkdir(parents=True, exist_ok=True)
+    history_path.write_text(
+        yaml.safe_dump(
+            {
+                "generated_at": "2026-06-12T00:00:00Z",
+                "latest_run_stamp": "2026-06-10T00-00-00Z",
+                "prior_run_stamp": "2026-06-01T00-00-00Z",
+                "run_count": 3,
+                "runs": [
+                    {
+                        "run_stamp": "2026-06-10T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-06-10T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-06-10T00:00:00Z",
+                        "total_items": 9,
+                        "executed_item_count": 1,
+                        "approval_coverage_rate": 1.0,
+                        "execution_completion_rate": 1 / 9,
+                    },
+                    {
+                        "run_stamp": "2026-06-01T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-01T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-06-01T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-06-01T00:00:00Z",
+                        "total_items": 9,
+                        "executed_item_count": 0,
+                        "approval_coverage_rate": 0.0,
+                        "execution_completion_rate": 0.0,
+                    },
+                    {
+                        "run_stamp": "2026-05-20T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-05-20T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-05-20T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-05-20T00:00:00Z",
+                        "total_items": 10,
+                        "executed_item_count": 0,
+                        "approval_coverage_rate": 0.0,
+                        "execution_completion_rate": 0.0,
+                    },
+                ],
+            },
+            sort_keys=False,
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+
+    _write_reporting_run_artifact(
+        debt_dir,
+        run_stamp="2026-06-10T00-00-00Z",
+        pending_approval=0,
+        ready_to_execute=8,
+        executed=1,
+        gate_item_count=1,
+        approved_gate_item_count=1,
+        approval_coverage_rate=1.0,
+        executed_item_count=1,
+        execution_completion_rate=1 / 9,
+        owners=[
+            {
+                "owner": "shared-owner",
+                "item_count": 2,
+                "state_counts": {"pending_approval": 0, "ready_to_execute": 1, "executed": 1},
+                "gate_item_count": 1,
+                "approved_gate_item_count": 1,
+                "approval_coverage_rate": 1.0,
+                "executed_item_count": 1,
+                "execution_completion_rate": 0.5,
+            },
+            {
+                "owner": "late-owner",
+                "item_count": 1,
+                "state_counts": {"pending_approval": 0, "ready_to_execute": 1, "executed": 0},
+                "gate_item_count": 0,
+                "approved_gate_item_count": 0,
+                "approval_coverage_rate": 0.0,
+                "executed_item_count": 0,
+                "execution_completion_rate": 0.0,
+            },
+        ],
+    )
+    _write_reporting_run_artifact(
+        debt_dir,
+        run_stamp="2026-06-01T00-00-00Z",
+        pending_approval=1,
+        ready_to_execute=8,
+        executed=0,
+        gate_item_count=1,
+        approved_gate_item_count=0,
+        approval_coverage_rate=0.0,
+        executed_item_count=0,
+        execution_completion_rate=0.0,
+        owners=[
+            {
+                "owner": "shared-owner",
+                "item_count": 1,
+                "state_counts": {"pending_approval": 1, "ready_to_execute": 0, "executed": 0},
+                "gate_item_count": 1,
+                "approved_gate_item_count": 0,
+                "approval_coverage_rate": 0.0,
+                "executed_item_count": 0,
+                "execution_completion_rate": 0.0,
+            }
+        ],
+    )
+    _write_reporting_run_artifact(
+        debt_dir,
+        run_stamp="2026-05-20T00-00-00Z",
+        pending_approval=1,
+        ready_to_execute=9,
+        executed=0,
+        gate_item_count=1,
+        approved_gate_item_count=0,
+        approval_coverage_rate=0.0,
+        executed_item_count=0,
+        execution_completion_rate=0.0,
+        owners=[
+            {
+                "owner": "legacy-only",
+                "item_count": 2,
+                "state_counts": {"pending_approval": 1, "ready_to_execute": 1, "executed": 0},
+                "gate_item_count": 0,
+                "approved_gate_item_count": 0,
+                "approval_coverage_rate": 0.0,
+                "executed_item_count": 0,
+                "execution_completion_rate": 0.0,
+            }
+        ],
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-trend",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+            "--last",
+            "2",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    packet = yaml.safe_load((debt_dir / "reporting" / "trend" / "current.yaml").read_text(encoding="utf-8"))
+
+    assert result.returncode == 0, result.stderr
+    assert packet["window_requested"] == 2
+    assert packet["owners"]["owners_trend_status"] == "owners_trend_available"
+    assert packet["owners"]["owners_excluded_count"] == 1
+    assert packet["owner_presence"] == {
+        "presence_status": "presence_available",
+        "window_run_count": 2,
+        "entries": [
+            {
+                "owner": "late-owner",
+                "run_count": 1,
+                "first_window_run": "2026-06-10T00-00-00Z",
+                "last_window_run": "2026-06-10T00-00-00Z",
+                "in_first_window_run": False,
+                "in_last_window_run": True,
+            }
+        ],
+    }
+
+
 def test_debt_report_trend_accepts_last_window_override(tmp_path: Path) -> None:
     debt_dir = tmp_path / ".omo" / "debt"
     debt_dir.mkdir(parents=True, exist_ok=True)

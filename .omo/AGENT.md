@@ -295,6 +295,11 @@ Interpretation rules:
 - `owners_trend_status` is explicit: `owners_trend_available` when at least one shared owner exists, `no_shared_owners` when the selected multi-run window has none, and owners stays null when `trend_status` is `insufficient_history`
 - Owner trend metrics are owner-scoped: `item_count`, `executed_item_count`, `approval_coverage_rate`, and `execution_completion_rate`
 - `shared_owner_count` reports how many owners survive the selected window intersection, and `owners_excluded_count` reports owners that appear somewhere in the selected window but not in every run
+- `owner_presence` is a parallel block, not a replacement for `owners`; it focuses only on excluded owners in the selected window
+- `owner_presence` uses `presence_status`: `presence_available` when excluded owners exist in the selected window, `no_excluded_owners` when the window has no excluded owners, and owner_presence stays null when owners stays null under `insufficient_history`
+- `owner_presence.window_run_count` mirrors the selected multi-run window, and each entry exposes `owner`, `run_count`, `first_window_run`, `last_window_run`, `in_first_window_run`, and `in_last_window_run`
+- `owner_presence` is window-scoped only: it says where excluded owners appear inside the selected window, not whether they globally appeared or disappeared across the whole system
+- In a two-run window this can overlap conceptually with `report-diff`, but `owner_presence` still reports selected-window presence facts rather than pairwise diff labels
 - Sparse gaps, burndown projections, and slope math remain deferred
 - Schedule command template: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at <NEXT_REVIEW_AT>`
 - Schedule shell example: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at 2026-06-17T00:00:00Z`
