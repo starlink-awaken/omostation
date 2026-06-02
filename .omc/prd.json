@@ -1,0 +1,49 @@
+{
+  "task": "闭合 governance overlay 在 contract_gap 处的下一片缺口：为缺少 deliverables 的 active task 建立 OMO-native 的 contract declaration / proposal flow，使系统不再只有阻断能力，还能把修复动作纳入治理闭环。",
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "生成 contract declaration request 与 governance proposal",
+      "priority": 1,
+      "passes": true,
+      "acceptanceCriteria": [
+        "文件 `/Users/xiamingxing/Workspace/scripts/omo_contract_request.py` 存在，并提供构建 contract request artifact 与 governance proposal 的 helper",
+        "contract request artifact 路径使用 `.omo/workers/runs/<TASK_ID>-contract-request-<STAMP>.yaml` 命名约定",
+        "proposal 目标直接指向原始 task YAML，`changes.set.deliverables` 等于传入的 deliverables 列表，不创建第二套 task SSOT"
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "为 contract declaration flow 增加 coordinator CLI 与 fail-closed 校验",
+      "priority": 2,
+      "passes": false,
+      "acceptanceCriteria": [
+        "命令 `python3 scripts/omo_worker.py task contract-declare-deliverables <TASK_ID> --deliverables <PATH>... --actor <ACTOR> --now <ISO8601>` 可执行",
+        "该命令只允许处于 `active_dispatch_blocked` / `contract:<TASK_ID>` 语义下的 task 进入 request flow；非 contract-gap task 会明确失败",
+        "执行命令后会同时写出 request artifact 与 `.omo/_truth/task-center/proposals/<...>-proposal.yaml`，且输出包含 proposal id / request ref"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "证明 contract proposal apply 后 overlay 会从 contract_gap 推进到 launch-ready",
+      "priority": 3,
+      "passes": false,
+      "acceptanceCriteria": [
+        "自动化测试证明：对 contract-gap task 运行 contract declaration command，再 approve/apply proposal 后，`governance-overlay-status` 会把该 task 从 `active_dispatch_blocked` 推进为 `active_dispatched`",
+        "自动化测试证明：proposal apply 后，overlay `next_action` 从 `contract:<TASK_ID>` 变为 `launch:<TASK_ID>`",
+        "文档 `.omo/AGENT.md`、`.omo/tasks/README.md`、`.omo/workers/README.md` 明确描述 `contract:<TASK_ID>` → `contract-declare-deliverables` → approve/apply → `launch:<TASK_ID>` 的 operator flow"
+      ]
+    },
+    {
+      "id": "US-VERIFY",
+      "title": "验证 contract repair flow 已闭合并记录 Ralph learnings",
+      "priority": 4,
+      "passes": false,
+      "acceptanceCriteria": [
+        "fresh focused verification 至少运行 `.omo/tests/test_omo_governance_overlay.py`、`.omo/tests/test_omo_automation.py`、`.omo/tests/test_worker_mechanism_consistency.py`，且相关筛选全部通过",
+        "progress.txt 追加记录本轮实现内容、变更文件、为何选择 proposal flow 而不是直接猜测 deliverables",
+        "reviewer 明确按以上 acceptance criteria 给出通过结论"
+      ]
+    }
+  ]
+}

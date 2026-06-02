@@ -1,0 +1,64 @@
+Ralph closure wave initialized at 2026-06-01.
+
+Goal:
+- Close the external OMO federation architecture at the current abstraction layer by adding the portfolio-level meta-governance wave (39/40/41), then verify there is no immediate adjacent structural gap.
+
+Planned stories:
+- US-039: portfolio routing / chooser / default arbitration
+- US-040: meta-governance / policy inheritance / exception control
+- US-041: lifecycle portfolio review / sunset radar / recomposition backlog
+- US-SYNC: shared surface synchronization and decisions
+- US-VERIFY-CLOSE: verification + reviewer approval + closure rationale
+
+Implementation checkpoint:
+- Added final closure wave playbooks:
+  - 39-OMO联邦Portfolio Routing、Multi-Federation Chooser与Default Arbitration Playbook.md
+  - 40-OMO联邦Meta-Governance、Policy Inheritance与Exception Control Playbook.md
+  - 41-OMO联邦Lifecycle Portfolio Review、Sunset Radar与Recomposition Backlog Playbook.md
+- Synced shared surfaces:
+  - README.md
+  - INDEX.md
+  - _control/INDEX.md
+  - _control/STATE.md
+  - _knowledge/02-OMO增长路线图.md
+  - _control/DECISIONS.md
+- Added decisions D-049 / D-050 / D-051.
+
+Fresh verification evidence:
+- control_count=44
+- playbook_count=39
+- README / INDEX / _control/INDEX / _control/STATE / 路线图 / DECISIONS all reference 39/40/41
+- stale synced-surface phrases removed:
+  - 41 文件
+  - 三十六个 Playbook
+  - 第 37 份及之后
+
+Closure rationale at current abstraction:
+- 1-38 already covered single-federation lifecycle from formation to failure-cycle reset and authority re-baseline.
+- 39-41 adds the missing portfolio layer: multi-federation routing, portfolio governance semantics, and portfolio lifecycle review.
+- After this wave, further expansion is optional topic-deepening beyond 第40份, not an adjacent structural gap in the current method-system layer.
+
+Reviewer + deslop:
+- Architect reviewer verdict: APPROVED against all PRD acceptance criteria.
+- Reviewer explicitly confirmed 39/40/41 is a sound final closure layer for the current abstraction.
+- Bounded ai-slop-cleaner pass over the Ralph changed-file set found no safe simplification worth expanding the diff; the patterned playbook structure is intentional and consistent with adjacent handbooks, so the cleanup action was to preserve the approved structure and proceed to regression re-verification.
+
+---
+
+Ralph contract-repair wave initialized at 2026-06-03.
+
+Current goal:
+- Close the next governance overlay gap by adding an OMO-native contract declaration flow for active tasks blocked on missing deliverables/write scope.
+
+US-001 complete:
+- Added `scripts/omo_contract_request.py` with:
+  - `contract_request_ref(...)`
+  - `build_contract_request(...)`
+  - `build_contract_proposal(...)`
+- Added unit coverage in `.omo/tests/test_omo_contract_request.py`.
+- Acceptance criteria verified with:
+  - `python3 -m pytest .omo/tests/test_omo_contract_request.py -q` -> `4 passed`
+
+Learnings:
+- The cleanest repair path is to reuse promotion/admission's request + governance proposal pattern.
+- The proposal should target the original task YAML directly via `changes.set.deliverables`, which preserves task SSOT and avoids a second write-scope registry.
