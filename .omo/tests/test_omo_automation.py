@@ -966,6 +966,68 @@ def test_sync_state_drops_stale_task_lines_from_next_active_queue(tmp_path: Path
     ]
 
 
+def test_sync_state_tracks_planned_tasks_and_preview(tmp_path: Path):
+    omo = tmp_path / ".omo"
+    _write_yaml(omo / "state" / "system.yaml", {"health_score": 0.0})
+    _write_yaml(omo / "goals" / "current.yaml", {"phase": 16, "status": "completed", "goals": []})
+    _write_yaml(
+        omo / "tasks" / "active" / "gate.yaml",
+        {"id": "P17-DEBT-GOVERNANCE-GATE-RULES", "phase": 17, "status": "in_progress", "run_ref": "run.yaml", "review_ref": "review.md"},
+    )
+    _write_yaml(omo / "tasks" / "planned" / "p18.yaml", {"id": "P18-W1-NEURAL-CENTER", "phase": 18, "status": "pending"})
+    _write_yaml(
+        omo / "tasks" / "planned" / "p19.yaml",
+        {"id": "P19-W1-AGENT-RUNTIME-ENHANCE", "phase": 19, "status": "pending"},
+    )
+    _write_yaml(omo / "tasks" / "blocked" / "blocked.yaml", {"id": "TASK-BLOCKED", "phase": 16})
+    _write_yaml(omo / "tasks" / "done" / "done.yaml", {"id": "TASK-DONE", "phase": 16, "status": "done"})
+
+    state = sync_state(omo, test_output="5 passed")
+
+    assert state["active_tasks"] == 1
+    assert state["planned_tasks"] == 2
+    assert state["blocked_tasks"] == 1
+    assert state["completed_tasks"] == 1
+    assert state["total_tasks"] == 5
+    assert state["next_active_tasks"] == [
+        "Current active queue from .omo/tasks/active/ (1 task)",
+        "P17-DEBT-GOVERNANCE-GATE-RULES",
+    ]
+    assert state["next_planned_tasks"] == [
+        "Current planned queue from .omo/tasks/planned/ (2 tasks)",
+        "P18-W1-NEURAL-CENTER",
+        "P19-W1-AGENT-RUNTIME-ENHANCE",
+    ]
+
+
+def test_sync_state_drops_stale_active_headers_when_count_changes(tmp_path: Path):
+    omo = tmp_path / ".omo"
+    _write_yaml(
+        omo / "state" / "system.yaml",
+        {
+            "health_score": 0.0,
+            "next_active_tasks": [
+                "Current active queue from .omo/tasks/active/ (32 tasks)",
+                "Current active queue from .omo/tasks/active/ (5 tasks)",
+                "Phase 17 gate in progress",
+            ],
+        },
+    )
+    _write_yaml(omo / "goals" / "current.yaml", {"phase": 16, "status": "completed", "goals": []})
+    _write_yaml(
+        omo / "tasks" / "active" / "gate.yaml",
+        {"id": "P17-DEBT-GOVERNANCE-GATE-RULES", "phase": 17, "status": "in_progress", "run_ref": "run.yaml", "review_ref": "review.md"},
+    )
+
+    state = sync_state(omo, test_output="1 passed")
+
+    assert state["next_active_tasks"] == [
+        "Current active queue from .omo/tasks/active/ (1 task)",
+        "P17-DEBT-GOVERNANCE-GATE-RULES",
+        "Phase 17 gate in progress",
+    ]
+
+
 def test_dispatch_task_creates_packet_and_preclaims_task(tmp_path: Path):
     root = tmp_path
     omo = root / ".omo"
