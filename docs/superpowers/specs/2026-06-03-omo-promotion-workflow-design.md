@@ -148,7 +148,8 @@ Instead:
 1. the packet must already be `candidate` or `pending` in `planned/`
 2. successful promotion moves the file into `active/`
 3. its status remains `pending` after promotion
-4. dispatch fields remain unset until the normal execution claim happens later
+4. the promotion envelope ref is appended to `handoff_refs`
+5. dispatch fields remain unset until the normal execution claim happens later
 
 This keeps the canonical status model intact and makes queue placement carry the execution-eligibility meaning.
 
@@ -209,9 +210,10 @@ The explicit `target_phase == current_phase + 1` rule is intentionally narrow fo
 
 1. run the same eligibility checks as `promote-eval`
 2. write the promotion envelope artifact
-3. move the task file from `planned/` to `active/`
-4. run `sync_omo_state.py --omo-dir .omo`
-5. print the envelope ref and the new task ref
+3. append the envelope ref to the task's `handoff_refs`
+4. move the task file from `planned/` to `active/`
+5. run `sync_omo_state.py --omo-dir .omo`
+6. print the envelope ref and the new task ref
 
 If any step fails:
 
@@ -238,7 +240,8 @@ Expected rehearsal result:
 
 1. the packet moves from `planned/` to `active/`
 2. a promotion envelope artifact exists under `.omo/workers/runs/`
-3. `state/system.yaml` reflects the changed counts and previews
+3. the active task now points back to that envelope through `handoff_refs`
+4. `state/system.yaml` reflects the changed counts and previews
 
 ## 7. Data flow
 
@@ -246,9 +249,10 @@ The intended Version 1 flow is:
 
 1. coordinator selects one planned packet
 2. `promote-eval` checks queue membership, phase horizon, approval, and active-schema readiness
-3. `promote-apply` writes the promotion envelope and performs the queue move
+3. `promote-apply` writes the promotion envelope, records its ref on the task, and performs the queue move
 4. state sync refreshes `active_tasks`, `planned_tasks`, `next_active_tasks`, and `next_planned_tasks`
-5. rehearsal evidence points to the envelope and the refreshed live state
+5. queue-hygiene tests treat future-phase pending packets in `active/` as valid only when a promotion envelope ref is present in `handoff_refs`
+6. rehearsal evidence points to the envelope and the refreshed live state
 
 This keeps promotion visible at both the truth layer (task file location) and the delivery layer (run artifact).
 
@@ -273,10 +277,11 @@ The implementation plan should include tests for:
 
 1. `promote-eval` rejects a Phase 18+ packet while current phase is 16
 2. `promote-eval` rejects an approval-required packet without `approval_ref`
-3. `promote-apply` creates the promotion envelope and moves a valid Phase 17 packet from `planned/` to `active/`
+3. `promote-apply` creates the promotion envelope, records it in `handoff_refs`, and moves a valid Phase 17 packet from `planned/` to `active/`
 4. failed promotion rolls back any partial move
-5. rehearsal updates `state/system.yaml` counts and previews correctly
-6. docs record the new promotion workflow without changing the canonical full verify command
+5. queue-hygiene tests allow promoted future-phase pending packets only when the envelope ref is present
+6. rehearsal updates `state/system.yaml` counts and previews correctly
+7. docs record the new promotion workflow without changing the canonical full verify command
 
 ## 10. Risks and mitigations
 
