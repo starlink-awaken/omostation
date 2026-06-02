@@ -1,0 +1,18 @@
+generated_at: '2026-06-03T00:15:00Z'
+approval_task_count: 1
+requested_count: 0
+approved_pending_apply_count: 0
+granted_count: 1
+tasks:
+- task_id: P19-W3-ARCHIVE-TS
+  task_ref: .omo/tasks/planned/P19-W3-ARCHIVE-TS.yaml
+  approval_ref: .omo/workers/runs/P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z.yaml
+  approval_id: P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z
+  approval_status: granted
+  proposal_id: P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z-proposal
+  proposal_ref: .omo/_truth/task-center/proposals/P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z-proposal.yaml
+  proposal_status: verified
+  human_approval_required: true
+  eligible: false
+  blockers:
+  - phase_mismatch

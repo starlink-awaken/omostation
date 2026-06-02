@@ -1,4 +1,4 @@
-generated_at: '2026-06-03T00:00:00Z'
+generated_at: '2026-06-03T00:15:00Z'
 current_phase: 16
 target_phase: 17
 ready_count: 6
@@ -237,12 +237,11 @@ tasks:
   eligible: false
   blockers:
   - phase_mismatch
-  - approval_invalid
   checks:
     queue_membership_ok: true
     status_ok: true
     phase_ok: false
-    approval_ready: false
+    approval_ready: true
     target_path_clear: true
     active_schema_ready: true
   errors: []

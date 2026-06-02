@@ -16,8 +16,9 @@ rollback_plan:
   approval_status back to requested if the release must be withdrawn.
 secret_refs: []
 trace_id: trace-P19-W3-ARCHIVE-TS-promotion-approval-2026-06-03T00-00-00Z
-status: proposed
+status: verified
 requested_at: '2026-06-03T00:00:00Z'
-approved_at: null
-applied_at: null
-verified_at: null
+approved_at: '2026-06-03T00:10:00Z'
+applied_at: '2026-06-03T00:15:00Z'
+verified_at: '2026-06-03T00:15:00Z'
+approved_by: copilot-cli
