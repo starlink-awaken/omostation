@@ -2143,3 +2143,50 @@ def test_render_reporting_trend_markdown_includes_execution_progress_section() -
     assert "### Progress Run: 2026-06-10T00-00-00Z" in markdown
     assert "open_item_delta_vs_baseline=-5" in markdown
     assert "open_item_ratio_vs_baseline=0.5" in markdown
+
+
+def test_render_reporting_trend_markdown_includes_state_progress_section() -> None:
+    packet = {
+        "generated_at": "2026-06-12T01:00:00Z",
+        "trend_status": "trend_available",
+        "window_requested": None,
+        "from_run_stamp_requested": None,
+        "to_run_stamp_requested": None,
+        "window_run_count": 2,
+        "oldest_run_stamp": "2026-06-01T00-00-00Z",
+        "latest_run_stamp": "2026-06-10T00-00-00Z",
+        "runs": [],
+        "intervals": [],
+        "owners": None,
+        "owner_presence": None,
+        "execution_progress": None,
+        "state_progress": {
+            "state_progress_status": "state_progress_available",
+            "anchor_run_stamp": "2026-06-01T00-00-00Z",
+            "baseline_pending_approval": 2,
+            "runs": [
+                {
+                    "run_stamp": "2026-06-01T00-00-00Z",
+                    "pending_approval": 2,
+                    "ready_to_execute": 6,
+                    "executed": 1,
+                    "pending_approval_delta_vs_baseline": 0,
+                },
+                {
+                    "run_stamp": "2026-06-10T00-00-00Z",
+                    "pending_approval": 1,
+                    "ready_to_execute": 4,
+                    "executed": 3,
+                    "pending_approval_delta_vs_baseline": -1,
+                },
+            ],
+        },
+    }
+
+    markdown = render_reporting_trend_markdown(packet)
+
+    assert "## State Progress" in markdown
+    assert "state_progress_status=state_progress_available" in markdown
+    assert "baseline_pending_approval=2" in markdown
+    assert "### State Run: 2026-06-10T00-00-00Z" in markdown
+    assert "pending_approval_delta_vs_baseline=-1" in markdown
