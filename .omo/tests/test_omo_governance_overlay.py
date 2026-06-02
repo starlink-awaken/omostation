@@ -227,3 +227,116 @@ def test_build_governance_overlay_status_prefers_verify_for_active_review_target
 
     assert result["yaml"]["active_target_states"][0]["state"] == "active_review"
     assert result["yaml"]["next_action"] == "verify:TASK-A"
+
+
+def test_build_governance_overlay_status_surfaces_contract_gap_for_dispatched_empty_scope(tmp_path: Path):
+    _write_yaml(
+        tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
+        {
+            "overlay_id": "GOV-OVERLAY-2026-06",
+            "status": "active",
+            "autopilot_mode": "full_omo_autopilot",
+            "intake_scope": "future_planned_debt",
+            "current_milestone": "GOV-M1-EXECUTION-HARDENING",
+            "next_milestone": "GOV-M2-SHAREDBRAIN-DEBT",
+            "success_target": "future roadmap governed through overlay lane",
+            "updated_at": "2026-06-03T07:10:00Z",
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "autopilot-policy.yaml",
+        {"autopilot_mode": "full_omo_autopilot", "auto_select": True},
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml",
+        {
+            "items": [
+                {
+                    "id": "GOV-M1-EXECUTION-HARDENING",
+                    "type": "task-bundle",
+                    "title": "Execution hardening",
+                    "priority": "P0",
+                    "status": "in_progress",
+                    "depends_on": [],
+                    "source_refs": [".omo/MASTER-BLUEPRINT.md"],
+                    "target_refs": [".omo/tasks/planned/TASK-A.yaml"],
+                    "success_criteria": ["execution hardening closed"],
+                }
+            ]
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "active" / "TASK-A.yaml",
+        {
+            "id": "TASK-A",
+            "status": "in_progress",
+            "deliverables": [],
+            "run_ref": ".omo/workers/runs/task-a-dispatch.yaml",
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "runs" / "task-a-dispatch.yaml",
+        {"dispatch_state": "dispatched"},
+    )
+
+    result = build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T07:12:00Z")
+
+    assert result["yaml"]["active_target_states"][0]["state"] == "active_dispatch_blocked"
+    assert result["yaml"]["active_target_states"][0]["detail"] == "dispatch exists but task has no launch-ready write scope"
+    assert result["yaml"]["next_action"] == "contract:TASK-A"
+
+
+def test_build_governance_overlay_status_surfaces_launch_for_dispatched_ready_scope(tmp_path: Path):
+    _write_yaml(
+        tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
+        {
+            "overlay_id": "GOV-OVERLAY-2026-06",
+            "status": "active",
+            "autopilot_mode": "full_omo_autopilot",
+            "intake_scope": "future_planned_debt",
+            "current_milestone": "GOV-M1-EXECUTION-HARDENING",
+            "next_milestone": "GOV-M2-SHAREDBRAIN-DEBT",
+            "success_target": "future roadmap governed through overlay lane",
+            "updated_at": "2026-06-03T07:10:00Z",
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "autopilot-policy.yaml",
+        {"autopilot_mode": "full_omo_autopilot", "auto_select": True},
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml",
+        {
+            "items": [
+                {
+                    "id": "GOV-M1-EXECUTION-HARDENING",
+                    "type": "task-bundle",
+                    "title": "Execution hardening",
+                    "priority": "P0",
+                    "status": "in_progress",
+                    "depends_on": [],
+                    "source_refs": [".omo/MASTER-BLUEPRINT.md"],
+                    "target_refs": [".omo/tasks/planned/TASK-A.yaml"],
+                    "success_criteria": ["execution hardening closed"],
+                }
+            ]
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "active" / "TASK-A.yaml",
+        {
+            "id": "TASK-A",
+            "status": "in_progress",
+            "deliverables": ["src/app.py"],
+            "run_ref": ".omo/workers/runs/task-a-dispatch.yaml",
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "runs" / "task-a-dispatch.yaml",
+        {"dispatch_state": "dispatched"},
+    )
+
+    result = build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T07:13:00Z")
+
+    assert result["yaml"]["active_target_states"][0]["state"] == "active_dispatched"
+    assert result["yaml"]["next_action"] == "launch:TASK-A"
