@@ -1220,6 +1220,88 @@ def test_worker_validate_command_reports_all_planned_errors(tmp_path: Path, monk
     assert "planned tasks must use candidate or pending status" in output
 
 
+def test_task_promote_eval_rejects_phase_beyond_next_wave(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P18-W1-TOO-FAR.yaml",
+        {
+            "id": "P18-W1-TOO-FAR",
+            "phase": 18,
+            "milestone": "M18.1",
+            "priority": "P1",
+            "title": "Too far ahead",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["phase16_completed"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "human_approval_required": False,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["omo", "task", "promote-eval", "P18-W1-TOO-FAR", "--omo-dir", ".omo"])
+
+    assert omo_worker_main() == 1
+    output = capsys.readouterr().out
+
+    assert "eligible=false" in output
+    assert "phase_mismatch" in output
+
+
+def test_task_promote_eval_rejects_missing_required_approval_ref(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-NEEDS-APPROVAL.yaml",
+        {
+            "id": "P17-W1-NEEDS-APPROVAL",
+            "phase": 17,
+            "milestone": "M17.1",
+            "priority": "P1",
+            "title": "Approval-gated packet",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["phase16_completed"],
+            "risk_level": "L2",
+            "allowed_operation_level": "L2",
+            "human_approval_required": True,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "promote-eval", "P17-W1-NEEDS-APPROVAL", "--omo-dir", ".omo"],
+    )
+
+    assert omo_worker_main() == 1
+    output = capsys.readouterr().out
+
+    assert "eligible=false" in output
+    assert "approval_missing" in output
+
+
 def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Path):
     root = tmp_path
     omo = root / ".omo"
