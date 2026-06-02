@@ -253,6 +253,9 @@ Interpretation rules:
 - Dispatched `revalidate` commands now carry `--dispatch-run-ref .omo/debt/dispatch/runs/<timestamp>.yaml`; use the frozen dispatch command rather than reconstructing it by hand
 - If a newer dispatch run supersedes the surfaced packet, stale dispatched commands fail closed until the operator reruns from the latest dispatch packet
 - Successful dispatched execution writes immutable evidence under `.omo/debt/dispatch/executions/<RUN_STAMP>/<ITEM_ID>.yaml`
+- Generate the latest run-level coordination packet with `python3 scripts/omo_debt.py campaign --omo-dir .omo`; pass `--run-ref <RUN_REF>` when you need to inspect a specific dispatch run instead of the latest one
+- Campaign packets are derived from dispatch, approval, and execution facts and live at `.omo/debt/campaign/current.yaml` plus `.omo/debt/campaign/runs/<RUN_STAMP>/current.yaml`
+- Campaign state meanings stay narrow in Version 1: `pending_approval` means a gate item lacks matching approval for the run, `ready_to_execute` means the run still has executable work, and `executed` means immutable execution evidence already exists for that run/item pair
 - Schedule command template: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at <NEXT_REVIEW_AT>`
 - Schedule shell example: `python3 scripts/omo_debt.py schedule --omo-dir .omo --id <ID> --next-review-at 2026-06-17T00:00:00Z`
 - Review packets must expose sections for `Due Now`, `Escalation Candidates`, `Upcoming Window`, and `Unscheduled Debts`

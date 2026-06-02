@@ -41,3 +41,8 @@ def test_omo_agent_documents_debt_refresh_flow() -> None:
     assert "--dispatch-run-ref" in content
     assert ".omo/debt/dispatch/executions/<RUN_STAMP>/" in content
     assert "stale dispatched commands fail closed" in content.lower()
+    assert "python3 scripts/omo_debt.py campaign --omo-dir .omo" in content
+    assert ".omo/debt/campaign/current.yaml" in content
+    assert "pending_approval" in content
+    assert "ready_to_execute" in content
+    assert "executed" in content

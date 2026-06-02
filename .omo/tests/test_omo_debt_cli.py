@@ -668,3 +668,129 @@ def test_debt_revalidate_rejects_stale_approval_after_new_dispatch(tmp_path: Pat
     assert revalidate.returncode != 0
     assert "dispatch run" in revalidate.stderr
     assert after == before
+
+
+def test_debt_campaign_requires_dispatch_packet_when_run_ref_missing(tmp_path: Path) -> None:
+    debt_dir = tmp_path / ".omo" / "debt"
+    debt_dir.mkdir(parents=True, exist_ok=True)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "campaign",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    assert result.returncode != 0
+    assert "dispatch/current.yaml" in result.stderr
+
+
+def test_debt_campaign_writes_latest_run_outputs(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
+    shutil.copytree(source, tmp_path / ".omo" / "debt")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "campaign",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    current_yaml = yaml.safe_load((tmp_path / ".omo" / "debt" / "campaign" / "current.yaml").read_text(encoding="utf-8"))
+    run_yaml = yaml.safe_load(
+        (tmp_path / ".omo" / "debt" / "campaign" / "runs" / "2026-06-10T00-00-00Z" / "current.yaml").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert current_yaml == run_yaml
+    assert current_yaml["dispatch_run_ref"] == ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml"
+    assert current_yaml["summary"]["state_counts"] == {
+        "pending_approval": 1,
+        "ready_to_execute": 8,
+        "executed": 0,
+    }
+
+
+def test_debt_campaign_reflects_approval_and_execution_facts(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
+    shutil.copytree(source, tmp_path / ".omo" / "debt")
+
+    run_ref = ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml"
+    approve = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "approve",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+            "--id",
+            "SB_DECOMPOSITION",
+            "--approved-by",
+            "omo-governance",
+            "--scope",
+            "execute_revalidate",
+            "--approved-at",
+            "2026-06-11T00:00:00Z",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    execute = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "revalidate",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+            "--id",
+            "SB_UNTESTED_PKGS",
+            "--reviewed-at",
+            "2026-06-11T12:00:00Z",
+            "--dispatch-run-ref",
+            run_ref,
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    campaign = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "campaign",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+            "--run-ref",
+            run_ref,
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    packet = yaml.safe_load((tmp_path / ".omo" / "debt" / "campaign" / "current.yaml").read_text(encoding="utf-8"))
+    entries = {entry["id"]: entry for owner in packet["owners"] for entry in owner["entries"]}
+
+    assert approve.returncode == 0, approve.stderr
+    assert execute.returncode == 0, execute.stderr
+    assert campaign.returncode == 0, campaign.stderr
+    assert entries["SB_DECOMPOSITION"]["campaign_state"] == "ready_to_execute"
+    assert entries["SB_UNTESTED_PKGS"]["campaign_state"] == "executed"
+    assert entries["SB_UNTESTED_PKGS"]["execution_record_ref"] == (
+        ".omo/debt/dispatch/executions/2026-06-10T00-00-00Z/SB_UNTESTED_PKGS.yaml"
+    )
