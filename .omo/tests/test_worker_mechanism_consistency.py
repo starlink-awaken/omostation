@@ -158,6 +158,20 @@ def test_task_and_plan_docs_embed_required_standard_references():
     assert "phase2-full-execution-go-no-go.md" in plans_text
 
 
+def test_task_docs_distinguish_active_and_planned_queues():
+    tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    index_text = (OMO / "INDEX.md").read_text(encoding="utf-8")
+    doc_arch_text = (OMO / "DOC-ARCH.md").read_text(encoding="utf-8")
+    tests_text = (OMO / "tests" / "README.md").read_text(encoding="utf-8")
+
+    assert "tasks/planned/" in tasks_text
+    assert "strict-active-only" in agent_text
+    assert "[tasks/planned/](tasks/planned/)" in index_text
+    assert "planned/" in doc_arch_text
+    assert "planned queue" in tests_text
+
+
 def test_standards_registry_tracks_active_and_legacy_merged_docs():
     standards_readme = (OMO / "standards" / "README.md").read_text(encoding="utf-8")
 

@@ -20,6 +20,8 @@
 | 6 | [tasks/active/](tasks/active/) | 查看可认领的活跃任务 |
 
 > **启动检查**：读完上面 6 步后，你应该知道：系统在哪一阶段、状态是否健康、还有哪些任务可做。
+>
+> **Queue contract**：采用 `strict-active-only` 规则；只有 `tasks/active/` 是当前可执行队列，`tasks/planned/` 只是 future backlog / not-yet-promoted packet surface。
 
 ---
 
@@ -82,7 +84,7 @@
 
 | 操作 | 写入位置 | 前提条件 |
 |------|---------|---------|
-| 创建新任务 | `tasks/active/` | 必须符合 YAML schema（14 必填字段） |
+| 创建新任务 | `tasks/active/` | 仅限已晋升的可执行任务；必须符合 YAML schema（14 必填字段） |
 | 完成任务 | `tasks/done/` | 必须提供 evidence + 更新 state |
 | 更新状态 | `state/system.yaml` | 通过 `scripts/sync_omo_state.py` 自动完成 |
 | 更新目标 | `goals/current.yaml` | ⚠️ 仅人类可修改，Agent 只能读取 |
@@ -114,6 +116,7 @@
 1. 查看 active/ 任务列表
     → 检查 risk_level + allowed_operation_level
     → 确认 human_approval_required
+    → 保持 strict-active-only：不要直接执行 planned queue
 
 2. 阅读 source_docs
     → 理解任务上下文
