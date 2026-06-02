@@ -130,7 +130,7 @@ A single repo-local entrypoint should represent the authoritative `.omo` verific
 
 Form:
 
-- either a dedicated script such as `scripts/verify_omo.py` / `scripts/verify_omo.sh`
+- either a dedicated script such as `bin/verify-omo.sh`
 - or a single Make target that becomes the only canonical entrypoint and is directly reused by CI
 
 Recommendation:

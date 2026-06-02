@@ -12,7 +12,7 @@
 
 ## File map
 
-- Create: `/Users/xiamingxing/Workspace/scripts/verify_omo.sh`
+- Create: `/Users/xiamingxing/Workspace/bin/verify-omo.sh`
 - Create: `/Users/xiamingxing/Workspace/.omo/tests/test_omo_verification_contract.py`
 - Modify: `/Users/xiamingxing/Workspace/Makefile`
 - Modify: `/Users/xiamingxing/Workspace/.github/workflows/governance-check.yml`
@@ -43,7 +43,7 @@ def _read(rel_path: str) -> str:
 
 
 def test_canonical_runner_exists_and_keeps_stage_order() -> None:
-    script = _read("scripts/verify_omo.sh")
+    script = _read("bin/verify-omo.sh")
 
     sync_cmd = "python3 scripts/sync_omo_state.py --omo-dir .omo"
     validate_cmd = "python3 scripts/omo_worker.py task validate --all-active"
@@ -62,7 +62,7 @@ def test_makefile_delegates_to_canonical_runner() -> None:
 
     assert ".PHONY: help kairon-test kairon-build kairon-lint governance-check governance-sync governance-validate governance-index-check governance-verify" in makefile
     assert "governance-verify:" in makefile
-    assert "\tbash scripts/verify_omo.sh" in makefile
+    assert "\tbash bin/verify-omo.sh" in makefile
     assert "governance-check: governance-verify governance-index-check" in makefile
 
 
@@ -70,14 +70,14 @@ def test_governance_workflow_uses_canonical_runner() -> None:
     workflow = _read(".github/workflows/governance-check.yml")
 
     assert "- name: Canonical .omo verification" in workflow
-    assert "run: bash scripts/verify_omo.sh" in workflow
+    assert "run: bash bin/verify-omo.sh" in workflow
 
 
 def test_omo_agent_documents_canonical_verification_command() -> None:
     agent = _read(".omo/AGENT.md")
 
     assert "canonical `.omo` verification command" in agent
-    assert "`bash scripts/verify_omo.sh`" in agent
+    assert "`bash bin/verify-omo.sh`" in agent
     assert "`make governance-verify`" in agent
     assert "partial checks only" in agent
 ```
@@ -90,7 +90,7 @@ Run:
 cd /Users/xiamingxing/Workspace && python3 -m pytest .omo/tests/test_omo_verification_contract.py -q
 ```
 
-Expected: FAIL because `scripts/verify_omo.sh` does not exist yet and the current `Makefile` / workflow / `.omo/AGENT.md` do not all reference one canonical runner.
+Expected: FAIL because `bin/verify-omo.sh` does not exist yet and the current `Makefile` / workflow / `.omo/AGENT.md` do not all reference one canonical runner.
 
 - [ ] **Step 3: Keep the failing baseline in place**
 
@@ -117,12 +117,12 @@ cd /Users/xiamingxing/Workspace && git add .omo/tests/test_omo_verification_cont
 ### Task 2: Add the canonical `.omo` verification runner
 
 **Files:**
-- Create: `/Users/xiamingxing/Workspace/scripts/verify_omo.sh`
+- Create: `/Users/xiamingxing/Workspace/bin/verify-omo.sh`
 - Test: `/Users/xiamingxing/Workspace/.omo/tests/test_omo_verification_contract.py`
 
 - [ ] **Step 1: Write the minimal runner**
 
-Create `/Users/xiamingxing/Workspace/scripts/verify_omo.sh` with this content:
+Create `/Users/xiamingxing/Workspace/bin/verify-omo.sh` with this content:
 
 ```bash
 #!/usr/bin/env bash
@@ -146,10 +146,10 @@ python3 -m pytest .omo/tests -q
 Run:
 
 ```bash
-cd /Users/xiamingxing/Workspace && chmod +x scripts/verify_omo.sh
+cd /Users/xiamingxing/Workspace && chmod +x bin/verify-omo.sh
 ```
 
-Expected: `scripts/verify_omo.sh` is executable.
+Expected: `bin/verify-omo.sh` is executable.
 
 - [ ] **Step 3: Run the contract test**
 
@@ -166,7 +166,7 @@ Expected: PASS. The remaining tests in `test_omo_verification_contract.py` shoul
 Run:
 
 ```bash
-cd /Users/xiamingxing/Workspace && bash scripts/verify_omo.sh
+cd /Users/xiamingxing/Workspace && bash bin/verify-omo.sh
 ```
 
 Expected: the three stages run in order; use the current repo baseline as the source of truth for pass/fail while the rest of the integration work is still incomplete.
@@ -174,7 +174,7 @@ Expected: the three stages run in order; use the current repo baseline as the so
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/xiamingxing/Workspace && git add scripts/verify_omo.sh .omo/tests/test_omo_verification_contract.py && git -c core.hooksPath=/dev/null commit -m $'feat(omo): add canonical verification runner\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>'
+cd /Users/xiamingxing/Workspace && git add bin/verify-omo.sh .omo/tests/test_omo_verification_contract.py && git -c core.hooksPath=/dev/null commit -m $'feat(omo): add canonical verification runner\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>'
 ```
 
 ---
@@ -217,7 +217,7 @@ kairon-build:
 	cd projects/kairon && uv sync
 
 governance-verify:
-	bash scripts/verify_omo.sh
+	bash bin/verify-omo.sh
 
 governance-check: governance-verify governance-index-check
 	@echo "Governance checks complete."
@@ -244,7 +244,7 @@ with one visible canonical step plus explicit extra checks:
 
 ```yaml
       - name: Canonical .omo verification
-        run: bash scripts/verify_omo.sh
+        run: bash bin/verify-omo.sh
 ```
 
 Keep `INDEX.md Coverage Check`, `System consistency check`, and any other non-canonical policy steps as separate layers after the canonical step.
@@ -258,7 +258,7 @@ Add a short operator-facing subsection under the consistency / execution guidanc
 
 Use this command when you need proof that the Workspace `.omo` governance surface is green:
 
-- `bash scripts/verify_omo.sh`
+- `bash bin/verify-omo.sh`
 
 Equivalent local wrapper:
 
@@ -298,7 +298,7 @@ cd /Users/xiamingxing/Workspace && git add Makefile .github/workflows/governance
 ### Task 4: Verify the solidified path end-to-end
 
 **Files:**
-- Verify only: `/Users/xiamingxing/Workspace/scripts/verify_omo.sh`
+- Verify only: `/Users/xiamingxing/Workspace/bin/verify-omo.sh`
 - Verify only: `/Users/xiamingxing/Workspace/Makefile`
 - Verify only: `/Users/xiamingxing/Workspace/.github/workflows/governance-check.yml`
 - Verify only: `/Users/xiamingxing/Workspace/.omo/AGENT.md`
@@ -309,7 +309,7 @@ cd /Users/xiamingxing/Workspace && git add Makefile .github/workflows/governance
 Run:
 
 ```bash
-cd /Users/xiamingxing/Workspace && bash scripts/verify_omo.sh
+cd /Users/xiamingxing/Workspace && bash bin/verify-omo.sh
 ```
 
 Expected: PASS with the sync, validate, and `.omo` test stages printed in order.
@@ -322,7 +322,7 @@ Run:
 cd /Users/xiamingxing/Workspace && make governance-verify
 ```
 
-Expected: PASS and delegate to `bash scripts/verify_omo.sh`.
+Expected: PASS and delegate to `bash bin/verify-omo.sh`.
 
 - [ ] **Step 3: Run the regression test guarding drift**
 
@@ -347,5 +347,5 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/xiamingxing/Workspace && git add scripts/verify_omo.sh Makefile .github/workflows/governance-check.yml .omo/AGENT.md .omo/tests/test_omo_verification_contract.py && git -c core.hooksPath=/dev/null commit -m $'test(omo): verify solidified validation flow\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>'
+cd /Users/xiamingxing/Workspace && git add bin/verify-omo.sh Makefile .github/workflows/governance-check.yml .omo/AGENT.md .omo/tests/test_omo_verification_contract.py && git -c core.hooksPath=/dev/null commit -m $'test(omo): verify solidified validation flow\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>'
 ```
