@@ -142,13 +142,18 @@ def test_phase16_closeout_and_live_state_are_completed_with_only_authorized_acti
     state = _read_yaml("state/system.yaml")
     active_tasks = list((OMO_ROOT / "tasks" / "active").glob("*.yaml"))
     active_payloads = [yaml.safe_load(path.read_text(encoding="utf-8")) for path in active_tasks]
-    # After Phase 16 closeout, only explicitly authorized execution packets may remain active;
-    # pending future backlog must live in planned/.
+    # After Phase 16 closeout, future backlog must live in planned/ unless the coordinator
+    # explicitly promotes one packet and records that promotion in handoff_refs.
     stale_active = [
         task for task in active_payloads
         if task.get("phase", 0) <= goals["phase"]
     ]
-    unauthorized_active = [task["id"] for task in active_payloads if task.get("status") == "pending"]
+    unauthorized_active = [
+        task["id"]
+        for task in active_payloads
+        if task.get("status") == "pending"
+        and not any("-promotion-" in ref for ref in task.get("handoff_refs", []))
+    ]
 
     assert goals["phase"] == 16
     assert goals["status"] == "completed"

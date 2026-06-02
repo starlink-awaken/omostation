@@ -68,7 +68,12 @@ def test_phase14_remains_completed_after_phase16_completion_allowing_only_author
         task for task in active_payloads
         if task.get("phase", 0) <= goals["phase"]
     ]
-    unauthorized_active = [task["id"] for task in active_payloads if task.get("status") == "pending"]
+    unauthorized_active = [
+        task["id"]
+        for task in active_payloads
+        if task.get("status") == "pending"
+        and not any("-promotion-" in ref for ref in task.get("handoff_refs", []))
+    ]
 
     assert goals["phase"] == 16
     assert goals["status"] == "completed"

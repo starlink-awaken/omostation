@@ -17,9 +17,10 @@ phase3_acceptance_status: completed
 phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
 completed_tasks: 124
 total_tasks: 158
-active_tasks: 2
+active_tasks: 3
 next_active_tasks:
-- Current active queue from .omo/tasks/active/ (2 tasks)
+- Current active queue from .omo/tasks/active/ (3 tasks)
+- ORPHANED-TASKS-STRUCTURED-REGISTRY
 - P17-DEBT-GOVERNANCE-GATE-RULES
 - SHAREDBRAIN-FORMAL-DECISION
 last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 kickoff
@@ -45,9 +46,12 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-02T16:25:51Z'
+updated_at: '2026-06-02T16:50:02Z'
 divergence_flags: []
 task_gate_summary:
+  ORPHANED-TASKS-STRUCTURED-REGISTRY:
+    canonical_status: pending
+    gate_facts: []
   P17-DEBT-GOVERNANCE-GATE-RULES:
     canonical_status: in_progress
     gate_facts:
@@ -59,6 +63,7 @@ task_gate_summary:
     - dispatched
     - review_ready
 promotion_blockers:
+  ORPHANED-TASKS-STRUCTURED-REGISTRY: []
   P17-DEBT-GOVERNANCE-GATE-RULES: []
   SHAREDBRAIN-FORMAL-DECISION: []
 divergence_triage_summary: {}
@@ -135,12 +140,11 @@ debt_metrics:
 debt_watchlist_count: 3
 debt_gate_count: 1
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 30
+planned_tasks: 29
 next_planned_tasks:
-- Current planned queue from .omo/tasks/planned/ (30 tasks)
+- Current planned queue from .omo/tasks/planned/ (29 tasks)
 - D2-CI-E2E-TEST-ENV
 - D3-EU-PRICING-TEST
-- ORPHANED-TASKS-STRUCTURED-REGISTRY
 - P17-W1-ARCHITECTURE-FOUNDATION
 - P17-W2-SHAREDBRAIN-PROTOCOLS-V1
 - P17-W3-METAOS-GAP-ANALYSIS
