@@ -1177,3 +1177,96 @@ def test_debt_report_diff_rederives_metrics_from_facts_not_history_metadata(tmp_
     assert packet["summary_diff"]["total_items"] == {"latest": 9, "prior": 9, "delta": 0}
     assert packet["summary_diff"]["approval_coverage_rate"] == {"latest": 0.0, "prior": 1.0, "delta": -1.0}
     assert packet["summary_diff"]["executed_item_count"] == {"latest": 0, "prior": 1, "delta": -1}
+
+
+def test_debt_report_diff_writes_owner_diff_from_rederived_run_facts(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
+    shutil.copytree(source, tmp_path / ".omo" / "debt")
+
+    latest_run = tmp_path / ".omo" / "debt" / "dispatch" / "runs" / "2026-06-10T00-00-00Z.yaml"
+    prior_run = tmp_path / ".omo" / "debt" / "dispatch" / "runs" / "2026-06-01T00-00-00Z.yaml"
+    prior_payload = yaml.safe_load(latest_run.read_text(encoding="utf-8"))
+    prior_payload["dispatched_at"] = "2026-06-01T00:00:00Z"
+    prior_payload["latest_run_ref"] = ".omo/debt/dispatch/runs/2026-06-01T00-00-00Z.yaml"
+    removed_owner = prior_payload["owners"][3]
+    removed_owner["owner"] = "retired-governance"
+    for entry in removed_owner["entries"]:
+        entry["owner"] = "retired-governance"
+    prior_payload["owners"] = [
+        removed_owner,
+        prior_payload["owners"][1],
+        prior_payload["owners"][0],
+    ]
+    prior_payload["owners"][0]["entries"] = prior_payload["owners"][0]["entries"][:2]
+    prior_payload["owners"][1]["entries"] = prior_payload["owners"][1]["entries"][:1]
+    prior_payload["owners"][2]["entries"] = prior_payload["owners"][2]["entries"][:3]
+    prior_run.parent.mkdir(parents=True, exist_ok=True)
+    prior_run.write_text(yaml.safe_dump(prior_payload, sort_keys=False, allow_unicode=True), encoding="utf-8")
+
+    history_path = tmp_path / ".omo" / "debt" / "reporting" / "history" / "current.yaml"
+    history_path.parent.mkdir(parents=True, exist_ok=True)
+    history_path.write_text(
+        yaml.safe_dump(
+            {
+                "generated_at": "2026-06-12T00:00:00Z",
+                "latest_run_stamp": "2026-06-10T00-00-00Z",
+                "prior_run_stamp": "2026-06-01T00-00-00Z",
+                "run_count": 2,
+                "runs": [
+                    {
+                        "run_stamp": "2026-06-10T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-06-10T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-06-10T00:00:00Z",
+                        "total_items": 999,
+                        "executed_item_count": 999,
+                        "approval_coverage_rate": 999.0,
+                        "execution_completion_rate": 999.0,
+                    },
+                    {
+                        "run_stamp": "2026-06-01T00-00-00Z",
+                        "dispatch_run_ref": ".omo/debt/dispatch/runs/2026-06-01T00-00-00Z.yaml",
+                        "reporting_ref": ".omo/debt/reporting/runs/2026-06-01T00-00-00Z/current.yaml",
+                        "reporting_exists": True,
+                        "report_generated_at": "2026-06-01T00:00:00Z",
+                        "total_items": 999,
+                        "executed_item_count": 999,
+                        "approval_coverage_rate": 999.0,
+                        "execution_completion_rate": 999.0,
+                    },
+                ],
+            },
+            sort_keys=False,
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-diff",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    packet = yaml.safe_load((tmp_path / ".omo" / "debt" / "reporting" / "diff" / "current.yaml").read_text(encoding="utf-8"))
+
+    assert result.returncode == 0, result.stderr
+    assert [entry["owner"] for entry in packet["owners"]["compared"]] == [
+        "commerce-governance",
+        "sharedbrain-governance",
+    ]
+    assert packet["owners"]["compared"][0]["item_count"]["delta"] == 0
+    assert packet["owners"]["compared"][1]["item_count"]["delta"] == 1
+    assert packet["owners"]["added"] == [
+        {"owner": "omo-governance"},
+        {"owner": "platform-governance"},
+    ]
+    assert packet["owners"]["removed"] == [{"owner": "retired-governance"}]
