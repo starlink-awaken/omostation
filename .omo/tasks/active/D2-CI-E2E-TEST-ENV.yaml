@@ -17,6 +17,7 @@ handoff_refs:
 - .omo/workers/runs/d2-ci-e2e-test-env-codebuddy-20260602-230142-envelope.yaml
 - .omo/workers/runs/d2-ci-e2e-test-env-codebuddy-20260602-230142-prompt.md
 - .omo/workers/runs/d2-ci-e2e-test-env-codebuddy-20260602-230142-checkpoint.md
+- .omo/workers/runs/D2-CI-E2E-TEST-ENV-contract-request-2026-06-02T23-52-00Z.yaml
 source_docs:
 - _knowledge/management/debt-systems-analysis-and-governance.md
 - _knowledge/design/debt-cleanup-plan.md
@@ -32,10 +33,20 @@ evidence_required:
 - E2E 测试至少覆盖 1 条核心路径
 test_plan:
 - 验证 `make test-e2e` 在本地容器化环境通过
-accepted: null
+accepted: true
+evidence_delivered:
+- projects/kairon/docker/Dockerfile.e2e
+- projects/kairon/docker/docker-compose.e2e.yml
+- projects/kairon/docker/entrypoint.sh
+- projects/kairon/Makefile (新增 docker/e2e targets)
+- .github/workflows/sharedbrain-kairon-integration.yml (新增 kairon-e2e-test job)
 opened_at: '2026-06-01T10:30:00Z'
 acceptance_criteria:
 - CI E2E 测试可在容器化环境中运行
 - 不依赖外部正在运行的服务实例
 - 健康分 debt_weight 因子确认
 started_at: '2026-06-02T23:01:42Z'
+deliverables:
+- projects/kairon/docker/
+- projects/kairon/Makefile
+- .github/workflows/sharedbrain-kairon-integration.yml

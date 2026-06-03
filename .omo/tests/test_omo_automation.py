@@ -3102,9 +3102,16 @@ def test_task_governance_overlay_run_next_records_contract_gap_for_dispatched_ta
             "worker_id": "mockworker",
             "transport_mode": "cli_prompt",
             "dispatch_state": "dispatched",
-            "execution": {
+            "inputs": {
+                "task_yaml": ".omo/tasks/active/TASK-A.yaml",
+                "envelope_file": ".omo/workers/runs/task-a-mockworker-20260603-071500-envelope.yaml",
                 "prompt_file": ".omo/workers/runs/task-a-mockworker-20260603-071500-prompt.md",
+                "source_docs": [".omo/MASTER-BLUEPRINT.md"],
+            },
+            "execution": {
+                "launch_command": 'python3 -c "print(\\"launched\\")"',
                 "log_ref": ".omo/workers/runs/task-a-mockworker-20260603-071500-stdout.log",
+                "checkpoint_refs": [".omo/workers/runs/task-a-mockworker-20260603-071500-checkpoint.md"],
             },
             "lease": {
                 "heartbeat_interval_seconds": 300,
@@ -3223,9 +3230,16 @@ def test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is
             "worker_id": "mockworker",
             "transport_mode": "cli_prompt",
             "dispatch_state": "dispatched",
-            "execution": {
+            "inputs": {
+                "task_yaml": ".omo/tasks/active/TASK-A.yaml",
+                "envelope_file": ".omo/workers/runs/task-a-mockworker-20260603-071500-envelope.yaml",
                 "prompt_file": ".omo/workers/runs/task-a-mockworker-20260603-071500-prompt.md",
+                "source_docs": [".omo/MASTER-BLUEPRINT.md"],
+            },
+            "execution": {
+                "launch_command": 'python3 -c "print(\\"launched\\")"',
                 "log_ref": ".omo/workers/runs/task-a-mockworker-20260603-071500-stdout.log",
+                "checkpoint_refs": [".omo/workers/runs/task-a-mockworker-20260603-071500-checkpoint.md"],
             },
             "lease": {
                 "heartbeat_interval_seconds": 300,

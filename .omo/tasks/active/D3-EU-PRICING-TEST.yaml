@@ -17,6 +17,7 @@ handoff_refs:
 - .omo/workers/runs/d3-eu-pricing-test-codebuddy-20260602-230142-envelope.yaml
 - .omo/workers/runs/d3-eu-pricing-test-codebuddy-20260602-230142-prompt.md
 - .omo/workers/runs/d3-eu-pricing-test-codebuddy-20260602-230142-checkpoint.md
+- .omo/workers/runs/D3-EU-PRICING-TEST-contract-request-2026-06-02T23-52-30Z.yaml
 source_docs:
 - _knowledge/management/debt-systems-analysis-and-governance.md
 - _knowledge/design/debt-cleanup-plan.md
@@ -39,3 +40,7 @@ acceptance_criteria:
 - 不依赖实际计价服务运行
 - 测试通过率 >= 80%
 started_at: '2026-06-02T23:01:42Z'
+deliverables:
+- projects/kairon/packages/eu-pricing/tests/
+- projects/kairon/packages/eu-pricing/src/eu_pricing/
+- projects/kairon/packages/eu-pricing/pyproject.toml

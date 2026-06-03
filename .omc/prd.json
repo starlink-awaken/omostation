@@ -1,48 +1,59 @@
 {
-  "task": "闭合 governance overlay 在 contract_gap 处的下一片缺口：为缺少 deliverables 的 active task 建立 OMO-native 的 contract declaration / proposal flow，使系统不再只有阻断能力，还能把修复动作纳入治理闭环。",
+  "task": "继续 Ralph 迭代 governance overlay 的 live blocked items：基于现有 debt plan / package layout，为 D2-CI-E2E-TEST-ENV 与 D3-EU-PRICING-TEST 生成并推进 evidence-based contract declaration，使 overlay 不再卡在 contract gap。",
   "stories": [
     {
       "id": "US-001",
-      "title": "生成 contract declaration request 与 governance proposal",
+      "title": "为 live blocked task 收敛最小可审计 deliverables 集合",
       "priority": 1,
       "passes": true,
       "acceptanceCriteria": [
-        "文件 `/Users/xiamingxing/Workspace/scripts/omo_contract_request.py` 存在，并提供构建 contract request artifact 与 governance proposal 的 helper",
-        "contract request artifact 路径使用 `.omo/workers/runs/<TASK_ID>-contract-request-<STAMP>.yaml` 命名约定",
-        "proposal 目标直接指向原始 task YAML，`changes.set.deliverables` 等于传入的 deliverables 列表，不创建第二套 task SSOT"
+        "D2 的 deliverables 候选有明确文档依据，并收敛到 `projects/kairon/docker/`、`projects/kairon/Makefile`、`.github/workflows/sharedbrain-kairon-integration.yml` 这组最小集合",
+        "D3 的 deliverables 候选有明确文档与代码布局依据，并收敛到 `projects/kairon/packages/eu-pricing/tests/`、`projects/kairon/packages/eu-pricing/src/eu_pricing/`、`projects/kairon/packages/eu-pricing/pyproject.toml` 这组最小集合",
+        "`.omc/progress.txt` 追加记录为什么这些路径是 evidence-based 的最小 write scope，而不是继续留空或扩大到整仓目录"
       ]
     },
     {
       "id": "US-002",
-      "title": "为 contract declaration flow 增加 coordinator CLI 与 fail-closed 校验",
+      "title": "为 D2 / D3 写出 contract declaration request 与 governance proposal",
       "priority": 2,
       "passes": true,
       "acceptanceCriteria": [
-        "命令 `python3 scripts/omo_worker.py task contract-declare-deliverables <TASK_ID> --deliverables <PATH>... --actor <ACTOR> --now <ISO8601>` 可执行",
-        "该命令只允许处于 `active_dispatch_blocked` / `contract:<TASK_ID>` 语义下的 task 进入 request flow；非 contract-gap task 会明确失败",
-        "执行命令后会同时写出 request artifact 与 `.omo/_truth/task-center/proposals/<...>-proposal.yaml`，且输出包含 proposal id / request ref"
+        "运行 `python3 scripts/omo_worker.py task contract-declare-deliverables ...` 后，D2 与 D3 各自产生新的 `.omo/workers/runs/*-contract-request-*.yaml` request artifact",
+        "D2 与 D3 各自产生新的 `.omo/_truth/task-center/proposals/*-proposal.yaml`，其 `changes.set.deliverables` 精确等于 US-001 中收敛后的 deliverables 集合",
+        "对应 active task YAML 的 `handoff_refs` 已追加 request ref，形成可追溯链路"
       ]
     },
     {
       "id": "US-003",
-      "title": "证明 contract proposal apply 后 overlay 会从 contract_gap 推进到 launch-ready",
+      "title": "推进 live proposal 到 overlay launch-ready 状态",
       "priority": 3,
       "passes": true,
       "acceptanceCriteria": [
-        "自动化测试证明：对 contract-gap task 运行 contract declaration command，再 approve/apply proposal 后，`governance-overlay-status` 会把该 task 从 `active_dispatch_blocked` 推进为 `active_dispatched`",
-        "自动化测试证明：proposal apply 后，overlay `next_action` 从 `contract:<TASK_ID>` 变为 `launch:<TASK_ID>`",
-        "文档 `.omo/AGENT.md`、`.omo/tasks/README.md`、`.omo/workers/README.md` 明确描述 `contract:<TASK_ID>` → `contract-declare-deliverables` → approve/apply → `launch:<TASK_ID>` 的 operator flow"
+        "D2 与 D3 的 contract proposal 均完成 approve + apply，且 active task YAML 中 `deliverables` 已写入对应集合",
+        "fresh `python3 scripts/omo_worker.py task governance-overlay-status --omo-dir .omo` 输出中，D2 与 D3 都不再是 `active_dispatch_blocked`",
+        "fresh overlay status 的 `next_action` 已从 `contract:D2-CI-E2E-TEST-ENV` 前进为 `launch:D2-CI-E2E-TEST-ENV` 或更后续的 launch/monitor 动作，而不再停在 contract gap"
       ]
     },
     {
       "id": "US-VERIFY",
-      "title": "验证 contract repair flow 已闭合并记录 Ralph learnings",
+      "title": "验证 live contract advancement 闭环并记录 Ralph learnings",
+      "priority": 5,
+      "passes": true,
+      "acceptanceCriteria": [
+        "fresh verification 至少覆盖 `python3 scripts/omo_worker.py task governance-overlay-status --omo-dir .omo` 与 D2/D3 task YAML / proposal artifact 的当前内容读取",
+        "`.omc/progress.txt` 追加记录本轮 live advancement 的操作证据、proposal id、以及为何选择当前 deliverables 粒度",
+        "reviewer 明确按以上 acceptance criteria 给出通过结论，并确认不存在明显更优的更小 scope 方案被遗漏"
+      ]
+    },
+    {
+      "id": "US-004",
+      "title": "继续沿 overlay next_action 启动既有 D2 / D3 dispatch",
       "priority": 4,
       "passes": true,
       "acceptanceCriteria": [
-        "fresh focused verification 至少运行 `.omo/tests/test_omo_governance_overlay.py`、`.omo/tests/test_omo_automation.py`、`.omo/tests/test_worker_mechanism_consistency.py`，且相关筛选全部通过",
-        "progress.txt 追加记录本轮实现内容、变更文件、为何选择 proposal flow 而不是直接猜测 deliverables",
-        "reviewer 明确按以上 acceptance criteria 给出通过结论"
+        "fresh `python3 scripts/omo_worker.py task governance-overlay-run-next --actor copilot-cli --omo-dir .omo --now <...>` 至少成功把 D2 与 D3 各 launch 一次，且相应 run artifact `summary` 为 `launched`",
+        "D2 与 D3 对应 dispatch YAML 的 `dispatch_state` 已变为 `active`",
+        "fresh overlay status 的 `next_action` 已前进到 D2 / D3 之后的下一项，而不再停留在 `launch:D2-CI-E2E-TEST-ENV` 或 `launch:D3-EU-PRICING-TEST`"
       ]
     }
   ]

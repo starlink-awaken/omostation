@@ -106,3 +106,96 @@ Changed files in this Ralph slice:
 - .omo/workers/README.md
 - .omc/prd.json
 - .omc/progress.txt
+
+---
+
+Ralph live-contract advancement wave initialized at 2026-06-03.
+
+Current goal:
+- Continue from the closed contract-repair mechanism and use it on the live blocked tasks D2 / D3 until the overlay no longer stops at `contract:` or `launch:` for them.
+
+US-001 complete:
+- Derived the smallest evidence-based deliverable sets from debt docs + actual repo layout.
+- D2 scope:
+  - `projects/kairon/docker/`
+  - `projects/kairon/Makefile`
+  - `.github/workflows/sharedbrain-kairon-integration.yml`
+- Why this is the minimal justified set:
+  - debt plan explicitly names docker directory creation, `Makefile:test-e2e`, and CI integration changes
+  - current repo has both `.github/workflows/integration.yml` and `.github/workflows/sharedbrain-kairon-integration.yml`; the narrower choice here is the sharedbrain × kairon workflow because it is the concrete pipeline already scoped to the integration surfaces named by the D2 debt, while widening to the generic integration workflow would grant more write scope than the current evidence requires
+- D3 scope:
+  - `projects/kairon/packages/eu-pricing/tests/`
+  - `projects/kairon/packages/eu-pricing/src/eu_pricing/`
+  - `projects/kairon/packages/eu-pricing/pyproject.toml`
+- Why this is the minimal justified set:
+  - debt plan explicitly calls for an independent test directory + mock environment
+  - actual package layout confirms `tests/` and `src/eu_pricing/` exist
+  - `pyproject.toml` is the smallest extra surface that may need dependency/test config updates without widening to the whole package root
+
+US-002 complete:
+- Staged request/proposal artifacts:
+  - D2 request: `.omo/workers/runs/D2-CI-E2E-TEST-ENV-contract-request-2026-06-02T23-52-00Z.yaml`
+  - D2 proposal: `.omo/_truth/task-center/proposals/D2-CI-E2E-TEST-ENV-contract-request-2026-06-02T23-52-00Z-proposal.yaml`
+  - D3 request: `.omo/workers/runs/D3-EU-PRICING-TEST-contract-request-2026-06-02T23-52-30Z.yaml`
+  - D3 proposal: `.omo/_truth/task-center/proposals/D3-EU-PRICING-TEST-contract-request-2026-06-02T23-52-30Z-proposal.yaml`
+- Both active task YAMLs now append the new request refs in `handoff_refs`, preserving traceability.
+
+US-003 complete:
+- Approved + applied both contract proposals with `scripts/omo_governance.py`.
+- Fresh overlay evidence at `.omo/workers/governance-overlay/current.yaml` (`generated_at: 2026-06-02T23:55:00Z`) shows:
+  - D2: `active_dispatched`
+  - D3: `active_dispatched`
+  - `next_action: launch:D2-CI-E2E-TEST-ENV`
+- The live contract gap is therefore closed not only in tests, but in the real overlay state.
+
+US-004 complete:
+- First live launch:
+  - run artifact: `.omo/workers/runs/governance-overlay-2026-06-02T23-56-00Z.yaml`
+  - `summary: launched`
+  - D2 dispatch state moved to `active`
+- Second live launch:
+  - run artifact: `.omo/workers/runs/governance-overlay-2026-06-03T00-01-00Z.yaml`
+  - `summary: launched`
+  - D3 dispatch state moved to `active`
+- Fresh overlay evidence at `.omo/workers/governance-overlay/current.yaml` (`generated_at: 2026-06-03T00:01:00Z`) now shows:
+  - D2: `active_in_progress`
+  - D3: `active_in_progress`
+  - `next_action: monitor:GOV-M1-EXECUTION-HARDENING`
+- Interpretation:
+  - the overlay is no longer blocked on missing contract or missing launch
+  - the next state is monitoring live worker execution, not repairing control-plane gaps
+
+Live bug discovered and fixed during US-004:
+- Real D2 launch exposed a schema drift bug:
+  - `_launch_existing_dispatch(...)` read `dispatch[\"execution\"][\"prompt_file\"]`
+  - live dispatch packets store the prompt at `dispatch[\"inputs\"][\"prompt_file\"]`
+- Root cause:
+  - dispatch writer evolved to the newer schema, but launch helper and one launch regression fixture still encoded the legacy location
+- TDD evidence:
+  - updated the launch regression fixture to use the live schema
+  - red:
+    - `python3 -m pytest .omo/tests/test_omo_automation.py -q -k 'test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is_declared'` -> `1 failed` with `KeyError: 'prompt_file'`
+  - green:
+    - patched `scripts/omo_worker.py` to prefer `inputs.prompt_file` and fall back to legacy `execution.prompt_file`
+    - reran the same regression -> `1 passed`
+- Fresh focused regression after the fix:
+  - `python3 -m pytest .omo/tests/test_omo_contract_request.py .omo/tests/test_omo_governance_overlay.py .omo/tests/test_omo_automation.py .omo/tests/test_worker_mechanism_consistency.py -q -k 'contract_request or contract_declare_deliverables or contract_declaration_apply_advances_overlay_from_contract_gap_to_launch or launch_contract_actions or contract_gap_for_dispatched_empty_scope or surfaces_launch_for_dispatched_ready_scope or test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is_declared'` -> `11 passed`
+
+Fresh live status verification for reviewer gate:
+- `python3 scripts/omo_worker.py task governance-overlay-status --omo-dir .omo` -> `eligible_count=0 blocked_count=2 next_action=monitor:GOV-M1-EXECUTION-HARDENING`
+- Read-side confirmation from `.omo/workers/governance-overlay/current.yaml`:
+  - D2: `active_in_progress`
+  - D3: `active_in_progress`
+  - control plane is now waiting on worker progress rather than asking for more contract/launch repair
+
+Reviewer + deslop + final regression:
+- Architect reviewer verdict after evidence refresh: APPROVED
+  - reviewer confirmed the previous rejection was only about evidence-governance completeness, not about the live advancement design
+  - reviewer explicitly confirmed there is no meaningfully smaller / simpler / safer missed approach that should block approval
+- Bounded ai-slop-cleaner pass for this slice was a no-op:
+  - `scripts/omo_worker.py` only gained the minimum compatibility read for `inputs.prompt_file` with legacy fallback
+  - `.omo/tests/test_omo_automation.py` only aligned the launch regression fixture to the live dispatch schema
+  - `.omc/prd.json` / `.omc/progress.txt` are evidence-tracking surfaces for the Ralph loop, not refactor targets
+- Post-deslop verification:
+  - `python3 -m pytest .omo/tests/test_omo_contract_request.py .omo/tests/test_omo_governance_overlay.py .omo/tests/test_omo_automation.py .omo/tests/test_worker_mechanism_consistency.py -q -k 'contract_request or contract_declare_deliverables or contract_declaration_apply_advances_overlay_from_contract_gap_to_launch or launch_contract_actions or contract_gap_for_dispatched_empty_scope or surfaces_launch_for_dispatched_ready_scope or test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is_declared'` -> `11 passed`
+  - `python3 scripts/omo_worker.py task governance-overlay-status --omo-dir .omo` -> `eligible_count=0 blocked_count=2 next_action=monitor:GOV-M1-EXECUTION-HARDENING`
