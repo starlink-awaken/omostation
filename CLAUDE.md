@@ -189,7 +189,8 @@ bash tests/integration/run-all.sh
 | `.omo/state/system.yaml` | 当前系统运行状态 |
 | `.omo/goals/current.yaml` | 当前 Phase 目标 |
 | `.omo/MASTER-BLUEPRINT.md` | 长期蓝图 |
-| `projects/kairon/pyproject.toml` | kairon 包结构 |
+| `projects/kairon/CLAUDE.md` | kairon 31 包 monorepo 指南 |
+| `projects/gbrain/AGENTS.md` | gbrain 开发者指南 |
 | `projects/*/AGENTS.md` | 各子项目开发者指南 |
 
 ---

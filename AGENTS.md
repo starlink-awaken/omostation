@@ -166,7 +166,7 @@ GitHub Actions workflows in `.github/workflows/` (11 workflows):
 
 ## Reading Before Working
 
-- **For kairon work**: Read `projects/kairon/pyproject.toml` for package structure
+- **For kairon work**: Read `projects/kairon/CLAUDE.md` + `projects/kairon/AGENTS.md` for monorepo conventions. Package structure in `projects/kairon/pyproject.toml`.
 - **For gbrain work**: Read `projects/gbrain/AGENTS.md` + `projects/gbrain/CLAUDE.md`
 - **For governance**: Read `.omo/standards/` for architectural standards
 - **For integration tests**: Read individual test scripts in `tests/integration/`
