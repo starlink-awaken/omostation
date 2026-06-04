@@ -8,23 +8,29 @@ This root directory is a **multi-project workspace** containing independent git 
 
 | Project | Stack | Location | Status |
 |---------|-------|----------|--------|
-| `kairon` | Python (uv, pytest) | `projects/kairon/` | Active — 17 packages |
-| `SharedBrain` | Python | `projects/SharedBrain/` | Active — Digital Life OS |
-| `agentmesh` | TypeScript (bun) | `projects/agentmesh/` | Active — Agent SDK |
-| `gbrain` | TypeScript (bun) | `projects/gbrain/` | Active — Knowledge Brain |
+| `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 31 packages |
+| `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — Knowledge Brain |
+| `SharedBrain` | Python | `projects/SharedBrain/` | ⚪ Archived — 代码已迁移至 kairon/sharedbrain-standalone |
+| `agentmesh` | TypeScript (bun) | `projects/agentmesh/` | ⚪ Archived — 100% 迁移至 kairon |
+| `hermes-console` | TypeScript | `projects/hermes-console/` | 🟡 独立项目，待评估 |
+| `_archived` | — | `projects/_archived/` | ⚪ 24 项已迁移旧项目备份 |
 
 **Also contains:**
-- `data/db/` — Local SQLite databases (execution.db, memory.db)
-- `.omo/` — Workspace governance (metadata, standards, retrospectives)
-- `.hermes/` — Hermes adapter and scripts
-- `SharedBrain/` — Central skill/data repository
+- `.omo/` — Workspace governance (goals, state, standards, tasks, audits)
+- `spaces/` — User-space / tenant-space manifests and ownership boundaries
+- `data/` — Shared databases (backups, local SQLite)
+- `runtime/` — Ephemeral runtime residue (logs, temp state)
+- `tests/integration/` — Integration test suite (11 scripts + 4 Python tests)
+- `scripts/` — Utility scripts and governance automation (独立 git 仓库)
+- `bin/` — Executable tools (workspace CLI, verify scripts)
+- `docs/` — Documentation
 
 ## Essential Commands
 
 ### Root Makefile
 
 ```bash
-# Run kairon tests (all 17 packages)
+# Run kairon tests (all 31 packages)
 make kairon-test
 
 # Ruff lint check
@@ -32,6 +38,9 @@ make kairon-lint
 
 # Install kairon
 make kairon-build
+
+# Governance verification chain
+make governance-verify
 ```
 
 ### Per-Project Commands
@@ -52,28 +61,19 @@ cd projects/agentmesh && bun install
 
 ## Architecture
 
-### Two-Layer Structure
+### Workspace Plane Structure
 
-1. **Projects layer** (`projects/`) — Independent git repos, each with own build/test/lint commands
-2. **Governance layer** (`.omo/`) — Workspace metadata, standards, retrospective docs
-
-### Data Flow
-
-```
-Agent Input → SharedBrain/ (central skills + data)
-            ↓
-         kairon/ (processing, reasoning)
-            ↓
-         gbrain/ (knowledge storage)
-            ↓
-         agentmesh/ (execution)
-```
+1. **Governance layer** (`.omo/`) — goals, state, tasks, standards, reviews
+2. **Capability layer** (`projects/`) — independent repos with own build/test/lint contracts
+3. **User-space layer** (`spaces/`) — tenant / workspace manifest boundaries
+4. **Data substrate** (`data/`) — shared databases, indexes, snapshots
+5. **Runtime residue** (`runtime/`) — ephemeral logs, temp state
 
 ### Key Dependencies
 
 - **gbrain** depends on **agentmesh** (SDK)
-- **kairon/agora** provides service discovery/routing
-- **SharedBrain** hosts central skills referenced by gbrain
+- **kairon/agora** provides service discovery / routing
+- **kairon/sharedbrain-standalone** replaces legacy SharedBrain code
 
 ## Testing Pattern
 
@@ -83,39 +83,50 @@ Located at `tests/integration/` in root:
 
 ```bash
 # Run all integration tests
-cd tests/integration && ./run-all.sh
+bash tests/integration/run-all.sh
 
 # Individual test scripts:
-./test-01-identity.sh
-./test-02-pipeline.sh
-./test-03-constraints.sh
-./test-04-phase-lock.sh
-./test-05-pricing.sh
-./test-06-trace.sh
-./test-07-collab-agentmesh.sh
-./test-08-knowledge-pipeline.sh
-./test-09-agora-degrade.sh
-./test-10-runtime-check.sh
-./test-11-i0-integration.sh
+bash tests/integration/test-01-identity.sh
+bash tests/integration/test-02-pipeline.sh
+bash tests/integration/test-03-constraints.sh
+bash tests/integration/test-04-phase-lock.sh
+bash tests/integration/test-05-pricing.sh
+bash tests/integration/test-06-trace.sh
+bash tests/integration/test-07-collab-agentmesh.sh
+bash tests/integration/test-08-knowledge-pipeline.sh
+bash tests/integration/test-09-agora-degrade.sh
+bash tests/integration/test-10-runtime-check.sh
+bash tests/integration/test-11-i0-integration.sh
+
+# Python tests
+python3 tests/integration/test-e2e-phase1.py
+python3 tests/integration/test-fault-injection.py
+python3 tests/integration/test-user-journeys.py
+python3 tests/integration/test-perf-baseline.py
 ```
 
 ### CI Configuration
 
-GitHub Actions workflows in `.github/workflows/`:
-- `pytest.yml` — Runs kairon package tests
-- `integration.yml` — Integration test suite
-- `quality.yml` — Lint and formatting
-- Others for specific checks
+GitHub Actions workflows in `.github/workflows/` (11 workflows):
+- `pytest.yml` — kairon Python 3.14 测试
+- `phase11-ci.yml` — kairon 全包基线测试 (Python 3.13 + uv)
+- `integration.yml` — 集成测试 (3 个 Python 版本矩阵)
+- `quality.yml` / `ruff-check.yml` — Lint 和格式化
+- `workspace.yml` — 全工作区 CI
+- `governance-check.yml` — 治理层验证
+- `constraint-validation.yml` — arcnode 约束验证
+- `config-check.yml` — Agora 配置校验
+- `sharedbrain-kairon-integration.yml` — 跨项目集成测试
+- `phase11-ci.yml` — Phase 11 基线 CI
 
 ## Gotchas
 
 1. **kairon uses uv** — Not pip/poetry. `uv sync` to install, `uv add <package>` to add deps.
 
-2. **Python 3.13** — kairon targets Python 3.13+ (`ruff` config shows `target-version = "py313"`)
+2. **Python 3.13+** — kairon targets Python 3.13+ (`ruff` config shows `target-version = "py313"`)
 
 3. **agentmesh needs bun** — Uses Bun as runtime, not Node/npm:
    ```bash
-   # Install dependencies
    cd projects/agentmesh && bun install
    ```
 
@@ -146,9 +157,14 @@ GitHub Actions workflows in `.github/workflows/`:
 
 - `projects/*/` — Independent project repos
 - `.omo/` — Workspace governance docs (read for context, don't modify without clear reason)
+- `spaces/` — User-space / tenant-space manifests and routing boundaries
+- `data/` — Shared data substrate and local databases
+- `runtime/` — Ephemeral runtime residue; avoid storing durable truth here
 - `tests/integration/` — E2E test scripts
-- `scripts/` — Utility scripts and automation
-- `.github/workflows/` — CI configurations
+- `scripts/` — Utility scripts and automation (独立 git 仓库)
+- `bin/` — Executable tools
+- `docs/` — Supplementary documentation
+- `.github/workflows/` — CI configurations (11 workflows)
 - `.hermes/` — Hermes-related scripts and adapters
 
 ## Reading Before Working
