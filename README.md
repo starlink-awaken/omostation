@@ -1,5 +1,8 @@
 # omostation
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 > Workspace 整合了所有知识工程与研究项目。
 >
 > **Phase 17**: 进行中 | [治理面板](.omo/MASTER-BLUEPRINT.md)
