@@ -1,0 +1,48 @@
+id: P10-W1-CROSS-ROOT-RULE-REGISTRY
+phase: 10
+milestone: W1
+priority: P0
+title: Define the first cross-root rule registry and resolver seam
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase10-wave1-cross-root-rules
+run_ref: .omo/workers/runs/phase10-wave1-cross-root-rules-dispatch.yaml
+approval_ref: .omo/workers/runs/phase9-wave3-identity-admission-approval.yaml
+review_ref: .omo/workers/runs/phase10-wave1-cross-root-rules-review.md
+knowledge_refs:
+  - .omo/plans/archive/phase10-program-plan.md
+  - .omo/plans/archive/phase10-wave1-execution-plan.md
+handoff_refs:
+  - .omo/workers/runs/phase10-wave1-cross-root-rules-envelope.yaml
+  - .omo/workers/runs/phase10-wave1-cross-root-rules-prompt.md
+  - .omo/workers/runs/phase10-wave1-cross-root-rules-checkpoint.md
+source_docs:
+  - .omo/summaries/phase9-closeout-retrospective.md
+  - .omo/plans/archive/phase10-wave1-execution-plan.md
+deliverables:
+  - .omo/plans/archive/phase10-wave1-execution-plan.md
+  - spaces/system-space-cross-root-rule-registry.yaml
+  - data/system-data-access-policy.yaml
+  - scripts/omo_rules.py
+  - .omo/workers/runs/phase10-wave1-cross-root-rules-envelope.yaml
+  - .omo/tests/test_phase10_cross_root_rules.py
+depends_on: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 9 closeout exists at .omo/summaries/phase9-closeout-retrospective.md
+  - Wave 4 acceptance path exists at .omo/workers/runs/phase9-wave4-rollout-ops-acceptance.yaml
+evidence_required:
+  - cross-root rule registry exists
+  - a real envelope resolves its rule bundle across spaces/data/runtime/delivery
+  - rules-eval CLI prints the resolved bundle
+test_plan:
+  - python3 scripts/omo_worker.py task validate --all-active
+  - python3 -m pytest .omo/tests/test_phase10_kickoff_docs.py -q
+  - python3 -m pytest .omo/tests/test_phase10_cross_root_rules.py -q
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-05-31T21:05:00Z'
+completed_at: '2026-05-31T21:11:00Z'
+blocked_by: null
+retry_count: 0

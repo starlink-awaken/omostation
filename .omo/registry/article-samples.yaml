@@ -1,0 +1,41 @@
+samples:
+  - id: article-sample-001
+    title: Capability registry design note
+    source_ref: local:phase12-program-plan.md
+    retrieved_at: "2026-06-01"
+    quality_score: 88
+    retention: reference
+    summary: Defines the registry, discovery, and binding direction for Phase 12.
+    tags: [capability, registry, phase12]
+  - id: article-sample-002
+    title: Scenario binding policy note
+    source_ref: local:capability-binding-policy.md
+    retrieved_at: "2026-06-01"
+    quality_score: 84
+    retention: reference
+    summary: Captures fail-closed and fallback audit rules for scenario traces.
+    tags: [scenario, binding, audit]
+  - id: article-sample-003
+    title: OMO governance proposal note
+    source_ref: local:phase12-14-architecture-design.md
+    retrieved_at: "2026-06-01"
+    quality_score: 82
+    retention: reference
+    summary: Separates plan text from live SSOT promotion and mutation.
+    tags: [governance, promotion, ssot]
+  - id: article-sample-004
+    title: Package dry-run policy note
+    source_ref: local:phase12-wave3-execution-plan.md
+    retrieved_at: "2026-06-01"
+    quality_score: 78
+    retention: reference
+    summary: Keeps dependency reconciliation read-only during Phase 12.
+    tags: [package, dry-run, dependency]
+  - id: article-sample-005
+    title: Deferred ecosystem expansion note
+    source_ref: local:phase14-deferred-ecosystem-backlog.md
+    retrieved_at: "2026-06-01"
+    quality_score: 80
+    retention: reference
+    summary: Records ecosystem expansion candidates that Phase 12 intentionally does not execute.
+    tags: [phase14, backlog, ecosystem]

@@ -1,0 +1,13 @@
+id: P18-W2-CIRCUIT-ENGINE
+phase: Phase
+milestone: Mhase
+priority: P0
+title: CircuitEngine实现
+status: completed
+assigned_to: null
+opened_at: '2026-06-01T00:00:00Z'
+entry_gate: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+acceptance_criteria: []

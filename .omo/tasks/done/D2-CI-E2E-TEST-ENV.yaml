@@ -1,0 +1,55 @@
+id: D2-CI-E2E-TEST-ENV
+phase: 17
+milestone: M17.1
+priority: P0
+title: CI E2E 测试环境容器化 (Resolve D2 debt)
+status: done
+assigned_to: codebuddy
+dispatch_id: d2-ci-e2e-test-env-codebuddy-20260602-230142
+run_ref: .omo/workers/runs/d2-ci-e2e-test-env-codebuddy-20260602-230142-dispatch.yaml
+approval_ref: null
+review_ref: .omo/workers/runs/d2-ci-e2e-test-env-codebuddy-20260602-230142-review.md
+knowledge_refs:
+- _knowledge/management/debt-systems-analysis-and-governance.md
+- _knowledge/design/debt-cleanup-plan.md
+handoff_refs:
+- .omo/workers/runs/D2-CI-E2E-TEST-ENV-promotion-2026-06-03T06-40-00Z.yaml
+- .omo/workers/runs/d2-ci-e2e-test-env-codebuddy-20260602-230142-envelope.yaml
+- .omo/workers/runs/d2-ci-e2e-test-env-codebuddy-20260602-230142-prompt.md
+- .omo/workers/runs/d2-ci-e2e-test-env-codebuddy-20260602-230142-checkpoint.md
+- .omo/workers/runs/D2-CI-E2E-TEST-ENV-contract-request-2026-06-02T23-52-00Z.yaml
+- .omo/workers/runs/d2-ci-e2e-test-env-copilot-cli-20260603-012052-verify.md
+- .omo/workers/runs/d2-ci-e2e-test-env-copilot-cli-20260603-013938-verify.md
+source_docs:
+- _knowledge/management/debt-systems-analysis-and-governance.md
+- _knowledge/design/debt-cleanup-plan.md
+depends_on: []
+entry_gate:
+- phase16_completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- Dockerfile / docker-compose 配置
+- make test-e2e 在 CI 中通过
+- E2E 测试至少覆盖 1 条核心路径
+test_plan:
+- 验证 `make test-e2e` 在本地容器化环境通过
+accepted: true
+evidence_delivered:
+- projects/kairon/docker/Dockerfile.e2e
+- projects/kairon/docker/docker-compose.e2e.yml
+- projects/kairon/docker/entrypoint.sh
+- projects/kairon/Makefile (新增 docker/e2e targets)
+- .github/workflows/sharedbrain-kairon-integration.yml (新增 kairon-e2e-test job)
+opened_at: '2026-06-01T10:30:00Z'
+acceptance_criteria:
+- CI E2E 测试可在容器化环境中运行
+- 不依赖外部正在运行的服务实例
+- 健康分 debt_weight 因子确认
+started_at: '2026-06-02T23:01:42Z'
+completed_at: '2026-06-03T01:41:29Z'
+deliverables:
+- projects/kairon/docker/
+- projects/kairon/Makefile
+- .github/workflows/sharedbrain-kairon-integration.yml

@@ -68,10 +68,10 @@
 |------|------|----------|
 | **战略参考信号** | `goals/current.yaml` | 人类设定 Phase 目标的唯一源 |
 | **系统状态仪表盘** | `state/system.yaml` | Agent 可读的系统全局状态快照 |
-| **质量门禁** | `CONSISTENCY-CHECK.md` | 跨平面一致性规则与检查结果 |
+| **质量门禁** | `_archive/CONSISTENCY-CHECK.md` | 跨平面一致性规则与检查结果 |
 | **控制历史文档** | `_control/*.md` (legacy 控制文档) | 历史快照，不再作为执行源 |
 
-**核心流程**: `goals/` 设定目标 → Agent 执行 → `state/system.yaml` 聚合状态 → `CONSISTENCY-CHECK.md` 验证一致性 → 反馈修正目标
+**核心流程**: `goals/` 设定目标 → Agent 执行 → `state/system.yaml` 聚合状态 → `_archive/CONSISTENCY-CHECK.md` 验证一致性 → 反馈修正目标
 
 ### 2. 事实面 — `_truth/`
 
@@ -83,7 +83,7 @@
 | **标准 SSOT** | `standards/` | 8 Active + 5 Legacy 治理标准 |
 | **项目注册表** | `PROJECTS.yaml` | 5 项目 + 1 归档的注册信息 |
 | **Worker 注册表** | `workers/registry.yaml` | 外部 Agent 注册与能力声明 |
-| **资产清单** | `INVENTORY.md` | 全系统资产枚举 |
+| **资产清单** | `_truth/INVENTORY.md` | 全系统资产枚举 |
 | **巨石分解配置** | `boulder.json` | 巨石任务分解结构 |
 
 **SSOT 铁律**: 同一事实不在多处重复写。知识面文档引用事实面时使用指针而非副本。
@@ -148,7 +148,7 @@ superseded_by:          # (可选) 取代此文件的新文件路径
 | 规范 | 规则 |
 |------|------|
 | **平面目录前缀** | 体系目录以 `_` 开头: `_control/`, `_truth/` 等 |
-| **文件名格式** | kebab-case: `CONSISTENCY-CHECK.md`, `system.yaml` |
+| **文件名格式** | kebab-case: `_archive/CONSISTENCY-CHECK.md`, `system.yaml` |
 | **知识面编号** | 子分类内使用 `NN-` 前缀表阅读顺序 |
 | **实体 ID** | `{type}-{kebab-case}` 格式: `task-M2.5-knowledge-closed-loop` |
 | **已有文件** | 保持原名不重命名，通过平面 INDEX 定位 |
@@ -170,6 +170,7 @@ superseded_by:          # (可选) 取代此文件的新文件路径
 2. **目标覆盖**: 每个 active goal 必须有对应任务 YAML
 3. **指针优于副本**: 事实面（SSOT）数据在知识面文档中只能引用，不得复制
 4. **新鲜度标记**: 知识面文档必须标注 `freshness` 日期，超过 90 天标记为 `⚠️ stale`
+   - *当前状态*: 本机制已定义但未自动化执行。建议纳入 CI 或在每次 phase closeout 时人工检查 `_knowledge/` 文档新鲜度。
 5. **交付不可逆**: 交付面运行记录一旦写入不可删除，仅可标记 `archived`
 6. **平面入口**: 每个平面必须有 `INDEX.md` 作为该平面唯一入口
 
@@ -186,7 +187,7 @@ goals/current.yaml              → 战略参考信号
 goals/history/                  → 历史目标归档
 state/system.yaml               → 系统状态仪表盘
 state/provider-plane.yaml       → Provider 状态
-MASTER-BLUEPRINT.md             → 战略蓝图
+_knowledge/design/MASTER-BLUEPRINT.md             → 战略蓝图
 CONSISTENCY-CHECK.md            → 质量门禁
 GOVERNANCE_PLAN.md              → 历史控制文档 (legacy)
 HEALTH_DASHBOARD.md             → 历史健康看板 (legacy)
@@ -204,7 +205,7 @@ tasks/                          → 任务 SSOT（含 active/ current executable
 standards/                      → 标准 SSOT
 workers/registry.yaml           → Worker 注册表
 PROJECTS.yaml                   → 项目注册表
-INVENTORY.md                    → 资产清单
+_truth/INVENTORY.md                    → 资产清单
 boulder.json                    → 巨石分解配置
 ```
 
@@ -214,29 +215,29 @@ boulder.json                    → 巨石分解配置
 现有位置                        → 知识面子分类
 ─────────────────────────────────────────────────
 plans/                          → design (设计文档)
-MASTER-BLUEPRINT.md             → design (蓝图)
-INSIGHTS-AND-ROADMAP.md         → design (路线图)
+_knowledge/design/MASTER-BLUEPRINT.md             → design (蓝图)
+_knowledge/design/INSIGHTS-AND-ROADMAP.md         → design (路线图)
 task-center-requirements.md     → design (需求规格书)
 _knowledge/design/reviews/      → design (审阅报告)
-ARC-ONTOLOGY-RECOMMEND.md       → reference (本体论)
-ARC-ONTOLOGY-TOOLKIT.md         → reference (工具包)
+_knowledge/reference/ARC-ONTOLOGY-RECOMMEND.md       → reference (本体论)
+_knowledge/reference/ARC-ONTOLOGY-TOOLKIT.md         → reference (工具包)
 diagrams/                       → reference (架构图)
 summaries/                      → process/management
 audits/                         → management
 AUDIT.md                        → management
 ARCH-AUDIT-*.md                 → management
-ARCH-REVIEW.md                  → management
-KOS_MIGRATION_IMPACT.md         → management
-DEBT-ANALYSIS.md                → management
+_knowledge/management/ARCH-REVIEW.md                  → management
+_knowledge/management/KOS_MIGRATION_IMPACT.md         → management
+_knowledge/management/DEBT-ANALYSIS.md                → management
 CLEANUP.md                      → management
 _knowledge/management/           → management (清理/运维记录)
 RETRO-*.md / retro-*.md / wave-*.md → process (复盘)
-LESSONS.md                      → reference (经验教训)
-MODEL-BENCHMARK.md              → reference (基准测试)
-KNOWLEDGE_ARCH.md               → reference (知识架构)
-PRODUCT-ARCH-JOURNEY.md         → reference (演进史)
+_knowledge/reference/LESSONS.md                      → reference (经验教训)
+_knowledge/reference/MODEL-BENCHMARK.md              → reference (基准测试)
+_knowledge/reference/KNOWLEDGE_ARCH.md               → reference (知识架构)
+_knowledge/reference/PRODUCT-ARCH-JOURNEY.md         → reference (演进史)
 ONBOARDING.md                   → usage (上手指南)
-CLI-MCP-SPEC.md                 → usage (CLI 规范)
+_knowledge/usage/CLI-MCP-SPEC.md                 → usage (CLI 规范)
 drafts/                         → management (草稿)
 task-prompts/                   → reference (Agent 提示词)
 ```

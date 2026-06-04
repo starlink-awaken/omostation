@@ -34,7 +34,7 @@ review_ref: null
 knowledge_refs: []
 handoff_refs: []
 source_docs:
-  - ".omo/plans/phase2-task-specs-v2.md"
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
 depends_on:
   - M2.0-TASK-SYSTEM-SEED
 risk_level: L2
@@ -73,7 +73,7 @@ candidate ──→ pending ──→ in_progress ──→ review ──→ don
 
 ## Agent 使用约定
 
-1. 只从 `active/` 认领任务；不要从旧 `TASK_POOL.md` 或历史计划中直接开工。
+1. 只从 `active/` 认领任务；不要从旧 `_archive/TASK_POOL.md` 或历史计划中直接开工。
 2. `tasks/planned/` 只存放 future backlog / not-yet-promoted packet surface，不是执行队列。
 3. `active/` 是 current executable queue；planned packet 只有在正式晋升后才进入 `active/`。
 4. coordinator 如需评估 planned packet 是否可晋升，先运行 `python3 scripts/omo_worker.py task promote-eval <TASK_ID> --omo-dir .omo`。

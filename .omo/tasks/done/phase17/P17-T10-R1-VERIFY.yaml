@@ -1,0 +1,24 @@
+id: P17-T10-R1-VERIFY
+phase: 17
+milestone: M17.1
+priority: P2
+title: "验证 R1 产品交互层是否进入 Phase 17 计划"
+status: done
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+source_docs:
+  - ".omo/plans/phase17-debt-governance-sprint.md"
+  - ".omo/debt/items/R1_P0_SURFACE_GAP.yaml"
+  - ".omo/goals/current.yaml"
+entry_gate:
+  - phase16_completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+  - "确认 Phase 17 计划中包含产品交互层（R1）相关任务或已规划"
+test_plan:
+  - "grep -i 'product\\|surface\\|交互' .omo/goals/current.yaml"

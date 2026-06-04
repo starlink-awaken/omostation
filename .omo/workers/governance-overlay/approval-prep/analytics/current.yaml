@@ -1,0 +1,28 @@
+generated_at: '2026-06-03T02:42:32Z'
+prep_task_count: 1
+history_event_count: 2
+request_now_count: 0
+awaiting_approval_count: 1
+blocker_histogram:
+  phase_mismatch: 1
+  approval_invalid: 1
+age_buckets:
+  lt_1d: 1
+  d1_to_d3: 0
+  d3_plus: 0
+action_queues:
+  request_now: []
+  awaiting_approval:
+  - task_id: P24-W2-NUCLEUS-REPLACE
+    age_bucket: lt_1d
+    blockers: &id001
+    - phase_mismatch
+    - approval_invalid
+tasks:
+- task_id: P24-W2-NUCLEUS-REPLACE
+  state: planned_approval_prep_pending
+  action: await_approval
+  age_bucket: lt_1d
+  latest_started_at: '2026-06-03T02:34:21Z'
+  blockers: *id001
+  approval_ref: .omo/workers/runs/P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z.yaml

@@ -1,0 +1,55 @@
+id: R1_P0_SURFACE_GAP
+title: P0 产品交互层缺失 — 无用户可见入口
+dimension: product
+subdimension: user_surface
+domain: workspace
+scope: cross_project
+severity: low
+weight: 0.20
+entropy_class: state
+lifecycle_state: closed
+owner: product-governance
+affected_roots:
+  - projects/kairon/packages/kos
+  - projects/kairon/packages/kos/src/kos/cli/__main__.py
+  - projects/kairon/packages/kos/src/kos/web/app.py
+  - .hermes/skills/knowledge-capture-search/SKILL.md
+evidence_refs:
+  - .omo/_knowledge/management/architecture-health-snapshot-phase16-post.md
+  - LAYER-INDEX.md
+mitigation_refs:
+  - .omo/_knowledge/design/phase17-planning-gate-guardrails.md
+  - .hermes/skills/knowledge-capture-search/SKILL.md
+opened_at: "2026-06-03T14:50:00Z"
+resolved_at: "2026-06-03T20:45:00Z"
+last_reviewed_at: "2026-06-03T20:45:00Z"
+next_review_at: "2026-07-03T00:00:00Z"
+gate_level: phase17
+history:
+  - at: "2026-06-03T14:50:00Z"
+    action: register
+    note: >-
+      P0 layer audit reveals hermes-webui (port 8787) not listening,
+      pallas/gstack/bos-skill-cli absent from codebase.
+      Phase 16 produced fixture-backed evidence but no live user entrypoint.
+      Registered as watching; Phase 17 Wave 0 must define at least one CLI/API entry.
+  - at: "2026-06-03T20:45:00Z"
+    action: resolve
+    note: >-
+      Three user-visible entry points created and E2E verified:
+      1. CLI: kos capture <url|text> + kos search <query>
+      2. Web UI: GET /capture (form) + POST /api/capture + GET / (search)
+      3. Hermes skill: capture/搜 commands with LLM enrichment
+      E2E flow verified: web_extract → LLM summarization + entity extraction
+      → kos capture → kos ingest → kos search → formatted results.
+      Agora web dashboard running on port 7430.
+closure_evidence_refs:
+  - projects/kairon/packages/kos/src/kos/cli/__main__.py
+  - projects/kairon/packages/kos/src/kos/web/app.py
+  - .hermes/skills/knowledge-capture-search/SKILL.md
+  - LAYER-INDEX.md
+closure_summary: >
+  Knowledge Capture/Search Pilot E2E completed. Three entry points established
+  (CLI, Web UI, Hermes skill). Full pipeline verified: content capture → LLM
+  enrichment → KOS indexing → FTS5 search → formatted results. Agora service
+  mesh operational on 7430/7431. All 6 original debt items closed.

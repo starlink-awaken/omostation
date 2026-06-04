@@ -1,0 +1,38 @@
+id: M2.4-TRUST-GRAPH-LAYER
+phase: 2
+milestone: M2.4
+priority: P1
+title: "Trust graph layer — KOS entity confidence scoring"
+status: done
+owner: kos
+assigned_to: "me"
+started_at: "2026-05-30T17:15:00Z"
+completed_at: "2026-05-30T17:25:00Z"
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+depends_on: []
+dependencies: []
+inputs:
+  - "projects/kairon/packages/kos/src/kos/"
+outputs:
+  - "projects/kairon/packages/kos/src/kos/trust_layer.py"
+acceptance_criteria:
+  - "Entity trust score (0.0-1.0) based on source authority"
+  - "Age decay: >365d → 0.9x, >730d → 0.8x"
+  - "Cross-validation boosts score by 0.1"
+  - "Trust propagation across graph (2-step)"
+  - "Query-time trust filtering"
+evidence_required:
+  - "trust_layer.py implemented"
+  - "Unit tests for scoring, decay, propagation"
+evidence:
+  - "trust_layer.py exists with TrustLayer class: score_entity, get_score, propagate, filter, stats"
+  - "SOURCE_AUTHORITY mapping: official_docs=1.0, peer_reviewed=0.9, blog=0.5, social_media=0.3, unknown=0.2"
+  - "23/23 unit tests pass: source authority (3), score entity (6), get score (3), propagate (4), filter (3), stats (2), integration (1)"
+test_plan:
+  - "unit: score by source type"
+  - "unit: age decay"
+  - "unit: 2-step propagation"

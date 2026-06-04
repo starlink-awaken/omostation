@@ -1,0 +1,24 @@
+id: P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z-proposal
+title: Grant promotion approval for P24-W2-NUCLEUS-REPLACE
+operation_level: L2
+requested_by: copilot-cli
+target:
+  ref: .omo/workers/runs/P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z.yaml
+changes:
+  set:
+    approval_status: granted
+change_summary: Grant promotion approval for P24-W2-NUCLEUS-REPLACE
+impact: Releases a planned task into the promotion approval chain.
+verification_plan:
+- python3 scripts/omo_worker.py task promote-eval P24-W2-NUCLEUS-REPLACE --omo-dir
+  .omo
+rollback_plan:
+- Set .omo/workers/runs/P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z.yaml
+  approval_status back to requested if the release must be withdrawn.
+secret_refs: []
+trace_id: trace-P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z
+status: proposed
+requested_at: '2026-06-03T01:49:00Z'
+approved_at: null
+applied_at: null
+verified_at: null

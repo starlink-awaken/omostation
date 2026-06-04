@@ -1,0 +1,43 @@
+id: M2.5-AGENT-REGISTRY-FULL-ACP1
+phase: 2
+milestone: M2.5
+priority: P1
+title: "Agent registry full ACP1 — identity verification + backup registry"
+status: done
+owner: kos
+assigned_to: codebuddy
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/plans/deep-architecture-agent-analysis.md"
+depends_on:
+  - M2.2-AGENT-REGISTRY-HEARTBEAT
+dependencies:
+  - M2.2-AGENT-REGISTRY-HEARTBEAT
+inputs:
+  - ".omo/standards/agent-registry-heartbeat.md"
+  - "projects/kairon/packages/agora/src/agora/"
+outputs:
+  - "projects/kairon/packages/agora/src/agora/agent_registry.py"
+  - "projects/kairon/packages/agora/tests/test_agent_registry.py"
+acceptance_criteria:
+  - "Agents verified by Ed25519 signature on registration"
+  - "Backup registry stands by if primary unavailable"
+  - "Existing Agora registry tests pass"
+evidence_required:
+  - "Identity verification code"
+  - "Backup registry design"
+  - "Tests pass"
+evidence:
+  - "agent_registry.py upgraded with Ed25519: generate_key_pair(), sign_challenge(), verify_signature()"
+  - "73 new test cases (test_agent_registry.py): Ed25519 crypto(23), AgentInfo(12), Register(10), Heartbeat(10), VerifyIdentity(4), Query(6), Reap(4), Backup(7), Cache(3), Integration(5)"
+  - "74/74 test_agent_registry tests passing"
+  - "40/40 existing test_registry.py tests passing (backward compatible)"
+  - "Backup registry: dual-cache (primary + backup), auto-sync, fallback load on primary corruption"
+  - "Mixed auth: Ed25519 agents + legacy identity_token agents coexist"
+  - "cryptography>=41.0 added to agora/pyproject.toml dependencies"
+test_plan:
+  - "unit: Ed25519 signature verification"
+  - "integration: backup registry failover"
+completed_at: "2026-05-30T18:30:00Z"
+completed_by: codebuddy

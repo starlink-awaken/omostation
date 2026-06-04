@@ -1,0 +1,48 @@
+run_id: governance-overlay-2026-06-03T02-11-00Z
+overlay_id: GOV-OVERLAY-2026-06
+actor: copilot-cli
+started_at: '2026-06-03T02:11:00Z'
+completed_at: '2026-06-03T02:11:00Z'
+mode: continue_active
+next_action_before_run: monitor:GOV-M3-FUTURE-PROMOTION-OPERATIONS
+roadmap_item_id: GOV-M3-FUTURE-PROMOTION-OPERATIONS
+summary: waiting_on_external_gate
+target_results:
+- target_ref: .omo/tasks/planned/P19-W3-ARCHIVE-TS.yaml
+  task_id: P19-W3-ARCHIVE-TS
+  state: planned_promotion_blocked
+  action: promote_apply
+  result: promotion_blocked
+  detail: planned task is blocked by existing promotion gates
+  blockers:
+  - phase_mismatch
+- target_ref: .omo/tasks/planned/P24-W2-NUCLEUS-REPLACE.yaml
+  task_id: P24-W2-NUCLEUS-REPLACE
+  state: planned_promotion_blocked
+  action: promote_apply
+  result: promotion_blocked
+  detail: planned task is blocked by existing promotion gates
+  blockers:
+  - phase_mismatch
+  - approval_invalid
+- target_ref: .omo/tasks/planned/P25-W1-E2E-INTEGRATION.yaml
+  task_id: P25-W1-E2E-INTEGRATION
+  state: planned_promotion_blocked
+  action: promote_apply
+  result: promotion_blocked
+  detail: planned task is blocked by existing promotion gates
+  blockers:
+  - phase_mismatch
+- target_ref: .omo/tasks/planned/P25-W2-DOCS-DEBT-CLOSURE.yaml
+  task_id: P25-W2-DOCS-DEBT-CLOSURE
+  state: planned_promotion_blocked
+  action: promote_apply
+  result: promotion_blocked
+  detail: planned task is blocked by existing promotion gates
+  blockers:
+  - phase_mismatch
+target_state_summary:
+  planned_promotion_blocked: 4
+control_updates:
+  current_milestone: null
+  next_milestone: null

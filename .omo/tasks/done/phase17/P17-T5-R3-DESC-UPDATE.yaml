@@ -1,0 +1,24 @@
+id: P17-T5-R3-DESC-UPDATE
+phase: 17
+milestone: M17.1
+priority: P2
+title: "更新 R3 债务描述以匹配当前 LAYER-INDEX"
+status: done
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+source_docs:
+  - ".omo/plans/phase17-debt-governance-sprint.md"
+  - ".omo/debt/items/R3_LAYER_INDEX_DRIFT.yaml"
+  - "LAYER-INDEX.md"
+entry_gate:
+  - phase16_completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+  - "R3 债务描述中的 LAYER-INDEX 状态与当前实际一致"
+test_plan:
+  - "grep 'LAYER-INDEX' .omo/debt/items/R3_LAYER_INDEX_DRIFT.yaml"

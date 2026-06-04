@@ -1,0 +1,31 @@
+id: P3-WS3-MINERVA-CLI-CONVERGENCE
+phase: 3
+milestone: M3.1
+priority: P0
+title: Minerva CLI hardcoded provider cleanup
+status: done
+assigned_to: copilot-cli
+dispatch_id: manual-phase3-foundation
+run_ref: .omo/summaries/p3-foundation-convergence-retrospective.md
+approval_ref: null
+review_ref: .omo/summaries/p3-foundation-convergence-retrospective.md
+knowledge_refs:
+  - projects/kairon/packages/minerva/src/minerva/config.py
+  - projects/kairon/packages/minerva/tests/unit/test_config.py
+handoff_refs: []
+blocked_by: null
+source_docs:
+  - .omo/plans/archive/phase2-phase3-task-manifest.md
+  - .omo/plans/llm-convergence-planning-packet.md
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+entry_gate:
+  - P2 provider plane baseline complete
+evidence_required:
+  - Minerva CLI config accepts generic LLM_PROVIDER/BASE_URL/API_KEY/MODEL
+  - Legacy OLLAMA_BASE_URL compatibility remains intact
+test_plan:
+  - PYTHONPATH=src python3 -m pytest tests/unit/test_config.py -q
+completed_at: '2026-05-30T16:14:37Z'
+completion_summary: "Minerva's CLI-facing config now accepts the unified LLM_* contract instead of only relying on Ollama-specific base URL wiring."

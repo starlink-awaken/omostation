@@ -1,0 +1,35 @@
+id: M2.5-KRONOS-MINERVA-KOS-KNOWLEDGE-CLOSED-LOOP
+phase: 2
+milestone: M2.5
+priority: P2
+title: "Knowledge closed-loop — user query → research → save → audit"
+status: done
+owner: minerva
+assigned_to: codebuddy
+completed_at: 2026-05-30
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+depends_on:
+  - M2.4-KOS-HEALTH-MONITOR-IMPLEMENTATION
+dependencies:
+  - M2.4-KOS-HEALTH-MONITOR-IMPLEMENTATION
+inputs:
+  - "projects/kairon/packages/minerva/src/minerva/"
+  - "projects/kairon/packages/kos/src/kos/"
+  - "projects/kairon/packages/kronos/src/kronos/"
+outputs:
+  - "Knowledge closed-loop pipeline integration"
+acceptance_criteria:
+  - "User query → KOS search → minerva research → save to KOS → audit log visible"
+  - "Batch write or rebuild requires L2 human confirmation"
+  - "All writes go through Operation Levels"
+evidence_required:
+  - "Pipeline integration working end-to-end for 1 query"
+  - "Audit log shows research result saved"
+  - "L2 write correctly denied without confirmation"
+test_plan:
+  - "integration: end-to-end query flow"
+  - "unit: write operation level check"

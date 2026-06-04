@@ -48,8 +48,8 @@ def test_debt_registry_campaign_and_reporting_refs_exist() -> None:
 def test_seed_items_keep_refs_to_existing_governance_surfaces() -> None:
     item = _load_yaml("debt/items/SB_DECOMPOSITION.yaml")
 
-    assert item["lifecycle_state"] == "in_progress"
-    assert item["gate_level"] == "gate"
+    assert item["lifecycle_state"] == "resolved"
+    assert item["gate_level"] == "none"
     assert ".omo/tasks/active/SHAREDBRAIN-FORMAL-DECISION.yaml" in item["evidence_refs"]
     assert ".omo/_knowledge/design/debt-cleanup-plan.md" in item["mitigation_refs"]
     assert "projects/SharedBrain" in item["affected_roots"]

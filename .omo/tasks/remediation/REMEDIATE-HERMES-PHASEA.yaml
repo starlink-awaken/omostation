@@ -1,0 +1,14 @@
+id: REMEDIATE-HERMES-PHASEA
+phase: '17'
+priority: P0
+title: Hermes Console Phase A
+description: MCP客户端+基础面板(搜索/Agent列表/对话/告警)
+status: completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+rollback: git revert
+acceptance_criteria:
+- bun run dev可启动
+- 4个Tab展示内容
+completed_at: '2026-06-03T00:00:00Z'

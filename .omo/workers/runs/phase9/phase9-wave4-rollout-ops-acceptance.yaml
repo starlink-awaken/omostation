@@ -1,0 +1,21 @@
+version: 1
+acceptance_id: phase9-wave4-rollout-ops-acceptance
+task_id: P9-W4-ROLLOUT-OPS-CLOSEOUT
+worker_id: copilot-cli
+accepted_by: copilot-cli
+accepted_at: '2026-05-31T20:50:00Z'
+decision: allow
+refs:
+  envelope_ref: .omo/workers/runs/phase9-wave4-rollout-ops-envelope.yaml
+  approval_ref: .omo/workers/runs/phase9-wave3-identity-admission-approval.yaml
+  run_ref: .omo/workers/runs/phase9-wave4-rollout-ops-dispatch.yaml
+  task_ref: .omo/tasks/done/P9-W4-ROLLOUT-OPS-CLOSEOUT.yaml
+  rollout_policy_ref: spaces/system-space-rollout-policy.yaml
+  runtime_boundary_ref: runtime/system-runtime-boundary.yaml
+evidence:
+  acceptance_evidence_refs:
+  - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/apply.yaml
+  - .omo/_delivery/task-center/proposals/phase9-wave3-identity-admission-approval-proposal/verify.yaml
+  runtime_residue_paths:
+  - runtime/run-continuation/phase9-wave4-rollout-ops
+  - runtime/logs/phase9-wave4-rollout-ops.log

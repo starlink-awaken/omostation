@@ -1,49 +1,87 @@
 overlay_id: GOV-OVERLAY-2026-06
-generated_at: '2026-06-03T00:56:39Z'
+generated_at: '2026-06-03T11:03:00Z'
 status: active
 autopilot_mode: full_omo_autopilot
 intake_scope: future_planned_debt
-current_milestone: GOV-M1-EXECUTION-HARDENING
-next_milestone: GOV-M2-SHAREDBRAIN-DEBT
+current_milestone: GOV-M3-FUTURE-PROMOTION-OPERATIONS
+next_milestone: null
 success_target: future roadmap, planned queue, and debt watchlist are governed through
   the overlay lane
 eligible_count: 0
-blocked_count: 2
+blocked_count: 0
 active_roadmap_item:
-  id: GOV-M1-EXECUTION-HARDENING
-  title: Execution hardening and E2E debt closure
-  type: task-bundle
-  priority: P0
+  id: GOV-M3-FUTURE-PROMOTION-OPERATIONS
+  title: Promotion-driven future phase operations
+  type: phase-bridge
+  priority: P1
 active_target_states:
-- target_ref: .omo/tasks/planned/D2-CI-E2E-TEST-ENV.yaml
-  task_id: D2-CI-E2E-TEST-ENV
-  state: active_in_progress
-  detail: task currently exists in tasks/active/ with status in_progress
-- target_ref: .omo/tasks/planned/D3-EU-PRICING-TEST.yaml
-  task_id: D3-EU-PRICING-TEST
-  state: active_in_progress
-  detail: task currently exists in tasks/active/ with status in_progress
+- target_ref: .omo/tasks/planned/P19-W3-ARCHIVE-TS.yaml
+  task_id: P19-W3-ARCHIVE-TS
+  state: planned_promotion_blocked
+  action: promote_apply
+  result: promotion_blocked
+  detail: planned task is blocked by existing promotion gates
+  blockers:
+  - phase_mismatch
+- target_ref: .omo/tasks/planned/P24-W2-NUCLEUS-REPLACE.yaml
+  task_id: P24-W2-NUCLEUS-REPLACE
+  state: planned_approval_prep_pending
+  action: await_approval
+  result: approval_prep_pending
+  detail: phase gate is still closed and task-specific promotion approval is not granted
+    yet
+  blockers:
+  - phase_mismatch
+  - approval_invalid
 - target_ref: .omo/tasks/planned/P25-W1-E2E-INTEGRATION.yaml
   task_id: P25-W1-E2E-INTEGRATION
-  state: planned_pending
-  detail: task currently exists in tasks/planned/
+  state: planned_promotion_blocked
+  action: promote_apply
+  result: promotion_blocked
+  detail: planned task is blocked by existing promotion gates
+  blockers:
+  - phase_mismatch
 - target_ref: .omo/tasks/planned/P25-W2-DOCS-DEBT-CLOSURE.yaml
   task_id: P25-W2-DOCS-DEBT-CLOSURE
-  state: planned_pending
-  detail: task currently exists in tasks/planned/
+  state: planned_promotion_blocked
+  action: promote_apply
+  result: promotion_blocked
+  detail: planned task is blocked by existing promotion gates
+  blockers:
+  - phase_mismatch
+monitor_summary:
+  blocked_target_count: 4
+  state_histogram:
+    planned_promotion_blocked: 3
+    planned_approval_prep_pending: 1
+  blocker_histogram:
+    phase_mismatch: 4
+    approval_invalid: 1
+  approval_blocked_task_ids:
+  - P24-W2-NUCLEUS-REPLACE
+  phase_blocked_task_ids:
+  - P19-W3-ARCHIVE-TS
+  - P24-W2-NUCLEUS-REPLACE
+  - P25-W1-E2E-INTEGRATION
+  - P25-W2-DOCS-DEBT-CLOSURE
+  approval_prep:
+    prep_task_count: 1
+    request_now_count: 0
+    awaiting_approval_count: 1
+    trend_status: trend_available
+    window_event_count: 2
+    changed_current_task_ids:
+    - P24-W2-NUCLEUS-REPLACE
+    no_longer_current_task_ids: []
+    attention_summary:
+      fresh_count: 1
+      watch_count: 0
+      escalate_count: 0
+    followup_task_ids: []
+    escalation_task_ids: []
 autopilot_candidates: []
-blocked_items:
-- id: GOV-M2-SHAREDBRAIN-DEBT
-  title: SharedBrain debt convergence
-  reason: unmet_dependencies
-  depends_on:
-  - GOV-M1-EXECUTION-HARDENING
-- id: GOV-M3-FUTURE-PROMOTION-OPERATIONS
-  title: Promotion-driven future phase operations
-  reason: unmet_dependencies
-  depends_on:
-  - GOV-M2-SHAREDBRAIN-DEBT
-next_action: monitor:GOV-M1-EXECUTION-HARDENING
+blocked_items: []
+next_action: monitor:GOV-M3-FUTURE-PROMOTION-OPERATIONS
 policy:
   autopilot_mode: full_omo_autopilot
   auto_select: true

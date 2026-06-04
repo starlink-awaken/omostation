@@ -1,0 +1,33 @@
+id: SB_UNTESTED_PKGS
+title: kairon SharedBrain-adjacent packages still lack minimum test baselines
+dimension: code_test
+subdimension: baseline_coverage
+domain: projects
+scope: cross_project
+severity: high
+weight: 0.15
+entropy_class: state
+lifecycle_state: closed
+owner: sharedbrain-governance
+affected_roots:
+  - projects/kairon
+evidence_refs:
+  - .omo/_knowledge/design/debt-cleanup-plan.md
+mitigation_refs:
+  - .omo/tasks/done/SHAREDBRAIN-FORMAL-DECISION.yaml
+  - .omo/_knowledge/design/sharedbrain-decomposition-architecture.md
+opened_at: "2026-06-01T10:30:00Z"
+last_reviewed_at: "2026-06-03T00:00:00Z"
+next_review_at: null
+gate_level: none
+history:
+  - at: "2026-06-02T00:00:00Z"
+    action: register
+    note: Seeded from the legacy debt-weight backlog for untested SharedBrain-adjacent packages.
+  - at: "2026-06-03T00:00:00Z"
+    action: close
+    note: >-
+      SharedBrain 107K lines cleanup complete (115 .py files remaining).
+      Organs archived to _archived/, code migrated to kairon packages.
+      SHAREDBRAIN-FORMAL-DECISION mitigation completed.
+      The SharedBrain-adjacent packages in kairon have their own test baselines.

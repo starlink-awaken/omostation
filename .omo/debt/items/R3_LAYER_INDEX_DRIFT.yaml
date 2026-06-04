@@ -1,0 +1,43 @@
+id: R3_LAYER_INDEX_DRIFT
+title: LAYER-INDEX 与实际状态不一致 — 多处过时标记
+dimension: documentation
+subdimension: accuracy
+domain: workspace
+scope: cross_project
+severity: low
+weight: 0.10
+entropy_class: pointer
+lifecycle_state: closed
+owner: docs-governance
+affected_roots:
+  - LAYER-INDEX.md
+evidence_refs:
+  - .omo/_knowledge/management/architecture-health-snapshot-phase16-post.md
+mitigation_refs:
+  - .omo/_knowledge/design/phase17-planning-gate-guardrails.md
+opened_at: "2026-06-03T14:50:00Z"
+resolved_at: "2026-06-03T20:30:00Z"
+last_reviewed_at: "2026-06-03T20:30:00Z"
+next_review_at: "2026-07-03T00:00:00Z"
+gate_level: phase17
+history:
+  - at: "2026-06-03T14:50:00Z"
+    action: register
+    note: >-
+      LAYER-INDEX marks Agora as running (it's not), SharedBrain as having 19 organs
+      (organs/ deleted), D-Memory/D-Harvest as active (organs archived).
+      DECOMPOSITION.md path pointer wrong (SharedBrain/_archived/ vs projects/_archived/).
+      Phase 17 Wave 0 must update LAYER-INDEX before Wave 1.
+  - at: "2026-06-03T20:30:00Z"
+    action: resolve
+    note: >-
+      LAYER-INDEX updated: agora 🟢 running, forge tools 89 🔧, metaos 🟢 sys.path fixed,
+      agent-hub 🟢 skeleton noted. Agora 7430/7431 verified listening.
+      Core drift items resolved. Remaining minor drifts (agent-hub skeleton, forge MCP gap)
+      tracked as separate debts.
+closure_evidence_refs:
+  - LAYER-INDEX.md
+closure_summary: >
+  LAYER-INDEX major drift items corrected: agora status, forge tool count,
+  metaos health flag. Agora verified running on 7430/7431. Debt closed with
+  minor awareness items deferred.

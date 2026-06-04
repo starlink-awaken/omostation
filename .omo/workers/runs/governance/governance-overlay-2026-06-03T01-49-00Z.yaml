@@ -1,0 +1,34 @@
+run_id: governance-overlay-2026-06-03T01-49-00Z
+overlay_id: GOV-OVERLAY-2026-06
+actor: copilot-cli
+started_at: '2026-06-03T01:49:00Z'
+completed_at: '2026-06-03T01:49:00Z'
+mode: advance_pending
+next_action_before_run: advance:GOV-M3-FUTURE-PROMOTION-OPERATIONS
+roadmap_item_id: GOV-M3-FUTURE-PROMOTION-OPERATIONS
+summary: advanced
+target_results:
+- target_ref: .omo/tasks/planned/P19-W3-ARCHIVE-TS.yaml
+  task_id: P19-W3-ARCHIVE-TS
+  action: promote_apply
+  result: promotion_blocked
+  detail: promote-apply was blocked by existing promotion gates
+- target_ref: .omo/tasks/planned/P24-W2-NUCLEUS-REPLACE.yaml
+  task_id: P24-W2-NUCLEUS-REPLACE
+  action: request_approval
+  result: approval_requested
+  detail: task-specific promotion approval request created
+  approval_ref: .omo/workers/runs/P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z.yaml
+  proposal_ref: .omo/_truth/task-center/proposals/P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z-proposal.yaml
+- target_ref: .omo/tasks/planned/P25-W1-E2E-INTEGRATION.yaml
+  task_id: P25-W1-E2E-INTEGRATION
+  action: promote_apply
+  result: promotion_blocked
+  detail: promote-apply was blocked by existing promotion gates
+- target_ref: .omo/tasks/planned/P25-W2-DOCS-DEBT-CLOSURE.yaml
+  task_id: P25-W2-DOCS-DEBT-CLOSURE
+  action: promote_apply
+  result: promotion_blocked
+  detail: promote-apply was blocked by existing promotion gates
+target_state_summary: {}
+control_updates: {}

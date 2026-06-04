@@ -1,0 +1,30 @@
+id: D3_EU_PRICING
+title: eu-pricing tests are not independently governed
+dimension: code_test
+subdimension: isolated_test_coverage
+domain: projects
+scope: cross_project
+severity: high
+weight: 0.15
+entropy_class: state
+lifecycle_state: closed
+owner: commerce-governance
+affected_roots:
+- projects/kairon
+- .github/workflows
+evidence_refs:
+- .omo/_knowledge/design/debt-cleanup-plan.md
+- .omo/tasks/active/P17-DEBT-GOVERNANCE-GATE-RULES.yaml
+mitigation_refs:
+- .omo/_knowledge/design/debt-cleanup-plan.md
+opened_at: '2026-06-01T10:30:00Z'
+last_reviewed_at: '2026-06-02T00:00:00Z'
+next_review_at: '2026-06-09T00:00:00Z'
+gate_level: none
+history:
+- at: '2026-06-02T00:00:00Z'
+  action: register
+  note: Seeded from existing Phase 17 debt backlog.
+- at: '2026-06-03T02:05:04Z'
+  action: close
+  note: Closed debt item.

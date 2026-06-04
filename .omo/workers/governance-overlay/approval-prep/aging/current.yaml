@@ -1,0 +1,21 @@
+generated_at: '2026-06-03T11:01:00Z'
+aging_status: aging_available
+prep_task_count: 1
+attention_summary:
+  fresh_count: 1
+  watch_count: 0
+  escalate_count: 0
+followup_task_ids: []
+escalation_task_ids: []
+tasks:
+- task_id: P24-W2-NUCLEUS-REPLACE
+  state: planned_approval_prep_pending
+  action: await_approval
+  age_bucket: lt_1d
+  latest_started_at: '2026-06-03T02:34:21Z'
+  blockers:
+  - phase_mismatch
+  - approval_invalid
+  approval_ref: .omo/workers/runs/P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z.yaml
+  attention_level: fresh
+  attention_reason: recent approval prep activity

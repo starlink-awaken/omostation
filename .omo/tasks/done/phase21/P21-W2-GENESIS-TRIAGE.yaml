@@ -1,0 +1,40 @@
+id: P21-W2-GENESIS-TRIAGE
+phase: 21
+milestone: M21.2
+priority: P0
+title: 'D_Genesis三向分散: 起源→metaos, 自愈→agent-runtime, 进化→minerva'
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../_knowledge/design/MASTER-BLUEPRINT.md
+depends_on:
+- P17-W3-METAOS-GAP-ANALYSIS
+- P20-W4-HARNESS-DISPERSAL
+entry_gate:
+- phase20_completed
+risk_level: L3
+allowed_operation_level: L2
+human_approval_required: true
+evidence_required:
+- 'metaos/core/engine.py: 起源引导+生命周期'
+- 'agent-runtime/self_healing.py: 自愈执行器'
+- minerva进化反馈模块
+- self_healing.circuit定义
+- genesis-neuron连接
+- 原型管理/遗传算法→归档
+- 'BaseMembrane: 34文件→0'
+acceptance_criteria:
+- 自愈回路端到端 <5s
+- 3个目标模块编译通过
+- 测试≥70%通过率
+- 归档过度工程(原型/遗传/联邦)
+test_plan:
+- 完成 Genesis 三向分散后验证起源、自愈、进化链路归位
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'

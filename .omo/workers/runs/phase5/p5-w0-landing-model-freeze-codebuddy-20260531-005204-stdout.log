@@ -1,0 +1,26 @@
+测试通过。任务完成。以下是工作总结：
+
+---
+
+## P5-W0-LANDING-MODEL-FREEZE 完成
+
+### 交付物
+
+- ✅ `.omo/_knowledge/design/phase5-task-center-landing-model.md` — 着陆模型冻结文档
+- ✅ `.omo/workers/runs/p5-w0-landing-model-freeze-codebuddy-20260531-005204-review.md` — 审查记录
+
+### 文档结构
+
+| 章节 | 内容 |
+|------|------|
+| §2 | 四平面所有权表 — truth/delivery/control/knowledge 各自持有资源清单 |
+| §3 | 5 条边界规则 — 不镜像运行时快照、不镜像注册表、secret 引用替代明文、治理调度分离、Hermes 兼容层 |
+| §4 | 拒绝清单 — 5 项被拒绝的操作及替代方案 |
+| §5 | 落地状态 — 平面冻结已完成，目录创建归 Wave 1 MVP |
+| §6 | Wave 1+ 预留变更空间 — 联邦调度、模板、Hermes 退役 |
+
+### 证据验证
+
+- `truth and delivery ownership table is explicit` — ✅ §2 显式定义
+- `no mirrored runtime snapshot is proposed outside owner planes` — ✅ §3 规则 1/2 禁止镜像，§4 拒绝清单列明
+- 测试 `test_phase5_wave0_docs.py` — **1 passed**

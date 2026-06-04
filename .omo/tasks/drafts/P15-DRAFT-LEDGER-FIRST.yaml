@@ -1,0 +1,12 @@
+id: P15-DRAFT-LEDGER-FIRST
+phase: 15
+status: draft
+activation_allowed: false
+approval_required: human
+title: Governance evidence ledger hardening
+source_proposal: p13-proposal-ledger-first
+source_evidence:
+- .omo/evidence/phase13/bottleneck-proposals.yaml
+- .omo/_truth/governance-evidence/ledger.yaml
+rollback: Delete this draft and keep existing Phase 12-14 evidence as source refs.
+verification: Policy tests prove no draft activation leak.

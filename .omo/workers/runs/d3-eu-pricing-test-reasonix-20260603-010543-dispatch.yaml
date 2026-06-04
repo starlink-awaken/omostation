@@ -1,0 +1,42 @@
+version: 1
+dispatch_id: d3-eu-pricing-test-reasonix-20260603-010543
+task_id: D3-EU-PRICING-TEST
+worker_id: reasonix
+transport_mode: cli_prompt
+run_ref: .omo/workers/runs/d3-eu-pricing-test-reasonix-20260603-010543-dispatch.yaml
+dispatch_state: active
+coordinator: copilot-cli
+launched_at: '2026-06-03T01:05:43Z'
+lease:
+  heartbeat_interval_seconds: 300
+  warning_after_seconds: 900
+  lease_expired_after_seconds: 1200
+  reclaim_after_seconds: 1800
+  last_checkpoint_at: null
+  last_material_write_at: '2026-06-03T01:15:27Z'
+inputs:
+  task_yaml: .omo/tasks/active/D3-EU-PRICING-TEST.yaml
+  envelope_file: .omo/workers/runs/d3-eu-pricing-test-reasonix-20260603-010543-envelope.yaml
+  prompt_file: .omo/workers/runs/d3-eu-pricing-test-reasonix-20260603-010543-prompt.md
+  source_docs:
+  - _knowledge/management/debt-systems-analysis-and-governance.md
+  - _knowledge/design/debt-cleanup-plan.md
+execution:
+  launch_command: reasonix run "<prompt:.omo/workers/runs/d3-eu-pricing-test-reasonix-20260603-010543-prompt.md>"
+  approval_ref: null
+  session_ref: null
+  log_ref: .omo/workers/runs/d3-eu-pricing-test-reasonix-20260603-010543-stdout.log
+  checkpoint_refs:
+  - .omo/workers/runs/d3-eu-pricing-test-reasonix-20260603-010543-checkpoint.md
+handoff:
+  output_summary_ref: .omo/workers/runs/d3-eu-pricing-test-reasonix-20260603-010543-review.md
+  evidence_paths: []
+  unresolved_risks: []
+  next_handoff: null
+reclaim:
+  required: false
+  reason: null
+  reclaimed_at: null
+  successor_worker_id: null
+  successor_dispatch_id: null
+  note_ref: .omo/workers/runs/d3-eu-pricing-test-reasonix-20260603-010543-reclaim.md

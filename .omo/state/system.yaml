@@ -1,13 +1,13 @@
-current_phase: 16
+current_phase: 26
 phase1_status: closed
-phase_status: completed
-current_wave: null
-next_milestone: Phase 17 live capture/search pilot planning gate
-health_score: 29.1
+phase_status: active
+current_wave: W1
+next_milestone: "Phase 26 W1 — OMO Fusion Upgrade: 控制面同步"
+health_score: 98.0
 active_agents: 1
 idle_agents: 3
 dead_agents: 0
-blocked_tasks: 2
+blocked_tasks: 0
 phase2_core_complete: true
 phase3_foundation_status: completed
 phase3_foundation_completed_at: '2026-05-30T16:14:37Z'
@@ -15,14 +15,11 @@ phase3_capability_slice_status: completed
 phase3_capability_slice_completed_at: '2026-05-30T22:35:00Z'
 phase3_acceptance_status: completed
 phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
-completed_tasks: 124
-total_tasks: 158
-active_tasks: 3
+completed_tasks: 14
+total_tasks: 14
+active_tasks: 0
 next_active_tasks:
-- Current active queue from .omo/tasks/active/ (3 tasks)
-- ORPHANED-TASKS-STRUCTURED-REGISTRY
-- P17-DEBT-GOVERNANCE-GATE-RULES
-- SHAREDBRAIN-FORMAL-DECISION
+- (No active tasks)
 last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 kickoff
   may proceed)
 phase2_status: completed
@@ -46,26 +43,10 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-03T00:00:00Z'
+updated_at: '2026-06-04T04:03:00Z'
 divergence_flags: []
-task_gate_summary:
-  ORPHANED-TASKS-STRUCTURED-REGISTRY:
-    canonical_status: pending
-    gate_facts: []
-  P17-DEBT-GOVERNANCE-GATE-RULES:
-    canonical_status: in_progress
-    gate_facts:
-    - dispatched
-    - review_ready
-  SHAREDBRAIN-FORMAL-DECISION:
-    canonical_status: in_progress
-    gate_facts:
-    - dispatched
-    - review_ready
-promotion_blockers:
-  ORPHANED-TASKS-STRUCTURED-REGISTRY: []
-  P17-DEBT-GOVERNANCE-GATE-RULES: []
-  SHAREDBRAIN-FORMAL-DECISION: []
+task_gate_summary: {}
+promotion_blockers: {}
 divergence_triage_summary: {}
 divergence_detail_refs: {}
 phase12_status: completed
@@ -83,92 +64,118 @@ governance_loop_safety_score: 100
 user_value_traceability_score: 100
 phase16_status: completed
 phase16_completed_at: '2026-06-01T09:10:00Z'
+phase17_completed_at: '2026-06-03T14:42:00Z'
+phase18_completed_at: '2026-06-03T14:42:00Z'
+phase19_status: completed
+phase19_completed_at: '2026-06-03T15:00:00Z'
+phase20_status: completed
+phase20_completed_at: '2026-06-03T15:30:00Z'
+phase21_status: completed
+phase21_completed_at: '2026-06-03T16:00:00Z'
+phase22_status: completed
+phase22_completed_at: '2026-06-03T16:30:00Z'
+phase23_status: completed
+phase23_completed_at: '2026-06-03T17:00:00Z'
+phase24_status: completed
+phase24_completed_at: '2026-06-04T11:27:00Z'
+phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
 health_score_raw: 97.0
-debt_weight: 0.3
+debt_weight: 1.0
 debt_weight_items:
   D2_CI_E2E:
-    resolved: false
+    resolved: true
     weight: 0.15
     desc: CI E2E test environment is still non-canonical
   D3_EU_PRICING:
-    resolved: false
+    resolved: true
     weight: 0.15
     desc: eu-pricing tests are not independently governed
   SB_DECOMPOSITION:
-    resolved: false
+    resolved: true
     weight: 0.2
     desc: SharedBrain decomposition remains partially governed
   SB_UNTESTED_PKGS:
-    resolved: false
+    resolved: true
     weight: 0.15
     desc: kairon SharedBrain-adjacent packages still lack minimum test baselines
   SB_ORPHANED_TASKS:
-    resolved: false
+    resolved: true
     weight: 0.1
     desc: orphaned task semantics can still drift away from the debt ledger
   SB_ROOT_CLEANUP:
-    resolved: false
+    resolved: true
     weight: 0.05
     desc: Root SharedBrain shell cleanup remains deferred
   SB_BRIDGE_FIX:
-    resolved: false
+    resolved: true
     weight: 0.1
     desc: sharedbrain-bridge remains disconnected from the live platform
   SB_PROJECTS_YAML:
-    resolved: false
+    resolved: true
     weight: 0.05
     desc: PROJECTS registry metadata for SharedBrain remains stale
   SB_PHASE17_PLAN:
-    resolved: false
+    resolved: true
     weight: 0.05
     desc: Phase 17 SharedBrain execution planning still needs debt-ledger tracking
-resolved_debt_items: []
+  R1_P0_SURFACE_GAP:
+    resolved: true
+    weight: 0.2
+    desc: P0 产品交互层缺失 — 无用户可见入口
+  R2_AGORA_NOT_RUNNING:
+    resolved: true
+    weight: 0.15
+    desc: Agora Service Mesh 未运行 — 端口 7430/7431 无监听
+  R3_LAYER_INDEX_DRIFT:
+    resolved: true
+    weight: 0.1
+    desc: LAYER-INDEX 与实际状态不一致 — 多处过时标记
+  R4_RUNTIME_ADAPTER_DEBT:
+    resolved: true
+    weight: 0.15
+    desc: 运行时适配器模式债务 — try/except ImportError 掩盖运行时故障
+  R5_METAOS_PATH_INSERT:
+    resolved: true
+    weight: 0.1
+    desc: metaos 运行时 sys.path.insert — 影响可分发性
+  R6_SB_STANDALONE_NO_TESTS:
+    resolved: true
+    weight: 0.1
+    desc: sharedbrain-standalone 零测试 — 分解残留包未验证
+resolved_debt_items:
+- D2_CI_E2E
+- D3_EU_PRICING
+- R1_P0_SURFACE_GAP
+- R2_AGORA_NOT_RUNNING
+- R3_LAYER_INDEX_DRIFT
+- R4_RUNTIME_ADAPTER_DEBT
+- R5_METAOS_PATH_INSERT
+- R6_SB_STANDALONE_NO_TESTS
+- SB_BRIDGE_FIX
+- SB_DECOMPOSITION
+- SB_ORPHANED_TASKS
+- SB_PHASE17_PLAN
+- SB_PROJECTS_YAML
+- SB_ROOT_CLEANUP
+- SB_UNTESTED_PKGS
 orphaned_tasks_ref: .omo/tasks/registry/INDEX.md
 debt_registry_ref: .omo/debt/registry.yaml
 debt_dashboard_ref: .omo/debt/dashboard/current.yaml
 debt_review_pack_ref: .omo/debt/reviews/current.md
 debt_metrics:
-  debt_health: 37.5
+  debt_health: 100.0
   classification_entropy: 0.0
-  state_entropy: 1.0
-  pointer_entropy: 1.11
+  state_entropy: 0.0
+  pointer_entropy: 0.0
   time_entropy: 0.0
-  backlog_pressure: 1.0
-  coupling_load: 2.22
-debt_watchlist_count: 3
-debt_gate_count: 1
+  backlog_pressure: 0
+  coupling_load: 0.0
+debt_watchlist_count: 0
+debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 29
+planned_tasks: 0
+planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- Current planned queue from .omo/tasks/planned/ (29 tasks)
-- D2-CI-E2E-TEST-ENV
-- D3-EU-PRICING-TEST
-- P17-W1-ARCHITECTURE-FOUNDATION
-- P17-W2-SHAREDBRAIN-PROTOCOLS-V1
-- P17-W3-METAOS-GAP-ANALYSIS
-- P17-W4-AGENTMESH-AUDIT
-- P18-W1-NEURAL-CENTER
-- P18-W2-CIRCUIT-ENGINE
-- P18-W3-NEURON-POOL
-- P18-W4-CLEANUP-DWINDOW-REFS
-- P19-W1-AGENT-RUNTIME-ENHANCE
-- P19-W2-AGENT-HUB-CREATE
-- P19-W3-ARCHIVE-TS
-- P20-W1-ECONOMY-EXTRACTION
-- P20-W2-KI-KOS-MERGE
-- P20-W3-EXTENSION-FORGE
-- P20-W4-HARNESS-DISPERSAL
-- P21-W1-IMMUNITY-METAOS
-- P21-W2-GENESIS-TRIAGE
-- P21-W3-OBSERVABILITY-CREATE
-- P21-W4-GC-ENGINE-CREATE
-- P22-W1-PONTUS-DSL-SCHEDULER
-- P22-W2-PONTUS-QUALITY
-- P23-W1-HERMES-SCAFFOLD
-- P23-W2-HERMES-DASHBOARD
-- P24-W1-BASEMEMBRANE-ZERO
-- P24-W2-NUCLEUS-REPLACE
-- P25-W1-E2E-INTEGRATION
-- P25-W2-DOCS-DEBT-CLOSURE
+- (No planned tasks)

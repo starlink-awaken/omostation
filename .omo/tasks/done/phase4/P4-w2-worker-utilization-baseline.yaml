@@ -1,0 +1,36 @@
+id: P4-W2-WORKER-UTILIZATION-BASELINE
+phase: 4
+milestone: W2
+priority: P0
+title: Establish the first periodic worker utilization baseline
+status: done
+assigned_to: copilot-cli
+dispatch_id: wave2-governance-hardening
+run_ref: .omo/summaries/worker-utilization-baseline.md
+approval_ref: null
+review_ref: .omo/summaries/p4-wave2-closure-retrospective.md
+knowledge_refs:
+  - .omo/plans/archive/phase4-wave2-hardening-design.md
+  - .omo/plans/archive/phase4-wave2-hardening-implementation-plan.md
+  - .omo/summaries/worker-utilization-baseline.md
+handoff_refs:
+  - scripts/omo_metrics.py
+blocked_by: null
+source_docs:
+  - .omo/plans/archive/phase4-wave2-hardening-design.md
+  - .omo/plans/archive/phase4-wave2-hardening-implementation-plan.md
+  - .omo/_delivery/INDEX.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 4 Wave 1 worker ops baseline completed
+evidence_required:
+  - baseline report defines minimum worker dispatch reclaim and completion metrics
+  - utilization reporting is linked from the delivery plane
+test_plan:
+  - python3 -m pytest .omo/tests/test_omo_automation.py -q --tb=short
+  - python3 -m pytest .omo/tests/test_phase4_wave2_docs.py -q --tb=short
+created_at: '2026-05-31T01:10:00Z'
+completed_at: '2026-05-31T02:20:00Z'
+completion_summary: "The worker baseline now reports a real observation window plus review-note and handoff metrics, making Wave 2 utilization usable for operating decisions instead of a raw snapshot."

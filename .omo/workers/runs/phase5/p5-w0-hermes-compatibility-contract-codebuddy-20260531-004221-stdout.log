@@ -1,0 +1,30 @@
+所有交付物已完成。以下是摘要：
+
+---
+
+## 交付物完成
+
+### 1. `.omo/_knowledge/design/phase5-hermes-contract.md` — 已创建
+
+Hermes 兼容性合约冻结了以下内容：
+
+**Scope Boundary**（三层分类）：
+- **IN** — WeChat/IM 入口、分层记忆（MCP 消费）、API key 回退
+- **OUT** — 调度主干、cron 定义、任务定义所有权、MCP 工具源、看板（全部带有迁移目标和截止时间）
+- **MAINTENANCE ONLY** — 现有桥接 symlink、现有 cron 定义、现有 MCP 工具（保持运行，不新增）
+
+**三种集成合约**：入口合约（路由冻结）、记忆消费合约（尽力而为）、回退依赖合约（`secret_ref` 链）
+
+**所有权交接计划**：Wave 1 迁移调度层，Wave 3 迁移工具源和记忆消费
+
+**非协商项**：四条硬性规则，包括无新影子 SSOT、无 Hermes 作为新工作的调度主干
+
+**证据交叉引用**：直接映射到任务 YAML 中的两个 `evidence_required` 标准
+
+### 2. Review note — 已更新
+
+记录了所做工作的完整摘要，包括冻结的决策和检查过的文件。
+
+### 3. 任务状态 — 未标记完成
+
+任务 YAML 仍为 `status: in_progress`，符合约束要求。

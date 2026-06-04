@@ -1,0 +1,59 @@
+id: P11-W4-EVOLUTION-BRIDGE
+phase: 11
+milestone: W4
+priority: P0
+title: Execute the Phase 11 evolution bridge packet
+status: done
+assigned_to: worker-1
+dispatch_id: phase11-wave4-evolution-bridge
+run_ref: .omo/workers/runs/phase11-wave4-evolution-bridge-dispatch.yaml
+approval_ref: null
+review_ref: .omo/workers/runs/phase11-wave4-evolution-bridge-review.md
+knowledge_refs:
+  - .omo/plans/archive/phase11-program-plan.md
+  - .omo/plans/archive/phase11-wave4-execution-plan.md
+  - .omo/summaries/phase11-wave3-closeout.md
+handoff_refs:
+  - .omo/workers/runs/phase11-wave4-evolution-bridge-prompt.md
+  - .omo/workers/runs/phase11-wave4-evolution-bridge-checkpoint.md
+  - .omo/workers/runs/phase11-wave4-evolution-bridge-reclaim.md
+source_docs:
+  - .omo/plans/archive/phase11-program-plan.md
+  - .omo/plans/archive/phase11-wave4-execution-plan.md
+  - .omo/summaries/phase11-wave3-closeout.md
+deliverables:
+  - .omo/plans/archive/phase11-wave4-execution-plan.md
+  - .omo/summaries/phase11-wave4-closeout.md
+  - .omo/summaries/phase11-retrospective.md
+  - .omo/workers/runs/phase11-wave4-evolution-bridge-dispatch.yaml
+  - .omo/workers/runs/phase11-wave4-evolution-bridge-prompt.md
+  - .omo/workers/runs/phase11-wave4-evolution-bridge-review.md
+  - .omo/workers/runs/phase11-wave4-evolution-bridge-checkpoint.md
+  - .omo/workers/runs/phase11-wave4-evolution-bridge-reclaim.md
+  - .omo/tests/test_phase11_wave4_docs.py
+depends_on:
+  - P11-W3-USER-MVP
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 11 Wave 3 closeout exists at .omo/summaries/phase11-wave3-closeout.md
+  - goals/current.yaml promotes G11.4 as the only active wave goal
+  - only one active packet may remain in .omo/tasks/active/
+evidence_required:
+  - Wave 4 is the only active packet in .omo/tasks/active/
+  - goals/current.yaml and state/system.yaml report Phase 11 Wave 4 as active
+  - Wave 4 uses the Wave 3 closeout as its execution entry gate
+test_plan:
+  - python3 scripts/sync_omo_state.py
+  - python3 scripts/omo_worker.py task validate --all-active
+  - python3 -m pytest .omo/tests/test_phase11_wave3_docs.py .omo/tests/test_phase11_wave4_docs.py -q
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-06-01T01:20:00Z'
+completed_at: '2026-06-01T00:10:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary:
+  closeout_ref: .omo/summaries/phase11-wave4-closeout.md
+  retrospective_ref: .omo/summaries/phase11-retrospective.md
+  decision: GO for Phase 12 entry

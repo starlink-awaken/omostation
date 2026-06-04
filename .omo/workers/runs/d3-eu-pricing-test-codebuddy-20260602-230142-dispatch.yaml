@@ -4,7 +4,7 @@ task_id: D3-EU-PRICING-TEST
 worker_id: codebuddy
 transport_mode: cli_prompt
 run_ref: .omo/workers/runs/d3-eu-pricing-test-codebuddy-20260602-230142-dispatch.yaml
-dispatch_state: active
+dispatch_state: reclaimed
 coordinator: copilot-cli
 launched_at: '2026-06-02T23:01:42Z'
 lease:
@@ -34,9 +34,9 @@ handoff:
   unresolved_risks: []
   next_handoff: null
 reclaim:
-  required: false
-  reason: null
-  reclaimed_at: null
-  successor_worker_id: null
-  successor_dispatch_id: null
+  required: true
+  reason: lease expired with no checkpoint or review output
+  reclaimed_at: '2026-06-03T01:05:43Z'
+  successor_worker_id: reasonix
+  successor_dispatch_id: d3-eu-pricing-test-reasonix-20260603-010543
   note_ref: .omo/workers/runs/d3-eu-pricing-test-codebuddy-20260602-230142-reclaim.md

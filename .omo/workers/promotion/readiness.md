@@ -1,6 +1,6 @@
 # Task Promotion Readiness
 
-Generated at: 2026-06-03T00:00:00Z
+Generated at: 2026-06-03T00:15:00Z
 Current phase: 16
 Target phase: 17
 Ready tasks: 6
@@ -82,7 +82,7 @@ blockers=phase_mismatch
 
 task_ref=.omo/tasks/planned/P19-W3-ARCHIVE-TS.yaml
 phase=19
-blockers=phase_mismatch,approval_invalid
+blockers=phase_mismatch
 
 ## Blocked: P20-W1-ECONOMY-EXTRACTION
 

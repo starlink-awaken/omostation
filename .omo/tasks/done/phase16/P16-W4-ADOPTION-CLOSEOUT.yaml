@@ -1,0 +1,10 @@
+id: P16-W4-ADOPTION-CLOSEOUT
+phase: 16
+status: done
+title: Adoption closeout and external OMO method deposition
+evidence_refs:
+  - .omo/evidence/phase16/adoption-closeout.yaml
+  - .omo/summaries/phase16-closeout.md
+  - .omo/summaries/phase16-retrospective.md
+  - .omo/_knowledge/management/phase16-cross-audit.md
+verification: adoption evidence, closeout, retrospective, audit, and external OMO method artifacts are complete

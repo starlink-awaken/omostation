@@ -1,0 +1,2353 @@
+
+[tool filesystem_read_text_file] id: P2-PLAN-SAFE-MESH-RBAC
+phase: 2
+milestone: M2.6
+priority: P2
+title: Plan Safe Mesh / RBAC deployment roadmap
+status: in_progress
+assigned_to: reasonix
+dispatch_id: p2-plan-safe-mesh-rbac-reasonix-20260530-145751
+run_ref: .omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-dispatch.yaml
+approval_ref: null
+review_ref: .omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-review.md
+knowledge_refs:
+- .omo/standards/operation-levels.md
+- .omo/standards/agent-registry-heartbeat.md
+handoff_refs:
+- .omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-envelope.yaml
+- .omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-prompt.md
+source_docs:
+- .omo/standards/operation-levels.md
+- .omo/standards/agent-registry-heartbeat.md
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+entry_gate: []
+evidence_required:
+- Safe Mesh deployment plan documented
+- RBAC integration points identified
+test_plan:
+- Review roadmap against operation levels and heartbeat standards
+- Confirm rollout sequence distinguishes delivery track vs governance gate
+started_at: '2026-05-30T14:57:51Z'
+
+[tool filesystem_read_text_file] # L0-L3 Operation Levels — Phase 2 Safe Mesh
+
+> 状态: active | 版本: v1.0 | 关联: M2.2-OPERATION-LEVELS
+> 适用范围: 所有 MCP tool、Agent action、CLI 命令
+
+---
+
+## 1. 级别定义
+
+| 级别 | 名称 | 含义 | 示例 | 审批要求 |
+|------|------|------|------|----------|
+| **L0** | Read-Only | 纯读操作，无副作用 | 搜索、查询、列出、健康检查 | 无 |
+| **L1** | Low-Risk Write | 低风险写，已确认安全 | 添加 tag、记录日志、更新缓存 | 审计记录即可 |
+| **L2** | High-Risk Write | 高风险写，可能影响数据完整性 | 索引重建、批量删除、Schema 修改 | **必须人工确认** |
+| **L3** | Destructive | 破坏性操作，不可逆 | 删除数据库、清空索引、回滚版本 | **人工确认 + 24h 冷静期** |
+
+## 2. 操作分类矩阵
+
+每个操作必须标记其 operation_level。以下为默认分类：
+
+```
+Pages CRUD (gbrain/SharedBrain):
+  get_page, list_pages, search                      → L0
+  put_page, add_tag, remove_tag, log_ingest          → L1
+  delete_page, softDeletePage, purgeDeletedPages     → L2
+  executeRaw(DELETE/DROP/TRUNCATE)                   → L3
+
+KOS Index:
+  search_knowledge, get_knowledge, get_system_status → L0
+  cross_domain_sync (incremental)                    → L1
+  run_indexer (full), ontology_rebuild               → L2
+  kos db vacuum, kos db drop                         → L3
+
+Agora Registry:
+  list_services, check_health                        → L0
+  register_service (auto-discovery)                  → L1
+  unregister_service, update_service_config          → L2
+  registry db reset                                  → L3
+
+Config:
+  get_config, list_config_keys                       → L0
+  set_config (existing key)                          → L1
+  set_config (new key), unset_config                 → L2
+  config factory reset                                → L3
+```
+
+## 3. 拒绝路径（Deny Path）
+
+L2 操作未确认时必须被拒绝。拒绝路径：
+
+```python
+# MCP tool middleware pattern
+def _check_operation_level(level: int, tool_name: str, args: dict) -> None:
+    if level >= 2:
+        confirmed = args.pop("_confirmed", False)
+        if not confirmed:
+            raise PermissionError(
+                f"L{level} operation '{tool_name}' requires explicit confirmation. "
+                f"Re-run with `_confirmed: true` after review."
+            )
+    if level >= 3:
+        confirmed = args.pop("_confirmed", False)
+        cooldown = args.pop("_cool_down_hours", 0)
+        if not confirmed or cooldown < 24:
+            raise PermissionError(
+                f"L3 operation '{tool_name}' requires explicit confirmation "
+                f"AND 24h cool-down. Set `_cool_down_hours: 24`."
+            )
+```
+
+## 4. 审计日志
+
+每次 access/deny 必须记录：
+
+```yaml
+# Audit log entry schema
+operation_level: L0|L1|L2|L3
+tool: tool_name
+action: allow|deny
+actor: agent_id|human
+target: resource_path
+reason: "explicit confirmation missing" | "cool-down not satisfied" | "auto-approved"
+timestamp: ISO-8601
+```
+
+审计日志存储位置：`~/.omostation/audit/operations.log`
+
+## 5. 测试场景
+
+| 场景 | 输入 | 预期输出 | 验证 |
+|------|------|----------|------|
+| L0 正常执行 | `get_page("hello")` | 返回 page | ✅ |
+| L1 自动通过 | `add_tag("hello", "test")` | 成功，有审计 | ✅ |
+| L2 无确认被拒 | `delete_page("hello")` | **拒绝**: PermissionError | ✅ 必须验证 |
+| L2 有确认通过 | `delete_page("hello", {_confirmed: true})` | 成功，有审计 | ✅ |
+| L3 无冷静期被拒 | `executeRaw("DROP TABLE pages", {_confirmed: true})` | **拒绝**: 需 24h | ✅ 必须验证 |
+| L3 冷静期通过 | `executeRaw("DROP TABLE pages", {_confirmed: true, _cool_down_hours: 24})` | 成功，有审计 | ✅ |
+
+## 6. 集成方案
+
+Phase 2 不要求所有 MCP server 立即实现 operation level middleware，但要求：
+
+1. **定义已完成**（本文件）✅
+2. **Agora 注册表**支持为每个已注册 tool 标注 operation_level
+3. **agentmesh Gateway** 支持在 dispatch 时检查 operation_level
+4. **审计日志 schema** 已定义并写入 ops/hermes
+
+当前阶段优先级：完成定义和 Agora 注册表集成。
+
+---
+
+## 7. Rollout inventory baseline
+
+本节吸收原 `operation-level-rollout-plan.md` 的最小 rollout 约束。
+
+### 7.1 First-wave candidate set
+
+| Tool / Action | Target Level | Deny Path |
+|---------------|--------------|-----------|
+| `kos search_knowledge` | L0 | none |
+| `kos run_indexer(incremental)` | L1 | audit |
+| `kos run_indexer(full)` | L2 | `_confirmed: true` |
+| `gbrain delete_page` | L2 | `_confirmed: true` |
+| `kos db_vacuum` | L3 | `_confirmed: true` + `24h` |
+
+### 7.2 Rollout sequence
+
+1. 建 inventory / classification table
+2. 为 first-wave tools 落 deny path / audit path
+3. 扩展到更多 MCP/tool surface
+4. 最后才允许默认放大到全量 rollout
+
+### 7.3 Sensitive capability rule
+
+以下能力在独立 gate 前保持 blocked：
+
+- Apple / WeChat / Family OS
+- 高自主自愈
+- 未完成审批链的 destructive admin action
+
+[tool filesystem_read_text_file] # Agent Registry Heartbeat, Cache & Identity Gate — M2.2
+
+> 状态: active | 版本: v1.0 | 关联: M2.2-AGENT-REGISTRY-HEARTBEAT
+> 适用范围: agentmesh Gateway, Agora Registry, 所有注册 Agent
+
+---
+
+## 1. 问题陈述
+
+当前 Agora Registry 是 MCP 服务发现的单点。如果 Registry 不可达：
+- 新 Agent 无法获取路由信息
+- 已运行 Agent 无法刷新身份 token
+- 恶意 Agent 可能注入假服务
+
+## 2. Heartbeat 策略
+
+### 2.1 正常流程
+
+```
+Agent → Registry: POST /api/heartbeat {agent_id, identity_token, ttl: 60}
+Registry → Agent: 200 OK {status: "renewed", expires_at}
+```
+
+- Agent 每 60s 发送 heartbeat
+- TTL 默认 60s，Registry 返回实际过期时间
+- 连续 3 次 heartbeat 失败 → Agent 标记为 `zombie`
+
+### 2.2 Heartbeat 超时处理
+
+| 状态 | 条件 | 行为 |
+|------|------|------|
+| active | heartbeat < 60s ago | 正常路由 |
+| stale | heartbeat 60-180s ago | 仍可路由，发警告 |
+| zombie | heartbeat > 180s ago | 取消路由，通知管理员 |
+| dead | zombie > 24h | 自动注销 |
+
+### 2.3 Registry 不可用时
+
+当 Registry 整体不可达时：
+
+```python
+# Local cache behavior
+if registry_unreachable:
+    # 1. 使用本地缓存的路由表（最后同步版本）
+    local_cache = load_local_cache()
+    
+    # 2. 拒绝新 Agent 注册（防注入）
+    new_registration_allowed = False
+    
+    # 3. 现有 Agent 继续使用缓存路由
+    #    但不更新 heartbeat
+    agent_uses_cached_routes = True
+    
+    # 4. 缓存有效期：最长 15 分钟
+    if cache_age > 900:  # 15 min
+        agent_enters_safe_mode()  # 只读模式
+```
+
+## 3. 本地缓存行为
+
+| 场景 | 读操作 | 写操作 | Heartbeat |
+|------|--------|--------|-----------|
+| Registry 正常 | 实时查询 | 实时写入 | 正常发送 |
+| Registry 不可达 <5min | 缓存可用 | 缓存写入，队列同步 | 本地标记 |
+| Registry 不可达 5-15min | 缓存可用 | 拒绝 | 本地标记 |
+| Registry 不可达 >15min | 降级只读 | 拒绝 | 告警 |
+
+## 4. Agent Identity 验证规则
+
+### 4.1 Identity Token
+
+```yaml
+# Agent identity token schema
+agent_id: str            # 唯一标识，如 "minerva-worker-01"
+agent_type: str          # "research" | "indexer" | "gateway" | "orchestrator"
+capabilities: [str]      # ["read", "write", "admin"]
+identity_token: str      # JWT 或 HMAC 签名
+issued_at: ISO-8601
+expires_at: ISO-8601
+public_key: str          # 用于签名验证
+```
+
+### 4.2 身份验证流程
+
+```
+1. Agent 启动 → 生成 keypair → 发送 register 请求
+2. Registry 验证 → 签发 identity_token (JWT, 24h 有效)
+3. 每次 heartbeat → 附带 identity_token
+4. Registry 验证 token → 返回更新后的 token（续期）
+5. Token 过期 → Agent 被标记为 zombie
+```
+
+### 4.3 恶意 Agent 注入缓解
+
+| 攻击场景 | 缓解措施 |
+|----------|----------|
+| 伪造 agent_id | Registry 签发 HMAC-signed token，无法伪造 |
+| 重放攻击 | Token 含 timestamp + nonce，60s 窗口 |
+| 注册超量 Agent | 每 identity_key 最多 5 个 agent |
+| 提权 | capability 必须在注册时声明，不可变更 |
+| Registry 不可达时注入 | 新注册被拒绝（见 §2.3）|
+
+## 5. Deadlock 检测
+
+Agent 死锁检测规则：
+
+| 检测项 | 条件 | 行为 |
+|--------|------|------|
+| 任务超时 | Agent 执行任务 > 30min 无进展 | 发送 probe，标记可疑 |
+| Heartbeat 停跳 | 3 次 miss | 标记 zombie，重新调度任务 |
+| 重复任务 | 同一任务被 2+ agent 认领 | 停止新调度，人工介入 |
+| 循环依赖 | Agent A → B → A 互相等待 | 超时检测 + 强制取消 |
+
+## 6. 测试/验收场景
+
+| 场景 | 输入 | 预期输出 |
+|------|------|----------|
+| 正常 heartbeat | Agent 每 60s 发送 | Registry 返回 `renewed` |
+| Heartbeat 超时 | 停止发送 180s | Agent 标记 `zombie`，取消路由 |
+| Registry 宕机 5min | 断开 Registry | 缓存路由可用，新注册拒绝 |
+| Registry 宕机 15min | 持续不可达 | Agent 进入 safe mode |
+| 恶意 agent 注入 | 伪造 agent_id 注册 | HMAC 验证失败，拒绝 |
+| Token 过期 | 24h 不续期 | Agent 标记 zombie |
+| 死锁检测 | 任务 30min 无进展 | Probe 发送，任务可重新调度 |
+
+## 7. 集成方案
+
+Phase 2 M2.2 不要求完整实现所有组件，但要求：
+
+1. ✅ **策略已设计**（本文件）
+2. **Agora Registry 扩展**: 注册时附带 identity_token / heartbeat 字段
+3. **agentmesh Gateway 集成**: 发送 heartbeat + 本地缓存
+4. **Ops/Hermes 集成**: 告警 zombie agent + 审计日志
+
+当前阶段优先级：完成设计和 Agora Registry schema 扩展。
+
+[tool filesystem_list_directory] [FILE] README.md
+[FILE] agent-architecture-audit-redteam.md
+[FILE] architecture-final-vision.md
+[DIR] archive
+[FILE] beyond-phase4-review.md
+[FILE] beyond-phase4-vision.md
+[FILE] comprehensive-architecture-audit.md
+[DIR] dbo-archive
+[FILE] deep-architecture-agent-analysis.md
+[FILE] evolution-roadmap-4phases.md
+[FILE] kos-repair-plan.md
+[FILE] llm-convergence-planning-packet.md
+[FILE] llm-convergence-requirements.md
+[FILE] phase1-sprint-plan.md
+[FILE] phase1-task-specs.md
+[FILE] phase1-verification-report.md
+[FILE] phase2-phase3-task-manifest.md
+[FILE] phase2-task-specs-v2.md
+[FILE] phase3-task-specs-v2.md
+[FILE] phase4-task-specs-v2.md
+[FILE] redteam-revision-patch.md
+[FILE] sharedbrain-kairon-integration.md
+[FILE] tech-intelligence-2026q2.md
+
+[tool filesystem_search_files] /Users/xiamingxing/Workspace/.omo/ARC-ONTOLOGY-RECOMMEND.md
+/Users/xiamingxing/Workspace/.omo/ARC-ONTOLOGY-TOOLKIT.md
+/Users/xiamingxing/Workspace/.omo/ARCH-AUDIT-2026-05.md
+/Users/xiamingxing/Workspace/.omo/ARCH-AUDIT-v2.md
+/Users/xiamingxing/Workspace/.omo/ARCH-REVIEW.md
+/Users/xiamingxing/Workspace/.omo/AUDIT.md
+/Users/xiamingxing/Workspace/.omo/CLEANUP.md
+/Users/xiamingxing/Workspace/.omo/CLI-MCP-SPEC.md
+/Users/xiamingxing/Workspace/.omo/CONSISTENCY-CHECK.md
+/Users/xiamingxing/Workspace/.omo/DEBT-ANALYSIS.md
+/Users/xiamingxing/Workspace/.omo/GOVERNANCE_PLAN.md
+/Users/xiamingxing/Workspace/.omo/HEALTH_DASHBOARD.md
+/Users/xiamingxing/Workspace/.omo/INDEX.md
+/Users/xiamingxing/Workspace/.omo/INSIGHTS-AND-ROADMAP.md
+/Users/xiamingxing/Workspace/.omo/INVENTORY.md
+/Users/xiamingxing/Workspace/.omo/KNOWLEDGE_ARCH.md
+/Users/xiamingxing/Workspace/.omo/KOS_MIGRATION_IMPACT.md
+/Users/xiamingxing/Workspace/.omo/LESSONS.md
+/Users/xiamingxing/Workspace/.omo/MASTER-BLUEPRINT.md
+/Users/xiamingxing/Workspace/.omo/MODEL-BENCHMARK.md
+/Users/xiamingxing/Workspace/.omo/ONBOARDING.md
+/Users/xiamingxing/Workspace/.omo/P1_PROJECT_HEALTH.md
+/Users/xiamingxing/Workspace/.omo/PRODUCT-ARCH-JOURNEY.md
+/Users/xiamingxing/Workspace/.omo/RETRO-COMPLETE.md
+/Users/xiamingxing/Workspace/.omo/RETRO-PHASE5.md
+/Users/xiamingxing/Workspace/.omo/STATE.md
+/Users/xiamingxing/Workspace/.omo/TASK_POOL.md
+/Users/xiamingxing/Workspace/.omo/audits/phase2-comprehensive-audit-20260530.md
+/Users/xiamingxing/Workspace/.omo/diagrams/4-plus-1-3-architecture.md
+/Users/xiamingxing/Workspace/.omo/diagrams/INDEX.md
+/Users/xiamingxing/Workspace/.omo/diagrams/control-plane-state-flow.md
+/Users/xiamingxing/Workspace/.omo/drafts/scenario-analysis.md
+/Users/xiamingxing/Workspace/.omo/goals/README.md
+/Users/xiamingxing/Workspace/.omo/plans/README.md
+/Users/xiamingxing/Workspace/.omo/plans/agent-architecture-audit-redteam.md
+/Users/xiamingxing/Workspace/.omo/plans/architecture-final-vision.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/architecture-governance-v5.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/architecture-phase-abc.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/architecture-upgrade-v4.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/architecture-v4-4-plus-1-plus-3-plus-i.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/complete-architecture-analysis-v3.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/deep-analysis-next-phase.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/error-experience-optimization.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/gap-implementation-roadmap.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/governance-phase1.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/governance-phase2.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/governance-phase3.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/governance-phase4.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/hermes-ops-design.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/knowledge-foundation-phase2.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/knowledge-foundation.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/legacy-integration.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/modeling-fix.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/ontology-toolkit-phase3a.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/ontology-toolkit-phase3b.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/ontology-toolkit-phase3c.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/ops-rename-and-correlation.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/phase-0-execution.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/phase-0-openhuman-benchmark.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/phase-i-execution.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/phase-m-maintenance.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/phase10-cleanup-commands.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/phase10-commands.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/phase13-metacognition.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/phase2-task-specs.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/phase3-task-specs.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/phase4-task-specs.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/phase7-run-tools.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/phase8-multi-agent-collab.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/phase9-multi-org-collab.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/product-experience-optimization.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/product-ux-redesign.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/self-collab-consensus-phase.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/test-report-script.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/verify-retro-iteration-phase.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/workspace-ai-os-master-roadmap.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/workspace-ai-os-roadmap-v2.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/workspace-ai-os-roadmap-v3.md
+/Users/xiamingxing/Workspace/.omo/plans/archive/x3-traceability-proposal.md
+/Users/xiamingxing/Workspace/.omo/plans/beyond-phase4-review.md
+/Users/xiamingxing/Workspace/.omo/plans/beyond-phase4-vision.md
+/Users/xiamingxing/Workspace/.omo/plans/comprehensive-architecture-audit.md
+/Users/xiamingxing/Workspace/.omo/plans/dbo-archive/approved/GIP-2026-001-global-implementation-plan.zh-CN.md
+/Users/xiamingxing/Workspace/.omo/plans/dbo-archive/approved/PLAN-INDEX.md
+/Users/xiamingxing/Workspace/.omo/plans/dbo-archive/approved/W1-conductor-operating-system.md
+/Users/xiamingxing/Workspace/.omo/plans/dbo-archive/approved/phase0-freeze-report.md
+/Users/xiamingxing/Workspace/.omo/plans/dbo-archive/templates/proposal-template.md
+/Users/xiamingxing/Workspace/.omo/plans/dbo-archive/templates/sprint-plan-template.md
+/Users/xiamingxing/Workspace/.omo/plans/dbo-archive/templates/wave-plan-template.md
+/Users/xiamingxing/Workspace/.omo/plans/deep-architecture-agent-analysis.md
+/Users/xiamingxing/Workspace/.omo/plans/evolution-roadmap-4phases.md
+/Users/xiamingxing/Workspace/.omo/plans/kos-repair-plan.md
+/Users/xiamingxing/Workspace/.omo/plans/llm-convergence-planning-packet.md
+/Users/xiamingxing/Workspace/.omo/plans/llm-convergence-requirements.md
+/Users/xiamingxing/Workspace/.omo/plans/phase1-sprint-plan.md
+/Users/xiamingxing/Workspace/.omo/plans/phase1-task-specs.md
+/Users/xiamingxing/Workspace/.omo/plans/phase1-verification-report.md
+/Users/xiamingxing/Workspace/.omo/plans/phase2-phase3-task-manifest.md
+/Users/xiamingxing/Workspace/.omo/plans/phase2-task-specs-v2.md
+/Users/xiamingxing/Workspace/.omo/plans/phase3-task-specs-v2.md
+/Users/xiamingxing/Workspace/.omo/plans/phase4-task-specs-v2.md
+/Users/xiamingxing/Workspace/.omo/plans/redteam-revision-patch.md
+/Users/xiamingxing/Workspace/.omo/plans/sharedbrain-kairon-integration.md
+/Users/xiamingxing/Workspace/.omo/plans/tech-intelligence-2026q2.md
+/Users/xiamingxing/Workspace/.omo/retro-knowledge-foundation.md
+/Users/xiamingxing/Workspace/.omo/standards/ARCHITECTURE_CONVERGENCE.md
+/Users/xiamingxing/Workspace/.omo/standards/MCP_STANDARDS.md
+/Users/xiamingxing/Workspace/.omo/standards/README.md
+/Users/xiamingxing/Workspace/.omo/standards/agent-cli-worker-collaboration.md
+/Users/xiamingxing/Workspace/.omo/standards/agent-registry-heartbeat.md
+/Users/xiamingxing/Workspace/.omo/standards/hardcoded-paths-inventory.md
+/Users/xiamingxing/Workspace/.omo/standards/kos-baseline-drift-monitor.md
+/Users/xiamingxing/Workspace/.omo/standards/mcp-tool-and-transport-standard.md
+/Users/xiamingxing/Workspace/.omo/standards/mcp-transport.md
+/Users/xiamingxing/Workspace/.omo/standards/operation-level-rollout-plan.md
+/Users/xiamingxing/Workspace/.omo/standards/operation-levels.md
+/Users/xiamingxing/Workspace/.omo/standards/phase2-full-execution-go-no-go.md
+/Users/xiamingxing/Workspace/.omo/standards/planning-blueprint-delivery-test-standard.md
+/Users/xiamingxing/Workspace/.omo/standards/post-phase1-governance-and-phase2-entry.md
+/Users/xiamingxing/Workspace/.omo/standards/ssot-7-domain-schema.md
+/Users/xiamingxing/Workspace/.omo/state/README.md
+/Users/xiamingxing/Workspace/.omo/summaries/4-plus-1-plus-3-architecture-mapping.md
+/Users/xiamingxing/Workspace/.omo/summaries/agent-task-contract.md
+/Users/xiamingxing/Workspace/.omo/summaries/architecture-phase-abc-retrospective.md
+/Users/xiamingxing/Workspace/.omo/summaries/architecture-redteam-retrospective.md
+/Users/xiamingxing/Workspace/.omo/summaries/data-flow.md
+/Users/xiamingxing/Workspace/.omo/summaries/deep-retrospective-end-of-session.md
+/Users/xiamingxing/Workspace/.omo/summaries/digitalbrainos-summary.md
+/Users/xiamingxing/Workspace/.omo/summaries/full-architecture-audit-redteam-v3.md
+/Users/xiamingxing/Workspace/.omo/summaries/phase1-evidence-reconciliation.md
+/Users/xiamingxing/Workspace/.omo/summaries/phase1-retrospective.md
+/Users/xiamingxing/Workspace/.omo/summaries/phase2-integration-verification-report.md
+/Users/xiamingxing/Workspace/.omo/summaries/phase2-retrospective.md
+/Users/xiamingxing/Workspace/.omo/summaries/retro-2026-05-28.md
+/Users/xiamingxing/Workspace/.omo/summaries/retro-2026-05-30-audit-fix.md
+/Users/xiamingxing/Workspace/.omo/summaries/retro-M2.5-knowledge-closed-loop.md
+/Users/xiamingxing/Workspace/.omo/summaries/workspace-architecture-final.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/handoffs/pipeline-contract.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/phase10-t134-memory-tree.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/phase10-t137-tokenjuice.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/phase10-t140-evolution-engine.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/phase7-t100-hermes-taskobject.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/phase7-t101-103-consensus-freshness-scene.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/phase7-w702-cost-visibility.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/phase8-t114-memory-mcp.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/phase8-t119-e2e.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/phase9-t123-identity-ca.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/phase9-t126-authorizer.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-1.1-config-cleanup.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-1.1B-e2e-fix.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-1.2A-ruff-zero.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-1.2B-health-audit.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-1.2C-config-automation.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-2.1A-minerva-persist.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-2.1B-workspace-bridge.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-2.2A-progress.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-2.2B-followup.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-2.2C-demo-skeleton.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-3.1A-workspace-status.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-3.1B-demo-full.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-3.2A-agentmesh-verify.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-3.2B-deprecate.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-4A-docs.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-4B-ci.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-4C-tech-debt.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-5.1A-eidos-schema.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-5.1B-kos-entitytypes.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-5.2-self-domain.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-5.3-collab-domain.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-5.4A-consensus.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-5.4B-cron-e2e.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-6.3-iteration-fix.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-l1-1.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-l2-1.md
+/Users/xiamingxing/Workspace/.omo/task-prompts/wave-x3-1.md
+/Users/xiamingxing/Workspace/.omo/tasks/README.md
+/Users/xiamingxing/Workspace/.omo/tests/README.md
+/Users/xiamingxing/Workspace/.omo/wave-13-1-retro.md
+/Users/xiamingxing/Workspace/.omo/wave-13-2-retro.md
+/Users/xiamingxing/Workspace/.omo/workers/README.md
+/Users/xiamingxing/Workspace/.omo/workers/runbooks/pilot-dispatch-and-reclaim.md
+/Users/xiamingxing/Workspace/.omo/workers/runs/p2-fix-hardcoded-paths-codebuddy-20260530-145751-prompt.md
+/Users/xiamingxing/Workspace/.omo/workers/runs/p2-fix-hardcoded-paths-codebuddy-20260530-145751-review.md
+/Users/xiamingxing/Workspace/.omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-prompt.md
+/Users/xiamingxing/Workspace/.omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-review.md
+/Users/xiamingxing/Workspace/.omo/workers/runs/pilot-codebuddy-review-20260530-2149-prompt.md
+/Users/xiamingxing/Workspace/.omo/workers/runs/pilot-codebuddy-review-20260530-2149-review.md
+/Users/xiamingxing/Workspace/.omo/workers/runs/pilot-handoff-codebuddy-20260530-2201-prompt.md
+/Users/xiamingxing/Workspace/.omo/workers/runs/pilot-reclaim-handoff-20260530-2158-review.md
+/Users/xiamingxing/Workspace/.omo/workers/runs/pilot-reclaim-reasonix-20260530-2158-prompt.md
+/Users/xiamingxing/Workspace/.omo/workers/runs/pilot-reclaim-reasonix-20260530-2158-reclaim.md
+/Users/xiamingxing/Workspace/.omo/workers/templates/worker-prompt.md
+/Users/xiamingxing/Workspace/.omo/workers/templates/worker-reclaim-note.md
+
+[tool filesystem_read_text_file] # Operation Levels Rollout Plan
+
+> 状态: merged
+> 已合并至 `.omo/standards/operation-levels.md`
+> 本文件保留为历史 rollout 细节来源，不再作为新的 workflow 引用入口。
+
+> 状态: pending | 版本: v1.0 | 关联: M2.3-OPERATION-LEVEL-ROLLOUT-PLAN
+> 基础: `.omo/standards/operation-levels.md` (v1.0)
+> 范围: 所有 MCP/tool 到 L0-L3 的分层分类，不包含代码实现
+
+---
+
+## 1. MCP/Tool Inventory
+
+### 1.1 KOS MCP
+
+| Tool | Current Level | Target Level | Deny Path | Notes |
+|------|:------------:|:------------:|:---------:|-------|
+| search_knowledge | — | L0 | none | read-only |
+| get_knowledge | — | L0 | none | read-only |
+| get_system_status | — | L0 | none | read-only |
+| get_entity | — | L0 | none | read-only |
+| get_relation | — | L0 | none | read-only |
+| cross_domain_sync (incremental) | — | L1 | audit | known safe write |
+| add_tag | — | L1 | audit | known safe write |
+| remove_tag | — | L1 | audit | known safe write |
+| log_ingest | — | L1 | audit | known safe write |
+| run_indexer (full) | L2 | L2 | _confirmed:false | align to existing server.py:398 |
+| run_indexer (incremental) | L1 | L1 | audit | align to existing server.py:463 |
+| ontology_rebuild | — | L2 | _confirmed:false | align to existing server.py:486 |
+| delete_knowledge | — | L2 | _confirmed:false | |
+| db_vacuum | — | L3 | _confirmed:false + 24h | |
+| db_drop | — | L3 | _confirmed:false + 24h | |
+
+### 1.2 Agora Registry
+
+| Tool | Current Level | Target Level | Deny Path | Notes |
+|------|:------------:|:------------:|:---------:|-------|
+| list_services | — | L0 | none | |
+| check_health | — | L0 | none | |
+| resolve_uri | — | L0 | none | |
+| register_service | — | L1 | audit | auto-discovery |
+| update_service_config | — | L2 | _confirmed:false | |
+| unregister_service | — | L2 | _confirmed:false | |
+| registry_db_reset | — | L3 | _confirmed:false + 24h | |
+
+### 1.3 Eidos MCP
+
+| Tool | Current Level | Target Level | Deny Path | Notes |
+|------|:------------:|:------------:|:---------:|-------|
+| validate | — | L0 | none | |
+| list_schemas | — | L0 | none | |
+| register_schema | — | L2 | _confirmed:false | |
+| unregister_schema | — | L2 | _confirmed:false | |
+
+### 1.4 gbrain MCP
+
+| Tool | Current Level | Target Level | Deny Path | Notes |
+|------|:------------:|:------------:|:---------:|-------|
+| get_page | — | L0 | none | |
+| list_pages | — | L0 | none | |
+| search | — | L0 | none | |
+| put_page | — | L1 | audit | |
+| add_tag | — | L1 | audit | |
+| remove_tag | — | L1 | audit | |
+| delete_page | — | L2 | _confirmed:false | |
+| softDeletePage | — | L2 | _confirmed:false | |
+| purgeDeletedPages | — | L2 | _confirmed:false | |
+| executeRaw(DELETE/DROP) | — | L3 | _confirmed:false + 24h | |
+
+### 1.5 agentmesh Tools
+
+| Tool | Current Level | Target Level | Deny Path | Notes |
+|------|:------------:|:------------:|:---------:|-------|
+| list_tools | — | L0 | none | |
+| get_tool | — | L0 | none | |
+| list_agents | — | L0 | none | |
+| run_agent | — | L1 | audit | |
+| register_tool | — | L2 | _confirmed:false | |
+| unregister_tool | — | L2 | _confirmed:false | |
+| stop_agent | — | L2 | _confirmed:false | |
+
+### 1.6 SharedBrain MCP
+
+| Tool | Current Level | Target Level | Deny Path | Notes |
+|------|:------------:|:------------:|:---------:|-------|
+| bos_health | — | L0 | none | |
+| bos_status | — | L0 | none | |
+| bos_task_submit | — | L1 | audit | |
+| bos_task_list | — | L0 | none | |
+| bos_organ_status | — | L0 | none | |
+| bos_organ_delegate | — | L2 | _confirmed:false | |
+| bos_organ_reset | — | L3 | _confirmed:false + 24h | |
+
+---
+
+## 2. Classification Rules
+
+### 2.1 L0 — Read-Only (搜索/查询/列表/状态)
+
+- Must NOT modify any persistent state
+- Must NOT trigger side effects (logging is acceptable)
+- Examples: search, get, list, status, health, validate
+
+### 2.2 L1 — Low-Risk Write (增添/标记/缓存/增量)
+
+- Known-safe mutations with clear undo path
+- Must log to audit trail
+- Examples: add_tag, log_ingest, incremental_sync, auto-register
+
+### 2.3 L2 — High-Risk Write (删除/重建/批量修改)
+
+- May affect data integrity or availability
+- **Must require human confirmation** (`_confirmed: true`)
+- Default: deny with `PermissionError`
+- Examples: delete, full_reindex, schema_modify, batch_operation
+
+### 2.4 L3 — Destructive (清空/重置/不可逆)
+
+- Irreversible operations
+- **Must require human confirmation** AND **24h cool-down**
+- Default: deny with `PermissionError`
+- Examples: db_drop, factory_reset, purge_all
+
+---
+
+## 3. Deny Path Standard
+
+Per `operation-levels.md` §3:
+
+```
+L2 deny pattern:
+  confirmed = args.pop("_confirmed", false)
+  if not confirmed:
+    raise PermissionError("L2 operation '{tool}' requires _confirmed=true")
+
+L3 deny pattern:
+  confirmed = args.pop("_confirmed", false)
+  cooldown = args.pop("_cool_down_hours", 0)
+  if not confirmed or cooldown < 24:
+    raise PermissionError("L3 operation requires _confirmed=true AND cooldown>=24h")
+```
+
+### Aligned with KOS MCP Existing Annotations
+
+KOS MCP `server.py` already implements `operation_level` annotations at:
+- Line 398: `run_indexer(full)` → L2
+- Line 463: `run_indexer(incremental)` → L1
+- Line 486: `ontology_rebuild` → L2
+
+This rollout plan aligns with and extends these existing annotations.
+
+---
+
+## 4. Human Approval Standard
+
+### 4.1 When Approval is Required
+
+| Level | Approval | Method | Audit |
+|:----:|----------|--------|:----:|
+| L0 | never | — | optional |
+| L1 | never (audit only) | log | required |
+| L2 | required | `_confirmed: true` | required |
+| L3 | required + 24h cool-down | `_confirmed: true` + `_cool_down_hours >= 24` | required |
+
+### 4.2 Approval Request Format
+
+```json
+{
+  "tool": "run_indexer",
+  "level": 2,
+  "_confirmed": false,
+  "args": {"zone": "sharedbrain"},
+  "evidence": {
+    "drift_detected": "total=-15%, zone=sharedbrain",
+    "known_doc_retrieval": "10/10"
+  },
+  "requested_by": "kos-drift-monitor",
+  "requested_at": "2026-05-30T10:00:00Z"
+}
+```
+
+---
+
+## 5. First-Wave Minimum Viable Candidates
+
+### Selection Criteria
+- Cover each level (L0/L1/L2/L3) with at least 1 tool
+- Align with existing KOS MCP annotations (server.py:398, 463, 486)
+- Do NOT touch sensitive capabilities (Apple/WeChat/Family OS/SMB/Media)
+
+### Candidate Set
+
+| # | Tool | Level | Rationale |
+|:-:|------|:----:|-----------|
+| 1 | `kos search_knowledge` | L0 | already read-only, lowest risk |
+| 2 | `kos run_indexer(incremental)` | L1 | already annotated as L1 in server.py:463 |
+| 3 | `kos run_indexer(full)` | L2 | already annotated as L2 in server.py:398, deny path exists |
+| 4 | `gbrain delete_page` | L2 | clear L2 pattern, deny path straightforward |
+| 5 | `kos db_vacuum` | L3 | destructive + reversible enough for first L3 test |
+
+### Why These 5
+
+1. **L0 validation**: confirm read-only works without any deny path
+2. **L1 validation**: confirm audit logging works for known-safe writes
+3. **L2 with existing deny path**: confirm KOS MCP already-implemented pattern works
+4. **L2 new deny path**: confirm deny path can be extended to a new tool
+5. **L3 cooldown**: confirm 24h cool-down mechanism works end-to-end
+
+---
+
+## 6. Rollout Sequence
+
+```
+Wave 1 (immediate):    Tool inventory + classification table    ← this document
+Wave 2 (M2.3 exec):    Deny path implementation for 5 candidates
+Wave 3 (M2.4):         Remaining MCP tools classification
+Wave 4 (M2.5):         All denly paths implemented → full rollout complete
+```
+
+---
+
+## 7. Sensitive Capabilities Blocked
+
+Canonical policy phrase: **sensitive capabilities remain blocked**.
+
+These capabilities must maintain L2/L3 deny paths at minimum:
+
+- Apple ecosystem connectors (Calendar, Reminders, Notes)
+- WeChat message/file access
+- Family OS scheduler (member profiles, health records)
+- SMB/NAS file operations
+- Media indexing (photos, videos)
+- High-autonomy triggers (>50% autonomous operations)
+
+**Rule**: Any new tool that touches one of these domains must be classified at L2 or L3 by default. Reclassification to L0/L1 requires human approval.
+
+---
+
+> **Evidence required**: MCP tool inventory table ✓ | Classification table ✓ | Deny path standard ✓ | Human approval standard ✓ | First-wave candidates ✓ | Sensitive capabilities blocked ✓
+
+[tool filesystem_read_text_file] # Review Note
+
+## Summary of work done
+
+TBD
+
+[tool filesystem_read_text_file] # Phase 2 任务规格书 v2.1（Post-Phase1 gated execution）
+
+> 日期: 2026-05-30 | 版本: v2.1 | 依据: comprehensive-architecture-audit.md + post-phase1 governance
+> 前序: Phase 1 code complete；Phase 2 仅允许 M2.0-M2.2 limited-go，full execution 需 Safe Mesh + KOS baseline
+> 变更: v1→v2 — 新增 5 Critical缺口修复 + SSOT 7域 + 3 Tech-Intel + 6 安全(ACP/CTRL/SAFE)
+
+---
+
+## v2.1 执行口径
+
+Phase 2 v2.0 的 47 项任务保持为候选池，但不再允许全量并发启动。执行顺序改为：
+
+```text
+M2.0 治理收敛与 Phase 1 关闭
+  -> M2.1 KOS baseline restore
+  -> M2.2 Safe Mesh
+  -> M2.3 SSOT 7 域最小注册
+  -> M2.4 真实知识闭环
+  -> M2.5 扩展能力评审
+```
+
+当前唯一可执行入口为 `.omo/tasks/active/*.yaml`。本规格书提供任务候选、上下文和验收要求，不再直接作为 Agent 认领入口。
+
+### M2.0-M2.2 当前 active gate
+
+| Gate | 任务 YAML | 目标 |
+|------|-----------|------|
+| M2.0 | `M2.0-phase1-governance-close.yaml` | 关闭 Phase 1 治理状态漂移 |
+| M2.0 | `M2.0-task-system-seed.yaml` | 建立任务 YAML SSOT |
+| M2.1 | `M2.1-kos-index-diagnosis.yaml` | 诊断 KOS 10165→700 退化 |
+| M2.1 | `M2.1-kos-repair-plan.yaml` | 制定 no-loss repair plan |
+| M2.2 | `M2.2-operation-levels.yaml` | L0-L3 操作分级与拒绝路径 |
+| M2.2 | `M2.2-agent-registry-heartbeat.yaml` | Registry heartbeat/cache/identity gate |
+
+### 暂停直接执行的高风险任务
+
+以下任务必须等 M2.2 通过后再进入 active：
+
+- Obsidian / Apple / WeChat / SMB / media 等外部或敏感连接器。
+- KOS self、高自主自愈、破坏性备份/恢复。
+- 跨域自动研究和 Family OS 调度。
+
+---
+
+## 变更摘要
+
+Phase 2 v1.0（3 Sprint, 29 任务）→ Phase 2 v2.0（4 Sprint, 47 任务），新增:
+
+| 来源 | 新增任务数 | 说明 |
+|------|:--------:|------|
+| C1 KOS 索引修复 | 2 | 🔴 最紧急 |
+| C5 SSOT 7 域注册 | 3 | 基础架构扩展 |
+| C2/C3 Obsidian+Apple 连接器 | 3 | iris 扩展 |
+| C4 KOS 健���监控 | 2 | ecos 扩展 |
+| M1 模型花园 | 2 | forge 扩展 |
+| M4 KEMS 运行时 | 2 | sophia 扩展 |
+| T1 TokenJuicer 压缩层 | 1 | L2 新能力 (tech-intel) |
+| T2 信任图谱层 | 1 | KOS index (tech-intel) |
+| T3 BFTS 树搜索 | 1 | minerva 研究 (tech-intel) |
+
+---
+
+## Phase 2 v2.1 全景 Sprint 视图
+
+```
+    M2.0-M2.2 Gate              M2.3 最小注册            M2.4 真实闭环             M2.5 扩展评审
+   治理收敛 + KOS + Safe Mesh   SSOT 7域最小注册         知识闭环 + 审计          连接器/自动化排序
+┌──────────────────────────┐ ┌──────────────────────┐ ┌──────────────────────┐ ┌──────────────────────┐
+│ M2.0: Phase1关闭         │ │ SSOT schema/authority│ │ 用户问题→KOS/minerva│ │ 模型花园排序         │
+│ M2.1: KOS索引诊断/��复   │ │ 最小查询/校验/追溯   │ │ 保存→审计可见       │ │ Apple/Obsidian评审   │
+│ M2.2: 操作分级/RBAC/审计 │ │ 不做全量数据摄取     │ │ 失败注入            │ │ KEMS/跨域研究评审    │
+│ M2.2: Registry heartbeat │ │                      │ │                     │ │ Phase2 full-go判定   │
+└──────────────────────────┘ └──────────────────────┘ └──────────────────────┘ └──────────────────────┘
+         |                          |                      |                      |
+   🚦 LIMITED-GO              🚦 M2.3 Go/No-Go      🚦 M2.4 Go/No-Go      🚦 M2.FULL-GO 判定
+```
+
+---
+
+## 📋 Agent 执行命令模板 — 新增任务
+
+### Sprint 1 Wave 1: KOS 索引紧急修复 🔴
+
+```bash
+# C1: KOS 索引修复 — 诊断
+task(category="unspecified-high", description="C1a: Diagnose KOS index degradation", prompt='''
+Diagnose why the KOS index has degraded from 10,165 to only ~700 documents.
+
+1. Read the KOS indexing code at /Users/xiamingxing/Workspace/projects/kairon/packages/kos/
+2. Check the actual KOS data store:
+   - What database/storage is used? (likely LanceDB or Neo4j)
+   - Compare stored document count vs expected
+3. Check KOS ingestion logs to find when degradation started
+4. Identify root cause:
+   - Was there a schema change that caused re-indexing?
+   - Was there a database migration that lost data?
+   - Was there a cleanup script that removed too much?
+   - Is the index still being populated (incremental)?
+5. Report: root cause diagnosis with recommended fix
+
+This is the HIGHEST PRIORITY task in Phase 2. All knowledge retrieval depends on KOS.
+''')
+
+# C1: KOS 索引修复 — 执行
+task(category="unspecified-high", description="C1b: Repair KOS index", prompt='''
+Repair the KOS index from ~700 back to full coverage.
+
+Based on the diagnosis (C1a), execute the repair.
+
+1. If re-indexing is needed:
+   - Scan the original document sources (Obsidian vault at ~/Documents/Obsidian/)
+   - Re-ingest all documents into KOS via the kos/ingest pipeline
+2. If database recovery is needed:
+   - Restore from backup if available
+   - Or full re-index from source
+3. Add incremental index health check to prevent future degradation
+4. Verify: KOS index contains all expected documents
+5. Report: "KOS index repaired: <before> → <after> documents indexed"
+''')
+```
+
+### Sprint 1 Wave 1-2: SSOT 7 域扩展
+
+```bash
+# C5: SSOT 域注册
+task(category="quick", description="C5a: Register SSOT domains for all 7 knowledge domains", prompt='''
+Register all 7 SSOT domains defined in the architecture audit.
+
+Read: /Users/xiamingxing/Workspace/.omo/plans/comprehensive-architecture-audit.md (Section 2.1)
+
+Create domain definition files:
+
+1. /Users/xiamingxing/Workspace/projects/kairon/packages/ssot/domains/knowledge.yaml
+   - Entities: Article, Book, Paper, Note, Concept, Tag, Source
+   - Authority: Obsidian vault (学习进化)
+
+2. /Users/xiamingxing/Workspace/projects/kairon/packages/ssot/domains/work.yaml
+   - Entities: Project, Task, Document, Meeting, Decision, Regulation
+   - Authority: ~/Documents/工作文档/
+
+3. /Users/xiamingxing/Workspace/projects/kairon/packages/ssot/domains/family.yaml
+   - Entities: Member, HealthRecord, EducationPlan, Event, Asset
+   - Authority: FamilyShared iCloud
+
+4. /Users/xiamingxing/Workspace/projects/kairon/packages/ssot/domains/ai.yaml
+   - Entities: Model, Agent, Tool, Skill, Pipeline, ModelBenchmark
+   - Authority: TOOL_REGISTRY + Agora registry
+
+5. /Users/xiamingxing/Workspace/projects/kairon/packages/ssot/domains/system.yaml
+   - Entities: Service, Port, Config, Rule, Alert, HealthMetric
+   - Authority: .omo/ + Hermes ports registry
+
+6. /Users/xiamingxing/Workspace/projects/kairon/packages/ssot/domains/data.yaml
+   - Entities: Vault, File, Directory, Mount, SyncStatus
+   - Authority: filesystem + iCloud
+
+7. /Users/xiamingxing/Workspace/projects/kairon/packages/ssot/domains/media.yaml
+   - Entities: Photo, Video, Audio, Album, Collection
+   - Authority: SharedDisk 媒体目录
+
+Use the existing sharedbrain.yaml as a template. Each domain file needs: domain name, description, authority, conflict resolution, and at minimum 3 entity schemas.
+
+Report: "SSOT domains: 7/7 registered"
+''')
+```
+
+### Sprint 2 Wave 4: Obsidian + Apple 连接器
+
+```bash
+# C2: Obsidian vault 连接器
+task(category="unspecified-high", description="C2: Create Obsidian vault connector", prompt='''
+Create an iris connector for Obsidian vaults.
+
+1. Create /Users/xiamingxing/Workspace/projects/kairon/packages/iris/src/iris/connectors/obsidian_connector.py
+
+Requirements:
+- Read Obsidian vault at ~/Documents/Obsidian/学习进化/
+- Parse .md files with YAML frontmatter
+- Extract: title, tags, created/modified dates, backlinks, content
+- Convert to KOS Entity format
+- Index into KOS knowledge domain
+- Support incremental sync (watch for file changes via mtime)
+
+2. Expose as MCP tool: "iris_obsidian_sync"
+   - Full sync: re-index entire vault
+   - Incremental sync: only changed files since last sync
+
+3. Test: sync the 学习进化 vault → verify entities appear in KOS
+4. Report: "Obsidian connector: <N> documents synced to KOS"
+''')
+
+# C3: Apple 生态连接器
+task(category="unspecified-high", description="C3: Create Apple ecosystem connector", prompt='''
+Create an iris connector for Apple Calendar and Reminders.
+
+1. Create /Users/xiamingxing/Workspace/projects/kairon/packages/iris/src/iris/connectors/apple_connector.py
+
+Requirements:
+- Calendar: read events from ~/Library/Calendars/ or via AppleScript/EventKit bridge
+  - Extract: title, start/end, location, notes, recurrence
+
+[tool filesystem_list_directory] [FILE] P2-fix-hardcoded-paths.yaml
+[FILE] P2-plan-safe-mesh-rbac.yaml
+
+[tool filesystem_search_files] No matches found
+
+[tool filesystem_search_files] No matches found
+
+[tool filesystem_search_files] /Users/xiamingxing/Workspace/.omo/plans/archive/phase2-task-specs.md
+/Users/xiamingxing/Workspace/.omo/plans/phase2-task-specs-v2.md
+
+[tool filesystem_read_text_file] # Phase 2 任务规格书 v2.1（Post-Phase1 gated execution）
+
+> 日期: 2026-05-30 | 版本: v2.1 | 依据: comprehensive-architecture-audit.md + post-phase1 governance
+> 前序: Phase 1 code complete；Phase 2 仅允许 M2.0-M2.2 limited-go，full execution 需 Safe Mesh + KOS baseline
+> 变更: v1→v2 — 新增 5 Critical缺口修复 + SSOT 7域 + 3 Tech-Intel + 6 安全(ACP/CTRL/SAFE)
+
+---
+
+## v2.1 执行口径
+
+Phase 2 v2.0 的 47 项任务保持为候选池，但不再允许全量并发启动。执行顺序改为：
+
+```text
+M2.0 治理收敛与 Phase 1 关闭
+  -> M2.1 KOS baseline restore
+  -> M2.2 Safe Mesh
+  -> M2.3 SSOT 7 域最小注册
+  -> M2.4 真实知识闭环
+  -> M2.5 扩展能力评审
+```
+
+当前唯一可执行入口为 `.omo/tasks/active/*.yaml`。本规格书提供任务候选、上下文和验收要求，不再直接作为 Agent 认领入口。
+
+### M2.0-M2.2 当前 active gate
+
+| Gate | 任务 YAML | 目标 |
+|------|-----------|------|
+| M2.0 | `M2.0-phase1-governance-close.yaml` | 关闭 Phase 1 治理状态漂移 |
+| M2.0 | `M2.0-task-system-seed.yaml` | 建立任务 YAML SSOT |
+| M2.1 | `M2.1-kos-index-diagnosis.yaml` | 诊断 KOS 10165→700 退化 |
+| M2.1 | `M2.1-kos-repair-plan.yaml` | 制定 no-loss repair plan |
+| M2.2 | `M2.2-operation-levels.yaml` | L0-L3 操作分级与拒绝路径 |
+| M2.2 | `M2.2-agent-registry-heartbeat.yaml` | Registry heartbeat/cache/identity gate |
+
+### 暂停直接执行的高风险任务
+
+以下任务必须等 M2.2 通过后再进入 active：
+
+- Obsidian / Apple / WeChat / SMB / media 等外部或敏感连接器。
+- KOS self、高自主自愈、破坏性备份/恢复。
+- 跨域自动研究和 Family OS 调度。
+
+---
+
+## 变更摘要
+
+Phase 2 v1.0（3 Sprint, 29 任务）→ Phase 2 v2.0（4 Sprint, 47 任务），新增:
+
+| 来源 | 新增任务数 | 说明 |
+|------|:--------:|------|
+| C1 KOS 索引修复 | 2 | 🔴 最紧急 |
+| C5 SSOT 7 域注册 | 3 | 基础架构扩展 |
+| C2/C3 Obsidian+Apple 连接器 | 3 | iris 扩展 |
+| C4 KOS 健���监控 | 2 | ecos 扩展 |
+| M1 模型花园 | 2 | forge 扩展 |
+| M4 KEMS 运行时 | 2 | sophia 扩展 |
+| T1 TokenJuicer 压缩层 | 1 | L2 新能力 (tech-intel) |
+| T2 信任图谱层 | 1 | KOS index (tech-intel) |
+| T3 BFTS 树搜索 | 1 | minerva 研究 (tech-intel) |
+
+---
+
+## Phase 2 v2.1 全景 Sprint 视图
+
+```
+    M2.0-M2.2 Gate              M2.3 最小注册            M2.4 真实闭环             M2.5 扩展评审
+   治理收敛 + KOS + Safe Mesh   SSOT 7域最小注册         知识闭环 + 审计          连接器/自动化排序
+┌──────────────────────────┐ ┌──────────────────────┐ ┌──────────────────────┐ ┌──────────────────────┐
+│ M2.0: Phase1关闭         │ │ SSOT schema/authority│ │ 用户问题→KOS/minerva│ │ 模型花园排序         │
+│ M2.1: KOS索引诊断/��复   │ │ 最小查询/校验/追溯   │ │ 保存→审计可见       │ │ Apple/Obsidian评审   │
+│ M2.2: 操作分级/RBAC/审计 │ │ 不做全量数据摄取     │ │ 失败注入            │ │ KEMS/跨域研究评审    │
+│ M2.2: Registry heartbeat │ │                      │ │                     │ │ Phase2 full-go判定   │
+└──────────────────────────┘ └──────────────────────┘ └──────────────────────┘ └──────────────────────┘
+         |                          |                      |                      |
+   🚦 LIMITED-GO              🚦 M2.3 Go/No-Go      🚦 M2.4 Go/No-Go      🚦 M2.FULL-GO 判定
+```
+
+---
+
+## 📋 Agent 执行命令模板 — 新增任务
+
+### Sprint 1 Wave 1: KOS 索引紧急修复 🔴
+
+```bash
+# C1: KOS 索引修复 — 诊断
+task(category="unspecified-high", description="C1a: Diagnose KOS index degradation", prompt='''
+Diagnose why the KOS index has degraded from 10,165 to only ~700 documents.
+
+1. Read the KOS indexing code at /Users/xiamingxing/Workspace/projects/kairon/packages/kos/
+2. Check the actual KOS data store:
+   - What database/storage is used? (likely LanceDB or Neo4j)
+   - Compare stored document count vs expected
+3. Check KOS ingestion logs to find when degradation started
+4. Identify root cause:
+   - Was there a schema change that caused re-indexing?
+   - Was there a database migration that lost data?
+   - Was there a cleanup script that removed too much?
+   - Is the index still being populated (incremental)?
+5. Report: root cause diagnosis with recommended fix
+
+[tool filesystem_search_files] No matches found
+
+[tool filesystem_search_files] No matches found
+
+[tool filesystem_search_files] No matches found
+
+[tool filesystem_read_text_file] # Architecture Convergence Report
+
+> 生成日期: 2026-05-28
+> 任务: Batch 5 — agent-runtime 依赖分析 + SSOT 拆解执行总结
+
+---
+
+## Table of Contents
+
+1. [Current Architecture State](#1-current-architecture-state)
+2. [SSOT Decomposition Execution Summary](#2-ssot-decomposition-execution-summary)
+3. [Project Boundary Redefinitions](#3-project-boundary-redefinitions)
+4. [agent-runtime Deep Analysis](#4-agent-runtime-deep-analysis)
+5. [agentmesh Gateway vs agent-runtime Comparison](#5-agentmesh-gateway-vs-agent-runtime-comparison)
+6. [Convergence Proposal](#6-convergence-proposal)
+7. [Next Steps](#7-next-steps)
+
+---
+
+## 1. Current Architecture State
+
+### Before SSOT Decomposition (Pre-2026-05)
+
+```
+Hermes Cron Runner (run-agent-task.sh)
+  │
+  ├──► agent-runtime:9876 (Python FastAPI)
+  │     ├── GET  /health
+  │     ├── POST /run-task
+  │     ├── POST /chat
+  │     ├── GET  /logs
+  │     └── GET  /task-history/{id}
+  │
+  └──► MCP Server (stdio, for Hermes MCP tools)
+        ├── run_task
+        └── chat
+```
+
+Relationship to agentmesh:
+
+```
+agentmesh Gateway:3000 (TypeScript Fastify)
+  ├── /v1/health, /v1/tasks, /v1/scheduler
+  ├── /v1/agents, /v1/pipeline, /v1/spaces
+  ├── /v1/chat/completions (OpenAI compatible)
+  ├── /v1/model-gateway, /v1/model-orchestrator
+  ├── /v1/skills, /v1/hermes/*
+  └── /v1/events (SSE)
+        ▲
+        │ No direct bridge
+        │
+agent-runtime:9876 (Python, independent)
+```
+
+**Problem:** `agent-runtime` exists as a Python silo — it duplicates API patterns (`/health`, `/run-task`) while agentmesh Gateway already provides a superset of HTTP API capabilities. The 12 cron jobs calling agent-runtime are locked to a legacy interface.
+
+### After SSOT Decomposition (Current Topology)
+
+```
+Hermes (WeChat/CLI entry)
+  │
+  ├──► agent-runtime:9876 ────► 12 cron jobs (task_definitions/*.json)
+  │     │                          │
+  │     │                          ├── WF-001 KOS索引 (mcp_kos)
+  │     │                          ├── WF-002 Minerva研究 (mcp_minerva)
+  │     │                          ├── WF-003 系统健康检查
+  │     │                          ├── WF-005 HANDOFF自动更新
+  │     │                          ├── WF-006 感知管道
+  │     │                          ├── WF-007 实时安全检查
+  │     │                          ├── WF-008 Kanban-SSB桥接
+  │     │                          ├── WF-009 委员会周检
+  │     │                          ├── WF-010 宪法执行器
+  │     │                          ├── WF-015 swarm-guardian
+  │     │                          ├── codexbar-quota-refresh
+  │     │                          └── daily-summary
+  │     │
+  │     └──► Agora:7430 ──► KOS:7420 / Minerva:8765 (MCP degrade)
+  │
+  ├──► agentmesh Gateway:3000 (TypeScript monorepo)
+  │     ├── packages/gateway    — Fastify HTTP Gateway
+  │     ├── packages/engine     — Honeycomb Orchestrator
+  │     ├── packages/toolkit    — Capability SDK
+  │     ├── packages/model-orchestrator — LLM Router
+  │     ├── packages/core-types — Shared contracts
+  │     ├── apps/server         — MCP Server
+  │     └── apps/cli            — Unified CLI
+  │
+  ├──► Agora:7430 (Python MCP Hub)
+  ├──► Minerva:8765 (Research Engine)
+  ├──► KOS:7420 (Knowledge Store)
+  └──► [Other MCP services]
+```
+
+---
+
+## 2. SSOT Decomposition Execution Summary
+
+| Batch | Task | Status | Key Outcome |
+|-------|------|--------|-------------|
+| Batch 1 | eCOS dependency audit + transfer plan | ✅ | eCOS dependencies mapped, transfer blueprint created |
+
+[tool filesystem_read_text_file] # 架构终极进化蓝图：从 omostation 到 AGI Personal OS
+
+> 日期: 2026-05-29 | 版本: v1.0 | 状态: 愿景草案
+> 输入: Workspace 5项目 (omostation) + SharedWork 90+项目 (R&D厨房)
+> 受众: 架构决策者、未来开发者、AI Agent 接入者
+
+---
+
+## 目录
+
+1. [当前状态全景](#一当前状态全景)
+2. [SharedWork × Workspace 能力映射](#二sharedwork--workspace-能力映射)
+3. [终极架构：AGI Personal OS](#三终极架构agi-personal-os)
+4. [项目命运：谁留谁走谁融入](#四项目命运谁留谁走谁融入)
+5. [进化路线图：从现在到终点](#五进化路线图从现在到终点)
+6. [架构法则与设计哲学](#六架构法则与设计哲学)
+7. [最终能力矩阵](#七最终能力矩阵)
+
+---
+
+## 一、当前状态全景
+
+### 1.1 Workspace (omostation) — 生产厨房
+
+```
+omostation/
+├── kairon/           5.1MB Python monorepo (17包)
+│   ├── L1: core-models, eidos           契约层
+│   ├── L2: kronos, minerva, sophia      ���力层
+│   │       ontoderive, ssot, codeanalyze
+│   ├── L3: forge, kos, iris             协作层
+│   ├── L4: agent-runtime, metaos, ecos  元层
+│   └── I0: agora                        集成织物 (27 MCP tools)
+│
+├── SharedBrain/      2.1MB Runtime Kernel
+│   ├── 17 D-Domain organs
+│   ├── EU经济/数字免疫/器官演化/合规控制
+│   └── identity_bridge (A1身份)
+│
+├── agentmesh/        TypeScript Agent SDK (22 tools)
+├── gbrain/           TypeScript Knowledge Brain (74 tools)
+│
+├── ops/              运维中心 (32 MCP tools)
+├── gstack/           53 编排器
+│
+└── .omo/             治理知识库 (89 docs)
+
+架构模型: 4+1+3+I (8 layers)
+健康评分: 66.80/100 🟡
+```
+
+### 1.2 SharedWork — R&D 厨房
+
+```
+SharedWork/ (31 顶级分类, 90+ 项目)
+├── Agent/           12 智能体项目
+│   ├── agentmesh, OpenManus, DeepCode
+│   ├── trae-agent, Maestro, ruflo, agenticSeek
+│   └── AgentCPM, Agency-Agents, nanochat
+│
+├── DeepResearch/    17 深度研究项目
+│   ├── gpt-researcher, Tongyi DeepResearch
+│   ├── Open Deep Research, AgentLaboratory, RD-Agent
+│   └── deepface, paperai, PatentSBERTa
+│
+├── Mem/             3+ 记忆系统
+│   └── memU (Rust core + Python server + Vue UI)
+│
+├── Knowledge/       9 知识管理
+│   ├── GitNexus(code图谱), Graphify(文档图谱)
+│   └── UltraRAG, KOS-Skills
+│
+├── MCP/             7 MCP 服务器
+│   ├── Firecrawl(抓取), CodeContext(代码分析)
+│   └── EdgeOne(部署), OpenClaw(消息)
+│
+├── Gateway/         2 API 网关
+│   └── LiteLLM(100+ LLM), one-api(Go)
+│
+├── Skills/          8 技能系统
+
+[tool filesystem_read_text_file] # omostation 全景蓝图：架构·路线图·里程碑
+
+> 日期: 2026-05-30 | 版本: v1.2 | 状态: 主蓝图 / Phase 2 full_execution
+> 综合: architecture-final-vision · evolution-roadmap · beyond-phase4 · comprehensive-audit · tech-intelligence · phase1-4 task-specs · post-phase1 governance
+
+---
+
+## 0. 当前执行基线
+
+| 项 | 当前口径 |
+|----|----------|
+| Phase 1 | 工程交付基本完成，运行时证据待统一归档 |
+| Phase 2 | full_execution，敏感能力继续走 gate/approval |
+| 任务 SSOT | `.omo/tasks/active/*.yaml` |
+| 当前目标 | `.omo/goals/current.yaml` |
+| 规划注册表 | `.omo/plans/README.md` |
+| 交付/测试标准 | `.omo/standards/planning-blueprint-delivery-test-standard.md` |
+
+Phase 2 不再按 47 项任务全量启动，而是先完成治理收敛、KOS baseline、Safe Mesh，再开放 SSOT 7 域、真实知识闭环和连接器扩展。
+
+## I. 全景架构图
+
+```
+                           ┌───────────────────��─────┐
+                           │    P0 — 用户入口层        │
+                           │  wksp CLI · Agora Dashboard│
+                           │  IDE 插件 · Hermes Agent  │
+                           └───────────┬─────────────┘
+                                       │
+                           ┌───────────▼─────────────┐
+                           │   I0 — Agora Service Mesh │
+                           │  MCP 统一协议 · wksp:// URI│
+                           │  100+ tools · 熔断·降级·路由│
+                           └─┬───────┬───────┬───────┘
+                             │       │       │
+              ┌──────────────┘       │       └──────────────┐
+              ▼                      ▼                      ▼
+   ┌──────────────────┐ ┌──────────────────────────┐ ┌──────────────┐
+   │   SharedBrain    │ │     kairon 知识操作栈       │ │  agentmesh   │
+   │   合规控制面      │ │                          │ │  Agent运行时  │
+   │                  │ │ ┌────────────────────┐   │ │              │
+   │ EU经济 · 数字免疫│ │ │ L1 契约 (5包)       │   │ │ MCP网关      │
+   │ A1身份 · 自愈    │ │ │ core-models        │   │ │ LLM路由      │
+   │ 语音处理         │ │ │ eidos              │   │ │ 工具注册     │
+   │ 14 活跃器官      │ │ │ family-models      │   │ │ 任务编排     │
+   └──────────────────┘ │ │ work-models        │   │ └───────���──────┘
+                        │ │ media-models       │   │
+                        │ └────────────────────┘   │ ┌──────────────┐
+                        │ ┌────────────────────┐   │ │   gbrain     │
+                        │ │ L2 能力 (10包)      │   │ │   知识脑     │
+                        │ │ kronos · minerva    │   │ │              │
+                        │ │ sophia · ontoderive │   │ │ memU后端     │
+                        │ │ ssot · codeanalyze  │   │ │ Postgres     │
+                        │ │ eu-pricing          │   │ │ 74 tools     │
+                        │ │ token-juicer 🆕     │   │ └──────────────┘
+                        │ │ memory-tree 🆕      │   │
+                        │ │ bf-search 🆕        │   │ ┌──────────────┐
+                        │ └────────────────────┘   │ │     ops      │
+                        │ ┌────────────────────┐   │ │   运维中心    │
+                        │ │ L3 协作 (8包)       │   │ │              │
+                        │ │ forge · kos · iris  │   │ │ 32 tools     │
+                        │ │ cross-domain        │   │ │ 7 SQLite表   │
+                        │ │ kems-runtime        │   │ │ 关联引擎     │
+                        │ │ trust-layer 🆕      │   │ └──────────────┘
+                        │ │ skill-router 🆕     │   │
+                        │ └────────────────────┘   │   基础设施服务
+                        │ ┌────────────────────┐   │ ┌──────────────┐
+                        │ │ L4 元层 (8包)       │   │ │ LiteLLM      │
+                        │ │ agent-runtime       │   │ │ one-api      │
+                        │ │ metaos · ecos       │   │ │ memU(Rust)   │
+                        │ │ cron-service · wksp │   │ │ wx-cli       │
+                        │ │ family-os 🆕        │   │ │ MinerU       │
+                        │ │ kos-health 🆕       │   │ │ Firecrawl    │
+                        │ │ device-orchestrator │   │ │ EdgeOne      │
+                        │ └────────────────────┘   │ └──────────────┘
+                        └──────────────────────────┘
+
+                 5 项目 · ~30 kairon 包 · 100+ MCP tools
+```
+
+---
+
+## II. 全局路线图
+
+```
+2026 Q2         Q3         Q4         2027 Q1       Q2         Q3         Q4+
+  │              │           │            │           │           │           │
+  ├─ Phase 1 ────┤           │            │           │           │           │
+  │  基础设施     │           │            │           │           │           │
+  │  (6周)        │           │            │           │           │           │
+  │              ├─ Phase 2 ──┤            │           │           │           │
+  │              │  知识深化  │            │           │           │           │
+  │              │  (8周)     │            │           │           │           │
+  │              │           ├─ Phase 3 ───┤           │           │           │
+  │              │           │  辅助自主   │           │           │           │
+  │              │           │  (12周)     │           │           │           │
+  │              │           │            ├─ 验证期 ──┤           │           │
+  │              │           │            │ (3-6月)    │           │           │
+  │              │           │            │           ├─ Phase 4 ──┤           │
+  │              │           │            │           │  高自主    │           │
+
+[tool filesystem_read_text_file] # MCP 工具开发规范 (v1.0)
+
+> 状态: merged
+> 已合并至 `.omo/standards/mcp-tool-and-transport-standard.md`
+> 本文件保留为历史细节来源，不再作为新的 workflow 引用入口。
+
+> 本文档定义所有使用 FastMCP 框架的项目中，`@mcp.tool()` 函数的**统一返回契约**和**合规标准**。
+>
+> **适用范围**: agora, codeanalyze, iris, kronos, minerva, sophia, SharedBrain/D_Gateway 及其他所有 FastMCP server。
+>
+> **关联文件**: [tools_template.py 参考模板](#参考模板)
+
+---
+
+## 一、核心契约
+
+### 1.1 返回类型
+
+所有 `@mcp.tool()` 函数必须返回 `dict`，由 FastMCP 框架自动序列化为 JSON-RPC 响应。
+
+```
+✅ return dict         → fastmcp 自动序列化
+❌ return str          → json.dumps 手动序列化（已废弃）
+```
+
+### 1.2 format_version 字段
+
+每个工具函数的返回值 **必须** 包含 `"format_version"` 字段。
+
+**命名规范**:
+
+```
+"{project_name}-v{major}"
+```
+
+| 项目 | FORMAT_VERSION |
+|------|---------------|
+| agora | `agora-v1` |
+| codeanalyze | `codeanalyze-v1` |
+| iris | `iris-v1` |
+| kronos | `kronos-v1` |
+| minerva | `minerva-v1` |
+| sophia | `sophia-v1` |
+| SharedBrain D_Gateway | `dgateway-v1` |
+
+### 1.3 辅助函数模式
+
+推荐使用 `_ok()` / `_error()` 辅助函数统一返回格式：
+
+```python
+def _ok(data: dict) -> dict:
+    return {"status": "ok", **data}
+
+def _error(msg: str) -> dict:
+    return {"status": "error", "error": msg, "format_version": FORMAT_VERSION}
+```
+
+**注意**: `_ok()` 的 `data` 参数中**不内建** `format_version`，要求每个工具函数**显式传递**（原因见 [AST 静态检测](#三ast-静态检测规则)）。
+
+---
+
+## 二、四种返回模式（按推荐度排序）
+
+| 模式 | 示例 | 合规 | 推荐度 |
+|------|------|------|--------|
+| A: `_ok()` 辅助函数 | `return _ok({"format_version": FV, ...})` | ✅ | ★★★★★ |
+| B: 直接 return dict | `return {"format_version": FV, ...}` | ✅ | ★★★★☆ |
+| C: 注入式后 return | `r = {...}; r["format_version"] = FV; return r` | ✅ | ★★★☆☆ |
+| D: ~~json.dumps 序列化~~ | `return json.dumps({...})` | ❌ 废弃 | — |
+
+> **模式 A 是推荐标准**，原因：
+> 1. 集中管理成功/错误路径格式
+> 2. 错误路径自动含 format_version
+> 3. 对 AST 静态检测友好（函数体内有字面量）
+
+---
+
+## 三、AST 静态检测规则
+
+SOP 脚本 `scripts/sop_check_format_version.py` 通过 Python `ast` 模块执行静态检查。
+
+[tool filesystem_read_text_file] # omostation 全景蓝图：架构·路线图·里程碑
+
+> 日期: 2026-05-30 | 版本: v1.2 | 状态: 主蓝图 / Phase 2 full_execution
+> 综合: architecture-final-vision · evolution-roadmap · beyond-phase4 · comprehensive-audit · tech-intelligence · phase1-4 task-specs · post-phase1 governance
+
+---
+
+## 0. 当前执行基线
+
+| 项 | 当前口径 |
+|----|----------|
+| Phase 1 | 工程交付基本完成，运行时证据待统一归档 |
+| Phase 2 | full_execution，敏感能力继续走 gate/approval |
+| 任务 SSOT | `.omo/tasks/active/*.yaml` |
+| 当前目标 | `.omo/goals/current.yaml` |
+| 规划注册表 | `.omo/plans/README.md` |
+| 交付/测试标准 | `.omo/standards/planning-blueprint-delivery-test-standard.md` |
+
+Phase 2 不再按 47 项任务全量启动，而是先完成治理收敛、KOS baseline、Safe Mesh，再开放 SSOT 7 域、真实知识闭环和连接器扩展。
+
+## I. 全景架构图
+
+```
+                           ┌───────────────────��─────┐
+                           │    P0 — 用户入口层        │
+                           │  wksp CLI · Agora Dashboard│
+                           │  IDE 插件 · Hermes Agent  │
+                           └───────────┬─────────────┘
+                                       │
+                           ┌───────────▼─────────────┐
+                           │   I0 — Agora Service Mesh │
+                           │  MCP 统一协议 · wksp:// URI│
+                           │  100+ tools · 熔断·降级·路由│
+                           └─┬───────┬───────┬───────┘
+                             │       │       │
+              ┌──────────────┘       │       └──────────────┐
+              ▼                      ▼                      ▼
+   ┌──────────────────┐ ┌──────────────────────────┐ ┌──────────────┐
+   │   SharedBrain    │ │     kairon 知识操作栈       │ │  agentmesh   │
+   │   合规控制面      │ │                          │ │  Agent运行时  │
+   │                  │ │ ┌────────────────────┐   │ │              │
+   │ EU经济 · 数字免疫│ │ │ L1 契约 (5包)       │   │ │ MCP网关      │
+   │ A1身份 · 自愈    │ │ │ core-models        │   │ │ LLM路由      │
+   │ 语音处理         │ │ │ eidos              │   │ │ 工具注册     │
+   │ 14 活跃器官      │ │ │ family-models      │   │ │ 任务编排     │
+   └──────────────────┘ │ │ work-models        │   │ └───────���──────┘
+                        │ │ media-models       │   │
+                        │ └────────────────────┘   │ ┌──────────────┐
+                        │ ┌────────────────────┐   │ │   gbrain     │
+                        │ │ L2 能力 (10包)      │   │ │   知识脑     │
+                        │ │ kronos · minerva    │   │ │              │
+                        │ │ sophia · ontoderive │   │ │ memU后端     │
+                        │ │ ssot · codeanalyze  │   │ │ Postgres     │
+                        │ │ eu-pricing          │   │ │ 74 tools     │
+                        │ │ token-juicer 🆕     │   │ └──────────────┘
+                        │ │ memory-tree 🆕      │   │
+                        │ │ bf-search 🆕        │   │ ┌──────────────┐
+                        │ └────────────────────┘   │ │     ops      │
+                        │ ┌────────────────────┐   │ │   运维中心    │
+                        │ │ L3 协作 (8包)       │   │ │              │
+                        │ │ forge · kos · iris  │   │ │ 32 tools     │
+                        │ │ cross-domain        │   │ │ 7 SQLite表   │
+                        │ │ kems-runtime        │   │ │ 关联引擎     │
+                        │ │ trust-layer 🆕      │   │ └──────────────┘
+                        │ │ skill-router 🆕     │   │
+                        │ └────────────────────┘   │   基础设施服务
+                        │ ┌────────────────────┐   │ ┌──────────────┐
+                        │ │ L4 元层 (8包)       │   │ │ LiteLLM      │
+                        │ │ agent-runtime       │   │ │ one-api      │
+                        │ │ metaos · ecos       │   │ │ memU(Rust)   │
+                        │ │ cron-service · wksp │   │ │ wx-cli       │
+                        │ │ family-os 🆕        │   │ │ MinerU       │
+                        │ │ kos-health 🆕       │   │ │ Firecrawl    │
+                        │ │ device-orchestrator │   │ │ EdgeOne      │
+                        │ └────────────────────┘   │ └──────────────┘
+                        └──────────────────────────┘
+
+                 5 项目 · ~30 kairon 包 · 100+ MCP tools
+```
+
+---
+
+## II. 全局路线图
+
+```
+2026 Q2         Q3         Q4         2027 Q1       Q2         Q3         Q4+
+  │              │           │            │           │           │           │
+  ├─ Phase 1 ────┤           │            │           │           │           │
+  │  基础设施     │           │            │           │           │           │
+  │  (6周)        │           │            │           │           │           │
+  │              ├─ Phase 2 ──┤            │           │           │           │
+  │              │  知识深化  │            │           │           │           │
+  │              │  (8周)     │            │           │           │           │
+  │              │           ├─ Phase 3 ───┤           │           │           │
+  │              │           │  辅助自主   │           │           │           │
+  │              │           │  (12周)     │           │           │           │
+  │              │           │            ├─ 验证期 ──┤           │           │
+  │              │           │            │ (3-6月)    │           │           │
+  │              │           │            │           ├─ Phase 4 ──┤           │
+  │              │           │            │           │  高自主    │           │
+  │              │           │            │           │  (持续)    │           │
+  │              │           │            │           │           ├─ Phase ∞  │
+  │              │           │            │           │           │  持续进化  │
+  │              │           │            │           │           │  (永久)    │
+```
+
+### 各阶段概览
+
+| Phase | 时间 | 时长 | Sprint | 任务 | 系统健康 |
+|-------|------|:---:|:-----:|:---:|:--------:|
+| **1**  基础设施 | Q2-Q3 2026 | 6周 | 3 | 24 | 66→75 |
+| **2**  知识深化 | Q3-Q4 2026 | 8-10周 | M2.0-M2.5 | 47候选 / 6 gate | 75→82 |
+| **3**  辅助自主 | Q4 2026-Q1 2027 | 12周 | 4 | 35 | 82→88 |
+| —    验证期 | Q1-Q2 2027 | 3-6月 | — | 6 gate | 验证 |
+| **4**  高自主   | Q2 2027+ | 持续 | — | 15 | 88→91 |
+| **∞**  持续进化 | Q2 2028+ | 永久 | 季度 | — | 91→95 |
+
+---
+
+## III. 里程碑时间线
+
+```
+2026 ──────────────────────────────────────────────────────────── 2028+
+
+Q2 2026                Q3 2026               Q4 2026            Q1 2027
+│                      │                     │                  │
+├ M1.1: P1收尾         ├ M2.0: 治理收敛       ├ M2.4: 真实知识闭环├ M3.1: KOS self就绪
+│   SB×kairon整合完成  │ M2.1: KOS baseline   │ M2.5: 扩展评审    │   辅助自主率>50%
+│   Code complete      │ M2.2: Safe Mesh      ├ M3.1: 跨域研究    ├ M3.2: 自愈全系统
+│                      │ M2.3: SSOT 7域最小注册│                 │
+│                      │                     │   家庭OS就绪      │   wksp://100%覆盖
+
+Q2 2027               Q3 2027              Q4 2027             Q2 2028+
+│                     │                    │                    │
+├ M4.1: 辅助自主>50%  ├ M4.2: >70%        ├ M4.3: >80%        ├ 开源核心
+│   系统可分发        │   联邦学习启动     │   健康≥91          │ Phase∞启动
+│   健康≥88           │   社区Skill/Tool   │   3+用户           │ 联邦安全模型就绪
+```
+
+---
+
+## IV. 能力增长矩阵
+
+### kairon 包增长
+
+```
+Phase 1: 17 → 19 (+2: sharedbrain-bridge, eu-pricing)           ■■■■■■■■■■  ▢▢▢▢▢▢▢▢▢▢
+Phase 2: 19 → 24 (+5: family-models, work-models, media-models,  ■■■■■■■■■■■■■■  ▢▢▢▢▢
+                      token-juicer, trust-layer)
+Phase 3: 24 → 28 (+4: cross-domain, memory-tree, skill-router,   ■■■■■■■■■■■■■■■■■■  ▢▢
+                      device-orchestrator)
+Phase 4: 28 → 30 (+2: bf-search, kems-runtime)                   ■■■■■■■■■■■■■■■■■■■■
+```
+
+### MCP 工具增长
+
+```
+当前:   33+ 工具 (8 opencode + 15 claude + ~12 kairon internal)     ████
+Phase 1: 50+  工具 (+sharedbrain 20, +sharedbrain-bridge 5)        ██████
+Phase 2: 80+  工具 (+model-garden, +obsidian, +apple, etc.)        ███████████
+Phase 3: 100+ 工具 (+family, +device, +wechat, etc.)               ███████████████
+Phase 4: 130+ 工具 (+template, +smb, +media, etc.)                 ██████████████████
+Phase∞: 150+ 工具 (KOS self generated)                             ████████████████████
+```
+
+---
+
+## V. Phase 任务规格书索引
+
+| Phase | 文件 | 版本 | Sprint | 任务 | Agent 命令模板 |
+|-------|------|:---:|:-----:|:---:|:-------------:|
+| 1 | `phase1-task-specs.md` | v1.0 | 3 | 24 | reference |
+| 2 | `phase2-task-specs-v2.md` | **v2.1** | M2.0-M2.5 | **47候选 / 6 gate** | execution-gated |
+| 3 | `phase3-task-specs-v2.md` | **v2.1** | 4 | **35** | future-gated |
+| 4 | `phase4-task-specs-v2.md` | **v2.1** | ∞ | **15** | future-gated |
+
+---
+
+## VI. 支撑文档索引
+
+| 文档 | 用途 |
+|------|------|
+| `architecture-final-vision.md` | 终极架构（Workspace×SharedWork 全景融合） |
+| `evolution-roadmap-4phases.md` v1.1 | 4 阶段路线图（红队修订版） |
+| `comprehensive-architecture-audit.md` | SSOT 7 域拆解 + 架构缺口分析 |
+| `tech-intelligence-2026q2.md` | 技术情报（50+ repos + 100+ 文章） |
+| `beyond-phase4-vision.md` v1.1 | Phase ∞ 远景（红队修订版） |
+| `beyond-phase4-review.md` | Phase ∞ 红队·战略·安全审查 |
+| `redteam-revision-patch.md` | 全 Phase 红队修订��丁 |
+| `sharedbrain-kairon-integration.md` v2.0 | SharedBrain 融合方案 |
+| `phase1-sprint-plan.md` | Phase 1 Sprint 拆解 |
+| `post-phase1-governance-and-phase2-entry.md` | Phase 1 关闭 + Phase 2 入场门禁 |
+| `planning-blueprint-delivery-test-standard.md` | 规划、交付、测试统一标准 |
+| `llm-convergence-requirements.md` | LiteLLM / LLM 路由统一收敛需求，纳入后续规划输入 |
+| `llm-convergence-planning-packet.md` | dual_track 规划包：P2 尾波前置 + P3 主收敛包 |
+| `phase2-phase3-task-manifest.md` | 当前 P2 尾波 / P3 future-gated 任务清单 |
+| `MASTER-BLUEPRINT.md` (本文件) | **全景主蓝图** |
+
+---
+
+## VII. 系统健康评分轨迹
+
+```
+ 100 ┤                                              ╭────── Phase∞: 91→95
+     │                                        ╭─────╯
+  90 ┤                                  ╭─────╯ Phase4: 88→91
+     │                            ╭─────╯
+  80 ┤                      ╭─────╯ Phase3: 82→88
+     │                ╭─────╯
+  70 ┤          ╭─────╯ Phase2: 75→82
+     │    ╭─────╯
+  60 ┤────╯ Phase1: 66→75
+     │
+     └─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────
+         Q2'26  Q3'26  Q4'26  Q1'27  Q2'27  Q3'27  Q4'27
+```
+
+---
+
+## VIII. SSOT 7 域模型
+
+```
+omostation Knowledge Domains
+├── 🧠 Knowledge  (Obsidian vaults, AI papers, KEMS methodology)
+├── 💼 Work       (卫健委, 国转中心, legal, templates)
+├── 👨‍👩‍👧‍👦 Family     (members, health, education, assets)
+├── 🤖 AI         (462GB models, agents, tools, skills, pipelines)
+├── ⚙️ System     (4+1+3+I architecture, .omo governance, ops)
+├── 📁 Data       (iCloud, SharedDisk, Desktop, sync status)
+└── 🎬 Media      (photos, videos, music, albums)
+```
+
+---
+
+> **架构法则**: 10 条不可变法则（I0 隔离、MCP 强制、Python→kairon、TS→agentmesh/gbrain、SB 不做知识处理、kairon 不做运行时控制、core-models 唯一权威、器官可委托不可删除、吸收而非复制、每 Phase 安全扫描）
+
+> **下次复审**: M2.2 Safe Mesh 验收后 | **主蓝图版本**: v1.1
+
+[tool filesystem_read_text_file] # .omo/plans/ 目录索引
+
+> 日期: 2026-05-30 | 版本: v1.2 | 状态: Phase 2 full_execution
+
+---
+
+## 文档状态分类
+
+| 标识 | 含义 | 操作 |
+|:----:|------|------|
+| 🔴 **EXECUTION** | 正在执行的任务规格书 | Agent 直接使用 |
+| 🟣 **GATED** | 执行候选，但只允许前置 gate 任务 | Agent 只能执行 `.omo/tasks/active/*.yaml` |
+| 🟡 **ACTIVE** | 持续更新的活文档 | 随进展更新 |
+| 🟢 **REFERENCE** | 计划完成，保留参考 | 只读，不修改 |
+| ⚪ **ARCHIVED** | 已被新版取代 | 移到 archive/ |
+
+---
+
+## 🔴 EXECUTION — 当前任务源
+
+| 文件/目录 | Phase | 状态 | Agent 执行规则 |
+|-----------|:----:|------|----------------|
+| `.omo/tasks/active/*.yaml` | 2 | 🔴 EXECUTION | 唯一可认领任务源 |
+
+### 生成 active task 前必须对齐的标准
+
+- `.omo/standards/planning-blueprint-delivery-test-standard.md`
+- `.omo/standards/phase2-full-execution-go-no-go.md`
+- `.omo/standards/ARCHITECTURE_CONVERGENCE.md`
+
+要求：
+
+1. phase spec 进入 execution 前，必须能映射成 `.omo/tasks/active/*.yaml`。
+2. active task 必须带上 entry gate / evidence / test plan。
+3. 任何执行推进都必须服从当前 `goals/current.yaml` 与 go/no-go 约束。
+
+---
+
+## 🟣 GATED — 阶段规格书（执行候选）
+
+| 文件 | Phase | 任务数 | 当前口径 |
+|------|:----:|:-----:|----------|
+| `phase2-task-specs-v2.md` | 2 | 47 | M2.FULL-GO 7/7 已通过；可初始化 M2.3 首批任务到 active/ |
+| `phase3-task-specs-v2.md` | 3 | 35 | Phase 2 full execution 验收前不可执行 |
+| `phase4-task-specs-v2.md` | 4 | 15 | Phase 3 + 验证期通过前不可执行 |
+| `llm-convergence-requirements.md` | 2→3 | draft | LLM 路由统一收敛需求源，不直接下发到 active/ |
+| `llm-convergence-planning-packet.md` | 2→3 | gated | dual_track 规划包：P2 尾波前置 + P3 主收敛包 |
+| `phase2-phase3-task-manifest.md` | 2→3 | active planning | 当前可调度 P2 尾波 + future-gated P3 任务清单 |
+
+---
+
+## 🟡 ACTIVE — 活文档（持续更新）
+
+| 文件 | 版本 | 描述 |
+|------|:---:|------|
+| `MASTER-BLUEPRINT.md` | v1.1 | 全景主蓝图 + Post-Phase1 门禁 |
+| `evolution-roadmap-4phases.md` | v1.1 | 4 阶段路线图（红队修订） |
+| `post-phase1-governance-and-phase2-entry.md` | v1.0 | Phase 1 关闭 + Phase 2 入场规范 |
+| `planning-blueprint-delivery-test-standard.md` | v1.0 | 规划/交付/测试统一标准 |
+| `phase1-sprint-plan.md` | v1.0 | Phase 1 Sprint/Wave/Task 拆解 |
+| `llm-convergence-requirements.md` | v1.0 | LiteLLM / LLM 路由统一收敛需求（future planning input） |
+| `llm-convergence-planning-packet.md` | v1.0 | 将 requirements 拆成 dual_track workstreams 的规划包 |
+| `phase2-phase3-task-manifest.md` | v1.0 | P2 尾波执行项 + P3 future-gated 任务清单 |
+
+---
+
+## 🟢 REFERENCE — 参考文档（计划完成，只读）
+
+| 文件 | 版本 | 描述 | 成果已融入 |
+|------|:---:|------|-----------|
+| `phase1-task-specs.md` | v1.0 | Phase 1 任务规格 | Phase 1 归档 |
+| `phase1-verification-report.md` | v1.0 | Phase 1 代码验收 | Phase 1 history |
+| `architecture-final-vision.md` | v1.0 | 终极架构蓝图 | MASTER-BLUEPRINT |
+| `sharedbrain-kairon-integration.md` | v2.0 | SharedBrain 融合方案 | Phase 1 已完成 |
+| `comprehensive-architecture-audit.md` | v1.0 | SSOT 7 域拆解 + 缺口分析 | Phase 2-3 任务 |
+| `tech-intelligence-2026q2.md` | v1.0 | 行业技术情报 (50+ repos) | Phase 2-3 T1-T5 |
+| `deep-architecture-agent-analysis.md` | v1.1 | Agent 协作 + 第一性原理 | Phase 2 ACP_* |
+| `agent-architecture-audit-redteam.md` | v1.0 | Agent 体系审计 + 红队 | Phase 2 SAFE_* |
+| `redteam-revision-patch.md` | v1.0 | 全 Phase 红队修订补丁 | 已应用到 v1.1 |
+| `beyond-phase4-vision.md` | v1.1 | Phase ∞ 远景（红队修订） | — |
+| `beyond-phase4-review.md` | v1.0 | Phase ∞ 红队·战略·安全审查 | — |
+
+---
+
+## ⚪ ARCHIVED — 已被新版取代
+
+| 文件 | 取代者 |
+|------|--------|
+| `phase2-task-specs.md` (v1.0, 29任务) | `phase2-task-specs-v2.md` (v2.0, 47任务) |
+| `phase3-task-specs.md` (v1.0, 25任务) | `phase3-task-specs-v2.md` (v2.0, 35任务) |
+| `phase4-task-specs.md` (v1.0, 10任务) | `phase4-task-specs-v2.md` (v2.0, 15任务) |
+
+---
+
+## .omo/ 根目录文档
+
+| 文件 | 状态 | 描述 |
+|------|:---:|------|
+| `MASTER-BLUEPRINT.md` | 🟡 ACTIVE | 全景主蓝图（架构·路线图·里程碑） |
+| `CONSISTENCY-CHECK.md` | 🟡 ACTIVE | 一致性检查报告 |
+| `goals/current.yaml` | 🔴 EXECUTION | 当前 Phase 目标源 |
+| `state/system.yaml` | 🟡 ACTIVE | 聚合状态快照 |
+| `tasks/active/*.yaml` | 🔴 EXECUTION | Agent 可认领任务源 |
+
+---
+
+## 命名规范
+
+```
+[status]-[phase]-[name]-[version].md
+
+示例:
+  phase2-task-specs-v2.md    ← EXECUTION, Phase 2, 任务规格, v2
+  evolution-roadmap-4phases.md ← ACTIVE, 路线图
+  beyond-phase4-vision.md      ← REFERENCE, 远景
+
+规则:
+  - 任务规格书: phase{N}-task-specs{-v{N}}.md
+  - 蓝图/路线图: {name}.md
+  - 审计/分析: {name}-{audit|analysis|review|redteam}.md
+  - 可执行任务: .omo/tasks/active/{milestone}-{slug}.yaml
+  - 旧版: 移到 archive/ 或标记 ARCHIVED
+```
+
+[tool filesystem_read_text_file] # 规划、蓝图、架构、里程碑、交付与测试迭代标准
+
+> 日期: 2026-05-30  
+> 版本: v1.0  
+> 状态: active  
+> 范围: `.omo` 下所有规划、蓝图、架构、方案、设计、任务规格书、交付标准、测试与复盘文档
+
+---
+
+## 1. 目标
+
+`.omo` 是 omostation 的治理控制面，不只是文档目录。未来所有规划与执行材料必须同时满足三件事：
+
+1. **可追溯**：任何任务都能追溯到蓝图、阶段目标、任务规格、验收证据。
+2. **可执行**：Agent 只能从明确的执行源领取任务，不能从历史文档里自由解释任务。
+3. **可验证**：每个里程碑必须有测试、日志、健康指标或人工验收证据。
+
+---
+
+## 2. 权威源分层
+
+| 层级 | 权威文件/目录 | 职责 | 更新者 |
+|------|---------------|------|--------|
+| Blueprint | `.omo/MASTER-BLUEPRINT.md` | 长期愿景、架构边界、阶段地图 | human + architect agent |
+| Plan Registry | `.omo/plans/README.md` | 规划文件状态与执行入口 | governance agent |
+| Phase Specs | `.omo/plans/phase*-task-specs*.md` | 阶段任务候选、验收清单、agent prompt | phase owner |
+| Standards | `.omo/standards/*.md` | 跨阶段不可变规范、门禁、交付标准 | governance agent |
+| Goals | `.omo/goals/current.yaml` | 当前 Phase 目标、进入模式、Go/No-Go | human |
+| Goal History | `.omo/goals/history/*.yaml` | 已关闭或暂停 Phase 的目标快照 | governance agent |
+| Task SSOT | `.omo/tasks/{active,done,blocked}/*.yaml` | Agent 可写任务状态 | assigned agent |
+| Runtime State | `.omo/state/system.yaml` | 聚合状态，只读输入 | system aggregator / manual calibration |
+| Evidence | `.omo/summaries/*.md`, reports | 验收、复盘、审计、事故证据 | verifier / auditor |
+| Tests | `.omo/tests/` | 治理、集成、门禁测试规范或测试代码 | test agent |
+
+规则：
+
+- `TASK_POOL.md` 降级为历史镜像或迁移入口，不再作为真实任务 SSOT。
+- `plans/archive/` 与旧 Phase 5/9/13 文档只能作为参考，不得被 Agent 直接执行。
+- `phase3`、`phase4` 任务规格默认是 **future-gated**，只有前序 gate 通过后才能进入 EXECUTION。
+
+---
+
+## 3. 文档状态机
+
+| 状态 | 含义 | 是否可执行 |
+|------|------|------------|
+| `draft` | 草稿，未评审 | 否 |
+| `proposed` | 已提出，等待采纳 | 否 |
+| `active` | 活文档，可迭代 | 否，除非被 current goal 引用 |
+| `execution-gated` | 执行候选，但需要前置门禁 | 仅限 gate 任务 |
+| `execution` | 当前可执行源 | 是 |
+| `reference` | 已吸收，保留参考 | 否 |
+| `archived` | 已被新版取代 | 否 |
+
+任何从 `execution-gated` 升级到 `execution` 的文档必须满足：
+
+1. `goals/current.yaml` 引用它。
+2. `.omo/tasks/active/` 已生成首批任务 YAML。
+3. 至少一个验收测试或检查清单存在。
+4. 前序 Phase 的关闭状态已记录。
+
+---
+
+## 4. 规划与蓝图迭代规则
+
+每次更新规划、蓝图或架构，必须同步检查以下文件：
+
+| 变更类型 | 必须同步 |
+|----------|----------|
+| Phase 状态变化 | `goals/current.yaml`, `state/system.yaml`, `plans/README.md`, `MASTER-BLUEPRINT.md` |
+| 新里程碑 | 对应 `phase*-task-specs*.md`, `.omo/tasks/active/*.yaml` |
+| 新架构边界 | `MASTER-BLUEPRINT.md`, `standards/ARCHITECTURE_CONVERGENCE.md` 或新标准 |
+| 新安全约束 | Phase specs、验收清单、测试标准 |
+| 新连接器/外部数据源 | 数据分类、RBAC、审计、备份、隐私门禁 |
+| 审计发现 | 进入任务 YAML 或明确豁免，不得只停留在审计文档 |
+
+---
+
+## 5. Milestone 标准模板
+
+每个里程碑必须包含：
+
+```yaml
+id: M2.1
+title: "KOS baseline restore"
+phase: 2
+entry_gate:
+  - "M2.0 governance close complete"
+exit_gate:
+  - "KOS before/after document count recorded"
+  - "10 known documents search 10/10 found"
+user_visible_outcome: "知识检索恢复可信"
+system_evidence:
+  - "health metric"
+  - "test report"
+  - "audit log"
+failure_injection:
+  - "simulate 20% index drop"
+rollback_or_delay:
+  - "root cause unknown"
+final_approver: "human + verifier"
+```
+
+禁止只用“文件创建”“工具注册”“Agent 自述完成”作为里程碑完成标准。
+
+---
+
+## 6. 任务规格书标准
+
+任务规格书中的每个任务必须能被拆成任务 YAML。任务 YAML 至少包含：
+
+```yaml
+id: M2.2-SAFE-MESH-OP-LEVELS
+phase: 2
+milestone: M2.2
+priority: P0
+title: "Implement operation levels"
+status: pending
+assigned_to: null
+source_docs:
+  - ".omo/plans/phase2-task-specs-v2.md"
+depends_on:
+  - "M2.0-PHASE1-GOVERNANCE-CLOSE"
+risk_level: L2
+operation_level: L2
+human_approval_required: true
+entry_gate: []
+evidence_required:
+  - "L2 write denied without confirmation"
+  - "confirmation path audited"
+test_plan:
+  - ".omo/tests/README.md#operation-level-tests"
+```
+
+---
+
+## 7. 交付标准
+
+每个交付物必须归入以下类型之一：
+
+| 类型 | 交付证据 |
+|------|----------|
+| 文档治理 | 文档状态更新、索引同步、一致性检查 |
+| 架构设计 | 边界表、依赖图、失败模式、门禁 |
+| 任务规格 | 可拆成 YAML 的任务、依赖、验收 |
+| 代码能力 | 测试、日志、健康指标、回滚策略 |
+| 连接器 | 权限、数据分类、dry-run、审计、隐私边界 |
+| Agent 能力 | 身份、RBAC、sandbox、checkpoint、deadlock test |
+| 数据能力 | 数据量基线、完整性校验、备份/恢复证据 |
+
+---
+
+## 8. 测试标准
+
+所有 Phase 的测试必须分为五层：
+
+1. **Spec tests**：文档和 YAML schema 是否完整。
+2. **Unit tests**：单包/单模块行为。
+3. **Integration tests**：跨项目、跨包、跨 Agent 的主路径。
+4. **Failure-injection tests**：网络不可达、索引退化、权限拒绝、Agent 死锁。
+5. **Acceptance tests**：用户可见闭环和人工验收。
+
+Phase 2 起，任何 P0/P1 任务至少需要：
+
+- 一个成功路径证据。
+- 一个失败/拒绝路径证据。
+- 一个审计或健康指标证据。
+
+---
+
+## 9. Phase 2 执行口径
+
+Phase 2 不是“47 个任务全部启动”，而是：
+
+```text
+M2.0 governance close
+  -> M2.1 KOS baseline
+  -> M2.2 Safe Mesh
+  -> M2.3 SSOT 7-domain minimal registration
+  -> M2.4 real knowledge loop
+  -> M2.5 expansion review
+```
+
+在 M2.0-M2.2 完成前，以下任务只能保持 `candidate`：
+
+- Apple / WeChat / SMB / media 等敏感连接器。
+- KOS self / 高自主自愈。
+- Family OS、设备协同、跨域自动研究。
+- 破坏性备份/恢复操作。
+
+---
+
+## 10. Go/No-Go 口径
+
+| 决策 | 条件 |
+|------|------|
+| `NO-GO` | Phase 目标源、任务源、状态源冲突；或关键安全门禁缺失 |
+| `LIMITED-GO` | 允许治理/KOS/安全类 P0 任务启动，禁止敏感连接器 |
+| `GO` | 关闭前序 Phase，任务 YAML 完整，测试和审计证据存在 |
+
+当前建议状态：
+
+```text
+Phase 1 = code_complete + runtime_evidence_pending
+Phase 2 = limited_go_for_M2.0_M2.1_M2.2
+```
+
+[tool filesystem_read_text_file] version: 1
+dispatch_id: p2-plan-safe-mesh-rbac-reasonix-20260530-145751
+task_id: P2-PLAN-SAFE-MESH-RBAC
+worker_id: reasonix
+transport_mode: cli_prompt
+run_ref: .omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-dispatch.yaml
+dispatch_state: dispatched
+coordinator: copilot-cli
+launched_at: '2026-05-30T14:57:51Z'
+lease:
+  heartbeat_interval_seconds: 300
+  warning_after_seconds: 900
+  lease_expired_after_seconds: 1200
+  reclaim_after_seconds: 1800
+  last_checkpoint_at: null
+  last_material_write_at: null
+inputs:
+  task_yaml: .omo/tasks/active/P2-plan-safe-mesh-rbac.yaml
+  envelope_file: .omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-envelope.yaml
+  prompt_file: .omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-prompt.md
+  source_docs:
+  - .omo/standards/operation-levels.md
+  - .omo/standards/agent-registry-heartbeat.md
+execution:
+  launch_command: reasonix run "<prompt:.omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-prompt.md>"
+  approval_ref: null
+  session_ref: null
+  log_ref: .omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-stdout.log
+  checkpoint_refs: []
+handoff:
+  output_summary_ref: .omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-review.md
+  evidence_paths: []
+  unresolved_risks: []
+  next_handoff: null
+reclaim:
+  required: false
+  reason: null
+  reclaimed_at: null
+  successor_worker_id: null
+  successor_dispatch_id: null
+
+[tool filesystem_read_text_file] # Worker Prompt Contract
+
+WORKER_ID: `reasonix`
+TASK_ID: `P2-PLAN-SAFE-MESH-RBAC`
+TRANSPORT: `cli_prompt`
+READ_BUDGET: `5`
+
+## Mission
+
+Plan Safe Mesh / RBAC deployment roadmap
+
+## Task SSOT
+
+- Task YAML: `.omo/tasks/active/P2-plan-safe-mesh-rbac.yaml`
+- Source doc: `.omo/standards/operation-levels.md`
+- Source doc: `.omo/standards/agent-registry-heartbeat.md`
+
+## Constraints
+
+- You may write to `.omo/plans/`
+- You may write to `.omo/tasks/active/P2-plan-safe-mesh-rbac.yaml`
+- You may write to `.omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-review.md`
+- Do not modify global state files.
+- Do not mark the task `done`.
+Now I have the full picture. Let me synthesize and produce the three deliverables.
+[tool filesystem_read_text_file] # Post-Phase1 治理收敛规范与 Phase 2 入场方案
+
+> 状态: historical
+> 说明: 这是 Phase 1 关闭 / Phase 2 入场时的历史 gate snapshot。
+> 当前执行请以 `.omo/goals/current.yaml`、`.omo/state/system.yaml` 与 `.omo/standards/phase2-full-execution-go-no-go.md` 为准。
+
+> 日期: 2026-05-30  
+> 状态: active  
+> 适用范围: `.omo` 治理体系、Phase 1 关闭、Phase 2 启动门禁  
+> 输入文档: `MASTER-BLUEPRINT.md`, `CONSISTENCY-CHECK.md`, `plans/README.md`, `plans/phase1-verification-report.md`, `summaries/phase1-retrospective.md`, `plans/phase2-task-specs-v2.md`, `plans/phase3-task-specs-v2.md`, `plans/phase4-task-specs-v2.md`, `plans/deep-architecture-agent-analysis.md`, `plans/agent-architecture-audit-redteam.md`, `plans/comprehensive-architecture-audit.md`, `goals/current.yaml`, `state/system.yaml`, `tasks/README.md`, `TASK_POOL.md`, `PROJECTS.yaml`, `convergence.yaml`, `LAYER-INDEX.md`
+
+---
+
+## 1. 结论摘要
+
+Phase 1 可以判定为 **工程交付基本完成**，��不能直接判定为 **治理关闭完成**。
+
+当前证据呈现三层状态：
+
+| 层级 | 当前判断 | 依据 |
+|------|----------|------|
+| 工程交付 | 基本完成 | `phase1-retrospective.md` 记录 21/21 核心任务完成，E2E、故障注入、性能、memU 均通过 |
+| 运行时验证 | 证据冲突，需统一 | `phase1-retrospective.md` 记录 Docker 4/4 Healthy；`phase1-verification-report.md` 记录代码 7/7 PASS，但 Docker/smoke runtime PENDING |
+| 治理状态 | 未关闭 | `goals/current.yaml`, `state/system.yaml`, `convergence.yaml`, `LAYER-INDEX.md`, `TASK_POOL.md` 仍显示 Phase 1 进行中、旧任务池或过期状态 |
+
+因此后续不能直接从 Phase 2 的 47 项任务全量并发启动。正确路径是先执行 **M2.0 治理收敛与 Phase 1 正式关闭**，再进入 Phase 2 的 P0 入场包。
+
+---
+
+## 2. 最新 `.omo` 更新纳入后的权威判断
+
+### 2.1 最新规划主线
+
+当前应以以下文档为规划主线：
+
+| 优先级 | 文件 | 角色 |
+|--------|------|------|
+| P0 | `MASTER-BLUEPRINT.md` | 全景蓝图，定义长期架构、阶段、能力增长、SSOT 7 域 |
+| P0 | `plans/README.md` | 计划文档注册表，定义 EXECUTION / ACTIVE / REFERENCE / ARCHIVED |
+| P0 | `plans/phase2-task-specs-v2.md` | Phase 2 当前执行候选规格，47 任务 |
+| P1 | `plans/deep-architecture-agent-analysis.md` | ACP、Agent-as-Kernel、控制面、安全机制设计来源 |
+| P1 | `plans/agent-architecture-audit-redteam.md` | 安全红队约束来源 |
+| P1 | `plans/comprehensive-architecture-audit.md` | SSOT 7 域、KOS 退化、连接器与长期缺口来源 |
+| P2 | `plans/phase3-task-specs-v2.md` / `phase4-task-specs-v2.md` | 只作为后续依赖图，不作为当前执行入口 |
+
+旧的 `GOVERNANCE_PLAN.md`, `TASK_POOL.md` Phase 6X, 更早 Phase 9/13 计划只能作为历史参考，不能继续作为执行源。
+
+### 2.2 Phase 1 证据冲突
+
+`phase1-retrospective.md` 与 `phase1-verification-report.md` 对运行时验收的结论不同：
+
+[tool filesystem_read_text_file] # Agent CLI Worker Collaboration Standard
+
+> Status: active | Version: v1.0 | Scope: external agent CLI workers
+> Related: `.omo/tasks/README.md`, `.omo/standards/operation-levels.md`,
+> `.omo/standards/agent-registry-heartbeat.md`,
+> `.omo/summaries/agent-task-contract.md`
+
+---
+
+## 1. Purpose
+
+This standard defines how external agent CLIs join OMO collaboration as
+**workers** without breaking task SSOT, operation-level gates, or review
+discipline.
+
+Current worker set:
+
+- `codebuddy`
+- `reasonix`
+
+Future agent CLIs may be added through the same registry and handoff flow.
+
+## 2. Core Rules
+
+1. **Task YAML remains the only task SSOT.**
+2. **Coordinator owns scheduling, review, requeue, and phase promotion.**
+3. **Workers only act inside declared task scope and declared write paths.**
+4. **External workers default to L1 max execution authority.**
+5. **L2/L3 operations require explicit human approval and coordinator release.**
+6. **Sensitive capabilities remain blocked by default.**
+7. **Every worker run must leave reusable evidence and knowledge artifacts.**
+
+## 3. Collaboration Topology
+
+```text
+Coordinator
+  -> .omo/tasks/active/*.yaml               # task SSOT
+  -> .omo/workers/registry.yaml             # worker capabilities + policy
+  -> .omo/workers/templates/*               # handoff envelope + prompt contract
+  -> external worker CLI                    # codebuddy / reasonix / future workers
+  -> task evidence + review notes
+  -> review / requeue / archive
+```
+
+## 4. Roles
+
+### 4.1 Coordinator
+
+Usually human or a governance/orchestrator agent.
+
+[tool filesystem_write_file] Successfully wrote to .omo/plans/safe-mesh-rbac-deployment-roadmap.md
+Now update the task YAML with evidence markers and write the review note.
+[tool filesystem_edit_file] ```diff
+Index: /Users/xiamingxing/Workspace/.omo/tasks/active/P2-plan-safe-mesh-rbac.yaml
+===================================================================
+--- /Users/xiamingxing/Workspace/.omo/tasks/active/P2-plan-safe-mesh-rbac.yaml	original
++++ /Users/xiamingxing/Workspace/.omo/tasks/active/P2-plan-safe-mesh-rbac.yaml	modified
+@@ -24,8 +24,33 @@
+ entry_gate: []
+ evidence_required:
+ - Safe Mesh deployment plan documented
+ - RBAC integration points identified
++
++evidence:
++  safe_mesh_deployment_plan:
++    location: .omo/plans/safe-mesh-rbac-deployment-roadmap.md
++    status: completed
++    summary: "6-Wave roadmap covering RBAC model design, identity token extension, deny path rollout, heartbeat implementation, and security audit"
++  rbac_integration_points:
++    location: .omo/plans/safe-mesh-rbac-deployment-roadmap.md §3.6
++    status: completed
++    summary: "7 integration points identified (I1-I7) across Agora Registry, agentmesh Gateway, KOS, gbrain, SharedBrain, Ops/Hermes, CLI"
++  rbac_model:
++    location: .omo/plans/safe-mesh-rbac-deployment-roadmap.md §3
++    status: completed
++    summary: "5 roles defined (reader/operator/curator/admin/auditor), default agent-type mapping, RBAC check flow, extended identity token schema"
++  rollout_sequence:
++    location: .omo/plans/safe-mesh-rbac-deployment-roadmap.md §4
++    status: completed
++    summary: "6 Waves clearly split 3 governance gates (Waves 1,2,6) vs 3 delivery tracks (Waves 3,4,5)"
++
++next_action: "Human review RBAC model → approve Wave 1 gate → begin Wave 2 execution"
++needs_human_review:
++- RBAC role definitions (§3.1)
++- Agent type → role mapping (§3.2)
++- Sensitive capabilities list (§4 Wave 4)
++- Full 6-Wave sequence timeline
+ test_plan:
+ - Review roadmap against operation levels and heartbeat standards
+ - Confirm rollout sequence distinguishes delivery track vs governance gate
+ started_at: '2026-05-30T14:57:51Z'
+```
+
+[tool filesystem_edit_file] ```diff
+Index: /Users/xiamingxing/Workspace/.omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-review.md
+===================================================================
+--- /Users/xiamingxing/Workspace/.omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-review.md	original
++++ /Users/xiamingxing/Workspace/.omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-review.md	modified
+@@ -1,5 +1,56 @@
+-# Review Note
++# Review Note — P2-PLAN-SAFE-MESH-RBAC
+ 
+ ## Summary of work done
+ 
+-TBD
++### Inputs consumed
++- `.omo/tasks/active/P2-plan-safe-mesh-rbac.yaml` — task definition
++- `.omo/standards/operation-levels.md` — L0-L3 classification, deny path pattern, first-wave candidates, sensitive capabilities rule
++- `.omo/standards/agent-registry-heartbeat.md` — heartbeat protocol, identity token schema, cache behavior, deadlock detection
++- `.omo/MASTER-BLUEPRINT.md` — architecture context, M2.2 Safe Mesh placement
++- `.omo/plans/phase2-task-specs-v2.md` — M2.0-M2.5 gate sequence
++- `.omo/standards/operation-level-rollout-plan.md` — detailed tool inventory, first-wave selection rationale
++- `.omo/plans/planning-blueprint-delivery-test-standard.md` — plan/evidence/review format standards
++
++### Deliverable 1: Deployment Roadmap
++**File:** `.omo/plans/safe-mesh-rbac-deployment-roadmap.md`
++
++Contents:
++1. **§1 Safe Mesh definition** — 4 layers: Operation Levels + Heartbeat + Identity + RBAC
++2. **§2 Current state baseline** — what's done (operation-levels, heartbeat design) vs what's new (RBAC)
++3. **§3 RBAC model (NEW)** — 5 roles (reader/operator/curator/admin/auditor), agent-type mapping, RBAC check flow, extended identity token schema with `role` field
++4. **§4 6-Wave rollout roadmap** — 3 governance gates (Waves 1, 2, 6) + 3 delivery tracks (Waves 3, 4, 5)
++5. **§5 Delivery Track vs Governance Gate** — comparison table clarifying the distinction
++6. **§6 Integration matrix** — 7 integration points (I1-I7) across all components
++7. **§7 Acceptance scenarios** — RBAC-specific + full Safe Mesh end-to-end
++8. **§8 Dependencies & preconditions**
++9. **§9 Risk register**
++
++### Deliverable 2: Updated Task YAML
++**File:** `.omo/tasks/active/P2-plan-safe-mesh-rbac.yaml`
++
++Added `evidence` section with 4 evidence items pointing to the roadmap document, plus `next_action` and `needs_human_review` fields.
++
++### Key architecture decisions
++
++| Decision | Rationale |
++|----------|-----------|
++| RBAC CHECK at agentmesh Gateway (not per-MCP-server) | Leverage existing Gateway routing layer, avoid N implementations |
++| `role` as explicit JWT field (not derived from `agent_type`) | agent_type → role is default mapping, but override allows flexible policy without changing agent identity |
++| 4 sensitive capability categories blocked | Aligned with `operation-levels.md` §7 — Apple, WeChat, Family OS, SMB, Media, high-autonomy |
++| L2 deny as `_confirmed:true` not per-role | Keeps deny path consistent with existing L2/L3 standard; role check happens before deny path |
++
++### Test plan verification
++1. ✅ Roadmap reviewed against operation levels — rollup inventory baseline (§7 of operation-levels.md) incorporated into Wave 3 first-wave candidates
++2. ✅ Roadmap reviewed against heartbeat standards — identity token extended with `role` field, integration point I3-I7 map back to heartbeat/registry
++3. ✅ Rollout sequence distinguishes delivery track (Waves 3,4,5 — code) vs governance gate (Waves 1,2,6 — design/audit)
++
++### Next steps (human)
++1. **Review RBAC model** (§3) — approve/modify roles, agent-type mapping, permission rules
++2. **Approve Wave 1 gate** — unblock Wave 2 execution (identity token extension + RBAC middleware)
++3. **Review sensitive capabilities list** (§4 Wave 4)
++4. **Confirm resource allocation** for Waves 3-5 (implementation) — estimate: 2-3 sprints
++
++### Unresolved risks
++- RBAC granularity may cause performance regression if checked per-request at Gateway level
++- SharedBrain MCP tools not yet classified — default L2+ may be too restrictive
++- Token rollover during Wave 2→3 transition could disrupt running agents
+```
+所有交付物已就位。以下是完成摘要：
+
+---
+
+## ✅ 已完成 — P2 计划安全网格/RBAC 部署路线图
+
+### 交付物
+
+| # | 文件 | 用途 |
+|---|------|------|
+| 1 | `.omo/plans/safe-mesh-rbac-deployment-roadmap.md` **（新）** | 主路线图 |
+| 2 | `.omo/tasks/active/P2-plan-safe-mesh-rbac.yaml` **（已更新）** | 添加了 4 项证据 + 下一步操作 |
+| 3 | `.omo/workers/runs/p2-plan-safe-mesh-rbac-reasonix-20260530-145751-review.md` **（已更新）** | 审查记录 |
+
+### 路线图内容
+
+**第 3 节 — 全新 RBAC 模型：**
+- 5 个角色：`reader`（L0）、`operator`（L1）、`curator`（L2）、`admin`（L3）、`auditor`
+- 默认 agent_type → 角色映射：research→reader、indexer/网关→operator、编排器→curator、系统→admin
+- RBAC 检查流程：令牌解码 → 级别门控 → 工具允许列表 → 域范围 → 拒绝路径 → 审计
+
+**第 4 节 — 6 波次部署：**
+| 波次 | 类型 | 内容 |
+|------|------|------|
+| 1 🚦 | 治理门控 | RBAC 模型评审 + 令牌 schema 定稿 |
+| 2 🚚 | 交付 | 身份令牌扩展 + agentmesh 网关中的 RBAC 强制 |
+| 3 🚚 | 交付 | 首批 5 个候选工具的拒绝路径（KOS + gbrain） |
+| 4 🚦 | 治理门控 | 所有剩余工具分类 + 敏感能力阻断 |
+| 5 🚚 | 交付 | 全面拒绝路径 + 心跳代码实现 |
+| 6 🚦 | 治理门控 | 安全审计 + 回退策略 + 锁定 |
+
+**第 7 节 — 验收场景：** 6 个 RBAC 特定场景 + 5 个端到端安全网格场景。
+
+**第 6 节 — 7 个集成点：** I1（Agora 注册表）→ I7（CLI/仪表板）映射了实现需要触及的每个组件。
+
+### ⏳ 接下来需人工操作
+
+路线图需要您审查和批准后，才能进入第 2 波次执行：
+1. **RBAC 角色定义**（§3.1）— 五个角色是否足够？需要更细粒度吗？
+2. **Agent 类型 → 角色映射**（§3.2）— 默认映射是否合理？
+3. **敏感能力列表**（§4 波次 4）— Apple、微信、家庭操作系统、SMB、媒体、高自主性
+4. **完整 6 波次时间线** — 优先级和资源分配
+
+— turns:18 cache:92.4% cost:$0.011180 save-vs-claude:99.4%
+[skills] "CLAUDE" at /Users/xiamingxing/.claude/skills/CLAUDE.md has no description: — it will be loaded but won't appear in the skills index.
+[skills] "switch-profile" at /Users/xiamingxing/.claude/skills/switch-profile/SKILL.md has no description: — it will be loaded but won't appear in the skills index.
+⌘ MCP · filesystem      ↻ 握手中…         初始化 → tools/list → resources/list
+⌘ MCP · filesystem      ✓ 已连接          14 tools · 26566ms
+⌘ MCP · memory          ↻ 握手中…         初始化 → tools/list → resources/list
+⌘ MCP · memory          ✓ 已连接          9 tools · 9126ms
+⌘ MCP · github          ↻ 握手中…         初始化 → tools/list → resources/list
+⌘ MCP · github          ✓ 已连接          26 tools · 3183ms
+⌘ MCP · everything      ↻ 握手中…         初始化 → tools/list → resources/list
+⌘ MCP · everything      ✓ 已连接          14 tools · 12388ms

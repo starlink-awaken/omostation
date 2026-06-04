@@ -1,0 +1,13 @@
+id: P25-W1-E2E-INTEGRATION
+phase: Phase
+milestone: Mhase
+priority: P0
+title: E2E集成测试
+status: pending
+assigned_to: null
+opened_at: '2026-06-01T00:00:00Z'
+entry_gate: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+acceptance_criteria: []

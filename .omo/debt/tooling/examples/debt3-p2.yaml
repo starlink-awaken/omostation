@@ -1,0 +1,8 @@
+id: SB-D01
+title: 部分包未编写单元测试
+impact: 5
+frequency: 3
+cost: 8
+stage: stable_growth
+project: omostation
+created_at: "2026-04-10"

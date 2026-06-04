@@ -1,0 +1,38 @@
+id: M2.4-TOKENJUICER-COMPRESSION-LAYER
+phase: 2
+milestone: M2.4
+priority: P1
+title: "TokenJuicer — HTML/text token compression layer"
+status: done
+owner: kronos
+assigned_to: "me"
+started_at: "2026-05-30T17:30:00Z"
+completed_at: "2026-05-30T17:40:00Z"
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+depends_on: []
+dependencies: []
+inputs:
+  - "projects/kairon/packages/kronos/src/kronos/"
+outputs:
+  - "projects/kairon/packages/kronos/src/kronos/compressors/token_juicer.py"
+acceptance_criteria:
+  - "HTML→Markdown compression: reduces 40-60% tokens"
+  - "SHA-256 dedup: repeated content detected"
+  - "CJK preserved: no character loss"
+  - "URL tracking params stripped: ?utm_* removed"
+  - "Whitespace normalized: multiple spaces → single"
+evidence_required:
+  - "token_juicer.py implemented"
+  - "Unit tests for each feature"
+evidence:
+  - "token_juicer.py exists with TokenJuicer class: compress (strips HTML, normalizes WS, strips UTM), dedup_check (SHA-256), dedup_stats"
+  - "22/22 unit tests pass: HTML stripping (3), whitespace (3), CJK (4), URL tracking (4), dedup (5), return shape (3)"
+test_plan:
+  - "unit: HTML→MD compression ratio"
+  - "unit: dedup via SHA-256"
+  - "unit: CJK preservation"
+  - "unit: URL param stripping"

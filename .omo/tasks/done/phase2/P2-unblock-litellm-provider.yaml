@@ -1,0 +1,30 @@
+id: P2-UNBLOCK-LITELLM-PROVIDER
+phase: 2
+milestone: M2.6
+priority: P0
+title: Unblock one healthy LiteLLM provider path
+status: done
+assigned_to: copilot-cli
+dispatch_id: manual-phase2-provider-plane
+run_ref: .omo/summaries/p2-provider-plane-evidence.md
+approval_ref: null
+review_ref: .omo/summaries/p2-provider-plane-evidence.md
+knowledge_refs:
+  - .omo/state/provider-plane.yaml
+handoff_refs: []
+blocked_by: null
+source_docs:
+  - .omo/plans/llm-convergence-requirements.md
+  - .omo/plans/llm-convergence-planning-packet.md
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+entry_gate: []
+evidence_required:
+  - At least one provider/key path configured for LiteLLM
+  - curl :4000/health shows healthy_count > 0
+test_plan:
+  - curl :4000/health returns healthy_count > 0
+  - curl /v1/chat/completions succeeds with one configured model
+completed_at: '2026-05-30T15:36:00Z'
+completion_summary: "cc-switch selected a healthy Claude-compatible provider path and LiteLLM health now reports healthy_count > 0."

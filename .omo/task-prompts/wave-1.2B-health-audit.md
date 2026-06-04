@@ -70,7 +70,7 @@ cd ../toolkit && bun test 2>&1 | tail -5
 
 编辑 `AGENTS.md` 添加 MetaOS/SSOT 状态，agentmesh engine/toolkit 加 `@experimental`。
 
-### Step 5: 更新 INVENTORY.md
+### Step 5: 更新 ../_truth/INVENTORY.md
 
 确保所有项目的版本、测试数、LOC、活跃度字段最新。
 

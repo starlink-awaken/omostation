@@ -1,0 +1,75 @@
+id: M2.6-PHASE2-INTEGRATION-VERIFICATION
+phase: 2
+milestone: M2.6
+priority: P0
+title: "Phase 2 integration verification — run all acceptance checks"
+status: done
+owner: qa
+assigned_to: codebuddy
+completed_at: "2026-05-30T13:15:00Z"
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+  - ".omo/summaries/phase2-integration-verification-report.md"
+depends_on:
+  - M2.4-SSOT-DOMAIN-SCHEMA-FIELD-UPGRADE
+  - M2.4-KOS-HEALTH-MONITOR-IMPLEMENTATION
+  - M2.4-OPERATION-LEVEL-ROLLOUT-EXECUTION-WAVE1
+  - M2.4-TRUST-GRAPH-LAYER
+  - M2.4-TOKENJUICER-COMPRESSION-LAYER
+  - M2.4-MODEL-GARDEN-INVENTORY
+  - M2.4-KEMS-RUNTIME
+  - M2.5-AGENT-REGISTRY-FULL-ACP1
+  - M2.5-TASK-DISPATCHER-PRIORITY-QUEUE
+  - M2.5-AGENT-SANDBOX-DESIGN-AND-STUB
+  - M2.5-L2-CONTROLLER-PROTOTYPE
+  - M2.5-DEADLOCK-DETECTOR
+  - M2.5-BFTS-MINERVA-SEARCH
+  - M2.5-KRONOS-MINERVA-KOS-KNOWLEDGE-CLOSED-LOOP
+  - M2.5-EU-IMMUNE-EXTENSION
+  - M2.6-OBSIDIAN-CONNECTOR-SAFE-MINIMUM
+dependencies:
+  - M2.4-SSOT-DOMAIN-SCHEMA-FIELD-UPGRADE
+  - M2.4-KOS-HEALTH-MONITOR-IMPLEMENTATION
+  - M2.4-OPERATION-LEVEL-ROLLOUT-EXECUTION-WAVE1
+  - M2.4-TRUST-GRAPH-LAYER
+  - M2.4-TOKENJUICER-COMPRESSION-LAYER
+  - M2.4-MODEL-GARDEN-INVENTORY
+  - M2.4-KEMS-RUNTIME
+  - M2.5-AGENT-REGISTRY-FULL-ACP1
+  - M2.5-TASK-DISPATCHER-PRIORITY-QUEUE
+  - M2.5-AGENT-SANDBOX-DESIGN-AND-STUB
+  - M2.5-L2-CONTROLLER-PROTOTYPE
+  - M2.5-DEADLOCK-DETECTOR
+  - M2.5-BFTS-MINERVA-SEARCH
+  - M2.5-KRONOS-MINERVA-KOS-KNOWLEDGE-CLOSED-LOOP
+  - M2.5-EU-IMMUNE-EXTENSION
+  - M2.6-OBSIDIAN-CONNECTOR-SAFE-MINIMUM
+inputs:
+  - ".omo/tasks/done/*.yaml"
+  - ".omo/standards/*.md"
+  - "Test results from all verification-runnable packages"
+outputs:
+  - ".omo/summaries/phase2-integration-verification-report.md"
+acceptance_criteria:
+  - "KOS baseline: known-doc 10/10"
+  - "SSOT: 7 domains registered"
+  - "KOS health: drift detection works, no auto-reindex"
+  - "Operation Levels: deny paths for 5 candidates"
+  - "Model garden: inventory + recommendation"
+  - "KEMS runtime: planes/chains mapped"
+  - "Apple/WeChat/SMB/media blocked items: DEFERRED (not failure)"
+evidence_required:
+  - ".omo/summaries/phase2-integration-verification-report.md"
+evidence:
+  report: ".omo/summaries/phase2-integration-verification-report.md"
+  test_results:
+    total_live_verified: 149
+    passed: 148
+    failed: 0
+    skipped: 1
+  verification_result: "7/7 PASS — GO"
+test_plan:
+  - "Run all acceptance checks listed above"

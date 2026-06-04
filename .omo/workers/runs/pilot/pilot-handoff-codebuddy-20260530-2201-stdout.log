@@ -1,0 +1,14 @@
+交接完成。以下是所做工作的摘要：
+
+**已读取 8 个文件** — 任务 YAML、回收说明、reasonix stdout、2 个分派记录、2 个信封、提示文件
+
+**已创建** `.omo/workers/runs/pilot-reclaim-handoff-20260530-2158-review.md` — 包含：
+- **摘要**：reasonix 在 MCP 握手期间于 14:01 被中断；codebuddy 接力阅读所有文档；3/4 验收标准通过
+- **证据清单**：全部 5 项证据到位
+- **验收标准检查**：3 项通过，1 项待办（协调员关闭任务）
+- **风险与观察**：无检查点、仅 stdout 日志、回收说明的“不重试”指令至关重要
+- **回收就绪结论**：L0 试点的回收机制已就绪；建议对 `checkpoint_required: true` 进行后续演习
+
+**已更新** `.omo/tasks/active/PILOT-worker-reclaim-handoff-validation.yaml`：`status: in_progress` → `status: review`
+
+**接下来**：协调员应验证审核笔记，使用 5 项证据项关闭任务至 `done`，并可选择运行更深层次的回收演习（含部分工件和检查点）。

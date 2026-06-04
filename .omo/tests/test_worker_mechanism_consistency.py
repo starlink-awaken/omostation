@@ -163,7 +163,7 @@ def test_task_and_plan_docs_embed_required_standard_references():
 
 def test_task_docs_distinguish_active_and_planned_queues():
     tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
-    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "_knowledge/usage/AGENT.md").read_text(encoding="utf-8")
     index_text = (OMO / "INDEX.md").read_text(encoding="utf-8")
     doc_arch_text = (OMO / "DOC-ARCH.md").read_text(encoding="utf-8")
     tests_text = (OMO / "tests" / "README.md").read_text(encoding="utf-8")
@@ -177,7 +177,7 @@ def test_task_docs_distinguish_active_and_planned_queues():
 
 def test_task_docs_describe_planned_to_active_promotion_workflow():
     tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
-    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "_knowledge/usage/AGENT.md").read_text(encoding="utf-8")
     index_text = (OMO / "INDEX.md").read_text(encoding="utf-8")
 
     assert "promote-eval" in tasks_text
@@ -189,7 +189,7 @@ def test_task_docs_describe_planned_to_active_promotion_workflow():
 
 def test_worker_docs_describe_promotion_history_surface():
     workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
-    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "_knowledge/usage/AGENT.md").read_text(encoding="utf-8")
 
     assert "promotion-history" in workers_text
     assert ".omo/workers/promotion/current.yaml" in workers_text
@@ -198,7 +198,7 @@ def test_worker_docs_describe_promotion_history_surface():
 
 def test_worker_docs_describe_promotion_readiness_surface():
     workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
-    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "_knowledge/usage/AGENT.md").read_text(encoding="utf-8")
     tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
 
     assert "promotion-readiness" in workers_text
@@ -209,7 +209,7 @@ def test_worker_docs_describe_promotion_readiness_surface():
 
 def test_worker_docs_distinguish_backlog_presence_approval_from_promotion_approval():
     workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
-    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "_knowledge/usage/AGENT.md").read_text(encoding="utf-8")
     tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
 
     assert "worker-promotion-approval.yaml" in workers_text
@@ -219,7 +219,7 @@ def test_worker_docs_distinguish_backlog_presence_approval_from_promotion_approv
 
 def test_worker_docs_describe_promotion_request_workflow():
     workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
-    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "_knowledge/usage/AGENT.md").read_text(encoding="utf-8")
     tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
 
     assert "promotion-request-approval" in workers_text
@@ -229,7 +229,7 @@ def test_worker_docs_describe_promotion_request_workflow():
 
 def test_worker_docs_describe_promotion_approval_closure_surface():
     workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
-    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "_knowledge/usage/AGENT.md").read_text(encoding="utf-8")
     tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
 
     assert "promotion-approval-status" in workers_text
@@ -240,7 +240,7 @@ def test_worker_docs_describe_promotion_approval_closure_surface():
 
 def test_worker_docs_describe_promotion_approval_history_surface():
     workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
-    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "_knowledge/usage/AGENT.md").read_text(encoding="utf-8")
     tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
 
     assert "promotion-approval-history" in workers_text
@@ -251,7 +251,7 @@ def test_worker_docs_describe_promotion_approval_history_surface():
 
 def test_worker_docs_describe_promotion_approval_analytics_surface():
     workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
-    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "_knowledge/usage/AGENT.md").read_text(encoding="utf-8")
     tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
 
     assert "promotion-approval-analytics" in workers_text
@@ -262,7 +262,7 @@ def test_worker_docs_describe_promotion_approval_analytics_surface():
 
 def test_worker_docs_describe_governance_overlay_surface():
     workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
-    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "_knowledge/usage/AGENT.md").read_text(encoding="utf-8")
     tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
 
     assert "governance-overlay-status" in workers_text
@@ -273,7 +273,7 @@ def test_worker_docs_describe_governance_overlay_surface():
 
 def test_worker_docs_describe_governance_overlay_run_next_surface():
     workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
-    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "_knowledge/usage/AGENT.md").read_text(encoding="utf-8")
     tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
 
     assert "governance-overlay-run-next" in workers_text
@@ -283,7 +283,7 @@ def test_worker_docs_describe_governance_overlay_run_next_surface():
 
 def test_worker_docs_describe_governance_overlay_active_item_continuation():
     workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
-    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "_knowledge/usage/AGENT.md").read_text(encoding="utf-8")
 
     assert "continue_active" in workers_text
     assert "close a finished roadmap item and advance control state" in workers_text
@@ -292,7 +292,7 @@ def test_worker_docs_describe_governance_overlay_active_item_continuation():
 
 def test_worker_docs_describe_governance_overlay_dispatch_and_verify_actions():
     workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
-    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "_knowledge/usage/AGENT.md").read_text(encoding="utf-8")
     tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
 
     assert "dispatch:<TASK_ID>" in workers_text
@@ -303,7 +303,7 @@ def test_worker_docs_describe_governance_overlay_dispatch_and_verify_actions():
 
 def test_worker_docs_describe_governance_overlay_launch_contract_actions():
     workers_text = (OMO / "workers" / "README.md").read_text(encoding="utf-8")
-    agent_text = (OMO / "AGENT.md").read_text(encoding="utf-8")
+    agent_text = (OMO / "_knowledge/usage/AGENT.md").read_text(encoding="utf-8")
     tasks_text = (OMO / "tasks" / "README.md").read_text(encoding="utf-8")
 
     assert "contract:<TASK_ID>" in workers_text

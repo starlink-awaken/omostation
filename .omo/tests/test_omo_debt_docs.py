@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 def test_omo_agent_documents_debt_refresh_flow() -> None:
-    content = Path(".omo/AGENT.md").read_text(encoding="utf-8")
+    content = Path(".omo/_knowledge/usage/AGENT.md").read_text(encoding="utf-8")
 
     assert "python3 scripts/omo_debt.py refresh --omo-dir .omo" in content
     assert "python3 scripts/omo_debt.py dispatch --omo-dir .omo --now" in content

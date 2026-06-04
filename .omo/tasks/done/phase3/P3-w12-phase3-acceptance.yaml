@@ -1,0 +1,35 @@
+id: P3-W12-PHASE3-ACCEPTANCE
+phase: 3
+milestone: W12
+priority: P0
+title: Phase 3 end-to-end acceptance and retrospective closure
+status: done
+assigned_to: copilot-cli
+dispatch_id: manual-phase3-acceptance-closure
+run_ref: .omo/summaries/phase3-acceptance-report.md
+approval_ref: null
+review_ref: .omo/summaries/p3-full-execution-retrospective.md
+knowledge_refs:
+  - scripts/phase3_acceptance.py
+  - .omo/summaries/phase3-acceptance-report.md
+  - projects/kairon/packages/wksp/src/wksp/cli.py
+  - projects/kairon/packages/wksp/src/wksp/scripts/product-health
+handoff_refs: []
+blocked_by: null
+source_docs:
+  - .omo/plans/archive/phase2-phase3-task-manifest.md
+  - .omo/plans/archive/phase3-task-specs-v2.md
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+entry_gate:
+  - Phase 3 foundation completed
+  - Phase 3 capability kickoff slice completed
+evidence_required:
+  - acceptance runner executes wksp orchestration, capability, and recovery suites
+  - report is written to .omo/summaries/phase3-acceptance-report.md
+  - final retrospective records Phase 3 closure decision
+test_plan:
+  - python3 scripts/phase3_acceptance.py --write-report
+completed_at: '2026-05-30T23:05:00Z'
+completion_summary: "Phase 3 now closes with a curated acceptance runner, a fixed wksp product-health path, and a final retrospective."

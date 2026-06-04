@@ -1,0 +1,25 @@
+## 完成报告 — D2-CI-E2E-TEST-ENV
+
+### 交付物汇总
+
+| 交付物 | 状态 | 说明 |
+|---------|------|------|
+| `projects/kairon/docker/` | ✅ 新建 | `Dockerfile.e2e` + `docker-compose.e2e.yml` + `entrypoint.sh` |
+| `projects/kairon/Makefile` | ✅ 更新 | 新增 `test-e2e`/`test-e2e-core`/`test-e2e-cov`/`docker-{build,up,down,logs}` 共 7 个目标 |
+| `.github/workflows/...` | ✅ 更新 | 新增 `kairon-e2e-test` job，使用容器化环境运行核心路径 E2E |
+
+### 验收条件对照
+
+- **CI E2E 测试可在容器化环境中运行** ✅ — `docker/docker-compose.e2e.yml` 定义了 postgres + kairon-e2e 服务
+- **不依赖外部服务实例** ✅ — 仅自建 postgres 容器（tmpfs 临时存储），网络隔离
+- **健康分 debt_weight 因子确认** ⏳ — 需治理系统确认
+
+### 证据
+
+- Dockerfile / docker-compose 配置 → `projects/kairon/docker/`
+- make test-e2e → Makefile 新增 `test-e2e` 目标 + CI 中 `make test-e2e-core` 等价命令
+- 核心路径覆盖 → ontoderive 5 个 E2E 测试 + ecos baseline ~20 个测试，覆盖推导闭环/pipeline/ToolForge/MCP/SSB/认证/Guard/状态一致性等
+
+### 注意事项
+
+部分 E2E 测试依赖项目内数据文件（如 ecos 的 `LADS/` 目录）和 `sys.path.insert` 导入方式，首次 CI 执行可能需要微调。建议手动触发一次 `workflow_dispatch` 验证流程通过后，由 coordinator 推进 `status` 至 `done`。

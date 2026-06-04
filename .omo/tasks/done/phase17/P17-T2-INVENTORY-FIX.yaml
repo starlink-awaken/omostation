@@ -1,0 +1,23 @@
+id: P17-T2-INVENTORY-FIX
+phase: 17
+milestone: M17.1
+priority: P1
+title: "修复 ../../_truth/INVENTORY.md 包数（33→31）"
+status: done
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+source_docs:
+  - ".omo/plans/phase17-debt-governance-sprint.md"
+  - ".omo/INVENTORY.md"
+entry_gate:
+  - phase16_completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+  - "../../_truth/INVENTORY.md 中 kairon 包数 = 31（与 PROJECTS.yaml 一致）"
+test_plan:
+  - "grep -c 'packages: 31' .omo/INVENTORY.md"

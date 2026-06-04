@@ -1,0 +1,27 @@
+id: M2.6-APPLE-CONNECTOR-BLOCKED-SPEC
+phase: 2
+milestone: M2.6
+priority: P2
+title: "Apple connector — blocked spec (sensitive capability)"
+status: blocked
+blocked_reason: "sensitive_capability — Apple Calendar/Reminders access requires Safe Mesh fully deployed"
+owner: iris
+assigned_to: null
+risk_level: L2
+allowed_operation_level: L0
+human_approval_required: true
+source_deps:
+  - "Safe Mesh deployment complete"
+  - "RBAC tool-level authorization ready"
+depends_on: []
+dependencies: []
+inputs:
+  - "projects/kairon/packages/iris/src/iris/"
+outputs:
+  - "Apple connector design spec ONLY"
+acceptance_criteria:
+  - "Spec documents: Calendar read, Reminders sync, Notes access"
+  - "Does NOT implement any connector"
+  - "Blocked until Safe Mesh + RBAC tool-level authorization ready"
+evidence_required: []
+test_plan: "blocked — no implementation"

@@ -1,5 +1,9 @@
 # MCP 工具开发规范 (v1.0)
 
+> 状态: merged
+> 已合并至 `.omo/standards/mcp-tool-and-transport-standard.md`
+> 本文件保留为历史细节来源，不再作为新的 workflow 引用入口。
+
 > 本文档定义所有使用 FastMCP 框架的项目中，`@mcp.tool()` 函数的**统一返回契约**和**合规标准**。
 >
 > **适用范围**: agora, codeanalyze, iris, kronos, minerva, sophia, SharedBrain/D_Gateway 及其他所有 FastMCP server。
@@ -218,7 +222,7 @@ return _error(f"Internal error: {traceback.format_exc()}")
 
 ## 六、参考模板
 
-每个项目应包含自己的 `tools_template.py`，基于 [codeanalyze 模板](../codeanalyze/src/codeanalyze/tools_template.py) 定制：
+每个项目应包含自己的 `tools_template.py`，基于 [codeanalyze 模板](../../projects/agentmesh/packages/gateway/src/hermes/routes.ts) 定制：
 
 ```
 codeanalyze/src/codeanalyze/tools_template.py   # 通用参考

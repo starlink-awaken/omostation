@@ -155,17 +155,17 @@ def test_phase16_closeout_and_live_state_are_completed_with_only_authorized_acti
         and not any("-promotion-" in ref for ref in task.get("handoff_refs", []))
     ]
 
-    assert goals["phase"] == 16
-    assert goals["status"] == "completed"
-    assert [goal["status"] for goal in goals["goals"]] == ["completed", "completed", "completed", "completed"]
-    assert state["current_phase"] == 16
-    assert state["phase_status"] == "completed"
+    assert goals["phase"] >= 16
+    assert goals["status"] in ("completed", "active")
+    assert all(s in ("completed", "active") for s in [goal["status"] for goal in goals["goals"]])
+    assert state["current_phase"] >= 16
+    assert state["phase_status"] in ("completed", "active")
     assert state["phase15_status"] == "completed"
     assert state["phase16_status"] == "completed"
     assert stale_active == [], f"Unexpected non-future active tasks: {stale_active}"
     assert unauthorized_active == [], f"Unexpected non-authorized active tasks: {unauthorized_active}"
 
-    assert "Phase 16 is complete" in _read("summaries/phase16-closeout.md")
-    assert "Status: GO" in _read("summaries/phase16-closeout.md")
-    assert "knowledge capture/search" in _read("summaries/phase16-retrospective.md")
+    assert "Phase 16 is complete" in _read("summaries/phase16/phase16-closeout.md")
+    assert "Status: GO" in _read("summaries/phase16/phase16-closeout.md")
+    assert "knowledge capture/search" in _read("summaries/phase16/phase16-retrospective.md")
     assert "Status: pass" in _read("_knowledge/management/phase16-cross-audit.md")

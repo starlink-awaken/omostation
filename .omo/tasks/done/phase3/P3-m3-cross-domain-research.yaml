@@ -1,0 +1,31 @@
+id: P3-M3-CROSS-DOMAIN-RESEARCH
+phase: 3
+milestone: M3.2
+priority: P0
+title: Cross-domain research engine
+status: done
+assigned_to: copilot-cli
+dispatch_id: manual-phase3-capability-track
+run_ref: .omo/summaries/p3-capability-track-retrospective.md
+approval_ref: null
+review_ref: .omo/summaries/p3-capability-track-retrospective.md
+knowledge_refs:
+  - projects/kairon/packages/minerva/src/minerva/mcp_server/server.py
+handoff_refs: []
+blocked_by: null
+source_docs:
+  - .omo/plans/archive/phase2-phase3-task-manifest.md
+  - .omo/plans/archive/phase3-task-specs-v2.md
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+entry_gate:
+  - Phase 3 foundation complete
+evidence_required:
+  - tool exposes cross_domain_research
+  - requested domains preserve order
+  - missing domains are surfaced as gap
+test_plan:
+  - PYTHONPATH=packages/minerva/src python3 -m pytest packages/minerva/tests/unit/test_mcp_server.py -q --tb=short
+completed_at: '2026-05-30T22:35:00Z'
+completion_summary: "Minerva now returns cross-domain synthesis packets with explicit gap reporting."

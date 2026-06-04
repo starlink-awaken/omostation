@@ -1,0 +1,9 @@
+id: P15-W3-PROPOSAL-TO-TASK
+phase: 15
+status: done
+title: Proposal-to-task dry-run compiler
+evidence_refs:
+  - .omo/evidence/phase15/proposal-to-task-dry-run.yaml
+  - .omo/tasks/drafts/P15-DRAFT-LEDGER-FIRST.yaml
+  - .omo/tasks/drafts/P15-DRAFT-USER-VALUE-LIVE-DEMO.yaml
+verification: compiler creates inactive drafts only and zero active tasks

@@ -1,0 +1,20 @@
+id: P0-FIX-C1-C6-AUDIT
+phase: 2
+milestone: M2.6
+priority: P0
+title: 'Fix C1-C6 critical audit findings: RCE, auth bypass, hardcoded keys, NameError'
+status: done
+completed_at: "2026-05-30T22:30:00+08:00"
+assigned_to: reasonix-code
+dispatch_id: null
+run_ref: null
+approval_ref: required://human-approval-before-execution
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- .omo/tasks/active/
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: true
+started_at: '2026-05-30T22:00:00+08:00'

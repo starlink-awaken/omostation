@@ -1,0 +1,35 @@
+id: SB_DECOMPOSITION
+title: SharedBrain decomposition remains partially governed
+dimension: architecture
+subdimension: platform_decomposition
+domain: workspace
+scope: cross_project
+severity: critical
+weight: 0.2
+entropy_class: coupling
+lifecycle_state: closed
+owner: sharedbrain-governance
+affected_roots:
+  - projects/SharedBrain
+  - projects/kairon
+  - .omo/tasks/active
+evidence_refs:
+  - .omo/tasks/active/SHAREDBRAIN-FORMAL-DECISION.yaml
+  - .omo/_knowledge/design/debt-cleanup-plan.md
+mitigation_refs:
+  - .omo/_knowledge/design/debt-cleanup-plan.md
+  - .omo/plans/phase17-wave1-sharedbrain-decomposition-plan.md
+opened_at: "2026-06-01T10:30:00Z"
+last_reviewed_at: "2026-06-03T00:00:00Z"
+next_review_at: null
+gate_level: none
+history:
+  - at: "2026-06-03T00:00:00Z"
+    action: close
+    note: "All 19 D_ organs extracted to kairon packages. sharedbrain-core library (protocols, neural center, circuits) completed. lifecycle_state corrected from 'resolved' to 'closed' for sync script compatibility."
+  - at: "2026-06-03T00:00:00Z"
+    action: resolve
+    note: "All 19 D_ organs archived to _archived/organs/. Code extracted to kairon packages (30 packages). sharedbrain-core library (protocols, neural center, circuits) completed. SharedBrain README and AGENTS.md updated to reflect post-decomposition architecture."
+  - at: "2026-06-02T00:00:00Z"
+    action: register
+    note: Seeded from existing SharedBrain governance packet.

@@ -1,0 +1,32 @@
+id: phase15-policy-test-report
+created_at: '2026-06-04T02:27:52Z'
+phase: 15
+status: pass
+policy_test_pass_rate: 1.0
+live_mutations_applied: 0
+draft_activation_leak_count: 0
+checks:
+- id: no-live-ssot-promotion-without-envelope
+  result: pass
+  would_block: true
+  evidence_ref: .omo/_truth/governance-evidence/ledger.yaml
+- id: one-active-packet
+  result: pass
+  would_block: true
+  evidence_ref: .omo/tasks/active/
+- id: no-hidden-deferred-scope
+  result: pass
+  would_block: true
+  evidence_ref: .omo/plans/archive/phase14-deferred-ecosystem-backlog.md
+- id: mutation-proposal-requires-rollback
+  result: pass
+  would_block: true
+  evidence_ref: .omo/evidence/phase13/bottleneck-proposals.yaml
+- id: drafts-never-enter-active
+  result: pass
+  would_block: true
+  evidence_ref: .omo/tasks/drafts/
+- id: user-value-evidence-required
+  result: pass
+  would_block: true
+  evidence_ref: .omo/evidence/phase15/user-value-loop.yaml

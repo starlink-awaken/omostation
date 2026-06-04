@@ -1,0 +1,58 @@
+id: P11-W3-USER-MVP
+phase: 11
+milestone: W3
+priority: P0
+title: Execute the Phase 11 user layer MVP packet
+status: done
+assigned_to: worker-1
+dispatch_id: phase11-wave3-user-mvp
+run_ref: .omo/workers/runs/phase11-wave3-user-mvp-dispatch.yaml
+approval_ref: null
+review_ref: .omo/summaries/phase11-wave3-closeout.md
+knowledge_refs:
+  - .omo/plans/archive/phase11-program-plan.md
+  - .omo/plans/archive/phase11-wave3-execution-plan.md
+  - .omo/summaries/phase11-wave2-closeout.md
+  - .omo/summaries/phase11-wave3-closeout.md
+handoff_refs:
+  - .omo/workers/runs/phase11-wave3-user-mvp-prompt.md
+  - .omo/workers/runs/phase11-wave3-user-mvp-checkpoint.md
+  - .omo/workers/runs/phase11-wave3-user-mvp-reclaim.md
+source_docs:
+  - .omo/plans/archive/phase11-program-plan.md
+  - .omo/plans/archive/phase11-wave3-execution-plan.md
+  - .omo/summaries/phase11-wave2-closeout.md
+  - .omo/summaries/phase11-wave3-closeout.md
+deliverables:
+  - .omo/plans/archive/phase11-wave3-execution-plan.md
+  - .omo/summaries/phase11-wave3-closeout.md
+  - .omo/summaries/phase11-wave3-scenario-assessment.md
+  - .omo/workers/runs/phase11-wave3-user-mvp-dispatch.yaml
+  - .omo/workers/runs/phase11-wave3-user-mvp-prompt.md
+  - .omo/workers/runs/phase11-wave3-user-mvp-review.md
+  - .omo/workers/runs/phase11-wave3-user-mvp-checkpoint.md
+  - .omo/workers/runs/phase11-wave3-user-mvp-reclaim.md
+  - .omo/tests/test_phase11_wave3_docs.py
+depends_on:
+  - P11-W2-CORE-DEBT
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 11 Wave 2 closeout exists at .omo/summaries/phase11-wave2-closeout.md
+  - goals/current.yaml promoted G11.3 as the only active wave goal during execution
+  - only one active packet remained in .omo/tasks/active/ during Wave 3
+evidence_required:
+  - Wave 3 was the only active packet in .omo/tasks/active/ during execution
+  - goals/current.yaml and state/system.yaml reported Phase 11 Wave 3 as active during execution
+  - user layer MVP work used the Wave 2 closeout as input
+test_plan:
+  - python3 scripts/sync_omo_state.py
+  - python3 scripts/omo_worker.py task validate --all-active
+  - python3 -m pytest .omo/tests/test_phase11_wave2_docs.py .omo/tests/test_phase11_wave3_docs.py -q
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-05-31T15:39:16Z'
+completed_at: '2026-06-01T01:20:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary: Wave 3 closed by landing the user-layer MVP baseline across data index, search, health, notifications, dashboard, structured identity, and the blocked-scenario assessment.

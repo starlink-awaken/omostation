@@ -1,0 +1,8 @@
+id: P16-W3-CAPTURE-SEARCH-WALKTHROUGH
+phase: 16
+status: done
+title: Fixture-backed capture/search walkthrough
+evidence_refs:
+  - .omo/evidence/phase16/capture-search-walkthrough.yaml
+  - .omo/evidence/phase16/recovery-report.yaml
+verification: user-visible capture receipt, search hit, result summary, evidence refs, and status are present

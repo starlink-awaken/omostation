@@ -1,0 +1,39 @@
+id: M2.5-AGENT-SANDBOX-DESIGN-AND-STUB
+phase: 2
+milestone: M2.5
+priority: P1
+title: "Agent sandbox design + stub — isolation framework for untrusted agents"
+status: done
+completed_at: "2026-05-30T19:30:00Z"
+evidence:
+  - "agent_sandbox.py 升级：完整状态机 pending→probation→active|rejected|blocked"
+  - "新增 finalize(), block(), can_launch_docker() 方法"
+  - "63 个测试覆盖：Register(6), StartProbation(4), Evaluate(5), Report(6), Finalize(7), Block(4), Docker(8), StatusMachine(7), ProbationPeriod(3), MCPTools(3), EdgeCases(8), IntegrationLifecycle(3)"
+  - "63/63 全部通过，无回归"
+owner: kos
+assigned_to: null
+risk_level: L2
+allowed_operation_level: L0  # design only
+human_approval_required: false
+source_docs:
+  - ".omo/plans/deep-architecture-agent-analysis.md"
+depends_on: []
+dependencies: []
+inputs:
+  - "projects/kairon/packages/kos/src/kos/"
+outputs:
+  - "projects/kairon/packages/kos/src/kos/agent_sandbox.py"
+acceptance_criteria:
+  - "Sandbox status model: pending/active/rejected/blocked"
+  - "7-day probation period enforced"
+  - "Evaluation report generated for human review"
+  - "Docker execution default blocked (requires human approval)"
+  - "No real container launched by this implementation"
+evidence_required:
+  - "agent_sandbox.py with stub implementation"
+  - "Sandbox state machine documented"
+  - "Tests for state transitions"
+test_plan:
+  - "unit: sandbox status transitions"
+  - "unit: evaluation report generation"
+  - "integration: docker launch blocked (stub only)"

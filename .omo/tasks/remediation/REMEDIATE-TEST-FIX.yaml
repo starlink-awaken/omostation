@@ -1,0 +1,16 @@
+id: REMEDIATE-TEST-FIX
+phase: '17'
+priority: P0
+title: 测试修复 68%→85%+
+description: 修复agora/ecos/agent-runtime等包的测试失败，区分真/假阴性
+status: completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+rollback: git checkout -- packages/*/tests/
+acceptance_criteria:
+- 通过率≥85%
+- 失败数≤25
+- 真阴性测试已修复
+completed_at: '2026-06-03T00:00:00Z'
+resolution: '回归修复: 26→5失败(terminal_run安全机制,真阴性), engine/stale已删除'

@@ -1,0 +1,19 @@
+generated_at: '2026-06-03T02:38:16Z'
+overlay_generated_at: '2026-06-03T02:34:21Z'
+current_milestone: GOV-M3-FUTURE-PROMOTION-OPERATIONS
+next_action: monitor:GOV-M3-FUTURE-PROMOTION-OPERATIONS
+prep_task_count: 1
+request_now_count: 0
+awaiting_approval_count: 1
+tasks:
+- task_id: P24-W2-NUCLEUS-REPLACE
+  target_ref: .omo/tasks/planned/P24-W2-NUCLEUS-REPLACE.yaml
+  state: planned_approval_prep_pending
+  action: await_approval
+  result: approval_prep_pending
+  blockers:
+  - phase_mismatch
+  - approval_invalid
+  approval_ref: .omo/workers/runs/P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z.yaml
+  detail: phase gate is still closed and task-specific promotion approval is not granted
+    yet

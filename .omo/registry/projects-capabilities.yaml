@@ -1,0 +1,1089 @@
+capabilities:
+- id: kairon.agent-runtime
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/agent-runtime
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: agent-runtime'
+    version: local
+    tags:
+    - kairon
+    - package
+    - agent-runtime
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/agent-runtime
+- id: kairon.agora
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/agora
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: agora'
+    version: local
+    tags:
+    - kairon
+    - package
+    - agora
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/agora
+- id: kairon.codeanalyze
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/codeanalyze
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: codeanalyze'
+    version: local
+    tags:
+    - kairon
+    - package
+    - codeanalyze
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/codeanalyze
+- id: kairon.core-models
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/core-models
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: core-models'
+    version: local
+    tags:
+    - kairon
+    - package
+    - core-models
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/core-models
+- id: kairon.cron-service
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/cron-service
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: cron-service'
+    version: local
+    tags:
+    - kairon
+    - package
+    - cron-service
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/cron-service
+- id: kairon.ecos
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/ecos
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: ecos'
+    version: local
+    tags:
+    - kairon
+    - package
+    - ecos
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/ecos
+- id: kairon.eidos
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/eidos
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: eidos'
+    version: local
+    tags:
+    - kairon
+    - package
+    - eidos
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/eidos
+- id: kairon.eu-pricing
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/eu-pricing
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: eu-pricing'
+    version: local
+    tags:
+    - kairon
+    - package
+    - eu-pricing
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/eu-pricing
+- id: kairon.forge
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/forge
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: forge'
+    version: local
+    tags:
+    - kairon
+    - package
+    - forge
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/forge
+- id: kairon.iris
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/iris
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: iris'
+    version: local
+    tags:
+    - kairon
+    - package
+    - iris
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/iris
+- id: kairon.kos
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/kos
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: kos'
+    version: local
+    tags:
+    - kairon
+    - package
+    - kos
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/kos
+- id: kairon.kronos
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/kronos
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: kronos'
+    version: local
+    tags:
+    - kairon
+    - package
+    - kronos
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/kronos
+- id: kairon.metaos
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/metaos
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: metaos'
+    version: local
+    tags:
+    - kairon
+    - package
+    - metaos
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/metaos
+- id: kairon.minerva
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/minerva
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: minerva'
+    version: local
+    tags:
+    - kairon
+    - package
+    - minerva
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/minerva
+- id: kairon.ontoderive
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/ontoderive
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: ontoderive'
+    version: local
+    tags:
+    - kairon
+    - package
+    - ontoderive
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/ontoderive
+- id: kairon.shared-lib
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/shared-lib
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: shared-lib'
+    version: local
+    tags:
+    - kairon
+    - package
+    - shared-lib
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/shared-lib
+- id: kairon.sharedbrain-bridge
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/sharedbrain-bridge
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: sharedbrain-bridge'
+    version: local
+    tags:
+    - kairon
+    - package
+    - sharedbrain-bridge
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/sharedbrain-bridge
+- id: kairon.sophia
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/sophia
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: sophia'
+    version: local
+    tags:
+    - kairon
+    - package
+    - sophia
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/sophia
+- id: kairon.ssot
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/ssot
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: ssot'
+    version: local
+    tags:
+    - kairon
+    - package
+    - ssot
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/ssot
+- id: kairon.wksp
+  type: package
+  protocol: local
+  entrypoint: projects/kairon/packages/wksp
+  lifecycle: active
+  metadata:
+    description: 'Kairon package capability: wksp'
+    version: local
+    tags:
+    - kairon
+    - package
+    - wksp
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/kairon/packages/wksp
+- id: project.agentmesh
+  type: capability
+  protocol: local
+  entrypoint: projects/agentmesh
+  lifecycle: active
+  metadata:
+    description: 'Workspace project capability: agentmesh'
+    version: local
+    tags:
+    - project
+    - agentmesh
+    scenario_tags:
+    - workspace-governance
+    source: projects/agentmesh
+- id: agentmesh.Plans
+  type: capability
+  protocol: local
+  entrypoint: projects/agentmesh/Plans
+  lifecycle: active
+  metadata:
+    description: 'agentmesh component capability: Plans'
+    version: local
+    tags:
+    - agentmesh
+    - component
+    - plans
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/agentmesh/Plans
+- id: agentmesh.--e2e--
+  type: capability
+  protocol: local
+  entrypoint: projects/agentmesh/__e2e__
+  lifecycle: active
+  metadata:
+    description: 'agentmesh component capability: __e2e__'
+    version: local
+    tags:
+    - agentmesh
+    - component
+    - __e2e__
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/agentmesh/__e2e__
+- id: agentmesh.apps
+  type: capability
+  protocol: local
+  entrypoint: projects/agentmesh/apps
+  lifecycle: active
+  metadata:
+    description: 'agentmesh component capability: apps'
+    version: local
+    tags:
+    - agentmesh
+    - component
+    - apps
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/agentmesh/apps
+- id: agentmesh.beads-data
+  type: capability
+  protocol: local
+  entrypoint: projects/agentmesh/beads-data
+  lifecycle: active
+  metadata:
+    description: 'agentmesh component capability: beads-data'
+    version: local
+    tags:
+    - agentmesh
+    - component
+    - beads-data
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/agentmesh/beads-data
+- id: agentmesh.bin
+  type: capability
+  protocol: local
+  entrypoint: projects/agentmesh/bin
+  lifecycle: active
+  metadata:
+    description: 'agentmesh component capability: bin'
+    version: local
+    tags:
+    - agentmesh
+    - component
+    - bin
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/agentmesh/bin
+- id: agentmesh.config
+  type: capability
+  protocol: local
+  entrypoint: projects/agentmesh/config
+  lifecycle: active
+  metadata:
+    description: 'agentmesh component capability: config'
+    version: local
+    tags:
+    - agentmesh
+    - component
+    - config
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/agentmesh/config
+- id: agentmesh.data
+  type: capability
+  protocol: local
+  entrypoint: projects/agentmesh/data
+  lifecycle: active
+  metadata:
+    description: 'agentmesh component capability: data'
+    version: local
+    tags:
+    - agentmesh
+    - component
+    - data
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/agentmesh/data
+- id: agentmesh.dist
+  type: capability
+  protocol: local
+  entrypoint: projects/agentmesh/dist
+  lifecycle: active
+  metadata:
+    description: 'agentmesh component capability: dist'
+    version: local
+    tags:
+    - agentmesh
+    - component
+    - dist
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/agentmesh/dist
+- id: agentmesh.docs
+  type: capability
+  protocol: local
+  entrypoint: projects/agentmesh/docs
+  lifecycle: active
+  metadata:
+    description: 'agentmesh component capability: docs'
+    version: local
+    tags:
+    - agentmesh
+    - component
+    - docs
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/agentmesh/docs
+- id: agentmesh.graphify-out
+  type: capability
+  protocol: local
+  entrypoint: projects/agentmesh/graphify-out
+  lifecycle: active
+  metadata:
+    description: 'agentmesh component capability: graphify-out'
+    version: local
+    tags:
+    - agentmesh
+    - component
+    - graphify-out
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/agentmesh/graphify-out
+- id: agentmesh.logs
+  type: capability
+  protocol: local
+  entrypoint: projects/agentmesh/logs
+  lifecycle: active
+  metadata:
+    description: 'agentmesh component capability: logs'
+    version: local
+    tags:
+    - agentmesh
+    - component
+    - logs
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/agentmesh/logs
+- id: agentmesh.node-modules
+  type: capability
+  protocol: local
+  entrypoint: projects/agentmesh/node_modules
+  lifecycle: active
+  metadata:
+    description: 'agentmesh component capability: node_modules'
+    version: local
+    tags:
+    - agentmesh
+    - component
+    - node_modules
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/agentmesh/node_modules
+- id: project.gbrain
+  type: capability
+  protocol: local
+  entrypoint: projects/gbrain
+  lifecycle: active
+  metadata:
+    description: 'Workspace project capability: gbrain'
+    version: local
+    tags:
+    - project
+    - gbrain
+    scenario_tags:
+    - workspace-governance
+    source: projects/gbrain
+- id: gbrain.admin
+  type: capability
+  protocol: local
+  entrypoint: projects/gbrain/admin
+  lifecycle: active
+  metadata:
+    description: 'gbrain component capability: admin'
+    version: local
+    tags:
+    - gbrain
+    - component
+    - admin
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/gbrain/admin
+- id: gbrain.docs
+  type: capability
+  protocol: local
+  entrypoint: projects/gbrain/docs
+  lifecycle: active
+  metadata:
+    description: 'gbrain component capability: docs'
+    version: local
+    tags:
+    - gbrain
+    - component
+    - docs
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/gbrain/docs
+- id: gbrain.evals
+  type: capability
+  protocol: local
+  entrypoint: projects/gbrain/evals
+  lifecycle: active
+  metadata:
+    description: 'gbrain component capability: evals'
+    version: local
+    tags:
+    - gbrain
+    - component
+    - evals
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/gbrain/evals
+- id: gbrain.examples
+  type: capability
+  protocol: local
+  entrypoint: projects/gbrain/examples
+  lifecycle: active
+  metadata:
+    description: 'gbrain component capability: examples'
+    version: local
+    tags:
+    - gbrain
+    - component
+    - examples
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/gbrain/examples
+- id: gbrain.node-modules
+  type: capability
+  protocol: local
+  entrypoint: projects/gbrain/node_modules
+  lifecycle: active
+  metadata:
+    description: 'gbrain component capability: node_modules'
+    version: local
+    tags:
+    - gbrain
+    - component
+    - node_modules
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/gbrain/node_modules
+- id: gbrain.recipes
+  type: capability
+  protocol: local
+  entrypoint: projects/gbrain/recipes
+  lifecycle: active
+  metadata:
+    description: 'gbrain component capability: recipes'
+    version: local
+    tags:
+    - gbrain
+    - component
+    - recipes
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/gbrain/recipes
+- id: gbrain.scripts
+  type: capability
+  protocol: local
+  entrypoint: projects/gbrain/scripts
+  lifecycle: active
+  metadata:
+    description: 'gbrain component capability: scripts'
+    version: local
+    tags:
+    - gbrain
+    - component
+    - scripts
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/gbrain/scripts
+- id: gbrain.skills
+  type: capability
+  protocol: local
+  entrypoint: projects/gbrain/skills
+  lifecycle: active
+  metadata:
+    description: 'gbrain component capability: skills'
+    version: local
+    tags:
+    - gbrain
+    - component
+    - skills
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/gbrain/skills
+- id: gbrain.src
+  type: capability
+  protocol: local
+  entrypoint: projects/gbrain/src
+  lifecycle: active
+  metadata:
+    description: 'gbrain component capability: src'
+    version: local
+    tags:
+    - gbrain
+    - component
+    - src
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/gbrain/src
+- id: gbrain.templates
+  type: capability
+  protocol: local
+  entrypoint: projects/gbrain/templates
+  lifecycle: active
+  metadata:
+    description: 'gbrain component capability: templates'
+    version: local
+    tags:
+    - gbrain
+    - component
+    - templates
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/gbrain/templates
+- id: gbrain.test
+  type: capability
+  protocol: local
+  entrypoint: projects/gbrain/test
+  lifecycle: active
+  metadata:
+    description: 'gbrain component capability: test'
+    version: local
+    tags:
+    - gbrain
+    - component
+    - test
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/gbrain/test
+- id: gbrain.tests
+  type: capability
+  protocol: local
+  entrypoint: projects/gbrain/tests
+  lifecycle: active
+  metadata:
+    description: 'gbrain component capability: tests'
+    version: local
+    tags:
+    - gbrain
+    - component
+    - tests
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/gbrain/tests
+- id: project.SharedBrain
+  type: capability
+  protocol: local
+  entrypoint: projects/SharedBrain
+  lifecycle: active
+  metadata:
+    description: 'Workspace project capability: SharedBrain'
+    version: local
+    tags:
+    - project
+    - sharedbrain
+    scenario_tags:
+    - workspace-governance
+    source: projects/SharedBrain
+- id: sharedbrain.Plans
+  type: capability
+  protocol: local
+  entrypoint: projects/SharedBrain/Plans
+  lifecycle: active
+  metadata:
+    description: 'SharedBrain component capability: Plans'
+    version: local
+    tags:
+    - sharedbrain
+    - component
+    - plans
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/SharedBrain/Plans
+- id: sharedbrain.-archived
+  type: capability
+  protocol: local
+  entrypoint: projects/SharedBrain/_archived
+  lifecycle: active
+  metadata:
+    description: 'SharedBrain component capability: _archived'
+    version: local
+    tags:
+    - sharedbrain
+    - component
+    - _archived
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/SharedBrain/_archived
+- id: sharedbrain.analysis
+  type: capability
+  protocol: local
+  entrypoint: projects/SharedBrain/analysis
+  lifecycle: active
+  metadata:
+    description: 'SharedBrain component capability: analysis'
+    version: local
+    tags:
+    - sharedbrain
+    - component
+    - analysis
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/SharedBrain/analysis
+- id: sharedbrain.bin
+  type: capability
+  protocol: local
+  entrypoint: projects/SharedBrain/bin
+  lifecycle: active
+  metadata:
+    description: 'SharedBrain component capability: bin'
+    version: local
+    tags:
+    - sharedbrain
+    - component
+    - bin
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/SharedBrain/bin
+- id: sharedbrain.conductor
+  type: capability
+  protocol: local
+  entrypoint: projects/SharedBrain/conductor
+  lifecycle: active
+  metadata:
+    description: 'SharedBrain component capability: conductor'
+    version: local
+    tags:
+    - sharedbrain
+    - component
+    - conductor
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/SharedBrain/conductor
+- id: sharedbrain.config
+  type: capability
+  protocol: local
+  entrypoint: projects/SharedBrain/config
+  lifecycle: active
+  metadata:
+    description: 'SharedBrain component capability: config'
+    version: local
+    tags:
+    - sharedbrain
+    - component
+    - config
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/SharedBrain/config
+- id: sharedbrain.data
+  type: capability
+  protocol: local
+  entrypoint: projects/SharedBrain/data
+  lifecycle: active
+  metadata:
+    description: 'SharedBrain component capability: data'
+    version: local
+    tags:
+    - sharedbrain
+    - component
+    - data
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/SharedBrain/data
+- id: sharedbrain.demos
+  type: capability
+  protocol: local
+  entrypoint: projects/SharedBrain/demos
+  lifecycle: active
+  metadata:
+    description: 'SharedBrain component capability: demos'
+    version: local
+    tags:
+    - sharedbrain
+    - component
+    - demos
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/SharedBrain/demos
+- id: sharedbrain.deployment
+  type: capability
+  protocol: local
+  entrypoint: projects/SharedBrain/deployment
+  lifecycle: active
+  metadata:
+    description: 'SharedBrain component capability: deployment'
+    version: local
+    tags:
+    - sharedbrain
+    - component
+    - deployment
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/SharedBrain/deployment
+- id: sharedbrain.docs
+  type: capability
+  protocol: local
+  entrypoint: projects/SharedBrain/docs
+  lifecycle: active
+  metadata:
+    description: 'SharedBrain component capability: docs'
+    version: local
+    tags:
+    - sharedbrain
+    - component
+    - docs
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/SharedBrain/docs
+- id: sharedbrain.forge-mcp
+  type: capability
+  protocol: local
+  entrypoint: projects/SharedBrain/forge-mcp
+  lifecycle: active
+  metadata:
+    description: 'SharedBrain component capability: forge-mcp'
+    version: local
+    tags:
+    - sharedbrain
+    - component
+    - forge-mcp
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/SharedBrain/forge-mcp
+- id: sharedbrain.frontend
+  type: capability
+  protocol: local
+  entrypoint: projects/SharedBrain/frontend
+  lifecycle: active
+  metadata:
+    description: 'SharedBrain component capability: frontend'
+    version: local
+    tags:
+    - sharedbrain
+    - component
+    - frontend
+    scenario_tags:
+    - research-pipeline
+    - workspace-governance
+    source: projects/SharedBrain/frontend
+- id: cli.omo
+  type: cli
+  protocol: cli
+  entrypoint: scripts/omo
+  lifecycle: active
+  metadata:
+    description: 'OMO CLI/script capability: omo'
+    version: local
+    tags:
+    - omo
+    - cli
+    - omo
+    scenario_tags:
+    - workspace-governance
+    source: scripts/omo
+- id: cli.omo-worker
+  type: cli
+  protocol: cli
+  entrypoint: scripts/omo_worker.py
+  lifecycle: active
+  metadata:
+    description: 'OMO CLI/script capability: omo_worker.py'
+    version: local
+    tags:
+    - omo
+    - cli
+    - omo_worker
+    scenario_tags:
+    - workspace-governance
+    source: scripts/omo_worker.py
+- id: cli.omo-governance
+  type: cli
+  protocol: cli
+  entrypoint: scripts/omo_governance.py
+  lifecycle: active
+  metadata:
+    description: 'OMO CLI/script capability: omo_governance.py'
+    version: local
+    tags:
+    - omo
+    - cli
+    - omo_governance
+    scenario_tags:
+    - workspace-governance
+    source: scripts/omo_governance.py
+- id: cli.omo-discovery
+  type: cli
+  protocol: cli
+  entrypoint: scripts/omo_discovery.py
+  lifecycle: active
+  metadata:
+    description: 'OMO CLI/script capability: omo_discovery.py'
+    version: local
+    tags:
+    - omo
+    - cli
+    - omo_discovery
+    scenario_tags:
+    - workspace-governance
+    source: scripts/omo_discovery.py
+- id: cli.omo-skill
+  type: cli
+  protocol: cli
+  entrypoint: scripts/omo_skill.py
+  lifecycle: active
+  metadata:
+    description: 'OMO CLI/script capability: omo_skill.py'
+    version: local
+    tags:
+    - omo
+    - cli
+    - omo_skill
+    scenario_tags:
+    - workspace-governance
+    source: scripts/omo_skill.py
+- id: cli.sync-omo-state
+  type: cli
+  protocol: cli
+  entrypoint: scripts/sync_omo_state.py
+  lifecycle: active
+  metadata:
+    description: 'OMO CLI/script capability: sync_omo_state.py'
+    version: local
+    tags:
+    - omo
+    - cli
+    - sync_omo_state
+    scenario_tags:
+    - workspace-governance
+    source: scripts/sync_omo_state.py
+- id: cli.check-system-consistency
+  type: cli
+  protocol: cli
+  entrypoint: scripts/check-system-consistency.sh
+  lifecycle: active
+  metadata:
+    description: 'OMO CLI/script capability: check-system-consistency.sh'
+    version: local
+    tags:
+    - omo
+    - cli
+    - check-system-consistency
+    scenario_tags:
+    - workspace-governance
+    source: scripts/check-system-consistency.sh
+- id: cli.daily-backup
+  type: cli
+  protocol: cli
+  entrypoint: scripts/daily-backup.sh
+  lifecycle: active
+  metadata:
+    description: 'OMO CLI/script capability: daily-backup.sh'
+    version: local
+    tags:
+    - omo
+    - cli
+    - daily-backup
+    scenario_tags:
+    - workspace-governance
+    source: scripts/daily-backup.sh
+- id: cli.restore-from-backup
+  type: cli
+  protocol: cli
+  entrypoint: scripts/restore-from-backup.sh
+  lifecycle: active
+  metadata:
+    description: 'OMO CLI/script capability: restore-from-backup.sh'
+    version: local
+    tags:
+    - omo
+    - cli
+    - restore-from-backup
+    scenario_tags:
+    - workspace-governance
+    source: scripts/restore-from-backup.sh
+- id: cli.cost-track-org
+  type: cli
+  protocol: cli
+  entrypoint: scripts/cost_track_org.py
+  lifecycle: active
+  metadata:
+    description: 'OMO CLI/script capability: cost_track_org.py'
+    version: local
+    tags:
+    - omo
+    - cli
+    - cost_track_org
+    scenario_tags:
+    - workspace-governance
+    source: scripts/cost_track_org.py

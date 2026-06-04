@@ -1,0 +1,37 @@
+id: phase13-readonly-metacognition-baseline
+created_at: '2026-06-01T06:10:12Z'
+mode: read-only
+auto_apply: disabled
+capability_count: 79
+coverage:
+  by_type:
+    package: 20
+    capability: 39
+    cli: 10
+    connector: 10
+  by_lifecycle:
+    active: 69
+    external: 10
+  scenario_trace_status: ready
+  scenario_trace_steps: 4
+  package_mutations: 0
+blind_spots:
+- id: bs-live-mutation-disabled
+  description: Live mutation is intentionally disabled; Phase 13 can only propose
+    changes.
+  severity: controlled
+  evidence_ref: .omo/_knowledge/design/phase12-14-architecture-design.md
+- id: bs-external-connectors-unabsorbed
+  description: External connectors remain Phase 14 backlog candidates.
+  severity: medium
+  evidence_ref: .omo/plans/archive/phase14-deferred-ecosystem-backlog.md
+- id: bs-single-scenario
+  description: Only one scenario trace is proven; additional scenarios require future
+    approval.
+  severity: medium
+  evidence_ref: .omo/evidence/phase12/research-pipeline-trace.yaml
+confidence:
+  registry: 0.92
+  scenario_trace: 0.9
+  package_dry_run: 0.88
+  mutation_safety: 0.95

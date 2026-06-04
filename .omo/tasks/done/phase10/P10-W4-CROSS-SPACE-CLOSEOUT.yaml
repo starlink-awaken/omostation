@@ -1,0 +1,51 @@
+id: P10-W4-CROSS-SPACE-CLOSEOUT
+phase: 10
+milestone: W4
+priority: P0
+title: Close Phase 10 with cross-space bundle reuse
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase10-wave4-cross-space-closeout
+run_ref: .omo/workers/runs/phase10-wave4-cross-space-closeout-dispatch.yaml
+approval_ref: .omo/workers/runs/phase9-wave3-identity-admission-approval.yaml
+review_ref: .omo/workers/runs/phase10-wave4-cross-space-closeout-review.md
+knowledge_refs:
+  - .omo/plans/archive/phase10-program-plan.md
+  - .omo/plans/archive/phase10-wave4-execution-plan.md
+handoff_refs:
+  - .omo/workers/runs/phase10-wave4-cross-space-closeout-envelope.yaml
+  - .omo/workers/runs/phase10-wave4-cross-space-closeout-prompt.md
+  - .omo/workers/runs/phase10-wave4-cross-space-closeout-checkpoint.md
+source_docs:
+  - .omo/plans/archive/phase10-wave4-execution-plan.md
+  - .omo/summaries/phase10-wave4-closeout.md
+deliverables:
+  - spaces/runtime-space.yaml
+  - spaces/runtime-space-cross-root-rule-registry.yaml
+  - data/runtime-space-access-policy.yaml
+  - .omo/workers/runs/phase10-wave4-cross-space-closeout-envelope.yaml
+  - .omo/_delivery/task-center/contracts/runtime-space-runtime-observe-delivery-contract.yaml
+  - .omo/_delivery/task-center/contracts/runtime-mutate-delivery-contract.yaml
+  - .omo/summaries/phase10-wave4-closeout.md
+  - .omo/summaries/phase10-closeout-retrospective.md
+depends_on:
+  - P10-W3-ACTION-FIRST-MATRIX
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Wave 3 action-first matrix is green
+  - generic normalized bundle resolver is already active
+evidence_required:
+  - runtime-space resolves a live normalized bundle
+  - runtime.mutate reuses the same normalized bundle surface
+  - Phase 10 is recorded as completed with no active packet
+test_plan:
+  - python3 scripts/omo_worker.py worker rules-eval .omo/workers/runs/phase10-wave4-cross-space-closeout-envelope.yaml
+  - python3 scripts/omo_worker.py worker rules-eval .omo/workers/runs/phase10-wave4-runtime-mutate-envelope.yaml
+  - python3 scripts/omo_worker.py task validate --all-active
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-05-31T21:47:00Z'
+completed_at: '2026-05-31T22:05:00Z'
+blocked_by: null
+retry_count: 0

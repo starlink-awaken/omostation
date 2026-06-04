@@ -1,0 +1,61 @@
+id: M2.FULL-KOS-REINDEX-CONFIRMATION
+phase: 2
+milestone: M2.FULL-GO
+priority: P0
+title: "Confirm and execute KOS reindex baseline"
+status: done
+owner: human
+assigned_to: agent:copilot
+source_docs:
+  - ".omo/standards/phase2-full-execution-go-no-go.md"
+  - ".omo/plans/kos-repair-plan.md"
+inputs:
+  - ".omo/plans/kos-repair-plan.md"
+  - "KOS source documents and local index store"
+outputs:
+  - "Before/after KOS indexed document count"
+  - "10 known documents retrieval check"
+  - "Reindex audit note or summary"
+acceptance_criteria:
+  - "Human explicitly approves L2 reindex execution"
+  - "Reindex completes without data loss"
+  - "10 known docs are 10/10 retrievable"
+  - "Baseline count is recorded for future health checks"
+evidence_required:
+  - "Command or tool invocation used for reindex"
+  - "Before/after document counts"
+  - "10/10 retrieval proof"
+evidence:
+  approval: "User input: 批准，执行吧"
+  backup: "Moved previous local index to kos/backups/kos-index.sqlite.bak.20260530133226 before rebuild"
+  pre_reindex_status: "retrieval.status=not available; documents=0; no previous DB existed before first approved rebuild attempt"
+  l2_denial_probe: "{'status': 'denied', 'error': 'L2 operation requires explicit confirmation before full KOS reindex', 'operation_level': 'L2', 'required_confirmation': True}"
+  command: "cd projects/kairon/packages/kos && PYTHONPATH=src:src/kos python3 - <<'PY' ... mcp.tool_run_indexer(incremental=False, background=False, confirmed=True)"
+  final_reindex_result: "returncode=0; mode=full; zones=[workspace_root, omo, kairon, agentmesh, gbrain, sharedbrain]; stats={added: 7327, updated: 0, skipped: 1, removed: 0, errors: 0}"
+  final_retrieval_status: "active"
+  final_index_path: "/Users/xiamingxing/Workspace/kos/kos-index.sqlite"
+  final_documents: 7327
+  final_by_zone:
+    workspace_root: 8
+    omo: 179
+    kairon: 1886
+    agentmesh: 38
+    gbrain: 506
+    sharedbrain: 4710
+  retrieval_proof: "10/10 expected known documents matched: phase1-retrospective, MCP_STANDARDS, SharedBrain, agora/server/mcp.py, src/kos/indexer/engine.py, eidos/mcp_server.py, LAYER-INDEX, memu-engine, litellm.ts, sharedbrain-bridge"
+  hardening:
+    - "KOS MCP full rebuild requires confirmed=True for L2 execution"
+    - "KOS MCP subprocess now passes absolute PYTHONPATH"
+    - "KOS indexer now honors manifest filePatterns"
+    - "KOS indexer skips broken symlinks instead of recording processing errors"
+dependencies:
+  - M2.1-KOS-REPAIR-PLAN
+risk_level: L2
+allowed_operation_level: L2
+operation_level: L2
+human_approval_required: true
+test_plan:
+  - ".omo/tests/README.md#kos-baseline-tests"
+started_at: "2026-05-30T05:17:00Z"
+completed_at: "2026-05-30T13:39:30Z"
+retry_count: 0

@@ -1,0 +1,15 @@
+id: REMEDIATE-AGENTMESH-ARCHIVE
+phase: '17'
+priority: P0
+title: agentmesh TS源码归档
+description: 将476个TS文件从agentmesh项目归档到_archived/agentmesh/
+status: completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+rollback: mv projects/_archived/agentmesh/* projects/agentmesh/
+acceptance_criteria:
+- agentmesh核心代码已移动
+- README指向_archived
+- 无活动引用
+completed_at: '2026-06-03T00:00:00Z'

@@ -1,0 +1,17 @@
+rules:
+  orphaned_tasks:
+    severity: medium
+    owner: truth
+    disposition: must_fix
+  missing_goal_tasks:
+    severity: medium
+    owner: control
+    disposition: must_fix
+  active_task_missing_run_ref:
+    severity: high
+    owner: truth
+    disposition: must_fix
+  active_task_missing_review_ref:
+    severity: high
+    owner: delivery
+    disposition: must_fix

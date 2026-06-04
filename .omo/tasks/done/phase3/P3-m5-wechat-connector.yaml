@@ -1,0 +1,30 @@
+id: P3-M5-WECHAT-CONNECTOR
+phase: 3
+milestone: M3.2
+priority: P1
+title: WeChat connector export-stub
+status: done
+assigned_to: copilot-cli
+dispatch_id: manual-phase3-capability-track
+run_ref: .omo/summaries/p3-capability-track-retrospective.md
+approval_ref: null
+review_ref: .omo/summaries/p3-capability-track-retrospective.md
+knowledge_refs:
+  - projects/kairon/packages/iris/src/iris/connectors/wechat/connector.py
+handoff_refs: []
+blocked_by: M2.6-wechat-smb-media-deferred-specs
+source_docs:
+  - .omo/plans/archive/phase2-phase3-task-manifest.md
+  - .omo/plans/archive/phase3-task-specs-v2.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - export-stub only; no native contact scraping
+evidence_required:
+  - BaseConnector contract is satisfied
+  - txt export import/search/status/list_contacts works
+test_plan:
+  - PYTHONPATH=packages/iris/src python3 -m pytest packages/iris/tests/test_new_connectors.py -q --tb=short -k WeChatConnector
+completed_at: '2026-05-30T22:35:00Z'
+completion_summary: "Iris now exposes a safe WeChat export-stub connector without crossing the native-API privacy gate."

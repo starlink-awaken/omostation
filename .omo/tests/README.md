@@ -24,7 +24,7 @@
 1. `plans/README.md` 的 EXECUTION/REFERENCE 状态与 `goals/current.yaml` 一致。
 2. `goals/current.yaml` 的 phase 与 `state/system.yaml.current_phase` 一致，除非 `state/system.yaml.phase_status = limited_go` 并说明原因。
 3. 每个 active goal 至少有一个 `.omo/tasks/active/*.yaml`。
-4. `TASK_POOL.md` 不再是唯一任务源。
+4. `_archive/TASK_POOL.md` 不再是唯一任务源。
 5. Phase 关闭证据必须存在于 `goals/history/` 或 `summaries/`。
 6. `state/system.yaml.divergence_detail_refs` 必须把 orphaned / stale / dangling debt 收敛到结构化 artifact，而不是仅保留计数。
 7. `state/system.yaml.promotion_blockers` 必须能解释为什么某个 active task 还不能被推进。

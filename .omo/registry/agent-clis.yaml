@@ -1,0 +1,16 @@
+clis:
+- name: omo
+  entrypoint: scripts/omo
+  description: Workspace CLI entrypoint for omo
+- name: sync-omo-state
+  entrypoint: scripts/sync-omo-state.sh
+  description: Workspace CLI entrypoint for sync-omo-state
+- name: kos
+  entrypoint: kos-infra/kos
+  description: Workspace CLI entrypoint for kos
+- name: kos-cli
+  entrypoint: projects/kairon/packages/kos/kos-cli.py
+  description: Workspace CLI entrypoint for kos-cli
+- name: kairon-cli
+  entrypoint: projects/kairon/packages/kos/kairon-cli.py
+  description: Workspace CLI entrypoint for kairon-cli

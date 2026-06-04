@@ -1,0 +1,114 @@
+version: 1
+status: active
+policy_owner: governance
+default_worker_role: worker
+default_allowed_operation_level: L1
+coordinator_owns_phase_promotion: true
+coordinator_owns_global_state_sync: true
+sensitive_capabilities_default: blocked
+
+defaults:
+  transport_preference:
+    - cli_prompt
+    - acp_stdio
+  knowledge_policy:
+    require_task_envelope: true
+    require_prompt_contract: true
+    require_evidence_summary: true
+    require_reusable_outputs: true
+  lease_policy:
+    heartbeat_interval_seconds: 300
+    warning_after_seconds: 900
+    lease_expired_after_seconds: 1200
+    reclaim_after_seconds: 1800
+  stall_policy:
+    read_budget: 5
+    require_partial_output_when_stuck: true
+    auto_requeue_on_lease_expired: true
+  permission_policy:
+    max_operation_level_without_human_approval: L1
+    allow_l2_prepare_only: true
+    allow_l3_prepare_only: false
+    forbid_global_state_writes: true
+    forbid_sensitive_capability_execution: true
+
+workers:
+  - id: codebuddy
+    enabled: true
+    role: worker
+    class: external_agent_cli
+    transports:
+      cli_prompt:
+        command: 'codebuddy -y -p "{prompt}"'
+      acp_stdio:
+        command: "codebuddy --acp --acp-transport stdio"
+      acp_streamable_http:
+        command: "codebuddy --acp --acp-transport streamable-http"
+    strengths:
+      - implementation
+      - multi_step_execution
+      - review_followup
+      - resumable_sessions
+    capabilities:
+      - code_change
+      - test_execution
+      - verification
+      - structured_followup
+    allowed_operation_level: L1
+    may_prepare_levels:
+      - L2
+    forbidden_domains:
+      - apple
+      - wechat
+      - smb
+      - family
+      - media
+    write_scope:
+      mode: task_declared_only
+      forbidden_paths:
+        - ".omo/state/system.yaml"
+        - ".omo/goals/current.yaml"
+        - "convergence.yaml"
+    lease_policy:
+      heartbeat_interval_seconds: 300
+      warning_after_seconds: 900
+      lease_expired_after_seconds: 1200
+      reclaim_after_seconds: 1800
+
+  - id: reasonix
+    enabled: true
+    role: worker
+    class: external_agent_cli
+    transports:
+      cli_prompt:
+        command: 'reasonix run "{prompt}"'
+      acp_stdio:
+        command: "reasonix acp"
+    strengths:
+      - focused_execution
+      - diagnostics
+      - code_mode
+    capabilities:
+      - code_change
+      - verification
+      - diagnosis
+    allowed_operation_level: L1
+    may_prepare_levels:
+      - L2
+    forbidden_domains:
+      - apple
+      - wechat
+      - smb
+      - family
+      - media
+    write_scope:
+      mode: task_declared_only
+      forbidden_paths:
+        - ".omo/state/system.yaml"
+        - ".omo/goals/current.yaml"
+        - "convergence.yaml"
+    lease_policy:
+      heartbeat_interval_seconds: 300
+      warning_after_seconds: 900
+      lease_expired_after_seconds: 1200
+      reclaim_after_seconds: 1800

@@ -1,0 +1,31 @@
+id: SB_BRIDGE_FIX
+title: sharedbrain-bridge remains disconnected from the live platform
+dimension: architecture
+subdimension: integration_bridge
+domain: projects
+scope: cross_project
+severity: medium
+weight: 0.1
+entropy_class: coupling
+lifecycle_state: closed
+owner: sharedbrain-governance
+affected_roots:
+  - projects/kairon
+  - projects/SharedBrain
+evidence_refs:
+  - .omo/_knowledge/design/sharedbrain-decomposition-architecture.md
+  - .omo/_knowledge/design/debt-cleanup-plan.md
+mitigation_refs:
+  - .omo/tasks/active/SHAREDBRAIN-FORMAL-DECISION.yaml
+  - .omo/plans/phase17-wave1-sharedbrain-decomposition-plan.md
+opened_at: "2026-06-01T10:30:00Z"
+last_reviewed_at: "2026-06-02T00:00:00Z"
+next_review_at: "2026-06-08T00:00:00Z"
+gate_level: none
+history:
+  - at: "2026-06-02T00:00:00Z"
+    action: register
+    note: Seeded from the legacy bridge-fix debt weight entry and kept pointer-based.
+  - at: "2026-06-03T04:30:00Z"
+    action: close
+    note: SharedBrain已归档到_archived/，bridge自然失效。gbrain_client.py可复用，其余代码在归档中可查阅

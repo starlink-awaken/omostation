@@ -1,0 +1,40 @@
+id: P5-W0-LANDING-MODEL-FREEZE
+phase: 5
+milestone: W0
+priority: P0
+title: Freeze Task Center landing model across truth and delivery planes
+status: done
+assigned_to: codebuddy
+dispatch_id: p5-w0-landing-model-freeze-codebuddy-20260531-005204
+run_ref: .omo/workers/runs/p5-w0-landing-model-freeze-codebuddy-20260531-005204-dispatch.yaml
+approval_ref: null
+review_ref: .omo/workers/runs/p5-w0-landing-model-freeze-codebuddy-20260531-005204-review.md
+knowledge_refs:
+  - .omo/_knowledge/design/phase5-program-architecture.md
+  - .omo/_knowledge/design/task-center-requirements.md
+  - .omo/plans/archive/phase5-wave0-task-specs.md
+handoff_refs:
+  - .omo/workers/runs/p5-w0-landing-model-freeze-codebuddy-20260531-005204-envelope.yaml
+  - .omo/workers/runs/p5-w0-landing-model-freeze-codebuddy-20260531-005204-prompt.md
+  - .omo/workers/runs/p5-w0-landing-model-freeze-codebuddy-20260531-005204-checkpoint.md
+source_docs:
+  - .omo/plans/archive/phase5-wave0-task-specs.md
+  - .omo/_knowledge/design/phase5-program-architecture.md
+  - .omo/_knowledge/design/task-center-requirements.md
+deliverables:
+  - .omo/_knowledge/design/phase5-task-center-landing-model.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - G5.0 active queue seeded
+evidence_required:
+  - truth and delivery ownership table is explicit
+  - no mirrored runtime snapshot is proposed outside owner planes
+test_plan:
+  - python3 -m pytest .omo/tests/test_phase5_wave0_docs.py -q --tb=short
+blocked_by: null
+started_at: '2026-05-31T00:52:04Z'
+completed_at: '2026-05-31T01:10:00Z'
+retry_count: 0
+completion_summary: "Worker-produced landing model was accepted after coordinator normalization of the Hermes boundary. The Task Center plane contract is now frozen with no mirrored runtime SSOT and no new Hermes bridge growth."

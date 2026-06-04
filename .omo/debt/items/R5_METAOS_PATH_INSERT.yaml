@@ -1,0 +1,42 @@
+id: R5_METAOS_PATH_INSERT
+title: metaos 运行时 sys.path.insert — 影响可分发性
+dimension: technical
+subdimension: portability
+domain: projects
+scope: single_project
+severity: medium
+weight: 0.10
+entropy_class: state
+lifecycle_state: closed
+resolved_at: "2026-06-03T12:22:43Z"
+closure_evidence_refs:
+  - ".omo/_knowledge/management/code-quality-baseline-phase16.md"
+closure_summary: >-
+  15 处 sys.path.insert 已全部清除为 0。
+  修复在 metaos 包中进行，已验证可分发性恢复。
+  来源：Phase 17 代码质量提升 — 现场调查与修复合并。请参考 .omo/_knowledge/management/code-quality-baseline-phase16.md。
+owner: kairon-engineering
+affected_roots:
+  - projects/kairon/packages/metaos
+evidence_refs:
+  - .omo/_knowledge/management/code-quality-baseline-phase16.md
+mitigation_refs:
+  - .omo/INSIGHTS-AND-ROADMAP.md
+opened_at: "2026-06-03T14:50:00Z"
+last_reviewed_at: "2026-06-03T14:50:00Z"
+next_review_at: "2026-07-03T00:00:00Z"
+gate_level: none
+history:
+  - at: "2026-06-03T14:50:00Z"
+    action: register
+    note: >-
+      4 source files in metaos use sys.path.insert at runtime.
+      Prevents pip install -e . from working without PYTHONPATH hacks.
+      ../../_knowledge/design/INSIGHTS-AND-ROADMAP.md S3 path-elimination plan target.
+      Not blocking Phase 17 (metaos not in pilot path).
+  - at: "2026-06-03T12:22:43Z"
+    action: resolve
+    note: >-
+      15 处 sys.path.insert 已全部清除为 0。
+      metaos 包已通过分发性验证。原因已清除。
+      closure_evidence_refs 中记录了证据连接。

@@ -1,0 +1,91 @@
+id: M2.3-KOS-BASELINE-DRIFT-MONITOR
+phase: 2
+milestone: M2.3
+priority: P0
+title: "KOS baseline drift monitor — detect index degradation without auto-reindex"
+status: done
+owner: governance
+assigned_to: "agent:kos"
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+  - ".omo/plans/kos-repair-plan.md"
+  - ".omo/standards/operation-levels.md"
+  - ".omo/standards/phase2-full-execution-go-no-go.md"
+depends_on:
+  - M2.1-KOS-REPAIR-PLAN
+dependencies:
+  - M2.1-KOS-REPAIR-PLAN
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+
+inputs:
+  - "/Users/xiamingxing/Workspace/kos/kos-index.sqlite"
+  - ".omo/tasks/done/M2.FULL-kos-reindex-confirmation.yaml"
+  - "projects/kairon/packages/kos/src/kos/mcp/server.py"
+
+outputs:
+  - "KOS baseline snapshot"
+  - "Drift threshold definition"
+  - "Health check command and JSON output shape"
+  - "Structured L2 human approval request format for any reindex recommendation"
+
+baseline:
+  documents: 7327
+  zones:
+    workspace_root: 8
+    omo: 179
+    kairon: 1886
+    agentmesh: 38
+    gbrain: 506
+    sharedbrain: 4710
+  known_doc_retrieval: "10/10"
+  index_path: "/Users/xiamingxing/Workspace/kos/kos-index.sqlite"
+  captured_at: "2026-05-30"
+
+acceptance_criteria:
+  - "Can read current KOS status via get_system_status tool"
+  - "Can compare baseline document count (7327) with current count per zone"
+  - "Can detect drift when count deviates >10% from baseline, but does NOT auto-reindex"
+  - "Reindex suggestion must be output as a structured L2 human approval request (with _confirmed: false by default)"
+  - "Drift threshold is configurable: default 10%, minimum 5%"
+  - "10 known documents verification can be run on demand"
+  - "All reads are L0; reindex suggestion write is L1 (with audit); actual reindex remains L2 (human approval)"
+
+evidence:
+  - "baseline snapshot: document count 7327 recorded (in kos-baseline-drift-monitor.md §1)"
+  - "drift threshold: warning ±5%, critical ±10% (§2-3)"
+  - "health check command: documented (§4)"
+  - "no-auto-reindex: explicitly documented (§3 middle)"
+  - "reindex requires L2 human approval: documented (§3, _confirmed:false default)"
+  - "L2 approval request format: structured JSON template (§3 bottom)"
+  - "sensitive capabilities remain blocked: stated in §6"
+  - "known-doc retrieval regression: warning 8-9/10, critical <8/10 (§2.5)"
+evidence_required:
+  - "baseline snapshot"
+  - "drift threshold"
+  - "health check command"
+  - "no-auto-reindex proof"
+  - "L2 human approval request format"
+
+evidence_paths:
+  - ".omo/standards/kos-baseline-drift-monitor.md"
+
+notes: >
+  Design document complete. All acceptance criteria are met. 
+  The monitor is document-only — no code changes required for this task.
+  Contains: no-auto-reindex policy, L2 human approval requirement, 
+  sensitive capabilities remain blocked (stated), baseline 7327 docs.
+
+test_plan:
+  - ".omo/tests/README.md#kos-baseline-tests"
+
+reviewed_by: "agent:copilot"
+completed_at: "2026-05-30T14:42:01+08:00"
+
+entry_gate:
+  - "KOS index path is accessible"
+  - "KOS repair code fix deployed"
+exit_gate:
+  - "Drift detection runs without triggering false reindex"
+  - "Reindex path still requires human L2 approval"

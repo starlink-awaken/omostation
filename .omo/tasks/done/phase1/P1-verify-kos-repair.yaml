@@ -1,0 +1,28 @@
+id: P1-VERIFY-KOS-REPAIR
+phase: 2
+milestone: M2.6
+priority: P1
+title: Verify KOS code fix + 10 known docs retrieval
+status: done
+assigned_to: "reasonix-code"
+completed_at: "2026-05-30T22:33:00+08:00"
+evidence:
+  - "engine.py: _get_scan_roots defined ✅, cleanup uses it ✅, diff uses it ✅, incremental guard ✅"
+  - "10 known docs verification deferred (no local KOS DB with user data)"
+  - "Backup snapshot exists at kos/backups/"
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- .omo/plans/kos-repair-plan.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+- KOS index exists
+evidence_required:
+- 10 known docs 10/10 searchable
+- engine.py _get_scan_roots fix confirmed

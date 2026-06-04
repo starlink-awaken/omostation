@@ -1,0 +1,45 @@
+id: HIGH-AUDIT-FIXES-BUNDLE
+phase: 2
+milestone: M2.8-AUDIT-FIX
+priority: P1
+title: Fix all HIGH severity audit findings (H1-H12)
+status: done
+assigned_to: codebuddy
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+owner: workspace
+risk_level: L1
+allowed_operation_level: L0
+human_approval_required: false
+source_docs:
+- .omo/audits/phase2-comprehensive-audit-20260530.md
+inputs:
+- projects/kairon/packages/minerva/src/minerva/pipeline/immune_audit.py
+- projects/kairon/packages/minerva/src/minerva/search/bfs_search.py
+- projects/kairon/packages/forge/src/forge/http_api.py
+- projects/kairon/packages/kos/src/kos/mcp/server.py
+- projects/kairon/packages/kos/src/kos/push_engine.py
+- projects/kairon/packages/kos/src/kos/pattern_learner.py
+acceptance_criteria:
+- 'H1: immune_audit async blocking fixed (aiohttp/httpx.AsyncClient)'
+- 'H2: bfs_search hardcoded threshold uses self.prune_threshold'
+- 'H3: Forge HTTP API auth enabled by default + CORS whitelist'
+- 'H4: full_sync tool has L2 level check'
+- 'H5: metaos plaintext token → encrypted + permission 600'
+- 'H6: Agent Runtime auth default disabled (covered by C6)'
+- 'H7: tools.py http_get/http_post has URL whitelist'
+- 'H8: push_engine no shell string injection'
+- 'H9: pattern_learner no shell string injection'
+- 'H10: convergence.yaml reference fixed'
+- 'H11: dependency name M2.2-AGENT-REGISTRY-heartbeat-cache → HEARTBEAT'
+- 'H12: agent-runtime absorption task created + basic tests written'
+evidence_required:
+- git diff for each fix
+- pytest passes on affected packages
+test_plan:
+- 'unit: all affected modules'
+started_at: '2026-05-30T21:42:00+08:00'

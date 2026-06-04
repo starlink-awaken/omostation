@@ -1,0 +1,24 @@
+id: phase9-wave3-identity-admission-approval-proposal
+title: Grant conditional approval for project.dispatch
+operation_level: L2
+requested_by: copilot-cli
+target:
+  ref: .omo/workers/runs/phase9-wave3-identity-admission-approval.yaml
+changes:
+  set:
+    approval_status: granted
+change_summary: Grant project.dispatch for system-governor-membership
+impact: Releases a conditional approval request into the governance chain.
+verification_plan:
+- python3 scripts/omo_worker.py worker admission-eval .omo/workers/runs/phase9-wave3-identity-admission-envelope.yaml
+rollback_plan:
+- Set .omo/workers/runs/phase9-wave3-identity-admission-approval.yaml approval_status
+  back to requested if approval must be withdrawn.
+secret_refs: []
+trace_id: trace-phase9-wave3-identity-admission-approval
+status: verified
+requested_at: '2026-05-31T12:35:00Z'
+approved_at: '2026-05-31T12:36:00Z'
+applied_at: '2026-05-31T12:36:30Z'
+verified_at: '2026-05-31T12:36:30Z'
+approved_by: copilot-cli

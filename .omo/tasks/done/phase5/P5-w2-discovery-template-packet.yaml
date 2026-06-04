@@ -1,0 +1,36 @@
+id: P5-W2-DISCOVERY-TEMPLATE-PACKET
+phase: 5
+milestone: W2
+priority: P0
+title: Freeze the discovery and template packet
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase5-wave2-packet
+run_ref: .omo/plans/archive/phase5-wave2-execution-plan.md
+approval_ref: null
+review_ref: .omo/summaries/phase5-wave2-retrospective.md
+knowledge_refs:
+  - .omo/_knowledge/design/task-center-requirements.md
+  - .omo/_knowledge/design/phase5-task-center-landing-model.md
+  - .omo/plans/archive/phase5-wave0-task-specs.md
+handoff_refs: []
+source_docs:
+  - .omo/plans/archive/phase5-program-plan.md
+  - .omo/_knowledge/design/phase5-program-architecture.md
+deliverables:
+  - .omo/plans/archive/phase5-wave2-execution-plan.md
+  - .omo/summaries/phase5-wave2-retrospective.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - G5.1 completed
+evidence_required:
+  - single-source metadata rule is explicit
+  - plan/spec/task packet template is explicit
+test_plan:
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-05-31T11:50:00Z'
+completed_at: '2026-05-31T12:00:00Z'
+retry_count: 0
+completion_summary: "Wave 2 closed as a discovery/template packet that formalizes single-source metadata and packet templating rules without creating new shadow SSOTs."

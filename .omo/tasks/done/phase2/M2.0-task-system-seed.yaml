@@ -1,0 +1,31 @@
+id: M2.0-TASK-SYSTEM-SEED
+phase: 2
+milestone: M2.0
+priority: P0
+title: "Seed machine-readable task SSOT for Phase 2 gates"
+status: done
+assigned_to: "reasonix-code"
+started_at: "2026-05-30T01:43:00+08:00"
+completed_at: "2026-05-30T01:44:00+08:00"
+evidence:
+  - "M2.0-M2.2 P0 tasks exist as YAML: 6 files in .omo/tasks/active/"
+  - "TASK_POOL.md: marked as legacy mirror (line 3)"
+  - "plans/README.md: references .omo/tasks/active/*.yaml as sole executable source (line 12, 23)"
+source_docs:
+  - ".omo/tasks/README.md"
+  - ".omo/standards/planning-blueprint-delivery-test-standard.md"
+depends_on:
+  - M2.0-PHASE1-GOVERNANCE-CLOSE
+risk_level: L0
+operation_level: L1
+human_approval_required: false
+entry_gate:
+  - ".omo/tasks/active exists"
+evidence_required:
+  - "M2.0-M2.2 P0 tasks exist as YAML"
+  - "TASK_POOL.md marked legacy or migration mirror"
+  - "plans/README.md points agents to task YAML for execution state"
+test_plan:
+  - ".omo/tests/README.md#task-schema-tests"
+exit_gate:
+  - "No P0/P1 work is tracked only in prose"

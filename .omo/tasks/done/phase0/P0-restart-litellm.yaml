@@ -1,0 +1,21 @@
+id: P0-RESTART-LITELLM
+phase: 2
+milestone: M2.6
+priority: P0
+title: "Restart LiteLLM container and verify LLM routing health"
+status: done
+completed_at: "2026-05-30T03:30:30+08:00"
+assigned_to: "reasonix-code"
+source_docs: []
+depends_on: []
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+entry_gate:
+  - "Docker daemon running"
+evidence_required:
+  - "docker ps shows litellm running"
+  - "curl localhost:4000/health returns 200"
+test_plan:
+  - "manual: curl http://localhost:4000/health"
+started_at: "2026-05-30T03:10:00+08:00"

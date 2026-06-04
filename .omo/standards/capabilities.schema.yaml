@@ -1,0 +1,62 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: OMO capability record
+type: object
+required:
+  - id
+  - type
+  - protocol
+  - entrypoint
+  - lifecycle
+  - metadata
+properties:
+  id:
+    type: string
+    minLength: 1
+  type:
+    enum:
+      - capability
+      - skill
+      - tool
+      - plugin
+      - connector
+      - cli
+      - package
+  protocol:
+    enum:
+      - cli
+      - mcp
+      - api
+      - local
+      - file
+      - doc
+  entrypoint:
+    type: string
+    minLength: 1
+  lifecycle:
+    enum:
+      - active
+      - experimental
+      - deprecated
+      - external
+  metadata:
+    type: object
+    required:
+      - description
+      - tags
+      - scenario_tags
+    properties:
+      description:
+        type: string
+        minLength: 1
+      version:
+        type: string
+      tags:
+        type: array
+        items:
+          type: string
+      scenario_tags:
+        type: array
+        items:
+          type: string
+      source:
+        type: string

@@ -1,0 +1,34 @@
+id: P14-W1-INTEGRATION-TRIAGE
+phase: 14
+milestone: W1
+priority: P0
+title: Integration backlog triage
+status: done
+assigned_to: codex
+dispatch_id: phase14-wave1-integration-triage
+run_ref: .omo/summaries/phase14-closeout.md
+approval_ref: user-request-2026-06-01-start-complete-phase14
+review_ref: .omo/_knowledge/management/phase14-cross-audit.md
+source_docs:
+  - .omo/plans/archive/phase14-program-plan.md
+  - .omo/plans/archive/phase14-deferred-ecosystem-backlog.md
+deliverables:
+  - .omo/evidence/phase14/integration-triage.yaml
+depends_on:
+  - P13-W4-SELF-HEALING-REHEARSAL
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 13 closeout GO
+evidence_required:
+  - deferred backlog ranked
+test_plan:
+  - python3 -m pytest .omo/tests/test_phase14_execution.py -q
+started_at: '2026-06-01T06:00:00Z'
+completed_at: '2026-06-01T06:10:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary:
+  result: completed
+  closeout_ref: .omo/summaries/phase14-closeout.md

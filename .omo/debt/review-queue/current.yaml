@@ -1,0 +1,137 @@
+generated_at: '2026-06-03T01:47:00Z'
+defaults:
+  review_window_days: 7
+  escalation_threshold_days: 3
+due_now: []
+upcoming:
+- id: SB_BRIDGE_FIX
+  title: sharedbrain-bridge remains disconnected from the live platform
+  owner: sharedbrain-governance
+  severity: medium
+  dimension: architecture
+  subdimension: integration_bridge
+  lifecycle_state: classified
+  gate_level: none
+  next_review_at: '2026-06-08T00:00:00Z'
+  last_reviewed_at: '2026-06-02T00:00:00Z'
+  stale_evidence: true
+  overdue_by: 0
+  affected_roots:
+  - projects/kairon
+  - projects/SharedBrain
+  priority_reason: upcoming
+- id: SB_ORPHANED_TASKS
+  title: orphaned task semantics can still drift away from the debt ledger
+  owner: omo-governance
+  severity: medium
+  dimension: governance_process
+  subdimension: ssot_semantics
+  lifecycle_state: classified
+  gate_level: none
+  next_review_at: '2026-06-08T00:00:00Z'
+  last_reviewed_at: null
+  stale_evidence: true
+  overdue_by: 0
+  affected_roots:
+  - .omo/state
+  - .omo/tasks
+  priority_reason: upcoming
+- id: SB_PROJECTS_YAML
+  title: PROJECTS registry metadata for SharedBrain remains stale
+  owner: omo-governance
+  severity: low
+  dimension: governance_process
+  subdimension: registry_freshness
+  lifecycle_state: classified
+  gate_level: none
+  next_review_at: '2026-06-08T00:00:00Z'
+  last_reviewed_at: '2026-06-02T00:00:00Z'
+  stale_evidence: true
+  overdue_by: 0
+  affected_roots:
+  - .omo/PROJECTS.yaml
+  - .omo/_truth
+  priority_reason: upcoming
+- id: SB_UNTESTED_PKGS
+  title: kairon SharedBrain-adjacent packages still lack minimum test baselines
+  owner: sharedbrain-governance
+  severity: high
+  dimension: code_test
+  subdimension: baseline_coverage
+  lifecycle_state: scheduled
+  gate_level: watchlist
+  next_review_at: '2026-06-09T00:00:00Z'
+  last_reviewed_at: '2026-06-02T00:00:00Z'
+  stale_evidence: true
+  overdue_by: 0
+  affected_roots:
+  - projects/kairon
+  - .omo/tasks/active
+  priority_reason: upcoming
+- id: SB_PHASE17_PLAN
+  title: Phase 17 SharedBrain execution planning still needs debt-ledger tracking
+  owner: omo-governance
+  severity: low
+  dimension: governance_process
+  subdimension: planning_readiness
+  lifecycle_state: mitigated
+  gate_level: none
+  next_review_at: '2026-06-09T00:00:00Z'
+  last_reviewed_at: '2026-06-02T00:00:00Z'
+  stale_evidence: true
+  overdue_by: 0
+  affected_roots:
+  - .omo/tasks/active
+  - .omo/plans
+  priority_reason: upcoming
+escalation_candidates: []
+unscheduled:
+- id: SB_DECOMPOSITION
+  title: SharedBrain decomposition remains partially governed
+  owner: sharedbrain-governance
+  severity: critical
+  dimension: architecture
+  subdimension: platform_decomposition
+  lifecycle_state: resolved
+  gate_level: none
+  next_review_at: null
+  last_reviewed_at: '2026-06-03T00:00:00Z'
+  stale_evidence: false
+  overdue_by: 0
+  affected_roots:
+  - projects/SharedBrain
+  - projects/kairon
+  - .omo/tasks/active
+  priority_reason: upcoming
+- id: SB_ROOT_CLEANUP
+  title: Root SharedBrain shell cleanup remains deferred
+  owner: sharedbrain-governance
+  severity: low
+  dimension: architecture
+  subdimension: residual_surface
+  lifecycle_state: resolved
+  gate_level: none
+  next_review_at: null
+  last_reviewed_at: '2026-06-03T00:00:00Z'
+  stale_evidence: false
+  overdue_by: 0
+  affected_roots:
+  - projects/SharedBrain
+  - .omo/tasks/active
+  priority_reason: upcoming
+summary:
+  due_now_count: 0
+  upcoming_count: 5
+  escalation_candidate_count: 0
+  unscheduled_count: 2
+  by_severity:
+    critical: 1
+    high: 1
+    medium: 2
+    low: 3
+  by_gate_level:
+    watchlist: 1
+    none: 6
+  by_owner:
+    omo-governance: 3
+    sharedbrain-governance: 4

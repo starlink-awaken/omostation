@@ -1,0 +1,30 @@
+id: C2-FIX-WPSNOTE-HARDCODED-KEY
+phase: 2
+milestone: M2.8-AUDIT-FIX
+priority: P0
+title: Fix wpsnote.py hardcoded production API key (C2)
+status: done
+assigned_to: codebuddy
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+owner: iris
+risk_level: L2
+allowed_operation_level: L0
+human_approval_required: false
+source_docs:
+- .omo/audits/phase2-comprehensive-audit-20260530.md
+inputs:
+- projects/kairon/packages/iris/src/iris/connectors/wpsnote.py
+acceptance_criteria:
+- API key moved from source code to environment variable
+- Fallback behavior documented (e.g., None or error message)
+evidence_required:
+- git diff showing hardcoded key removal
+- package imports os.getenv for WPSNOTE_API_KEY
+test_plan:
+- 'unit: test with env var set and unset'
+started_at: '2026-05-30T21:42:00+08:00'

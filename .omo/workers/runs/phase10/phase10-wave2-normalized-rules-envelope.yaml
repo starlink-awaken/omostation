@@ -1,0 +1,31 @@
+version: 1
+task_id: P10-W2-NORMALIZED-RULE-BUNDLE
+worker_id: copilot-cli
+transport_mode: cli_prompt
+run_ref: .omo/workers/runs/phase10-wave2-normalized-rules-dispatch.yaml
+knowledge_refs:
+  - .omo/summaries/phase9-closeout-retrospective.md
+  - .omo/plans/phase10-wave2-execution-plan.md
+handoff_refs:
+  - .omo/workers/runs/phase10-wave2-normalized-rules-prompt.md
+  - .omo/workers/runs/phase10-wave2-normalized-rules-checkpoint.md
+  - .omo/workers/runs/phase10-wave2-normalized-rules-review.md
+  - .omo/workers/runs/phase10-wave2-normalized-rules-reclaim.md
+objective: Normalize the live project.dispatch bundle into typed contracts
+task_yaml: .omo/tasks/active/P10-W2-NORMALIZED-RULE-BUNDLE.yaml
+inputs:
+  source_docs:
+    - .omo/summaries/phase9-closeout-retrospective.md
+    - .omo/plans/phase10-wave2-execution-plan.md
+  required_context:
+    - .omo/tasks/active/P10-W2-NORMALIZED-RULE-BUNDLE.yaml
+    - .omo/workers/runs/phase9-wave4-rollout-ops-envelope.yaml
+execution_context:
+  space_ref: spaces/system-space.yaml
+  membership_ref: system-governor-membership
+  action: project.dispatch
+rules_context:
+  registry_ref: spaces/system-space-cross-root-rule-registry.yaml
+gates:
+  approval_ref: .omo/workers/runs/phase9-wave3-identity-admission-approval.yaml
+  acceptance_ref: .omo/workers/runs/phase9-wave4-rollout-ops-acceptance.yaml

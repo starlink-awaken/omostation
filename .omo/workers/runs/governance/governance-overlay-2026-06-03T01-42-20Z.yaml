@@ -1,0 +1,23 @@
+run_id: governance-overlay-2026-06-03T01-42-20Z
+overlay_id: GOV-OVERLAY-2026-06
+actor: copilot-cli
+started_at: '2026-06-03T01:42:20Z'
+completed_at: '2026-06-03T01:42:20Z'
+mode: continue_active
+next_action_before_run: close:GOV-M1-EXECUTION-HARDENING
+roadmap_item_id: GOV-M1-EXECUTION-HARDENING
+summary: closed
+target_results:
+- target_ref: .omo/tasks/planned/D2-CI-E2E-TEST-ENV.yaml
+  task_id: D2-CI-E2E-TEST-ENV
+  state: done
+  detail: task currently exists in tasks/done/
+- target_ref: .omo/tasks/planned/D3-EU-PRICING-TEST.yaml
+  task_id: D3-EU-PRICING-TEST
+  state: done
+  detail: task currently exists in tasks/done/
+target_state_summary:
+  done: 2
+control_updates:
+  current_milestone: GOV-M2-SHAREDBRAIN-DEBT
+  next_milestone: GOV-M3-FUTURE-PROMOTION-OPERATIONS

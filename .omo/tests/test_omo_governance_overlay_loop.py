@@ -60,6 +60,7 @@ def test_plan_governance_overlay_cycle_requests_approval_for_gated_planned_task(
             "auto_promote_when_safe": True,
         },
     )
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
         tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml",
         {

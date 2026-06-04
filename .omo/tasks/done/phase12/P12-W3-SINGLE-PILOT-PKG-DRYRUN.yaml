@@ -1,0 +1,40 @@
+id: P12-W3-SINGLE-PILOT-PKG-DRYRUN
+phase: 12
+milestone: W3
+priority: P0
+title: Single fusion pilot, package dry-run, and scenario trace
+status: done
+assigned_to: codex
+dispatch_id: phase12-wave3-single-pilot-pkg-dryrun
+run_ref: .omo/summaries/phase12-closeout.md
+approval_ref: user-request-2026-06-01-complete-phase11-and-phase12
+review_ref: .omo/_knowledge/management/phase12-cross-audit.md
+source_docs:
+  - .omo/plans/archive/phase12-wave3-execution-plan.md
+deliverables:
+  - .omo/evidence/phase12/research-pipeline-trace.yaml
+  - .omo/evidence/phase12/package-dry-run.yaml
+  - .omo/registry/package-baseline.yaml
+  - .omo/standards/capability-binding-policy.md
+  - .omo/evidence/phase12/pilot-rollback.md
+  - .omo/evidence/phase12/sample-retrieval-report.md
+depends_on:
+  - P12-W2-REGISTRY-SCENARIO-PILOT-ADR
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Wave 2 scenario and pilot ADR complete
+evidence_required:
+  - research-pipeline trace ready
+  - package dry-run has zero mutations
+  - pilot rollback notes exist
+test_plan:
+  - python3 -m pytest .omo/tests/test_phase12_execution.py -q
+started_at: '2026-06-01T00:30:00Z'
+completed_at: '2026-06-01T00:40:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary:
+  closeout_ref: .omo/summaries/phase12-closeout.md
+  result: completed

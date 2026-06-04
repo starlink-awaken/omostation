@@ -1,0 +1,25 @@
+task_id: P26-W1-CONTROL-SYNC
+phase: 26
+wave: W1
+goal_ref: G26.1
+status: in_progress
+created_at: '2026-06-04T12:05:00Z'
+title: "控制面同步 — system.yaml / goals/ 与真实 Phase 对齐"
+description: >
+  Wave 1: 确保 system.yaml、goals/current.yaml、state/ 与真实 Phase 26 状态一致；
+  P17-P25 历史状态归档至 tasks/done/；所有平面 INDEX.md 引用指向最新 SSOT。
+dispatch:
+  - sync system.yaml → Phase 26, Wave 1, health 98, 所有债务 resolved
+  - 验证 goals/current.yaml 与 system.yaml 的 phase/wave 一致性
+  - 归档 P17-P25 已完成任务至 tasks/done/ (已完成)
+  - 更新 _control/governance-overlay 至 P26 W1 (已完成)
+  - 创建本任务文件 P26-W1-CONTROL-SYNC
+evidence:
+  - .omo/state/system.yaml (已更新)
+  - .omo/goals/current.yaml (已提交，Phase 26)
+  - .omo/_control/governance-overlay/current.yaml (已更新至 P26 W1)
+  - .omo/tasks/active/P26-W1-CONTROL-SYNC.yaml (本文件)
+review:
+  status: pending
+  reviewer: human
+  gate: "system.yaml phase=26, wave=W1, health>=95, 无未解决债务"

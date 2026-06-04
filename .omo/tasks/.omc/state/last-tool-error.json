@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd /Users/xiamingxing/Workspace/projects/kairon && uv run pytest packages/agent-runtime/tests/ -q --timeout=30 2>&1\",\"description\":\"Run all tests with global timeout guard\"}",
+  "error": "Exit code 4\nERROR: usage: pytest [options] [file_or_dir] [file_or_dir] [...]\npytest: error: unrecognized arguments: --timeout=30\n  inifile: /Users/xiamingxing/Workspace/projects/kairon/packages/agent-runtime/pyproject.toml\n  rootdir: /Users/xiamingxing/Workspace/projects/kairon/packages/agent-runtime",
+  "timestamp": "2026-06-03T07:10:19.027Z",
+  "retry_count": 1
+}

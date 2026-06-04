@@ -1,0 +1,33 @@
+generated_at: '2026-06-03T02:38:46Z'
+event_count: 2
+latest_run_id: governance-overlay-2026-06-03T02-34-21Z
+prior_run_id: governance-overlay-2026-06-03T01-49-00Z
+events:
+- event_id: governance-overlay-2026-06-03T02-34-21Z:P24-W2-NUCLEUS-REPLACE
+  run_id: governance-overlay-2026-06-03T02-34-21Z
+  run_ref: .omo/workers/runs/governance-overlay-2026-06-03T02-34-21Z.yaml
+  task_id: P24-W2-NUCLEUS-REPLACE
+  target_ref: .omo/tasks/planned/P24-W2-NUCLEUS-REPLACE.yaml
+  state: planned_approval_prep_pending
+  action: await_approval
+  result: approval_prep_pending
+  started_at: '2026-06-03T02:34:21Z'
+  completed_at: '2026-06-03T02:34:21Z'
+  blockers:
+  - phase_mismatch
+  - approval_invalid
+  approval_ref: null
+  proposal_ref: null
+- event_id: governance-overlay-2026-06-03T01-49-00Z:P24-W2-NUCLEUS-REPLACE
+  run_id: governance-overlay-2026-06-03T01-49-00Z
+  run_ref: .omo/workers/runs/governance-overlay-2026-06-03T01-49-00Z.yaml
+  task_id: P24-W2-NUCLEUS-REPLACE
+  target_ref: .omo/tasks/planned/P24-W2-NUCLEUS-REPLACE.yaml
+  state: null
+  action: request_approval
+  result: approval_requested
+  started_at: '2026-06-03T01:49:00Z'
+  completed_at: '2026-06-03T01:49:00Z'
+  blockers: []
+  approval_ref: .omo/workers/runs/P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z.yaml
+  proposal_ref: .omo/_truth/task-center/proposals/P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z-proposal.yaml

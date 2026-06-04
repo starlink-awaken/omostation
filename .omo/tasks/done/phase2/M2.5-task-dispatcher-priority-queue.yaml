@@ -1,0 +1,38 @@
+id: M2.5-TASK-DISPATCHER-PRIORITY-QUEUE
+phase: 2
+milestone: M2.5
+priority: P1
+title: "Task dispatcher — priority queues + QoS + preemption"
+status: done
+completed_at: "2026-05-30T20:00:00Z"
+evidence:
+  - "task_dispatcher.py 升级：修复 next() 抢占逻辑 bug（不应抢占相同或更高优先级）"
+  - "新增 check_qos() — 每个优先级等待时间监控"
+  - "新增 find_agent(capability, agents) — 按 capability 匹配 Agent 存根"
+  - "55 个测试覆盖：PriorityOrdering(10), Preemption(8), QoS(5), AgentMatch(8), Status(5), Stats(5), EdgeCases(8), MCPTools(4), Integration(4)"
+  - "55/55 全部通过，无回归"
+owner: kos
+assigned_to: null
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/plans/deep-architecture-agent-analysis.md"
+depends_on: []
+dependencies: []
+inputs:
+  - "projects/kairon/packages/kos/src/kos/"
+outputs:
+  - "projects/kairon/packages/kos/src/kos/task_dispatcher.py"
+acceptance_criteria:
+  - "Priority levels: P0-P3"
+  - "P0 preempts P2/P3 (pause lower priority)"
+  - "QoS: P0 starts within 5min, P1 within 30min"
+  - "Agent match by capability"
+  - "Status query: kos_task_status(task_id)"
+evidence_required:
+  - "task_dispatcher.py implemented"
+  - "Unit tests for preemption and priority"
+test_plan:
+  - "unit: priority queue ordering"
+  - "unit: P0 preemption of P3"
+  - "integration: agent match by capability"

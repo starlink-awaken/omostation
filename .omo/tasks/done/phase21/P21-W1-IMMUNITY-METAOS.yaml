@@ -1,0 +1,40 @@
+id: P21-W1-IMMUNITY-METAOS
+phase: 21
+milestone: M21.1
+priority: P0
+title: 'D_Immunity→metaos: RBAC+免疫+威胁检测+身份填入壳子'
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../_knowledge/design/MASTER-BLUEPRINT.md
+depends_on:
+- P17-W3-METAOS-GAP-ANALYSIS
+- P20-W4-HARNESS-DISPERSAL
+entry_gate:
+- phase20_completed
+risk_level: L3
+allowed_operation_level: L2
+human_approval_required: true
+evidence_required:
+- 'metaos/core/immune.py: RBAC引擎+行为指纹+威胁检测'
+- 'metaos/core/gate.py: 身份验证+决策门控'
+- 量子安全/联邦信任→归档
+- identity_verify.circuit定义
+- identity-neuron连接metaos
+- 'BaseMembrane: 88→0'
+acceptance_criteria:
+- metaos immune.py从壳子变为实际实现
+- 身份验证回路端到端 <50ms p99
+- 威胁检测回路端到端 <200ms
+- 测试≥70%通过率
+- 归档过度工程(量子安全/联邦/边缘)
+test_plan:
+- 填入 metaos 壳子后验证 RBAC、免疫、威胁检测与身份主链路
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'

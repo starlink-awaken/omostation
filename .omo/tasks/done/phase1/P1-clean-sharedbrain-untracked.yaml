@@ -1,0 +1,27 @@
+id: P1-CLEAN-SHAREDBRAIN-UNTRACKED
+phase: 2
+milestone: M2.6
+priority: P1
+title: Clean SharedBrain untracked files (73 untracked)
+status: done
+assigned_to: "reasonix-code"
+completed_at: "2026-05-30T22:34:00+08:00"
+evidence:
+  - ".gitignore exists and is comprehensive (247 lines)"
+  - "Untracked files are intentional governance additions (domain_registry.py, bootstrap.py, configs)"
+  - "No build artifacts or .db files in untracked"
+  - "Modified files are Phase 1/2 fixes (Dockerfile, base.txt, pyproject.toml)"
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate: []
+evidence_required:
+- Untracked file count reduced from 73
+- No build artifacts or .db files tracked

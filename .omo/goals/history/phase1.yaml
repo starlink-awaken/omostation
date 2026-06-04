@@ -1,0 +1,59 @@
+# Phase 1 目标归档
+# ⚠️ 此为历史归档 — 反映 Phase 1 关闭时的原始状态，不作为当前执行源
+# 当前执行源: .omo/goals/current.yaml | .omo/state/system.yaml | convergence.yaml
+# Phase 1 当前 gate 状态: reconciled_closed
+
+phase: 1
+status: code_complete_runtime_pending
+start_date: "2026-05-29"
+closed_at: "2026-05-30T09:38:11+08:00"
+closure_mode: closed_with_reconciled_evidence
+
+summary: >
+  Phase 1 工程交付基本完成，SharedBrain × kairon 整合、适配器、bridge、
+  Agora 注册、CI 与 smoke 测试文件均已交付。运行时 Docker/smoke 证据在
+  phase1-retrospective.md 与 phase1-verification-report.md 之间存在冲突，
+  因此归档状态采用更严格口径：code complete, runtime evidence pending。
+  
+  ⚠️ 当前 gate 状态已 reconciled_closed — 见 convergence.yaml 和 state/system.yaml。
+  此文件中 "pending" 为历史状态，不是当前 gate 阻塞条件。
+
+goals:
+  - id: G1.1
+    desc: "kairon × SharedBrain 整合完成"
+    final_status: code_complete
+    progress: 85
+    evidence:
+      - ".omo/plans/archive/phase1-verification-report.md"
+      - ".omo/summaries/phase1-retrospective.md"
+    remaining_gap: "统一 Docker/smoke/E2E 运行时证据"
+
+  - id: G1.2
+    desc: "agentmesh LiteLLM 路由就绪"
+    final_status: deferred_to_phase2
+    progress: 0
+    remaining_gap: "纳入 Phase 2 Safe Mesh / ACP gate 后再启动"
+
+  - id: G1.3
+    desc: "gbrain memU 兼容性验证"
+    final_status: evidence_conflict
+    progress: 0
+    remaining_gap: "复盘报告声称 27/27，current goal 未同步；需要证据归档"
+
+close_gates:
+  code_delivery: pass
+  runtime_verification: pending
+  governance_sync: reconciled   # 2026-05-30: convergence/state/goals 三者已对齐
+  phase2_limited_entry: allowed
+
+next_phase:
+  phase: 2
+  mode: limited_go
+  allowed_milestones:
+    - M2.0
+    - M2.1
+    - M2.2
+  blocked_until_safe_mesh:
+    - sensitive_connectors
+    - autonomous_self_healing
+    - destructive_backup_or_restore

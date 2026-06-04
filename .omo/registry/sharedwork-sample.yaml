@@ -1,0 +1,151 @@
+capabilities:
+- id: sharedwork.gitnexus
+  type: connector
+  protocol: doc
+  entrypoint: SharedWork/GitNexus
+  lifecycle: external
+  metadata:
+    description: repository intelligence and graph analysis
+    version: local
+    tags:
+    - sharedwork
+    - deferred
+    - gitnexus
+    scenario_tags:
+    - phase14-candidate
+    source: SharedWork/GitNexus
+- id: sharedwork.graphify
+  type: connector
+  protocol: doc
+  entrypoint: SharedWork/Graphify
+  lifecycle: external
+  metadata:
+    description: graph extraction and visualization
+    version: local
+    tags:
+    - sharedwork
+    - deferred
+    - graphify
+    scenario_tags:
+    - phase14-candidate
+    source: SharedWork/Graphify
+- id: sharedwork.ultrarag
+  type: connector
+  protocol: doc
+  entrypoint: SharedWork/UltraRAG
+  lifecycle: external
+  metadata:
+    description: retrieval augmented generation
+    version: local
+    tags:
+    - sharedwork
+    - deferred
+    - ultrarag
+    scenario_tags:
+    - phase14-candidate
+    source: SharedWork/UltraRAG
+- id: sharedwork.firecrawl
+  type: connector
+  protocol: doc
+  entrypoint: SharedWork/Firecrawl
+  lifecycle: external
+  metadata:
+    description: web crawling and extraction
+    version: local
+    tags:
+    - sharedwork
+    - deferred
+    - firecrawl
+    scenario_tags:
+    - phase14-candidate
+    source: SharedWork/Firecrawl
+- id: sharedwork.mineru
+  type: connector
+  protocol: doc
+  entrypoint: SharedWork/MinerU
+  lifecycle: external
+  metadata:
+    description: document parsing and mining
+    version: local
+    tags:
+    - sharedwork
+    - deferred
+    - mineru
+    scenario_tags:
+    - phase14-candidate
+    source: SharedWork/MinerU
+- id: sharedwork.agentlaboratory
+  type: connector
+  protocol: doc
+  entrypoint: SharedWork/AgentLaboratory
+  lifecycle: external
+  metadata:
+    description: agent research workflow
+    version: local
+    tags:
+    - sharedwork
+    - deferred
+    - agentlaboratory
+    scenario_tags:
+    - phase14-candidate
+    source: SharedWork/AgentLaboratory
+- id: sharedwork.nuwa_skill
+  type: connector
+  protocol: doc
+  entrypoint: SharedWork/nuwa-skill
+  lifecycle: external
+  metadata:
+    description: skill authoring and packaging
+    version: local
+    tags:
+    - sharedwork
+    - deferred
+    - nuwa-skill
+    scenario_tags:
+    - phase14-candidate
+    source: SharedWork/nuwa-skill
+- id: sharedwork.openmanus
+  type: connector
+  protocol: doc
+  entrypoint: SharedWork/OpenManus
+  lifecycle: external
+  metadata:
+    description: agent task execution reference
+    version: local
+    tags:
+    - sharedwork
+    - deferred
+    - openmanus
+    scenario_tags:
+    - phase14-candidate
+    source: SharedWork/OpenManus
+- id: sharedwork.contexthub
+  type: connector
+  protocol: doc
+  entrypoint: SharedWork/ContextHub
+  lifecycle: external
+  metadata:
+    description: context sharing reference
+    version: local
+    tags:
+    - sharedwork
+    - deferred
+    - contexthub
+    scenario_tags:
+    - phase14-candidate
+    source: SharedWork/ContextHub
+- id: sharedwork.trustgraph
+  type: connector
+  protocol: doc
+  entrypoint: SharedWork/TrustGraph
+  lifecycle: external
+  metadata:
+    description: context core and graph memory reference
+    version: local
+    tags:
+    - sharedwork
+    - deferred
+    - trustgraph
+    scenario_tags:
+    - phase14-candidate
+    source: SharedWork/TrustGraph

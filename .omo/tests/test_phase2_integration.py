@@ -2,15 +2,17 @@
 
 import sys
 import importlib
+from pathlib import Path
 
-# Set PYTHONPATH to include all project src dirs
-WORKSPACE = "/Users/xiamingxing/Workspace"
+# Auto-detect workspace root from project structure
+_WORKSPACE = Path(__file__).resolve().parents[2]  # .omo/tests/ → workspace root
+_KAIRON = _WORKSPACE / "projects" / "kairon" / "packages"
 for p in [
-    f"{WORKSPACE}/eidos/src",
-    f"{WORKSPACE}/ontoderive/engine/src",
-    f"{WORKSPACE}/minerva/src",
+    str(_KAIRON / "eidos" / "src"),
+    str(_KAIRON / "ontoderive" / "engine" / "src"),
+    str(_KAIRON / "minerva" / "src"),
 ]:
-    if p not in sys.path:
+    if p not in sys.path and Path(p).exists():
         sys.path.insert(0, p)
 
 

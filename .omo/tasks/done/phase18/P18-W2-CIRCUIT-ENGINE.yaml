@@ -1,0 +1,36 @@
+id: P18-W2-CIRCUIT-ENGINE
+phase: 18
+milestone: M18.2
+priority: P0
+title: 实现CircuitEngine — YAML回路解析+状态机执行器+SLA保障
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../_knowledge/design/MASTER-BLUEPRINT.md
+depends_on:
+- P18-W1-NEURAL-CENTER
+entry_gate:
+- phase17_completed
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- sharedbrain/circuit_engine.py 实现完成
+- .circuit文件加载和解析
+- 回路状态机执行(步骤依赖+条件+重试)
+- SLA超时检测和降级处理
+- 至少2个回路定义文件可被加载和执行
+acceptance_criteria:
+- 回路定义YAML解析 <100ms
+- 回路步骤依赖正确执行(拓扑排序)
+- 回路超时后正确降级(fire_and_forget步骤不影响主流程)
+test_plan:
+- 实现后验证 YAML 回路解析、状态机执行与 SLA 保障场景
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'

@@ -1,0 +1,36 @@
+id: P5-W0-GOAL-TASK-SEEDING
+phase: 5
+milestone: W0
+priority: P0
+title: Seed G5.0 active queue and kickoff control state
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase5-wave0-kickoff
+run_ref: .omo/plans/archive/phase5-wave0-execution-plan.md
+approval_ref: null
+review_ref: .omo/plans/archive/phase5-wave0-execution-plan.md
+knowledge_refs:
+  - .omo/plans/archive/phase5-program-plan.md
+  - .omo/plans/archive/phase5-entry-gate-checklist.md
+  - .omo/plans/archive/phase5-wave0-task-specs.md
+handoff_refs: []
+source_docs:
+  - .omo/plans/archive/phase5-program-plan.md
+  - .omo/plans/archive/phase5-entry-gate-checklist.md
+  - .omo/plans/archive/phase5-wave0-task-specs.md
+deliverables:
+  - .omo/goals/current.yaml
+  - .omo/state/system.yaml
+  - .omo/plans/archive/phase5-wave0-execution-plan.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 4 completed
+evidence_required:
+  - G5.0 active queue exists
+  - Phase 5 control state is visible from goals and state
+test_plan:
+  - python3 -m pytest .omo/tests/test_phase5_wave0_docs.py -q --tb=short
+completed_at: '2026-05-31T00:45:00Z'
+completion_summary: "Phase 5 Wave 0 kickoff packet seeded: execution plan, task specs, G5.0 goal entry, current phase state, and initial active queue are now live."

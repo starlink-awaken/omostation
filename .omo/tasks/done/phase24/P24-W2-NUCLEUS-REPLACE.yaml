@@ -1,0 +1,35 @@
+id: P24-W2-NUCLEUS-REPLACE
+phase: 24
+milestone: M24.2
+priority: P0
+title: 'Nucleus替换: 320引用→Agora事件总线+pathlib'
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z.yaml
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../_knowledge/design/MASTER-BLUEPRINT.md
+depends_on:
+- P24-W1-BASEMEMBRANE-ZERO
+entry_gate:
+- phase23_completed
+risk_level: L3
+allowed_operation_level: L2
+human_approval_required: true
+evidence_required:
+- rg 'from nucleus.'在活跃代码中返回0
+- 事件通信→wksp://events
+- 路径引用→pathlib.Path
+- BOSUri→str
+acceptance_criteria:
+- 活跃代码中0个nucleus引用
+- 事件总线通信测试通过
+- 全量编译通过
+test_plan:
+- 替换 Nucleus 引用后验证 Agora 事件总线与 pathlib 迁移闭合
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'

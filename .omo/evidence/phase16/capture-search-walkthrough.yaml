@@ -1,0 +1,43 @@
+id: phase16-capture-search-walkthrough
+created_at: '2026-06-04T02:27:52Z'
+phase: 16
+scenario_id: knowledge-capture-search
+status: completed
+mode: fixture-backed
+blocked_reason: Live gbrain local brain, API keys, and user data store were not assumed
+  during governed repo execution.
+next_live_demo_condition: Run the same scenario against an initialized local gbrain
+  PGLite brain after explicit user approval.
+sample_input:
+  text: OMO Phase16 should turn governance evidence into a user-visible knowledge
+    capture and search loop.
+  query: What should Phase16 prove for users?
+execution_path:
+- project: SharedBrain
+  action: accept intent and provide result-home semantics
+- project: gbrain
+  action: fixture capture receipt and keyword search hit
+- project: kairon
+  action: record capability binding and evidence trace
+- project: .omo
+  action: store walkthrough, recovery, and closeout evidence
+user_visible_result:
+  status: completed
+  capture_receipt: fixture://phase16/knowledge-capture-search/receipt-001
+  search_hits:
+  - id: fixture-hit-001
+    title: Phase16 knowledge capture/search proof
+    snippet: Phase16 should prove a user can capture knowledge, search it back, and
+      inspect evidence refs.
+    source: fixture-backed-gbrain-contract
+  result_summary: Phase16 proves a governed, user-visible capture/search loop before
+    broader product-surface expansion.
+capability_binding:
+  SharedBrain: runtime-home
+  gbrain: capture-search
+  kairon: governance-trace
+evidence_refs:
+- .omo/scenarios/knowledge-capture-search.yaml
+- .omo/evidence/phase16/scenario-shell.yaml
+- projects/gbrain/README.md
+- projects/SharedBrain/QUICKSTART.md

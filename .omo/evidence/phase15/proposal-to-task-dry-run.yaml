@@ -1,0 +1,13 @@
+id: phase15-proposal-to-task-dry-run
+created_at: '2026-06-04T02:27:52Z'
+phase: 15
+status: ready
+mode: inactive-draft-only
+created_active_tasks: 0
+drafts:
+- id: P15-DRAFT-LEDGER-FIRST
+  path: .omo/tasks/drafts/P15-DRAFT-LEDGER-FIRST.yaml
+  activation_allowed: false
+- id: P15-DRAFT-USER-VALUE-LIVE-DEMO
+  path: .omo/tasks/drafts/P15-DRAFT-USER-VALUE-LIVE-DEMO.yaml
+  activation_allowed: false

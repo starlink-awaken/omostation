@@ -1,0 +1,34 @@
+id: P19-W2-AGENT-HUB-CREATE
+phase: 19
+milestone: M19.2
+priority: P0
+title: 新建agent-hub包 — Agent注册发现 (从agentmesh/agents迁入)
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../_knowledge/design/MASTER-BLUEPRINT.md
+depends_on:
+- P17-W4-AGENTMESH-AUDIT
+entry_gate:
+- phase18_completed
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- kairon/packages/agent-hub/ 包结构创建
+- Agent注册/发现/注销API
+- 与agora的MCP工具注册集成
+acceptance_criteria:
+- agent-hub编译通过
+- Agent注册→发现回路 <100ms
+- ruff check通过
+test_plan:
+- 新建 agent-hub 后验证注册、发现与迁移接口闭合
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'

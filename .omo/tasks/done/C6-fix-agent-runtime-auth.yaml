@@ -1,0 +1,31 @@
+id: C6-FIX-AGENT-RUNTIME-AUTH
+phase: 2
+milestone: M2.8-AUDIT-FIX
+priority: P0
+title: Fix Agent Runtime default auth bypass (C6)
+status: done
+assigned_to: codebuddy
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+owner: agent-runtime
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: true
+source_docs:
+- .omo/audits/phase2-comprehensive-audit-20260530.md
+inputs:
+- projects/kairon/packages/agent-runtime/src/agent_runtime/server.py
+- projects/_archived/agent-runtime/server.py
+acceptance_criteria:
+- All HTTP endpoints require authentication by default (no auth skip)
+- Auto-generation of random token if AGENT_RUNTIME_AUTH_TOKEN not set
+evidence_required:
+- git diff showing auth requirement enforcement
+- 'unit test: endpoint returns 401/403 without valid token'
+test_plan:
+- 'unit: test authenticated and unauthenticated requests'
+started_at: '2026-05-30T21:42:00+08:00'

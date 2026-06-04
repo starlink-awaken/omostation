@@ -1,0 +1,38 @@
+id: P4-W2-HANDOFF-INDEX
+phase: 4
+milestone: W2
+priority: P0
+title: Create a single chase path for dispatch checkpoint reclaim review and acceptance evidence
+status: done
+assigned_to: copilot-cli
+dispatch_id: wave2-governance-hardening
+run_ref: .omo/summaries/p4-wave2-closure-retrospective.md
+approval_ref: null
+review_ref: .omo/summaries/p4-wave2-closure-retrospective.md
+knowledge_refs:
+  - .omo/plans/archive/phase4-wave2-hardening-design.md
+  - .omo/plans/archive/phase4-wave2-hardening-implementation-plan.md
+  - .omo/evidence/handoffs/PILOT-WORKER-RECLAIM-HANDOFF-VALIDATION.md
+  - .omo/evidence/handoffs/P2-FIX-HARDCODED-PATHS.md
+handoff_refs:
+  - .omo/_delivery/INDEX.md
+  - scripts/omo_handoff_index.py
+blocked_by: null
+source_docs:
+  - .omo/plans/archive/phase4-wave2-hardening-design.md
+  - .omo/plans/archive/phase4-wave2-hardening-implementation-plan.md
+  - .omo/workers/README.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 4 Wave 1 worker ops baseline completed
+evidence_required:
+  - each task can point to a single handoff trace path
+  - handoff index remains an index and does not duplicate source evidence
+test_plan:
+  - python3 -m pytest .omo/tests/test_omo_automation.py -q --tb=short
+  - python3 -m pytest .omo/tests/test_phase4_wave2_docs.py -q --tb=short
+created_at: '2026-05-31T01:10:00Z'
+completed_at: '2026-05-31T02:20:00Z'
+completion_summary: "Handoff evidence is now chaseable from task to dispatch chain, reclaim/review artifacts, and completion summary through a single generated index."

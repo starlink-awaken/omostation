@@ -1,0 +1,41 @@
+id: M2.5-BFTS-MINERVA-SEARCH
+phase: 2
+milestone: M2.5
+priority: P1
+title: "BFTS Tree Search — Best-First Tree Search for minerva research pipeline"
+status: done
+owner: minerva
+assigned_to: minerva
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+depends_on: []
+dependencies: []
+inputs:
+  - "projects/kairon/packages/minerva/src/minerva/search/engine.py"
+  - "projects/kairon/packages/minerva/src/minerva/search/__init__.py"
+  - "projects/kairon/packages/minerva/src/minerva/mcp_server/server.py"
+outputs:
+  - "projects/kairon/packages/minerva/src/minerva/search/bfs_search.py"
+  - "projects/kairon/packages/minerva/src/minerva/search/bfs_search_types.py"
+  - "projects/kairon/packages/minerva/tests/unit/test_bfs_search.py"
+acceptance_criteria:
+  - "Parallel exploration: decompose research question → N sub-questions, explore each in parallel (fan-out)"
+  - "Dynamic pruning: score each branch by relevance * source_trust, prune branches with score < threshold"
+  - "Best-first selection: continue exploring top-K branches, merge results into synthesis"
+  - "Configurable: max_depth=3, max_branches=5, prune_threshold=0.3"
+  - "MCP tool: minerva_bfs_search registered with query/depth/max_branches parameters"
+  - "Report format: branches_explored, depth_reached, pruned_count, synthesis (deduplicated, sorted)"
+evidence:
+  - "bfs_search.py implemented (full BFTSearch class, ~230 lines)"
+  - "bfs_search_types.py implemented (BFTSNode dataclass + factory functions)"
+  - "test_bfs_search.py: 44 tests covering BFTSNode/Decompose/ScoreBranch/Prune/Explore/Synthesize/FullSearch/MCPTool/Integration"
+  - "219/219 unit tests pass, 0 regression"
+  - "MCP tool minerva_bfs_search registered and tested"
+report:
+  branches_explored: 44
+  test_coverage_pct: 100
+  mcp_tools_added:
+    - minerva_bfs_search

@@ -1,0 +1,18 @@
+id: research-pipeline
+description: Phase 12 scenario MVP for dry-run capability binding across collection, derivation, retrieval, and memory.
+capabilities:
+  - kairon.kronos
+  - kairon.ontoderive
+  - kairon.minerva
+  - project.gbrain
+bindings:
+  - from: kairon.kronos
+    to: kairon.ontoderive
+    mode: dry-run
+  - from: kairon.ontoderive
+    to: kairon.minerva
+    mode: dry-run
+  - from: kairon.minerva
+    to: project.gbrain
+    mode: dry-run
+failure_policy: fail-closed

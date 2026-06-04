@@ -1,0 +1,22 @@
+pilot:
+  id: phase12-litellm-agentmesh-gateway
+  selected: LiteLLM to agentmesh Gateway
+  status: active
+  interface:
+    protocol: api
+    input:
+      - model_alias
+      - prompt
+      - policy_tags
+    output:
+      - provider
+      - response_ref
+      - usage_ref
+      - fallback_reason
+  smoke_path:
+    mode: dry-run
+    command: scripts/omo capability discover --tag workspace-governance
+  rollback:
+    - Disable the pilot registry record.
+    - Keep existing provider routing unchanged.
+    - Re-run package dry-run to confirm no dependency mutation.

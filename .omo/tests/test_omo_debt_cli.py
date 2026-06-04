@@ -8,6 +8,92 @@ from pathlib import Path
 import yaml
 
 
+def _seed_legacy_dispatch_snapshot(debt_dir: Path) -> str:
+    run_ref = ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml"
+    def _entry(item_id: str, gate_level: str) -> dict[str, str]:
+        return {
+            "id": item_id,
+            "primary_lane": "revalidate_now",
+            "gate_level": gate_level,
+            "command": f"python3 scripts/omo_debt.py revalidate --omo-dir .omo --id {item_id} --reviewed-at <ISO8601> --dispatch-run-ref {run_ref}",
+        }
+
+    owners = [
+        {
+            "owner": "sharedbrain-governance",
+            "dispatched_at": "2026-06-10T00:00:00Z",
+            "item_count": 4,
+            "summary": {"total_count": 4, "lane_counts": {"revalidate_now": 4, "schedule_now": 0, "escalate_now": 0, "continue_mitigation": 0, "watch_only": 0}},
+            "entries": [
+                _entry("SB_DECOMPOSITION", "gate"),
+                _entry("SB_UNTESTED_PKGS", "watchlist"),
+                _entry("SB_BRIDGE_FIX", "none"),
+                _entry("SB_ROOT_CLEANUP", "none"),
+            ],
+        },
+        {
+            "owner": "commerce-governance",
+            "dispatched_at": "2026-06-10T00:00:00Z",
+            "item_count": 1,
+            "summary": {"total_count": 1, "lane_counts": {"revalidate_now": 1, "schedule_now": 0, "escalate_now": 0, "continue_mitigation": 0, "watch_only": 0}},
+            "entries": [_entry("D3_EU_PRICING", "watchlist")],
+        },
+        {
+            "owner": "platform-governance",
+            "dispatched_at": "2026-06-10T00:00:00Z",
+            "item_count": 1,
+            "summary": {"total_count": 1, "lane_counts": {"revalidate_now": 1, "schedule_now": 0, "escalate_now": 0, "continue_mitigation": 0, "watch_only": 0}},
+            "entries": [_entry("D2_CI_E2E", "watchlist")],
+        },
+        {
+            "owner": "omo-governance",
+            "dispatched_at": "2026-06-10T00:00:00Z",
+            "item_count": 3,
+            "summary": {"total_count": 3, "lane_counts": {"revalidate_now": 3, "schedule_now": 0, "escalate_now": 0, "continue_mitigation": 0, "watch_only": 0}},
+            "entries": [
+                _entry("SB_ORPHANED_TASKS", "none"),
+                _entry("SB_PROJECTS_YAML", "none"),
+                _entry("SB_PHASE17_PLAN", "none"),
+            ],
+        },
+    ]
+    packet = {
+        "dispatched_at": "2026-06-10T00:00:00Z",
+        "source_owner_routing_ref": ".omo/debt/owner-routing/current.yaml",
+        "source_owner_routing_generated_at": "2026-06-10T00:00:00Z",
+        "latest_run_ref": run_ref,
+        "owners": owners,
+        "summary": {
+            "owner_count": 4,
+            "total_dispatched_items": 9,
+            "lane_counts": {"revalidate_now": 9, "schedule_now": 0, "escalate_now": 0, "continue_mitigation": 0, "watch_only": 0},
+        },
+    }
+    current_path = debt_dir / "dispatch" / "current.yaml"
+    run_path = debt_dir / "dispatch" / "runs" / "2026-06-10T00-00-00Z.yaml"
+    current_path.parent.mkdir(parents=True, exist_ok=True)
+    run_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = yaml.safe_dump(packet, sort_keys=False, allow_unicode=True)
+    current_path.write_text(payload, encoding="utf-8")
+    run_path.write_text(payload, encoding="utf-8")
+    return run_ref
+
+
+def _reset_generated_reporting_artifacts(debt_dir: Path) -> None:
+    for relative in [
+        "dispatch/runs",
+        "reporting/runs",
+        "reporting/history/current.yaml",
+        "reporting/diff/current.yaml",
+        "reporting/trend/current.yaml",
+    ]:
+        path = debt_dir / relative
+        if path.is_dir():
+            shutil.rmtree(path)
+        elif path.exists():
+            path.unlink()
+
+
 def _write_reporting_run_artifact(
     debt_dir: Path,
     *,
@@ -358,6 +444,7 @@ def test_debt_approve_requires_dispatch_packet(tmp_path: Path) -> None:
 def test_debt_approve_writes_current_and_record_files_for_gate_item(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
 
     approved_at = "2026-06-11T00:00:00Z"
     result = subprocess.run(
@@ -402,6 +489,7 @@ def test_debt_approve_writes_current_and_record_files_for_gate_item(tmp_path: Pa
 def test_debt_approve_rejects_non_gate_item_and_duplicate_record(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
 
     non_gate = subprocess.run(
         [
@@ -460,6 +548,7 @@ def test_debt_approve_rejects_non_gate_item_and_duplicate_record(tmp_path: Path)
 def test_debt_revalidate_gate_item_requires_matching_approval(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
 
     item_path = tmp_path / ".omo" / "debt" / "items" / "SB_DECOMPOSITION.yaml"
     before = yaml.safe_load(item_path.read_text(encoding="utf-8"))
@@ -493,6 +582,7 @@ def test_debt_revalidate_gate_item_requires_matching_approval(tmp_path: Path) ->
 def test_debt_revalidate_dispatched_item_requires_dispatch_run_ref(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
 
     item_path = tmp_path / ".omo" / "debt" / "items" / "SB_UNTESTED_PKGS.yaml"
     before = yaml.safe_load(item_path.read_text(encoding="utf-8"))
@@ -523,6 +613,7 @@ def test_debt_revalidate_dispatched_item_requires_dispatch_run_ref(tmp_path: Pat
 def test_debt_revalidate_rejects_stale_dispatch_run_ref(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
 
     result = subprocess.run(
         [
@@ -550,6 +641,7 @@ def test_debt_revalidate_rejects_stale_dispatch_run_ref(tmp_path: Path) -> None:
 def test_debt_revalidate_writes_execution_record_for_dispatched_item(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
 
     run_ref = ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml"
     result = subprocess.run(
@@ -587,6 +679,7 @@ def test_debt_revalidate_writes_execution_record_for_dispatched_item(tmp_path: P
 def test_debt_revalidate_gate_item_succeeds_after_matching_approval(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
 
     run_ref = ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml"
     approve = subprocess.run(
@@ -649,6 +742,7 @@ def test_debt_revalidate_gate_item_succeeds_after_matching_approval(tmp_path: Pa
 def test_debt_revalidate_rejects_stale_approval_after_new_dispatch(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
 
     item_path = tmp_path / ".omo" / "debt" / "items" / "SB_DECOMPOSITION.yaml"
     before = yaml.safe_load(item_path.read_text(encoding="utf-8"))
@@ -711,7 +805,7 @@ def test_debt_revalidate_rejects_stale_approval_after_new_dispatch(tmp_path: Pat
     assert approve.returncode == 0, approve.stderr
     assert dispatch.returncode == 0, dispatch.stderr
     assert revalidate.returncode != 0
-    assert "dispatch run" in revalidate.stderr
+    assert "dispatched revalidate entry" in revalidate.stderr
     assert after == before
 
 
@@ -739,6 +833,7 @@ def test_debt_campaign_requires_dispatch_packet_when_run_ref_missing(tmp_path: P
 def test_debt_campaign_writes_latest_run_outputs(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
 
     result = subprocess.run(
         [
@@ -773,6 +868,7 @@ def test_debt_campaign_writes_latest_run_outputs(tmp_path: Path) -> None:
 def test_debt_campaign_reflects_approval_and_execution_facts(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
 
     run_ref = ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml"
     approve = subprocess.run(
@@ -865,6 +961,7 @@ def test_debt_report_requires_dispatch_packet_when_run_ref_missing(tmp_path: Pat
 def test_debt_report_writes_latest_run_outputs(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
 
     result = subprocess.run(
         [
@@ -895,6 +992,7 @@ def test_debt_report_writes_latest_run_outputs(tmp_path: Path) -> None:
 def test_debt_report_reflects_approval_and_execution_facts(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
 
     approve = subprocess.run(
         [
@@ -980,6 +1078,8 @@ def test_debt_report_history_requires_dispatch_runs(tmp_path: Path) -> None:
 def test_debt_report_history_writes_latest_and_prior_run_metadata(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _reset_generated_reporting_artifacts(tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
 
     older_dispatch = tmp_path / ".omo" / "debt" / "dispatch" / "runs" / "2026-06-01T00-00-00Z.yaml"
     older_reporting = tmp_path / ".omo" / "debt" / "reporting" / "runs" / "2026-06-01T00-00-00Z" / "current.yaml"
@@ -1009,6 +1109,20 @@ def test_debt_report_history_writes_latest_and_prior_run_metadata(tmp_path: Path
         ),
         encoding="utf-8",
     )
+
+    latest_report = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    assert latest_report.returncode == 0, latest_report.stderr
 
     result = subprocess.run(
         [
@@ -1040,10 +1154,26 @@ def test_debt_report_history_writes_latest_and_prior_run_metadata(tmp_path: Path
 def test_debt_report_history_keeps_run_when_reporting_artifact_is_missing(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _reset_generated_reporting_artifacts(tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
 
     older_dispatch = tmp_path / ".omo" / "debt" / "dispatch" / "runs" / "2026-06-01T00-00-00Z.yaml"
     older_dispatch.parent.mkdir(parents=True, exist_ok=True)
     older_dispatch.write_text("dispatched_at: '2026-06-01T00:00:00Z'\n", encoding="utf-8")
+
+    latest_report = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    assert latest_report.returncode == 0, latest_report.stderr
 
     result = subprocess.run(
         [
@@ -1092,6 +1222,36 @@ def test_debt_report_diff_requires_history_packet(tmp_path: Path) -> None:
 def test_debt_report_diff_writes_no_prior_run_packet_for_single_history_run(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _reset_generated_reporting_artifacts(tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
+
+    report = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    assert report.returncode == 0, report.stderr
+
+    history = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-history",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    assert history.returncode == 0, history.stderr
 
     result = subprocess.run(
         [
@@ -1341,6 +1501,36 @@ def test_debt_report_trend_requires_history_packet(tmp_path: Path) -> None:
 def test_debt_report_trend_writes_insufficient_history_packet_for_single_history_run(tmp_path: Path) -> None:
     source = Path(__file__).resolve().parents[2] / ".omo" / "debt"
     shutil.copytree(source, tmp_path / ".omo" / "debt")
+    _reset_generated_reporting_artifacts(tmp_path / ".omo" / "debt")
+    _seed_legacy_dispatch_snapshot(tmp_path / ".omo" / "debt")
+
+    report = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    assert report.returncode == 0, report.stderr
+
+    history = subprocess.run(
+        [
+            sys.executable,
+            "scripts/omo_debt.py",
+            "report-history",
+            "--omo-dir",
+            str(tmp_path / ".omo"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    assert history.returncode == 0, history.stderr
 
     result = subprocess.run(
         [

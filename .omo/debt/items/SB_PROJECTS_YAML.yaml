@@ -1,0 +1,31 @@
+id: SB_PROJECTS_YAML
+title: PROJECTS registry metadata for SharedBrain remains stale
+dimension: governance_process
+subdimension: registry_freshness
+domain: .omo
+scope: governance_kernel
+severity: low
+weight: 0.05
+entropy_class: classification
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - .omo/PROJECTS.yaml
+  - .omo/_truth
+evidence_refs:
+  - .omo/PROJECTS.yaml
+  - .omo/_knowledge/design/sharedbrain-decomposition-architecture.md
+mitigation_refs:
+  - .omo/_knowledge/design/debt-cleanup-plan.md
+  - .omo/tasks/active/SHAREDBRAIN-FORMAL-DECISION.yaml
+opened_at: "2026-06-01T10:30:00Z"
+last_reviewed_at: "2026-06-02T00:00:00Z"
+next_review_at: "2026-06-08T00:00:00Z"
+gate_level: none
+history:
+  - at: "2026-06-02T00:00:00Z"
+    action: register
+    note: Seeded from the stale SharedBrain line-count registry debt item.
+  - at: "2026-06-03T04:15:00Z"
+    action: close
+    note: PROJECTS.yaml updated - SharedBrain → archived, agentmesh → archived, kairon pkgs 18→30, hermes-console added

@@ -1,45 +1,126 @@
-generated_at: '2026-06-02T12:01:20Z'
-diff_status: no_prior_run
+generated_at: '2026-06-03T02:19:21Z'
+diff_status: diff_available
 latest_run_stamp: 2026-06-10T00-00-00Z
-prior_run_stamp: null
+prior_run_stamp: 2026-06-03T02-12-00Z
 latest_dispatch_run_ref: .omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml
-prior_dispatch_run_ref: null
+prior_dispatch_run_ref: .omo/debt/dispatch/runs/2026-06-03T02-12-00Z.yaml
 summary_diff:
   total_items:
     latest: 9
-    prior: null
-    delta: null
+    prior: 7
+    delta: 2
   state_counts:
     pending_approval:
       latest: 1
-      prior: null
-      delta: null
+      prior: 0
+      delta: 1
     ready_to_execute:
       latest: 8
-      prior: null
-      delta: null
+      prior: 7
+      delta: 1
     executed:
       latest: 0
-      prior: null
-      delta: null
+      prior: 0
+      delta: 0
   gate_item_count:
     latest: 1
-    prior: null
-    delta: null
+    prior: 0
+    delta: 1
   approved_gate_item_count:
     latest: 0
-    prior: null
-    delta: null
+    prior: 0
+    delta: 0
   approval_coverage_rate:
     latest: 0.0
-    prior: null
-    delta: null
+    prior: 1.0
+    delta: -1.0
   executed_item_count:
     latest: 0
-    prior: null
-    delta: null
+    prior: 0
+    delta: 0
   execution_completion_rate:
     latest: 0.0
-    prior: null
-    delta: null
-owners: null
+    prior: 0.0
+    delta: 0.0
+owners:
+  compared:
+  - owner: omo-governance
+    item_count:
+      latest: 3
+      prior: 3
+      delta: 0
+    state_counts:
+      pending_approval:
+        latest: 0
+        prior: 0
+        delta: 0
+      ready_to_execute:
+        latest: 3
+        prior: 3
+        delta: 0
+      executed:
+        latest: 0
+        prior: 0
+        delta: 0
+    gate_item_count:
+      latest: 0
+      prior: 0
+      delta: 0
+    approved_gate_item_count:
+      latest: 0
+      prior: 0
+      delta: 0
+    approval_coverage_rate:
+      latest: 1.0
+      prior: 1.0
+      delta: 0.0
+    executed_item_count:
+      latest: 0
+      prior: 0
+      delta: 0
+    execution_completion_rate:
+      latest: 0.0
+      prior: 0.0
+      delta: 0.0
+  - owner: sharedbrain-governance
+    item_count:
+      latest: 4
+      prior: 4
+      delta: 0
+    state_counts:
+      pending_approval:
+        latest: 1
+        prior: 0
+        delta: 1
+      ready_to_execute:
+        latest: 3
+        prior: 4
+        delta: -1
+      executed:
+        latest: 0
+        prior: 0
+        delta: 0
+    gate_item_count:
+      latest: 1
+      prior: 0
+      delta: 1
+    approved_gate_item_count:
+      latest: 0
+      prior: 0
+      delta: 0
+    approval_coverage_rate:
+      latest: 0.0
+      prior: 1.0
+      delta: -1.0
+    executed_item_count:
+      latest: 0
+      prior: 0
+      delta: 0
+    execution_completion_rate:
+      latest: 0.0
+      prior: 0.0
+      delta: 0.0
+  added:
+  - owner: commerce-governance
+  - owner: platform-governance
+  removed: []

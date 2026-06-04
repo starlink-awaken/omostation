@@ -1,0 +1,47 @@
+id: PILOT-WORKER-RECLAIM-HANDOFF-VALIDATION
+phase: 2
+milestone: M2.PILOT
+priority: P1
+title: Run reclaim and second-worker handoff validation under OMO framework
+status: done
+assigned_to: codebuddy
+dispatch_id: pilot-handoff-codebuddy-20260530-2201
+run_ref: .omo/workers/runs/pilot-handoff-codebuddy-20260530-2201-dispatch.yaml
+approval_ref: null
+review_ref: .omo/workers/runs/pilot-reclaim-handoff-20260530-2158-review.md
+knowledge_refs:
+  - .omo/standards/agent-cli-worker-collaboration.md
+  - .omo/workers/README.md
+  - .omo/workers/runbooks/pilot-dispatch-and-reclaim.md
+handoff_refs:
+  - .omo/workers/runs/pilot-reclaim-reasonix-20260530-2158-envelope.yaml
+  - .omo/workers/runs/pilot-reclaim-reasonix-20260530-2158-prompt.md
+  - .omo/workers/runs/pilot-reclaim-reasonix-20260530-2158-reclaim.md
+  - .omo/workers/runs/pilot-handoff-codebuddy-20260530-2201-envelope.yaml
+  - .omo/workers/runs/pilot-handoff-codebuddy-20260530-2201-prompt.md
+owner: omo
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+source_docs:
+  - .omo/standards/agent-cli-worker-collaboration.md
+  - .omo/workers/README.md
+  - .omo/workers/runbooks/pilot-dispatch-and-reclaim.md
+inputs:
+  - .omo/standards/agent-cli-worker-collaboration.md
+  - .omo/workers/README.md
+  - .omo/workers/runbooks/pilot-dispatch-and-reclaim.md
+acceptance_criteria:
+  - First worker is intentionally interrupted and reclaimed
+  - Reclaim note captures enough context for handoff
+  - Second worker completes the review artifact and updates task to review
+  - Coordinator closes the task to done with dispatch evidence preserved
+evidence_required:
+  - first dispatch record exists
+  - reclaim note exists
+  - second dispatch record exists
+  - final review note exists
+test_plan:
+  - manual: reasonix interrupted mid-run, then second worker resumes from reclaim note
+started_at: '2026-05-30T13:58:00Z'
+completed_at: '2026-05-30T14:02:30Z'

@@ -1,0 +1,26 @@
+version: 1
+approval_id: "<APPROVAL_ID>"
+task_id: "<TASK_ID>"
+dispatch_id: "<DISPATCH_ID>"
+worker_id: "<codebuddy|reasonix|future-worker>"
+
+approval_status: "<requested|granted|denied|expired>"
+requested_operation_level: "<L2|L3>"
+release_scope:
+  exact_action: "<exact action to release>"
+  allowed_paths: []
+  denied_paths: []
+
+requested_at: "<ISO8601>"
+approved_at: null
+expires_at: null
+approver: null
+
+refs:
+  task_ref: ".omo/tasks/active/<task-file>.yaml"
+  run_ref: ".omo/workers/runs/<dispatch-id>-dispatch.yaml"
+  review_ref: null
+
+evidence:
+  request_evidence: []
+  approval_evidence: []

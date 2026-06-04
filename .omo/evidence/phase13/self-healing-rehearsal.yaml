@@ -1,0 +1,23 @@
+id: phase13-self-healing-rehearsal
+created_at: '2026-06-01T05:38:00Z'
+mode: dry-run
+auto_apply: disabled
+anomaly:
+  id: missing-scenario-capability-fixture
+  description: A fixture scenario references a missing capability and must fail closed.
+recommended_action:
+  type: rollback-recommendation
+  operation_level: L1
+  live_mutation_allowed: false
+  rollback: Restore the last known good scenario trace and keep the faulty scenario
+    inactive.
+  verification: binding policy reports missing capability before activation
+trend_report:
+  capability_registry: stable
+  scenario_coverage: narrow
+  package_safety: dry-run-only
+roadmap_delta_proposal:
+  target: Phase 15 governance evidence ledger
+  status: proposal-only
+  reason: Evidence should become queryable before any mutation automation.
+result: pass

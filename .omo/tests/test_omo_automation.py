@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import shutil
 import sys
 import subprocess
 from pathlib import Path
@@ -854,6 +853,62 @@ def test_dispatch_task_uses_supplied_now_for_dispatch_identity_and_start_time(tm
     assert result["dispatch_id"].endswith("20260603-070500")
     assert dispatch["launched_at"] == "2026-06-03T07:05:00Z"
     assert task["started_at"] == "2026-06-03T07:05:00Z"
+
+
+def test_dispatch_task_launch_marks_dispatch_active_and_updates_lease(tmp_path: Path):
+    root = tmp_path
+    omo = root / ".omo"
+
+    _write_yaml(
+        omo / "tasks" / "active" / "launch.yaml",
+        {
+            "id": "TASK-LAUNCH",
+            "title": "Launch updates live dispatch state",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": [".omo/MASTER-BLUEPRINT.md"],
+            "risk_level": "L0",
+            "allowed_operation_level": "L0",
+            "human_approval_required": False,
+            "entry_gate": [],
+            "evidence_required": ["dispatch recorded as active after launch"],
+            "test_plan": ["inspect dispatch artifacts"],
+            "started_at": None,
+            "completed_at": None,
+            "blocked_by": None,
+            "retry_count": 0,
+            "deliverables": ["src/app.py"],
+        },
+    )
+    _write_yaml(
+        omo / "workers" / "registry.yaml",
+        {
+            "workers": [
+                {
+                    "id": "mockworker",
+                    "transports": {"cli_prompt": {"command": 'python3 -c "print(\'launched\')" "{prompt}"'}},
+                }
+            ]
+        },
+    )
+
+    result = dispatch_task(
+        root,
+        task_id="TASK-LAUNCH",
+        worker_id="mockworker",
+        allowed_write_paths=["src/"],
+        launch=True,
+    )
+
+    dispatch = _load_yaml(root / result["dispatch_path"])
+    assert dispatch["dispatch_state"] == "active"
+    assert dispatch["lease"]["last_material_write_at"] is not None
 
 
 def test_install_all_bridges_defaults_to_wrapper_only_without_running_legacy_installers(tmp_path: Path):
@@ -2728,6 +2783,111 @@ def test_task_governance_overlay_status_writes_current_surfaces(tmp_path: Path, 
     assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "current.md").exists()
 
 
+def test_task_governance_overlay_status_writes_prep_monitor_aggregation(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(
+        tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
+        {
+            "overlay_id": "GOV-OVERLAY-2026-06",
+            "status": "active",
+            "autopilot_mode": "full_omo_autopilot",
+            "intake_scope": "future_planned_debt",
+            "current_milestone": "GOV-M3-FUTURE-PROMOTION-OPERATIONS",
+            "next_milestone": None,
+            "success_target": "future roadmap governed through overlay lane",
+            "updated_at": "2026-06-03T10:58:00Z",
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "autopilot-policy.yaml",
+        {"autopilot_mode": "full_omo_autopilot", "auto_select": True},
+    )
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 23})
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml",
+        {
+            "items": [
+                {
+                    "id": "GOV-M3-FUTURE-PROMOTION-OPERATIONS",
+                    "type": "phase-bridge",
+                    "title": "Future promotion bridge",
+                    "priority": "P1",
+                    "status": "in_progress",
+                    "depends_on": [],
+                    "source_refs": [".omo/MASTER-BLUEPRINT.md"],
+                    "target_refs": [".omo/tasks/planned/P24-W2-NUCLEUS-REPLACE.yaml"],
+                    "success_criteria": ["future packets promoted safely"],
+                }
+            ]
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P24-W2-NUCLEUS-REPLACE.yaml",
+        {
+            "id": "P24-W2-NUCLEUS-REPLACE",
+            "phase": 24,
+            "milestone": "M24.2",
+            "priority": "P0",
+            "title": "Nucleus replace",
+            "status": "pending",
+            "approval_ref": ".omo/workers/runs/P24-W2-NUCLEUS-REPLACE-promotion-approval.yaml",
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": [".omo/MASTER-BLUEPRINT.md"],
+            "depends_on": [],
+            "entry_gate": ["phase23_completed"],
+            "risk_level": "L3",
+            "allowed_operation_level": "L2",
+            "human_approval_required": True,
+            "evidence_required": ["approval granted"],
+            "test_plan": [".omo/tests/test_omo_automation.py"],
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "runs" / "P24-W2-NUCLEUS-REPLACE-promotion-approval.yaml",
+        {
+            "task_id": "P24-W2-NUCLEUS-REPLACE",
+            "approval_status": "requested",
+            "approval_scope": "task.promote_apply",
+            "refs": {"task_ref": ".omo/tasks/planned/P24-W2-NUCLEUS-REPLACE.yaml"},
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "current.yaml",
+        {"prep_task_count": 1, "request_now_count": 0, "awaiting_approval_count": 1},
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "trend" / "current.yaml",
+        {"trend_status": "trend_available", "window_event_count": 2},
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "diff" / "current.yaml",
+        {"changed_current_task_ids": ["P24-W2-NUCLEUS-REPLACE"], "no_longer_current_task_ids": []},
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "aging" / "current.yaml",
+        {
+            "attention_summary": {"fresh_count": 1, "watch_count": 0, "escalate_count": 0},
+            "followup_task_ids": [],
+            "escalation_task_ids": [],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "governance-overlay-status", "--omo-dir", ".omo", "--now", "2026-06-03T11:02:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "current.yaml")
+
+    assert "next_action=monitor:GOV-M3-FUTURE-PROMOTION-OPERATIONS" in output
+    assert packet["monitor_summary"]["approval_prep"]["trend_status"] == "trend_available"
+    assert packet["monitor_summary"]["approval_prep"]["changed_current_task_ids"] == ["P24-W2-NUCLEUS-REPLACE"]
+
+
 def test_task_governance_overlay_run_next_writes_run_artifact(tmp_path: Path, monkeypatch, capsys):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
@@ -3371,6 +3531,501 @@ def test_task_governance_overlay_run_next_marks_verify_ready_for_active_review_t
 
     assert "summary=verify_ready" in output
     assert run_packet["target_results"][0]["state"] == "active_review"
+
+
+def test_task_governance_overlay_run_next_continues_active_item_with_planned_approval_request(
+    tmp_path: Path, monkeypatch, capsys
+):
+    _write_yaml(
+        tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
+        {
+            "overlay_id": "GOV-OVERLAY-2026-06",
+            "status": "active",
+            "autopilot_mode": "full_omo_autopilot",
+            "intake_scope": "future_planned_debt",
+            "current_milestone": "GOV-M3-FUTURE-PROMOTION-OPERATIONS",
+            "next_milestone": None,
+            "success_target": "future roadmap governed through overlay lane",
+            "updated_at": "2026-06-03T01:49:00Z",
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "autopilot-policy.yaml",
+        {
+            "autopilot_mode": "full_omo_autopilot",
+            "auto_select": True,
+            "auto_promote_when_safe": True,
+        },
+    )
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 23, "status": "in_progress", "goals": []})
+    _write_yaml(tmp_path / ".omo" / "state" / "system.yaml", {"current_phase": 23, "health_score": 0.0})
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml",
+        {
+            "items": [
+                {
+                    "id": "GOV-M3-FUTURE-PROMOTION-OPERATIONS",
+                    "type": "phase-bridge",
+                    "title": "Future promotion bridge",
+                    "priority": "P1",
+                    "status": "in_progress",
+                    "depends_on": [],
+                    "source_refs": [".omo/MASTER-BLUEPRINT.md"],
+                    "target_refs": [".omo/tasks/planned/P24-W2-NUCLEUS-REPLACE.yaml"],
+                    "success_criteria": ["future packet promoted safely"],
+                }
+            ]
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P24-W2-NUCLEUS-REPLACE.yaml",
+        {
+            "id": "P24-W2-NUCLEUS-REPLACE",
+            "phase": 24,
+            "milestone": "M24.2",
+            "priority": "P0",
+            "title": "Nucleus replace",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": [".omo/MASTER-BLUEPRINT.md"],
+            "depends_on": [],
+            "entry_gate": ["phase23_completed"],
+            "risk_level": "L3",
+            "allowed_operation_level": "L2",
+            "human_approval_required": True,
+            "evidence_required": ["approval granted"],
+            "test_plan": [".omo/tests/test_omo_automation.py"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "governance-overlay-run-next", "--omo-dir", ".omo", "--actor", "copilot-cli", "--now", "2026-06-03T01:50:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    run_packet = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T01-50-00Z.yaml")
+    task = _load_yaml(tmp_path / ".omo" / "tasks" / "planned" / "P24-W2-NUCLEUS-REPLACE.yaml")
+
+    assert "summary=advanced" in output
+    assert run_packet["mode"] == "continue_active"
+    assert run_packet["target_results"][0]["result"] == "approval_requested"
+    assert task["approval_ref"] == run_packet["target_results"][0]["approval_ref"]
+
+
+def test_task_governance_overlay_run_next_prepares_approval_even_when_phase_is_still_blocked(
+    tmp_path: Path, monkeypatch, capsys
+):
+    _write_yaml(
+        tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",
+        {
+            "overlay_id": "GOV-OVERLAY-2026-06",
+            "status": "active",
+            "autopilot_mode": "full_omo_autopilot",
+            "intake_scope": "future_planned_debt",
+            "current_milestone": "GOV-M3-FUTURE-PROMOTION-OPERATIONS",
+            "next_milestone": None,
+            "success_target": "future roadmap governed through overlay lane",
+            "updated_at": "2026-06-03T02:30:00Z",
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "autopilot-policy.yaml",
+        {
+            "autopilot_mode": "full_omo_autopilot",
+            "auto_select": True,
+            "auto_promote_when_safe": True,
+        },
+    )
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16, "status": "in_progress", "goals": []})
+    _write_yaml(tmp_path / ".omo" / "state" / "system.yaml", {"current_phase": 16, "health_score": 0.0})
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml",
+        {
+            "items": [
+                {
+                    "id": "GOV-M3-FUTURE-PROMOTION-OPERATIONS",
+                    "type": "phase-bridge",
+                    "title": "Future promotion bridge",
+                    "priority": "P1",
+                    "status": "in_progress",
+                    "depends_on": [],
+                    "source_refs": [".omo/MASTER-BLUEPRINT.md"],
+                    "target_refs": [".omo/tasks/planned/P24-W2-NUCLEUS-REPLACE.yaml"],
+                    "success_criteria": ["future packet promoted safely"],
+                }
+            ]
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P24-W2-NUCLEUS-REPLACE.yaml",
+        {
+            "id": "P24-W2-NUCLEUS-REPLACE",
+            "phase": 24,
+            "milestone": "M24.2",
+            "priority": "P0",
+            "title": "Nucleus replace",
+            "status": "pending",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": [".omo/MASTER-BLUEPRINT.md"],
+            "depends_on": [],
+            "entry_gate": ["phase23_completed"],
+            "risk_level": "L3",
+            "allowed_operation_level": "L2",
+            "human_approval_required": True,
+            "evidence_required": ["approval granted"],
+            "test_plan": [".omo/tests/test_omo_automation.py"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "governance-overlay-run-next", "--omo-dir", ".omo", "--actor", "copilot-cli", "--now", "2026-06-03T02:31:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    run_packet = _load_yaml(tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T02-31-00Z.yaml")
+    task = _load_yaml(tmp_path / ".omo" / "tasks" / "planned" / "P24-W2-NUCLEUS-REPLACE.yaml")
+
+    assert "summary=advanced" in output
+    assert run_packet["mode"] == "continue_active"
+    assert run_packet["target_results"][0]["result"] == "approval_requested"
+    assert task["approval_ref"] == run_packet["target_results"][0]["approval_ref"]
+
+
+def test_task_governance_overlay_approval_prep_status_writes_current_surface(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "current.yaml",
+        {
+            "generated_at": "2026-06-03T02:34:21Z",
+            "current_milestone": "GOV-M3-FUTURE-PROMOTION-OPERATIONS",
+            "active_target_states": [
+                {
+                    "target_ref": ".omo/tasks/planned/P24-W2-NUCLEUS-REPLACE.yaml",
+                    "task_id": "P24-W2-NUCLEUS-REPLACE",
+                    "state": "planned_approval_prep_pending",
+                    "action": "await_approval",
+                    "result": "approval_prep_pending",
+                    "blockers": ["phase_mismatch", "approval_invalid"],
+                }
+            ],
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "P24-W2-NUCLEUS-REPLACE.yaml",
+        {
+            "id": "P24-W2-NUCLEUS-REPLACE",
+            "approval_ref": ".omo/workers/runs/P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z.yaml",
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "governance-overlay-approval-prep-status", "--omo-dir", ".omo", "--now", "2026-06-03T02:35:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "current.yaml")
+
+    assert "prep_task_count=1" in output
+    assert packet["awaiting_approval_count"] == 1
+    assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "current.md").exists()
+
+
+def test_task_governance_overlay_approval_prep_history_writes_history_surface(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "runs" / "governance-overlay-2026-06-03T02-31-00Z.yaml",
+        {
+            "run_id": "governance-overlay-2026-06-03T02-31-00Z",
+            "started_at": "2026-06-03T02:31:00Z",
+            "completed_at": "2026-06-03T02:31:00Z",
+            "target_results": [
+                {
+                    "target_ref": ".omo/tasks/planned/P26-W1-FUTURE-APPROVAL.yaml",
+                    "task_id": "P26-W1-FUTURE-APPROVAL",
+                    "state": "planned_approval_prep_needed",
+                    "action": "request_approval",
+                    "result": "approval_requested",
+                    "approval_ref": ".omo/workers/runs/P26-W1-FUTURE-APPROVAL-promotion-approval-2026-06-03T02-31-00Z.yaml",
+                    "proposal_ref": ".omo/_truth/task-center/proposals/P26-W1-FUTURE-APPROVAL-promotion-approval-2026-06-03T02-31-00Z-proposal.yaml",
+                }
+            ],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "governance-overlay-approval-prep-history", "--omo-dir", ".omo", "--now", "2026-06-03T02:35:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "history" / "current.yaml")
+
+    assert "event_count=1" in output
+    assert packet["latest_run_id"] == "governance-overlay-2026-06-03T02-31-00Z"
+    assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "history" / "current.md").exists()
+
+
+def test_task_governance_overlay_approval_prep_analytics_writes_current_surface(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "current.yaml",
+        {
+            "generated_at": "2026-06-03T02:38:16Z",
+            "prep_task_count": 1,
+            "request_now_count": 0,
+            "awaiting_approval_count": 1,
+            "tasks": [
+                {
+                    "task_id": "P24-W2-NUCLEUS-REPLACE",
+                    "state": "planned_approval_prep_pending",
+                    "action": "await_approval",
+                    "blockers": ["phase_mismatch", "approval_invalid"],
+                    "approval_ref": ".omo/workers/runs/P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z.yaml",
+                }
+            ],
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "history" / "current.yaml",
+        {
+            "generated_at": "2026-06-03T02:38:46Z",
+            "event_count": 1,
+            "events": [
+                {
+                    "event_id": "governance-overlay-2026-06-03T02-34-21Z:P24-W2-NUCLEUS-REPLACE",
+                    "run_id": "governance-overlay-2026-06-03T02-34-21Z",
+                    "task_id": "P24-W2-NUCLEUS-REPLACE",
+                    "started_at": "2026-06-03T02:34:21Z",
+                }
+            ],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "governance-overlay-approval-prep-analytics", "--omo-dir", ".omo", "--now", "2026-06-03T02:39:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "analytics" / "current.yaml")
+
+    assert "prep_task_count=1" in output
+    assert packet["awaiting_approval_count"] == 1
+    assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "analytics" / "current.md").exists()
+
+
+def test_task_governance_overlay_approval_prep_trend_writes_current_surface(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "analytics" / "current.yaml",
+        {
+            "generated_at": "2026-06-03T02:42:32Z",
+            "prep_task_count": 1,
+            "history_event_count": 2,
+            "request_now_count": 0,
+            "awaiting_approval_count": 1,
+            "blocker_histogram": {"phase_mismatch": 1, "approval_invalid": 1},
+            "age_buckets": {"lt_1d": 1, "d1_to_d3": 0, "d3_plus": 0},
+            "action_queues": {"request_now": [], "awaiting_approval": [{"task_id": "P24-W2-NUCLEUS-REPLACE"}]},
+            "tasks": [
+                {
+                    "task_id": "P24-W2-NUCLEUS-REPLACE",
+                    "state": "planned_approval_prep_pending",
+                    "action": "await_approval",
+                    "age_bucket": "lt_1d",
+                    "latest_started_at": "2026-06-03T02:34:21Z",
+                    "blockers": ["phase_mismatch", "approval_invalid"],
+                    "approval_ref": ".omo/workers/runs/P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z.yaml",
+                }
+            ],
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "history" / "current.yaml",
+        {
+            "generated_at": "2026-06-03T02:38:46Z",
+            "event_count": 2,
+            "events": [
+                {
+                    "event_id": "governance-overlay-2026-06-03T02-34-21Z:P24-W2-NUCLEUS-REPLACE",
+                    "run_id": "governance-overlay-2026-06-03T02-34-21Z",
+                    "task_id": "P24-W2-NUCLEUS-REPLACE",
+                    "state": "planned_approval_prep_pending",
+                    "action": "await_approval",
+                    "result": "approval_prep_pending",
+                    "started_at": "2026-06-03T02:34:21Z",
+                },
+                {
+                    "event_id": "governance-overlay-2026-06-02T02-31-00Z:P26-W1-FUTURE-APPROVAL",
+                    "run_id": "governance-overlay-2026-06-02T02-31-00Z",
+                    "task_id": "P26-W1-FUTURE-APPROVAL",
+                    "state": "planned_approval_prep_needed",
+                    "action": "request_approval",
+                    "result": "approval_requested",
+                    "started_at": "2026-06-02T02:31:00Z",
+                },
+            ],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "governance-overlay-approval-prep-trend", "--omo-dir", ".omo", "--now", "2026-06-03T02:43:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "trend" / "current.yaml")
+
+    assert "trend_status=trend_available" in output
+    assert packet["window_event_count"] == 2
+    assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "trend" / "current.md").exists()
+
+
+def test_task_governance_overlay_approval_prep_diff_writes_current_surface(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "current.yaml",
+        {
+            "generated_at": "2026-06-03T02:35:00Z",
+            "prep_task_count": 1,
+            "request_now_count": 0,
+            "awaiting_approval_count": 1,
+            "tasks": [
+                {
+                    "task_id": "P24-W2-NUCLEUS-REPLACE",
+                    "state": "planned_approval_prep_pending",
+                    "action": "await_approval",
+                    "result": "approval_prep_pending",
+                    "blockers": ["phase_mismatch", "approval_invalid"],
+                    "approval_ref": ".omo/workers/runs/P24-W2-NUCLEUS-REPLACE-promotion-approval-2026-06-03T01-49-00Z.yaml",
+                }
+            ],
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "history" / "current.yaml",
+        {
+            "generated_at": "2026-06-03T02:38:46Z",
+            "event_count": 2,
+            "events": [
+                {
+                    "event_id": "governance-overlay-2026-06-03T02-34-21Z:P24-W2-NUCLEUS-REPLACE",
+                    "run_id": "governance-overlay-2026-06-03T02-34-21Z",
+                    "task_id": "P24-W2-NUCLEUS-REPLACE",
+                    "state": "planned_approval_prep_pending",
+                    "action": "await_approval",
+                    "result": "approval_prep_pending",
+                    "started_at": "2026-06-03T02:34:21Z",
+                },
+                {
+                    "event_id": "governance-overlay-2026-06-03T01-49-00Z:P24-W2-NUCLEUS-REPLACE",
+                    "run_id": "governance-overlay-2026-06-03T01-49-00Z",
+                    "task_id": "P24-W2-NUCLEUS-REPLACE",
+                    "state": "planned_approval_prep_needed",
+                    "action": "request_approval",
+                    "result": "approval_requested",
+                    "started_at": "2026-06-03T01:49:00Z",
+                },
+            ],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "governance-overlay-approval-prep-diff", "--omo-dir", ".omo", "--now", "2026-06-03T02:43:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "diff" / "current.yaml")
+
+    assert "diff_status=diff_available" in output
+    assert packet["changed_current_task_ids"] == ["P24-W2-NUCLEUS-REPLACE"]
+    assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "diff" / "current.md").exists()
+
+
+def test_task_governance_overlay_approval_prep_aging_writes_current_surface(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "analytics" / "current.yaml",
+        {
+            "generated_at": "2026-06-03T10:58:00Z",
+            "prep_task_count": 2,
+            "history_event_count": 2,
+            "request_now_count": 1,
+            "awaiting_approval_count": 1,
+            "blocker_histogram": {"phase_mismatch": 2, "approval_invalid": 1, "approval_missing": 1},
+            "age_buckets": {"lt_1d": 0, "d1_to_d3": 1, "d3_plus": 1},
+            "action_queues": {
+                "request_now": [{"task_id": "P30-W1-REQUEST-LONGTAIL"}],
+                "awaiting_approval": [{"task_id": "P31-W1-PENDING-FOLLOWUP"}],
+            },
+            "tasks": [
+                {
+                    "task_id": "P30-W1-REQUEST-LONGTAIL",
+                    "state": "planned_approval_prep_needed",
+                    "action": "request_approval",
+                    "age_bucket": "d3_plus",
+                    "latest_started_at": "2026-05-29T10:00:00Z",
+                    "blockers": ["phase_mismatch", "approval_missing"],
+                    "approval_ref": None,
+                },
+                {
+                    "task_id": "P31-W1-PENDING-FOLLOWUP",
+                    "state": "planned_approval_prep_pending",
+                    "action": "await_approval",
+                    "age_bucket": "d1_to_d3",
+                    "latest_started_at": "2026-06-01T10:00:00Z",
+                    "blockers": ["phase_mismatch", "approval_invalid"],
+                    "approval_ref": ".omo/workers/runs/P31-W1-PENDING-FOLLOWUP-promotion-approval.yaml",
+                },
+            ],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo", "task", "governance-overlay-approval-prep-aging", "--omo-dir", ".omo", "--now", "2026-06-03T11:00:00Z"],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "aging" / "current.yaml")
+
+    assert "aging_status=aging_available" in output
+    assert packet["escalation_task_ids"] == ["P30-W1-REQUEST-LONGTAIL"]
+    assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "aging" / "current.md").exists()
 
 
 def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Path):

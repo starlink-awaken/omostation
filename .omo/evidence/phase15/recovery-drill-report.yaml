@@ -1,0 +1,28 @@
+id: phase15-recovery-drill-report
+created_at: '2026-06-04T02:27:52Z'
+phase: 15
+status: pass
+mode: fixture-and-dry-run
+rollback_drill_success_rate: 1.0
+drills:
+- id: rollback-ledger-fixture
+  target: governance evidence ledger
+  mode: fixture
+  rollback_command: restore previous ledger fixture
+  expected_state: ledger entries remain queryable
+  observed_result: fixture rollback path documented
+  result: pass
+- id: rollback-draft-task
+  target: inactive task draft
+  mode: dry-run
+  rollback_command: remove .omo/tasks/drafts/P15-DRAFT-*.yaml
+  expected_state: active task queue remains empty
+  observed_result: created_active_tasks stayed 0
+  result: pass
+- id: rollback-user-value-preview
+  target: user value preview
+  mode: fixture
+  rollback_command: mark dashboard stale and keep ledger authoritative
+  expected_state: no project code mutation
+  observed_result: project evidence is referenced read-only
+  result: pass

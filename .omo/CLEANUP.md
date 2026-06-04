@@ -1,29 +1,6 @@
-# .omo/ Cleanup Policy
+# 文件已归档
 
-> Auto-generated cleanup guidance for stale planning artifacts.
-
-## Current Policy
-
-Session artifacts older than 30 days from last modified date can be cleaned.
-
-## Cleanup Commands
-
-```bash
-# List stale plan files (older than 30 days)
-find .omo/plans/ -name "*.md" -mtime +30 -ls
-
-# List stale summary files
-find .omo/summaries/ -name "*.md" -mtime +30 -ls
-
-# Clean all stale
-find .omo/plans/ .omo/summaries/ -name "*.md" -mtime +30 -delete
-```
-
-## What NOT to Clean
-
-| File | Why |
-|------|-----|
-| architecture-*.md | Core architecture reference |
-| full-architecture-audit-*.md | Latest audit |
-| 4-plus-1-plus-3-*.md | Architecture mapping |
-| boulder.json | Session state |
+> 本文档已迁移至 [`_archive/CLEANUP.md`](_archive/CLEANUP.md)。
+>
+> 根目录不再保留历史文档副本。如需查阅，请访问归档位置。
+> 当前状态请以 `state/system.yaml` 和 `goals/current.yaml` 为准。

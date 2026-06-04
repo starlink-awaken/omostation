@@ -1,0 +1,24 @@
+version: 1
+approval_id: phase9-wave3-identity-admission-approval
+task_id: P9-W3-IDENTITY-ADMISSION-CONTRACT
+dispatch_id: phase9-wave3-identity-admission
+worker_id: copilot-cli
+approval_status: granted
+requested_operation_level: L2
+release_scope:
+  exact_action: project.dispatch
+  allowed_paths:
+  - spaces/system-space.yaml
+  denied_paths: []
+requested_at: '2026-05-31T12:35:00Z'
+approved_at: null
+expires_at: null
+approver: null
+refs:
+  task_ref: .omo/tasks/done/P9-W3-IDENTITY-ADMISSION-CONTRACT.yaml
+  run_ref: .omo/workers/runs/phase9-wave3-identity-admission-dispatch.yaml
+  review_ref: .omo/summaries/phase9-wave3-closeout.md
+evidence:
+  request_evidence:
+  - .omo/workers/runs/phase9-wave3-identity-admission-envelope.yaml
+  approval_evidence: []

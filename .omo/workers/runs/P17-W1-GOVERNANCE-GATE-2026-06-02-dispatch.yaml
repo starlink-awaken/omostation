@@ -1,0 +1,38 @@
+version: 1
+dispatch_id: P17-W1-GOVERNANCE-GATE
+task_id: P17-DEBT-GOVERNANCE-GATE-RULES
+worker_id: claude-code
+transport_mode: manual-anchor
+run_ref: .omo/workers/runs/P17-W1-GOVERNANCE-GATE-2026-06-02-dispatch.yaml
+dispatch_state: checkpointed
+coordinator: claude-code
+launched_at: '2026-06-02T01:52:00Z'
+lease:
+  heartbeat_interval_seconds: 300
+  warning_after_seconds: 86400
+  lease_expired_after_seconds: 172800
+  reclaim_after_seconds: 259200
+  last_checkpoint_at: '2026-06-02T01:52:00Z'
+  last_material_write_at: '2026-06-02T01:52:00Z'
+inputs:
+  task_yaml: .omo/tasks/active/P17-DEBT-GOVERNANCE-GATE-RULES.yaml
+execution:
+  launch_command: manual-placeholder
+  approval_ref: .omo/workers/runs/P17-W1-SB-APPROVED-2026-06-01.md
+  session_ref: null
+  log_ref: null
+  checkpoint_refs:
+    - .omo/workers/runs/P17-W1-GOVERNANCE-GATE-2026-06-02.md
+handoff:
+  output_summary_ref: .omo/workers/runs/P17-W1-GOVERNANCE-GATE-2026-06-02-review.md
+  evidence_paths:
+    - .omo/tasks/active/P17-DEBT-GOVERNANCE-GATE-RULES.yaml
+  unresolved_risks: []
+  next_handoff: .omo/workers/runs/P17-W1-GOVERNANCE-GATE-2026-06-02-review.md
+reclaim:
+  required: false
+  reason: null
+  reclaimed_at: null
+  successor_worker_id: null
+  successor_dispatch_id: null
+  note_ref: null

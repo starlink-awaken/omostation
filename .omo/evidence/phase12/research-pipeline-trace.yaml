@@ -1,0 +1,37 @@
+trace_id: research-pipeline-trace
+created_at: '2026-05-31T23:51:59Z'
+mode: dry-run
+scenario: .omo/scenarios/research-pipeline.yaml
+scenario_id: research-pipeline
+status: ready
+missing_capabilities: []
+bindings:
+- capability_id: kairon.kronos
+  entrypoint: projects/kairon/packages/kronos
+  protocol: local
+- capability_id: kairon.ontoderive
+  entrypoint: projects/kairon/packages/ontoderive
+  protocol: local
+- capability_id: kairon.minerva
+  entrypoint: projects/kairon/packages/minerva
+  protocol: local
+- capability_id: project.gbrain
+  entrypoint: projects/gbrain
+  protocol: local
+steps:
+- step: 1
+  capability_id: kairon.kronos
+  status: simulated
+  entrypoint: projects/kairon/packages/kronos
+- step: 2
+  capability_id: kairon.ontoderive
+  status: simulated
+  entrypoint: projects/kairon/packages/ontoderive
+- step: 3
+  capability_id: kairon.minerva
+  status: simulated
+  entrypoint: projects/kairon/packages/minerva
+- step: 4
+  capability_id: project.gbrain
+  status: simulated
+  entrypoint: projects/gbrain

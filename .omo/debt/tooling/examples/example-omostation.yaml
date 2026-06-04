@@ -1,0 +1,42 @@
+# omostation Technical Debt Example
+# Project: omostation (Multi-project workspace)
+# Stage: stable_growth (23 commits/month)
+
+id: OMO-D01
+title: kairon 包测试覆盖率不足
+description: |
+  kairon monorepo (17 个包) 的测试覆盖率不均衡：
+  
+  覆盖率现状：
+  - 核心包 (agora, ontoderive): 85-90% ✅
+  - 工具包 (wksp, kos): 60-70% ⚠️
+  - 新包 (sophia, minerva): 40-50% ❌
+  
+  影响：
+  1. 重构风险高（缺少回归测试）
+  2. Bug 容易进入生产
+  3. 代码质量难以保证
+  
+  根本原因：
+  - 快速开发期间测试滞后
+  - 缺少测试覆盖率 CI 门禁
+
+impact: 8
+frequency: 6
+cost: 8
+
+evidence:
+  commits:
+    - "abc123"  # kairon 初始提交
+    - "def456"  # 最近测试修复
+  issues:
+    - "#42"   # 测试覆盖率追踪
+    - "#89"   # 生产 bug (缺少测试)
+  refs:
+    - "projects/kairon/README.md"
+    - "projects/kairon/Makefile"
+
+metadata:
+  created: "2026-06-03"
+  owner: "kairon-maintainers"
+  tags: ["testing", "quality", "ci-cd"]

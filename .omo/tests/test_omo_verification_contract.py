@@ -41,7 +41,7 @@ def test_governance_workflow_uses_canonical_runner() -> None:
 
 
 def test_omo_agent_documents_canonical_verification_command() -> None:
-    agent = _read(".omo/AGENT.md")
+    agent = _read(".omo/_knowledge/usage/AGENT.md")
 
     assert "canonical `.omo` verification command" in agent.lower()
     assert "`bash bin/verify-omo.sh`" in agent

@@ -1,0 +1,36 @@
+id: P5-W1-RUNTIME-GOVERNANCE-PACKET
+phase: 5
+milestone: W1
+priority: P0
+title: Freeze the durable runtime and governance core packet
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase5-wave1-packet
+run_ref: .omo/plans/archive/phase5-wave1-execution-plan.md
+approval_ref: null
+review_ref: .omo/summaries/phase5-wave1-retrospective.md
+knowledge_refs:
+  - .omo/_knowledge/design/phase5-proposal-governance-model.md
+  - .omo/_knowledge/design/phase5-task-center-landing-model.md
+  - .omo/_knowledge/design/phase5-secrets-ownership.md
+handoff_refs: []
+source_docs:
+  - .omo/plans/archive/phase5-program-plan.md
+  - .omo/_knowledge/design/phase5-program-architecture.md
+deliverables:
+  - .omo/plans/archive/phase5-wave1-execution-plan.md
+  - .omo/summaries/phase5-wave1-retrospective.md
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - G5.0 completed
+evidence_required:
+  - durable runtime seam is explicit
+  - governance deny path is explicit
+test_plan:
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-05-31T11:40:00Z'
+completed_at: '2026-05-31T11:50:00Z'
+retry_count: 0
+completion_summary: "Wave 1 closed as a runtime/governance foundation packet based on the existing worker runtime, proposal contract, and Hermes convergence rules."

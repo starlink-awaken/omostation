@@ -1,0 +1,101 @@
+id: M2.3-SSOT-7-DOMAIN-SCHEMA
+phase: 2
+milestone: M2.3
+priority: P0
+title: "SSOT 7 domain schema — define full_execution source-of-truth domains"
+status: done
+owner: governance
+assigned_to: "reasonix-code"
+risk_level: L0
+allowed_operation_level: L0
+created_at: "2026-05-30"
+
+description: >
+  Initialize and register SSOT 7-domain schema definitions across the
+  omostation knowledge architecture. Each domain must have a clear schema,
+  field constraints, data source mapping, and acceptance criteria.
+
+source_docs:
+  - ".omo/plans/archive/phase2-task-specs-v2.md"
+  - ".omo/standards/phase2-full-execution-go-no-go.md"
+  - ".omo/MASTER-BLUEPRINT.md"
+  - ".omo/comprehensive-architecture-audit.md"
+
+inputs:
+  - ".omo/tasks"
+  - ".omo/state/system.yaml"
+  - ".omo/goals/current.yaml"
+  - "convergence.yaml"
+  - "projects/kairon/packages/ssot/domains/"
+
+dependencies: []
+blocked_by: null
+
+outputs:
+  ssot_7_domain_schema_draft:
+    description: "Preliminary schema for all 7 SSOT domains"
+    format: "YAML files under kairon/packages/ssot/domains/"
+    expected_items:
+      - knowledge.yaml
+      - work.yaml
+      - family.yaml
+      - ai.yaml
+      - system.yaml
+      - data.yaml
+      - media.yaml
+
+  field_constraints:
+    description: "Per-field type, required/optional, uniqueness, enum values"
+    format: "Inline in each domain YAML"
+
+  data_source_mapping:
+    description: "Each domain's authoritative data source"
+    items:
+      - domain: knowledge → Obsidian vault
+      - domain: work → ~/Documents/工作文档
+      - domain: family → iCloud FamilyShared
+      - domain: ai → AROOL_REGISTRY + Agora registry
+      - domain: system → .omo/ + Hermes
+      - domain: data → filesystem + iCloud + SharedDisk
+      - domain: media → SharedDisk
+
+  acceptance_criteria:
+    - "7 domains clearly named and scoped"
+    - "Each domain has an owner / source of truth / write policy"
+    - "Relationships with .omo/tasks, .omo/state, .omo/goals, convergence.yaml are explicit"
+    - "No sensitive capability launched"
+
+  migration_compatibility_notes:
+    description: "Ensure existing KOS entities map cleanly to new domain schemas"
+    action: "Document any conflicts before schema activation"
+
+evidence:
+  - "Schema document: .omo/standards/ssot-7-domain-schema.md"
+  - "Existing ssot domain YAMLs verified: projects/kairon/packages/ssot/domains/ (7 files exist)"
+  - "KOS zone→domain mapping documented: 6 zones mapped to 5 SSOT domains"
+  - "Agent write rules documented: coordinator sync vs independent write matrix"
+  - "Sensitive capabilities remain blocked: section 7"
+  - "Validation checklist: 10 items defined in section 6"
+evidence_required:
+  - "Schema draft file path"
+  - "7-domain owner/source/write-policy checklist"
+  - "Governance relationship mapping for tasks/state/goals/convergence"
+  - "Coordinator verification result"
+notes: >
+  Schema document created at .omo/standards/ssot-7-domain-schema.md.
+  7 domains fully defined with owner/SOT/write-policy/read-policy.
+  Governance file relationships explicit for system.yaml, goals.yaml, convergence.yaml.
+  KOS baseline (7327 docs) referenced. Agent write rules matrix documented.
+  Sensitive capabilities confirmed blocked. No sensitive capability launched.
+  YAML parse check: active/3 files all pass.
+reviewed_by: "agent:copilot"
+completed_at: "2026-05-30T14:38:16+08:00"
+
+test_plan:
+  - ".omo/tests/README.md#ssot-schema-tests"
+
+acceptance_criteria:
+  - "7 domains clearly named and scoped"
+  - "Each domain has an owner / source of truth / write policy"
+  - "Relationships with .omo/tasks, .omo/state, .omo/goals, convergence.yaml are explicit"
+  - "No sensitive capability launched"

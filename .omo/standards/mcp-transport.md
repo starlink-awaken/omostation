@@ -1,5 +1,9 @@
 # MCP 传输规范 MCP-01
 
+> 状态: merged
+> 已合并至 `.omo/standards/mcp-tool-and-transport-standard.md`
+> 本文件保留为历史 transport 快照，不再作为新的 workflow 引用入口。
+
 ## 原则
 - 新 MCP Server 默认用 stdio 传输
 - 需要网络暴露的用 SSE（HTTP 流）

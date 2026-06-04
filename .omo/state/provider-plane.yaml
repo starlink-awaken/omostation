@@ -1,0 +1,37 @@
+updated_at: '2026-05-30T15:35:11Z'
+standard_env_contract:
+  vars:
+  - LLM_PROVIDER
+  - LLM_BASE_URL
+  - LLM_API_KEY
+  - LLM_MODEL
+  consumers:
+  - projects/gbrain
+  - projects/kairon/packages/minerva
+  - projects/kairon/packages/ssot
+  - projects/kairon/packages/ontoderive
+  - projects/kairon/packages/metaos
+selected_provider:
+  provider_id: a150bd78-35f6-4e63-8654-9f8e8fac1d15
+  app_type: claude
+  name: DeepSeek
+  base_url: https://api.deepseek.com/anthropic
+  model: DeepSeek-V4-pro[1m]
+  is_healthy: true
+  last_success_at: '2026-05-29T02:05:08.336304+00:00'
+  source: cc-switch
+quota_summary:
+  provider_count: 1
+  providers:
+    openrouter:
+      available: true
+      summary: balance=$26.72, used=46.56187174%
+      balance: 26.71906413
+      used_percent: 46.56187174
+litellm_health:
+  healthy_count: 1
+  unhealthy_count: 1
+  healthy_models:
+  - anthropic/DeepSeek-V4-pro[1m]
+  unhealthy_models:
+  - openai/gpt-4o

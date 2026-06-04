@@ -1,0 +1,24 @@
+debts:
+  - id: GBR-D01
+    title: 未实现跨表关联查询
+    impact: 9
+    frequency: 8
+    cost: 7
+  
+  - id: GBR-D02
+    title: 缺少事务回滚机制
+    impact: 7
+    frequency: 5
+    cost: 6
+  
+  - id: GBR-D03
+    title: SQL 注入风险未全面防护
+    impact: 10
+    frequency: 3
+    cost: 5
+  
+  - id: GBR-D04
+    title: 缺少查询结果缓存
+    impact: 6
+    frequency: 7
+    cost: 4

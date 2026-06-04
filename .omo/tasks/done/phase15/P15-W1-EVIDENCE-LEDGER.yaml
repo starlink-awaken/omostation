@@ -1,0 +1,8 @@
+id: P15-W1-EVIDENCE-LEDGER
+phase: 15
+status: done
+title: Evidence ledger baseline
+evidence_refs:
+  - .omo/_truth/governance-evidence/ledger.yaml
+  - .omo/evidence/phase15/user-value-loop.yaml
+verification: ledger includes required governance, project, and user-value envelope types

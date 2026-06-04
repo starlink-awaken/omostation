@@ -1,0 +1,28 @@
+version: 1
+task_id: P10-W4-CROSS-SPACE-CLOSEOUT
+worker_id: copilot-cli
+transport_mode: cli_prompt
+run_ref: .omo/workers/runs/phase10-wave4-cross-space-closeout-dispatch.yaml
+knowledge_refs:
+  - .omo/plans/phase10-wave4-execution-plan.md
+  - .omo/summaries/phase10-wave4-closeout.md
+handoff_refs:
+  - .omo/workers/runs/phase10-wave4-cross-space-closeout-prompt.md
+  - .omo/workers/runs/phase10-wave4-cross-space-closeout-checkpoint.md
+  - .omo/workers/runs/phase10-wave4-cross-space-closeout-review.md
+  - .omo/workers/runs/phase10-wave4-cross-space-closeout-reclaim.md
+objective: Close Phase 10 by proving the first cross-space normalized bundle reuse
+task_yaml: .omo/tasks/done/P10-W4-CROSS-SPACE-CLOSEOUT.yaml
+inputs:
+  source_docs:
+    - .omo/plans/phase10-wave4-execution-plan.md
+    - .omo/summaries/phase10-wave4-closeout.md
+execution_context:
+  space_ref: spaces/runtime-space.yaml
+  membership_ref: runtime-space-observer-membership
+  action: runtime.observe
+rules_context:
+  registry_ref: spaces/runtime-space-cross-root-rule-registry.yaml
+gates:
+  approval_ref: .omo/workers/runs/phase9-wave3-identity-admission-approval.yaml
+  acceptance_ref: .omo/workers/runs/phase9-wave4-rollout-ops-acceptance.yaml

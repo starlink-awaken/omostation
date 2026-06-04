@@ -1,0 +1,32 @@
+id: P2-HARDCODED-PATHS-TICKET
+phase: 2
+milestone: M2.6
+priority: P2
+title: Document and batch-fix ~25 hardcoded /Users/xiamingxing paths across active
+  source
+status: review
+assigned_to: reasonix-code
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+started_at: '2026-05-30T03:34:00+08:00'
+completed_at: '2026-05-30T03:35:00+08:00'
+evidence:
+- 'Inventory: .omo/standards/hardcoded-paths-inventory.md'
+- 2 paths fixed (sync.py, test_phase2_integration.py)
+- Remaining 21 paths documented for follow-up
+source_docs: []
+depends_on: []
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+entry_gate:
+- Hardcoded path inventory exists
+evidence_required:
+- Hardcoded path inventory documented
+- At least 5 paths fixed as proof of pattern
+- Remaining paths filed as follow-up ticket
+test_plan: []

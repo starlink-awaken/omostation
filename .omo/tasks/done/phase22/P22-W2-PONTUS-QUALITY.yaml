@@ -1,0 +1,35 @@
+id: P22-W2-PONTUS-QUALITY
+phase: 22
+milestone: M22.2
+priority: P0
+title: 'Pontus: 断点续传+数据质量校验+去重'
+status: pending
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/future-active-l2l3-pending-approval-2026-06-02.md
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../_knowledge/design/MASTER-BLUEPRINT.md
+depends_on:
+- P22-W1-PONTUS-DSL-SCHEDULER
+entry_gate:
+- phase21_completed
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- 断点续传(失败从断点恢复)
+- 格式校验+类型检查
+- 跨源实体去重
+- 源可信度评分
+acceptance_criteria:
+- 管线失败后可从断点恢复
+- 去重准确率 >95%(已知测试集)
+- 测试≥70%通过率
+test_plan:
+- 补齐 Pontus 质量能力后验证断点续传、校验与去重场景
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'

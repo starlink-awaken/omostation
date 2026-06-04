@@ -1,0 +1,34 @@
+generated_at: '2026-06-03T15:25:00Z'
+debt_metrics:
+  debt_health: 100.0
+  classification_entropy: 0.0
+  state_entropy: 0.0
+  pointer_entropy: 0.0
+  time_entropy: 0.0
+  backlog_pressure: 0.0
+  coupling_load: 0.0
+watchlist_item_ids:
+  - R1_P0_SURFACE_GAP
+  - R2_AGORA_NOT_RUNNING
+  - R3_LAYER_INDEX_DRIFT
+  - R4_RUNTIME_ADAPTER_DEBT
+  - R5_METAOS_PATH_INSERT
+  - R6_SB_STANDALONE_NO_TESTS
+gate_item_ids:
+  - R1_P0_SURFACE_GAP
+  - R2_AGORA_NOT_RUNNING
+overdue_review_count: 0
+overdue_review_item_ids: []
+next_review_queue:
+  - item_id: R1_P0_SURFACE_GAP
+    review_at: '2026-06-17T00:00:00Z'
+  - item_id: R2_AGORA_NOT_RUNNING
+    review_at: '2026-06-10T00:00:00Z'
+  - item_id: R3_LAYER_INDEX_DRIFT
+    review_at: '2026-06-10T00:00:00Z'
+  - item_id: R4_RUNTIME_ADAPTER_DEBT
+    review_at: '2026-07-03T00:00:00Z'
+  - item_id: R5_METAOS_PATH_INSERT
+    review_at: '2026-07-03T00:00:00Z'
+  - item_id: R6_SB_STANDALONE_NO_TESTS
+    review_at: '2026-06-17T00:00:00Z'

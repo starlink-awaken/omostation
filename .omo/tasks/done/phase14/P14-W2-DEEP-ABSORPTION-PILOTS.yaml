@@ -1,0 +1,33 @@
+id: P14-W2-DEEP-ABSORPTION-PILOTS
+phase: 14
+milestone: W2
+priority: P0
+title: Deep absorption adapter-contract pilots
+status: done
+assigned_to: codex
+dispatch_id: phase14-wave2-deep-absorption-pilots
+run_ref: .omo/summaries/phase14-closeout.md
+approval_ref: user-request-2026-06-01-start-complete-phase14
+review_ref: .omo/_knowledge/management/phase14-cross-audit.md
+source_docs:
+  - .omo/plans/archive/phase14-program-plan.md
+deliverables:
+  - .omo/evidence/phase14/deep-absorption-pilots.yaml
+depends_on:
+  - P14-W1-INTEGRATION-TRIAGE
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 14 Wave 1 triage complete
+evidence_required:
+  - selected pilots have rollback
+test_plan:
+  - python3 -m pytest .omo/tests/test_phase14_execution.py -q
+started_at: '2026-06-01T06:10:00Z'
+completed_at: '2026-06-01T06:20:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary:
+  result: completed
+  closeout_ref: .omo/summaries/phase14-closeout.md

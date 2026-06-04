@@ -1,0 +1,45 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: OMO scenario definition
+type: object
+required:
+  - id
+  - description
+  - capabilities
+  - bindings
+  - failure_policy
+properties:
+  id:
+    type: string
+    minLength: 1
+  description:
+    type: string
+    minLength: 1
+  capabilities:
+    type: array
+    minItems: 1
+    items:
+      type: string
+  bindings:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      required:
+        - from
+        - to
+        - mode
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        mode:
+          enum:
+            - dry-run
+            - local
+            - mcp
+  failure_policy:
+    enum:
+      - fail-closed
+      - fallback-with-audit
+      - proposal-only

@@ -1,0 +1,46 @@
+id: P10-W3-ACTION-FIRST-MATRIX
+phase: 10
+milestone: W3
+priority: P0
+title: Expand the normalized bundle into a two-action matrix
+status: done
+assigned_to: copilot-cli
+dispatch_id: phase10-wave3-action-matrix
+run_ref: .omo/workers/runs/phase10-wave3-action-matrix-dispatch.yaml
+approval_ref: .omo/workers/runs/phase9-wave3-identity-admission-approval.yaml
+review_ref: .omo/workers/runs/phase10-wave3-action-matrix-review.md
+knowledge_refs:
+  - .omo/plans/archive/phase10-program-plan.md
+  - .omo/plans/archive/phase10-wave3-execution-plan.md
+handoff_refs:
+  - .omo/workers/runs/phase10-wave3-action-matrix-prompt.md
+  - .omo/workers/runs/phase10-wave3-action-matrix-checkpoint.md
+source_docs:
+  - .omo/summaries/phase9-closeout-retrospective.md
+  - .omo/plans/archive/phase10-wave3-execution-plan.md
+deliverables:
+  - .omo/plans/archive/phase10-wave3-execution-plan.md
+  - .omo/_delivery/task-center/contracts/runtime-observe-delivery-contract.yaml
+  - .omo/workers/runs/phase10-wave3-action-matrix-envelope.yaml
+  - scripts/omo_rules.py
+  - .omo/tests/test_phase10_wave3_matrix.py
+depends_on: []
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 10 Wave 2 normalized bundle is green
+  - runtime/system-runtime-boundary.yaml is already ratified
+evidence_required:
+  - runtime.observe resolves through the normalized bundle keys
+  - project.dispatch still resolves through the same normalized interface
+  - rules-eval CLI remains action-agnostic
+test_plan:
+  - python3 scripts/omo_worker.py task validate --all-active
+  - python3 -m pytest .omo/tests/test_phase10_wave3_docs.py -q
+  - python3 -m pytest .omo/tests/test_phase10_wave3_matrix.py -q
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-05-31T21:31:00Z'
+completed_at: '2026-05-31T21:40:00Z'
+blocked_by: null
+retry_count: 0

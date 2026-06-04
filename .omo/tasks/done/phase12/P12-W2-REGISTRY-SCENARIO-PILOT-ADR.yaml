@@ -1,0 +1,39 @@
+id: P12-W2-REGISTRY-SCENARIO-PILOT-ADR
+phase: 12
+milestone: W2
+priority: P0
+title: Registry enablement, scenario MVP, and P0 pilot ADR
+status: done
+assigned_to: codex
+dispatch_id: phase12-wave2-registry-scenario-pilot-adr
+run_ref: .omo/summaries/phase12-closeout.md
+approval_ref: user-request-2026-06-01-complete-phase11-and-phase12
+review_ref: .omo/_knowledge/management/phase12-cross-audit.md
+source_docs:
+  - .omo/plans/archive/phase12-wave2-execution-plan.md
+deliverables:
+  - .omo/plans/archive/phase12-p0-pilot-adr.md
+  - .omo/registry/pilot-contract.yaml
+  - .omo/scenarios/research-pipeline.yaml
+  - .omo/standards/article-ingestion-policy.md
+  - .omo/registry/article-samples.yaml
+depends_on:
+  - P12-W1-METAMODEL-SCAN
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Wave 1 metamodel and core scan baseline complete
+evidence_required:
+  - exactly one P0 pilot selected
+  - research-pipeline scenario exists
+  - article policy and five samples exist
+test_plan:
+  - python3 -m pytest .omo/tests/test_phase12_execution.py -q
+started_at: '2026-06-01T00:20:00Z'
+completed_at: '2026-06-01T00:30:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary:
+  closeout_ref: .omo/summaries/phase12-closeout.md
+  result: completed

@@ -1,0 +1,39 @@
+id: P13-W4-SELF-HEALING-REHEARSAL
+phase: 13
+milestone: W4
+priority: P0
+title: Self-healing and strategic sensing dry-run
+status: done
+assigned_to: codex
+dispatch_id: phase13-wave4-self-healing-rehearsal
+run_ref: .omo/summaries/phase13-closeout.md
+approval_ref: user-request-2026-06-01-complete-phase11-12-13
+review_ref: .omo/summaries/phase13-closeout.md
+source_docs:
+  - .omo/plans/archive/phase13-metacognition-preplanning.md
+deliverables:
+  - .omo/evidence/phase13/self-healing-rehearsal.yaml
+  - .omo/summaries/phase13-closeout.md
+  - .omo/summaries/phase13-retrospective.md
+depends_on:
+  - P13-W3-SUPERVISED-COLLABORATION
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+entry_gate:
+  - Phase 13 Wave 3 supervised collaboration envelope complete
+evidence_required:
+  - self-healing rehearsal is dry-run
+  - auto-apply remains disabled
+  - Phase 13 closeout and retrospective exist
+test_plan:
+  - python3 -m pytest .omo/tests/test_phase13_execution.py -q
+  - python3 -m pytest .omo/tests -q
+started_at: '2026-06-01T05:30:00Z'
+completed_at: '2026-06-01T05:40:00Z'
+blocked_by: null
+retry_count: 0
+completion_summary:
+  closeout_ref: .omo/summaries/phase13-closeout.md
+  retrospective_ref: .omo/summaries/phase13-retrospective.md
+  result: completed

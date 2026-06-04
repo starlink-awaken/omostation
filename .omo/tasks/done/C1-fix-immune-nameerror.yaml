@@ -1,0 +1,30 @@
+id: C1-FIX-IMMUNE-NAMEERROR
+phase: 2
+milestone: M2.8-AUDIT-FIX
+priority: P0
+title: Fix immune.py metacognitive_quality_report NameError (C1)
+status: done
+assigned_to: codebuddy
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+owner: metaos
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+source_docs:
+- .omo/audits/phase2-comprehensive-audit-20260530.md
+inputs:
+- projects/kairon/packages/metaos/src/metaos/core/immune.py
+acceptance_criteria:
+- Line 115 uses self_assessments instead of undefined assessments variable
+- No NameError when metacognitive_quality_report executes with data
+evidence_required:
+- git diff showing line 115 fix
+- pytest passes on metaos package
+test_plan:
+- 'manual: verify no NameError in immune.py execution path'
+started_at: '2026-05-30T21:42:00+08:00'
