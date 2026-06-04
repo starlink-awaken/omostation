@@ -9,7 +9,11 @@ projects/gbrain/
 projects/_archived/
 
 # ---- 运行时数据持久层 ----
-SharedBrain/data/
+data/sharedbrain/data/
+data/kos/
+
+# ---- 运行时日志（Hermes Agent 持续写入） ----
+agent-runtime/
 
 # ---- 构建产物 ----
 .env
