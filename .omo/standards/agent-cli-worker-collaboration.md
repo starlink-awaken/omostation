@@ -283,14 +283,14 @@ After the budget is exhausted, the worker must produce one of:
 - a blocked report
 - a concrete replan
 
-### 8.2 Progress Lease
+### 8.2 Progress Lease & Auto-Reap
 
-Default execution lease:
+Default execution lease enforced by MCP-Native Reaper:
 
-- heartbeat/checkpoint every 5 minutes or after a material write
-- warning at 15 minutes
-- `lease_expired` at 20 minutes
-- reclaim/reassign at 30 minutes if no recovery occurs
+- **heartbeat/checkpoint**: every 5 minutes (via `mcp.tool: heartbeat` or material write).
+- **warning**: at 15 minutes.
+- **stale**: at 20 minutes (`lease_expired`).
+- **auto-reap**: at 30 minutes (`reclaim_due`), the `omo_worker.py` Auto-Reaper will forcibly terminate the lease and trigger `AUTO_RECLAIM_TIMEOUT`.
 
 ### 8.3 Stuck Worker Recovery
 

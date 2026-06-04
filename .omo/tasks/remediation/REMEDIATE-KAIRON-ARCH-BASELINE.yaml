@@ -1,0 +1,20 @@
+id: REMEDIATE-KAIRON-ARCH-BASELINE
+phase: '26'
+priority: P0
+title: kairon架构基线修复与控制面契约收口
+description: 先修复inventory漂移、packages目录污染、agora契约回归、agent-runtime依赖错位，再推进更高层能力建设。
+status: pending
+risk_level: L3
+allowed_operation_level: L2
+human_approval_required: true
+depends_on: []
+acceptance_criteria:
+  - kairon repo docs and live package count agree on 25 or newer recomputed truth
+  - packages目录不再出现非包成员警告
+  - agora registry/router/event-payload targeted tests pass
+  - agent-runtime documented workspace install path can pass package tests
+  - agentmesh and SharedBrain migration references match live tree reality
+knowledge_refs:
+  - /Users/xiamingxing/Workspace/projects/kairon/docs/architecture_audit.md
+  - /Users/xiamingxing/Workspace/projects/kairon/docs/cross_project_boundary_audit.md
+  - /Users/xiamingxing/Workspace/projects/kairon/docs/governance_plan.md

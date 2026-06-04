@@ -46,7 +46,7 @@ return {"status": "ok", "format_version": FORMAT_VERSION, ...}
 - 新 MCP server 默认使用 **stdio**
 - 需要网络暴露或流式接入时使用 **SSE / streamable HTTP**
 - 默认超时：`30s`
-- 每个 MCP server 必须提供 `health`/状态能力
+- 每个 MCP server 必须提供 `health`/状态能力。作为外部 Worker 接入时，必须支持心跳接口（`mcp.tool: heartbeat` 或被动响应看门狗探测），Coordinator 将据此刷新 Lease 续期。
 
 ## 3. Server baseline
 

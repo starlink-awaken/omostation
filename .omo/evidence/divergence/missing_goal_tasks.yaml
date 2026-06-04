@@ -1,6 +1,0 @@
-rule: missing_goal_tasks
-count: 0
-task_ids: []
-status: resolved
-resolution: "P16 tasks archived to tasks/done/phase16-archive/"
-resolved_at: '2026-06-04T11:30:00Z'

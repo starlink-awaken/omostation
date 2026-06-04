@@ -1,0 +1,9 @@
+id: IMPORTED-bd096d
+title: 初始化数据库表结构
+status: planned
+task_type: feature
+depends_on: []
+source_docs:
+- /Users/xiamingxing/Workspace/scratch/demo-spec.md
+deliverables: []
+imported_via: omo_bridge

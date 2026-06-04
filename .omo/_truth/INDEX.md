@@ -13,6 +13,8 @@
 | `tasks/done/` | 已完成任务归档 |
 | `standards/` | 标准与规范 |
 | `registry/` | 注册表（workers, organs 等） |
+| `_truth/04-omo-architecture-and-governance.md` | OMO 双核联邦分形架构与治理总纲 |
+| `_truth/05-omo-v4-evolutionary-architecture.md` | OMO v4.0 超越四平面与动态演化机制 |
 | `_truth/INVENTORY.md` | 资产清单 |
 | `_truth/task-center/proposals/` | 提案注册表（元数据） |
 

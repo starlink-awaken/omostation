@@ -1,0 +1,42 @@
+name: OMO Autopilot (v4.0 Evolutionary Loop)
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # Run at 2 AM UTC daily
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  metabolic_loop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+          
+      - name: Install OMO Tools
+        run: |
+          uv tool install ./projects/omo
+          uv tool install ./projects/omo-debt
+          
+      - name: 1. Perception (Sense Debt)
+        run: |
+          omo-debt analyze .omo --output .omo/debt/dispatch/current.yaml
+          
+      - name: 2. Metabolism (GC)
+        run: |
+          omo gc
+          
+      - name: 3. Ledger Snapshot (Governance Log)
+        run: |
+          omo ledger --message "Automated Daily Metabolic Snapshot"
+          
+      - name: Create Pull Request if changes exist
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore(omo): daily metabolic evolution"
+          branch: omo-daily-metabolism
+          title: "🤖 OMO Daily Metabolic Evolution"
+          body: "Automated cleanup, debt assessment, and ledger snapshot."

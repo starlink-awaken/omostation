@@ -1,184 +1,120 @@
 # Workspace 项目资产清单
 
-> 生成: 2026-05-29 | 更新: 2026-06-03
-> 架构: 根仓库 omostation + 5 嵌入式子仓库
-> ⚠️ 注意: 包数量等动态数据可能滞后，请以 `projects/kairon/pyproject.toml` 和实际目录为准
+> 生成: 2026-06-04
+> 性质: live inventory snapshot
+> 原则: 以当前工作树和可复算目录结果为准；历史文档和旧阶段报告只作候选证据，不作真相源
 
 ---
 
 ## 概览
 
-| 维度 | 数值 |
-|------|------|
-| 根仓库 | omostation（starlink-awaken/omostation） |
-| 嵌入式子仓库 | 5（kairon, SharedBrain, agentmesh, gbrain, _archived） |
-| kairon Python 包 | 31 |
-| SharedBrain Python | ~115 .py 文件（源代码已归档至 `projects/_archived/SharedBrain-code/`） |
-| agentmesh TypeScript | ~5,148 .ts 文件 |
-| gbrain TypeScript | ~1,257 .ts 文件 |
-| .omo 跟踪文件 | 89 |
-| 已归档旧项目 | 22 |
+| 维度 | 当前事实 |
+|------|----------|
+| 根仓库 | `omostation` workspace root |
+| 当前 `projects/` 可见项目 | `kairon`, `gbrain`, `agentmesh`, `hermes-console`, `_archived` |
+| `kairon` 活跃 Python 包 | **25** |
+| `agentmesh` 状态 | 已归档壳，README 声明能力已迁入 `kairon` |
+| `SharedBrain` 状态 | 当前 `projects/` 树中**不存在独立 sibling repo** |
+| `.omo` 角色 | 治理与证据层，不应替代 repo 侧 live inventory |
 
 ---
 
-## 一、kairon — 知识工程与研究栈（31 包 monorepo）
+## 一、kairon — 知识工程与研究栈（25 包）
 
 > 位置: `projects/kairon/`
-> 构建: UV workspace + hatchling
-> 源码布局: `src/<package>/`（除 ontoderive 使用 flat 布局）
+> 构建: `uv` workspace
+> 说明: 当前 checkout 可见 25 个带 `pyproject.toml` 的包
 
-### 1.1 运行时与基础设施
+### 1.1 当前活跃包
 
-| 包 | 源码 | 状态 | 说明 |
-|----|------|------|------|
-| **agora** | 65 src .py | active | MCP 服务融合 Hub（pipeline/eventbus/路由/监控） |
-| **agent-hub** | — | active | Agent 注册与发现 |
-| **agent-runtime** | 7 src .py | active | Agent 运行时环境 |
-| **codeanalyze** | 63 src .py | active | 代码与文档分析工具集 |
-| **core-models** | 6 src .py | active | 核心数据模型定义 |
-| **cron-service** | 11 src .py | active | 定时任务服务 |
-| **ecos** | 18 src .py | active | 外化认知操作系统 |
-| **eidos** | 28 src .py | active | 元模型本体建模 / Schema 验证 |
-| **engine-core** | — | active | 引擎核心基础设施 |
-| **eu-pricing** | — | active | EU 定价与能量模型 |
-| **forge** | 22 src .py | active | 内部工具注册与发现（111 tools） |
-| **gc-engine** | — | active | GC 引擎 |
-| **iris** | 46 src .py | active | 个人知识平台连接器 Hub |
-| **kairon-assistant** | — | active | Kairon 助手 |
-| **kairon-voice** | — | active | Kairon 语音 |
-| **kaironcloud-billing** | — | active | KaironCloud 计费 |
-| **kos** | 63 src .py | active | 知识操作系统 CLI（26 MCP tools） |
-| **kronos** | 14 src .py | active | 知识摄取管线 |
-| **llm-gateway** | — | active | LLM 网关 |
-| **metaos** | 27 src .py | active | 元操作系统引擎 |
-| **minerva** | 63 src .py | active | 本地优先深度研究系统 |
-| **observability** | — | active | 可观测性 |
-| **ontoderive** | engine/ (~127 .py) | active | 事实驱动知识工程引擎 |
-| **pontus** | — | active | Pontus |
-| **shared-lib** | — | active | 共享库 |
-| **sharedbrain-bridge** | — | active | SharedBrain 桥接 |
-| **sharedbrain-standalone** | — | active | SharedBrain 独立运行时 |
-| **sophia** | 9 src .py | active | 符号化研究范式引擎 |
-| **ssot** | 49 src .py | active | 单一真相源 |
-| **symphony-protocol** | — | active | Symphony 协议 |
-| **wksp** | 53 src .py | active | 统一 CLI 工作台 |
+- `agent-runtime`
+- `agora`
+- `codeanalyze`
+- `core-models`
+- `cron-service`
+- `ecos`
+- `eidos`
+- `engine-core`
+- `forge`
+- `iris`
+- `kairon-assistant`
+- `kairon-voice`
+- `kaironcloud-billing`
+- `kos`
+- `kronos`
+- `llm-gateway`
+- `metaos`
+- `minerva`
+- `ontoderive`
+- `shared-lib`
+- `sharedbrain-bridge`
+- `sophia`
+- `ssot`
+- `symphony-protocol`
+- `wksp`
 
-### 1.2 知识工程核心
+### 1.2 重要说明
 
-| 包 | 源码 | 状态 | 说明 |
-|----|------|------|------|
-| **ontoderive** | engine/ (~127 .py) | active | 事实驱动知识工程引擎（渊衍框架 v3.6.4） |
-| **eidos** | 28 src .py | active | 元模型本体建模 / Schema 验证 |
-| **sophia** | 9 src .py | active | 符号化研究范式引擎 v0.2.1 |
-| **ssot** | 49 src .py | active | 单一真相源（配置/状态管理） |
+- `packages/` 目录必须只容纳包成员；运行期 DB、分析产物、临时文件不应放在这里。
+- `core-models` 是当前最明确的依赖基座，但不能单靠它解释整体运行时架构。
+- `wksp` 是否为统一 operator-home，必须以 repo 侧运行和文档契约确认，不能靠历史叙述默认成立。
 
-### 1.3 研究与分析
+### 1.3 当前已知漂移风险
 
-| 包 | 源码 | 状态 | 说明 |
-|----|------|------|------|
-| **minerva** | 63 src .py | active | 本地优先深度研究系统（5 MCP tools） |
-| **codeanalyze** | 63 src .py | active | 代码与文档分析工具集 |
-| **iris** | 46 src .py | active | 个人知识平台连接器 Hub |
-
-### 1.4 操作系统层
-
-| 包 | 源码 | 状态 | 说明 |
-|----|------|------|------|
-| **kos** | 63 src .py | active | 知识操作系统 CLI（26 MCP tools） |
-| **metaos** | 27 src .py | active | 元操作系统引擎 v7.1（9 MCP tools） |
-| **ecos** | 18 src .py | active | 外化认知操作系统 v0.6.0 |
-
-### 1.5 工具与通用
-
-| 包 | 源码 | 状态 | 说明 |
-|----|------|------|------|
-| **forge** | 22 src .py | active | 内部工具注册与发现 |
-| **kronos** | 14 src .py | active | 知识摄取管线 |
-| **core-models** | 6 src .py | active | 核心数据模型定义 |
+- 历史资料常写 `26/31` 包，这与当前 checkout 不符。
+- 近期 git 历史和旧文档仍引用过以下当前树中不存在的包名：
+  - `agent-hub`
+  - `eu-pricing`
+  - `gc-engine`
+  - `observability`
+  - `pontus`
+  - `sharedbrain-standalone`
 
 ---
 
-## 二、SharedBrain — 数字化生命 OS
+## 二、agentmesh — 已归档接缝项目
 
-| 属性 | 值 |
-|------|-----|
-| **位置** | `projects/SharedBrain/` |
-| **规模** | ~115 .py 文件（文档+配置+测试；源码已归档） |
-| **入口** | 文档参考（非运行时） |
-| **技术栈** | 已分解；运行时能力迁移至 kairon 包 |
-| **关键目录** | data/, docs/, config/, tests/（源码已归档至 `projects/_archived/SharedBrain-code/`） |
-| **状态** | 文档参考仓库（分解完成 2026-06-03） |
+| 属性 | 当前事实 |
+|------|----------|
+| 位置 | `projects/agentmesh/` |
+| 状态 | 归档壳 |
+| 当前角色 | 保留迁移声明和归档入口，不再视为主开发面 |
+| 风险 | README 中曾把 Agent Registry 指向 `packages/agent-hub/`，但当前 `kairon` checkout 未见该包 |
 
 ---
 
-## 三、agentmesh — 多 Agent SDK（TypeScript monorepo）
+## 三、gbrain — 知识脑
 
-| 属性 | 值 |
-|------|-----|
-| **位置** | `projects/agentmesh/` |
-| **规模** | ~5,148 .ts 文件 |
-| **运行时** | bun |
-| **包数** | 7（core-types, model-orchestrator, gateway, engine, toolkit, server, cli） |
-| **入口** | `agentmesh` CLI, HTTP :3000, MCP stdio |
-| **状态** | 最活跃（持续提交） |
+| 属性 | 当前事实 |
+|------|----------|
+| 位置 | `projects/gbrain/` |
+| 技术栈 | TypeScript / bun |
+| 状态 | 活跃 |
+| 角色 | 独立知识捕获与检索能力面，和 `kairon` 通过场景/桥接契约协同 |
 
 ---
 
-## 四、gbrain — 知识脑
+## 四、hermes-console
 
-| 属性 | 值 |
-|------|-----|
-| **位置** | `projects/gbrain/` |
-| **规模** | ~1,257 .ts 文件 |
-| **运行时** | bun |
-| **数据库** | Postgres（TypeORM） |
-| **状态** | 活跃 |
+| 属性 | 当前事实 |
+|------|----------|
+| 位置 | `projects/hermes-console/` |
+| 状态 | 独立项目，待进一步架构对齐评估 |
 
 ---
 
-## 五、已归档（projects/_archived/）
+## 五、_archived
 
-| 项目 | 原位置 | 归档原因 |
-|------|--------|----------|
-| AggreResearch | `_archived/ecosystem/` | 功能被 minerva 覆盖 |
-| hermes-agent-self-evolution | `_archived/ecosystem/` | 功能合并 |
-| crush | `_archived/` | — |
-| gstack_old | `_archived/` | 被 gstack 替代 |
-| +18 其他 | `_archived/` | 迁移/清理 |
+| 属性 | 当前事实 |
+|------|----------|
+| 位置 | `projects/_archived/` |
+| 角色 | 历史项目和迁移资料归档区 |
+| 注意 | 归档内容可作迁移证据，不应默认代表 live capability |
 
 ---
 
-## 六、目录规范
+## 六、治理约束
 
-```
-omostation/
-├── .omo/                    # 治理知识库
-├── projects/
-# kairon/              # Python monorepo（31 包）
-│   │   └── packages/<name>/
-│   ├── SharedBrain/         # 数字化生命 OS
-│   ├── agentmesh/           # Agent SDK
-│   ├── gbrain/              # 知识脑
-│   └── _archived/           # 旧项目备份
-├── README.md                # 项目总览
-├── AGENTS.md                # 项目治理边界
-├── Makefile                 # 跨项目命令
-├── docker-compose.yml       # 服务编排
-├── convergence.yaml         # 融合治理状态
-├── CONTRIBUTING.md          # 贡献指南
-├── CODE_OF_CONDUCT.md       # 行为准则
-└── LICENSE                  # MIT
-```
-
----
-
-## 七、重点债务
-
-1. SharedBrain 中遗留硬编码旧项目绝对路径（如 `/Users/xiamingxing/Workspace/Forge/`）
-2. ontoderive 使用 flat 布局（engine/），未迁移到 src/ 布局
-3. 部分 kairon 包测试覆盖率 < 50%
-4. 跨项目集成测试未系统化
-
----
-
-*维护: 2026-05-29 · 反映 omostation + kairon monorepo 架构*
+1. repo 内当前结构优先于 `.omo` 历史叙述。
+2. `.omo` 只登记 live evidence、task、closeout，不复制 repo 正式报告正文。
+3. 任何包数、项目边界、迁移状态，都应能被目录扫描或测试输出复算。
