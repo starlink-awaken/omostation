@@ -185,7 +185,7 @@ bash tests/integration/run-all.sh
 | `LAYER-INDEX.md` | 分层架构索引（I0-L4） |
 | `convergence.yaml` | 融合治理状态 |
 | `.omo/INDEX.md` | 治理知识库导航 |
-| `.omo/INDEX.md` | 治理知识库导航 |
+| `data/` | 数据层（`db/`, `kos/`, `sharedbrain/`） |
 | `.omo/state/system.yaml` | 当前系统运行状态 |
 | `.omo/goals/current.yaml` | 当前 Phase 目标 |
 | `.omo/MASTER-BLUEPRINT.md` | 长期蓝图 |

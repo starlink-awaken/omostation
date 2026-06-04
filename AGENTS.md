@@ -10,20 +10,19 @@ This root directory is a **multi-project workspace** containing independent git 
 |---------|-------|----------|--------|
 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 31 packages |
 | `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — Knowledge Brain |
-| `SharedBrain` | Python | `projects/SharedBrain/` | ⚪ Archived — 代码已迁移至 kairon/sharedbrain-standalone |
-| `agentmesh` | TypeScript (bun) | `projects/agentmesh/` | ⚪ Archived — 100% 迁移至 kairon |
+| `SharedBrain` | Python | `projects/_archived/SharedBrain-original/` | ⚪ Archived — 代码已迁移至 kairon，数据层在 `data/sharedbrain/` |
+| `agentmesh` | TypeScript (bun) | `projects/_archived/` | ⚪ Archived — 100% 迁移至 kairon |
 | `hermes-console` | TypeScript | `projects/hermes-console/` | 🟡 独立项目，待评估 |
 | `_archived` | — | `projects/_archived/` | ⚪ 24 项已迁移旧项目备份 |
 
 **Also contains:**
 - `.omo/` — Workspace governance (goals, state, standards, tasks, audits)
 - `spaces/` — User-space / tenant-space manifests and ownership boundaries
-- `data/` — Shared databases (backups, local SQLite)
+- `data/` — Shared databases (substrates: `db/`, `kos/`, `sharedbrain/`, `backups/`)
 - `runtime/` — Ephemeral runtime residue (logs, temp state)
 - `tests/integration/` — Integration test suite (11 scripts + 4 Python tests)
 - `scripts/` — Utility scripts and governance automation (独立 git 仓库)
 - `bin/` — Executable tools (workspace CLI, verify scripts)
-- `docs/` — Documentation
 
 ## Essential Commands
 
@@ -55,8 +54,7 @@ cd projects/kairon && make lint       # Ruff check
 cd projects/gbrain && bun test
 cd projects/gbrain && bun run ci:local
 
-# agentmesh (projects/agentmesh/) — See AGENTS.md there
-cd projects/agentmesh && bun install
+# agentmesh (projects/agentmesh/) — 已归档，参照 kairon 替代包
 ```
 
 ## Architecture
@@ -136,7 +134,7 @@ GitHub Actions workflows in `.github/workflows/` (11 workflows):
 
 6. **No root-level test command** — Tests run per-project (via project Makefiles)
 
-7. **SharedBrain has its own AGENTS.md** — Per-project docs may have additional requirements
+7. **SharedBrain 数据层在 `data/sharedbrain/`** — 旧 `projects/SharedBrain/` 已归档至 `_archived/SharedBrain-original/`
 
 ## Style Conventions
 
@@ -158,12 +156,11 @@ GitHub Actions workflows in `.github/workflows/` (11 workflows):
 - `projects/*/` — Independent project repos
 - `.omo/` — Workspace governance docs (read for context, don't modify without clear reason)
 - `spaces/` — User-space / tenant-space manifests and routing boundaries
-- `data/` — Shared data substrate and local databases
+- `data/` — Shared data layer (`db/`, `kos/`, `sharedbrain/`, `backups/`)
 - `runtime/` — Ephemeral runtime residue; avoid storing durable truth here
 - `tests/integration/` — E2E test scripts
-- `scripts/` — Utility scripts and automation (独立 git 仓库)
+- `scripts/` — Utility scripts and automation (独立 git 仓库, `omo/` + `shell/`)
 - `bin/` — Executable tools
-- `docs/` — Supplementary documentation
 - `.github/workflows/` — CI configurations (11 workflows)
 - `.hermes/` — Hermes-related scripts and adapters
 

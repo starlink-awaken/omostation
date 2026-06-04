@@ -1,14 +1,14 @@
 # LAYER-INDEX.md — 项目分层索引
 
 > 基于 omostation 4-Layer + 1 架构
-> 更新: 2026-06-04 | 目录治理 · L1 包列表从 12→28，包含全部 28 个 L1 包
+> 更新: 2026-06-04 | P1/P2 修复 · agora 7430 确认监听 · L1 包列表 28 包
 
 ## I0 — Service Mesh / 路由层
 
 | 项目 | 角色 | 端口 | 状态 |
 |------|------|------|------|
 | agora | MCP 服务发现 + 代理 + 断路器 | 7430 (HTTP), 7431 (SSE) | 🟢 运行中 |
-| agora-mcp | Agora MCP 模式实例 | 7423 | 🟡 配置存在，待验证 |
+| agora-mcp | Agora 内部 MCP 服务器入口（`pyproject.toml` 定义） | — | 🟢 已集成至 agora 包 |
 
 ## L1 — 知识工程层
 
@@ -21,7 +21,7 @@
 | sophia | `kairon/packages/sophia` | 8 tools | 🟢 |
 | iris | `kairon/packages/iris` | 8 tools | 🟢 |
 | ssot | `kairon/packages/ssot` | 6 tools | 🟢 |
-| forge | `kairon/packages/forge` | 89 tools | 🟡 无 MCP @tool |
+| forge | `kairon/packages/forge` | 70 tools (JSON 注册表) | 🟡 无 MCP @tool |
 | codeanalyze | `kairon/packages/codeanalyze` | 多种 | 🟢 |
 | kronos | `kairon/packages/kronos` | 9 tools | 🟢 |
 | metaos | `kairon/packages/metaos` | 基础 | 🟢 sys.path 已修复 |
@@ -56,23 +56,25 @@
 |------|------|------|
 | kairon/agent-runtime | Agent 执行引擎（原 agentmesh Engine） | 🟢 |
 | kairon/agent-hub | Agent 注册中心 | 🟢 |
-| kairon/agora | MCP 服务发现 + 代理 + 断路器 | 🟢 运行中 7430/7431 |
+| kairon/agora | MCP 服务发现 + 代理 + 断路器（6 核心 MCP handler + proxy） | 🟡 tests 收集错误 41 |
 | kairon/llm-gateway | LLM 路由 + 配额管理（原 agentmesh Model-Orchestrator） | 🟢 |
-| agentmesh | 已 100% 迁移到 kairon，残留壳已清理 | ⚪ 已归档 |
+| agentmesh | 已 100% 迁移到 kairon，残留壳已清理，归档至 `projects/_archived/` | ⚪ 已归档 |
 
 ## L4 — 知识存储层
 
 | 项目 | 后端 | 状态 |
 |------|------|------|
 | gbrain | Postgres (TypeORM) + MCP | 🟢 |
-| SharedBrain (数据持久壳) | SQLite 数据层 | ⚪ 仅数据持久，无业务代码 |
+| SharedBrain | SQLite 数据层，已迁至 `data/sharedbrain/` | ⚪ 仅数据持久，无业务代码 |
 
 ## 治理层
 
 | 模块 | 角色 |
 |------|------|
-| .omo/ | 治理知识库（状态/架构/审计/标准） |
+| .omo/ | 治理知识库（状态/架构/审计/标准/知识面） |
 | .github/workflows/ | CI/CD 工作流 |
+| scripts/ | OMO 治理自动化（`omo/` + `shell/`） |
+| data/ | 数据层统一管理（`db/`, `kos/`, `sharedbrain/`） |
 
 ## 当前治理入口
 
