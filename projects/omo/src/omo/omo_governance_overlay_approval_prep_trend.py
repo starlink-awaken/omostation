@@ -28,8 +28,12 @@ def _point(event: dict[str, object]) -> dict[str, object]:
     }
 
 
-def _interval(previous: dict[str, object], current: dict[str, object]) -> dict[str, object]:
-    elapsed = _parse_iso8601(str(current["started_at"])) - _parse_iso8601(str(previous["started_at"]))
+def _interval(
+    previous: dict[str, object], current: dict[str, object]
+) -> dict[str, object]:
+    elapsed = _parse_iso8601(str(current["started_at"])) - _parse_iso8601(
+        str(previous["started_at"])
+    )
     return {
         "from_event_id": previous["event_id"],
         "to_event_id": current["event_id"],
@@ -41,12 +45,30 @@ def build_governance_overlay_approval_prep_trend(
     root: Path, *, omo_dir: str | Path = ".omo", now: str
 ) -> dict[str, object]:
     omo_ref = Path(omo_dir)
-    analytics = _load_yaml_required(root / omo_ref / "workers" / "governance-overlay" / "approval-prep" / "analytics" / "current.yaml")
-    history = _load_yaml_required(root / omo_ref / "workers" / "governance-overlay" / "approval-prep" / "history" / "current.yaml")
+    analytics = _load_yaml_required(
+        root
+        / omo_ref
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "analytics"
+        / "current.yaml"
+    )
+    history = _load_yaml_required(
+        root
+        / omo_ref
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "history"
+        / "current.yaml"
+    )
 
     events_desc = list(history.get("events", []))
     points = [_point(event) for event in reversed(events_desc)]
-    intervals = [_interval(points[index], points[index + 1]) for index in range(len(points) - 1)]
+    intervals = [
+        _interval(points[index], points[index + 1]) for index in range(len(points) - 1)
+    ]
     action_histogram: dict[str, int] = {}
     task_ids_seen: list[str] = []
     for point in points:
@@ -56,7 +78,9 @@ def build_governance_overlay_approval_prep_trend(
         if task_id not in task_ids_seen:
             task_ids_seen.append(task_id)
 
-    peak_backlog_estimate = max(int(analytics.get("prep_task_count", 0)), len(task_ids_seen))
+    peak_backlog_estimate = max(
+        int(analytics.get("prep_task_count", 0)), len(task_ids_seen)
+    )
     current_backlog = int(analytics.get("prep_task_count", 0))
     burndown = {
         "current_backlog": current_backlog,
@@ -66,7 +90,9 @@ def build_governance_overlay_approval_prep_trend(
     }
     yaml_packet = {
         "generated_at": now,
-        "trend_status": "trend_available" if len(points) >= 2 else "insufficient_history",
+        "trend_status": "trend_available"
+        if len(points) >= 2
+        else "insufficient_history",
         "window_event_count": len(points),
         "oldest_started_at": None if not points else points[0]["started_at"],
         "latest_started_at": None if not points else points[-1]["started_at"],

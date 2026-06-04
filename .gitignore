@@ -61,3 +61,10 @@ data/**/*.sqlite3
 .omc/sessions/
 .omo/plans/
 .omo/run-continuation/
+
+# ---- 第三方工具缓存 ----
+.grok/
+.reasonix/
+kos/
+spaces/
+_derivation_logs/

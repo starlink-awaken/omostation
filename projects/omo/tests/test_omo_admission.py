@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from scripts.omo_admission import evaluate_worker_envelope, request_conditional_approval
+from omo.omo_admission import evaluate_worker_envelope, request_conditional_approval
 
 
 def _write_yaml(path: Path, data: dict) -> None:

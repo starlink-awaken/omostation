@@ -1,9 +1,25 @@
-# CLAUDE.md
+# OMO v4.0 (The OS Kernel) - Agent Instructions
 
-- 本项目是 OMO OS 引擎的内核源码仓库（Engine/L0 Kernel）。
-- **职责**：开发 `omo` CLI 工具，负责跨域调度、防脑裂并发控制、工作流流转。
-- **语言/工具**：Python 3.13+, `uv` 包管理器。
-- **重要规训**：
-  - 切勿混淆“内核引擎”与“业务实例”。所有的业务态数据（`.omo/`）都不在本仓库产生。
-  - 所有新增的调度逻辑，必须首先考虑**防重入**与**原子锁**（参考 SQLite `locks.db`）。
-  - 严格保持 0 依赖或者最少外部依赖（如 `pyyaml` 是必需的，但尽量避免引入庞大的业务包），以保持内核的极速响应能力。
+Welcome to the OMO v4.0 Kernel. 
+If you are an AI Agent assigned to work in this workspace, you MUST obey the following Contract-based Dispatch rules.
+
+## 1. Do NOT modify `.omo` directly
+The `.omo` directory is the K0 Data layer (the Database). You should NEVER manually create tasks, modify locks, or delete drafts directly unless absolutely necessary.
+Instead, use the `omo-cli` toolchain to interact with it.
+
+## 2. Using the OMO CLI
+All commands should be run using `uvx omo-cli` (or `PYTHONPATH=projects/omo/src python3 projects/omo/src/omo/cli.py` if not installed globally).
+
+- `omo bridge <file.md> --sequential`: Import external BMAD/Markdown specs into OMO planned tasks.
+- `omo worker dispatch`: Fetch your next task. This will create `.omo/workers/runs/xxx-prompt.md`.
+- `omo-debt analyze`: Check the current system technical debt before writing new features.
+- `omo ledger`: Snapshot the workspace state.
+
+## 3. The Execution Loop
+1. When you enter the workspace, check `.omo/_truth/goals/current.yaml` to understand the overarching Phase and Wave.
+2. Look in `.omo/workers/runs/` for any `*-prompt.md` files assigned to you.
+3. Execute the work in the specified `allowed_paths`.
+4. Create a `*-review.md` file in `.omo/workers/runs/` detailing what you changed.
+5. NEVER bypass the Micro-DAG. If your task is blocked by `depends_on`, wait or resolve the dependency first.
+
+Remember: LLM = CPU, Agent = OS. OMO is the OS. You are the CPU. Follow the OS instructions.

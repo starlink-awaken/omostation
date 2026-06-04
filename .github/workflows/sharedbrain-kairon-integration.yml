@@ -132,3 +132,54 @@ jobs:
       - name: Cleanup
         if: always()
         run: docker compose -f $COMPOSE_FILE down -v
+
+  kairon-e2e-test:
+    name: kairon E2E (Containerized)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/kairon
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build kairon E2E image
+        run: |
+          docker compose -f docker/docker-compose.e2e.yml build
+
+      - name: Start E2E services
+        run: |
+          docker compose -f docker/docker-compose.e2e.yml up -d postgres
+
+      - name: Wait for postgres
+        run: |
+          for i in $(seq 1 10); do
+            if docker compose -f docker/docker-compose.e2e.yml exec -T postgres pg_isready -U kairon -d gbrain_test 2>/dev/null; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            echo "Waiting for PostgreSQL... ($i/10)"
+            sleep 3
+          done
+
+      - name: Run E2E tests (core path: ontoderive smoke)
+        run: |
+          docker compose -f docker/docker-compose.e2e.yml run --rm kairon-e2e \
+            uv run --no-sync pytest packages/ontoderive/tests/test_e2e.py \
+              -v --timeout=120 -q --tb=short -p no:cacheprovider
+
+      - name: Collect E2E test logs
+        if: failure()
+        run: |
+          docker compose -f docker/docker-compose.e2e.yml logs --tail=100 > /tmp/kairon-e2e-logs.txt
+
+      - name: Upload E2E test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kairon-e2e-logs
+          path: /tmp/kairon-e2e-logs.txt
+
+      - name: Cleanup E2E environment
+        if: always()
+        run: docker compose -f docker/docker-compose.e2e.yml down -v

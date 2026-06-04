@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scripts.omo_promotion_approval_status import (
+from omo.omo_promotion_approval_status import (
     build_promotion_approval_status_packet,
     render_promotion_approval_status_markdown,
 )

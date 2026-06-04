@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from scripts.omo_debt_metrics import compute_debt_metrics
-from scripts.omo_debt_registry import DebtItem, load_debt_ledger
+from omo.omo_debt_metrics import compute_debt_metrics
+from omo.omo_debt_registry import DebtItem, load_debt_ledger
 
 
 def test_load_debt_ledger_returns_seed_items() -> None:

@@ -14,7 +14,9 @@ def _resolve_rule(registry: dict, space_ref: str, action: str) -> dict:
     for rule in registry.get("rules", []):
         if rule.get("space_ref") == space_ref and rule.get("action") == action:
             return rule
-    raise ValueError(f"no cross-root rule found for space={space_ref!r} action={action!r}")
+    raise ValueError(
+        f"no cross-root rule found for space={space_ref!r} action={action!r}"
+    )
 
 
 def _find_data_rule(data_policy: dict, action: str) -> dict:
@@ -29,15 +31,23 @@ def _resolve_data_policy_ref(rule: dict) -> str:
 
 
 def _resolve_runtime_boundary_ref(rule: dict) -> str:
-    return str(rule.get("runtime_boundary_ref") or rule.get("runtime", {}).get("boundary_ref"))
+    return str(
+        rule.get("runtime_boundary_ref") or rule.get("runtime", {}).get("boundary_ref")
+    )
 
 
 def _resolve_admission_contract_ref(rule: dict) -> str:
-    return str(rule.get("admission_contract_ref") or rule.get("governance", {}).get("admission_contract_ref"))
+    return str(
+        rule.get("admission_contract_ref")
+        or rule.get("governance", {}).get("admission_contract_ref")
+    )
 
 
 def _resolve_rollout_policy_ref(rule: dict) -> str:
-    return str(rule.get("rollout_policy_ref") or rule.get("governance", {}).get("rollout_policy_ref"))
+    return str(
+        rule.get("rollout_policy_ref")
+        or rule.get("governance", {}).get("rollout_policy_ref")
+    )
 
 
 def _resolve_delivery_contract_ref(rule: dict) -> str | None:
@@ -63,7 +73,9 @@ def evaluate_rule_bundle(root: Path, envelope_ref: Path) -> dict[str, object]:
         raise ValueError("worker envelope must include rules_context.registry_ref")
 
     registry = _load_yaml(root / registry_ref)
-    rule = _resolve_rule(registry, str(execution_context["space_ref"]), str(execution_context["action"]))
+    rule = _resolve_rule(
+        registry, str(execution_context["space_ref"]), str(execution_context["action"])
+    )
     data_policy_ref = _resolve_data_policy_ref(rule)
     runtime_boundary_ref = _resolve_runtime_boundary_ref(rule)
     admission_contract_ref = _resolve_admission_contract_ref(rule)
@@ -93,7 +105,9 @@ def evaluate_rule_bundle(root: Path, envelope_ref: Path) -> dict[str, object]:
                 "proposal_ref": delivery_contract["proposal_ref"],
                 "apply_ref": delivery_contract["apply_ref"],
                 "verify_ref": delivery_contract["verify_ref"],
-                "acceptance_ref": delivery_contract.get("acceptance_ref", envelope["gates"]["acceptance_ref"]),
+                "acceptance_ref": delivery_contract.get(
+                    "acceptance_ref", envelope["gates"]["acceptance_ref"]
+                ),
             },
             "approval_ref": envelope["gates"]["approval_ref"],
             "acceptance_ref": envelope["gates"]["acceptance_ref"],

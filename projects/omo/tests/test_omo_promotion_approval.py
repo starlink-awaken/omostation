@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from scripts.omo_promotion_approval import evaluate_promotion_approval
+from omo.omo_promotion_approval import evaluate_promotion_approval
 
 
 def _write_text(path: Path, content: str) -> None:

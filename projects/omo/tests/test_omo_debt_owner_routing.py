@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from scripts.omo_debt_owner_routing import build_owner_routing_packet
+from omo.omo_debt_owner_routing import build_owner_routing_packet
 
 
 def _entry(

@@ -5,7 +5,15 @@ from pathlib import Path
 
 import yaml
 
-VALID_STATUSES = {"candidate", "pending", "in_progress", "review", "done", "blocked", "failed"}
+VALID_STATUSES = {
+    "candidate",
+    "pending",
+    "in_progress",
+    "review",
+    "done",
+    "blocked",
+    "failed",
+}
 VALID_LEVELS = {"L0", "L1", "L2", "L3"}
 EXECUTION_STATUSES = {"pending", "in_progress", "review"}
 PLANNED_STATUSES = {"candidate", "pending"}
@@ -21,7 +29,9 @@ def _require_fields(task: dict, fields: list[str], errors: list[str]) -> None:
             errors.append(f"missing required field: {field}")
 
 
-def _require_list(task: dict, field: str, errors: list[str], allow_empty: bool = True) -> None:
+def _require_list(
+    task: dict, field: str, errors: list[str], allow_empty: bool = True
+) -> None:
     value = task.get(field)
     if not isinstance(value, list):
         errors.append(f"{field} must be a list")
@@ -69,12 +79,29 @@ def validate_task_data(task: dict, group: str | None = None) -> list[str]:
         errors.append(f"invalid status: {task['status']}")
     if "risk_level" in task and task["risk_level"] not in VALID_LEVELS:
         errors.append(f"invalid risk_level: {task['risk_level']}")
-    if "allowed_operation_level" in task and task["allowed_operation_level"] not in VALID_LEVELS:
-        errors.append(f"invalid allowed_operation_level: {task['allowed_operation_level']}")
+    if (
+        "allowed_operation_level" in task
+        and task["allowed_operation_level"] not in VALID_LEVELS
+    ):
+        errors.append(
+            f"invalid allowed_operation_level: {task['allowed_operation_level']}"
+        )
 
-    for field in ("knowledge_refs", "handoff_refs", "source_docs", "entry_gate", "evidence_required", "deliverables"):
+    for field in (
+        "knowledge_refs",
+        "handoff_refs",
+        "source_docs",
+        "entry_gate",
+        "evidence_required",
+        "deliverables",
+    ):
         if field in task:
-            _require_list(task, field, errors, allow_empty=field in {"knowledge_refs", "handoff_refs", "entry_gate"})
+            _require_list(
+                task,
+                field,
+                errors,
+                allow_empty=field in {"knowledge_refs", "handoff_refs", "entry_gate"},
+            )
 
     planned_context = group == "planned"
     execution_context = group == "active" or task.get("status") in EXECUTION_STATUSES

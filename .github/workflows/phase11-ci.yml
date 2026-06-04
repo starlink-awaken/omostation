@@ -1,0 +1,38 @@
+name: Phase 11 CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "projects/kairon/**"
+      - ".github/workflows/phase11-ci.yml"
+      - "Makefile"
+  pull_request:
+    branches: [main]
+    paths:
+      - "projects/kairon/**"
+      - ".github/workflows/phase11-ci.yml"
+      - "Makefile"
+  workflow_dispatch:
+
+jobs:
+  kairon-all-packages:
+    name: Kairon all-package baseline
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Sync kairon workspace
+        working-directory: projects/kairon
+        run: uv sync --all-packages
+
+      - name: Run kairon test target
+        run: make kairon-test

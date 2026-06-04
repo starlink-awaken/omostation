@@ -4,10 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-try:
-    from .omo_debt_registry import DebtItem
-except ModuleNotFoundError:
-    from .omo_debt_registry import DebtItem
+from .omo_debt_registry import DebtItem
 
 
 @dataclass(frozen=True)
@@ -33,7 +30,9 @@ def _resolve_ref_path(repo_root: Path, ref: str) -> Path:
     return repo_root / ref_path
 
 
-def collect_stale_evidence_item_ids(items: tuple[DebtItem, ...], repo_root: Path | None = None) -> set[str]:
+def collect_stale_evidence_item_ids(
+    items: tuple[DebtItem, ...], repo_root: Path | None = None
+) -> set[str]:
     repo_root = repo_root or Path(__file__).resolve().parents[1]
     stale_ids: set[str] = set()
 
@@ -43,20 +42,30 @@ def collect_stale_evidence_item_ids(items: tuple[DebtItem, ...], repo_root: Path
         if not item.evidence_refs or not item.mitigation_refs:
             stale_ids.add(item.id)
             continue
-        refs = tuple(_resolve_ref_path(repo_root, ref) for ref in (*item.evidence_refs, *item.mitigation_refs))
+        refs = tuple(
+            _resolve_ref_path(repo_root, ref)
+            for ref in (*item.evidence_refs, *item.mitigation_refs)
+        )
         if any(not ref.exists() for ref in refs):
             stale_ids.add(item.id)
             continue
         if not item.last_reviewed_at:
             stale_ids.add(item.id)
             continue
-        last_reviewed = datetime.fromisoformat(item.last_reviewed_at.replace("Z", "+00:00"))
-        if any(datetime.fromtimestamp(ref.stat().st_mtime, tz=timezone.utc) > last_reviewed for ref in refs):
+        last_reviewed = datetime.fromisoformat(
+            item.last_reviewed_at.replace("Z", "+00:00")
+        )
+        if any(
+            datetime.fromtimestamp(ref.stat().st_mtime, tz=timezone.utc) > last_reviewed
+            for ref in refs
+        ):
             stale_ids.add(item.id)
     return stale_ids
 
 
-def compute_debt_metrics(items: tuple[DebtItem, ...], now: str, repo_root: Path | None = None) -> DebtMetrics:
+def compute_debt_metrics(
+    items: tuple[DebtItem, ...], now: str, repo_root: Path | None = None
+) -> DebtMetrics:
     current = datetime.fromisoformat(now.replace("Z", "+00:00"))
     open_items = [item for item in items if item.lifecycle_state != "closed"]
     overdue = [
@@ -69,7 +78,10 @@ def compute_debt_metrics(items: tuple[DebtItem, ...], now: str, repo_root: Path 
     missing_pointers = [
         item
         for item in open_items
-        if not item.owner or not item.evidence_refs or not item.last_reviewed_at or not item.next_review_at
+        if not item.owner
+        or not item.evidence_refs
+        or not item.last_reviewed_at
+        or not item.next_review_at
     ]
     repo_root = repo_root or Path(__file__).resolve().parents[1]
     stale_ids = collect_stale_evidence_item_ids(tuple(open_items), repo_root=repo_root)
@@ -77,7 +89,8 @@ def compute_debt_metrics(items: tuple[DebtItem, ...], now: str, repo_root: Path 
     long_running = [
         item
         for item in open_items
-        if item.lifecycle_state in {"classified", "scheduled", "in_progress", "mitigated"}
+        if item.lifecycle_state
+        in {"classified", "scheduled", "in_progress", "mitigated"}
     ]
     watchlist = [item.id for item in open_items if item.gate_level == "watchlist"]
     gate = [item.id for item in open_items if item.gate_level == "gate"]
@@ -95,13 +108,19 @@ def compute_debt_metrics(items: tuple[DebtItem, ...], now: str, repo_root: Path 
         debt_health=round(health, 2),
         classification_entropy=round(len(vague) / denominator, 2),
         state_entropy=round(len(long_running) / denominator, 2),
-        pointer_entropy=round((len(missing_pointers) + len(stale_evidence)) / denominator, 2),
+        pointer_entropy=round(
+            (len(missing_pointers) + len(stale_evidence)) / denominator, 2
+        ),
         time_entropy=round(len(overdue) / denominator, 2),
         backlog_pressure=round(sum(item.weight for item in open_items), 2),
-        coupling_load=round(sum(len(item.affected_roots) for item in open_items) / denominator, 2),
+        coupling_load=round(
+            sum(len(item.affected_roots) for item in open_items) / denominator, 2
+        ),
         debt_watchlist_count=len(watchlist),
         debt_gate_count=len(gate),
         watchlist_item_ids=tuple(watchlist),
         gate_item_ids=tuple(gate),
-        closed_item_ids=tuple(item.id for item in items if item.lifecycle_state == "closed"),
+        closed_item_ids=tuple(
+            item.id for item in items if item.lifecycle_state == "closed"
+        ),
     )

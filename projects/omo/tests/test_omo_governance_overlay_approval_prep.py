@@ -4,14 +4,14 @@ from pathlib import Path
 
 import yaml
 
-from scripts.omo_governance_overlay_approval_prep import (
+from omo.omo_governance_overlay_approval_prep import (
     build_governance_overlay_approval_prep_history,
     build_governance_overlay_approval_prep_status,
 )
-from scripts.omo_governance_overlay_approval_prep_analytics import build_governance_overlay_approval_prep_analytics
-from scripts.omo_governance_overlay_approval_prep_aging import build_governance_overlay_approval_prep_aging
-from scripts.omo_governance_overlay_approval_prep_diff import build_governance_overlay_approval_prep_diff
-from scripts.omo_governance_overlay_approval_prep_trend import build_governance_overlay_approval_prep_trend
+from omo.omo_governance_overlay_approval_prep_analytics import build_governance_overlay_approval_prep_analytics
+from omo.omo_governance_overlay_approval_prep_aging import build_governance_overlay_approval_prep_aging
+from omo.omo_governance_overlay_approval_prep_diff import build_governance_overlay_approval_prep_diff
+from omo.omo_governance_overlay_approval_prep_trend import build_governance_overlay_approval_prep_trend
 
 
 def _write_yaml(path: Path, data: dict) -> None:

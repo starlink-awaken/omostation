@@ -2,8 +2,8 @@
 """Register cron-service MCP server in Hermes config.yaml.
 
 Usage:
-  python3 scripts/register-mcp.py              # Dry run
-  python3 scripts/register-mcp.py --apply      # Actually update config.yaml
+  python3 bin/register-mcp.py                   # Dry run
+  python3 bin/register-mcp.py --apply           # Actually update config.yaml
 """
 import os
 import sys
@@ -11,8 +11,14 @@ import yaml
 from pathlib import Path
 
 CONFIG_PATH = Path.home() / ".hermes" / "config.yaml"
-VENV_PYTHON = "/Users/xiamingxing/.hermes/hermes-agent/venv/bin/python3.11"
-WORKDIR = "/Users/xiamingxing/Workspace/projects/kairon/packages/cron-service"
+
+# 动态检测路径：从脚本位置推断 workspace 根目录
+_SCRIPT_DIR = Path(__file__).resolve().parent
+WORKSPACE_ROOT = _SCRIPT_DIR.parent  # bin/ → workspace root
+VENV_PYTHON = os.environ.get("HERMES_PYTHON") or str(
+    (Path.home() / ".hermes" / "hermes-agent" / "venv" / "bin" / "python3").resolve()
+)
+WORKDIR = str(WORKSPACE_ROOT / "projects" / "kairon" / "packages" / "cron-service")
 
 MCP_ENTRY = {
     "cron-service": {

@@ -3,20 +3,9 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
-import yaml
-
-try:
-    from .omo_io import write_yaml_atomic
-except ModuleNotFoundError:
-    from .omo_io import write_yaml_atomic
-
-
-def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+from .omo_shared import utc_now, load_yaml, write_yaml
 
 
 def _root() -> Path:
@@ -27,19 +16,11 @@ def _omo(root: Path) -> Path:
     return root / ".omo"
 
 
-def _load_yaml(path: Path) -> Any:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) if path.exists() else None
-
-
-def _write(path: Path, payload: dict[str, Any]) -> None:
-    write_yaml_atomic(path, payload)
-
-
 def triage_command(args: argparse.Namespace) -> int:
     _root()
     baseline = {
         "id": "phase14-integration-backlog-triage",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "mode": "governed-triage",
         "source": ".omo/plans/phase14-deferred-ecosystem-backlog.md",
         "ranking_model": {
@@ -96,15 +77,20 @@ def triage_command(args: argparse.Namespace) -> int:
             },
         ],
     }
-    _write(Path(args.output), baseline)
-    print(json.dumps({"status": "ready", "selected": 4, "output": args.output}, ensure_ascii=False))
+    write_yaml(Path(args.output), baseline)
+    print(
+        json.dumps(
+            {"status": "ready", "selected": 4, "output": args.output},
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
 def pilots_command(args: argparse.Namespace) -> int:
     payload = {
         "id": "phase14-deep-absorption-pilots",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "mode": "adapter-contract-only",
         "mutation": "disabled",
         "pilots": [
@@ -143,21 +129,34 @@ def pilots_command(args: argparse.Namespace) -> int:
             },
         ],
     }
-    _write(Path(args.output), payload)
-    print(json.dumps({"status": "ready", "pilots": len(payload["pilots"]), "output": args.output}, ensure_ascii=False))
+    write_yaml(Path(args.output), payload)
+    print(
+        json.dumps(
+            {
+                "status": "ready",
+                "pilots": len(payload["pilots"]),
+                "output": args.output,
+            },
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
 def patterns_command(args: argparse.Namespace) -> int:
     payload = {
         "id": "phase14-architecture-pattern-landing",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "mode": "design-fixture",
         "patterns": [
             {
                 "id": "brain-hands-session",
                 "status": "landed-as-contract",
-                "contract": ["brain_decides", "hands_execute_with_envelope", "session_records_evidence"],
+                "contract": [
+                    "brain_decides",
+                    "hands_execute_with_envelope",
+                    "session_records_evidence",
+                ],
                 "rollback": "Keep existing worker run evidence as authoritative.",
             },
             {
@@ -174,18 +173,31 @@ def patterns_command(args: argparse.Namespace) -> int:
             },
         ],
     }
-    _write(Path(args.output), payload)
-    print(json.dumps({"status": "ready", "patterns": len(payload["patterns"]), "output": args.output}, ensure_ascii=False))
+    write_yaml(Path(args.output), payload)
+    print(
+        json.dumps(
+            {
+                "status": "ready",
+                "patterns": len(payload["patterns"]),
+                "output": args.output,
+            },
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
 def ecosystem_command(args: argparse.Namespace) -> int:
     root = _root()
-    packages = _load_yaml(_omo(root) / "registry" / "system-packages.yaml") or {"packages": []}
-    article_samples = _load_yaml(_omo(root) / "registry" / "article-samples.yaml") or {"samples": []}
+    packages = load_yaml(_omo(root) / "registry" / "system-packages.yaml") or {
+        "packages": []
+    }
+    article_samples = load_yaml(_omo(root) / "registry" / "article-samples.yaml") or {
+        "samples": []
+    }
     payload = {
         "id": "phase14-ecosystem-expansion-preview",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "mode": "preview-only",
         "mutations_applied": 0,
         "article_knowledge_graph": {
@@ -199,25 +211,36 @@ def ecosystem_command(args: argparse.Namespace) -> int:
         "package_graph": {
             "mode": "manifest-preview",
             "packages_checked": len(packages.get("packages", [])),
-            "managers": sorted({package["manager"] for package in packages.get("packages", [])}),
+            "managers": sorted(
+                {package["manager"] for package in packages.get("packages", [])}
+            ),
         },
         "marketplace_preview": {
             "mode": "list-only",
             "install_enabled": False,
             "publish_enabled": False,
             "admission_required": True,
-            "candidates": ["memu-gbrain-memory", "gitnexus-kos-index", "firecrawl-kronos-ingestion"],
+            "candidates": [
+                "memu-gbrain-memory",
+                "gitnexus-kos-index",
+                "firecrawl-kronos-ingestion",
+            ],
         },
     }
-    _write(Path(args.output), payload)
-    print(json.dumps({"status": "ready", "mutations": 0, "output": args.output}, ensure_ascii=False))
+    write_yaml(Path(args.output), payload)
+    print(
+        json.dumps(
+            {"status": "ready", "mutations": 0, "output": args.output},
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
 def security_command(args: argparse.Namespace) -> int:
     payload = {
         "id": "phase14-security-review",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "status": "pass-with-preview-only-controls",
         "controls": [
             {
@@ -239,8 +262,13 @@ def security_command(args: argparse.Namespace) -> int:
         ],
         "critical_findings": [],
     }
-    _write(Path(args.output), payload)
-    print(json.dumps({"status": "pass", "critical_findings": 0, "output": args.output}, ensure_ascii=False))
+    write_yaml(Path(args.output), payload)
+    print(
+        json.dumps(
+            {"status": "pass", "critical_findings": 0, "output": args.output},
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
@@ -249,23 +277,33 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     triage = sub.add_parser("triage")
-    triage.add_argument("--output", default=".omo/evidence/phase14/integration-triage.yaml")
+    triage.add_argument(
+        "--output", default=".omo/evidence/phase14/integration-triage.yaml"
+    )
     triage.set_defaults(func=triage_command)
 
     pilots = sub.add_parser("pilots")
-    pilots.add_argument("--output", default=".omo/evidence/phase14/deep-absorption-pilots.yaml")
+    pilots.add_argument(
+        "--output", default=".omo/evidence/phase14/deep-absorption-pilots.yaml"
+    )
     pilots.set_defaults(func=pilots_command)
 
     patterns = sub.add_parser("patterns")
-    patterns.add_argument("--output", default=".omo/evidence/phase14/architecture-patterns.yaml")
+    patterns.add_argument(
+        "--output", default=".omo/evidence/phase14/architecture-patterns.yaml"
+    )
     patterns.set_defaults(func=patterns_command)
 
     ecosystem = sub.add_parser("ecosystem")
-    ecosystem.add_argument("--output", default=".omo/evidence/phase14/ecosystem-preview.yaml")
+    ecosystem.add_argument(
+        "--output", default=".omo/evidence/phase14/ecosystem-preview.yaml"
+    )
     ecosystem.set_defaults(func=ecosystem_command)
 
     security = sub.add_parser("security")
-    security.add_argument("--output", default=".omo/evidence/phase14/security-review.yaml")
+    security.add_argument(
+        "--output", default=".omo/evidence/phase14/security-review.yaml"
+    )
     security.set_defaults(func=security_command)
     return parser
 

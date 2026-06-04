@@ -34,7 +34,9 @@ def _history_sort_key(entry: dict[str, object]) -> tuple[datetime, str]:
     return (_parse_iso8601(str(entry["started_at"])), str(entry["event_id"]))
 
 
-def _approval_ref_for_target(root: Path, omo_ref: Path, target: dict[str, object]) -> str | None:
+def _approval_ref_for_target(
+    root: Path, omo_ref: Path, target: dict[str, object]
+) -> str | None:
     target_ref = str(target["target_ref"])
     if not target_ref.startswith(str(omo_ref / "tasks" / "planned")):
         return None
@@ -49,7 +51,9 @@ def build_governance_overlay_approval_prep_status(
     root: Path, *, omo_dir: str | Path = ".omo", now: str
 ) -> dict[str, object]:
     omo_ref = Path(omo_dir)
-    current = _load_yaml_required(root / omo_ref / "workers" / "governance-overlay" / "current.yaml")
+    current = _load_yaml_required(
+        root / omo_ref / "workers" / "governance-overlay" / "current.yaml"
+    )
     tasks: list[dict[str, object]] = []
     for target in current.get("active_target_states", []):
         if str(target.get("state")) not in _PREP_STATES:
@@ -73,8 +77,12 @@ def build_governance_overlay_approval_prep_status(
         "current_milestone": current.get("current_milestone"),
         "next_action": current.get("next_action"),
         "prep_task_count": len(tasks),
-        "request_now_count": sum(1 for entry in tasks if entry["action"] == "request_approval"),
-        "awaiting_approval_count": sum(1 for entry in tasks if entry["action"] == "await_approval"),
+        "request_now_count": sum(
+            1 for entry in tasks if entry["action"] == "request_approval"
+        ),
+        "awaiting_approval_count": sum(
+            1 for entry in tasks if entry["action"] == "await_approval"
+        ),
         "tasks": tasks,
     }
     markdown_lines = [
@@ -112,7 +120,10 @@ def build_governance_overlay_approval_prep_history(
         run = _load_yaml_required(run_path)
         run_id = str(run["run_id"])
         for target in run.get("target_results", []):
-            if str(target.get("state")) not in _PREP_STATES and str(target.get("result")) not in _PREP_RESULTS:
+            if (
+                str(target.get("state")) not in _PREP_STATES
+                and str(target.get("result")) not in _PREP_RESULTS
+            ):
                 continue
             task_id = str(target["task_id"])
             events.append(

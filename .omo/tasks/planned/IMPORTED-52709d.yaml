@@ -1,0 +1,9 @@
+id: IMPORTED-52709d
+title: 2.2 加 tests/conftest.py：全局 fixture（tmpdir, yaml_loader, mock_time）
+status: completed
+task_type: feature
+depends_on: []
+source_docs:
+- /Users/xiamingxing/Workspace/scratch/omo-cleanup-plan.md
+deliverables: []
+imported_via: omo_bridge

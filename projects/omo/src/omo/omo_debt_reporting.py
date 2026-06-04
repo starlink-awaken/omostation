@@ -14,7 +14,8 @@ def _owner_rollup(owner_packet: dict[str, object]) -> dict[str, object]:
     approved_gate_item_count = sum(
         1
         for entry in entries
-        if entry.get("gate_level") == "gate" and entry.get("campaign_state") != "pending_approval"
+        if entry.get("gate_level") == "gate"
+        and entry.get("campaign_state") != "pending_approval"
     )
     executed_item_count = int(state_counts.get("executed", 0))
     item_count = int(owner_packet["item_count"])
@@ -24,9 +25,13 @@ def _owner_rollup(owner_packet: dict[str, object]) -> dict[str, object]:
         "state_counts": state_counts,
         "gate_item_count": gate_item_count,
         "approved_gate_item_count": approved_gate_item_count,
-        "approval_coverage_rate": _rate(approved_gate_item_count, gate_item_count, empty_value=1.0),
+        "approval_coverage_rate": _rate(
+            approved_gate_item_count, gate_item_count, empty_value=1.0
+        ),
         "executed_item_count": executed_item_count,
-        "execution_completion_rate": _rate(executed_item_count, item_count, empty_value=0.0),
+        "execution_completion_rate": _rate(
+            executed_item_count, item_count, empty_value=0.0
+        ),
     }
 
 
@@ -34,7 +39,9 @@ def build_reporting_packet(campaign_packet: dict[str, object]) -> dict[str, obje
     owners = [_owner_rollup(owner_packet) for owner_packet in campaign_packet["owners"]]
     summary = campaign_packet["summary"]
     gate_item_count = sum(owner["gate_item_count"] for owner in owners)
-    approved_gate_item_count = sum(owner["approved_gate_item_count"] for owner in owners)
+    approved_gate_item_count = sum(
+        owner["approved_gate_item_count"] for owner in owners
+    )
     executed_item_count = sum(owner["executed_item_count"] for owner in owners)
     total_items = int(summary["total_items"])
     return {
@@ -47,9 +54,13 @@ def build_reporting_packet(campaign_packet: dict[str, object]) -> dict[str, obje
             "state_counts": dict(summary["state_counts"]),
             "gate_item_count": gate_item_count,
             "approved_gate_item_count": approved_gate_item_count,
-            "approval_coverage_rate": _rate(approved_gate_item_count, gate_item_count, empty_value=1.0),
+            "approval_coverage_rate": _rate(
+                approved_gate_item_count, gate_item_count, empty_value=1.0
+            ),
             "executed_item_count": executed_item_count,
-            "execution_completion_rate": _rate(executed_item_count, total_items, empty_value=0.0),
+            "execution_completion_rate": _rate(
+                executed_item_count, total_items, empty_value=0.0
+            ),
         },
         "owners": owners,
     }

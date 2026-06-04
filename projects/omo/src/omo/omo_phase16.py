@@ -3,23 +3,18 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+import os
 from pathlib import Path
 from typing import Any
 
-import yaml
-
-try:
-    from .omo_io import write_text_atomic, write_yaml_atomic
-except ModuleNotFoundError:
-    from .omo_io import write_text_atomic, write_yaml_atomic
+from .omo_shared import utc_now, write_yaml, write_text
 
 
-EXTERNAL_OMO_ROOT = Path("/Users/xiamingxing/Documents/学习进化/经验积累/OMO")
-
-
-def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+EXTERNAL_OMO_ROOT = Path(
+    os.environ.get(
+        "OMO_EXTERNAL_ROOT", str(Path.home() / "Documents/学习进化/经验积累/OMO")
+    )
+)
 
 
 def _root() -> Path:
@@ -30,24 +25,10 @@ def _omo(root: Path) -> Path:
     return root / ".omo"
 
 
-def _load_yaml(path: Path) -> Any:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) if path.exists() else None
-
-
-def _write(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    write_yaml_atomic(path, payload)
-
-
-def _write_text(path: Path, payload: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    write_text_atomic(path, payload)
-
-
 def baseline_payload() -> dict[str, Any]:
     return {
         "id": "phase16-journey-baseline",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "phase": 16,
         "status": "ready",
         "primary_scenario": "knowledge-capture-search",
@@ -61,19 +42,31 @@ def baseline_payload() -> dict[str, Any]:
         "project_roles": {
             "SharedBrain": {
                 "role": "runtime-home and result-home",
-                "evidence_refs": ["projects/SharedBrain/README.md", "projects/SharedBrain/QUICKSTART.md"],
+                "evidence_refs": [
+                    "projects/SharedBrain/README.md",
+                    "projects/SharedBrain/QUICKSTART.md",
+                ],
             },
             "gbrain": {
                 "role": "capture, search, retrieval",
-                "evidence_refs": ["projects/gbrain/README.md", "projects/gbrain/package.json"],
+                "evidence_refs": [
+                    "projects/gbrain/README.md",
+                    "projects/gbrain/package.json",
+                ],
             },
             "kairon": {
                 "role": "capability binding and governance trace",
-                "evidence_refs": ["projects/kairon/README.md", "projects/kairon/pyproject.toml"],
+                "evidence_refs": [
+                    "projects/kairon/README.md",
+                    "projects/kairon/pyproject.toml",
+                ],
             },
             "agentmesh": {
                 "role": "future orchestration candidate only",
-                "evidence_refs": ["projects/agentmesh/README.md", "projects/agentmesh/package.json"],
+                "evidence_refs": [
+                    "projects/agentmesh/README.md",
+                    "projects/agentmesh/package.json",
+                ],
             },
         },
         "double_layer_deposition": {
@@ -92,8 +85,20 @@ def scenario_payload() -> dict[str, Any]:
         "authorization": "scenario-contract-only",
         "description": "User captures text or a markdown file, searches it back, and receives a visible result state with evidence refs.",
         "input_contract": ["text_or_markdown_file", "query"],
-        "output_contract": ["capture_receipt", "search_hits", "result_summary", "evidence_refs", "status"],
-        "status_enum": ["ready", "needs_approval", "blocked", "failed_with_recovery", "completed"],
+        "output_contract": [
+            "capture_receipt",
+            "search_hits",
+            "result_summary",
+            "evidence_refs",
+            "status",
+        ],
+        "status_enum": [
+            "ready",
+            "needs_approval",
+            "blocked",
+            "failed_with_recovery",
+            "completed",
+        ],
         "project_boundaries": {
             "SharedBrain": "runtime-home and result-home",
             "gbrain": "capture, search, retrieval",
@@ -112,11 +117,18 @@ def scenario_payload() -> dict[str, Any]:
 def shell_payload() -> dict[str, Any]:
     return {
         "id": "phase16-scenario-shell",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "phase": 16,
         "scenario_id": "knowledge-capture-search",
         "status": "ready",
-        "binds": ["intent", "context", "policy", "execution", "verification", "recovery"],
+        "binds": [
+            "intent",
+            "context",
+            "policy",
+            "execution",
+            "verification",
+            "recovery",
+        ],
         "intent": {
             "user_goal": "Capture knowledge and search it back with an explainable result.",
             "input_contract": ["text_or_markdown_file", "query"],
@@ -151,7 +163,7 @@ def shell_payload() -> dict[str, Any]:
 def walkthrough_payload() -> dict[str, Any]:
     return {
         "id": "phase16-capture-search-walkthrough",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "phase": 16,
         "scenario_id": "knowledge-capture-search",
         "status": "completed",
@@ -163,10 +175,22 @@ def walkthrough_payload() -> dict[str, Any]:
             "query": "What should Phase16 prove for users?",
         },
         "execution_path": [
-            {"project": "SharedBrain", "action": "accept intent and provide result-home semantics"},
-            {"project": "gbrain", "action": "fixture capture receipt and keyword search hit"},
-            {"project": "kairon", "action": "record capability binding and evidence trace"},
-            {"project": ".omo", "action": "store walkthrough, recovery, and closeout evidence"},
+            {
+                "project": "SharedBrain",
+                "action": "accept intent and provide result-home semantics",
+            },
+            {
+                "project": "gbrain",
+                "action": "fixture capture receipt and keyword search hit",
+            },
+            {
+                "project": "kairon",
+                "action": "record capability binding and evidence trace",
+            },
+            {
+                "project": ".omo",
+                "action": "store walkthrough, recovery, and closeout evidence",
+            },
         ],
         "user_visible_result": {
             "status": "completed",
@@ -215,7 +239,7 @@ def recovery_payload() -> dict[str, Any]:
     ]
     return {
         "id": "phase16-recovery-report",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "phase": 16,
         "status": "pass",
         "mode": "fixture-backed-recovery",
@@ -229,12 +253,17 @@ def recovery_payload() -> dict[str, Any]:
 def adoption_payload() -> dict[str, Any]:
     return {
         "id": "phase16-adoption-closeout",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "phase": 16,
         "status": "ready",
         "user_can_complete_task": True,
         "primary_scenario": "knowledge-capture-search",
-        "result_states": ["completed", "blocked", "needs_approval", "failed_with_recovery"],
+        "result_states": [
+            "completed",
+            "blocked",
+            "needs_approval",
+            "failed_with_recovery",
+        ],
         "operator_facing_journey": "Inspect scenario shell, walkthrough evidence, recovery report, and closeout.",
         "end_user_facing_journey": "Submit knowledge text and query, then receive capture receipt, search hit, summary, and status.",
         "remaining_limits": [
@@ -249,7 +278,10 @@ def adoption_payload() -> dict[str, Any]:
 def external_docs() -> dict[Path, str]:
     workspace = "/Users/xiamingxing/Workspace/.omo/"
     return {
-        EXTERNAL_OMO_ROOT / "_delivery" / "cases" / "2026-06-01-phase16-knowledge-capture-search-retrospective.md": f"""# Phase16 知识捕获检索复盘
+        EXTERNAL_OMO_ROOT
+        / "_delivery"
+        / "cases"
+        / "2026-06-01-phase16-knowledge-capture-search-retrospective.md": f"""# Phase16 知识捕获检索复盘
 
 > 类型：Case / Retrospective
 > 边界：Pointer only，不是 repo live truth，也不是 shadow SSOT。
@@ -271,7 +303,10 @@ Pointer:
 
 本文件不维护 repo 的 live phase、active queue 或任何 mutable fact。repo `.omo/` 是 live SSOT；外部 OMO 只做方法复盘与模式抽象，避免 shadow SSOT。
 """,
-        EXTERNAL_OMO_ROOT / "_delivery" / "patterns" / "03-控制面不能替代用户价值.md": f"""# 控制面不能替代用户价值
+        EXTERNAL_OMO_ROOT
+        / "_delivery"
+        / "patterns"
+        / "03-控制面不能替代用户价值.md": f"""# 控制面不能替代用户价值
 
 > 类型：Pattern
 > 边界：Pointer / Pattern only，不是 repo live truth，也不是 shadow SSOT。
@@ -298,7 +333,9 @@ Pointer:
 
 不要在外部 OMO 复制 repo live state；不要维护 live phase 或 active queue；不要制造 shadow SSOT。
 """,
-        EXTERNAL_OMO_ROOT / "_control" / "07-从OMO计划到项目能力升级Playbook.md": f"""# 从 OMO 计划转项目能力升级 Playbook
+        EXTERNAL_OMO_ROOT
+        / "_control"
+        / "07-从OMO计划到项目能力升级Playbook.md": f"""# 从 OMO 计划转项目能力升级 Playbook
 
 > 类型：Playbook
 > 边界：Pointer / Playbook only，不是 repo live truth，也不是 shadow SSOT。
@@ -329,7 +366,7 @@ Pointer:
 
 def baseline_command(args: argparse.Namespace) -> int:
     payload = baseline_payload()
-    _write(Path(args.output), payload)
+    write_yaml(Path(args.output), payload)
     print(json.dumps({"status": "ready", "output": args.output}, ensure_ascii=False))
     return 0
 
@@ -338,22 +375,36 @@ def scenario_command(args: argparse.Namespace) -> int:
     root = _root()
     scenario = scenario_payload()
     shell = shell_payload()
-    _write(_omo(root) / "scenarios" / "knowledge-capture-search.yaml", scenario)
-    _write(Path(args.output), shell)
-    print(json.dumps({"status": "ready", "scenario": scenario["id"], "output": args.output}, ensure_ascii=False))
+    write_yaml(_omo(root) / "scenarios" / "knowledge-capture-search.yaml", scenario)
+    write_yaml(Path(args.output), shell)
+    print(
+        json.dumps(
+            {"status": "ready", "scenario": scenario["id"], "output": args.output},
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
 def walkthrough_command(args: argparse.Namespace) -> int:
     payload = walkthrough_payload()
-    _write(Path(args.output), payload)
-    print(json.dumps({"status": payload["status"], "mode": payload["mode"], "output": args.output}, ensure_ascii=False))
+    write_yaml(Path(args.output), payload)
+    print(
+        json.dumps(
+            {
+                "status": payload["status"],
+                "mode": payload["mode"],
+                "output": args.output,
+            },
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
 def recovery_command(args: argparse.Namespace) -> int:
     payload = recovery_payload()
-    _write(Path(args.output), payload)
+    write_yaml(Path(args.output), payload)
     print(json.dumps({"status": "pass", "output": args.output}, ensure_ascii=False))
     return 0
 
@@ -361,24 +412,50 @@ def recovery_command(args: argparse.Namespace) -> int:
 def closeout_command(args: argparse.Namespace) -> int:
     root = _root()
     adoption = adoption_payload()
-    _write(_omo(root) / "evidence" / "phase16" / "adoption-closeout.yaml", adoption)
+    write_yaml(_omo(root) / "evidence" / "phase16" / "adoption-closeout.yaml", adoption)
     for path, text in external_docs().items():
-        _write_text(path, text)
-    print(json.dumps({"status": "ready", "external_docs": 3, "output": ".omo/evidence/phase16/adoption-closeout.yaml"}, ensure_ascii=False))
+        write_text(path, text)
+    print(
+        json.dumps(
+            {
+                "status": "ready",
+                "external_docs": 3,
+                "output": ".omo/evidence/phase16/adoption-closeout.yaml",
+            },
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
 def all_command(args: argparse.Namespace) -> int:
     root = _root()
-    _write(_omo(root) / "evidence" / "phase16" / "journey-baseline.yaml", baseline_payload())
-    _write(_omo(root) / "scenarios" / "knowledge-capture-search.yaml", scenario_payload())
-    _write(_omo(root) / "evidence" / "phase16" / "scenario-shell.yaml", shell_payload())
-    _write(_omo(root) / "evidence" / "phase16" / "capture-search-walkthrough.yaml", walkthrough_payload())
-    _write(_omo(root) / "evidence" / "phase16" / "recovery-report.yaml", recovery_payload())
-    _write(_omo(root) / "evidence" / "phase16" / "adoption-closeout.yaml", adoption_payload())
+    write_yaml(
+        _omo(root) / "evidence" / "phase16" / "journey-baseline.yaml",
+        baseline_payload(),
+    )
+    write_yaml(
+        _omo(root) / "scenarios" / "knowledge-capture-search.yaml", scenario_payload()
+    )
+    write_yaml(
+        _omo(root) / "evidence" / "phase16" / "scenario-shell.yaml", shell_payload()
+    )
+    write_yaml(
+        _omo(root) / "evidence" / "phase16" / "capture-search-walkthrough.yaml",
+        walkthrough_payload(),
+    )
+    write_yaml(
+        _omo(root) / "evidence" / "phase16" / "recovery-report.yaml", recovery_payload()
+    )
+    write_yaml(
+        _omo(root) / "evidence" / "phase16" / "adoption-closeout.yaml",
+        adoption_payload(),
+    )
     for path, text in external_docs().items():
-        _write_text(path, text)
-    print(json.dumps({"status": "ready", "phase": 16, "artifacts": 9}, ensure_ascii=False))
+        write_text(path, text)
+    print(
+        json.dumps({"status": "ready", "phase": 16, "artifacts": 9}, ensure_ascii=False)
+    )
     return 0
 
 
@@ -387,19 +464,27 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     baseline = sub.add_parser("baseline")
-    baseline.add_argument("--output", default=".omo/evidence/phase16/journey-baseline.yaml")
+    baseline.add_argument(
+        "--output", default=".omo/evidence/phase16/journey-baseline.yaml"
+    )
     baseline.set_defaults(func=baseline_command)
 
     scenario = sub.add_parser("scenario")
-    scenario.add_argument("--output", default=".omo/evidence/phase16/scenario-shell.yaml")
+    scenario.add_argument(
+        "--output", default=".omo/evidence/phase16/scenario-shell.yaml"
+    )
     scenario.set_defaults(func=scenario_command)
 
     walkthrough = sub.add_parser("walkthrough")
-    walkthrough.add_argument("--output", default=".omo/evidence/phase16/capture-search-walkthrough.yaml")
+    walkthrough.add_argument(
+        "--output", default=".omo/evidence/phase16/capture-search-walkthrough.yaml"
+    )
     walkthrough.set_defaults(func=walkthrough_command)
 
     recovery = sub.add_parser("recovery")
-    recovery.add_argument("--output", default=".omo/evidence/phase16/recovery-report.yaml")
+    recovery.add_argument(
+        "--output", default=".omo/evidence/phase16/recovery-report.yaml"
+    )
     recovery.set_defaults(func=recovery_command)
 
     closeout = sub.add_parser("closeout")

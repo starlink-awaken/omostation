@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from scripts.omo_debt_registry import DebtItem
-from scripts.omo_debt_review_queue import build_review_queue
+from omo.omo_debt_registry import DebtItem
+from omo.omo_debt_review_queue import build_review_queue
 
 
 def _item(

@@ -1,11 +1,7 @@
 from __future__ import annotations
 
-try:
-    from .omo_debt_approval import dispatch_entry_requires_approval
-    from .omo_debt_execution import run_slug_from_ref
-except ModuleNotFoundError:
-    from .omo_debt_approval import dispatch_entry_requires_approval
-    from .omo_debt_execution import run_slug_from_ref
+from .omo_debt_approval import dispatch_entry_requires_approval
+from .omo_debt_execution import run_slug_from_ref
 
 
 def _empty_counts() -> dict[str, int]:
@@ -41,7 +37,9 @@ def build_campaign_packet(
         for entry in owner_packet["entries"]:
             item_id = str(entry["id"])
             execution_record_ref = execution_lookup.get(item_id)
-            campaign_state = _campaign_state(entry, approval_lookup.get(item_id, False), execution_record_ref)
+            campaign_state = _campaign_state(
+                entry, approval_lookup.get(item_id, False), execution_record_ref
+            )
             owner_counts[campaign_state] += 1
             summary_counts[campaign_state] += 1
             packet_entry = dict(entry)
@@ -94,7 +92,9 @@ def render_campaign_markdown(packet: dict[str, object]) -> str:
             ("ready_to_execute", "Ready To Execute"),
             ("executed", "Executed"),
         ]:
-            state_entries = [entry for entry in owner["entries"] if entry["campaign_state"] == state]
+            state_entries = [
+                entry for entry in owner["entries"] if entry["campaign_state"] == state
+            ]
             if not state_entries:
                 continue
             lines.extend([f"### {title}", ""])

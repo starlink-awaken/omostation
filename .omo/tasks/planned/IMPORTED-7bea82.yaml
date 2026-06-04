@@ -1,0 +1,10 @@
+id: IMPORTED-7bea82
+title: 3.1 拆分 test_omo_automation.py（5,388行→按域拆为3-4个文件）
+status: completed
+task_type: feature
+depends_on:
+- IMPORTED-b461d5
+source_docs:
+- /Users/xiamingxing/Workspace/scratch/omo-cleanup-plan.md
+deliverables: []
+imported_via: omo_bridge

@@ -4,12 +4,8 @@ from pathlib import Path
 
 import yaml
 
-try:
-    from .omo_promotion_approval import evaluate_promotion_approval
-    from .omo_task_schema import validate_task_file
-except ModuleNotFoundError:
-    from .omo_promotion_approval import evaluate_promotion_approval
-    from .omo_task_schema import validate_task_file
+from .omo_promotion_approval import evaluate_promotion_approval
+from .omo_task_schema import validate_task_file
 
 
 def _load_yaml_required(path: Path) -> dict:
@@ -19,7 +15,11 @@ def _load_yaml_required(path: Path) -> dict:
 
 
 def _task_has_task_specific_promotion_approval(approval_ref: str | None) -> bool:
-    return bool(approval_ref and approval_ref.endswith(".yaml") and "-promotion-approval-" in approval_ref)
+    return bool(
+        approval_ref
+        and approval_ref.endswith(".yaml")
+        and "-promotion-approval-" in approval_ref
+    )
 
 
 def evaluate_governance_overlay_planned_target(
@@ -108,7 +108,9 @@ def evaluate_governance_overlay_planned_target(
             "blockers": blockers,
         }
 
-    if blockers == ["approval_invalid"] and _task_has_task_specific_promotion_approval(approval_ref):
+    if blockers == ["approval_invalid"] and _task_has_task_specific_promotion_approval(
+        approval_ref
+    ):
         return {
             "target_ref": target_ref,
             "task_id": task_id,
@@ -118,7 +120,10 @@ def evaluate_governance_overlay_planned_target(
             "detail": "task-specific promotion approval exists but is not granted yet",
         }
 
-    if blockers == ["phase_mismatch", "approval_invalid"] and _task_has_task_specific_promotion_approval(approval_ref):
+    if blockers == [
+        "phase_mismatch",
+        "approval_invalid",
+    ] and _task_has_task_specific_promotion_approval(approval_ref):
         return {
             "target_ref": target_ref,
             "task_id": task_id,

@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from scripts.omo_promotion_approval_analytics import build_promotion_approval_analytics_packet
+from omo.omo_promotion_approval_analytics import build_promotion_approval_analytics_packet
 
 
 def _write_yaml(path: Path, data: dict) -> None:

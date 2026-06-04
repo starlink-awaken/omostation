@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scripts.omo_promotion_readiness import (
+from omo.omo_promotion_readiness import (
     build_promotion_readiness_packet,
     render_promotion_readiness_markdown,
 )

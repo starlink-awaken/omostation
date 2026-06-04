@@ -8,12 +8,8 @@ from pathlib import Path
 
 import yaml
 
-try:
-    from .omo_io import write_yaml_atomic
-    from .omo_redaction import redact_sensitive_text
-except ModuleNotFoundError:
-    from .omo_io import write_yaml_atomic
-    from .omo_redaction import redact_sensitive_text
+from .omo_io import write_yaml_atomic
+from .omo_redaction import redact_sensitive_text
 
 
 _REQUIRED_FIELDS = {
@@ -33,7 +29,12 @@ _REQUIRED_FIELDS = {
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 def propose_truth_mutation(root: Path, proposal: dict, now: str) -> dict:
@@ -41,7 +42,9 @@ def propose_truth_mutation(root: Path, proposal: dict, now: str) -> dict:
     if missing:
         raise ValueError(f"proposal missing required fields: {', '.join(missing)}")
     if _contains_secret_like_value(proposal):
-        raise ValueError("proposal contains secret-like raw values; use secret_refs instead")
+        raise ValueError(
+            "proposal contains secret-like raw values; use secret_refs instead"
+        )
 
     payload = deepcopy(proposal)
     payload["status"] = "proposed"
@@ -50,7 +53,9 @@ def propose_truth_mutation(root: Path, proposal: dict, now: str) -> dict:
     payload["applied_at"] = None
     payload["verified_at"] = None
 
-    proposal_path = root / ".omo" / "_truth" / "task-center" / "proposals" / f"{payload['id']}.yaml"
+    proposal_path = (
+        root / ".omo" / "_truth" / "task-center" / "proposals" / f"{payload['id']}.yaml"
+    )
     write_yaml_atomic(proposal_path, payload)
     return payload
 
@@ -60,7 +65,9 @@ def _load_yaml(path: Path) -> dict:
 
 
 def _proposal_path(root: Path, proposal_id: str) -> Path:
-    return root / ".omo" / "_truth" / "task-center" / "proposals" / f"{proposal_id}.yaml"
+    return (
+        root / ".omo" / "_truth" / "task-center" / "proposals" / f"{proposal_id}.yaml"
+    )
 
 
 def _contains_secret_like_value(value: object) -> bool:
@@ -73,7 +80,9 @@ def _contains_secret_like_value(value: object) -> bool:
     return False
 
 
-def approve_truth_mutation(root: Path, proposal_id: str, approver: str, now: str) -> dict:
+def approve_truth_mutation(
+    root: Path, proposal_id: str, approver: str, now: str
+) -> dict:
     proposal_path = _proposal_path(root, proposal_id)
     proposal = _load_yaml(proposal_path)
     if proposal.get("status") != "proposed":
@@ -98,7 +107,9 @@ def apply_truth_mutation(root: Path, proposal_id: str, now: str) -> dict:
     target.update(changes)
     write_yaml_atomic(target_path, target)
 
-    delivery_dir = root / ".omo" / "_delivery" / "task-center" / "proposals" / proposal_id
+    delivery_dir = (
+        root / ".omo" / "_delivery" / "task-center" / "proposals" / proposal_id
+    )
     apply_payload = {
         "proposal_id": proposal_id,
         "trace_id": proposal["trace_id"],
@@ -168,18 +179,24 @@ def main() -> int:
         return 0
 
     if args.command == "approve":
-        result = approve_truth_mutation(root, args.proposal_id, approver=args.approver, now=args.now or _utc_now())
+        result = approve_truth_mutation(
+            root, args.proposal_id, approver=args.approver, now=args.now or _utc_now()
+        )
         print(f"approved {result['id']} status={result['status']}")
         return 0
 
     if args.command == "apply":
-        result = apply_truth_mutation(root, args.proposal_id, now=args.now or _utc_now())
+        result = apply_truth_mutation(
+            root, args.proposal_id, now=args.now or _utc_now()
+        )
         print(f"applied {result['id']} status={result['status']}")
         return 0
 
     if args.command == "list":
         for row in list_truth_mutations(root):
-            print(f"{row['id']} status={row['status']} level={row['operation_level']} target={row['target_ref']}")
+            print(
+                f"{row['id']} status={row['status']} level={row['operation_level']} target={row['target_ref']}"
+            )
         return 0
 
     return 1

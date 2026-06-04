@@ -2,11 +2,17 @@ from __future__ import annotations
 
 from pathlib import Path
 import sqlite3
+import sys
 
 import yaml
 
+# Ensure Workspace root is on sys.path for scripts.* imports
+_ws_root = Path(__file__).resolve().parents[2]
+if str(_ws_root) not in sys.path:
+    sys.path.insert(0, str(_ws_root))
+
 from scripts.cost_track_org import cost_summary_by_org
-from scripts.omo_experience import (
+from omo.omo_experience import (
     bridge_request_to_task,
     build_session_bootstrap,
     evaluate_control_gate,
@@ -15,7 +21,7 @@ from scripts.omo_experience import (
     write_freshness_report,
     write_resource_accounting_report,
 )
-from scripts.omo_task_schema import validate_task_file
+from omo.omo_task_schema import validate_task_file
 
 
 def _write_yaml(path: Path, data: dict) -> None:

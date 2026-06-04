@@ -1,24 +1,35 @@
 from __future__ import annotations
 
 
-def _delta_metric(latest: int | float, prior: int | float | None) -> dict[str, int | float | None]:
+def _delta_metric(
+    latest: int | float, prior: int | float | None
+) -> dict[str, int | float | None]:
     if prior is None:
         return {"latest": latest, "prior": None, "delta": None}
     return {"latest": latest, "prior": prior, "delta": latest - prior}
 
 
-def _summary_diff(latest_summary: dict[str, object], prior_summary: dict[str, object] | None) -> dict[str, object]:
+def _summary_diff(
+    latest_summary: dict[str, object], prior_summary: dict[str, object] | None
+) -> dict[str, object]:
     prior_state_counts = prior_summary["state_counts"] if prior_summary else None
     return {
-        "total_items": _delta_metric(int(latest_summary["total_items"]), int(prior_summary["total_items"]) if prior_summary else None),
+        "total_items": _delta_metric(
+            int(latest_summary["total_items"]),
+            int(prior_summary["total_items"]) if prior_summary else None,
+        ),
         "state_counts": {
             "pending_approval": _delta_metric(
                 int(latest_summary["state_counts"]["pending_approval"]),
-                int(prior_state_counts["pending_approval"]) if prior_state_counts else None,
+                int(prior_state_counts["pending_approval"])
+                if prior_state_counts
+                else None,
             ),
             "ready_to_execute": _delta_metric(
                 int(latest_summary["state_counts"]["ready_to_execute"]),
-                int(prior_state_counts["ready_to_execute"]) if prior_state_counts else None,
+                int(prior_state_counts["ready_to_execute"])
+                if prior_state_counts
+                else None,
             ),
             "executed": _delta_metric(
                 int(latest_summary["state_counts"]["executed"]),
@@ -43,7 +54,9 @@ def _summary_diff(latest_summary: dict[str, object], prior_summary: dict[str, ob
         ),
         "execution_completion_rate": _delta_metric(
             float(latest_summary["execution_completion_rate"]),
-            float(prior_summary["execution_completion_rate"]) if prior_summary else None,
+            float(prior_summary["execution_completion_rate"])
+            if prior_summary
+            else None,
         ),
     }
 
@@ -57,7 +70,9 @@ def _owner_diff_entry(
     prior_state_counts = prior_owner["state_counts"]
     return {
         "owner": owner,
-        "item_count": _delta_metric(int(latest_owner["item_count"]), int(prior_owner["item_count"])),
+        "item_count": _delta_metric(
+            int(latest_owner["item_count"]), int(prior_owner["item_count"])
+        ),
         "state_counts": {
             "pending_approval": _delta_metric(
                 int(latest_state_counts["pending_approval"]),
@@ -72,7 +87,9 @@ def _owner_diff_entry(
                 int(prior_state_counts["executed"]),
             ),
         },
-        "gate_item_count": _delta_metric(int(latest_owner["gate_item_count"]), int(prior_owner["gate_item_count"])),
+        "gate_item_count": _delta_metric(
+            int(latest_owner["gate_item_count"]), int(prior_owner["gate_item_count"])
+        ),
         "approved_gate_item_count": _delta_metric(
             int(latest_owner["approved_gate_item_count"]),
             int(prior_owner["approved_gate_item_count"]),
@@ -92,7 +109,9 @@ def _owner_diff_entry(
     }
 
 
-def _owners_diff(latest_owners: list[dict[str, object]], prior_owners: list[dict[str, object]]) -> dict[str, object]:
+def _owners_diff(
+    latest_owners: list[dict[str, object]], prior_owners: list[dict[str, object]]
+) -> dict[str, object]:
     latest_by_owner = {str(owner["owner"]): owner for owner in latest_owners}
     prior_by_owner = {str(owner["owner"]): owner for owner in prior_owners}
     shared_names = sorted(latest_by_owner.keys() & prior_by_owner.keys())
@@ -100,7 +119,9 @@ def _owners_diff(latest_owners: list[dict[str, object]], prior_owners: list[dict
     removed_names = sorted(prior_by_owner.keys() - latest_by_owner.keys())
     return {
         "compared": [
-            _owner_diff_entry(owner_name, latest_by_owner[owner_name], prior_by_owner[owner_name])
+            _owner_diff_entry(
+                owner_name, latest_by_owner[owner_name], prior_by_owner[owner_name]
+            )
             for owner_name in shared_names
         ],
         "added": [{"owner": owner_name} for owner_name in added_names],
@@ -116,14 +137,20 @@ def build_reporting_diff_packet(
 ) -> dict[str, object]:
     latest_summary = latest_packet["summary"]
     prior_summary = prior_packet["summary"] if prior_packet else None
-    owners = None if prior_packet is None else _owners_diff(latest_packet["owners"], prior_packet["owners"])
+    owners = (
+        None
+        if prior_packet is None
+        else _owners_diff(latest_packet["owners"], prior_packet["owners"])
+    )
     return {
         "generated_at": generated_at,
         "diff_status": "diff_available" if prior_packet else "no_prior_run",
         "latest_run_stamp": latest_packet["run_stamp"],
         "prior_run_stamp": prior_packet["run_stamp"] if prior_packet else None,
         "latest_dispatch_run_ref": latest_packet["dispatch_run_ref"],
-        "prior_dispatch_run_ref": prior_packet["dispatch_run_ref"] if prior_packet else None,
+        "prior_dispatch_run_ref": prior_packet["dispatch_run_ref"]
+        if prior_packet
+        else None,
         "summary_diff": _summary_diff(latest_summary, prior_summary),
         "owners": owners,
     }
@@ -151,7 +178,9 @@ def render_reporting_diff_markdown(packet: dict[str, object]) -> str:
                 )
             lines.append("")
             continue
-        lines.append(f"{field}: latest={payload['latest']}, prior={payload['prior']}, delta={payload['delta']}")
+        lines.append(
+            f"{field}: latest={payload['latest']}, prior={payload['prior']}, delta={payload['delta']}"
+        )
     if packet["owners"] is not None:
         lines.extend(["", "## Owner Diff", "", "### Shared owners", ""])
         compared = packet["owners"]["compared"]
@@ -177,10 +206,14 @@ def render_reporting_diff_markdown(packet: dict[str, object]) -> str:
             lines.extend(["- none", ""])
         if packet["owners"]["added"]:
             lines.extend(["### Added owners", ""])
-            lines.extend([f"- `{entry['owner']}`" for entry in packet["owners"]["added"]])
+            lines.extend(
+                [f"- `{entry['owner']}`" for entry in packet["owners"]["added"]]
+            )
             lines.append("")
         if packet["owners"]["removed"]:
             lines.extend(["### Removed owners", ""])
-            lines.extend([f"- `{entry['owner']}`" for entry in packet["owners"]["removed"]])
+            lines.extend(
+                [f"- `{entry['owner']}`" for entry in packet["owners"]["removed"]]
+            )
             lines.append("")
     return "\n".join(lines)

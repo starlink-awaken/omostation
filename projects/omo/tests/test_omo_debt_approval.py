@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.omo_debt_approval import (
+from omo.omo_debt_approval import (
     APPROVAL_SCOPE_EXECUTE_REVALIDATE,
     approval_current_path,
     approval_paths,

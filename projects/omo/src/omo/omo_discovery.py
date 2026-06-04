@@ -5,10 +5,7 @@ from pathlib import Path
 
 import yaml
 
-try:
-    from .omo_io import write_yaml_atomic
-except ModuleNotFoundError:
-    from .omo_io import write_yaml_atomic
+from .omo_io import write_yaml_atomic
 
 
 def _load_frontmatter(path: Path) -> dict:
@@ -50,7 +47,9 @@ def discover_task_blueprints(root: Path, scan_dir: Path) -> dict:
     return registry
 
 
-def instantiate_task_template(root: Path, blueprint_id: str, task_id: str, title: str) -> dict[str, str]:
+def instantiate_task_template(
+    root: Path, blueprint_id: str, task_id: str, title: str
+) -> dict[str, str]:
     registry_path = root / ".omo" / "_truth" / "task-center" / "discovery-registry.yaml"
     registry = yaml.safe_load(registry_path.read_text(encoding="utf-8")) or {}
     blueprint = registry["blueprints"][blueprint_id]

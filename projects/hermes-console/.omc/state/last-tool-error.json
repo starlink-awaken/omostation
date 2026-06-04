@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"echo \\\"=== 最终统计 ===\\\" && echo \\\"\\\" && echo \\\"--- 文件级 import from nucleus（0 剩余）---\\\" && grep -rn \\\"^from nucleus\\\\|^import nucleus\\\" /Users/xiamingxing/Workspace/projects/kairon/packages/ -...",
+  "error": "Exit code 1\n=== 最终统计 ===\n\n--- 文件级 import from nucleus（0 剩余）---",
+  "timestamp": "2026-06-03T03:02:59.813Z",
+  "retry_count": 1
+}

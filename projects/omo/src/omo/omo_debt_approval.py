@@ -11,7 +11,9 @@ VALID_APPROVAL_SCOPES = {
 }
 
 
-def find_dispatch_entry(dispatch_packet: dict[str, object], item_id: str) -> dict[str, object] | None:
+def find_dispatch_entry(
+    dispatch_packet: dict[str, object], item_id: str
+) -> dict[str, object] | None:
     for owner_packet in dispatch_packet.get("owners", []):
         for entry in owner_packet.get("entries", []):
             if entry.get("id") == item_id:
@@ -22,7 +24,10 @@ def find_dispatch_entry(dispatch_packet: dict[str, object], item_id: str) -> dic
 def dispatch_entry_requires_approval(entry: dict[str, object] | None) -> bool:
     if entry is None:
         return False
-    return entry.get("primary_lane") == "revalidate_now" and entry.get("gate_level") == "gate"
+    return (
+        entry.get("primary_lane") == "revalidate_now"
+        and entry.get("gate_level") == "gate"
+    )
 
 
 def approval_current_path(omo_dir: Path, item_id: str) -> Path:

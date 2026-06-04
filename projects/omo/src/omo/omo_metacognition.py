@@ -9,14 +9,16 @@ from typing import Any
 
 import yaml
 
-try:
-    from .omo_io import write_yaml_atomic
-except ModuleNotFoundError:
-    from .omo_io import write_yaml_atomic
+from .omo_io import write_yaml_atomic
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 def _root() -> Path:
@@ -41,7 +43,9 @@ def _load_registry(root: Path) -> list[dict[str, Any]]:
 
 def _phase12_evidence(root: Path) -> dict[str, Any]:
     omo = _omo(root)
-    trace = _load_yaml(omo / "evidence" / "phase12" / "research-pipeline-trace.yaml") or {}
+    trace = (
+        _load_yaml(omo / "evidence" / "phase12" / "research-pipeline-trace.yaml") or {}
+    )
     dry_run = _load_yaml(omo / "evidence" / "phase12" / "package-dry-run.yaml") or {}
     return {
         "trace_status": trace.get("status"),
@@ -103,7 +107,12 @@ def baseline_command(args: argparse.Namespace) -> int:
     }
     output = Path(args.output)
     write_yaml_atomic(output, report)
-    print(json.dumps({"status": "ready", "output": str(output), "capabilities": len(records)}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"status": "ready", "output": str(output), "capabilities": len(records)},
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
@@ -136,7 +145,9 @@ def proposals_command(args: argparse.Namespace) -> int:
                 "confidence": 0.9,
                 "risk": "low",
                 "operation_level": "L1",
-                "evidence_refs": [".omo/_knowledge/design/phase15-autonomous-governance-design.md"],
+                "evidence_refs": [
+                    ".omo/_knowledge/design/phase15-autonomous-governance-design.md"
+                ],
                 "rollback": "Keep existing evidence refs as source of truth.",
                 "verification": "policy tests must prove no draft activation leak",
             },
@@ -156,7 +167,16 @@ def proposals_command(args: argparse.Namespace) -> int:
     }
     output = Path(args.output)
     write_yaml_atomic(output, proposals)
-    print(json.dumps({"status": "proposal-only", "output": str(output), "count": len(proposals["proposals"])}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "status": "proposal-only",
+                "output": str(output),
+                "count": len(proposals["proposals"]),
+            },
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
@@ -183,13 +203,20 @@ def collaboration_command(args: argparse.Namespace) -> int:
         "execution_envelope": {
             "may_create_active_task": False,
             "draft_path": ".omo/tasks/drafts/",
-            "required_fields": ["source_evidence", "approval_ref", "rollback", "verification"],
+            "required_fields": [
+                "source_evidence",
+                "approval_ref",
+                "rollback",
+                "verification",
+            ],
             "guardrail": "No active task is created by Phase 13 metacognition.",
         },
     }
     output = Path(args.output)
     write_yaml_atomic(output, plan)
-    print(json.dumps({"status": "draft-only", "output": str(output)}, ensure_ascii=False))
+    print(
+        json.dumps({"status": "draft-only", "output": str(output)}, ensure_ascii=False)
+    )
     return 0
 
 
@@ -233,19 +260,27 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     baseline = subparsers.add_parser("baseline")
-    baseline.add_argument("--output", default=".omo/evidence/phase13/metacognition-baseline.yaml")
+    baseline.add_argument(
+        "--output", default=".omo/evidence/phase13/metacognition-baseline.yaml"
+    )
     baseline.set_defaults(func=baseline_command)
 
     proposals = subparsers.add_parser("proposals")
-    proposals.add_argument("--output", default=".omo/evidence/phase13/bottleneck-proposals.yaml")
+    proposals.add_argument(
+        "--output", default=".omo/evidence/phase13/bottleneck-proposals.yaml"
+    )
     proposals.set_defaults(func=proposals_command)
 
     collaboration = subparsers.add_parser("collaboration")
-    collaboration.add_argument("--output", default=".omo/evidence/phase13/supervised-collaboration.yaml")
+    collaboration.add_argument(
+        "--output", default=".omo/evidence/phase13/supervised-collaboration.yaml"
+    )
     collaboration.set_defaults(func=collaboration_command)
 
     rehearse = subparsers.add_parser("rehearse")
-    rehearse.add_argument("--output", default=".omo/evidence/phase13/self-healing-rehearsal.yaml")
+    rehearse.add_argument(
+        "--output", default=".omo/evidence/phase13/self-healing-rehearsal.yaml"
+    )
     rehearse.set_defaults(func=rehearse_command)
     return parser
 

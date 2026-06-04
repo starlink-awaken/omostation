@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from scripts.omo_governance_overlay import build_governance_overlay_status
+from omo.omo_governance_overlay import build_governance_overlay_status
 
 
 def _write_yaml(path: Path, data: dict) -> None:

@@ -21,13 +21,18 @@ def _normalize_owner(owner: object) -> str:
     return str(owner or "unowned")
 
 
-def _priority_flags(entry: dict[str, object], escalation_threshold_days: int) -> list[str]:
+def _priority_flags(
+    entry: dict[str, object], escalation_threshold_days: int
+) -> list[str]:
     flags: list[str] = []
     if entry.get("last_reviewed_at") is None:
         flags.append("initial_review_required")
     if entry.get("gate_level") == "gate":
         flags.append("gate_attention")
-    if entry.get("current_lane") == "revalidate_now" and int(entry.get("overdue_by", 0)) >= escalation_threshold_days:
+    if (
+        entry.get("current_lane") == "revalidate_now"
+        and int(entry.get("overdue_by", 0)) >= escalation_threshold_days
+    ):
         flags.append("escalation_watch")
     if entry.get("current_lane") == "continue_mitigation":
         flags.append("active_mitigation")
@@ -51,7 +56,9 @@ def build_owner_routing_packet(action_packet: dict[str, object]) -> dict[str, ob
                 {
                     **entry,
                     "primary_lane": lane_name,
-                    "priority_flags": _priority_flags(entry, int(defaults["escalation_threshold_days"])),
+                    "priority_flags": _priority_flags(
+                        entry, int(defaults["escalation_threshold_days"])
+                    ),
                 }
             )
 
@@ -84,7 +91,12 @@ def build_owner_routing_packet(action_packet: dict[str, object]) -> dict[str, ob
 
     owners.sort(
         key=lambda owner_packet: (
-            0 if any("gate_attention" in item["priority_flags"] for item in owner_packet["entries"]) else 1,
+            0
+            if any(
+                "gate_attention" in item["priority_flags"]
+                for item in owner_packet["entries"]
+            )
+            else 1,
             min(_severity_rank(item) for item in owner_packet["entries"]),
             -int(owner_packet["summary"]["total_count"]),
             -int(owner_packet["summary"]["lane_counts"]["revalidate_now"]),
@@ -100,7 +112,9 @@ def build_owner_routing_packet(action_packet: dict[str, object]) -> dict[str, ob
         "owners": owners,
         "summary": {
             "owner_count": len(owners),
-            "total_routed_items": sum(owner["summary"]["total_count"] for owner in owners),
+            "total_routed_items": sum(
+                owner["summary"]["total_count"] for owner in owners
+            ),
             "lane_counts": {
                 lane: sum(owner["summary"]["lane_counts"][lane] for owner in owners)
                 for lane in LANE_PRIORITY

@@ -7,7 +7,7 @@ import yaml
 
 import pytest
 
-from scripts.omo_governance import (
+from omo.omo_governance import (
     approve_truth_mutation,
     apply_truth_mutation,
     list_truth_mutations,

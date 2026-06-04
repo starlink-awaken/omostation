@@ -37,7 +37,9 @@ def _dispatch_entry(entry: dict[str, object], dispatched_at: str) -> dict[str, o
     return dispatch_entry
 
 
-def build_dispatch_packet(owner_routing: dict[str, object], dispatched_at: str) -> dict[str, object]:
+def build_dispatch_packet(
+    owner_routing: dict[str, object], dispatched_at: str
+) -> dict[str, object]:
     generated_at = owner_routing.get("generated_at")
     owners = owner_routing.get("owners")
     summary = owner_routing.get("summary")
@@ -49,7 +51,9 @@ def build_dispatch_packet(owner_routing: dict[str, object], dispatched_at: str) 
 
     dispatch_owners: list[dict[str, object]] = []
     for owner_packet in owners:
-        entries = [_dispatch_entry(entry, dispatched_at) for entry in owner_packet["entries"]]
+        entries = [
+            _dispatch_entry(entry, dispatched_at) for entry in owner_packet["entries"]
+        ]
         dispatch_owners.append(
             {
                 "owner": owner_packet["owner"],
@@ -68,7 +72,9 @@ def build_dispatch_packet(owner_routing: dict[str, object], dispatched_at: str) 
         "owners": dispatch_owners,
         "summary": {
             "owner_count": len(dispatch_owners),
-            "total_dispatched_items": sum(owner["item_count"] for owner in dispatch_owners),
+            "total_dispatched_items": sum(
+                owner["item_count"] for owner in dispatch_owners
+            ),
             "lane_counts": dict(summary["lane_counts"]),
         },
     }

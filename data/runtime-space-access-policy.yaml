@@ -1,0 +1,12 @@
+apiVersion: omo/v1
+kind: DataAccessPolicy
+space_ref: spaces/runtime-space.yaml
+rules:
+  - action: runtime.observe
+    allowed_roots: []
+    required_registry_ref: spaces/runtime-space-cross-root-rule-registry.yaml
+    runtime_boundary_ref: runtime/runtime-space-boundary.yaml
+    controls:
+      registry_ref: spaces/runtime-space-cross-root-rule-registry.yaml
+      runtime_boundary_ref: runtime/runtime-space-boundary.yaml
+schema_version: v1

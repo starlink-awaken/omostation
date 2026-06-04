@@ -1,0 +1,11 @@
+id: IMPORTED-5d50b0
+title: 4.1 GHA workflow：uv sync --group dev → pytest → ruff check
+status: completed
+task_type: feature
+depends_on:
+- IMPORTED-dffdd8
+- IMPORTED-4c93ca
+source_docs:
+- /Users/xiamingxing/Workspace/scratch/omo-cleanup-plan.md
+deliverables: []
+imported_via: omo_bridge

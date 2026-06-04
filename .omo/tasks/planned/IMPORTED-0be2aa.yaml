@@ -1,0 +1,9 @@
+id: IMPORTED-0be2aa
+title: 1.4 phase16.py 硬编码 EXTERNAL_OMO_ROOT 改为参数/环境变量
+status: completed
+task_type: feature
+depends_on: []
+source_docs:
+- /Users/xiamingxing/Workspace/scratch/omo-cleanup-plan.md
+deliverables: []
+imported_via: omo_bridge

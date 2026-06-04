@@ -47,7 +47,9 @@ def _history_entry(root: Path, omo_ref: Path, approval_path: Path) -> dict[str, 
             raise ValueError(f"missing required promotion approval field: {field_name}")
 
     proposal_id = f"{approval['approval_id']}-proposal"
-    proposal_ref = omo_ref / "_truth" / "task-center" / "proposals" / f"{proposal_id}.yaml"
+    proposal_ref = (
+        omo_ref / "_truth" / "task-center" / "proposals" / f"{proposal_id}.yaml"
+    )
     proposal = _proposal_payload(root, proposal_ref)
     return {
         "approval_id": approval["approval_id"],
@@ -58,7 +60,9 @@ def _history_entry(root: Path, omo_ref: Path, approval_path: Path) -> dict[str, 
         "approval_status": approval["approval_status"],
         "proposal_id": proposal_id,
         "proposal_ref": str(proposal_ref),
-        "proposal_status": "missing" if proposal is None else str(proposal.get("status", "missing")),
+        "proposal_status": "missing"
+        if proposal is None
+        else str(proposal.get("status", "missing")),
         "approver": approval.get("approver"),
         "approved_at": approval.get("approved_at"),
         "applied_at": None if proposal is None else proposal.get("applied_at"),
@@ -66,7 +70,9 @@ def _history_entry(root: Path, omo_ref: Path, approval_path: Path) -> dict[str, 
     }
 
 
-def build_promotion_approval_history(root: Path, omo_dir: str | Path = ".omo", now: str = "2026-06-03T00:15:00Z") -> dict[str, object]:
+def build_promotion_approval_history(
+    root: Path, omo_dir: str | Path = ".omo", now: str = "2026-06-03T00:15:00Z"
+) -> dict[str, object]:
     omo_ref = Path(omo_dir)
     runs_dir = root / omo_ref / "workers" / "runs"
     entries = [
@@ -74,7 +80,10 @@ def build_promotion_approval_history(root: Path, omo_dir: str | Path = ".omo", n
         for path in sorted(runs_dir.glob("*-promotion-approval-*.yaml"))
         if _is_promotion_approval_artifact(path)
     ]
-    entries.sort(key=lambda item: (_parse_iso8601(item["requested_at"]), item["approval_id"]), reverse=True)
+    entries.sort(
+        key=lambda item: (_parse_iso8601(item["requested_at"]), item["approval_id"]),
+        reverse=True,
+    )
 
     latest = entries[0] if entries else None
     prior = entries[1] if len(entries) > 1 else None
@@ -86,12 +95,20 @@ def build_promotion_approval_history(root: Path, omo_dir: str | Path = ".omo", n
         "prior_approval_ref": prior["approval_ref"] if prior else None,
         "approval_count": len(entries),
         "requested_count": sum(
-            1 for entry in entries if entry["approval_status"] == "requested" and entry["proposal_status"] == "proposed"
+            1
+            for entry in entries
+            if entry["approval_status"] == "requested"
+            and entry["proposal_status"] == "proposed"
         ),
         "approved_pending_apply_count": sum(
-            1 for entry in entries if entry["approval_status"] == "requested" and entry["proposal_status"] == "approved"
+            1
+            for entry in entries
+            if entry["approval_status"] == "requested"
+            and entry["proposal_status"] == "approved"
         ),
-        "granted_count": sum(1 for entry in entries if entry["approval_status"] == "granted"),
+        "granted_count": sum(
+            1 for entry in entries if entry["approval_status"] == "granted"
+        ),
         "approvals": entries,
     }
     markdown_lines = [

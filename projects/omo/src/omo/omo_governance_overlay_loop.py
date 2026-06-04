@@ -4,12 +4,8 @@ from pathlib import Path
 
 import yaml
 
-try:
-    from .omo_governance_overlay import build_governance_overlay_status
-    from .omo_governance_overlay_targets import evaluate_governance_overlay_planned_target
-except ModuleNotFoundError:
-    from .omo_governance_overlay import build_governance_overlay_status
-    from .omo_governance_overlay_targets import evaluate_governance_overlay_planned_target
+from .omo_governance_overlay import build_governance_overlay_status
+from .omo_governance_overlay_targets import evaluate_governance_overlay_planned_target
 
 
 def _load_yaml_required(path: Path) -> dict:
@@ -41,9 +37,13 @@ def _target_action(root: Path, target_ref: str) -> dict[str, object]:
     return evaluate_governance_overlay_planned_target(root, target_ref)
 
 
-def plan_governance_overlay_cycle(root: Path, *, omo_dir: str | Path = ".omo", actor: str, now: str) -> dict[str, object]:
+def plan_governance_overlay_cycle(
+    root: Path, *, omo_dir: str | Path = ".omo", actor: str, now: str
+) -> dict[str, object]:
     omo_ref = Path(omo_dir)
-    roadmap = _load_yaml_required(root / omo_ref / "_truth" / "governance-overlay" / "roadmap.yaml")
+    roadmap = _load_yaml_required(
+        root / omo_ref / "_truth" / "governance-overlay" / "roadmap.yaml"
+    )
     status = build_governance_overlay_status(root, omo_dir=omo_dir, now=now)["yaml"]
     run = {
         "run_id": f"governance-overlay-{now.replace(':', '-')}",
@@ -72,10 +72,16 @@ def plan_governance_overlay_cycle(root: Path, *, omo_dir: str | Path = ".omo", a
         run["target_state_summary"] = _target_state_summary(run["target_results"])
         run["control_updates"] = {
             "current_milestone": pending_items[0]["id"] if pending_items else None,
-            "next_milestone": pending_items[1]["id"] if len(pending_items) > 1 else None,
+            "next_milestone": pending_items[1]["id"]
+            if len(pending_items) > 1
+            else None,
         }
         states = [target["state"] for target in run["target_results"]]
-        terminal_blockers = {"planned_blocked", "unsupported_target_ref", "missing_target_ref"}
+        terminal_blockers = {
+            "planned_blocked",
+            "unsupported_target_ref",
+            "missing_target_ref",
+        }
         if states and all(state == "done" for state in states):
             run["summary"] = "close_ready"
         elif states and all(state in terminal_blockers for state in states):
@@ -90,8 +96,12 @@ def plan_governance_overlay_cycle(root: Path, *, omo_dir: str | Path = ".omo", a
     roadmap_item_id = str(status["autopilot_candidates"][0]["id"])
     item = _roadmap_item(roadmap, roadmap_item_id)
     run["roadmap_item_id"] = roadmap_item_id
-    run["target_results"] = [_target_action(root, str(ref)) for ref in item.get("target_refs", [])]
-    if run["target_results"] and all(result["result"] == "unsupported_target_ref" for result in run["target_results"]):
+    run["target_results"] = [
+        _target_action(root, str(ref)) for ref in item.get("target_refs", [])
+    ]
+    if run["target_results"] and all(
+        result["result"] == "unsupported_target_ref" for result in run["target_results"]
+    ):
         run["summary"] = "blocked"
     else:
         run["summary"] = "advanced"

@@ -4,8 +4,8 @@ from pathlib import Path
 
 import yaml
 
-from scripts.omo_discovery import discover_task_blueprints, instantiate_task_template
-from scripts.omo_task_schema import validate_task_file
+from omo.omo_discovery import discover_task_blueprints, instantiate_task_template
+from omo.omo_task_schema import validate_task_file
 
 
 def _load_yaml(path: Path) -> dict:

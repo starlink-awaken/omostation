@@ -5,31 +5,37 @@ from pathlib import Path
 
 import yaml
 
-try:
-    from .omo_governance import propose_truth_mutation
-    from .omo_io import write_yaml_atomic
-except ModuleNotFoundError:
-    from .omo_governance import propose_truth_mutation
-    from .omo_io import write_yaml_atomic
+from .omo_governance import propose_truth_mutation
+from .omo_io import write_yaml_atomic
 
 
 def _load_yaml(path: Path) -> dict:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
-def _resolve_required_capabilities(matrix: dict, action: str, fallback: list[str]) -> tuple[list[str], str]:
+def _resolve_required_capabilities(
+    matrix: dict, action: str, fallback: list[str]
+) -> tuple[list[str], str]:
     for rule in matrix.get("rules", []):
         if rule.get("action") == action:
-            return list(rule.get("required_capabilities", [])), rule.get("decision", "deny")
+            return list(rule.get("required_capabilities", [])), rule.get(
+                "decision", "deny"
+            )
     return fallback, "deny"
 
 
-def evaluate_worker_envelope(root: Path, envelope_ref: Path, matrix_ref: Path | None = None) -> dict[str, object]:
+def evaluate_worker_envelope(
+    root: Path, envelope_ref: Path, matrix_ref: Path | None = None
+) -> dict[str, object]:
     envelope = _load_yaml(root / envelope_ref)
     context = envelope.get("execution_context", {})
 
     contract = _load_yaml(root / context["admission_contract_ref"])
-    matrix = _load_yaml(root / matrix_ref) if matrix_ref is not None else _load_yaml(root / contract["admission_matrix_ref"])
+    matrix = (
+        _load_yaml(root / matrix_ref)
+        if matrix_ref is not None
+        else _load_yaml(root / contract["admission_matrix_ref"])
+    )
 
     required_capabilities, decision = _resolve_required_capabilities(
         matrix,
@@ -45,7 +51,11 @@ def evaluate_worker_envelope(root: Path, envelope_ref: Path, matrix_ref: Path | 
             for capability in binding.get("capabilities", [])
         }
     )
-    missing_capabilities = [capability for capability in required_capabilities if capability not in granted_capabilities]
+    missing_capabilities = [
+        capability
+        for capability in required_capabilities
+        if capability not in granted_capabilities
+    ]
 
     if missing_capabilities:
         decision = "deny"
@@ -84,7 +94,9 @@ def request_conditional_approval(
 ) -> dict[str, str]:
     result = evaluate_worker_envelope(root, envelope_ref)
     if result["decision"] != "conditional_approval":
-        raise ValueError("conditional approval required before requesting governance approval")
+        raise ValueError(
+            "conditional approval required before requesting governance approval"
+        )
 
     envelope_path = root / envelope_ref
     envelope = _load_yaml(envelope_path)

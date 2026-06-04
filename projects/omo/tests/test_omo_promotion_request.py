@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scripts.omo_promotion_request import (
+from omo.omo_promotion_request import (
     build_promotion_approval_proposal,
     build_promotion_approval_request,
     promotion_approval_ref,

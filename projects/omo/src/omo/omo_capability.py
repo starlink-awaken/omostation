@@ -9,19 +9,29 @@ from typing import Any
 
 import yaml
 
-try:
-    from .omo_io import write_text_atomic, write_yaml_atomic
-except ModuleNotFoundError:
-    from .omo_io import write_text_atomic, write_yaml_atomic
+from .omo_io import write_text_atomic, write_yaml_atomic
 
 
-CAPABILITY_TYPES = {"capability", "skill", "tool", "plugin", "connector", "cli", "package"}
+CAPABILITY_TYPES = {
+    "capability",
+    "skill",
+    "tool",
+    "plugin",
+    "connector",
+    "cli",
+    "package",
+}
 PROTOCOLS = {"cli", "mcp", "api", "local", "file", "doc"}
 LIFECYCLES = {"active", "experimental", "deprecated", "external"}
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 def _root() -> Path:
@@ -91,7 +101,9 @@ def _project_capabilities(root: Path) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     packages_root = root / "projects" / "kairon" / "packages"
     if packages_root.exists():
-        for package in sorted(path for path in packages_root.iterdir() if path.is_dir()):
+        for package in sorted(
+            path for path in packages_root.iterdir() if path.is_dir()
+        ):
             package_id = package.name.replace("_", "-")
             records.append(
                 _capability_record(
@@ -120,7 +132,11 @@ def _project_capabilities(root: Path) -> list[dict[str, Any]]:
                 ["workspace-governance"],
             )
         )
-        for child in sorted(path for path in project.iterdir() if path.is_dir() and not path.name.startswith("."))[:12]:
+        for child in sorted(
+            path
+            for path in project.iterdir()
+            if path.is_dir() and not path.name.startswith(".")
+        )[:12]:
             records.append(
                 _capability_record(
                     f"{project_name.lower()}.{child.name.replace('_', '-')}",
@@ -271,9 +287,15 @@ def scan_command(args: argparse.Namespace) -> int:
     if args.write:
         (omo / "registry").mkdir(parents=True, exist_ok=True)
         _write_registry_index(root)
-        write_yaml_atomic(omo / "registry" / "projects-capabilities.yaml", {"capabilities": records})
-        write_yaml_atomic(omo / "registry" / "sharedwork-sample.yaml", {"capabilities": sharedwork})
-        write_yaml_atomic(omo / "registry" / "system-packages.yaml", {"packages": packages})
+        write_yaml_atomic(
+            omo / "registry" / "projects-capabilities.yaml", {"capabilities": records}
+        )
+        write_yaml_atomic(
+            omo / "registry" / "sharedwork-sample.yaml", {"capabilities": sharedwork}
+        )
+        write_yaml_atomic(
+            omo / "registry" / "system-packages.yaml", {"packages": packages}
+        )
         write_yaml_atomic(omo / "registry" / "agent-clis.yaml", {"clis": clis})
 
     print(
@@ -302,22 +324,30 @@ def _load_all_capabilities(root: Path) -> list[dict[str, Any]]:
 def register_command(args: argparse.Namespace) -> int:
     root = _root()
     payload = _load_yaml(Path(args.file))
-    records = payload.get("capabilities", payload if isinstance(payload, list) else [payload])
+    records = payload.get(
+        "capabilities", payload if isinstance(payload, list) else [payload]
+    )
     errors: dict[str, list[str]] = {}
     for record in records:
         record_errors = _validate_capability(record)
         if record_errors:
             errors[record.get("id", "<missing-id>")] = record_errors
     if errors:
-        raise SystemExit(json.dumps({"status": "failed", "errors": errors}, ensure_ascii=False))
+        raise SystemExit(
+            json.dumps({"status": "failed", "errors": errors}, ensure_ascii=False)
+        )
 
     target = _omo(root) / "registry" / "manual-capabilities.yaml"
     existing = _load_yaml(target) or {"capabilities": []}
     by_id = {record["id"]: record for record in existing.get("capabilities", [])}
     for record in records:
         by_id[record["id"]] = record
-    write_yaml_atomic(target, {"capabilities": sorted(by_id.values(), key=lambda item: item["id"])})
-    print(json.dumps({"status": "registered", "count": len(records)}, ensure_ascii=False))
+    write_yaml_atomic(
+        target, {"capabilities": sorted(by_id.values(), key=lambda item: item["id"])}
+    )
+    print(
+        json.dumps({"status": "registered", "count": len(records)}, ensure_ascii=False)
+    )
     return 0
 
 
@@ -334,15 +364,27 @@ def discover_command(args: argparse.Namespace) -> int:
             or args.tag in record.get("metadata", {}).get("scenario_tags", [])
         ]
     if args.lifecycle:
-        records = [record for record in records if record.get("lifecycle") == args.lifecycle]
-    print(json.dumps({"count": len(records), "capabilities": records}, ensure_ascii=False, indent=2))
+        records = [
+            record for record in records if record.get("lifecycle") == args.lifecycle
+        ]
+    print(
+        json.dumps(
+            {"count": len(records), "capabilities": records},
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
     return 0
 
 
 def _scenario_bindings(root: Path, scenario_path: Path) -> dict[str, Any]:
     scenario = _load_yaml(scenario_path)
     capabilities = {record["id"]: record for record in _load_all_capabilities(root)}
-    missing = [capability_id for capability_id in scenario.get("capabilities", []) if capability_id not in capabilities]
+    missing = [
+        capability_id
+        for capability_id in scenario.get("capabilities", [])
+        if capability_id not in capabilities
+    ]
     return {
         "scenario_id": scenario["id"],
         "status": "blocked" if missing else "ready",
@@ -374,7 +416,11 @@ def trace_command(args: argparse.Namespace) -> int:
         "trace_id": f"{result['scenario_id']}-trace",
         "created_at": _utc_now(),
         "mode": "dry-run",
-        "scenario": str(scenario_path.relative_to(root) if scenario_path.is_absolute() else scenario_path),
+        "scenario": str(
+            scenario_path.relative_to(root)
+            if scenario_path.is_absolute()
+            else scenario_path
+        ),
         **result,
         "steps": [
             {
@@ -388,7 +434,11 @@ def trace_command(args: argparse.Namespace) -> int:
     }
     output = Path(args.output)
     write_yaml_atomic(output, trace)
-    print(json.dumps({"status": trace["status"], "output": str(output)}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"status": trace["status"], "output": str(output)}, ensure_ascii=False
+        )
+    )
     return 0 if trace["status"] == "ready" else 2
 
 
@@ -396,7 +446,9 @@ def pkg_sync_command(args: argparse.Namespace) -> int:
     if not args.dry_run:
         raise SystemExit("Phase 12 only supports pkg sync --dry-run")
     root = _root()
-    baseline = _load_yaml(_omo(root) / "registry" / "system-packages.yaml") or {"packages": []}
+    baseline = _load_yaml(_omo(root) / "registry" / "system-packages.yaml") or {
+        "packages": []
+    }
     report = {
         "mode": "dry-run",
         "created_at": _utc_now(),
@@ -423,7 +475,11 @@ def registry_browse_command(args: argparse.Namespace) -> int:
     counts: dict[str, int] = {}
     for record in records:
         counts[record["type"]] = counts.get(record["type"], 0) + 1
-    print(json.dumps({"total": len(records), "by_type": counts}, ensure_ascii=False, indent=2))
+    print(
+        json.dumps(
+            {"total": len(records), "by_type": counts}, ensure_ascii=False, indent=2
+        )
+    )
     return 0
 
 

@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-try:
-    from .omo_debt_reporting_history import _validate_run_stamp
-except ModuleNotFoundError:
-    from .omo_debt_reporting_history import _validate_run_stamp
+from .omo_debt_reporting_history import _validate_run_stamp
 
 
 def _trend_run(entry: dict[str, object]) -> dict[str, object]:
@@ -16,7 +13,9 @@ def _trend_run(entry: dict[str, object]) -> dict[str, object]:
             "execution_completion_rate",
         )
     ):
-        raise ValueError(f"missing reporting trend metadata for run: {entry['run_stamp']}")
+        raise ValueError(
+            f"missing reporting trend metadata for run: {entry['run_stamp']}"
+        )
     return {
         "run_stamp": entry["run_stamp"],
         "dispatch_run_ref": entry["dispatch_run_ref"],
@@ -28,18 +27,25 @@ def _trend_run(entry: dict[str, object]) -> dict[str, object]:
     }
 
 
-def _interval(previous: dict[str, object], current: dict[str, object]) -> dict[str, object]:
+def _interval(
+    previous: dict[str, object], current: dict[str, object]
+) -> dict[str, object]:
     return {
         "from_run_stamp": previous["run_stamp"],
         "to_run_stamp": current["run_stamp"],
         "total_items_delta": current["total_items"] - previous["total_items"],
-        "executed_item_count_delta": current["executed_item_count"] - previous["executed_item_count"],
-        "approval_coverage_rate_delta": current["approval_coverage_rate"] - previous["approval_coverage_rate"],
-        "execution_completion_rate_delta": current["execution_completion_rate"] - previous["execution_completion_rate"],
+        "executed_item_count_delta": current["executed_item_count"]
+        - previous["executed_item_count"],
+        "approval_coverage_rate_delta": current["approval_coverage_rate"]
+        - previous["approval_coverage_rate"],
+        "execution_completion_rate_delta": current["execution_completion_rate"]
+        - previous["execution_completion_rate"],
     }
 
 
-def _owner_trend_run(owner: str, run_stamp: str, entry: dict[str, object]) -> dict[str, object]:
+def _owner_trend_run(
+    owner: str, run_stamp: str, entry: dict[str, object]
+) -> dict[str, object]:
     if any(
         entry[field] is None
         for field in (
@@ -49,7 +55,9 @@ def _owner_trend_run(owner: str, run_stamp: str, entry: dict[str, object]) -> di
             "execution_completion_rate",
         )
     ):
-        raise ValueError(f"missing owner trend metadata for owner {owner} in run: {run_stamp}")
+        raise ValueError(
+            f"missing owner trend metadata for owner {owner} in run: {run_stamp}"
+        )
     return {
         "run_stamp": run_stamp,
         "item_count": entry["item_count"],
@@ -59,14 +67,19 @@ def _owner_trend_run(owner: str, run_stamp: str, entry: dict[str, object]) -> di
     }
 
 
-def _owner_interval(previous: dict[str, object], current: dict[str, object]) -> dict[str, object]:
+def _owner_interval(
+    previous: dict[str, object], current: dict[str, object]
+) -> dict[str, object]:
     return {
         "from_run_stamp": previous["run_stamp"],
         "to_run_stamp": current["run_stamp"],
         "item_count_delta": current["item_count"] - previous["item_count"],
-        "executed_item_count_delta": current["executed_item_count"] - previous["executed_item_count"],
-        "approval_coverage_rate_delta": current["approval_coverage_rate"] - previous["approval_coverage_rate"],
-        "execution_completion_rate_delta": current["execution_completion_rate"] - previous["execution_completion_rate"],
+        "executed_item_count_delta": current["executed_item_count"]
+        - previous["executed_item_count"],
+        "approval_coverage_rate_delta": current["approval_coverage_rate"]
+        - previous["approval_coverage_rate"],
+        "execution_completion_rate_delta": current["execution_completion_rate"]
+        - previous["execution_completion_rate"],
     }
 
 
@@ -100,7 +113,9 @@ def _owner_trends(
     for owner_map in owners_by_run:
         union_names |= set(owner_map.keys())
 
-    shared_names = sorted(set.intersection(*(set(owner_map.keys()) for owner_map in owners_by_run)))
+    shared_names = sorted(
+        set.intersection(*(set(owner_map.keys()) for owner_map in owners_by_run))
+    )
     compared = []
     for owner_name in shared_names:
         owner_runs = [
@@ -119,7 +134,9 @@ def _owner_trends(
         )
 
     return {
-        "owners_trend_status": "owners_trend_available" if shared_names else "no_shared_owners",
+        "owners_trend_status": "owners_trend_available"
+        if shared_names
+        else "no_shared_owners",
         "shared_owner_count": len(shared_names),
         "owners_excluded_count": len(union_names - set(shared_names)),
         "compared": compared,
@@ -194,10 +211,11 @@ def _execution_progress(
         return None
 
     anchor_run = ordered_runs[0]
-    baseline_open_item_count = int(anchor_run["total_items"]) - int(anchor_run["executed_item_count"])
+    baseline_open_item_count = int(anchor_run["total_items"]) - int(
+        anchor_run["executed_item_count"]
+    )
     progress_runs = [
-        _execution_progress_run(run, baseline_open_item_count)
-        for run in ordered_runs
+        _execution_progress_run(run, baseline_open_item_count) for run in ordered_runs
     ]
     return {
         "progress_status": (
@@ -228,7 +246,8 @@ def _state_progress_run(
         "pending_approval": pending_approval,
         "ready_to_execute": ready_to_execute,
         "executed": executed,
-        "pending_approval_delta_vs_baseline": pending_approval - baseline_pending_approval,
+        "pending_approval_delta_vs_baseline": pending_approval
+        - baseline_pending_approval,
     }
 
 
@@ -241,7 +260,9 @@ def _state_progress(
 
     anchor_run = ordered_runs[0]
     anchor_packet = reporting_packets_by_run[str(anchor_run["run_stamp"])]
-    baseline_pending_approval = int(anchor_packet["summary"]["state_counts"]["pending_approval"])
+    baseline_pending_approval = int(
+        anchor_packet["summary"]["state_counts"]["pending_approval"]
+    )
     runs = [
         _state_progress_run(
             run,
@@ -279,7 +300,9 @@ def _select_runs(
         try:
             _validate_run_stamp(from_run_stamp_requested)
         except ValueError as exc:
-            raise ValueError(f"invalid from-run-stamp: {from_run_stamp_requested}") from exc
+            raise ValueError(
+                f"invalid from-run-stamp: {from_run_stamp_requested}"
+            ) from exc
         try:
             _validate_run_stamp(to_run_stamp_requested)
         except ValueError as exc:
@@ -331,7 +354,9 @@ def build_reporting_trend_packet(
     state_progress = _state_progress(ordered_runs, reporting_packets_by_run)
     return {
         "generated_at": generated_at,
-        "trend_status": "trend_available" if len(ordered_runs) >= 2 else "insufficient_history",
+        "trend_status": "trend_available"
+        if len(ordered_runs) >= 2
+        else "insufficient_history",
         "window_requested": window_requested,
         "from_run_stamp_requested": from_run_stamp_requested,
         "to_run_stamp_requested": to_run_stamp_requested,

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from scripts.omo_debt_dispatch import build_dispatch_packet
+from omo.omo_debt_dispatch import build_dispatch_packet
 
 
 def _owner_routing() -> dict[str, object]:

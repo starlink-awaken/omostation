@@ -3,12 +3,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from pathlib import Path
 
-try:
-    from .omo_debt_metrics import collect_stale_evidence_item_ids
-    from .omo_debt_registry import DebtItem
-except ModuleNotFoundError:
-    from .omo_debt_metrics import collect_stale_evidence_item_ids
-    from .omo_debt_registry import DebtItem
+from .omo_debt_metrics import collect_stale_evidence_item_ids
+from .omo_debt_registry import DebtItem
 
 
 REVIEW_WINDOW_DAYS = 7
@@ -42,7 +38,9 @@ def _priority_reason(item: DebtItem, stale_ids: set[str], overdue_by: int) -> st
     return "upcoming"
 
 
-def _entry_payload(item: DebtItem, *, stale_ids: set[str], overdue_by: int) -> dict[str, object]:
+def _entry_payload(
+    item: DebtItem, *, stale_ids: set[str], overdue_by: int
+) -> dict[str, object]:
     return {
         "id": item.id,
         "title": item.title,
@@ -61,7 +59,9 @@ def _entry_payload(item: DebtItem, *, stale_ids: set[str], overdue_by: int) -> d
     }
 
 
-def build_review_queue(items: tuple[DebtItem, ...], now: str, repo_root: Path) -> dict[str, object]:
+def build_review_queue(
+    items: tuple[DebtItem, ...], now: str, repo_root: Path
+) -> dict[str, object]:
     current = _parse_iso8601(now)
     upcoming_cutoff = current + timedelta(days=REVIEW_WINDOW_DAYS)
     stale_ids = collect_stale_evidence_item_ids(items, repo_root=repo_root)
@@ -92,17 +92,39 @@ def build_review_queue(items: tuple[DebtItem, ...], now: str, repo_root: Path) -
             or (item.id in stale_ids and overdue_by > 0)
             or (item.severity == "critical" and overdue_by > 0)
         ):
-            escalation_candidates.append({**entry, "escalation_reason": entry["priority_reason"]})
+            escalation_candidates.append(
+                {**entry, "escalation_reason": entry["priority_reason"]}
+            )
 
     def severity_rank(severity):
         return SEVERITY_ORDER.get(str(severity), 99)
+
     def gate_rank(gate):
         return GATE_ORDER.get(str(gate), 99)
-    due_now.sort(key=lambda entry: (gate_rank(entry["gate_level"]), severity_rank(entry["severity"]), -int(entry["overdue_by"]), entry["id"]))
-    escalation_candidates.sort(
-        key=lambda entry: (gate_rank(entry["gate_level"]), severity_rank(entry["severity"]), -int(entry["overdue_by"]), entry["id"])
+
+    due_now.sort(
+        key=lambda entry: (
+            gate_rank(entry["gate_level"]),
+            severity_rank(entry["severity"]),
+            -int(entry["overdue_by"]),
+            entry["id"],
+        )
     )
-    upcoming.sort(key=lambda entry: (entry["next_review_at"], severity_rank(entry["severity"]), entry["id"]))
+    escalation_candidates.sort(
+        key=lambda entry: (
+            gate_rank(entry["gate_level"]),
+            severity_rank(entry["severity"]),
+            -int(entry["overdue_by"]),
+            entry["id"],
+        )
+    )
+    upcoming.sort(
+        key=lambda entry: (
+            entry["next_review_at"],
+            severity_rank(entry["severity"]),
+            entry["id"],
+        )
+    )
     unscheduled.sort(key=lambda entry: (severity_rank(entry["severity"]), entry["id"]))
 
     open_items = [item for item in items if item.lifecycle_state != "closed"]
@@ -127,13 +149,19 @@ def build_review_queue(items: tuple[DebtItem, ...], now: str, repo_root: Path) -
                 if any(item.severity == severity for item in open_items)
             },
             "by_gate_level": {
-                gate_level: sum(1 for item in open_items if item.gate_level == gate_level)
+                gate_level: sum(
+                    1 for item in open_items if item.gate_level == gate_level
+                )
                 for gate_level in ("gate", "watchlist", "none")
                 if any(item.gate_level == gate_level for item in open_items)
             },
             "by_owner": {
-                owner: sum(1 for item in open_items if _normalize_owner(item.owner) == owner)
-                for owner in sorted({_normalize_owner(item.owner) for item in open_items})
+                owner: sum(
+                    1 for item in open_items if _normalize_owner(item.owner) == owner
+                )
+                for owner in sorted(
+                    {_normalize_owner(item.owner) for item in open_items}
+                )
             },
         },
     }

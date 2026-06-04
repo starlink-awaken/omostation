@@ -4,8 +4,8 @@ from pathlib import Path
 
 import yaml
 
-from scripts.omo_skill import create_skill_task_packet, register_skill_manifest
-from scripts.omo_task_schema import validate_task_file
+from omo.omo_skill import create_skill_task_packet, register_skill_manifest
+from omo.omo_task_schema import validate_task_file
 
 
 def _load_yaml(path: Path) -> dict:

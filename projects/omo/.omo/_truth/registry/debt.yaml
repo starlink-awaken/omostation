@@ -1,0 +1,5 @@
+items: {}
+seed_items:
+- .omo/debt/items/DEBT-OMO-001.yaml
+- .omo/debt/items/DEBT-OMO-002.yaml
+- .omo/debt/items/DEBT-OMO-003.yaml

@@ -3,20 +3,10 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import yaml
-
-try:
-    from .omo_io import write_yaml_atomic
-except ModuleNotFoundError:
-    from .omo_io import write_yaml_atomic
-
-
-def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+from .omo_shared import utc_now, load_yaml, write_yaml
 
 
 def _root() -> Path:
@@ -27,22 +17,13 @@ def _omo(root: Path) -> Path:
     return root / ".omo"
 
 
-def _load_yaml(path: Path) -> Any:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) if path.exists() else None
-
-
-def _write(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    write_yaml_atomic(path, payload)
-
-
 def _rel(path: Path) -> str:
     return str(path.relative_to(_root()))
 
 
 def _phase_state(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
-    state = _load_yaml(_omo(root) / "state" / "system.yaml") or {}
-    goals = _load_yaml(_omo(root) / "goals" / "current.yaml") or {}
+    state = load_yaml(_omo(root) / "state" / "system.yaml") or {}
+    goals = load_yaml(_omo(root) / "goals" / "current.yaml") or {}
     return state, goals
 
 
@@ -51,25 +32,37 @@ def _project_health() -> dict[str, dict[str, Any]]:
         "kairon": {
             "status": "runnable-governed",
             "role": "reasoning, KOS, package baseline",
-            "evidence_refs": ["projects/kairon/README.md", "projects/kairon/pyproject.toml"],
+            "evidence_refs": [
+                "projects/kairon/README.md",
+                "projects/kairon/pyproject.toml",
+            ],
             "current_limit": "Phase 15 records health from manifests and tests; it does not mutate package code.",
         },
         "gbrain": {
             "status": "runnable-governed",
             "role": "knowledge brain, recipes, skills, retrieval surface",
-            "evidence_refs": ["projects/gbrain/README.md", "projects/gbrain/package.json"],
+            "evidence_refs": [
+                "projects/gbrain/README.md",
+                "projects/gbrain/package.json",
+            ],
             "current_limit": "Knowledge UX scenarios are governed through user-value evidence before live expansion.",
         },
         "agentmesh": {
             "status": "runnable-governed",
             "role": "agent SDK and execution/collaboration substrate",
-            "evidence_refs": ["projects/agentmesh/README.md", "projects/agentmesh/package.json"],
+            "evidence_refs": [
+                "projects/agentmesh/README.md",
+                "projects/agentmesh/package.json",
+            ],
             "current_limit": "Execution automation remains behind approval and active-packet gates.",
         },
         "SharedBrain": {
             "status": "runnable-governed",
             "role": "shared memory, skills, workflows, frontend/server assets",
-            "evidence_refs": ["projects/SharedBrain/README.md", "projects/SharedBrain/pyproject.toml"],
+            "evidence_refs": [
+                "projects/SharedBrain/README.md",
+                "projects/SharedBrain/pyproject.toml",
+            ],
             "current_limit": "SharedBrain integration is tracked as user value, not silently absorbed into OMO.",
         },
     }
@@ -119,7 +112,7 @@ def _user_value_scenarios() -> list[dict[str, Any]]:
 def user_value_payload() -> dict[str, Any]:
     return {
         "id": "phase15-user-value-loop",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "phase": 15,
         "status": "ready",
         "mode": "governed-user-value-loop",
@@ -146,35 +139,50 @@ def ledger_payload() -> dict[str, Any]:
             "type": "promotion",
             "source_phase": 14,
             "target_phase": 15,
-            "evidence_refs": [".omo/summaries/phase14/phase14-closeout.md", ".omo/plans/phase15-autonomous-governance-preplanning.md"],
+            "evidence_refs": [
+                ".omo/summaries/phase14/phase14-closeout.md",
+                ".omo/plans/phase15-autonomous-governance-preplanning.md",
+            ],
             "verification": "Phase 14 completed and Phase 15 explicitly promoted by user goal.",
             "rollback": "Restore Phase 14 completed goals/state and remove Phase 15 active promotion.",
         },
         {
             "id": "p15-deferred-scope-entry",
             "type": "deferred-scope",
-            "evidence_refs": [".omo/plans/archive/phase14-deferred-ecosystem-backlog.md", ".omo/evidence/phase14/integration-triage.yaml"],
+            "evidence_refs": [
+                ".omo/plans/archive/phase14-deferred-ecosystem-backlog.md",
+                ".omo/evidence/phase14/integration-triage.yaml",
+            ],
             "verification": "Deferred ecosystem items remain ranked and are not treated as Phase 15 execution scope.",
             "rollback": "Keep deferred items in backlog and rerun policy tests for hidden scope.",
         },
         {
             "id": "p15-scenario-trace-entry",
             "type": "scenario-trace",
-            "evidence_refs": [".omo/scenarios/research-pipeline.yaml", ".omo/evidence/phase12/research-pipeline-trace.yaml"],
+            "evidence_refs": [
+                ".omo/scenarios/research-pipeline.yaml",
+                ".omo/evidence/phase12/research-pipeline-trace.yaml",
+            ],
             "verification": "Scenario trace remains ready and reproducible as evidence input.",
             "rollback": "Use the Phase 12 trace fixture as last known good scenario evidence.",
         },
         {
             "id": "p15-mutation-proposal-entry",
             "type": "mutation-proposal",
-            "evidence_refs": [".omo/evidence/phase13/bottleneck-proposals.yaml", ".omo/standards/mutation-proposal-envelope.md"],
+            "evidence_refs": [
+                ".omo/evidence/phase13/bottleneck-proposals.yaml",
+                ".omo/standards/mutation-proposal-envelope.md",
+            ],
             "verification": "Every sampled proposal includes evidence, operation level, rollback, and verification.",
             "rollback": "Keep proposals proposal-only and delete generated inactive drafts.",
         },
         {
             "id": "p15-closeout-entry",
             "type": "closeout",
-            "evidence_refs": [".omo/summaries/phase15/phase15-closeout.md", ".omo/summaries/phase15/phase15-retrospective.md"],
+            "evidence_refs": [
+                ".omo/summaries/phase15/phase15-closeout.md",
+                ".omo/summaries/phase15/phase15-retrospective.md",
+            ],
             "verification": "Closeout records scope, non-goals, tests, and residual risks.",
             "rollback": "Reopen Phase 15 state and keep Phase 15 closeout as failed draft.",
         },
@@ -207,7 +215,7 @@ def ledger_payload() -> dict[str, Any]:
     ]
     return {
         "id": "phase15-governance-evidence-ledger",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "phase": 15,
         "status": "ready",
         "live_ssot_mutation": "disabled",
@@ -260,7 +268,7 @@ def policy_payload() -> dict[str, Any]:
     ]
     return {
         "id": "phase15-policy-test-report",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "phase": 15,
         "status": "pass",
         "policy_test_pass_rate": 1.0,
@@ -281,7 +289,10 @@ def compile_payload() -> dict[str, Any]:
             "approval_required": "human",
             "title": "Governance evidence ledger hardening",
             "source_proposal": "p13-proposal-ledger-first",
-            "source_evidence": [".omo/evidence/phase13/bottleneck-proposals.yaml", ".omo/_truth/governance-evidence/ledger.yaml"],
+            "source_evidence": [
+                ".omo/evidence/phase13/bottleneck-proposals.yaml",
+                ".omo/_truth/governance-evidence/ledger.yaml",
+            ],
             "rollback": "Delete this draft and keep existing Phase 12-14 evidence as source refs.",
             "verification": "Policy tests prove no draft activation leak.",
         },
@@ -293,16 +304,19 @@ def compile_payload() -> dict[str, Any]:
             "approval_required": "human",
             "title": "User value live demo candidate",
             "source_proposal": "phase15-user-value-gap",
-            "source_evidence": [".omo/evidence/phase15/user-value-loop.yaml", ".omo/evidence/phase15/operating-dashboard-snapshot.yaml"],
+            "source_evidence": [
+                ".omo/evidence/phase15/user-value-loop.yaml",
+                ".omo/evidence/phase15/operating-dashboard-snapshot.yaml",
+            ],
             "rollback": "Remove the draft and keep all user-facing execution in governed-preview mode.",
             "verification": "A later active packet must prove one read-only user scenario end-to-end.",
         },
     ]
     for draft in drafts:
-        _write(_omo(root) / "tasks" / "drafts" / f"{draft['id']}.yaml", draft)
+        write_yaml(_omo(root) / "tasks" / "drafts" / f"{draft['id']}.yaml", draft)
     return {
         "id": "phase15-proposal-to-task-dry-run",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "phase": 15,
         "status": "ready",
         "mode": "inactive-draft-only",
@@ -322,7 +336,7 @@ def dashboard_payload() -> dict[str, Any]:
     project_health = _project_health()
     return {
         "id": "phase15-operating-dashboard-snapshot",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "phase": 15,
         "status": "ready",
         "ledger_authoritative": True,
@@ -386,7 +400,7 @@ def recovery_payload() -> dict[str, Any]:
     ]
     return {
         "id": "phase15-recovery-drill-report",
-        "created_at": _utc_now(),
+        "created_at": utc_now(),
         "phase": 15,
         "status": "pass",
         "mode": "fixture-and-dry-run",
@@ -397,21 +411,35 @@ def recovery_payload() -> dict[str, Any]:
 
 def ledger_command(args: argparse.Namespace) -> int:
     payload = ledger_payload()
-    _write(Path(args.output), payload)
-    print(json.dumps({"status": "ready", "entries": len(payload["entries"]), "output": args.output}, ensure_ascii=False))
+    write_yaml(Path(args.output), payload)
+    print(
+        json.dumps(
+            {
+                "status": "ready",
+                "entries": len(payload["entries"]),
+                "output": args.output,
+            },
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
 def policy_command(args: argparse.Namespace) -> int:
     payload = policy_payload()
-    _write(Path(args.output), payload)
-    print(json.dumps({"status": "pass", "checks": len(payload["checks"]), "output": args.output}, ensure_ascii=False))
+    write_yaml(Path(args.output), payload)
+    print(
+        json.dumps(
+            {"status": "pass", "checks": len(payload["checks"]), "output": args.output},
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
 def compile_command(args: argparse.Namespace) -> int:
     payload = compile_payload()
-    _write(Path(args.output), payload)
+    write_yaml(Path(args.output), payload)
     print(
         json.dumps(
             {
@@ -428,40 +456,72 @@ def compile_command(args: argparse.Namespace) -> int:
 
 def dashboard_command(args: argparse.Namespace) -> int:
     payload = dashboard_payload()
-    _write(Path(args.output), payload)
-    print(json.dumps({"status": "ready", "projects": len(payload["project_health"]), "output": args.output}, ensure_ascii=False))
+    write_yaml(Path(args.output), payload)
+    print(
+        json.dumps(
+            {
+                "status": "ready",
+                "projects": len(payload["project_health"]),
+                "output": args.output,
+            },
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
 def recovery_command(args: argparse.Namespace) -> int:
     payload = recovery_payload()
-    _write(Path(args.output), payload)
-    print(json.dumps({"status": "pass", "drills": len(payload["drills"]), "output": args.output}, ensure_ascii=False))
+    write_yaml(Path(args.output), payload)
+    print(
+        json.dumps(
+            {"status": "pass", "drills": len(payload["drills"]), "output": args.output},
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
 def user_value_command(args: argparse.Namespace) -> int:
     payload = user_value_payload()
-    _write(Path(args.output), payload)
-    print(json.dumps({"status": "ready", "scenarios": len(payload["scenarios"]), "output": args.output}, ensure_ascii=False))
+    write_yaml(Path(args.output), payload)
+    print(
+        json.dumps(
+            {
+                "status": "ready",
+                "scenarios": len(payload["scenarios"]),
+                "output": args.output,
+            },
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 
 def all_command(args: argparse.Namespace) -> int:
     root = _root()
     user_value = user_value_payload()
-    _write(_omo(root) / "evidence" / "phase15" / "user-value-loop.yaml", user_value)
+    write_yaml(_omo(root) / "evidence" / "phase15" / "user-value-loop.yaml", user_value)
     dashboard = dashboard_payload()
-    _write(_omo(root) / "evidence" / "phase15" / "operating-dashboard-snapshot.yaml", dashboard)
+    write_yaml(
+        _omo(root) / "evidence" / "phase15" / "operating-dashboard-snapshot.yaml",
+        dashboard,
+    )
     compiler = compile_payload()
-    _write(_omo(root) / "evidence" / "phase15" / "proposal-to-task-dry-run.yaml", compiler)
+    write_yaml(
+        _omo(root) / "evidence" / "phase15" / "proposal-to-task-dry-run.yaml", compiler
+    )
     recovery = recovery_payload()
-    _write(_omo(root) / "evidence" / "phase15" / "recovery-drill-report.yaml", recovery)
+    write_yaml(
+        _omo(root) / "evidence" / "phase15" / "recovery-drill-report.yaml", recovery
+    )
     policy = policy_payload()
-    _write(_omo(root) / "evidence" / "phase15" / "policy-test-report.yaml", policy)
+    write_yaml(_omo(root) / "evidence" / "phase15" / "policy-test-report.yaml", policy)
     ledger = ledger_payload()
-    _write(_omo(root) / "_truth" / "governance-evidence" / "ledger.yaml", ledger)
-    print(json.dumps({"status": "ready", "phase": 15, "artifacts": 6}, ensure_ascii=False))
+    write_yaml(_omo(root) / "_truth" / "governance-evidence" / "ledger.yaml", ledger)
+    print(
+        json.dumps({"status": "ready", "phase": 15, "artifacts": 6}, ensure_ascii=False)
+    )
     return 0
 
 
@@ -470,27 +530,39 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     ledger = sub.add_parser("ledger")
-    ledger.add_argument("--output", default=".omo/_truth/governance-evidence/ledger.yaml")
+    ledger.add_argument(
+        "--output", default=".omo/_truth/governance-evidence/ledger.yaml"
+    )
     ledger.set_defaults(func=ledger_command)
 
     policy = sub.add_parser("policy")
-    policy.add_argument("--output", default=".omo/evidence/phase15/policy-test-report.yaml")
+    policy.add_argument(
+        "--output", default=".omo/evidence/phase15/policy-test-report.yaml"
+    )
     policy.set_defaults(func=policy_command)
 
     compile_parser = sub.add_parser("compile")
-    compile_parser.add_argument("--output", default=".omo/evidence/phase15/proposal-to-task-dry-run.yaml")
+    compile_parser.add_argument(
+        "--output", default=".omo/evidence/phase15/proposal-to-task-dry-run.yaml"
+    )
     compile_parser.set_defaults(func=compile_command)
 
     dashboard = sub.add_parser("dashboard")
-    dashboard.add_argument("--output", default=".omo/evidence/phase15/operating-dashboard-snapshot.yaml")
+    dashboard.add_argument(
+        "--output", default=".omo/evidence/phase15/operating-dashboard-snapshot.yaml"
+    )
     dashboard.set_defaults(func=dashboard_command)
 
     recovery = sub.add_parser("recovery")
-    recovery.add_argument("--output", default=".omo/evidence/phase15/recovery-drill-report.yaml")
+    recovery.add_argument(
+        "--output", default=".omo/evidence/phase15/recovery-drill-report.yaml"
+    )
     recovery.set_defaults(func=recovery_command)
 
     user_value = sub.add_parser("user-value")
-    user_value.add_argument("--output", default=".omo/evidence/phase15/user-value-loop.yaml")
+    user_value.add_argument(
+        "--output", default=".omo/evidence/phase15/user-value-loop.yaml"
+    )
     user_value.set_defaults(func=user_value_command)
 
     all_parser = sub.add_parser("all")

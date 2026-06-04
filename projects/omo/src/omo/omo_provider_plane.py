@@ -9,10 +9,7 @@ from typing import Any
 
 import yaml
 
-try:
-    from .omo_redaction import redact_sensitive_text
-except ModuleNotFoundError:
-    from .omo_redaction import redact_sensitive_text
+from .omo_redaction import redact_sensitive_text
 
 
 @dataclass(frozen=True)
@@ -78,10 +75,18 @@ def _runtime_from_row(row: sqlite3.Row) -> ProviderRuntime | None:
     if row["app_type"] == "claude":
         api_key = env.get("ANTHROPIC_AUTH_TOKEN") or env.get("ANTHROPIC_API_KEY")
         base_url = env.get("ANTHROPIC_BASE_URL") or row["endpoint_url"]
-        model = env.get("ANTHROPIC_MODEL") or env.get("ANTHROPIC_DEFAULT_SONNET_MODEL") or "claude-3-5-sonnet-20241022"
+        model = (
+            env.get("ANTHROPIC_MODEL")
+            or env.get("ANTHROPIC_DEFAULT_SONNET_MODEL")
+            or "claude-3-5-sonnet-20241022"
+        )
     elif row["app_type"] in {"codex", "openai"}:
         api_key = env.get("OPENAI_API_KEY")
-        base_url = env.get("OPENAI_BASE_URL") or env.get("OPENAI_API_BASE") or row["endpoint_url"]
+        base_url = (
+            env.get("OPENAI_BASE_URL")
+            or env.get("OPENAI_API_BASE")
+            or row["endpoint_url"]
+        )
         model = env.get("OPENAI_MODEL") or "gpt-4o"
     else:
         api_key = env.get("API_KEY")
@@ -122,7 +127,9 @@ def select_cc_switch_provider(
 
     pool = preferred_candidates or candidates
     if not pool:
-        raise ValueError(f"No healthy {app_type} provider with runtime config found in {db_path}")
+        raise ValueError(
+            f"No healthy {app_type} provider with runtime config found in {db_path}"
+        )
     return pool[0]
 
 
@@ -136,7 +143,9 @@ def _litellm_model_name(provider: ProviderRuntime) -> str:
     return provider.model
 
 
-def apply_provider_to_litellm_config(config_path: Path, target_model_name: str, provider: ProviderRuntime) -> None:
+def apply_provider_to_litellm_config(
+    config_path: Path, target_model_name: str, provider: ProviderRuntime
+) -> None:
     data = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
     model_list = data.get("model_list", [])
     for entry in model_list:
@@ -149,9 +158,13 @@ def apply_provider_to_litellm_config(config_path: Path, target_model_name: str, 
         entry["litellm_params"] = params
         break
     else:
-        raise ValueError(f"Target model not found in LiteLLM config: {target_model_name}")
+        raise ValueError(
+            f"Target model not found in LiteLLM config: {target_model_name}"
+        )
 
-    config_path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    config_path.write_text(
+        yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8"
+    )
 
 
 def summarize_codexbar_usage(raw_json: str) -> dict[str, Any]:
@@ -168,7 +181,9 @@ def summarize_codexbar_usage(raw_json: str) -> dict[str, Any]:
         }
         if provider == "codex":
             remaining = ((entry.get("credits") or {}).get("remaining")) or 0
-            used = (((entry.get("usage") or {}).get("secondary") or {}).get("usedPercent")) or 0
+            used = (
+                ((entry.get("usage") or {}).get("secondary") or {}).get("usedPercent")
+            ) or 0
             summary["available"] = remaining > 0 or used < 100
             summary["remaining"] = remaining
             summary["used_percent"] = used
@@ -184,7 +199,9 @@ def summarize_codexbar_usage(raw_json: str) -> dict[str, Any]:
         else:
             error = entry.get("error")
             summary["available"] = not bool(error)
-            summary["summary"] = error.get("message", "ok") if isinstance(error, dict) else "ok"
+            summary["summary"] = (
+                error.get("message", "ok") if isinstance(error, dict) else "ok"
+            )
         providers[str(provider)] = summary
 
     return {
@@ -223,13 +240,18 @@ def write_provider_plane_snapshot(
     }
 
     payload = {
-        "updated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "updated_at": datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z"),
         "selected_provider": sanitized_provider,
         "quota_summary": quota_summary,
         "litellm_health": summarized_health,
     }
     snapshot_path.parent.mkdir(parents=True, exist_ok=True)
-    snapshot_path.write_text(yaml.safe_dump(payload, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    snapshot_path.write_text(
+        yaml.safe_dump(payload, sort_keys=False, allow_unicode=True), encoding="utf-8"
+    )
 
 
 def safe_provider_summary(provider: ProviderRuntime) -> dict[str, Any]:

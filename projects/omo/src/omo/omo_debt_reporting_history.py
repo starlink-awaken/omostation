@@ -29,7 +29,9 @@ def _history_entry(
     if reporting_packet is None:
         return entry
     if reporting_packet.get("run_stamp") != run_stamp:
-        raise ValueError(f"reporting run stamp mismatch: {reporting_packet.get('run_stamp')} != {run_stamp}")
+        raise ValueError(
+            f"reporting run stamp mismatch: {reporting_packet.get('run_stamp')} != {run_stamp}"
+        )
     summary = reporting_packet["summary"]
     entry.update(
         {
@@ -58,7 +60,9 @@ def build_reporting_history_packet(
     if len(run_stamps) != len(set(run_stamps)):
         raise ValueError("duplicate dispatch run stamp in reporting history")
     runs = [
-        _history_entry(dispatch_run, reporting_packets_by_run.get(dispatch_run["run_stamp"]))
+        _history_entry(
+            dispatch_run, reporting_packets_by_run.get(dispatch_run["run_stamp"])
+        )
         for dispatch_run in ordered_runs
     ]
     return {

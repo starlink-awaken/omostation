@@ -2,12 +2,6 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
-
-
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "scripts"))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -35,15 +29,19 @@ def main(argv: list[str] | None = None) -> int:
 
     if args and args[0] == "ledger":
         from omo.omo_ledger import main as ledger_main
+
         return ledger_main(args[1:])
     if args and args[0] == "bridge":
         from omo.omo_bridge import main as bridge_main
+
         return bridge_main(args[1:])
     if args and args[0] == "gc":
         from omo.omo_gc import main as gc_main
+
         return gc_main(args[1:])
 
     from omo.omo_worker import main as worker_main
+
     return worker_main(args)
 
 

@@ -1,0 +1,59 @@
+# Phase 26 active goals
+
+phase: 26
+status: active
+current_wave: W1
+start_date: "2026-06-03"
+entry_gate: phase24_completed
+theme: "OMO Fusion Upgrade — 四平面治理操作系统升级"
+
+objectives:
+  - id: W1
+    desc: "Wave 1 — 控制面同步 + 状态刷新（修复 governance 漂移）"
+  - id: W2
+    desc: "Wave 2 — 四平面职责清理 + 目录重组（control/truth/knowledge/delivery 边界清晰化）"
+  - id: W3
+    desc: "Wave 3 — 索引一致性验证 + 自动化测试（INDEX.md / plane indexes / SSOT 对齐）"
+  - id: W4
+    desc: "Wave 4 — 执行闭环模板固化 + 验收（7步 loop 标准化 + 漂移预防）"
+
+goals:
+  - id: G26.1
+    desc: "Wave 1 — 控制面同步"
+    kpi: "system.yaml / goals/current.yaml / state/ 与真实 phase 对齐；P17-P24 历史状态归档"
+    progress: 0.0
+    status: active
+    tasks:
+      - P26-W1-CONTROL-SYNC
+
+  - id: G26.2
+    desc: "Wave 2 — 四平面职责清理"
+    kpi: "_control/_truth/_knowledge/_delivery 目录边界清晰；无跨平面职责混杂；重复内容合并"
+    progress: 0.0
+    status: pending
+    tasks:
+      - P26-W2-PLANE-CLEANUP
+
+  - id: G26.3
+    desc: "Wave 3 — 索引一致性验证"
+    kpi: "4个平面 INDEX.md 回指真实 SSOT；plane indexes 可自动验证；新增 test_fusion_optimization_docs.py"
+    progress: 0.0
+    status: pending
+    tasks:
+      - P26-W3-INDEX-VALIDATION
+
+  - id: G26.4
+    desc: "Wave 4 — 执行闭环固化"
+    kpi: "7步 loop 文档化 + 模板化；新增 governance 文档必须通过平面判定；验收报告生成"
+    progress: 0.0
+    status: pending
+    tasks:
+      - P26-W4-CLOSURE-TEMPLATES
+
+health_targets:
+  overall: 98
+  omo_fusion_score: 100
+
+source_plan_refs:
+  - .omo/plans/omo-fusion-optimization-blueprint.md
+  - .omo/plans/gentle-toasting-mango.md

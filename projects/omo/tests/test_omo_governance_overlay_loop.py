@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from scripts.omo_governance_overlay_loop import plan_governance_overlay_cycle
+from omo.omo_governance_overlay_loop import plan_governance_overlay_cycle
 
 
 def _write_yaml(path: Path, data: dict) -> None:

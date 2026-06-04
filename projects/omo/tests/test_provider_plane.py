@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-from scripts.omo_provider_plane import (
+from omo.omo_provider_plane import (
     apply_provider_to_litellm_config,
     select_cc_switch_provider,
     summarize_codexbar_usage,

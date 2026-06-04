@@ -27,8 +27,23 @@ def build_governance_overlay_approval_prep_diff(
     root: Path, *, omo_dir: str | Path = ".omo", now: str
 ) -> dict[str, object]:
     omo_ref = Path(omo_dir)
-    current = _load_yaml_required(root / omo_ref / "workers" / "governance-overlay" / "approval-prep" / "current.yaml")
-    history = _load_yaml_required(root / omo_ref / "workers" / "governance-overlay" / "approval-prep" / "history" / "current.yaml")
+    current = _load_yaml_required(
+        root
+        / omo_ref
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "current.yaml"
+    )
+    history = _load_yaml_required(
+        root
+        / omo_ref
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "history"
+        / "current.yaml"
+    )
 
     task_events = _events_by_task(history)
     current_task_ids = {str(entry["task_id"]) for entry in current.get("tasks", [])}
@@ -45,9 +60,9 @@ def build_governance_overlay_approval_prep_diff(
         latest_event = events[0] if events else None
         previous_event = None
         if latest_event is not None:
-            latest_matches_current = (
-                latest_event.get("state") == entry.get("state") and latest_event.get("action") == entry.get("action")
-            )
+            latest_matches_current = latest_event.get("state") == entry.get(
+                "state"
+            ) and latest_event.get("action") == entry.get("action")
             if latest_matches_current:
                 previous_event = events[1] if len(events) > 1 else None
             else:
@@ -56,7 +71,9 @@ def build_governance_overlay_approval_prep_diff(
         if previous_event is None:
             change_kind = "entered"
             new_current_task_ids.append(task_id)
-        elif previous_event.get("state") != entry.get("state") or previous_event.get("action") != entry.get("action"):
+        elif previous_event.get("state") != entry.get("state") or previous_event.get(
+            "action"
+        ) != entry.get("action"):
             change_kind = "transitioned"
             changed_current_task_ids.append(task_id)
         else:
@@ -71,10 +88,18 @@ def build_governance_overlay_approval_prep_diff(
                 "current_action": entry.get("action"),
                 "current_result": entry.get("result"),
                 "current_approval_ref": entry.get("approval_ref"),
-                "previous_state": None if previous_event is None else previous_event.get("state"),
-                "previous_action": None if previous_event is None else previous_event.get("action"),
-                "previous_result": None if previous_event is None else previous_event.get("result"),
-                "previous_started_at": None if previous_event is None else previous_event.get("started_at"),
+                "previous_state": None
+                if previous_event is None
+                else previous_event.get("state"),
+                "previous_action": None
+                if previous_event is None
+                else previous_event.get("action"),
+                "previous_result": None
+                if previous_event is None
+                else previous_event.get("result"),
+                "previous_started_at": None
+                if previous_event is None
+                else previous_event.get("started_at"),
                 "blockers": list(entry.get("blockers", [])),
             }
         )
@@ -87,7 +112,9 @@ def build_governance_overlay_approval_prep_diff(
 
     yaml_packet = {
         "generated_at": now,
-        "diff_status": "diff_available" if current.get("prep_task_count", 0) or history.get("event_count", 0) else "empty_diff",
+        "diff_status": "diff_available"
+        if current.get("prep_task_count", 0) or history.get("event_count", 0)
+        else "empty_diff",
         "current_task_count": int(current.get("prep_task_count", 0)),
         "history_event_count": int(history.get("event_count", 0)),
         "new_current_task_ids": new_current_task_ids,
@@ -107,15 +134,27 @@ def build_governance_overlay_approval_prep_diff(
         "",
         "## Entered",
         "",
-        *(["none"] if not new_current_task_ids else [f"- {task_id}" for task_id in new_current_task_ids]),
+        *(
+            ["none"]
+            if not new_current_task_ids
+            else [f"- {task_id}" for task_id in new_current_task_ids]
+        ),
         "",
         "## Transitioned",
         "",
-        *(["none"] if not changed_current_task_ids else [f"- {task_id}" for task_id in changed_current_task_ids]),
+        *(
+            ["none"]
+            if not changed_current_task_ids
+            else [f"- {task_id}" for task_id in changed_current_task_ids]
+        ),
         "",
         "## Exited",
         "",
-        *(["none"] if not no_longer_current_task_ids else [f"- {task_id}" for task_id in no_longer_current_task_ids]),
+        *(
+            ["none"]
+            if not no_longer_current_task_ids
+            else [f"- {task_id}" for task_id in no_longer_current_task_ids]
+        ),
     ]
     for entry in task_changes:
         markdown_lines.extend(

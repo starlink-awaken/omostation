@@ -1,19 +1,20 @@
 [project]
 name = "omo"
 version = "0.1.0"
-description = "Add your description here"
+description = "OMO — OS for AI Agents"
 readme = "README.md"
-authors = [
-    { name = "starlink-awaken", email = "234556587+starlink-awaken@users.noreply.github.com" }
-]
 requires-python = ">=3.13"
 dependencies = [
     "pyyaml>=6.0.3",
 ]
 
-[build-system]
-requires = ["uv_build>=0.11.19,<0.12.0"]
-build-backend = "uv_build"
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.4"]
 
 [project.scripts]
 omo = "omo.cli:main"
+omo-debt = "omo.omo_debt:main"
+
+[build-system]
+requires = ["uv_build>=0.11.19,<0.12.0"]
+build-backend = "uv_build"

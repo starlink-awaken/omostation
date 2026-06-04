@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scripts.omo_debt_campaign import build_campaign_packet, render_campaign_markdown
+from omo.omo_debt_campaign import build_campaign_packet, render_campaign_markdown
 
 
 def _dispatch_run() -> dict[str, object]:

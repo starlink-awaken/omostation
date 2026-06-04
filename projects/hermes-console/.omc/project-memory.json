@@ -1,0 +1,243 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1780454479247,
+  "projectRoot": "/Users/xiamingxing/Workspace/projects/hermes-console",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "react",
+        "version": "18.2.0",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "18.2.0",
+        "category": "frontend"
+      },
+      {
+        "name": "vite",
+        "version": "5.0.0",
+        "category": "build"
+      },
+      {
+        "name": "vitest",
+        "version": "1.1.0",
+        "category": "testing"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "echo \"========================================================================\" && echo \"              O M O S T A T I O N  全 面 审 计\" && echo \"========================================================================\" && echo \"\" && echo \"=== 1. 项目结构 ===\" && echo \"--- 顶层项目 ---\" && ls -d /Users/xiamingxing/Workspace/projects/*/ 2>/dev/null | sed 's|.*/projects/||; s|/||' && echo \"\" && echo \"--- kairon包数 ---\" && ls -d /Users/xiamingxing/Workspace/projects/kairon/packages/*/ 2>/dev/null | wc -l && echo \"\" && echo \"=== 2. 编译状态 ===\" && echo \"--- Hermes Console ---\" && npx tsc --noEmit 2>&1 | grep -c \"error\" && echo \"errors\" && npx vitest run 2>&1 | grep -E \"Tests|Files\" && echo \"\" && echo \"=== 3. 债务状态 ===\" && for f in /Users/xiamingxing/Workspace/.omo/debt/items/*.yaml; do name=$(basename \"$f\" .yaml); state=$(grep \"lifecycle_state:\" \"$f\" | awk '{print $2}'); weight=$(grep \"weight:\" \"$f\" | awk '{print $2}'); echo \"  $name: $state (weight $weight)\"; done && echo \"\" && echo \"=== 4. OMO状态 ===\" && cat /Users/xiamingxing/Workspace/.omo/state/system.yaml | grep -E \"health_score|current_phase|completed_tasks|total_tasks|phase.*status\"",
+    "testCommand": "echo \"========================================================================\" && echo \"              O M O S T A T I O N  全 面 审 计\" && echo \"========================================================================\" && echo \"\" && echo \"=== 1. 项目结构 ===\" && echo \"--- 顶层项目 ---\" && ls -d /Users/xiamingxing/Workspace/projects/*/ 2>/dev/null | sed 's|.*/projects/||; s|/||' && echo \"\" && echo \"--- kairon包数 ---\" && ls -d /Users/xiamingxing/Workspace/projects/kairon/packages/*/ 2>/dev/null | wc -l && echo \"\" && echo \"=== 2. 编译状态 ===\" && echo \"--- Hermes Console ---\" && npx tsc --noEmit 2>&1 | grep -c \"error\" && echo \"errors\" && npx vitest run 2>&1 | grep -E \"Tests|Files\" && echo \"\" && echo \"=== 3. 债务状态 ===\" && for f in /Users/xiamingxing/Workspace/.omo/debt/items/*.yaml; do name=$(basename \"$f\" .yaml); state=$(grep \"lifecycle_state:\" \"$f\" | awk '{print $2}'); weight=$(grep \"weight:\" \"$f\" | awk '{print $2}'); echo \"  $name: $state (weight $weight)\"; done && echo \"\" && echo \"=== 4. OMO状态 ===\" && cat /Users/xiamingxing/Workspace/.omo/state/system.yaml | grep -E \"health_score|current_phase|completed_tasks|total_tasks|phase.*status\"",
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "vite",
+      "build": "tsc -b && vite build",
+      "preview": "vite preview",
+      "test": "vitest run",
+      "test:watch": "vitest",
+      "lint": "tsc --noEmit"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "src"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "dist": {
+      "path": "dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 1,
+      "lastAccessed": 1780454479233,
+      "keyFiles": [
+        "index.html"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 2,
+      "lastAccessed": 1780454479233,
+      "keyFiles": [
+        "App.tsx",
+        "index.tsx"
+      ]
+    },
+    "dist/assets": {
+      "path": "dist/assets",
+      "purpose": "Static assets",
+      "fileCount": 1,
+      "lastAccessed": 1780454479236,
+      "keyFiles": [
+        "index-DeZ-ew2Y.js"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src/__tests__/HealthPage.test.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1780455380417,
+      "type": "file"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 2,
+      "lastAccessed": 1780454925203,
+      "type": "file"
+    },
+    {
+      "path": "src/App.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1780454933072,
+      "type": "file"
+    },
+    {
+      "path": "tsconfig.json",
+      "accessCount": 1,
+      "lastAccessed": 1780454925150,
+      "type": "file"
+    },
+    {
+      "path": "index.html",
+      "accessCount": 1,
+      "lastAccessed": 1780454925173,
+      "type": "file"
+    },
+    {
+      "path": "src/dashboard/DashboardPage.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780454931625,
+      "type": "file"
+    },
+    {
+      "path": "src/health/HealthPage.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780454932970,
+      "type": "file"
+    },
+    {
+      "path": "src/agent/AgentPage.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780454933013,
+      "type": "file"
+    },
+    {
+      "path": "src/mcp/client.ts",
+      "accessCount": 1,
+      "lastAccessed": 1780454933103,
+      "type": "file"
+    },
+    {
+      "path": "src/settings/SettingsPage.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780454933145,
+      "type": "file"
+    },
+    {
+      "path": "src/index.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780454933177,
+      "type": "file"
+    },
+    {
+      "path": "src/hooks/useMcp.ts",
+      "accessCount": 1,
+      "lastAccessed": 1780454933233,
+      "type": "file"
+    },
+    {
+      "path": "src/mcp/types.ts",
+      "accessCount": 1,
+      "lastAccessed": 1780454933286,
+      "type": "file"
+    },
+    {
+      "path": "vitest.config.ts",
+      "accessCount": 1,
+      "lastAccessed": 1780455158998,
+      "type": "file"
+    },
+    {
+      "path": "src/__tests__/App.test.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780455216556,
+      "type": "file"
+    },
+    {
+      "path": "src/__tests__/DashboardPage.test.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780455219607,
+      "type": "file"
+    },
+    {
+      "path": "src/__tests__/AgentPage.test.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780455221288,
+      "type": "file"
+    },
+    {
+      "path": "src/__tests__/SettingsPage.test.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780455224392,
+      "type": "file"
+    },
+    {
+      "path": "src/__tests__/useMcp.test.ts",
+      "accessCount": 1,
+      "lastAccessed": 1780455225703,
+      "type": "file"
+    },
+    {
+      "path": "src/components/KnowledgeGraph.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780455247823,
+      "type": "file"
+    },
+    {
+      "path": "src/components/ServiceTopology.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780455248294,
+      "type": "file"
+    },
+    {
+      "path": "src/components/MetricsChart.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1780455248872,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

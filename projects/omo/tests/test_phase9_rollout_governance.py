@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from scripts.omo_rollout import evaluate_rollout_envelope
+from omo.omo_rollout import evaluate_rollout_envelope
 
 
 ROOT = Path(__file__).resolve().parents[2]

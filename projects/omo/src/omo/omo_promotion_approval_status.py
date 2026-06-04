@@ -15,18 +15,28 @@ def _ordered_tasks(tasks: list[dict[str, object]]) -> list[dict[str, object]]:
     )
 
 
-def build_promotion_approval_status_packet(*, generated_at: str, tasks: list[dict[str, object]]) -> dict[str, object]:
+def build_promotion_approval_status_packet(
+    *, generated_at: str, tasks: list[dict[str, object]]
+) -> dict[str, object]:
     ordered = _ordered_tasks(tasks)
     return {
         "generated_at": generated_at,
         "approval_task_count": len(ordered),
         "requested_count": sum(
-            1 for entry in ordered if entry["approval_status"] == "requested" and entry["proposal_status"] == "proposed"
+            1
+            for entry in ordered
+            if entry["approval_status"] == "requested"
+            and entry["proposal_status"] == "proposed"
         ),
         "approved_pending_apply_count": sum(
-            1 for entry in ordered if entry["approval_status"] == "requested" and entry["proposal_status"] == "approved"
+            1
+            for entry in ordered
+            if entry["approval_status"] == "requested"
+            and entry["proposal_status"] == "approved"
         ),
-        "granted_count": sum(1 for entry in ordered if entry["approval_status"] == "granted"),
+        "granted_count": sum(
+            1 for entry in ordered if entry["approval_status"] == "granted"
+        ),
         "tasks": ordered,
     }
 

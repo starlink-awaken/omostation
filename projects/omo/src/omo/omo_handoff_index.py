@@ -5,10 +5,7 @@ from pathlib import Path
 
 import yaml
 
-try:
-    from .omo_io import write_text_atomic
-except ModuleNotFoundError:
-    from .omo_io import write_text_atomic
+from .omo_io import write_text_atomic
 
 
 def _load_yaml(path: Path) -> dict:

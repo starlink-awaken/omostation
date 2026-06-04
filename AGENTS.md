@@ -8,7 +8,7 @@ This root directory is a **multi-project workspace** containing independent git 
 
 | Project | Stack | Location | Status |
 |---------|-------|----------|--------|
-| `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 31 packages |
+| `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 25 packages |
 | `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — Knowledge Brain |
 | `SharedBrain` | Python | `projects/_archived/SharedBrain-original/` | ⚪ Archived — 代码已迁移至 kairon，数据层在 `data/sharedbrain/` |
 | `agentmesh` | TypeScript (bun) | `projects/_archived/` | ⚪ Archived — 100% 迁移至 kairon |
@@ -59,13 +59,14 @@ cd projects/gbrain && bun run ci:local
 
 ## Architecture
 
-### Workspace Plane Structure
+### Workspace Plane Structure (OMO v4.0)
 
-1. **Governance layer** (`.omo/`) — goals, state, tasks, standards, reviews
-2. **Capability layer** (`projects/`) — independent repos with own build/test/lint contracts
-3. **User-space layer** (`spaces/`) — tenant / workspace manifest boundaries
-4. **Data substrate** (`data/`) — shared databases, indexes, snapshots
-5. **Runtime residue** (`runtime/`) — ephemeral logs, temp state
+1. **Governance layer** (`.omo/`) — The K0 Data Plane (goals, state, tasks). DO NOT manually modify; use `omo-cli`.
+2. **Engine layer** (`projects/omo/`) — The K1 Ribosome Engine. Contains `omo-cli` for GC, Ledger, and Bridge.
+3. **Capability layer** (`projects/`) — independent repos with own build/test/lint contracts.
+4. **User-space layer** (`spaces/`) — tenant / workspace manifest boundaries.
+5. **Data substrate** (`data/`) — shared databases, indexes, snapshots.
+6. **Runtime residue** (`runtime/`) — ephemeral logs, temp state.
 
 ### Key Dependencies
 
@@ -166,6 +167,7 @@ GitHub Actions workflows in `.github/workflows/` (11 workflows):
 
 ## Reading Before Working
 
+- **For incoming AI Agents**: YOU MUST READ `projects/omo/CLAUDE.md` to understand how to interact with the OMO v4.0 Operating System. Do NOT manually edit `.omo` files. Use the Contract-based Dispatch workflow.
 - **For kairon work**: Read `projects/kairon/CLAUDE.md` + `projects/kairon/AGENTS.md` for monorepo conventions. Package structure in `projects/kairon/pyproject.toml`.
 - **For gbrain work**: Read `projects/gbrain/AGENTS.md` + `projects/gbrain/CLAUDE.md`
 - **For governance**: Read `.omo/standards/` for architectural standards

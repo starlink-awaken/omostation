@@ -2,7 +2,7 @@ import argparse
 import time
 import shutil
 from pathlib import Path
-import yaml
+
 
 def get_omo_dir(base_dir: Path) -> Path:
     current = base_dir.resolve()
@@ -12,9 +12,14 @@ def get_omo_dir(base_dir: Path) -> Path:
         current = current.parent
     return base_dir / ".omo"
 
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="OMO Global Garbage Collector")
-    parser.add_argument("--dry-run", action="store_true", help="Show what would be cleaned without doing it")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be cleaned without doing it",
+    )
     args = parser.parse_args(argv)
 
     omo_dir = get_omo_dir(Path.cwd())
@@ -38,7 +43,7 @@ def main(argv: list[str]) -> int:
                     print(f"  [代谢] 草案已过期超过30天: {f.name} -> 移至 _archive")
                     if not args.dry_run:
                         shutil.move(str(f), str(archive_dir / f.name))
-    
+
     # 2. GC Dead Task Locks (> 24 hours)
     locks_dir = omo_dir / "state" / "locks"
     one_day = 24 * 3600
@@ -54,6 +59,8 @@ def main(argv: list[str]) -> int:
     print("✅ 代谢清理完成。")
     return 0
 
+
 if __name__ == "__main__":
     import sys
+
     sys.exit(main(sys.argv[1:]))

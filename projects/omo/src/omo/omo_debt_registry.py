@@ -49,7 +49,9 @@ def load_debt_ledger(omo_dir: Path) -> DebtLedger:
 
     items: list[DebtItem] = []
     for item_ref in registry["seed_items"]:
-        payload = yaml.safe_load((omo_dir.parent / item_ref).read_text(encoding="utf-8"))
+        payload = yaml.safe_load(
+            (omo_dir.parent / item_ref).read_text(encoding="utf-8")
+        )
         items.append(
             DebtItem(
                 id=payload["id"],

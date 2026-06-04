@@ -8,7 +8,9 @@
 | 项目 | 角色 | 端口 | 状态 |
 |------|------|------|------|
 | agora | MCP 服务发现 + 代理 + 断路器 | 7430 (HTTP), 7431 (SSE) | 🟢 运行中 |
-| agora-mcp | Agora 内部 MCP 服务器入口（`pyproject.toml` 定义） | — | 🟢 已集成至 agora 包 |
+| agora-mcp-gateway | 统一 MCP 后端注册入口（`mcp_gateway.py`） | — | 🟢 新建，所有包 MCP 入口统一经 agora 注册 |
+
+> **MCP 入口统一**: 所有 kairon 包的 MCP 入口（agent-runtime, eidos, iris, kronos, metaos, minerva, sophia, cron-service）不再暴露独立端口，全部通过 `agora.mcp_gateway` 经 agora ProxyManager 注册。单包 `pyproject.toml` 中的 MCP script 入口保留为 agora 的 stdio 命令。`agora-mcp`（`server/mcp.py`）仍是统一 MCP 服务器入口。
 
 ## L1 — 知识工程层
 
@@ -56,7 +58,7 @@
 |------|------|------|
 | kairon/agent-runtime | Agent 执行引擎（原 agentmesh Engine） | 🟢 |
 | kairon/agent-hub | Agent 注册中心 | 🟢 |
-| kairon/agora | MCP 服务发现 + 代理 + 断路器（6 核心 MCP handler + proxy） | 🟡 tests 收集错误 41 |
+| kairon/agora | MCP 服务发现 + 代理 + 断路器（6 核心 MCP handler + proxy） | 🟢 engine-core导入已修复，agora测试缺prometheus-client依赖（uv sync后可运行） |
 | kairon/llm-gateway | LLM 路由 + 配额管理（原 agentmesh Model-Orchestrator） | 🟢 |
 | agentmesh | 已 100% 迁移到 kairon，残留壳已清理，归档至 `projects/_archived/` | ⚪ 已归档 |
 

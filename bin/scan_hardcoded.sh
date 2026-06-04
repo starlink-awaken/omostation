@@ -1,6 +1,7 @@
 #!/bin/bash
 # Workspace hardcoded config scanner
-WORKSPACE="/Users/xiamingxing/Workspace"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WORKSPACE="${OMOSTATION_ROOT:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 
 PROJECTS=(
   "kairon/packages/agora" "kairon/packages/codeanalyze" "kairon/packages/kronos"
@@ -36,11 +37,11 @@ for DIR in "${SCAN_DIRS[@]}"; do
   echo "## Project: $PROJ_NAME (cd $DIR)"
   echo ""
   
-  # 1. Absolute paths (/Users/xiamingxing)
-  ABS_COUNT=$(find "$DIR" $EXCLUDE \( $EXTENSIONS \) -exec grep -l "/Users/xiamingxing" {} \; 2>/dev/null | wc -l | tr -d ' ')
+  # 1. Absolute user-home paths
+  ABS_COUNT=$(find "$DIR" $EXCLUDE \( $EXTENSIONS \) -exec grep -l "/Users/" {} \; 2>/dev/null | wc -l | tr -d ' ')
   if [ "$ABS_COUNT" -gt 0 ] && [ "$ABS_COUNT" -gt 0 ] 2>/dev/null; then
-    echo ">>> [PATH] Absolute paths (/Users/xiamingxing):"
-    find "$DIR" $EXCLUDE \( $EXTENSIONS \) -exec grep -Hn "/Users/xiamingxing" {} \; 2>/dev/null | head -20 | sed 's|/Users/xiamingxing/Workspace/||g' | sed 's|/Users/xiamingxing|~|g'
+    echo ">>> [PATH] Absolute paths (/Users/...):"
+    find "$DIR" $EXCLUDE \( $EXTENSIONS \) -exec grep -Hn "/Users/" {} \; 2>/dev/null | head -20 | sed "s|$WORKSPACE/||g" | sed 's|/Users/[^/]*/|~/|g'
   fi
   
   # 2. Tilde paths

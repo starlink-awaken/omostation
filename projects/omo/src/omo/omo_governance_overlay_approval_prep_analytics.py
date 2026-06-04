@@ -41,8 +41,23 @@ def build_governance_overlay_approval_prep_analytics(
     root: Path, *, omo_dir: str | Path = ".omo", now: str
 ) -> dict[str, object]:
     omo_ref = Path(omo_dir)
-    current = _load_yaml_required(root / omo_ref / "workers" / "governance-overlay" / "approval-prep" / "current.yaml")
-    history = _load_yaml_required(root / omo_ref / "workers" / "governance-overlay" / "approval-prep" / "history" / "current.yaml")
+    current = _load_yaml_required(
+        root
+        / omo_ref
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "current.yaml"
+    )
+    history = _load_yaml_required(
+        root
+        / omo_ref
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "history"
+        / "current.yaml"
+    )
     generated_at = _parse_iso8601(now)
 
     latest_event_by_task: dict[str, dict[str, object]] = {}

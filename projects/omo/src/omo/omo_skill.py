@@ -5,20 +5,23 @@ from pathlib import Path
 
 import yaml
 
-try:
-    from .omo_io import write_yaml_atomic
-except ModuleNotFoundError:
-    from .omo_io import write_yaml_atomic
+from .omo_io import write_yaml_atomic
 
 
 def register_skill_manifest(root: Path, manifest: dict) -> dict:
-    path = root / ".omo" / "_truth" / "task-center" / "skills" / f"{manifest['id']}.yaml"
+    path = (
+        root / ".omo" / "_truth" / "task-center" / "skills" / f"{manifest['id']}.yaml"
+    )
     write_yaml_atomic(path, manifest)
     return manifest
 
 
-def create_skill_task_packet(root: Path, skill_id: str, task_id: str, title: str) -> dict[str, str]:
-    manifest_path = root / ".omo" / "_truth" / "task-center" / "skills" / f"{skill_id}.yaml"
+def create_skill_task_packet(
+    root: Path, skill_id: str, task_id: str, title: str
+) -> dict[str, str]:
+    manifest_path = (
+        root / ".omo" / "_truth" / "task-center" / "skills" / f"{skill_id}.yaml"
+    )
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
     task = {
         "id": task_id,
@@ -34,7 +37,10 @@ def create_skill_task_packet(root: Path, skill_id: str, task_id: str, title: str
         "review_ref": None,
         "knowledge_refs": [],
         "handoff_refs": [],
-        "source_docs": [*manifest.get("source_docs", []), f".omo/_truth/task-center/skills/{skill_id}.yaml"],
+        "source_docs": [
+            *manifest.get("source_docs", []),
+            f".omo/_truth/task-center/skills/{skill_id}.yaml",
+        ],
         "deliverables": manifest.get("deliverables", []),
         "risk_level": manifest["risk_level"],
         "allowed_operation_level": manifest["allowed_operation_level"],

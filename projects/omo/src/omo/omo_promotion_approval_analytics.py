@@ -51,13 +51,25 @@ def build_promotion_approval_analytics_packet(
     root: Path, *, omo_dir: str | Path = ".omo", now: str
 ) -> dict[str, object]:
     omo = Path(omo_dir)
-    current = _load_yaml_required(root / omo / "workers" / "promotion" / "approvals" / "current.yaml")
-    history = _load_yaml_required(root / omo / "workers" / "promotion" / "approvals" / "history" / "current.yaml")
+    current = _load_yaml_required(
+        root / omo / "workers" / "promotion" / "approvals" / "current.yaml"
+    )
+    history = _load_yaml_required(
+        root / omo / "workers" / "promotion" / "approvals" / "history" / "current.yaml"
+    )
     _load_yaml_required(root / omo / "workers" / "promotion" / "readiness.yaml")
     generated_at = _parse_iso8601(now)
 
-    history_by_task = {entry["task_id"]: entry for entry in history.get("approvals", [])}
-    proposal_status_histogram = {"proposed": 0, "approved": 0, "verified": 0, "missing": 0, "invalid": 0}
+    history_by_task = {
+        entry["task_id"]: entry for entry in history.get("approvals", [])
+    }
+    proposal_status_histogram = {
+        "proposed": 0,
+        "approved": 0,
+        "verified": 0,
+        "missing": 0,
+        "invalid": 0,
+    }
     action_queues = {"approve_now": [], "apply_now": [], "check_readiness": []}
     approval_age_buckets = {"lt_1d": 0, "d1_to_d3": 0, "d3_plus": 0}
     blocker_histogram: dict[str, int] = {}
@@ -71,7 +83,9 @@ def build_promotion_approval_analytics_packet(
             proposal_status = "invalid"
         proposal_status_histogram[proposal_status] += 1
 
-        age_bucket = _age_bucket(generated_at, requested_at, str(entry["approval_status"]))
+        age_bucket = _age_bucket(
+            generated_at, requested_at, str(entry["approval_status"])
+        )
         if age_bucket is not None:
             approval_age_buckets[age_bucket] += 1
 
@@ -116,9 +130,15 @@ def build_promotion_approval_analytics_packet(
         "approved_pending_apply_count": current.get("approved_pending_apply_count", 0),
         "granted_count": current.get("granted_count", 0),
         "missing_proposal_count": proposal_status_histogram["missing"],
-        "eligible_after_approval_count": sum(1 for entry in tasks if entry["next_action"] == "check_readiness" and entry["eligible"]),
+        "eligible_after_approval_count": sum(
+            1
+            for entry in tasks
+            if entry["next_action"] == "check_readiness" and entry["eligible"]
+        ),
         "blocked_after_approval_count": sum(
-            1 for entry in tasks if entry["next_action"] == "check_readiness" and not entry["eligible"]
+            1
+            for entry in tasks
+            if entry["next_action"] == "check_readiness" and not entry["eligible"]
         ),
         "action_queues": action_queues,
         "blocker_histogram": blocker_histogram,

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scripts.omo_debt_action_packet import build_action_packet
+from omo.omo_debt_action_packet import build_action_packet
 
 
 def _entry(

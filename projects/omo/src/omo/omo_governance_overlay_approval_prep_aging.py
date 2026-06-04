@@ -37,7 +37,15 @@ def build_governance_overlay_approval_prep_aging(
     root: Path, *, omo_dir: str | Path = ".omo", now: str
 ) -> dict[str, object]:
     omo_ref = Path(omo_dir)
-    analytics = _load_yaml_required(root / omo_ref / "workers" / "governance-overlay" / "approval-prep" / "analytics" / "current.yaml")
+    analytics = _load_yaml_required(
+        root
+        / omo_ref
+        / "workers"
+        / "governance-overlay"
+        / "approval-prep"
+        / "analytics"
+        / "current.yaml"
+    )
 
     tasks: list[dict[str, object]] = []
     attention_summary = {"fresh_count": 0, "watch_count": 0, "escalate_count": 0}
@@ -65,12 +73,20 @@ def build_governance_overlay_approval_prep_aging(
             escalation_task_ids.append(str(entry["task_id"]))
 
     tasks.sort(key=_task_sort_key)
-    followup_task_ids = [entry["task_id"] for entry in tasks if entry["attention_level"] in {"watch", "escalate"}]
-    escalation_task_ids = [entry["task_id"] for entry in tasks if entry["attention_level"] == "escalate"]
+    followup_task_ids = [
+        entry["task_id"]
+        for entry in tasks
+        if entry["attention_level"] in {"watch", "escalate"}
+    ]
+    escalation_task_ids = [
+        entry["task_id"] for entry in tasks if entry["attention_level"] == "escalate"
+    ]
 
     yaml_packet = {
         "generated_at": now,
-        "aging_status": "aging_available" if int(analytics.get("prep_task_count", 0)) else "no_prep_tasks",
+        "aging_status": "aging_available"
+        if int(analytics.get("prep_task_count", 0))
+        else "no_prep_tasks",
         "prep_task_count": int(analytics.get("prep_task_count", 0)),
         "attention_summary": attention_summary,
         "followup_task_ids": followup_task_ids,
@@ -87,11 +103,19 @@ def build_governance_overlay_approval_prep_aging(
         "",
         "## Escalation Candidates",
         "",
-        *(["none"] if not escalation_task_ids else [f"- {task_id}" for task_id in escalation_task_ids]),
+        *(
+            ["none"]
+            if not escalation_task_ids
+            else [f"- {task_id}" for task_id in escalation_task_ids]
+        ),
         "",
         "## Follow-up Queue",
         "",
-        *(["none"] if not followup_task_ids else [f"- {task_id}" for task_id in followup_task_ids]),
+        *(
+            ["none"]
+            if not followup_task_ids
+            else [f"- {task_id}" for task_id in followup_task_ids]
+        ),
     ]
     for entry in tasks:
         markdown_lines.extend(

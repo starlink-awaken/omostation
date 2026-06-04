@@ -1,0 +1,11 @@
+id: IMPORTED-b461d5
+title: 2.1 提取 omo_shared_utils.py：_utc_now, _root, _load_yaml, _write, atomic IO 导入
+status: completed
+task_type: feature
+depends_on:
+- IMPORTED-08ea57
+- IMPORTED-b7fb35
+source_docs:
+- /Users/xiamingxing/Workspace/scratch/omo-cleanup-plan.md
+deliverables: []
+imported_via: omo_bridge

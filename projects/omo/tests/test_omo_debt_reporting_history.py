@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from scripts.omo_debt_reporting_history import build_reporting_history_packet, render_reporting_history_markdown
+from omo.omo_debt_reporting_history import build_reporting_history_packet, render_reporting_history_markdown
 
 
 def _dispatch_runs() -> tuple[dict[str, str], ...]:

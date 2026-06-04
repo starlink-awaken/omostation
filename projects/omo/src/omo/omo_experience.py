@@ -8,16 +8,10 @@ from pathlib import Path
 
 import yaml
 
-try:
-    from scripts.cost_track_org import cost_summary_by_org
-    from .omo_io import write_text_atomic, write_yaml_atomic
-    from .omo_redaction import redact_sensitive_text
-    from .omo_task_schema import validate_task_file
-except ModuleNotFoundError:
-    from cost_track_org import cost_summary_by_org
-    from .omo_io import write_text_atomic, write_yaml_atomic
-    from .omo_redaction import redact_sensitive_text
-    from .omo_task_schema import validate_task_file
+from scripts.cost_track_org import cost_summary_by_org
+from .omo_io import write_text_atomic, write_yaml_atomic
+from .omo_redaction import redact_sensitive_text
+from .omo_task_schema import validate_task_file
 
 
 def _workspace_root(root: Path) -> Path:
@@ -31,7 +25,12 @@ def _omo_root(root: Path) -> Path:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 def _timestamp_slug(now: str | None = None) -> str:
@@ -55,8 +54,16 @@ def _relative_ref(path: Path, root: Path) -> str:
 
 def _phase_and_wave(root: Path) -> tuple[int | None, int | None]:
     omo_root = _omo_root(root)
-    state = _load_yaml(omo_root / "state" / "system.yaml") if (omo_root / "state" / "system.yaml").exists() else {}
-    goals = _load_yaml(omo_root / "goals" / "current.yaml") if (omo_root / "goals" / "current.yaml").exists() else {}
+    state = (
+        _load_yaml(omo_root / "state" / "system.yaml")
+        if (omo_root / "state" / "system.yaml").exists()
+        else {}
+    )
+    goals = (
+        _load_yaml(omo_root / "goals" / "current.yaml")
+        if (omo_root / "goals" / "current.yaml").exists()
+        else {}
+    )
     phase = goals.get("phase", state.get("current_phase"))
     wave = goals.get("current_wave", state.get("current_wave"))
     return phase, wave
@@ -73,7 +80,9 @@ def _find_latest_summary(omo_root: Path) -> Path | None:
     summary_dir = omo_root / "summaries"
     if not summary_dir.exists():
         return None
-    summaries = sorted(summary_dir.glob("*.md"), key=lambda path: (path.stat().st_mtime, path.name))
+    summaries = sorted(
+        summary_dir.glob("*.md"), key=lambda path: (path.stat().st_mtime, path.name)
+    )
     return summaries[-1] if summaries else None
 
 
@@ -93,8 +102,16 @@ def _find_task_file(root: Path, task_id: str) -> Path:
 def build_session_bootstrap(root: Path) -> dict[str, object]:
     workspace_root = _workspace_root(root)
     omo_root = _omo_root(root)
-    state = _load_yaml(omo_root / "state" / "system.yaml") if (omo_root / "state" / "system.yaml").exists() else {}
-    goals = _load_yaml(omo_root / "goals" / "current.yaml") if (omo_root / "goals" / "current.yaml").exists() else {}
+    state = (
+        _load_yaml(omo_root / "state" / "system.yaml")
+        if (omo_root / "state" / "system.yaml").exists()
+        else {}
+    )
+    goals = (
+        _load_yaml(omo_root / "goals" / "current.yaml")
+        if (omo_root / "goals" / "current.yaml").exists()
+        else {}
+    )
     active_dir = omo_root / "tasks" / "active"
     active_task_ids: list[str] = []
     if active_dir.exists():
@@ -110,8 +127,12 @@ def build_session_bootstrap(root: Path) -> dict[str, object]:
         "next_milestone": state.get("next_milestone"),
         "active_task_ids": active_task_ids,
         "divergence_flags": state.get("divergence_flags", []),
-        "goal_ids": [goal.get("id") for goal in goals.get("goals", []) if goal.get("id")],
-        "latest_summary_ref": _relative_ref(latest_summary, workspace_root) if latest_summary else None,
+        "goal_ids": [
+            goal.get("id") for goal in goals.get("goals", []) if goal.get("id")
+        ],
+        "latest_summary_ref": _relative_ref(latest_summary, workspace_root)
+        if latest_summary
+        else None,
     }
 
 
@@ -142,7 +163,9 @@ def bridge_request_to_task(
         "knowledge_refs": [],
         "handoff_refs": [],
         "source_docs": source_docs or [],
-        "deliverables": ["schema-valid governed task packet created from complex request"],
+        "deliverables": [
+            "schema-valid governed task packet created from complex request"
+        ],
         "risk_level": "L1",
         "allowed_operation_level": "L1",
         "human_approval_required": False,
@@ -162,7 +185,9 @@ def bridge_request_to_task(
     }
 
 
-def record_confirmation_evidence(root: Path, task_id: str, message: str, now: str | None = None) -> dict[str, str]:
+def record_confirmation_evidence(
+    root: Path, task_id: str, message: str, now: str | None = None
+) -> dict[str, str]:
     workspace_root = _workspace_root(root)
     omo_root = _omo_root(root)
     task_path = _find_task_file(workspace_root, task_id)
@@ -189,15 +214,21 @@ def record_confirmation_evidence(root: Path, task_id: str, message: str, now: st
     return {"task_id": task_id, "evidence_ref": evidence_ref}
 
 
-def write_resource_accounting_report(root: Path, now: str | None = None, days: int = 7) -> dict[str, str]:
+def write_resource_accounting_report(
+    root: Path, now: str | None = None, days: int = 7
+) -> dict[str, str]:
     workspace_root = _workspace_root(root)
     omo_root = _omo_root(root)
     state_path = omo_root / "state" / "system.yaml"
     state = _load_yaml(state_path) if state_path.exists() else {}
     runs_dir = omo_root / "workers" / "runs"
-    dispatch_files = sorted(runs_dir.glob("*-dispatch.yaml")) if runs_dir.exists() else []
+    dispatch_files = (
+        sorted(runs_dir.glob("*-dispatch.yaml")) if runs_dir.exists() else []
+    )
     dispatches = [_load_yaml(path) for path in dispatch_files]
-    worker_counts = Counter(dispatch.get("worker_id", "unknown") for dispatch in dispatches)
+    worker_counts = Counter(
+        dispatch.get("worker_id", "unknown") for dispatch in dispatches
+    )
     cost_by_org = cost_summary_by_org(days=days)
     registry = {
         "generated_at": now or _utc_now(),
@@ -255,15 +286,29 @@ def write_freshness_report(root: Path, now: str | None = None) -> dict[str, str]
     updated_at = _parse_iso8601(state.get("updated_at"))
     if updated_at is None or (generated_at - updated_at).total_seconds() >= 3600:
         stale_items.append("state_update_stale")
-    stale_items.extend(flag for flag in state.get("divergence_flags", []) if flag not in stale_items)
-    freshness_score = max(0, 100 - (30 if "state_update_stale" in stale_items else 0) - 20 * (len(stale_items) - ("state_update_stale" in stale_items)))
+    stale_items.extend(
+        flag for flag in state.get("divergence_flags", []) if flag not in stale_items
+    )
+    freshness_score = max(
+        0,
+        100
+        - (30 if "state_update_stale" in stale_items else 0)
+        - 20 * (len(stale_items) - ("state_update_stale" in stale_items)),
+    )
     report = {
-        "generated_at": generated_at.replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "generated_at": generated_at.replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z"),
         "current_phase": state.get("current_phase"),
         "current_wave": state.get("current_wave"),
         "stale_items": stale_items,
         "freshness_score": freshness_score,
-        "recommended_actions": ["refresh state summary", "resolve or tolerate divergence"] if stale_items else ["no action required"],
+        "recommended_actions": [
+            "refresh state summary",
+            "resolve or tolerate divergence",
+        ]
+        if stale_items
+        else ["no action required"],
     }
     report_path = omo_root / "_delivery" / "task-center" / "freshness" / "current.yaml"
     write_yaml_atomic(report_path, report)
@@ -300,11 +345,15 @@ def evaluate_control_gate(
     omo_root = _omo_root(workspace_root)
     generated_at = now or _utc_now()
     accounting_path = omo_root / "_truth" / "task-center" / "usage-accounting.yaml"
-    freshness_path = omo_root / "_delivery" / "task-center" / "freshness" / "current.yaml"
+    freshness_path = (
+        omo_root / "_delivery" / "task-center" / "freshness" / "current.yaml"
+    )
     accounting = _load_yaml(accounting_path) if accounting_path.exists() else {}
     freshness = _load_yaml(freshness_path) if freshness_path.exists() else {}
 
-    total_cost = sum(float(item.get("cost", 0) or 0) for item in accounting.get("cost_by_org", []))
+    total_cost = sum(
+        float(item.get("cost", 0) or 0) for item in accounting.get("cost_by_org", [])
+    )
     freshness_score = int(freshness.get("freshness_score", 100) or 100)
     stale_items = list(freshness.get("stale_items", []) or [])
     reasons: list[str] = []
@@ -330,8 +379,12 @@ def evaluate_control_gate(
         "total_cost_usd": round(total_cost, 4),
         "freshness_score": freshness_score,
         "stale_items": stale_items,
-        "accounting_ref": _relative_ref(accounting_path, workspace_root) if accounting_path.exists() else None,
-        "freshness_ref": _relative_ref(freshness_path, workspace_root) if freshness_path.exists() else None,
+        "accounting_ref": _relative_ref(accounting_path, workspace_root)
+        if accounting_path.exists()
+        else None,
+        "freshness_ref": _relative_ref(freshness_path, workspace_root)
+        if freshness_path.exists()
+        else None,
     }
     artifact_path = omo_root / "_delivery" / "task-center" / "control" / "current.yaml"
     write_yaml_atomic(artifact_path, artifact)
@@ -440,16 +493,25 @@ def main() -> int:
     if args.command == "confirm":
         print(
             yaml.safe_dump(
-                record_confirmation_evidence(root, task_id=args.task_id, message=args.message, now=args.now),
+                record_confirmation_evidence(
+                    root, task_id=args.task_id, message=args.message, now=args.now
+                ),
                 sort_keys=False,
             )
         )
         return 0
     if args.command == "accounting":
-        print(yaml.safe_dump(write_resource_accounting_report(root, now=args.now, days=args.days), sort_keys=False))
+        print(
+            yaml.safe_dump(
+                write_resource_accounting_report(root, now=args.now, days=args.days),
+                sort_keys=False,
+            )
+        )
         return 0
     if args.command == "freshness":
-        print(yaml.safe_dump(write_freshness_report(root, now=args.now), sort_keys=False))
+        print(
+            yaml.safe_dump(write_freshness_report(root, now=args.now), sort_keys=False)
+        )
         return 0
     if args.command == "control":
         print(

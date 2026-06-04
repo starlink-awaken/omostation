@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.omo_debt_execution import build_execution_record, execution_record_path, run_slug_from_ref
+from omo.omo_debt_execution import build_execution_record, execution_record_path, run_slug_from_ref
 
 
 def test_execution_record_helpers_build_run_scoped_paths(tmp_path: Path) -> None:

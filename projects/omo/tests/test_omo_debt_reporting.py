@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scripts.omo_debt_reporting import build_reporting_packet, render_reporting_markdown
+from omo.omo_debt_reporting import build_reporting_packet, render_reporting_markdown
 
 
 def _campaign_packet() -> dict[str, object]:

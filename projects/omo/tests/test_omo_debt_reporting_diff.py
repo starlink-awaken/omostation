@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scripts.omo_debt_reporting_diff import build_reporting_diff_packet, render_reporting_diff_markdown
+from omo.omo_debt_reporting_diff import build_reporting_diff_packet, render_reporting_diff_markdown
 
 
 def _owner_packet(
