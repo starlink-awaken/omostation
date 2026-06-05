@@ -79,6 +79,16 @@ def main(argv: list[str] | None = None) -> int:
 
         return event_main(args[1:])
 
+    if args and args[0] == "alert":
+        from omo.omo_alert import main as alert_main
+
+        return alert_main(args[1:])
+
+    if args and args[0] == "dashboard":
+        from omo.omo_dashboard import main as dash_main
+
+        return dash_main(args[1:])
+
     from omo.omo_worker import main as worker_main
 
     return worker_main(args)
