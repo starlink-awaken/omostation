@@ -1,0 +1,24 @@
+id: OMO-WORKER-BLOAT
+title: "omo_worker.py 2,142 行 — 单体膨胀信号，需关注拆分"
+dimension: code_quality
+subdimension: module_boundary
+domain: projects
+scope: within_project
+severity: medium
+weight: 0.3
+entropy_class: classification
+lifecycle_state: open
+owner: omo-governance
+affected_roots:
+  - projects/omo/src/omo/omo_worker.py
+evidence_refs:
+  - .omo/_knowledge/management/omo-architecture-panorama.md
+mitigation_refs: []
+opened_at: "2026-06-06T06:00:00Z"
+last_reviewed_at: null
+next_review_at: "2026-06-20T06:00:00Z"
+gate_level: phase28
+history:
+  - at: "2026-06-06T06:00:00Z"
+    action: register
+    note: "OMO 全景架构分析: omo_worker.py 是所有模块中最大的 (2,142 行)，且是默认路由。功能开始膨胀。"

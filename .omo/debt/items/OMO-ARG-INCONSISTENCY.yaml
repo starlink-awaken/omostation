@@ -1,0 +1,26 @@
+id: OMO-ARG-INCONSISTENCY
+title: "新旧模块 arg 解析不一致: 新 CLI 用 argparse, 老模块用 if args[n]"
+dimension: code_quality
+subdimension: consistency
+domain: projects
+scope: within_project
+severity: low
+weight: 0.2
+entropy_class: classification
+lifecycle_state: open
+owner: omo-governance
+affected_roots:
+  - projects/omo/src/omo/cli.py
+  - projects/omo/src/omo/omo_debt.py
+  - projects/omo/src/omo/omo_worker.py
+evidence_refs:
+  - .omo/_knowledge/management/omo-architecture-panorama.md
+mitigation_refs: []
+opened_at: "2026-06-06T06:00:00Z"
+last_reviewed_at: null
+next_review_at: "2026-06-27T06:00:00Z"
+gate_level: phase28
+history:
+  - at: "2026-06-06T06:00:00Z"
+    action: register
+    note: "OMO 全景架构分析: 新 6 模块 (goal/state 等) 用 argparse subparsers, 老模块 (debt/worker) 用 if args[n] 字符串匹配。两种模式共存。"

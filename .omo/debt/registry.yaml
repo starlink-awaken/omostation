@@ -117,3 +117,10 @@ seed_items:
   - .omo/debt/items/P2-FAMILY_DEBT_DENSITY.yaml
   # ── 2026-06-06 产品路 ──
   - .omo/debt/items/C1-HERMES_BUILD_BROKEN.yaml
+  # ── 2026-06-06 全景分析 ──
+  - .omo/debt/items/OMO-CLI-TEST-GAP.yaml
+  - .omo/debt/items/OMO-TASK-NO-CLI.yaml
+  - .omo/debt/items/OMO-EVIDENCE-NO-CLI.yaml
+  - .omo/debt/items/OMO-WORKER-BLOAT.yaml
+  - .omo/debt/items/OMO-ARG-INCONSISTENCY.yaml
+  - .omo/debt/items/OMO-X3-NOCOST.yaml
