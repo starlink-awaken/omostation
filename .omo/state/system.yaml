@@ -1,11 +1,19 @@
-current_phase: 26
+current_phase: 28
+# 🔗 MetaOS 知识体系 → Phase 6（统一追踪），见 ~/Documents/驾驶舱/DASHBOARD.md
+# 2026-06-05: 全量架构审计落地。P0x6 清零, P1-Agora绕道/运行时桥接/架构标注修复, L0协议+TaskObject修复
 phase1_status: closed
 phase_status: active
-current_wave: W1
-next_milestone: "Phase 26 W1 — OMO Fusion Upgrade: 控制面同步"
-health_score: 98.0
-active_agents: 1
-idle_agents: 3
+current_wave: W4
+next_milestone: 'Phase 29 — 工具体系韧性 · 治理首次运行 (2026-06-06)'
+health_score: 100.0
+
+# Phase 规划 (知识文档)
+# Phase 29: .omo/_knowledge/management/plan-phase29-toolchain.md
+# Phase 30: .omo/_knowledge/management/plan-phase30-architecture-maturity.md
+# Phase 31: .omo/_knowledge/management/plan-phase31-observability.md
+# Phase 32: .omo/_knowledge/management/plan-phase32-governance.md
+active_agents: 0
+idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
 phase2_core_complete: true
@@ -15,8 +23,8 @@ phase3_capability_slice_status: completed
 phase3_capability_slice_completed_at: '2026-05-30T22:35:00Z'
 phase3_acceptance_status: completed
 phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
-completed_tasks: 14
-total_tasks: 14
+completed_tasks: 25
+total_tasks: 26
 active_tasks: 0
 next_active_tasks:
 - (No active tasks)
@@ -43,12 +51,23 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-04T04:03:00Z'
-divergence_flags: []
+updated_at: '2026-06-06T04:00:00Z'
+# Phase 29 completed: omo goal/state/knowledge/delivery/standard/i0 CLI
+# Architecture doc: .omo/_knowledge/management/omo-extension-architecture-v1.md
+divergence_flags:
+- missing_debt_generated_ref:dashboard_ref
+- deep_analysis_p0_pending:agent_runtime_tasks_and_imports
 task_gate_summary: {}
 promotion_blockers: {}
-divergence_triage_summary: {}
-divergence_detail_refs: {}
+divergence_triage_summary:
+  missing_debt_generated_ref:dashboard_ref:
+    severity: low
+    owner: control
+    disposition: monitor
+divergence_detail_refs:
+  debt_generated_refs:
+    count: 1
+    ref: .omo/evidence/divergence/debt_generated_refs.yaml
 phase12_status: completed
 phase12_completed_at: '2026-06-01T00:50:00Z'
 ecosystem_maturity_score: 100
@@ -81,29 +100,13 @@ phase24_completed_at: '2026-06-04T11:27:00Z'
 phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
-health_score_raw: 97.0
-debt_weight: 1.0
+health_score_raw: 98.5
+debt_weight: 0.0
 debt_weight_items:
-  D2_CI_E2E:
+  SB_PROJECTS_YAML:
     resolved: true
-    weight: 0.15
-    desc: CI E2E test environment is still non-canonical
-  D3_EU_PRICING:
-    resolved: true
-    weight: 0.15
-    desc: eu-pricing tests are not independently governed
-  SB_DECOMPOSITION:
-    resolved: true
-    weight: 0.2
-    desc: SharedBrain decomposition remains partially governed
-  SB_UNTESTED_PKGS:
-    resolved: true
-    weight: 0.15
-    desc: kairon SharedBrain-adjacent packages still lack minimum test baselines
-  SB_ORPHANED_TASKS:
-    resolved: true
-    weight: 0.1
-    desc: orphaned task semantics can still drift away from the debt ledger
+    weight: 0.05
+    desc: PROJECTS registry metadata for SharedBrain remains stale
   SB_ROOT_CLEANUP:
     resolved: true
     weight: 0.05
@@ -112,14 +115,22 @@ debt_weight_items:
     resolved: true
     weight: 0.1
     desc: sharedbrain-bridge remains disconnected from the live platform
-  SB_PROJECTS_YAML:
+  SB_DECOMPOSITION:
     resolved: true
-    weight: 0.05
-    desc: PROJECTS registry metadata for SharedBrain remains stale
+    weight: 0.2
+    desc: SharedBrain decomposition remains partially governed
+  SB_ORPHANED_TASKS:
+    resolved: true
+    weight: 0.1
+    desc: orphaned task semantics can still drift away from the debt ledger
   SB_PHASE17_PLAN:
     resolved: true
     weight: 0.05
     desc: Phase 17 SharedBrain execution planning still needs debt-ledger tracking
+  SB_UNTESTED_PKGS:
+    resolved: true
+    weight: 0.15
+    desc: kairon SharedBrain-adjacent packages still lack minimum test baselines
   R1_P0_SURFACE_GAP:
     resolved: true
     weight: 0.2
@@ -144,6 +155,54 @@ debt_weight_items:
     resolved: true
     weight: 0.1
     desc: sharedbrain-standalone 零测试 — 分解残留包未验证
+  D2_CI_E2E:
+    resolved: true
+    weight: 0.15
+    desc: CI E2E test environment is still non-canonical
+  D3_EU_PRICING:
+    resolved: true
+    weight: 0.15
+    desc: eu-pricing tests are not independently governed
+  I0-AGORA_DUAL_INSTANCE:
+    resolved: true
+    weight: 0.6
+    desc: Agora 双实例运行冲突 — Docker + native 同时存在，端口混乱
+  I0-AGORA_SSE_DEAD:
+    resolved: true
+    weight: 0.8
+    desc: Agora SSE 端点 (:7431/:7432) 返回 HTTP 000 不可达
+  L0-PROTOCOL_GHOSTS:
+    resolved: true
+    weight: 0.5
+    desc: L0 协议注册表 16 协议中 14 个只有文档定义，无运行时实现
+  L1-SCHEDULER_MISSING:
+    resolved: true
+    weight: 0.5
+    desc: Matrix Scheduler 文档中定义但无持续运行的守护进程
+  L1-HEALTH_STALE:
+    resolved: true
+    weight: 0.3
+    desc: Runtime 健康状态无定时刷新 (matrix_state.json 无 cron job 定期更新)
+  X1-SANDBOX_INERT:
+    resolved: true
+    weight: 0.6
+    desc: KEI Sandbox 代码 (kei_sandbox.py) 存在但 Python audit hook 从未激活
+  X1-NO_AUDIT_CHAIN:
+    resolved: true
+    weight: 0.2
+    desc: 无实际操作审计链 — MCP 工具调用无日志记录
+  X2-NO_FRESHNESS:
+    resolved: true
+    weight: 0.3
+    desc: 无保鲜机制 — 所有服务无 age/freshness 追踪，无自动恢复逻辑
+  X3-NO_COSTING:
+    resolved: true
+    weight: 0.2
+    desc: 无成本核算 — _STATS 计数器定义在 mcp_server.py 中但从未递增
+  L0-TASKOBJECT_UNUSED:
+    resolved: true
+    weight: 0.2
+    desc: TaskObject v1 规范存在但无任何 Agent 实际生成或消费
 resolved_debt_items:
 - D2_CI_E2E
 - D3_EU_PRICING
@@ -160,22 +219,53 @@ resolved_debt_items:
 - SB_PROJECTS_YAML
 - SB_ROOT_CLEANUP
 - SB_UNTESTED_PKGS
+- I0-AGORA_DUAL_INSTANCE
+- I0-AGORA_SSE_DEAD
+- L0-PROTOCOL_GHOSTS
+- L1-SCHEDULER_MISSING
+- L1-HEALTH_STALE
+- X1-SANDBOX_INERT
+- X1-NO_AUDIT_CHAIN
+- X2-NO_FRESHNESS
+- X3-NO_COSTING
+- L0-TASKOBJECT_UNUSED
 orphaned_tasks_ref: .omo/tasks/registry/INDEX.md
 debt_registry_ref: .omo/debt/registry.yaml
 debt_dashboard_ref: .omo/debt/dashboard/current.yaml
 debt_review_pack_ref: .omo/debt/reviews/current.md
 debt_metrics:
-  debt_health: 100.0
+  debt_health: 0.0
   classification_entropy: 0.0
   state_entropy: 0.0
-  pointer_entropy: 0.0
+  pointer_entropy: 2.0
   time_entropy: 0.0
-  backlog_pressure: 0
+  backlog_pressure: 0.0
   coupling_load: 0.0
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 0
+planned_tasks: 16
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- (No planned tasks)
+- Current planned queue from .omo/tasks/planned/ (16 tasks)
+- P28-W0-NORTH-STAR (completed)
+- P28-W0-TOOL-HEATMAP (completed)
+- P28-W1-E2E-DEMO
+- P28-W1-TECH-RADAR
+- P28-W2-PKG-SLIM
+- P28-W3-ADR-SETUP
+- IMPORTED-08ea57
+- IMPORTED-0be2aa
+- IMPORTED-4c93ca
+- IMPORTED-52709d
+- IMPORTED-5d50b0
+- IMPORTED-7bea82
+- IMPORTED-83e4a0
+- IMPORTED-b461d5
+- IMPORTED-b7fb35
+- IMPORTED-dffdd8
+phase27_status: completed
+phase28_status: active
+phase28_completed_at: '2026-06-05T22:10:00Z'
+governance:
+  code_freeze: true
