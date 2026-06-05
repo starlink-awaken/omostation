@@ -39,3 +39,79 @@ seed_items:
   - .omo/debt/items/X2-NO_FRESHNESS.yaml
   - .omo/debt/items/X3-NO_COSTING.yaml
   - .omo/debt/items/L0-TASKOBJECT_UNUSED.yaml
+  - .omo/debt/items/DEBT-OMO-022.yaml
+  # ── 2026-06-05 全量架构审计新增 ──
+  - .omo/debt/items/P0-KEI_SANDBOX_BLOCKS_TESTS.yaml
+  - .omo/debt/items/P0-DOCKER_ECOSYSTEM_DOWN.yaml
+  - .omo/debt/items/P0-KAIRON_LINT_REGRESSION.yaml
+  - .omo/debt/items/P0-LAUNCHD_LIFECYCLE_SPLIT.yaml
+  - .omo/debt/items/P1-AGORA_STATE_DRIFT.yaml
+  - .omo/debt/items/P1-AUDIT_V2_UNRESOLVED.yaml
+  - .omo/debt/items/P2-PROTOCOLS_EMPTY.yaml
+  - .omo/debt/items/P2-SCHEDULER_NO_HEARTBEAT.yaml
+  - .omo/debt/items/P2-KAIRON_PACKAGES_POLLUTION.yaml
+  # ── 2026-06-10 产品进化建议 ──
+  - .omo/debt/items/P0-DASHBOARD_COCKPIT.yaml
+  - .omo/debt/items/P0-SMART_NOTIFY.yaml
+  - .omo/debt/items/P0-TASKOBJECT_LIVE.yaml
+  - .omo/debt/items/P1-AUTO_HEAL.yaml
+  - .omo/debt/items/P1-FRESHNESS_AUTO.yaml
+  - .omo/debt/items/P2-KEI_SANDBOX.yaml
+  - .omo/debt/items/P2-META_CI.yaml
+  - .omo/debt/items/P2-RED_TEAM.yaml
+  # ── 2026-06-05 债务分析新增 ──
+  - .omo/debt/items/P1-KAIRON_CONFTEST_POLLUTION.yaml
+  - .omo/debt/items/P1-DOCKER_COMPOSE_FRAGMENTS.yaml
+  - .omo/debt/items/P2-OMO_DASHBOARD_STALE.yaml
+  - .omo/debt/items/P2-LAUNCHD_ZOMBIES.yaml
+  - .omo/debt/items/P2-KEI_AUDIT_EMPTY.yaml
+  # ── 2026-06-05 架构缺口分析 — P0 波 ──
+  - .omo/debt/items/P0-PYTEST_ROOT_FIX.yaml
+  - .omo/debt/items/P0-GBRAIN_E2E_VERIFY.yaml
+  - .omo/debt/items/P0-HEALTH_ALERTING.yaml
+  # ── 2026-06-05 架构缺口分析 — P1 波 ──
+  - .omo/debt/items/P1-CORE_TESTS_BASELINE.yaml
+  - .omo/debt/items/P1-KEI_ALERTING.yaml
+  - .omo/debt/items/P1-AGORA_SEMANTIC_ROUTER.yaml
+  # ── 2026-06-05 架构缺口分析 — P2 波 ──
+  - .omo/debt/items/P2-OMO_DASHBOARD_AUTO.yaml
+  - .omo/debt/items/P2-PROTOCOL_DEEPEN.yaml
+  - .omo/debt/items/P2-SECURITY_HARDEN.yaml
+  - .omo/debt/items/P2-CI_GATE.yaml
+  # ── 2026-06-05 深度分析新增 — 新发现的问题 ──
+  - .omo/debt/items/P0-AGENTRT_CRITICAL.yaml
+  - .omo/debt/items/P1-RUNTIME_CONSOLIDATION.yaml
+  - .omo/debt/items/P1-AGORA_BYPASS.yaml
+  - .omo/debt/items/P1-ARCH_CODE_GAP.yaml
+  - .omo/debt/items/P2-AGORA_MODULE_SPLIT.yaml
+  - .omo/debt/items/P2-KEI_SANDBOX_PERMISSIVE.yaml
+  # ── 2026-06-05 21处绕过子债务 ──
+  - .omo/debt/items/BYPASS-001.yaml
+  - .omo/debt/items/BYPASS-002.yaml
+  - .omo/debt/items/BYPASS-003.yaml
+  - .omo/debt/items/BYPASS-004.yaml
+  - .omo/debt/items/BYPASS-005.yaml
+  - .omo/debt/items/BYPASS-006.yaml
+  - .omo/debt/items/BYPASS-007.yaml
+  - .omo/debt/items/BYPASS-008.yaml
+  - .omo/debt/items/BYPASS-009.yaml
+  # ── 2026-06-05 复盘追加 ──
+  - .omo/debt/items/P0-CI_GATE_VERIFY.yaml
+  - .omo/debt/items/P1-PROTOCOL_CLI.yaml
+  - .omo/debt/items/P2-KEI_DASHBOARD.yaml
+  # ── 2026-06-05 产品方向 ──
+  - .omo/debt/items/P0-ECOS_COCKPIT.yaml
+  - .omo/debt/items/P0-SMART_NOTIFY_LIVE.yaml
+  - .omo/debt/items/P1-TASKOBJECT_LIVE.yaml
+  - .omo/debt/items/P2-PUSH_GATE_CI.yaml
+  - .omo/debt/items/P2-KEI_WEEKLY.yaml
+  # ── 2026-06-06 流程缺陷 ──
+  - .omo/debt/items/FLOW-OMC-REVERT.yaml
+  - .omo/debt/items/FLOW-PRECOMMIT-CLEANUP.yaml
+  - .omo/debt/items/FLOW-TEST-FAST.yaml
+  # ── 2026-06-05 全景架构分析新增 ──
+  - .omo/debt/items/P1-CARDS_KAIRON_GAP.yaml
+  - .omo/debt/items/P2-VAULT_CARDS_GAP.yaml
+  - .omo/debt/items/P2-CARDS_MISSING_FILTERS.yaml
+  - .omo/debt/items/P3-CARDS_DAEMON_BG.yaml
+  - .omo/debt/items/P2-FAMILY_DEBT_DENSITY.yaml
