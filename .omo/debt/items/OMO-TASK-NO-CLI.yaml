@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: medium
 weight: 0.3
 entropy_class: classification
-lifecycle_state: open
+lifecycle_state: resolved
 owner: omo-governance
 affected_roots:
   - .omo/tasks/
@@ -22,3 +22,6 @@ history:
   - at: "2026-06-06T06:00:00Z"
     action: register
     note: "OMO 全景架构分析: tasks/ 有 active/planned/done 三目录约 200+ 文件，但无任何 CLI 命令覆盖。"
+  - at: "2026-06-06T07:30:00Z"
+    action: close
+    note: "OMO-CLI-TEST-GAP: 13 tests added, all passing. OMO-TASK-NO-CLI: omo task list created. OMO-EVIDENCE-NO-CLI: omo evidence list created."

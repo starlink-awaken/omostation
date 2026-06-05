@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: low
 weight: 0.2
 entropy_class: classification
-lifecycle_state: open
+lifecycle_state: resolved
 owner: omo-governance
 affected_roots:
   - .omo/evidence/
@@ -22,3 +22,6 @@ history:
   - at: "2026-06-06T06:00:00Z"
     action: register
     note: "OMO 全景架构分析: evidence/ 目录有 divergence 和 phase 数据但无 CLI 可读。"
+  - at: "2026-06-06T07:30:00Z"
+    action: close
+    note: "OMO-CLI-TEST-GAP: 13 tests added, all passing. OMO-TASK-NO-CLI: omo task list created. OMO-EVIDENCE-NO-CLI: omo evidence list created."
