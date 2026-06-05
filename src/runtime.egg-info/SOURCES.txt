@@ -9,6 +9,7 @@ src/runtime/matrix.py
 src/runtime/mcp_server.py
 src/runtime/protocol.py
 src/runtime/scheduler.py
+src/runtime/taskobject_adapter.py
 src/runtime.egg-info/PKG-INFO
 src/runtime.egg-info/SOURCES.txt
 src/runtime.egg-info/dependency_links.txt

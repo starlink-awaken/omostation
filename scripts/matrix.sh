@@ -38,7 +38,7 @@ get_services() {
 get_field() {
   local service="$1"
   local field="$2"
-  sed -n "/- name: \"$service\"/,/^  - name:/p" "$RUNTIME_MATRIX" | \
+  sed -n "/    - name: \"$service\"/,/^    - name:/p" "$RUNTIME_MATRIX" | \
     grep "^      $field:" | \
     sed "s/^      $field: //;s/\"//g"
 }

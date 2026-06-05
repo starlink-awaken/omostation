@@ -13,5 +13,7 @@ permissions:
       - "/tmp"
       - "/Users/xiamingxing/Workspace"
       - "/Users/xiamingxing/.runtime"
+      - "/Users/xiamingxing/runtime"
+      - "/Users/xiamingxing/Library/Mobile Documents"
   execution:
-    allow_subprocess: false
+    allow_subprocess: true

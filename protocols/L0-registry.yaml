@@ -2,8 +2,13 @@
 # L0 Protocol Weave — eCOS Protocol Registry (SSOT)
 # All protocols used in the eCOS stack, their status, ports, and implementations.
 # Managed by Runtime project. Query with: runtime protocol list / get
+# usage: active | partial | planned | legacy
 # =============================================================================
-version: 1
+# Meta-Model Reference: See ecos-meta-model.yaml for the formal M3/M2/M1/M0
+# hierarchy definition (entity types, protocol model, instances, registries).
+# This registry is the M0 (Ontology Reference) layer of the meta-model.
+# =============================================================================
+version: 2
 updated: "2026-06-05"
 
 protocols:
@@ -12,6 +17,7 @@ protocols:
     version: "2025-03-26"
     category: "agent-communication"
     status: "active"
+    usage: "active"
     description: "Model Context Protocol — tool/resource/prompt discovery"
     spec_url: "https://modelcontextprotocol.io"
     port_range: "7420-7425"
@@ -24,6 +30,7 @@ protocols:
     version: "0.1"
     category: "agent-communication"
     status: "active"
+    usage: "partial"
     description: "Agent Communication Protocol — stdin/stdout JSON-RPC"
     transport: ["stdio"]
     implementations:
@@ -33,7 +40,8 @@ protocols:
   - name: "TaskObject"
     version: "1.0"
     category: "agent-communication"
-    status: "active"
+    status: "partial"
+    usage: "partial"
     description: "Neutral task format for cross-agent task passing through L3 Entry Bridge"
     spec_url: "~/Workspace/projects/runtime/protocols/task-object-v1.md"
     transport: ["mcp-stdio"]
@@ -42,6 +50,7 @@ protocols:
     version: "0.1"
     category: "agent-communication"
     status: "planned"
+    usage: "planned"
     description: "Agent-to-Agent messaging (Google A2A inspired)"
     port_range: "7430-7435"
     transport: ["http", "websocket"]
@@ -52,6 +61,7 @@ protocols:
     version: "2"
     category: "service-discovery"
     status: "active"
+    usage: "active"
     description: "Service registry YAML — env-var-based, version controlled"
     spec_url: "$RUNTIME_HOME/matrix.yaml"
     transport: ["file"]
@@ -64,19 +74,21 @@ protocols:
     version: "1"
     category: "service-discovery"
     status: "active"
-    description: "Agora service registration and routing"
+    usage: "partial"
+    description: "Agora service registration and routing — the I0 Integration Fabric implementation"
     spec_url: "~/Workspace/projects/kairon/packages/agora"
     port_range: "7426, 7430-7431"
     transport: ["http", "mcp"]
     implementations:
       - "kairon/packages/agora"
-    notes: "Backed by Agora routing services. Concrete runtime endpoints belong in Runtime Matrix."
+    notes: "Agora is the I0 Integration Fabric implementation. It is NOT part of L2 Kernel. It provides service discovery and routing BETWEEN layers. Backed by Agora routing services. Concrete runtime endpoints belong in Runtime Matrix."
 
   # ── Kernel Architecture ───────────────────────────────────────────
   - name: "Tri-Plane Bus"
     version: "1"
     category: "kernel-architecture"
     status: "active"
+    usage: "partial"
     description: "L2 Kernel Tri-Plane coordination — governance/engine/memory plane routing"
     spec_url: "~/Workspace/projects/runtime/protocols/tri-plane-registry.yaml"
     transport: ["mcp", "yaml"]
@@ -91,6 +103,7 @@ protocols:
     version: "1"
     category: "governance"
     status: "active"
+    usage: "active"
     description: "L0 协议级约束 — 宪法约束编译进协议映射矩阵"
     spec_url: "~/Workspace/projects/runtime/protocols/governance-constraints.yaml"
     transport: ["mcp", "yaml"]
@@ -102,6 +115,7 @@ protocols:
     version: "1.0.0"
     category: "governance"
     status: "active"
+    usage: "partial"
     description: "Kernel Extension Interface — 扩展注册、沙箱隔离、权限管理"
     spec_url: "~/Workspace/projects/runtime/protocols/kei-extensions.yaml"
     transport: ["mcp", "yaml"]
@@ -110,22 +124,64 @@ protocols:
       - "kei_sandbox.py (audit hook)"
       - "kei.py (manifest loader)"
 
+  # ── Governance ────────────────────────────────────────────────────
+  - name: "X1 Governance Policy"
+    version: "1"
+    category: "governance"
+    status: "active"
+    usage: "active"
+    description: "OMO governance security policies — audit, auth, identity, trust, constitution traceability"
+    spec_url: "/Users/xiamingxing/Workspace/projects/omo/.omo/_truth/x1-governance-policies.yaml"
+    transport: ["yaml", "mcp"]
+    implementations:
+      - "OMO Debt items (x1_policy_ref field)"
+      - "governance-constraints.yaml (derived_from chain)"
+    notes: "5 policies defined. Referenced by DebtItem.x1_policy_ref field. X1 is eCOS cross-cutting governance security dimension."
+
+  - name: "X2 Lifecycle Rule"
+    version: "1"
+    category: "governance"
+    status: "active"
+    usage: "partial"
+    description: "X2 anti-entropy lifecycle and freshness rules — service health, knowledge freshness, idle decommissioning"
+    spec_url: "/Users/xiamingxing/Workspace/projects/omo/.omo/_truth/x2-lifecycle-rules.yaml"
+    transport: ["yaml", "mcp"]
+    implementations:
+      - "OMO Debt items (x2_freshness field)"
+      - "ecos-health-scan (cron-based monitoring)"
+    notes: "4 rules defined. Referenced by DebtItem.x2_freshness field. X2 is eCOS cross-cutting anti-entropy dimension."
+
+  - name: "X3 Value Stack"
+    version: "1"
+    category: "governance"
+    status: "active"
+    usage: "active"
+    description: "X3 7-tier value hierarchy with half-life and weight multipliers"
+    spec_url: "/Users/xiamingxing/Workspace/projects/omo/.omo/_truth/x3-value-stack.yaml"
+    transport: ["yaml", "cli"]
+    implementations:
+      - "OMO Debt items (x3_tier field)"
+      - "omo_debt_weight.get_computed_weight()"
+    notes: "7 tiers: Axiom→Tool. Referenced by DebtItem.x3_tier field. X3 is eCOS cross-cutting value assessment dimension."
+
   # ── Self Layer ────────────────────────────────────────────────────
   - name: "L4 Gateway"
     version: "4.0"
     category: "self-layer"
     status: "active"
+    usage: "active"
     description: "CLAUDE_COWORK_GLOBAL.md — 身份锚、域路由、执行纪律、会话行为基线"
-    spec_url: "~/Documents/学习进化/CLAUDE_COWORK_GLOBAL.md"
+    spec_url: "~/Documents/CLAUDE_COWORK_GLOBAL.md"
     transport: ["file", "claude-cowork"]
     implementations:
-      - "~/Documents/学习进化/CLAUDE_COWORK_GLOBAL.md"
+      - "~/Documents/CLAUDE_COWORK_GLOBAL.md"
 
   # ── State Sync ─────────────────────────────────────────────────────
   - name: "KOS State"
     version: "1"
     category: "state-sync"
     status: "active"
+    usage: "active"
     description: "Knowledge OS — capture/ingest/search pipeline"
     transport: ["file", "mcp", "http"]
     implementations:
@@ -137,6 +193,7 @@ protocols:
     version: "1"
     category: "state-sync"
     status: "active"
+    usage: "active"
     description: "Postgres+pgvector knowledge graph"
     port_range: "5433"
     transport: ["postgres wire"]
@@ -149,6 +206,7 @@ protocols:
     version: "1"
     category: "model-access"
     status: "active"
+    usage: "active"
     description: "Local LLM inference (OpenAI-compatible API)"
     port_range: "11434"
     transport: ["http"]
@@ -163,6 +221,7 @@ protocols:
     version: "4.0"
     category: "identity-auth"
     status: "active"
+    usage: "active"
     description: "OMO v4 — truth mutation lifecycle, debt registry, KEI"
     transport: ["cli", "file"]
     implementations:
@@ -176,17 +235,31 @@ protocols:
     version: "2"
     category: "orchestration"
     status: "active"
+    usage: "active"
     description: "cron-service orchestration with MCP and HTTP control surfaces"
     port_range: "7450-7451"
     transport: ["http", "mcp"]
     implementations:
       - "kairon/packages/cron-service"
-    notes: "Scheduling runtime details are tracked in Runtime Matrix and runtime health evidence."
+    notes: "This IS the L1 scheduler. See also L0 protocol mapping. Matches DEBT-OMO-008 requirement. Scheduling runtime details are tracked in Runtime Matrix and runtime health evidence."
+
+  # ── Legacy / Deprecated ───────────────────────────────────────────
+  - name: "BOS URI"
+    version: "0"
+    category: "agent-communication"
+    status: "deprecated"
+    usage: "legacy"
+    description: "BOS internal URI scheme (bos://) — listed in PAT-45 protocol mapping matrix but zero code implements it"
+    spec_url: null
+    transport: [\"bos\"]
+    implementations: []
+    notes: "DEPRECATED. BOS URI was defined in PAT-45 eCOS v5 protocol mapping matrix (tools/call, task, discovery, health) but never implemented in any codebase. Kept here for traceability. See DEBT-OMO-021."
 
   - name: "Agent Runtime API"
     version: "1"
     category: "orchestration"
     status: "active"
+    usage: "active"
     description: "Agent lifecycle management HTTP API"
     port_range: "9876"
     transport: ["http"]

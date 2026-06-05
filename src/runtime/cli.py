@@ -219,6 +219,10 @@ def main(argv: list[str] | None = None) -> int:
     kei_val = kei_sub.add_parser("validate", help="Validate a KEI manifest")
     kei_val.add_argument("path", help="Path to kei.yaml")
 
+    # i0 fabric
+    from .cli_i0 import add_i0_subparser, handle_i0_command
+    add_i0_subparser(sub)
+
     args = parser.parse_args(argv)
 
     if args.command == "health":
@@ -263,6 +267,8 @@ def main(argv: list[str] | None = None) -> int:
         else:
             kei_p.print_help()
             return 1
+    elif args.command == "i0":
+        return handle_i0_command(args)
     else:
         parser.print_help()
         return 1

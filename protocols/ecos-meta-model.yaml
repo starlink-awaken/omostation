@@ -1,0 +1,75 @@
+# =============================================================================
+# eCOS Meta-Model v1.0 — M3/M2/M1/M0 四层本体层次定义
+# Defines the hierarchy: Meta-Model → Protocol Model → Instance → Ontology Reference
+# Managed by Runtime project. Query with: runtime protocol list / get
+# =============================================================================
+version: "1.0"
+updated: "2026-06-05"
+
+layers:
+  - layer: "M3: Meta-Model"
+    question: "什么可以存在？"
+    description: "定义实体类型和关系的抽象框架"
+    entities:
+      - name: "ecos:Entity"
+        subtypes: ["Agent", "Task", "Context", "Protocol", "Capability", "Governance", "Extension", "Value"]
+      - name: "ecos:Relation"
+        subtypes: ["Implements", "Extends", "DependsOn", "MapsTo", "Governs", "CommunicatesVia"]
+    constraints:
+      - "实体必须属于一个 subtype"
+      - "关系必须连接两个实体"
+      - "subtype 数量 ≤ 8"
+    status: "proposed"
+
+  - layer: "M2: Protocol Model"
+    question: "怎么通信？"
+    description: "具体的通信协议和约束定义"
+    protocols:
+      - name: "MCP"
+        purpose: "工具/资源发现和调用"
+        transport: ["stdio", "http", "websocket"]
+        implements: "ecos:CommunicatesVia"
+      - name: "ACP"
+        purpose: "Agent间通信"
+        transport: ["stdio"]
+      - name: "A2A"
+        purpose: "Agent间任务传递"
+        transport: ["http", "websocket"]
+        status: "planned"
+      - name: "TaskObject"
+        purpose: "中立任务格式"
+        transport: ["mcp-stdio"]
+        implements: "ecos:Implements"
+    constraints:
+      - "所有协议必须注册到 L0-registry.yaml"
+      - "协议变更必须版本化"
+      - "跨边界通信优先 MCP"
+    status: "partial"
+
+  - layer: "M1: Instance"
+    question: "具体什么在运行？"
+    description: "运行中的具体实现实例"
+    tracked_by: "Runtime Matrix (matrix.yaml)"
+    examples:
+      - "Agora :7430 (MCP 端点)"
+      - "OMO CLI (治理工具)"
+      - "cron-service :7450"
+    status: "partial"
+
+  - layer: "M0: Ontology Reference"
+    question: "实体身份声明在哪？"
+    description: "所有实体的声明性身份和引用"
+    registries:
+      - name: "L0 Registry"
+        path: "protocols/L0-registry.yaml"
+        covers: "protocols"
+      - name: "debt registry"
+        path: ".omo/_truth/registry/debt.yaml"
+        covers: "debt items"
+      - name: "KEI extension registry"
+        path: "protocols/kei-extensions.yaml"
+        covers: "extensions"
+      - name: "Runtime Matrix"
+        path: "$RUNTIME_HOME/matrix.yaml"
+        covers: "services"
+    status: "partial"

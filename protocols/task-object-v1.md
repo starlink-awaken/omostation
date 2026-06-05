@@ -194,6 +194,21 @@ TaskObject v1.0 intentionally minimal. Future versions may add:
 - `result_contract` field for typed result expectations
 - `audit` field for governance chain-of-custody
 
+## Adoption Status
+
+TaskObject v1.0 is the canonical L3 task envelope format. Current adoption:
+
+| Component | Status | Evidence |
+|-----------|--------|----------|
+| Runtime MCP Server | **Native params** — tools accept individual params, not a full TaskObject envelope. A thin adapter could wrap/decorate incoming requests into TaskObject format. | `src/runtime/mcp_server.py` defines per-tool pydantic models, not a unified TaskObject dispatcher. |
+| Hermes | MCP client — TaskObject fields map to JSON-RPC params, no envelope enforcement at client level. | Hermes calls MCP tools directly, not through TaskObject. |
+| Claude Code | MCP client — same as Hermes. | No TaskObject awareness. |
+
+**Adoption path:**
+- ✅ P2 (DONE): TaskObject adapter at `src/runtime/taskobject_adapter.py` validates envelopes and dispatches to MCP tools
+- P3: Make all L3 entry points (Hermes, Claude Code, Codex) emit TaskObject envelopes
+- Current: TaskObject is implemented at the adapter layer; agents still call tools directly
+
 ## Compatibility
 
 | Agent | MCP Client | TaskObject Support |
@@ -202,3 +217,11 @@ TaskObject v1.0 intentionally minimal. Future versions may add:
 | Claude Code | Native (settings.json) | Full ✅ |
 | Codex | Native (config.toml) | Full ✅ |
 | OpenCode | Not MCP client | Via terminal wrapper |
+
+### Current Implementation
+
+The TaskObject adapter at `src/runtime/taskobject_adapter.py` implements the dispatch pipeline:
+
+- `dispatch_taskobject()` — validates envelope → routes to MCP tool → returns standardized result
+- `call_via_taskobject()` — wraps native calls in TaskObject format
+- Status: [EXISTS] — first implementation, covers all 12 Runtime MCP tools
