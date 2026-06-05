@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 RUNTIME_HOME = Path(os.environ.get("RUNTIME_HOME", Path.home() / "runtime"))
-PROJECT_HOME = Path(__file__).parent.parent
+PROJECT_HOME = Path(__file__).parent.parent.parent
 SCRIPTS_DIR = PROJECT_HOME / "scripts"
 
 
