@@ -24,6 +24,7 @@ class ServiceEntry:
     health_url: Optional[str] = None
     docker_container: Optional[str] = None
     notes: Optional[str] = None
+    depends_on: list[str] = field(default_factory=list)
     raw: dict = field(default_factory=dict)
 
 
@@ -140,6 +141,9 @@ def load_matrix(path: Optional[Path] = None) -> list[ServiceEntry]:
 def _parse_entry(raw: dict) -> ServiceEntry:
     port_str = raw.get("port", "")
     port = int(port_str) if port_str and port_str not in ("null", "—") else None
+    
+    depends_raw = raw.get("depends_on", "")
+    depends_on = [d.strip() for d in depends_raw.strip("[]").split(",")] if depends_raw and depends_raw != "null" else []
 
     return ServiceEntry(
         name=raw.get("name", "unknown"),
@@ -153,6 +157,7 @@ def _parse_entry(raw: dict) -> ServiceEntry:
         health_url=raw.get("health_url"),
         docker_container=raw.get("docker_container"),
         notes=raw.get("notes"),
+        depends_on=[d for d in depends_on if d],
         raw=raw,
     )
 

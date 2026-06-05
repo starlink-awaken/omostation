@@ -1,8 +1,10 @@
 pyproject.toml
 src/runtime/__init__.py
 src/runtime/__main__.py
+src/runtime/bus_consumer.py
 src/runtime/cli.py
 src/runtime/kei.py
+src/runtime/kei_sandbox.py
 src/runtime/matrix.py
 src/runtime/mcp_server.py
 src/runtime/protocol.py
@@ -15,3 +17,4 @@ src/runtime.egg-info/requires.txt
 src/runtime.egg-info/top_level.txt
 tests/test_matrix.py
 tests/test_mcp_integration.py
+tests/test_protocol_registry_hygiene.py

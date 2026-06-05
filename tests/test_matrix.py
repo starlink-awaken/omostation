@@ -43,4 +43,5 @@ runtime_matrix:
     assert svc.name == "test-svc"
     assert svc.type == "daemon"
     assert svc.port == 9999
-    assert svc.deploy_path == "$HOME/test"
+    assert svc.deploy_path.endswith("/test")
+    assert "$HOME" not in svc.deploy_path

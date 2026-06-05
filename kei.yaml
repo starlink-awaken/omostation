@@ -1,0 +1,17 @@
+version: "1.0"
+permissions:
+  network:
+    allow:
+      - "localhost"
+      - "127.0.0.1"
+      # Allow some external APIs if needed
+      # - "api.github.com"
+  filesystem:
+    allow_read:
+      - "/"
+    allow_write:
+      - "/tmp"
+      - "/Users/xiamingxing/Workspace"
+      - "/Users/xiamingxing/.runtime"
+  execution:
+    allow_subprocess: false

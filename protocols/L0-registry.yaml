@@ -16,6 +16,9 @@ protocols:
     spec_url: "https://modelcontextprotocol.io"
     port_range: "7420-7425"
     transport: ["stdio", "http", "websocket"]
+    implementations:
+      - "kairon/packages/agora"
+      - "native-mcp (Hermes client)"
 
   - name: "ACP"
     version: "0.1"
@@ -23,6 +26,9 @@ protocols:
     status: "active"
     description: "Agent Communication Protocol — stdin/stdout JSON-RPC"
     transport: ["stdio"]
+    implementations:
+      - "Hermes ACP client (hermes_cli.acp.*)"
+    notes: "Used by Hermes subagent delegation. Pipeline-based communication."
 
   - name: "TaskObject"
     version: "1.0"
@@ -39,6 +45,7 @@ protocols:
     description: "Agent-to-Agent messaging (Google A2A inspired)"
     port_range: "7430-7435"
     transport: ["http", "websocket"]
+    notes: "Not yet implemented. Planned for cross-machine agent orchestration."
 
   # ── Service Discovery ──────────────────────────────────────────────
   - name: "Runtime Matrix"
@@ -46,15 +53,38 @@ protocols:
     category: "service-discovery"
     status: "active"
     description: "Service registry YAML — env-var-based, version controlled"
+    spec_url: "$RUNTIME_HOME/matrix.yaml"
     transport: ["file"]
+    implementations:
+      - "runtime CLI (runtime matrix get/list)"
+      - "runtime/scripts/matrix.sh"
+    notes: "Human-readable SSOT for runtime service inventory."
 
   - name: "Agora Discovery"
     version: "1"
     category: "service-discovery"
     status: "active"
     description: "Agora service registration and routing"
+    spec_url: "~/Workspace/projects/kairon/packages/agora"
     port_range: "7426, 7430-7431"
     transport: ["http", "mcp"]
+    implementations:
+      - "kairon/packages/agora"
+    notes: "Backed by Agora routing services. Concrete runtime endpoints belong in Runtime Matrix."
+
+  # ── Kernel Architecture ───────────────────────────────────────────
+  - name: "Tri-Plane Bus"
+    version: "1"
+    category: "kernel-architecture"
+    status: "active"
+    description: "L2 Kernel Tri-Plane coordination — governance/engine/memory plane routing"
+    spec_url: "~/Workspace/projects/runtime/protocols/tri-plane-registry.yaml"
+    transport: ["mcp", "yaml"]
+    implementations:
+      - "Runtime MCP (plane_list, plane_capabilities)"
+      - "OMO MCP (omo_*)"
+      - "Agora MCP (agora-unified)"
+      - "gbrain MCP (kos*)"
 
   # ── State Sync ─────────────────────────────────────────────────────
   - name: "KOS State"
@@ -63,6 +93,10 @@ protocols:
     status: "active"
     description: "Knowledge OS — capture/ingest/search pipeline"
     transport: ["file", "mcp", "http"]
+    implementations:
+      - "kairon/packages/kos"
+      - "kos capture/ingest/search CLI"
+    notes: "Knowledge capture and retrieval substrate. Concrete deployment endpoints belong in Runtime Matrix."
 
   - name: "GBrain State"
     version: "1"
@@ -71,6 +105,9 @@ protocols:
     description: "Postgres+pgvector knowledge graph"
     port_range: "5433"
     transport: ["postgres wire"]
+    implementations:
+      - "gbrain-postgres"
+      - "gbrain-index"
 
   # ── Model Access ───────────────────────────────────────────────────
   - name: "Ollama API"
@@ -80,6 +117,11 @@ protocols:
     description: "Local LLM inference (OpenAI-compatible API)"
     port_range: "11434"
     transport: ["http"]
+    implementations:
+      - "ollama serve"
+      - "nomic-embed-text"
+      - "qwen3.6:35b-a3b"
+    notes: "Used for local inference and embedding-related workflows."
 
   # ── Identity & Auth ────────────────────────────────────────────────
   - name: "OMO Governance"
@@ -88,15 +130,23 @@ protocols:
     status: "active"
     description: "OMO v4 — truth mutation lifecycle, debt registry, KEI"
     transport: ["cli", "file"]
+    implementations:
+      - "projects/omo"
+      - "omo-cli"
+      - ".omo truth data plane"
+    notes: "KEI contract for kernel extension. L2 kernel governance."
 
   # ── Orchestration ──────────────────────────────────────────────────
   - name: "Cron Scheduler"
     version: "2"
     category: "orchestration"
     status: "active"
-    description: "cron-service: 37 scheduled jobs, MCP+HTTP API"
+    description: "cron-service orchestration with MCP and HTTP control surfaces"
     port_range: "7450-7451"
     transport: ["http", "mcp"]
+    implementations:
+      - "kairon/packages/cron-service"
+    notes: "Scheduling runtime details are tracked in Runtime Matrix and runtime health evidence."
 
   - name: "Agent Runtime API"
     version: "1"
@@ -105,3 +155,6 @@ protocols:
     description: "Agent lifecycle management HTTP API"
     port_range: "9876"
     transport: ["http"]
+    implementations:
+      - "kairon/packages/agent-runtime"
+    notes: "Lifecycle API contract for agent execution and health reporting."

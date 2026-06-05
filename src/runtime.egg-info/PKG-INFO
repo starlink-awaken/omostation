@@ -3,4 +3,6 @@ Name: runtime
 Version: 0.1.0
 Summary: eCOS Runtime Layer — L1 service registry, health monitoring, and protocol management
 Requires-Python: >=3.9
+Requires-Dist: pyjwt>=2.13.0
 Requires-Dist: PyYAML
+Requires-Dist: requests>=2.32.5

@@ -1,6 +1,7 @@
 # TaskObject — eCOS L3 中立任务格式规范 v1.0
 
 > Standard task format for cross-agent task passing through the L3 Entry Bridge.
+> Status: design-locked for v1.0 minimal envelope; not a full workflow/DAG contract.
 
 ## Overview
 
@@ -11,6 +12,17 @@ TaskObject 是 eCOS L3 入口桥接矩阵层的**中立任务单元**，
 ```
 Agent A → TaskObject → L3 MCP Server → Agent B
 ```
+
+## Current Scope
+
+TaskObject v1.0 only solves one thing: a stable **single-request envelope** for
+L3 entry bridging. It does **not** yet standardize:
+
+- multi-step workflow orchestration
+- DAG dependencies
+- typed result contracts
+- chain-of-custody audit payloads
+- approval state transitions
 
 ## Schema
 
@@ -34,6 +46,35 @@ task_object:
   priority: integer      # Optional. 0=critical, 1=high, 2=normal (default: 2)
 ```
 
+## Implementation Status
+
+### Implemented in v1.0
+
+| Field | Status | Notes |
+|------|--------|------|
+| `version` | Implemented | Current value locked to `1.0` |
+| `id` | Implemented | Used as JSON-RPC correlation ID |
+| `intent` | Implemented | Used for routing semantics and walkthrough classification |
+| `context.source` | Implemented | Source client identity |
+| `context.session` | Partial | Trace-friendly, client dependent |
+| `context.description` | Implemented | Human-readable task summary |
+| `target.service` | Implemented | Logical target service, e.g. `runtime` |
+| `target.tool` | Implemented | Maps to MCP `tools/call.name` |
+| `target.params` | Implemented | Maps to MCP `tools/call.arguments` |
+| `callback.channel` | Partial | Response channel intent only |
+| `callback.format` | Partial | Output preference only |
+| `ttl` | Partial | Envelope-level hint, not yet enforced end-to-end |
+| `priority` | Partial | Envelope-level hint, not yet enforced by a scheduler |
+
+### Reserved for future versions
+
+| Field | Why deferred |
+|------|--------------|
+| `pipeline` | Not needed before tri-plane main path is stable |
+| `dependencies` | DAG orchestration is out of v1 scope |
+| `result_contract` | Result typing is not yet stabilized across clients |
+| `audit` | Governance evidence is currently recorded outside the envelope |
+
 ## Intent Types
 
 | Intent | Meaning | Example |
@@ -42,6 +83,16 @@ task_object:
 | `query` | Retrieve information | List services, get protocol details |
 | `control` | Manage lifecycle | Restart daemon, reload config |
 | `custom` | Free-form task | Arbitrary agent-to-agent cooperation |
+
+## Source Values
+
+Recommended `context.source` values:
+
+- `hermes`
+- `claude-code`
+- `codex`
+- `opencode`
+- `runtime-bridge`
 
 ## Examples
 
@@ -75,7 +126,7 @@ task_object:
   id: "550e8400-e29b-41d4-a716-446655440001"
   intent: control
   context:
-    source: claude
+    source: claude-code
     session: "cls_xyz789"
     description: "Restart cron-service"
   target:
@@ -108,6 +159,18 @@ TaskObject maps to MCP `tools/call` as follows:
   }
 }
 ```
+
+### Current Runtime MCP Tool Surface
+
+Current `runtime` service tools exposed by Runtime MCP Server:
+
+- `runtime_health`
+- `runtime_matrix_list`
+- `runtime_matrix_get`
+- `runtime_service_ctl`
+- `runtime_protocol_list`
+- `runtime_protocol_get`
+- `runtime_ontology_get`
 
 ### CLI Invocation
 

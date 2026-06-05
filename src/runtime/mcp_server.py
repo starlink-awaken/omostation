@@ -135,7 +135,65 @@ TOOLS = [
         "inputSchema": {"type": "object", "properties": {}},
         "handler": lambda args: (PROJECT_HOME / "protocols" / "ecos-ontology.yaml").read_text() if (PROJECT_HOME / "protocols" / "ecos-ontology.yaml").exists() else "❌ Ontology not found",
     },
+    {
+        "name": "plane_list",
+        "description": "List all L2 Kernel Tri-Planes (governance/engine/memory) and their capabilities.",
+        "inputSchema": {"type": "object", "properties": {}},
+        "handler": lambda args: _plane_list(),
+    },
+    {
+        "name": "plane_capabilities",
+        "description": "Get detailed capabilities of a specific L2 kernel plane.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "plane": {
+                    "type": "string",
+                    "enum": ["governance", "engine", "memory"],
+                    "description": "Plane name: governance (OMO), engine (kairon), memory (gbrain)",
+                }
+            },
+            "required": ["plane"],
+        },
+        "handler": lambda args: _plane_capabilities(args["plane"]),
+    },
 ]
+
+
+def _plane_list() -> str:
+    import yaml
+    registry_file = PROJECT_HOME / "protocols" / "tri-plane-registry.yaml"
+    if not registry_file.exists():
+        return "❌ Tri-Plane Registry not found"
+    data = yaml.safe_load(registry_file.read_text())
+    planes = data.get("planes", {})
+    lines = [f"{'PLANE':15s} {'STATUS':10s} {'CAPABILITIES':30s}", "-" * 60]
+    for name, p in planes.items():
+        caps = len(p.get("capabilities", []))
+        lines.append(f"{p['name']:15s} {p.get('status', '?'):10s} {caps} capabilities")
+    lines.append(f"\nTotal: {len(planes)} planes registered")
+    return "\n".join(lines)
+
+
+def _plane_capabilities(plane_name: str) -> str:
+    import yaml
+    registry_file = PROJECT_HOME / "protocols" / "tri-plane-registry.yaml"
+    if not registry_file.exists():
+        return "❌ Tri-Plane Registry not found"
+    data = yaml.safe_load(registry_file.read_text())
+    planes = data.get("planes", {})
+    p = planes.get(plane_name)
+    if not p:
+        return f"❌ Plane not found: {plane_name}"
+    lines = [f"Plane:      {p['name']}", f"Status:     {p.get('status', '?')}",
+             f"Runtime:    {p.get('runtime', '?')}", f"Entry:      {p.get('entry', '?')}",
+             f"Code:       {p.get('code', '?')}", f"Description: {p.get('description', '')}", ""]
+    caps = p.get("capabilities", [])
+    lines.append(f"Capabilities ({len(caps)}):")
+    for c in caps:
+        lines.append(f"  • {c['name']}: {c['description']}")
+    return "\n".join(lines)
+
 
 TOOL_MAP = {t["name"]: t for t in TOOLS}
 

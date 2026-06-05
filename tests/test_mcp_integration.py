@@ -1,4 +1,4 @@
-"""Integration test: verify all Runtime MCP Server tools."""
+"""Integration test: verify Runtime MCP Server core tool surface."""
 import subprocess, json, os
 
 SERVER = os.path.expanduser("~/Workspace/projects/runtime/src/runtime/mcp_server.py")
@@ -31,7 +31,8 @@ try:
     tools = r["result"]["tools"]
     tool_names = {t["name"] for t in tools}
     expected = {"runtime_health","runtime_matrix_list","runtime_matrix_get",
-                "runtime_service_ctl","runtime_protocol_list","runtime_protocol_get"}
+                "runtime_service_ctl","runtime_protocol_list","runtime_protocol_get",
+                "runtime_ontology_get"}
     assert expected == tool_names, f"Tool mismatch: missing={expected-tool_names}"
     print(f"✅ tools/list: {len(tools)} tools OK")
 
@@ -77,7 +78,14 @@ try:
     assert "MCP" in text
     print(f"✅ runtime_protocol_list: protocols listed")
 
-    print(f"\n🎉 All 8 tests passed — L3 Entry Bridge verified")
+    # 9. ontology_get
+    r = send({"jsonrpc":"2.0","id":10,"method":"tools/call",
+              "params":{"name":"runtime_ontology_get","arguments":{}}})
+    text = r["result"]["content"][0]["text"]
+    assert "ecos:Entity" in text
+    print(f"✅ runtime_ontology_get: ontology loaded")
+
+    print(f"\n🎉 All 9 tests passed — L3 Entry Bridge verified")
 
 finally:
     proc.terminate()
