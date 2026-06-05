@@ -1,0 +1,41 @@
+# OMO Debt Registry — 台账索引
+# seed_items 指向 items/ 下的具体债务条目
+
+version: 1
+items_dir: ".omo/debt/items"
+dashboard_ref: ".omo/debt/dashboard/current.yaml"
+review_pack_ref: ".omo/debt/reviews/current.md"
+review_queue_ref: ".omo/debt/review-queue/current.yaml"
+action_packet_ref: ".omo/debt/action-packet/current.yaml"
+owner_routing_ref: ".omo/debt/owner-routing/current.yaml"
+dispatch_ref: ".omo/debt/dispatch/current.yaml"
+campaign_ref: ".omo/debt/campaign/current.yaml"
+reporting_ref: ".omo/debt/reporting/current.yaml"
+
+seed_items:
+  - .omo/debt/items/SB_PROJECTS_YAML.yaml
+  - .omo/debt/items/SB_ROOT_CLEANUP.yaml
+  - .omo/debt/items/SB_BRIDGE_FIX.yaml
+  - .omo/debt/items/SB_DECOMPOSITION.yaml
+  - .omo/debt/items/SB_ORPHANED_TASKS.yaml
+  - .omo/debt/items/SB_PHASE17_PLAN.yaml
+  - .omo/debt/items/SB_UNTESTED_PKGS.yaml
+  - .omo/debt/items/R1_P0_SURFACE_GAP.yaml
+  - .omo/debt/items/R2_AGORA_NOT_RUNNING.yaml
+  - .omo/debt/items/R3_LAYER_INDEX_DRIFT.yaml
+  - .omo/debt/items/R4_RUNTIME_ADAPTER_DEBT.yaml
+  - .omo/debt/items/R5_METAOS_PATH_INSERT.yaml
+  - .omo/debt/items/R6_SB_STANDALONE_NO_TESTS.yaml
+  - .omo/debt/items/D2_CI_E2E.yaml
+  - .omo/debt/items/D3_EU_PRICING.yaml
+  # ── 2026-06-05 审计新增 ──
+  - .omo/debt/items/I0-AGORA_DUAL_INSTANCE.yaml
+  - .omo/debt/items/I0-AGORA_SSE_DEAD.yaml
+  - .omo/debt/items/L0-PROTOCOL_GHOSTS.yaml
+  - .omo/debt/items/L1-SCHEDULER_MISSING.yaml
+  - .omo/debt/items/L1-HEALTH_STALE.yaml
+  - .omo/debt/items/X1-SANDBOX_INERT.yaml
+  - .omo/debt/items/X1-NO_AUDIT_CHAIN.yaml
+  - .omo/debt/items/X2-NO_FRESHNESS.yaml
+  - .omo/debt/items/X3-NO_COSTING.yaml
+  - .omo/debt/items/L0-TASKOBJECT_UNUSED.yaml

@@ -592,10 +592,53 @@ def dispatch_task(
         prompt_text = (root / prompt_path).read_text(encoding="utf-8")
         argv = _build_launch_argv(registry, worker_id, transport, prompt_text)
         result = subprocess.run(argv, cwd=root, capture_output=True, text=True)
-        write_text_atomic(
-            root / stdout_path,
-            redact_sensitive_text((result.stdout or "") + (result.stderr or "")),
-        )
+        log_content = redact_sensitive_text((result.stdout or "") + (result.stderr or ""))
+        write_text_atomic(root / stdout_path, log_content)
+        
+        # Phase 28 Step 3: Tri-Plane Bus - Broadcast event to Agora EventBus
+        def push_log_to_agora(dispatch_id: str, content: str):
+            """Push log synchronization event to Agora via internal Event Bus."""
+            try:
+                import urllib.request
+                import json
+                import os
+                req = urllib.request.Request(
+                    "http://127.0.0.1:7430/api/events",
+                    data=json.dumps({
+                        "type": "omo:log_sync",
+                        "source": "omo_worker",
+                        "payload": {
+                            "dispatch_id": dispatch_id,
+                            "content": content
+                        }
+                    }).encode("utf-8"),
+                    method="POST"
+                )
+                req.add_header("Content-Type", "application/json")
+                
+                jwt_secret = os.environ.get("AGORA_JWT_SECRET")
+                api_key = os.environ.get("AGORA_API_KEY")
+                if jwt_secret:
+                    import jwt
+                    import time
+                    token = jwt.encode(
+                        {"role": "system_daemon", "exp": time.time() + 3600}, 
+                        jwt_secret, 
+                        algorithm="HS256"
+                    )
+                    req.add_header("Authorization", f"Bearer {token}")
+                elif api_key:
+                    req.add_header("X-API-Key", api_key)
+                    
+                # Bypass proxy for 127.0.0.1
+                proxy_handler = urllib.request.ProxyHandler({})
+                opener = urllib.request.build_opener(proxy_handler)
+                opener.open(req, timeout=3.0)
+            except Exception as e:
+                print(f"⚠️ Failed to broadcast log via Tri-Plane Bus: {e}")
+        push_log_to_agora(dispatch_id, log_content)
+        print(f"✅ Sync'ed {dispatch_id} log via Tri-Plane Bus")
+            
         dispatch["dispatch_state"] = "active"
         dispatch["lease"]["last_material_write_at"] = _utc_now()
         _write_yaml(root / dispatch_path, dispatch)
