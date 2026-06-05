@@ -89,6 +89,16 @@ def main(argv: list[str] | None = None) -> int:
 
         return dash_main(args[1:])
 
+    if args and args[0] == "task":
+        from omo.omo_task import main as task_main
+
+        return task_main(args[1:])
+
+    if args and args[0] == "evidence":
+        from omo.omo_evidence import main as ev_main
+
+        return ev_main(args[1:])
+
     from omo.omo_worker import main as worker_main
 
     return worker_main(args)
