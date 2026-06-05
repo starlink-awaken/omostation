@@ -110,6 +110,17 @@ protocols:
       - "kei_sandbox.py (audit hook)"
       - "kei.py (manifest loader)"
 
+  # ── Self Layer ────────────────────────────────────────────────────
+  - name: "L4 Gateway"
+    version: "4.0"
+    category: "self-layer"
+    status: "active"
+    description: "CLAUDE_COWORK_GLOBAL.md — 身份锚、域路由、执行纪律、会话行为基线"
+    spec_url: "~/Documents/学习进化/CLAUDE_COWORK_GLOBAL.md"
+    transport: ["file", "claude-cowork"]
+    implementations:
+      - "~/Documents/学习进化/CLAUDE_COWORK_GLOBAL.md"
+
   # ── State Sync ─────────────────────────────────────────────────────
   - name: "KOS State"
     version: "1"
