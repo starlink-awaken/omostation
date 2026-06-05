@@ -7,7 +7,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RUNTIME_HOME="${RUNTIME_HOME:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+RUNTIME_HOME="${RUNTIME_HOME:-$HOME/runtime}"
 source "$RUNTIME_HOME/config/env.sh" 2>/dev/null || true
 
 show_usage() {
