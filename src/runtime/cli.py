@@ -210,6 +210,15 @@ def main(argv: list[str] | None = None) -> int:
     # status
     sub.add_parser("status", help="Quick system summary")
 
+    # mcp
+    sub.add_parser("mcp", help="Run L3 CLIAdapter (MCP Server over stdio)")
+
+    # kei
+    kei_p = sub.add_parser("kei", help="Kernel Extension Interface (Sandbox) management")
+    kei_sub = kei_p.add_subparsers(dest="kei_cmd")
+    kei_val = kei_sub.add_parser("validate", help="Validate a KEI manifest")
+    kei_val.add_argument("path", help="Path to kei.yaml")
+
     args = parser.parse_args(argv)
 
     if args.command == "health":
@@ -236,6 +245,24 @@ def main(argv: list[str] | None = None) -> int:
             return 1
     elif args.command == "status":
         return cmd_status()
+    elif args.command == "mcp":
+        from .mcp_server import main as mcp_main
+        mcp_main()
+        return 0
+    elif args.command == "kei":
+        if args.kei_cmd == "validate":
+            from .kei import load_manifest
+            try:
+                manifest = load_manifest(args.path)
+                print(f"✅ KEI Manifest valid: {manifest.name} v{manifest.version}")
+                print(f"  Permissions: {manifest.permissions}")
+                return 0
+            except Exception as e:
+                print(f"❌ KEI Validation failed: {e}", file=sys.stderr)
+                return 1
+        else:
+            kei_p.print_help()
+            return 1
     else:
         parser.print_help()
         return 1

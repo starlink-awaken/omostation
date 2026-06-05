@@ -24,6 +24,14 @@ protocols:
     description: "Agent Communication Protocol — stdin/stdout JSON-RPC"
     transport: ["stdio"]
 
+  - name: "TaskObject"
+    version: "1.0"
+    category: "agent-communication"
+    status: "active"
+    description: "Neutral task format for cross-agent task passing through L3 Entry Bridge"
+    spec_url: "~/Workspace/projects/runtime/protocols/task-object-v1.md"
+    transport: ["mcp-stdio"]
+
   - name: "A2A"
     version: "0.1"
     category: "agent-communication"

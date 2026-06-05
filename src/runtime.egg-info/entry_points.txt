@@ -1,2 +1,3 @@
 [console_scripts]
+ecos-matrix-scheduler = runtime.scheduler:main
 runtime = runtime.cli:main

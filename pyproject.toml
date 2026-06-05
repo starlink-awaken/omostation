@@ -3,10 +3,13 @@ name = "runtime"
 version = "0.1.0"
 description = "eCOS Runtime Layer — L1 service registry, health monitoring, and protocol management"
 requires-python = ">=3.9"
-dependencies = []
+dependencies = [
+    "PyYAML",
+]
 
 [project.scripts]
 runtime = "runtime.cli:main"
+ecos-matrix-scheduler = "runtime.scheduler:main"
 
 [build-system]
 requires = ["setuptools>=75"]
