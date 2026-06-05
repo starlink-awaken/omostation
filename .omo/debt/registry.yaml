@@ -115,3 +115,5 @@ seed_items:
   - .omo/debt/items/P2-CARDS_MISSING_FILTERS.yaml
   - .omo/debt/items/P3-CARDS_DAEMON_BG.yaml
   - .omo/debt/items/P2-FAMILY_DEBT_DENSITY.yaml
+  # ── 2026-06-06 产品路 ──
+  - .omo/debt/items/C1-HERMES_BUILD_BROKEN.yaml
