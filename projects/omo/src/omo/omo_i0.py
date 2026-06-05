@@ -41,13 +41,35 @@ def cmd_i0_status() -> int:
     return 0
 
 
+def cmd_i0_routes() -> int:
+    """List Agora routing table."""
+    try:
+        resp = urlopen(Request(f"{_agora_url('/api/services')}"), timeout=3)
+        services = json.loads(resp.read())
+        if isinstance(services, list):
+            print(f"{'SERVICE':30s} {'STATUS':12s} {'TOOLS':8s}")
+            print("-" * 55)
+            for s in services:
+                name = s.get("name", "?")[:28]
+                st = s.get("status", "?")[:10]
+                tools = str(len(s.get("tools", [])))
+                print(f"{name:30s} {st:12s} {tools:8s}")
+            print(f"\nTotal: {len(services)} services")
+    except Exception as e:
+        print(f"❌ Route query failed: {e}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="omo i0", description="OMO I0 Integration Fabric query")
     sub = parser.add_subparsers(dest="command")
     sub.add_parser("status", help="Show Agora I0 fabric status")
+    sub.add_parser("routes", help="List Agora routing table")
     args = parser.parse_args(argv)
     if args.command == "status":
         return cmd_i0_status()
+    elif args.command == "routes":
+        return cmd_i0_routes()
     parser.print_help()
     return 1
 
