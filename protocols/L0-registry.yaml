@@ -1,0 +1,99 @@
+# =============================================================================
+# L0 Protocol Weave — eCOS Protocol Registry (SSOT)
+# All protocols used in the eCOS stack, their status, ports, and implementations.
+# Managed by Runtime project. Query with: runtime protocol list / get
+# =============================================================================
+version: 1
+updated: "2026-06-05"
+
+protocols:
+  # ── Agent Communication ─────────────────────────────────────────────
+  - name: "MCP"
+    version: "2025-03-26"
+    category: "agent-communication"
+    status: "active"
+    description: "Model Context Protocol — tool/resource/prompt discovery"
+    spec_url: "https://modelcontextprotocol.io"
+    port_range: "7420-7425"
+    transport: ["stdio", "http", "websocket"]
+
+  - name: "ACP"
+    version: "0.1"
+    category: "agent-communication"
+    status: "active"
+    description: "Agent Communication Protocol — stdin/stdout JSON-RPC"
+    transport: ["stdio"]
+
+  - name: "A2A"
+    version: "0.1"
+    category: "agent-communication"
+    status: "planned"
+    description: "Agent-to-Agent messaging (Google A2A inspired)"
+    port_range: "7430-7435"
+    transport: ["http", "websocket"]
+
+  # ── Service Discovery ──────────────────────────────────────────────
+  - name: "Runtime Matrix"
+    version: "2"
+    category: "service-discovery"
+    status: "active"
+    description: "Service registry YAML — env-var-based, version controlled"
+    transport: ["file"]
+
+  - name: "Agora Discovery"
+    version: "1"
+    category: "service-discovery"
+    status: "active"
+    description: "Agora service registration and routing"
+    port_range: "7426, 7430-7431"
+    transport: ["http", "mcp"]
+
+  # ── State Sync ─────────────────────────────────────────────────────
+  - name: "KOS State"
+    version: "1"
+    category: "state-sync"
+    status: "active"
+    description: "Knowledge OS — capture/ingest/search pipeline"
+    transport: ["file", "mcp", "http"]
+
+  - name: "GBrain State"
+    version: "1"
+    category: "state-sync"
+    status: "active"
+    description: "Postgres+pgvector knowledge graph"
+    port_range: "5433"
+    transport: ["postgres wire"]
+
+  # ── Model Access ───────────────────────────────────────────────────
+  - name: "Ollama API"
+    version: "1"
+    category: "model-access"
+    status: "active"
+    description: "Local LLM inference (OpenAI-compatible API)"
+    port_range: "11434"
+    transport: ["http"]
+
+  # ── Identity & Auth ────────────────────────────────────────────────
+  - name: "OMO Governance"
+    version: "4.0"
+    category: "identity-auth"
+    status: "active"
+    description: "OMO v4 — truth mutation lifecycle, debt registry, KEI"
+    transport: ["cli", "file"]
+
+  # ── Orchestration ──────────────────────────────────────────────────
+  - name: "Cron Scheduler"
+    version: "2"
+    category: "orchestration"
+    status: "active"
+    description: "cron-service: 37 scheduled jobs, MCP+HTTP API"
+    port_range: "7450-7451"
+    transport: ["http", "mcp"]
+
+  - name: "Agent Runtime API"
+    version: "1"
+    category: "orchestration"
+    status: "active"
+    description: "Agent lifecycle management HTTP API"
+    port_range: "9876"
+    transport: ["http"]

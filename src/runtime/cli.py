@@ -1,0 +1,245 @@
+"""Runtime CLI — eCOS Layer 1 infrastructure management.
+
+Usage:
+    runtime health               — run health scan (delegates to health-scan.sh)
+    runtime matrix list          — list all services
+    runtime matrix get <name>    — show service details
+    runtime matrix resolve       — expand all env-var paths
+    runtime service <name> status — check service status (delegates to service-ctl.sh)
+    runtime service <name> start  — start a service
+    runtime service <name> stop   — stop a service
+    runtime protocol list         — list L0 protocols
+    runtime protocol get <name>   — show protocol details
+    runtime status                — quick summary: matrix version + count
+    runtime version               — show runtime CLI version
+"""
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+from . import __version__
+from .matrix import (
+    RUNTIME_HOME, RUNTIME_MATRIX,
+    load_matrix, get_service, resolve_path,
+    list_services, ServiceEntry,
+)
+from .protocol import L0_PROTOCOLS, get_protocol, by_category
+
+
+# ─── Helpers ────────────────────────────────────────────────────────────────
+
+def _run_script(name: str, *args: str) -> int:
+    """Run a shell script from the runtime scripts directory."""
+    script = Path(__file__).parent.parent.parent / "scripts" / name
+    if not script.exists():
+        print(f"❌ Script not found: {script}", file=sys.stderr)
+        return 1
+    env = os.environ.copy()
+    env.setdefault("RUNTIME_HOME", str(RUNTIME_HOME))
+    r = subprocess.run([str(script), *args], env=env)
+    return r.returncode
+
+
+def _print_table(rows: list[list[str]], headers: list[str]) -> None:
+    """Print a aligned table."""
+    col_widths = [len(h) for h in headers]
+    for row in rows:
+        for i, cell in enumerate(row):
+            col_widths[i] = max(col_widths[i], len(cell))
+
+    sep = "  "
+    hdr = sep.join(h.ljust(w) for h, w in zip(headers, col_widths))
+    print(hdr)
+    print("-" * len(hdr))
+    for row in rows:
+        print(sep.join(c.ljust(w) for c, w in zip(row, col_widths)))
+
+
+# ─── Commands ───────────────────────────────────────────────────────────────
+
+def cmd_health() -> int:
+    return _run_script("health-scan.sh")
+
+
+def cmd_health_json() -> int:
+    return _run_script("health-scan.sh", "--json")
+
+
+def cmd_matrix_list() -> int:
+    try:
+        services = list_services()
+    except FileNotFoundError as e:
+        print(f"❌ {e}", file=sys.stderr)
+        return 1
+    rows = []
+    for svc in services:
+        port = str(svc.port) if svc.port else "—"
+        rows.append([svc.name, f"[{svc.type}]", f":{port}", svc.status])
+    _print_table(rows, ["SERVICE", "TYPE", "PORT", "STATUS"])
+    return 0
+
+
+def cmd_matrix_get(name: str) -> int:
+    svc = get_service(name)
+    if not svc:
+        print(f"❌ Service not found: {name}", file=sys.stderr)
+        return 1
+    print(f"Service: {svc.name}")
+    print(f"  Type:      {svc.type}")
+    print(f"  Status:    {svc.status}")
+    if svc.port:
+        print(f"  Port:      {svc.port}")
+    if svc.launchd_label:
+        print(f"  Launchd:   {svc.launchd_label}")
+    if svc.health_url:
+        print(f"  Health:    {svc.health_url}")
+    if svc.docker_container:
+        print(f"  Docker:    {svc.docker_container}")
+    print(f"  Deploy:    {resolve_path(svc.deploy_path) or '—'}")
+    print(f"  Logs:      {resolve_path(svc.log_path) or '—'}")
+    if svc.notes:
+        print(f"  Notes:     {svc.notes[:120]}...")
+    return 0
+
+
+def cmd_matrix_resolve() -> int:
+    try:
+        services = list_services()
+    except FileNotFoundError as e:
+        print(f"❌ {e}", file=sys.stderr)
+        return 1
+    for svc in services:
+        resolved = resolve_path(svc.deploy_path)
+        if resolved:
+            print(f"  {svc.name:25s} → {resolved}")
+    return 0
+
+
+def cmd_service(name: str, action: str) -> int:
+    return _run_script("service-ctl.sh", name, action)
+
+
+def cmd_protocol_list() -> int:
+    rows = []
+    for p in L0_PROTOCOLS:
+        status_icon = {"active": "✅", "draft": "📝", "planned": "🔲", "deprecated": "🗄️"}.get(p.status, "❓")
+        rows.append([f"{status_icon} {p.name}", f"v{p.version}", p.category, p.status])
+    _print_table(rows, ["PROTOCOL", "VERSION", "CATEGORY", "STATUS"])
+    print(f"\nTotal: {len(L0_PROTOCOLS)} protocols")
+    return 0
+
+
+def cmd_protocol_get(name: str) -> int:
+    p = get_protocol(name)
+    if not p:
+        print(f"❌ Protocol not found: {name}", file=sys.stderr)
+        return 1
+    print(f"Protocol: {p.name} v{p.version}")
+    print(f"  Category:  {p.category}")
+    print(f"  Status:    {p.status}")
+    print(f"  Desc:      {p.description}")
+    if p.spec_url:
+        print(f"  Spec:      {p.spec_url}")
+    if p.port_range:
+        print(f"  Ports:     {p.port_range}")
+    print(f"  Transport: {', '.join(p.transport)}")
+    if p.implementations:
+        for impl in p.implementations:
+            if impl:
+                print(f"  Impl:      {impl}")
+    if p.notes:
+        print(f"  Notes:     {p.notes}")
+    return 0
+
+
+def cmd_status() -> int:
+    try:
+        services = list_services()
+    except FileNotFoundError:
+        services = []
+    active = sum(1 for s in services if s.status == "running")
+    failed = sum(1 for s in services if s.status in ("stopped", "failed"))
+    protocol_active = sum(1 for p in L0_PROTOCOLS if p.status == "active")
+
+    print(f"Runtime CLI     v{__version__}")
+    print(f"Matrix          v2 — {RUNTIME_MATRIX}")
+    print(f"Services:       {len(services)} total ({active} running, {failed} failed)")
+    print(f"Protocols:      {len(L0_PROTOCOLS)} total ({protocol_active} active)")
+    return 0
+
+
+# ─── Main ───────────────────────────────────────────────────────────────────
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="runtime",
+        description="eCOS Runtime Layer — infrastructure management",
+    )
+    parser.add_argument("--version", action="version", version=f"runtime {__version__}")
+
+    sub = parser.add_subparsers(dest="command")
+
+    # health
+    health_p = sub.add_parser("health", help="Run health scan")
+    health_p.add_argument("--json", action="store_true", help="JSON output")
+
+    # matrix
+    matrix_p = sub.add_parser("matrix", help="Query service registry")
+    matrix_sub = matrix_p.add_subparsers(dest="matrix_cmd")
+    matrix_sub.add_parser("list", help="List all services")
+    g = matrix_sub.add_parser("get", help="Get service details")
+    g.add_argument("name")
+    matrix_sub.add_parser("resolve", help="Resolve all env-var paths")
+
+    # service
+    svc_p = sub.add_parser("service", help="Manage services")
+    svc_p.add_argument("name")
+    svc_p.add_argument("action", choices=["status", "start", "stop", "restart"])
+
+    # protocol
+    proto_p = sub.add_parser("protocol", help="Query L0 protocol registry")
+    proto_sub = proto_p.add_subparsers(dest="proto_cmd")
+    proto_sub.add_parser("list", help="List all protocols")
+    pg = proto_sub.add_parser("get", help="Get protocol details")
+    pg.add_argument("name")
+
+    # status
+    sub.add_parser("status", help="Quick system summary")
+
+    args = parser.parse_args(argv)
+
+    if args.command == "health":
+        return cmd_health_json() if args.json else cmd_health()
+    elif args.command == "matrix":
+        if args.matrix_cmd == "list":
+            return cmd_matrix_list()
+        elif args.matrix_cmd == "get":
+            return cmd_matrix_get(args.name)
+        elif args.matrix_cmd == "resolve":
+            return cmd_matrix_resolve()
+        else:
+            matrix_p.print_help()
+            return 1
+    elif args.command == "service":
+        return cmd_service(args.name, args.action)
+    elif args.command == "protocol":
+        if args.proto_cmd == "list":
+            return cmd_protocol_list()
+        elif args.proto_cmd == "get":
+            return cmd_protocol_get(args.name)
+        else:
+            proto_p.print_help()
+            return 1
+    elif args.command == "status":
+        return cmd_status()
+    else:
+        parser.print_help()
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
