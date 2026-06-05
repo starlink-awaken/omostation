@@ -69,6 +69,11 @@ def main(argv: list[str] | None = None) -> int:
 
         return i0_main(args[1:])
 
+    if args and args[0] in ("log", "metric", "observability"):
+        from omo.omo_observability import main as obs_main
+
+        return obs_main(args)
+
     from omo.omo_worker import main as worker_main
 
     return worker_main(args)
