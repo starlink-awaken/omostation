@@ -74,6 +74,11 @@ def main(argv: list[str] | None = None) -> int:
 
         return obs_main(args)
 
+    if args and args[0] == "event":
+        from omo.omo_event import main as event_main
+
+        return event_main(args[1:])
+
     from omo.omo_worker import main as worker_main
 
     return worker_main(args)
