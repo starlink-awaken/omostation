@@ -1,0 +1,96 @@
+# KEI Extension Registry — eCOS 扩展注册表 v1.0
+
+# KEI Extension Registry — eCOS 扩展注册表 v1.0
+#
+# All external capabilities registered via KEI are automatically discovered
+# and used by L1 Runtime Matrix.
+# K1: 注册即存在 | K2: 发现即可用 | K3: 代理即隔离
+
+version: 1
+updated: "2026-06-05"
+
+extensions:
+  # ── Tri-Plane 注册为扩展 ──────────────────────────────────────────
+  - id: "ecos.plane.governance"
+    name: "OMO Governance Plane"
+    version: "1.0.0"
+    type: "kernel-plane"
+    description: "宪法执行、债务追踪、阶段管理、任务调度"
+    entrypoint: "mcp:omo"  # references mcp_servers.omo in Hermes config
+    status: "registered"
+    registered_at: "2026-06-05"
+    kei_rules:
+      governance_scope: "workspace"
+      audit_required: true
+      constraint: "constitution v3.0"
+    permissions:
+      network: ["localhost"]
+      filesystem: ["/Users/xiamingxing/Workspace/projects/omo"]
+      shell_exec: true
+
+  - id: "ecos.plane.engine"
+    name: "kairon Engine Plane"
+    version: "1.0.0"
+    type: "kernel-plane"
+    description: "知识索引、服务路由、LLM 推理、cron 编排"
+    entrypoint: "mcp:agora-unified"  # references mcp_servers.agora-unified
+    status: "registered"
+    registered_at: "2026-06-05"
+    kei_rules:
+      governance_scope: "workspace"
+      audit_required: false
+      constraint: "performance baseline"
+    permissions:
+      network: ["*"]
+      filesystem: ["/Users/xiamingxing/Workspace/projects/kairon"]
+      shell_exec: false
+
+  - id: "ecos.plane.memory"
+    name: "gbrain Memory Plane"
+    version: "1.0.0"
+    type: "kernel-plane"
+    description: "知识图谱、语义检索、事实追踪、热记忆注入"
+    entrypoint: "mcp:kos"  # references mcp_servers.kos
+    status: "registered"
+    registered_at: "2026-06-05"
+    kei_rules:
+      governance_scope: "workspace"
+      audit_required: true
+      constraint: "data privacy"
+    permissions:
+      network: ["localhost", "api.gbrain.ai"]
+      filesystem: ["/Users/xiamingxing/Workspace/projects/gbrain"]
+      shell_exec: false
+
+  # ── L0/L1 核心服务注册为扩展 ──────────────────────────────────────
+  - id: "ecos.service.cron"
+    name: "Cron Service"
+    version: "1.0.0"
+    type: "daemon"
+    description: "定时任务调度 — 37 个 cron job + launchd 保活"
+    entrypoint: "mcp:cron-service"
+    status: "registered"
+    registered_at: "2026-06-05"
+    kei_rules:
+      governance_scope: "daemon"
+      audit_required: false
+    permissions:
+      network: ["localhost"]
+      filesystem: ["/Users/xiamingxing"]
+      shell_exec: true
+
+  - id: "ecos.service.runtime"
+    name: "Runtime MCP Server"
+    version: "0.2.0"
+    type: "mcp-server"
+    description: "L1 Runtime Matrix + L3 Entry Bridge + Tri-Plane Bus — 9 tools"
+    entrypoint: "mcp:runtime"
+    status: "registered"
+    registered_at: "2026-06-05"
+    kei_rules:
+      governance_scope: "system"
+      audit_required: true
+    permissions:
+      network: ["localhost"]
+      filesystem: ["/Users/xiamingxing/runtime", "/Users/xiamingxing/Workspace"]
+      shell_exec: true

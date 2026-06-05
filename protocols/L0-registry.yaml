@@ -86,6 +86,30 @@ protocols:
       - "Agora MCP (agora-unified)"
       - "gbrain MCP (kos*)"
 
+  # ── Governance & Extension ───────────────────────────────────────
+  - name: "Governance Constraint"
+    version: "1"
+    category: "governance"
+    status: "active"
+    description: "L0 协议级约束 — 宪法约束编译进协议映射矩阵"
+    spec_url: "~/Workspace/projects/runtime/protocols/governance-constraints.yaml"
+    transport: ["mcp", "yaml"]
+    implementations:
+      - "Runtime MCP (runtime_stats, kei_*)"
+      - "OMO Governance Plane (omo_metacognition)"
+
+  - name: "KEI Extension"
+    version: "1.0.0"
+    category: "governance"
+    status: "active"
+    description: "Kernel Extension Interface — 扩展注册、沙箱隔离、权限管理"
+    spec_url: "~/Workspace/projects/runtime/protocols/kei-extensions.yaml"
+    transport: ["mcp", "yaml"]
+    implementations:
+      - "Runtime MCP (kei_list, kei_inspect)"
+      - "kei_sandbox.py (audit hook)"
+      - "kei.py (manifest loader)"
+
   # ── State Sync ─────────────────────────────────────────────────────
   - name: "KOS State"
     version: "1"

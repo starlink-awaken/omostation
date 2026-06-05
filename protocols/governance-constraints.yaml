@@ -1,0 +1,49 @@
+# L0 协议约束注册表 — 用于宪法级约束验证
+
+version: 1
+updated: "2026-06-05"
+
+# 每个协议的操作都有对应的约束类型
+# 违反约束的操作被阻止
+
+constraints:
+  # ── L0 协议约束 ─────────────────────────────────────────────────
+  - protocol: "MCP"
+    operations:
+      - name: "tools/call"
+        constraint: "工具调用必须受限 — 禁止直接系统调用"
+        severity: "mandatory"
+      - name: "tools/list"
+        constraint: "工具列举不限制"
+        severity: "none"
+
+  - protocol: "Tri-Plane Bus"
+    operations:
+      - name: "governance_plane"
+        constraint: "治理操作必须通过 OMO 审计链"
+        severity: "mandatory"
+      - name: "engine_plane"
+        constraint: "引擎操作不能修改底层状态"
+        severity: "advisory"
+      - name: "memory_plane"
+        constraint: "记忆查询必须标注来源（remote/local）"
+        severity: "mandatory"
+
+  - protocol: "TaskObject"
+    operations:
+      - name: "dispatch"
+        constraint: "任务必须携带 context.source 标识来源"
+        severity: "mandatory"
+      - name: "callback"
+        constraint: "回调必须指定 channel 和 format"
+        severity: "advisory"
+
+  # ── KEI 扩展约束 ────────────────────────────────────────────────
+  - protocol: "KEI Extension"
+    operations:
+      - name: "registration"
+        constraint: "扩展必须声明权限范围（K1 规则）"
+        severity: "mandatory"
+      - name: "permission_escalation"
+        constraint: "扩展不能自行提升权限"
+        severity: "blocking"
