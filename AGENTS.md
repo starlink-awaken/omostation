@@ -70,7 +70,6 @@ cd projects/gbrain && bun run ci:local
 
 ### Key Dependencies
 
-- **gbrain** depends on **agentmesh** (SDK)
 - **kairon/agora** provides service discovery / routing
 - **kairon/sharedbrain-standalone** replaces legacy SharedBrain code
 
@@ -124,9 +123,9 @@ GitHub Actions workflows in `.github/workflows/` (11 workflows):
 
 2. **Python 3.13+** — kairon targets Python 3.13+ (`ruff` config shows `target-version = "py313"`)
 
-3. **agentmesh needs bun** — Uses Bun as runtime, not Node/npm:
+3. **gbrain needs bun** — Uses Bun as runtime, not Node/npm:
    ```bash
-   cd projects/agentmesh && bun install
+   cd projects/gbrain && bun install
    ```
 
 4. **Database paths are gitignored** — `data/db/` and each project's local DB files are `.gitignore`d
@@ -136,6 +135,10 @@ GitHub Actions workflows in `.github/workflows/` (11 workflows):
 6. **No root-level test command** — Tests run per-project (via project Makefiles)
 
 7. **SharedBrain 数据层在 `data/sharedbrain/`** — 旧 `projects/SharedBrain/` 已归档至 `_archived/SharedBrain-original/`
+
+8. **!!! 关键修改必须立即 git commit !!!** — kairon 项目历史中有 `git reset` 操作会静默回滚未提交的修改。AI Agent 每次修改文件后必须立即 commit，否则修改可能丢失。参见 FLOW-OMC-REVERT。
+9. **Pre-commit 已改为仅检查已暂存文件** — pre-commit hook("~/.hermes/scripts/git-hooks/pre-commit")从 `ruff check packages/` 改为 `git diff --cached --name-only | ruff check`，只检查本次提交的文件。
+10. **快速差异测试: `make test-diff`** — 只测试自 HEAD 以来修改过的包，取代全量 `make test-fast`。修改单个包时用此命令。
 
 ## Style Conventions
 
@@ -147,7 +150,7 @@ GitHub Actions workflows in `.github/workflows/` (11 workflows):
 - **Target**: Python 3.13+
 - **Import sorting**: isort enabled via ruff
 
-### TypeScript (gbrain, agentmesh)
+### TypeScript (gbrain)
 
 - **Formatter/Auto-fix**: bun fmt / bun run lint:fix
 - **Testing**: bun test + bun run ci:local
