@@ -115,16 +115,52 @@ Agent 启动:
 
 **原则**: L4 存"要做什么"和"为什么做"。L3 提供"怎么做"。中间缺的那个"谁决定做"——是 Agent（人或 AI）。Agent = 执行器，L4 = 知识面，L3 = 工具面。
 
-## X1-X4 横向切面
+## X1-X4 横向切面 (保障体系)
 
-| 切面 | 核心模块 | 实现位置 | 状态 |
-|------|---------|---------|------|
-| **X1 审计链** | KEI 沙箱审计闭环 | `projects/runtime/kei_sandbox.py` | 🟡 基础框架, 告警回路待建 |
-| **X2 抗熵** | 服务保鲜 + autoheal | `projects/runtime/scheduler.py` | 🟡 基础框架 |
-| **X3 价值栈** | LLM 成本追踪 | llm-gateway `record_llm_cost()` | 🟡 记录点存在, 无汇总 |
-| **X4 治理一致性** | 规则合规检查 (CLI/端口/依赖/文档/CI/Phase) | `scripts/check-interfaces.py` + cockpit MCP | 🟢 7 项规则中 5 项通过 |
+> **X 轴 = 贯穿所有层的保障机制。每条规则: 文档定义 + 代码实现 + CI 验证 + 运行时阻断。**
 
-**X4 定位**: X1-X3 的"元规则"——检查治理规则本身是否被遵守。不增加新规则，只检查规则的执行情况。
+### X1 审计链 (操作安全)
+
+| 机制 | 实现位置 | 阻断方式 |
+|------|---------|---------|
+| KEI 沙箱拦截 | `runtime/kei_sandbox.py` | sys.addaudithook |
+| Agora MCP 认证 | `agora/server/mcp.py` | API Key/JWT |
+| 端口安全验证 | `agora/registry.py:register()` | ValueError 阻断 |
+
+### X2 抗熵 (数据保鲜)
+
+| 机制 | 实现位置 | 阻断方式 |
+|------|---------|---------|
+| 服务健康监控 | `runtime/scheduler.py` + `autoheal.sh` | 15s 心跳 + 自愈 |
+| 文档保鲜 | `scripts/check-interfaces.py --doc-only` | CI cron >90d RED |
+| 债务保鲜 | `omo_debt.py` | 7d review 周期 |
+
+### X3 价值栈 (投入产出)
+
+| 机制 | 实现位置 | 阻断方式 |
+|------|---------|---------|
+| LLM 成本追踪 | `omo_cost.py` → `llm_cost.jsonl` | 10 模型定价 |
+| CARDS 优先级 | P0/P1/P2/P3 分级 | 治理驱动 |
+
+### X4 一致性 (规则遵守)
+
+| 机制 | 实现位置 | 阻断方式 |
+|------|---------|---------|
+| CLI 入口验证 | `check-interfaces.py` | CI push → RED |
+| 端口冲突检测 | `check-interfaces.py` + `agora/registry.py` | CI + runtime 双重 |
+| 跨层 import 检查 | `check-cross-deps.py` | CI push → RED |
+| CI 覆盖 | `.github/workflows/` 9/9 | 创建时检查 |
+| Agent 启动链 | `CLAUDE.md §0` + `workspace_context` | 对话即读 |
+| Phase 门禁 | `current.yaml` + X4 score | score≥90 |
+| 接口注册表 | `INTERFACE.yaml` ×7 | 声明式 + CI |
+| 端口注册表 | `protocols/port-registry.yaml` | 先注册后使用 |
+
+### 加入原则
+
+```
+新机制 → X1/X2/X3/X4 归类 → 注册到 L0 协议 → CI 脚本 → 更新本文档 → Memory
+```
+参考: `.omo/_knowledge/management/x-axis-consolidation-v1.md`
 
 ## 已归档包
 
