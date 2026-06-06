@@ -17,18 +17,23 @@ import httpx
 
 from omo.omo_daemon import run_once, _write_pid_file, _clear_pid_file, _setup_logging
 from omo.omo_paths import OMO_ROOT
+from omo.omo_self_healing import get_healing_engine
 
 DAEMON_PID_FILE = OMO_ROOT / ".omo" / "_delivery" / "sse_daemon.pid"
 DAEMON_LOG_FILE = OMO_ROOT / ".omo" / "_delivery" / "sse_daemon.log"
 
 AGORA_SSE_URL = os.environ.get("AGORA_SSE_URL", "http://127.0.0.1:8080/v1/events")
+ENABLE_SELF_HEALING = os.environ.get("OMO_SELF_HEALING", "1") == "1"
 
 
 async def listen_to_sse(stop_event: asyncio.Event, logger: logging.Logger):
-    """Connect to Agora SSE and trigger omo logic on events."""
+    """Connect to Agora SSE, run OMO sync + self-healing on events."""
     logger.info(f"Connecting to Agora SSE bus at {AGORA_SSE_URL}...")
-    
-    timeout = httpx.Timeout(None)  # no timeout for long-lived connection
+    healing = get_healing_engine() if ENABLE_SELF_HEALING else None
+    if healing:
+        logger.info(f"Self-healing engine enabled: {len(healing._rules)} rules configured")
+
+    timeout = httpx.Timeout(None)
     async with httpx.AsyncClient(timeout=timeout) as client:
         while not stop_event.is_set():
             try:
@@ -39,36 +44,44 @@ async def listen_to_sse(stop_event: asyncio.Event, logger: logging.Logger):
                         continue
 
                     logger.info("SSE Connection established.")
-                    
+
                     async for line in response.aiter_lines():
                         if stop_event.is_set():
                             break
-                        
+
                         line = line.strip()
                         if not line:
                             continue
-                            
+
                         if line.startswith("data: "):
                             data_str = line[6:]
                             try:
                                 event = json.loads(data_str)
                                 ev_type = event.get("type", "UNKNOWN")
                                 logger.info(f"Received event: {ev_type}")
-                                
-                                # Run OMO Sync in thread pool to avoid blocking SSE read
+
+                                # Run OMO Sync
                                 loop = asyncio.get_running_loop()
                                 tick_result = await loop.run_in_executor(None, run_once)
-                                
+
                                 if tick_result.error:
                                     logger.error(f"tick_error: {tick_result.error}")
                                 else:
                                     logger.info(f"tick_done score={tick_result.audit_score} diffs={tick_result.sync_diff_count}")
-                                    
+
+                                # Run self-healing engine
+                                if healing:
+                                    healing_actions = await healing.on_event(event)
+                                    if healing_actions:
+                                        logger.warning(
+                                            "self_healing_triggered",
+                                            actions=json.dumps(healing_actions, default=str),
+                                        )
+
                             except json.JSONDecodeError:
                                 logger.warning(f"Failed to parse SSE data: {data_str}")
-                                
+
                         elif line == ": ping":
-                            # Keep-alive
                             pass
                             
             except httpx.RequestError as e:
