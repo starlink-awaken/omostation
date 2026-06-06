@@ -1,11 +1,12 @@
-current_phase: 28
+current_phase: 30
 # 🔗 MetaOS 知识体系 → Phase 6（统一追踪），见 ~/Documents/驾驶舱/DASHBOARD.md
-# 2026-06-05: 全量架构审计落地。P0x6 清零, P1-Agora绕道/运行时桥接/架构标注修复, L0协议+TaskObject修复
+# Phase 30: 架构迁移 — 5→9 项目
+# 全路径: .omo/_knowledge/management/architecture-migration-playbook.md
 phase1_status: closed
 phase_status: active
-current_wave: W4
-next_milestone: 'Phase 29 — 工具体系韧性 · 治理首次运行 (2026-06-06)'
-health_score: 100.0
+current_wave: "W1"
+next_milestone: "Phase 30 M1 — 低风险搬家 (metaos/ecos/wksp → 独立项目)"
+health_score: 99.0
 
 # Phase 规划 (知识文档)
 # Phase 29: .omo/_knowledge/management/plan-phase29-toolchain.md
@@ -23,8 +24,8 @@ phase3_capability_slice_status: completed
 phase3_capability_slice_completed_at: '2026-05-30T22:35:00Z'
 phase3_acceptance_status: completed
 phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
-completed_tasks: 25
-total_tasks: 26
+completed_tasks: 28
+total_tasks: 28
 active_tasks: 0
 next_active_tasks:
 - (No active tasks)
@@ -51,7 +52,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-06T04:00:00Z'
+updated_at: "2026-06-05T23:42:54Z"
 # Phase 29 completed: omo goal/state/knowledge/delivery/standard/i0 CLI
 # Architecture doc: .omo/_knowledge/management/omo-extension-architecture-v1.md
 divergence_flags:
@@ -100,7 +101,7 @@ phase24_completed_at: '2026-06-04T11:27:00Z'
 phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
-health_score_raw: 98.5
+health_score_raw: 99.0
 debt_weight: 0.0
 debt_weight_items:
   SB_PROJECTS_YAML:
@@ -241,10 +242,10 @@ debt_metrics:
   time_entropy: 0.0
   backlog_pressure: 0.0
   coupling_load: 0.0
-debt_watchlist_count: 0
-debt_gate_count: 0
+debt_watchlist_count: 1
+debt_gate_count: 1
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 16
+planned_tasks: 28
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
 - Current planned queue from .omo/tasks/planned/ (16 tasks)
@@ -265,7 +266,7 @@ next_planned_tasks:
 - IMPORTED-b7fb35
 - IMPORTED-dffdd8
 phase27_status: completed
-phase28_status: active
+phase28_status: "completed"
 phase28_completed_at: '2026-06-05T22:10:00Z'
 governance:
   code_freeze: true

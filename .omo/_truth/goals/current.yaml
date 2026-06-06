@@ -1,54 +1,80 @@
-# Phase 27 active goals
-
-phase: 27
-status: active
 current_wave: W1
-start_date: "2026-06-04"
 entry_gate: phase26_completed
-theme: "OMO 蜂群网络纪元 (Swarm Network Era)"
-
-objectives:
-  - id: W1
-    desc: "Wave 1 — Agora MCP Safe Mesh (I0 隔离固化)"
-  - id: W2
-    desc: "Wave 2 — LLM Gateway (算力调度大一统)"
-  - id: W3
-    desc: "Wave 3 — gbrain Shared Context (L4 图谱记忆共享)"
-  - id: W4
-    desc: "Wave 4 — OMO MCP Server (硬件级剥夺与防越权)"
-
 goals:
-  - id: G27.1
-    desc: "Wave 1 — Agora MCP 隔离"
-    kpi: "所有 L1 知识工具包必须通过 agora 网关代理，切断跨包函数直连调用"
-    progress: 0.0
-    status: active
-    tasks: []
-
-  - id: G27.2
-    desc: "Wave 2 — 算力调度统一"
-    kpi: "Agent 移除本地 API Key，全系接入 llm-gateway，实现排队与限流"
-    progress: 0.0
-    status: pending
-    tasks: []
-
-  - id: G27.3
-    desc: "Wave 3 — 图谱记忆共享"
-    kpi: "OMO 运行日志自动入库 gbrain Postgres，建立 Agent 跨任务记忆上下文"
-    progress: 0.0
-    status: pending
-    tasks: []
-
-  - id: G27.4
-    desc: "Wave 4 — OMO MCP 化"
-    kpi: "建立 omo-mcp-server，禁止终端 Agent 绕过 OMO 工具链直接读写 .omo 核心库"
-    progress: 0.0
-    status: pending
-    tasks: []
-
+- desc: Wave 1 — Agora MCP 隔离
+  id: G27.1
+  kpi: 所有 L1 知识工具包必须通过 agora 网关代理，切断跨包函数直连调用
+  progress: 100.0
+  status: done
+  tasks: []
+- desc: Wave 2 — 算力调度统一
+  id: G27.2
+  kpi: Agent 移除本地 API Key，全系接入 llm-gateway，实现排队与限流
+  progress: 100.0
+  status: done
+  tasks: []
+- desc: Wave 3 — 图谱记忆共享
+  id: G27.3
+  kpi: OMO 运行日志自动入库 gbrain Postgres，建立 Agent 跨任务记忆上下文
+  progress: 100.0
+  status: done
+  tasks: []
+- desc: Wave 4 — OMO MCP 化
+  id: G27.4
+  kpi: 建立 omo-mcp-server，禁止终端 Agent 绕过 OMO 工具链直接读写 .omo 核心库
+  progress: 100.0
+  status: done
+  tasks: []
+- id: P30.1
+  desc: M1 低风险搬家 — metaos → projects/metaos (7.8K, 自包含)
+  progress: 0.0
+  status: pending
+  tasks: []
+- id: P30.2
+  desc: M1 低风险搬家 — ecos → projects/ecos (6.3K, 自包含)
+  progress: 0.0
+  status: pending
+  tasks: []
+- id: P30.3
+  desc: M1 低风险搬家 — wksp → cockpit (15K, 依赖 agora)
+  progress: 0.0
+  status: pending
+  tasks: []
+- id: P30.4
+  desc: M2 中风险拆分 — cron-service → runtime (1.8K, 自包含)
+  progress: 0.0
+  status: pending
+  tasks: []
+- id: P30.5
+  desc: M2 中风险拆分 — agent-runtime 拆分为 runtime+ext/cockpit (20K)
+  progress: 0.0
+  status: pending
+  tasks: []
+- id: P30.6
+  desc: M3 高风险核心 — agora 从 kairon 独立 (38K, 改5包接口)
+  progress: 0.0
+  status: pending
+  tasks: []
+- id: P30.7
+  desc: M4 收尾 — kairon-governance → omo 合并 (2.5K)
+  progress: 0.0
+  status: pending
+  tasks: []
 health_targets:
-  overall: 99
   mcp_isolation_score: 100
-
+  overall: 99
+objectives:
+- desc: Wave 1 — Agora MCP Safe Mesh (I0 隔离固化)
+  id: W1
+- desc: Wave 2 — LLM Gateway (算力调度大一统)
+  id: W2
+- desc: Wave 3 — gbrain Shared Context (L4 图谱记忆共享)
+  id: W3
+- desc: Wave 4 — OMO MCP Server (硬件级剥夺与防越权)
+  id: W4
+phase: 27
 source_plan_refs:
-  - .omo/plans/phase27-swarm-network.md
+- .omo/plans/phase27-swarm-network.md
+start_date: '2026-06-04'
+status: active
+theme: OMO 蜂群网络纪元 (Swarm Network Era)
