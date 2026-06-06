@@ -221,6 +221,7 @@ GitHub Actions workflows in `.github/workflows/` (**20 workflows**, 9/9 项目�
 3. **BOS URI ABSTRACTION**: State mutations and reads must use `bos://` URIs instead of direct file I/O where applicable.
 4. **INTROSPECTION**: If you don't know what tools or resources are available, invoke `read_resource("bos://agora/registry")` to dump the current Mesh state.
 5. **MUTATION**: To change the state of an object managed by the mesh, use the `mutate_resource(uri, payload, action)` tool instead of ad-hoc tools.
+6. **COGNITIVE FRAMEWORKS**: MetaOS dynamically loads cognitive frameworks (like BDSK or Six Hats) from the L0 MOF model (`ecos/src/ecos/ssot/mof/m1/cognitive_framework/`). When executing complex planning, adhere strictly to the injected framework personas.
 
 ## Reading Before Working
 
