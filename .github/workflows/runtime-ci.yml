@@ -1,0 +1,22 @@
+name: Runtime CI
+on:
+  push:
+    paths:
+      - 'projects/runtime/**'
+  pull_request:
+    paths:
+      - 'projects/runtime/**'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+      - name: Install dependencies
+        run: cd projects/runtime && uv sync
+      - name: Run tests
+        run: cd projects/runtime && uv run pytest tests/ -q --tb=short
