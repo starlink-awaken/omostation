@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Activity, Server, Cpu, Database, CheckCircle, AlertTriangle, XCircle, Search, Settings, Terminal } from 'lucide-react';
 import SandboxTerminal from './SandboxTerminal';
 import MemoryInjector from './MemoryInjector';
+import EnginesView from './EnginesView';
+import SettingsView from './SettingsView';
 import './Dashboard.css';
 
 interface Service {
@@ -205,19 +207,11 @@ export default function Dashboard() {
           )}
 
           {activeTab === 'Engines' && (
-            <div className="glass-panel animate-fade-in" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-              <Cpu size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-              <h2>Engines Configuration</h2>
-              <p>Coming Soon</p>
-            </div>
+            <EnginesView />
           )}
 
           {activeTab === 'Settings' && (
-            <div className="glass-panel animate-fade-in" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-              <Settings size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-              <h2>System Settings</h2>
-              <p>Coming Soon</p>
-            </div>
+            <SettingsView />
           )}
         </div>
       </main>
