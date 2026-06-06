@@ -282,6 +282,36 @@ class SSBClient:
         """
         _validate_event(event)
 
+        # ── Phase 34 Wave 2: Audit Flood Debounce (Rate Limiting) ──
+        if not hasattr(self, "_rate_limit_cache"):
+            self._rate_limit_cache = {}
+            
+        import time
+        import hashlib
+        import uuid
+        
+        # We define uniqueness by type, agent, and the exact summary text
+        ev_type = event.get("event", {}).get("type", "UNKNOWN")
+        source_agent = event.get("source", {}).get("agent", "UNKNOWN")
+        payload_summary = event.get("payload", {}).get("summary", "")
+        
+        sig_str = f"{ev_type}:{source_agent}:{payload_summary}"
+        sig = hashlib.md5(sig_str.encode('utf-8')).hexdigest()
+        
+        now = time.time()
+        history = self._rate_limit_cache.setdefault(sig, [])
+        # Sliding window: keep events from the last 60 seconds
+        history = [ts for ts in history if now - ts < 60]
+        self._rate_limit_cache[sig] = history
+        
+        # Threshold: max 10 identical events per minute
+        if len(history) >= 10:
+            # We silently drop the DB write, but return a valid UUID structure to not break clients
+            return f"debounced-{uuid.uuid4()}"
+            
+        self._rate_limit_cache[sig].append(now)
+        # ──────────────────────────────────────────────────────────
+
         # Enrich with metadata
         event_id = event.get("event_id", _new_id())
         event["event_id"] = event_id
