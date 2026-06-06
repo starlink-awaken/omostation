@@ -5,6 +5,18 @@
 
 ---
 
+## §0 启动强制指令 (MANDATORY · 不可跳过 · 每次对话第一步)
+
+**Agent 首次响应前必须执行以下任一步骤，获取当前上下文：**
+
+1. **通过 MCP**: 连接 `cockpit` MCP server，调用 `workspace_context` 工具
+   - 返回: 当前 Phase、活跃 P0 卡片、治理约束、下一步引导
+2. **备选 (无 MCP 时)**: 读取 `.omo/_truth/goals/current.yaml` 获取当前阶段和目标
+
+**禁止**: 未获取上下文直接修改代码。禁止跳过 L4 约束检查直接操作 `.omo` 目录。
+
+---
+
 ## 项目身份
 
 这是 **omostation** 根仓库 —— 一个多项目融合工作区，整合了知识工程、数字生命 OS、Agent SDK 与知识脑四大子系统。**Phase 27 进行中**（OMO 蜂群网络纪元 — Swarm Network Era）。
