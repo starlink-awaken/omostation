@@ -116,7 +116,7 @@ X1 审计 ── KEI sandbox (runtime) | X2 抗熵 ── scheduler autoheal | X
 | 项目 | CLI 入口 | MCP 工具 | HTTP 端口 | 依赖 |
 |------|---------|---------|-----------|------|
 | agora | `agora` | 42+ tools | :7422/:7431/:8080 | fastmcp, httpx, aiohttp |
-| cockpit | `cockpit`, `workspace` | 🔴 | stdlib http | runtime |
+| cockpit | `cockpit`, `workspace` | 15 | stdlib http | runtime |
 | runtime | `runtime`, `ecos-matrix-scheduler` | 30 | FastAPI | fastmcp, apscheduler |
 | omo | `omo`, `cards`, `omo-debt` | 10 | — | httpx, pyyaml |
 | metaos | `metaos` | 11 | — | structlog |
@@ -135,45 +135,28 @@ X1 审计 ── KEI sandbox (runtime) | X2 抗熵 ── scheduler autoheal | X
 
 ### Integration Tests
 
-Located at `tests/integration/` in root:
+Located at `tests/integration/` in root (5 active scripts, 简化为当前可运行集合):
 
 ```bash
 # Run all integration tests
 bash tests/integration/run-all.sh
 
-# Individual test scripts:
-bash tests/integration/test-01-identity.sh
+# Active test scripts:
 bash tests/integration/test-02-pipeline.sh
-bash tests/integration/test-03-constraints.sh
-bash tests/integration/test-04-phase-lock.sh
 bash tests/integration/test-05-pricing.sh
-bash tests/integration/test-06-trace.sh
-bash tests/integration/test-07-collab-agentmesh.sh
-bash tests/integration/test-08-knowledge-pipeline.sh
-bash tests/integration/test-09-agora-degrade.sh
 bash tests/integration/test-10-runtime-check.sh
-bash tests/integration/test-11-i0-integration.sh
-
-# Python tests
-python3 tests/integration/test-e2e-phase1.py
-python3 tests/integration/test-fault-injection.py
-python3 tests/integration/test-user-journeys.py
-python3 tests/integration/test-perf-baseline.py
+python3 tests/integration/test_runtime_e2e.py
 ```
 
 ### CI Configuration
 
-GitHub Actions workflows in `.github/workflows/` (11 workflows):
-- `pytest.yml` — kairon Python 3.14 测试
-- `phase11-ci.yml` — kairon 全包基线测试 (Python 3.13 + uv)
-- `integration.yml` — 集成测试 (3 个 Python 版本矩阵)
-- `quality.yml` / `ruff-check.yml` — Lint 和格式化
-- `workspace.yml` — 全工作区 CI
-- `governance-check.yml` — 治理层验证
-- `constraint-validation.yml` — arcnode 约束验证
-- `config-check.yml` — Agora 配置校验
-- `sharedbrain-kairon-integration.yml` — 跨项目集成测试
-- `phase11-ci.yml` — Phase 11 基线 CI
+GitHub Actions workflows in `.github/workflows/` (**18 workflows**, 9/9 项目覆盖):
+
+**kairon (7)**: `pytest.yml`, `phase11-ci.yml`, `integration.yml`, `quality.yml`, `ruff-check.yml`, `config-check.yml`, `publish-pypi.yml`
+**omo (3)**: `governance-check.yml`, `omo-autopilot.yml`, `constraint-validation.yml`
+**runtime (1)**: `meta-model-check.yml`
+**独立项目 CI (5, 2026-06-06 新建)**: `cockpit-ci.yml`, `agora-ci.yml`, `metaos-ci.yml`, `ecos-ci.yml`, `gbrain-ci.yml`
+**跨项目 (2)**: `sharedbrain-kairon-integration.yml`, `workspace.yml`
 
 ## Gotchas
 

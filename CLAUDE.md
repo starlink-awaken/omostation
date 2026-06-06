@@ -44,16 +44,22 @@ Worker/User → SharedBrain (轻量数据持久层)
 
 ---
 
-## 子项目清单
+## 子项目清单 (9 项目 · 5+3+1 架构)
 
-| 项目 | 位置 | 栈 | 规模 | 说明 |
-|------|------|-----|------|------|
-| **kairon** | `projects/kairon/` | Python (uv, ruff, pytest) | 30 包 | 知识工程与研究栈（已吸收 SharedBrain + agentmesh） |
-| **SharedBrain** | `projects/_archived/SharedBrain-original/` | Python | 已归档 | 源码已迁移至 kairon，根目录 SharedBrain/ 仅存数据持久层 |
-| **agentmesh** | `projects/_archived/` | TypeScript | 已归档 | 100% 迁移至 kairon（agent-hub/agent-runtime/agora/forge/llm-gateway） |
-| **gbrain** | `projects/gbrain/` | TypeScript (bun, Postgres) | 74+ 工具 | Postgres 知识脑 |
-| **hermes-console** | `projects/hermes-console/` | TypeScript (React) | 34 源文件 | Hermes 管理控制台 |
-| **_archived** | `projects/_archived/` | — | 24 项/6.3 GB | 已迁移旧项目备份 |
+| 项目 | 层 | 位置 | 栈 | 规模 | 状态 |
+|------|-----|------|-----|------|------|
+| **cockpit** | L3 | `projects/cockpit/` | Python (uv, pytest) | CLI 13 + MCP 15 | 🟢 486 tests |
+| **agora** | I0 | `projects/agora/` | Python (uv, pytest) | MCP 42 + HTTP 30+ | 🟢 1105 tests |
+| **kairon** | L2 | `projects/kairon/` | Python (uv, pytest) | 25 包 | 🟢 1810+ tests |
+| **gbrain** | L2 | `projects/gbrain/` | TypeScript (bun) | MCP 67, 163K TS | 🟢 |
+| **omo** | L2 | `projects/omo/` | Python (uv, pytest) | CLI 28 + MCP 10 | 🟢 221 tests |
+| **metaos** | L2 | `projects/metaos/` | Python (uv, pytest) | MCP 11 | 🟢 163 tests |
+| **runtime** | L1 | `projects/runtime/` | Python (uv, pytest) | MCP 30 + HTTP 5 | 🟢 171 tests |
+| **ecos** | L0 | `projects/ecos/` | Python (uv, pytest) | SSB + emergence | 🟢 122 tests |
+| **protocols** | L0 | `protocols/` | YAML | 16 protocols | 🟢 |
+| **SharedBrain** | — | `projects/_archived/` | Python | 已归档 | ⚪ |
+| **agentmesh** | — | `projects/_archived/` | TypeScript | 100% 迁移至 kairon | ⚪ |
+| **hermes-console** | — | `projects/hermes-console/` | TypeScript | 待集成至 cockpit | 🟡 |
 
 ---
 
