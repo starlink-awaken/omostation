@@ -56,7 +56,26 @@ def main(argv: list[str]) -> int:
                     if not args.dry_run:
                         f.unlink()
 
-    print("✅ 代谢清理完成。")
+    # 3. GC SQLite Databases (VACUUM to defragment)
+    import sqlite3
+    dbs_to_vacuum = [
+        omo_dir.parent / "projects" / "agora" / "src" / "agora.db",
+        omo_dir.parent / "projects" / "ecos" / "LADS" / "ssb" / "ecos.db",
+        omo_dir.parent / "data" / "cards" / "cards.db",
+        omo_dir.parent / "data" / "sharedbrain" / "data" / "db" / "core" / "event_store.db"
+    ]
+    
+    for db_path in dbs_to_vacuum:
+        if db_path.exists():
+            print(f"  [碎片整理] 压缩数据库空间 (VACUUM): {db_path.name}")
+            if not args.dry_run:
+                try:
+                    with sqlite3.connect(db_path) as conn:
+                        conn.execute("VACUUM")
+                except Exception as e:
+                    print(f"    ❌ VACUUM 失败: {e}")
+
+    print("✅ 代谢清理与碎片整理完成。")
     return 0
 
 
