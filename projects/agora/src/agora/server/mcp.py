@@ -282,6 +282,9 @@ def _ok(data: dict) -> dict:
     """返回标准成功响应。data 中应包含 format_version 字段。"""
     return {"status": "ok", **data}
 
+# NOTE: _ok/_error 定义当前与 agora.response_helpers 略有不同（此处内建 format_version）。
+# 待 God Module 拆分完成后可统一使用 response_helpers 版本。
+
 
 def _identity_from_auth_token() -> dict | None:
     """Best-effort identity derivation from the current FastMCP access token."""
