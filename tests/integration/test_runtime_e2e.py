@@ -4,10 +4,7 @@ Checks all eCOS layers from L0 to L4 + I0 fabric.
 Exits 0 if all checks pass, 1 if any fail.
 """
 from __future__ import annotations
-import json
-import os
 import socket
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path

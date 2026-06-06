@@ -1,0 +1,15 @@
+id: LESSON-OMO-SSOT-----------
+type: Lesson
+subtype: OMOLesson
+name: SSOT 元模型驱动设计的价值
+description: SSOT 元模型驱动设计的价值
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: SSOT 元模型驱动设计的价值
+  lesson: SSOT 元模型驱动设计的价值
+  source: .omo/_knowledge/reference/LESSONS.md
+  severity: medium

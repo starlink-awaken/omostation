@@ -1,0 +1,15 @@
+id: LESSON-OMO-KOS---------
+type: Lesson
+subtype: OMOLesson
+name: KOS 插件架构非常脆弱
+description: KOS 插件架构非常脆弱
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: KOS 插件架构非常脆弱
+  lesson: KOS 插件架构非常脆弱
+  source: .omo/_knowledge/reference/LESSONS.md
+  severity: medium

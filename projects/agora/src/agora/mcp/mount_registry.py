@@ -1,6 +1,5 @@
-from typing import Dict, Optional, Any, List
+from typing import Dict, Optional, Any
 import logging
-import asyncio
 
 _log = logging.getLogger(__name__)
 

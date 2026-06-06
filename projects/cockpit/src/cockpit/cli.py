@@ -258,6 +258,10 @@ def main() -> int:
 
     sub.add_parser("version", help="版本信息")
 
+    # Gap #7: MetaOS 工作流编排入口
+    wf_p = sub.add_parser("workflow", help="🧠 MetaOS 工作流编排（动态规划 / 执行 / 历史）")
+    wf_p.add_argument("workflow_args", nargs="*", help="workflow 子命令和参数")
+
     code_p = sub.add_parser("code", help="代码库分析与审查 (基于 codeanalyze)")
     code_sub = code_p.add_subparsers(dest="code_command", parser_class=WorkspaceParser)
     
@@ -426,6 +430,10 @@ def main() -> int:
         console.print(f"[bold cyan]cockpit[/] v[bold]{__version__}[/]")
         console.print("[dim]L3 统一入口 · 5+3+1 架构[/]")
         return 0
+
+    if args.command == "workflow":
+        from cockpit.commands.workflow import handle_workflow
+        return handle_workflow(getattr(args, "workflow_args", []))
 
     console.print(
         Panel.fit(

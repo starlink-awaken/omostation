@@ -1,0 +1,19 @@
+# M1 Node: ARTIFACT-SCRIPT-ecos-event-watcher
+# Type: Artifact
+# Generated: 2026-06-06T13:08:34.001080+00:00
+
+id: ARTIFACT-SCRIPT-ecos-event-watcher
+type: Artifact
+subtype: Script
+name: ecos-event-watcher
+description: 文件变更时触发保鲜检查
+status: active
+domain: meta
+created: '2026-06-06T16:29:01.581462'
+version: 1.0.0
+properties:
+  path: 驾驶舱/scripts/ecos-event-watcher.py
+  format: python
+  size: 7061
+  mtime: '2026-06-06T16:28:59.142967'
+layer: L4

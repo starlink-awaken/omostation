@@ -1,0 +1,19 @@
+# M1 Node: PROTOCOL-A2A
+# Type: Protocol
+# Generated: 2026-06-06T13:08:34.004456+00:00
+
+id: PROTOCOL-A2A
+type: Protocol
+name: A2A
+description: Agent-to-Agent 任务协议
+status: active
+domain: meta
+created: '2026-01-01'
+version: '1.0'
+properties:
+  version_spec: '1.0'
+  introduced: '2026-01-01'
+  half_life: 180
+  registered: true
+  value_tier: 2
+layer: L0

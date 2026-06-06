@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-CARD-TASK-2026-06-06-002
+# Type: Entity
+# Generated: 2026-06-06T13:08:34.008320+00:00
+
+id: ENTITY-CARD-TASK-2026-06-06-002
+type: Entity
+subtype: Card
+name: 'Phase 8: MADF 8视图企业架构 → Wave 1-2完成'
+description: 架构视图体系(SSOT)·元模型M3·V1-V8全部创建·企业架构对齐TOGAF+Zachman+4+1。DASHBOARD+本体注册表已更新。
+status: active
+domain: meta
+created: '2026-06-05T23:50:52Z'
+version: 1.0.0
+properties:
+  card_type: task
+  card_status: planned
+  priority: P1
+  entity_type: concept
+layer: L4

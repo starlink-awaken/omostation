@@ -1,1 +1,1 @@
-from ecos.ecos_common import *  # noqa: F403
+from ecos.common.ecos_common import *  # noqa: F403

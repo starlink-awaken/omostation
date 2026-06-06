@@ -1,0 +1,18 @@
+# M1 Node: ARTIFACT-L4-check-vault-audit
+# Type: Artifact
+# Modeled: 2026-06-06T13:31:04
+
+id: ARTIFACT-L4-check-vault-audit
+type: Artifact
+subtype: Script
+name: check-vault-audit
+description: 'L4 脚本: check-vault-audit'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: X2
+properties:
+  path: 驾驶舱/scripts/check-vault-audit.py
+  format: python
+  size: 8367

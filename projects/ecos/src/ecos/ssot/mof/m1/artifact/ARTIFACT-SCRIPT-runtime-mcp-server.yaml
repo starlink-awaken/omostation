@@ -1,0 +1,19 @@
+# M1 Node: ARTIFACT-SCRIPT-runtime-mcp-server
+# Type: Artifact
+# Generated: 2026-06-06T13:08:34.002976+00:00
+
+id: ARTIFACT-SCRIPT-runtime-mcp-server
+type: Artifact
+subtype: Script
+name: runtime-mcp-server
+description: 'runtime_health: 全系统健康'
+status: active
+domain: meta
+created: '2026-06-06T16:18:20.298328'
+version: 1.0.0
+properties:
+  path: 驾驶舱/scripts/runtime-mcp-server.py
+  format: python
+  size: 9779
+  mtime: '2026-06-06T16:18:18.168855'
+layer: L3

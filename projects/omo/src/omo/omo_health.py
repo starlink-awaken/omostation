@@ -161,7 +161,21 @@ async def _probe_one(
     *,
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
 ) -> HealthCheckResult:
-    """单服务探活 (GET). 4xx 视为可达."""
+    """单服务探活 (GET). 4xx 视为可达.
+
+    P32-W0-AGORA-FIX: stdio 协议 (endpoint 以 _STDIO_URL_SCHEME 开头) 不做 HTTP 探活,
+    直接返回 is_healthy=True 并以 error 字段标注 "stdio:no-http-probe" 作为协议标识.
+    """
+    # stdio MCP 服务: 跳过 HTTP, 直接标"协议存活" (mcp_proxy 会按需 spawn)
+    if endpoint.startswith(_STDIO_URL_SCHEME):
+        return HealthCheckResult(
+            service=service,
+            endpoint=endpoint,
+            is_healthy=True,
+            status_code=None,
+            response_ms=0.0,
+            error="stdio:no-http-probe",
+        )
     t0 = time.time()
     try:
         resp = await client.get(endpoint, timeout=timeout)

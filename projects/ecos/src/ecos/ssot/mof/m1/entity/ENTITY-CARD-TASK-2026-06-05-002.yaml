@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-CARD-TASK-2026-06-05-002
+# Type: Entity
+# Generated: 2026-06-06T13:08:34.007338+00:00
+
+id: ENTITY-CARD-TASK-2026-06-05-002
+type: Entity
+subtype: Card
+name: 充电桩前置准备 — 物业证明 + 理想勘测 + 续临牌
+description: 物业书面同意已拿到。临牌已续。下一步：理想APP约勘测→国网装表→公牛装桩。
+status: active
+domain: family
+created: '2026-06-05'
+version: 1.0.0
+properties:
+  card_type: task
+  card_status: active
+  priority: P1
+  entity_type: concept
+layer: L4

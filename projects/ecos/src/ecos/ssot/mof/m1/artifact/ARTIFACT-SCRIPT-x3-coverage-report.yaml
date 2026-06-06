@@ -1,0 +1,19 @@
+# M1 Node: ARTIFACT-SCRIPT-x3-coverage-report
+# Type: Artifact
+# Generated: 2026-06-06T13:08:34.003722+00:00
+
+id: ARTIFACT-SCRIPT-x3-coverage-report
+type: Artifact
+subtype: Script
+name: x3-coverage-report
+description: x3-coverage-report.py
+status: active
+domain: meta
+created: '2026-06-06T14:23:44.977333'
+version: 1.0.0
+properties:
+  path: 驾驶舱/scripts/x3-coverage-report.py
+  format: python
+  size: 6806
+  mtime: '2026-06-06T14:23:41.419959'
+layer: X3

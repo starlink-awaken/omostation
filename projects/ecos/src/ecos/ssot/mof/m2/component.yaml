@@ -1,0 +1,63 @@
+# M2: Component
+# Split from M2-元模型.yaml
+
+m2_type: Component
+version: 1.0.0
+created: '2026-06-06'
+Component:
+  m3_parent: StructuralElement.Component
+  description: 可部署/可运行的功能单元——服务、库、项目。回答'系统由哪些部件组成'。
+  icon: 🧱
+  stateMachine:
+    active:
+      description: 运行中
+      transitions:
+      - degraded
+      - stopped
+      - archived
+    degraded:
+      description: 降级运行
+      transitions:
+      - active
+      - stopped
+    stopped:
+      description: 已停止
+      transitions:
+      - active
+      - archived
+    archived:
+      description: 已归档
+      transitions: []
+  requiredProperties:
+    layer:
+      type: string
+      description: 所属架构层 (L0-L4/I0/P0/X1-X4)
+    runtime:
+      type: enum
+      values:
+      - active
+      - idle
+      - stopped
+      - unknown
+      description: 运行时状态
+  optionalProperties:
+    protocol:
+      type: ref
+      description: 使用的协议
+    port:
+      type: integer
+      description: 监听端口
+    has_tests:
+      type: boolean
+      description: 是否有测试
+  validationRules:
+  - rule: layer != null
+    level: error
+    message: 组件必须声明所属层
+  examples:
+  - id: COMP-WS-agora
+    name: Agora Service Mesh
+    description: I0 集成织物 — MCP路由·动态代理
+  - id: COMP-WS-cockpit
+    name: Cockpit Entry Bridge
+    description: L3 入口桥接 — 多Agent接入

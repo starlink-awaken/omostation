@@ -1,0 +1,19 @@
+# M1 Node: LESSON-EXTRACT-2026-06-06-ecos-v5-L3-X1-X3-fu
+# Type: Lesson
+# Fixed: added lesson field
+
+id: LESSON-EXTRACT-2026-06-06-ecos-v5-L3-X1-X3-fu
+type: Lesson
+name: eCOS v5 L3+X1-X3 全量架构升级复盘
+description: L3 的问题本质是"设计超前于实现"——规范说该有的都有，但实际上不存在。红队审计抓住了这个矛盾。
+status: recorded
+domain: meta
+created: '2026-06-06T13:26:34.838078+00:00'
+version: 1.0.0
+layer: X2
+properties:
+  incident: L3 的问题本质是"设计超前于实现"——规范说该有的都有，但实际上不存在。红队审计抓住了这个矛盾。
+  lesson: '每次架构升级必须包含: 债务注册+脚本实现+证据链+复盘文档。自签 closeout 不可靠。'
+  root_cause: ''
+  source: Documents/学习进化/2-knowledge/经验积累/lessons/2026-06-06-ecos-v5-L3-X1-X3-full-retrospective.md
+  severity: medium

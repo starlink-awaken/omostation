@@ -1,0 +1,22 @@
+# M1 Node: DEC-2026-06-06-MOF-L0
+# Type: Decision
+
+id: DEC-2026-06-06-MOF-L0
+type: Decision
+name: MOF 融入 eCOS L0 而非独立项目
+description: MOF 元模型框架是 L0 协议编织层的运行时实现——不应作为独立治理项目或留在 L4 Documents。扩展 ecos/ssot/ 成为
+  L0 的完整 MOF 基座。
+status: accepted
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L0
+properties:
+  problem: 如何MOF 融入 eCOS L0 而非独立项目
+  decision: MOF 元模型框架是 L0 协议编织层的运行时实现——不应作为独立治理项目或留在 L4 Documents。
+  rationale: MOF 与 topology/patterns/constraints 深度耦合，同仓库消除双轨维护。L4 仅保留指针文档。
+  options:
+  - MOF 独立项目
+  - MOF 留在 L4
+  - MOF 融入 L0
+  consequences: 已执行。见 ssot/mof/ 和 tools/

@@ -1,0 +1,20 @@
+# M1 Node: PATT-PARENT-CHILD
+# Type: Pattern
+
+id: PATT-PARENT-CHILD
+type: Pattern
+name: CARDS单向parent指针模式
+description: 用单向parent替代双向children维护——降低Agent写入复杂度
+status: validated
+domain: meta
+created: '2026-06-05'
+version: 1.0.0
+layer: L4
+properties:
+  problem: 双向关系要求每次创建child时更新parent的children列表
+  context: 有层级关系但写入频繁的场景
+  solution: 只维护child→parent单向指针，反向查询通过搜索完成
+  known_uses:
+  - CARDS IDEA→TASK→DEL
+  - OMO债务链
+  - CLAUDE.md继承

@@ -1,0 +1,22 @@
+id: MECH-DAEMON-CYCLE
+type: Mechanism
+name: Daemon 定时巡检循环
+description: 每6h自动触发健康检查+保鲜+一致性+协议校验的守护机制
+status: active
+domain: meta
+created: '2026-06-06'
+version: 2.1.0
+layer: L1
+properties:
+  trigger: launchd 定时 (每 21600s)
+  action: ecos-daemon.py → health-check → constraint-validator → sla-tracker → weekly-digest
+  interval: 21600
+  feedback: daemon-state.db + daemon-logs/ + health-digest.md
+  fallback: ecos-healer.py 自动重试; 失败3次→CARDS创建DEBT卡片
+  depends_on:
+  - ARTIFACT-SCRIPT-ecos-daemon
+  - ARTIFACT-SCRIPT-ecos-health-check
+  - ARTIFACT-SCRIPT-ecos-sla-tracker
+  sla_target:
+    uptime: '>=99%'
+    consecutive_passes: '>=1'

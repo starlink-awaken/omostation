@@ -1,0 +1,52 @@
+id: P33-W0-FOLD
+phase: 33
+wave: W0
+title: "归档 P30/P31/P32 — 让 planned/ 平面只剩 P33"
+status: completed
+task_type: governance
+priority: P1
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P32-RETROSPECTIVE completed"
+depends_on:
+  - P32-RETROSPECTIVE
+deliverables:
+  - ".omo/tasks/archived/p30/"
+  - ".omo/tasks/archived/p31/"
+  - ".omo/tasks/archived/p32/"
+risk_level: L0
+allowed_operation_level: L0
+source_docs: []
+knowledge_refs: []
+description: |
+  归档 P30/P31/P32 任务到 archived/, 让 planned/ 平面清空为 P33 专用。
+  当前 planned/ 平面 23 个 YAML (P30 × 7, P31 × 9, P32 × 7) 全部 P0/P1 已 completed。
+  archived/ 现有 p28/ p29/ 子目录, 继续 p30/ p31/ p32/。
+  归档规则: 不删文件, 只移动 + 标记归档状态。
+
+  验收:
+  - ls .omo/tasks/planned/ → 仅 P33-*.yaml (4 个)
+  - ls .omo/tasks/archived/p30/ → 7 个
+  - ls .omo/tasks/archived/p31/ → 9 个
+  - ls .omo/tasks/archived/p32/ → 7 个
+  - 总数守恒 23 → 23 (4 in planned + 23 in archived)
+
+  P33 启动前置, 与 P33-W0-NORTH-STAR 并行。
+started_at: 2026-06-06T10:00:00+08:00
+completed_at: 2026-06-06T10:05:00+08:00
+blocked_by: null
+retry_count: 0
+outcome: |
+  归档成功。planned/ 平面从 28 个文件清理为 4 个 P33 任务。
+  归档分布: archived/p30/ 7 个, archived/p31/ 10 个, archived/p32/ 7 个。
+  使用 mv 移动 (绝大多数文件 untracked, 沿用 P29 subagent 范式)。
+  误报说明: P31 比 prompt 预期多 2 个 (P31-W0-AGORA-ACTUAL-FIX, P31-W0-HISTORICAL-TESTS),
+  P32 比预期多 1 个 (P32-W0-AGORA 缺前缀 W0-SMOKE 但目录已含), 实际按 glob 全部归档。
+  omo daemon PID 47826 保持运行, 无重启。
+verification:
+  - "planned/ 4 files, all P33-* ✓"
+  - "archived/p30/ 7 files ✓"
+  - "archived/p31/ 10 files ✓"
+  - "archived/p32/ 7 files ✓"
+  - "omo daemon PID 47826 仍在 ✓"

@@ -1,0 +1,26 @@
+id: P32-W1-MISSING-DELIVERABLE
+phase: 32
+wave: W1
+title: "修最后 1 个 task consistency 缺口 — 推 audit 100 (A+)"
+status: completed
+task_type: governance
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P32-W1-RUFF-CLEANUP completed"
+depends_on:
+  - P32-W1-RUFF-CLEANUP
+deliverables:
+  - ".omo/_delivery/phase32-missing-deliverable.md"
+risk_level: L0
+allowed_operation_level: L0
+source_docs: []
+knowledge_refs: []
+description: |
+  P32-W0 audit task consistency 90, 1 个 P32 内部 missing deliverable。
+  修路径推 task consistency 100, audit 可能 100 (A+ 极限)。
+started_at: '2026-06-06T06:30:00Z'
+completed_at: '2026-06-06T06:30:00Z'
+blocked_by: null
+retry_count: 0

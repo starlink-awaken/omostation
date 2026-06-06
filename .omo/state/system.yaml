@@ -1,9 +1,9 @@
-current_phase: 28
-phase1_status: closed
+current_phase: 32
+phase32_status: active
 phase_status: active
-current_wave: W0
-next_milestone: Phase 31 W1 — kairon 3 组合并（llm-gateway-kernel / sot-bridge / protocols-layer）
-health_score: 57.2
+current_wave: W2
+next_milestone: 'Phase 33 — Agora Mesh + 5 Domain + Forge 集市（待启动）'
+health_score: 100.0
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -15,8 +15,8 @@ phase3_capability_slice_status: completed
 phase3_capability_slice_completed_at: '2026-05-30T22:35:00Z'
 phase3_acceptance_status: completed
 phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
-completed_tasks: 16
-total_tasks: 36
+completed_tasks: 24
+total_tasks: 25
 active_tasks: 0
 next_active_tasks:
 - (No active tasks)
@@ -43,7 +43,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-06T11:55:14Z'
+updated_at: '2026-06-07T00:00:00Z'
 phase29_status: completed
 phase29_completed_at: '2026-06-05T20:00:00Z'
 phase30_status: active
@@ -86,7 +86,8 @@ phase24_completed_at: '2026-06-04T11:27:00Z'
 phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
-health_score_raw: 57.2
+health_score_raw: 100.0
+phase32_completed_at: '2026-06-07T00:00:00Z'
 debt_weight: 1.0
 debt_weight_items:
   SB_PROJECTS_YAML:
@@ -609,10 +610,10 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 20
+planned_tasks: 21
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- Current planned queue from .omo/tasks/planned/ (20 tasks)
+- Current planned queue from .omo/tasks/planned/ (21 tasks)
 - P30-W0-DAEMON-INSTALL
 - P30-W0-FOLD
 - P30-W0-PLAN-UPDATE
@@ -630,6 +631,7 @@ next_planned_tasks:
 - P31-W1-FIX-LLM-GATEWAY-KERNEL-TESTS
 - P31-W1-MERGE-PROTOCOLS-LAYER
 - P31-W1-MERGE-SOT-BRIDGE
+- P32-W0-AGORA-FIX
 - P32-W0-AGORA
 - P32-W0-DELIVERABLES
 - P32-W0-SMOKE

@@ -1,0 +1,22 @@
+# M1 Node: ENTITY-DOMAIN-学习进化
+# Type: Entity
+# Modeled: 2026-06-06T13:31:04
+
+id: ENTITY-DOMAIN-学习进化
+type: Entity
+subtype: Domain
+name: 学习进化
+description: Vault — 知识面·三层架构·方法论
+status: active
+domain: 学习进化
+created: '2026-06-06'
+version: 1.0.0
+layer: L4
+properties:
+  entity_type: domain
+  identity:
+    name: 学习进化
+  sources:
+  - 学习进化
+  attributes:
+    file_count: 1175

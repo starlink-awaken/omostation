@@ -1,0 +1,84 @@
+# M2: Process
+# Split from M2-元模型.yaml
+
+m2_type: Process
+version: 1.0.0
+created: '2026-06-06'
+Process:
+  m3_parent: BehavioralElement.Process
+  description: 有明确步骤序列和状态机的工作流——定义'事情怎么做'。
+  icon: 🔄
+  stateMachine:
+    defined:
+      description: 已定义·待实例化
+      transitions:
+      - active
+    active:
+      description: 运行中·实例在执行
+      transitions:
+      - blocked
+      - completed
+      - cancelled
+    blocked:
+      description: 被阻塞
+      transitions:
+      - active
+      - cancelled
+    completed:
+      description: 已完成
+      transitions:
+      - archived
+    cancelled:
+      description: 已取消
+      transitions:
+      - archived
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    states:
+      type: list
+      description: 状态列表 [{name, description, transitions}]
+    steps:
+      type: list
+      description: 步骤序列 [{order, name, action, input, output}]
+  optionalProperties:
+    input_type:
+      type: ref
+      description: 输入类型 (→Element)
+    output_type:
+      type: ref
+      description: 输出类型 (→Element)
+    sla:
+      type: map
+      description: '{metric: target}'
+    owner:
+      type: ref
+      description: 流程负责人 (→Entity)
+    decision_points:
+      type: list
+      description: 决策点 [{condition, branches}]
+  validationRules:
+  - rule: states.size >= 2
+    level: error
+    message: 流程至少需要起始和终止两个状态
+  - rule: steps.size >= 1
+    level: error
+    message: 流程至少需要一个步骤
+  - rule: has_terminal_state(states)
+    level: error
+    message: 流程必须有终止状态(completed/cancelled/archived)
+  relationConstraints:
+    can_be_source_of:
+    - Triggers
+    - DataFlow
+    can_be_target_of:
+    - Constrains
+    - Audits
+  examples:
+  - id: PROC-2026-06-06-001
+    name: CARDS Idea→Delivery 流程
+    description: flash→incubating→promoted→active→done→published→maintained
+  - id: PROC-2026-06-06-002
+    name: Agent 启动链
+    description: workspace_context→cards_check→执行→cards_update (7个生命周期钩子)

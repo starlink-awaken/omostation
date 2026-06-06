@@ -1,5 +1,1 @@
-import sys
-
-from ecos.core import ssb_auth as _impl
-
-sys.modules[__name__] = _impl
+from ecos.protocol.ssb.ssb_auth import *  # noqa: F403

@@ -1,0 +1,15 @@
+id: LESSON-OMO------vs------
+type: Lesson
+subtype: OMOLesson
+name: 直接编辑 vs 调度的平衡
+description: 直接编辑 vs 调度的平衡
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: 直接编辑 vs 调度的平衡
+  lesson: 直接编辑 vs 调度的平衡
+  source: .omo/_knowledge/reference/LESSONS.md
+  severity: medium

@@ -1,0 +1,20 @@
+# M1 Node: LESSON-EXTRACT-2026-06-06-architecture-upgrad
+# Type: Lesson
+# Extracted by mof-extract: 2026-06-06T13:26:34.839472+00:00
+# ⚠️ 待人工审核
+
+id: LESSON-EXTRACT-2026-06-06-architecture-upgrad
+type: Lesson
+name: 经验教训 — 架构升级全量复盘摘要
+description: '"100% 覆盖率"不是满分'
+status: recorded
+domain: meta
+created: '2026-06-06T13:26:34.837964+00:00'
+version: 1.0.0
+layer: X2
+properties:
+  incident: 二值覆盖率（✅/❌）掩盖了实现深度差异。Kairon X1 脚本自评 ⚠️ 但外部标注 ✅。
+  lesson: '"100% 覆盖率"不是满分'
+  root_cause: ''
+  source: Documents/学习进化/2-knowledge/经验积累/lessons/2026-06-06-architecture-upgrade-rules.md
+  severity: medium

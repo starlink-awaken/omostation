@@ -1,0 +1,18 @@
+# M1 Node: CONV-DOMAIN-CLAUDE
+# Type: Convention
+# Extracted from 工具箱/REGISTRY.md
+
+id: CONV-DOMAIN-CLAUDE
+type: Convention
+name: 域 CLAUDE.md 必须声明 SSOT
+description: 域 CLAUDE.md 的 §0 必须声明本域各内容类型的 SSOT 位置并区分本文件策略
+status: adopted
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L4
+properties:
+  rule: 域 CLAUDE.md 的 §0 必须声明本域各内容类型的 SSOT 位置并区分本文件策略
+  scope: domain
+  enforcement: mandatory
+  auto_check: true

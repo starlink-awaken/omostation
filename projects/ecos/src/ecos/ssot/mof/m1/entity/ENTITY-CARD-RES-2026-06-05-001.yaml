@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-CARD-RES-2026-06-05-001
+# Type: Entity
+# Generated: 2026-06-06T13:08:34.007826+00:00
+
+id: ENTITY-CARD-RES-2026-06-05-001
+type: Entity
+subtype: Card
+name: MCP Transport协议演化研究
+description: 研究MCP从stdio到Streamable HTTP演化，评估对Agent通信层影响
+status: active
+domain: ai-research
+created: '2026-06-05T14:03:47Z'
+version: 1.0.0
+properties:
+  card_type: research
+  card_status: publish
+  priority: P1
+  entity_type: concept
+layer: L4

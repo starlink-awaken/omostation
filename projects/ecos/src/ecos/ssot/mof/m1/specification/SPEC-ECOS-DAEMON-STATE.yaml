@@ -1,0 +1,17 @@
+id: SPEC-ECOS-DAEMON-STATE
+type: Specification
+subtype: RuntimeConfig
+name: Daemon 状态数据库 Schema
+description: 'daemon-state.db: cycles 表 + alerts 表 — 运行时健康追踪'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L1
+properties:
+  constraints:
+  - runtime 资源边界
+  - 拓扑约束
+  scope:
+  - L1
+  enforcement: warn

@@ -1,0 +1,21 @@
+# M1 Node: MECH-SCHEDULED-forge-daily-maintenance
+# Type: Mechanism
+# Registered by mof-register-tasks
+
+id: MECH-SCHEDULED-forge-daily-maintenance
+type: Mechanism
+subtype: ScheduledTask
+name: Forge Daily Maintenance
+description: '定时任务: forge-daily-maintenance'
+status: active
+domain: meta
+created: '2026-06-05'
+version: 1.0.0
+layer: L4
+properties:
+  trigger: scheduled (daily)
+  action: 执行 SKILL.md 中定义的指令
+  interval: 86400
+  feedback: task-runlog.md (手动)
+  sla_target:
+    max_stale_hours: 48

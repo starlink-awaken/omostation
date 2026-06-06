@@ -1,1 +1,1 @@
-from ecos.ecos_timeout import *  # noqa: F403
+from ecos.common.ecos_timeout import *  # noqa: F403

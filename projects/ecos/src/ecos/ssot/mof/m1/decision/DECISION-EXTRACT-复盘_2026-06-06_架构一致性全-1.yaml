@@ -1,0 +1,18 @@
+# M1 Node: DECISION-EXTRACT-复盘_2026-06-06_架构一致性全-1
+# Type: Decision
+# Extracted by mof-extract: 2026-06-06T13:26:34.840119+00:00
+# ⚠️ 待人工审核
+
+id: DECISION-EXTRACT-复盘_2026-06-06_架构一致性全-1
+type: Decision
+name: '深度复盘 — MetaOS 架构一致性全链路: **修复**'
+description: CARDS v1.0 → v2.0
+status: accepted
+domain: meta
+created: '2026-06-06T13:26:34.838318+00:00'
+version: 1.0.0
+layer: L4
+properties:
+  problem: '**修复**'
+  decision: CARDS v1.0 → v2.0
+  rationale: '来源: 复盘_2026-06-06_架构一致性全链路.md'

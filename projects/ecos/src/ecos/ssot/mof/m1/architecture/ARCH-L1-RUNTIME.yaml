@@ -1,0 +1,29 @@
+# M1 Node: ARCH-L1-RUNTIME
+# Type: Architecture
+id: ARCH-L1-RUNTIME
+type: Architecture
+name: L1 运行时矩阵架构
+description: 服务编排·资源管理·健康监控·进程生命周期——eCOS v5 的运行时基础设施
+status: active
+domain: infra
+created: '2026-06-05'
+version: 1.0.0
+layer: L1
+properties:
+  topology: hub_spoke
+  components:
+  - ecos-daemon
+  - ecos-healer
+  - ecos-sla-tracker
+  - agent-runtime
+  - runtime-matrix
+  connectors:
+  - launchd
+  - mcp:sse
+  quality_attrs:
+    uptime: '>=99%'
+    self_healing: enabled
+    sla_tracking: enabled
+  evolution_path:
+  - Phase7.6 自治运维
+  - Phase8.3 自治愈

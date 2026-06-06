@@ -100,6 +100,12 @@ KNOWN_BACKENDS: list[dict] = [
         "command": "uv",
         "args": ["run", "--package", "sot-bridge", "python", "-m", "sot_bridge.sharedbrain_bridge.mcp"],
     },
+    {
+        "name": "forge",
+        "mcp_endpoint": "",
+        "command": "uv",
+        "args": ["run", "--package", "forge", "python", "-m", "forge.mcp_server"],
+    },
 ]
 
 # Module-level singleton — reused across start/stop calls.

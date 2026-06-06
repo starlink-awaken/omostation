@@ -1,0 +1,213 @@
+# eCOS v5 — Agent 能力注册表 (Machine-Readable Manifest)
+# =========================================================
+# 机器可读。外部 Agent/工具通过此文件发现系统全部能力。
+# v1.0 | 2026-06-06
+
+ecos_version: "v5.1.0"
+phase: "Phase7"
+status: "operational"
+
+gateway:
+  primary: "CLAUDE_COWORK_GLOBAL.md"
+  path: "~/Documents/CLAUDE_COWORK_GLOBAL.md"
+  sections:
+    - "§0 身份锚"
+    - "§2 域路由"
+    - "§3 启动链"
+    - "§4 治理入口"
+    - "§5 工具清单"
+    - "§8 全架构抓手"
+
+scripts:
+  - id: ecos-health-check
+    path: "驾驶舱/scripts/ecos-health-check.py"
+    level: 1
+    description: "全系统健康检查"
+    checks: 9
+    output: "pass/fail per check + dimension summary"
+    flags: ["--json", "--skip"]
+    always_available: true
+
+  - id: x3-coverage-report
+    path: "驾驶舱/scripts/x3-coverage-report.py"
+    level: 1
+    description: "X 轴覆盖率双矩阵"
+    flags: ["--json"]
+
+  - id: check-claude-freshness
+    path: "驾驶舱/scripts/check-claude-freshness.py"
+    level: 1
+    description: "CLAUDE.md 保鲜检查"
+    args: ["--root", "--max-age-days"]
+    flags: ["--json"]
+
+  - id: check-vault-audit
+    path: "驾驶舱/scripts/check-vault-audit.py"
+    level: 3
+    description: "Vault 变更审计"
+    args: ["--vault", "--since", "--card-db"]
+    flags: ["--json"]
+
+  - id: vault-value-attribution
+    path: "驾驶舱/scripts/vault-value-attribution.py"
+    level: 2
+    description: "Vault 文件价值归因"
+    args: ["--vault"]
+    flags: ["--json"]
+
+  - id: domain-value-attribution
+    path: "驾驶舱/scripts/domain-value-attribution.py"
+    level: 2
+    description: "域系统活跃度分析"
+    args: ["--vault"]
+    flags: ["--json"]
+
+  - id: check-cards-state-consistency
+    path: "~/.ecos/scripts/check-cards-state-consistency.py"
+    level: 3
+    description: "CARDS↔STATE 一致性"
+    args: ["--db", "--vault"]
+    flags: ["--json"]
+    requires: ["cards.db"]
+
+  - id: cards-value-attribution
+    path: "~/.ecos/scripts/cards-value-attribution.py"
+    level: 3
+    description: "CARDS 价值归因"
+    args: ["--db"]
+    flags: ["--json"]
+    requires: ["cards.db"]
+
+  - id: check-kairon-governance
+    path: "~/.ecos/scripts/check-kairon-governance.py"
+    level: 4
+    description: "Kairon 治理检查"
+    args: ["--workspace"]
+    flags: ["--json"]
+    requires: ["kairon packages"]
+
+  - id: kairon-cost-attribution
+    path: "~/.ecos/scripts/kairon-cost-attribution.py"
+    level: 4
+    description: "Kairon 成本核算"
+    args: ["--workspace"]
+    flags: ["--json"]
+    requires: ["kairon packages"]
+
+  - id: ecos-constraint-validator
+    path: "学习进化/2-knowledge/基建架构/ecos-constraint-validator.py"
+    level: 4
+    description: "L0 协议约束校验"
+    constraints: 8
+    flags: ["--enforce", "--json"]
+
+  - id: ecos-onboard
+    path: "驾驶舱/scripts/ecos-onboard.py"
+    level: 0
+    description: "接入引导向导"
+    flags: ["--check", "--json"]
+
+domains:
+  - id: cockpit
+    name: "驾驶舱"
+    claude_path: "驾驶舱/CLAUDE.md"
+    cards_domain: "meta"
+    description: "全局状态·跨域信号·CARDS·治理"
+    level: 1
+
+  - id: vault
+    name: "学习进化"
+    claude_path: "学习进化/CLAUDE.md"
+    cards_domain: ""
+    description: "知识系统·方法论·创作·经验"
+    level: 1
+
+  - id: toolbox
+    name: "工具箱"
+    claude_path: "工具箱/CLAUDE.md"
+    cards_domain: ""
+    description: "能力注册·模板·管线"
+    level: 1
+
+  - id: knowledge_base
+    name: "领域知识库"
+    claude_path: "领域知识库/CLAUDE.md"
+    cards_domain: ""
+    description: "SSOT 实体实例化"
+    level: 1
+
+  - id: work
+    name: "工作文档"
+    claude_path: "工作文档/CLAUDE.md"
+    cards_domain: "work"
+    description: "卫健委·国转中心·合同"
+    level: 1
+
+  - id: family
+    name: "家庭生活"
+    claude_path: "家庭生活/CLAUDE.md"
+    cards_domain: "family"
+    description: "成员·医疗·育儿·资产"
+    level: 1
+
+  - id: kairon
+    name: "Kairon"
+    path: "~/Workspace/projects/kairon/"
+    cards_domain: "ai-research"
+    description: "知识研究·AI 管线"
+    level: 4
+
+  - id: infra
+    name: "Infra"
+    path: "~/.ecos/"
+    cards_domain: "infra"
+    description: "基础设施·运行时"
+    level: 4
+
+mcp_servers:
+  - id: cards
+    tools: ["cards_status", "cards_search", "cards_check", "cards_create", "cards_update"]
+    fallback: "sqlite3 ~/Workspace/data/cards/cards.db"
+    level: 3
+
+  - id: omo
+    tools: ["omo_worker_dispatch", "omo_debt_list", "omo_gc"]
+    fallback: "cat ~/Workspace/.omo/state/system.yaml"
+    level: 4
+
+  - id: kairon
+    tools: ["minerva", "eidos", "sophia", "kos", "agora"]
+    fallback: "kos search"
+    level: 4
+
+data_sources:
+  - id: cards_db
+    path: "~/Workspace/data/cards/cards.db"
+    type: sqlite
+    access: ["MCP cards_*", "sqlite3", "python3"]
+    level: 3
+
+  - id: runtime_registry
+    path: "~/.ecos/runtime/registry.json"
+    type: json
+    access: ["ecos-register.py", "cat"]
+    level: 4
+
+  - id: event_stream
+    path: "~/.ecos/events/event-stream.jsonl"
+    type: jsonl
+    access: ["ecos-event.py", "cat"]
+    level: 4
+
+  - id: omo_state
+    path: "~/Workspace/.omo/state/system.yaml"
+    type: yaml
+    access: ["cat", "python3 yaml"]
+    level: 4
+
+# 接入深度
+levels:
+  1: {name: "read-only observer",  checks: 4, label: "观察"}
+  2: {name: "domain participant",  checks: 6, label: "域级"}
+  3: {name: "full-stack agent",    checks: 4, label: "全栈"}
+  4: {name: "runtime integration", checks: 5, label: "运行时"}

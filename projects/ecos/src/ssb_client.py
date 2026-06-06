@@ -1,1 +1,1 @@
-from ecos.core.ssb_client import *  # noqa: F403
+from ecos.protocol.ssb.ssb_client import *  # noqa: F403

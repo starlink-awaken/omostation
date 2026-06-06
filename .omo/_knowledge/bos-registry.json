@@ -1,0 +1,233 @@
+[
+  {
+    "uri": "bos://memory/kos/search",
+    "domain": "memory",
+    "package": "kos",
+    "action": "search",
+    "endpoint": "kairon.packages.kos.ontology.store:search_entities",
+    "protocol": "internal",
+    "description": "KOS 知识图谱检索入口 (P33-W1 战役 2 起步)",
+    "registered_at": "2026-06-06T13:40:39.451030+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://memory/kronos/ingest",
+    "domain": "memory",
+    "package": "kronos",
+    "action": "ingest",
+    "endpoint": "kairon.packages.kronos.ingest:ingest",
+    "protocol": "internal",
+    "description": "KRONOS 记忆摄取入口 (P33-W1 战役 2 起步)",
+    "registered_at": "2026-06-06T13:40:39.451451+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://governance/omo/audit",
+    "domain": "governance",
+    "package": "omo",
+    "action": "audit",
+    "endpoint": "omo.omo_audit:run_governance_audit",
+    "protocol": "internal",
+    "description": "omo 治理审计入口 (P33-W1 战役 2 起步)",
+    "registered_at": "2026-06-06T13:40:39.451839+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://governance/metaos/gate",
+    "domain": "governance",
+    "package": "metaos",
+    "action": "gate",
+    "endpoint": "projects.metaos.src.metaos.gate:check",
+    "protocol": "internal",
+    "description": "metaos 免疫门控入口 (P33-W1 战役 2 起步)",
+    "registered_at": "2026-06-06T13:40:39.452032+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://governance/sot-bridge/register",
+    "domain": "governance",
+    "package": "sot-bridge",
+    "action": "register",
+    "endpoint": "kairon.packages.sot_bridge.sharedbrain_bridge:register",
+    "protocol": "internal",
+    "description": "sot-bridge SSOT 注册入口 (P31-W1 合并后, P33-W1 战役 2 起步)",
+    "registered_at": "2026-06-06T13:40:39.452200+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://governance/protocols-layer/trigger",
+    "domain": "governance",
+    "package": "protocols-layer",
+    "action": "trigger",
+    "endpoint": "kairon.packages.protocols_layer.symphony:trigger",
+    "protocol": "internal",
+    "description": "protocols-layer 协议触发器入口 (P31-W1 合并后, P33-W1 战役 2 起步)",
+    "registered_at": "2026-06-06T13:40:39.452358+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://analysis/minerva/research",
+    "domain": "analysis",
+    "package": "minerva",
+    "action": "research",
+    "endpoint": "kairon.packages.minerva.research:run",
+    "protocol": "internal",
+    "description": "Minerva 深度研究 (P33-W2 战役 2 余下)",
+    "registered_at": "2026-06-06T13:58:51.294474+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://analysis/minerva/draft",
+    "domain": "analysis",
+    "package": "minerva",
+    "action": "draft",
+    "endpoint": "kairon.packages.minerva.draft:compose",
+    "protocol": "internal",
+    "description": "Minerva 报告草稿生成 (P33-W2 战役 2 余下)",
+    "registered_at": "2026-06-06T13:58:51.294650+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://analysis/ontoderive/derive",
+    "domain": "analysis",
+    "package": "ontoderive",
+    "action": "derive",
+    "endpoint": "kairon.packages.ontoderive.engine:derive",
+    "protocol": "internal",
+    "description": "Ontoderive 事实推导 (P33-W2 战役 2 余下)",
+    "registered_at": "2026-06-06T13:58:51.294810+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://analysis/ontoderive/audit",
+    "domain": "analysis",
+    "package": "ontoderive",
+    "action": "audit",
+    "endpoint": "kairon.packages.ontoderive.engine:audit",
+    "protocol": "internal",
+    "description": "Ontoderive 事实审计 (P33-W2 战役 2 余下)",
+    "registered_at": "2026-06-06T13:58:51.295002+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://analysis/codeanalyze/scan",
+    "domain": "analysis",
+    "package": "codeanalyze",
+    "action": "scan",
+    "endpoint": "kairon.packages.codeanalyze.scanner:scan",
+    "protocol": "internal",
+    "description": "Codeanalyze 静态扫描 (P33-W2 战役 2 余下)",
+    "registered_at": "2026-06-06T13:58:51.295294+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://analysis/codeanalyze/report",
+    "domain": "analysis",
+    "package": "codeanalyze",
+    "action": "report",
+    "endpoint": "kairon.packages.codeanalyze.reporter:report",
+    "protocol": "internal",
+    "description": "Codeanalyze 报告生成 (P33-W2 战役 2 余下)",
+    "registered_at": "2026-06-06T13:58:51.295502+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://analysis/iris/connect",
+    "domain": "analysis",
+    "package": "iris",
+    "action": "connect",
+    "endpoint": "kairon.packages.iris.connector:connect",
+    "protocol": "internal",
+    "description": "Iris 数据连接 (P33-W2 战役 2 余下)",
+    "registered_at": "2026-06-06T13:58:51.295706+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://persona/sharedbrain-bridge/recall",
+    "domain": "persona",
+    "package": "sharedbrain-bridge",
+    "action": "recall",
+    "endpoint": "kairon.packages.sharedbrain_bridge.recall:recall",
+    "protocol": "internal",
+    "description": "sharedbrain 回忆 (P33-W2 战役 2 余下)",
+    "registered_at": "2026-06-06T13:58:51.295886+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://persona/sharedbrain-bridge/sync",
+    "domain": "persona",
+    "package": "sharedbrain-bridge",
+    "action": "sync",
+    "endpoint": "kairon.packages.sharedbrain_bridge.sync:sync",
+    "protocol": "internal",
+    "description": "sharedbrain 同步 (P33-W2 战役 2 余下)",
+    "registered_at": "2026-06-06T13:58:51.296066+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://persona/core-models/schema",
+    "domain": "persona",
+    "package": "core-models",
+    "action": "schema",
+    "endpoint": "kairon.packages.core_models.schema:load",
+    "protocol": "internal",
+    "description": "core-models schema (P33-W2 战役 2 余下)",
+    "registered_at": "2026-06-06T13:58:51.296257+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://persona/health-profile/summary",
+    "domain": "persona",
+    "package": "health-profile",
+    "action": "summary",
+    "endpoint": "kairon.packages.health_profile.summary:summarize",
+    "protocol": "internal",
+    "description": "health-profile 摘要 (P33-W2 战役 2 余下)",
+    "registered_at": "2026-06-06T13:58:51.296444+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://capability/forge/register-tool",
+    "domain": "capability",
+    "package": "forge",
+    "action": "register-tool",
+    "endpoint": "kairon.packages.forge.registry:register",
+    "protocol": "internal",
+    "description": "Forge 工具注册 (P33-W2 战役 2 余下)",
+    "registered_at": "2026-06-06T13:58:51.296616+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://capability/forge/discover",
+    "domain": "capability",
+    "package": "forge",
+    "action": "discover",
+    "endpoint": "kairon.packages.forge.registry:discover",
+    "protocol": "internal",
+    "description": "Forge 工具发现 (P33-W2 战役 2 余下)",
+    "registered_at": "2026-06-06T13:58:51.296784+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://capability/agent-runtime/run-task",
+    "domain": "capability",
+    "package": "agent-runtime",
+    "action": "run-task",
+    "endpoint": "kairon.agent_runtime.runner:run",
+    "protocol": "internal",
+    "description": "agent-runtime 任务执行 (P33-W2 战役 2 余下)",
+    "registered_at": "2026-06-06T13:58:51.296967+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://capability/agent-runtime/chat",
+    "domain": "capability",
+    "package": "agent-runtime",
+    "action": "chat",
+    "endpoint": "kairon.agent_runtime.chat:chat",
+    "protocol": "internal",
+    "description": "agent-runtime 对话 (P33-W2 战役 2 余下)",
+    "registered_at": "2026-06-06T13:58:51.297145+00:00",
+    "registered_by": "omo-bos-cli"
+  }
+]

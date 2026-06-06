@@ -1,0 +1,22 @@
+# M1 Node: PROC-CARDS-IDEA
+
+id: PROC-CARDS-IDEA
+type: Process
+subtype: CARDS
+name: CARDS Idea 流程
+description: flash → incubating → promoted | discarded
+status: active
+domain: meta
+created: '2026-06-06'
+version: 2.0.0
+layer: L4
+properties:
+  states:
+  - 'flash '
+  - ' incubating '
+  - ' promoted | discarded'
+  steps:
+  - order: 1
+    name: 创建
+  - order: 2
+    name: 流转

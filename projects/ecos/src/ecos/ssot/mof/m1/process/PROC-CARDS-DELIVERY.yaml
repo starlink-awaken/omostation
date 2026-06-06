@@ -1,0 +1,24 @@
+# M1 Node: PROC-CARDS-DELIVERY
+
+id: PROC-CARDS-DELIVERY
+type: Process
+subtype: CARDS
+name: CARDS Delivery 流程
+description: draft → review → published → maintained → superseded
+status: active
+domain: meta
+created: '2026-06-06'
+version: 2.0.0
+layer: L4
+properties:
+  states:
+  - 'draft '
+  - ' review '
+  - ' published '
+  - ' maintained '
+  - ' superseded'
+  steps:
+  - order: 1
+    name: 创建
+  - order: 2
+    name: 流转

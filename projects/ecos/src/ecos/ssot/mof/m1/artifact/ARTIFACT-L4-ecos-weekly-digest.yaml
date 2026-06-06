@@ -1,0 +1,18 @@
+# M1 Node: ARTIFACT-L4-ecos-weekly-digest
+# Type: Artifact
+# Modeled: 2026-06-06T13:31:04
+
+id: ARTIFACT-L4-ecos-weekly-digest
+type: Artifact
+subtype: Script
+name: ecos-weekly-digest
+description: 'L4 脚本: ecos-weekly-digest'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L4
+properties:
+  path: 驾驶舱/scripts/ecos-weekly-digest.py
+  format: python
+  size: 5884

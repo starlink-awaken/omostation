@@ -1,0 +1,26 @@
+# M1 Node: PROC-CARDS-RESEARCH
+
+id: PROC-CARDS-RESEARCH
+type: Process
+subtype: CARDS
+name: CARDS Research 流程
+description: queue → ingest → digest → analyze → publish → review → archived
+status: active
+domain: meta
+created: '2026-06-06'
+version: 2.0.0
+layer: L4
+properties:
+  states:
+  - 'queue '
+  - ' ingest '
+  - ' digest '
+  - ' analyze '
+  - ' publish '
+  - ' review '
+  - ' archived'
+  steps:
+  - order: 1
+    name: 创建
+  - order: 2
+    name: 流转

@@ -1,0 +1,19 @@
+# M1 Node: CONV-EXTRACT-CARDS-ID
+# Type: Convention
+# Extracted by mof-extract: 2026-06-06T13:26:34.841538+00:00
+# ⚠️ 待人工审核
+
+id: CONV-EXTRACT-CARDS-ID
+type: Convention
+name: 'CARDS 卡片 ID 格式: {TYPE}-{YYYY}-{MM}-{DD}-{NNN}'
+description: 'CARDS 卡片 ID 格式: {TYPE}-{YYYY}-{MM}-{DD}-{NNN}'
+status: adopted
+domain: meta
+created: '2026-06-06T13:26:34.838340+00:00'
+version: 1.0.0
+layer: L4
+properties:
+  rule: 'CARDS 卡片 ID 格式: {TYPE}-{YYYY}-{MM}-{DD}-{NNN}'
+  scope: global
+  enforcement: mandatory
+  auto_check: true

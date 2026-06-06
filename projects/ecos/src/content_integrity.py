@@ -1,1 +1,1 @@
-from ecos.content_integrity import *  # noqa: F403
+from ecos.common.content_integrity import *  # noqa: F403

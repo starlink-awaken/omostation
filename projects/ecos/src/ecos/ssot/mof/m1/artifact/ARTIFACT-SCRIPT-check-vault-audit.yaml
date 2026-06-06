@@ -1,0 +1,19 @@
+# M1 Node: ARTIFACT-SCRIPT-check-vault-audit
+# Type: Artifact
+# Generated: 2026-06-06T13:08:33.999116+00:00
+
+id: ARTIFACT-SCRIPT-check-vault-audit
+type: Artifact
+subtype: Script
+name: check-vault-audit
+description: 获取 Git 变更日志
+status: active
+domain: meta
+created: '2026-06-06T14:34:28.294136'
+version: 1.0.0
+properties:
+  path: 驾驶舱/scripts/check-vault-audit.py
+  format: python
+  size: 8367
+  mtime: '2026-06-06T14:34:26.963822'
+layer: X1

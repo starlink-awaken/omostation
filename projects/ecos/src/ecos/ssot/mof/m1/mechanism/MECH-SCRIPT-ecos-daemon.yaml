@@ -1,0 +1,19 @@
+# M1 Node: MECH-SCRIPT-ecos-daemon
+# Type: Mechanism
+# Registered by mof-register-tasks
+
+id: MECH-SCRIPT-ecos-daemon
+type: Mechanism
+subtype: GovernanceScript
+name: ecos-daemon
+description: '治理脚本: ecos-daemon'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L1
+properties:
+  trigger: scheduled (daemon)
+  action: python3 ecos-daemon.py
+  interval: 21600
+  feedback: stdout/stderr + daemon-state.db

@@ -1,0 +1,15 @@
+id: LESSON-OMO--------------8---
+type: Lesson
+subtype: OMOLesson
+name: 子代理频繁超时 — 发生 8+ 次
+description: 子代理频繁超时 — 发生 8+ 次
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: 子代理频繁超时 — 发生 8+ 次
+  lesson: 子代理频繁超时 — 发生 8+ 次
+  source: .omo/_knowledge/reference/LESSONS.md
+  severity: medium
