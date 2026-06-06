@@ -1,4 +1,23 @@
-"""Agora MCP Server — unified entry point for all services."""
+"""Agora MCP Server — unified entry point for all services.
+
+工具分组 (42 tools, 1,757 行 → 待拆分为独立模块):
+  ┌─ BOS Tools        (L511):  mutate_resource, read_resource
+  ├─ Proxy Tools      (L535):  proxy_connect/call/status/list/add/remove
+  ├─ Registry Tools   (L697):  register_service
+  ├─ Routing Tools    (L827):  list_services, check_health, add_route, route_call
+  ├─ Event Tools      (L911):  publish/subscribe/get_event_log
+  ├─ Audit Tools      (L975):  audit_query, audit_stats
+  ├─ API Key Tools    (L1019): create/list/revoke_api_key
+  ├─ A2A Notify       (L1067): register_push_notification
+  ├─ A2A Task Tools   (L1104): a2a_send/get/cancel/list_tasks
+  ├─ State Tools      (L1203): get_state_transitions
+  ├─ Agent Cards      (L1286): list/get_agent_card
+  ├─ Repo Tools       (L1335): repo_search/discover/status/install/load/unload/pipeline
+  ├─ Lifecycle Tools  (L1567): lifecycle_status/start_watch/stop_watch/load_all/unload_all
+  └─ Execution        (L1703): agora_execute
+
+拆分计划: docs/god-module-split-plan.md
+"""
 
 from __future__ import annotations
 
@@ -508,6 +527,10 @@ def agora_registry() -> str:
     return json.dumps({"error": "proxy manager not initialized"})
 
 
+# ═══════════════════════════════════════════════════════════════
+# Section 1: BOS Tools (行 530-553)
+# ═══════════════════════════════════════════════════════════════
+
 @mcp.tool()
 async def mutate_resource(uri: str, payload: str, action: str = "update") -> str:
     """Unified BOS URI mutation protocol. Modifies state at the specified URI.
@@ -531,7 +554,9 @@ async def mutate_resource(uri: str, payload: str, action: str = "update") -> str
     })
 
 
-# ── Proxy tools ────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════
+# Section 2: Proxy Tools (行 558-715)
+# ═══════════════════════════════════════════════════════════════
 @mcp.tool()
 async def proxy_connect() -> dict:
     """Connect to all configured downstream MCP services via the proxy.
@@ -694,6 +719,10 @@ async def proxy_remove_service(name: str) -> dict:
 # ── Service management tools ─────────────────────────────────────
 
 
+
+# ═══════════════════════════════════════════════════════════════
+# Section 3: Registry Tools (register_service)
+# ═══════════════════════════════════════════════════════════════
 @mcp.tool()
 async def register_service(
     name: str,
@@ -824,6 +853,10 @@ def _save_proxy_service(svc: dict):
     json_save(_PROXY_CONFIG_PATH, existing)
 
 
+
+# ═══════════════════════════════════════════════════════════════
+# Section 4: Routing & Events
+# ═══════════════════════════════════════════════════════════════
 @mcp.tool()
 def list_services() -> dict:
     """List all registered services and their health status."""
@@ -972,6 +1005,10 @@ def get_event_log(limit: int = 50, since: str = "") -> dict:
 # ── Governance tools (v2.0) ─────────────────────────────────────
 
 
+
+# ═══════════════════════════════════════════════════════════════
+# Section 5: Audit Tools
+# ═══════════════════════════════════════════════════════════════
 @mcp.tool()
 def audit_query(actor: str = "", resource: str = "", event_type: str = "", since: str = "", limit: int = 50) -> dict:
     """Query the audit log for persisted events.
@@ -1016,6 +1053,10 @@ def audit_stats(since: str = "") -> dict:
     )
 
 
+
+# ═══════════════════════════════════════════════════════════════
+# Section 6: API Key Tools
+# ═══════════════════════════════════════════════════════════════
 @mcp.tool()
 def create_api_key(name: str, scopes: str = "read", tenant: str = "", expires_days: int = 0) -> dict:
     """Create a new API key. The raw secret is shown only once."""
@@ -1064,6 +1105,10 @@ def revoke_api_key(key_id: str) -> dict:
 # ── Push Notification tools (A2A-compatible) ──────────────────────────
 
 
+
+# ═══════════════════════════════════════════════════════════════
+# Section 7: A2A Tools (push/task/state)
+# ═══════════════════════════════════════════════════════════════
 @mcp.tool()
 def register_push_notification(callback_url: str, event_types: str = "*") -> dict:
     """Register a webhook callback for push notification delivery.
@@ -1283,6 +1328,10 @@ def _build_agent_card(service_name: str) -> tuple[dict | None, str | None]:
         return None, str(e)
 
 
+
+# ═══════════════════════════════════════════════════════════════
+# Section 8: Agent Cards
+# ═══════════════════════════════════════════════════════════════
 @mcp.tool()
 def list_agent_cards() -> dict:
     """List all registered Agent Cards — A2A-compatible agent metadata.
@@ -1332,6 +1381,10 @@ def get_agent_card(name: str) -> dict:
 # ── MCP Registry tools (Phase 1) ────────────────────────────────────
 
 
+
+# ═══════════════════════════════════════════════════════════════
+# Section 9: Repository/Registry Tools
+# ═══════════════════════════════════════════════════════════════
 @mcp.tool()
 async def repo_search(query: str = "", source: str = "local", limit: int = 20) -> dict:
     """Search the tool catalog (local) or external sources (GitHub/registry).
@@ -1564,6 +1617,10 @@ def _build_registry_orchestrator(catalog: ToolCatalog) -> Orchestrator:
 # ── Lifecycle Management tools (Phase 2) ──────────────────────────────
 
 
+
+# ═══════════════════════════════════════════════════════════════
+# Section 10: Lifecycle Tools
+# ═══════════════════════════════════════════════════════════════
 @mcp.tool()
 async def lifecycle_status() -> dict:
     """Show current lifecycle manager status — loaded tools, idle watch state."""
@@ -1700,6 +1757,10 @@ async def lifecycle_unload_all() -> dict:
         return _error(f"Unload all failed: {e}")
 
 
+
+# ═══════════════════════════════════════════════════════════════
+# Section 11: Execution Engine
+# ═══════════════════════════════════════════════════════════════
 @mcp.tool()
 async def agora_execute(query: str, mode: str = "auto") -> dict:
     """Execute a natural language query by routing to the best matching MCP tool.
