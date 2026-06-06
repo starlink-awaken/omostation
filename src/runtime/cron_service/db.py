@@ -141,6 +141,8 @@ def update_job(job_id: str, data: JobUpdate) -> Job | None:
     values = list(updates.values()) + [job_id]
 
     conn = _get_conn()
+    # set_clause keys 来自 Pydantic model_dump (exclude_unset=True)，字段名受限于有效 Python 标识符。
+    # 参数化查询确保 value 安全注入。
     conn.execute(f"UPDATE jobs SET {set_clause} WHERE id = ?", values)
     conn.commit()
     return get_job(job_id)
