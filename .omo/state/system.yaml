@@ -149,13 +149,17 @@ debt_weight_items:
     weight: 0.15
     desc: eu-pricing tests are not independently governed
   I0-AGORA_DUAL_INSTANCE:
-    resolved: false
+    resolved: true
     weight: 0.6
     desc: Agora 双实例运行冲突 — Docker + native 同时存在，端口混乱
+    resolved_at: '2026-06-06'
+    resolution: 'agentmesh 废弃后 Docker agora 容器已删除，当前只有 native agora:7430 单实例运行'
   I0-AGORA_SSE_DEAD:
-    resolved: false
+    resolved: true
     weight: 0.8
     desc: Agora SSE 端点 (:7431/:7432) 返回 HTTP 000 不可达
+    resolved_at: '2026-06-06'
+    resolution: '7431/7432 是 agentmesh 旧端口，agentmesh 废弃后这两个端口本就不应存在。当前 agora 在 :7430 运行正常，无 SSE 端点需求。债务描述过时。'
   L0-PROTOCOL_GHOSTS:
     resolved: false
     weight: 0.3
