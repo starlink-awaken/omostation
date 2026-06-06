@@ -296,7 +296,7 @@ def build_parser():
 
     # pipeline MCP endpoint
     start_parser = sub.add_parser("start-pipeline", help="Start Eidos Pipeline MCP endpoint")
-    from agora.eidos_pipeline import EIDOS_PIPELINE_SERVICE  # type: ignore[import-not-found]
+    from agora.pipelines.eidos_pipeline import EIDOS_PIPELINE_SERVICE  # type: ignore[import-not-found]
 
     start_parser.add_argument(
         "--pipeline", choices=list(EIDOS_PIPELINE_SERVICE["commands"].keys()), default="knowledge-base"
@@ -470,7 +470,7 @@ def start_pipeline_command(args):
     """Start a simple HTTP server that serves pipeline results."""
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
-    from agora.eidos_pipeline import EIDOS_PIPELINE_SERVICE
+    from agora.pipelines.eidos_pipeline import EIDOS_PIPELINE_SERVICE
 
     command = EIDOS_PIPELINE_SERVICE["commands"].get(args.pipeline, "")
 

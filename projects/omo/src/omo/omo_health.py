@@ -27,19 +27,39 @@ from omo.omo_paths import AGORA_ROUTES_PATH
 
 # ── omostation 服务端口约定 (fallback, 实际以 agora-routes.json _meta.routing_table 为准) ──────
 # P31-W0-AGORA-ACTUAL-FIX: 修正错配端口 + 删除 stdio-only 服务
+# P32-W0-AGORA-FIX: agent-runtime-mcp 实际是 cockpit.agent_runtime_mcp_server (transport=stdio),
+#   不应当做 HTTP 服务探活 — 移入 STDIO_ONLY_SERVICES
 DEFAULT_SERVICE_PORTS: dict[str, int] = {
     # HTTP-reachable services (实际端口)
     "agora-internal": 7430,            # FastAPI dashboard, 启动: agora-web
-    "agent-runtime-mcp": 9876,         # 实际端口 9876 (旧表错为 7440)
     "cron-service-mcp": 7450,          # 实际端口 7450 (旧表错为 7438)
     "sharedbrain-bridge-mcp": 8001,    # sharedbrain standalone MCP 端口 (旧表错为 7439)
     "minerva": 8765,                   # minerva web 端口 (非 MCP)
-    # stdio-only MCP services (无 HTTP endpoint, 不应出现在 HTTP 健康检查)
-    # - iris-mcp, codeanalyze-mcp, sophia-mcp, llm-gateway-mcp: stdio-only, 由 Hermes spawn
-    # - eidos: stdio-only, 自定义 JSON-RPC over stdin/stdout
-    # - shared-lib-mcp: 已废弃, 不存在
-    # 占位: 未来若需 HTTP 暴露, 在 agora-routes.json _meta.routing_table 添加
+    # stdio-only MCP services 不在此表 — 见 STDIO_ONLY_SERVICES
 }
+
+# ── stdio-only MCP 服务集合 ──────────────────────────────
+# P32-W0-AGORA-FIX: 这些服务用 FastMCP transport="stdio", 由 agora mcp_proxy spawn 调用,
+# 不监听 HTTP 端口, 不应做 HTTP 探活. 健康检查时直接标 is_healthy=True + protocol=stdio.
+STDIO_ONLY_SERVICES: frozenset[str] = frozenset({
+    "agent-runtime-mcp",    # cockpit.agent_runtime_mcp_server (transport=stdio)
+    "iris-mcp",             # iris MCP, stdio-only
+    "eidos",                # eidos, 自定义 JSON-RPC over stdin/stdout
+    "codeanalyze-mcp",      # codeanalyze MCP, stdio-only
+    "sophia-mcp",           # sophia MCP, stdio-only
+    "llm-gateway-mcp",      # llm-gateway MCP, stdio-only
+    "shared-lib-mcp",       # 旧名, 保留以防 routes 漂回
+    "core-models",          # 旧名, 保留以防 routes 漂回
+    "engine-core",          # 旧名, 保留以防 routes 漂回
+    "ontoderive",           # 旧名, 保留以防 routes 漂回
+    "kos",                  # 旧名, 保留以防 routes 漂回
+    "forge-mcp",            # 旧名, 保留以防 routes 漂回
+    "kronos-mcp",           # kronos MCP, stdio-only (P32 修正)
+    "test-svc",             # 测试桩, 不应探活
+})
+
+# stdio 占位 URL scheme — 让 endpoints 字典里能塞进 stdio 服务而不被当 HTTP 处理
+_STDIO_URL_SCHEME = "stdio://"
 
 DEFAULT_TIMEOUT_SECONDS = 5.0
 DEFAULT_CONCURRENCY = 5
@@ -90,6 +110,9 @@ def derive_endpoints(
 
     优先 _meta.routing_table (含 host/port); 否则 fallback 到
     DEFAULT_SERVICE_PORTS + localhost.
+
+    P32-W0-AGORA-FIX: stdio-only 服务 (STDIO_ONLY_SERVICES 集合) 以
+    "stdio://<service>" 占位 URL 出现在结果中, 实际探活时被 _probe_one 跳过.
     """
     if routes is None:
         routes = load_agora_routes()
@@ -99,6 +122,10 @@ def derive_endpoints(
     routing_table = routes.get("_meta", {}).get("routing_table", {}) if isinstance(routes, dict) else {}
     for svc, info in routing_table.items():
         if not isinstance(info, dict):
+            continue
+        # routing_table 显式标 protocol=stdio 时, 走 stdio 占位
+        if info.get("protocol") == "stdio" or svc in STDIO_ONLY_SERVICES:
+            out[svc] = f"{_STDIO_URL_SCHEME}{svc}"
             continue
         if "host" in info and "port" in info:
             health_path = info.get("health_path", HEALTH_PATH)
@@ -113,6 +140,10 @@ def derive_endpoints(
         services.update(v for v in routes_data.values() if isinstance(v, str))
     for svc in sorted(services):
         if svc in out:
+            continue
+        # stdio-only 服务: 占位 URL, 不做 HTTP 探活
+        if svc in STDIO_ONLY_SERVICES:
+            out[svc] = f"{_STDIO_URL_SCHEME}{svc}"
             continue
         port = ports.get(svc)
         if port:

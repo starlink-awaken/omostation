@@ -4,7 +4,7 @@ import importlib
 
 
 def test_execute_builds_command_and_runs(monkeypatch):
-    eidos_pipeline = importlib.import_module("agora.eidos_pipeline")
+    eidos_pipeline = importlib.import_module("agora.pipelines.eidos_pipeline")
 
     seen = {}
 

@@ -24,7 +24,7 @@ def cmd_register(args):
         return 1
 
     if args.name == "eidos" and args.mcp is None:
-        from agora.eidos_pipeline import EIDOS_PIPELINE_SERVICE  # type: ignore[import-not-found]
+        from agora.pipelines.eidos_pipeline import EIDOS_PIPELINE_SERVICE  # type: ignore[import-not-found]
 
         print(f"Registering {EIDOS_PIPELINE_SERVICE['name']}...")
         print(f"Capabilities: {EIDOS_PIPELINE_SERVICE['capabilities']}")
