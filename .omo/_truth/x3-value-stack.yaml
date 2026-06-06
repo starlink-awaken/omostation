@@ -1,0 +1,74 @@
+# X3 Value Stack — MetaOS 全系统 X 轴治理归属
+#
+# Phase 7 架构收敛：X 轴从 OMO-only 扩展为全系统覆盖
+# 完整映射 → ~/Documents/驾驶舱/统一架构模型.md
+#
+# X 轴三维：
+#   X1 (Audit):     变更历史是否可追溯？
+#   X2 (Freshness):  数据是否有过期检测？
+#   X3 (Value/Cost): 资源消耗是否可归因？
+#
+# 每个功能域支柱必须在三维上声明自己的实现方式。
+
+domains:
+  CARDS:
+    x1_audit:
+      mechanism: card_history 表（SQLite）
+      coverage: 每次 status 变更自动写入
+      implemented: true
+    x2_freshness:
+      mechanism: cards check + review_due + deadline
+      coverage: 选题池溢出·overdue·review提醒
+      implemented: true
+    x3_value:
+      mechanism: 未实现
+      implemented: false
+      note: 卡牌数量·CLI调用·MCP调用频率均可量化，待补充 cost tracking
+
+  OMO:
+    x1_audit:
+      mechanism: debt 审计链（history字段）+ dispatch runs
+      implemented: true
+    x2_freshness:
+      mechanism: next_review_at + staleness checks
+      implemented: true
+    x3_value:
+      mechanism: omo_cost.py + cost-tracking.jsonl
+      dimensions: [compute, storage, maintenance, network]
+      implemented: true
+
+  Kairon:
+    x1_audit:
+      mechanism: minerva audit log
+      implemented: partial
+    x2_freshness:
+      mechanism: KOS staleness checks
+      implemented: partial
+    x3_value:
+      mechanism: 未实现
+      implemented: false
+
+  Vault:
+    x1_audit:
+      mechanism: 无（Markdown 文件无原生审计）
+      implemented: false
+    x2_freshness:
+      mechanism: 校验脚本 42/42 + CLAUDE.md 保鲜（2月stale）
+      implemented: true
+    x3_value:
+      mechanism: 未实现
+      implemented: false
+
+  Domain_Systems:
+    x1_audit:
+      mechanism: CARDS card_history（通过 domain 字段）
+      implemented: partial
+    x2_freshness:
+      mechanism: STATE→CARDS 指针 + SIGNALS 跨域信号
+      implemented: partial
+    x3_value:
+      mechanism: 未实现
+      implemented: false
+
+principles:
+  ssot_cascade: "X 轴治理维度应贯穿全部功能域支柱。当前缺口：Vault X1·Kairon X3·CARDS X3。"

@@ -26,9 +26,9 @@ omo:
     risk_level: L1
     allowed_operation_level: L1
     source_docs:
-      - .omo/plans/phase6-wave1-execution-plan.md
+      - .omo/_knowledge/design/plans/archive/phase6-wave1-execution-plan.md
     deliverables:
-      - .omo/summaries/phase6/phase6-wave2-closeout.md
+      - .omo/_knowledge/summaries/phase6/phase6-wave2-closeout.md
     evidence_required:
       - discovery registry reconciled
     test_plan:
@@ -69,9 +69,9 @@ omo:
     risk_level: L1
     allowed_operation_level: L1
     source_docs:
-      - .omo/plans/phase6-program-plan.md
+      - .omo/_knowledge/design/plans/archive/phase6-program-plan.md
     deliverables:
-      - .omo/summaries/phase6/phase6-wave2-closeout.md
+      - .omo/_knowledge/summaries/phase6/phase6-wave2-closeout.md
     evidence_required:
       - packet instantiated from blueprint
     test_plan:
@@ -96,5 +96,5 @@ omo:
     assert task["status"] == "blocked"
     assert task["phase"] == 6
     assert task["milestone"] == "W2"
-    assert task["source_docs"] == [".omo/plans/phase6-program-plan.md", "docs/template.md"]
+    assert task["source_docs"] == [".omo/_knowledge/design/plans/archive/phase6-program-plan.md", "docs/template.md"]
     assert validate_task_file(task_path) == []

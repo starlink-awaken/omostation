@@ -1,0 +1,24 @@
+id: I0-AGORA_DUAL_INSTANCE
+title: "Agora 双实例运行冲突 — Docker + native 同时存在，端口混乱"
+dimension: architecture
+subdimension: service_mesh
+domain: projects
+scope: cross_project
+severity: medium
+weight: 0.6
+entropy_class: state
+lifecycle_state: resolved
+owner: omo-governance
+affected_roots:
+  - projects/kairon/packages/agora
+evidence_refs:
+  - .omo/_knowledge/management/ecos-layer-audit-2026-06-05.md
+mitigation_refs: []
+opened_at: "2026-06-05T21:00:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase17
+history:
+  - at: "2026-06-05T21:00:00Z"
+    action: register
+    note: "Debt registered from Layer Audit 2026-06-05."

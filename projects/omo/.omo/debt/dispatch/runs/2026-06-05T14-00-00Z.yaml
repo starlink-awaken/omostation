@@ -1,0 +1,279 @@
+dispatched_at: '2026-06-05T14:00:00Z'
+source_owner_routing_ref: .omo/debt/owner-routing/current.yaml
+source_owner_routing_generated_at: '2026-06-05T14:00:00Z'
+latest_run_ref: .omo/debt/dispatch/runs/2026-06-05T14-00-00Z.yaml
+owners:
+- owner: omo-engineer
+  dispatched_at: '2026-06-05T14:00:00Z'
+  item_count: 11
+  summary:
+    total_count: 11
+    lane_counts:
+      revalidate_now: 0
+      schedule_now: 11
+      escalate_now: 0
+      continue_mitigation: 0
+      watch_only: 0
+  entries:
+  - id: DEBT-OMO-004
+    title: 'I0: Agora SSE不可达 (Agora SSE endpoint unreachable)'
+    owner: omo-engineer
+    severity: critical
+    dimension: integration
+    subdimension: agora-sse
+    lifecycle_state: identified
+    gate_level: none
+    next_review_at: null
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 0
+    affected_roots:
+    - .omo
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags:
+    - initial_review_required
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-OMO-004
+      --next-review-at 2026-06-12T14:00:00Z
+  - id: DEBT-OMO-005
+    title: 'I0: Agora双实例 — native + Docker 并行运行冲突'
+    owner: omo-engineer
+    severity: high
+    dimension: architecture
+    subdimension: service-duplication
+    lifecycle_state: identified
+    gate_level: none
+    next_review_at: null
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 0
+    affected_roots:
+    - .omo
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags:
+    - initial_review_required
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-OMO-005
+      --next-review-at 2026-06-12T14:00:00Z
+  - id: DEBT-OMO-011
+    title: 'X1: 无审计链 — no audit chain established'
+    owner: omo-engineer
+    severity: high
+    dimension: governance
+    subdimension: audit-chain
+    lifecycle_state: identified
+    gate_level: none
+    next_review_at: null
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 0
+    affected_roots:
+    - .omo
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags:
+    - initial_review_required
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-OMO-011
+      --next-review-at 2026-06-12T14:00:00Z
+  - id: DEBT-OMO-001
+    title: 集成测试依赖真实 .omo 工作区状态
+    owner: omo-engineer
+    severity: medium
+    dimension: test-infrastructure
+    subdimension: integration-tests
+    lifecycle_state: identified
+    gate_level: none
+    next_review_at: null
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 0
+    affected_roots:
+    - .omo
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags:
+    - initial_review_required
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-OMO-001
+      --next-review-at 2026-06-12T14:00:00Z
+  - id: DEBT-OMO-006
+    title: 'X1: 沙箱空转 — KEI sandbox registered but never executed audit'
+    owner: omo-engineer
+    severity: medium
+    dimension: governance
+    subdimension: kei-sandbox
+    lifecycle_state: identified
+    gate_level: none
+    next_review_at: null
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 0
+    affected_roots:
+    - .omo
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags:
+    - initial_review_required
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-OMO-006
+      --next-review-at 2026-06-12T14:00:00Z
+  - id: DEBT-OMO-007
+    title: 'L0: 协议幽灵 — 16个协议中只有MCP真正在用'
+    owner: omo-engineer
+    severity: medium
+    dimension: architecture
+    subdimension: protocol-ghosts
+    lifecycle_state: identified
+    gate_level: none
+    next_review_at: null
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 0
+    affected_roots:
+    - .omo
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags:
+    - initial_review_required
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-OMO-007
+      --next-review-at 2026-06-12T14:00:00Z
+  - id: DEBT-OMO-008
+    title: 'L1: 调度器缺失 — 无统一任务调度机制'
+    owner: omo-engineer
+    severity: medium
+    dimension: infrastructure
+    subdimension: scheduler
+    lifecycle_state: identified
+    gate_level: none
+    next_review_at: null
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 0
+    affected_roots:
+    - .omo
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags:
+    - initial_review_required
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-OMO-008
+      --next-review-at 2026-06-12T14:00:00Z
+  - id: DEBT-OMO-010
+    title: 'X2: 无保鲜实现 — no freshness validation mechanism in place'
+    owner: omo-engineer
+    severity: medium
+    dimension: governance
+    subdimension: freshness
+    lifecycle_state: identified
+    gate_level: none
+    next_review_at: null
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 0
+    affected_roots:
+    - .omo
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags:
+    - initial_review_required
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-OMO-010
+      --next-review-at 2026-06-12T14:00:00Z
+  - id: DEBT-OMO-009
+    title: 'L1: 健康检查陈旧 — health check data outdated'
+    owner: omo-engineer
+    severity: low
+    dimension: maintenance
+    subdimension: health-stale
+    lifecycle_state: identified
+    gate_level: none
+    next_review_at: null
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 0
+    affected_roots:
+    - .omo
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags:
+    - initial_review_required
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-OMO-009
+      --next-review-at 2026-06-12T14:00:00Z
+  - id: DEBT-OMO-012
+    title: 'X3: 无成本追踪 — no cost tracking mechanism'
+    owner: omo-engineer
+    severity: low
+    dimension: governance
+    subdimension: costing
+    lifecycle_state: identified
+    gate_level: none
+    next_review_at: null
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 0
+    affected_roots:
+    - .omo
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags:
+    - initial_review_required
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-OMO-012
+      --next-review-at 2026-06-12T14:00:00Z
+  - id: DEBT-OMO-013
+    title: 'L0: TaskObject未实际使用 — TaskObject defined but never adopted'
+    owner: omo-engineer
+    severity: low
+    dimension: architecture
+    subdimension: task-object-adoption
+    lifecycle_state: identified
+    gate_level: none
+    next_review_at: null
+    last_reviewed_at: null
+    stale_evidence: true
+    overdue_by: 0
+    affected_roots:
+    - .omo
+    priority_reason: upcoming
+    current_lane: schedule_now
+    recommended_action: schedule
+    reason: missing_next_review_at
+    primary_lane: schedule_now
+    priority_flags:
+    - initial_review_required
+    command: python3 scripts/omo_debt.py schedule --omo-dir .omo --id DEBT-OMO-013
+      --next-review-at 2026-06-12T14:00:00Z
+summary:
+  owner_count: 1
+  total_dispatched_items: 11
+  lane_counts:
+    revalidate_now: 0
+    schedule_now: 11
+    escalate_now: 0
+    continue_mitigation: 0
+    watch_only: 0

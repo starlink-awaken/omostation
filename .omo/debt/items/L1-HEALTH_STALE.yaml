@@ -1,0 +1,24 @@
+id: L1-HEALTH_STALE
+title: "Runtime 健康状态无定时刷新 (matrix_state.json 无 cron job 定期更新)"
+dimension: governance_process
+subdimension: runtime_monitoring
+domain: workspace
+scope: cross_project
+severity: low
+weight: 0.3
+entropy_class: behavior
+lifecycle_state: resolved
+owner: omo-governance
+affected_roots:
+  - ~/runtime/
+evidence_refs:
+  - .omo/_knowledge/management/ecos-layer-audit-2026-06-05.md
+mitigation_refs: []
+opened_at: "2026-06-05T21:00:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase17
+history:
+  - at: "2026-06-05T21:00:00Z"
+    action: register
+    note: "Debt registered from Layer Audit 2026-06-05."

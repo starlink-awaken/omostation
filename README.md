@@ -5,17 +5,16 @@
 
 > Workspace 整合了所有知识工程与研究项目。
 >
-> **Phase 17**: 进行中 | [治理面板](.omo/MASTER-BLUEPRINT.md)
+> **Phase 27**: 进行中 | [治理面板](.omo/MASTER-BLUEPRINT.md)
 
 ## 结构
 
 ```
 omostation/
 ├── projects/               # 所有项目（独立 git 仓库）
-│   ├── kairon/             # 知识工程与研究栈（31 包 monorepo）
+│   ├── kairon/             # 知识工程与研究栈（24 包 monorepo）
 │   ├── gbrain/             # Postgres 原生知识脑（TypeScript）
 │   ├── hermes-console/     # Hermes 控制台
-│   ├── agentmesh/          # Agent SDK（已归档）
 │   └── _archived/          # 已迁移旧项目备份（24 项）
 │
 ├── data/                   # 共享数据层
@@ -51,7 +50,7 @@ omostation/
 ## 快速开始
 
 ```bash
-# kairon 全量测试（31 包）
+# kairon 全量测试（当前 checkout: 24 包）
 cd projects/kairon && make test
 
 # 单个包测试
@@ -68,7 +67,7 @@ python3 tests/integration/test-e2e-phase1.py
 
 | 项目 | 栈 | 规模 | 说明 | 状态 |
 |------|-----|------|------|------|
-| `kairon` | Python | 31 包 monorepo | 知识工程与研究栈 | 🟢 Active |
+| `kairon` | Python | 24 包 monorepo | 知识工程与研究栈 | 🟢 Active |
 | `gbrain` | TypeScript | 74 工具 + memU 引擎 | Postgres 知识脑 | 🟢 Active |
 | `hermes-console` | TypeScript | 137 MB | Hermes 控制台 | 🟡 待评估 |
 | `SharedBrain` | Python | 已归档 | 代码迁移至 kairon，数据层在 `data/sharedbrain/` | ⚪ Archived |

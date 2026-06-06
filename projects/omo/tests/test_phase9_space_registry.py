@@ -5,7 +5,7 @@ from pathlib import Path
 import yaml
 
 
-OMO_ROOT = Path(__file__).resolve().parents[1]
+OMO_ROOT = Path(__file__).resolve().parents[2]
 WORKSPACE_ROOT = OMO_ROOT.parent
 
 
@@ -36,10 +36,10 @@ def test_space_registry_entry_carries_boundary_metadata() -> None:
     assert entry["roots"]["data"] == "data"
     assert entry["roots"]["runtime"] == "runtime"
     assert {
-        ".omo/plans/phase9-program-plan.md",
-        ".omo/plans/phase9-wave2-execution-plan.md",
-        ".omo/plans/phase9-wave3-execution-plan.md",
-        ".omo/plans/phase9-wave4-execution-plan.md",
+        ".omo/_knowledge/design/plans/archive/phase9-program-plan.md",
+        ".omo/_knowledge/design/plans/archive/phase9-wave2-execution-plan.md",
+        ".omo/_knowledge/design/plans/archive/phase9-wave3-execution-plan.md",
+        ".omo/_knowledge/design/plans/archive/phase9-wave4-execution-plan.md",
         "spaces/system-space-identity-admission.yaml",
         "spaces/system-space-capability-taxonomy.yaml",
         "spaces/system-space-admission-matrix.yaml",
@@ -94,9 +94,9 @@ def test_system_space_manifest_matches_schema_contract() -> None:
     assert manifest["space_kind"] == "system"
     assert manifest["owners"]["governance_root"] == ".omo"
     assert manifest["owners"]["capability_roots"] == [
-        "projects/SharedBrain",
+        "projects/_archived/SharedBrain-original",
         "projects/gbrain",
-        "projects/agentmesh",
+        "projects/runtime",
         "projects/kairon",
     ]
     assert manifest["roots"] == {
@@ -105,7 +105,8 @@ def test_system_space_manifest_matches_schema_contract() -> None:
         "data": "data",
         "runtime": "runtime",
     }
-    assert manifest["routing"]["default_project"] == "projects/SharedBrain"
+    assert manifest["routing"]["default_project"] == "projects/_archived/SharedBrain-original"
+    assert manifest["routing"]["runtime_project"] == "projects/runtime"
 
     for rel_path in manifest["owners"]["capability_roots"]:
         assert (WORKSPACE_ROOT / rel_path).exists(), rel_path

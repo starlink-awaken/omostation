@@ -27,6 +27,9 @@ class DebtItem:
     next_review_at: str | None
     gate_level: str
     history: tuple[dict[str, str], ...]
+    x1_policy_ref: str = ""
+    x2_freshness: str = ""
+    x3_tier: str = ""
 
 
 @dataclass(frozen=True)
@@ -73,6 +76,9 @@ def load_debt_ledger(omo_dir: Path) -> DebtLedger:
                 next_review_at=payload.get("next_review_at"),
                 gate_level=payload["gate_level"],
                 history=tuple(payload.get("history", [])),
+                x1_policy_ref=payload.get("x1_policy_ref", ""),
+                x2_freshness=payload.get("x2_freshness", ""),
+                x3_tier=payload.get("x3_tier", ""),
             )
         )
 

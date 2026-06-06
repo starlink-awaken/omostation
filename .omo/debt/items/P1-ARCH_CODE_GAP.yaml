@@ -1,0 +1,32 @@
+id: P1-ARCH_CODE_GAP
+title: "架构文档与代码实现两层皮: Agora 代码在 kairon/packages/ 但架构定义其为 I0 层 (决策: 标注+长期台阶)"
+dimension: governance
+subdimension: architecture_convergence
+domain: .omo
+scope: governance_kernel
+severity: medium
+weight: 0.5
+entropy_class: classification
+lifecycle_state: resolved
+owner: omo-governance
+affected_roots:
+  - .omo
+  - projects/runtime/protocols
+evidence_refs:
+  - .omo/_knowledge/management/ecos-v5-deep-analysis-2026-06-05.md
+mitigation_refs:
+  - .omo/standards/ARCHITECTURE_CONVERGENCE.md
+opened_at: "2026-06-05T21:30:00Z"
+last_reviewed_at: null
+next_review_at: "2026-06-19T21:30:00Z"
+gate_level: phase28
+history:
+  - at: "2026-06-05T21:30:00Z"
+    action: register
+    note: "Full architecture audit 2026-06-05: L0 14/16 protocols ghost, L3 only Hermes active, I0(Agora) code in kairon not I0 project. 7 identified debt items never scheduled."
+  - at: "2026-06-05T23:15:00Z"
+    action: design_lock
+    note: "决策: 接受现状(标注文档). 战略台阶: 短期标注文档 → 中期将 workspace 级功能(服务发现/事件总线/跨层路由)逐步提取到 projects/runtime/ → 长期 Agora 在 kairon 内只保留 MCP 工具注册和代理. 当前 Agora 90+ 文件不动。"
+  - at: "2026-06-05T23:45:00Z"
+    action: close
+    note: "短台阶已完成: eCOS-v5-Architecture-SSOT.md 已添加战略台阶注释, 标注 Agora 驻留在 kairon 内(I0 实现)。"

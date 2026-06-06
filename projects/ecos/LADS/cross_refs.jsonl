@@ -1,0 +1,3 @@
+{"link_id":"LINK-001","source":"GENOME.md","target":"STATE.yaml","score":0.92}
+{"link_id":"LINK-002","source":"STATE.yaml","target":"LADS/HANDOFF/LATEST.md","score":0.73}
+{"link_id":"LINK-003","source":"AGENTS.md","target":"GENOME.md","score":0.64}

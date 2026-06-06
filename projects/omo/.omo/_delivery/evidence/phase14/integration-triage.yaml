@@ -1,0 +1,45 @@
+id: phase14-integration-backlog-triage
+created_at: '2026-06-06T05:41:43Z'
+mode: governed-triage
+source: .omo/_knowledge/design/plans/archive/phase14-deferred-ecosystem-backlog.md
+ranking_model:
+  user_value: 0.4
+  interface_readiness: 0.3
+  maintenance_risk_inverse: 0.2
+  rollback_clarity: 0.1
+ranked_items:
+- id: memu-gbrain-memory
+  workstream: multi-project-deep-absorption
+  rank: 1
+  score: 89
+  selected_for_phase14: true
+  integration_level: L2
+  reason: High memory value and bounded adapter surface after Phase 13 proposal controls.
+- id: gitnexus-kos-index
+  workstream: multi-project-deep-absorption
+  rank: 2
+  score: 84
+  selected_for_phase14: true
+  integration_level: L2
+  reason: Repository intelligence maps cleanly to KOS index records.
+- id: firecrawl-kronos-ingestion
+  workstream: multi-project-deep-absorption
+  rank: 3
+  score: 80
+  selected_for_phase14: true
+  integration_level: L2
+  reason: Useful ingestion pilot, but restricted to preview mode.
+- id: ultrarag-minerva
+  workstream: multi-project-deep-absorption
+  rank: 4
+  score: 71
+  selected_for_phase14: false
+  integration_level: deferred
+  reason: Retrieval semantics require more evaluation after package graph maturity.
+- id: marketplace-preview
+  workstream: marketplace-external-ecosystem
+  rank: 5
+  score: 68
+  selected_for_phase14: true
+  integration_level: preview-only
+  reason: Preview can validate admission controls without installs.

@@ -74,3 +74,9 @@ packages = ["src/agora"]
 
 [tool.hatch.build.targets.sdist]
 packages = ["src/agora"]
+
+[tool.uv.sources]
+kos = { path = "../kairon/packages/kos", editable = true }
+eidos = { path = "../kairon/packages/eidos", editable = true }
+minerva = { path = "../kairon/packages/minerva", editable = true }
+core-models = { path = "../kairon/packages/core-models", editable = true }

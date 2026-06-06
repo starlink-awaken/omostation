@@ -1,0 +1,27 @@
+id: P2-KEI_WEEKLY
+title: "KEI 每周审计报告 — cron 生成趋势报告并推送微信"
+dimension: observability
+subdimension: reporting
+domain: workspace
+scope: governance_kernel
+severity: low
+weight: 0.2
+entropy_class: behavior
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - ~/runtime/data/kei_audit.jsonl
+  - ~/runtime/scripts/kei_dashboard.py
+evidence_refs: []
+mitigation_refs: []
+opened_at: "2026-06-05T15:00:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase19
+history:
+  - at: "2026-06-05T15:00:00Z"
+    action: register
+    note: "Retro recommendation: weekly cron that runs kei_dashboard.py --html, saves report to ~/runtime/reports/, pushes summary to WeChat via server酱."
+  - at: "2026-06-05T22:35:00Z"
+    action: close
+    note: "kei_weekly.py created. First report generated at ~/runtime/reports/kei-weekly-20260605.html (2777 bytes). Cron entry: 0 9 * * 1. Server酱 push support included (skipped when SENDKEY unset)."

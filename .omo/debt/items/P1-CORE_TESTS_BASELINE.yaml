@@ -1,0 +1,28 @@
+id: P1-CORE_TESTS_BASELINE
+title: "核心基座包测试薄弱：core-models(3)、cron-service(3)、engine-core(10)"
+dimension: code_test
+subdimension: baseline_coverage
+domain: projects
+scope: within_project
+severity: high
+weight: 0.5
+entropy_class: state
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - projects/kairon/packages/core-models/
+  - projects/kairon/packages/cron-service/
+  - projects/kairon/packages/engine-core/
+evidence_refs: []
+mitigation_refs: []
+opened_at: "2026-06-05T14:00:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase18
+history:
+  - at: "2026-06-05T14:00:00Z"
+    action: register
+    note: "Architecture gap analysis 2026-06-05: core-models (dependency base, 3 tests), cron-service (scheduler, 3 tests), engine-core (runtime core, 10 tests) — all below safety baseline."
+  - at: "2026-06-05T21:30:00Z"
+    action: close
+    note: "Audit revealed architecture_audit.md test counts were wrong: core-models has ~50+ tests (not 3), cron-service has ~100+ (not 3), engine-core 118 passed. Duplicate test files identified. Audit report written."

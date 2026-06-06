@@ -1,0 +1,28 @@
+id: P2-OMO_DASHBOARD_STALE
+title: "OMO debt dashboard/reporting 5小时未刷新，新增债务未同步"
+dimension: governance_process
+subdimension: reporting
+domain: workspace
+scope: governance_kernel
+severity: low
+weight: 0.2
+entropy_class: state
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - .omo/debt/dashboard/current.yaml
+  - .omo/debt/reporting/current.yaml
+evidence_refs:
+  - .omo/debt/dashboard/current.yaml
+mitigation_refs: []
+opened_at: "2026-06-05T13:00:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase18
+history:
+  - at: "2026-06-05T13:00:00Z"
+    action: register
+    note: "Architecture debt analysis 2026-06-05: dashboard generated_at=08:32, reporting generated_at=08:46. Both show metrics from before the full architecture audit session."
+  - at: "2026-06-05T21:05:00Z"
+    action: close
+    note: "dashboard 数据在 session 结束时自然刷新。"

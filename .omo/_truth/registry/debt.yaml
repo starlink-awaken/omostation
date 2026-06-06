@@ -9,20 +9,26 @@ dispatch_ref: .omo/debt/dispatch/current.yaml
 campaign_ref: .omo/debt/campaign/current.yaml
 reporting_ref: .omo/debt/reporting/current.yaml
 seed_items:
-  # Historical debt (all closed)
-  - .omo/debt/items/D2_CI_E2E.yaml
-  - .omo/debt/items/D3_EU_PRICING.yaml
-  - .omo/debt/items/SB_DECOMPOSITION.yaml
-  - .omo/debt/items/SB_UNTESTED_PKGS.yaml
-  - .omo/debt/items/SB_ORPHANED_TASKS.yaml
-  - .omo/debt/items/SB_ROOT_CLEANUP.yaml
-  - .omo/debt/items/SB_BRIDGE_FIX.yaml
-  - .omo/debt/items/SB_PROJECTS_YAML.yaml
-  - .omo/debt/items/SB_PHASE17_PLAN.yaml
-  # Phase 17 planning gate residual risks (watching)
-  - .omo/debt/items/R1_P0_SURFACE_GAP.yaml
-  - .omo/debt/items/R2_AGORA_NOT_RUNNING.yaml
-  - .omo/debt/items/R3_LAYER_INDEX_DRIFT.yaml
-  - .omo/debt/items/R4_RUNTIME_ADAPTER_DEBT.yaml
-  - .omo/debt/items/R5_METAOS_PATH_INSERT.yaml
-  - .omo/debt/items/R6_SB_STANDALONE_NO_TESTS.yaml
+- .omo/debt/items/D2_CI_E2E.yaml
+- .omo/debt/items/D3_EU_PRICING.yaml
+- .omo/debt/items/SB_DECOMPOSITION.yaml
+- .omo/debt/items/SB_UNTESTED_PKGS.yaml
+- .omo/debt/items/SB_ORPHANED_TASKS.yaml
+- .omo/debt/items/SB_ROOT_CLEANUP.yaml
+- .omo/debt/items/SB_BRIDGE_FIX.yaml
+- .omo/debt/items/SB_PROJECTS_YAML.yaml
+- .omo/debt/items/SB_PHASE17_PLAN.yaml
+- .omo/debt/items/R1_P0_SURFACE_GAP.yaml
+- .omo/debt/items/R2_AGORA_NOT_RUNNING.yaml
+- .omo/debt/items/R3_LAYER_INDEX_DRIFT.yaml
+- .omo/debt/items/R4_RUNTIME_ADAPTER_DEBT.yaml
+- .omo/debt/items/R5_METAOS_PATH_INSERT.yaml
+- .omo/debt/items/R6_SB_STANDALONE_NO_TESTS.yaml
+- .omo/debt/items/P0-DASHBOARD_COCKPIT.yaml
+- .omo/debt/items/P0-SMART_NOTIFY.yaml
+- .omo/debt/items/P0-TASKOBJECT_LIVE.yaml
+- .omo/debt/items/P1-AUTO_HEAL.yaml
+- .omo/debt/items/P1-FRESHNESS_AUTO.yaml
+- .omo/debt/items/P2-KEI_SANDBOX.yaml
+- .omo/debt/items/P2-META_CI.yaml
+- .omo/debt/items/P2-RED_TEAM.yaml

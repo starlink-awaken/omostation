@@ -1,0 +1,57 @@
+id: phase15-operating-dashboard-snapshot
+created_at: '2026-06-05T06:29:20Z'
+phase: 15
+status: ready
+ledger_authoritative: true
+dashboard_mutation_allowed: false
+capability_health:
+  registered_assets: 79
+  scenario_trace: ready
+  mutation_mode: proposal-and-draft-only
+proposal_quality:
+  sampled_proposals: 3
+  traceability_rate: 1.0
+  rollback_coverage: 1.0
+backlog_pressure:
+  phase14_deferred_scope: ranked-not-executed
+  hidden_scope_detected: false
+recovery_readiness:
+  selected_drills: 3
+  status: pass
+project_health:
+  kairon:
+    status: runnable-governed
+    role: reasoning, KOS, package baseline
+    evidence_refs:
+    - projects/kairon/README.md
+    - projects/kairon/pyproject.toml
+    current_limit: Phase 15 records health from manifests and tests; it does not mutate
+      package code.
+  gbrain:
+    status: runnable-governed
+    role: knowledge brain, recipes, skills, retrieval surface
+    evidence_refs:
+    - projects/gbrain/README.md
+    - projects/gbrain/package.json
+    current_limit: Knowledge UX scenarios are governed through user-value evidence
+      before live expansion.
+  agentmesh:
+    status: runnable-governed
+    role: agent SDK and execution/collaboration substrate
+    evidence_refs:
+    - projects/agentmesh/README.md
+    - projects/agentmesh/package.json
+    current_limit: Execution automation remains behind approval and active-packet
+      gates.
+  SharedBrain:
+    status: runnable-governed
+    role: shared memory, skills, workflows, frontend/server assets
+    evidence_refs:
+    - projects/SharedBrain/README.md
+    - projects/SharedBrain/pyproject.toml
+    current_limit: SharedBrain integration is tracked as user value, not silently
+      absorbed into OMO.
+user_value:
+  scenario_count: 3
+  live_demo_candidates: 2
+  risk: governed-preview

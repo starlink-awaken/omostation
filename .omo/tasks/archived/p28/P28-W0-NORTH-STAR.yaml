@@ -1,0 +1,30 @@
+id: P28-W0-NORTH-STAR
+phase: 28
+wave: W0
+title: "定义北极星场景 — 写下 2-3 个每天会用 omostation 做的具体事情"
+status: completed
+task_type: governance
+priority: P0
+assigned_to: human
+human_approval_required: true
+entry_gate:
+  - "phase27 所有目标已完成"
+depends_on: []
+deliverables:
+  - ".omo/_control/north-star.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/design/plans/phase28-observable-knowledge-workflow.md"
+knowledge_refs:
+  - ".omo/_knowledge/design/plans/phase28-observable-knowledge-workflow.md"
+description: |
+  人类必须完成此任务才能解锁 Phase 28 的后续 Wave。
+  写下 2-3 个具体的日常使用场景，例如：
+    - "每天用 omostation 搜索并整理某个技术领域的最新进展"
+    - "用 omostation 完成一份技术调研报告，带参考来源"
+  记录到 .omo/_control/north-star.md，作为 Phase 28 所有 Wave 的验收基准。
+started_at: '2026-06-05T14:00:00Z'
+completed_at: '2026-06-05T14:00:00Z'
+blocked_by: null
+retry_count: 0

@@ -1,0 +1,31 @@
+id: DEBT-OMO-025
+title: 'P1: TaskObject真正启用 — 从Hermes自动路由任务到服务'
+dimension: integration
+subdimension: layer-l3
+domain: workspace
+scope: governance_kernel
+severity: low
+weight: 0.03
+entropy_class: classification
+lifecycle_state: closed
+owner: omo-agent
+affected_roots:
+  - ~/Workspace/projects/runtime/protocols/task-object-v1.md
+  - $RUNTIME_HOME/scripts/taskobject.sh
+  - ~/.hermes/skills/taskobject-router/SKILL.md
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-05T09:30:00Z'
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: Skill
+history:
+  - at: '2026-06-05T09:30:00Z'
+    action: register
+    note: 'TaskObject协议和适配器已写好但无人使用，需要让Hermes自动路由任务到对应服务'
+  - at: '2026-06-05T17:50:00Z'
+    action: close
+    note: 'Created taskobject-router SKILL.md at ~/.hermes/skills/taskobject-router/. Routes natural-language queries through TaskObject v1 adapter to 17+ Runtime MCP tools. Hermes skill with intent parsing, tool routing table, and 3 worked examples.'

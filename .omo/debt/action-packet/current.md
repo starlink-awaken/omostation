@@ -1,6 +1,6 @@
 # Debt Action Packet
 
-Generated at: 2026-06-03T01:47:00Z
+Generated at: 2026-06-05T08:32:32Z
 
 ## Revalidate Now
 
@@ -8,8 +8,24 @@ Generated at: 2026-06-03T01:47:00Z
 
 ## Schedule Now
 
-- `SB_DECOMPOSITION` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id SB_DECOMPOSITION --next-review-at 2026-06-10T01:47:00Z`
-- `SB_ROOT_CLEANUP` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id SB_ROOT_CLEANUP --next-review-at 2026-06-10T01:47:00Z`
+- `I0-AGORA_SSE_DEAD` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id I0-AGORA_SSE_DEAD --next-review-at 2026-06-12T08:32:32Z`
+- `P0-DASHBOARD_COCKPIT` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id P0-DASHBOARD_COCKPIT --next-review-at 2026-06-12T08:32:32Z`
+- `P0-SMART_NOTIFY` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id P0-SMART_NOTIFY --next-review-at 2026-06-12T08:32:32Z`
+- `P0-TASKOBJECT_LIVE` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id P0-TASKOBJECT_LIVE --next-review-at 2026-06-12T08:32:32Z`
+- `I0-AGORA_DUAL_INSTANCE` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id I0-AGORA_DUAL_INSTANCE --next-review-at 2026-06-12T08:32:32Z`
+- `L0-PROTOCOL_GHOSTS` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id L0-PROTOCOL_GHOSTS --next-review-at 2026-06-12T08:32:32Z`
+- `L1-SCHEDULER_MISSING` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id L1-SCHEDULER_MISSING --next-review-at 2026-06-12T08:32:32Z`
+- `P1-AUTO_HEAL` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id P1-AUTO_HEAL --next-review-at 2026-06-12T08:32:32Z`
+- `P1-FRESHNESS_AUTO` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id P1-FRESHNESS_AUTO --next-review-at 2026-06-12T08:32:32Z`
+- `X1-SANDBOX_INERT` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id X1-SANDBOX_INERT --next-review-at 2026-06-12T08:32:32Z`
+- `L0-TASKOBJECT_UNUSED` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id L0-TASKOBJECT_UNUSED --next-review-at 2026-06-12T08:32:32Z`
+- `L1-HEALTH_STALE` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id L1-HEALTH_STALE --next-review-at 2026-06-12T08:32:32Z`
+- `P2-KEI_SANDBOX` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id P2-KEI_SANDBOX --next-review-at 2026-06-12T08:32:32Z`
+- `P2-META_CI` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id P2-META_CI --next-review-at 2026-06-12T08:32:32Z`
+- `P2-RED_TEAM` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id P2-RED_TEAM --next-review-at 2026-06-12T08:32:32Z`
+- `X1-NO_AUDIT_CHAIN` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id X1-NO_AUDIT_CHAIN --next-review-at 2026-06-12T08:32:32Z`
+- `X2-NO_FRESHNESS` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id X2-NO_FRESHNESS --next-review-at 2026-06-12T08:32:32Z`
+- `X3-NO_COSTING` — missing_next_review_at — `python3 scripts/omo_debt.py schedule --omo-dir .omo --id X3-NO_COSTING --next-review-at 2026-06-12T08:32:32Z`
 
 ## Escalate Now
 
@@ -21,8 +37,4 @@ Generated at: 2026-06-03T01:47:00Z
 
 ## Watch Only
 
-- `SB_BRIDGE_FIX` — upcoming_not_due — `manual: keep item on review radar`
-- `SB_ORPHANED_TASKS` — upcoming_not_due — `manual: keep item on review radar`
-- `SB_PROJECTS_YAML` — upcoming_not_due — `manual: keep item on review radar`
-- `SB_UNTESTED_PKGS` — upcoming_not_due — `manual: keep item on review radar`
-- `SB_PHASE17_PLAN` — upcoming_not_due — `manual: keep item on review radar`
+- none

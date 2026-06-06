@@ -1,0 +1,56 @@
+id: P28-W1-HEALTH-PROFILE
+phase: 28
+wave: W1
+title: "家庭健康档案子系统 — HealthProfile 数据结构 + demo 录入脚本 + 单元测试"
+status: completed
+task_type: feature
+priority: P1
+assigned_to: python-backend-engineer
+human_approval_required: false
+entry_gate:
+  - "P28-W0-NORTH-STAR completed"
+  - "P28-W0-TOOL-HEATMAP completed"
+depends_on:
+  - P28-W0-NORTH-STAR
+  - P28-W0-TOOL-HEATMAP
+deliverables:
+  - "projects/kairon/packages/health-profile/src/health_profile/models.py"
+  - "projects/kairon/packages/health-profile/src/health_profile/__init__.py"
+  - "projects/kairon/packages/health-profile/tests/unit/test_health_profile.py"
+  - ".omo/_delivery/phase28-health-profile-deliverable.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/design/plans/phase28-observable-knowledge-workflow.md"
+  - ".omo/_control/north-star.md"
+knowledge_refs:
+  - ".omo/_control/north-star.md § 场景 C"
+description: |
+  北极星场景 C（FamilyShared 医疗跟踪）的数据底座任务。
+  当前 FamilyShared 已积累视力档案、生长数据、体检提醒等结构化数据，
+  但 omostation 侧缺少对"家庭成员健康档案"的一等数据建模，W4 阶段的
+  健康摘要与行动提醒生成缺一个稳定的输入对象。
+
+  范围（仅 W1，W4 再做摘要/提醒生成）：
+    1. 在 kairon 新建 packages/health_profile/ 子包（含 pyproject、README、tests）
+    2. 定义 HealthProfile pydantic 数据模型：
+       - member_id / name / birth_date / relationship（self/spouse/child/parent）
+       - records: list[HealthRecord]，每条 record 含 type（vision/growth/checkup/vaccine）、date、payload、source
+       - reminders: list[HealthReminder]，含 title、due_date、status
+    3. 提供 JSON 序列化/反序列化（与 gbrain 入库格式对齐）
+    4. demo_ingest.py：读入 1 份夏维桢示例 JSON，打印入库结果
+    5. 单测覆盖：构造/序列化/反序列化/必填校验/未知 record type 拒绝
+
+  验收（严格）：
+    - `make kairon-test` 新增 health_profile 测试全部通过
+    - demo 脚本能成功录入 1 条夏维桢示例数据并打印结构化输出
+    - 不引入额外重型依赖（仅 pydantic + 标准库）
+
+  约束：
+    - 暂不接 FamilyShared 真数据源，使用示例 fixture 即可
+    - W4 阶段再做"摘要生成 + 提醒 cron"等上层功能
+    - 风险 L1：纯新包，不动现有模块，失败可整体回滚
+started_at: 2026-06-05T13:05:00Z
+completed_at: 2026-06-05T13:12:27Z
+blocked_by: null
+retry_count: 0

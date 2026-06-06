@@ -9,11 +9,15 @@ from .omo_shared import utc_now, load_yaml, write_yaml
 
 
 def _root() -> Path:
-    return Path(__file__).resolve().parents[1]
+    return Path(__file__).resolve().parents[2]
 
 
 def _omo(root: Path) -> Path:
     return root / ".omo"
+
+
+def _phase14_evidence_ref(name: str) -> str:
+    return f".omo/_delivery/evidence/phase14/{name}"
 
 
 def triage_command(args: argparse.Namespace) -> int:
@@ -22,7 +26,7 @@ def triage_command(args: argparse.Namespace) -> int:
         "id": "phase14-integration-backlog-triage",
         "created_at": utc_now(),
         "mode": "governed-triage",
-        "source": ".omo/plans/phase14-deferred-ecosystem-backlog.md",
+        "source": ".omo/_knowledge/design/plans/archive/phase14-deferred-ecosystem-backlog.md",
         "ranking_model": {
             "user_value": 0.4,
             "interface_readiness": 0.3,
@@ -278,31 +282,31 @@ def build_parser() -> argparse.ArgumentParser:
 
     triage = sub.add_parser("triage")
     triage.add_argument(
-        "--output", default=".omo/evidence/phase14/integration-triage.yaml"
+        "--output", default=_phase14_evidence_ref("integration-triage.yaml")
     )
     triage.set_defaults(func=triage_command)
 
     pilots = sub.add_parser("pilots")
     pilots.add_argument(
-        "--output", default=".omo/evidence/phase14/deep-absorption-pilots.yaml"
+        "--output", default=_phase14_evidence_ref("deep-absorption-pilots.yaml")
     )
     pilots.set_defaults(func=pilots_command)
 
     patterns = sub.add_parser("patterns")
     patterns.add_argument(
-        "--output", default=".omo/evidence/phase14/architecture-patterns.yaml"
+        "--output", default=_phase14_evidence_ref("architecture-patterns.yaml")
     )
     patterns.set_defaults(func=patterns_command)
 
     ecosystem = sub.add_parser("ecosystem")
     ecosystem.add_argument(
-        "--output", default=".omo/evidence/phase14/ecosystem-preview.yaml"
+        "--output", default=_phase14_evidence_ref("ecosystem-preview.yaml")
     )
     ecosystem.set_defaults(func=ecosystem_command)
 
     security = sub.add_parser("security")
     security.add_argument(
-        "--output", default=".omo/evidence/phase14/security-review.yaml"
+        "--output", default=_phase14_evidence_ref("security-review.yaml")
     )
     security.set_defaults(func=security_command)
     return parser

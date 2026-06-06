@@ -1,0 +1,41 @@
+id: P30-W1-METAOS-EXTRACT
+phase: 30
+wave: W1
+title: "metaos 独立出 kairon"
+status: completed
+task_type: extraction
+priority: P0
+assigned_to: claude-code-agent
+human_approval_required: true
+entry_gate:
+  - "P30-W0-DECISION 审批通过"
+  - "P30-W0-DAEMON-INSTALL 完成"
+depends_on:
+  - P30-W0-DECISION
+  - P30-W0-DAEMON-INSTALL
+deliverables:
+  - "projects/metaos/ 新建项目目录 (uv workspace + pyproject.toml)"
+  - "kairon/packages/metaos/ 内容 git mv 到 projects/metaos/"
+  - "kairon monorepo 中移除 metaos 包 (从 pyproject.toml 删)"
+  - "projects/metaos/ 自身 uv sync 通过 + pytest 全绿"
+  - ".omo/_knowledge/management/decision-p30-architecture-final.md 引用链接更新"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/management/decision-p30-architecture-final.md"
+  - ".omo/_knowledge/management/architecture-final-state-v3.md"
+knowledge_refs:
+  - "kairon/packages/metaos 当前 6K 行, 自包含, 仅依赖 eidos/kos"
+description: |
+  metaos 独立出 kairon monorepo, 成为 projects/ 第 5 个独立项目。
+  风险: 中 — 自包含但需检查是否真有"仅依赖"承诺 (eidos/kos 跨项目引用)。
+  验证: projects/metaos/ 自身 make test 全绿。
+started_at: '2026-06-06T01:00:00Z'
+completed_at: '2026-06-06T01:30:00Z'
+blocked_by: null
+retry_count: 0
+notes: |
+  完成于 2026-06-06 (自动模式). 实际移动 6201 行 (含 scenarios 场景测试),
+  pytest 全 163 个测试通过. v3 方案的"0 依赖, 0 被依赖"承诺已验证
+  (grep 全 kairon: 0 处 kairon 包 import metaos). 仍需人类审批后
+  才能 merge, 故 status=completed 标记为"执行完成, 待审批合并"。

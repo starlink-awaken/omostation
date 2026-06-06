@@ -1,24 +1,46 @@
-generated_at: '2026-06-03T02:19:21Z'
-dispatch_run_ref: .omo/debt/dispatch/runs/2026-06-03T02-12-00Z.yaml
-run_stamp: 2026-06-03T02-12-00Z
+generated_at: '2026-06-05T08:32:46Z'
+dispatch_run_ref: .omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml
+run_stamp: 2026-06-10T00-00-00Z
 summary:
-  owner_count: 2
-  total_items: 7
+  owner_count: 4
+  total_items: 9
   state_counts:
-    pending_approval: 0
-    ready_to_execute: 7
+    pending_approval: 1
+    ready_to_execute: 8
     executed: 0
-  gate_item_count: 0
+  gate_item_count: 1
   approved_gate_item_count: 0
-  approval_coverage_rate: 1.0
+  approval_coverage_rate: 0.0
   executed_item_count: 0
   execution_completion_rate: 0.0
 owners:
 - owner: sharedbrain-governance
   item_count: 4
   state_counts:
+    pending_approval: 1
+    ready_to_execute: 3
+    executed: 0
+  gate_item_count: 1
+  approved_gate_item_count: 0
+  approval_coverage_rate: 0.0
+  executed_item_count: 0
+  execution_completion_rate: 0.0
+- owner: commerce-governance
+  item_count: 1
+  state_counts:
     pending_approval: 0
-    ready_to_execute: 4
+    ready_to_execute: 1
+    executed: 0
+  gate_item_count: 0
+  approved_gate_item_count: 0
+  approval_coverage_rate: 1.0
+  executed_item_count: 0
+  execution_completion_rate: 0.0
+- owner: platform-governance
+  item_count: 1
+  state_counts:
+    pending_approval: 0
+    ready_to_execute: 1
     executed: 0
   gate_item_count: 0
   approved_gate_item_count: 0

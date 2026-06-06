@@ -1,0 +1,26 @@
+id: P1-KEI_ALERTING
+title: "KEI 审计日志写但无人消费：无告警、无 dashboard、无异常检测"
+dimension: observability
+subdimension: security_monitoring
+domain: workspace
+scope: governance_kernel
+severity: high
+weight: 0.4
+entropy_class: behavior
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - ~/runtime/data/kei_audit.jsonl
+evidence_refs: []
+mitigation_refs: []
+opened_at: "2026-06-05T14:00:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase18
+history:
+  - at: "2026-06-05T14:00:00Z"
+    action: register
+    note: "Architecture gap analysis 2026-06-05: KEI sandbox writes 11K+ audit records but there's no consumer. No pattern detection for blocked operations, no alerting for sandbox violations."
+  - at: "2026-06-05T21:30:00Z"
+    action: close
+    note: "kei_alert.py created, cron every 5min, threshold 10/min. Verified: 0 blocked actions."

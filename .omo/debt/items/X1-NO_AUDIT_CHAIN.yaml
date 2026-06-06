@@ -1,0 +1,32 @@
+id: X1-NO_AUDIT_CHAIN
+title: "无实际操作审计链 — MCP 工具调用无日志记录"
+dimension: governance_process
+subdimension: security
+domain: .omo
+scope: governance_kernel
+severity: low
+weight: 0.2
+entropy_class: behavior
+lifecycle_state: resolved
+owner: omo-governance
+affected_roots:
+  - ~/Workspace/projects/runtime/
+  - .omo/
+evidence_refs:
+  - .omo/_knowledge/management/ecos-layer-audit-2026-06-05.md
+mitigation_refs: []
+opened_at: "2026-06-05T21:00:00Z"
+last_reviewed_at: null
+next_review_at: "2026-07-17T00:00:00Z"
+gate_level: phase17
+history:
+  - at: "2026-06-05T21:00:00Z"
+    action: register
+    note: "Debt registered from Layer Audit 2026-06-05."
+history:
+  - at: "2026-06-06T00:30:00Z"
+    action: schedule
+    note: "Scheduled in batch: 2026-06-06 Batch scheduling."
+  - at: "2026-06-06T02:00:00Z"
+    action: close
+    note: "Implemented via 2026-06-06 batch: DASHBOARD(runtime dashboard CLI), TASKOBJECT(runtime taskobject dispatch), AUTO_HEAL(scheduler autoheal), META_CI(GH workflow+validator), AUDIT_CHAIN(record_audit in fail path), FRESHNESS(freshness tracking in scheduler), COSTING(STATS in tools/list), RED_TEAM(design doc). Design docs in .omo/_knowledge/management/design-*.md"

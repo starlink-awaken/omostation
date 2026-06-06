@@ -1,0 +1,26 @@
+id: DEBT-TEST-001
+title: Test fixture debt item alpha
+dimension: test-infrastructure
+subdimension: fixtures
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: deferred
+owner: omo-engineer
+affected_roots:
+- .omo
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-01T00:00:00Z'
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+history:
+- at: '2026-06-01T00:00:00Z'
+  action: register
+  note: Registered test item DEBT-TEST-001.
+x1_policy_ref: X1-AUDIT-001
+x2_freshness: '2026-06-05T06:00:00Z'
+x3_tier: Framework

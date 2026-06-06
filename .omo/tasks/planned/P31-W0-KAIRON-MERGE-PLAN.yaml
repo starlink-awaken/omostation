@@ -1,0 +1,108 @@
+id: P31-W0-KAIRON-MERGE-PLAN
+phase: 31
+wave: W0
+title: "kairon 17 包合并规划（方向 C）— AST 分析 + ADR-0006"
+status: completed
+task_type: analysis
+priority: P1
+assigned_to: claude
+human_approval_required: false
+entry_gate:
+  - "P31-W0-ECOS-EXTRACT completed"
+depends_on:
+  - P31-W0-ECOS-EXTRACT
+deliverables:
+  - "/tmp/ast_scan.py (AST 扫描器)"
+  - "/tmp/kairon_deps.json (AST 分析结果，1,101 prod 文件扫描，34 cross-pkg imports / 7 pairs)"
+  - "/Users/xiamingxing/Workspace/.omo/_knowledge/decisions/0006-kairon-package-merge.md (ADR-0006 PROPOSED)"
+  - "/Users/xiamingxing/Workspace/.omo/_knowledge/decisions/INDEX.md (新增 0006 索引)"
+risk_level: L0
+allowed_operation_level: L0
+source_docs:
+  - ".omo/_knowledge/management/architecture-pure-analysis.md"
+  - ".omo/_knowledge/management/architecture-final-state-v3.md"
+knowledge_refs:
+  - "ADR-0005 (P29 架构升级)"
+  - "ADR-0006 (本任务产出)"
+  - "P31-W0-ECOS-EXTRACT (上游，已完成 kairon 21→20 包)"
+description: |
+  用 Python AST（不是 grep）严谨分析 kairon 17 包跨包 import，校正"0 跨包 import"错误假设。
+  按方向 C 写 4 组合并规划（17→12 包）：llm-gateway-kernel / protocols-layer / sot-bridge / data-pipeline。
+  产 ADR-0006 (PROPOSED 状态，等人类 review)。
+  本任务只规划，不真实施合并（合并放 P31-W1）。
+
+  === AST 严谨分析结果（校正后）===
+
+  旧假设（grep 得出）: "生产代码 0 跨包 import"
+  AST 实际: **生产代码 34 条跨包 import / 7 唯一源→目标对 / 1,101 文件扫描**
+
+  7 对跨包依赖矩阵:
+  - codeanalyze → eidos (1)
+  - eidos → kos (2)
+  - iris → eidos (3)
+  - iris → kronos (1)
+  - iris → minerva (1)
+  - iris → ssot (2)  [注: iris 用 ssot_kernel 这个 import 名称, 之前 grep 漏掉]
+  - kos → eidos (6)
+  - kronos → kos (1)
+  - minerva → eidos (1)
+  - minerva → health-profile (3)
+  - minerva → kos (8)
+  - sharedbrain-bridge → core-models (5)
+
+  关键发现:
+  - 10/17 包零出向 prod import (core-models, engine-core, forge, health-profile, llm-gateway, ontoderive, shared-lib, sophia, ssot, symphony-protocol)
+  - 22/34 (65%) 跨包 import 集中在 eidos↔kos↔minerva 三联体
+  - 7 条 import 集中在 iris（连接器层）
+  - 5 条 import 集中在 sharedbrain-bridge → core-models (standalone server 入口)
+  - 测试代码 12 条 import / 3 对（minerva→sophia 7 条，minerva→health-profile 2 条，sharedbrain-bridge→core-models 3 条）
+
+  === 方向 C 合并规划 ===
+
+  4 组（17→12 包）:
+  1. llm-gateway-kernel = llm-gateway (2,560 行) + engine-core (25,641 行) = 28,201 行
+  2. protocols-layer = sophia (1,440) + symphony-protocol (1,014) = 2,454 行
+  3. sot-bridge = ssot (14,826) + sharedbrain-bridge (451) = 15,277 行
+  4. data-pipeline = codeanalyze (7,170) + kronos (2,903) + iris (8,311) = 18,384 行
+
+  不动的 8 包（保留独立）:
+  - eidos (35,509), kos (14,256), minerva (25,725), core-models (1,661)
+  - forge (8,021), health-profile (192), ontoderive (6,647), shared-lib (38,075)
+
+  === 关键设计决定 ===
+
+  1. eidos/kos/minerva **保持独立**（不并入 knowledge-stack）—— 22 条循环虽集中但三者职责不同
+  2. ssot 仍用 `ssot_kernel` 作为 wheel name（合并到 sot-bridge 后保留 import 路径）
+  3. data-pipeline 内部 3 包不重命名子包（保持 codeanalyze/kronos/iris 原名）
+  4. 合并后 1 条 prod import 变内部 import (iris→kronos 改同包内)
+
+  === 实施时序（建议 P31-W1 工作）===
+
+  - W1-DAY1: 合并 1 (llm-gateway-kernel) — 工程量最大
+  - W1-DAY2: 合并 4 (data-pipeline) — 测试最多
+  - W1-DAY3: 合并 2 (protocols-layer) — 最小
+  - W1-DAY4: 合并 3 (sot-bridge) — ssot 有 mcp_server.py 在 src 外
+  - W1-DAY5: 全量 pytest + ruff + uv sync 验证
+
+  === 已知风险（详见 ADR-0006 §Risk Assessment）===
+
+  - L2: 合并后 import 路径错乱
+  - L2: 测试失败（4 组共 200+ 测试需逐个验证）
+  - L1: 命名空间冲突（已分析：无冲突）
+  - L1: 引入新循环依赖（已分析：无）
+
+started_at: "2026-06-06T03:00:00Z"
+completed_at: "2026-06-06T03:30:00Z"
+blocked_by: null
+retry_count: 0
+artifact_paths:
+  ast_scanner: "/tmp/ast_scan.py"
+  ast_report: "/tmp/kairon_deps.json"
+  adr: "/Users/xiamingxing/Workspace/.omo/_knowledge/decisions/0006-kairon-package-merge.md"
+  adr_index_updated: "/Users/xiamingxing/Workspace/.omo/_knowledge/decisions/INDEX.md"
+supersedes_claim: "上一轮 grep 报告'生产代码 0 跨包 import'已被 AST 严谨分析证伪 (实际 34 条 / 7 对)"
+downstream_tasks:
+  - id: P31-W1-KAIRON-MERGE-EXEC
+    title: "kairon 17→12 包物理合并执行（基于 ADR-0006 方向 C）"
+    estimated_duration: "5 工作日"
+    depends_on_decision: "ADR-0006 ACCEPTED (人类 review 通过)"

@@ -1,0 +1,126 @@
+capabilities:
+- id: cap:agora-mesh
+  type: capability
+  protocol: mcp
+  entrypoint: http://127.0.0.1:7430
+  lifecycle: active
+  metadata:
+    description: Agora MCP Service Convergence Hub — route, monitor, govern inter-service
+      communication
+    tags:
+    - i0
+    - service-mesh
+    - mcp
+    - routing
+    scenario_tags:
+    - infrastructure
+    - service-discovery
+- id: cap:cron-scheduler
+  type: capability
+  protocol: mcp
+  entrypoint: http://127.0.0.1:7450
+  lifecycle: active
+  metadata:
+    description: Distributed cron job scheduler
+    tags:
+    - i0
+    - scheduler
+    - cron
+    scenario_tags:
+    - automation
+    - scheduling
+- id: cap:dashboard
+  type: capability
+  protocol: api
+  entrypoint: http://127.0.0.1:8080
+  lifecycle: active
+  metadata:
+    description: Runtime health dashboard
+    tags:
+    - i0
+    - dashboard
+    - monitoring
+    scenario_tags:
+    - observability
+- id: cap:gbrain
+  type: capability
+  protocol: mcp
+  entrypoint: http://127.0.0.1:5433
+  lifecycle: active
+  metadata:
+    description: Knowledge Brain — vector storage and semantic search
+    tags:
+    - l2
+    - knowledge
+    - vector
+    scenario_tags:
+    - storage
+    - search
+- id: cap:hermes-gateway
+  type: capability
+  protocol: mcp
+  entrypoint: ''
+  lifecycle: active
+  metadata:
+    description: Multi-platform messaging gateway (WeChat, Yuanbao, Telegram)
+    tags:
+    - i0
+    - gateway
+    - messaging
+    scenario_tags:
+    - communication
+    - platform
+- id: cap:kos
+  type: capability
+  protocol: api
+  entrypoint: ''
+  lifecycle: active
+  metadata:
+    description: Knowledge OS — domain state management
+    tags:
+    - l1
+    - knowledge
+    - state
+    scenario_tags:
+    - state-management
+- id: cap:ollama
+  type: capability
+  protocol: api
+  entrypoint: http://127.0.0.1:11434
+  lifecycle: active
+  metadata:
+    description: Local LLM inference
+    tags:
+    - l0
+    - llm
+    - inference
+    scenario_tags:
+    - ai
+    - llm
+- id: cap:runtime-mcp
+  type: capability
+  protocol: mcp
+  entrypoint: stdio
+  lifecycle: active
+  metadata:
+    description: Runtime MCP tool server (embedded)
+    tags:
+    - i0
+    - mcp
+    - runtime
+    scenario_tags:
+    - tool-execution
+- id: cap:sharedbrain-bos
+  type: capability
+  protocol: mcp
+  entrypoint: http://127.0.0.1:7436
+  lifecycle: active
+  metadata:
+    description: Brain OS — knowledge graph and identity bridge
+    tags:
+    - l2
+    - knowledge
+    - identity
+    scenario_tags:
+    - knowledge
+    - identity

@@ -1,0 +1,27 @@
+id: P3-CARDS_DAEMON_BG
+title: cards daemon无后台进程·依赖手动触发
+dimension: platform
+subdimension: automation
+domain: workspace
+scope: governance_kernel
+severity: low
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: omo-governance
+affected_roots:
+- .omo
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-05T14:28:56Z'
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+history:
+- at: '2026-06-05T14:28:56Z'
+  action: register
+  note: Registered debt item P3-CARDS_DAEMON_BG.
+  actor: 全景分析 2026-06-05
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: Tool

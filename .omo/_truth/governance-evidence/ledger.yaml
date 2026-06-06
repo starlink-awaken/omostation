@@ -1,0 +1,71 @@
+id: phase15-governance-evidence-ledger
+created_at: '2026-06-05T13:35:30Z'
+phase: 15
+status: ready
+live_ssot_mutation: disabled
+entry_gate:
+  phase14_status: completed
+  human_approval: 'goal: 完成phase15'
+entries:
+- id: p15-promotion-entry
+  type: promotion
+  source_phase: 14
+  target_phase: 15
+  evidence_refs:
+  - .omo/_knowledge/summaries/phase14/phase14-closeout.md
+  - .omo/_knowledge/design/plans/phase15-autonomous-governance-preplanning.md
+  verification: Phase 14 completed and Phase 15 explicitly promoted by user goal.
+  rollback: Restore Phase 14 completed goals/state and remove Phase 15 active promotion.
+- id: p15-deferred-scope-entry
+  type: deferred-scope
+  evidence_refs:
+  - .omo/_knowledge/design/plans/archive/phase14-deferred-ecosystem-backlog.md
+  - .omo/_delivery/evidence/phase14/integration-triage.yaml
+  verification: Deferred ecosystem items remain ranked and are not treated as Phase
+    15 execution scope.
+  rollback: Keep deferred items in backlog and rerun policy tests for hidden scope.
+- id: p15-scenario-trace-entry
+  type: scenario-trace
+  evidence_refs:
+  - .omo/_truth/scenarios/research-pipeline.yaml
+  - .omo/_delivery/evidence/phase12/research-pipeline-trace.yaml
+  verification: Scenario trace remains ready and reproducible as evidence input.
+  rollback: Use the Phase 12 trace fixture as last known good scenario evidence.
+- id: p15-mutation-proposal-entry
+  type: mutation-proposal
+  evidence_refs:
+  - .omo/_delivery/evidence/phase13/bottleneck-proposals.yaml
+  - .omo/standards/mutation-proposal-envelope.md
+  verification: Every sampled proposal includes evidence, operation level, rollback,
+    and verification.
+  rollback: Keep proposals proposal-only and delete generated inactive drafts.
+- id: p15-closeout-entry
+  type: closeout
+  evidence_refs:
+  - .omo/_knowledge/summaries/phase15/phase15-closeout.md
+  - .omo/_knowledge/summaries/phase15/phase15-retrospective.md
+  verification: Closeout records scope, non-goals, tests, and residual risks.
+  rollback: Reopen Phase 15 state and keep Phase 15 closeout as failed draft.
+- id: p15-recovery-drill-entry
+  type: recovery-drill
+  evidence_refs:
+  - .omo/_delivery/evidence/phase15/recovery-drill-report.yaml
+  verification: Selected rollback drills pass in fixture/dry-run mode.
+  rollback: Block mutation-capable promotion until recovery drill passes.
+- id: p15-project-health-entry
+  type: project-health
+  evidence_refs:
+  - projects/kairon/README.md
+  - projects/gbrain/README.md
+  - projects/_archived/agentmesh/src/index.ts
+  - projects/_archived/SharedBrain-original/README.md
+  verification: Core project layer is represented in Phase 15 dashboard and user-value
+    checks.
+  rollback: Mark Phase 15 dashboard stale if project health refs disappear.
+- id: p15-user-value-entry
+  type: user-value-scenario
+  evidence_refs:
+  - .omo/_delivery/evidence/phase15/user-value-loop.yaml
+  verification: Three user-facing scenarios map goals to projects, evidence, limits,
+    and next improvements.
+  rollback: Keep Phase 15 governance-only and block claims of user-layer improvement.

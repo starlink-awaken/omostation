@@ -25,9 +25,9 @@ def test_architecture_baseline_registers_canonical_framework_and_boundaries() ->
 
 
 def test_phase15_and_phase16_docs_preserve_sequence_and_non_goals() -> None:
-    phase15 = _read("plans/phase15-autonomous-governance-preplanning.md")
+    phase15 = _read("_knowledge/design/plans/phase15-autonomous-governance-preplanning.md")
     phase15_design = _read("_knowledge/design/phase15-autonomous-governance-design.md")
-    phase16 = _read("plans/phase16-product-surface-convergence-preplanning.md")
+    phase16 = _read("_knowledge/design/plans/phase16-product-surface-convergence-preplanning.md")
 
     assert "system-design-baseline.md" in phase15
     assert "No P0 surface work during Phase 15." in phase15
@@ -48,7 +48,7 @@ def test_phase15_and_phase16_docs_preserve_sequence_and_non_goals() -> None:
 def test_indexes_and_plan_registry_include_baseline_and_phase16() -> None:
     root_index = _read("INDEX.md")
     design_index = _read("_knowledge/design/INDEX.md")
-    plans_readme = _read("plans/README.md")
+    plans_readme = _read("_knowledge/design/plans/README.md")
 
     assert "system-design-baseline.md" in root_index
     assert "system-design-baseline.md" in design_index

@@ -1,0 +1,38 @@
+id: P30-W1-GOV-MERGE
+phase: 30
+wave: W1
+title: "kairon-governance 6 模块功能迁 omo"
+status: pending
+task_type: merger
+priority: P0
+assigned_to: null
+human_approval_required: true
+entry_gate:
+  - "P30-W0-DECISION 审批通过"
+  - "P30-W0-DAEMON-INSTALL 完成"
+depends_on:
+  - P30-W0-DECISION
+  - P30-W0-DAEMON-INSTALL
+deliverables:
+  - "6 模块代码迁 omo: audit / score / history / freeze / daemon / agora_health"
+  - "kairon/packages/kairon-governance/ 标记 archived/"
+  - "kairon monorepo 中移除 kairon-governance 包"
+  - "omo-cli 集成 6 模块 (omo audit / omo score / omo history 等子命令)"
+  - "omo 88 测试全绿, kairon 历史 88 测试迁移后仍全绿"
+  - "治理历史 JSONL 写入 P30-W1-GOV-MERGE 完成事件"
+risk_level: L2
+allowed_operation_level: L2
+source_docs:
+  - ".omo/_knowledge/management/decision-p30-architecture-final.md"
+knowledge_refs:
+  - "kairon-governance v0.1.0 (88 测试, 6 模块)"
+  - "P29-W2-KAIRON-GOVERNANCE-PKG 完成报告"
+description: |
+  把 kairon-governance 6 模块功能迁 omo, 删 kairon-governance 包。
+  omo 治理面唯一, 不允许第二个治理包存在。
+  风险: 中 — 测试全量迁移 (88 个), 需保证 omo 接收后无功能丢失。
+  验证: omo audit / omo score / omo history 命令全部能跑 + 88 测试全绿。
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

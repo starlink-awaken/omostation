@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cockpit"
+version = "0.4.0"
+description = "Cockpit — 统一研究驾驶舱 (CLI + Web UI) — 工作区入口与研究对象管理"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "夏铭星"}]
+keywords = ["research", "workspace", "knowledge-management", "cli", "cockpit", "ui"]
+
+dependencies = [
+    "click>=8.0",
+    "rich>=13.0",
+    "pyyaml>=6.0",
+    "runtime",
+]
+
+[project.optional-dependencies]
+web = []  # Web UI lives in web/ (TypeScript), no Python deps needed
+
+[project.scripts]
+cockpit = "cockpit.cli:main"
+workspace = "cockpit.cli:main"  # 旧名兼容
+agent-runtime = "cockpit.agent_runtime_cli:main"
+
+[project.urls]
+Homepage = "https://github.com/starlink-awaken/omostation"
+Repository = "https://github.com/starlink-awaken/cockpit"
+Documentation = "https://github.com/starlink-awaken/cockpit/tree/main/docs"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cockpit"]
+
+[tool.pytest.ini_options]
+testpaths = ["src/cockpit/tests", "tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "S", "PLE", "RUF100"]
+ignore = ["S101", "S603", "S607", "S108", "S110", "S314", "S608", "E402", "E501", "SIM115", "N813", "UP047"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.uv.sources]
+runtime = { path = "../runtime" }
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]

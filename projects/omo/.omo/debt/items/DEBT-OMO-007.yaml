@@ -1,0 +1,31 @@
+id: DEBT-OMO-007
+title: 'L0: 协议幽灵 — 16个协议中只有MCP真正在用'
+dimension: architecture
+subdimension: protocol-ghosts
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.08
+entropy_class: classification
+lifecycle_state: closed
+owner: omo-engineer
+affected_roots:
+- .omo
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-05T12:00:00Z'
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+x1_policy_ref: X1-CONST-001
+x2_freshness: '2026-06-05T06:10:13Z'
+x3_tier: Framework
+history:
+- at: '2026-06-05T12:00:00Z'
+  action: register
+  note: Registered debt item DEBT-OMO-007 from audit findings. 16 defined protocols
+    but only MCP is actively used — protocol ghosts create maintenance overhead.
+- at: '2026-06-05T06:18:41Z'
+  action: close
+  note: Closed debt item.
+  actor: omo-agent

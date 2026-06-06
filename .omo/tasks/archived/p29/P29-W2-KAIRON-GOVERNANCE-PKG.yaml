@@ -1,0 +1,32 @@
+id: P29-W2-KAIRON-GOVERNANCE-PKG
+phase: 29
+wave: W2
+title: "建 kairon-governance 包 + 治理历史 JSONL（ADR-0005 阶段 2 落地）"
+status: completed
+task_type: feature
+priority: P1
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P29-W1-ARCH-EXPLORE completed"
+depends_on:
+  - P29-W1-ARCH-EXPLORE
+deliverables:
+  - "projects/kairon/packages/kairon-governance/"
+  - ".omo/_knowledge/governance-history.jsonl"
+  - ".omo/_delivery/phase29-kairon-governance-packaging.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs: []
+knowledge_refs:
+  - "ADR-0005"
+description: |
+  ADR-0005 阶段 2 落地：建 kairon-governance 独立包，迁移 4 个治理脚本
+  (governance_audit, adr_collect, agora_route_generator, sync_system_state)。
+  新增治理历史 JSONL (.omo/_knowledge/governance-history.jsonl) 解决"治理可观测性 = 0"
+  结构性问题。保留 scripts/ 下 4 个 shim 转发到新包，向后兼容。
+  CLI 统一入口: `kairon-governance {audit,adr-scan,agora-routes,sync,history,version}`
+started_at: '2026-06-06T00:10:00Z'
+completed_at: '2026-06-06T00:20:00Z'
+blocked_by: null
+retry_count: 0

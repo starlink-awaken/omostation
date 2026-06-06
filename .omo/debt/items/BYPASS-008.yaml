@@ -1,0 +1,29 @@
+id: BYPASS-008
+title: "forge/asset_cli.py + healing_trigger.py: 硬编码 agora/agora-dashboard/minerva 端口"
+dimension: architecture
+subdimension: service_mesh
+domain: projects
+scope: within_project
+severity: medium
+weight: 0.2
+entropy_class: state
+lifecycle_state: resolved
+owner: omo-governance
+affected_roots:
+  - projects/kairon/packages/forge/src/forge/asset_cli.py
+  - projects/kairon/packages/forge/src/forge/entropy/healing_trigger.py
+evidence_refs:
+  - .omo/_knowledge/management/ecos-v5-deep-analysis-2026-06-05.md
+mitigation_refs: []
+opened_at: "2026-06-05T23:15:00Z"
+last_reviewed_at: null
+next_review_at: "2026-07-03T23:15:00Z"
+gate_level: phase28
+history:
+  - at: "2026-06-05T23:15:00Z"
+    action: register
+    note: "Parent: P1-AGORA_BYPASS. asset_cli.py hardcodes ports 7422, 7430, 8765, 7420. healing_trigger.py default agora_endpoint=localhost:7422. Fix: resolve from runtime matrix/env."
+
+  - at: "2026-06-06T00:00:00Z"
+    action: close
+    note: "Hardcoded ports replaced with env var resolution (AGORA_MCP_URL/SHAREDBRAIN_ENDPOINT/KAIRONCLOUD_PRICING_PATH etc). All syntax verified."

@@ -1,0 +1,27 @@
+generated_at: '2026-06-05T05:23:24Z'
+dispatch_run_ref: .omo/debt/dispatch/runs/2026-06-05T14-00-00Z.yaml
+run_stamp: 2026-06-05T14-00-00Z
+summary:
+  owner_count: 1
+  total_items: 11
+  state_counts:
+    pending_approval: 0
+    ready_to_execute: 11
+    executed: 0
+  gate_item_count: 0
+  approved_gate_item_count: 0
+  approval_coverage_rate: 1.0
+  executed_item_count: 0
+  execution_completion_rate: 0.0
+owners:
+- owner: omo-engineer
+  item_count: 11
+  state_counts:
+    pending_approval: 0
+    ready_to_execute: 11
+    executed: 0
+  gate_item_count: 0
+  approved_gate_item_count: 0
+  approval_coverage_rate: 1.0
+  executed_item_count: 0
+  execution_completion_rate: 0.0

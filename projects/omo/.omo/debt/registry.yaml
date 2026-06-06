@@ -1,0 +1,44 @@
+items: {}
+# X1/X2/X3 fields added 2026-06-05:
+#   x1_policy_ref — reference to X1 audit policy (e.g. X1-AUDIT-001)
+#   x2_freshness  — ISO8601 timestamp of last freshness validation
+#   x3_tier       — value tier: Axiom|Principle|Theory|Framework|Knowledge|Skill|Tool
+seed_items:
+- .omo/debt/items/DEBT-OMO-001.yaml
+- .omo/debt/items/DEBT-OMO-002.yaml
+- .omo/debt/items/DEBT-OMO-003.yaml
+- .omo/debt/items/DEBT-OMO-004.yaml
+- .omo/debt/items/DEBT-OMO-005.yaml
+- .omo/debt/items/DEBT-OMO-006.yaml
+- .omo/debt/items/DEBT-OMO-007.yaml
+- .omo/debt/items/DEBT-OMO-008.yaml
+- .omo/debt/items/DEBT-OMO-009.yaml
+- .omo/debt/items/DEBT-OMO-010.yaml
+- .omo/debt/items/DEBT-OMO-011.yaml
+- .omo/debt/items/DEBT-OMO-012.yaml
+- .omo/debt/items/DEBT-OMO-013.yaml
+- .omo/debt/items/DEBT-OMO-014.yaml
+- .omo/debt/items/DEBT-OMO-015.yaml
+- .omo/debt/items/DEBT-OMO-016.yaml
+- .omo/debt/items/DEBT-OMO-017.yaml
+- .omo/debt/items/DEBT-OMO-018.yaml
+- .omo/debt/items/DEBT-OMO-019.yaml
+- .omo/debt/items/DEBT-OMO-020.yaml
+- .omo/debt/items/DEBT-OMO-021.yaml
+- .omo/debt/items/DEBT-OMO-023.yaml
+- .omo/debt/items/DEBT-OMO-024.yaml
+- .omo/debt/items/DEBT-OMO-025.yaml
+- .omo/debt/items/DEBT-OMO-026.yaml
+- .omo/debt/items/DEBT-OMO-027.yaml
+- .omo/debt/items/DEBT-OMO-028.yaml
+- .omo/debt/items/DEBT-OMO-029.yaml
+- .omo/debt/items/DEBT-OMO-030.yaml
+- .omo/debt/items/DEBT-OMO-031.yaml
+dashboard_ref: .omo/debt/dashboard/latest.yaml
+review_pack_ref: .omo/debt/review/latest.yaml
+review_queue_ref: .omo/debt/queue/latest.yaml
+action_packet_ref: .omo/debt/action/latest.yaml
+owner_routing_ref: .omo/debt/routing/latest.yaml
+dispatch_ref: .omo/debt/dispatch/latest.yaml
+campaign_ref: .omo/debt/campaign/latest.yaml
+reporting_ref: .omo/debt/reporting/latest.yaml

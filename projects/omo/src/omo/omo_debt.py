@@ -62,14 +62,17 @@ def _write_yaml(path: Path, payload: dict) -> None:
     )
 
 
-def append_history(payload: dict, action: str, note: str) -> None:
-    payload.setdefault("history", []).append(
-        {
-            "at": _timestamp(),
-            "action": action,
-            "note": note,
-        }
-    )
+def append_history(
+    payload: dict, action: str, note: str, actor: str = ""
+) -> None:
+    entry: dict[str, str] = {
+        "at": _timestamp(),
+        "action": action,
+        "note": note,
+    }
+    if actor:
+        entry["actor"] = actor
+    payload.setdefault("history", []).append(entry)
 
 
 def _parse_iso8601(value: str) -> datetime:
@@ -104,8 +107,14 @@ def register_item(args: argparse.Namespace) -> dict:
         "next_review_at": None,
         "gate_level": "none",
         "history": [],
+        "x1_policy_ref": getattr(args, "x1_policy_ref", ""),
+        "x2_freshness": getattr(args, "x2_freshness", ""),
+        "x3_tier": getattr(args, "x3_tier", ""),
     }
-    append_history(payload, "register", f"Registered debt item {args.id}.")
+    actor = getattr(args, "actor", "")
+    append_history(
+        payload, "register", f"Registered debt item {args.id}.", actor=actor
+    )
     return payload
 
 
@@ -826,6 +835,10 @@ def main() -> int:
     register_parser.add_argument("--subdimension", required=True)
     register_parser.add_argument("--severity", required=True)
     register_parser.add_argument("--owner", required=True)
+    register_parser.add_argument("--actor", default="", help="Who performed this action (default: empty)")
+    register_parser.add_argument("--x1-policy-ref", default="", help="X1 governance policy reference ID")
+    register_parser.add_argument("--x2-freshness", default="", help="X2 freshness timestamp (ISO 8601)")
+    register_parser.add_argument("--x3-tier", default="", help="X3 value tier (Axiom/Principle/Theory/Framework/Knowledge/Skill/Tool)")
 
     schedule_parser = subparsers.add_parser("schedule")
     schedule_parser.add_argument("--omo-dir", default=".omo")
@@ -887,10 +900,12 @@ def main() -> int:
     close_parser = subparsers.add_parser("close")
     close_parser.add_argument("--omo-dir", default=".omo")
     close_parser.add_argument("--id", required=True)
+    close_parser.add_argument("--actor", default="", help="Who performed this action")
 
     reopen_parser = subparsers.add_parser("reopen")
     reopen_parser.add_argument("--omo-dir", default=".omo")
     reopen_parser.add_argument("--id", required=True)
+    reopen_parser.add_argument("--actor", default="", help="Who performed this action")
 
     args = parser.parse_args()
     omo_dir = Path(args.omo_dir)
@@ -1003,7 +1018,12 @@ def main() -> int:
         item_path, payload = update_item(omo_dir, args.id)
         payload["lifecycle_state"] = "closed"
         payload["gate_level"] = "none"
-        append_history(payload, "close", "Closed debt item.")
+        append_history(
+            payload,
+            "close",
+            "Closed debt item.",
+            actor=getattr(args, "actor", ""),
+        )
         _write_yaml(item_path, payload)
         print(f"closed {args.id}")
         return 0
@@ -1011,7 +1031,12 @@ def main() -> int:
     if args.command == "reopen":
         item_path, payload = update_item(omo_dir, args.id)
         payload["lifecycle_state"] = "identified"
-        append_history(payload, "reopen", "Reopened debt item.")
+        append_history(
+            payload,
+            "reopen",
+            "Reopened debt item.",
+            actor=getattr(args, "actor", ""),
+        )
         _write_yaml(item_path, payload)
         print(f"reopened {args.id}")
         return 0

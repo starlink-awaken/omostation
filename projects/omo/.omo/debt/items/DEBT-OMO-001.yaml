@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: medium
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: closed
 owner: omo-engineer
 affected_roots:
 - .omo
@@ -21,3 +21,10 @@ history:
 - at: '2026-06-04T22:21:36Z'
   action: register
   note: Registered debt item DEBT-OMO-001.
+- at: '2026-06-05T06:24:22Z'
+  action: close
+  note: Closed debt item.
+  actor: omo-agent
+x1_policy_ref: X1-AUDIT-001
+x2_freshness: '2026-06-05T06:10:13Z'
+x3_tier: Framework

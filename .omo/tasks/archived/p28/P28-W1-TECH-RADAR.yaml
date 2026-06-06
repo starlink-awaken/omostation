@@ -1,0 +1,55 @@
+id: P28-W1-TECH-RADAR
+phase: 28
+wave: W1
+title: "技术情报雷达 — 自动订阅/分析 AI 技术动态，识别 omostation 升级机会"
+status: completed
+task_type: feature
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P28-W0-NORTH-STAR completed"
+depends_on:
+  - P28-W0-NORTH-STAR
+deliverables:
+  - "projects/kairon/packages/minerva/src/minerva/tech_radar"
+  - ".omo/_delivery/tech-radar-2026-06-05-report.md"
+risk_level: L2
+allowed_operation_level: L2
+source_docs:
+  - ".omo/_knowledge/design/plans/phase28-observable-knowledge-workflow.md"
+  - ".omo/_control/north-star.md"
+knowledge_refs:
+  - ".omo/_control/north-star.md"
+description: |
+  北极星场景 B：omostation 项目持续升级情报雷达
+
+  目标：建立自动化的技术情报订阅→分析→沉淀→建议机制，让 omostation 能感知并吸收外部技术进展。
+
+  数据源（初期）：
+    - ArXiv（cs.AI / cs.IR / cs.MA 类别）
+    - GitHub Trending（Python/TypeScript，AI/Agent 方向）
+    - HuggingFace 新模型/工具发布
+    - 技术博客 RSS（LangChain、LlamaIndex、Anthropic 等）
+
+  处理流程：
+    1. 定期抓取（每日/每周）→ 去重过滤
+    2. 与 omostation 当前架构（agora/kairon/gbrain）做相关性匹配
+    3. 有价值内容自动入库 gbrain/KOS，打标签（#tech-radar #upgrade-candidate）
+    4. 每周生成《技术雷达简报》：Top 候选升级项 + 理由 + 落地难度评估
+
+  验收标准：
+    - 运行完整一个周期（7 天）
+    - 输出包含 ≥3 条有效升级建议的技术雷达简报
+    - 至少 1 条建议已转化为 omostation planned 任务
+    - gbrain 中可查询到 ≥10 条带标签的技术情报记录
+
+  实现策略：
+    - 优先复用 kairon 现有研究/爬取能力（minerva/sophia 包）
+    - 调度通过现有 agora 网关或 cron
+    - 不引入新的外部依赖，先用 kairon 内部能力跑通
+started_at: '2026-06-05T15:00:00Z'
+completed_at: '2026-06-05T17:35:00Z'
+completed_at: null
+blocked_by: null
+retry_count: 0

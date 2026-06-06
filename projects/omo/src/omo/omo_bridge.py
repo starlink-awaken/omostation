@@ -51,6 +51,7 @@ def _import_bmad(file_path: Path, omo_dir: Path, sequential: bool = False):
                 "title": task_title,
                 "status": "planned",
                 "task_type": "feature",
+                "risk_level": "L0",
                 "depends_on": depends_on,
                 "source_docs": [str(file_path.absolute())],
                 "deliverables": [],

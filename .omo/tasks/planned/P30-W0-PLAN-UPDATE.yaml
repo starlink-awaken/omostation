@@ -1,0 +1,32 @@
+id: P30-W0-PLAN-UPDATE
+phase: 30
+wave: W0
+title: "更新 4 份 plan-phase*.md 反映 v3 决策"
+status: pending
+task_type: governance
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P30-W0-DECISION 审批通过"
+  - "P30-W0-FOLD 完成"
+depends_on:
+  - P30-W0-DECISION
+  - P30-W0-FOLD
+deliverables:
+  - "plan-phase29-toolchain.md 顶部加 ✅ 已完成"
+  - "plan-phase30-architecture-maturity.md 顶部加 ⚠️ SUPERSEDED"
+  - "plan-phase31-observability.md 顶部加 🟡 部分完成"
+  - "plan-phase32-governance.md 顶部加 🟡 部分完成"
+risk_level: L0
+allowed_operation_level: L0
+source_docs:
+  - ".omo/_knowledge/management/decision-p30-architecture-final.md"
+knowledge_refs: []
+description: |
+  在 4 份 plan-phase*.md 顶部加状态标记, 让未来读者一眼看清进度。
+  不用 Write 覆盖, 全部用 Edit 在顶部插入。
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

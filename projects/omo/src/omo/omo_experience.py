@@ -54,16 +54,16 @@ def _relative_ref(path: Path, root: Path) -> str:
 
 def _phase_and_wave(root: Path) -> tuple[int | None, int | None]:
     omo_root = _omo_root(root)
-    state = (
-        _load_yaml(omo_root / "state" / "system.yaml")
-        if (omo_root / "state" / "system.yaml").exists()
-        else {}
-    )
-    goals = (
-        _load_yaml(omo_root / "goals" / "current.yaml")
-        if (omo_root / "goals" / "current.yaml").exists()
-        else {}
-    )
+    state = _load_yaml(omo_root / "state" / "system.yaml") if (omo_root / "state" / "system.yaml").exists() else {}
+    goal_candidates = [
+        omo_root / "_truth" / "goals" / "current.yaml",
+        omo_root / "goals" / "current.yaml",
+    ]
+    goals = {}
+    for goal_path in goal_candidates:
+        if goal_path.exists():
+            goals = _load_yaml(goal_path)
+            break
     phase = goals.get("phase", state.get("current_phase"))
     wave = goals.get("current_wave", state.get("current_wave"))
     return phase, wave
@@ -77,13 +77,19 @@ def _append_unique(existing: list[str] | None, value: str) -> list[str]:
 
 
 def _find_latest_summary(omo_root: Path) -> Path | None:
-    summary_dir = omo_root / "summaries"
-    if not summary_dir.exists():
+    candidate_dirs = [
+        omo_root / "_knowledge" / "summaries",
+        omo_root / "summaries",
+    ]
+    summaries: list[Path] = []
+    for summary_dir in candidate_dirs:
+        if not summary_dir.exists():
+            continue
+        summaries.extend(path for path in summary_dir.rglob("*.md") if path.is_file())
+    if not summaries:
         return None
-    summaries = sorted(
-        summary_dir.glob("*.md"), key=lambda path: (path.stat().st_mtime, path.name)
-    )
-    return summaries[-1] if summaries else None
+    summaries.sort(key=lambda path: (path.stat().st_mtime, path.as_posix()))
+    return summaries[-1]
 
 
 def _find_task_file(root: Path, task_id: str) -> Path:
@@ -102,16 +108,16 @@ def _find_task_file(root: Path, task_id: str) -> Path:
 def build_session_bootstrap(root: Path) -> dict[str, object]:
     workspace_root = _workspace_root(root)
     omo_root = _omo_root(root)
-    state = (
-        _load_yaml(omo_root / "state" / "system.yaml")
-        if (omo_root / "state" / "system.yaml").exists()
-        else {}
-    )
-    goals = (
-        _load_yaml(omo_root / "goals" / "current.yaml")
-        if (omo_root / "goals" / "current.yaml").exists()
-        else {}
-    )
+    state = _load_yaml(omo_root / "state" / "system.yaml") if (omo_root / "state" / "system.yaml").exists() else {}
+    goal_candidates = [
+        omo_root / "_truth" / "goals" / "current.yaml",
+        omo_root / "goals" / "current.yaml",
+    ]
+    goals = {}
+    for goal_path in goal_candidates:
+        if goal_path.exists():
+            goals = _load_yaml(goal_path)
+            break
     active_dir = omo_root / "tasks" / "active"
     active_task_ids: list[str] = []
     if active_dir.exists():

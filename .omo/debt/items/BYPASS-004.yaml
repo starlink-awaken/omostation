@@ -1,0 +1,28 @@
+id: BYPASS-004
+title: "sharedbrain-bridge/eu.py: DEFAULT_AGORA 硬编码 localhost:7430"
+dimension: architecture
+subdimension: service_mesh
+domain: projects
+scope: within_project
+severity: medium
+weight: 0.3
+entropy_class: state
+lifecycle_state: resolved
+owner: omo-governance
+affected_roots:
+  - projects/kairon/packages/sharedbrain-bridge/src/sharedbrain_bridge/eu.py
+evidence_refs:
+  - .omo/_knowledge/management/ecos-v5-deep-analysis-2026-06-05.md
+mitigation_refs: []
+opened_at: "2026-06-05T23:15:00Z"
+last_reviewed_at: null
+next_review_at: "2026-07-03T23:15:00Z"
+gate_level: phase28
+history:
+  - at: "2026-06-05T23:15:00Z"
+    action: register
+    note: "Parent: P1-AGORA_BYPASS. DEFAULT_AGORA = http://localhost:7430. Fix: resolve Agora endpoint from runtime matrix/env instead of hardcoded default."
+
+  - at: "2026-06-06T00:00:00Z"
+    action: close
+    note: "Hardcoded ports replaced with env var resolution (AGORA_MCP_URL/SHAREDBRAIN_ENDPOINT/KAIRONCLOUD_PRICING_PATH etc). All syntax verified."

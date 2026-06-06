@@ -15,8 +15,10 @@ affected_roots:
 evidence_refs:
 - .omo/_knowledge/design/debt-cleanup-plan.md
 - .omo/tasks/active/P17-DEBT-GOVERNANCE-GATE-RULES.yaml
+- .omo/_delivery/phase28-pkg-slim-plan.md
 mitigation_refs:
 - .omo/_knowledge/design/debt-cleanup-plan.md
+resolution_evidence: "P28-W2-PKG-SLIM 已通过 P28-W0-TOOL-HEATMAP 工具热力图评估 eu-pricing 状态：CLAUDE.md 虽列出 eu-pricing，但 live packages/ 目录无此包（已物理消失），kairon uv sync + pytest 均不再包含 eu-pricing。该债务因目标对象已不存在而自然终结。详见 .omo/_delivery/phase28-pkg-slim-plan.md §0.1 关键发现。"
 opened_at: '2026-06-01T10:30:00Z'
 last_reviewed_at: '2026-06-02T00:00:00Z'
 next_review_at: '2026-06-09T00:00:00Z'

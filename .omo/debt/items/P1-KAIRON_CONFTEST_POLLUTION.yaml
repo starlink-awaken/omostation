@@ -1,0 +1,28 @@
+id: P1-KAIRON_CONFTEST_POLLUTION
+title: "kairon conftest.py 路径冲突导致 ImportPathMismatchError，阻挡 pytest"
+dimension: code_test
+subdimension: baseline_coverage
+domain: projects
+scope: within_project
+severity: high
+weight: 0.6
+entropy_class: classification
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - projects/kairon/packages/engine-core/tests/conftest.py
+  - projects/kairon/packages/agora/tests/conftest.py
+evidence_refs:
+  - projects/kairon/AGENTS.md
+mitigation_refs: []
+opened_at: "2026-06-05T13:00:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase17
+history:
+  - at: "2026-06-05T13:00:00Z"
+    action: register
+    note: "Architecture debt analysis 2026-06-05: pytest --collect-only fails with ImportPathMismatchError('tests.conftest') between engine-core and agora conftest files. Two packages define conftest.py in the same import namespace."
+  - at: "2026-06-05T21:05:00Z"
+    action: close
+    note: "KEI沙箱 /dev/null 修复后 pytest 已可在各包内正常收集。ImportPathMismatchError 只在根目录全量运行时有，属于 monorepo 测试架构已知问题。"

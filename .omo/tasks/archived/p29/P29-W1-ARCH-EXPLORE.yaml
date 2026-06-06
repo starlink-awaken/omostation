@@ -1,0 +1,40 @@
+id: P29-W1-ARCH-EXPLORE
+phase: 29
+wave: W1
+title: "架构升级探索 — 治理 + monorepo 演进方向（ADR-0005）"
+status: completed
+task_type: analysis
+priority: P1
+assigned_to: null
+human_approval_required: true
+entry_gate:
+  - "P29-W0-FOLLOW-UP completed"
+depends_on:
+  - P29-W0-FOLLOW-UP
+deliverables:
+  - ".omo/_knowledge/decisions/0005-architecture-p29-upgrade.md"
+risk_level: L0
+allowed_operation_level: L0
+source_docs: []
+knowledge_refs:
+  - "ADR-0001"
+  - "ADR-0002"
+  - "ADR-0003"
+  - "ADR-0004"
+  - ".omo/_delivery/phase28-followup-report.md"
+  - ".omo/_delivery/phase28-governance-audit-2026-06-05-v2.md"
+description: |
+  识别 P28/P29 暴露的 5 个结构性问题（scripts 散乱 / .omo 平面单向人工 /
+  agora 路由脱节 / minerva 命名空间压力 / 治理可观测性 = 0），给出
+  3-5 个候选方案 + 推荐。
+
+  产出一份 ADR-0005 + 2 张架构图（as-is / to-be）+ 3 阶段实施路径。
+  状态 PROPOSED，**不写生产代码**，等待人类 review 后才能 ACCEPTED。
+
+  阶段 1 (本期): 仅产出 ADR
+  阶段 2 (P29-W2): 建 kairon-governance 包 + 治理历史 JSONL
+  阶段 3 (P29-W3-P30): sync daemon + agora 探活 + minerva __all__ 收敛
+started_at: '2026-06-05T23:55:00Z'
+completed_at: '2026-06-05T23:55:00Z'
+blocked_by: null
+retry_count: 0

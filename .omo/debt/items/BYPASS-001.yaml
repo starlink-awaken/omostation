@@ -1,0 +1,27 @@
+id: BYPASS-001
+title: "agent-runtime/tools.py: Agora 降级直连机制 — 连续2次失败后自动直连KOS/Minerva 5分钟"
+dimension: architecture
+subdimension: service_mesh
+domain: projects
+scope: within_project
+severity: high
+weight: 0.6
+entropy_class: behavior
+lifecycle_state: resolved
+owner: omo-governance
+affected_roots:
+  - projects/kairon/packages/agent-runtime/src/agent_runtime/tools.py
+evidence_refs:
+  - .omo/_knowledge/management/ecos-v5-deep-analysis-2026-06-05.md
+mitigation_refs: []
+opened_at: "2026-06-05T23:15:00Z"
+last_reviewed_at: null
+next_review_at: "2026-07-03T23:15:00Z"
+gate_level: phase28
+history:
+  - at: "2026-06-05T23:15:00Z"
+    action: register
+    note: "Parent: P1-AGORA_BYPASS. tools.py implements _direct_mcp_call() + _agora_failure_count + _agora_direct_mode_until. 3 paths trigger degrade: direct mode active, Agora unconfigured, Agora call fails. Fix: remove direct mode, relay degrade decision to projects/runtime/scheduler."
+  - at: "2026-06-05T23:45:00Z"
+    action: close
+    note: "Decision A implemented: degrade centralized under runtime Matrix policy. Code change verified."

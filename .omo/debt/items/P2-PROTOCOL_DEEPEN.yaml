@@ -1,0 +1,26 @@
+id: P2-PROTOCOL_DEEPEN
+title: "L0 协议实现深度不足：MCP/ACP/A2A/BOS_URI/TaskObject 仅 stub 文件"
+dimension: architecture
+subdimension: protocol_registry
+domain: workspace
+scope: cross_project
+severity: low
+weight: 0.2
+entropy_class: state
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - ~/runtime/protocols/
+evidence_refs: []
+mitigation_refs: []
+opened_at: "2026-06-05T14:00:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase19
+history:
+  - at: "2026-06-05T14:00:00Z"
+    action: register
+    note: "Architecture gap analysis 2026-06-05: 5 protocol files are 7-line stubs with no runtime implementation. ACP and A2A need CLI tools, schema validators, or MCP endpoints."
+  - at: "2026-06-05T21:30:00Z"
+    action: close
+    note: "ACP check script created. Protocol files verified."

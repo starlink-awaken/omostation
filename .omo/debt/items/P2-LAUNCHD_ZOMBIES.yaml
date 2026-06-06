@@ -1,0 +1,27 @@
+id: P2-LAUNCHD_ZOMBIES
+title: "3 个 launchd 服务 exit 码 0 但未卸载：agentmesh, gbrain-index, vault-backup"
+dimension: operations
+subdimension: service_lifecycle
+domain: workspace
+scope: within_project
+severity: low
+weight: 0.1
+entropy_class: state
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - ~/Library/LaunchAgents/
+evidence_refs:
+  - launchctl list output
+mitigation_refs: []
+opened_at: "2026-06-05T13:00:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase18
+history:
+  - at: "2026-06-05T13:00:00Z"
+    action: register
+    note: "Architecture debt analysis 2026-06-05: com.agentmesh.gateway, com.knowledgebase.gbrain-index, com.user.vault-backup all show LastExitStatus=0. Clean exit but services are no longer needed."
+  - at: "2026-06-05T21:05:00Z"
+    action: close
+    note: "3个服务已卸载，plist 已归档至 archived/。"

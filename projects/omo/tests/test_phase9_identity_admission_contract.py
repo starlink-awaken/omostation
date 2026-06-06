@@ -5,7 +5,7 @@ from pathlib import Path
 import yaml
 
 
-OMO_ROOT = Path(__file__).resolve().parents[1]
+OMO_ROOT = Path(__file__).resolve().parents[2]
 WORKSPACE_ROOT = OMO_ROOT.parent
 
 
@@ -53,7 +53,7 @@ def test_system_space_identity_contract_is_linked_and_concrete() -> None:
     contract = _load_workspace_yaml("spaces/system-space-identity-admission.yaml")
 
     assert "spaces/system-space-identity-admission.yaml" in manifest["policy_refs"]
-    assert ".omo/plans/phase9-wave3-execution-plan.md" in manifest["policy_refs"]
+    assert ".omo/_knowledge/design/plans/archive/phase9-wave3-execution-plan.md" in manifest["policy_refs"]
 
     assert contract["apiVersion"] == "omo/v1"
     assert contract["kind"] == "SpaceIdentityAdmission"
@@ -127,7 +127,7 @@ def test_system_space_identity_contract_links_taxonomy_and_matrix() -> None:
 
 def test_worker_envelope_binds_action_and_membership_to_admission_contract() -> None:
     template = _load_workspace_yaml(".omo/workers/templates/worker-task-envelope.yaml")
-    envelope = _load_workspace_yaml(".omo/workers/runs/phase9-wave3-identity-admission-envelope.yaml")
+    envelope = _load_workspace_yaml(".omo/workers/runs/phase9/phase9-wave3-identity-admission-envelope.yaml")
 
     assert template["execution_context"] == {
         "space_ref": "<space manifest path>",

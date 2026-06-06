@@ -1,0 +1,36 @@
+generated_at: '2026-06-05T11:14:41Z'
+defaults:
+  review_window_days: 7
+  escalation_threshold_days: 3
+due_now: []
+upcoming: []
+escalation_candidates: []
+unscheduled:
+- id: DEBT-OMO-030
+  title: 'P3: 红蓝对抗第二轮 — 集成层面安全审计'
+  owner: omo-agent
+  severity: high
+  dimension: security
+  subdimension: layer-i0
+  lifecycle_state: scheduled
+  gate_level: gate
+  next_review_at: null
+  last_reviewed_at: null
+  stale_evidence: true
+  overdue_by: 0
+  affected_roots:
+  - $RUNTIME_HOME/matrix.yaml
+  - $RUNTIME_HOME/protocols/
+  - ~/Workspace/projects/omo/.omo/debt/
+  priority_reason: upcoming
+summary:
+  due_now_count: 0
+  upcoming_count: 0
+  escalation_candidate_count: 0
+  unscheduled_count: 1
+  by_severity:
+    high: 1
+  by_gate_level:
+    gate: 1
+  by_owner:
+    omo-agent: 1

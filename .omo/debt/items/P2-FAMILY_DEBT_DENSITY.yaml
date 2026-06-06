@@ -1,0 +1,27 @@
+id: P2-FAMILY_DEBT_DENSITY
+title: "家庭域 CARDS 债务密度 43% — 7 张卡片中 3 张为 debt"
+dimension: governance
+subdimension: health
+domain: workspace
+scope: meta
+severity: medium
+weight: 0.25
+entropy_class: pointer
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - ~/Documents/家庭生活/
+evidence_refs:
+  - ~/Documents/驾驶舱/全景架构分析.md
+mitigation_refs: []
+opened_at: "2026-06-05T14:30:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+x1_policy_ref: X1-AUDIT-001
+x2_freshness: "2026-06-05T14:30:00Z"
+x3_tier: Knowledge
+history:
+  - at: "2026-06-05T14:30:00Z"
+    action: register
+    note: "全景分析发现：family域7张活跃卡片中3张是debt(DEBT-002新车风险/DEBT-004紧急联系人/DEBT-005密度过高)。建议审查是否系统性风险，或推进DEBT-002→DEBT-004的解决。"

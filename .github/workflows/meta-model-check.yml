@@ -1,0 +1,30 @@
+name: Meta-Model CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'projects/runtime/protocols/*.yaml'
+      - 'projects/runtime/protocols/*.md'
+  pull_request:
+    paths:
+      - 'projects/runtime/protocols/*.yaml'
+      - 'projects/runtime/protocols/*.md'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install yamllint
+        run: pip install yamllint pyyaml
+      - name: Validate YAML syntax
+        run: yamllint projects/runtime/protocols/
+      - name: Validate L0-registry.yaml
+        run: python3 scripts/validate_protocol_registry.py
+      - name: List protocols
+        run: python3 -m pip install -e projects/runtime/ && python3 -m runtime protocol list

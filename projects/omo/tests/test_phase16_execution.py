@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -9,7 +10,21 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OMO_ROOT = REPO_ROOT / ".omo"
-EXTERNAL_OMO_ROOT = Path("/Users/xiamingxing/Documents/学习进化/体系/OMO")
+EXTERNAL_OMO_ROOT_CANDIDATES = [
+    Path("/Users/xiamingxing/Documents/学习进化/2-knowledge/经验积累/OMO"),
+    Path("/Users/xiamingxing/Documents/学习进化/经验积累/OMO"),
+    Path("/Users/xiamingxing/Documents/学习进化/2-knowledge/体系/OMO"),
+]
+
+
+def _external_omo_root() -> Path:
+    for candidate in EXTERNAL_OMO_ROOT_CANDIDATES:
+        if candidate.exists():
+            return candidate
+    return EXTERNAL_OMO_ROOT_CANDIDATES[0]
+
+
+EXTERNAL_OMO_ROOT = _external_omo_root()
 
 
 def _read_yaml(rel_path: str) -> dict:
@@ -21,7 +36,7 @@ def _read(rel_path: str) -> str:
 
 
 def test_phase16_plan_promotes_knowledge_capture_search_scope() -> None:
-    plan = _read("plans/phase16-product-surface-convergence-preplanning.md")
+    plan = _read("_knowledge/design/plans/phase16-product-surface-convergence-preplanning.md")
 
     assert "Status: completed" in plan
     assert "Knowledge Capture/Search Product Surface Convergence" in plan
@@ -35,8 +50,8 @@ def test_phase16_plan_promotes_knowledge_capture_search_scope() -> None:
 
 
 def test_phase16_scenario_shell_defines_user_contract_and_boundaries() -> None:
-    scenario = _read_yaml("scenarios/knowledge-capture-search.yaml")
-    shell = _read_yaml("evidence/phase16/scenario-shell.yaml")
+    scenario = _read_yaml("_truth/scenarios/knowledge-capture-search.yaml")
+    shell = _read_yaml("_delivery/evidence/phase16/scenario-shell.yaml")
 
     assert scenario["id"] == "knowledge-capture-search"
     assert scenario["status"] == "ready"
@@ -57,9 +72,10 @@ def test_phase16_scenario_shell_defines_user_contract_and_boundaries() -> None:
 
 
 def test_phase16_baseline_and_walkthrough_tie_omo_back_to_projects_and_user_value() -> None:
-    baseline = _read_yaml("evidence/phase16/journey-baseline.yaml")
-    walkthrough = _read_yaml("evidence/phase16/capture-search-walkthrough.yaml")
-    adoption = _read_yaml("evidence/phase16/adoption-closeout.yaml")
+    baseline = _read_yaml("_delivery/evidence/phase16/journey-baseline.yaml")
+    walkthrough = _read_yaml("_delivery/evidence/phase16/capture-search-walkthrough.yaml")
+    run_record = _read_yaml("_delivery/evidence/phase16/knowledge-capture-run-record.yaml")
+    adoption = _read_yaml("_delivery/evidence/phase16/adoption-closeout.yaml")
 
     assert baseline["status"] == "ready"
     assert baseline["primary_scenario"] == "knowledge-capture-search"
@@ -73,9 +89,19 @@ def test_phase16_baseline_and_walkthrough_tie_omo_back_to_projects_and_user_valu
     assert len(walkthrough["user_visible_result"]["search_hits"]) >= 1
     assert walkthrough["user_visible_result"]["result_summary"]
     assert walkthrough["evidence_refs"]
+    assert ".omo/_delivery/evidence/phase16/knowledge-capture-run-record.yaml" in walkthrough["evidence_refs"]
     if walkthrough["mode"] == "fixture-backed":
         assert walkthrough["blocked_reason"]
         assert walkthrough["next_live_demo_condition"]
+
+    assert run_record["status"] == "completed"
+    assert run_record["scenario_id"] == "knowledge-capture-search"
+    assert run_record["request_id"] == "fixture-2026-06-05-run-001"
+    assert run_record["kairon_trace_id"] == "trace-knowledge-capture-001"
+    assert run_record["gbrain_execution_ref"] == "eval_candidate:1"
+    assert run_record["capture_receipt"]["slug"] == "inbox/knowledge-capture-run-record"
+    assert run_record["search_hit_refs"][0]["slug"] == "inbox/knowledge-capture-run-record"
+    assert run_record["verification_refs"]
 
     assert adoption["status"] == "ready"
     assert adoption["user_can_complete_task"] is True
@@ -84,8 +110,8 @@ def test_phase16_baseline_and_walkthrough_tie_omo_back_to_projects_and_user_valu
 
 
 def test_phase16_recovery_and_policy_keep_phase15_guardrails() -> None:
-    recovery = _read_yaml("evidence/phase16/recovery-report.yaml")
-    phase15_policy = _read_yaml("evidence/phase15/policy-test-report.yaml")
+    recovery = _read_yaml("_delivery/evidence/phase16/recovery-report.yaml")
+    phase15_policy = _read_yaml("_delivery/evidence/phase15/policy-test-report.yaml")
 
     assert recovery["status"] == "pass"
     assert recovery["mode"] == "fixture-backed-recovery"
@@ -117,28 +143,31 @@ def test_phase16_external_omo_records_method_without_shadow_ssot() -> None:
     assert "从 OMO 计划转项目能力升级" in playbook.read_text(encoding="utf-8")
 
 
-def test_phase16_cli_commands_are_usable() -> None:
+def test_phase16_cli_commands_are_usable(tmp_path: Path) -> None:
     commands = [
         ("baseline", '"status": "ready"'),
         ("scenario", '"status": "ready"'),
         ("walkthrough", '"status": "completed"'),
+        ("run-record", '"request_id": "fixture-2026-06-05-run-001"'),
         ("recovery", '"status": "pass"'),
         ("closeout", '"status": "ready"'),
     ]
 
+    external_omo_root = tmp_path / "external-omo"
     for command, expected in commands:
         result = subprocess.run(
             [sys.executable, str(REPO_ROOT / "scripts" / "omo"), "phase16", command],
             cwd=REPO_ROOT,
             text=True,
             capture_output=True,
+            env={**os.environ, "OMO_EXTERNAL_ROOT": str(external_omo_root)},
             check=True,
         )
         assert expected in result.stdout
 
 
 def test_phase16_closeout_and_live_state_are_completed_with_only_authorized_active_tasks() -> None:
-    goals = _read_yaml("goals/current.yaml")
+    goals = _read_yaml("_truth/goals/current.yaml")
     state = _read_yaml("state/system.yaml")
     active_tasks = list((OMO_ROOT / "tasks" / "active").glob("*.yaml"))
     active_payloads = [yaml.safe_load(path.read_text(encoding="utf-8")) for path in active_tasks]
@@ -156,8 +185,8 @@ def test_phase16_closeout_and_live_state_are_completed_with_only_authorized_acti
     ]
 
     assert goals["phase"] >= 16
-    assert goals["status"] in ("completed", "active")
-    assert all(s in ("completed", "active") for s in [goal["status"] for goal in goals["goals"]])
+    assert goals["status"] in ("completed", "active", "done")
+    assert all(s in ("completed", "active", "done") for s in [goal["status"] for goal in goals["goals"]])
     assert state["current_phase"] >= 16
     assert state["phase_status"] in ("completed", "active")
     assert state["phase15_status"] == "completed"
@@ -165,7 +194,7 @@ def test_phase16_closeout_and_live_state_are_completed_with_only_authorized_acti
     assert stale_active == [], f"Unexpected non-future active tasks: {stale_active}"
     assert unauthorized_active == [], f"Unexpected non-authorized active tasks: {unauthorized_active}"
 
-    assert "Phase 16 is complete" in _read("summaries/phase16/phase16-closeout.md")
-    assert "Status: GO" in _read("summaries/phase16/phase16-closeout.md")
-    assert "knowledge capture/search" in _read("summaries/phase16/phase16-retrospective.md")
+    assert "Phase 16 is complete" in _read("_knowledge/summaries/phase16/phase16-closeout.md")
+    assert "Status: GO" in _read("_knowledge/summaries/phase16/phase16-closeout.md")
+    assert "knowledge capture/search" in _read("_knowledge/summaries/phase16/phase16-retrospective.md")
     assert "Status: pass" in _read("_knowledge/management/phase16-cross-audit.md")

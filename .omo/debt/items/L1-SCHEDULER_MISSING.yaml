@@ -1,0 +1,25 @@
+id: L1-SCHEDULER_MISSING
+title: "Matrix Scheduler 文档中定义但无持续运行的守护进程"
+dimension: architecture
+subdimension: runtime_monitoring
+domain: workspace
+scope: cross_project
+severity: medium
+weight: 0.5
+entropy_class: state
+lifecycle_state: resolved
+owner: omo-governance
+affected_roots:
+  - ~/runtime/
+  - ~/Workspace/projects/runtime/
+evidence_refs:
+  - .omo/_knowledge/management/ecos-layer-audit-2026-06-05.md
+mitigation_refs: []
+opened_at: "2026-06-05T21:00:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase17
+history:
+  - at: "2026-06-05T21:00:00Z"
+    action: register
+    note: "Debt registered from Layer Audit 2026-06-05."

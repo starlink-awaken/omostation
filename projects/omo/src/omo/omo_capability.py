@@ -520,7 +520,7 @@ def build_parser() -> argparse.ArgumentParser:
     pkg_sub = pkg.add_subparsers(dest="command", required=True)
     sync = pkg_sub.add_parser("sync")
     sync.add_argument("--dry-run", action="store_true")
-    sync.add_argument("--output", default=".omo/evidence/phase12/package-dry-run.yaml")
+    sync.add_argument("--output", default=".omo/_delivery/evidence/phase12/package-dry-run.yaml")
     sync.set_defaults(func=pkg_sync_command)
     return parser
 

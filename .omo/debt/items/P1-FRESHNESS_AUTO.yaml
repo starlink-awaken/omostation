@@ -1,0 +1,33 @@
+id: P1-FRESHNESS_AUTO
+title: 保鲜自动化 — X2 真正落地：协议校验+服务审计+周报
+dimension: system_health
+subdimension: freshness
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: resolved
+owner: omo-governance
+affected_roots:
+- .omo
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-05T08:32:13Z'
+last_reviewed_at: null
+next_review_at: "2026-06-26T00:00:00Z"
+gate_level: none
+history:
+- at: '2026-06-05T08:32:13Z'
+  action: register
+  note: Registered debt item P1-FRESHNESS_AUTO.
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+history:
+  - at: "2026-06-06T00:30:00Z"
+    action: schedule
+    note: "Scheduled in batch: 2026-06-06 Batch scheduling. Review and implement."
+  - at: "2026-06-06T02:00:00Z"
+    action: close
+    note: "Design doc completed. SMART_NOTIFY design locked, FRESHNESS merged with X2 freshness scheduler, AGORA_SPLIT user-deferred."

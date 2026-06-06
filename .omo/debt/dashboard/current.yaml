@@ -1,0 +1,9 @@
+debt_metrics:
+  backlog_pressure: 0.0
+  classification_entropy: 0.0
+  coupling_load: 0.0
+  debt_health: 1.0
+  pointer_entropy: 0.0
+  state_entropy: 0.0
+  time_entropy: 0.0
+generated_at: '2026-06-05T13:26:29Z'

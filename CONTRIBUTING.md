@@ -5,7 +5,7 @@
 ## 项目范围
 
 当前活跃项目主要在 `projects/kairon/`（Python monorepo）。  
-其他项目（SharedBrain、agentmesh、gbrain）各自独立演进。
+其他项目（gbrain）各自独立演进。
 
 ## kairon 开发流程
 

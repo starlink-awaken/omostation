@@ -1,0 +1,27 @@
+id: P1-CARDS_KAIRON_GAP
+title: CARDS与Kairon/Minerva研究管线完全隔离
+dimension: architecture
+subdimension: integration
+domain: workspace
+scope: governance_kernel
+severity: high
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: omo-governance
+affected_roots:
+- .omo
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-05T14:28:47Z'
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+history:
+- at: '2026-06-05T14:28:47Z'
+  action: register
+  note: Registered debt item P1-CARDS_KAIRON_GAP.
+  actor: 全景分析 2026-06-05
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: Framework

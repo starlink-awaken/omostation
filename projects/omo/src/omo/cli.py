@@ -104,6 +104,28 @@ def main(argv: list[str] | None = None) -> int:
 
         return cost_main(args[1:])
 
+    if args and args[0] == "governance":
+        from omo.omo_audit import governance_main, governance_history_main
+
+        sub = args[1] if len(args) > 1 else "audit"
+        rest = args[2:] if len(args) > 2 else None
+        if sub == "history":
+            return governance_history_main(rest)
+        if sub in ("audit", "--help", "-h", None):
+            return governance_main(rest)
+        # unknown sub: treat as audit args
+        return governance_main(args[1:])
+
+    if args and args[0] == "daemon":
+        from omo.omo_daemon import main as daemon_main
+
+        return daemon_main(args[1:])
+
+    if args and args[0] == "health":
+        from omo.omo_health import main as health_main
+
+        return health_main(args[1:])
+
     from omo.omo_worker import main as worker_main
 
     return worker_main(args)

@@ -1,0 +1,28 @@
+id: P1-DOCKER_COMPOSE_FRAGMENTS
+title: "96 个 docker-compose.yml 散落在 projects/ 中，大部分在归档内无人管理"
+dimension: infrastructure
+subdimension: configuration_hygiene
+domain: workspace
+scope: cross_project
+severity: medium
+weight: 0.3
+entropy_class: state
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - projects/_archived/SharedBrain-code/
+  - projects/_archived/legacy-readme-snapshots/
+evidence_refs:
+  - workspace root find output
+mitigation_refs: []
+opened_at: "2026-06-05T13:00:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase17
+history:
+  - at: "2026-06-05T13:00:00Z"
+    action: register
+    note: "Architecture debt analysis 2026-06-05: ~96 docker-compose files found across workspace. Majority are in _archived/SharedBrain-code/.worktrees/ — legacy artifacts from the SharedBrain decomposition. Not causing problems but adds scan noise."
+  - at: "2026-06-05T21:05:00Z"
+    action: close
+    note: "审计报告已写。所有 docker-compose 碎片在 _archived/ 下，活跃项目的 compose 正常使用。关闭。"

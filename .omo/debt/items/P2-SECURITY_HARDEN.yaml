@@ -1,0 +1,26 @@
+id: P2-SECURITY_HARDEN
+title: "KEI 沙箱安全策略粗放：allow_read: '/' 允许全局读取"
+dimension: security
+subdimension: sandbox_policy
+domain: workspace
+scope: governance_kernel
+severity: low
+weight: 0.3
+entropy_class: state
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - ~/Workspace/projects/runtime/kei.yaml
+evidence_refs: []
+mitigation_refs: []
+opened_at: "2026-06-05T14:00:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase19
+history:
+  - at: "2026-06-05T14:00:00Z"
+    action: register
+    note: "Architecture gap analysis 2026-06-05: KEI kei.yaml allows_read: '/' means any extension can read any file. Should be restricted to Workspace + runtime + home."
+  - at: "2026-06-05T21:30:00Z"
+    action: close
+    note: "allow_read whitelisted from '/' to Workspace/runtime/.hermes/Documents. allow_write also updated for /dev."

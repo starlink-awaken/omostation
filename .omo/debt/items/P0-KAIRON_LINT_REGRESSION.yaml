@@ -1,0 +1,30 @@
+id: P0-KAIRON_LINT_REGRESSION
+title: "kairon lint 75 错误 (65 auto-fixable), 代码质量退化"
+dimension: code_quality
+subdimension: linting
+domain: projects
+scope: within_project
+severity: critical
+weight: 0.8
+entropy_class: state
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - projects/kairon/
+evidence_refs:
+  - projects/kairon/Makefile
+mitigation_refs: []
+opened_at: "2026-06-05T12:15:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase17
+history:
+  - at: "2026-06-05T12:15:00Z"
+    action: register
+    note: "Full architecture audit 2026-06-05: make lint shows 75 errors, 65 auto-fixable with --fix."
+  - at: "2026-06-05T20:45:00Z"
+    action: close
+    note: "Full architecture audit 2026-06-05: all findings verified and fixed during audit session."
+  - at: "2026-06-05T20:45:00Z"
+    action: close
+    note: "Full architecture audit 2026-06-05: all findings verified and fixed during audit session."

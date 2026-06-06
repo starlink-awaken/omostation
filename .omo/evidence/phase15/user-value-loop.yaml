@@ -1,0 +1,54 @@
+id: phase15-user-value-loop
+created_at: '2026-06-05T06:31:11Z'
+phase: 15
+status: ready
+mode: governed-user-value-loop
+purpose: Tie OMO governance back to projects and concrete user-facing value.
+scenarios:
+- id: uv-knowledge-capture-search
+  user_goal: Capture material, index it, and find it again through governed search.
+  projects_used:
+  - SharedBrain
+  - gbrain
+  - kairon
+  evidence_refs:
+  - .omo/_delivery/evidence/phase12/research-pipeline-trace.yaml
+  - projects/gbrain/README.md
+  - projects/_archived/SharedBrain-original/README.md
+  current_limit: Search and evidence traces are local/governed; no broad user-facing
+    product shell is enabled by Phase 15.
+  next_improvement: Promote one live search demo behind a user-approved packet.
+- id: uv-research-pipeline
+  user_goal: Turn a research question into structured outputs with traceable capability
+    bindings.
+  projects_used:
+  - kairon
+  - gbrain
+  - agentmesh
+  evidence_refs:
+  - .omo/_truth/scenarios/research-pipeline.yaml
+  - .omo/_delivery/evidence/phase12/research-pipeline-trace.yaml
+  - projects/agentmesh/README.md
+  current_limit: The proven path is scenario trace/dry-run, not full autonomous execution.
+  next_improvement: Add a second scenario with live read-only retrieval and no mutation.
+- id: uv-supervised-agent-task
+  user_goal: Convert a system proposal into a reviewable task draft without accidentally
+    executing it.
+  projects_used:
+  - agentmesh
+  - SharedBrain
+  - kairon
+  evidence_refs:
+  - .omo/_delivery/evidence/phase13/bottleneck-proposals.yaml
+  - .omo/_delivery/evidence/phase15/proposal-to-task-dry-run.yaml
+  - projects/agentmesh/AGENTS.md
+  current_limit: Draft tasks are intentionally inactive until human approval.
+  next_improvement: Wire one approved draft into a later active packet after policy
+    tests pass.
+live_demo_candidates:
+- uv-knowledge-capture-search
+- uv-research-pipeline
+non_goals:
+- No production auto-mutation.
+- No marketplace install or publish.
+- No hidden Phase 14 ecosystem expansion.

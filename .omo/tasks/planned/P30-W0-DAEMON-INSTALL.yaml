@@ -1,0 +1,31 @@
+id: P30-W0-DAEMON-INSTALL
+phase: 30
+wave: W0
+title: "启动 omo daemon + launchd 开机自启"
+status: completed
+task_type: infrastructure
+priority: P0
+assigned_to: null
+human_approval_required: true
+entry_gate:
+  - "omo CLI 已安装 (kairon-governance 6 模块迁 omo 后)"
+depends_on:
+  - P30-W0-DECISION
+deliverables:
+  - "omo daemon start 成功"
+  - "launchd plist 文件写入 ~/Library/LaunchAgents/"
+  - "launchctl load 验证自启"
+  - "omo agora-health 检查通过"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/management/decision-p30-architecture-final.md"
+knowledge_refs:
+  - "P29-W3-DAEMON-AGORA-HEALTH (daemon 基础已实现)"
+description: |
+  启动 omo daemon 服务, 配置 launchd 开机自启, 验证 agora 健康探活。
+  依赖 P29-W3 已实现的 daemon.py + agora_health.py, P30-W0 仅做"配置 + 启动"层。
+started_at: '2026-06-06T01:00:00Z'
+completed_at: '2026-06-06T01:35:00Z'
+blocked_by: null
+retry_count: 0

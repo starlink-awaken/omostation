@@ -45,7 +45,7 @@ omostation/
 │
 └── .omo/             治理知识库 (89 docs)
 
-架构模型: 4+1+3+I (8 layers)
+架构模型: 5+3+1 (eCOS v5)
 健康评分: 66.80/100 🟡
 ```
 
@@ -216,7 +216,7 @@ SharedWork/ (31 顶级分类, 90+ 项目)
 - **注册服务**: 全系统 100+ MCP 工具
 - **EU 计价路由**: 调用 eu-pricing L2 服务（不自己计算）
 
-#### kairon — 知识操作栈 (Python monorepo, ~25 包)
+#### kairon — 知识操作栈 (Python monorepo, 当前 live 基线 24 包)
 
 **L1 契约层** — 数据和 Schema 合约
 - **core-models**: Entity/Relation/KnowledgeGraph/Provenance — 所有项目的共享数据模型
@@ -324,7 +324,7 @@ SharedWork/ (31 顶级分类, 90+ 项目)
 目标: 4个核心系统全部就位，开始协同工作
 
 ┌──────────────────────────────────────────────┐
-│ ◆ kairon monorepo: 25 包，全部 MCP 就绪       │
+│ ◆ kairon monorepo: 24 包 live 基线，继续收敛 MCP/入口契约 │
 │ ◆ SharedBrain: 合规控制面，4器官 delegated     │
 │ ◆ agentmesh: 吸收 LiteLLM LLM 路由能力         │
 │ ◆ gbrain: 吸收 memU 记忆核心算法               │

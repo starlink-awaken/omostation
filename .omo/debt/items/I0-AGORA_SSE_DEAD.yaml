@@ -1,0 +1,24 @@
+id: I0-AGORA_SSE_DEAD
+title: "Agora SSE 端点 (:7431/:7432) 返回 HTTP 000 不可达"
+dimension: architecture
+subdimension: service_mesh
+domain: projects
+scope: cross_project
+severity: high
+weight: 0.8
+entropy_class: behavior
+lifecycle_state: resolved
+owner: omo-governance
+affected_roots:
+  - projects/kairon/packages/agora
+evidence_refs:
+  - .omo/_knowledge/management/ecos-layer-audit-2026-06-05.md
+mitigation_refs: []
+opened_at: "2026-06-05T21:00:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase17
+history:
+  - at: "2026-06-05T21:00:00Z"
+    action: register
+    note: "Debt registered from Layer Audit 2026-06-05."

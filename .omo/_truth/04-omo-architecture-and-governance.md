@@ -92,3 +92,17 @@ graph TD
    由于 `.omo` 数据平面是语言无关的 YAML/MD。未来如果在 `projects/frontend/` 中引入了前端项目，即使开发语言是 TypeScript，它依然可以在自己目录下的 `.omo/` 中使用相同的四平面逻辑进行项目治理，甚至用 TS 写一个解析 `.omo` 的脚本，与全局系统的通信依然畅通。
 3. **无限垂直引擎扩展 (Infinite Engines)**
    如果未来需要添加一个“文档生成引擎”或“安全扫描引擎”，我们只需在 `projects/` 下建立新的独立计算包（如 `projects/omo-security`），而绝不会污染主干的调度引擎 (`omo`)。
+
+---
+
+## 5. 外部 SSOT 系统治理 (Phase 7 新增)
+
+> OMO 治理内核管理 Workspace 内的工程任务和债务。以下系统位于 Workspace 外部，但通过 MCP/CLI 与 OMO 互通。完整映射 → `~/Documents/驾驶舱/统一架构模型.md`
+
+| 外部系统 | SSOT | 互通方式 | OMO 治理覆盖 |
+|---------|------|---------|------------|
+| **CARDS 统一追踪** | `~/Documents/驾驶舱/CARDS/` (SQLite) | CLI: `omo cards` · MCP: `cards_*` | X1(card_history)·X2(cards check) |
+| **Vault 知识存储** | `~/Documents/学习进化/` (Markdown) | Agent: read_file | X2(校验脚本) |
+| **域系统** | 家庭/工作/创作 + CARDS domain | 域CLAUDE.md + `cards list --domain` | X2(STATE→CARDS指针) |
+
+OMO 不管理这些外部系统的内部状态——它只追踪"外部系统是否健康"（通过 X 轴治理维度）。

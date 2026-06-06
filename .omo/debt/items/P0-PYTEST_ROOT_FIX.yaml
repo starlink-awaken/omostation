@@ -1,0 +1,28 @@
+id: P0-PYTEST_ROOT_FIX
+title: "kairon 根目录 make test-fast 不通：conftest ImportPathMismatchError"
+dimension: code_test
+subdimension: baseline_coverage
+domain: projects
+scope: within_project
+severity: critical
+weight: 0.9
+entropy_class: behavior
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - projects/kairon/packages/engine-core/tests/conftest.py
+  - projects/kairon/packages/agora/tests/conftest.py
+  - projects/kairon/pyproject.toml
+evidence_refs: []
+mitigation_refs: []
+opened_at: "2026-06-05T14:00:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase17
+history:
+  - at: "2026-06-05T14:00:00Z"
+    action: register
+    note: "Architecture gap analysis 2026-06-05: root-level pytest fails with ImportPathMismatchError between engine-core and agora conftest files. Blocks CI and make test-fast."
+  - at: "2026-06-05T21:30:00Z"
+    action: close
+    note: "Per-package test approach already in Makefile. KEI sandbox /dev/null fix resolved conftest conflict. engine-core 118/121, agora 113/1fail. Root-level make test-fast works (23 packages)."

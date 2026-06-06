@@ -1,0 +1,8 @@
+timestamp: '2026-06-05T04:58:09.525710+00:00'
+message: '2026-06-05 Layer Audit: registered 10 debt items for L0/L1/I0/X1-X3 remediation'
+metrics:
+  active_tasks: 0
+  planned_tasks: 4
+system_state: null
+goals: null
+debt: null

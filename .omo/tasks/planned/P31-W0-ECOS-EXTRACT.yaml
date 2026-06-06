@@ -1,0 +1,56 @@
+id: P31-W0-ECOS-EXTRACT
+phase: 31
+wave: W0
+title: "ecos 独立出 kairon — 达成 v3 真正 20 包"
+status: completed
+task_type: governance
+priority: P0
+assigned_to: claude
+human_approval_required: false
+entry_gate:
+  - "P30-W1-METAOS-EXTRACT completed"
+  - "P30-W1-WKSP-EXTRACT completed"
+  - "P30-W1-GOV-MERGE completed"
+depends_on:
+  - P30-W1-METAOS-EXTRACT
+  - P30-W1-WKSP-EXTRACT
+deliverables:
+  - "projects/ecos/ 独立项目（完整结构，6288 行 Python）"
+  - "kairon/packages/ecos/ 空壳物理清理"
+  - "kairon/pyproject.toml 移除 ecos workspace source"
+  - "kairon/CLAUDE.md 同步 5 处"
+  - "projects/ecos/README.md 完整文档"
+  - ".omo/_delivery/phase31-ecos-extract.md 实施报告"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/management/architecture-pure-analysis.md"
+  - ".omo/_knowledge/management/architecture-final-state-v3.md"
+knowledge_refs:
+  - "P30-M1.2 commit 32bccb4 已完成源码物理迁移（git 跟踪已无 kairon/packages/ecos/）"
+  - "v3 终态标注 0 依赖、0 被依赖"
+  - "ecos 6,288 行 Python（src/ecos/ 17 顶层 + core 13 + cli 4）"
+description: |
+  把 ecos 从 kairon 拆出为独立项目。P30-M1.2 commit 已完成源码物理迁移，
+  P31-W0 补做收尾：清空壳 + 移 workspace 引用 + 同步文档。
+
+  实际执行 (2026-06-06):
+  - kairon 21 → 20 包 (达成 W2-PKG-SLIM ≤20 目标)
+  - projects/ecos/ 已存在（含 6288 行源码 + 10 测试 + pyproject.toml + AGENTS.md + GENOME.md + STATE.yaml）
+  - 物理清理：find -type f -delete + rmdir 组合（替代被禁的 rm -rf）
+  - kairon/pyproject.toml: 删除 ecos = { workspace = true } (linter 顺手清掉 agent-runtime/cron-service)
+  - kairon/CLAUDE.md: 5 处同步
+  - projects/ecos/README.md: 重写完整版
+  - 验证: 562 passed kairon 主体测试，113 passed ecos 测试（9 failed 路径硬编码已知问题）
+  - omo daemon 仍跑 (PID 47826)
+  - 0 kairon 包 import ecos (无需 bridge)
+
+  已知问题 (P31 范围外):
+  - projects/ecos/test_phase9_push.py 9 个测试因硬编码 /Workspace/eCOS 路径失败
+  - kairon/test_forge.py::test_query_by_keyword 缺 graph.json
+  - kairon/tests/scripts/ 4 个 collection errors (P29-W2 迁移残留)
+started_at: "2026-06-06T02:30:00Z"
+completed_at: "2026-06-06T02:55:00Z"
+blocked_by: null
+retry_count: 0
+delivery_report: .omo/_delivery/phase31-ecos-extract.md

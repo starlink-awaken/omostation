@@ -1,0 +1,32 @@
+id: DEBT-OMO-024
+title: 'P0: 智能通知管道 — 事件驱动+每日摘要简报'
+dimension: infrastructure
+subdimension: layer-l1
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: closed
+owner: omo-agent
+affected_roots:
+  - $RUNTIME_HOME/scripts/daily_digest.sh
+  - $RUNTIME_HOME/scripts/event_driven_notify.py
+  - $RUNTIME_HOME/scripts/notify-alerts.sh
+  - $RUNTIME_HOME/data/service_state.json
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-05T09:30:00Z'
+last_reviewed_at: '2026-06-05T17:39:00Z'
+next_review_at: null
+gate_level: none
+x1_policy_ref: X1-AUDIT-002
+x2_freshness: ''
+x3_tier: Tool
+history:
+  - at: '2026-06-05T09:30:00Z'
+    action: register
+    note: '通知管道从定时扫描升级为事件驱动+每日摘要简报，服务挂即时推送而非等30分钟'
+  - at: '2026-06-05T17:39:00Z'
+    action: close
+    note: 'Smart Notification Pipeline implemented: daily_digest.sh pulls /api/status+debt for markdown summary; event_driven_notify.py detects service state transitions (up→down=ALERT, already down=skip), persists to service_state.json, sends WeChat Push via server酱 if SCKEY found else logs to file; ~/runtime/data/ created; notify-alerts.sh updated to call daily_digest.sh after health scan. All scripts verified live against :8080 API.'

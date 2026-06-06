@@ -1,0 +1,77 @@
+id: P31-W0-AGORA-ACTUAL-FIX
+phase: 31
+wave: W0
+title: "agora 9 服务真修复 — 健康度从 18.2% 提升"
+status: completed
+task_type: infra
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P30-W2-VERIFY completed"
+depends_on:
+  - P30-W2-VERIFY
+deliverables:
+  - ".omo/_delivery/phase31-agora-actual-fix.md"
+  - "projects/agora/src/agora-routes.json (rebuilt)"
+  - "projects/omo/src/omo/omo_paths.py (AGORA_ROUTES_PATH fixed)"
+  - "projects/omo/src/omo/omo_health.py (DEFAULT_SERVICE_PORTS fixed)"
+risk_level: L2
+allowed_operation_level: L2
+source_docs:
+  - ".omo/_delivery/phase30-verify-report.md"
+knowledge_refs:
+  - "ADR-0005"
+description: |
+  agora 9 服务 DOWN 真修复, 提升健康度从 18.2% → 25.0% (+6.8pp).
+  核心动作:
+    1. 启动 agora-internal HTTP gateway (PID 20658, port 7430)
+    2. 重建 agora-routes.json (76 路由 + _meta.routing_table)
+    3. 修正 omo_paths.py AGORA_ROUTES_PATH (kairon → agora)
+    4. 修正 omo_health.py DEFAULT_SERVICE_PORTS (端口错配 3 处, 死端口 5 个, stdio-only 6 个)
+  未达 80% 目标原因:
+    - 6 个 stdio-only MCP (iris/eidos/codeanalyze/sophia/llm-gateway/minerva-mcp) 设计上无 HTTP 端点
+    - 1 个 P30 拆分后源码丢失 (agent-runtime, kairon/packages/agent-runtime/ 目录已删)
+    - 1 个需外部 LLM 依赖 (minerva web 需 ollama 或 API key)
+    - 1 个需独立任务 (sharedbrain-bridge standalone 冷启动)
+    - 1 个 test stub (test-svc 路由占位)
+started_at: '2026-06-06T05:00:00Z'
+completed_at: '2026-06-06T05:50:00Z'
+blocked_by: null
+retry_count: 0
+metrics:
+  health_before: "2/11 (18.2%)"
+  health_after: "3/12 (25.0%)"
+  health_delta: "+6.8pp"
+  services_started: 1
+  files_modified: 3
+  lines_changed: 95
+processes:
+  - service: agora-web
+    pid: 20658
+    port: 7430
+    pid_file: /tmp/agora-web.pid
+    log_file: /tmp/agora-web.log
+    started_at: '2026-06-06T05:35:00Z'
+not_started:
+  - service: agent-runtime-mcp
+    port: 9876
+    reason: "P30 拆分后 kairon/packages/agent-runtime/ 源码目录被删, 不可恢复"
+  - service: sharedbrain-bridge-mcp
+    port: 8001
+    reason: "standalone.server 需 NeuralCenter + CircuitEngine 冷启动, 工作量大于本 wave"
+  - service: minerva-web
+    port: 8765
+    reason: "缺 LLM 后端 (ollama 未跑, DEEPSEEK_API_KEY 等未设)"
+down_with_design_reason:
+  - "iris-mcp (7432): stdio-only, main() mcp.run(transport='stdio')"
+  - "eidos (7434): stdio-only, 自定义 JSON-RPC over stdin/stdout"
+  - "codeanalyze-mcp (7435): stdio-only, main() mcp.run() 默认 stdio"
+  - "sophia-mcp (7437): stdio-only, main() mcp.run() 默认 stdio"
+  - "llm-gateway-mcp (7441): stdio-only, 由 Hermes MCP 客户端 spawn"
+verification:
+  omo_health_output: /tmp/omo_health_p31.md
+  omo_health_result: "3/12 (25.0%)"
+  daemon_pid: 47826
+  daemon_status: running
+  ruff_check: "All checks passed!"

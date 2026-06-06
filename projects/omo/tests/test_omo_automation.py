@@ -11,8 +11,6 @@ import yaml
 # The workspace root is injected by tests/conftest.py, so scripts.* imports resolve.
 from scripts.sync_omo_state import sync_state
 from omo.omo_governance import approve_truth_mutation, apply_truth_mutation
-from omo.omo_handoff_index import write_handoff_index
-from omo.omo_metrics import write_worker_utilization_summary
 from omo.omo_io import write_text_atomic, write_yaml_atomic
 from omo.omo_provider_plane import write_provider_plane_snapshot
 from omo.omo_redaction import redact_sensitive_text
@@ -21,11 +19,12 @@ from omo.omo_worker import (
     collect_worker_status,
     dispatch_task,
     main as omo_worker_main,
-    reclaim_task,
-    scan_runtime_watchdog,
-    update_dispatch_checkpoint,
 )
 from omo.omo_task_schema import validate_task_file
+
+
+PROJECTS_ROOT = Path(__file__).resolve().parents[2]
+WORKSPACE_ROOT = PROJECTS_ROOT.parent
 
 
 def _write_yaml(path: Path, data: dict) -> None:
@@ -130,6 +129,46 @@ def test_sync_state_ignores_unphased_historical_done_tasks(tmp_path: Path):
     state = sync_state(omo, test_output="1 passed")
 
     assert state["divergence_flags"] == []
+
+
+def test_sync_state_bridges_runtime_health_as_summary_only(tmp_path: Path):
+    omo = tmp_path / ".omo"
+    _write_yaml(omo / "state" / "system.yaml", {"health_score": 0.0})
+    _write_yaml(
+        omo / "state" / "system_health.yaml",
+        {
+            "last_scan": 100.0,
+            "services": {
+                "agora": {
+                    "port_listening": True,
+                    "health_check": "healthy",
+                    "runtime": {"freshness_seconds": 10},
+                },
+                "gbrain": {
+                    "port_listening": False,
+                    "health_check": "unreachable",
+                    "runtime": {"freshness_seconds": 90001},
+                },
+            },
+        },
+    )
+    _write_yaml(omo / "goals" / "current.yaml", {"phase": 28, "status": "active", "goals": []})
+    for group in ("active", "planned", "blocked", "done"):
+        (omo / "tasks" / group).mkdir(parents=True, exist_ok=True)
+
+    state = sync_state(omo, test_output="2 passed")
+
+    assert "services" not in state
+    assert "last_scan" not in state
+    assert state["runtime_health_summary"] == {
+        "last_scan": 100.0,
+        "total_services": 2,
+        "online_services": 1,
+        "healthy_services": 1,
+        "offline_services": 1,
+        "unhealthy_services": ["gbrain"],
+        "stale_services": ["gbrain"],
+    }
 
 
 def test_sync_state_derives_current_wave_and_phase_status_from_goals(tmp_path: Path):
@@ -516,8 +555,8 @@ def test_sync_omo_state_script_runs_from_repo_root(tmp_path: Path):
         (omo / "tasks" / group).mkdir(parents=True, exist_ok=True)
 
     result = subprocess.run(
-        [sys.executable, "scripts/sync_omo_state.py", "--omo-dir", str(omo)],
-        cwd=Path(__file__).resolve().parents[2],
+        [sys.executable, str(WORKSPACE_ROOT / "scripts" / "sync_omo_state.py"), "--omo-dir", str(omo)],
+        cwd=WORKSPACE_ROOT,
         capture_output=True,
         text=True,
     )
@@ -570,7 +609,7 @@ def test_dispatch_task_launch_redacts_stdout_log(tmp_path: Path):
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/example.md"],
+            "source_docs": [".omo/_knowledge/design/plans/example.md"],
             "risk_level": "L0",
             "allowed_operation_level": "L0",
             "human_approval_required": False,
@@ -580,7 +619,7 @@ def test_dispatch_task_launch_redacts_stdout_log(tmp_path: Path):
         },
     )
     _write_yaml(
-        omo / "workers" / "registry.yaml",
+        omo / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
                 {
@@ -754,7 +793,7 @@ def test_dispatch_task_and_worker_status_use_custom_omo_root(tmp_path: Path):
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".kos/plans/source.md"],
+            "source_docs": [".kos/_knowledge/design/plans/source.md"],
             "risk_level": "L0",
             "allowed_operation_level": "L0",
             "human_approval_required": False,
@@ -764,7 +803,7 @@ def test_dispatch_task_and_worker_status_use_custom_omo_root(tmp_path: Path):
         },
     )
     _write_yaml(
-        omo / "workers" / "registry.yaml",
+        omo / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
                 {
@@ -814,7 +853,7 @@ def test_dispatch_task_uses_supplied_now_for_dispatch_identity_and_start_time(tm
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/source.md"],
+            "source_docs": [".omo/_knowledge/design/plans/source.md"],
             "risk_level": "L0",
             "allowed_operation_level": "L0",
             "human_approval_required": False,
@@ -828,7 +867,7 @@ def test_dispatch_task_uses_supplied_now_for_dispatch_identity_and_start_time(tm
         },
     )
     _write_yaml(
-        omo / "workers" / "registry.yaml",
+        omo / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
                 {
@@ -888,7 +927,7 @@ def test_dispatch_task_launch_marks_dispatch_active_and_updates_lease(tmp_path: 
         },
     )
     _write_yaml(
-        omo / "workers" / "registry.yaml",
+        omo / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
                 {
@@ -924,8 +963,8 @@ def test_install_all_bridges_defaults_to_wrapper_only_without_running_legacy_ins
     installer.chmod(0o755)
 
     result = subprocess.run(
-        ["bash", "scripts/install-all-bridges.sh"],
-        cwd=Path(__file__).resolve().parents[2],
+        ["bash", str(WORKSPACE_ROOT / "scripts" / "shell" / "install-all-bridges.sh")],
+        cwd=WORKSPACE_ROOT,
         env={**os.environ, "HOME": str(home)},
         capture_output=True,
         text=True,
@@ -948,8 +987,8 @@ def test_install_all_bridges_can_opt_into_legacy_installers(tmp_path: Path):
     installer.chmod(0o755)
 
     result = subprocess.run(
-        ["bash", "scripts/install-all-bridges.sh", "--legacy-installers"],
-        cwd=Path(__file__).resolve().parents[2],
+        ["bash", str(WORKSPACE_ROOT / "scripts" / "shell" / "install-all-bridges.sh"), "--legacy-installers"],
+        cwd=WORKSPACE_ROOT,
         env={**os.environ, "HOME": str(home)},
         capture_output=True,
         text=True,
@@ -1171,7 +1210,7 @@ def test_dispatch_task_creates_packet_and_preclaims_task(tmp_path: Path):
         },
     )
     _write_yaml(
-        omo / "workers" / "registry.yaml",
+        omo / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
                 {
@@ -1221,7 +1260,7 @@ def test_validate_task_file_rejects_l2_task_without_approval_reference(tmp_path:
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/example.md"],
+            "source_docs": [".omo/_knowledge/design/plans/example.md"],
             "risk_level": "L2",
             "allowed_operation_level": "L2",
             "human_approval_required": True,
@@ -1251,7 +1290,7 @@ def test_validate_task_file_allows_planned_packet_without_approval_ref(tmp_path:
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/example.md"],
+            "source_docs": [".omo/_knowledge/design/plans/example.md"],
             "risk_level": "L3",
             "allowed_operation_level": "L3",
             "human_approval_required": True,
@@ -1279,7 +1318,7 @@ def test_validate_task_file_rejects_planned_packet_with_live_dispatch_chain(tmp_
             "review_ref": ".omo/workers/runs/dispatch-123-review.md",
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/example.md"],
+            "source_docs": [".omo/_knowledge/design/plans/example.md"],
             "risk_level": "L2",
             "allowed_operation_level": "L2",
             "human_approval_required": True,
@@ -1315,7 +1354,7 @@ def test_worker_validate_command_reports_all_planned_errors(tmp_path: Path, monk
             "review_ref": ".omo/workers/runs/dispatch-123-review.md",
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/example.md"],
+            "source_docs": [".omo/_knowledge/design/plans/example.md"],
             "risk_level": "L1",
             "allowed_operation_level": "L1",
             "human_approval_required": False,
@@ -1491,7 +1530,7 @@ def test_task_promote_apply_moves_task_and_writes_envelope(tmp_path: Path, monke
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(
-        "scripts.omo_worker.subprocess.run",
+        "omo.omo_worker.subprocess.run",
         lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, "", ""),
     )
     monkeypatch.setattr(
@@ -1558,7 +1597,7 @@ def test_task_promote_apply_rolls_back_when_sync_fails(tmp_path: Path, monkeypat
     def _fail_sync(*args, **kwargs):
         raise subprocess.CalledProcessError(1, args[0])
 
-    monkeypatch.setattr("scripts.omo_worker.subprocess.run", _fail_sync)
+    monkeypatch.setattr("omo.omo_worker.subprocess.run", _fail_sync)
     monkeypatch.setattr(
         sys,
         "argv",
@@ -2963,7 +3002,7 @@ def test_task_governance_overlay_run_next_writes_run_artifact(tmp_path: Path, mo
     _write_yaml(tmp_path / ".omo" / "state" / "system.yaml", {"current_phase": 16, "health_score": 0.0})
 
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr("scripts.omo_worker._sync_omo_state", lambda *args, **kwargs: None)
+    monkeypatch.setattr("omo.omo_worker._sync_omo_state", lambda *args, **kwargs: None)
     monkeypatch.setattr(
         sys,
         "argv",
@@ -3156,7 +3195,7 @@ def test_task_governance_overlay_run_next_dispatches_first_active_pending_target
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "registry.yaml",
+        tmp_path / ".omo" / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
                 {
@@ -3285,7 +3324,7 @@ def test_task_governance_overlay_run_next_records_contract_gap_for_dispatched_ta
         },
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "registry.yaml",
+        tmp_path / ".omo" / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
                 {
@@ -3416,7 +3455,7 @@ def test_task_governance_overlay_run_next_launches_dispatched_task_when_scope_is
         "# prompt\n", encoding="utf-8"
     )
     _write_yaml(
-        tmp_path / ".omo" / "workers" / "registry.yaml",
+        tmp_path / ".omo" / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
                 {

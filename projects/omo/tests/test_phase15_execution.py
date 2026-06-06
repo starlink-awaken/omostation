@@ -8,6 +8,7 @@ import yaml
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+WORKSPACE_ROOT = REPO_ROOT.parent
 OMO_ROOT = REPO_ROOT / ".omo"
 
 
@@ -17,6 +18,12 @@ def _read_yaml(rel_path: str) -> dict:
 
 def _read(rel_path: str) -> str:
     return (OMO_ROOT / rel_path).read_text(encoding="utf-8")
+
+
+def _resolve_workspace_ref(ref: str) -> Path:
+    if ref.startswith(".omo/"):
+        return WORKSPACE_ROOT / ref
+    return WORKSPACE_ROOT / ref
 
 
 def test_phase15_governance_evidence_ledger_is_complete_and_traceable() -> None:
@@ -45,11 +52,11 @@ def test_phase15_governance_evidence_ledger_is_complete_and_traceable() -> None:
         assert entry["verification"]
         assert entry["rollback"]
         for ref in entry["evidence_refs"]:
-            assert (REPO_ROOT / ref).exists(), ref
+            assert _resolve_workspace_ref(ref).exists(), ref
 
 
 def test_phase15_policy_report_blocks_governance_invariant_violations() -> None:
-    report = _read_yaml("evidence/phase15/policy-test-report.yaml")
+    report = _read_yaml("_delivery/evidence/phase15/policy-test-report.yaml")
 
     assert report["status"] == "pass"
     assert report["policy_test_pass_rate"] == 1.0
@@ -70,7 +77,7 @@ def test_phase15_policy_report_blocks_governance_invariant_violations() -> None:
 
 
 def test_phase15_proposal_compiler_outputs_inactive_task_drafts_only() -> None:
-    compiler = _read_yaml("evidence/phase15/proposal-to-task-dry-run.yaml")
+    compiler = _read_yaml("_delivery/evidence/phase15/proposal-to-task-dry-run.yaml")
     drafts = sorted((OMO_ROOT / "tasks" / "drafts").glob("P15-*.yaml"))
     active = sorted((OMO_ROOT / "tasks" / "active").glob("*.yaml"))
     p15_active = [
@@ -97,7 +104,7 @@ def test_phase15_proposal_compiler_outputs_inactive_task_drafts_only() -> None:
 
 
 def test_phase15_dashboard_includes_projects_and_user_value_not_only_omo() -> None:
-    dashboard = _read_yaml("evidence/phase15/operating-dashboard-snapshot.yaml")
+    dashboard = _read_yaml("_delivery/evidence/phase15/operating-dashboard-snapshot.yaml")
 
     assert dashboard["status"] == "ready"
     assert dashboard["ledger_authoritative"] is True
@@ -110,8 +117,8 @@ def test_phase15_dashboard_includes_projects_and_user_value_not_only_omo() -> No
 
 
 def test_phase15_recovery_and_user_value_evidence_are_rehearsed() -> None:
-    recovery = _read_yaml("evidence/phase15/recovery-drill-report.yaml")
-    user_value = _read_yaml("evidence/phase15/user-value-loop.yaml")
+    recovery = _read_yaml("_delivery/evidence/phase15/recovery-drill-report.yaml")
+    user_value = _read_yaml("_delivery/evidence/phase15/user-value-loop.yaml")
 
     assert recovery["status"] == "pass"
     assert recovery["rollback_drill_success_rate"] == 1.0
@@ -151,7 +158,7 @@ def test_phase15_cli_commands_are_usable() -> None:
 
 
 def test_phase15_remains_completed_after_phase16_completion_allowing_only_authorized_active_tasks() -> None:
-    goals = _read_yaml("goals/current.yaml")
+    goals = _read_yaml("_truth/goals/current.yaml")
     state = _read_yaml("state/system.yaml")
     active_tasks = list((OMO_ROOT / "tasks" / "active").glob("*.yaml"))
     active_payloads = [yaml.safe_load(path.read_text(encoding="utf-8")) for path in active_tasks]
@@ -167,8 +174,8 @@ def test_phase15_remains_completed_after_phase16_completion_allowing_only_author
     ]
 
     assert goals["phase"] >= 16
-    assert goals["status"] in ("completed", "active")
-    assert all(s in ("completed", "active") for s in [goal["status"] for goal in goals["goals"]])
+    assert goals["status"] in ("completed", "active", "done")
+    assert all(s in ("completed", "active", "done") for s in [goal["status"] for goal in goals["goals"]])
     assert state["current_phase"] >= 16
     assert state["phase_status"] in ("completed", "active")
     assert state["phase15_status"] == "completed"
@@ -177,7 +184,7 @@ def test_phase15_remains_completed_after_phase16_completion_allowing_only_author
     assert stale_active == [], f"Unexpected non-future active tasks: {stale_active}"
     assert unauthorized_active == [], f"Unexpected non-authorized active tasks: {unauthorized_active}"
 
-    assert "Phase 15 is complete" in _read("summaries/phase15/phase15-closeout.md")
-    assert "Status: GO" in _read("summaries/phase15/phase15-closeout.md")
-    assert "projects and user value loop" in _read("summaries/phase15/phase15-retrospective.md")
+    assert "Phase 15 is complete" in _read("_knowledge/summaries/phase15/phase15-closeout.md")
+    assert "Status: GO" in _read("_knowledge/summaries/phase15/phase15-closeout.md")
+    assert "projects and user value loop" in _read("_knowledge/summaries/phase15/phase15-retrospective.md")
     assert "Status: pass" in _read("_knowledge/management/phase15-cross-audit.md")

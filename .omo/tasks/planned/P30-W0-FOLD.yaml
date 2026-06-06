@@ -1,0 +1,29 @@
+id: P30-W0-FOLD
+phase: 30
+wave: W0
+title: "归档 P28/P29/IMPORTED — 让 planned/ 平面只剩 P30"
+status: pending
+task_type: governance
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P30-W0-DECISION 审批通过（决策文档已存在）"
+depends_on:
+  - P30-W0-DECISION
+deliverables:
+  - ".omo/tasks/archived/p28/（12 文件）"
+  - ".omo/tasks/archived/p29/（8 文件）"
+  - ".omo/tasks/archived/imported/（10 文件）"
+risk_level: L0
+allowed_operation_level: L0
+source_docs:
+  - ".omo/_knowledge/management/decision-p30-architecture-final.md"
+knowledge_refs: []
+description: |
+  把 P28/P29/IMPORTED 共 30 个任务归档。
+  planned/ 平面清空, 只留 P30 任务。
+started_at: null
+completed_at: null
+blocked_by: null
+retry_count: 0

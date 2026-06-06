@@ -1,0 +1,31 @@
+id: P29-W0-E2E-EVAL
+phase: 29
+wave: W0
+title: "E2E-DEMO 真用化 — schema 校验 + 召回率自评 + 参数化问题"
+status: completed
+task_type: feature
+priority: P1
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P28-W1-E2E-DEMO completed"
+depends_on:
+  - P28-W1-E2E-DEMO
+deliverables:
+  - "projects/kairon/scripts/e2e_health_eval.py"
+  - "projects/kairon/tests/scripts/test_e2e_health_eval.py"
+  - ".omo/_delivery/phase28-e2e-eval-report.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_control/north-star.md"
+knowledge_refs:
+  - "ADR-0001"
+description: |
+  把 E2E-DEMO 从"可演示"升级为"可生产用".
+  加 schema 校验(强制结构)、召回率自评(量化质量)、参数化(支持真实问题).
+  目标: 下次真用卫健委 E2E 时, 输出报告自带质量分.
+started_at: '2026-06-05T23:00:00'
+completed_at: '2026-06-05T23:00:00'
+blocked_by: null
+retry_count: 0

@@ -1,0 +1,66 @@
+id: P31-W0-KAIRON-MERGE-ACCEPTED
+phase: 31
+wave: W0
+title: "ADR-0006 状态 PROPOSED → ACCEPTED + 取消 data-pipeline 合并"
+status: completed
+task_type: governance
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P31-W0-KAIRON-MERGE-PLAN completed"
+depends_on:
+  - P31-W0-KAIRON-MERGE-PLAN
+deliverables:
+  - ".omo/_knowledge/decisions/0006-kairon-package-merge.md（修订历史）"
+  - ".omo/_knowledge/decisions/INDEX.md（0006 行 ACCEPTED）"
+  - ".omo/INDEX.md（顶层状态同步 Phase 31 W0）"
+  - ".omo/state/system.yaml（current_phase=31, wave=W0, completed_tasks+1）"
+  - ".omo/tasks/planned/P31-W0-KAIRON-MERGE-ACCEPTED.yaml（本任务）"
+  - ".omo/_delivery/phase31-merge-accepted.md（交付物）"
+risk_level: L0
+allowed_operation_level: L0
+source_docs: []
+knowledge_refs:
+  - "ADR-0006"
+description: |
+  人类审批 3 组合并（砍掉 data-pipeline）。
+  ADR-0006 状态从 PROPOSED 改为 ACCEPTED。
+  系统状态同步到 Phase 31 W0。
+  本任务仅治理文件，不实施 3 组合并（合并由 W1 三个 subagent 并行执行）。
+
+  === 修订要点 ===
+  - 保留 3 组合并: llm-gateway-kernel / sot-bridge / protocols-layer
+  - 取消 data-pipeline 合并（AST 0 跨包 import, v3 标"不动"）
+  - 17 → 14 包（4 组合并 → 3 组合并，节省 1 组工作量）
+
+  === 治理文件变更清单 ===
+  1. ADR-0006 顶: Status PROPOSED → ACCEPTED + Accepted at 时间戳
+  2. ADR-0006 加"修订历史"段
+  3. decisions/INDEX.md: 0006 行 PROPOSED → ACCEPTED + 主题分类同步
+  4. omo/INDEX.md: 顶层状态表 Phase 30 → Phase 31 W0
+  5. system.yaml: current_phase 30→31, wave W2→W0, next_milestone 更新, completed_tasks 17→18, total_tasks 23→24, phase31_status active, updated_at 2026-06-06T03:30:00Z
+
+started_at: '2026-06-06T03:30:00Z'
+completed_at: '2026-06-06T03:30:00Z'
+blocked_by: null
+retry_count: 0
+artifact_paths:
+  adr: "/Users/xiamingxing/Workspace/.omo/_knowledge/decisions/0006-kairon-package-merge.md"
+  adr_index: "/Users/xiamingxing/Workspace/.omo/_knowledge/decisions/INDEX.md"
+  omo_index: "/Users/xiamingxing/Workspace/.omo/INDEX.md"
+  system_yaml: "/Users/xiamingxing/Workspace/.omo/state/system.yaml"
+  delivery: "/Users/xiamingxing/Workspace/.omo/_delivery/phase31-merge-accepted.md"
+downstream_tasks:
+  - id: P31-W1-KAIRON-MERGE-EXEC-1
+    title: "合并 1: llm-gateway-kernel (llm-gateway + engine-core, 28K)"
+    estimated_duration: "1-2 工作日"
+    depends_on_decision: "ADR-0006 ACCEPTED"
+  - id: P31-W1-KAIRON-MERGE-EXEC-2
+    title: "合并 2: sot-bridge (ssot + sharedbrain-bridge, 15K)"
+    estimated_duration: "1 工作日"
+    depends_on_decision: "ADR-0006 ACCEPTED"
+  - id: P31-W1-KAIRON-MERGE-EXEC-3
+    title: "合并 3: protocols-layer (sophia + symphony-protocol, 2.4K)"
+    estimated_duration: "0.5 工作日"
+    depends_on_decision: "ADR-0006 ACCEPTED"

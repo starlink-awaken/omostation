@@ -1,0 +1,27 @@
+id: P3-CARDS_DAEMON_BG
+title: "cards daemon 无后台进程 — 依赖 Agent 或人手动触发"
+dimension: platform
+subdimension: automation
+domain: workspace
+scope: omo_project
+severity: low
+weight: 0.15
+entropy_class: behavior
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - ~/Workspace/projects/omo/src/omo/omo_cards.py
+evidence_refs:
+  - ~/Documents/驾驶舱/全景架构分析.md
+mitigation_refs: []
+opened_at: "2026-06-05T14:30:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+x1_policy_ref: X1-AUDIT-001
+x2_freshness: "2026-06-05T14:30:00Z"
+x3_tier: Tool
+history:
+  - at: "2026-06-05T14:30:00Z"
+    action: register
+    note: "cards daemon 需要手动或 Agent 在 on_session_end 触发。建议加 launchd 定时任务或 cron。"

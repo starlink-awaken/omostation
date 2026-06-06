@@ -1,0 +1,35 @@
+id: DEBT-OMO-030
+title: 'P3: 红蓝对抗第二轮 — 集成层面安全审计'
+dimension: security
+subdimension: layer-i0
+domain: workspace
+scope: governance_kernel
+severity: high
+weight: 0.05
+entropy_class: classification
+lifecycle_state: closed
+owner: omo-agent
+affected_roots:
+  - $RUNTIME_HOME/matrix.yaml
+  - $RUNTIME_HOME/protocols/
+  - ~/Workspace/projects/omo/.omo/debt/
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-05T09:30:00Z'
+last_reviewed_at: null
+next_review_at: null
+gate_level: gate
+x1_policy_ref: X1-AUDIT-003
+x2_freshness: ''
+x3_tier: Principle
+history:
+  - at: '2026-06-05T09:30:00Z'
+    action: register
+    note: '上次8场景挖出4个真缺陷，现在系统更完整，再来一轮对抗暴露集成层面新问题'
+  - at: '2026-06-05T17:42:00Z'
+    action: schedule
+    note: 'Scheduled to P3 gate-level — redteam-round2-plan.md created with 10 integration-layer test scenarios'
+  - at: '2026-06-05T18:00:00Z'
+    action: close
+    note: 'Red Team Round 2 completed: 11/18 checks passed. env.sh(644→600) + matrix.yaml(644→640) fixed. Report at ~/runtime/scripts/redteam-round2-report.md. 3 false positives identified. No new exploitable vulns.'
+lifecycle_state: closed

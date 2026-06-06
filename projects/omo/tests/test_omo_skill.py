@@ -19,7 +19,7 @@ def test_register_skill_manifest_writes_truth_record(tmp_path: Path):
             "id": "skill.review.refresh",
             "title": "Review refresh skill",
             "worker_bridge": "mockworker",
-            "source_docs": [".omo/plans/phase6-wave1-execution-plan.md"],
+            "source_docs": [".omo/_knowledge/design/plans/archive/phase6-wave1-execution-plan.md"],
             "deliverables": [".omo/evidence/handoffs/review-refresh.md"],
             "allowed_write_paths": [".omo/evidence/handoffs/"],
             "risk_level": "L1",
@@ -41,7 +41,7 @@ def test_create_skill_task_packet_bridges_skill_to_worker_runtime(tmp_path: Path
             "id": "skill.review.refresh",
             "title": "Review refresh skill",
             "worker_bridge": "mockworker",
-            "source_docs": [".omo/plans/phase6-wave3-execution-plan.md"],
+            "source_docs": [".omo/_knowledge/design/plans/archive/phase6-wave3-execution-plan.md"],
             "deliverables": [".omo/evidence/handoffs/review-refresh.md"],
             "allowed_write_paths": [".omo/evidence/handoffs/"],
             "risk_level": "L1",
@@ -61,7 +61,7 @@ def test_create_skill_task_packet_bridges_skill_to_worker_runtime(tmp_path: Path
     assert task["id"] == "P6-G3-SKILL-FEDERATION-PACKET"
     assert task["status"] == "blocked"
     assert task["source_docs"] == [
-        ".omo/plans/phase6-wave3-execution-plan.md",
+        ".omo/_knowledge/design/plans/archive/phase6-wave3-execution-plan.md",
         ".omo/_truth/task-center/skills/skill.review.refresh.yaml",
     ]
     assert task["worker_bridge"] == "mockworker"

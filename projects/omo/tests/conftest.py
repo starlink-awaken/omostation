@@ -47,6 +47,22 @@ def omo_dir(tmp_path: Path) -> Path:
     return d
 
 
+@pytest.fixture(scope="session")
+def omo_test_dir() -> Path:
+    """Return path to a minimal .omo test directory with real fixture data.
+
+    The directory is generated once per session by
+    ``tests/fixtures/minimal_omo.generate()`` and includes a debt registry,
+    three synthetic debt items (DEBT-TEST-001 … 003) with X1/X2/X3 fields,
+    a minimal ``_truth/registry/debt.yaml``, and placeholder ref files.
+
+    Idempotent — re-running re-generates in place.
+    """
+    from tests.fixtures.minimal_omo import generate
+
+    return generate()
+
+
 @pytest.fixture
 def write_yaml(omo_dir: Path) -> Any:
     """Return a helper that writes YAML files relative to ``omo_dir``.
@@ -76,6 +92,16 @@ def pytest_configure(config: pytest.Config) -> None:
     )
 
 
+def pytest_addoption(parser: pytest.Parser) -> None:
+    """Allow opting into real-workspace .omo tests."""
+    parser.addoption(
+        "--run-real-omo",
+        action="store_true",
+        default=False,
+        help="run tests that require the real workspace .omo state",
+    )
+
+
 def pytest_collection_modifyitems(
     config: pytest.Config, items: list[pytest.Item]
 ) -> None:
@@ -99,6 +125,7 @@ def pytest_collection_modifyitems(
       structure, all ``requires_real_omo`` items receive a ``skip`` marker.
     """
     _omo_root = _ws_root / ".omo"
+    _run_real_omo = bool(config.getoption("--run-real-omo"))
 
     # Determine whether real .omo state is present.
     # We consider state "present" when the .omo directory exists and contains
@@ -128,7 +155,6 @@ def pytest_collection_modifyitems(
         "test_omo_debt_docs.py",
         "test_omo_debt_metrics.py",
         "test_omo_debt_outputs.py",
-        "test_omo_debt_registry.py",
         "test_omo_experience.py",
         "test_omo_admission.py",
         "test_phase9_space_registry.py",
@@ -210,15 +236,18 @@ def pytest_collection_modifyitems(
         # -- Apply marker and optionally skip --------------------------------
         if needs_omo:
             item.add_marker(pytest.mark.requires_real_omo)
-            # Always skip archive and explicit module tests (they need
-            # a full workspace checkout with real .omo state that's
-            # not available in CI or clean checkouts).
-            # Pass --run-real-omo to run them.
-            item.add_marker(
-                pytest.mark.skip(
-                    reason=(
-                        "requires real .omo workspace state; "
-                        "pass --run-real-omo to enable"
+            if not _omo_present:
+                item.add_marker(
+                    pytest.mark.skip(
+                        reason="requires real .omo workspace state; workspace .omo not found"
                     )
                 )
-            )
+            elif not _run_real_omo:
+                item.add_marker(
+                    pytest.mark.skip(
+                        reason=(
+                            "requires real .omo workspace state; "
+                            "pass --run-real-omo to enable"
+                        )
+                    )
+                )

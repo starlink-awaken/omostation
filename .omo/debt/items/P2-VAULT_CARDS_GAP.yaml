@@ -1,0 +1,30 @@
+id: P2-VAULT_CARDS_GAP
+title: "学习进化 Vault 8/10 子模块无 CARDS 指针"
+dimension: governance
+subdimension: ssot
+domain: workspace
+scope: meta
+severity: medium
+weight: 0.4
+entropy_class: pointer
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - ~/Documents/学习进化/
+evidence_refs:
+  - ~/Documents/驾驶舱/全景架构分析.md
+mitigation_refs: []
+opened_at: "2026-06-05T14:30:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase6
+x1_policy_ref: X1-AUDIT-001
+x2_freshness: "2026-06-05T14:30:00Z"
+x3_tier: Knowledge
+history:
+  - at: "2026-06-05T14:30:00Z"
+    action: register
+    note: "全景分析：体系/基建架构/创意创作/渠道传播/经验积累/灵感顿悟/知识订阅/资料库 共8个子模块缺CARDS指针。仅自我剖析+收件箱已标注。"
+  - at: "2026-06-05T14:45:00Z"
+    action: close
+    note: "已为4个有STATE.md的子模块(KEMS/OMO/创意创作/渠道传播)添加CARDS指针。其余4个无STATE.md(CLAUDE.md即为控制面)。"

@@ -51,7 +51,7 @@ def test_build_session_bootstrap_reads_live_phase_and_active_packet(tmp_path: Pa
         },
     )
     _write_yaml(
-        root / ".omo" / "goals" / "current.yaml",
+        root / ".omo" / "_truth" / "goals" / "current.yaml",
         {
             "phase": 7,
             "status": "in_progress",
@@ -67,7 +67,7 @@ def test_build_session_bootstrap_reads_live_phase_and_active_packet(tmp_path: Pa
             "status": "pending",
         },
     )
-    _write_text(root / ".omo" / "summaries" / "phase7-planning-ratification.md", "# ratified\n")
+    _write_text(root / ".omo" / "_knowledge" / "summaries" / "phase7" / "phase7-planning-ratification.md", "# ratified\n")
 
     bootstrap = build_session_bootstrap(root)
 
@@ -75,19 +75,19 @@ def test_build_session_bootstrap_reads_live_phase_and_active_packet(tmp_path: Pa
     assert bootstrap["wave"] == 1
     assert bootstrap["active_task_ids"] == ["P7-W1-USER-JOURNEY-ENABLEMENT"]
     assert bootstrap["divergence_flags"] == ["orphaned_tasks:1"]
-    assert bootstrap["latest_summary_ref"] == ".omo/summaries/phase7/phase7-planning-ratification.md"
+    assert bootstrap["latest_summary_ref"] == ".omo/_knowledge/summaries/phase7/phase7-planning-ratification.md"
 
 
 def test_bridge_request_to_task_creates_governed_blocked_packet(tmp_path: Path):
     root = tmp_path
-    _write_yaml(root / ".omo" / "goals" / "current.yaml", {"phase": 7, "current_wave": 1})
+    _write_yaml(root / ".omo" / "_truth" / "goals" / "current.yaml", {"phase": 7, "current_wave": 1})
 
     result = bridge_request_to_task(
         root,
         task_id="P7-W1-COMPLEX-REQUEST",
         title="Bridge a complex Wave 1 request",
         request_text="Please推进phase7 wave1并完成一次治理整改。",
-        source_docs=[".omo/plans/phase7-starter-packet-spec.md"],
+        source_docs=[".omo/_knowledge/design/plans/archive/phase7-starter-packet-spec.md"],
     )
 
     task_path = root / result["task_ref"]
@@ -96,7 +96,7 @@ def test_bridge_request_to_task_creates_governed_blocked_packet(tmp_path: Path):
     assert task["phase"] == 7
     assert task["milestone"] == "W1"
     assert task["status"] == "blocked"
-    assert task["source_docs"] == [".omo/plans/phase7-starter-packet-spec.md"]
+    assert task["source_docs"] == [".omo/_knowledge/design/plans/archive/phase7-starter-packet-spec.md"]
     assert validate_task_file(task_path) == []
 
 
@@ -116,7 +116,7 @@ def test_record_confirmation_evidence_attaches_delivery_ref_to_task(tmp_path: Pa
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/phase7-starter-packet-spec.md"],
+            "source_docs": [".omo/_knowledge/design/plans/archive/phase7-starter-packet-spec.md"],
             "deliverables": [],
             "risk_level": "L1",
             "allowed_operation_level": "L1",
@@ -160,7 +160,7 @@ def test_write_resource_accounting_report_persists_truth_and_summary(tmp_path: P
     )
 
     monkeypatch.setattr(
-        "scripts.omo_experience.cost_summary_by_org",
+        "omo.omo_experience.cost_summary_by_org",
         lambda days=7: [{"org": "starlink-core", "calls": 3, "cost": 1.25, "tokens": 2048}],
     )
 
@@ -186,7 +186,7 @@ def test_write_freshness_report_scores_staleness_and_refs(tmp_path: Path):
             "updated_at": "2026-05-31T08:00:00Z",
         },
     )
-    _write_yaml(root / ".omo" / "goals" / "current.yaml", {"phase": 7, "current_wave": 3})
+    _write_yaml(root / ".omo" / "_truth" / "goals" / "current.yaml", {"phase": 7, "current_wave": 3})
     _write_yaml(
         root / ".omo" / "tasks" / "active" / "wave3.yaml",
         {
@@ -195,7 +195,7 @@ def test_write_freshness_report_scores_staleness_and_refs(tmp_path: Path):
             "status": "pending",
         },
     )
-    _write_text(root / ".omo" / "summaries" / "phase7-planning-ratification.md", "# ratified\n")
+    _write_text(root / ".omo" / "_knowledge" / "summaries" / "phase7" / "phase7-planning-ratification.md", "# ratified\n")
 
     result = write_freshness_report(root, now="2026-05-31T10:00:00Z")
 
@@ -288,7 +288,7 @@ def test_control_gate_degrades_on_warning_freshness(tmp_path: Path) -> None:
 
 def test_route_request_with_control_gate_writes_decision_and_routes_task(tmp_path: Path) -> None:
     root = tmp_path
-    _write_yaml(root / ".omo" / "goals" / "current.yaml", {"phase": 8, "current_wave": 1})
+    _write_yaml(root / ".omo" / "_truth" / "goals" / "current.yaml", {"phase": 8, "current_wave": 1})
     _write_yaml(
         root / ".omo" / "_truth" / "task-center" / "usage-accounting.yaml",
         {
@@ -309,7 +309,7 @@ def test_route_request_with_control_gate_writes_decision_and_routes_task(tmp_pat
         task_id="P8-W1-CONTROLLED-REQUEST",
         title="Control-routed request",
         request_text="Please execute a complex controlled request",
-        source_docs=[".omo/plans/phase8-starter-packet-spec.md"],
+        source_docs=[".omo/_knowledge/design/plans/archive/phase8-starter-packet-spec.md"],
         budget_limit_usd=2.5,
     )
 

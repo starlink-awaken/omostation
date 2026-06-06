@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import os
 import sys
-import subprocess
 from pathlib import Path
 
 import yaml
@@ -16,11 +14,7 @@ if str(_ws_root) not in sys.path:
 from scripts.sync_omo_state import sync_state
 from omo.omo_handoff_index import write_handoff_index
 from omo.omo_metrics import write_worker_utilization_summary
-from omo.omo_io import write_text_atomic, write_yaml_atomic
-from omo.omo_provider_plane import write_provider_plane_snapshot
-from omo.omo_redaction import redact_sensitive_text
 from omo.omo_worker import (
-    _build_launch_argv,
     collect_worker_status,
     dispatch_task,
     main as omo_worker_main,
@@ -28,7 +22,6 @@ from omo.omo_worker import (
     scan_runtime_watchdog,
     update_dispatch_checkpoint,
 )
-from omo.omo_task_schema import validate_task_file
 
 
 def _write_yaml(path: Path, data: dict) -> None:
@@ -56,7 +49,7 @@ def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Pat
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/example.md"],
+            "source_docs": [".omo/_knowledge/design/plans/example.md"],
             "risk_level": "L2",
             "allowed_operation_level": "L2",
             "human_approval_required": True,
@@ -66,7 +59,7 @@ def test_dispatch_task_rejects_invalid_task_schema_before_preclaim(tmp_path: Pat
         },
     )
     _write_yaml(
-        omo / "workers" / "registry.yaml",
+        omo / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
                 {
@@ -107,7 +100,7 @@ def test_dispatch_task_launch_handles_quoted_prompt_without_shell_breakage(tmp_p
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/example.md"],
+            "source_docs": [".omo/_knowledge/design/plans/example.md"],
             "risk_level": "L0",
             "allowed_operation_level": "L0",
             "human_approval_required": False,
@@ -117,7 +110,7 @@ def test_dispatch_task_launch_handles_quoted_prompt_without_shell_breakage(tmp_p
         },
     )
     _write_yaml(
-        omo / "workers" / "registry.yaml",
+        omo / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
                 {
@@ -161,8 +154,8 @@ def test_dispatch_prompt_includes_required_deliverables_when_task_declares_them(
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/source.md"],
-            "deliverables": [".omo/plans/output.md"],
+            "source_docs": [".omo/_knowledge/design/plans/source.md"],
+            "deliverables": [".omo/_knowledge/design/plans/output.md"],
             "risk_level": "L0",
             "allowed_operation_level": "L0",
             "human_approval_required": False,
@@ -172,7 +165,7 @@ def test_dispatch_prompt_includes_required_deliverables_when_task_declares_them(
         },
     )
     _write_yaml(
-        omo / "workers" / "registry.yaml",
+        omo / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
                 {
@@ -189,16 +182,16 @@ def test_dispatch_prompt_includes_required_deliverables_when_task_declares_them(
         root,
         task_id="TASK-DELIVERABLE",
         worker_id="mockworker",
-        allowed_write_paths=[".omo/plans/"],
+        allowed_write_paths=[".omo/_knowledge/design/plans/"],
         launch=False,
     )
 
     prompt_text = (root / result["prompt_path"]).read_text(encoding="utf-8")
     envelope = yaml.safe_load((root / result["envelope_path"]).read_text(encoding="utf-8"))
 
-    assert "- Required deliverable: `.omo/plans/output.md`" in prompt_text
+    assert "- Required deliverable: `.omo/_knowledge/design/plans/output.md`" in prompt_text
     assert "Updating only the review note is not sufficient" in prompt_text
-    assert envelope["outputs"]["required_deliverables"] == [".omo/plans/output.md"]
+    assert envelope["outputs"]["required_deliverables"] == [".omo/_knowledge/design/plans/output.md"]
 
 
 def test_dispatch_task_creates_checkpoint_and_reclaim_artifacts(tmp_path: Path):
@@ -218,7 +211,7 @@ def test_dispatch_task_creates_checkpoint_and_reclaim_artifacts(tmp_path: Path):
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/example.md"],
+            "source_docs": [".omo/_knowledge/design/plans/example.md"],
             "risk_level": "L0",
             "allowed_operation_level": "L0",
             "human_approval_required": False,
@@ -228,7 +221,7 @@ def test_dispatch_task_creates_checkpoint_and_reclaim_artifacts(tmp_path: Path):
         },
     )
     _write_yaml(
-        omo / "workers" / "registry.yaml",
+        omo / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
                 {
@@ -320,7 +313,7 @@ def test_sync_state_derives_gate_facts_and_promotion_blockers(tmp_path: Path):
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/example.md"],
+            "source_docs": [".omo/_knowledge/design/plans/example.md"],
             "risk_level": "L0",
             "allowed_operation_level": "L0",
             "human_approval_required": False,
@@ -380,7 +373,7 @@ def test_sync_state_dispatched_gate_requires_dispatch_id(tmp_path: Path):
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/example.md"],
+            "source_docs": [".omo/_knowledge/design/plans/example.md"],
             "risk_level": "L0",
             "allowed_operation_level": "L0",
             "human_approval_required": False,
@@ -422,7 +415,7 @@ def test_sync_state_done_task_requires_completion_summary_before_acceptance(tmp_
             "review_ref": ".omo/workers/runs/dispatch-done-review.md",
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/example.md"],
+            "source_docs": [".omo/_knowledge/design/plans/example.md"],
             "risk_level": "L0",
             "allowed_operation_level": "L0",
             "human_approval_required": False,
@@ -506,7 +499,7 @@ def test_worker_status_command_prints_checkpoint_summary(tmp_path: Path, monkeyp
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/example.md"],
+            "source_docs": [".omo/_knowledge/design/plans/example.md"],
             "risk_level": "L0",
             "allowed_operation_level": "L0",
             "human_approval_required": False,
@@ -516,7 +509,7 @@ def test_worker_status_command_prints_checkpoint_summary(tmp_path: Path, monkeyp
         },
     )
     _write_yaml(
-        omo / "workers" / "registry.yaml",
+        omo / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
                 {
@@ -558,7 +551,7 @@ def test_update_dispatch_checkpoint_records_step_and_refreshes_lease(tmp_path: P
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/example.md"],
+            "source_docs": [".omo/_knowledge/design/plans/example.md"],
             "risk_level": "L0",
             "allowed_operation_level": "L0",
             "human_approval_required": False,
@@ -568,7 +561,7 @@ def test_update_dispatch_checkpoint_records_step_and_refreshes_lease(tmp_path: P
         },
     )
     _write_yaml(
-        omo / "workers" / "registry.yaml",
+        omo / "_truth" / "registry" / "workers.yaml",
         {"workers": [{"id": "mockworker", "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}}}]},
     )
 
@@ -718,7 +711,7 @@ def test_worker_admission_eval_command_prints_decision(monkeypatch, capsys):
             "omo",
             "worker",
             "admission-eval",
-            ".omo/workers/runs/phase9-wave3-identity-admission-envelope.yaml",
+            ".omo/workers/runs/phase9/phase9-wave3-identity-admission-envelope.yaml",
         ],
     )
 
@@ -1280,7 +1273,7 @@ def test_reclaim_task_reassigns_from_checkpoint_context(tmp_path: Path):
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/example.md"],
+            "source_docs": [".omo/_knowledge/design/plans/example.md"],
             "risk_level": "L0",
             "allowed_operation_level": "L0",
             "human_approval_required": False,
@@ -1290,7 +1283,7 @@ def test_reclaim_task_reassigns_from_checkpoint_context(tmp_path: Path):
         },
     )
     _write_yaml(
-        omo / "workers" / "registry.yaml",
+        omo / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
                 {
@@ -1361,7 +1354,7 @@ def test_write_handoff_index_links_dispatch_checkpoint_reclaim_and_review(tmp_pa
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
-            "source_docs": [".omo/plans/example.md"],
+            "source_docs": [".omo/_knowledge/design/plans/example.md"],
             "risk_level": "L0",
             "allowed_operation_level": "L0",
             "human_approval_required": False,
@@ -1371,7 +1364,7 @@ def test_write_handoff_index_links_dispatch_checkpoint_reclaim_and_review(tmp_pa
         },
     )
     _write_yaml(
-        omo / "workers" / "registry.yaml",
+        omo / "_truth" / "registry" / "workers.yaml",
         {
             "workers": [
                 {"id": "worker-a", "transports": {"cli_prompt": {"command": 'mockworker "{prompt}"'}}},

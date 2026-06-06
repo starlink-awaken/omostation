@@ -1,0 +1,27 @@
+id: P0-ECOS_COCKPIT
+title: "eCOS Cockpit — 从健康监控升级为系统运行总览 dashboard"
+dimension: product
+subdimension: ux
+domain: workspace
+scope: cross_project
+severity: high
+weight: 0.7
+entropy_class: classification
+lifecycle_state: closed
+owner: omo-governance
+affected_roots:
+  - ~/runtime/scripts/
+  - ~/Workspace/projects/runtime/
+evidence_refs: []
+mitigation_refs: []
+opened_at: "2026-06-05T15:00:00Z"
+last_reviewed_at: null
+next_review_at: null
+gate_level: phase17
+history:
+  - at: "2026-06-05T15:00:00Z"
+    action: register
+    note: "Retro recommendation: upgrade dashboard from pure health grid to system overview (services, recent events, action entry points). Build on existing :8080."
+  - at: "2026-06-05T22:35:00Z"
+    action: close
+    note: "cockpit.py created (13KB), running on :8081. Dark theme HTML with service health grid, KEI event stream, action entry points, system stats. All data from matrix_state.json/kei_audit.jsonl/scheduler_state.json."

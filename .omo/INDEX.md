@@ -22,11 +22,11 @@
 
 | 指标 | SSOT | 值 |
 |------|------|-----|
-| **Phase** | [state/system.yaml](state/system.yaml) | **Phase 30** — eCOS 物理拆分 + 治理整合（✅ 收官） |
-| **Wave** | [state/system.yaml](state/system.yaml) | **W2** — 全 6 项目 E2E 验证 + 健康分收尾 |
+| **Phase** | [state/system.yaml](state/system.yaml) | **Phase 31** — kairon 3 组合并（ADR-0006 ACCEPTED, 17→14 包） |
+| **Wave** | [state/system.yaml](state/system.yaml) | **W0** — ADR-0006 审批 + 状态同步（已完成） |
 | **Health** | [state/system.yaml](state/system.yaml) | **57.2 / 100** (F, omo audit-final 2026-06-06) |
-| **Active tasks** | [tasks/active/](tasks/active/) | **0** (P30-W2-VERIFY 收官) |
-| **Goals** | [_truth/goals/current.yaml](_truth/goals/current.yaml) | Phase 30 收官 → Phase 31 可观测性 + agora 物理独立评估 |
+| **Active tasks** | [tasks/active/](tasks/active/) | **0** (P31-W0 治理收尾；3 组合并由 W1 subagent 执行) |
+| **Goals** | [_truth/goals/current.yaml](_truth/goals/current.yaml) | Phase 31 W1: kairon 3 组合并（llm-gateway-kernel / sot-bridge / protocols-layer） |
 
 ---
 
@@ -98,4 +98,4 @@ kairon-governance history --trend
 
 ---
 
-*维护: 2026-06-06 · 状态以 state/system.yaml 为准*
+*维护: 2026-06-06 · 状态以 state/system.yaml 为准 · ADR-0006 ACCEPTED 同步*

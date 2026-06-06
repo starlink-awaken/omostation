@@ -1,0 +1,27 @@
+id: P2-CARDS_MISSING_FILTERS
+title: cards CLI缺少priority筛选+research默认status错误
+dimension: platform
+subdimension: cli
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: omo-governance
+affected_roots:
+- .omo
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-05T14:28:56Z'
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+history:
+- at: '2026-06-05T14:28:56Z'
+  action: register
+  note: Registered debt item P2-CARDS_MISSING_FILTERS.
+  actor: 全景分析 2026-06-05
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: Tool

@@ -6,8 +6,8 @@ approval_required: human
 title: User value live demo candidate
 source_proposal: phase15-user-value-gap
 source_evidence:
-- .omo/evidence/phase15/user-value-loop.yaml
-- .omo/evidence/phase15/operating-dashboard-snapshot.yaml
+- .omo/_delivery/evidence/phase15/user-value-loop.yaml
+- .omo/_delivery/evidence/phase15/operating-dashboard-snapshot.yaml
 rollback: Remove the draft and keep all user-facing execution in governed-preview
   mode.
 verification: A later active packet must prove one read-only user scenario end-to-end.

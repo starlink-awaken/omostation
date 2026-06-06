@@ -1,3 +1,7 @@
+> [!WARNING]
+> **DEPRECATED**: 本文档描述的 4+1+3 架构或旧版 eCOS 映射已过时。请参考最新的 **eCOS v5.0 (5+3+1)** 宪法大纲：`~/Documents/学习进化/2-knowledge/基建架构/phase6-完成化/pat-45-eCOS-v5-architecture.md`。
+
+
 # 4+1+3 架构图
 
 > 系统架构 Mermaid 图，展示 P0/L4/L3/L2/L1 + X1/X2/X3 跨层关系。

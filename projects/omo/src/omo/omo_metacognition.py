@@ -22,7 +22,7 @@ def _utc_now() -> str:
 
 
 def _root() -> Path:
-    return Path(__file__).resolve().parents[1]
+    return Path(__file__).resolve().parents[2]
 
 
 def _omo(root: Path) -> Path:
@@ -44,9 +44,15 @@ def _load_registry(root: Path) -> list[dict[str, Any]]:
 def _phase12_evidence(root: Path) -> dict[str, Any]:
     omo = _omo(root)
     trace = (
-        _load_yaml(omo / "evidence" / "phase12" / "research-pipeline-trace.yaml") or {}
+        _load_yaml(omo / "_delivery" / "evidence" / "phase12" / "research-pipeline-trace.yaml")
+        or _load_yaml(omo / "evidence" / "phase12" / "research-pipeline-trace.yaml")
+        or {}
     )
-    dry_run = _load_yaml(omo / "evidence" / "phase12" / "package-dry-run.yaml") or {}
+    dry_run = (
+        _load_yaml(omo / "_delivery" / "evidence" / "phase12" / "package-dry-run.yaml")
+        or _load_yaml(omo / "evidence" / "phase12" / "package-dry-run.yaml")
+        or {}
+    )
     return {
         "trace_status": trace.get("status"),
         "trace_steps": len(trace.get("steps", [])),
@@ -59,6 +65,26 @@ def _phase12_evidence(root: Path) -> dict[str, Any]:
 def baseline_command(args: argparse.Namespace) -> int:
     root = _root()
     records = _load_registry(root)
+
+    # Apply lens filter if specified
+    lens = getattr(args, 'lens', None)
+    if lens and lens != "all":
+        filtered = []
+        for record in records:
+            if lens == "X1":
+                # X1 lens: filter to items with non-empty x1_policy_ref
+                if record.get("x1_policy_ref"):
+                    filtered.append(record)
+            elif lens == "X2":
+                # X2 lens: filter to items by freshness staleness
+                if record.get("x2_freshness"):
+                    filtered.append(record)
+            elif lens == "X3":
+                # X3 lens: filter to items by x3_tier
+                if record.get("x3_tier"):
+                    filtered.append(record)
+        records = filtered
+
     by_type: dict[str, int] = {}
     by_lifecycle: dict[str, int] = {}
     for record in records:
@@ -89,13 +115,13 @@ def baseline_command(args: argparse.Namespace) -> int:
                 "id": "bs-external-connectors-unabsorbed",
                 "description": "External connectors remain Phase 14 backlog candidates.",
                 "severity": "medium",
-                "evidence_ref": ".omo/plans/phase14-deferred-ecosystem-backlog.md",
+                "evidence_ref": ".omo/_knowledge/design/plans/archive/phase14-deferred-ecosystem-backlog.md",
             },
             {
                 "id": "bs-single-scenario",
                 "description": "Only one scenario trace is proven; additional scenarios require future approval.",
                 "severity": "medium",
-                "evidence_ref": ".omo/evidence/phase12/research-pipeline-trace.yaml",
+                "evidence_ref": ".omo/_delivery/evidence/phase12/research-pipeline-trace.yaml",
             },
         ],
         "confidence": {
@@ -105,6 +131,46 @@ def baseline_command(args: argparse.Namespace) -> int:
             "mutation_safety": 0.95,
         },
     }
+    # Debt lens filter (X1/X2/X3 convergence)
+    try:
+        from .omo_debt_registry import load_debt_ledger
+
+        ledger = load_debt_ledger(_omo(root))
+        all_items = list(ledger.items)
+        if args.lens in ("X1", "X2", "X3"):
+            if args.lens == "X1":
+                filtered = [i for i in all_items if i.x1_policy_ref]
+            elif args.lens == "X2":
+                filtered = [i for i in all_items if i.x2_freshness]
+            elif args.lens == "X3":
+                filtered = [i for i in all_items if i.x3_tier]
+        else:
+            filtered = all_items
+        report["debt_lens"] = {
+            "lens": getattr(args, "lens", "all"),
+            "total_debt_items": len(all_items),
+            "filtered_debt_items": len(filtered),
+            "items": [
+                {
+                    "id": i.id,
+                    "title": i.title,
+                    "severity": i.severity,
+                    "x1": i.x1_policy_ref or "",
+                    "x2": i.x2_freshness or "",
+                    "x3": i.x3_tier or "",
+                }
+                for i in filtered
+            ],
+        }
+        # Tier breakdown
+        tiers = {}
+        for i in filtered:
+            t = i.x3_tier or "Unknown"
+            tiers[t] = tiers.get(t, 0) + 1
+        report["debt_lens"]["x3_tier_breakdown"] = tiers
+    except Exception as e:
+        report["debt_lens"] = {"error": str(e)}
+
     output = Path(args.output)
     write_yaml_atomic(output, report)
     print(
@@ -133,7 +199,7 @@ def proposals_command(args: argparse.Namespace) -> int:
                 "confidence": 0.86,
                 "risk": "medium",
                 "operation_level": "L1",
-                "evidence_refs": [".omo/evidence/phase12/research-pipeline-trace.yaml"],
+                "evidence_refs": [".omo/_delivery/evidence/phase12/research-pipeline-trace.yaml"],
                 "rollback": "Remove draft scenario and rerun policy tests.",
                 "verification": "scenario trace fixture must remain reproducible",
             },
@@ -159,7 +225,7 @@ def proposals_command(args: argparse.Namespace) -> int:
                 "confidence": 0.84,
                 "risk": "medium",
                 "operation_level": "L2",
-                "evidence_refs": [".omo/evidence/phase12/package-dry-run.yaml"],
+                "evidence_refs": [".omo/_delivery/evidence/phase12/package-dry-run.yaml"],
                 "rollback": "Restore package baseline and confirm mutations_applied remains 0.",
                 "verification": f"current package mutations: {evidence['package_mutations']}",
             },
@@ -261,25 +327,29 @@ def build_parser() -> argparse.ArgumentParser:
 
     baseline = subparsers.add_parser("baseline")
     baseline.add_argument(
-        "--output", default=".omo/evidence/phase13/metacognition-baseline.yaml"
+        "--output", default=".omo/_delivery/evidence/phase13/metacognition-baseline.yaml"
+    )
+    baseline.add_argument(
+        "--lens", choices=["X1", "X2", "X3", "all"], default="all",
+        help="Lens filter: X1 (policy_ref), X2 (freshness), X3 (tier), all (no filter)"
     )
     baseline.set_defaults(func=baseline_command)
 
     proposals = subparsers.add_parser("proposals")
     proposals.add_argument(
-        "--output", default=".omo/evidence/phase13/bottleneck-proposals.yaml"
+        "--output", default=".omo/_delivery/evidence/phase13/bottleneck-proposals.yaml"
     )
     proposals.set_defaults(func=proposals_command)
 
     collaboration = subparsers.add_parser("collaboration")
     collaboration.add_argument(
-        "--output", default=".omo/evidence/phase13/supervised-collaboration.yaml"
+        "--output", default=".omo/_delivery/evidence/phase13/supervised-collaboration.yaml"
     )
     collaboration.set_defaults(func=collaboration_command)
 
     rehearse = subparsers.add_parser("rehearse")
     rehearse.add_argument(
-        "--output", default=".omo/evidence/phase13/self-healing-rehearsal.yaml"
+        "--output", default=".omo/_delivery/evidence/phase13/self-healing-rehearsal.yaml"
     )
     rehearse.set_defaults(func=rehearse_command)
     return parser

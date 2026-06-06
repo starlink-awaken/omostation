@@ -1,0 +1,39 @@
+id: P28-W1-E2E-DEMO
+phase: 28
+wave: W1
+title: "E2E 可演示知识工作流 — 卫健委工作场景全链路跑通，30 秒可演示"
+status: completed
+task_type: feature
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P28-W0-NORTH-STAR completed"
+  - "P28-W0-TOOL-HEATMAP completed"
+depends_on:
+  - P28-W0-NORTH-STAR
+  - P28-W0-TOOL-HEATMAP
+deliverables:
+  - ".omo/_delivery/phase28-e2e-demo-evidence.md"
+  - ".omo/_delivery/phase28-e2e-eval-report.md"
+risk_level: L2
+allowed_operation_level: L2
+source_docs:
+  - ".omo/_knowledge/design/plans/phase28-observable-knowledge-workflow.md"
+knowledge_refs: []
+description: |
+  北极星场景 A：卫健委工作辅助
+  链路：工作问题输入 → KOS 搜索相关政策/技术知识 → kairon 推理整合 → gbrain 知识持久化 → 带来源的结构化初稿输出
+
+  验收标准（严格）：
+    - 输入一个真实卫健委工作问题，30 分钟内输出可用初稿
+    - 输出报告包含至少 3 个可溯源的引用
+    - gbrain 中有对应的知识记录可查询
+    - 30 秒内可向他人演示整个流程
+
+  如果链路中有断点，优先修复断点，不允许 mock 跳过。
+  来源: .omo/_control/north-star.md § 场景 A
+started_at: 2026-06-05T19:00:00
+completed_at: 2026-06-05T21:01:30
+blocked_by: null
+retry_count: 0
