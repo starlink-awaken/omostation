@@ -7,7 +7,7 @@
 
 ## 项目身份
 
-这是 **omostation** 根仓库 —— 一个多项目融合工作区，整合了知识工程、数字生命 OS、Agent SDK 与知识脑四大子系统。**Phase 17 进行中**（SharedBrain 分解 Wave 0）。
+这是 **omostation** 根仓库 —— 一个多项目融合工作区，整合了知识工程、数字生命 OS、Agent SDK 与知识脑四大子系统。**Phase 27 进行中**（OMO 蜂群网络纪元 — Swarm Network Era）。
 
 ---
 
@@ -48,7 +48,7 @@ Worker/User → SharedBrain (轻量数据持久层)
 
 | 项目 | 位置 | 栈 | 规模 | 说明 |
 |------|------|-----|------|------|
-| **kairon** | `projects/kairon/` | Python (uv, ruff, pytest) | 31 包 | 知识工程与研究栈（已吸收 SharedBrain + agentmesh） |
+| **kairon** | `projects/kairon/` | Python (uv, ruff, pytest) | 30 包 | 知识工程与研究栈（已吸收 SharedBrain + agentmesh） |
 | **SharedBrain** | `projects/_archived/SharedBrain-original/` | Python | 已归档 | 源码已迁移至 kairon，根目录 SharedBrain/ 仅存数据持久层 |
 | **agentmesh** | `projects/_archived/` | TypeScript | 已归档 | 100% 迁移至 kairon（agent-hub/agent-runtime/agora/forge/llm-gateway） |
 | **gbrain** | `projects/gbrain/` | TypeScript (bun, Postgres) | 74+ 工具 | Postgres 知识脑 |
@@ -133,7 +133,7 @@ bash tests/integration/run-all.sh
 - **Python 版本**: 3.13+
 - **Import 排序**: isort (通过 ruff 启用)
 
-### TypeScript (gbrain, agentmesh)
+### TypeScript (gbrain)
 
 - **运行时**: bun (非 Node/npm)
 - **格式化**: `bun fmt` / `bun run lint:fix`
@@ -197,12 +197,12 @@ bash tests/integration/run-all.sh
 
 ## Phase 上下文
 
-- **当前 Phase**: 17 (SharedBrain 分解 Wave 0)
-- **下一里程碑**: Phase 17 Wave 1 SharedBrain decomposition
+- **当前 Phase**: 27 (OMO 蜂群网络纪元 — Swarm Network Era)
+- **下一里程碑**: Phase 27 G27.1-G27.4 全部完成，待启动 Phase 28
 - **健康分**: 97.0/100
-- **完成度**: Phase 16 已完成，Phase 17 目标全完成
+- **完成度**: Phase 1-27 已完成，G27.1-G27.4（Agora MCP 隔离、算力调度统一、图谱记忆共享、OMO MCP 化）全部 done
 - **当前活跃任务**: (无活跃任务)
-- **关键原则**: Phase 16 目录治理完成，四平面 SSOT 架构固化
+- **关键原则**: OMO MCP 化完成，agora 网关隔离固化，llm-gateway 统一算力调度，gbrain 图谱记忆共享上线
 
 ---
 

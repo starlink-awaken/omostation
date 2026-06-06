@@ -8,7 +8,7 @@ This root directory is a **multi-project workspace** containing independent git 
 
 | Project | Stack | Location | Status |
 |---------|-------|----------|--------|
-| `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 25 packages |
+| `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 30 packages（含 5 个新拆分子包） |
 | `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — Knowledge Brain |
 | `SharedBrain` | Python | `projects/_archived/SharedBrain-original/` | ⚪ Archived — 代码已迁移至 kairon，数据层在 `data/sharedbrain/` |
 | `agentmesh` | TypeScript (bun) | `projects/_archived/` | ⚪ Archived — 100% 迁移至 kairon |

@@ -7,7 +7,7 @@ scope: within_project
 severity: high
 weight: 0.7
 entropy_class: behavior
-lifecycle_state: open
+lifecycle_state: resolved
 owner: omo-governance
 affected_roots:
   - projects/hermes-console
@@ -23,3 +23,6 @@ history:
   - at: "2026-06-06T05:00:00Z"
     action: register
     note: "hermes-console npm run build fails: @modelcontextprotocol/sdk imports 'node:stream' internally. Vite rollup can't bundle it in browser target. Fix options: (1) downgrade SDK to pre-stream version, (2) replace with lightweight MCP client, (3) use @esbuild-plugins/node-globals-polyfill. Recommended: option 2 — write a simple fetch-based MCP client."
+  - at: "2026-06-06T06:33:00Z"
+    action: resolve
+    note: "hermes-console React/TS code has been deleted and replaced by a Python backend in cockpit. The build issue no longer exists."
