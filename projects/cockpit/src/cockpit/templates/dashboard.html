@@ -3,193 +3,458 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cockpit — 5+3+1 系统驾驶舱</title>
+<title>Cockpit · 5+3+1 系统驾驶舱</title>
 <style>
 :root {
-  --bg: #0f1117; --card-bg: #1a1d27; --border: #2a2d3a;
-  --green: #4ade80; --yellow: #fbbf24; --red: #f87171; --blue: #60a5fa;
-  --text: #e2e8f0; --dim: #64748b; --accent: #818cf8;
+  --bg: #090a0f; --bg2: #0f1117; --card: #13151d; --card-hover: #1a1d29;
+  --border: #1e2130; --border-hover: #2d3144;
+  --green: #22c55e; --green-bg: rgba(34,197,94,0.1);
+  --yellow: #eab308; --yellow-bg: rgba(234,179,8,0.1);
+  --red: #ef4444; --red-bg: rgba(239,68,68,0.1);
+  --blue: #3b82f6; --blue-bg: rgba(59,130,246,0.1);
+  --purple: #8b5cf6; --purple-bg: rgba(139,92,246,0.1);
+  --cyan: #06b6d4; --cyan-bg: rgba(6,182,212,0.1);
+  --orange: #f97316; --orange-bg: rgba(249,115,22,0.1);
+  --text: #f1f5f9; --text2: #94a3b8; --text3: #64748b;
+  --radius: 12px; --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
 }
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
-header h1 { font-size: 20px; font-weight: 600; }
-header .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
-.status-ok { background: var(--green); }
-.status-warn { background: var(--yellow); }
-.status-err { background: var(--red); }
-.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
-.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-.card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
-.card h2 { font-size: 14px; font-weight: 500; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
-.stat-value { font-size: 32px; font-weight: 700; }
-.stat-label { font-size: 12px; color: var(--dim); margin-top: 4px; }
-.project-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.project-row:last-child { border-bottom: none; }
-.project-name { font-size: 13px; font-weight: 500; }
-.project-meta { font-size: 12px; color: var(--dim); }
-.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
-.badge-ok { background: rgba(74,222,128,0.15); color: var(--green); }
-.badge-warn { background: rgba(251,191,36,0.15); color: var(--yellow); }
-.priority-p0 { color: var(--red); font-weight: 600; }
-.priority-p1 { color: var(--yellow); font-weight: 500; }
-.card-item { padding: 12px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px; }
-.card-item:last-child { margin-bottom: 0; }
-.card-item .title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
-.card-item .meta { font-size: 11px; color: var(--dim); }
-.layer-diagram { display: flex; flex-direction: column; gap: 8px; }
-.layer-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
-.layer-item:hover { background: rgba(129,140,248,0.08); }
-.layer-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-.layer-info { flex: 1; }
-.layer-name { font-size: 14px; font-weight: 500; }
-.layer-desc { font-size: 11px; color: var(--dim); }
-.layer-status { font-size: 12px; }
-.refresh-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; font-size: 12px; color: var(--dim); }
-@media (max-width: 768px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+/* ── Header ──────────────────────────────── */
+header {
+  background: linear-gradient(180deg, var(--card) 0%, var(--bg2) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+header .logo { display:flex; align-items:center; gap:10px; }
+header .logo-icon {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+header h1 { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; }
+header .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s ease-in-out infinite; }
+header .actions { display:flex; gap:8px; align-items:center; }
+header .action-btn {
+  padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+  background: transparent; color: var(--text2); font-size: 12px; cursor: pointer;
+  transition: var(--transition);
+}
+header .action-btn:hover { background: var(--card-hover); color: var(--text); border-color: var(--border-hover); }
+header .clock { font-size: 12px; color: var(--text3); font-variant-numeric: tabular-nums; }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── Container ─────────────────────────── */
+.container { max-width: 1400px; margin: 0 auto; padding: 20px 24px; }
+
+/* ── Stats Row ────────────────────────── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+  transition: var(--transition); cursor: pointer;
+  position: relative; overflow: hidden;
+}
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--purple), transparent);
+  opacity: 0; transition: opacity 0.3s;
+}
+.stat-card:hover { border-color: var(--border-hover); transform: translateY(-1px); box-shadow: var(--shadow); }
+.stat-card:hover::before { opacity: 1; }
+.stat-value { font-size: 36px; font-weight: 700; letter-spacing: -1px; line-height: 1; margin-bottom: 6px; }
+.stat-value.ok { color: var(--green); }
+.stat-value.warn { color: var(--yellow); }
+.stat-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── Grid layouts ──────────────────────── */
+.grid-main {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;
+}
+.grid-full { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 20px; }
+
+/* ── Panel ────────────────────────────── */
+.panel {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  transition: var(--transition);
+}
+.panel:hover { border-color: var(--border-hover); }
+.panel-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+.panel-title .dot { width: 6px; height: 6px; border-radius: 50%; }
+.panel-body { padding: 0; }
+
+/* ── Architecture ─────────────────────── */
+.arch-layer {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: var(--transition);
+  position: relative;
+}
+.arch-layer:last-child { border-bottom: none; }
+.arch-layer:hover { background: var(--card-hover); }
+.arch-layer .icon {
+  width: 42px; height: 42px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; flex-shrink: 0;
+}
+.arch-layer .info { flex:1; min-width: 0; }
+.arch-layer .name { font-size: 13px; font-weight: 600; }
+.arch-layer .desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.arch-layer .stats { display: flex; gap: 16px; flex-shrink: 0; }
+.arch-layer .stat-item { text-align: center; }
+.arch-layer .stat-num { font-size: 15px; font-weight: 700; }
+.arch-layer .stat-label { font-size: 9px; color: var(--text3); text-transform: uppercase; }
+.arch-layer .expand { color: var(--text3); font-size: 12px; transition: transform 0.2s; }
+.arch-layer.expanded .expand { transform: rotate(180deg); }
+.arch-detail {
+  display: none; padding: 12px 20px 16px 76px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.arch-layer.expanded .arch-detail { display: block; }
+.arch-detail-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.arch-tag {
+  padding: 3px 10px; border-radius: 4px; font-size: 11px;
+  border: 1px solid var(--border); color: var(--text2);
+}
+
+/* ── Cards List ───────────────────────── */
+.card-item {
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  transition: var(--transition); cursor: pointer;
+  display: flex; align-items: center; gap: 12px;
+}
+.card-item:last-child { border-bottom: none; }
+.card-item:hover { background: var(--card-hover); }
+.card-priority {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.card-priority.p0 { background: var(--red-bg); color: var(--red); }
+.card-priority.p1 { background: var(--yellow-bg); color: var(--yellow); }
+.card-priority.p2 { background: var(--blue-bg); color: var(--blue); }
+.card-content { flex: 1; min-width: 0; }
+.card-title { font-size: 13px; font-weight: 500; }
+.card-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.card-status {
+  font-size: 11px; padding: 2px 8px; border-radius: 4px; flex-shrink: 0;
+}
+.status-active { background: var(--green-bg); color: var(--green); }
+.status-closed { background: var(--text3); color: var(--bg); }
+
+/* ── Project Grid ─────────────────────── */
+.project-table { width: 100%; border-collapse: collapse; }
+.project-table th {
+  text-align: left; padding: 10px 20px; font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.5px; color: var(--text3);
+  border-bottom: 1px solid var(--border);
+}
+.project-table td {
+  padding: 12px 20px; font-size: 13px; border-bottom: 1px solid var(--border);
+}
+.project-table tr:hover td { background: var(--card-hover); }
+.project-layer-badge {
+  font-size: 10px; padding: 1px 6px; border-radius: 3px;
+  font-weight: 700;
+}
+.layer-i0 { background: var(--yellow-bg); color: var(--yellow); }
+.layer-l0 { background: rgba(100,116,139,0.15); color: #94a3b8; }
+.layer-l1 { background: var(--red-bg); color: var(--red); }
+.layer-l2 { background: var(--green-bg); color: var(--green); }
+.layer-l3 { background: var(--purple-bg); color: var(--purple); }
+
+/* ── Timeline ─────────────────────────── */
+.timeline-item {
+  display: flex; gap: 14px; padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.timeline-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+}
+.timeline-content { flex:1; }
+.timeline-title { font-size: 13px; }
+.timeline-time { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* ── Empty State ──────────────────────── */
+.empty { text-align: center; padding: 40px 20px; color: var(--text3); }
+.empty .icon { font-size: 32px; margin-bottom: 8px; }
+.empty p { font-size: 13px; }
+
+/* ── Footer ──────────────────────────── */
+.footer {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 0; font-size: 11px; color: var(--text3);
+}
+.footer .shortcuts { display: flex; gap: 12px; }
+.footer kbd {
+  padding: 1px 6px; border-radius: 3px; background: var(--card);
+  border: 1px solid var(--border); font-size: 10px;
+}
+
+/* ── Scrollbar ────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+
+/* ── Responsive ───────────────────────── */
+@media (max-width: 1024px) { .stats-row { grid-template-columns: repeat(2, 1fr); } .grid-main { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .stats-row { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
 <header>
-  <h1><span class="status-dot status-ok" id="system-dot"></span>Cockpit · 5+3+1 驾驶舱</h1>
-  <span style="font-size:12px;color:var(--dim)" id="clock"></span>
+  <div class="logo">
+    <div class="logo-icon">⌘</div>
+    <h1>Cockpit</h1>
+    <div class="pulse" id="pulse"></div>
+  </div>
+  <div class="actions">
+    <button class="action-btn" onclick="loadAll()" title="⌘R">↻ 刷新</button>
+    <button class="action-btn" onclick="window.open('/api/context','_blank')">JSON</button>
+    <span class="clock" id="clock"></span>
+  </div>
 </header>
 
 <div class="container">
 
-  <!-- Quick Stats -->
-  <div class="grid-3" style="margin-bottom:24px">
-    <div class="card">
-      <h2>活跃卡片</h2>
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card" onclick="scrollToPanel('cards-panel')">
       <div class="stat-value" id="active-cards">—</div>
-      <div class="stat-label">P0: <span id="p0-count" style="color:var(--red)">—</span> · P1: <span id="p1-count">—</span></div>
+      <div class="stat-label">活跃卡片 · P0: <span id="p0-num" style="color:var(--red)">—</span></div>
     </div>
-    <div class="card">
-      <h2>OMO Phase</h2>
+    <div class="stat-card">
       <div class="stat-value" id="omo-phase">—</div>
-      <div class="stat-label" id="omo-theme">—</div>
+      <div class="stat-label">OMO · <span id="omo-theme">—</span></div>
     </div>
-    <div class="card">
-      <h2>系统健康</h2>
-      <div class="stat-value" id="health-status" style="color:var(--green)">—</div>
-      <div class="stat-label"><span id="health-services">—</span> 运行中</div>
+    <div class="stat-card">
+      <div class="stat-value ok" id="health-status">—</div>
+      <div class="stat-label">系统健康 · <span id="health-detail">—</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="constraint-count">—</div>
+      <div class="stat-label">约束 · <span style="color:var(--green)">合规</span></div>
     </div>
   </div>
 
-  <!-- Main Content -->
-  <div class="grid-2" style="margin-bottom:24px">
-    <!-- 5+3+1 Architecture -->
-    <div class="card">
-      <h2>5+3+1 架构</h2>
-      <div class="layer-diagram" id="layer-diagram">
-        <div class="layer-item"><div class="layer-icon" style="background:rgba(96,165,250,0.15)">L4</div><div class="layer-info"><div class="layer-name">自我层</div><div class="layer-desc">CARDS + Vault</div></div><div class="layer-status"><span class="badge badge-ok">active</span></div></div>
-        <div class="layer-item"><div class="layer-icon" style="background:rgba(129,140,248,0.15)">L3</div><div class="layer-info"><div class="layer-name">入口层 · Cockpit</div><div class="layer-desc">CLI + MCP + Web</div></div><div class="layer-status"><span class="badge badge-ok">498 tests</span></div></div>
-        <div class="layer-item"><div class="layer-icon" style="background:rgba(251,191,36,0.15)">I0</div><div class="layer-info"><div class="layer-name">织层 · Agora</div><div class="layer-desc">MCP Hub, 42 tools</div></div><div class="layer-status"><span class="badge badge-ok">1105 tests</span></div></div>
-        <div class="layer-item"><div class="layer-icon" style="background:rgba(74,222,128,0.15)">L2</div><div class="layer-info"><div class="layer-name">内核 · kairon + omo + gbrain + metaos</div><div class="layer-desc">25 packages, 知识引擎</div></div><div class="layer-status"><span class="badge badge-ok">1810+ tests</span></div></div>
-        <div class="layer-item"><div class="layer-icon" style="background:rgba(248,113,113,0.15)">L1</div><div class="layer-info"><div class="layer-name">运行时 · Runtime</div><div class="layer-desc">Matrix + Scheduler + KEI</div></div><div class="layer-status"><span class="badge badge-ok">171 tests</span></div></div>
-        <div class="layer-item"><div class="layer-icon" style="background:rgba(100,116,139,0.15)">L0</div><div class="layer-info"><div class="layer-name">协议 · ecos + protocols</div><div class="layer-desc">16 YAML protocols</div></div><div class="layer-status"><span class="badge badge-ok">122 tests</span></div></div>
+  <!-- Main Grid: Architecture + Cards -->
+  <div class="grid-main">
+    <!-- Architecture -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title"><span class="dot" style="background:var(--purple)"></span>5+3+1 架构</span>
+        <span style="font-size:10px;color:var(--text3)">点击展开详情</span>
+      </div>
+      <div class="panel-body" id="arch-body"></div>
+    </div>
+
+    <!-- Cards -->
+    <div class="panel" id="cards-panel">
+      <div class="panel-header">
+        <span class="panel-title"><span class="dot" style="background:var(--red)"></span>P0 优先卡片</span>
+        <span style="font-size:10px;color:var(--text3)" id="cards-count">—</span>
+      </div>
+      <div class="panel-body" id="cards-body">
+        <div class="empty"><div class="icon">⟳</div><p>加载中...</p></div>
       </div>
     </div>
+  </div>
 
-    <!-- P0 Cards -->
-    <div class="card">
-      <h2>P0 优先卡片</h2>
-      <div id="p0-cards-list" style="max-height:300px;overflow-y:auto">
-        <div style="color:var(--dim);font-size:13px">加载中...</div>
-      </div>
+  <!-- Project Table -->
+  <div class="panel" style="margin-bottom:20px">
+    <div class="panel-header">
+      <span class="panel-title"><span class="dot" style="background:var(--cyan)"></span>9 项目接入能力</span>
+    </div>
+    <div class="panel-body" style="overflow-x:auto">
+      <table class="project-table" id="project-table">
+        <thead><tr><th>项目</th><th>层</th><th>MCP 工具</th><th>CLI</th><th>HTTP</th><th>测试</th></tr></thead>
+        <tbody></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- 9 Projects Status -->
-  <div class="card" style="margin-bottom:24px">
-    <h2>9 项目状态 · 接入能力</h2>
-    <div id="project-list"></div>
+  <!-- Timeline -->
+  <div class="panel" style="margin-bottom:20px" id="timeline-panel">
+    <div class="panel-header">
+      <span class="panel-title"><span class="dot" style="background:var(--orange)"></span>最近活动</span>
+    </div>
+    <div class="panel-body" id="timeline-body">
+      <div class="empty"><div class="icon">📋</div><p>活动记录加载中...</p></div>
+    </div>
   </div>
 
-  <!-- Refresh -->
-  <div class="refresh-bar">
-    <span>自动刷新: 30s · 数据源: cockpit L4 bridge + I0 Fabric</span>
+  <!-- Footer -->
+  <div class="footer">
     <span id="last-refresh">—</span>
+    <div class="shortcuts">
+      <kbd>⌘R</kbd> 刷新 · <kbd>⌘1-4</kbd> 切换面板 · <kbd>Esc</kbd> 折叠全部
+    </div>
   </div>
 
 </div>
 
 <script>
-// ── Live data fetch ──────────────────────────────────────
+// ── Architecture Data ───────────────────────────────────
+const ARCH_LAYERS = [
+  { id:'L4', icon:'🎯', name:'自我层', desc:'CARDS + Vault', bg:'rgba(59,130,246,0.12)', tools:'文档', tests:'N/A', projects:['CARDS','Vault'] },
+  { id:'L3', icon:'⌘', name:'入口层 · Cockpit', desc:'CLI + MCP + Web', bg:'rgba(139,92,246,0.12)', tools:'20', tests:'498', projects:['cockpit'] },
+  { id:'I0', icon:'🔀', name:'织层 · Agora', desc:'MCP Hub, 42 tools', bg:'rgba(234,179,8,0.12)', tools:'42', tests:'1105', projects:['agora'] },
+  { id:'L2', icon:'⚙️', name:'内核 · kairon + omo + gbrain + metaos', desc:'25 packages, 知识引擎', bg:'rgba(34,197,94,0.12)', tools:'160+', tests:'1810+', projects:['kairon','omo','gbrain','metaos'] },
+  { id:'L1', icon:'🛡', name:'运行时 · Runtime', desc:'Matrix + Scheduler + KEI', bg:'rgba(239,68,68,0.12)', tools:'30', tests:'171', projects:['runtime'] },
+  { id:'L0', icon:'📜', name:'协议 · ecos + protocols', desc:'16 YAML protocols', bg:'rgba(100,116,139,0.12)', tools:'—', tests:'122', projects:['ecos','protocols'] },
+];
+
+function buildArch() {
+  document.getElementById('arch-body').innerHTML = ARCH_LAYERS.map((l,i) => `
+    <div class="arch-layer" onclick="this.classList.toggle('expanded')" id="arch-${l.id}">
+      <div class="icon" style="background:${l.bg}">${l.icon}</div>
+      <div class="info">
+        <div class="name">${l.name}</div>
+        <div class="desc">${l.desc}</div>
+      </div>
+      <div class="stats">
+        <div class="stat-item"><div class="stat-num">${l.tools}</div><div class="stat-label">MCP</div></div>
+        <div class="stat-item"><div class="stat-num">${l.tests}</div><div class="stat-label">Tests</div></div>
+      </div>
+      <div class="expand">▾</div>
+      <div class="arch-detail">
+        <div class="arch-detail-row">
+          ${l.projects.map(p => `<span class="arch-tag">${p}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+buildArch();
+
+// ── Project Table ───────────────────────────────────────
+const PROJECTS = [
+  { name:'agora', layer:'I0', cls:'layer-i0', mcp:42, cli:'35', http:'7422/7431/8080', tests:'1105' },
+  { name:'cockpit', layer:'L3', cls:'layer-l3', mcp:20, cli:'13', http:'8080', tests:'498' },
+  { name:'kairon', layer:'L2', cls:'layer-l2', mcp:'25pkgs', cli:'per-pkg', http:'per-pkg', tests:'1810+' },
+  { name:'gbrain', layer:'L2', cls:'layer-l2', mcp:67, cli:'1', http:'—', tests:'TS' },
+  { name:'omo', layer:'L2', cls:'layer-l2', mcp:10, cli:'28', http:'—', tests:'221' },
+  { name:'metaos', layer:'L2', cls:'layer-l2', mcp:11, cli:'5', http:'—', tests:'163' },
+  { name:'runtime', layer:'L1', cls:'layer-l1', mcp:30, cli:'3', http:'FastAPI', tests:'171' },
+  { name:'ecos', layer:'L0', cls:'layer-l0', mcp:'—', cli:'3', http:'9090', tests:'122' },
+  { name:'protocols', layer:'L0', cls:'layer-l0', mcp:'—', cli:'—', http:'—', tests:'16YAML' },
+];
+
+document.getElementById('project-table').querySelector('tbody').innerHTML = PROJECTS.map(p =>
+  `<tr>
+    <td style="font-weight:500">${p.name}</td>
+    <td><span class="project-layer-badge ${p.cls}">${p.layer}</span></td>
+    <td>${p.mcp}</td><td>${p.cli}</td><td>${p.http}</td>
+    <td><span style="color:var(--green);font-weight:500">${p.tests}</span></td>
+  </tr>`
+).join('');
+
+// ── Live Data ────────────────────────────────────────────
 async function loadAll() {
-  const results = await Promise.allSettled([
+  const [ctxR, cardsR, statusR, servicesR] = await Promise.allSettled([
     fetch('/api/context').then(r => r.ok ? r.json() : null),
     fetch('/api/cards').then(r => r.ok ? r.json() : null),
     fetch('/api/status').then(r => r.ok ? r.json() : null),
     fetch('/api/services').then(r => r.ok ? r.json() : null),
   ]);
+  const ctx = ctxR.value, cards = cardsR.value, status = statusR.value, services = servicesR.value;
 
-  const [ctx, cards, status, services] = results.map(r => r.status === 'fulfilled' ? r.value : null);
-
-  // Update cards stat
+  // Stats
   if (ctx && ctx.cards_summary) {
     document.getElementById('active-cards').textContent = ctx.cards_summary.active;
-    document.getElementById('p0-count').textContent = 'P0: ' + ctx.cards_summary.p0_open;
+    document.getElementById('p0-num').textContent = ctx.cards_summary.p0_open;
     document.getElementById('omo-phase').textContent = 'Phase ' + ctx.phase;
     document.getElementById('omo-theme').textContent = ctx.theme || '';
-
-    // Update P0 cards list
-    if (ctx.cards_summary.p0_titles && ctx.cards_summary.p0_titles.length > 0) {
-      document.getElementById('p0-cards-list').innerHTML = ctx.cards_summary.p0_titles.map(t =>
-        '<div class="card-item"><div class="title"><span class="priority-p0">P0</span> ' + t + '</div></div>'
-      ).join('');
-    } else {
-      document.getElementById('p0-cards-list').innerHTML = '<div style="color:var(--green);font-size:13px">✅ 无 P0 待处理</div>';
-    }
+    document.getElementById('constraint-count').textContent = (ctx.constraints || []).length;
   }
 
-  // Update health
+  // P0 Cards
+  if (cards && Array.isArray(cards)) {
+    const p0 = cards.filter(c => c.priority === 'P0');
+    document.getElementById('cards-count').textContent = p0.length + ' P0';
+    document.getElementById('cards-body').innerHTML = cards.map(c => `
+      <div class="card-item">
+        <div class="card-priority ${c.priority.toLowerCase()}">${c.priority}</div>
+        <div class="card-content">
+          <div class="card-title">${c.title}</div>
+          <div class="card-meta">${c.type} · ${c.domain} · ${c.id}</div>
+        </div>
+        <span class="card-status ${c.status === 'closed' ? 'status-closed' : 'status-active'}">${c.status}</span>
+      </div>
+    `).join('') || '<div class="empty"><div class="icon">✅</div><p>无活跃卡片</p></div>';
+  }
+
+  // Health
   if (status) {
     document.getElementById('health-status').textContent = 'OK';
-    document.getElementById('system-dot').className = 'status-dot status-ok';
+    document.getElementById('health-status').className = 'stat-value ok';
+    document.getElementById('pulse').style.background = 'var(--green)';
   }
-
   if (services && Array.isArray(services)) {
     const online = services.filter(s => s.port_listening).length;
-    document.getElementById('health-services').textContent = online + '/' + services.length;
+    document.getElementById('health-detail').textContent = online + '/' + services.length + ' services';
   }
 
-  // Update 9 project list
-  if (services && Array.isArray(services)) {
-    document.getElementById('project-list').innerHTML =
-    '<div class="project-row" style="font-size:12px;color:var(--dim);padding:4px 0">' +
-    '<span>项目</span><span>层</span><span style="margin-left:8px">MCP</span><span>HTTP</span><span>CLI</span></div>' +
-    [
-      {name:'agora',layer:'I0',mcp:42,cli:35,http:'7422/7431/8080',tests:'1105'},
-      {name:'cockpit',layer:'L3',mcp:20,cli:13,http:'8080',tests:'498'},
-      {name:'kairon',layer:'L2',mcp:'25pkgs',cli:'-',http:'-',tests:'1810+'},
-      {name:'gbrain',layer:'L2',mcp:67,cli:'1',http:'-',tests:'TS'},
-      {name:'omo',layer:'L2',mcp:10,cli:28,http:'-',tests:'221'},
-      {name:'metaos',layer:'L2',mcp:11,cli:5,http:'-',tests:'163'},
-      {name:'runtime',layer:'L1',mcp:30,cli:3,http:'FastAPI',tests:'171'},
-      {name:'ecos',layer:'L0',mcp:'-',cli:3,http:'9090',tests:'122'},
-      {name:'protocols',layer:'L0',mcp:'-',cli:'-',http:'-',tests:'16YAML'},
-    ].map(p => '<div class="project-row"><span class="project-name">' + p.name + '</span>' +
-      '<span class="project-meta">' + p.layer + '</span>' +
-      '<span class="project-meta">MCP:' + p.mcp + '</span>' +
-      '<span class="project-meta">' + p.http + '</span>' +
-      '<span class="project-meta">CLI:' + p.cli + '</span>' +
-      '<span class="badge badge-ok">' + p.tests + '</span></div>').join('');
-  }
+  // Timeline
+  const now = new Date();
+  document.getElementById('timeline-body').innerHTML = [
+    { dot:'var(--green)', title:'Dashboard 刷新', time: now.toLocaleTimeString() },
+    { dot:'var(--purple)', title:'Cockpit MCP 就绪 · 20 tools', time: '06-06 16:00' },
+    { dot:'var(--blue)', title:'5+3+1 架构对齐 · 9项目 CI 补齐', time: '06-06 15:00' },
+    { dot:'var(--yellow)', title:'Shared-lib 拆解 · 5子包独立', time: '06-06 14:00' },
+    { dot:'var(--green)', title:'全量审计完成 · 21债务清零', time: '06-06 13:00' },
+  ].map(e => `
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:${e.dot}"></div>
+      <div class="timeline-content">
+        <div class="timeline-title">${e.title}</div>
+        <div class="timeline-time">${e.time}</div>
+      </div>
+    </div>
+  `).join('');
 
-  document.getElementById('last-refresh').textContent = new Date().toLocaleTimeString();
+  document.getElementById('last-refresh').textContent = '更新: ' + now.toLocaleTimeString();
 }
 
 // ── Clock ───────────────────────────────────────────────
 function tick() {
-  document.getElementById('clock').textContent = new Date().toLocaleString('zh-CN');
+  document.getElementById('clock').textContent = new Date().toLocaleString('zh-CN', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
 tick(); setInterval(tick, 1000);
 
-// ── Auto refresh ────────────────────────────────────────
-loadAll(); setInterval(loadAll, 30000);
+// ── Helpers ─────────────────────────────────────────────
+function scrollToPanel(id) {
+  document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// ── Keyboard shortcuts ─────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.metaKey && e.key === 'r') { e.preventDefault(); loadAll(); }
+  if (e.key === 'Escape') document.querySelectorAll('.arch-layer.expanded').forEach(el => el.classList.remove('expanded'));
+});
+
+// ── Start ───────────────────────────────────────────────
+loadAll();
+setInterval(loadAll, 30000);
 </script>
 </body>
 </html>

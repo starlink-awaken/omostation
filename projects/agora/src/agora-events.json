@@ -10358,6 +10358,36 @@
       "payload": {
         "msg": "hello"
       }
+    },
+    {
+      "id": "evt_1780745723_117511",
+      "time": "2026-06-06T11:35:23Z",
+      "source": "e2e-test",
+      "type": "test:e2e",
+      "trace_id": "",
+      "payload": {
+        "ok": true
+      }
+    },
+    {
+      "id": "evt_1780745758_b172ad",
+      "time": "2026-06-06T11:35:58Z",
+      "source": "e2e-test",
+      "type": "test:e2e",
+      "trace_id": "",
+      "payload": {
+        "ok": true
+      }
+    },
+    {
+      "id": "evt_1780745855_78f13b",
+      "time": "2026-06-06T11:37:35Z",
+      "source": "e2e-test",
+      "type": "test:e2e",
+      "trace_id": "",
+      "payload": {
+        "ok": true
+      }
     }
   ],
   "subscriptions": [

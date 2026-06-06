@@ -229,6 +229,16 @@ def handle_tools_list(params: dict, ctx: ToolContext) -> dict:
     except (ImportError, KeyError, AttributeError) as exc:
         _log.warning("[MCPServer] tools/list: D-Execution registry unavailable — %s", exc)
 
+    pm = _get_proxy_manager()
+    if pm:
+        proxy_schemas = pm.registry.get_tool_schemas()
+        for s in proxy_schemas:
+            tools.append({
+                "name": s["name"],
+                "description": s["description"],
+                "inputSchema": s.get("parameters", {"type": "object", "properties": {}}),
+            })
+
     if not tools:
         tools = _get_builtin_mcp_tools()
     return {"tools": tools}
@@ -278,7 +288,7 @@ def handle_tools_call(params: dict, ctx: ToolContext) -> dict:
         pm = _get_proxy_manager()
         loop = asyncio.new_event_loop()
         try:
-            if pm:
+            if pm and pm.registry.get_entry(tool_name):
                 res = loop.run_until_complete(pm.dispatch(tool_name, arguments))
                 if res.get("status") == "error":
                     return {"content": [{"type": "text", "text": f"[tool error] {res.get('error')}"}], "isError": True}

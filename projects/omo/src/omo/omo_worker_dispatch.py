@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""OMO Worker dispatch logic — task execution, reclaim, and garbage collection."""
 from __future__ import annotations
-
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -21,6 +18,7 @@ from .omo_worker_core import (
     _worker_command,
     _write_yaml,
 )
+
 def dispatch_task(
     root: Path,
     task_id: str,
