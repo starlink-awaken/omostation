@@ -323,8 +323,19 @@ Phase 目标: .omo/_truth/goals/current.yaml
 迁移流程:
   1. 所有 P0 debt 关闭
   2. 所有 CI 通过
-  3. 文档保鲜检查
-  4. 更新 phase 状态 → done
+  3. 文档保鲜检查 (<30d)
+  4. X4 Score ≥ 90 且 0 critical violations
+  5. 更新 phase 状态 → done
+```
+
+### 7.4 X4 治理一致性检查
+
+参见 `.omo/_knowledge/management/x4-governance-consistency-design.md`。每次 Phase 迁移必须通过 X4 检查。
+
+```
+每周一早8: CI cron → X4 check → 报告
+  score < 80 → omo debt P0
+  critical > 0 → 阻断 Phase 迁移
 ```
 
 ---
