@@ -1,6 +1,6 @@
 """Tests for setup wizard."""
 
-from agora.wizard import _confirm, run_wizard
+from agora.plugins.identity.wizard import _confirm, run_wizard
 
 
 def test_confirm_non_tty(monkeypatch):

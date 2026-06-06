@@ -1,6 +1,6 @@
 """Tests for Market."""
 
-from agora.market import Market
+from agora.plugins.market.market import Market
 
 
 class TestMarket:

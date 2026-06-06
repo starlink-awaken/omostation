@@ -11,7 +11,7 @@ import json
 import time
 from pathlib import Path
 
-from agora.web_of_trust import WebOfTrust  # type: ignore[import-not-found]
+from agora.plugins.identity.web_of_trust import WebOfTrust  # type: ignore[import-not-found]
 
 DISTRIBUTED_GRANTS_DB = Path.home() / ".kos" / "distributed_grants.json"
 

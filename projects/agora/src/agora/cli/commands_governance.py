@@ -29,7 +29,7 @@ def cmd_tenant(args):
 
 def cmd_market(args):
     """MCP tool marketplace."""
-    from agora.market import Market  # type: ignore[import-not-found]
+    from agora.plugins.market.market import Market  # type: ignore[import-not-found]
 
     mkt = Market()
     if args.market_cmd == "list":

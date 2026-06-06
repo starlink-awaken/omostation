@@ -310,7 +310,7 @@ class TestLifecycleInstall:
             "tags": ["mcp", "python", "server"],
         }
 
-        with patch("agora.market.Market.install", return_value=fake_install_result) as mock_install:
+        with patch("agora.plugins.market.market.Market.install", return_value=fake_install_result) as mock_install:
             # Simulate the install pipeline
             result = mock_install("test-org/mcp-server-0")
 
@@ -367,7 +367,7 @@ class TestLifecycleInstall:
             "tags": [],
         }
 
-        with patch("agora.market.Market.install", return_value=fake_install_result) as mock_install:
+        with patch("agora.plugins.market.market.Market.install", return_value=fake_install_result) as mock_install:
             result = mock_install("test-org/mcp-server-0")
 
         # Update catalog with install results
@@ -485,8 +485,8 @@ class TestLifecycleLoad:
             "port": 0,
             "tags": [],
         }
-        with patch("agora.market.Market.install", return_value=fake_install):
-            from agora.market import Market
+        with patch("agora.plugins.market.market.Market.install", return_value=fake_install):
+            from agora.plugins.market.market import Market
 
             result = Market().install("test-org/mcp-server-0")
         catalog.update_install(
@@ -563,9 +563,9 @@ class TestNegativeCases:
     @pytest.mark.asyncio
     async def test_install_non_existent_market_tool(self, catalog):
         """Installing a tool not in the catalog should still be possible (Market handles it)."""
-        with patch("agora.market.Market._run_cmd") as mock_run:
+        with patch("agora.plugins.market.market.Market._run_cmd") as mock_run:
             mock_run.return_value = None
-            with patch("agora.market.Market._fetch_repo_metadata") as mock_fetch:
+            with patch("agora.plugins.market.market.Market._fetch_repo_metadata") as mock_fetch:
                 mock_fetch.return_value = {
                     "name": "custom-tool",
                     "description": "Custom tool",
@@ -573,7 +573,7 @@ class TestNegativeCases:
                     "entry": "server.py",
                     "tags": [],
                 }
-                from agora.market import Market
+                from agora.plugins.market.market import Market
 
                 result = Market().install("some-user/custom-tool")
                 assert result["name"] == "custom-tool"

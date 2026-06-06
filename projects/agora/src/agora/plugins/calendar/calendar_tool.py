@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Any
 
 from agora.calendar_adapters import BaseCalendarAdapter, create_adapter  # type: ignore[import-not-found]
-from agora.calendar_models import CalendarEvent  # type: ignore[import-not-found]
+from agora.plugins.calendar.calendar_models import CalendarEvent  # type: ignore[import-not-found]
 from agora.mcp.base_tool import BaseTool  # type: ignore[import-not-found]
 from agora.mcp.tool_contract import ToolConfig, ToolRequest, ToolResult, ToolStatus  # type: ignore[import-not-found]
 

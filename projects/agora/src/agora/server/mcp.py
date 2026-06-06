@@ -18,7 +18,7 @@ from fastmcp.server.dependencies import get_access_token
 from fastmcp.server.middleware import AuthMiddleware
 from fastmcp.tools import Tool, ToolResult
 
-from agora.agent_card import service_to_agent_card  # type: ignore[import-not-found]
+from agora.plugins.identity.agent_card import service_to_agent_card  # type: ignore[import-not-found]
 from agora.audit_subscriber import AuditSubscriber  # type: ignore[import-not-found]
 from agora.auth.identity import normalize_identity  # type: ignore[import-not-found]
 from agora.core.service_base import is_safe_url, parse_protocol_config, parse_tags  # type: ignore[import-not-found]
