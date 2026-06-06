@@ -136,77 +136,87 @@ export default function Dashboard() {
             <p className="hero-subtitle">Monitor your eCOS v5 environment in real-time.</p>
           </div>
 
-          <div className="stats-grid">
-            <div className="stat-card glass-panel animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              <div className="stat-icon-wrapper pulse-success">
-                <Server size={24} />
-              </div>
-              <div className="stat-info">
-                <h3>Services Active</h3>
-                <p className="stat-value">24 / 28</p>
-              </div>
-            </div>
-            
-            <div className="stat-card glass-panel animate-fade-in" style={{ animationDelay: '0.4s' }}>
-              <div className="stat-icon-wrapper pulse-accent">
-                <Cpu size={24} />
-              </div>
-              <div className="stat-info">
-                <h3>LLM Requests</h3>
-                <p className="stat-value">12.4k</p>
-              </div>
-            </div>
-          </div>
-
-          {activeTab === 'Sandbox' && (
-            <SandboxTerminal />
-          )}
-
-          {activeTab === 'Knowledge' && (
-            <MemoryInjector />
-          )}
-
-          {activeTab !== 'Sandbox' && activeTab !== 'Knowledge' && (
-            <div className="services-section animate-fade-in" style={{ animationDelay: '0.5s' }}>
-              <div className="section-header">
-                <h2>Core Services</h2>
-                <button className="btn-glass">View All</button>
-              </div>
-              
-              <div className="services-list glass-panel">
-                {loading ? (
-                  <div className="loading-state">
-                    <div className="spinner"></div>
-                    <p>Connecting to Agora Mesh...</p>
+          {activeTab === 'Overview' && (
+            <>
+              <div className="stats-grid">
+                <div className="stat-card glass-panel animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                  <div className="stat-icon-wrapper pulse-success">
+                    <Server size={24} />
                   </div>
-                ) : (
-                  <table className="services-table">
-                    <thead>
-                      <tr>
-                        <th>Service Name</th>
-                        <th>Status</th>
-                        <th>Uptime</th>
-                        <th>Latency</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {services.map(svc => (
-                        <tr key={svc.id} className="service-row">
-                          <td className="font-medium">{svc.name}</td>
-                          <td>
-                            <span className={`status-badge ${svc.status}`}>
-                              {getStatusIcon(svc.status)}
-                              {svc.status}
-                            </span>
-                          </td>
-                          <td className="text-muted">{svc.uptime}</td>
-                          <td className="text-muted">{svc.latency}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+                  <div className="stat-info">
+                    <h3>Services Active</h3>
+                    <p className="stat-value">24 / 28</p>
+                  </div>
+                </div>
+                
+                <div className="stat-card glass-panel animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                  <div className="stat-icon-wrapper pulse-accent">
+                    <Cpu size={24} />
+                  </div>
+                  <div className="stat-info">
+                    <h3>LLM Requests</h3>
+                    <p className="stat-value">12.4k</p>
+                  </div>
+                </div>
               </div>
+
+              <div className="services-section animate-fade-in" style={{ animationDelay: '0.5s' }}>
+                <div className="section-header">
+                  <h2>Core Services</h2>
+                  <button className="btn-glass">View All</button>
+                </div>
+                
+                <div className="services-list glass-panel">
+                  {loading ? (
+                    <div className="loading-state">
+                      <div className="spinner"></div>
+                      <p>Connecting to Agora Mesh...</p>
+                    </div>
+                  ) : (
+                    <table className="services-table">
+                      <thead>
+                        <tr>
+                          <th>Service Name</th>
+                          <th>Status</th>
+                          <th>Uptime</th>
+                          <th>Latency</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {services.map(svc => (
+                          <tr key={svc.id} className="service-row">
+                            <td className="font-medium">{svc.name}</td>
+                            <td>
+                              <span className={`status-badge ${svc.status}`}>
+                                {getStatusIcon(svc.status)}
+                                {svc.status}
+                              </span>
+                            </td>
+                            <td className="text-muted">{svc.uptime}</td>
+                            <td className="text-muted">{svc.latency}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'Engines' && (
+            <div className="glass-panel animate-fade-in" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
+              <Cpu size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+              <h2>Engines Configuration</h2>
+              <p>Coming Soon</p>
+            </div>
+          )}
+
+          {activeTab === 'Settings' && (
+            <div className="glass-panel animate-fade-in" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
+              <Settings size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+              <h2>System Settings</h2>
+              <p>Coming Soon</p>
             </div>
           )}
         </div>

@@ -70,7 +70,11 @@ export default function MemoryInjector() {
       // For `search` tool, we expect a JSON string in the first text block
       const resultText = data.result?.content?.[0]?.text;
       if (resultText) {
-        setSearchResults(JSON.parse(resultText));
+        let cleanText = resultText.trim();
+        if (cleanText.startsWith('```json')) {
+          cleanText = cleanText.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+        }
+        setSearchResults(JSON.parse(cleanText));
       } else {
         setSearchResults([]);
       }
