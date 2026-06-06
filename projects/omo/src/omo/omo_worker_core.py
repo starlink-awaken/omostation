@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+import shlex
+from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
+
+from .omo_io import write_yaml_atomic
 
 def _timestamp_slug(now: str | None = None) -> str:
     if now:

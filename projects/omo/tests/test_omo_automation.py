@@ -15,11 +15,11 @@ from omo.omo_io import write_text_atomic, write_yaml_atomic
 from omo.omo_provider_plane import write_provider_plane_snapshot
 from omo.omo_redaction import redact_sensitive_text
 from omo.omo_worker import (
-    _build_launch_argv,
     collect_worker_status,
     dispatch_task,
     main as omo_worker_main,
 )
+from omo.omo_worker_core import _build_launch_argv
 from omo.omo_task_schema import validate_task_file
 
 

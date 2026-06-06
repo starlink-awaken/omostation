@@ -67,10 +67,19 @@ from .omo_task_schema import (
 
 # ── Extracted submodules ────────────────────────────────────────────────────
 from .omo_worker_core import (
-    _omo_path,
+    _append_unique,
+    _build_launch_argv,
+    _find_dispatch_file,
+    _find_planned_task_file,
+    _find_task_file,
+    _find_task_file_safe,
     _load_yaml,
-    _write_yaml,
+    _omo_path,
+    _parse_iso8601,
+    _timestamp_slug,
     _utc_now,
+    _worker_command,
+    _write_yaml,
 )
 from .omo_worker_dispatch import (
     dispatch_task,
