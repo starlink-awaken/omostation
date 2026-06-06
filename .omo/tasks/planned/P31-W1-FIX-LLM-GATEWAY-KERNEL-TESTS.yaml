@@ -1,0 +1,36 @@
+id: P31-W1-FIX-LLM-GATEWAY-KERNEL-TESTS
+phase: 31
+wave: W1
+title: "修 llm-gateway-kernel 13 测试 collection errors（合并后 import 漂移）"
+status: completed
+task_type: test
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P31-W1-MERGE-LLM-GATEWAY-KERNEL completed"
+depends_on:
+  - P31-W1-MERGE-LLM-GATEWAY-KERNEL
+deliverables:
+  - ".omo/_delivery/phase31-fix-llm-gateway-kernel-tests.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs: []
+knowledge_refs:
+  - "ADR-0006"
+description: |
+  P31-W1-MERGE-LLM-GATEWAY-KERNEL subagent 在物理合并后 socket 断连,
+  留下 13 测试 collection errors。修 import 路径。
+
+  实际工作:
+  - 70+ 处 import 路径更新: `from llm_gateway` → `from llm_gateway_kernel.llm_gateway`,
+    `from engine_core` → `from llm_gateway_kernel.engine_core`
+  - 4 个 engine_core 测试文件 path-based 加载: 修正 `src/engine_core` →
+    `src/llm_gateway_kernel/engine_core` (含 multi-line 路径, 含重复前缀清理)
+  - 5 个 engine_core 测试文件 multi-line path 模式用 Python regex 修复
+  - 13 collection errors → 0; 现 212 passed, 2 skipped, 3 failed (3 个 failed 是
+    预存的 functional test failures, 不是 collection error)
+started_at: '2026-06-06T04:00:00Z'
+completed_at: '2026-06-06T04:00:00Z'
+blocked_by: null
+retry_count: 0

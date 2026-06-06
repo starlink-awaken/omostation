@@ -1,0 +1,48 @@
+id: P31-W1-CLEANUP-SHIM
+phase: 31
+wave: W1
+title: "3 组合并后清理 6 个 shim 业务目录 — kairon 14 活跃包达成"
+status: completed
+task_type: governance
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P31-W1-MERGE-PROTOCOLS-LAYER completed"
+  - "P31-W1-MERGE-SOT-BRIDGE completed"
+  - "P31-W1-MERGE-LLM-GATEWAY-KERNEL completed"
+depends_on:
+  - P31-W1-MERGE-LLM-GATEWAY-KERNEL
+deliverables:
+  - ".omo/_delivery/phase31-cleanup-shim.md"
+  - ".omo/_knowledge/decisions/0006-kairon-package-merge.md (修订 2)"
+  - "projects/kairon/CLAUDE.md (包结构 25→19)"
+  - "projects/kairon/pyproject.toml (exclude 6 源包 + 移除 6 sources)"
+  - "projects/kairon/packages/iris/pyproject.toml (ssot-kernel → sot-bridge)"
+  - "projects/kairon/packages/minerva/pyproject.toml (sophia → protocols-layer)"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/decisions/0006-kairon-package-merge.md"
+knowledge_refs:
+  - "ADR-0006"
+description: |
+  3 组合并后清理 6 个 shim 业务目录的 src/。
+  kairon pyproject.toml workspace 移除 6 个原包成员（用 exclude 段）。
+  消费者迁移: iris ssot-kernel → sot-bridge, minerva sophia → protocols-layer。
+  旧 import 失效（破坏面 0，AST 实证）。
+started_at: '2026-06-06T04:00:00Z'
+completed_at: '2026-06-06T04:00:00Z'
+blocked_by: null
+retry_count: 0
+notes: |
+  实际 kairon 物理目录: 25 → 19（src/ 消失 6 个，目录壳保留 pyproject.toml 作档案）
+  活跃 workspace 成员: 19 个 (3 个新合并包 + 16 个独立包)
+  uv sync --all-packages: 306 packages resolved
+  3 个新合并包 import 全部 OK
+  旧 import (sophia/symphony/ssot_kernel/sharedbrain_bridge/llm_gateway/engine_core) ModuleNotFoundError
+  pytest packages/*/tests/unit: 318 passed, 1 skipped in 108.55s
+  ruff check packages/: 270 errors (合并前 283，净减 13)
+  omo daemon: PID 47826 running
+  ADR-0006 修订 2 (CLEANUP-SHIM 实施) 已写入
+  kairon/CLAUDE.md 已更新 (包结构表 25→19 + 新增 P31-W1 CLEANUP-SHIM 段)

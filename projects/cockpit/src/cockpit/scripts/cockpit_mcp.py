@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import sys
 import time
+from pathlib import Path
 from typing import Any
 
 try:
@@ -331,6 +332,223 @@ def daily_summary(days: int = 1) -> str:
         },
         default=str,
     )
+
+
+# ══════════════════════════════════════════════════════════════
+# L4 Bridge tools (CARDS + Vault + OMO context)
+# ══════════════════════════════════════════════════════════════
+
+_CARDS_DIR = Path.home() / "Documents" / "驾驶舱" / "CARDS"
+_VAULT_DIR = Path.home() / "Documents" / "学习进化"
+_WORKSPACE_ROOT = Path(__file__).resolve().parents[4]  # cockpit/src/cockpit/scripts/cockpit_mcp.py → workspace root
+_OMO_GOALS = _WORKSPACE_ROOT / ".omo" / "_truth" / "goals" / "current.yaml"
+
+
+def _scan_cards() -> list[dict[str, str]]:
+    """扫描 CARDS 目录下所有带 frontmatter 的 Markdown 文件。"""
+    cards = []
+    for md_file in sorted(_CARDS_DIR.rglob("*.md")):
+        try:
+            text = md_file.read_text(encoding="utf-8")
+            if text.startswith("---"):
+                _, fm, __ = text.split("---", 2)
+                meta = {}
+                for line in fm.strip().split("\n"):
+                    if ":" in line:
+                        k, v = line.split(":", 1)
+                        meta[k.strip()] = v.strip()
+                if meta.get("id") and meta.get("type"):
+                    cards.append({
+                        "id": meta["id"],
+                        "type": meta.get("type", ""),
+                        "status": meta.get("status", ""),
+                        "title": meta.get("title", ""),
+                        "priority": meta.get("priority", ""),
+                        "domain": meta.get("domain", ""),
+                        "created": meta.get("created", ""),
+                        "tags": meta.get("tags", "[]"),
+                    })
+        except (OSError, ValueError):
+            continue
+    cards.sort(key=lambda c: ({"P0": 0, "P1": 1, "P2": 2, "P3": 3}.get(c["priority"], 9), c["created"]), reverse=True)
+    return cards
+
+
+def _read_omo_goals() -> dict:
+    """读取 OMO 当前目标。"""
+    try:
+        import yaml
+        return yaml.safe_load(_OMO_GOALS.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _read_omo_constraints() -> list[str]:
+    """从 .omo 治理约束中提取约束。"""
+    constraints_file = _WORKSPACE_ROOT / ".omo" / "_truth" / "x1-governance-policies.yaml"
+    try:
+        import yaml
+        cfg = yaml.safe_load(constraints_file.read_text(encoding="utf-8"))
+        rules = []
+        if cfg and isinstance(cfg, dict):
+            for section in cfg.values():
+                if isinstance(section, dict):
+                    for rule_name, rule_body in section.items():
+                        if isinstance(rule_body, dict) and "constraint" in rule_body:
+                            rules.append(f"[{rule_name}] {rule_body['constraint']}")
+                        elif isinstance(rule_body, str):
+                            rules.append(f"[{rule_name}] {rule_body}")
+        return rules
+    except Exception:
+        # Fallback to hardcoded key constraints
+        return [
+            "禁止直接改写 .omo 目录 (使用 OMO CLI)",
+            "修改后必须立即 git commit",
+            "跨包调用必须经 Agora I0 路由",
+            "L4 CARDS/Vault 仅通过 cockpit MCP 工具访问",
+        ]
+
+
+def _search_vault(keyword: str) -> list[dict]:
+    """搜索 Vault 中的 Markdown 文件。"""
+    results = []
+    if not keyword or not _VAULT_DIR.is_dir():
+        return results
+    kw = keyword.lower()
+    for md_file in _VAULT_DIR.rglob("*.md"):
+        if md_file.name.startswith("."):
+            continue
+        try:
+            text = md_file.read_text(encoding="utf-8")
+            if kw in text.lower():
+                lines = text.split("\n")
+                title = lines[0].replace("# ", "").strip() if lines else md_file.stem
+                snippet_start = max(0, text.lower().index(kw) - 40)
+                snippet_end = min(len(text), text.lower().index(kw) + 120)
+                results.append({
+                    "path": str(md_file.relative_to(_VAULT_DIR)),
+                    "title": title,
+                    "snippet": "..." + text[snippet_start:snippet_end].replace("\n", " ").strip() + "...",
+                })
+                if len(results) >= 10:
+                    break
+        except (OSError, ValueError):
+            continue
+    return results
+
+
+@_tool()
+def workspace_context() -> str:
+    """获取 Workspace 完整上下文：活跃目标、CARDS 状态、OMO 阶段、治理约束。
+
+    **Agent 应首先调用此工具**以获取当前工作目标/优先级/约束。
+    返回 JSON，包含: phase, theme, active_goals, cards_summary, constraints。
+    """
+    omo = _read_omo_goals()
+    goals_list = omo.get("goals", [])
+    active_cards = _scan_cards()
+    constraints = _read_omo_constraints()
+
+    active_count = sum(1 for c in active_cards if c["status"] not in ("closed", "done"))
+    p0_cards = [c for c in active_cards if c["priority"] == "P0" and c["status"] not in ("closed", "done")]
+
+    return json.dumps(
+        {
+            "phase": omo.get("phase", "?"),
+            "theme": omo.get("theme", ""),
+            "phase_status": omo.get("status", ""),
+            "active_goals": [
+                {"id": g.get("id", ""), "desc": g.get("desc", ""), "status": g.get("status", "")}
+                for g in goals_list
+            ],
+            "cards_summary": {
+                "total": len(active_cards),
+                "active": active_count,
+                "p0_open": len(p0_cards),
+                "p0_titles": [c["title"] for c in p0_cards[:5]],
+            },
+            "constraints": constraints,
+            "next_guidance": (
+                "1. 查看 P0 卡片确定当前优先任务。"
+                "2. 调用 cards_check 验证操作合规。"
+                "3. 经 Agora 调用 L2 工具执行。"
+                "4. 完成后调 cards_update 记录状态。"
+            ),
+        },
+        ensure_ascii=False,
+        default=str,
+    )
+
+
+@_tool()
+def cards_status() -> str:
+    """获取 CARDS 活跃卡片列表，按优先级排序。
+
+    **Agent 应调用此工具了解当前有哪些 P0/P1 任务。**
+    返回 JSON 数组，每个卡片含 id/type/status/title/priority/domain。
+    """
+    cards = _scan_cards()
+    active = [c for c in cards if c["status"] not in ("closed", "done")]
+    return json.dumps(
+        [
+            {"id": c["id"], "type": c["type"], "status": c["status"], "title": c["title"],
+             "priority": c["priority"], "domain": c["domain"], "created": c["created"]}
+            for c in active
+        ],
+        ensure_ascii=False,
+    )
+
+
+@_tool()
+def cards_check(card_id: str = "") -> str:
+    """检查指定 CARDS 卡片（或当前上下文）是否违反治理约束。
+
+    **Agent 应在执行操作前调用此工具**。遵守 L4 自我约束。
+    返回 JSON: compliant(bool), violations(list), guidance(str)。
+    """
+    constraints = _read_omo_constraints()
+    # 检查基础合规性
+    violations = []
+
+    # 检查是否在 OMO 阶段内操作
+    omo = _read_omo_goals()
+    if omo.get("code_freeze"):
+        violations.append("代码冻结中: 禁止非紧急修改")
+
+    if card_id:
+        found = False
+        for c in _scan_cards():
+            if c["id"] == card_id:
+                found = True
+                if c["status"] == "closed":
+                    violations.append(f"卡片 {card_id} 已关闭")
+                break
+        if not found:
+            violations.append(f"卡片 {card_id} 不存在")
+
+    return json.dumps(
+        {
+            "compliant": len(violations) == 0,
+            "violations": violations,
+            "constraints_checked": len(constraints),
+            "guidance": (
+                "合规, 可以执行" if not violations
+                else f"需要解决 {len(violations)} 个违规项: " + "; ".join(violations)
+            ),
+        },
+        ensure_ascii=False,
+    )
+
+
+@_tool()
+def vault_search(keyword: str = "") -> str:
+    """在 L4 Vault (学习进化) 中搜索相关知识/方法论/经验。
+
+    **Agent 应在需要方法论或历史上下文时调用此工具。**
+    返回 JSON: results(list), total(int)。
+    """
+    results = _search_vault(keyword)
+    return json.dumps({"results": results, "total": len(results)}, ensure_ascii=False)
 
 
 # ══════════════════════════════════════════════════════════════

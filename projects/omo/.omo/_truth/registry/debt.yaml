@@ -26,6 +26,8 @@ seed_items:
 - .omo/debt/items/P2-CARDS_MISSING_FILTERS.yaml
 - .omo/debt/items/P3-CARDS_DAEMON_BG.yaml
 - .omo/debt/items/P2-FAMILY_DEBT_DENSITY.yaml
+- .omo/debt/items/FAMILY-HUB-DEBT-001.yaml
+- .omo/debt/items/FAMILY-HUB-DEBT-002.yaml
 dashboard_ref: .omo/debt/dashboard/latest.yaml
 review_pack_ref: .omo/debt/review/latest.yaml
 review_queue_ref: .omo/debt/queue/latest.yaml

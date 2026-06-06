@@ -8,9 +8,9 @@ WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", "/Users/xiamingxing/Works
 HOME_DIR = Path.home()
 DOCS_ROOT = HOME_DIR / "Documents"
 
-mcp = FastMCP("ecos-bos-mounter", description="BOS Virtual File System Mounter")
+mcp = FastMCP("ecos-bos-mounter")
 
-@mcp.resource("bos://memory/{path:path}")
+@mcp.resource("bos://memory/{path}")
 def read_memory_resource(path: str) -> str:
     """
     Map bos://memory/* URIs to local documents/workspace files.
@@ -50,7 +50,7 @@ def read_memory_resource(path: str) -> str:
     except Exception as e:
         return f"Error reading resource: {str(e)}"
 
-@mcp.resource("bos://omo/{path:path}")
+@mcp.resource("bos://omo/{path}")
 def read_omo_resource(path: str) -> str:
     """
     Map bos://omo/* URIs to .omo governance files.

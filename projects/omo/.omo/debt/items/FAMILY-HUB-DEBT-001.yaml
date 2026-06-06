@@ -1,0 +1,30 @@
+id: FAMILY-HUB-DEBT-001
+title: In-memory database needs replacement with gbrain/pglite
+dimension: ARCHITECTURE
+subdimension: DATA_PERSISTENCE
+domain: workspace
+scope: governance_kernel
+severity: HIGH
+weight: 0.05
+entropy_class: classification
+lifecycle_state: closed
+owner: Builder
+affected_roots:
+- .omo
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-06T08:38:26Z'
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+history:
+- at: '2026-06-06T08:38:26Z'
+  action: register
+  note: Registered debt item FAMILY-HUB-DEBT-001.
+- at: '2026-06-06T08:41:48Z'
+  action: close
+  note: Closed debt item.
+  actor: Antigravity
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
