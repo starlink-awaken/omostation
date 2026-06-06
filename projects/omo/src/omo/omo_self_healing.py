@@ -480,15 +480,193 @@ def _severity_weight(severity: str) -> float:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Module-level singleton (for daemon integration)
+# Trend Analysis
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+@dataclass
+class EventTrend:
+    """事件趋势快照。"""
+
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    total_events: int = 0
+    events_by_type: dict[str, int] = field(default_factory=dict)
+    triggers: int = 0
+    fixes: int = 0
+    debts: int = 0
+
+
+class TrendTracker:
+    """追踪事件趋势 (10 个快照点)。"""
+
+    def __init__(self, max_snapshots: int = 10):
+        self._snapshots: deque[EventTrend] = deque(maxlen=max_snapshots)
+        self._total_triggers: int = 0
+        self._total_fixes: int = 0
+        self._total_debts: int = 0
+
+    def record(self, trend: EventTrend) -> None:
+        self._snapshots.append(trend)
+        self._total_triggers += trend.triggers
+        self._total_fixes += trend.fixes
+        self._total_debts += trend.debts
+
+    def get_trends(self) -> list[dict]:
+        return [
+            {
+                "ts": t.timestamp,
+                "events": t.total_events,
+                "by_type": t.events_by_type,
+                "triggers": t.triggers,
+                "fixes": t.fixes,
+            }
+            for t in self._snapshots
+        ]
+
+    def is_escalating(self, event_type: str) -> bool:
+        """检测事件是否在升级 (最近 3 个快照连续增长)。"""
+        if len(self._snapshots) < 3:
+            return False
+        recent = list(self._snapshots)[-3:]
+        counts = [s.events_by_type.get(event_type, 0) for s in recent]
+        return counts[0] < counts[1] < counts[2]
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# HTTP Health Server (status + fix execution)
+# ═══════════════════════════════════════════════════════════════════════════
+
+_HEALING_HTTP_PORT = int(os.environ.get("OMO_HEALING_HTTP_PORT", "9091"))
+
+
+def start_http_status_server(engine: SelfHealingEngine | None = None) -> None:
+    """在后台线程启动 HTTP 状态端点。
+
+    Endpoints:
+        GET /health           — {"status": "ok", "engine": ...}
+        GET /status            — 自愈引擎完整状态
+        GET /fixes             — 可用修复脚本列表
+        POST /fix/run/<name>   — 手动触发一个修复
+        GET /trends            — 趋势数据
+    """
+    if engine is None:
+        engine = get_healing_engine()
+
+    try:
+        from http.server import HTTPServer, BaseHTTPRequestHandler
+
+        _engine_ref = engine
+
+        class _Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                if self.path == "/health":
+                    self._json(200, {"status": "ok", "engine": "omo-self-healing"})
+                elif self.path == "/status":
+                    self._json(200, _engine_ref.get_status())
+                elif self.path == "/fixes":
+                    from omo.omo_self_healing_fixes import list_fixes
+                    self._json(200, {"fixes": list_fixes()})
+                elif self.path == "/trends":
+                    self._json(200, {"trends": _engine_ref._trends.get_trends()})
+                else:
+                    self._json(404, {"error": "not found"})
+
+            def do_POST(self):
+                if self.path.startswith("/fix/run/"):
+                    fix_name = self.path.split("/fix/run/")[1]
+                    from omo.omo_self_healing_fixes import run_fix
+                    result = run_fix(fix_name)
+                    self._json(200, result)
+                else:
+                    self._json(404, {"error": "not found"})
+
+            def _json(self, code, data):
+                import json
+                self.send_response(code)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "http://localhost:8090")
+                self.end_headers()
+                self.wfile.write(json.dumps(data, default=str).encode())
+
+            def log_message(self, format, *args):
+                pass  # suppress logs
+
+        import threading
+        server = HTTPServer(("127.0.0.1", _HEALING_HTTP_PORT), _Handler)
+        t = threading.Thread(target=server.serve_forever, daemon=True, name="healing-http")
+        t.start()
+        logger.info("healing_http_started port=%s", _HEALING_HTTP_PORT)
+    except Exception:
+        logger.warning("healing_http_start_failed — port may be in use")
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Configuration Persistence
+# ═══════════════════════════════════════════════════════════════════════════
+
+HEALING_CONFIG_PATH = OMO_ROOT / ".omo" / "self_healing_rules.yaml"
+
+
+def save_rules(rules: list[HealingRule], path: Path | None = None) -> None:
+    """保存自定义规则到 YAML 配置文件。"""
+    target = path or HEALING_CONFIG_PATH
+    target.parent.mkdir(parents=True, exist_ok=True)
+    data = []
+    for r in rules:
+        data.append({
+            "name": r.name,
+            "event_types": r.event_types,
+            "threshold": r.threshold,
+            "severity": r.severity,
+            "action": r.action,
+            "cooldown_seconds": r.cooldown_seconds,
+            "workflow_id": r.workflow_id,
+            "fix_names": r.fix_names,
+            "publish_event": r.publish_event,
+            "description": r.description,
+        })
+    target.write_text(yaml.dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    logger.info("healing_rules_saved path=%s count=%s", target, len(data))
+
+
+def load_rules(path: Path | None = None) -> list[HealingRule]:
+    """从 YAML 配置文件加载自定义规则。"""
+    target = path or HEALING_CONFIG_PATH
+    if not target.exists():
+        return []
+    data = yaml.safe_load(target.read_text(encoding="utf-8")) or []
+    rules = []
+    for d in data:
+        rules.append(HealingRule(
+            name=d["name"],
+            event_types=d.get("event_types", []),
+            threshold=d.get("threshold", 5),
+            severity=d.get("severity", "warning"),
+            action=d.get("action", "debt"),
+            cooldown_seconds=d.get("cooldown_seconds", 600),
+            workflow_id=d.get("workflow_id", ""),
+            fix_names=d.get("fix_names", []),
+            publish_event=d.get("publish_event", True),
+            description=d.get("description", ""),
+        ))
+    return rules
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Module-level singleton
 # ═══════════════════════════════════════════════════════════════════════════
 
 _engine: SelfHealingEngine | None = None
 
 
 def get_healing_engine() -> SelfHealingEngine:
-    """获取全局自愈引擎实例（懒加载）。"""
+    """获取全局自愈引擎实例（懒加载）。优先加载自定义规则。"""
     global _engine
     if _engine is None:
-        _engine = SelfHealingEngine()
+        custom_rules = load_rules()
+        if custom_rules:
+            _engine = SelfHealingEngine(rules=custom_rules)
+            logger.info("healing_engine_loaded_custom_rules count=%s", len(custom_rules))
+        else:
+            _engine = SelfHealingEngine()
     return _engine
