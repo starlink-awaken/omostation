@@ -1,4 +1,4 @@
-from .shared import PROJECT_HOME, _STATS
+from .shared import PROJECT_HOME, _STATS, _summarize_executor_costs
 import json
 
 def _runtime_stats() -> str:
@@ -29,6 +29,14 @@ def _runtime_stats() -> str:
     else:
         for tname, cnt in _STATS.items():
             lines.append(f"║  {tname:24s} {cnt:4d}         ║")
+    lines.append("╠════════════════════════════════════════╣")
+    lines.append("║        LLM Cost Summary (Executor)     ║")
+    lines.append("╠════════════════════════════════════════╣")
+    cost_summary = _summarize_executor_costs()
+    lines.append(f"║  Total Calls:           {cost_summary['total_calls']:4d}           ║")
+    lines.append(f"║  Total Tokens:          {cost_summary['total_tokens']:7d}        ║")
+    lines.append(f"║  Est. Cost:        ${cost_summary['estimated_cost_usd']:>10.6f}   ║")
+    lines.append(f"║  Model:        {cost_summary['model']:28s} ║")
     lines.append("╚════════════════════════════════════════╝")
     return "\n".join(lines)
 

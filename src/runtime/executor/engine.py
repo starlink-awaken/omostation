@@ -18,6 +18,7 @@ from runtime.executor.config import (
     WORKSPACE,
     log,
 )
+from runtime.executor.matrix_bridge import register_executor_service, report_execution
 from runtime.executor.tools import Tools
 
 
@@ -34,6 +35,18 @@ def _log_execution(task_id: str, status: str, summary: str, result: dict, durati
     }
     with open(EXEC_LOG_FILE, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+    # Bridge to Matrix for observability
+    try:
+        report_execution(
+            task_id=task_id,
+            status=status,
+            tokens_used=entry["tokens_used"],
+            duration_sec=duration_sec,
+            error=result.get("error"),
+        )
+    except Exception:
+        pass  # Matrix bridge failure must not break execution logging
 
 
 def _build_alert_message(task_id: str, result: dict) -> str:

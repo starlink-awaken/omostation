@@ -98,6 +98,71 @@ def active_protocols() -> list[ProtocolEntry]:
     return [protocol for protocol in L0_PROTOCOLS if protocol.status == "active"]
 
 
+# ── Protocol dispatch registry ──────────────────────────────────────────────
+# Per-protocol handlers are registered here. Each handler receives a
+# validated message dict and returns a (success: bool, result: dict) tuple.
+_PROTOCOL_HANDLERS: dict[str, callable] = {}
+
+
+def register_protocol_handler(protocol_name: str, handler: callable) -> None:
+    """Register a runtime handler for a protocol.
+
+    Example:
+        register_protocol_handler("taskobject-v1", _handle_taskobject)
+    """
+    _PROTOCOL_HANDLERS[protocol_name.lower()] = handler
+
+
+def list_protocol_handlers() -> dict[str, str]:
+    """Return a mapping of registered protocol names to handler docstrings."""
+    return {
+        name: (handler.__doc__ or "No description")
+        for name, handler in _PROTOCOL_HANDLERS.items()
+    }
+
+
+def dispatch_protocol_message(protocol_name: str, message: dict) -> tuple[bool, dict]:
+    """Dispatch a validated message to its registered protocol handler.
+
+    Returns (success, result_dict). If no handler is registered,
+    returns (False, {"error": "No handler registered"}).
+    """
+    valid, reason = validate_protocol_message(protocol_name, message)
+    if not valid:
+        return False, {"error": reason, "protocol": protocol_name}
+
+    handler = _PROTOCOL_HANDLERS.get(protocol_name.lower())
+    if not handler:
+        return False, {
+            "error": f"No handler registered for protocol: {protocol_name}",
+            "protocol": protocol_name,
+            "available_handlers": list(_PROTOCOL_HANDLERS.keys()),
+        }
+
+    try:
+        return handler(message)
+    except Exception as e:
+        return False, {"error": str(e), "protocol": protocol_name}
+
+
+def get_protocol_implementation_status(protocol_name: str) -> dict:
+    """Return implementation status for a protocol (registry + runtime)."""
+    protocol = get_protocol(protocol_name)
+    if not protocol:
+        return {"exists": False, "error": f"Unknown protocol: {protocol_name}"}
+
+    return {
+        "exists": True,
+        "name": protocol.name,
+        "version": protocol.version,
+        "status": protocol.status,
+        "category": protocol.category,
+        "handler_registered": protocol_name.lower() in _PROTOCOL_HANDLERS,
+        "implementations": protocol.implementations,
+        "transport": protocol.transport,
+    }
+
+
 def validate_protocol_message(protocol_name: str, message: dict) -> tuple[bool, str]:
     """Validate a protocol message against the protocol registry.
 
