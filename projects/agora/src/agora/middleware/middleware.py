@@ -84,6 +84,13 @@ try:
             self._logger = logger or structlog.get_logger("agora.audit")
 
         async def on_call_tool(self, context: Any, call_next: Any) -> Any:
+            from structlog.contextvars import bind_contextvars
+            # Extract Trace ID from MCP metadata
+            meta = getattr(context.request, "meta", {}) or {}
+            agent_id = meta.get("x-agent-id", "anonymous")
+            conv_id = meta.get("x-conversation-id", "none")
+            bind_contextvars(agent_id=agent_id, conversation_id=conv_id)
+            
             try:
                 # FastMCP context.request is CallToolRequestParams which has 'name' and 'arguments'
                 tool_name = context.request.name
@@ -96,6 +103,44 @@ try:
                 # fallback if context doesn't have request.name
                 tool_name = getattr(getattr(context, "request", None), "name", "unknown")
                 self._logger.error("mcp_tool_error", tool=tool_name, error=str(e))
+                raise
+
+        async def on_read_resource(self, context: Any, call_next: Any) -> Any:
+            from structlog.contextvars import bind_contextvars
+            # Extract Trace ID from MCP metadata
+            meta = getattr(context.request, "meta", {}) or {}
+            agent_id = meta.get("x-agent-id", "anonymous")
+            conv_id = meta.get("x-conversation-id", "none")
+            bind_contextvars(agent_id=agent_id, conversation_id=conv_id)
+            
+            uri = getattr(context.request, "uri", "unknown")
+            self._logger.info("mcp_read_resource", uri=uri)
+            try:
+                result = await call_next(context)
+                
+                # Context Window Shield
+                if result and hasattr(result, "contents") and isinstance(result.contents, list):
+                    MAX_LEN = 10000
+                    for content in result.contents:
+                        if hasattr(content, "text") and content.text and len(content.text) > MAX_LEN:
+                            self._logger.warning("mcp_resource_truncated", uri=uri, length=len(content.text))
+                            import uuid
+                            import os
+                            import json
+                            cache_id = str(uuid.uuid4())
+                            cache_dir = os.path.expanduser("~/Workspace/LADS/agora_cache")
+                            os.makedirs(cache_dir, exist_ok=True)
+                            
+                            cache_path = os.path.join(cache_dir, f"{cache_id}.json")
+                            with open(cache_path, "w", encoding="utf-8") as f:
+                                json.dump({"uri": uri, "full_text": content.text}, f)
+                                
+                            truncated_text = content.text[:MAX_LEN] + f"\n\n...[TRUNCATED: Payload exceeded {MAX_LEN} chars. To read the rest, use read_resource('bos://agora/cache/{cache_id}?page=2')]..."
+                            content.text = truncated_text
+                            
+                return result
+            except Exception as e:
+                self._logger.error("mcp_read_error", uri=uri, error=str(e))
                 raise
 except ImportError:
     pass
