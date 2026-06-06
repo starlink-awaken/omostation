@@ -1,9 +1,13 @@
 # M1: BDSK Cognitive Framework
-m1_type: CognitiveFramework
 id: CFW-BDSK-001
+type: CognitiveFramework
 name: BDSK Virtual Board
 description: 建立了“虚拟董事会”架构 (B.D.S.K.)，用于深度决策、方案评审与反脆弱迭代。
 status: active
+domain: meta
+created: '2026-06-07'
+version: 1.0.0
+layer: L0
 properties:
   framework_name: "B.D.S.K. 虚拟董事会"
   core_purpose: "多维度系统性思考：工程落地、风险控制、战略架构、过程与律法守护。"
