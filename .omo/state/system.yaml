@@ -334,7 +334,7 @@ debt_weight_items:
     weight: 0.6
     desc: 'L1管控面(projects/runtime) 未接管 L2运行时(agent-runtime) 的可观测与管理职责: 需建桥接契约'
   P1-AGORA_BYPASS:
-    resolved: false
+    resolved: true
     weight: 0.7
     desc: '跨层/跨包通信绕开 Agora(I0) 总线: 6包9处绕过 (决策: 降级归集中控, 各处记为子债务)'
   P1-ARCH_CODE_GAP:
