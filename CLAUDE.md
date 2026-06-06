@@ -13,6 +13,7 @@
    - 返回: 当前 Phase、活跃 P0 卡片、治理约束、下一步引导
 2. **备选 (无 MCP 时)**: 读取 `.omo/_truth/goals/current.yaml` 获取当前阶段和目标
 3. **治理宪章**: 所有 5+3+1 架构规范见 `.omo/_knowledge/management/governance-charter-v1.md`
+4. **X 轴保障**: X1(审计)/X2(保鲜)/X3(价值)/X4(一致性) 完整体系见 `.omo/_knowledge/management/x-axis-consolidation-v1.md`
 
 **涉及端口时必须**: 先查 `protocols/port-registry.yaml` → 确认端口未被占用 → 注册新端口 → 使用环境变量 `{SERVICE}_PORT`。CI 和 Agora runtime 双重阻断端口冲突。
 
