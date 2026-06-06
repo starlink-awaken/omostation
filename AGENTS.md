@@ -80,20 +80,23 @@ cd projects/gbrain && bun run ci:local
 
 ## Architecture
 
-### 5+3+1 分层快照 (Phase 28 · 2026-06-06 审计)
+### 5+3+1 分层快照与 BOS URI 挂载图谱 (Phase 33 · 2026-06-06 确立)
+
+eCOS v5 已进入大一统阶段。通过 `agora` 作为服务网格 (Mesh) 动态反向代理，所有的项目和包都被抽象为 5 大 BOS URI 命名空间：
+
+*   **域 1：记忆与事实源 `bos://memory`** ── `kos` (跨域搜索)、`kronos` (摄取管线)、`gbrain` (TS知识库)、`ssot`
+*   **域 2：治理与律法 `bos://omo`** ── `metaos` (决策/免疫)、`eidos` (Schema约束)、`protocols-layer` (触发器规则)、`omo` (治理引擎)
+*   **域 3：认知与推演 `bos://analysis`** ── `ontoderive` (推导)、`minerva` (深度研究)、`codeanalyze` (AST理解)
+*   **域 4：人格与心智 `bos://persona`** ── `sharedbrain-bridge` (人格核心)
+*   **域 5：能力与生态 `bos://forge`** ── `forge` (集市与注册表)、`runtime` (KEI 沙箱执行)
 
 ```
 L4 自我层 ── ~/Documents/驾驶舱/CARDS/ (SQLite) + ~/Documents/学习进化/ (MD)
-L3 入口层 ── cockpit (CLI 13 + MCP 🔴 + HTTP 8) 🟡 MCP 待修复
-I0 织层   ── agora (CLI 35 + MCP 42 + HTTP 30+) ✅ 99.37% tests
-L2 引擎面 ── kairon 25 packages (630 shared-lib tests) ✅
-L2 治理面 ── omo (CLI 28 + MCP 10) ✅
-L2 记忆面 ── gbrain 163K TS (MCP 67) ✅
-L2 编排   ── metaos (CLI 5 + MCP 11) ✅
-L1 运行时 ── runtime (CLI 3 + MCP 30 + HTTP 5) ✅
-L0 协议   ── ecos (CLI 3 + HTTP dashboard :9090) + protocols 16 YAML 🟡
-
-X1 审计 ── KEI sandbox (runtime) | X2 抗熵 ── scheduler autoheal | X3 价值栈 ── llm-gateway cost
+L3 入口层 ── cockpit (CLI 13 + MCP + Web) ── 终端消费 BOS URI
+I0 织层   ── agora (动态反向代理 Mesh) ── 拦截并路由 bos:// 流量，触发 eidos 校验与 metaos 免疫
+L2 引擎面 ── kairon 25 packages / gbrain / omo / metaos ── 以后台 Daemon 提供 MCP 资源
+L1 运行时 ── runtime ── 受控沙箱，随 protocols 规则产生 Ephemeral Agents
+L0 协议   ── ecos ── SSB 协议层，承载系统决策的 Immutable Log 上链与涌现计算
 ```
 
 ### 项目测试健康度
