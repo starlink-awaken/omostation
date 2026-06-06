@@ -3,7 +3,7 @@ import urllib.parse
 from pathlib import Path
 from fastmcp import FastMCP
 from pydantic import BaseModel
-from ecos.core.ssb_client import SSBClient  # type: ignore[import-not-found]
+from ecos.protocol.ssb.ssb_client import SSBClient  # type: ignore[import-not-found]
 
 # Define the base workspace and documents paths
 WORKSPACE_ROOT = Path(

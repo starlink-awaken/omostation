@@ -18,7 +18,7 @@ from datetime import UTC, datetime, timedelta
 
 import yaml
 
-from ecos.core.common import ECOS_HOME as ECOS_DIR  # type: ignore[import-not-found]
+from ecos.common.common import ECOS_HOME as ECOS_DIR  # type: ignore[import-not-found]
 
 STATE_PATH = ECOS_DIR / "STATE.yaml"
 SSB_DB = ECOS_DIR / "LADS/ssb/ecos.db"
@@ -193,7 +193,7 @@ def write_ssb_alert(metric_name, metric_label, baseline, current, deviation, sev
         )
 
         # 计算并写入 HMAC 签名
-        from ssb_auth import compute_signature  # type: ignore[import-not-found]
+        from ecos.protocol.ssb.ssb_auth import compute_signature
 
         sig = compute_signature(new_seq, event_id, "EMERGENCE_WATCH", "{}")
         if sig:

@@ -155,7 +155,7 @@ class TestE2E_Guard:  # noqa: N801
 
     @pytest.fixture
     def check(self):
-        from ecos.realtime_guard import check
+        from ecos.services.realtime_guard import check
 
         return check
 

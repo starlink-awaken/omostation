@@ -22,7 +22,7 @@ from datetime import datetime
 
 import yaml
 
-from ecos.core.common import ECOS_HOME as ECOS_ROOT  # type: ignore[import-not-found]
+from ecos.common.common import ECOS_HOME as ECOS_ROOT  # type: ignore[import-not-found]
 
 SCHEDULE_DIR = ECOS_ROOT / "schedule"
 BOARD = "ecos"

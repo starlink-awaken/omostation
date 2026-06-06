@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ecos.kos_health_monitor import (
+from ecos.services.kos_health_monitor import (
     BASELINE,
     THRESHOLDS,
     check_drift,

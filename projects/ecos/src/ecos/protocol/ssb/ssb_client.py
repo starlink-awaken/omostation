@@ -38,11 +38,11 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from ecos.core.common import ECOS_HOME, TZ, get_conn, now_iso  # type: ignore[import-not-found]
-from ecos.core.common import SSB_DB_PATH as _SSB_DB_PATH
+from ecos.common.common import ECOS_HOME, TZ, get_conn, now_iso  # type: ignore[import-not-found]
+from ecos.common.common import SSB_DB_PATH as _SSB_DB_PATH
 
 # SSB Auth for event signing
-from ecos.core.ssb_auth import compute_signature  # type: ignore[import-not-found]
+from ecos.protocol.ssb.ssb_auth import compute_signature  # type: ignore[import-not-found]
 
 # ─── Paths ────────────────────────────────────────────────────────────
 

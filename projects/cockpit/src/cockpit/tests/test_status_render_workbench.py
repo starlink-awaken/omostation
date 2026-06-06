@@ -10,11 +10,12 @@ from pathlib import Path
 
 from rich.console import Console
 from cockpit.commands import status as S  # noqa: N812
+from cockpit.commands import base as B  # noqa: N812
 
 # ── 保存原函数引用（避免递归）──
-_ORIG_STATUS_SERVICES = S._status_services
-_ORIG_HTTP_HEALTH = S._http_health
-_ORIG_FIND_CLI = S._find_cli
+_ORIG_STATUS_SERVICES = B._status_services
+_ORIG_HTTP_HEALTH = B._http_health
+_ORIG_FIND_CLI = B._find_cli
 
 
 def _make_research(
@@ -110,11 +111,11 @@ def _create_workbench_db(tmp_path: Path, active_count: int = 0, archived_count: 
 def test_empty_workbench_no_research_no_services(monkeypatch):
     """无研究、无服务 → 空空如也 + 全部离线。"""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
-    monkeypatch.setattr(S, "_status_services", lambda: [])
-    monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: False)
-    monkeypatch.setattr(S, "_find_cli", lambda name: None)
-    monkeypatch.setattr(S, "_get_data_access", lambda: _make_research_da([]))
+    monkeypatch.setattr(B, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_status_services", lambda: [])
+    monkeypatch.setattr(B, "_http_health", lambda url, timeout=3.0: False)
+    monkeypatch.setattr(B, "_find_cli", lambda name: None)
+    monkeypatch.setattr(B, "_get_data_access", lambda: _make_research_da([]))
 
     S._render_workbench()
     output = buf.getvalue()
@@ -124,16 +125,16 @@ def test_empty_workbench_no_research_no_services(monkeypatch):
 def test_workbench_all_healthy_with_research(monkeypatch):
     """全部服务正常 + 有研究数据。"""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
-    monkeypatch.setattr(S, "_status_services", lambda: _ORIG_STATUS_SERVICES())
-    monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: True)
-    monkeypatch.setattr(S, "_find_cli", lambda name: name)
+    monkeypatch.setattr(B, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_status_services", lambda: _ORIG_STATUS_SERVICES())
+    monkeypatch.setattr(B, "_http_health", lambda url, timeout=3.0: True)
+    monkeypatch.setattr(B, "_find_cli", lambda name: name)
 
     records = [
         _make_research(1, "Transformers", source_count=5),
         _make_research(2, "Attention Is All You Need", source_count=3),
     ]
-    monkeypatch.setattr(S, "_get_data_access", lambda: _make_research_da(records))
+    monkeypatch.setattr(B, "_get_data_access", lambda: _make_research_da(records))
     S._render_workbench()
     output = buf.getvalue()
     assert "全部正常" in output
@@ -143,8 +144,8 @@ def test_workbench_all_healthy_with_research(monkeypatch):
 def test_workbench_partial_services(monkeypatch):
     """部分服务异常 → 🟡 部分异常。"""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
-    monkeypatch.setattr(S, "_status_services", lambda: _ORIG_STATUS_SERVICES())
+    monkeypatch.setattr(B, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_status_services", lambda: _ORIG_STATUS_SERVICES())
 
     call_count = [0]
 
@@ -152,9 +153,9 @@ def test_workbench_partial_services(monkeypatch):
         call_count[0] += 1
         return call_count[0] == 1  # only first service is healthy
 
-    monkeypatch.setattr(S, "_http_health", _mock_http)
-    monkeypatch.setattr(S, "_find_cli", lambda name: name)
-    monkeypatch.setattr(S, "_get_data_access", lambda: _make_research_da([]))
+    monkeypatch.setattr(B, "_http_health", _mock_http)
+    monkeypatch.setattr(B, "_find_cli", lambda name: name)
+    monkeypatch.setattr(B, "_get_data_access", lambda: _make_research_da([]))
     S._render_workbench()
     output = buf.getvalue()
     assert "🟡" in output or "部分异常" in output
@@ -163,11 +164,11 @@ def test_workbench_partial_services(monkeypatch):
 def test_workbench_all_offline(monkeypatch):
     """全部离线 → 🔴 全部离线。"""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
-    monkeypatch.setattr(S, "_status_services", lambda: _ORIG_STATUS_SERVICES())
-    monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: False)
-    monkeypatch.setattr(S, "_find_cli", lambda name: None)
-    monkeypatch.setattr(S, "_get_data_access", lambda: _make_research_da([]))
+    monkeypatch.setattr(B, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_status_services", lambda: _ORIG_STATUS_SERVICES())
+    monkeypatch.setattr(B, "_http_health", lambda url, timeout=3.0: False)
+    monkeypatch.setattr(B, "_find_cli", lambda name: None)
+    monkeypatch.setattr(B, "_get_data_access", lambda: _make_research_da([]))
     S._render_workbench()
     output = buf.getvalue()
     assert "全部离线" in output or "🔴" in output
@@ -176,11 +177,11 @@ def test_workbench_all_offline(monkeypatch):
 def test_workbench_cycle_mode(monkeypatch):
     """带 cycle 参数 → 显示刷新次数。"""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
-    monkeypatch.setattr(S, "_status_services", lambda: _ORIG_STATUS_SERVICES())
-    monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: True)
-    monkeypatch.setattr(S, "_find_cli", lambda name: name)
-    monkeypatch.setattr(S, "_get_data_access", lambda: _make_research_da([]))
+    monkeypatch.setattr(B, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_status_services", lambda: _ORIG_STATUS_SERVICES())
+    monkeypatch.setattr(B, "_http_health", lambda url, timeout=3.0: True)
+    monkeypatch.setattr(B, "_find_cli", lambda name: name)
+    monkeypatch.setattr(B, "_get_data_access", lambda: _make_research_da([]))
     S._render_workbench(cycle=3, interval=5.0)
     output = buf.getvalue()
     assert "第 3 次刷新" in output
@@ -190,10 +191,10 @@ def test_workbench_cycle_mode(monkeypatch):
 def test_workbench_half_life_labels(monkeypatch):
     """半衰期三级标签：荒废 / 需保鲜 / 活跃。"""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
-    monkeypatch.setattr(S, "_status_services", lambda: [])
-    monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: False)
-    monkeypatch.setattr(S, "_find_cli", lambda name: None)
+    monkeypatch.setattr(B, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_status_services", lambda: [])
+    monkeypatch.setattr(B, "_http_health", lambda url, timeout=3.0: False)
+    monkeypatch.setattr(B, "_find_cli", lambda name: None)
 
     records = [
         _make_research(1, "Hot Topic"),
@@ -205,7 +206,7 @@ def test_workbench_half_life_labels(monkeypatch):
         2: {"decay": 0.4, "half_life_days": 11, "days_since_active": 6.0, "follow_up_count": 0, "published_count": 0},
         3: {"decay": 0.1, "half_life_days": 42, "days_since_active": 30.0, "follow_up_count": 0, "published_count": 0},
     }
-    monkeypatch.setattr(S, "_get_data_access", lambda: _make_research_da(records, hl_map))
+    monkeypatch.setattr(B, "_get_data_access", lambda: _make_research_da(records, hl_map))
     S._render_workbench()
     output = buf.getvalue()
     assert "活跃" in output
@@ -215,11 +216,11 @@ def test_workbench_half_life_labels(monkeypatch):
 def test_recommendation_h1_active_zero(monkeypatch, tmp_path):
     """推荐 H1：active_count == 0 → 开始第一个研究。"""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
-    monkeypatch.setattr(S, "_status_services", lambda: [])
-    monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: False)
-    monkeypatch.setattr(S, "_find_cli", lambda name: None)
-    monkeypatch.setattr(S, "_get_data_access", lambda: _make_research_da([]))
+    monkeypatch.setattr(B, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_status_services", lambda: [])
+    monkeypatch.setattr(B, "_http_health", lambda url, timeout=3.0: False)
+    monkeypatch.setattr(B, "_find_cli", lambda name: None)
+    monkeypatch.setattr(B, "_get_data_access", lambda: _make_research_da([]))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)  # 确保 SQLite DB 不存在 → active_count=0
     S._render_workbench()
     output = buf.getvalue()
@@ -229,18 +230,18 @@ def test_recommendation_h1_active_zero(monkeypatch, tmp_path):
 def test_recommendation_h2_active_one(monkeypatch, tmp_path):
     """推荐 H2：active_count == 1 → 继续唯一研究。"""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_get_console", lambda: c)
     services = list(_ORIG_STATUS_SERVICES()[:1])
-    monkeypatch.setattr(S, "_status_services", lambda: services)
-    monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: True)
-    monkeypatch.setattr(S, "_find_cli", lambda name: name)
+    monkeypatch.setattr(B, "_status_services", lambda: services)
+    monkeypatch.setattr(B, "_http_health", lambda url, timeout=3.0: True)
+    monkeypatch.setattr(B, "_find_cli", lambda name: name)
 
     # 创建带 1 条活跃研究的数据库
     _create_workbench_db(tmp_path, active_count=1)
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
     records = [_make_research(1, "My Single Study")]
-    monkeypatch.setattr(S, "_get_data_access", lambda: _make_research_da(records))
+    monkeypatch.setattr(B, "_get_data_access", lambda: _make_research_da(records))
     S._render_workbench()
     output = buf.getvalue()
     assert "继续" in output or "--open" in output
@@ -249,11 +250,11 @@ def test_recommendation_h2_active_one(monkeypatch, tmp_path):
 def test_recommendation_h3_active_many(monkeypatch, tmp_path):
     """推荐 H3：active_count > 1 → 浏览所有活跃研究。"""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_get_console", lambda: c)
     services = list(_ORIG_STATUS_SERVICES()[:1])
-    monkeypatch.setattr(S, "_status_services", lambda: services)
-    monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: True)
-    monkeypatch.setattr(S, "_find_cli", lambda name: name)
+    monkeypatch.setattr(B, "_status_services", lambda: services)
+    monkeypatch.setattr(B, "_http_health", lambda url, timeout=3.0: True)
+    monkeypatch.setattr(B, "_find_cli", lambda name: name)
 
     # 创建带 3 条活跃研究的数据库
     _create_workbench_db(tmp_path, active_count=3)
@@ -264,7 +265,7 @@ def test_recommendation_h3_active_many(monkeypatch, tmp_path):
         _make_research(2, "Study Beta"),
         _make_research(3, "Study Gamma"),
     ]
-    monkeypatch.setattr(S, "_get_data_access", lambda: _make_research_da(records))
+    monkeypatch.setattr(B, "_get_data_access", lambda: _make_research_da(records))
     S._render_workbench()
     output = buf.getvalue()
     assert "浏览所有活跃研究" in output or "--list" in output
@@ -273,11 +274,11 @@ def test_recommendation_h3_active_many(monkeypatch, tmp_path):
 def test_workbench_no_research_table(monkeypatch):
     """无研究 → 显示空工作台提示。"""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
-    monkeypatch.setattr(S, "_status_services", lambda: _ORIG_STATUS_SERVICES())
-    monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: True)
-    monkeypatch.setattr(S, "_find_cli", lambda name: name)
-    monkeypatch.setattr(S, "_get_data_access", lambda: _make_research_da([]))
+    monkeypatch.setattr(B, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_status_services", lambda: _ORIG_STATUS_SERVICES())
+    monkeypatch.setattr(B, "_http_health", lambda url, timeout=3.0: True)
+    monkeypatch.setattr(B, "_find_cli", lambda name: name)
+    monkeypatch.setattr(B, "_get_data_access", lambda: _make_research_da([]))
     S._render_workbench()
     output = buf.getvalue()
     assert "工作台空空如也" in output or "开始你的第一个研究" in output
@@ -286,15 +287,15 @@ def test_workbench_no_research_table(monkeypatch):
 def test_workbench_archived_research(monkeypatch):
     """已归档研究 → 📦 已归档标签。"""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
-    monkeypatch.setattr(S, "_status_services", lambda: [])
-    monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: False)
-    monkeypatch.setattr(S, "_find_cli", lambda name: None)
+    monkeypatch.setattr(B, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_status_services", lambda: [])
+    monkeypatch.setattr(B, "_http_health", lambda url, timeout=3.0: False)
+    monkeypatch.setattr(B, "_find_cli", lambda name: None)
 
     records = [
         _make_research(1, "Archived Study", archived_at=time.time() - 86400),
     ]
-    monkeypatch.setattr(S, "_get_data_access", lambda: _make_research_da(records))
+    monkeypatch.setattr(B, "_get_data_access", lambda: _make_research_da(records))
     S._render_workbench()
     output = buf.getvalue()
     assert "已归档" in output
@@ -303,11 +304,11 @@ def test_workbench_archived_research(monkeypatch):
 def test_sqlite_error_in_workbench(monkeypatch, tmp_path):
     """SQLite DB 损坏 → sqlite3.Error 被静默处理 (lines 81-82)."""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
-    monkeypatch.setattr(S, "_status_services", lambda: [])
-    monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: False)
-    monkeypatch.setattr(S, "_find_cli", lambda name: None)
-    monkeypatch.setattr(S, "_get_data_access", lambda: _make_research_da([]))
+    monkeypatch.setattr(B, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_status_services", lambda: [])
+    monkeypatch.setattr(B, "_http_health", lambda url, timeout=3.0: False)
+    monkeypatch.setattr(B, "_find_cli", lambda name: None)
+    monkeypatch.setattr(B, "_get_data_access", lambda: _make_research_da([]))
     # 创建损坏的 SQLite 文件
     db_dir = tmp_path / ".workspace"
     db_dir.mkdir(parents=True)
@@ -324,10 +325,10 @@ def test_sqlite_error_in_workbench(monkeypatch, tmp_path):
 def test_days_since_ge_7_shows_archivable_badge(monkeypatch):
     """days_since >= 7 → 可归档标签 (line 127)."""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
-    monkeypatch.setattr(S, "_status_services", lambda: [])
-    monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: False)
-    monkeypatch.setattr(S, "_find_cli", lambda name: None)
+    monkeypatch.setattr(B, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_status_services", lambda: [])
+    monkeypatch.setattr(B, "_http_health", lambda url, timeout=3.0: False)
+    monkeypatch.setattr(B, "_find_cli", lambda name: None)
 
     old_time = time.time() - 10 * 86400  # 10 天前
     records = [_make_research(1, "Old Study", created_at=old_time)]
@@ -348,7 +349,7 @@ def test_days_since_ge_7_shows_archivable_badge(monkeypatch):
         def get_research_timeline(self, rid):
             return [{"created_at": str(old_time), "event_type": "created", "description": "初始创建"}]
 
-    monkeypatch.setattr(S, "_get_data_access", lambda: _OldTimelineDA())
+    monkeypatch.setattr(B, "_get_data_access", lambda: _OldTimelineDA())
     S._render_workbench()
     output = buf.getvalue()
     assert "可归档" in output
@@ -357,10 +358,10 @@ def test_days_since_ge_7_shows_archivable_badge(monkeypatch):
 def test_days_since_ge_3_shows_freshness_badge(monkeypatch):
     """days_since >= 3 且 < 7 → 待保鲜标签 (line 129)."""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
-    monkeypatch.setattr(S, "_status_services", lambda: [])
-    monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: False)
-    monkeypatch.setattr(S, "_find_cli", lambda name: None)
+    monkeypatch.setattr(B, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_status_services", lambda: [])
+    monkeypatch.setattr(B, "_http_health", lambda url, timeout=3.0: False)
+    monkeypatch.setattr(B, "_find_cli", lambda name: None)
 
     mid_time = time.time() - 5 * 86400  # 5 天前
     records = [_make_research(2, "Mid Study", created_at=mid_time)]
@@ -381,7 +382,7 @@ def test_days_since_ge_3_shows_freshness_badge(monkeypatch):
         def get_research_timeline(self, rid):
             return [{"created_at": str(mid_time), "event_type": "created", "description": "初始创建"}]
 
-    monkeypatch.setattr(S, "_get_data_access", lambda: _MidTimelineDA())
+    monkeypatch.setattr(B, "_get_data_access", lambda: _MidTimelineDA())
     S._render_workbench()
     output = buf.getvalue()
     assert "待保鲜" in output
@@ -390,11 +391,11 @@ def test_days_since_ge_3_shows_freshness_badge(monkeypatch):
 def test_workbench_service_health_recommendation(monkeypatch):
     """部分服务离线 → 推荐中显示 ⚠️ 提示。"""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
-    monkeypatch.setattr(S, "_status_services", lambda: _ORIG_STATUS_SERVICES())
-    monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: False)
-    monkeypatch.setattr(S, "_find_cli", lambda name: None)
-    monkeypatch.setattr(S, "_get_data_access", lambda: _make_research_da([]))
+    monkeypatch.setattr(B, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_status_services", lambda: _ORIG_STATUS_SERVICES())
+    monkeypatch.setattr(B, "_http_health", lambda url, timeout=3.0: False)
+    monkeypatch.setattr(B, "_find_cli", lambda name: None)
+    monkeypatch.setattr(B, "_get_data_access", lambda: _make_research_da([]))
     S._render_workbench()
     output = buf.getvalue()
     assert "服务离线" in output or "全部离线" in output
@@ -408,8 +409,8 @@ def test_workbench_service_health_recommendation(monkeypatch):
 def test_cmd_status_json(monkeypatch):
     """status --json 输出 JSON 格式状态。"""
     c, buf = _capture_console()
-    monkeypatch.setattr(S, "_get_console", lambda: c)
-    monkeypatch.setattr(S, "_get_err", lambda: c)
+    monkeypatch.setattr(B, "_get_console", lambda: c)
+    monkeypatch.setattr(B, "_get_err", lambda: c)
     monkeypatch.setattr(
         S,
         "_status_services",
@@ -417,9 +418,9 @@ def test_cmd_status_json(monkeypatch):
             ("Agora", ":7430", "agora", "http://localhost:7430/health", "MCP Hub"),
         ],
     )
-    monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: True)
-    monkeypatch.setattr(S, "_find_cli", lambda name: "/usr/local/bin/agora")
-    monkeypatch.setattr(S, "_get_data_access", lambda: _make_research_da([]))
+    monkeypatch.setattr(B, "_http_health", lambda url, timeout=3.0: True)
+    monkeypatch.setattr(B, "_find_cli", lambda name: "/usr/local/bin/agora")
+    monkeypatch.setattr(B, "_get_data_access", lambda: _make_research_da([]))
 
     code = S.cmd_status(argparse.Namespace(watch=False, interval=5.0, json=True))
 

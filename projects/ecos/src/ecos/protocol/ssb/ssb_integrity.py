@@ -6,7 +6,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
-from ecos.core.common import SSB_DB_PATH as DB_PATH  # type: ignore[import-not-found]
+from ecos.common.common import SSB_DB_PATH as DB_PATH  # type: ignore[import-not-found]
 
 CHAIN_CHECKPOINT = Path(__file__).resolve().parent.parent / "LADS" / "ssb" / ".chain_hash"
 

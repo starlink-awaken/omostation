@@ -14,12 +14,10 @@ jobs:
         with: {python-version: '3.13'}
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
-      - name: Install agentmesh dependencies
+      - name: Install gbrain dependencies
         run: |
-          cd projects/agentmesh && bun install
-      - name: Build agentmesh
-        run: cd projects/agentmesh && bun run build
-      - name: Test agentmesh
-        run: cd projects/agentmesh && bun test
+          cd projects/gbrain && bun install
+      - name: Test gbrain
+        run: cd projects/gbrain && bun test
       - name: Run integration tests
         run: bash tests/integration/run-all.sh

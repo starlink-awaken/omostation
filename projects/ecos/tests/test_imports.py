@@ -2,7 +2,9 @@
 
 
 def test_core_imports():
-    from ecos.core import calc_emergence, common, ssb_client
+    from ecos.protocol.emergence import calc_emergence
+    from ecos.common import common
+    from ecos.protocol.ssb import ssb_client
 
     assert common.ECOS_HOME
     assert ssb_client
@@ -10,7 +12,7 @@ def test_core_imports():
 
 
 def test_common_paths():
-    from ecos.core.common import ECOS_HOME, SSB_DB_PATH, TZ
+    from ecos.common.common import ECOS_HOME, SSB_DB_PATH, TZ
 
     assert ECOS_HOME
     assert SSB_DB_PATH
@@ -18,6 +20,6 @@ def test_common_paths():
 
 
 def test_ssb_init():
-    from ecos.core.ssb_init import main as ssb_init
+    from ecos.protocol.ssb.ssb_init import main as ssb_init
 
     assert callable(ssb_init)

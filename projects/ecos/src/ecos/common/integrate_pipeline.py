@@ -1,6 +1,6 @@
 import sys
 
-from ecos.core.common import INTEGRATE_AUTO_SCORE, INTEGRATE_CANDIDATE_SCORE
+from ecos.common.common import INTEGRATE_AUTO_SCORE, INTEGRATE_CANDIDATE_SCORE
 
 
 def classify_score(score: float) -> str:

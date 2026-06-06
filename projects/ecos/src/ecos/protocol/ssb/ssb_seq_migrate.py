@@ -20,7 +20,7 @@ import sqlite3
 import sys
 from datetime import datetime, timedelta, timezone
 
-from ecos.core.common import ECOS_HOME as ECOS_DIR  # type: ignore[import-not-found]
+from ecos.common.common import ECOS_HOME as ECOS_DIR  # type: ignore[import-not-found]
 
 SSB_DB = ECOS_DIR / "LADS/ssb/ecos.db"
 CHAIN_CHECKPOINT = ECOS_DIR / "LADS/ssb" / ".chain_hash"
@@ -43,8 +43,7 @@ def backup():
 def compute_signature(seq, event_id, agent, payload_str):
     """计算 HMAC 签名（与 ssb_auth 兼容）"""
     try:
-        sys.path.insert(0, str(ECOS_DIR / "scripts"))
-        from ssb_auth import compute_signature as cs  # type: ignore[import-not-found]
+        from .ssb_auth import compute_signature as cs
 
         return cs(seq, event_id, agent, payload_str) or ""
     except Exception:

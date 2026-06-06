@@ -10,7 +10,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 
-from ecos.core.common import SSB_JSONL_PATH  # type: ignore[import-not-found]
+from ecos.common.common import SSB_JSONL_PATH  # type: ignore[import-not-found]
 
 SSB_PATH = str(SSB_JSONL_PATH)
 BACKUP = SSB_PATH + f".backup.{int(time.time())}"

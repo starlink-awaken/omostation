@@ -24,7 +24,7 @@ from datetime import datetime, timedelta, timezone
 
 import yaml
 
-from ecos.core.common import ECOS_HOME as ECOS_DIR  # type: ignore[import-not-found]
+from ecos.common.common import ECOS_HOME as ECOS_DIR  # type: ignore[import-not-found]
 
 STATE_PATH = ECOS_DIR / "STATE.yaml"
 SSB_DB = ECOS_DIR / "LADS/ssb/ecos.db"

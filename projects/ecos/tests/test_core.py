@@ -136,7 +136,7 @@ class TestRealtimeGuard:
 
     @pytest.fixture
     def guard(self):
-        from ecos.realtime_guard import check
+        from ecos.services.realtime_guard import check
 
         return check
 
