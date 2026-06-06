@@ -12,6 +12,7 @@
 1. **通过 MCP**: 连接 `cockpit` MCP server，调用 `workspace_context` 工具
    - 返回: 当前 Phase、活跃 P0 卡片、治理约束、下一步引导
 2. **备选 (无 MCP 时)**: 读取 `.omo/_truth/goals/current.yaml` 获取当前阶段和目标
+3. **治理宪章**: 所有 5+3+1 架构规范见 `.omo/_knowledge/management/governance-charter-v1.md`
 
 **禁止**: 未获取上下文直接修改代码。禁止跳过 L4 约束检查直接操作 `.omo` 目录。
 
