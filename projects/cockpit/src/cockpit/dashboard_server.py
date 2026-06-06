@@ -50,6 +50,38 @@ except ImportError:
 PORT = int(os.environ.get("COCKPIT_DASHBOARD_PORT", "8090"))
 DASHBOARD_TOKEN = os.environ.get("COCKPIT_DASHBOARD_TOKEN", "")
 DASHBOARD_CORS_ORIGIN = os.environ.get("COCKPIT_DASHBOARD_CORS_ORIGIN", "http://localhost:8090")
+DASHBOARD_RATE_LIMIT = int(os.environ.get("COCKPIT_DASHBOARD_RATE_LIMIT", "60"))  # req/min per IP
+
+
+# ─── Rate Limiter ────────────────────────────────────────────────────────────
+
+class _RateLimiter:
+    """简单的滑动窗口限流器 (每分钟每IP请求数)。"""
+
+    def __init__(self, max_requests: int, window_seconds: int = 60):
+        self._max = max_requests
+        self._window = window_seconds
+        self._buckets: dict[str, list[float]] = {}
+
+    def allow(self, ip: str) -> bool:
+        import time
+        now = time.monotonic()
+        bucket = self._buckets.get(ip, [])
+        # 清理过期条目
+        cutoff = now - self._window
+        bucket = [t for t in bucket if t > cutoff]
+        if len(bucket) >= self._max:
+            self._buckets[ip] = bucket
+            return False
+        bucket.append(now)
+        self._buckets[ip] = bucket
+        # 定期清理过期的 IP 条目
+        if len(self._buckets) > 1000:
+            self._buckets = {k: v for k, v in self._buckets.items() if v}
+        return True
+
+
+_RATE_LIMITER = _RateLimiter(DASHBOARD_RATE_LIMIT)
 
 
 # ─── Live-Data JS Snippet ──────────────────────────────────────────────────
@@ -169,6 +201,15 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps({"error": "Unauthorized"}).encode())
+            return
+        # Rate limiting
+        client_ip = self.client_address[0]
+        if not _RATE_LIMITER.allow(client_ip):
+            self.send_response(429)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Retry-After", "60")
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": "Rate limit exceeded"}).encode())
             return
         if self.path == "/":
             self.serve_dashboard()
