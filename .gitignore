@@ -68,3 +68,6 @@ data/**/*.sqlite3
 kos/
 spaces/
 _derivation_logs/
+
+# ---- Token 存储 ----
+.metaos/
