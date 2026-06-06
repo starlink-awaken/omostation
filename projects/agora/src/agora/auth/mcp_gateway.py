@@ -82,6 +82,18 @@ KNOWN_BACKENDS: list[dict] = [
         "command": "uv",
         "args": ["run", "--package", "omo", "python", "-m", "omo.mcp_server"],
     },
+    {
+        "name": "ecos-bos-mounter",
+        "mcp_endpoint": "",
+        "command": "uv",
+        "args": ["run", "--package", "ecos", "python", "-m", "ecos.mcp_vfs"],
+    },
+    {
+        "name": "codeanalyze",
+        "mcp_endpoint": "",
+        "command": "uv",
+        "args": ["run", "--package", "codeanalyze", "python", "-m", "codeanalyze.mcp"],
+    },
 ]
 
 # Module-level singleton — reused across start/stop calls.

@@ -325,6 +325,8 @@ class ProxyManager:
                 service_name = "omo"
             elif uri.startswith("bos://memory/gbrain/"):
                 service_name = "gbrain"
+            elif uri.startswith("bos://memory/"):
+                service_name = "ecos-bos-mounter"
             elif uri.startswith("bos://analysis/code/"):
                 service_name = "codeanalyze"
             elif uri.startswith("bos://analysis/derive/"):
