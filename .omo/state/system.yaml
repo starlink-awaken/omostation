@@ -3,7 +3,7 @@ phase1_status: closed
 phase_status: active
 current_wave: W0
 next_milestone: Phase 31 W1 — kairon 3 组合并（llm-gateway-kernel / sot-bridge / protocols-layer）
-health_score: 53.2
+health_score: 53.77
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -43,7 +43,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-06T11:03:50Z'
+updated_at: '2026-06-06T11:07:07Z'
 phase29_status: completed
 phase29_completed_at: '2026-06-05T20:00:00Z'
 phase30_status: active
@@ -87,7 +87,7 @@ phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
 health_score_raw: 57.2
-debt_weight: 0.93
+debt_weight: 0.94
 debt_weight_items:
   SB_PROJECTS_YAML:
     resolved: true
@@ -374,7 +374,7 @@ debt_weight_items:
     weight: 0.2
     desc: 'wksp/base.py: 硬编码服务健康检查列表 + Agora 直连查询'
   BYPASS-008:
-    resolved: false
+    resolved: true
     weight: 0.2
     desc: 'forge/asset_cli.py + healing_trigger.py: 硬编码 agora/agora-dashboard/minerva
       端口'
@@ -501,6 +501,7 @@ resolved_debt_items:
 - BYPASS-005
 - BYPASS-006
 - BYPASS-007
+- BYPASS-008
 - BYPASS-009
 - C1-HERMES_BUILD_BROKEN
 - D2_CI_E2E
@@ -594,8 +595,8 @@ debt_metrics:
   state_entropy: 0.0
   pointer_entropy: 2.0
   time_entropy: 0.0
-  backlog_pressure: 2.4
-  coupling_load: 1.4
+  backlog_pressure: 2.2
+  coupling_load: 1.33
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml

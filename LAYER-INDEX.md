@@ -90,10 +90,10 @@
 
 | 工具 | L4 数据源 | 说明 | 状态 |
 |------|----------|------|------|
-| `workspace_context` | CARDS + .omo | 聚合活跃目标/阶段/约束 | 待实现 |
-| `cards_status` | `~/Documents/驾驶舱/CARDS/` | 活跃卡片列表, 按优先级排序 | 待实现 |
-| `cards_check` | CARDS | 检查当前操作是否违反约束 | 待实现 |
-| `vault_search` | `~/Documents/学习进化/` | 检索 Vault 知识/Markdown | 待实现 |
+| `workspace_context` | CARDS + OMO | 聚合活跃目标/阶段/约束 | ✅ 已实现 |
+| `cards_status` | `~/Documents/驾驶舱/CARDS/` | 活跃卡片列表, 按优先级排序 | ✅ 已实现 |
+| `cards_check` | CARDS + OMO | 检查当前操作是否违反约束 | ✅ 已实现 |
+| `vault_search` | `~/Documents/学习进化/` | 检索 Vault 知识/Markdown | ✅ 已实现 |
 
 ### L3 → I0 协议
 
@@ -145,5 +145,5 @@ Agent 启动:
 | M1 已做完 | agora 拆出为 I0 独立项目 | 消除最大架构偏差 | ✅ |
 | M3 已做完 | metaos + ecos + wksp 搬家 | 自包含包独立 | ✅ |
 | M4 已做完 | cron-service → L1, agent-runtime 拆分 | L1 基础设施完整 | ✅ |
-| M5 | L4 bridge: cockpit cards_*/vault_* MCP 工具 | Agent 通过 L3 访问 L4 上下文 | 🟡 P1 |
+| M5 已做完 | L4 bridge: cockpit cards_*/vault_* MCP 工具 | Agent 通过 L3 访问 L4 上下文 | ✅ 2026-06-06 |
 | 其他 | CI 补齐: 9/9 项目覆盖 | 质量保障 | ✅ |
