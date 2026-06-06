@@ -83,10 +83,15 @@ MCP 配置 SSOT:
   9090 — eCOS Dashboard        (http.server, L0)
   动态  — Runtime Cron         (FastAPI, L1)
 
-端口注册:
-  所有端口必须在 §1.3 注册
-  新端口申请: 通过 OMO debt 提交, 标注 X1(安全)/X2(保鲜)/X3(成本)
-  冲突原则: I0 > L3 > L2 > L1 > L0 (优先级递减)
+端口注册 (SSOT: protocols/port-registry.yaml):
+  所有端口必须先在 port-registry.yaml 注册，后在代码中使用
+  新端口注册流程:
+    1. 检查 port-registry.yaml → 确认未被占用
+    2. 添加端口条目 (格式: PORT: service-name # project · protocol · desc)
+    3. CI push 时自动验证 (check-interfaces.py)
+    4. 代码中使用环境变量: {SERVICE}_PORT
+  冲突裁决: I0 > L3 > L2 > L1 > L0 (优先级递减)
+  阻断机制: CI + Agora register() 双重检测
 ```
 
 ### 1.4 命名规范
