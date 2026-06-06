@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Server, Cpu, Database, CheckCircle, AlertTriangle, XCircle, Search, Settings, Terminal } from 'lucide-react';
+import { Activity, Server, Cpu, Database, CheckCircle, AlertTriangle, XCircle, Search, Settings, Terminal, GitCommit, Network } from 'lucide-react';
 import SandboxTerminal from './SandboxTerminal';
 import MemoryInjector from './MemoryInjector';
 import EnginesView from './EnginesView';
 import SettingsView from './SettingsView';
+import WorkflowsView from './WorkflowsView';
+import TopologyView from './TopologyView';
 import './Dashboard.css';
 
 interface Service {
@@ -89,6 +91,13 @@ export default function Dashboard() {
             <span>概览</span>
           </button>
           <button 
+            className={`nav-item ${activeTab === 'Topology' ? 'active' : ''}`}
+            onClick={() => setActiveTab('Topology')}
+          >
+            <Network size={18} />
+            <span>全局拓扑</span>
+          </button>
+          <button 
             className={`nav-item ${activeTab === 'Engines' ? 'active' : ''}`}
             onClick={() => setActiveTab('Engines')}
           >
@@ -108,6 +117,13 @@ export default function Dashboard() {
           >
             <Terminal size={18} />
             <span>隔离沙箱</span>
+          </button>
+          <button 
+            className={`nav-item ${activeTab === 'Workflows' ? 'active' : ''}`}
+            onClick={() => setActiveTab('Workflows')}
+          >
+            <GitCommit size={18} />
+            <span>MetaOS 工作流</span>
           </button>
           <button 
             className={`nav-item ${activeTab === 'Settings' ? 'active' : ''}`}
@@ -205,12 +221,21 @@ export default function Dashboard() {
               </div>
             </>
           )}
+
+          {activeTab === 'Topology' && (
+            <TopologyView />
+          )}
+
           {activeTab === 'Engines' && (
             <EnginesView />
           )}
 
           {activeTab === 'Knowledge' && (
             <MemoryInjector />
+          )}
+
+          {activeTab === 'Workflows' && (
+            <WorkflowsView />
           )}
 
           {activeTab === 'Sandbox' && (
