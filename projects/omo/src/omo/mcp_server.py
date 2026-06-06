@@ -270,8 +270,65 @@ async def cards_update(req: CardsUpdateRequest) -> str:
         return f"Error: {e.stderr}"
 
 
+@mcp.resource("bos://omo/debt")
+def read_omo_debt() -> str:
+    """Dynamically generate the debt list as markdown."""
+    try:
+        import os
+        workspace_root = Path(os.environ.get("WORKSPACE_ROOT", "/Users/xiamingxing/Workspace"))
+        debt_script = workspace_root / "projects" / "omo" / "scripts" / "omo_debt.py"
+        result = subprocess.run(
+            ["python3", str(debt_script), "report", "--omo-dir", str(workspace_root / ".omo")],
+            capture_output=True, text=True, check=True, cwd=str(workspace_root)
+        )
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f"Error generating debt report: {e.stderr}"
+
+@mcp.resource("bos://omo/tasks/active")
+def read_omo_active_tasks() -> str:
+    """Dynamically fetch the active tasks."""
+    try:
+        import os
+        workspace_root = Path(os.environ.get("WORKSPACE_ROOT", "/Users/xiamingxing/Workspace"))
+        result = subprocess.run(
+            ["python3", "-m", "omo.omo_cards", "list", "--limit", "20"],
+            capture_output=True, text=True, check=True, cwd=str(workspace_root / "projects" / "omo")
+        )
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f"Error fetching active tasks: {e.stderr}"
+
+@mcp.resource("bos://omo/standards/{rule}")
+def read_omo_standard(rule: str) -> str:
+    """Read static standard rules from .omo/standards/."""
+    try:
+        import urllib.parse
+        import os
+        workspace_root = Path(os.environ.get("WORKSPACE_ROOT", "/Users/xiamingxing/Workspace"))
+        
+        rule = urllib.parse.unquote(rule)
+        # Ensure it has .md extension
+        if not rule.endswith('.md'):
+            rule += '.md'
+            
+        omo_root = workspace_root / ".omo"
+        target_path = (omo_root / "standards" / rule).resolve()
+        
+        if not str(target_path).startswith(str(omo_root / "standards")):
+            return "Error: Path traversal detected."
+            
+        if not target_path.exists() or not target_path.is_file():
+            return f"Error: Standard not found at {rule}"
+            
+        with open(target_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except Exception as e:
+        return f"Error reading standard: {str(e)}"
+
 def main():
     mcp.run()
 
 if __name__ == "__main__":
     main()
+
