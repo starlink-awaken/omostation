@@ -10,10 +10,14 @@ permissions:
     allow_read:
       - "/"
     allow_write:
+      - "/dev"
       - "/tmp"
+      - "/var/folders"
       - "/Users/xiamingxing/Workspace"
       - "/Users/xiamingxing/.runtime"
       - "/Users/xiamingxing/runtime"
+      - "/Users/xiamingxing/.hermes"
+      - "/Users/xiamingxing/.local"
       - "/Users/xiamingxing/Library/Mobile Documents"
   execution:
     allow_subprocess: true

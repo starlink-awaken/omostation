@@ -34,21 +34,18 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 #   L2 = kernel services
 #   I0 = fabric/infrastructure services
 _SERVICE_LAYER: dict[str, str] = {
-    # I0 — Fabric/Infrastructure
+    # I0 — Fabric/Infrastructure (core daemons)
     "hermes-gateway": "I0",
-    "sharedbrain-bos-mcp": "I0",
+    "cron-service": "I0",
     "agora": "I0",
     "runtime-mcp": "I0",
     # L0 — Protocol
     "ollama": "L0",
-    "agentmesh-gateway": "L0",
-    # L1 — Runtime
-    "agent-runtime": "L1",
-    "cron-service": "L1",
+    # L1 — Runtime / Knowledge
     "kos": "L1",
     "gbrain-index": "L1",
-    # L2 — Kernel
-    "sharedbrain-bos": "L2",
+    # L2 — Kernel (stateful backends)
+    # "sharedbrain-bos": "L2",  # 已废弃，2026-06-06移除
     "gbrain": "L2",
 }
 
@@ -108,8 +105,8 @@ def _get_pid_for_port(port: int) -> Optional[int]:
 
 
 def _fetch_events_from_agora(limit: int = 20) -> list[dict]:
-    """Fetch recent events from Agora SSE endpoint."""
-    url = "http://127.0.0.1:7430/api/events"
+    """Fetch recent events from Agora event-log endpoint."""
+    url = "http://127.0.0.1:7430/api/event-log"
     events: list[dict] = []
     try:
         req = urllib.request.Request(url)
@@ -181,8 +178,17 @@ def i0_services() -> list[dict]:
     for svc in matrix_services:
         layer = _SERVICE_LAYER.get(svc.name, "L1")
         has_port = svc.port is not None and svc.port > 0
-        port_listening = _probe_port("127.0.0.1", svc.port) if has_port else False
-        pid = _get_pid_for_port(svc.port) if has_port and port_listening else None
+        if svc.type == "scheduled":
+            # Scheduled jobs (e.g. daily batch) aren't always running — skip port probe
+            port_listening = True
+            pid = None
+        elif has_port:
+            port_listening = _probe_port("127.0.0.1", svc.port)
+            pid = _get_pid_for_port(svc.port) if port_listening else None
+        else:
+            # No port — trust matrix.yaml status (running/active = online)
+            port_listening = svc.status in ("running", "active", "idle")
+            pid = None
 
         # Health check
         health = "unknown"

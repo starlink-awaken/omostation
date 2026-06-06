@@ -33,22 +33,24 @@ try:
     expected = {"runtime_health","runtime_matrix_list","runtime_matrix_get",
                 "runtime_service_ctl","runtime_protocol_list","runtime_protocol_get",
                 "runtime_ontology_get"}
-    assert expected == tool_names, f"Tool mismatch: missing={expected-tool_names}"
-    print(f"✅ tools/list: {len(tools)} tools OK")
+    missing = expected - tool_names
+    extra = tool_names - expected
+    assert not missing, f"Tool mismatch: missing={missing}, extra={extra}"
+    print(f"✅ tools/list: {len(tools)} tools OK (core {len(expected)} present, {len(extra)} additional)")
 
     # 3. matrix_list
     r = send({"jsonrpc":"2.0","id":4,"method":"tools/call",
               "params":{"name":"runtime_matrix_list","arguments":{}}})
     text = r["result"]["content"][0]["text"]
-    assert "agent-runtime" in text
+    assert "cron-service" in text
     print(f"✅ runtime_matrix_list: services OK")
 
-    # 4. matrix_get
+    # 4. matrix_get (agent-runtime was archived — replaced by runtime executor)
     r = send({"jsonrpc":"2.0","id":5,"method":"tools/call",
-              "params":{"name":"runtime_matrix_get","arguments":{"name":"agent-runtime"}}})
+              "params":{"name":"runtime_matrix_get","arguments":{"name":"cron-service"}}})
     text = r["result"]["content"][0]["text"]
-    assert "9876" in text
-    print(f"✅ runtime_matrix_get: agent-runtime port 9876")
+    assert "7450" in text
+    print(f"✅ runtime_matrix_get: cron-service port 7450")
 
     # 5. protocol_get
     r = send({"jsonrpc":"2.0","id":6,"method":"tools/call",

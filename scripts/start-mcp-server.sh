@@ -6,6 +6,7 @@ set -euo pipefail
 
 HERMES_PYTHON="$HOME/.hermes/hermes-agent/venv/bin/python"
 export RUNTIME_HOME="${RUNTIME_HOME:-$HOME/runtime}"
+export AUDIT_FILE_PATH="${AUDIT_FILE_PATH:-$HOME/runtime/data/kei_audit.jsonl}"
 export PYTHONPATH="$HOME/Workspace/projects/runtime/src${PYTHONPATH:+:$PYTHONPATH}"
 
 exec "$HERMES_PYTHON" "$HOME/Workspace/projects/runtime/src/runtime/mcp_server.py" "$@"

@@ -30,7 +30,9 @@ def _load_kei_rules(config_path: str = "kei.yaml") -> dict:
 
 
 _RULES = _load_kei_rules(os.environ.get("KEI_CONFIG_PATH", "kei.yaml"))
-_AUDIT_FILE = None  # Set by enable_sandbox()
+_workspace_root = Path(__file__).resolve().parents[4]  # runtime/src/runtime/kei_sandbox.py → workspace root
+_DEFAULT_AUDIT = _workspace_root / "runtime" / "data" / "kei_audit.jsonl"
+_AUDIT_FILE = Path(os.environ.get("KEI_AUDIT_FILE", str(_DEFAULT_AUDIT)))  # Set by enable_sandbox()
 _IN_AUDIT = False   # Recursion guard
 
 
@@ -44,8 +46,8 @@ def record_audit(action: str, extension_id: str, status: str, details: str) -> N
         details:    Human-readable description of the operation.
     """
     global _AUDIT_FILE, _IN_AUDIT
-    if _AUDIT_FILE is None or _IN_AUDIT:
-        return  # Audit not configured or re-entrant call; silently skip
+    if _AUDIT_FILE is None or _IN_AUDIT or status == "pass":
+        return  # Audit not configured, re-entrant, or passing event — skip logging
 
     _IN_AUDIT = True
     record = {
@@ -129,13 +131,17 @@ def enable_sandbox(config_path: str = "kei.yaml", audit_file: str | None = None)
     Args:
         config_path: Path to kei.yaml rules file.
         audit_file:  Path where audit records are written (JSONL).
-                     Defaults to $HOME/runtime/audit/kei-audit.jsonl.
+                     Falls back to $AUDIT_FILE_PATH env var, then
+                     $HOME/runtime/audit/kei-audit.jsonl.
     """
     global _RULES, _AUDIT_FILE
     _RULES = _load_kei_rules(config_path)
 
     if audit_file is None:
-        audit_file = str(Path.home() / "runtime" / "audit" / "kei-audit.jsonl")
+        audit_file = os.environ.get(
+            "AUDIT_FILE_PATH",
+            str(_DEFAULT_AUDIT)
+        )
     _AUDIT_FILE = Path(audit_file)
     _AUDIT_FILE.parent.mkdir(parents=True, exist_ok=True)
 

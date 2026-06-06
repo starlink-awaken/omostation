@@ -16,7 +16,11 @@ import shutil
 import hashlib
 
 STATE_FILE = Path(os.environ.get("RUNTIME_HOME", Path.home() / "runtime")) / "matrix_state.json"
-OMO_STATE_FILE = Path("/Users/xiamingxing/Workspace/.omo/state/system_health.yaml")
+# Compute OMO state path from RUNTIME_HOME or workspace root
+_workspace_root = Path(__file__).resolve().parents[4]  # runtime/src/runtime/scheduler.py → workspace root
+OMO_STATE_FILE = Path(
+    os.environ.get("OMO_STATE_FILE", str(_workspace_root / ".omo" / "state" / "system_health.yaml"))
+)
 
 class MatrixScheduler:
     def __init__(self):
@@ -296,7 +300,7 @@ class MatrixScheduler:
 
     def run_entropy_gc(self):
         print("🧹 [X2 Anti-Entropy] Running Pan-Entropy GC...")
-        workspace = Path("/Users/xiamingxing/Workspace")
+        workspace = _workspace_root
         # 1. GC debt ledger
         debt_dir = workspace / ".omo/debt/items"
         archive_dir = workspace / ".omo/debt/archive"

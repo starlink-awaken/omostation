@@ -71,14 +71,11 @@ SERVICES=(
   "Agent Runtime|l|com.agent-runtime|$AGENT_RUNTIME_PORT|http://127.0.0.1:$AGENT_RUNTIME_PORT/health"
   "Cron Service|l|com.user.cron-service|$CRON_SERVICE_PORT|http://127.0.0.1:$CRON_SERVICE_PORT/health"
   "Ollama|o|—|$OLLAMA_PORT|http://localhost:$OLLAMA_PORT/api/tags"
-  "GBrain Index|l|com.knowledgebase.gbrain-index|—|—"
 )
 
 DOCKER_SERVICES=(
   "gbrain-postgres"
-  "integration-agora-1"
   "integration-sharedbrain-1"
-  "integration-agora-mcp-1"
 )
 
 # ─── JSON mode ──────────────────────────────────────────────────────────────

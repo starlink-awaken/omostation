@@ -35,10 +35,11 @@ section() {
 validate_yaml_syntax() {
     section "YAML Syntax Validation"
 
-    # Get staged files (both in index and working tree for pre-commit)
+    # Get staged files with .yaml/.yml extension
     local yaml_files
-    yaml_files=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null || true)
+    yaml_files=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null | grep -E '\.(yaml|yml)$' || true)
     if [[ -z "$yaml_files" ]]; then
+        # Fallback: list tracked yaml files
         yaml_files=$(git ls-files '*.yaml' '*.yml' 2>/dev/null || true)
     fi
 
