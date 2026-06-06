@@ -47,7 +47,7 @@ try:
 except ImportError:
     _HAS_L4_BRIDGE = False
 
-PORT = int(os.environ.get("DASHBOARD_PORT", "8080"))
+PORT = int(os.environ.get("COCKPIT_DASHBOARD_PORT", "8090"))
 
 
 # ─── Live-Data JS Snippet ──────────────────────────────────────────────────

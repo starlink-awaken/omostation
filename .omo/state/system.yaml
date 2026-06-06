@@ -3,7 +3,7 @@ phase1_status: closed
 phase_status: active
 current_wave: W0
 next_milestone: Phase 31 W1 — kairon 3 组合并（llm-gateway-kernel / sot-bridge / protocols-layer）
-health_score: 56.63
+health_score: 57.2
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -16,7 +16,7 @@ phase3_capability_slice_completed_at: '2026-05-30T22:35:00Z'
 phase3_acceptance_status: completed
 phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
 completed_tasks: 16
-total_tasks: 35
+total_tasks: 36
 active_tasks: 0
 next_active_tasks:
 - (No active tasks)
@@ -43,7 +43,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-06T11:40:23Z'
+updated_at: '2026-06-06T11:55:14Z'
 phase29_status: completed
 phase29_completed_at: '2026-06-05T20:00:00Z'
 phase30_status: active
@@ -87,7 +87,7 @@ phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
 health_score_raw: 57.2
-debt_weight: 0.99
+debt_weight: 1.0
 debt_weight_items:
   SB_PROJECTS_YAML:
     resolved: true
@@ -338,7 +338,7 @@ debt_weight_items:
     weight: 0.5
     desc: '架构文档与代码实现两层皮: Agora 代码在 kairon/packages/ 但架构定义其为 I0 层 (决策: 标注+长期台阶)'
   P2-AGORA_MODULE_SPLIT:
-    resolved: false
+    resolved: true
     weight: 0.3
     desc: 'Agora 90+ 文件职责过载: 路由/认证/代理/仪表板/A2A/MCP注册表集于一身, 需拆分 3-4 子包'
   P2-KEI_SANDBOX_PERMISSIVE:
@@ -555,6 +555,7 @@ resolved_debt_items:
 - P1-PROTOCOL_CLI
 - P1-RUNTIME_CONSOLIDATION
 - P1-TASKOBJECT_LIVE
+- P2-AGORA_MODULE_SPLIT
 - P2-CARDS_MISSING_FILTERS
 - P2-CI_GATE
 - P2-FAMILY_DEBT_DENSITY
@@ -598,20 +599,20 @@ debt_registry_ref: .omo/debt/registry.yaml
 debt_dashboard_ref: .omo/debt/dashboard/current.yaml
 debt_review_pack_ref: .omo/debt/reviews/current.md
 debt_metrics:
-  debt_health: 87.5
+  debt_health: 100.0
   classification_entropy: 0.0
   state_entropy: 0.0
-  pointer_entropy: 2.0
+  pointer_entropy: 0.0
   time_entropy: 0.0
-  backlog_pressure: 0.3
-  coupling_load: 1.0
+  backlog_pressure: 0
+  coupling_load: 0.0
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 19
+planned_tasks: 20
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- Current planned queue from .omo/tasks/planned/ (19 tasks)
+- Current planned queue from .omo/tasks/planned/ (20 tasks)
 - P30-W0-DAEMON-INSTALL
 - P30-W0-FOLD
 - P30-W0-PLAN-UPDATE
@@ -631,6 +632,7 @@ next_planned_tasks:
 - P31-W1-MERGE-SOT-BRIDGE
 - P32-W0-AGORA
 - P32-W0-DELIVERABLES
+- P32-W0-SMOKE
 - P28-W0-NORTH-STAR (completed)
 - P28-W0-TOOL-HEATMAP (completed)
 - IMPORTED-08ea57
