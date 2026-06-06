@@ -94,6 +94,12 @@ KNOWN_BACKENDS: list[dict] = [
         "command": "uv",
         "args": ["run", "--package", "codeanalyze", "python", "-m", "codeanalyze.mcp"],
     },
+    {
+        "name": "sot-bridge-persona",
+        "mcp_endpoint": "",
+        "command": "uv",
+        "args": ["run", "--package", "sot-bridge", "python", "-m", "sot_bridge.sharedbrain_bridge.mcp"],
+    },
 ]
 
 # Module-level singleton — reused across start/stop calls.
