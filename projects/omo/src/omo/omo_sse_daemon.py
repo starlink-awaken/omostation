@@ -60,22 +60,33 @@ async def listen_to_sse(stop_event: asyncio.Event, logger: logging.Logger):
                                 ev_type = event.get("type", "UNKNOWN")
                                 logger.info(f"Received event: {ev_type}")
 
-                                # Run OMO Sync
-                                loop = asyncio.get_running_loop()
-                                tick_result = await loop.run_in_executor(None, run_once)
+                                # 事件类型路由:
+                                # 治理/债务/完成类事件 → 运行 OMO Sync + audit
+                                # 错误/宕机/超时 → 运行 self-healing
+                                # 其他 → 仅计数 (不触发全量 audit)
 
-                                if tick_result.error:
-                                    logger.error(f"tick_error: {tick_result.error}")
-                                else:
-                                    logger.info(f"tick_done score={tick_result.audit_score} diffs={tick_result.sync_diff_count}")
+                                _governance_types = (
+                                    "pipeline:completed", "pipeline:step:ok",
+                                    "registry:service.registered", "node_completed",
+                                    "debt:created", "debt:reviewed",
+                                )
+                                if ev_type in _governance_types or ev_type.startswith("pipeline:") or ev_type.startswith("debt:"):
+                                    loop = asyncio.get_running_loop()
+                                    tick_result = await loop.run_in_executor(None, run_once)
+                                    if tick_result.error:
+                                        logger.error(f"tick_error: {tick_result.error}")
+                                    else:
+                                        logger.info(
+                                            f"tick_done score={tick_result.audit_score} diffs={tick_result.sync_diff_count}"
+                                        )
 
-                                # Run self-healing engine
+                                # Run self-healing engine (所有事件都送入)
                                 if healing:
                                     healing_actions = await healing.on_event(event)
                                     if healing_actions:
                                         logger.warning(
-                                            "self_healing_triggered",
-                                            actions=json.dumps(healing_actions, default=str),
+                                            "self_healing_triggered actions=%s",
+                                            json.dumps(healing_actions, default=str)[:500],
                                         )
 
                             except json.JSONDecodeError:
