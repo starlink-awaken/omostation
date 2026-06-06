@@ -45,20 +45,27 @@ def parse_protocol_config(raw: str | dict) -> tuple[dict, str | None]:
 
 
 def is_safe_url(url: str) -> bool:
-    """Validate URL does not target internal/private network resources."""
+    """Validate URL does not target internal/private network resources.
+
+    Delegates to ssrf_guard.validate_external_url for strict checking,
+    but allows loopback for local development mode.
+    """
+    from urllib.parse import urlparse
+
     parsed = urlparse(url)
     hostname = parsed.hostname
     if not hostname:
         return False
+    # Loopback is always safe for local development
     if hostname.lower() in ("localhost", "127.0.0.1", "::1"):
-        return True  # Loopback is always safe for local development
-    if hostname.lower() in BLOCKED_HOSTS:
-        return False
+        return True
+    # Delegate to strict SSRF guard for all other URLs
     try:
-        ip = ipaddress.ip_address(hostname)
-        return not any(ip in net for net in BLOCKED_NETWORKS)
+        from agora.ssrf_guard import validate_external_url
+        validate_external_url(url)
+        return True
     except ValueError:
-        pass
+        return False
     try:
         resolved = socket.gethostbyname(hostname)
         ip = ipaddress.ip_address(resolved)

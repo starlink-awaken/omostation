@@ -1,7 +1,6 @@
 """SSRF防护 — 验证外部端点URL不指向内部/私有地址。"""
 
 import ipaddress
-import re
 from urllib.parse import urlparse
 
 # 私有/内网地址范围
