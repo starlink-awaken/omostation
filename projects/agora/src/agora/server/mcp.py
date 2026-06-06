@@ -1,13 +1,13 @@
 """Agora MCP Server — unified entry point for all services.
 
-工具分组 (42 tools, 1,757 行 → 待拆分为独立模块):
+工具分组 (42 tools → Phase 1: API Keys 已提取至 server/tools_api_keys.py):
   ┌─ BOS Tools        (L511):  mutate_resource, read_resource
   ├─ Proxy Tools      (L535):  proxy_connect/call/status/list/add/remove
   ├─ Registry Tools   (L697):  register_service
   ├─ Routing Tools    (L827):  list_services, check_health, add_route, route_call
   ├─ Event Tools      (L911):  publish/subscribe/get_event_log
   ├─ Audit Tools      (L975):  audit_query, audit_stats
-  ├─ API Key Tools    (L1019): create/list/revoke_api_key
+  ├─ API Key Tools    (extracted → server/tools_api_keys.py)  ✅ Phase 1
   ├─ A2A Notify       (L1067): register_push_notification
   ├─ A2A Task Tools   (L1104): a2a_send/get/cancel/list_tasks
   ├─ State Tools      (L1203): get_state_transitions
@@ -49,6 +49,11 @@ from agora.mcp_registry.lifecycle import LifecycleManager  # type: ignore[import
 from agora.mcp_registry.orchestrator import Orchestrator  # type: ignore[import-not-found]
 from agora.mcp_registry.repository import ToolCatalog  # type: ignore[import-not-found]
 from agora.mcp_registry.router import SmartRouter  # type: ignore[import-not-found]
+
+# L0 审计 hook — BOS URI 前置校验 + 后置审计
+import sys as _sys
+_sys.path.insert(0, str(Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools"))
+from mof_agora_hook import pre_check as _bos_pre_check, post_audit as _bos_post_audit  # type: ignore[import-not-found]
 
 logger = structlog.get_logger(__name__)
 
@@ -541,17 +546,31 @@ async def mutate_resource(uri: str, payload: str, action: str = "update") -> str
         action: The verb (update, create, delete).
     """
     import json
+    import time as _time
     logger.info("mutate_resource", uri=uri, action=action)
     if not uri.startswith("bos://"):
         return f"Error: Invalid URI scheme. Must start with bos://. Received {uri}"
     
+    # L0 前置校验
+    ok, reason = _bos_pre_check(uri)
+    if not ok:
+        logger.warning("bos_pre_check_blocked", uri=uri, reason=reason)
+        return json.dumps({"status": "error", "code": 403, "reason": reason})
+    
+    _t0 = _time.time()
     # Future: Parse URI and route to specific downstream FastMCP POST endpoints or tools
-    return json.dumps({
+    result = json.dumps({
         "status": "success",
         "action": action,
         "mutated_uri": uri,
         "message": f"Phase 34 Wave 2: mutated_resource executed for {uri}"
     })
+    
+    # L0 后置审计
+    _duration_ms = int((_time.time() - _t0) * 1000)
+    _bos_post_audit(uri, 200, _duration_ms)
+    
+    return result
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -609,12 +628,23 @@ async def proxy_call(tool_name: str, arguments: str = "{}") -> dict:
     except json.JSONDecodeError:
         args = {}
 
+    # L0 前置校验
+    _bos_uri = f"bos://agora/tools/{tool_name}"
+    _ok_check, _reason = _bos_pre_check(_bos_uri)
+    if not _ok_check:
+        logger.warning("bos_pre_check_blocked", uri=_bos_uri, reason=_reason)
+        return _error(_reason)
+
+    _t0 = __import__('time').time()
     try:
         result = await _proxy_manager.dispatch(tool_name, args)
+        _bos_post_audit(_bos_uri, 200, int((__import__('time').time() - _t0) * 1000))
         return _ok({"format_version": FORMAT_VERSION, **result})
     except ValueError as e:
+        _bos_post_audit(_bos_uri, 400, int((__import__('time').time() - _t0) * 1000))
         return _error(str(e))
     except Exception as e:
+        _bos_post_audit(_bos_uri, 500, int((__import__('time').time() - _t0) * 1000))
         return _error(f"Proxy call failed: {str(e)[:200]}")
 
 
@@ -893,6 +923,9 @@ def add_route(tool_name: str, service_name: str) -> dict:
     if not tool_name.strip() or not service_name.strip():
         return _error("Tool name and service name required")
 
+    # L0 审计 — 路由变更事件
+    _bos_post_audit(f"bos://agora/routes/{tool_name}", 200, 0)
+
     router.add_route(tool_name, service_name)
     return _ok(
         {
@@ -1055,51 +1088,11 @@ def audit_stats(since: str = "") -> dict:
 
 
 # ═══════════════════════════════════════════════════════════════
-# Section 6: API Key Tools
+# Section 6: API Key Tools (extracted → server/tools_api_keys.py)
 # ═══════════════════════════════════════════════════════════════
-@mcp.tool()
-def create_api_key(name: str, scopes: str = "read", tenant: str = "", expires_days: int = 0) -> dict:
-    """Create a new API key. The raw secret is shown only once."""
-    from agora.governance import KeyManager  # type: ignore[import-not-found]
+from agora.server.tools_api_keys import register_tools as _register_api_keys
 
-    scope_list = [s.strip() for s in scopes.split(",") if s.strip()]
-    kid, secret = KeyManager().create_key(name, scope_list, tenant, expires_days)
-    return _ok(
-        {
-            "format_version": FORMAT_VERSION,
-            "key_id": kid,
-            "secret": secret,
-            "warning": "Save this secret — it won't be shown again.",
-        }
-    )
-
-
-@mcp.tool()
-def list_api_keys(tenant: str = "") -> dict:
-    """List API keys, optionally filtered by tenant."""
-    from agora.governance import KeyManager
-
-    return _ok(
-        {
-            "format_version": FORMAT_VERSION,
-            "data": KeyManager().list_keys(tenant),
-        }
-    )
-
-
-@mcp.tool()
-def revoke_api_key(key_id: str) -> dict:
-    """Revoke an API key by its ID."""
-    from agora.governance import KeyManager
-
-    KeyManager().revoke(key_id)
-    return _ok(
-        {
-            "format_version": FORMAT_VERSION,
-            "action": "revoked",
-            "key_id": key_id,
-        }
-    )
+_register_api_keys(mcp, _ok, FORMAT_VERSION)
 
 
 # ── Push Notification tools (A2A-compatible) ──────────────────────────
