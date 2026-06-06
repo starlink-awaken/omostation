@@ -194,12 +194,11 @@ protocols:
     category: "state-sync"
     status: "active"
     usage: "active"
-    description: "Postgres+pgvector knowledge graph"
-    port_range: "5433"
-    transport: ["postgres wire"]
+    description: "Knowledge graph (PGLite mode via CLI)"
+    port_range: "—"
+    transport: [stdio]
     implementations:
-      - "gbrain-postgres"
-      - "gbrain-index"
+      - "gbrain (PGLite, via bun CLI)"
 
   # ── Model Access ───────────────────────────────────────────────────
   - name: "Ollama API"

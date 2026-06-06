@@ -43,7 +43,7 @@ _SERVICE_LAYER: dict[str, str] = {
     "ollama": "L0",
     # L1 — Runtime / Knowledge
     "kos": "L1",
-    "gbrain-index": "L1",
+    # gbrain-index moved to Hermes cron (PGLite mode), no longer a persistent service
     # L2 — Kernel (stateful backends)
     # "sharedbrain-bos": "L2",  # 已废弃，2026-06-06移除
     "gbrain": "L2",
