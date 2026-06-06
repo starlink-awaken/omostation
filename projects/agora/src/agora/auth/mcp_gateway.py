@@ -76,6 +76,12 @@ KNOWN_BACKENDS: list[dict] = [
         "command": "cron-service",
         "args": ["--mcp"],
     },
+    {
+        "name": "omo",
+        "mcp_endpoint": "",
+        "command": "uv",
+        "args": ["run", "--package", "omo", "python", "-m", "omo.mcp_server"],
+    },
 ]
 
 # Module-level singleton — reused across start/stop calls.

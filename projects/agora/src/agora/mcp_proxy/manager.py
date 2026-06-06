@@ -312,31 +312,37 @@ class ProxyManager:
         Currently tries all connected clients until one returns the resource, 
         or we can use a prefix mapping. For now we will fan-out or route by known prefixes.
         """
-        import asyncio
+        # Use MountRegistry to dynamically resolve routing instead of hardcoded if/else
+        from agora.mcp.mount_registry import get_mount_registry
         
-        # Simple routing based on known prefix conventions mapping URI to service name
-        # bos://omo/ -> omo
-        # bos://memory/gbrain/ -> gbrain
-        # bos://analysis/code/ -> codeanalyze
-        service_name = None
-        if uri.startswith("bos://omo/"):
-            service_name = "omo"
-        elif uri.startswith("bos://memory/gbrain/"):
-            service_name = "gbrain"
-        elif uri.startswith("bos://analysis/code/"):
-            service_name = "codeanalyze"
-        elif uri.startswith("bos://analysis/derive/"):
-            service_name = "ontoderive"
-        elif uri.startswith("bos://analysis/research/"):
-            service_name = "minerva"
-        elif uri.startswith("bos://forge/registry/"):
-            service_name = "forge"
-            
+        registry = get_mount_registry()
+        # Fallback to simple prefixes mapping if not registered dynamically
+        # In the future, everything should be registered through MountRegistry
+        
+        service_name = registry.resolve_provider(uri)
+        if not service_name:
+            if uri.startswith("bos://omo/"):
+                service_name = "omo"
+            elif uri.startswith("bos://memory/gbrain/"):
+                service_name = "gbrain"
+            elif uri.startswith("bos://analysis/code/"):
+                service_name = "codeanalyze"
+            elif uri.startswith("bos://analysis/derive/"):
+                service_name = "ontoderive"
+            elif uri.startswith("bos://analysis/research/"):
+                service_name = "minerva"
+            elif uri.startswith("bos://forge/registry/"):
+                service_name = "forge"
+                
         if service_name:
-            await self.ensure_connected(service_name)
-            client = self.registry._clients.get(service_name)
-            if client and client.connected:
-                return await client.read_resource(uri)
+            if isinstance(service_name, str): # Downstream proxy client by service name
+                await self.ensure_connected(service_name)
+                client = self.registry._clients.get(service_name)
+                if client and client.connected:
+                    return await client.read_resource(uri)
+            else:
+                # If provider is a direct local handler (not implemented yet, but for future)
+                pass
                 
         # Fallback: broadcast to all connected
         for name, client in self.registry._clients.items():
