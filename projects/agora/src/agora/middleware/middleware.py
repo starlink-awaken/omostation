@@ -127,11 +127,23 @@ try:
                     
             return result
 
+        def _validate_agent_token(self, meta: dict) -> str:
+            """Phase 34: Token-based Identity Trust (Anti-Spoofing)"""
+            import os
+            token = meta.get("x-agent-token", "")
+            agent_id = meta.get("x-agent-id", "anonymous")
+            expected_token = os.environ.get("AGORA_AGENT_TOKEN", "eCOS-v5-Trust-Token")
+            
+            if agent_id != "anonymous" and token != expected_token:
+                self._logger.warning("agent_spoofing_detected", claimed_id=agent_id)
+                return "untrusted-agent"
+            return agent_id
+
         async def on_call_tool(self, context: Any, call_next: Any) -> Any:
             from structlog.contextvars import bind_contextvars
-            # Extract Trace ID from MCP metadata
+            # Extract Trace ID with anti-spoofing
             meta = getattr(context.request, "meta", {}) or {}
-            agent_id = meta.get("x-agent-id", "anonymous")
+            agent_id = self._validate_agent_token(meta)
             conv_id = meta.get("x-conversation-id", "none")
             bind_contextvars(agent_id=agent_id, conversation_id=conv_id)
             
@@ -155,9 +167,9 @@ try:
 
         async def on_read_resource(self, context: Any, call_next: Any) -> Any:
             from structlog.contextvars import bind_contextvars
-            # Extract Trace ID from MCP metadata
+            # Extract Trace ID with anti-spoofing
             meta = getattr(context.request, "meta", {}) or {}
-            agent_id = meta.get("x-agent-id", "anonymous")
+            agent_id = self._validate_agent_token(meta)
             conv_id = meta.get("x-conversation-id", "none")
             bind_contextvars(agent_id=agent_id, conversation_id=conv_id)
             
