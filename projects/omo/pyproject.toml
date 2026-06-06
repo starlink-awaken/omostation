@@ -17,6 +17,7 @@ omo = "omo.cli:main"
 omo-debt = "omo.omo_debt:main"
 omo-mcp = "omo.mcp_server:main"
 cards = "omo.omo_cards:main"
+omo-sse-daemon = "omo.omo_sse_daemon:main"
 
 [build-system]
 requires = ["uv_build>=0.11.19,<0.12.0"]

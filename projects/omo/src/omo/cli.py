@@ -121,6 +121,17 @@ def main(argv: list[str] | None = None) -> int:
 
         return daemon_main(args[1:])
 
+    if args and args[0] == "sse-daemon":
+        from omo.omo_sse_daemon import main as sse_daemon_main
+
+        return sse_daemon_main()
+
+    if args and args[0] == "bos":
+        # BOS (Banyan Object Service) URI 注册/查询 — P33-W1 战役 2 起步
+        from omo.omo_bos import main as bos_main
+
+        return bos_main(args[1:])
+
     if args and args[0] == "health":
         from omo.omo_health import main as health_main
 
