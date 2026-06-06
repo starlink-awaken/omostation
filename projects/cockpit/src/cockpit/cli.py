@@ -239,6 +239,14 @@ def main() -> int:
     )
     gov_p.add_argument("extra_args", nargs=argparse.REMAINDER, help="传递给 arcnode-* 脚本的额外参数")
 
+    # ── L4 Bridge commands ────────────────────────────────────
+    ctx_p = sub.add_parser("context", help="显示系统上下文 (Phase/CARDS/约束/引导)")
+    cards_p = sub.add_parser("cards", help="显示 CARDS 卡片状态")
+    cards_p.add_argument("--check", action="store_true", help="检查当前操作合规性")
+    cards_p.add_argument("--card-id", type=str, help="检查指定卡片")
+    vault_p = sub.add_parser("vault", help="搜索 L4 Vault 知识库")
+    vault_p.add_argument("keyword", nargs="?", help="搜索关键词")
+
     code_p = sub.add_parser("code", help="代码库分析与审查 (基于 codeanalyze)")
     code_sub = code_p.add_subparsers(dest="code_command", parser_class=WorkspaceParser)
     
@@ -385,16 +393,34 @@ def main() -> int:
         return cmd_governance(args)
     if args.command == "mcp":
         return cmd_mcp(args)
+    if args.command == "context":
+        from .commands.l4bridge import cmd_context
+        return cmd_context(args)
+    if args.command == "cards":
+        from .commands.l4bridge import cmd_cards
+        return cmd_cards(args)
+    if args.command == "vault":
+        from .commands.l4bridge import cmd_vault
+        return cmd_vault(args)
 
     console.print(
         Panel.fit(
-            "[bold cyan]🧭 欢迎使用 Workspace[/bold cyan]\n\n"
-            "研究对象管理系统。输入 → 研究 → 追问 → 发布 → 复盘。\n\n"
-            "🚀 [cyan]workspace demo[/]          — 5 分钟体验完整闭环\n"
-            "🛠️  [cyan]workspace status[/]         — 打开工作台\n"
-            '💡 [cyan]workspace research "主题"[/]  — 发起第一个研究\n'
-            "👤 [cyan]workspace profile[/]         — 查看身份档案\n"
-            "📖 [cyan]workspace help[/]           — 查看产品地图",
+            "[bold cyan]🛸 Cockpit · L3 统一入口[/bold cyan]\n\n"
+            "[bold]上下文[/]\n"
+            "  [cyan]workspace context[/]          — 系统上下文 (Phase/P0/约束)\n"
+            "  [cyan]workspace cards[/]            — CARDS 卡片列表\n"
+            "  [cyan]workspace cards --check[/]    — 操作合规检查\n"
+            "  [cyan]workspace vault search KEY[/] — 搜索知识库\n\n"
+            "[bold]研究对象[/]\n"
+            "  [cyan]workspace research \"主题\"[/]   — 发起研究\n"
+            "  [cyan]workspace research --list[/]   — 查看历史\n\n"
+            "[bold]工具[/]\n"
+            "  [cyan]workspace status[/]            — 工作台\n"
+            "  [cyan]workspace dashboard[/]         — Web 驾驶舱\n"
+            "  [cyan]workspace mcp[/]               — MCP Server\n"
+            "  [cyan]workspace demo[/]              — 5 分钟体验\n"
+            "  [cyan]workspace code analyze[/]      — 代码分析\n\n"
+            "[dim]快捷键: F1帮助 · Ctrl+C 退出[/]",
             border_style="cyan",
             box=box.ROUNDED,
         )

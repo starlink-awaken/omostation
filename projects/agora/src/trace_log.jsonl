@@ -1551,3 +1551,4 @@
 {"time": 1780745724.747686, "tool": "nonexistent_tool", "service": "unknown", "status": "error", "elapsed_s": 0.0, "detail": "not_found"}
 {"time": 1780745724.773128, "tool": "research_now", "service": "minerva", "status": "error", "elapsed_s": 0.0233, "detail": "Client error '404 Not Found' for url 'http://localhost:8765/mcp'\nFor more information check: https:/"}
 {"time": 1780745724.7990289, "tool": "research_now", "service": "minerva", "status": "error", "elapsed_s": 0.0235, "detail": "Client error '404 Not Found' for url 'http://localhost:8765/mcp'\nFor more information check: https:/"}
+{"time": 1780746098.407001, "tool": "nonexistent", "service": "unknown", "status": "error", "elapsed_s": 0.0, "detail": "not_found"}

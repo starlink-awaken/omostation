@@ -1,0 +1,43 @@
+id: P32-W0-SMOKE
+phase: 32
+wave: W0
+title: "补 6 包 smoke test — test coverage 40 → 100"
+status: completed
+task_type: test
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P31-VERIFY completed"
+  - "P31-W1 CLEANUP-SHIM completed (6 包 src/ 已删, 目录归档)"
+depends_on:
+  - P31-VERIFY
+  - P31-W1
+deliverables:
+  - "6 个 tests/test_smoke_<pkg>.py 新增 (30 个 test cases)"
+  - ".omo/_delivery/phase32-smoke-report.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs: []
+knowledge_refs:
+  - "ADR-0006"
+description: |
+  P31 收官 audit 发现 6 包无 test: engine-core, llm-gateway, sharedbrain-bridge,
+  sophia, ssot, symphony-protocol. 这 6 包在 P31-W1 CLEANUP-SHIM 中已合并至
+  llm-gateway-kernel / sot-bridge / protocols-layer, src/ 已删, 目录作档案保留,
+  并被 kairon pyproject.toml 的 [tool.uv.workspace] exclude 段排除。
+
+  本任务为这 6 个归档包各写 5 个 smoke test, 验证 P31-W1 CLEANUP-SHIM 的
+  不变量 (TOML 有效 / 包元数据正确 / 排除 workspace / src/ 不存在),
+  不写完整 unit test 套件。test coverage 40 → 100。
+started_at: '2026-06-06T05:00:00Z'
+completed_at: '2026-06-06T05:00:00Z'
+blocked_by: null
+retry_count: 0
+test_artifacts:
+  - packages/engine-core/tests/test_smoke_engine_core.py
+  - packages/llm-gateway/tests/test_smoke_llm_gateway.py
+  - packages/sharedbrain-bridge/tests/test_smoke_sharedbrain_bridge.py
+  - packages/sophia/tests/test_smoke_sophia.py
+  - packages/ssot/tests/test_smoke_ssot.py
+  - packages/symphony-protocol/tests/test_smoke_symphony_protocol.py

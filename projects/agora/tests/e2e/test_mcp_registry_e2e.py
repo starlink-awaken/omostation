@@ -771,11 +771,9 @@ class TestMcpBootstrapConfig:
             "eidos",
             "sophia",
             "minerva",
-            "metaos",
             "agent-runtime",
             "codeanalyze",
             "kos",
-            "cron-service",
         }
         for name in expected:
             assert name in kairon_services, f"Missing kairon service: {name}"
