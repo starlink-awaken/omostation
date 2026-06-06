@@ -1,0 +1,76 @@
+[project]
+name = "agora"
+version = "3.0.0"
+description = "Agora — I0 MCP Service Convergence Hub. Route, monitor, and govern inter-service communication."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [{name = "omostation Contributors"}]
+keywords = ["mcp", "service-mesh", "hub", "routing", "governance", "i0"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: Proxy Servers",
+    "Topic :: System :: Networking",
+]
+dependencies = [
+    "cryptography>=41.0",
+    "httpx>=0.27",
+    "structlog>=24.0",
+    "fastmcp>=0.1",
+    "rich>=13.0",
+    "fastapi>=0.100",
+    "uvicorn>=0.20",
+    "prometheus-client>=0.20",
+    "aiohttp>=3.14.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/starlink-awaken/agora"
+Repository = "https://github.com/starlink-awaken/agora.git"
+Documentation = "https://github.com/starlink-awaken/agora#readme"
+Issues = "https://github.com/starlink-awaken/agora/issues"
+
+[project.scripts]
+agora = "agora.cli:main"
+agora-mcp = "agora.server.mcp:main"
+agora-mcp-gateway = "agora.mcp_gateway:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.24,<1.0", "ruff>=0.8", "mypy>=1.0"]
+grpc = ["grpcio>=1.60", "grpcio-tools>=1.60", "protobuf>=4.0"]
+kairon = ["eidos", "kos", "minerva", "core-models"]
+all = ["agora[dev,grpc,kairon]"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+pythonpath = ["src"]
+markers = [
+    "network: marks tests that require network access to github.com (skip if no network).",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+    "pytest-asyncio>=0.26.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agora"]
+
+[tool.hatch.build.targets.sdist]
+packages = ["src/agora"]

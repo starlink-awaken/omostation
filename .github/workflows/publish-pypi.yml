@@ -1,0 +1,61 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - 'v*'
+    paths:
+      - 'projects/kairon/packages/*/pyproject.toml'
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to publish (leave empty for all)'
+        required: false
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package:
+          - core-models
+          - eidos
+          - kos
+          - minerva
+          - ontoderive
+          - sophia
+          - kronos
+          - iris
+          - codeanalyze
+          - forge
+          - symphony-protocol
+          - shared-lib
+          - llm-gateway
+          - sshard-brain-bridge
+          - engine-core
+          - cron-service
+          - agent-runtime
+          - kairon-governance
+          - pontus
+          - ecos
+          - metaos
+          - health-profile
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install build tools
+        run: pip install build twine
+      - name: Build package
+        run: |
+          cd projects/kairon/packages/${{ matrix.package }}
+          python -m build
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          cd projects/kairon/packages/${{ matrix.package }}
+          twine upload dist/*
