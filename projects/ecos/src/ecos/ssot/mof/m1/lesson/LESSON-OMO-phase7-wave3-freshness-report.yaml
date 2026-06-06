@@ -1,0 +1,22 @@
+# M1 Node: LESSON-OMO-phase7-wave3-freshness-report
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase7-wave3-freshness-report
+type: Lesson
+subtype: OMORetro
+name: Phase 7 freshness report
+description: '## Stale items
+
+  - none'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 7 freshness report
+  lesson: '## Stale items
+
+    - none'
+  source: Workspace/.omo/_knowledge/summaries/phase7/phase7-wave3-freshness-report.md
+  severity: medium

@@ -1,0 +1,18 @@
+# M1 Node: LESSON-OMO-architecture-phase-abc-retrosp
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-architecture-phase-abc-retrosp
+type: Lesson
+subtype: OMORetro
+name: Architecture Phase A/B/C 复盘总结
+description: 在开始实施前，做了全项目扫描（AGENTS.md + 4个explore agent），这是对的。
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Architecture Phase A/B/C 复盘总结
+  lesson: 在开始实施前，做了全项目扫描（AGENTS.md + 4个explore agent），这是对的。
+  source: Workspace/.omo/_knowledge/summaries/architecture-phase-abc-retrospective.md
+  severity: medium

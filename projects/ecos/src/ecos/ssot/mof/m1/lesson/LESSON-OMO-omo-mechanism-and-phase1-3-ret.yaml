@@ -1,0 +1,18 @@
+# M1 Node: LESSON-OMO-omo-mechanism-and-phase1-3-ret
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-omo-mechanism-and-phase1-3-ret
+type: Lesson
+subtype: OMORetro
+name: OMO mechanism and Phase 1-3 retrospective
+description: 机制已经存在，但入口层和认知层仍不够统一，容易出现“知道机制的人会用，不知道的人找不到”的问题。
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: OMO mechanism and Phase 1-3 retrospective
+  lesson: 机制已经存在，但入口层和认知层仍不够统一，容易出现“知道机制的人会用，不知道的人找不到”的问题。
+  source: Workspace/.omo/_knowledge/summaries/phase1/omo-mechanism-and-phase1-3-retrospective.md
+  severity: medium

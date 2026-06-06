@@ -144,7 +144,7 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="Protocols-Layer 触发 (POC stdio)",
     ),
-    # Analysis (3 POC, 余 4 W4.5+)
+    # Analysis (12 POC — P34-W5 补 minerva.draft/audit, codeanalyze.report/lint, iris.connect/transform/validate, ontoderive.audit/fact-check)
     "bos://analysis/minerva/research": BosService(
         uri="bos://analysis/minerva/research",
         domain="analysis",
@@ -156,6 +156,30 @@ POC_SERVICES: dict[str, BosService] = {
             "python", "-m", "minerva", "serve", "--action", "research",
         ],
         description="Minerva 深度研究 (POC stdio)",
+    ),
+    "bos://analysis/minerva/draft": BosService(
+        uri="bos://analysis/minerva/draft",
+        domain="analysis",
+        package="minerva",
+        action="draft",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "minerva", "serve", "--action", "draft",
+        ],
+        description="Minerva 草稿生成 (POC stdio)",
+    ),
+    "bos://analysis/minerva/audit": BosService(
+        uri="bos://analysis/minerva/audit",
+        domain="analysis",
+        package="minerva",
+        action="audit",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "minerva", "serve", "--action", "audit",
+        ],
+        description="Minerva 审计 (POC stdio)",
     ),
     "bos://analysis/ontoderive/derive": BosService(
         uri="bos://analysis/ontoderive/derive",
@@ -169,6 +193,30 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="Ontoderive 事实推导 (POC stdio)",
     ),
+    "bos://analysis/ontoderive/audit": BosService(
+        uri="bos://analysis/ontoderive/audit",
+        domain="analysis",
+        package="ontoderive",
+        action="audit",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "ontoderive", "serve", "--action", "audit",
+        ],
+        description="Ontoderive 审计 (POC stdio)",
+    ),
+    "bos://analysis/ontoderive/fact-check": BosService(
+        uri="bos://analysis/ontoderive/fact-check",
+        domain="analysis",
+        package="ontoderive",
+        action="fact-check",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "ontoderive", "serve", "--action", "fact-check",
+        ],
+        description="Ontoderive 事实校验 (POC stdio)",
+    ),
     "bos://analysis/codeanalyze/scan": BosService(
         uri="bos://analysis/codeanalyze/scan",
         domain="analysis",
@@ -180,6 +228,66 @@ POC_SERVICES: dict[str, BosService] = {
             "python", "-m", "codeanalyze", "serve", "--action", "scan",
         ],
         description="CodeAnalyze 代码扫描 (POC stdio)",
+    ),
+    "bos://analysis/codeanalyze/report": BosService(
+        uri="bos://analysis/codeanalyze/report",
+        domain="analysis",
+        package="codeanalyze",
+        action="report",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "codeanalyze", "serve", "--action", "report",
+        ],
+        description="CodeAnalyze 分析报告 (POC stdio)",
+    ),
+    "bos://analysis/codeanalyze/lint": BosService(
+        uri="bos://analysis/codeanalyze/lint",
+        domain="analysis",
+        package="codeanalyze",
+        action="lint",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "codeanalyze", "serve", "--action", "lint",
+        ],
+        description="CodeAnalyze Lint (POC stdio)",
+    ),
+    "bos://analysis/iris/connect": BosService(
+        uri="bos://analysis/iris/connect",
+        domain="analysis",
+        package="iris",
+        action="connect",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "iris", "serve", "--action", "connect",
+        ],
+        description="Iris 连接 (POC stdio)",
+    ),
+    "bos://analysis/iris/transform": BosService(
+        uri="bos://analysis/iris/transform",
+        domain="analysis",
+        package="iris",
+        action="transform",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "iris", "serve", "--action", "transform",
+        ],
+        description="Iris 数据转换 (POC stdio)",
+    ),
+    "bos://analysis/iris/validate": BosService(
+        uri="bos://analysis/iris/validate",
+        domain="analysis",
+        package="iris",
+        action="validate",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "iris", "serve", "--action", "validate",
+        ],
+        description="Iris 数据校验 (POC stdio)",
     ),
     # Persona (1 POC)
     "bos://persona/health-profile/summary": BosService(
@@ -341,8 +449,16 @@ def _call_stdio(service: BosService, *args: Any, **kwargs: Any) -> dict:
       请求: {"request_id": "req-N-xxx", "action": "<name>", "args": <list>}
       响应: {"status": "ok|error", "service": "<name>", "action": "<name>",
              "request_id": "<id>", "result": {...} | "error": "..."}
+
+    返回字段: 包装 invoke_stdio 响应, 加 transport + 兼容 alive_at_spawn 字段.
     """
-    return invoke_stdio(service.uri, service.action, args, kwargs, timeout=_STDIO_TIMEOUT_DEFAULT)
+    response = invoke_stdio(service.uri, service.action, args, kwargs, timeout=_STDIO_TIMEOUT_DEFAULT)
+    # 包装: 补 transport 字段 + alive_at_spawn (兼容 P33 测试)
+    response["transport"] = "stdio"
+    if response.get("status") == "ok":
+        response["alive_at_spawn"] = True
+        response["command"] = service.command
+    return response
 
 
 def invoke_stdio(

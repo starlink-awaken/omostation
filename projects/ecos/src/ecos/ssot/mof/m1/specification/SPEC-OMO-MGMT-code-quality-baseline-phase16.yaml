@@ -1,0 +1,15 @@
+id: SPEC-OMO-MGMT-code-quality-baseline-phase16
+type: Specification
+subtype: OMOMgmt
+name: 代码质量基线 — Phase 16 完成后
+description: 'OMO 管理文档: 代码质量基线 — Phase 16 完成后'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  constraints:
+  - OMO 管理
+  scope:
+  - OMO

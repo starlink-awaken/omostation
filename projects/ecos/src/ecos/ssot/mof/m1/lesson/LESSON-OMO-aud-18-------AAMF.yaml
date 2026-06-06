@@ -1,0 +1,26 @@
+# M1 Node: LESSON-OMO-aud-18-------AAMF
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-aud-18-------AAMF
+type: Lesson
+subtype: OMORetro
+name: AI OS 深度架构审计
+description: '```
+
+  时间线:
+
+  AgentMesh → Agora → KOS → Min'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: AI OS 深度架构审计
+  lesson: '```
+
+    时间线:
+
+    AgentMesh → Agora → KOS → Min'
+  source: Workspace/.omo/_knowledge/summaries/audits/aud-18-深度架构审计AAMF.md
+  severity: medium

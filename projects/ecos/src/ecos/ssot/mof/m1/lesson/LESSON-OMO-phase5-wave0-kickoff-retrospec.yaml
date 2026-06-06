@@ -1,0 +1,20 @@
+# M1 Node: LESSON-OMO-phase5-wave0-kickoff-retrospec
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase5-wave0-kickoff-retrospec
+type: Lesson
+subtype: OMORetro
+name: Phase 5 Wave 0 kickoff retrospective
+description: "3. **Wave 0 exit remains blocked.**  \n   The refreshed review packet\
+  \ surfaced eight concrete b"
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 5 Wave 0 kickoff retrospective
+  lesson: "3. **Wave 0 exit remains blocked.**  \n   The refreshed review packet surfaced\
+    \ eight concrete b"
+  source: Workspace/.omo/_knowledge/summaries/phase5/phase5-wave0-kickoff-retrospective.md
+  severity: medium

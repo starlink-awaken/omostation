@@ -1,0 +1,13 @@
+id: SKILL-FORGE-insight_report
+type: Skill
+subtype: ForgeSkill
+name: insight_report
+description: 'Forge 技能: insight_report'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  skill: 'Forge 内置能力: insight_report'
+  trigger: mcp

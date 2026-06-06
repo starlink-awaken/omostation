@@ -307,6 +307,183 @@ SEED_REGISTRATIONS: list[BosRegistration] = [
         protocol="internal",
         description="agent-runtime 对话 (P33-W2 战役 2 余下)",
     ),
+    # ── P34-W0 战役 2 扩展: 19 条细粒度 URI (21 → 40) ──
+    # Memory +3
+    BosRegistration(
+        uri="bos://memory/kos/ingest",
+        domain="memory",
+        package="kos",
+        action="ingest",
+        endpoint="kairon.packages.kos.ontology.store:put_entity",
+        protocol="internal",
+        description="KOS 实体写入 (P34-W0 战役 2 扩展)",
+    ),
+    BosRegistration(
+        uri="bos://memory/kronos/query",
+        domain="memory",
+        package="kronos",
+        action="query",
+        endpoint="kairon.packages.kronos.query:query",
+        protocol="internal",
+        description="KRONOS 时间序列查询 (P34-W0 战役 2 扩展)",
+    ),
+    BosRegistration(
+        uri="bos://memory/kronos/schedule",
+        domain="memory",
+        package="kronos",
+        action="schedule",
+        endpoint="kairon.packages.kronos.scheduler:schedule",
+        protocol="internal",
+        description="KRONOS 调度任务 (P34-W0 战役 2 扩展)",
+    ),
+    # Governance +4
+    BosRegistration(
+        uri="bos://governance/omo/sync",
+        domain="governance",
+        package="omo",
+        action="sync",
+        endpoint="omo.omo_sync:sync_state",
+        protocol="internal",
+        description="omo 状态同步 (P34-W0 战役 2 扩展)",
+    ),
+    BosRegistration(
+        uri="bos://governance/omo/inspect",
+        domain="governance",
+        package="omo",
+        action="inspect",
+        endpoint="omo.omo_inspect:inspect",
+        protocol="internal",
+        description="omo 系统检查 (P34-W0 战役 2 扩展)",
+    ),
+    BosRegistration(
+        uri="bos://governance/metaos/register",
+        domain="governance",
+        package="metaos",
+        action="register",
+        endpoint="projects.metaos.src.metaos.registry:register",
+        protocol="internal",
+        description="metaos 包注册 (P34-W0 战役 2 扩展)",
+    ),
+    BosRegistration(
+        uri="bos://governance/sot-bridge/query",
+        domain="governance",
+        package="sot-bridge",
+        action="query",
+        endpoint="kairon.packages.sot_bridge.sharedbrain_bridge:query",
+        protocol="internal",
+        description="sot-bridge 跨系统查询 (P34-W0 战役 2 扩展)",
+    ),
+    # Analysis +5
+    BosRegistration(
+        uri="bos://analysis/minerva/audit",
+        domain="analysis",
+        package="minerva",
+        action="audit",
+        endpoint="kairon.packages.minerva.audit:run",
+        protocol="internal",
+        description="minerva 审计 (P34-W0 战役 2 扩展)",
+    ),
+    BosRegistration(
+        uri="bos://analysis/iris/transform",
+        domain="analysis",
+        package="iris",
+        action="transform",
+        endpoint="kairon.packages.iris.transformer:transform",
+        protocol="internal",
+        description="iris 数据转换 (P34-W0 战役 2 扩展)",
+    ),
+    BosRegistration(
+        uri="bos://analysis/iris/validate",
+        domain="analysis",
+        package="iris",
+        action="validate",
+        endpoint="kairon.packages.iris.validator:validate",
+        protocol="internal",
+        description="iris 数据验证 (P34-W0 战役 2 扩展)",
+    ),
+    BosRegistration(
+        uri="bos://analysis/codeanalyze/lint",
+        domain="analysis",
+        package="codeanalyze",
+        action="lint",
+        endpoint="kairon.packages.codeanalyze.linter:lint",
+        protocol="internal",
+        description="codeanalyze lint (P34-W0 战役 2 扩展)",
+    ),
+    BosRegistration(
+        uri="bos://analysis/ontoderive/fact-check",
+        domain="analysis",
+        package="ontoderive",
+        action="fact-check",
+        endpoint="kairon.packages.ontoderive.engine:fact_check",
+        protocol="internal",
+        description="ontoderive 事实核查 (P34-W0 战役 2 扩展)",
+    ),
+    # Persona +3
+    BosRegistration(
+        uri="bos://persona/sharedbrain-bridge/recall-entity",
+        domain="persona",
+        package="sharedbrain-bridge",
+        action="recall-entity",
+        endpoint="kairon.packages.sharedbrain_bridge.recall:recall_entity",
+        protocol="internal",
+        description="共享实体回忆 (P34-W0 战役 2 扩展)",
+    ),
+    BosRegistration(
+        uri="bos://persona/core-models/validate",
+        domain="persona",
+        package="core-models",
+        action="validate",
+        endpoint="kairon.packages.core_models.schema:validate",
+        protocol="internal",
+        description="core-models 验证 (P34-W0 战役 2 扩展)",
+    ),
+    BosRegistration(
+        uri="bos://persona/health-profile/alert",
+        domain="persona",
+        package="health-profile",
+        action="alert",
+        endpoint="kairon.packages.health_profile.alerts:alert",
+        protocol="internal",
+        description="健康档案告警 (P34-W0 战役 2 扩展)",
+    ),
+    # Capability +4
+    BosRegistration(
+        uri="bos://capability/forge/list-tools",
+        domain="capability",
+        package="forge",
+        action="list-tools",
+        endpoint="kairon.packages.forge.registry:list_tools",
+        protocol="internal",
+        description="forge 工具列表 (P34-W0 战役 2 扩展)",
+    ),
+    BosRegistration(
+        uri="bos://capability/forge/exec-tool",
+        domain="capability",
+        package="forge",
+        action="exec-tool",
+        endpoint="kairon.packages.forge.executor:exec",
+        protocol="internal",
+        description="forge 工具执行 (P34-W0 战役 2 扩展)",
+    ),
+    BosRegistration(
+        uri="bos://capability/agent-runtime/agent-list",
+        domain="capability",
+        package="agent-runtime",
+        action="agent-list",
+        endpoint="kairon.agent_runtime.registry:list_agents",
+        protocol="internal",
+        description="agent 列表 (P34-W0 战役 2 扩展)",
+    ),
+    BosRegistration(
+        uri="bos://capability/agent-runtime/task-status",
+        domain="capability",
+        package="agent-runtime",
+        action="task-status",
+        endpoint="kairon.agent_runtime.runner:status",
+        protocol="internal",
+        description="任务状态查询 (P34-W0 战役 2 扩展)",
+    ),
 ]
 
 
@@ -678,11 +855,12 @@ def register_seeds(
     dual_write: bool = True,
     kos_zone: str = "bos_registry",
 ) -> list[dict[str, Any]]:
-    """Register all 21 SEED_REGISTRATIONS (idempotent, KOS dual-write by default).
+    """Register all 40 SEED_REGISTRATIONS (idempotent, KOS dual-write by default).
 
     P33-W1: 6 条 (memory + governance)
     P33-W2: 15 条 (analysis + persona + capability)
-    Total : 21 条 SEED URI 覆盖 5 Domain
+    P34-W0: 19 条 战役 2 扩展 (memory 5 / governance 8 / analysis 12 / persona 7 / capability 8)
+    Total : 40 条 SEED URI 覆盖 5 Domain
 
     Args:
         dual_write: 默认 True — 每条 SEED 同时写 KOS zone=bos_registry.
@@ -847,13 +1025,13 @@ def main(argv: list[str] | None = None) -> int:
     # seed
     sub.add_parser(
         "seed",
-        help="批量注册 20 条 SEED URI (6 W1 + 14 W2, 幂等, 已存在会更新)",
+        help="批量注册 40 条 SEED URI (21 W33 + 19 W34, 幂等, 已存在会更新)",
     )
 
     # register-seeds (alias, 战役 2 起步命名约定)
     sub.add_parser(
         "register-seeds",
-        help="注册 21 条 SEED URI (alias of seed)",
+        help="注册 40 条 SEED URI (alias of seed)",
     )
 
     # verify (M2: importlib 实测 endpoint 可达)

@@ -22,6 +22,9 @@ dependencies = [
 ecos-ssb = "ecos.core.ssb_client:main"
 ecos-dashboard = "ecos.cli.dashboard:main"
 ecos-scheduler = "ecos.cli.scheduler:main"
+mof = "ecos.ssot.tools.mof:main"
+mof-validate = "ecos.ssot.tools.mof-validate:main"
+mof-audit = "ecos.ssot.tools.mof-audit:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ecos"]

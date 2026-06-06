@@ -1,0 +1,13 @@
+id: AGENT-AGENTS-project-conventions
+type: Agent
+subtype: AgentDef
+name: project-conventions
+description: 'Agent: project-conventions'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L3
+properties:
+  agent_name: project-conventions
+  role: Agent defined in ~/.agents/

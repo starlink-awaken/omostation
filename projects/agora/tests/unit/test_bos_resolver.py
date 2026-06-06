@@ -20,6 +20,7 @@ from agora.mcp.bos_resolver import (
     BosService,
     ProcessPool,
     get_pool,
+    invoke_stdio,
     list_domains,
     list_services,
     parse_bos_uri,
@@ -184,9 +185,9 @@ class TestProcessPool:
 
 # ── 5. list_services / 注册表完整性 ────────────────
 class TestRegistry:
-    def test_11_poc_services(self):
-        """应有 11 个 POC service."""
-        assert len(POC_SERVICES) == 11
+    def test_20_poc_services(self):
+        """P34-W5 升级: 20 个 POC service (原 11 + W5 补 9)."""
+        assert len(POC_SERVICES) == 20
 
     def test_5_domains_coverage(self):
         """覆盖 5 个 domain."""
@@ -194,17 +195,17 @@ class TestRegistry:
         assert set(domains.keys()) == {"memory", "governance", "analysis", "persona", "capability"}
 
     def test_by_transport(self):
-        """1 internal (omo) + 10 stdio = 11."""
+        """1 internal (omo) + 19 stdio = 20 (P34-W5 补 9 analysis 全 stdio)."""
         by_t = {"stdio": 0, "internal": 0, "http": 0}
         for svc in POC_SERVICES.values():
             by_t[svc.transport] += 1
-        assert by_t["stdio"] == 10
+        assert by_t["stdio"] == 19
         assert by_t["internal"] == 1
         assert by_t["http"] == 0
 
-    def test_list_services_returns_11(self):
+    def test_list_services_returns_20(self):
         services = list_services()
-        assert len(services) == 11
+        assert len(services) == 20
         for svc in services:
             assert "uri" in svc
             assert "transport" in svc
@@ -218,9 +219,9 @@ class TestRegistry:
     def test_protocol_self_check(self):
         ck = protocol_self_check()
         assert ck["status"] == "ok"
-        assert ck["total_services"] == 11
+        assert ck["total_services"] == 20
         assert len(ck["domains"]) == 5
-        assert ck["by_transport"]["stdio"] == 10
+        assert ck["by_transport"]["stdio"] == 19
         assert ck["by_transport"]["internal"] == 1
 
 
@@ -233,8 +234,8 @@ class TestMcpToolWrapper:
 
         result = bos_list()
         assert result["status"] == "ok"
-        assert result["count"] == 11
-        assert len(result["services"]) == 11
+        assert result["count"] == 20
+        assert len(result["services"]) == 20
 
     def test_bos_parse_tool(self):
         from agora.mcp.tools.bos_resolve import bos_parse
@@ -319,4 +320,63 @@ def test_module_no_lint_smoke():
     assert callable(protocol_self_check)
     assert callable(get_pool)
     assert isinstance(POC_SERVICES, dict)
-    assert len(POC_SERVICES) == 11
+    assert len(POC_SERVICES) == 20
+
+
+# ── 9. P34-W1 升级: invoke_stdio 真 stdio 协议 ──────
+class TestP34W1StdioProtocol:
+    """P34-W1 战役 1 升级: 完整 stdio JSON 协议通信 (写 stdin/读 stdout)."""
+
+    def teardown_method(self):
+        """清理: 测试结束关闭所有 spawn 的进程."""
+        get_pool().shutdown()
+
+    def test_invoke_stdio_success(self):
+        """W1 验证: stdio 协议调用成功 (kairon kos serve)."""
+        r = invoke_stdio("bos://memory/kos/search", "search", ["hello"], {"q": "test"})
+        # 期望: status=ok, 含 result 或 uri 字段
+        assert r.get("uri") == "bos://memory/kos/search", f"missing uri: {r}"
+        assert r.get("status") == "ok" or "result" in r, f"unexpected response: {r}"
+        # pid 必有 (Popen 已 spawn)
+        assert r.get("pid") is not None and r["pid"] > 0
+
+    def test_invoke_stdio_unknown_uri(self):
+        """W1 验证: 未知 URI → unknown_bos_uri error."""
+        r = invoke_stdio("bos://nonexistent/x/y", "test", {})
+        assert r.get("status") == "error"
+        assert "unknown_bos_uri" in r["error"]
+
+    def test_invoke_stdio_minerva(self):
+        """W1 验证: minerva stdio 协议 (analysis domain)."""
+        r = invoke_stdio("bos://analysis/minerva/research", "research", {"topic": "test"})
+        assert r.get("uri") == "bos://analysis/minerva/research"
+        # 三种可能: 成功 / 错误 / 超时
+        assert r.get("status") in ("ok", "error")
+        assert "result" in r or "error" in r
+
+    def test_list_services_includes_pid(self):
+        """W1 验证: list_services 含 pid + alive (spawn 后)."""
+        # 先触发 spawn
+        invoke_stdio("bos://memory/kos/search", "search", [])
+        services = list_services()
+        kos_service = next(s for s in services if s["uri"] == "bos://memory/kos/search")
+        assert kos_service["transport"] == "stdio"
+        assert kos_service["pid"] is not None
+        assert kos_service["pid"] > 0
+        assert kos_service["alive"] is True
+
+    def test_process_pool_lifecycle_w1(self):
+        """W1 验证: ProcessPool 进程复用 (不重复 spawn)."""
+        # 第一次调用 → spawn
+        r1 = invoke_stdio("bos://memory/kos/search", "search", [])
+        assert r1.get("status") == "ok", f"first call failed: {r1}"
+        pid1 = get_pool().processes["bos://memory/kos/search"].pid
+
+        # 第二次调用 → 复用同一进程
+        r2 = invoke_stdio("bos://memory/kos/search", "search", [])
+        assert r2.get("status") == "ok", f"second call failed: {r2}"
+        pid2 = get_pool().processes["bos://memory/kos/search"].pid
+
+        assert pid1 == pid2, f"进程不复用! pid1={pid1}, pid2={pid2}"
+        # request_id 必须递增
+        assert r1["request_id"] != r2["request_id"]

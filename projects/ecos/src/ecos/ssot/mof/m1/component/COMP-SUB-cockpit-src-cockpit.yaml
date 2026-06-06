@@ -1,0 +1,13 @@
+id: COMP-SUB-cockpit-src-cockpit
+type: Component
+subtype: SubPackage
+name: src/cockpit
+description: 'cockpit 子包: src/cockpit'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L3
+properties:
+  layer: L3
+  runtime: active

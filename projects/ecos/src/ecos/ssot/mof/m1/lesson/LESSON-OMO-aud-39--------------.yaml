@@ -1,0 +1,28 @@
+# M1 Node: LESSON-OMO-aud-39--------------
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-aud-39--------------
+type: Lesson
+subtype: OMORetro
+name: Workspace 全面架构审计与债务治理报告
+description: '```
+
+  Runtime Core       ████████████████████████░░  58/100  (agentmesh 75 + MetaOS 72
+  + agent-runtime 62, 原51)
+
+  MCP Buses          █████████████████████'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Workspace 全面架构审计与债务治理报告
+  lesson: '```
+
+    Runtime Core       ████████████████████████░░  58/100  (agentmesh 75 + MetaOS
+    72 + agent-runtime 62, 原51)
+
+    MCP Buses          █████████████████████'
+  source: Workspace/.omo/_knowledge/summaries/audits/aud-39-全面架构审计与债务治理报告.md
+  severity: medium

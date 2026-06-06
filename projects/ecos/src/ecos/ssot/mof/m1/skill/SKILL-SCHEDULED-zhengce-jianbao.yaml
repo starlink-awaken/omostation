@@ -1,0 +1,13 @@
+id: SKILL-SCHEDULED-zhengce-jianbao
+type: Skill
+subtype: ScheduledTask
+name: 政策情报简报 V2 — 三源混合摄入（gov.cn JSON Pull + moe.gov.cn Feed Pull +
+description: '定时任务: zhengce-jianbao'
+status: active
+domain: meta
+created: '2026-06-05'
+version: 1.0.0
+layer: L4
+properties:
+  skill: 执行 zhengce-jianbao 中定义的指令
+  trigger: scheduled

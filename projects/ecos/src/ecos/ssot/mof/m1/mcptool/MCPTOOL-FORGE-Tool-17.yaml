@@ -1,0 +1,13 @@
+id: MCPTOOL-FORGE-Tool-17
+type: MCPTool
+subtype: ForgeTool
+name: Tool 17
+description: 'Forge 工具: Tool 17'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  tool_name: Tool 17
+  server: forge

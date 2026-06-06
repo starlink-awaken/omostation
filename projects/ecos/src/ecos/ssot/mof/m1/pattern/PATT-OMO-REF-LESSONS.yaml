@@ -1,0 +1,16 @@
+id: PATT-OMO-REF-LESSONS
+type: Pattern
+subtype: OMORef
+name: 项目经验教训记录
+description: 'OMO 参考: 项目经验教训记录'
+status: documented
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  problem: 项目经验教训记录
+  context: OMO 治理
+  solution: 详见 .omo/_knowledge/reference/LESSONS.md
+  known_uses:
+  - .omo/_knowledge/reference/

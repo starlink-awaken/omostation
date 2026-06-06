@@ -1,0 +1,13 @@
+id: COMP-SUB-kairon-src-kairon
+type: Component
+subtype: SubPackage
+name: src/kairon
+description: 'kairon 子包: src/kairon'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  layer: L2
+  runtime: active

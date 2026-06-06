@@ -1,0 +1,13 @@
+id: SKILL-SCHEDULED-cross-domain-sync
+type: Skill
+subtype: ScheduledTask
+name: KOS 跨域状态同步 v2.6 — 每4小时增量索引 + 本体 CRUD + 摘要 + 域注册保活
+description: '定时任务: cross-domain-sync'
+status: active
+domain: meta
+created: '2026-06-05'
+version: 1.0.0
+layer: L4
+properties:
+  skill: 执行 cross-domain-sync 中定义的指令
+  trigger: scheduled

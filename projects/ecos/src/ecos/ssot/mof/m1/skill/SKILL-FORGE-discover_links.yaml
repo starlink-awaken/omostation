@@ -1,0 +1,13 @@
+id: SKILL-FORGE-discover_links
+type: Skill
+subtype: ForgeSkill
+name: discover_links
+description: 'Forge 技能: discover_links'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  skill: 'Forge 内置能力: discover_links'
+  trigger: mcp

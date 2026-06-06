@@ -1,0 +1,14 @@
+id: ENTITY-OMO-DEBT-P1-PROTOCOL_CLI
+type: Entity
+subtype: OMODebt
+name: L0 协议从 stub 深化为可用 CLI：ACP/A2A/BOS_URI 无运行时工具
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: P1-PROTOCOL_CLI

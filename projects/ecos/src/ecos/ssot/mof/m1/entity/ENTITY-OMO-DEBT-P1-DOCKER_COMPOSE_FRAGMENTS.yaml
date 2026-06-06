@@ -1,0 +1,14 @@
+id: ENTITY-OMO-DEBT-P1-DOCKER_COMPOSE_FRAGMENTS
+type: Entity
+subtype: OMODebt
+name: 96 个 docker-compose.yml 散落在 projects/ 中，大部分在归档内无人管理
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: P1-DOCKER_COMPOSE_FRAGMENTS

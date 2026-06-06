@@ -1,0 +1,14 @@
+id: WORKFLOW-DEPLOY
+type: Workflow
+subtype: AgentWorkflow
+name: Deploy 工作流
+description: 部署工作流——构建→测试→部署→健康检查
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L3
+properties:
+  workflow_name: Deploy 工作流
+  steps: 部署工作流——构建→测试→部署→健康检查
+  trigger: agent-invoke

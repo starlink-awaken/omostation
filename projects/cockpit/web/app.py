@@ -440,6 +440,32 @@ async def api_clear():
     return {"status": "cleared", "removed": count}
 
 
+@app.post("/api/sandbox/execute")
+async def api_sandbox_execute(request_data: dict):
+    """Execute arbitrary python code securely inside the KEI sandbox."""
+    code = request_data.get("code", "")
+    if not code:
+        return _error_resp("Code is required", 400)
+    
+    try:
+        from runtime.kei_sandbox import enable_sandbox
+        from runtime.executor.sandbox import Sandbox
+        # Enable sandbox (idempotent hook registration)
+        enable_sandbox()
+        # Execute the untrusted code
+        res = Sandbox.execute(code)
+        return {
+            "success": res.success,
+            "stdout": res.stdout,
+            "duration_ms": res.duration_ms,
+            "error": res.error,
+            "output": res.output,
+        }
+    except Exception as e:
+        return _error_resp(f"Sandbox execution failed: {e}", 500)
+
+
+
 @app.post("/api/instance")
 async def api_add_instance(data: dict):
     """Add a load-balanced instance to a service."""

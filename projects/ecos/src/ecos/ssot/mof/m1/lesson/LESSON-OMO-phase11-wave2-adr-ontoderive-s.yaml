@@ -1,0 +1,24 @@
+# M1 Node: LESSON-OMO-phase11-wave2-adr-ontoderive-s
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase11-wave2-adr-ontoderive-s
+type: Lesson
+subtype: OMORetro
+name: ADR — Phase 11 Wave 2 — OntoDerive Scheme MetaType
+description: '1. Scheme objects now participate in the same model-type contract surface
+  as other knowledge artifacts.
+
+  2. Existing scheme fields and file-path behavi'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: ADR — Phase 11 Wave 2 — OntoDerive Scheme MetaType
+  lesson: '1. Scheme objects now participate in the same model-type contract surface
+    as other knowledge artifacts.
+
+    2. Existing scheme fields and file-path behavi'
+  source: Workspace/.omo/_knowledge/summaries/phase11/phase11-wave2-adr-ontoderive-scheme-metatype.md
+  severity: medium

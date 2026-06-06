@@ -1,137 +1,120 @@
-# eCOS v5 L0 — 协议级约束定义 (PoC)
-# =========================================
-# Phase7 / ADT-04 / v5 设计能力 — 协议约束最低可行产品
-# 宪法约束编译为 YAML，由 ecos-constraint-validator.py 在协议映射阶段校验。
-#
-# 约束类型:
-#   required  — 必须满足，否则拒绝
-#   preferred — 推荐满足，不满足告警
-#   immutable — 不可变更（仅 L4 宪法修订可改）
-
-version: "1.0.0"
-generated: "2026-06-06"
-
 constraints:
-  # ── X1: 治理安全约束 ──
-  - id: X1-C01
-    type: required
-    dimension: X1
-    description: "所有跨层协议映射必须在 L0 Protocol Registry 中注册"
-    rule: "protocol.registered == true"
-    applies_to: [L0, L1, L2, L3]
-    violation: "E-L0-001: 未注册协议映射"
-
-  - id: X1-C02
-    type: required
-    dimension: X1
-    description: "跨层 MCP 调用必须经过 I0/Agora 路由"
-    rule: "layer.cross_call.route == 'I0/Agora'"
-    applies_to: [L1, L2, L3]
-    violation: "E-L0-002: 绕过 I0/Agora 的跨层直连"
-
-  - id: X1-C03
-    type: required
-    dimension: X1
-    description: "Agora register 是唯一写操作入口"
-    rule: "write.entry == 'agora.register'"
-    applies_to: [I0]
-    violation: "E-L0-003: 未经 Agora 的写操作"
-
-  # ── X2: 抗熵进化约束 ──
-  - id: X2-C01
-    type: required
-    dimension: X2
-    description: "协议版本必须声明——未版本化协议不可进入注册表"
-    rule: "protocol.version != null"
-    applies_to: [L0]
-    violation: "E-L0-004: 未版本化协议"
-
-  - id: X2-C02
-    type: preferred
-    dimension: X2
-    description: "协议版本超过 2 个 MAJOR 版本应触发升级审查"
-    rule: "protocol.age_major_versions <= 2"
-    applies_to: [L0]
-    violation: "W-L0-001: 协议版本老化"
-
-  - id: X2-C03
-    type: required
-    dimension: X2
-    description: "CLAUDE.md 超过 60 天未更新应触发保鲜告警"
-    rule: "claude_md.age_days <= 60"
-    applies_to: [L4]
-    violation: "W-L0-002: CLAUDE.md 保鲜告警"
-
-    # ── X2: 协议级反熵 (v5 设计能力) ──
-  - id: X2-C04
-    type: preferred
-    dimension: X2
-    description: "协议引入超过 half_life_days 后应触发老化审查"
-    rule: "protocol.age_days <= protocol.half_life_days"
-    applies_to: [L0]
-    violation: "W-L0-005: 协议超过半衰期"
-
-  # ── X3: 价值堆栈约束 ──
-  - id: X3-C01
-    type: preferred
-    dimension: X3
-    description: "每个功能域应声明 value_tier"
-    rule: "domain.value_tier != null"
-    applies_to: [L4]
-    violation: "W-L0-003: 未声明 value_tier"
-
-  - id: X3-C02
-    type: preferred
-    dimension: X3
-    description: "value_tier=1 的域应有 cost_attribution"
-    rule: "domain.value_tier == 1 implies domain.cost_attribution != 'none'"
-    applies_to: [L4]
-    violation: "W-L0-004: 核心域无成本归因"
-
-# ── 协议注册表 (含 half_life 价值衰减) ──
-protocol_registry:
-  - id: MCP
-    version: "2025-03-26"
-    introduced: "2026-06-06"  # 审查日期重置 — 协议仍为核心基础设施
-    half_life_days: 365
-    status: active
-    value_tier: 1
-    description: "Model Context Protocol — 工具协议 (cockpit/agora 活跃使用中)"
-
-  - id: ACP
-    version: "1.0"
-    introduced: "2026-01-01"
-    half_life_days: 180
-    status: active
-    value_tier: 1
-    description: "Agent Communication Protocol — Agent通信"
-
-  - id: A2A
-    version: "1.0"
-    introduced: "2026-01-01"
-    half_life_days: 180
-    status: active
-    value_tier: 2
-    description: "Agent-to-Agent 任务协议"
-
-  - id: BOS_URI
-    version: "0.2"  # Phase 33 重建中
-    introduced: "2026-06-06"  # 审查日期重置 — Phase 33 活跃开发中
-    half_life_days: 180
-    status: active
-    value_tier: 2
-    description: "全域 BOS URI 挂载方案 (Phase 33: DEL-006-004 进行中)"
-
-  - id: L0_YAML
-    version: "1.0.0"
-    introduced: "2026-06-06"
-    half_life_days: 180
-    status: active
-    value_tier: 2
-    description: "L0 协议约束 YAML 格式"
-
-# 约束执行记录
+- applies_to:
+  - L0
+  - L1
+  - L2
+  - L3
+  description: 所有跨层协议映射必须在 L0 Protocol Registry 中注册
+  dimension: X1
+  id: X1-C01
+  rule: protocol.registered == true
+  type: required
+  violation: 'E-L0-001: 未注册协议映射'
+- applies_to:
+  - L1
+  - L2
+  - L3
+  description: 跨层 MCP 调用必须经过 I0/Agora 路由
+  dimension: X1
+  id: X1-C02
+  rule: layer.cross_call.route == 'I0/Agora'
+  type: required
+  violation: 'E-L0-002: 绕过 I0/Agora 的跨层直连'
+- applies_to:
+  - I0
+  description: Agora register 是唯一写操作入口
+  dimension: X1
+  id: X1-C03
+  rule: write.entry == 'agora.register'
+  type: required
+  violation: 'E-L0-003: 未经 Agora 的写操作'
+- applies_to:
+  - L0
+  description: 协议版本必须声明——未版本化协议不可进入注册表
+  dimension: X2
+  id: X2-C01
+  rule: protocol.version != null
+  type: required
+  violation: 'E-L0-004: 未版本化协议'
+- applies_to:
+  - L0
+  description: 协议版本超过 2 个 MAJOR 版本应触发升级审查
+  dimension: X2
+  id: X2-C02
+  rule: protocol.age_major_versions <= 2
+  type: preferred
+  violation: 'W-L0-001: 协议版本老化'
+- applies_to:
+  - L4
+  description: CLAUDE.md 超过 60 天未更新应触发保鲜告警
+  dimension: X2
+  id: X2-C03
+  rule: claude_md.age_days <= 60
+  type: required
+  violation: 'W-L0-002: CLAUDE.md 保鲜告警'
+- applies_to:
+  - L0
+  description: 协议引入超过 half_life_days 后应触发老化审查
+  dimension: X2
+  id: X2-C04
+  rule: protocol.age_days <= protocol.half_life_days
+  type: preferred
+  violation: 'W-L0-005: 协议超过半衰期'
+- applies_to:
+  - L4
+  description: 每个功能域应声明 value_tier
+  dimension: X3
+  id: X3-C01
+  rule: domain.value_tier != null
+  type: preferred
+  violation: 'W-L0-003: 未声明 value_tier'
+- applies_to:
+  - L4
+  description: value_tier=1 的域应有 cost_attribution
+  dimension: X3
+  id: X3-C02
+  rule: domain.value_tier == 1 implies domain.cost_attribution != 'none'
+  type: preferred
+  violation: 'W-L0-004: 核心域无成本归因'
 execution:
-  validator: "ecos-constraint-validator.py"
-  mode: "warn"  # warn | enforce — 当前 PoC 阶段为 warn
   last_run: null
+  mode: warn
+  validator: ecos-constraint-validator.py
+generated: '2026-06-06'
+protocol_registry:
+- description: Model Context Protocol — 工具协议 (cockpit/agora 活跃使用中)
+  half_life_days: 365
+  id: MCP
+  introduced: '2026-06-06'
+  status: active
+  value_tier: 1
+  version: '2025-03-26'
+- description: Agent Communication Protocol — v2.0 运行时实现中 (DEC-2026-06-06-ACP-A2A)
+  half_life_days: 180
+  id: ACP
+  introduced: '2026-06-06'
+  status: active
+  value_tier: 1
+  version: '1.0'
+- description: Agent-to-Agent 任务协议— v2.0 运行时实现中 (DEC-2026-06-06-ACP-A2A)
+  half_life_days: 180
+  id: A2A
+  introduced: '2026-06-06'
+  status: active
+  value_tier: 2
+  version: '1.0'
+- description: '全域 BOS URI 挂载方案 (Phase 33: DEL-006-004 进行中)'
+  half_life_days: 180
+  id: BOS_URI
+  introduced: '2026-06-06'
+  status: active
+  value_tier: 2
+  version: '0.2'
+- description: L0 协议约束 YAML 格式
+  half_life_days: 180
+  id: L0_YAML
+  introduced: '2026-06-06'
+  status: active
+  value_tier: 2
+  version: 1.0.0
+version: 1.0.0

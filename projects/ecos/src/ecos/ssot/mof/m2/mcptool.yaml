@@ -1,0 +1,49 @@
+# M2: MCPTool
+
+m2_type: MCPTool
+version: 1.0.0
+created: '2026-06-06'
+MCPTool:
+  m3_parent: BehavioralElement.Protocol
+  description: MCP 工具——通过 Model Context Protocol 暴露的可调用端点。如 cockpit tools·agora tools。回答"Agent
+    能调用什么"。
+  icon: 🔧
+  stateMachine:
+    active:
+      description: active
+      transitions:
+      - deprecated
+      - archived
+    deprecated:
+      description: deprecated
+      transitions:
+      - archived
+    archived:
+      description: archived
+      transitions: []
+  requiredProperties:
+    tool_name:
+      type: string
+      description: 工具名称
+    server:
+      type: string
+      description: 所属 MCP Server
+  optionalProperties:
+    description:
+      type: string
+      description: 工具描述
+    parameters:
+      type: string
+      description: 参数 schema
+    returns:
+      type: string
+      description: 返回值 schema
+  validationRules:
+  - rule: tool_name != null
+    level: error
+    message: MCPTool 必须有 tool_name
+  examples:
+  - id: MCPTOOL-2026-06-06-001
+    name: 示例 MCPTool
+    description: MCP 工具——通过 Model Context Protocol 暴露的可调用端点。如 cockpit tools·agora
+      tools。回答"Agent 能调用什么"。

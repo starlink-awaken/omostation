@@ -1,0 +1,24 @@
+# M1 Node: LESSON-OMO-phase13-retrospective
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase13-retrospective
+type: Lesson
+subtype: OMORetro
+name: Phase 13 retrospective
+description: '- Phase 14 can consume ranked deferred work without treating Phase 13
+  proposals as approval.
+
+  - Phase 15 should turn Phase 12-13 evidence into a first-'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 13 retrospective
+  lesson: '- Phase 14 can consume ranked deferred work without treating Phase 13 proposals
+    as approval.
+
+    - Phase 15 should turn Phase 12-13 evidence into a first-'
+  source: Workspace/.omo/_knowledge/summaries/phase13/phase13-retrospective.md
+  severity: medium

@@ -1,0 +1,26 @@
+# M1 Node: LESSON-OMO-phase11-wave4-adr-kos-canonica
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase11-wave4-adr-kos-canonica
+type: Lesson
+subtype: OMORetro
+name: ADR — Phase 11 Wave 4 — KOS Canonical MetaType Calibration
+description: '1. KOS 的存储语义与 CLI 暴露的 MetaType 过滤面重新对齐。
+
+  2. `fact / inference / constraint / processor` 等类型首次能稳定写入索引元数据，而不再被压扁成 `document/unknown`。
+
+  3. 后续如果要把 MetaType '
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: ADR — Phase 11 Wave 4 — KOS Canonical MetaType Calibration
+  lesson: '1. KOS 的存储语义与 CLI 暴露的 MetaType 过滤面重新对齐。
+
+    2. `fact / inference / constraint / processor` 等类型首次能稳定写入索引元数据，而不再被压扁成 `document/unknown`。
+
+    3. 后续如果要把 MetaType '
+  source: Workspace/.omo/_knowledge/summaries/phase11/phase11-wave4-adr-kos-canonical-metatype.md
+  severity: medium

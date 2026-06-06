@@ -1,0 +1,13 @@
+id: AGENT-AGENTS-mobile-developer
+type: Agent
+subtype: AgentDef
+name: mobile-developer
+description: 'Agent: mobile-developer'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L3
+properties:
+  agent_name: mobile-developer
+  role: Agent defined in ~/.agents/

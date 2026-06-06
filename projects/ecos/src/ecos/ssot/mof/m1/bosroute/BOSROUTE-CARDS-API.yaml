@@ -1,0 +1,14 @@
+id: BOSROUTE-CARDS-API
+type: Component
+subtype: BOSRoute
+name: bos://cards/*
+description: CARDS 追踪 API 路由
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: I0
+properties:
+  layer: I0
+  runtime: active
+  protocol: BOS_URI

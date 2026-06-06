@@ -1,0 +1,13 @@
+id: ACTION-ACP-IMPLEMENT
+type: Action
+name: ACP 协议运行时实现
+description: 实现 Agent 发现·心跳·消息路由——基于 I0 Agora event bus
+status: planned
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: multi
+properties:
+  action: 实现 Agent 发现·心跳·消息路由——基于 I0 Agora event bus
+  intent: INTENT-MULTI-AGENT
+  priority: P1

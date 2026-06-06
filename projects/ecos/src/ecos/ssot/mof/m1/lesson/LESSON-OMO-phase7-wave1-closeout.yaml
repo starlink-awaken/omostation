@@ -1,0 +1,20 @@
+# M1 Node: LESSON-OMO-phase7-wave1-closeout
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase7-wave1-closeout
+type: Lesson
+subtype: OMORetro
+name: Phase 7 Wave 1 closeout
+description: 'Wave 1 met its bar: one real request path can now preload live context,
+  bridge into governed work, persist confirmation evidence, and hand off to fres'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 7 Wave 1 closeout
+  lesson: 'Wave 1 met its bar: one real request path can now preload live context,
+    bridge into governed work, persist confirmation evidence, and hand off to fres'
+  source: Workspace/.omo/_knowledge/summaries/phase7/phase7-wave1-closeout.md
+  severity: medium

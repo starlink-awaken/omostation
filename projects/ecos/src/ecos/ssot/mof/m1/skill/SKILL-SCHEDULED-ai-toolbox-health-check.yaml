@@ -1,0 +1,13 @@
+id: SKILL-SCHEDULED-ai-toolbox-health-check
+type: Skill
+subtype: ScheduledTask
+name: 每日 AI-ToolBox 健康巡检
+description: '定时任务: ai-toolbox-health-check'
+status: active
+domain: meta
+created: '2026-06-05'
+version: 1.0.0
+layer: L4
+properties:
+  skill: 执行 ai-toolbox-health-check 中定义的指令
+  trigger: scheduled

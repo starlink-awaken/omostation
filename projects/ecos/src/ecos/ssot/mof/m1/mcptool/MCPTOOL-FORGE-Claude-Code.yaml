@@ -1,0 +1,13 @@
+id: MCPTOOL-FORGE-Claude-Code
+type: MCPTool
+subtype: ForgeTool
+name: Claude Code
+description: 'Forge 工具: Claude Code'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  tool_name: Claude Code
+  server: forge

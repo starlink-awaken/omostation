@@ -1,0 +1,12 @@
+# ecos L0 — gitignore
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+.env
+.ecos/

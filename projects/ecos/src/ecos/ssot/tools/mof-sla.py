@@ -21,7 +21,9 @@ L0_NODES = WS / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "nodes"
 M0_FILE = WS / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "M0-snapshot.yaml"
 CARDS_DB = WS / "data" / "cards" / "cards.db"
 DAEMON_DB = HOME / ".ecos" / "daemon-state.db"
-CONSTRAINTS = HOME / "Documents" / "学习进化" / "2-knowledge" / "基建架构" / "L0-constraints.yaml"
+CONSTRAINTS = WS / "projects" / "ecos" / "src" / "ecos" / "ssot" / "registry" / "L0-constraints.yaml"
+if not CONSTRAINTS.exists():
+    CONSTRAINTS = HOME / "Documents" / "学习进化" / "2-knowledge" / "基建架构" / "L0-constraints.yaml"
 
 
 def now(): return datetime.now(timezone.utc)

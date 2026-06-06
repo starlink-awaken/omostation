@@ -1,0 +1,14 @@
+id: ARTIFACT-L0-mof-view
+type: Artifact
+subtype: L0Tool
+name: mof-view
+description: 'L0 工具: mof-view'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L0
+properties:
+  path: ssot/tools/mof-view.py
+  format: python
+  size: 8657

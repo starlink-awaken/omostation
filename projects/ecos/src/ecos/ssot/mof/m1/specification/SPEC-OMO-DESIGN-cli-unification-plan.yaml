@@ -1,0 +1,15 @@
+id: SPEC-OMO-DESIGN-cli-unification-plan
+type: Specification
+subtype: OMODesign
+name: CLI unification plan
+description: 'OMO 设计文档: CLI unification plan'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  constraints:
+  - OMO 设计
+  scope:
+  - OMO

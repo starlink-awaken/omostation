@@ -40,7 +40,14 @@ from .omo_debt_reporting_trend import (
 )
 from .omo_debt_registry import DebtItem, load_debt_ledger
 from .omo_debt_review_queue import build_review_queue
-
+from .omo_debt_lifecycle import (
+    append_history,
+    register_item,
+    append_registry_ref,
+    schedule_item,
+    update_item,
+    classify_review_sections,
+)
 
 def _timestamp() -> str:
     return (
@@ -62,19 +69,6 @@ def _write_yaml(path: Path, payload: dict) -> None:
     )
 
 
-def append_history(
-    payload: dict, action: str, note: str, actor: str = ""
-) -> None:
-    entry: dict[str, str] = {
-        "at": _timestamp(),
-        "action": action,
-        "note": note,
-    }
-    if actor:
-        entry["actor"] = actor
-    payload.setdefault("history", []).append(entry)
-
-
 def _parse_iso8601(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
@@ -85,87 +79,6 @@ def _positive_int(value: str) -> int:
         raise argparse.ArgumentTypeError("value must be >= 1")
     return parsed
 
-
-def register_item(args: argparse.Namespace) -> dict:
-    payload = {
-        "id": args.id,
-        "title": args.title,
-        "dimension": args.dimension,
-        "subdimension": args.subdimension,
-        "domain": "workspace",
-        "scope": "governance_kernel",
-        "severity": args.severity,
-        "weight": 0.05,
-        "entropy_class": "classification",
-        "lifecycle_state": "identified",
-        "owner": args.owner,
-        "affected_roots": [".omo"],
-        "evidence_refs": [],
-        "mitigation_refs": [],
-        "opened_at": _timestamp(),
-        "last_reviewed_at": None,
-        "next_review_at": None,
-        "gate_level": "none",
-        "history": [],
-        "x1_policy_ref": getattr(args, "x1_policy_ref", ""),
-        "x2_freshness": getattr(args, "x2_freshness", ""),
-        "x3_tier": getattr(args, "x3_tier", ""),
-    }
-    actor = getattr(args, "actor", "")
-    append_history(
-        payload, "register", f"Registered debt item {args.id}.", actor=actor
-    )
-    return payload
-
-
-def append_registry_ref(omo_dir: Path, item_ref: str) -> None:
-    registry_path = omo_dir / "_truth" / "registry" / "debt.yaml"
-    registry = _load_yaml(registry_path)
-    refs = list(registry.get("seed_items", []))
-    if item_ref not in refs:
-        refs.append(item_ref)
-    registry["seed_items"] = refs
-    _write_yaml(registry_path, registry)
-
-
-def schedule_item(omo_dir: Path, item_id: str, next_review_at: str) -> None:
-    item_path = omo_dir / "debt" / "items" / f"{item_id}.yaml"
-    payload = _load_yaml(item_path)
-    payload["lifecycle_state"] = "scheduled"
-    payload["next_review_at"] = next_review_at
-    append_history(payload, "schedule", f"Next review set to {next_review_at}.")
-    _write_yaml(item_path, payload)
-
-
-def update_item(omo_dir: Path, item_id: str) -> tuple[Path, dict]:
-    item_path = omo_dir / "debt" / "items" / f"{item_id}.yaml"
-    return item_path, _load_yaml(item_path)
-
-
-def classify_review_sections(items: tuple[DebtItem, ...]) -> dict[str, list[str]]:
-    sections = {
-        "newly_registered": [],
-        "closed": [],
-        "drifted": [],
-        "escalated": [],
-        "reopened": [],
-    }
-    for item in items:
-        actions = [entry["action"] for entry in item.history]
-        if "register" in actions:
-            sections["newly_registered"].append(item.id)
-        if "close" in actions or item.lifecycle_state == "closed":
-            sections["closed"].append(item.id)
-        if (
-            item.entropy_class in {"pointer", "time"}
-            and item.lifecycle_state != "closed"
-        ):
-            sections["drifted"].append(item.id)
-        if "escalate" in actions or item.gate_level == "gate":
-            sections["escalated"].append(item.id)
-        if "reopen" in actions:
-            sections["reopened"].append(item.id)
-    return sections
 
 
 def write_dashboard(

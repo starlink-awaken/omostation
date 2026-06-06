@@ -1,0 +1,14 @@
+id: BOSROUTE-KAIRON-kairon-utils
+type: Component
+subtype: BOSRoute
+name: bos://kairon/kairon-utils
+description: 'Kairon 子包: kairon-utils'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  layer: L2
+  runtime: active
+  protocol: BOS_URI

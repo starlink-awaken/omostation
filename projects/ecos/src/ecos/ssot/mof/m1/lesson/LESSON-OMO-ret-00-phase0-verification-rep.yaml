@@ -1,0 +1,22 @@
+# M1 Node: LESSON-OMO-ret-00-phase0-verification-rep
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-ret-00-phase0-verification-rep
+type: Lesson
+subtype: OMORetro
+name: Phase 0 端到端验证报告
+description: "```\n每个 arcnode reason 调用:\n  system prompt: ~1,500 tokens (宪法上下文)\n\
+  \  user content: ~500 tokens (YAML + 指令)\n  LLM response: ~500-1,000 tokens (JSON\
+  \ 报告)\n "
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 0 端到端验证报告
+  lesson: "```\n每个 arcnode reason 调用:\n  system prompt: ~1,500 tokens (宪法上下文)\n  user\
+    \ content: ~500 tokens (YAML + 指令)\n  LLM response: ~500-1,000 tokens (JSON 报告)\n\
+    \ "
+  source: Workspace/.omo/_knowledge/process/retrospectives/ret-00-phase0-verification-report.md
+  severity: medium

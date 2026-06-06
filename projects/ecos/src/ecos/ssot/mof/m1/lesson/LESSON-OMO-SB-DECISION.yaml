@@ -1,0 +1,18 @@
+# M1 Node: LESSON-OMO-SB-DECISION
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-SB-DECISION
+type: Lesson
+subtype: OMORetro
+name: SharedBrain Phase 11 decision
+description: '##'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: SharedBrain Phase 11 decision
+  lesson: '##'
+  source: Workspace/.omo/_knowledge/summaries/SB-DECISION.md
+  severity: medium

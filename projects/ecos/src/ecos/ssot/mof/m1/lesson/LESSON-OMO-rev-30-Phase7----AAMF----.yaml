@@ -1,0 +1,26 @@
+# M1 Node: LESSON-OMO-rev-30-Phase7----AAMF----
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-rev-30-Phase7----AAMF----
+type: Lesson
+subtype: OMORetro
+name: Phase 7 深度复盘 + AAMF 最终审计
+description: '周一 7:00  arcnode-graph (含 C4)          (agent)
+
+  周一 9:00  arcnode-resolve-review         (no_agent)
+
+  周一 9:'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 7 深度复盘 + AAMF 最终审计
+  lesson: '周一 7:00  arcnode-graph (含 C4)          (agent)
+
+    周一 9:00  arcnode-resolve-review         (no_agent)
+
+    周一 9:'
+  source: Workspace/.omo/_knowledge/process/retrospectives/rev-30-Phase7深度复盘AAMF最终审计.md
+  severity: medium

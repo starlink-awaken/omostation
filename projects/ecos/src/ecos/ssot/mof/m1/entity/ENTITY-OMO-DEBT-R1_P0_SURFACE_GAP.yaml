@@ -1,0 +1,14 @@
+id: ENTITY-OMO-DEBT-R1_P0_SURFACE_GAP
+type: Entity
+subtype: OMODebt
+name: P0 产品交互层缺失 — 无用户可见入口
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: R1_P0_SURFACE_GAP

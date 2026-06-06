@@ -1,0 +1,22 @@
+# M1 Node: LESSON-OMO-phase1-8-deep-retrospective
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase1-8-deep-retrospective
+type: Lesson
+subtype: OMORetro
+name: Phase 1-8 deep retrospective
+description: '1. phase-driven delivery discipline
+
+  2. task-centered governed'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 1-8 deep retrospective
+  lesson: '1. phase-driven delivery discipline
+
+    2. task-centered governed'
+  source: Workspace/.omo/_knowledge/summaries/phase1/phase1-8-deep-retrospective.md
+  severity: medium

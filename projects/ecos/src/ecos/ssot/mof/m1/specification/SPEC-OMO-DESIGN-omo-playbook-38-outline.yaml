@@ -1,0 +1,17 @@
+id: SPEC-OMO-DESIGN-omo-playbook-38-outline
+type: Specification
+subtype: OMODesign
+name: 'OMO Playbook 38: 联邦Authority Re-Baseline、Ownership Recomposition与New Default
+  Con'
+description: 'OMO 设计文档: OMO Playbook 38: 联邦Authority Re-Baseline、Ownership Recomposition与New
+  Default Con'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  constraints:
+  - OMO 设计
+  scope:
+  - OMO

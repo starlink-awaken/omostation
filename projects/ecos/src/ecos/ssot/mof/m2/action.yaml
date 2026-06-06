@@ -1,0 +1,70 @@
+# M2: Action
+
+m2_type: Action
+version: 1.0.0
+created: '2026-06-06'
+Action:
+  m3_parent: BehavioralElement.Process
+  description: 行动——做什么。任务·专项·迭代。回答"做什么"。
+  icon: ⚡
+  stateMachine:
+    planned:
+      description: 已规划
+      transitions:
+      - active
+      - cancelled
+    active:
+      description: 进行中
+      transitions:
+      - blocked
+      - done
+      - cancelled
+    blocked:
+      description: 被阻塞
+      transitions:
+      - active
+      - cancelled
+    done:
+      description: 已完成
+      transitions:
+      - archived
+    cancelled:
+      description: 已取消
+      transitions:
+      - archived
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    action:
+      type: string
+      description: 行动描述
+    intent:
+      type: ref
+      description: 所属意图 (→Intent)
+  optionalProperties:
+    assignee:
+      type: string
+      description: 执行者
+    deadline:
+      type: date
+      description: 截止日期
+    priority:
+      type: enum
+      values:
+      - P0
+      - P1
+      - P2
+      - P3
+      description: 优先级
+    produces:
+      type: list
+      description: 产出的成果 (→Outcome)
+  validationRules:
+  - rule: action != null
+    level: error
+    message: 行动必须有描述
+  examples:
+  - id: ACTION-2026-06-06-001
+    name: 实现 X4 约束脚本
+    description: 编写 check-cards-state-consistency.py

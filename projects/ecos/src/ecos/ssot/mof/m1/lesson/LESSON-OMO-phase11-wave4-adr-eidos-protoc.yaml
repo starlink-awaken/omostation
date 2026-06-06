@@ -1,0 +1,24 @@
+# M1 Node: LESSON-OMO-phase11-wave4-adr-eidos-protoc
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase11-wave4-adr-eidos-protoc
+type: Lesson
+subtype: OMORetro
+name: ADR — Phase 11 Wave 4 — Eidos Protocol Contract Surface
+description: '1. `eidos/protocols/` now has a concrete v0.3 contract direction instead
+  of remaining only a runtime-typing convenience layer.
+
+  2. Cross-package valida'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: ADR — Phase 11 Wave 4 — Eidos Protocol Contract Surface
+  lesson: '1. `eidos/protocols/` now has a concrete v0.3 contract direction instead
+    of remaining only a runtime-typing convenience layer.
+
+    2. Cross-package valida'
+  source: Workspace/.omo/_knowledge/summaries/phase11/phase11-wave4-adr-eidos-protocol-contract-surface.md
+  severity: medium

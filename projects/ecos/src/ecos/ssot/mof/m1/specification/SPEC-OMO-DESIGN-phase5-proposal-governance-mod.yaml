@@ -1,0 +1,15 @@
+id: SPEC-OMO-DESIGN-phase5-proposal-governance-mod
+type: Specification
+subtype: OMODesign
+name: Phase 5 proposal governance model
+description: 'OMO 设计文档: Phase 5 proposal governance model'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  constraints:
+  - OMO 设计
+  scope:
+  - OMO

@@ -1,0 +1,19 @@
+# M1 Node: DEC-OMO-0001-agora-routes-deferred
+# Extracted from .omo/ decisions
+
+id: DEC-OMO-0001-agora-routes-deferred
+type: Decision
+subtype: OMO-ADR
+name: 'ADR-0001: agora 路由表精简策略 — L1 包按需注册'
+description: 'ADR-0001: agora 路由表精简策略 — L1 包按需注册'
+status: accepted
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  problem: 'ADR-0001: agora 路由表精简策略 — L1 包按需注册'
+  decision: 'ADR-0001: agora 路由表精简策略 — L1 包按需注册'
+  rationale: '来源: .omo/_knowledge/decisions/0001-agora-routes-deferred.md'
+  options: []
+  consequences: ''

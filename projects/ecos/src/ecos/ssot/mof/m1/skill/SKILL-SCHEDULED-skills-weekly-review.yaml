@@ -1,0 +1,13 @@
+id: SKILL-SCHEDULED-skills-weekly-review
+type: Skill
+subtype: ScheduledTask
+name: 每周一14:00扫描近期工作模式，更新project-skills技能仓库
+description: '定时任务: skills-weekly-review'
+status: active
+domain: meta
+created: '2026-06-05'
+version: 1.0.0
+layer: L4
+properties:
+  skill: 执行 skills-weekly-review 中定义的指令
+  trigger: scheduled

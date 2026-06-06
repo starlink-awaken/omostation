@@ -1,0 +1,13 @@
+id: SKILL-SCHEDULED-family-weekly-maintenance
+type: Skill
+subtype: ScheduledTask
+name: 每周一早上8点重建FamilySearch索引，检查STATE/TIMELINE是否需要更新
+description: '定时任务: family-weekly-maintenance'
+status: active
+domain: meta
+created: '2026-06-05'
+version: 1.0.0
+layer: L4
+properties:
+  skill: 执行 family-weekly-maintenance 中定义的指令
+  trigger: scheduled

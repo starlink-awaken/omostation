@@ -1,0 +1,26 @@
+# M1 Node: LESSON-OMO-worker-collaboration-effective
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-worker-collaboration-effective
+type: Lesson
+subtype: OMORetro
+name: Worker collaboration effectiveness review
+description: '1. `P4-W1-DISPATCH-AUTOMATION`
+
+  2. `P4-W1-CHECKPOINTED-RECLAIM-DRILL`
+
+  3. `P4-W1-CONSISTENCY-AUTO-GATE`'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Worker collaboration effectiveness review
+  lesson: '1. `P4-W1-DISPATCH-AUTOMATION`
+
+    2. `P4-W1-CHECKPOINTED-RECLAIM-DRILL`
+
+    3. `P4-W1-CONSISTENCY-AUTO-GATE`'
+  source: Workspace/.omo/_knowledge/summaries/worker-collaboration-effectiveness-review.md
+  severity: medium

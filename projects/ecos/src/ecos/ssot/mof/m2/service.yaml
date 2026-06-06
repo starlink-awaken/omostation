@@ -1,0 +1,76 @@
+# M2: Service
+
+m2_type: Service
+version: 1.0.0
+created: '2026-06-06'
+Service:
+  m3_parent: StructuralElement.Component
+  description: 长期运行的后台服务——区别于静态 Component(定义)和 Mechanism(自动化)。回答"什么在跑"。
+  icon: 🔌
+  stateMachine:
+    stopped:
+      description: 已停止
+      transitions:
+      - starting
+    starting:
+      description: 启动中
+      transitions:
+      - running
+      - failed
+    running:
+      description: 运行中
+      transitions:
+      - degraded
+      - stopping
+      - stopped
+    degraded:
+      description: 降级运行
+      transitions:
+      - running
+      - stopped
+    stopping:
+      description: 停止中
+      transitions:
+      - stopped
+    failed:
+      description: 失败
+      transitions:
+      - starting
+    archived:
+      description: 已归档
+      transitions: []
+  requiredProperties:
+    service_name:
+      type: string
+      description: 服务名称
+    runtime_status:
+      type: enum
+      values:
+      - stopped
+      - starting
+      - running
+      - degraded
+      - stopping
+      - failed
+      description: 运行时状态
+  optionalProperties:
+    port:
+      type: integer
+      description: 监听端口
+    pid:
+      type: integer
+      description: 进程 PID
+    health_check_url:
+      type: string
+      description: 健康检查端点
+    resources:
+      type: map
+      description: 资源占用 {cpu, memory, disk}
+  validationRules:
+  - rule: service_name != null
+    level: error
+    message: Service 必须有名称
+  examples:
+  - id: SVC-2026-06-06-001
+    name: ecos-daemon
+    description: L1 守护进程服务

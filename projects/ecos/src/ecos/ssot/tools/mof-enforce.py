@@ -32,7 +32,7 @@ from datetime import datetime, timezone
 HOME = Path.home()
 DOCS = HOME / "Documents"
 WS = HOME / "Workspace"
-BOUNDARY_FILE = WS / "projects" / "ecos" / "src" / "ecos" / "ssot" / "layer-boundary.yaml"
+BOUNDARY_FILE = WS / "projects" / "ecos" / "src" / "ecos" / "ssot" / "registry" / "layer-boundary.yaml"
 CARDS_DB = WS / "data" / "cards" / "cards.db"
 
 

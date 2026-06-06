@@ -1,0 +1,26 @@
+# M1 Node: LESSON-OMO-p4-wave1-worker-ops-baseline
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-p4-wave1-worker-ops-baseline
+type: Lesson
+subtype: OMORetro
+name: Phase 4 Wave 1 worker ops baseline
+description: '- `python3 -m pytest .omo/tests/test_omo_automation.py -q --tb=short`
+
+  - `python3 -m pytest .omo/tests/test_phase4_kickoff_docs.py -q --tb=short`
+
+  - `py'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 4 Wave 1 worker ops baseline
+  lesson: '- `python3 -m pytest .omo/tests/test_omo_automation.py -q --tb=short`
+
+    - `python3 -m pytest .omo/tests/test_phase4_kickoff_docs.py -q --tb=short`
+
+    - `py'
+  source: Workspace/.omo/_knowledge/summaries/p4-wave1-worker-ops-baseline.md
+  severity: medium

@@ -1,0 +1,15 @@
+id: SPEC-OMO-DESIGN-MASTER-BLUEPRINT
+type: Specification
+subtype: OMODesign
+name: omostation 全景蓝图：架构·路线图·里程碑
+description: 'OMO 设计文档: omostation 全景蓝图：架构·路线图·里程碑'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  constraints:
+  - OMO 设计
+  scope:
+  - OMO

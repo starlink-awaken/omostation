@@ -1,0 +1,20 @@
+# M1 Node: LESSON-OMO-phase5-wave2-retrospective
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase5-wave2-retrospective
+type: Lesson
+subtype: OMORetro
+name: Phase 5 Wave 2 retrospective
+description: Creating new wave packets or future task-center discovery logic now follows
+  an explicit template chain instead of ad hoc document and task generation.
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 5 Wave 2 retrospective
+  lesson: Creating new wave packets or future task-center discovery logic now follows
+    an explicit template chain instead of ad hoc document and task generation.
+  source: Workspace/.omo/_knowledge/summaries/phase5/phase5-wave2-retrospective.md
+  severity: medium

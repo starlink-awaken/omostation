@@ -2,107 +2,38 @@
 from __future__ import annotations
 
 import argparse
-import shlex
-import subprocess
-from datetime import datetime, timezone
 from pathlib import Path
 
-import yaml
 
 from .omo_admission import evaluate_worker_envelope, request_conditional_approval
-from .omo_governance import propose_truth_mutation
-from .omo_contract_request import (
-    build_contract_proposal,
-    build_contract_request,
-    contract_request_ref,
-)
-from .omo_io import write_text_atomic, write_yaml_atomic
 from .omo_handoff_index import write_handoff_index
 from .omo_metrics import write_worker_utilization_summary
-from .omo_promotion_approval import evaluate_promotion_approval
-from .omo_promotion_history import build_promotion_history
-from .omo_promotion_request import (
-    build_promotion_approval_proposal,
-    build_promotion_approval_request,
-    promotion_approval_ref,
-)
-from .omo_promotion_approval_status import (
-    build_promotion_approval_status_packet,
-    render_promotion_approval_status_markdown,
-)
-from .omo_promotion_approval_history import build_promotion_approval_history
-from .omo_promotion_approval_analytics import build_promotion_approval_analytics_packet
-from .omo_governance_overlay import build_governance_overlay_status
-from .omo_governance_overlay_approval_prep import (
-    build_governance_overlay_approval_prep_history,
-    build_governance_overlay_approval_prep_status,
-)
-from .omo_governance_overlay_approval_prep_aging import (
-    build_governance_overlay_approval_prep_aging,
-)
-from .omo_governance_overlay_approval_prep_analytics import (
-    build_governance_overlay_approval_prep_analytics,
-)
-from .omo_governance_overlay_approval_prep_diff import (
-    build_governance_overlay_approval_prep_diff,
-)
-from .omo_governance_overlay_approval_prep_trend import (
-    build_governance_overlay_approval_prep_trend,
-)
-from .omo_governance_overlay_loop import plan_governance_overlay_cycle
-from .omo_governance_overlay_targets import evaluate_governance_overlay_planned_target
-from .omo_promotion_readiness import (
-    build_promotion_readiness_packet,
-    render_promotion_readiness_markdown,
-)
 from .omo_rules import evaluate_rule_bundle
 from .omo_rollout import accept_rollout_envelope, evaluate_rollout_envelope
-from .omo_redaction import redact_sensitive_text
 from .omo_task_schema import (
     validate_active_tasks,
     validate_planned_tasks,
     validate_task_file,
 )
 
+from .omo_worker_status import (
+    collect_worker_status,
+    scan_runtime_watchdog,
+)
 
 # ── Extracted submodules ────────────────────────────────────────────────────
-from .omo_worker_core import (
-    _append_unique,
-    _build_launch_argv,
-    _find_dispatch_file,
-    _find_planned_task_file,
-    _find_task_file,
-    _find_task_file_safe,
-    _load_yaml,
-    _omo_path,
-    _parse_iso8601,
-    _timestamp_slug,
-    _utc_now,
-    _worker_command,
-    _write_yaml,
-)
 from .omo_worker_dispatch import (
     dispatch_task,
     reclaim_task,
     _worker_gc,
 )
 from .omo_worker_promotion import (
-    _promotion_eval,
     _print_task_promotion_eval,
-    _promotion_stamp,
-    _task_has_task_specific_promotion_approval,
-    _execute_governance_overlay_target_actions,
-    _sync_omo_state,
     _apply_task_promotion,
     _request_task_promotion_approval,
     _request_task_contract_declaration,
-    _request_task_contract_declaration_record,
-    _request_task_promotion_approval_record,
     _write_task_promotion_history,
-    _promotion_readiness_entry,
     _write_task_promotion_readiness,
-    _proposal_status,
-    _promotion_approval_status_entry,
     _write_task_promotion_approval_status,
     _write_task_promotion_approval_history,
     _write_task_promotion_approval_analytics,
@@ -116,121 +47,6 @@ from .omo_worker_promotion import (
     _write_task_governance_overlay_run_next,
 )
 
-def collect_worker_status(
-    root: Path, omo_dir: str | Path = ".omo"
-) -> dict[str, object]:
-    active_dir = _omo_path(root, omo_dir) / "tasks" / "active"
-    runs: list[dict[str, object]] = []
-
-    for task_file in sorted(active_dir.glob("*.yaml")):
-        task = _load_yaml(task_file)
-        run_ref = task.get("run_ref")
-        if not run_ref:
-            continue
-
-        dispatch_path = root / run_ref
-        if not dispatch_path.exists():
-            continue
-
-        dispatch = _load_yaml(dispatch_path)
-        runs.append(
-            {
-                "task_id": dispatch.get("task_id", task.get("id")),
-                "worker_id": dispatch.get("worker_id"),
-                "dispatch_state": dispatch.get("dispatch_state"),
-                "checkpoint_refs": dispatch.get("execution", {}).get(
-                    "checkpoint_refs", []
-                ),
-                "reclaim_ref": dispatch.get("reclaim", {}).get("note_ref"),
-                "review_ref": dispatch.get("handoff", {}).get("output_summary_ref"),
-                "lease": dispatch.get("lease", {}),
-            }
-        )
-
-    return {
-        "active_dispatches": len(runs),
-        "runs": runs,
-    }
-
-
-def update_dispatch_checkpoint(
-    root: Path,
-    dispatch_id: str,
-    completed_step: str,
-    changed_files: list[str],
-    note: str,
-    now: str | None = None,
-    omo_dir: str | Path = ".omo",
-) -> dict[str, object]:
-    dispatch_path = _find_dispatch_file(
-        _omo_path(root, omo_dir) / "workers" / "runs", dispatch_id
-    )
-    dispatch = _load_yaml(dispatch_path)
-    checkpoint_ref = dispatch.get("execution", {}).get("checkpoint_refs", [None])[-1]
-    if not checkpoint_ref:
-        raise ValueError(f"dispatch {dispatch_id} has no checkpoint ref")
-
-    timestamp = now or _utc_now()
-    changed_file_lines = [f"- `{path}`" for path in changed_files] or ["- None"]
-    checkpoint_lines = [
-        "# Checkpoint Note",
-        "",
-        "## Last completed step",
-        "",
-        completed_step,
-        "",
-        "## Changed files",
-        "",
-        *changed_file_lines,
-        "",
-        "## Operator note",
-        "",
-        note,
-        "",
-    ]
-    write_text_atomic(root / checkpoint_ref, "\n".join(checkpoint_lines))
-
-    dispatch["dispatch_state"] = "checkpointed"
-    dispatch["lease"]["last_checkpoint_at"] = timestamp
-    dispatch["lease"]["last_material_write_at"] = timestamp
-    _write_yaml(dispatch_path, dispatch)
-    return dispatch
-
-
-def scan_runtime_watchdog(
-    root: Path, now: str | None = None, omo_dir: str | Path = ".omo"
-) -> dict[str, object]:
-    current_time = _parse_iso8601(now) or datetime.now(timezone.utc)
-    status = collect_worker_status(root, omo_dir=omo_dir)
-    runs: list[dict[str, object]] = []
-    counts = {"healthy": 0, "warning": 0, "stale": 0, "reclaim_due": 0}
-
-    for run in status["runs"]:
-        lease = run.get("lease", {})
-        last_seen = _parse_iso8601(
-            lease.get("last_material_write_at")
-        ) or _parse_iso8601(lease.get("last_checkpoint_at"))
-        age_seconds = (
-            int((current_time - last_seen).total_seconds()) if last_seen else None
-        )
-        health = "healthy"
-        if age_seconds is not None:
-            if age_seconds >= lease.get("reclaim_after_seconds", 0):
-                health = "reclaim_due"
-            elif age_seconds >= lease.get("lease_expired_after_seconds", 0):
-                health = "stale"
-            elif age_seconds >= lease.get("warning_after_seconds", 0):
-                health = "warning"
-        counts[health] += 1
-        runs.append(
-            {
-                **run,
-                "age_seconds": age_seconds,
-                "health": health,
-            }
-        )
-
-    return {"counts": counts, "runs": runs}
 
 
 

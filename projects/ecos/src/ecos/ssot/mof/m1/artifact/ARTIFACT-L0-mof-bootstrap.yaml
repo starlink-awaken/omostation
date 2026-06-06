@@ -1,0 +1,14 @@
+id: ARTIFACT-L0-mof-bootstrap
+type: Artifact
+subtype: L0Tool
+name: mof-bootstrap
+description: 'L0 工具: mof-bootstrap'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L0
+properties:
+  path: ssot/tools/mof-bootstrap.py
+  format: python
+  size: 8876

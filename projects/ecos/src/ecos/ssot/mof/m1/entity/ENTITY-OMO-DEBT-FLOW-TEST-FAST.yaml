@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-OMO-DEBT-FLOW-TEST-FAST
+# Extracted from .omo/ debts
+
+id: ENTITY-OMO-DEBT-FLOW-TEST-FAST
+type: Entity
+subtype: OMODebt
+name: 无快速测试反馈回路 — make test-fast 遍历24包需2min+, 无法快速验证不破坏已有功能
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: FLOW-TEST-FAST
+  sources:
+  - Workspace/.omo/debt/items/FLOW-TEST-FAST.yaml

@@ -1,0 +1,20 @@
+# M1 Node: LESSON-OMO-p2-provider-plane-evidence
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-p2-provider-plane-evidence
+type: Lesson
+subtype: OMORetro
+name: Phase 2 Provider Plane Evidence
+description: "- Provider plane now has a concrete split:\n  - `cc-switch` = provider\
+  \ registry / runtime source-o"
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 2 Provider Plane Evidence
+  lesson: "- Provider plane now has a concrete split:\n  - `cc-switch` = provider\
+    \ registry / runtime source-o"
+  source: Workspace/.omo/_knowledge/summaries/p2-provider-plane-evidence.md
+  severity: medium

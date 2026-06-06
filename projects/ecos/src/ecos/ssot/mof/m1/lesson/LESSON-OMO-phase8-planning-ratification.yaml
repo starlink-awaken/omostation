@@ -1,0 +1,20 @@
+# M1 Node: LESSON-OMO-phase8-planning-ratification
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase8-planning-ratification
+type: Lesson
+subtype: OMORetro
+name: Phase 8 planning ratification
+description: Phase 8 is now live with one active packet and a bounded Wave 1 runtime
+  objective.
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 8 planning ratification
+  lesson: Phase 8 is now live with one active packet and a bounded Wave 1 runtime
+    objective.
+  source: Workspace/.omo/_knowledge/summaries/phase8/phase8-planning-ratification.md
+  severity: medium
