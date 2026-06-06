@@ -205,9 +205,16 @@ export default function Dashboard() {
               </div>
             </>
           )}
-
           {activeTab === 'Engines' && (
             <EnginesView />
+          )}
+
+          {activeTab === 'Knowledge' && (
+            <MemoryInjector />
+          )}
+
+          {activeTab === 'Sandbox' && (
+            <SandboxTerminal />
           )}
 
           {activeTab === 'Settings' && (

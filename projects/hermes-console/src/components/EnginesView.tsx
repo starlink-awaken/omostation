@@ -4,7 +4,7 @@ import { Cpu, Play, Activity, List, GitCommit } from 'lucide-react';
 interface EventLog {
   id: string;
   type: string;
-  timestamp: string;
+  time: string;
   source: string;
   payload: any;
 }
@@ -168,7 +168,7 @@ export default function EnginesView() {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', fontSize: '0.8rem' }}>
                   <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{ev.type}</span>
-                  <span style={{ color: 'var(--color-muted)' }}>{new Date(ev.timestamp).toLocaleTimeString()}</span>
+                  <span style={{ color: 'var(--color-muted)' }}>{new Date(ev.time).toLocaleString()}</span>
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.5rem' }}>
                   <GitCommit size={10} /> 来源: {ev.source}
