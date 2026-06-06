@@ -48,6 +48,8 @@ except ImportError:
     _HAS_L4_BRIDGE = False
 
 PORT = int(os.environ.get("COCKPIT_DASHBOARD_PORT", "8090"))
+DASHBOARD_TOKEN = os.environ.get("COCKPIT_DASHBOARD_TOKEN", "")
+DASHBOARD_CORS_ORIGIN = os.environ.get("COCKPIT_DASHBOARD_CORS_ORIGIN", "http://localhost:8090")
 
 
 # ─── Live-Data JS Snippet ──────────────────────────────────────────────────
@@ -149,7 +151,25 @@ setInterval(loadLiveDebt, 60000);
 class DashboardHandler(SimpleHTTPRequestHandler):
     """HTTP request handler for the live I0 dashboard."""
 
+    def _check_auth(self) -> bool:
+        """验证 Bearer token。如果未配置 token 则跳过验证。"""
+        if not DASHBOARD_TOKEN:
+            return True
+        auth = self.headers.get("Authorization", "")
+        expected = f"Bearer {DASHBOARD_TOKEN}"
+        return auth == expected
+
+    @property
+    def _cors_origin(self) -> str:
+        return DASHBOARD_CORS_ORIGIN
+
     def do_GET(self):
+        if not self._check_auth():
+            self.send_response(401)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": "Unauthorized"}).encode())
+            return
         if self.path == "/":
             self.serve_dashboard()
         elif self.path.startswith("/api/"):
@@ -158,6 +178,20 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             self.send_error(404)
         else:
             self.send_error(404)
+
+    def do_OPTIONS(self):
+        """CORS preflight."""
+        origin = self.headers.get("Origin", "")
+        allowed = DASHBOARD_CORS_ORIGIN
+        if origin and (allowed == "*" or origin == allowed):
+            self.send_response(204)
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type")
+            self.end_headers()
+        else:
+            self.send_response(403)
+            self.end_headers()
 
     def serve_dashboard(self):
         """Serve dashboard.html with live-data JS injected before </body>."""
@@ -215,7 +249,7 @@ class DashboardHandler(SimpleHTTPRequestHandler):
 
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Origin", self._cors_origin)
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.end_headers()
         self.wfile.write(json.dumps(data, ensure_ascii=False, default=str).encode("utf-8"))

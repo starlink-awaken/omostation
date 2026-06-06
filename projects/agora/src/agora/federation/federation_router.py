@@ -209,6 +209,9 @@ class FederationRouter:
         self._max_retries = max_retries
 
     def register_node(self, node_id: str, endpoint: str, capabilities: list[str] | None = None) -> None:
+        from agora.ssrf_guard import validate_external_url
+
+        validate_external_url(endpoint)
         self._nodes[node_id] = NodeRecord(
             node_id=node_id, endpoint=endpoint.rstrip("/"), capabilities=capabilities or []
         )

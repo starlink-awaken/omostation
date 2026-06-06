@@ -33,6 +33,9 @@ class FullNodeAdapter(NodeAdapter):
     """接入完整4+1+3架构节点。"""
 
     def __init__(self, node_id: str, endpoint: str, a2a_endpoint: str = ""):
+        from agora.ssrf_guard import validate_external_url
+
+        validate_external_url(endpoint)
         self.node_id = node_id
         self.endpoint = endpoint
         self.a2a_endpoint = a2a_endpoint or f"{endpoint}/mcp"

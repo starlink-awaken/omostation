@@ -9,8 +9,8 @@ This root directory is a **multi-project workspace** organized in the 5+3+1 (eCO
 | Layer | Project | Stack | Location | Status |
 |-------|---------|-------|----------|--------|
 | L3 | `cockpit` | Python (uv, pytest) | `projects/cockpit/` | 🟢 Active — 统一入口 (CLI + Web) |
-| I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · 98 src, 1112 tests |
-| L2 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 知识引擎 · 25 packages |
+| I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · 172 src, 1200 tests |
+| L2 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 知识引擎 · 19 active (+6 archived) packages |
 | L2 | `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — 知识数据库 · 163K TS |
 | L2 | `omo` | Python (uv, pytest) | `projects/omo/` | 🟢 Active — 治理面 · 82 src files |
 | L2 | `metaos` | Python (uv, pytest) | `projects/metaos/` | 🟢 Active — 编排引擎 · 163 tests |
@@ -25,7 +25,7 @@ This root directory is a **multi-project workspace** organized in the 5+3+1 (eCO
 - `spaces/` — User-space / tenant-space manifests and ownership boundaries
 - `data/` — Shared databases (substrates: `db/`, `kos/`, `sharedbrain/`, `backups/`)
 - `runtime/` — Ephemeral runtime residue (logs, temp state)
-- `tests/integration/` — Integration test suite (11 scripts + 4 Python tests)
+- `tests/integration/` — Integration test suite (3 scripts + 1 Python test)
 - `scripts/` — Utility scripts and governance automation (独立 git 仓库)
 - `bin/` — Executable tools (workspace CLI, verify scripts)
 
@@ -34,7 +34,7 @@ This root directory is a **multi-project workspace** organized in the 5+3+1 (eCO
 ### Root Makefile
 
 ```bash
-# Run kairon tests (all 31 packages)
+# Run kairon tests (all 19 active packages)
 make kairon-test
 
 # Ruff lint check
@@ -56,22 +56,22 @@ cd projects/kairon && make test-fast   # Unit tests only
 cd projects/kairon && make lint       # Ruff check
 
 # agora (projects/agora/)
-cd projects/agora && uv run pytest tests/ -q   # 1105/1112 pass
+cd projects/agora && uv run pytest tests/ -q   # 1165/1200 pass
 
 # cockpit (projects/cockpit/)
-cd projects/cockpit && uv run pytest tests/ -q  # 445/490 pass
+cd projects/cockpit && uv run pytest tests/ -q  # 498/514 pass
 
 # runtime (projects/runtime/)
-cd projects/runtime && uv run pytest tests/ -q  # 171/175 pass
+cd projects/runtime && uv run pytest tests/ -q  # 171/176 pass
 
 # omo (projects/omo/)
-cd projects/omo && uv run pytest tests/ -q      # 221/400+ (182 skipped)
+cd projects/omo && uv run pytest tests/ -q      # 302/530 (225 skipped)
 
 # metaos (projects/metaos/)
-cd projects/metaos && uv run pytest tests/ -q   # 163/163 pass
+cd projects/metaos && uv run pytest tests/ -q   # 188/188 pass
 
 # ecos (projects/ecos/)
-cd projects/ecos && uv run pytest tests/ -q     # 113/122 pass
+cd projects/ecos && uv run pytest tests/ -q     # 112/122 pass
 
 # gbrain (projects/gbrain/)
 cd projects/gbrain && bun test
@@ -84,17 +84,17 @@ cd projects/gbrain && bun run ci:local
 
 eCOS v5 已进入大一统阶段。通过 `agora` 作为服务网格 (Mesh) 动态反向代理，所有的项目和包都被抽象为 5 大 BOS URI 命名空间：
 
-*   **域 1：记忆与事实源 `bos://memory`** ── `kos` (跨域搜索)、`kronos` (摄取管线)、`gbrain` (TS知识库)、`ssot`
+*   **域 1：记忆与事实源 `bos://memory`** ── `kos` (跨域搜索)、`kronos` (摄取管线)、`gbrain` (TS知识库)、`sot-bridge` (SSOT 桥接)
 *   **域 2：治理与律法 `bos://omo`** ── `metaos` (决策/免疫)、`eidos` (Schema约束)、`protocols-layer` (触发器规则)、`omo` (治理引擎)
 *   **域 3：认知与推演 `bos://analysis`** ── `ontoderive` (推导)、`minerva` (深度研究)、`codeanalyze` (AST理解)
-*   **域 4：人格与心智 `bos://persona`** ── `sharedbrain-bridge` (人格核心)
+*   **域 4：人格与心智 `bos://persona`** ── `sot-bridge` (SharedBrain 桥接)
 *   **域 5：能力与生态 `bos://forge`** ── `forge` (集市与注册表)、`runtime` (KEI 沙箱执行)
 
 ```
 L4 自我层 ── ~/Documents/驾驶舱/CARDS/ (SQLite) + ~/Documents/学习进化/ (MD)
 L3 入口层 ── cockpit (CLI 13 + MCP + Web) ── 终端消费 BOS URI
 I0 织层   ── agora (动态反向代理 Mesh) ── 拦截并路由 bos:// 流量，触发 eidos 校验与 metaos 免疫
-L2 引擎面 ── kairon 25 packages / gbrain / omo / metaos ── 以后台 Daemon 提供 MCP 资源
+L2 引擎面 ── kairon 19 packages / gbrain / omo / metaos ── 以后台 Daemon 提供 MCP 资源
 L1 运行时 ── runtime ── 受控沙箱，随 protocols 规则产生 Ephemeral Agents
 L0 协议   ── ecos ── SSB 协议层，承载系统决策的 Immutable Log 上链与涌现计算
 ```
@@ -103,16 +103,16 @@ L0 协议   ── ecos ── SSB 协议层，承载系统决策的 Immutable L
 
 | 项目 | 总测试 | 通过 | 通过率 |
 |------|--------|------|--------|
-| agora | 1112 | 1105 | 99.37% |
-| cockpit | 490 | 445 | ~90% |
-| kairon | 1810+ | ~1750+ | ~97% |
-| runtime | 175 | 171 | 100% |
-| omo | 400+ | 221 | 100%* |
-| metaos | 163 | 163 | 100% |
-| ecos | 122 | 113 | 92.6% |
-| gbrain | TS | TS | N/A |
+| agora | 1200 | 1165 | 97.1% |
+| cockpit | 514 | 498 | 96.9% |
+| kairon | 4199 | 4157 | 99.8% |
+| runtime | 176 | 171 | 97.2% |
+| omo | 530 | 302 | 57%* |
+| metaos | 188 | 188 | 100% |
+| ecos | 122 | 112 | 91.8% |
+| gbrain | ~9,737 | ~9,700 | ~99.6% |
 
-*OMO: 182 skipped (需要完整环境)
+*OMO: 225 skipped (需要完整环境), 有效通过率 97.4%
 
 ### 对外接入能力
 
@@ -138,7 +138,7 @@ L0 协议   ── ecos ── SSB 协议层，承载系统决策的 Immutable L
 
 ### Integration Tests
 
-Located at `tests/integration/` in root (5 active scripts, 简化为当前可运行集合):
+Located at `tests/integration/` in root (4 active scripts, 简化为当前可运行集合):
 
 ```bash
 # Run all integration tests
@@ -153,7 +153,7 @@ python3 tests/integration/test_runtime_e2e.py
 
 ### CI Configuration
 
-GitHub Actions workflows in `.github/workflows/` (**18 workflows**, 9/9 项目覆盖):
+GitHub Actions workflows in `.github/workflows/` (**19 workflows**, 9/9 项目覆盖):
 
 **kairon (7)**: `pytest.yml`, `phase11-ci.yml`, `integration.yml`, `quality.yml`, `ruff-check.yml`, `config-check.yml`, `publish-pypi.yml`
 **omo (3)**: `governance-check.yml`, `omo-autopilot.yml`, `constraint-validation.yml`
