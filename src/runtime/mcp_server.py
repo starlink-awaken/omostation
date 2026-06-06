@@ -165,40 +165,6 @@ TOOLS = [
         "inputSchema": {"type": "object", "properties": {}},
         "handler": lambda args: (PROJECT_HOME / "protocols" / "ecos-ontology.yaml").read_text() if (PROJECT_HOME / "protocols" / "ecos-ontology.yaml").exists() else "Ontology not found",
     },
-    # ── I0 Fabric Tools ──
-    {
-        "name": "i0_status",
-        "description": "I0 Fabric health overview — total services, online/offline count, protocol summary, event count per layer.",
-        "inputSchema": {"type": "object", "properties": {}},
-        "handler": lambda args: _i0_status(),
-    },
-    {
-        "name": "i0_services",
-        "description": "I0 Fabric service list — all registered services with live port probe and health check.",
-        "inputSchema": {"type": "object", "properties": {}},
-        "handler": lambda args: _i0_services(),
-    },
-    {
-        "name": "i0_events",
-        "description": "I0 Fabric recent events — last N events from Agora SSE event bus.",
-        "inputSchema": {
-            "type": "object",
-            "properties": {"limit": {"type": "integer", "description": "Number of events (default: 20)"}},
-        },
-        "handler": lambda args: _i0_events(int(args.get("limit", 20))),
-    },
-    {
-        "name": "i0_protocols",
-        "description": "I0 Fabric protocol overview",
-        "inputSchema": {"type": "object", "properties": {}},
-        "handler": lambda args: _i0_protocols(),
-    },
-    {
-        "name": "i0_graph",
-        "description": "I0 Fabric dependency graph",
-        "inputSchema": {"type": "object", "properties": {}},
-        "handler": lambda args: _i0_graph(),
-    },
     # ── Tri-Plane Bus Tools ──
     {
         "name": "plane_list",
