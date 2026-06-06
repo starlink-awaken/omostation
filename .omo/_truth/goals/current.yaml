@@ -27,42 +27,58 @@ goals:
   tasks: []
 - id: P30.1
   desc: M1 低风险搬家 — metaos → projects/metaos (7.8K, 自包含)
-  progress: 0.0
-  status: pending
+  progress: 100.0
+  status: done
   tasks: []
 - id: P30.2
   desc: M1 低风险搬家 — ecos → projects/ecos (6.3K, 自包含)
-  progress: 0.0
-  status: pending
+  progress: 100.0
+  status: done
   tasks: []
 - id: P30.3
   desc: M1 低风险搬家 — wksp → cockpit (15K, 依赖 agora)
-  progress: 0.0
-  status: pending
+  progress: 100.0
+  status: done
   tasks: []
 - id: P30.4
   desc: M2 中风险拆分 — cron-service → runtime (1.8K, 自包含)
-  progress: 0.0
-  status: pending
+  progress: 100.0
+  status: done
   tasks: []
 - id: P30.5
   desc: M2 中风险拆分 — agent-runtime 拆分为 runtime+ext/cockpit (20K)
-  progress: 0.0
-  status: pending
+  progress: 100.0
+  status: done
   tasks: []
 - id: P30.6
   desc: M3 高风险核心 — agora 从 kairon 独立 (38K, 改5包接口)
-  progress: 0.0
-  status: pending
+  progress: 100.0
+  status: done
   tasks: []
 - id: P30.7
   desc: M4 收尾 — kairon-governance → omo 合并 (2.5K)
-  progress: 0.0
-  status: pending
+  progress: 100.0
+  status: done
+  tasks: []
+- id: P31.1
+  desc: 'I0精简: Agora web/dashboard → cockpit (1,121L)'
+  progress: 100.0
+  status: done
+  tasks: []
+- id: P31.2
+  desc: 'I0精简: Agora a2a → metaos (257L)'
+  progress: 100.0
+  status: done
+  tasks: []
+- id: P31.3
+  desc: 'M3核心: Agora 从 kairon 独立为 projects/agora (38K→35K)'
+  progress: 100.0
+  status: done
   tasks: []
 health_targets:
   mcp_isolation_score: 100
   overall: 99
+  audit_complete: 2026-06-06
 objectives:
 - desc: Wave 1 — Agora MCP Safe Mesh (I0 隔离固化)
   id: W1
@@ -72,9 +88,10 @@ objectives:
   id: W3
 - desc: Wave 4 — OMO MCP Server (硬件级剥夺与防越权)
   id: W4
-phase: 27
+phase: 28
 source_plan_refs:
 - .omo/plans/phase27-swarm-network.md
+- .omo/_knowledge/management/5+3+1-full-audit-2026-06-06.md
 start_date: '2026-06-04'
 status: active
-theme: OMO 蜂群网络纪元 (Swarm Network Era)
+theme: OMO 蜂群网络纪元 — 全量审计与接口修复 (Swarm Audit & Interface Hardening)
