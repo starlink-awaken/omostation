@@ -115,13 +115,16 @@ Agent 启动:
 
 **原则**: L4 存"要做什么"和"为什么做"。L3 提供"怎么做"。中间缺的那个"谁决定做"——是 Agent（人或 AI）。Agent = 执行器，L4 = 知识面，L3 = 工具面。
 
-## X1-X3 横向切面
+## X1-X4 横向切面
 
 | 切面 | 核心模块 | 实现位置 | 状态 |
 |------|---------|---------|------|
 | **X1 审计链** | KEI 沙箱审计闭环 | `projects/runtime/kei_sandbox.py` | 🟡 基础框架, 告警回路待建 |
 | **X2 抗熵** | 服务保鲜 + autoheal | `projects/runtime/scheduler.py` | 🟡 基础框架 |
 | **X3 价值栈** | LLM 成本追踪 | llm-gateway `record_llm_cost()` | 🟡 记录点存在, 无汇总 |
+| **X4 治理一致性** | 规则合规检查 (CLI/端口/依赖/文档/CI/Phase) | `scripts/check-interfaces.py` + cockpit MCP | 🟢 7 项规则中 5 项通过 |
+
+**X4 定位**: X1-X3 的"元规则"——检查治理规则本身是否被遵守。不增加新规则，只检查规则的执行情况。
 
 ## 已归档包
 
