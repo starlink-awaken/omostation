@@ -4,16 +4,21 @@
 
 ## Project Overview
 
-This root directory is a **multi-project workspace** containing independent git repos:
+This root directory is a **multi-project workspace** organized in the 5+3+1 (eCOS v5) architecture:
 
-| Project | Stack | Location | Status |
-|---------|-------|----------|--------|
-| `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 30 packages（含 5 个新拆分子包） |
-| `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — Knowledge Brain |
-| `SharedBrain` | Python | `projects/_archived/SharedBrain-original/` | ⚪ Archived — 代码已迁移至 kairon，数据层在 `data/sharedbrain/` |
-| `agentmesh` | TypeScript (bun) | `projects/_archived/` | ⚪ Archived — 100% 迁移至 kairon |
-| `hermes-console` | TypeScript | `projects/hermes-console/` | 🟡 独立项目，待评估 |
-| `_archived` | — | `projects/_archived/` | ⚪ 24 项已迁移旧项目备份 |
+| Layer | Project | Stack | Location | Status |
+|-------|---------|-------|----------|--------|
+| L3 | `cockpit` | Python (uv, pytest) | `projects/cockpit/` | 🟢 Active — 统一入口 (CLI + Web) |
+| I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · 98 src, 1112 tests |
+| L2 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 知识引擎 · 25 packages |
+| L2 | `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — 知识数据库 · 163K TS |
+| L2 | `omo` | Python (uv, pytest) | `projects/omo/` | 🟢 Active — 治理面 · 82 src files |
+| L2 | `metaos` | Python (uv, pytest) | `projects/metaos/` | 🟢 Active — 编排引擎 · 163 tests |
+| L1 | `runtime` | Python (uv, pytest) | `projects/runtime/` | 🟢 Active — 运行时 · matrix + scheduler + kei |
+| L0 | `ecos` | Python (uv, pytest) | `projects/ecos/` | 🟢 Active — SSB 协议 · 122 tests |
+| — | `hermes-console` | TypeScript | `projects/hermes-console/` | 🟡 待集成至 cockpit |
+| — | `SharedBrain` | Python | `projects/_archived/SharedBrain-original/` | ⚪ Archived |
+| — | `agentmesh` | TypeScript (bun) | `projects/_archived/` | ⚪ Archived — 100% 迁移至 kairon |
 
 **Also contains:**
 - `.omo/` — Workspace governance (goals, state, standards, tasks, audits)

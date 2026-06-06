@@ -1,10 +1,5 @@
 version: "3.8"
-services:
-  agentmesh-gateway:
-    build: ./projects/agentmesh
-    ports: ["3000:3000"]
-    env_file: ./projects/agentmesh/packages/gateway/.env
-
-  agora:
-    build: ./projects/kairon/packages/agora
-    ports: ["7430:7430"]
+# Note: agora-web and agora-sse have been removed to prevent I0-AGORA_DUAL_INSTANCE.
+# They are now launched natively via ~/.hermes/scripts/agora-startup.sh
+# agentmesh-gateway has been archived.
+services: {}
