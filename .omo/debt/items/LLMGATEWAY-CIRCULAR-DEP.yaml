@@ -7,7 +7,7 @@ scope: within_project
 severity: high
 weight: 0.5
 entropy_class: classification
-lifecycle_state: open
+lifecycle_state: closed
 owner: omo-governance
 affected_roots:
   - projects/kairon/packages/llm-gateway
@@ -23,3 +23,6 @@ history:
   - at: "2026-06-07T06:00:00Z"
     action: register
     note: "llm-gateway 架构审计: pyproject.toml 中 llm-gateway depends minerva, minerva depends llm-gateway。代码中无真正的 import 循环(legacy adapter 是单向包装), 但配置层面双向引用不干净。Phase 30 迁移时需解决。"
+  - at: "2026-06-06T16:30:00Z"
+    action: close
+    note: "Phase 31: llm-gateway pyproject.toml 已改为仅依赖 llm-gateway-kernel，minerva 不再依赖 llm-gateway。双向依赖已解除。"

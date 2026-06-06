@@ -7,7 +7,7 @@ scope: within_project
 severity: high
 weight: 0.5
 entropy_class: state
-lifecycle_state: resolved
+lifecycle_state: closed
 owner: omo-governance
 affected_roots:
   - projects/kairon/packages/agent-runtime/src/agent_runtime/config/config.py

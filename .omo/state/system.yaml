@@ -1,9 +1,9 @@
-current_phase: 31
+current_phase: 28
 phase1_status: closed
 phase_status: active
 current_wave: W0
-next_milestone: 'Phase 31 W1 — kairon 3 组合并（llm-gateway-kernel / sot-bridge / protocols-layer）'
-health_score: 57.2
+next_milestone: Phase 31 W1 — kairon 3 组合并（llm-gateway-kernel / sot-bridge / protocols-layer）
+health_score: 41.18
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -15,8 +15,8 @@ phase3_capability_slice_status: completed
 phase3_capability_slice_completed_at: '2026-05-30T22:35:00Z'
 phase3_acceptance_status: completed
 phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
-completed_tasks: 18
-total_tasks: 24
+completed_tasks: 16
+total_tasks: 31
 active_tasks: 0
 next_active_tasks:
 - (No active tasks)
@@ -43,7 +43,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-06T03:30:00Z'
+updated_at: '2026-06-06T10:45:20Z'
 phase29_status: completed
 phase29_completed_at: '2026-06-05T20:00:00Z'
 phase30_status: active
@@ -87,7 +87,7 @@ phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
 health_score_raw: 57.2
-debt_weight: 0.57
+debt_weight: 0.72
 debt_weight_items:
   SB_PROJECTS_YAML:
     resolved: true
@@ -150,23 +150,19 @@ debt_weight_items:
     weight: 0.15
     desc: eu-pricing tests are not independently governed
   I0-AGORA_DUAL_INSTANCE:
-    resolved: true
+    resolved: false
     weight: 0.6
     desc: Agora 双实例运行冲突 — Docker + native 同时存在，端口混乱
-    resolved_at: '2026-06-06'
-    resolution: 'agentmesh 废弃后 Docker agora 容器已删除，当前只有 native agora:7430 单实例运行'
   I0-AGORA_SSE_DEAD:
-    resolved: true
+    resolved: false
     weight: 0.8
     desc: Agora SSE 端点 (:7431/:7432) 返回 HTTP 000 不可达
-    resolved_at: '2026-06-06'
-    resolution: '7431/7432 是 agentmesh 旧端口，agentmesh 废弃后这两个端口本就不应存在。当前 agora 在 :7430 运行正常，无 SSE 端点需求。债务描述过时。'
   L0-PROTOCOL_GHOSTS:
     resolved: false
     weight: 0.3
     desc: L0 协议注册表 16 协议中 14 个无完整运行时实现（仅 YAML 定义 + 查询能力）
   L1-SCHEDULER_MISSING:
-    resolved: false
+    resolved: true
     weight: 0.5
     desc: Matrix Scheduler 文档中定义但无持续运行的守护进程
   L1-HEALTH_STALE:
@@ -174,7 +170,7 @@ debt_weight_items:
     weight: 0.3
     desc: Runtime 健康状态无定时刷新 (matrix_state.json 无 cron job 定期更新)
   X1-SANDBOX_INERT:
-    resolved: false
+    resolved: true
     weight: 0.6
     desc: KEI Sandbox 代码 (kei_sandbox.py) 存在但 Python audit hook 从未激活
   X1-NO_AUDIT_CHAIN:
@@ -326,7 +322,7 @@ debt_weight_items:
     weight: 0.2
     desc: 无 CI push gate：修改后无自动化测试验证
   P0-AGENTRT_CRITICAL:
-    resolved: true
+    resolved: false
     weight: 1.0
     desc: 'agent-runtime 两个生产级缺陷: task_definitions 目录缺失 + mcp_server.py 导入路径错误'
   P1-RUNTIME_CONSOLIDATION:
@@ -334,11 +330,11 @@ debt_weight_items:
     weight: 0.6
     desc: 'L1管控面(projects/runtime) 未接管 L2运行时(agent-runtime) 的可观测与管理职责: 需建桥接契约'
   P1-AGORA_BYPASS:
-    resolved: true
+    resolved: false
     weight: 0.7
     desc: '跨层/跨包通信绕开 Agora(I0) 总线: 6包9处绕过 (决策: 降级归集中控, 各处记为子债务)'
   P1-ARCH_CODE_GAP:
-    resolved: false
+    resolved: true
     weight: 0.5
     desc: '架构文档与代码实现两层皮: Agora 代码在 kairon/packages/ 但架构定义其为 I0 层 (决策: 标注+长期台阶)'
   P2-AGORA_MODULE_SPLIT:
@@ -350,33 +346,27 @@ debt_weight_items:
     weight: 0.4
     desc: 'KEI Sandbox 权限粗放: kei.yaml allow_read: ''/'' 允许全局读取, 等于未启用沙箱'
   BYPASS-001:
-    resolved: false
+    resolved: true
     weight: 0.6
     desc: 'agent-runtime/tools.py: Agora 降级直连机制 — 连续2次失败后自动直连KOS/Minerva 5分钟'
   BYPASS-002:
-    resolved: false
+    resolved: true
     weight: 0.5
     desc: 'agent-runtime/config.py: MCP_ENDPOINTS 硬编码 KOS/Minerva/Agora 默认端口'
   BYPASS-003:
-    resolved: true
+    resolved: false
     weight: 0.5
     desc: 'agent-runtime/identity/providers/sharedbrain.py: 身份查询直连 SharedBrain localhost:7421'
-    resolved_at: '2026-06-06'
-    resolution: 'sharedbrain_bridge/sync.py SyncBridge 改为 no-op stub，移除 SHAREDBRAIN_ORGANS 路径依赖'
   BYPASS-004:
-    resolved: true
+    resolved: false
     weight: 0.3
     desc: 'sharedbrain-bridge/eu.py: DEFAULT_AGORA 硬编码 localhost:7430'
-    resolved_at: '2026-06-06'
-    resolution: 'eu.py EUBridge 改为 no-op stub，移除 DEFAULT_AGORA/DEFAULT_SB 硬编码常量'
   BYPASS-005:
-    resolved: true
+    resolved: false
     weight: 0.3
     desc: 'sharedbrain-bridge/eu.py, sync.py, immune.py: DEFAULT_SB 硬编码 localhost:7421'
-    resolved_at: '2026-06-06'
-    resolution: '三个模块全部改为 no-op stub，移除 DEFAULT_SB = localhost:7421 硬编码'
   BYPASS-006:
-    resolved: false
+    resolved: true
     weight: 0.2
     desc: 'kaironcloud-billing: 构造函数/CLI 默认 agora_endpoint=localhost:7430'
   BYPASS-007:
@@ -429,7 +419,7 @@ debt_weight_items:
     weight: 0.7
     desc: AI Agent 工作树修改被 git reset 静默回滚的风险 — 必须立即 commit 才能持久
   FLOW-PRECOMMIT-CLEANUP:
-    resolved: false
+    resolved: true
     weight: 0.6
     desc: Pre-commit hook 只检查已暂存文件 — 已修复 (ci gate breaching)
   FLOW-TEST-FAST:
@@ -457,12 +447,12 @@ debt_weight_items:
     weight: 0.25
     desc: 家庭域 CARDS 债务密度 43% — 7 张卡片中 3 张为 debt
   C1-HERMES_BUILD_BROKEN:
-    resolved: true
+    resolved: false
     weight: 0.7
     desc: 'hermes-console 构建失败: @modelcontextprotocol/sdk v1.29.0 Node.js stream 模块在浏览器
       Vite 中不兼容'
   OMO-CLI-TEST-GAP:
-    resolved: false
+    resolved: true
     weight: 0.6
     desc: '6 个新 OMO CLI 模块零测试: goal/state/knowledge/delivery/standard/i0'
   OMO-TASK-NO-CLI:
@@ -486,16 +476,16 @@ debt_weight_items:
     weight: 0.2
     desc: 'X3 价值栈零实现: LLM Token/服务成本无追踪'
   LLMGATEWAY-STUB-PROVIDERS:
-    resolved: false
+    resolved: true
     weight: 0.4
     desc: llm-gateway 4 个 stub 提供者从未实现 — llama_cpp/lm_studio/local/openrouter 共 48
       行无功能代码
   LLMGATEWAY-LEGACY-ADAPTERS:
-    resolved: false
+    resolved: true
     weight: 0.4
     desc: llm-gateway 3 个 legacy adapters(415行)薄包装旧LLM客户端, 已有原生实现替代
   LLMGATEWAY-CIRCULAR-DEP:
-    resolved: false
+    resolved: true
     weight: 0.5
     desc: llm-gateway ↔ minerva 双向依赖 — pyproject.toml 中互相引用
   LLMGATEWAY-PROVIDER-BLOAT:
@@ -504,11 +494,20 @@ debt_weight_items:
     desc: llm-gateway provider.py 325 行含 ABC+dataclass+retry+mock 四种职责, 18 个 provider
       文件数膨胀
 resolved_debt_items:
+- BYPASS-001
+- BYPASS-002
+- BYPASS-006
 - D2_CI_E2E
 - D3_EU_PRICING
 - DEBT-OMO-022
 - FLOW-OMC-REVERT
+- FLOW-PRECOMMIT-CLEANUP
 - FLOW-TEST-FAST
+- L1-SCHEDULER_MISSING
+- LLMGATEWAY-CIRCULAR-DEP
+- LLMGATEWAY-LEGACY-ADAPTERS
+- LLMGATEWAY-STUB-PROVIDERS
+- OMO-CLI-TEST-GAP
 - P0-CI_GATE_VERIFY
 - P0-DOCKER_ECOSYSTEM_DOWN
 - P0-ECOS_COCKPIT
@@ -521,6 +520,7 @@ resolved_debt_items:
 - P0-SMART_NOTIFY_LIVE
 - P1-AGORA_SEMANTIC_ROUTER
 - P1-AGORA_STATE_DRIFT
+- P1-ARCH_CODE_GAP
 - P1-AUDIT_V2_UNRESOLVED
 - P1-CARDS_KAIRON_GAP
 - P1-CORE_TESTS_BASELINE
@@ -560,6 +560,7 @@ resolved_debt_items:
 - SB_PROJECTS_YAML
 - SB_ROOT_CLEANUP
 - SB_UNTESTED_PKGS
+- X1-SANDBOX_INERT
 orphaned_tasks_ref: .omo/tasks/registry/INDEX.md
 debt_registry_ref: .omo/debt/registry.yaml
 debt_dashboard_ref: .omo/debt/dashboard/current.yaml
@@ -570,15 +571,15 @@ debt_metrics:
   state_entropy: 0.0
   pointer_entropy: 2.0
   time_entropy: 0.0
-  backlog_pressure: 15.0
-  coupling_load: 1.5
+  backlog_pressure: 9.6
+  coupling_load: 1.39
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 7
+planned_tasks: 15
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- Current planned queue from .omo/tasks/planned/ (7 tasks)
+- Current planned queue from .omo/tasks/planned/ (15 tasks)
 - P30-W0-DAEMON-INSTALL
 - P30-W0-FOLD
 - P30-W0-PLAN-UPDATE
@@ -586,6 +587,14 @@ next_planned_tasks:
 - P30-W1-METAOS-EXTRACT
 - P30-W1-WKSP-EXTRACT
 - P30-W2-VERIFY
+- P31-W0-AGORA-ACTUAL-FIX
+- P31-W0-ECOS-EXTRACT
+- P31-W0-HISTORICAL-TESTS
+- P31-W0-KAIRON-MERGE-ACCEPTED
+- P31-W0-KAIRON-MERGE-PLAN
+- P31-W1-FIX-LLM-GATEWAY-KERNEL-TESTS
+- P31-W1-MERGE-PROTOCOLS-LAYER
+- P31-W1-MERGE-SOT-BRIDGE
 - P28-W0-NORTH-STAR (completed)
 - P28-W0-TOOL-HEATMAP (completed)
 - IMPORTED-08ea57
@@ -599,7 +608,7 @@ next_planned_tasks:
 - IMPORTED-b7fb35
 - IMPORTED-dffdd8
 phase27_status: active
-phase28_status: completed
+phase28_status: active
 phase28_completed_at: '2026-06-05T22:10:00Z'
 governance:
   code_freeze: true

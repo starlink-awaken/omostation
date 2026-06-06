@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: medium
 weight: 0.6
 entropy_class: state
-lifecycle_state: resolved
+lifecycle_state: closed
 owner: omo-governance
 affected_roots:
   - ~/Workspace/projects/runtime/src/runtime/kei_sandbox.py
@@ -22,3 +22,6 @@ history:
   - at: "2026-06-05T21:00:00Z"
     action: register
     note: "Debt registered from Layer Audit 2026-06-05."
+  - at: "2026-06-06T16:30:00Z"
+    action: close
+    note: "scheduler.py:396 main() 调用 enable_sandbox()，sys.addaudithook(_audit_hook) 已激活，mcp_server.py 消费 record_audit。audit hook 实际运行中。"
