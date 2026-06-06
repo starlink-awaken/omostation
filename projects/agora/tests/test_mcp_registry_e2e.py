@@ -250,6 +250,8 @@ class TestFullPipeline:
     @pytest.mark.asyncio
     async def test_router_code_analysis(self, registry_path, catalog, embeddings):
         """Router should route 'code analysis' to codeanalyze tool."""
+        if not getattr(embeddings, "model", None):
+            pytest.skip("sentence-transformers model not available; skipping semantic routing")
         results = await search_registry(f"file://{registry_path}")
         for svc in results:
             catalog.add_tool(svc)
@@ -272,6 +274,8 @@ class TestFullPipeline:
     @pytest.mark.asyncio
     async def test_router_sqlite_database(self, registry_path, catalog, embeddings):
         """Router should route database-related queries to sqlite tools."""
+        if not getattr(embeddings, "model", None):
+            pytest.skip("sentence-transformers model not available; skipping semantic routing")
         results = await search_registry(f"file://{registry_path}")
         for svc in results:
             catalog.add_tool(svc)
@@ -289,6 +293,8 @@ class TestFullPipeline:
     @pytest.mark.asyncio
     async def test_router_docker_container(self, registry_path, catalog, embeddings):
         """Router should route container-related queries to docker tools."""
+        if not getattr(embeddings, "model", None):
+            pytest.skip("sentence-transformers model not available; skipping semantic routing")
         results = await search_registry(f"file://{registry_path}")
         for svc in results:
             catalog.add_tool(svc)
