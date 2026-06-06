@@ -141,6 +141,26 @@ def _get_tm() -> TaskManager:
     return _task_manager
 
 
+_proxy_manager = None
+
+async def get_proxy_manager():
+    global _proxy_manager
+    if _proxy_manager is None:
+        from agora.mcp_proxy.manager import ProxyManager
+        import os
+        _proxy_manager = ProxyManager()
+        workspace_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+        gbrain_svc = {
+            "name": "gbrain",
+            "command": "bun",
+            "args": ["run", "src/cli.ts", "serve"],
+            "cwd": os.path.join(workspace_root, "projects/gbrain")
+        }
+        await _proxy_manager.start([gbrain_svc])
+    return _proxy_manager
+
+
+
 def _get_dashboard_html() -> str:
     """Lazy-load dashboard HTML to avoid import-time crash if file missing."""
     html_path = Path(__file__).parent / "dashboard.html"
@@ -463,6 +483,45 @@ async def api_sandbox_execute(request_data: dict):
         }
     except Exception as e:
         return _error_resp(f"Sandbox execution failed: {e}", 500)
+
+
+@app.post("/api/knowledge/put")
+async def api_knowledge_put(request_data: dict):
+    pm = await get_proxy_manager()
+    slug = request_data.get("slug")
+    title = request_data.get("title")
+    content = request_data.get("content")
+    if not slug or not title or not content:
+        return _error_resp("slug, title, and content are required", 400)
+    
+    args = {
+        "slug": slug,
+        "title": title,
+        "content": content,
+        "tags": request_data.get("tags", [])
+    }
+    
+    try:
+        res = await pm.dispatch("gbrain.put_page", args)
+        return {"status": "ok", "result": res}
+    except Exception as e:
+        return _error_resp(str(e), 500)
+
+
+@app.post("/api/knowledge/search")
+async def api_knowledge_search(request_data: dict):
+    pm = await get_proxy_manager()
+    query = request_data.get("query")
+    if not query:
+        return _error_resp("query is required", 400)
+    
+    try:
+        res = await pm.dispatch("gbrain.search", {"query": query})
+        return {"status": "ok", "result": res}
+    except Exception as e:
+        return _error_resp(str(e), 500)
+
+
 
 
 

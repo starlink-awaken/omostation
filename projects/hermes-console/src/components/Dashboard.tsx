@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, Server, Cpu, Database, CheckCircle, AlertTriangle, XCircle, Search, Settings, Terminal } from 'lucide-react';
 import SandboxTerminal from './SandboxTerminal';
+import MemoryInjector from './MemoryInjector';
 import './Dashboard.css';
 
 interface Service {
@@ -161,7 +162,11 @@ export default function Dashboard() {
             <SandboxTerminal />
           )}
 
-          {activeTab !== 'Sandbox' && (
+          {activeTab === 'Knowledge' && (
+            <MemoryInjector />
+          )}
+
+          {activeTab !== 'Sandbox' && activeTab !== 'Knowledge' && (
             <div className="services-section animate-fade-in" style={{ animationDelay: '0.5s' }}>
               <div className="section-header">
                 <h2>Core Services</h2>
