@@ -101,11 +101,16 @@ async def _proxy_lifespan(server: FastMCP):
     _lifecycle_manager = None
 
 
+from agora.middleware import FastMCPAuditMiddleware
+
 mcp = FastMCP(
     "Agora — Service Convergence Hub",
     lifespan=_proxy_lifespan,
     mask_error_details=True,
-    middleware=[AuthMiddleware(auth=_require_agora_api_key)],
+    middleware=[
+        AuthMiddleware(auth=_require_agora_api_key),
+        FastMCPAuditMiddleware()
+    ],
 )
 registry = get_registry()
 _bus = get_event_bus(registry)
