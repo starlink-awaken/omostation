@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import signal
+import subprocess
 import sys
 from pathlib import Path
 
@@ -17,13 +18,27 @@ import httpx
 
 from omo.omo_daemon import run_once, _write_pid_file, _clear_pid_file, _setup_logging
 from omo.omo_paths import OMO_ROOT
-from omo.omo_self_healing import get_healing_engine
+from omo.omo_self_healing import get_healing_engine, start_http_status_server
 
 DAEMON_PID_FILE = OMO_ROOT / ".omo" / "_delivery" / "sse_daemon.pid"
 DAEMON_LOG_FILE = OMO_ROOT / ".omo" / "_delivery" / "sse_daemon.log"
 
 AGORA_SSE_URL = os.environ.get("AGORA_SSE_URL", "http://127.0.0.1:8080/v1/events")
 ENABLE_SELF_HEALING = os.environ.get("OMO_SELF_HEALING", "1") == "1"
+ENABLE_NOTIFICATIONS = os.environ.get("OMO_NOTIFY", "0") == "1"
+
+
+def _send_notification(title: str, message: str) -> None:
+    """发送 macOS 桌面通知。"""
+    if not ENABLE_NOTIFICATIONS:
+        return
+    try:
+        subprocess.run([
+            "osascript", "-e",
+            f'display notification "{message}" with title "{title}"',
+        ], capture_output=True, timeout=3)
+    except Exception:
+        pass
 
 
 async def listen_to_sse(stop_event: asyncio.Event, logger: logging.Logger):
@@ -88,6 +103,15 @@ async def listen_to_sse(stop_event: asyncio.Event, logger: logging.Logger):
                                             "self_healing_triggered actions=%s",
                                             json.dumps(healing_actions, default=str)[:500],
                                         )
+                                        # 通知
+                                        for ha in healing_actions:
+                                            if ha.get("severity") in ("critical", "high") or any(
+                                                a.get("type") == "debt_created" for a in ha.get("actions", [])
+                                            ):
+                                                _send_notification(
+                                                    f"OMO Self-Healing: {ha['rule']}",
+                                                    f"事件 {ha['event_type']} × {ha['count']} 触发 {ha['rule']}",
+                                                )
 
                             except json.JSONDecodeError:
                                 logger.warning(f"Failed to parse SSE data: {data_str}")
@@ -118,6 +142,10 @@ def main():
     _write_pid_file(DAEMON_PID_FILE)
     logger = _setup_logging(DAEMON_LOG_FILE)
     logger.info(f"omo_sse_daemon_started pid={os.getpid()}")
+
+    # Start HTTP health server (:9091) for status queries
+    start_http_status_server()
+    logger.info("healing_http_server_started port=9091")
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)

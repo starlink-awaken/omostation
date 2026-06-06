@@ -409,19 +409,22 @@ class SelfHealingEngine:
     # ── Auto-Fix ───────────────────────────────────────────────────────
 
     async def _run_fixes(self, rule: HealingRule) -> list[dict]:
-        """执行规则关联的修复脚本。"""
+        """执行规则关联的修复脚本 (失败自动重试)。"""
         from omo.omo_self_healing_fixes import run_fix
 
         results = []
         for fix_name in rule.fix_names:
             result = run_fix(fix_name, {"rule": rule.name, "severity": rule.severity})
+            # 失败自动重试 1 次
+            if not result["success"]:
+                logger.warning("fix_retrying fix=%s", fix_name)
+                result = run_fix(fix_name, {"rule": rule.name, "severity": rule.severity, "retry": True})
             self._fix_history.append({
                 "rule": rule.name,
                 "fix_name": fix_name,
                 "success": result["success"],
                 "output": result["output"][:200],
             })
-            # 限制历史记录
             if len(self._fix_history) > 100:
                 self._fix_history = self._fix_history[-100:]
             results.append(result)
