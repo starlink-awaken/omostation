@@ -204,11 +204,32 @@ class Market:
 
     INSTALL_DIR = Path.home() / ".agora" / "market"
 
+    def _get_market(self) -> dict[str, dict]:
+        """Get market registry either from bos://forge or fallback to BUILTIN_MARKET."""
+        try:
+            import httpx
+            # Try to read the dynamic registry from Agora gateway
+            resp = httpx.post(
+                "http://127.0.0.1:8080/v1/resources/read",
+                json={"uri": "bos://forge/market/list"},
+                timeout=2.0
+            )
+            if resp.status_code == 200:
+                import json
+                data = resp.json().get("content", [{}])[0].get("text", "{}")
+                forge_market = json.loads(data)
+                if forge_market:
+                    return {**BUILTIN_MARKET, **forge_market}
+        except Exception as e:
+            logger.debug("Failed to fetch dynamic market from bos://forge, using builtin", error=str(e))
+        return BUILTIN_MARKET
+
     def search(self, query: str) -> list[dict]:
-        """Search the built-in market by keyword."""
+        """Search the market by keyword."""
         q = query.lower()
         results = []
-        for info in BUILTIN_MARKET.values():
+        market_data = self._get_market()
+        for info in market_data.values():
             if (
                 q in info["name"].lower()
                 or q in info["description"].lower()
@@ -219,16 +240,16 @@ class Market:
 
     def list_all(self) -> list[dict]:
         """List all available MCP services in the market."""
-        return list(BUILTIN_MARKET.values())
+        return list(self._get_market().values())
 
     def install(self, name_or_url: str) -> dict:
-        """Install an MCP service from the built-in market or GitHub URL.
+        """Install an MCP service from the market or GitHub URL.
 
         Returns metadata for registration.
         """
-        # Check built-in market first
-        if name_or_url in BUILTIN_MARKET:
-            info = BUILTIN_MARKET[name_or_url]
+        market_data = self._get_market()
+        if name_or_url in market_data:
+            info = market_data[name_or_url]
             repo = info["repo"]
             subdir = info.get("subdir", "")
         else:
