@@ -289,6 +289,65 @@ class ProxyManager:
         """
         return await self.registry.dispatch(tool_name, arguments)
 
+    async def list_resources(self) -> list[dict]:
+        """Aggregate resources from all connected/known downstream services."""
+        import asyncio
+        all_resources = []
+        tasks = []
+        # Connect lazy services if needed, but for list we only query currently connected ones to be fast
+        # Alternatively, we can query all known.
+        for name, client in self.registry._clients.items():
+            if client.connected:
+                tasks.append(client.list_resources())
+        if tasks:
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for res in results:
+                if isinstance(res, list):
+                    all_resources.extend(res)
+        return all_resources
+
+    async def read_resource(self, uri: str) -> dict:
+        """Route a resource read request based on its prefix.
+        
+        Currently tries all connected clients until one returns the resource, 
+        or we can use a prefix mapping. For now we will fan-out or route by known prefixes.
+        """
+        import asyncio
+        
+        # Simple routing based on known prefix conventions mapping URI to service name
+        # bos://omo/ -> omo
+        # bos://memory/gbrain/ -> gbrain
+        # bos://analysis/code/ -> codeanalyze
+        service_name = None
+        if uri.startswith("bos://omo/"):
+            service_name = "omo"
+        elif uri.startswith("bos://memory/gbrain/"):
+            service_name = "gbrain"
+        elif uri.startswith("bos://analysis/code/"):
+            service_name = "codeanalyze"
+        elif uri.startswith("bos://analysis/derive/"):
+            service_name = "ontoderive"
+        elif uri.startswith("bos://analysis/research/"):
+            service_name = "minerva"
+        elif uri.startswith("bos://forge/registry/"):
+            service_name = "forge"
+            
+        if service_name:
+            await self.ensure_connected(service_name)
+            client = self.registry._clients.get(service_name)
+            if client and client.connected:
+                return await client.read_resource(uri)
+                
+        # Fallback: broadcast to all connected
+        for name, client in self.registry._clients.items():
+            if name == service_name:
+                continue
+            if client.connected:
+                res = await client.read_resource(uri)
+                if isinstance(res, dict) and "contents" in res:
+                    return res
+        return {"status": "error", "error": f"Resource not found or no provider for: {uri}"}
+
     # ── Status ────────────────────────────────────────────────────────
 
     def status(self) -> dict:

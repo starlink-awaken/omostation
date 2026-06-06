@@ -67,63 +67,65 @@ _log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
+def _get_proxy_manager():
+    from agora.auth.mcp_gateway import _gateway_manager
+    return _gateway_manager
+
 def handle_resources_list(params: dict, ctx: ToolContext) -> dict:
     """MCP resources/list — enumerate available B-OS resources."""
-    return {
-        "resources": [
-            {
-                "uri": "bos://memory/docs/readme",
-                "name": "B-OS README",
-                "description": "Project overview and quick start",
-                "mimeType": "text/markdown",
-            },
-            {
-                "uri": "bos://execution/workers/status",
-                "name": "Worker Pool Status",
-                "description": "Current worker pool metrics",
-                "mimeType": "application/json",
-            },
-            {
-                "uri": "bos://governance/roles/list",
-                "name": "Role Definitions",
-                "description": "Available B-OS roles",
-                "mimeType": "application/json",
-            },
-        ]
-    }
+    pm = _get_proxy_manager()
+    base_resources = [
+        {
+            "uri": "bos://memory/docs/readme",
+            "name": "B-OS README",
+            "description": "Project overview and quick start",
+            "mimeType": "text/markdown",
+        },
+        {
+            "uri": "bos://execution/workers/status",
+            "name": "Worker Pool Status",
+            "description": "Current worker pool metrics",
+            "mimeType": "application/json",
+        },
+        {
+            "uri": "bos://governance/roles/list",
+            "name": "Role Definitions",
+            "description": "Available B-OS roles",
+            "mimeType": "application/json",
+        },
+    ]
+    
+    if pm:
+        import asyncio
+        try:
+            loop = asyncio.get_running_loop()
+            proxy_resources = loop.run_until_complete(pm.list_resources())
+            if proxy_resources:
+                base_resources.extend(proxy_resources)
+        except Exception as exc:
+            _log.warning("[MCPServer] resources/list proxy fetch failed: %s", exc)
+            
+    return {"resources": base_resources}
 
 
 def handle_resources_read(params: dict, ctx: ToolContext) -> dict:
     """MCP resources/read — fetch a specific resource by URI."""
     uri = params.get("uri", "")
     
-    if uri.startswith("bos://memory/"):
-        path = uri[len("bos://memory/"):]
+    pm = _get_proxy_manager()
+    if pm:
+        import asyncio
         try:
-            from ecos.mcp_vfs import read_memory_resource
-            content = read_memory_resource(path)
-            return {"contents": [{"uri": uri, "mimeType": "text/markdown", "text": content}]}
-        except ImportError:
-            return {"contents": [{"uri": uri, "mimeType": "text/plain", "text": f"Error: ecos mcp_vfs not found for {uri}"}]}
+            loop = asyncio.get_running_loop()
+            res = loop.run_until_complete(pm.read_resource(uri))
+            if res and "contents" in res:
+                return res
+            if res and "error" in res:
+                _log.warning("[MCPServer] resources/read error from proxy: %s", res["error"])
+        except Exception as exc:
+            _log.warning("[MCPServer] resources/read proxy fetch failed: %s", exc)
             
-    elif uri.startswith("bos://omo/"):
-        try:
-            from omo.mcp_server import read_omo_debt, read_omo_active_tasks, read_omo_standard
-            content = None
-            if uri == "bos://omo/debt":
-                content = read_omo_debt()
-            elif uri == "bos://omo/tasks/active":
-                content = read_omo_active_tasks()
-            elif uri.startswith("bos://omo/standards/"):
-                rule = uri[len("bos://omo/standards/"):]
-                content = read_omo_standard(rule)
-            
-            if content is not None:
-                return {"contents": [{"uri": uri, "mimeType": "text/markdown", "text": content}]}
-            return {"contents": [{"uri": uri, "mimeType": "text/plain", "text": f"Error: No OMO handler for {uri}"}]}
-        except ImportError:
-            return {"contents": [{"uri": uri, "mimeType": "text/plain", "text": f"Error: omo mcp_server not found for {uri}"}]}
-            
+    # Fallbacks for builtin endpoints
     if uri == "bos://execution/workers/status":
         return {"contents": [{"uri": uri, "mimeType": "application/json", "text": '{"status": "ok"}'}]}
     else:
@@ -273,26 +275,34 @@ def handle_tools_call(params: dict, ctx: ToolContext) -> dict:
         ).get_default_registry
         registry = get_default_registry()
 
+        pm = _get_proxy_manager()
         loop = asyncio.new_event_loop()
         try:
-            tool_result = loop.run_until_complete(registry.invoke_async(tool_name, arguments))
+            if pm:
+                res = loop.run_until_complete(pm.dispatch(tool_name, arguments))
+                if res.get("status") == "error":
+                    return {"content": [{"type": "text", "text": f"[tool error] {res.get('error')}"}], "isError": True}
+                return {"content": [{"type": "text", "text": str(res)}]}
+            else:
+                tool_result = loop.run_until_complete(registry.invoke_async(tool_name, arguments))
+
+                if tool_result.is_error:
+                    error_msg = getattr(tool_result, "error_message", str(tool_result.content))
+                    return {
+                        "content": [{"type": "text", "text": f"[tool error] {error_msg}"}],
+                        "isError": True,
+                    }
+                return {
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": str(tool_result.content) if tool_result.content is not None else "",
+                        }
+                    ]
+                }
         finally:
             loop.close()
 
-        if tool_result.is_error:
-            error_msg = getattr(tool_result, "error_message", str(tool_result.content))
-            return {
-                "content": [{"type": "text", "text": f"[tool error] {error_msg}"}],
-                "isError": True,
-            }
-        return {
-            "content": [
-                {
-                    "type": "text",
-                    "text": str(tool_result.content) if tool_result.content is not None else "",
-                }
-            ]
-        }
     except _ParamError:
         raise
     except (ImportError, KeyError, AttributeError) as exc:

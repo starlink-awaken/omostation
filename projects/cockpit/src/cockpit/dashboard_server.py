@@ -28,9 +28,9 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
 # ─── Paths ──────────────────────────────────────────────────────────────────
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent  # runtime/
+PROJECT_ROOT = Path(__file__).resolve().parent  # cockpit/src/cockpit/
 OMO_ROOT = Path.home() / "Workspace/projects/omo"
-DASHBOARD_HTML = OMO_ROOT / "debt" / "dashboard_cockpit.html"
+DASHBOARD_HTML = PROJECT_ROOT / "templates" / "dashboard.html"
 
 # Ensure both runtime/src and omo/src are on sys.path for imports
 _runtime_src = str(PROJECT_ROOT / "src")

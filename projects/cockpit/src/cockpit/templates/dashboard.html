@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cockpit — 5+3+1 系统驾驶舱</title>
+<style>
+:root {
+  --bg: #0f1117; --card-bg: #1a1d27; --border: #2a2d3a;
+  --green: #4ade80; --yellow: #fbbf24; --red: #f87171; --blue: #60a5fa;
+  --text: #e2e8f0; --dim: #64748b; --accent: #818cf8;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+header h1 { font-size: 20px; font-weight: 600; }
+header .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+.status-ok { background: var(--green); }
+.status-warn { background: var(--yellow); }
+.status-err { background: var(--red); }
+.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+.card h2 { font-size: 14px; font-weight: 500; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+.stat-value { font-size: 32px; font-weight: 700; }
+.stat-label { font-size: 12px; color: var(--dim); margin-top: 4px; }
+.project-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.project-row:last-child { border-bottom: none; }
+.project-name { font-size: 13px; font-weight: 500; }
+.project-meta { font-size: 12px; color: var(--dim); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+.badge-ok { background: rgba(74,222,128,0.15); color: var(--green); }
+.badge-warn { background: rgba(251,191,36,0.15); color: var(--yellow); }
+.priority-p0 { color: var(--red); font-weight: 600; }
+.priority-p1 { color: var(--yellow); font-weight: 500; }
+.card-item { padding: 12px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px; }
+.card-item:last-child { margin-bottom: 0; }
+.card-item .title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.card-item .meta { font-size: 11px; color: var(--dim); }
+.layer-diagram { display: flex; flex-direction: column; gap: 8px; }
+.layer-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+.layer-item:hover { background: rgba(129,140,248,0.08); }
+.layer-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.layer-info { flex: 1; }
+.layer-name { font-size: 14px; font-weight: 500; }
+.layer-desc { font-size: 11px; color: var(--dim); }
+.layer-status { font-size: 12px; }
+.refresh-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; font-size: 12px; color: var(--dim); }
+@media (max-width: 768px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="status-dot status-ok" id="system-dot"></span>Cockpit · 5+3+1 驾驶舱</h1>
+  <span style="font-size:12px;color:var(--dim)" id="clock"></span>
+</header>
+
+<div class="container">
+
+  <!-- Quick Stats -->
+  <div class="grid-3" style="margin-bottom:24px">
+    <div class="card">
+      <h2>活跃卡片</h2>
+      <div class="stat-value" id="active-cards">—</div>
+      <div class="stat-label">P0: <span id="p0-count" style="color:var(--red)">—</span> · P1: <span id="p1-count">—</span></div>
+    </div>
+    <div class="card">
+      <h2>OMO Phase</h2>
+      <div class="stat-value" id="omo-phase">—</div>
+      <div class="stat-label" id="omo-theme">—</div>
+    </div>
+    <div class="card">
+      <h2>系统健康</h2>
+      <div class="stat-value" id="health-status" style="color:var(--green)">—</div>
+      <div class="stat-label"><span id="health-services">—</span> 运行中</div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="grid-2" style="margin-bottom:24px">
+    <!-- 5+3+1 Architecture -->
+    <div class="card">
+      <h2>5+3+1 架构</h2>
+      <div class="layer-diagram" id="layer-diagram">
+        <div class="layer-item"><div class="layer-icon" style="background:rgba(96,165,250,0.15)">L4</div><div class="layer-info"><div class="layer-name">自我层</div><div class="layer-desc">CARDS + Vault</div></div><div class="layer-status"><span class="badge badge-ok">active</span></div></div>
+        <div class="layer-item"><div class="layer-icon" style="background:rgba(129,140,248,0.15)">L3</div><div class="layer-info"><div class="layer-name">入口层 · Cockpit</div><div class="layer-desc">CLI + MCP + Web</div></div><div class="layer-status"><span class="badge badge-ok">498 tests</span></div></div>
+        <div class="layer-item"><div class="layer-icon" style="background:rgba(251,191,36,0.15)">I0</div><div class="layer-info"><div class="layer-name">织层 · Agora</div><div class="layer-desc">MCP Hub, 42 tools</div></div><div class="layer-status"><span class="badge badge-ok">1105 tests</span></div></div>
+        <div class="layer-item"><div class="layer-icon" style="background:rgba(74,222,128,0.15)">L2</div><div class="layer-info"><div class="layer-name">内核 · kairon + omo + gbrain + metaos</div><div class="layer-desc">25 packages, 知识引擎</div></div><div class="layer-status"><span class="badge badge-ok">1810+ tests</span></div></div>
+        <div class="layer-item"><div class="layer-icon" style="background:rgba(248,113,113,0.15)">L1</div><div class="layer-info"><div class="layer-name">运行时 · Runtime</div><div class="layer-desc">Matrix + Scheduler + KEI</div></div><div class="layer-status"><span class="badge badge-ok">171 tests</span></div></div>
+        <div class="layer-item"><div class="layer-icon" style="background:rgba(100,116,139,0.15)">L0</div><div class="layer-info"><div class="layer-name">协议 · ecos + protocols</div><div class="layer-desc">16 YAML protocols</div></div><div class="layer-status"><span class="badge badge-ok">122 tests</span></div></div>
+      </div>
+    </div>
+
+    <!-- P0 Cards -->
+    <div class="card">
+      <h2>P0 优先卡片</h2>
+      <div id="p0-cards-list" style="max-height:300px;overflow-y:auto">
+        <div style="color:var(--dim);font-size:13px">加载中...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9 Projects Status -->
+  <div class="card" style="margin-bottom:24px">
+    <h2>9 项目状态 · 接入能力</h2>
+    <div id="project-list"></div>
+  </div>
+
+  <!-- Refresh -->
+  <div class="refresh-bar">
+    <span>自动刷新: 30s · 数据源: cockpit L4 bridge + I0 Fabric</span>
+    <span id="last-refresh">—</span>
+  </div>
+
+</div>
+
+<script>
+// ── Live data fetch ──────────────────────────────────────
+async function loadAll() {
+  const results = await Promise.allSettled([
+    fetch('/api/context').then(r => r.ok ? r.json() : null),
+    fetch('/api/cards').then(r => r.ok ? r.json() : null),
+    fetch('/api/status').then(r => r.ok ? r.json() : null),
+    fetch('/api/services').then(r => r.ok ? r.json() : null),
+  ]);
+
+  const [ctx, cards, status, services] = results.map(r => r.status === 'fulfilled' ? r.value : null);
+
+  // Update cards stat
+  if (ctx && ctx.cards_summary) {
+    document.getElementById('active-cards').textContent = ctx.cards_summary.active;
+    document.getElementById('p0-count').textContent = 'P0: ' + ctx.cards_summary.p0_open;
+    document.getElementById('omo-phase').textContent = 'Phase ' + ctx.phase;
+    document.getElementById('omo-theme').textContent = ctx.theme || '';
+
+    // Update P0 cards list
+    if (ctx.cards_summary.p0_titles && ctx.cards_summary.p0_titles.length > 0) {
+      document.getElementById('p0-cards-list').innerHTML = ctx.cards_summary.p0_titles.map(t =>
+        '<div class="card-item"><div class="title"><span class="priority-p0">P0</span> ' + t + '</div></div>'
+      ).join('');
+    } else {
+      document.getElementById('p0-cards-list').innerHTML = '<div style="color:var(--green);font-size:13px">✅ 无 P0 待处理</div>';
+    }
+  }
+
+  // Update health
+  if (status) {
+    document.getElementById('health-status').textContent = 'OK';
+    document.getElementById('system-dot').className = 'status-dot status-ok';
+  }
+
+  if (services && Array.isArray(services)) {
+    const online = services.filter(s => s.port_listening).length;
+    document.getElementById('health-services').textContent = online + '/' + services.length;
+  }
+
+  // Update 9 project list
+  if (services && Array.isArray(services)) {
+    document.getElementById('project-list').innerHTML =
+    '<div class="project-row" style="font-size:12px;color:var(--dim);padding:4px 0">' +
+    '<span>项目</span><span>层</span><span style="margin-left:8px">MCP</span><span>HTTP</span><span>CLI</span></div>' +
+    [
+      {name:'agora',layer:'I0',mcp:42,cli:35,http:'7422/7431/8080',tests:'1105'},
+      {name:'cockpit',layer:'L3',mcp:20,cli:13,http:'8080',tests:'498'},
+      {name:'kairon',layer:'L2',mcp:'25pkgs',cli:'-',http:'-',tests:'1810+'},
+      {name:'gbrain',layer:'L2',mcp:67,cli:'1',http:'-',tests:'TS'},
+      {name:'omo',layer:'L2',mcp:10,cli:28,http:'-',tests:'221'},
+      {name:'metaos',layer:'L2',mcp:11,cli:5,http:'-',tests:'163'},
+      {name:'runtime',layer:'L1',mcp:30,cli:3,http:'FastAPI',tests:'171'},
+      {name:'ecos',layer:'L0',mcp:'-',cli:3,http:'9090',tests:'122'},
+      {name:'protocols',layer:'L0',mcp:'-',cli:'-',http:'-',tests:'16YAML'},
+    ].map(p => '<div class="project-row"><span class="project-name">' + p.name + '</span>' +
+      '<span class="project-meta">' + p.layer + '</span>' +
+      '<span class="project-meta">MCP:' + p.mcp + '</span>' +
+      '<span class="project-meta">' + p.http + '</span>' +
+      '<span class="project-meta">CLI:' + p.cli + '</span>' +
+      '<span class="badge badge-ok">' + p.tests + '</span></div>').join('');
+  }
+
+  document.getElementById('last-refresh').textContent = new Date().toLocaleTimeString();
+}
+
+// ── Clock ───────────────────────────────────────────────
+function tick() {
+  document.getElementById('clock').textContent = new Date().toLocaleString('zh-CN');
+}
+tick(); setInterval(tick, 1000);
+
+// ── Auto refresh ────────────────────────────────────────
+loadAll(); setInterval(loadAll, 30000);
+</script>
+</body>
+</html>
