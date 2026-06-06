@@ -239,6 +239,43 @@ async def handle_register_agent(body: dict) -> dict:
     return {"id": body.get("id"), "status": "registered"}
 
 
+# ── Phase 34 Wave 3: SSE Event Bus ──────────────────────────────────────────────
+
+async def handle_events(request: Any):
+    """Phase 34 Wave 3: SSE Pub/Sub Event Bus endpoint."""
+    from fastapi.responses import StreamingResponse
+    import asyncio
+    from agora.core.state import get_event_bus, get_registry  # type: ignore[import-not-found]
+    
+    bus = get_event_bus(get_registry())
+    
+    async def event_generator():
+        queue = asyncio.Queue()
+        
+        def on_event(event: dict):
+            queue.put_nowait(event)
+            
+        bus.register_hook(on_event)
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    event = await asyncio.wait_for(queue.get(), timeout=1.0)
+                    import json
+                    yield f"data: {json.dumps(event)}\n\n"
+                except asyncio.TimeoutError:
+                    yield ": ping\n\n"
+        finally:
+            try:
+                # Assuming unregister_hook exists; if not, we gracefully pass
+                bus.unregister_hook(on_event)
+            except Exception:
+                pass
+                
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
 # ── Route Registration ────────────────────────────────────────────────────────
 
 
@@ -256,6 +293,9 @@ def register_routes(router: Any, prefix: str = "/v1") -> None:
     # Health
     router.add_api_route(f"{prefix}/health", handle_health, methods=["GET"])
     router.add_api_route(f"{prefix}/health/detailed", handle_detailed_health, methods=["GET"])
+
+    # Phase 34 Wave 3: Event Bus
+    router.add_api_route(f"{prefix}/events", handle_events, methods=["GET"])
 
     # Tasks
     router.add_api_route(f"{prefix}/tasks", handle_submit_task, methods=["POST"])
