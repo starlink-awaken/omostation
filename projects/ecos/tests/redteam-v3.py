@@ -13,7 +13,8 @@
 import os
 import time
 
-ECOS = os.path.expanduser("~/Workspace/eCOS")
+from pathlib import Path
+ECOS = os.environ.get("ECOS_ROOT", str(Path(__file__).resolve().parents[1]))
 
 attacks = [
     {

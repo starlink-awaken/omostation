@@ -125,6 +125,19 @@ def handle_request(req: dict) -> dict | None:
             }
         }
 
+    elif method == "initialize":
+        return {
+            "jsonrpc": "2.0", "id": req_id,
+            "result": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {"tools": {}},
+                "serverInfo": {"name": "omo-mcp-plane", "version": "1.0.0"},
+            }
+        }
+
+    elif method == "notifications/initialized":
+        return None  # notification, no response
+
     elif method == "tools/call":
         tool_name = params.get("name", "")
         args = params.get("arguments", {})

@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-ECOS = os.environ.get("ECOS_ROOT", str(Path.home() / "Workspace" / "eCOS"))
+ECOS = os.environ.get("ECOS_ROOT", str(Path(__file__).resolve().parents[1]))
 
 
 class TestDailyDigest:

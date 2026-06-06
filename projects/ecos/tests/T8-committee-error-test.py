@@ -9,8 +9,9 @@
 
 import os
 import re
+from pathlib import Path
 
-ECOS = os.path.expanduser("~/Workspace/eCOS")
+ECOS = os.environ.get("ECOS_ROOT", str(Path(__file__).resolve().parents[1]))
 GENOME = os.path.join(ECOS, "GENOME.md")
 IRREV = os.path.join(ECOS, "docs/policy/IRREVERSIBLE-OPS.md")
 GUARD = os.path.join(ECOS, "scripts/realtime_guard.py")

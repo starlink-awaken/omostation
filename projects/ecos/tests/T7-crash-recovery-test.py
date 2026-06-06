@@ -12,8 +12,9 @@ import json
 import os
 import random
 import time
+from pathlib import Path
 
-ECOS = os.path.expanduser("~/Workspace/eCOS")
+ECOS = os.environ.get("ECOS_ROOT", str(Path(__file__).resolve().parents[1]))
 SSB_DB = os.path.join(ECOS, "LADS/ssb/ecos.jsonl")
 STATE = os.path.join(ECOS, "STATE.yaml")
 HANDOFF = os.path.join(ECOS, "LADS/HANDOFF/LATEST.md")
