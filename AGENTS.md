@@ -55,28 +55,81 @@ cd projects/kairon && make test         # All packages
 cd projects/kairon && make test-fast   # Unit tests only
 cd projects/kairon && make lint       # Ruff check
 
-# gbrain (projects/gbrain/) — See AGENTS.md in that directory
+# agora (projects/agora/)
+cd projects/agora && uv run pytest tests/ -q   # 1105/1112 pass
+
+# cockpit (projects/cockpit/)
+cd projects/cockpit && uv run pytest tests/ -q  # 445/490 pass
+
+# runtime (projects/runtime/)
+cd projects/runtime && uv run pytest tests/ -q  # 171/175 pass
+
+# omo (projects/omo/)
+cd projects/omo && uv run pytest tests/ -q      # 221/400+ (182 skipped)
+
+# metaos (projects/metaos/)
+cd projects/metaos && uv run pytest tests/ -q   # 163/163 pass
+
+# ecos (projects/ecos/)
+cd projects/ecos && uv run pytest tests/ -q     # 113/122 pass
+
+# gbrain (projects/gbrain/)
 cd projects/gbrain && bun test
 cd projects/gbrain && bun run ci:local
-
-# agentmesh (projects/agentmesh/) — 已归档，参照 kairon 替代包
 ```
 
 ## Architecture
 
-### Workspace Plane Structure (OMO v4.0)
+### 5+3+1 分层快照 (Phase 28 · 2026-06-06 审计)
 
-1. **Governance layer** (`.omo/`) — The K0 Data Plane (goals, state, tasks). DO NOT manually modify; use `omo-cli`.
-2. **Engine layer** (`projects/omo/`) — The K1 Ribosome Engine. Contains `omo-cli` for GC, Ledger, and Bridge.
-3. **Capability layer** (`projects/`) — independent repos with own build/test/lint contracts.
-4. **User-space layer** (`spaces/`) — tenant / workspace manifest boundaries.
-5. **Data substrate** (`data/`) — shared databases, indexes, snapshots.
-6. **Runtime residue** (`runtime/`) — ephemeral logs, temp state.
+```
+L4 自我层 ── ~/Documents/驾驶舱/CARDS/ (SQLite) + ~/Documents/学习进化/ (MD)
+L3 入口层 ── cockpit (CLI 13 + MCP 🔴 + HTTP 8) 🟡 MCP 待修复
+I0 织层   ── agora (CLI 35 + MCP 42 + HTTP 30+) ✅ 99.37% tests
+L2 引擎面 ── kairon 25 packages (630 shared-lib tests) ✅
+L2 治理面 ── omo (CLI 28 + MCP 10) ✅
+L2 记忆面 ── gbrain 163K TS (MCP 67) ✅
+L2 编排   ── metaos (CLI 5 + MCP 11) ✅
+L1 运行时 ── runtime (CLI 3 + MCP 30 + HTTP 5) ✅
+L0 协议   ── ecos (CLI 3 + HTTP dashboard :9090) + protocols 16 YAML 🟡
+
+X1 审计 ── KEI sandbox (runtime) | X2 抗熵 ── scheduler autoheal | X3 价值栈 ── llm-gateway cost
+```
+
+### 项目测试健康度
+
+| 项目 | 总测试 | 通过 | 通过率 |
+|------|--------|------|--------|
+| agora | 1112 | 1105 | 99.37% |
+| cockpit | 490 | 445 | ~90% |
+| kairon | 1810+ | ~1750+ | ~97% |
+| runtime | 175 | 171 | 100% |
+| omo | 400+ | 221 | 100%* |
+| metaos | 163 | 163 | 100% |
+| ecos | 122 | 113 | 92.6% |
+| gbrain | TS | TS | N/A |
+
+*OMO: 182 skipped (需要完整环境)
+
+### 对外接入能力
+
+| 项目 | CLI 入口 | MCP 工具 | HTTP 端口 | 依赖 |
+|------|---------|---------|-----------|------|
+| agora | `agora` | 42+ tools | :7422/:7431/:8080 | fastmcp, httpx, aiohttp |
+| cockpit | `cockpit`, `workspace` | 🔴 | stdlib http | runtime |
+| runtime | `runtime`, `ecos-matrix-scheduler` | 30 | FastAPI | fastmcp, apscheduler |
+| omo | `omo`, `cards`, `omo-debt` | 10 | — | httpx, pyyaml |
+| metaos | `metaos` | 11 | — | structlog |
+| ecos | `ecos-ssb`, `ecos-dashboard` | — | :9090 | requests, jinja2 |
+| gbrain | `gbrain` | 67 | — | bun |
 
 ### Key Dependencies
 
-- **kairon/agora** provides service discovery / routing
-- **kairon/sharedbrain-standalone** replaces legacy SharedBrain code
+- **I0 agora** provides MCP service discovery / routing / proxy (all cross-layer communication)
+- **L1 runtime** provides service registry, health monitoring, KEI sandbox
+- **L2 kairon** provides knowledge engineering pipeline (eidos/kos/minerva/...)
+- **L2 gbrain** provides Postgres knowledge database (67 MCP tools)
+- **L2 omo** provides governance CLI, debt registry, task management
 
 ## Testing Pattern
 
