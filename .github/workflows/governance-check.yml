@@ -1,43 +1,34 @@
-name: .omo Governance Check
-
+name: Governance Check
 on:
-  pull_request:
-    branches: [main]
+  push:
     paths:
-      - '.omo/**'
-      - '.github/workflows/governance-check.yml'
-      - 'bin/verify-omo.sh'
-      - 'scripts/omo_task_schema.py'
-      - 'scripts/check-system-consistency.sh'
-      - 'scripts/sync_omo_state.py'
-      - 'scripts/omo_worker.py'
-      - 'scripts/check-state-goals-alignment.py'
+      - "projects/*/pyproject.toml"
+      - "projects/*/src/**"
+      - "scripts/check-*.py"
+      - "CLAUDE.md"
+      - "LAYER-INDEX.md"
+  pull_request:
+  schedule:
+    - cron: "0 8 * * 1"  # 每周一早8点自动运行
 
 jobs:
-  governance-validate:
-    name: Run governance checks
+  interface-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
-
-      - name: Install dependencies
-        run: pip install pyyaml pygithub
-
-      - name: Canonical .omo verification
-        run: bash bin/verify-omo.sh
-
-      - name: INDEX.md Coverage Check
+          python-version: "3.13"
+      - name: Run governance checks
         run: |
-          python3 scripts/check-index-coverage.py || \
-            { echo "::warning::INDEX.md coverage below 95%"; exit 1; }
+          python3 scripts/check-interfaces.py
+          python3 scripts/check-cross-deps.py
 
-      - name: State-Goals Alignment Check
-        run: python3 scripts/check-state-goals-alignment.py || \
-            { echo "::warning::State-goals alignment check failed"; exit 1; }
-
-      - name: System consistency check
-        run: bash scripts/check-system-consistency.sh
+  doc-freshness:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check documentation freshness
+        run: |
+          python3 scripts/check-interfaces.py --doc-only
