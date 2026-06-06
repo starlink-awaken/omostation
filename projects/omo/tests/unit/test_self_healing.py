@@ -229,7 +229,7 @@ class TestDefaultRules:
             assert rule.name
             assert rule.threshold > 0
             assert rule.severity in ("info", "warning", "high", "critical")
-            assert rule.action in ("debt", "workflow", "both")
+            assert rule.action in ("debt", "workflow", "fix", "both")
             assert rule.description
 
     def test_error_spike_rule_exists(self):
@@ -239,5 +239,94 @@ class TestDefaultRules:
 
     def test_disk_quota_threshold_is_one(self):
         rule = next(r for r in DEFAULT_RULES if r.name == "disk_quota_warning")
-        assert rule.threshold == 1  # 立即触发
+        assert rule.threshold == 1
         assert rule.severity == "critical"
+
+    def test_timeout_has_fix_scripts(self):
+        rule = next(r for r in DEFAULT_RULES if r.name == "timeout_cascade")
+        assert "restart_agora" in rule.fix_names
+
+    def test_disk_quota_has_fix_scripts(self):
+        rule = next(r for r in DEFAULT_RULES if r.name == "disk_quota_warning")
+        assert len(rule.fix_names) >= 3
+
+    def test_new_rules_exist(self):
+        names = [r.name for r in DEFAULT_RULES]
+        assert "memory_pressure" in names
+        assert "process_dead_alert" in names
+
+    def test_7_default_rules(self):
+        assert len(DEFAULT_RULES) == 7
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Fix Scripts
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class TestFixScripts:
+    def test_fix_registry_has_all(self):
+        from omo.omo_self_healing_fixes import FIX_REGISTRY, list_fixes
+
+        fixes = list_fixes()
+        assert len(fixes) == 6
+        assert "clear_pytest_cache" in fixes
+        assert "restart_agora" in fixes
+        assert "disk_check" in fixes
+        assert "process_health_check" in fixes
+
+    def test_run_fix_disk_check(self):
+        from omo.omo_self_healing_fixes import run_fix
+
+        result = run_fix("disk_check")
+        assert result["fix_name"] == "disk_check"
+        assert "success" in result
+        assert "output" in result
+
+    def test_run_fix_unknown(self):
+        from omo.omo_self_healing_fixes import run_fix
+
+        result = run_fix("nonexistent_fix")
+        assert result["success"] is False
+        assert "Unknown fix" in result["output"]
+
+    def test_run_fix_git_gc(self):
+        from omo.omo_self_healing_fixes import run_fix
+
+        result = run_fix("git_gc")
+        assert result["fix_name"] == "git_gc"
+
+    def test_run_fix_clean_temp(self):
+        from omo.omo_self_healing_fixes import run_fix
+
+        result = run_fix("clean_temp_files")
+        assert result["fix_name"] == "clean_temp_files"
+        assert result["success"] is True
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Extended Engine Features
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class TestExtendedEngine:
+    def test_fix_rules_exist(self):
+        engine = SelfHealingEngine()
+        fix_rules = [r for r in engine._rules if r.fix_names]
+        assert len(fix_rules) >= 3  # timeout/disk/memory/process
+
+    def test_status_includes_fixes(self):
+        engine = SelfHealingEngine()
+        status = engine.get_status()
+        assert "fixes_executed" in status
+        assert "recent_fixes" in status
+        assert status["fixes_executed"] == 0
+
+    def test_engine_has_publish_setting(self):
+        engine = SelfHealingEngine()
+        rule = next(r for r in engine._rules if r.name == "disk_quota_warning")
+        assert rule.publish_event is False  # disk_quota 不发布事件
+
+    def test_engine_event_url_configured(self):
+        engine = SelfHealingEngine(agora_event_url="http://test:9999/events")
+        assert engine._agora_event_url == "http://test:9999/events"

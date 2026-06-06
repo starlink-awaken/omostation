@@ -1,14 +1,19 @@
-"""OMO 自愈代谢引擎 (Self-Healing Metabolism Engine)
+"""
+OMO 自愈代谢引擎 (Self-Healing Metabolism Engine)
 
-Phase 38: 从被动监听升级为主动自愈。
+Phase 38-39: 从被动监听升级为主动自愈。
 - 监听 Agora SSE 事件流
 - 滑动窗口统计错误事件
 - 阈值触发 MetaOS 工作流 → 生成 Debt 报告 → 尝试自动修复
+- 支持自定义修复脚本 (omo_self_healing_fixes.py)
+- HTTP 状态端点 + Agora 事件发布
 
 架构:
     Agora SSE ──→ ErrorEventCounter ──→ HealingRuleEngine ──→ MetaOS Workflow
                                                 │
-                                                └──→ Debt 报告生成
+                                    ┌───────────┼───────────┐
+                                    ▼           ▼           ▼
+                               Debt 报告    Auto-Fix     Agora Event
 """
 
 from __future__ import annotations
@@ -97,18 +102,23 @@ class HealingRule:
         event_types: 匹配的事件类型列表 (空列表匹配所有)
         threshold: 窗口内最小事件数才触发
         severity: 生成的 Debt 严重级别
-        action: 触发动作 (debt | workflow | both)
+        action: 触发动作 (debt | workflow | fix | both)
         cooldown_seconds: 冷却时间，避免重复触发
         workflow_id: 关联的 MetaOS 工作流 ID (可选)
+        fix_names: 关联的修复脚本名称列表 (来自 FIX_REGISTRY)
+        publish_event: 是否向 Agora 发布事件
+        description: 规则描述
     """
 
     name: str
     event_types: list[str] = field(default_factory=list)
     threshold: int = 5
     severity: str = "warning"
-    action: str = "debt"  # debt | workflow | both
+    action: str = "debt"  # debt | workflow | fix | both
     cooldown_seconds: int = 600
     workflow_id: str = ""
+    fix_names: list[str] = field(default_factory=list)
+    publish_event: bool = True
     description: str = ""
 
     _last_triggered: float = field(default=0.0, init=False, repr=False)
@@ -135,7 +145,8 @@ DEFAULT_RULES: list[HealingRule] = [
         severity="critical",
         action="both",
         cooldown_seconds=600,
-        description="系统错误/审计失败/健康下降超过阈值时，自动触发审计 + 生成债务",
+        fix_names=["process_health_check"],
+        description="系统错误/审计失败/健康下降时触发审计+债务+进程检查",
     ),
     HealingRule(
         name="import_failure_chain",
@@ -144,7 +155,7 @@ DEFAULT_RULES: list[HealingRule] = [
         severity="high",
         action="debt",
         cooldown_seconds=1800,
-        description="导入错误频发时生成债务，提示检查依赖链",
+        description="导入错误频发时生成债务",
     ),
     HealingRule(
         name="timeout_cascade",
@@ -153,7 +164,8 @@ DEFAULT_RULES: list[HealingRule] = [
         severity="high",
         action="both",
         cooldown_seconds=600,
-        description="超时事件激增时生成债务 + 尝试重启相关服务",
+        fix_names=["restart_agora", "clear_pytest_cache"],
+        description="超时事件激增时重启Agora+清理缓存",
     ),
     HealingRule(
         name="test_failure_alert",
@@ -162,16 +174,37 @@ DEFAULT_RULES: list[HealingRule] = [
         severity="warning",
         action="debt",
         cooldown_seconds=3600,
-        description="CI 测试失败时生成债务，追踪测试健康",
+        description="CI 测试失败时生成债务",
     ),
     HealingRule(
         name="disk_quota_warning",
         event_types=["DISK_FULL", "QUOTA_EXCEEDED"],
         threshold=1,
         severity="critical",
-        action="debt",
+        action="fix",
+        fix_names=["disk_check", "clean_temp_files", "git_gc"],
+        publish_event=False,
+        description="磁盘告警立刻清理临时文件+磁盘检查",
+    ),
+    HealingRule(
+        name="memory_pressure",
+        event_types=["MEMORY_EXHAUSTED", "OOM_KILLED"],
+        threshold=1,
+        severity="critical",
+        action="fix",
         cooldown_seconds=300,
-        description="磁盘/配额告警立刻生成严重债务",
+        fix_names=["process_health_check", "clear_pytest_cache"],
+        description="内存耗尽时进程健康检查+缓存清理",
+    ),
+    HealingRule(
+        name="process_dead_alert",
+        event_types=["PROCESS_DOWN", "SERVICE_UNREACHABLE"],
+        threshold=1,
+        severity="high",
+        action="fix",
+        cooldown_seconds=300,
+        fix_names=["restart_agora", "process_health_check"],
+        description="进程宕机时自动重启+健康检查",
     ),
 ]
 
@@ -195,14 +228,20 @@ class SelfHealingEngine:
         self,
         rules: list[HealingRule] | None = None,
         window_seconds: int = 300,
+        agora_event_url: str = "",
     ):
         self._counter = ErrorEventCounter(window_seconds=window_seconds)
         self._rules: list[HealingRule] = rules or DEFAULT_RULES
         self._triggered_count: dict[str, int] = {}
+        self._fix_history: list[dict] = []
+        self._agora_event_url = agora_event_url or os.environ.get(
+            "AGORA_EVENT_URL", "http://127.0.0.1:8080/v1/events"
+        )
         logger.info(
-            "self_healing_engine_init rules=%s window_s=%s",
+            "self_healing_engine_init rules=%s window_s=%s agora=%s",
             len(self._rules),
             window_seconds,
+            self._agora_event_url,
         )
 
     # ── Event Handling ─────────────────────────────────────────────────
@@ -244,15 +283,23 @@ class SelfHealingEngine:
                 wf_result = await self._trigger_workflow(rule)
                 actions.append({"type": "workflow_triggered", "result": wf_result})
 
+            # Auto-fix execution
+            if rule.fix_names:
+                fix_results = await self._run_fixes(rule)
+                for fr in fix_results:
+                    actions.append({"type": "fix_executed", "result": fr})
+
+            # Publish event to Agora
+            if rule.publish_event:
+                await self._publish_healing_event(rule, ev_type, count, actions)
+
             if actions:
-                triggered.append(
-                    {
-                        "rule": rule.name,
-                        "event_type": ev_type,
-                        "count": count,
-                        "actions": actions,
-                    }
-                )
+                triggered.append({
+                    "rule": rule.name,
+                    "event_type": ev_type,
+                    "count": count,
+                    "actions": actions,
+                })
 
         return triggered
 
@@ -359,6 +406,54 @@ class SelfHealingEngine:
             logger.error("self_healing_workflow_error error=%s", str(exc))
             return {"status": "error", "error": str(exc)}
 
+    # ── Auto-Fix ───────────────────────────────────────────────────────
+
+    async def _run_fixes(self, rule: HealingRule) -> list[dict]:
+        """执行规则关联的修复脚本。"""
+        from omo.omo_self_healing_fixes import run_fix
+
+        results = []
+        for fix_name in rule.fix_names:
+            result = run_fix(fix_name, {"rule": rule.name, "severity": rule.severity})
+            self._fix_history.append({
+                "rule": rule.name,
+                "fix_name": fix_name,
+                "success": result["success"],
+                "output": result["output"][:200],
+            })
+            # 限制历史记录
+            if len(self._fix_history) > 100:
+                self._fix_history = self._fix_history[-100:]
+            results.append(result)
+        return results
+
+    # ── Event Publishing ───────────────────────────────────────────────
+
+    async def _publish_healing_event(
+        self, rule: HealingRule, ev_type: str, count: int, actions: list[dict]
+    ) -> None:
+        """向 Agora 发布自愈事件。"""
+        try:
+            import json
+
+            import httpx
+
+            payload = {
+                "type": "omo:healing:triggered",
+                "rule": rule.name,
+                "event_type": ev_type,
+                "count": count,
+                "severity": rule.severity,
+                "actions": actions,
+            }
+            async with httpx.AsyncClient(timeout=httpx.Timeout(5.0)) as client:
+                await client.post(
+                    self._agora_event_url,
+                    json=payload,
+                )
+        except Exception:
+            pass  # 事件发布失败不影响主流程
+
     # ── Status ────────────────────────────────────────────────────────
 
     def get_status(self) -> dict:
@@ -370,6 +465,8 @@ class SelfHealingEngine:
             "event_window_s": self._counter._window.total_seconds(),
             "current_events": self._counter.count(),
             "events_by_type": self._counter.by_type(),
+            "fixes_executed": len(self._fix_history),
+            "recent_fixes": self._fix_history[-5:],
         }
 
 
