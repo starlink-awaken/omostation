@@ -7,7 +7,7 @@
 
 | 接口类型 | 入口 | 说明 |
 |---------|------|------|
-| CLI | `cockpit`, `workspace` | 13 个子命令 (research/status/code/governance/...) |
+| CLI | `cockpit`, `workspace` | 18 子命令 (context/cards/vault/health/brief + research/status/code/...) |
 | MCP | `cockpit-mcp` | 20 个工具 (research_* × 15 + status_* × 2 + L4 bridge × 4) |
 | Web | `dashboard_server.py` | stdlib http, I0 状态面板 |
 

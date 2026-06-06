@@ -395,6 +395,27 @@
       "provider_info": null,
       "healthy": true,
       "last_health_check": 0.0
+    },
+    {
+      "name": "cockpit",
+      "description": "Cockpit — 统一研究驾驶舱 (CLI + Web UI) — 工作区入口与研究对象管理",
+      "protocol": "mcp",
+      "protocol_config": {},
+      "mcp_endpoint": "stdio://cockpit",
+      "health_endpoint": "",
+      "port": 0,
+      "tags": [
+        "research",
+        "workspace",
+        "knowledge-management",
+        "cli",
+        "cockpit",
+        "ui"
+      ],
+      "instances": [],
+      "provider_info": null,
+      "healthy": true,
+      "last_health_check": 0.0
     }
   ]
 }

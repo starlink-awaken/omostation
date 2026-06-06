@@ -247,6 +247,14 @@ def main() -> int:
     vault_p = sub.add_parser("vault", help="搜索 L4 Vault 知识库")
     vault_p.add_argument("keyword", nargs="?", help="搜索关键词")
 
+    health_p = sub.add_parser("health", help="一键系统健康检查")
+    health_p.add_argument("--json", action="store_true", help="JSON 格式输出")
+
+    brief_p = sub.add_parser("brief", help="会话简报")
+    brief_p.add_argument("--force", action="store_true", help="强制重新生成")
+
+    sub.add_parser("version", help="版本信息")
+
     code_p = sub.add_parser("code", help="代码库分析与审查 (基于 codeanalyze)")
     code_sub = code_p.add_subparsers(dest="code_command", parser_class=WorkspaceParser)
     
@@ -402,6 +410,15 @@ def main() -> int:
     if args.command == "vault":
         from .commands.l4bridge import cmd_vault
         return cmd_vault(args)
+    if args.command == "health":
+        return _cmd_health(args)
+    if args.command == "brief":
+        return _cmd_brief(args)
+    if args.command == "version":
+        from cockpit import __version__
+        console.print(f"[bold cyan]cockpit[/] v[bold]{__version__}[/]")
+        console.print("[dim]L3 统一入口 · 5+3+1 架构[/]")
+        return 0
 
     console.print(
         Panel.fit(
@@ -410,7 +427,9 @@ def main() -> int:
             "  [cyan]workspace context[/]          — 系统上下文 (Phase/P0/约束)\n"
             "  [cyan]workspace cards[/]            — CARDS 卡片列表\n"
             "  [cyan]workspace cards --check[/]    — 操作合规检查\n"
-            "  [cyan]workspace vault search KEY[/] — 搜索知识库\n\n"
+            "  [cyan]workspace vault search KEY[/] — 搜索知识库\n"
+            "  [cyan]workspace health[/]           — 一键系统健康\n"
+            "  [cyan]workspace brief[/]            — 会话简报\n\n"
             "[bold]研究对象[/]\n"
             "  [cyan]workspace research \"主题\"[/]   — 发起研究\n"
             "  [cyan]workspace research --list[/]   — 查看历史\n\n"
@@ -419,12 +438,66 @@ def main() -> int:
             "  [cyan]workspace dashboard[/]         — Web 驾驶舱\n"
             "  [cyan]workspace mcp[/]               — MCP Server\n"
             "  [cyan]workspace demo[/]              — 5 分钟体验\n"
-            "  [cyan]workspace code analyze[/]      — 代码分析\n\n"
+            "  [cyan]workspace code analyze[/]      — 代码分析\n"
+            "  [cyan]workspace version[/]           — 版本信息\n\n"
             "[dim]快捷键: F1帮助 · Ctrl+C 退出[/]",
             border_style="cyan",
             box=box.ROUNDED,
         )
     )
+    return 0
+
+
+def _cmd_health(args: Namespace) -> int:
+    """一键系统健康检查 — 聚合 Context + Status。"""
+    try:
+        from .commands.l4bridge import cmd_context
+        ctx_result = cmd_context(args)
+    except Exception:
+        console.print("[yellow]⚠ L4 bridge 不可用, 仅运行 I0 检查[/]")
+        ctx_result = 1
+
+    # Also run I0 status if available
+    try:
+        if args.json:
+            from cockpit.scripts.cockpit_mcp import workspace_context
+            import json
+            print(workspace_context())
+        else:
+            console.print("[bold green]✅ Health check complete[/]")
+            cmd_status(args)
+    except Exception as e:
+        console.print(f"[red]Health check error: {e}[/]")
+
+    return 0 if ctx_result == 0 else 1
+
+
+def _cmd_brief(args: Namespace) -> int:
+    """生成会话简报。"""
+    from datetime import datetime
+
+    console.print(_panel("[bold cyan]📋 会话简报[/]", "cyan"))
+
+    try:
+        from cockpit.scripts.cockpit_mcp import workspace_context, cards_status
+        import json
+
+        ctx = json.loads(workspace_context())
+        cards = json.loads(cards_status())
+
+        console.print(f"Phase {ctx['phase']} · {ctx.get('theme', '')}")
+        console.print(f"活跃卡片: {ctx['cards_summary']['active']} (P0: {ctx['cards_summary']['p0_open']})")
+
+        if cards and args.force:
+            console.print("\n[bold]P0 优先:[/]")
+            for c in [c for c in cards if c['priority'] == 'P0']:
+                console.print(f"  [red]▪[/] {c['title']}")
+
+        console.print(f"\n[dim]生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M')}[/]")
+    except Exception as e:
+        console.print(f"[yellow]⚠ Brief generation limited: {e}[/]")
+
+    return 0
     return 0
 
 

@@ -46,6 +46,12 @@ class _FakeMCPClient(MCPClient):
             return self.call_tool_results[name]
         return {"status": "ok", "data": f"{name} called with {arguments}"}
 
+    async def list_resources(self) -> list[dict]:
+        return []
+
+    async def read_resource(self, uri: str) -> str | bytes:
+        return ""
+
 
 def _make_registry() -> ProxyRegistry:
     return ProxyRegistry()

@@ -101,7 +101,7 @@ async def _proxy_lifespan(server: FastMCP):
     _lifecycle_manager = None
 
 
-from agora.middleware import FastMCPAuditMiddleware
+from agora.middleware.middleware import FastMCPAuditMiddleware
 
 mcp = FastMCP(
     "Agora — Service Convergence Hub",
