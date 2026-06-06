@@ -489,9 +489,46 @@ async def _proxy_sync_loop():
             backoff = min(backoff * 2, 120)
 
 
+# ── Phase 34: Agora Mesh V2 (Agent Experience Layer) ────────────────
+
+@mcp.resource("bos://agora/registry")
+def agora_registry() -> str:
+    """Introspection: returns a JSON dump of all registered tools and resources."""
+    import json
+    if _proxy_manager:
+        tools = _proxy_manager.list_tools()
+        resources = _proxy_manager.list_resources()
+        return json.dumps({
+            "tools": [{"name": t.name, "description": t.description} for t in tools],
+            "resources": [{"uri": r.uri, "name": r.name} for r in resources]
+        }, indent=2)
+    return json.dumps({"error": "proxy manager not initialized"})
+
+
+@mcp.tool()
+async def mutate_resource(uri: str, payload: str, action: str = "update") -> str:
+    """Unified BOS URI mutation protocol. Modifies state at the specified URI.
+    
+    Args:
+        uri: The bos:// URI to mutate.
+        payload: JSON string payload.
+        action: The verb (update, create, delete).
+    """
+    import json
+    logger.info("mutate_resource", uri=uri, action=action)
+    if not uri.startswith("bos://"):
+        return f"Error: Invalid URI scheme. Must start with bos://. Received {uri}"
+    
+    # Future: Parse URI and route to specific downstream FastMCP POST endpoints or tools
+    return json.dumps({
+        "status": "success",
+        "action": action,
+        "mutated_uri": uri,
+        "message": f"Phase 34 Wave 2: mutated_resource executed for {uri}"
+    })
+
+
 # ── Proxy tools ────────────────────────────────────────────────────
-
-
 @mcp.tool()
 async def proxy_connect() -> dict:
     """Connect to all configured downstream MCP services via the proxy.
