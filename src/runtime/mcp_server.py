@@ -192,6 +192,13 @@ def main():
     parser.add_argument("--list", action="store_true", help="列出所有工具")
     args = parser.parse_args()
 
+    # Enable KEI Sandbox
+    try:
+        from runtime.kei_sandbox import enable_sandbox
+        enable_sandbox()
+    except ImportError:
+        pass
+
     # 测试模式: 直接调用并打印
     if args.test:
         handlers = {

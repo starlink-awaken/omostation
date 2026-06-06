@@ -351,6 +351,13 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
 
+    # Enable KEI Sandbox
+    try:
+        from runtime.kei_sandbox import enable_sandbox
+        enable_sandbox()
+    except ImportError:
+        pass
+
     if args.command == "health":
         return cmd_health_json() if args.json else cmd_health()
     elif args.command == "matrix":
