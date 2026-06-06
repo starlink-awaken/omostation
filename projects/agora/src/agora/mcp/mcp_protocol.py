@@ -107,13 +107,22 @@ def handle_resources_read(params: dict, ctx: ToolContext) -> dict:
             return {"contents": [{"uri": uri, "mimeType": "text/plain", "text": f"Error: ecos mcp_vfs not found for {uri}"}]}
             
     elif uri.startswith("bos://omo/"):
-        path = uri[len("bos://omo/"):]
         try:
-            from ecos.mcp_vfs import read_omo_resource
-            content = read_omo_resource(path)
-            return {"contents": [{"uri": uri, "mimeType": "text/markdown", "text": content}]}
+            from omo.mcp_server import read_omo_debt, read_omo_active_tasks, read_omo_standard
+            content = None
+            if uri == "bos://omo/debt":
+                content = read_omo_debt()
+            elif uri == "bos://omo/tasks/active":
+                content = read_omo_active_tasks()
+            elif uri.startswith("bos://omo/standards/"):
+                rule = uri[len("bos://omo/standards/"):]
+                content = read_omo_standard(rule)
+            
+            if content is not None:
+                return {"contents": [{"uri": uri, "mimeType": "text/markdown", "text": content}]}
+            return {"contents": [{"uri": uri, "mimeType": "text/plain", "text": f"Error: No OMO handler for {uri}"}]}
         except ImportError:
-            return {"contents": [{"uri": uri, "mimeType": "text/plain", "text": f"Error: ecos mcp_vfs not found for {uri}"}]}
+            return {"contents": [{"uri": uri, "mimeType": "text/plain", "text": f"Error: omo mcp_server not found for {uri}"}]}
             
     if uri == "bos://execution/workers/status":
         return {"contents": [{"uri": uri, "mimeType": "application/json", "text": '{"status": "ok"}'}]}
