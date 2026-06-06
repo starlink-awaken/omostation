@@ -1,18 +1,9 @@
 current_phase: 30
-# 🔗 MetaOS 知识体系 → Phase 6（统一追踪），见 ~/Documents/驾驶舱/DASHBOARD.md
-# Phase 30: 架构迁移 — 5→9 项目
-# 全路径: .omo/_knowledge/management/architecture-migration-playbook.md
 phase1_status: closed
 phase_status: active
-current_wave: "W1"
-next_milestone: "Phase 30 M1 — 低风险搬家 (metaos/ecos/wksp → 独立项目)"
-health_score: 99.0
-
-# Phase 规划 (知识文档)
-# Phase 29: .omo/_knowledge/management/plan-phase29-toolchain.md
-# Phase 30: .omo/_knowledge/management/plan-phase30-architecture-maturity.md
-# Phase 31: .omo/_knowledge/management/plan-phase31-observability.md
-# Phase 32: .omo/_knowledge/management/plan-phase32-governance.md
+current_wave: W2
+next_milestone: 'Phase 30 收官 → Phase 31 可观测性 + agora 物理独立评估'
+health_score: 57.2
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -24,8 +15,8 @@ phase3_capability_slice_status: completed
 phase3_capability_slice_completed_at: '2026-05-30T22:35:00Z'
 phase3_acceptance_status: completed
 phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
-completed_tasks: 28
-total_tasks: 28
+completed_tasks: 17
+total_tasks: 23
 active_tasks: 0
 next_active_tasks:
 - (No active tasks)
@@ -52,23 +43,16 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: "2026-06-05T23:42:54Z"
-# Phase 29 completed: omo goal/state/knowledge/delivery/standard/i0 CLI
-# Architecture doc: .omo/_knowledge/management/omo-extension-architecture-v1.md
-divergence_flags:
-- missing_debt_generated_ref:dashboard_ref
-- deep_analysis_p0_pending:agent_runtime_tasks_and_imports
+updated_at: '2026-06-06T01:30:00Z'
+phase29_status: completed
+phase29_completed_at: '2026-06-05T20:00:00Z'
+phase30_status: active
+phase30_completed_at: '2026-06-06T01:30:00Z'
+divergence_flags: []
 task_gate_summary: {}
 promotion_blockers: {}
-divergence_triage_summary:
-  missing_debt_generated_ref:dashboard_ref:
-    severity: low
-    owner: control
-    disposition: monitor
-divergence_detail_refs:
-  debt_generated_refs:
-    count: 1
-    ref: .omo/evidence/divergence/debt_generated_refs.yaml
+divergence_triage_summary: {}
+divergence_detail_refs: {}
 phase12_status: completed
 phase12_completed_at: '2026-06-01T00:50:00Z'
 ecosystem_maturity_score: 100
@@ -101,8 +85,8 @@ phase24_completed_at: '2026-06-04T11:27:00Z'
 phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
-health_score_raw: 99.0
-debt_weight: 0.0
+health_score_raw: 57.2
+debt_weight: 0.57
 debt_weight_items:
   SB_PROJECTS_YAML:
     resolved: true
@@ -165,48 +149,399 @@ debt_weight_items:
     weight: 0.15
     desc: eu-pricing tests are not independently governed
   I0-AGORA_DUAL_INSTANCE:
-    resolved: true
+    resolved: false
     weight: 0.6
     desc: Agora 双实例运行冲突 — Docker + native 同时存在，端口混乱
   I0-AGORA_SSE_DEAD:
-    resolved: true
+    resolved: false
     weight: 0.8
     desc: Agora SSE 端点 (:7431/:7432) 返回 HTTP 000 不可达
   L0-PROTOCOL_GHOSTS:
-    resolved: true
-    weight: 0.5
-    desc: L0 协议注册表 16 协议中 14 个只有文档定义，无运行时实现
+    resolved: false
+    weight: 0.3
+    desc: L0 协议注册表 16 协议中 14 个无完整运行时实现（仅 YAML 定义 + 查询能力）
   L1-SCHEDULER_MISSING:
-    resolved: true
+    resolved: false
     weight: 0.5
     desc: Matrix Scheduler 文档中定义但无持续运行的守护进程
   L1-HEALTH_STALE:
-    resolved: true
+    resolved: false
     weight: 0.3
     desc: Runtime 健康状态无定时刷新 (matrix_state.json 无 cron job 定期更新)
   X1-SANDBOX_INERT:
-    resolved: true
+    resolved: false
     weight: 0.6
     desc: KEI Sandbox 代码 (kei_sandbox.py) 存在但 Python audit hook 从未激活
   X1-NO_AUDIT_CHAIN:
-    resolved: true
+    resolved: false
     weight: 0.2
     desc: 无实际操作审计链 — MCP 工具调用无日志记录
   X2-NO_FRESHNESS:
-    resolved: true
+    resolved: false
     weight: 0.3
     desc: 无保鲜机制 — 所有服务无 age/freshness 追踪，无自动恢复逻辑
   X3-NO_COSTING:
-    resolved: true
+    resolved: false
     weight: 0.2
     desc: 无成本核算 — _STATS 计数器定义在 mcp_server.py 中但从未递增
   L0-TASKOBJECT_UNUSED:
-    resolved: true
+    resolved: false
     weight: 0.2
     desc: TaskObject v1 规范存在但无任何 Agent 实际生成或消费
+  DEBT-OMO-022:
+    resolved: true
+    weight: 0.1
+    desc: LLM Gateway 归档 — 1453 LOC 未使用，被 NewAPI(:3000) 替代
+  P0-KEI_SANDBOX_BLOCKS_TESTS:
+    resolved: true
+    weight: 1.0
+    desc: 'KEI Sandbox 阻挡全部 pytest: /var/folders/ 不在 allow_write 白名单'
+  P0-DOCKER_ECOSYSTEM_DOWN:
+    resolved: true
+    weight: 1.0
+    desc: 'Docker 生态全部宕机: gbrain (Postgres) + sharedbrain-bos 容器离线'
+  P0-KAIRON_LINT_REGRESSION:
+    resolved: true
+    weight: 0.8
+    desc: kairon lint 75 错误 (65 auto-fixable), 代码质量退化
+  P0-LAUNCHD_LIFECYCLE_SPLIT:
+    resolved: true
+    weight: 0.7
+    desc: 'agent-runtime + cron-service launchd PID -15 (被 SIGTERM), HTML仍响应: 生命周期分裂'
+  P1-AGORA_STATE_DRIFT:
+    resolved: true
+    weight: 0.4
+    desc: Agora port_listening=false 在 matrix_state 中但 :7430 实际响应 200
+  P1-AUDIT_V2_UNRESOLVED:
+    resolved: true
+    weight: 0.3
+    desc: 6/4 架构审计 v2 (architecture_audit.md) 25+ 项发现未处理
+  P2-PROTOCOLS_EMPTY:
+    resolved: true
+    weight: 0.2
+    desc: 'L0 协议目录 (~/runtime/protocols/) 空: 注册表16协议仅MCP活跃'
+  P2-SCHEDULER_NO_HEARTBEAT:
+    resolved: true
+    weight: 0.2
+    desc: scheduler_state.json 无心跳、无运行统计、仅含 restart_history
+  P2-KAIRON_PACKAGES_POLLUTION:
+    resolved: true
+    weight: 0.1
+    desc: 'kairon packages/ 目录含非包文件: agora.db, agora-audit.db, kairon-10pkg-analysis.md'
+  P0-DASHBOARD_COCKPIT:
+    resolved: false
+    weight: 0.05
+    desc: Dashboard 升级为 eCOS 驾驶舱 — 聚合服务健康/事件流/快速入口
+  P0-SMART_NOTIFY:
+    resolved: false
+    weight: 0.05
+    desc: 通知管道进化 — 事件驱动推送+每日服务摘要简报
+  P0-TASKOBJECT_LIVE:
+    resolved: false
+    weight: 0.05
+    desc: TaskObject 接入 Hermes — 自动路由任务到对应服务
+  P1-AUTO_HEAL:
+    resolved: false
+    weight: 0.05
+    desc: 服务自动修复 — Agora/AgentRT/Dashboard 挂了自动重启
+  P1-FRESHNESS_AUTO:
+    resolved: false
+    weight: 0.05
+    desc: 保鲜自动化 — X2 真正落地：协议校验+服务审计+周报
+  P2-KEI_SANDBOX:
+    resolved: false
+    weight: 0.05
+    desc: KEI 沙箱真实场景 — 新服务注册自动触发审计链
+  P2-META_CI:
+    resolved: false
+    weight: 0.05
+    desc: 元模型校验 CI 门禁 — git hook 自动校验 M3→M0 一致性
+  P2-RED_TEAM:
+    resolved: false
+    weight: 0.05
+    desc: 新一轮红蓝对抗 — 全系统渗透测试挖集成层面缺陷
+  P1-KAIRON_CONFTEST_POLLUTION:
+    resolved: true
+    weight: 0.6
+    desc: kairon conftest.py 路径冲突导致 ImportPathMismatchError，阻挡 pytest
+  P1-DOCKER_COMPOSE_FRAGMENTS:
+    resolved: true
+    weight: 0.3
+    desc: 96 个 docker-compose.yml 散落在 projects/ 中，大部分在归档内无人管理
+  P2-OMO_DASHBOARD_STALE:
+    resolved: true
+    weight: 0.2
+    desc: OMO debt dashboard/reporting 5小时未刷新，新增债务未同步
+  P2-LAUNCHD_ZOMBIES:
+    resolved: true
+    weight: 0.1
+    desc: 3 个 launchd 服务 exit 码 0 但未卸载：agentmesh, gbrain-index, vault-backup
+  P2-KEI_AUDIT_EMPTY:
+    resolved: true
+    weight: 0.2
+    desc: 'KEI 审计日志一直空: _AUDIT_FILE is None, 所有审计记录静默丢弃'
+  P0-PYTEST_ROOT_FIX:
+    resolved: true
+    weight: 0.9
+    desc: kairon 根目录 make test-fast 不通：conftest ImportPathMismatchError
+  P0-GBRAIN_E2E_VERIFY:
+    resolved: true
+    weight: 0.9
+    desc: gbrain 管道恢复后未 E2E 验证：ping、索引、Ollama embedding 链路
+  P0-HEALTH_ALERTING:
+    resolved: true
+    weight: 0.8
+    desc: Runtime 健康扫描无告警通道：服务挂了只在日志里，无人知道
+  P1-CORE_TESTS_BASELINE:
+    resolved: true
+    weight: 0.5
+    desc: 核心基座包测试薄弱：core-models(3)、cron-service(3)、engine-core(10)
+  P1-KEI_ALERTING:
+    resolved: true
+    weight: 0.4
+    desc: KEI 审计日志写但无人消费：无告警、无 dashboard、无异常检测
+  P1-AGORA_SEMANTIC_ROUTER:
+    resolved: true
+    weight: 0.4
+    desc: Agora semantic router 降级运行：缺 sentence_transformers 嵌入
+  P2-OMO_DASHBOARD_AUTO:
+    resolved: true
+    weight: 0.2
+    desc: OMO debt dashboard/reporting 手动生成，无自动刷新周期
+  P2-PROTOCOL_DEEPEN:
+    resolved: true
+    weight: 0.2
+    desc: L0 协议实现深度不足：MCP/ACP/A2A/BOS_URI/TaskObject 仅 stub 文件
+  P2-SECURITY_HARDEN:
+    resolved: true
+    weight: 0.3
+    desc: 'KEI 沙箱安全策略粗放：allow_read: ''/'' 允许全局读取'
+  P2-CI_GATE:
+    resolved: true
+    weight: 0.2
+    desc: 无 CI push gate：修改后无自动化测试验证
+  P0-AGENTRT_CRITICAL:
+    resolved: false
+    weight: 1.0
+    desc: 'agent-runtime 两个生产级缺陷: task_definitions 目录缺失 + mcp_server.py 导入路径错误'
+  P1-RUNTIME_CONSOLIDATION:
+    resolved: false
+    weight: 0.6
+    desc: 'L1管控面(projects/runtime) 未接管 L2运行时(agent-runtime) 的可观测与管理职责: 需建桥接契约'
+  P1-AGORA_BYPASS:
+    resolved: false
+    weight: 0.7
+    desc: '跨层/跨包通信绕开 Agora(I0) 总线: 6包9处绕过 (决策: 降级归集中控, 各处记为子债务)'
+  P1-ARCH_CODE_GAP:
+    resolved: false
+    weight: 0.5
+    desc: '架构文档与代码实现两层皮: Agora 代码在 kairon/packages/ 但架构定义其为 I0 层 (决策: 标注+长期台阶)'
+  P2-AGORA_MODULE_SPLIT:
+    resolved: false
+    weight: 0.3
+    desc: 'Agora 90+ 文件职责过载: 路由/认证/代理/仪表板/A2A/MCP注册表集于一身, 需拆分 3-4 子包'
+  P2-KEI_SANDBOX_PERMISSIVE:
+    resolved: true
+    weight: 0.4
+    desc: 'KEI Sandbox 权限粗放: kei.yaml allow_read: ''/'' 允许全局读取, 等于未启用沙箱'
+  BYPASS-001:
+    resolved: false
+    weight: 0.6
+    desc: 'agent-runtime/tools.py: Agora 降级直连机制 — 连续2次失败后自动直连KOS/Minerva 5分钟'
+  BYPASS-002:
+    resolved: false
+    weight: 0.5
+    desc: 'agent-runtime/config.py: MCP_ENDPOINTS 硬编码 KOS/Minerva/Agora 默认端口'
+  BYPASS-003:
+    resolved: true
+    weight: 0.5
+    desc: 'agent-runtime/identity/providers/sharedbrain.py: 身份查询直连 SharedBrain localhost:7421'
+    resolved_at: '2026-06-06'
+    resolution: 'sharedbrain_bridge/sync.py SyncBridge 改为 no-op stub，移除 SHAREDBRAIN_ORGANS 路径依赖'
+  BYPASS-004:
+    resolved: true
+    weight: 0.3
+    desc: 'sharedbrain-bridge/eu.py: DEFAULT_AGORA 硬编码 localhost:7430'
+    resolved_at: '2026-06-06'
+    resolution: 'eu.py EUBridge 改为 no-op stub，移除 DEFAULT_AGORA/DEFAULT_SB 硬编码常量'
+  BYPASS-005:
+    resolved: true
+    weight: 0.3
+    desc: 'sharedbrain-bridge/eu.py, sync.py, immune.py: DEFAULT_SB 硬编码 localhost:7421'
+    resolved_at: '2026-06-06'
+    resolution: '三个模块全部改为 no-op stub，移除 DEFAULT_SB = localhost:7421 硬编码'
+  BYPASS-006:
+    resolved: false
+    weight: 0.2
+    desc: 'kaironcloud-billing: 构造函数/CLI 默认 agora_endpoint=localhost:7430'
+  BYPASS-007:
+    resolved: false
+    weight: 0.2
+    desc: 'wksp/base.py: 硬编码服务健康检查列表 + Agora 直连查询'
+  BYPASS-008:
+    resolved: false
+    weight: 0.2
+    desc: 'forge/asset_cli.py + healing_trigger.py: 硬编码 agora/agora-dashboard/minerva
+      端口'
+  BYPASS-009:
+    resolved: false
+    weight: 0.1
+    desc: 'agora registry.yaml + dashboard.html: 硬编码 localhost URLs (非绕过, 属于自引用; 记录以保持完整性)'
+  P0-CI_GATE_VERIFY:
+    resolved: true
+    weight: 0.6
+    desc: CI gate 未实跑验证：pre-commit hook 已创建但 GitHub Actions 未确认可执行
+  P1-PROTOCOL_CLI:
+    resolved: true
+    weight: 0.4
+    desc: L0 协议从 stub 深化为可用 CLI：ACP/A2A/BOS_URI 无运行时工具
+  P2-KEI_DASHBOARD:
+    resolved: true
+    weight: 0.2
+    desc: KEI 审计日志有告警无可视化：无 dashboard 展示沙箱阻断趋势
+  P0-ECOS_COCKPIT:
+    resolved: true
+    weight: 0.7
+    desc: eCOS Cockpit — 从健康监控升级为系统运行总览 dashboard
+  P0-SMART_NOTIFY_LIVE:
+    resolved: true
+    weight: 0.6
+    desc: Smart Notify 打通微信推送 — 服务异常、KEI 告警、指标异常直接推微信
+  P1-TASKOBJECT_LIVE:
+    resolved: true
+    weight: 0.4
+    desc: TaskObject 格式跑通首个真实 cron job — 证明闭环
+  P2-PUSH_GATE_CI:
+    resolved: true
+    weight: 0.3
+    desc: CI gate 升级为 push gate — GitHub Actions 实跑受影响包测试
+  P2-KEI_WEEKLY:
+    resolved: true
+    weight: 0.2
+    desc: KEI 每周审计报告 — cron 生成趋势报告并推送微信
+  FLOW-OMC-REVERT:
+    resolved: true
+    weight: 0.7
+    desc: AI Agent 工作树修改被 git reset 静默回滚的风险 — 必须立即 commit 才能持久
+  FLOW-PRECOMMIT-CLEANUP:
+    resolved: false
+    weight: 0.6
+    desc: Pre-commit hook 只检查已暂存文件 — 已修复 (ci gate breaching)
+  FLOW-TEST-FAST:
+    resolved: true
+    weight: 0.5
+    desc: 无快速测试反馈回路 — make test-fast 遍历24包需2min+, 无法快速验证不破坏已有功能
+  P1-CARDS_KAIRON_GAP:
+    resolved: true
+    weight: 0.7
+    desc: CARDS 与 Kairon/Minerva 研究管线完全隔离
+  P2-VAULT_CARDS_GAP:
+    resolved: true
+    weight: 0.4
+    desc: 学习进化 Vault 8/10 子模块无 CARDS 指针
+  P2-CARDS_MISSING_FILTERS:
+    resolved: true
+    weight: 0.3
+    desc: cards CLI 缺少 priority 筛选器 + research 默认 status 错误
+  P3-CARDS_DAEMON_BG:
+    resolved: true
+    weight: 0.15
+    desc: cards daemon 无后台进程 — 依赖 Agent 或人手动触发
+  P2-FAMILY_DEBT_DENSITY:
+    resolved: true
+    weight: 0.25
+    desc: 家庭域 CARDS 债务密度 43% — 7 张卡片中 3 张为 debt
+  C1-HERMES_BUILD_BROKEN:
+    resolved: false
+    weight: 0.7
+    desc: 'hermes-console 构建失败: @modelcontextprotocol/sdk v1.29.0 Node.js stream 模块在浏览器
+      Vite 中不兼容'
+  OMO-CLI-TEST-GAP:
+    resolved: false
+    weight: 0.6
+    desc: '6 个新 OMO CLI 模块零测试: goal/state/knowledge/delivery/standard/i0'
+  OMO-TASK-NO-CLI:
+    resolved: false
+    weight: 0.3
+    desc: 'task 管理无 CLI 命令: active/planned/done 全靠手动 YAML'
+  OMO-EVIDENCE-NO-CLI:
+    resolved: false
+    weight: 0.2
+    desc: 'evidence 无 CLI 命令: 偏差证据链全靠手动'
+  OMO-WORKER-BLOAT:
+    resolved: false
+    weight: 0.3
+    desc: omo_worker.py 2,142 行 — 单体膨胀信号，需关注拆分
+  OMO-ARG-INCONSISTENCY:
+    resolved: false
+    weight: 0.2
+    desc: '新旧模块 arg 解析不一致: 新 CLI 用 argparse, 老模块用 if args[n]'
+  OMO-X3-NOCOST:
+    resolved: false
+    weight: 0.2
+    desc: 'X3 价值栈零实现: LLM Token/服务成本无追踪'
+  LLMGATEWAY-STUB-PROVIDERS:
+    resolved: false
+    weight: 0.4
+    desc: llm-gateway 4 个 stub 提供者从未实现 — llama_cpp/lm_studio/local/openrouter 共 48
+      行无功能代码
+  LLMGATEWAY-LEGACY-ADAPTERS:
+    resolved: false
+    weight: 0.4
+    desc: llm-gateway 3 个 legacy adapters(415行)薄包装旧LLM客户端, 已有原生实现替代
+  LLMGATEWAY-CIRCULAR-DEP:
+    resolved: false
+    weight: 0.5
+    desc: llm-gateway ↔ minerva 双向依赖 — pyproject.toml 中互相引用
+  LLMGATEWAY-PROVIDER-BLOAT:
+    resolved: false
+    weight: 0.2
+    desc: llm-gateway provider.py 325 行含 ABC+dataclass+retry+mock 四种职责, 18 个 provider
+      文件数膨胀
 resolved_debt_items:
 - D2_CI_E2E
 - D3_EU_PRICING
+- DEBT-OMO-022
+- FLOW-OMC-REVERT
+- FLOW-TEST-FAST
+- P0-CI_GATE_VERIFY
+- P0-DOCKER_ECOSYSTEM_DOWN
+- P0-ECOS_COCKPIT
+- P0-GBRAIN_E2E_VERIFY
+- P0-HEALTH_ALERTING
+- P0-KAIRON_LINT_REGRESSION
+- P0-KEI_SANDBOX_BLOCKS_TESTS
+- P0-LAUNCHD_LIFECYCLE_SPLIT
+- P0-PYTEST_ROOT_FIX
+- P0-SMART_NOTIFY_LIVE
+- P1-AGORA_SEMANTIC_ROUTER
+- P1-AGORA_STATE_DRIFT
+- P1-AUDIT_V2_UNRESOLVED
+- P1-CARDS_KAIRON_GAP
+- P1-CORE_TESTS_BASELINE
+- P1-DOCKER_COMPOSE_FRAGMENTS
+- P1-KAIRON_CONFTEST_POLLUTION
+- P1-KEI_ALERTING
+- P1-PROTOCOL_CLI
+- P1-TASKOBJECT_LIVE
+- P2-CARDS_MISSING_FILTERS
+- P2-CI_GATE
+- P2-FAMILY_DEBT_DENSITY
+- P2-KAIRON_PACKAGES_POLLUTION
+- P2-KEI_AUDIT_EMPTY
+- P2-KEI_DASHBOARD
+- P2-KEI_SANDBOX_PERMISSIVE
+- P2-KEI_WEEKLY
+- P2-LAUNCHD_ZOMBIES
+- P2-OMO_DASHBOARD_AUTO
+- P2-OMO_DASHBOARD_STALE
+- P2-PROTOCOLS_EMPTY
+- P2-PROTOCOL_DEEPEN
+- P2-PUSH_GATE_CI
+- P2-SCHEDULER_NO_HEARTBEAT
+- P2-SECURITY_HARDEN
+- P2-VAULT_CARDS_GAP
+- P3-CARDS_DAEMON_BG
 - R1_P0_SURFACE_GAP
 - R2_AGORA_NOT_RUNNING
 - R3_LAYER_INDEX_DRIFT
@@ -220,16 +555,6 @@ resolved_debt_items:
 - SB_PROJECTS_YAML
 - SB_ROOT_CLEANUP
 - SB_UNTESTED_PKGS
-- I0-AGORA_DUAL_INSTANCE
-- I0-AGORA_SSE_DEAD
-- L0-PROTOCOL_GHOSTS
-- L1-SCHEDULER_MISSING
-- L1-HEALTH_STALE
-- X1-SANDBOX_INERT
-- X1-NO_AUDIT_CHAIN
-- X2-NO_FRESHNESS
-- X3-NO_COSTING
-- L0-TASKOBJECT_UNUSED
 orphaned_tasks_ref: .omo/tasks/registry/INDEX.md
 debt_registry_ref: .omo/debt/registry.yaml
 debt_dashboard_ref: .omo/debt/dashboard/current.yaml
@@ -240,21 +565,24 @@ debt_metrics:
   state_entropy: 0.0
   pointer_entropy: 2.0
   time_entropy: 0.0
-  backlog_pressure: 0.0
-  coupling_load: 0.0
-debt_watchlist_count: 1
-debt_gate_count: 1
+  backlog_pressure: 15.0
+  coupling_load: 1.5
+debt_watchlist_count: 0
+debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 28
+planned_tasks: 7
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- Current planned queue from .omo/tasks/planned/ (16 tasks)
+- Current planned queue from .omo/tasks/planned/ (7 tasks)
+- P30-W0-DAEMON-INSTALL
+- P30-W0-FOLD
+- P30-W0-PLAN-UPDATE
+- P30-W1-GOV-MERGE
+- P30-W1-METAOS-EXTRACT
+- P30-W1-WKSP-EXTRACT
+- P30-W2-VERIFY
 - P28-W0-NORTH-STAR (completed)
 - P28-W0-TOOL-HEATMAP (completed)
-- P28-W1-E2E-DEMO
-- P28-W1-TECH-RADAR
-- P28-W2-PKG-SLIM
-- P28-W3-ADR-SETUP
 - IMPORTED-08ea57
 - IMPORTED-0be2aa
 - IMPORTED-4c93ca
@@ -265,8 +593,16 @@ next_planned_tasks:
 - IMPORTED-b461d5
 - IMPORTED-b7fb35
 - IMPORTED-dffdd8
-phase27_status: completed
-phase28_status: "completed"
+phase27_status: active
+phase28_status: completed
 phase28_completed_at: '2026-06-05T22:10:00Z'
 governance:
   code_freeze: true
+runtime_health_summary:
+  last_scan: 1780669326.075913
+  total_services: 12
+  online_services: 6
+  healthy_services: 5
+  offline_services: 6
+  unhealthy_services: []
+  stale_services: []
