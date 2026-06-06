@@ -75,7 +75,7 @@ export default function EnginesView() {
     return (
       <div className="glass-panel animate-fade-in" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
         <div className="spinner" style={{ margin: '0 auto 1rem' }}></div>
-        <p>Initializing Engines...</p>
+        <p>引擎初始化中...</p>
       </div>
     );
   }
@@ -86,11 +86,11 @@ export default function EnginesView() {
       <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div className="section-header" style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Cpu size={20} className="text-accent" />
-          <h2 style={{ fontSize: '1.2rem', margin: 0 }}>Pipeline Orchestrator</h2>
+          <h2 style={{ fontSize: '1.2rem', margin: 0 }}>管线编排器</h2>
         </div>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <label style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>Select Engine Pipeline</label>
+          <label style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>选择执行管线</label>
           <select 
             className="glass-input" 
             value={selectedPipeline}
@@ -100,15 +100,15 @@ export default function EnginesView() {
             {pipelines.map(p => (
               <option key={p} value={p} style={{ background: '#090a0f', color: '#fff' }}>{p}</option>
             ))}
-            {pipelines.length === 0 && <option>No pipelines found</option>}
+            {pipelines.length === 0 && <option>未发现可用管线</option>}
           </select>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <label style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>Instruction / Goal</label>
+          <label style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>执行指令 / 目标</label>
           <textarea 
             className="glass-input" 
-            placeholder="E.g., Analyze the performance metrics..."
+            placeholder="例如：分析当前系统的性能指标..."
             value={pipelineInput}
             onChange={(e) => setPipelineInput(e.target.value)}
             style={{ minHeight: '100px', resize: 'vertical' }}
@@ -122,7 +122,7 @@ export default function EnginesView() {
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: running ? 'transparent' : 'rgba(56, 189, 248, 0.1)', borderColor: 'var(--color-accent)' }}
         >
           {running ? <div className="spinner" style={{ width: 16, height: 16 }}></div> : <Play size={16} />}
-          {running ? 'Executing Pipeline...' : 'Dispatch Engine'}
+          {running ? '管线执行中...' : '调度引擎'}
         </button>
 
         {runResult && (
@@ -149,14 +149,14 @@ export default function EnginesView() {
         <div className="section-header" style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Activity size={20} className="text-warning" />
-            <h2 style={{ fontSize: '1.2rem', margin: 0 }}>Event Bus Trace</h2>
+            <h2 style={{ fontSize: '1.2rem', margin: 0 }}>消息总线追踪</h2>
           </div>
           <List size={16} className="text-muted" />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', overflowY: 'auto', maxHeight: '500px', paddingRight: '0.5rem' }}>
           {events.length === 0 ? (
-            <p style={{ color: 'var(--color-muted)', textAlign: 'center', marginTop: '2rem' }}>No events in the bus yet.</p>
+            <p style={{ color: 'var(--color-muted)', textAlign: 'center', marginTop: '2rem' }}>总线暂无事件流。</p>
           ) : (
             events.map((ev, i) => (
               <div key={i} className="animate-fade-in" style={{ 
@@ -171,7 +171,7 @@ export default function EnginesView() {
                   <span style={{ color: 'var(--color-muted)' }}>{new Date(ev.timestamp).toLocaleTimeString()}</span>
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.5rem' }}>
-                  <GitCommit size={10} /> source: {ev.source}
+                  <GitCommit size={10} /> 来源: {ev.source}
                 </div>
                 <div style={{ fontSize: '0.8rem', fontFamily: 'monospace', color: '#94a3b8', background: 'rgba(0,0,0,0.3)', padding: '0.5rem', borderRadius: '4px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
                   {JSON.stringify(ev.payload)}

@@ -37,13 +37,13 @@ export default function MemoryInjector() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || response.statusText);
       
-      setWriteResult({ status: 'success', msg: `Successfully injected knowledge into bos://memory.` });
+      setWriteResult({ status: 'success', msg: `知识注入成功，已落盘至 bos://memory。` });
       setSlug('');
       setTitle('');
       setContent('');
       setTags('');
     } catch (err: any) {
-      setWriteResult({ status: 'error', msg: `Failed: ${err.message}` });
+      setWriteResult({ status: 'error', msg: `注入失败: ${err.message}` });
     } finally {
       setWriteLoading(false);
     }
@@ -80,7 +80,7 @@ export default function MemoryInjector() {
       }
     } catch (err: any) {
       console.error(err);
-      alert('Search failed: ' + err.message);
+      alert('检索失败: ' + err.message);
     } finally {
       setSearchLoading(false);
     }
@@ -90,7 +90,7 @@ export default function MemoryInjector() {
     <div className="memory-container animate-fade-in" style={{ animationDelay: '0.2s', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <div className="section-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <Database size={24} className="text-accent" />
-        <h2>bos://memory Domain</h2>
+        <h2>bos://memory 记忆域</h2>
       </div>
 
       {/* Tabs */}
@@ -100,14 +100,14 @@ export default function MemoryInjector() {
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', border: activeSubTab === 'write' ? '1px solid var(--color-accent)' : 'none' }}
           onClick={() => setActiveSubTab('write')}
         >
-          <Save size={16} /> Inject Memory
+          <Save size={16} /> 注入记忆
         </button>
         <button 
           className={`btn-glass ${activeSubTab === 'search' ? 'active-subtab' : ''}`}
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', border: activeSubTab === 'search' ? '1px solid var(--color-accent)' : 'none' }}
           onClick={() => setActiveSubTab('search')}
         >
-          <Search size={16} /> Search Substrate
+          <Search size={16} /> 检索基底
         </button>
       </div>
 
@@ -117,28 +117,28 @@ export default function MemoryInjector() {
           <form onSubmit={handleWrite} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '600px' }}>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>Unique Slug</label>
-                <input required type="text" value={slug} onChange={e => setSlug(e.target.value)} placeholder="e.g. project-x-arch" className="glass-input" />
+                <label style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>唯一标识 (Slug)</label>
+                <input required type="text" value={slug} onChange={e => setSlug(e.target.value)} placeholder="例如: project-x-arch" className="glass-input" />
               </div>
               <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>Title</label>
-                <input required type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Project X Architecture" className="glass-input" />
+                <label style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>标题</label>
+                <input required type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="项目 X 架构说明" className="glass-input" />
               </div>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>Memory Content (Markdown)</label>
-              <textarea required value={content} onChange={e => setContent(e.target.value)} placeholder="Detail the knowledge here..." className="glass-input" style={{ minHeight: '150px', resize: 'vertical' }} />
+              <label style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>记忆内容 (支持 Markdown)</label>
+              <textarea required value={content} onChange={e => setContent(e.target.value)} placeholder="在此详细描述知识或记忆记录..." className="glass-input" style={{ minHeight: '150px', resize: 'vertical' }} />
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>Tags (comma separated)</label>
-              <input type="text" value={tags} onChange={e => setTags(e.target.value)} placeholder="architecture, planning, draft" className="glass-input" />
+              <label style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>标签 (逗号分隔)</label>
+              <input type="text" value={tags} onChange={e => setTags(e.target.value)} placeholder="架构, 计划, 草稿" className="glass-input" />
             </div>
 
             <button type="submit" disabled={writeLoading} className="btn-glass" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: 'fit-content', marginTop: '0.5rem' }}>
               {writeLoading ? <Loader2 size={16} className="spinner" /> : <Save size={16} />}
-              {writeLoading ? 'Injecting to KOS...' : 'Inject Memory'}
+              {writeLoading ? '正在注入知识库...' : '注入记忆'}
             </button>
 
             {writeResult && (
@@ -155,9 +155,9 @@ export default function MemoryInjector() {
         <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <form onSubmit={handleSearch} className="glass-panel" style={{ padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <Search size={18} className="text-muted" />
-            <input required type="text" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search vector space (e.g. 'architecture decisions')" className="glass-input" style={{ flex: 1, border: 'none', backgroundColor: 'transparent' }} />
+            <input required type="text" value={query} onChange={e => setQuery(e.target.value)} placeholder="检索向量空间 (如: '核心架构决策')" className="glass-input" style={{ flex: 1, border: 'none', backgroundColor: 'transparent' }} />
             <button type="submit" disabled={searchLoading} className="btn-glass">
-              {searchLoading ? <Loader2 size={18} className="spinner" /> : 'Search'}
+              {searchLoading ? <Loader2 size={18} className="spinner" /> : '检索'}
             </button>
           </form>
 
@@ -167,7 +167,7 @@ export default function MemoryInjector() {
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
                   <h3 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--color-text)' }}>{res.title}</h3>
                   <span style={{ fontSize: '0.75rem', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(0,255,200,0.1)', color: 'var(--color-accent)' }}>
-                    Score: {res.score?.toFixed(2)}
+                    匹配度: {res.score?.toFixed(2)}
                   </span>
                 </div>
                 
@@ -191,7 +191,7 @@ export default function MemoryInjector() {
             {searchResults.length === 0 && !searchLoading && (
               <div className="glass-panel" style={{ gridColumn: '1 / -1', padding: '2rem', textAlign: 'center', color: 'var(--color-muted)' }}>
                 <BookOpen size={32} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-                <p>No memories found. Start searching or inject new knowledge.</p>
+                <p>未找到相关记忆。请尝试输入其他关键词或注入新的知识。</p>
               </div>
             )}
           </div>

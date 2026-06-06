@@ -8,7 +8,7 @@ export default function SandboxTerminal() {
 
   const handleExecute = async () => {
     setIsRunning(true);
-    setOutput('Executing in secure sandbox...');
+    setOutput('正在安全沙箱中执行...');
     
     try {
       const response = await fetch('/api/sandbox/execute', {
@@ -22,17 +22,17 @@ export default function SandboxTerminal() {
       const data = await response.json();
       
       if (!response.ok) {
-        setOutput(`Error: ${data.error || response.statusText}`);
+        setOutput(`错误: ${data.error || response.statusText}`);
         return;
       }
 
       if (data.success) {
-        setOutput(`[Success] Duration: ${data.duration_ms.toFixed(2)}ms\n\n[STDOUT]\n${data.stdout}\n\n[RETURN]\n${JSON.stringify(data.output, null, 2)}`);
+        setOutput(`[执行成功] 耗时: ${data.duration_ms.toFixed(2)}ms\n\n[标准输出]\n${data.stdout}\n\n[返回值]\n${JSON.stringify(data.output, null, 2)}`);
       } else {
-        setOutput(`[Blocked/Failed]\n\n${data.error}`);
+        setOutput(`[执行被拦截或失败]\n\n${data.error}`);
       }
     } catch (err: any) {
-      setOutput(`Network Error: ${err.message}`);
+      setOutput(`网络异常: ${err.message}`);
     } finally {
       setIsRunning(false);
     }
@@ -42,10 +42,10 @@ export default function SandboxTerminal() {
     <div className="sandbox-container animate-fade-in" style={{ animationDelay: '0.2s', padding: '1rem' }}>
       <div className="section-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <Terminal size={24} className="text-accent" />
-        <h2>Runtime Sandbox (KEI)</h2>
+        <h2>运行时沙箱 (KEI 隔离)</h2>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-warning)', fontSize: '0.85rem' }}>
           <ShieldAlert size={16} />
-          <span>AST & OS-Level Isolation Active</span>
+          <span>AST 与系统级隔离已启用</span>
         </div>
       </div>
       
@@ -53,7 +53,7 @@ export default function SandboxTerminal() {
         <div style={{ display: 'flex', gap: '1rem' }}>
           {/* Editor */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.9rem', color: 'var(--color-muted)' }}>Python Code</label>
+            <label style={{ fontSize: '0.9rem', color: 'var(--color-muted)' }}>Python 执行代码</label>
             <textarea 
               value={code}
               onChange={(e) => setCode(e.target.value)}
@@ -79,13 +79,13 @@ export default function SandboxTerminal() {
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '0.5rem' }}
             >
               {isRunning ? <Loader2 size={16} className="spinner" /> : <Play size={16} />}
-              {isRunning ? 'Executing...' : 'Execute Code'}
+              {isRunning ? '运行中...' : '执行代码'}
             </button>
           </div>
           
           {/* Output */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.9rem', color: 'var(--color-muted)' }}>Console Output</label>
+            <label style={{ fontSize: '0.9rem', color: 'var(--color-muted)' }}>控制台输出</label>
             <pre style={{
               flex: 1,
               backgroundColor: 'rgba(0,0,0,0.5)',

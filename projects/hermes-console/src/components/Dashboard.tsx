@@ -86,35 +86,35 @@ export default function Dashboard() {
             onClick={() => setActiveTab('Overview')}
           >
             <Server size={18} />
-            <span>Overview</span>
+            <span>概览</span>
           </button>
           <button 
             className={`nav-item ${activeTab === 'Engines' ? 'active' : ''}`}
             onClick={() => setActiveTab('Engines')}
           >
             <Cpu size={18} />
-            <span>Engines</span>
+            <span>引擎调度</span>
           </button>
           <button 
             className={`nav-item ${activeTab === 'Knowledge' ? 'active' : ''}`}
             onClick={() => setActiveTab('Knowledge')}
           >
             <Database size={18} />
-            <span>Knowledge</span>
+            <span>知识中枢</span>
           </button>
           <button 
             className={`nav-item ${activeTab === 'Sandbox' ? 'active' : ''}`}
             onClick={() => setActiveTab('Sandbox')}
           >
             <Terminal size={18} />
-            <span>Sandbox</span>
+            <span>隔离沙箱</span>
           </button>
           <button 
             className={`nav-item ${activeTab === 'Settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('Settings')}
           >
             <Settings size={18} />
-            <span>Settings</span>
+            <span>系统设置</span>
           </button>
         </nav>
       </aside>
@@ -124,18 +124,18 @@ export default function Dashboard() {
         <header className="topbar animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <div className="search-bar glass-panel">
             <Search size={18} className="text-muted" />
-            <input type="text" placeholder="Search services, models, agents..." />
+            <input type="text" placeholder="搜索服务、模型、智能体..." />
           </div>
           <div className="user-profile glass-panel">
             <div className="avatar">AD</div>
-            <span>Admin</span>
+            <span>管理员</span>
           </div>
         </header>
 
         <div className="content-area">
           <div className="hero-section animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <h1 className="hero-title">System Overview</h1>
-            <p className="hero-subtitle">Monitor your eCOS v5 environment in real-time.</p>
+            <h1 className="hero-title">系统全局概览</h1>
+            <p className="hero-subtitle">实时监控 eCOS v5 微服务环境，掌握集群全貌。</p>
           </div>
 
           {activeTab === 'Overview' && (
@@ -146,7 +146,7 @@ export default function Dashboard() {
                     <Server size={24} />
                   </div>
                   <div className="stat-info">
-                    <h3>Services Active</h3>
+                    <h3>活跃服务数</h3>
                     <p className="stat-value">24 / 28</p>
                   </div>
                 </div>
@@ -156,7 +156,7 @@ export default function Dashboard() {
                     <Cpu size={24} />
                   </div>
                   <div className="stat-info">
-                    <h3>LLM Requests</h3>
+                    <h3>大模型请求数</h3>
                     <p className="stat-value">12.4k</p>
                   </div>
                 </div>
@@ -164,24 +164,24 @@ export default function Dashboard() {
 
               <div className="services-section animate-fade-in" style={{ animationDelay: '0.5s' }}>
                 <div className="section-header">
-                  <h2>Core Services</h2>
-                  <button className="btn-glass">View All</button>
+                  <h2>核心服务节点</h2>
+                  <button className="btn-glass">查看全部</button>
                 </div>
                 
                 <div className="services-list glass-panel">
                   {loading ? (
                     <div className="loading-state">
                       <div className="spinner"></div>
-                      <p>Connecting to Agora Mesh...</p>
+                      <p>正在连接 Agora 服务网格...</p>
                     </div>
                   ) : (
                     <table className="services-table">
                       <thead>
                         <tr>
-                          <th>Service Name</th>
-                          <th>Status</th>
-                          <th>Uptime</th>
-                          <th>Latency</th>
+                          <th>服务名称</th>
+                          <th>运行状态</th>
+                          <th>正常运行时间</th>
+                          <th>响应延迟</th>
                         </tr>
                       </thead>
                       <tbody>
