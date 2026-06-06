@@ -111,6 +111,14 @@ class ServiceRegistry:
             raise ValueError(f"Endpoint URL blocked: {service.mcp_endpoint}")
         if service.protocol not in KNOWN_PROTOCOLS:
             raise ValueError(f"Unknown protocol: {service.protocol}. Known: {sorted(KNOWN_PROTOCOLS)}")
+        # Port conflict detection (if port > 0)
+        if service.port and service.port > 0:
+            for existing in self._services.values():
+                if existing.port == service.port and existing.name != service.name:
+                    raise ValueError(
+                        f"Port conflict: {service.port} already used by '{existing.name}'. "
+                        f"See protocols/port-registry.yaml for SSOT."
+                    )
         self._services[service.name] = service
         self._save()
         self._transitions.add(service.name, "", "registered", "Service registered", "register")

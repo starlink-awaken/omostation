@@ -1,29 +1,29 @@
 # L0 协议: 服务端口注册表 (Service Port Registry)
 
-# 所有 HTTP/MCP 端口的 SSOT。
-# 消费方: agora KNOWN_SERVICES · forge asset_cli · omo health check · cockpit dashboard
-# 验证: scripts/check-interfaces.py (CI)
-# 注册规则: 新端口必须先在此注册
+# 所有 HTTP/MCP 端口的 SSOT。新端口必须先在此注册，CI 自动验证。
 
-# 注册格式:
-#   port: {service}  # {owner_project} · {protocol} · {description}
+# 消费方:
+#   - CI: scripts/check-interfaces.py (push 时自动验证冲突)
+#   - Agora: core/registry.py → 可选消费, Service.port 从注册表注入
+#   - Forge: asset_cli.py → 可选消费, 替代硬编码的 9 个端口
+#   - OMO: omo_health.py → 可选消费, 替代 DEFAULT_SERVICE_PORTS
 
 ports:
-  7422: agora-mcp-http     # agora · FastMCP · MCP HTTP 入口
-  7430: agora-dashboard    # agora · FastAPI · Web Dashboard
-  7431: agora-mcp-sse      # agora · FastMCP · MCP SSE 入口
-  8080: agora-api-gateway  # agora · aiohttp · REST API Gateway
-  8090: cockpit-dashboard  # cockpit · http.server · Web Dashboard
-  8765: minerva-web        # kairon/minerva · FastAPI · Web 面板
-  9090: ecos-dashboard     # ecos · http.server · SSB Dashboard
-  9190: omo-dashboard      # omo · http.server · Debt Dashboard [待迁移]
-  9290: llm-gateway-http   # kairon/llm-gateway · http.server · LLM Gateway [待迁移]
+  7422: agora-mcp-http       # agora · FastMCP · MCP HTTP 入口
+  7430: agora-dashboard      # agora · FastAPI · Web Dashboard
+  7431: agora-mcp-sse        # agora · FastMCP · MCP SSE 入口
+  8080: agora-api-gateway    # agora · aiohttp · REST API Gateway
+  8090: cockpit-dashboard    # cockpit · http.server · Cockpit Web Dashboard
+  8765: minerva-web          # kairon/minerva · FastAPI · 深度研究 Web 面板
+  8766: forge-api            # kairon/forge · HTTP · Forge API Server
+  9090: ecos-dashboard       # ecos · http.server · SSB Dashboard
+  9190: omo-dashboard        # omo · http.server · Debt Dashboard [从 9090 迁移]
+  9290: llm-gateway-http     # kairon/llm-gateway · http.server · LLM Gateway [从 9090 迁移]
+  9876: forge-dashboard      # kairon/forge · HTTP · Forge Dashboard [保留]
 
-# 分配规则:
-#   1. 先在此注册 → CI 验证通过 → 才能在代码中使用
-#   2. 端口冲突按优先级: I0 > L3 > L2 > L1 > L0
-#   3. 已注册端口不能被其他项目占用
-#   4. 所有端口引用使用环境变量: {SERVICE}_PORT
+# 注册规则:
+#   1. 端口冲突按优先级: I0 > L3 > L2 > L1 > L0 (高优先得)
+#   2. 所有端口引用使用环境变量: {SERVICE}_PORT
+#   3. CI 在 push 时自动验证端口冲突
 
-# 审阅: 每次 Phase 迁移时全量审查
 # 最后更新: 2026-06-06
