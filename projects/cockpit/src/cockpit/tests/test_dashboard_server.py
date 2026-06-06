@@ -136,3 +136,46 @@ class TestDashboardCORS:
             assert cors == "http://myapp.local"
         except Exception:
             pass
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Rate Limiting
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class TestRateLimiter:
+    def test_allows_within_limit(self):
+        from cockpit.dashboard_server import _RateLimiter
+
+        rl = _RateLimiter(max_requests=10, window_seconds=60)
+        for _ in range(5):
+            assert rl.allow("192.168.1.1") is True
+
+    def test_blocks_above_limit(self):
+        from cockpit.dashboard_server import _RateLimiter
+
+        rl = _RateLimiter(max_requests=3, window_seconds=60)
+        for _ in range(3):
+            assert rl.allow("10.0.0.1") is True
+        assert rl.allow("10.0.0.1") is False
+
+    def test_ips_independent(self):
+        from cockpit.dashboard_server import _RateLimiter
+
+        rl = _RateLimiter(max_requests=1, window_seconds=60)
+        assert rl.allow("ip_a") is True
+        assert rl.allow("ip_b") is True
+        assert rl.allow("ip_a") is False
+
+    def test_window_expiry(self):
+        from cockpit.dashboard_server import _RateLimiter
+        import time
+
+        rl = _RateLimiter(max_requests=2, window_seconds=0)
+        assert rl.allow("test") is True
+        assert rl.allow("test") is True
+        # window=0 → immediately expired
+        assert rl.allow("test") is True
+
+    def test_config_from_env(self):
+        assert hasattr(__import__("cockpit.dashboard_server", fromlist=["DASHBOARD_RATE_LIMIT"]), "DASHBOARD_RATE_LIMIT")
