@@ -77,19 +77,43 @@
 | **metaos** | `projects/metaos/` | 编排引擎 · 已拆出 (7.8K) |
 | **gbrain** | `projects/gbrain/` | TypeScript 知识数据库 · 67 MCP 工具 (163K TS) |
 
-## L3 — 统一入口
+## L3 — 统一入口 (Agent 桥接层)
+
+> **L3 是所有工具性入口的唯一通道。Agent 不直接读 L4 数据，通过 L3 的 MCP 工具获取 L4 上下文。**
 
 | 项目 | 位置 | 说明 | 状态 |
 |------|------|------|------|
-| **cockpit** | `projects/cockpit/` | 统一 CLI + Web 面板 | 🟡 收并 wksp + hermes-console |
+| **cockpit** | `projects/cockpit/` | 统一 CLI + Web 面板 + MCP 工具 | 🟡 收并 wksp + hermes-console |
 | wksp | kairon (已拆出) | CLI 工具 · 15K → 移至 cockpit | ⚪ |
 
-## L4 — 自我层
+### L3 → L4 桥接工具计划 (cockpit MCP)
 
-| 项目 | 位置 | 说明 |
-|------|------|------|
-| **CARDS** | `~/Documents/驾驶舱/CARDS/` | SQLite 追踪系统 |
-| **Vault** | `~/Documents/学习进化/` | Markdown 知识库 |
+| 工具 | L4 数据源 | 说明 | 状态 |
+|------|----------|------|------|
+| `workspace_context` | CARDS + .omo | 聚合活跃目标/阶段/约束 | 待实现 |
+| `cards_status` | `~/Documents/驾驶舱/CARDS/` | 活跃卡片列表, 按优先级排序 | 待实现 |
+| `cards_check` | CARDS | 检查当前操作是否违反约束 | 待实现 |
+| `vault_search` | `~/Documents/学习进化/` | 检索 Vault 知识/Markdown | 待实现 |
+
+### L3 → I0 协议
+
+```
+Agent 启动:
+  ① workspace_context → 知: 当前目标/约束
+  ② L2 引擎调用 → 行: 经 Agora 路由到 kairon/minerva
+  ③ cards_update → 归: 记录执行结果/新债务
+```
+
+## L4 — 自我层 (数据面 · 被动)
+
+> **L4 是纯文档层，不运行代码，不暴露 MCP。Agent 通过 L3 cockpit 的 MCP 工具间接消费 L4 数据。**
+
+| 项目 | 位置 | 类型 | 说明 |
+|------|------|------|------|
+| **CARDS** | `~/Documents/驾驶舱/CARDS/` | SQLite | 目标追踪 + 优先级 + 约束 |
+| **Vault** | `~/Documents/学习进化/` | Markdown | 方法论 + 洞察 + 经验 |
+
+**原则**: L4 存"要做什么"和"为什么做"。L3 提供"怎么做"。中间缺的那个"谁决定做"——是 Agent（人或 AI）。Agent = 执行器，L4 = 知识面，L3 = 工具面。
 
 ## X1-X3 横向切面
 
@@ -118,8 +142,8 @@
 | 步骤 | 操作 | 收益 | 状态 |
 |------|------|------|------|
 | M0 已做完 | shared-lib 拆出 5 子包 → L0 | 降低耦合, 独立演进 | ✅ |
+| M1 已做完 | agora 拆出为 I0 独立项目 | 消除最大架构偏差 | ✅ |
 | M3 已做完 | metaos + ecos + wksp 搬家 | 自包含包独立 | ✅ |
-| M1 | agora 拆出为 I0 独立项目 | 消除最大架构偏差 | 🔴 待做 |
-| M2 | cron-service + agent-runtime 拆分 | L1 基础设施完整 | 🟡 待做 |
-| M4 | kairon-governance → omo | 治理功能统一 | 🟢 低风险 |
-| 其他 | LAYER-INDEX 更新, 包数对齐 | 基准正确 | ✅ P0 |
+| M4 已做完 | cron-service → L1, agent-runtime 拆分 | L1 基础设施完整 | ✅ |
+| M5 | L4 bridge: cockpit cards_*/vault_* MCP 工具 | Agent 通过 L3 访问 L4 上下文 | 🟡 P1 |
+| 其他 | CI 补齐: 9/9 项目覆盖 | 质量保障 | ✅ |
