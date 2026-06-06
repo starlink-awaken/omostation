@@ -68,7 +68,7 @@ class A2ATransport:
 
     def _emit(self, event_type: str, payload: dict) -> bool:
         try:
-            from kairon_lib.events import get_global_event_bus, make_event  # type: ignore[import-not-found]
+            from kairon_events import get_global_event_bus, make_event
         except ImportError:
             _log.debug("[A2ATransport] kairon_lib.events unavailable")
             return False

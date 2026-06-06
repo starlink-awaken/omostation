@@ -121,7 +121,7 @@ KNOWN_SERVICES: dict[str, dict[str, Any]] = {
         "command": "uv",
         "args": ["run", "--package", "metaos", "python", "-m", "metaos.mcp_server"],
         "description": "MetaOS — 编排/治理层，决策门控与系统协同",
-        "source": "kairon",
+        "source": "metaos",  # independent project at projects/metaos/
     },
     "minerva": {
         "command": "uv",
@@ -139,7 +139,7 @@ KNOWN_SERVICES: dict[str, dict[str, Any]] = {
         "command": "uv",
         "args": ["run", "--package", "cron-service", "cron-service", "--mcp"],
         "description": "定时调度引擎 — 作业管理、脚本编排、定时触发",
-        "source": "kairon",
+        "source": "runtime",  # migrated to projects/runtime/
     },
     # ── npm 全局 MCP 工具 ────────────────────────────────────
     "mcp-server-sqlite": {

@@ -186,7 +186,7 @@ class HermesToolRegistry:
         """List system alerts."""
         alerts: list[dict[str, Any]] = []
         try:
-            from kairon_lib.observability.alerts import AlertManager  # type: ignore[import-not-found]
+            from kairon_observability.alerts import AlertManager
             manager = AlertManager()
             for a in manager.get_active() if hasattr(manager, "get_active") else []:
                 alerts.append({
