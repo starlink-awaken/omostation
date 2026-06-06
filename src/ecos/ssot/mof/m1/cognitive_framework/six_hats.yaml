@@ -1,0 +1,35 @@
+id: CFW-SIX-HATS-001
+type: CognitiveFramework
+name: Six Thinking Hats
+description: 六顶思考帽框架，用于平行思考，避免多视角的混杂与冲突。
+status: active
+domain: meta
+created: '2026-06-07'
+version: 1.0.0
+layer: L0
+properties:
+  framework_name: "Six Thinking Hats (六顶思考帽)"
+  core_purpose: "多维度平行思考，通过佩戴不同颜色的‘帽子’将情感、事实、风险、创意等剥离开来，避免混战与偏见。"
+  interaction_mode: "sequential"
+  trigger_conditions:
+    - "创新脑暴阶段"
+    - "复杂冲突协调与复盘"
+  personas:
+    - role: "White Hat (白帽/客观事实)"
+      focus: "关注客观事实和数据，我们需要什么信息，我们有什么信息。"
+      icon: "⚪"
+    - role: "Red Hat (红帽/情感直觉)"
+      focus: "关注情感、直觉和预感。无需解释，纯粹的主观反应。"
+      icon: "🔴"
+    - role: "Black Hat (黑帽/风险评估)"
+      focus: "关注风险、潜在问题和负面影响。为什么这个方案不可行？"
+      icon: "⚫"
+    - role: "Yellow Hat (黄帽/乐观探索)"
+      focus: "关注价值、利益和建设性。为什么这个方案会成功？"
+      icon: "🟡"
+    - role: "Green Hat (绿帽/创意发散)"
+      focus: "关注创意、备选方案和可能性。有其他更好的办法吗？"
+      icon: "🟢"
+    - role: "Blue Hat (蓝帽/控制与组织)"
+      focus: "关注思维过程的控制和组织。我们现在应该戴什么颜色的帽子？"
+      icon: "🔵"
