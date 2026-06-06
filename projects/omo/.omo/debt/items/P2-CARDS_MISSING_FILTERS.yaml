@@ -17,11 +17,14 @@ opened_at: '2026-06-05T14:28:56Z'
 last_reviewed_at: null
 next_review_at: null
 gate_level: none
-history:
-- at: '2026-06-05T14:28:56Z'
-  action: register
-  note: Registered debt item P2-CARDS_MISSING_FILTERS.
-  actor: 全景分析 2026-06-05
-x1_policy_ref: ''
-x2_freshness: ''
-x3_tier: Tool
+status: "resolved"
+priority: "P2"
+created_at: "2026-06-05T14:28:56Z"
+resolved_at: "2026-06-06T16:35:00Z"
+assigned_to: "system"
+tags: ["cli", "cards"]
+
+description: >
+  cards CLI缺少priority筛选+research默认status错误已修复：
+  - priority 现在支持逗号分隔多选 (IN 语句)。
+  - research 的默认 status 修改为 identified。

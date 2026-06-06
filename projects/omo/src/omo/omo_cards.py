@@ -138,7 +138,7 @@ def cmd_create(args):
     tags = json.dumps(args.tags if args.tags else [])
     extra = json.dumps({"severity": args.severity} if args.severity else {})
 
-    default_status = {"idea": "flash", "research": "queue"}.get(args.type, "planned")
+    default_status = {"idea": "flash", "research": "identified"}.get(args.type, "planned")
     conn.execute(
         """INSERT INTO cards (id, type, status, title, domain, priority, summary, content, parent_id, created_at, updated_at, deadline, tags, extra)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -175,8 +175,10 @@ def cmd_list(args):
         conditions.append("domain = ?")
         params.append(args.domain)
     if getattr(args, 'priority', None):
-        conditions.append("priority = ?")
-        params.append(args.priority)
+        priorities = [p.strip() for p in args.priority.split(",")]
+        placeholders = ",".join("?" for _ in priorities)
+        conditions.append(f"priority IN ({placeholders})")
+        params.extend(priorities)
 
     where = " AND ".join(conditions) if conditions else "1=1"
     order = "ORDER BY CASE priority WHEN 'P0' THEN 0 WHEN 'P1' THEN 1 WHEN 'P2' THEN 2 WHEN 'P3' THEN 3 END, created_at DESC"
