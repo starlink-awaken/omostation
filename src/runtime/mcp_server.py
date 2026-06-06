@@ -13,64 +13,14 @@ Phase 8.2 / DEBT-L3-001 (🔴)
     python3 runtime-mcp-server.py --test health
 
 依赖:
-    - mcp 库 (pip install mcp)
+    - fastmcp 库 (uv add fastmcp)
 """
 
 import sys
 import json
 import argparse
 from datetime import datetime
-
-
-TOOLS = [
-    {
-        "name": "runtime_health",
-        "description": "全系统健康扫描 — 返回所有 9 项检查的通过/失败状态",
-        "inputSchema": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "runtime_matrix_list",
-        "description": "陈列服务注册表 — 列出所有已注册的 L1 运行时服务",
-        "inputSchema": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "runtime_protocol_list",
-        "description": "L0 协议注册表陈列 — 列出所有已注册的协议及其 half_life",
-        "inputSchema": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "runtime_protocol_get",
-        "description": "查询单个协议详情 — 含 half_life 衰减状态",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "protocol_id": {"type": "string", "description": "协议 ID (MCP/ACP/A2A/BOS_URI/L0_YAML)"}
-            },
-            "required": ["protocol_id"],
-        },
-    },
-    {
-        "name": "runtime_ontology_get",
-        "description": "查询 L0 元模型本体 — 返回 M3-M0 实体类型和关系类型",
-        "inputSchema": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "runtime_brief",
-        "description": "获取会话简报 — 聚合健康+SLA+卡片+风险",
-        "inputSchema": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "runtime_kv_get",
-        "description": "查询运行时键值存储 — 从 L1 daemon-state.db 读取",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "key": {"type": "string", "description": "查询键 (daemon/sla/health/protocols)"}
-            },
-            "required": ["key"],
-        },
-    },
-]
+from pathlib import Path
 
 
 def handle_health() -> dict:
@@ -93,7 +43,6 @@ def handle_matrix_list() -> dict:
     reg = Path.home() / ".ecos" / "runtime" / "registry.json"
     if reg.exists():
         return json.loads(reg.read_text())
-    # fallback: 通过 ecos-register.py 查询
     script = Path.home() / ".ecos" / "scripts" / "ecos-register.py"
     if script.exists():
         r = subprocess.run(["python3", str(script), "--status"],
@@ -120,7 +69,6 @@ def handle_protocol_list() -> dict:
 def handle_protocol_get(protocol_id: str) -> dict:
     """runtime_protocol_get: 单个协议详情"""
     import yaml
-    from datetime import datetime
     constraint_file = Path.home() / "Documents" / "学习进化" / "2-knowledge" / \
                       "基建架构" / "L0-constraints.yaml"
     if not constraint_file.exists():
@@ -149,7 +97,6 @@ def handle_ontology() -> dict:
     if meta_file.exists():
         import yaml
         return yaml.safe_load(meta_file.read_text())
-    from pathlib import Path
     return {"error": "元模型文件不可用"}
 
 
@@ -200,7 +147,43 @@ def handle_kv_get(key: str) -> dict:
     return result
 
 
-from pathlib import Path  # noqa: E402
+# ── FastMCP server ──────────────────────────────────────────────────────────
+
+try:
+    from fastmcp import FastMCP
+    mcp = FastMCP("ecos-runtime")
+
+    @mcp.tool()
+    def runtime_health() -> dict:
+        return handle_health()
+
+    @mcp.tool()
+    def runtime_matrix_list() -> dict:
+        return handle_matrix_list()
+
+    @mcp.tool()
+    def runtime_protocol_list() -> dict:
+        return handle_protocol_list()
+
+    @mcp.tool()
+    def runtime_protocol_get(protocol_id: str) -> dict:
+        return handle_protocol_get(protocol_id)
+
+    @mcp.tool()
+    def runtime_ontology_get() -> dict:
+        return handle_ontology()
+
+    @mcp.tool()
+    def runtime_brief() -> dict:
+        return handle_brief()
+
+    @mcp.tool()
+    def runtime_kv_get(key: str) -> dict:
+        return handle_kv_get(key)
+
+except ImportError as _e:
+    mcp = None
+    _import_error = _e
 
 
 def main():
@@ -226,42 +209,27 @@ def main():
         return
 
     if args.list:
-        for t in TOOLS:
-            print(f"  {t['name']:30s} — {t['description'][:50]}")
+        tools = [
+            "runtime_health",
+            "runtime_matrix_list",
+            "runtime_protocol_list",
+            "runtime_protocol_get",
+            "runtime_ontology_get",
+            "runtime_brief",
+            "runtime_kv_get",
+        ]
+        for t in tools:
+            print(f"  {t}")
         return
 
-    # MCP stdio 模式 (供 MCP 客户端调用)
-    try:
-        from mcp.server import Server, stdio_server
-        server = Server("ecos-runtime")
-
-        @server.list_tools()
-        async def list_tools():
-            return TOOLS
-
-        @server.call_tool()
-        async def call_tool(name: str, arguments: dict):
-            handlers = {
-                "runtime_health": lambda: handle_health(),
-                "runtime_matrix_list": lambda: handle_matrix_list(),
-                "runtime_protocol_list": lambda: handle_protocol_list(),
-                "runtime_protocol_get": lambda: handle_protocol_get(arguments.get("protocol_id", "")),
-                "runtime_ontology_get": lambda: handle_ontology(),
-                "runtime_brief": lambda: handle_brief(),
-                "runtime_kv_get": lambda: handle_kv_get(arguments.get("key", "")),
-            }
-            handler = handlers.get(name)
-            if not handler:
-                raise ValueError(f"Unknown tool: {name}")
-            return handler()
-
-        import asyncio
-        asyncio.run(stdio_server(server))
-
-    except ImportError:
-        print("⚠️  mcp 库未安装。运行: pip install mcp")
+    # MCP stdio 模式
+    if mcp is None:
+        print(f"⚠️  fastmcp 库未安装: {_import_error}")
         print("   测试模式可用: --test health|matrix|protocols|ontology|brief")
         print("   列出工具: --list")
+        return
+
+    mcp.run()
 
 
 if __name__ == "__main__":

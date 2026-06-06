@@ -76,7 +76,7 @@ protocols:
     status: "active"
     usage: "partial"
     description: "Agora service registration and routing — the I0 Integration Fabric implementation"
-    spec_url: "~/Workspace/projects/kairon/packages/agora"
+    spec_url: "~/Workspace/projects/agora"
     port_range: "7426, 7430-7431"
     transport: ["http", "mcp"]
     implementations:
