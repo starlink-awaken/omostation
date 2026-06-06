@@ -222,6 +222,7 @@ GitHub Actions workflows in `.github/workflows/` (**20 workflows**, 9/9 项目�
 4. **INTROSPECTION**: If you don't know what tools or resources are available, invoke `read_resource("bos://agora/registry")` to dump the current Mesh state.
 5. **MUTATION**: To change the state of an object managed by the mesh, use the `mutate_resource(uri, payload, action)` tool instead of ad-hoc tools.
 6. **COGNITIVE FRAMEWORKS**: MetaOS dynamically loads cognitive frameworks (like BDSK or Six Hats) from the L0 MOF model (`ecos/src/ecos/ssot/mof/m1/cognitive_framework/`). When executing complex planning, adhere strictly to the injected framework personas.
+7. **MANDATORY ATOMIC COMMITS**: All agents MUST immediately run `git commit` after making logical changes, especially to documentation or `.omo` files. The system relies on Git post-commit hooks for knowledge extraction (`mof-extract`). Failing to commit will break the system's memory loop and is a critical failure.
 
 ## Reading Before Working
 

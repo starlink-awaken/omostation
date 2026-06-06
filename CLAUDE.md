@@ -16,6 +16,7 @@
 4. **X 轴保障**: X1(审计)/X2(保鲜)/X3(价值)/X4(一致性) 原则见 `LAYER-INDEX.md`，实现见 `.omo/_knowledge/management/x-axis-implementation-registry.md`
 
 **涉及端口时必须**: 先查 `protocols/port-registry.yaml` → 确认端口未被占用 → 注册新端口 → 使用环境变量 `{SERVICE}_PORT`。CI 和 Agora runtime 双重阻断端口冲突。
+**强制闭环原则 (Mandatory Commits)**: Agent 修改任何文件后（尤其是 `.omo` 或文档），**必须立即执行 `git commit`**。Git post-commit 钩子承载着 L0 层知识萃取引擎的触发机制。不 commit 意味着你产生的知识将从系统的全局记忆中彻底丢失，这被视为严重故障。
 
 **禁止**: 未获取上下文直接修改代码。禁止跳过 L4 约束检查直接操作 `.omo` 目录。
 
