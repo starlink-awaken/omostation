@@ -1,14 +1,23 @@
 #!/usr/bin/env python3
-"""BOS (Banyan Object Service) URI registry — P33-W1 Campaign 2 Precheck.
+"""BOS (Banyan Object Service) URI registry — P33 Campaign 2.
 
 BOS URI naming convention: ``bos://<domain>/<package>/<action>``
 - ``domain``   : one of 5 fixed (memory, governance, analysis, persona, capability)
 - ``package``  : kebab-case, matches the kairon package directory
 - ``action``   : verb (search/ingest/audit/register/trigger/gate/...)
 
-Persistence: local JSON file at ``.omo/_knowledge/bos-registry.json`` —
-P33-W1 战役 2 起步故意避开 KOS 写入, 走文件系统落盘, 简化交付。
-后续 P33-W2+ (战役 1 agora 接入) 时再迁移到 KOS zone=bos_registry。
+Legacy 3-segment form: ``bos://<package>/<action>`` (no explicit domain).
+Used by mcp_server.py (``bos://omo/debt`` etc., P30 era). Accepted via
+``BOS_URI_LEGACY_PATTERN``; domain is auto-mapped from ``LEGACY_DOMAIN_MAP``
+(default: ``omo`` → ``governance``). New code SHOULD use the 4-segment form.
+
+Persistence (P33-W3+):
+  - Primary: KOS ``zone=bos_registry`` via direct package call
+    (``kos.ontology.store.put_entity``), bypassing agora to avoid
+    P32 audit regression.
+  - Mirror : local JSON at ``.omo/_knowledge/bos-registry.json`` for
+    offline read and CLI listing.  Both writes are attempted on
+    register; KOS failure does NOT block local registration.
 
 P32 收官约束: 不改 agora 核心, 不重启 omo daemon, 0 破坏性操作.
 本模块纯加法, 文件锁保护并发写, 原子 rename 防半写状态。
@@ -16,6 +25,7 @@ P32 收官约束: 不改 agora 核心, 不重启 omo daemon, 0 破坏性操作.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import re
 import sys
@@ -24,6 +34,12 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
+
+# ── 路径配置 (P33-W3 暴露给外部) ──────────────────────
+# kairon packages 根目录 — kairon 23 个包, 包含 kos 实体存储
+_KAIRON_PACKAGES_SRC = Path(
+    "/Users/xiamingxing/Workspace/projects/kairon/packages/kos/src"
+)
 
 # ── BOS URI 命名空间 ────────────────────────────────────────
 # 5 个 domain 固定不可扩展 (北星 ADR-0007 约束)
@@ -44,6 +60,22 @@ BOS_URI_PATTERN = re.compile(
     r"/(?P<package>" + _KOS_PART + r")"
     r"/(?P<action>" + _KOS_PART + r")$"
 )
+
+# 3-段 legacy URI (P30 时代 mcp_server.py 既有: bos://omo/debt 等)
+# 接受 bos://<package>/<action> 形式, domain 通过 LEGACY_DOMAIN_MAP 推断
+BOS_URI_LEGACY_PATTERN = re.compile(
+    r"^bos://(?P<package>" + _KOS_PART + r")/(?P<action>" + _KOS_PART + r")$"
+)
+
+# legacy 3-段 → 4-段 domain 隐含映射
+# 多数 mcp_server.py 的 3-段 URI 属于 governance (omo, alerts, debt 等)
+LEGACY_DOMAIN_MAP: dict[str, str] = {
+    "omo": "governance",
+    "debt": "governance",
+    "alerts": "governance",
+    "tasks": "governance",
+    "standards": "governance",
+}
 
 Domain = Literal["memory", "governance", "analysis", "persona", "capability"]
 Protocol = Literal["http", "stdio", "internal"]
@@ -78,9 +110,9 @@ class BosRegistration:
         return asdict(self)
 
 
-# ── 20 起步 URI 预定义 (P33-W1 战役 2 起步 6 + P33-W2 余下 14) ─
+# ── 21 起步 URI 预定义 (P33-W1 战役 2 起步 6 + P33-W2 余下 15) ─
 # P33-W1: memory × 2 + governance × 4
-# P33-W2: analysis × 7 + persona × 4 + capability × 3 → 累计 5 Domain 全覆盖
+# P33-W2: analysis × 7 + persona × 4 + capability × 4 → 累计 5 Domain 全覆盖 (21)
 SEED_REGISTRATIONS: list[BosRegistration] = [
     BosRegistration(
         uri="bos://memory/kos/search",
@@ -282,36 +314,69 @@ SEED_REGISTRATIONS: list[BosRegistration] = [
 
 
 def validate_bos_uri(uri: str) -> tuple[bool, str]:
-    """Validate BOS URI format.
+    """Validate BOS URI format (4-segment new + 3-segment legacy).
+
+    Accepted forms:
+      1. ``bos://<domain>/<package>/<action>`` (new, P33 北星)
+         domain ∈ {memory, governance, analysis, persona, capability}
+      2. ``bos://<package>/<action>`` (legacy, P30 mcp_server.py)
+         domain auto-mapped via LEGACY_DOMAIN_MAP
 
     Returns:
-        (True, "") if valid; (False, error_message) otherwise.
+        (True, "") on valid 4-segment; (True, info_msg) on valid legacy
+        (info_msg contains the auto-mapped domain); (False, error_message)
+        on invalid.
     """
     if not isinstance(uri, str):
         return False, f"URI must be string, got {type(uri).__name__}"
+    # 1) 4-段新格式 (北星, 北斗主用)
     m = BOS_URI_PATTERN.match(uri)
-    if not m:
+    if m:
+        return True, ""
+    # 2) 3-段 legacy 格式 (mcp_server.py P30 既有 URI)
+    lm = BOS_URI_LEGACY_PATTERN.match(uri)
+    if lm:
+        pkg = lm.group("package")
+        if pkg in LEGACY_DOMAIN_MAP:
+            return (
+                True,
+                f"legacy 3-segment URI, auto-mapped to "
+                f"domain={LEGACY_DOMAIN_MAP[pkg]}",
+            )
         return (
             False,
-            f"Invalid BOS URI: {uri!r}. "
-            f"Expected bos://<domain>/<package>/<action> "
-            f"with domain in {ALLOWED_DOMAINS}",
+            f"Legacy 3-segment URI but package '{pkg}' not in domain map. "
+            f"Use 4-segment form: bos://<domain>/<package>/<action>",
         )
-    return True, ""
+    return (
+        False,
+        f"Invalid BOS URI: {uri!r}. "
+        f"Expected bos://<domain>/<package>/<action> "
+        f"(domain in {ALLOWED_DOMAINS}) or legacy bos://<package>/<action>",
+    )
 
 
 def parse_bos_uri(uri: str) -> dict[str, str]:
-    """Parse BOS URI into dict.
+    """Parse BOS URI into dict (handles both 4-segment and 3-segment legacy).
 
-    Raises:
-        ValueError: if URI is invalid.
+    For legacy 3-segment URIs, the domain is filled from
+    ``LEGACY_DOMAIN_MAP``.  Raises ``ValueError`` if the URI is invalid
+    or the legacy package has no domain mapping.
     """
     valid, err = validate_bos_uri(uri)
     if not valid:
         raise ValueError(err)
-    m = BOS_URI_PATTERN.match(uri)
-    assert m is not None  # validate_bos_uri just confirmed
-    return m.groupdict()
+    m4 = BOS_URI_PATTERN.match(uri)
+    if m4:
+        return m4.groupdict()
+    m3 = BOS_URI_LEGACY_PATTERN.match(uri)
+    assert m3 is not None  # validate_bos_uri just confirmed
+    pkg = m3.group("package")
+    return {
+        "domain": LEGACY_DOMAIN_MAP[pkg],
+        "package": pkg,
+        "action": m3.group("action"),
+    }
 
 
 # ── 本地 JSON 持久化 ──────────────────────────────────────
@@ -380,6 +445,119 @@ def save_registry(
             pass
 
 
+def _ensure_kos_importable() -> str | None:
+    """Add kairon KOS package to sys.path if not already importable.
+
+    Returns:
+        None on success, error message on failure.
+    """
+    if "kos.ontology.store" in sys.modules:
+        return None
+    try:
+        spec = importlib.util.find_spec("kos.ontology.store")
+    except (ImportError, ModuleNotFoundError, ValueError):
+        spec = None
+    if spec is not None:
+        return None
+    if not _KAIRON_PACKAGES_SRC.exists():
+        return f"kos src not found at {_KAIRON_PACKAGES_SRC}"
+    sys.path.insert(0, str(_KAIRON_PACKAGES_SRC))
+    # 重新检查
+    try:
+        spec = importlib.util.find_spec("kos.ontology.store")
+    except (ImportError, ModuleNotFoundError, ValueError):
+        spec = None
+    if spec is None:
+        return "kos.ontology.store still not importable after path injection"
+    return None
+
+
+def save_to_kos(
+    registration: dict[str, Any],
+    zone: str = "bos_registry",
+) -> dict[str, Any]:
+    """Persist a BOS registration to KOS zone=bos_registry.
+
+    Uses direct package call to ``kos.ontology.store.put_entity`` (P32
+    pattern, bypasses agora to keep P32 audit at 100).  Caller is
+    expected to be a registration dict with keys: ``uri``, ``domain``,
+    ``package``, ``action``, ``endpoint``, ``description``, ``registered_at``.
+
+    Self-healing: older KOS DBs may lack columns ``source`` /
+    ``status`` / ``version`` / ``confidence`` / ``created_at`` — we
+    run a defensive ALTER TABLE ADD COLUMN with safe defaults before
+    ``put_entity``.  Existing rows are preserved.
+
+    Returns:
+        dict with keys: ``saved`` (uri), ``entity_id``, ``backend`` ("kos")
+        on success; ``{"error": str}`` on failure (kos not available,
+        put_entity rejected, etc.).  Never raises.
+    """
+    err = _ensure_kos_importable()
+    if err:
+        return {"error": f"kos_not_available: {err}"}
+    try:
+        from kos.ontology._types import Entity, EntityType  # type: ignore[import-not-found]
+        from kos.ontology.store import _get_conn, put_entity  # type: ignore[import-not-found]
+    except Exception as exc:  # pragma: no cover
+        return {"error": f"kos_import_failed: {exc}"}
+
+    # 自愈: 给老 KOS DB 加缺失列 (KOS store.py 已有 zone 自愈, 我们补 source/status 等)
+    try:
+        import sqlite3
+        conn = _get_conn()
+        for col, ddl in [
+            ("source", "TEXT"),
+            ("status", "TEXT DEFAULT 'active'"),
+            ("version", "INTEGER DEFAULT 1"),
+            ("confidence", "REAL DEFAULT 1.0"),
+            ("created_at", "TEXT"),
+        ]:
+            try:
+                conn.execute(f"ALTER TABLE kos_entities ADD COLUMN {col} {ddl}")
+            except sqlite3.OperationalError:
+                pass  # 列已存在
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass  # 自愈失败不阻塞
+
+    uri = registration.get("uri", "")
+    # entity_id 由 CONCEPT 前缀 (CON-) + URI hash 保证唯一
+    safe = uri.replace("bos://", "").replace("/", "-").replace(":", "-")
+    entity_id = f"CON-BOS-{safe}"[:96]
+    try:
+        entity = Entity(
+            entity_id=entity_id,
+            entity_type=EntityType.CONCEPT,
+            label=uri,
+            description=registration.get("description", f"BOS URI: {uri}"),
+            zone=zone,
+            source="omo-bos",
+            confidence=1.0,
+            metadata={
+                "uri": uri,
+                "domain": registration.get("domain", ""),
+                "package": registration.get("package", ""),
+                "action": registration.get("action", ""),
+                "endpoint": registration.get("endpoint", ""),
+                "protocol": registration.get("protocol", "internal"),
+                "registered_at": registration.get("registered_at", ""),
+            },
+        )
+        result = put_entity(entity)
+        if isinstance(result, dict) and "error" in result:
+            return {"error": f"kos_put_failed: {result['error']}"}
+        return {
+            "saved": uri,
+            "entity_id": entity_id,
+            "backend": "kos",
+            "zone": zone,
+        }
+    except Exception as exc:  # pragma: no cover
+        return {"error": f"kos_save_exception: {exc}"[:200]}
+
+
 def register_uri(
     uri: str,
     endpoint: str = "",
@@ -388,16 +566,25 @@ def register_uri(
     description: str = "",
     registered_by: str = "omo-bos-cli",
     path: Path = DEFAULT_REGISTRY_PATH,
+    kos_zone: str = "bos_registry",
+    dual_write: bool = True,
 ) -> dict[str, Any]:
-    """Register a single BOS URI to local JSON.
+    """Register a single BOS URI (local JSON + KOS dual-write).
 
     Idempotent: re-registering the same URI updates the existing entry
     in place (preserving original ``registered_at``) and returns a
     status dict.
 
+    W3+ policy: W0 spec #4 要求持久化到 KOS zone=bos_registry. 本函数
+    默认先写本地 JSON (offline fallback), 再写 KOS (主存).  KOS 写入
+    失败不会回滚本地 JSON (best-effort), 失败原因记录在 ``kos_result``.
+
+    Args:
+        dual_write: set to False 跳过 KOS 写入 (测试场景).
+
     Returns:
-        dict with keys: ``uri`` (str), ``status`` ("registered" | "updated"),
-        ``total`` (int — total registrations in registry after write).
+        dict with keys: ``uri``, ``status`` ("registered" | "updated"),
+        ``total`` (本地 JSON 总数), ``kos_result`` (save_to_kos 返回).
         On validation failure returns ``{"error": str}``.
     """
     valid, err = validate_bos_uri(uri)
@@ -430,7 +617,17 @@ def register_uri(
         regs.append(new_entry)
 
     save_registry(regs, path)
-    return {"uri": uri, "status": status, "total": len(regs)}
+
+    kos_result: dict[str, Any] = {"skipped": "dual_write_disabled"}
+    if dual_write:
+        kos_result = save_to_kos(new_entry, zone=kos_zone)
+
+    return {
+        "uri": uri,
+        "status": status,
+        "total": len(regs),
+        "kos_result": kos_result,
+    }
 
 
 def list_registrations(
@@ -475,11 +672,21 @@ def list_registrations(
     return out
 
 
-def register_seeds(path: Path = DEFAULT_REGISTRY_PATH) -> list[dict[str, Any]]:
-    """Register all 20 SEED_REGISTRATIONS to local JSON (idempotent).
+def register_seeds(
+    path: Path = DEFAULT_REGISTRY_PATH,
+    *,
+    dual_write: bool = True,
+    kos_zone: str = "bos_registry",
+) -> list[dict[str, Any]]:
+    """Register all 21 SEED_REGISTRATIONS (idempotent, KOS dual-write by default).
 
     P33-W1: 6 条 (memory + governance)
-    P33-W2: 14 条 (analysis + persona + capability)
+    P33-W2: 15 条 (analysis + persona + capability)
+    Total : 21 条 SEED URI 覆盖 5 Domain
+
+    Args:
+        dual_write: 默认 True — 每条 SEED 同时写 KOS zone=bos_registry.
+        kos_zone: KOS zone 名称 (默认 "bos_registry").
 
     Returns:
         List of per-URI result dicts (see ``register_uri``).
@@ -494,9 +701,77 @@ def register_seeds(path: Path = DEFAULT_REGISTRY_PATH) -> list[dict[str, Any]]:
                 description=r.description,
                 registered_by=r.registered_by,
                 path=path,
+                dual_write=dual_write,
+                kos_zone=kos_zone,
             )
         )
     return results
+
+
+# ── M2 修复: endpoint 实测可达性 ───────────────────────
+
+
+def verify_endpoint(endpoint: str) -> dict[str, Any]:
+    """实测 endpoint 字符串是否可 import (用 importlib.util.find_spec).
+
+    endpoint 格式: ``<python.module.path>:<func>`` 或纯 module path.
+
+    - module path: 用 importlib.util.find_spec 检查模块是否可定位
+    - ``:<func>``: 不验证函数存在 (stub 可能没真实现)
+
+    Returns:
+        ``{"endpoint": str, "module_found": bool, "error": str|None}``
+    """
+    if not isinstance(endpoint, str) or not endpoint:
+        return {"endpoint": endpoint or "", "module_found": False, "error": "no_endpoint"}
+    if ":" in endpoint:
+        module_path = endpoint.split(":", 1)[0]
+    else:
+        module_path = endpoint
+    module_path = module_path.strip()
+    if not module_path:
+        return {"endpoint": endpoint, "module_found": False, "error": "empty_module_path"}
+    try:
+        spec = importlib.util.find_spec(module_path)
+    except (ImportError, ModuleNotFoundError, ValueError) as exc:
+        return {
+            "endpoint": endpoint,
+            "module_found": False,
+            "error": f"import_error: {exc}"[:160],
+        }
+    except Exception as exc:  # pragma: no cover - 其他异常
+        return {
+            "endpoint": endpoint,
+            "module_found": False,
+            "error": f"unexpected: {type(exc).__name__}: {exc}"[:160],
+        }
+    if spec is None:
+        return {
+            "endpoint": endpoint,
+            "module_found": False,
+            "error": "module_not_found",
+        }
+    return {"endpoint": endpoint, "module_found": True, "error": None}
+
+
+def verify_all_endpoints(
+    path: Path = DEFAULT_REGISTRY_PATH,
+) -> list[dict[str, Any]]:
+    """遍历注册表, 验证每条 URI 的 endpoint 模块是否可定位.
+
+    Returns:
+        List of dicts, each with ``uri``, ``endpoint``, ``module_found``,
+        ``error``.  顺序与注册表保持一致.
+    """
+    regs = load_registry(path)
+    out: list[dict[str, Any]] = []
+    for r in regs:
+        uri = r.get("uri", "")
+        ep = r.get("endpoint", "")
+        result = verify_endpoint(ep)
+        result["uri"] = uri
+        out.append(result)
+    return out
 
 
 # ── CLI 入口 ─────────────────────────────────────────────
@@ -578,7 +853,18 @@ def main(argv: list[str] | None = None) -> int:
     # register-seeds (alias, 战役 2 起步命名约定)
     sub.add_parser(
         "register-seeds",
-        help="注册 20 条 SEED URI (alias of seed)",
+        help="注册 21 条 SEED URI (alias of seed)",
+    )
+
+    # verify (M2: importlib 实测 endpoint 可达)
+    ver = sub.add_parser(
+        "verify",
+        help="实测所有 URI endpoint 模块可达性 (importlib.find_spec)",
+    )
+    ver.add_argument(
+        "--path",
+        default=None,
+        help=f"注册表路径 (默认: {DEFAULT_REGISTRY_PATH})",
     )
 
     args = parser.parse_args(argv)
@@ -636,16 +922,38 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         return 0
 
+    if args.cmd == "verify":
+        path = Path(args.path) if args.path else DEFAULT_REGISTRY_PATH
+        results = verify_all_endpoints(path=path)
+        ok = sum(1 for r in results if r.get("module_found"))
+        fail = len(results) - ok
+        no_ep = sum(1 for r in results if r.get("error") == "no_endpoint")
+        print(
+            f"[omo bos verify] {path}\n"
+            f"  总 {len(results)} / 可达 {ok} / 失败 {fail} "
+            f"(no_endpoint={no_ep})"
+        )
+        for r in results:
+            status = "✓" if r.get("module_found") else "✗"
+            print(f"  {status} {r['uri']}  →  {r['endpoint']}")
+            if not r.get("module_found"):
+                err = r.get("error") or ""
+                print(f"      error: {err}", file=sys.stderr)
+        # 全部失败也是 0 (有结果就行), 任何 fail 不算 1 因为 m2 是"实测"而非"必须通过"
+        return 0
+
     parser.print_help()
     return 1
 
 
 __all__ = (
     "ALLOWED_DOMAINS",
+    "BOS_URI_LEGACY_PATTERN",
     "BOS_URI_PATTERN",
     "BosRegistration",
     "DEFAULT_REGISTRY_PATH",
     "Domain",
+    "LEGACY_DOMAIN_MAP",
     "Protocol",
     "SEED_REGISTRATIONS",
     "list_registrations",
@@ -655,7 +963,10 @@ __all__ = (
     "register_seeds",
     "register_uri",
     "save_registry",
+    "save_to_kos",
     "validate_bos_uri",
+    "verify_all_endpoints",
+    "verify_endpoint",
 )
 
 

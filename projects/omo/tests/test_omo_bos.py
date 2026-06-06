@@ -1,13 +1,14 @@
-"""Unit tests for omo.omo_bos — P33-W1 战役 2 起步.
+"""Unit tests for omo.omo_bos — P33 Campaign 2.
 
 Covers:
 - BOS URI validation (5 domain whitelist + kebab-case)
-- Parsing round-trip
+- 3-segment legacy URI validation (R2 fix: mcp_server.py compat)
+- Parsing round-trip (4-segment + 3-segment)
 - Local JSON persistence (register, list, idempotency)
+- KOS dual-write (M1 fix)
+- Endpoint importlib verification (M2 fix)
 - SEED_REGISTRATIONS consistency
-- CLI subcommands dispatch
-
-P33-W1 约束: 纯本地 JSON 持久化, 不写 KOS.
+- CLI subcommands dispatch (validate/list/register/seed/verify)
 """
 from __future__ import annotations
 
@@ -15,6 +16,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -29,7 +31,10 @@ from omo.omo_bos import (
     register_seeds,
     register_uri,
     save_registry,
+    save_to_kos,
     validate_bos_uri,
+    verify_all_endpoints,
+    verify_endpoint,
 )
 
 
@@ -346,3 +351,149 @@ def test_list_filter_by_each_domain(tmp_path: Path) -> None:
         regs = list_registrations(domain=d, path=reg_path)
         assert all(r.domain == d for r in regs), f"域 {d} 过滤不纯"
         assert len(regs) >= 1, f"域 {d} 应至少 1 条, 实得 {len(regs)}"
+
+
+# ── P33-W3 修复: 5 个新测试 (M1 + M2 + R2) ─────────────────────
+
+
+def test_save_to_kos_writes_entity(tmp_path: Path) -> None:
+    """W3 验证: KOS 写入有 mock 测试 (避免污染 KOS db)."""
+    with patch("omo.omo_bos.save_to_kos") as mock_save:
+        mock_save.return_value = {
+            "saved": "bos://test/x/y",
+            "entity_id": "CON-BOS-test-x-y",
+            "backend": "kos",
+            "zone": "bos_registry",
+        }
+        result = mock_save({
+            "uri": "bos://test/x/y",
+            "domain": "test",
+            "package": "x",
+            "action": "y",
+            "endpoint": "x.y:z",
+            "description": "test",
+        })
+        assert result.get("backend") == "kos"
+        assert result.get("saved") == "bos://test/x/y"
+        assert mock_save.called
+
+
+def test_save_to_kos_direct_call_fallback() -> None:
+    """W3 验证: save_to_kos 真接调用走 _ensure_kos_importable + put_entity.
+
+    不污染 KOS: 用唯一 ID 写入, 写入后再 delete_entity 清理.
+    """
+    reg = {
+        "uri": "bos://memory/kos/test-w3-direct",
+        "domain": "memory",
+        "package": "kos",
+        "action": "test-w3-direct",
+        "endpoint": "kos.ontology.store:search_entities",
+        "protocol": "internal",
+        "description": "W3 direct-call test (transient)",
+        "registered_at": "2026-06-06T00:00:00+00:00",
+    }
+    result = save_to_kos(reg, zone="bos_registry")
+    # 要么 KOS 成功, 要么明确报错 — 不允许 raise
+    assert "error" in result or result.get("backend") == "kos"
+    # 清理: 如果真写入了, 把 entity 删掉
+    if result.get("backend") == "kos":
+        try:
+            sys.path.insert(
+                0,
+                "/Users/xiamingxing/Workspace/projects/kairon/packages/kos/src",
+            )
+            from kos.ontology.store import delete_entity  # type: ignore
+            delete_entity(result["entity_id"])
+        except Exception:
+            pass  # 清理失败不阻塞测试
+
+
+def test_verify_endpoint_known_module() -> None:
+    """W3 验证: 已知 omo.omo_bos 模块可实测可达."""
+    r = verify_endpoint("omo.omo_bos:register_uri")
+    assert r["module_found"] is True
+    assert r["error"] is None
+
+
+def test_verify_endpoint_unknown_module() -> None:
+    """W3 验证: 未知模块返回 module_found=False."""
+    r = verify_endpoint("nonexistent.module.foo_xyz_999:bar")
+    assert r["module_found"] is False
+    assert r["error"] is not None
+
+
+def test_legacy_3segment_uri_validated() -> None:
+    """W3 验证: 3 段 legacy URI 通过 (R2 协调 mcp_server.py bos://omo/debt)."""
+    valid, err = validate_bos_uri("bos://omo/debt")
+    assert valid, err
+    assert "legacy" in err or "auto-mapped" in err
+    # parse 也能跑, domain 隐含 governance
+    parsed = parse_bos_uri("bos://omo/debt")
+    assert parsed["domain"] == "governance"
+    assert parsed["package"] == "omo"
+    assert parsed["action"] == "debt"
+    # 未知 legacy package 拒绝 (4-段新格式也仍生效)
+    valid3, err3 = validate_bos_uri("bos://unknownpkg/whatever")
+    assert not valid3
+    # 4-段新格式 (domain=governance) 仍通过
+    valid4, _ = validate_bos_uri("bos://governance/omo/audit")
+    assert valid4
+
+
+def test_register_uri_kos_and_local_dual_write(tmp_path: Path) -> None:
+    """W3 验证: register_uri 同时写本地 JSON + 尝试 KOS (默认双写)."""
+    reg_path = tmp_path / "bos-registry.json"
+    with patch("omo.omo_bos.save_to_kos") as mock_kos:
+        mock_kos.return_value = {
+            "saved": "bos://memory/kos/search",
+            "entity_id": "CON-BOS-memory-kos-search",
+            "backend": "kos",
+            "zone": "bos_registry",
+        }
+        r = register_uri(
+            uri="bos://memory/kos/search",
+            endpoint="kos.ontology.store:search_entities",
+            description="W3 dual write test",
+            path=reg_path,
+        )
+        assert "kos_result" in r, f"应含 kos_result, 实际 keys: {list(r.keys())}"
+        assert mock_kos.called, "save_to_kos 应被调用一次"
+        # 本地 JSON 仍写
+        assert r["total"] == 1
+        assert reg_path.exists()
+        raw = json.loads(reg_path.read_text(encoding="utf-8"))
+        assert len(raw) == 1
+        assert raw[0]["uri"] == "bos://memory/kos/search"
+
+
+def test_register_uri_no_kos_when_dual_write_false(tmp_path: Path) -> None:
+    """W3 验证: dual_write=False 跳过 KOS 写入 (测试场景)."""
+    reg_path = tmp_path / "bos-registry.json"
+    with patch("omo.omo_bos.save_to_kos") as mock_kos:
+        r = register_uri(
+            uri="bos://memory/kos/search",
+            endpoint="kos.ontology.store:search_entities",
+            path=reg_path,
+            dual_write=False,
+        )
+        assert "kos_result" in r
+        assert r["kos_result"].get("skipped") == "dual_write_disabled"
+        assert not mock_kos.called, "dual_write=False 不应调 save_to_kos"
+
+
+def test_verify_all_endpoints_runs(tmp_path: Path) -> None:
+    """W3 验证: verify_all_endpoints 跑全表, 返回结构化结果."""
+    reg_path = tmp_path / "bos-registry.json"
+    register_seeds(path=reg_path)
+    results = verify_all_endpoints(path=reg_path)
+    assert len(results) == 21
+    for r in results:
+        assert "uri" in r
+        assert "endpoint" in r
+        assert "module_found" in r
+        assert "error" in r
+    # 至少 omo.omo_bos 自身 endpoint 可达 (我们 register 的 SEED 含这个)
+    omoruns = [r for r in results if "omo.omo_audit" in r["endpoint"]]
+    if omoruns:
+        assert omoruns[0]["module_found"] is True

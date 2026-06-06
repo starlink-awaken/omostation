@@ -241,8 +241,10 @@ async def handle_register_agent(body: dict) -> dict:
 
 # ── Phase 34 Wave 3: SSE Event Bus ──────────────────────────────────────────────
 
-async def handle_events(request: Any):
-    """Phase 34 Wave 3: SSE Pub/Sub Event Bus endpoint."""
+async def handle_events(request: Any, replay: int = 50):
+    """Phase 34 Wave 3: SSE Pub/Sub Event Bus endpoint.
+    Includes historical ring-buffer replay.
+    """
     from fastapi.responses import StreamingResponse
     import asyncio
     from agora.core.state import get_event_bus, get_registry  # type: ignore[import-not-found]
@@ -251,25 +253,42 @@ async def handle_events(request: Any):
     
     async def event_generator():
         queue = asyncio.Queue()
+        seen_ids = set()
         
         def on_event(event: dict):
             queue.put_nowait(event)
             
         bus.register_hook(on_event)
         try:
+            import json
+            # 1. Replay historical events
+            if replay > 0:
+                history = bus.get_event_log(limit=replay)
+                for event in history:
+                    event_id = event.get("id")
+                    if event_id:
+                        seen_ids.add(event_id)
+                    yield f"id: {event_id}\ndata: {json.dumps(event)}\n\n"
+                    
+            # 2. Stream live events
             while True:
                 if await request.is_disconnected():
                     break
                 try:
                     event = await asyncio.wait_for(queue.get(), timeout=1.0)
-                    import json
-                    yield f"data: {json.dumps(event)}\n\n"
+                    event_id = event.get("id")
+                    # Deduplicate in case an event was caught both in history and hook
+                    if event_id and event_id in seen_ids:
+                        continue
+                    if event_id:
+                        seen_ids.add(event_id)
+                        
+                    yield f"id: {event_id}\ndata: {json.dumps(event)}\n\n"
                 except asyncio.TimeoutError:
                     yield ": ping\n\n"
         finally:
             try:
-                # Assuming unregister_hook exists; if not, we gracefully pass
-                bus.unregister_hook(on_event)
+                bus.remove_hook(on_event)
             except Exception:
                 pass
                 

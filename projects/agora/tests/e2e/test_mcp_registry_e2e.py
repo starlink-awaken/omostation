@@ -48,7 +48,7 @@ def _make_service(name: str = "minerva", **kwargs) -> Service:
         description=f"MCP service: {name}",
         protocol="mcp",
         mcp_endpoint="stdio:test",
-        port=8765,
+        port=0,
         tags=["test", name],
     )
     defaults.update(kwargs)
@@ -79,7 +79,7 @@ class TestServiceRegistryLifecycle:
 
         r2 = ServiceRegistry(storage_path=str(path))
         assert r2.get("minerva") is not None
-        assert r2.get("minerva").port == 8765
+        assert r2.get("minerva").port == 0
 
     def test_list_all_returns_registered_services(self, tmp_path: Path):
         """list_all() 返回所有已注册的服务。"""
