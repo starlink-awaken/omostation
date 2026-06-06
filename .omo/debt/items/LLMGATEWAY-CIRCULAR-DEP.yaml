@@ -1,0 +1,25 @@
+id: LLMGATEWAY-CIRCULAR-DEP
+title: "llm-gateway ↔ minerva 双向依赖 — pyproject.toml 中互相引用"
+dimension: architecture
+subdimension: dependency_management
+domain: projects
+scope: within_project
+severity: high
+weight: 0.5
+entropy_class: classification
+lifecycle_state: open
+owner: omo-governance
+affected_roots:
+  - projects/kairon/packages/llm-gateway
+  - projects/kairon/packages/minerva
+evidence_refs:
+  - null
+mitigation_refs: []
+opened_at: "2026-06-07T06:00:00Z"
+last_reviewed_at: null
+next_review_at: "2026-06-14T06:00:00Z"
+gate_level: phase28
+history:
+  - at: "2026-06-07T06:00:00Z"
+    action: register
+    note: "llm-gateway 架构审计: pyproject.toml 中 llm-gateway depends minerva, minerva depends llm-gateway。代码中无真正的 import 循环(legacy adapter 是单向包装), 但配置层面双向引用不干净。Phase 30 迁移时需解决。"

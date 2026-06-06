@@ -124,3 +124,8 @@ seed_items:
   - .omo/debt/items/OMO-WORKER-BLOAT.yaml
   - .omo/debt/items/OMO-ARG-INCONSISTENCY.yaml
   - .omo/debt/items/OMO-X3-NOCOST.yaml
+  # ── 2026-06-07 llm-gateway 架构审计 ──
+  - .omo/debt/items/LLMGATEWAY-STUB-PROVIDERS.yaml
+  - .omo/debt/items/LLMGATEWAY-LEGACY-ADAPTERS.yaml
+  - .omo/debt/items/LLMGATEWAY-CIRCULAR-DEP.yaml
+  - .omo/debt/items/LLMGATEWAY-PROVIDER-BLOAT.yaml

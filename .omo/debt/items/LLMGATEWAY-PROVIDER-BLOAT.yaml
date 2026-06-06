@@ -1,0 +1,24 @@
+id: LLMGATEWAY-PROVIDER-BLOAT
+title: "llm-gateway provider.py 325 行含 ABC+dataclass+retry+mock 四种职责, 18 个 provider 文件数膨胀"
+dimension: code_quality
+subdimension: module_boundary
+domain: projects
+scope: within_project
+severity: low
+weight: 0.2
+entropy_class: classification
+lifecycle_state: open
+owner: omo-governance
+affected_roots:
+  - projects/kairon/packages/llm-gateway
+evidence_refs:
+  - null
+mitigation_refs: []
+opened_at: "2026-06-07T06:00:00Z"
+last_reviewed_at: null
+next_review_at: "2026-06-21T06:00:00Z"
+gate_level: phase28
+history:
+  - at: "2026-06-07T06:00:00Z"
+    action: register
+    note: "llm-gateway 架构审计: 18 个 provider 文件数偏多(+6 个无功能 stub 或 redundant adapter)。provider.py 集 ABC/dataclass/Retry/Mock 于一体。可拆为 core.py(ABC+dataclass) + retry.py(已有) + mock.py(new)。"
