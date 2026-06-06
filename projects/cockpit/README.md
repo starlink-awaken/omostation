@@ -58,3 +58,10 @@ L4 (知识面) → cockpit MCP bridge → Agent 获取上下文
 L3 (工具面) → cockpit CLI + MCP + Web
 I0 (织层)  → Agora 路由 L2 调用
 ```
+
+### X4 治理一致性 (7 项规则检查)
+
+Cockpit 承载 X4 横切面的运行时实现:
+- `workspace_context` → Agent 启动链合规检查 (GC-007)
+- `cards_check` → 操作前约束验证 (GC-001~GC-006)
+- `governance_compliance` → X4 一键检查 (待实现)
