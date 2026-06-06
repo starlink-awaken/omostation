@@ -253,6 +253,9 @@ def main() -> int:
     brief_p = sub.add_parser("brief", help="会话简报")
     brief_p.add_argument("--force", action="store_true", help="强制重新生成")
 
+    events_p = sub.add_parser("events", help="实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard)")
+    events_p.add_argument("--url", default="http://127.0.0.1:8080/v1/events", help="Agora SSE Endpoint")
+
     sub.add_parser("version", help="版本信息")
 
     code_p = sub.add_parser("code", help="代码库分析与审查 (基于 codeanalyze)")
@@ -414,6 +417,10 @@ def main() -> int:
         return _cmd_health(args)
     if args.command == "brief":
         return _cmd_brief(args)
+    if args.command == "events":
+        from .commands.events import run_events_dashboard
+        run_events_dashboard(args.url)
+        return 0
     if args.command == "version":
         from cockpit import __version__
         console.print(f"[bold cyan]cockpit[/] v[bold]{__version__}[/]")
