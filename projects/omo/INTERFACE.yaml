@@ -1,0 +1,33 @@
+# OMO Interface Registry
+project: omo
+layer: L2
+description: 治理面 (债务/目标/任务/Worker)
+
+cli:
+  - name: omo
+    module: omo.cli:main
+    description: 28 子命令 (capability/ledger/bridge/cards/gc/goal/...)
+  - name: omo-debt
+    module: omo.omo_debt:main
+    description: 技术债务管理
+  - name: omo-mcp
+    module: omo.mcp_server:main
+    description: OMO MCP Server (10 tools)
+  - name: cards
+    module: omo.omo_cards:main
+    description: CARDS 统一追踪
+
+mcp:
+  server: omo.mcp_server
+  tools: 12
+  transport: [stdio]
+
+http:
+  - port: 9090
+    protocol: http.server (Dashboard) [⚠ 与 ecos 冲突, 待迁移]
+
+dependencies:
+  runtime: [httpx, pyyaml, fastmcp]
+  dev: [pytest, pytest-cov, ruff]
+
+tests: 400+
