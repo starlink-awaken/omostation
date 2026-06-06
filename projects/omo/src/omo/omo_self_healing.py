@@ -673,3 +673,105 @@ def get_healing_engine() -> SelfHealingEngine:
         else:
             _engine = SelfHealingEngine()
     return _engine
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Hot Reload — 监听配置文件变更自动重载规则
+# ═══════════════════════════════════════════════════════════════════════════
+
+_HOT_RELOAD_STARTED = False
+_RULES_MTIME: float = 0.0
+
+
+def _check_and_reload() -> bool:
+    """检查配置文件是否变更，若是则自动重载引擎规则。返回 True 表示已重载。"""
+    global _HOT_RELOAD_STARTED, _RULES_MTIME, _engine
+    if not HEALING_CONFIG_PATH.exists():
+        return False
+    current_mtime = HEALING_CONFIG_PATH.stat().st_mtime
+    if current_mtime == _RULES_MTIME:
+        return False
+    _RULES_MTIME = current_mtime
+    custom_rules = load_rules()
+    if custom_rules and _engine is not None:
+        _engine._rules = custom_rules
+        logger.info("healing_rules_hot_reloaded count=%s", len(custom_rules))
+        return True
+    return False
+
+
+def start_hot_reload(interval_seconds: int = 30) -> None:
+    """启动热加载后台线程，每 interval_seconds 秒检查配置变更。"""
+    global _HOT_RELOAD_STARTED
+    if _HOT_RELOAD_STARTED:
+        return
+    _HOT_RELOAD_STARTED = True
+    if HEALING_CONFIG_PATH.exists():
+        global _RULES_MTIME
+        _RULES_MTIME = 0  # force first check
+    import threading
+    import time as _time
+
+    def _loop():
+        while True:
+            _time.sleep(interval_seconds)
+            try:
+                _check_and_reload()
+            except Exception:
+                pass
+
+    t = threading.Thread(target=_loop, daemon=True, name="healing-hot-reload")
+    t.start()
+    logger.info("healing_hot_reload_started interval=%s", interval_seconds)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Webhook / Slack 通知
+# ═══════════════════════════════════════════════════════════════════════════
+
+NOTIFY_WEBHOOK_URL = os.environ.get("OMO_HEALING_WEBHOOK_URL", "")
+
+
+def notify_webhook(rule_name: str, event_type: str, count: int, severity: str) -> None:
+    """发送 Webhook 通知 (兼容 Slack Incoming Webhook)。"""
+    if not NOTIFY_WEBHOOK_URL:
+        return
+    try:
+        import json as _json
+        import urllib.request
+
+        color = {"critical": "#FF0000", "high": "#FF6600", "warning": "#FFCC00", "info": "#36A64F"}.get(severity, "#CCCCCC")
+        payload = {
+            "attachments": [{
+                "color": color,
+                "title": f"OMO Self-Healing: {rule_name}",
+                "text": f"事件 *{event_type}* × {count} 触发规则 *{rule_name}*",
+                "fields": [
+                    {"title": "Severity", "value": severity, "short": True},
+                    {"title": "Count", "value": str(count), "short": True},
+                ],
+                "ts": int(__import__("time").time()),
+            }]
+        }
+        data = _json.dumps(payload).encode()
+        req = urllib.request.Request(NOTIFY_WEBHOOK_URL, data=data, method="POST")
+        req.add_header("Content-Type", "application/json")
+        urllib.request.urlopen(req, timeout=5)
+    except Exception:
+        pass
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# History CLI Helper
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def get_history() -> dict:
+    """返回引擎历史记录供 CLI 使用。"""
+    engine = get_healing_engine()
+    return {
+        "triggers": dict(engine._triggered_count),
+        "fixes": engine._fix_history,
+        "rules": [r.name for r in engine._rules],
+        "status": engine.get_status(),
+    }

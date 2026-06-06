@@ -18,7 +18,7 @@ import httpx
 
 from omo.omo_daemon import run_once, _write_pid_file, _clear_pid_file, _setup_logging
 from omo.omo_paths import OMO_ROOT
-from omo.omo_self_healing import get_healing_engine, start_http_status_server
+from omo.omo_self_healing import get_healing_engine, start_http_status_server, start_hot_reload, notify_webhook
 
 DAEMON_PID_FILE = OMO_ROOT / ".omo" / "_delivery" / "sse_daemon.pid"
 DAEMON_LOG_FILE = OMO_ROOT / ".omo" / "_delivery" / "sse_daemon.log"
@@ -112,6 +112,7 @@ async def listen_to_sse(stop_event: asyncio.Event, logger: logging.Logger):
                                                     f"OMO Self-Healing: {ha['rule']}",
                                                     f"事件 {ha['event_type']} × {ha['count']} 触发 {ha['rule']}",
                                                 )
+                                                notify_webhook(ha["rule"], ha["event_type"], ha["count"], ha.get("severity", "warning"))
 
                             except json.JSONDecodeError:
                                 logger.warning(f"Failed to parse SSE data: {data_str}")
@@ -145,6 +146,11 @@ def main():
 
     # Start HTTP health server (:9091) for status queries
     start_http_status_server()
+    logger.info("healing_http_server_started port=9091")
+
+    # Start hot-reload for config changes
+    start_hot_reload()
+    logger.info("healing_hot_reload_started")
     logger.info("healing_http_server_started port=9091")
 
     loop = asyncio.new_event_loop()

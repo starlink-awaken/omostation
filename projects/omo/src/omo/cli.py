@@ -161,9 +161,10 @@ def _cmd_healing(args: list[str]) -> int:
         fix-list    — 列出所有可用修复脚本
         rules       — 列出所有规则
         config      — 导出当前规则到 YAML
+        history     — 显示触发和修复历史
     """
     if not args:
-        print("Usage: omo healing <status|fix-run|fix-list|rules|config>")
+        print("Usage: omo healing <status|fix-run|fix-list|rules|config|history>")
         return 1
 
     sub = args[0]
@@ -202,6 +203,12 @@ def _cmd_healing(args: list[str]) -> int:
         engine = get_healing_engine()
         save_rules(engine._rules)
         print("Rules saved to .omo/self_healing_rules.yaml")
+
+    elif sub == "history":
+        from omo.omo_self_healing import get_history
+        import json
+        data = get_history()
+        print(json.dumps(data, indent=2, default=str, ensure_ascii=False))
 
     else:
         print(f"Unknown subcommand: {sub}")
