@@ -212,9 +212,19 @@ GitHub Actions workflows in `.github/workflows/` (**18 workflows**, 9/9 项目�
 - `.github/workflows/` — CI configurations (11 workflows)
 - `.hermes/` — Hermes-related scripts and adapters
 
+## 🤖 Agentic Protocols & BOS URIs (eCOS v5 Mandatory Rules)
+
+**All AI Agents operating in this workspace MUST follow these architectural constraints:**
+
+1. **NO RAW CONFIG EDITS**: Do not manually edit configuration files in `.omo/` or database files to change system state.
+2. **USE AGORA MESH**: All cross-layer operations must go through the Agora Service Mesh (`agora`).
+3. **BOS URI ABSTRACTION**: State mutations and reads must use `bos://` URIs instead of direct file I/O where applicable.
+4. **INTROSPECTION**: If you don't know what tools or resources are available, invoke `read_resource("bos://agora/registry")` to dump the current Mesh state.
+5. **MUTATION**: To change the state of an object managed by the mesh, use the `mutate_resource(uri, payload, action)` tool instead of ad-hoc tools.
+
 ## Reading Before Working
 
-- **For incoming AI Agents**: YOU MUST READ `projects/omo/CLAUDE.md` to understand how to interact with the OMO v4.0 Operating System. Do NOT manually edit `.omo` files. Use the Contract-based Dispatch workflow.
+- **For incoming AI Agents**: YOU MUST READ `projects/omo/CLAUDE.md` to understand how to interact with the OMO v4.0 Operating System. Do NOT manually edit `.omo` files. Use the Contract-based Dispatch workflow. AND adhere to the Agentic Protocols listed above.
 - **For kairon work**: Read `projects/kairon/CLAUDE.md` + `projects/kairon/AGENTS.md` for monorepo conventions. Package structure in `projects/kairon/pyproject.toml`.
 - **For gbrain work**: Read `projects/gbrain/AGENTS.md` + `projects/gbrain/CLAUDE.md`
 - **For governance**: Read `.omo/standards/` for architectural standards
