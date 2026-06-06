@@ -1,19 +1,21 @@
-"""Live I0 Dashboard — HTTP server with real-time data API.
+"""Cockpit Web Dashboard — HTTP server with real-time status from I0 + L4.
 
-Serves the OMO debt dashboard with real-time data from I0 Fabric.
+Serves the cockpit status dashboard with live data from I0 Fabric and L4 bridge.
 
 Endpoints:
-  GET /          → dashboard HTML (with live-data JS injected)
+  GET /              → dashboard HTML
   GET /api/status    → i0_status() JSON
   GET /api/services  → i0_services() JSON
   GET /api/events    → i0_events(50) JSON
   GET /api/protocols → i0_protocols() JSON
   GET /api/debt      → debt ledger JSON
+  GET /api/context   → workspace_context JSON (L4 bridge)
+  GET /api/cards     → cards_status JSON (L4 bridge)
 
 Usage:
-    python3 -m runtime.dashboard_server
+    cockpit dashboard
     # or
-    DASHBOARD_PORT=8080 python3 -m runtime.dashboard_server
+    python3 -m cockpit.dashboard_server
 """
 from __future__ import annotations
 
@@ -36,6 +38,14 @@ _omo_src = str(OMO_ROOT / "src")
 for p in [_runtime_src, _omo_src]:
     if p not in sys.path:
         sys.path.insert(0, p)
+
+# L4 bridge imports (try/except for graceful degradation)
+try:
+    from cockpit.scripts.cockpit_mcp import workspace_context, cards_status, cards_check, vault_search
+
+    _HAS_L4_BRIDGE = True
+except ImportError:
+    _HAS_L4_BRIDGE = False
 
 PORT = int(os.environ.get("DASHBOARD_PORT", "8080"))
 
@@ -172,22 +182,33 @@ class DashboardHandler(SimpleHTTPRequestHandler):
 
     def serve_api(self):
         """Route API requests to the appropriate I0 query function."""
-        from runtime.i0 import i0_status, i0_services, i0_events, i0_protocols
+        try:
+            from runtime.i0 import i0_status, i0_services, i0_events, i0_protocols
+        except ImportError:
+            i0_status = i0_services = i0_events = i0_protocols = None
 
         if self.path == "/api/status":
-            data = i0_status()
+            data = i0_status() if i0_status else {"error": "runtime.i0 not available"}
         elif self.path == "/api/services":
-            data = i0_services()
+            data = i0_services() if i0_services else {"error": "runtime.i0 not available"}
         elif self.path == "/api/events":
-            data = i0_events(50)
+            data = i0_events(50) if i0_events else {"error": "runtime.i0 not available"}
         elif self.path == "/api/protocols":
-            data = i0_protocols()
+            data = i0_protocols() if i0_protocols else {"error": "runtime.i0 not available"}
         elif self.path == "/api/debt":
             data = _load_debt()
         elif self.path == "/api/e2e":
             data = _run_e2e()
         elif self.path == "/api/omo-report":
             data = _omo_report()
+        elif self.path == "/api/context":
+            data = json.loads(workspace_context()) if _HAS_L4_BRIDGE else {"error": "L4 bridge not available"}
+        elif self.path == "/api/cards":
+            data = json.loads(cards_status()) if _HAS_L4_BRIDGE else {"error": "L4 bridge not available"}
+        elif self.path == "/api/cards/check":
+            data = json.loads(cards_check()) if _HAS_L4_BRIDGE else {"error": "L4 bridge not available"}
+        elif self.path == "/api/vault/search":
+            data = json.loads(vault_search()) if _HAS_L4_BRIDGE else {"error": "L4 bridge not available"}
         else:
             self.send_error(404)
             return
@@ -307,15 +328,14 @@ def _omo_report() -> dict:
 def main():
     """Start the dashboard HTTP server."""
     server = HTTPServer(("127.0.0.1", PORT), DashboardHandler)
-    print(f"🚀 I0 Live Dashboard")
-    print(f"   Dashboard: http://127.0.0.1:{PORT}")
-    print(f"   Status:    http://127.0.0.1:{PORT}/api/status")
-    print(f"   Services:  http://127.0.0.1:{PORT}/api/services")
-    print(f"   Events:    http://127.0.0.1:{PORT}/api/events")
-    print(f"   Protocols: http://127.0.0.1:{PORT}/api/protocols")
-    print(f"   Debt:      http://127.0.0.1:{PORT}/api/debt")
-    print(f"   Dashboard HTML: {DASHBOARD_HTML}")
-    print(f"   Press Ctrl+C to stop.")
+    print(f"🚀 Cockpit Web Dashboard")
+    if _HAS_L4_BRIDGE:
+        print(f"   L4 Bridge:  http://127.0.0.1:{PORT}/api/context (workspace_context)")
+        print(f"   L4 Bridge:  http://127.0.0.1:{PORT}/api/cards (cards_status)")
+        print(f"   L4 Bridge:  http://127.0.0.1:{PORT}/api/cards/check (cards_check)")
+    print(f"   I0 Status:  http://127.0.0.1:{PORT}/api/status")
+    print(f"   I0 Services: http://127.0.0.1:{PORT}/api/services")
+    print(f"   Debt:       http://127.0.0.1:{PORT}/api/debt")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
