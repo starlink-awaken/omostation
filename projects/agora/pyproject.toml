@@ -28,6 +28,7 @@ dependencies = [
     "uvicorn>=0.20",
     "prometheus-client>=0.20",
     "aiohttp>=3.14.0",
+    "ecos",
 ]
 
 [project.urls]
@@ -80,3 +81,4 @@ kos = { path = "../kairon/packages/kos", editable = true }
 eidos = { path = "../kairon/packages/eidos", editable = true }
 minerva = { path = "../kairon/packages/minerva", editable = true }
 core-models = { path = "../kairon/packages/core-models", editable = true }
+ecos = { path = "../ecos" }

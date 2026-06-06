@@ -96,14 +96,26 @@ def handle_resources_list(params: dict, ctx: ToolContext) -> dict:
 def handle_resources_read(params: dict, ctx: ToolContext) -> dict:
     """MCP resources/read — fetch a specific resource by URI."""
     uri = params.get("uri", "")
-    if uri == "bos://memory/docs/readme":
+    
+    if uri.startswith("bos://memory/"):
+        path = uri[len("bos://memory/"):]
         try:
-            with open("README.md") as readme_file:
-                content = readme_file.read()
-        except OSError:
-            content = "README not found"
-        return {"contents": [{"uri": uri, "mimeType": "text/markdown", "text": content}]}
-    elif uri == "bos://execution/workers/status":
+            from ecos.mcp_vfs import read_memory_resource
+            content = read_memory_resource(path)
+            return {"contents": [{"uri": uri, "mimeType": "text/markdown", "text": content}]}
+        except ImportError:
+            return {"contents": [{"uri": uri, "mimeType": "text/plain", "text": f"Error: ecos mcp_vfs not found for {uri}"}]}
+            
+    elif uri.startswith("bos://omo/"):
+        path = uri[len("bos://omo/"):]
+        try:
+            from ecos.mcp_vfs import read_omo_resource
+            content = read_omo_resource(path)
+            return {"contents": [{"uri": uri, "mimeType": "text/markdown", "text": content}]}
+        except ImportError:
+            return {"contents": [{"uri": uri, "mimeType": "text/plain", "text": f"Error: ecos mcp_vfs not found for {uri}"}]}
+            
+    if uri == "bos://execution/workers/status":
         return {"contents": [{"uri": uri, "mimeType": "application/json", "text": '{"status": "ok"}'}]}
     else:
         return {"contents": [{"uri": uri, "mimeType": "text/plain", "text": f"Resource not found: {uri}"}]}

@@ -15,6 +15,7 @@ source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
     { name = "cryptography" },
+    { name = "ecos" },
     { name = "fastapi" },
     { name = "fastmcp" },
     { name = "httpx" },
@@ -68,6 +69,7 @@ requires-dist = [
     { name = "aiohttp", specifier = ">=3.14.0" },
     { name = "core-models", marker = "extra == 'kairon'", editable = "../kairon/packages/core-models" },
     { name = "cryptography", specifier = ">=41.0" },
+    { name = "ecos", directory = "../ecos" },
     { name = "eidos", marker = "extra == 'kairon'", editable = "../kairon/packages/eidos" },
     { name = "fastapi", specifier = ">=0.100" },
     { name = "fastmcp", specifier = ">=0.1" },
@@ -1015,6 +1017,33 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e0/4d/f332313098c1de1b2d2ff91cf2674415cc7cddab2ca1b01ae29774bd5fdf/docstring_parser-0.18.0.tar.gz", hash = "sha256:292510982205c12b1248696f44959db3cdd1740237a968ea1e2e7a900eeb2015", size = 29341, upload-time = "2026-04-14T04:09:19.867Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl", hash = "sha256:b3fcbed555c47d8479be0796ef7e19c2670d428d72e96da63f3a40122860374b", size = 22484, upload-time = "2026-04-14T04:09:18.638Z" },
+]
+
+[[package]]
+name = "ecos"
+version = "0.8.0"
+source = { directory = "../ecos" }
+dependencies = [
+    { name = "beautifulsoup4" },
+    { name = "fastmcp" },
+    { name = "jinja2" },
+    { name = "pyyaml" },
+    { name = "requests" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "beautifulsoup4", specifier = ">=4.12" },
+    { name = "fastmcp", specifier = ">=3.4.2" },
+    { name = "jinja2", specifier = ">=3.1" },
+    { name = "pyyaml", specifier = ">=6.0" },
+    { name = "requests", specifier = ">=2.28" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=9.0.3" },
+    { name = "ruff", specifier = ">=0.15.16" },
 ]
 
 [[package]]
@@ -2167,6 +2196,7 @@ requires-dist = [
     { name = "lancedb", specifier = ">=0.21" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.0" },
     { name = "neo4j", marker = "extra == 'tier2'", specifier = ">=5.0" },
+    { name = "protocols-layer", marker = "extra == 'paradigm'", editable = "../kairon/packages/protocols-layer" },
     { name = "pydantic", specifier = ">=2.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.24" },
@@ -2176,7 +2206,6 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8" },
     { name = "semantica", marker = "extra == 'tier2'", specifier = ">=0.4.0" },
     { name = "sentence-transformers", specifier = ">=3.0" },
-    { name = "sophia", marker = "extra == 'paradigm'", editable = "../kairon/packages/sophia" },
     { name = "spacy", specifier = ">=3.8" },
     { name = "structlog", specifier = ">=24.0" },
     { name = "ujson", specifier = ">=5.12.1" },
