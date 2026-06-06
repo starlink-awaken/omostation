@@ -20,7 +20,9 @@ L0 协议    — Protocols(16 YAML) + eCOS(SSB 签名链 + 涌现计算)
 
 X1 审计链 · X2 抗熵进化 · X3 价值堆栈 · X4 治理一致性 ← 横向贯穿所有层
 
-**保障体系**: X 轴 = 贯穿全部层的强制执行机制。每条规则在 LAYER-INDEX.md §X1-X4 中有完整的文档定义+代码实现+CI验证+运行时阻断。
+**保障体系**: 
+  架构原则: `LAYER-INDEX.md` §X1-X4 (定义"是什么", 稳定)
+  实现注册: `.omo/_knowledge/management/x-axis-implementation-registry.md` (定义"怎么实现", 可变)
 ```
 
 ### 0.2 不可变原则 (10 条)
