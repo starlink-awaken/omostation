@@ -1,0 +1,27 @@
+# eCOS Interface Registry
+project: ecos
+layer: L0
+description: SSB 签名链 + 涌现计算 + 认知监控
+
+cli:
+  - name: ecos-ssb
+    module: ecos.core.ssb_client:main
+    description: 共享语义总线客户端
+  - name: ecos-dashboard
+    module: ecos.cli.dashboard:main
+    description: Web Dashboard (9090)
+  - name: ecos-scheduler
+    module: ecos.cli.scheduler:main
+    description: 轻量调度器
+
+mcp: []
+
+http:
+  - port: 9090
+    protocol: http.server (SSB Dashboard)
+
+dependencies:
+  runtime: [pyyaml, requests, beautifulsoup4, jinja2]
+  dev: [pytest, ruff]
+
+tests: 122
