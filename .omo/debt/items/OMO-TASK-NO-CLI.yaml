@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: medium
 weight: 0.3
 entropy_class: classification
-lifecycle_state: resolved
+lifecycle_state: closed
 owner: omo-governance
 affected_roots:
   - .omo/tasks/

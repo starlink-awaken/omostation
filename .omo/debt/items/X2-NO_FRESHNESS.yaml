@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: low
 weight: 0.3
 entropy_class: behavior
-lifecycle_state: resolved
+lifecycle_state: closed
 owner: omo-governance
 affected_roots:
   - ~/Workspace/projects/runtime/

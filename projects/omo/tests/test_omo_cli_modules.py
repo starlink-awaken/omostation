@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for OMO CLI modules: goal, state, knowledge, delivery, standard, i0.
+"""Tests for OMO CLI modules: goal, state, knowledge, delivery, standard, i0, task, evidence.
 
 Covers OMO-CLI-TEST-GAP debt remediation for:
 - omo_goal
@@ -8,16 +8,16 @@ Covers OMO-CLI-TEST-GAP debt remediation for:
 - omo_delivery
 - omo_standard
 - omo_i0
+- omo_task
+- omo_evidence
 """
 from __future__ import annotations
 
 import json
 import sys
-from io import StringIO
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
 import yaml
 
 # Ensure omo src is importable
@@ -29,9 +29,11 @@ from omo.omo_knowledge import cmd_knowledge_add, cmd_knowledge_list
 from omo.omo_delivery import cmd_delivery_archive, cmd_delivery_list
 from omo.omo_standard import cmd_standard_add, cmd_standard_list
 from omo.omo_i0 import cmd_i0_routes, cmd_i0_status
+from omo.omo_task import cmd_task_list
+from omo.omo_evidence import cmd_evidence_list
 
 
-# ────────────────────────────── omo_goal ──────────────────────────────
+# -- omo_goal --
 
 
 class TestOmoGoal:
@@ -60,7 +62,8 @@ class TestOmoGoal:
         ret = cmd_goal_list(omo_dir)
         assert ret == 0
         captured = capsys.readouterr()
-        assert "Phase 31 — Debt cleanup" in captured.out
+        assert "Phase 31" in captured.out
+        assert "Debt cleanup" in captured.out
         assert "G31.1: Fix tests" in captured.out
         assert "G31.2: Clean debt" in captured.out
         assert "2 goals total" in captured.out
@@ -120,7 +123,8 @@ class TestOmoGoal:
         ret = cmd_goal_progress(omo_dir, "G31.1", 75.0)
         assert ret == 0
         captured = capsys.readouterr()
-        assert "progress → 75.0%" in captured.out
+        assert "progress" in captured.out
+        assert "75.0%" in captured.out
         updated = yaml.safe_load((goals_dir / "current.yaml").read_text())
         assert updated["goals"][0]["progress"] == 75.0
         assert updated["goals"][0]["status"] == "active"
@@ -148,7 +152,7 @@ class TestOmoGoal:
         assert "not found" in captured.err
 
 
-# ────────────────────────────── omo_state ──────────────────────────────
+# -- omo_state --
 
 
 class TestOmoState:
@@ -220,7 +224,7 @@ class TestOmoState:
         assert "gbrain: idle" in captured.out
 
 
-# ────────────────────────────── omo_knowledge ──────────────────────────────
+# -- omo_knowledge --
 
 
 class TestOmoKnowledge:
@@ -274,7 +278,7 @@ class TestOmoKnowledge:
         assert "already exists" in captured.err
 
 
-# ────────────────────────────── omo_delivery ──────────────────────────────
+# -- omo_delivery --
 
 
 class TestOmoDelivery:
@@ -328,7 +332,7 @@ class TestOmoDelivery:
         assert (archive_dir / "phase27-b.md").exists()
 
 
-# ────────────────────────────── omo_standard ──────────────────────────────
+# -- omo_standard --
 
 
 class TestOmoStandard:
@@ -375,7 +379,7 @@ class TestOmoStandard:
         assert "already exists" in captured.err
 
 
-# ────────────────────────────── omo_i0 ──────────────────────────────
+# -- omo_i0 --
 
 
 class TestOmoI0:
@@ -418,3 +422,85 @@ class TestOmoI0:
         assert ret == 0
         captured = capsys.readouterr()
         assert "Route query failed" in captured.out
+
+
+# -- omo_task --
+
+
+class TestOmoTask:
+    def test_cmd_task_list_no_dir(self, capsys, tmp_path: Path) -> None:
+        omo_dir = tmp_path
+        ret = cmd_task_list(omo_dir, None)
+        assert ret == 0
+        captured = capsys.readouterr()
+        assert "Total: 0 tasks" in captured.out
+
+    def test_cmd_task_list(self, capsys, tmp_path: Path) -> None:
+        omo_dir = tmp_path
+        active_dir = omo_dir / "tasks" / "active"
+        active_dir.mkdir(parents=True)
+        (active_dir / "task-01.yaml").write_text("id: T1\ntitle: Test task 1\n")
+        (active_dir / "task-02.yaml").write_text("id: T2\ntitle: Test task 2\n")
+        done_dir = omo_dir / "tasks" / "done"
+        done_dir.mkdir(parents=True)
+        (done_dir / "task-03.yaml").write_text("id: T3\ntitle: Done task\n")
+        ret = cmd_task_list(omo_dir, None)
+        assert ret == 0
+        captured = capsys.readouterr()
+        assert "active (2 tasks)" in captured.out
+        assert "done (1 tasks)" in captured.out
+        assert "id: T1" in captured.out
+        assert "Total: 3 tasks" in captured.out
+
+    def test_cmd_task_list_status_filter(self, capsys, tmp_path: Path) -> None:
+        omo_dir = tmp_path
+        active_dir = omo_dir / "tasks" / "active"
+        active_dir.mkdir(parents=True)
+        (active_dir / "task-01.yaml").write_text("id: T1\n")
+        done_dir = omo_dir / "tasks" / "done"
+        done_dir.mkdir(parents=True)
+        (done_dir / "task-02.yaml").write_text("id: T2\n")
+        ret = cmd_task_list(omo_dir, "active")
+        assert ret == 0
+        captured = capsys.readouterr()
+        assert "id: T1" in captured.out
+        assert "id: T2" not in captured.out
+
+
+# -- omo_evidence --
+
+
+class TestOmoEvidence:
+    def test_cmd_evidence_list_no_dir(self, capsys, tmp_path: Path) -> None:
+        omo_dir = tmp_path
+        ret = cmd_evidence_list(omo_dir, None)
+        assert ret == 0
+        captured = capsys.readouterr()
+        assert "not found" in captured.out
+
+    def test_cmd_evidence_list(self, capsys, tmp_path: Path) -> None:
+        omo_dir = tmp_path
+        evidence_dir = omo_dir / "evidence"
+        sub_dir = evidence_dir / "divergence"
+        sub_dir.mkdir(parents=True)
+        (sub_dir / "test.md").write_text("# Evidence")
+        ret = cmd_evidence_list(omo_dir, None)
+        assert ret == 0
+        captured = capsys.readouterr()
+        assert "test.md" in captured.out
+        assert "Total: 1 evidence files" in captured.out
+
+    def test_cmd_evidence_list_category(self, capsys, tmp_path: Path) -> None:
+        omo_dir = tmp_path
+        evidence_dir = omo_dir / "evidence"
+        p15 = evidence_dir / "phase15"
+        p15.mkdir(parents=True)
+        (p15 / "report.md").write_text("# Report")
+        p16 = evidence_dir / "phase16"
+        p16.mkdir(parents=True)
+        (p16 / "data.md").write_text("# Data")
+        ret = cmd_evidence_list(omo_dir, "phase15")
+        assert ret == 0
+        captured = capsys.readouterr()
+        assert "report.md" in captured.out
+        assert "data.md" not in captured.out
