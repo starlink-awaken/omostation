@@ -1,0 +1,13 @@
+id: MCPTOOL-COCKPIT-workspace_context
+type: MCPTool
+subtype: CockpitTool
+name: workspace_context
+description: 'cockpit MCP 工具: workspace_context'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L3
+properties:
+  tool_name: workspace_context
+  server: cockpit

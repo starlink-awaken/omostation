@@ -1,0 +1,19 @@
+# M1 Node: MODEL-DATA-FLOW
+# Type: Model
+
+id: MODEL-DATA-FLOW
+type: Model
+name: 数据流模型
+description: L4→L3→I0→L2→L1→L0 的数据流向映射——定义各层之间的数据传递协议
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: multi
+properties:
+  source: L4 文档·CARDS SQLite
+  target: L0 M1 节点·M0 快照
+  mapping:
+    read: I0/Agora→MCP
+    write: CARDS MCP·mof-scan
+  formality: semiformal

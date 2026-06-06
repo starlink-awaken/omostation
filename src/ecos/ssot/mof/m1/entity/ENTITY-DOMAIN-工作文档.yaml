@@ -1,0 +1,22 @@
+# M1 Node: ENTITY-DOMAIN-工作文档
+# Type: Entity
+# Modeled: 2026-06-06T13:31:04
+
+id: ENTITY-DOMAIN-工作文档
+type: Entity
+subtype: Domain
+name: 工作文档
+description: 工作域 — 卫健委·国转中心
+status: active
+domain: 工作文档
+created: '2026-06-06'
+version: 1.0.0
+layer: L4
+properties:
+  entity_type: domain
+  identity:
+    name: 工作文档
+  sources:
+  - 工作文档
+  attributes:
+    file_count: 229198

@@ -1,0 +1,16 @@
+id: PATT-OMO-REF-ARC-ONTOLOGY-TOOLKIT
+type: Pattern
+subtype: OMORef
+name: 本体建模全生命周期工具集 — 细化设计方案
+description: 'OMO 参考: 本体建模全生命周期工具集 — 细化设计方案'
+status: documented
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  problem: 本体建模全生命周期工具集 — 细化设计方案
+  context: OMO 治理
+  solution: 详见 .omo/_knowledge/reference/ARC-ONTOLOGY-TOOLKIT.md
+  known_uses:
+  - .omo/_knowledge/reference/

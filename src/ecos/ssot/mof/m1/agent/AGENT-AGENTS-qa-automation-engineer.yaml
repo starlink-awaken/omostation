@@ -1,0 +1,13 @@
+id: AGENT-AGENTS-qa-automation-engineer
+type: Agent
+subtype: AgentDef
+name: qa-automation-engineer
+description: 'Agent: qa-automation-engineer'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L3
+properties:
+  agent_name: qa-automation-engineer
+  role: Agent defined in ~/.agents/

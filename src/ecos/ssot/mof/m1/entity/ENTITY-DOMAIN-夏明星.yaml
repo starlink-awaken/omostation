@@ -1,0 +1,20 @@
+# M1 Node: ENTITY-DOMAIN-夏明星
+# Type: Entity
+# Generated: 2026-06-06T13:08:34.011178+00:00
+
+id: ENTITY-DOMAIN-夏明星
+type: Entity
+subtype: DomainEntity
+name: 夏明星
+description: '领域实体: 夏明星'
+status: active
+domain: 领域知识库
+created: '2026-06-06T11:41:45.473825'
+version: 1.0.0
+properties:
+  entity_type: person
+  sources:
+  - 领域知识库/人物/实体/夏明星.md
+  identity:
+    name: 夏明星
+layer: L4

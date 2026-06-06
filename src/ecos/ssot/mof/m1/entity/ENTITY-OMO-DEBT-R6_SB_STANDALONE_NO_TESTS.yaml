@@ -1,0 +1,14 @@
+id: ENTITY-OMO-DEBT-R6_SB_STANDALONE_NO_TESTS
+type: Entity
+subtype: OMODebt
+name: sharedbrain-standalone 零测试 — 分解残留包未验证
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: R6_SB_STANDALONE_NO_TESTS

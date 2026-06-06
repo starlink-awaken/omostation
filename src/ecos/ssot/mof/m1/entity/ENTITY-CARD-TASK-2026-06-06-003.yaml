@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-CARD-TASK-2026-06-06-003
+# Type: Entity
+# Generated: 2026-06-06T13:08:34.005971+00:00
+
+id: ENTITY-CARD-TASK-2026-06-06-003
+type: Entity
+subtype: Card
+name: 'KOS索引构建: 为Vault+领域库运行 kos index --config kos-index.yaml'
+description: 为学习进化Vault和领域知识库构建KOS语义索引，使 kos search 可跨域检索全部知识资产。
+status: active
+domain: infra
+created: '2026-06-06T02:55:14Z'
+version: 1.0.0
+properties:
+  card_type: task
+  card_status: active
+  priority: P0
+  entity_type: concept
+layer: L4

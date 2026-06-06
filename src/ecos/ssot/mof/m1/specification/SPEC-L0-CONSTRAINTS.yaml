@@ -1,0 +1,32 @@
+# M1 Node: SPEC-L0-CONSTRAINTS
+# Type: Specification
+# Generated: 2026-06-06T13:08:34.005148+00:00
+
+id: SPEC-L0-CONSTRAINTS
+type: Specification
+name: L0 协议约束规范
+description: 9条约束覆盖 X1-X3 治理维度的协议级规则定义
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+properties:
+  constraints:
+  - X1-C01
+  - X1-C02
+  - X1-C03
+  - X2-C01
+  - X2-C02
+  - X2-C03
+  - X2-C04
+  - X3-C01
+  - X3-C02
+  scope:
+  - L0
+  - L1
+  - L2
+  - L3
+  - L4
+  - I0
+  enforcement: warn
+layer: L0

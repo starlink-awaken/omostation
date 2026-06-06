@@ -1,0 +1,24 @@
+# M1 Node: LESSON-OMO-phase11-wave2-adr-minerva-rela
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase11-wave2-adr-minerva-rela
+type: Lesson
+subtype: OMORetro
+name: ADR — Phase 11 Wave 2 — Minerva Relation MetaRelationType
+description: '1. Minerva relation objects now carry a canonical relation-type contract
+  without breaking current persistence behavior.
+
+  2. Existing graph/store code c'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: ADR — Phase 11 Wave 2 — Minerva Relation MetaRelationType
+  lesson: '1. Minerva relation objects now carry a canonical relation-type contract
+    without breaking current persistence behavior.
+
+    2. Existing graph/store code c'
+  source: Workspace/.omo/_knowledge/summaries/phase11/phase11-wave2-adr-minerva-relation-metarelation.md
+  severity: medium

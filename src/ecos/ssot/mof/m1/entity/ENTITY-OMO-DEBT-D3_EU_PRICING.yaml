@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-OMO-DEBT-D3_EU_PRICING
+# Extracted from .omo/ debts
+
+id: ENTITY-OMO-DEBT-D3_EU_PRICING
+type: Entity
+subtype: OMODebt
+name: eu-pricing tests are not independently governed
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: D3_EU_PRICING
+  sources:
+  - Workspace/.omo/debt/items/D3_EU_PRICING.yaml

@@ -1,0 +1,13 @@
+id: SKILL-SCHEDULED-wednesday-maintenance
+type: Skill
+subtype: ScheduledTask
+name: 周三维护综合 — 国转知识库维护 + vault收件箱清理（合并自 guozhuan-shijianxian + vau
+description: '定时任务: wednesday-maintenance'
+status: active
+domain: meta
+created: '2026-06-05'
+version: 1.0.0
+layer: L4
+properties:
+  skill: 执行 wednesday-maintenance 中定义的指令
+  trigger: scheduled

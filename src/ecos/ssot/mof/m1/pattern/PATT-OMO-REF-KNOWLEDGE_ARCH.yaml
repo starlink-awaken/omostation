@@ -1,0 +1,16 @@
+id: PATT-OMO-REF-KNOWLEDGE_ARCH
+type: Pattern
+subtype: OMORef
+name: 全面知识基座架构方案
+description: 'OMO 参考: 全面知识基座架构方案'
+status: documented
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  problem: 全面知识基座架构方案
+  context: OMO 治理
+  solution: 详见 .omo/_knowledge/reference/KNOWLEDGE_ARCH.md
+  known_uses:
+  - .omo/_knowledge/reference/

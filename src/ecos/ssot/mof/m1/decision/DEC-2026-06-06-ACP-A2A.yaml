@@ -1,0 +1,20 @@
+id: DEC-2026-06-06-ACP-A2A
+type: Decision
+name: ACP + A2A 协议从占位到运行时——多Agent调度基础
+description: ACP(Agent Communication Protocol)和A2A(Agent-to-Agent Task Protocol)当前为占位符(衰减87%)。必须实现运行时以支撑多Agent协同调度。
+status: accepted
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L0
+properties:
+  problem: ACP/A2A 协议仅注册未实现，无法支撑多 Agent 协同
+  decision: 'Phase 1: ACP 实现(Agent发现+心跳+消息路由)。Phase 2: A2A 实现(任务分发+状态同步+结果回传)。Phase
+    3: 多Agent调度器集成。'
+  rationale: 织星架构的多Agent能力依赖这两个协议作为通信基础。I0 Agora 已经有 event bus 和 pipeline——ACP/A2A
+    可以复用。
+  options:
+  - 保持占位(不推荐)
+  - 仅实现 ACP
+  - ACP+A2A 完整实现
+  consequences: '预计影响: L3 cockpit(L3入口适配)·I0 Agora(路由)·L2 kairon(Agent编排)'

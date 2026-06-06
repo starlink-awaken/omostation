@@ -1,0 +1,20 @@
+# M1 Node: MECH-SELF-HEALING
+# Type: Mechanism
+
+id: MECH-SELF-HEALING
+type: Mechanism
+name: 自愈框架
+description: 检测异常→分类→尝试恢复→失败告警→自动创建CARDS债务卡片
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L1
+properties:
+  trigger: daemon检测到异常
+  action: freshness→警告 / consistency→diff / protocol→审查 / daemon→重启
+  interval: 0
+  feedback: healer-state.db + CARDS自动创建DEBT
+  fallback: 全部失败→P0卡片+ecos-daemon.err
+  depends_on:
+  - ARTIFACT-SCRIPT-ecos-healer

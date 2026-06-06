@@ -1,0 +1,18 @@
+# M1 Node: ARTIFACT-L4-adapter-stubs
+# Type: Artifact
+# Modeled: 2026-06-06T13:31:04
+
+id: ARTIFACT-L4-adapter-stubs
+type: Artifact
+subtype: Script
+name: adapter-stubs
+description: 'L4 脚本: adapter-stubs'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L4
+properties:
+  path: 驾驶舱/scripts/adapter-stubs.py
+  format: python
+  size: 4598

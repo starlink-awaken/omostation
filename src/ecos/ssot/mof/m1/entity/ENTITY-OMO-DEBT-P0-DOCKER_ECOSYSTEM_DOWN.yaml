@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-OMO-DEBT-P0-DOCKER_ECOSYSTEM_DOWN
+# Extracted from .omo/ debts
+
+id: ENTITY-OMO-DEBT-P0-DOCKER_ECOSYSTEM_DOWN
+type: Entity
+subtype: OMODebt
+name: 'Docker 生态全部宕机: gbrain (Postgres) + sharedbrain-bos 容器离线'
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: P0-DOCKER_ECOSYSTEM_DOWN
+  sources:
+  - Workspace/.omo/debt/items/P0-DOCKER_ECOSYSTEM_DOWN.yaml

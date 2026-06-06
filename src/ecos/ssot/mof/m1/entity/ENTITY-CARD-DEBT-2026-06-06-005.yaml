@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-CARD-DEBT-2026-06-06-005
+# Type: Entity
+# Generated: 2026-06-06T13:08:34.009924+00:00
+
+id: ENTITY-CARD-DEBT-2026-06-06-005
+type: Entity
+subtype: Card
+name: X3价值归因：Vault + 域系统成本归因缺失
+description: 5个功能域中OMO已实现成本归因，CARDS+Kairon为planned，Vault+域系统为none。需建立全量归因。
+status: active
+domain: meta
+created: '2026-06-06T12:13:51.924908Z'
+version: 1.0.0
+properties:
+  card_type: debt
+  card_status: in_progress
+  priority: P1
+  entity_type: concept
+layer: L4

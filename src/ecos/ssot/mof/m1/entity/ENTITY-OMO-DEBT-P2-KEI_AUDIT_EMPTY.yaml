@@ -1,0 +1,14 @@
+id: ENTITY-OMO-DEBT-P2-KEI_AUDIT_EMPTY
+type: Entity
+subtype: OMODebt
+name: 'KEI 审计日志一直空: _AUDIT_FILE is None, 所有审计记录静默丢弃'
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: P2-KEI_AUDIT_EMPTY

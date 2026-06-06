@@ -1,0 +1,19 @@
+# M1 Node: CONSTRAINT-CARDS-INCUBATING
+# Extracted from CARDS README
+
+id: CONSTRAINT-CARDS-INCUBATING
+type: Specification
+subtype: Constraint
+name: Idea incubating 状态最长 2 周
+description: 超过强制 promoted 或 discarded
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: X4
+properties:
+  constraints:
+  - CONSTRAINT-CARDS-INCUBATING
+  scope:
+  - CARDS
+  enforcement: warn

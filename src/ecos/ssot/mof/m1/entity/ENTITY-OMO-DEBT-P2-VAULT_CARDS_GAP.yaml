@@ -1,0 +1,14 @@
+id: ENTITY-OMO-DEBT-P2-VAULT_CARDS_GAP
+type: Entity
+subtype: OMODebt
+name: 学习进化 Vault 8/10 子模块无 CARDS 指针
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: P2-VAULT_CARDS_GAP

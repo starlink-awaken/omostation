@@ -1,0 +1,24 @@
+# M1 Node: LESSON-OMO-phase11-wave1-closeout
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase11-wave1-closeout
+type: Lesson
+subtype: OMORetro
+name: Phase 11 Wave 1 closeout
+description: '1. `make kairon-test` currently masks a `python` vs `python3` failure
+  and should not be treated as a healthy CI signal.
+
+  2. The live kairon inventory i'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 11 Wave 1 closeout
+  lesson: '1. `make kairon-test` currently masks a `python` vs `python3` failure and
+    should not be treated as a healthy CI signal.
+
+    2. The live kairon inventory i'
+  source: Workspace/.omo/_knowledge/summaries/phase11/phase11-wave1-closeout.md
+  severity: medium

@@ -1,0 +1,13 @@
+id: SKILL-FORGE-cron_manager
+type: Skill
+subtype: ForgeSkill
+name: cron_manager
+description: 'Forge 技能: cron_manager'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  skill: 'Forge 内置能力: cron_manager'
+  trigger: mcp

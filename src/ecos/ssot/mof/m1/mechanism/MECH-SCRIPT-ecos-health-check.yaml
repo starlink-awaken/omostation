@@ -1,0 +1,19 @@
+# M1 Node: MECH-SCRIPT-ecos-health-check
+# Type: Mechanism
+# Registered by mof-register-tasks
+
+id: MECH-SCRIPT-ecos-health-check
+type: Mechanism
+subtype: GovernanceScript
+name: ecos-health-check
+description: '治理脚本: ecos-health-check'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L4
+properties:
+  trigger: manual/daemon
+  action: python3 ecos-health-check.py
+  interval: 0
+  feedback: stdout/stderr + daemon-state.db

@@ -1,0 +1,24 @@
+# M1 Node: LESSON-OMO-phase7-closeout-retrospective
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase7-closeout-retrospective
+type: Lesson
+subtype: OMORetro
+name: Phase 7 closeout retrospective
+description: '1. Experience realism can be added without inventing a second execution
+  system when every surface compiles back down to governed task/evidence truth.
+
+  '
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 7 closeout retrospective
+  lesson: '1. Experience realism can be added without inventing a second execution
+    system when every surface compiles back down to governed task/evidence truth.
+
+    '
+  source: Workspace/.omo/_knowledge/summaries/phase7/phase7-closeout-retrospective.md
+  severity: medium

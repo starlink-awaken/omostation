@@ -1,0 +1,15 @@
+id: SPEC-OMO-SP-plan-2026-06-02-debt-owner-dispatch
+type: Specification
+subtype: OMOSuperpower
+name: Debt Owner Dispatch Packet Implementation Plan
+description: 'OMO 超能力: Debt Owner Dispatch Packet Implementation Plan'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  constraints:
+  - OMO 超能力
+  scope:
+  - OMO

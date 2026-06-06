@@ -1,0 +1,20 @@
+# M1 Node: LESSON-OMO-phase10-wave4-closeout
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase10-wave4-closeout
+type: Lesson
+subtype: OMORetro
+name: Phase 10 Wave 4 closeout
+description: Phase 10 now ends on a generic normalized rule-bundle seam that is no
+  longer tied to a single action or a single space.
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 10 Wave 4 closeout
+  lesson: Phase 10 now ends on a generic normalized rule-bundle seam that is no longer
+    tied to a single action or a single space.
+  source: Workspace/.omo/_knowledge/summaries/phase10/phase10-wave4-closeout.md
+  severity: medium

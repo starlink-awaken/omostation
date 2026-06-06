@@ -1,0 +1,28 @@
+# M1 Node: LESSON-OMO-system-capability-inventory
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-system-capability-inventory
+type: Lesson
+subtype: OMORetro
+name: Phase 11 Wave 1 — System capability inventory (T1.5)
+description: '| Package | Layer | Owner | Py files | LOC | Tests | Ruff findings |
+  Health | Snapshot |
+
+  |---|---:|---|---:|---:|---:|---:|---|---|
+
+  | `core-models` | '
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 11 Wave 1 — System capability inventory (T1.5)
+  lesson: '| Package | Layer | Owner | Py files | LOC | Tests | Ruff findings | Health
+    | Snapshot |
+
+    |---|---:|---|---:|---:|---:|---:|---|---|
+
+    | `core-models` | '
+  source: Workspace/.omo/_knowledge/summaries/system-capability-inventory.md
+  severity: medium

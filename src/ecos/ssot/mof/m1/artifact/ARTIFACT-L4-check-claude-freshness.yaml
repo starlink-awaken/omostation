@@ -1,0 +1,18 @@
+# M1 Node: ARTIFACT-L4-check-claude-freshness
+# Type: Artifact
+# Modeled: 2026-06-06T13:31:04
+
+id: ARTIFACT-L4-check-claude-freshness
+type: Artifact
+subtype: Script
+name: check-claude-freshness
+description: 'L4 脚本: check-claude-freshness'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: X2
+properties:
+  path: 驾驶舱/scripts/check-claude-freshness.py
+  format: python
+  size: 5648

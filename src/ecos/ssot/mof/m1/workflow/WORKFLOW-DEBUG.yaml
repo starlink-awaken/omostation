@@ -1,0 +1,14 @@
+id: WORKFLOW-DEBUG
+type: Workflow
+subtype: AgentWorkflow
+name: Debug 工作流
+description: Agent 调试工作流——定位问题→分析根因→修复→验证
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L3
+properties:
+  workflow_name: Debug 工作流
+  steps: Agent 调试工作流——定位问题→分析根因→修复→验证
+  trigger: agent-invoke

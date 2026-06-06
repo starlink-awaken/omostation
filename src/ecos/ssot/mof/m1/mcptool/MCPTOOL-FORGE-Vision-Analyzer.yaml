@@ -1,0 +1,13 @@
+id: MCPTOOL-FORGE-Vision-Analyzer
+type: MCPTool
+subtype: ForgeTool
+name: Vision Analyzer
+description: 'Forge 工具: Vision Analyzer'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  tool_name: Vision Analyzer
+  server: forge

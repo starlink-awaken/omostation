@@ -1,0 +1,24 @@
+# M1 Node: LESSON-OMO-phase16-retrospective
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase16-retrospective
+type: Lesson
+subtype: OMORetro
+name: Phase 16 retrospective
+description: '- Phase17 should verify local gbrain readiness and run one live low-risk
+  capture/search pilot.
+
+  - External OMO should continue adding patterns only fro'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 16 retrospective
+  lesson: '- Phase17 should verify local gbrain readiness and run one live low-risk
+    capture/search pilot.
+
+    - External OMO should continue adding patterns only fro'
+  source: Workspace/.omo/_knowledge/summaries/phase16/phase16-retrospective.md
+  severity: medium

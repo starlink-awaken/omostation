@@ -1,0 +1,13 @@
+id: AGENT-AGENTS-product-owner
+type: Agent
+subtype: AgentDef
+name: product-owner
+description: 'Agent: product-owner'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L3
+properties:
+  agent_name: product-owner
+  role: Agent defined in ~/.agents/

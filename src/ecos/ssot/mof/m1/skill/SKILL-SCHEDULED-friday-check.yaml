@@ -1,0 +1,13 @@
+id: SKILL-SCHEDULED-friday-check
+type: Skill
+subtype: ScheduledTask
+name: 周末工作检查提醒 - 每周五9:00
+description: '定时任务: friday-check'
+status: active
+domain: meta
+created: '2026-06-05'
+version: 1.0.0
+layer: L4
+properties:
+  skill: 执行 friday-check 中定义的指令
+  trigger: scheduled

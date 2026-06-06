@@ -1,0 +1,20 @@
+# M1 Node: LESSON-OMO-RETRO-ANTI-OPTIMISM
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-RETRO-ANTI-OPTIMISM
+type: Lesson
+subtype: OMORetro
+name: 警示录：反过度乐观与幻觉胜利 (Anti-Optimism Directive)
+description: '*This document serves as a permanent cognitive boundary for all future
+  interactions and sub-agents. Optimism builds systems; Paranoia keeps them alive'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: 警示录：反过度乐观与幻觉胜利 (Anti-Optimism Directive)
+  lesson: '*This document serves as a permanent cognitive boundary for all future
+    interactions and sub-agents. Optimism builds systems; Paranoia keeps them alive'
+  source: Workspace/.omo/_knowledge/process/retrospectives/RETRO-ANTI-OPTIMISM.md
+  severity: medium

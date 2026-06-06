@@ -1,0 +1,20 @@
+# M1 Node: LESSON-OMO-phase6-entry-hardening-closeou
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase6-entry-hardening-closeou
+type: Lesson
+subtype: OMORetro
+name: Phase 6 entry hardening closeout
+description: The next implementation plan must target `I1 / Durable + Governance core`.
+  This closeout does not itself open any Phase 6 active queue.
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 6 entry hardening closeout
+  lesson: The next implementation plan must target `I1 / Durable + Governance core`.
+    This closeout does not itself open any Phase 6 active queue.
+  source: Workspace/.omo/_knowledge/summaries/phase6/phase6-entry-hardening-closeout.md
+  severity: medium

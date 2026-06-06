@@ -1,0 +1,20 @@
+# M1 Node: ENTITY-DOMAIN-良乡医院
+# Type: Entity
+# Generated: 2026-06-06T13:08:34.011652+00:00
+
+id: ENTITY-DOMAIN-良乡医院
+type: Entity
+subtype: DomainEntity
+name: 良乡医院
+description: '领域实体: 良乡医院'
+status: active
+domain: 领域知识库
+created: '2026-06-06T11:42:40.047320'
+version: 1.0.0
+properties:
+  entity_type: concept
+  sources:
+  - 领域知识库/医疗信息化/实体/良乡医院.md
+  identity:
+    name: 良乡医院
+layer: L4

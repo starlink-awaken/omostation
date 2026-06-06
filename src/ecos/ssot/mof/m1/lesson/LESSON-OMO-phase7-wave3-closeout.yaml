@@ -1,0 +1,20 @@
+# M1 Node: LESSON-OMO-phase7-wave3-closeout
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase7-wave3-closeout
+type: Lesson
+subtype: OMORetro
+name: Phase 7 Wave 3 closeout
+description: 'Wave 3 met its bar: freshness is no longer informal operator knowledge;
+  it is emitted as a governed artifact that can be reviewed and acted on.'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 7 Wave 3 closeout
+  lesson: 'Wave 3 met its bar: freshness is no longer informal operator knowledge;
+    it is emitted as a governed artifact that can be reviewed and acted on.'
+  source: Workspace/.omo/_knowledge/summaries/phase7/phase7-wave3-closeout.md
+  severity: medium

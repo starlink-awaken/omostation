@@ -1,0 +1,13 @@
+id: COMP-SUB-runtime-src-runtime
+type: Component
+subtype: SubPackage
+name: src/runtime
+description: 'runtime 子包: src/runtime'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L1
+properties:
+  layer: L1
+  runtime: active

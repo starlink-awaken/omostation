@@ -1,0 +1,18 @@
+# M1 Node: LESSON-OMO-agent-task-contract
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-agent-task-contract
+type: Lesson
+subtype: OMORetro
+name: Agent Task Contract — Read Budget Protocol
+description: '`deep`/`unspecified-high` 使用的模型更强 → 思考代价更高 → 更容易在「探索」阶段陷入无限循环。'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Agent Task Contract — Read Budget Protocol
+  lesson: '`deep`/`unspecified-high` 使用的模型更强 → 思考代价更高 → 更容易在「探索」阶段陷入无限循环。'
+  source: Workspace/.omo/_knowledge/summaries/agent-task-contract.md
+  severity: medium

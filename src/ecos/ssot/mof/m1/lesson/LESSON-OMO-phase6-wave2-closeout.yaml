@@ -1,0 +1,20 @@
+# M1 Node: LESSON-OMO-phase6-wave2-closeout
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase6-wave2-closeout
+type: Lesson
+subtype: OMORetro
+name: Phase 6 Wave 2 closeout
+description: 'Wave 2 met its exit bar: definition cost is reduced through discovery/templates,
+  while control and execution still converge on task-center truth.'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 6 Wave 2 closeout
+  lesson: 'Wave 2 met its exit bar: definition cost is reduced through discovery/templates,
+    while control and execution still converge on task-center truth.'
+  source: Workspace/.omo/_knowledge/summaries/phase6/phase6-wave2-closeout.md
+  severity: medium

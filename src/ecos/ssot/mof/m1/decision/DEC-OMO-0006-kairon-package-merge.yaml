@@ -1,0 +1,19 @@
+# M1 Node: DEC-OMO-0006-kairon-package-merge
+# Extracted from .omo/ decisions
+
+id: DEC-OMO-0006-kairon-package-merge
+type: Decision
+subtype: OMO-ADR
+name: 'ADR-0006: kairon 17 包合并到 12 包（方向 C — 4 组瘦包合并）'
+description: 'ADR-0006: kairon 17 包合并到 12 包（方向 C — 4 组瘦包合并）'
+status: accepted
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  problem: 'ADR-0006: kairon 17 包合并到 12 包（方向 C — 4 组瘦包合并）'
+  decision: 'ADR-0006: kairon 17 包合并到 12 包（方向 C — 4 组瘦包合并）'
+  rationale: '来源: .omo/_knowledge/decisions/0006-kairon-package-merge.md'
+  options: []
+  consequences: ''

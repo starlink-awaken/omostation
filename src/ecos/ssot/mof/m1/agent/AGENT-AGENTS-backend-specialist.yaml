@@ -1,0 +1,13 @@
+id: AGENT-AGENTS-backend-specialist
+type: Agent
+subtype: AgentDef
+name: backend-specialist
+description: 'Agent: backend-specialist'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L3
+properties:
+  agent_name: backend-specialist
+  role: Agent defined in ~/.agents/

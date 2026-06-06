@@ -1,0 +1,13 @@
+id: MCPTOOL-COCKPIT-vault_search
+type: MCPTool
+subtype: CockpitTool
+name: vault_search
+description: 'cockpit MCP 工具: vault_search'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L3
+properties:
+  tool_name: vault_search
+  server: cockpit

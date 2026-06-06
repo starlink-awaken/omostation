@@ -1,0 +1,13 @@
+id: SKILL-SCHEDULED-kos-kuabu
+type: Skill
+subtype: ScheduledTask
+name: KOS 跨域同步 v2.7 — 每日4:00增量索引检查 + DB健康 + 报告输出（已降频：原每4h→每日）
+description: '定时任务: kos-kuabu'
+status: active
+domain: meta
+created: '2026-06-05'
+version: 1.0.0
+layer: L4
+properties:
+  skill: 执行 kos-kuabu 中定义的指令
+  trigger: scheduled

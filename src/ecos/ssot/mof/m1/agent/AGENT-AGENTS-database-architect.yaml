@@ -1,0 +1,13 @@
+id: AGENT-AGENTS-database-architect
+type: Agent
+subtype: AgentDef
+name: database-architect
+description: 'Agent: database-architect'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L3
+properties:
+  agent_name: database-architect
+  role: Agent defined in ~/.agents/

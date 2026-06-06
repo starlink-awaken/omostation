@@ -1,0 +1,13 @@
+id: SKILL-SCHEDULED-refresh-knowledge-index
+type: Skill
+subtype: ScheduledTask
+name: 每周一刷新知识面索引目录
+description: '定时任务: refresh-knowledge-index'
+status: active
+domain: meta
+created: '2026-06-05'
+version: 1.0.0
+layer: L4
+properties:
+  skill: 执行 refresh-knowledge-index 中定义的指令
+  trigger: scheduled

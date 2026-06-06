@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-OMO-DEBT-P0-PYTEST_ROOT_FIX
+# Extracted from .omo/ debts
+
+id: ENTITY-OMO-DEBT-P0-PYTEST_ROOT_FIX
+type: Entity
+subtype: OMODebt
+name: kairon 根目录 make test-fast 不通：conftest ImportPathMismatchErro
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: P0-PYTEST_ROOT_FIX
+  sources:
+  - Workspace/.omo/debt/items/P0-PYTEST_ROOT_FIX.yaml

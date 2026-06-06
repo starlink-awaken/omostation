@@ -1,0 +1,21 @@
+# M1 Node: PATT-SSOT-CASCADE
+# Type: Pattern
+
+id: PATT-SSOT-CASCADE
+type: Pattern
+name: SSOT级联模式
+description: 上层定义→下层继承→绝不重复——确保跨系统一致性的核心模式
+status: validated
+domain: meta
+created: '2026-06-05'
+version: 1.0.0
+layer: X4
+properties:
+  problem: 多份文档描述同一事实时必然产生不一致
+  context: 有层级继承关系的分布式文档系统
+  solution: 1)声明SSOT 2)指针引用 3)不复制 4)自动校验
+  known_uses:
+  - CLAUDE.md级联
+  - STATE→DASHBOARD聚合
+  - CARDS SQLite→CARDS/*.md
+  - 领域知识库→域ENTITIES

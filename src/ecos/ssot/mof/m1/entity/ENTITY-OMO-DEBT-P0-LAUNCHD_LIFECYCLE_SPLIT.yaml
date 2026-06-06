@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-OMO-DEBT-P0-LAUNCHD_LIFECYCLE_SPLIT
+# Extracted from .omo/ debts
+
+id: ENTITY-OMO-DEBT-P0-LAUNCHD_LIFECYCLE_SPLIT
+type: Entity
+subtype: OMODebt
+name: agent-runtime + cron-service launchd PID -15 (被 SIGTERM), HT
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: P0-LAUNCHD_LIFECYCLE_SPLIT
+  sources:
+  - Workspace/.omo/debt/items/P0-LAUNCHD_LIFECYCLE_SPLIT.yaml

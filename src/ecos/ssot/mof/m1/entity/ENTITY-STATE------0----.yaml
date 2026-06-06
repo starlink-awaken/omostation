@@ -1,0 +1,20 @@
+# M1 Node: ENTITY-STATE------0----
+# Type: Entity
+# Modeled: 2026-06-06T13:31:04
+
+id: ENTITY-STATE------0----
+type: Entity
+subtype: StateSnapshot
+name: 'STATE: 工作文档/0-控制面'
+description: 域状态快照 — 工作文档/卫健委/0-控制面/STATE.md
+status: active
+domain: 工作文档
+created: '2026-06-06'
+version: 1.0.0
+layer: L4
+properties:
+  entity_type: document
+  sources:
+  - 工作文档/卫健委/0-控制面/STATE.md
+  identity:
+    path: 工作文档/卫健委/0-控制面/STATE.md

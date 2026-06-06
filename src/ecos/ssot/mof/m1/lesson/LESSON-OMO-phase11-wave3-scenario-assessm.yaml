@@ -1,0 +1,27 @@
+# M1 Node: LESSON-OMO-phase11-wave3-scenario-assessm
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase11-wave3-scenario-assessm
+type: Lesson
+subtype: OMORetro
+name: Phase 11 Wave 3 scenario assessment
+description: '| Scenario | Prior state | Wave 3 assessment | Disposition | Evidence
+  |
+
+  |---|---|---|---|---|
+
+  | `A4` 追踪某主题的长期变化 | ❌ blocked | Still no durable recurri'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 11 Wave 3 scenario assessment
+  lesson: '| Scenario | Prior state | Wave 3 assessment | Disposition | Evidence |
+
+    |---|---|---|---|---|
+
+    | `A4` 追踪某主题的长期变化 | ❌ blocked | Still no durable recurri'
+  source: Workspace/.omo/_knowledge/summaries/phase11/phase11-wave3-scenario-assessment.md
+  severity: medium

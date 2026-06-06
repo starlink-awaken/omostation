@@ -1,0 +1,14 @@
+id: ENTITY-OMO-DEBT-P1-CARDS_KAIRON_GAP
+type: Entity
+subtype: OMODebt
+name: CARDS 与 Kairon/Minerva 研究管线完全隔离
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: P1-CARDS_KAIRON_GAP

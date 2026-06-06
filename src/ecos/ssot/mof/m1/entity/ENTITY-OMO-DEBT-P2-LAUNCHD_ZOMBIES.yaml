@@ -1,0 +1,14 @@
+id: ENTITY-OMO-DEBT-P2-LAUNCHD_ZOMBIES
+type: Entity
+subtype: OMODebt
+name: 3 个 launchd 服务 exit 码 0 但未卸载：agentmesh, gbrain-index, vault-
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: P2-LAUNCHD_ZOMBIES

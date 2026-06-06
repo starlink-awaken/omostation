@@ -1,0 +1,13 @@
+id: AGENT-AGENTS-penetration-tester
+type: Agent
+subtype: AgentDef
+name: penetration-tester
+description: 'Agent: penetration-tester'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L3
+properties:
+  agent_name: penetration-tester
+  role: Agent defined in ~/.agents/

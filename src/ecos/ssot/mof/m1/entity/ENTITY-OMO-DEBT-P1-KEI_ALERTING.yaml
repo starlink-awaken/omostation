@@ -1,0 +1,14 @@
+id: ENTITY-OMO-DEBT-P1-KEI_ALERTING
+type: Entity
+subtype: OMODebt
+name: KEI 审计日志写但无人消费：无告警、无 dashboard、无异常检测
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: P1-KEI_ALERTING

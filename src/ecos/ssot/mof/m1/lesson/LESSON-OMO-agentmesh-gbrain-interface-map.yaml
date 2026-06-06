@@ -1,0 +1,26 @@
+# M1 Node: LESSON-OMO-agentmesh-gbrain-interface-map
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-agentmesh-gbrain-interface-map
+type: Lesson
+subtype: OMORetro
+name: Phase 11 Wave 1 — agentmesh ↔ gbrain interface mapping (T1.7–T1.8)
+description: '| Area | gbrain evidence | agentmesh evidence | Mapping |
+
+  |---|---|---|---|
+
+  | MCP entrypoint | `src/mcp-entry.ts` (“MCP stdio server entry point”) | p'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 11 Wave 1 — agentmesh ↔ gbrain interface mapping (T1.7–T1.8)
+  lesson: '| Area | gbrain evidence | agentmesh evidence | Mapping |
+
+    |---|---|---|---|
+
+    | MCP entrypoint | `src/mcp-entry.ts` (“MCP stdio server entry point”) | p'
+  source: Workspace/.omo/_knowledge/summaries/agentmesh-gbrain-interface-mapping.md
+  severity: medium

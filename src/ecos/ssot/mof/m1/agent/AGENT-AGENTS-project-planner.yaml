@@ -1,0 +1,13 @@
+id: AGENT-AGENTS-project-planner
+type: Agent
+subtype: AgentDef
+name: project-planner
+description: 'Agent: project-planner'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L3
+properties:
+  agent_name: project-planner
+  role: Agent defined in ~/.agents/

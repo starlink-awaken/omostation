@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-OMO-DEBT-DEBT-OMO-022
+# Extracted from .omo/ debts
+
+id: ENTITY-OMO-DEBT-DEBT-OMO-022
+type: Entity
+subtype: OMODebt
+name: LLM Gateway 归档 — 1453 LOC 未使用，被 NewAPI(:3000) 替代
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: DEBT-OMO-022
+  sources:
+  - Workspace/.omo/debt/items/DEBT-OMO-022.yaml

@@ -1,0 +1,20 @@
+# M1 Node: LESSON-OMO-rev-23-Phase3----------
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-rev-23-Phase3----------
+type: Lesson
+subtype: OMORetro
+name: Phase 3 深度复盘 + 架构债务审计 + 红队分析
+description: "```\n宪法层:\n  WORKSPACE_ARCHITECTURE_CONSTITUTION.md (8 章)\n  ├─ schema/meta_types.md\
+  \           — 6 类型 × 6 关系 + engine/actor\n  ├─ schema/constraints.md   "
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 3 深度复盘 + 架构债务审计 + 红队分析
+  lesson: "```\n宪法层:\n  WORKSPACE_ARCHITECTURE_CONSTITUTION.md (8 章)\n  ├─ schema/meta_types.md\
+    \           — 6 类型 × 6 关系 + engine/actor\n  ├─ schema/constraints.md   "
+  source: Workspace/.omo/_knowledge/process/retrospectives/rev-23-Phase3深度复盘债务审计红队.md
+  severity: medium

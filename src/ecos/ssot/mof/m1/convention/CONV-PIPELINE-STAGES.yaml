@@ -1,0 +1,18 @@
+# M1 Node: CONV-PIPELINE-STAGES
+# Type: Convention
+# Extracted from 工具箱/REGISTRY.md
+
+id: CONV-PIPELINE-STAGES
+type: Convention
+name: 管线四阶转化
+description: '内容创作管线: 收件箱→创意工作台→创作引擎→渠道引擎'
+status: adopted
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L4
+properties:
+  rule: '内容创作管线: 收件箱→创意工作台→创作引擎→渠道引擎'
+  scope: domain
+  enforcement: recommended
+  auto_check: true

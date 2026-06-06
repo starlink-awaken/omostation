@@ -1,0 +1,14 @@
+id: ENTITY-OMO-DEBT-X2-NO_FRESHNESS
+type: Entity
+subtype: OMODebt
+name: 无保鲜机制 — 所有服务无 age/freshness 追踪，无自动恢复逻辑
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: X2-NO_FRESHNESS

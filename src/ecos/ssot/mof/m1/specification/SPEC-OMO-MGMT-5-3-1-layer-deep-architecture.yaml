@@ -1,0 +1,15 @@
+id: SPEC-OMO-MGMT-5-3-1-layer-deep-architecture
+type: Specification
+subtype: OMOMgmt
+name: 5+3+1 逐层深度架构分析
+description: 'OMO 管理文档: 5+3+1 逐层深度架构分析'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  constraints:
+  - OMO 管理
+  scope:
+  - OMO

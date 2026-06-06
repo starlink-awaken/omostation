@@ -1,0 +1,13 @@
+id: SKILL-SCHEDULED-kos-daily-ontology-sync
+type: Skill
+subtype: ScheduledTask
+name: 每日自动重建 KOS 本体 — 跨域同步 + 增量索引 + 本体抽取与推理
+description: '定时任务: kos-daily-ontology-sync'
+status: active
+domain: meta
+created: '2026-06-05'
+version: 1.0.0
+layer: L4
+properties:
+  skill: 执行 kos-daily-ontology-sync 中定义的指令
+  trigger: scheduled

@@ -1,0 +1,18 @@
+# M1 Node: LESSON-OMO-ret-00-phase0-retrospective
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-ret-00-phase0-retrospective
+type: Lesson
+subtype: OMORetro
+name: Phase 0 回顾：发现的问题与改进方向
+description: 发现的问题与改进方向
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 0 回顾：发现的问题与改进方向
+  lesson: 发现的问题与改进方向
+  source: Workspace/.omo/_knowledge/process/retrospectives/ret-00-phase0-retrospective.md
+  severity: medium

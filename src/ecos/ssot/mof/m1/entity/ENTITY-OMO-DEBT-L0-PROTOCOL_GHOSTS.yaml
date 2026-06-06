@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-OMO-DEBT-L0-PROTOCOL_GHOSTS
+# Extracted from .omo/ debts
+
+id: ENTITY-OMO-DEBT-L0-PROTOCOL_GHOSTS
+type: Entity
+subtype: OMODebt
+name: L0 协议注册表 16 协议中 14 个无完整运行时实现（仅 YAML 定义 + 查询能力）
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: L0-PROTOCOL_GHOSTS
+  sources:
+  - Workspace/.omo/debt/items/L0-PROTOCOL_GHOSTS.yaml

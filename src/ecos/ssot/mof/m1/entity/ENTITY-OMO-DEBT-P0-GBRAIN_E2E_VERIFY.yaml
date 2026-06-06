@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-OMO-DEBT-P0-GBRAIN_E2E_VERIFY
+# Extracted from .omo/ debts
+
+id: ENTITY-OMO-DEBT-P0-GBRAIN_E2E_VERIFY
+type: Entity
+subtype: OMODebt
+name: gbrain 管道恢复后未 E2E 验证：ping、索引、Ollama embedding 链路
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: P0-GBRAIN_E2E_VERIFY
+  sources:
+  - Workspace/.omo/debt/items/P0-GBRAIN_E2E_VERIFY.yaml

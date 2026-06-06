@@ -1,0 +1,19 @@
+# M1 Node: ARTIFACT-SCRIPT-ecos-entry-logger
+# Type: Artifact
+# Generated: 2026-06-06T13:08:34.000587+00:00
+
+id: ARTIFACT-SCRIPT-ecos-entry-logger
+type: Artifact
+subtype: Script
+name: ecos-entry-logger
+description: 记录一次入口事件
+status: active
+domain: meta
+created: '2026-06-06T15:12:40.558159'
+version: 1.0.0
+properties:
+  path: 驾驶舱/scripts/ecos-entry-logger.py
+  format: python
+  size: 5264
+  mtime: '2026-06-06T15:12:39.116740'
+layer: L4

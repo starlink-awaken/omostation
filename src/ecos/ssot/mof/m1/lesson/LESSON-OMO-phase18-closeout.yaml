@@ -1,0 +1,30 @@
+# M1 Node: LESSON-OMO-phase18-closeout
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase18-closeout
+type: Lesson
+subtype: OMORetro
+name: Phase 18 — Closeout
+description: '## 当前状态
+
+  - `current_phase: 18`
+
+  - `phase_status: completed`
+
+  - `next_milestone: Phase 19 planning gate`'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 18 — Closeout
+  lesson: '## 当前状态
+
+    - `current_phase: 18`
+
+    - `phase_status: completed`
+
+    - `next_milestone: Phase 19 planning gate`'
+  source: Workspace/.omo/_knowledge/summaries/phase18/phase18-closeout.md
+  severity: medium

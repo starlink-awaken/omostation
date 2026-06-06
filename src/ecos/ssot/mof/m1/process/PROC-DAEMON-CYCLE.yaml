@@ -1,0 +1,44 @@
+id: PROC-DAEMON-CYCLE
+type: Process
+subtype: DaemonFlow
+name: Daemon 执行流程
+description: '每 6h: gate→bootstrap→enforce→sla→audit→health-check→digest'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L1
+properties:
+  states:
+  - gate
+  - bootstrap
+  - enforce
+  - sla
+  - audit
+  - health-check
+  - digest
+  steps:
+  - order: 1
+    name: gate
+    action: mof-gate 变更门禁
+  - order: 2
+    name: bootstrap
+    action: mof-bootstrap L0自举
+  - order: 3
+    name: enforce
+    action: mof-enforce 层合规
+  - order: 4
+    name: sla
+    action: mof-sla SLA+M0快照
+  - order: 5
+    name: audit
+    action: mof-audit 漂移审计
+  - order: 6
+    name: health-check
+    action: ecos-health-check 9项检查
+  - order: 7
+    name: digest
+    action: ecos-weekly-digest 周报(每28次)
+  sla:
+    interval_seconds: 21600
+    max_failures: 3

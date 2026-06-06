@@ -1,0 +1,13 @@
+id: SKILL-SCHEDULED-gzh-daily-fetch
+type: Skill
+subtype: ScheduledTask
+name: 公众号文章每日抓取 — 全国高校绿色能源区域技转中心公众号新文章自动发现→全文抓取→WPS笔记+wiki双存档
+description: '定时任务: gzh-daily-fetch'
+status: active
+domain: meta
+created: '2026-06-05'
+version: 1.0.0
+layer: L4
+properties:
+  skill: 执行 gzh-daily-fetch 中定义的指令
+  trigger: scheduled

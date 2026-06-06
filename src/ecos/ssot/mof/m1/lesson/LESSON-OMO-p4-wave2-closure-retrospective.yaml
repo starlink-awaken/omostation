@@ -1,0 +1,20 @@
+# M1 Node: LESSON-OMO-p4-wave2-closure-retrospective
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-p4-wave2-closure-retrospective
+type: Lesson
+subtype: OMORetro
+name: Phase 4 Wave 2 closure retrospective
+description: '**Go, design-first.** Phase 5 can proceed as an entry-gated design and
+  planning phase, but runtime implementation should wait until the Task Ce'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 4 Wave 2 closure retrospective
+  lesson: '**Go, design-first.** Phase 5 can proceed as an entry-gated design and
+    planning phase, but runtime implementation should wait until the Task Ce'
+  source: Workspace/.omo/_knowledge/summaries/p4-wave2-closure-retrospective.md
+  severity: medium

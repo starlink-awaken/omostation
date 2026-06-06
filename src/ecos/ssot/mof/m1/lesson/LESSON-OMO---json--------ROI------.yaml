@@ -1,0 +1,15 @@
+id: LESSON-OMO---json--------ROI------
+type: Lesson
+subtype: OMOLesson
+name: --json 标准化是最高 ROI 的架构决策
+description: --json 标准化是最高 ROI 的架构决策
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: --json 标准化是最高 ROI 的架构决策
+  lesson: --json 标准化是最高 ROI 的架构决策
+  source: .omo/_knowledge/reference/LESSONS.md
+  severity: medium

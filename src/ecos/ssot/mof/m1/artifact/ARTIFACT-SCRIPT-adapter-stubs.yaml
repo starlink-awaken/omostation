@@ -1,0 +1,19 @@
+# M1 Node: ARTIFACT-SCRIPT-adapter-stubs
+# Type: Artifact
+# Generated: 2026-06-06T13:08:33.998306+00:00
+
+id: ARTIFACT-SCRIPT-adapter-stubs
+type: Artifact
+subtype: Script
+name: adapter-stubs
+description: 适配器基类 — 所有入口适配器必须实现
+status: active
+domain: meta
+created: '2026-06-06T16:18:42.834791'
+version: 1.0.0
+properties:
+  path: 驾驶舱/scripts/adapter-stubs.py
+  format: python
+  size: 4598
+  mtime: '2026-06-06T16:18:41.068455'
+layer: L4

@@ -1,0 +1,13 @@
+id: ACTION-MULTI-AGENT-SCHEDULER
+type: Action
+name: 多 Agent 调度器
+description: 基于 ACP+A2A 实现多 Agent 并行调度——OMO Worker Dispatch 升级
+status: planned
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: multi
+properties:
+  action: 基于 ACP+A2A 实现多 Agent 并行调度——OMO Worker Dispatch 升级
+  intent: INTENT-MULTI-AGENT
+  priority: P1

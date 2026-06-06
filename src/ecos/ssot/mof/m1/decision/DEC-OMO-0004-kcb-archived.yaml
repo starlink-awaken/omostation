@@ -1,0 +1,19 @@
+# M1 Node: DEC-OMO-0004-kcb-archived
+# Extracted from .omo/ decisions
+
+id: DEC-OMO-0004-kcb-archived
+type: Decision
+subtype: OMO-ADR
+name: 'ADR-0004: kaironcloud-billing 归档决策'
+description: 那个 1 处 import 真的是归档的
+status: accepted
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  problem: 那个 1 处 import 真的是归档的
+  decision: 'ADR-0004: kaironcloud-billing 归档决策'
+  rationale: '来源: .omo/_knowledge/decisions/0004-kcb-archived.md'
+  options: []
+  consequences: ''

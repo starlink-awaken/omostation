@@ -1,0 +1,22 @@
+# M1 Node: LESSON-OMO-rev-09---Review-----
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-rev-09---Review-----
+type: Lesson
+subtype: OMORetro
+name: 架构细化Review与机制设计
+description: "# 1. TOOLS dict — 工具注册信息\nSELF_TOOLS = {\n    \"self.get_profile\":\
+  \ {\n        \"description\": \"获取完整自我画像\",\n        \"inputSchema\": {\"type\"\
+  : \"object\", \"proper"
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: 架构细化Review与机制设计
+  lesson: "# 1. TOOLS dict — 工具注册信息\nSELF_TOOLS = {\n    \"self.get_profile\": {\n\
+    \        \"description\": \"获取完整自我画像\",\n        \"inputSchema\": {\"type\": \"\
+    object\", \"proper"
+  source: Workspace/.omo/_knowledge/process/retrospectives/rev-09-架构Review与机制设计.md
+  severity: medium

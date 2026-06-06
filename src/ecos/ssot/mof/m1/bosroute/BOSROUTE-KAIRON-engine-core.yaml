@@ -1,0 +1,14 @@
+id: BOSROUTE-KAIRON-engine-core
+type: Component
+subtype: BOSRoute
+name: bos://kairon/engine-core
+description: 'Kairon 子包: engine-core'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  layer: L2
+  runtime: active
+  protocol: BOS_URI

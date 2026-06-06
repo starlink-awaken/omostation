@@ -1,0 +1,13 @@
+id: MCPTOOL-FORGE-Tool-01
+type: MCPTool
+subtype: ForgeTool
+name: Tool 01
+description: 'Forge 工具: Tool 01'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  tool_name: Tool 01
+  server: forge

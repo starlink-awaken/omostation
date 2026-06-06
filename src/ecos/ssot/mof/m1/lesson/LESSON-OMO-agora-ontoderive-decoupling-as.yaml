@@ -1,0 +1,26 @@
+# M1 Node: LESSON-OMO-agora-ontoderive-decoupling-as
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-agora-ontoderive-decoupling-as
+type: Lesson
+subtype: OMORetro
+name: Phase 11 Wave 1 — Agora → OntoDerive decoupling assessment (T1.9)
+description: '| File | Ref count | Coupling type | Notes |
+
+  |---|---:|---|---|
+
+  | `src/agora/cli/commands_pallas.py` | 31 | CLI/process coupling | discovers `ontoderi'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 11 Wave 1 — Agora → OntoDerive decoupling assessment (T1.9)
+  lesson: '| File | Ref count | Coupling type | Notes |
+
+    |---|---:|---|---|
+
+    | `src/agora/cli/commands_pallas.py` | 31 | CLI/process coupling | discovers `ontoderi'
+  source: Workspace/.omo/_knowledge/summaries/agora-ontoderive-decoupling-assessment.md
+  severity: medium

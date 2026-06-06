@@ -1,0 +1,32 @@
+# M1 Node: ARCH-L2-KERNEL
+# Type: Architecture
+id: ARCH-L2-KERNEL
+type: Architecture
+name: L2 内核三平面架构
+description: OMO(治理平面) + Kairon(引擎平面) + gBrain(记忆平面)——eCOS v5 的知识与治理内核
+status: active
+domain: infra
+created: '2026-06-05'
+version: 1.0.0
+layer: L2
+properties:
+  topology: modular
+  components:
+  - OMO
+  - Kairon
+  - gBrain
+  - KOS
+  - Minerva
+  - Kronos
+  - Forge
+  - CodeAnalyze
+  connectors:
+  - MCP
+  - pipeline:json
+  - internal:python
+  quality_attrs:
+    knowledge_coverage: partial
+    governance_maturity: high
+  evolution_path:
+  - Phase28 OMO
+  - Phase8 企业架构

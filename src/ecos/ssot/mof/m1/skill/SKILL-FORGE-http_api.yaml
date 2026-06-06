@@ -1,0 +1,13 @@
+id: SKILL-FORGE-http_api
+type: Skill
+subtype: ForgeSkill
+name: http_api
+description: 'Forge 技能: http_api'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  skill: 'Forge 内置能力: http_api'
+  trigger: mcp

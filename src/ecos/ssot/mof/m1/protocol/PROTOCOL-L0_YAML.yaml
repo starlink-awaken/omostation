@@ -1,0 +1,19 @@
+# M1 Node: PROTOCOL-L0_YAML
+# Type: Protocol
+# Generated: 2026-06-06T13:08:34.004919+00:00
+
+id: PROTOCOL-L0_YAML
+type: Protocol
+name: L0_YAML
+description: L0 协议约束 YAML 格式
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+properties:
+  version_spec: 1.0.0
+  introduced: '2026-06-06'
+  half_life: 180
+  registered: true
+  value_tier: 2
+layer: L0

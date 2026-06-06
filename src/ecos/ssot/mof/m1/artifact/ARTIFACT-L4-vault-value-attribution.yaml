@@ -1,0 +1,18 @@
+# M1 Node: ARTIFACT-L4-vault-value-attribution
+# Type: Artifact
+# Modeled: 2026-06-06T13:31:04
+
+id: ARTIFACT-L4-vault-value-attribution
+type: Artifact
+subtype: Script
+name: vault-value-attribution
+description: 'L4 脚本: vault-value-attribution'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: X3
+properties:
+  path: 驾驶舱/scripts/vault-value-attribution.py
+  format: python
+  size: 5024

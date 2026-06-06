@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-CARD-DEL-2026-06-06-004
+# Type: Entity
+# Generated: 2026-06-06T13:08:34.006510+00:00
+
+id: ENTITY-CARD-DEL-2026-06-06-004
+type: Entity
+subtype: Card
+name: Phase 33 大一统：BOS URI 挂载与 Agora Mesh
+description: 实现 eCOS v5 终态架构大一统，通过 BOS URI 与 Agora Mesh 完成物理层与协议层统一
+status: active
+domain: infra
+created: '2026-06-06T11:28:56Z'
+version: 1.0.0
+properties:
+  card_type: delivery
+  card_status: planned
+  priority: P0
+  entity_type: concept
+layer: L4

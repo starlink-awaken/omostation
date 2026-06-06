@@ -1,0 +1,12 @@
+id: OUTCOME-L0-565-NODES
+type: Outcome
+name: L0 565 M1 节点
+description: 织星 MOF 全量建模成果——13+4 M2类型全覆盖
+status: published
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: multi
+properties:
+  outcome: 565 M1 节点·17 M2 类型·自举健康
+  from_action: ACTION-L0-REFACTOR

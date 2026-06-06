@@ -1,0 +1,13 @@
+id: COMP-SUB-agora-extras-web
+type: Component
+subtype: SubPackage
+name: extras/web
+description: 'agora 子包: extras/web'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: I0
+properties:
+  layer: I0
+  runtime: active

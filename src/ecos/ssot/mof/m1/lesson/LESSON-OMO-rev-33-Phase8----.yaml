@@ -1,0 +1,26 @@
+# M1 Node: LESSON-OMO-rev-33-Phase8----
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-rev-33-Phase8----
+type: Lesson
+subtype: OMORetro
+name: Phase 8 深度复盘 — 跨机器拓扑 + ERROR 状态
+description: '> **文档位置**: `~/Documents/学习进化/基建架构/33-Phase8-深度复盘.md`
+
+  > **前序**: #32 v4 迭代方案
+
+  > **当前**: Phase 8 ✅ → 待确认 Phase 9 (schema 权威源)'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 8 深度复盘 — 跨机器拓扑 + ERROR 状态
+  lesson: '> **文档位置**: `~/Documents/学习进化/基建架构/33-Phase8-深度复盘.md`
+
+    > **前序**: #32 v4 迭代方案
+
+    > **当前**: Phase 8 ✅ → 待确认 Phase 9 (schema 权威源)'
+  source: Workspace/.omo/_knowledge/process/retrospectives/rev-33-Phase8深度复盘.md
+  severity: medium

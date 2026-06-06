@@ -1,0 +1,20 @@
+# M1 Node: LESSON-OMO-phase11-retrospective
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-phase11-retrospective
+type: Lesson
+subtype: OMORetro
+name: Phase 11 retrospective
+description: 'Phase 12 may enter with human approval from this explicit user request:
+  complete Phase 11 remaining work and Phase 12 all tasks. The Phase 12 executio'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 11 retrospective
+  lesson: 'Phase 12 may enter with human approval from this explicit user request:
+    complete Phase 11 remaining work and Phase 12 all tasks. The Phase 12 executio'
+  source: Workspace/.omo/_knowledge/summaries/phase11/phase11-retrospective.md
+  severity: medium

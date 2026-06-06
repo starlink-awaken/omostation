@@ -1,0 +1,14 @@
+id: BOSROUTE-KAIRON-core-models
+type: Component
+subtype: BOSRoute
+name: bos://kairon/core-models
+description: 'Kairon 子包: core-models'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  layer: L2
+  runtime: active
+  protocol: BOS_URI

@@ -1,0 +1,14 @@
+id: BOSROUTE-ECOS-SSB
+type: Component
+subtype: BOSRoute
+name: bos://ecos/ssb/*
+description: SSB 不可变日志路由
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: I0
+properties:
+  layer: I0
+  runtime: active
+  protocol: BOS_URI

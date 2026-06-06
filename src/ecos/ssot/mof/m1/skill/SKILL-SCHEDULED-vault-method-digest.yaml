@@ -1,0 +1,13 @@
+id: SKILL-SCHEDULED-vault-method-digest
+type: Skill
+subtype: ScheduledTask
+name: 方法论洞察 — 扫描工作文档和灵感顿悟，提取可方法论化的工作经验，写入收件箱供复盘
+description: '定时任务: vault-method-digest'
+status: active
+domain: meta
+created: '2026-06-05'
+version: 1.0.0
+layer: L4
+properties:
+  skill: 执行 vault-method-digest 中定义的指令
+  trigger: scheduled

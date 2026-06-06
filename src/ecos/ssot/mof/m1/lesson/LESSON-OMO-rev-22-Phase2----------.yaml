@@ -1,0 +1,18 @@
+# M1 Node: LESSON-OMO-rev-22-Phase2----------
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-rev-22-Phase2----------
+type: Lesson
+subtype: OMORetro
+name: Phase 2 复盘报告：全栈覆盖后的深度洞察
+description: '### 四、'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase 2 复盘报告：全栈覆盖后的深度洞察
+  lesson: '### 四、'
+  source: Workspace/.omo/_knowledge/process/retrospectives/rev-22-Phase2深度复盘债务审计红队.md
+  severity: medium

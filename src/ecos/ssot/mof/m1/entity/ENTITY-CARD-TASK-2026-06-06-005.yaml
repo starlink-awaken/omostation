@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-CARD-TASK-2026-06-06-005
+# Type: Entity
+# Generated: 2026-06-06T13:08:34.008866+00:00
+
+id: ENTITY-CARD-TASK-2026-06-06-005
+type: Entity
+subtype: Card
+name: 'Vault Git初始化: git init 学习进化/ 并配置 .gitignore, 为X1审计提供变更追踪'
+description: 对学习进化/ 执行 git init 并配置 .gitignore（排除.obsidian/和Zotero/storage/），为X1审计提供文件变更追踪能力。
+status: active
+domain: meta
+created: '2026-06-06T02:55:19Z'
+version: 1.0.0
+properties:
+  card_type: task
+  card_status: planned
+  priority: P1
+  entity_type: concept
+layer: L4

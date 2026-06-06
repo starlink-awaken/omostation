@@ -1,0 +1,26 @@
+# M1 Node: LESSON-OMO-rt-38b-PhaseA----
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-rt-38b-PhaseA----
+type: Lesson
+subtype: OMORetro
+name: Phase A 红队分析报告
+description: '1. **移除 `_mcp_call` 机制** — 子进程fork + 双重代码路径 + 无实际收益，Phase A 不需要
+
+  2. **文件权限加固** — `chmod 600 ~/.workspace/persona.yaml ~/.workspace/data.db`，立即生效
+
+  3. **p'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Phase A 红队分析报告
+  lesson: '1. **移除 `_mcp_call` 机制** — 子进程fork + 双重代码路径 + 无实际收益，Phase A 不需要
+
+    2. **文件权限加固** — `chmod 600 ~/.workspace/persona.yaml ~/.workspace/data.db`，立即生效
+
+    3. **p'
+  source: Workspace/.omo/_knowledge/summaries/audits/rt-38b-PhaseA红队分析.md
+  severity: medium

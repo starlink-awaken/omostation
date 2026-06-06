@@ -1,0 +1,14 @@
+id: ENTITY-OMO-DEBT-P2-OMO_DASHBOARD_AUTO
+type: Entity
+subtype: OMODebt
+name: OMO debt dashboard/reporting 手动生成，无自动刷新周期
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: P2-OMO_DASHBOARD_AUTO

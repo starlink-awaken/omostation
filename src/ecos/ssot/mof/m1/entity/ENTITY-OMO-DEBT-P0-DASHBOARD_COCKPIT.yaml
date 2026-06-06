@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-OMO-DEBT-P0-DASHBOARD_COCKPIT
+# Extracted from .omo/ debts
+
+id: ENTITY-OMO-DEBT-P0-DASHBOARD_COCKPIT
+type: Entity
+subtype: OMODebt
+name: Dashboard 升级为 eCOS 驾驶舱 — 聚合服务健康/事件流/快速入口
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: P0-DASHBOARD_COCKPIT
+  sources:
+  - Workspace/.omo/debt/items/P0-DASHBOARD_COCKPIT.yaml

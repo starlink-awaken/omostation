@@ -1,0 +1,13 @@
+id: MCPTOOL-COCKPIT-status_phase
+type: MCPTool
+subtype: CockpitTool
+name: status_phase
+description: 'cockpit MCP 工具: status_phase'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L3
+properties:
+  tool_name: status_phase
+  server: cockpit

@@ -1,0 +1,22 @@
+# M1 Node: LESSON-OMO-data-flow
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-data-flow
+type: Lesson
+subtype: OMORetro
+name: 数据流向规范
+description: '**输出位置**:
+
+  - Python 内存对象'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: 数据流向规范
+  lesson: '**输出位置**:
+
+    - Python 内存对象'
+  source: Workspace/.omo/_knowledge/summaries/data-flow.md
+  severity: medium

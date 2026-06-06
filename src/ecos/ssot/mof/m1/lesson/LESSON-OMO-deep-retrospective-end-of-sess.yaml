@@ -1,0 +1,30 @@
+# M1 Node: LESSON-OMO-deep-retrospective-end-of-sess
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-deep-retrospective-end-of-sess
+type: Lesson
+subtype: OMORetro
+name: 深度复盘：Workspace 架构治理全周期
+description: '| 文档 | 位置 |
+
+  |:----:|------|
+
+  | 架构全映射 | `.omo/summaries/4-plus-1-plus-3-architecture-mapping.md` |
+
+  | 架构审计 v3 | `.omo/summaries/full-architecture-audit-r'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: 深度复盘：Workspace 架构治理全周期
+  lesson: '| 文档 | 位置 |
+
+    |:----:|------|
+
+    | 架构全映射 | `.omo/summaries/4-plus-1-plus-3-architecture-mapping.md` |
+
+    | 架构审计 v3 | `.omo/summaries/full-architecture-audit-r'
+  source: Workspace/.omo/_knowledge/summaries/deep-retrospective-end-of-session.md
+  severity: medium

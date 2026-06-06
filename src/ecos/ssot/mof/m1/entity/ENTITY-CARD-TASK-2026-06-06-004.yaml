@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-CARD-TASK-2026-06-06-004
+# Type: Entity
+# Generated: 2026-06-06T13:08:34.006237+00:00
+
+id: ENTITY-CARD-TASK-2026-06-06-004
+type: Entity
+subtype: Card
+name: 'Minerva Vault Sink 实现: 按设计文档创建 sinks/vault_sink.py, 研究publis'
+description: 实现Minerva研究publish阶段的Vault自动归档——研究完成后自动写入学习进化/2-knowledge/对应位置。
+status: active
+domain: infra
+created: '2026-06-06T02:55:19Z'
+version: 1.0.0
+properties:
+  card_type: task
+  card_status: planned
+  priority: P0
+  entity_type: concept
+layer: L4

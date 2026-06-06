@@ -1,0 +1,19 @@
+# M1 Node: CONV-EXTRACT-CLAUDE-STRUCTURE
+# Type: Convention
+# Extracted by mof-extract: 2026-06-06T13:26:34.841204+00:00
+# ⚠️ 待人工审核
+
+id: CONV-EXTRACT-CLAUDE-STRUCTURE
+type: Convention
+name: CLAUDE.md 必须包含 §0 SSOT声明·§1模块定位·§2快速路由·维护节
+description: CLAUDE.md 必须包含 §0 SSOT声明·§1模块定位·§2快速路由·维护节
+status: adopted
+domain: meta
+created: '2026-06-06T13:26:34.838338+00:00'
+version: 1.0.0
+layer: L4
+properties:
+  rule: CLAUDE.md 必须包含 §0 SSOT声明·§1模块定位·§2快速路由·维护节
+  scope: global
+  enforcement: mandatory
+  auto_check: true

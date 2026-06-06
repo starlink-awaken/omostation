@@ -1,0 +1,22 @@
+# M1 Node: LESSON-OMO-architecture-redteam-retrospec
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-architecture-redteam-retrospec
+type: Lesson
+subtype: OMORetro
+name: 架构分析与红队复盘总结
+description: '```
+
+  攻击者进入内网 (SS'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: 架构分析与红队复盘总结
+  lesson: '```
+
+    攻击者进入内网 (SS'
+  source: Workspace/.omo/_knowledge/summaries/architecture-redteam-retrospective.md
+  severity: medium

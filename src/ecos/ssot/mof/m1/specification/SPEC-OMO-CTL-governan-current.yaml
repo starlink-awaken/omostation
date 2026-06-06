@@ -1,0 +1,15 @@
+id: SPEC-OMO-CTL-governan-current
+type: Specification
+subtype: OMOControl
+name: 'OMO Control: current'
+description: 'OMO 控制面: governance-overlay/current.yaml'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  constraints:
+  - OMO 控制
+  scope:
+  - OMO

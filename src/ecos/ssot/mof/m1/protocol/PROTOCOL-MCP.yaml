@@ -1,0 +1,19 @@
+# M1 Node: PROTOCOL-MCP
+# Type: Protocol
+# Generated: 2026-06-06T13:08:34.003971+00:00
+
+id: PROTOCOL-MCP
+type: Protocol
+name: MCP
+description: Model Context Protocol — 工具协议 (cockpit/agora 活跃使用中)
+status: active
+domain: meta
+created: '2026-06-06'
+version: '2025-03-26'
+properties:
+  version_spec: '2025-03-26'
+  introduced: '2026-06-06'
+  half_life: 365
+  registered: true
+  value_tier: 1
+layer: L0

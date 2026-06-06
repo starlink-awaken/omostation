@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-OMO-DEBT-P0-HEALTH_ALERTING
+# Extracted from .omo/ debts
+
+id: ENTITY-OMO-DEBT-P0-HEALTH_ALERTING
+type: Entity
+subtype: OMODebt
+name: Runtime 健康扫描无告警通道：服务挂了只在日志里，无人知道
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: P0-HEALTH_ALERTING
+  sources:
+  - Workspace/.omo/debt/items/P0-HEALTH_ALERTING.yaml

@@ -1,0 +1,13 @@
+id: MCPTOOL-COCKPIT-cards_update
+type: MCPTool
+subtype: CockpitTool
+name: cards_update
+description: 'cockpit MCP 工具: cards_update'
+status: active
+domain: meta
+created: '2026-06-06'
+version: 1.0.0
+layer: L3
+properties:
+  tool_name: cards_update
+  server: cockpit

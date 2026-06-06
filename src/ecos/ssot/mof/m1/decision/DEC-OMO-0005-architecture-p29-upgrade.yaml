@@ -1,0 +1,19 @@
+# M1 Node: DEC-OMO-0005-architecture-p29-upgrade
+# Extracted from .omo/ decisions
+
+id: DEC-OMO-0005-architecture-p29-upgrade
+type: Decision
+subtype: OMO-ADR
+name: 'ADR-0005: P29 治理与 monorepo 架构升级方向'
+description: 'ADR-0005: P29 治理与 monorepo 架构升级方向'
+status: accepted
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  problem: 'ADR-0005: P29 治理与 monorepo 架构升级方向'
+  decision: 'ADR-0005: P29 治理与 monorepo 架构升级方向'
+  rationale: '来源: .omo/_knowledge/decisions/0005-architecture-p29-upgrade.md'
+  options: []
+  consequences: ''

@@ -1,0 +1,14 @@
+id: ENTITY-OMO-DEBT-P2-RED_TEAM
+type: Entity
+subtype: OMODebt
+name: 新一轮红蓝对抗 — 全系统渗透测试挖集成层面缺陷
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: P2-RED_TEAM

@@ -1,0 +1,28 @@
+# M1 Node: PROC-CARDS-LIFECYCLE
+# Type: Process
+
+id: PROC-CARDS-LIFECYCLE
+type: Process
+name: CARDS卡片生命周期流程
+description: Idea→Task→Delivery三级级联+Debt追踪的完整流程
+status: active
+domain: meta
+created: '2026-06-05'
+version: 2.0.0
+layer: L4
+properties:
+  states:
+  - flash→incubating→promoted|discarded
+  - planned→active→blocked→done|cancelled
+  steps:
+  - order: 1
+    name: flash
+  - order: 2
+    name: promote
+  - order: 3
+    name: execute
+  - order: 4
+    name: deliver
+  sla:
+    incubating_max_days: 14
+  owner: 夏明星

@@ -1,0 +1,19 @@
+# M1 Node: ENTITY-OMO-DEBT-OMO-ARG-INCONSISTENCY
+# Extracted from .omo/ debts
+
+id: ENTITY-OMO-DEBT-OMO-ARG-INCONSISTENCY
+type: Entity
+subtype: OMODebt
+name: '新旧模块 arg 解析不一致: 新 CLI 用 argparse, 老模块用 if args[n]'
+description: ''
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  entity_type: debt
+  identity:
+    omo_debt_id: OMO-ARG-INCONSISTENCY
+  sources:
+  - Workspace/.omo/debt/items/OMO-ARG-INCONSISTENCY.yaml

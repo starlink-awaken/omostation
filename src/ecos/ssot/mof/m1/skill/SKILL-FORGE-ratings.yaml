@@ -1,0 +1,13 @@
+id: SKILL-FORGE-ratings
+type: Skill
+subtype: ForgeSkill
+name: ratings
+description: 'Forge 技能: ratings'
+status: active
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  skill: 'Forge 内置能力: ratings'
+  trigger: mcp

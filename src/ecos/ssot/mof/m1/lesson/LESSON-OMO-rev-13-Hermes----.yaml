@@ -1,0 +1,26 @@
+# M1 Node: LESSON-OMO-rev-13-Hermes----
+# Extracted from .omo/ retros
+
+id: LESSON-OMO-rev-13-Hermes----
+type: Lesson
+subtype: OMORetro
+name: Hermes 依赖分析报告
+description: '| 目录 | 文件 | 大小 | 能否独立运行 |
+
+  |------|------|------|-------------|
+
+  |'
+status: recorded
+domain: infra
+created: '2026-06-06'
+version: 1.0.0
+layer: L2
+properties:
+  incident: Hermes 依赖分析报告
+  lesson: '| 目录 | 文件 | 大小 | 能否独立运行 |
+
+    |------|------|------|-------------|
+
+    |'
+  source: Workspace/.omo/_knowledge/process/retrospectives/rev-13-Hermes依赖分析.md
+  severity: medium

@@ -1,0 +1,23 @@
+# M1 Node: SPEC-CLAUDE---------
+# Type: Specification
+# Modeled: 2026-06-06T13:31:04
+
+id: SPEC-CLAUDE---------
+type: Specification
+subtype: CLAUDE.md
+name: '工作文档: CLAUDE.md'
+description: Agent 操作契约 — 工作文档 域
+status: active
+domain: 工作文档
+created: '2026-06-06'
+version: v2.1
+layer: L4
+properties:
+  path: 工作文档/卫健委/CLAUDE.md
+  format: markdown
+  constraints:
+  - SSOT声明
+  - 快速路由
+  - 维护周期
+  scope:
+  - 工作文档
