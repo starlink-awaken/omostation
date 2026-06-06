@@ -28,6 +28,8 @@ function App() {
   const [logs, setLogs] = useState<string[]>([]);
   const [aiMessage, setAiMessage] = useState("Hi! I'm your AI Mentor. Let's load your dashboard!");
   const [blindBox, setBlindBox] = useState<string | null>(null);
+  const [report, setReport] = useState<string | null>(null);
+  const [isReportLoading, setIsReportLoading] = useState(false);
 
   const fetchDashboard = async (currentRole: string) => {
     try {
@@ -40,6 +42,22 @@ function App() {
     } catch (err) {
       console.error(err);
       setAiMessage("Could not connect to the backend server. Make sure it is running on port 3001.");
+    }
+  };
+
+  const fetchReport = async () => {
+    setIsReportLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/report?role=${role}`);
+      const data = await res.json();
+      if (data.success) {
+        setReport(data.report);
+      }
+    } catch (err) {
+      console.error(err);
+      setAiMessage("Could not generate report.");
+    } finally {
+      setIsReportLoading(false);
     }
   };
 
@@ -133,8 +151,22 @@ function App() {
 
       <div className="ai-mentor">
         <div className="ai-avatar float">🤖</div>
-        <div className="ai-bubble">{aiMessage}</div>
+        <div className="ai-bubble">
+          <p>{aiMessage}</p>
+          <button className="report-btn" onClick={fetchReport} disabled={isReportLoading}>
+            {isReportLoading ? "⏳ Generating..." : "📊 Generate Weekly AI Report"}
+          </button>
+        </div>
       </div>
+
+      {report && (
+        <div className="blind-box-modal" onClick={() => setReport(null)}>
+          <div className="report-content popIn" onClick={e => e.stopPropagation()}>
+            <div dangerouslySetInnerHTML={{ __html: report.replace(/\n/g, '<br/>') }} />
+            <button className="add-btn" onClick={() => setReport(null)} style={{marginTop: '2rem'}}>Close</button>
+          </div>
+        </div>
+      )}
 
       <main className="board-main">
         <div className="board-header">

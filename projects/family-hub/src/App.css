@@ -235,3 +235,49 @@
   color: #d1d5db;
 }
 .logs-section li:last-child { border-bottom: none; }
+
+.ai-bubble {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.ai-bubble p {
+  margin: 0;
+}
+.report-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+.report-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+}
+.report-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.report-content {
+  background: #1e1e2f;
+  padding: 2.5rem;
+  border-radius: 20px;
+  max-width: 600px;
+  width: 90%;
+  color: #e5e7eb;
+  line-height: 1.6;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.report-content h3 {
+  margin-top: 0;
+  color: #a855f7;
+}
+.report-content strong {
+  color: #fcd34d;
+}
