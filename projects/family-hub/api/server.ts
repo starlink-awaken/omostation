@@ -1,82 +1,107 @@
 import express from 'express';
 import cors from 'cors';
+import { Database } from 'bun:sqlite';
+import { exec } from 'child_process';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// In-memory mock database
-const db = {
-  profiles: {
-    child: {
-      name: '小明',
-      role: 'child',
-      level: 3,
-      wisdomPoints: 120,
-      responsibilityPoints: 80,
-      inventory: ['1小时动画券'],
-    },
-    parent: {
-      name: '爸爸',
-      role: 'parent',
-      wisdomPoints: 0,
-      responsibilityPoints: 0,
-      inventory: [],
-    }
-  },
-  quests: [
-    { id: 1, title: '阅读课外书30分钟', type: 'wisdom', reward: 10, completed: false, assignee: 'child' },
-    { id: 2, title: '自己整理书桌', type: 'responsibility', reward: 15, completed: false, assignee: 'child' },
-    { id: 3, title: '陪小明拼乐高30分钟', type: 'responsibility', reward: 20, completed: false, assignee: 'parent' }
-  ],
-  logs: []
+// Initialize SQLite database
+const db = new Database('family_hub.db');
+
+// Setup tables
+db.exec(`
+  CREATE TABLE IF NOT EXISTS profiles (
+    role TEXT PRIMARY KEY,
+    name TEXT,
+    level INTEGER,
+    wisdomPoints INTEGER,
+    responsibilityPoints INTEGER,
+    inventory TEXT
+  );
+  
+  CREATE TABLE IF NOT EXISTS quests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT,
+    type TEXT,
+    reward INTEGER,
+    completed BOOLEAN,
+    assignee TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    message TEXT,
+    type TEXT,
+    timestamp TEXT
+  );
+`);
+
+// Seed data if empty
+const count = db.prepare('SELECT COUNT(*) as count FROM profiles').get() as { count: number };
+if (count.count === 0) {
+  const insertProfile = db.prepare('INSERT INTO profiles (role, name, level, wisdomPoints, responsibilityPoints, inventory) VALUES (?, ?, ?, ?, ?, ?)');
+  insertProfile.run('child', '小明', 3, 120, 80, JSON.stringify(['1小时动画券']));
+  insertProfile.run('parent', '爸爸', 1, 0, 0, JSON.stringify([]));
+
+  const insertQuest = db.prepare('INSERT INTO quests (title, type, reward, completed, assignee) VALUES (?, ?, ?, ?, ?)');
+  insertQuest.run('阅读课外书30分钟', 'wisdom', 10, 0, 'child');
+  insertQuest.run('自己整理书桌', 'responsibility', 15, 0, 'child');
+  insertQuest.run('陪小明拼乐高30分钟', 'responsibility', 20, 0, 'parent');
+}
+
+// Helper to parse profile
+const getProfile = (role: string) => {
+  const p = db.prepare('SELECT * FROM profiles WHERE role = ?').get(role) as any;
+  if (!p) return null;
+  return { ...p, inventory: JSON.parse(p.inventory), completed: !!p.completed };
 };
 
 // API: Get profile and quests based on role
 app.get('/api/dashboard', (req, res) => {
   const role = req.query.role as string || 'child';
-  const profile = db.profiles[role as keyof typeof db.profiles];
-  const quests = db.quests.filter(q => q.assignee === role);
+  const profile = getProfile(role);
+  
+  const quests = db.prepare('SELECT * FROM quests WHERE assignee = ?').all(role).map((q: any) => ({
+    ...q, completed: !!q.completed
+  }));
+  
+  const recentLogs = db.prepare('SELECT message FROM logs ORDER BY id DESC LIMIT 5').all().map((l: any) => l.message);
   
   res.json({
     profile,
     quests,
-    recentLogs: db.logs.slice(0, 5)
+    recentLogs
   });
 });
 
 // API: Complete a quest and trigger blind box
 app.post('/api/quests/:id/complete', (req, res) => {
   const questId = parseInt(req.params.id);
-  const quest = db.quests.find(q => q.id === questId);
+  const quest = db.prepare('SELECT * FROM quests WHERE id = ?').get(questId) as any;
   
   if (!quest || quest.completed) {
     return res.status(400).json({ error: 'Quest not found or already completed.' });
   }
 
-  quest.completed = true;
+  // Mark as completed
+  db.prepare('UPDATE quests SET completed = 1 WHERE id = ?').run(questId);
   
-  // A: 将目前模拟的后端逻辑，通过 agora MCP 服务，持久化写入我们的 gbrain 数据库
+  // MCP sync
   try {
-    const { exec } = require('child_process');
     const dbUrl = "postgresql://gbrain:Dsirl1Y0H6MTmo54ULeKZ21RJToe5RyB@127.0.0.1:5433/brain";
-    
-    // Approach 1: Directly using gbrain CLI for persistence
     const gbrainCmd = `GBRAIN_DATABASE_URL=${dbUrl} bun run /Users/xiamingxing/Workspace/projects/gbrain/src/cli.ts put quest-${quest.id} --text "${quest.title} completed by ${quest.assignee}"`;
-    
-    // Approach 2: Using Agora MCP routing (Simulated execution for Agora Hub)
-    const agoraCmd = `uv run agora run "Save family-hub task '${quest.title}' to gbrain"`;
-
-    exec(gbrainCmd, (err, stdout, stderr) => {
-      if (err) console.error("gbrain persistence error:", err);
-      else console.log("gbrain persistence success:", stdout);
+    exec(gbrainCmd, (err) => {
+      if (err) console.error("gbrain persistence error:", err.message);
     });
   } catch (err) {
-    console.error("Failed to sync to MCP / gbrain:", err);
+    console.error("Failed to sync to MCP / gbrain", err);
   }
 
   const role = quest.assignee;
-  const profile = db.profiles[role as keyof typeof db.profiles];
+  const profile = getProfile(role);
+  if (!profile) return res.status(400).json({ error: 'Profile not found' });
 
   // Add points
   if (quest.type === 'wisdom') profile.wisdomPoints += quest.reward;
@@ -90,39 +115,43 @@ app.post('/api/quests/:id/complete', (req, res) => {
     profile.inventory.push(blindBoxItem);
   }
 
+  // Update profile
+  db.prepare('UPDATE profiles SET wisdomPoints = ?, responsibilityPoints = ?, inventory = ? WHERE role = ?')
+    .run(profile.wisdomPoints, profile.responsibilityPoints, JSON.stringify(profile.inventory), role);
+
   // Log it
-  db.logs.unshift(`[${new Date().toLocaleTimeString()}] ${profile.name} 完成了: ${quest.title}`);
+  const logMessage = `[${new Date().toLocaleTimeString()}] ${profile.name} 完成了: ${quest.title}`;
+  db.prepare('INSERT INTO logs (message, type, timestamp) VALUES (?, ?, ?)').run(logMessage, quest.type, new Date().toISOString());
 
   res.json({
     success: true,
     profile,
-    quest,
+    quest: { ...quest, completed: true },
     blindBoxDrop: blindBoxItem,
     message: blindBoxItem ? `太棒了！触发了随机盲盒奖励：${blindBoxItem}！` : '任务完成，干得好！'
   });
 });
 
-// API: Add a new quest (Parent can add for child, child can add for parent)
+// API: Add a new quest
 app.post('/api/quests', (req, res) => {
   const { title, type, reward, assignee } = req.body;
-  const newQuest = {
-    id: db.quests.length + 1,
-    title,
-    type,
-    reward: parseInt(reward) || 10,
-    completed: false,
-    assignee
-  };
-  db.quests.push(newQuest);
-  res.json({ success: true, quest: newQuest });
+  const r = parseInt(reward) || 10;
+  
+  const info = db.prepare('INSERT INTO quests (title, type, reward, completed, assignee) VALUES (?, ?, ?, ?, ?)')
+    .run(title, type, r, 0, assignee);
+    
+  res.json({ 
+    success: true, 
+    quest: { id: info.lastInsertRowid, title, type, reward: r, completed: false, assignee } 
+  });
 });
 
 // API: Generate Weekly AI Mentor Report
 app.get('/api/report', (req, res) => {
   const role = req.query.role as string || 'child';
-  const profile = db.profiles[role as keyof typeof db.profiles];
+  const profile = getProfile(role);
+  if (!profile) return res.status(404).json({ error: 'Profile not found' });
   
-  // Simulate LLM evaluation delay
   setTimeout(() => {
     let report = "";
     if (role === 'child') {
@@ -132,7 +161,7 @@ app.get('/api/report', (req, res) => {
     }
 
     res.json({ success: true, report });
-  }, 1500); // 1.5s delay to simulate thinking
+  }, 1500);
 });
 
 const PORT = 3001;

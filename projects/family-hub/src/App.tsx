@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import './App.css';
 
 interface Quest {
@@ -162,7 +163,7 @@ function App() {
       {report && (
         <div className="blind-box-modal" onClick={() => setReport(null)}>
           <div className="report-content popIn" onClick={e => e.stopPropagation()}>
-            <div dangerouslySetInnerHTML={{ __html: report.replace(/\n/g, '<br/>') }} />
+            <ReactMarkdown>{report}</ReactMarkdown>
             <button className="add-btn" onClick={() => setReport(null)} style={{marginTop: '2rem'}}>Close</button>
           </div>
         </div>
