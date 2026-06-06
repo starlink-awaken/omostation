@@ -13,9 +13,9 @@ depends_on:
   - P30-W2-VERIFY
 deliverables:
   - ".omo/_delivery/phase31-agora-actual-fix.md"
-  - "projects/agora/src/agora-routes.json (rebuilt)"
-  - "projects/omo/src/omo/omo_paths.py (AGORA_ROUTES_PATH fixed)"
-  - "projects/omo/src/omo/omo_health.py (DEFAULT_SERVICE_PORTS fixed)"
+  - "projects/agora/src/agora-routes.json"
+  - "projects/omo/src/omo/omo_paths.py"
+  - "projects/omo/src/omo/omo_health.py"
 risk_level: L2
 allowed_operation_level: L2
 source_docs:

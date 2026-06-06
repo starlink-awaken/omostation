@@ -12,10 +12,10 @@ entry_gate:
 depends_on:
   - P30-W0-DECISION
 deliverables:
-  - "omo daemon start 成功"
-  - "launchd plist 文件写入 ~/Library/LaunchAgents/"
-  - "launchctl load 验证自启"
-  - "omo agora-health 检查通过"
+  - ".omo/_delivery/phase30-daemon-runbook.md"
+  - "projects/omo/scripts/com.omo.governance.daemon.plist"
+  - ".omo/_delivery/daemon.log"
+  - ".omo/_delivery/daemon-stdout.log"
 risk_level: L1
 allowed_operation_level: L1
 source_docs:

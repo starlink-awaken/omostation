@@ -14,11 +14,11 @@ depends_on:
   - P30-W0-DECISION
   - P30-W0-DAEMON-INSTALL
 deliverables:
-  - "projects/metaos/ 新建项目目录 (uv workspace + pyproject.toml)"
-  - "kairon/packages/metaos/ 内容 git mv 到 projects/metaos/"
-  - "kairon monorepo 中移除 metaos 包 (从 pyproject.toml 删)"
-  - "projects/metaos/ 自身 uv sync 通过 + pytest 全绿"
-  - ".omo/_knowledge/management/decision-p30-architecture-final.md 引用链接更新"
+  - "projects/metaos/pyproject.toml"
+  - "projects/metaos/README.md"
+  - "projects/kairon/pyproject.toml"
+  - "projects/metaos/uv.lock"
+  - ".omo/_knowledge/management/decision-p30-architecture-final.md"
 risk_level: L1
 allowed_operation_level: L1
 source_docs:

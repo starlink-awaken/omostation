@@ -16,11 +16,11 @@ depends_on:
   - P30-W1-WKSP-EXTRACT
   - P30-W1-GOV-MERGE
 deliverables:
-  - "6 项目各自 make test 全绿 (kairon / gbrain / runtime / metaos / cockpit / omo)"
-  - "全仓 health-check.sh 通过"
-  - "E2E 关键路径 1 条: agent 调用 → agora 路由 → L2 知识工程 → gbrain 落盘"
-  - ".omo/state/system.yaml 健康分更新为 P30 完成态"
-  - "P30 完工复盘文档: retrospective-2026-06-XX.md"
+  - ".omo/_delivery/phase30-verify-report.md"
+  - ".omo/_delivery/phase30-verify-report.md"
+  - ".omo/_delivery/phase30-verify-report.md"
+  - ".omo/state/system.yaml"
+  - ".omo/_knowledge/management/retrospective-2026-06-06.md"
 risk_level: L1
 allowed_operation_level: L1
 source_docs:

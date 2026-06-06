@@ -12,7 +12,7 @@ entry_gate:
 depends_on:
   - P31-W1-MERGE-LLM-GATEWAY-KERNEL
 deliverables:
-  - ".omo/_delivery/phase31-fix-llm-gateway-kernel-tests.md"
+  - "projects/kairon/packages/llm-gateway-kernel/tests/llm_gateway/test_unified.py"
 risk_level: L1
 allowed_operation_level: L1
 source_docs: []

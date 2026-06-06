@@ -1,0 +1,39 @@
+id: P32-W0-AGORA
+phase: 32
+wave: W0
+title: "恢复 3 个 DOWN agora 服务 — agora 健康度 40% → 80%+"
+status: completed
+task_type: infra
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P31-VERIFY completed"
+depends_on:
+  - P31-VERIFY
+deliverables:
+  - ".omo/_delivery/phase32-agora-recovery.md"
+risk_level: L2
+allowed_operation_level: L2
+source_docs:
+  - ".omo/_delivery/phase31-agora-actual-fix.md"
+knowledge_refs: []
+description: |
+  P31 后仍 3 个 DOWN agora 服务.
+  尽可能启动, 不可启动的诚实记录原因.
+
+  实际结果: 2/3 成功启动 (minerva 200 OK, sharedbrain-bridge-mcp 200/404 reachable),
+  1/3 源码已删无法启动 (agent-runtime-mcp). agora 健康度 40% → 80% (+40pp).
+started_at: '2026-06-06T05:00:00Z'
+completed_at: '2026-06-06T05:00:00Z'
+blocked_by: null
+retry_count: 0
+process_pids:
+  minerva_web: 72599
+  sb_bridge_standalone: 83215
+pid_files:
+  - /tmp/minerva-web.pid
+  - /tmp/sb-bridge-standalone.pid
+log_files:
+  - /tmp/minerva-web.log
+  - /tmp/sb-bridge-standalone.log

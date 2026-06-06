@@ -7,7 +7,7 @@ scope: within_project
 severity: low
 weight: 0.2
 entropy_class: classification
-lifecycle_state: open
+lifecycle_state: closed
 owner: omo-governance
 affected_roots:
   - projects/kairon/packages/llm-gateway
@@ -22,3 +22,6 @@ history:
   - at: "2026-06-07T06:00:00Z"
     action: register
     note: "llm-gateway 架构审计: 18 个 provider 文件数偏多(+6 个无功能 stub 或 redundant adapter)。provider.py 集 ABC/dataclass/Retry/Mock 于一体。可拆为 core.py(ABC+dataclass) + retry.py(已有) + mock.py(new)。"
+  - at: "2026-06-06T08:30:00Z"
+    action: close
+    note: "provider.py 已不存在: llm-gateway 精简为 shim 包(仅 __init__.py 30 行)。18 个 provider 文件已迁移至 llm-gateway-kernel/llm_providers/。债务自动消解。"

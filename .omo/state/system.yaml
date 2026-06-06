@@ -3,7 +3,7 @@ phase1_status: closed
 phase_status: active
 current_wave: W0
 next_milestone: Phase 31 W1 — kairon 3 组合并（llm-gateway-kernel / sot-bridge / protocols-layer）
-health_score: 53.77
+health_score: 56.06
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -16,7 +16,7 @@ phase3_capability_slice_completed_at: '2026-05-30T22:35:00Z'
 phase3_acceptance_status: completed
 phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
 completed_tasks: 16
-total_tasks: 33
+total_tasks: 34
 active_tasks: 0
 next_active_tasks:
 - (No active tasks)
@@ -43,7 +43,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-06T11:07:07Z'
+updated_at: '2026-06-06T11:24:51Z'
 phase29_status: completed
 phase29_completed_at: '2026-06-05T20:00:00Z'
 phase30_status: active
@@ -87,7 +87,7 @@ phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
 health_score_raw: 57.2
-debt_weight: 0.94
+debt_weight: 0.98
 debt_weight_items:
   SB_PROJECTS_YAML:
     resolved: true
@@ -158,7 +158,7 @@ debt_weight_items:
     weight: 0.8
     desc: Agora SSE 端点 (:7431/:7432) 返回 HTTP 000 不可达
   L0-PROTOCOL_GHOSTS:
-    resolved: false
+    resolved: true
     weight: 0.3
     desc: L0 协议注册表 16 协议中 14 个无完整运行时实现（仅 YAML 定义 + 查询能力）
   L1-SCHEDULER_MISSING:
@@ -182,7 +182,7 @@ debt_weight_items:
     weight: 0.3
     desc: 无保鲜机制 — 所有服务无 age/freshness 追踪，无自动恢复逻辑
   X3-NO_COSTING:
-    resolved: false
+    resolved: true
     weight: 0.2
     desc: 无成本核算 — _STATS 计数器定义在 mcp_server.py 中但从未递增
   L0-TASKOBJECT_UNUSED:
@@ -254,11 +254,11 @@ debt_weight_items:
     weight: 0.05
     desc: KEI 沙箱真实场景 — 新服务注册自动触发审计链
   P2-META_CI:
-    resolved: false
+    resolved: true
     weight: 0.05
     desc: 元模型校验 CI 门禁 — git hook 自动校验 M3→M0 一致性
   P2-RED_TEAM:
-    resolved: false
+    resolved: true
     weight: 0.05
     desc: 新一轮红蓝对抗 — 全系统渗透测试挖集成层面缺陷
   P1-KAIRON_CONFTEST_POLLUTION:
@@ -326,7 +326,7 @@ debt_weight_items:
     weight: 1.0
     desc: 'agent-runtime 两个生产级缺陷: task_definitions 目录缺失 + mcp_server.py 导入路径错误'
   P1-RUNTIME_CONSOLIDATION:
-    resolved: false
+    resolved: true
     weight: 0.6
     desc: 'L1管控面(projects/runtime) 未接管 L2运行时(agent-runtime) 的可观测与管理职责: 需建桥接契约'
   P1-AGORA_BYPASS:
@@ -472,7 +472,7 @@ debt_weight_items:
     weight: 0.2
     desc: '新旧模块 arg 解析不一致: 新 CLI 用 argparse, 老模块用 if args[n]'
   OMO-X3-NOCOST:
-    resolved: false
+    resolved: true
     weight: 0.2
     desc: 'X3 价值栈零实现: LLM Token/服务成本无追踪'
   LLMGATEWAY-STUB-PROVIDERS:
@@ -489,7 +489,7 @@ debt_weight_items:
     weight: 0.5
     desc: llm-gateway ↔ minerva 双向依赖 — pyproject.toml 中互相引用
   LLMGATEWAY-PROVIDER-BLOAT:
-    resolved: false
+    resolved: true
     weight: 0.2
     desc: llm-gateway provider.py 325 行含 ABC+dataclass+retry+mock 四种职责, 18 个 provider
       文件数膨胀
@@ -512,16 +512,19 @@ resolved_debt_items:
 - FLOW-TEST-FAST
 - I0-AGORA_DUAL_INSTANCE
 - I0-AGORA_SSE_DEAD
+- L0-PROTOCOL_GHOSTS
 - L0-TASKOBJECT_UNUSED
 - L1-HEALTH_STALE
 - L1-SCHEDULER_MISSING
 - LLMGATEWAY-CIRCULAR-DEP
 - LLMGATEWAY-LEGACY-ADAPTERS
+- LLMGATEWAY-PROVIDER-BLOAT
 - LLMGATEWAY-STUB-PROVIDERS
 - OMO-ARG-INCONSISTENCY
 - OMO-CLI-TEST-GAP
 - OMO-EVIDENCE-NO-CLI
 - OMO-TASK-NO-CLI
+- OMO-X3-NOCOST
 - P0-AGENTRT_CRITICAL
 - P0-CI_GATE_VERIFY
 - P0-DASHBOARD_COCKPIT
@@ -549,6 +552,7 @@ resolved_debt_items:
 - P1-KAIRON_CONFTEST_POLLUTION
 - P1-KEI_ALERTING
 - P1-PROTOCOL_CLI
+- P1-RUNTIME_CONSOLIDATION
 - P1-TASKOBJECT_LIVE
 - P2-CARDS_MISSING_FILTERS
 - P2-CI_GATE
@@ -560,11 +564,13 @@ resolved_debt_items:
 - P2-KEI_SANDBOX_PERMISSIVE
 - P2-KEI_WEEKLY
 - P2-LAUNCHD_ZOMBIES
+- P2-META_CI
 - P2-OMO_DASHBOARD_AUTO
 - P2-OMO_DASHBOARD_STALE
 - P2-PROTOCOLS_EMPTY
 - P2-PROTOCOL_DEEPEN
 - P2-PUSH_GATE_CI
+- P2-RED_TEAM
 - P2-SCHEDULER_NO_HEARTBEAT
 - P2-SECURITY_HARDEN
 - P2-VAULT_CARDS_GAP
@@ -585,25 +591,26 @@ resolved_debt_items:
 - X1-NO_AUDIT_CHAIN
 - X1-SANDBOX_INERT
 - X2-NO_FRESHNESS
+- X3-NO_COSTING
 orphaned_tasks_ref: .omo/tasks/registry/INDEX.md
 debt_registry_ref: .omo/debt/registry.yaml
 debt_dashboard_ref: .omo/debt/dashboard/current.yaml
 debt_review_pack_ref: .omo/debt/reviews/current.md
 debt_metrics:
-  debt_health: 0.0
+  debt_health: 75.0
   classification_entropy: 0.0
   state_entropy: 0.0
   pointer_entropy: 2.0
   time_entropy: 0.0
-  backlog_pressure: 2.2
-  coupling_load: 1.33
+  backlog_pressure: 0.6
+  coupling_load: 1.0
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 17
+planned_tasks: 18
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- Current planned queue from .omo/tasks/planned/ (17 tasks)
+- Current planned queue from .omo/tasks/planned/ (18 tasks)
 - P30-W0-DAEMON-INSTALL
 - P30-W0-FOLD
 - P30-W0-PLAN-UPDATE
@@ -621,6 +628,7 @@ next_planned_tasks:
 - P31-W1-FIX-LLM-GATEWAY-KERNEL-TESTS
 - P31-W1-MERGE-PROTOCOLS-LAYER
 - P31-W1-MERGE-SOT-BRIDGE
+- P32-W0-AGORA
 - P28-W0-NORTH-STAR (completed)
 - P28-W0-TOOL-HEATMAP (completed)
 - IMPORTED-08ea57

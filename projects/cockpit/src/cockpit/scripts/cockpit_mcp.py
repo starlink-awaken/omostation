@@ -556,6 +556,10 @@ def vault_search(keyword: str = "") -> str:
 # ══════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
+    main()
+
+def main() -> None:
+    """Entry point for cockpit MCP server. Use `cockpit-mcp` CLI or `uv run --package cockpit cockpit-mcp`."""
     if not HAS_FASTMCP or mcp is None:
         print("错误: 需安装 fastmcp 才能运行 MCP server", file=sys.stderr)
         sys.exit(1)

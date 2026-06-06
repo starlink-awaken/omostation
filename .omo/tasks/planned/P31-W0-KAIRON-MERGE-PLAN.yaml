@@ -12,10 +12,10 @@ entry_gate:
 depends_on:
   - P31-W0-ECOS-EXTRACT
 deliverables:
-  - "/tmp/ast_scan.py (AST 扫描器)"
-  - "/tmp/kairon_deps.json (AST 分析结果，1,101 prod 文件扫描，34 cross-pkg imports / 7 pairs)"
-  - "/Users/xiamingxing/Workspace/.omo/_knowledge/decisions/0006-kairon-package-merge.md (ADR-0006 PROPOSED)"
-  - "/Users/xiamingxing/Workspace/.omo/_knowledge/decisions/INDEX.md (新增 0006 索引)"
+  - "/tmp/ast_scan.py"
+  - "/tmp/kairon_deps.json"
+  - "/Users/xiamingxing/Workspace/.omo/_knowledge/decisions/0006-kairon-package-merge.md"
+  - "/Users/xiamingxing/Workspace/.omo/_knowledge/decisions/INDEX.md"
 risk_level: L0
 allowed_operation_level: L0
 source_docs:

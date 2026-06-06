@@ -12,12 +12,12 @@ entry_gate:
 depends_on:
   - P31-W0-KAIRON-MERGE-PLAN
 deliverables:
-  - ".omo/_knowledge/decisions/0006-kairon-package-merge.md（修订历史）"
-  - ".omo/_knowledge/decisions/INDEX.md（0006 行 ACCEPTED）"
-  - ".omo/INDEX.md（顶层状态同步 Phase 31 W0）"
-  - ".omo/state/system.yaml（current_phase=31, wave=W0, completed_tasks+1）"
-  - ".omo/tasks/planned/P31-W0-KAIRON-MERGE-ACCEPTED.yaml（本任务）"
-  - ".omo/_delivery/phase31-merge-accepted.md（交付物）"
+  - ".omo/_knowledge/decisions/0006-kairon-package-merge.md"
+  - ".omo/_knowledge/decisions/INDEX.md"
+  - ".omo/INDEX.md"
+  - ".omo/state/system.yaml"
+  - ".omo/tasks/planned/P31-W0-KAIRON-MERGE-ACCEPTED.yaml"
+  - ".omo/_delivery/phase31-merge-accepted.md"
 risk_level: L0
 allowed_operation_level: L0
 source_docs: []

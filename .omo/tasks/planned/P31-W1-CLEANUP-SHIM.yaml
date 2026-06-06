@@ -15,11 +15,11 @@ depends_on:
   - P31-W1-MERGE-LLM-GATEWAY-KERNEL
 deliverables:
   - ".omo/_delivery/phase31-cleanup-shim.md"
-  - ".omo/_knowledge/decisions/0006-kairon-package-merge.md (修订 2)"
-  - "projects/kairon/CLAUDE.md (包结构 25→19)"
-  - "projects/kairon/pyproject.toml (exclude 6 源包 + 移除 6 sources)"
-  - "projects/kairon/packages/iris/pyproject.toml (ssot-kernel → sot-bridge)"
-  - "projects/kairon/packages/minerva/pyproject.toml (sophia → protocols-layer)"
+  - ".omo/_knowledge/decisions/0006-kairon-package-merge.md"
+  - "projects/kairon/CLAUDE.md"
+  - "projects/kairon/pyproject.toml"
+  - "projects/kairon/packages/iris/pyproject.toml"
+  - "projects/kairon/packages/minerva/pyproject.toml"
 risk_level: L1
 allowed_operation_level: L1
 source_docs:

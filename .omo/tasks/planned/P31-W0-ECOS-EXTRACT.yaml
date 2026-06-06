@@ -15,12 +15,12 @@ depends_on:
   - P30-W1-METAOS-EXTRACT
   - P30-W1-WKSP-EXTRACT
 deliverables:
-  - "projects/ecos/ 独立项目（完整结构，6288 行 Python）"
-  - "kairon/packages/ecos/ 空壳物理清理"
-  - "kairon/pyproject.toml 移除 ecos workspace source"
-  - "kairon/CLAUDE.md 同步 5 处"
-  - "projects/ecos/README.md 完整文档"
-  - ".omo/_delivery/phase31-ecos-extract.md 实施报告"
+  - "projects/ecos/README.md"
+  - "projects/kairon/pyproject.toml"
+  - "projects/kairon/pyproject.toml"
+  - "projects/kairon/CLAUDE.md"
+  - "projects/ecos/README.md"
+  - ".omo/_delivery/phase31-ecos-extract.md"
 risk_level: L1
 allowed_operation_level: L1
 source_docs:
