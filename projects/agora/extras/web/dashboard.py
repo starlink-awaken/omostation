@@ -1008,6 +1008,38 @@ async def well_known_agent_card():
     }
 
 
+# ── BOS 状态 API (P48 W4) ──────────────────────────────
+
+
+@app.get("/api/bos/status")
+async def bos_status():
+    """BOS 统一路由/中间件/指标状态 (内联 BOS 数据源)."""
+    try:
+        from agora.mcp.bos_router import bos_router
+        from agora.mcp.bos_middleware import bos_cache, bos_circuit_breaker, bos_rate_limiter
+        from agora.mcp.bos_metrics import bos_metrics
+        from agora.mcp.bos_resolver import POC_SERVICES, list_services as _list_poc_services
+    except ImportError:
+        return JSONResponse({"status": "bos_unavailable", "error": "BOS components not loaded"})
+
+    from collections import Counter
+    doms: Counter = Counter()
+    for svc in _list_poc_services():
+        doms[svc.get("domain", "unknown")] += 1
+
+    return {
+        "status": "ok",
+        "router": {"total_routes": bos_router.count(), "by_adapter": bos_router.stats()},
+        "poc_services": {"total": len(POC_SERVICES), "uris": sorted(POC_SERVICES.keys())},
+        "rate_limiter": bos_rate_limiter.status(),
+        "circuit_breaker": {"open_circuits": bos_circuit_breaker.status()},
+        "cache": bos_cache.status(),
+        "metrics": bos_metrics.summary(),
+        "metrics_detail": bos_metrics.status(),
+        "domains": dict(doms),
+    }
+
+
 # ── CLI entry ──────────────────────────────────────────────────
 
 
