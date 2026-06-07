@@ -1,0 +1,28 @@
+id: P54-W0-MCP-STDIO-MIGRATION
+phase: 54
+wave: W0
+title: "POC 自定义协议 → 标准 MCP stdio JSON-RPC 2.0 迁移"
+status: planned
+task_type: feature
+priority: P1
+description: |
+  当前 40 个 POC_SERVICES 使用自定义简化 JSON 协议 (一行 stdin → 一行 stdout)。
+  需迁移为标准 MCP JSON-RPC 2.0 协议 (initialize → tools/list → tools/call)。
+
+  MCPStdioAdapter 适配器已在 bos_protocol.py 中实现，但下游子进程尚未适配。
+
+scope:
+  - 挑选 1 个 POC 服务 (建议 kos/search) 实现标准 MCP stdio
+  - 验证端到端: Agent → resolve_bos_uri → MCPStdioAdapter → 子进程 → 返回结果
+  - 建立迁移模板供其余 39 个服务参考
+
+deliverables:
+  - "1 个下游包完成 MCP stdio 协议适配"
+  - "端到端验证脚本 (stdlib MCP protocol)"
+  - "迁移指南文档 (.omo/_knowledge/reference/mcp-stdio-migration-guide.md)"
+
+risk_level: L2
+effort: "1-2天"
+blocked_by:
+  - "下游包需配合修改 main entry"
+blocking: []
