@@ -79,18 +79,38 @@ uv run pytest tests/ --ignore=tests/e2e -q    # 1165/1200 pass
 
 Agora 对外提供的 BOS URI 服务。Agent 通过 `resolve_bos_uri()` 或 `read_resource()` 调用。
 
+### 核心路由 (internal)
 - `bos://agora/registry` — Agora 注册表内省 (resource)
   - 无需参数，直接 `read_resource("bos://agora/registry")`
-- `bos://memory/kos/search` — KOS 跨域语义搜索 (poc)
+
+### 记忆域 (memory)
+- `bos://memory/kos/search` — KOS 跨域语义搜索 (poc, stdio)
   - 输入: `{"query": "str", "limit": 10}`
-  - 输出: `{"results": [...]}`
-- `bos://analysis/minerva/research` — Minerva 深度研究 (poc)
-  - 输入: `{"topic": "str", "depth": "basic|deep"}`
-  - 输出: `{"report": "str", "sources": [...]}`
-- `bos://analysis/codeanalyze/scan` — CodeAnalyze 代码扫描 (poc)
-  - 输入: `{"path": "str"}`
-  - 输出: `{"issues": [...]}`
+- `bos://memory/kronos/ingest` — Kronos 知识摄取 (poc, stdio)
+  - 输入: `{"source": "str", "url": "str"}`
+
+### 治理域 (omo)
 - `bos://governance/omo/audit` — OMO 治理审计 (internal)
-  - 无参数
-  - 输出: `{"summary": "str"}`
+- `bos://omo/metaos/gate` — MetaOS 决策门控 (poc, stdio)
+
+### 分析域 (analysis)
+- `bos://analysis/minerva/research` — Minerva 深度研究 (poc, stdio)
+  - 输入: `{"topic": "str", "depth": "L0|L1|L2|L3|L4"}` (默认 L2)
+- `bos://analysis/codeanalyze/scan` — CodeAnalyze 代码扫描 (poc, stdio)
+- `bos://analysis/ontoderive/align` — Ontoderive 文档对齐 (poc, stdio)
+
+### 能力域 (forge)
+- `bos://forge/registry/*` — Forge 工具集市 (proxy, mcp)
+
+### Agent MCP 工具 (直接调用)
+```
+resolve_bos_uri(uri, arguments)     — 路由 BOS URI 到后端
+read_resource(uri, params)           — 读资源 (proxy→poc 降级)
+mutate_resource(uri, payload)       — 写资源 (真路由 + L0 审计)
+list_bos_resources(prefix)           — 发现可用资源
+list_bos_domains()                   — 域统计
+get_bos_schema(uri)                  — 查询参数规范
+bos_metrics_status(prefix, format)   — 调用指标
+bos_middleware_status()              — 限流/熔断/缓存状态
+```
 

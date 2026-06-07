@@ -314,27 +314,56 @@ def cmd_run(args):
         print_error(f"工作流未找到: {args.name}")
         return 1
 
+    bos_uri = node.get("bos_uri", "")
     out.print_header(f"执行: {node.get('name')}")
     out.print_key_value({
-        "BOS URI": node.get("bos_uri", "?"),
+        "BOS URI": bos_uri,
         "实现方": node.get("cross_layer", {}).get("realized_by", [{}])[0].get("project", "?"),
-        "层": node.get("layer", "?"),
+        "步骤数": str(len(node.get("steps", []))),
     }, "基本信息")
 
     if args.dry_run:
-        out.print_progress("干运行模式")
-        steps = node.get("steps", [])
-        for s in steps:
+        out.print_progress("干运行模式 — 仅验证步骤")
+        for s in node.get("steps", []):
             dep_ok = True
             if s.get("depends_on"):
-                dep_ok = all(d in [st.get("name") for st in steps] for d in s["depends_on"])
+                dep_ok = all(d in [st.get("name") for st in node.get("steps", [])] for d in s["depends_on"])
             icon = "\033[32m✓\033[0m" if dep_ok else "\033[33m!\033[0m"
-            print(f"  {icon} 步骤 {s.get('order')}: {s.get('name')} → {s.get('action')}")
-        out.print_success(f"干运行完成 ({len(steps)} 步骤可执行)")
+            print(f"  {icon} {s.get('order')}. {s.get('name')} → {s.get('action')}")
+        out.print_success(f"干运行完成 ({len(node.get('steps', []))} 步骤)")
         return 0
 
-    out.print_warning("实际执行需通过 Agora Service Mesh 路由")
-    out.print_info(f"路径: {node.get('bos_uri')} → agora → {node.get('layer')} → 执行器")
+    # 尝试通过 BOS URI 实际执行
+    import subprocess, json
+    if bos_uri:
+        out.print_progress(f"通过 BOS URI 路由执行: {bos_uri}")
+        try:
+            result = subprocess.run(
+                ["python3", "-c", f"""
+import sys; sys.path.insert(0, '{HOME}/Workspace/projects/agora/src')
+from agora.mcp.bos_resolver import resolve_bos_uri, parse_bos_uri
+import asyncio
+info = parse_bos_uri('{bos_uri.replace("ecos/workflow/", "")}')
+action = info.get('action', 'main')
+try:
+    result = asyncio.run(resolve_bos_uri('{bos_uri.replace("ecos/workflow/", "")}'))
+    print(json.dumps(result))
+except Exception as e:
+    print(json.dumps({{'status': 'error', 'error': str(e)}}))
+"""],
+                capture_output=True, text=True, timeout=10,
+            )
+            out.print_success("执行完成")
+            print(f"\n\033[2m{result.stdout[:500]}\033[0m")
+            return 0
+        except subprocess.TimeoutExpired:
+            out.print_warning("执行超时 (10s)")
+        except Exception as e:
+            out.print_error(f"执行失败: {e}")
+    else:
+        out.print_warning("该工作流无 BOS URI，需通过 Agora Service Mesh 路由")
+        out.print_info("提示: 使用 'agora pipeline <name> --goal \"...\"' 通过 Agora 执行")
+
     return 0
 
 
