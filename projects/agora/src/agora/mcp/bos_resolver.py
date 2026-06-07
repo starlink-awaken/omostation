@@ -998,12 +998,12 @@ class StdioAdapter:
         )
 
     def health_check(self, uri: str) -> bool:
-        """检查 URI 对应的子进程是否存活。"""
+        """检查 URI 对应的子进程是否存活 (read-only, 不 force respawn)."""
         service = POC_SERVICES.get(uri)
         if not service:
             return False
         pool = get_pool()
-        proc = pool.get_or_spawn(service, uri)
+        proc = pool.get_or_spawn(service)  # 默认 force_respawn=False
         return proc is not None and proc.poll() is None
 
 
