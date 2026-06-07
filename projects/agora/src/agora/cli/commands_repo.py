@@ -2,7 +2,6 @@
 
 import argparse
 import asyncio
-import json
 
 from agora.cli.output import OutputFormatter
 from agora.mcp_registry.lifecycle import LifecycleManager  # type: ignore[import-not-found]
@@ -213,24 +212,23 @@ def _cmd_repo_pipeline(catalog: ToolCatalog, args: argparse.Namespace) -> int:
 
 def _cmd_repo_remove(catalog: ToolCatalog, args: argparse.Namespace) -> int:
     """Remove a tool from the catalog."""
+    out = OutputFormatter()
     ok = catalog.remove_tool(args.name_or_id)
     if ok:
-        print(f"Tool '{args.name_or_id}' removed from catalog.")
+        out.print_success(f"Tool '{args.name_or_id}' removed from catalog.")
         return 0
-    print(f"Tool not found: {args.name_or_id}")
+    out.print_error(f"Tool not found: {args.name_or_id}")
     return 1
 
 
 def _cmd_repo_run(catalog: ToolCatalog, args: argparse.Namespace) -> int:
     """Run a natural language query through the Smart Router."""
-    import asyncio
-
     from agora.mcp_registry.embeddings import EmbeddingStore  # type: ignore[import-not-found]
     from agora.mcp_registry.router import SmartRouter  # type: ignore[import-not-found]
 
+    out = OutputFormatter()
     if not args.query:
-        print("Error: run requires a query string.")
-        print("Usage: agora repo run <query> [--mode direct|recommend|auto]")
+        out.print_error("run requires a query string.", suggestion="Usage: agora repo run <query> [--mode direct|recommend|auto]")
         return 1
 
     async def _run():
@@ -238,7 +236,7 @@ def _cmd_repo_run(catalog: ToolCatalog, args: argparse.Namespace) -> int:
         router = SmartRouter(catalog, embeddings=embeddings)
         try:
             result = await router.route(args.query, mode=getattr(args, "mode", "auto"))
-            _print_json(result)
+            out.print_json(result)
             return 0 if result.get("status") == "ok" else 1
         finally:
             embeddings.close()

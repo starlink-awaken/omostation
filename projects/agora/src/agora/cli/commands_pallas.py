@@ -17,6 +17,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+from agora.cli.errors import CLIError
+from agora.cli.output import OutputFormatter
+
 EXPECTED_FORMAT_VERSION = "ontoderive-v1"
 
 
@@ -80,97 +83,145 @@ def _find_cli(cmd: str, pkg: str) -> str | None:
 
 
 def pcmd_match(args):
-    _ontoderive_cmd = _find_cli("ontoderive", "ontoderive")
-    if not _ontoderive_cmd:
-        return
-    cmd = [_ontoderive_cmd, "toolforge", args.goal]
-    if args.context:
-        cmd.extend(["--context", args.context])
-    if args.inference_guide:
-        cmd.append("--inference-guide")
-    elif args.json:
-        cmd.append("--json")
-    _run_cli(cmd, "ontoderive toolforge")
+    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    try:
+        _ontoderive_cmd = _find_cli("ontoderive", "ontoderive")
+        if not _ontoderive_cmd:
+            return 1
+        cmd = [_ontoderive_cmd, "toolforge", args.goal]
+        if args.context:
+            cmd.extend(["--context", args.context])
+        if args.inference_guide:
+            cmd.append("--inference-guide")
+        elif args.json:
+            cmd.append("--json")
+        _run_cli(cmd, "ontoderive toolforge")
+    except CLIError as e:
+        out.print_error(e.message, e.suggestion)
+        return e.exit_code
+    except Exception as e:
+        out.print_error(str(e), "使用 'agora --help' 获取帮助")
+        return 1
 
 
 def pcmd_derive(args):
-    _ontoderive_cmd = _find_cli("ontoderive", "ontoderive")
-    if not _ontoderive_cmd:
-        return
-    cmd = [_ontoderive_cmd, "derive", "--project", args.project]
-    if args.with_tools:
-        cmd.append("--with-tools")
-        if args.goal:
-            cmd.extend(["--goal", args.goal])
-        if args.tool_context:
-            cmd.extend(["--tool-context", args.tool_context])
-    _run_cli(cmd, "ontoderive derive")
+    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    try:
+        _ontoderive_cmd = _find_cli("ontoderive", "ontoderive")
+        if not _ontoderive_cmd:
+            return 1
+        cmd = [_ontoderive_cmd, "derive", "--project", args.project]
+        if args.with_tools:
+            cmd.append("--with-tools")
+            if args.goal:
+                cmd.extend(["--goal", args.goal])
+            if args.tool_context:
+                cmd.extend(["--tool-context", args.tool_context])
+        _run_cli(cmd, "ontoderive derive")
+    except CLIError as e:
+        out.print_error(e.message, e.suggestion)
+        return e.exit_code
+    except Exception as e:
+        out.print_error(str(e), "使用 'agora --help' 获取帮助")
+        return 1
 
 
 def pcmd_check(args):
-    _ontoderive_cmd = _find_cli("ontoderive", "ontoderive")
-    if not _ontoderive_cmd:
-        return
-    cmd = [_ontoderive_cmd, "check", "--project", args.project]
-    subprocess.run(cmd)
+    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    try:
+        _ontoderive_cmd = _find_cli("ontoderive", "ontoderive")
+        if not _ontoderive_cmd:
+            return 1
+        cmd = [_ontoderive_cmd, "check", "--project", args.project]
+        _run_cli(cmd, "ontoderive check")
+    except CLIError as e:
+        out.print_error(e.message, e.suggestion)
+        return e.exit_code
+    except Exception as e:
+        out.print_error(str(e), "使用 'agora --help' 获取帮助")
+        return 1
 
 
 def pcmd_pipeline(args):
-    _ontoderive_cmd = _find_cli("ontoderive", "ontoderive")
-    if not _ontoderive_cmd:
-        return
-    goal = args.goal
-    project = args.project
-    context = args.context or ""
+    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    try:
+        _ontoderive_cmd = _find_cli("ontoderive", "ontoderive")
+        if not _ontoderive_cmd:
+            return 1
+        goal = args.goal
+        project = args.project
+        context = args.context or ""
 
-    print(f"\n{'=' * 60}")
-    print("  Pallas full pipeline")
-    print(f"  Goal: {goal}")
-    print(f"  Project: {project}")
-    print(f"{'=' * 60}\n")
+        print(f"\n{'=' * 60}")
+        print("  Pallas full pipeline")
+        print(f"  Goal: {goal}")
+        print(f"  Project: {project}")
+        print(f"{'=' * 60}\n")
 
-    print("- Step 1/3: ToolForge matching")
-    cmd = [_ontoderive_cmd, "toolforge", goal, "--inference-guide"]
-    if context:
-        cmd.extend(["--context", context])
-    subprocess.run(cmd)
+        print("- Step 1/3: ToolForge matching")
+        cmd = [_ontoderive_cmd, "toolforge", goal, "--inference-guide"]
+        if context:
+            cmd.extend(["--context", context])
+        subprocess.run(cmd)
 
-    print("\n- Step 2/3: OntoDerive derivation")
-    cmd = [
-        _ontoderive_cmd,
-        "derive",
-        "--project",
-        project,
-        "--with-tools",
-        "--goal",
-        goal,
-    ]
-    if context:
-        cmd.extend(["--tool-context", context])
-    _run_cli(cmd, "pipeline derive")
+        print("\n- Step 2/3: OntoDerive derivation")
+        cmd = [
+            _ontoderive_cmd,
+            "derive",
+            "--project",
+            project,
+            "--with-tools",
+            "--goal",
+            goal,
+        ]
+        if context:
+            cmd.extend(["--tool-context", context])
+        _run_cli(cmd, "pipeline derive")
 
-    print("\n- Step 3/3: Protocol check")
-    _run_cli([_ontoderive_cmd, "check", "--project", project], "pipeline check")
+        print("\n- Step 3/3: Protocol check")
+        _run_cli([_ontoderive_cmd, "check", "--project", project], "pipeline check")
 
-    print(f"\n{'=' * 60}")
-    print("  Pipeline complete")
-    print(f"  Guide: {project}/inferences/_toolforge_guide.md")
-    print(f"{'=' * 60}\n")
+        print(f"\n{'=' * 60}")
+        print("  Pipeline complete")
+        print(f"  Guide: {project}/inferences/_toolforge_guide.md")
+        print(f"{'=' * 60}\n")
+    except CLIError as e:
+        out.print_error(e.message, e.suggestion)
+        return e.exit_code
+    except Exception as e:
+        out.print_error(str(e), "使用 'agora --help' 获取帮助")
+        return 1
 
 
 def pcmd_init(args):
-    _ontoderive_cmd = _find_cli("ontoderive", "ontoderive")
-    if not _ontoderive_cmd:
-        return
-    cmd = [_ontoderive_cmd, "init", args.name]
-    subprocess.run(cmd)
+    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    try:
+        _ontoderive_cmd = _find_cli("ontoderive", "ontoderive")
+        if not _ontoderive_cmd:
+            return 1
+        cmd = [_ontoderive_cmd, "init", args.name]
+        subprocess.run(cmd)
+    except CLIError as e:
+        out.print_error(e.message, e.suggestion)
+        return e.exit_code
+    except Exception as e:
+        out.print_error(str(e), "使用 'agora --help' 获取帮助")
+        return 1
 
 
 def pcmd_serve(args):
-    print("Starting Agora MCP Hub...")
-    agora_path = shutil.which("agora")
-    if agora_path:
-        _run_cli(["agora", "sync"], "agora sync")
+    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    try:
+        out.print_info("Starting Agora MCP Hub...")
+        agora_path = shutil.which("agora")
+        if agora_path:
+            _run_cli(["agora", "sync"], "agora sync")
+    except CLIError as e:
+        out.print_error(e.message, e.suggestion)
+        return e.exit_code
+    except Exception as e:
+        out.print_error(str(e), "使用 'agora --help' 获取帮助")
+        return 1
 
 
 FORGE_MCP = "forge-bridge"
@@ -203,33 +254,42 @@ def _forge_mcp_call(tool_name: str, arguments: dict | None = None) -> dict | Non
 
 
 def pcmd_toolbox(args):
-    if args.toolbox_command == "search":
-        print(f"Searching tools: {args.query}")
-        result = _forge_mcp_call("search_tools_mcp", {"query": args.query})
-        if result:
-            tools = result.get("tools", [])
-            print(f"  Matched {len(tools)} tools")
-            for tool in tools[:10]:
-                cats = ", ".join(tool.get("category", []))
-                print(f"  [{cats}] {tool.get('name', '?')}")
-                print(f"    {tool.get('notes', '')[:120]}")
-    elif args.toolbox_command == "status":
-        result = _forge_mcp_call("ai_toolbox_status")
-        if result:
-            print("Forge status")
-            print(f"  Tool count: {result.get('tools', result.get('tool_count', '?'))}")
-            g = result.get("graph", {})
-            print(f"  Graph nodes: {g.get('total_nodes', '?')}")
-            print(f"  Graph edges: {g.get('total_edges', '?')}")
-    elif args.toolbox_command == "graph":
-        print(f"Querying knowledge graph: {args.query}")
-        result = _forge_mcp_call("query_graph_mcp", {"query": args.query})
-        if result:
-            nodes = result.get("nodes", result)
-            count = result.get("count", len(nodes) if isinstance(nodes, list) else 0)
-            print(f"  Matched {count} nodes")
-            for node in (nodes if isinstance(nodes, list) else [])[:20]:
-                print(f"  - {node.get('label', node.get('id', '?'))}  [{node.get('type', '?')}]")
+    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    try:
+        if args.toolbox_command == "search":
+            print(f"Searching tools: {args.query}")
+            result = _forge_mcp_call("search_tools_mcp", {"query": args.query})
+            if result:
+                tools = result.get("tools", [])
+                print(f"  Matched {len(tools)} tools")
+                for tool in tools[:10]:
+                    cats = ", ".join(tool.get("category", []))
+                    print(f"  [{cats}] {tool.get('name', '?')}")
+                    print(f"    {tool.get('notes', '')[:120]}")
+        elif args.toolbox_command == "status":
+            result = _forge_mcp_call("ai_toolbox_status")
+            if result:
+                print("Forge status")
+                print(f"  Tool count: {result.get('tools', result.get('tool_count', '?'))}")
+                g = result.get("graph", {})
+                print(f"  Graph nodes: {g.get('total_nodes', '?')}")
+                print(f"  Graph edges: {g.get('total_edges', '?')}")
+        elif args.toolbox_command == "graph":
+            print(f"Querying knowledge graph: {args.query}")
+            result = _forge_mcp_call("query_graph_mcp", {"query": args.query})
+            if result:
+                nodes = result.get("nodes", result)
+                count = result.get("count", len(nodes) if isinstance(nodes, list) else 0)
+                print(f"  Matched {count} nodes")
+                for node in (nodes if isinstance(nodes, list) else [])[:20]:
+                    print(f"  - {node.get('label', node.get('id', '?'))}  [{node.get('type', '?')}]")
+        return 0
+    except CLIError as e:
+        out.print_error(e.message, e.suggestion)
+        return e.exit_code
+    except Exception as e:
+        out.print_error(str(e), "使用 'agora --help' 获取帮助")
+        return 1
 
 
 def add_pallas_subparser(subparsers):
@@ -280,17 +340,26 @@ def add_pallas_subparser(subparsers):
 
 def dispatch_pallas(args):
     """Dispatch pallas subcommand."""
-    commands = {
-        "match": pcmd_match,
-        "derive": pcmd_derive,
-        "check": pcmd_check,
-        "pipeline": pcmd_pipeline,
-        "init": pcmd_init,
-        "serve": pcmd_serve,
-        "toolbox": pcmd_toolbox,
-    }
-    handler = commands.get(args.pallas_cmd)
-    if handler:
-        handler(args)
-    else:
-        print("Usage: agora pallas {match|derive|check|pipeline|init|serve|toolbox} [options]")
+    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    try:
+        commands = {
+            "match": pcmd_match,
+            "derive": pcmd_derive,
+            "check": pcmd_check,
+            "pipeline": pcmd_pipeline,
+            "init": pcmd_init,
+            "serve": pcmd_serve,
+            "toolbox": pcmd_toolbox,
+        }
+        handler = commands.get(args.pallas_cmd)
+        if handler:
+            return handler(args)
+        else:
+            print("Usage: agora pallas {match|derive|check|pipeline|init|serve|toolbox} [options]")
+            return 1
+    except CLIError as e:
+        out.print_error(e.message, e.suggestion)
+        return e.exit_code
+    except Exception as e:
+        out.print_error(str(e), "使用 'agora --help' 获取帮助")
+        return 1

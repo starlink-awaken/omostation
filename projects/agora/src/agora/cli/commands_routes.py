@@ -2,32 +2,69 @@
 
 from __future__ import annotations
 
-import json
-
+from agora.cli.errors import CLIError
+from agora.cli.output import OutputFormatter
 from agora.core.router import Router  # type: ignore[import-not-found]
 from agora.core.state import get_registry  # type: ignore[import-not-found]
 
 
 def cmd_route(args):
     """Add a tool route."""
-    registry = get_registry()
-    router = Router(registry)
-    router.add_route(args.tool, args.service)
-    print(f"Route added: '{args.tool}' -> '{args.service}'")
+    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    try:
+        registry = get_registry()
+        router = Router(registry)
+        router.add_route(args.tool, args.service)
+        out.print_success(f"Route added: '{args.tool}' -> '{args.service}'")
+        return 0
+    except CLIError as e:
+        out.print_error(e.message, e.suggestion)
+        return e.exit_code
+    except Exception as e:
+        out.print_error(str(e), "使用 'agora --help' 获取帮助")
+        return 1
 
 
-def cmd_routes(_args):
+def cmd_routes(args):
     """List all routes."""
-    registry = get_registry()
-    router = Router(registry)
-    print(json.dumps(router.list_routes(), ensure_ascii=False, indent=2))
+    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    try:
+        registry = get_registry()
+        router = Router(registry)
+        routes = router.list_routes()
+        if args.json:
+            out.print_json(routes)
+        else:
+            if not routes:
+                out.print_info("没有配置的路由。使用 'agora route add' 添加路由")
+            else:
+                out.print_table(
+                    ["工具", "服务"],
+                    [[tool, svc] for tool, svc in routes.items()],
+                    title="路由表"
+                )
+        return 0
+    except CLIError as e:
+        out.print_error(e.message, e.suggestion)
+        return e.exit_code
+    except Exception as e:
+        out.print_error(str(e), "使用 'agora --help' 获取帮助")
+        return 1
 
 
 def cmd_instance(args):
     """Load-balanced instance operations."""
-    registry = get_registry()
-    router = Router(registry)
-    if args.instance_cmd == "add":
-        router._add_instance(args.service, args.mcp, args.health, args.port)
-        print(f"Instance added: {args.service} -> {args.mcp}")
-    return 0
+    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    try:
+        registry = get_registry()
+        router = Router(registry)
+        if args.instance_cmd == "add":
+            router._add_instance(args.service, args.mcp, args.health, args.port)
+            out.print_success(f"Instance added: {args.service} -> {args.mcp}")
+        return 0
+    except CLIError as e:
+        out.print_error(e.message, e.suggestion)
+        return e.exit_code
+    except Exception as e:
+        out.print_error(str(e), "使用 'agora --help' 获取帮助")
+        return 1
