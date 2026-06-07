@@ -1,0 +1,28 @@
+m2_type: hardware_asset
+version: 1.0.0
+created: '2026-06-07'
+hardware_asset:
+  m3_parent: StructuralElement.Component
+  description: 具体硬件资产（如 CPU, GPU, 内存配置等）
+  icon: 💾
+  stateMachine:
+    active:
+      description: 运行中
+      transitions: []
+  requiredProperties:
+    node_ref:
+      type: ref
+      description: 所属计算节点 (Compute Node)
+    device_type:
+      type: string
+      description: 硬件类型 (cpu, gpu, npu, memory)
+  optionalProperties:
+    model:
+      type: string
+      description: 具体型号 (如 Apple M2, RTX 4060)
+    vram_gb:
+      type: float
+      description: 显存大小 (GB)
+    ram_gb:
+      type: float
+      description: 内存大小 (GB)

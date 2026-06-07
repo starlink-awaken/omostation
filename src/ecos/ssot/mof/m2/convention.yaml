@@ -1,0 +1,75 @@
+# M2: Convention
+# Split from M2-元模型.yaml
+
+m2_type: Convention
+version: 1.0.0
+created: '2026-06-06'
+Convention:
+  m3_parent: GovernanceElement.Specification
+  description: 命名约定·编码规范·文档结构标准。回答'怎么写才对'。
+  icon: 📏
+  stateMachine:
+    proposed:
+      description: 提议中
+      transitions:
+      - adopted
+      - rejected
+    adopted:
+      description: 已采纳
+      transitions:
+      - amended
+      - deprecated
+    amended:
+      description: 已修订
+      transitions:
+      - adopted
+    deprecated:
+      description: 已废弃
+      transitions:
+      - archived
+    archived:
+      description: 归档
+      transitions: []
+    rejected:
+      description: 已拒绝
+      transitions: []
+  requiredProperties:
+    rule:
+      type: string
+      description: 约定规则
+    scope:
+      type: enum
+      values:
+      - global
+      - layer
+      - domain
+      - project
+      description: 适用范围
+  optionalProperties:
+    enforcement:
+      type: enum
+      values:
+      - mandatory
+      - recommended
+      - optional
+      description: 强制级别
+    examples_good:
+      type: list
+      description: 正例
+    examples_bad:
+      type: list
+      description: 反例
+    auto_check:
+      type: boolean
+      description: 是否可自动检测
+  validationRules:
+  - rule: rule != null and scope != null
+    level: error
+    message: 约定必须有 规则/范围
+  examples:
+  - id: CONV-2026-06-06-001
+    name: CLAUDE.md 标准模板
+    description: §0 SSOT·§1定位·§2路由·维护节
+  - id: CONV-2026-06-06-002
+    name: CARDS ID 格式
+    description: '{TYPE}-{YYYY}-{MM}-{DD}-{NNN}'

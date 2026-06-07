@@ -1,0 +1,8 @@
+id: HW-RTX4060-Y7000P
+type: hardware_asset
+node_ref: NODE-Y7000P
+device_type: gpu
+model: "Nvidia RTX 4060 Laptop"
+vram_gb: 8.0
+status: active
+description: "Y7000P 搭载的独立显卡，适合运行中小规模模型吞吐"

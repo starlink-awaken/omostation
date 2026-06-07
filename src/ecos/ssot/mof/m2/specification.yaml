@@ -1,0 +1,78 @@
+# M2: Specification
+# Split from M2-元模型.yaml
+
+m2_type: Specification
+version: 1.0.0
+created: '2026-06-06'
+Specification:
+  m3_parent: GovernanceElement.Specification
+  description: 形式化的规则集合——定义'必须遵守什么'。
+  icon: 📋
+  stateMachine:
+    draft:
+      description: 起草中
+      transitions:
+      - active
+    active:
+      description: 生效中·强制执行
+      transitions:
+      - amended
+      - deprecated
+    amended:
+      description: 修订中·部分条款变更
+      transitions:
+      - active
+    deprecated:
+      description: 已废弃
+      transitions:
+      - archived
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    constraints:
+      type: list
+      description: 包含的约束规则 (→Constraint)
+    scope:
+      type: list
+      description: 适用范围 (→Layer 或 →Component)
+  optionalProperties:
+    validator:
+      type: ref
+      description: 校验器 (→Artifact)
+    enforcement:
+      type: enum
+      description: 执行模式
+      values:
+      - warn
+      - enforce
+      - audit_only
+      default: warn
+    exemptions:
+      type: list
+      description: 豁免条件
+  validationRules:
+  - rule: constraints.size >= 1
+    level: error
+    message: 规范必须包含至少一条约束
+  - rule: scope.size >= 1
+    level: error
+    message: 规范必须声明适用范围
+  - rule: status == 'active' implies enforcement != null
+    level: warning
+    message: 生效规范应明确执行模式
+  relationConstraints:
+    can_be_source_of:
+    - Constrains
+    - Contains
+    can_be_target_of:
+    - Constrains
+    - References
+    - Audits
+  examples:
+  - id: SPEC-2026-06-06-001
+    name: L0 协议约束规范
+    description: L0-constraints.yaml — 9条约束覆盖X1-X3
+  - id: SPEC-2026-06-06-002
+    name: CLAUDE.md 写作规范
+    description: §0 SSOT声明·§1模块定位·§2快速路由·更新规则·维护周期

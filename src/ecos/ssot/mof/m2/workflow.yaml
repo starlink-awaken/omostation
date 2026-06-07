@@ -1,0 +1,52 @@
+# M2: Workflow
+
+m2_type: Workflow
+version: 1.0.0
+created: '2026-06-06'
+Workflow:
+  m3_parent: BehavioralElement.Process
+  description: 工作流——有明确步骤序列的 Agent 执行流程。如 debug workflow·deploy workflow。回答"怎么做"。
+  icon: 📋
+  stateMachine:
+    defined:
+      description: defined
+      transitions:
+      - active
+      - deprecated
+    active:
+      description: active
+      transitions:
+      - deprecated
+      - archived
+    deprecated:
+      description: deprecated
+      transitions:
+      - archived
+    archived:
+      description: archived
+      transitions: []
+  requiredProperties:
+    workflow_name:
+      type: string
+      description: 工作流名称
+    steps:
+      type: string
+      description: 步骤序列
+  optionalProperties:
+    trigger:
+      type: string
+      description: 触发条件
+    agent:
+      type: string
+      description: 执行 Agent
+    timeout:
+      type: string
+      description: 超时
+  validationRules:
+  - rule: workflow_name != null
+    level: error
+    message: Workflow 必须有 workflow_name
+  examples:
+  - id: WORKFLOW-2026-06-06-001
+    name: 示例 Workflow
+    description: 工作流——有明确步骤序列的 Agent 执行流程。如 debug workflow·deploy workflow。回答"怎么做"。

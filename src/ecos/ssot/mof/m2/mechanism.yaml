@@ -1,0 +1,96 @@
+# M2: Mechanism
+# Split from M2-元模型.yaml
+
+m2_type: Mechanism
+version: 1.0.0
+created: '2026-06-06'
+Mechanism:
+  m3_parent: BehavioralElement.Mechanism
+  description: 自动化或半自动化的运行机制——定义'系统如何自动运作'。
+  icon: ⚙️
+  stateMachine:
+    designed:
+      description: 设计完成·待实现
+      transitions:
+      - implemented
+    implemented:
+      description: 已实现·待部署
+      transitions:
+      - active
+    active:
+      description: 运行中
+      transitions:
+      - degraded
+      - stopped
+    degraded:
+      description: 降级运行·部分功能异常
+      transitions:
+      - active
+      - stopped
+    stopped:
+      description: 已停止
+      transitions:
+      - active
+      - archived
+    archived:
+      description: 已移除
+      transitions: []
+  requiredProperties:
+    trigger:
+      type: string
+      description: 触发条件 (cron/event/manual/api)
+    action:
+      type: string
+      description: 执行动作描述
+    interval:
+      type: integer
+      description: 执行间隔(秒)，0=事件驱动
+  optionalProperties:
+    feedback:
+      type: string
+      description: 反馈方式 (log/alert/event/cards)
+    fallback:
+      type: string
+      description: 降级策略
+    depends_on:
+      type: list
+      description: 依赖的其他机制/组件
+    sla_target:
+      type: map
+      description: 'SLA 目标 {metric: target}'
+  validationRules:
+  - rule: trigger != null
+    level: error
+    message: 机制必须有触发条件
+  - rule: action != null
+    level: error
+    message: 机制必须有执行动作
+  - rule: status == 'active' implies feedback != null
+    level: warning
+    message: 运行中的机制应有反馈方式
+  relationConstraints:
+    can_be_source_of:
+    - Invokes
+    - Triggers
+    can_be_target_of:
+    - Invokes
+    - Triggers
+    - Constrains
+    cardinality_rules:
+    - relation: Invokes
+      from: Mechanism
+      to: Artifact
+      cardinality: N:M
+      note: 机制可调用多个脚本
+    - relation: Triggers
+      from: Mechanism
+      to: Mechanism
+      cardinality: 1:N
+      note: 一个机制可触发多个子机制
+  examples:
+  - id: MECH-2026-06-06-001
+    name: Daemon 定时循环
+    description: 每 6h 触发健康检查+保鲜+协议校验
+  - id: MECH-2026-06-06-002
+    name: 自愈框架
+    description: 检测异常→尝试恢复→失败告警→创建 DEBT 卡片

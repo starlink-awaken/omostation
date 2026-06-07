@@ -1,0 +1,6 @@
+id: ZONE-HOME-LAN
+type: network_zone
+zone_type: lan
+latency_profile: low
+status: active
+description: "家庭局域网，连通 MacMini, Y7000P 和 Local-Mac"
