@@ -28,7 +28,8 @@ def _action_agent_list(args: dict[str, Any]) -> dict[str, Any]:
     from runtime.executor.agent_hub import AgentHub  # type: ignore[import-not-found]
 
     hub = AgentHub()
-    return {"status": "ok", "result": {"agents": [a.to_dict() for a in hub.list_all()]}}
+    agents = [a.to_dict() for a in hub.list_all()]
+    return {"status": "ok", "result": {"agents": agents, "args_echo": args}}
 
 
 def _action_chat(args: dict[str, Any]) -> dict[str, Any]:
