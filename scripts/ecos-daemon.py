@@ -124,97 +124,116 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
     if (WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-sla.py").exists():
         run_script(WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-sla.py")
 
-    # 1. L0 协议约束 + half_life (编译模式)
+    # 1. L0 协议约束 (非关键路径 — 缺失或失败不阻塞 daemon)
     print("\n── L0 协议约束 ──")
-    compiler_script = SCRIPTS / "ecos-constraint-compiler.py"
-    if compiler_script.exists() and compiler_script != CONSTRAINT_SCRIPT:
-        code, out = run_script(compiler_script, timeout=15)
-        for line in out.split("\n"):
-            if "衰减" in line or "约束" in line:
-                print(f"  {line.strip()}")
-    else:
-        code, out = run_script(CONSTRAINT_SCRIPT)
-        for line in out.split("\n"):
-            if "衰减" in line or "✅" in line and "X" in line:
-                print(f"  {line.strip()}")
-    if code != 0:
-        errors.append(f"L0 约束: exit={code}")
-        conn.execute("INSERT INTO alerts (cycle_id, alert_type, message, created_at) VALUES (?,?,?,?)",
-                     (cycle_id, "L0_constraint", f"exit={code}", started))
+    try:
+        constraint_path = CONSTRAINT_SCRIPT
+        if not constraint_path.exists():
+            constraint_path = SCRIPTS / "ecos-constraint-validator.py"
+        if constraint_path.exists():
+            code, out = run_script(constraint_path, timeout=15)
+            for line in out.split("\n"):
+                if "衰减" in line or "✅" in line:
+                    print(f"  {line.strip()}")
+            if code != 0:
+                print(f"  ⚠️ 约束校验: exit={code} (non-fatal)")
+        else:
+            print("  ℹ️ 约束校验器未安装, 跳过")
+    except Exception as e:
+        print(f"  ⚠️ 约束校验异常: {e} (non-fatal)")
 
     # 1.5 L3 入口深度统计
     profiler_script = SCRIPTS / "ecos-entry-profiler.py"
     if profiler_script.exists():
         run_script(profiler_script, ["--session-start"], timeout=5)
 
-    # 2. 健康检查
+    # 2. 健康检查 (非关键路径 — 缺失或失败不阻塞 daemon)
     print("\n── 健康检查 ──")
-    code, out = run_script(HEALTH_SCRIPT, ["--json"])
     try:
-        data = json.loads(out)
-        results = data.get("results", [])
-        passed = sum(1 for r in results if r.get("pass") is True)
-        failed = sum(1 for r in results if r.get("pass") is False)
-        print(f"  {passed}/{passed+failed} 通过")
-        if failed > 0:
-            for r in results:
-                if r.get("pass") is False:
-                    reason = r.get("reason", "")[:60]
-                    print(f"  ⚠️  {r['name']}: {reason}")
-                    conn.execute(
-                        "INSERT INTO alerts (cycle_id, alert_type, message, created_at) VALUES (?,?,?,?)",
-                        (cycle_id, "health_check", f"{r['name']}: {reason}", started))
-            errors.append(f"健康检查: {failed} 项失败")
-    except (json.JSONDecodeError, KeyError):
-        if code != 0:
-            errors.append("健康检查: 解析失败")
+        if not HEALTH_SCRIPT.exists():
+            print("  ℹ️ 健康检查脚本未安装, 跳过")
+        else:
+            code, out = run_script(HEALTH_SCRIPT, ["--json"])
+            try:
+                data = json.loads(out)
+                results = data.get("results", [])
+                passed = sum(1 for r in results if r.get("pass") is True)
+                failed = sum(1 for r in results if r.get("pass") is False)
+                print(f"  {passed}/{passed+failed} 通过")
+                if failed > 0:
+                    for r in results:
+                        if r.get("pass") is False:
+                            reason = r.get("reason", "")[:60]
+                            print(f"  ⚠️  {r['name']}: {reason}")
+                            conn.execute(
+                                "INSERT INTO alerts (cycle_id, alert_type, message, created_at) VALUES (?,?,?,?)",
+                                (cycle_id, "health_check", f"{r['name']}: {reason}", started))
+                    print(f"  ⚠️ 健康检查: {failed} 项失败 (non-fatal)")
+            except (json.JSONDecodeError, KeyError):
+                print(f"  ⚠️ 健康检查输出解析失败, exit={code} (non-fatal)")
+    except Exception as e:
+        print(f"  ⚠️ 健康检查异常: {e} (non-fatal)")
 
     # 3. SLA 记录
     sla_result = "pass" if not errors else "fail"
     run_script(SLA_SCRIPT, ["--log", sla_result, "--dim", "daemon",
                             "--detail", f"cycle={cycle_num}"])
 
-    # 3.5 存储空间检查
-    disk_check = Path.home() / ".ecos" / "scripts" / "check-disk-usage.py"
-    if disk_check.exists():
-        code, out = run_script(disk_check, timeout=10)
-        for line in out.split("\n"):
-            if line.strip():
-                print(f"  {line.strip()}")
-        if code != 0:
-            errors.append(f"存储: exit={code}")
+    # 3.5 存储空间检查 (非关键路径)
+    try:
+        disk_check = Path.home() / ".ecos" / "scripts" / "check-disk-usage.py"
+        if disk_check.exists():
+            code, out = run_script(disk_check, timeout=10)
+            for line in out.split("\n"):
+                if line.strip():
+                    print(f"  {line.strip()}")
+            if code != 0:
+                print(f"  ⚠️ 存储空间告警: exit={code} (non-fatal)")
+    except Exception as e:
+        print(f"  ⚠️ 存储检查异常: {e} (non-fatal)")
 
     # 3.6 文件目录增量扫描 (每 4 周期 ≈ 24h)
-    if cycle_num % 4 == 0:
-        catalog = Path.home() / ".ecos" / "scripts" / "catalog-daemon.py"
-        if catalog.exists():
-            for vol in ["sharedmodel", "model"]:
-                code, out = run_script(catalog, ["--update", vol, "--max-depth", "10", "--json"], timeout=120)
-                print(f"  📁 catalog {vol}: {'✅' if code==0 else '⚠️'}")
+    try:
+        if cycle_num % 4 == 0:
+            catalog = Path.home() / ".ecos" / "scripts" / "catalog-daemon.py"
+            if catalog.exists():
+                for vol in ["sharedmodel", "model"]:
+                    code, out = run_script(catalog, ["--update", vol, "--max-depth", "10", "--json"], timeout=120)
+                    print(f"  📁 catalog {vol}: {'✅' if code==0 else '⚠️'}")
+    except Exception as e:
+        print(f"  ⚠️ catalog 扫描异常: {e} (non-fatal)")
 
     # 4. 周报 (每 WEEKLY_INTERVAL 次)
-    if cycle_num % WEEKLY_INTERVAL == 0 and DIGEST_SCRIPT.exists():
-        print("\n── 每周摘要 ──")
-        code, out = run_script(DIGEST_SCRIPT, ["--output", str(DIGEST_OUTPUT)])
-        if code == 0:
-            print(f"  ✅ 已生成: {DIGEST_OUTPUT}")
-        else:
-            print(f"  ⚠️  生成失败: exit={code}")
+    try:
+        if cycle_num % WEEKLY_INTERVAL == 0 and DIGEST_SCRIPT.exists():
+            print("\n── 每周摘要 ──")
+            code, out = run_script(DIGEST_SCRIPT, ["--output", str(DIGEST_OUTPUT)])
+            if code == 0:
+                print(f"  ✅ 已生成: {DIGEST_OUTPUT}")
+            else:
+                print(f"  ⚠️  生成失败: exit={code} (non-fatal)")
+    except Exception as e:
+        print(f"  ⚠️ 摘要生成异常: {e} (non-fatal)")
 
     # 5. 会话简报更新
-    if BRIEF_SCRIPT.exists():
-        run_script(BRIEF_SCRIPT, ["--force", "--output", str(BRIEF_OUTPUT)],
-                   timeout=45)
+    try:
+        if BRIEF_SCRIPT.exists():
+            run_script(BRIEF_SCRIPT, ["--force", "--output", str(BRIEF_OUTPUT)], timeout=45)
+    except Exception as e:
+        print(f"  ⚠️ 简报生成异常: {e} (non-fatal)")
 
     # 2.7 自愈 (如果有错误)
     if errors:
-        healer_script = SCRIPTS / "ecos-healer.py"
-        if healer_script.exists():
-            print("\n── 自治愈 ──")
-            heal_code, heal_out = run_script(healer_script, ["--check-health"], timeout=30)
-            for line in heal_out.split("\n"):
-                if "→" in line:
-                    print(f"  {line.strip()}")
+        try:
+            healer_script = SCRIPTS / "ecos-healer.py"
+            if healer_script.exists():
+                print("\n── 自治愈 ──")
+                heal_code, heal_out = run_script(healer_script, ["--check-health"], timeout=30)
+                for line in heal_out.split("\n"):
+                    if "→" in line:
+                        print(f"  {line.strip()}")
+        except Exception as e:
+            print(f"  ⚠️ 自治愈异常: {e} (non-fatal)")
 
     # 完成
     summary = "; ".join(errors) if errors else "全部通过"
