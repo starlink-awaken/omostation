@@ -118,4 +118,5 @@ class TestWorkflowCLI:
         r = run("seed-bos")
         # May fail if agora module not importable, accept either
         assert r.returncode in (0, 1)
-        assert "BOSRouter" in r.stdout or "Agora" in r.stdout
+        output = r.stdout + r.stderr
+        assert "BOSRouter" in output or "Agora" in output

@@ -14,9 +14,9 @@ import sqlite3
 import sys
 from pathlib import Path
 
-ECOS_HOME = Path(__file__).resolve().parents[3]
+from ecos.common.common import ECOS_HOME, SSB_DB_PATH as DB_PATH
+
 KEY_FILE = ECOS_HOME / "LADS" / "ssb" / ".ssb_key"
-DB_PATH = ECOS_HOME / "LADS" / "ssb" / "ecos.db"
 
 
 def _load_key():
