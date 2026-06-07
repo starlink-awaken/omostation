@@ -26,13 +26,55 @@ cross_layer:
 steps:
   - order: 1
     name: FetchFromSources
-    action: fetch_from_sources
+    action: kronos.fetch
     description: "从 RSS、公众号等配置源采集原始内容"
     input:
-      - bos://memory/feeds/rss
-      - bos://memory/feeds/gzh
+      sources:
+        type: array
+        required: true
+        items: "bos://memory/feeds/{source}"
+        default: ["rss", "gzh"]
     output:
-      - raw_documents[]
+      raw_documents:
+        type: array
+        description: "原始文档列表"
+  - order: 2
+    name: ExtractContent
+    action: kronos.extract
+    description: "从原始文档提取结构化内容"
+    input:
+      raw_documents:
+        type: array
+        required: true
+    output:
+      extracted:
+        type: array
+  - order: 3
+    name: ClassifyContent
+    action: kronos.classify
+    description: "内容分类与标签"
+    input:
+      extracted:
+        type: array
+    output:
+      classified:
+        type: array
+        tags: "自动生成的分类标签"
+  - order: 4
+    name: DispatchToTargets
+    action: kronos.dispatch
+    description: "分发到 Vault / WPS / KOS"
+    input:
+      classified:
+        type: array
+      targets:
+        type: array
+        enum: ["vault", "wps", "kos"]
+        default: ["vault", "kos"]
+    output:
+      dispatched:
+        type: array
+        targets: "分发结果"
     depends_on: []
   - order: 2
     name: ExtractContent
