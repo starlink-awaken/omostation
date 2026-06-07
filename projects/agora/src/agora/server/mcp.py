@@ -55,6 +55,10 @@ import sys as _sys
 _sys.path.insert(0, str(Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools"))
 from mof_agora_hook import pre_check as _bos_pre_check, post_audit as _bos_post_audit  # type: ignore[import-not-found]
 
+# BOS URI 解析器 (P45 W1) — 统一 POC_SERVICES 路由
+from agora.mcp.bos_resolver import resolve_bos_uri as _resolve_bos_uri  # type: ignore[import-not-found]
+from agora.mcp.bos_resolver import list_services as _list_poc_services        # type: ignore[import-not-found]
+
 logger = structlog.get_logger(__name__)
 
 FORMAT_VERSION = "agora-v1"
@@ -537,8 +541,8 @@ def agora_registry() -> str:
 # ═══════════════════════════════════════════════════════════════
 
 @mcp.tool()
-async def mutate_resource(uri: str, payload: str, action: str = "update") -> str:
-    """Unified BOS URI mutation protocol. Modifies state at the specified URI.
+async def mutate_resource(uri: str, payload: str, action: str = "update") -> dict:
+    """Unified BOS URI mutation protocol. Routes to downstream service via resolve_bos_uri.
     
     Args:
         uri: The bos:// URI to mutate.
@@ -549,28 +553,26 @@ async def mutate_resource(uri: str, payload: str, action: str = "update") -> str
     import time as _time
     logger.info("mutate_resource", uri=uri, action=action)
     if not uri.startswith("bos://"):
-        return f"Error: Invalid URI scheme. Must start with bos://. Received {uri}"
+        return _error(f"Invalid URI scheme. Must start with bos://. Received: {uri}")
     
     # L0 前置校验
     ok, reason = _bos_pre_check(uri)
     if not ok:
         logger.warning("bos_pre_check_blocked", uri=uri, reason=reason)
-        return json.dumps({"status": "error", "code": 403, "reason": reason})
+        return _error(f"BOS pre-check failed: {reason}")
     
     _t0 = _time.time()
-    # Future: Parse URI and route to specific downstream FastMCP POST endpoints or tools
-    result = json.dumps({
-        "status": "success",
-        "action": action,
-        "mutated_uri": uri,
-        "message": f"Phase 34 Wave 2: mutated_resource executed for {uri}"
-    })
-    
-    # L0 后置审计
-    _duration_ms = int((_time.time() - _t0) * 1000)
-    _bos_post_audit(uri, 200, _duration_ms)
-    
-    return result
+    try:
+        # P45 W1: 真实路由 — 通过 resolve_bos_uri 调用下游服务
+        result = await _resolve_bos_uri(uri, payload=json.loads(payload) if isinstance(payload, str) else payload, action=action)
+        _duration_ms = int((_time.time() - _t0) * 1000)
+        _bos_post_audit(uri, 200, _duration_ms)
+        return _ok({"format_version": FORMAT_VERSION, "uri": uri, "action": action, "result": result})
+    except Exception as e:
+        _duration_ms = int((_time.time() - _t0) * 1000)
+        _bos_post_audit(uri, 500, _duration_ms)
+        logger.exception("mutate_resource_failed", uri=uri, action=action)
+        return _error(f"Mutation failed: {e}")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1754,6 +1756,116 @@ async def lifecycle_unload_all() -> dict:
 # ═══════════════════════════════════════════════════════════════
 # Section 11: Execution Engine
 # ═══════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════
+# Section: BOS URI 统一入口 (P45 W1)
+# ═══════════════════════════════════════════════════════════════
+
+@mcp.tool()
+async def resolve_bos_uri(uri: str, arguments: str = "{}") -> dict:
+    """将 BOS URI 解析为实际调用，路由到对应的后端服务。
+    
+    支持 bos://memory/* bos://omo/* bos://analysis/* bos://persona/* bos://forge/*
+    
+    Args:
+        uri: BOS URI (e.g. bos://memory/kos/search)
+        arguments: JSON 参数字符串 (e.g. '{"query": "什么是 eCOS?"}')
+    """
+    import json
+    try:
+        args = json.loads(arguments) if isinstance(arguments, str) else arguments
+    except json.JSONDecodeError:
+        return _error(f"Invalid JSON arguments: {arguments}")
+    try:
+        result = await _resolve_bos_uri(uri, **args)
+        return _ok({"format_version": FORMAT_VERSION, "uri": uri, "result": result})
+    except Exception as e:
+        logger.exception("resolve_bos_uri_failed", uri=uri)
+        return _error(f"BOS URI resolve failed: {e}")
+
+
+@mcp.tool()
+async def read_resource(uri: str, params: str = "{}") -> dict:
+    """通过 BOS URI 读取资源。先尝试 ProxyManager (MCP 下游)，回退到 bos_resolver。
+
+    Args:
+        uri: BOS URI (e.g. bos://memory/kos/search)
+        params: JSON 参数字符串 (e.g. '{"query": "..."}')
+    """
+    import json
+    if not uri.startswith("bos://"):
+        return _error(f"Invalid BOS URI: {uri}")
+    try:
+        args = json.loads(params) if isinstance(params, str) else params
+    except json.JSONDecodeError:
+        return _error(f"Invalid JSON params: {params}")
+    # Step 1: 尝试 ProxyManager (MCP 下游代理)
+    if _proxy_manager is not None:
+        try:
+            result = await _proxy_manager.read_resource(uri)
+            if isinstance(result, dict) and "contents" in result:
+                return _ok({"format_version": FORMAT_VERSION, "uri": uri,
+                           "source": "proxy", "contents": result["contents"]})
+        except Exception:
+            pass
+    # Step 2: 回退到 bos_resolver (POC_SERVICES 子进程)
+    try:
+        result = await _resolve_bos_uri(uri, **args)
+        return _ok({"format_version": FORMAT_VERSION, "uri": uri,
+                   "source": "bos_resolver", "result": result})
+    except Exception as e:
+        logger.exception("read_resource_failed", uri=uri)
+        return _error(f"Resource read failed: {e}")
+
+
+@mcp.tool()
+async def list_bos_resources(prefix: str = "") -> dict:
+    """列出所有可用的 BOS 资源。合并 POC_SERVICES + ProxyManager。
+
+    Args:
+        prefix: URI 前缀过滤 (可选，如 bos://memory/)
+    """
+    resources = []
+    # Part A: POC services (bos_resolver)
+    for svc in _list_poc_services():
+        resources.append({
+            "uri": svc.get("uri", ""),
+            "domain": svc.get("domain", ""),
+            "source": "poc",
+            "transport": svc.get("transport", ""),
+            "description": svc.get("description", ""),
+        })
+    # Part B: 从 ProxyManager configs 中提取 bos:// 映射
+    if _proxy_manager is not None:
+        for name, config in getattr(_proxy_manager, '_configs', {}).items():
+            if isinstance(config, dict):
+                for bos_prefix in config.get("bos_prefixes", []):
+                    resources.append({
+                        "uri": bos_prefix,
+                        "domain": bos_prefix.split("/")[2] if "/" in bos_prefix else "unknown",
+                        "source": "proxy",
+                        "transport": "mcp_proxy",
+                        "description": config.get("description", f"Proxy: {name}"),
+                    })
+    if prefix:
+        resources = [r for r in resources if r["uri"].startswith(prefix)]
+    return _ok({"format_version": FORMAT_VERSION, "resources": resources, "total": len(resources)})
+
+
+@mcp.tool()
+async def list_bos_domains() -> dict:
+    """列出所有已注册的 BOS 域及其路由摘要。"""
+    from collections import Counter
+    doms = Counter()
+    for svc in _list_poc_services():
+        doms[svc.get("domain", "unknown")] += 1
+    return _ok({"format_version": FORMAT_VERSION, "domains": dict(doms),
+               "description": "BOS URI 5+1 域: memory/omo/analysis/persona/forge"})
+
+
+# ═══════════════════════════════════════════════════════════════
+# Section: 执行引擎
+# ═══════════════════════════════════════════════════════════════
+
 @mcp.tool()
 async def agora_execute(query: str, mode: str = "auto") -> dict:
     """Execute a natural language query by routing to the best matching MCP tool.

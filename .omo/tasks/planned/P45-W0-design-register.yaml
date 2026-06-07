@@ -2,7 +2,7 @@ id: P45-W0-DESIGN-REGISTER
 phase: 45
 wave: W0
 title: "BOS URI 理想态架构设计与 L0 注册"
-status: in_progress
+status: done
 task_type: design
 priority: P0
 assigned_to: null
@@ -26,3 +26,4 @@ description: |
   更新 L0 约束文件，新增 BOS 域约束
   注册 P45 Phase Goals 并更新系统状态
 started_at: '2026-06-07T00:00:00Z'
+completed_at: '2026-06-07T12:00:00Z'

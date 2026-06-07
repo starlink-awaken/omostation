@@ -2,7 +2,7 @@ id: P45-W1-P0-BLOCKER-FIX
 phase: 45
 wave: W1
 title: "P0 阻断修复 — Agent 能通过 BOS URI 访问系统"
-status: pending
+status: in_progress
 task_type: feature
 priority: P0
 assigned_to: null

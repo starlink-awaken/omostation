@@ -33,9 +33,10 @@ _log = logging.getLogger(__name__)
 # ── stdio 协议默认超时 (秒) ──────────────────────────
 _STDIO_TIMEOUT_DEFAULT = 5.0
 
-# ── 4 段标准 (W1 北星) ──────────────────────────────
+# ── 4 段标准 (W1 北星 → P45 扩展域名) ──────────────
+# P45: governance→omo, capability→forge, 新增 meta/ecos/agora
 BOS_URI_PATTERN = re.compile(
-    r"^bos://(?P<domain>memory|governance|analysis|persona|capability)"
+    r"^bos://(?P<domain>memory|governance|omo|analysis|persona|capability|forge|meta|ecos|agora)"
     r"/(?P<package>[a-z][a-z0-9-]+)/(?P<action>[a-z][a-z0-9-]+)$"
 )
 
