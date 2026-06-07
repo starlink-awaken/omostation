@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 
 from agora.cli.parser import build_parser  # type: ignore[import-not-found]
@@ -11,6 +12,11 @@ def main():
     """Main entry point — build parser, parse args, dispatch."""
     parser = build_parser()
     args = parser.parse_args()
+
+    if getattr(args, 'version', False):
+        from agora import __version__
+        print(f"agora v{__version__}")
+        return 0
 
     if args.command is None:
         parser.print_help()
@@ -54,37 +60,37 @@ def main():
     if args.command == "register":
         from agora.cli.commands_registry import cmd_register
 
-        cmd_register(args)
+        return cmd_register(args)
 
     elif args.command == "unregister":
         from agora.cli.commands_registry import cmd_unregister
 
-        cmd_unregister(args)
+        return cmd_unregister(args)
 
     elif args.command == "list":
         from agora.cli.commands_registry import cmd_list
 
-        cmd_list(args)
+        return cmd_list(args)
 
     elif args.command == "health":
         from agora.cli.commands_registry import cmd_health
 
-        cmd_health(args)
+        return cmd_health(args)
 
     elif args.command == "config":
         from agora.cli.commands_registry import cmd_config
 
-        cmd_config(args)
+        return cmd_config(args)
 
     elif args.command == "route":
         from agora.cli.commands_routes import cmd_route  # type: ignore[import-not-found]
 
-        cmd_route(args)
+        return cmd_route(args)
 
     elif args.command == "routes":
         from agora.cli.commands_routes import cmd_routes
 
-        cmd_routes(args)
+        return cmd_routes(args)
 
     elif args.command == "instance":
         if args.instance_cmd == "add":
@@ -119,27 +125,27 @@ def main():
     elif args.command == "pipeline":
         from agora.cli.commands_pipeline import cmd_pipeline  # type: ignore[import-not-found]
 
-        cmd_pipeline(args)
+        return cmd_pipeline(args)
 
     elif args.command == "pipelines":
         from agora.cli.commands_pipeline import cmd_pipelines
 
-        cmd_pipelines(args)
+        return cmd_pipelines(args)
 
     elif args.command == "pipeline-define":
         from agora.cli.commands_pipeline import cmd_pipeline_define
 
-        cmd_pipeline_define(args)
+        return cmd_pipeline_define(args)
 
     elif args.command == "key":
         from agora.cli.commands_governance import cmd_key  # type: ignore[import-not-found]
 
-        cmd_key(args)
+        return cmd_key(args)
 
     elif args.command == "audit":
         from agora.cli.commands_governance import cmd_audit
 
-        cmd_audit(args)
+        return cmd_audit(args)
 
     elif args.command == "tenant":
         from agora.cli.commands_governance import cmd_tenant
@@ -159,12 +165,12 @@ def main():
     elif args.command == "proto":
         from agora.cli.commands_governance import cmd_proto
 
-        cmd_proto(args)
+        return cmd_proto(args)
 
     elif args.command == "transitions":
         from agora.cli.commands_a2a import cmd_transitions  # type: ignore[import-not-found]
 
-        cmd_transitions(args)
+        return cmd_transitions(args)
 
     elif args.command == "a2a":
         from agora.cli.commands_a2a import cmd_a2a
@@ -230,7 +236,11 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\nInterrupted.")
         sys.exit(130)
-    except Exception:
-        print("An unexpected error occurred.")
-        print("   Run 'agora config' to check setup, or 'agora init' to re-run setup.")
+    except Exception as e:
+        from agora.cli.errors import CLIError
+        import traceback
+        print(f"\nError: {e}", file=sys.stderr)
+        print("  Hint: Run 'agora config' to check setup, or 'agora init' to re-run setup.", file=sys.stderr)
+        if os.environ.get("AGORA_DEBUG"):
+            traceback.print_exc()
         sys.exit(1)

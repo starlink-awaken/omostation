@@ -91,8 +91,41 @@ def build_parser():
 
     from agora.core.registry import KNOWN_PROTOCOLS  # type: ignore[import-not-found]
 
-    p = argparse.ArgumentParser(prog="agora", description="Agora -- Service Convergence Hub")
+    p = argparse.ArgumentParser(
+        prog="agora",
+        description="Agora -- Service Convergence Hub",
+        epilog="""Examples:
+  # 注册服务
+  agora register my-api --protocol mcp --mcp http://localhost:8000
+
+  # 发现 workspace 中的所有服务
+  agora discover --register
+
+  # 列出已注册服务
+  agora list
+
+  # 健康检查
+  agora health --watch --interval 10
+
+  # 查看服务详情
+  agora info my-api --json | jq .
+
+  # MCP 工具仓库
+  agora repo list
+  agora repo discover mcp-server
+  agora repo pipeline mcp-server
+
+  # 流水线
+  agora pipeline full --goal "分析代码" --stream
+
+  # 启动 MCP 服务器
+  agora mcp
+
+For more: https://github.com/starlink-awaken/agora#readme""",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     p.add_argument("--json", action="store_true", help="JSON output")
+    p.add_argument("--version", action="store_true", help="Show version")
     sub = p.add_subparsers(dest="command")
 
     # register
@@ -473,6 +506,11 @@ def start_pipeline_command(args):
     from agora.pipelines.eidos_pipeline import EIDOS_PIPELINE_SERVICE
 
     command = EIDOS_PIPELINE_SERVICE["commands"].get(args.pipeline, "")
+
+    if args.pipeline not in EIDOS_PIPELINE_SERVICE.get("commands", {}):
+        print(f"Error: Unknown pipeline '{args.pipeline}'", file=sys.stderr)
+        print(f"Available: {list(EIDOS_PIPELINE_SERVICE.get('commands', {}).keys())}", file=sys.stderr)
+        sys.exit(1)
 
     class PipelineHandler(BaseHTTPRequestHandler):
         def do_GET(self):
