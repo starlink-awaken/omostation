@@ -22,6 +22,8 @@ jobs:
         run: uv run ruff check src/
       - name: Ruff format check
         run: uv run ruff format src/ --check
+      - name: OMO Contract Gatekeeper
+        run: python scripts/contract_gatekeeper.py src/ scripts/
 
   test:
     runs-on: ubuntu-latest
