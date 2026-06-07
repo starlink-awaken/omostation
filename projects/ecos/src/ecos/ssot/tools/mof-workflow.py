@@ -566,6 +566,50 @@ def cmd_graph(args):
     return 0
 
 
+def cmd_check_refs(args):
+    """交叉引用校验 — 验证 workflow-catalog.yaml 中所有引用有效性"""
+    out = OutputFormatter(json_mode=args.json)
+    catalog = _load_catalog()
+    nodes = _load_nodes()
+    node_ids = {n.get("id", "") for n in nodes}
+    global_rels = catalog.get("global_relations", {})
+
+    errors = []
+    warnings = []
+
+    for t in global_rels.get("triggers", []):
+        for field in ["from", "to"]:
+            ref = t.get(field, "")
+            if ref.startswith("WORKFLOW-") and ref not in node_ids:
+                errors.append(f"Trigger {field}: '{ref}' 无对应 M1 节点")
+
+    for d in global_rels.get("dependencies", []):
+        for field in ["dependent", "depends_on"]:
+            ref = d.get(field, "")
+            if ref.startswith("WORKFLOW-") and ref not in node_ids:
+                errors.append(f"Dependency {field}: '{ref}' 无对应 M1 节点")
+
+    if args.json:
+        out.print_json({"errors": errors, "warnings": warnings, "total_nodes": len(nodes)})
+        return 1 if errors else 0
+
+    out.print_header(f"交叉引用校验 ({len(nodes)} 节点)")
+
+    if errors:
+        for e in errors:
+            out.print_error(e)
+    if warnings:
+        for w in warnings:
+            out.print_warning(w)
+
+    if not errors and not warnings:
+        out.print_success("全部校验通过 — 所有引用指向存在的 M1 节点")
+        return 0
+    else:
+        out.print_error(f"{len(errors)} 个错误, {len(warnings)} 个警告")
+        return 1 if errors else 0
+
+
 # ═══════════════════════════════════════════════════════════════
 # Argparse 入口
 # ═══════════════════════════════════════════════════════════════
@@ -628,6 +672,10 @@ def build_parser():
     g.add_argument("--format", choices=["dot", "mermaid", "ascii"], default="ascii", help="输出格式")
     g.add_argument("--json", action="store_true", help="JSON 输出")
 
+    # check-refs
+    cr = sub.add_parser("check-refs", help="交叉引用校验")
+    cr.add_argument("--json", action="store_true", help="JSON 输出")
+
     return p
 
 
@@ -653,6 +701,7 @@ def main():
         "relations": cmd_relations,
         "stats": cmd_stats,
         "graph": cmd_graph,
+        "check-refs": cmd_check_refs,
     }
 
     handler = commands.get(args.subcommand)

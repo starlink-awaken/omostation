@@ -1,21 +1,28 @@
-"""统一输出库 — ecos MOF 工具链 (轻量版) | v1.1
-===================================================
-对照 kubectl / docker 风格，规避循环依赖（独立于 agora 包）。
+"""统一输出库 — ecos MOF 工具链 | v1.2
+============================================
+优先从 agora.cli.output 导入 (rich 支持), 回退到 ANSI 独立实现。
 
 用法:
     from _output import OutputFormatter, print_success, print_error
-
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
-    out.print_table(["名称", "步骤数"], [["Kronos", "5"], ...])
-    out.print_success("创建成功")
 """
 
 from __future__ import annotations
 
 import json as _json
 import sys
-from pathlib import Path
 from typing import Any
+
+# 尝试从 agora 导入 rich 版本
+try:
+    from agora.cli.output import OutputFormatter as _AgoraFormatter  # type: ignore[import-not-found]
+    print_success = _AgoraFormatter().print_success
+    print_error = _AgoraFormatter().print_error
+    print_warning = _AgoraFormatter().print_warning
+    print_info = _AgoraFormatter().print_info
+    OutputFormatter = _AgoraFormatter
+except ImportError:
+    # 回退: 独立 ANSI 实现
+    pass
 
 
 class OutputFormatter:
