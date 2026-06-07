@@ -73,6 +73,25 @@ class BosService:
     description: str = ""
 
 
+def _with_uv_package(service: BosService) -> list[str]:
+    """Normalize legacy ``uv run --directory ...`` commands for workspace packages.
+
+    Older POC entries assumed the repo root environment exposed all package modules.
+    The current kairon layout does not guarantee that. Inject ``--package <name>``
+    when the command is a workspace ``uv run`` and no package is specified yet.
+    """
+    cmd = list(service.command)
+    if len(cmd) < 2 or cmd[0] != "uv" or cmd[1] != "run":
+        return cmd
+    if "--package" in cmd:
+        return cmd
+    if "--directory" not in cmd:
+        return cmd
+    if not service.package:
+        return cmd
+    return ["uv", "run", "--package", service.package, *cmd[2:]]
+
+
 # ── 5 Domain 5 包 POC service registry (11 总) ──────
 # 命名规范: python -m <package> serve --action <action>
 # 实际 stdio 协议: stdin JSON 行 → stdout JSON 行 (POC 简化版)
@@ -321,6 +340,9 @@ POC_SERVICES: dict[str, BosService] = {
         description="Forge 工具注册 (POC stdio)",
     ),
     # P36-W1 跨域 GAP 补 5 条 (P35-W0 spec 注册但未在 resolver)
+    # Note: sharedbrain-bridge / sot-bridge are legacy BOS compatibility names.
+    # They no longer correspond to live installable packages in the current
+    # kairon tree, but tests and downstream routing still depend on the URI layer.
     "bos://persona/sharedbrain-bridge/recall-entity": BosService(
         uri="bos://persona/sharedbrain-bridge/recall-entity",
         domain="persona",
@@ -331,7 +353,7 @@ POC_SERVICES: dict[str, BosService] = {
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "sot_bridge.sharedbrain_bridge", "serve", "--action", "recall-entity",
         ],
-        description="SharedBrain-Bridge 实体召回 (P36-W1 补, POC stdio)",
+        description="SharedBrain-Bridge 实体召回 (legacy compatibility URI, P36-W1 补, POC stdio)",
     ),
     "bos://persona/health-profile/alert": BosService(
         uri="bos://persona/health-profile/alert",
@@ -390,7 +412,7 @@ POC_SERVICES: dict[str, BosService] = {
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "sot_bridge.sharedbrain_bridge", "serve", "--action", "recall",
         ],
-        description="SharedBrain-Bridge 跨域语义召回 (P45-W0, POC stdio, recall-entity 的泛化版)",
+        description="SharedBrain-Bridge 跨域语义召回 (legacy compatibility URI, P45-W0, POC stdio, recall-entity 的泛化版)",
     ),
     "bos://capability/forge/discover": BosService(
         uri="bos://capability/forge/discover",
@@ -464,7 +486,7 @@ POC_SERVICES: dict[str, BosService] = {
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "sot_bridge", "serve", "--action", "query",
         ],
-        description="SOT-Bridge 跨系统查询 (P45-W2, POC stdio, register 的对偶)",
+        description="SOT-Bridge 跨系统查询 (legacy compatibility URI, P45-W2, POC stdio, register 的对偶)",
     ),
     # ── P45-W3 战役 1: 3 个 persona GAP URI (P44-W2 评估) ──
     "bos://persona/core-models/schema": BosService(
@@ -501,7 +523,7 @@ POC_SERVICES: dict[str, BosService] = {
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "sot_bridge.sharedbrain_bridge", "serve", "--action", "sync",
         ],
-        description="SharedBrain-Bridge 同步 (P45-W3, POC stdio, recall-entity 的对偶)",
+        description="SharedBrain-Bridge 同步 (legacy compatibility URI, P45-W3, POC stdio, recall-entity 的对偶)",
     ),
     # ── P48-W2 omo/sync 真重构 (stdio transport, 替代 P47 internal) ──
     "bos://governance/omo/sync": BosService(
@@ -615,8 +637,9 @@ class ProcessPool:
             # 死进程清理 (is_alive 已处理, 此处保险)
             if service.uri in self.processes and not self.is_alive(service.uri):
                 self.processes.pop(service.uri, None)
+            command = _with_uv_package(service)
             self.processes[service.uri] = subprocess.Popen(
-                service.command,
+                command,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -625,7 +648,12 @@ class ProcessPool:
             )
             # 记录: 此 URI 曾经 spawn 过 (供 respawn_dead 使用)
             self.seen_uris.add(service.uri)
-            _log.info("Spawned BOS service: %s (pid=%d)", service.uri, self.processes[service.uri].pid)
+            _log.info(
+                "Spawned BOS service: %s (pid=%d, command=%s)",
+                service.uri,
+                self.processes[service.uri].pid,
+                command,
+            )
         return self.processes[service.uri]
 
     def is_alive(self, uri: str) -> bool:
@@ -777,7 +805,7 @@ def _call_stdio(service: BosService, *args: Any, **kwargs: Any) -> dict:
     response["transport"] = "stdio"
     if response.get("status") == "ok":
         response["alive_at_spawn"] = True
-        response["command"] = service.command
+        response["command"] = _with_uv_package(service)
     return response
 
 
