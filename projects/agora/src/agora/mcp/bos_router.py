@@ -1,7 +1,7 @@
 """BOSRouter — 统一 BOS URI 注册表 (P45 W2)
 =================================================
 合并 POC_SERVICES (子进程) 和 ProxyManager (MCP 代理) 两张表，
-提供最长前缀匹配的统一路由入口。
+使用 Trie 前缀索引提供 O(k) 最长前缀匹配路由入口。
 
 用法:
     from agora.mcp.bos_router import BOSRouter, bos_router
@@ -16,9 +16,13 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import ItemsView
 from typing import Any
 
 _log = logging.getLogger(__name__)
+
+# Trie 路由节点标记
+_ROUTE_MARKER = "__route__"
 
 
 class BOSRouter:
@@ -26,11 +30,107 @@ class BOSRouter:
 
     - POC routes: 从 bos_resolver.POC_SERVICES 加载 (子进程)
     - Proxy routes: 从 ProxyManager 加载 (MCP 代理)
-    - 最长前缀匹配
+    - 使用 Trie 前缀索引，resolve 时间复杂度 O(k) 其中 k=URI seg 数
     """
 
     def __init__(self):
         self._routes: dict[str, dict[str, Any]] = {}
+        # Trie: nested dict, 叶子节点含 _ROUTE_MARKER
+        self._trie: dict[str, Any] = {}
+
+    # ── Trie 操作 ─────────────────────────────────────
+
+    def _trie_insert(self, prefix: str, route: dict[str, Any]) -> None:
+        """按 URI 段逐级插入 trie."""
+        segments = self._uri_segments(prefix)
+        node = self._trie
+        for seg in segments:
+            node = node.setdefault(seg, {})
+        node[_ROUTE_MARKER] = route
+
+    def _trie_remove(self, prefix: str) -> None:
+        """从 trie 移除路由 (不清除空节点，简化实现)."""
+        segments = self._uri_segments(prefix)
+        node = self._trie
+        for seg in segments:
+            if seg not in node:
+                return  # 不在 trie 中
+            node = node[seg]
+        node.pop(_ROUTE_MARKER, None)
+
+    def _trie_lookup(self, uri: str) -> dict[str, Any] | None:
+        """Trie 最长前缀匹配 — O(k) 遍历，k = URI段数.
+
+        返回最深匹配路径上的 __route__ 节点作为最佳 prefix 匹配。
+        """
+        segments = self._uri_segments(uri)
+        node = self._trie
+        best = node.get(_ROUTE_MARKER)  # 根节点匹配 (bos:)
+
+        for seg in segments:
+            # 当前节点的通配符: 作为回退记录
+            if "" in node and _ROUTE_MARKER in node[""]:
+                best = node[""][_ROUTE_MARKER]
+
+            if seg in node:
+                node = node[seg]
+                if _ROUTE_MARKER in node:
+                    best = node[_ROUTE_MARKER]
+                continue
+
+            # 当前段不通: 尝试通配符
+            if "" in node:
+                node = node[""]
+                if _ROUTE_MARKER in node:
+                    best = node[_ROUTE_MARKER]
+                continue
+
+            break
+
+        # 末尾空段回退: 检查有无 "" child (斜杠注册)
+        if _ROUTE_MARKER not in node and "" in node:
+            if _ROUTE_MARKER in node[""]:
+                best = node[""][_ROUTE_MARKER]
+
+        # 精确匹配: 注册时自动加 / 但 URI 没 /
+        if best is None and not uri.endswith("/"):
+            node = self._trie
+            for seg in segments:
+                if seg in node:
+                    node = node[seg]
+                else:
+                    return None
+            if _ROUTE_MARKER in node:
+                best = node[_ROUTE_MARKER]
+            elif "" in node and _ROUTE_MARKER in node[""]:
+                best = node[""][_ROUTE_MARKER]
+
+        return best
+
+    @staticmethod
+    def _uri_segments(uri: str) -> list[str]:
+        """将 bos:// URI 拆分为段列表。
+
+        bos://memory/kos/search → ["bos:", "memory", "kos", "search"]
+        bos://memory/kos/      → ["bos:", "memory", "kos", ""]
+        """
+        if uri.startswith("bos://"):
+            rest = uri[6:]  # strip "bos://" (6 chars)
+        else:
+            rest = uri
+        parts = rest.split("/")
+        result = ["bos:"]
+        for i, p in enumerate(parts):
+            if p:
+                result.append(p)
+            elif i == len(parts) - 1:  # trailing slash preserves empty
+                result.append("")
+        # edge: only bos:// → just ["bos:"]
+        if len(result) == 1:
+            result.append("")
+        return result
+
+    # ── 公共 API ───────────────────────────────────────
 
     def register(self, prefix: str, adapter: str, config: dict[str, Any] | None = None) -> None:
         """注册一条路由。
@@ -45,11 +145,13 @@ class BOSRouter:
         if prefix in self._routes:
             _log.warning("[BOSRouter] Skipping duplicate: %s (already %s)", prefix, self._routes[prefix]["adapter"])
             return
-        self._routes[prefix] = {
+        route = {
             "adapter": adapter,
             "prefix": prefix,
             "config": config or {},
         }
+        self._routes[prefix] = route
+        self._trie_insert(prefix, route)
         _log.info("[BOSRouter] Registered: %s → %s", prefix, adapter)
 
     def unregister(self, prefix: str) -> None:
@@ -57,25 +159,11 @@ class BOSRouter:
         if not prefix.endswith("/"):
             prefix += "/"
         self._routes.pop(prefix, None)
+        self._trie_remove(prefix)
 
     def resolve(self, uri: str) -> dict[str, Any] | None:
-        """最长前缀匹配 — 返回路由信息或 None。
-
-        同时处理精确匹配（忽略尾部斜杠）场景：
-        - registered: bos://memory/kos/search/
-        - uri:        bos://memory/kos/search  → 也匹配
-        """
-        best_match = None
-        best_len = -1
-        for prefix, route in self._routes.items():
-            if uri.startswith(prefix) and len(prefix) > best_len:
-                best_match = route
-                best_len = len(prefix)
-            # 精确匹配: 注册时自动加的 / 不应影响匹配
-            if prefix.endswith("/") and prefix[:-1] == uri and len(prefix) > best_len:
-                best_match = route
-                best_len = len(prefix)
-        return best_match
+        """最长前缀匹配 — 使用 Trie O(k) 索引。"""
+        return self._trie_lookup(uri)
 
     def list_all(self, prefix_filter: str = "") -> list[dict[str, Any]]:
         """列出所有路由，可选前缀过滤。"""
