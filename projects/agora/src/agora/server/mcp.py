@@ -28,7 +28,7 @@ import sys
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import structlog
 from fastmcp import FastMCP
@@ -411,6 +411,65 @@ def _ok(data: dict) -> dict:
 # 待 God Module 拆分完成后可统一使用 response_helpers 版本。
 
 
+# ── BOSRouter 路由辅助函数 (P48 W3) ──────────────────────────
+async def _resolve_with_router(uri: str, **kwargs: Any) -> tuple[dict, str]:
+    """路由解析链: BOSRouter → POC_SERVICES.
+
+    Args:
+        uri: BOS URI
+        **kwargs: 传给下游服务的参数
+
+    Returns:
+        (result_dict, source_name) 其中 source_name 标明来源
+    """
+    # Step 1: BOSRouter 查找
+    route = _bos_router.resolve(uri)
+    if route is not None:
+        adapter = route.get("adapter", "")
+        if adapter == "poc":
+            # POC 路由 → 走子进程
+            result = await _resolve_bos_uri(uri, **kwargs)
+            if isinstance(result, dict) and result.get("status") == "error":
+                # URI 在 BOSRouter 注册表中但 POC_SERVICES 没有执行后端
+                # → 返回路由配置信息作为回退
+                config = route.get("config", {})
+                return {
+                    "uri": uri,
+                    "status": "info",
+                    "source": "bos_router_metadata",
+                    "note": "Route registered but no executable backend (metadata only)",
+                    "adapter": adapter,
+                    "config": config,
+                }, "bos_router_metadata"
+            return result, "bos_router_poc"
+        elif adapter == "proxy" and _proxy_manager is not None:
+            try:
+                result = await _proxy_manager.read_resource(uri)
+                if isinstance(result, dict) and "contents" in result:
+                    return result["contents"], "bos_router_proxy"
+            except Exception:
+                pass
+        elif adapter in ("http", "internal"):
+            # HTTP / internal 路由 → 尝试 POC_SERVICES 调用回退
+            result = await _resolve_bos_uri(uri, **kwargs)
+            if isinstance(result, dict) and result.get("status") != "error":
+                return result, "bos_router_fallback"
+            # 返回路由元数据
+            return {
+                "uri": uri,
+                "status": "info",
+                "source": "bos_router_metadata",
+                "note": f"Route registered (adapter={adapter}) but no executable backend",
+                "adapter": adapter,
+                "config": route.get("config", {}),
+            }, "bos_router_metadata"
+        # 未知 adapter → 继续 Step 2
+
+    # Step 2: POC_SERVICES 直查（兼容旧版）
+    result = await _resolve_bos_uri(uri, **kwargs)
+    return result, "poc_services"
+
+
 def _identity_from_auth_token() -> dict | None:
     """Best-effort identity derivation from the current FastMCP access token."""
     token = get_access_token()
@@ -698,14 +757,18 @@ async def mutate_resource(uri: str, payload: str, action: str = "update") -> dic
     
     _t0 = _time.time()
     try:
-        # P45 W1: 真实路由 — 通过 resolve_bos_uri 调用下游服务
-        result = await _resolve_bos_uri(uri, payload=json.loads(payload) if isinstance(payload, str) else payload, action=action)
+        # P48 W3: BOSRouter 优先路由
+        result, source = await _resolve_with_router(uri, payload=json.loads(payload) if isinstance(payload, str) else payload, action=action)
         _duration_ms = int((_time.time() - _t0) * 1000)
+        # 写入操作 → 缓存失效
+        bos_cache.invalidate(uri)
         _bos_post_audit(uri, 200, _duration_ms)
-        return _ok({"format_version": FORMAT_VERSION, "uri": uri, "action": action, "result": result})
+        _publish_bos_event(uri, "mutate", "ok", _duration_ms)
+        return _ok({"format_version": FORMAT_VERSION, "uri": uri, "action": action, "source": source, "result": result})
     except Exception as e:
         _duration_ms = int((_time.time() - _t0) * 1000)
         _bos_post_audit(uri, 500, _duration_ms)
+        _publish_bos_event(uri, "mutate", "error", _duration_ms)
         logger.exception("mutate_resource_failed", uri=uri, action=action)
         return _error(f"Mutation failed: {e}")
 
@@ -1930,15 +1993,17 @@ async def resolve_bos_uri(uri: str, arguments: str = "{}") -> dict:
     _t0 = _time.time()
     try:
         args = json.loads(arguments) if isinstance(arguments, str) else arguments
-        result = await _resolve_bos_uri(uri, **args)
+        result, source = await _resolve_with_router(uri, **args)
         bos_circuit_breaker.record_success(uri)
         _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
-        return _ok({"format_version": FORMAT_VERSION, "uri": uri, "result": result})
+        _publish_bos_event(uri, "resolve", "ok", int((_time.time() - _t0) * 1000))
+        return _ok({"format_version": FORMAT_VERSION, "uri": uri, "source": source, "result": result})
     except json.JSONDecodeError:
         return _error(f"Invalid JSON arguments: {arguments}")
     except Exception as e:
         bos_circuit_breaker.record_failure(uri)
         _bos_post_audit(uri, 500, int((_time.time() - _t0) * 1000))
+        _publish_bos_event(uri, "resolve", "error", int((_time.time() - _t0) * 1000))
         logger.exception("resolve_bos_uri_failed", uri=uri)
         return _error(f"BOS URI resolve failed: {e}")
 
@@ -1976,7 +2041,21 @@ async def read_resource(uri: str, params: str = "{}") -> dict:
     # P45 W3 T14: L0 审计
     import time as _time
     _t0 = _time.time()
-    # Step 1: 尝试 ProxyManager (MCP 下游代理)
+    # Step 1: BOSRouter → POC_SERVICES 统一路由链
+    try:
+        result, source = await _resolve_with_router(uri, **args)
+        # 如果结果不是 error 状态，且没有进一步尝试 ProxyManager 的必要
+        if isinstance(result, dict) and result.get("status") != "error":
+            bos_cache.set(uri, args, result, ttl=30)
+            bos_circuit_breaker.record_success(uri)
+            _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
+            _publish_bos_event(uri, "read", "ok", int((_time.time() - _t0) * 1000))
+            return _ok({"format_version": FORMAT_VERSION, "uri": uri,
+                       "source": source, "result": result})
+    except Exception:
+        pass
+
+    # Step 2: 尝试 ProxyManager (MCP 下游代理)
     if _proxy_manager is not None:
         try:
             result = await _proxy_manager.read_resource(uri)
@@ -1984,6 +2063,7 @@ async def read_resource(uri: str, params: str = "{}") -> dict:
                 bos_cache.set(uri, args, result["contents"], ttl=30)
                 bos_circuit_breaker.record_success(uri)
                 _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
+                _publish_bos_event(uri, "read", "ok", int((_time.time() - _t0) * 1000))
                 return _ok({"format_version": FORMAT_VERSION, "uri": uri,
                            "source": "proxy", "contents": result["contents"]})
         except Exception:
@@ -1994,11 +2074,13 @@ async def read_resource(uri: str, params: str = "{}") -> dict:
         bos_cache.set(uri, args, result, ttl=30)
         bos_circuit_breaker.record_success(uri)
         _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
+        _publish_bos_event(uri, "read", "ok", int((_time.time() - _t0) * 1000))
         return _ok({"format_version": FORMAT_VERSION, "uri": uri,
                    "source": "bos_resolver", "result": result})
     except Exception as e:
         bos_circuit_breaker.record_failure(uri)
         _bos_post_audit(uri, 500, int((_time.time() - _t0) * 1000))
+        _publish_bos_event(uri, "read", "error", int((_time.time() - _t0) * 1000))
         logger.exception("read_resource_failed", uri=uri)
         return _error(f"Resource read failed: {e}")
 
@@ -2011,16 +2093,33 @@ async def list_bos_resources(prefix: str = "") -> dict:
         prefix: URI 前缀过滤 (可选，如 bos://memory/)
     """
     resources = []
-    # Part A: POC services (bos_resolver)
-    for svc in _list_poc_services():
+    # Part A: BOSRouter routes
+    for route in _bos_router.list_all(prefix_filter=prefix):
+        uri = route["prefix"].rstrip("/")
+        config = route.get("config", {})
         resources.append({
-            "uri": svc.get("uri", ""),
+            "uri": uri,
+            "domain": config.get("domain", uri.split("/")[2] if "/" in uri else "unknown"),
+            "source": "bos_router",
+            "adapter": route["adapter"],
+            "description": config.get("description", config.get("workflow", f"BOSRouter: {route['adapter']}")),
+            "schema_available": bool(config.get("steps", 0) or config.get("workflow")),
+        })
+    # Part B: POC services (legacy, 部分已由 BOSRouter 覆盖)
+    for svc in _list_poc_services():
+        uri = svc.get("uri", "")
+        # 去重：BOSRouter 已包含的跳过
+        if any(r["uri"] == uri for r in resources):
+            continue
+        resources.append({
+            "uri": uri,
             "domain": svc.get("domain", ""),
             "source": "poc",
             "transport": svc.get("transport", ""),
             "description": svc.get("description", ""),
+            "schema_available": False,
         })
-    # Part B: 从 ProxyManager configs 中提取 bos:// 映射
+    # Part C: ProxyManager configs
     if _proxy_manager is not None:
         for name, config in getattr(_proxy_manager, '_configs', {}).items():
             if isinstance(config, dict):
@@ -2034,6 +2133,31 @@ async def list_bos_resources(prefix: str = "") -> dict:
                     })
     if prefix:
         resources = [r for r in resources if r["uri"].startswith(prefix)]
+
+    # 附上 schema 信息: 标注哪些 URI 有已知 schema
+    try:
+        wf_dir = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "workflow"
+        if wf_dir.exists():
+            import yaml
+            known_actions = set()
+            for f in wf_dir.glob("WORKFLOW-*.yaml"):
+                node = yaml.safe_load(open(f))
+                if node and node.get("type") == "Workflow":
+                    for step in node.get("steps", []):
+                        if step.get("action"):
+                            known_actions.add(step["action"])
+            for r in resources:
+                uri = r["uri"]
+                # Check if URI matches any known action
+                parts = uri.replace("bos://", "").split("/")
+                if len(parts) >= 3:
+                    pkg_action = f"{parts[1]}.{parts[2]}"
+                    r["schema_available"] = pkg_action in known_actions
+                else:
+                    r["schema_available"] = False
+    except Exception:
+        pass
+
     return _ok({"format_version": FORMAT_VERSION, "resources": resources, "total": len(resources)})
 
 
@@ -2042,10 +2166,23 @@ async def list_bos_domains() -> dict:
     """列出所有已注册的 BOS 域及其路由摘要。"""
     from collections import Counter
     doms = Counter()
+    # POC services
     for svc in _list_poc_services():
         doms[svc.get("domain", "unknown")] += 1
+    # BOSRouter routes (补充不在 POC 中的域)
+    bos_domains = set()
+    for route in _bos_router.list_all():
+        config = route.get("config", {})
+        d = config.get("domain", "")
+        if d:
+            bos_domains.add(d)
+    for d in bos_domains:
+        if d not in doms:
+            doms[d] = sum(1 for r in _bos_router.list_all()
+                          if r.get("config", {}).get("domain") == d)
     return _ok({"format_version": FORMAT_VERSION, "domains": dict(doms),
-               "description": "BOS URI 5+1 域: memory/omo/analysis/persona/forge"})
+               "description": "BOS URI 5+1+扩展域: memory/omo/analysis/persona/forge + M1 扩展",
+               "total_routes": _bos_router.count()})
 
 # ═══════════════════════════════════════════════════════════════
 # BOS 鉴权 (P45 W3 T13)
@@ -2136,8 +2273,6 @@ async def get_bos_schema(uri: str = "") -> dict:
 
 # ═══════════════════════════════════════════════════════════════
 # BOS 可观测性 (P46 W0)
-# ═══════════════════════════════════════════════════════════════
-
 @mcp.tool()
 async def bos_middleware_status() -> dict:
     """BOS 中间件状态查询 — 限流/熔断/缓存实时状态。"""
@@ -2169,13 +2304,13 @@ async def bos_metrics_status(prefix: str = "", format: str = "json") -> dict | s
             labels = p.replace("://", "_").replace("/", "_").replace("-", "_")
             lines.append(f"# HELP bos_calls_total Total BOS calls per prefix")
             lines.append(f"# TYPE bos_calls_total counter")
-            lines.append(f"bos_calls_total{{prefix=\"{p}\"}} {s['calls']}")
+            lines.append(f'bos_calls_total{{prefix="{p}"}} {s["calls"]}')
             lines.append(f"# HELP bos_success_rate BOS success rate per prefix")
             lines.append(f"# TYPE bos_success_rate gauge")
-            lines.append(f"bos_success_rate{{prefix=\"{p}\"}} {s['success_rate']}")
+            lines.append(f'bos_success_rate{{prefix="{p}"}} {s["success_rate"]}')
             lines.append(f"# HELP bos_latency_ms_avg Average latency per prefix")
             lines.append(f"# TYPE bos_latency_ms_avg gauge")
-            lines.append(f"bos_latency_ms_avg{{prefix=\"{p}\"}} {s['avg_latency_ms']}")
+            lines.append(f'bos_latency_ms_avg{{prefix="{p}"}} {s["avg_latency_ms"]}')
         return "\n".join(lines) + "\n"
     if prefix:
         return _ok({"format_version": FORMAT_VERSION, "metrics": bos_metrics.status(prefix)})
@@ -2184,6 +2319,82 @@ async def bos_metrics_status(prefix: str = "", format: str = "json") -> dict | s
         "summary": bos_metrics.summary(),
         "detail": bos_metrics.status(),
     })
+
+
+# BOS 事件订阅 (watch_resource)
+
+def _bos_uri_to_event_type(uri: str) -> str:
+    """将 bos:// URI 转换为事件类型。
+
+    bos://memory/kos/search → bos:memory:kos:search
+    bos://memory/kos/*     → bos:memory:kos:*
+    """
+    return uri.replace("://", ":").replace("/", ":")
+
+
+def _publish_bos_event(uri: str, operation: str, status: str = "ok",
+                       duration_ms: int = 0) -> None:
+    """发布 BOS URI 操作事件到总线。"""
+    event_type = _bos_uri_to_event_type(uri)
+    _bus.publish(event_type, {
+        "uri": uri,
+        "operation": operation,
+        "status": status,
+        "duration_ms": duration_ms,
+    }, source="bos")
+
+
+@mcp.tool()
+async def watch_resource(uri_pattern: str, callback_url: str = "") -> dict:
+    """监听 BOS URI 的变化事件。
+
+    当指定的 bos:// URI 被解析、读取或变更时，通过事件总线通知。
+    支持通配符: bos://memory/kos/* (监听所有 kos 操作)
+
+    Args:
+        uri_pattern: BOS URI 模式 (e.g. bos://memory/kos/search 或 bos://memory/kos/*)
+        callback_url: 可选 HTTP 回调 URL，事件发生时 POST 通知
+
+    Returns:
+        包含 subscription_id 的响应
+    """
+    if not uri_pattern.startswith("bos://"):
+        return _error(f"Invalid BOS URI pattern: {uri_pattern}")
+
+    event_pattern = _bos_uri_to_event_type(uri_pattern)
+
+    bus = _bus
+    sub_id = bus.subscribe("bos-watch", event_pattern, callback_url)
+
+    logger.info("watch_resource_registered", uri_pattern=uri_pattern,
+                event_pattern=event_pattern, sub_id=sub_id)
+
+    return _ok({
+        "format_version": FORMAT_VERSION,
+        "action": "watching",
+        "uri_pattern": uri_pattern,
+        "event_pattern": event_pattern,
+        "subscription_id": sub_id,
+        "hint": "Use get_event_log() to poll events, or provide callback_url for push delivery",
+    })
+
+
+@mcp.tool()
+def unwatch_resource(subscription_id: str) -> dict:
+    """取消 BOS URI 事件监听。
+
+    Args:
+        subscription_id: watch_resource 返回的订阅 ID
+    """
+    bus = _bus
+    bus.unsubscribe(subscription_id)
+    logger.info("watch_resource_unregistered", sub_id=subscription_id)
+    return _ok({
+        "format_version": FORMAT_VERSION,
+        "action": "unwatched",
+        "subscription_id": subscription_id,
+    })
+
 
 
 # ═══════════════════════════════════════════════════════════════
