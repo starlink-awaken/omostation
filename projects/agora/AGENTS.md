@@ -105,12 +105,23 @@ Agora 对外提供的 BOS URI 服务。Agent 通过 `resolve_bos_uri()` 或 `rea
 ### Agent MCP 工具 (直接调用)
 ```
 resolve_bos_uri(uri, arguments)     — 路由 BOS URI 到后端
-read_resource(uri, params)           — 读资源 (proxy→poc 降级)
+read_resource(uri, arguments)        — 读资源 (proxy→poc 降级, 含缓存)
 mutate_resource(uri, payload)       — 写资源 (真路由 + L0 审计)
 list_bos_resources(prefix)           — 发现可用资源
 list_bos_domains()                   — 域统计
 get_bos_schema(uri)                  — 查询参数规范
 bos_metrics_status(prefix, format)   — 调用指标
 bos_middleware_status()              — 限流/熔断/缓存状态
+```
+
+### HTTP / SSE 入口
+- HTTP: `http://localhost:7422` (`agora-mcp-gateway`)
+- SSE:  `http://localhost:7431` (`agora-server`) 
+- MCP stdio: `agora-mcp`
+
+### CLI 入口
+```bash
+agora --help              # 30+ 子命令
+mof workflow --help       # 11 workflow 管理命令
 ```
 
