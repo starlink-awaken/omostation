@@ -441,6 +441,31 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="KRONOS 调度任务 (P45-W1, POC stdio)",
     ),
+    # ── P45-W2 战役 1: 2 个 governance GAP URI (P44-W2 评估, 跳 omo/sync 复杂度 5) ──
+    "bos://governance/metaos/register": BosService(
+        uri="bos://governance/metaos/register",
+        domain="governance",
+        package="metaos",
+        action="register",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(METAOS_ROOT),
+            "python", "-m", "metaos", "serve", "--action", "register",
+        ],
+        description="MetaOS 包注册 (P45-W2, POC stdio, gate 的对偶)",
+    ),
+    "bos://governance/sot-bridge/query": BosService(
+        uri="bos://governance/sot-bridge/query",
+        domain="governance",
+        package="sot-bridge",
+        action="query",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "sot_bridge", "serve", "--action", "query",
+        ],
+        description="SOT-Bridge 跨系统查询 (P45-W2, POC stdio, register 的对偶)",
+    ),
 }
 
 
