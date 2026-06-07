@@ -194,6 +194,14 @@ def print_help():
     print("  mof entity list    列出所有实体")
     print("  mof entity stats   实体统计")
     print()
+    print("工作流:")
+    print("  mof workflow list   列出所有工作流 [--domain <d>] [--layer <l>]")
+    print("  mof workflow show   查看工作流详情 [--json]")
+    print("  mof workflow validate 校验工作流 [--ci]")
+    print("  mof workflow run    执行工作流 [--dry-run]")
+    print("  mof workflow relations 查看关系图")
+    print("  mof workflow stats  统计摘要")
+    print()
     print("运维:")
     print("  mof trail          统一审计追踪")
     print("  mof events         治理事件流")
@@ -232,6 +240,9 @@ def main():
     elif cmd == "events": run_tool("mof-events", args)
     elif cmd == "sla": run_tool("mof-sla", args)
     elif cmd == "scan": run_tool("mof-scan", args)
+
+    # Workflow management
+    elif cmd == "workflow": run_tool("mof-workflow", args)
     
     elif cmd in ("help", "-h", "--help"): print_help()
     else:

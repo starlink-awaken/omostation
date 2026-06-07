@@ -1,11 +1,13 @@
-# M2: Workflow
+# M2: Workflow — v2.0 扩展版 (Phase 33 全局建模)
+# 2026-06-07 扩展: domain/subtype/bos_uri/cross_layer/execution/relations/sla
 
 m2_type: Workflow
-version: 1.0.0
+version: 2.0.0
 created: '2026-06-06'
+updated: '2026-06-07'
 Workflow:
   m3_parent: BehavioralElement.Process
-  description: 工作流——有明确步骤序列的 Agent 执行流程。如 debug workflow·deploy workflow。回答"怎么做"。
+  description: 工作流——有明确步骤序列的执行流程。支持 PipelineWorkflow/AgentWorkflow/ScheduledWorkflow/MCPWorkflow 四种子类型。回答"怎么做"。
   icon: 📋
   stateMachine:
     defined:
@@ -33,6 +35,7 @@ Workflow:
       type: string
       description: 步骤序列
   optionalProperties:
+    # ── v1 原有字段 (保持向后兼容) ──
     trigger:
       type: string
       description: 触发条件
@@ -42,11 +45,57 @@ Workflow:
     timeout:
       type: string
       description: 超时
+    # ── v2 新增字段 (Phase 33 全局建模) ──
+    domain:
+      type: string
+      description: 所属 BOS 域 (memory|omo|analysis|persona|forge|meta|infra)
+    subtype:
+      type: string
+      description: 工作流子类型 (PipelineWorkflow|AgentWorkflow|ScheduledWorkflow|MCPWorkflow)
+    bos_uri:
+      type: string
+      description: BOS URI 地址 (bos://ecos/workflow/{name})
+    cross_layer:
+      type: map
+      description: 跨层映射信息 {realized_by, invoked_by, triggers, data_flow}
+    execution:
+      type: map
+      description: 执行配置 {mode, max_retries, timeout, on_failure, audit_enabled}
+    relations:
+      type: list
+      description: M3 关系类型实例 [{type, from, to, cardinality, note}]
+    sla:
+      type: map
+      description: SLA 指标 {max_execution_time, expected_completion_rate, critical}
+    tags:
+      type: list
+      description: 分类标签
+    layer:
+      type: string
+      description: 所属架构层 (L0|L1|L2|I0|L3|L4)
+    maintained_by:
+      type: string
+      description: 维护方 (project/package)
+    last_reviewed:
+      type: string
+      description: 最后审核日期
   validationRules:
   - rule: workflow_name != null
     level: error
     message: Workflow 必须有 workflow_name
+  - rule: subtype != null
+    level: error
+    message: Workflow 必须声明 subtype (PipelineWorkflow|AgentWorkflow|ScheduledWorkflow|MCPWorkflow)
+  - rule: cross_layer.realized_by != null
+    level: warning
+    message: 建议声明 cross_layer.realized_by 跨层实现方
+  - rule: steps.size >= 1
+    level: warning
+    message: Workflow 至少应有 1 个步骤
   examples:
-  - id: WORKFLOW-2026-06-06-001
-    name: 示例 Workflow
-    description: 工作流——有明确步骤序列的 Agent 执行流程。如 debug workflow·deploy workflow。回答"怎么做"。
+  - id: WORKFLOW-MINERVA-DEEP-RESEARCH
+    name: Minerva 五级深度研究管线
+    description: PipelineWorkflow 示例 — L0-L4 五级深度研究: Decompose→Search→...→Output
+  - id: WORKFLOW-CREATE
+    name: Create 工作流
+    description: AgentWorkflow 示例 — 脚手架→编码→文档→提交
