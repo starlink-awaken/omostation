@@ -379,6 +379,43 @@ POC_SERVICES: dict[str, BosService] = {
         func_name="run_full_inspection",
         description="OMO 系统检查 (P36-W1 补, internal 同进程)",
     ),
+    # ── P45-W0 战役 1: 3 个高 ROI GAP URI 实施 (P44-W2 评估) ──
+    "bos://persona/sharedbrain-bridge/recall": BosService(
+        uri="bos://persona/sharedbrain-bridge/recall",
+        domain="persona",
+        package="sharedbrain-bridge",
+        action="recall",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "sot_bridge.sharedbrain_bridge", "serve", "--action", "recall",
+        ],
+        description="SharedBrain-Bridge 跨域语义召回 (P45-W0, POC stdio, recall-entity 的泛化版)",
+    ),
+    "bos://capability/forge/discover": BosService(
+        uri="bos://capability/forge/discover",
+        domain="capability",
+        package="forge",
+        action="discover",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "forge", "serve", "--action", "discover",
+        ],
+        description="Forge 工具发现 (P45-W0, POC stdio, LLM 工具选择关键)",
+    ),
+    "bos://memory/kos/ingest": BosService(
+        uri="bos://memory/kos/ingest",
+        domain="memory",
+        package="kos",
+        action="ingest",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "kos", "serve", "--action", "ingest",
+        ],
+        description="KOS 实体写入 (P45-W0, POC stdio, search 的对偶)",
+    ),
 }
 
 
