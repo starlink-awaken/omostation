@@ -28,6 +28,14 @@ logger = structlog.get_logger(__name__)
 _DEFAULT_DATA_DIR = Path.home() / ".agora"
 _DEFAULT_CONFIG_FILE = "agora-proxy-services.json"
 
+# L0 Registry — dynamic override for KNOWN_SERVICES
+_HAVE_L0_LOADER = False
+try:
+    from agora.l0_registry_loader import load_known_services as _l0_load_known
+    _HAVE_L0_LOADER = True
+except ImportError:
+    pass
+
 
 def get_data_dir() -> Path:
     """Return the Agora data directory.
@@ -77,8 +85,24 @@ migrate_legacy_data()
 
 # ── Known MCP service registry ──────────────────────────────────────
 # Each entry defines how to launch the service via `uv run --package`.
+# SSOT: l0_registry_overrides.yaml → L0 M1 nodes → KNOWN_SERVICES (fallback)
+# Static dict retained as fallback; new services should register in L0.
 
-KNOWN_SERVICES: dict[str, dict[str, Any]] = {
+def _get_known_services() -> dict[str, dict[str, Any]]:
+    """Merge L0 registry entries with static KNOWN_SERVICES (L0 wins)."""
+    if _HAVE_L0_LOADER:
+        try:
+            l0_known = _l0_load_known()
+            if l0_known:
+                merged = dict(_KNOWN_FALLBACK)
+                merged.update(l0_known)
+                return merged
+        except Exception:
+            pass
+    return dict(_KNOWN_FALLBACK)
+
+
+_KNOWN_FALLBACK: dict[str, dict[str, Any]] = {
     # ── Kairon 工作空间 MCP 服务 ──────────────────────────────
     # 通过 agora 代理由子进程加载的服务
     "agent-runtime": {
@@ -351,7 +375,7 @@ def _default_config(workspace: Path | None) -> dict[str, Any]:
     - External tools (npm, etc.) are enabled if their command is on PATH
     """
     services = []
-    for name, info in KNOWN_SERVICES.items():
+    for name, info in _get_known_services().items():
         available = _check_tool_available(name, info)
         entry: dict[str, Any] = {
             "name": name,
@@ -445,7 +469,7 @@ def get_config_status() -> dict[str, Any]:
     config_path = _get_config_path()
 
     services = []
-    for name, info in KNOWN_SERVICES.items():
+    for name, info in _get_known_services().items():
         available = _check_tool_available(name, info)
         source = info.get("source", "kairon")
         installed = _check_package_installed(name, workspace) if source == "kairon" and available else available

@@ -406,8 +406,30 @@ class ProxyRegistry:
 
         try:
             result = await entry.client.call_tool(entry.original_name, arguments)
+            try:
+                from agora.audit import AuditLogger
+                AuditLogger().log(
+                    action="mcp.tool_call",
+                    actor="system",
+                    resource=tool_name,
+                    result="success",
+                    detail=str(arguments)[:1000]
+                )
+            except Exception as audit_e:
+                logger.warning("proxy_audit_log_failed", tool=tool_name, error=str(audit_e))
         except Exception as e:
             logger.error("proxy_dispatch_failed", tool=tool_name, service=svc_name, error=str(e))
+            try:
+                from agora.audit import AuditLogger
+                AuditLogger().log(
+                    action="mcp.tool_call",
+                    actor="system",
+                    resource=tool_name,
+                    result="error",
+                    detail=str(e)[:1000]
+                )
+            except Exception:
+                pass
             return {"status": "error", "error": str(e)}
 
         # Notify all usage callbacks for lifecycle management (idle timeout refresh)

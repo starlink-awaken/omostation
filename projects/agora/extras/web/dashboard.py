@@ -95,7 +95,7 @@ app.middleware("http")(_auth_middleware)
 
 # Rate limiting — simple sliding window per IP (max 60 req/min)
 _rate_limits: dict[str, list[float]] = {}
-_RATE_LIMIT_MAX = int(os.environ.get("AGORA_RATE_LIMIT", "60"))
+_RATE_LIMIT_MAX = int(os.environ.get("AGORA_RATE_LIMIT", "0"))
 _RATE_LIMIT_WINDOW = 60.0  # seconds
 _RATE_LIMIT_CLEANUP_AT = 500  # entries before cleanup
 

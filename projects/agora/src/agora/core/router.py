@@ -90,9 +90,30 @@ class Router:
             _atexit_registered = True
 
     def _load_routes(self):
-        """Load persisted route mappings from JSON file."""
-        from agora.persistence import json_load  # type: ignore[import-not-found]
+        """Load route mappings from L0 registry + JSON fallback."""
+        import json
 
+        # Try L0 registry first
+        try:
+            from agora.l0_registry_loader import load_routes as _l0_routes
+
+            l0 = _l0_routes()
+            if l0:
+                self._routes = l0
+                # Also load JSON for agora-internal routes not in L0
+                from agora.persistence import json_load
+                data = json_load(self._routes_path, default={})
+                json_routes = data.get("routes", {})
+                # JSON agora-internal routes supplement L0
+                for k, v in json_routes.items():
+                    if v == "agora-internal":
+                        self._routes[k] = v
+                return
+        except ImportError:
+            pass
+
+        # Fallback: JSON file
+        from agora.persistence import json_load
         data = json_load(self._routes_path, default={})
         self._routes = data.get("routes", {})
 

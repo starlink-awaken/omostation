@@ -1,29 +1,22 @@
----
-name: Pull Request
-about: 提交代码变更
-title: ''
-labels: ''
-assignees: ''
----
+## PR Checklist (omo governance audit 自动跑)
 
-## 相关 Issue
-关联的 Issue 编号（如有）：`#123`
+- [ ] 跑过本地 CI: `./scripts/ci_local.sh`
+- [ ] `omo governance audit` 总分 >= 95
+- [ ] 0 missing deliverables (P36 治理债务永久化)
+- [ ] agora 12/12 健康 (如改动 agora)
+- [ ] kairon 0 ruff errors (如改动 kairon)
+- [ ] deliverables 列全部为文件路径 (非描述式)
 
-## 变更类型
-- [ ] 新功能 (feat)
-- [ ] Bug 修复 (fix)
-- [ ] 重构 (refactor)
-- [ ] 文档更新 (docs)
-- [ ] 测试 (test)
-- [ ] 运维/构建 (chore)
+### 改动概述
 
-## 变更内容
-清晰描述此次 PR 做了哪些变更。
+<!-- 简述 PR 改了什么 -->
 
-## 测试情况
-- [ ] 本地测试通过
-- [ ] 新增了单元测试
-- [ ] 所有既有测试仍然通过
+### 关联任务
 
-## 其他说明
-任何需要 reviewer 注意的额外信息。
+<!-- P32 / P33 / P34 / P35 / P36 / P37-XXX-XXX -->
+
+### 验收命令
+
+```bash
+./scripts/ci_local.sh
+```

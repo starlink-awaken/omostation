@@ -24,9 +24,9 @@ l0_internal_layers:
   # ── L0-M2: 元模型层 ──  
   - id: L0-M2
     name: "元模型层"
-    description: "定义 17 种要素类型的模具——每种东西长什么样。"
+    description: "定义 18 种要素类型的模具——每种东西长什么样。"
     assets:
-      - "mof/m2/ (17 files)"
+      - "mof/m2/ (18 files)"
     tools: ["mof-bootstrap (M3↔M2 自反性)"]
     depends_on: [L0-M3]
     feeds_into: [L0-M1, L0-Registry]
@@ -48,9 +48,9 @@ l0_internal_layers:
   # ── L0-M1: 模型层 ──
   - id: L0-M1
     name: "模型层"
-    description: "575 个节点声明——全系统的模型化表达。"
+    description: "576 个节点声明——全系统的模型化表达。"
     assets:
-      - "mof/m1/ (17 directories, 575 nodes)"
+      - "mof/m1/ (18 directories, 576 nodes)"
     tools: ["mof-validate (M2→M1 校验)", "mof-scan (System→M1)", "mof-extract (提炼→M1)", "mof-generate (M1→System)"]
     depends_on: [L0-M2, L0-Registry]
     feeds_into: [L0-M0, L0-Tools]

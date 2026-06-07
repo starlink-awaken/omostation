@@ -311,9 +311,68 @@ POC_SERVICES: dict[str, BosService] = {
         transport="stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "forge", "serve", "--action", "register-tool",
+            "python", "-m", "forge", "--action", "register-tool",
         ],
         description="Forge 工具注册 (POC stdio)",
+    ),
+    # P36-W1 跨域 GAP 补 5 条 (P35-W0 spec 注册但未在 resolver)
+    "bos://persona/sharedbrain-bridge/recall-entity": BosService(
+        uri="bos://persona/sharedbrain-bridge/recall-entity",
+        domain="persona",
+        package="sharedbrain-bridge",
+        action="recall-entity",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "sot_bridge.sharedbrain_bridge", "serve", "--action", "recall-entity",
+        ],
+        description="SharedBrain-Bridge 实体召回 (P36-W1 补, POC stdio)",
+    ),
+    "bos://persona/health-profile/alert": BosService(
+        uri="bos://persona/health-profile/alert",
+        domain="persona",
+        package="health-profile",
+        action="alert",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "health_profile", "serve", "--action", "alert",
+        ],
+        description="Health-Profile 健康告警 (P36-W1 补, POC stdio)",
+    ),
+    "bos://capability/forge/exec-tool": BosService(
+        uri="bos://capability/forge/exec-tool",
+        domain="capability",
+        package="forge",
+        action="exec-tool",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "forge", "--action", "exec-tool",
+        ],
+        description="Forge 工具执行 (P36-W1 补, POC stdio)",
+    ),
+    "bos://capability/forge/list-tools": BosService(
+        uri="bos://capability/forge/list-tools",
+        domain="capability",
+        package="forge",
+        action="list-tools",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "forge", "--action", "list-tools",
+        ],
+        description="Forge 工具列表 (P36-W1 补, POC stdio)",
+    ),
+    "bos://governance/omo/inspect": BosService(
+        uri="bos://governance/omo/inspect",
+        domain="governance",
+        package="omo",
+        action="inspect",
+        transport="internal",
+        module_path="omo.omo_inspect",
+        func_name="run_full_inspection",
+        description="OMO 系统检查 (P36-W1 补, internal 同进程)",
     ),
 }
 
@@ -330,6 +389,8 @@ class ProcessPool:
     """
 
     processes: dict[str, subprocess.Popen] = field(default_factory=dict)
+    # 跟踪曾经 spawn 过的 URI (P35-W1), 让 respawn_dead 知道哪些 URI 应该被检查
+    seen_uris: set[str] = field(default_factory=set)
     request_id: int = 0
 
     def _next_id(self) -> str:
@@ -337,9 +398,32 @@ class ProcessPool:
         self.request_id += 1
         return f"req-{self.request_id}-{uuid.uuid4().hex[:8]}"
 
-    def get_or_spawn(self, service: BosService) -> subprocess.Popen:
-        """懒加载 spawn. PID 在 spawn 后即可获取."""
-        if service.uri not in self.processes:
+    def get_or_spawn(self, service: BosService, force_respawn: bool = False) -> subprocess.Popen:
+        """懒加载 spawn + 自动 respawn 死进程 (P35-W1 升级).
+
+        Args:
+            service: BOS 服务描述
+            force_respawn: 强制先 kill 旧进程再 spawn 新进程
+
+        Returns:
+            subprocess.Popen: spawn 后的进程句柄
+        """
+        # 强制 respawn: 先 kill 旧进程
+        if force_respawn and service.uri in self.processes:
+            old_proc = self.processes.pop(service.uri)
+            if old_proc.poll() is None:
+                old_proc.terminate()
+                try:
+                    old_proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    old_proc.kill()
+                    old_proc.wait()
+
+        # 懒加载 / 死进程自动 respawn
+        if service.uri not in self.processes or not self.is_alive(service.uri):
+            # 死进程清理 (is_alive 已处理, 此处保险)
+            if service.uri in self.processes and not self.is_alive(service.uri):
+                self.processes.pop(service.uri, None)
             self.processes[service.uri] = subprocess.Popen(
                 service.command,
                 stdin=subprocess.PIPE,
@@ -348,15 +432,57 @@ class ProcessPool:
                 cwd=str(KAIRON_ROOT),
                 bufsize=0,  # unbuffered for stdio JSON 协议
             )
+            # 记录: 此 URI 曾经 spawn 过 (供 respawn_dead 使用)
+            self.seen_uris.add(service.uri)
             _log.info("Spawned BOS service: %s (pid=%d)", service.uri, self.processes[service.uri].pid)
         return self.processes[service.uri]
 
     def is_alive(self, uri: str) -> bool:
-        """检查 URI 对应进程是否还活着."""
+        """检查进程是否 alive + 自动清理死进程 (P35-W1 升级).
+
+        Returns:
+            bool: 进程存在且 alive 时为 True
+        """
         proc = self.processes.get(uri)
         if proc is None:
             return False
-        return proc.poll() is None
+        if proc.poll() is not None:
+            # 进程已死, 清理 (下次调用会 respawn)
+            self.processes.pop(uri, None)
+            return False
+        return True
+
+    def respawn_dead(self) -> list[str]:
+        """批量 respawn 死进程 (P35-W1 战役 4).
+
+        策略: 遍历 seen_uris (曾经 spawn 过的 URI), 对死进程重新 spawn.
+        这样不受 is_alive 自动清理影响 — 已从池清理的 URI 仍能被重新 spawn,
+        仍留在池中的死进程也能被重建.
+
+        Returns:
+            list[str]: 被 respawn 的 URI 列表
+        """
+        respawned: list[str] = []
+        # 迭代 seen_uris 快照 (避免迭代中修改)
+        for uri in list(self.seen_uris):
+            proc = self.processes.get(uri)
+            is_dead = proc is None or proc.poll() is not None
+            if not is_dead:
+                continue
+            # 找 service 重建
+            service = POC_SERVICES.get(uri)
+            if service is None:
+                # 不在注册表: 清理 tracking
+                self.seen_uris.discard(uri)
+                self.processes.pop(uri, None)
+                continue
+            # 清理 + 重建
+            if proc is not None:
+                self.processes.pop(uri, None)
+            self.get_or_spawn(service)
+            respawned.append(uri)
+            _log.warning("Respawned process: %s (new pid=%d)", uri, self.processes[uri].pid)
+        return respawned
 
     def shutdown(self, uri: str | None = None) -> int:
         """关闭一个或全部进程. 返回关闭数量."""
@@ -364,8 +490,11 @@ class ProcessPool:
             count = 0
             for u in list(self.processes.keys()):
                 count += self.shutdown(u)
+            # 清空 seen_uris 跟踪 (P35-W1)
+            self.seen_uris.clear()
             return count
         proc = self.processes.pop(uri, None)
+        # 单个 shutdown 不清 seen_uris (允许未来 respawn)
         if proc is None:
             return 0
         if proc.poll() is None:
@@ -500,6 +629,9 @@ def invoke_stdio(
 
     pool = get_pool()
     try:
+        # 双重保险: is_alive 已自动清理, get_or_spawn 再保险一次
+        if uri in pool.processes and not pool.is_alive(uri):
+            _log.warning("Process dead on invoke, will respawn: %s", uri)
         proc = pool.get_or_spawn(service)
     except FileNotFoundError as exc:
         return {
@@ -515,11 +647,21 @@ def invoke_stdio(
         }
 
     if not pool.is_alive(uri):
-        return {
-            "uri": uri,
-            "status": "error",
-            "error": f"process_dead: pid={proc.pid}",
-        }
+        # 最后兜底: 自动 respawn (P35-W1 升级)
+        try:
+            proc = pool.get_or_spawn(service, force_respawn=True)
+        except Exception as exc:  # noqa: BLE001
+            return {
+                "uri": uri,
+                "status": "error",
+                "error": f"respawn_failed: {exc}",
+            }
+        if not pool.is_alive(uri):
+            return {
+                "uri": uri,
+                "status": "error",
+                "error": f"process_still_dead_after_respawn: pid={proc.pid}",
+            }
 
     # 构造请求
     request_id = pool._next_id()
