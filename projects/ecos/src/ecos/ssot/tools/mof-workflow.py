@@ -620,7 +620,10 @@ def cmd_schema_report(args):
             continue
 
         has_structured = any(
-            isinstance(s.get("input", {}), dict) and "type" in s.get("input", {})
+            isinstance(s.get("input", {}), dict) and any(
+                isinstance(v, dict) and "type" in v
+                for v in s.get("input", {}).values()
+            )
             for s in steps
         )
         if has_structured:
