@@ -25,112 +25,65 @@ class ProviderRuntime:
     source: str = "cc-switch"
 
 
-def _load_settings(value: str | None) -> dict[str, Any]:
-    if not value:
-        return {}
-    parsed = json.loads(value)
-    return parsed if isinstance(parsed, dict) else {}
-
-
-def _load_provider_rows(db_path: Path, app_type: str) -> list[sqlite3.Row]:
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    try:
-        rows = conn.execute(
-            """
-            SELECT
-                p.id,
-                p.app_type,
-                p.name,
-                p.settings_config,
-                p.is_current,
-                p.sort_index,
-                pe.url AS endpoint_url,
-                ph.is_healthy,
-                ph.last_success_at
-            FROM providers p
-            LEFT JOIN provider_endpoints pe
-              ON pe.provider_id = p.id AND pe.app_type = p.app_type
-            LEFT JOIN provider_health ph
-              ON ph.provider_id = p.id AND ph.app_type = p.app_type
-            WHERE p.app_type = ?
-            ORDER BY COALESCE(ph.is_healthy, 0) DESC,
-                     COALESCE(ph.last_success_at, '') DESC,
-                     COALESCE(p.is_current, 0) DESC,
-                     COALESCE(p.sort_index, 9999) ASC
-            """,
-            (app_type,),
-        ).fetchall()
-    finally:
-        conn.close()
-    return rows
-
-
-def _runtime_from_row(row: sqlite3.Row) -> ProviderRuntime | None:
-    settings = _load_settings(row["settings_config"])
-    env = settings.get("env", {})
-    if not isinstance(env, dict):
-        env = {}
-
-    if row["app_type"] == "claude":
-        api_key = env.get("ANTHROPIC_AUTH_TOKEN") or env.get("ANTHROPIC_API_KEY")
-        base_url = env.get("ANTHROPIC_BASE_URL") or row["endpoint_url"]
-        model = (
-            env.get("ANTHROPIC_MODEL")
-            or env.get("ANTHROPIC_DEFAULT_SONNET_MODEL")
-            or "claude-3-5-sonnet-20241022"
-        )
-    elif row["app_type"] in {"codex", "openai"}:
-        api_key = env.get("OPENAI_API_KEY")
-        base_url = (
-            env.get("OPENAI_BASE_URL")
-            or env.get("OPENAI_API_BASE")
-            or row["endpoint_url"]
-        )
-        model = env.get("OPENAI_MODEL") or "gpt-4o"
-    else:
-        api_key = env.get("API_KEY")
-        base_url = env.get("BASE_URL") or row["endpoint_url"]
-        model = env.get("MODEL") or ""
-
-    if not api_key or not base_url or not model:
-        return None
-
-    return ProviderRuntime(
-        provider_id=str(row["id"]),
-        app_type=str(row["app_type"]),
-        name=str(row["name"]),
-        base_url=str(base_url).rstrip("/"),
-        api_key=str(api_key),
-        model=str(model),
-        is_healthy=bool(row["is_healthy"]),
-        last_success_at=row["last_success_at"],
-    )
-
-
 def select_cc_switch_provider(
-    db_path: Path,
-    app_type: str,
+    db_path: Path | None = None,
+    app_type: str = "claude",
     preferred_names: list[str] | None = None,
+    m1_dir: Path | None = None,
 ) -> ProviderRuntime:
-    preferred = {name.lower() for name in preferred_names or []}
-    candidates = []
-    preferred_candidates = []
-
-    for row in _load_provider_rows(db_path, app_type=app_type):
-        runtime = _runtime_from_row(row)
-        if runtime is None or not runtime.is_healthy:
-            continue
-        candidates.append(runtime)
-        if runtime.name.lower() in preferred:
-            preferred_candidates.append(runtime)
-
-    pool = preferred_candidates or candidates
-    if not pool:
-        raise ValueError(
-            f"No healthy {app_type} provider with runtime config found in {db_path}"
+    import asyncio
+    import os
+    from llm_gateway_kernel.llm_gateway.scheduler import ModelScheduler
+    from llm_gateway_kernel.llm_gateway.types import ModelRequest, ModelRoutePolicy
+    
+    if m1_dir is None:
+        m1_dir = Path(__file__).resolve().parents[3] / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "compute_engine"
+        
+    async def _do_select() -> ProviderRuntime:
+        scheduler = ModelScheduler.from_m1_dir(str(m1_dir))
+        await scheduler._registry.refresh()
+        
+        req = ModelRequest(required_capabilities=["chat"])
+        policy = ModelRoutePolicy(priority=preferred_names or [])
+        sel = await scheduler.select_model(req, policy=policy)
+        
+        if not sel:
+            raise ValueError(f"No healthy provider found in M1 registry for app_type={app_type}")
+            
+        provider_name = sel.provider_name
+        adapter = scheduler._registry._providers.get(provider_name)
+        
+        base_url = ""
+        if adapter and hasattr(adapter, "base_url"):
+            base_url = adapter.base_url or ""
+            
+        if app_type == "claude":
+            api_key = os.environ.get("ANTHROPIC_AUTH_TOKEN") or os.environ.get("ANTHROPIC_API_KEY", "dummy-key")
+        elif app_type in {"codex", "openai"}:
+            api_key = os.environ.get("OPENAI_API_KEY", "dummy-key")
+        else:
+            api_key = os.environ.get("API_KEY", "dummy-key")
+            
+        if app_type == "claude" and not base_url:
+            base_url = os.environ.get("ANTHROPIC_BASE_URL", base_url)
+        if app_type in {"codex", "openai"} and not base_url:
+            base_url = os.environ.get("OPENAI_BASE_URL", base_url)
+            
+        real_model = sel.model.id.split("/")[-1] if "/" in sel.model.id else sel.model.id
+            
+        return ProviderRuntime(
+            provider_id=sel.model.provider,
+            app_type=app_type,
+            name=sel.provider_name,
+            base_url=base_url,
+            api_key=api_key,
+            model=real_model,
+            is_healthy=True,
+            last_success_at=None,
+            source="llm-gateway",
         )
-    return pool[0]
+        
+    return asyncio.run(_do_select())
 
 
 def _litellm_model_name(provider: ProviderRuntime) -> str:

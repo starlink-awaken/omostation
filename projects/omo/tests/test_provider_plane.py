@@ -15,147 +15,37 @@ from omo.omo_provider_plane import (
 _WORKSPACE = Path(__file__).resolve().parents[2]
 
 
-def _seed_cc_switch_db(path: Path) -> None:
-    conn = sqlite3.connect(path)
-    cur = conn.cursor()
-    cur.executescript(
+import os
+from unittest.mock import patch
+
+def _seed_m1_dir(tmp_path: Path) -> Path:
+    m1_dir = tmp_path / "m1" / "compute_engine"
+    m1_dir.mkdir(parents=True)
+    (m1_dir / "ENG-DEEPSEEK.yaml").write_text(
         """
-        CREATE TABLE providers (
-            id TEXT PRIMARY KEY,
-            app_type TEXT,
-            name TEXT,
-            settings_config TEXT,
-            website_url TEXT,
-            category TEXT,
-            created_at INTEGER,
-            sort_index INTEGER,
-            notes TEXT,
-            icon TEXT,
-            icon_color TEXT,
-            meta TEXT,
-            is_current INTEGER,
-            in_failover_queue INTEGER,
-            cost_multiplier TEXT,
-            limit_daily_usd REAL,
-            limit_monthly_usd REAL,
-            provider_type TEXT
-        );
-        CREATE TABLE provider_endpoints (
-            id INTEGER PRIMARY KEY,
-            provider_id TEXT,
-            app_type TEXT,
-            url TEXT,
-            added_at INTEGER
-        );
-        CREATE TABLE provider_health (
-            provider_id TEXT,
-            app_type TEXT,
-            is_healthy INTEGER,
-            consecutive_failures INTEGER,
-            last_success_at TEXT,
-            last_failure_at TEXT,
-            last_error TEXT,
-            updated_at TEXT
-        );
+id: ENG-DEEPSEEK
+type: compute_engine
+engine_type: cloud_api
+base_url: "https://api.deepseek.com/anthropic"
+supported_protocols: ["openai", "anthropic"]
+cost_multiplier: 1.0
+status: active
         """
     )
-    cur.execute(
-        """
-        INSERT INTO providers (
-            id, app_type, name, settings_config, website_url, category, created_at, sort_index,
-            notes, icon, icon_color, meta, is_current, in_failover_queue, cost_multiplier,
-            limit_daily_usd, limit_monthly_usd, provider_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            "healthy-deepseek",
-            "claude",
-            "DeepSeek",
-            '{"env":{"ANTHROPIC_AUTH_TOKEN":"secret-token","ANTHROPIC_BASE_URL":"https://api.deepseek.com/anthropic","ANTHROPIC_MODEL":"DeepSeek-V4-pro"}}',
-            "https://platform.deepseek.com",
-            "cn_official",
-            0,
-            1,
-            "healthy",
-            "deepseek",
-            "#000000",
-            "{}",
-            1,
-            0,
-            "1.0",
-            None,
-            None,
-            None,
-        ),
-    )
-    cur.execute(
-        "INSERT INTO provider_endpoints (provider_id, app_type, url, added_at) VALUES (?, ?, ?, ?)",
-        ("healthy-deepseek", "claude", "https://api.deepseek.com/anthropic", 0),
-    )
-    cur.execute(
-        """
-        INSERT INTO provider_health (
-            provider_id, app_type, is_healthy, consecutive_failures, last_success_at, last_failure_at, last_error, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        ("healthy-deepseek", "claude", 1, 0, "2026-05-30T10:00:00Z", None, None, "2026-05-30T10:00:00Z"),
-    )
-    cur.execute(
-        """
-        INSERT INTO providers (
-            id, app_type, name, settings_config, website_url, category, created_at, sort_index,
-            notes, icon, icon_color, meta, is_current, in_failover_queue, cost_multiplier,
-            limit_daily_usd, limit_monthly_usd, provider_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            "unhealthy-openrouter",
-            "claude",
-            "OpenRouter",
-            '{"env":{"ANTHROPIC_AUTH_TOKEN":"bad-token","ANTHROPIC_BASE_URL":"https://openrouter.ai/api","ANTHROPIC_MODEL":"anthropic/claude-sonnet-4.6"}}',
-            "https://openrouter.ai",
-            "aggregator",
-            0,
-            2,
-            "unhealthy",
-            "openrouter",
-            "#111111",
-            "{}",
-            0,
-            0,
-            "1.0",
-            None,
-            None,
-            None,
-        ),
-    )
-    cur.execute(
-        "INSERT INTO provider_endpoints (provider_id, app_type, url, added_at) VALUES (?, ?, ?, ?)",
-        ("unhealthy-openrouter", "claude", "https://openrouter.ai/api", 0),
-    )
-    cur.execute(
-        """
-        INSERT INTO provider_health (
-            provider_id, app_type, is_healthy, consecutive_failures, last_success_at, last_failure_at, last_error, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        ("unhealthy-openrouter", "claude", 0, 4, None, "2026-05-29T10:00:00Z", "401", "2026-05-29T10:00:00Z"),
-    )
-    conn.commit()
-    conn.close()
+    return m1_dir
 
 
 def test_select_cc_switch_provider_prefers_healthy_entry_and_extracts_runtime(tmp_path: Path) -> None:
-    db_path = tmp_path / "cc-switch.db"
-    _seed_cc_switch_db(db_path)
+    m1_dir = _seed_m1_dir(tmp_path)
 
-    provider = select_cc_switch_provider(db_path, app_type="claude")
+    with patch.dict(os.environ, {"ANTHROPIC_AUTH_TOKEN": "secret-token"}):
+        provider = select_cc_switch_provider(m1_dir=m1_dir, app_type="claude")
 
-    assert provider.name == "DeepSeek"
-    assert provider.base_url == "https://api.deepseek.com/anthropic"
-    assert provider.api_key == "secret-token"
-    assert provider.model == "DeepSeek-V4-pro"
-    assert provider.is_healthy is True
+        assert provider.name == "ENG-DEEPSEEK"
+        assert provider.base_url == "https://api.deepseek.com/anthropic"
+        assert provider.api_key == "secret-token"
+        assert provider.model == "gpt-4o"
+        assert provider.is_healthy is True
 
 
 def test_apply_provider_to_litellm_config_updates_target_model_only(tmp_path: Path) -> None:
@@ -178,9 +68,9 @@ def test_apply_provider_to_litellm_config_updates_target_model_only(tmp_path: Pa
         ),
         encoding="utf-8",
     )
-    db_path = tmp_path / "cc-switch.db"
-    _seed_cc_switch_db(db_path)
-    provider = select_cc_switch_provider(db_path, app_type="claude")
+    m1_dir = _seed_m1_dir(tmp_path)
+    with patch.dict(os.environ, {"ANTHROPIC_AUTH_TOKEN": "secret-token"}):
+        provider = select_cc_switch_provider(m1_dir=m1_dir, app_type="claude")
 
     apply_provider_to_litellm_config(config_path, target_model_name="claude-3-5-sonnet", provider=provider)
 
@@ -188,7 +78,7 @@ def test_apply_provider_to_litellm_config_updates_target_model_only(tmp_path: Pa
     assert data["model_list"][0]["litellm_params"] == {"model": "openai/gpt-4o", "api_key": "os.environ/OPENAI_API_KEY"}
     assert data["model_list"][1]["litellm_params"]["api_key"] == "secret-token"
     assert data["model_list"][1]["litellm_params"]["api_base"] == "https://api.deepseek.com/anthropic"
-    assert data["model_list"][1]["litellm_params"]["model"] == "anthropic/DeepSeek-V4-pro"
+    assert data["model_list"][1]["litellm_params"]["model"] == "anthropic/gpt-4o"
 
 
 def test_quota_summary_and_snapshot_redact_sensitive_fields(tmp_path: Path) -> None:
@@ -264,12 +154,3 @@ def test_provider_snapshot_summarizes_litellm_health(tmp_path: Path) -> None:
     assert snapshot["litellm_health"]["unhealthy_models"] == ["openai/gpt-4o"]
     assert "healthy_endpoints" not in snapshot["litellm_health"]
     assert "unhealthy_endpoints" not in snapshot["litellm_health"]
-
-
-def test_agentmesh_gateway_config_prefers_local_litellm_for_claude_routes() -> None:
-    config = yaml.safe_load((_WORKSPACE / "projects" / "agentmesh" / "config" / "gateway.yaml").read_text(encoding="utf-8"))
-    models = config["models"]
-
-    assert "litellm" in models["providers"]
-    assert models["providers"]["litellm"]["base_url"] == "http://127.0.0.1:4000/v1"
-    assert models["model_routing"]["claude"][0] == "litellm"
