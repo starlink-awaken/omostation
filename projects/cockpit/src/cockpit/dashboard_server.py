@@ -34,6 +34,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+import yaml
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -42,6 +43,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 PROJECT_ROOT = Path(__file__).resolve().parent  # cockpit/src/cockpit/
 OMO_ROOT = Path.home() / "Workspace/projects/omo"
 DASHBOARD_HTML = PROJECT_ROOT / "templates" / "dashboard.html"
+M0_SNAPSHOT_PATH = Path.home() / "Workspace/projects/ecos/src/ecos/ssot/mof/m0/snapshot.yaml"
 
 # Ensure both runtime/src and omo/src are on sys.path for imports
 _runtime_src = str(PROJECT_ROOT / "src")
@@ -92,7 +94,7 @@ _LAYER_SOURCES: list[dict] = [
     {"layer": "I0", "name": "agora", "url": "http://localhost:7430/api/bos/status", "port": 7430},
     {"layer": "L2", "name": "omo",   "url": "http://localhost:9090/api/v1/status",   "port": 9090},
     {"layer": "L1", "name": "runtime", "url": "http://localhost:9876/api/v1/status",  "port": 9876},
-    {"layer": "L0", "name": "ecos",  "url": "http://localhost:9090/api/v1/status",   "port": 9090},
+    {"layer": "L0", "name": "ecos",  "url": "file://m0_snapshot", "port": None, "source": "m0_snapshot"},
 ]
 
 
@@ -134,8 +136,46 @@ def _fetch_layer_status(source: dict) -> dict:
         except Exception:
             return _fetch_http(source)
 
-    # L0 ecos — HTTP fallback only
+    # L0 ecos — read from M0 snapshot file
+    if source["layer"] == "L0":
+        return _read_m0_snapshot()
     return _fetch_http(source)
+
+
+def _read_m0_snapshot() -> dict:
+    """Read the M0 runtime snapshot from the local YAML file."""
+    try:
+        m0_path = M0_SNAPSHOT_PATH
+        if not m0_path.exists():
+            return {
+                "layer": "L0",
+                "name": "ecos",
+                "status": "down",
+                "error": f"M0 snapshot not found at {m0_path}",
+            }
+        raw = yaml.safe_load(m0_path.read_text(encoding="utf-8"))
+        return {
+            "layer": "L0",
+            "name": "ecos",
+            "status": "ok",
+            "data": {
+                "source": "m0_snapshot",
+                "snapshot": {
+                    "version": raw.get("version"),
+                    "generated_at": str(raw.get("generated_at", "")),
+                    "daemon": raw.get("daemon", {}),
+                    "m1_node_count": raw.get("m1_node_count", 0),
+                    "protocols": raw.get("protocols", {}),
+                },
+            },
+        }
+    except Exception as e:
+        return {
+            "layer": "L0",
+            "name": "ecos",
+            "status": "down",
+            "error": f"M0 snapshot read error: {e}",
+        }
 
 
 def _fetch_http(source: dict) -> dict:
@@ -203,6 +243,24 @@ async def api_v1_status():
     })
 
 
+@app.get("/api/v1/m0")
+async def api_v1_m0():
+    """Return M0 runtime snapshot as JSON."""
+    try:
+        if not M0_SNAPSHOT_PATH.exists():
+            return JSONResponse(
+                {"error": f"M0 snapshot not found at {M0_SNAPSHOT_PATH}"},
+                status_code=404,
+            )
+        raw = yaml.safe_load(M0_SNAPSHOT_PATH.read_text(encoding="utf-8"))
+        return JSONResponse(raw)
+    except Exception as e:
+        return JSONResponse(
+            {"error": f"M0 snapshot read error: {e}"},
+            status_code=500,
+        )
+
+
 # ═══════════════════════════════════════════════════════════════
 # 统一概览页面
 # ═══════════════════════════════════════════════════════════════
@@ -240,6 +298,7 @@ a{color:#58a6ff;text-decoration:none}a:hover{text-decoration:underline}
 <div class="nav">
   <a href="/">&#x1F4CA; 债务驾驶舱 (原有)</a>
   <a href="/api/v1/status">&#x1F4CB; API JSON</a>
+  <a href="/api/v1/m0">&#x1F4CA; M0 快照</a>
   <a href="http://localhost:7430">&#x2197; Agora (I0)</a>
   <a href="http://localhost:9090">&#x2197; OMO (L2)</a>
   <a href="http://localhost:9876">&#x2197; Runtime (L1)</a>
@@ -266,6 +325,36 @@ d.layers.forEach(l=>{
     if(l.data.summary){
       const s=l.data.summary;
       body+='<div class="stat"><span class="label">健康</span><span class="val">'+s.healthy+'/'+s.total_layers+'</span></div>';
+    }
+    // L0 M0 snapshot protocol health
+    if(l.data.snapshot){
+      const snap=l.data.snapshot;
+      body+='<div class="stat"><span class="label">Daemon</span><span class="val">'+(snap.daemon.healthy?'\u2705 \u5065\u5eb7':'\u274C \u5f02\u5e38')+'</span></div>';
+      body+='<div class="stat"><span class="label">M1 \u8282\u70b9</span><span class="val">'+snap.m1_node_count+'</span></div>';
+      body+='<div class="stat"><span class="label">\u5feb\u7167\u7248\u672c</span><span class="val">'+(snap.version||'N/A')+'</span></div>';
+      body+='<div style="margin-top:8px;font-size:11px;color:#8b949e">\u534f\u8bae\u8870\u51cf</div>';
+      for(const [pname, p] of Object.entries(snap.protocols||{})){
+        const pct=p.remaining_pct;
+        const decay=p.decay;
+        const age=p.age_days;
+        const status=p.status;
+        const barColor=pct>80?'#4ade80':pct>50?'#fbbf24':'#f87171';
+        const statusBadgeCls=status==='fresh'?'badge-ok':status==='aging'?'badge-degraded':'badge-down';
+        body+='<div style="margin:6px 0;padding:6px 8px;background:#0d1117;border:1px solid #21262d;border-radius:4px">'+
+          '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'+
+          '<span style="font-weight:600;font-size:11px">'+pname+'</span>'+
+          '<span class="badge '+statusBadgeCls+'">'+status+'</span>'+
+          '</div>'+
+          '<div style="display:flex;justify-content:space-between;font-size:10px;color:#8b949e;margin-bottom:3px">'+
+          '<span>\u8870\u51cf: '+(decay*100).toFixed(0)+'%</span>'+
+          '<span>\u5269\u4f59: '+pct+'%</span>'+
+          '<span>\u5df2\u8fc7: '+age+'\u5929</span>'+
+          '</div>'+
+          '<div style="background:#21262d;border-radius:4px;height:8px;overflow:hidden">'+
+          '<div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:4px;transition:width 0.5s"></div>'+
+          '</div>'+
+          '</div>';
+      }
     }
   }
   if(l.error)body+='<div class="stat"><span class="label">错误</span><span style="color:#f87171;font-size:11px">'+l.error.slice(0,60)+'</span></div>';
