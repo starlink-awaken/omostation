@@ -6,6 +6,11 @@ import sys
 
 def main(argv: list[str] | None = None) -> int:
     args = list(argv if argv is not None else sys.argv[1:])
+    # P48-W2: serve 子命令 (stdin/stdout JSON-RPC, 供 agora subprocess spawn)
+    if args and args[0] == "serve":
+        from omo.omo_sync_serve import serve as omo_serve
+
+        return omo_serve()
     if args and args[0] in {"capability", "registry", "scenario", "pkg"}:
         from omo.omo_capability import main as capability_main
 
