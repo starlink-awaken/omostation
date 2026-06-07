@@ -197,14 +197,16 @@ def print_help():
   mof entity stats   实体统计
 
 工作流 (v2.0):
-  mof workflow list      列出所有工作流 [--domain <d>] [--json]
-  mof workflow show      查看详情 [--json]
-  mof workflow validate  校验 [--ci] [--json]
-  mof workflow run       执行 [--dry-run]
-  mof workflow relations 关系图
-  mof workflow graph     依赖图 [--format dot|mermaid|ascii]
-  mof workflow check-refs 交叉引用校验
-  mof workflow stats     统计摘要
+  mof workflow list         列出所有工作流
+  mof workflow show         查看详情 [--json]
+  mof workflow validate     校验 [--ci]
+  mof workflow run          执行 [--dry-run]
+  mof workflow relations    关系图
+  mof workflow graph        依赖图 [--format dot|mermaid|ascii]
+  mof workflow check-refs   交叉引用校验
+  mof workflow schema-report 覆盖度报告
+  mof workflow seed-bos      注册到BOSRouter
+  mof workflow stats        统计摘要
 
 运维:
   mof trail          统一审计追踪
