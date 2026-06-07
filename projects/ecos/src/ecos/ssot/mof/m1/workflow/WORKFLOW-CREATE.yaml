@@ -5,6 +5,7 @@ name: Create 工作流
 description: 创建工作流——脚手架→编码→文档→提交
 status: active
 domain: meta
+bos_uri: bos://ecos/workflow/create
 created: '2026-06-06'
 version: 1.0.0
 layer: L3
@@ -12,4 +13,3 @@ properties:
   workflow_name: Create 工作流
   steps: 创建工作流——脚手架→编码→文档→提交
   trigger: agent-invoke
-bos_uri: bos://ecos/workflow/create
