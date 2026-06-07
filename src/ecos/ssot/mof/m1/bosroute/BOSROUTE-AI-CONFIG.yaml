@@ -1,0 +1,15 @@
+# M1 Node: BOSROUTE-AI-CONFIG
+id: BOSROUTE-AI-CONFIG
+type: Component
+subtype: BOSRoute
+name: bos://ai-config/**
+description: AI配置域路由
+status: active
+domain: infra
+created: '2026-06-07'
+version: 1.0.0
+layer: I0
+properties:
+  layer: I0
+  runtime: active
+  protocol: BOS_URI

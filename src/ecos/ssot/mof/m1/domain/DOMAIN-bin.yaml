@@ -1,0 +1,26 @@
+# M1 Node: DOMAIN-bin
+# Type: Domain | Subtype: ToolDomain
+# Generated: 2026-06-07
+
+id: DOMAIN-bin
+type: Domain
+name: ~/bin
+description: 基础设施运维脚本 — 订阅·摄入·索引·备份·监控
+status: active
+domain: meta
+created: '2026-06-07'
+version: 1.0.0
+layer: L1
+properties:
+  bos_uri_pattern: bos://bin/**
+  domain_type: tool
+  layer: L1
+  governance_tier: 0
+  storage: /Users/xiamingxing/bin
+  capabilities:
+  - script.run
+  - pipeline.execute
+  - backup.run
+  entry_points:
+    cli: ecos
+subtype: ToolDomain

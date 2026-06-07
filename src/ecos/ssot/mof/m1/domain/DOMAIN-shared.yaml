@@ -1,0 +1,30 @@
+# M1 Node: DOMAIN-shared
+# Type: Domain | Subtype: DocumentDomain
+# Generated: 2026-06-07
+
+id: DOMAIN-shared
+type: Domain
+name: '@公共'
+description: 共享知识 — 人物·关系·医疗信息化·组织·模板
+status: active
+domain: meta
+created: '2026-06-07'
+version: 1.0.0
+layer: L4
+properties:
+  bos_uri_pattern: bos://shared/**
+  domain_type: document
+  layer: L4
+  governance_tier: 3
+  storage: /Users/xiamingxing/Documents/@公共
+  kems_planes:
+  - _control
+  - _entities
+  - _knowledge
+  - _runtime
+  capabilities:
+  - knowledge.read
+  - entity.resolve
+  entry_points:
+    mcp: domain_read
+subtype: DocumentDomain

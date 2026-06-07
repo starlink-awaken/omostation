@@ -1,0 +1,15 @@
+# M1 Node: BOSROUTE-VAULT
+id: BOSROUTE-VAULT
+type: Component
+subtype: BOSRoute
+name: bos://vault/**
+description: 知识库域路由
+status: active
+domain: infra
+created: '2026-06-07'
+version: 1.0.0
+layer: I0
+properties:
+  layer: I0
+  runtime: active
+  protocol: BOS_URI

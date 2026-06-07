@@ -1,0 +1,22 @@
+# M1 Node: DOMAIN-ai-config
+# Type: Domain | Subtype: ConfigDomain
+# Generated: 2026-06-07
+
+id: DOMAIN-ai-config
+type: Domain
+name: ~/.ai
+description: Claude Code 配置 — prompts/agents/architecture
+status: active
+domain: meta
+created: '2026-06-07'
+version: 1.0.0
+layer: L3-L4
+properties:
+  bos_uri_pattern: bos://ai-config/**
+  domain_type: config
+  layer: L3-L4
+  governance_tier: 0
+  storage: /Users/xiamingxing/.ai
+  capabilities:
+  - config.read
+subtype: ConfigDomain

@@ -1,0 +1,26 @@
+# M1 Node: DOMAIN-sharedwork
+# Type: Domain | Subtype: WorkspaceDomain
+# Generated: 2026-06-07
+
+id: DOMAIN-sharedwork
+type: Domain
+name: SharedWork
+description: 外部项目协作空间 — 23区·120+项目
+status: active
+domain: meta
+created: '2026-06-07'
+version: 1.0.0
+layer: L4
+properties:
+  bos_uri_pattern: bos://sharedwork/**
+  domain_type: workspace
+  layer: L4
+  governance_tier: 0
+  storage: /Users/xiamingxing/SharedWork
+  capabilities:
+  - project.list
+  - project.open
+  - code.search
+  entry_points:
+    cli: ls ~/SharedWork/
+subtype: WorkspaceDomain
