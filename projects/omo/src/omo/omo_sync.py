@@ -1,15 +1,19 @@
-"""P47 omo/sync — omo 状态同步 (internal transport).
+"""P47 omo/sync — omo 状态同步.
 
 P47 简化版: 不重新设计 in-process→subprocess, 用 internal transport
 (module_path + func_name, 同进程 importlib). 调 omo.omo_audit + sync_omo_state
 做实际 sync, append 治理历史.
 
 P47+ 真重构: 把 omo daemon 改成跨进程架构 (复杂度 5, 留 P48+).
+P49-simplify: 改用 omo_audit.record() + omo_audit._utc_now(), 不再内联 JSONL 写盘 / 手写 UTC.
 """
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import Any
+
+from omo.omo_audit import _utc_now, record as audit_record
+
+AUDIT_CHECKS = 6
 
 
 def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -29,13 +33,12 @@ def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
       - phase: int (current)
       - health_score: float (audit 100.0)
       - synced_at: ISO8601
-      - audit_checks: int (6)
+      - audit_checks: int
     """
     args = args or {}
     dry_run = bool(args.get("dry_run", False))
 
     try:
-        # 读 current phase
         phase = 0
         health_score = 0.0
         try:
@@ -49,29 +52,20 @@ def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
         except Exception:
             pass
 
-        # 写 governance-history
         if not dry_run:
-            from omo.omo_paths import GOVERNANCE_HISTORY_PATH  # type: ignore[import-not-found]
-
-            entry = {
-                "source": "omo_sync",
-                "ts": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
-                "phase": phase,
-                "health_score": health_score,
-                "dry_run": dry_run,
-            }
-            GOVERNANCE_HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
-            with open(GOVERNANCE_HISTORY_PATH, "a", encoding="utf-8") as f:
-                import json
-
-                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            audit_record(
+                action="omo_sync",
+                debt_id="OMO-SYNC",
+                actor="omo-sync",
+                details=f"phase={phase} health_score={health_score} dry_run={dry_run}",
+            )
 
         return {
             "status": "ok",
             "phase": phase,
             "health_score": health_score,
-            "synced_at": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
-            "audit_checks": 6,
+            "synced_at": _utc_now(),
+            "audit_checks": AUDIT_CHECKS,
             "dry_run": dry_run,
         }
     except Exception as exc:
@@ -81,4 +75,4 @@ def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
         }
 
 
-__all__ = ["run_sync"]
+__all__ = ["run_sync", "AUDIT_CHECKS"]

@@ -25,6 +25,7 @@ import json
 import os
 import subprocess
 import sys
+from collections import OrderedDict
 from pathlib import Path
 from typing import Any
 
@@ -302,11 +303,23 @@ class _AgoraPoolManager:
     P45-W5: 后台 heartbeat 主动检测长空闲连接的死活.
     """
 
-    HEARTBEAT_INTERVAL_SEC = 30.0
+    HEARTBEAT_INTERVAL_SEC = float(
+        os.environ.get("OMO_AGORA_HEARTBEAT_SEC", "30.0")
+    )
 
-    def __init__(self, cmd: list[str], max_size: int = 4) -> None:
+    def __init__(
+        self,
+        cmd: list[str],
+        max_size: int = 4,
+        heartbeat_interval_sec: float | None = None,
+    ) -> None:
         self._cmd = cmd
         self._max_size = max_size
+        self._heartbeat_interval = (
+            heartbeat_interval_sec
+            if heartbeat_interval_sec is not None
+            else self.HEARTBEAT_INTERVAL_SEC
+        )
         self._idle: collections.deque[_AgoraPool] = collections.deque()
         self._active = 0
         self._lock = asyncio.Lock()
@@ -356,12 +369,12 @@ class _AgoraPoolManager:
         self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
 
     async def _heartbeat_loop(self) -> None:
-        """P45-W5: 后台心跳循环, 每 30s 扫一次 idle 池死连接."""
+        """P45-W5: 后台心跳循环, 每 30s (可配) 扫一次 idle 池死连接."""
         while not self._heartbeat_stop.is_set():
             try:
                 await asyncio.wait_for(
                     self._heartbeat_stop.wait(),
-                    timeout=self.HEARTBEAT_INTERVAL_SEC,
+                    timeout=self._heartbeat_interval,
                 )
                 break  # stop event set
             except asyncio.TimeoutError:
@@ -557,14 +570,17 @@ async def _resolve_via_oneoff_subprocess(
 
 
 # ── P44-W3: audit dedup (同 (uri, failure_type) 1 分钟内只 1 条) ─
+# P49-simplify: OrderedDict LRU 替代 dict.clear() 全清 (避免丢未过期项)
 _AUDIT_DEDUP_TTL_SEC = 60
-_AUDIT_DEDUP_CACHE: dict[tuple[str, str], float] = {}
+_AUDIT_DEDUP_MAX = 1000
+_AUDIT_DEDUP_CACHE: OrderedDict[tuple[str, str], float] = OrderedDict()
 
 
 def _audit_should_record(uri: str, failure_type: str) -> bool:
     """P44-W3: 返回 True 表示可以 record (新 key 或 1 分钟前已过).
 
-    用 in-memory dict + 60s TTL, 不持久化. 进程重启后清空.
+    用 in-memory OrderedDict + 60s TTL, 满 1000 条 popitem(last=False) 删最旧, 不全清.
+    不持久化. 进程重启后清空.
     """
     import time as _time
 
@@ -574,9 +590,9 @@ def _audit_should_record(uri: str, failure_type: str) -> bool:
     if last is not None and (now - last) < _AUDIT_DEDUP_TTL_SEC:
         return False
     _AUDIT_DEDUP_CACHE[key] = now
-    # 简单 LRU 截断: 超过 1000 条清空 (避免无限增长)
-    if len(_AUDIT_DEDUP_CACHE) > 1000:
-        _AUDIT_DEDUP_CACHE.clear()
+    # LRU 截断: 超过 1000 条删最旧 (保留最近活跃项)
+    while len(_AUDIT_DEDUP_CACHE) > _AUDIT_DEDUP_MAX:
+        _AUDIT_DEDUP_CACHE.popitem(last=False)
     return True
 
 
