@@ -1032,13 +1032,12 @@ def get_stdio_adapter(timeout: float = 5.0) -> StdioAdapter:
     return StdioAdapter(timeout=timeout)
 
 
-def _call_mcp_stdio(service: BosService, *args: Any, request_uri: str | None = None, **kwargs: Any) -> dict:
+async def _call_mcp_stdio(service: BosService, *args: Any, request_uri: str | None = None, **kwargs: Any) -> dict:
     """mcp_stdio transport: 标准 MCP JSON-RPC 2.0 (P54-W0).
 
     使用 mcp_stdio_bridge.py 桥接自定义 POC 协议到标准 MCP stdio。
     下游子进程无需修改 — 桥接器处理协议转换。
     """
-    import asyncio as _asyncio
     from agora.mcp.bos_protocol import MCPStdioAdapter
 
     action = service.action
@@ -1048,7 +1047,7 @@ def _call_mcp_stdio(service: BosService, *args: Any, request_uri: str | None = N
 
     try:
         adapter = MCPStdioAdapter(bridge_cmd, timeout=5.0)
-        started = _asyncio.run(adapter.start())
+        started = await adapter.start()
         if not started:
             return {
                 "uri": request_uri or "",
@@ -1056,10 +1055,10 @@ def _call_mcp_stdio(service: BosService, *args: Any, request_uri: str | None = N
                 "status": "error",
                 "error": "mcp_stdio_initialize_failed",
             }
-        result = _asyncio.run(adapter.call("poc_exec", {
+        result = await adapter.call("poc_exec", {
             "action": action,
             "args": list(args),
-        }))
+        })
         adapter.shutdown()
         return result if isinstance(result, dict) else {"status": "ok", "result": result}
     except Exception as e:
@@ -1092,7 +1091,7 @@ async def resolve_bos_uri(uri: str, *args: Any, **kwargs: Any) -> dict:
         result.setdefault("canonical_uri", canonical_uri)
         return result
     if service.transport == "mcp_stdio":
-        result = _call_mcp_stdio(service, *args, request_uri=uri, **kwargs)
+        result = await _call_mcp_stdio(service, *args, request_uri=uri, **kwargs)
         result.setdefault("uri", uri)
         result.setdefault("canonical_uri", canonical_uri)
         return result
