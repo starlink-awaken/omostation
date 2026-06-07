@@ -104,8 +104,8 @@ def test_agora_resolver_importable_from_omo_path():
     )
     assert r.returncode == 0, f"Failed: {r.stderr}"
     out = r.stdout
-    assert "services: 11" in out
-    assert "analysis: 3" in out
+    assert "services: 25" in out
+    assert "analysis: 12" in out
     assert "bos://analysis/" in out
 
 
@@ -142,12 +142,15 @@ def test_cross_process_minerva_research():
     assert "result" in payload
 
 
-def test_cross_process_9_unregistered_return_error():
-    """W2 验证: 跨进程调 9 条未注册 URI → unknown_bos_uri 错误 (GAP 诚实)."""
+def test_cross_process_3_gap_samples_return_error():
+    """P43-W3 验证: 跨进程调 3 条 GAP URI (registry 有但 resolver 无) → unknown_bos_uri 错误.
+
+    P34 时代 12-3=9 GAP, 现在 40-25=15 GAP, 测 3 个 sample 跨 3 domain (capability/governance/memory).
+    """
     for uri in [
-        "bos://analysis/minerva/draft",
-        "bos://analysis/codeanalyze/lint",
-        "bos://analysis/iris/connect",
+        "bos://capability/forge/discover",
+        "bos://governance/omo/sync",
+        "bos://memory/kronos/query",
     ]:
         code = (
             "import asyncio, json; "
@@ -203,6 +206,6 @@ def test_p34w2_cross_process_summary():
     summary = json.loads(last_line)
     assert summary["registry_total"] == 40
     assert summary["registry_analysis"] == 12
-    assert summary["resolver_total"] == 11
-    assert summary["resolver_analysis"] == 3
+    assert summary["resolver_total"] == 25
+    assert summary["resolver_analysis"] == 12
     print(f"\nP34-W2 跨进程状态: {summary}")

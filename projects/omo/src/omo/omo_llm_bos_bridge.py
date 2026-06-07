@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -141,13 +142,14 @@ async def invoke_bos_uri_tool(uri: str, args: dict[str, Any] | None = None) -> d
     # (因 agora 依赖链含 websockets/aiohttp, 拉进 omo 进程会污染 omo 依赖面)
     sub_result = await _resolve_via_agora_subprocess(uri, args)
     if sub_result is not None:
+        transport = sub_result.pop("_transport", "agora_subprocess")
         return {
             "uri": uri,
             "domain": parsed["domain"],
             "package": parsed["package"],
             "action": parsed["action"],
             "status": "resolved",
-            "transport": "agora_subprocess",
+            "transport": transport,
             "result": sub_result,
         }
 
@@ -163,16 +165,203 @@ async def invoke_bos_uri_tool(uri: str, args: dict[str, Any] | None = None) -> d
 
 
 async def _resolve_via_agora_subprocess(uri: str, args: dict[str, Any]) -> dict[str, Any] | None:
-    """Subprocess 调 agora venv 跑 resolve_bos_uri (P32 跨进程架构, P42-W2 落地).
+    """跨进程调 agora venv 跑 resolve_bos_uri (P32 跨进程架构, P42-W2 落地, P43-W0 长驻池).
 
     设计理由:
       - agora 是独立 venv, 含 websockets/aiohttp 等重依赖
       - omo 进程不 import agora (避免污染 omo 依赖面, 也避免 agora→omo 循环依赖)
-      - 每次调用 spawn 一次 subprocess (POC 阶段够用; 后续 P43+ 可改长驻进程池)
+      - P43-W0: 长驻 subprocess 池, 一次 spawn 多次调用, 消除每次 10-15s 启动开销
+      - 长驻池启动失败 → fallback 到一次性 subprocess (P42-W2 行为)
 
     返回:
       - dict: agora resolve_bos_uri 的 result 字段
       - None: subprocess 失败 (uv/venv 不可用, URI 不在 registry, JSON parse 失败)
+    """
+    # P43-W0: 优先用长驻池
+    pool = await _get_agora_pool()
+    if pool is not None:
+        result, err = await pool.invoke(uri, args)
+        if err is not None:
+            _record_agora_failure(uri, err["type"], err["details"])
+            return {"_subprocess_error": err["details"], "transport": "agora_pool"}
+        # 标记 transport 让 invoke_bos_uri_tool 知道走的是长驻池
+        if isinstance(result, dict):
+            result.setdefault("_transport", "agora_pool")
+        return result
+
+    # Fallback: 一次性 subprocess (P42-W2 行为, 长驻池启动失败时)
+    result = await _resolve_via_oneoff_subprocess(uri, args)
+    if isinstance(result, dict):
+        result.setdefault("_transport", "agora_subprocess")
+    return result
+
+
+class _AgoraPool:
+    """P43-W0: 长驻 agora subprocess, stdin/stdout 持久通信.
+
+    协议 (行式 JSON-RPC 简化):
+      - 客户端写: "URI <json_payload>\\n"
+      - 服务端响应: "JSON <result_json>\\n" 或 "ERR <error_msg>\\n"
+      - 客户端关闭: "QUIT\\n"
+      - 服务端退出: EOF on stdin
+
+    单连接串行, asyncio.Lock 同步. 后续 P44+ 可改多进程池.
+    """
+
+    def __init__(self, cmd: list[str]) -> None:
+        self._cmd = cmd
+        self._proc: asyncio.subprocess.Process | None = None
+        self._lock = asyncio.Lock()
+
+    async def start(self) -> bool:
+        try:
+            self._proc = await asyncio.create_subprocess_exec(
+                *self._cmd,
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            return True
+        except (OSError, subprocess.SubprocessError):
+            return False
+
+    async def invoke(
+        self, uri: str, args: dict[str, Any]
+    ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
+        """invoke URI, 返 (result, err). err 非空表示失败."""
+        assert self._proc is not None and self._proc.stdin and self._proc.stdout
+        async with self._lock:
+            try:
+                payload = (
+                    "URI "
+                    + json.dumps({"uri": uri, "args": args}, ensure_ascii=False)
+                    + "\n"
+                )
+                self._proc.stdin.write(payload.encode("utf-8"))
+                await self._proc.stdin.drain()
+            except (BrokenPipeError, ConnectionResetError) as exc:
+                return None, {"type": "pool_broken_pipe", "details": str(exc)}
+
+            try:
+                line = await asyncio.wait_for(
+                    self._proc.stdout.readline(), timeout=30
+                )
+            except asyncio.TimeoutError:
+                return None, {"type": "pool_read_timeout", "details": "30s timeout"}
+
+            text = line.decode("utf-8", errors="replace").rstrip()
+            if text.startswith("JSON "):
+                try:
+                    return json.loads(text[5:]), None
+                except json.JSONDecodeError as exc:
+                    return None, {
+                        "type": "json_decode_failed",
+                        "details": f"{type(exc).__name__}: {exc}",
+                    }
+            if text.startswith("ERR "):
+                return None, {"type": "daemon_error", "details": text[4:]}
+            if not text:  # EOF
+                return None, {"type": "pool_eof", "details": "agora daemon closed"}
+            return None, {"type": "pool_unexpected", "details": text[:200]}
+
+    async def close(self) -> None:
+        if self._proc and self._proc.returncode is None:
+            try:
+                if self._proc.stdin:
+                    self._proc.stdin.write(b"QUIT\n")
+                    await self._proc.stdin.drain()
+                await asyncio.wait_for(self._proc.wait(), timeout=5)
+            except (BrokenPipeError, asyncio.TimeoutError, OSError):
+                try:
+                    self._proc.kill()
+                except ProcessLookupError:
+                    pass
+
+
+# ── Agora 长驻池 singleton ─────────────────────────────
+_POOL: _AgoraPool | None = None
+_POOL_INIT_LOCK = asyncio.Lock()
+_DAEMON_SCRIPT_PATH: Path | None = None
+
+
+def _write_agora_daemon_script() -> str | None:
+    """P43-W0: 写临时 agora daemon 脚本 (subprocess 启动它, 持久 stdin/stdout)."""
+    global _DAEMON_SCRIPT_PATH
+    if _DAEMON_SCRIPT_PATH and _DAEMON_SCRIPT_PATH.exists():
+        return str(_DAEMON_SCRIPT_PATH)
+    try:
+        import tempfile
+
+        fd, path = tempfile.mkstemp(suffix=".py", prefix="agora_daemon_")
+        daemon_code = (
+            "import asyncio, json, sys\n"
+            "from agora.mcp.bos_resolver import resolve_bos_uri\n"
+            "\n"
+            "while True:\n"
+            "    line = sys.stdin.readline()\n"
+            "    if not line:\n"
+            "        break\n"
+            "    line = line.rstrip()\n"
+            "    if line == 'QUIT':\n"
+            "        break\n"
+            "    if line.startswith('URI '):\n"
+            "        try:\n"
+            "            payload = json.loads(line[4:])\n"
+            "            r = asyncio.run(resolve_bos_uri(payload['uri'], **payload.get('args') or {}))\n"
+            "            sys.stdout.write('JSON ' + json.dumps(r, ensure_ascii=False) + '\\n')\n"
+            "        except Exception as exc:\n"
+            "            sys.stdout.write('ERR ' + f'{type(exc).__name__}: {exc}' + '\\n')\n"
+            "        sys.stdout.flush()\n"
+        )
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(daemon_code)
+        _DAEMON_SCRIPT_PATH = Path(path)
+        return path
+    except OSError:
+        return None
+
+
+async def _get_agora_pool() -> _AgoraPool | None:
+    """P43-W0: singleton 长驻 agora subprocess 池, 启动失败返 None."""
+    global _POOL
+    if _POOL is not None:
+        return _POOL
+    async with _POOL_INIT_LOCK:
+        if _POOL is not None:
+            return _POOL
+        try:
+            from omo.omo_paths import PROJECTS_DIR
+
+            agora_project = PROJECTS_DIR / "agora"
+            if not (agora_project / "pyproject.toml").exists():
+                return None
+            daemon_script = _write_agora_daemon_script()
+            if daemon_script is None:
+                return None
+            cmd = [
+                "uv",
+                "run",
+                "--project",
+                str(agora_project),
+                "python",
+                daemon_script,
+            ]
+            pool = _AgoraPool(cmd)
+            ok = await pool.start()
+            if not ok:
+                return None
+            _POOL = pool
+            return _POOL
+        except Exception:
+            return None
+
+
+async def _resolve_via_oneoff_subprocess(
+    uri: str, args: dict[str, Any]
+) -> dict[str, Any] | None:
+    """P42-W2 行为保留: 长驻池不可用时, fallback 到一次性 subprocess.
+
+    启动开销 10-15s, 但保证可派发.
     """
     try:
         from omo.omo_paths import PROJECTS_DIR
@@ -184,8 +373,6 @@ async def _resolve_via_agora_subprocess(uri: str, args: dict[str, Any]) -> dict[
     if not (_AGORA_PROJECT / "pyproject.toml").exists():
         return None
 
-    # 内联 Python: import resolve_bos_uri, run, dump JSON to stdout
-    # args 通过临时文件传 (避免命令行转义)
     import tempfile
 
     with tempfile.NamedTemporaryFile(
@@ -217,6 +404,7 @@ async def _resolve_via_agora_subprocess(uri: str, args: dict[str, Any]) -> dict[
         )
         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
     except (subprocess.SubprocessError, asyncio.TimeoutError, OSError) as exc:
+        _record_agora_failure(uri, "spawn_failed", f"{type(exc).__name__}: {exc}")
         return {"_subprocess_error": f"{type(exc).__name__}: {exc}"}
     finally:
         try:
@@ -225,12 +413,35 @@ async def _resolve_via_agora_subprocess(uri: str, args: dict[str, Any]) -> dict[
             pass
 
     if proc.returncode != 0:
-        return {"_subprocess_error": stderr.decode("utf-8", errors="replace")}
+        stderr_text = stderr.decode("utf-8", errors="replace")
+        _record_agora_failure(uri, "non_zero_exit", f"rc={proc.returncode} stderr={stderr_text[:200]}")
+        return {"_subprocess_error": stderr_text}
 
     try:
         return json.loads(stdout.decode("utf-8", errors="replace"))
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
+        _record_agora_failure(uri, "json_decode_failed", f"{type(exc).__name__}: {exc}")
         return None
+
+
+def _record_agora_failure(uri: str, failure_type: str, details: str) -> None:
+    """P43-W2: 跨进程 agora 派发失败时 record omo-audit, 让治理 daemon 看到.
+
+    失败类型: spawn_failed (uv/venv 不可用) / non_zero_exit (agora venv 内异常) /
+              json_decode_failed (stdout 不是 JSON) / unknown_bos_uri (POC_SERVICES 没注册)
+    """
+    try:
+        from omo.omo_audit import record as audit_record  # type: ignore[import-not-found]
+
+        audit_record(
+            action="bos_resolve_failure",
+            debt_id=f"BOS-RESOLVE-{failure_type.upper()}",
+            actor="omo-bridge",
+            details=f"uri={uri} failure={failure_type} {details}",
+        )
+    except Exception:
+        # audit 自身失败不阻塞业务流
+        pass
 
 
 def list_bos_uris_tool(domain: str | None = None) -> dict[str, Any]:
