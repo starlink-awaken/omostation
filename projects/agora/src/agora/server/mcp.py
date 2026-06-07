@@ -64,6 +64,9 @@ from agora.mcp.bos_resolver import POC_SERVICES as _POC_SERVICES              # 
 from agora.mcp.bos_router import bos_router as _bos_router  # type: ignore[import-not-found]
 from agora.mcp.bos_router import BOSRouter  # type: ignore[import-not-found]
 
+# BOS 中间件 (P46 W0) — 限流/熔断/缓存
+from agora.mcp.bos_middleware import bos_rate_limiter, bos_circuit_breaker, bos_cache  # type: ignore[import-not-found]
+
 logger = structlog.get_logger(__name__)
 
 FORMAT_VERSION = "agora-v1"
@@ -307,6 +310,14 @@ async def _init_proxy():
             "description": getattr(svc, "description", ""),
         })
     logger.info("bos_router_seeded", poc_count=_bos_router.count())
+
+    # ── Phase 5 (P46 W0): 配置 BOS 中间件 ──
+    # 按域/操作类型设置限流 QPS
+    bos_rate_limiter.configure("bos://analysis/minerva/", qps=5)     # 深度研究，高成本
+    bos_rate_limiter.configure("bos://analysis/code/", qps=10)       # 代码分析
+    bos_rate_limiter.configure("bos://memory/kronos/", qps=10)       # 摄取管线
+    bos_rate_limiter.configure("bos://memory/kos/", qps=20)          # 搜索，高频
+    logger.info("bos_middleware_configured")
 
 
 # ── 辅助函数 ─────────────────────────────────────────
@@ -617,6 +628,10 @@ async def mutate_resource(uri: str, payload: str, action: str = "update") -> dic
     logger.info("mutate_resource", uri=uri, action=action)
     if not uri.startswith("bos://"):
         return _error(f"Invalid URI scheme. Must start with bos://. Received: {uri}")
+    
+    # P46 W0: 限流
+    if not bos_rate_limiter.acquire(uri):
+        return _error(f"Rate limit exceeded for: {uri}")
     
     # L0 前置校验
     ok, reason = _bos_pre_check(uri)
@@ -1841,10 +1856,16 @@ async def resolve_bos_uri(uri: str, arguments: str = "{}") -> dict:
     if not _bos_domain_authorized(uri, "read"):
         return _error(f"Access denied to domain: {uri}")
 
+    # P46 W0: 限流检查
+    if not bos_rate_limiter.acquire(uri):
+        return _error(f"Rate limit exceeded for: {uri}")
+
+    # P46 W0: 熔断检查
+    if bos_circuit_breaker.is_open(uri):
+        return _error(f"Circuit breaker open for: {uri}")
+
     # P45 W3 T14: L0 审计
     ok, reason = _bos_pre_check(uri)
-    if not ok:
-        logger.warning("bos_pre_check_blocked", uri=uri, reason=reason)
 
     import json
     import time as _time
@@ -1852,11 +1873,13 @@ async def resolve_bos_uri(uri: str, arguments: str = "{}") -> dict:
     try:
         args = json.loads(arguments) if isinstance(arguments, str) else arguments
         result = await _resolve_bos_uri(uri, **args)
+        bos_circuit_breaker.record_success(uri)
         _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
         return _ok({"format_version": FORMAT_VERSION, "uri": uri, "result": result})
     except json.JSONDecodeError:
         return _error(f"Invalid JSON arguments: {arguments}")
     except Exception as e:
+        bos_circuit_breaker.record_failure(uri)
         _bos_post_audit(uri, 500, int((_time.time() - _t0) * 1000))
         logger.exception("resolve_bos_uri_failed", uri=uri)
         return _error(f"BOS URI resolve failed: {e}")
@@ -1878,19 +1901,29 @@ async def read_resource(uri: str, params: str = "{}") -> dict:
     if not _bos_domain_authorized(uri, "read"):
         return _error(f"Access denied to domain: {uri}")
 
-    # P45 W3 T14: L0 审计
-    ok, reason = _bos_pre_check(uri)
-    import time as _time
-    _t0 = _time.time()
+    # P46 W0: 限流检查
+    if not bos_rate_limiter.acquire(uri):
+        return _error(f"Rate limit exceeded for: {uri}")
+
+    # P46 W0: 缓存查询 (读操作)
     try:
         args = json.loads(params) if isinstance(params, str) else params
     except json.JSONDecodeError:
         return _error(f"Invalid JSON params: {params}")
+    cached = bos_cache.get(uri, args)
+    if cached:
+        return _ok({"format_version": FORMAT_VERSION, "uri": uri, "source": "cache", "result": cached})
+
+    # P45 W3 T14: L0 审计
+    import time as _time
+    _t0 = _time.time()
     # Step 1: 尝试 ProxyManager (MCP 下游代理)
     if _proxy_manager is not None:
         try:
             result = await _proxy_manager.read_resource(uri)
             if isinstance(result, dict) and "contents" in result:
+                bos_cache.set(uri, args, result["contents"], ttl=30)
+                bos_circuit_breaker.record_success(uri)
                 _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
                 return _ok({"format_version": FORMAT_VERSION, "uri": uri,
                            "source": "proxy", "contents": result["contents"]})
@@ -1899,10 +1932,13 @@ async def read_resource(uri: str, params: str = "{}") -> dict:
     # Step 2: 回退到 bos_resolver (POC_SERVICES 子进程)
     try:
         result = await _resolve_bos_uri(uri, **args)
+        bos_cache.set(uri, args, result, ttl=30)
+        bos_circuit_breaker.record_success(uri)
         _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
         return _ok({"format_version": FORMAT_VERSION, "uri": uri,
                    "source": "bos_resolver", "result": result})
     except Exception as e:
+        bos_circuit_breaker.record_failure(uri)
         _bos_post_audit(uri, 500, int((_time.time() - _t0) * 1000))
         logger.exception("read_resource_failed", uri=uri)
         return _error(f"Resource read failed: {e}")
@@ -2038,6 +2074,21 @@ async def get_bos_schema(uri: str = "") -> dict:
                    "schemas": schemas, "hint": "Use get_bos_schema('minerva.research') for specific"})
     except Exception as e:
         return _error(f"Schema lookup failed: {e}")
+
+# ═══════════════════════════════════════════════════════════════
+# BOS 可观测性 (P46 W0)
+# ═══════════════════════════════════════════════════════════════
+
+@mcp.tool()
+async def bos_middleware_status() -> dict:
+    """BOS 中间件状态查询 — 限流/熔断/缓存实时状态。"""
+    return _ok({
+        "format_version": FORMAT_VERSION,
+        "rate_limiter": bos_rate_limiter.status(),
+        "circuit_breaker": {"open_circuits": bos_circuit_breaker.status()},
+        "cache": bos_cache.status(),
+        "router": {"total_routes": _bos_router.count(), "stats": _bos_router.stats()},
+    })
 
 
 # ═══════════════════════════════════════════════════════════════
