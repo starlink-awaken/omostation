@@ -1,0 +1,9 @@
+id: ENG-CC-SWITCH
+type: compute_engine
+node_ref: NODE-CLOUD
+engine_type: cloud_api
+supported_protocols: ["openai", "anthropic", "deepseek"]
+auth_source: cc-switch
+cost_multiplier: 1.0
+status: active
+description: "受控的公有云请求代理，由 cc-switch 提供鉴权，codexbar 拦截预算"
