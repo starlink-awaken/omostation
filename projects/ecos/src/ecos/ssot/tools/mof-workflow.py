@@ -473,6 +473,70 @@ def cmd_stats(args):
     return 0
 
 
+def cmd_graph(args):
+    """工作流依赖图 — 支持 dot/mermaid/ascii 格式输出"""
+    out = OutputFormatter(json_mode=args.json)
+    catalog = _load_catalog()
+    global_rels = catalog.get("global_relations", {})
+
+    if args.json:
+        out.print_json(global_rels)
+        return 0
+
+    fmt = args.format
+
+    if fmt == "dot":
+        lines = ["digraph BOS_Workflows {", '  rankdir=TB;', '  node [shape=box, style=filled, fillcolor=lightyellow];']
+        nodes = set()
+        edges = []
+        for t in global_rels.get("triggers", []):
+            src = t["from"].replace("-", "_").replace(":", "_")
+            dst = t["to"].replace("-", "_").replace(":", "_")
+            nodes.add(src); nodes.add(dst)
+            edges.append(f'  "{src}" -> "{dst}" [label="triggers", fontsize=9];')
+        for n in sorted(nodes):
+            lines.append(f'  "{n}";')
+        lines.extend(edges)
+        lines.append("}")
+        print("\n".join(lines))
+        print("\n# Render: dot -Tpng graph.dot -o graph.png")
+
+    elif fmt == "mermaid":
+        lines = ["graph TD"]
+        for t in global_rels.get("triggers", []):
+            src = t["from"].replace("-", "_").replace("WORKFLOW_", "").replace("MECH_", "")
+            dst = t["to"].replace("-", "_").replace("WORKFLOW_", "").replace("MECH_", "")
+            lines.append(f"  {src} -->|triggers| {dst}")
+        for d in global_rels.get("dependencies", []):
+            dep = d["dependent"].replace("-", "_").replace("WORKFLOW_", "")
+            ond = d["depends_on"].replace("-", "_").replace("WORKFLOW_", "")
+            lines.append(f"  {dep} -.->|depends| {ond}")
+        print("\n".join(lines))
+        print("\n# Render: https://mermaid.live")
+
+    else:  # ascii
+        out.print_header("工作流依赖图 (ASCII)")
+        triggers = global_rels.get("triggers", [])
+        for t in triggers:
+            src = t["from"].replace("WORKFLOW-", "").replace("MECH-", "")[:30]
+            dst = t["to"].replace("WORKFLOW-", "").replace("MECH-", "")[:30]
+            print(f"  \033[36m{src}\033[0m")
+            print(f"    │ triggers")
+            print(f"    ▼")
+            print(f"  \033[36m{dst}\033[0m")
+            if t.get("note"):
+                print(f"    \033[2m{t['note'][:60]}\033[0m")
+        deps = global_rels.get("dependencies", [])
+        if deps:
+            out.print_section("依赖关系")
+            for d in deps:
+                dep = d["dependent"].replace("WORKFLOW-", "")[:30]
+                ond = d["depends_on"].replace("WORKFLOW-", "")[:30]
+                print(f"  \033[36m{dep}\033[0m 需要 \033[36m{ond}\033[0m")
+
+    return 0
+
+
 # ═══════════════════════════════════════════════════════════════
 # Argparse 入口
 # ═══════════════════════════════════════════════════════════════
@@ -530,6 +594,11 @@ def build_parser():
     st = sub.add_parser("stats", help="统计摘要")
     st.add_argument("--json", action="store_true", help="JSON 输出")
 
+    # graph
+    g = sub.add_parser("graph", help="工作流依赖图")
+    g.add_argument("--format", choices=["dot", "mermaid", "ascii"], default="ascii", help="输出格式")
+    g.add_argument("--json", action="store_true", help="JSON 输出")
+
     return p
 
 
@@ -554,6 +623,7 @@ def main():
         "run": cmd_run,
         "relations": cmd_relations,
         "stats": cmd_stats,
+        "graph": cmd_graph,
     }
 
     handler = commands.get(args.subcommand)

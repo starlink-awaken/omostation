@@ -29,18 +29,34 @@ steps:
     action: decompose
     description: "将研究课题分解为多个子问题"
     input:
-      - research_topic
+      research_topic:
+        type: string
+        required: true
+        description: "研究课题描述"
     output:
-      - sub_questions[]
+      sub_questions:
+        type: array
+        description: "子问题列表"
     depends_on: []
   - order: 2
     name: MultiSourceSearch
     action: multi_source_search
     description: "从多个数据源并行搜索相关信息"
     input:
-      - sub_questions[]
+      sub_questions:
+        type: array
+        required: true
+      depth:
+        type: string
+        enum: ["L0", "L1", "L2", "L3", "L4"]
+        default: "L2"
+      sources:
+        type: array
+        default: ["ddg", "scholar", "metaso"]
     output:
-      - search_results[]
+      search_results:
+        type: array
+        description: "搜索结果列表"
     depends_on:
       - Decompose
   - order: 3
