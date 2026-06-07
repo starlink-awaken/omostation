@@ -334,30 +334,23 @@ def cmd_run(args):
         return 0
 
     # 尝试通过 BOS URI 实际执行
-    import subprocess, json
+    import json
     if bos_uri:
         out.print_progress(f"通过 BOS URI 路由执行: {bos_uri}")
         try:
-            result = subprocess.run(
-                ["python3", "-c", f"""
-import sys; sys.path.insert(0, '{HOME}/Workspace/projects/agora/src')
-from agora.mcp.bos_resolver import resolve_bos_uri, parse_bos_uri
-import asyncio
-info = parse_bos_uri('{bos_uri.replace("ecos/workflow/", "")}')
-action = info.get('action', 'main')
-try:
-    result = asyncio.run(resolve_bos_uri('{bos_uri.replace("ecos/workflow/", "")}'))
-    print(json.dumps(result))
-except Exception as e:
-    print(json.dumps({{'status': 'error', 'error': str(e)}}))
-"""],
-                capture_output=True, text=True, timeout=10,
-            )
+            import asyncio
+            sys.path.insert(0, str(HOME / "Workspace" / "projects" / "agora" / "src"))
+            from agora.mcp.bos_resolver import resolve_bos_uri, parse_bos_uri
+            target_uri = bos_uri.replace("ecos/workflow/", "")
+            info = parse_bos_uri(target_uri)
+            out.print_progress(f"解析: {info.get('domain', '?')}/{info.get('package', '?')}/{info.get('action', '?')}")
+            result = asyncio.run(resolve_bos_uri(target_uri))
             out.print_success("执行完成")
-            print(f"\n\033[2m{result.stdout[:500]}\033[0m")
+            print(f"\n\033[2m{json.dumps(result, ensure_ascii=False, default=str)[:500]}\033[0m")
             return 0
-        except subprocess.TimeoutExpired:
-            out.print_warning("执行超时 (10s)")
+        except ImportError:
+            out.print_warning("Agora 模块未安装，无法直接执行")
+            out.print_info("提示: 使用 'agora pipeline <name> --goal \"...\"' 通过 Agora 执行")
         except Exception as e:
             out.print_error(f"执行失败: {e}")
     else:

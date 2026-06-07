@@ -790,7 +790,7 @@ async def bos_universal_resource(domain: str, package: str, action: str) -> str:
 
 
 # ═══════════════════════════════════════════════════════════════
-# Section 1: BOS Tools (行 530-553)
+# Section 1: BOS Tools — mutate/resolve/read/list
 # ═══════════════════════════════════════════════════════════════
 
 @mcp.tool()
@@ -2015,7 +2015,7 @@ async def lifecycle_unload_all() -> dict:
 
 
 # ═══════════════════════════════════════════════════════════════
-# Section 11: Execution Engine
+# Section 11: Execution Engine (agora_execute)
 # ═══════════════════════════════════════════════════════════════
 # ═══════════════════════════════════════════════════════════════
 # Section: BOS URI 统一入口 (P45 W1)
