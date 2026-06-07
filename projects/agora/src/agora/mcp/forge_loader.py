@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,7 +28,7 @@ from agora.mcp.bos_resolver import (
 
 _log = logging.getLogger(__name__)
 
-CAPS_ROOT = Path("/Users/xiamingxing/Workspace/.omo/capabilities")
+CAPS_ROOT = Path(os.environ.get("OMO_CAPABILITIES_ROOT", "/Users/xiamingxing/Workspace/.omo/capabilities"))
 MARKET_REGISTRY = CAPS_ROOT / "market.json"
 
 
