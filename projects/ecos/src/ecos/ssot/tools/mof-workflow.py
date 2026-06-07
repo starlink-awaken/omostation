@@ -610,6 +610,70 @@ def cmd_check_refs(args):
         return 1 if errors else 0
 
 
+def cmd_schema_report(args):
+    """Schema 覆盖度报告 — 检查哪些工作流有结构化 input/output schema"""
+    out = OutputFormatter(json_mode=args.json)
+    nodes = _load_nodes()
+
+    complete = []
+    partial = []
+    missing = []
+
+    for n in nodes:
+        nid = n.get("id", "?")
+        steps = n.get("steps", [])
+        if not steps:
+            missing.append(nid)
+            continue
+
+        has_structured = any(
+            isinstance(s.get("input", {}), dict) and "type" in s.get("input", {})
+            for s in steps
+        )
+        if has_structured:
+            complete.append({"id": nid, "name": n.get("name"), "steps": len(steps)})
+        elif any(s.get("input") for s in steps):
+            partial.append({"id": nid, "name": n.get("name"), "steps": len(steps)})
+        else:
+            missing.append(nid)
+
+    if args.json:
+        out.print_json({
+            "total": len(nodes),
+            "complete": complete,
+            "partial": partial,
+            "missing": missing,
+            "coverage": round(len(complete) / len(nodes) * 100, 1) if nodes else 0,
+        })
+        return 0
+
+    out.print_header(f"Schema 覆盖度报告 ({len(nodes)} 工作流)")
+    coverage = round(len(complete) / len(nodes) * 100, 1) if nodes else 0
+    out.print_key_value({
+        "完成 (结构化)": str(len(complete)),
+        "部分 (数组格式)": str(len(partial)),
+        "缺失": str(len(missing)),
+        "覆盖度": f"{coverage}%",
+    })
+
+    if complete:
+        out.print_section(f"已完成 ({len(complete)})")
+        for w in complete:
+            print(f"  ✅ {w['name']} ({w['steps']} steps)")
+
+    if partial:
+        out.print_section(f"待结构化 ({len(partial)})")
+        for w in partial:
+            print(f"  ⚠️ {w['name']} ({w['steps']} steps)")
+
+    if missing:
+        out.print_section(f"缺失 ({len(missing)})")
+        for w in missing:
+            print(f"  ❌ {w}")
+
+    return 0
+
+
 # ═══════════════════════════════════════════════════════════════
 # Argparse 入口
 # ═══════════════════════════════════════════════════════════════
@@ -676,6 +740,10 @@ def build_parser():
     cr = sub.add_parser("check-refs", help="交叉引用校验")
     cr.add_argument("--json", action="store_true", help="JSON 输出")
 
+    # schema-report
+    sr = sub.add_parser("schema-report", help="Schema 覆盖度报告")
+    sr.add_argument("--json", action="store_true", help="JSON 输出")
+
     return p
 
 
@@ -702,6 +770,7 @@ def main():
         "stats": cmd_stats,
         "graph": cmd_graph,
         "check-refs": cmd_check_refs,
+        "schema-report": cmd_schema_report,
     }
 
     handler = commands.get(args.subcommand)
