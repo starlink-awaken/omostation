@@ -10,7 +10,8 @@ WF_CLI = str(Path(__file__).parent.parent / "src" / "ecos" / "ssot" / "tools" / 
 
 
 def run(*args):
-    return subprocess.run(["python3", WF_CLI] + list(args), capture_output=True, text=True)
+    import sys
+    return subprocess.run([sys.executable, WF_CLI] + list(args), capture_output=True, text=True)
 
 
 class TestWorkflowCLI:
