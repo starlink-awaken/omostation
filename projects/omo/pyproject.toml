@@ -1,12 +1,12 @@
 [project]
 name = "omo"
-version = "0.1.0"
+version = "0.1.1"
 description = "OMO — OS for AI Agents"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "httpx[socks]>=0.28.1",
-    "llm-gateway-kernel",
+    "aetherforge-gateway",
     "openai>=2.41.0",
     "pyyaml>=6.0.3",
 ]
@@ -26,9 +26,13 @@ requires = ["uv_build>=0.11.19,<0.12.0"]
 build-backend = "uv_build"
 
 [tool.uv.sources]
-llm-gateway-kernel = { path = "../kairon/packages/llm-gateway-kernel" }
+aetherforge-gateway = { path = "../aetherforge/packages/gateway" }
 
 [tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
 # P44-W4: 注册 BOS URI 测试 markers, 让 CI 按需分组跑
 #   pytest -m fast           → 只跑 registry load (1 测, <10ms)
 #   pytest -m bos_5domain    → 跑 5 domain 覆盖 (1 测, ~3s)
@@ -37,4 +41,11 @@ markers = [
     "fast: 快速验证 (<10ms), 不依赖 agora/venv",
     "bos_40: 40 BOS URI smoke test 全套 (跨进程派发)",
     "bos_5domain: 5 Domain 覆盖验证 (POC_SERVICES 每个域至少 1 resolved)",
+    "bos_concurrent: 并发 4 URI 调用测试",
+    "integration: 需要外部服务 (agora/kairon) 真活的集成测试",
+]
+
+[dependency-groups]
+dev = [
+    "pytest-asyncio>=1.4.0",
 ]

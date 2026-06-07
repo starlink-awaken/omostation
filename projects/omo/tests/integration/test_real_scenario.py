@@ -48,6 +48,7 @@ def _invoke_agora_stdio(uri: str, action: str, args: list | None = None, kwargs:
     return json.loads(last_line)
 
 
+@pytest.mark.integration
 def test_real_scenario_p34w5_5of5():
     """W5 真实场景: 5 URI 串联全 ok.
 
@@ -96,6 +97,7 @@ def test_real_scenario_p34w5_5of5():
     assert ok_count == 5, f"W5 目标 5/5 ok, 实得 {ok_count}/5: {results}"
 
 
+@pytest.mark.integration
 def test_real_scenario_research_echo():
     """W5 anchor: 单条 minerva.research 真活."""
     r = _invoke_agora_stdio(
@@ -110,6 +112,7 @@ def test_real_scenario_research_echo():
     assert "research" in msg, f"Unexpected message: {msg}"
 
 
+@pytest.mark.integration
 def test_real_scenario_spawn_lifecycle():
     """W5: 进程池生命周期 — 同一 URI 多次调用, 进程复用 (P34-W1 持久)."""
     r1 = _invoke_agora_stdio(
@@ -129,6 +132,7 @@ def test_real_scenario_spawn_lifecycle():
 
 # ── 摘要 ─────────────────────────────────────────────
 
+@pytest.mark.integration
 def test_p34w5_real_scenario_summary():
     """W5 真实场景摘要 — 5/5 全 ok."""
     scenario = [

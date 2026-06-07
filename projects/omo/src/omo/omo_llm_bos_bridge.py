@@ -401,7 +401,7 @@ class _AgoraPoolManager:
 
 # ── Agora 长驻池 manager singleton ─────────────────────────────
 _MANAGER: _AgoraPoolManager | None = None
-_MANAGER_INIT_LOCK = asyncio.Lock()
+_MANAGER_INIT_LOCK: asyncio.Lock | None = None
 _DAEMON_SCRIPT_PATH: Path | None = None
 
 
@@ -451,6 +451,9 @@ async def _get_agora_pool() -> _AgoraPoolManager | None:
     global _MANAGER
     if _MANAGER is not None:
         return _MANAGER
+    global _MANAGER_INIT_LOCK
+    if _MANAGER_INIT_LOCK is None:
+        _MANAGER_INIT_LOCK = asyncio.Lock()
     async with _MANAGER_INIT_LOCK:
         if _MANAGER is not None:
             return _MANAGER
