@@ -1,0 +1,16 @@
+# M1 Mechanism: MECH-BOS-RETRY
+id: MECH-BOS-RETRY
+type: Mechanism
+name: BOS 调用重试策略
+domain: meta
+layer: I0
+status: active
+version: 1.0.0
+created: '2026-06-07'
+properties:
+  trigger: on-failure
+  source: agora/mcp/bos_middleware.py:RetryPolicy
+relations:
+- type: DependsOn
+  from: MECH-BOS-RETRY
+  to: MECH-BOS-CIRCUIT-BREAKER

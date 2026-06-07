@@ -1,0 +1,13 @@
+# M1 Mechanism: MECH-WORKFLOW-GRAPH
+id: MECH-WORKFLOW-GRAPH
+type: Mechanism
+name: 工作流依赖图可视化
+domain: meta
+layer: L0
+status: active
+version: 1.0.0
+created: '2026-06-07'
+properties:
+  trigger: mof workflow graph
+  source: ecos/ssot/tools/mof-workflow.py:cmd_graph
+relations: []
