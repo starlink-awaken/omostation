@@ -7,6 +7,7 @@ import json
 import shutil
 from datetime import datetime
 
+from agora.cli.output import OutputFormatter
 from agora.core.state import get_registry  # type: ignore[import-not-found]
 
 
@@ -33,8 +34,8 @@ def cmd_register(args):
 
     proto_cfg, err = parse_protocol_config(args.protocol_config)
     if err:
-        print(f"Error: --protocol-config is not valid JSON: {err}")
-        return
+        print(f"Error: --protocol-config is not valid JSON: {err}", file=__import__("sys").stderr)
+        return 1
     if args.proto:
         proto_cfg["proto_path"] = args.proto
     if args.rest_method is not None:
@@ -71,10 +72,33 @@ def cmd_unregister(args):
     print(f"Unregistered: {args.name}")
 
 
-def cmd_list(_args):
-    """List all services as JSON."""
+def cmd_list(args):
+    """List all services in tabular format (--json for JSON output)."""
     registry = get_registry()
-    print(json.dumps(registry.to_dict(), ensure_ascii=False, indent=2))
+    services = registry.list_all()
+    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+
+    if not services:
+        out.print_info("No services registered.")
+        return 0
+
+    rows = [
+        [
+            s.name,
+            s.protocol,
+            "healthy" if s.is_available else "offline",
+            s.mcp_endpoint or "-",
+            str(s.port) if s.port else "-",
+            ", ".join(s.tags) if s.tags else "-",
+        ]
+        for s in services
+    ]
+    out.print_table(
+        ["Name", "Protocol", "Status", "Endpoint", "Port", "Tags"],
+        rows,
+        title="Registered Services",
+    )
+    return 0
 
 
 def cmd_search(args):
@@ -86,19 +110,23 @@ def cmd_search(args):
         for s in registry.list_all()
         if keyword in s.name.lower() or keyword in s.description.lower() or any(keyword in t.lower() for t in s.tags)
     ]
+    out = OutputFormatter(json_mode=getattr(args, 'json', False))
 
     if args.json:
-        print(json.dumps([s.__dict__ for s in matches], ensure_ascii=False, indent=2, default=str))
+        out.print_json([s.to_dict() for s in matches])
     else:
-        print(f"'{args.keyword}' -> {len(matches)} results:\n")
+        if not matches:
+            out.print_info(f"No services matching '{args.keyword}'.")
+            return 0
+        out.print_info(f"'{args.keyword}' -> {len(matches)} results:")
         for s in matches:
-            print(f"  {s.name}")
+            status = "healthy" if s.is_available else "offline"
+            out.print_info(f"  {s.name}  [{status}]")
             if s.description:
-                print(f"     {s.description}")
+                out.print_info(f"     {s.description}")
             if s.tags:
-                print(f"     tags: {', '.join(s.tags)}")
-            print(f"     status: {'healthy' if s.is_available else 'offline'}")
-            print()
+                out.print_info(f"     tags: {', '.join(s.tags)}")
+            out.print_divider()
     return 0
 
 
@@ -106,35 +134,25 @@ def cmd_info(args):
     """Show detailed service info."""
     registry = get_registry()
     svc = registry.get(args.name)
+    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+
     if not svc:
-        print(f"Service '{args.name}' not found. Use 'agora list' to see all services.")
+        out.print_error(f"Service '{args.name}' not found.", suggestion="Use 'agora list' to see all services.")
         return 1
 
-    if args.json:
-        info = {
-            "name": svc.name,
-            "description": svc.description,
-            "mcp_endpoint": svc.mcp_endpoint,
-            "health_endpoint": svc.health_endpoint,
-            "port": svc.port,
-            "tags": svc.tags,
-            "is_available": svc.is_available,
-            "circuit_state": svc.circuit_state,
-            "failure_count": svc.failure_count,
-            "last_health_check": svc.last_health_check,
-        }
-        print(json.dumps(info, ensure_ascii=False, indent=2))
-    else:
-        status = "healthy" if svc.is_available else "offline"
-        circuit = svc.circuit_state
-        print(f"  {svc.name}  [{status}]  Circuit: {circuit}")
-        print(f"   Description:    {svc.description or 'N/A'}")
-        print(f"   MCP Endpoint:   {svc.mcp_endpoint or 'N/A'}")
-        print(f"   Health:         {svc.health_endpoint or 'N/A'}")
-        print(f"   Port:           {svc.port or 'N/A'}")
-        print(f"   Tags:           {', '.join(svc.tags) if svc.tags else 'N/A'}")
-        print(f"   Failures:       {svc.failure_count}/3")
-        print(f"   Last Check:     {svc.last_health_check or 'never'}")
+    info_data = {
+        "name": svc.name,
+        "description": svc.description or "N/A",
+        "status": "healthy" if svc.is_available else "offline",
+        "circuit": svc.circuit_state,
+        "mcp_endpoint": svc.mcp_endpoint or "N/A",
+        "health_endpoint": svc.health_endpoint or "N/A",
+        "port": str(svc.port) if svc.port else "N/A",
+        "tags": ", ".join(svc.tags) if svc.tags else "N/A",
+        "failures": f"{svc.failure_count}/3",
+        "last_check": svc.last_health_check or "never",
+    }
+    out.print_key_value(info_data, f"Service: {svc.name}")
     return 0
 
 
@@ -144,31 +162,38 @@ def cmd_stats(_args):
     all_svc = registry.list_all()
     healthy = registry.list_healthy()
 
-    print("Agora Service Statistics\n")
-    print(f"   Total services:     {len(all_svc)}")
-    print(f"   Healthy:            {len(healthy)}")
-    print(f"   Degraded/Offline:   {len(all_svc) - len(healthy)}")
-    print(f"   Health check rate:  {len(healthy) / max(len(all_svc), 1) * 100:.1f}%")
-    print()
+    out = OutputFormatter(json_mode=getattr(_args, 'json', False))
+    stats_data = {
+        "Total services": len(all_svc),
+        "Healthy": len(healthy),
+        "Degraded/Offline": len(all_svc) - len(healthy),
+        "Health rate": f"{len(healthy) / max(len(all_svc), 1) * 100:.1f}%",
+    }
+    out.print_key_value(stats_data, "服务统计")
 
     if all_svc:
-        print("   Per-service status:")
+        rows = []
         for s in all_svc:
             bar = "#" * 10 if s.is_available else "-" * 10
-            print(f"     [{bar}] {s.name:20s} | tags: {', '.join(s.tags) if s.tags else '-'}")
+            rows.append([bar, s.name, ", ".join(s.tags) if s.tags else "-"])
+        out.print_table(["Health", "Name", "Tags"], rows)
     return 0
 
 
 def cmd_config(_args):
     """Show config paths and status."""
     registry = get_registry()
-    print(f"Services file:   {registry._storage_path}")
-    print(f"Registered:      {len(registry.list_all())} services")
-    print(f"Healthy:         {len(registry.list_healthy())}")
-    print("Events file:     agora-events.json")
-    print("Trace file:      trace_log.jsonl")
-    print("Dashboard:       http://localhost:7430")
-    print("Metrics:         http://localhost:7430/metrics")
+    out = OutputFormatter(json_mode=getattr(_args, 'json', False))
+    config_data = {
+        "Services file": registry._storage_path,
+        "Registered": len(registry.list_all()),
+        "Healthy": len(registry.list_healthy()),
+        "Events file": "agora-events.json",
+        "Trace file": "trace_log.jsonl",
+        "Dashboard": "http://localhost:7430",
+        "Metrics": "http://localhost:7430/metrics",
+    }
+    out.print_key_value(config_data, "配置状态")
 
 
 def _check_proxy_services() -> dict:
@@ -230,22 +255,6 @@ def _check_proxy_services() -> dict:
     }
 
 
-def _format_proxy_health(proxy: dict) -> list[str]:
-    """Format proxy service status as display lines."""
-    if "error" in proxy:
-        return [f"  ⚠️  {proxy['error']}"]
-    lines = [
-        "",
-        "  MCP Proxy Services:",
-        f"     Available:   {proxy['available_count']}/{proxy['count']}",
-    ]
-    if proxy.get("unavailable"):
-        lines.append(f"     Unavailable: {proxy['unavailable_count']}/{proxy['count']}")
-        for s in proxy["unavailable"]:
-            lines.append(f"       ❌ {s['name']:20s}  cmd not found: {s['command']}")
-    return lines
-
-
 def _get_system_metrics() -> dict:
     """Collect system health metrics (CPU, memory, disk)."""
     metrics = {}
@@ -271,107 +280,81 @@ def _get_system_metrics() -> dict:
     return metrics
 
 
-def _format_system_metrics(metrics: dict) -> list[str]:
-    """Format system metrics as display lines."""
-    if "error" in metrics:
-        return [f"  ⚠️  {metrics['error']}"]
-    lines = [
-        "",
-        "  System Health:",
-        f"     CPU:       {metrics.get('cpu_percent', '?'):>5.1f}%",
-    ]
-    mem = metrics.get("memory", {})
-    if mem:
-        lines.append(
-            f"     Memory:    {mem.get('percent', '?'):>5.1f}%  ({mem.get('available_gb', '?')}G / {mem.get('total_gb', '?')}G free)"
-        )
-    disk = metrics.get("disk", {})
-    if disk:
-        lines.append(
-            f"     Disk:      {disk.get('percent', '?'):>5.1f}%  ({disk.get('free_gb', '?')}G / {disk.get('total_gb', '?')}G free)"
-        )
-    load = metrics.get("load_avg")
-    if load:
-        lines.append(f"     Load Avg:  {load[0]:>5.2f}  {load[1]:>5.2f}  {load[2]:>5.2f}")
-    return lines
-
-
 def cmd_health(args):
     """Probe all services health."""
     registry = get_registry()
+    out = OutputFormatter(json_mode=getattr(args, 'json', False))
 
     async def _check() -> tuple[list[dict], dict, dict]:
         await registry.health_check_all()
         return registry.to_dict(), _get_system_metrics(), _check_proxy_services()
 
-    def _format_health(services: list[dict], sys_metrics: dict, proxy_services: dict, json_output: bool = False) -> str:
-        if json_output:
-            return json.dumps(
-                {
-                    "services": services,
-                    "count": len(services),
-                    "system": sys_metrics,
-                },
-                indent=2,
-                ensure_ascii=False,
-            )
-
+    def _print_health(services: list[dict], sys_metrics: dict, proxy_services: dict) -> None:
         healthy = [s for s in services if s.get("healthy")]
         unhealthy = [s for s in services if not s.get("healthy")]
-        lines = [
-            "=" * 60,
-            "Health Check Report",
-            "=" * 60,
-            f"Healthy:   {len(healthy)}/{len(services)}",
-            f"Unhealthy: {len(unhealthy)}/{len(services)}",
-            "",
-        ]
+
+        out.print_header("Health Check Report")
+        stats = {
+            "Healthy": f"{len(healthy)}/{len(services)}",
+            "Unhealthy": f"{len(unhealthy)}/{len(services)}",
+        }
+        out.print_key_value(stats, "总览")
+
         if healthy:
-            lines.append("  Healthy services:")
-            for s in healthy:
-                ep = s.get("endpoint", "") or f"port {s.get('port', '?')}"
-                lines.append(f"     {s['name']:20s}  {ep}")
+            rows = [[s["name"], s.get("endpoint", "") or f"port {s.get('port', '?')}"] for s in healthy]
+            out.print_table(["Name", "Endpoint"], rows, title="Healthy Services")
+
         if unhealthy:
-            lines.append("  Unhealthy services:")
-            for s in unhealthy:
-                ep = s.get("endpoint", "") or f"port {s.get('port', '?')}"
-                lines.append(f"     {s['name']:20s}  {ep}")
-        lines.append("")
-        lines.append("-" * 60)
-        lines.extend(_format_system_metrics(sys_metrics))
-        lines.extend(_format_proxy_health(proxy_services))
-        lines.extend(
-            [
-                "",
-                "=" * 60,
-                "Next check: agora health --watch",
-            ]
-        )
-        return "\n".join(lines)
+            rows = [[s["name"], s.get("endpoint", "") or f"port {s.get('port', '?')}"] for s in unhealthy]
+            out.print_table(["Name", "Endpoint"], rows, title="Unhealthy Services")
+
+        # System metrics
+        if "error" not in sys_metrics:
+            mem = sys_metrics.get("memory", {})
+            disk = sys_metrics.get("disk", {})
+            load = sys_metrics.get("load_avg", [])
+            sys_data = {
+                "CPU": f"{sys_metrics.get('cpu_percent', '?'):.1f}%" if 'cpu_percent' in sys_metrics else "?",
+                "Memory": f"{mem.get('percent', '?')}% ({mem.get('available_gb', '?')}G / {mem.get('total_gb', '?')}G free)" if mem else "?",
+                "Disk": f"{disk.get('percent', '?')}% ({disk.get('free_gb', '?')}G / {disk.get('total_gb', '?')}G free)" if disk else "?",
+                "Load Avg": f"{load[0]:.2f} {load[1]:.2f} {load[2]:.2f}" if load else "?",
+            }
+            out.print_key_value(sys_data, "System Health")
+        elif not out.json_mode:
+            out.print_warning(sys_metrics.get("error", "System metrics unavailable"))
+
+        # Proxy services
+        if "error" in proxy_services:
+            out.print_warning(proxy_services["error"])
+        else:
+            proxy_data = {
+                "Available": f"{proxy_services['available_count']}/{proxy_services['count']}",
+            }
+            if proxy_services.get("unavailable"):
+                proxy_data["Unavailable"] = f"{proxy_services['unavailable_count']}/{proxy_services['count']}"
+            out.print_key_value(proxy_data, "MCP Proxy Services")
+            if proxy_services.get("unavailable"):
+                rows = [[s["name"], s["command"]] for s in proxy_services["unavailable"]]
+                out.print_table(["Service", "Missing Command"], rows, title="Unavailable Proxies")
+
+        out.print_info("Next check: agora health --watch")
 
     if args.watch:
-        print(f"Health watch started (interval: {args.interval}s). Ctrl+C to stop.\n")
+        out.print_info(f"Health watch started (interval: {args.interval}s). Ctrl+C to stop.")
         try:
             while True:
                 services, sys_metrics, proxy_services = asyncio.run(_check())
                 timestamp = datetime.now().strftime("%H:%M:%S")
                 if args.json:
-                    print(
-                        json.dumps(
-                            {
-                                "timestamp": timestamp,
-                                "services": services,
-                                "system": sys_metrics,
-                                "proxy_services": proxy_services,
-                            },
-                            indent=2,
-                            default=str,
-                            ensure_ascii=False,
-                        )
-                    )
+                    out.print_json({
+                        "timestamp": timestamp,
+                        "services": services,
+                        "system": sys_metrics,
+                        "proxy_services": proxy_services,
+                    })
                 else:
                     healthy_count = sum(1 for s in services if s.get("healthy"))
-                    print(f"[{timestamp}] Healthy: {healthy_count}/{len(services)}")
+                    out.print_info(f"[{timestamp}] Healthy: {healthy_count}/{len(services)}")
                 import time as _time
 
                 _time.sleep(args.interval)
@@ -379,4 +362,4 @@ def cmd_health(args):
             print("\nHealth watch stopped.")
     else:
         services, sys_metrics, proxy_services = asyncio.run(_check())
-        print(_format_health(services, sys_metrics, proxy_services, args.json))
+        _print_health(services, sys_metrics, proxy_services)

@@ -172,42 +172,52 @@ def cmd_adr(args):
 
 
 def print_help():
-    print("织星 MOF — L0 统一命令行")
-    print()
-    print("架构治理:")
-    print("  mof check          全量检查 (gate+validate+audit+enforce)")
-    print("  mof status         系统状态摘要")
-    print("  mof validate       校验 M1↔M2 合规")
-    print("  mof audit          审计 M1↔M0 漂移")
-    print("  mof gate           变更门禁 (检测未注册资产)")
-    print("  mof enforce        层合规强制执行")
-    print("  mof bootstrap      L0 自举校验")
-    print()
-    print("变更管理:")
-    print("  mof adr list       列出架构决策")
-    print("  mof adr create ... 创建新 ADR")
-    print()
-    print("查询视图:")
-    print("  mof view           生成全量架构视图")
-    print("  mof view quick     Agent 快速索引")
-    print("  mof entity resolve 跨域实体解析")
-    print("  mof entity list    列出所有实体")
-    print("  mof entity stats   实体统计")
-    print()
-    print("工作流:")
-    print("  mof workflow list   列出所有工作流 [--domain <d>] [--layer <l>]")
-    print("  mof workflow show   查看工作流详情 [--json]")
-    print("  mof workflow validate 校验工作流 [--ci]")
-    print("  mof workflow run    执行工作流 [--dry-run]")
-    print("  mof workflow relations 查看关系图")
-    print("  mof workflow stats  统计摘要")
-    print()
-    print("运维:")
-    print("  mof trail          统一审计追踪")
-    print("  mof events         治理事件流")
-    print("  mof sla            SLA + M0 快照")
-    print("  mof scan           扫描资产 → M1")
-    print()
+    print("""织星 MOF — L0 统一命令行 | v2.0
+═══════════════════════════════════════════════
+  eCOS v5 架构治理统一入口
+
+架构治理:
+  mof check          全量检查 (gate+validate+audit+enforce)
+  mof status         系统状态摘要
+  mof validate       校验 M1↔M2 合规
+  mof audit          审计 M1↔M0 漂移
+  mof gate           变更门禁 (检测未注册资产)
+  mof enforce        层合规强制执行
+  mof bootstrap      L0 自举校验
+
+变更管理:
+  mof adr list       列出架构决策
+  mof adr create ... 创建新 ADR
+
+查询视图:
+  mof view           生成全量架构视图
+  mof view quick     Agent 快速索引
+  mof entity resolve 跨域实体解析
+  mof entity list    列出所有实体
+  mof entity stats   实体统计
+
+工作流 (v2.0):
+  mof workflow list   列出所有工作流 [--domain <d>] [--layer <l>] [--json]
+  mof workflow show   查看详情 [--json]
+  mof workflow validate 校验 [--ci] [--json]
+  mof workflow run    执行 [--dry-run]
+  mof workflow relations 关系图
+  mof workflow stats  统计摘要
+
+运维:
+  mof trail          统一审计追踪
+  mof events         治理事件流
+  mof sla            SLA + M0 快照
+  mof scan           扫描资产 → M1
+
+Examples:
+  mof workflow list --domain analysis --json | jq .
+  mof workflow show minerva-deep-research
+  mof check
+  mof status
+
+For more: bos://ecos/workflow/*
+""")
 
 
 def main():

@@ -4,13 +4,10 @@ import argparse
 import asyncio
 import json
 
+from agora.cli.output import OutputFormatter
 from agora.mcp_registry.lifecycle import LifecycleManager  # type: ignore[import-not-found]
 from agora.mcp_registry.orchestrator import Orchestrator  # type: ignore[import-not-found]
 from agora.mcp_registry.repository import ToolCatalog  # type: ignore[import-not-found]
-
-
-def _print_json(data):
-    print(json.dumps(data, indent=2, ensure_ascii=False, default=str))
 
 
 def _build_orchestrator(catalog: ToolCatalog) -> Orchestrator:
@@ -60,40 +57,36 @@ def _cmd_repo_list(catalog: ToolCatalog, args: argparse.Namespace) -> int:
     """List tools in the catalog, optionally filtered by status."""
     status = getattr(args, "status", None)
     tools = catalog.list_tools(status=status)
+    out = OutputFormatter(json_mode=args.json)
     if args.json:
-        _print_json(tools)
+        out.print_json(tools)
     else:
         if not tools:
-            print("No tools in catalog.")
+            out.print_info("No tools in catalog.")
             return 0
-        print(f"{'ID':<30} {'Name':<25} {'Status':<15} {'Score':<8} {'Stars':<8}")
-        print("-" * 90)
-        for t in tools:
-            score = t.get("quality_score", 0)
-            stars = t.get("stars", 0)
-            print(f"{t['id']:<30} {t['name']:<25} {t.get('status', '?'):<15} {score:<8.4f} {stars:<8}")
+        rows = [[t["id"], t["name"], t.get("status", "?"), f"{t.get('quality_score', 0):.4f}", str(t.get("stars", 0))]
+                for t in tools]
+        out.print_table(["ID", "Name", "Status", "Score", "Stars"], rows)
     return 0
 
 
 def _cmd_repo_search(catalog: ToolCatalog, args: argparse.Namespace) -> int:
     """Search local catalog by keyword."""
+    out = OutputFormatter(json_mode=args.json)
     if not args.query:
-        print("Error: search requires a query string.")
-        print("Usage: agora repo search <query> [--status STATUS] [--json]")
+        out.print_error("search requires a query string.", suggestion="Usage: agora repo search <query> [--status STATUS] [--json]")
         return 1
     tools = catalog.search_tools(args.query, status=getattr(args, "status", None))
     if args.json:
-        _print_json(tools)
+        out.print_json(tools)
     else:
         if not tools:
-            print(f"No results for '{args.query}'.")
+            out.print_info(f"No results for '{args.query}'.")
             return 0
-        print(f"Found {len(tools)} tool(s) matching '{args.query}':")
-        print(f"{'ID':<30} {'Name':<25} {'Status':<15} {'Score':<8}")
-        print("-" * 80)
-        for t in tools:
-            score = t.get("quality_score", 0)
-            print(f"{t['id']:<30} {t['name']:<25} {t.get('status', '?'):<15} {score:<8.4f}")
+        out.print_info(f"Found {len(tools)} tool(s) matching '{args.query}':")
+        rows = [[t["id"], t["name"], t.get("status", "?"), f"{t.get('quality_score', 0):.4f}"]
+                for t in tools]
+        out.print_table(["ID", "Name", "Status", "Score"], rows)
     return 0
 
 
@@ -101,14 +94,15 @@ def _cmd_repo_status(catalog: ToolCatalog, args: argparse.Namespace) -> int:
     """Show catalog statistics."""
     counts = catalog.count_by_status()
     total = sum(counts.values())
+    out = OutputFormatter(json_mode=args.json)
     if args.json:
-        _print_json({"total": total, "by_status": counts})
+        out.print_json({"total": total, "by_status": counts})
     else:
-        print(f"Total tools: {total}")
+        out.print_info(f"Total tools: {total}")
         for status in ("discovered", "installed", "loaded", "idle"):
             cnt = counts.get(status, 0)
             if cnt > 0:
-                print(f"  {status}: {cnt}")
+                out.print_info(f"  {status}: {cnt}")
     return 0
 
 
@@ -118,7 +112,8 @@ def _cmd_repo_info(catalog: ToolCatalog, args: argparse.Namespace) -> int:
     if not tool:
         print(f"Tool not found: {args.name_or_id}")
         return 1
-    _print_json(tool)
+    out = OutputFormatter(json_mode=True)
+    out.print_json(tool)
     return 0
 
 
@@ -131,15 +126,16 @@ def _cmd_repo_discover(catalog: ToolCatalog, args: argparse.Namespace) -> int:
             sources=getattr(args, "sources", None),
         )
     )
+    out = OutputFormatter(json_mode=args.json)
     if args.json:
-        _print_json(results)
+        out.print_json(results)
     else:
-        print(f"Discovered {len(results)} tool(s):")
+        out.print_info(f"Discovered {len(results)} tool(s):")
         for t in results:
             score = t.get("quality_score", 0)
             source = t.get("source", "?")
             desc = (t.get("description") or "")[:60]
-            print(f"  [{score:.4f}] {t['name']:<25} ({source}) — {desc}")
+            out.print_info(f"  [{score:.4f}] {t['name']:<25} ({source}) — {desc}")
     return 0
 
 
@@ -147,7 +143,11 @@ def _cmd_repo_install(catalog: ToolCatalog, args: argparse.Namespace) -> int:
     """Install a discovered tool (Phase 2: status update + lifecycle install)."""
     orchestrator = _build_orchestrator(catalog)
     ok, msg = asyncio.run(orchestrator.install_tool(args.name_or_id))
-    print(msg)
+    out = OutputFormatter()
+    if ok:
+        out.print_success(msg)
+    else:
+        out.print_error(msg)
     return 0 if ok else 1
 
 
@@ -155,7 +155,11 @@ def _cmd_repo_load(catalog: ToolCatalog, args: argparse.Namespace) -> int:
     """Load a tool via the LifecycleManager (Phase 2: proxy integration)."""
     orchestrator = _build_orchestrator(catalog)
     ok, msg = asyncio.run(orchestrator.load_tool(args.name_or_id))
-    print(msg)
+    out = OutputFormatter()
+    if ok:
+        out.print_success(msg)
+    else:
+        out.print_error(msg)
     return 0 if ok else 1
 
 
@@ -163,7 +167,11 @@ def _cmd_repo_unload(catalog: ToolCatalog, args: argparse.Namespace) -> int:
     """Unload a tool via the LifecycleManager."""
     orchestrator = _build_orchestrator(catalog)
     ok, msg = asyncio.run(orchestrator.unload_tool(args.name_or_id))
-    print(msg)
+    out = OutputFormatter()
+    if ok:
+        out.print_success(msg)
+    else:
+        out.print_error(msg)
     return 0 if ok else 1
 
 
@@ -171,7 +179,8 @@ def _cmd_repo_load_all(catalog: ToolCatalog, args: argparse.Namespace) -> int:
     """Load all idle tools."""
     orchestrator = _build_orchestrator(catalog)
     count = asyncio.run(orchestrator.load_all_idle())
-    print(f"Loaded {count} tool(s).")
+    out = OutputFormatter()
+    out.print_success(f"Loaded {count} tool(s).")
     return 0
 
 
@@ -179,7 +188,8 @@ def _cmd_repo_unload_all(catalog: ToolCatalog, args: argparse.Namespace) -> int:
     """Unload all loaded tools."""
     orchestrator = _build_orchestrator(catalog)
     count = asyncio.run(orchestrator.unload_all_loaded())
-    print(f"Unloaded {count} tool(s).")
+    out = OutputFormatter()
+    out.print_success(f"Unloaded {count} tool(s).")
     return 0
 
 
@@ -193,10 +203,11 @@ def _cmd_repo_pipeline(catalog: ToolCatalog, args: argparse.Namespace) -> int:
             auto_load=True,
         )
     )
+    out = OutputFormatter(json_mode=args.json)
     if args.json:
-        _print_json(result)
+        out.print_json(result)
     else:
-        print(f"Discovered: {result['discovered']}, Installed: {result['installed']}, Loaded: {result['loaded']}")
+        out.print_success(f"Discovered: {result['discovered']}, Installed: {result['installed']}, Loaded: {result['loaded']}")
     return 0
 
 
