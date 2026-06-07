@@ -2208,7 +2208,7 @@ async def list_bos_resources(prefix: str = "") -> dict:
 
     # 附上 schema 信息: 标注哪些 URI 有已知 schema
     try:
-        wf_dir = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "workflow"
+        wf_dir = Path(__file__).parent.parent.parent.parent / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "workflow"
         if wf_dir.exists():
             import yaml
             known_actions = set()
@@ -2297,7 +2297,7 @@ async def get_bos_schema(uri: str = "") -> dict:
     """
     import yaml
     try:
-        wf_dir = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "workflow"
+        wf_dir = Path(__file__).parent.parent.parent.parent / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "workflow"
         if not wf_dir.exists():
             return _error("M1 Workflow 目录不存在")
 
