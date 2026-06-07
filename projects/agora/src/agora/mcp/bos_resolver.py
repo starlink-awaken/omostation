@@ -32,6 +32,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
+from agora.legacy_compat import (
+    CANONICAL_PERSONA_BRIDGE_URI_PREFIX,
+    LEGACY_PERSONA_BRIDGE_SERVICE,
+    LEGACY_PERSONA_BRIDGE_URI_PREFIX,
+)
+
 _log = logging.getLogger(__name__)
 
 # ── stdio 协议默认超时 (秒) ──────────────────────────
@@ -43,6 +49,12 @@ BOS_URI_PATTERN = re.compile(
     r"^bos://(?P<domain>memory|governance|omo|analysis|persona|capability|forge|meta|ecos|agora)"
     r"/(?P<package>[a-z][a-z0-9-]+)/(?P<action>[a-z][a-z0-9-]+)$"
 )
+
+_LEGACY_BOS_URI_ALIASES = {
+    f"{LEGACY_PERSONA_BRIDGE_URI_PREFIX}recall-entity": f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}recall-entity",
+    f"{LEGACY_PERSONA_BRIDGE_URI_PREFIX}recall": f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}recall",
+    f"{LEGACY_PERSONA_BRIDGE_URI_PREFIX}sync": f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}sync",
+}
 
 # ── 路径常量 ────────────────────────────────────────
 KAIRON_ROOT = Path("/Users/xiamingxing/Workspace/projects/kairon")
@@ -90,6 +102,11 @@ def _with_uv_package(service: BosService) -> list[str]:
     if not service.package:
         return cmd
     return ["uv", "run", "--package", service.package, *cmd[2:]]
+
+
+def normalize_bos_uri(uri: str) -> str:
+    """Map legacy BOS URIs onto their canonical compatibility URI."""
+    return _LEGACY_BOS_URI_ALIASES.get(uri, uri)
 
 
 # ── 5 Domain 5 包 POC service registry (11 总) ──────
@@ -335,7 +352,7 @@ POC_SERVICES: dict[str, BosService] = {
         transport="stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "forge", "--action", "register-tool",
+            "python", "-m", "forge", "serve", "--action", "register-tool",
         ],
         description="Forge 工具注册 (POC stdio)",
     ),
@@ -343,17 +360,17 @@ POC_SERVICES: dict[str, BosService] = {
     # Note: sharedbrain-bridge / sot-bridge are legacy BOS compatibility names.
     # They no longer correspond to live installable packages in the current
     # kairon tree, but tests and downstream routing still depend on the URI layer.
-    "bos://persona/sharedbrain-bridge/recall-entity": BosService(
-        uri="bos://persona/sharedbrain-bridge/recall-entity",
+    f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}recall-entity": BosService(
+        uri=f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}recall-entity",
         domain="persona",
-        package="sharedbrain-bridge",
+        package=LEGACY_PERSONA_BRIDGE_SERVICE,
         action="recall-entity",
         transport="stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "sot_bridge.sharedbrain_bridge", "serve", "--action", "recall-entity",
         ],
-        description="SharedBrain-Bridge 实体召回 (legacy compatibility URI, P36-W1 补, POC stdio)",
+        description="Legacy persona bridge entity recall (canonical compatibility URI, P36-W1 补, POC stdio)",
     ),
     "bos://persona/health-profile/alert": BosService(
         uri="bos://persona/health-profile/alert",
@@ -375,7 +392,7 @@ POC_SERVICES: dict[str, BosService] = {
         transport="stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "forge", "--action", "exec-tool",
+            "python", "-m", "forge", "serve", "--action", "exec-tool",
         ],
         description="Forge 工具执行 (P36-W1 补, POC stdio)",
     ),
@@ -387,7 +404,7 @@ POC_SERVICES: dict[str, BosService] = {
         transport="stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "forge", "--action", "list-tools",
+            "python", "-m", "forge", "serve", "--action", "list-tools",
         ],
         description="Forge 工具列表 (P36-W1 补, POC stdio)",
     ),
@@ -402,17 +419,17 @@ POC_SERVICES: dict[str, BosService] = {
         description="OMO 系统检查 (P36-W1 补, internal 同进程)",
     ),
     # ── P45-W0 战役 1: 3 个高 ROI GAP URI 实施 (P44-W2 评估) ──
-    "bos://persona/sharedbrain-bridge/recall": BosService(
-        uri="bos://persona/sharedbrain-bridge/recall",
+    f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}recall": BosService(
+        uri=f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}recall",
         domain="persona",
-        package="sharedbrain-bridge",
+        package=LEGACY_PERSONA_BRIDGE_SERVICE,
         action="recall",
         transport="stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "sot_bridge.sharedbrain_bridge", "serve", "--action", "recall",
         ],
-        description="SharedBrain-Bridge 跨域语义召回 (legacy compatibility URI, P45-W0, POC stdio, recall-entity 的泛化版)",
+        description="Legacy persona bridge semantic recall (canonical compatibility URI, P45-W0, POC stdio, recall-entity 的泛化版)",
     ),
     "bos://capability/forge/discover": BosService(
         uri="bos://capability/forge/discover",
@@ -513,17 +530,17 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="core-models 验证 (P45-W3, POC stdio, schema 的对偶)",
     ),
-    "bos://persona/sharedbrain-bridge/sync": BosService(
-        uri="bos://persona/sharedbrain-bridge/sync",
+    f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}sync": BosService(
+        uri=f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}sync",
         domain="persona",
-        package="sharedbrain-bridge",
+        package=LEGACY_PERSONA_BRIDGE_SERVICE,
         action="sync",
         transport="stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "sot_bridge.sharedbrain_bridge", "serve", "--action", "sync",
         ],
-        description="SharedBrain-Bridge 同步 (legacy compatibility URI, P45-W3, POC stdio, recall-entity 的对偶)",
+        description="Legacy persona bridge sync (canonical compatibility URI, P45-W3, POC stdio, recall-entity 的对偶)",
     ),
     # ── P48-W2 omo/sync 真重构 (stdio transport, 替代 P47 internal) ──
     "bos://governance/omo/sync": BosService(
@@ -741,7 +758,8 @@ def get_pool() -> ProcessPool:
 # ── 解析 + 调用 ─────────────────────────────────────
 def parse_bos_uri(uri: str) -> dict[str, str]:
     """解析 BOS URI. 抛 ValueError 当格式错."""
-    m = BOS_URI_PATTERN.match(uri)
+    normalized = normalize_bos_uri(uri)
+    m = BOS_URI_PATTERN.match(normalized)
     if not m:
         raise ValueError(f"Invalid BOS URI: {uri!r} (expected bos://<domain>/<package>/<action>)")
     return m.groupdict()
@@ -783,7 +801,7 @@ def _call_internal(service: BosService, *args: Any, **kwargs: Any) -> dict:
     }
 
 
-def _call_stdio(service: BosService, *args: Any, **kwargs: Any) -> dict:
+def _call_stdio(service: BosService, *args: Any, request_uri: str | None = None, **kwargs: Any) -> dict:
     """stdio transport: 真 stdio JSON 协议 (P34-W1 升级).
 
     流程:
@@ -800,7 +818,7 @@ def _call_stdio(service: BosService, *args: Any, **kwargs: Any) -> dict:
 
     返回字段: 包装 invoke_stdio 响应, 加 transport + 兼容 alive_at_spawn 字段.
     """
-    response = invoke_stdio(service.uri, service.action, args, kwargs, timeout=_STDIO_TIMEOUT_DEFAULT)
+    response = invoke_stdio(request_uri or service.uri, service.action, args, kwargs, timeout=_STDIO_TIMEOUT_DEFAULT)
     # 包装: 补 transport 字段 + alive_at_spawn (兼容 P33 测试)
     response["transport"] = "stdio"
     if response.get("status") == "ok":
@@ -832,7 +850,8 @@ def invoke_stdio(
     Returns:
         dict: 含 status + result/error + request_id + pid 等字段
     """
-    service = POC_SERVICES.get(uri)
+    canonical_uri = normalize_bos_uri(uri)
+    service = POC_SERVICES.get(canonical_uri)
     if service is None:
         # 提供类似 URI 推荐
         suggestions = []
@@ -862,8 +881,8 @@ def invoke_stdio(
     pool = get_pool()
     try:
         # 双重保险: is_alive 已自动清理, get_or_spawn 再保险一次
-        if uri in pool.processes and not pool.is_alive(uri):
-            _log.warning("Process dead on invoke, will respawn: %s", uri)
+        if canonical_uri in pool.processes and not pool.is_alive(canonical_uri):
+            _log.warning("Process dead on invoke, will respawn: %s", canonical_uri)
         proc = pool.get_or_spawn(service)
     except FileNotFoundError as exc:
         return {
@@ -878,7 +897,7 @@ def invoke_stdio(
             "error": f"spawn_failed: {exc}",
         }
 
-    if not pool.is_alive(uri):
+    if not pool.is_alive(canonical_uri):
         # 最后兜底: 自动 respawn (P35-W1 升级)
         try:
             proc = pool.get_or_spawn(service, force_respawn=True)
@@ -888,7 +907,7 @@ def invoke_stdio(
                 "status": "error",
                 "error": f"respawn_failed: {exc}",
             }
-        if not pool.is_alive(uri):
+        if not pool.is_alive(canonical_uri):
             return {
                 "uri": uri,
                 "status": "error",
@@ -934,6 +953,7 @@ def invoke_stdio(
 
         response = json.loads(response_line.decode("utf-8"))
         response["uri"] = uri
+        response["canonical_uri"] = canonical_uri
         response["request_id"] = response.get("request_id", request_id)
         response["pid"] = proc.pid
         return response
@@ -1015,10 +1035,12 @@ def get_stdio_adapter(timeout: float = 5.0) -> StdioAdapter:
 async def resolve_bos_uri(uri: str, *args: Any, **kwargs: Any) -> dict:
     """解析 BOS URI 到实际调用 (主入口, async 兼容)."""
     parsed = parse_bos_uri(uri)
-    service = POC_SERVICES.get(uri)
+    canonical_uri = normalize_bos_uri(uri)
+    service = POC_SERVICES.get(canonical_uri)
     if service is None:
         return {
             "uri": uri,
+            "canonical_uri": canonical_uri,
             "parsed": parsed,
             "status": "error",
             "error": f"unknown_bos_uri: {uri} (registered: {len(POC_SERVICES)})",
@@ -1027,7 +1049,10 @@ async def resolve_bos_uri(uri: str, *args: Any, **kwargs: Any) -> dict:
         # internal 在事件循环内同步执行 (omo 同进程)
         return _call_internal(service, *args, **kwargs)
     if service.transport == "stdio":
-        return _call_stdio(service, *args, **kwargs)
+        result = _call_stdio(service, *args, request_uri=uri, **kwargs)
+        result.setdefault("uri", uri)
+        result.setdefault("canonical_uri", canonical_uri)
+        return result
     return {
         "uri": uri,
         "status": "error",
@@ -1056,7 +1081,7 @@ def list_services() -> list[dict]:
 
 def get_service(uri: str) -> BosService | None:
     """查询单个 service (无副作用)."""
-    return POC_SERVICES.get(uri)
+    return POC_SERVICES.get(normalize_bos_uri(uri))
 
 
 def list_domains() -> dict[str, list[str]]:
@@ -1090,6 +1115,7 @@ __all__ = (
     "BosService",
     "ProcessPool",
     "KAIRON_ROOT",
+    "normalize_bos_uri",
     "METAOS_ROOT",
     "POC_SERVICES",
     "get_pool",
