@@ -16,7 +16,6 @@ deliverables:
   - "projects/omo/src/omo/omo_inspect.py"
   - "projects/omo/src/omo/cli.py"
   - "projects/agora/src/agora/mcp/bos_resolver.py"
-  - "projects/kairon/packages/sot-bridge/src/sot_bridge/sharedbrain_bridge/__main__.py"
   - "projects/kairon/packages/forge/src/forge/__main__.py"
   - "projects/agora/tests/integration/test_domain_chain.py"
   - ".omo/tasks/planned/P36-W0-W1-COMBO.yaml"
