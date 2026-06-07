@@ -1,79 +1,159 @@
-# omostation
+# omostation · eCOS v5
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![CI Status](https://img.shields.io/badge/CI-20%20workflows-brightgreen)](.github/workflows/)
+[![Tests](https://img.shields.io/badge/tests-16,500+-blue)](AGENTS.md)
+[![SOTI](https://img.shields.io/badge/health-8.0%2F10-success)](.omo/state/system.yaml)
 
-> Workspace 整合了所有知识工程与研究项目。
+> **eCOS v5** — 多项目知识工程与研究 Workspace。7 层架构，8 活跃项目，~490K 行代码，16,500+ 测试。
 >
-> **Phase 27**: 进行中 | [治理面板](.omo/MASTER-BLUEPRINT.md)
+> **eCOS v5** — Multi-project knowledge engineering & research workspace. 7-layer architecture, 8 active projects, ~490K LOC, 16,500+ tests.
 
-## 结构
+[English](#english) | [中文](#中文)
+
+---
+
+<a name="english"></a>
+
+## English
+
+### Architecture
 
 ```
-omostation/
-├── projects/               # 所有项目（独立 git 仓库）
-│   ├── kairon/             # 知识工程与研究栈（24 包 monorepo）
-│   ├── gbrain/             # Postgres 原生知识脑（TypeScript）
-│   ├── hermes-console/     # Hermes 控制台
-│   └── _archived/          # 已迁移旧项目备份（24 项）
-│
-├── data/                   # 共享数据层
-│   ├── db/                 # SQLite 数据库
-│   ├── kos/                # KOS 搜索索引
-│   ├── sharedbrain/        # SharedBrain 数据持久层（数据库+备份）
-│   └── backups/            # 数据备份
-│
-├── .omo/                   # 治理层（目标/状态/标准/审计/知识面）
-├── spaces/                 # 用户空间 / 租户边界
-│
-├── scripts/                # 治理自动化
-│   ├── omo/                # OMO Python 工具集（CLI + 50 模块）
-│   └── shell/              # Shell 脚本
-│
-├── bin/                    # 可执行工具
-├── tests/integration/      # 集成测试
-├── runtime/                # 运行时残留
-├── agent-runtime/          # Hermes Agent 日志（gitignored）
-│
-├── Makefile                # 跨项目构建/测试/部署
-├── docker-compose.yml      # 服务编排
-│
-├── README.md               # 项目总览
-├── AGENTS.md               # 开发指南
-├── CLAUDE.md               # AI 助手规则
-├── LAYER-INDEX.md          # 4-Layer 架构索引
-├── CONTRIBUTING.md         # 贡献指南
-├── CODE_OF_CONDUCT.md      # 行为准则
-└── LICENSE                 # MIT
+ L4  Self      ── Personal CARDS + Learning Evolution (SQLite/MD)
+ L3  Entry     ── cockpit (CLI 13 commands + MCP + Web Dashboard)
+ I0  Weave     ── agora (Dynamic MCP Proxy Mesh, 42+ tools)
+ L2  Engine    ── kairon (19 packages) · gbrain (67 MCP tools) · omo · metaos
+ L1  Runtime   ── runtime (Matrix + Scheduler + KEI Sandbox)
+ L0  Protocol  ── ecos (SSB Protocol Layer + Emergence)
 ```
 
-## 快速开始
+### Active Projects
+
+| Project | Layer | Language | Source | Tests | Pass Rate |
+|---------|-------|----------|--------|-------|-----------|
+| [agora](./projects/agora/) | I0 | Python | 38,905 LOC | 1,200 | 97.1% |
+| [cockpit](./projects/cockpit/) | L3 | Python | 16,260 LOC | 514 | 96.9% |
+| [kairon](./projects/kairon/) | L2 | Python | 208,540 LOC | 4,199 | 99.8% |
+| [gbrain](./projects/gbrain/) | L2 | TypeScript | 163,204 LOC | ~9,737 | ~99.6% |
+| [omo](./projects/omo/) | L2 | Python | 19,921 LOC | 530 | 97.4% |
+| [metaos](./projects/metaos/) | L2 | Python | 7,341 LOC | 188 | 100% |
+| [runtime](./projects/runtime/) | L1 | Python | 25,012 LOC | 176 | 97.2% |
+| [ecos](./projects/ecos/) | L0 | Python | 10,601 LOC | 122 | 91.8% |
+
+### Quick Start
 
 ```bash
-# kairon 全量测试（当前 checkout: 24 包）
-cd projects/kairon && make test
+# Clone workspace
+git clone https://github.com/starlink-awaken/omostation.git
+cd omostation
 
-# 单个包测试
-cd projects/kairon/packages/eidos && python3 -m pytest tests/ -q
-
-# 集成测试
+# Run all integration tests
 bash tests/integration/run-all.sh
 
-# E2E 全链路测试
-python3 tests/integration/test-e2e-phase1.py
+# Per-project tests
+cd projects/kairon && make test         # Kairon: all 19 packages
+cd projects/agora && uv run pytest      # Agora: 1165/1200 pass
+cd projects/gbrain && bun test          # Gbrain: ~9,700 pass
 ```
 
-## 项目总览
+### Governance
 
-| 项目 | 栈 | 规模 | 说明 | 状态 |
-|------|-----|------|------|------|
-| `kairon` | Python | 24 包 monorepo | 知识工程与研究栈 | 🟢 Active |
-| `gbrain` | TypeScript | 74 工具 + memU 引擎 | Postgres 知识脑 | 🟢 Active |
-| `hermes-console` | TypeScript | 137 MB | Hermes 控制台 | 🟡 待评估 |
-| `SharedBrain` | Python | 已归档 | 代码迁移至 kairon，数据层在 `data/sharedbrain/` | ⚪ Archived |
-| `agentmesh` | TypeScript | 已归档 | 100% 迁移至 kairon | ⚪ Archived |
-| `_archived` | — | 24 项 / 6.3 GB | 已迁移旧项目备份 | ⚪ Archived |
+- **[OMO](./projects/omo/)** — Operating System for AI Agents (debt registry, task management, health monitoring)
+- **[Self-Healing Engine](./projects/omo/src/omo/omo_self_healing.py)** — Automatic error detection, debt generation, and fix execution
+- **[Audit Report](./.omo/_delivery/audits/architecture_audit_20260607.md)** — Comprehensive architecture audit (2026-06-07)
+- **[Tech Debt Roadmap](./.omo/_delivery/audits/tech_debt_roadmap_20260607.md)** — Remaining debt items
 
-## License
+### Documentation
 
-MIT
+| Document | Description |
+|----------|-------------|
+| [AGENTS.md](./AGENTS.md) | Development guide for AI agents |
+| [CLAUDE.md](./CLAUDE.md) | AI assistant operational rules |
+| [LAYER-INDEX.md](./LAYER-INDEX.md) | 7-layer architecture index |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribution guidelines |
+| [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) | Community code of conduct |
+| [SECURITY.md](./SECURITY.md) | Security policy |
+| [WIKI.md](./WIKI.md) | Technical Wiki |
+
+### CI/CD
+
+19 workflows covering all 8 projects. See [.github/workflows/](./.github/workflows/).
+
+### License
+
+MIT © [starlink-awaken](https://github.com/starlink-awaken)
+
+---
+
+<a name="中文"></a>
+
+## 中文
+
+### 架构
+
+```
+ L4  自我层     ── ~/Documents/驾驶舱/CARDS/ (SQLite) + ~/Documents/学习进化/ (MD)
+ L3  入口层     ── cockpit (CLI 13 + MCP + Web 仪表板)
+ I0  织层       ── agora (动态反向代理 MCP 网格, 42+ 工具)
+ L2  引擎面     ── kairon (19 包) · gbrain (67 MCP 工具) · omo · metaos
+ L1  运行时     ── runtime (Matrix + Scheduler + KEI 沙箱)
+ L0  协议层     ── ecos (SSB 签名链 + 涌现计算)
+```
+
+### 活跃项目
+
+| 项目 | 层级 | 语言 | 代码量 | 测试数 | 通过率 |
+|------|------|------|--------|--------|--------|
+| [agora](./projects/agora/) | I0 | Python | 38,905 行 | 1,200 | 97.1% |
+| [cockpit](./projects/cockpit/) | L3 | Python | 16,260 行 | 514 | 96.9% |
+| [kairon](./projects/kairon/) | L2 | Python | 208,540 行 | 4,199 | 99.8% |
+| [gbrain](./projects/gbrain/) | L2 | TypeScript | 163,204 行 | ~9,737 | ~99.6% |
+| [omo](./projects/omo/) | L2 | Python | 19,921 行 | 530 | 97.4% |
+| [metaos](./projects/metaos/) | L2 | Python | 7,341 行 | 188 | 100% |
+| [runtime](./projects/runtime/) | L1 | Python | 25,012 行 | 176 | 97.2% |
+| [ecos](./projects/ecos/) | L0 | Python | 10,601 行 | 122 | 91.8% |
+
+### 快速开始
+
+```bash
+# 克隆工作区
+git clone https://github.com/starlink-awaken/omostation.git
+cd omostation
+
+# 运行所有集成测试
+bash tests/integration/run-all.sh
+
+# 单项目测试
+cd projects/kairon && make test         # Kairon: 19 个包全量测试
+cd projects/agora && uv run pytest      # Agora: 1165/1200 通过
+cd projects/gbrain && bun test          # Gbrain: ~9,700 通过
+```
+
+### 治理体系
+
+- **[OMO](./projects/omo/)** — AI Agent 操作系统 (债务注册、任务管理、健康监控)
+- **[自愈引擎](./projects/omo/src/omo/omo_self_healing.py)** — 自动错误检测、债务生成、修复执行
+- **[审计报告](./.omo/_delivery/audits/architecture_audit_20260607.md)** — 全面架构审计 (2026-06-07)
+- **[技术债务路线图](./.omo/_delivery/audits/tech_debt_roadmap_20260607.md)** — 剩余债务项目
+
+### 文档
+
+| 文档 | 说明 |
+|------|------|
+| [AGENTS.md](./AGENTS.md) | AI Agent 开发指南 |
+| [CLAUDE.md](./CLAUDE.md) | AI 助手操作规则 |
+| [LAYER-INDEX.md](./LAYER-INDEX.md) | 7 层架构索引 |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | 贡献指南 |
+| [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) | 社区行为准则 |
+| [SECURITY.md](./SECURITY.md) | 安全策略 |
+| [WIKI.md](./WIKI.md) | 技术 Wiki |
+
+### CI/CD
+
+20 个 workflows 覆盖全部 8 个项目。详见 [.github/workflows/](./.github/workflows/)。
+
+### 许可证
+
+MIT © [starlink-awaken](https://github.com/starlink-awaken)
