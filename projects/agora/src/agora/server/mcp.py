@@ -164,6 +164,9 @@ router = get_router(registry, _bus)
 from agora.server.tools_bos import register_bos_tools  # type: ignore[import-not-found]
 register_bos_tools(mcp, _bus)
 
+from agora.server.tools_swarm import register_swarm_tools  # type: ignore[import-not-found]
+register_swarm_tools(mcp)
+
 # ── A2A Task Manager ──────────────────────────────────────────────────
 
 _task_manager: TaskManager | None = None  # noqa: F821
