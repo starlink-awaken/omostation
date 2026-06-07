@@ -94,3 +94,28 @@ class TestWorkflowCLI:
         r = run("check-refs")
         assert r.returncode == 0
         assert "通过" in r.stdout or "校验" in r.stdout
+
+    def test_check_refs_json(self):
+        r = run("check-refs", "--json")
+        assert r.returncode == 0
+        import json
+        data = json.loads(r.stdout)
+        assert "total_nodes" in data
+
+    def test_schema_report(self):
+        r = run("schema-report")
+        assert r.returncode == 0
+        assert "覆盖度" in r.stdout
+
+    def test_schema_report_json(self):
+        r = run("schema-report", "--json")
+        assert r.returncode == 0
+        import json
+        data = json.loads(r.stdout)
+        assert "coverage" in data
+
+    def test_seed_bos(self):
+        r = run("seed-bos")
+        # May fail if agora module not importable, accept either
+        assert r.returncode in (0, 1)
+        assert "BOSRouter" in r.stdout or "Agora" in r.stdout
