@@ -15,6 +15,8 @@
 | 0004 | kaironcloud-billing 归档（W6 评估） | ACCEPTED | 2026-06-05 | omostation P28-W6 | 0004-kcb-archived.md |
 | 0005 | P29 架构升级（kairon 31 包 → L1 工程层） | ACCEPTED | 2026-06-05 | omostation P29 | 0005-architecture-p29-upgrade.md |
 | 0006 | kairon 17 包合并到 14 包（方向 C — 3 组瘦包合并，砍 data-pipeline） | ACCEPTED | 2026-06-06 | omostation P31-W0 | 0006-kairon-package-merge.md |
+| 0007 | 多仓库统一版本发布策略（VERSION + CHANGELOG + release.sh） | ACCEPTED | 2026-06-07 | omostation P34-W3 | 0007-multi-repo-release.md |
+| 0008 | in_progress 任务列表清理原则（4 类分类：completed / pending / cancelled / 删） | ACCEPTED | 2026-06-07 | omostation P37-W1 | 0008-task-cleanup-policy.md |
 
 ---
 
@@ -56,6 +58,11 @@
 - ADR-0005: P29 架构升级（kairon 31 包 → L1 工程层）
 - ADR-0006: kairon 17 包合并到 14 包（方向 C，3 组：llm-gateway-kernel / sot-bridge / protocols-layer）— **ACCEPTED**
 
+### L2 — 治理与发布
+
+- ADR-0007: 多仓库统一版本发布（VERSION + CHANGELOG + release.sh，6 项目共享 omostation-X.Y.Z）— **ACCEPTED**
+- ADR-0008: in_progress 任务列表清理原则（4 类：completed / pending / cancelled / 删）— **ACCEPTED**
+
 ---
 
 ## 维护责任
@@ -75,4 +82,4 @@
 
 ---
 
-*最近更新: 2026-06-06 · Owner: P31-W0-KAIRON-MERGE-ACCEPTED · 0006 状态 PROPOSED → ACCEPTED*
+*最近更新: 2026-06-07 · Owner: P37-W1-CLEANUP · 0007/0008 状态 ACCEPTED*

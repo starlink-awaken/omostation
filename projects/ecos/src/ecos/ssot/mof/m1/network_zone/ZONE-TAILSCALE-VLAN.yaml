@@ -1,0 +1,6 @@
+id: ZONE-TAILSCALE-VLAN
+type: network_zone
+zone_type: vlan
+latency_profile: medium
+status: active
+description: "Tailscale 虚拟局域网。当不在家时，用于跨地域打通本机与 MacMini/Y7000P 算力节点。"

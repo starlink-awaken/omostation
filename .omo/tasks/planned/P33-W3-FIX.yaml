@@ -1,0 +1,50 @@
+id: P33-W3-FIX
+phase: 33
+wave: W3
+title: "修 3 高严重度 — KOS 持久化 + 实测可达 + 命名协调"
+status: completed
+task_type: governance
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P33-W2-DOMAINS-3 completed"
+depends_on:
+  - P33-W2-DOMAINS-3
+deliverables:
+  - "projects/omo/src/omo/omo_bos.py"
+  - "projects/omo/tests/test_omo_bos.py"
+  - ".omo/_delivery/phase33-w3-fix.md"
+  - ".omo/_delivery/phase33-campaign-2-precheck.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_delivery/phase33-review-redundancy.md"
+  - ".omo/_delivery/phase33-campaign-2-precheck.md"
+knowledge_refs: []
+description: |
+  修 P33-W3 3 高严重度问题 (源自 phase33-review-redundancy.md):
+
+  M1 (高): W1 持久化只写本地 JSON, KOS 实际没写,
+           phase33-campaign-2-precheck.md:102 虚假勾选.
+    修复: save_to_kos 函数实装, register_uri KOS + 本地 JSON 双写.
+
+  M2 (高): 21 URI 全部只写 endpoint 字符串, 无 importlib 实测.
+    修复: verify_endpoint + verify_all_endpoints + omo bos verify CLI,
+          实测结果诚实记录 (1/21 达, 20/21 因 omo 缺 kairon 依赖不可达).
+
+  R2 (高): mcp_server.py 已有 bos://omo/debt (3 段), 与新 4 段正则不兼容.
+    修复: BOS_URI_LEGACY_PATTERN + LEGACY_DOMAIN_MAP, 接受 3 段 legacy URI.
+
+  修订 phase33-campaign-2-precheck.md (W1 虚假勾选改正为 W3 修复后真实状态).
+
+  守 P32 100 极限: audit 100.0 (A+), agora 12/12, omo daemon PID 47826,
+                  ruff 0 errors, 26/26 单元测试通过.
+
+  额外修订: P33-W2-DOMAINS-3 task YAML deliverables 改为实际文件路径
+            (audit governance_check_task_consistency 此前误判 95,
+            因描述性字符串不能 resolve 为文件).
+started_at: '2026-06-06T22:00:00Z'
+completed_at: '2026-06-06T22:30:00Z'
+blocked_by: null
+retry_count: 0

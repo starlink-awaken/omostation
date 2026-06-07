@@ -2,6 +2,7 @@
 
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 from agora.core.registry import Service, ServiceRegistry
 from agora.core.router import Router
@@ -11,8 +12,14 @@ class TestAgoraIntegration:
     """End-to-end routing tests with real Minerva + Sophia."""
 
     def setup_method(self):
+        # Prevent L0 global routes from leaking into unit test assertions
+        self._l0_patch = patch("agora.l0_registry_loader.load_routes", return_value={})
+        self._l0_patch.start()
         self.registry = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json"))
         self.router = Router(self.registry, routes_path=str(Path(tempfile.mkdtemp()) / "test-routes.json"))
+
+    def teardown_method(self):
+        self._l0_patch.stop()
 
     def test_register_all_services(self):
         self.registry.register(

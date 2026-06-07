@@ -1,0 +1,7 @@
+id: NODE-Y7000P
+type: compute_node
+architecture: amd64
+os: windows
+tier: edge
+status: active
+description: "局域网高性能游戏本，配备 Nvidia 独立显卡，适合重度高吞吐推理"

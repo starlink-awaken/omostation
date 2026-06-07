@@ -1,10 +1,13 @@
-## 当前 Phase: 32 (治理满分级) — ✅ 收官
+## 当前 Phase: 39 (CI 真启用 + LLM 真消费 + dashboard 真服务化) — ✅ 验收
 
-- **健康分**: 100.0 (A+ 极限)
-- **完成时间**: 2026-06-07
-- **omo daemon**: launchd 跑着, PID 47826
-- **下一里程碑**: Phase 33 — Agora Mesh + 5 Domain + Forge 集市
-- **复盘**: .omo/_knowledge/management/retrospective-2026-06-07-p32.md
+- **健康分**: 100.0 (A+ 极限, 连续守 25+ wave)
+- **完成时间**: 2026-06-14
+- **3 wave 全收官**: P39-W0 GitHub push 真启用 / P39-W1 跨域+LLM 卫健委 / P39-W2 dashboard 真服务化
+- **dashboard 真服务化**: `com.omo.dashboard.plist` + `dashboard_stop.sh` + `dashboard_health.sh` (launchd 开机自启, POC 阶段装一次 + 立即 unload)
+- **6 URI 跨域串联**: kos.search → minerva.research → minerva.draft → iris.transform → omo.inspect → iris.validate
+- **omo daemon**: launchd 跑着, PID 47826 (守 P32-P38 无回归)
+- **下一里程碑**: P40 候选 (GitHub 真 push / LLM 真综合 / dashboard 持续服务化)
+- **复盘**: .omo/_knowledge/management/retrospective-2026-06-14-p39.md
 
 ---
 

@@ -27,3 +27,14 @@ build-backend = "uv_build"
 
 [tool.uv.sources]
 llm-gateway-kernel = { path = "../kairon/packages/llm-gateway-kernel" }
+
+[tool.pytest.ini_options]
+# P44-W4: 注册 BOS URI 测试 markers, 让 CI 按需分组跑
+#   pytest -m fast           → 只跑 registry load (1 测, <10ms)
+#   pytest -m bos_5domain    → 跑 5 domain 覆盖 (1 测, ~3s)
+#   pytest -m bos_40         → 跑 40 URI 全套 (3 测, ~3s)
+markers = [
+    "fast: 快速验证 (<10ms), 不依赖 agora/venv",
+    "bos_40: 40 BOS URI smoke test 全套 (跨进程派发)",
+    "bos_5domain: 5 Domain 覆盖验证 (POC_SERVICES 每个域至少 1 resolved)",
+]

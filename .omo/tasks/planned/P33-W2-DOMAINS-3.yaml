@@ -12,9 +12,8 @@ entry_gate:
 depends_on:
   - P33-W1-CAMPAIGN-2-PRECHECK
 deliverables:
-  - "15 条新增 BOS URI (3 Domain: analysis × 7, persona × 4, capability × 4)"
-  - ".omo/_knowledge/bos-registry.json (21 URI 总, 5 Domain 全覆盖)"
-  - "3 个 W2 单元测试 (test_seeds_cover_5_domains, test_register_3_domains_persists, test_list_filter_by_each_domain)"
+  - ".omo/_knowledge/bos-registry.json"
+  - "projects/omo/tests/test_omo_bos.py"
   - ".omo/_delivery/phase33-domains-3.md"
 risk_level: L0
 allowed_operation_level: L0

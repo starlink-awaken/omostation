@@ -1,0 +1,32 @@
+# M1 Node: DOMAIN-vault
+# Type: Domain | Subtype: KnowledgeVault
+# Generated: 2026-06-07
+
+id: DOMAIN-vault
+type: Domain
+name: '@学习进化'
+description: 知识库 — 10-systems·20-creative·30-distribution·40-lessons·50-concepts
+status: active
+domain: meta
+created: '2026-06-07'
+version: 1.0.0
+layer: L4
+properties:
+  bos_uri_pattern: bos://vault/**
+  domain_type: document
+  layer: L4
+  governance_tier: 1
+  storage: /Users/xiamingxing/Documents/@学习进化
+  kems_planes:
+  - _control
+  - _entities
+  - _knowledge
+  - _storage
+  - _archive
+  capabilities:
+  - knowledge.read
+  - knowledge.search
+  - entity.resolve
+  entry_points:
+    mcp: domain_read
+subtype: KnowledgeVault

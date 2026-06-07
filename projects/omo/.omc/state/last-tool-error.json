@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"git add \\\\\\n  .omo/_delivery/phase43-4wave-combo.md \\\\\\n  .omo/tasks/planned/P43-W0-W3-COMBO.yaml \\\\\\n  projects/omo/src/omo/omo_llm_bos_bridge.py \\\\\\n  projects/omo/tests/integration/test...",
+  "error": "Exit code 128\nfatal: pathspec '.omo/_delivery/phase43-4wave-combo.md' did not match any files",
+  "timestamp": "2026-06-07T01:26:40.440Z",
+  "retry_count": 1
+}

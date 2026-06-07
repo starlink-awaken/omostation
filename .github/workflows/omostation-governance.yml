@@ -1,0 +1,88 @@
+name: omostation governance audit
+on:
+  pull_request:
+    paths:
+      - '.omo/tasks/planned/**'
+      - 'projects/**/pyproject.toml'
+      - 'projects/omo/src/omo/omo_*.py'
+  push:
+    branches: [main]
+    paths:
+      - '.omo/tasks/planned/**'
+  workflow_dispatch:  # 手动触发 (P37-W0)
+  schedule:
+    - cron: '0 9 * * 1'  # 每周一 9:00 UTC 跑 (P37-W0)
+
+jobs:
+  audit:
+    runs-on: macos-latest  # omo 是 macOS 项目
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.13"]  # matrix 多 Python 版本 (P37-W0 可选)
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install omo
+        run: |
+          cd projects/omo
+          uv sync
+
+      - name: Run governance audit
+        run: |
+          cd projects/omo
+          uv run omo governance audit --output /tmp/audit.md
+          cat /tmp/audit.md
+
+      - name: Check audit score ≥ 95
+        run: |
+          SCORE=$(grep "总分" /tmp/audit.md | head -1 | grep -oE "[0-9]+\.[0-9]+" | head -1)
+          if [ -z "$SCORE" ]; then
+            echo "Audit score not found in /tmp/audit.md"
+            exit 1
+          fi
+          if (( $(echo "$SCORE < 95" | bc -l) )); then
+            echo "Audit score $SCORE below 95 threshold"
+            exit 1
+          fi
+          echo "Audit score $SCORE OK"
+
+      - name: Check no missing deliverables (P36 治理债务永久化)
+        run: |
+          cd projects/omo
+          uv run omo governance audit 2>&1 | tee /tmp/audit_full.txt > /dev/null
+          MISSING=$(grep -c "missing deliverable" /tmp/audit_full.txt || true)
+          if [ "$MISSING" -gt 0 ]; then
+            echo "Found $MISSING missing deliverables"
+            cat /tmp/audit_full.txt
+            exit 1
+          fi
+          echo "All deliverables verified (0 missing)"
+
+      - name: Check deliverables are file paths
+        run: |
+          cd projects/omo
+          # audit grep task consistency 段, 找缺失 deliverables
+          MISSING=$(uv run omo governance audit 2>&1 | grep "missing deliverable" | wc -l | tr -d ' ')
+          if [ "$MISSING" -gt 0 ]; then
+            echo "Found $MISSING missing deliverables"
+            exit 1
+          fi
+          echo "All deliverables verified"
+
+      - name: Comment on PR (failure only)
+        if: github.event_name == 'pull_request' && failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ omo governance audit 失败. 请跑 `./scripts/ci_local.sh` 本地检查.'
+            })

@@ -1,0 +1,31 @@
+id: P37-W2-W3-COMBO
+phase: 37
+wave: W2
+title: "跨域+LLM 实战 + P37 验收 (W2 + W3 合并)"
+status: completed
+task_type: feature
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P37-W0-W1-COMBO completed"
+depends_on:
+  - P37-W0-W1-COMBO
+deliverables:
+  - "projects/omo/src/omo/omo_llm_bos_bridge.py"
+  - "scripts/llm_bos_demo.py"
+  - ".omo/_knowledge/management/retrospective-2026-06-12-p37.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/management/retrospective-2026-06-11-p36.md"
+knowledge_refs:
+  - "ADR-0008"
+description: |
+  P37-W2 跨域+LLM 实战 (omo.llm_bos_bridge + llm_bos_demo).
+  P37-W3 P37 整体验收.
+  守 P32-P36 修复.
+started_at: '2026-06-07T13:00:00Z'
+completed_at: '2026-06-07T13:00:00Z'
+blocked_by: null
+retry_count: 0

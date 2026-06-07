@@ -1,0 +1,11 @@
+apiVersion: omo/v1
+kind: RuntimeBoundary
+id: system-runtime-boundary
+space_ref: spaces/system-space.yaml
+allowed_runtime_roots:
+  - runtime/run-continuation
+  - runtime/logs
+disallowed_runtime_classes:
+  - .omo-governance-state
+  - durable-delivery-evidence
+  - project-source

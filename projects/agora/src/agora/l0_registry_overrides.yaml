@@ -1,0 +1,189 @@
+# L0 Registry Overrides — non-derivable service configs
+# =====================================================
+# 
+# SSOT for tool→service routing + service startup configs.
+# Replaces agora-routes.json, agora-services.json, and KNOWN_SERVICES
+# in mcp_bootstrap.py.
+#
+# When L0 M1 nodes gain command/args metadata, entries here can be removed.
+# Until then, this is the authoritative override.
+
+# ── Tool → Service Route Mappings ──────────────────────────
+routes:
+  # Kairon services
+  analyze_project: codeanalyze
+  audit_project: codeanalyze
+  codegraph_callees: codeanalyze
+  codegraph_callers: codeanalyze
+  codegraph_context: codeanalyze
+  codegraph_search: codeanalyze
+  crg_build: codeanalyze
+  crg_status: codeanalyze
+  export_graph: codeanalyze
+  extract_policy_docs: codeanalyze
+  toolforge_match: codeanalyze
+  chat: agent-runtime
+  run_task: agent-runtime
+  terminal_run: agent-runtime
+  eidos: eidos
+  iris_connector_status: iris
+  iris_get_item: iris
+  iris_list_connectors: iris
+  iris_list_items: iris
+  iris_search: iris
+  iris_sync: iris
+  iris_sync_bidirectional: iris
+  kos: kos
+  kronos_event: kronos
+  kronos_get_state: kronos
+  kronos_history: kronos
+  kronos_list_streams: kronos
+  kronos_subscribe: kronos
+  kronos_transition: kronos
+  kronos_unsubscribe: kronos
+  llm_generate: llm-gateway
+  cross_domain_research: minerva
+  minerva_ingest: minerva
+  minerva_research: minerva
+  minerva_search: minerva
+  research_now: minerva
+  research_schedule: minerva
+  research_watch: minerva
+  compile_paradigm: sophia
+  get_effective_ops: sophia
+  get_transitions: sophia
+  sophia_compile: sophia
+  sophia_list: sophia
+  toolforge: ontoderive
+  ontoderive: ontoderive
+
+  # Scheduled / daemon services
+  cron_create: cron-service
+  cron_delete: cron-service
+  cron_get: cron-service
+  cron_list: cron-service
+  cron_pause: cron-service
+  cron_resume: cron-service
+  cron_run: cron-service
+  cron_status: cron-service
+  cron_update: cron-service
+
+  # SharedBrain bridge
+  circuit_execute: sharedbrain-bridge
+  health_check: sharedbrain-bridge
+  identity_verify: sharedbrain-bridge
+
+  # Infrastructure
+  test_tool: test-svc
+  test.tool: test-svc
+
+# ── Startup Command Overrides (for mcp_bootstrap) ─────────
+known_services:
+  agent-runtime:
+    command: uv
+    args: ["run", "--package", "cockpit", "python", "-m", "cockpit.agent_runtime_mcp_server"]
+    description: "Agent Runtime — 任务执行、对话、终端和文件工具运行时"
+    source: kairon
+  codeanalyze:
+    command: uv
+    args: ["run", "--package", "codeanalyze", "python", "-m", "codeanalyze.mcp"]
+    description: "代码与文档分析 — CRG 知识图谱、Tree-sitter、代码搜索"
+    source: kairon
+  eidos:
+    command: uv
+    args: ["run", "--package", "eidos", "python", "-m", "eidos.mcp_server"]
+    description: "知识建模与校验 — Schema、迁移、验证与导出"
+    source: kairon
+  iris:
+    command: uv
+    args: ["run", "--package", "iris", "python", "-m", "iris.mcp_server"]
+    description: "连接器中心 — 外部知识源拉取、搜索与同步"
+    source: kairon
+  kos:
+    command: uv
+    args: ["run", "--package", "kos", "python", "-m", "kos.mcp.server"]
+    description: "知识操作系统 — 跨域搜索、本体、协作、共识"
+    source: kairon
+  kronos:
+    command: uv
+    args: ["run", "--package", "kronos", "python", "-m", "kronos.cli"]
+    description: "知识摄取管线 — 抓取、转换、分块与入库"
+    source: kairon
+  minerva:
+    command: uv
+    args: ["run", "--package", "minerva", "python", "-m", "minerva.mcp_server.server"]
+    description: "深度研究系统 — 检索、推理、报告与研究管线"
+    source: kairon
+  sophia:
+    command: uv
+    args: ["run", "--package", "sophia", "python", "-m", "sophia.server.mcp_server"]
+    description: "符号化研究范式引擎 — 状态机驱动的研究方法运行时"
+    source: kairon
+  ontoderive:
+    command: uv
+    args: ["run", "--package", "ontoderive", "python", "-m", "ontoderive.mcp"]
+    description: "Fact-driven knowledge engineering — ToolForge + derive + check"
+    source: kairon
+  cron-service:
+    command: uv
+    args: ["run", "--package", "cron-service", "cron-service", "--mcp"]
+    description: "定时调度引擎 — 作业管理、脚本编排、定时触发"
+    source: runtime
+  sharedbrain-bridge:
+    command: uv
+    args: ["run", "--package", "sharedbrain-bridge", "python", "-m", "sharedbrain_bridge.mcp_server"]
+    description: "SharedBrain 桥接 — 跨 Agent 协调、身份验证、健康检查"
+    source: kairon
+  metaos:
+    command: uv
+    args: ["run", "--package", "metaos", "python", "-m", "metaos.mcp_server"]
+    description: "MetaOS — 编排/治理层，决策门控与系统协同"
+    source: metaos
+  llm-gateway:
+    command: uv
+    args: ["run", "--package", "llm-gateway", "python", "-m", "llm_gateway.mcp_server"]
+    description: "LLM 网关 — 统一推理接口，支持多后端路由与负载均衡"
+    source: kairon
+  mcp-server-sqlite:
+    command: mcp-server-sqlite
+    args: []
+    description: "SQLite 数据库操作 — 查询、建表、CRUD"
+    source: npm
+  mcp-server-apple-events:
+    command: mcp-server-apple-events
+    args: []
+    description: "macOS 原生集成 — Apple 提醒事项和日历"
+    source: npm
+  docker-mcp-gateway:
+    command: docker
+    args: ["mcp", "gateway", "run", "--profile", "default"]
+    description: "Docker MCP Gateway — 73 个工具"
+    source: docker
+    init_timeout: 30
+  gitnexus:
+    command: gitnexus
+    args: ["mcp"]
+    description: "代码仓库知识图谱 — 索引、搜索、分析"
+    source: homebrew
+  zai-mcp-server:
+    command: npx
+    args: ["-y", "@z_ai/mcp-server"]
+    description: "Z.AI MCP — UI转换、文字提取、图表分析"
+    source: npm
+  claude-mcp-serve:
+    command: claude
+    args: ["mcp", "serve"]
+    description: "Claude Code (v2.1) — 跨 Agent 编排"
+    source: agent-cli
+    init_timeout: 20
+  codex-mcp-server:
+    command: codex
+    args: ["mcp-server"]
+    description: "Codex CLI (v0.135) — 跨 Agent 编排"
+    source: agent-cli
+    init_timeout: 20
+  chrome-devtools-mcp:
+    command: npx
+    args: ["-y", "chrome-devtools-mcp@latest"]
+    description: "Chrome DevTools MCP — 浏览器调试"
+    source: npm

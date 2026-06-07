@@ -44,8 +44,13 @@ async def probe_quota() -> dict[str, QuotaInfo]:
 def _probe_provider(provider: str) -> dict[str, Any]:
     """Probe a single provider's quota/usage.
 
-    Returns a dict simulating what a real CLI or API would return.
+    Reads from ~/.runtime/cache/quota_rates.json (refreshed by omo).
     """
+    import json
+    from pathlib import Path
+    
+    cache_file = Path(os.environ.get("RUNTIME_HOME", str(Path.home() / ".runtime"))) / "cache" / "quota_rates.json"
+    
     env_key_map = {
         "deepseek": "DEEPSEEK_API_KEY",
         "openai": "OPENAI_API_KEY",
@@ -55,6 +60,18 @@ def _probe_provider(provider: str) -> dict[str, Any]:
         "ollama": "",
     }
     key = os.environ.get(env_key_map.get(provider, ""), "")
+    
+    if cache_file.exists():
+        try:
+            data = json.loads(cache_file.read_text())
+            quota = data.get("quota", [])
+            for q in quota:
+                if q.get("provider") == provider:
+                    # Codexbar sets 'error' if provider is disabled/unavailable
+                    return q
+        except (json.JSONDecodeError, OSError):
+            pass
+
     if provider == "ollama":
         return {"available": True, "error": None}
     return {"available": bool(key), "error": None if key else {"message": "no API key configured"}}

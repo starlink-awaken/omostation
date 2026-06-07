@@ -233,6 +233,29 @@ async def api_services():
     return results
 
 
+@app.get("/api/compute/status")
+async def api_compute_status():
+    import json
+    from pathlib import Path
+    import os
+    
+    # Read quota from cache
+    cache_file = Path(os.environ.get("RUNTIME_HOME", str(Path.home() / ".runtime"))) / "cache" / "quota_rates.json"
+    quota_data = {"rates": {}, "quota": []}
+    if cache_file.exists():
+        try:
+            quota_data = json.loads(cache_file.read_text())
+        except Exception:
+            pass
+            
+    # Mock nodes for now (or read from M1 SSOT in the future)
+    nodes = [
+        {"id": "macmini", "name": "MacMini 24G", "type": "local", "status": "online", "model": "Ollama"},
+        {"id": "y7000p", "name": "Y7000P 48G", "type": "lan", "status": "online", "model": "LMStudio"},
+        {"id": "cloud", "name": "cc-switch proxy", "type": "cloud", "status": "online", "model": "OpenRouter / DeepSeek"}
+    ]
+    
+    return {"nodes": nodes, "quota": quota_data}
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 @app.get("/api/events")

@@ -32,16 +32,34 @@ MODEL_COST_MAP: dict[str, dict[str, float]] = {
 
 
 def _estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
+    from omo.omo_quota import get_cached_rates_and_quota
+    
     model_lower = model.lower()
-    rates = MODEL_COST_MAP.get(model_lower)
+    
+    # Try dynamic rates first
+    dynamic_data = get_cached_rates_and_quota()
+    rates = dynamic_data.get("rates", {}).get(model_lower)
+    
     if not rates:
-        # Try prefix matching
+        rates = MODEL_COST_MAP.get(model_lower)
+        
+    if not rates:
+        # Try prefix matching in dynamic rates
+        for key, val in dynamic_data.get("rates", {}).items():
+            if model_lower.startswith(key):
+                rates = val
+                break
+        
+    if not rates:
+        # Try prefix matching in static rates
         for key, val in MODEL_COST_MAP.items():
             if model_lower.startswith(key):
                 rates = val
                 break
+                
     if not rates:
         rates = {"input": 0.002, "output": 0.008}  # fallback: ~deepseek rates
+        
     input_cost = (input_tokens / 1000) * rates["input"]
     output_cost = (output_tokens / 1000) * rates["output"]
     return round(input_cost + output_cost, 6)

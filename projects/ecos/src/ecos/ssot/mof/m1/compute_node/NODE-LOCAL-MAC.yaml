@@ -1,0 +1,7 @@
+id: NODE-LOCAL-MAC
+type: compute_node
+architecture: arm64
+os: darwin
+tier: local
+status: active
+description: "当前开发机，极低延迟网络"

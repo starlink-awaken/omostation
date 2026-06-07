@@ -1,0 +1,7 @@
+id: HW-RAM-Y7000P
+type: hardware_asset
+node_ref: NODE-Y7000P
+device_type: memory
+ram_gb: 48.0
+status: active
+description: "Y7000P 搭载的大容量内存，为数据预处理和大型上下文缓存提供空间"

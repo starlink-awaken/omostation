@@ -1,0 +1,23 @@
+# M1 Node: DOMAIN-obsidian-vault
+# Type: Domain | Subtype: DocumentDomain
+# Generated: 2026-06-07
+
+id: DOMAIN-obsidian-vault
+type: Domain
+name: Obsidian Vault
+description: L4 视图层 — 移动端快速捕获入口
+status: active
+domain: meta
+created: '2026-06-07'
+version: 1.0.0
+layer: L4
+properties:
+  bos_uri_pattern: bos://obsidian-vault/**
+  domain_type: document
+  layer: L4
+  governance_tier: 3
+  storage: /Users/xiamingxing/Library/Mobile Documents/iCloud~md~obsidian/Documents
+  capabilities:
+  - capture.note
+  - quick.search
+subtype: DocumentDomain

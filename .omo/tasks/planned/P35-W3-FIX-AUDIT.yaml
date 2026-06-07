@@ -1,0 +1,28 @@
+id: P35-W3-FIX-AUDIT
+phase: 35
+wave: W3
+title: "修 P35 任务 YAML 描述债务 — audit 100 (A+ 守)"
+status: completed
+task_type: governance
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P35-W0-DOMAIN-CHAIN completed"
+depends_on:
+  - P35-W0-DOMAIN-CHAIN
+deliverables:
+  - ".omo/_delivery/phase35-fix-audit.md"
+risk_level: L0
+allowed_operation_level: L0
+source_docs: []
+knowledge_refs: []
+description: |
+  修 P35-W1-W2-COMBO 任务 YAML deliverables 描述式 -> 真实路径.
+  移除 bos_resolver.py 括号描述, 补 test_bos_resolver.py 真实路径.
+  恢复 audit 100.0 (A+) 守 12 wave.
+  参照 P32-W0-DELIVERABLES + P34-W4-FIX-AUDIT 处理方式.
+started_at: '2026-06-07T09:00:00Z'
+completed_at: '2026-06-07T09:00:00Z'
+blocked_by: null
+retry_count: 0

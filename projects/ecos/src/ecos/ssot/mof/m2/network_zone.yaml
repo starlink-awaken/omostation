@@ -1,0 +1,22 @@
+m2_type: network_zone
+version: 1.0.0
+created: '2026-06-07'
+network_zone:
+  m3_parent: StructuralElement.Component
+  description: 网络拓扑区域
+  icon: 🌐
+  stateMachine:
+    active:
+      description: 正常
+      transitions: []
+  requiredProperties:
+    zone_type:
+      type: string
+      description: 区域类型 (lan, wan, localhost)
+    latency_profile:
+      type: string
+      description: 延迟特征 (ultra_low, low, high)
+  optionalProperties:
+    gateway:
+      type: string
+      description: 网关地址

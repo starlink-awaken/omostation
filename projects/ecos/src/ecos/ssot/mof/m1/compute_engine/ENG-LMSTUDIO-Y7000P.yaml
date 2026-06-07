@@ -1,0 +1,9 @@
+id: ENG-LMSTUDIO-Y7000P
+type: compute_engine
+node_ref: NODE-Y7000P
+engine_type: local_server
+base_url: "http://y7000p.local:1234/v1"
+supported_protocols: ["openai"]
+cost_multiplier: 0.0001
+status: active
+description: "Y7000P 上的 LMStudio 高性能推理服务"

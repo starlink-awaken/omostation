@@ -1,0 +1,6 @@
+id: ZONE-LOCALHOST
+type: network_zone
+zone_type: localhost
+latency_profile: ultra_low
+status: active
+description: "本机环回网络，用于本机进程间通信"

@@ -1,0 +1,23 @@
+# M1 Node: DOMAIN-shareddisk
+# Type: Domain | Subtype: StorageDomain
+# Generated: 2026-06-07
+
+id: DOMAIN-shareddisk
+type: Domain
+name: SharedDisk
+description: 大容量存储 — 5.5TiB·媒体/教育/档案/AI
+status: active
+domain: meta
+created: '2026-06-07'
+version: 1.0.0
+layer: L4-Storage
+properties:
+  bos_uri_pattern: bos://shareddisk/**
+  domain_type: storage
+  layer: L4-Storage
+  governance_tier: 0
+  storage: /Volumes/SharedDisk
+  capabilities:
+  - storage.space
+  - storage.catalog
+subtype: StorageDomain

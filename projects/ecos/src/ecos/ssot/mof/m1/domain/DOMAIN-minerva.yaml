@@ -1,0 +1,28 @@
+# M1 Node: DOMAIN-minerva
+# Type: Domain | Subtype: EngineDomain
+# Generated: 2026-06-07
+
+id: DOMAIN-minerva
+type: Domain
+name: Minerva 引擎
+description: 本地优先深度研究系统 — Ollama·SearXNG·Neo4j
+status: active
+domain: meta
+created: '2026-06-07'
+version: 1.0.0
+layer: L2
+properties:
+  bos_uri_pattern: bos://minerva/**
+  domain_type: engine
+  layer: L2
+  governance_tier: 0
+  storage: /Users/xiamingxing/minerva
+  capabilities:
+  - research.run
+  - search.query
+  - health.check
+  entry_points:
+    cli: minerva
+    mcp: minerva-mcp
+    web: http://localhost:8765
+subtype: EngineDomain

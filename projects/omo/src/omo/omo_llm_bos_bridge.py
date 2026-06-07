@@ -20,6 +20,7 @@ P32 收官约束: 不改 agora 核心, 不重启 omo daemon, 0 破坏性操作.
 from __future__ import annotations
 
 import asyncio
+import collections
 import json
 import os
 import subprocess
@@ -177,17 +178,26 @@ async def _resolve_via_agora_subprocess(uri: str, args: dict[str, Any]) -> dict[
       - dict: agora resolve_bos_uri 的 result 字段
       - None: subprocess 失败 (uv/venv 不可用, URI 不在 registry, JSON parse 失败)
     """
-    # P43-W0: 优先用长驻池
-    pool = await _get_agora_pool()
-    if pool is not None:
-        result, err = await pool.invoke(uri, args)
-        if err is not None:
-            _record_agora_failure(uri, err["type"], err["details"])
-            return {"_subprocess_error": err["details"], "transport": "agora_pool"}
-        # 标记 transport 让 invoke_bos_uri_tool 知道走的是长驻池
-        if isinstance(result, dict):
-            result.setdefault("_transport", "agora_pool")
-        return result
+    # P44-W0: 优先用多连接长驻池 manager (P43-W0 单连接池升级)
+    manager = await _get_agora_pool()
+    if manager is not None:
+        pool = await manager.acquire()
+        if pool is not None:
+            try:
+                result, err = await pool.invoke(uri, args)
+                # P44-W1: 僵死检测 — err 含 eof/timeout/broken_pipe 时 alive=False
+                alive = err is None
+                await manager.release(pool, alive=alive)
+                if err is not None:
+                    _record_agora_failure(uri, err["type"], err["details"])
+                    return {"_subprocess_error": err["details"], "transport": "agora_pool"}
+                if isinstance(result, dict):
+                    result.setdefault("_transport", "agora_pool")
+                return result
+            except Exception as exc:
+                await manager.release(pool, alive=False)
+                _record_agora_failure(uri, "invoke_exception", f"{type(exc).__name__}: {exc}")
+                return {"_subprocess_error": f"{type(exc).__name__}: {exc}", "transport": "agora_pool"}
 
     # Fallback: 一次性 subprocess (P42-W2 行为, 长驻池启动失败时)
     result = await _resolve_via_oneoff_subprocess(uri, args)
@@ -205,13 +215,17 @@ class _AgoraPool:
       - 客户端关闭: "QUIT\\n"
       - 服务端退出: EOF on stdin
 
-    单连接串行, asyncio.Lock 同步. 后续 P44+ 可改多进程池.
+    单连接串行, asyncio.Lock 同步.
     """
 
     def __init__(self, cmd: list[str]) -> None:
         self._cmd = cmd
         self._proc: asyncio.subprocess.Process | None = None
         self._lock = asyncio.Lock()
+
+    def is_alive(self) -> bool:
+        """P44-W1: 僵死检测 — returncode 是 None 表示还活着."""
+        return self._proc is not None and self._proc.returncode is None
 
     async def start(self) -> bool:
         try:
@@ -278,9 +292,67 @@ class _AgoraPool:
                     pass
 
 
-# ── Agora 长驻池 singleton ─────────────────────────────
-_POOL: _AgoraPool | None = None
-_POOL_INIT_LOCK = asyncio.Lock()
+class _AgoraPoolManager:
+    """P44-W0: LRU 多连接池, max_size=4, 支持并发 invoke.
+
+    acquire() 拿空闲连接 (无空闲且 active < max 时新建, 否则返 None)
+    release(pool, alive) 还连接 (alive=False 时关掉, LRU 淘汰最旧)
+
+    P44-W1: 死连接由 is_alive() 探测, 死亡池 LRU 淘汰时关闭.
+    """
+
+    def __init__(self, cmd: list[str], max_size: int = 4) -> None:
+        self._cmd = cmd
+        self._max_size = max_size
+        self._idle: collections.deque[_AgoraPool] = collections.deque()
+        self._active = 0
+        self._lock = asyncio.Lock()
+
+    async def acquire(self) -> _AgoraPool | None:
+        async with self._lock:
+            # 先取 idle, 跳过死的
+            while self._idle:
+                p = self._idle.popleft()
+                if p.is_alive():
+                    self._active += 1
+                    return p
+                # 死的, 关掉 (不等)
+                asyncio.create_task(p.close())  # noqa: RUF006
+            # 无 idle, 尝试新建
+            if self._active < self._max_size:
+                p = _AgoraPool(self._cmd)
+                if await p.start():
+                    self._active += 1
+                    return p
+            return None  # 已满
+
+    async def release(self, pool: _AgoraPool, alive: bool) -> None:
+        async with self._lock:
+            self._active = max(0, self._active - 1)
+            if not alive or not pool.is_alive():
+                # 死的, 关掉
+                asyncio.create_task(pool.close())  # noqa: RUF006
+                return
+            self._idle.append(pool)
+            # LRU: idle 超过 max 时淘汰最旧
+            while len(self._idle) > self._max_size:
+                old = self._idle.popleft()
+                asyncio.create_task(old.close())  # noqa: RUF006
+
+    async def close_all(self) -> None:
+        async with self._lock:
+            while self._idle:
+                p = self._idle.popleft()
+                try:
+                    await p.close()
+                except Exception:
+                    pass
+            self._active = 0
+
+
+# ── Agora 长驻池 manager singleton ─────────────────────────────
+_MANAGER: _AgoraPoolManager | None = None
+_MANAGER_INIT_LOCK = asyncio.Lock()
 _DAEMON_SCRIPT_PATH: Path | None = None
 
 
@@ -321,14 +393,18 @@ def _write_agora_daemon_script() -> str | None:
         return None
 
 
-async def _get_agora_pool() -> _AgoraPool | None:
-    """P43-W0: singleton 长驻 agora subprocess 池, 启动失败返 None."""
-    global _POOL
-    if _POOL is not None:
-        return _POOL
-    async with _POOL_INIT_LOCK:
-        if _POOL is not None:
-            return _POOL
+async def _get_agora_pool() -> _AgoraPoolManager | None:
+    """P44-W0: singleton LRU 多连接池 manager, 启动失败返 None.
+
+    P43-W0 是单 _AgoraPool, P44-W0 升级为 _AgoraPoolManager (max=4).
+    P44-W1: 死连接由 manager.release(alive=False) 关闭.
+    """
+    global _MANAGER
+    if _MANAGER is not None:
+        return _MANAGER
+    async with _MANAGER_INIT_LOCK:
+        if _MANAGER is not None:
+            return _MANAGER
         try:
             from omo.omo_paths import PROJECTS_DIR
 
@@ -346,12 +422,14 @@ async def _get_agora_pool() -> _AgoraPool | None:
                 "python",
                 daemon_script,
             ]
-            pool = _AgoraPool(cmd)
-            ok = await pool.start()
-            if not ok:
+            manager = _AgoraPoolManager(cmd, max_size=4)
+            # 预热: 启动 1 个连接, 避免首调用冷启动延迟
+            warm = await manager.acquire()
+            if warm is None:
                 return None
-            _POOL = pool
-            return _POOL
+            await manager.release(warm, alive=True)
+            _MANAGER = manager
+            return _MANAGER
         except Exception:
             return None
 
@@ -424,12 +502,39 @@ async def _resolve_via_oneoff_subprocess(
         return None
 
 
+# ── P44-W3: audit dedup (同 (uri, failure_type) 1 分钟内只 1 条) ─
+_AUDIT_DEDUP_TTL_SEC = 60
+_AUDIT_DEDUP_CACHE: dict[tuple[str, str], float] = {}
+
+
+def _audit_should_record(uri: str, failure_type: str) -> bool:
+    """P44-W3: 返回 True 表示可以 record (新 key 或 1 分钟前已过).
+
+    用 in-memory dict + 60s TTL, 不持久化. 进程重启后清空.
+    """
+    import time as _time
+
+    key = (uri, failure_type)
+    now = _time.time()
+    last = _AUDIT_DEDUP_CACHE.get(key)
+    if last is not None and (now - last) < _AUDIT_DEDUP_TTL_SEC:
+        return False
+    _AUDIT_DEDUP_CACHE[key] = now
+    # 简单 LRU 截断: 超过 1000 条清空 (避免无限增长)
+    if len(_AUDIT_DEDUP_CACHE) > 1000:
+        _AUDIT_DEDUP_CACHE.clear()
+    return True
+
+
 def _record_agora_failure(uri: str, failure_type: str, details: str) -> None:
     """P43-W2: 跨进程 agora 派发失败时 record omo-audit, 让治理 daemon 看到.
+    P44-W3: 加 dedup, 同 (uri, failure_type) 1 分钟内只 1 条.
 
     失败类型: spawn_failed (uv/venv 不可用) / non_zero_exit (agora venv 内异常) /
               json_decode_failed (stdout 不是 JSON) / unknown_bos_uri (POC_SERVICES 没注册)
     """
+    if not _audit_should_record(uri, failure_type):
+        return
     try:
         from omo.omo_audit import record as audit_record  # type: ignore[import-not-found]
 

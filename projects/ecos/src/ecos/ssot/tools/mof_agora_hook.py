@@ -20,7 +20,7 @@ Agora 在处理每个 BOS 请求时调用 pre_check / post_audit。
     - 异常时异步写审计日志，不阻塞请求
 """
 
-import json, yaml, sqlite3, threading, time
+import json, yaml, sqlite3, time
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -122,7 +122,7 @@ def post_audit(bos_uri: str, status_code: int, duration_ms: int = 0):
     """
     后置审计 — Agora 在响应后调用
     
-    异步写审计日志，不阻塞请求。
+    同步写审计日志。Agora Server 是长进程，CLI 模式也不丢失。
     """
     stats["total_audits"] += 1
     
@@ -137,31 +137,31 @@ def post_audit(bos_uri: str, status_code: int, duration_ms: int = 0):
     if entry["anomaly"]:
         stats["anomalies"] += 1
     
-    # Async write (fire-and-forget in thread)
-    def _write():
+    # 同步写入审计日志
+    try:
         AUDIT_LOG.parent.mkdir(parents=True, exist_ok=True)
         with open(AUDIT_LOG, "a") as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-        
-        # Auto-create CARDS for anomalies
-        if entry["anomaly"] and CARDS_DB.exists():
-            try:
-                conn = sqlite3.connect(str(CARDS_DB))
-                now_str = datetime.now(timezone.utc).isoformat()
-                debt_id = f"DEBT-BOS-{now_str[:10]}-{bos_uri.replace('/', '-')[:30]}"
-                conn.execute("""
-                    INSERT OR IGNORE INTO cards (id, type, status, title, domain, priority, summary, content, created_at, updated_at)
-                    VALUES (?, 'debt', 'identified', ?, 'infra', 'P2', ?, ?, ?, ?)
-                """, (debt_id, f"BOS 异常: {bos_uri[:60]}",
-                      f"status={status_code} duration={duration_ms}ms",
-                      f"## mof-bos auto-detect\n- URI: {bos_uri}\n- Status: {status_code}\n- Duration: {duration_ms}ms",
-                      now_str, now_str))
-                conn.commit()
-                conn.close()
-            except:
-                pass
+    except Exception:
+        pass
     
-    threading.Thread(target=_write, daemon=True).start()
+    # 异常时自动创建 CARDS 债务卡片
+    if entry["anomaly"] and CARDS_DB.exists():
+        try:
+            conn = sqlite3.connect(str(CARDS_DB))
+            now_str = datetime.now(timezone.utc).isoformat()
+            debt_id = f"DEBT-BOS-{now_str[:10]}-{bos_uri.replace('/', '-')[:30]}"
+            conn.execute("""
+                INSERT OR IGNORE INTO cards (id, type, status, title, domain, priority, summary, content, created_at, updated_at)
+                VALUES (?, 'debt', 'identified', ?, 'infra', 'P2', ?, ?, ?, ?)
+            """, (debt_id, f"BOS 异常: {bos_uri[:60]}",
+                  f"status={status_code} duration={duration_ms}ms",
+                  f"## mof-bos auto-detect\n- URI: {bos_uri}\n- Status: {status_code}\n- Duration: {duration_ms}ms",
+                  now_str, now_str))
+            conn.commit()
+            conn.close()
+        except Exception:
+            pass
 
 
 def health_check() -> dict:

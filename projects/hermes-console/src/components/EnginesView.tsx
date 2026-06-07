@@ -51,7 +51,14 @@ export default function EnginesView() {
       try {
         const eventData = JSON.parse(e.data);
         
-        if (eventData.type === 'pipeline:step:ok' || eventData.type === 'pipeline:step:error') {
+        if (eventData.type === 'node_running' || eventData.type === 'node_completed' || eventData.type === 'node_failed' || eventData.type === 'node_awaiting_approval') {
+            const nodeId = eventData.payload?.node_id;
+            if (nodeId !== undefined) {
+                setActiveSteps(prev => {
+                    return prev.includes(nodeId) ? prev : [...prev, nodeId];
+                });
+            }
+        } else if (eventData.type === 'pipeline:step:ok' || eventData.type === 'pipeline:step:error') {
             const stepIndex = eventData.payload?.step_index;
             if (stepIndex !== undefined) {
                 setActiveSteps(prev => {
@@ -59,7 +66,7 @@ export default function EnginesView() {
                     return prev.includes(stepId) ? prev : [...prev, stepId];
                 });
             }
-        } else if (eventData.type === 'pipeline:started') {
+        } else if (eventData.type === 'pipeline:started' || eventData.type === 'workflow_started') {
             setActiveSteps([]);
         }
 

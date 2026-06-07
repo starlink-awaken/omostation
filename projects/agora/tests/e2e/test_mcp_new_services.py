@@ -153,7 +153,7 @@ def main():
         "chrome-devtools-mcp",
     ]
 
-    cwd = os.path.expanduser("~/Workspace/projects/kairon")
+    cwd = os.path.expanduser("~/Workspace/projects/agora")
     sys.stderr.write("=" * 60 + "\n")
     sys.stderr.write("Starting agora-mcp subprocess...\n")
     sys.stderr.write("=" * 60 + "\n")

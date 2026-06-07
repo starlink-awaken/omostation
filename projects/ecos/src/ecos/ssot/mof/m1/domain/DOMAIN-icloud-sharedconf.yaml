@@ -1,0 +1,23 @@
+# M1 Node: DOMAIN-icloud-sharedconf
+# Type: Domain | Subtype: ConfigDomain
+# Generated: 2026-06-07
+
+id: DOMAIN-icloud-sharedconf
+type: Domain
+name: iCloud 共享配置
+description: 跨设备配置共享 — Agents/Skills/CC_Switch/Cherry_Studio
+status: active
+domain: meta
+created: '2026-06-07'
+version: 1.0.0
+layer: L4
+properties:
+  bos_uri_pattern: bos://icloud-sharedconf/**
+  domain_type: config
+  layer: L4
+  governance_tier: 3
+  storage: /Users/xiamingxing/SharedConf
+  capabilities:
+  - config.sync
+  - skill.share
+subtype: ConfigDomain

@@ -1,0 +1,29 @@
+# M1 Node: DOMAIN-family
+# Type: Domain | Subtype: DocumentDomain
+# Generated: 2026-06-07
+
+id: DOMAIN-family
+type: Domain
+name: '@家庭生活'
+description: 家庭管理·医疗·育儿·车辆
+status: active
+domain: meta
+created: '2026-06-07'
+version: 1.0.0
+layer: L4
+properties:
+  bos_uri_pattern: bos://family/**
+  domain_type: document
+  layer: L4
+  governance_tier: 1
+  storage: /Users/xiamingxing/Documents/@家庭生活
+  kems_planes:
+  - _control
+  - _knowledge
+  - _storage
+  capabilities:
+  - knowledge.read
+  - task.track
+  entry_points:
+    mcp: domain_read
+subtype: DocumentDomain

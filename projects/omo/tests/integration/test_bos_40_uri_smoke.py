@@ -29,6 +29,13 @@ OMOSTATION_ROOT = Path("/Users/xiamingxing/Workspace")
 BOS_REGISTRY = OMOSTATION_ROOT / ".omo" / "_knowledge" / "bos-registry.json"
 
 
+# ── Pytest markers (P44-W4 上线, CI 按需分组跑) ─────────
+#   pytest -m fast           → 只跑 test_40_uri_registry_loads
+#   pytest -m bos_5domain    → 跑 5 domain 覆盖 (1 测, ~3s)
+#   pytest -m bos_40         → 跑 40 URI 全套 (3 测, ~3s)
+#   pytest                   → 全跑
+
+
 def _load_registry() -> list[dict]:
     return json.loads(BOS_REGISTRY.read_text(encoding="utf-8"))
 
@@ -42,8 +49,10 @@ def _default_args_for(uri: str) -> dict:
     return {"topic": "smoke test"}
 
 
+@pytest.mark.fast
+@pytest.mark.bos_40
 def test_40_uri_registry_loads():
-    """W1 验证: bos-registry.json 含 40 URI."""
+    """P43-W1 验证: bos-registry.json 含 40 URI."""
     regs = _load_registry()
     assert len(regs) == 40, f"Expected 40 URIs, got {len(regs)}"
     domains = Counter(r.get("domain") for r in regs)
@@ -52,13 +61,14 @@ def test_40_uri_registry_loads():
     ), f"Domain distribution drift: {dict(domains)}"
 
 
+@pytest.mark.bos_40
 def test_smoke_25_resolved_15_gap_single_loop():
-    """W1 验证: 40 URI 全部能 invoke, 25 真 resolved + 15 GAP (unknown_bos_uri).
+    """P43-W1 验证: 40 URI 全部能 invoke, 25 真 resolved + 15 GAP (unknown_bos_uri).
 
     P43-W0 长驻池是 module-level singleton, 必须单 asyncio.run() 内调用.
     跑完显式关 pool.
     """
-    from omo.omo_llm_bos_bridge import _POOL
+    from omo.omo_llm_bos_bridge import _MANAGER
 
     async def _run_all():
         regs = _load_registry()
@@ -79,8 +89,8 @@ def test_smoke_25_resolved_15_gap_single_loop():
         return results
 
     results = asyncio.run(_run_all())
-    if _POOL is not None:
-        asyncio.run(_POOL.close())
+    if _MANAGER is not None:
+        asyncio.run(_MANAGER.close_all())
 
     by_status = Counter(s for _, s in results)
     assert by_status.get("resolved", 0) == 25, (
@@ -102,10 +112,12 @@ def test_smoke_25_resolved_15_gap_single_loop():
     print(f"  by (domain, status): {dict(by_domain)}")
 
 
+@pytest.mark.bos_5domain
+@pytest.mark.bos_40
 def test_5_domain_each_resolves_at_least_one():
-    """W1 验证: 5 Domain 全部有 URI, 每个域至少有 1 个 resolved (POC_SERVICES 覆盖)."""
+    """P43-W1 验证: 5 Domain 全部有 URI, 每个域至少有 1 个 resolved (POC_SERVICES 覆盖)."""
     import omo.omo_llm_bos_bridge as bridge
-    bridge._POOL = None  # reset singleton (跨 asyncio.run 边界)
+    bridge._MANAGER = None  # reset singleton (跨 asyncio.run 边界)
 
     async def _check():
         regs = _load_registry()

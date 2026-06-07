@@ -1,0 +1,29 @@
+id: P35-W0-DOMAIN-CHAIN
+phase: 35
+wave: W0
+title: "跨 Domain 串联 — 5 场景验证 (memory→analysis→persona→capability→governance)"
+status: completed
+task_type: test
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P34-VERIFY completed"
+depends_on:
+  - P34-VERIFY
+deliverables:
+  - "projects/agora/tests/integration/test_domain_chain.py"
+  - "projects/omo/tests/integration/test_bos_domain_chain.py"
+  - ".omo/_delivery/phase35-domain-chain.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_delivery/phase34-verify.md"
+knowledge_refs: []
+description: |
+  P35-W0 跨 Domain 串联: 5 场景验证 40 URI 真能跨域协同.
+  守 P32/P33/P34 修复.
+started_at: '2026-06-07T07:00:00Z'
+completed_at: '2026-06-07T07:00:00Z'
+blocked_by: null
+retry_count: 0

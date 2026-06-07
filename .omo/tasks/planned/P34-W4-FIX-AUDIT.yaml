@@ -1,0 +1,27 @@
+id: P34-W4-FIX-AUDIT
+phase: 34
+wave: W4
+title: "修任务 YAML 描述债务 — audit 95→100 (A+ 恢复)"
+status: completed
+task_type: governance
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P34-W0-URI-EXPAND completed"
+depends_on:
+  - P34-W0-URI-EXPAND
+deliverables:
+  - ".omo/_delivery/phase34-fix-audit.md"
+risk_level: L0
+allowed_operation_level: L0
+source_docs: []
+knowledge_refs: []
+description: |
+  修 P34-W0/W1 任务 YAML deliverables 描述式文本 -> 真实文件路径.
+  恢复 audit 100.0 (A+) 守 P33 极限.
+  参照 P32-W0-DELIVERABLES 处理方式.
+started_at: '2026-06-07T05:00:00Z'
+completed_at: '2026-06-07T05:00:00Z'
+blocked_by: null
+retry_count: 0

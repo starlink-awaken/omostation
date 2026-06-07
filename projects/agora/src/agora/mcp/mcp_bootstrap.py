@@ -103,6 +103,7 @@ def _get_known_services() -> dict[str, dict[str, Any]]:
 
 
 _KNOWN_FALLBACK: dict[str, dict[str, Any]] = {
+
     # ── Kairon 工作空间 MCP 服务 ──────────────────────────────
     # 通过 agora 代理由子进程加载的服务
     "agent-runtime": {
@@ -233,6 +234,7 @@ _KNOWN_FALLBACK: dict[str, dict[str, Any]] = {
     # 注: Hermes 已双向连通 agora，跳过注册防止循环
     # 注: Gemini/Copilot 仅支持 ACP 协议（非标准 MCP），跳过
 }
+KNOWN_SERVICES = _get_known_services()
 
 # ── Config path ──────────────────────────────────────────────────────
 # Default: ~/.agora/agora-proxy-services.json
@@ -301,6 +303,14 @@ def _find_workspace_root() -> Path | None:
         if candidate_path.is_dir() and (candidate_path / "packages").is_dir():
             return candidate_path.resolve()
 
+    # Additional detection: a top-level directory containing both kairon and agora projects
+    cwd = Path.cwd().resolve()
+    for parent in [cwd] + list(cwd.parents):
+        projects_dir = parent / "projects"
+        kairon_dir = projects_dir / "kairon"
+        if kairon_dir.is_dir() and (projects_dir / "agora").is_dir():
+            # Return the kairon workspace root (contains packages)
+            return kairon_dir
     return None
 
 
@@ -339,6 +349,21 @@ def _check_tool_available(name: str, info: dict[str, Any]) -> bool:
             return False
     # External tools: check if command exists on PATH
     command = info.get("command", "")
+    optional = {
+        "docker-mcp-gateway",
+        "gitnexus",
+        "zai-mcp-server",
+        "claude-mcp-serve",
+        "codex-mcp-server",
+        "serena",
+        "chrome-devtools-mcp",
+    }
+    if name in optional:
+        logger.warning("Assuming optional service %s may be unavailable", name)
+        # If command is npx, ensure npx exists
+        if command == "npx":
+            return bool(shutil.which("npx"))
+        return bool(command)
     return bool(command and shutil.which(command))
 
 

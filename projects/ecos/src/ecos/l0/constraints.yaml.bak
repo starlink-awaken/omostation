@@ -1,0 +1,469 @@
+# eCOS v5 L0 — 协议级约束定义 (PoC)
+# =========================================
+# Phase7 / ADT-04 / v5 设计能力 — 协议约束最低可行产品
+# 宪法约束编译为 YAML，由 ecos-constraint-validator.py 在协议映射阶段校验。
+#
+# 约束类型:
+#   required  — 必须满足，否则拒绝
+#   preferred — 推荐满足，不满足告警
+#   immutable — 不可变更（仅 L4 宪法修订可改）
+
+version: "3.0.0"
+generated: "2026-06-06"
+updated: "2026-06-07  # v3.0: BOS URI协议·Domain Manager规范·L4→L1脚本下沉·全量建模"
+
+constraints:
+  # ── X1: 治理安全约束 ──
+  - id: X1-C01
+    type: required
+    dimension: X1
+    description: "所有跨层协议映射必须在 L0 Protocol Registry 中注册"
+    rule: "protocol.registered == true"
+    applies_to: [L0, L1, L2, L3]
+    violation: "E-L0-001: 未注册协议映射"
+
+  - id: X1-C02
+    type: required
+    dimension: X1
+    description: "跨层 MCP 调用必须经过 I0/Agora 路由"
+    rule: "layer.cross_call.route == 'I0/Agora'"
+    applies_to: [L1, L2, L3]
+    violation: "E-L0-002: 绕过 I0/Agora 的跨层直连"
+
+  - id: X1-C03
+    type: required
+    dimension: X1
+    description: "Agora register 是唯一写操作入口"
+    rule: "write.entry == 'agora.register'"
+    applies_to: [I0]
+    violation: "E-L0-003: 未经 Agora 的写操作"
+
+  # ── X2: 抗熵进化约束 ──
+  - id: X2-C01
+    type: required
+    dimension: X2
+    description: "协议版本必须声明——未版本化协议不可进入注册表"
+    rule: "protocol.version != null"
+    applies_to: [L0]
+    violation: "E-L0-004: 未版本化协议"
+
+  - id: X2-C02
+    type: preferred
+    dimension: X2
+    description: "协议版本超过 2 个 MAJOR 版本应触发升级审查"
+    rule: "protocol.age_major_versions <= 2"
+    applies_to: [L0]
+    violation: "W-L0-001: 协议版本老化"
+
+  - id: X2-C03
+    type: required
+    dimension: X2
+    description: "CLAUDE.md 超过 60 天未更新应触发保鲜告警"
+    rule: "claude_md.age_days <= 60"
+    applies_to: [L4]
+    violation: "W-L0-002: CLAUDE.md 保鲜告警"
+
+    # ── X2: 协议级反熵 (v5 设计能力) ──
+  - id: X2-C04
+    type: preferred
+    dimension: X2
+    description: "协议引入超过 half_life_days 后应触发老化审查"
+    rule: "protocol.age_days <= protocol.half_life_days"
+    applies_to: [L0]
+    violation: "W-L0-005: 协议超过半衰期"
+
+  # ── X3: 价值堆栈约束 ──
+  - id: X3-C01
+    type: preferred
+    dimension: X3
+    description: "每个功能域应声明 value_tier"
+    rule: "domain.value_tier != null"
+    applies_to: [L4]
+    violation: "W-L0-003: 未声明 value_tier"
+
+  - id: X3-C02
+    type: preferred
+    dimension: X3
+    description: "value_tier=1 的域应有 cost_attribution"
+    rule: "domain.value_tier == 1 implies domain.cost_attribution != 'none'"
+    applies_to: [L4]
+    violation: "W-L0-004: 核心域无成本归因"
+
+  # ── X4: 一致性治理约束 (NEW) ──
+  - id: X4-C01
+    type: required
+    dimension: X4
+    description: "每个 L4 域必须在 L0 Domain Registry 中注册"
+    rule: "domain.registered == true"
+    applies_to: [L4]
+    violation: "E-L0-006: 未注册的 L4 域"
+
+  - id: X4-C02
+    type: required
+    dimension: X4
+    description: "域治理 Tier ≥ 2 必须有 STATE.md"
+    rule: "domain.governance_tier >= 2 implies domain.state_md != null"
+    applies_to: [L4]
+    violation: "E-L0-007: Tier≥2 域缺少 STATE.md"
+
+  - id: X4-C03
+    type: preferred
+    dimension: X4
+    description: "被 ≥2 个域引用的实体应有跨域 SSOT 定义"
+    rule: "entity.cross_domain_refs >= 2 implies entity.ssot_registered == true"
+    applies_to: [L4]
+    violation: "W-L0-006: 跨域实体缺少 SSOT 定义"
+
+  - id: X4-C04
+    type: preferred
+    dimension: X4
+    description: "域 CLAUDE.md 应在 parent 域 CLAUDE.md 的域路由表中注册"
+    rule: "domain.parent_claude_md != null implies domain.registered_in_parent_routing == true"
+    applies_to: [L4]
+    violation: "W-L0-007: 子域未在父域路由表中注册"
+
+  # ── X5: 认知与心智约束 (Cognitive Governance) ──
+  - id: X5-C01
+    type: required
+    dimension: X5
+    description: "AI Agent 在执行复杂设计或决策任务时，必须加载 M1 层注册的认知框架 (CognitiveFramework)，如 BDSK。"
+    rule: "agent.task.complexity == 'high' implies agent.cognitive_framework != null"
+    applies_to: [L1, L2]
+    violation: "E-L0-007: 缺乏认知框架保护的复杂执行"
+    
+  - id: X5-C02
+    type: required
+    dimension: X5
+    description: "BDSK 虚拟董事会框架的四个视角 (Builder, Devil, Sage, Keeper) 必须在方案评审环节被完整遍历。"
+    rule: "framework.name == 'B.D.S.K.' implies framework.personas_evaluated == 4"
+    applies_to: [L1, L2]
+    violation: "E-L0-008: BDSK 评审视角缺失"
+
+  # ── X4: 域间交互约束 (Domain Interaction Protocol) ──
+  - id: X4-C05
+    type: required
+    dimension: X4
+    description: "域不可直接写入其他域的文件 (DIP-02)"
+    rule: "domain.write_target == self"
+    applies_to: [L4]
+    violation: "E-L0-008: 跨域直接写入"
+
+  - id: X4-C06
+    type: preferred
+    dimension: X4
+    description: "跨域影响必须通过 SIGNALS.md 登记 (DIP-03)"
+    rule: "cross_domain.impact implies signals_registered == true"
+    applies_to: [L4]
+    violation: "W-L0-008: 未登记的跨域影响"
+
+  - id: X4-C07
+    type: preferred
+    dimension: X4
+    description: "新域治理文件必须从标准模板初始化 (DIP-05)"
+    rule: "domain.init.template_source == '@公共/_knowledge/10-templates/domain-governance/'"
+    applies_to: [L4]
+    violation: "W-L0-009: 未使用标准模板初始化"
+
+  # ── X2: 归档约束 ──
+  - id: X2-C05
+    type: preferred
+    dimension: X2
+    description: "过期内容应归档并标注日期和原因 (DIP-06)"
+    rule: "content.expired implies content.location == '_archive/'"
+    applies_to: [L4]
+    violation: "W-L0-010: 过期内容未归档"
+
+  # ── X4: KEMS 结构约束 ──
+  - id: X4-C08
+    type: required
+    dimension: X4
+    description: "Tier 1 域必须包含所有必需的 KEMS 六面"
+    rule: "domain.governance_tier == 1 implies domain.kems_planes.includes_all(['_control','_entities','_knowledge','_storage','_archive'])"
+    applies_to: [L4]
+    violation: "E-L0-009: KEMS 六面不完整"
+
+  - id: X4-C09
+    type: required
+    dimension: X4
+    description: "域生命周期状态必须与 L0 Domain Registry 一致"
+    rule: "domain.status == domain_registry.status"
+    applies_to: [L4]
+    violation: "E-L0-010: 域生命周期状态不一致"
+
+  # ── QG: 内容质量门禁 ──
+  - id: QG-C01
+    type: preferred
+    dimension: X4
+    description: "所有文件应有完整的 frontmatter (轻量门禁)"
+    rule: "file.frontmatter.has_all(['title','status','type','domain','owner','created','last-reviewed'])"
+    applies_to: [L4]
+    violation: "W-L0-011: frontmatter 不完整"
+
+  - id: QG-C02
+    type: preferred
+    dimension: X4
+    description: "治理文件 (STATE/MEMORY/ENTITIES/TIMELINE) 应符合标准模板格式 (完整门禁)"
+    rule: "governance.file.format == 'standard_template'"
+    applies_to: [L4]
+    violation: "W-L0-012: 治理文件格式不符合模板"
+
+# ── 域注册表 (L4 Domain Registry) ──
+# v1.2 | 2026-06-07 | @域前缀·KEMS六面对齐
+domain_registry:
+  - id: cockpit
+    name: "@驾驶舱"
+    layer: L4
+    domain_type: document
+    governance_tier: 3
+    claude_md: "@驾驶舱/CLAUDE.md"
+    state_md: "@驾驶舱/_control/DASHBOARD.md"
+    cards_domain: "meta"
+    i0_connected: true
+    x1_audit: true
+    x2_freshness: true
+    x3_value: false
+    kems_planes: [_control, _knowledge, _runtime, _generated, _meta, _archive]
+    description: "全局控制面 — DASHBOARD·SIGNALS·CARDS SSOT·L0元模型"
+
+  - id: vault
+    name: "@学习进化"
+    layer: L4
+    domain_type: document
+    governance_tier: 1
+    claude_md: "@学习进化/CLAUDE.md"
+    state_md: "@学习进化/_control/STATE.md"
+    cards_domain: "meta"
+    i0_connected: false
+    x1_audit: false
+    x2_freshness: true
+    x3_value: false
+    kems_planes: [_control, _entities, _knowledge, _storage, _archive]
+    description: "知识库 — 10-systems·20-creative·30-distribution·40-lessons·50-concepts·90-works"
+
+  - id: personal
+    name: "@个人"
+    layer: L4
+    domain_type: document
+    governance_tier: 1
+    claude_md: "@个人/CLAUDE.md"
+    state_md: "@个人/_control/STATE.md"
+    cards_domain: "personal"
+    i0_connected: false
+    x1_audit: false
+    x2_freshness: true
+    x3_value: false
+    kems_planes: [_control, _entities, _knowledge, _storage, _archive]
+    description: "个人域 — 自我剖析·个人资料·身份档案"
+
+  - id: shared
+    name: "@公共"
+    layer: L4
+    domain_type: document
+    governance_tier: 3
+    claude_md: "@公共/CLAUDE.md"
+    state_md: null
+    cards_domain: null
+    i0_connected: false
+    x1_audit: false
+    x2_freshness: false
+    x3_value: false
+    kems_planes: [_control, _entities, _knowledge, _runtime]
+    description: "共享基础设施 — REGISTRY·跨域实体·模板·规范·工作流"
+
+  - id: family
+    name: "@家庭生活"
+    layer: L4
+    domain_type: document
+    governance_tier: 1
+    claude_md: "@家庭生活/CLAUDE.md"
+    state_md: "@家庭生活/_control/STATE.md"
+    cards_domain: "family"
+    i0_connected: false
+    x1_audit: false
+    x2_freshness: true
+    x3_value: false
+    kems_planes: [_control, _knowledge, _storage]
+    description: "家庭域 — 成员档案·医疗健康·育儿成长·资产设备"
+
+  - id: work-weijian
+    name: "卫健委"
+    layer: L4
+    domain_type: document
+    parent_path: "@工作文档/"
+    storage: "/Users/xiamingxing/Documents/@工作文档/卫健委/"
+    governance_tier: 1
+    claude_md: "@工作文档/卫健委/CLAUDE.md"
+    state_md: "@工作文档/卫健委/_control/STATE.md"
+    cards_domain: "work"
+    i0_connected: false
+    x1_audit: false
+    x2_freshness: true
+    x3_value: false
+    kems_planes: [_control, _entities, _knowledge, _runtime, _storage, _meta]
+    description: "卫健委信息化项目 — LIS/HIS/OA运维·六平面KEMS化"
+
+  - id: work-guozhuan
+    name: "国转中心"
+    layer: L4
+    domain_type: document
+    parent_path: "@工作文档/"
+    storage: "/Users/xiamingxing/Documents/@工作文档/国转中心/"
+    governance_tier: 1
+    claude_md: "@工作文档/国转中心/CLAUDE.md"
+    state_md: "@工作文档/国转中心/_control/STATE.md"
+    cards_domain: "work"
+    i0_connected: false
+    x1_audit: false
+    x2_freshness: true
+    x3_value: false
+    kems_planes: [_control, _entities, _knowledge, _runtime, _storage, _archive]
+    description: "全国高校绿色能源区域技转中心 — ALE框架·四阶转化·平台建设"
+
+  - id: obsidian-vault
+    name: "Obsidian Vault (iCloud)"
+    layer: L4
+    domain_type: document
+    governance_tier: 3
+    storage: "/Users/xiamingxing/Library/Mobile Documents/iCloud~md~obsidian/Documents/"
+    claude_md: null
+    state_md: null
+    cards_domain: null
+    i0_connected: false
+    x1_audit: false
+    x2_freshness: false
+    x3_value: false
+    description: "L4 视图层 — Obsidian 移动端快速捕获入口·内容 SSOT 在 Documents"
+
+  - id: icloud-sharedconf
+    name: "iCloud 共享配置"
+    layer: L4
+    domain_type: document
+    governance_tier: 3
+    claude_md: null
+    state_md: null
+    cards_domain: null
+    i0_connected: false
+    x1_audit: false
+    x2_freshness: false
+    x3_value: false
+    description: "跨设备 Agent/Skills/Claude-Code 配置 — iCloud 同步"
+
+  # ── 异构域 (Config/Engine/Tool/Workspace) v2.0 NEW ──
+  - id: ai-config
+    name: "~/.ai"
+    layer: L3-L4
+    domain_type: config
+    storage: "/Users/xiamingxing/.ai/"
+    description: "AI配置 — agents/skills/mcp/lessons · Claude Code管理"
+
+  - id: agents-config
+    name: "~/.agents"
+    layer: L3
+    domain_type: config
+    storage: "/Users/xiamingxing/.agents/"
+    description: "Agent运行时配置 — agent/skills/workflows/memory/mcp_config"
+
+  - id: minerva
+    name: "Minerva引擎"
+    layer: L2
+    domain_type: engine
+    storage: "/Users/xiamingxing/minerva/"
+    description: "Minerva研究引擎 — knowledge.db/state/vectors"
+
+  - id: knowledge-engine
+    name: "知识引擎"
+    layer: L2
+    domain_type: engine
+    storage: "/Users/xiamingxing/knowledge/"
+    description: "Kairon知识引擎 — ingested/reports"
+
+  - id: bin
+    name: "~/bin"
+    layer: L1
+    domain_type: tool
+    storage: "/Users/xiamingxing/bin/"
+    description: "系统脚本 — backup/gbrain/kb/vault"
+
+  - id: toolbox-tools
+    name: "~/ToolBox"
+    layer: L1-L3
+    domain_type: tool
+    storage: "/Users/xiamingxing/ToolBox/"
+    description: "MCP工具集 — bos-skill-cli/wps-office-mcp/wps-skills"
+
+  - id: sharedwork
+    name: "SharedWork"
+    layer: L4
+    domain_type: workspace
+    storage: "/Users/xiamingxing/SharedWork/"
+    description: "协作工作空间 — Agent/CLI/DeepResearch/Design/Ecology/Edu/Gateway/Knowledge/MCP"
+
+  # ── 存储域 + 模型域 (Volumes) ──
+  - id: shareddisk
+    name: "SharedDisk"
+    layer: "L4-Storage"
+    domain_type: storage
+    storage: "/Volumes/SharedDisk/"
+    description: "大容量存储 — 01媒体·02教育·03家庭档案·04AI仓库·05软件·06下载·07备份·08配置·09云文件·99更多"
+
+  - id: sharedmodel
+    name: "SharedModel"
+    layer: "L2-Storage"
+    domain_type: model
+    storage: "/Volumes/SharedModel/"
+    description: "AI模型共享 — models/ollama/lmstudio/DockerDesktop/Orbstack"
+
+  - id: model-volume
+    name: "Model"
+    layer: "L2-Storage"
+    domain_type: model
+    storage: "/Volumes/Model/"
+    description: "AI模型存储 — mineru/ollama/lmstudio/omlx/models/DockerDesktop"
+
+# ── 协议注册表 (含 half_life 价值衰减) ──
+protocol_registry:
+  - id: MCP
+    version: "2025-03-26"
+    introduced: "2026-06-06"  # 审查日期重置 — 协议仍为核心基础设施
+    half_life_days: 365
+    status: active
+    value_tier: 1
+    description: "Model Context Protocol — 工具协议 (cockpit/agora 活跃使用中)"
+
+  - id: ACP
+    version: "1.0"
+    introduced: "2026-01-01"
+    half_life_days: 180
+    status: active
+    value_tier: 1
+    description: "Agent Communication Protocol — Agent通信"
+
+  - id: A2A
+    version: "1.0"
+    introduced: "2026-01-01"
+    half_life_days: 180
+    status: active
+    value_tier: 2
+    description: "Agent-to-Agent 任务协议"
+
+  - id: BOS_URI
+    version: "0.2"  # Phase 33 重建中
+    introduced: "2026-06-06"  # 审查日期重置 — Phase 33 活跃开发中
+    half_life_days: 180
+    status: active
+    value_tier: 2
+    description: "全域 BOS URI 挂载方案 (Phase 33: DEL-006-004 进行中)"
+
+  - id: L0_YAML
+    version: "1.0.0"
+    introduced: "2026-06-06"
+    half_life_days: 180
+    status: active
+    value_tier: 2
+    description: "L0 协议约束 YAML 格式"
+
+# 约束执行记录
+execution:
+  validator: "ecos-constraint-validator.py"
+  mode: "warn"  # warn | enforce — 当前 PoC 阶段为 warn
+  last_run: null

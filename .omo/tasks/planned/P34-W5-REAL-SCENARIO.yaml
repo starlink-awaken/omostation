@@ -1,0 +1,34 @@
+id: P34-W5-REAL-SCENARIO
+phase: 34
+wave: W5
+title: "真实场景 5/5 ok — 修基础设施让 5 URI 串联全活"
+status: completed
+task_type: feature
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P34-W4-FIX-AUDIT completed"
+depends_on:
+  - P34-W4-FIX-AUDIT
+deliverables:
+  - "projects/agora/src/agora/mcp/bos_resolver.py"
+  - "projects/kairon/packages/ontoderive/src/ontoderive/__main__.py"
+  - "projects/kairon/packages/ontoderive/pyproject.toml"
+  - ".omo/_delivery/phase34-real-scenario.md"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_delivery/phase34-analysis-exec.md"
+knowledge_refs: []
+description: |
+  修 P34-W2 揭出的 3 错误:
+    1. ontoderive 包名错位 (pyproject 指向 engine/, 实际 src/ontoderive/) — 改 pyproject 3 行
+    2. resolver POC_SERVICES 9 缺注册 — 补 9 条 (minerva.draft/audit, codeanalyze.report/lint, iris.connect/transform/validate, ontoderive.audit/fact-check)
+    3. kairon ontoderive 缺 __main__.py — 新建 (iris/codeanalyze W2 已有)
+  真实场景 5/5 ok. 守 audit 100 / agora 12/12 / kairon 0 ruff / daemon 47826.
+  旁路修复 llm-gateway-kernel test 残留 noqa+unused import (audit 100 守卫).
+started_at: '2026-06-07T06:00:00Z'
+completed_at: '2026-06-07T06:00:00Z'
+blocked_by: null
+retry_count: 0

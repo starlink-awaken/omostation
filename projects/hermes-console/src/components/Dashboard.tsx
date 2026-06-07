@@ -6,6 +6,7 @@ import EnginesView from './EnginesView';
 import SettingsView from './SettingsView';
 import WorkflowsView from './WorkflowsView';
 import TopologyView from './TopologyView';
+import ComputeView from './ComputeView';
 import './Dashboard.css';
 
 interface Service {
@@ -96,6 +97,13 @@ export default function Dashboard() {
           >
             <Network size={18} />
             <span>全局拓扑</span>
+          </button>
+          <button 
+            className={`nav-item ${activeTab === 'Compute' ? 'active' : ''}`}
+            onClick={() => setActiveTab('Compute')}
+          >
+            <Cpu size={18} />
+            <span>算力大盘</span>
           </button>
           <button 
             className={`nav-item ${activeTab === 'Engines' ? 'active' : ''}`}
@@ -224,6 +232,10 @@ export default function Dashboard() {
 
           {activeTab === 'Topology' && (
             <TopologyView />
+          )}
+
+          {activeTab === 'Compute' && (
+            <ComputeView />
           )}
 
           {activeTab === 'Engines' && (

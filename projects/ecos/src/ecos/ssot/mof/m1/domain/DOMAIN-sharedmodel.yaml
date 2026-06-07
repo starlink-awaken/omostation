@@ -1,0 +1,23 @@
+# M1 Node: DOMAIN-sharedmodel
+# Type: Domain | Subtype: ModelDomain
+# Generated: 2026-06-07
+
+id: DOMAIN-sharedmodel
+type: Domain
+name: SharedModel
+description: AI 模型仓库 — Mac mini SMB·2TiB
+status: active
+domain: meta
+created: '2026-06-07'
+version: 1.0.0
+layer: L2-Storage
+properties:
+  bos_uri_pattern: bos://sharedmodel/**
+  domain_type: model
+  layer: L2-Storage
+  governance_tier: 0
+  storage: /Volumes/SharedModel
+  capabilities:
+  - model.inventory
+  - model.download
+subtype: ModelDomain

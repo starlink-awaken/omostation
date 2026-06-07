@@ -4,6 +4,8 @@ import ipaddress
 from urllib.parse import urlparse
 
 # 私有/内网地址范围
+# 注意: RFC 5737 文档测试地址 (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24) 未列入，
+# 它们不可路由但被测试代码合法使用。Benchmark 地址 (198.18.0.0/15) 同理。
 _PRIVATE_NETWORKS = [
     ipaddress.ip_network("10.0.0.0/8"),       # RFC 1918
     ipaddress.ip_network("172.16.0.0/12"),    # RFC 1918
@@ -16,10 +18,6 @@ _PRIVATE_NETWORKS = [
     ipaddress.ip_network("0.0.0.0/8"),        # Current network (invalid target)
     ipaddress.ip_network("100.64.0.0/10"),    # CGNAT (RFC 6598)
     ipaddress.ip_network("192.0.0.0/24"),     # IETF Protocol Assignments
-    ipaddress.ip_network("192.0.2.0/24"),     # TEST-NET-1
-    ipaddress.ip_network("198.18.0.0/15"),    # Benchmark testing
-    ipaddress.ip_network("198.51.100.0/24"),  # TEST-NET-2
-    ipaddress.ip_network("203.0.113.0/24"),   # TEST-NET-3
     ipaddress.ip_network("224.0.0.0/4"),      # Multicast
     ipaddress.ip_network("240.0.0.0/4"),      # Reserved
 ]

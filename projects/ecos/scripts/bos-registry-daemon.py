@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+"""
+BOS Registry Daemon — watch L0-constraints.yaml → auto-update routes.json
+
+Monitors the domain_registry in L0-constraints.yaml for changes.
+On change: re-read registry → update ~/.ecos/bos/routes.json → notify MCP.
+
+Usage:
+    python3 bos-registry-daemon.py [--interval 60] [--once]
+
+Designed for launchd or background job.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+import time
+from datetime import datetime
+from pathlib import Path
+
+# ── Paths ──
+L0_CONSTRAINTS = Path.home() / "Documents" / "@学习进化" / "_knowledge" / "10-systems" / "基建架构" / "L0-constraints.yaml"
+ROUTES_JSON = Path.home() / ".ecos" / "bos" / "routes.json"
+DOMAIN_MANAGER = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "services" / "domain_manager.py"
+LOG_FILE = Path.home() / ".ecos" / "bos" / "daemon.log"
+
+
+def log(msg: str) -> None:
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = f"[{ts}] {msg}"
+    print(line)
+    LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(LOG_FILE, "a") as f:
+        f.write(line + "\n")
+
+
+def get_mtime(path: Path) -> float:
+    try:
+        return path.stat().st_mtime
+    except OSError:
+        return 0.0
+
+
+def update_routes() -> bool:
+    """Re-read L0-constraints.yaml and update routes.json.
+    
+    Returns True if routes.json was updated.
+    """
+    if not L0_CONSTRAINTS.exists():
+        log(f"⚠️  L0-constraints.yaml not found: {L0_CONSTRAINTS}")
+        return False
+
+    # Use domain_manager to reload and export routes
+    try:
+        sys.path.insert(0, str(DOMAIN_MANAGER.parent.parent))
+        from importlib.machinery import SourceFileLoader
+        dm = SourceFileLoader("dm", str(DOMAIN_MANAGER)).load_module()
+        registry = dm.load_registry()
+    except Exception as e:
+        log(f"⚠️  domain_manager load failed: {e}")
+        return False
+
+    # Parse domain_registry into routes format
+    routes = {"_generated": datetime.now().isoformat(), "_source": str(L0_CONSTRAINTS), "routes": {}}
+    for entry in registry:
+        domain_id = entry.get("id", entry.get("name", ""))
+        if domain_id:
+            routes["routes"][domain_id] = {
+                "id": domain_id,
+                "name": entry.get("name", ""),
+                "layer": entry.get("layer", "?"),
+                "type": entry.get("domain_type", "?"),
+                "path": str(entry.get("path", "")),
+                "state_md": str(entry.get("state_md", "")),
+                "claude_md": str(entry.get("claude_md", "")),
+                "kems_planes": entry.get("kems_planes", []),
+            }
+
+    # Write routes.json
+    ROUTES_JSON.parent.mkdir(parents=True, exist_ok=True)
+    ROUTES_JSON.write_text(json.dumps(routes, indent=2, ensure_ascii=False), encoding="utf-8")
+    log(f"✅ Updated routes.json: {len(routes['routes'])} domains")
+    return True
+
+
+def notify_mcp() -> None:
+    """Notify MCP server that routes have changed.
+    
+    Creates a touch file that the MCP server can watch.
+    """
+    touch = ROUTES_JSON.parent / ".updated"
+    touch.write_text(datetime.now().isoformat(), encoding="utf-8")
+
+
+def main() -> int:
+    interval = 60
+    run_once = False
+
+    args = sys.argv[1:]
+    for i, arg in enumerate(args):
+        if arg == "--interval" and i + 1 < len(args):
+            interval = int(args[i + 1])
+        elif arg == "--once":
+            run_once = True
+
+    log(f"BOS Registry Daemon starting (interval={interval}s)")
+    
+    if run_once:
+        if update_routes():
+            notify_mcp()
+        return 0
+
+    last_mtime = get_mtime(L0_CONSTRAINTS)
+    update_routes()
+
+    try:
+        while True:
+            time.sleep(interval)
+            current = get_mtime(L0_CONSTRAINTS)
+            if current != last_mtime:
+                log(f"Detected change in L0-constraints.yaml")
+                if update_routes():
+                    notify_mcp()
+                last_mtime = current
+    except KeyboardInterrupt:
+        log("Daemon stopped")
+    
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

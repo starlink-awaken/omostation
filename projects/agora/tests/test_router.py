@@ -250,12 +250,19 @@ class TestIdentityPropagation:
 class TestRouter:
     def setup_method(self):
         import tempfile
+        from unittest.mock import patch
 
         self.tmpdir = tempfile.mkdtemp()
         self.registry = ServiceRegistry(storage_path=str(Path(self.tmpdir) / "test-services.json"))
         self.registry.register(Service("minerva", mcp_endpoint="http://192.0.2.1:8765"))
         self.registry.register(Service("sophia", mcp_endpoint="http://192.0.2.2:9001"))
+        # Prevent L0 global routes from leaking into unit test assertions
+        self._l0_patch = patch("agora.l0_registry_loader.load_routes", return_value={})
+        self._l0_patch.start()
         self.router = Router(self.registry, routes_path=str(Path(self.tmpdir) / "test-routes.json"))
+
+    def teardown_method(self):
+        self._l0_patch.stop()
 
     def test_exact_match(self):
         self.router.add_route("minerva.research_now", "minerva")
