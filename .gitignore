@@ -4,26 +4,22 @@
 
 # ---- 项目目录（独立 git 仓库） ----
 projects/kairon/
-projects/agentmesh/
 projects/gbrain/
 projects/_archived/
 
-# ---- 运行时数据持久层 ----
+# ---- 运行时数据 ----
 data/sharedbrain/data/
 data/kos/
+data/驾驶舱/
 
-# ---- 运行时日志（Hermes Agent 持续写入） ----
-agent-runtime/
+# ---- 运行时日志 ----
+runtime/agent-runtime/
 
 # ---- 构建产物 ----
 .env
 __pycache__/
 *.pyc
 node_modules/
-
-# ---- graphify产物 ----
-graphify-out/
-
 dist/
 *.egg-info/
 *.so
@@ -34,13 +30,16 @@ dist/
 # ---- 缓存 ----
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
 .coverage
 .runtime/
-runtime/*
-!runtime/README.md
-!runtime/run-continuation/
-runtime/run-continuation/*
-!runtime/run-continuation/README.md
+
+# ---- KOS 运行时索引 ----
+kos/
+
+# ---- 外部工具数据 ----
+spaces/
+_derivation_logs/
 
 # ---- 运行时数据 ----
 data/backups/
@@ -65,9 +64,6 @@ data/**/*.sqlite3
 # ---- 第三方工具缓存 ----
 .grok/
 .reasonix/
-kos/
-spaces/
-_derivation_logs/
 
 # ---- Token 存储 ----
 .metaos/
