@@ -1,0 +1,76 @@
+domain: knowledge
+description: "Personal knowledge domain (Obsidian vaults, AI papers, KEMS methodology)"
+authority: local
+owner: "@self"
+write_policy: "open"
+schema_version: "0.1.0"
+
+metadata:
+  domain_id: "knowledge.personal"
+  version: "0.1.0"
+  maintainer: "@self"
+  source: "Obsidian vaults, arXiv, web clippings"
+  sync_mode: "pull"
+
+schemas:
+  article:
+    description: "A knowledge article from any source"
+    fields:
+      title:
+        type: string
+        description: "Article title"
+        required: true
+      tags:
+        type: array
+        description: "Topic tags for categorization"
+        items:
+          type: string
+      source:
+        type: string
+        description: "Origin URL or reference"
+      created:
+        type: string
+        description: "ISO 8601 creation timestamp"
+      vault:
+        type: string
+        description: "Obsidian vault or notebook name"
+      summary:
+        type: string
+        description: "AI-generated or manual abstract"
+        required: false
+
+  concept:
+    description: "A distinct concept in the knowledge graph"
+    fields:
+      name:
+        type: string
+        description: "Canonical concept name"
+        required: true
+        unique: true
+      definition:
+        type: string
+        description: "Concise definition"
+      domain:
+        type: string
+        description: "Primary domain this concept belongs to"
+      related_concepts:
+        type: array
+        description: "Related concept names"
+        items:
+          type: string
+      confidence:
+        type: float
+        description: "Confidence score 0.0–1.0"
+        default: 0.5
+
+conflict_resolution:
+  strategy: "authoritative_wins"
+
+data_flow:
+  inbound:
+    direction: pull
+    schedule: "on_demand"
+    via: "eidos/adapters/knowledge_ingest.py"
+  outbound:
+    direction: push
+    via: "eidos/adapters/knowledge_to_graph.py"

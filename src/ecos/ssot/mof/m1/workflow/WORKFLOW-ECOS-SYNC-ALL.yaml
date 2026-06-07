@@ -1,0 +1,73 @@
+id: WORKFLOW-ECOS-SYNC-ALL
+type: Workflow
+subtype: ScheduledWorkflow
+name: 全量同步管线
+description: "全量域索引同步 + BOS 路由更新"
+status: active
+version: "1.0.0"
+domain: meta
+layer: L0
+created: "2026-06-07"
+bos_uri: bos://ecos/workflow/sync-all
+
+cross_layer:
+  realized_by:
+    - project: ecos
+      package: ecos
+      entrypoint: src/ecos/workflow/definitions/sync-all.yaml
+  invoked_by:
+    - layer: I0
+      component: agora
+      mechanism: MCP 工具调用
+    - layer: L3
+      component: cockpit
+      mechanism: CLI 命令透传
+
+steps:
+  - order: 1
+    name: SyncDomainIndex
+    action: ecos.ecos.sync_domain_index
+    description: "全量同步所有域的索引信息"
+    input:
+      - bos://meta/domain/change
+    output:
+      - domain_sync_report
+    depends_on: []
+  - order: 2
+    name: UpdateRoutes
+    action: ecos.ecos.update_routes
+    description: "更新 BOS 路由表，确保所有 URI 解析正确"
+    input:
+      - domain_sync_report
+    output:
+      - bos://meta/index
+    depends_on:
+      - SyncDomainIndex
+
+execution:
+  mode: sequential
+  max_retries: 3
+  timeout: 600
+  on_failure: abort
+  audit_enabled: true
+
+relations:
+  - type: triggers
+    target: bos://meta/domain/change
+    note: "域变更触发全量同步"
+  - type: data_flows
+    target: bos://meta/index
+    note: "同步后的索引输出到元系统域"
+
+sla:
+  max_execution_time: 120
+  expected_completion_rate: 0.99
+  critical: false
+
+tags:
+  - ecos
+  - sync
+  - domain
+
+maintained_by: ecos
+last_reviewed: "2026-06-07"

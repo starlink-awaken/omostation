@@ -1,0 +1,25 @@
+id: BOSROUTE-ANALYSIS-ONTODERIVE
+type: BosRoute
+name: "bos://analysis/ontoderive/* → Ontoderive 推导"
+description: "bos://analysis/ontoderive/* → kairon/ontoderive，本体推导与推理"
+domain: analysis
+layer: I0
+status: active
+version: "1.0.0"
+created: "2026-06-07"
+
+properties:
+  uri_pattern: "bos://analysis/ontoderive/*"
+  adapter_type: mcp_proxy
+  adapter_config:
+    service_name: "ontoderive"
+    protocol: mcp
+  health_endpoint: "/health"
+
+cross_references:
+  realized_by:
+    project: kairon
+    package: ontoderive
+    entrypoint: src/ontoderive/
+  related_workflows:
+    - WORKFLOW-ONTODERIVE-DLOGOS

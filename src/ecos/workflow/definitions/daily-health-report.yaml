@@ -1,0 +1,26 @@
+# Workflow: 每日健康报告
+name: daily-health-report
+description: "每日自动健康巡检——健康检查+域校验+索引同步+BOS校验+路由更新"
+trigger: "bos://_workflow/daily-health-report"
+schedule: "daily 08:00"
+
+steps:
+  - name: health-check
+    action: health_check
+    description: "9项全系统健康检查"
+    
+  - name: domain-validate
+    action: domain_validate_all
+    description: "全量document域KEMS校验"
+    
+  - name: domain-sync
+    action: domain_sync
+    description: "同步DOMAIN-INDEX.md"
+    
+  - name: bos-validate
+    action: bos_validate
+    description: "BOS URI全量健康检查"
+    
+  - name: routes-update
+    action: domain_routes
+    description: "更新BOS路由表缓存"

@@ -1,0 +1,27 @@
+id: BOSROUTE-ANALYSIS-MINERVA
+type: BosRoute
+name: "bos://analysis/minerva/* → Minerva 深度研究"
+description: "bos://analysis/minerva/* → kairon/minerva，深度研究引擎"
+domain: analysis
+layer: I0
+status: active
+version: "1.0.0"
+created: "2026-06-07"
+
+properties:
+  uri_pattern: "bos://analysis/minerva/*"
+  adapter_type: mcp_proxy
+  adapter_config:
+    service_name: "minerva"
+    protocol: mcp
+  health_endpoint: "/health"
+
+cross_references:
+  realized_by:
+    project: kairon
+    package: minerva
+    entrypoint: src/minerva/
+  related_workflows:
+    - WORKFLOW-MINERVA-DEEP-RESEARCH
+    - WORKFLOW-MINERVA-PONTUS-DAG
+    - WORKFLOW-MINERVA-VECTOR

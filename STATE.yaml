@@ -1,0 +1,15 @@
+system: eCOS
+version: v0.8.0
+phase: 10
+ssb_events: 5234
+cron:
+  enabled: true
+  jobs: 12
+emergence:
+  event_freq_24h: 128
+  event_hourly_avg: 7.6
+  signature_coverage: 1.0
+  role_switch_rate: 0.42
+  role_balance: 0.68
+  error_resilience: 0.81
+  knowledge_velocity: 5234

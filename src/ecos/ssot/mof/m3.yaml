@@ -1,0 +1,438 @@
+# ============================================================================
+# 织星 MOF — M3 元元模型 (Meta-Meta-Model)
+# ============================================================================
+# MOF Layer: M3
+# 定义"定义的方式"——所有 M2 元模型必须遵守的类型系统和本体论基础。
+# 本文件是自反的：它自身的结构也遵守自己定义的规则。
+#
+# 版本: 1.0.0 | 日期: 2026-06-06
+# SSOT: 驾驶舱/元模型/M3-元元模型.yaml
+# 依赖: 学习进化/2-knowledge/基建架构/宪法/ §3.2 (M3 原始定义)
+# ============================================================================
+
+m3:
+  version: "1.0.0"
+  created: "2026-06-06"
+  description: >
+    织星 MOF 的 M3 层。定义四大类元素类型、四大类关系类型、
+    以及统一的属性系统。M2 元模型中的所有要素类型定义都是
+    本 M3 的实例。
+
+  # =========================================================================
+  # §1 元素本体 — Element Taxonomy
+  # =========================================================================
+  # 一切皆 Element。四大根类别覆盖 MetaOS 中所有需要建模的事物。
+  # 每个 Element 类型有: id, name, description, parent(继承), properties, applies_to
+
+  elements:
+
+    # ── 根类型 ──
+    Element:
+      id: Element
+      name: "元素"
+      description: "MOF 中一切类型的根。所有类型最终继承自 Element。"
+      parent: null
+      abstract: true
+      properties:
+        id:        { type: string,  required: true,  description: "全局唯一标识符" }
+        name:      { type: string,  required: true,  description: "人类可读名称" }
+        description: { type: string, required: true, description: "一句话定义" }
+        created:   { type: datetime, required: true, description: "创建时间" }
+        version:   { type: semver,  required: true,  description: "语义版本号" }
+        status:    { type: enum,    required: true,  description: "生命周期状态", values: [draft, active, deprecated, archived] }
+        tags:      { type: list,    required: false, description: "分类标签" }
+
+    # ── 结构元素: 描述"是什么" ──
+    StructuralElement:
+      id: StructuralElement
+      name: "结构元素"
+      description: "描述系统的静态构成——层、组件、实体、产物。回答'是什么'。"
+      parent: Element
+      abstract: true
+      properties:
+        composition: { type: ref, required: false, description: "组合关系：包含哪些子元素" }
+
+    Layer:
+      id: Layer
+      name: "层"
+      description: "架构分层。如 L0 协议编织层、L4 自我层。"
+      parent: StructuralElement
+      abstract: false
+      properties:
+        index:      { type: integer, required: true,  description: "层序号 (L0=0, L4=4, I0=-1, P0=5)" }
+        scope:      { type: enum,    required: true,  description: "层类型", values: [core, integration, governance, product] }
+        debts:      { type: list,    required: false, description: "关联债务 ID 列表" }
+      applies_to: [M2, M1, M0]
+
+    Component:
+      id: Component
+      name: "组件"
+      description: "可部署/可运行的功能单元。如 cockpit、agora、daemon。"
+      parent: StructuralElement
+      abstract: false
+      properties:
+        layer:      { type: ref,    required: true,  description: "所属层 (→Layer)" }
+        protocol:   { type: ref,    required: false, description: "使用的协议 (→Protocol)" }
+        runtime:    { type: enum,   required: true,  description: "运行时状态", values: [active, idle, stopped, unknown] }
+        port:       { type: integer, required: false, description: "监听端口" }
+      applies_to: [M2, M1, M0]
+
+    Entity:
+      id: Entity
+      name: "实体"
+      description: "有身份、可跨域追踪的事物。如人员、组织、项目、卡片。"
+      parent: StructuralElement
+      abstract: false
+      properties:
+        domain:     { type: string,  required: true,  description: "SSOT 所在域" }
+        identity:   { type: map,     required: true,  description: "身份属性 (跨域解析键)" }
+        relations:  { type: list,    required: false, description: "与其他实体的关系" }
+        lifecycle:  { type: enum,    required: true,  description: "生命阶段", values: [emerging, active, declining, archived] }
+      applies_to: [M2, M1, M0]
+
+    Artifact:
+      id: Artifact
+      name: "产物"
+      description: "可寻址的文件/数据产物。如脚本、配置、文档、数据库。"
+      parent: StructuralElement
+      abstract: false
+      properties:
+        path:       { type: path,    required: true,  description: "文件路径或数据源路径" }
+        format:     { type: enum,    required: true,  description: "格式", values: [yaml, markdown, python, sqlite, json, shell] }
+        size:       { type: integer, required: false, description: "字节数" }
+        mtime:      { type: datetime, required: false, description: "最后修改时间" }
+      applies_to: [M2, M1, M0]
+
+    # ── 行为元素: 描述"做什么" ──
+    BehavioralElement:
+      id: BehavioralElement
+      name: "行为元素"
+      description: "描述系统的动态行为——流程、机制、协议。回答'做什么'。"
+      parent: Element
+      abstract: true
+      properties:
+        trigger:    { type: string,  required: false, description: "触发条件" }
+        frequency:  { type: string,  required: false, description: "执行频率" }
+
+    Process:
+      id: Process
+      name: "流程"
+      description: "有明确步骤序列和状态机的工作流。如 CARDS 状态流转、研究管线。"
+      parent: BehavioralElement
+      abstract: false
+      properties:
+        stateMachine: { type: list,  required: true,  description: "状态机定义 [state→transitions]" }
+        steps:        { type: list,  required: true,  description: "步骤序列" }
+        input:        { type: ref,   required: false, description: "输入类型 (→Element)" }
+        output:       { type: ref,   required: false, description: "输出类型 (→Element)" }
+        sla:          { type: map,   required: false, description: "SLA 指标" }
+      applies_to: [M2, M1]
+
+    Mechanism:
+      id: Mechanism
+      name: "机制"
+      description: "自动化或半自动化的运行机制。如 daemon 循环、自愈框架、SLA 追踪。"
+      parent: BehavioralElement
+      abstract: false
+      properties:
+        action:       { type: string, required: true,  description: "执行动作" }
+        feedback:     { type: string, required: false, description: "反馈方式" }
+        fallback:     { type: string, required: false, description: "降级策略" }
+        interval:     { type: integer, required: false, description: "执行间隔(秒)" }
+      applies_to: [M2, M1]
+
+    Protocol:
+      id: Protocol
+      name: "协议"
+      description: "层间或系统间通信协议。如 MCP、ACP、A2A、BOS_URI。"
+      parent: BehavioralElement
+      abstract: false
+      properties:
+        version_spec: { type: semver, required: true,  description: "协议版本" }
+        introduced:   { type: date,   required: true,  description: "引入日期" }
+        half_life:    { type: integer, required: true,  description: "价值半衰期(天)" }
+        value_tier:   { type: integer, required: true,  description: "价值层级(1-5)", min: 1, max: 5 }
+        registered:   { type: boolean, required: true,  description: "是否已在 L0 注册" }
+        mapping:      { type: map,    required: false, description: "协议操作映射" }
+      applies_to: [M2, M1]
+
+    # ── 治理元素: 描述"怎么管" ──
+    GovernanceElement:
+      id: GovernanceElement
+      name: "治理元素"
+      description: "描述系统的治理规则——约束、策略、模式、规范。回答'怎么管'。"
+      parent: Element
+      abstract: true
+      properties:
+        dimension:   { type: enum,   required: true,  description: "所属治理维", values: [X1, X2, X3, X4] }
+        severity:    { type: enum,   required: true,  description: "严重度", values: [critical, high, medium, low] }
+
+    Constraint:
+      id: Constraint
+      name: "约束"
+      description: "必须满足或推荐满足的规则。如 L0 9 条约束。"
+      parent: GovernanceElement
+      abstract: false
+      properties:
+        rule:        { type: string,  required: true,  description: "约束表达式" }
+        type:        { type: enum,    required: true,  description: "约束类型", values: [required, preferred, immutable] }
+        violation:   { type: string,  required: true,  description: "违反时的错误信息" }
+        applies_to_layers: { type: list, required: true, description: "作用层" }
+      applies_to: [M2, M1]
+
+    Policy:
+      id: Policy
+      name: "策略"
+      description: "可配置的治理策略。如保鲜周期、告警阈值、降级条件。"
+      parent: GovernanceElement
+      abstract: false
+      properties:
+        parameter:   { type: map,    required: true,  description: "策略参数" }
+        scope:       { type: ref,    required: true,  description: "作用范围 (→Element)" }
+        override:    { type: boolean, required: false, description: "是否允许覆盖" }
+      applies_to: [M2, M1]
+
+    Pattern:
+      id: Pattern
+      name: "模式"
+      description: "可复用的解决方案模板。如 SSOT 级联、CARDS parent→child。"
+      parent: GovernanceElement
+      abstract: false
+      properties:
+        problem:     { type: string,  required: true,  description: "解决的问题" }
+        context:     { type: string,  required: true,  description: "适用上下文" }
+        solution:    { type: string,  required: true,  description: "解决方案" }
+        known_uses:  { type: list,    required: false, description: "已知应用实例" }
+        anti_pattern: { type: string, required: false, description: "反模式" }
+      applies_to: [M2, M1]
+
+    Specification:
+      id: Specification
+      name: "规范"
+      description: "形式化的规则集合。如 L0-constraints.yaml、CLAUDE.md 规范。"
+      parent: GovernanceElement
+      abstract: false
+      properties:
+        constraints: { type: list,   required: true,  description: "包含的约束 (→Constraint)" }
+        validator:   { type: ref,    required: false, description: "校验器 (→Artifact)" }
+        compliance:  { type: enum,   required: true,  description: "合规状态", values: [full, partial, none] }
+      applies_to: [M2, M1]
+
+    # ── 描述元素: 描述"怎么理解" ──
+    DescriptiveElement:
+      id: DescriptiveElement
+      name: "描述元素"
+      description: "描述系统的抽象表示——模型、架构、视图。回答'怎么理解'。"
+      parent: Element
+      abstract: true
+      properties:
+        perspective: { type: enum, required: true, description: "视角", values: [functional, technical, governance, operational] }
+        formality:   { type: enum, required: true, description: "形式化程度", values: [informal, semiformal, formal] }
+
+    Model:
+      id: Model
+      name: "模型"
+      description: "系统的抽象表示。如统一架构模型、元模型本身。"
+      parent: DescriptiveElement
+      abstract: false
+      properties:
+        source:      { type: ref,    required: false, description: "建模源 (→Element)" }
+        target:      { type: ref,    required: false, description: "建模目标 (→Element)" }
+        mapping:     { type: map,    required: false, description: "映射规则" }
+        projects_to: { type: list,   required: false, description: "可投影为哪些视图" }
+      applies_to: [M2, M1]
+
+    Architecture:
+      id: Architecture
+      name: "架构"
+      description: "系统的组件-连接器-拓扑描述。如 eCOS v5、织星架构。"
+      parent: DescriptiveElement
+      abstract: false
+      properties:
+        components:  { type: list,   required: true,  description: "组件集 (→Component)" }
+        connectors:  { type: list,   required: true,  description: "连接器 (→Protocol)" }
+        topology:    { type: enum,   required: true,  description: "拓扑类型", values: [layered, mesh, hub_spoke, pipeline] }
+        quality_attrs: { type: map,  required: false, description: "质量属性" }
+      applies_to: [M2, M1]
+
+    View:
+      id: View
+      name: "视图"
+      description: "架构的特定投影。如 MADF 8 视图(V1-V8)、DASHBOARD。"
+      parent: DescriptiveElement
+      abstract: false
+      properties:
+        viewpoint:   { type: enum,   required: true,  description: "视点", values: [panoramic, dev, deploy, runtime, functional, ops, governance, data] }
+        generated:   { type: boolean, required: true,  description: "是否自动生成" }
+        source_model: { type: ref,   required: false, description: "源模型 (→Model)" }
+      applies_to: [M2, M1]
+
+  # =========================================================================
+  # §2 关系本体 — Relation Ontology
+  # =========================================================================
+  relations:
+
+    Relation:
+      id: Relation
+      name: "关系"
+      description: "Element 之间的连接。所有关系类型继承自 Relation。"
+      parent: null
+      abstract: true
+      properties:
+        from:       { type: ref,    required: true, description: "源元素" }
+        to:         { type: ref,    required: true, description: "目标元素" }
+        cardinality: { type: string, required: true, description: "基数 (1:1, 1:N, N:M)" }
+
+    # ── 结构关系 ──
+    StructuralRelation:
+      id: StructuralRelation
+      name: "结构关系"
+      description: "元素之间的静态结构关系。"
+      parent: Relation
+      abstract: true
+
+    Contains:
+      id: Contains
+      name: "包含"
+      description: "组合关系——整体包含部分。如 Layer 包含 Component。"
+      parent: StructuralRelation
+      abstract: false
+      properties: { composition: { type: boolean, required: true, description: "是否为强组合(删除整体则删除部分)" } }
+
+    References:
+      id: References
+      name: "引用"
+      description: "指针关系——元素 A 引用元素 B 但不拥有它。"
+      parent: StructuralRelation
+      abstract: false
+
+    # ── 行为关系 ──
+    BehavioralRelation:
+      id: BehavioralRelation
+      name: "行为关系"
+      description: "元素之间的动态行为关系。"
+      parent: Relation
+      abstract: true
+
+    Invokes:
+      id: Invokes
+      name: "调用"
+      description: "元素 A 调用元素 B 的功能。如 daemon 调用 health-check。"
+      parent: BehavioralRelation
+      abstract: false
+
+    Triggers:
+      id: Triggers
+      name: "触发"
+      description: "元素 A 的事件触发元素 B 的执行。"
+      parent: BehavioralRelation
+      abstract: false
+
+    DataFlow:
+      id: DataFlow
+      name: "数据流"
+      description: "数据从 A 流向 B。"
+      parent: BehavioralRelation
+      abstract: false
+
+    # ── 治理关系 ──
+    GovernanceRelation:
+      id: GovernanceRelation
+      name: "治理关系"
+      description: "元素之间的治理约束关系。"
+      parent: Relation
+      abstract: true
+
+    Constrains:
+      id: Constrains
+      name: "约束"
+      description: "约束 C 约束元素 E 的行为。"
+      parent: GovernanceRelation
+      abstract: false
+
+    Audits:
+      id: Audits
+      name: "审计"
+      description: "审计器 A 审计元素 E 的合规性。"
+      parent: GovernanceRelation
+      abstract: false
+
+    Attributes:
+      id: Attributes
+      name: "归因"
+      description: "将成本/价值归因到元素。"
+      parent: GovernanceRelation
+      abstract: false
+
+    # ── 语义关系 ──
+    SemanticRelation:
+      id: SemanticRelation
+      name: "语义关系"
+      description: "元素之间的本体论语义关系。"
+      parent: Relation
+      abstract: true
+
+    EquivalentTo:
+      id: EquivalentTo
+      name: "等价"
+      description: "元素 A 与元素 B 语义等价。如 5+4+1 的 L4 ≡ L0-L4 的 L4。"
+      parent: SemanticRelation
+      abstract: false
+
+    Generalizes:
+      id: Generalizes
+      name: "泛化"
+      description: "元素 A 是元素 B 的泛化（B 继承 A）。"
+      parent: SemanticRelation
+      abstract: false
+
+    Realizes:
+      id: Realizes
+      name: "实现"
+      description: "元素 A 实现了元素 B 的定义。如 M1 节点实现 M2 元模型。"
+      parent: SemanticRelation
+      abstract: false
+
+    DependsOn:
+      id: DependsOn
+      name: "依赖"
+      description: "元素 A 依赖元素 B 才能正常运作。"
+      parent: SemanticRelation
+      abstract: false
+
+  # =========================================================================
+  # §3 属性系统 — Property System
+  # =========================================================================
+  # 所有 Element 和 Relation 的属性遵循以下类型系统。
+
+  property_types:
+    string:    { base: primitive, description: "文本字符串" }
+    integer:   { base: primitive, description: "整数" }
+    float:     { base: primitive, description: "浮点数" }
+    boolean:   { base: primitive, description: "布尔值" }
+    datetime:  { base: primitive, description: "ISO-8601 日期时间" }
+    date:      { base: primitive, description: "ISO-8601 日期" }
+    semver:    { base: string,    description: "语义版本号 (x.y.z)", pattern: "^\\d+\\.\\d+\\.\\d+$" }
+    path:      { base: string,    description: "文件系统路径" }
+    enum:      { base: string,    description: "枚举值（须声明 values）" }
+    ref:       { base: string,    description: "指向其他 Element 的引用" }
+    list:      { base: collection, description: "有序列表" }
+    map:       { base: collection, description: "键值对映射" }
+
+  # =========================================================================
+  # §4 自反性声明 — Self-Referential Closure
+  # =========================================================================
+  # M3 自身的结构也遵守 M3 定义的规则。以下声明 M3 中每个类型在 M3 自身中的实例化。
+
+  self_referential:
+    - "M3.Element 是 M3.Element 的一个实例（自举）"
+    - "M3.Relation 是 M3.Element 的一个实例"
+    - "M3.property_types 是 M3.StructuralElement 的一个实例"
+    - "本文件本身是 M3.Specification 的一个 M1 实例"
+
+# ============================================================================
+meta:
+  maintained_by: "织星 MOF 治理框架"
+  next_review: "2026-07-06"
+  change_log:
+    - "v1.0.0 (2026-06-06): 初始版本 — 16 Element 类型(4大类) + 12 Relation 类型(4大类) + 属性系统"

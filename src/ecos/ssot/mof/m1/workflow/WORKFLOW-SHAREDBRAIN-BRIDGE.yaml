@@ -1,0 +1,106 @@
+id: WORKFLOW-SHAREDBRAIN-BRIDGE
+type: Workflow
+subtype: PipelineWorkflow
+name: SharedBrain 桥接管线
+description: "SharedBrain 知识图谱 ↔ KOS 语义网双向桥接同步，保证知识一致性"
+status: active
+version: "1.0.0"
+domain: persona
+layer: L2
+created: "2026-06-07"
+bos_uri: bos://ecos/workflow/sharedbrain-bridge
+
+cross_layer:
+  realized_by:
+    - project: kairon
+      package: sot-bridge
+      entrypoint: src/sot_bridge/
+  invoked_by:
+    - layer: I0
+      component: agora
+      mechanism: MCP 工具调用
+    - layer: L3
+      component: cockpit
+      mechanism: CLI 命令透传
+
+steps:
+  - order: 1
+    name: ReadSharedBrainGraph
+    action: read_sharedbrain_graph
+    description: "读取 SharedBrain 知识图谱中的节点和边数据"
+    input:
+      - bos://persona/sharedbrain/update
+    output:
+      - graph_nodes[]
+      - graph_edges[]
+    depends_on: []
+  - order: 2
+    name: ExtractKnowledgeNodes
+    action: extract_knowledge_nodes
+    description: "从图谱中提取可迁移的知识节点"
+    input:
+      - graph_nodes[]
+      - graph_edges[]
+    output:
+      - knowledge_nodes[]
+    depends_on:
+      - ReadSharedBrainGraph
+  - order: 3
+    name: MapToKOSOntology
+    action: map_to_kos_ontology
+    description: "将知识节点映射到 KOS 语义网本体结构"
+    input:
+      - knowledge_nodes[]
+    output:
+      - kos_entities[]
+    depends_on:
+      - ExtractKnowledgeNodes
+  - order: 4
+    name: SyncBidirectional
+    action: sync_bidirectional
+    description: "双向同步 — KOS 变更回写 SharedBrain，SharedBrain 新数据写入 KOS"
+    input:
+      - kos_entities[]
+    output:
+      - bos://memory/kos
+    depends_on:
+      - MapToKOSOntology
+  - order: 5
+    name: AuditConsistency
+    action: audit_consistency
+    description: "审计 SharedBrain 与 KOS 的知识一致性"
+    input:
+      - bos://persona/sharedbrain
+      - bos://memory/kos
+    output:
+      - consistency_audit_report
+    depends_on:
+      - SyncBidirectional
+
+execution:
+  mode: sequential
+  max_retries: 3
+  timeout: 600
+  on_failure: abort
+  audit_enabled: true
+
+relations:
+  - type: triggers
+    target: bos://persona/sharedbrain/update
+    note: "SharedBrain 更新触发桥接同步"
+  - type: data_flows
+    target: bos://memory/kos
+    note: "桥接结果输出到 KOS 本体"
+
+sla:
+  max_execution_time: 600
+  expected_completion_rate: 0.95
+  critical: false
+
+tags:
+  - sharedbrain
+  - bridge
+  - knowledge-graph
+
+maintained_by: kairon/sot-bridge
+last_reviewed: "2026-06-07"

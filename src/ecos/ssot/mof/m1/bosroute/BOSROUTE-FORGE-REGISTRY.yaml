@@ -1,0 +1,23 @@
+id: BOSROUTE-FORGE-REGISTRY
+type: BosRoute
+name: "bos://forge/registry/* → Agora 注册表"
+description: "bos://forge/registry/* → agora，服务注册与发现"
+domain: forge
+layer: I0
+status: active
+version: "1.0.0"
+created: "2026-06-07"
+
+properties:
+  uri_pattern: "bos://forge/registry/*"
+  adapter_type: internal
+  adapter_config:
+    service_name: "agora"
+    protocol: mcp
+  health_endpoint: "/health"
+
+cross_references:
+  realized_by:
+    project: agora
+    entrypoint: src/agora/
+  related_workflows: []

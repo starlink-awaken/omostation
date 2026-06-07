@@ -1,0 +1,12 @@
+id: ENG-VERTEX-AI
+type: compute_engine
+node_ref: NODE-CLOUD
+engine_type: cloud_api
+base_url: "https://{region}-aiplatform.googleapis.com/"
+supported_protocols: ["vertex"]
+auth_source: GOOGLE_CLOUD_PROJECT + GOOGLE_APPLICATION_CREDENTIALS
+network_zone: "cloud"
+cost_multiplier: 1.3
+status: active
+capabilities: ["chat", "vision", "embedding"]
+description: "Google Vertex AI"

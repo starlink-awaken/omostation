@@ -1,0 +1,18 @@
+# M1 Pricing Nodes — 模型定价数据
+# 覆盖 AetherForge 内置默认值。文件名为 MODEL-PRICING-* 以便 M1Loader 识别。
+
+- model_id: gpt-4o
+  provider: openai
+  display_name: "GPT-4o"
+  cost_per_1k_input: 0.0025
+  cost_per_1k_output: 0.01
+  context_window: 128000
+  capabilities: [chat, vision, tools]
+
+- model_id: deepseek-chat
+  provider: deepseek
+  display_name: "DeepSeek Chat"
+  cost_per_1k_input: 0.0005
+  cost_per_1k_output: 0.0015
+  context_window: 65536
+  capabilities: [chat]

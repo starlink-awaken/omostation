@@ -5,6 +5,7 @@ name: Test 工作流
 description: 测试工作流——单元测试→集成测试→E2E→报告
 status: active
 domain: meta
+bos_uri: bos://ecos/workflow/test
 created: '2026-06-06'
 version: 1.0.0
 layer: L3

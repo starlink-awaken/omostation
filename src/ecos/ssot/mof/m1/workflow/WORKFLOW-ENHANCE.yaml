@@ -5,6 +5,7 @@ name: Enhance 工作流
 description: 增强工作流——代码审查→重构→优化→验证
 status: active
 domain: meta
+bos_uri: bos://ecos/workflow/enhance
 created: '2026-06-06'
 version: 1.0.0
 layer: L3

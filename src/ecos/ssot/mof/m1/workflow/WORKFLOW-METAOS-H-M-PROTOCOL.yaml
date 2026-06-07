@@ -1,0 +1,115 @@
+id: WORKFLOW-METAOS-H-M-PROTOCOL
+type: Workflow
+subtype: PipelineWorkflow
+name: MetaOS 六步 H-M 标准协议
+description: "H-M 交互核心协议 — 权限判定 → 路由分发 → M层执行 → 免疫检测 → 结果组装 → H确认"
+status: active
+version: "1.0.0"
+domain: omo
+layer: L2
+created: "2026-06-07"
+bos_uri: bos://ecos/workflow/metaos-h-m-protocol
+
+cross_layer:
+  realized_by:
+    - project: metaos
+      package: metaos
+      entrypoint: src/metaos/core/engine.py
+  invoked_by:
+    - layer: I0
+      component: agora
+      mechanism: MCP 工具调用
+    - layer: L3
+      component: cockpit
+      mechanism: CLI 命令透传
+
+steps:
+  - order: 1
+    name: DecisionGate
+    action: decision_gate
+    description: "决策权限判定 — 校验请求来源和权限范围"
+    input:
+      - bos://omo/decision/request
+    output:
+      - authorized_request
+    depends_on: []
+  - order: 2
+    name: RouterDispatch
+    action: router_dispatch
+    description: "将授权请求路由分发到对应的认知框架和执行器"
+    input:
+      - authorized_request
+    output:
+      - routed_request
+    depends_on:
+      - DecisionGate
+  - order: 3
+    name: MLayerExecute
+    action: m_layer_execute
+    description: "M 层实际执行决策逻辑"
+    input:
+      - routed_request
+    output:
+      - execution_result
+    depends_on:
+      - RouterDispatch
+  - order: 4
+    name: ImmuneMonitor
+    action: immune_monitor
+    description: "免疫系统实时监测执行过程，检测异常和违规"
+    input:
+      - execution_result
+    output:
+      - immune_verdict
+    depends_on:
+      - MLayerExecute
+  - order: 5
+    name: ResultAssembly
+    action: result_assembly
+    description: "组装执行结果和免疫审查结论"
+    input:
+      - execution_result
+      - immune_verdict
+    output:
+      - assembled_result
+    depends_on:
+      - ImmuneMonitor
+  - order: 6
+    name: HConfirm
+    action: h_confirm
+    description: "H 层最终确认或驳回决策结果"
+    input:
+      - assembled_result
+    output:
+      - bos://omo/decision/result
+    depends_on:
+      - ResultAssembly
+
+execution:
+  mode: sequential
+  max_retries: 3
+  timeout: 600
+  on_failure: abort
+  audit_enabled: true
+
+relations:
+  - type: triggers
+    target: bos://omo/decision/request
+    note: "决策请求触发 H-M 协议"
+  - type: data_flows
+    target: bos://omo/decision/result
+    note: "协议结果返回决策完成状态"
+
+sla:
+  max_execution_time: 600
+  expected_completion_rate: 0.99
+  critical: true
+
+tags:
+  - protocol
+  - h-m
+  - decision
+  - metaos
+
+maintained_by: metaos
+last_reviewed: "2026-06-07"

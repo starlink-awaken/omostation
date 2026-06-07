@@ -1,0 +1,184 @@
+# ============================================================================
+# 织星 MOF — M2 本体映射 (Ontology Mapping)
+# ============================================================================
+# MOF Layer: M2 (辅助)
+# 定义 8 种要素类型之间的本体论语义关系。
+# 基于 M3 的关系本体，实例化为 M2 层面的具体关系网。
+#
+# 版本: 1.0.0 | 日期: 2026-06-06
+# SSOT: 驾驶舱/元模型/M2-本体映射.yaml
+# ============================================================================
+
+m2_ontology:
+  version: "1.0.0"
+
+  # =========================================================================
+  # §1 等价映射 — 跨语言/跨视图的同一事物
+  # =========================================================================
+  equivalences:
+    - { a: "M3.Element",     b: "Element",     relation: EquivalentTo, note: "M3 定义 ≡ MOF 内部类型系统" }
+    - { a: "L0-L4 的 L4",   b: "5+4+1 的 L4",  relation: EquivalentTo, note: "两个架构视图中的自我层是同一个" }
+    - { a: "织星架构",       b: "eCOS v5 架构", relation: EquivalentTo, note: "同一架构的正式名称与代号" }
+    - { a: "CARDS卡片",      b: "Entity(卡片)", relation: EquivalentTo, note: "CARDS 中的卡片是 Entity 的子类型" }
+    - { a: "X4(一致性)",     b: "SSOT 级联原则", relation: EquivalentTo, note: "X4 治理维是 SSOT 原则的形式化实现" }
+
+  # =========================================================================
+  # §2 泛化层次 — 类型继承关系
+  # =========================================================================
+  generalizations:
+    # 8要素 → M3 父类型
+    - { child: "Model",        parent: "DescriptiveElement",  note: "模型是一种描述元素" }
+    - { child: "Architecture", parent: "DescriptiveElement",  note: "架构是一种描述元素" }
+    - { child: "Mechanism",    parent: "BehavioralElement",   note: "机制是一种行为元素" }
+    - { child: "Protocol",     parent: "BehavioralElement",   note: "协议是一种行为元素" }
+    - { child: "Pattern",      parent: "GovernanceElement",   note: "模式是一种治理元素" }
+    - { child: "Specification", parent: "GovernanceElement",  note: "规范是一种治理元素" }
+    - { child: "Process",      parent: "BehavioralElement",   note: "流程是一种行为元素" }
+    - { child: "Entity",       parent: "StructuralElement",   note: "实体是一种结构元素" }
+
+    # 子类型关系 (M2 内部)
+    - { child: "Constraint",   parent: "Specification",      note: "约束是规范的基本组成单元" }
+    - { child: "Card",         parent: "Entity",             note: "CARDS 卡片是实体的子类型" }
+    - { child: "Script",       parent: "Artifact",           note: "脚本是产物的子类型" }
+    - { child: "View",         parent: "Model",              note: "视图是模型的特定投影" }
+
+  # =========================================================================
+  # §3 组成关系 — 整体-部分
+  # =========================================================================
+  compositions:
+    - { whole: "Architecture",  parts: ["Layer", "Component", "Protocol"], note: "架构由层+组件+协议组成" }
+    - { whole: "Specification", parts: ["Constraint"],                    note: "规范由多条约束组成" }
+    - { whole: "Process",       parts: ["State", "Step"],                 note: "流程由状态+步骤组成" }
+    - { whole: "Model",         parts: ["MappingRule"],                   note: "模型由映射规则组成" }
+    - { whole: "Pattern",       parts: ["Problem", "Context", "Solution"], note: "模式由问题+上下文+解决方案组成" }
+    - { whole: "Entity",        parts: ["Identity", "Attribute", "Relation"], note: "实体由身份+属性+关系组成" }
+
+  # =========================================================================
+  # §4 依赖关系 — 谁依赖谁
+  # =========================================================================
+  dependencies:
+    - { dependent: "Architecture", depends_on: "Model",       note: "架构依赖模型来定义组件间映射" }
+    - { dependent: "Protocol",     depends_on: "Specification", note: "协议在 L0 注册表(规范)中注册" }
+    - { dependent: "Mechanism",    depends_on: "Artifact",    note: "机制由脚本(产物)实现" }
+    - { dependent: "Process",      depends_on: "Entity",      note: "流程由实体(owner)执行" }
+    - { dependent: "Specification", depends_on: "Constraint", note: "规范由具体约束定义" }
+    - { dependent: "Pattern",      depends_on: "Architecture", note: "模式从架构实践中提炼" }
+    - { dependent: "Entity",       depends_on: "Specification", note: "实体结构受规范约束(如 SENSITIVE.md)" }
+    - { dependent: "Model",        depends_on: "Architecture", note: "模型描述架构的抽象表示" }
+
+  # =========================================================================
+  # §5 推导规则 — 推理引擎用
+  # =========================================================================
+  derivation_rules:
+    # 传递性规则
+    - { id: DR-01, description: "组件使用的协议衰减 → 组件存在协议风险",
+        rule: "if (Component uses Protocol) and (Protocol.status == 'aging') then Component.risk += 'protocol_decay'",
+        priority: medium }
+
+    - { id: DR-02, description: "核心域无成本归因 → 价值盲区",
+        rule: "if (Entity.domain in tier_1_domains) and (not exists CostAttribution for Entity) then Entity.risk += 'value_blind_spot'",
+        priority: high }
+
+    - { id: DR-03, description: "规范约束未关联校验器 → 空转约束",
+        rule: "if (Specification.constraints.size > 0) and (Specification.validator == null) then Specification.risk += 'unenforced'",
+        priority: medium }
+
+    - { id: DR-04, description: "架构演化但模型未更新 → 模型漂移",
+        rule: "if (Architecture.status == 'evolving') and (Model.mtime < Architecture.mtime) then Model.risk += 'drift'",
+        priority: high }
+
+    - { id: DR-05, description: "机制停止但依赖组件仍活跃 → 僵尸依赖",
+        rule: "if (Mechanism.status == 'stopped') and (exists Component with Component.depends_on contains Mechanism) then Component.risk += 'zombie_dep'",
+        priority: medium }
+
+    # 逆关系推导
+    - { id: DR-06, description: "被约束反向推导约束源",
+        rule: "if (Constrains.from=C and Constrains.to=E) then E.constrained_by includes C",
+        priority: low }
+
+    - { id: DR-07, description: "SSOT 来源反向推导引用者",
+        rule: "if (Entity.sources contains F) then F.referenced_by includes Entity",
+        priority: low }
+
+    # 完整性推导
+    - { id: DR-08, description: "M1 节点缺失检测",
+        rule: "if (M2_type has examples > 0) and (M1_nodes of M2_type == 0) then M2_type.coverage = 'missing'",
+        priority: medium }
+
+  # =========================================================================
+  # §6 跨域本体桥接 — Entity Resolution
+  # =========================================================================
+  entity_resolution:
+    description: "同一实体在不同域的表示——如何识别它们指向同一事物"
+    resolution_keys:
+      - { key: "身份证号", domains: ["家庭生活", "领域知识库"], note: "最精确但敏感" }
+      - { key: "姓名+出生日期", domains: ["家庭生活", "领域知识库", "工作文档"], note: "常用组合键" }
+      - { key: "统一社会信用代码", domains: ["工作文档/卫健委", "领域知识库/组织"], note: "组织实体" }
+      - { key: "CARDS owner 字段", domains: ["CARDS", "领域知识库/人物"], note: "Agent 通过 owner 关联" }
+      - { key: "文件路径", domains: ["Vault", "工作文档"], note: "实体声明文件的路径" }
+
+    resolution_examples:
+      - entity: "夏明星"
+        occurrences:
+          - { domain: "领域知识库/人物/实体/夏明星.md", role: "SSOT", identity: "name=夏明星" }
+          - { domain: "家庭生活/00.管理系统/ENTITIES.md", role: "域属性(财务/医疗)", identity: "name=夏明星" }
+          - { domain: "CARDS (cards.db)", role: "卡片owner", identity: "owner=xiamingxing (13张)" }
+          - { domain: "工作文档/卫健委", role: "工作人员", identity: "信息中心·科员" }
+        resolution_status: resolved
+        resolution_confidence: high
+
+      - entity: "房山区卫健委"
+        occurrences:
+          - { domain: "领域知识库/组织/实体/", role: "SSOT", identity: "name=房山区卫生健康委员会" }
+          - { domain: "工作文档/卫健委/", role: "工作域实例", identity: "域根目录" }
+          - { domain: "CARDS (cards.db)", role: "domain=work", identity: "domain过滤" }
+        resolution_status: resolved
+        resolution_confidence: high
+
+  # =========================================================================
+  # §7 使用场景 — 上层能力封装
+  # =========================================================================
+  scenarios:
+    # 场景封装：将 MOF 复杂性隐藏在使用场景背后
+    register_protocol:
+      description: "注册新协议 — 一步完成 L0 注册+M1声明+约束校验"
+      steps:
+        - { action: "mof-design Protocol", tool: "交互式或模板填充", output: "M1 Protocol 节点声明" }
+        - { action: "mof-validate", tool: "自动", output: "合规报告" }
+        - { action: "mof-compile --type=Protocol", tool: "自动", output: "注册到 L0-constraints.yaml + 编译约束函数" }
+        - { action: "mof-drive --template=protocol_stub", tool: "自动", output: "协议实现桩代码" }
+      input: { name: "协议名称", version: "1.0.0", half_life: 180, description: "..." }
+      output: "协议已在 L0 注册·M1 节点已创建·约束已编译"
+
+    audit_system:
+      description: "全域一致性审计 — 一键检查 M1↔M0 漂移"
+      steps:
+        - { action: "mof-scan --refresh", tool: "自动", output: "最新 M1 节点清单" }
+        - { action: "mof-audit", tool: "自动", output: "漂移报告" }
+        - { action: "mof-derive --risks", tool: "自动", output: "风险链" }
+        - { action: "CARDS create", tool: "自动(如有漂移)", output: "DEBT 卡片" }
+      trigger: "daemon 每 6h 或手动触发"
+      output: "health-digest.md 更新"
+
+    evolve_architecture:
+      description: "架构演进 — 变更追踪+影响分析+一致性保证"
+      steps:
+        - { action: "mof-design Architecture --evolve", tool: "交互式", output: "架构变更方案" }
+        - { action: "mof-derive --impact", tool: "自动", output: "影响分析(哪些组件/协议/流程受影响)" }
+        - { action: "mof-validate --all", tool: "自动", output: "变更后整体合规性" }
+        - { action: "mof-drive --update-views", tool: "自动", output: "更新受影响视图" }
+      input: { change_description: "新增 X4 一致性治理维", affected: ["L0-constraints.yaml", "CLAUDE_COWORK_GLOBAL.md"] }
+
+    resolve_entity:
+      description: "跨域实体解析 — 同一个实体在多个域的表示"
+      steps:
+        - { action: "mof-scan --type=Entity", tool: "自动", output: "全量实体清单" }
+        - { action: "mof-derive --entity-resolution", tool: "自动", output: "跨域匹配+置信度" }
+        - { action: "mof-drive --merge-entities", tool: "交互式", output: "合并后的统一实体视图" }
+      example: "查询 '夏明星' → 返回 4 个域的出现+关系+SSOT 指针"
+
+meta:
+  maintained_by: "织星 MOF 治理框架"
+  next_review: "2026-07-06"
+  change_log:
+    - "v1.0.0 (2026-06-06): 初始版本 — 等价映射·泛化层次·组成·依赖·推导规则(8条)·实体解析·4场景"

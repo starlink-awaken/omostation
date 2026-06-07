@@ -1,0 +1,24 @@
+id: BOSROUTE-MEMORY-GBRAIN
+type: BosRoute
+name: "bos://memory/gbrain/* → gbrain 知识数据库"
+description: "bos://memory/gbrain/* → gbrain，TypeScript 知识数据库"
+domain: memory
+layer: I0
+status: active
+version: "1.0.0"
+created: "2026-06-07"
+
+properties:
+  uri_pattern: "bos://memory/gbrain/*"
+  adapter_type: mcp_proxy
+  adapter_config:
+    service_name: "gbrain"
+    protocol: mcp
+  health_endpoint: "/health"
+
+cross_references:
+  realized_by:
+    project: gbrain
+    entrypoint: src/
+  related_workflows:
+    - WORKFLOW-GBRAIN-KNOWLEDGE-SYNC
