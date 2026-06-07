@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "aetherforge.fullname" . }}
+  labels:
+    {{- include "aetherforge.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    {{- toYaml .Values.strategy | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- include "aetherforge.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "aetherforge.labels" . | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "{{ .Values.monitoring.enabled }}"
+        prometheus.io/port: "{{ .Values.mcp.port }}"
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "aetherforge.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: aetherforge
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - aetherforge-mcp
+          env:
+            - name: AETHERFORGE_MCP_PORT
+              value: "{{ .Values.mcp.port }}"
+            - name: AETHERFORGE_MCP_TRANSPORT
+              value: "{{ .Values.mcp.transport }}"
+            - name: AETHERFORGE_CONFIG
+              value: /etc/aetherforge/aetherforge.yaml
+            # Provider API keys
+            - name: OPENAI_API_KEY
+              value: "{{ .Values.providerKeys.openai }}"
+            - name: ANTHROPIC_API_KEY
+              value: "{{ .Values.providerKeys.anthropic }}"
+            - name: GOOGLE_API_KEY
+              value: "{{ .Values.providerKeys.gemini }}"
+            - name: DEEPSEEK_API_KEY
+              value: "{{ .Values.providerKeys.deepseek }}"
+            - name: AZURE_OPENAI_API_KEY
+              value: "{{ .Values.providerKeys.azure.apiKey }}"
+            - name: AZURE_OPENAI_ENDPOINT
+              value: "{{ .Values.providerKeys.azure.endpoint }}"
+            - name: AWS_ACCESS_KEY_ID
+              value: "{{ .Values.providerKeys.aws.accessKeyId }}"
+            - name: AWS_SECRET_ACCESS_KEY
+              value: "{{ .Values.providerKeys.aws.secretAccessKey }}"
+            - name: AWS_REGION
+              value: "{{ .Values.providerKeys.aws.region }}"
+            - name: GOOGLE_CLOUD_PROJECT
+              value: "{{ .Values.providerKeys.google.project }}"
+          ports:
+            - name: mcp
+              containerPort: {{ .Values.mcp.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: mcp
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: mcp
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: config
+              mountPath: /etc/aetherforge
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "aetherforge.fullname" . }}-config
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

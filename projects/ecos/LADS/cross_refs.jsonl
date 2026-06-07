@@ -1,0 +1,3 @@
+{"link_id": "r1", "source": "a", "target": "b", "score": 0.9}
+{"link_id": "r2", "source": "b", "target": "c", "score": 0.8}
+{"link_id": "r3", "source": "c", "target": "a", "score": 0.7}

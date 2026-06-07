@@ -1,0 +1,28 @@
+# M1 Network Scanner Types — 网络发现类型定义
+
+id: NET-SCANNER
+type: network_scanner_config
+scan_methods:
+  mdns:
+    enabled: true
+    timeout_seconds: 3
+    known_hosts:
+      - "macmini.local"
+      - "y7000p.local"
+      - "imac.local"
+      - "nas.local"
+  tailscale:
+    enabled: true
+    timeout_seconds: 5
+  proxy:
+    enabled: true
+    config_paths:
+      - "~/.config/clash/config.yaml"
+      - "~/Library/Application Support/ClashX/config.yaml"
+      - "~/Library/Application Support/ClashX Meta/config.yaml"
+      - "~/.config/sing-box/config.json"
+  icloud:
+    enabled: true
+    patterns:
+      - "ClashX*/config.yaml"
+      - "Proxy*/config.yaml"

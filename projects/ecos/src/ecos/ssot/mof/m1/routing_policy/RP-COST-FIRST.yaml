@@ -1,0 +1,13 @@
+id: RP-COST-FIRST
+type: routing_policy
+strategy: cost_first
+weights:
+  cost: 0.7
+  quota: 0.3
+constraints:
+  max_cost_per_1k_input: 0.01
+  min_quota_pct: 5
+fallback:
+  enabled: true
+  max_retries: 1
+  cooldown_seconds: 10

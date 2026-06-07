@@ -871,6 +871,21 @@ def invoke_stdio(
             "error": f"unknown_bos_uri: {uri} (registered: {len(POC_SERVICES)})",
             "hint": hint.strip(),
         }
+    if service.transport == "mcp_stdio":
+        # P54-W0: mcp_stdio 通过 resolve_bos_uri 调用 (async → sync bridge)
+        import asyncio as _asyncio
+
+        try:
+            result = _asyncio.run(resolve_bos_uri(uri, args))
+        except RuntimeError:
+            # 可能已在 event loop 中 (e.g. pytest-asyncio)
+            loop = _asyncio.get_event_loop()
+            result = loop.run_until_complete(resolve_bos_uri(uri, args))
+        result.setdefault("uri", uri)
+        result.setdefault("canonical_uri", canonical_uri)
+        result.setdefault("request_id", "mcp-" + canonical_uri.replace("/", "-"))
+        return result
+
     if service.transport != "stdio":
         return {
             "uri": uri,

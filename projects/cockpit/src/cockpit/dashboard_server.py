@@ -97,7 +97,49 @@ _LAYER_SOURCES: list[dict] = [
 
 
 def _fetch_layer_status(source: dict) -> dict:
-    """Fetch a single layer's status via HTTP."""
+    """Fetch a single layer's status — try direct import first, then HTTP."""
+
+    # I0 Agora — always HTTP (separate process)
+    if source["layer"] == "I0":
+        return _fetch_http(source)
+
+    # L2 omo — try direct import
+    if source["layer"] == "L2":
+        try:
+            from omo.omo_dashboard import _load_json as _omo_load
+            omo_dir = Path(os.environ.get("OMO_DIR",
+                            str(Path.home() / "Workspace" / ".omo")))
+            system = _omo_load(omo_dir / "state" / "system.yaml")
+            return {
+                "layer": "L2",
+                "name": "omo",
+                "status": "ok",
+                "data": {"system": system, "source": "direct_import"},
+            }
+        except Exception:
+            return _fetch_http(source)
+
+    # L1 runtime — try direct import
+    if source["layer"] == "L1":
+        try:
+            from runtime.i0 import i0_status
+            status = i0_status() if i0_status else {}
+            return {
+                "layer": "L1",
+                "name": "runtime",
+                "status": "ok",
+                "data": {"summary": {"total_layers": 3, "healthy": 1},
+                         "status": status, "source": "direct_import"},
+            }
+        except Exception:
+            return _fetch_http(source)
+
+    # L0 ecos — HTTP fallback only
+    return _fetch_http(source)
+
+
+def _fetch_http(source: dict) -> dict:
+    """Fetch a layer's status via HTTP."""
     import urllib.request
     try:
         req = urllib.request.Request(source["url"], method="GET")

@@ -1,0 +1,24 @@
+apiVersion: v2
+name: aetherforge
+description: AetherForge — 你的个人 AI 算力中心 (LLM Gateway + Compute Mesh + Swarm Engine)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+icon: https://raw.githubusercontent.com/aetherforge/aetherforge/main/docs/icon.png
+
+keywords:
+  - llm
+  - gateway
+  - mesh
+  - compute
+  - agent
+  - multi-agent
+  - ai
+
+home: https://aetherforge.dev
+sources:
+  - https://github.com/aetherforge/aetherforge
+
+maintainers:
+  - name: AetherForge Team
+    email: team@aetherforge.dev

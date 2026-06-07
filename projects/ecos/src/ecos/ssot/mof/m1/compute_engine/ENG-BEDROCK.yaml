@@ -1,0 +1,12 @@
+id: ENG-BEDROCK
+type: compute_engine
+node_ref: NODE-CLOUD
+engine_type: cloud_api
+base_url: "https://bedrock-runtime.{region}.amazonaws.com/"
+supported_protocols: ["bedrock"]
+auth_source: AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY
+network_zone: "cloud"
+cost_multiplier: 1.2
+status: active
+capabilities: ["chat", "vision"]
+description: "AWS Bedrock"

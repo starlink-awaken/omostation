@@ -14534,15 +14534,65 @@
       "payload": {
         "uri": "bos://memory/kos/search"
       }
+    },
+    {
+      "id": "evt_1780874079_5ea385",
+      "time": "2026-06-07T23:14:39Z",
+      "source": "agora.server.mcp",
+      "type": "registry:service.registered",
+      "trace_id": "",
+      "payload": {
+        "name": "mcp-test"
+      }
+    },
+    {
+      "id": "evt_1780874079_2d5f87",
+      "time": "2026-06-07T23:14:39Z",
+      "source": "agora.server.mcp",
+      "type": "registry:service.registered",
+      "trace_id": "",
+      "payload": {
+        "name": "rest-test"
+      }
+    },
+    {
+      "id": "evt_1780874079_c87560",
+      "time": "2026-06-07T23:14:39Z",
+      "source": "agora.server.mcp",
+      "type": "registry:service.registered",
+      "trace_id": "",
+      "payload": {
+        "name": "a2a-param-test"
+      }
+    },
+    {
+      "id": "evt_1780874079_f7615a",
+      "time": "2026-06-07T23:14:39Z",
+      "source": "agora.server.mcp",
+      "type": "registry:service.registered",
+      "trace_id": "",
+      "payload": {
+        "name": "list-test"
+      }
+    },
+    {
+      "id": "evt_1780874079_1c7739",
+      "time": "2026-06-07T23:14:39Z",
+      "source": "mcp-test",
+      "type": "test:mcp",
+      "trace_id": "",
+      "payload": {
+        "msg": "hello"
+      }
     }
   ],
   "subscriptions": [
     {
-      "id": "sub_4c48d96b",
-      "service": "test-bos",
-      "pattern": "bos:memory:kos:search",
+      "id": "sub_48f51a28",
+      "service": "mcp-caller",
+      "pattern": "test:*",
       "callback_url": "",
-      "created": "2026-06-07T08:21:17Z"
+      "created": "2026-06-07T23:14:39Z"
     }
   ],
   "max_events": 1000

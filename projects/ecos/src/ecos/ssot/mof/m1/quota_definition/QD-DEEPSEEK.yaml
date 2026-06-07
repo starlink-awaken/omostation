@@ -1,0 +1,12 @@
+# M1 Quota Definition — 配额定义
+
+id: QD-DEEPSEEK
+type: quota_definition
+provider: deepseek
+quota_model: prepaid
+unit: CNY
+source: codexbar
+check_command: "codexbar usage --provider deepseek --format json"
+refresh_interval: 300
+cost_per_1k_input: 0.0005
+cost_per_1k_output: 0.0015

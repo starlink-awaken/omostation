@@ -5,6 +5,7 @@
     "ai-config_default": "ai-config",
     "bin_default": "bin",
     "cards_default": "cards",
+    "catalog_default": "catalog",
     "cockpit_default": "cockpit",
     "ecos_default": "ecos",
     "family_default": "family",

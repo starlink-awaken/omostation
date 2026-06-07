@@ -1,1 +1,2 @@
 {"ts": "2026-06-06T18:57:16.599390+00:00", "action": "reject", "extension_id": "ecos.kernel.sandbox", "status": "blocked", "details": "Subprocess blocked: b u n"}
+{"ts": "2026-06-07T23:03:41.348801+00:00", "action": "reject", "extension_id": "ecos.kernel.sandbox", "status": "blocked", "details": "Write blocked: /Users/xiamingxing/Library/Application Support/fastmcp/version_cache.json (mode=w)"}

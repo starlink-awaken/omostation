@@ -1,0 +1,102 @@
+# AetherForge Helm Chart — Production Deployment Values
+
+# ── Image ──────────────────────────────────────────────────────────
+image:
+  repository: ghcr.io/aetherforge/aetherforge
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# ── MCP Server ─────────────────────────────────────────────────────
+mcp:
+  enabled: true
+  port: 8000
+  transport: sse  # stdio | sse
+
+# ── Gateway ────────────────────────────────────────────────────────
+gateway:
+  autoDetect: true
+  defaultProvider: ""
+  defaultModel: ""
+
+# ── Rate Limiter ───────────────────────────────────────────────────
+rateLimiter:
+  enabled: true
+  defaultTpm: 100000
+  defaultRpm: 100
+
+# ── Topology ───────────────────────────────────────────────────────
+topology:
+  scanOnStart: true
+  healthCheckInterval: 60
+  probeLocal: false  # disable local daemon probing in K8s
+  detectCloud: true
+
+# ── Deployment ─────────────────────────────────────────────────────
+replicaCount: 1
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 1Gi
+
+# ── Service ────────────────────────────────────────────────────────
+service:
+  type: ClusterIP
+  port: 8000
+
+# ── Ingress ────────────────────────────────────────────────────────
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: aetherforge.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+# ── Autoscaling ────────────────────────────────────────────────────
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+
+# ── Monitoring ─────────────────────────────────────────────────────
+monitoring:
+  enabled: false
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+
+# ── Provider API Keys ──────────────────────────────────────────────
+# Set these via `--set` or values file, never commit to git
+providerKeys:
+  openai: ""
+  anthropic: ""
+  gemini: ""
+  deepseek: ""
+  azure:
+    apiKey: ""
+    endpoint: ""
+  aws:
+    accessKeyId: ""
+    secretAccessKey: ""
+    region: "us-east-1"
+  google:
+    project: ""
+    applicationCredentials: ""
+
+# ── Node Selector / Tolerations / Affinity ─────────────────────────
+nodeSelector: {}
+tolerations: []
+affinity: {}
