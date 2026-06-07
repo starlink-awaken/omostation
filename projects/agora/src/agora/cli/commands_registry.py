@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import shutil
 from datetime import datetime
 
@@ -190,8 +191,8 @@ def cmd_config(_args):
         "Healthy": len(registry.list_healthy()),
         "Events file": "agora-events.json",
         "Trace file": "trace_log.jsonl",
-        "Dashboard": "http://localhost:7430",
-        "Metrics": "http://localhost:7430/metrics",
+        "Dashboard": os.environ.get("AGORA_DASHBOARD_URL", "http://localhost:7430"),
+        "Metrics": os.environ.get("AGORA_METRICS_URL", "http://localhost:7430/metrics"),
     }
     out.print_key_value(config_data, "配置状态")
 

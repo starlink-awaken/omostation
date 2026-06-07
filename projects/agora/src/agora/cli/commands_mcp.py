@@ -14,7 +14,9 @@ def cmd_web(_args):
     """Start Web Dashboard."""
     from agora.web.app import main as web_main  # type: ignore[import-not-found]
 
-    print("Agora Dashboard -> http://localhost:7430")
+    import os
+    dashboard_url = os.environ.get("AGORA_DASHBOARD_URL", "http://localhost:7430")
+    print(f"Agora Dashboard -> {dashboard_url}")
     return web_main()
 
 
@@ -38,10 +40,10 @@ def cmd_completion(args):
 
     shell = getattr(args, 'shell', 'bash')
     if shell == 'fish':
-        print(f"# Add to ~/.config/fish/config.fish:")
-        print(f'#   agora completion --shell fish | source')
+        print("# Add to ~/.config/fish/config.fish:")
+        print('#   agora completion --shell fish | source')
         print()
-        print(f"complete -c agora -f")
+        print("complete -c agora -f")
         for c in sorted(cmds):
             print(f"complete -c agora -n 'not __fish_seen_subcommand_from {' '.join(cmds)}' -a {c}")
     else:
