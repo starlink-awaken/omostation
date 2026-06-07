@@ -1,7 +1,7 @@
 # M1 Mechanism: MECH-BOS-MCP-STDIO
 id: MECH-BOS-MCP-STDIO
 type: Mechanism
-name: MCP Stdio 标准协议适配器
+name: MCP Stdio 适配器
 domain: meta
 layer: I0
 status: active
@@ -9,5 +9,5 @@ version: 1.0.0
 created: '2026-06-07'
 properties:
   trigger: on-connect
-  source: agora/mcp/bos_protocol.py:MCPStdioAdapter
+  source: agora/mcp/bos_protocol.py
 relations: []

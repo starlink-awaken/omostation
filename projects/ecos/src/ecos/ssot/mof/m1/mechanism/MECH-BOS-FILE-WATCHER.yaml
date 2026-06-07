@@ -1,7 +1,7 @@
 # M1 Mechanism: MECH-BOS-FILE-WATCHER
 id: MECH-BOS-FILE-WATCHER
 type: Mechanism
-name: BOS 配置文件热监听
+name: BOS 配置文件监听
 domain: meta
 layer: I0
 status: active
@@ -10,7 +10,4 @@ created: '2026-06-07'
 properties:
   trigger: file_mtime
   source: agora/mcp/bos_middleware.py:ConfigWatcher
-relations:
-- type: DependsOn
-  from: MECH-BOS-FILE-WATCHER
-  to: MECH-BOS-RATE-LIMITER
+relations: []
