@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import shlex
 import subprocess
-from datetime import datetime, timezone
 from pathlib import Path
 
 from .omo_contract_request import (
@@ -48,9 +46,11 @@ from .omo_promotion_request import (
     build_promotion_approval_request,
     promotion_approval_ref,
 )
+from .omo_redaction import redact_sensitive_text
 from .omo_task_schema import validate_task_file
 from .omo_worker_core import (
     _append_unique,
+    _build_launch_argv,
     _default_enabled_worker_id,
     _dispatch_allowed_write_paths,
     _find_planned_task_file,
@@ -60,6 +60,7 @@ from .omo_worker_core import (
     _utc_now,
     _write_yaml,
 )
+from .omo_worker_dispatch import dispatch_task
 
 def _launch_worker_from_prompt(
     root: Path,

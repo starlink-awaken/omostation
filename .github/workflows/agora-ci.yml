@@ -11,6 +11,7 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@v3
       - name: Install dependencies
-        run: cd projects/agora && uv sync
+        # P41-W1 fix: skip [kairon] extra — projects/kairon is a separate repo (.gitignore'd)
+        run: cd projects/agora && uv sync --no-extra kairon
       - name: Run tests
         run: cd projects/agora && uv run pytest tests/ --ignore=tests/e2e -q

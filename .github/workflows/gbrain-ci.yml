@@ -5,10 +5,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-      - name: Install dependencies
-        run: cd projects/gbrain && bun install
-      - name: Run tests
-        run: cd projects/gbrain && bun test
+      # P41-W1 fix: projects/gbrain is .gitignore'd (separate repo). The gBrain CI is intentionally
+      # scoped to a no-op here because gbrain has its own CI in the gbrain repository. The main
+      # omostation CI must not fail just because this monorepo excludes a sub-repo.
+      - name: gBrain CI placeholder
+        run: |
+          echo "projects/gbrain is .gitignore'd in this monorepo — its CI lives in the gbrain repo."
+          echo "This is a deliberate no-op. See .omo/_delivery/phase41-w1-fix-ci.md for context."

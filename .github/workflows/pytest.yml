@@ -10,5 +10,7 @@ jobs:
           python-version: "3.14"
       - name: Set up uv
         uses: astral-sh/setup-uv@v3
-      - name: Run kairon tests
-        run: cd projects/kairon && make test
+      - name: Run omo unit tests
+        # P41-W1 fix: projects/kairon is .gitignore'd (separate repo). Run omo tests instead — the
+        # only python project fully tracked in this monorepo.
+        run: cd projects/omo && uv sync && uv run pytest tests/ -q
