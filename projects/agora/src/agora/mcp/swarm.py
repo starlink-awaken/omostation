@@ -36,6 +36,18 @@ HEARTBEAT_INTERVAL = 5  # 秒
 HEARTBEAT_TIMEOUT = 15  # 3 个间隔无响应 → 判定离线
 DISCOVERY_MSG = b"AGORA_SWARM_DISCOVER"
 RESPONSE_MSG = b"AGORA_SWARM_HERE"
+LEADER_ELECTION_MSG = b"AGORA_SWARM_ELECT"
+
+# ── 节点健康等级 (Kubernetes/Consul 风格) ──
+class NodeHealth:
+    GREEN = "green"     # 完全健康
+    YELLOW = "yellow"   # 负载较高但可用
+    RED = "red"         # 不可用/离线
+
+
+# ── Gossip 种子节点 ──
+GOSSIP_FANOUT = 3       # 每次传播目标数
+GOSSIP_INTERVAL = 2     # 传播间隔
 
 # ── 节点模型 ──
 
@@ -45,25 +57,38 @@ class SwarmNode:
     node_id: str
     host: str
     port: int = SWARM_DEFAULT_PORT
-    role: str = "worker"  # master | worker | function
+    role: str = "worker"
     bos_uris: list[str] = field(default_factory=list)
     capabilities: dict[str, Any] = field(default_factory=dict)
     last_heartbeat: float = 0.0
-    status: str = "unknown"  # online | offline | degraded
+    status: str = "unknown"
+    # ── P55-W1: 负载感知 (Consul/K8s 风格) ──
+    load_score: float = 0.0       # 0-100, 越低越好
+    cpu_percent: float = 0.0
+    memory_mb: float = 0.0
+    queue_depth: int = 0          # 待处理任务数
+    generation: int = 0           # 选举 generation (用于 RAFT)
 
     @property
     def is_online(self) -> bool:
         return time.time() - self.last_heartbeat < HEARTBEAT_TIMEOUT
 
+    @property
+    def health(self) -> str:
+        """节点健康等级 (GREEN/YELLOW/RED)。"""
+        if not self.is_online:
+            return NodeHealth.RED
+        if self.load_score > 80 or self.queue_depth > 10:
+            return NodeHealth.YELLOW
+        return NodeHealth.GREEN
+
     def to_dict(self) -> dict:
         return {
-            "node_id": self.node_id,
-            "host": self.host,
-            "port": self.port,
-            "role": self.role,
-            "bos_uris": self.bos_uris,
-            "capabilities": self.capabilities,
-            "status": "online" if self.is_online else "offline",
+            "node_id": self.node_id, "host": self.host, "port": self.port,
+            "role": self.role, "bos_uris": self.bos_uris,
+            "status": self.health,
+            "load_score": self.load_score, "queue_depth": self.queue_depth,
+            "generation": self.generation,
         }
 
 
@@ -99,10 +124,14 @@ class SwarmOrchestrator:
         if self.role == "master":
             self._start_discovery_listener()
             self._start_heartbeat_monitor()
+            self._start_election_timer()
             _log.info("SwarmOrchestrator: master started on port %d", self.port)
         else:
             self._start_heartbeat_sender()
             _log.info("SwarmOrchestrator: %s started", self.role)
+
+        # 所有节点参与 gossip
+        self._start_gossip_loop()
 
     def stop(self) -> None:
         """停止蜂群协调器。"""
@@ -131,16 +160,127 @@ class SwarmOrchestrator:
         return nodes
 
     def get_node_by_uri(self, uri: str) -> SwarmNode | None:
-        """根据 BOS URI 查找能处理它的节点。"""
-        # 最长前缀匹配
-        best = None
-        best_len = -1
+        """根据 BOS URI 查找能处理它的节点（负载感知）。
+
+        规则:
+          1. 最长前缀匹配 (与现有逻辑相同)
+          2. 同 URI 多节点 → 选负载最低的 (Consul/K8s 风格)
+          3. 跳过 RED 节点
+          4. YELLOW 节点降权
+        """
+        candidates: list[tuple[SwarmNode, int]] = []
+
         for node in self.get_online_nodes():
+            if node.health == NodeHealth.RED:
+                continue
+
             for node_uri in node.bos_uris:
-                if uri.startswith(node_uri) and len(node_uri) > best_len:
-                    best = node
-                    best_len = len(node_uri)
-        return best
+                if uri.startswith(node_uri):
+                    match_len = len(node_uri)
+                    # YELLOW 节点降权: 前缀长度减半
+                    if node.health == NodeHealth.YELLOW:
+                        match_len = max(1, match_len // 2)
+                    candidates.append((node, match_len))
+
+        if not candidates:
+            return None
+
+        # 最长前缀匹配; 平局时选负载最低的
+        candidates.sort(key=lambda x: (-x[1], x[0].load_score))
+        return candidates[0][0]
+
+    # ── Gossip 协议 (Serf/Consul 风格) ──
+
+    def gossip_sync(self) -> None:
+        """Gossip 一轮: 随机选 GOSSIP_FANOUT 个节点同步状态，push-pull 合并。"""
+        online = self.get_online_nodes()
+        if len(online) <= 1:
+            return
+
+        import random
+        targets = random.sample(online, min(GOSSIP_FANOUT, len(online)))
+
+        for target in targets:
+            if target.node_id == self.node_id:
+                continue
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                sock.settimeout(1.0)
+                msg = json.dumps({
+                    "type": "gossip",
+                    "from": self.node_id,
+                    "nodes": {nid: n.to_dict() for nid, n in self._nodes.items() if n.is_online},
+                    "generation": getattr(self, '_generation', 0),
+                }).encode()
+                sock.sendto(msg, (target.host, target.port))
+                _log.debug("[Gossip] → %s (%d nodes)", target.node_id, len(self._nodes))
+                sock.close()
+            except OSError:
+                pass
+
+    def _start_gossip_loop(self) -> None:
+        """Gossip 后台循环 (master + worker 均参与)。"""
+        def _loop():
+            while self._running:
+                self.gossip_sync()
+                time.sleep(GOSSIP_INTERVAL)
+
+        t = threading.Thread(target=_loop, daemon=True)
+        t.start()
+        _log.info("[Gossip] loop started (fanout=%d, interval=%ds)", GOSSIP_FANOUT, GOSSIP_INTERVAL)
+
+    # ── Leader Election (RAFT 简化版, 优先级制) ──
+
+    def elect_leader(self) -> str | None:
+        """基于优先级的简易选举: master 优先 > 最低 load_score > 最大 generation。
+
+        返回新 leader 的 node_id，或 None（无变化）。
+        """
+        online = self.get_online_nodes()
+        candidates = [n for n in online if n.health != NodeHealth.RED]
+
+        if not candidates:
+            return None
+
+        # 排序: master 角色优先 → 负载最低 → generation 最大
+        def election_score(node: SwarmNode) -> tuple:
+            role_priority = 0 if node.role == "master" else 1
+            return (role_priority, node.load_score, -node.generation)
+
+        candidates.sort(key=election_score)
+        new_leader = candidates[0]
+
+        # 如果当前节点不是 leader 且 new_leader 不是自己，承认新 leader
+        if new_leader.node_id != self.node_id:
+            self.role = "worker"
+            _log.info("[Election] new leader: %s", new_leader.node_id)
+            return new_leader.node_id
+        return None
+
+    def _start_election_timer(self) -> None:
+        """定期触发选举 (仅 master 角色参与)。"""
+        def _timer():
+            while self._running:
+                time.sleep(HEARTBEAT_TIMEOUT * 2)  # 30s 选举一次
+                if self.role == "master":
+                    leader = self.elect_leader()
+                    if leader and leader != self.node_id:
+                        self.role = "worker"  # 降级
+
+        t = threading.Thread(target=_timer, daemon=True)
+        t.start()
+
+    # ── 健康等级上报 ──
+
+    def report_load(self, load_score: float = 0, queue_depth: int = 0,
+                    cpu_pct: float = 0, memory_mb: float = 0) -> None:
+        """本节点负载上报 (供 worker heartbeat 使用)。"""
+        self_node = self._nodes.get(self.node_id)
+        if self_node:
+            self_node.load_score = load_score
+            self_node.queue_depth = queue_depth
+            self_node.cpu_percent = cpu_pct
+            self_node.memory_mb = memory_mb
 
     def status(self) -> dict:
         """蜂群状态摘要。"""

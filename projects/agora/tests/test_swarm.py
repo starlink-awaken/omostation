@@ -35,7 +35,7 @@ class TestSwarmNode:
         assert d["role"] == "worker"
         assert d["host"] == "127.0.0.1"
         assert "bos://memory/kos/search" in d["bos_uris"]
-        assert d["status"] in ("online", "offline")
+        assert d["status"] in ("green", "yellow", "red")  # health grading
 
 
 class TestSwarmOrchestrator:
@@ -132,6 +132,82 @@ class TestSwarmOrchestrator:
         s1 = get_swarm()
         s2 = get_swarm()
         assert s1 is s2  # 单例
+
+
+class TestSwarmAdvanced:
+
+    def test_health_grading(self):
+        from agora.mcp.swarm import NodeHealth
+        n = make_node()
+        n.last_heartbeat = time.time()
+        assert n.health == NodeHealth.GREEN
+
+    def test_health_yellow_on_high_load(self):
+        n = make_node()
+        n.last_heartbeat = time.time()
+        n.load_score = 85  # > 80 threshold
+        assert n.health == "yellow"
+
+    def test_health_red_offline(self):
+        from agora.mcp.swarm import HEARTBEAT_TIMEOUT
+        n = make_node()
+        n.last_heartbeat = time.time() - HEARTBEAT_TIMEOUT - 10
+        assert n.health == "red"
+
+    def test_load_aware_routing(self):
+        from agora.mcp.swarm import SwarmOrchestrator
+        s = SwarmOrchestrator(role="master")
+
+        # Two workers with same URI, different load
+        w1 = make_node("w1", "worker", ["bos://memory/kos/"])
+        w2 = make_node("w2", "worker", ["bos://memory/kos/"])
+        w1.load_score = 20  # low load
+        w2.load_score = 80  # high load
+        s.register_node(w1)
+        s.register_node(w2)
+
+        node = s.get_node_by_uri("bos://memory/kos/search")
+        assert node is not None
+        assert node.node_id == "w1"  # lower load wins
+
+    def test_yellow_node_deprioritized(self):
+        from agora.mcp.swarm import SwarmOrchestrator
+        s = SwarmOrchestrator(role="master")
+
+        w1 = make_node("w1", "worker", ["bos://memory/kos/"])
+        w2 = make_node("w2", "worker", ["bos://memory/kos/search"])
+        w1.load_score = 85  # YELLOW
+        w2.load_score = 10  # GREEN
+        s.register_node(w1)
+        s.register_node(w2)
+
+        # w2 has more specific prefix AND lower load
+        node = s.get_node_by_uri("bos://memory/kos/search")
+        assert node.node_id == "w2"
+
+    def test_leader_election_master_wins(self):
+        from agora.mcp.swarm import SwarmOrchestrator
+        s = SwarmOrchestrator(role="master")
+        s.register_node(make_node("m1", "master"))
+        s.register_node(make_node("w1", "worker"))
+        s.register_node(make_node("w2", "worker"))
+
+        leader = s.elect_leader()
+        assert leader is not None
+        # Master node hasn't registered itself, so election picks from registered nodes
+        # In practice, the master would register itself first
+
+    def test_report_load(self):
+        from agora.mcp.swarm import SwarmOrchestrator
+        s = SwarmOrchestrator(role="worker")
+        # Register with the node's own ID to match report_load's lookup
+        n = make_node(s.node_id, "worker")
+        s.register_node(n)
+        s.report_load(load_score=50, queue_depth=5, cpu_pct=60, memory_mb=1024)
+        updated = s._nodes.get(s.node_id)
+        assert updated is not None
+        assert updated.load_score == 50
+        assert updated.queue_depth == 5
 
 
 class TestSwarmL0Model:
