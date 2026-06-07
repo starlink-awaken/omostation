@@ -2,7 +2,7 @@ id: P54-W0-MCP-STDIO-MIGRATION
 phase: 54
 wave: W0
 title: "POC 自定义协议 → 标准 MCP stdio JSON-RPC 2.0 迁移"
-status: planned
+status: done
 task_type: feature
 priority: P1
 description: |
