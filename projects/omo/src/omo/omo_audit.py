@@ -490,8 +490,18 @@ def governance_check_task_consistency() -> CheckResult:
             if not isinstance(d, str):
                 continue
             p = _WORKSPACE_ROOT / d
-            if not p.exists():
-                inconsistent.append(f"{yaml_file.stem} → {d} (status=completed 但文件不存在)")
+            if p.exists():
+                continue
+            # Glob 展开 (P36 W0 规则宽容: 含 * 的路径按 glob 展开, 全部命中才算 OK)
+            if any(ch in d for ch in ("*", "?", "[")):
+                matches = list((_WORKSPACE_ROOT).glob(d))
+                if matches:
+                    continue
+                inconsistent.append(
+                    f"{yaml_file.stem} → {d} (glob 展开无匹配)"
+                )
+                continue
+            inconsistent.append(f"{yaml_file.stem} → {d} (status=completed 但文件不存在)")
     if checked == 0:
         return CheckResult(
             name="task consistency",

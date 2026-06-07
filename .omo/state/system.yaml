@@ -1,13 +1,23 @@
-current_phase: 32
+current_phase: 28
 phase32_status: active
+phase35_status: completed
+phase35_completed_at: '2026-06-10T00:00:00Z'
+phase41_status: completed
+phase41_completed_at: '2026-06-16T00:00:00Z'
 phase_status: active
-current_wave: W2
-next_milestone: 'Phase 33 — Agora Mesh + 5 Domain + Forge 集市（待启动）'
+current_wave: W3
+next_milestone: P40 候选（GitHub 真 push / LLM 真综合 / dashboard 持续服务化）
 health_score: 100.0
+health_score_raw: 100.0
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
+completed_tasks: 16
+total_tasks: 49
+active_tasks: 0
+phase39_status: completed
+phase39_completed_at: '2026-06-14T00:00:00Z'
 phase2_core_complete: true
 phase3_foundation_status: completed
 phase3_foundation_completed_at: '2026-05-30T16:14:37Z'
@@ -15,9 +25,8 @@ phase3_capability_slice_status: completed
 phase3_capability_slice_completed_at: '2026-05-30T22:35:00Z'
 phase3_acceptance_status: completed
 phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
-completed_tasks: 24
-total_tasks: 25
-active_tasks: 0
+phase36_status: completed
+phase36_completed_at: '2026-06-11T00:00:00Z'
 next_active_tasks:
 - (No active tasks)
 last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 kickoff
@@ -43,7 +52,11 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-07T00:00:00Z'
+updated_at: '2026-06-07T00:32:07Z'
+phase33_status: completed
+phase33_completed_at: '2026-06-08T00:00:00Z'
+phase34_status: completed
+phase34_completed_at: '2026-06-09T00:00:00Z'
 phase29_status: completed
 phase29_completed_at: '2026-06-05T20:00:00Z'
 phase30_status: active
@@ -86,7 +99,6 @@ phase24_completed_at: '2026-06-04T11:27:00Z'
 phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
-health_score_raw: 100.0
 phase32_completed_at: '2026-06-07T00:00:00Z'
 debt_weight: 1.0
 debt_weight_items:
@@ -610,31 +622,43 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 21
+planned_tasks: 33
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- Current planned queue from .omo/tasks/planned/ (21 tasks)
-- P30-W0-DAEMON-INSTALL
-- P30-W0-FOLD
-- P30-W0-PLAN-UPDATE
-- P30-W1-GOV-MERGE
-- P30-W1-METAOS-EXTRACT
-- P30-W1-WKSP-EXTRACT
-- P30-W2-VERIFY
-- P31-VERIFY
-- P31-W0-AGORA-ACTUAL-FIX
-- P31-W0-ECOS-EXTRACT
-- P31-W0-HISTORICAL-TESTS
-- P31-W0-KAIRON-MERGE-ACCEPTED
-- P31-W0-KAIRON-MERGE-PLAN
-- P31-W1-CLEANUP-SHIM
-- P31-W1-FIX-LLM-GATEWAY-KERNEL-TESTS
-- P31-W1-MERGE-PROTOCOLS-LAYER
-- P31-W1-MERGE-SOT-BRIDGE
-- P32-W0-AGORA-FIX
-- P32-W0-AGORA
-- P32-W0-DELIVERABLES
-- P32-W0-SMOKE
+- Current planned queue from .omo/tasks/planned/ (33 tasks)
+- P33-STARTUP-EVAL
+- P33-VERIFY
+- P33-W0-FOLD
+- P33-W0-NORTH-STAR
+- P33-W1-CAMPAIGN-2-PRECHECK
+- P33-W2-DOMAINS-3
+- P33-W3-FIX
+- P33-W4-AGORA-MESH
+- P33-W5-FORGE-MARKET
+- P34-VERIFY
+- P34-W0-URI-EXPAND
+- P34-W1-AGORA-W4-UPGRADE
+- P34-W2-ANALYSIS-EXEC
+- P34-W3-MULTI-REPO-RELEASE
+- P34-W4-FIX-AUDIT
+- P34-W5-REAL-SCENARIO
+- P35-ROADMAP
+- P35-VERIFY
+- P35-W0-DOMAIN-CHAIN
+- P35-W1-W2-COMBO
+- P35-W3-FIX-AUDIT
+- P36-W0-W1-COMBO
+- P36-W2-W3-COMBO
+- P37-W0-W1-COMBO
+- P37-W2-W3-COMBO
+- P38-W0-W1-COMBO
+- P38-W2-W3-COMBO
+- P39-W0-W1-COMBO
+- P39-W2-W3-COMBO
+- P40-W0-W1-COMBO
+- P40-W2-W3-COMBO
+- P41-W0-W1-COMBO
+- P42-W0-W1-COMBO
 - P28-W0-NORTH-STAR (completed)
 - P28-W0-TOOL-HEATMAP (completed)
 - IMPORTED-08ea57

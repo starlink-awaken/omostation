@@ -12,10 +12,10 @@ entry_gate:
 depends_on:
   - P40-W2-W3-COMBO
 deliverables:
-  - "scripts/llm_healthwork_scenario.py (加 ollama 模式, 优先级最高)"
-  - "projects/omo/pyproject.toml (加 openai SDK)"
-  - "projects/omo/src/omo/omo_worker_promotion.py (真修 6 ruff violations)"
-  - ".github/workflows/*.yml (14 个 CI 修: agora/cockpit/ecos/pytest/integration/workspace/gbrain/runtime/phase11/sharedbrain/metaos/config-check/ruff-check/quality)"
+  - "scripts/llm_healthwork_scenario.py"
+  - "projects/omo/pyproject.toml"
+  - "projects/omo/src/omo/omo_worker_promotion.py"
+  - ".github/workflows/*.yml"
   - ".omo/_delivery/phase41-w0-ollama-llm.md"
   - ".omo/_delivery/phase41-w1-fix-ci.md"
 risk_level: L1
