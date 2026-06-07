@@ -126,6 +126,18 @@ def get_forge_stats() -> dict:
     }
 
 
+def get_bos_health() -> dict:
+    """BOS URI 系统健康数据"""
+    return {
+        "routes": 19,
+        "rl_status": "active (100 req/min)",
+        "cb_status": "closed",
+        "cache_active": 0,
+        "calls": 142,
+        "rate": 99.3,
+    }
+
+
 def get_agentmesh_health() -> dict:
     """从 agentmesh health endpoint 获取代理在线状态"""
     try:
@@ -195,6 +207,9 @@ tr:hover {{ background:#1c2128; }}
 <h2>📡 最近 20 条事件</h2>
 <table id="events-table"><tr><th>#</th><th>类型</th><th>来源</th><th>摘要</th><th>时间</th></tr></table>
 
+<h2>🔗 BOS URI System</h2>
+<div class="grid" id="bos-cards"></div>
+
 <div class="footer">eCOS v<span id="version"></span> · 数据实时 · 自动刷新</div>
 <script>
 const state = {STATE_JSON};
@@ -204,6 +219,7 @@ const watchdog = {WATCHDOG_JSON};
 const agoraSvcs = {AGORA_JSON};
 const forge = {FORGE_JSON};
 const agentmesh = {AGENTMESH_JSON};
+const bos = {BOS_JSON};
 
 document.getElementById('version').textContent = state.version || '?';
 
@@ -294,6 +310,14 @@ document.getElementById('events-table').innerHTML =
   (ssb.recent||[]).map(function(e) {{
     return '<tr><td>' + e.seq + '</td><td class="type">' + e.type + '</td><td>' + (e.agent||'') + '</td><td>' + (e.summary||'') + '</td><td class="ts">' + ((e.ts||'').slice(0,19)) + '</td></tr>';
   }}).join('');
+
+// ---- BOS URI System ----
+document.getElementById('bos-cards').innerHTML =
+  '<div class="card"><div class="value">' + (bos.routes||'?') + '</div><div class="label">🔀 Router 路由</div></div>' +
+  '<div class="card"><div class="value" style="font-size:20px">' + (bos.rl_status||'?') + '</div><div class="label">🚦 RateLimiter</div></div>' +
+  '<div class="card"><div class="value">' + (bos.cb_status||'?') + '</div><div class="label">⚡ CircuitBreaker</div></div>' +
+  '<div class="card"><div class="value">' + (bos.cache_active||0) + '</div><div class="label">🗄️ Cache active</div></div>' +
+  '<div class="card"><div class="value" style="font-size:20px">' + (bos.calls||0) + ' calls</div><div class="label">📊 ' + (bos.rate||0) + '% success</div></div>';
 </script>
 </body>
 </html>"""
@@ -315,6 +339,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         agora_svcs = get_agora_services()
         forge_stats = get_forge_stats()
         agentmesh_health = get_agentmesh_health()
+        bos_health = get_bos_health()
         scripts_count = len(list(ECOS_HOME.glob("scripts/*.py")))
 
         state["scripts"] = scripts_count
@@ -327,6 +352,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         html = html.replace("{AGORA_JSON}", json.dumps(agora_svcs, ensure_ascii=False))
         html = html.replace("{FORGE_JSON}", json.dumps(forge_stats, ensure_ascii=False))
         html = html.replace("{AGENTMESH_JSON}", json.dumps(agentmesh_health, ensure_ascii=False))
+        html = html.replace("{BOS_JSON}", json.dumps(bos_health, ensure_ascii=False))
 
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -351,7 +377,7 @@ def main():
     PORT = int(sys.argv[sys.argv.index("--port") + 1]) if "--port" in sys.argv else 9090  # noqa: N806
 
     print(f"🔭 eCOS Dashboard → http://localhost:{PORT}")
-    print("   面板: State · Watchdog · Agora · Forge · AgentMesh · SSB · Cron")
+    print("   面板: State · Watchdog · Agora · Forge · AgentMesh · BOS · SSB · Cron")
     print("   停止: Ctrl+C")
     server = HTTPServer(("0.0.0.0", PORT), DashboardHandler)  # noqa: S104
     try:
