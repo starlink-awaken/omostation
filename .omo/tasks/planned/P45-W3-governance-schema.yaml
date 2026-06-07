@@ -1,0 +1,26 @@
+id: P45-W3-GOVERNANCE-SCHEMA
+phase: 45
+wave: W3
+title: "P2 治理 + Schema — 鉴权/审计/Schema 契约"
+status: pending
+task_type: feature
+priority: P2
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P45 W2 完成"
+depends_on:
+  - P45-W2-UNIFIED-ROUTING
+deliverables:
+  - "server/mcp.py: BOS 鉴权中间件 (API Key → bos:// 域级别)"
+  - "server/mcp.py: BOS 审计链路 (l0_audit 集成)"
+  - "server/mcp.py: get_bos_schema MCP 工具 (从 M1 Workflow 读取)"
+risk_level: L2
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/design/plans/bos-uri-ideal-architecture.md"
+description: |
+  治理层增强:
+  T13: API Key 鉴权接入 BOS URI 域级别
+  T14: 所有 BOS 操作自动 L0 SSB 审计
+  T15: get_bos_schema(uri) 从 M1 Workflow 节点读取参数规范

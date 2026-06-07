@@ -1,0 +1,26 @@
+id: P45-W2-UNIFIED-ROUTING
+phase: 45
+wave: W2
+title: "P1 统一路由 — 合并双表 + 通配注册 + 统一错误"
+status: pending
+task_type: feature
+priority: P1
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P45 W1 完成"
+depends_on:
+  - P45-W1-P0-BLOCKER-FIX
+deliverables:
+  - "agora/bos_router.py: BOSRouter 统一注册表 (合并 POC_SERVICES + ProxyManager)"
+  - "server/mcp.py: URI template 通配 @mcp.resource('bos://{domain}/{package}/{action}')"
+  - "mcp/bos_resolver.py + server/mcp.py: 统一错误模型 BOSError"
+risk_level: L2
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/design/plans/bos-uri-ideal-architecture.md"
+description: |
+  统一 BOS URI 路由核心:
+  T10: 创建 BOSRouter 类 — 内存注册表 + 最长前缀匹配
+  T11: 激活 MCPResourceManager.register_template 基础设施
+  T12: 统一所有 BOS 操作的错误输出格式为 BOSResult

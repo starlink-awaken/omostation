@@ -1,0 +1,28 @@
+id: P45-W0-DESIGN-REGISTER
+phase: 45
+wave: W0
+title: "BOS URI 理想态架构设计与 L0 注册"
+status: in_progress
+task_type: design
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P44 completion"
+  - "BOS URI 12 缺陷代码验证完成"
+deliverables:
+  - ".omo/_knowledge/design/plans/bos-uri-ideal-architecture.md"
+  - "projects/ecos/src/ecos/ssot/mof/m1/bosroute/BOSROUTE-*.yaml (11 文件)"
+  - "projects/ecos/src/ecos/l0/constraints.yaml (X5/X6/X7 新增)"
+  - ".omo/_truth/goals/current.yaml"
+  - ".omo/state/system.yaml"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/design/plans/bos-uri-ideal-architecture.md"
+description: |
+  编写 BOS URI 统一寻址的理想态架构设计文档
+  在 L0 MOF 中创建 11 个 BOS 路由 M1 节点
+  更新 L0 约束文件，新增 BOS 域约束
+  注册 P45 Phase Goals 并更新系统状态
+started_at: '2026-06-07T00:00:00Z'

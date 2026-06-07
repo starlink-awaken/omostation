@@ -1,4 +1,5 @@
-current_phase: 28
+current_phase: 45
+phase45_status: active
 phase32_status: active
 phase35_status: completed
 phase35_completed_at: '2026-06-10T00:00:00Z'
@@ -6,7 +7,7 @@ phase41_status: completed
 phase41_completed_at: '2026-06-16T00:00:00Z'
 phase_status: active
 current_wave: W3
-next_milestone: P40 候选（GitHub 真 push / LLM 真综合 / dashboard 持续服务化）
+next_milestone: BOS URI 统一寻址 P0 阻断修复
 health_score: 100.0
 health_score_raw: 100.0
 active_agents: 0
