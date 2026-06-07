@@ -503,6 +503,17 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="SharedBrain-Bridge 同步 (P45-W3, POC stdio, recall-entity 的对偶)",
     ),
+    # ── P47 omo/sync 简化版 (internal transport, 跳 P47+ 真重构) ──
+    "bos://governance/omo/sync": BosService(
+        uri="bos://governance/omo/sync",
+        domain="governance",
+        package="omo",
+        action="sync",
+        transport="internal",
+        module_path="omo.omo_sync",
+        func_name="run_sync",
+        description="OMO 状态同步 (P47 简化版, internal transport, 跳 P47+ in-process→subprocess 真重构)",
+    ),
 }
 
 
