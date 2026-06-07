@@ -1,0 +1,13 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "swarm-engine"
+version = "1.0.0"
+description = "群体智能引擎 — 拍卖/竞价/DAG/生命周期的多智能体任务编排"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/swarm_engine"]

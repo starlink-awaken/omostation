@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aetherforge-swarm"
+version = "1.0.0"
+description = "AetherForge Swarm — 群体智能引擎 (拍卖/竞价/DAG/生命周期/经济账本的多智能体任务编排)"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+keywords = ["swarm", "agent", "multi-agent", "orchestration", "aetherforge"]
+
+dependencies = [
+    "aetherforge-gateway",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/swarm_engine"]

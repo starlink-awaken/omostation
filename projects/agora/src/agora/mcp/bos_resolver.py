@@ -1,6 +1,6 @@
 """BOS URI 解析器 — agora 侧 (P33-W4 + P34-W1 战役 1 升级).
 
-输入: bos://<domain>/<package>/<action> + args
+输入: bos://<domain>/<package/<action> + args
 输出: 实际 MCP 工具调用结果 (stdio 子进程 / internal / http)
 
 P33-W3 揭出 M3 高严重度: omo 进程 verify_endpoint 时, 20/21 kairon URI 不可达.
@@ -12,6 +12,10 @@ P34-W1 升级: 从"进程 alive 验证"到"真 stdio JSON 协议通信".
   - 5s 超时控制 (select + timeout)
   - 错误处理 (BrokenPipe / JSONDecode / EOF)
   - 进程池复用 (同 URI 多次调用复用同一进程)
+
+P46 W2 升级: StdioAdapter 协议抽象封装, 支持渐进迁移到标准 MCP.
+  - StdioAdapter.call(uri, args) → dict: 统一调用接口
+  - 不改变现有 invoke_stdio 实现 (向后兼容)
 
 11 POC service 覆盖 5 Domain (memory / governance / analysis / persona / capability).
 """
@@ -728,6 +732,57 @@ def invoke_stdio(
             "error": f"json_decode_error: {exc}",
             "request_id": request_id,
         }
+
+
+# ── Protocol Adapter (P46 W2) ───────────────────────
+
+class StdioAdapter:
+    """stdio 协议适配器 — 封装 invoke_stdio 为统一接口。
+
+    用法:
+        adapter = StdioAdapter(timeout=5.0)
+        result = adapter.call("bos://memory/kos/search", {"query": "..."})
+
+    设计意图: 渐进迁移到标准 MCP stdio JSON-RPC 2.0 协议。
+    当前底层仍使用自定义简化协议，但通过此适配器隔离变化。
+    """
+
+    def __init__(self, timeout: float = 5.0):
+        self.timeout = timeout
+
+    def call(self, uri: str, action: str, args: list | None = None, kwargs: dict | None = None) -> dict:
+        """调用 stdio 子进程。
+
+        Args:
+            uri: bos://domain/package/action
+            action: 子进程 action 名
+            args: 位置参数
+            kwargs: 关键字参数
+
+        Returns:
+            dict 含 status + result/error
+        """
+        return invoke_stdio(
+            uri=uri,
+            action=action,
+            args=args or [],
+            kwargs=kwargs or {},
+            timeout=self.timeout,
+        )
+
+    def health_check(self, uri: str) -> bool:
+        """检查 URI 对应的子进程是否存活。"""
+        service = POC_SERVICES.get(uri)
+        if not service:
+            return False
+        pool = get_pool()
+        proc = pool.get_or_spawn(service, uri)
+        return proc is not None and proc.poll() is None
+
+
+def get_stdio_adapter(timeout: float = 5.0) -> StdioAdapter:
+    """获取 stdio 适配器实例。"""
+    return StdioAdapter(timeout=timeout)
 
 
 async def resolve_bos_uri(uri: str, *args: Any, **kwargs: Any) -> dict:

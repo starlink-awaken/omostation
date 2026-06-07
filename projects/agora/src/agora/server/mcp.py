@@ -66,6 +66,9 @@ from agora.mcp.bos_router import bos_router as _bos_router  # type: ignore[impor
 # BOS 中间件 (P46 W0) — 限流/熔断/缓存
 from agora.mcp.bos_middleware import bos_rate_limiter, bos_circuit_breaker, bos_cache  # type: ignore[import-not-found]
 
+# BOS Metrics (P46 W2) — 可观测性
+from agora.mcp.bos_metrics import bos_metrics  # type: ignore[import-not-found]
+
 logger = structlog.get_logger(__name__)
 
 FORMAT_VERSION = "agora-v1"
@@ -330,6 +333,42 @@ async def _init_proxy():
     from agora.mcp.bos_auto_register import auto_register_from_m1  # type: ignore[import-not-found]
     count = auto_register_from_m1()
     logger.info("auto_register_from_m1: %d workflow routes seeded", count)
+
+    # ── Phase 7 (P46 W2): 信号热加载 + Metrics ──
+    _install_signal_handler()
+
+
+# ── 信号处理 (P46 W2) ─────────────────────────────────
+
+def _install_signal_handler() -> None:
+    """安装 SIGUSR1 信号处理器 — 热加载 BOS 配置。"""
+    import signal
+    import yaml
+
+    def _reload_handler(signum, frame):
+        logger.info("signal_handler: received SIGUSR1, reloading BOS config")
+        rates_path = Path(__file__).parent.parent / "agora-bos-rates.yaml"
+        if rates_path.exists():
+            try:
+                rates = yaml.safe_load(open(rates_path))
+                for route in rates.get("routes", []):
+                    bos_rate_limiter.configure(route["prefix"], qps=route["qps"])
+                logger.info("signal_handler: rate limits reloaded (%d routes)", len(rates.get("routes", [])))
+            except Exception as e:
+                logger.error("signal_handler: failed to reload rates: %s", e)
+        # Reload BOSRouter from POC_SERVICES
+        for uri, svc in _POC_SERVICES.items():
+            _bos_router.register(uri, adapter="poc", config={
+                "domain": getattr(svc, "domain", ""),
+                "transport": getattr(svc, "transport", ""),
+            })
+        logger.info("signal_handler: BOSRouter reloaded (%d routes)", _bos_router.count())
+
+    try:
+        signal.signal(signal.SIGUSR1, _reload_handler)
+        logger.info("signal_handler: SIGUSR1 handler installed (kill -USR1 %d to reload)", os.getpid())
+    except (AttributeError, ValueError):
+        pass  # Windows 不支持 SIGUSR1
 
 
 # ── 辅助函数 ─────────────────────────────────────────
@@ -1836,6 +1875,7 @@ async def lifecycle_unload_all() -> dict:
 # ═══════════════════════════════════════════════════════════════
 
 @mcp.tool()
+@bos_metrics.track("bos://")
 async def resolve_bos_uri(uri: str, arguments: str = "{}") -> dict:
     """将 BOS URI 解析为实际调用，路由到对应的后端服务。
     
@@ -1883,6 +1923,7 @@ async def resolve_bos_uri(uri: str, arguments: str = "{}") -> dict:
 
 
 @mcp.tool()
+@bos_metrics.track("bos://")
 async def read_resource(uri: str, params: str = "{}") -> dict:
     """通过 BOS URI 读取资源。先尝试 ProxyManager (MCP 下游)，回退到 bos_resolver。
 
@@ -2085,6 +2126,22 @@ async def bos_middleware_status() -> dict:
         "circuit_breaker": {"open_circuits": bos_circuit_breaker.status()},
         "cache": bos_cache.status(),
         "router": {"total_routes": _bos_router.count(), "stats": _bos_router.stats()},
+    })
+
+
+# ═══════════════════════════════════════════════════════════════
+# BOS 可观测性 (P46 W2)
+# ═══════════════════════════════════════════════════════════════
+
+@mcp.tool()
+async def bos_metrics_status(prefix: str = "") -> dict:
+    """BOS 调用指标 — 按 URI 前缀统计调用量/成功率/延迟。"""
+    if prefix:
+        return _ok({"format_version": FORMAT_VERSION, "metrics": bos_metrics.status(prefix)})
+    return _ok({
+        "format_version": FORMAT_VERSION,
+        "summary": bos_metrics.summary(),
+        "detail": bos_metrics.status(),
     })
 
 
