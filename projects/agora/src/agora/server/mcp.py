@@ -1834,14 +1834,30 @@ async def resolve_bos_uri(uri: str, arguments: str = "{}") -> dict:
         arguments: JSON 参数字符串 (e.g. '{"query": "什么是 eCOS?"}')
     """
     import json
+    if not uri.startswith("bos://"):
+        return _error(f"Invalid BOS URI: {uri}")
+
+    # P45 W3 T13: BOS 域级别鉴权
+    if not _bos_domain_authorized(uri, "read"):
+        return _error(f"Access denied to domain: {uri}")
+
+    # P45 W3 T14: L0 审计
+    ok, reason = _bos_pre_check(uri)
+    if not ok:
+        logger.warning("bos_pre_check_blocked", uri=uri, reason=reason)
+
+    import json
+    import time as _time
+    _t0 = _time.time()
     try:
         args = json.loads(arguments) if isinstance(arguments, str) else arguments
+        result = await _resolve_bos_uri(uri, **args)
+        _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
+        return _ok({"format_version": FORMAT_VERSION, "uri": uri, "result": result})
     except json.JSONDecodeError:
         return _error(f"Invalid JSON arguments: {arguments}")
-    try:
-        result = await _resolve_bos_uri(uri, **args)
-        return _ok({"format_version": FORMAT_VERSION, "uri": uri, "result": result})
     except Exception as e:
+        _bos_post_audit(uri, 500, int((_time.time() - _t0) * 1000))
         logger.exception("resolve_bos_uri_failed", uri=uri)
         return _error(f"BOS URI resolve failed: {e}")
 
@@ -1857,6 +1873,15 @@ async def read_resource(uri: str, params: str = "{}") -> dict:
     import json
     if not uri.startswith("bos://"):
         return _error(f"Invalid BOS URI: {uri}")
+
+    # P45 W3 T13: BOS 域级别鉴权
+    if not _bos_domain_authorized(uri, "read"):
+        return _error(f"Access denied to domain: {uri}")
+
+    # P45 W3 T14: L0 审计
+    ok, reason = _bos_pre_check(uri)
+    import time as _time
+    _t0 = _time.time()
     try:
         args = json.loads(params) if isinstance(params, str) else params
     except json.JSONDecodeError:
@@ -1866,6 +1891,7 @@ async def read_resource(uri: str, params: str = "{}") -> dict:
         try:
             result = await _proxy_manager.read_resource(uri)
             if isinstance(result, dict) and "contents" in result:
+                _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
                 return _ok({"format_version": FORMAT_VERSION, "uri": uri,
                            "source": "proxy", "contents": result["contents"]})
         except Exception:
@@ -1873,9 +1899,11 @@ async def read_resource(uri: str, params: str = "{}") -> dict:
     # Step 2: 回退到 bos_resolver (POC_SERVICES 子进程)
     try:
         result = await _resolve_bos_uri(uri, **args)
+        _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
         return _ok({"format_version": FORMAT_VERSION, "uri": uri,
                    "source": "bos_resolver", "result": result})
     except Exception as e:
+        _bos_post_audit(uri, 500, int((_time.time() - _t0) * 1000))
         logger.exception("read_resource_failed", uri=uri)
         return _error(f"Resource read failed: {e}")
 
@@ -1923,6 +1951,93 @@ async def list_bos_domains() -> dict:
         doms[svc.get("domain", "unknown")] += 1
     return _ok({"format_version": FORMAT_VERSION, "domains": dict(doms),
                "description": "BOS URI 5+1 域: memory/omo/analysis/persona/forge"})
+
+# ═══════════════════════════════════════════════════════════════
+# BOS 鉴权 (P45 W3 T13)
+# ═══════════════════════════════════════════════════════════════
+
+_BOS_DOMAIN_ACCESS = {
+    # 默认所有域允许，可配置为 {domain: [scopes]}
+    "memory":    ["read", "write"],
+    "omo":       ["read", "write"],
+    "analysis":  ["read", "write"],
+    "persona":   ["read", "write"],
+    "forge":     ["read", "write"],
+    "meta":      ["read"],
+    "ecos":      ["read"],
+    "agora":     ["read"],
+}
+
+def _bos_domain_authorized(uri: str, operation: str = "read") -> bool:
+    """检查 BOS URI 的域级别权限。"""
+    if not _AGORA_API_KEY:
+        return True  # 本地开发模式
+    domain = uri.split("/")[2] if uri.startswith("bos://") and "/" in uri else ""
+    allowed = _BOS_DOMAIN_ACCESS.get(domain, [])
+    return operation in allowed
+
+# ═══════════════════════════════════════════════════════════════
+# BOS Schema (P45 W3 T15)
+# ═══════════════════════════════════════════════════════════════
+
+@mcp.tool()
+async def get_bos_schema(uri: str = "") -> dict:
+    """获取 BOS URI 的参数规范。从 M1 Workflow 节点的 steps 读取。
+
+    Args:
+        uri: BOS URI 或 action 名称 (如 bos://analysis/minerva/research 或 minerva.research)
+             不传则返回所有已知 schema 摘要
+    """
+    import yaml
+    try:
+        wf_dir = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "workflow"
+        if not wf_dir.exists():
+            return _error("M1 Workflow 目录不存在")
+
+        schemas = {}
+        for f in sorted(wf_dir.glob("WORKFLOW-*.yaml")):
+            try:
+                node = yaml.safe_load(open(f))
+                if not node or node.get("type") != "Workflow":
+                    continue
+                for step in node.get("steps", []):
+                    action = step.get("action", "")
+                    if not action:
+                        continue
+                    schemas[action] = {
+                        "workflow": node.get("name", ""),
+                        "action": action,
+                        "description": step.get("description", ""),
+                        "order": step.get("order"),
+                        "input": step.get("input", {}),
+                        "output": step.get("output", {}),
+                        "sla": node.get("sla", {}),
+                        "domain": node.get("domain", ""),
+                        "layer": node.get("layer", ""),
+                    }
+            except Exception:
+                pass
+
+        if uri:
+            # 匹配: 直接 action 名 或 从 URI 中提取
+            action_key = uri
+            if uri.startswith("bos://"):
+                parts = uri.replace("bos://", "").split("/")
+                # 尝试匹配 package.action 格式
+                if len(parts) >= 3:
+                    action_key = f"{parts[1]}.{parts[2]}"
+            if action_key in schemas:
+                return _ok({"format_version": FORMAT_VERSION, "uri": uri, "schema": schemas[action_key]})
+            # 部分匹配
+            matches = {k: v for k, v in schemas.items() if action_key in k}
+            if matches:
+                return _ok({"format_version": FORMAT_VERSION, "uri": uri, "schemas": matches, "match_count": len(matches)})
+            return _error(f"No schema found for: {uri}. Use get_bos_schema() without args to list all.")
+
+        return _ok({"format_version": FORMAT_VERSION, "total_schemas": len(schemas),
+                   "schemas": schemas, "hint": "Use get_bos_schema('minerva.research') for specific"})
+    except Exception as e:
+        return _error(f"Schema lookup failed: {e}")
 
 
 # ═══════════════════════════════════════════════════════════════
