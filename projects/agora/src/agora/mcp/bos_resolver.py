@@ -466,6 +466,43 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="SOT-Bridge 跨系统查询 (P45-W2, POC stdio, register 的对偶)",
     ),
+    # ── P45-W3 战役 1: 3 个 persona GAP URI (P44-W2 评估) ──
+    "bos://persona/core-models/schema": BosService(
+        uri="bos://persona/core-models/schema",
+        domain="persona",
+        package="core-models",
+        action="schema",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "core_models", "serve", "--action", "schema",
+        ],
+        description="core-models schema (P45-W3, POC stdio)",
+    ),
+    "bos://persona/core-models/validate": BosService(
+        uri="bos://persona/core-models/validate",
+        domain="persona",
+        package="core-models",
+        action="validate",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "core_models", "serve", "--action", "validate",
+        ],
+        description="core-models 验证 (P45-W3, POC stdio, schema 的对偶)",
+    ),
+    "bos://persona/sharedbrain-bridge/sync": BosService(
+        uri="bos://persona/sharedbrain-bridge/sync",
+        domain="persona",
+        package="sharedbrain-bridge",
+        action="sync",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "sot_bridge.sharedbrain_bridge", "serve", "--action", "sync",
+        ],
+        description="SharedBrain-Bridge 同步 (P45-W3, POC stdio, recall-entity 的对偶)",
+    ),
 }
 
 
