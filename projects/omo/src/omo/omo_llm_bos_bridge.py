@@ -8,17 +8,17 @@ P37-W2 目标: 把 BOS URI 抽象暴露成 LLM 可理解的 tool 工具集,
 设计:
 - 工具 1: ``invoke_bos_uri(uri, args)``  - 调单个 BOS URI
 - 工具 2: ``list_bos_uris(domain?)``     - 列已注册 URI (供 LLM 上下文)
-- 派发: ``TOOL_DISPATCHER``  - LLM 调用的同步派发表
+- 派发: ``TOOL_DISPATCHER``  - 在 omo.omo_bos_dispatcher (P59-W2 抽出)
 
 P58-W1: 716 行拆 3 模块 — pool (omo_agora_pool) + dedup (omo_audit_dedup) + facade (本文件).
-本文件保留: schema + invoke/list 入口 + dispatcher + 自测.
+P59-W2: facade 再拆 — dispatcher (omo_bos_dispatcher) 抽出 TOOL_DISPATCHER + _dispatch_sync + _self_test.
+本文件 (facade) 留: schema + invoke/list 入口 + backward compat re-export.
 
 P32 收官约束: 不改 agora 核心, 不重启 omo daemon, 0 破坏性操作.
 本模块纯加法, 只读 BOS URI 注册表, 不写.
 """
 from __future__ import annotations
 
-import asyncio
 import sys
 from pathlib import Path
 from typing import Any
@@ -34,12 +34,14 @@ except ImportError:  # pragma: no cover - 路径旁路场景
         sys.path.insert(0, str(_OMO_SRC))
     from omo.omo_bos import load_registry, parse_bos_uri, validate_bos_uri  # type: ignore[no-redef]
 
-# ── P58-W1: 长驻池 + dedup 从 omo_llm_bos_bridge 抽出 ─────
+# ── P58-W1: 长驻池从 omo_llm_bos_bridge 抽出 ───────────
 # facade 内部只用 _resolve_via_agora_subprocess, _MANAGER 留给 tests/integration 用
 from omo.omo_agora_pool import (  # type: ignore[import-not-found]
     _MANAGER,  # noqa: F401  # tests/integration re-export
     _resolve_via_agora_subprocess,
 )
+# P59-W2: dispatcher 在 omo.omo_bos_dispatcher 抽 TOOL_DISPATCHER + _dispatch_sync + _self_test.
+# facade 不 re-export (避免循环依赖, 外部 import 走 dispatcher module).
 
 
 # ── 工具 schema (Anthropic tool_use 格式) ────────────────────
@@ -191,75 +193,6 @@ def list_bos_uris_tool(domain: str | None = None) -> dict[str, Any]:
     return {"count": len(compact), "uris": compact}
 
 
-# ── 派发器 (供 demo + 真 API 模式共用) ──────────────────────
-
-
-def _dispatch_sync(name: str, args: dict[str, Any]) -> dict[str, Any]:
-    """同步派发 (供不支持 async 的 LLM client 用)."""
-    if name == "invoke_bos_uri":
-        return asyncio.run(invoke_bos_uri_tool(args["uri"], args.get("args")))
-    if name == "list_bos_uris":
-        return list_bos_uris_tool(args.get("domain"))
-    return {"error": f"unknown_tool: {name}"}
-
-
-TOOL_DISPATCHER: dict[str, Any] = {
-    # P59-W0: lambda 包装 (修复 P37-era _self_test 单 arg 调用 bug)
-    "invoke_bos_uri": lambda args: _dispatch_sync("invoke_bos_uri", args),
-    "list_bos_uris": lambda args: _dispatch_sync("list_bos_uris", args),
-}
-
-
-# ── 自测 (直接 python omo_llm_bos_bridge.py) ───────────────
-
-
-def _self_test() -> int:
-    """快速自测: 验证 schema + 派发器本地闭环."""
-    print("=" * 60)
-    print("omo.llm_bos_bridge 自测")
-    print("=" * 60)
-
-    # 1) schema
-    schema = bos_uri_tool_schema()
-    assert len(schema) == 2, "schema 必须是 2 个工具"
-    names = {s["name"] for s in schema}
-    assert names == {"invoke_bos_uri", "list_bos_uris"}, f"工具名错: {names}"
-    print(f"[OK] schema: 2 tools, names={names}")
-
-    # 2) list
-    r = TOOL_DISPATCHER["list_bos_uris"]({"domain": "memory"})
-    print(f"[OK] list_bos_uris(memory): count={r.get('count', '?')}")
-    assert "count" in r, "list 必须返回 count"
-
-    # 3) invoke (memory/kos/search)
-    r = TOOL_DISPATCHER["invoke_bos_uri"](
-        {"uri": "bos://memory/kos/search", "args": {"query": "kairon commits"}}
-    )
-    print(f"[OK] invoke bos://memory/kos/search: status={r.get('status', '?')}")
-    assert r.get("status") in ("resolved", "agora_unavailable"), (
-        f"invoke 状态错: {r}"
-    )
-
-    # 4) invoke (invalid)
-    r = TOOL_DISPATCHER["invoke_bos_uri"]({"uri": "bos://bad/foo/bar"})
-    print(f"[OK] invoke invalid: status={r.get('status', '?')}")
-    assert r.get("status") == "invalid_uri", f"invalid 状态错: {r}"
-
-    # 5) invoke (5 跨域)
-    uris = [
-        ("bos://memory/kos/search", {"query": "kairon commits"}),
-        ("bos://analysis/minerva/research", {"topic": "kairon 提交趋势"}),
-        ("bos://analysis/minerva/draft", {"topic": "kairon 提交趋势"}),
-        ("bos://analysis/iris/transform", {}),
-        ("bos://capability/forge/list-tools", {}),
-    ]
-    for uri, args in uris:
-        r = TOOL_DISPATCHER["invoke_bos_uri"]({"uri": uri, "args": args})
-        print(f"  - {uri}: status={r.get('status', '?')}")
-    print()
-    print("[OK] omo.llm_bos_bridge 自测全过")
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(_self_test())
+# ── 自测入口 (P59-W2 抽到 omo_bos_dispatcher) ────────────
+# 跑自测: python -m omo.omo_bos_dispatcher
+# facade 本文件不重复定义 _self_test, 保持单一职责 (只暴露 schema + invoke/list 入口)
