@@ -226,3 +226,62 @@ class Cache:
 bos_rate_limiter = RateLimiter()
 bos_circuit_breaker = CircuitBreaker()
 bos_cache = Cache()
+
+
+# ═══════════════════════════════════════════════════════════════
+# RetryPolicy (P47)
+# ═══════════════════════════════════════════════════════════════
+
+class RetryPolicy:
+    """BOS 调用重试策略。
+
+    用法:
+        @retry_policy.wrap
+        async def call_bos(uri):
+            ...
+    """
+
+    def __init__(self, max_retries: int = 2, base_delay: float = 0.5):
+        self.max_retries = max_retries
+        self.base_delay = base_delay
+        self._attempts: dict[str, int] = {}
+
+    async def wrap(self, uri: str, coro_func, *args, **kwargs):
+        """执行协程，失败时指数退避重试。
+
+        Returns:
+            (result, success: bool)
+        """
+        import asyncio
+        last_error = None
+        for attempt in range(self.max_retries + 1):
+            try:
+                result = await coro_func(*args, **kwargs)
+                key = self._key(uri)
+                self._attempts.pop(key, None)
+                return (result, True)
+            except Exception as e:
+                last_error = e
+                key = self._key(uri)
+                self._attempts[key] = attempt + 1
+                if attempt < self.max_retries:
+                    delay = self.base_delay * (2 ** attempt)
+                    _log.warning("retry_policy: attempt %d/%d for %s, waiting %.1fs",
+                               attempt + 1, self.max_retries, uri, delay)
+                    await asyncio.sleep(delay)
+        return (last_error, False)
+
+    def status(self, uri: str = "") -> dict:
+        if uri:
+            key = self._key(uri)
+            return {uri: {"attempts": self._attempts.get(key, 0)}}
+        return {"active_retries": dict(self._attempts)}
+
+    @staticmethod
+    def _key(uri: str) -> str:
+        parts = uri.split("/")
+        return "/".join(parts[:4]) if len(parts) >= 4 else uri
+
+
+# ── 全局单例 ──
+retry_policy = RetryPolicy()

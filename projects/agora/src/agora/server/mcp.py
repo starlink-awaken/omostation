@@ -334,7 +334,10 @@ async def _init_proxy():
     count = auto_register_from_m1()
     logger.info("auto_register_from_m1: %d workflow routes seeded", count)
 
-    # ── Phase 7 (P46 W2): 信号热加载 + Metrics ──
+    # ── Phase 7 (P47): 从 AGENTS.md 自动发现 + 信号热加载 ──
+    from agora.mcp.bos_discovery import discover_from_workspace  # type: ignore[import-not-found]
+    discovered = discover_from_workspace()
+    logger.info("bos_discovery: %d URIs discovered from AGENTS.md", discovered)
     _install_signal_handler()
 
 

@@ -1,0 +1,23 @@
+id: MECH-BOS-METRICS
+type: Mechanism
+name: "BOS 调用指标收集"
+description: "按 BOS URI 前缀统计调用量/成功率/延迟，通过 bos_metrics_status MCP 工具暴露"
+domain: meta
+layer: I0
+status: active
+version: "1.0.0"
+created: "2026-06-07"
+
+properties:
+  trigger: "per-call"
+  source: "agora/mcp/bos_metrics.py"
+  pattern: "prefix aggregation"
+  metrics:
+    - calls
+    - success_rate
+    - avg_latency_ms
+
+relations:
+  - type: Realizes
+    from: MECH-BOS-METRICS
+    to: "Layer 4 — 可观测性"

@@ -1,0 +1,22 @@
+id: MECH-BOS-RETRY
+type: Mechanism
+name: "BOS 调用重试策略"
+description: "失败时指数退避重试: max 2 retries, base 0.5s delay, 2^n backoff"
+domain: meta
+layer: I0
+status: active
+version: "1.0.0"
+created: "2026-06-07"
+
+properties:
+  trigger: "on-failure"
+  source: "agora/mcp/bos_middleware.py:RetryPolicy"
+  max_retries: 2
+  base_delay: 0.5
+  strategy: "exponential_backoff"
+
+relations:
+  - type: DependsOn
+    from: MECH-BOS-RETRY
+    to: MECH-BOS-CIRCUIT-BREAKER
+    note: "重试失败累积 → 触发熔断"
