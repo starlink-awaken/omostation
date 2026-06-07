@@ -15,6 +15,9 @@ dependencies = [
     "pyyaml",
     "requests>=2.32.5",
     "uvicorn>=0.39.0",
+    # LLM Gateway — provided by aetherforge-gateway
+    # import: from llm_gateway.detection import detect_backends
+    "aetherforge-gateway",
 ]
 
 [project.scripts]
@@ -28,3 +31,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.uv.sources]
+aetherforge-gateway = { path = "../aetherforge/packages/gateway" }
