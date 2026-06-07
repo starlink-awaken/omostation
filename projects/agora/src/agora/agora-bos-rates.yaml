@@ -1,0 +1,11 @@
+# BOS URI 限流配置
+default_qps: 20
+routes:
+  - prefix: "bos://analysis/minerva/"
+    qps: 5
+  - prefix: "bos://analysis/code/"
+    qps: 10
+  - prefix: "bos://memory/kronos/"
+    qps: 10
+  - prefix: "bos://memory/kos/"
+    qps: 20

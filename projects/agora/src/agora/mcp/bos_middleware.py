@@ -25,6 +25,7 @@
 from __future__ import annotations
 
 import time
+import threading
 import hashlib
 import json
 import logging
@@ -97,6 +98,23 @@ class CircuitBreaker:
         self._states: dict[str, dict] = {}  # uri → {state, failures, last_failure_time}
         self._failure_threshold = failure_threshold
         self._recovery_timeout = recovery_timeout
+        self._stop_event = threading.Event()
+        self._recovery_thread = threading.Thread(target=self._recovery_loop, daemon=True)
+        self._recovery_thread.start()
+
+    def _recovery_loop(self) -> None:
+        """后台线程: 定期检查 OPEN 电路是否超时，超时则转为 HALF_OPEN。"""
+        while not self._stop_event.wait(timeout=self._recovery_timeout):
+            for key in list(self._states.keys()):
+                s = self._states.get(key)
+                if s and s["state"] == self.OPEN:
+                    if time.time() - s["last_failure_time"] > self._recovery_timeout:
+                        s["state"] = self.HALF_OPEN
+                        _log.info("circuit_breaker_half_open for %s (auto)", key)
+
+    def shutdown(self) -> None:
+        """停止恢复线程。"""
+        self._stop_event.set()
 
     def is_open(self, uri: str) -> bool:
         """检查熔断是否打开。"""
@@ -155,16 +173,22 @@ class Cache:
     def __init__(self):
         self._store: dict[str, tuple[float, Any]] = {}  # key → (expires_at, value)
 
-    def _key(self, uri: str, params: dict | None = None) -> str:
-        """生成缓存键: MD5(uri + sorted params)."""
+    def _key(self, uri: str, params: dict | None = None) -> str | None:
+        """生成缓存键: MD5(uri + sorted params). 序列化失败返回 None。"""
         raw = uri
         if params:
-            raw += json.dumps(params, sort_keys=True, default=str)
+            try:
+                raw += json.dumps(params, sort_keys=True)
+            except (TypeError, ValueError):
+                _log.warning("cache_key_serialization_failed for %s", uri)
+                return None
         return hashlib.md5(raw.encode()).hexdigest()
 
     def get(self, uri: str, params: dict | None = None) -> Any | None:
         """查询缓存。返回 None 表示未命中。"""
         key = self._key(uri, params)
+        if key is None:
+            return None
         entry = self._store.get(key)
         if entry is None:
             return None
@@ -176,8 +200,10 @@ class Cache:
         return value
 
     def set(self, uri: str, params: dict | None, value: Any, ttl: float = 30.0) -> None:
-        """写入缓存。"""
+        """写入缓存。序列化失败则跳过。"""
         key = self._key(uri, params)
+        if key is None:
+            return
         self._store[key] = (time.time() + ttl, value)
 
     def invalidate(self, uri: str) -> None:

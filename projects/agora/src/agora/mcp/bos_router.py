@@ -42,6 +42,9 @@ class BOSRouter:
         """
         if not prefix.endswith("/"):
             prefix += "/"
+        if prefix in self._routes:
+            _log.warning("[BOSRouter] Skipping duplicate: %s (already %s)", prefix, self._routes[prefix]["adapter"])
+            return
         self._routes[prefix] = {
             "adapter": adapter,
             "prefix": prefix,

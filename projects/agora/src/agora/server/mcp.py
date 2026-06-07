@@ -62,7 +62,6 @@ from agora.mcp.bos_resolver import POC_SERVICES as _POC_SERVICES              # 
 
 # BOSRouter (P45 W2) — 统一路由注册表
 from agora.mcp.bos_router import bos_router as _bos_router  # type: ignore[import-not-found]
-from agora.mcp.bos_router import BOSRouter  # type: ignore[import-not-found]
 
 # BOS 中间件 (P46 W0) — 限流/熔断/缓存
 from agora.mcp.bos_middleware import bos_rate_limiter, bos_circuit_breaker, bos_cache  # type: ignore[import-not-found]
@@ -312,11 +311,19 @@ async def _init_proxy():
     logger.info("bos_router_seeded", poc_count=_bos_router.count())
 
     # ── Phase 5 (P46 W0): 配置 BOS 中间件 ──
-    # 按域/操作类型设置限流 QPS
-    bos_rate_limiter.configure("bos://analysis/minerva/", qps=5)     # 深度研究，高成本
-    bos_rate_limiter.configure("bos://analysis/code/", qps=10)       # 代码分析
-    bos_rate_limiter.configure("bos://memory/kronos/", qps=10)       # 摄取管线
-    bos_rate_limiter.configure("bos://memory/kos/", qps=20)          # 搜索，高频
+    # 从配置文件读取限流 QPS，硬编码作为回退
+    import yaml
+    rates_path = Path(__file__).parent.parent / "agora-bos-rates.yaml"
+    if rates_path.exists():
+        rates = yaml.safe_load(open(rates_path))
+        for route in rates.get("routes", []):
+            bos_rate_limiter.configure(route["prefix"], qps=route["qps"])
+    else:
+        # 硬编码回退
+        bos_rate_limiter.configure("bos://analysis/minerva/", qps=5)
+        bos_rate_limiter.configure("bos://analysis/code/", qps=10)
+        bos_rate_limiter.configure("bos://memory/kronos/", qps=10)
+        bos_rate_limiter.configure("bos://memory/kos/", qps=20)
     logger.info("bos_middleware_configured")
 
     # ── Phase 6 (P46 W1): 从 M1 Workflow 节点自动注册 BOS 路由 ──
@@ -549,21 +556,6 @@ async def _proxy_sync_loop():
             logger.exception("proxy_sync_loop_error")
             backoff = min(backoff * 2, 120)
 
-
-# ── Phase 34: Agora Mesh V2 (Agent Experience Layer) ────────────────
-
-@mcp.resource("bos://agora/registry")
-def agora_registry() -> str:
-    """Introspection: returns a JSON dump of all registered tools and resources."""
-    import json
-    if _proxy_manager:
-        tools = _proxy_manager.list_tools()
-        resources = _proxy_manager.list_resources()
-        return json.dumps({
-            "tools": [{"name": t.name, "description": t.description} for t in tools],
-            "resources": [{"uri": r.uri, "name": r.name} for r in resources]
-        }, indent=2)
-    return json.dumps({"error": "proxy manager not initialized"})
 
 # ── Phase 34: Agora Mesh V2 (Agent Experience Layer) ────────────────
 
