@@ -100,7 +100,7 @@ class TestCmdRepoSearch:
         rc = cmd_repo(_make_args(repo_cmd="search"))
         assert rc == 1
         captured = capsys.readouterr()
-        assert "requires a query" in captured.out
+        assert "requires a query" in captured.err
 
     def test_search_no_results(self, capsys):
         with patch("agora.cli.commands_repo.ToolCatalog") as MockCatalog:  # noqa: N806
@@ -287,7 +287,7 @@ class TestCmdRepoInstall:
                     rc = cmd_repo(_make_args(repo_cmd="install", name_or_id="ghost"))
                     assert rc == 1
                     captured = capsys.readouterr()
-                    assert "not found" in captured.out
+                    assert "not found" in captured.err
 
 
 # ── Tests: load ────────────────────────────────────────────────────────
@@ -320,7 +320,7 @@ class TestCmdRepoLoad:
             rc = cmd_repo(_make_args(repo_cmd="load", name_or_id="broken"))
             assert rc == 1
             captured = capsys.readouterr()
-            assert "Failed" in captured.out
+            assert "Failed" in captured.err
 
 
 # ── Tests: unload ──────────────────────────────────────────────────────
@@ -353,7 +353,7 @@ class TestCmdRepoUnload:
             rc = cmd_repo(_make_args(repo_cmd="unload", name_or_id="broken"))
             assert rc == 1
             captured = capsys.readouterr()
-            assert "Failed" in captured.out
+            assert "Failed" in captured.err
 
 
 # ── Tests: load-all ────────────────────────────────────────────────────
@@ -492,7 +492,7 @@ class TestCmdRepoRemove:
             rc = cmd_repo(_make_args(repo_cmd="remove", name_or_id="ghost"))
             assert rc == 1
             captured = capsys.readouterr()
-            assert "not found" in captured.out
+            assert "not found" in captured.err
 
 
 # ── Tests: unknown command ─────────────────────────────────────────────

@@ -52,6 +52,7 @@ quote-style = "double"
 
 [tool.uv.sources]
 runtime = { path = "../runtime" }
+aetherforge-gateway = { path = "../aetherforge/packages/gateway" }
 
 [dependency-groups]
 dev = [
