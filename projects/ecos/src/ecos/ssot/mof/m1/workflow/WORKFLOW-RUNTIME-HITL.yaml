@@ -26,41 +26,57 @@ cross_layer:
 steps:
   - order: 1
     name: Phase1_DecomposeIntent
-    action: runtime.runtime.phase1_decompose_intent
-    description: "第一阶段 — 意图拆解，将复杂任务分解为子任务"
+    action: runtime.decompose
+    description: "意图拆解 — 将复杂任务分解为子任务"
     input:
-      - bos://forge/task/complex
+      task:
+        type: object
+        required: true
+        description: "复杂任务描述"
     output:
-      - sub_tasks[]
+      sub_tasks:
+        type: array
     depends_on: []
   - order: 2
     name: Phase2_MultiSourceRetrieve
-    action: runtime.runtime.phase2_multi_source_retrieve
-    description: "第二阶段 — 多源检索，从 KOS、gbrain、Vault 等多源获取相关知识"
+    action: runtime.retrieve
+    description: "多源检索 — 从 KOS/gbrain/Vault 获取知识"
     input:
-      - sub_tasks[]
+      sub_tasks:
+        type: array
+        required: true
+      sources:
+        type: array
+        default: ["kos", "gbrain", "vault"]
     output:
-      - retrieved_knowledge[]
+      retrieved_knowledge:
+        type: array
     depends_on:
       - Phase1_DecomposeIntent
   - order: 3
     name: Phase3_InsightGenerate
-    action: runtime.runtime.phase3_insight_generate
-    description: "第三阶段 — 洞察生成，基于检索结果生成分析洞察"
+    action: runtime.insight
+    description: "洞察生成 — 基于检索结果生成分析"
     input:
-      - retrieved_knowledge[]
+      retrieved_knowledge:
+        type: array
+        required: true
     output:
-      - insights[]
+      insights:
+        type: array
     depends_on:
       - Phase2_MultiSourceRetrieve
   - order: 4
     name: Phase4_GraphUpdate
-    action: runtime.runtime.phase4_graph_update
-    description: "第四阶段 — 图谱更新，将新洞察写入知识图谱"
+    action: runtime.graph_update
+    description: "图谱更新 — 将洞察写入知识图谱"
     input:
-      - insights[]
+      insights:
+        type: array
+        required: true
     output:
-      - graph_updates[]
+      graph_updates:
+        type: array
     depends_on:
       - Phase3_InsightGenerate
   - order: 5

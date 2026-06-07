@@ -29,18 +29,28 @@ steps:
     action: decision_gate
     description: "决策权限判定 — 校验请求来源和权限范围"
     input:
-      - bos://omo/decision/request
+      request:
+        type: object
+        required: true
+        description: "决策请求"
     output:
-      - authorized_request
+      level:
+        type: string
+        enum: ["RED", "YELLOW", "GREEN"]
+      authorized:
+        type: boolean
     depends_on: []
   - order: 2
     name: RouterDispatch
     action: router_dispatch
     description: "将授权请求路由分发到对应的认知框架和执行器"
     input:
-      - authorized_request
+      authorized_request:
+        type: object
+        required: true
     output:
-      - routed_request
+      routed_request:
+        type: object
     depends_on:
       - DecisionGate
   - order: 3
@@ -48,9 +58,12 @@ steps:
     action: m_layer_execute
     description: "M 层实际执行决策逻辑"
     input:
-      - routed_request
+      routed_request:
+        type: object
+        required: true
     output:
-      - execution_result
+      execution_result:
+        type: object
     depends_on:
       - RouterDispatch
   - order: 4
@@ -58,9 +71,14 @@ steps:
     action: immune_monitor
     description: "免疫系统实时监测执行过程，检测异常和违规"
     input:
-      - execution_result
+      execution_result:
+        type: object
+        required: true
     output:
-      - immune_verdict
+      immune_verdict:
+        type: object
+      safe:
+        type: boolean
     depends_on:
       - MLayerExecute
   - order: 5
@@ -68,10 +86,13 @@ steps:
     action: result_assembly
     description: "组装执行结果和免疫审查结论"
     input:
-      - execution_result
-      - immune_verdict
+      execution_result:
+        type: object
+      immune_verdict:
+        type: object
     output:
-      - assembled_result
+      assembled_result:
+        type: object
     depends_on:
       - ImmuneMonitor
   - order: 6
