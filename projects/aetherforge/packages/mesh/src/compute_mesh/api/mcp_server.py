@@ -94,12 +94,16 @@ async def mesh_generate(prompt: str) -> str:
     if not provider_name:
         return f"❌ Node {best.node_id} has no known protocol."
 
-    from llm_gateway.detection import create_provider
+    from llm_gateway.detection import create_provider, detect_backends
     from llm_gateway.provider import LLMRequest
 
-    provider = create_provider(provider_name)
+    provider = create_provider(provider_name) if provider_name else None
     if not provider or not provider.is_available():
-        return f"❌ Provider {provider_name} not available."
+        backends = detect_backends()
+        if backends:
+            provider = backends[0]
+        else:
+            return f"❌ No available provider for node {best.node_id}."
 
     req = LLMRequest(prompt=prompt)
     try:

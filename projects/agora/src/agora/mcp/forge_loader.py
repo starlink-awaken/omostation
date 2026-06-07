@@ -65,7 +65,7 @@ def _build_service(tool: dict) -> BosService | None:
     package = m.group(2)
     action = m.group(3)
 
-    install_path = tool.get("install_path", "")
+    install_path = tool.get("install_path", tool.get("path", ""))
     module_name = Path(install_path).name or package
 
     # stdio command — 与 P33-W4 战役 1 同模式
@@ -134,7 +134,7 @@ class ForgeLoader:
         """加载单条工具到 ProcessPool + POC_SERVICES."""
         name = tool.get("name", "")
         bos_uri = tool.get("bos_uri", "")
-        install_path = tool.get("install_path", "")
+        install_path = tool.get("install_path", tool.get("path", ""))
 
         if not name or not bos_uri or not install_path:
             return {

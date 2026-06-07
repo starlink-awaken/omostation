@@ -59,11 +59,20 @@ class BOSRouter:
         self._routes.pop(prefix, None)
 
     def resolve(self, uri: str) -> dict[str, Any] | None:
-        """最长前缀匹配 — 返回路由信息或 None。"""
+        """最长前缀匹配 — 返回路由信息或 None。
+
+        同时处理精确匹配（忽略尾部斜杠）场景：
+        - registered: bos://memory/kos/search/
+        - uri:        bos://memory/kos/search  → 也匹配
+        """
         best_match = None
         best_len = -1
         for prefix, route in self._routes.items():
             if uri.startswith(prefix) and len(prefix) > best_len:
+                best_match = route
+                best_len = len(prefix)
+            # 精确匹配: 注册时自动加的 / 不应影响匹配
+            if prefix.endswith("/") and prefix[:-1] == uri and len(prefix) > best_len:
                 best_match = route
                 best_len = len(prefix)
         return best_match

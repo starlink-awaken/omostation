@@ -17,7 +17,7 @@
     print(f"Discovered {len(nodes)} compute nodes")
 """
 
-from .node import ComputeNode, NodeEngineType, NodeStatus
+from .node import ComputeNode, NodeEngineType, NodeStatus, TopologyLabels
 from .registry import NodeRegistry
 from .scanner import (
     CLOUD_PROVIDERS,
@@ -35,6 +35,7 @@ __all__ = (
     "NodeEngineType",
     "NodeRegistry",
     "NodeStatus",
+    "TopologyLabels",
     "TopologyScanner",
     "detect_cloud_nodes",
     "load_static_nodes",

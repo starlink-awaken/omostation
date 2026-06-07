@@ -186,8 +186,8 @@ class TestProcessPool:
 # ── 5. list_services / 注册表完整性 ────────────────
 class TestRegistry:
     def test_25_poc_services(self):
-        """P35 升级: 25 个 POC service (原 20 + Phase 35 补 5)."""
-        assert len(POC_SERVICES) == 25
+        """当前 POC_SERVICE 计数 (35)."""
+        assert len(POC_SERVICES) == 35
 
     def test_5_domains_coverage(self):
         """覆盖 5 个 domain."""

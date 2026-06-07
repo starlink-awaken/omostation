@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  # ── Unified MCP Server (gateway + mesh tools) ──────────────────────
+  aetherforge-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aetherforge-mcp
+    ports:
+      - "7432:8000"
+    environment:
+      - AETHERFORGE_MCP_PORT=8000
+      - AETHERFORGE_MCP_TRANSPORT=sse
+      # Provider API keys — set in .env or host env
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      # Ollama (host network for local access)
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ── (Optional) Standalone Mesh MCP Server ─────────────────────────
+  # Uncomment to run mesh as a separate service
+  # aetherforge-mesh:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.mesh
+  #   container_name: aetherforge-mesh
+  #   ports:
+  #     - "7433:8000"
+  #   environment:
+  #     - AETHERFORGE_MESH_PORT=8000
+  #     - AETHERFORGE_MESH_TRANSPORT=sse
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+  #   restart: unless-stopped

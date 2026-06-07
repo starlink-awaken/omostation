@@ -74,3 +74,23 @@ uv run pytest tests/ --ignore=tests/e2e -q    # 1165/1200 pass
 2. **ecos/omo 依赖声明但无静态 import** — 通过 subprocess 交互
 3. **CI 忽略 e2e 测试** — `--ignore=tests/e2e`
 4. **端口**: HTTP :7422, Web :7430, SSE :7431, API :8080
+
+## BOS Services
+
+Agora 对外提供的 BOS URI 服务。Agent 通过 `resolve_bos_uri()` 或 `read_resource()` 调用。
+
+- `bos://agora/registry` — Agora 注册表内省 (resource)
+  - 无需参数，直接 `read_resource("bos://agora/registry")`
+- `bos://memory/kos/search` — KOS 跨域语义搜索 (poc)
+  - 输入: `{"query": "str", "limit": 10}`
+  - 输出: `{"results": [...]}`
+- `bos://analysis/minerva/research` — Minerva 深度研究 (poc)
+  - 输入: `{"topic": "str", "depth": "basic|deep"}`
+  - 输出: `{"report": "str", "sources": [...]}`
+- `bos://analysis/codeanalyze/scan` — CodeAnalyze 代码扫描 (poc)
+  - 输入: `{"path": "str"}`
+  - 输出: `{"issues": [...]}`
+- `bos://governance/omo/audit` — OMO 治理审计 (internal)
+  - 无参数
+  - 输出: `{"summary": "str"}`
+

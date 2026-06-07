@@ -29,6 +29,64 @@ class NodeEngineType(Enum):
 
 
 @dataclass
+class TopologyLabels:
+    """Four-layer topology positioning for a compute node.
+
+    Mirrors Kubernetes topology.kubernetes.io conventions:
+      - **region**: Geographic region (e.g. ``"us-east-1"``, ``"cn-beijing"``)
+      - **zone**: Availability zone within region (e.g. ``"us-east-1a"``)
+      - **rack**: Physical or virtual rack (e.g. ``"rack-01"``, ``"local"``)
+      - **host**: The hostname or machine identifier (e.g. ``"macmini.local"``)
+
+    Nodes with empty labels match any topology query.
+    """
+
+    region: str = ""
+    """Geographic region (e.g. ``"us-east-1"``, ``"cn-beijing"``)."""
+
+    zone: str = ""
+    """Availability zone (e.g. ``"us-east-1a"``, ``"home"``)."""
+
+    rack: str = ""
+    """Physical or virtual rack identifier."""
+
+    host: str = ""
+    """Hostname or machine identifier."""
+
+    def matches(self, other: TopologyLabels) -> bool:
+        """Check if this node matches *other* at all non-empty levels."""
+        if other.region and self.region and self.region != other.region:
+            return False
+        if other.zone and self.zone and self.zone != other.zone:
+            return False
+        if other.rack and self.rack and self.rack != other.rack:
+            return False
+        if other.host and self.host and self.host != other.host:
+            return False
+        return True
+
+    def affinity_score(self, other: TopologyLabels) -> float:
+        """Compute a 0.0–1.0 affinity score.
+
+        The more topology levels match, the higher the score.
+        Each matching level adds 0.25; exact match = 1.0.
+        """
+        score = 0.0
+        if other.region and self.region:
+            score += 0.25 if self.region == other.region else -0.1
+        if other.zone and self.zone:
+            score += 0.25 if self.zone == other.zone else -0.1
+        if other.rack and self.rack:
+            score += 0.25 if self.rack == other.rack else -0.1
+        if other.host and self.host:
+            score += 0.25 if self.host == other.host else -0.1
+        return max(0.0, min(1.0, score))
+
+    def to_dict(self) -> dict[str, str]:
+        return {"region": self.region, "zone": self.zone, "rack": self.rack, "host": self.host}
+
+
+@dataclass
 class ComputeNode:
     """Describes a single compute node in the mesh.
 
@@ -49,8 +107,14 @@ class ComputeNode:
     base_url: str = ""
     """Endpoint URL (e.g. ``http://localhost:11434``)."""
 
-    network_zone: str = "local"
-    """Network locality: ``"local"``, ``"lan"``, ``"cloud"``, ``"tunnel"``."""
+    topology: TopologyLabels = field(default_factory=TopologyLabels)
+    """Four-layer topology labels (region/zone/rack/host)."""
+
+    network_zone: str = ""
+    """Network locality: ``"local"``, ``"lan"``, ``"cloud"``, ``"tunnel"``.
+    
+    If empty, derived from topology: region != '' → cloud, rack == 'local' → local.
+    """
 
     protocols: list[str] = field(default_factory=list)
     """Supported API protocols (e.g. ``["openai"]``, ``["anthropic"]``)."""
@@ -94,6 +158,14 @@ class ComputeNode:
         now = datetime.now().timestamp()
         if not self.first_seen:
             self.first_seen = now
+        # Auto-derive network_zone from topology if not set
+        if not self.network_zone:
+            if self.topology.host:
+                self.network_zone = "local"
+            elif self.topology.region:
+                self.network_zone = "cloud"
+            else:
+                self.network_zone = "local"
 
     @property
     def is_online(self) -> bool:
@@ -117,6 +189,7 @@ class ComputeNode:
             "name": self.name,
             "engine_type": self.engine_type.value,
             "base_url": self.base_url,
+            "topology": self.topology.to_dict(),
             "network_zone": self.network_zone,
             "protocols": self.protocols,
             "capabilities": self.capabilities,

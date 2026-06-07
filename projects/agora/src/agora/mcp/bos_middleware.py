@@ -174,7 +174,13 @@ class Cache:
         self._store: dict[str, tuple[float, Any]] = {}  # key → (expires_at, value)
 
     def _key(self, uri: str, params: dict | None = None) -> str | None:
-        """生成缓存键: MD5(uri + sorted params). 序列化失败返回 None。"""
+        """生成缓存键: uri_hash[:16] + full_hash(uri + sorted params).
+
+        双段结构确保:
+        - 精确查询: 完整 full_hash 确保唯一性
+        - 批量失效: uri_hash[:16] 前缀允许按 URI 匹配所有参数组合
+        """
+        uri_md5 = hashlib.md5(uri.encode()).hexdigest()[:16]
         raw = uri
         if params:
             try:
@@ -182,7 +188,8 @@ class Cache:
             except (TypeError, ValueError):
                 _log.warning("cache_key_serialization_failed for %s", uri)
                 return None
-        return hashlib.md5(raw.encode()).hexdigest()
+        full_md5 = hashlib.md5(raw.encode()).hexdigest()
+        return uri_md5 + full_md5
 
     def get(self, uri: str, params: dict | None = None) -> Any | None:
         """查询缓存。返回 None 表示未命中。"""
@@ -207,8 +214,8 @@ class Cache:
         self._store[key] = (time.time() + ttl, value)
 
     def invalidate(self, uri: str) -> None:
-        """失效 URI 相关的所有缓存。"""
-        prefix = hashlib.md5(uri.encode()).hexdigest()[:8]
+        """失效 URI 相关的所有缓存。匹配 uri_hash[:16] 前缀。"""
+        prefix = hashlib.md5(uri.encode()).hexdigest()[:16]
         keys = [k for k in self._store if k.startswith(prefix)]
         for k in keys:
             del self._store[k]

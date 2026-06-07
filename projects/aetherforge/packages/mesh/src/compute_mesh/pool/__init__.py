@@ -20,9 +20,11 @@
 """
 
 from .cost import CostTracker
+from .cost_db import CostDB
 from .manager import ComputePool
 
 __all__ = (
     "ComputePool",
+    "CostDB",
     "CostTracker",
 )

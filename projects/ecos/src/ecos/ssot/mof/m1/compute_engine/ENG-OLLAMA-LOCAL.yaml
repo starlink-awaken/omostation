@@ -1,9 +1,0 @@
-id: ENG-OLLAMA-LOCAL
-type: compute_engine
-node_ref: NODE-LOCAL-MAC
-engine_type: local_daemon
-base_url: "http://localhost:11434/v1"
-supported_protocols: ["ollama"]
-cost_multiplier: 0.0001
-status: active
-description: "本机 Ollama 常驻服务 (13 models: qwen3.6, deepseek-r1, etc.)"

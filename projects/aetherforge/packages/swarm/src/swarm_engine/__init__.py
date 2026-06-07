@@ -15,6 +15,7 @@ from .cost_aware_dispatcher import CostAwareDispatcher
 from .dag import TaskDAG, TaskNode
 from .domain_router import DomainRouter as DomainRouterNew
 from .economy_seed import EnergyLedger
+from .synapse_gateway import GatewaySynapse
 from .env_resolver import EnvResolver
 from .event_bus import BOSEvent, EventBus, make_event
 from .goal_task_mapper import GoalTaskMapper
@@ -61,6 +62,7 @@ __all__ = (
     "DomainHandlerProto",
     "DomainRouterNew",
     "EnergyLedger",
+    "GatewaySynapse",
     "EnvResolver",
     "EventBus",
     "GoalTaskMapper",

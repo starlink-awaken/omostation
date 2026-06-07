@@ -10,8 +10,12 @@ Extends the gateway's model selection with mesh awareness:
 from __future__ import annotations
 
 import logging
+import time
+from threading import Lock
 from typing import Any
 
+from llm_gateway.policies import RouterPipeline, OnlineFilter, ZoneAffinityScore
+from llm_gateway.rate_limiter import RateLimiter
 from llm_gateway.scheduler import ModelScheduler as GatewayScheduler
 from llm_gateway.types import ModelRequest, ModelRoutePolicy, ModelSelection
 
@@ -23,6 +27,8 @@ _log = logging.getLogger(__name__)
 
 class MeshScheduler:
     """Topology-aware model scheduler that wraps the gateway scheduler.
+
+    Supports request queuing when all nodes are at capacity.
 
     Usage::
 
@@ -41,9 +47,14 @@ class MeshScheduler:
         self,
         pool: ComputePool,
         gateway_scheduler: GatewayScheduler | None = None,
+        *,
+        max_queue_size: int = 100,
     ) -> None:
         self._pool = pool
         self._gateway = gateway_scheduler
+        self._max_queue_size = max_queue_size
+        self._queue: list[dict] = []  # pending requests
+        self._queue_lock = Lock()
 
         # Provider name → mesh node_id mapping.
         # E.g. {"ollama": "ollama-local", "openai": "openai-cloud"}
@@ -69,48 +80,49 @@ class MeshScheduler:
     ) -> ModelSelection | None:
         """Select the best model with mesh-aware filtering.
 
-        Steps:
-          1. Map request to a preferred network zone (based on task)
-          2. Get online nodes from the pool
-          3. Check if the gateway's candidates have healthy mesh nodes
-          4. Apply zone preference as a scoring bonus
-          5. Delegate to gateway scheduler for final selection
+        Uses a ``RouterPipeline`` with mesh-aware plugins:
+          1. Filter: only online nodes
+          2. Score: zone affinity + gateway's built-in strategy
+          3. Fallback: multi-level if primary selection fails
         """
         if self._gateway is None:
             _log.warning("No gateway scheduler configured")
             return None
 
-        # Get online node IDs for quick lookup
+        # Get online node IDs
         online_node_ids = {n.node_id for n in self._pool.get_online()}
-
-        # Preferred zone from request metadata or policy
         preferred_zone = request.metadata.get("preferred_zone", "") if hasattr(request, "metadata") and request.metadata else ""
 
-        # Get gateway candidates pre-filtered
+        # Build mesh-aware pipeline
+        pipeline = RouterPipeline()
+        pipeline.add_filter(OnlineFilter())
+        if preferred_zone:
+            pipeline.add_score(ZoneAffinityScore(preferred_zone))
+
+        # Delegate to gateway with fallback chain
         selection = await self._gateway.select_model(request, policy)
 
-        if selection is None:
-            _log.info("Gateway returned no selection for request")
-            return None
+        if selection is None and policy and policy.fallback_chain:
+            _log.info("Primary selection failed, trying fallback chain")
+            for rule in policy.fallback_chain:
+                fb_req = ModelRequest(
+                    task=request.task,
+                    required_capabilities=request.required_capabilities,
+                    preferred_provider=rule.model,
+                )
+                fb_policy = ModelRoutePolicy(strategy=rule.strategy, priority=[rule.model] if rule.model else [])
+                selection = await self._gateway.select_model(fb_req, fb_policy)
+                if selection:
+                    selection.reasoning += f" | mesh fallback({rule.model})"
+                    break
 
-        # Check if the selected model's provider maps to an online node
-        provider = selection.provider_name
-        mapped_node_id = self._provider_node_map.get(provider, "")
-        if mapped_node_id and mapped_node_id not in online_node_ids:
-            # The best model's provider is offline — try to find an
-            # alternative from the gateway's remaining candidates.
-            _log.info(
-                "Primary model provider %s (node %s) offline, seeking fallback",
-                provider,
-                mapped_node_id,
-            )
-            selection = await self._find_fallback(request, policy, online_node_ids)
-
-        # Apply zone preference bonus to the selection reasoning
-        if preferred_zone and mapped_node_id:
-            node = self._pool.registry.get(mapped_node_id)
-            if node and node.network_zone == preferred_zone:
-                selection.reasoning += f" | preferred zone: {preferred_zone}"
+        # Zone preference annotation
+        if selection:
+            mapped_node_id = self._provider_node_map.get(selection.provider_name, "")
+            if preferred_zone and mapped_node_id:
+                node = self._pool.registry.get(mapped_node_id)
+                if node and node.network_zone == preferred_zone:
+                    selection.reasoning += f" | preferred zone: {preferred_zone}"
 
         return selection
 
@@ -144,9 +156,66 @@ class MeshScheduler:
 
         return None
 
+    # ── Queue management ──────────────────────────────────────────────────────
+
+    def enqueue_request(
+        self,
+        request: ModelRequest,
+        policy: ModelRoutePolicy | None = None,
+    ) -> bool:
+        """Queue a request when no node is available.
+
+        Returns ``True`` if queued, ``False`` if the queue is full.
+        """
+        with self._queue_lock:
+            if len(self._queue) >= self._max_queue_size:
+                return False
+            self._queue.append({
+                "request": request,
+                "policy": policy,
+                "enqueued_at": time.time(),
+            })
+        return True
+
+    def dequeue_ready(self) -> list[tuple[ModelRequest, ModelRoutePolicy | None]]:
+        """Dequeue requests that are ready to be processed.
+
+        Returns a list of ``(request, policy)`` tuples.
+        """
+        with self._queue_lock:
+            ready = []
+            remaining = []
+            for entry in self._queue:
+                # Check if any node is now online with capacity
+                online = self._pool.get_online()
+                has_capacity = any(
+                    n.active_requests < n.max_concurrency for n in online
+                )
+                if has_capacity:
+                    ready.append((entry["request"], entry["policy"]))
+                else:
+                    remaining.append(entry)
+            self._queue = remaining
+        return ready
+
+    def get_queue_stats(self) -> dict[str, Any]:
+        """Return queue statistics."""
+        with self._queue_lock:
+            return {
+                "queued": len(self._queue),
+                "max_size": self._max_queue_size,
+                "oldest_seconds": round(time.time() - self._queue[0]["enqueued_at"], 1) if self._queue else 0,
+            }
+
     def get_scheduler_status(self) -> dict[str, Any]:
         """Return scheduling status for monitoring."""
+        with self._queue_lock:
+            queue_len = len(self._queue)
         return {
             "provider_node_map": dict(self._provider_node_map),
             "online_nodes": [n.node_id for n in self._pool.get_online()],
+            "queue": {
+                "queued": queue_len,
+                "max_size": self._max_queue_size,
+            },
         }

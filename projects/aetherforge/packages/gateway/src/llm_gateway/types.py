@@ -59,12 +59,27 @@ class ModelDescriptor:
 
 
 @dataclass
+class FallbackRule:
+    """A single fallback rule with strategy and timeout."""
+
+    model: str = ""
+    """Model name to fall back to."""
+    strategy: str = "balanced"
+    """Scoring strategy for this fallback level."""
+    timeout_ms: int = 30_000
+    """Max wait before triggering the next fallback."""
+    cooldown_ms: int = 10_000
+    """Min time before retrying this fallback after a failure."""
+
+
+@dataclass
 class ModelRoutePolicy:
     """Routing policy for model selection."""
 
     strategy: str = "balanced"
     priority: list[str] = field(default_factory=list)
-    fallback_chain: list[str] = field(default_factory=list)
+    fallback_chain: list[FallbackRule] = field(default_factory=list)
+    """Multi-level fallback chain. Each entry: model + strategy + timeout."""
 
 
 @dataclass

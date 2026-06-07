@@ -744,10 +744,23 @@ def invoke_stdio(
     """
     service = POC_SERVICES.get(uri)
     if service is None:
+        # 提供类似 URI 推荐
+        suggestions = []
+        from agora.mcp.bos_router import bos_router as _br
+        known = _br.list_all()
+        uri_parts = uri.strip("/").split("/")
+        for r in known:
+            known_uri = r["prefix"].strip("/")
+            if len(uri_parts) >= 2 and any(p in known_uri for p in uri_parts):
+                suggestions.append(known_uri + "/")
+        hint = ""
+        if suggestions:
+            hint = f" Did you mean: {', '.join(suggestions[:5])}?"
         return {
             "uri": uri,
             "status": "error",
             "error": f"unknown_bos_uri: {uri} (registered: {len(POC_SERVICES)})",
+            "hint": hint.strip(),
         }
     if service.transport != "stdio":
         return {

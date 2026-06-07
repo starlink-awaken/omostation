@@ -1,11 +1,36 @@
-# BOS URI 限流配置
-default_qps: 20
+# Agora BOS 限流配置 (agora-bos-rates.yaml)
+# 配置文件支持热加载: ConfigWatcher 每 5s 检查变化
+# 手动触发: kill -SIGUSR1 <agora-pid>
+
 routes:
+  # Memory 域
+  - prefix: "bos://memory/kos/"
+    qps: 20
+  - prefix: "bos://memory/kronos/"
+    qps: 10
+
+  # Analysis 域
   - prefix: "bos://analysis/minerva/"
     qps: 5
   - prefix: "bos://analysis/code/"
     qps: 10
-  - prefix: "bos://memory/kronos/"
+  - prefix: "bos://analysis/iris/"
     qps: 10
-  - prefix: "bos://memory/kos/"
-    qps: 20
+
+  # Governance 域
+  - prefix: "bos://governance/omo/"
+    qps: 10
+  - prefix: "bos://governance/metaos/"
+    qps: 5
+
+  # Persona 域
+  - prefix: "bos://persona/"
+    qps: 10
+
+  # Forge 域
+  - prefix: "bos://forge/"
+    qps: 10
+
+  # Ecos workflow 域 (M1 自动注册)
+  - prefix: "bos://ecos/"
+    qps: 5

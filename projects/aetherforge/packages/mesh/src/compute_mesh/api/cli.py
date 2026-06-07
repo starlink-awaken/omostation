@@ -90,8 +90,49 @@ def cmd_health() -> int:
 
 
 def cmd_worker_list() -> int:
-    """List registered workers (TODO)."""
-    print("👷 Worker management: not yet implemented (Layer 5)")
+    """List registered workers."""
+    pool = _get_pool()
+    from ..worker import WorkerRegistry, TaskDispatcher
+
+    registry = WorkerRegistry()
+    dispatcher = TaskDispatcher(pool, registry)
+    dispatcher.provision_all(workers_per_node=2)
+
+    workers = registry.get_all()
+    if not workers:
+        print("👷 No workers registered.")
+        return 0
+
+    print(f"👷 AetherForge Workers — {len(workers)} total:")
+    stats = registry.get_stats()
+    print(f"   Idle: {stats['idle']} | Busy: {stats['busy']} | Error: {stats['error']} | Completed: {stats['total_completed']}")
+    print()
+    for w in sorted(workers, key=lambda x: x.node_id):
+        icon = {"idle": "🟢", "busy": "🟡", "error": "🔴", "draining": "🔵", "terminated": "⚫"}.get(w.status.value, "⚪")
+        print(f"  {icon} {w.worker_id:30s} node={w.node_id:20s} status={w.status.value:10s} load={w.current_load:.1f}")
+    return 0
+
+
+def cmd_worker_dispatch(worker_id: str, prompt: str) -> int:
+    """Dispatch a generation task to a specific worker."""
+    pool = _get_pool()
+    from ..worker import WorkerRegistry, TaskDispatcher
+
+    registry = WorkerRegistry()
+    dispatcher = TaskDispatcher(pool, registry)
+
+    worker = registry.get(worker_id)
+    if not worker:
+        print(f"❌ Worker {worker_id} not found.")
+        return 1
+
+    result = dispatcher.dispatch(worker.node_id, prompt=prompt)
+    if result["success"]:
+        print(f"⚡ {worker_id} → {result['model']} ({result['latency_ms']}ms)")
+        print(result["content"])
+    else:
+        print(f"❌ {result['error']}")
+        return 1
     return 0
 
 
@@ -117,19 +158,23 @@ def cmd_generate(prompt: str) -> int:
 
     print(f"⚡ Routing to best node: {best.node_id} (zone={best.network_zone})")
 
-    # Try to use the gateway's provider directly
+    # Try the mapped provider first, fallback to gateway auto-detection
+    from llm_gateway.detection import create_provider, detect_backends
+    from llm_gateway.provider import LLMRequest
+
     provider_name = best.protocols[0] if best.protocols else ""
-    if not provider_name:
-        print(f"❌ Node {best.node_id} has no known protocol.")
-        return 1
+    provider = create_provider(provider_name) if provider_name else None
 
-    # Import gateway detection
-    from llm_gateway.detection import create_provider
-
-    provider = create_provider(provider_name)
     if not provider or not provider.is_available():
-        print(f"❌ Provider {provider_name} not available.")
-        return 1
+        # Fallback: use whatever gateway can detect
+        backends = detect_backends()
+        if backends:
+            provider = backends[0]
+            if best.base_url and hasattr(provider, "base_url"):
+                provider.base_url = best.base_url
+        else:
+            print(f"❌ No available provider for node {best.node_id}.")
+            return 1
 
     from llm_gateway.provider import LLMRequest
 
@@ -149,7 +194,10 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("status", help="Health + load summary")
     sub.add_parser("topology-scan", help="Discover nodes via all backends")
     sub.add_parser("health", help="Run health checks")
-    sub.add_parser("worker-list", help="List workers (TODO)")
+    sub.add_parser("worker-list", help="List workers")
+    wp = sub.add_parser("worker-dispatch", help="Dispatch task to a worker")
+    wp.add_argument("worker_id", help="Worker ID")
+    wp.add_argument("prompt", help="Prompt text")
     sub.add_parser("cost", help="Cost report")
 
     gen = sub.add_parser("generate", help="Generate via best node")
@@ -167,6 +215,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_health()
     elif args.cmd == "worker-list":
         return cmd_worker_list()
+    elif args.cmd == "worker-dispatch":
+        return cmd_worker_dispatch(args.worker_id, args.prompt)
     elif args.cmd == "cost":
         return cmd_cost()
     elif args.cmd == "generate":

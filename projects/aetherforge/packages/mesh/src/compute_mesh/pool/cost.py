@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from ..topology import NodeRegistry
+from .cost_db import CostDB
 
 _log = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ class CostTracker:
         self._cost_log = Path(cost_log_path)
         self._session_costs: dict[str, float] = defaultdict(float)
         self._session_requests: dict[str, int] = defaultdict(int)
+        self._db = CostDB()
 
     # ── Recording ────────────────────────────────────────────────────────────
 
@@ -72,6 +74,18 @@ class CostTracker:
         self._session_costs[node_id] += total_cost
         self._session_requests[node_id] += 1
 
+        # Dual write: SQLite + JSONL
+        self._db.record(
+            node_id=node_id,
+            model=model,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_cost=total_cost,
+            cost_input=cost_input,
+            cost_output=cost_output,
+        )
+
+        # Legacy JSONL (for backwards compat)
         entry = {
             "ts": datetime.now(UTC).isoformat(),
             "node_id": node_id,
@@ -82,7 +96,6 @@ class CostTracker:
             "cost_output": round(cost_output, 6),
             "total_cost": round(total_cost, 6),
         }
-
         self._write_log(entry)
 
     def record_llm(
@@ -115,9 +128,10 @@ class CostTracker:
     # ── Reporting ────────────────────────────────────────────────────────────
 
     def get_report(self) -> dict[str, Any]:
-        """Return a cost report for the current session."""
-        total_cost = sum(self._session_costs.values())
-        total_requests = sum(self._session_requests.values())
+        """Return a cost report (SQLite aggregated + session data)."""
+        # Session-level data
+        session_total = sum(self._session_costs.values())
+        session_requests = sum(self._session_requests.values())
 
         node_details = []
         for node_id in self._session_costs:
@@ -129,12 +143,29 @@ class CostTracker:
                 }
             )
 
+        # SQLite persistent data
+        db_report = self._db.get_report()
+
         return {
-            "total_cost": round(total_cost, 6),
-            "total_requests": total_requests,
-            "nodes": node_details,
-            "log_path": str(self._cost_log),
+            "session": {
+                "total_cost": round(session_total, 6),
+                "total_requests": session_requests,
+                "nodes": node_details,
+            },
+            "all_time": {
+                "total_cost": db_report["total_cost"],
+                "total_requests": db_report["total_requests"],
+                "total_prompt_tokens": db_report["total_prompt_tokens"],
+                "total_completion_tokens": db_report["total_completion_tokens"],
+                "nodes": len(db_report["per_node"]),
+            },
+            "db_path": str(self._db._db_path),
+            "jsonl_path": str(self._db._jsonl_path),
         }
+
+    def get_db(self) -> CostDB:
+        """Access the underlying SQLite cost database directly."""
+        return self._db
 
     def reset_session(self) -> None:
         """Reset in-memory session counters."""

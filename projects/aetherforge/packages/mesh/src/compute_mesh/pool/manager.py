@@ -240,6 +240,87 @@ class ComputePool:
             "zones": list({n.network_zone for n in self._registry.get_all()}),
         }
 
+    # ── Auto-scaling ─────────────────────────────────────────────────────────
+
+    def auto_scale_workers(
+        self,
+        worker_registry,
+        *,
+        min_workers: int = 1,
+        max_workers: int = 20,
+        scale_up_threshold: float = 0.8,
+        scale_down_threshold: float = 0.2,
+        workers_per_node: int = 2,
+    ) -> dict[str, Any]:
+        """Dynamically adjust the number of workers based on load.
+
+        Called periodically (e.g. every 30s) to scale workers up or down.
+
+        Args:
+            worker_registry: The worker registry to manage.
+            min_workers: Minimum total workers across all nodes.
+            max_workers: Maximum total workers across all nodes.
+            scale_up_threshold: Fraction of busy workers that triggers scale-up.
+            scale_down_threshold: Fraction of busy workers that triggers scale-down.
+            workers_per_node: Target workers per online node.
+
+        Returns:
+            Dict with ``added``, ``removed``, ``total`` counts.
+        """
+        from ..worker import TaskDispatcher, WorkerRegistry
+
+        dispatcher = TaskDispatcher(self, worker_registry)
+        total_workers = worker_registry.count()
+        stats = worker_registry.get_stats()
+        busy_ratio = stats["busy"] / max(1, total_workers)
+
+        result: dict[str, Any] = {"added": 0, "removed": 0, "total": total_workers, "reason": "stable"}
+
+        # Scale up: if busy ratio exceeds threshold or too few workers
+        if busy_ratio > scale_up_threshold or total_workers < min_workers:
+            if total_workers < max_workers:
+                new_workers = dispatcher.provision_all(workers_per_node=workers_per_node)
+                result["added"] = len(new_workers)
+                result["total"] = worker_registry.count()
+                result["reason"] = f"scale_up (busy={busy_ratio:.0%})"
+            else:
+                result["reason"] = "at_max_capacity"
+
+        # Scale down: if busy ratio is below threshold and we have excess
+        elif busy_ratio < scale_down_threshold and total_workers > min_workers:
+            idle = worker_registry.get_idle()
+            to_remove = max(0, len(idle) - min_workers)
+            if to_remove > 0:
+                for w in idle[:to_remove]:
+                    worker_registry.unregister(w.worker_id)
+                result["removed"] = to_remove
+                result["total"] = worker_registry.count()
+                result["reason"] = f"scale_down (busy={busy_ratio:.0%})"
+
+        return result
+
+    def get_load_report(self) -> dict[str, Any]:
+        """Return a detailed load report for capacity planning."""
+        nodes = self._registry.get_all()
+        total_capacity = sum(n.max_concurrency for n in nodes if n.is_online)
+        total_load = sum(n.active_requests for n in nodes if n.is_online)
+        return {
+            "total_nodes": len(nodes),
+            "online_nodes": len(self.get_online()),
+            "total_capacity": total_capacity,
+            "total_load": total_load,
+            "utilization": round(total_load / max(1, total_capacity), 3),
+            "nodes": [
+                {
+                    "node_id": n.node_id,
+                    "load": n.active_requests,
+                    "capacity": n.max_concurrency,
+                    "utilization": round(n.active_requests / max(1, n.max_concurrency), 3),
+                }
+                for n in nodes
+            ],
+        }
+
 
 # Import socket at module level for _probe_node
 import socket  # noqa: E402
