@@ -25,21 +25,36 @@ def cmd_init(_args):
     return run_wizard()
 
 
-def cmd_completion(_args):
-    """Generate shell completion (bash/zsh)."""
-    cmds = (
-        "register unregister list discover instance tenant market search info stats health "
-        "route routes mcp init config web sync completion "
-        "pipeline pipelines pipeline-define event start-pipeline run "
-        "proto key audit transitions a2a agent-card"
-    )
-    print("# Add to ~/.bashrc or ~/.zshrc:")
-    print('#   eval "$(agora completion)"')
-    print()
-    print("_agora_completion() {")
-    print("  local cur=${COMP_WORDS[COMP_CWORD]}")
-    print(f'  local cmds="{cmds} start-pipeline"')
-    print('  COMPREPLY=($(compgen -W "$cmds" -- "$cur"))')
+def cmd_completion(args):
+    """Generate shell completion (bash/zsh/fish)."""
+    from agora.cli.parser import build_parser
+
+    parser = build_parser()
+    cmds = []
+    for action in parser._subparsers._group_actions:
+        for choice in action.choices:
+            cmds.append(choice)
+    cmd_str = " ".join(sorted(cmds))
+
+    shell = getattr(args, 'shell', 'bash')
+    if shell == 'fish':
+        print(f"# Add to ~/.config/fish/config.fish:")
+        print(f'#   agora completion --shell fish | source')
+        print()
+        print(f"complete -c agora -f")
+        for c in sorted(cmds):
+            print(f"complete -c agora -n 'not __fish_seen_subcommand_from {' '.join(cmds)}' -a {c}")
+    else:
+        print("# Add to ~/.bashrc or ~/.zshrc:")
+        print('#   eval "$(agora completion)"')
+        print()
+        print("_agora_completion() {")
+        print("  local cur=${COMP_WORDS[COMP_CWORD]}")
+        print(f'  local cmds="{cmd_str}"')
+        print('  COMPREPLY=($(compgen -W "$cmds" -- "$cur"))')
+        print("  return 0")
+        print("}")
+        print("complete -F _agora_completion agora")
     print("}")
     print("complete -F _agora_completion agora")
     return 0
