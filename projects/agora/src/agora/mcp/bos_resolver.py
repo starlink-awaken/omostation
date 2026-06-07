@@ -514,6 +514,55 @@ POC_SERVICES: dict[str, BosService] = {
         func_name="run_sync",
         description="OMO 状态同步 (P47 简化版, internal transport, 跳 P47+ in-process→subprocess 真重构)",
     ),
+    # ── P46 战役 2: 4 个 agent-runtime URI 跨项目 spawn runtime (P44-W2 评估) ──
+    "bos://capability/agent-runtime/agent-list": BosService(
+        uri="bos://capability/agent-runtime/agent-list",
+        domain="capability",
+        package="agent-runtime",
+        action="agent-list",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(OMOSTATION_ROOT / "projects" / "runtime"),
+            "python", "-m", "runtime.executor.agent_hub", "serve", "--action", "agent-list",
+        ],
+        description="Agent-runtime agent-list (P46, POC stdio, 跨项目 spawn runtime, 待 runtime serve dispatcher 适配)",
+    ),
+    "bos://capability/agent-runtime/chat": BosService(
+        uri="bos://capability/agent-runtime/chat",
+        domain="capability",
+        package="agent-runtime",
+        action="chat",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(OMOSTATION_ROOT / "projects" / "runtime"),
+            "python", "-m", "runtime.executor.agent_runner", "serve", "--action", "chat",
+        ],
+        description="Agent-runtime chat (P46, POC stdio, 跨项目 spawn runtime, P39-W1 卫健委可能用)",
+    ),
+    "bos://capability/agent-runtime/run-task": BosService(
+        uri="bos://capability/agent-runtime/run-task",
+        domain="capability",
+        package="agent-runtime",
+        action="run-task",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(OMOSTATION_ROOT / "projects" / "runtime"),
+            "python", "-m", "runtime.executor.agent_executor", "serve", "--action", "run-task",
+        ],
+        description="Agent-runtime run-task (P46, POC stdio, 跨项目 spawn runtime)",
+    ),
+    "bos://capability/agent-runtime/task-status": BosService(
+        uri="bos://capability/agent-runtime/task-status",
+        domain="capability",
+        package="agent-runtime",
+        action="task-status",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(OMOSTATION_ROOT / "projects" / "runtime"),
+            "python", "-m", "runtime.executor.agent_hub", "serve", "--action", "task-status",
+        ],
+        description="Agent-runtime task-status (P46, POC stdio, 跨项目 spawn runtime)",
+    ),
 }
 
 
