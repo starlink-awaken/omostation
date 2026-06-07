@@ -1,0 +1,94 @@
+domain: sharedbrain
+description: "SharedBrain organ state, identity, and configuration domain"
+authority: external
+owner: "@sharedbrain"
+write_policy: "admin_only"
+schema_version: "0.1.0"
+
+metadata:
+  domain_id: "sharedbrain.organ"
+  version: "0.1.0"
+  maintainer: "@sharedbrain"
+  source: "SharedBrain D-Governance"
+  sync_mode: "pull"
+
+schemas:
+  organ:
+    description: "A SharedBrain D-Domain organ"
+    fields:
+      name:
+        type: string
+        description: "Organ name (e.g., D-Economy, D-Immunity)"
+        required: true
+        unique: true
+      status:
+        type: string
+        description: "Operational status"
+        enum: ["active", "delegated", "degraded", "maintenance", "inactive"]
+        default: "active"
+      base_class:
+        type: string
+        description: "Inherited base class (e.g., BaseMembrane)"
+        required: true
+      ports:
+        type: map
+        description: "TCP/UDP ports used by this organ"
+        key_type: string
+        value_type: integer
+      dependencies:
+        type: array
+        description: "Other organs this organ depends on"
+        items:
+          type: string
+      dna_references:
+        type: array
+        description: "Z-Spore DNA rules governing this organ"
+        items:
+          type: string
+      layer:
+        type: string
+        description: "B-OS architecture layer"
+        enum: ["L0", "L1", "L2", "L3"]
+      mcp_endpoint:
+        type: string
+        description: "MCP endpoint if this organ exposes tools"
+        required: false
+
+  agent:
+    description: "An A1 Agent registered with identity_bridge"
+    fields:
+      agent_id:
+        type: string
+        description: "Unique A1 agent identifier"
+        required: true
+        unique: true
+      role:
+        type: string
+        description: "AgentRole from identity_bridge"
+        required: true
+      permissions:
+        type: array
+        description: "Granted permissions"
+        items:
+          type: string
+      org:
+        type: string
+        description: "Organization the agent belongs to"
+        required: false
+
+conflict_resolution:
+  strategy: "authoritative_wins"
+  authority: sharedbrain
+  precedence:
+    - sharedbrain
+    - cache
+    - local
+
+data_flow:
+  inbound:
+    direction: pull
+    schedule: "every 5 minutes"
+    via: "eidos/adapters/sharedbrain.py"
+  outbound:
+    direction: push
+    via: "eidos/adapters/eidos_to_bos.py"

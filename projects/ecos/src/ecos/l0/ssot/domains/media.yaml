@@ -1,0 +1,89 @@
+domain: media
+description: "Personal media domain (photos, videos, albums, metadata)"
+authority: local
+owner: "@self"
+write_policy: "admin_only"
+schema_version: "0.1.0"
+
+metadata:
+  domain_id: "media.personal"
+  version: "0.1.0"
+  maintainer: "@self"
+  source: "Apple Photos, local media libraries"
+  sync_mode: "pull"
+
+schemas:
+  photo:
+    description: "A personal photograph with metadata"
+    fields:
+      filename:
+        type: string
+        description: "File name including extension"
+        required: true
+      taken_at:
+        type: string
+        description: "ISO 8601 capture timestamp"
+        required: true
+      path:
+        type: string
+        description: "Relative or absolute path in the media store"
+        required: true
+      album:
+        type: string
+        description: "Album or folder name"
+      people:
+        type: array
+        description: "Tagged person names"
+        items:
+          type: string
+      location:
+        type: string
+        description: "GPS or place name"
+        required: false
+      hash:
+        type: string
+        description: "SHA-256 file hash for dedup"
+        required: false
+
+  video:
+    description: "A personal video clip with metadata"
+    fields:
+      filename:
+        type: string
+        description: "File name including extension"
+        required: true
+      taken_at:
+        type: string
+        description: "ISO 8601 capture timestamp"
+        required: true
+      path:
+        type: string
+        description: "Relative or absolute path in the media store"
+        required: true
+      duration_sec:
+        type: integer
+        description: "Duration in seconds"
+      album:
+        type: string
+        description: "Album or folder name"
+      people:
+        type: array
+        description: "Tagged person names"
+        items:
+          type: string
+      resolution:
+        type: string
+        description: "e.g., 1920x1080"
+        required: false
+
+conflict_resolution:
+  strategy: "authoritative_wins"
+
+data_flow:
+  inbound:
+    direction: pull
+    schedule: "on_demand"
+    via: "eidos/adapters/media_ingest.py"
+  outbound:
+    direction: push
+    via: "eidos/adapters/media_to_bos.py"

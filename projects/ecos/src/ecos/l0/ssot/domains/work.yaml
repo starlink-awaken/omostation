@@ -1,0 +1,93 @@
+domain: work
+description: "Professional work domain (projects, documents, tasks, milestones)"
+authority: local
+owner: "@self"
+write_policy: "admin_only"
+schema_version: "0.1.0"
+
+metadata:
+  domain_id: "work.professional"
+  version: "0.1.0"
+  maintainer: "@self"
+  source: "Project management, writing workflow"
+  sync_mode: "pull"
+
+schemas:
+  project:
+    description: "A professional project or workstream"
+    fields:
+      name:
+        type: string
+        description: "Project name"
+        required: true
+        unique: true
+      status:
+        type: string
+        description: "Current project phase"
+        enum: ["backlog", "active", "paused", "review", "completed", "archived"]
+        default: "backlog"
+      domain:
+        type: string
+        description: "Business domain (e.g., engineering, research, writing)"
+        required: true
+      start_date:
+        type: string
+        description: "ISO 8601 start date"
+      target_date:
+        type: string
+        description: "ISO 8601 target completion date"
+      tags:
+        type: array
+        description: "Categorization tags"
+        items:
+          type: string
+      url:
+        type: string
+        description: "Link to repo, doc, or tracker"
+        required: false
+
+  document:
+    description: "A work document (spec, report, proposal, note)"
+    fields:
+      title:
+        type: string
+        description: "Document title"
+        required: true
+      type:
+        type: string
+        description: "Document category"
+        enum: ["spec", "report", "proposal", "memo", "note", "design_doc"]
+        default: "note"
+      project:
+        type: string
+        description: "Parent project name"
+        required: true
+      version:
+        type: string
+        description: "Semantic version"
+        default: "0.1.0"
+      authors:
+        type: array
+        description: "Contributor names or IDs"
+        items:
+          type: string
+      created:
+        type: string
+        description: "ISO 8601 creation timestamp"
+      status:
+        type: string
+        description: "Review status"
+        enum: ["draft", "review", "approved", "superseded"]
+        default: "draft"
+
+conflict_resolution:
+  strategy: "authoritative_wins"
+
+data_flow:
+  inbound:
+    direction: pull
+    schedule: "on_demand"
+    via: "eidos/adapters/work_ingest.py"
+  outbound:
+    direction: push
+    via: "eidos/adapters/work_to_bos.py"

@@ -319,6 +319,11 @@ async def _init_proxy():
     bos_rate_limiter.configure("bos://memory/kos/", qps=20)          # 搜索，高频
     logger.info("bos_middleware_configured")
 
+    # ── Phase 6 (P46 W1): 从 M1 Workflow 节点自动注册 BOS 路由 ──
+    from agora.mcp.bos_auto_register import auto_register_from_m1  # type: ignore[import-not-found]
+    count = auto_register_from_m1()
+    logger.info("auto_register_from_m1: %d workflow routes seeded", count)
+
 
 # ── 辅助函数 ─────────────────────────────────────────
 # _ok() / _error() 集中管理返回格式。

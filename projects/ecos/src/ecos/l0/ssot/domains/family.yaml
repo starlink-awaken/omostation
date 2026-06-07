@@ -1,0 +1,75 @@
+domain: family
+description: "Personal & family domain (members, events, activities, contacts)"
+authority: local
+owner: "@self"
+write_policy: "admin_only"
+schema_version: "0.1.0"
+
+metadata:
+  domain_id: "family.personal"
+  version: "0.1.0"
+  maintainer: "@self"
+  source: "Calendar, contacts, family records"
+  sync_mode: "pull"
+
+schemas:
+  member:
+    description: "A family member or close personal relation"
+    fields:
+      name:
+        type: string
+        description: "Display name"
+        required: true
+      relationship:
+        type: string
+        description: "Relation to self (e.g., spouse, child, parent)"
+        required: true
+      birthday:
+        type: string
+        description: "ISO 8601 date of birth"
+      notes:
+        type: string
+        description: "Free-form notes"
+        required: false
+
+  event:
+    description: "A family or personal event"
+    fields:
+      title:
+        type: string
+        description: "Event name"
+        required: true
+      date:
+        type: string
+        description: "ISO 8601 event date"
+        required: true
+      category:
+        type: string
+        description: "Event type"
+        enum: ["celebration", "gathering", "travel", "health", "milestone", "other"]
+        default: "other"
+      participants:
+        type: array
+        description: "Family members involved"
+        items:
+          type: string
+      location:
+        type: string
+        description: "Venue or address"
+        required: false
+      notes:
+        type: string
+        description: "Event details or memories"
+        required: false
+
+conflict_resolution:
+  strategy: "authoritative_wins"
+
+data_flow:
+  inbound:
+    direction: pull
+    schedule: "on_demand"
+    via: "eidos/adapters/family_ingest.py"
+  outbound:
+    direction: push
+    via: "eidos/adapters/family_to_bos.py"

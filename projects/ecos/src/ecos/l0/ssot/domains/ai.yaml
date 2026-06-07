@@ -1,0 +1,90 @@
+domain: ai
+description: "AI tooling domain (models, tools, agents, prompts, evals)"
+authority: local
+owner: "@self"
+write_policy: "admin_only"
+schema_version: "0.1.0"
+
+metadata:
+  domain_id: "ai.tooling"
+  version: "0.1.0"
+  maintainer: "@self"
+  source: "OpenRouter, HuggingFace, local inference"
+  sync_mode: "pull"
+
+schemas:
+  model:
+    description: "An AI model accessible via API or local inference"
+    fields:
+      name:
+        type: string
+        description: "Model identifier (e.g., claude-sonnet-4-20250514)"
+        required: true
+        unique: true
+      provider:
+        type: string
+        description: "API provider or source"
+        required: true
+      capability:
+        type: array
+        description: "Model capabilities"
+        items:
+          type: string
+          enum: ["chat", "vision", "code", "reasoning", "embedding", "image_gen", "audio"]
+      context_window:
+        type: integer
+        description: "Maximum context length in tokens"
+      cost_per_1k_input:
+        type: float
+        description: "USD per 1K input tokens"
+      cost_per_1k_output:
+        type: float
+        description: "USD per 1K output tokens"
+      status:
+        type: string
+        description: "Availability status"
+        enum: ["available", "deprecated", "unstable"]
+        default: "available"
+
+  tool:
+    description: "An AI-enabled tool, MCP server, or agent skill"
+    fields:
+      name:
+        type: string
+        description: "Tool name"
+        required: true
+        unique: true
+      type:
+        type: string
+        description: "Tool category"
+        enum: ["mcp", "skill", "agent", "plugin", "script"]
+        required: true
+      description:
+        type: string
+        description: "What this tool does"
+      models:
+        type: array
+        description: "Compatible model names"
+        items:
+          type: string
+      triggers:
+        type: array
+        description: "Keywords or patterns that invoke this tool"
+        items:
+          type: string
+      version:
+        type: string
+        description: "Semantic version"
+        default: "0.1.0"
+
+conflict_resolution:
+  strategy: "authoritative_wins"
+
+data_flow:
+  inbound:
+    direction: pull
+    schedule: "on_demand"
+    via: "eidos/adapters/ai_ingest.py"
+  outbound:
+    direction: push
+    via: "eidos/adapters/ai_to_bos.py"

@@ -1,0 +1,17 @@
+id: P46-W0-RELIABILITY
+phase: 46
+wave: W0
+title: "BOS 可靠性 — 限流/熔断/缓存"
+status: done
+task_type: feature
+priority: P0
+depends_on:
+  - P45-W3-GOVERNANCE-SCHEMA
+deliverables:
+  - "agora/mcp/bos_middleware.py (RateLimiter + CircuitBreaker + Cache)"
+  - "server/mcp.py: 集成中间件 + bos_middleware_status 工具"
+  - "server/mcp.py: _init_proxy Phase 5 限流配置"
+risk_level: L1
+allowed_operation_level: L1
+started_at: '2026-06-07T13:00:00Z'
+completed_at: '2026-06-07T14:00:00Z'
