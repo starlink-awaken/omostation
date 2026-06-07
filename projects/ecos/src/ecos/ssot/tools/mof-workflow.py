@@ -482,6 +482,10 @@ def cmd_stats(args):
         "按类型": str(dict(subtype_counter)),
     })
 
+    if not nodes:
+        out.print_info('暂无工作流数据')
+        return 0
+
     if critical:
         out.print_section("关键路径")
         for c in critical:
