@@ -416,6 +416,31 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="KOS 实体写入 (P45-W0, POC stdio, search 的对偶)",
     ),
+    # ── P45-W1 战役 1: 2 个 kronos GAP URI (P44-W2 评估) ──
+    "bos://memory/kronos/query": BosService(
+        uri="bos://memory/kronos/query",
+        domain="memory",
+        package="kronos",
+        action="query",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "kronos", "serve", "--action", "query",
+        ],
+        description="KRONOS 时间序列查询 (P45-W1, POC stdio, ingest 的对偶)",
+    ),
+    "bos://memory/kronos/schedule": BosService(
+        uri="bos://memory/kronos/schedule",
+        domain="memory",
+        package="kronos",
+        action="schedule",
+        transport="stdio",
+        command=[
+            "uv", "run", "--directory", str(KAIRON_ROOT),
+            "python", "-m", "kronos", "serve", "--action", "schedule",
+        ],
+        description="KRONOS 调度任务 (P45-W1, POC stdio)",
+    ),
 }
 
 
