@@ -1,0 +1,26 @@
+id: DEBT-M1-GIT-RESET
+title: "M1 文件被 git reset 反复删除"
+status: active
+priority: P1
+created: "2026-06-07"
+category: infra
+risk: high
+effort: "0.5天"
+
+description: |
+  projects/ecos/src/ecos/ssot/mof/m1/ 下的 workflow/bosroute/mechanism YAML 文件
+  在每次 git commit 时被静默删除。根因不明，可能与 git hooks 或 submodule 交互有关。
+
+workaround: |
+  当前使用 git update-index --assume-unchanged 保护 37 个文件。
+  每次创建新 M1 文件后需手动添加保护。
+
+affected_files:
+  - projects/ecos/src/ecos/ssot/mof/m1/workflow/*.yaml
+  - projects/ecos/src/ecos/ssot/mof/m1/bosroute/*.yaml
+  - projects/ecos/src/ecos/ssot/mof/m1/mechanism/MECH-BOS-*.yaml
+
+notes: |
+  - 每次 session 平均发生 5-8 次文件丢失
+  - scripts/preserve-m1-files.sh 作为急救脚本存在
+  - 根因可能: .gitignore 规则 / pre-commit hook / submodule 边界
