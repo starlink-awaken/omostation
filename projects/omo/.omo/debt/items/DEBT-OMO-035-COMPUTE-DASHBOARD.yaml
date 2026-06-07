@@ -1,0 +1,18 @@
+id: DEBT-OMO-035-COMPUTE-DASHBOARD
+title: 构建算力网格的可视化监控仪表盘 (Compute Grid Dashboard)
+description: |
+  实现混合云算力系统的 UI 面板，直观展示大模型请求在家庭局域网与公有云之间的流转状态。
+  功能需求：
+  1. 拓扑图：展示 Local-Mac、MacMini (Ollama)、Y7000P (LMStudio) 与 Cloud (cc-switch) 的连通性。
+  2. 流量追踪：监控每条 prompt 发往了哪个物理节点，展示延迟与 Token 吞吐率。
+  3. 成本大盘：对接 codexbar 显示实时拦截情况，展示通过白嫖本地显卡节省的成本。
+priority: P2
+severity: medium
+component: L3/Cockpit
+status: open
+created_at: '2026-06-07T08:20:00Z'
+owner: system
+tags:
+  - ui
+  - observability
+  - llm-gateway

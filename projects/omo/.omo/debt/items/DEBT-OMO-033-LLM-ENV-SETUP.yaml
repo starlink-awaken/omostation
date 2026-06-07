@@ -1,0 +1,18 @@
+id: DEBT-OMO-033-LLM-ENV-SETUP
+title: 注入系统全局 LLM 环境配置与打通 Worker 执行端
+description: |
+  目前 OMO Worker 和内部大模型风控节点由于缺乏大模型资源配置（如 API Key）而处于干跑失败状态。
+  需要完成以下动作以点火大模型决策层：
+  1. 向 ~/.ecos/db/registry.sqlite 或全局环境变量注入有效的大模型 API Key（主推 Anthropic / OpenAI）。
+  2. 修改 .omo/_truth/registry/workers.yaml，将缺省的 codebuddy 替换为当前环境下实际可用的 CLI Agent 或 Python 代理脚本。
+  3. 验证 omo task dispatch 能够被成功唤醒并跑通基于大模型的推理、规划与结案流程。
+priority: P1
+severity: high
+component: L2/OMO
+status: open
+created_at: '2026-06-07T07:51:00Z'
+owner: system
+tags:
+  - llm
+  - configuration
+  - event-driven
