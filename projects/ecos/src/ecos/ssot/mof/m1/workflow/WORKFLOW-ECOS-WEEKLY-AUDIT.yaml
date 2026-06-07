@@ -27,62 +27,97 @@ steps:
   name: KEMSValidateAll
   action: ecos.domain_validate_all
   description: KEMS 六面结构校验
-  input: {}
+  input:
+    task:
+      type: object
+      required: true
+      description: Task input
   output:
-    passed: int
+    passed:
+      type: int
   depends_on: []
 - order: 2
   name: DriftDetection
   action: ecos.domain_audit
   description: 注册表 vs 文件系统漂移检测
-  input: {}
+  input:
+    task:
+      type: object
+      required: true
+      description: Task input
   output:
-    drifts: int
+    drifts:
+      type: int
   depends_on:
   - KEMSValidateAll
 - order: 3
   name: ReferenceCheck
   action: ecos.check_refs
   description: 跨域路径引用可解析性检查
-  input: {}
+  input:
+    task:
+      type: object
+      required: true
+      description: Task input
   output:
-    broken_refs: int
+    broken_refs:
+      type: int
   depends_on:
   - DriftDetection
 - order: 4
   name: BOSValidate
   action: ecos.bos_validate
   description: BOS URI 健康检查
-  input: {}
+  input:
+    task:
+      type: object
+      required: true
+      description: Task input
   output:
-    valid: int
+    valid:
+      type: int
   depends_on:
   - ReferenceCheck
 - order: 5
   name: RoutesUpdate
   action: ecos.domain_routes
   description: 路由缓存更新
-  input: {}
+  input:
+    task:
+      type: object
+      required: true
+      description: Task input
   output:
-    routes: int
+    routes:
+      type: int
   depends_on:
   - BOSValidate
 - order: 6
   name: IndexSync
   action: ecos.domain_sync
   description: 索引同步
-  input: {}
+  input:
+    task:
+      type: object
+      required: true
+      description: Task input
   output:
-    synced: bool
+    synced:
+      type: bool
   depends_on:
   - RoutesUpdate
 - order: 7
   name: HealthCheck
   action: ecos.health_check
   description: 最终全系统健康检查
-  input: {}
+  input:
+    task:
+      type: object
+      required: true
+      description: Task input
   output:
-    healthy: bool
+    healthy:
+      type: bool
   depends_on:
   - IndexSync
 execution:

@@ -1,3 +1,4 @@
+# M1 Workflow: WORKFLOW-DEPLOY
 id: WORKFLOW-DEPLOY
 type: Workflow
 subtype: AgentWorkflow
@@ -13,3 +14,17 @@ properties:
   workflow_name: Deploy 工作流
   steps: 部署工作流——构建→测试→部署→健康检查
   trigger: agent-invoke
+steps:
+- order: 1
+  name: DEPLOYTask
+  action: agent.deploy
+  description: 部署工作流——构建→测试→部署→健康检查
+  input:
+    context:
+      type: object
+      description: Agent context
+  output:
+    result:
+      type: object
+      description: DEPLOY result
+  depends_on: []

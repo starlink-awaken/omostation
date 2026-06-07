@@ -1,107 +1,121 @@
+# M1 Workflow: WORKFLOW-RUNTIME-SCENARIO
 id: WORKFLOW-RUNTIME-SCENARIO
 type: Workflow
 subtype: PipelineWorkflow
 name: Runtime 场景管线
-description: "6 预定义知识处理场景: standard/quick-analysis/full-review/learning-cycle/knowledge-refresh/deep-analysis"
+description: '6 预定义知识处理场景: standard/quick-analysis/full-review/learning-cycle/knowledge-refresh/deep-analysis'
 status: active
-version: "1.0.0"
+version: 1.0.0
 domain: forge
 layer: L1
-created: "2026-06-07"
+created: '2026-06-07'
 bos_uri: bos://ecos/workflow/runtime-scenario
-
 cross_layer:
   realized_by:
-    - project: runtime
-      package: runtime
-      entrypoint: src/runtime/executor/workflows/SCENARIOS.py
+  - project: runtime
+    package: runtime
+    entrypoint: src/runtime/executor/workflows/SCENARIOS.py
   invoked_by:
-    - layer: I0
-      component: agora
-      mechanism: MCP 工具调用
-    - layer: L3
-      component: cockpit
-      mechanism: CLI 命令透传
-
+  - layer: I0
+    component: agora
+    mechanism: MCP 工具调用
+  - layer: L3
+    component: cockpit
+    mechanism: CLI 命令透传
 steps:
-  - order: 1
-    name: SelectScenario
-    action: runtime.runtime.select_scenario
-    description: "根据请求参数选择匹配的预定义场景模板"
-    input:
-      - bos://forge/agent/request
-    output:
-      - scenario_config
-    depends_on: []
-  - order: 2
-    name: LoadSteps
-    action: runtime.runtime.load_steps
-    description: "加载场景配置，展开为可执行的步骤序列"
-    input:
-      - scenario_config
-    output:
-      - step_sequence[]
-    depends_on:
-      - SelectScenario
-  - order: 3
-    name: ExecuteStep
-    action: runtime.runtime.execute_step
-    description: "逐步骤执行场景中的操作，记录执行状态"
-    input:
-      - step_sequence[]
-    output:
-      - step_results[]
-    depends_on:
-      - LoadSteps
-  - order: 4
-    name: CollectOutput
-    action: runtime.runtime.collect_output
-    description: "收集所有步骤的执行结果"
-    input:
-      - step_results[]
-    output:
-      - collected_results
-    depends_on:
-      - ExecuteStep
-  - order: 5
-    name: ReturnResult
-    action: runtime.runtime.return_result
-    description: "组装并返回最终场景执行输出"
-    input:
-      - collected_results
-    output:
-      - bos://forge/result
-    depends_on:
-      - CollectOutput
-
+- order: 1
+  name: SelectScenario
+  action: runtime.runtime.select_scenario
+  description: 根据请求参数选择匹配的预定义场景模板
+  input:
+    forge_agent_request:
+      type: object
+      description: forge_agent_request
+  output:
+    scenario_config:
+      type: object
+      description: scenario_config
+  depends_on: []
+- order: 2
+  name: LoadSteps
+  action: runtime.runtime.load_steps
+  description: 加载场景配置，展开为可执行的步骤序列
+  input:
+    scenario_config:
+      type: object
+      description: scenario_config
+  output:
+    step_sequence:
+      type: object
+      description: step_sequence
+  depends_on:
+  - SelectScenario
+- order: 3
+  name: ExecuteStep
+  action: runtime.runtime.execute_step
+  description: 逐步骤执行场景中的操作，记录执行状态
+  input:
+    step_sequence:
+      type: object
+      description: step_sequence
+  output:
+    step_results:
+      type: object
+      description: step_results
+  depends_on:
+  - LoadSteps
+- order: 4
+  name: CollectOutput
+  action: runtime.runtime.collect_output
+  description: 收集所有步骤的执行结果
+  input:
+    step_results:
+      type: object
+      description: step_results
+  output:
+    collected_results:
+      type: object
+      description: collected_results
+  depends_on:
+  - ExecuteStep
+- order: 5
+  name: ReturnResult
+  action: runtime.runtime.return_result
+  description: 组装并返回最终场景执行输出
+  input:
+    collected_results:
+      type: object
+      description: collected_results
+  output:
+    forge_result:
+      type: object
+      description: forge_result
+  depends_on:
+  - CollectOutput
 execution:
   mode: sequential
   max_retries: 3
   timeout: 600
   on_failure: abort
   audit_enabled: true
-
 relations:
-  - type: triggers
-    target: bos://forge/agent/request
-    note: "Agent 请求触发场景管线"
-  - type: data_flows
-    target: bos://forge/result
-    note: "场景结果返回运行时消费端"
-  - type: triggers
-    target: WORKFLOW-RUNTIME-HITL
-    note: "复杂场景触发 HITL 五阶段处理"
-
+- type: triggers
+  target: bos://forge/agent/request
+  note: Agent 请求触发场景管线
+- type: data_flows
+  target: bos://forge/result
+  note: 场景结果返回运行时消费端
+- type: triggers
+  target: WORKFLOW-RUNTIME-HITL
+  note: 复杂场景触发 HITL 五阶段处理
 sla:
   max_execution_time: 600
   expected_completion_rate: 0.95
   critical: false
-
 tags:
-  - runtime
-  - scenario
-  - knowledge
-  - agent
-
+- runtime
+- scenario
+- knowledge
+- agent
 maintained_by: runtime
-last_reviewed: "2026-06-07"
+last_reviewed: '2026-06-07'

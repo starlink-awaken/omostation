@@ -1,3 +1,4 @@
+# M1 Workflow: WORKFLOW-CREATE
 id: WORKFLOW-CREATE
 type: Workflow
 subtype: AgentWorkflow
@@ -13,3 +14,17 @@ properties:
   workflow_name: Create 工作流
   steps: 创建工作流——脚手架→编码→文档→提交
   trigger: agent-invoke
+steps:
+- order: 1
+  name: CREATETask
+  action: agent.create
+  description: 创建工作流——脚手架→编码→文档→提交
+  input:
+    context:
+      type: object
+      description: Agent context
+  output:
+    result:
+      type: object
+      description: CREATE result
+  depends_on: []

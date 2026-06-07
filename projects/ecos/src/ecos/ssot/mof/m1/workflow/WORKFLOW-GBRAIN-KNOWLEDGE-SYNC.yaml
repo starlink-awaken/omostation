@@ -1,98 +1,111 @@
+# M1 Workflow: WORKFLOW-GBRAIN-KNOWLEDGE-SYNC
 id: WORKFLOW-GBRAIN-KNOWLEDGE-SYNC
 type: Workflow
 subtype: PipelineWorkflow
 name: gbrain 知识同步管线
-description: "TypeScript 知识库与 Postgres 同步管线 — 67 MCP 工具支撑，从 KOS 拉取 → Schema 转换 → Upsert → 完整性校验"
+description: TypeScript 知识库与 Postgres 同步管线 — 67 MCP 工具支撑，从 KOS 拉取 → Schema 转换 → Upsert
+  → 完整性校验
 status: active
-version: "1.0.0"
+version: 1.0.0
 domain: memory
 layer: L2
-created: "2026-06-07"
+created: '2026-06-07'
 bos_uri: bos://ecos/workflow/gbrain-knowledge-sync
-
 cross_layer:
   realized_by:
-    - project: gbrain
-      package: gbrain
-      entrypoint: src/
+  - project: gbrain
+    package: gbrain
+    entrypoint: src/
   invoked_by:
-    - layer: I0
-      component: agora
-      mechanism: MCP 工具调用
-    - layer: L3
-      component: cockpit
-      mechanism: CLI 命令透传
-
+  - layer: I0
+    component: agora
+    mechanism: MCP 工具调用
+  - layer: L3
+    component: cockpit
+    mechanism: CLI 命令透传
 steps:
-  - order: 1
-    name: PullFromKOS
-    action: pull_from_kos
-    description: "从 KOS 本体拉取最新知识条目和更新差异"
-    input:
-      - bos://memory/kos
-    output:
-      - kos_entries[]
-    depends_on: []
-  - order: 2
-    name: TransformSchema
-    action: transform_schema
-    description: "将 KOS 本体 Schema 映射转换为 Postgres 关系模型"
-    input:
-      - kos_entries[]
-    output:
-      - pg_rows[]
-    depends_on:
-      - PullFromKOS
-  - order: 3
-    name: UpsertPostgres
-    action: upsert_postgres
-    description: "增量 Upsert 至 Postgres 表，处理冲突与去重"
-    input:
-      - pg_rows[]
-    output:
-      - bos://memory/gbrain
-    depends_on:
-      - TransformSchema
-  - order: 4
-    name: VerifyIntegrity
-    action: verify_integrity
-    description: "校验 Postgres 数据与 KOS 源的一致性"
-    input:
-      - bos://memory/gbrain
-      - bos://memory/kos
-    output:
-      - integrity_report
-    depends_on:
-      - UpsertPostgres
-
+- order: 1
+  name: PullFromKOS
+  action: pull_from_kos
+  description: 从 KOS 本体拉取最新知识条目和更新差异
+  input:
+    memory_kos:
+      type: object
+      description: memory_kos
+  output:
+    kos_entries:
+      type: object
+      description: kos_entries
+  depends_on: []
+- order: 2
+  name: TransformSchema
+  action: transform_schema
+  description: 将 KOS 本体 Schema 映射转换为 Postgres 关系模型
+  input:
+    kos_entries:
+      type: object
+      description: kos_entries
+  output:
+    pg_rows:
+      type: object
+      description: pg_rows
+  depends_on:
+  - PullFromKOS
+- order: 3
+  name: UpsertPostgres
+  action: upsert_postgres
+  description: 增量 Upsert 至 Postgres 表，处理冲突与去重
+  input:
+    pg_rows:
+      type: object
+      description: pg_rows
+  output:
+    memory_gbrain:
+      type: object
+      description: memory_gbrain
+  depends_on:
+  - TransformSchema
+- order: 4
+  name: VerifyIntegrity
+  action: verify_integrity
+  description: 校验 Postgres 数据与 KOS 源的一致性
+  input:
+    memory_gbrain:
+      type: object
+      description: memory_gbrain
+    memory_kos:
+      type: object
+      description: memory_kos
+  output:
+    integrity_report:
+      type: object
+      description: integrity_report
+  depends_on:
+  - UpsertPostgres
 execution:
   mode: sequential
   max_retries: 3
   timeout: 600
   on_failure: abort
   audit_enabled: true
-
 relations:
-  - type: triggers
-    target: bos://memory/kos
-    note: "KOS 知识更新触发 gbrain 同步"
-  - type: data_flows
-    target: bos://memory/gbrain
-    note: "同步结果流入 gbrain Postgres 表"
-  - type: depends_on
-    target: WORKFLOW-KRONOS-INGEST
-    note: "gbrain 同步依赖 Kronos 摄取的基础数据"
-
+- type: triggers
+  target: bos://memory/kos
+  note: KOS 知识更新触发 gbrain 同步
+- type: data_flows
+  target: bos://memory/gbrain
+  note: 同步结果流入 gbrain Postgres 表
+- type: depends_on
+  target: WORKFLOW-KRONOS-INGEST
+  note: gbrain 同步依赖 Kronos 摄取的基础数据
 sla:
   max_execution_time: 600
   expected_completion_rate: 0.95
   critical: false
-
 tags:
-  - sync
-  - postgres
-  - knowledge
-  - gbrain
-
+- sync
+- postgres
+- knowledge
+- gbrain
 maintained_by: gbrain
-last_reviewed: "2026-06-07"
+last_reviewed: '2026-06-07'
