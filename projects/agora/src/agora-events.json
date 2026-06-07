@@ -14464,15 +14464,85 @@
       "payload": {
         "ok": true
       }
+    },
+    {
+      "id": "evt_1780819760_04d585",
+      "time": "2026-06-07T08:09:20Z",
+      "source": "unknown",
+      "type": "bos:memory:kos:search",
+      "trace_id": "",
+      "payload": {
+        "uri": "bos://memory/kos/search"
+      }
+    },
+    {
+      "id": "evt_1780819800_bdbc7a",
+      "time": "2026-06-07T08:10:00Z",
+      "source": "unknown",
+      "type": "bos:memory:kos:search",
+      "trace_id": "",
+      "payload": {
+        "uri": "bos://memory/kos/search"
+      }
+    },
+    {
+      "id": "evt_1780819842_11ffdc",
+      "time": "2026-06-07T08:10:42Z",
+      "source": "unknown",
+      "type": "bos:memory:kos:search",
+      "trace_id": "",
+      "payload": {
+        "uri": "bos://memory/kos/search"
+      }
+    },
+    {
+      "id": "evt_1780819858_831dbe",
+      "time": "2026-06-07T08:10:58Z",
+      "source": "unknown",
+      "type": "bos:memory:kos:search",
+      "trace_id": "",
+      "payload": {
+        "uri": "bos://memory/kos/search"
+      }
+    },
+    {
+      "id": "evt_1780819867_dc65b9",
+      "time": "2026-06-07T08:11:07Z",
+      "source": "unknown",
+      "type": "bos:memory:kos:search",
+      "trace_id": "",
+      "payload": {
+        "uri": "bos://memory/kos/search"
+      }
+    },
+    {
+      "id": "evt_1780820382_6bbb64",
+      "time": "2026-06-07T08:19:42Z",
+      "source": "unknown",
+      "type": "bos:memory:kos:search",
+      "trace_id": "",
+      "payload": {
+        "uri": "bos://memory/kos/search"
+      }
+    },
+    {
+      "id": "evt_1780820477_493d4f",
+      "time": "2026-06-07T08:21:17Z",
+      "source": "unknown",
+      "type": "bos:memory:kos:search",
+      "trace_id": "",
+      "payload": {
+        "uri": "bos://memory/kos/search"
+      }
     }
   ],
   "subscriptions": [
     {
-      "id": "sub_142fb57b",
-      "service": "mcp-caller",
-      "pattern": "test:*",
+      "id": "sub_4c48d96b",
+      "service": "test-bos",
+      "pattern": "bos:memory:kos:search",
       "callback_url": "",
-      "created": "2026-06-07T03:58:14Z"
+      "created": "2026-06-07T08:21:17Z"
     }
   ],
   "max_events": 1000

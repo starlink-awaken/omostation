@@ -100,6 +100,31 @@ class BOSRouter:
         c = Counter(r["adapter"] for r in self._routes.values())
         return dict(c)
 
+    def reload_from_m1(self) -> int:
+        """热加载: 从 M1 Workflow YAML 重新注册 (不重启服务器).
+
+        新增的 WORKFLOW-*.yaml 会被注册，已有路由不被覆盖。
+        返回新注册数量。
+
+        用法:
+            from agora.mcp.bos_router import bos_router
+            count = bos_router.reload_from_m1()
+        """
+        from agora.mcp.bos_auto_register import auto_register_from_m1
+        count = auto_register_from_m1(bos_router=self)
+        _log.info("[BOSRouter] reload_from_m1: %d new routes", count)
+        return count
+
+    def reload_from_discovery(self) -> int:
+        """热加载: 从 AGENTS.md 重新发现 (不重启服务器).
+
+        返回新注册数量。
+        """
+        from agora.mcp.bos_discovery import discover_from_workspace
+        count = discover_from_workspace()
+        _log.info("[BOSRouter] reload_from_discovery: %d new routes", count)
+        return count
+
 
 # ── 全局单例 ──
 bos_router = BOSRouter()

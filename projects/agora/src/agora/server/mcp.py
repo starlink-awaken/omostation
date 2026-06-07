@@ -398,6 +398,42 @@ def _install_signal_handler() -> None:
 # 要求每个工具函数显式传递（以便 SOP 的 AST 静态检测能在工具函数体中找到字面量）。
 
 
+# ── 缓存 TTL 配置 ──────────────────────────────────────
+# 从 agora-bos-rates.yaml 读取每前缀的 cache_ttl，无配置时默认 30s。
+_RATES_CACHE_TTL: dict[str, int] = {}
+
+
+def _load_cache_ttl_config() -> None:
+    """加载缓存 TTL 配置。"""
+    global _RATES_CACHE_TTL
+    rates_path = Path(__file__).parent.parent / "agora-bos-rates.yaml"
+    if not rates_path.exists():
+        return
+    import yaml
+    try:
+        rates = yaml.safe_load(open(rates_path))
+        _RATES_CACHE_TTL = {}
+        for route in rates.get("routes", []):
+            prefix = route["prefix"]
+            ttl = route.get("cache_ttl", 30)
+            _RATES_CACHE_TTL[prefix] = ttl
+    except Exception:
+        _RATES_CACHE_TTL = {}
+
+
+def _get_cache_ttl(uri: str) -> int:
+    """按 URI 前缀获取缓存 TTL (最长前缀匹配，无匹配默认 30s)."""
+    if not _RATES_CACHE_TTL:
+        _load_cache_ttl_config()
+    best_len = -1
+    best_ttl = 30
+    for prefix, ttl in _RATES_CACHE_TTL.items():
+        if uri.startswith(prefix) and len(prefix) > best_len:
+            best_len = len(prefix)
+            best_ttl = ttl
+    return best_ttl
+
+
 def _error(msg: str) -> dict:
     """返回标准错误响应（内建 format_version）。"""
     return {"status": "error", "error": msg, "format_version": FORMAT_VERSION}
@@ -690,6 +726,33 @@ def agora_registry() -> str:
             "resources": [{"uri": r.uri, "name": r.name} for r in resources]
         }, indent=2)
     return json.dumps({"error": "proxy manager not initialized"})
+
+
+@mcp.resource("bos://agora/status")
+async def bos_agora_status() -> str:
+    """BOS 系统内省 — 统一大盘: 路由/域/中间件/调用量.
+
+    Agent 单次调用即可获取 BOS 系统全貌，无需调多个工具。
+    """
+    import json
+    status = {
+        "format_version": FORMAT_VERSION,
+        "service": "agora",
+        "router": {
+            "total_routes": _bos_router.count(),
+            "stats": _bos_router.stats(),
+        },
+        "middleware": {
+            "rate_limiter": bos_rate_limiter.status(),
+            "circuit_breaker": {
+                "open_circuits": bos_circuit_breaker.status(),
+            },
+            "cache": bos_cache.status(),
+        },
+        "metrics": bos_metrics.summary(),
+        "resources_total": _bos_router.count() + len(_POC_SERVICES),
+    }
+    return json.dumps(status, ensure_ascii=False, indent=2)
 
 
 @mcp.resource("bos://{domain}/{package}/{action}")
@@ -1993,7 +2056,16 @@ async def resolve_bos_uri(uri: str, arguments: str = "{}") -> dict:
     _t0 = _time.time()
     try:
         args = json.loads(arguments) if isinstance(arguments, str) else arguments
+
+        # P48 W4: 缓存查询 (resolve 只读, 可缓存)
+        cached = bos_cache.get(uri, args)
+        if cached:
+            bos_circuit_breaker.record_success(uri)
+            return _ok({"format_version": FORMAT_VERSION, "uri": uri,
+                       "source": "cache", "result": cached})
+
         result, source = await _resolve_with_router(uri, **args)
+        bos_cache.set(uri, args, result, ttl=_get_cache_ttl(uri))
         bos_circuit_breaker.record_success(uri)
         _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
         _publish_bos_event(uri, "resolve", "ok", int((_time.time() - _t0) * 1000))
@@ -2046,7 +2118,7 @@ async def read_resource(uri: str, params: str = "{}") -> dict:
         result, source = await _resolve_with_router(uri, **args)
         # 如果结果不是 error 状态，且没有进一步尝试 ProxyManager 的必要
         if isinstance(result, dict) and result.get("status") != "error":
-            bos_cache.set(uri, args, result, ttl=30)
+            bos_cache.set(uri, args, result, ttl=_get_cache_ttl(uri))
             bos_circuit_breaker.record_success(uri)
             _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
             _publish_bos_event(uri, "read", "ok", int((_time.time() - _t0) * 1000))
@@ -2060,7 +2132,7 @@ async def read_resource(uri: str, params: str = "{}") -> dict:
         try:
             result = await _proxy_manager.read_resource(uri)
             if isinstance(result, dict) and "contents" in result:
-                bos_cache.set(uri, args, result["contents"], ttl=30)
+                bos_cache.set(uri, args, result["contents"], ttl=_get_cache_ttl(uri))
                 bos_circuit_breaker.record_success(uri)
                 _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
                 _publish_bos_event(uri, "read", "ok", int((_time.time() - _t0) * 1000))
@@ -2071,7 +2143,7 @@ async def read_resource(uri: str, params: str = "{}") -> dict:
     # Step 2: 回退到 bos_resolver (POC_SERVICES 子进程)
     try:
         result = await _resolve_bos_uri(uri, **args)
-        bos_cache.set(uri, args, result, ttl=30)
+        bos_cache.set(uri, args, result, ttl=_get_cache_ttl(uri))
         bos_circuit_breaker.record_success(uri)
         _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
         _publish_bos_event(uri, "read", "ok", int((_time.time() - _t0) * 1000))
@@ -2282,6 +2354,36 @@ async def bos_middleware_status() -> dict:
         "circuit_breaker": {"open_circuits": bos_circuit_breaker.status()},
         "cache": bos_cache.status(),
         "router": {"total_routes": _bos_router.count(), "stats": _bos_router.stats()},
+    })
+
+
+@mcp.tool()
+async def bos_reload_m1() -> dict:
+    """热加载 M1 Workflow 路由 — 从 YAML 重新注册 (不重启服务器).
+
+    扫描 ecos M1 workflow 目录，注册新增的 WORKFLOW-*.yaml。
+    已有路由不被覆盖。
+    """
+    count = _bos_router.reload_from_m1()
+    logger.info("bos_reload_m1: %d new routes", count)
+    return _ok({
+        "format_version": FORMAT_VERSION,
+        "action": "reload_m1",
+        "new_routes": count,
+        "total_routes": _bos_router.count(),
+    })
+
+
+@mcp.tool()
+async def bos_reload_discovery() -> dict:
+    """热加载 Discovery 路由 — 从 AGENTS.md 重新发现 (不重启服务器)."""
+    count = _bos_router.reload_from_discovery()
+    logger.info("bos_reload_discovery: %d new routes", count)
+    return _ok({
+        "format_version": FORMAT_VERSION,
+        "action": "reload_discovery",
+        "new_routes": count,
+        "total_routes": _bos_router.count(),
     })
 
 
