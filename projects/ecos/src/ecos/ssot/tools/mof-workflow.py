@@ -667,6 +667,39 @@ def cmd_schema_report(args):
     return 0
 
 
+def cmd_seed_bos(args):
+    """将 Workflow M1 节点的 BOS URI 注册到 BOSRouter"""
+    out = OutputFormatter()
+    nodes = _load_nodes()
+    registered = 0
+
+    try:
+        sys.path.insert(0, str(HOME / "Workspace" / "projects" / "agora" / "src"))
+        from agora.mcp.bos_router import bos_router
+    except ImportError:
+        out.print_error("Agora 模块未安装，无法注册到 BOSRouter")
+        return 1
+
+    for n in nodes:
+        bos_uri = n.get("bos_uri", "")
+        if not bos_uri or not bos_uri.startswith("bos://"):
+            continue
+        bos_router.register(bos_uri, adapter="poc", config={
+            "domain": n.get("domain", "unknown"),
+            "workflow": n.get("name", ""),
+            "steps": len(n.get("steps", [])),
+        })
+        registered += 1
+
+    out.print_header("BOSRouter 注册")
+    out.print_key_value({
+        "已注册": str(registered),
+        "BOSRouter 总数": str(bos_router.count()),
+        "按适配器": str(bos_router.stats()),
+    })
+    return 0
+
+
 # ═══════════════════════════════════════════════════════════════
 # Argparse 入口
 # ═══════════════════════════════════════════════════════════════
@@ -737,6 +770,9 @@ def build_parser():
     sr = sub.add_parser("schema-report", help="Schema 覆盖度报告")
     sr.add_argument("--json", action="store_true", help="JSON 输出")
 
+    # seed-bos
+    sb = sub.add_parser("seed-bos", help="将 Workflow M1 节点注册到 BOSRouter")
+
     return p
 
 
@@ -764,6 +800,7 @@ def main():
         "graph": cmd_graph,
         "check-refs": cmd_check_refs,
         "schema-report": cmd_schema_report,
+        "seed-bos": cmd_seed_bos,
     }
 
     handler = commands.get(args.subcommand)

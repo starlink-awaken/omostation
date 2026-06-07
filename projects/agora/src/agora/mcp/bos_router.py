@@ -100,6 +100,26 @@ class BOSRouter:
         c = Counter(r["adapter"] for r in self._routes.values())
         return dict(c)
 
+    def seed_from_poc(self, poc_services: dict) -> int:
+        """从 POC_SERVICES 字典批量注册路由。
+
+        Args:
+            poc_services: bos_resolver.POC_SERVICES 字典
+
+        Returns:
+            新注册的路由数量
+        """
+        count = 0
+        for uri, svc in poc_services.items():
+            self.register(uri, adapter="poc", config={
+                "domain": getattr(svc, "domain", ""),
+                "transport": getattr(svc, "transport", ""),
+                "description": getattr(svc, "description", ""),
+            })
+            count += 1
+        _log.info("BOSRouter seeded from POC: %d routes", count)
+        return count
+
     def reload_from_m1(self) -> int:
         """热加载: 从 M1 Workflow YAML 重新注册 (不重启服务器).
 
