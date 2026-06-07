@@ -12,3 +12,4 @@ properties:
   workflow_name: Enhance 工作流
   steps: 增强工作流——代码审查→重构→优化→验证
   trigger: agent-invoke
+bos_uri: bos://ecos/workflow/enhance

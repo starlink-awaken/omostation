@@ -12,3 +12,4 @@ properties:
   workflow_name: Plan 工作流
   steps: 规划工作流——需求分析→方案设计→任务分解→分配
   trigger: agent-invoke
+bos_uri: bos://ecos/workflow/plan

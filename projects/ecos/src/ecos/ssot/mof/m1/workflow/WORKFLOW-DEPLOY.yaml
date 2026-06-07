@@ -12,3 +12,4 @@ properties:
   workflow_name: Deploy 工作流
   steps: 部署工作流——构建→测试→部署→健康检查
   trigger: agent-invoke
+bos_uri: bos://ecos/workflow/deploy

@@ -12,3 +12,4 @@ properties:
   workflow_name: Create 工作流
   steps: 创建工作流——脚手架→编码→文档→提交
   trigger: agent-invoke
+bos_uri: bos://ecos/workflow/create
