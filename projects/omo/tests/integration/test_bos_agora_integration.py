@@ -144,14 +144,15 @@ def test_cross_process_minerva_research():
 
 
 def test_cross_process_3_gap_samples_return_error():
-    """P43-W3 验证: 跨进程调 3 条 GAP URI (registry 有但 resolver 无) → unknown_bos_uri 错误.
+    """P43-W3 验证: 跨进程调 3 条不存在的 URI → unknown_bos_uri 错误.
 
-    P34 时代 12-3=9 GAP, 现在 40-25=15 GAP, 测 3 个 sample 跨 3 domain (capability/governance/memory).
+    随着 POC_SERVICES 完善，原 GAP URI 已全部注册；测试改为验证 resolver
+    对明确未知 URI 仍返回正确的 unknown_bos_uri 错误。
     """
     for uri in [
-        "bos://capability/forge/discover",
-        "bos://governance/omo/sync",
-        "bos://memory/kronos/query",
+        "bos://capability/nonexistent/discover",
+        "bos://governance/nonexistent/sync",
+        "bos://memory/nonexistent/query",
     ]:
         code = (
             "import asyncio, json; "
