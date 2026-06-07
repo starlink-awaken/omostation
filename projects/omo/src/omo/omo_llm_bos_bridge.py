@@ -204,8 +204,9 @@ def _dispatch_sync(name: str, args: dict[str, Any]) -> dict[str, Any]:
 
 
 TOOL_DISPATCHER: dict[str, Any] = {
-    "invoke_bos_uri": _dispatch_sync,  # 闭包内调 asyncio.run
-    "list_bos_uris": _dispatch_sync,
+    # P59-W0: lambda 包装 (修复 P37-era _self_test 单 arg 调用 bug)
+    "invoke_bos_uri": lambda args: _dispatch_sync("invoke_bos_uri", args),
+    "list_bos_uris": lambda args: _dispatch_sync("list_bos_uris", args),
 }
 
 
