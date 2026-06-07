@@ -1,0 +1,7 @@
+id: HW-CPU-Y7000P
+type: hardware_asset
+node_ref: NODE-Y7000P
+device_type: cpu
+model: "Intel Core i7-13500H"
+status: active
+description: "Y7000P 主力 CPU，拥有强劲的多核并发计算性能"
