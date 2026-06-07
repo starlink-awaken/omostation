@@ -1,0 +1,44 @@
+version: 1
+kind: compute_engine_registry
+status: active
+policy_owner: governance
+description: "eCOS 大模型运行时引擎与调度端点注册表"
+
+engines:
+  - id: engine-cc-switch
+    node_ref: cloud
+    type: cloud_api
+    description: "受控的公有云请求代理，由 cc-switch 提供鉴权，codexbar 拦截预算"
+    supported_protocols: ["openai", "anthropic", "deepseek"]
+    auth_source: cc-switch
+    billing_source: codexbar
+    pricing_source: models
+    cost_multiplier: 1.0
+    status: active
+    
+  - id: engine-ollama-macmini
+    node_ref: macmini
+    type: local_daemon
+    description: "MacMini 上的 Ollama 常驻服务"
+    base_url: "http://macmini.local:11434/v1"
+    supported_protocols: ["openai"]
+    cost_multiplier: 0.0
+    status: active
+    
+  - id: engine-lmstudio-y7000p
+    node_ref: y7000p
+    type: local_server
+    description: "Y7000P 上的 LMStudio 高性能推理服务"
+    base_url: "http://y7000p.local:1234/v1"
+    supported_protocols: ["openai"]
+    cost_multiplier: 0.0
+    status: active
+    
+  - id: engine-omlx-local
+    node_ref: local-mac
+    type: local_inference
+    description: "本地开发机的 omlx 推理框架"
+    base_url: "http://127.0.0.1:8080/v1"
+    supported_protocols: ["openai"]
+    cost_multiplier: 0.0
+    status: active

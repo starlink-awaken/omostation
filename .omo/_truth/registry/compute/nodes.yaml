@@ -1,0 +1,35 @@
+version: 1
+kind: compute_node_registry
+status: active
+policy_owner: governance
+description: "eCOS 异构物理算力节点注册表"
+
+nodes:
+  - id: local-mac
+    type: host
+    architecture: arm64
+    os: darwin
+    description: "当前开发机，极低延迟网络"
+    status: active
+    tier: edge
+    
+  - id: macmini
+    type: host
+    architecture: arm64
+    os: darwin
+    description: "局域网常驻服务器，统一内存架构，适合跑轻量级量化模型兜底"
+    status: active
+    tier: edge
+    
+  - id: y7000p
+    type: host
+    architecture: amd64
+    description: "局域网高性能游戏本，配备 Nvidia 独立显卡，适合重度高吞吐推理"
+    status: active
+    tier: edge
+    
+  - id: cloud
+    type: remote
+    description: "公有云大模型算力资源池"
+    status: active
+    tier: cloud
