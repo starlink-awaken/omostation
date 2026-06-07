@@ -2235,7 +2235,10 @@ async def list_bos_resources(prefix: str = "") -> dict:
 
 @mcp.tool()
 async def list_bos_domains() -> dict:
-    """列出所有已注册的 BOS 域及其路由摘要。"""
+    """列出所有已注册的 BOS 域及其路由摘要。
+    
+    Returns: domains 及其服务数量统计
+    """
     from collections import Counter
     doms = Counter()
     # POC services
@@ -2402,6 +2405,7 @@ async def bos_metrics_status(prefix: str = "", format: str = "json") -> dict | s
     if format == "prometheus":
         lines = []
         status = bos_metrics.status(prefix)
+        status = bos_metrics.status(prefix)
         for p, s in sorted(status.items()):
             labels = p.replace("://", "_").replace("/", "_").replace("-", "_")
             lines.append(f"# HELP bos_calls_total Total BOS calls per prefix")
@@ -2523,6 +2527,26 @@ async def agora_execute(query: str, mode: str = "auto") -> dict:
     except Exception as e:
         logger.exception("agora_execute_failed", query=query, mode=mode)
         return _error(f"Execution failed: {e}")
+
+
+
+@mcp.tool()
+async def list_bos_tools() -> dict:
+    """列出所有可用的 BOS MCP 工具及 schema — Agent 统一发现入口。
+
+    返回每个 BOS 工具的: name, description, arguments, bos_uri
+    """
+    tools = [
+        {"name": "resolve_bos_uri", "description": "将 BOS URI 解析为实际调用，路由到后端服务", "arguments": {"uri": "BOS URI", "arguments": "JSON 参数字符串"}},
+        {"name": "read_resource", "description": "通过 BOS URI 读取资源 (Proxy→POC 降级)", "arguments": {"uri": "BOS URI", "arguments": "JSON 参数字符串"}},
+        {"name": "mutate_resource", "description": "通过 BOS URI 修改资源 (真路由 + L0 审计)", "arguments": {"uri": "BOS URI", "payload": "JSON 负载", "action": "update"}},
+        {"name": "list_bos_resources", "description": "列出所有已注册 BOS 资源", "arguments": {"prefix": "可选前缀过滤"}},
+        {"name": "list_bos_domains", "description": "列出 BOS 域及路由统计", "arguments": {}},
+        {"name": "get_bos_schema", "description": "查询 BOS URI 的参数规范 (从 M1 节点)", "arguments": {"uri": "BOS URI 或 action 名"}},
+        {"name": "bos_metrics_status", "description": "BOS 调用指标 (JSON/Prometheus)", "arguments": {"prefix": "可选前缀", "format": "json|prometheus"}},
+        {"name": "bos_middleware_status", "description": "限流/熔断/缓存/路由实时状态", "arguments": {}},
+    ]
+    return _ok({"format_version": FORMAT_VERSION, "tools": tools, "total": len(tools)})
 
 
 def main():
