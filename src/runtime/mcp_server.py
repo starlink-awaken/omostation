@@ -195,7 +195,8 @@ def main():
     # Enable KEI Sandbox
     try:
         from runtime.kei_sandbox import enable_sandbox
-        enable_sandbox()
+        kei_config = str(Path(__file__).resolve().parent.parent.parent / "kei.yaml")
+        enable_sandbox(config_path=kei_config)
     except ImportError:
         pass
 
