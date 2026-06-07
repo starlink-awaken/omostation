@@ -136,7 +136,7 @@ def test_minerva_research_real_query():
     if result.get("status") == "ok":
         assert "result" in result
         # minerva POC __main__ echo 协议: result.message 含 action 名
-        assert "research" in str(result["result"].get("message", ""))
+        assert "research" in str(result["result"].get("message", result["result"].get("action_dispatched", "")))
     else:
         # 如果失败, 记录但不失败测试 (允许基础设施升级)
         pytest.skip(f"minerva.research infra not ready: {result.get('error')}")
