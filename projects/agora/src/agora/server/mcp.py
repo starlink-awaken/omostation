@@ -65,6 +65,7 @@ from agora.mcp.bos_router import bos_router as _bos_router  # type: ignore[impor
 
 # BOS 中间件 (P46 W0) — 限流/熔断/缓存
 from agora.mcp.bos_middleware import bos_rate_limiter, bos_circuit_breaker, bos_cache  # type: ignore[import-not-found]
+from agora.mcp.bos_middleware import config_watcher  # type: ignore[import-not-found]
 
 # BOS Metrics (P46 W2) — 可观测性
 from agora.mcp.bos_metrics import bos_metrics  # type: ignore[import-not-found]
@@ -339,6 +340,23 @@ async def _init_proxy():
     discovered = discover_from_workspace()
     logger.info("bos_discovery: %d URIs discovered from AGENTS.md", discovered)
     _install_signal_handler()
+
+    # ── Phase 8 (P48): 启动配置文件监听 ──
+    rates_path = Path(__file__).parent.parent / "agora-bos-rates.yaml"
+    if rates_path.exists():
+        def _reload_rates():
+            import yaml
+            try:
+                rates = yaml.safe_load(open(rates_path))
+                for route in rates.get("routes", []):
+                    bos_rate_limiter.configure(route["prefix"], qps=route["qps"])
+                logger.info("config_watcher: rates reloaded (%d routes)", len(rates.get("routes", [])))
+            except Exception as e:
+                logger.error("config_watcher: reload failed: %s", e)
+        config_watcher.file_path = str(rates_path)
+        config_watcher._on_change = _reload_rates
+        config_watcher.start(interval=5)
+        logger.info("config_watcher: started")
 
 
 # ── 信号处理 (P46 W2) ─────────────────────────────────
@@ -2137,8 +2155,28 @@ async def bos_middleware_status() -> dict:
 # ═══════════════════════════════════════════════════════════════
 
 @mcp.tool()
-async def bos_metrics_status(prefix: str = "") -> dict:
-    """BOS 调用指标 — 按 URI 前缀统计调用量/成功率/延迟。"""
+async def bos_metrics_status(prefix: str = "", format: str = "json") -> dict | str:
+    """BOS 调用指标 — 支持 JSON 和 Prometheus 两种格式。
+
+    Args:
+        prefix: URI 前缀过滤
+        format: "json" (默认) 或 "prometheus" (Prometheus scrape)
+    """
+    if format == "prometheus":
+        lines = []
+        status = bos_metrics.status(prefix)
+        for p, s in sorted(status.items()):
+            labels = p.replace("://", "_").replace("/", "_").replace("-", "_")
+            lines.append(f"# HELP bos_calls_total Total BOS calls per prefix")
+            lines.append(f"# TYPE bos_calls_total counter")
+            lines.append(f"bos_calls_total{{prefix=\"{p}\"}} {s['calls']}")
+            lines.append(f"# HELP bos_success_rate BOS success rate per prefix")
+            lines.append(f"# TYPE bos_success_rate gauge")
+            lines.append(f"bos_success_rate{{prefix=\"{p}\"}} {s['success_rate']}")
+            lines.append(f"# HELP bos_latency_ms_avg Average latency per prefix")
+            lines.append(f"# TYPE bos_latency_ms_avg gauge")
+            lines.append(f"bos_latency_ms_avg{{prefix=\"{p}\"}} {s['avg_latency_ms']}")
+        return "\n".join(lines) + "\n"
     if prefix:
         return _ok({"format_version": FORMAT_VERSION, "metrics": bos_metrics.status(prefix)})
     return _ok({

@@ -1,0 +1,20 @@
+id: MECH-BOS-FILE-WATCHER
+type: Mechanism
+name: "BOS 配置文件热监听"
+description: "Polling 方式监听 agora-bos-rates.yaml 变化，自动 reload 限流配置"
+domain: meta
+layer: I0
+status: active
+version: "1.0.0"
+created: "2026-06-07"
+
+properties:
+  trigger: "file_mtime_change"
+  source: "agora/mcp/bos_middleware.py:ConfigWatcher"
+  interval: 5
+  target: "bos_rate_limiter"
+
+relations:
+  - type: DependsOn
+    from: MECH-BOS-FILE-WATCHER
+    to: MECH-BOS-RATE-LIMITER

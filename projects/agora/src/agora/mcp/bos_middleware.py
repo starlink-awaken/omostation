@@ -285,3 +285,57 @@ class RetryPolicy:
 
 # ── 全局单例 ──
 retry_policy = RetryPolicy()
+
+
+# ═══════════════════════════════════════════════════════════════
+# ConfigWatcher (P48) — polling 文件监听
+# ═══════════════════════════════════════════════════════════════
+
+class ConfigWatcher:
+    """Polling 方式监听配置文件变化，自动 reload。
+
+    用法:
+        watcher = ConfigWatcher("/path/to/agora-bos-rates.yaml", on_change=reload_fn)
+        watcher.start(interval=5)  # 每 5s 检查一次
+    """
+
+    def __init__(self, file_path: str, on_change=None):
+        self.file_path = file_path
+        self._on_change = on_change
+        self._mtime: float = 0
+        self._running = False
+        self._thread: threading.Thread | None = None
+
+    def start(self, interval: float = 5.0) -> None:
+        """启动 polling 监听。"""
+        import os
+        if os.path.exists(self.file_path):
+            self._mtime = os.path.getmtime(self.file_path)
+        self._running = True
+        self._thread = threading.Thread(target=self._poll_loop, args=(interval,), daemon=True)
+        self._thread.start()
+        _log.info("config_watcher: watching %s (interval=%ds)", self.file_path, interval)
+
+    def stop(self) -> None:
+        """停止监听。"""
+        self._running = False
+
+    def _poll_loop(self, interval: float) -> None:
+        import os
+        while self._running:
+            time.sleep(interval)
+            try:
+                if not os.path.exists(self.file_path):
+                    continue
+                mtime = os.path.getmtime(self.file_path)
+                if mtime != self._mtime:
+                    self._mtime = mtime
+                    _log.info("config_watcher: file changed, reloading %s", self.file_path)
+                    if self._on_change:
+                        self._on_change()
+            except Exception as e:
+                _log.warning("config_watcher: poll error: %s", e)
+
+
+# ── 全局单例 ──
+config_watcher = ConfigWatcher("")  # 延迟配置
