@@ -69,3 +69,8 @@ ecos 是 L0 编织层，独立于知识工程栈，可被任意上层调用。
 - **决策**: L0 协议层自治（kairon 不再治理）
 - **依赖注入**: 上层通过 HTTP / MCP / 直接 import 三种方式接入
 - **演进**: 协议变更需经 L0 协议层 RFC 流程
+
+## CLI Tools
+
+-  — 26 workflow management (11 subcommands)
+-  — L0 MOF governance CLI
