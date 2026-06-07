@@ -158,6 +158,12 @@ _auditor = AuditSubscriber(_bus, registry)
 _bus.register_hook(_auditor.on_event)
 router = get_router(registry, _bus)
 
+# ── BOS Tools Registration ──────────────────────────────────────────
+# 注册在 mcp 实例创建后、任何工具定义之前
+
+from agora.server.tools_bos import register_bos_tools  # type: ignore[import-not-found]
+register_bos_tools(mcp, _bus)
+
 # ── A2A Task Manager ──────────────────────────────────────────────────
 
 _task_manager: TaskManager | None = None  # noqa: F821
