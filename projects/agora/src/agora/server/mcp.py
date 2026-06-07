@@ -2082,12 +2082,12 @@ async def resolve_bos_uri(uri: str, arguments: str = "{}") -> dict:
 
 @mcp.tool()
 @bos_metrics.track("bos://")
-async def read_resource(uri: str, params: str = "{}") -> dict:
+async def read_resource(uri: str, arguments: str = "{}") -> dict:
     """通过 BOS URI 读取资源。先尝试 ProxyManager (MCP 下游)，回退到 bos_resolver。
 
     Args:
         uri: BOS URI (e.g. bos://memory/kos/search)
-        params: JSON 参数字符串 (e.g. '{"query": "..."}')
+        arguments: JSON 参数字符串 (e.g. '{"query": "..."}')
     """
     import json
     if not uri.startswith("bos://"):
@@ -2103,9 +2103,9 @@ async def read_resource(uri: str, params: str = "{}") -> dict:
 
     # P46 W0: 缓存查询 (读操作)
     try:
-        args = json.loads(params) if isinstance(params, str) else params
+        args = json.loads(arguments) if isinstance(arguments, str) else arguments
     except json.JSONDecodeError:
-        return _error(f"Invalid JSON params: {params}")
+        return _error(f"Invalid JSON arguments: {arguments}")
     cached = bos_cache.get(uri, args)
     if cached:
         return _ok({"format_version": FORMAT_VERSION, "uri": uri, "source": "cache", "result": cached})

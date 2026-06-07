@@ -1,120 +1,106 @@
-# M1 Workflow: WORKFLOW-EIDOS-PIPELINE
 id: WORKFLOW-EIDOS-PIPELINE
 type: Workflow
 subtype: PipelineWorkflow
 name: Eidos 多工具编排链
-description: 通过 subprocess 串联 eidos/kos/minerva/ontoderive 多工具链式调用
+description: "通过 subprocess 串联 eidos/kos/minerva/ontoderive 多工具链式调用"
 status: active
-version: 1.0.0
+version: "1.0.0"
 domain: omo
 layer: L2
-created: '2026-06-07'
+created: "2026-06-07"
 bos_uri: bos://ecos/workflow/eidos-pipeline
+
 cross_layer:
   realized_by:
-  - project: kairon
-    package: eidos
-    entrypoint: src/eidos/pipeline/__init__.py
+    - project: kairon
+      package: eidos
+      entrypoint: src/eidos/pipeline/__init__.py
   invoked_by:
-  - layer: I0
-    component: agora
-    mechanism: MCP 工具调用
-  - layer: L3
-    component: cockpit
-    mechanism: CLI 命令透传
+    - layer: I0
+      component: agora
+      mechanism: MCP 工具调用
+    - layer: L3
+      component: cockpit
+      mechanism: CLI 命令透传
+
 steps:
-- order: 1
-  name: LoadSchema
-  action: load_schema
-  description: 加载 Schema 定义和约束规则
-  input:
-    omo_schema_change:
-      type: object
-      description: omo_schema_change
-  output:
-    schema_definition:
-      type: object
-      description: schema_definition
-  depends_on: []
-- order: 2
-  name: ValidateConstraints
-  action: validate_constraints
-  description: 基于加载的 Schema 校验数据约束
-  input:
-    schema_definition:
-      type: object
-      description: schema_definition
-  output:
-    validation_results:
-      type: object
-      description: validation_results
-  depends_on:
-  - LoadSchema
-- order: 3
-  name: ChainTools
-  action: chain_tools
-  description: 链式调用 kos/minerva/ontoderive 等下游工具处理
-  input:
-    validation_results:
-      type: object
-      description: validation_results
-  output:
-    tool_results:
-      type: object
-      description: tool_results
-  depends_on:
-  - ValidateConstraints
-- order: 4
-  name: AggregateResults
-  action: aggregate_results
-  description: 聚合所有工具链的输出结果
-  input:
-    tool_results:
-      type: object
-      description: tool_results
-  output:
-    aggregated_output:
-      type: object
-      description: aggregated_output
-  depends_on:
-  - ChainTools
-- order: 5
-  name: ReturnOutput
-  action: return_output
-  description: 返回最终校验和编排结果
-  input:
-    aggregated_output:
-      type: object
-      description: aggregated_output
-  output:
-    omo_schema_validated:
-      type: object
-      description: omo_schema_validated
-  depends_on:
-  - AggregateResults
+  - order: 1
+    name: LoadSchema
+    action: load_schema
+    description: "加载 Schema 定义和约束规则"
+    input:
+      - bos://omo/schema/change
+    output:
+      - schema_definition
+    depends_on: []
+  - order: 2
+    name: ValidateConstraints
+    action: validate_constraints
+    description: "基于加载的 Schema 校验数据约束"
+    input:
+      - schema_definition
+    output:
+      - validation_results[]
+    depends_on:
+      - LoadSchema
+  - order: 3
+    name: ChainTools
+    action: chain_tools
+    description: "链式调用 kos/minerva/ontoderive 等下游工具处理"
+    input:
+      - validation_results[]
+    output:
+      - tool_results[]
+    depends_on:
+      - ValidateConstraints
+  - order: 4
+    name: AggregateResults
+    action: aggregate_results
+    description: "聚合所有工具链的输出结果"
+    input:
+      - tool_results[]
+    output:
+      - aggregated_output
+    depends_on:
+      - ChainTools
+  - order: 5
+    name: ReturnOutput
+    action: return_output
+    description: "返回最终校验和编排结果"
+    input:
+      - aggregated_output
+    output:
+      - bos://omo/schema/validated
+    depends_on:
+      - AggregateResults
+
 execution:
   mode: sequential
   max_retries: 3
   timeout: 600
   on_failure: abort
   audit_enabled: true
+
 relations:
-- type: triggers
-  target: bos://omo/schema/change
-  note: Schema 变更触发 Eidos 编排
-- type: data_flows
-  target: bos://omo/schema/validated
-  note: 校验结果返回 Schema 已完成状态
-- type: data_flows
-  target: bos://analysis/eidos
-  note: Eidos 结果流入分析域
+  - type: triggers
+    target: bos://omo/schema/change
+    note: "Schema 变更触发 Eidos 编排"
+  - type: data_flows
+    target: bos://omo/schema/validated
+    note: "校验结果返回 Schema 已完成状态"
+  - type: data_flows
+    target: bos://analysis/eidos
+    note: "Eidos 结果流入分析域"
+
 sla:
   max_execution_time: 600
   expected_completion_rate: 0.95
   critical: false
+
 tags:
-- eidos
-- schema
-- orchestrate
+  - eidos
+  - schema
+  - orchestrate
+
 maintained_by: kairon/eidos
-last_reviewed: '2026-06-07'
+last_reviewed: "2026-06-07"

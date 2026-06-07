@@ -1,4 +1,3 @@
-# M1 Workflow: WORKFLOW-TEST
 id: WORKFLOW-TEST
 type: Workflow
 subtype: AgentWorkflow
@@ -14,17 +13,3 @@ properties:
   workflow_name: Test 工作流
   steps: 测试工作流——单元测试→集成测试→E2E→报告
   trigger: agent-invoke
-steps:
-- order: 1
-  name: TESTTask
-  action: agent.test
-  description: 测试工作流——单元测试→集成测试→E2E→报告
-  input:
-    context:
-      type: object
-      description: Agent context
-  output:
-    result:
-      type: object
-      description: TEST result
-  depends_on: []

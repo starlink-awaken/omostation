@@ -1,4 +1,3 @@
-# M1 Workflow: WORKFLOW-ENHANCE
 id: WORKFLOW-ENHANCE
 type: Workflow
 subtype: AgentWorkflow
@@ -14,17 +13,3 @@ properties:
   workflow_name: Enhance 工作流
   steps: 增强工作流——代码审查→重构→优化→验证
   trigger: agent-invoke
-steps:
-- order: 1
-  name: ENHANCETask
-  action: agent.enhance
-  description: 增强工作流——代码审查→重构→优化→验证
-  input:
-    context:
-      type: object
-      description: Agent context
-  output:
-    result:
-      type: object
-      description: ENHANCE result
-  depends_on: []

@@ -1,121 +1,107 @@
-# M1 Workflow: WORKFLOW-MINERVA-VECTOR
 id: WORKFLOW-MINERVA-VECTOR
 type: Workflow
 subtype: PipelineWorkflow
 name: Minerva VectorPipeline 向量嵌入
-description: 高性能批量文档向量化与索引构建管线 — 加载文档 → 分块 → 生成向量 → 构建索引 → 持久化
+description: "高性能批量文档向量化与索引构建管线 — 加载文档 → 分块 → 生成向量 → 构建索引 → 持久化"
 status: active
-version: 1.0.0
+version: "1.0.0"
 domain: analysis
 layer: L2
-created: '2026-06-07'
+created: "2026-06-07"
 bos_uri: bos://ecos/workflow/minerva-vector
+
 cross_layer:
   realized_by:
-  - project: kairon
-    package: minerva
-    entrypoint: src/minerva/index/vector_pipeline.py
+    - project: kairon
+      package: minerva
+      entrypoint: src/minerva/index/vector_pipeline.py
   invoked_by:
-  - layer: I0
-    component: agora
-    mechanism: MCP 工具调用
-  - layer: L3
-    component: cockpit
-    mechanism: CLI 命令透传
+    - layer: I0
+      component: agora
+      mechanism: MCP 工具调用
+    - layer: L3
+      component: cockpit
+      mechanism: CLI 命令透传
+
 steps:
-- order: 1
-  name: LoadDocuments
-  action: load_documents
-  description: 从 KOS 加载待向量化的文档
-  input:
-    memory_kos_update:
-      type: object
-      description: memory_kos_update
-  output:
-    documents:
-      type: object
-      description: documents
-  depends_on: []
-- order: 2
-  name: ChunkText
-  action: chunk_text
-  description: 将长文档分块为适合嵌入的片段
-  input:
-    documents:
-      type: object
-      description: documents
-  output:
-    chunks:
-      type: object
-      description: chunks
-  depends_on:
-  - LoadDocuments
-- order: 3
-  name: GenerateEmbeddings
-  action: generate_embeddings
-  description: 批量生成文档块的向量嵌入表示
-  input:
-    chunks:
-      type: object
-      description: chunks
-  output:
-    embeddings:
-      type: object
-      description: embeddings
-  depends_on:
-  - ChunkText
-- order: 4
-  name: BuildIndex
-  action: build_index
-  description: 基于向量嵌入构建高效的相似度搜索索引
-  input:
-    embeddings:
-      type: object
-      description: embeddings
-  output:
-    vector_index:
-      type: object
-      description: vector_index
-  depends_on:
-  - GenerateEmbeddings
-- order: 5
-  name: PersistVectors
-  action: persist_vectors
-  description: 将向量索引持久化存储
-  input:
-    vector_index:
-      type: object
-      description: vector_index
-  output:
-    analysis_vectors:
-      type: object
-      description: analysis_vectors
-  depends_on:
-  - BuildIndex
+  - order: 1
+    name: LoadDocuments
+    action: load_documents
+    description: "从 KOS 加载待向量化的文档"
+    input:
+      - bos://memory/kos/update
+    output:
+      - documents[]
+    depends_on: []
+  - order: 2
+    name: ChunkText
+    action: chunk_text
+    description: "将长文档分块为适合嵌入的片段"
+    input:
+      - documents[]
+    output:
+      - chunks[]
+    depends_on:
+      - LoadDocuments
+  - order: 3
+    name: GenerateEmbeddings
+    action: generate_embeddings
+    description: "批量生成文档块的向量嵌入表示"
+    input:
+      - chunks[]
+    output:
+      - embeddings[]
+    depends_on:
+      - ChunkText
+  - order: 4
+    name: BuildIndex
+    action: build_index
+    description: "基于向量嵌入构建高效的相似度搜索索引"
+    input:
+      - embeddings[]
+    output:
+      - vector_index
+    depends_on:
+      - GenerateEmbeddings
+  - order: 5
+    name: PersistVectors
+    action: persist_vectors
+    description: "将向量索引持久化存储"
+    input:
+      - vector_index
+    output:
+      - bos://analysis/vectors
+    depends_on:
+      - BuildIndex
+
 execution:
   mode: sequential
   max_retries: 3
   timeout: 600
   on_failure: abort
   audit_enabled: true
+
 relations:
-- type: triggers
-  target: bos://memory/kos/update
-  note: KOS 更新触发向量索引重建
-- type: data_flows
-  target: bos://analysis/vectors
-  note: 向量索引存储到分析域
-- type: depends_on
-  target: WORKFLOW-KRONOS-INGEST
-  note: 向量嵌入依赖 Kronos 摄取的新文档
+  - type: triggers
+    target: bos://memory/kos/update
+    note: "KOS 更新触发向量索引重建"
+  - type: data_flows
+    target: bos://analysis/vectors
+    note: "向量索引存储到分析域"
+  - type: depends_on
+    target: WORKFLOW-KRONOS-INGEST
+    note: "向量嵌入依赖 Kronos 摄取的新文档"
+
 sla:
   max_execution_time: 600
   expected_completion_rate: 0.95
   critical: false
+
 tags:
-- vector
-- embedding
-- index
-- minerva
+  - vector
+  - embedding
+  - index
+  - minerva
+
 maintained_by: kairon/minerva
-last_reviewed: '2026-06-07'
+last_reviewed: "2026-06-07"

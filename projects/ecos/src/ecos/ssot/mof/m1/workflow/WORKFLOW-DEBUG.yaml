@@ -1,4 +1,3 @@
-# M1 Workflow: WORKFLOW-DEBUG
 id: WORKFLOW-DEBUG
 type: Workflow
 subtype: AgentWorkflow
@@ -14,17 +13,3 @@ properties:
   workflow_name: Debug 工作流
   steps: Agent 调试工作流——定位问题→分析根因→修复→验证
   trigger: agent-invoke
-steps:
-- order: 1
-  name: DEBUGTask
-  action: agent.debug
-  description: Agent 调试工作流——定位问题→分析根因→修复→验证
-  input:
-    context:
-      type: object
-      description: Agent context
-  output:
-    result:
-      type: object
-      description: DEBUG result
-  depends_on: []

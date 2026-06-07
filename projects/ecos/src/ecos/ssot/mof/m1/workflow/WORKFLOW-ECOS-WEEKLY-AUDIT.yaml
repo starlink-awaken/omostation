@@ -1,149 +1,127 @@
-# M1 Workflow: ECOS Weekly Audit
 id: WORKFLOW-ECOS-WEEKLY-AUDIT
 type: Workflow
 subtype: ScheduledWorkflow
 name: 每周全量审计管线
-description: '每周一全量审计: KEMS校验→漂移检测→引用检查→BOS校验→路由更新→索引同步→健康检查'
+description: "每周一全量审计: KEMS校验→漂移检测→引用检查→BOS校验→路由更新→索引同步→健康检查"
 status: active
-version: 1.0.0
+version: "1.0.0"
 domain: meta
 layer: L0
-created: '2026-06-07'
+created: "2026-06-07"
 bos_uri: bos://ecos/workflow/weekly-audit
+
 cross_layer:
   realized_by:
-  - project: ecos
-    package: ecos
-    entrypoint: src/ecos/workflow/definitions/weekly-audit.yaml
+    - project: ecos
+      package: ecos
+      entrypoint: src/ecos/workflow/definitions/weekly-audit.yaml
   invoked_by:
-  - layer: I0
-    component: agora
-    mechanism: MCP 工具调用
-  - layer: L3
-    component: cockpit
-    mechanism: CLI 命令透传
+    - layer: I0
+      component: agora
+      mechanism: MCP 工具调用
+    - layer: L3
+      component: cockpit
+      mechanism: CLI 命令透传
+
 steps:
-- order: 1
-  name: KEMSValidateAll
-  action: ecos.domain_validate_all
-  description: KEMS 六面结构校验
-  input:
-    task:
-      type: object
-      required: true
-      description: Task input
-  output:
-    passed:
-      type: int
-  depends_on: []
-- order: 2
-  name: DriftDetection
-  action: ecos.domain_audit
-  description: 注册表 vs 文件系统漂移检测
-  input:
-    task:
-      type: object
-      required: true
-      description: Task input
-  output:
-    drifts:
-      type: int
-  depends_on:
-  - KEMSValidateAll
-- order: 3
-  name: ReferenceCheck
-  action: ecos.check_refs
-  description: 跨域路径引用可解析性检查
-  input:
-    task:
-      type: object
-      required: true
-      description: Task input
-  output:
-    broken_refs:
-      type: int
-  depends_on:
-  - DriftDetection
-- order: 4
-  name: BOSValidate
-  action: ecos.bos_validate
-  description: BOS URI 健康检查
-  input:
-    task:
-      type: object
-      required: true
-      description: Task input
-  output:
-    valid:
-      type: int
-  depends_on:
-  - ReferenceCheck
-- order: 5
-  name: RoutesUpdate
-  action: ecos.domain_routes
-  description: 路由缓存更新
-  input:
-    task:
-      type: object
-      required: true
-      description: Task input
-  output:
-    routes:
-      type: int
-  depends_on:
-  - BOSValidate
-- order: 6
-  name: IndexSync
-  action: ecos.domain_sync
-  description: 索引同步
-  input:
-    task:
-      type: object
-      required: true
-      description: Task input
-  output:
-    synced:
-      type: bool
-  depends_on:
-  - RoutesUpdate
-- order: 7
-  name: HealthCheck
-  action: ecos.health_check
-  description: 最终全系统健康检查
-  input:
-    task:
-      type: object
-      required: true
-      description: Task input
-  output:
-    healthy:
-      type: bool
-  depends_on:
-  - IndexSync
+  - order: 1
+    name: KEMSValidateAll
+    action: ecos.ecos.kems_validate_all
+    description: "全量 KEMS 校验所有域的完整性和正确性"
+    input:
+      - MECH-DAEMON-CYCLE
+    output:
+      - domain_status[]
+    depends_on: []
+  - order: 2
+    name: DriftDetection
+    action: ecos.ecos.drift_detection
+    description: "检测配置漂移 — 比较期望状态与实际状态"
+    input:
+      - domain_status[]
+    output:
+      - drift_report[]
+    depends_on:
+      - KEMSValidateAll
+  - order: 3
+    name: ReferenceCheck
+    action: ecos.ecos.reference_check
+    description: "检查所有跨域引用和链接的有效性"
+    input:
+      - drift_report[]
+    output:
+      - reference_check_report
+    depends_on:
+      - DriftDetection
+  - order: 4
+    name: BOSValidate
+    action: ecos.ecos.bos_validate
+    description: "校验所有 BOS URI 引用和命名空间一致性"
+    input:
+      - reference_check_report
+    output:
+      - bos_validation_report
+    depends_on:
+      - ReferenceCheck
+  - order: 5
+    name: RoutesUpdate
+    action: ecos.ecos.routes_update
+    description: "根据审计结果更新 Agora Mesh 路由表"
+    input:
+      - bos_validation_report
+    output:
+      - routes_update_report
+    depends_on:
+      - BOSValidate
+  - order: 6
+    name: IndexSync
+    action: ecos.ecos.index_sync
+    description: "同步所有域索引至最新状态"
+    input:
+      - routes_update_report
+    output:
+      - sync_report
+    depends_on:
+      - RoutesUpdate
+  - order: 7
+    name: HealthCheck
+    action: ecos.ecos.health_check
+    description: "审计后健康检查，确保所有服务正常"
+    input:
+      - sync_report
+    output:
+      - bos://meta/audit/report
+    depends_on:
+      - IndexSync
+
 execution:
   mode: sequential
   max_retries: 3
   timeout: 1200
   on_failure: abort
   audit_enabled: true
+
 relations:
-- type: triggers
-  target: MECH-DAEMON-CYCLE
-  note: Daemon 每周一触发全量审计
-- type: data_flows
-  target: bos://meta/audit/report
-  note: 审计报告输出到元系统域
-- type: depends_on
-  target: WORKFLOW-ECOS-DAILY-HEALTH
-  note: 周审计依赖每日巡检的基础数据
+  - type: triggers
+    target: MECH-DAEMON-CYCLE
+    note: "Daemon 每周一触发全量审计"
+  - type: data_flows
+    target: bos://meta/audit/report
+    note: "审计报告输出到元系统域"
+  - type: depends_on
+    target: WORKFLOW-ECOS-DAILY-HEALTH
+    note: "周审计依赖每日巡检的基础数据"
+
 sla:
   max_execution_time: 600
   expected_completion_rate: 0.99
   critical: true
+
 tags:
-- ecos
-- audit
-- weekly
-- drift
+  - ecos
+  - audit
+  - weekly
+  - drift
+
 maintained_by: ecos
-last_reviewed: '2026-06-07'
+last_reviewed: "2026-06-07"

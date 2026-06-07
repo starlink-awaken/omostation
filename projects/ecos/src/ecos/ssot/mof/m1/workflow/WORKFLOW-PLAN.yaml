@@ -1,4 +1,3 @@
-# M1 Workflow: WORKFLOW-PLAN
 id: WORKFLOW-PLAN
 type: Workflow
 subtype: AgentWorkflow
@@ -14,17 +13,3 @@ properties:
   workflow_name: Plan 工作流
   steps: 规划工作流——需求分析→方案设计→任务分解→分配
   trigger: agent-invoke
-steps:
-- order: 1
-  name: PLANTask
-  action: agent.plan
-  description: 规划工作流——需求分析→方案设计→任务分解→分配
-  input:
-    context:
-      type: object
-      description: Agent context
-  output:
-    result:
-      type: object
-      description: PLAN result
-  depends_on: []

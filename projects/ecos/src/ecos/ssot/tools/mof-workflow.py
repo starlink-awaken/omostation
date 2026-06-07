@@ -249,7 +249,7 @@ def cmd_validate(args):
     if name:
         node = _find(name)
         if not node:
-            print_error(f"工作流未找到: {name}")
+            print_error(f"工作流未找到: {name}", "使用 'mof workflow list' 查看所有工作流")
             return 1
         nodes = [node]
     else:
@@ -714,12 +714,14 @@ def build_parser():
         prog="mof-workflow",
         description="织星 MOF — 全局工作流统一管理",
         epilog="""Examples:
-  mof workflow list --domain analysis
+  mof workflow list --domain analysis --json | jq .
   mof workflow show minerva-deep-research
-  mof workflow show minerva-deep-research --json | jq .
   mof workflow validate --ci
+  mof workflow graph --format mermaid
+  mof workflow check-refs
+  mof workflow schema-report
+  mof workflow seed-bos
   mof workflow stats --json
-  mof workflow relations minerva-deep-research
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

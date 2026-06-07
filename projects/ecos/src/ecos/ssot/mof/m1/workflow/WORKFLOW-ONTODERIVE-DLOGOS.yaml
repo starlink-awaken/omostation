@@ -1,106 +1,96 @@
-# M1 Workflow: WORKFLOW-ONTODERIVE-DLOGOS
 id: WORKFLOW-ONTODERIVE-DLOGOS
 type: Workflow
 subtype: PipelineWorkflow
 name: Ontoderive D-Logos 文档代码对齐
-description: 文档-代码对齐批量管线 — Scan → Align → Validate → Evolve，支持断点续传
+description: "文档-代码对齐批量管线 — Scan → Align → Validate → Evolve，支持断点续传"
 status: active
-version: 1.0.0
+version: "1.0.0"
 domain: analysis
 layer: L2
-created: '2026-06-07'
+created: "2026-06-07"
 bos_uri: bos://ecos/workflow/ontoderive-dlogos
+
 cross_layer:
   realized_by:
-  - project: kairon
-    package: ontoderive
-    entrypoint: src/ontoderive/engine/pipeline.py
+    - project: kairon
+      package: ontoderive
+      entrypoint: src/ontoderive/engine/pipeline.py
   invoked_by:
-  - layer: I0
-    component: agora
-    mechanism: MCP 工具调用
-  - layer: L3
-    component: cockpit
-    mechanism: CLI 命令透传
+    - layer: I0
+      component: agora
+      mechanism: MCP 工具调用
+    - layer: L3
+      component: cockpit
+      mechanism: CLI 命令透传
+
 steps:
-- order: 1
-  name: ScanCodebase
-  action: scan_codebase
-  description: 扫描代码库变更，检测需要更新的文档映射
-  input:
-    forge_codebase_change:
-      type: object
-      description: forge_codebase_change
-  output:
-    code_changes:
-      type: object
-      description: code_changes
-  depends_on: []
-- order: 2
-  name: AlignDocsToCode
-  action: align_docs_to_code
-  description: 将现有文档与代码结构进行对齐分析
-  input:
-    code_changes:
-      type: object
-      description: code_changes
-  output:
-    alignment_map:
-      type: object
-      description: alignment_map
-  depends_on:
-  - ScanCodebase
-- order: 3
-  name: ValidateAlignment
-  action: validate_alignment
-  description: 校验文档与代码对齐的一致性和完整性
-  input:
-    alignment_map:
-      type: object
-      description: alignment_map
-  output:
-    validation_report:
-      type: object
-      description: validation_report
-  depends_on:
-  - AlignDocsToCode
-- order: 4
-  name: EvolveDocs
-  action: evolve_docs
-  description: 基于对齐结果自动演化更新文档
-  input:
-    validation_report:
-      type: object
-      description: validation_report
-  output:
-    analysis_alignment:
-      type: object
-      description: analysis_alignment
-  depends_on:
-  - ValidateAlignment
+  - order: 1
+    name: ScanCodebase
+    action: scan_codebase
+    description: "扫描代码库变更，检测需要更新的文档映射"
+    input:
+      - bos://forge/codebase/change
+    output:
+      - code_changes[]
+    depends_on: []
+  - order: 2
+    name: AlignDocsToCode
+    action: align_docs_to_code
+    description: "将现有文档与代码结构进行对齐分析"
+    input:
+      - code_changes[]
+    output:
+      - alignment_map[]
+    depends_on:
+      - ScanCodebase
+  - order: 3
+    name: ValidateAlignment
+    action: validate_alignment
+    description: "校验文档与代码对齐的一致性和完整性"
+    input:
+      - alignment_map[]
+    output:
+      - validation_report
+    depends_on:
+      - AlignDocsToCode
+  - order: 4
+    name: EvolveDocs
+    action: evolve_docs
+    description: "基于对齐结果自动演化更新文档"
+    input:
+      - validation_report
+    output:
+      - bos://analysis/alignment
+    depends_on:
+      - ValidateAlignment
+
 execution:
   mode: sequential
   max_retries: 3
   timeout: 1200
   on_failure: abort
   audit_enabled: true
+
 relations:
-- type: triggers
-  target: bos://forge/codebase/change
-  note: 代码库变更触发文档对齐
-- type: data_flows
-  target: bos://analysis/alignment
-  note: 对齐结果输出到分析域
-- type: depends_on
-  target: WORKFLOW-MINERVA-DEEP-RESEARCH
-  note: 文档对齐依赖 Minerva 深度分析结果
+  - type: triggers
+    target: bos://forge/codebase/change
+    note: "代码库变更触发文档对齐"
+  - type: data_flows
+    target: bos://analysis/alignment
+    note: "对齐结果输出到分析域"
+  - type: depends_on
+    target: WORKFLOW-MINERVA-DEEP-RESEARCH
+    note: "文档对齐依赖 Minerva 深度分析结果"
+
 sla:
   max_execution_time: 1200
   expected_completion_rate: 0.95
   critical: false
+
 tags:
-- ontoderive
-- alignment
-- code-docs
+  - ontoderive
+  - alignment
+  - code-docs
+
 maintained_by: kairon/ontoderive
-last_reviewed: '2026-06-07'
+last_reviewed: "2026-06-07"
