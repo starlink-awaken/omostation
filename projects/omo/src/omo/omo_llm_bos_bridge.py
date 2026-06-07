@@ -299,7 +299,10 @@ class _AgoraPoolManager:
     release(pool, alive) 还连接 (alive=False 时关掉, LRU 淘汰最旧)
 
     P44-W1: 死连接由 is_alive() 探测, 死亡池 LRU 淘汰时关闭.
+    P45-W5: 后台 heartbeat 主动检测长空闲连接的死活.
     """
+
+    HEARTBEAT_INTERVAL_SEC = 30.0
 
     def __init__(self, cmd: list[str], max_size: int = 4) -> None:
         self._cmd = cmd
@@ -307,6 +310,8 @@ class _AgoraPoolManager:
         self._idle: collections.deque[_AgoraPool] = collections.deque()
         self._active = 0
         self._lock = asyncio.Lock()
+        self._heartbeat_task: asyncio.Task | None = None
+        self._heartbeat_stop = asyncio.Event()
 
     async def acquire(self) -> _AgoraPool | None:
         async with self._lock:
@@ -339,7 +344,51 @@ class _AgoraPoolManager:
                 old = self._idle.popleft()
                 asyncio.create_task(old.close())  # noqa: RUF006
 
+    async def start_heartbeat(self) -> None:
+        """P45-W5: 启动后台 heartbeat task, 定期清理 idle 池死连接.
+
+        每 30s 扫一次 idle 池, is_alive() 探测, 死的关掉 + 从 idle 移除.
+        第一次 acquire 时自动启动, close_all() 时 cancel.
+        """
+        if self._heartbeat_task is not None and not self._heartbeat_task.done():
+            return
+        self._heartbeat_stop.clear()
+        self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
+
+    async def _heartbeat_loop(self) -> None:
+        """P45-W5: 后台心跳循环, 每 30s 扫一次 idle 池死连接."""
+        while not self._heartbeat_stop.is_set():
+            try:
+                await asyncio.wait_for(
+                    self._heartbeat_stop.wait(),
+                    timeout=self.HEARTBEAT_INTERVAL_SEC,
+                )
+                break  # stop event set
+            except asyncio.TimeoutError:
+                pass  # 30s 到, 跑一次清理
+            # 清理死连接
+            async with self._lock:
+                dead = []
+                live = collections.deque()
+                while self._idle:
+                    p = self._idle.popleft()
+                    if p.is_alive():
+                        live.append(p)
+                    else:
+                        dead.append(p)
+                self._idle = live
+                for p in dead:
+                    asyncio.create_task(p.close())  # noqa: RUF006
+
     async def close_all(self) -> None:
+        # P45-W5: 先停 heartbeat, 再清池
+        if self._heartbeat_task is not None:
+            self._heartbeat_stop.set()
+            try:
+                await asyncio.wait_for(self._heartbeat_task, timeout=2)
+            except asyncio.TimeoutError:
+                self._heartbeat_task.cancel()
+            self._heartbeat_task = None
         async with self._lock:
             while self._idle:
                 p = self._idle.popleft()
@@ -428,6 +477,8 @@ async def _get_agora_pool() -> _AgoraPoolManager | None:
             if warm is None:
                 return None
             await manager.release(warm, alive=True)
+            # P45-W5: 启动后台 heartbeat, 主动清理 idle 池死连接
+            await manager.start_heartbeat()
             _MANAGER = manager
             return _MANAGER
         except Exception:
