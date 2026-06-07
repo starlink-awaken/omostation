@@ -58,6 +58,11 @@ from mof_agora_hook import pre_check as _bos_pre_check, post_audit as _bos_post_
 # BOS URI 解析器 (P45 W1) — 统一 POC_SERVICES 路由
 from agora.mcp.bos_resolver import resolve_bos_uri as _resolve_bos_uri  # type: ignore[import-not-found]
 from agora.mcp.bos_resolver import list_services as _list_poc_services        # type: ignore[import-not-found]
+from agora.mcp.bos_resolver import POC_SERVICES as _POC_SERVICES              # type: ignore[import-not-found]
+
+# BOSRouter (P45 W2) — 统一路由注册表
+from agora.mcp.bos_router import bos_router as _bos_router  # type: ignore[import-not-found]
+from agora.mcp.bos_router import BOSRouter  # type: ignore[import-not-found]
 
 logger = structlog.get_logger(__name__)
 
@@ -293,6 +298,15 @@ async def _init_proxy():
 
     # ── Phase 3: Register proxy tools ──
     _register_proxy_tools(mcp, _proxy_manager)
+
+    # ── Phase 4 (P45 W2): Seed BOSRouter from POC_SERVICES ──
+    for uri, svc in _POC_SERVICES.items():
+        _bos_router.register(uri, adapter="poc", config={
+            "domain": getattr(svc, "domain", ""),
+            "transport": getattr(svc, "transport", ""),
+            "description": getattr(svc, "description", ""),
+        })
+    logger.info("bos_router_seeded", poc_count=_bos_router.count())
 
 
 # ── 辅助函数 ─────────────────────────────────────────
@@ -534,6 +548,55 @@ def agora_registry() -> str:
             "resources": [{"uri": r.uri, "name": r.name} for r in resources]
         }, indent=2)
     return json.dumps({"error": "proxy manager not initialized"})
+
+# ── Phase 34: Agora Mesh V2 (Agent Experience Layer) ────────────────
+
+@mcp.resource("bos://agora/registry")
+def agora_registry() -> str:
+    """Introspection: returns a JSON dump of all registered tools and resources."""
+    import json
+    if _proxy_manager:
+        tools = _proxy_manager.list_tools()
+        resources = _proxy_manager.list_resources()
+        return json.dumps({
+            "tools": [{"name": t.name, "description": t.description} for t in tools],
+            "resources": [{"uri": r.uri, "name": r.name} for r in resources]
+        }, indent=2)
+    return json.dumps({"error": "proxy manager not initialized"})
+
+
+@mcp.resource("bos://{domain}/{package}/{action}")
+async def bos_universal_resource(domain: str, package: str, action: str) -> str:
+    """P45 W2: Universal BOS URI resource handler — 匹配所有 bos:// 请求。
+    
+    路由优先级: BOSRouter (POC) → ProxyManager (MCP 代理) → 404
+    """
+    import json
+    uri = f"bos://{domain}/{package}/{action}"
+    # Step 1: BOSRouter
+    route = _bos_router.resolve(uri)
+    if route:
+        if route["adapter"] == "poc":
+            try:
+                result = await _resolve_bos_uri(uri)
+                return json.dumps({"status": "ok", "uri": uri, "source": "bos_router",
+                                  "result": result, "format_version": FORMAT_VERSION})
+            except Exception as e:
+                return json.dumps({"status": "error", "uri": uri, "error": str(e),
+                                  "format_version": FORMAT_VERSION})
+    # Step 2: ProxyManager
+    if _proxy_manager:
+        try:
+            result = await _proxy_manager.read_resource(uri)
+            if isinstance(result, dict) and "contents" in result:
+                return json.dumps({"status": "ok", "uri": uri, "source": "proxy",
+                                  "contents": result["contents"], "format_version": FORMAT_VERSION})
+        except Exception:
+            pass
+    # Step 3: Not found
+    return json.dumps({"status": "error", "uri": uri,
+                      "error": f"Resource not found or no provider for: {uri}",
+                      "format_version": FORMAT_VERSION})
 
 
 # ═══════════════════════════════════════════════════════════════
