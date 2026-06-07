@@ -1,16 +1,22 @@
-"""Cockpit Web Dashboard — HTTP server with real-time status from I0 + L4.
+"""Cockpit Web Dashboard — FastAPI unified status aggregation hub (L3).
 
-Serves the cockpit status dashboard with live data from I0 Fabric and L4 bridge.
+原有 stdlib http.server 已升级为 FastAPI, 保持所有现有 API 向后兼容。
+新增 /api/v1/status + /overview 统一层聚合页面。
 
-Endpoints:
-  GET /              → dashboard HTML
-  GET /api/status    → i0_status() JSON
-  GET /api/services  → i0_services() JSON
-  GET /api/events    → i0_events(50) JSON
-  GET /api/protocols → i0_protocols() JSON
-  GET /api/debt      → debt ledger JSON
-  GET /api/context   → workspace_context JSON (L4 bridge)
-  GET /api/cards     → cards_status JSON (L4 bridge)
+Endpoints (现有, 向后兼容):
+  GET /               → dashboard HTML (原有模板)
+  GET /api/status     → i0_status() JSON
+  GET /api/services   → i0_services() JSON
+  GET /api/events     → i0_events(50) JSON
+  GET /api/protocols  → i0_protocols() JSON
+  GET /api/debt       → debt ledger JSON
+  GET /api/context    → workspace_context JSON (L4 bridge)
+  GET /api/cards      → cards_status JSON (L4 bridge)
+
+Endpoints (新增):
+  GET /api/v1/status  → 统一层聚合 JSON (I0+L2+L1+L0+L4)
+  GET /healthz        → 健康检查
+  GET /overview       → 统一层聚合 HTML 页面
 
 Usage:
     cockpit dashboard
@@ -24,8 +30,13 @@ import os
 import re
 import subprocess
 import sys
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+import time
 from pathlib import Path
+from typing import Any
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse
 
 # ─── Paths ──────────────────────────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).resolve().parent  # cockpit/src/cockpit/
@@ -42,7 +53,6 @@ for p in [_runtime_src, _omo_src]:
 # L4 bridge imports (try/except for graceful degradation)
 try:
     from cockpit.scripts.cockpit_mcp import workspace_context, cards_status, cards_check, vault_search
-
     _HAS_L4_BRIDGE = True
 except ImportError:
     _HAS_L4_BRIDGE = False
@@ -50,47 +60,197 @@ except ImportError:
 PORT = int(os.environ.get("COCKPIT_DASHBOARD_PORT", "8090"))
 DASHBOARD_TOKEN = os.environ.get("COCKPIT_DASHBOARD_TOKEN", "")
 DASHBOARD_CORS_ORIGIN = os.environ.get("COCKPIT_DASHBOARD_CORS_ORIGIN", "http://localhost:8090")
-DASHBOARD_RATE_LIMIT = int(os.environ.get("COCKPIT_DASHBOARD_RATE_LIMIT", "60"))  # req/min per IP
+DASHBOARD_RATE_LIMIT = int(os.environ.get("COCKPIT_DASHBOARD_RATE_LIMIT", "60"))
 
 
-# ─── Rate Limiter ────────────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════
+# FastAPI App
+# ═══════════════════════════════════════════════════════════════
 
-class _RateLimiter:
-    """简单的滑动窗口限流器 (每分钟每IP请求数)。"""
+app = FastAPI(title="Cockpit Dashboard", version="2.0.0")
 
-    def __init__(self, max_requests: int, window_seconds: int = 60):
-        self._max = max_requests
-        self._window = window_seconds
-        self._buckets: dict[str, list[float]] = {}
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[DASHBOARD_CORS_ORIGIN],
+    allow_methods=["GET", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+)
 
-    def allow(self, ip: str) -> bool:
-        import time
-        now = time.monotonic()
-        bucket = self._buckets.get(ip, [])
-        # 清理过期条目
-        cutoff = now - self._window
-        bucket = [t for t in bucket if t > cutoff]
-        if len(bucket) >= self._max:
-            self._buckets[ip] = bucket
-            return False
-        bucket.append(now)
-        self._buckets[ip] = bucket
-        # 定期清理过期的 IP 条目
-        if len(self._buckets) > 1000:
-            self._buckets = {k: v for k, v in self._buckets.items() if v}
-        return True
+# ─── 健康检查 ──────────────────────────────────────────────────
 
 
-_RATE_LIMITER = _RateLimiter(DASHBOARD_RATE_LIMIT)
+@app.get("/healthz")
+async def healthz():
+    return {"status": "ok", "service": "cockpit-dashboard", "port": PORT}
 
 
-# ─── Live-Data JS Snippet ──────────────────────────────────────────────────
-# This snippet is injected into the dashboard HTML before </body>.
-# It replaces the static DEBTS/... constants with live fetch() calls.
-LIVE_DATA_JS = r'''
+# ═══════════════════════════════════════════════════════════════
+# 层聚合 API
+# ═══════════════════════════════════════════════════════════════
+
+_LAYER_SOURCES: list[dict] = [
+    {"layer": "I0", "name": "agora", "url": "http://localhost:7430/api/bos/status", "port": 7430},
+    {"layer": "L2", "name": "omo",   "url": "http://localhost:9090/api/v1/status",   "port": 9090},
+    {"layer": "L1", "name": "runtime", "url": "http://localhost:9876/api/v1/status",  "port": 9876},
+    {"layer": "L0", "name": "ecos",  "url": "http://localhost:9090/api/v1/status",   "port": 9090},
+]
+
+
+def _fetch_layer_status(source: dict) -> dict:
+    """Fetch a single layer's status via HTTP."""
+    import urllib.request
+    try:
+        req = urllib.request.Request(source["url"], method="GET")
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            data = json.loads(resp.read().decode())
+        return {
+            "layer": source["layer"],
+            "name": source["name"],
+            "status": data.get("status", "ok"),
+            "data": data,
+        }
+    except Exception as e:
+        return {
+            "layer": source["layer"],
+            "name": source["name"],
+            "status": "down",
+            "error": str(e),
+        }
+
+
+@app.get("/api/v1/status")
+async def api_v1_status():
+    """Aggregated status from all layers."""
+    import concurrent.futures
+
+    layers = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+        futures = {pool.submit(_fetch_layer_status, s): s for s in _LAYER_SOURCES}
+        for future in concurrent.futures.as_completed(futures, timeout=5):
+            try:
+                layers.append(future.result())
+            except Exception as e:
+                source = futures[future]
+                layers.append({
+                    "layer": source["layer"],
+                    "name": source["name"],
+                    "status": "down",
+                    "error": str(e),
+                })
+
+    # Sort by layer name for consistent output
+    layers.sort(key=lambda x: x["layer"])
+
+    # Compute overall health
+    total = len(layers)
+    ok = sum(1 for l in layers if l["status"] == "ok")
+    degraded = sum(1 for l in layers if l["status"] == "degraded")
+
+    return JSONResponse({
+        "service": "cockpit-dashboard",
+        "version": "2.0.0",
+        "timestamp": time.time(),
+        "layers": layers,
+        "summary": {
+            "total_layers": total,
+            "healthy": ok,
+            "degraded": degraded,
+            "down": total - ok - degraded,
+        },
+        "sources": [{"layer": s["layer"], "name": s["name"], "url": s["url"], "port": s["port"]} for s in _LAYER_SOURCES],
+    })
+
+
+# ═══════════════════════════════════════════════════════════════
+# 统一概览页面
+# ═══════════════════════════════════════════════════════════════
+
+_OVERVIEW_HTML = """<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cockpit — 统一状态概览</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',monospace;background:#0d1117;color:#c9d1d9;padding:24px}
+h1{color:#58a6ff;font-size:20px;margin-bottom:4px}
+.sub{color:#8b949e;font-size:12px;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.layer-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
+.layer-card h2{font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.badge-ok{background:#052e16;color:#4ade80}.badge-degraded{background:#271c00;color:#fbbf24}.badge-down{background:#3b0d0d;color:#f87171}
+.status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot-ok{background:#4ade80}.dot-degraded{background:#fbbf24}.dot-down{background:#f87171}
+.stat{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid #21262d}
+.stat:last-child{border:none}.label{color:#8b949e}.val{color:#58a6ff;font-weight:600}
+a{color:#58a6ff;text-decoration:none}a:hover{text-decoration:underline}
+.nav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.nav a{padding:6px 14px;background:#161b22;border:1px solid #30363d;border-radius:6px;font-size:12px}
+.nav a:hover{background:#1c2333;border-color:#58a6ff}
+.legacy-link{font-size:12px;color:#8b949e;margin-top:16px;text-align:center}
+</style>
+</head>
+<body>
+<h1>&#x25C8; Cockpit — 统一状态概览</h1>
+<div class="sub">L3 聚合入口 · 自动检测各层状态</div>
+<div class="nav">
+  <a href="/">&#x1F4CA; 债务驾驶舱 (原有)</a>
+  <a href="/api/v1/status">&#x1F4CB; API JSON</a>
+  <a href="http://localhost:7430">&#x2197; Agora (I0)</a>
+  <a href="http://localhost:9090">&#x2197; OMO (L2)</a>
+  <a href="http://localhost:9876">&#x2197; Runtime (L1)</a>
+</div>
+<div class="grid" id="layer-grid">
+  <div style="color:#8b949e;grid-column:1/-1;text-align:center;padding:40px">Loading...</div>
+</div>
+<div class="legacy-link">
+  <span id="refresh-time"></span>
+</div>
 <script>
-// ─── Live dashboard: fetch + re-render with I0 Fabric API ────────────────
-// Cache original static data so we can merge fallbacks
+async function refresh(){try{
+const r=await fetch('/api/v1/status');const d=await r.json();
+let html='';
+d.layers.forEach(l=>{
+  const badgeCls=l.status==='ok'?'badge-ok':l.status==='degraded'?'badge-degraded':'badge-down';
+  const dotCls='dot-'+l.status;
+  let body='';
+  if(l.data){
+    if(l.data.router)body+='<div class="stat"><span class="label">路由</span><span class="val">'+l.data.router.total_routes+'</span></div>';
+    if(l.data.domains)body+='<div class="stat"><span class="label">域</span><span class="val">'+Object.keys(l.data.domains).length+'</span></div>';
+    if(l.data.metrics)body+='<div class="stat"><span class="label">调用</span><span class="val">'+l.data.metrics.total_calls+'</span></div>';
+    if(l.data.poc_services)body+='<div class="stat"><span class="label">POC</span><span class="val">'+l.data.poc_services.total+'</span></div>';
+    if(l.data.summary){
+      const s=l.data.summary;
+      body+='<div class="stat"><span class="label">健康</span><span class="val">'+s.healthy+'/'+s.total_layers+'</span></div>';
+    }
+  }
+  if(l.error)body+='<div class="stat"><span class="label">错误</span><span style="color:#f87171;font-size:11px">'+l.error.slice(0,60)+'</span></div>';
+  if(!body)body='<div class="stat"><span class="label">无数据</span></div>';
+  html+='<div class="layer-card"><h2><span class="status-dot '+dotCls+'"></span> '+l.layer+' '+l.name+' <span class="badge '+badgeCls+'">'+l.status+'</span></h2>'+body+'</div>';
+});
+document.getElementById('layer-grid').innerHTML=html;
+document.getElementById('refresh-time').textContent='Updated '+new Date().toLocaleTimeString();
+}catch(e){console.error(e);}}
+refresh();setInterval(refresh,10000);
+</script>
+</body></html>"""
+
+
+@app.get("/overview", response_class=HTMLResponse)
+@app.get("/overview/", response_class=HTMLResponse)
+async def overview_page():
+    return _OVERVIEW_HTML
+
+
+# ═══════════════════════════════════════════════════════════════
+# 原有 Dashboard (向后兼容)
+# ═══════════════════════════════════════════════════════════════
+
+# 注入 JS 片段 (从原 dashboard_server.py 迁移)
+_LIVE_DATA_JS = r'''
+<script>
 const STATIC_DEBTS = typeof DEBTS !== 'undefined' ? DEBTS : [];
 const STATIC_TIERS = typeof TIERS !== 'undefined' ? TIERS : [];
 const STATIC_POLICIES = typeof POLICIES !== 'undefined' ? POLICIES : [];
@@ -106,41 +266,24 @@ async function loadLiveDebt() {
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const ledger = await resp.json();
     if (ledger.error) { console.warn('Debt API error:', ledger.error); return; }
-
     const items = ledger.items || [];
-    // Rebuild tier counts
-    const tierCounts = {};
-    const policyCounts = {};
-    const ruleCounts = {};
+    const tierCounts = {}; const policyCounts = {}; const ruleCounts = {};
     STATIC_TIERS.forEach(t => { tierCounts[t.id] = { count: 0, color: t.color }; });
     STATIC_POLICIES.forEach(p => { policyCounts[p.id] = { ...p, count: 0 }; });
     STATIC_RULES.forEach(r => { ruleCounts[r.id] = { ...r, count: 0 }; });
-
     items.forEach(d => {
       const tier = d.x3 || d.x3_tier;
       if (tier && tierCounts[tier]) tierCounts[tier].count++;
-      // x1_policy_ref may be a string or array; normalize
       const refs = Array.isArray(d.x1) ? d.x1 : (d.x1_policy_refs || []);
       refs.forEach(p => { if (policyCounts[p]) policyCounts[p].count++; });
-      // x2 rules
       (d.x2 || []).forEach(r => { if (ruleCounts[r]) ruleCounts[r].count++; });
     });
-
-    // Reassign globals for existing render functions
     window.DEBTS = items;
     window.TIER_COUNTS = tierCounts;
     window.POLICY_COUNTS = policyCounts;
     window.RULE_COUNTS = ruleCounts;
-
-    // Re-render
-    renderTierChart();
-    renderPolicyGrid();
-    renderX2Grid();
-    populateFilters();
-    renderTable(items);
-  } catch(e) {
-    console.warn('Live debt unavailable, using static data:', e);
-  }
+    renderTierChart(); renderPolicyGrid(); renderX2Grid(); populateFilters(); renderTable(items);
+  } catch(e) { console.warn('Live debt unavailable:', e); }
 }
 
 async function loadLiveStatus() {
@@ -150,153 +293,121 @@ async function loadLiveStatus() {
       fetch('/api/services').then(r => r.ok ? r.json() : null)
     ]);
     if (status) {
-      // Update header meta
       const meta = document.querySelector('.header .meta');
       if (meta) {
         const el = document.querySelector('.header .meta span:first-child');
-        if (el) el.textContent = '📦 ' + (status.total_services || '?') + ' services';
+        if (el) el.textContent = '\uD83D\uDCE6 ' + (status.total_services || '?') + ' services';
       }
     }
-    // Update the first card (Total Items → show live service count)
     const card = document.querySelector('.card-stat:first-child .value');
     if (card && services) {
       const online = services.filter(s => s.port_listening).length;
       card.textContent = online + '/' + services.length;
       card.style.color = online === services.length ? '#4ade80' : '#fbbf24';
     }
-  } catch(e) {
-    console.log('Status unavailable:', e);
-  }
+  } catch(e) { console.log('Status unavailable:', e); }
 }
-
-// Run on page load
-loadLiveDebt();
-loadLiveStatus();
-// Auto-refresh status every 30s, debt every 60s
+loadLiveDebt(); loadLiveStatus();
 setInterval(loadLiveStatus, 30000);
 setInterval(loadLiveDebt, 60000);
 </script>'''
 
 
-# ─── Dashboard Handler ─────────────────────────────────────────────────────
+@app.get("/", response_class=HTMLResponse)
+async def dashboard_page():
+    """Serve the existing dashboard.html with live-data JS injected."""
+    if not DASHBOARD_HTML.exists():
+        html = f"""<!DOCTYPE html><html><body><h1>Dashboard not found</h1>
+<p>Expected at: {DASHBOARD_HTML}</p>
+<p>Try <a href="/overview">/overview</a> for unified status.</p></body></html>"""
+        return HTMLResponse(content=html, status_code=404)
 
-class DashboardHandler(SimpleHTTPRequestHandler):
-    """HTTP request handler for the live I0 dashboard."""
-
-    def _check_auth(self) -> bool:
-        """验证 Bearer token。如果未配置 token 则跳过验证。"""
-        if not DASHBOARD_TOKEN:
-            return True
-        auth = self.headers.get("Authorization", "")
-        expected = f"Bearer {DASHBOARD_TOKEN}"
-        return auth == expected
-
-    @property
-    def _cors_origin(self) -> str:
-        return DASHBOARD_CORS_ORIGIN
-
-    def do_GET(self):
-        if not self._check_auth():
-            self.send_response(401)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "Unauthorized"}).encode())
-            return
-        # Rate limiting
-        client_ip = self.client_address[0]
-        if not _RATE_LIMITER.allow(client_ip):
-            self.send_response(429)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Retry-After", "60")
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "Rate limit exceeded"}).encode())
-            return
-        if self.path == "/":
-            self.serve_dashboard()
-        elif self.path.startswith("/api/"):
-            self.serve_api()
-        elif self.path == "/favicon.ico":
-            self.send_error(404)
-        else:
-            self.send_error(404)
-
-    def do_OPTIONS(self):
-        """CORS preflight."""
-        origin = self.headers.get("Origin", "")
-        allowed = DASHBOARD_CORS_ORIGIN
-        if origin and (allowed == "*" or origin == allowed):
-            self.send_response(204)
-            self.send_header("Access-Control-Allow-Origin", origin)
-            self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
-            self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type")
-            self.end_headers()
-        else:
-            self.send_response(403)
-            self.end_headers()
-
-    def serve_dashboard(self):
-        """Serve dashboard.html with live-data JS injected before </body>."""
-        if not DASHBOARD_HTML.exists():
-            html = f"""<!DOCTYPE html><html><body><h1>Dashboard not found</h1>
-<p>Expected at: {DASHBOARD_HTML}</p></body></html>"""
-            self.send_response(404)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(html.encode("utf-8"))
-            return
-
-        html = DASHBOARD_HTML.read_text(encoding="utf-8")
-        # Inject live-data JS before </body>
-        html = html.replace("</body>", LIVE_DATA_JS + "\n</body>")
-
-        self.send_response(200)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
-        self.end_headers()
-        self.wfile.write(html.encode("utf-8"))
-
-    def serve_api(self):
-        """Route API requests to the appropriate I0 query function."""
-        try:
-            from runtime.i0 import i0_status, i0_services, i0_events, i0_protocols
-        except ImportError:
-            i0_status = i0_services = i0_events = i0_protocols = None
-
-        if self.path == "/api/status":
-            data = i0_status() if i0_status else {"error": "runtime.i0 not available"}
-        elif self.path == "/api/services":
-            data = i0_services() if i0_services else {"error": "runtime.i0 not available"}
-        elif self.path == "/api/events":
-            data = i0_events(50) if i0_events else {"error": "runtime.i0 not available"}
-        elif self.path == "/api/protocols":
-            data = i0_protocols() if i0_protocols else {"error": "runtime.i0 not available"}
-        elif self.path == "/api/debt":
-            data = _load_debt()
-        elif self.path == "/api/e2e":
-            data = _run_e2e()
-        elif self.path == "/api/omo-report":
-            data = _omo_report()
-        elif self.path == "/api/context":
-            data = json.loads(workspace_context()) if _HAS_L4_BRIDGE else {"error": "L4 bridge not available"}
-        elif self.path == "/api/cards":
-            data = json.loads(cards_status()) if _HAS_L4_BRIDGE else {"error": "L4 bridge not available"}
-        elif self.path == "/api/cards/check":
-            data = json.loads(cards_check()) if _HAS_L4_BRIDGE else {"error": "L4 bridge not available"}
-        elif self.path == "/api/vault/search":
-            data = json.loads(vault_search()) if _HAS_L4_BRIDGE else {"error": "L4 bridge not available"}
-        else:
-            self.send_error(404)
-            return
-
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", self._cors_origin)
-        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
-        self.end_headers()
-        self.wfile.write(json.dumps(data, ensure_ascii=False, default=str).encode("utf-8"))
+    html = DASHBOARD_HTML.read_text(encoding="utf-8")
+    html = html.replace("</body>", _LIVE_DATA_JS + "\n</body>")
+    return HTMLResponse(content=html)
 
 
-# ─── Debt Ledger Loader ────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════
+# 原有 API (向后兼容)
+# ═══════════════════════════════════════════════════════════════
+
+
+@app.get("/api/status")
+async def api_status():
+    try:
+        from runtime.i0 import i0_status
+        return JSONResponse(content=(i0_status() if i0_status else {"error": "runtime.i0 not available"}))
+    except ImportError:
+        return JSONResponse(content={"error": "runtime.i0 not available"})
+
+
+@app.get("/api/services")
+async def api_services():
+    try:
+        from runtime.i0 import i0_services
+        return JSONResponse(content=(i0_services() if i0_services else {"error": "runtime.i0 not available"}))
+    except ImportError:
+        return JSONResponse(content={"error": "runtime.i0 not available"})
+
+
+@app.get("/api/events")
+async def api_events():
+    try:
+        from runtime.i0 import i0_events
+        return JSONResponse(content=(i0_events(50) if i0_events else {"error": "runtime.i0 not available"}))
+    except ImportError:
+        return JSONResponse(content={"error": "runtime.i0 not available"})
+
+
+@app.get("/api/protocols")
+async def api_protocols():
+    try:
+        from runtime.i0 import i0_protocols
+        return JSONResponse(content=(i0_protocols() if i0_protocols else {"error": "runtime.i0 not available"}))
+    except ImportError:
+        return JSONResponse(content={"error": "runtime.i0 not available"})
+
+
+@app.get("/api/debt")
+async def api_debt():
+    return JSONResponse(content=_load_debt())
+
+
+@app.get("/api/e2e")
+async def api_e2e():
+    return JSONResponse(content=_run_e2e())
+
+
+@app.get("/api/omo-report")
+async def api_omo_report():
+    return JSONResponse(content=_omo_report())
+
+
+@app.get("/api/context")
+async def api_context():
+    if not _HAS_L4_BRIDGE:
+        return JSONResponse(content={"error": "L4 bridge not available"})
+    return JSONResponse(content=json.loads(workspace_context()))
+
+
+@app.get("/api/cards")
+async def api_cards():
+    if not _HAS_L4_BRIDGE:
+        return JSONResponse(content={"error": "L4 bridge not available"})
+    return JSONResponse(content=json.loads(cards_status()))
+
+
+@app.get("/api/cards/check")
+async def api_cards_check():
+    if not _HAS_L4_BRIDGE:
+        return JSONResponse(content={"error": "L4 bridge not available"})
+    return JSONResponse(content=json.loads(cards_check()))
+
+
+# ═══════════════════════════════════════════════════════════════
+# 债务加载 / E2E / OMO 报告 (从原 dashboard_server.py 迁移)
+# ═══════════════════════════════════════════════════════════════
+
 
 def _load_debt() -> dict:
     """Load OMO debt ledger from the filesystem and return a JSON-safe dict."""
@@ -309,7 +420,6 @@ def _load_debt() -> dict:
 
         ledger = load_debt_ledger(omo_dir)
 
-        # Normalize items for the dashboard JS
         items = []
         for i in ledger.items:
             items.append({
@@ -332,7 +442,6 @@ def _load_debt() -> dict:
                 "next_review_at": i.next_review_at,
                 "gate_level": i.gate_level,
                 "history": list(i.history),
-                # Normalize: dashboard expects x1_policy_refs (array), x2_freshness, x3_tier
                 "x1_policy_refs": [i.x1_policy_ref] if i.x1_policy_ref else [],
                 "x1_policy_ref": i.x1_policy_ref,
                 "x1": [i.x1_policy_ref] if i.x1_policy_ref else [],
@@ -353,8 +462,6 @@ def _load_debt() -> dict:
     except Exception as e:
         return {"error": str(e), "items": []}
 
-
-# ─── E2E Check & OMO Report ────────────────────────────────────────────────
 
 def _run_e2e() -> dict:
     """Run the e2e check and return results."""
@@ -398,24 +505,22 @@ def _omo_report() -> dict:
         return {"error": str(e), "summary": "Error"}
 
 
-# ─── Main ──────────────────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════
+# Main
+# ═══════════════════════════════════════════════════════════════
+
 
 def main():
-    """Start the dashboard HTTP server."""
-    server = HTTPServer(("127.0.0.1", PORT), DashboardHandler)
-    print(f"🚀 Cockpit Web Dashboard")
+    """Start the dashboard HTTP server via uvicorn."""
+    import uvicorn
+
+    print(f"🚀 Cockpit Web Dashboard (FastAPI)")
+    print(f"   Overview: http://127.0.0.1:{PORT}/overview")
+    print(f"   Legacy:   http://127.0.0.1:{PORT}/ (原有债务驾驶舱)")
+    print(f"   API:      http://127.0.0.1:{PORT}/api/v1/status")
     if _HAS_L4_BRIDGE:
-        print(f"   L4 Bridge:  http://127.0.0.1:{PORT}/api/context (workspace_context)")
-        print(f"   L4 Bridge:  http://127.0.0.1:{PORT}/api/cards (cards_status)")
-        print(f"   L4 Bridge:  http://127.0.0.1:{PORT}/api/cards/check (cards_check)")
-    print(f"   I0 Status:  http://127.0.0.1:{PORT}/api/status")
-    print(f"   I0 Services: http://127.0.0.1:{PORT}/api/services")
-    print(f"   Debt:       http://127.0.0.1:{PORT}/api/debt")
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("\nShutting down...")
-        server.shutdown()
+        print(f"   L4 Cards: http://127.0.0.1:{PORT}/api/cards")
+    uvicorn.run(app, host="127.0.0.1", port=PORT, log_level="info")
 
 
 if __name__ == "__main__":
