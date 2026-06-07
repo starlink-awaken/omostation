@@ -12,7 +12,7 @@ properties:
   trigger: "per-call"
   source: "agora/mcp/bos_resolver.py:_call_mcp_stdio + agora/mcp/mcp_stdio_bridge.py"
   strategy: "zero-touch bridge — downstream services unchanged"
-  current: "1/40 mcp_stdio (kos/search), 37 stdio, 2 internal"
+  current: "38/40 mcp_stdio, 2 internal — 迁移完成 | P54-W0 done"
   target: "40/40 mcp_stdio"
 
 relations:

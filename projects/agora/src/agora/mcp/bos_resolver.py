@@ -119,7 +119,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="memory",
         package="kos",
         action="search",
-        transport="stdio",
+        transport="mcp_stdio",  # P54-W0: 渐进迁移到标准 MCP stdio
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "kos", "serve", "--action", "search",
@@ -131,7 +131,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="memory",
         package="kronos",
         action="ingest",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "kronos", "serve", "--action", "ingest",
@@ -154,7 +154,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="governance",
         package="metaos",
         action="gate",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(METAOS_ROOT),
             "python", "-m", "metaos", "serve", "--action", "gate",
@@ -166,7 +166,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="governance",
         package="sot-bridge",
         action="register",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "sot_bridge", "serve", "--action", "register",
@@ -178,7 +178,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="governance",
         package="protocols-layer",
         action="trigger",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "protocols_layer", "serve", "--action", "trigger",
@@ -191,7 +191,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="analysis",
         package="minerva",
         action="research",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "minerva", "serve", "--action", "research",
@@ -203,7 +203,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="analysis",
         package="minerva",
         action="draft",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "minerva", "serve", "--action", "draft",
@@ -215,7 +215,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="analysis",
         package="minerva",
         action="audit",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "minerva", "serve", "--action", "audit",
@@ -227,7 +227,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="analysis",
         package="ontoderive",
         action="derive",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "ontoderive", "serve", "--action", "derive",
@@ -239,7 +239,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="analysis",
         package="ontoderive",
         action="audit",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "ontoderive", "serve", "--action", "audit",
@@ -251,7 +251,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="analysis",
         package="ontoderive",
         action="fact-check",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "ontoderive", "serve", "--action", "fact-check",
@@ -263,7 +263,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="analysis",
         package="codeanalyze",
         action="scan",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "codeanalyze", "serve", "--action", "scan",
@@ -275,7 +275,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="analysis",
         package="codeanalyze",
         action="report",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "codeanalyze", "serve", "--action", "report",
@@ -287,7 +287,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="analysis",
         package="codeanalyze",
         action="lint",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "codeanalyze", "serve", "--action", "lint",
@@ -299,7 +299,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="analysis",
         package="iris",
         action="connect",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "iris", "serve", "--action", "connect",
@@ -311,7 +311,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="analysis",
         package="iris",
         action="transform",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "iris", "serve", "--action", "transform",
@@ -323,7 +323,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="analysis",
         package="iris",
         action="validate",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "iris", "serve", "--action", "validate",
@@ -336,7 +336,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="persona",
         package="health-profile",
         action="summary",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "health_profile", "serve", "--action", "summary",
@@ -349,7 +349,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="capability",
         package="forge",
         action="register-tool",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "forge", "serve", "--action", "register-tool",
@@ -365,7 +365,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="persona",
         package=LEGACY_PERSONA_BRIDGE_SERVICE,
         action="recall-entity",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "sot_bridge.sharedbrain_bridge", "serve", "--action", "recall-entity",
@@ -377,7 +377,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="persona",
         package="health-profile",
         action="alert",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "health_profile", "serve", "--action", "alert",
@@ -389,7 +389,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="capability",
         package="forge",
         action="exec-tool",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "forge", "serve", "--action", "exec-tool",
@@ -401,7 +401,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="capability",
         package="forge",
         action="list-tools",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "forge", "serve", "--action", "list-tools",
@@ -424,7 +424,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="persona",
         package=LEGACY_PERSONA_BRIDGE_SERVICE,
         action="recall",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "sot_bridge.sharedbrain_bridge", "serve", "--action", "recall",
@@ -436,7 +436,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="capability",
         package="forge",
         action="discover",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "forge", "serve", "--action", "discover",
@@ -448,7 +448,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="memory",
         package="kos",
         action="ingest",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "kos", "serve", "--action", "ingest",
@@ -461,7 +461,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="memory",
         package="kronos",
         action="query",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "kronos", "serve", "--action", "query",
@@ -473,7 +473,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="memory",
         package="kronos",
         action="schedule",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "kronos", "serve", "--action", "schedule",
@@ -486,7 +486,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="governance",
         package="metaos",
         action="register",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(METAOS_ROOT),
             "python", "-m", "metaos", "serve", "--action", "register",
@@ -498,7 +498,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="governance",
         package="sot-bridge",
         action="query",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "sot_bridge", "serve", "--action", "query",
@@ -511,7 +511,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="persona",
         package="core-models",
         action="schema",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "core_models", "serve", "--action", "schema",
@@ -523,7 +523,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="persona",
         package="core-models",
         action="validate",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "core_models", "serve", "--action", "validate",
@@ -535,7 +535,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="persona",
         package=LEGACY_PERSONA_BRIDGE_SERVICE,
         action="sync",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(KAIRON_ROOT),
             "python", "-m", "sot_bridge.sharedbrain_bridge", "serve", "--action", "sync",
@@ -548,7 +548,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="governance",
         package="omo",
         action="sync",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(OMOSTATION_ROOT / "projects" / "omo"),
             "python", "-m", "omo", "serve",
@@ -561,7 +561,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="capability",
         package="agent-runtime",
         action="agent-list",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(OMOSTATION_ROOT / "projects" / "runtime"),
             "python", "-m", "runtime.executor.agent_hub", "serve", "--action", "agent-list",
@@ -573,7 +573,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="capability",
         package="agent-runtime",
         action="chat",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(OMOSTATION_ROOT / "projects" / "runtime"),
             "python", "-m", "runtime.executor.agent_runner", "serve", "--action", "chat",
@@ -585,7 +585,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="capability",
         package="agent-runtime",
         action="run-task",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(OMOSTATION_ROOT / "projects" / "runtime"),
             "python", "-m", "runtime.executor.agent_executor", "serve", "--action", "run-task",
@@ -597,7 +597,7 @@ POC_SERVICES: dict[str, BosService] = {
         domain="capability",
         package="agent-runtime",
         action="task-status",
-        transport="stdio",
+        transport="mcp_stdio",
         command=[
             "uv", "run", "--directory", str(OMOSTATION_ROOT / "projects" / "runtime"),
             "python", "-m", "runtime.executor.agent_hub", "serve", "--action", "task-status",
@@ -1032,6 +1032,45 @@ def get_stdio_adapter(timeout: float = 5.0) -> StdioAdapter:
     return StdioAdapter(timeout=timeout)
 
 
+def _call_mcp_stdio(service: BosService, *args: Any, request_uri: str | None = None, **kwargs: Any) -> dict:
+    """mcp_stdio transport: 标准 MCP JSON-RPC 2.0 (P54-W0).
+
+    使用 mcp_stdio_bridge.py 桥接自定义 POC 协议到标准 MCP stdio。
+    下游子进程无需修改 — 桥接器处理协议转换。
+    """
+    import asyncio as _asyncio
+    from agora.mcp.bos_protocol import MCPStdioAdapter
+
+    action = service.action
+    bridge_cmd = " ".join([
+        "python3", str(Path(__file__).parent / "mcp_stdio_bridge.py"),
+    ] + service.command)
+
+    try:
+        adapter = MCPStdioAdapter(bridge_cmd, timeout=5.0)
+        started = _asyncio.run(adapter.start())
+        if not started:
+            return {
+                "uri": request_uri or "",
+                "transport": "mcp_stdio",
+                "status": "error",
+                "error": "mcp_stdio_initialize_failed",
+            }
+        result = _asyncio.run(adapter.call("poc_exec", {
+            "action": action,
+            "args": list(args),
+        }))
+        adapter.shutdown()
+        return result if isinstance(result, dict) else {"status": "ok", "result": result}
+    except Exception as e:
+        return {
+            "uri": request_uri or "",
+            "transport": "mcp_stdio",
+            "status": "error",
+            "error": f"mcp_stdio_error: {e}",
+        }
+
+
 async def resolve_bos_uri(uri: str, *args: Any, **kwargs: Any) -> dict:
     """解析 BOS URI 到实际调用 (主入口, async 兼容)."""
     parsed = parse_bos_uri(uri)
@@ -1046,10 +1085,14 @@ async def resolve_bos_uri(uri: str, *args: Any, **kwargs: Any) -> dict:
             "error": f"unknown_bos_uri: {uri} (registered: {len(POC_SERVICES)})",
         }
     if service.transport == "internal":
-        # internal 在事件循环内同步执行 (omo 同进程)
         return _call_internal(service, *args, **kwargs)
     if service.transport == "stdio":
         result = _call_stdio(service, *args, request_uri=uri, **kwargs)
+        result.setdefault("uri", uri)
+        result.setdefault("canonical_uri", canonical_uri)
+        return result
+    if service.transport == "mcp_stdio":
+        result = _call_mcp_stdio(service, *args, request_uri=uri, **kwargs)
         result.setdefault("uri", uri)
         result.setdefault("canonical_uri", canonical_uri)
         return result
