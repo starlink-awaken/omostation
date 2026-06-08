@@ -14,14 +14,14 @@ ports:
   3100: mcp-stdio              # 临时 — 待确认归属
   3101: mcp-stdio-alt          # 临时 — 待确认归属
   7422: agora-mcp-http         # agora · FastMCP · MCP HTTP 入口 (env-only,代码不硬编码)
-  7430: agora-dashboard        # agora · FastAPI · Web Dashboard  (env-only + ⚠️ omo 也引用 — 冲突待裁决)
-  7431: agora-mcp-sse          # agora · FastMCP · MCP SSE 入口  (⚠️ cockpit 也引用 — 冲突待裁决)
+  7430: agora-dashboard        # agora · FastAPI · Web Dashboard  (env-only + I0 拥有,runtime/omo 引用合规)
+  7431: agora-mcp-sse          # agora · FastMCP · MCP SSE 入口  (I0 拥有,cockpit 引用合规)
   7455: gateway-tls            # 临时 — 待确认归属
-  8080: agora-api-gateway      # agora · aiohttp · REST API Gateway  (⚠️ kairon 也引用 — 冲突待裁决)
+  8080: agora-api-gateway      # agora · aiohttp · REST API Gateway  (I0 拥有,事件 ID 1780804* 误命中,合规)
   8090: cockpit-dashboard      # cockpit · http.server · Cockpit Web Dashboard (env-only)
-  8765: minerva-web            # kairon/minerva · FastAPI · 深度研究 Web 面板  (⚠️ 多项目引用 — 冲突待裁决)
+  8765: minerva-web            # kairon/minerva · FastAPI · 深度研究 Web 面板  (L2 拥有,但 omo/runtime/ecos 写死 8765 — 业务代码待改)
   8888: mcp-stdio-debug        # 临时 — 待确认归属
-  9090: ecos-dashboard         # ecos · http.server · SSB Dashboard  (⚠️ aetherforge/compute-mesh/llm-gateway/omo 也引用 — 5 项目抢)
+  9090: ecos-dashboard         # ecos · http.server · SSB Dashboard  (L0 期望拥有,但 llm-gateway/compute-mesh 用 9090 default — 业务代码待改默认到 9290)
 
 # 端口类型(用于抑制"僵尸条目"误报):
 #   env-only: 端口在注册表但代码用环境变量引用,不视为僵尸
@@ -31,6 +31,24 @@ types:
   7422: env-only
   7430: env-only
   8090: env-only
+
+# 已裁决(governance 拍板)端口: check-interfaces 跳过这些,不再报冲突。
+# 仅对"引用者都是合法消费方"的情况裁决;真正有项目硬编码抢的放 conflicts_pending。
+conflicts_resolved:
+  7430: [agora, runtime, omo]      # agora I0 拥有,runtime 走 I0 路由合规,omo dashboard URL 合规
+  7431: [agora, cockpit]            # agora I0 拥有,cockpit 走 I0 SSE 代理合规
+  8080: [agora, omo, kairon]        # agora I0 拥有 api_gateway:8080;omo 消费者合规;
+                                    # kairon 8080 多语义: ontoderive web default / minerva searxng URL / eidos validator URL
+                                    # — 同端口不同语义,运行时用 env 区分(待 governance 细分业务端口分配)
+
+# 待裁决(governance 需拍板): check 仍报冲突,供 governance 决策
+conflicts_pending:
+  8765:
+    owner: minerva
+    squatters: [omo, runtime, ecos]    # 这 3 个项目应改业务代码默认端口
+  9090:
+    owner: ecos
+    squatters: [llm-gateway, compute-mesh]  # 这 2 个项目应改 default=9090 → 9290
 
 # 已知冲突(待 governance-charter §1.3 "I0>L3>L2>L1>L0" 优先级裁决):
 #   :9090 → ecos(L0 期望拥有); 4 个 L2+ 项目硬编码引用 = 架构违规

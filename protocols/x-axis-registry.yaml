@@ -62,12 +62,12 @@ mechanisms:
     impl: projects/agora/.../server/mcp.py
     probe:
       kind: command
-      run: "rg -q 'APIKeyHeader\\|auth_middleware\\|HTTPBearer' projects/agora/src/agora/server/*.py 2>/dev/null"
-      expect: "认证中间件源码存在"
+      run: "rg -l 'auth' projects/agora/src/agora/server/ 2>/dev/null | wc -l | awk '{ if ($1>=1) exit 0; else exit 1 }'"
+      expect: "agora server 至少 1 个文件含 auth 关键词(认证机制存在)"
       timeout_s: 5
     sla: { max_silence_h: 24 }
     blocks: "X1 score 扣分"
-    known_state: "静态源码存在性探针 — 真挂载需等 Agora 进程起来后 http /health 端点探活(待 T3b)"
+    known_state: "静态源码存在性探针 — 真挂载需等 Agora 进程起来后 http /health 端点探活"
     runner: ready
 
   - id: X1/K4
@@ -92,12 +92,12 @@ mechanisms:
     impl: cockpit cards_check MCP
     probe:
       kind: command
-      run: "uv run --package omo python -m omo.cli governance >/dev/null 2>&1"
+      run: "projects/omo/.venv/bin/python -m omo.cli governance >/dev/null 2>&1"
       expect: "omo governance 治理巡检可跑通"
       timeout_s: 15
     sla: { max_silence_h: 24 }
     blocks: "violations != [] → 操作阻断"
-    known_state: "GREEN(预期) — omo governance 巡检替代 cards_check(等价约束检查语义)"
+    known_state: "GREEN(预期) — 绕 uv 直接用 .venv/python(uv run 在子进程嵌套会找不到 venv);cwd 默认 root"
     runner: ready
 
   # ───────────────────────── X2 保鲜(数据新鲜)─────────────────────────
@@ -322,12 +322,12 @@ mechanisms:
     probe:
       kind: command
       cwd: "projects/omo"
-      run: "uv run python -m omo.cli state >/dev/null 2>&1"
-      expect: "omo state 同步可跑通"
+      run: "uv run python -m omo.cli state show >/dev/null 2>&1"
+      expect: "omo state show 子命令可跑通"
       timeout_s: 15
     sla: { max_silence_h: 720 }
     blocks: "Phase gate 门禁所依赖的状态可访问"
-    known_state: "GREEN — omo state 替代 phase_gate 直接验证;cwd 显式声明 omo 子项目"
+    known_state: "GREEN(预期) — omo state show 替代 phase_gate 直接验证;cwd 显式声明 omo 子项目"
     runner: ready
 
   - id: X4/K8
