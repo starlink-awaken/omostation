@@ -416,6 +416,85 @@
       "provider_info": null,
       "healthy": true,
       "last_health_check": 0.0
+    },
+    {
+      "name": "compute-mesh",
+      "description": "eCOS 算力网格 — 算力发现/聚合/调度/Worker 管理",
+      "protocol": "mcp",
+      "protocol_config": {},
+      "mcp_endpoint": "stdio://compute-mesh",
+      "health_endpoint": "",
+      "port": 0,
+      "tags": [
+        "llm",
+        "compute",
+        "mesh",
+        "scheduler",
+        "agent"
+      ],
+      "instances": [],
+      "provider_info": null,
+      "healthy": true,
+      "last_health_check": 0.0
+    },
+    {
+      "name": "aetherforge",
+      "description": "AetherForge — 算力网格 + LLM 网关 + 群体智能引擎融合栈",
+      "protocol": "mcp",
+      "protocol_config": {},
+      "mcp_endpoint": "stdio://aetherforge",
+      "health_endpoint": "",
+      "port": 0,
+      "tags": [
+        "compute",
+        "mesh",
+        "llm",
+        "gateway",
+        "swarm",
+        "agent",
+        "multi-agent"
+      ],
+      "instances": [],
+      "provider_info": null,
+      "healthy": true,
+      "last_health_check": 0.0
+    },
+    {
+      "name": "aetherforge-mcp",
+      "description": "Docker MCP service: aetherforge-mcp",
+      "protocol": "mcp",
+      "protocol_config": {},
+      "mcp_endpoint": "http://localhost:8000/mcp",
+      "health_endpoint": "http://localhost:8000/health",
+      "port": 8000,
+      "tags": [
+        "docker",
+        "mcp"
+      ],
+      "instances": [],
+      "provider_info": null,
+      "healthy": true,
+      "last_health_check": 0.0
+    },
+    {
+      "name": "llm-gateway",
+      "description": "LLM Provider 抽象层 — Ollama/OpenAI/Anthropic/Gemini/DeepSeek/HITL",
+      "protocol": "mcp",
+      "protocol_config": {},
+      "mcp_endpoint": "",
+      "health_endpoint": "",
+      "port": 0,
+      "tags": [
+        "llm",
+        "provider",
+        "gateway",
+        "openai",
+        "anthropic"
+      ],
+      "instances": [],
+      "provider_info": null,
+      "healthy": true,
+      "last_health_check": 0.0
     }
   ]
 }
