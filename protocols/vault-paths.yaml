@@ -1,0 +1,79 @@
+# Vault Paths SSOT — 所有 vault 路径单一来源
+#
+# 架构意义: omostation 体系内任何代码/脚本/工具,严禁硬编码
+# ~/Documents/X/ 这种 iCloud/iOS 特定路径。必须读这个文件。
+#
+# 设计原则:
+#   1. 显式 opt-in,无静默 fallback
+#   2. env 优先(yaml 次之,XDG 兜底),CI/容器化可控
+#   3. 任何新增路径 → 先在这里声明 → mof-extract 扫描本文件入 L0 元模型
+#
+# 解析器: scripts/check-vault-paths.py 提供 resolve_path() 函数
+#   用法: from protocols.vault_paths import resolve_path; p = resolve_path('cockpit_root')
+
+version: 1
+last_updated: '2026-06-08T23:32:00'
+
+# ── 路径定义 ──────────────────────────────────
+# 任何 iCloud/L4 域路径必须在这里声明,硬编码一律报错
+paths:
+  # 跨域 L4 自我层
+  cockpit_root: ~/Documents/@驾驶舱              # 驾驶舱(新 KEMS,带 @ 前缀)
+  cockpit_legacy: ~/Documents/@驾驶舱/_archive/legacy-2026-06-08  # 老 KEMS 驾驶舱归档
+  vault_root: ~/Documents/@学习进化               # 知识进化 vault
+  learning_root: ~/Documents/@学习进化             # alias
+  cockpit_old: null                                # 老路径 (驾驶舱/ 无 @) — 显式 null 表示禁止使用
+
+  # 关键子路径
+  cockpit_claude: ~/Documents/@驾驶舱/CLAUDE.md
+  cockpit_cards: ~/Documents/@驾驶舱/CARDS
+  cockpit_dashboard: ~/Documents/@驾驶舱/DASHBOARD.md
+  cockpit_m1_nodes: ~/Documents/@驾驶舱/_generated/m1-nodes
+  cockpit_scripts: ~/Documents/@驾驶舱/scripts
+
+  learning_claude: ~/Documents/@学习进化/CLAUDE.md
+  learning_control: ~/Documents/@学习进化/_control
+  learning_status: ~/Documents/@学习进化/_control/STATUS.md
+  learning_knowledge: ~/Documents/@学习进化/_knowledge
+
+  # mof 工具输出
+  mof_m1_convention: ~/Workspace/projects/ecos/src/ecos/ssot/mof/m1/convention
+
+  # 数据层
+  runtime_root: ~/runtime                          # runtime 数据根(matrix/cards/keiprobe 等)
+  kei_audit_log: ~/runtime/data/kei_audit.jsonl
+  llm_cost_log: ~/runtime/data/llm_cost.jsonl
+
+# ── 解析优先级(由高到低)──────────────────────
+resolution_priority:
+  1. env VAULT_PATHS_COCKPIT_ROOT 等(显式 opt-in,CI/容器化用)
+  2. protocols/vault-paths.yaml(本文件,SSOT 默认)
+  3. XDG 规范 ~/.config/omostation/vault-paths.yaml(用户覆盖)
+  4. null/空 → 报错 exit 2(绝不静默 fallback 老路径)
+
+# ── 反 sed 模式 ──────────────────────────────────
+# 任何代码硬编码这些字符串,check-vault-paths.py 报红:
+#   ~/Documents/驾驶舱/         ← 禁用(无 @)
+#   ~/Documents/驾驶舱/scripts/  ← 禁用
+#   ~/Documents/驾驶舱/CARDS/    ← 禁用
+# 正确路径(必须读本文件):
+#   ~/Documents/@驾驶舱/        ← 唯一合法
+forbidden_patterns:
+  - "~/Documents/驾驶舱/"
+  - "/Documents/驾驶舱/"
+  - "驾驶舱/scripts/"
+  - "驾驶舱/CARDS/"
+  - "驾驶舱/_generated/"
+
+# ── M2 元模型契约 ──────────────────────────────
+# M2 工具运行时通过 resolve_path() 取路径,不直读 env
+# L0 知识萃取 (mof-extract) 扫本文件入 convention 节点
+# mof-validate 校验: 任何缺必填字段的 vault 节点报缺必填属性
+required_fields:
+  - cockpit_root
+  - cockpit_claude
+  - cockpit_dashboard
+  - vault_root
+  - learning_claude
+  - learning_status
+  - runtime_root
