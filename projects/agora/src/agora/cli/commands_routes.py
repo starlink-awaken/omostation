@@ -38,10 +38,21 @@ def cmd_routes(args):
             if not routes:
                 out.print_info("没有配置的路由。使用 'agora route add' 添加路由")
             else:
+                # Group by first segment (bos domain)
+                groups: dict[str, list[tuple[str, str]]] = {}
+                for tool, svc in routes.items():
+                    prefix = tool.split("_")[0] if "_" in tool else tool
+                    groups.setdefault(prefix, []).append((tool, svc))
+
+                out.print_panel(
+                    f"共 {len(routes)} 条路由 · {len(groups)} 个域",
+                    title="路由表",
+                    style="cyan"
+                )
+                rows = [[tool, svc] for tool, svc in sorted(routes.items())]
                 out.print_table(
                     ["工具", "服务"],
-                    [[tool, svc] for tool, svc in routes.items()],
-                    title="路由表"
+                    rows,
                 )
         return 0
     except CLIError as e:

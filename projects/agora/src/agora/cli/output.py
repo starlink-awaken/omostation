@@ -23,7 +23,6 @@ from typing import Any
 
 try:
     from rich.console import Console
-    from rich.table import Table
     from rich.panel import Panel
     from rich.text import Text
     from rich.theme import Theme
@@ -62,6 +61,10 @@ class OutputFormatter:
         if self.console is None:
             return False
         return self.console.color_system is not None
+
+    def _uses_rich(self) -> bool:
+        """Rich Console 可用 (即使 color_system 为 None 也支持表格渲染)"""
+        return self.console is not None
 
     # ── 图标约定 ──
     def _icon(self, name: str) -> str:
@@ -131,12 +134,22 @@ class OutputFormatter:
             self.print_info(f"(空) — {title}" if title else "(空)")
             return
 
-        if self.supports_color():
-            table = Table(title=title, caption=caption, caption_style="dim") if title else Table(caption=caption)
+        if self._uses_rich() or self.supports_color():
+            import rich.table
+            import rich.text
+
+            table = rich.table.Table(title=title, caption=caption, caption_style="dim") if title else rich.table.Table(caption=caption)
             for h in headers:
                 table.add_column(h, overflow="fold", max_width=60)
             for row in rows:
-                table.add_row(*[str(c) for c in row])
+                rich_row: list[Any] = []
+                for cell in row:
+                    s = str(cell)
+                    if "[" in s and "]" in s:
+                        rich_row.append(rich.text.Text.from_markup(s))
+                    else:
+                        rich_row.append(s)
+                table.add_row(*rich_row)
             self.console.print(table)
         else:
             # 回退到 ASCII 表格
@@ -239,6 +252,32 @@ class OutputFormatter:
             self.console.print(f"\n[bold]── {title} ──[/bold]")
         else:
             print(f"\n── {title} ──")
+
+    def print_panel(self, content: str, title: str = "", style: str = "highlight") -> None:
+        """面板输出 — 用于汇总卡片"""
+        if self.json_mode:
+            return
+        if self._uses_rich() or self.supports_color():
+            try:
+                from rich.markdown import Markdown
+                self.console.print(Panel(Markdown(content), title=title, border_style=style))
+            except ImportError:
+                self.console.print(Panel(content, title=title, border_style=style))
+        else:
+            if title:
+                print(f"\n── {title} ──")
+            print(content.rstrip())
+
+    def print_health_bar(self, ratio: float, width: int = 10) -> str:
+        """返回彩色健康条 Rich markup (用于表格单元格)"""
+        filled = int(ratio * width)
+        if ratio >= 0.9:
+            color = "green"
+        elif ratio >= 0.7:
+            color = "yellow"
+        else:
+            color = "red"
+        return f"[{color}]{'█' * filled}[/]{'░' * (width - filled)}"
 
     # ── 进度条 ──
     def create_progress(self) -> Progress | None:

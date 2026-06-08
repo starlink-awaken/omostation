@@ -87,17 +87,17 @@ def cmd_list(args):
         [
             s.name,
             s.protocol,
-            "healthy" if s.is_available else "offline",
+            "[success]healthy[/]" if s.is_available else "[error]offline[/]",
             s.mcp_endpoint or "-",
             str(s.port) if s.port else "-",
-            ", ".join(s.tags) if s.tags else "-",
+            ", ".join(s.tags[:3]) if s.tags else "-",
         ]
         for s in services
     ]
     out.print_table(
         ["Name", "Protocol", "Status", "Endpoint", "Port", "Tags"],
         rows,
-        title="Registered Services",
+        title=f"Registered Services ({len(services)})",
     )
     return 0
 
@@ -162,22 +162,37 @@ def cmd_stats(_args):
     registry = get_registry()
     all_svc = registry.list_all()
     healthy = registry.list_healthy()
+    total = max(len(all_svc), 1)
+    rate = len(healthy) / total
 
     out = OutputFormatter(json_mode=getattr(_args, 'json', False))
-    stats_data = {
-        "Total services": len(all_svc),
-        "Healthy": len(healthy),
-        "Degraded/Offline": len(all_svc) - len(healthy),
-        "Health rate": f"{len(healthy) / max(len(all_svc), 1) * 100:.1f}%",
-    }
-    out.print_key_value(stats_data, "服务统计")
+
+    # Summary panel
+    summary = (
+        f"  \033[1m总计\033[0m  {len(all_svc)}  |  "
+        f"\033[32m健康\033[0m  {len(healthy)}  |  "
+        f"\033[31m异常\033[0m  {len(all_svc) - len(healthy)}  |  "
+        f"\033[36m健康率\033[0m  {rate * 100:.1f}%"
+    )
+    out.print_panel(summary, title="服务统计", style="cyan")
 
     if all_svc:
         rows = []
         for s in all_svc:
-            bar = "#" * 10 if s.is_available else "-" * 10
-            rows.append([bar, s.name, ", ".join(s.tags) if s.tags else "-"])
-        out.print_table(["Health", "Name", "Tags"], rows)
+            # Color health bar: green >90%, yellow >70%, red <70%
+            health_ratio = 1.0 if s.is_available else 0.0
+            bar = out.print_health_bar(health_ratio, width=10)
+            # Color status
+            status = "[green]healthy[/]" if s.is_available else "[red]offline[/]"
+            tags = ", ".join(s.tags[:3]) if s.tags else "-"
+            rows.append([bar, s.name, status, tags])
+
+        out.print_table(
+            ["Health", "Name", "Status", "Tags"],
+            rows,
+            title="服务详情",
+            caption=f"共 {len(all_svc)} 服务"
+        )
     return 0
 
 
