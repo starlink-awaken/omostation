@@ -6,7 +6,7 @@
 基于 M2 元模型定义，为每个发现的要素创建结构化的 M1 节点 YAML。
 
 扫描源:
-  1. 驾驶舱/scripts/*.py          → Artifact
+  1. @驾驶舱/scripts/*.py          → Artifact
   2. L0-constraints.yaml           → Protocol + Specification
   3. CARDS SQLite                  → Entity (卡片)
   4. 5+4+1架构全景.md              → Architecture
@@ -231,7 +231,7 @@ def scan_architecture() -> list[dict]:
             "projects_to": ["MADF V1-V8"],
         },
         "layer": "multi",
-        "sources": ["驾驶舱/统一架构模型.md"],
+        "sources": ["@驾驶舱/统一架构模型.md"],
     })
 
     return nodes
