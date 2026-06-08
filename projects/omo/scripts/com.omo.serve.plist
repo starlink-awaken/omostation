@@ -19,10 +19,18 @@
     <true/>
 
     <key>KeepAlive</key>
-    <true/>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+        <key>AfterInitialDemand</key>
+        <true/>
+    </dict>
 
-    <key>ThrottleInterval</key>
-    <integer>10</integer>
+    <key>ProcessType</key>
+    <string>Background</string>
+
+    <key>Nice</key>
+    <integer>20</integer>
 
     <key>StandardOutPath</key>
     <string>/Users/xiamingxing/Workspace/.omo/_delivery/omo-serve-stdout.log</string>
