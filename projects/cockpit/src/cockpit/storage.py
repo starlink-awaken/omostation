@@ -95,10 +95,17 @@ class SQLiteDataAccess:
 
     # ── helpers ──────────────────────────────────────────────────────
 
+    def _connect(self) -> sqlite3.Connection:
+        """获取 SQLite 连接 (WAL 模式, 多线程安全)。"""
+        conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA busy_timeout=5000")
+        return conn
+
     def _ensure_db(self) -> None:
         """Create database and tables if they don't exist."""
         DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         conn.execute("""
             CREATE TABLE IF NOT EXISTS research (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -194,7 +201,7 @@ class SQLiteDataAccess:
         agent: str = "",
     ) -> int:
         self._ensure_db()
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         conn.execute(
             "INSERT INTO research (topic, summary, full_text, created_at, source_count, agent) VALUES (?, ?, ?, ?, ?, ?)",
             (topic, summary, full_text, time.time(), source_count, agent),
@@ -207,7 +214,7 @@ class SQLiteDataAccess:
     def add_follow_up(self, research_id: int, question: str, answer: str) -> None:
         """Store a follow-up question and answer for a research record."""
         self._ensure_db()
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         row = conn.execute("SELECT follow_ups FROM research WHERE id = ?", (research_id,)).fetchone()
         if row is None:
             conn.close()
@@ -225,7 +232,7 @@ class SQLiteDataAccess:
         include_archived: bool = False,
     ) -> list[dict[str, Any]]:
         self._ensure_db()
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         conn.row_factory = sqlite3.Row
         query = "SELECT id, topic, summary, created_at, source_count, tags, archived_at, archive_reason, quarantined_at, quarantine_reason, agent FROM research"
         filters: list[str] = []
@@ -246,7 +253,7 @@ class SQLiteDataAccess:
 
     def search_research(self, keyword: str, limit: int = 10) -> list[dict[str, Any]]:
         self._ensure_db()
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
             "SELECT r.id, r.topic, r.summary, r.created_at, r.source_count, r.tags, r.archived_at, r.archive_reason, r.quarantined_at, r.quarantine_reason, r.agent, "
@@ -263,7 +270,7 @@ class SQLiteDataAccess:
 
     def get_research(self, research_id: int) -> dict[str, Any] | None:
         self._ensure_db()
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         conn.row_factory = sqlite3.Row
         row = conn.execute(
             "SELECT id, topic, summary, full_text, created_at, source_count, follow_ups, tags, archived_at, archive_reason, quarantined_at, quarantine_reason, agent FROM research WHERE id = ?",
@@ -280,7 +287,7 @@ class SQLiteDataAccess:
     def set_research_tags(self, research_id: int, tags: list[str]) -> list[str]:
         self._ensure_db()
         normalized = self._normalize_tags(tags)
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         row = conn.execute("SELECT id FROM research WHERE id = ?", (research_id,)).fetchone()
         if row is None:
             conn.close()
@@ -299,7 +306,7 @@ class SQLiteDataAccess:
         new_value = new_topic.strip()
         if not new_value:
             return False
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         row = conn.execute("SELECT topic FROM research WHERE id = ?", (research_id,)).fetchone()
         if row is None:
             conn.close()
@@ -320,7 +327,7 @@ class SQLiteDataAccess:
         reason: str = "manual quarantine",
     ) -> tuple[list[int], list[int]]:
         self._ensure_db()
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         quarantined: list[int] = []
         missing: list[int] = []
 
@@ -346,7 +353,7 @@ class SQLiteDataAccess:
 
     def restore_research(self, research_ids: list[int]) -> tuple[list[int], list[int]]:
         self._ensure_db()
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         restored: list[int] = []
         missing: list[int] = []
 
@@ -376,7 +383,7 @@ class SQLiteDataAccess:
         reason: str = "manual archive",
     ) -> tuple[list[int], list[int]]:
         self._ensure_db()
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         archived: list[int] = []
         missing: list[int] = []
         for research_id in research_ids:
@@ -400,7 +407,7 @@ class SQLiteDataAccess:
 
     def restore_archived_research(self, research_ids: list[int]) -> tuple[list[int], list[int]]:
         self._ensure_db()
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         restored: list[int] = []
         missing: list[int] = []
         for research_id in research_ids:
@@ -424,7 +431,7 @@ class SQLiteDataAccess:
 
     def add_research_relations(self, parent_ids: list[int], child_id: int, relation_type: str) -> None:
         self._ensure_db()
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         for parent_id in parent_ids:
             conn.execute(
                 "INSERT INTO research_relations (parent_id, child_id, relation_type, created_at) VALUES (?, ?, ?, ?)",
@@ -435,7 +442,7 @@ class SQLiteDataAccess:
 
     def save_published_report(self, research_id: int, style: str, output_path: str) -> int:
         self._ensure_db()
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         published_at = time.time()
         conn.execute(
             "INSERT INTO published_reports (research_id, style, output_path, published_at) VALUES (?, ?, ?, ?)",
@@ -456,7 +463,7 @@ class SQLiteDataAccess:
         if record is None:
             return []
 
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         conn.row_factory = sqlite3.Row
         relations = conn.execute(
             "SELECT parent_id, relation_type, created_at FROM research_relations WHERE child_id = ? ORDER BY created_at ASC",
@@ -498,7 +505,7 @@ class SQLiteDataAccess:
         if record is None:
             return None
 
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         conn.row_factory = sqlite3.Row
         parents = conn.execute(
             "SELECT r.id, r.topic, rel.relation_type "
@@ -528,7 +535,7 @@ class SQLiteDataAccess:
     def set_research_agent(self, research_id: int, agent_name: str) -> bool:
         """标记研究记录的处理 Agent。"""
         self._ensure_db()
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         row = conn.execute("SELECT id FROM research WHERE id = ?", (research_id,)).fetchone()
         if row is None:
             conn.close()
@@ -583,7 +590,7 @@ class SQLiteDataAccess:
     def export_backup(self) -> dict[str, Any]:
         """全量导出所有数据为可序列化字典。"""
         self._ensure_db()
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
         conn.row_factory = sqlite3.Row
 
         # 导出 research（含 follow_ups/tags 反序列化）
@@ -613,7 +620,7 @@ class SQLiteDataAccess:
     def import_backup(self, data: dict[str, Any]) -> dict[str, int]:
         """从备份字典导入数据。返回导入统计。"""
         self._ensure_db()
-        conn = sqlite3.connect(str(DB_PATH))
+        conn = self._connect()
 
         id_map: dict[int, int] = {}  # old_id -> new_id
         imported = {"research": 0, "relations": 0, "published_reports": 0, "events": 0}
