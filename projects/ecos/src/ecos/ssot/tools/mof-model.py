@@ -79,14 +79,14 @@ def scan_claude_md(root: Path) -> list[dict]:
         
         # Infer domain from path
         rel = str(md.relative_to(root)) if str(md).startswith(str(root)) else str(md)
-        for seg in ['驾驶舱', '学习进化', '工作文档', '工具箱', '领域知识库', '家庭生活']:
+        for seg in ['@驾驶舱', '驾驶舱', '学习进化', '工作文档', '工具箱', '领域知识库', '家庭生活']:
             if seg in rel:
                 domain = seg
                 break
         
         # Infer layer
-        if '驾驶舱' in rel: layer = 'L4'
-        elif '学习进化' in rel: layer = 'L4'
+        if '驾驶舱' in rel or '@驾驶舱' in rel: layer = 'L4'
+        elif '学习进化' in rel or '@学习进化' in rel: layer = 'L4'
         elif 'Workspace' in rel: layer = 'L2'
         
         nid = f"SPEC-CLAUDE-{domain}-{md.parent.name if md.parent.name != '.' else 'root'}"
@@ -122,7 +122,7 @@ def scan_state_md(root: Path) -> list[dict]:
         rel = str(md.relative_to(root)) if str(md).startswith(str(root)) else str(md)
         parent = md.parent.name
         domain = "unknown"
-        for seg in ['驾驶舱', '学习进化', '工作文档', '卫健委', '国转中心', '家庭生活']:
+        for seg in ['@驾驶舱', '驾驶舱', '学习进化', '工作文档', '卫健委', '国转中心', '家庭生活']:
             if seg in rel:
                 domain = seg
                 break
