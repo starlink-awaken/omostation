@@ -6,6 +6,7 @@ Uses _get_xxx() lazy accessors for monkeypatch compatibility.
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import time
 from datetime import datetime
@@ -89,7 +90,7 @@ def cmd_research(args: argparse.Namespace) -> int:
                     [minerva, "research", topic],
                     capture_output=True,
                     text=True,
-                    timeout=180,
+                    timeout=os.environ.get("MINERVA_TIMEOUT", 180),
                 )
                 progress.update(task, description="minerva 引擎研究完成")
             raw = (result.stdout or result.stderr or "").strip()
@@ -97,11 +98,13 @@ def cmd_research(args: argparse.Namespace) -> int:
                 output = raw
                 source = "minerva"
             else:
-                _get_err().print("[yellow]⚠️ minerva 执行异常，尝试 ollama 降级...[/yellow]")
-        except TimeoutError:
-            _get_err().print("[red]⚠️ minerva 超时（180s），尝试 ollama 降级...[/red]")
-        except Exception:
-            _get_err().print("[yellow]⚠️ minerva 不可用，尝试 ollama 降级...[/yellow]")
+                _get_err().print(f"[yellow]⚠️ minerva rc={result.returncode} — 降级 ollama[/yellow]")
+        except subprocess.TimeoutExpired as e:
+            _get_err().print(f"[red]⚠️ minerva 超时 ({e.timeout}s) — 降级 ollama[/red]")
+        except FileNotFoundError:
+            _get_err().print("[yellow]⚠️ minerva 未安装 — 降级 ollama[/yellow]")
+        except Exception as e:
+            _get_err().print(f"[yellow]⚠️ minerva 异常 ({type(e).__name__}) — 降级 ollama[/yellow]")
 
     if not output:
         with Progress(
@@ -113,7 +116,7 @@ def cmd_research(args: argparse.Namespace) -> int:
             transient=False,
         ) as progress:
             progress.add_task(f"[yellow]ollama 降级研究中 · {_short(topic, 40)}", total=None)
-            ollama_out = _run_ollama(f"请对以下主题进行简要研究分析，用中文输出:\n\n{topic}", timeout=120)
+            ollama_out = _run_ollama(f"请对以下主题进行简要研究分析，用中文输出:\n\n{topic}", timeout=os.environ.get("OLLAMA_TIMEOUT", 120))
         if ollama_out:
             output = f"[ollama 回复] {ollama_out}\n\n---\n⚠️ **注意：此为 ollama 降级回复，非 minerva 研究引擎结果。**"
             source = "ollama"
@@ -133,7 +136,7 @@ def cmd_research(args: argparse.Namespace) -> int:
         topic=topic,
         summary=_short(output, 200),
         full_text=output,
-        source_count=3,
+        source_count=len(source) and 1 or 0,  # 1 for minerva/ollama, 0 for cache fallback
     )
     _notify_research_complete(topic)
     source_label = {"minerva": "minerva 引擎", "ollama": "ollama（降级）", "cache": "本地缓存（降级）"}.get(

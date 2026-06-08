@@ -95,16 +95,20 @@ def _auto_fix(c: Console, args: argparse.Namespace) -> int:
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
-                # 等待启动
-                for _ in range(30):
-                    time.sleep(1)
-                    if _check_ollama_running():
-                        c.print("  [green]✅ ollama 启动成功[/green]")
-                        fixes.append("ollama 服务已启动")
-                        break
-                else:
-                    c.print("  [red]❌ ollama 启动超时，请手动执行: ollama serve[/red]")
-                    issues.append("ollama 启动失败")
+                # 等待启动 (带进度指示)
+                from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
+                with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), TimeElapsedColumn(), transient=True) as progress:
+                    task = progress.add_task("[yellow]等待 ollama 启动...[/]", total=30)
+                    for i in range(30):
+                        time.sleep(1)
+                        progress.update(task, advance=1)
+                        if _check_ollama_running():
+                            c.print("  [green]✅ ollama 启动成功[/green]")
+                            fixes.append("ollama 服务已启动")
+                            break
+                    else:
+                        c.print("  [red]❌ ollama 启动超时，请手动执行: ollama serve[/red]")
+                        issues.append("ollama 启动失败")
             except Exception as e:
                 c.print(f"  [red]❌ ollama 启动失败: {e}[/red]")
                 issues.append(f"ollama 启动失败: {e}")
