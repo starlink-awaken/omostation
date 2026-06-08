@@ -340,6 +340,17 @@ def daily_summary(days: int = 1) -> str:
 
 _CARDS_DIR = Path.home() / "Documents" / "驾驶舱" / "CARDS"
 _VAULT_DIR = Path.home() / "Documents" / "@学习进化"
+
+# L4 12 域映射 (bos:// URI 域 → 本地文件系统路径)
+_L4_DOMAINS: dict[str, Path] = {
+    "vault": _VAULT_DIR,
+    "personal": Path.home() / "Documents" / "@个人",
+    "family": Path.home() / "Documents" / "@家庭",
+    "shared": Path.home() / "Documents" / "@共享",
+    "sharedwork": Path.home() / "Documents" / "@共享工作",
+    "work-weijian": Path.home() / "Documents" / "@卫健工作",
+    "work-guozhuan": Path.home() / "Documents" / "@国转工作",
+}
 _WORKSPACE_ROOT = Path(__file__).resolve().parents[4]  # cockpit/src/cockpit/scripts/cockpit_mcp.py → workspace root
 _OMO_GOALS = _WORKSPACE_ROOT / ".omo" / "_truth" / "goals" / "current.yaml"
 
@@ -409,13 +420,14 @@ def _read_omo_constraints() -> list[str]:
         ]
 
 
-def _search_vault(keyword: str) -> list[dict]:
+def _search_vault(keyword: str, base_dir: Path | None = None) -> list[dict]:
     """搜索 Vault 中的 Markdown 文件。"""
     results = []
-    if not keyword or not _VAULT_DIR.is_dir():
+    vault_dir = base_dir or _VAULT_DIR
+    if not keyword or not vault_dir.is_dir():
         return results
     kw = keyword.lower()
-    for md_file in _VAULT_DIR.rglob("*.md"):
+    for md_file in vault_dir.rglob("*.md"):
         if md_file.name.startswith("."):
             continue
         try:
@@ -426,7 +438,7 @@ def _search_vault(keyword: str) -> list[dict]:
                 snippet_start = max(0, text.lower().index(kw) - 40)
                 snippet_end = min(len(text), text.lower().index(kw) + 120)
                 results.append({
-                    "path": str(md_file.relative_to(_VAULT_DIR)),
+                    "path": str(md_file.relative_to(vault_dir)),
                     "title": title,
                     "snippet": "..." + text[snippet_start:snippet_end].replace("\n", " ").strip() + "...",
                 })
@@ -541,14 +553,41 @@ def cards_check(card_id: str = "") -> str:
 
 
 @_tool()
-def vault_search(keyword: str = "") -> str:
-    """在 L4 Vault (学习进化) 中搜索相关知识/方法论/经验。
+def vault_search(keyword: str = "", domain: str = "vault") -> str:
+    """在 L4 域中搜索相关知识/方法论/经验。
+
+    支持12个 L4 域:
+      vault (默认: 学习进化), personal (@个人), family (@家庭),
+      shared (@共享), sharedwork (@共享工作),
+      work-weijian (@卫健工作), work-guozhuan (@国转工作)
 
     **Agent 应在需要方法论或历史上下文时调用此工具。**
-    返回 JSON: results(list), total(int)。
+    返回 JSON: results(list), total(int), domain(str)。
     """
-    results = _search_vault(keyword)
-    return json.dumps({"results": results, "total": len(results)}, ensure_ascii=False)
+    search_dir = _L4_DOMAINS.get(domain, _VAULT_DIR)
+    if not search_dir.is_dir():
+        return json.dumps(
+            {"results": [], "total": 0, "domain": domain, "warning": f"域 '{domain}' 目录不存在: {search_dir}"},
+            ensure_ascii=False,
+        )
+    results = _search_vault(keyword, base_dir=search_dir)
+    return json.dumps({"results": results, "total": len(results), "domain": domain}, ensure_ascii=False)
+
+
+@_tool()
+def domains_list() -> str:
+    """列出 L4 所有域及其状态。
+
+    返回 JSON: domains(list of {name, path, exists})。
+    """
+    domains = []
+    for name, path in _L4_DOMAINS.items():
+        domains.append({
+            "name": name,
+            "path": str(path),
+            "exists": path.is_dir(),
+        })
+    return json.dumps({"domains": domains, "total": len(domains)}, ensure_ascii=False)
 
 
 # ══════════════════════════════════════════════════════════════
