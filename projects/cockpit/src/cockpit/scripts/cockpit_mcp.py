@@ -339,7 +339,7 @@ def daily_summary(days: int = 1) -> str:
 # ══════════════════════════════════════════════════════════════
 
 _CARDS_DIR = Path.home() / "Documents" / "驾驶舱" / "CARDS"
-_VAULT_DIR = Path.home() / "Documents" / "学习进化"
+_VAULT_DIR = Path.home() / "Documents" / "@学习进化"
 _WORKSPACE_ROOT = Path(__file__).resolve().parents[4]  # cockpit/src/cockpit/scripts/cockpit_mcp.py → workspace root
 _OMO_GOALS = _WORKSPACE_ROOT / ".omo" / "_truth" / "goals" / "current.yaml"
 
