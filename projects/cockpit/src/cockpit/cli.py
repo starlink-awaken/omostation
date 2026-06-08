@@ -542,10 +542,21 @@ def _cmd_health(args: Namespace) -> int:
         console.print(f"[red]Cockpit status error: {e}[/]")
         return_code = 1
 
-    # ── Full: I0 Agora + L1 Runtime + L2 OMO ────────────────────
+        # ── Full: I0 Agora + L1 Runtime + L2 OMO ────────────────────
     if getattr(args, "full", False):
         console.print("\n[bold cyan]═══ I0 服务网格 ═══[/]\n")
         try:
+            # Try l4-kernel for domain health first
+            try:
+                from l4_kernel import DomainRegistry
+                reg = DomainRegistry()
+                h = reg.aggregate_health()
+                if not args.json:
+                    console.print(f"  [dim]域总数: {h['total']}  |  存在: {h['existing']}  |  健康率: {h['health_rate']}[/]")
+            except ImportError:
+                pass
+
+            # Agora stats via subprocess as fallback
             import subprocess as _sp
             from pathlib import Path as _P
             ws = _P(os.environ.get("WORKSPACE_ROOT", str(_P(__file__).resolve().parents[4])))
@@ -553,20 +564,33 @@ def _cmd_health(args: Namespace) -> int:
             if agora_bin.exists():
                 result = _sp.run([str(agora_bin), "stats"], capture_output=True, text=True, timeout=15)
                 if not args.json:
-                    # Parse agora stats output for key metrics
                     for line in result.stdout.split("\n"):
                         if "总计" in line or "健康" in line or "异常" in line or "健康率" in line:
                             console.print(f"  [dim]{line.strip()}[/]")
-                    healthy_count = result.stdout.count("healthy")
-                    total_count = max(len([l for l in result.stdout.split("\n") if "│" in l and "┃" not in l]) - 1, 0)
             else:
                 console.print("[yellow]⚠ agora CLI 未安装[/]")
         except Exception as e:
             console.print(f"[yellow]⚠ I0 检查跳过: {e}[/]")
 
+        # ── L4 Domain Health ──────────────────────────────────────
+        console.print("\n[bold cyan]═══ L4 域健康 ═══[/]\n")
+        try:
+            from l4_kernel import DomainRegistry
+            from l4_kernel.health import DomainHealth
+            reg = DomainRegistry()
+            dh = DomainHealth(reg)
+            dashboard = dh.generate_dashboard()
+            if not args.json:
+                # Extract summary lines
+                for line in dashboard.split("\n"):
+                    if line.startswith("- **"):
+                        console.print(f"  [dim]{line.strip()}[/]")
+        except ImportError:
+            console.print("[yellow]⚠ l4-kernel 未安装[/]")
+
         # ── Full: Runtime Matrix ────────────────────────────────
         console.print("\n[bold cyan]═══ L1 运行时 ═══[/]\n")
-        matrix_path = _P.home() / "runtime" / "matrix_state.json"
+        matrix_path = Path.home() / "runtime" / "matrix_state.json"
         if not args.json and matrix_path.exists():
             try:
                 import json as _j
