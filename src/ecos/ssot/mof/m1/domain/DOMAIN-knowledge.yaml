@@ -1,0 +1,22 @@
+# M1 Node: DOMAIN-knowledge
+# Type: Domain | Subtype: EngineDomain
+# Generated: 2026-06-08 · l4-kernel 对齐
+
+id: DOMAIN-knowledge
+type: Domain
+name: Knowledge 引擎
+description: 知识处理引擎配置域
+status: active
+domain: meta
+created: '2026-06-08'
+version: 1.0.0
+layer: L2
+properties:
+  bos_uri_pattern: bos://knowledge/**
+  domain_type: engine
+  layer: L2
+  governance_tier: 2
+  storage: /Users/xiamingxing/knowledge
+  capabilities:
+  - knowledge.process
+subtype: EngineDomain
