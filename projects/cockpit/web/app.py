@@ -83,7 +83,7 @@ async def _lifespan(_app: FastAPI):
 app = FastAPI(title="Agora Dashboard", version="1.5.0", lifespan=_lifespan)
 
 # CORS — configurable via AGORA_CORS_ORIGINS env var (comma-separated)
-_origins_str = os.environ.get("AGORA_CORS_ORIGINS", "http://localhost:7430,http://127.0.0.1:7430")
+_origins_str = os.environ.get("AGORA_CORS_ORIGINS", "http://localhost:8090,http://127.0.0.1:8090")
 _allow_origins = [o.strip() for o in _origins_str.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
@@ -788,7 +788,7 @@ async def well_known_agent_card():
 def main():
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=7430, log_level="info")  # noqa: S104
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("COCKPIT_PORT", "8090")), log_level="info")  # noqa: S104
 
 
 if __name__ == "__main__":
