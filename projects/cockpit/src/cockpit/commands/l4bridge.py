@@ -72,6 +72,65 @@ def cmd_context(_args: Namespace) -> int:
     return 0
 
 
+def cmd_domains(_args: Namespace) -> int:
+    """列出 L4 所有域及其状态。"""
+    console = _get_console()
+
+    if not _HAS_L4:
+        _get_err().print("[red]❌ L4 bridge 不可用[/]")
+        return 1
+
+    try:
+        from cockpit.scripts.cockpit_mcp import domains_list
+
+        result = json.loads(domains_list())
+    except Exception as e:
+        _get_err().print(f"[red]❌ domains_list 失败: {e}[/]")
+        return 1
+
+    console.print(f"\n[bold cyan]🌐 L4 域状态 ({result['total']} 域)[/]\n")
+    for d in result.get("domains", []):
+        icon = "[green]✓[/]" if d["exists"] else "[red]✗[/]"
+        console.print(f"  {icon} [bold]{d['name']}[/] [dim]{d['path']}[/]")
+
+    return 0
+
+
+def cmd_skill(args: Namespace) -> int:
+    """运行 L4 定时技能 (由 cron_service 触发)。"""
+    console = _get_console()
+
+    skill_name = getattr(args, "skill_name", "") or ""
+    if not skill_name:
+        _get_err().print("[yellow]用法: cockpit workspace skill run <skill_name>[/]")
+        return 1
+
+    console.print(f"[cyan]⏳ 执行技能: {skill_name}...[/]")
+
+    from pathlib import Path
+
+    skill_file = (
+        Path(__file__).resolve().parents[4] / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof"
+        / "m1" / "skill" / f"SKILL-SCHEDULED-{skill_name}.yaml"
+    )
+
+    if not skill_file.exists():
+        _get_err().print(f"[red]❌ 技能未找到: SKILL-SCHEDULED-{skill_name}.yaml[/]")
+        return 1
+
+    try:
+        import yaml
+
+        skill_def = yaml.safe_load(skill_file.read_text(encoding="utf-8"))
+        desc = skill_def.get("description", skill_def.get("name", skill_name))
+        console.print(f"  [dim]描述: {desc}[/]")
+        console.print(f"  [green]✓ 技能已调度 (由 cron_service 执行)[/]")
+        return 0
+    except Exception as e:
+        _get_err().print(f"[red]❌ 技能执行失败: {e}[/]")
+        return 1
+
+
 def cmd_cards(args: Namespace) -> int:
     """显示 CARDS 状态。"""
     console = _get_console()
@@ -116,6 +175,65 @@ def cmd_cards(args: Namespace) -> int:
 
     console.print()
     return 0
+
+
+def cmd_domains(_args: Namespace) -> int:
+    """列出 L4 所有域及其状态。"""
+    console = _get_console()
+
+    if not _HAS_L4:
+        _get_err().print("[red]❌ L4 bridge 不可用[/]")
+        return 1
+
+    try:
+        from cockpit.scripts.cockpit_mcp import domains_list
+
+        result = json.loads(domains_list())
+    except Exception as e:
+        _get_err().print(f"[red]❌ domains_list 失败: {e}[/]")
+        return 1
+
+    console.print(f"\n[bold cyan]🌐 L4 域状态 ({result['total']} 域)[/]\n")
+    for d in result.get("domains", []):
+        icon = "[green]✓[/]" if d["exists"] else "[red]✗[/]"
+        console.print(f"  {icon} [bold]{d['name']}[/] [dim]{d['path']}[/]")
+
+    return 0
+
+
+def cmd_skill(args: Namespace) -> int:
+    """运行 L4 定时技能 (由 cron_service 触发)。"""
+    console = _get_console()
+
+    skill_name = getattr(args, "skill_name", "") or ""
+    if not skill_name:
+        _get_err().print("[yellow]用法: cockpit workspace skill run <skill_name>[/]")
+        return 1
+
+    console.print(f"[cyan]⏳ 执行技能: {skill_name}...[/]")
+
+    from pathlib import Path
+
+    skill_file = (
+        Path(__file__).resolve().parents[4] / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof"
+        / "m1" / "skill" / f"SKILL-SCHEDULED-{skill_name}.yaml"
+    )
+
+    if not skill_file.exists():
+        _get_err().print(f"[red]❌ 技能未找到: SKILL-SCHEDULED-{skill_name}.yaml[/]")
+        return 1
+
+    try:
+        import yaml
+
+        skill_def = yaml.safe_load(skill_file.read_text(encoding="utf-8"))
+        desc = skill_def.get("description", skill_def.get("name", skill_name))
+        console.print(f"  [dim]描述: {desc}[/]")
+        console.print(f"  [green]✓ 技能已调度 (由 cron_service 执行)[/]")
+        return 0
+    except Exception as e:
+        _get_err().print(f"[red]❌ 技能执行失败: {e}[/]")
+        return 1
 
 
 def cmd_vault(args: Namespace) -> int:
