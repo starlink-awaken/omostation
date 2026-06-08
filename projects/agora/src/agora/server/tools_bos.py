@@ -34,7 +34,10 @@ from agora.mcp.bos_router import bos_router as _bos_router  # type: ignore[impor
 
 # L0 审计 hook
 import sys as _sys
-_sys.path.insert(0, str(Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools"))
+_CURRENT_FILE = Path(__file__).resolve()
+_PROJECTS_DIR = _CURRENT_FILE.parents[4]
+_ECOS_SSOT_TOOLS = _PROJECTS_DIR / "ecos" / "src" / "ecos" / "ssot" / "tools"
+_sys.path.insert(0, str(_ECOS_SSOT_TOOLS))
 from mof_agora_hook import (  # type: ignore[import-not-found]
     post_audit as _bos_post_audit,
     pre_check as _bos_pre_check,
@@ -170,12 +173,12 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
     # ── mutate_resource ──────────────────────────────────
 
     @mcp.tool()
-    async def mutate_resource(uri: str, payload: str, action: str = "update") -> dict:
+    async def mutate_resource(uri: str, payload: dict | str = "{}", action: str = "update") -> dict:
         """Unified BOS URI mutation protocol. Routes to downstream service via resolve_bos_uri.
 
         Args:
             uri: The bos:// URI to mutate.
-            payload: JSON string payload.
+            payload: JSON string or dict payload.
             action: The verb (update, create, delete).
         """
         logger.info("mutate_resource", uri=uri, action=action)
@@ -215,14 +218,14 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
 
     @mcp.tool()
     @bos_metrics.track("bos://")
-    async def resolve_bos_uri(uri: str, arguments: str = "{}") -> dict:
+    async def resolve_bos_uri(uri: str, arguments: dict | str = "{}") -> dict:
         """将 BOS URI 解析为实际调用，路由到对应的后端服务。
 
         bos:// 支持域: memory, omo, analysis, persona, forge, meta, ecos, agora
 
         Args:
             uri: BOS URI (e.g. bos://memory/kos/search)
-            arguments: JSON 参数字符串 (e.g. '{"query": "什么是 eCOS?"}')
+            arguments: JSON 参数字符串 or dict (e.g. '{"query": "什么是 eCOS?"}')
         """
         if not uri.startswith("bos://"):
             return _error(f"Invalid BOS URI: {uri}")
@@ -266,7 +269,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
 
     @mcp.tool()
     @bos_metrics.track("bos://")
-    async def read_resource(uri: str, arguments: str = "{}") -> dict:
+    async def read_resource(uri: str, arguments: dict | str = "{}") -> dict:
         """通过 BOS URI 读取资源。先尝试 BOSRouter，回退到 ProxyManager，最后 bos_resolver。
 
         Args:
@@ -391,7 +394,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
 
         # Schema 标注
         try:
-            wf_dir = Path(__file__).parent.parent.parent.parent / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "workflow"
+            wf_dir = _PROJECTS_DIR / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "workflow"
             if wf_dir.exists():
                 import yaml
                 known_actions = set()
@@ -446,7 +449,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         """
         import yaml
         try:
-            wf_dir = Path(__file__).parent.parent.parent.parent / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "workflow"
+            wf_dir = _PROJECTS_DIR / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "workflow"
             if not wf_dir.exists():
                 return _error("M1 Workflow 目录不存在")
 

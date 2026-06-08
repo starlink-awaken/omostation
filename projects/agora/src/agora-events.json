@@ -9467,22 +9467,25 @@
       "payload": {
         "msg": "hello"
       }
+    },
+    {
+      "id": "evt_1780923680_410d15",
+      "time": "2026-06-08T13:01:20Z",
+      "source": "unknown",
+      "type": "bos:memory:kos:search",
+      "trace_id": "",
+      "payload": {
+        "uri": "bos://memory/kos/search"
+      }
     }
   ],
   "subscriptions": [
     {
-      "id": "sub_d9b78e83",
+      "id": "sub_3711fb29",
       "service": "test-bos",
       "pattern": "bos:memory:kos:search",
       "callback_url": "",
-      "created": "2026-06-08T06:27:46Z"
-    },
-    {
-      "id": "sub_28eda693",
-      "service": "mcp-caller",
-      "pattern": "test:*",
-      "callback_url": "",
-      "created": "2026-06-08T06:28:13Z"
+      "created": "2026-06-08T13:01:20Z"
     }
   ],
   "max_events": 1000

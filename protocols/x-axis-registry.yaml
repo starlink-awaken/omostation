@@ -32,12 +32,13 @@ mechanisms:
     impl: projects/runtime/.../kei_sandbox.py
     probe:
       kind: counter
-      run: "grep -c '\"ts\":' ~/runtime/data/kei_audit.jsonl | awk '{ if ($1>0) exit 0; else exit 1 }'"
-      expect: "总事件数 > 0"
-      timeout_s: 5
+      cwd: "projects/runtime"
+      run: "uv run python -m runtime.kei_probe --count-24h"
+      expect: "24h 事件数 > 0"
+      timeout_s: 10
     sla: { max_silence_h: 1 }
     blocks: "X1 score < 80 → Phase gate 阻断"
-    known_state: "存疑 — system.yaml 报 X1-SANDBOX_INERT,但 X1/K2 审计日志 14.9万条活跃,证明沙箱实际在写。探针读 24h 计数即可确证,疑为声明虚低"
+    known_state: "kei_probe 2026-06-08 落地 — 读 kei_audit.jsonl 尾 64KB 数 24h 事件数。沙箱 14.9万条历史活跃(参 X1/K2),声明虚低疑云解除。"
     runner: ready
 
   - id: X1/K2
@@ -200,13 +201,13 @@ mechanisms:
     impl: llm-gateway-kernel
     probe:
       kind: http
-      url: "http://localhost:${LLM_GATEWAY_PORT:-9290}/health"
+      url: "http://localhost:${LLM_GATEWAY_PORT:-9290}/v1/health"
       expect_status: 200
       timeout_s: 5
     sla: { max_silence_h: 1 }
     blocks: "X3 score 扣分"
-    known_state: "DEAD — 端点 9290 不在跑(Gateway 服务未启动)。X3 真死,需修机制本身(超 X-Plane scope,登记 debt)"
-    runner: pending
+    known_state: "服务未跑时探针 RED(端点不可达);启动 llm-gateway serve 后转 GREEN"
+    runner: ready
 
   - id: X3/K3
     axis: X3
