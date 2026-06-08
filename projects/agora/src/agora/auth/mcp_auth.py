@@ -81,12 +81,18 @@ class MCPAuthMiddleware:
         self._token_ttl = token_ttl
 
     def _get_sovereign_key(self) -> str:
-        """Get the sovereign key from env or cached value."""
+        """Get the sovereign key from env or cached value.
+
+        Raises:
+            MCPAuthError: If SHAREDBRAIN_SOVEREIGN_KEY is not set.
+        """
         if self._sovereign_key is None:
-            self._sovereign_key = os.environ.get(
-                "SHAREDBRAIN_SOVEREIGN_KEY",
-                "sharedbrain-default-key",
-            )
+            self._sovereign_key = os.environ.get("SHAREDBRAIN_SOVEREIGN_KEY")
+            if not self._sovereign_key:
+                raise MCPAuthError(
+                    "SHAREDBRAIN_SOVEREIGN_KEY not set. "
+                    "Configure this environment variable before starting agora."
+                )
         return self._sovereign_key
 
     def _validate_bearer_token(self, auth_header: str | None) -> dict[str, Any]:
