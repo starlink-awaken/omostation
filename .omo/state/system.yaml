@@ -8,7 +8,7 @@ phase41_completed_at: '2026-06-16T00:00:00Z'
 phase_status: active
 current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
-health_score: 100.0
+health_score: 73.75
 health_score_raw: 100.0
 active_agents: 0
 idle_agents: 4
@@ -53,7 +53,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-08T13:26:43Z'
+updated_at: '2026-06-08T22:00:00Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -205,5 +205,5 @@ runtime_health_summary:
   unhealthy_services: []
   stale_services: []
 phase46_status: active
-xplane_score: 100.0
+xplane_score: 12.5
 xplane_coverage: 100.0

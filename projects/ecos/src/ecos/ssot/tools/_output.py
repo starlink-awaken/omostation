@@ -48,7 +48,9 @@ class OutputFormatter:
 
     def print_error(self, msg: str, suggestion: str = "") -> None:
         if self.json_mode:
-            self.print_json({"status": "error", "message": msg, "hint": suggestion})
+            import sys as _sys
+            json_str = _json.dumps({"status": "error", "message": msg, "hint": suggestion}, ensure_ascii=False, default=str)
+            print(json_str, file=_sys.stderr)
         else:
             print(f"\033[31m✗ Error:\033[0m {msg}", file=sys.stderr)
             if suggestion:
@@ -144,7 +146,7 @@ class OutputFormatter:
             print()
 
     def print_json(self, data: Any) -> None:
-        print(_json.dumps(data, ensure_ascii=False, indent=2, default=str))
+        print(_json.dumps(data, ensure_ascii=False, default=str))
 
 
 # ── 便捷函数 ──

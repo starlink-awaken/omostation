@@ -718,3 +718,264 @@
 81481","port":9090}
 {"source":"dashboard_monitor","timestamp":"2026-06-08T12:57:58Z","launchd_state":"running","http_code":"200","pid":"1130
 84649","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T13:02:59Z","launchd_state":"running","http_code":"200","pid":"1130
+89376","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T13:07:57.080271+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T13:07:59Z","launchd_state":"running","http_code":"200","pid":"1130
+94013","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T13:12:59Z","launchd_state":"running","http_code":"200","pid":"1130
+94822","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T13:17:59Z","launchd_state":"running","http_code":"200","pid":"1130
+95524","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T13:22:59Z","launchd_state":"running","http_code":"200","pid":"1130
+96261","port":9090}
+{"checks": [{"category": "lint", "name": "ruff lint", "score": 100.0, "severity": "ok"}, {"category": "tests", "name": "test coverage", "score": 100.0, "severity": "ok"}, {"category": "debt", "name": "debt integrity", "score": 100.0, "severity": "ok"}, {"category": "knowledge", "name": "adr links", "score": 100.0, "severity": "ok"}, {"category": "tasks", "name": "task consistency", "score": 100.0, "severity": "ok"}, {"category": "agora", "name": "agora health", "score": 75.0, "severity": "warn"}], "date": "2026-06-08", "grade": "A", "timestamp": "2026-06-08T13:24:35.336725+00:00", "total_score": 95.8, "watchlist_count": 2}
+{"checks": [{"category": "lint", "name": "ruff lint", "score": 100.0, "severity": "ok"}, {"category": "tests", "name": "test coverage", "score": 100.0, "severity": "ok"}, {"category": "debt", "name": "debt integrity", "score": 100.0, "severity": "ok"}, {"category": "knowledge", "name": "adr links", "score": 100.0, "severity": "ok"}, {"category": "tasks", "name": "task consistency", "score": 100.0, "severity": "ok"}, {"category": "agora", "name": "agora health", "score": 75.0, "severity": "warn"}], "date": "2026-06-08", "grade": "A", "timestamp": "2026-06-08T13:25:02.118202+00:00", "total_score": 95.8, "watchlist_count": 2}
+{"checks": [{"category": "lint", "name": "ruff lint", "score": 100.0, "severity": "ok"}, {"category": "tests", "name": "test coverage", "score": 100.0, "severity": "ok"}, {"category": "debt", "name": "debt integrity", "score": 100.0, "severity": "ok"}, {"category": "knowledge", "name": "adr links", "score": 100.0, "severity": "ok"}, {"category": "tasks", "name": "task consistency", "score": 100.0, "severity": "ok"}, {"category": "agora", "name": "agora health", "score": 75.0, "severity": "warn"}], "date": "2026-06-08", "grade": "A", "timestamp": "2026-06-08T13:26:25.045744+00:00", "total_score": 95.8, "watchlist_count": 2}
+{"checks": [{"category": "lint", "name": "ruff lint", "score": 100.0, "severity": "ok"}, {"category": "tests", "name": "test coverage", "score": 100.0, "severity": "ok"}, {"category": "debt", "name": "debt integrity", "score": 100.0, "severity": "ok"}, {"category": "knowledge", "name": "adr links", "score": 100.0, "severity": "ok"}, {"category": "tasks", "name": "task consistency", "score": 100.0, "severity": "ok"}, {"category": "agora", "name": "agora health", "score": 75.0, "severity": "warn"}], "date": "2026-06-08", "grade": "A", "timestamp": "2026-06-08T13:26:44.419874+00:00", "total_score": 95.8, "watchlist_count": 2}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T13:27:59Z","launchd_state":"running","http_code":"200","pid":"1130
+2878","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T13:32:59Z","launchd_state":"running","http_code":"200","pid":"1130
+4995","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T13:37:59.302510+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T13:38:00Z","launchd_state":"running","http_code":"200","pid":"1130
+6292","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T13:43:00Z","launchd_state":"running","http_code":"200","pid":"1130
+7040","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T13:48:00Z","launchd_state":"running","http_code":"200","pid":"1130
+7796","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T13:53:00Z","launchd_state":"running","http_code":"200","pid":"1130
+8612","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T13:58:00Z","launchd_state":"running","http_code":"200","pid":"1130
+9334","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T14:03:00Z","launchd_state":"running","http_code":"200","pid":"1130
+10162","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T14:07:59.658610+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T14:08:00Z","launchd_state":"running","http_code":"200","pid":"1130
+11142","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T14:13:01Z","launchd_state":"running","http_code":"200","pid":"1130
+11885","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T14:18:01Z","launchd_state":"running","http_code":"200","pid":"1130
+12690","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T14:23:01Z","launchd_state":"running","http_code":"200","pid":"1130
+13391","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T14:28:01Z","launchd_state":"running","http_code":"200","pid":"1130
+14094","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T14:33:01Z","launchd_state":"running","http_code":"200","pid":"1130
+14896","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T14:37:59.967082+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T14:38:01Z","launchd_state":"running","http_code":"200","pid":"1130
+15591","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T14:43:01Z","launchd_state":"running","http_code":"200","pid":"1130
+16378","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T14:48:01Z","launchd_state":"running","http_code":"200","pid":"1130
+17029","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T14:53:02Z","launchd_state":"running","http_code":"200","pid":"1130
+17744","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T14:58:02Z","launchd_state":"running","http_code":"200","pid":"1130
+18408","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T15:03:02Z","launchd_state":"running","http_code":"200","pid":"1130
+19269","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T15:08:00.370028+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T15:08:02Z","launchd_state":"running","http_code":"200","pid":"1130
+20208","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T15:13:02Z","launchd_state":"running","http_code":"200","pid":"1130
+20918","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T15:18:02Z","launchd_state":"running","http_code":"200","pid":"1130
+21656","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T15:23:02Z","launchd_state":"running","http_code":"200","pid":"1130
+22285","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T15:28:03Z","launchd_state":"running","http_code":"200","pid":"1130
+22962","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T15:33:03Z","launchd_state":"running","http_code":"200","pid":"1130
+23568","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T15:38:00.627783+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T15:38:03Z","launchd_state":"running","http_code":"200","pid":"1130
+24308","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T15:43:03Z","launchd_state":"running","http_code":"200","pid":"1130
+24963","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T15:48:03Z","launchd_state":"running","http_code":"200","pid":"1130
+25625","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T15:53:03Z","launchd_state":"running","http_code":"200","pid":"1130
+26370","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T15:58:03Z","launchd_state":"running","http_code":"200","pid":"1130
+27044","port":9090}
+{"checks": [{"category": "lint", "name": "ruff lint", "score": 0.0, "severity": "fail"}, {"category": "tests", "name": "test coverage", "score": 100.0, "severity": "ok"}, {"category": "debt", "name": "debt integrity", "score": 100.0, "severity": "ok"}, {"category": "knowledge", "name": "adr links", "score": 100.0, "severity": "ok"}, {"category": "tasks", "name": "task consistency", "score": 100.0, "severity": "ok"}, {"category": "agora", "name": "agora health", "score": 75.0, "severity": "warn"}], "date": "2026-06-08", "grade": "C", "timestamp": "2026-06-08T16:00:01.360134+00:00", "total_score": 79.2, "watchlist_count": 2}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T16:03:03Z","launchd_state":"running","http_code":"200","pid":"1130
+27862","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T16:08:00.970223+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T16:08:04Z","launchd_state":"running","http_code":"200","pid":"1130
+28840","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T16:13:04Z","launchd_state":"running","http_code":"200","pid":"1130
+29660","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T16:18:04Z","launchd_state":"running","http_code":"200","pid":"1130
+30403","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T16:23:04Z","launchd_state":"running","http_code":"200","pid":"1130
+31159","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T16:28:04Z","launchd_state":"running","http_code":"200","pid":"1130
+31842","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T16:33:04Z","launchd_state":"running","http_code":"200","pid":"1130
+32523","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T16:38:01.291540+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T16:38:04Z","launchd_state":"running","http_code":"200","pid":"1130
+33221","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T16:43:04Z","launchd_state":"running","http_code":"200","pid":"1130
+33902","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T16:48:05Z","launchd_state":"running","http_code":"200","pid":"1130
+34569","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T16:53:05Z","launchd_state":"running","http_code":"200","pid":"1130
+35267","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T16:58:05Z","launchd_state":"running","http_code":"200","pid":"1130
+35955","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T17:03:05Z","launchd_state":"running","http_code":"200","pid":"1130
+36786","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T17:08:01.646747+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T17:08:05Z","launchd_state":"running","http_code":"200","pid":"1130
+37714","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T17:13:05Z","launchd_state":"running","http_code":"200","pid":"1130
+38404","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T17:18:05Z","launchd_state":"running","http_code":"200","pid":"1130
+39104","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T17:23:06Z","launchd_state":"running","http_code":"200","pid":"1130
+39850","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T17:28:06Z","launchd_state":"running","http_code":"200","pid":"1130
+40648","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T17:33:06Z","launchd_state":"running","http_code":"200","pid":"1130
+41376","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T17:38:02.041244+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T17:38:06Z","launchd_state":"running","http_code":"200","pid":"1130
+42073","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T17:43:06Z","launchd_state":"running","http_code":"200","pid":"1130
+42814","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T17:48:06Z","launchd_state":"running","http_code":"200","pid":"1130
+43542","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T17:53:06Z","launchd_state":"running","http_code":"200","pid":"1130
+44251","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T17:58:07Z","launchd_state":"running","http_code":"200","pid":"1130
+45025","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T18:03:07Z","launchd_state":"running","http_code":"200","pid":"1130
+45995","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T18:08:02.363533+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T18:08:07Z","launchd_state":"running","http_code":"200","pid":"1130
+47082","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T18:13:07Z","launchd_state":"running","http_code":"200","pid":"1130
+47890","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T18:18:07Z","launchd_state":"running","http_code":"200","pid":"1130
+48627","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T18:23:07Z","launchd_state":"running","http_code":"200","pid":"1130
+49366","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T18:28:07Z","launchd_state":"running","http_code":"200","pid":"1130
+50135","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T18:33:07Z","launchd_state":"running","http_code":"200","pid":"1130
+50924","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T18:38:02.624426+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T18:38:08Z","launchd_state":"running","http_code":"200","pid":"1130
+51743","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T18:43:08Z","launchd_state":"running","http_code":"200","pid":"1130
+52525","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T18:48:08Z","launchd_state":"running","http_code":"200","pid":"1130
+53291","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T18:53:08Z","launchd_state":"running","http_code":"200","pid":"1130
+54077","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T18:58:08Z","launchd_state":"running","http_code":"200","pid":"1130
+54853","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T19:03:08Z","launchd_state":"running","http_code":"200","pid":"1130
+56533","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T19:08:04.247327+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T19:08:08Z","launchd_state":"running","http_code":"200","pid":"1130
+57728","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T19:13:09Z","launchd_state":"running","http_code":"200","pid":"1130
+58325","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T19:18:09Z","launchd_state":"running","http_code":"200","pid":"1130
+59104","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T19:23:09Z","launchd_state":"running","http_code":"200","pid":"1130
+59838","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T19:28:09Z","launchd_state":"running","http_code":"200","pid":"1130
+60680","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T19:33:09Z","launchd_state":"running","http_code":"200","pid":"1130
+61508","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T19:38:04.610886+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T19:38:09Z","launchd_state":"running","http_code":"200","pid":"1130
+62254","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T19:43:09Z","launchd_state":"running","http_code":"200","pid":"1130
+63074","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T19:48:09Z","launchd_state":"running","http_code":"200","pid":"1130
+63874","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T19:53:10Z","launchd_state":"running","http_code":"200","pid":"1130
+64656","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T19:58:10Z","launchd_state":"running","http_code":"200","pid":"1130
+65453","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T20:03:10Z","launchd_state":"running","http_code":"200","pid":"1130
+66355","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T20:08:05.054602+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T20:08:10Z","launchd_state":"running","http_code":"200","pid":"1130
+67448","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T20:13:10Z","launchd_state":"running","http_code":"200","pid":"1130
+68266","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T20:18:10Z","launchd_state":"running","http_code":"200","pid":"1130
+69036","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T20:23:10Z","launchd_state":"running","http_code":"200","pid":"1130
+69869","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T20:28:11Z","launchd_state":"running","http_code":"200","pid":"1130
+70642","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T20:33:11Z","launchd_state":"running","http_code":"200","pid":"1130
+71421","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T20:38:07.079017+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T20:38:11Z","launchd_state":"running","http_code":"200","pid":"1130
+72208","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T20:43:11Z","launchd_state":"running","http_code":"200","pid":"1130
+72990","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T20:48:11Z","launchd_state":"running","http_code":"200","pid":"1130
+73799","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T20:53:11Z","launchd_state":"running","http_code":"200","pid":"1130
+74601","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T20:58:11Z","launchd_state":"running","http_code":"200","pid":"1130
+75366","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T21:03:12Z","launchd_state":"running","http_code":"200","pid":"1130
+76325","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T21:08:07.471930+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T21:08:12Z","launchd_state":"running","http_code":"200","pid":"1130
+77441","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T21:13:12Z","launchd_state":"running","http_code":"200","pid":"1130
+78296","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T21:18:12Z","launchd_state":"running","http_code":"200","pid":"1130
+79098","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T21:23:12Z","launchd_state":"running","http_code":"200","pid":"1130
+79872","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T21:28:12Z","launchd_state":"running","http_code":"200","pid":"1130
+81560","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T21:33:12Z","launchd_state":"running","http_code":"200","pid":"1130
+82763","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T21:38:07.790244+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T21:38:13Z","launchd_state":"running","http_code":"200","pid":"1130
+84475","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T21:43:13Z","launchd_state":"running","http_code":"200","pid":"1130
+85792","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T21:48:13Z","launchd_state":"running","http_code":"200","pid":"1130
+87399","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T21:53:13Z","launchd_state":"running","http_code":"200","pid":"1130
+88978","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T21:58:13Z","launchd_state":"running","http_code":"200","pid":"1130
+90633","port":9090}
+{"checks": [{"category": "lint", "name": "ruff lint", "score": 0.0, "severity": "fail"}, {"category": "tests", "name": "test coverage", "score": 100.0, "severity": "ok"}, {"category": "debt", "name": "debt integrity", "score": 100.0, "severity": "ok"}, {"category": "knowledge", "name": "adr links", "score": 100.0, "severity": "ok"}, {"category": "tasks", "name": "task consistency", "score": 100.0, "severity": "ok"}, {"category": "agora", "name": "agora health", "score": 75.0, "severity": "warn"}], "date": "2026-06-08", "grade": "C", "timestamp": "2026-06-08T22:00:01.048677+00:00", "total_score": 79.2, "watchlist_count": 2}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T22:03:13Z","launchd_state":"running","http_code":"200","pid":"1130
+92421","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T22:08:08.026924+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T22:08:13Z","launchd_state":"running","http_code":"200","pid":"1130
+94325","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T22:13:13Z","launchd_state":"running","http_code":"200","pid":"1130
+95950","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T22:18:14Z","launchd_state":"running","http_code":"200","pid":"1130
+97128","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T22:23:14Z","launchd_state":"running","http_code":"200","pid":"1130
+98819","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T22:28:14Z","launchd_state":"running","http_code":"200","pid":"1130
+1339","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T22:33:14Z","launchd_state":"running","http_code":"200","pid":"1130
+4550","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T22:38:08.428826+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T22:38:14Z","launchd_state":"running","http_code":"200","pid":"1130
+6040","port":9090}
+{"date": "2026-06-08", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-08T22:43:03.138634+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-08T22:43:14Z","launchd_state":"running","http_code":"200","pid":"7777
+7799","port":9090}
