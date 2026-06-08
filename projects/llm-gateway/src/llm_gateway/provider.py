@@ -320,13 +320,16 @@ class MockLLMProvider(LLMProvider):
         )
 
     def complete(self, request: LLMRequest) -> LLMResponse:
-        return LLMResponse(
+        response = LLMResponse(
             content=f"Mock response to: {request.prompt[:50]}",
             provider="mock",
             model="mock-model",
             input_tokens=len(request.prompt.split()),
             output_tokens=10,
         )
+        # X3 cost tracking — silent fail per record_llm_cost contract
+        record_llm_cost(response.model, response.input_tokens, response.output_tokens)
+        return response
 
 
 class NoneProvider(LLMProvider):
@@ -351,8 +354,11 @@ class NoneProvider(LLMProvider):
         )
 
     def complete(self, request: LLMRequest) -> LLMResponse:
-        return LLMResponse(
+        response = LLMResponse(
             content="",
             provider="none",
             model="none",
         )
+        # X3 cost tracking — NoneProvider 默认 0 tokens
+        record_llm_cost(response.model, 0, 0)
+        return response
