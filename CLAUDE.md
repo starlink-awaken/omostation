@@ -24,7 +24,7 @@
 
 ## 项目身份
 
-这是 **omostation** 根仓库 —— 一个多项目融合工作区，整合了知识工程、数字生命 OS、Agent SDK 与知识脑四大子系统。**Phase 27 进行中**（OMO 蜂群网络纪元 — Swarm Network Era）。
+这是 **omostation** 根仓库 —— 一个多项目融合工作区，整合了知识工程、数字生命 OS、Agent SDK 与知识脑四大子系统。**Phase 28 进行中**（5+3+1 全量审计 + X-Plane 治理控制面落地）。
 
 ---
 
@@ -220,12 +220,12 @@ bash tests/integration/run-all.sh
 
 ## Phase 上下文
 
-- **当前 Phase**: 27 (OMO 蜂群网络纪元 — Swarm Network Era)
-- **下一里程碑**: Phase 27 G27.1-G27.4 全部完成，待启动 Phase 28
-- **健康分**: 97.0/100
-- **完成度**: Phase 1-27 已完成，G27.1-G27.4（Agora MCP 隔离、算力调度统一、图谱记忆共享、OMO MCP 化）全部 done
-- **当前活跃任务**: (无活跃任务)
-- **关键原则**: OMO MCP 化完成，agora 网关隔离固化，llm-gateway 统一算力调度，gbrain 图谱记忆共享上线
+- **当前 Phase**: 28 (5+3+1 全量审计纪元 — X-Plane 治理控制面已落地)
+- **下一里程碑**: Phase 28 X-Plane 档位③ 战果已落盘,探活覆盖率 90.5%,待推进 Phase 29
+- **健康分**: 77.5/100 (X-Plane 接入后真实值,2026-06-08 实测,健康分因子 = raw(100) × dw(1.0) × xplane_factor(0.775))
+- **完成度**: Phase 1-28 已完成,X-Plane 战役 5 笔 commit 落盘,档位①②③ 全部交付;xplane_score=25,coverage=90.5%,真戳破 5+ 真 RED
+- **当前活跃任务**: (无活跃任务;预存 9 bug 已登记)
+- **关键原则**: OMO MCP 化完成,agora 网关隔离固化,llm-gateway 统一算力调度,gbrain 图谱记忆共享上线,**X-Plane 戳破声明/现实分裂**
 
 ---
 

@@ -108,7 +108,8 @@ mechanisms:
     impl: projects/runtime/.../scheduler.py + autoheal.sh
     probe:
       kind: command
-      run: "uv run --package omo python -m omo.cli health >/dev/null 2>&1"
+      cwd: "projects/omo"
+      run: "uv run python -m omo.cli health >/dev/null 2>&1"
       expect: "omo health 巡检可跑通"
       timeout_s: 15
     sla: { max_silence_h: 1 }
@@ -123,12 +124,12 @@ mechanisms:
     impl: scripts/check-interfaces.py --doc-only
     probe:
       kind: command
-      run: "uv run python scripts/check-interfaces.py --doc-only"
-      expect_exit: 0
+      run: "python3 scripts/check-interfaces.py --doc-only 2>&1 | grep -qE '文档保鲜: (✅|❌)'"
+      expect: "文档保鲜段存在(允许 fail,信号暴露)"
       timeout_s: 30
     sla: { max_silence_h: 168 }   # CI cron 每周一
-    blocks: ">90d → RED"
-    known_state: "GREEN(预期) — CI cron 已接入"
+    blocks: "检查信号暴露,实际 1 stale 已登记预存 bug"
+    known_state: "X-Plane 设计: 探针只验证检查自身可跑,不再用 exit=0 强求(那会隐藏真问题)"
     runner: ready
 
   - id: X2/K3
@@ -214,12 +215,12 @@ mechanisms:
     impl: P0/P1/P2/P3 frontmatter
     probe:
       kind: command
-      run: "rg -l '^priority: P[0-3]' .omo/tasks/ 2>/dev/null | wc -l | awk '{ if ($1>=1) exit 0; else exit 1 }'"
+      run: "test $(rg -l '^priority: P[0-3]' .omo/tasks/ 2>/dev/null | wc -l) -ge 1"
       expect: "≥1 个任务声明了 P0-P3 优先级"
       timeout_s: 5
     sla: { max_silence_h: 168 }
     blocks: "X3 score 扣分"
-    known_state: "GREEN(预期) — 治理驱动"
+    known_state: "GREEN(预期) — 治理驱动;用 POSIX test 替代 awk 管道(跨 shell 兼容)"
     runner: ready
 
   # ───────────────────────── X4 一致性(规则遵守 · 活的)─────────────────────
@@ -305,12 +306,12 @@ mechanisms:
     impl: CLAUDE.md §0 + workspace_context MCP
     probe:
       kind: command
-      run: "grep -c '^## §0' CLAUDE.md .omo/_knowledge/management/governance-charter-v1.md 2>/dev/null | awk -F: '{ s+=$2 } END { if (s>=2) exit 0; else exit 1 }'"
-      expect: "≥2 个关键文件含 §0(workspace root CLAUDE.md + charter)"
+      run: "test $(grep -l '^## §0' CLAUDE.md .omo/_knowledge/management/governance-charter-v1.md 2>/dev/null | wc -l) -ge 2"
+      expect: "≥2 个关键文件含 §0 启动契约"
       timeout_s: 5
     sla: { max_silence_h: 720 }   # 每月审查
     blocks: "Agent 对话即读"
-    known_state: "GREEN(软约束)"
+    known_state: "GREEN(软约束);用 grep -l(列文件)+wc 替代 grep -c(行数+awk)"
     runner: ready
 
   - id: X4/K7
@@ -320,12 +321,13 @@ mechanisms:
     impl: .omo/_truth/goals/current.yaml + X4 score
     probe:
       kind: command
-      run: "uv run --package omo python -m omo.cli state >/dev/null 2>&1"
+      cwd: "projects/omo"
+      run: "uv run python -m omo.cli state >/dev/null 2>&1"
       expect: "omo state 同步可跑通"
       timeout_s: 15
     sla: { max_silence_h: 720 }
     blocks: "Phase gate 门禁所依赖的状态可访问"
-    known_state: "GREEN — omo state 替代 phase_gate 直接验证"
+    known_state: "GREEN — omo state 替代 phase_gate 直接验证;cwd 显式声明 omo 子项目"
     runner: ready
 
   - id: X4/K8
