@@ -57,9 +57,11 @@ _LEGACY_BOS_URI_ALIASES = {
 }
 
 # ── 路径常量 ────────────────────────────────────────
-KAIRON_ROOT = Path("/Users/xiamingxing/Workspace/projects/kairon")
-METAOS_ROOT = Path("/Users/xiamingxing/Workspace/projects/metaos")
-OMOSTATION_ROOT = Path("/Users/xiamingxing/Workspace")
+import os as _os
+_WS = _os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
+KAIRON_ROOT = Path(_WS) / "projects" / "kairon"
+METAOS_ROOT = Path(_WS) / "projects" / "metaos"
+OMOSTATION_ROOT = Path(_WS)
 
 # ── 类型 ────────────────────────────────────────────
 Transport = Literal["stdio", "internal", "http"]
