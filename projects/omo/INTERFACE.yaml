@@ -23,8 +23,8 @@ mcp:
   transport: [stdio]
 
 http:
-  - port: 9090
-    protocol: http.server (Dashboard) [⚠ 与 ecos 冲突, 待迁移]
+  - port: 9091
+    protocol: http.server (Dashboard)
 
 dependencies:
   runtime: [httpx, pyyaml, fastmcp]
