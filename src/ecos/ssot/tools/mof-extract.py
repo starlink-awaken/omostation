@@ -20,6 +20,7 @@
 """
 
 import sys
+import os
 import json
 import yaml
 import argparse
@@ -246,7 +247,7 @@ def save_nodes(nodes: list[dict], output_dir: Path):
             f.write(f"# M1 Node: {n['id']}\n")
             f.write(f"# Type: {n['type']}\n")
             f.write(f"# Extracted by mof-extract: {now()}\n")
-            f.write(f"# ⚠️ 待人工审核\n\n")
+            f.write("# ⚠️ 待人工审核\n\n")
             yaml.dump(n, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
         saved += 1
     return saved
@@ -269,8 +270,8 @@ def format_summary(all_nodes: list[dict]) -> str:
     for t, c in sorted(by_type.items()):
         lines.append(f"    {t:15s}: {c} 个")
     
-    lines.append(f"\n  ⚠️ 所有节点标记为 '待人工审核'")
-    lines.append(f"  审核后运行 mof-validate 校验")
+    lines.append("\n  ⚠️ 所有节点标记为 '待人工审核'")
+    lines.append("  审核后运行 mof-validate 校验")
     lines.append("=" * 64)
     return "\n".join(lines)
 
@@ -306,11 +307,41 @@ def main():
     print(format_summary(all_nodes))
 
     if not args.dry_run and all_nodes:
-        output_dir = args.output or (Path.home() / "Documents" / "驾驶舱" / "元模型" / "nodes")
+        output_dir = args.output or _resolve_output_dir()
         saved = save_nodes(all_nodes, output_dir)
         print(f"  ✅ {saved} 个节点 → {output_dir}")
-        for n in all_nodes:
-            print(f"     [{n['type']:12s}] {n['id']:<45s} {n['name'][:50]}")
+
+
+def _resolve_output_dir() -> Path:
+    """解析 mof-extract 输出目录 SSOT。
+
+    优先级(均显式 opt-in,无静默 fallback):
+      1. --output 命令行参数
+      2. MOF_EXTRACT_OUTPUT 环境变量
+      3. WORKSPACE_ROOT 环境变量 + eCOS m1 convention 路径
+
+    历史(2026-06-08): 旧硬编码 `~/Documents/驾驶舱/元模型/nodes/` 已被驾驶舱漂移融合删除,
+    仍 fallback 该路径会让 mof-extract "逆向还原" 已被合并的旧资产(声明/现实分裂)。
+    现改为:三选一都没有 → 报错退出,绝不静默 fallback 旧路径。
+
+    调用方推荐:
+      # 默认(项目内 eCOS m1)
+      WORKSPACE_ROOT=~/Workspace python3 mof-extract.py
+      # 自定义(跨项目 L0 节点归档)
+      MOF_EXTRACT_OUTPUT=/path/to/nodes python3 mof-extract.py
+    """
+    explicit = os.environ.get("MOF_EXTRACT_OUTPUT")
+    if explicit:
+        return Path(explicit)
+    workspace = os.environ.get("WORKSPACE_ROOT")
+    if workspace:
+        return Path(workspace) / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "convention"
+    print(
+        "  ❌ mof-extract: 无法解析输出目录。\n"
+        "     设置 WORKSPACE_ROOT env(指向 ~/Workspace) 或 MOF_EXTRACT_OUTPUT 指向目标目录。\n"
+        "     旧路径 ~/Documents/驾驶舱/元模型/nodes/ 已被驾驶舱漂移融合删除,不再 fallback。"
+    )
+    sys.exit(2)
 
 
 if __name__ == "__main__":
