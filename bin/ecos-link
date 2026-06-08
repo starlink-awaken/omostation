@@ -35,15 +35,26 @@ TOOL_LIST=(
   "kairon-cli:kairon"     "cloakbrowser:kairon"
 )
 
-KNOWN_STALE=(
-  "ag" "agent" "agent-cli" "ai-tools" "astrbot" "grok"
-  "kimi-cli" "kimi-legacy" "ccproxy" "m2claude" "mclaude" "zai-claude"
-  "pylsp" "python3.12" "codexbar" "mkdocs" "nano-pdf" "eu-pricing"
-  "deepagents" "deepagents-cli" "graphify" "markitdown"
-  "serena" "serena-agent" "serena-hooks" "wpsnote-cli" "cua-driver"
-  "forge-bridge" "forge-mcp" "hermes" "switch-node.sh"
+# 已过期的旧文件 (不是 uv tool 管理的)
+KNOWN_STALE_BINARIES=(
   "agy" "cagent" "droid" "chair" "exec" "scribe"
 )
+KNOWN_STALE_SCRIPTS=(
+  "m2claude" "mclaude" "zai-claude" "switch-node.sh"
+  "forge-bridge" "forge-mcp" "hermes"
+)
+KNOWN_STALE_TERMINALS=(
+  "bash (kiro-cli-term)" "fish (kiro-cli-term)"
+  "nu (kiro-cli-term)" "zsh (kiro-cli-term)"
+)
+KNOWN_STALE_LINKS=(
+  "python3.12"  # 旧 Python 版本
+)
+
+# 仍在使用的 uv tools/外部工具 — 不应标记为 stale
+# ag, agent, agent-cli, deepagents, serena, markitdown, graphify,
+# astrbot, kimi-cli, ccproxy, wpsnote-cli, grok, mkdocs, nano-pdf,
+# pytest, codexbar, cua-driver, eu-pricing, pylsp, ai-tools
 
 # ── 颜色 ────────────────────────────────────────────────────────────
 G='\033[32m'; R='\033[31m'; Y='\033[33m'; C='\033[36m'
@@ -133,20 +144,33 @@ cmd_check() {
     fi
   done
 
-  # 过时文件
+  # 过时文件 (非软链)
   for entry in "$BIN_DIR"/*; do
     local name=$(basename "$entry")
-    for s in "${KNOWN_STALE[@]}"; do
-      if [ "$s" = "$name" ]; then
-        if [ -f "$entry" ] && [ ! -L "$entry" ]; then
-          local sz=$(du -sh "$entry" 2>/dev/null | cut -f1)
-          warn "$name (${sz}) — 已知过时，建议手动清理"
-        else
-          warn "$name — 已知过时链接"
-        fi
-        ((st++)); break
-      fi
+    [ -L "$entry" ] && continue
+    local is_stale=0
+    for s in "${KNOWN_STALE_BINARIES[@]}" "${KNOWN_STALE_SCRIPTS[@]}" "${KNOWN_STALE_TERMINALS[@]}"; do
+      [ "$s" = "$name" ] && is_stale=1 && break
     done
+    if [ $is_stale -eq 1 ]; then
+      local sz=$(du -sh "$entry" 2>/dev/null | cut -f1)
+      warn "$name (${sz}) — 可清理"
+      ((st++))
+    fi
+  done
+
+  # 过时软链
+  for entry in "$BIN_DIR"/*; do
+    local name=$(basename "$entry")
+    [ -L "$entry" ] || continue
+    local is_stale=0
+    for s in "${KNOWN_STALE_LINKS[@]}"; do
+      [ "$s" = "$name" ] && is_stale=1 && break
+    done
+    if [ $is_stale -eq 1 ]; then
+      warn "$name — 旧版本链接"
+      ((st++))
+    fi
   done
 
   # 有效链接
@@ -161,16 +185,31 @@ cmd_check() {
 
 # ── clean ────────────────────────────────────────────────────────────
 cmd_clean() {
-  echo -e "\n${B}清理失效软链${Z}\n"
+  echo -e "\n${B}清理失效/过时文件${Z}\n"
   local c=0
+
+  # 清理失效软链
   for entry in "$BIN_DIR"/*; do
     [ -L "$entry" ] || continue
     if [ ! -e "$entry" ]; then
       local name=$(basename "$entry")
-      rm -f "$entry" && ok "$name — 已删除" && ((c++))
+      rm -f "$entry" && ok "$name — 已删除失效链接" && ((c++))
     fi
   done
-  echo -e "\n清理了 ${c} 个失效链接\n"
+
+  # 清理已知过时文件
+  for entry in "$BIN_DIR"/*; do
+    local name=$(basename "$entry")
+    local should_del=0
+    for s in "${KNOWN_STALE_BINARIES[@]}" "${KNOWN_STALE_SCRIPTS[@]}" "${KNOWN_STALE_TERMINALS[@]}" "${KNOWN_STALE_LINKS[@]}"; do
+      [ "$s" = "$name" ] && should_del=1 && break
+    done
+    if [ $should_del -eq 1 ] && [ -e "$entry" ]; then
+      rm -f "$entry" && ok "$name — 已清理" && ((c++))
+    fi
+  done
+
+  echo -e "\n${B}清理了 ${c} 个文件${Z}\n"
 }
 
 # ── main ─────────────────────────────────────────────────────────────
