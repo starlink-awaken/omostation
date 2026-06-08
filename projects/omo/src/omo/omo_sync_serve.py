@@ -21,8 +21,10 @@ def _call_action(action: str, args: dict[str, Any]) -> dict[str, Any]:
 
 
 def serve() -> int:
-    """P48-W2: serve 模式入口 (P49-simplify 用 omo_stdio_rpc 共用 helper)."""
-    return run_stdio_dispatch(_call_action)
+    """P48-W2: serve 模式入口 (P49-simplify 用 omo_stdio_rpc 共用 helper).
+    P64-W0: daemon_mode=True (launchd plist 没 pipe stdin 兼容).
+    """
+    return run_stdio_dispatch(_call_action, daemon_mode=True)
 
 
 __all__ = ["serve", "_call_action"]
