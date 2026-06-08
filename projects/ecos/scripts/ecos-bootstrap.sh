@@ -55,8 +55,8 @@ echo ""
 # ── 目录结构 ──
 echo "── 1/8: 创建目录结构 ──"
 
-mkdir -p "${TARGET}/驾驶舱/scripts"
-mkdir -p "${TARGET}/驾驶舱/CARDS"
+mkdir -p "${TARGET}/@驾驶舱/scripts"
+mkdir -p "${TARGET}/@驾驶舱/CARDS"
 mkdir -p "${TARGET}/学习进化/1-active/自我剖析"
 mkdir -p "${TARGET}/学习进化/1-active/收件箱"
 mkdir -p "${TARGET}/学习进化/2-knowledge/体系"
@@ -122,7 +122,7 @@ X1 治理安全 · X2 抗熵进化 · X3 价值堆栈
 
 Agent 启动后按顺序执行：
 
-0. **`python3 ~/Documents/驾驶舱/scripts/ecos-brief.py --force`**
+0. **`python3 ~/Documents/@驾驶舱/scripts/ecos-brief.py --force`**
 1. **`驾驶舱/brief.md`** — 读会话简报
 2. **本文件** — 身份锚 + 域路由
 3. **`驾驶舱/DASHBOARD.md`** — 全局状态
@@ -135,13 +135,13 @@ Agent 启动后按顺序执行：
 
 ```bash
 # 一键健康检查
-python3 ~/Documents/驾驶舱/scripts/ecos-health-check.py
+python3 ~/Documents/@驾驶舱/scripts/ecos-health-check.py
 
 # 会话简报
-python3 ~/Documents/驾驶舱/scripts/ecos-brief.py --force
+python3 ~/Documents/@驾驶舱/scripts/ecos-brief.py --force
 
 # 系统自述
-python3 ~/Documents/驾驶舱/scripts/ecos-whoami.py
+python3 ~/Documents/@驾驶舱/scripts/ecos-whoami.py
 ```
 
 ---

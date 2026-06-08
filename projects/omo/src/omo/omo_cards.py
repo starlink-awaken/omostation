@@ -17,6 +17,15 @@ from typing import Optional
 
 DB_PATH = Path(__file__).resolve().parents[4] / "data" / "cards" / "cards.db"
 
+
+def _get_cockpit_dir() -> Path:
+    """Resolve standard @驾驶舱 or 驾驶舱 folder in Documents."""
+    d = Path.home() / "Documents" / "@驾驶舱"
+    if d.exists():
+        return d
+    return Path.home() / "Documents" / "@驾驶舱"
+
+
 # ── schema ──────────────────────────────────────────────
 
 SCHEMA = """
@@ -428,7 +437,7 @@ def cmd_generate(args=None):
         output_dir = Path(args.output)
     else:
         # Obsidian vault is at ~/Documents/ (separate from Workspace)
-        output_dir = Path.home() / "Documents" / "驾驶舱" / "CARDS"
+        output_dir = _get_cockpit_dir() / "CARDS"
 
     rows = conn.execute(
         """SELECT * FROM cards
@@ -511,7 +520,7 @@ def cmd_daemon(args=None):
 
     # 3. Update DASHBOARD
     print("  → Updating DASHBOARD...")
-    dashboard_path = Path.home() / "Documents" / "驾驶舱" / "DASHBOARD.md"
+    dashboard_path = _get_cockpit_dir() / "DASHBOARD.md"
     try:
         import io
         old_stdout = _sys.stdout
@@ -553,8 +562,8 @@ def cmd_daemon(args=None):
 
 
 def cmd_generate_views(args=None):
-    """Generate architecture views (Layer A+B) from SSOT sources."""
-    views_dir = Path.home() / "Documents" / "驾驶舱" / "生成"
+    """Generate architecture views (Layer A+B) from SSOT SSOT sources."""
+    views_dir = _get_cockpit_dir() / "生成"
     views_dir.mkdir(parents=True, exist_ok=True)
 
     conn = _get_db()
@@ -676,7 +685,7 @@ def cmd_generate_views(args=None):
         ("CARDS DB", "SQLite", DB_PATH, DB_PATH.exists()),
         ("OMO 治理", "YAML", Path.home() / "Workspace" / ".omo", (Path.home() / "Workspace" / ".omo").exists()),
         ("Vault", "Markdown", Path.home() / "Documents" / "学习进化", (Path.home() / "Documents" / "学习进化").exists()),
-        ("驾驶舱", "MD+SQLite", Path.home() / "Documents" / "驾驶舱", (Path.home() / "Documents" / "驾驶舱").exists()),
+        ("驾驶舱", "MD+SQLite", _get_cockpit_dir(), _get_cockpit_dir().exists()),
         ("MADF 视图", "Markdown(自动生成)", views_dir, views_dir.exists()),
     ]
     for name, fmt, path, exists in checks:
@@ -946,7 +955,8 @@ def main(argv: list[str] | None = None) -> int:
 
     # migrate
     p = sub.add_parser("migrate", help="Import v1 markdown cards")
-    p.add_argument("--source", default="驾驶舱/CARDS")
+    default_source = "Documents/@驾驶舱/CARDS" if (Path.home() / "Documents" / "@驾驶舱").exists() else "Documents/@驾驶舱/CARDS"
+    p.add_argument("--source", default=str(Path.home() / default_source))
 
     args = parser.parse_args(argv)
 
