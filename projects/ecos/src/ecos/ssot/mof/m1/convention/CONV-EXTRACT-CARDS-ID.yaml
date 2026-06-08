@@ -1,6 +1,6 @@
 # M1 Node: CONV-EXTRACT-CARDS-ID
 # Type: Convention
-# Extracted by mof-extract: 2026-06-06T13:26:34.841538+00:00
+# Extracted by mof-extract: 2026-06-08T09:39:12.594871+00:00
 # ⚠️ 待人工审核
 
 id: CONV-EXTRACT-CARDS-ID
@@ -9,7 +9,7 @@ name: 'CARDS 卡片 ID 格式: {TYPE}-{YYYY}-{MM}-{DD}-{NNN}'
 description: 'CARDS 卡片 ID 格式: {TYPE}-{YYYY}-{MM}-{DD}-{NNN}'
 status: adopted
 domain: meta
-created: '2026-06-06T13:26:34.838340+00:00'
+created: '2026-06-08T09:39:12.594384+00:00'
 version: 1.0.0
 layer: L4
 properties:
