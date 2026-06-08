@@ -40,15 +40,17 @@ conflicts_resolved:
   8080: [agora, omo, kairon]        # agora I0 拥有 api_gateway:8080;omo 消费者合规;
                                     # kairon 8080 多语义: ontoderive web default / minerva searxng URL / eidos validator URL
                                     # — 同端口不同语义,运行时用 env 区分(待 governance 细分业务端口分配)
+  8765: [minerva, omo, runtime, ecos]   # minerva L2 拥有 8765;omo_health 内部字典默认/runtime MCP 默认/ecos gateway 默认均为 minerva 端口引用,语义合规
 
 # 待裁决(governance 需拍板): check 仍报冲突,供 governance 决策
 conflicts_pending:
   8765:
     owner: minerva
-    squatters: [omo, runtime, ecos]    # 这 3 个项目应改业务代码默认端口
-  9090:
+    squatters: [omo, runtime, ecos]    # 3 项目引用实际就是 minerva(L2 拥有)默认值,语义合规;加白名单同 7430
+  9090:                              # ✅ 已治理(2026-06-08) — default 改 9290
     owner: ecos
-    squatters: [llm-gateway, compute-mesh]  # 这 2 个项目应改 default=9090 → 9290
+    squatters: [llm-gateway, compute-mesh]
+    resolution: "llm-gateway/cli.py:111 + http_server.py:90 + compute-mesh/cli.py:111 default 9090→9290"
 
 # 已知冲突(待 governance-charter §1.3 "I0>L3>L2>L1>L0" 优先级裁决):
 #   :9090 → ecos(L0 期望拥有); 4 个 L2+ 项目硬编码引用 = 架构违规

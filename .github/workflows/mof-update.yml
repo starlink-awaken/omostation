@@ -1,0 +1,87 @@
+name: mof-update (L0 周期化)
+
+# 织星 MOF L0 周期化(2026-06-08)
+# 每周一 06:00 跑 mof check + mof-extract + mof status,任一 RED 提交 issue
+# 设计目的: 解决 X-Plane 战役发现的"声明/现实分裂"长期无人发现
+# 关联设计: .omo/_knowledge/management/x-plane-architecture-design-v1.md §9
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # 每周一 06:00
+  workflow_dispatch:       # 允许手动触发
+
+permissions:
+  contents: read
+  issues: write            # 失败时自动开 issue
+
+jobs:
+  mof-update:
+    name: L0 知识萃取周期化
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install eCOS (L0 工具链来源)
+        working-directory: projects/ecos
+        run: |
+          pip install uv
+          uv sync
+
+      - name: mof status (L0 健康度快照)
+        working-directory: projects/ecos
+        run: |
+          uv run mof status | tee ../../mof-status.txt
+          echo "## mof status" >> $GITHUB_STEP_SUMMARY
+          cat ../../mof-status.txt >> $GITHUB_STEP_SUMMARY
+
+      - name: mof check (全量 gate+validate+audit+enforce)
+        id: mof-check
+        working-directory: projects/ecos
+        run: |
+          set +e
+          uv run mof check | tee ../../mof-check.txt
+          EXIT=$?
+          echo "## mof check" >> $GITHUB_STEP_SUMMARY
+          cat ../../mof-check.txt >> $GITHUB_STEP_SUMMARY
+          exit $EXIT
+
+      - name: mof-extract (L4 知识萃取)
+        working-directory: projects/ecos
+        env:
+          WORKSPACE_ROOT: ${{ github.workspace }}
+        run: |
+          uv run python3 src/ecos/ssot/tools/mof-extract.py | tee ../../mof-extract.txt
+          echo "## mof-extract" >> $GITHUB_STEP_SUMMARY
+          cat ../../mof-extract.txt >> $GITHUB_STEP_SUMMARY
+
+      - name: 失败 → 自动开 issue
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const checkOut = fs.readFileSync('mof-check.txt', 'utf8').slice(-2000);
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[L0 周期化] mof check 失败 @ ${new Date().toISOString().slice(0,10)}`,
+              body: `## 摘要
+            mof 周期化工作流在每周一 06:00 运行,本次 mof check 失败。
+
+            ## 最近 mof-check 输出(末 2000 字符)
+            \`\`\`
+            ${checkOut}
+            \`\`\`
+
+            ## 行动
+            - 读 .omo/_knowledge/management/x-plane-architecture-design-v1.md
+            - 跑 \`mof check\` 本地复现
+            - 修后用 \`workflow_dispatch\` 重跑
+            `
+            });
