@@ -148,6 +148,11 @@ def main(argv: list[str] | None = None) -> int:
 
         return health_main(args[1:])
 
+    if args and args[0] in ("x-axis", "xaxis"):
+        from omo.omo_xplane import main as xplane_main
+
+        return xplane_main(args[1:])
+
     if args and args[0] == "inspect":
         from omo.omo_inspect import main as inspect_main
 
@@ -155,6 +160,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if args and args[0] == "healing":
         return _cmd_healing(args[1:])
+
+    # 兜底:有参但无匹配子命令 → 报错退出;无参 → 静默退出 0(保持原行为)
+    if args:
+        print(f"Unknown subcommand: {args[0]}", file=sys.stderr)
+        return 1
+    return 0
 
 
 def _cmd_healing(args: list[str]) -> int:
