@@ -87,7 +87,7 @@ class LLMGatewayHandler(BaseHTTPRequestHandler):
         sys.stderr.write(f"[llm-gateway] {args[0]} {args[1]} {args[2]}\n")
 
 
-def serve(port: int = 9090) -> None:
+def serve(port: int = 9290) -> None:
     """Start the llm-gateway HTTP server.
 
     Endpoints:
