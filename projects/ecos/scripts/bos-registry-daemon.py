@@ -21,10 +21,17 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+# Try to import yaml for fallback parsing
+try:
+    import yaml
+    HAS_YAML = True
+except ImportError:
+    HAS_YAML = False
+
 # ── Paths ──
 L0_CONSTRAINTS = Path.home() / "Documents" / "@学习进化" / "_knowledge" / "10-systems" / "基建架构" / "L0-constraints.yaml"
 ROUTES_JSON = Path.home() / ".ecos" / "bos" / "routes.json"
-DOMAIN_MANAGER = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "services" / "domain_manager.py"
+DOMAIN_MANAGER = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "services" / "governance" / "domain_manager.py"
 LOG_FILE = Path.home() / ".ecos" / "bos" / "daemon.log"
 
 
@@ -53,14 +60,31 @@ def update_routes() -> bool:
         log(f"⚠️  L0-constraints.yaml not found: {L0_CONSTRAINTS}")
         return False
 
-    # Use domain_manager to reload and export routes
+    registry = None
+
+    # Method 1: Use domain_manager to reload and export routes
     try:
         sys.path.insert(0, str(DOMAIN_MANAGER.parent.parent))
         from importlib.machinery import SourceFileLoader
         dm = SourceFileLoader("dm", str(DOMAIN_MANAGER)).load_module()
         registry = dm.load_registry()
+        log("✅ Loaded registry via domain_manager")
     except Exception as e:
-        log(f"⚠️  domain_manager load failed: {e}")
+        log(f"ℹ️  domain_manager load failed: {e}")
+
+    # Method 2: Fallback — parse YAML directly
+    if registry is None and HAS_YAML:
+        try:
+            with open(L0_CONSTRAINTS) as f:
+                data = yaml.safe_load(f)
+            registry = data.get("domain_registry", [])
+            log(f"✅ Loaded registry via YAML fallback ({len(registry)} domains)")
+        except Exception as e:
+            log(f"⚠️  YAML fallback also failed: {e}")
+            return False
+
+    if registry is None:
+        log("⚠️  No registry source available")
         return False
 
     # Parse domain_registry into routes format
@@ -108,13 +132,24 @@ def main() -> int:
 
     log(f"BOS Registry Daemon starting (interval={interval}s)")
     
+    # Warm L2 → L1 cache if domain_manager is available
+    try:
+        sys.path.insert(0, str(DOMAIN_MANAGER.parent.parent))
+        from importlib.machinery import SourceFileLoader
+        dm = SourceFileLoader("dm", str(DOMAIN_MANAGER)).load_module()
+        warm_stats = dm._cache_warm()
+        log(f"Cache warm: L2={warm_stats['l2_items']} → L1={warm_stats['warmed']}")
+    except Exception:
+        log("Cache warm skipped (domain_manager not available)")
+    
     if run_once:
         if update_routes():
             notify_mcp()
         return 0
 
     last_mtime = get_mtime(L0_CONSTRAINTS)
-    update_routes()
+    if not update_routes():
+        log("⚠️  Initial route update failed")
 
     try:
         while True:
