@@ -136,7 +136,9 @@ protocols:
     implementations:
       - "OMO Debt items (x1_policy_ref field)"
       - "governance-constraints.yaml (derived_from chain)"
-    notes: "5 policies defined. Referenced by DebtItem.x1_policy_ref field. X1 is eCOS cross-cutting governance security dimension."
+      - "l4-kernel KemsValidator (域 Schema 合规校验)"
+      - "l4-kernel SignalBus (violation → 信号 → OMO debt)"
+    notes: "5 policies defined. Referenced by DebtItem.x1_policy_ref field. X1 is eCOS cross-cutting governance security dimension. L4 domain violations are emitted as signals and registered as OMO debt items."
 
   - name: "X2 Lifecycle Rule"
     version: "1"
@@ -149,7 +151,9 @@ protocols:
     implementations:
       - "OMO Debt items (x2_freshness field)"
       - "ecos-health-scan (cron-based monitoring)"
-    notes: "4 rules defined. Referenced by DebtItem.x2_freshness field. X2 is eCOS cross-cutting anti-entropy dimension."
+      - "l4-kernel DomainHealth.check_freshness() (STATE.md >30天检测)"
+      - "l4-kernel freshness cron job (每日 02:00 扫描)"
+    notes: "4 rules defined. Referenced by DebtItem.x2_freshness field. X2 is eCOS cross-cutting anti-entropy dimension. L4 domain freshness is checked daily via l4-kernel cron."
 
   - name: "X3 Value Stack"
     version: "1"
@@ -162,32 +166,49 @@ protocols:
     implementations:
       - "OMO Debt items (x3_tier field)"
       - "omo_debt_weight.get_computed_weight()"
-    notes: "7 tiers: Axiom→Tool. Referenced by DebtItem.x3_tier field. X3 is eCOS cross-cutting value assessment dimension."
+      - "l4-kernel DomainHealth.aggregate_health() (域活跃度评分)"
+      - "l4-kernel DASHBOARD (跨域价值聚合)"
+    notes: "7 tiers: Axiom→Tool. Referenced by DebtItem.x3_tier field. X3 is eCOS cross-cutting value assessment dimension. L4 domain activity scores contribute to value stack assessment."
 
   # ── Self Layer ────────────────────────────────────────────────────
   - name: "L4 Gateway"
-    version: "4.0"
+    version: "5.0"
     category: "self-layer"
     status: "active"
     usage: "active"
-    description: "CLAUDE_COWORK_GLOBAL.md — 身份锚、12域路由、执行纪律、会话行为基线"
+    description: "CLAUDE_COWORK_GLOBAL.md — 身份锚、21域路由、执行纪律、会话行为基线"
     spec_url: "~/Documents/CLAUDE_COWORK_GLOBAL.md"
     transport: ["file", "claude-cowork"]
     implementations:
       - "~/Documents/CLAUDE_COWORK_GLOBAL.md"
-    notes: "L4 自我层含 12 域: CARDS(驾驶舱), Vault(@学习进化), Personal(@个人), Family, Shared/SharedWork/SharedDisk, Work-Weijian, Work-Guozhuan, AI-Config, Obsidian-Vault, iCloud-SharedConf. 22 个定时技能通过 runtime cron-service 调度。域模型见 ecos/ssot/mof/m1/domain/。"
+      - "l4-kernel DomainRegistry (21域统一注册 + 路径解析)"
+    notes: "L4 自我层含 21 域 (8 Document + 3 Config + 3 Engine + 2 Tool + 2 Model + 1 Workspace + 1 Storage + 1 Obsidian)。30 个定时技能通过 runtime cron-service 调度。l4-kernel 提供统一管理面。"
 
   - name: "L4 Domains"
-    version: "2.0"
+    version: "4.0"
     category: "self-layer"
     status: "active"
     usage: "active"
-    description: "L4 12 域数据架构 — cockpit MCP vault_search 桥接访问"
+    description: "L4 21 域数据架构 — l4-kernel 统一管理面 + cockpit MCP 桥接"
     transport: ["file", "mcp"]
     implementations:
-      - "cockpit MCP (vault_search, workspace_context)"
-      - "metaos cards_context (prompt注入)"
-      - "minerva VaultSink (自动归档)"
+      - "l4-kernel (DomainRegistry + KemsPlane + DomainHealth + SignalBus)"
+      - "cockpit MCP (vault_search, workspace_context — 集成 l4-kernel)"
+      - "metaos cards_context (prompt注入 — 集成 l4-kernel CardsPlane)"
+      - "minerva VaultSink (自动归档 — 集成 l4-kernel KemsPlane)"
+    notes: "21 域通过 l4-kernel DomainRegistry 统一注册。42 个 MCP 工具通过 l4-kernel MCP Server (port 7455) 暴露。X1-X4 治理轴通过 KemsValidator/DomainHealth/SignalBus 与 l4-kernel 联动。"
+
+  - name: "L4 Kernel MCP"
+    version: "1.0.0"
+    category: "self-layer"
+    status: "active"
+    usage: "active"
+    description: "L4 自我层管理面 — 21域统一注册 + KEMS六面 + 域生命周期 + 42 MCP tools"
+    port_range: "7455"
+    transport: ["stdio", "http", "sse"]
+    implementations:
+      - "projects/l4-kernel"
+    notes: "42 MCP tools 分 7 组: domain_*(7), kems_*(8), search/validate(5), cards_*(5), health/dashboard(4), plugin_*(5), config/tool/storage/model/engine(8)。启动: l4-kernel mcp --http"
 
   # ── State Sync ─────────────────────────────────────────────────────
   - name: "KOS State"
