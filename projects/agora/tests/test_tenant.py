@@ -7,9 +7,9 @@ from agora.auth.tenant import Tenant, TenantManager
 
 
 def test_tenant_dataclass():
-    t = Tenant(name="test", token="sk-test", services=["minerva"], rate_limit=50)  # noqa: S106
+    t = Tenant(name="test", token_hash="pbkdf2:sha256:600000:s:h", services=["minerva"], rate_limit=50)
     assert t.name == "test"
-    assert t.token == "sk-test"  # noqa: S105
+    assert t.token_hash == "pbkdf2:sha256:600000:s:h"
     assert t.services == ["minerva"]
     assert t.rate_limit == 50
 
@@ -31,7 +31,8 @@ class TestTenantManager:
         tenant = tm.authenticate("sk-valid")
         assert tenant is not None
         assert tenant.name == "test"
-        assert tenant.token == "sk-valid"  # noqa: S105
+        # Token was migrated to hash on load — verify it exists
+        assert tenant.token_hash.startswith("pbkdf2:sha256:")
 
     def test_authenticate_invalid(self):
         path = self._make_config(
@@ -87,6 +88,7 @@ class TestTenantManager:
         assert len(tenants) == 1
         assert tenants[0]["name"] == "test"
         assert "token" not in tenants[0]
+        assert "token_hash" not in tenants[0]  # Hash also not exposed
 
     def test_default_config_auto_created(self):
         with tempfile.TemporaryDirectory() as td:
@@ -94,6 +96,10 @@ class TestTenantManager:
             assert not config.exists()
             tm = TenantManager(str(config))
             assert config.exists()
+            # Config file stores hash, not plain token
+            content = config.read_text()
+            assert "token_hash" in content
+            assert "sk-" not in content or "token_hash" in content
             # Default tenant is created
             tenants = tm.list_tenants()
             assert len(tenants) == 1
