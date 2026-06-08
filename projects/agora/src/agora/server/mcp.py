@@ -108,10 +108,22 @@ async def _proxy_lifespan(server: FastMCP):
     inside the lifespan context manager, subprocesses stay alive for the
     entire server lifetime.
     """
+    import asyncio
+
     _sync_task = None
+    _swarm = None
     try:
         await _init_proxy()
         _sync_task = asyncio.create_task(_proxy_sync_loop())
+
+        # ── Swarm 启动 (P55) ──
+        swarm_role = os.environ.get("AGORA_SWARM_ROLE", "")
+        if swarm_role:
+            from agora.mcp.swarm import get_swarm, SWARM_DEFAULT_PORT
+            swarm_port = int(os.environ.get("AGORA_SWARM_PORT", str(SWARM_DEFAULT_PORT)))
+            _swarm = get_swarm(role=swarm_role, port=swarm_port)
+            _swarm.start()
+            logger.info("swarm_started", role=swarm_role, port=swarm_port)
     except Exception:
         logger.exception("proxy_init_in_lifespan")
     global \
@@ -138,6 +150,9 @@ async def _proxy_lifespan(server: FastMCP):
     _cached_router = None
     _cached_lifecycle_mgr = None
     _lifecycle_manager = None
+    if _swarm is not None:
+        _swarm.stop()
+        logger.info("swarm_stopped")
 
 
 from agora.middleware.middleware import FastMCPAuditMiddleware
