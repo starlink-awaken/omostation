@@ -10,7 +10,6 @@ WF_CLI = str(Path(__file__).parent.parent / "src" / "ecos" / "ssot" / "tools" / 
 
 
 def run(*args):
-    import sys
     return subprocess.run([sys.executable, WF_CLI] + list(args), capture_output=True, text=True)
 
 
@@ -118,4 +117,8 @@ class TestWorkflowCLI:
         r = run("seed-bos")
         # May fail if agora module not importable, accept either
         assert r.returncode in (0, 1)
-        assert "BOSRouter" in r.stdout or "Agora" in r.stdout
+        if r.returncode == 0:
+            assert "BOSRouter" in r.stdout or "Agora" in r.stdout
+        else:
+            # Agora module not installed — skip gracefully
+            assert "Agora 模块未安装" in r.stderr
