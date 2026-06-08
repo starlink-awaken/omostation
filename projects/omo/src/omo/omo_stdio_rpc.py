@@ -36,15 +36,19 @@ def run_stdio_dispatch(
     dispatch_fn: DispatchFn,
     on_quit: Callable[[], None] | None = None,
     daemon_mode: bool = False,
+    restart_delay_sec: int = 0,
 ) -> int:
     """P49-simplify: 通用 stdio JSON-RPC serve 入口.
     P64-W0: 加 daemon_mode 参数.
+    /simplify P68 review: 加 restart_delay_sec 参数 (镜像 kairon_utils helper, 防漂移).
 
     读 stdin JSON 行, 调 dispatch_fn(action, args), 写 stdout JSON 行.
     QUIT 关闭 (可选 on_quit 钩子).
 
-    daemon_mode=True: stdin EOF 时 sleep 30s + retry (launchd 没 pipe stdin 兼容).
-    daemon_mode=False: stdin EOF 立即 return 0 (P49-W0 era 行为, 默认).
+    3 模式 (跟 kairon_utils.stdio_rpc 一致):
+    - daemon_mode=False: stdin EOF 立即 return 0 (P49-W0 era 默认).
+    - daemon_mode=True, restart_delay_sec=0: EOF sleep 30s + retry forever.
+    - daemon_mode=True, restart_delay_sec=N: EOF sleep Ns + return 0 (配 launchd 重启).
     """
     while True:
         for line in sys.stdin:
@@ -78,7 +82,12 @@ def run_stdio_dispatch(
         # stdin EOF
         if not daemon_mode:
             return 0
-        sys.stderr.write("[daemon] stdin EOF, sleep 30s then retry\n")
+        if restart_delay_sec > 0:
+            sys.stderr.write(f"[daemon] stdin EOF, sleep {restart_delay_sec}s then exit (launchd restart)\n")
+            sys.stderr.flush()
+            time.sleep(restart_delay_sec)
+            return 0
+        sys.stderr.write("[daemon] stdin EOF, sleep 30s then retry (forever)\n")
         sys.stderr.flush()
         time.sleep(30)
 
