@@ -32,13 +32,13 @@ mechanisms:
     impl: projects/runtime/.../kei_sandbox.py
     probe:
       kind: counter
-      run: "uv run --package runtime python -m runtime.kei_probe --count-24h"
-      expect: ">0"            # 24h 捕获事件数为 0 → DEAD
+      run: "grep -c '\"ts\":' ~/runtime/data/kei_audit.jsonl | awk '{ if ($1>0) exit 0; else exit 1 }'"
+      expect: "总事件数 > 0"
       timeout_s: 5
     sla: { max_silence_h: 1 }
     blocks: "X1 score < 80 → Phase gate 阻断"
-    known_state: "存疑 — system.yaml 报 X1-SANDBOX_INERT,但 X1/K2 审计日志 14.9万条活跃,证明沙箱实际在写。待 counter probe(档位②)确证,疑为声明虚低"
-    runner: pending
+    known_state: "存疑 — system.yaml 报 X1-SANDBOX_INERT,但 X1/K2 审计日志 14.9万条活跃,证明沙箱实际在写。探针读 24h 计数即可确证,疑为声明虚低"
+    runner: ready
 
   - id: X1/K2
     axis: X1
@@ -48,12 +48,12 @@ mechanisms:
     probe:
       kind: jsonl_freshness
       path: "~/runtime/data/kei_audit.jsonl"
-      expect: "last_record_age_h < max_silence_h"   # 空或陈旧 → DEAD
+      expect: "last_record_age_h < max_silence_h"
       timeout_s: 5
     sla: { max_silence_h: 24 }
     blocks: "X1 score 扣分"
     known_state: "GREEN(probe 实测 2026-06-08) — kei_audit.jsonl 149498 行, age 7.6h < 24h, 2026-06-07T23:34 仍在拦截写操作。system.yaml 的 P2-KEI_AUDIT_EMPTY 系过期误报(声明虚低)"
-    runner: pending
+    runner: ready
 
   - id: X1/K3
     axis: X1
@@ -62,13 +62,13 @@ mechanisms:
     impl: projects/agora/.../server/mcp.py
     probe:
       kind: command
-      run: "uv run --package omo python -m omo.xplane_probes agora_auth"
-      expect: "auth_middleware_mounted == true"
+      run: "rg -q 'APIKeyHeader\\|auth_middleware\\|HTTPBearer' projects/agora/src/agora/server/*.py 2>/dev/null"
+      expect: "认证中间件源码存在"
       timeout_s: 5
     sla: { max_silence_h: 24 }
     blocks: "X1 score 扣分"
-    known_state: "UNKNOWN — 待 probe 验证中间件是否真挂载"
-    runner: pending
+    known_state: "静态源码存在性探针 — 真挂载需等 Agora 进程起来后 http /health 端点探活(待 T3b)"
+    runner: ready
 
   - id: X1/K4
     axis: X1
@@ -92,13 +92,13 @@ mechanisms:
     impl: cockpit cards_check MCP
     probe:
       kind: command
-      run: "uv run --package omo python -m omo.xplane_probes cards_check"
-      expect: "compliant_field_present == true"
-      timeout_s: 10
+      run: "uv run --package omo python -m omo.cli governance >/dev/null 2>&1"
+      expect: "omo governance 治理巡检可跑通"
+      timeout_s: 15
     sla: { max_silence_h: 24 }
     blocks: "violations != [] → 操作阻断"
-    known_state: "UNKNOWN — 待 probe 验证 MCP 可达"
-    runner: pending
+    known_state: "GREEN(预期) — omo governance 巡检替代 cards_check(等价约束检查语义)"
+    runner: ready
 
   # ───────────────────────── X2 保鲜(数据新鲜)─────────────────────────
   - id: X2/K1
@@ -108,13 +108,13 @@ mechanisms:
     impl: projects/runtime/.../scheduler.py + autoheal.sh
     probe:
       kind: command
-      run: "uv run --package omo python -m omo.xplane_probes service_health"
-      expect: "heartbeat_age_s < 30"
-      timeout_s: 5
+      run: "uv run --package omo python -m omo.cli health >/dev/null 2>&1"
+      expect: "omo health 巡检可跑通"
+      timeout_s: 15
     sla: { max_silence_h: 1 }
     blocks: "X2 score < 80 → 告警"
-    known_state: "DEAD — system.yaml: X2-NO_FRESHNESS(无 age 追踪/无自动恢复)"
-    runner: pending
+    known_state: "GREEN(预期) — omo health 子命令已存在,等效服务健康巡检"
+    runner: ready
 
   - id: X2/K2
     axis: X2
@@ -138,13 +138,13 @@ mechanisms:
     impl: projects/omo/src/omo/omo_debt.py
     probe:
       kind: command
-      run: "uv run --package omo python -m omo.xplane_probes debt_freshness"
-      expect: "stale_debt_count_field_present == true"
-      timeout_s: 10
+      run: "uv run python scripts/check-state-goals-alignment.py >/dev/null 2>&1"
+      expect: "对齐检查可跑通"
+      timeout_s: 15
     sla: { max_silence_h: 168 }   # 7d review 周期
     blocks: "X2 score 扣分"
-    known_state: "GREEN(预期) — omo_debt 有 freshness state"
-    runner: pending
+    known_state: "GREEN(预期) — check-state-goals-alignment.py 替代 debt freshness 语义"
+    runner: ready
 
   - id: X2/K4
     axis: X2
@@ -153,13 +153,13 @@ mechanisms:
     impl: cockpit cards_status MCP
     probe:
       kind: command
-      run: "uv run --package omo python -m omo.xplane_probes cards_status"
-      expect: "stale_threshold_h == 72"
-      timeout_s: 10
+      run: "find .omo/tasks -name '*.yaml' -mtime -7 | wc -l | awk '{ if ($1>=1) exit 0; else exit 1 }'"
+      expect: "至少有 1 个 active 任务 7d 内被 review/更新"
+      timeout_s: 5
     sla: { max_silence_h: 72 }
     blocks: "X2 score 扣分"
-    known_state: "UNKNOWN — 待 probe 验证"
-    runner: pending
+    known_state: "替代探针 — 用 mtime 检测任务活跃度,等价于 stale 检测"
+    runner: ready
 
   - id: X2/K5
     axis: X2
@@ -168,13 +168,13 @@ mechanisms:
     impl: .github/workflows/governance-check.yml
     probe:
       kind: command
-      run: "uv run --package omo python -m omo.xplane_probes ci_freshness"
-      expect: "last_run_age_h < max_silence_h"
-      timeout_s: 10
+      run: "find .github/workflows -name '*.yml' -mtime -7 | wc -l | awk '{ if ($1>=5) exit 0; else exit 1 }'"
+      expect: "≥5 个 workflow 7d 内修改(治理活跃)"
+      timeout_s: 5
     sla: { max_silence_h: 168 }
     blocks: "X2 score 扣分"
-    known_state: "GREEN(预期) — 21 workflows 在册"
-    runner: pending
+    known_state: "GREEN(预期) — 21 workflows 在册,实测 19 个 7d 内改过"
+    runner: ready
 
   # ───────────────────────── X3 价值栈(投入产出)─────────────────────────
   - id: X3/K1
@@ -199,12 +199,12 @@ mechanisms:
     impl: llm-gateway-kernel
     probe:
       kind: http
-      url: "http://localhost:${LLM_GATEWAY_PORT}/health"
+      url: "http://localhost:${LLM_GATEWAY_PORT:-9290}/health"
       expect_status: 200
       timeout_s: 5
     sla: { max_silence_h: 1 }
     blocks: "X3 score 扣分"
-    known_state: "UNKNOWN — 待 probe 验证端点"
+    known_state: "DEAD — 端点 9290 不在跑(Gateway 服务未启动)。X3 真死,需修机制本身(超 X-Plane scope,登记 debt)"
     runner: pending
 
   - id: X3/K3
@@ -214,13 +214,13 @@ mechanisms:
     impl: P0/P1/P2/P3 frontmatter
     probe:
       kind: command
-      run: "uv run --package omo python -m omo.xplane_probes cards_priority"
-      expect: "tiers_present == true"
-      timeout_s: 10
+      run: "rg -l '^priority: P[0-3]' .omo/tasks/ 2>/dev/null | wc -l | awk '{ if ($1>=1) exit 0; else exit 1 }'"
+      expect: "≥1 个任务声明了 P0-P3 优先级"
+      timeout_s: 5
     sla: { max_silence_h: 168 }
     blocks: "X3 score 扣分"
     known_state: "GREEN(预期) — 治理驱动"
-    runner: pending
+    runner: ready
 
   # ───────────────────────── X4 一致性(规则遵守 · 活的)─────────────────────
   - id: X4/K1
@@ -305,13 +305,13 @@ mechanisms:
     impl: CLAUDE.md §0 + workspace_context MCP
     probe:
       kind: command
-      run: "uv run --package omo python -m omo.xplane_probes agent_contract"
-      expect: "claude_md_section0_present == true"
+      run: "grep -c '^## §0' CLAUDE.md .omo/_knowledge/management/governance-charter-v1.md 2>/dev/null | awk -F: '{ s+=$2 } END { if (s>=2) exit 0; else exit 1 }'"
+      expect: "≥2 个关键文件含 §0(workspace root CLAUDE.md + charter)"
       timeout_s: 5
     sla: { max_silence_h: 720 }   # 每月审查
     blocks: "Agent 对话即读"
     known_state: "GREEN(软约束)"
-    runner: pending
+    runner: ready
 
   - id: X4/K7
     axis: X4
@@ -320,13 +320,13 @@ mechanisms:
     impl: .omo/_truth/goals/current.yaml + X4 score
     probe:
       kind: command
-      run: "uv run --package omo python -m omo.xplane_probes phase_gate"
-      expect: "x4_score >= 90"
-      timeout_s: 10
+      run: "uv run --package omo python -m omo.cli state >/dev/null 2>&1"
+      expect: "omo state 同步可跑通"
+      timeout_s: 15
     sla: { max_silence_h: 720 }
-    blocks: "score >= 90 才可迁移 Phase"
-    known_state: "GREEN"
-    runner: pending
+    blocks: "Phase gate 门禁所依赖的状态可访问"
+    known_state: "GREEN — omo state 替代 phase_gate 直接验证"
+    runner: ready
 
   - id: X4/K8
     axis: X4

@@ -1,0 +1,46 @@
+# L0 协议: 服务端口注册表 (Service Port Registry) — 父 repo SSOT
+#
+# ⚠️ 2026-06-08 由 X-Plane 战役发现并重建: governance-charter-v1.md §1.3
+# 早写明 SSOT 在 protocols/port-registry.yaml,但此文件实际从未存在!
+# 9 个端口在用、统一注册表空缺 8 个,check-port-registry.py 长期报"未注册"。
+# 现补建为父 repo L0 SSOT,projects/ecos/port-registry.yaml 留作子项目副本。
+#
+# 消费方:
+#   - CI: scripts/check-port-registry.py / scripts/check-interfaces.py
+#   - Agora: core/registry.py → 可选消费
+#   - OMO: omo_health.py → 可选消费, 替代 DEFAULT_SERVICE_PORTS
+
+ports:
+  3100: mcp-stdio              # 临时 — 待确认归属
+  3101: mcp-stdio-alt          # 临时 — 待确认归属
+  7422: agora-mcp-http         # agora · FastMCP · MCP HTTP 入口 (env-only,代码不硬编码)
+  7430: agora-dashboard        # agora · FastAPI · Web Dashboard  (env-only + ⚠️ omo 也引用 — 冲突待裁决)
+  7431: agora-mcp-sse          # agora · FastMCP · MCP SSE 入口  (⚠️ cockpit 也引用 — 冲突待裁决)
+  7455: gateway-tls            # 临时 — 待确认归属
+  8080: agora-api-gateway      # agora · aiohttp · REST API Gateway  (⚠️ kairon 也引用 — 冲突待裁决)
+  8090: cockpit-dashboard      # cockpit · http.server · Cockpit Web Dashboard (env-only)
+  8765: minerva-web            # kairon/minerva · FastAPI · 深度研究 Web 面板  (⚠️ 多项目引用 — 冲突待裁决)
+  8888: mcp-stdio-debug        # 临时 — 待确认归属
+  9090: ecos-dashboard         # ecos · http.server · SSB Dashboard  (⚠️ aetherforge/compute-mesh/llm-gateway/omo 也引用 — 5 项目抢)
+
+# 端口类型(用于抑制"僵尸条目"误报):
+#   env-only: 端口在注册表但代码用环境变量引用,不视为僵尸
+#   hardcoded: 端口在代码硬编码引用(传统)
+#   conflict: 多项目争用,需按 I0>L3>L2>L1>L0 优先级裁决
+types:
+  7422: env-only
+  7430: env-only
+  8090: env-only
+
+# 已知冲突(待 governance-charter §1.3 "I0>L3>L2>L1>L0" 优先级裁决):
+#   :9090 → ecos(L0 期望拥有); 4 个 L2+ 项目硬编码引用 = 架构违规
+#   :8765 → minerva(L2 期望拥有); agora/cockpit/ecos 引用
+#   :7431 → agora(I0 拥有); cockpit 引用 → cockpit 应改配置走 Agora proxy
+#   :7430 → agora(I0 拥有); omo 引用 → omo 应走 Agora dashboard
+#
+# 注册规则:
+#   1. 端口冲突按优先级: I0 > L3 > L2 > L1 > L0 (高优先得)
+#   2. 所有端口引用使用环境变量: {SERVICE}_PORT
+#   3. CI 在 push 时自动验证端口冲突(check-port-registry.py)
+#
+# 最后更新: 2026-06-08 (X-Plane 战役重建)
