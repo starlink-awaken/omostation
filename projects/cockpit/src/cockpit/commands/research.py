@@ -32,6 +32,7 @@ from .base import (
     _render_publish_content,
     _research_progress,
     _run_ollama,
+    _run_ollama_stream,
     _short,
     _topic_text,
 )
@@ -107,16 +108,25 @@ def cmd_research(args: argparse.Namespace) -> int:
             _get_err().print(f"[yellow]⚠️ minerva 异常 ({type(e).__name__}) — 降级 ollama[/yellow]")
 
     if not output:
-        with Progress(
-            SpinnerColumn(style="yellow"),
-            TextColumn("[bold]{task.description}[/bold]"),
-            BarColumn(bar_width=None),
-            TimeElapsedColumn(),
-            console=_get_console(),
-            transient=False,
-        ) as progress:
-            progress.add_task(f"[yellow]ollama 降级研究中 · {_short(topic, 40)}", total=None)
-            ollama_out = _run_ollama(f"请对以下主题进行简要研究分析，用中文输出:\n\n{topic}", timeout=os.environ.get("OLLAMA_TIMEOUT", 120))
+        use_stream = getattr(args, "stream", False)
+        ollama_timeout = int(os.environ.get("OLLAMA_TIMEOUT", "120"))
+        if use_stream:
+            _get_console().print(f"[yellow]⏳ ollama 流式生成中 ({_short(topic, 30)})...[/]")
+            ollama_out = _run_ollama_stream(
+                f"请对以下主题进行简要研究分析，用中文输出:\n\n{topic}",
+                timeout=ollama_timeout,
+            )
+        else:
+            with Progress(
+                SpinnerColumn(style="yellow"),
+                TextColumn("[bold]{task.description}[/bold]"),
+                BarColumn(bar_width=None),
+                TimeElapsedColumn(),
+                console=_get_console(),
+                transient=False,
+            ) as progress:
+                progress.add_task(f"[yellow]ollama 降级研究中 · {_short(topic, 40)}", total=None)
+                ollama_out = _run_ollama(f"请对以下主题进行简要研究分析，用中文输出:\n\n{topic}", timeout=ollama_timeout)
         if ollama_out:
             output = f"[ollama 回复] {ollama_out}\n\n---\n⚠️ **注意：此为 ollama 降级回复，非 minerva 研究引擎结果。**"
             source = "ollama"

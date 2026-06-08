@@ -389,6 +389,58 @@ def _run_ollama(prompt: str, *, timeout: int = 60) -> str | None:
     return None
 
 
+def _run_ollama_stream(prompt: str, *, timeout: int = 120) -> str | None:
+    """流式调用 ollama — 逐 token 打印到 stdout，同时累积完整文本。
+
+    Returns:
+        成功时返回完整累积文本，失败返回 None。
+    """
+    try:
+        body = json.dumps(
+            {
+                "model": OLLAMA_MODEL,
+                "prompt": prompt,
+                "stream": True,
+                "raw": True,
+                "options": {"num_predict": 500, "temperature": 0.3},
+            }
+        ).encode()
+        req = urlrequest.Request(
+            os.environ.get("OLLAMA_ENDPOINT", "http://localhost:11434/api/generate"),
+            data=body,
+            headers={"Content-Type": "application/json"},
+        )
+        resp = urlrequest.urlopen(req, timeout=timeout)  # noqa: S310
+        full_text = ""
+        thinking = False
+        # 逐行读取 NDJSON 流
+        for line in resp:
+            try:
+                chunk = json.loads(line.decode())
+                token = (chunk.get("response") or "")
+                if not token:
+                    continue
+                # 跳过 <｜end▁of▁thinking｜> 标签
+                if "<｜end▁of▁thinking｜>" in token:
+                    thinking = True
+                    continue
+                if "响应" in token or "回答" in token:
+                    thinking = False
+                    continue
+                if not thinking:
+                    print(token, end="", flush=True)
+                    full_text += token
+                if chunk.get("done"):
+                    break
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue
+        print()  # 换行
+        return full_text.strip() or None
+    except Exception:
+        pass
+    return None
+
+
 def _status_services() -> list[tuple[str, str, str | None, str, str]]:
     """硬编码服务列表，作为动态发现的 fallback。"""
     agora_url = os.environ.get("AGORA_ENDPOINT", "http://localhost:7430")

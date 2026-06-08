@@ -166,6 +166,7 @@ def main() -> int:
     r.add_argument("--follow-up", action="store_true", help="查看追问工作台（待追问/已回答统计）")
     r.add_argument("--health", action="store_true", help="查看研究健康报告（衰减状态/保鲜建议）")
     r.add_argument("--batch", action="store_true", help="批量研究模式: 逐个处理多个 topic，汇总结果")
+    r.add_argument("--stream", action="store_true", help="流式输出 (ollama 逐 token 打印)")
     r.add_argument(
         "--backup",
         nargs="?",
