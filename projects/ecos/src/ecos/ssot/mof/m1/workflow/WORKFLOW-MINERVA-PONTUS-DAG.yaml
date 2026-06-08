@@ -2,93 +2,88 @@ id: WORKFLOW-MINERVA-PONTUS-DAG
 type: Workflow
 subtype: PipelineWorkflow
 name: Minerva Pontus DAG 并行执行器
-description: "基于拓扑排序的 DAG 并行管线执行器 — 支持异步/同步双模式，动态资源分配"
+description: 基于拓扑排序的 DAG 并行管线执行器 — 支持异步/同步双模式，动态资源分配
 status: active
-version: "1.0.0"
+version: 1.0.0
 domain: analysis
 layer: L2
-created: "2026-06-07"
+created: '2026-06-07'
 bos_uri: bos://ecos/workflow/minerva-pontus-dag
-
 cross_layer:
   realized_by:
-    - project: kairon
-      package: minerva
-      entrypoint: src/minerva/pipeline/pontus/scheduler.py
+  - project: kairon
+    package: minerva
+    entrypoint: src/minerva/pipeline/pontus/scheduler.py
   invoked_by:
-    - layer: I0
-      component: agora
-      mechanism: MCP 工具调用
-    - layer: L3
-      component: cockpit
-      mechanism: CLI 命令透传
-
+  - layer: I0
+    component: agora
+    mechanism: MCP 工具调用
+  - layer: L3
+    component: cockpit
+    mechanism: CLI 命令透传
 steps:
-  - order: 1
-    name: BuildDAG
-    action: build_dag
-    description: "构建研究任务的有向无环图依赖关系"
-    input:
-      - WORKFLOW-MINERVA-DEEP-RESEARCH
-    output:
-      - dag_graph
-    depends_on: []
-  - order: 2
-    name: TopologicalSort
-    action: topological_sort
-    description: "拓扑排序确定并行执行批次"
-    input:
-      - dag_graph
-    output:
-      - execution_plan[]
-    depends_on:
-      - BuildDAG
-  - order: 3
-    name: ParallelExecute
-    action: parallel_execute
-    description: "按拓扑层级并发执行节点，支持异步/同步双模式"
-    input:
-      - execution_plan[]
-    output:
-      - parallel_results[]
-    depends_on:
-      - TopologicalSort
-  - order: 4
-    name: AggregateOutputs
-    action: aggregate_outputs
-    description: "聚合所有并行节点的执行输出"
-    input:
-      - parallel_results[]
-    output:
-      - bos://analysis/parallel-results
-    depends_on:
-      - ParallelExecute
-
+- order: 1
+  name: BuildDAG
+  action: build_dag
+  description: 构建研究任务的有向无环图依赖关系
+  input:
+  - WORKFLOW-MINERVA-DEEP-RESEARCH
+  output:
+  - dag_graph
+  depends_on: []
+- order: 2
+  name: TopologicalSort
+  action: topological_sort
+  description: 拓扑排序确定并行执行批次
+  input:
+  - dag_graph
+  output:
+  - execution_plan[]
+  depends_on:
+  - BuildDAG
+- order: 3
+  name: ParallelExecute
+  action: parallel_execute
+  description: 按拓扑层级并发执行节点，支持异步/同步双模式
+  input:
+  - execution_plan[]
+  output:
+  - parallel_results[]
+  depends_on:
+  - TopologicalSort
+- order: 4
+  name: AggregateOutputs
+  action: aggregate_outputs
+  description: 聚合所有并行节点的执行输出
+  input:
+  - parallel_results[]
+  output:
+  - bos://analysis/parallel-results
+  depends_on:
+  - ParallelExecute
 execution:
   mode: dag
   max_retries: 3
   timeout: 1200
   on_failure: abort
   audit_enabled: true
-
 relations:
-  - type: triggers
-    target: WORKFLOW-MINERVA-DEEP-RESEARCH
-    note: "Minerva 深度研究触发 Pontus 并行执行"
-  - type: data_flows
-    target: bos://analysis/parallel-results
-    note: "并行结果输出到分析域"
-
+- type: triggers
+  target: WORKFLOW-MINERVA-DEEP-RESEARCH
+  note: Minerva 深度研究触发 Pontus 并行执行
+- type: data_flows
+  target: bos://analysis/parallel-results
+  note: 并行结果输出到分析域
 sla:
   max_execution_time: 1200
   expected_completion_rate: 0.95
   critical: false
-
 tags:
-  - dag
-  - parallel
-  - pontus
-  - minerva
-
+- dag
+- parallel
+- pontus
+- minerva
 maintained_by: kairon/minerva
-last_reviewed: "2026-06-07"
+last_reviewed: '2026-06-07'
+properties:
+  workflow_name: Minerva Pontus DAG 并行执行器

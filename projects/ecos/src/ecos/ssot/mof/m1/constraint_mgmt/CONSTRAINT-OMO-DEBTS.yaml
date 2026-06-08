@@ -1,5 +1,5 @@
 id: CONSTRAINT-OMO-DEBTS
-type: ConstraintMgmt
+type: constraint_mgmt
 name: OMO 债务积压
 description: 100 条 OMO 工程债务待清理
 status: identified

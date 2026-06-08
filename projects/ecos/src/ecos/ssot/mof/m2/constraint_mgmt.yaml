@@ -1,9 +1,7 @@
-# M2: ConstraintMgmt
-
 m2_type: ConstraintMgmt
 version: 1.0.0
 created: '2026-06-06'
-ConstraintMgmt:
+constraint_mgmt:
   m3_parent: GovernanceElement.Constraint
   description: 管理约束——什么限制了我们。债务·违规·技术债。回答"什么阻碍"。
   icon: 🚧

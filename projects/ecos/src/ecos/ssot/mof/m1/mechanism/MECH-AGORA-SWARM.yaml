@@ -1,45 +1,43 @@
 id: MECH-AGORA-SWARM
 type: Mechanism
-name: "Agora 蜂群多节点协调"
-description: "Master-Worker-Function 三层蜂群架构: UDP 自动发现, 心跳健康监控, BOS URI 跨节点路由, 任务分发与故障转移"
+name: Agora 蜂群多节点协调
+description: 'Master-Worker-Function 三层蜂群架构: UDP 自动发现, 心跳健康监控, BOS URI 跨节点路由, 任务分发与故障转移'
 domain: meta
 layer: I0
 status: active
-version: "1.0.0"
-created: "2026-06-08"
+version: 1.0.0
+created: '2026-06-08'
 phase: P55
-
 properties:
-  trigger: "startup"
-  source: "agora/mcp/swarm.py:SwarmOrchestrator"
+  trigger: startup
+  source: agora/mcp/swarm.py:SwarmOrchestrator
   roles:
-    - "master: 路由表 + 任务分发 + 健康监控"
-    - "worker: 执行 POC Services + 心跳上报"
-    - "function: 单服务专注节点"
-  discovery: "UDP 广播 + 手动注册"
+  - 'master: 路由表 + 任务分发 + 健康监控'
+  - 'worker: 执行 POC Services + 心跳上报'
+  - 'function: 单服务专注节点'
+  discovery: UDP 广播 + 手动注册
   heartbeat_interval: 5
   heartbeat_timeout: 15
-  failover: "worker 离线 → master 重新分配 BOS URI 到其他节点"
-
+  failover: worker 离线 → master 重新分配 BOS URI 到其他节点
+  action: Agora 蜂群多节点协调(需人工补具体执行描述)
+  interval: 0
 relations:
-  - type: DependsOn
-    from: MECH-AGORA-SWARM
-    to: MECH-A2A-TASK
-    note: "远程任务分发通过 A2A Task API"
-  - type: DependsOn
-    from: MECH-AGORA-SWARM
-    to: MECH-BOS-ROUTER
-    note: "BOS URI 路由跨节点同步"
-  - type: Realizes
-    from: MECH-AGORA-SWARM
-    to: "Phase 55: 单机 → 蜂群"
-
+- type: DependsOn
+  from: MECH-AGORA-SWARM
+  to: MECH-A2A-TASK
+  note: 远程任务分发通过 A2A Task API
+- type: DependsOn
+  from: MECH-AGORA-SWARM
+  to: MECH-BOS-ROUTER
+  note: BOS URI 路由跨节点同步
+- type: Realizes
+  from: MECH-AGORA-SWARM
+  to: 'Phase 55: 单机 → 蜂群'
 sla:
   max_execution_time: 5
   expected_completion_rate: 0.99
-
 tags:
-  - swarm
-  - cluster
-  - distributed
-  - mesh
+- swarm
+- cluster
+- distributed
+- mesh

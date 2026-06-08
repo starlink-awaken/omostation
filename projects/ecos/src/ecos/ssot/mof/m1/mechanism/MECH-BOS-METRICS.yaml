@@ -1,4 +1,3 @@
-# M1 Mechanism: MECH-BOS-METRICS
 id: MECH-BOS-METRICS
 type: Mechanism
 name: BOS 调用指标收集
@@ -10,4 +9,6 @@ created: '2026-06-07'
 properties:
   trigger: per-call
   source: agora/mcp/bos_metrics.py
+  action: BOS 调用指标收集(需人工补具体执行描述)
+  interval: 0
 relations: []

@@ -2,104 +2,99 @@ id: WORKFLOW-AGORA-PIPELINE
 type: Workflow
 subtype: MCPWorkflow
 name: Agora MCP 工具编排管线
-description: "多步 MCP 工具调用编排: 顺序/流式/并行三种执行模式，支持模板变量和事件总线"
+description: '多步 MCP 工具调用编排: 顺序/流式/并行三种执行模式，支持模板变量和事件总线'
 status: active
-version: "1.0.0"
+version: 1.0.0
 domain: meta
 layer: I0
-created: "2026-06-07"
+created: '2026-06-07'
 bos_uri: bos://ecos/workflow/agora-pipeline
-
 cross_layer:
   realized_by:
-    - project: agora
-      package: agora
-      entrypoint: src/agora/pipeline.py
+  - project: agora
+    package: agora
+    entrypoint: src/agora/pipeline.py
   invoked_by:
-    - layer: I0
-      component: agora
-      mechanism: MCP 工具调用
-    - layer: L3
-      component: cockpit
-      mechanism: CLI 命令透传
-    - layer: L2
-      component: kairon
-      mechanism: 研究管线调用
-
+  - layer: I0
+    component: agora
+    mechanism: MCP 工具调用
+  - layer: L3
+    component: cockpit
+    mechanism: CLI 命令透传
+  - layer: L2
+    component: kairon
+    mechanism: 研究管线调用
 steps:
-  - order: 1
-    name: LoadPipelineDefinition
-    action: agora.agora.load_pipeline_definition
-    description: "加载管线定义，解析工具链配置和模板变量"
-    input:
-      - bos://forge/tool/chain
-    output:
-      - pipeline_def
-    depends_on: []
-  - order: 2
-    name: ResolveToolReferences
-    action: agora.agora.resolve_tool_references
-    description: "解析工具引用，定位实际可用的 MCP 工具实例"
-    input:
-      - pipeline_def
-    output:
-      - resolved_tools[]
-    depends_on:
-      - LoadPipelineDefinition
+- order: 1
+  name: LoadPipelineDefinition
+  action: agora.agora.load_pipeline_definition
+  description: 加载管线定义，解析工具链配置和模板变量
+  input:
+  - bos://forge/tool/chain
+  output:
+  - pipeline_def
+  depends_on: []
+- order: 2
+  name: ResolveToolReferences
+  action: agora.agora.resolve_tool_references
+  description: 解析工具引用，定位实际可用的 MCP 工具实例
+  input:
+  - pipeline_def
+  output:
+  - resolved_tools[]
+  depends_on:
+  - LoadPipelineDefinition
+- order: 3
+  name: ExecuteSequential
+  action: agora.agora.execute_sequential
+  description: 顺序执行模式 — 按定义顺序逐个调用工具
+  input:
+  - resolved_tools[]
+  output:
+  - sequential_results[]
+  depends_on:
+  - ResolveToolReferences
+  parallel_group:
   - order: 3
-    name: ExecuteSequential
-    action: agora.agora.execute_sequential
-    description: "顺序执行模式 — 按定义顺序逐个调用工具"
-    input:
-      - resolved_tools[]
-    output:
-      - sequential_results[]
-    depends_on:
-      - ResolveToolReferences
-    parallel_group:
-      - order: 3
-        name: ParallelGroupAndCollect
-        action: agora.agora.parallel_group_and_collect
-        description: "并行执行模式 — 无依赖工具并发调用，通过事件总线收集结果"
-  - order: 4
-    name: ReturnUnifiedOutput
-    action: agora.agora.return_unified_output
-    description: "组装并返回统一的管线执行结果"
-    input:
-      - sequential_results[]
-    output:
-      - bos://forge/chain/result
-    depends_on:
-      - ExecuteSequential
-
+    name: ParallelGroupAndCollect
+    action: agora.agora.parallel_group_and_collect
+    description: 并行执行模式 — 无依赖工具并发调用，通过事件总线收集结果
+- order: 4
+  name: ReturnUnifiedOutput
+  action: agora.agora.return_unified_output
+  description: 组装并返回统一的管线执行结果
+  input:
+  - sequential_results[]
+  output:
+  - bos://forge/chain/result
+  depends_on:
+  - ExecuteSequential
 execution:
   mode: sequential
   max_retries: 3
   timeout: 600
   on_failure: abort
   audit_enabled: true
-
 relations:
-  - type: triggers
-    target: bos://forge/tool/chain
-    note: "工具链请求触发 Agora Pipeline"
-  - type: data_flows
-    target: bos://forge/chain/result
-    note: "编排结果返回工具消费端"
-  - type: depends_on
-    target: WORKFLOW-AGORA-ORCHESTRATOR
-    note: "Pipeline 编排依赖 Orchestrator 的工具加载"
-
+- type: triggers
+  target: bos://forge/tool/chain
+  note: 工具链请求触发 Agora Pipeline
+- type: data_flows
+  target: bos://forge/chain/result
+  note: 编排结果返回工具消费端
+- type: depends_on
+  target: WORKFLOW-AGORA-ORCHESTRATOR
+  note: Pipeline 编排依赖 Orchestrator 的工具加载
 sla:
   max_execution_time: 600
   expected_completion_rate: 0.95
   critical: false
-
 tags:
-  - agora
-  - mcp
-  - pipeline
-  - orchestrate
-
+- agora
+- mcp
+- pipeline
+- orchestrate
 maintained_by: agora
-last_reviewed: "2026-06-07"
+last_reviewed: '2026-06-07'
+properties:
+  workflow_name: Agora MCP 工具编排管线

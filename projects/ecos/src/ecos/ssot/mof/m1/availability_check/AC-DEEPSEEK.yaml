@@ -1,9 +1,7 @@
-# M1 Availability Check — 可用性检测配置
-
 id: AC-DEEPSEEK
 type: availability_check
 provider: deepseek
 probe_type: https
-probe_url: "https://api.deepseek.com/v1/models"
+probe_url: https://api.deepseek.com/v1/models
 timeout_seconds: 3
 expected_status: 200

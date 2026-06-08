@@ -2,134 +2,129 @@ id: WORKFLOW-AGORA-ORCHESTRATOR
 type: Workflow
 subtype: MCPWorkflow
 name: Agora 工具全流程编排
-description: "MCP 工具完整生命周期管理: 发现→质量评估→保存→安装→加载→健康检查→空闲超时卸载"
+description: 'MCP 工具完整生命周期管理: 发现→质量评估→保存→安装→加载→健康检查→空闲超时卸载'
 status: active
-version: "1.0.0"
+version: 1.0.0
 domain: meta
 layer: I0
-created: "2026-06-07"
+created: '2026-06-07'
 bos_uri: bos://ecos/workflow/agora-orchestrator
-
 cross_layer:
   realized_by:
-    - project: agora
-      package: agora
-      entrypoint: src/agora/mcp_registry/orchestrator.py
+  - project: agora
+    package: agora
+    entrypoint: src/agora/mcp_registry/orchestrator.py
   invoked_by:
-    - layer: I0
-      component: agora
-      mechanism: MCP 工具调用
-    - layer: L3
-      component: cockpit
-      mechanism: CLI 命令透传
-
+  - layer: I0
+    component: agora
+    mechanism: MCP 工具调用
+  - layer: L3
+    component: cockpit
+    mechanism: CLI 命令透传
 steps:
-  - order: 1
-    name: DiscoverExternalSources
-    action: agora.agora.discover_external_sources
-    description: "扫描并发现可用的外部 MCP 工具服务"
-    input:
-      - bos://forge/tool/discover
-    output:
-      - discovered_tools[]
-    depends_on: []
-  - order: 2
-    name: QualityAssessment
-    action: agora.agora.quality_assessment
-    description: "对发现的工具进行质量评估和评分"
-    input:
-      - discovered_tools[]
-    output:
-      - assessed_tools[]
-    depends_on:
-      - DiscoverExternalSources
-  - order: 3
-    name: SaveToCatalog
-    action: agora.agora.save_to_catalog
-    description: "将通过评估的工具信息保存到工具目录"
-    input:
-      - assessed_tools[]
-    output:
-      - catalog_entries[]
-    depends_on:
-      - QualityAssessment
-  - order: 4
-    name: InstallTool
-    action: agora.agora.install_tool
-    description: "安装工具所需依赖和配置"
-    input:
-      - catalog_entries[]
-    output:
-      - installed_tools[]
-    depends_on:
-      - SaveToCatalog
-  - order: 5
-    name: LoadViaLifecycleManager
-    action: agora.agora.load_via_lifecycle_manager
-    description: "通过生命周期管理器加载工具至内存，引用计数 +1"
-    input:
-      - installed_tools[]
-    output:
-      - loaded_tools[]
-    depends_on:
-      - InstallTool
-  - order: 6
-    name: HealthMonitor
-    action: agora.agora.health_monitor
-    description: "对已加载工具执行持续健康监控"
-    input:
-      - loaded_tools[]
-    output:
-      - health_status[]
-    depends_on:
-      - LoadViaLifecycleManager
-  - order: 7
-    name: IdleTimeoutTrigger
-    action: agora.agora.idle_timeout_trigger
-    description: "空闲超时检测 — 引用计数归零后触发卸载流程"
-    input:
-      - health_status[]
-    output:
-      - idle_tools[]
-    depends_on:
-      - HealthMonitor
-  - order: 8
-    name: UnloadTool
-    action: agora.agora.unload_tool
-    description: "安全卸载空闲工具，释放资源"
-    input:
-      - idle_tools[]
-    output:
-      - bos://forge/tool/loaded
-    depends_on:
-      - IdleTimeoutTrigger
-
+- order: 1
+  name: DiscoverExternalSources
+  action: agora.agora.discover_external_sources
+  description: 扫描并发现可用的外部 MCP 工具服务
+  input:
+  - bos://forge/tool/discover
+  output:
+  - discovered_tools[]
+  depends_on: []
+- order: 2
+  name: QualityAssessment
+  action: agora.agora.quality_assessment
+  description: 对发现的工具进行质量评估和评分
+  input:
+  - discovered_tools[]
+  output:
+  - assessed_tools[]
+  depends_on:
+  - DiscoverExternalSources
+- order: 3
+  name: SaveToCatalog
+  action: agora.agora.save_to_catalog
+  description: 将通过评估的工具信息保存到工具目录
+  input:
+  - assessed_tools[]
+  output:
+  - catalog_entries[]
+  depends_on:
+  - QualityAssessment
+- order: 4
+  name: InstallTool
+  action: agora.agora.install_tool
+  description: 安装工具所需依赖和配置
+  input:
+  - catalog_entries[]
+  output:
+  - installed_tools[]
+  depends_on:
+  - SaveToCatalog
+- order: 5
+  name: LoadViaLifecycleManager
+  action: agora.agora.load_via_lifecycle_manager
+  description: 通过生命周期管理器加载工具至内存，引用计数 +1
+  input:
+  - installed_tools[]
+  output:
+  - loaded_tools[]
+  depends_on:
+  - InstallTool
+- order: 6
+  name: HealthMonitor
+  action: agora.agora.health_monitor
+  description: 对已加载工具执行持续健康监控
+  input:
+  - loaded_tools[]
+  output:
+  - health_status[]
+  depends_on:
+  - LoadViaLifecycleManager
+- order: 7
+  name: IdleTimeoutTrigger
+  action: agora.agora.idle_timeout_trigger
+  description: 空闲超时检测 — 引用计数归零后触发卸载流程
+  input:
+  - health_status[]
+  output:
+  - idle_tools[]
+  depends_on:
+  - HealthMonitor
+- order: 8
+  name: UnloadTool
+  action: agora.agora.unload_tool
+  description: 安全卸载空闲工具，释放资源
+  input:
+  - idle_tools[]
+  output:
+  - bos://forge/tool/loaded
+  depends_on:
+  - IdleTimeoutTrigger
 execution:
   mode: sequential
   max_retries: 3
   timeout: 600
   on_failure: abort
   audit_enabled: true
-
 relations:
-  - type: triggers
-    target: bos://forge/tool/discover
-    note: "工具发现请求触发 Orchestrator"
-  - type: data_flows
-    target: bos://forge/tool/loaded
-    note: "工具加载状态通知能力域"
-
+- type: triggers
+  target: bos://forge/tool/discover
+  note: 工具发现请求触发 Orchestrator
+- type: data_flows
+  target: bos://forge/tool/loaded
+  note: 工具加载状态通知能力域
 sla:
   max_execution_time: 600
   expected_completion_rate: 0.95
   critical: false
-
 tags:
-  - agora
-  - mcp
-  - discovery
-  - lifecycle
-  - orchestrate
-
+- agora
+- mcp
+- discovery
+- lifecycle
+- orchestrate
 maintained_by: agora
-last_reviewed: "2026-06-07"
+last_reviewed: '2026-06-07'
+properties:
+  workflow_name: Agora 工具全流程编排

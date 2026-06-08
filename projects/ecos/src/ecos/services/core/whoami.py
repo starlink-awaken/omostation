@@ -21,7 +21,15 @@ from datetime import datetime
 from pathlib import Path
 
 
-SCRIPTS = Path.home() / "Documents" / "驾驶舱" / "scripts"
+def _get_cockpit_dir() -> Path:
+    """Resolve standard @驾驶舱 or 驾驶舱 folder in Documents."""
+    d = Path.home() / "Documents" / "@驾驶舱"
+    if d.exists():
+        return d
+    return Path.home() / "Documents" / "驾驶舱"
+
+
+SCRIPTS = _get_cockpit_dir() / "scripts"
 DOCS = Path.home() / "Documents"
 ECOS = Path.home() / ".ecos"
 
@@ -193,13 +201,13 @@ def format_brief(topology: dict, health: dict, debts: dict, scripts_count: int) 
     lines.append("\n## 快速入门")
     lines.append("```")
     lines.append("# 查看完整系统自述")
-    lines.append("python3 ~/Documents/驾驶舱/scripts/ecos-whoami.py --json")
+    lines.append("python3 ~/Documents/@驾驶舱/scripts/ecos-whoami.py --json")
     lines.append("")
     lines.append("# 会话简报 (启动 Step 0)")
-    lines.append("python3 ~/Documents/驾驶舱/scripts/ecos-brief.py")
+    lines.append("python3 ~/Documents/@驾驶舱/scripts/ecos-brief.py")
     lines.append("")
     lines.append("# 一键治理")
-    lines.append("python3 ~/Documents/驾驶舱/scripts/ecos-health-check.py")
+    lines.append("python3 ~/Documents/@驾驶舱/scripts/ecos-health-check.py")
     lines.append("```")
 
     return "\n".join(lines)
@@ -268,9 +276,9 @@ def main():
     print(f"  🛠️  能力: {len(caps)} 项")
 
     print(f"\n{'-'*56}")
-    print(f"  Agent 启动: python3 ~/Documents/驾驶舱/scripts/ecos-brief.py --force")
-    print(f"  一键治理: python3 ~/Documents/驾驶舱/scripts/ecos-health-check.py")
-    print(f"  接管手册: ~/Documents/驾驶舱/OPS.md")
+    print(f"  Agent 启动: python3 ~/Documents/@驾驶舱/scripts/ecos-brief.py --force")
+    print(f"  一键治理: python3 ~/Documents/@驾驶舱/scripts/ecos-health-check.py")
+    print(f"  接管手册: ~/Documents/@驾驶舱/OPS.md")
     print(f"{'='*56}\n")
 
 

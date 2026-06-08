@@ -1,4 +1,3 @@
-# M1 Mechanism: MECH-BOS-FILE-WATCHER
 id: MECH-BOS-FILE-WATCHER
 type: Mechanism
 name: BOS 配置文件监听
@@ -10,4 +9,6 @@ created: '2026-06-07'
 properties:
   trigger: file_mtime
   source: agora/mcp/bos_middleware.py:ConfigWatcher
+  action: BOS 配置文件监听(需人工补具体执行描述)
+  interval: 0
 relations: []

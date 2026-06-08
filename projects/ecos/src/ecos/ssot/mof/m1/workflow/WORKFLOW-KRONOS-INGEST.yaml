@@ -2,99 +2,94 @@ id: WORKFLOW-KRONOS-INGEST
 type: Workflow
 subtype: PipelineWorkflow
 name: Kronos 摄取管线
-description: "ETL 知识摄取管线 — 多源采集 → 内容提取 → 分类 → 分发至 Vault/WPS/KOS"
+description: ETL 知识摄取管线 — 多源采集 → 内容提取 → 分类 → 分发至 Vault/WPS/KOS
 status: active
-version: "1.0.0"
+version: 1.0.0
 domain: memory
 layer: L2
-created: "2026-06-07"
+created: '2026-06-07'
 bos_uri: bos://ecos/workflow/kronos-ingest
-
 cross_layer:
   realized_by:
-    - project: kairon
-      package: kronos
-      entrypoint: src/kronos/dispatcher.py
+  - project: kairon
+    package: kronos
+    entrypoint: src/kronos/dispatcher.py
   invoked_by:
-    - layer: I0
-      component: agora
-      mechanism: MCP 工具调用
-    - layer: L3
-      component: cockpit
-      mechanism: CLI 命令透传
-
+  - layer: I0
+    component: agora
+    mechanism: MCP 工具调用
+  - layer: L3
+    component: cockpit
+    mechanism: CLI 命令透传
 steps:
-  - order: 1
-    name: FetchFromSources
-    action: fetch_from_sources
-    description: "从 RSS、公众号等配置源采集原始内容"
-    input:
-      - bos://memory/feeds/rss
-      - bos://memory/feeds/gzh
-    output:
-      - raw_documents[]
-    depends_on: []
-  - order: 2
-    name: ExtractContent
-    action: extract_content
-    description: "提取正文、元数据、标签等结构化内容"
-    input:
-      - raw_documents[]
-    output:
-      - structured_documents[]
-    depends_on:
-      - FetchFromSources
-  - order: 3
-    name: ClassifyContent
-    action: classify_content
-    description: "按主题、领域分类内容以确定分发目标"
-    input:
-      - structured_documents[]
-    output:
-      - classified_documents[]
-    depends_on:
-      - ExtractContent
-  - order: 4
-    name: DispatchToTargets
-    action: dispatch_to_targets
-    description: "将分类后的内容分发到 Vault/Obsidian、WPS 和 KOS 本体"
-    input:
-      - classified_documents[]
-    output:
-      - bos://memory/vault
-      - bos://memory/kos/ontology
-      - bos://memory/gbrain/tables
-    depends_on:
-      - ClassifyContent
-
+- order: 1
+  name: FetchFromSources
+  action: fetch_from_sources
+  description: 从 RSS、公众号等配置源采集原始内容
+  input:
+  - bos://memory/feeds/rss
+  - bos://memory/feeds/gzh
+  output:
+  - raw_documents[]
+  depends_on: []
+- order: 2
+  name: ExtractContent
+  action: extract_content
+  description: 提取正文、元数据、标签等结构化内容
+  input:
+  - raw_documents[]
+  output:
+  - structured_documents[]
+  depends_on:
+  - FetchFromSources
+- order: 3
+  name: ClassifyContent
+  action: classify_content
+  description: 按主题、领域分类内容以确定分发目标
+  input:
+  - structured_documents[]
+  output:
+  - classified_documents[]
+  depends_on:
+  - ExtractContent
+- order: 4
+  name: DispatchToTargets
+  action: dispatch_to_targets
+  description: 将分类后的内容分发到 Vault/Obsidian、WPS 和 KOS 本体
+  input:
+  - classified_documents[]
+  output:
+  - bos://memory/vault
+  - bos://memory/kos/ontology
+  - bos://memory/gbrain/tables
+  depends_on:
+  - ClassifyContent
 execution:
   mode: sequential
   max_retries: 3
   timeout: 600
   on_failure: abort
   audit_enabled: true
-
 relations:
-  - type: triggers
-    target: MECH-SCHEDULED-rss-fetcher
-    note: "RSS 定时采集触发 Kronos 摄取管线"
-  - type: data_flows
-    target: bos://memory/kos
-    note: "Kronos 输出流入 KOS 知识库"
-  - type: depends_on
-    target: WORKFLOW-KOS-CROSS-SEARCH
-    note: "KOS 搜索依赖 Kronos 已摄取数据"
-
+- type: triggers
+  target: MECH-SCHEDULED-rss-fetcher
+  note: RSS 定时采集触发 Kronos 摄取管线
+- type: data_flows
+  target: bos://memory/kos
+  note: Kronos 输出流入 KOS 知识库
+- type: depends_on
+  target: WORKFLOW-KOS-CROSS-SEARCH
+  note: KOS 搜索依赖 Kronos 已摄取数据
 sla:
   max_execution_time: 600
   expected_completion_rate: 0.95
   critical: true
-
 tags:
-  - etl
-  - ingest
-  - knowledge
-  - kronos
-
+- etl
+- ingest
+- knowledge
+- kronos
 maintained_by: kairon/kronos
-last_reviewed: "2026-06-07"
+last_reviewed: '2026-06-07'
+properties:
+  workflow_name: Kronos 摄取管线

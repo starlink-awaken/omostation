@@ -2,113 +2,108 @@ id: WORKFLOW-SOT-BRIDGE-SYNC
 type: Workflow
 subtype: PipelineWorkflow
 name: SSOT 桥接同步管线
-description: "单一事实源桥接 — SharedBrain ↔ KOS ↔ Vault 双向同步，保证数据一致性"
+description: 单一事实源桥接 — SharedBrain ↔ KOS ↔ Vault 双向同步，保证数据一致性
 status: active
-version: "1.0.0"
+version: 1.0.0
 domain: memory
 layer: L2
-created: "2026-06-07"
+created: '2026-06-07'
 bos_uri: bos://ecos/workflow/sot-bridge-sync
-
 cross_layer:
   realized_by:
-    - project: kairon
-      package: sot-bridge
-      entrypoint: src/sot_bridge/
+  - project: kairon
+    package: sot-bridge
+    entrypoint: src/sot_bridge/
   invoked_by:
-    - layer: I0
-      component: agora
-      mechanism: MCP 工具调用
-    - layer: L3
-      component: cockpit
-      mechanism: CLI 命令透传
-
+  - layer: I0
+    component: agora
+    mechanism: MCP 工具调用
+  - layer: L3
+    component: cockpit
+    mechanism: CLI 命令透传
 steps:
-  - order: 1
-    name: ReadSharedBrain
-    action: read_sharedbrain
-    description: "读取 SharedBrain 图谱中的实体和关系数据"
-    input:
-      - bos://persona/sharedbrain
-    output:
-      - sb_entities[]
-      - sb_relations[]
-    depends_on: []
-  - order: 2
-    name: ExtractEntities
-    action: extract_entities
-    description: "从 SharedBrain 数据中提取知识实体并结构化"
-    input:
-      - sb_entities[]
-      - sb_relations[]
-    output:
-      - structured_entities[]
-    depends_on:
-      - ReadSharedBrain
-  - order: 3
-    name: MapToKOS
-    action: map_to_kos
-    description: "将实体映射到 KOS 本体概念体系"
-    input:
-      - structured_entities[]
-    output:
-      - kos_mapped[]
-    depends_on:
-      - ExtractEntities
-  - order: 4
-    name: SyncVault
-    action: sync_vault
-    description: "同步至 Vault/Obsidian 本地知识库"
-    input:
-      - kos_mapped[]
-    output:
-      - bos://memory/vault
-    depends_on:
-      - MapToKOS
-  - order: 5
-    name: ValidateConsistency
-    action: validate_consistency
-    description: "三方校验 SharedBrain ↔ KOS ↔ Vault 数据一致性"
-    input:
-      - bos://persona/sharedbrain
-      - bos://memory/kos
-      - bos://memory/vault
-    output:
-      - consistency_report
-    depends_on:
-      - SyncVault
-
+- order: 1
+  name: ReadSharedBrain
+  action: read_sharedbrain
+  description: 读取 SharedBrain 图谱中的实体和关系数据
+  input:
+  - bos://persona/sharedbrain
+  output:
+  - sb_entities[]
+  - sb_relations[]
+  depends_on: []
+- order: 2
+  name: ExtractEntities
+  action: extract_entities
+  description: 从 SharedBrain 数据中提取知识实体并结构化
+  input:
+  - sb_entities[]
+  - sb_relations[]
+  output:
+  - structured_entities[]
+  depends_on:
+  - ReadSharedBrain
+- order: 3
+  name: MapToKOS
+  action: map_to_kos
+  description: 将实体映射到 KOS 本体概念体系
+  input:
+  - structured_entities[]
+  output:
+  - kos_mapped[]
+  depends_on:
+  - ExtractEntities
+- order: 4
+  name: SyncVault
+  action: sync_vault
+  description: 同步至 Vault/Obsidian 本地知识库
+  input:
+  - kos_mapped[]
+  output:
+  - bos://memory/vault
+  depends_on:
+  - MapToKOS
+- order: 5
+  name: ValidateConsistency
+  action: validate_consistency
+  description: 三方校验 SharedBrain ↔ KOS ↔ Vault 数据一致性
+  input:
+  - bos://persona/sharedbrain
+  - bos://memory/kos
+  - bos://memory/vault
+  output:
+  - consistency_report
+  depends_on:
+  - SyncVault
 execution:
   mode: sequential
   max_retries: 3
   timeout: 600
   on_failure: abort
   audit_enabled: true
-
 relations:
-  - type: triggers
-    target: bos://memory/vault
-    note: "Vault 变更触发 SSOT 桥接同步"
-  - type: triggers
-    target: bos://persona/sharedbrain
-    note: "SharedBrain 更新触发 SSOT 桥接同步"
-  - type: data_flows
-    target: bos://memory/kos
-    note: "桥接结果输出到 KOS 本体"
-  - type: depends_on
-    target: WORKFLOW-KRONOS-INGEST
-    note: "SSOT 桥接依赖 Kronos 提供的基础数据"
-
+- type: triggers
+  target: bos://memory/vault
+  note: Vault 变更触发 SSOT 桥接同步
+- type: triggers
+  target: bos://persona/sharedbrain
+  note: SharedBrain 更新触发 SSOT 桥接同步
+- type: data_flows
+  target: bos://memory/kos
+  note: 桥接结果输出到 KOS 本体
+- type: depends_on
+  target: WORKFLOW-KRONOS-INGEST
+  note: SSOT 桥接依赖 Kronos 提供的基础数据
 sla:
   max_execution_time: 600
   expected_completion_rate: 0.95
   critical: false
-
 tags:
-  - bridge
-  - ssot
-  - sync
-  - sharedbrain
-
+- bridge
+- ssot
+- sync
+- sharedbrain
 maintained_by: kairon/sot-bridge
-last_reviewed: "2026-06-07"
+last_reviewed: '2026-06-07'
+properties:
+  workflow_name: SSOT 桥接同步管线
