@@ -18,6 +18,9 @@ dependencies = [
     "fastmcp>=3.4.2",
 ]
 
+[project.optional-dependencies]
+dashboard = ["agora"]  # Dashboard/MOF BOS features require agora runtime
+
 [project.scripts]
 ecos-ssb = "ecos.core.ssb_client:main"
 ecos-dashboard = "ecos.cli.dashboard:main"
