@@ -495,26 +495,6 @@
       "provider_info": null,
       "healthy": true,
       "last_health_check": 0.0
-    },
-    {
-      "name": "l4-kernel",
-      "description": "L4 自我层管理面 — 21域统一注册 + KEMS六面 + 42 MCP tools",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "stdio://l4-kernel",
-      "health_endpoint": "http://localhost:7455/health",
-      "port": 7455,
-      "tags": [
-        "l4",
-        "domain",
-        "kems",
-        "knowledge-management",
-        "lifecycle"
-      ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
     }
   ]
 }
