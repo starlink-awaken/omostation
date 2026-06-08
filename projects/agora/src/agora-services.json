@@ -1,134 +1,6 @@
 {
   "services": [
     {
-      "name": "cron-service",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {
-        "method": "GET"
-      },
-      "mcp_endpoint": "http://127.0.0.1:7450",
-      "health_endpoint": "",
-      "port": 7450,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "ollama",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {
-        "method": "GET"
-      },
-      "mcp_endpoint": "http://127.0.0.1:11434",
-      "health_endpoint": "",
-      "port": 11434,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "gbrain",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {
-        "method": "GET"
-      },
-      "mcp_endpoint": "http://127.0.0.1:5433",
-      "health_endpoint": "",
-      "port": 5433,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "dashboard-server",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {
-        "method": "GET"
-      },
-      "mcp_endpoint": "http://127.0.0.1:8080",
-      "health_endpoint": "",
-      "port": 8080,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "mcp-test",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://192.0.2.50:8765",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "test",
-        "mcp"
-      ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "rest-test",
-      "description": "",
-      "protocol": "rest",
-      "protocol_config": {
-        "method": "GET"
-      },
-      "mcp_endpoint": "http://192.0.2.51:3000",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "a2a-param-test",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://192.0.2.70:8765",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [],
-      "instances": [],
-      "provider_info": {
-        "organization": "TestOrg",
-        "version": "1.0"
-      },
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "list-test",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://192.0.2.60:8765",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
       "name": "minerva",
       "description": "Local-first deep research system — 5 Super Tools (Dropbox Dash pattern)",
       "protocol": "mcp",
@@ -234,40 +106,6 @@
         "anthropic",
         "gemini",
         "ollama"
-      ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "bos-daemon",
-      "description": "Docker MCP service: sharedbrain-bos:dev",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://localhost:7420/mcp",
-      "health_endpoint": "http://localhost:7420/health",
-      "port": 7420,
-      "tags": [
-        "docker",
-        "mcp"
-      ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "bos",
-      "description": "Docker MCP service: bos",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://localhost:7420/mcp",
-      "health_endpoint": "http://localhost:7420/health",
-      "port": 7420,
-      "tags": [
-        "docker",
-        "mcp"
       ],
       "instances": [],
       "provider_info": null,
@@ -453,23 +291,6 @@
         "swarm",
         "agent",
         "multi-agent"
-      ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "aetherforge-mcp",
-      "description": "Docker MCP service: aetherforge-mcp",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://localhost:8000/mcp",
-      "health_endpoint": "http://localhost:8000/health",
-      "port": 8000,
-      "tags": [
-        "docker",
-        "mcp"
       ],
       "instances": [],
       "provider_info": null,
