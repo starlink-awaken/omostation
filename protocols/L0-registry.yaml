@@ -8,8 +8,8 @@
 # hierarchy definition (entity types, protocol model, instances, registries).
 # This registry is the M0 (Ontology Reference) layer of the meta-model.
 # =============================================================================
-version: 2
-updated: "2026-06-05"
+version: 3
+updated: "2026-06-08"
 
 protocols:
   # ── Agent Communication ─────────────────────────────────────────────
