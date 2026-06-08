@@ -67,3 +67,6 @@ data/**/*.sqlite3
 
 # ---- Token 存储 ----
 .metaos/
+
+# PAI 框架运行时测试数据(.omo/capabilities/ 全部)
+.omo/capabilities/
