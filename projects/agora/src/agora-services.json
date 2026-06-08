@@ -1,500 +1,293 @@
 {
+  "_generated_by": "agora.mcp_bootstrap",
+  "_workspace": "/Users/xiamingxing/Workspace/projects/kairon",
   "services": [
     {
-      "name": "cron-service",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {
-        "method": "GET"
-      },
-      "mcp_endpoint": "http://127.0.0.1:7450",
-      "health_endpoint": "",
-      "port": 7450,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "ollama",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {
-        "method": "GET"
-      },
-      "mcp_endpoint": "http://127.0.0.1:11434",
-      "health_endpoint": "",
-      "port": 11434,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "gbrain",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {
-        "method": "GET"
-      },
-      "mcp_endpoint": "http://127.0.0.1:5433",
-      "health_endpoint": "",
-      "port": 5433,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "dashboard-server",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {
-        "method": "GET"
-      },
-      "mcp_endpoint": "http://127.0.0.1:8080",
-      "health_endpoint": "",
-      "port": 8080,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "mcp-test",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://192.0.2.50:8765",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "test",
-        "mcp"
+      "name": "agent-runtime",
+      "enabled": false,
+      "description": "Agent Runtime — 任务执行、对话、终端和文件工具运行时",
+      "command": "uv",
+      "args": [
+        "run",
+        "--package",
+        "cockpit",
+        "python",
+        "-m",
+        "cockpit.agent_runtime_mcp_server"
       ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
+      "source": "kairon"
     },
     {
-      "name": "rest-test",
-      "description": "",
-      "protocol": "rest",
-      "protocol_config": {
-        "method": "GET"
-      },
-      "mcp_endpoint": "http://192.0.2.51:3000",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "a2a-param-test",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://192.0.2.70:8765",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [],
-      "instances": [],
-      "provider_info": {
-        "organization": "TestOrg",
-        "version": "1.0"
-      },
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "list-test",
-      "description": "",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://192.0.2.60:8765",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "minerva",
-      "description": "Local-first deep research system — 5 Super Tools (Dropbox Dash pattern)",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "stdio://minerva",
-      "health_endpoint": "http://localhost:8765/health",
-      "port": 8765,
-      "tags": [
-        "research",
-        "knowledge",
-        "llm"
+      "name": "codeanalyze",
+      "enabled": true,
+      "description": "代码与文档分析 — CRG 知识图谱、Tree-sitter、代码搜索",
+      "command": "uv",
+      "args": [
+        "run",
+        "--package",
+        "codeanalyze",
+        "python",
+        "-m",
+        "codeanalyze.mcp"
       ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
+      "source": "kairon"
     },
     {
-      "name": "ontoderive",
-      "description": "Fact-driven knowledge engineering — ToolForge + derive + check",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "stdio://ontoderive",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "knowledge-engineering",
-        "derivation",
-        "ontology"
+      "name": "eidos",
+      "enabled": true,
+      "description": "知识建模与校验 — Schema、迁移、验证与导出",
+      "command": "uv",
+      "args": [
+        "run",
+        "--package",
+        "eidos",
+        "python",
+        "-m",
+        "eidos.mcp_server"
       ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "sophia",
-      "description": "Symbolic research paradigm compiler — state machine formalism",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "stdio://sophia",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "paradigm",
-        "compiler",
-        "state-machine"
-      ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "agora",
-      "description": "MCP service convergence hub — registry, routing, pipeline",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "stdio://agora",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "gateway",
-        "registry",
-        "pipeline"
-      ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "omo",
-      "description": "OMO — OS for AI Agents",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "stdio://omo",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "llm-gateway-kernel",
-      "description": "llm-gateway-kernel — LLM 抽象 + 引擎核心 (llm-gateway + engine-core 合并)",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "stdio://llm-gateway-kernel",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "llm",
-        "gateway",
-        "engine",
-        "event-bus",
-        "task-store",
-        "dispatch",
-        "provider",
-        "openai",
-        "anthropic",
-        "gemini",
-        "ollama"
-      ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "bos-daemon",
-      "description": "Docker MCP service: sharedbrain-bos:dev",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://localhost:7420/mcp",
-      "health_endpoint": "http://localhost:7420/health",
-      "port": 7420,
-      "tags": [
-        "docker",
-        "mcp"
-      ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "bos",
-      "description": "Docker MCP service: bos",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://localhost:7420/mcp",
-      "health_endpoint": "http://localhost:7420/health",
-      "port": 7420,
-      "tags": [
-        "docker",
-        "mcp"
-      ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "metaos",
-      "description": "MetaOS — 编排/治理层: 决策门控、免疫监控、路由、数字资产引擎",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "orchestration",
-        "governance",
-        "decision-gate",
-        "immune",
-        "router"
-      ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "runtime",
-      "description": "eCOS Runtime Layer — L1 service registry, health monitoring, and protocol management",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
+      "source": "kairon"
     },
     {
       "name": "iris",
-      "description": "Connector hub for personal knowledge platforms",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "connector",
-        "knowledge",
-        "note",
-        "sync",
-        "mcp"
+      "enabled": true,
+      "description": "连接器中心 — 外部知识源拉取、搜索与同步",
+      "command": "uv",
+      "args": [
+        "run",
+        "--package",
+        "iris",
+        "python",
+        "-m",
+        "iris.mcp_server"
       ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
+      "source": "kairon"
+    },
+    {
+      "name": "kos",
+      "enabled": true,
+      "description": "知识操作系统 — 跨域搜索、本体、协作、共识",
+      "command": "uv",
+      "args": [
+        "run",
+        "--package",
+        "kos",
+        "python",
+        "-m",
+        "kos.mcp.server"
+      ],
+      "source": "kairon"
     },
     {
       "name": "kronos",
-      "description": "Kronos — 知识摄取管线。L0原生HTTP / L2 Jina / L4 CloakBrowser / 5层自动抓取引擎",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "knowledge",
-        "pipeline",
-        "ingestion",
-        "content",
-        "ontology"
+      "enabled": true,
+      "description": "知识摄取管线 — 抓取、转换、分块与入库",
+      "command": "uv",
+      "args": [
+        "run",
+        "--package",
+        "kronos",
+        "python",
+        "-m",
+        "kronos.cli"
       ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
+      "source": "kairon"
     },
     {
-      "name": "sharedbrain-bridge",
-      "description": "Bridge between kairon and SharedBrain — EU pricing, immune audit, batch sync, standalone server",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "sot-bridge",
-      "description": "sot-bridge — 单源真相 (SSOT) + 跨系统桥接 (SharedBrain Bridge)。合并自 ssot-kernel + sharedbrain-bridge (P31-W1 ADR-0006)。",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "ssot",
-        "knowledge-engineering",
-        "ontology",
-        "sharedbrain-bridge",
-        "bridge"
+      "name": "minerva",
+      "enabled": true,
+      "description": "深度研究系统 — 检索、推理、报告与研究管线",
+      "command": "uv",
+      "args": [
+        "run",
+        "--package",
+        "minerva",
+        "python",
+        "-m",
+        "minerva.mcp_server.server"
       ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
+      "source": "kairon"
     },
     {
-      "name": "ecos",
-      "description": "eCOS — 认知层：SSB 签名链、涌现度量、认知监控",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
-    },
-    {
-      "name": "cockpit",
-      "description": "Cockpit — 统一研究驾驶舱 (CLI + Web UI) — 工作区入口与研究对象管理",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "stdio://cockpit",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "research",
-        "workspace",
-        "knowledge-management",
-        "cli",
-        "cockpit",
-        "ui"
+      "name": "sophia",
+      "enabled": false,
+      "description": "符号化研究范式引擎 — 状态机驱动的研究方法运行时",
+      "command": "uv",
+      "args": [
+        "run",
+        "--package",
+        "sophia",
+        "python",
+        "-m",
+        "sophia.server.mcp_server"
       ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
+      "source": "kairon"
     },
     {
-      "name": "compute-mesh",
-      "description": "eCOS 算力网格 — 算力发现/聚合/调度/Worker 管理",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "stdio://compute-mesh",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "llm",
-        "compute",
-        "mesh",
-        "scheduler",
-        "agent"
+      "name": "cron-service",
+      "enabled": false,
+      "description": "定时调度引擎 — 作业管理、脚本编排、定时触发",
+      "command": "uv",
+      "args": [
+        "run",
+        "--package",
+        "cron-service",
+        "cron-service",
+        "--mcp"
       ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
+      "source": "runtime"
     },
     {
-      "name": "aetherforge",
-      "description": "AetherForge — 算力网格 + LLM 网关 + 群体智能引擎融合栈",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "stdio://aetherforge",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "compute",
-        "mesh",
-        "llm",
+      "name": "mcp-server-sqlite",
+      "enabled": true,
+      "description": "SQLite 数据库操作 — 查询、建表、CRUD",
+      "command": "mcp-server-sqlite",
+      "args": [],
+      "source": "npm"
+    },
+    {
+      "name": "mcp-server-apple-events",
+      "enabled": true,
+      "description": "macOS 原生集成 — Apple 提醒事项和日历",
+      "command": "mcp-server-apple-events",
+      "args": [],
+      "source": "npm"
+    },
+    {
+      "name": "docker-mcp-gateway",
+      "enabled": true,
+      "description": "Docker MCP Gateway — 73 个工具",
+      "command": "docker",
+      "args": [
+        "mcp",
         "gateway",
-        "swarm",
-        "agent",
-        "multi-agent"
+        "run",
+        "--profile",
+        "default"
       ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
+      "source": "docker",
+      "init_timeout": 30
     },
     {
-      "name": "aetherforge-mcp",
-      "description": "Docker MCP service: aetherforge-mcp",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "http://localhost:8000/mcp",
-      "health_endpoint": "http://localhost:8000/health",
-      "port": 8000,
-      "tags": [
-        "docker",
+      "name": "gitnexus",
+      "enabled": true,
+      "description": "代码仓库知识图谱 — 索引、搜索、分析",
+      "command": "gitnexus",
+      "args": [
         "mcp"
       ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
+      "source": "homebrew"
+    },
+    {
+      "name": "zai-mcp-server",
+      "enabled": false,
+      "description": "Z.AI MCP — UI转换、文字提取、图表分析",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@z_ai/mcp-server"
+      ],
+      "source": "npm"
+    },
+    {
+      "name": "chrome-devtools-mcp",
+      "enabled": false,
+      "description": "Chrome DevTools MCP — 浏览器调试",
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ],
+      "source": "npm"
+    },
+    {
+      "name": "serena",
+      "enabled": true,
+      "description": "Serena — 开源 AI 助手 MCP，多 LLM 支持、Shell/文件操作",
+      "command": "serena",
+      "args": [
+        "start-mcp-server"
+      ],
+      "source": "npm",
+      "init_timeout": 10
+    },
+    {
+      "name": "ontoderive",
+      "enabled": true,
+      "description": "Fact-driven knowledge engineering — ToolForge + derive + check",
+      "command": "uv",
+      "args": [
+        "run",
+        "--package",
+        "ontoderive",
+        "python",
+        "-m",
+        "ontoderive.mcp"
+      ],
+      "source": "kairon"
     },
     {
       "name": "llm-gateway",
-      "description": "LLM Provider 抽象层 — Ollama/OpenAI/Anthropic/Gemini/DeepSeek/HITL",
-      "protocol": "mcp",
-      "protocol_config": {},
-      "mcp_endpoint": "",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "llm",
-        "provider",
-        "gateway",
-        "openai",
-        "anthropic"
+      "enabled": false,
+      "description": "LLM 网关 — 统一推理接口，支持多后端路由与负载均衡",
+      "command": "uv",
+      "args": [
+        "run",
+        "--package",
+        "llm-gateway",
+        "python",
+        "-m",
+        "llm_gateway.mcp_server"
       ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
+      "source": "kairon"
+    },
+    {
+      "name": "runtime",
+      "enabled": true,
+      "description": "eCOS L3 Runtime MCP — 健康检查、会话简报、协议、本体",
+      "command": "/Users/xiamingxing/.hermes/hermes-agent/venv/bin/python",
+      "args": [
+        "/Users/xiamingxing/Workspace/projects/runtime/src/runtime/mcp_server.py"
+      ],
+      "cwd": "/Users/xiamingxing/Workspace/projects/runtime",
+      "source": "hermes",
+      "init_timeout": 15,
+      "env": {
+        "RUNTIME_HOME": "/Users/xiamingxing/runtime",
+        "AUDIT_FILE_PATH": "/Users/xiamingxing/runtime/data/kei_audit.jsonl",
+        "PYTHONPATH": "/Users/xiamingxing/Workspace/projects/runtime/src"
+      }
+    },
+    {
+      "name": "aetherforge",
+      "enabled": true,
+      "description": "AetherForge — 算力网格 + LLM 网关 + 群体智能引擎 (mesh/gateway/swarm)",
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Users/xiamingxing/Workspace/projects/aetherforge",
+        "aetherforge-mcp"
+      ],
+      "source": "aetherforge",
+      "transport": "stdio",
+      "init_timeout": 30
+    },
+    {
+      "name": "cockpit-cards",
+      "enabled": true,
+      "description": "L4 自我层 CARDS 抓手 (cockpit l4cards serve, 镜像 P49 stdio_rpc helper, P75-W2 集成)",
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Users/xiamingxing/Workspace/projects/cockpit",
+        "python",
+        "-m",
+        "cockpit",
+        "l4cards",
+        "serve"
+      ],
+      "source": "cockpit"
     }
   ]
 }
