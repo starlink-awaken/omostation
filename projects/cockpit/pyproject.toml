@@ -55,6 +55,7 @@ quote-style = "double"
 [tool.uv.sources]
 runtime = { path = "../runtime" }
 aetherforge-gateway = { path = "../aetherforge/packages/gateway" }
+l4-kernel = { path = "../l4-kernel", editable = true }
 
 [dependency-groups]
 dev = [

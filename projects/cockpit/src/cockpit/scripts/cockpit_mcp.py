@@ -338,42 +338,34 @@ def daily_summary(days: int = 1) -> str:
 
 
 # ══════════════════════════════════════════════════════════════
-# L4 Bridge tools (CARDS + Vault + OMO context)
+# L4 Bridge tools (CARDS + Vault + OMO context) — 基于 l4-kernel
 # ══════════════════════════════════════════════════════════════
 
-_CARDS_DIR = Path.home() / "Documents" / "驾驶舱" / "CARDS"
-_VAULT_DIR = Path.home() / "Documents" / "@学习进化"
+try:
+    from l4_kernel import DomainRegistry
+    from l4_kernel.kems import KemsPlane, CardsPlane
 
-# L4 19 域映射 (bos:// URI 域 → 本地文件系统路径)
-# 来源: CLAUDE_COWORK_GLOBAL.md v6.0 + L0 MOF M1 domain/DOMAIN-*.yaml
-_L4_DOMAINS: dict[str, Path] = {
-    # ── DocumentDomain (7域) ──
-    "cockpit": Path.home() / "Documents" / "@驾驶舱",
-    "vault": _VAULT_DIR,
-    "personal": Path.home() / "Documents" / "@个人",
-    "shared": Path.home() / "Documents" / "@公共",
-    "family": Path.home() / "Documents" / "@家庭生活",
-    "work-weijian": Path.home() / "Documents" / "@卫健委",
-    "work-guozhuan": Path.home() / "Documents" / "@国转中心",
-    # ── ConfigDomain (3域) ──
-    "ai-config": Path.home() / ".ai",
-    "agents-config": Path.home() / ".agents",
-    "icloud-sharedconf": Path.home() / "SharedConf",
-    # ── ToolDomain (2域) ──
-    "bin": Path.home() / "bin",
-    "toolbox": Path.home() / "ToolBox",
-    # ── WorkspaceDomain (1域) ──
-    "sharedwork": Path("/Users") / "SharedWork",
-    # ── StorageDomain (1域) ──
-    "shareddisk": Path("/Volumes") / "SharedDisk",
-}
+    _registry = DomainRegistry()
+    _HAS_L4_KERNEL = True
+except ImportError:
+    _registry = None
+    _HAS_L4_KERNEL = False
+
+_CARDS_DIR = Path.home() / "Documents" / "@驾驶舱" / "CARDS"
+_VAULT_DIR = Path.home() / "Documents" / "@学习进化"
 _WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[4])))
 _OMO_GOALS = _WORKSPACE_ROOT / ".omo" / "_truth" / "goals" / "current.yaml"
 
 
 def _scan_cards() -> list[dict[str, str]]:
     """扫描 CARDS 目录下所有带 frontmatter 的 Markdown 文件。"""
+    if _HAS_L4_KERNEL and _registry:
+        cockpit = _registry.get("cockpit")
+        if cockpit:
+            cards = CardsPlane(cockpit.path)
+            return cards.scan_cards()
 
+    # Fallback: 直接解析
     cards = []
     for md_file in sorted(_CARDS_DIR.rglob("*.md")):
         try:
@@ -433,6 +425,14 @@ def _read_omo_constraints() -> list[str]:
 
 def _search_vault(keyword: str, base_dir: Path | None = None) -> list[dict]:
     """搜索 Vault 中的 Markdown 文件。"""
+    if _HAS_L4_KERNEL and _registry:
+        # Use l4-kernel KemsPlane
+        vault = _registry.get("vault")
+        if vault:
+            kems = KemsPlane(vault.path)
+            return kems.search(keyword)
+
+    # Fallback: 直接搜索
     results = []
     vault_dir = base_dir or _VAULT_DIR
     if not keyword or not vault_dir.is_dir():
@@ -577,8 +577,8 @@ def vault_search(keyword: str = "", domain: str = "vault") -> str:
     **Agent 应在需要方法论或历史上下文时调用此工具。**
     返回 JSON: results(list), total(int), domain(str)。
     """
-    search_dir = _L4_DOMAINS.get(domain, _VAULT_DIR)
-    if not search_dir.is_dir():
+    search_dir = _registry.resolve_path(domain) if _HAS_L4_KERNEL and _registry else _VAULT_DIR
+    if not search_dir or not search_dir.is_dir():
         return json.dumps(
             {"results": [], "total": 0, "domain": domain, "warning": f"域 '{domain}' 目录不存在: {search_dir}"},
             ensure_ascii=False,
