@@ -35,12 +35,14 @@ types:
 # 已裁决(governance 拍板)端口: check-interfaces 跳过这些,不再报冲突。
 # 仅对"引用者都是合法消费方"的情况裁决;真正有项目硬编码抢的放 conflicts_pending。
 conflicts_resolved:
-  7430: [agora, runtime, omo]      # agora I0 拥有,runtime 走 I0 路由合规,omo dashboard URL 合规
-  7431: [agora, cockpit]            # agora I0 拥有,cockpit 走 I0 SSE 代理合规
-  8080: [agora, omo, kairon]        # agora I0 拥有 api_gateway:8080;omo 消费者合规;
+  7430: [agora, runtime, omo, l4-kernel]      # agora I0 拥有,runtime 走 I0 路由合规,omo dashboard URL 合规,l4-kernel I0 集成合规
+  7431: [agora, cockpit, l4-kernel]            # agora I0 拥有,cockpit 走 I0 SSE 代理合规,l4-kernel I0 集成合规
+  8080: [agora, omo, kairon, l4-kernel]        # agora I0 拥有 api_gateway:8080;omo 消费者合规;
                                     # kairon 8080 多语义: ontoderive web default / minerva searxng URL / eidos validator URL
                                     # — 同端口不同语义,运行时用 env 区分(待 governance 细分业务端口分配)
-  8765: [minerva, omo, runtime, ecos]   # minerva L2 拥有 8765;omo_health 内部字典默认/runtime MCP 默认/ecos gateway 默认均为 minerva 端口引用,语义合规
+  8765: [minerva, omo, runtime, ecos, l4-kernel]   # minerva L2 拥有 8765;omo_health 内部字典默认/runtime MCP 默认/ecos gateway 默认/l4-kernel 集成均为 minerva 端口引用,语义合规
+  9090: [ecos, l4-kernel]                       # ecos L0 期望 9090 dashboard;l4-kernel 集成引用 9090;llm-gateway/compute-mesh/aetherforge/omo 已治理(改默认 9290 或 env)
+  7455: [agora, l4-kernel]                       # agora gateway-tls 7455(临时) + l4-kernel 集成引用 7455
 
 # 待裁决(governance 需拍板): check 仍报冲突,供 governance 决策
 conflicts_pending:
