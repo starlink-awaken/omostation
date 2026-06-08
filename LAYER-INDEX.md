@@ -55,11 +55,39 @@
 |------|------|------|------|
 | **cockpit** | `projects/cockpit/` | Agent 桥接层 · CLI + MCP + Web | CLI 18 · MCP 20 · HTTP 8090 |
 
-## L4 — 自我层 (数据面 · 被动)
+## L4 — 自我层 (管理面 + 数据面)
+
+### 管理面
+
+| 项目 | 位置 | 说明 | 接口 |
+|------|------|------|------|
+| **l4-kernel** | `projects/l4-kernel/` | 21域统一注册 · KEMS六面 · 跨域场景 · 联邦 | CLI + MCP 43 tools (:7455) + Python API |
+
+### 数据面 (21域)
 
 | 域 | 路径 | 类型 | bos:// URI |
 |----|------|------|------------|
-| **CARDS** | `~/Documents/驾驶舱/CARDS/` | 目标追踪 + 优先级 + 约束 (SQLite SSOT) | `bos://cockpit/` |
+| **驾驶舱** | `~/Documents/@驾驶舱/` | DocumentDomain | `bos://cockpit/` |
+| **学习进化** | `~/Documents/@学习进化/` | DocumentDomain | `bos://vault/` |
+| **个人** | `~/Documents/@个人/` | DocumentDomain | `bos://personal/` |
+| **公共** | `~/Documents/@公共/` | DocumentDomain | `bos://shared/` |
+| **家庭生活** | `~/Documents/@家庭生活/` | DocumentDomain | `bos://family/` |
+| **卫健委** | `~/Documents/@工作文档/卫健委` | DocumentDomain | `bos://work-weijian/` |
+| **国转中心** | `~/Documents/@工作文档/国转中心` | DocumentDomain | `bos://work-guozhuan/` |
+| **Obsidian Vault** | `~/Library/Mobile Documents/iCloud~md~obsidian/Documents` | DocumentDomain | `bos://obsidian-vault/` |
+| **AI 配置** | `~/.ai` | ConfigDomain | `bos://ai-config/` |
+| **Agent 配置** | `~/.agents` | ConfigDomain | `bos://agents-config/` |
+| **iCloud 共享** | `~/SharedConf` | ConfigDomain | `bos://icloud-sharedconf/` |
+| **Minerva 引擎** | `~/minerva` | EngineDomain | `bos://minerva/` |
+| **Knowledge 引擎** | `~/knowledge` | EngineDomain | `bos://knowledge/` |
+| **L4 Kernel** | `~/Workspace/projects/l4-kernel` | EngineDomain | `bos://l4-kernel/` |
+| **脚本工具** | `~/bin` | ToolDomain | `bos://bin/` |
+| **工具箱** | `~/ToolBox` | ToolDomain | `bos://toolbox/` |
+| **共享工作** | `/Users/SharedWork` | WorkspaceDomain | `bos://sharedwork/` |
+| **共享磁盘** | `/Volumes/SharedDisk` | StorageDomain | `bos://shareddisk/` |
+| **模型卷** | `/Volumes/Model` | ModelDomain | `bos://model-volume/` |
+| **共享模型** | `/Volumes/SharedModel` | ModelDomain | `bos://sharedmodel/` |
+| **eCOS Workbench** | `~/Workspace` | WorkspaceDomain | `bos://ecos/` |
 | **Vault** | `~/Documents/@学习进化/` | 方法论 + 洞察 + 经验 (Obsidian 知识库) | `bos://vault/` |
 | **Personal** | `~/Documents/@个人/` | 个人档案 | `bos://personal/` |
 | **Family** | — | 家庭生活 | — |
@@ -72,7 +100,7 @@
 | **Obsidian-Vault** | — | Obsidian 移动端 | — |
 | **iCloud-SharedConf** | — | iCloud 共享配置 | — |
 
-**原则**: L4 不运行代码。Agent 通过 L3 cockpit MCP 访问 L4 数据。L4 域模型定义在 L0 MOF `ecos/src/ecos/ssot/mof/m1/domain/`。
+**原则**: L4 通过 l4-kernel 管理面提供统一操作接口。Agent 通过 l4-kernel MCP Server (43 tools, :7455) 或 cockpit MCP 访问 L4 数据。L4 域模型定义在 L0 MOF `ecos/src/ecos/ssot/mof/m1/domain/`。
 
 ---
 
