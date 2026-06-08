@@ -375,7 +375,7 @@ def _run_ollama(prompt: str, *, timeout: int = 60) -> str | None:
             }
         ).encode()
         req = urlrequest.Request(
-            "http://localhost:11434/api/generate",
+            os.environ.get("OLLAMA_ENDPOINT", "http://localhost:11434/api/generate"),
             data=body,
             headers={"Content-Type": "application/json"},
         )

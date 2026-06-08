@@ -351,35 +351,33 @@ _L4_DOMAINS: dict[str, Path] = {
     "work-weijian": Path.home() / "Documents" / "@卫健工作",
     "work-guozhuan": Path.home() / "Documents" / "@国转工作",
 }
-_WORKSPACE_ROOT = Path(__file__).resolve().parents[4]  # cockpit/src/cockpit/scripts/cockpit_mcp.py → workspace root
+_WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[4])))
 _OMO_GOALS = _WORKSPACE_ROOT / ".omo" / "_truth" / "goals" / "current.yaml"
 
 
 def _scan_cards() -> list[dict[str, str]]:
     """扫描 CARDS 目录下所有带 frontmatter 的 Markdown 文件。"""
+    import yaml
+
     cards = []
     for md_file in sorted(_CARDS_DIR.rglob("*.md")):
         try:
             text = md_file.read_text(encoding="utf-8")
             if text.startswith("---"):
                 _, fm, __ = text.split("---", 2)
-                meta = {}
-                for line in fm.strip().split("\n"):
-                    if ":" in line:
-                        k, v = line.split(":", 1)
-                        meta[k.strip()] = v.strip()
-                if meta.get("id") and meta.get("type"):
+                meta = yaml.safe_load(fm) or {}
+                if isinstance(meta, dict) and meta.get("id") and meta.get("type"):
                     cards.append({
-                        "id": meta["id"],
-                        "type": meta.get("type", ""),
-                        "status": meta.get("status", ""),
-                        "title": meta.get("title", ""),
-                        "priority": meta.get("priority", ""),
-                        "domain": meta.get("domain", ""),
-                        "created": meta.get("created", ""),
-                        "tags": meta.get("tags", "[]"),
+                        "id": str(meta.get("id", "")),
+                        "type": str(meta.get("type", "")),
+                        "status": str(meta.get("status", "")),
+                        "title": str(meta.get("title", "")),
+                        "priority": str(meta.get("priority", "")),
+                        "domain": str(meta.get("domain", "")),
+                        "created": str(meta.get("created", "")),
+                        "tags": str(meta.get("tags", "[]")),
                     })
-        except (OSError, ValueError):
+        except (OSError, ValueError, yaml.YAMLError):
             continue
     cards.sort(key=lambda c: ({"P0": 0, "P1": 1, "P2": 2, "P3": 3}.get(c["priority"], 9), c["created"]), reverse=True)
     return cards
