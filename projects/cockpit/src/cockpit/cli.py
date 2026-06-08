@@ -165,6 +165,7 @@ def main() -> int:
     r.add_argument("--heatmap", action="store_true", help="显示研究活跃度热力图")
     r.add_argument("--follow-up", action="store_true", help="查看追问工作台（待追问/已回答统计）")
     r.add_argument("--health", action="store_true", help="查看研究健康报告（衰减状态/保鲜建议）")
+    r.add_argument("--batch", action="store_true", help="批量研究模式: 逐个处理多个 topic，汇总结果")
     r.add_argument(
         "--backup",
         nargs="?",
@@ -362,6 +363,8 @@ def main() -> int:
             args.research_id = args.ask
             args.question = args.topic
             return cmd_research_ask(args)
+        if args.batch and args.topic:
+            return _cmd_research_batch(args)
         return cmd_research(args)
 
     if args.command == "import":
@@ -477,6 +480,43 @@ def main() -> int:
         )
     )
     return 0
+
+
+def _cmd_research_batch(args: Namespace) -> int:
+    """批量研究模式 — 逐个处理多个 topic，汇总结果。"""
+    from .commands.research import cmd_research
+
+    topics = args.topic
+    if len(topics) < 2:
+        console.print("[red]batch 模式需要至少 2 个研究主题[/]")
+        return 1
+
+    results: list[dict] = []
+    start = time.time()
+    import copy
+
+    console.print(f"\n[bold cyan]📚 批量研究: {len(topics)} 个主题[/]\n")
+
+    for i, t in enumerate(topics, 1):
+        console.print(f"[bold yellow]⏳ [{i}/{len(topics)}][/] {t}")
+        batch_args = copy.copy(args)
+        batch_args.topic = [t]
+        batch_args.batch = False
+        try:
+            ret = cmd_research(batch_args)
+            results.append({"topic": t, "status": "ok" if ret == 0 else "error", "code": ret})
+            status_icon = "[green]✅[/]" if ret == 0 else "[red]❌[/]"
+            console.print(f"  {status_icon} 完成 [{i}/{len(topics)}]")
+        except Exception as e:
+            results.append({"topic": t, "status": "error", "error": str(e)})
+            console.print(f"  [red]❌ 失败: {e}[/]")
+
+    elapsed = time.time() - start
+    ok = sum(1 for r in results if r["status"] == "ok")
+    err = len(results) - ok
+
+    console.print(f"\n[bold]批量研究完成: {ok} 成功, {err} 失败 · 耗时 {elapsed:.1f}s[/]")
+    return 0 if err == 0 else 1
 
 
 def _cmd_health(args: Namespace) -> int:
