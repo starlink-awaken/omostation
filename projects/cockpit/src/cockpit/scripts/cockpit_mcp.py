@@ -8,10 +8,13 @@ restore, tag, rename, dossier, half-life, agent-list) and status tools
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 try:
     from fastmcp import FastMCP
@@ -357,7 +360,6 @@ _OMO_GOALS = _WORKSPACE_ROOT / ".omo" / "_truth" / "goals" / "current.yaml"
 
 def _scan_cards() -> list[dict[str, str]]:
     """扫描 CARDS 目录下所有带 frontmatter 的 Markdown 文件。"""
-    import yaml
 
     cards = []
     for md_file in sorted(_CARDS_DIR.rglob("*.md")):
@@ -386,7 +388,6 @@ def _scan_cards() -> list[dict[str, str]]:
 def _read_omo_goals() -> dict:
     """读取 OMO 当前目标。"""
     try:
-        import yaml
         return yaml.safe_load(_OMO_GOALS.read_text(encoding="utf-8"))
     except Exception:
         return {}
@@ -396,7 +397,6 @@ def _read_omo_constraints() -> list[str]:
     """从 .omo 治理约束中提取约束。"""
     constraints_file = _WORKSPACE_ROOT / ".omo" / "_truth" / "x1-governance-policies.yaml"
     try:
-        import yaml
         cfg = yaml.safe_load(constraints_file.read_text(encoding="utf-8"))
         rules = []
         if cfg and isinstance(cfg, dict):

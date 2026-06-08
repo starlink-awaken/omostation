@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from argparse import Namespace
+from pathlib import Path
 
 from .base import _get_console, _get_err, _panel
 
@@ -106,8 +107,6 @@ def cmd_skill(args: Namespace) -> int:
         return 1
 
     console.print(f"[cyan]⏳ 执行技能: {skill_name}...[/]")
-
-    from pathlib import Path
 
     skill_file = (
         Path(__file__).resolve().parents[4] / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof"

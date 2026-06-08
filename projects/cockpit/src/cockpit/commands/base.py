@@ -417,7 +417,8 @@ def _run_ollama_stream(prompt: str, *, timeout: int = 120) -> str | None:
                 print(token, end="", flush=True)
                 full_text += token
         print()
-        return full_text.strip() or None    except Exception:
+        return full_text.strip() or None
+    except Exception:
         pass
     return None
 

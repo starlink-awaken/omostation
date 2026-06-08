@@ -492,17 +492,18 @@ def _cmd_research_batch(args: Namespace) -> int:
         console.print("[red]batch 模式需要至少 2 个研究主题[/]")
         return 1
 
-    results: list[dict] = []
+    results: list[dict[str, str | int]] = []
     start = time.time()
-    import copy
+    import copy as _copy  # lazy to avoid overhead on non-batch path
 
     console.print(f"\n[bold cyan]📚 批量研究: {len(topics)} 个主题[/]\n")
 
     for i, t in enumerate(topics, 1):
         console.print(f"[bold yellow]⏳ [{i}/{len(topics)}][/] {t}")
-        batch_args = copy.copy(args)
+        batch_args = _copy.copy(args)
         batch_args.topic = [t]
         batch_args.batch = False
+        batch_args.stream = False  # batch 模式禁用流式避免交错
         try:
             ret = cmd_research(batch_args)
             results.append({"topic": t, "status": "ok" if ret == 0 else "error", "code": ret})
@@ -551,7 +552,7 @@ def _cmd_health(args: Namespace) -> int:
         try:
             import subprocess as _sp
             from pathlib import Path as _P
-            ws = _P(__file__).resolve().parents[4]
+            ws = _P(os.environ.get("WORKSPACE_ROOT", str(_P(__file__).resolve().parents[4])))
             agora_bin = ws / "projects" / "agora" / ".venv" / "bin" / "agora"
             if agora_bin.exists():
                 result = _sp.run([str(agora_bin), "stats"], capture_output=True, text=True, timeout=15)
