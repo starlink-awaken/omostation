@@ -1,0 +1,31 @@
+# M1 Node: DOMAIN-l4-kernel
+# Type: Domain | Subtype: EngineDomain
+# Generated: 2026-06-08 · l4-kernel 项目创建
+
+id: DOMAIN-l4-kernel
+type: Domain
+name: L4 Kernel
+description: L4 自我层管理面 — 19域统一注册 + KEMS六面操作 + 健康聚合
+status: active
+domain: meta
+created: '2026-06-08'
+version: 1.0.0
+layer: L4
+properties:
+  bos_uri_pattern: bos://l4-kernel/**
+  domain_type: engine
+  layer: L4
+  governance_tier: 1
+  storage: /Users/xiamingxing/Workspace/projects/l4-kernel
+  capabilities:
+  - domain.registry
+  - domain.health
+  - kems.read
+  - kems.write
+  - schema.validate
+  - signal.bus
+  - claude.inject
+  entry_points:
+    cli: l4-kernel
+    mcp: via cockpit
+subtype: EngineDomain
