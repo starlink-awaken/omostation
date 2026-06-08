@@ -261,6 +261,7 @@ def main() -> int:
 
     health_p = sub.add_parser("health", help="一键系统健康检查")
     health_p.add_argument("--json", action="store_true", help="JSON 格式输出")
+    health_p.add_argument("--full", action="store_true", help="全栈检查 (含 Agora 服务健康 + Runtime Matrix + OMO 债务)")
 
     brief_p = sub.add_parser("brief", help="会话简报")
     brief_p.add_argument("--force", action="store_true", help="强制重新生成")
@@ -479,27 +480,88 @@ def main() -> int:
 
 
 def _cmd_health(args: Namespace) -> int:
-    """一键系统健康检查 — 聚合 Context + Status。"""
+    """一键系统健康检查 — 聚合 Context + Status + 可选全栈检查。"""
+    return_code = 0
+
+    # ── L4 Context ──────────────────────────────────────────────
+    console.print("\n[bold cyan]═══ L4 上下文 ═══[/]\n")
     try:
         from .commands.l4bridge import cmd_context
-        ctx_result = cmd_context(args)
+        cmd_context(args)
     except Exception:
-        console.print("[yellow]⚠ L4 bridge 不可用, 仅运行 I0 检查[/]")
-        ctx_result = 1
+        console.print("[yellow]⚠ L4 bridge 不可用[/]")
+        return_code = 1
 
-    # Also run I0 status if available
+    # ── L3 Cockpit Status ───────────────────────────────────────
+    console.print("\n[bold cyan]═══ L3 Cockpit ═══[/]\n")
     try:
         if args.json:
-
             from cockpit.scripts.cockpit_mcp import workspace_context
             print(workspace_context())
         else:
-            console.print("[bold green]✅ Health check complete[/]")
             cmd_status(args)
     except Exception as e:
-        console.print(f"[red]Health check error: {e}[/]")
+        console.print(f"[red]Cockpit status error: {e}[/]")
+        return_code = 1
 
-    return 0 if ctx_result == 0 else 1
+    # ── Full: I0 Agora + L1 Runtime + L2 OMO ────────────────────
+    if getattr(args, "full", False):
+        console.print("\n[bold cyan]═══ I0 服务网格 ═══[/]\n")
+        try:
+            import subprocess as _sp
+            from pathlib import Path as _P
+            ws = _P(__file__).resolve().parents[4]
+            agora_bin = ws / "projects" / "agora" / ".venv" / "bin" / "agora"
+            if agora_bin.exists():
+                result = _sp.run([str(agora_bin), "stats"], capture_output=True, text=True, timeout=15)
+                if not args.json:
+                    # Parse agora stats output for key metrics
+                    for line in result.stdout.split("\n"):
+                        if "总计" in line or "健康" in line or "异常" in line or "健康率" in line:
+                            console.print(f"  [dim]{line.strip()}[/]")
+                    healthy_count = result.stdout.count("healthy")
+                    total_count = max(len([l for l in result.stdout.split("\n") if "│" in l and "┃" not in l]) - 1, 0)
+            else:
+                console.print("[yellow]⚠ agora CLI 未安装[/]")
+        except Exception as e:
+            console.print(f"[yellow]⚠ I0 检查跳过: {e}[/]")
+
+        # ── Full: Runtime Matrix ────────────────────────────────
+        console.print("\n[bold cyan]═══ L1 运行时 ═══[/]\n")
+        matrix_path = _P.home() / "runtime" / "matrix_state.json"
+        if not args.json and matrix_path.exists():
+            try:
+                import json as _j
+                state = _j.loads(matrix_path.read_text())
+                console.print(f"  [dim]服务注册: {len(state.get('services', {}))} 项[/]")
+                h = sum(1 for s in state.get("services", {}).values() if s.get("healthy"))
+                t = max(len(state.get("services", {})), 1)
+                console.print(f"  [{'green' if h==t else 'yellow'}]健康: {h}/{t}[/]")
+            except Exception:
+                console.print("[yellow]⚠ Matrix state 解析失败[/]")
+        elif not args.json:
+            console.print("[yellow]⚠ Matrix state 未生成 (runtime scheduler 未运行)[/]")
+
+        # ── Full: OMO Debt ───────────────────────────────────────
+        console.print("\n[bold cyan]═══ L2 治理 ═══[/]\n")
+        debt_path = ws / ".omo" / "state" / "system.yaml"
+        if debt_path.exists():
+            try:
+                import yaml
+                sys_data = yaml.safe_load(debt_path.read_text())
+                if not args.json:
+                    phase = sys_data.get("current_phase", "?")
+                    health = sys_data.get("health_score", 0)
+                    debt = sys_data.get("debt_weight", 0)
+                    console.print(f"  [dim]Phase: {phase}  |  健康分: {health}  |  债务权重: {debt}[/]")
+            except Exception:
+                console.print("[yellow]⚠ OMO state 解析失败[/]")
+        elif not args.json:
+            console.print("[yellow]⚠ OMO state 未生成[/]")
+
+        console.print(f"\n[bold green]✅ 全栈健康检查完成[/]\n")
+
+    return return_code
 
 
 def _cmd_brief(args: Namespace) -> int:
