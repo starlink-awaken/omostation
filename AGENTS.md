@@ -288,3 +288,7 @@ GitHub Actions workflows in `.github/workflows/` (**20 workflows**, 9/9 项目�
 - **For gbrain work**: Read `projects/gbrain/AGENTS.md` + `projects/gbrain/CLAUDE.md`
 - **For governance**: Read `.omo/standards/` for architectural standards
 - **For integration tests**: Read individual test scripts in `tests/integration/`
+
+## Panoramic View
+
+- **Full feature map / architecture / core flows / module deps / user journeys / integration surfaces**: See [`docs/PANORAMA.md`](./docs/PANORAMA.md) (6-section overview with Mermaid diagrams, P58-P71 14 phase steady state snapshot).
