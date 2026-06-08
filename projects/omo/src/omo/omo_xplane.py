@@ -190,6 +190,11 @@ def _probe_http(m: dict) -> ProbeResult:
         return ProbeResult(**base, status=RED, detail=f"探活异常: {e}")
 
 
+def _probe_counter(m: dict, root: Path) -> ProbeResult:
+    """counter 探针:跑命令捕获 exit 0 vs 非 0(expect_exit 默认 0),语义是"事件数 > 0"。"""
+    return _probe_command(m, root)
+
+
 def _probe_one(m: dict, root: Path, quick: bool) -> ProbeResult:
     kind = m.get("probe", {}).get("kind", "")
     base = dict(mechanism_id=m["id"], axis=m["axis"], name=m["name"])
@@ -201,6 +206,8 @@ def _probe_one(m: dict, root: Path, quick: bool) -> ProbeResult:
         return _probe_command(m, root)
     if kind == "http":
         return _probe_http(m)
+    if kind == "counter":
+        return _probe_counter(m, root)
     return ProbeResult(**base, status=PENDING, detail=f"{kind} runner 待实现 (档位②)")
 
 
