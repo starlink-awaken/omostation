@@ -414,7 +414,8 @@ def adoption_payload() -> dict[str, Any]:
 
 
 def external_docs() -> dict[Path, str]:
-    workspace = "/Users/xiamingxing/Workspace/.omo/"
+    workspace_root = os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
+    workspace = f"{workspace_root}/.omo/"
     return {
         EXTERNAL_OMO_ROOT
         / "_delivery"

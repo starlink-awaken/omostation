@@ -21,7 +21,7 @@ import socketserver
 import sys
 from pathlib import Path
 
-HISTORY_PATH = Path("/Users/xiamingxing/Workspace/.omo/_knowledge/governance-history.jsonl")
+HISTORY_PATH = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))) / ".omo" / "_knowledge" / "governance-history.jsonl"
 
 
 def load_history() -> list[dict]:

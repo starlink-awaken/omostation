@@ -38,8 +38,8 @@ from typing import Any, Literal
 # ── 路径配置 (P33-W3 暴露给外部) ──────────────────────
 # kairon packages 根目录 — kairon 23 个包, 包含 kos 实体存储
 _KAIRON_PACKAGES_SRC = Path(
-    "/Users/xiamingxing/Workspace/projects/kairon/packages/kos/src"
-)
+    os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
+) / "projects" / "kairon" / "packages" / "kos" / "src"
 
 # ── BOS URI 命名空间 ────────────────────────────────────────
 # 5 个 domain 固定不可扩展 (北星 ADR-0007 约束)
@@ -83,8 +83,8 @@ Protocol = Literal["http", "stdio", "internal"]
 # ── 持久化路径 ────────────────────────────────────────────
 # P33-W1: 战役 2 起步故意走本地 JSON (避开 KOS 写入复杂)
 DEFAULT_REGISTRY_PATH = Path(
-    "/Users/xiamingxing/Workspace/.omo/_knowledge/bos-registry.json"
-)
+    os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
+) / ".omo" / "_knowledge" / "bos-registry.json"
 
 
 # ── 数据类 ───────────────────────────────────────────────

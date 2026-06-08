@@ -37,7 +37,8 @@ def inspect_omo_daemon() -> dict:
 
 def inspect_agora_routes() -> dict:
     """检查 agora 路由表状态."""
-    routes_path = Path("/Users/xiamingxing/Workspace/projects/kairon/packages/agora/agora-routes.json")
+    ws = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+    routes_path = ws / "projects" / "agora" / "src" / "agora-services.json"
     if not routes_path.exists():
         return {"status": "error", "error": f"routes_not_found: {routes_path}"}
     data = json.loads(routes_path.read_text(encoding="utf-8"))
@@ -51,7 +52,8 @@ def inspect_agora_routes() -> dict:
 
 def inspect_kairon_packages() -> dict:
     """检查 kairon 活跃包数."""
-    kairon_pkgs = Path("/Users/xiamingxing/Workspace/projects/kairon/packages")
+    ws = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+    kairon_pkgs = ws / "projects" / "kairon" / "packages"
     if not kairon_pkgs.exists():
         return {"status": "error", "error": "kairon_not_found"}
     packages = [d.name for d in kairon_pkgs.iterdir() if d.is_dir() and not d.name.startswith(".")]
