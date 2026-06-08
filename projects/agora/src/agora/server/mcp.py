@@ -1223,9 +1223,6 @@ from agora.server.tools_api_keys import register_tools as _register_api_keys
 
 _register_api_keys(mcp, _ok, FORMAT_VERSION)
 
-# 注册 BOS 工具 (God Module 拆分)
-register_bos_tools(mcp, _bus)
-
 
 # ── Push Notification tools (A2A-compatible) ──────────────────────────
 
