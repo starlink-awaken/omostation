@@ -878,12 +878,14 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "agora", marker = "extra == 'dashboard'" },
     { name = "beautifulsoup4", specifier = ">=4.12" },
     { name = "fastmcp", specifier = ">=3.4.2" },
     { name = "jinja2", specifier = ">=3.1" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "requests", specifier = ">=2.28" },
 ]
+provides-extras = ["dashboard"]
 
 [package.metadata.requires-dev]
 dev = [
