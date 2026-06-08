@@ -261,6 +261,10 @@ def main() -> int:
     vault_p = sub.add_parser("vault", help="搜索 L4 Vault 知识库")
     vault_p.add_argument("keyword", nargs="?", help="搜索关键词")
 
+    domains_p = sub.add_parser("domains", help="列出 L4 所有域及其状态")
+    skill_p = sub.add_parser("skill", help="运行 L4 定时技能")
+    skill_p.add_argument("skill_name", help="技能名称 (如 kos-daily-ontology-sync)")
+
     health_p = sub.add_parser("health", help="一键系统健康检查")
     health_p.add_argument("--json", action="store_true", help="JSON 格式输出")
     health_p.add_argument("--full", action="store_true", help="全栈检查 (含 Agora 服务健康 + Runtime Matrix + OMO 债务)")
@@ -437,6 +441,12 @@ def main() -> int:
     if args.command == "vault":
         from .commands.l4bridge import cmd_vault
         return cmd_vault(args)
+    if args.command == "domains":
+        from .commands.l4bridge import cmd_domains
+        return cmd_domains(args)
+    if args.command == "skill":
+        from .commands.l4bridge import cmd_skill
+        return cmd_skill(args)
     if args.command == "health":
         return _cmd_health(args)
     if args.command == "brief":
