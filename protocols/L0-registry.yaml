@@ -242,6 +242,29 @@ protocols:
       - "kairon/packages/cron-service"
     notes: "This IS the L1 scheduler. See also L0 protocol mapping. Matches DEBT-OMO-008 requirement. Scheduling runtime details are tracked in Runtime Matrix and runtime health evidence."
 
+  - name: "Cockpit MCP"
+    version: "1"
+    category: "orchestration"
+    status: "active"
+    usage: "active"
+    description: "L3 统一驾驶舱 — CLI (18 子命令) + MCP (20 tools) + Web Dashboard (8090)"
+    port_range: "8090"
+    transport: ["stdio", "http"]
+    implementations:
+      - "projects/cockpit"
+    notes: "L3 Entry Layer. Agent/user interaction surface. Integrates with runtime and agora for cross-layer operations."
+
+  - name: "MetaOS MCP"
+    version: "1"
+    category: "orchestration"
+    status: "active"
+    usage: "active"
+    description: "L2 编排引擎 — 决策门控、免疫监控、路由、数字资产 (11 MCP tools)"
+    transport: ["stdio"]
+    implementations:
+      - "projects/metaos"
+    notes: "L2 Engine Layer. Provides decision gate, immune monitor, and cognitive framework loading. Migrated from kairon/packages/metaos to projects/metaos on 2026-06-06."
+
   # ── Legacy / Deprecated ───────────────────────────────────────────
   - name: "BOS URI"
     version: "0"
