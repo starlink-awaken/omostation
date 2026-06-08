@@ -564,8 +564,28 @@ def cmd_register(args):
     # Tier auto-detect
     tier = 1 if (path/"_control"/"STATE.md").exists() else 3
     
-    # Build entry
-    entry = {
+    # Read existing registry as YAML
+    try:
+        with open(L0_CONSTRAINTS) as f:
+            data = yaml.safe_load(f) or {}
+    except Exception as e:
+        print(f"❌ 无法读取 L0-constraints.yaml: {e}")
+        return
+    
+    registry = data.get("domain_registry", [])
+    if registry is None:
+        registry = []
+    
+    # Check for duplicate by ID or path
+    existing_ids = {d.get("id") for d in registry if isinstance(d, dict)}
+    existing_paths = {d.get("storage") for d in registry if isinstance(d, dict)}
+    if domain_id in existing_ids:
+        print(f"⚠️  ID '{domain_id}' 已存在"); return
+    if str(path) in existing_paths:
+        print(f"⚠️  路径 '{path}' 已注册"); return
+    
+    # Build entry as dict (safe YAML serialization — no f-string injection risk)
+    new_entry = {
         "id": domain_id,
         "name": name,
         "layer": "L4",
@@ -577,38 +597,14 @@ def cmd_register(args):
         "storage": str(path),
         "description": f"注册于 {datetime.now().strftime('%Y-%m-%d')}",
     }
+    registry.append(new_entry)
+    data["domain_registry"] = registry
     
-    # Read existing registry
-    with open(L0_CONSTRAINTS) as f:
-        content = f.read()
-    
-    # Find domain_registry section and append
-    marker = "# ── 域注册表 (L4 Domain Registry) ──"
-    if marker not in content:
-        print("❌ 无法找到 domain_registry 标记"); return
-    
-    # Check for duplicate
-    if f"id: {domain_id}" in content:
-        print(f"⚠️  ID '{domain_id}' 已存在"); return
-    
-    # Simple append after the last registry entry
-    yaml_entry = f"""
-  - id: {domain_id}
-    name: "{name}"
-    layer: L4
-    governance_tier: {tier}
-    domain_type: {dtype}
-    claude_md: {f'"{entry["claude_md"]}"' if entry["claude_md"] else "null"}
-    state_md: {f'"{entry["state_md"]}"' if entry["state_md"] else "null"}
-    status: active
-    storage: "{path}"
-    description: "{entry['description']}"
-"""
-    # Insert before # ── 协议注册表
-    content = content.replace("# ── 协议注册表", yaml_entry + "\n# ── 协议注册表")
-    
-    with open(L0_CONSTRAINTS,'w') as f: f.write(content)
+    # Write back via yaml.dump (auto-escapes special chars, replaces old string concatenation)
+    with open(L0_CONSTRAINTS, 'w') as f:
+        yaml.dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
     print(f"✅ 已注册: {name} ({domain_id}) → L0-constraints.yaml\n")
+    print(f"   ℹ️  注意: yaml.dump 会重排文件格式（注释丢失）。用 git diff 确认变更。\n")
 
 def cmd_fix(args):
     """自动修复常见问题"""

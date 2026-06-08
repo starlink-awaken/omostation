@@ -339,7 +339,6 @@ def cmd_run(args):
         out.print_progress(f"通过 BOS URI 路由执行: {bos_uri}")
         try:
             import asyncio
-            sys.path.insert(0, str(HOME / "Workspace" / "projects" / "agora" / "src"))
             from agora.mcp.bos_resolver import resolve_bos_uri, parse_bos_uri
             target_uri = bos_uri.replace("ecos/workflow/", "")
             info = parse_bos_uri(target_uri)
@@ -681,7 +680,6 @@ def cmd_seed_bos(args):
     registered = 0
 
     try:
-        sys.path.insert(0, str(HOME / "Workspace" / "projects" / "agora" / "src"))
         from agora.mcp.bos_router import bos_router
     except ImportError:
         out.print_error("Agora 模块未安装，无法注册到 BOSRouter")
