@@ -1,25 +1,25 @@
 id: MECH-MCP-STDIO-MIGRATION
 type: Mechanism
-name: "POC 自定义协议 → 标准 MCP stdio 渐进迁移"
-description: "通过零侵入桥接器将 37 个 POC 自定义协议服务逐步迁移到标准 MCP JSON-RPC 2.0 协议"
+name: POC 自定义协议 → 标准 MCP stdio 渐进迁移
+description: 通过零侵入桥接器将 37 个 POC 自定义协议服务逐步迁移到标准 MCP JSON-RPC 2.0 协议
 domain: meta
 layer: I0
 status: active
-version: "1.0.0"
-created: "2026-06-07"
-
+version: 1.0.0
+created: '2026-06-07'
 properties:
-  trigger: "per-call"
-  source: "agora/mcp/bos_resolver.py:_call_mcp_stdio + agora/mcp/mcp_stdio_bridge.py"
-  strategy: "zero-touch bridge — downstream services unchanged"
-  current: "38/40 mcp_stdio, 2 internal — 迁移完成 | P54-W0 done"
-  target: "40/40 mcp_stdio"
-
+  trigger: per-call
+  source: agora/mcp/bos_resolver.py:_call_mcp_stdio + agora/mcp/mcp_stdio_bridge.py
+  strategy: zero-touch bridge — downstream services unchanged
+  current: 38/40 mcp_stdio, 2 internal — 迁移完成 | P54-W0 done
+  target: 40/40 mcp_stdio
+  action: POC 自定义协议 → 标准 MCP stdio 渐进迁移(需人工补具体执行描述)
+  interval: 0
 relations:
-  - type: DependsOn
-    from: MECH-MCP-STDIO-MIGRATION
-    to: MECH-BOS-MCP-STDIO
-    note: "MCPStdioAdapter 处理标准协议 client 端"
-  - type: Realizes
-    from: MECH-MCP-STDIO-MIGRATION
-    to: "P54-W0 渐进迁移目标"
+- type: DependsOn
+  from: MECH-MCP-STDIO-MIGRATION
+  to: MECH-BOS-MCP-STDIO
+  note: MCPStdioAdapter 处理标准协议 client 端
+- type: Realizes
+  from: MECH-MCP-STDIO-MIGRATION
+  to: P54-W0 渐进迁移目标

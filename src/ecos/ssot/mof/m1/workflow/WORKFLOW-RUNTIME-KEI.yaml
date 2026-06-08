@@ -2,104 +2,99 @@ id: WORKFLOW-RUNTIME-KEI
 type: Workflow
 subtype: PipelineWorkflow
 name: Runtime KEI 沙箱执行管线
-description: "受控沙箱执行: 环境准备→代码执行→结果收集→安全审计"
+description: '受控沙箱执行: 环境准备→代码执行→结果收集→安全审计'
 status: active
-version: "1.0.0"
+version: 1.0.0
 domain: forge
 layer: L1
-created: "2026-06-07"
+created: '2026-06-07'
 bos_uri: bos://ecos/workflow/runtime-kei
-
 cross_layer:
   realized_by:
-    - project: runtime
-      package: runtime
-      entrypoint: src/runtime/executor/
+  - project: runtime
+    package: runtime
+    entrypoint: src/runtime/executor/
   invoked_by:
-    - layer: I0
-      component: agora
-      mechanism: MCP 工具调用
-    - layer: L3
-      component: cockpit
-      mechanism: CLI 命令透传
-
+  - layer: I0
+    component: agora
+    mechanism: MCP 工具调用
+  - layer: L3
+    component: cockpit
+    mechanism: CLI 命令透传
 steps:
-  - order: 1
-    name: PrepareEnvironment
-    action: runtime.runtime.prepare_environment
-    description: "准备隔离沙箱环境，配置依赖和运行时"
-    input:
-      - bos://forge/code/execute
-    output:
-      - sandbox_env
-    depends_on: []
-  - order: 2
-    name: ExecuteInSandbox
-    action: runtime.runtime.execute_in_sandbox
-    description: "在沙箱中执行代码，捕获标准输出和错误"
-    input:
-      - sandbox_env
-    output:
-      - execution_output
-    depends_on:
-      - PrepareEnvironment
-  - order: 3
-    name: CollectResults
-    action: runtime.runtime.collect_results
-    description: "收集执行结果，包括输出、返回值、状态码"
-    input:
-      - execution_output
-    output:
-      - collected_results
-    depends_on:
-      - ExecuteInSandbox
-  - order: 4
-    name: AuditSecurity
-    action: runtime.runtime.audit_security
-    description: "安全审计 — 检查执行过程中的异常和潜在风险"
-    input:
-      - collected_results
-    output:
-      - security_report
-    depends_on:
-      - CollectResults
-  - order: 5
-    name: CleanupAndReturn
-    action: runtime.runtime.cleanup_and_return
-    description: "清理沙箱环境并返回执行结果和安全审计报告"
-    input:
-      - collected_results
-      - security_report
-    output:
-      - bos://forge/result
-    depends_on:
-      - AuditSecurity
-
+- order: 1
+  name: PrepareEnvironment
+  action: runtime.runtime.prepare_environment
+  description: 准备隔离沙箱环境，配置依赖和运行时
+  input:
+  - bos://forge/code/execute
+  output:
+  - sandbox_env
+  depends_on: []
+- order: 2
+  name: ExecuteInSandbox
+  action: runtime.runtime.execute_in_sandbox
+  description: 在沙箱中执行代码，捕获标准输出和错误
+  input:
+  - sandbox_env
+  output:
+  - execution_output
+  depends_on:
+  - PrepareEnvironment
+- order: 3
+  name: CollectResults
+  action: runtime.runtime.collect_results
+  description: 收集执行结果，包括输出、返回值、状态码
+  input:
+  - execution_output
+  output:
+  - collected_results
+  depends_on:
+  - ExecuteInSandbox
+- order: 4
+  name: AuditSecurity
+  action: runtime.runtime.audit_security
+  description: 安全审计 — 检查执行过程中的异常和潜在风险
+  input:
+  - collected_results
+  output:
+  - security_report
+  depends_on:
+  - CollectResults
+- order: 5
+  name: CleanupAndReturn
+  action: runtime.runtime.cleanup_and_return
+  description: 清理沙箱环境并返回执行结果和安全审计报告
+  input:
+  - collected_results
+  - security_report
+  output:
+  - bos://forge/result
+  depends_on:
+  - AuditSecurity
 execution:
   mode: sequential
   max_retries: 3
   timeout: 600
   on_failure: abort
   audit_enabled: true
-
 relations:
-  - type: triggers
-    target: bos://forge/code/execute
-    note: "代码执行请求触发 KEI 沙箱"
-  - type: data_flows
-    target: bos://forge/result
-    note: "执行结果返回运行时消费端"
-
+- type: triggers
+  target: bos://forge/code/execute
+  note: 代码执行请求触发 KEI 沙箱
+- type: data_flows
+  target: bos://forge/result
+  note: 执行结果返回运行时消费端
 sla:
   max_execution_time: 600
   expected_completion_rate: 0.95
   critical: false
-
 tags:
-  - runtime
-  - kei
-  - sandbox
-  - execution
-
+- runtime
+- kei
+- sandbox
+- execution
 maintained_by: runtime
-last_reviewed: "2026-06-07"
+last_reviewed: '2026-06-07'
+properties:
+  workflow_name: Runtime KEI 沙箱执行管线

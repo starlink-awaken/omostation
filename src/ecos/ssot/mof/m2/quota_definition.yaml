@@ -1,0 +1,19 @@
+m2_type: quota_definition
+version: 1.0.0
+created: '2026-06-08T23:27:00'
+quota_definition:
+  description: 配额/限额定义节点(deepseek token quota 等)
+  requiredProperties: {}
+  optionalProperties:
+    provider:
+      type: string
+      description: 配额提供方
+    daily_limit:
+      type: integer
+      description: 日配额
+    monthly_limit:
+      type: integer
+      description: 月配额
+    reset_cycle:
+      type: string
+      description: 重置周期

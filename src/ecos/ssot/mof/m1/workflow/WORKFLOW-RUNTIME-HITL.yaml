@@ -2,107 +2,102 @@ id: WORKFLOW-RUNTIME-HITL
 type: Workflow
 subtype: PipelineWorkflow
 name: Runtime HITL 五阶段处理管线
-description: "Human-in-the-Loop 知识处理: 意图拆解→多源检索→洞察生成→图谱更新→闭环验证"
+description: 'Human-in-the-Loop 知识处理: 意图拆解→多源检索→洞察生成→图谱更新→闭环验证'
 status: active
-version: "1.0.0"
+version: 1.0.0
 domain: forge
 layer: L1
-created: "2026-06-07"
+created: '2026-06-07'
 bos_uri: bos://ecos/workflow/runtime-hitl
-
 cross_layer:
   realized_by:
-    - project: runtime
-      package: runtime
-      entrypoint: src/runtime/executor/workflows/scenario3/run_pipeline.py
+  - project: runtime
+    package: runtime
+    entrypoint: src/runtime/executor/workflows/scenario3/run_pipeline.py
   invoked_by:
-    - layer: I0
-      component: agora
-      mechanism: MCP 工具调用
-    - layer: L3
-      component: cockpit
-      mechanism: CLI 命令透传
-
+  - layer: I0
+    component: agora
+    mechanism: MCP 工具调用
+  - layer: L3
+    component: cockpit
+    mechanism: CLI 命令透传
 steps:
-  - order: 1
-    name: Phase1_DecomposeIntent
-    action: runtime.runtime.phase1_decompose_intent
-    description: "第一阶段 — 意图拆解，将复杂任务分解为子任务"
-    input:
-      - bos://forge/task/complex
-    output:
-      - sub_tasks[]
-    depends_on: []
-  - order: 2
-    name: Phase2_MultiSourceRetrieve
-    action: runtime.runtime.phase2_multi_source_retrieve
-    description: "第二阶段 — 多源检索，从 KOS、gbrain、Vault 等多源获取相关知识"
-    input:
-      - sub_tasks[]
-    output:
-      - retrieved_knowledge[]
-    depends_on:
-      - Phase1_DecomposeIntent
-  - order: 3
-    name: Phase3_InsightGenerate
-    action: runtime.runtime.phase3_insight_generate
-    description: "第三阶段 — 洞察生成，基于检索结果生成分析洞察"
-    input:
-      - retrieved_knowledge[]
-    output:
-      - insights[]
-    depends_on:
-      - Phase2_MultiSourceRetrieve
-  - order: 4
-    name: Phase4_GraphUpdate
-    action: runtime.runtime.phase4_graph_update
-    description: "第四阶段 — 图谱更新，将新洞察写入知识图谱"
-    input:
-      - insights[]
-    output:
-      - graph_updates[]
-    depends_on:
-      - Phase3_InsightGenerate
-  - order: 5
-    name: Phase5_ClosedLoopVerify
-    action: runtime.runtime.phase5_closed_loop_verify
-    description: "第五阶段 — 闭环验证，HITL 审查确认结果有效性"
-    input:
-      - graph_updates[]
-    output:
-      - bos://forge/insight
-    depends_on:
-      - Phase4_GraphUpdate
-
+- order: 1
+  name: Phase1_DecomposeIntent
+  action: runtime.runtime.phase1_decompose_intent
+  description: 第一阶段 — 意图拆解，将复杂任务分解为子任务
+  input:
+  - bos://forge/task/complex
+  output:
+  - sub_tasks[]
+  depends_on: []
+- order: 2
+  name: Phase2_MultiSourceRetrieve
+  action: runtime.runtime.phase2_multi_source_retrieve
+  description: 第二阶段 — 多源检索，从 KOS、gbrain、Vault 等多源获取相关知识
+  input:
+  - sub_tasks[]
+  output:
+  - retrieved_knowledge[]
+  depends_on:
+  - Phase1_DecomposeIntent
+- order: 3
+  name: Phase3_InsightGenerate
+  action: runtime.runtime.phase3_insight_generate
+  description: 第三阶段 — 洞察生成，基于检索结果生成分析洞察
+  input:
+  - retrieved_knowledge[]
+  output:
+  - insights[]
+  depends_on:
+  - Phase2_MultiSourceRetrieve
+- order: 4
+  name: Phase4_GraphUpdate
+  action: runtime.runtime.phase4_graph_update
+  description: 第四阶段 — 图谱更新，将新洞察写入知识图谱
+  input:
+  - insights[]
+  output:
+  - graph_updates[]
+  depends_on:
+  - Phase3_InsightGenerate
+- order: 5
+  name: Phase5_ClosedLoopVerify
+  action: runtime.runtime.phase5_closed_loop_verify
+  description: 第五阶段 — 闭环验证，HITL 审查确认结果有效性
+  input:
+  - graph_updates[]
+  output:
+  - bos://forge/insight
+  depends_on:
+  - Phase4_GraphUpdate
 execution:
   mode: sequential
   max_retries: 3
   timeout: 1200
   on_failure: abort
   audit_enabled: true
-
 relations:
-  - type: triggers
-    target: bos://forge/task/complex
-    note: "复杂任务触发 HITL 五阶段处理"
-  - type: data_flows
-    target: bos://forge/insight
-    note: "HITL 处理结果输出洞察"
-  - type: depends_on
-    target: WORKFLOW-RUNTIME-SCENARIO
-    note: "HITL 处理由场景管线触发"
-
+- type: triggers
+  target: bos://forge/task/complex
+  note: 复杂任务触发 HITL 五阶段处理
+- type: data_flows
+  target: bos://forge/insight
+  note: HITL 处理结果输出洞察
+- type: depends_on
+  target: WORKFLOW-RUNTIME-SCENARIO
+  note: HITL 处理由场景管线触发
 sla:
   max_execution_time: 900
-  expected_completion_rate: 0.90
+  expected_completion_rate: 0.9
   critical: true
-
 tags:
-  - runtime
-  - hitl
-  - knowledge
-  - pipeline
-  - critical
-
+- runtime
+- hitl
+- knowledge
+- pipeline
+- critical
 maintained_by: runtime
-last_reviewed: "2026-06-07"
+last_reviewed: '2026-06-07'
+properties:
+  workflow_name: Runtime HITL 五阶段处理管线

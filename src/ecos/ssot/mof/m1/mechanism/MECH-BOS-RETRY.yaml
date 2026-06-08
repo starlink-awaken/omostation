@@ -1,4 +1,3 @@
-# M1 Mechanism: MECH-BOS-RETRY
 id: MECH-BOS-RETRY
 type: Mechanism
 name: BOS 重试策略
@@ -10,4 +9,6 @@ created: '2026-06-07'
 properties:
   trigger: on-failure
   source: agora/mcp/bos_middleware.py:RetryPolicy
+  action: BOS 重试策略(需人工补具体执行描述)
+  interval: 0
 relations: []

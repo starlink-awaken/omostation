@@ -26,7 +26,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-SCRIPTS = Path.home() / "Documents" / "驾驶舱" / "scripts"
+def _get_cockpit_dir() -> Path:
+    """Resolve standard @驾驶舱 or 驾驶舱 folder in Documents."""
+    d = Path.home() / "Documents" / "@驾驶舱"
+    if d.exists():
+        return d
+    return Path.home() / "Documents" / "驾驶舱"
+
+
+SCRIPTS = _get_cockpit_dir() / "scripts"
 DOCS = Path.home() / "Documents"
 CARDS_DB = Path.home() / "Workspace" / "data" / "cards" / "cards.db"
 
@@ -261,7 +269,7 @@ def format_brief(sla: dict, cards: list[dict], risks: list[dict],
 
     lines.append("")
     lines.append("---")
-    lines.append(f"> 下一步: `python3 ~/Documents/驾驶舱/scripts/ecos-health-check.py` 查看详情")
+    lines.append(f"> 下一步: `python3 ~/Documents/@驾驶舱/scripts/ecos-health-check.py` 查看详情")
     return "\n".join(lines)
 
 

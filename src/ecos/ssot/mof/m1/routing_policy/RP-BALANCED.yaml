@@ -1,5 +1,3 @@
-# M1 Routing Policy — 综合路由策略
-
 id: RP-BALANCED
 type: routing_policy
 strategy: balanced
