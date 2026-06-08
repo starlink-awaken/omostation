@@ -223,6 +223,18 @@ def main() -> int:
     init_p.add_argument("--model", default="llama3.2", help="默认拉取的 LLM 模型名（默认 llama3.2）")
     profile_p = sub.add_parser("profile", help="查看/编辑身份档案 (L4 入口)")
     profile_p.add_argument("--edit", action="store_true", help="编辑身份档案")
+
+    # P74-W0: L4 自我层 CARDS 抓手 (5 仓对接 L4 镜像 P49 stdio_rpc helper 模式, l4cards 避免跟 line 256 'cards' 冲突)
+    from .commands.cards import cmd_cards
+    l4cards_p = sub.add_parser("l4cards", help="L4 自我层 CARDS 抓手 (列/查/搜/serve, 镜像 P49 stdio_rpc)")
+    l4cards_sub = l4cards_p.add_subparsers(dest="cards_command", parser_class=WorkspaceParser)
+    l4cards_sub.add_parser("list", help="列所有 CARDS (按 debts/deliverys/ideas/researchs/tasks)")
+    l4cards_get_p = l4cards_sub.add_parser("get", help="查 1 个 card (按 ID 或 path)")
+    l4cards_get_p.add_argument("id", help="card ID (含 .md 扩展名)")
+    l4cards_search_p = l4cards_sub.add_parser("search", help="全文搜 (按 title + tags + body)")
+    l4cards_search_p.add_argument("query", help="搜索关键词 (regex)")
+    l4cards_sub.add_parser("serve", help="stdio JSON-RPC serve mode (镜像 P49 stdio_rpc)")
+
     sub.add_parser("product-health", help="产品健康度检测")
 
     mcp_p = sub.add_parser("mcp", help="启动 MCP server 或列出工具")
@@ -264,17 +276,17 @@ def main() -> int:
 
     code_p = sub.add_parser("code", help="代码库分析与审查 (基于 codeanalyze)")
     code_sub = code_p.add_subparsers(dest="code_command", parser_class=WorkspaceParser)
-    
+
     # 基础分析命令
     code_sub.add_parser("analyze", help="运行全部分析工具")
     code_sub.add_parser("graph", help="运行语义图谱分析")
     code_sub.add_parser("pack", help="将代码库打包为 LLM 友好格式")
     code_sub.add_parser("dashboard", help="启动交互式知识图谱仪表盘")
-    
+
     # 高级工作流命令
     code_workflow_p = code_sub.add_parser("workflow", help="高级分析工作流")
     code_workflow_sub = code_workflow_p.add_subparsers(dest="workflow_command")
-    
+
     code_impact_p = code_workflow_sub.add_parser("impact", help="分析符号的变更影响面")
     code_impact_p.add_argument("--symbol", help="目标符号名称")
     code_workflow_sub.add_parser("onboarding", help="为 AI 构建项目全貌上下文")
@@ -414,6 +426,9 @@ def main() -> int:
     if args.command == "cards":
         from .commands.l4bridge import cmd_cards
         return cmd_cards(args)
+    if args.command == "l4cards":
+        # P74-W0: L4 自我层 CARDS 抓手 (镜像 P49 stdio_rpc helper 模式)
+        return cmd_cards(args)
     if args.command == "vault":
         from .commands.l4bridge import cmd_vault
         return cmd_vault(args)
@@ -475,8 +490,8 @@ def _cmd_health(args: Namespace) -> int:
     # Also run I0 status if available
     try:
         if args.json:
+
             from cockpit.scripts.cockpit_mcp import workspace_context
-            import json
             print(workspace_context())
         else:
             console.print("[bold green]✅ Health check complete[/]")
@@ -494,8 +509,9 @@ def _cmd_brief(args: Namespace) -> int:
     console.print(_panel("[bold cyan]📋 会话简报[/]", "cyan"))
 
     try:
-        from cockpit.scripts.cockpit_mcp import workspace_context, cards_status
         import json
+
+        from cockpit.scripts.cockpit_mcp import cards_status, workspace_context
 
         ctx = json.loads(workspace_context())
         cards = json.loads(cards_status())
