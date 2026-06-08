@@ -128,15 +128,25 @@ def _probe_jsonl_freshness(m: dict) -> ProbeResult:
 
 
 def _probe_command(m: dict, root: Path) -> ProbeResult:
-    """command 探针:跑命令按 expect_exit 判定。runner!=ready 直接 PENDING。"""
+    """command 探针:跑命令按 expect_exit 判定。runner!=ready 直接 PENDING。
+
+    cwd 解析: probe.cwd 显式声明(可相对 root) > 默认 workspace root。
+    显式 opt-in 而非 owner 推断,避免"自动推断与探针期望"对不齐的误判。
+    多数探针默认在 root 跑足够;子项目需 `uv run --package X` 的,显式设 cwd。
+    """
     probe = m["probe"]
     base = dict(mechanism_id=m["id"], axis=m["axis"], name=m["name"])
     if m.get("runner") != "ready":
         return ProbeResult(**base, status=PENDING, detail="runner 待实现 (档位②)")
+    cwd = Path(probe["cwd"]) if probe.get("cwd") else root
+    if not cwd.is_absolute():
+        cwd = root / cwd
+    if not cwd.exists():
+        return ProbeResult(**base, status=RED, detail=f"cwd 不存在: {cwd}")
     try:
         r = subprocess.run(
             probe.get("run", ""), shell=True, capture_output=True, text=True,
-            timeout=float(probe.get("timeout_s", 30)), cwd=str(root),
+            timeout=float(probe.get("timeout_s", 30)), cwd=str(cwd),
         )
     except subprocess.TimeoutExpired:
         return ProbeResult(**base, status=RED, detail="探活超时")
@@ -148,6 +158,38 @@ def _probe_command(m: dict, root: Path) -> ProbeResult:
     return ProbeResult(**base, status=RED, detail=f"exit={r.returncode} · {err[-1][:80] if err else ''}")
 
 
+def _probe_http(m: dict) -> ProbeResult:
+    """http 探针:打健康端点,2xx = GREEN,连接失败 = RED(服务未跑),非 2xx = RED(坏了)。
+
+    url 解析: 支持 ${VAR:-default} shell 风格(env 变量展开 + 默认值)。
+    用途: 端口默认值跟着 env 走,避免硬编码。
+    """
+    import urllib.request
+    import urllib.error
+    import re
+    probe = m["probe"]
+    base = dict(mechanism_id=m["id"], axis=m["axis"], name=m["name"])
+    if m.get("runner") != "ready":
+        return ProbeResult(**base, status=PENDING, detail="runner 待实现 (档位②)")
+    url = probe["url"]
+    # 解析 ${VAR:-default} 模式(os.path.expandvars 不支持)
+    def _resolve(matched: re.Match) -> str:
+        var, default = matched.group(1), matched.group(2)
+        return os.environ.get(var, default or "")
+    url = re.sub(r"\$\{([A-Z_][A-Z0-9_]*):-([^}]*)\}", _resolve, url)
+    try:
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req, timeout=float(probe.get("timeout_s", 5))) as r:
+            code = r.getcode()
+        if code == probe.get("expect_status", 200):
+            return ProbeResult(**base, status=GREEN, detail=f"HTTP {code} · {url}")
+        return ProbeResult(**base, status=RED, detail=f"HTTP {code} (期望 {probe.get('expect_status', 200)}) · {url}")
+    except urllib.error.URLError as e:
+        return ProbeResult(**base, status=RED, detail=f"端点不可达: {e.reason} · {url}")
+    except Exception as e:  # noqa: BLE001
+        return ProbeResult(**base, status=RED, detail=f"探活异常: {e}")
+
+
 def _probe_one(m: dict, root: Path, quick: bool) -> ProbeResult:
     kind = m.get("probe", {}).get("kind", "")
     base = dict(mechanism_id=m["id"], axis=m["axis"], name=m["name"])
@@ -157,6 +199,8 @@ def _probe_one(m: dict, root: Path, quick: bool) -> ProbeResult:
         if quick:
             return ProbeResult(**base, status=PENDING, detail="--quick 跳过 command 型")
         return _probe_command(m, root)
+    if kind == "http":
+        return _probe_http(m)
     return ProbeResult(**base, status=PENDING, detail=f"{kind} runner 待实现 (档位②)")
 
 
