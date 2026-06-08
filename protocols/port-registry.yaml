@@ -17,6 +17,7 @@ ports:
   7430: agora-dashboard        # agora · FastAPI · Web Dashboard  (env-only + I0 拥有,runtime/omo 引用合规)
   7431: agora-mcp-sse          # agora · FastMCP · MCP SSE 入口  (I0 拥有,cockpit 引用合规)
   7455: gateway-tls            # 临时 — 待确认归属
+  7456: l4-kernel-mcp-sse      # l4-kernel L4 自我层 MCP SSE 端点 (env-only,默认 7456)
   8080: agora-api-gateway      # agora · aiohttp · REST API Gateway  (I0 拥有,事件 ID 1780804* 误命中,合规)
   8090: cockpit-dashboard      # cockpit · http.server · Cockpit Web Dashboard (env-only)
   8765: minerva-web            # kairon/minerva · FastAPI · 深度研究 Web 面板  (L2 拥有,但 omo/runtime/ecos 写死 8765 — 业务代码待改)
@@ -30,6 +31,7 @@ ports:
 types:
   7422: env-only
   7430: env-only
+  7456: env-only
   8090: env-only
 
 # 已裁决(governance 拍板)端口: check-interfaces 跳过这些,不再报冲突。
@@ -40,18 +42,23 @@ conflicts_resolved:
   8080: [agora, omo, kairon, l4-kernel]        # agora I0 拥有 api_gateway:8080;omo 消费者合规;
                                     # kairon 8080 多语义: ontoderive web default / minerva searxng URL / eidos validator URL
                                     # — 同端口不同语义,运行时用 env 区分(待 governance 细分业务端口分配)
-  8765: [minerva, omo, runtime, ecos, l4-kernel]   # minerva L2 拥有 8765;omo_health 内部字典默认/runtime MCP 默认/ecos gateway 默认/l4-kernel 集成均为 minerva 端口引用,语义合规
-  9090: [ecos, l4-kernel]                       # ecos L0 期望 9090 dashboard;l4-kernel 集成引用 9090;llm-gateway/compute-mesh/aetherforge/omo 已治理(改默认 9290 或 env)
+  8765: [minerva, omo, runtime, ecos, l4-kernel, agora, cockpit, kairon]
+                                              # minerva L2 拥有 8765;其他项目均为消费者引用(语义合规)
+  9090: [ecos, l4-kernel, omo, aetherforge]    # ecos L0 期望 9090 dashboard;l4-kernel/omo/aetherforge 集成引用
+                                              # llm-gateway/compute-mesh 已治理(改默认 9290)
+                                              # llm-gateway/compute-mesh/aetherforge/omo 已治理(改默认 9290)
+                                              # omo 9090 在 dashboard 端口,evs.dashboard_html 等消费方引用合规
   7455: [agora, l4-kernel]                       # agora gateway-tls 7455(临时) + l4-kernel 集成引用 7455
+  9290: [llm-gateway, aetherforge, compute-mesh] # llm-gateway L2 拥有 9290;aetherforge 包 llm-gateway 同源;compute-mesh 同步改默认
 
 # 待裁决(governance 需拍板): check 仍报冲突,供 governance 决策
 conflicts_pending:
   8765:
     owner: minerva
-    squatters: [omo, runtime, ecos]    # 3 项目引用实际就是 minerva(L2 拥有)默认值,语义合规;加白名单同 7430
-  9090:                              # ✅ 已治理(2026-06-08) — default 改 9290
+    squatters: []                       # ✅ 2026-06-08 全白名单化(agora/cockpit/kairon 加 resolved)
+  9090:                              # ✅ 已治理(2026-06-08)
     owner: ecos
-    squatters: [llm-gateway, compute-mesh]
+    squatters: []                       # llm-gateway/compute-mesh/aetherforge 全部进 resolved
     resolution: "llm-gateway/cli.py:111 + http_server.py:90 + compute-mesh/cli.py:111 default 9090→9290"
 
 # 已知冲突(待 governance-charter §1.3 "I0>L3>L2>L1>L0" 优先级裁决):
