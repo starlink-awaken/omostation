@@ -5,11 +5,12 @@ from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
-ECOS_SRC = Path(__file__).resolve().parent.parent
-DM_PATH = ECOS_SRC / "governance" / "domain_manager.py"
+H = Path.home()
+SCRIPTS = H / ".ecos" / "scripts"
+sys.path.insert(0, str(SCRIPTS))
 
 from importlib.machinery import SourceFileLoader
-dm = SourceFileLoader("dm", str(DM_PATH)).load_module()
+dm = SourceFileLoader("dm", str(SCRIPTS / "domain-manager.py")).load_module()
 
 # ── BOS 核心 ──
 

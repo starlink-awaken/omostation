@@ -8,7 +8,7 @@ ECOS_SRC = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ECOS_SRC))
 
 from importlib.machinery import SourceFileLoader
-DM_PATH = ECOS_SRC / "governance" / "domain_manager.py"
+DM_PATH = ECOS_SRC / "services" / "domain_manager.py"
 dm = SourceFileLoader("dm", str(DM_PATH)).load_module()
 
 TOOLS = [

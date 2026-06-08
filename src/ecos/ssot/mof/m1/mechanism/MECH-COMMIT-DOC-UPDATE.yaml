@@ -1,0 +1,82 @@
+id: MECH-COMMIT-DOC-UPDATE
+type: Mechanism
+name: "提交时文档自动更新机制"
+description: "每次 git commit 后自动分析变更影响范围，触发相关文档更新和 L0 一致性校验"
+domain: meta
+layer: L0
+status: active
+version: "1.0.0"
+created: "2026-06-07"
+
+properties:
+  trigger: "post-commit"
+  source: ".git/hooks/post-commit"
+  phases:
+    - phase: 1
+      name: "变更分析"
+      description: "解析 commit diff，识别受影响层 (L0/L1/L2/L3/L4)"
+      output: "affected_layers"
+    - phase: 2
+      name: "L4 知识萃取"
+      description: "如果 L4 文档变更，运行 mof-extract 生成 M1 节点"
+      output: "new_m1_nodes"
+      condition: "L4 changed"
+    - phase: 3
+      name: "L0 影响分析"
+      description: "如果 M1 节点变更，运行 mof-validate + cross-ref 校验"
+      output: "validation_report"
+      condition: "M1 changed"
+    - phase: 4
+      name: "API 文档更新"
+      description: "自动重生成 bos-api-reference.md"
+      condition: "M1 workflow nodes changed"
+    - phase: 5
+      name: "Schema 报告更新"
+      description: "自动重生成 schema-report 并更新覆盖度统计"
+      condition: "workflow YAML changed"
+    - phase: 6
+      name: "下游通知"
+      description: "如果影响跨层，标记相关 AGENTS.md 需更新"
+      condition: "cross-layer impact detected"
+
+impact_analysis:
+  files:
+    - pattern: "projects/ecos/src/ecos/ssot/mof/m1/**/*.yaml"
+      action: "regenerate_api_ref + validate + update_stats"
+    - pattern: ".omo/_knowledge/**"
+      action: "mof-extract"
+    - pattern: "projects/agora/src/agora/mcp/bos_*.py"
+      action: "update_agents_bos_declaration"
+    - pattern: "projects/ecos/src/ecos/workflow/**"
+      action: "update_workflow_catalog"
+  layers:
+    L0: "M1 node validation + constraint check"
+    L1: "service registry update"
+    L2: "AGENTS.md BOS declaration sync"
+    L3: "CLI help text consistency"
+    L4: "knowledge extraction → M1"
+
+relations:
+  - type: Triggers
+    from: MECH-COMMIT-DOC-UPDATE
+    to: MECH-BOS-DISCOVERY
+    note: "M1 变更 → 触发 BOS 服务发现刷新"
+  - type: DependsOn
+    from: MECH-COMMIT-DOC-UPDATE
+    to: MECH-BOS-CONFIG-HOT-RELOAD
+    note: "配置变更 → 触发热加载"
+  - type: Realizes
+    from: MECH-COMMIT-DOC-UPDATE
+    to: "L0 constraints X5-X9"
+    note: "实现 BOS 治理约束的持续校验"
+
+sla:
+  max_execution_time: 30
+  expected_completion_rate: 0.99
+
+tags:
+  - commit
+  - documentation
+  - automation
+  - governance
+  - l0

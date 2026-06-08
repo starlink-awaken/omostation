@@ -1,5 +1,5 @@
 id: BOSROUTE-MEMORY-GBRAIN
-type: BosRoute
+type: Component
 name: "bos://memory/gbrain/* → gbrain 知识数据库"
 description: "bos://memory/gbrain/* → gbrain，TypeScript 知识数据库"
 domain: memory
@@ -9,6 +9,7 @@ version: "1.0.0"
 created: "2026-06-07"
 
 properties:
+  runtime: active
   uri_pattern: "bos://memory/gbrain/*"
   adapter_type: mcp_proxy
   adapter_config:

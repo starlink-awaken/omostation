@@ -183,7 +183,14 @@ def main():
         print(f"❌ M2 文件不存在: {m2_file}")
         sys.exit(2)
 
-    m2 = load_m2(m2_file)
+    try:
+        m2 = load_m2(m2_file)
+    except Exception as e:
+        print(f"⚠️ M2 加载失败 ({m2_file}): {e}", file=sys.stderr)
+        if not args.json:
+            sys.exit(2)
+        print(json.dumps({"error": f"M2 加载失败: {e}"}))
+        sys.exit(2)
     nodes = load_all_m1_nodes(nodes_dir)
 
     if args.type:

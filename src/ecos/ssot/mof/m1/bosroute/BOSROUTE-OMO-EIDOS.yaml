@@ -1,5 +1,5 @@
 id: BOSROUTE-OMO-EIDOS
-type: BosRoute
+type: Component
 name: "bos://omo/eidos/* → Eidos Schema 约束"
 description: "bos://omo/eidos/* → kairon/eidos，Schema 约束与语义校验"
 domain: omo
@@ -9,6 +9,7 @@ version: "1.0.0"
 created: "2026-06-07"
 
 properties:
+  runtime: active
   uri_pattern: "bos://omo/eidos/*"
   adapter_type: mcp_proxy
   adapter_config:

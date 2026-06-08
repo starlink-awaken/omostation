@@ -1,5 +1,5 @@
 id: BOSROUTE-ANALYSIS-MINERVA
-type: BosRoute
+type: Component
 name: "bos://analysis/minerva/* → Minerva 深度研究"
 description: "bos://analysis/minerva/* → kairon/minerva，深度研究引擎"
 domain: analysis
@@ -9,6 +9,7 @@ version: "1.0.0"
 created: "2026-06-07"
 
 properties:
+  runtime: active
   uri_pattern: "bos://analysis/minerva/*"
   adapter_type: mcp_proxy
   adapter_config:

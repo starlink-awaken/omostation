@@ -1,5 +1,5 @@
 id: BOSROUTE-OMO-METAOS
-type: BosRoute
+type: Component
 name: "bos://omo/metaos/* → MetaOS 决策编排"
 description: "bos://omo/metaos/* → metaos MCP，决策引擎与免疫协议"
 domain: omo
@@ -9,6 +9,7 @@ version: "1.0.0"
 created: "2026-06-07"
 
 properties:
+  runtime: active
   uri_pattern: "bos://omo/metaos/*"
   adapter_type: mcp_proxy
   adapter_config:

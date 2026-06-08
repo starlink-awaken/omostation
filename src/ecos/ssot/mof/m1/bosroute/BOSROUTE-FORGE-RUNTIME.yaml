@@ -1,5 +1,5 @@
 id: BOSROUTE-FORGE-RUNTIME
-type: BosRoute
+type: Component
 name: "bos://forge/runtime/* → Runtime KEI 沙箱"
 description: "bos://forge/runtime/* → runtime MCP，KEI 沙箱执行与 HITL 场景"
 domain: forge
@@ -9,6 +9,7 @@ version: "1.0.0"
 created: "2026-06-07"
 
 properties:
+  runtime: active
   uri_pattern: "bos://forge/runtime/*"
   adapter_type: mcp_proxy
   adapter_config:

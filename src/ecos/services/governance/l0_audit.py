@@ -1,4 +1,4 @@
-"""L0 Audit — 共享审计层 | 约束校验·操作日志·BOS验证"""
+"""L0 Audit — 共享审计层 | 约束校验·操作日志·BOS验证 (集成 unified logger)"""
 import yaml, json, os
 from pathlib import Path
 from datetime import datetime
@@ -7,6 +7,15 @@ H = Path.home()
 DOCS = H / "Documents"
 CONSTRAINTS_PATH = Path(__file__).parent.parent / "l0" / "constraints.yaml"
 AUDIT_LOG = H / ".ecos" / "audit" / "operations.jsonl"
+
+# 集成统一审计记录器
+try:
+    from audit_unified import log_event, create_audit_debt
+    HAS_UNIFIED = True
+except ImportError:
+    HAS_UNIFIED = False
+    def log_event(**kw): return kw
+    def create_audit_debt(**kw): return None
 
 def load_constraints():
     if not CONSTRAINTS_PATH.exists(): return []
@@ -47,10 +56,24 @@ def validate_operation(domain_id: str, operation: str, uri: str = None) -> dict:
     return result
 
 def log_operation(result: dict):
-    """写入审计日志"""
+    """写入审计日志 (统一入口)"""
+    # 始终写入源日志 (向后兼容)
     AUDIT_LOG.parent.mkdir(parents=True, exist_ok=True)
     with open(AUDIT_LOG, 'a') as f:
         f.write(json.dumps(result, ensure_ascii=False) + "\n")
+    
+    # 同步写入统一审计日志 (含 SSB 发布)
+    if HAS_UNIFIED:
+        log_event(
+            source="l0",
+            event_type=result.get("operation", "audit"),
+            summary=result.get("operation", "")[:200],
+            uri=result.get("uri"),
+            domain=result.get("domain"),
+            passed=result.get("passed", True),
+            violations=result.get("violations"),
+            metadata={"detail": result.get("detail", "")},
+        )
 
 def get_audit_log(domain: str = None, since: str = None, limit: int = 50) -> list:
     """查询审计日志"""
