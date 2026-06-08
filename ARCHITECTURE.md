@@ -364,13 +364,13 @@ cockpit/
 | 项目 | 语言 | 包管理 | 构建 | 测试 | 格式化 | Python |
 |------|------|--------|------|------|--------|--------|
 | agora | Python | uv | hatchling | pytest | ruff | 3.13+ |
-| cockpit | Python | uv | hatchling | pytest | ruff | 3.10+ |
+| cockpit | Python | uv | hatchling | pytest | ruff | 3.13+ |
 | kairon | Python | uv | hatchling | pytest | ruff | 3.13+ |
 | gbrain | TypeScript | bun | bun | bun test | bun fmt | — |
 | omo | Python | uv | uv_build | pytest | ruff | 3.13+ |
 | metaos | Python | uv | hatchling | pytest | ruff | 3.13+ |
-| runtime | Python | uv | setuptools | pytest | ruff | 3.10+ |
-| ecos | Python | uv | hatchling | pytest | ruff | 3.10+ |
+| runtime | Python | uv | setuptools | pytest | ruff | 3.13+ |
+| ecos | Python | uv | hatchling | pytest | ruff | 3.13+ |
 
 ---
 

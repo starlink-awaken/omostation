@@ -7,7 +7,7 @@ name = "ecos"
 version = "0.8.0"
 description = "eCOS — 认知层：SSB 签名链、涌现度量、认知监控"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 license = {text = "MIT"}
 
 dependencies = [
