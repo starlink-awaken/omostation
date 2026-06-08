@@ -7,7 +7,7 @@
 
 扫描源:
   1. Claude/Scheduled/ (31 SKILL.md) → Mechanism (定时任务)
-  2. 驾驶舱/scripts/*.py (22)       → Mechanism (治理脚本)
+  2. @驾驶舱/scripts/*.py (22)       → Mechanism (治理脚本)
   3. Workspace 各项目 scripts/       → Mechanism (项目脚本)
   4. LaunchAgents plist              → Component (守护进程)
   5. L0 tools/                       → Mechanism (MOF 工具)
@@ -81,9 +81,9 @@ def scan_scheduled_tasks() -> list[dict]:
 
 
 def scan_governance_scripts() -> list[dict]:
-    """驾驶舱/scripts → Mechanism 节点"""
+    """@驾驶舱/scripts → Mechanism 节点"""
     nodes = []
-    scripts = DOCS / '驾驶舱' / 'scripts'
+    scripts = DOCS / '@驾驶舱' / 'scripts'
     if not scripts.exists():
         return nodes
     

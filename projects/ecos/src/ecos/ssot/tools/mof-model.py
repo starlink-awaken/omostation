@@ -10,8 +10,8 @@
     - CLAUDE.md 文件 → Specification (Agent 契约)
     - STATE.md 文件 → Entity (域状态快照)  
     - 域根目录结构 → Entity (Domain)
-    - 驾驶舱/scripts/ → Artifact (脚本)
-    - 驾驶舱/CARDS/ → Process (流程)
+    - @驾驶舱/scripts/ → Artifact (脚本)
+    - @驾驶舱/CARDS/ → Process (流程)
     
   Workspace:
     - projects/ 下的项目 → Component (服务/库)
