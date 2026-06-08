@@ -1,5 +1,10 @@
 # X 轴实现注册表 (Implementation Registry)
 
+> ⚠️ **已降级为人类可读视图(2026-06-08)**。机器可读 SSOT 迁移至 `protocols/x-axis-registry.yaml`,
+> 含 probe 探活声明 + known_state 实测。本文不再手工维护实现状态 —— 以 YAML + `omo x-axis check` 实测为准。
+> **迁移原因**:本文曾声称 X1/X2/X3 已实现,但 probe 实测发现声明/现实分裂
+> (如 X1/K2 审计日志 system.yaml 报 EMPTY、实测 14.9 万条活跃)。详见 `x-plane-architecture-design-v1.md` §1。
+>
 > 可变 · 实现级 · 不纳入架构定义
 > 对应架构: LAYER-INDEX.md §X1-X4 (原则定义)
 

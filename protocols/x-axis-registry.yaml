@@ -1,0 +1,356 @@
+# X 轴机制注册表 (X-Axis Mechanism Registry) — 机器可读 SSOT
+#
+# 这是 X1-X4 所有保障机制的唯一权威注册源。
+# 替代 .omo/_knowledge/management/x-axis-implementation-registry.md(降级为生成视图)。
+#
+# 核心原则:
+#   - 每个机制必须声明 probe(探活方式),否则不得注册。
+#   - probe 回答的是"机制真的在运行吗"(alive),不是"代码是否存在"。
+#   - known_state 诚实标注 system.yaml 已知真相 —— registry 自己不撒谎。
+#   - status=DEAD = 声明存在但探活无证据(专治声明/现实分裂)。
+#
+# 对应设计: .omo/_knowledge/management/x-plane-architecture-design-v1.md §4-§5
+# 原则定义: LAYER-INDEX.md §X1-X4
+
+version: 2
+updated: "2026-06-08"
+
+# probe.kind 枚举:
+#   command          — 跑命令,exit 0 = alive
+#   http             — 打健康端点,2xx = alive
+#   jsonl_freshness  — 查 JSONL 最后记录时间戳,空/陈旧 = DEAD
+#   counter          — 读计数器(如 24h 事件数),0 = DEAD
+#
+# runner: ready(脚本已存在可直接跑) | pending(待档位②实现)
+
+mechanisms:
+  # ───────────────────────── X1 审计链(操作安全)─────────────────────────
+  - id: X1/K1
+    axis: X1
+    name: KEI 安全沙箱
+    owner: runtime
+    impl: projects/runtime/.../kei_sandbox.py
+    probe:
+      kind: counter
+      run: "uv run --package runtime python -m runtime.kei_probe --count-24h"
+      expect: ">0"            # 24h 捕获事件数为 0 → DEAD
+      timeout_s: 5
+    sla: { max_silence_h: 1 }
+    blocks: "X1 score < 80 → Phase gate 阻断"
+    known_state: "存疑 — system.yaml 报 X1-SANDBOX_INERT,但 X1/K2 审计日志 14.9万条活跃,证明沙箱实际在写。待 counter probe(档位②)确证,疑为声明虚低"
+    runner: pending
+
+  - id: X1/K2
+    axis: X1
+    name: KEI 审计记录
+    owner: runtime
+    impl: runtime/data/kei_audit.jsonl
+    probe:
+      kind: jsonl_freshness
+      path: "~/runtime/data/kei_audit.jsonl"
+      expect: "last_record_age_h < max_silence_h"   # 空或陈旧 → DEAD
+      timeout_s: 5
+    sla: { max_silence_h: 24 }
+    blocks: "X1 score 扣分"
+    known_state: "GREEN(probe 实测 2026-06-08) — kei_audit.jsonl 149498 行, age 7.6h < 24h, 2026-06-07T23:34 仍在拦截写操作。system.yaml 的 P2-KEI_AUDIT_EMPTY 系过期误报(声明虚低)"
+    runner: pending
+
+  - id: X1/K3
+    axis: X1
+    name: Agora MCP 认证
+    owner: agora
+    impl: projects/agora/.../server/mcp.py
+    probe:
+      kind: command
+      run: "uv run --package omo python -m omo.xplane_probes agora_auth"
+      expect: "auth_middleware_mounted == true"
+      timeout_s: 5
+    sla: { max_silence_h: 24 }
+    blocks: "X1 score 扣分"
+    known_state: "UNKNOWN — 待 probe 验证中间件是否真挂载"
+    runner: pending
+
+  - id: X1/K4
+    axis: X1
+    name: 端口安全验证
+    owner: agora
+    impl: projects/agora/.../core/registry.py
+    probe:
+      kind: command
+      run: "uv run python scripts/check-port-registry.py"
+      expect_exit: 0
+      timeout_s: 10
+    sla: { max_silence_h: 168 }
+    blocks: "X4 端口冲突 → CI RED"
+    known_state: "GREEN(预期) — X4 一致性体系已覆盖"
+    runner: ready
+
+  - id: X1/K5
+    axis: X1
+    name: OMO 约束检查
+    owner: cockpit
+    impl: cockpit cards_check MCP
+    probe:
+      kind: command
+      run: "uv run --package omo python -m omo.xplane_probes cards_check"
+      expect: "compliant_field_present == true"
+      timeout_s: 10
+    sla: { max_silence_h: 24 }
+    blocks: "violations != [] → 操作阻断"
+    known_state: "UNKNOWN — 待 probe 验证 MCP 可达"
+    runner: pending
+
+  # ───────────────────────── X2 保鲜(数据新鲜)─────────────────────────
+  - id: X2/K1
+    axis: X2
+    name: 服务健康监控
+    owner: runtime
+    impl: projects/runtime/.../scheduler.py + autoheal.sh
+    probe:
+      kind: command
+      run: "uv run --package omo python -m omo.xplane_probes service_health"
+      expect: "heartbeat_age_s < 30"
+      timeout_s: 5
+    sla: { max_silence_h: 1 }
+    blocks: "X2 score < 80 → 告警"
+    known_state: "DEAD — system.yaml: X2-NO_FRESHNESS(无 age 追踪/无自动恢复)"
+    runner: pending
+
+  - id: X2/K2
+    axis: X2
+    name: 文档保鲜检查
+    owner: scripts
+    impl: scripts/check-interfaces.py --doc-only
+    probe:
+      kind: command
+      run: "uv run python scripts/check-interfaces.py --doc-only"
+      expect_exit: 0
+      timeout_s: 30
+    sla: { max_silence_h: 168 }   # CI cron 每周一
+    blocks: ">90d → RED"
+    known_state: "GREEN(预期) — CI cron 已接入"
+    runner: ready
+
+  - id: X2/K3
+    axis: X2
+    name: 债务保鲜
+    owner: omo
+    impl: projects/omo/src/omo/omo_debt.py
+    probe:
+      kind: command
+      run: "uv run --package omo python -m omo.xplane_probes debt_freshness"
+      expect: "stale_debt_count_field_present == true"
+      timeout_s: 10
+    sla: { max_silence_h: 168 }   # 7d review 周期
+    blocks: "X2 score 扣分"
+    known_state: "GREEN(预期) — omo_debt 有 freshness state"
+    runner: pending
+
+  - id: X2/K4
+    axis: X2
+    name: CARDS 过期检测
+    owner: cockpit
+    impl: cockpit cards_status MCP
+    probe:
+      kind: command
+      run: "uv run --package omo python -m omo.xplane_probes cards_status"
+      expect: "stale_threshold_h == 72"
+      timeout_s: 10
+    sla: { max_silence_h: 72 }
+    blocks: "X2 score 扣分"
+    known_state: "UNKNOWN — 待 probe 验证"
+    runner: pending
+
+  - id: X2/K5
+    axis: X2
+    name: CI 工作流保鲜
+    owner: scripts
+    impl: .github/workflows/governance-check.yml
+    probe:
+      kind: command
+      run: "uv run --package omo python -m omo.xplane_probes ci_freshness"
+      expect: "last_run_age_h < max_silence_h"
+      timeout_s: 10
+    sla: { max_silence_h: 168 }
+    blocks: "X2 score 扣分"
+    known_state: "GREEN(预期) — 21 workflows 在册"
+    runner: pending
+
+  # ───────────────────────── X3 价值栈(投入产出)─────────────────────────
+  - id: X3/K1
+    axis: X3
+    name: LLM 成本追踪
+    owner: omo
+    impl: projects/omo/src/omo/omo_cost.py → llm_cost.jsonl
+    probe:
+      kind: jsonl_freshness
+      path: "~/runtime/data/llm_cost.jsonl"
+      expect: "last_record_age_h < max_silence_h"
+      timeout_s: 5
+    sla: { max_silence_h: 24 }
+    blocks: "X3 score < 80 → 告警"
+    known_state: "DEAD — system.yaml: X3-NO_COSTING / OMO-X3-NOCOST(零实现)"
+    runner: pending
+
+  - id: X3/K2
+    axis: X3
+    name: LLM Gateway 路由
+    owner: kairon
+    impl: llm-gateway-kernel
+    probe:
+      kind: http
+      url: "http://localhost:${LLM_GATEWAY_PORT}/health"
+      expect_status: 200
+      timeout_s: 5
+    sla: { max_silence_h: 1 }
+    blocks: "X3 score 扣分"
+    known_state: "UNKNOWN — 待 probe 验证端点"
+    runner: pending
+
+  - id: X3/K3
+    axis: X3
+    name: CARDS 优先级分级
+    owner: cockpit
+    impl: P0/P1/P2/P3 frontmatter
+    probe:
+      kind: command
+      run: "uv run --package omo python -m omo.xplane_probes cards_priority"
+      expect: "tiers_present == true"
+      timeout_s: 10
+    sla: { max_silence_h: 168 }
+    blocks: "X3 score 扣分"
+    known_state: "GREEN(预期) — 治理驱动"
+    runner: pending
+
+  # ───────────────────────── X4 一致性(规则遵守 · 活的)─────────────────────
+  - id: X4/K1
+    axis: X4
+    name: CLI 入口注册验证
+    owner: scripts
+    impl: scripts/check-interfaces.py
+    probe:
+      kind: command
+      run: "uv run python scripts/check-interfaces.py"
+      expect_exit: 0
+      timeout_s: 30
+    sla: { max_silence_h: 168 }
+    blocks: "未注册 CLI → CI RED"
+    known_state: "GREEN — X4 体系扎实"
+    runner: ready
+
+  - id: X4/K2
+    axis: X4
+    name: 端口冲突检测
+    owner: scripts
+    impl: scripts/check-interfaces.py + agora/registry.py
+    probe:
+      kind: command
+      run: "uv run python scripts/check-port-registry.py"
+      expect_exit: 0
+      timeout_s: 10
+    sla: { max_silence_h: 168 }
+    blocks: "端口冲突 → CI + runtime 双重阻断"
+    known_state: "GREEN"
+    runner: ready
+
+  - id: X4/K3
+    axis: X4
+    name: 跨层 import 检查
+    owner: scripts
+    impl: scripts/check-cross-deps.py
+    probe:
+      kind: command
+      run: "uv run python scripts/check-cross-deps.py"
+      expect_exit: 0
+      timeout_s: 30
+    sla: { max_silence_h: 168 }
+    blocks: "跨层违规 → CI RED"
+    known_state: "GREEN"
+    runner: ready
+
+  - id: X4/K4
+    axis: X4
+    name: 接口注册表
+    owner: scripts
+    impl: INTERFACE.yaml × 7 项目
+    probe:
+      kind: command
+      run: "uv run python scripts/check-interfaces.py"
+      expect_exit: 0
+      timeout_s: 30
+    sla: { max_silence_h: 168 }
+    blocks: "声明式 + CI 一致性验证"
+    known_state: "GREEN"
+    runner: ready
+
+  - id: X4/K5
+    axis: X4
+    name: 端口注册表
+    owner: protocols
+    impl: protocols/port-registry.yaml
+    probe:
+      kind: command
+      run: "uv run python scripts/check-port-registry.py"
+      expect_exit: 0
+      timeout_s: 10
+    sla: { max_silence_h: 168 }
+    blocks: "先注册后使用, CI 检查"
+    known_state: "GREEN"
+    runner: ready
+
+  - id: X4/K6
+    axis: X4
+    name: Agent 启动契约
+    owner: cockpit
+    impl: CLAUDE.md §0 + workspace_context MCP
+    probe:
+      kind: command
+      run: "uv run --package omo python -m omo.xplane_probes agent_contract"
+      expect: "claude_md_section0_present == true"
+      timeout_s: 5
+    sla: { max_silence_h: 720 }   # 每月审查
+    blocks: "Agent 对话即读"
+    known_state: "GREEN(软约束)"
+    runner: pending
+
+  - id: X4/K7
+    axis: X4
+    name: Phase 门禁
+    owner: omo
+    impl: .omo/_truth/goals/current.yaml + X4 score
+    probe:
+      kind: command
+      run: "uv run --package omo python -m omo.xplane_probes phase_gate"
+      expect: "x4_score >= 90"
+      timeout_s: 10
+    sla: { max_silence_h: 720 }
+    blocks: "score >= 90 才可迁移 Phase"
+    known_state: "GREEN"
+    runner: pending
+
+  - id: X4/K8
+    axis: X4
+    name: 跨项目依赖检查
+    owner: scripts
+    impl: scripts/check-cross-deps.py
+    probe:
+      kind: command
+      run: "uv run python scripts/check-cross-deps.py"
+      expect_exit: 0
+      timeout_s: 30
+    sla: { max_silence_h: 168 }
+    blocks: "违规 → CI push RED"
+    known_state: "GREEN"
+    runner: ready
+
+# ───────────────────────── 聚合策略 ─────────────────────────
+scoring:
+  # 每轴分数 = 该轴 GREEN 机制数 / 总机制数 × 100(DEAD/RED 计 0)
+  per_axis: "green_count / total_count * 100"
+  # 总分取短板,不取平均(木桶效应,防止 X4=100 稀释 X3=0)
+  xplane_score: "min(X1, X2, X3, X4)"
+  # 接入 health_score: health = w_quality*quality + w_xplane*xplane
+  health_integration:
+    target: projects/omo/src/omo/omo_state.py
+    formula: "health_score = 0.5*quality_score + 0.5*xplane_score"
+    note: "档位② 落地。当前 health_score=100 未含 xplane,即声明/现实分裂的根源。"
