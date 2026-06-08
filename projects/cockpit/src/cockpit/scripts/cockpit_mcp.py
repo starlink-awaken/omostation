@@ -344,15 +344,28 @@ def daily_summary(days: int = 1) -> str:
 _CARDS_DIR = Path.home() / "Documents" / "驾驶舱" / "CARDS"
 _VAULT_DIR = Path.home() / "Documents" / "@学习进化"
 
-# L4 12 域映射 (bos:// URI 域 → 本地文件系统路径)
+# L4 19 域映射 (bos:// URI 域 → 本地文件系统路径)
+# 来源: CLAUDE_COWORK_GLOBAL.md v6.0 + L0 MOF M1 domain/DOMAIN-*.yaml
 _L4_DOMAINS: dict[str, Path] = {
+    # ── DocumentDomain (7域) ──
+    "cockpit": Path.home() / "Documents" / "@驾驶舱",
     "vault": _VAULT_DIR,
     "personal": Path.home() / "Documents" / "@个人",
-    "family": Path.home() / "Documents" / "@家庭",
-    "shared": Path.home() / "Documents" / "@共享",
-    "sharedwork": Path.home() / "Documents" / "@共享工作",
-    "work-weijian": Path.home() / "Documents" / "@卫健工作",
-    "work-guozhuan": Path.home() / "Documents" / "@国转工作",
+    "shared": Path.home() / "Documents" / "@公共",
+    "family": Path.home() / "Documents" / "@家庭生活",
+    "work-weijian": Path.home() / "Documents" / "@卫健委",
+    "work-guozhuan": Path.home() / "Documents" / "@国转中心",
+    # ── ConfigDomain (3域) ──
+    "ai-config": Path.home() / ".ai",
+    "agents-config": Path.home() / ".agents",
+    "icloud-sharedconf": Path.home() / "SharedConf",
+    # ── ToolDomain (2域) ──
+    "bin": Path.home() / "bin",
+    "toolbox": Path.home() / "ToolBox",
+    # ── WorkspaceDomain (1域) ──
+    "sharedwork": Path("/Users") / "SharedWork",
+    # ── StorageDomain (1域) ──
+    "shareddisk": Path("/Volumes") / "SharedDisk",
 }
 _WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[4])))
 _OMO_GOALS = _WORKSPACE_ROOT / ".omo" / "_truth" / "goals" / "current.yaml"
@@ -554,10 +567,12 @@ def cards_check(card_id: str = "") -> str:
 def vault_search(keyword: str = "", domain: str = "vault") -> str:
     """在 L4 域中搜索相关知识/方法论/经验。
 
-    支持12个 L4 域:
-      vault (默认: 学习进化), personal (@个人), family (@家庭),
-      shared (@共享), sharedwork (@共享工作),
-      work-weijian (@卫健工作), work-guozhuan (@国转工作)
+    支持 19 个 L4 域:
+      Document: vault, cockpit, personal, shared, family,
+                work-weijian, work-guozhuan
+      Config:   ai-config, agents-config, icloud-sharedconf
+      Tool:     bin, toolbox
+      Other:    sharedwork, shareddisk
 
     **Agent 应在需要方法论或历史上下文时调用此工具。**
     返回 JSON: results(list), total(int), domain(str)。

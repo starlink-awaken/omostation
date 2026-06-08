@@ -226,17 +226,6 @@ def main() -> int:
     profile_p = sub.add_parser("profile", help="查看/编辑身份档案 (L4 入口)")
     profile_p.add_argument("--edit", action="store_true", help="编辑身份档案")
 
-    # P74-W0: L4 自我层 CARDS 抓手 (5 仓对接 L4 镜像 P49 stdio_rpc helper 模式, l4cards 避免跟 line 256 'cards' 冲突)
-    from .commands.cards import cmd_cards
-    l4cards_p = sub.add_parser("l4cards", help="L4 自我层 CARDS 抓手 (列/查/搜/serve, 镜像 P49 stdio_rpc)")
-    l4cards_sub = l4cards_p.add_subparsers(dest="cards_command", parser_class=WorkspaceParser)
-    l4cards_sub.add_parser("list", help="列所有 CARDS (按 debts/deliverys/ideas/researchs/tasks)")
-    l4cards_get_p = l4cards_sub.add_parser("get", help="查 1 个 card (按 ID 或 path)")
-    l4cards_get_p.add_argument("id", help="card ID (含 .md 扩展名)")
-    l4cards_search_p = l4cards_sub.add_parser("search", help="全文搜 (按 title + tags + body)")
-    l4cards_search_p.add_argument("query", help="搜索关键词 (regex)")
-    l4cards_sub.add_parser("serve", help="stdio JSON-RPC serve mode (镜像 P49 stdio_rpc)")
-
     sub.add_parser("product-health", help="产品健康度检测")
 
     mcp_p = sub.add_parser("mcp", help="启动 MCP server 或列出工具")
@@ -434,9 +423,6 @@ def main() -> int:
         return cmd_context(args)
     if args.command == "cards":
         from .commands.l4bridge import cmd_cards
-        return cmd_cards(args)
-    if args.command == "l4cards":
-        # P74-W0: L4 自我层 CARDS 抓手 (镜像 P49 stdio_rpc helper 模式)
         return cmd_cards(args)
     if args.command == "vault":
         from .commands.l4bridge import cmd_vault
