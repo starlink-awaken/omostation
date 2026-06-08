@@ -1,36 +1,35 @@
 # M0 运行时快照 (自动生成)
-# 更新: 2026-06-06T13:46:41.300837+00:00
+# 更新: 2026-06-08T00:43:45.794469+00:00
 
 daemon:
-  cycles: 11
-  healthy: false
-  last_exit: 1
-generated_at: '2026-06-06T13:46:41.300837+00:00'
-m1_node_count: 191
+  cycles: 24
+  healthy: true
+  last_exit: 0
+generated_at: '2026-06-08T00:43:45.794469+00:00'
 protocols:
   A2A:
-    age_days: 156
-    decay: 0.87
-    remaining_pct: 13.3
-    status: aging
+    age_days: 2
+    decay: 0.01
+    remaining_pct: 98.9
+    status: fresh
   ACP:
-    age_days: 156
-    decay: 0.87
-    remaining_pct: 13.3
-    status: aging
+    age_days: 2
+    decay: 0.01
+    remaining_pct: 98.9
+    status: fresh
   BOS_URI:
-    age_days: 0
-    decay: 0.0
-    remaining_pct: 100.0
+    age_days: 2
+    decay: 0.01
+    remaining_pct: 98.9
     status: fresh
   L0_YAML:
-    age_days: 0
-    decay: 0.0
-    remaining_pct: 100.0
+    age_days: 2
+    decay: 0.01
+    remaining_pct: 98.9
     status: fresh
   MCP:
-    age_days: 0
-    decay: 0.0
-    remaining_pct: 100.0
+    age_days: 2
+    decay: 0.01
+    remaining_pct: 99.5
     status: fresh
 version: 1.0.0

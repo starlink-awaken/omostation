@@ -1,0 +1,14 @@
+id: BOSROUTE-GOVERNANCE-SOT-BRIDGE
+type: Component
+subtype: BOSRoute
+name: bos://governance/sot-bridge/*
+description: 别名映射到 sot-bridge 桥接域 — sot-bridge/register, sot-bridge/query
+status: active
+domain: governance
+created: '2026-06-08'
+version: 1.0.0
+layer: I0
+properties:
+  layer: I0
+  runtime: active
+  protocol: BOS_URI

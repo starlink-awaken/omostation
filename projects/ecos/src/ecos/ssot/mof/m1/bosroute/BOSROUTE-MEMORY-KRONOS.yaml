@@ -1,0 +1,14 @@
+id: BOSROUTE-MEMORY-KRONOS
+type: Component
+subtype: BOSRoute
+name: bos://memory/kronos/*
+description: kronos 时间序列知识引擎别名 — kronos/ingest, kronos/query, kronos/schedule
+status: active
+domain: memory
+created: '2026-06-08'
+version: 1.0.0
+layer: I0
+properties:
+  layer: I0
+  runtime: active
+  protocol: BOS_URI

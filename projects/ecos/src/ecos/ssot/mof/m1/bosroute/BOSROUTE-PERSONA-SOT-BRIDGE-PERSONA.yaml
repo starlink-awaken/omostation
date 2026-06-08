@@ -1,0 +1,14 @@
+id: BOSROUTE-PERSONA-SOT-BRIDGE-PERSONA
+type: Component
+subtype: BOSRoute
+name: bos://persona/sot-bridge-persona/*
+description: sot-bridge 人格桥接 alias — recall-entity, recall, sync
+status: active
+domain: persona
+created: '2026-06-08'
+version: 1.0.0
+layer: I0
+properties:
+  layer: I0
+  runtime: active
+  protocol: BOS_URI

@@ -20,14 +20,19 @@ Agora 在处理每个 BOS 请求时调用 pre_check / post_audit。
     - 异常时异步写审计日志，不阻塞请求
 """
 
-import json, yaml, sqlite3, time
+import json
+import os
+import sqlite3
+import time
+
+import yaml
 from pathlib import Path
 from datetime import datetime, timezone
 
 HOME = Path.home()
 ROUTES_CACHE = None
 ROUTES_CACHE_TIME = 0
-CACHE_TTL = 300  # 5 min
+CACHE_TTL = int(os.environ.get("BOS_ROUTES_CACHE_TTL", "300"))  # 5 min default, overridable
 AUDIT_LOG = HOME / ".ecos" / "bos-audit.jsonl"
 CARDS_DB = HOME / "Workspace" / "data" / "cards" / "cards.db"
 L0_M1 = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
@@ -59,7 +64,7 @@ def _load_routes() -> dict:
                         "layer": (data.get("properties", {}) or {}).get("layer", "?"),
                         "description": data.get("description", ""),
                     }
-            except:
+            except Exception:
                 pass
     
     # Load from Component nodes with BOS_URI protocol
@@ -77,7 +82,7 @@ def _load_routes() -> dict:
                         "layer": props.get("layer", "?"),
                         "description": data.get("description", ""),
                     }
-            except:
+            except Exception:
                 pass
     
     ROUTES_CACHE = routes
@@ -197,5 +202,5 @@ if __name__ == "__main__":
     print(f"Pre-check: {'✅' if ok else '❌'} {reason}")
     if ok:
         post_audit(uri, 200, 12)
-        print(f"Post-audit: logged")
+        print("Post-audit: logged")
         print(f"Stats: {health_check()['stats']}")

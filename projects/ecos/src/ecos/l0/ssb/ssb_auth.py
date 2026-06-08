@@ -14,7 +14,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
-ECOS_HOME = Path(__file__).resolve().parents[3]
+ECOS_HOME = Path(os.environ.get("ECOS_HOME", Path.home() / ".ecos"))
 KEY_FILE = ECOS_HOME / "LADS" / "ssb" / ".ssb_key"
 DB_PATH = ECOS_HOME / "LADS" / "ssb" / "ecos.db"
 
@@ -29,7 +29,20 @@ def _load_key():
 
 
 def _ensure_schema(db: sqlite3.Connection):
-    """确保 ssb_events 表有 agent_signature 列"""
+    """确保 ssb_events 表存在且有 agent_signature 列"""
+    tables = [r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
+    if "ssb_events" not in tables:
+        db.execute("""
+            CREATE TABLE ssb_events (
+                id INTEGER PRIMARY KEY,
+                seq INTEGER,
+                payload_json TEXT,
+                source_agent TEXT,
+                agent_signature TEXT
+            )
+        """)
+        db.commit()
+        return
     cols = [r[1] for r in db.execute("PRAGMA table_info(ssb_events)").fetchall()]
     if "agent_signature" not in cols:
         db.execute("ALTER TABLE ssb_events ADD COLUMN agent_signature TEXT")

@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 HOME = Path.home()
 WS = HOME / "Workspace"
 L0_NODES = WS / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "nodes"
-M0_FILE = WS / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "M0-snapshot.yaml"
+M0_FILE = WS / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m0" / "snapshot.yaml"
 CARDS_DB = WS / "data" / "cards" / "cards.db"
 DAEMON_DB = HOME / ".ecos" / "daemon-state.db"
 CONSTRAINTS = WS / "projects" / "ecos" / "src" / "ecos" / "ssot" / "registry" / "L0-constraints.yaml"
@@ -77,10 +77,12 @@ def generate_m0_snapshot() -> dict:
     # Daemon state
     if DAEMON_DB.exists():
         conn = sqlite3.connect(str(DAEMON_DB))
-        cur = conn.execute("SELECT COUNT(*), MAX(exit_code) FROM cycles")
-        cycles, max_exit = cur.fetchone()
+        cur = conn.execute("SELECT COUNT(*), exit_code FROM cycles ORDER BY id DESC LIMIT 1")
+        cycles_row = cur.fetchone()
+        cycles = cycles_row[0] if cycles_row else 0
+        last_exit = cycles_row[1] if cycles_row else None
         conn.close()
-        snap["daemon"] = {"cycles": cycles, "healthy": max_exit == 0 if max_exit is not None else False, "last_exit": max_exit}
+        snap["daemon"] = {"cycles": cycles, "healthy": last_exit == 0 if last_exit is not None else False, "last_exit": last_exit}
     else:
         snap["daemon"] = {"status": "unknown"}
     

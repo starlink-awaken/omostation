@@ -12,6 +12,17 @@ except ImportError:
     L0_AUDIT = False
     def validate_operation(*a,**kw): return {"passed":True,"violations":[]}
     def get_audit_log(*a,**kw): return []
+
+# Unified audit integration
+try:
+    from audit_unified import query_events, print_audit_report, log_event
+    HAS_AUDIT_UNIFIED = True
+except ImportError:
+    HAS_AUDIT_UNIFIED = False
+    def query_events(**kw): return {"events": [], "total": 0, "sources": {}}
+    def print_audit_report(r): print("  ⚠️  unified audit 不可用")
+    def log_event(**kw): return {}
+
 from collections import defaultdict
 
 H = Path.home()
@@ -27,39 +38,131 @@ KEMS_PLANES = {"document":["_control","_entities","_knowledge","_storage","_arch
 REQUIRED_TIER1 = ["CLAUDE.md","_control/STATE.md","_control/MEMORY.md","_entities/ENTITIES.md","_control/TIMELINE.md"]
 SKIP_AUDIT = {"Workspace",".claude","Obsidian","Documents","Desktop","Downloads","Library","Movies","Music","Pictures","Public","Applications"}
 
-# ── 数据加载 (带 TTL 缓存) ──
-_registry_cache = {"data": None, "ts": 0.0, "path": None}
-REGISTRY_CACHE_TTL = 60  # seconds
+# ── 三层缓存系统 (L1: Memory / L2: JSON / L3: SSOT) ──
+# L1: 进程内存 TTL 缓存
+_L1_CACHE: dict[str, dict] = {}
+L1_TTL = 60  # seconds
+
+# L2: 持久化 JSON 缓存
+BOS_CACHE_FILE = H / ".ecos" / "bos" / "cache.json"
+L2_TTL = 300  # seconds (5 min)
+
+# L3: SSOT (直接从 YAML/M1 节点读取 — 无缓存)
+
+def _l1_get(key: str) -> any:
+    """L1 内存缓存读"""
+    entry = _L1_CACHE.get(key)
+    if entry and (__import__("time").time() - entry["ts"]) < L1_TTL:
+        return entry["data"]
+    return None
+
+def _l1_set(key: str, data: any) -> None:
+    """L1 内存缓存写"""
+    _L1_CACHE[key] = {"data": data, "ts": __import__("time").time()}
+
+def _l1_invalidate(key: str = None) -> None:
+    """L1 缓存失效"""
+    if key:
+        _L1_CACHE.pop(key, None)
+    else:
+        _L1_CACHE.clear()
+
+def _l2_get(key: str) -> any:
+    """L2 JSON 持久缓存读"""
+    try:
+        if BOS_CACHE_FILE.exists():
+            data = json.loads(BOS_CACHE_FILE.read_text())
+            entry = data.get(key)
+            if entry and (__import__("time").time() - entry.get("ts", 0)) < L2_TTL:
+                return entry["data"]
+    except Exception:
+        pass
+    return None
+
+def _l2_set(key: str, data: any) -> None:
+    """L2 JSON 持久缓存写"""
+    try:
+        BOS_CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        cache_data = {}
+        if BOS_CACHE_FILE.exists():
+            cache_data = json.loads(BOS_CACHE_FILE.read_text())
+        if "_version" not in cache_data:
+            cache_data["_version"] = 1
+            cache_data["_created"] = datetime.now().isoformat()
+        cache_data[key] = {"data": data, "ts": __import__("time").time()}
+        cache_data["_updated"] = datetime.now().isoformat()
+        BOS_CACHE_FILE.write_text(json.dumps(cache_data, indent=2, ensure_ascii=False))
+    except Exception:
+        pass
+
+def _cache_get(key: str) -> any:
+    """三级缓存读: L1 → L2 → L3 (返回 None = 未命中)"""
+    # L1 快速命中
+    data = _l1_get(key)
+    if data is not None:
+        return data
+    # L2 持久缓存
+    data = _l2_get(key)
+    if data is not None:
+        _l1_set(key, data)  # 预热 L1
+        return data
+    return None
+
+def _cache_set(key: str, data: any) -> None:
+    """三级缓存写: L1 + L2 同时写入"""
+    _l1_set(key, data)
+    _l2_set(key, data)
+
+def _cache_warm() -> dict:
+    """从 L2 预热 L1 缓存 — 返回预热统计"""
+    stats = {"l1_before": len(_L1_CACHE), "l2_items": 0, "warmed": 0}
+    try:
+        if BOS_CACHE_FILE.exists():
+            data = json.loads(BOS_CACHE_FILE.read_text())
+            for key, entry in data.items():
+                if key.startswith("_"):
+                    continue
+                if isinstance(entry, dict) and "data" in entry and "ts" in entry:
+                    if (__import__("time").time() - entry["ts"]) < L1_TTL:
+                        _L1_CACHE[key] = {"data": entry["data"], "ts": entry["ts"]}
+                        stats["warmed"] += 1
+                    stats["l2_items"] += 1
+    except Exception:
+        pass
+    stats["l1_after"] = len(_L1_CACHE)
+    return stats
 
 def load_registry(force_reload: bool = False):
-    """Load domain registry with TTL cache.
+    """Load domain registry with 3-tier cache.
+    
+    Cache key: "domain_registry"
+    L1 → L2 → L3 (YAML SSOT)
     
     Args:
-        force_reload: If True, bypass cache and reload from disk.
+        force_reload: If True, bypass all caches and reload from SSOT.
     """
-    global _registry_cache
-    now = __import__("time").time()
+    key = "domain_registry"
     
+    if not force_reload:
+        data = _cache_get(key)
+        if data is not None:
+            return data
+    
+    # L3: SSOT — 直接从 YAML 读取
     p = L0_CONSTRAINTS if L0_CONSTRAINTS.exists() else L0_CONSTRAINTS_L4
-    if not p.exists(): return []
-    
-    path_str = str(p.resolve())
-    if (not force_reload 
-        and _registry_cache["data"] is not None 
-        and (now - _registry_cache["ts"]) < REGISTRY_CACHE_TTL
-        and _registry_cache["path"] == path_str):
-        return _registry_cache["data"]
+    if not p.exists():
+        return []
     
     with open(p) as f:
         data = yaml.safe_load(f).get("domain_registry", [])
     
-    _registry_cache = {"data": data, "ts": now, "path": path_str}
+    # 写入 L1 + L2
+    _cache_set(key, data)
     return data
 
 def invalidate_registry_cache():
     """Force next load_registry() to reload from disk."""
-    global _registry_cache
-    _registry_cache["data"] = None
+    _l1_invalidate("domain_registry")
 
 def find_domain(registry, name):
     for d in registry:
@@ -589,6 +692,84 @@ SEMANTIC_MAP = {
     "_tree":     None,  # 特殊处理: 目录树
 }
 
+# ── URI 生命周期管理 ──
+# 状态机: proposed → active → deprecated → removed
+URI_LIFECYCLE_STATES = ["proposed", "active", "deprecated", "removed"]
+URI_LIFECYCLE_TRANSITIONS = {
+    "proposed":  ["active", "deprecated", "removed"],
+    "active":    ["deprecated", "removed"],
+    "deprecated": ["removed"],
+    "removed":   [],
+}
+URI_LIFECYCLE_FILE = H / ".ecos" / "bos" / "lifecycle.json"
+
+def _load_lifecycle() -> dict:
+    """读取 URI 生命周期文件"""
+    try:
+        if URI_LIFECYCLE_FILE.exists():
+            return json.loads(URI_LIFECYCLE_FILE.read_text())
+    except (json.JSONDecodeError, OSError):
+        pass
+    return {"uris": {}, "_created": datetime.now().isoformat()}
+
+def _save_lifecycle(data: dict) -> None:
+    """写入 URI 生命周期文件"""
+    URI_LIFECYCLE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    data["_updated"] = datetime.now().isoformat()
+    URI_LIFECYCLE_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+
+def _transition_valid(from_state: str, to_state: str) -> bool:
+    """检查状态转换是否合法"""
+    allowed = URI_LIFECYCLE_TRANSITIONS.get(from_state, [])
+    return to_state in allowed
+
+def _get_uri_state(uri: str, lifecycle: dict = None) -> dict | None:
+    """查询 URI 生命周期状态"""
+    if lifecycle is None:
+        lifecycle = _load_lifecycle()
+    return lifecycle.get("uris", {}).get(uri)
+
+def _set_uri_state(uri: str, state: str, note: str = "") -> tuple[bool, str]:
+    """设置 URI 生命周期状态"""
+    lifecycle = _load_lifecycle()
+    uris = lifecycle.setdefault("uris", {})
+    
+    current = uris.get(uri, {})
+    old_state = current.get("state", "proposed")
+    
+    # First registration: proposed is always valid
+    if not current:
+        pass
+    elif not _transition_valid(old_state, state):
+        return False, f"非法转换: {old_state} → {state} (允许: {URI_LIFECYCLE_TRANSITIONS.get(old_state, [])})"
+    
+    now = datetime.now().isoformat()
+    uris[uri] = {
+        "uri": uri,
+        "state": state,
+        "old_state": old_state if current else None,
+        "created_at": current.get("created_at", now) if current else now,
+        "updated_at": now,
+        "note": note or current.get("note", ""),
+        "transitions": current.get("transitions", []) + [{"from": old_state if current else None, "to": state, "at": now}],
+    }
+    _save_lifecycle(lifecycle)
+    return True, f"{old_state or '—'} → {state}"
+
+def _enrich_with_lifecycle(uri: str, result: dict) -> dict:
+    """给解析结果附加生命周期信息"""
+    lc = _get_uri_state(uri)
+    if lc:
+        result["lifecycle"] = lc["state"]
+        result["lifecycle_note"] = lc.get("note", "")
+        if lc["state"] == "deprecated":
+            result["_warning"] = f"⚠️ 此 URI 已标记为 deprecate: {lc.get('note', '')}"
+        elif lc["state"] == "removed":
+            result["_error"] = f"❌ 此 URI 已移除 (410): {lc.get('note', '')}"
+    else:
+        result["lifecycle"] = "active"  # default
+    return result
+
 def resolve_semantic(domain: dict, shortcut: str) -> str:
     """将 _state/_memory 等语义快捷方式解析为实际文件路径"""
     if shortcut not in SEMANTIC_MAP: return None
@@ -668,51 +849,183 @@ def cmd_resolve(args):
     if not d:
         print(f"❌ 无法解析: {uri}")
         return
+    
+    # Check lifecycle
+    result = _enrich_with_lifecycle(uri, {"domain": d, "subpath": sub})
+    if result.get("_error"):
+        print(f"  {result['_error']}")
+        return
+    warning = result.get("_warning", "")
+    
     base = resolve_path(d)
     full = base / sub if sub else base
     exists = full.exists()
     print(f"\n  {uri}")
+    if warning: print(f"  {warning}")
     print(f"  → {full} {'✅' if exists else '❌'}")
-    print(f"  域: {d.get('name',d['id'])} | 类型: {d.get('domain_type','?')} | 大小: {full.stat().st_size if exists else 0} bytes\n")
+    print(f"  域: {d.get('name',d['id'])} | 类型: {d.get('domain_type','?')} | 大小: {full.stat().st_size if exists else 0} bytes")
+    print(f"  生命周期: {result['lifecycle']}\n")
+
+# ── BOS URI 约束评估 (X4-C10~C13) ──
+
+def _load_bos_constraints() -> list[dict]:
+    """从 L0-constraints.yaml 加载 X4-C10~C13 约束"""
+    constraints = []
+    for src in [L0_CONSTRAINTS, L0_CONSTRAINTS_L4]:
+        if not src.exists():
+            continue
+        try:
+            with open(src) as f:
+                data = yaml.safe_load(f)
+            for c in data.get("constraints", []):
+                cid = c.get("id", "")
+                if cid.startswith("X4-C1"):
+                    constraints.append(c)
+            if constraints:
+                break
+        except Exception:
+            continue
+    return constraints
+
+def _evaluate_bos_constraints(uri: str, registry: list, lifecycle: dict = None) -> list[dict]:
+    """评估 X4-C10~C13 约束，返回 violations 列表"""
+    violations = []
+    constraints = _load_bos_constraints()
+    if not constraints:
+        return violations
+    
+    # Parse the URI
+    domain_obj, subpath = parse_bos_uri(uri, registry)
+    
+    # Build evaluation context
+    ctx = {
+        "uri": uri,
+        "format_valid": uri.startswith("bos://") and not uri.startswith("bos://l4/") and not uri.startswith("bos://l3/"),
+        "resolvable": domain_obj is not None,
+        "path_exists": False,
+        "lifecycle_registered": False,
+    }
+    
+    if domain_obj:
+        base = resolve_path(domain_obj)
+        full = base / subpath if subpath else base
+        ctx["path_exists"] = full.exists()
+    
+    if lifecycle is None:
+        lifecycle = _load_lifecycle()
+    ctx["lifecycle_registered"] = uri in lifecycle.get("uris", {})
+    
+    # Evaluate each constraint
+    for c in constraints:
+        cid = c["id"]
+        rule = c.get("rule", "")
+        severity = c.get("type", "required")  # required / preferred
+        violation_msg = c.get("violation", f"违反 {cid}")
+        
+        # X4-C10: format
+        if cid == "X4-C10" and not ctx["format_valid"]:
+            violations.append({"constraint": cid, "severity": severity, "message": violation_msg, "detail": f"URI 格式异常: {uri}"})
+        
+        # X4-C11: resolvable
+        if cid == "X4-C11" and not ctx["resolvable"]:
+            violations.append({"constraint": cid, "severity": severity, "message": violation_msg, "detail": f"不可解析: {uri}"})
+        
+        # X4-C12: path exists
+        if cid == "X4-C12" and domain_obj and not ctx["path_exists"]:
+            violations.append({"constraint": cid, "severity": severity, "message": violation_msg, "detail": f"路径不存在: {uri}"})
+        
+        # X4-C13: lifecycle
+        if cid == "X4-C13" and domain_obj and not ctx["lifecycle_registered"]:
+            violations.append({"constraint": cid, "severity": severity, "message": violation_msg, "detail": f"缺生命周期: {uri}"})
+    
+    return violations
 
 def cmd_bos_validate(args):
-    """全量BOS URI健康检查"""
+    """全量BOS URI健康检查 + X4-C10~C13 约束评估"""
     registry = load_registry()
-    print("\n  ═══ BOS URI 全量健康检查 ═══\n")
+    lifecycle = _load_lifecycle()
+    constraints = _load_bos_constraints()
     
-    total = 0; ok = 0; fail = 0
+    print("\n  ═══ BOS URI 全量健康检查 + X4-C10~C13 约束评估 ═══\n")
+    if constraints:
+        print(f"  加载 {len(constraints)} 条 BOS 约束:", ", ".join(c["id"] for c in constraints))
+    else:
+        print("  ⚠️  未找到 X4-C10~C13 约束定义\n")
+    
+    total_uris = 0
+    total_ok = 0
+    total_violations = 0
+    all_violations = []  # (uri, severity, message, detail)
+    
     for d in registry:
         did = d["id"]
-        dtype = d.get("domain_type","document")
+        dtype = d.get("domain_type", "document")
+        uri_base = f"bos://{did}"
         
-        # Check basic domain URI
-        uri = f"bos://{did}"
-        dd, ss = parse_bos_uri(uri, registry)
-        if not dd: continue
-        
-        p = resolve_path(dd)
-        total += 1
-        if p.exists():
-            ok += 1
-        else:
-            fail += 1
-            print(f"  ❌ {uri} → {p} (域路径不存在)")
-        
-        # Semantic shortcuts: only for document domains
+        # URIs to check
+        uris_to_check = [(uri_base, None)]
         if dtype == "document":
-            for shortcut in ["_state","_claude"]:
-                suri = f"bos://{did}/{shortcut}"
-                sd, ssub = parse_bos_uri(suri, registry)
-                if sd:
-                    full = resolve_path(sd) / ssub if ssub else resolve_path(sd)
-                    total += 1
-                    if full.exists():
-                        ok += 1
-                    else:
-                        fail += 1
-                        print(f"  ❌ {suri} → {full}")
+            for shortcut in ["_state", "_claude", "_memory"]:
+                uris_to_check.append((f"bos://{did}/{shortcut}", shortcut))
+        
+        for uri, shortcut in uris_to_check:
+            total_uris += 1
+            domain_obj, subpath = parse_bos_uri(uri, registry)
+            
+            if not domain_obj:
+                print(f"  ❌ {uri}")
+                print(f"      无法解析: 域 '{did}' 未在注册表中找到")
+                all_violations.append((uri, "critical", "E-L0-012", "域未注册"))
+                total_violations += 1
+                continue
+            
+            p = resolve_path(domain_obj)
+            full = p / subpath if subpath else p
+            path_exists = full.exists()
+            
+            # Evaluate X4 constraints
+            violations = _evaluate_bos_constraints(uri, registry, lifecycle)
+            
+            if path_exists and not violations:
+                total_ok += 1
+                continue
+            
+            # Report issues
+            icon = "⚠️" if violations else "❌"
+            lc_icon = "📋" if uri in lifecycle.get("uris", {}) else "○"
+            print(f"  {icon} {lc_icon} {uri}")
+            
+            if not path_exists:
+                print(f"      ❌ X4-C12: 路径不存在 → {full}")
+                all_violations.append((uri, "required", "E-L0-013", f"路径不存在: {full}"))
+                total_violations += 1
+            
+            for v in violations:
+                sv = v["severity"]
+                icon_v = "❌" if sv == "required" else "⚠️"
+                print(f"      {icon_v} {v['constraint']}: {v['detail']}")
+                all_violations.append((uri, sv, v["constraint"], v["detail"]))
+                total_violations += 1
     
-    print(f"\n  {ok}✅  {fail}❌  (共{total} BOS URI)" + ("\n  ✅ 全部健康" if fail==0 else "") + "\n")
+    # Summary
+    print(f"\n  ═══ 摘要 ═══")
+    print(f"  URI 总数: {total_uris}")
+    print(f"  通过: {total_ok}✅")
+    print(f"  违规: {total_violations}❌/⚠️")
+    
+    if all_violations:
+        print(f"\n  违规明细:")
+        by_severity = {"required": 0, "preferred": 0, "critical": 0}
+        for _, sv, cid, _ in all_violations:
+            by_severity[sv] = by_severity.get(sv, 0) + 1
+        print(f"    required: {by_severity.get('required', 0)} 条")
+        print(f"    preferred: {by_severity.get('preferred', 0)} 条")
+    
+    # Lifecycle coverage
+    lc_uris = len(lifecycle.get("uris", {}))
+    print(f"\n  生命周期覆盖: {lc_uris}/{total_uris} URI")
+    
+    print()
 
 def cmd_routes(args):
     """生成 BOS routes.json 缓存"""
@@ -803,6 +1116,14 @@ def cmd_read(args):
     d, sub = parse_bos_uri(uri, registry)
     if not d:
         print(f"❌ 无法解析: {uri}"); return
+    
+    # Check lifecycle
+    result = _enrich_with_lifecycle(uri, {"domain": d, "subpath": sub})
+    if result.get("_error"):
+        print(f"  {result['_error']}")
+        return
+    warning = result.get("_warning", "")
+    
     base = resolve_path(d)
     full = base / sub if sub else base
     if not full.exists():
@@ -822,6 +1143,160 @@ def cmd_read(args):
         for l in lines: print(f"  {l}")
         if len(content.split("\n"))>max_lines: print(f"\n  ... (共{len(content.split('\n'))}行)")
     print()
+
+# ── URI 生命周期 CLI ──
+
+def cmd_lifecycle_set(args):
+    """设置 URI 生命周期状态: ecos domain lifecycle-set <bos://uri> <state> [--note ...]"""
+    if len(args) < 2:
+        print("用法: ecos domain lifecycle-set <bos://uri> <state> [--note ...]")
+        print(f"  state: {'|'.join(URI_LIFECYCLE_STATES)}")
+        return
+    uri = args[0]
+    state = args[1]
+    note = ""
+    for i, a in enumerate(args[2:], 2):
+        if a == "--note" and i + 1 < len(args):
+            note = args[i + 1]
+    if state not in URI_LIFECYCLE_STATES:
+        print(f"❌ 无效状态: {state} (允许: {URI_LIFECYCLE_STATES})")
+        return
+    ok, msg = _set_uri_state(uri, state, note)
+    if ok:
+        print(f"  ✅ {uri}: {msg}")
+    else:
+        print(f"  ❌ {msg}")
+
+def cmd_lifecycle_list(args):
+    """列出所有 URI 生命周期状态"""
+    lifecycle = _load_lifecycle()
+    uris = lifecycle.get("uris", {})
+    if not uris:
+        print("\n  📋 暂无 URI 生命周期记录\n")
+        return
+    # Filter
+    state_filter = args[0] if args else None
+    print(f"\n  ═══ URI 生命周期 ({len(uris)} 条) ═══\n")
+    print(f"  {'状态':<12} {'URI':<50} {'备注'}")
+    print(f"  {'─'*12} {'─'*50} {'─'*30}")
+    for u, info in sorted(uris.items()):
+        s = info.get("state", "?")
+        if state_filter and s != state_filter:
+            continue
+        icons = {"proposed": "🆕", "active": "✅", "deprecated": "⚠️", "removed": "❌"}
+        note = info.get("note", "")[:28]
+        print(f"  {icons.get(s,'?')} {s:<10} {u:<50} {note}")
+    print()
+
+def cmd_lifecycle_status(args):
+    """URI 生命周期状态统计"""
+    lifecycle = _load_lifecycle()
+    uris = lifecycle.get("uris", {})
+    if not uris:
+        print("\n  📋 暂无 URI 生命周期记录\n")
+        return
+    counts = {}
+    for info in uris.values():
+        s = info.get("state", "?")
+        counts[s] = counts.get(s, 0) + 1
+    print(f"\n  ═══ URI 生命周期统计 ═══\n")
+    for state in URI_LIFECYCLE_STATES:
+        c = counts.get(state, 0)
+        icons = {"proposed": "🆕", "active": "✅", "deprecated": "⚠️", "removed": "❌"}
+        print(f"  {icons.get(state,'?')} {state:<12} {c}")
+    print(f"\n  总计: {len(uris)} URI\n")
+
+
+# ── 缓存管理 CLI ──
+
+def cmd_cache_status(args):
+    """三层缓存状态"""
+    l1_size = len(_L1_CACHE)
+    l2_size = 0
+    l2_age = 0
+    try:
+        if BOS_CACHE_FILE.exists():
+            data = json.loads(BOS_CACHE_FILE.read_text())
+            l2_size = len([k for k in data if not k.startswith("_")])
+            updated = data.get("_updated", "")
+            if updated:
+                l2_age = int((datetime.now() - datetime.fromisoformat(updated)).total_seconds())
+    except Exception:
+        pass
+    
+    mtime = 0
+    for p in [L0_CONSTRAINTS, L0_CONSTRAINTS_L4]:
+        try:
+            m = p.stat().st_mtime if p.exists() else 0
+            if m > mtime: mtime = m
+        except: pass
+    ssot_age = int(__import__("time").time() - mtime) if mtime else 0
+    
+    print(f"\n  ═══ 三层缓存状态 ═══\n")
+    print(f"  L1 (内存):  {l1_size} 条目  TTL={L1_TTL}s")
+    print(f"  L2 (JSON):  {l2_size} 条目  TTL={L2_TTL}s  年龄={l2_age}s")
+    print(f"  L3 (SSOT):  L0-constraints.yaml  年龄={ssot_age}s")
+    print(f"  缓存文件:   {BOS_CACHE_FILE}")
+    
+    # Key detail
+    if l1_size > 0:
+        print(f"\n  L1 键列表:")
+        for k in sorted(_L1_CACHE.keys()):
+            print(f"    • {k}")
+    
+    # Warm options
+    print(f"\n  操作:")
+    print(f"    ecos domain cache-warm   预热 L1 从 L2")
+    print(f"    ecos domain cache-clear  清空所有缓存\n")
+
+def cmd_cache_warm(args):
+    """预热 L1 缓存从 L2"""
+    stats = _cache_warm()
+    print(f"  ✅ 预热完成: L2={stats['l2_items']} → 预热={stats['warmed']} | L1: {stats['l1_before']}→{stats['l1_after']}")
+
+def cmd_cache_clear(args):
+    """清空所有缓存层"""
+    _l1_invalidate()
+    try:
+        if BOS_CACHE_FILE.exists():
+            BOS_CACHE_FILE.unlink()
+    except: pass
+    print("  ✅ 所有缓存已清空 (L1 + L2)")
+
+
+# ── 统一审计查询 CLI ──
+
+def cmd_audit_unified(args):
+    """统一审计查询: ecos domain audit-unified [--hours 24] [--source all] [--domain <域>] [--event-type <类型>]"""
+    hours = 24
+    source = "all"
+    domain = None
+    event_type = None
+    
+    for i, a in enumerate(args):
+        if a == "--hours" and i + 1 < len(args):
+            hours = int(args[i + 1])
+        elif a == "--source" and i + 1 < len(args):
+            source = args[i + 1]
+        elif a == "--domain" and i + 1 < len(args):
+            domain = args[i + 1]
+        elif a == "--event-type" and i + 1 < len(args):
+            event_type = args[i + 1]
+        elif a == "--help" or a == "-h":
+            print(cmd_audit_unified.__doc__)
+            print("  --hours <N>     时间窗口 (小时, 默认24)")
+            print("  --source <s>    来源: all|l0|bos|ssb|daemon|healer|unified")
+            print("  --domain <d>    域过滤")
+            print("  --event-type <t> 事件类型过滤")
+            return
+    
+    if not HAS_AUDIT_UNIFIED:
+        print("\n  ⚠️  audit_unified 模块不可用\n")
+        return
+    
+    result = query_events(hours=hours, source=source, domain=domain, event_type=event_type)
+    print_audit_report(result)
+
 
 def cmd_info(args):
     """域综合报告 (status+validate+tree)"""
@@ -939,7 +1414,7 @@ def cmd_capabilities(args):
 
 # ── 主入口 ──
 def main():
-    cmds = {"list":cmd_list,"status":cmd_status,"validate":cmd_validate,"validate-all":cmd_all_validate,"tree":cmd_tree,"audit":cmd_audit,"relations":cmd_relations,"sync":cmd_sync,"stats":cmd_stats,"create":cmd_create,"register":cmd_register,"fix":cmd_fix,"info":cmd_info,"check-refs":cmd_check_refs,"resolve":cmd_resolve,"read":cmd_read,"bos-validate":cmd_bos_validate,"routes":cmd_routes,"search":cmd_search,"audit-log":cmd_audit_log,"workflow":cmd_workflow,"capabilities":cmd_capabilities}
+    cmds = {"list":cmd_list,"status":cmd_status,"validate":cmd_validate,"validate-all":cmd_all_validate,"tree":cmd_tree,"audit":cmd_audit,"relations":cmd_relations,"sync":cmd_sync,"stats":cmd_stats,"create":cmd_create,"register":cmd_register,"fix":cmd_fix,"info":cmd_info,"check-refs":cmd_check_refs,"resolve":cmd_resolve,"read":cmd_read,"bos-validate":cmd_bos_validate,"routes":cmd_routes,"search":cmd_search,"audit-log":cmd_audit_log,"workflow":cmd_workflow,"capabilities":cmd_capabilities,"lifecycle-set":cmd_lifecycle_set,"lifecycle-list":cmd_lifecycle_list,"lifecycle-status":cmd_lifecycle_status,"cache-status":cmd_cache_status,"cache-warm":cmd_cache_warm,"cache-clear":cmd_cache_clear,"audit-unified":cmd_audit_unified}
     if len(sys.argv)<2:
         print("\necos domain <cmd> [args]\n")
         for c,f in cmds.items(): print(f"  {c:<12} {f.__doc__ or ''}")

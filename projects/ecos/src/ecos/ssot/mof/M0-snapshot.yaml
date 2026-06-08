@@ -1,11 +1,11 @@
 # M0 运行时快照 (自动生成)
-# 更新: 2026-06-07T06:56:19.037083+00:00
+# 更新: 2026-06-07T23:37:25.838389+00:00
 
 daemon:
-  cycles: 18
-  healthy: false
-  last_exit: 1
-generated_at: '2026-06-07T06:56:19.037083+00:00'
+  cycles: 23
+  healthy: true
+  last_exit: 0
+generated_at: '2026-06-07T23:37:25.838389+00:00'
 protocols:
   A2A:
     age_days: 1
