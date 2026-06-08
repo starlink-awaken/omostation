@@ -57,12 +57,22 @@
 
 ## L4 — 自我层 (数据面 · 被动)
 
-| 项目 | 位置 | 类型 |
-|------|------|------|
-| **CARDS** | `~/Documents/驾驶舱/CARDS/` | 目标追踪 + 优先级 + 约束 |
-| **Vault** | `~/Documents/学习进化/` | 方法论 + 洞察 + 经验 |
+| 域 | 路径 | 类型 | bos:// URI |
+|----|------|------|------------|
+| **CARDS** | `~/Documents/驾驶舱/CARDS/` | 目标追踪 + 优先级 + 约束 (SQLite SSOT) | `bos://cockpit/` |
+| **Vault** | `~/Documents/@学习进化/` | 方法论 + 洞察 + 经验 (Obsidian 知识库) | `bos://vault/` |
+| **Personal** | `~/Documents/@个人/` | 个人档案 | `bos://personal/` |
+| **Family** | — | 家庭生活 | — |
+| **Shared** | — | 共享工作空间 | — |
+| **SharedWork** | — | 共享工作文档 | — |
+| **SharedDisk** | — | 共享存储盘 | — |
+| **Work-Weijian** | — | 卫健工作 | — |
+| **Work-Guozhuan** | — | 国转工作 | — |
+| **AI-Config** | — | AI 配置 | — |
+| **Obsidian-Vault** | — | Obsidian 移动端 | — |
+| **iCloud-SharedConf** | — | iCloud 共享配置 | — |
 
-**原则**: L4 不运行代码。Agent 通过 L3 cockpit MCP 访问 L4 数据。
+**原则**: L4 不运行代码。Agent 通过 L3 cockpit MCP 访问 L4 数据。L4 域模型定义在 L0 MOF `ecos/src/ecos/ssot/mof/m1/domain/`。
 
 ---
 
