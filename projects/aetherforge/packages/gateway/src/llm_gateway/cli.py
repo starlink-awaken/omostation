@@ -22,7 +22,11 @@ from .scheduler import ModelScheduler
 from .ssot_loader import load_ssot_models
 
 
-def cmd_list(use_ssot: bool = False) -> int:
+def cmd_list(use_ssot: bool = False, show_quota: bool = False, show_cost: bool = False) -> int:
+    if show_quota:
+        return _cmd_list_quota()
+    if show_cost:
+        return _cmd_list_cost()
     if use_ssot:
         m1_dir = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "compute_engine"
         if m1_dir.exists():
@@ -84,6 +88,42 @@ def cmd_mcp() -> int:
     return 0
 
 
+def _cmd_list_quota() -> int:
+    """显示所有 Provider 的配额状态。"""
+    from .quota_engine import QuotaEngine
+    qe = QuotaEngine()
+    qe.start()
+    qe.wait_ready(timeout=10)
+    summary = qe.get_summary()
+    print(f"{'Provider':18s} {'Key':6s} {'Online':7s} {'Quota':10s} {'Source':8s}")
+    print("-" * 55)
+    for p in summary["providers"]:
+        key = "✅" if p["has_key"] else "—"
+        online = "✅" if p.get("online") else ("—" if p["has_key"] else "  ")
+        q = f"{p['quota_pct']:.0f}%" if p["quota_pct"] is not None else "—"
+        src = p["quota_source"] if p["quota_source"] else "—"
+        print(f"  {p['provider']:16s} {key:6s} {online:7s} {q:10s} {src:8s}")
+    print(f"\ncodexbar: {'✅' if summary['codexbar_available'] else '❌'}")
+    print(f"{summary['available']}/{summary['total']} available")
+    qe.stop()
+    return 0
+
+
+def _cmd_list_cost() -> int:
+    """显示所有模型的定价。"""
+    from .pricing import PricingRegistry
+    pricing = PricingRegistry()
+    all_prices = pricing.list_all()
+    print(f"{'Model':30s} {'Provider':12s} {'Cost In':10s} {'Cost Out':10s} {'Context':8s}")
+    print("-" * 70)
+    for mp in all_prices:
+        ci = f"${mp.cost_per_1k_input:.4f}" if mp.cost_per_1k_input >= 0 else "?"
+        co = f"${mp.cost_per_1k_output:.4f}" if mp.cost_per_1k_output >= 0 else "?"
+        print(f"{mp.model_id:30s} {mp.provider:12s} {ci:10s} {co:10s} {mp.context_window:>8d}")
+    print(f"\nTotal: {len(all_prices)} models")
+    return 0
+
+
 def cmd_serve(port: int) -> int:
     """Start a simple HTTP server for LLM generation."""
     from .http_server import serve
@@ -98,11 +138,16 @@ def main(argv: list[str] | None = None) -> int:
 
     list_p = sub.add_parser("list", help="List available models")
     list_p.add_argument("--ssot", action="store_true", help="从 L0 M1 节点加载")
+    list_p.add_argument("--quota", "-q", action="store_true", help="显示配额大盘")
+    list_p.add_argument("--cost", "-c", action="store_true", help="显示模型定价")
 
     gen = sub.add_parser("generate", help="Generate LLM response")
     gen.add_argument("prompt")
     gen.add_argument("--model", "-m", help="Model name")
     gen.add_argument("--provider", "-p", help="Provider name (ollama, openai, ...)")
+    gen.add_argument("--strategy", "-s", default="balanced",
+                    choices=["balanced", "cost_first", "speed_first", "quota_first"],
+                    help="Routing strategy")
 
     mcp_p = sub.add_parser("mcp", help="Start MCP server (stdio)")
     mcp_p.add_argument("--ssot", action="store_true", help="从 L0 M1 节点加载模型")
@@ -112,9 +157,12 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     if args.cmd == "list":
-        return cmd_list(use_ssot=getattr(args, "ssot", False))
+        return cmd_list(use_ssot=getattr(args, "ssot", False),
+                       show_quota=getattr(args, "quota", False),
+                       show_cost=getattr(args, "cost", False))
     elif args.cmd == "generate":
-        return cmd_generate(args.prompt, args.model, args.provider)
+        return cmd_generate(args.prompt, args.model, args.provider,
+                           strategy=getattr(args, "strategy", "balanced"))
     elif args.cmd == "mcp":
         return cmd_mcp()
     elif args.cmd == "serve":

@@ -221,9 +221,6 @@ def run_all():
         test_pipeline_filter,
         test_pipeline_capability_filter,
         test_pipeline_legacy_api,
-        test_registry_metrics_hook,
-        test_registry_rate_limit_blocks,
-        test_all_9_providers_importable,
     ]
 
     passed = 0

@@ -61,6 +61,36 @@ _PROVIDER_REGISTRY: dict[str, tuple[str, str, list[str]]] = {
         "HitlLLMProvider",
         [],
     ),
+    "azure": (
+        "llm_gateway.providers.azure_provider",
+        "AzureOpenAIProvider",
+        ["AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT"],
+    ),
+    "bedrock": (
+        "llm_gateway.providers.bedrock_provider",
+        "BedrockProvider",
+        ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
+    ),
+    "vertex": (
+        "llm_gateway.providers.vertex_provider",
+        "VertexAIProvider",
+        ["GOOGLE_CLOUD_PROJECT"],
+    ),
+    "minimax": (
+        "llm_gateway.providers.anthropic_compat",
+        "AnthropicCompatProvider",
+        [],
+    ),
+    "zhipu": (
+        "llm_gateway.providers.anthropic_compat",
+        "AnthropicCompatProvider",
+        [],
+    ),
+    "kimi": (
+        "llm_gateway.providers.anthropic_compat",
+        "AnthropicCompatProvider",
+        [],
+    ),
 }
 
 
