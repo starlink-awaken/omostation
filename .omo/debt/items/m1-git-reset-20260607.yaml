@@ -1,11 +1,22 @@
 id: DEBT-M1-GIT-RESET
 title: "M1 文件被 git reset 反复删除"
-status: active
+status: resolved
 priority: P1
-created: "2026-06-07"
+resolved: "2026-06-08"
+resolution: |
+  根因：post-commit hook (Phase 3) 中 mof-validate.py 因 M2 workflow.yaml 第98行
+  YAML 语法错误（冒号未引用导致解析失败）抛出异常，hook 执行 git checkout -- ../mof/m1/
+  回退整个 M1 目录。
+
+  修复：
+  1. mof/m2/workflow.yaml 第98行 description 加引号
+  2. mof-validate.py 增加 M2 加载异常 catch 分支
+  3. post-commit hook 移除 git checkout -- ../mof/m1/ 行，改为仅清理 *.tmp
+  4. 12 个 BOSRoute type: BosRoute → type: Component (M2 合规)
+  5. 11 个 BOSRoute 补 runtime: active
+  6. 移除 68 个 --assume-unchanged flag
 category: infra
-risk: high
-effort: "0.5天"
+risk: resolved
 
 description: |
   projects/ecos/src/ecos/ssot/mof/m1/ 下的 workflow/bosroute/mechanism YAML 文件

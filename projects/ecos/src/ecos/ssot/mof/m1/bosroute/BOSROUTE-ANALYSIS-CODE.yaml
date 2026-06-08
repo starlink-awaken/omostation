@@ -1,5 +1,5 @@
 id: BOSROUTE-ANALYSIS-CODE
-type: BosRoute
+type: Component
 name: "bos://analysis/code/* → CodeAnalyze 代码理解"
 description: "bos://analysis/code/* → kairon/codeanalyze，AST 代码理解"
 domain: analysis
@@ -9,6 +9,7 @@ version: "1.0.0"
 created: "2026-06-07"
 
 properties:
+  runtime: active
   uri_pattern: "bos://analysis/code/*"
   adapter_type: mcp_proxy
   adapter_config:

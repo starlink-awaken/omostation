@@ -95,7 +95,7 @@ Workflow:
   examples:
   - id: WORKFLOW-MINERVA-DEEP-RESEARCH
     name: Minerva 五级深度研究管线
-    description: PipelineWorkflow 示例 — L0-L4 五级深度研究: Decompose→Search→...→Output
+    description: "PipelineWorkflow 示例 — L0-L4 五级深度研究: Decompose→Search→...→Output"
   - id: WORKFLOW-CREATE
     name: Create 工作流
     description: AgentWorkflow 示例 — 脚手架→编码→文档→提交

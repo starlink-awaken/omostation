@@ -29,7 +29,10 @@ except ImportError:
     HAS_YAML = False
 
 # ── Paths ──
-L0_CONSTRAINTS = Path.home() / "Documents" / "@学习进化" / "_knowledge" / "10-systems" / "基建架构" / "L0-constraints.yaml"
+# SSOT (single source of truth) — project repo
+L0_CONSTRAINTS_SSOT = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "l0" / "constraints.yaml"
+# L4 cache copy — synced from SSOT
+L0_CONSTRAINTS_L4 = Path.home() / "Documents" / "@学习进化" / "_knowledge" / "10-systems" / "基建架构" / "L0-constraints.yaml"
 ROUTES_JSON = Path.home() / ".ecos" / "bos" / "routes.json"
 DOMAIN_MANAGER = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "services" / "governance" / "domain_manager.py"
 LOG_FILE = Path.home() / ".ecos" / "bos" / "daemon.log"
@@ -56,15 +59,18 @@ def update_routes() -> bool:
     
     Returns True if routes.json was updated.
     """
-    if not L0_CONSTRAINTS.exists():
-        log(f"⚠️  L0-constraints.yaml not found: {L0_CONSTRAINTS}")
+    # Pick best available L0 constraints source (SSOT first, then L4 cache)
+    L0_PATH = L0_CONSTRAINTS_SSOT if L0_CONSTRAINTS_SSOT.exists() else L0_CONSTRAINTS_L4
+    if not L0_PATH.exists():
+        log(f"⚠️  L0-constraints.yaml not found (SSOT={L0_CONSTRAINTS_SSOT}, L4={L0_CONSTRAINTS_L4})")
         return False
 
     registry = None
 
     # Method 1: Use domain_manager to reload and export routes
     try:
-        sys.path.insert(0, str(DOMAIN_MANAGER.parent.parent))
+        # Add governance/ to sys.path so domain_manager can import l0_audit / audit_unified
+        sys.path.insert(0, str(DOMAIN_MANAGER.parent))
         from importlib.machinery import SourceFileLoader
         dm = SourceFileLoader("dm", str(DOMAIN_MANAGER)).load_module()
         registry = dm.load_registry()
@@ -75,7 +81,7 @@ def update_routes() -> bool:
     # Method 2: Fallback — parse YAML directly
     if registry is None and HAS_YAML:
         try:
-            with open(L0_CONSTRAINTS) as f:
+            with open(L0_PATH) as f:
                 data = yaml.safe_load(f)
             registry = data.get("domain_registry", [])
             log(f"✅ Loaded registry via YAML fallback ({len(registry)} domains)")
@@ -88,7 +94,7 @@ def update_routes() -> bool:
         return False
 
     # Parse domain_registry into routes format
-    routes = {"_generated": datetime.now().isoformat(), "_source": str(L0_CONSTRAINTS), "routes": {}}
+    routes = {"_generated": datetime.now().isoformat(), "_source": str(L0_PATH), "routes": {}}
     for entry in registry:
         domain_id = entry.get("id", entry.get("name", ""))
         if domain_id:
@@ -134,7 +140,7 @@ def main() -> int:
     
     # Warm L2 → L1 cache if domain_manager is available
     try:
-        sys.path.insert(0, str(DOMAIN_MANAGER.parent.parent))
+        sys.path.insert(0, str(DOMAIN_MANAGER.parent))
         from importlib.machinery import SourceFileLoader
         dm = SourceFileLoader("dm", str(DOMAIN_MANAGER)).load_module()
         warm_stats = dm._cache_warm()
@@ -147,14 +153,15 @@ def main() -> int:
             notify_mcp()
         return 0
 
-    last_mtime = get_mtime(L0_CONSTRAINTS)
+    # Watch both SSOT and L4 cache copies
+    last_mtime = max(get_mtime(L0_CONSTRAINTS_SSOT), get_mtime(L0_CONSTRAINTS_L4))
     if not update_routes():
         log("⚠️  Initial route update failed")
 
     try:
         while True:
             time.sleep(interval)
-            current = get_mtime(L0_CONSTRAINTS)
+            current = max(get_mtime(L0_CONSTRAINTS_SSOT), get_mtime(L0_CONSTRAINTS_L4))
             if current != last_mtime:
                 log(f"Detected change in L0-constraints.yaml")
                 if update_routes():

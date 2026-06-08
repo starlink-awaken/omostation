@@ -1,5 +1,5 @@
 id: BOSROUTE-PERSONA-SOT
-type: BosRoute
+type: Component
 name: "bos://persona/sot/* → SOT Bridge 人格桥接"
 description: "bos://persona/sot/* → kairon/sot-bridge，SharedBrain 人格桥接"
 domain: persona
@@ -9,6 +9,7 @@ version: "1.0.0"
 created: "2026-06-07"
 
 properties:
+  runtime: active
   uri_pattern: "bos://persona/sot/*"
   adapter_type: mcp_proxy
   adapter_config:

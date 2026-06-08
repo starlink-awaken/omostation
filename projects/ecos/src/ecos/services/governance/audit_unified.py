@@ -18,6 +18,7 @@ import sqlite3
 import subprocess
 import sys
 import time as time_module
+import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -56,14 +57,10 @@ OPTIONAL_FIELDS = [
 ]
 
 # ── 顺序 ID 生成器 ──
-_seq_counter = 0
-
 
 def _generate_id() -> str:
-    global _seq_counter
-    _seq_counter += 1
     ts = datetime.now().strftime("%Y%m%d%H%M%S")
-    return f"unified-{ts}-{_seq_counter}"
+    return f"unified-{ts}-{uuid.uuid4().hex[:8]}"
 
 
 def _format_event(event: dict) -> dict:
@@ -94,7 +91,6 @@ def _ssb_publish(event: dict) -> str | None:
         if not tables:
             conn.close()
             return None
-        import uuid
         event_id = str(uuid.uuid4())
         row = c.execute("SELECT MAX(seq) FROM ssb_events").fetchone()
         next_seq = (row[0] or 0) + 1
@@ -436,7 +432,9 @@ def query_events(
     all_events = []
     source_counts = {}
 
-    sources_to_query = ["unified", "l0", "bos", "ssb", "daemon", "healer"] if source == "all" else [source]
+    # When source=all, skip "unified" to avoid double-counting (unified.jsonl aggregates
+    # events that also appear in l0/bos JSONLs). Use --source unified to query only the aggregate.
+    sources_to_query = ["l0", "bos", "ssb", "daemon", "healer"] if source == "all" else [source]
 
     for s in sources_to_query:
         if s == "unified":
