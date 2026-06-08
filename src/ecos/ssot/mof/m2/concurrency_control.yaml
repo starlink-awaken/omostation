@@ -1,0 +1,43 @@
+# M2: Concurrency Control
+# 并发控制类型定义
+
+id: concurrency_control
+type: Type
+name: 并发控制
+description: 多Agent并发操作管理 — 文件锁、乐观锁、分布式锁
+m3_parent: GovernanceElement.Constraint
+layer: L4
+status: active
+created: '2026-06-08'
+version: 1.0.0
+
+properties:
+  lock_type:
+    type: enum
+    description: 锁类型
+    values: [file_lock, optimistic_lock, distributed_lock]
+
+  scope:
+    type: enum
+    description: 作用域
+    values: [single_file, domain_control, cross_domain]
+
+requiredProperties:
+  lock_type:
+    type: string
+
+optionalProperties:
+  timeout_seconds:
+    type: float
+    description: 获取锁超时
+    default: 5.0
+
+  retry_interval:
+    type: float
+    description: 重试间隔
+    default: 0.1
+
+examples:
+  - { lock_type: file_lock, scope: single_file, description: "fcntl.flock 保护 signals.md 并发写入" }
+  - { lock_type: optimistic_lock, scope: domain_control, description: "STATE.md mtime 版本号检查" }
+  - { lock_type: distributed_lock, scope: cross_domain, description: "跨机器域同步锁" }
