@@ -1,0 +1,7 @@
+id: TASK-42AC4BA3
+title: L4 Kernel domain_types.py — 7 种域类型特化
+description: DocumentDomain (KEMS六面), ConfigDomain (YAML Schema), ToolDomain (脚本注册表),
+  WorkspaceDomain, StorageDomain, ModelDomain, EngineDomain
+status: planned
+priority: P0
+created_at: '2026-06-08T08:48:25.296957Z'
