@@ -10803,22 +10803,690 @@
       "payload": {
         "msg": "hello"
       }
+    },
+    {
+      "id": "evt_1780958688_967b08",
+      "time": "2026-06-08T22:44:48Z",
+      "source": "unknown",
+      "type": "bos:memory:kos:search",
+      "trace_id": "",
+      "payload": {
+        "uri": "bos://memory/kos/search"
+      }
+    },
+    {
+      "id": "evt_1780958709_059d4b",
+      "time": "2026-06-08T22:45:09Z",
+      "source": "agora.server.mcp",
+      "type": "registry:service.registered",
+      "trace_id": "",
+      "payload": {
+        "name": "mcp-test"
+      }
+    },
+    {
+      "id": "evt_1780958709_22e365",
+      "time": "2026-06-08T22:45:09Z",
+      "source": "agora.server.mcp",
+      "type": "registry:service.registered",
+      "trace_id": "",
+      "payload": {
+        "name": "rest-test"
+      }
+    },
+    {
+      "id": "evt_1780958709_b6143e",
+      "time": "2026-06-08T22:45:09Z",
+      "source": "agora.server.mcp",
+      "type": "registry:service.registered",
+      "trace_id": "",
+      "payload": {
+        "name": "a2a-param-test"
+      }
+    },
+    {
+      "id": "evt_1780958709_438d64",
+      "time": "2026-06-08T22:45:09Z",
+      "source": "agora.server.mcp",
+      "type": "registry:service.registered",
+      "trace_id": "",
+      "payload": {
+        "name": "list-test"
+      }
+    },
+    {
+      "id": "evt_1780958709_cccabb",
+      "time": "2026-06-08T22:45:09Z",
+      "source": "mcp-test",
+      "type": "test:mcp",
+      "trace_id": "",
+      "payload": {
+        "msg": "hello"
+      }
+    },
+    {
+      "id": "evt_1780958711_73ecf7",
+      "time": "2026-06-08T22:45:11Z",
+      "source": "pipeline",
+      "type": "pipeline:started",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "variables": {},
+        "step_count": 2,
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958711_4ba878",
+      "time": "2026-06-08T22:45:11Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "step": 0,
+        "tool": "ontoderive.derive",
+        "output_as": "derive_result",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958711_7a4e7e",
+      "time": "2026-06-08T22:45:11Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "step": 1,
+        "tool": "ontoderive.check",
+        "output_as": "step_1",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958711_d28e27",
+      "time": "2026-06-08T22:45:11Z",
+      "source": "pipeline",
+      "type": "pipeline:completed",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958711_2338c8",
+      "time": "2026-06-08T22:45:11Z",
+      "source": "pipeline",
+      "type": "pipeline:started",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "variables": {},
+        "step_count": 2,
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958711_208170",
+      "time": "2026-06-08T22:45:11Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "step": 0,
+        "tool": "ontoderive.derive",
+        "output_as": "derive_result",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958711_5d1ef2",
+      "time": "2026-06-08T22:45:11Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "step": 1,
+        "tool": "ontoderive.check",
+        "output_as": "step_1",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958711_ee0742",
+      "time": "2026-06-08T22:45:11Z",
+      "source": "pipeline",
+      "type": "pipeline:completed",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_6b55f3",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:started",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "variables": {},
+        "step_count": 2,
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_adb252",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "step": 0,
+        "tool": "ontoderive.derive",
+        "output_as": "derive_result",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_9898d3",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "step": 1,
+        "tool": "ontoderive.check",
+        "output_as": "step_1",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_310368",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:completed",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_2723a9",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:started",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "full-pipeline",
+        "variables": {},
+        "step_count": 4,
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_196ba6",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "full-pipeline",
+        "step": 0,
+        "tool": "toolforge.match",
+        "output_as": "matched_tools",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_476069",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "full-pipeline",
+        "step": 1,
+        "tool": "minerva.research",
+        "output_as": "research_result",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_d14716",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "full-pipeline",
+        "step": 2,
+        "tool": "ontoderive.derive",
+        "output_as": "derive_result",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_48f42a",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "full-pipeline",
+        "step": 3,
+        "tool": "ontoderive.check",
+        "output_as": "step_3",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_ad0932",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:completed",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "full-pipeline",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_e471a7",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:started",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "variables": {},
+        "step_count": 2,
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_95a7d3",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "step": 0,
+        "tool": "ontoderive.derive",
+        "output_as": "derive_result",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_d027c5",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "step": 1,
+        "tool": "ontoderive.check",
+        "output_as": "step_1",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_7dfd5c",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:completed",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_3c120f",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:started",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "variables": {},
+        "step_count": 2,
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_e6d259",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "step": 0,
+        "tool": "ontoderive.derive",
+        "output_as": "derive_result",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_b2e30a",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "step": 1,
+        "tool": "ontoderive.check",
+        "output_as": "step_1",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_26a7af",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:completed",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "derive-check",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_a04496",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:started",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "full-pipeline",
+        "variables": {},
+        "step_count": 4,
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_061574",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "full-pipeline",
+        "step": 0,
+        "tool": "toolforge.match",
+        "output_as": "matched_tools",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_bf991e",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "full-pipeline",
+        "step": 1,
+        "tool": "minerva.research",
+        "output_as": "research_result",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_66e82b",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "full-pipeline",
+        "step": 2,
+        "tool": "ontoderive.derive",
+        "output_as": "derive_result",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_da19b1",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:step:ok",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "full-pipeline",
+        "step": 3,
+        "tool": "ontoderive.check",
+        "output_as": "step_3",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958712_b6f74d",
+      "time": "2026-06-08T22:45:12Z",
+      "source": "pipeline",
+      "type": "pipeline:completed",
+      "trace_id": "",
+      "payload": {
+        "pipeline": "full-pipeline",
+        "identity": {
+          "subject_id": "unknown",
+          "subject_type": "legacy",
+          "issuer": "legacy",
+          "tenant": ""
+        }
+      }
+    },
+    {
+      "id": "evt_1780958727_3a1e07",
+      "time": "2026-06-08T22:45:27Z",
+      "source": "agora-router",
+      "type": "route:call.succeeded",
+      "trace_id": "",
+      "payload": {
+        "tool": "minerva.research",
+        "service": "minerva",
+        "duration_s": 0.0003,
+        "identity": {
+          "subject_id": "alice",
+          "subject_type": "user",
+          "issuer": "auth0",
+          "tenant": "acme"
+        }
+      }
+    },
+    {
+      "id": "evt_1780958729_3c2de1",
+      "time": "2026-06-08T22:45:29Z",
+      "source": "agora-router",
+      "type": "test:event",
+      "trace_id": "",
+      "payload": {
+        "msg": "hello"
+      }
     }
   ],
   "subscriptions": [
     {
-      "id": "sub_a98344c9",
+      "id": "sub_2cfde8f1",
       "service": "test-bos",
       "pattern": "bos:memory:kos:search",
       "callback_url": "",
-      "created": "2026-06-08T22:31:34Z"
+      "created": "2026-06-08T22:44:48Z"
     },
     {
-      "id": "sub_7412a348",
+      "id": "sub_e12ddd87",
       "service": "mcp-caller",
       "pattern": "test:*",
       "callback_url": "",
-      "created": "2026-06-08T22:32:00Z"
+      "created": "2026-06-08T22:45:09Z"
     }
   ],
   "max_events": 1000

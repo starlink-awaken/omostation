@@ -2943,3 +2943,50 @@
 {"time": 1780923730.178549, "tool": "exhaust.get", "service": "exhaust", "status": "error", "elapsed_s": 0.0001, "detail": "REST call failed: 502"}
 {"time": 1780923730.185442, "tool": "bad-req.get", "service": "bad-req", "status": "error", "elapsed_s": 0.0001, "detail": "REST call failed: 400"}
 {"time": 1780923730.192694, "tool": "crash.tool", "service": "crash", "status": "error", "elapsed_s": 0.0, "detail": "boom"}
+{"time": 1780958709.931981, "tool": "nonexistent", "service": "unknown", "status": "error", "elapsed_s": 0.0, "detail": "not_found"}
+{"time": 1780958691.283113, "tool": "research_now", "service": "minerva", "status": "error", "elapsed_s": 0.0385, "detail": "Server error '502 Bad Gateway' for url 'http://localhost:8765/mcp'\nFor more information check: https"}
+{"time": 1780958691.288686, "tool": "research_now", "service": "minerva", "status": "error", "elapsed_s": 0.0, "detail": "no_instance"}
+{"time": 1780958691.2931101, "tool": "nonexistent_tool", "service": "unknown", "status": "error", "elapsed_s": 0.0, "detail": "not_found"}
+{"time": 1780958691.321616, "tool": "research_now", "service": "minerva", "status": "error", "elapsed_s": 0.0193, "detail": "Server error '502 Bad Gateway' for url 'http://localhost:8765/mcp'\nFor more information check: https"}
+{"time": 1780958691.3475718, "tool": "research_now", "service": "minerva", "status": "error", "elapsed_s": 0.0189, "detail": "Server error '502 Bad Gateway' for url 'http://localhost:8765/mcp'\nFor more information check: https"}
+{"time": 1780958711.93345, "tool": "ontoderive.derive", "service": "ontoderive", "status": "error", "elapsed_s": 0.0178, "detail": "no_instance"}
+{"time": 1780958711.950411, "tool": "ontoderive.check", "service": "ontoderive", "status": "error", "elapsed_s": 0.0161, "detail": "no_instance"}
+{"time": 1780958711.97522, "tool": "ontoderive.derive", "service": "ontoderive", "status": "error", "elapsed_s": 0.0159, "detail": "no_instance"}
+{"time": 1780958711.992055, "tool": "ontoderive.check", "service": "ontoderive", "status": "error", "elapsed_s": 0.0159, "detail": "no_instance"}
+{"time": 1780958712.0167239, "tool": "ontoderive.derive", "service": "ontoderive", "status": "error", "elapsed_s": 0.0159, "detail": "no_instance"}
+{"time": 1780958712.03349, "tool": "ontoderive.check", "service": "ontoderive", "status": "error", "elapsed_s": 0.0159, "detail": "no_instance"}
+{"time": 1780958712.058327, "tool": "toolforge.match", "service": "ontoderive", "status": "error", "elapsed_s": 0.0159, "detail": "no_instance"}
+{"time": 1780958712.059217, "tool": "minerva.research", "service": "unknown", "status": "error", "elapsed_s": 0.0, "detail": "not_found"}
+{"time": 1780958712.0754619, "tool": "ontoderive.derive", "service": "ontoderive", "status": "error", "elapsed_s": 0.0156, "detail": "no_instance"}
+{"time": 1780958712.092076, "tool": "ontoderive.check", "service": "ontoderive", "status": "error", "elapsed_s": 0.0157, "detail": "no_instance"}
+{"time": 1780958712.117175, "tool": "ontoderive.derive", "service": "ontoderive", "status": "error", "elapsed_s": 0.0158, "detail": "no_instance"}
+{"time": 1780958712.133727, "tool": "ontoderive.check", "service": "ontoderive", "status": "error", "elapsed_s": 0.0157, "detail": "no_instance"}
+{"time": 1780958712.162477, "tool": "ontoderive.derive", "service": "ontoderive", "status": "error", "elapsed_s": 0.0156, "detail": "no_instance"}
+{"time": 1780958712.178109, "tool": "ontoderive.check", "service": "ontoderive", "status": "error", "elapsed_s": 0.0156, "detail": "no_instance"}
+{"time": 1780958712.201683, "tool": "ontoderive.derive", "service": "ontoderive", "status": "error", "elapsed_s": 0.0156, "detail": "no_instance"}
+{"time": 1780958712.2182882, "tool": "ontoderive.check", "service": "ontoderive", "status": "error", "elapsed_s": 0.0157, "detail": "no_instance"}
+{"time": 1780958712.236544, "tool": "toolforge.match", "service": "ontoderive", "status": "error", "elapsed_s": 0.0158, "detail": "no_instance"}
+{"time": 1780958712.2374358, "tool": "minerva.research", "service": "unknown", "status": "error", "elapsed_s": 0.0, "detail": "not_found"}
+{"time": 1780958712.2539961, "tool": "ontoderive.derive", "service": "ontoderive", "status": "error", "elapsed_s": 0.0159, "detail": "no_instance"}
+{"time": 1780958712.270452, "tool": "ontoderive.check", "service": "ontoderive", "status": "error", "elapsed_s": 0.0156, "detail": "no_instance"}
+{"time": 1780958727.286367, "tool": "minerva.research", "service": "minerva", "status": "ok", "elapsed_s": 0.0012, "detail": ""}
+{"time": 1780958727.295253, "tool": "minerva.research", "service": "minerva", "status": "ok", "elapsed_s": 0.0003, "detail": ""}
+{"time": 1780958727.3020742, "tool": "minerva.research", "service": "minerva", "status": "error", "elapsed_s": 0.0, "detail": "fail"}
+{"time": 1780958727.309192, "tool": "minerva.research", "service": "minerva", "status": "ok", "elapsed_s": 0.0007, "detail": ""}
+{"time": 1780958727.3471968, "tool": "grpc-svc", "service": "grpc-svc", "status": "error", "elapsed_s": 0.0001, "detail": "grpcio not installed. Run: pip install grpcio grpcio-tools"}
+{"time": 1780958727.368734, "tool": "ws-svc", "service": "ws-svc", "status": "error", "elapsed_s": 0.0127, "detail": "WebSocket call failed: connecting through a SOCKS proxy requires python-socks"}
+{"time": 1780958727.3759491, "tool": "stdio-svc", "service": "stdio-svc", "status": "error", "elapsed_s": 0.0, "detail": "stdio protocol uses proxy, not router"}
+{"time": 1780958729.334402, "tool": "retry-api", "service": "retry-api", "status": "error", "elapsed_s": 1.9526, "detail": "REST call failed: Server error '502 Bad Gateway' for url 'http://192.0.2.99:3000/retry-api'\nFor more"}
+{"time": 1780958729.3634, "tool": "bad-proto", "service": "bad-proto", "status": "error", "elapsed_s": 0.0, "detail": "Unknown protocol: unknown_proto"}
+{"time": 1780958729.377239, "tool": "bad-ws", "service": "bad-ws", "status": "error", "elapsed_s": 0.0, "detail": "Invalid WebSocket URL"}
+{"time": 1780958729.395651, "tool": "nonexistent.tool", "service": "unknown", "status": "error", "elapsed_s": 0.0, "detail": "not_found"}
+{"time": 1780958729.428978, "tool": "down-svc", "service": "down-svc", "status": "error", "elapsed_s": 0.0254, "detail": "no_instance"}
+{"time": 1780958729.4374988, "tool": "mcp-svc.tool", "service": "mcp-svc", "status": "ok", "elapsed_s": 0.0007, "detail": ""}
+{"time": 1780958729.4481401, "tool": "ssrf.tool", "service": "ssrf", "status": "error", "elapsed_s": 0.0001, "detail": "Service unavailable"}
+{"time": 1780958729.453687, "tool": "err.tool", "service": "err", "status": "error", "elapsed_s": 0.0, "detail": "connection refused"}
+{"time": 1780958729.459334, "tool": "rest-api.create", "service": "rest-api", "status": "ok", "elapsed_s": 0.0005, "detail": ""}
+{"time": 1780958729.464961, "tool": "rest-ssrf", "service": "rest-ssrf", "status": "error", "elapsed_s": 0.0, "detail": "Service unavailable"}
+{"time": 1780958729.473629, "tool": "retry-api.get", "service": "retry-api", "status": "ok", "elapsed_s": 0.0006, "detail": ""}
+{"time": 1780958729.480454, "tool": "exhaust.get", "service": "exhaust", "status": "error", "elapsed_s": 0.0001, "detail": "REST call failed: 502"}
+{"time": 1780958729.486905, "tool": "bad-req.get", "service": "bad-req", "status": "error", "elapsed_s": 0.0001, "detail": "REST call failed: 400"}
+{"time": 1780958729.4928188, "tool": "crash.tool", "service": "crash", "status": "error", "elapsed_s": 0.0, "detail": "boom"}

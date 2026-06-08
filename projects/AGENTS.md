@@ -16,7 +16,7 @@
 |------|------|--------|----------|------|
 | L3 | `cockpit` | Python (uv, pytest) | 统一入口 (CLI 18 + MCP 20 tools + Web) | 🟢 Active |
 | I0 | `agora` | Python (uv, pytest) | MCP Hub · 服务发现/路由/代理/治理 | 🟢 Active |
-| L2 | `kairon` | Python (uv, pytest) | 知识引擎 · 19 活跃包 monorepo | 🟢 Active |
+| L2 | `kairon` | Python (uv, pytest) | 知识引擎 · 19 活跃包 (+ 6 archived) monorepo | 🟢 Active |
 | L2 | `gbrain` | TypeScript (bun) | Postgres 知识数据库 · 67 MCP tools | 🟢 Active |
 | L2 | `omo` | Python (uv, pytest) | 治理面 · Agent OS 内核 | 🟢 Active |
 | L2 | `metaos` | Python (uv, pytest) | 编排引擎 · 决策门控/免疫/路由 | 🟢 Active |

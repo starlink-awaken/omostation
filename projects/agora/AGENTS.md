@@ -48,7 +48,7 @@ uv run pytest tests/ --ignore=tests/e2e -q    # 1165/1200 pass
 
 | 文件 | 行数 | 说明 |
 |------|------|------|
-| `server/mcp.py` | 1,757 | MCP 工具注册 (God Module) |
+| `server/mcp.py` | 1,945 | MCP 工具注册 (God Module — ⚠️ 待拆分, see docs/god-module-split-plan.md) |
 | `mcp_proxy/client.py` | 559 | MCP 客户端 |
 | `core/router.py` | 542 | 智能路由器 |
 | `mcp/bos_resolver.py` | 831 | BOS URI 解析 |
