@@ -352,35 +352,38 @@ def _strip_thinking(text: str) -> str:
 
 # 默认 Ollama 模型名，可通过环境变量 WKS_OLLAMA_MODEL 覆盖
 OLLAMA_MODEL = os.environ.get("WKS_OLLAMA_MODEL", "qwen3.5:4b")
+_OLLAMA_BASE = os.environ.get("OLLAMA_ENDPOINT", "http://localhost:11434/api/generate")
+
+
+def _ollama_request(prompt: str, *, stream: bool, timeout: int) -> bytes:
+    """构建 ollama API 请求，发送 HTTP POST，返回原始响应体。"""
+    body = json.dumps(
+        {
+            "model": OLLAMA_MODEL,
+            "prompt": prompt,
+            "stream": stream,
+            "raw": True,
+            "options": {"num_predict": 500, "temperature": 0.3},
+        }
+    ).encode()
+    req = urlrequest.Request(_OLLAMA_BASE, data=body, headers={"Content-Type": "application/json"})
+    with urlrequest.urlopen(req, timeout=timeout) as resp:  # noqa: S310
+        return resp.read()
+
+
+def _ollama_timeout(default: int = 60) -> int:
+    """安全地从环境变量读取 OLLAMA_TIMEOUT，异常时返回默认值。"""
+    try:
+        return int(os.environ.get("OLLAMA_TIMEOUT", str(default)))
+    except (ValueError, TypeError):
+        return default
 
 
 def _run_ollama(prompt: str, *, timeout: int = 60) -> str | None:
-    """调用本地 ollama 模型生成文本（通过 API 而非 CLI，更快更稳定）。
-
-    Args:
-        prompt: 发送给模型的提示词。
-        timeout: API 请求超时秒数。
-
-    Returns:
-        成功时返回模型输出文本（已去除思考过程），失败返回 None。
-    """
+    """调用本地 ollama 模型生成文本（非流式）。"""
     try:
-        body = json.dumps(
-            {
-                "model": OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": False,
-                "raw": True,
-                "options": {"num_predict": 500, "temperature": 0.3},
-            }
-        ).encode()
-        req = urlrequest.Request(
-            os.environ.get("OLLAMA_ENDPOINT", "http://localhost:11434/api/generate"),
-            data=body,
-            headers={"Content-Type": "application/json"},
-        )
-        resp = urlrequest.urlopen(req, timeout=timeout)  # noqa: S310
-        data = json.loads(resp.read())
+        raw = _ollama_request(prompt, stream=False, timeout=timeout)
+        data = json.loads(raw)
         text = (data.get("response") or "").strip()
         if text:
             return _strip_thinking(text)
@@ -396,47 +399,25 @@ def _run_ollama_stream(prompt: str, *, timeout: int = 120) -> str | None:
         成功时返回完整累积文本，失败返回 None。
     """
     try:
-        body = json.dumps(
-            {
-                "model": OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": True,
-                "raw": True,
-                "options": {"num_predict": 500, "temperature": 0.3},
-            }
-        ).encode()
-        req = urlrequest.Request(
-            os.environ.get("OLLAMA_ENDPOINT", "http://localhost:11434/api/generate"),
-            data=body,
-            headers={"Content-Type": "application/json"},
-        )
-        resp = urlrequest.urlopen(req, timeout=timeout)  # noqa: S310
+        raw = _ollama_request(prompt, stream=True, timeout=timeout)
         full_text = ""
-        thinking = False
-        # 逐行读取 NDJSON 流
-        for line in resp:
-            try:
-                chunk = json.loads(line.decode())
-                token = (chunk.get("response") or "")
-                if not token:
-                    continue
-                # 跳过 <｜end▁of▁thinking｜> 标签
-                if "<｜end▁of▁thinking｜>" in token:
-                    thinking = True
-                    continue
-                if "响应" in token or "回答" in token:
-                    thinking = False
-                    continue
-                if not thinking:
-                    print(token, end="", flush=True)
-                    full_text += token
-                if chunk.get("done"):
-                    break
-            except (json.JSONDecodeError, UnicodeDecodeError):
+        for line in raw.splitlines():
+            line = line.strip()
+            if not line:
                 continue
-        print()  # 换行
-        return full_text.strip() or None
-    except Exception:
+            try:
+                chunk = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            token = (chunk.get("response") or "")
+            done = chunk.get("done", False)
+            if done and not token:
+                break
+            if token:
+                print(token, end="", flush=True)
+                full_text += token
+        print()
+        return full_text.strip() or None    except Exception:
         pass
     return None
 

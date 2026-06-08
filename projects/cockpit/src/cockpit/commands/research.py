@@ -33,6 +33,7 @@ from .base import (
     _research_progress,
     _run_ollama,
     _run_ollama_stream,
+    _ollama_timeout,
     _short,
     _topic_text,
 )
@@ -109,7 +110,7 @@ def cmd_research(args: argparse.Namespace) -> int:
 
     if not output:
         use_stream = getattr(args, "stream", False)
-        ollama_timeout = int(os.environ.get("OLLAMA_TIMEOUT", "120"))
+        ollama_timeout = _ollama_timeout(120)
         if use_stream:
             _get_console().print(f"[yellow]⏳ ollama 流式生成中 ({_short(topic, 30)})...[/]")
             ollama_out = _run_ollama_stream(
