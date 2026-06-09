@@ -24,6 +24,7 @@ mcp:
 
 http:
   - port: 9091
+    enforcement: env-only   # 默认值不直连,生产 env 注入
     protocol: http.server (Dashboard)
 
 dependencies:

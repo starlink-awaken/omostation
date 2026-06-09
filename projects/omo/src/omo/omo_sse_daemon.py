@@ -12,12 +12,13 @@ import os
 import signal
 import subprocess
 import sys
-from pathlib import Path
 
 import httpx
 
 from omo.omo_daemon import run_once, _write_pid_file, _clear_pid_file, _setup_logging
 from omo.omo_paths import OMO_ROOT
+SSE_DAEMON_PORT = os.environ.get("OMO_SSE_DAEMON_PORT", "9091")
+
 from omo.omo_self_healing import get_healing_engine, start_http_status_server, start_hot_reload, notify_webhook
 
 DAEMON_PID_FILE = OMO_ROOT / ".omo" / "_delivery" / "sse_daemon.pid"
@@ -144,14 +145,14 @@ def main():
     logger = _setup_logging(DAEMON_LOG_FILE)
     logger.info(f"omo_sse_daemon_started pid={os.getpid()}")
 
-    # Start HTTP health server (:9091) for status queries
+    # Start HTTP health server (SSE_DAEMON_PORT env override) for status queries
     start_http_status_server()
-    logger.info("healing_http_server_started port=9091")
+    logger.info("healing_http_server_started port=" + SSE_DAEMON_PORT)
 
     # Start hot-reload for config changes
     start_hot_reload()
     logger.info("healing_hot_reload_started")
-    logger.info("healing_http_server_started port=9091")
+    logger.info("healing_http_server_started port=" + SSE_DAEMON_PORT)
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
