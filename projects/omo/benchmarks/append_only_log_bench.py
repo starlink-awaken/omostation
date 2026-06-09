@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import statistics
+from typing import Any
 import sys
 import tempfile
 import time
@@ -31,8 +32,18 @@ from omo.omo_io import AppendOnlyLog  # noqa: E402
 N = 100_000  # 默认 100K records
 
 
+def _time_ms(fn, *args, **kwargs) -> tuple[float, Any]:
+    """Round 11 /simplify: 统一 3 个 timing 助手 (tail/read_all/group_by) 的 boilerplate.
+
+    Returns: (elapsed_ms, result). 调用方负责 result 的 assertion.
+    """
+    t0 = time.monotonic()
+    result = fn(*args, **kwargs)
+    return (time.monotonic() - t0) * 1000, result
+
+
 def _bench_append(log: AppendOnlyLog, n: int) -> tuple[float, float]:
-    """测 append 吞吐量 (records/sec, MB/sec)."""
+    """测 append 吞吐量 (records/sec, MB/sec). 独立于 _time_ms 因返回 tuple."""
     t0 = time.monotonic()
     for i in range(n):
         log.append({"i": i, "kind": "bench", "name": f"item_{i}"})
@@ -41,56 +52,39 @@ def _bench_append(log: AppendOnlyLog, n: int) -> tuple[float, float]:
     return n / elapsed, size_mb / elapsed
 
 
-def _bench_tail(log: AppendOnlyLog, n: int = 10) -> float:
-    """测 tail(n) 延迟 (ms)."""
-    t0 = time.monotonic()
-    records = log.tail(n)
-    elapsed_ms = (time.monotonic() - t0) * 1000
-    assert len(records) == n
-    return elapsed_ms
-
-
-def _bench_read_all(log: AppendOnlyLog, expected_n: int) -> float:
-    """测 read_all 延迟 (ms). expected_n 是 append 时的 n (local), 非模块级 N."""
-    t0 = time.monotonic()
-    records = log.read_all()
-    elapsed_ms = (time.monotonic() - t0) * 1000
-    assert len(records) == expected_n
-    return elapsed_ms
-
-
-def _bench_group_by(log: AppendOnlyLog) -> float:
-    """测 group_by(field) 延迟 (ms)."""
-    t0 = time.monotonic()
-    counter = log.group_by("kind")
-    elapsed_ms = (time.monotonic() - t0) * 1000
-    assert counter == {"bench": counter.get("bench", 0)}  # 接受任意 bench 数
-    return elapsed_ms
-
-
 def run_bench(n: int = N) -> dict[str, float]:
     """运行 1 轮 bench, 返回度量 dict."""
     with tempfile.TemporaryDirectory() as tmp:
         log_path = Path(tmp) / "bench.jsonl"
         log = AppendOnlyLog(log_path)
 
-        # 1. append n records
+        # 1. append n records (独立, 返 tuple)
         append_tps, append_mbps = _bench_append(log, n)
 
         # 2. tail(10) — Round 7 P1 reverse-seek 优化效果
         # warm cache first
         _ = log.tail(10)
-        tail_latencies = [_bench_tail(log) for _ in range(5)]
+        tail_latencies = []
+        for _ in range(5):
+            ms, records = _time_ms(log.tail, 10)
+            assert len(records) == 10
+            tail_latencies.append(ms)
         tail_p50 = statistics.median(tail_latencies)
 
-        # 3. read_all
-        # Round 8 P1 修: 用 n (local) 而非 N (module default) 校验,
-        # 否则 n=1000 时, N=100_000 会让 assert 失败.
-        read_all_latencies = [_bench_read_all(log, n) for _ in range(3)]
+        # 3. read_all (Round 8 P1 修: 用 local n 而非模块级 N 校验)
+        read_all_latencies = []
+        for _ in range(3):
+            ms, records = _time_ms(log.read_all)
+            assert len(records) == n
+            read_all_latencies.append(ms)
         read_all_p50 = statistics.median(read_all_latencies)
 
         # 4. group_by
-        group_by_latencies = [_bench_group_by(log) for _ in range(3)]
+        group_by_latencies = []
+        for _ in range(3):
+            ms, counter = _time_ms(log.group_by, "kind")
+            assert counter.get("bench", 0) == n  # 接受任意 bench 计数
+            group_by_latencies.append(ms)
         group_by_p50 = statistics.median(group_by_latencies)
 
         file_size_mb = log_path.stat().st_size / 1024 / 1024

@@ -205,10 +205,7 @@ def cmd_logs_audit(consumer: str | None = None) -> int:
     """
     paths = _list_log_paths()
     if consumer:
-        try:
-            paths = [p for p in paths if p.stem == consumer or p.stem.replace("-", "_") == consumer]
-        except Exception:
-            pass
+        paths = [p for p in paths if p.stem == consumer or p.stem.replace("-", "_") == consumer]
         if not paths:
             print(f"❌ consumer not found: {consumer}", file=sys.stderr)
             return 1
@@ -223,16 +220,15 @@ def cmd_logs_audit(consumer: str | None = None) -> int:
         if not schema_name:
             print(f"⚠️  {p.stem}: no schema mapped, skipping SSOT check")
             continue
-        schema_cls = SCHEMA_REGISTRY[schema_name]
-        required = set(schema_cls.model_fields.keys())
-        failures = 0
-        parse_errors = 0
-        for i, r in enumerate(records):
+        # Round 11 /simplify 修: 单 pass 累计 drift + parse_errors (vs 旧版 2 次遍历)
+        required = set(SCHEMA_REGISTRY[schema_name].model_fields.keys())
+        failures = parse_errors = 0
+        for r in records:
             if not isinstance(r, dict):
                 parse_errors += 1
                 continue
-            missing = required - set(r.keys())
-            if missing:
+            if set(r.keys()) != required and not required.issubset(r.keys()):
+                # 仅当缺字段时报 (多余字段允许, forward compat)
                 failures += 1
         if failures or parse_errors:
             print(f"❌ {p.stem} ({schema_name}): {failures} schema drift, {parse_errors} parse errors (out of {len(records)} records)")

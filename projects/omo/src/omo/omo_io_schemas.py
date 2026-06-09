@@ -39,10 +39,30 @@ def _validate_z_suffix_iso8601(v: str) -> str:
     return v
 
 
+# 已知时间戳字段名 (按 SSOT, 不同 consumer 用不同名)
+_TIMESTAMP_FIELDS = ("ts", "recorded_at", "timestamp")
+
+
+class ZTimestampModel(BaseModel):
+    """AppendOnlyLog 6 个 consumer 共享的 Z-suffix ISO8601 校验基类 (Round 11 /simplify).
+
+    自动 model_validator 扫描已知时间戳字段名, 校验 Z 结尾 + ISO8601 格式.
+    子类只需定义字段 (ts: str 或 recorded_at: str 等), 无需重写 @field_validator.
+    """
+
+    @model_validator(mode="after")
+    def _check_all_timestamps(self) -> "ZTimestampModel":
+        for field_name in _TIMESTAMP_FIELDS:
+            v = getattr(self, field_name, None)
+            if v is not None and isinstance(v, str):
+                _validate_z_suffix_iso8601(v)
+        return self
+
+
 # ── Consumer 1: omo_audit ───────────────────────────────────
 
 
-class OmoAuditRecord(BaseModel):
+class OmoAuditRecord(ZTimestampModel):
     """governance action 审计记录 (Round 8 P2 SSOT)."""
 
     ts: str
@@ -50,11 +70,6 @@ class OmoAuditRecord(BaseModel):
     debt_id: str = ""
     actor: str = Field(..., min_length=1)
     details: str = ""
-
-    @field_validator("ts")
-    @classmethod
-    def _check_ts(cls, v: str) -> str:
-        return _validate_z_suffix_iso8601(v)
 
 
 # ── Consumer 2: omo_bos_metrics ──────────────────────────────
@@ -71,7 +86,7 @@ class BosStatus(str, Enum):
     ERROR = "error"
 
 
-class OmoBosMetricsRecord(BaseModel):
+class OmoBosMetricsRecord(ZTimestampModel):
     """BOS invoke 监控记录."""
 
     uri: str = Field(..., min_length=1)
@@ -80,11 +95,6 @@ class OmoBosMetricsRecord(BaseModel):
     transport: str = ""
     error: str = Field(default="", max_length=200)
     recorded_at: str
-
-    @field_validator("recorded_at")
-    @classmethod
-    def _check_recorded_at(cls, v: str) -> str:
-        return _validate_z_suffix_iso8601(v)
 
 
 # ── Consumer 3: omo_sync ───────────────────────────────────
@@ -95,7 +105,7 @@ class OmoSyncStatus(str, Enum):
     ERROR = "error"
 
 
-class OmoSyncRecord(BaseModel):
+class OmoSyncRecord(ZTimestampModel):
     """omo state sync 记录 (Round 8 P2 SSOT)."""
 
     ts: str
@@ -106,11 +116,6 @@ class OmoSyncRecord(BaseModel):
     audit_checks: int = Field(..., ge=0)
     status: OmoSyncStatus
     error: str = ""
-
-    @field_validator("ts")
-    @classmethod
-    def _check_ts(cls, v: str) -> str:
-        return _validate_z_suffix_iso8601(v)
 
     @model_validator(mode="after")
     def _check_error_only_when_error(self) -> "OmoSyncRecord":
@@ -129,7 +134,7 @@ class OmoAlertSeverity(str, Enum):
     INFO = "info"
 
 
-class OmoAlertRecord(BaseModel):
+class OmoAlertRecord(ZTimestampModel):
     """KEI threshold alert 记录 (Round 8 P2 SSOT)."""
 
     ts: str
@@ -140,27 +145,17 @@ class OmoAlertRecord(BaseModel):
     failed_rate: int = Field(..., ge=0)
     threshold: int = Field(..., ge=1)
 
-    @field_validator("ts")
-    @classmethod
-    def _check_ts(cls, v: str) -> str:
-        return _validate_z_suffix_iso8601(v)
-
 
 # ── Consumer 5: omo_event ──────────────────────────────────
 
 
-class OmoEventRecord(BaseModel):
+class OmoEventRecord(ZTimestampModel):
     """用户面向 emit 事件记录 (Round 5 P3 样板)."""
 
     ts: str
     kind: str = Field(..., min_length=1)
     source: str = Field(default="cli", min_length=1)
     payload: str = Field(default="{}", min_length=1)
-
-    @field_validator("ts")
-    @classmethod
-    def _check_ts(cls, v: str) -> str:
-        return _validate_z_suffix_iso8601(v)
 
     @field_validator("payload")
     @classmethod
@@ -186,7 +181,7 @@ class OmoHistoryGrade(str, Enum):
     F = "F"
 
 
-class OmoHistoryRecord(BaseModel):
+class OmoHistoryRecord(ZTimestampModel):
     """治理审计历史记录 (Round 8 P2 SSOT).
 
     note: source 标 Optional — 老记录 (Round 8 P2 之前) 没有此字段.
@@ -200,17 +195,6 @@ class OmoHistoryRecord(BaseModel):
     source: Optional[str] = None  # 老记录无
     # 用户业务字段: 任意 key, 允许多余 (forward compat)
     model_config = {"extra": "allow"}
-
-    @field_validator("timestamp")
-    @classmethod
-    def _check_ts(cls, v: str) -> str:
-        return _validate_z_suffix_iso8601(v)
-
-    @field_validator("date")
-    @classmethod
-    def _check_date_from_timestamp(cls, v: str) -> str:
-        # date 字段应是 timestamp 的日期部分
-        return v
 
 
 # ── 索引 (AppendOnlyLog.append 用 schema= 参数查) ────────────
