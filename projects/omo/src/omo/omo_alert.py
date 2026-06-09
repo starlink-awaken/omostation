@@ -5,21 +5,27 @@ Checks KEI audit logs for:
 - Blocked rate > threshold (default: 10 blocked/hour)
 - Failed service health checks
 - Debt items past due
+
+Round 4 (P1-2): 接入 AppendOnlyLog (第 4 个 consumer).
+  - 读源: KEI_AUDIT (其他模块写) → 用 AppendOnlyLog.since(hour_ago) 替代手写时间过滤
+  - 写汇: 新增 ALERT_LOG (自身写) → 每次 alert 触发落盘, 历史可查
 """
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import subprocess
-import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-import yaml
+from omo.omo_io import AppendOnlyLog
 
 KEI_AUDIT = Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime"))) / "data" / "kei_audit.jsonl"
 NOTIFY_SCRIPT = Path.home() / "Workspace" / "projects" / "runtime" / "scripts" / "notify-alerts.sh"
+
+# Round 4: 自身写的 alert 历史 (AppendOnlyLog consumer)
+_WORKSPACE = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+ALERT_LOG = _WORKSPACE / ".omo" / "_knowledge" / "omo-alerts.jsonl"
 
 
 def cmd_alert_check(threshold: int, notify: bool) -> int:
@@ -27,21 +33,11 @@ def cmd_alert_check(threshold: int, notify: bool) -> int:
     if not KEI_AUDIT.exists():
         print("ℹ️  No KEI audit data")
         return 0
-    lines = KEI_AUDIT.read_text().strip().split("\n")
+
+    # Round 4: 用 AppendOnlyLog.since 替代手写 read_text + 时间过滤 (8 行 → 2 行)
     now = datetime.now(timezone.utc)
-    recent: list[dict] = []
-    for line in lines:
-        if not line.strip():
-            continue
-        try:
-            r = json.loads(line)
-            ts = r.get("ts", "")
-            if ts:
-                r_ts = datetime.fromisoformat(ts)
-                if (now - r_ts).total_seconds() < 3600:
-                    recent.append(r)
-        except (json.JSONDecodeError, ValueError):
-            pass
+    one_hour_ago = (now - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    recent = AppendOnlyLog(KEI_AUDIT).since(one_hour_ago)
 
     blocked = [r for r in recent if r.get("status") == "blocked"]
     failed = [r for r in recent if r.get("status") == "fail"]
@@ -63,6 +59,21 @@ def cmd_alert_check(threshold: int, notify: bool) -> int:
     print(f"⚠️  {len(alerts)} alert(s) detected:")
     for a in alerts:
         print(f"  {a}")
+
+    # Round 4: 每次 alert 触发, 落 ALERT_LOG 一行 (结构化, 便于事后审计)
+    alert_log = AppendOnlyLog(ALERT_LOG)
+    for a in alerts:
+        alert_log.append(
+            {
+                "ts": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "kind": "kei_threshold",
+                "severity": "high",
+                "message": a,
+                "blocked_rate": blocked_rate,
+                "failed_rate": failed_rate,
+                "threshold": threshold,
+            }
+        )
 
     if notify:
         for a in alerts:
