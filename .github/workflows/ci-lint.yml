@@ -122,3 +122,22 @@ jobs:
             echo "::warning::omo logs audit 报 drift (老数据残留), 标记 warning 不阻塞 (Round 12 P0 设计)"
             exit 0
           }
+
+  # ── 5. omo lint schemas — Pydantic 写时契约静态校验 (Round 15 P0) ──
+  omo-lint-schemas:
+    name: omo lint schemas (X1 审计契约)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install uv
+        run: pip install --quiet uv
+      - name: Run omo lint schemas
+        # 5 consumer 模块 (omo_audit/sync/alert/event/trail) 所有 .append() 都传 schema=
+        # 守住 §11 X1 审计: schema 校验 = 写时锁, 跳过 = 失去写时一致性保证
+        # 退出码非 0 即 fail (有 schema 校验缺失, 真回归)
+        run: |
+          cd projects/omo
+          uv run --no-sync python -m omo.cli lint schemas
