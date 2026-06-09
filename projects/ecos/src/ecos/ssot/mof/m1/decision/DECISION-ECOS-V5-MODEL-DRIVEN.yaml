@@ -1,0 +1,18 @@
+id: "DECISION-ECOS-V5-2026-06-09-001"
+type: "Decision"
+subtype: "ADR"
+name: "eCOS v5 全生命周期模型驱动架构决策"
+description: "将 model-driven 的模型驱动方法和机制落实到 L0 MOF 体系中"
+status: "accepted"
+domain: "meta"
+layer: "L0"
+created: "2026-06-09"
+version: "1.0.0"
+properties:
+  context: "eCOS v5 已完成 7 层架构 (L0-L4+I0+X1-X4)，但 MOF 体系缺少全生命周期建模能力。model-driven 项目提供了 7 阶段引擎 + 24 M2 类型 + 12 工具链，需要将这套机制注册到 L0 MOF 中。"
+  decision: "在 ecos M3 中新增 LifecycleElement (Stage/Gate/Transition) 和 ValueElement (Goal/CostModel/BenefitModel) 类型，在 M1 中创建对应的生命周期和价值节点。同时保持 ecos 现有 mof-* 工具不变，model-driven 作为并行验证层。"
+  consequences: "1. L0 MOF 从 16 元素类型扩展到 24 类型 (新增 8 类型)。2. M1 新增 lifecycle/ 和 value/ 两个目录。3. model-driven 的验证工具可对 ecos M1 节点进行自反校验。4. 现有 daemon/cron/git hook 不受影响。"
+  alternatives:
+    - "方案 A: 将 model-driven 合并到 ecos — 增加耦合，不符合架构原则"
+    - "方案 B: 仅在 model-driven 中建模 — L0 不感知，缺少 SSOT"
+source: "model-driven/management/adr.py"

@@ -124,6 +124,32 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
     if (WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-sla.py").exists():
         run_script(WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-sla.py")
 
+    # 0.3 model-driven 自反验证 (并行验证层, 非关键路径 — 失败不阻塞 daemon)
+    print("\n── model-driven 自反验证 ──")
+    try:
+        md_dir = WORKSPACE / "projects" / "model-driven"
+        if md_dir.exists() and (md_dir / "pyproject.toml").exists():
+            import subprocess as _sp
+            result = _sp.run(
+                ["uv", "run", "python3", "-c",
+                 "from model_driven.toolchain.tools import tool_validate; "
+                 "import yaml; from pathlib import Path; "
+                 "m1 = Path.home() / 'Workspace/projects/ecos/src/ecos/ssot/mof/m1'; "
+                 "nodes = [yaml.safe_load(open(f)) for d in sorted(m1.iterdir()) if d.is_dir() for f in sorted(d.glob('*.yaml')) if (yaml.safe_load(open(f)) or {}).get('type')]; "
+                 "r = tool_validate(models=nodes); "
+                 "print(f'model-driven validate: passed={r[\"passed\"]}, errors={r[\"error_count\"]}, warnings={r[\"warning_count\"]}')"],
+                cwd=str(md_dir), capture_output=True, text=True, timeout=30
+            )
+            for line in result.stdout.strip().split("\n"):
+                if line.strip():
+                    print(f"  {line.strip()}")
+            if result.returncode != 0:
+                print(f"  ⚠️ model-driven 验证异常 (non-fatal): {result.stderr[:100]}")
+        else:
+            print("  ℹ️ model-driven 未安装, 跳过")
+    except Exception as e:
+        print(f"  ⚠️ model-driven 验证异常: {e} (non-fatal)")
+
     # 1. L0 协议约束 (非关键路径 — 缺失或失败不阻塞 daemon)
     print("\n── L0 协议约束 ──")
     try:

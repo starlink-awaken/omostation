@@ -430,9 +430,137 @@ m3:
     - "M3.property_types 是 M3.StructuralElement 的一个实例"
     - "本文件本身是 M3.Specification 的一个 M1 实例"
 
+  # =========================================================================
+  # §5 生命周期元素 — LifecycleElement (第 5 大类)
+  # =========================================================================
+  # 新增: 描述事物所处的生命周期阶段及阶段间转换。
+  # 对应 model-driven 项目的 m3_extended.py。
+
+    # ── 根类型 ──
+    LifecycleElement:
+      id: LifecycleElement
+      name: "生命周期元素"
+      description: "描述事物所处的生命周期阶段及阶段间转换。回答'在什么阶段'。"
+      parent: Element
+      abstract: true
+      properties:
+        stage:        { type: enum, required: true, values: [planning, design, development, deployment, runtime, operations, business_ops], description: "生命周期阶段" }
+        entry_criteria: { type: list, required: true, description: "进入条件" }
+        exit_criteria:  { type: list, required: true, description: "退出条件" }
+        deliverables:   { type: list, required: true, description: "交付物" }
+
+    Stage:
+      id: Stage
+      name: "阶段"
+      description: "生命周期的离散阶段。7 个标准阶段 + 可自定义子阶段。"
+      parent: LifecycleElement
+      abstract: false
+      properties:
+        order:       { type: integer, required: true, description: "阶段序号" }
+        parent_stage: { type: ref, required: false, description: "父阶段" }
+        duration_target: { type: integer, required: false, description: "目标时长(天)" }
+      applies_to: [M2, M1, M0]
+
+    Gate:
+      id: Gate
+      name: "门禁"
+      description: "阶段间的质量门禁检查点。"
+      parent: LifecycleElement
+      abstract: false
+      properties:
+        from_stage:  { type: ref, required: true, description: "来源阶段" }
+        to_stage:    { type: ref, required: true, description: "目标阶段" }
+        checks:      { type: list, required: true, description: "检查项" }
+        auto_pass:   { type: boolean, required: false, description: "是否自动通过" }
+      applies_to: [M2, M1]
+
+    Transition:
+      id: Transition
+      name: "转换"
+      description: "阶段间的转换记录。"
+      parent: LifecycleElement
+      abstract: false
+      properties:
+        from_stage: { type: ref, required: true, description: "来源阶段" }
+        to_stage:   { type: ref, required: true, description: "目标阶段" }
+        triggered_by: { type: string, required: false, description: "触发条件" }
+        gate_id:    { type: ref, required: false, description: "通过的门禁 ID" }
+      applies_to: [M2, M1]
+
+  # =========================================================================
+  # §6 价值元素 — ValueElement (第 6 大类)
+  # =========================================================================
+  # 新增: 描述事物的价值、成本、收益。对应 model-driven 项目的 m3_extended.py。
+
+    ValueElement:
+      id: ValueElement
+      name: "价值元素"
+      description: "描述事物的价值、成本、收益。回答'值不值'。"
+      parent: Element
+      abstract: true
+      properties:
+        value_tier:  { type: integer, required: true, min: 1, max: 7, description: "价值层级" }
+
+    Goal:
+      id: Goal
+      name: "目标"
+      description: "OKR 目标或业务目标。"
+      parent: ValueElement
+      abstract: false
+      properties:
+        key_results: { type: list, required: true, description: "KR 列表" }
+        progress:    { type: float, required: true, min: 0, max: 1, description: "进度" }
+        deadline:    { type: date, required: false, description: "截止日期" }
+        owner:       { type: string, required: false, description: "负责人" }
+      applies_to: [M2, M1, M0]
+
+    CostModel:
+      id: CostModel
+      name: "成本模型"
+      description: "资源消耗和成本归因。"
+      parent: ValueElement
+      abstract: false
+      properties:
+        resource_type: { type: enum, required: true, values: [compute, storage, human, api, license], description: "资源类型" }
+        unit_cost:     { type: float, required: true, description: "单位成本" }
+        attribution:   { type: ref, required: false, description: "成本归因目标" }
+      applies_to: [M2, M1, M0]
+
+    BenefitModel:
+      id: BenefitModel
+      name: "收益模型"
+      description: "收益量化和价值归因。"
+      parent: ValueElement
+      abstract: false
+      properties:
+        benefit_type: { type: enum, required: true, values: [revenue, cost_saving, efficiency, user_satisfaction, quality], description: "收益类型" }
+        estimated_value: { type: float, required: true, description: "预估价值" }
+        measurement_method: { type: string, required: false, description: "度量方法" }
+      applies_to: [M2, M1, M0]
+
+  # =========================================================================
+  # §7 治理元素扩展 — Decision
+  # =========================================================================
+  # 新增: 将 Decision 正式纳入 GovernanceElement 体系。
+
+    Decision:
+      id: Decision
+      name: "决策"
+      description: "架构决策记录 (ADR) — 记录决策及其背景、选项和后果。"
+      parent: GovernanceElement
+      abstract: false
+      properties:
+        context:      { type: string, required: true, description: "背景和问题陈述" }
+        decision:     { type: string, required: true, description: "决策内容" }
+        consequences: { type: string, required: true, description: "决策后果" }
+        alternatives: { type: list, required: false, description: "替代方案" }
+        superseded_by: { type: ref, required: false, description: "被哪个决策取代" }
+      applies_to: [M2, M1]
+
 # ============================================================================
 meta:
   maintained_by: "织星 MOF 治理框架"
   next_review: "2026-07-06"
   change_log:
     - "v1.0.0 (2026-06-06): 初始版本 — 16 Element 类型(4大类) + 12 Relation 类型(4大类) + 属性系统"
+    - "v1.1.0 (2026-06-09): 新增第5大类 LifecycleElement (Stage/Gate/Transition) + 第6大类 ValueElement (Goal/CostModel/BenefitModel) + Decision 类型 — 与 model-driven M3 对齐"

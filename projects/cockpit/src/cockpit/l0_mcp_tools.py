@@ -150,6 +150,46 @@ def l0_entity_resolve(query: str) -> str:
     return "\n".join(lines)
 
 
+# ── model-driven 桥接 ──
+
+def md_lifecycle_status(entity_id: str = "ecos") -> str:
+    """model-driven 生命周期状态 — 查询实体的全生命周期阶段进度"""
+    try:
+        from model_driven.lifecycle.tracking import LifecycleManager
+        mgr = LifecycleManager()
+        summary = mgr.get_stage_summary(entity_id)
+        if summary:
+            return f"实体 '{entity_id}': 阶段={summary['current_stage']} 进度={summary['progress_pct']}%"
+        return f"实体 '{entity_id}': 未追踪"
+    except ImportError:
+        return "model-driven 不可用"
+
+
+def md_validate() -> str:
+    """model-driven 自反验证 — 用 model-validate 校验 L0 MOF M1 节点"""
+    try:
+        import yaml
+        from pathlib import Path
+        from model_driven.toolchain.tools import tool_validate
+
+        m1_dir = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
+        nodes = []
+        for d in sorted(m1_dir.iterdir()):
+            if d.is_dir():
+                for f in sorted(d.glob("*.yaml")):
+                    try:
+                        data = yaml.safe_load(open(f))
+                        if data and "type" in data:
+                            nodes.append(data)
+                    except Exception:
+                        pass
+
+        result = tool_validate(models=nodes)
+        return f"model-driven 自反验证: passed={result['passed']}, errors={result['error_count']}, warnings={result['warning_count']}, nodes={len(nodes)}"
+    except ImportError:
+        return "model-driven 不可用"
+
+
 # ── MCP Tool Registry ──
 # 供 cockpit MCP server 注册使用
 MCP_TOOLS = {
@@ -182,6 +222,16 @@ MCP_TOOLS = {
         "function": l0_entity_resolve,
         "description": "跨域实体解析 — 查询同一实体在多个域的出现",
         "parameters": {"query": "实体名称"},
+    },
+    "md_lifecycle_status": {
+        "function": md_lifecycle_status,
+        "description": "model-driven 生命周期状态 — 查询实体的全生命周期阶段进度",
+        "parameters": {"entity_id": "实体 ID (默认 ecos)"},
+    },
+    "md_validate": {
+        "function": md_validate,
+        "description": "model-driven 自反验证 — 用 model-driven 工具校验 L0 MOF M1 节点",
+        "parameters": {},
     },
 }
 
