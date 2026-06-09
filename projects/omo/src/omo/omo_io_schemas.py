@@ -1,9 +1,9 @@
-"""AppendOnlyLog 6 个 consumer 的 Pydantic 模型 (Round 9 P0).
+"""AppendOnlyLog 7 个 consumer 的 Pydantic 模型 (Round 9 P0 + Round 12 P0).
 
 SSOT: 与 ``.omo/_knowledge/management/append-only-log-schemas-2026-06-09.md`` 一一对应.
 
 设计:
-  - 6 个 BaseModel, 必填字段 = 文档 required_fields
+  - 7 个 BaseModel, 必填字段 = 文档 required_fields
   - Status 字段用 Enum (type-safe)
   - 时间戳字段: type str, validator 强制 'Z' 结尾
   - 字段名 snake_case, 与 JSONL 行内字段名一致
@@ -197,6 +197,35 @@ class OmoHistoryRecord(ZTimestampModel):
     model_config = {"extra": "allow"}
 
 
+# ── Consumer 7: omo_trail ───────────────────────────────────
+
+
+class OmoTrailStatus(str, Enum):
+    """trail step 执行状态 (Round 12 P0)."""
+
+    OK = "ok"
+    FAIL = "fail"
+    SKIP = "skip"
+
+
+class OmoTrailRecord(ZTimestampModel):
+    """trail step 记录 (Round 12 P0 — 第 7 个 consumer).
+
+    区别于 omo_audit / omo_event:
+      - 强制 actor (谁做的) + duration_ms (耗时)
+      - 支持 parent_step_id (嵌套调用图)
+      - 细粒度 step-by-step, 适合"agent 走完几步完成任务"场景
+    """
+
+    ts: str
+    actor: str = Field(..., min_length=1)
+    action: str = Field(..., min_length=1)
+    target: str = Field(..., min_length=1)
+    status: OmoTrailStatus
+    duration_ms: int = Field(default=0, ge=0)
+    parent_step_id: str = ""  # 空串 = 顶层
+
+
 # ── 索引 (AppendOnlyLog.append 用 schema= 参数查) ────────────
 
 
@@ -207,6 +236,7 @@ SCHEMA_REGISTRY: dict[str, type[BaseModel]] = {
     "omo_alert": OmoAlertRecord,
     "omo_event": OmoEventRecord,
     "omo_history": OmoHistoryRecord,
+    "omo_trail": OmoTrailRecord,  # Round 12 P0 — 第 7 个 consumer
 }
 
 
@@ -221,5 +251,7 @@ __all__ = (
     "OmoHistoryRecord",
     "OmoSyncRecord",
     "OmoSyncStatus",
+    "OmoTrailRecord",
+    "OmoTrailStatus",
     "SCHEMA_REGISTRY",
 )
