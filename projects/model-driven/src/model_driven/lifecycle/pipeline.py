@@ -269,3 +269,105 @@ class PipelineTracker:
             "lifecycle": lifecycle_progress,
             "overall_progress": lifecycle_progress["progress_pct"],
         }
+
+    # ── 状态持久化 ──────────────────────────────────
+
+    def save(self, state_dir: str | None = None) -> bool:
+        """将 PipelineTracker 状态持久化到文件
+
+        Args:
+            state_dir: 状态目录，默认 ~/Workspace/.omo/state/model-driven/
+        """
+        from pathlib import Path
+
+        if state_dir is None:
+            state_dir = str(Path.home() / "Workspace" / ".omo" / "state" / "model-driven")
+
+        state_path = Path(state_dir)
+        state_path.mkdir(parents=True, exist_ok=True)
+
+        file_path = state_path / f"{self.entity_id}-pipeline.yaml"
+        try:
+            import yaml
+            data = {
+                "entity_id": self.entity_id,
+                "entity_type": self.entity_type,
+                "current_phase": self.current_phase.value if self.current_phase else None,
+                "phases": {
+                    p.value: {
+                        "status": self.phases[p].status.value,
+                        "started_at": self.phases[p].started_at,
+                        "completed_at": self.phases[p].completed_at,
+                        "issues": self.phases[p].issues,
+                    }
+                    for p in PipelinePhase
+                },
+                "lifecycle_stages": {
+                    s.value: {
+                        "status": self.lifecycle_tracker.stages[s].status.value,
+                        "started_at": self.lifecycle_tracker.stages[s].started_at,
+                        "completed_at": self.lifecycle_tracker.stages[s].completed_at,
+                    }
+                    for s in LifecycleStage
+                },
+                "saved_at": datetime.now(timezone.utc).isoformat(),
+            }
+            with open(file_path, "w") as f:
+                yaml.dump(data, f, allow_unicode=True, default_flow_style=False)
+            return True
+        except Exception:
+            return False
+
+    @classmethod
+    def load(cls, entity_id: str, state_dir: str | None = None) -> "PipelineTracker | None":
+        """从文件加载 PipelineTracker 状态
+
+        Args:
+            entity_id: 实体 ID
+            state_dir: 状态目录，默认 ~/Workspace/.omo/state/model-driven/
+        """
+        from pathlib import Path
+
+        if state_dir is None:
+            state_dir = str(Path.home() / "Workspace" / ".omo" / "state" / "model-driven")
+
+        file_path = Path(state_dir) / f"{entity_id}-pipeline.yaml"
+        if not file_path.exists():
+            return None
+
+        try:
+            import yaml
+            with open(file_path) as f:
+                data = yaml.safe_load(f)
+
+            tracker = cls(entity_id=data.get("entity_id", entity_id),
+                          entity_type=data.get("entity_type", ""))
+
+            # 恢复 Phase 状态
+            for phase in PipelinePhase:
+                phase_data = data.get("phases", {}).get(phase.value, {})
+                if phase_data.get("status") == "in_progress":
+                    tracker.phases[phase].status = PhaseStatus.IN_PROGRESS
+                    tracker.phases[phase].started_at = phase_data.get("started_at", "")
+                    tracker.current_phase = phase
+                elif phase_data.get("status") == "completed":
+                    tracker.phases[phase].status = PhaseStatus.COMPLETED
+                    tracker.phases[phase].started_at = phase_data.get("started_at", "")
+                    tracker.phases[phase].completed_at = phase_data.get("completed_at", "")
+                if phase_data.get("issues"):
+                    tracker.phases[phase].issues = phase_data["issues"]
+
+            # 恢复 Lifecycle 阶段状态
+            for stage in LifecycleStage:
+                stage_data = data.get("lifecycle_stages", {}).get(stage.value, {})
+                if stage_data.get("status") == "completed":
+                    tracker.lifecycle_tracker.stages[stage].status = StageStatus.COMPLETED
+                    tracker.lifecycle_tracker.stages[stage].completed_at = stage_data.get("completed_at", "")
+                    tracker.lifecycle_tracker.stages[stage].started_at = stage_data.get("started_at", "")
+                elif stage_data.get("status") == "in_progress":
+                    tracker.lifecycle_tracker.stages[stage].status = StageStatus.IN_PROGRESS
+                    tracker.lifecycle_tracker.stages[stage].started_at = stage_data.get("started_at", "")
+
+            return tracker
+        except Exception:
+            return None

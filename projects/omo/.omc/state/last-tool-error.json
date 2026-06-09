@@ -1,7 +1,7 @@
 {
   "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"cd \\\"/Users/xiamingxing/Workspace\\\" && ls projects/omo/.venv 2>&1 | head -3 && echo \\\"\\\" && echo \\\"=== 探针实跑(看 stderr 完整)===\\\" && uv run python -c \\\"\\nimport yaml, subprocess\\nfrom pathlib ...",
-  "error": "Exit code 1\nbin\nlib\nCACHEDIR.TAG\n\n=== 探针实跑(看 stderr 完整)===\nTraceback (most recent call last):\n  File \"<string>\", line 2, in <module>\n    import yaml, subprocess\nModuleNotFoundError: No module named 'yaml'",
-  "timestamp": "2026-06-08T08:50:41.441Z",
-  "retry_count": 2
+  "tool_input_preview": "{\"command\":\"cd projects/omo && .venv/bin/python -m omo.omo_bos_metrics 2>&1 | head -10\",\"description\":\"Self-test metrics module\"}",
+  "error": "Exit code 1\n(eval):cd:1: no such file or directory: projects/omo",
+  "timestamp": "2026-06-09T02:19:19.936Z",
+  "retry_count": 1
 }
