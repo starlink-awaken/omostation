@@ -65,6 +65,36 @@ cd projects/gbrain && bun test          # Gbrain: ~9,700 pass
 - **[Audit Report](./.omo/_delivery/audits/architecture_audit_20260607.md)** — Comprehensive architecture audit (2026-06-07)
 - **[Tech Debt Roadmap](./.omo/_delivery/audits/tech_debt_roadmap_20260607.md)** — Remaining debt items
 
+### AppendOnlyLog Pattern (Round 1-5 收口)
+
+L0 SSOT 抽象, 5 个领域共享同一 JSONL 物理写盘. 详见 [.omo/_knowledge/management/append-only-log-pattern-2026-06-09.md](.omo/_knowledge/management/append-only-log-pattern-2026-06-09.md).
+
+| Consumer | 落点 | 角色 |
+|----------|------|------|
+| `omo_audit` | `~/runtime/audit/governance-audit.jsonl` | governance actions |
+| `omo_bos_metrics` | `.omo/_knowledge/bos-metrics.jsonl` | BOS invocations |
+| `omo_sync` | `.omo/_knowledge/omo-sync.jsonl` | omo state sync |
+| `omo_alert` | `.omo/_knowledge/omo-alerts.jsonl` | KEI threshold alerts |
+| `omo_event` | `.omo/_knowledge/omo-events.jsonl` | 用户面向 emit (P3 样板) |
+
+**关键命令**:
+
+```bash
+# 观测
+omo bos status                          # BOS invoke metrics (p50/p95/p99)
+omo bos discover                        # Pydantic 验证后的注册表
+omo bos health                          # endpoint + metrics 健康
+omo observability log tail --type knowledge   # 多文件 tail
+
+# 用户写
+omo event emit --type my_event --source my_script --payload '{"k":"v"}'
+
+# 跨项目桥接
+from omo.model_driven_bridge import make_pipeline_tracker_with_log
+tracker = make_pipeline_tracker_with_log(entity_id="my-domain")
+# PipelineTracker.on_event 自动流到 .omo/_knowledge/pipeline-events.jsonl
+```
+
 ### Documentation
 
 | Document | Description |

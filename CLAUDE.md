@@ -69,7 +69,7 @@ Worker/User → SharedBrain (轻量数据持久层)
 | **agora** | I0 | `projects/agora/` | Python (uv, pytest) | MCP 42 + HTTP 30+ | 🟢 1105 tests |
 | **kairon** | L2 | `projects/kairon/` | Python (uv, pytest) | 25 包 | 🟢 1810+ tests |
 | **gbrain** | L2 | `projects/gbrain/` | TypeScript (bun) | MCP 67, 163K TS | 🟢 |
-| **omo** | L2 | `projects/omo/` | Python (uv, pytest) | CLI 28 + MCP 10 | 🟢 221 tests |
+| **omo** | L2 | `projects/omo/` | Python (uv, pytest) | CLI 35 + MCP 10 + AppendOnlyLog 5 consumers | 🟢 100+ tests + 3 集成 |
 | **metaos** | L2 | `projects/metaos/` | Python (uv, pytest) | MCP 11 | 🟢 163 tests |
 | **runtime** | L1 | `projects/runtime/` | Python (uv, pytest) | MCP 30 + HTTP 5 | 🟢 171 tests |
 | **ecos** | L0 | `projects/ecos/` | Python (uv, pytest) | SSB + emergence | 🟢 122 tests |
@@ -207,6 +207,8 @@ bash tests/integration/run-all.sh
 | `AGENTS.md` | 开发者指南、命令、陷阱 |
 | `LAYER-INDEX.md` | 分层架构索引（I0-L4） |
 | `convergence.yaml` | 融合治理状态 |
+| `.omo/_knowledge/management/append-only-log-pattern-2026-06-09.md` | **AppendOnlyLog 模式 (5 轮收口)** |
+| `.omo/_knowledge/management/governance-charter-v1.md` | 5+3+1 治理宪章 |
 | `.omo/INDEX.md` | 治理知识库导航 |
 | `data/` | 数据层（`db/`, `kos/`, `sharedbrain/`） |
 | `.omo/state/system.yaml` | 当前系统运行状态 |

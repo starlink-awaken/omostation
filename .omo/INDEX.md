@@ -63,6 +63,7 @@
 | 历史任务 | [tasks/done/](tasks/done/) |
 | **治理历史 (JSONL)** | [_knowledge/governance-history.jsonl](_knowledge/governance-history.jsonl) |
 | 架构基线 | [_knowledge/design/system-design-baseline.md](_knowledge/design/system-design-baseline.md) |
+| **AppendOnlyLog 模式 (5 轮收口)** | [_knowledge/management/append-only-log-pattern-2026-06-09.md](_knowledge/management/append-only-log-pattern-2026-06-09.md) |
 
 ---
 

@@ -4,6 +4,37 @@
 > 6 项目 (agora / kairon / gbrain / omo / metaos / cockpit / runtime) 共享版本号.
 > 详见 ADR-0007.
 
+## [0.1.2] - 2026-06-09
+
+### Added (AppendOnlyLog 全景方案 5 轮收口 — Round 1-5)
+- **Round 1 — 抽象**:
+  - `omo_io.AppendOnlyLog` 类 (SSOT JSONL 物理写盘)
+  - `omo_io.read_jsonl` 公开 (容错读)
+  - 19 个单元测试
+- **Round 2 — 接通**:
+  - `omo_audit` / `omo_bos_metrics` 内部用 AppendOnlyLog
+  - 外部 API 0 改 (49 测试不变)
+- **Round 3 — 样板**:
+  - `omo_sync` 摆脱 `details` 字符串拍扁, 结构化 record
+  - 6 个 omo_sync 单元测试
+- **Round 4 — 收尾**:
+  - `AppendOnlyLog.tail(n)` / `since(ts, field='ts')` 方法
+  - `AppendOnlyLog` 跨进程锁 `fcntl_lock` (POSIX fcntl.flock 包装)
+  - `omo observability log tail --type knowledge [--file X]` 多文件
+  - `omo_alert` 接入 AppendOnlyLog (第 4 个 consumer)
+- **Round 5 — L0 强化**:
+  - 治理审计 88.3 (B) → 100.0 (A+), kairon ruff 9→0
+  - 跨进程 fcntl_lock 集成测试 (3 tests, 100/100 0 丢行)
+  - `model_driven.PipelineTracker` 加 `on_event` 钩子 (向后兼容)
+  - `omo.model_driven_bridge` L1 → L0 事件流桥接 (5 tests)
+  - `omo event emit` 子命令 (P3 样板, 第 5 个 consumer, 4 tests)
+  - 100+ 单元测试 + 3 集成测试 + 1 跨项目桥接
+
+### Architecture
+- 详见 `.omo/_knowledge/management/append-only-log-pattern-2026-06-09.md`
+- 5 个 AppendOnlyLog consumer: omo_audit / omo_bos_metrics / omo_sync / omo_alert / omo_event
+- L1 → L0 事件流贯通: PipelineTracker.on_event → omo.model_driven_bridge → .jsonl
+
 ## [0.1.1] - 2026-06-07
 
 ### Changed

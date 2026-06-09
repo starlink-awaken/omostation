@@ -14,7 +14,7 @@ This root directory is a **multi-project workspace** organized in the 5+3+1 (eCO
 | I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · 172 src, 1200 tests |
 | L2 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 知识引擎 · 19 active (+6 archived) packages |
 | L2 | `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — 知识数据库 · 163K TS |
-| L2 | `omo` | Python (uv, pytest) | `projects/omo/` | 🟢 Active — 治理面 · 82 src files |
+| L2 | `omo` | Python (uv, pytest) | `projects/omo/` | 🟢 Active — 治理面 · 100+ tests · **AppendOnlyLog 5 consumers + fcntl 跨进程锁** |
 | L2 | `metaos` | Python (uv, pytest) | `projects/metaos/` | 🟢 Active — 编排引擎 · 163 tests |
 | L1 | `runtime` | Python (uv, pytest) | `projects/runtime/` | 🟢 Active — 运行时 · matrix + scheduler + kei |
 | L0 | `ecos` | Python (uv, pytest) | `projects/ecos/` | 🟢 Active — SSB 协议 · 122 tests |
@@ -95,7 +95,19 @@ cd projects/runtime && make shellcheck                  # Shell 脚本检查
 cd projects/runtime && make fmt                         # Ruff format
 
 # omo (projects/omo/)
-cd projects/omo && uv run pytest tests/ -q               # 302/530 (225 skipped)
+cd projects/omo && uv run pytest tests/ -q               # 100+ tests (AppendOnlyLog 5 轮收口后)
+
+# AppendOnlyLog 5 个 consumer (Round 1-5 收尾):
+#   omo_audit, omo_bos_metrics, omo_sync, omo_alert, omo_event
+# 详细: .omo/_knowledge/management/append-only-log-pattern-2026-06-09.md
+
+# 关键命令 (omo-cli):
+omo bos status          # BOS invoke metrics (p50/p95/p99)
+omo bos discover        # Pydantic 验证后的注册表
+omo bos health          # endpoint + metrics 健康报告
+omo observability log tail --type knowledge [--file X]   # 多文件 tail
+omo event emit --type X --source Y --payload '...'      # 用户面向样板
+omo governance          # 6 项治理审计 (期望 100.0 A+)
 
 # metaos (projects/metaos/)
 cd projects/metaos && uv run pytest tests/ -q            # 188/188 pass
