@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any
 
 from omo.omo_io import AppendOnlyLog
+from omo.omo_audit import _utc_now  # Round 8 P2 锁: 时间戳 Z 结尾统一
 from omo.omo_paths import GOVERNANCE_HISTORY_PATH
 
 # 默认历史文件路径
@@ -47,10 +48,11 @@ def append_entry(
     sort_keys=True 保与 kairon-governance 旧 JSONL 字节级兼容.
     """
     target = Path(path) if path is not None else DEFAULT_PATH
-    now = datetime.now(UTC)
+    # Round 8 P2: 用 _utc_now() 统一时间戳为 "Z" 结尾 (与 omo_audit 协议一致)
+    now_iso = _utc_now()  # 例: "2026-06-09T02:00:00Z"
     entry: dict[str, Any] = dict(data)
-    entry["date"] = now.strftime("%Y-%m-%d")
-    entry["timestamp"] = now.isoformat()
+    entry["date"] = now_iso[:10]  # "YYYY-MM-DD"
+    entry["timestamp"] = now_iso
     # sort_keys=True 通过 AppendOnlyLog.append 的 **json_kwargs 透传
     AppendOnlyLog(target).append(entry, sort_keys=True)
     return target
