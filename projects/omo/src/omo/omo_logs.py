@@ -20,7 +20,6 @@ import sys
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
 from omo.omo_io import AppendOnlyLog
 from omo.omo_io_schemas import SCHEMA_REGISTRY
@@ -118,7 +117,7 @@ def cmd_logs_inspect(name: str) -> int:
                 ts_z_suffix_count += 1
 
     print(f"📄 {path.name}: {len(records):,} records, {path.stat().st_size:,} bytes")
-    print(f"\n字段分布 (top 10):")
+    print("\n字段分布 (top 10):")
     for field, count in field_counter.most_common(10):
         print(f"  {field:30s} {count:>10,}")
     if schema_name:
@@ -131,7 +130,7 @@ def cmd_logs_inspect(name: str) -> int:
         if len(missing_required) > 5:
             print(f"  ... +{len(missing_required) - 5} more")
     else:
-        print(f"\n✅ 所有 records 符合必填字段 (Round 8 P2 SSOT)")
+        print("\n✅ 所有 records 符合必填字段 (Round 8 P2 SSOT)")
     if ts_z_suffix_count < len(records):
         bad = len(records) - ts_z_suffix_count
         print(f"⚠️  {bad} 条 records 时间戳不是 'Z' 结尾 (Round 8 P2 锁)")
@@ -197,11 +196,27 @@ def cmd_logs_tail(name: str, lines: int) -> int:
 # ── 子命令: audit ──────────────────────────────────────────
 
 
-def cmd_logs_audit(consumer: str | None = None) -> int:
+def cmd_logs_audit(
+    consumer: str | None = None,
+    baseline_init: str | None = None,
+    baseline_check: str | None = None,
+) -> int:
     """走 SSOT schema 检查所有 .jsonl, 报漂移.
+
+    Round 13 P0 新增 baseline 机制 (实现 Round 12 P0 commit flag 的 TODO):
+      - 老 .jsonl 漂移是历史问题, 不应阻塞新代码提交
+      - 启动时跑一次 --baseline-init 把当前 drift 写入 baseline 文件
+      - pre-commit 跑 --baseline-check, drift > baseline 才 fail
+      - 新代码引入的'增量漂移'才 fail, 老数据自动忽略
 
     Args:
         consumer: 限定 audit 单个 consumer (e.g. 'omo-bos-metrics'). None = audit 所有.
+        baseline_init: 路径, 写入当前 drift 为 baseline (生成/刷新).
+        baseline_check: 路径, 对比 baseline, 增量 > 0 才 fail (pre-commit 用).
+
+    Returns:
+        0 = pass (无漂移, 或 baseline-check 0 增量)
+        1 = fail (有漂移, 或 baseline-check 有回归)
     """
     paths = _list_log_paths()
     if consumer:
@@ -210,8 +225,11 @@ def cmd_logs_audit(consumer: str | None = None) -> int:
             print(f"❌ consumer not found: {consumer}", file=sys.stderr)
             return 1
 
-    total_failures = 0
     total_records = 0
+    # 按 schema_name 累计 drift (而非按文件名, baseline 用 schema 维度更稳定)
+    drift_by_consumer: dict[str, int] = {}
+    file_results: list[tuple[Path, str, int, int]] = []  # (path, schema_name, drift, parse_errors)
+
     for p in paths:
         log = AppendOnlyLog(p)
         records = log.read_all()
@@ -230,13 +248,100 @@ def cmd_logs_audit(consumer: str | None = None) -> int:
             if set(r.keys()) != required and not required.issubset(r.keys()):
                 # 仅当缺字段时报 (多余字段允许, forward compat)
                 failures += 1
+        file_results.append((p, schema_name, failures, parse_errors))
+        drift_by_consumer[schema_name] = drift_by_consumer.get(schema_name, 0) + failures
+
+    # ── 模式 1: --baseline-init (生成/刷新 baseline) ──
+    if baseline_init is not None:
+        baseline_path = Path(baseline_init)
+        baseline_path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "_comment": (
+                "AppendOnlyLog audit baseline (Round 13 P0). "
+                "漂移 = 已知/历史缺失, pre-commit 应忽略. "
+                "新代码引入'增量'漂移才 fail. "
+                "刷新: omo logs audit --baseline-init <this_path>."
+            ),
+            "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "drift_by_consumer": dict(sorted(drift_by_consumer.items())),
+            "total_drift": sum(drift_by_consumer.values()),
+            "total_records": total_records,
+        }
+        baseline_path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        print(f"✅ baseline 写入: {baseline_path}")
+        print(f"   total_records: {total_records:,}")
+        print(f"   total_drift:   {sum(drift_by_consumer.values())}")
+        print(f"   consumers ({len(drift_by_consumer)}):")
+        for k, v in sorted(drift_by_consumer.items()):
+            print(f"     {k}: {v}")
+        return 0
+
+    # ── 模式 2: --baseline-check (对比 baseline, 增量才 fail) ──
+    if baseline_check is not None:
+        baseline_path = Path(baseline_check)
+        if not baseline_path.exists():
+            print(
+                f"❌ baseline 不存在: {baseline_path}",
+                file=sys.stderr,
+            )
+            print(
+                f"   初始化: omo logs audit --baseline-init {baseline_path}",
+                file=sys.stderr,
+            )
+            return 1
+        try:
+            baseline_payload = json.loads(baseline_path.read_text(encoding="utf-8"))
+            # 兼容两种格式: 新格式 {drift_by_consumer: {...}} + 旧格式 (平铺 dict)
+            if "drift_by_consumer" in baseline_payload:
+                baseline_drift: dict[str, int] = baseline_payload["drift_by_consumer"]
+            else:
+                baseline_drift = baseline_payload  # type: ignore[assignment]
+        except (json.JSONDecodeError, KeyError, TypeError) as exc:
+            print(f"❌ baseline 解析失败: {exc}", file=sys.stderr)
+            return 1
+
+        any_regression = False
+        delta_total = 0
+        # 当前有 audit 数据的 consumer
+        for k, v in sorted(drift_by_consumer.items()):
+            base = baseline_drift.get(k, 0)
+            delta = v - base
+            if delta > 0:
+                print(f"❌ {k}: drift {v} (baseline {base}, +{delta} 回归)")
+                any_regression = True
+                delta_total += delta
+            elif delta < 0:
+                print(f"✅ {k}: drift {v} (baseline {base}, {-delta} 改善)")
+            else:
+                print(f"✅ {k}: drift {v} (baseline {base}, 不变)")
+        # baseline 记录但当前无数据 (consumer 临时为空)
+        for k in sorted(baseline_drift):
+            if k not in drift_by_consumer:
+                print(f"⚠️  {k}: baseline 存在但当前无 audit 数据 (skip)")
+        if any_regression:
+            print(f"\n❌ baseline check fail: 增量 drift {delta_total} (有回归, 新代码引入漂移)")
+            return 1
+        print("\n✅ baseline check pass: 0 增量 drift (新代码未引入新漂移)")
+        return 0
+
+    # ── 模式 3: 默认 (无 baseline) ──
+    total_failures = 0
+    for p, schema_name, failures, parse_errors in file_results:
         if failures or parse_errors:
-            print(f"❌ {p.stem} ({schema_name}): {failures} schema drift, {parse_errors} parse errors (out of {len(records)} records)")
+            print(
+                f"❌ {p.stem} ({schema_name}): {failures} schema drift, "
+                f"{parse_errors} parse errors (out of {len(AppendOnlyLog(p).read_all())} records)"
+            )
             total_failures += failures
         else:
-            print(f"✅ {p.stem} ({schema_name}): {len(records):,} records 符合 SSOT")
+            print(f"✅ {p.stem} ({schema_name}): {len(AppendOnlyLog(p).read_all()):,} records 符合 SSOT")
 
     print(f"\n总计: {total_records:,} records, {total_failures} 漂移")
+    if total_failures:
+        print("   提示: 用 --baseline-init 生成 baseline, 后续 --baseline-check 仅查增量")
     return 0 if total_failures == 0 else 1
 
 
@@ -265,6 +370,16 @@ def main(argv: list[str] | None = None) -> int:
     # audit
     au = sub.add_parser("audit", help="走 SSOT schema 检查所有 .jsonl, 报漂移")
     au.add_argument("--consumer", help="限定 audit 单个 consumer (e.g. 'omo-bos-metrics')")
+    au.add_argument(
+        "--baseline-init",
+        metavar="PATH",
+        help="写入当前 drift 为 baseline (生成/刷新 baseline 文件)",
+    )
+    au.add_argument(
+        "--baseline-check",
+        metavar="PATH",
+        help="对比 baseline, 增量 drift > 0 才 fail (pre-commit 用)",
+    )
 
     args = parser.parse_args(argv)
     if args.command == "list":
@@ -274,7 +389,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "tail":
         return cmd_logs_tail(args.name, args.lines)
     if args.command == "audit":
-        return cmd_logs_audit(args.consumer)
+        return cmd_logs_audit(
+            consumer=args.consumer,
+            baseline_init=args.baseline_init,
+            baseline_check=args.baseline_check,
+        )
     parser.print_help()
     return 1
 

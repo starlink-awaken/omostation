@@ -34,12 +34,12 @@ repos:
   - repo: local
     hooks:
       - id: omo-logs-audit
-        name: omo logs audit (SSOT schema 漂移检测)
-        entry: uv run --directory projects/omo python -m omo.cli logs audit
+        name: omo logs audit (baseline check, 0 增量才通过)
+        entry: uv run --directory projects/omo python -m omo.cli logs audit --baseline-check .omo/_knowledge/_audit_baseline.json
         language: system
         pass_filenames: false
         stages: [pre-commit]
-        # Round 12 P0 锁: 提交时自动验, 0 drift 才通过 (与 Round 8 P2 SSOT 一致).
-        # 若 .omo/_knowledge/ 下没 .jsonl, omo logs audit 返 0, 仍然通过.
-        # 老 governance-history.jsonl 已知有 1078 drift (Round 10 P1 验证),
-        # 提交时若 drift > 0 则 fail. 这是有意的 fail-fast, 锁住未来新代码不引入 drift.
+        # Round 13 P0 升级: baseline 机制 (实现 Round 12 P0 commit flag 的 TODO).
+        # 老 .jsonl 漂移是历史问题, baseline 锚定"已知漂移", pre-commit 只对"增量" fail.
+        # 刷新 baseline: uv run --directory projects/omo python -m omo.cli logs audit --baseline-init .omo/_knowledge/_audit_baseline.json
+        # Round 12 P0 旧 hook 已被 baseline-check 取代 (删了 files: 过滤, 不再需要).
