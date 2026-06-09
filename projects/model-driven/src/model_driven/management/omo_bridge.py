@@ -11,7 +11,7 @@ model_driven.management.omo_bridge — OMO 桥接
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -37,7 +37,7 @@ class OMOEvent:
     event_type: str
     source: str = "model-driven"
     payload: dict[str, Any] = field(default_factory=dict)
-    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 class OMOBridge:
@@ -58,8 +58,9 @@ class OMOBridge:
         if omo_dir:
             self._omo_dir = Path(omo_dir)
         else:
-            # 尝试自动检测 workspace 的 .omo/ 目录
-            ws = Path.home() / "Workspace"
+            from model_driven._paths import get_workspace_dir
+
+            ws = get_workspace_dir()
             if (ws / ".omo").exists():
                 self._omo_dir = ws / ".omo"
             else:
@@ -70,7 +71,7 @@ class OMOBridge:
     def emit(self, event_type: str, payload: dict[str, Any]) -> OMOEvent:
         """发送 OMO 事件"""
         event = OMOEvent(
-            id=f"OMO-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}",
+            id=f"OMO-{datetime.now(UTC).strftime('%Y%m%d%H%M%S%f')}",
             event_type=event_type,
             payload=payload,
         )
@@ -86,13 +87,13 @@ class OMOBridge:
     ) -> dict[str, Any]:
         """注册债务"""
         debt = {
-            "id": f"DEBT-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
+            "id": f"DEBT-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}",
             "title": title,
             "description": description,
             "severity": severity,
             "source": source,
             "status": "registered",
-            "registered_at": datetime.now(timezone.utc).isoformat(),
+            "registered_at": datetime.now(UTC).isoformat(),
         }
         self._pending_debts.append(debt)
         self.emit(OMOEventType.DEBT_REGISTERED.value, debt)
@@ -107,13 +108,13 @@ class OMOBridge:
     ) -> dict[str, Any]:
         """创建任务"""
         task = {
-            "id": f"TASK-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
+            "id": f"TASK-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}",
             "title": title,
             "description": description,
             "priority": priority,
             "assignee": assignee,
             "status": "pending",
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
         }
         self._pending_tasks.append(task)
         self.emit(OMOEventType.TASK_CREATED.value, task)
@@ -127,12 +128,15 @@ class OMOBridge:
         details: dict[str, Any] | None = None,
     ) -> OMOEvent:
         """记录审计"""
-        return self.emit(OMOEventType.AUDIT_RECORDED.value, {
-            "action": action,
-            "entity_type": entity_type,
-            "entity_id": entity_id,
-            "details": details or {},
-        })
+        return self.emit(
+            OMOEventType.AUDIT_RECORDED.value,
+            {
+                "action": action,
+                "entity_type": entity_type,
+                "entity_id": entity_id,
+                "details": details or {},
+            },
+        )
 
     def get_pending_debts(self) -> list[dict[str, Any]]:
         """获取待处理债务"""
@@ -158,8 +162,7 @@ class OMOBridge:
             "file_mode": self._file_mode,
             "omo_dir": str(self._omo_dir) if self._omo_dir else None,
             "events_by_type": {
-                et.value: len([e for e in self._events if e.event_type == et.value])
-                for et in OMOEventType
+                et.value: len([e for e in self._events if e.event_type == et.value]) for et in OMOEventType
             },
         }
 
@@ -173,24 +176,30 @@ class OMOBridge:
         tasks_dir = self._omo_dir / "tasks" / "active"
         tasks_dir.mkdir(parents=True, exist_ok=True)
 
-        task_id = task.get("id", f"TASK-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}")
+        task_id = task.get("id", f"TASK-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}")
         file_path = tasks_dir / f"{task_id}.yaml"
 
         try:
             import yaml
+
             with open(file_path, "w") as f:
-                yaml.dump({
-                    "id": task_id,
-                    "subject": task.get("title", ""),
-                    "description": task.get("description", ""),
-                    "status": "pending",
-                    "priority": task.get("priority", "P2"),
-                    "assignee": task.get("assignee", ""),
-                    "source": "model-driven",
-                    "created_at": task.get("created_at", datetime.now(timezone.utc).isoformat()),
-                }, f, allow_unicode=True, default_flow_style=False)
+                yaml.dump(
+                    {
+                        "id": task_id,
+                        "subject": task.get("title", ""),
+                        "description": task.get("description", ""),
+                        "status": "pending",
+                        "priority": task.get("priority", "P2"),
+                        "assignee": task.get("assignee", ""),
+                        "source": "model-driven",
+                        "created_at": task.get("created_at", datetime.now(UTC).isoformat()),
+                    },
+                    f,
+                    allow_unicode=True,
+                    default_flow_style=False,
+                )
             return True
-        except Exception:
+        except (OSError, ImportError, yaml.YAMLError):
             return False
 
     def write_debt_to_file(self, debt: dict[str, Any]) -> bool:
@@ -201,26 +210,34 @@ class OMOBridge:
         debt_dir = self._omo_dir / "debt"
         debt_dir.mkdir(parents=True, exist_ok=True)
 
-        debt_id = debt.get("id", f"DEBT-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}")
+        debt_id = debt.get("id", f"DEBT-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}")
         file_path = debt_dir / f"{debt_id}.yaml"
 
         try:
             import yaml
+
             with open(file_path, "w") as f:
-                yaml.dump({
-                    "id": debt_id,
-                    "title": debt.get("title", ""),
-                    "description": debt.get("description", ""),
-                    "severity": debt.get("severity", "medium"),
-                    "status": "registered",
-                    "source": "model-driven",
-                    "registered_at": debt.get("registered_at", datetime.now(timezone.utc).isoformat()),
-                }, f, allow_unicode=True, default_flow_style=False)
+                yaml.dump(
+                    {
+                        "id": debt_id,
+                        "title": debt.get("title", ""),
+                        "description": debt.get("description", ""),
+                        "severity": debt.get("severity", "medium"),
+                        "status": "registered",
+                        "source": "model-driven",
+                        "registered_at": debt.get("registered_at", datetime.now(UTC).isoformat()),
+                    },
+                    f,
+                    allow_unicode=True,
+                    default_flow_style=False,
+                )
             return True
-        except Exception:
+        except (OSError, ImportError, yaml.YAMLError):
             return False
 
-    def write_audit_to_log(self, action: str, entity_type: str = "", entity_id: str = "", details: dict[str, Any] | None = None) -> bool:
+    def write_audit_to_log(
+        self, action: str, entity_type: str = "", entity_id: str = "", details: dict[str, Any] | None = None
+    ) -> bool:
         """将审计记录写入 .omo/ 审计日志"""
         if not self._file_mode or not self._omo_dir:
             return False
@@ -231,7 +248,7 @@ class OMOBridge:
             "entity_id": entity_id,
             "details": details or {},
             "source": "model-driven",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         self._audit_log.append(audit_entry)
 
@@ -242,10 +259,11 @@ class OMOBridge:
 
         try:
             import json
+
             with open(log_path, "a") as f:
                 f.write(json.dumps(audit_entry, ensure_ascii=False) + "\n")
             return True
-        except Exception:
+        except (OSError, TypeError, ValueError):
             return False
 
     def sync_phase(self, phase_id: str, status: str, details: dict[str, Any] | None = None) -> bool:
@@ -259,6 +277,7 @@ class OMOBridge:
 
         try:
             import yaml
+
             with open(state_path) as f:
                 state = yaml.safe_load(f) or {}
 
@@ -266,12 +285,12 @@ class OMOBridge:
             state[key] = status
             if details:
                 state[f"{phase_id}_details"] = details
-            state["updated_at"] = datetime.now(timezone.utc).isoformat()
+            state["updated_at"] = datetime.now(UTC).isoformat()
 
             with open(state_path, "w") as f:
                 yaml.dump(state, f, allow_unicode=True, default_flow_style=False)
             return True
-        except Exception:
+        except (OSError, TypeError, ValueError):
             return False
 
     # ── 便捷方法: 自动选择内存/文件模式 ──────────────
@@ -327,6 +346,7 @@ class OMOBridge:
 
         try:
             import yaml
+
             with open(state_path) as f:
                 state = yaml.safe_load(f) or {}
             return {
@@ -338,10 +358,12 @@ class OMOBridge:
                 "total_tasks": state.get("total_tasks", 0),
                 "blocked_tasks": state.get("blocked_tasks", 0),
                 "active_agents": state.get("active_agents", 0),
-                "debt_health": state.get("debt_metrics", {}).get("debt_health", 0) if isinstance(state.get("debt_metrics"), dict) else 0,
+                "debt_health": state.get("debt_metrics", {}).get("debt_health", 0)
+                if isinstance(state.get("debt_metrics"), dict)
+                else 0,
                 "raw": state,
             }
-        except Exception as e:
+        except (OSError, ImportError, yaml.YAMLError) as e:
             return {"error": str(e)}
 
     def read_omo_tasks(self, status: str = "active") -> list[dict[str, Any]]:
@@ -356,14 +378,16 @@ class OMOBridge:
         tasks = []
         try:
             import yaml
+
             for f in sorted(tasks_dir.glob("*.yaml")):
                 try:
-                    data = yaml.safe_load(open(f))
+                    with open(f) as fh:
+                        data = yaml.safe_load(fh)
                     if data:
                         tasks.append(data)
-                except Exception:
+                except (OSError, yaml.YAMLError):
                     pass
-        except Exception:
+        except (OSError, ImportError):
             pass
 
         return tasks
@@ -380,14 +404,16 @@ class OMOBridge:
         debts = []
         try:
             import yaml
+
             for f in sorted(debt_dir.glob("*.yaml")):
                 try:
-                    data = yaml.safe_load(open(f))
+                    with open(f) as fh:
+                        data = yaml.safe_load(fh)
                     if data:
                         debts.append(data)
-                except Exception:
+                except (OSError, yaml.YAMLError):
                     pass
-        except Exception:
+        except (OSError, ImportError):
             pass
 
         return debts
@@ -407,6 +433,7 @@ class OMOBridge:
 
         try:
             import fcntl
+
             import yaml
 
             # 文件锁保护并发写入
@@ -420,16 +447,16 @@ class OMOBridge:
                     "current_phase": pipeline_progress.get("current_phase", "unknown"),
                     "overall_progress": pipeline_progress.get("overall_progress", 0),
                     "phases": pipeline_progress.get("phases", {}),
-                    "synced_at": datetime.now(timezone.utc).isoformat(),
+                    "synced_at": datetime.now(UTC).isoformat(),
                 }
-                state["updated_at"] = datetime.now(timezone.utc).isoformat()
+                state["updated_at"] = datetime.now(UTC).isoformat()
 
                 f.seek(0)
                 f.truncate()
                 yaml.dump(state, f, allow_unicode=True, default_flow_style=False)
                 fcntl.flock(f, fcntl.LOCK_UN)
             return True
-        except Exception:
+        except (OSError, ImportError, yaml.YAMLError):
             return False
 
     def get_omo_health_summary(self) -> dict[str, Any]:
@@ -453,5 +480,5 @@ class OMOBridge:
                 "pending_tasks": md_stats["pending_tasks"],
                 "file_mode": md_stats["file_mode"],
             },
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
         }

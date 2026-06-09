@@ -2,8 +2,7 @@
 Tests for model_driven.toolchain.derivation_engine — 推导规则执行引擎
 """
 
-import pytest
-from model_driven.toolchain.derivation_engine import DerivationEngine, DerivationResult
+from model_driven.toolchain.derivation_engine import DerivationEngine
 
 
 class TestDerivationEngine:

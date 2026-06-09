@@ -1115,3 +1115,55 @@
 15477","port":9090}
 {"source":"dashboard_monitor","timestamp":"2026-06-09T04:07:48Z","launchd_state":"running","http_code":"200","pid":"7777
 19945","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T04:12:48Z","launchd_state":"running","http_code":"200","pid":"7777
+21149","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T04:17:48Z","launchd_state":"running","http_code":"200","pid":"7777
+22884","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T04:22:48Z","launchd_state":"running","http_code":"200","pid":"7777
+24118","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T04:27:49Z","launchd_state":"running","http_code":"200","pid":"7777
+48709","port":9090}
+{"date": "2026-06-09", "grade": "A", "source": "omo_daemon", "timestamp": "2026-06-09T04:32:28.107958+00:00", "total_score": 92.5, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T04:32:49Z","launchd_state":"running","http_code":"200","pid":"7777
+52431","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T04:37:49Z","launchd_state":"running","http_code":"200","pid":"7777
+55890","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T04:42:49Z","launchd_state":"running","http_code":"200","pid":"7777
+59975","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T04:47:49Z","launchd_state":"running","http_code":"200","pid":"7777
+63687","port":9090}
+{"checks": [{"category": "lint", "name": "ruff lint", "score": 55.0, "severity": "warn"}, {"category": "tests", "name": "test coverage", "score": 100.0, "severity": "ok"}, {"category": "debt", "name": "debt integrity", "score": 100.0, "severity": "ok"}, {"category": "knowledge", "name": "adr links", "score": 100.0, "severity": "ok"}, {"category": "tasks", "name": "task consistency", "score": 100.0, "severity": "ok"}, {"category": "agora", "name": "agora health", "score": 75.0, "severity": "warn"}], "date": "2026-06-09", "grade": "B", "timestamp": "2026-06-09T04:50:23.848592+00:00", "total_score": 88.3, "watchlist_count": 2}
+{"checks": [{"category": "lint", "name": "ruff lint", "score": 55.0, "severity": "warn"}, {"category": "tests", "name": "test coverage", "score": 100.0, "severity": "ok"}, {"category": "debt", "name": "debt integrity", "score": 100.0, "severity": "ok"}, {"category": "knowledge", "name": "adr links", "score": 100.0, "severity": "ok"}, {"category": "tasks", "name": "task consistency", "score": 100.0, "severity": "ok"}, {"category": "agora", "name": "agora health", "score": 75.0, "severity": "warn"}], "date": "2026-06-09", "grade": "B", "timestamp": "2026-06-09T04:50:49.271267+00:00", "total_score": 88.3, "watchlist_count": 2}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T04:52:49Z","launchd_state":"running","http_code":"200","pid":"7777
+67755","port":9090}
+{"checks": [{"category": "lint", "name": "ruff lint", "score": 100.0, "severity": "ok"}, {"category": "tests", "name": "test coverage", "score": 100.0, "severity": "ok"}, {"category": "debt", "name": "debt integrity", "score": 100.0, "severity": "ok"}, {"category": "knowledge", "name": "adr links", "score": 100.0, "severity": "ok"}, {"category": "tasks", "name": "task consistency", "score": 100.0, "severity": "ok"}, {"category": "agora", "name": "agora health", "score": 100.0, "severity": "ok"}], "date": "2026-06-09", "grade": "A+", "timestamp": "2026-06-09T04:56:07.208663+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T04:57:49Z","launchd_state":"running","http_code":"200","pid":"7777
+72554","port":9090}
+{"date": "2026-06-09", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-09T05:02:28.311980+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T05:02:49Z","launchd_state":"running","http_code":"200","pid":"7777
+75494","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T05:07:49Z","launchd_state":"running","http_code":"200","pid":"7777
+81671","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T05:12:50Z","launchd_state":"running","http_code":"200","pid":"7777
+88455","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T05:17:50Z","launchd_state":"running","http_code":"200","pid":"7777
+93455","port":9090}
+{"checks": [{"category": "lint", "name": "ruff lint", "score": 100.0, "severity": "ok"}, {"category": "tests", "name": "test coverage", "score": 100.0, "severity": "ok"}, {"category": "debt", "name": "debt integrity", "score": 100.0, "severity": "ok"}, {"category": "knowledge", "name": "adr links", "score": 100.0, "severity": "ok"}, {"category": "tasks", "name": "task consistency", "score": 100.0, "severity": "ok"}, {"category": "agora", "name": "agora health", "score": 100.0, "severity": "ok"}], "date": "2026-06-09", "grade": "A+", "timestamp": "2026-06-09T05:18:14.943359+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T05:22:50Z","launchd_state":"running","http_code":"200","pid":"7777
+1404","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T05:27:50Z","launchd_state":"running","http_code":"200","pid":"7777
+8610","port":9090}
+{"date": "2026-06-09", "grade": "A+", "source": "omo_daemon", "timestamp": "2026-06-09T05:32:28.536270+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T05:32:50Z","launchd_state":"running","http_code":"200","pid":"7777
+16653","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T05:37:50Z","launchd_state":"running","http_code":"200","pid":"7777
+23273","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T05:42:50Z","launchd_state":"running","http_code":"200","pid":"7777
+29210","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T05:47:51Z","launchd_state":"running","http_code":"200","pid":"7777
+35214","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T05:52:51Z","launchd_state":"running","http_code":"200","pid":"7777
+40966","port":9090}
+{"checks": [{"category": "lint", "name": "ruff lint", "score": 100.0, "severity": "ok"}, {"category": "tests", "name": "test coverage", "score": 100.0, "severity": "ok"}, {"category": "debt", "name": "debt integrity", "score": 100.0, "severity": "ok"}, {"category": "knowledge", "name": "adr links", "score": 100.0, "severity": "ok"}, {"category": "tasks", "name": "task consistency", "score": 100.0, "severity": "ok"}, {"category": "agora", "name": "agora health", "score": 100.0, "severity": "ok"}], "date": "2026-06-09", "grade": "A+", "timestamp": "2026-06-09T05:53:10.348954+00:00", "total_score": 100.0, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T05:57:51Z","launchd_state":"running","http_code":"200","pid":"7777
+46600","port":9090}

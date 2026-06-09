@@ -14,17 +14,10 @@ model_driven.toolchain.mof_model — 全量资产 → M1 节点建模
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from model_driven.mof.m2_lifecycle import ALL_M2_SCHEMAS, get_schema
-from model_driven.mof.m3_extended import LifecycleStage
-
-
-def now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+from model_driven.toolchain.common import now
 
 
 def model_project(
@@ -63,15 +56,17 @@ def model_project(
             if "__pycache__" in str(py_file):
                 continue
             rel = py_file.relative_to(root)
-            model["modules"].append({
-                "id": f"CODE_MODULE-{py_file.stem}",
-                "type": "code_module",
-                "name": py_file.stem,
-                "path": str(rel),
-                "size": py_file.stat().st_size,
-                "status": "active",
-                "project": name,
-            })
+            model["modules"].append(
+                {
+                    "id": f"CODE_MODULE-{py_file.stem}",
+                    "type": "code_module",
+                    "name": py_file.stem,
+                    "path": str(rel),
+                    "size": py_file.stat().st_size,
+                    "status": "active",
+                    "project": name,
+                }
+            )
 
     # 测试
     tests_dir = root / "tests"
@@ -80,59 +75,68 @@ def model_project(
             if "__pycache__" in str(test_file):
                 continue
             rel = test_file.relative_to(root)
-            model["tests"].append({
-                "id": f"TEST_SUITE-{test_file.stem}",
-                "type": "test_suite",
-                "name": test_file.stem,
-                "path": str(rel),
-                "status": "active",
-                "project": name,
-            })
+            model["tests"].append(
+                {
+                    "id": f"TEST_SUITE-{test_file.stem}",
+                    "type": "test_suite",
+                    "name": test_file.stem,
+                    "path": str(rel),
+                    "status": "active",
+                    "project": name,
+                }
+            )
 
     # 配置
     for yaml_file in sorted(root.rglob("*.yaml")):
         if any(skip in str(yaml_file) for skip in ("__pycache__", ".venv", "uv.lock")):
             continue
         rel = yaml_file.relative_to(root)
-        model["configs"].append({
-            "id": f"CONFIG-{yaml_file.stem}",
-            "type": "deployment_config",
-            "name": yaml_file.stem,
-            "path": str(rel),
-            "status": "active",
-            "project": name,
-        })
+        model["configs"].append(
+            {
+                "id": f"CONFIG-{yaml_file.stem}",
+                "type": "deployment_config",
+                "name": yaml_file.stem,
+                "path": str(rel),
+                "status": "active",
+                "project": name,
+            }
+        )
 
     # Agent 契约
     for md_name in ("CLAUDE.md", "AGENTS.md", "CODEBUDDY.md"):
         md_path = root / md_name
         if md_path.exists():
-            model["specs"].append({
-                "id": f"SPEC-{md_name.replace('.md', '').replace('.', '_')}",
-                "type": "specification",
-                "name": md_name,
-                "path": str(md_path.relative_to(root)),
-                "status": "active",
-                "project": name,
-            })
+            model["specs"].append(
+                {
+                    "id": f"SPEC-{md_name.replace('.md', '').replace('.', '_')}",
+                    "type": "specification",
+                    "name": md_name,
+                    "path": str(md_path.relative_to(root)),
+                    "status": "active",
+                    "project": name,
+                }
+            )
 
     # 服务 (如果有 pyproject.toml 且定义了 scripts)
     pyproject = root / "pyproject.toml"
     if pyproject.exists():
         try:
             import tomllib
+
             with open(pyproject) as f:
                 data = tomllib.loads(f.read())
             scripts = data.get("project", {}).get("scripts", {})
             for script_name in scripts:
-                model["services"].append({
-                    "id": f"SERVICE-{script_name}",
-                    "type": "service",
-                    "name": script_name,
-                    "status": "active",
-                    "project": name,
-                })
-        except Exception:
+                model["services"].append(
+                    {
+                        "id": f"SERVICE-{script_name}",
+                        "type": "service",
+                        "name": script_name,
+                        "status": "active",
+                        "project": name,
+                    }
+                )
+        except (OSError, ValueError, TypeError, ImportError):
             pass
 
     model["total"] = (
@@ -153,8 +157,9 @@ def model_workspace(
 ) -> dict[str, Any]:
     """对整个工作区进行全量 M1 建模"""
     if workspace_dir is None:
-        import os
-        workspace_dir = os.environ.get("ECOS_WORKSPACE", str(Path.home() / "Workspace"))
+        from model_driven._paths import get_workspace_dir
+
+        workspace_dir = str(get_workspace_dir())
     root = Path(workspace_dir)
     exclude_patterns = exclude_patterns or ["_archived", ".git", "__pycache__", ".venv"]
 

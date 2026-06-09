@@ -9,9 +9,18 @@ model_driven.toolchain.trigger_m0 — Trigger M0 运行时快照
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+from model_driven.constants import (
+    DEGRADED_CONSECUTIVE_FAILURES,
+    HEALTH_PENALTY_DECREMENT,
+    HEALTH_RECOVERY_INCREMENT,
+    HEALTHY_CONSECUTIVE_SUCCESSES,
+    MAX_HEALTH_SCORE,
+    STOPPED_CONSECUTIVE_FAILURES,
+)
 
 
 @dataclass
@@ -31,8 +40,8 @@ class TriggerRuntimeSnapshot:
     last_duration_seconds: float = 0.0
     consecutive_failures: int = 0
     consecutive_successes: int = 0
-    health_score: float = 100.0  # 0-100
-    snapshotted_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    health_score: float = MAX_HEALTH_SCORE  # 0-100
+    snapshotted_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -61,9 +70,9 @@ class TriggerM0Manager:
 
     def __init__(self, state_dir: str | None = None):
         if state_dir is None:
-            import os
-            ws = os.environ.get("ECOS_WORKSPACE", str(Path.home() / "Workspace"))
-            self._state_dir = Path(ws) / ".omo" / "state" / "model-driven"
+            from model_driven._paths import get_state_dir
+
+            self._state_dir = get_state_dir()
         else:
             self._state_dir = Path(state_dir)
         self._state_dir.mkdir(parents=True, exist_ok=True)
@@ -83,27 +92,27 @@ class TriggerM0Manager:
         else:
             snap = TriggerRuntimeSnapshot(trigger_id=trigger_id)
 
-        snap.last_execution = datetime.now(timezone.utc).isoformat()
+        snap.last_execution = datetime.now(UTC).isoformat()
         snap.last_duration_seconds = duration_seconds
         snap.metadata.update(metadata or {})
 
         if success:
             snap.consecutive_successes += 1
             snap.consecutive_failures = 0
-            snap.health_score = min(100.0, snap.health_score + 5.0)
+            snap.health_score = min(MAX_HEALTH_SCORE, snap.health_score + HEALTH_RECOVERY_INCREMENT)
             # 首次成功 → healthy; 或连续 3 次 → healthy (防御性)
-            if snap.status == "unknown" or snap.consecutive_successes >= 3:
+            if snap.status == "unknown" or snap.consecutive_successes >= HEALTHY_CONSECUTIVE_SUCCESSES:
                 snap.status = "healthy"
         else:
             snap.consecutive_failures += 1
             snap.consecutive_successes = 0
-            snap.health_score = max(0.0, snap.health_score - 20.0)
-            if snap.consecutive_failures >= 3:
+            snap.health_score = max(0.0, snap.health_score - HEALTH_PENALTY_DECREMENT)
+            if snap.consecutive_failures >= DEGRADED_CONSECUTIVE_FAILURES:
                 snap.status = "degraded"
-            if snap.consecutive_failures >= 5:
+            if snap.consecutive_failures >= STOPPED_CONSECUTIVE_FAILURES:
                 snap.status = "stopped"
 
-        snap.snapshotted_at = datetime.now(timezone.utc).isoformat()
+        snap.snapshotted_at = datetime.now(UTC).isoformat()
         self._snapshots[trigger_id] = snap
         return snap
 
@@ -117,18 +126,16 @@ class TriggerM0Manager:
         """保存 M0 快照到文件"""
         try:
             import yaml
+
             data = {
                 "m0_type": "trigger_runtime_snapshot",
-                "generated_at": datetime.now(timezone.utc).isoformat(),
-                "triggers": {
-                    tid: snap.to_dict()
-                    for tid, snap in self._snapshots.items()
-                },
+                "generated_at": datetime.now(UTC).isoformat(),
+                "triggers": {tid: snap.to_dict() for tid, snap in self._snapshots.items()},
             }
             with open(self._snapshot_file, "w") as f:
                 yaml.dump(data, f, allow_unicode=True, default_flow_style=False)
             return True
-        except Exception:
+        except (OSError, ImportError, yaml.YAMLError):
             return False
 
     def load(self) -> bool:
@@ -137,6 +144,7 @@ class TriggerM0Manager:
             return False
         try:
             import yaml
+
             with open(self._snapshot_file) as f:
                 data = yaml.safe_load(f)
             if not data or "triggers" not in data:
@@ -149,18 +157,16 @@ class TriggerM0Manager:
                     last_duration_seconds=snap_data.get("last_duration_seconds", 0.0),
                     consecutive_failures=snap_data.get("consecutive_failures", 0),
                     consecutive_successes=snap_data.get("consecutive_successes", 0),
-                    health_score=snap_data.get("health_score", 100.0),
+                    health_score=snap_data.get("health_score", MAX_HEALTH_SCORE),
                     snapshotted_at=snap_data.get("snapshotted_at", ""),
                     metadata=snap_data.get("metadata", {}),
                 )
                 self._snapshots[tid] = snap
             return True
-        except Exception:
+        except (OSError, ImportError, yaml.YAMLError, KeyError):
             return False
 
-    def detect_drift(
-        self, m1_triggers: list[dict[str, Any]]
-    ) -> list[dict[str, Any]]:
+    def detect_drift(self, m1_triggers: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """M1 声明 vs M0 实际状态 漂移检测"""
         drifts = []
         for m1 in m1_triggers:
@@ -169,25 +175,29 @@ class TriggerM0Manager:
             m0 = self._snapshots.get(tid)
 
             if m0 is None:
-                drifts.append({
-                    "trigger_id": tid,
-                    "type": "missing_m0_snapshot",
-                    "m1_status": m1_status,
-                    "m0_status": "unknown",
-                    "severity": "warning",
-                    "message": f"Trigger {tid} 无 M0 运行时快照",
-                })
+                drifts.append(
+                    {
+                        "trigger_id": tid,
+                        "type": "missing_m0_snapshot",
+                        "m1_status": m1_status,
+                        "m0_status": "unknown",
+                        "severity": "warning",
+                        "message": f"Trigger {tid} 无 M0 运行时快照",
+                    }
+                )
             elif m0.status != "healthy" and m1_status == "active":
-                drifts.append({
-                    "trigger_id": tid,
-                    "type": "status_drift",
-                    "m1_status": m1_status,
-                    "m0_status": m0.status,
-                    "severity": "high",
-                    "health_score": m0.health_score,
-                    "consecutive_failures": m0.consecutive_failures,
-                    "message": f"Trigger {tid}: M1={m1_status}, M0={m0.status} (health={m0.health_score})",
-                })
+                drifts.append(
+                    {
+                        "trigger_id": tid,
+                        "type": "status_drift",
+                        "m1_status": m1_status,
+                        "m0_status": m0.status,
+                        "severity": "high",
+                        "health_score": m0.health_score,
+                        "consecutive_failures": m0.consecutive_failures,
+                        "message": f"Trigger {tid}: M1={m1_status}, M0={m0.status} (health={m0.health_score})",
+                    }
+                )
 
         return drifts
 
@@ -213,5 +223,5 @@ class TriggerM0Manager:
                 }
                 for tid, snap in self._snapshots.items()
             },
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
         }

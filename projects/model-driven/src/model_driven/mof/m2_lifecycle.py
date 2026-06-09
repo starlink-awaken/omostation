@@ -13,7 +13,6 @@ from typing import Any
 
 from .m3_extended import LifecycleStage
 
-
 # ── M2 类型枚举 ──────────────────────────────────────
 
 
@@ -341,7 +340,11 @@ M2_DEPLOYMENT_CONFIG = M2Schema(
     required_properties={
         "target_environment": {"type": "string", "description": "目标环境"},
         "config_path": {"type": "path", "description": "配置文件路径"},
-        "strategy": {"type": "enum", "description": "部署策略", "values": ["rolling", "blue_green", "canary", "recreate"]},
+        "strategy": {
+            "type": "enum",
+            "description": "部署策略",
+            "values": ["rolling", "blue_green", "canary", "recreate"],
+        },
     },
     optional_properties={
         "health_check": {"type": "map", "description": "健康检查配置"},
@@ -519,7 +522,11 @@ M2_CHANGE_REQUEST = M2Schema(
         "archived": {"description": "已归档", "transitions": []},
     },
     required_properties={
-        "change_type": {"type": "enum", "description": "变更类型", "values": ["config", "code", "infrastructure", "data"]},
+        "change_type": {
+            "type": "enum",
+            "description": "变更类型",
+            "values": ["config", "code", "infrastructure", "data"],
+        },
         "description": {"type": "string", "description": "变更描述"},
         "risk_level": {"type": "enum", "description": "风险等级", "values": ["low", "medium", "high", "critical"]},
     },
@@ -638,7 +645,11 @@ M2_COST_MODEL = M2Schema(
         "archived": {"description": "已归档", "transitions": []},
     },
     required_properties={
-        "resource_type": {"type": "enum", "description": "资源类型", "values": ["compute", "storage", "human", "api", "license"]},
+        "resource_type": {
+            "type": "enum",
+            "description": "资源类型",
+            "values": ["compute", "storage", "human", "api", "license"],
+        },
         "unit_cost": {"type": "float", "description": "单位成本"},
         "period": {"type": "enum", "description": "计费周期", "values": ["hourly", "daily", "monthly", "yearly"]},
     },
@@ -660,7 +671,11 @@ M2_BENEFIT_MODEL = M2Schema(
         "archived": {"description": "已归档", "transitions": []},
     },
     required_properties={
-        "benefit_type": {"type": "enum", "description": "收益类型", "values": ["revenue", "cost_saving", "efficiency", "user_satisfaction", "quality"]},
+        "benefit_type": {
+            "type": "enum",
+            "description": "收益类型",
+            "values": ["revenue", "cost_saving", "efficiency", "user_satisfaction", "quality"],
+        },
         "estimated_value": {"type": "float", "description": "预估价值"},
         "measurement_method": {"type": "string", "description": "度量方法"},
     },
@@ -713,11 +728,28 @@ M2_TRIGGER = M2Schema(
         "trigger_type": {
             "type": "enum",
             "description": "触发机制类型",
-            "values": ["git_hook", "cron", "daemon", "watchdog", "event_bus", "sse", "file_watch", "bus_consumer", "launchd", "scheduler"],
+            "values": [
+                "git_hook",
+                "cron",
+                "daemon",
+                "watchdog",
+                "event_bus",
+                "sse",
+                "file_watch",
+                "bus_consumer",
+                "launchd",
+                "scheduler",
+            ],
         },
-        "trigger_source": {"type": "string", "description": "触发源 (git commit / cron schedule / file change / http request)"},
+        "trigger_source": {
+            "type": "string",
+            "description": "触发源 (git commit / cron schedule / file change / http request)",
+        },
         "trigger_action": {"type": "string", "description": "触发后执行的动作"},
-        "schedule": {"type": "string", "description": "调度策略 (cron表达式 / on_push / on_file_change / every Ns / continuous)"},
+        "schedule": {
+            "type": "string",
+            "description": "调度策略 (cron表达式 / on_push / on_file_change / every Ns / continuous)",
+        },
     },
     optional_properties={
         "interval_seconds": {"type": "integer", "description": "间隔秒数"},
@@ -727,8 +759,11 @@ M2_TRIGGER = M2Schema(
         "gate_checks": {"type": "list", "description": "触发前门禁检查项"},
     },
     validation_rules=[
-        {"rule": "trigger_type in ['git_hook','cron','daemon','watchdog','event_bus','sse','file_watch','bus_consumer','launchd','scheduler']",
-         "level": "error", "message": "trigger_type 必须是已知类型"},
+        {
+            "rule": "trigger_type in ['git_hook','cron','daemon','watchdog','event_bus','sse','file_watch','bus_consumer','launchd','scheduler']",
+            "level": "error",
+            "message": "trigger_type 必须是已知类型",
+        },
         {"rule": "trigger_source != ''", "level": "error", "message": "必须声明触发源"},
     ],
     relation_constraints={

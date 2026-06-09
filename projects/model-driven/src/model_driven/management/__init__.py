@@ -21,6 +21,7 @@ __all__ = [
     "ADRStatus",
     # OKR
     "OKR",
+    "OKRDecomposer",
     "OKRManager",
     "OKRStatus",
     # OMO Bridge

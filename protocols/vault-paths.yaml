@@ -27,6 +27,8 @@ paths:
   family_root: ~/Documents/@家庭生活               # 家庭生活域
   shared_root: ~/Documents/@公共                   # 公共域
   work_root: ~/Documents/@工作文档                 # 工作文档聚合
+  weijian_root: ~/Documents/@工作文档/卫健委         # @工作文档/卫健委
+  guozhuan_root: ~/Documents/@工作文档/国转中心       # @工作文档/国转中心
   cockpit_old: null                                # 老路径 (驾驶舱/ 无 @) — 显式 null 表示禁止使用
 
   # 关键子路径

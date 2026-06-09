@@ -2,20 +2,12 @@
 Tests for model_driven.toolchain — 模型驱动工具链
 """
 
-import pytest
-from model_driven.toolchain.bus import ToolchainBus, ToolDefinition, ToolResult, ToolStatus
-from model_driven.toolchain import create_default_bus, DEFAULT_TOOLS
+from model_driven.toolchain import create_default_bus
+from model_driven.toolchain.bus import ToolchainBus, ToolDefinition
 from model_driven.toolchain.tools import (
-    tool_archive,
-    tool_compile,
-    tool_connect,
-    tool_deploy,
     tool_derive,
     tool_design,
     tool_evolve,
-    tool_generate,
-    tool_monitor,
-    tool_observe,
     tool_report,
     tool_validate,
 )

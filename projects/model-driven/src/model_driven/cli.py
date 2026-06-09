@@ -13,7 +13,6 @@ model_driven.cli — CLI 入口
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 
 def cmd_lifecycle(args: list[str]) -> None:
@@ -258,6 +257,7 @@ def main():
 def cmd_trigger(args: list[str]) -> None:
     """Trigger 管理命令"""
     from model_driven.toolchain.trigger_registry import TriggerRegistry
+
     registry = TriggerRegistry()
 
     if not args:
@@ -319,14 +319,16 @@ def _trigger_derive(registry, args: list[str]) -> None:
 
 def _trigger_heal(registry, args: list[str]) -> None:
     result = registry.run_heal()
-    print(f"修复状态: {result.get('status')} | 发现: {result.get('findings_count')} | 动作: {len(result.get('heal_actions', []))}")
+    print(
+        f"修复状态: {result.get('status')} | 发现: {result.get('findings_count')} | 动作: {len(result.get('heal_actions', []))}"
+    )
     for a in result.get("heal_actions", []):
         print(f"  🔧 {a['type']}: {a.get('trigger', '?')}")
 
 
 def _trigger_dashboard(registry, args: list[str]) -> None:
     dashboard = registry.get_dashboard()
-    print(f"=== Trigger 统一仪表板 ===")
+    print("=== Trigger 统一仪表板 ===")
     print(f"总数: {dashboard['total_triggers']} | 按类型: {dashboard['by_type']} | 按层: {dashboard['by_layer']}")
     m0 = dashboard["m0_health"]
     print(f"M0 健康: {m0.get('healthy', 0)}/{m0.get('total_triggers', 0)} healthy")

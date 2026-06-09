@@ -2,11 +2,10 @@
 Tests for model_driven.lifecycle — 全生命周期引擎
 """
 
-import pytest
+from model_driven.lifecycle.gates import GateEngine, GateResult
 from model_driven.lifecycle.stages import LifecycleTracker, StageInstance, StageStatus
-from model_driven.lifecycle.gates import GateEngine, GateResult, CheckResult
-from model_driven.lifecycle.transitions import TransitionEngine, STANDARD_TRANSITIONS
 from model_driven.lifecycle.tracking import LifecycleManager
+from model_driven.lifecycle.transitions import STANDARD_TRANSITIONS, TransitionEngine
 from model_driven.mof.m3_extended import LifecycleStage
 
 

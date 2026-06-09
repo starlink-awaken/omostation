@@ -9,8 +9,7 @@ model_driven.mcp_server — MCP Server (统一工具链入口)
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
 from typing import Any
 
 
@@ -32,109 +31,108 @@ class MCPServer:
         self._register_default_tools()
 
     def _register_default_tools(self) -> None:
-        """注册默认工具"""
-        from model_driven.lifecycle.stages import LifecycleTracker
+        """注册默认工具 (编排器)"""
+        self._init_lifecycle_managers()
+        self._init_toolchain()
+        self._init_management_managers()
+        self._init_ssot_managers()
+        self._register_lifecycle_tools()
+        self._register_management_tools()
+        self._register_trigger_tools()
+
+    # ── 初始化 ────────────────────────────────────
+
+    def _init_lifecycle_managers(self) -> None:
+        """创建 LifecycleManager + TransitionEngine (懒加载)"""
         from model_driven.lifecycle.tracking import LifecycleManager
+
+        self._lifecycle_manager = LifecycleManager()
+        LifecycleManager.load()  # 尝试加载持久化数据
+        self._transition_engine = None  # lazy init
+
+    def _init_toolchain(self) -> None:
+        """创建 ToolChain Bus 并加载历史"""
         from model_driven.toolchain import create_default_bus
-        from model_driven.management.spec import SpecManager
+
+        self._toolchain_bus = create_default_bus()
+        self._toolchain_bus.load_history()  # 尝试加载历史
+
+    def _init_management_managers(self) -> None:
+        """创建 Spec/ADR/OKR/OMO/Collab 管理器"""
         from model_driven.management.adr import ADRManager
+        from model_driven.management.agent_collab import AgentCollabManager
         from model_driven.management.okr import OKRManager
         from model_driven.management.omo_bridge import OMOBridge
-        from model_driven.management.agent_collab import AgentCollabManager
+        from model_driven.management.spec import SpecManager
+
+        self._spec_manager = SpecManager.load() or SpecManager()
+        self._adr_manager = ADRManager.load() or ADRManager()
+        self._okr_manager = OKRManager.load() or OKRManager()
+        self._omo_bridge = OMOBridge()
+        self._agent_collab = AgentCollabManager()
+
+    def _init_ssot_managers(self) -> None:
+        """创建 LifecycleSSOT/ValueSSOT/CrossStageChecker"""
         from model_driven.ssot.lifecycle_ssot import (
             CrossStageConsistencyChecker,
             LifecycleSSOT,
             ValueSSOT,
         )
 
-        # 生命周期管理工具
-        self._lifecycle_manager = LifecycleManager()
-        self._transition_engine = None  # lazy init
-
-        # 模型驱动工具链
-        self._toolchain_bus = create_default_bus()
-
-        # 管理面
-        self._spec_manager = SpecManager()
-        self._adr_manager = ADRManager()
-        self._okr_manager = OKRManager()
-        self._omo_bridge = OMOBridge()
-        self._agent_collab = AgentCollabManager()
-
-        # SSOT
         self._lifecycle_ssot = LifecycleSSOT()
         self._value_ssot = ValueSSOT()
         self._cross_checker = CrossStageConsistencyChecker()
 
+    # ── 工具注册 ──────────────────────────────────
+
+    def _register_lifecycle_tools(self) -> None:
+        """注册生命周期管理工具"""
+        self._register_tool("lifecycle-create", "创建实体的生命周期追踪器", "lifecycle", self._handle_lifecycle_create)
+        self._register_tool("lifecycle-advance", "推进实体到下一阶段", "lifecycle", self._handle_lifecycle_advance)
+        self._register_tool("lifecycle-status", "查询生命周期状态", "lifecycle", self._handle_lifecycle_status)
+        self._register_tool(
+            "lifecycle-dashboard", "生成全生命周期仪表板", "lifecycle", self._handle_lifecycle_dashboard
+        )
+        self._register_tool("lifecycle-blockers", "获取所有阻塞项", "lifecycle", self._handle_lifecycle_blockers)
+
+    def _register_management_tools(self) -> None:
+        """注册管理面工具 (spec/adr/okr/debt/task/audit/collab/ssot/toolchain)"""
+        self._register_tool("spec-create", "创建 Spec", "spec", self._handle_spec_create)
+        self._register_tool("spec-list", "列出 Spec", "spec", self._handle_spec_list)
+
+        self._register_tool("adr-create", "创建 ADR", "adr", self._handle_adr_create)
+        self._register_tool("adr-list", "列出 ADR", "adr", self._handle_adr_list)
+
+        self._register_tool("okr-create", "创建 OKR", "okr", self._handle_okr_create)
+        self._register_tool("okr-progress", "查询 OKR 进度", "okr", self._handle_okr_progress)
+
+        self._register_tool("debt-register", "注册债务", "omo", self._handle_debt_register)
+        self._register_tool("task-create", "创建任务", "omo", self._handle_task_create)
+        self._register_tool("audit-record", "记录审计", "omo", self._handle_audit_record)
+
+        self._register_tool("collab-create", "创建协作任务", "collab", self._handle_collab_create)
+        self._register_tool("collab-assign", "分配协作任务", "collab", self._handle_collab_assign)
+        self._register_tool("collab-status", "查询协作状态", "collab", self._handle_collab_status)
+
+        self._register_tool("model-execute", "执行模型驱动工具", "toolchain", self._handle_model_execute)
+        self._register_tool("model-tools", "列出可用模型工具", "toolchain", self._handle_model_tools)
+
+        self._register_tool("ssot-drift-check", "检查 SSOT 漂移", "ssot", self._handle_ssot_drift_check)
+        self._register_tool("cross-stage-check", "跨阶段一致性检查", "ssot", self._handle_cross_stage_check)
+        self._register_tool("value-roi", "计算 ROI", "ssot", self._handle_value_roi)
+
+    def _register_trigger_tools(self) -> None:
+        """注册 Trigger 工具"""
         # Trigger (懒加载，避免每次初始化都加载 YAML)
         self._trigger_registry = None
-
-        # 注册工具
-        self._register_tool("lifecycle-create", "创建实体的生命周期追踪器", "lifecycle",
-                            self._handle_lifecycle_create)
-        self._register_tool("lifecycle-advance", "推进实体到下一阶段", "lifecycle",
-                            self._handle_lifecycle_advance)
-        self._register_tool("lifecycle-status", "查询生命周期状态", "lifecycle",
-                            self._handle_lifecycle_status)
-        self._register_tool("lifecycle-dashboard", "生成全生命周期仪表板", "lifecycle",
-                            self._handle_lifecycle_dashboard)
-        self._register_tool("lifecycle-blockers", "获取所有阻塞项", "lifecycle",
-                            self._handle_lifecycle_blockers)
-
-        self._register_tool("spec-create", "创建 Spec", "spec",
-                            self._handle_spec_create)
-        self._register_tool("spec-list", "列出 Spec", "spec",
-                            self._handle_spec_list)
-
-        self._register_tool("adr-create", "创建 ADR", "adr",
-                            self._handle_adr_create)
-        self._register_tool("adr-list", "列出 ADR", "adr",
-                            self._handle_adr_list)
-
-        self._register_tool("okr-create", "创建 OKR", "okr",
-                            self._handle_okr_create)
-        self._register_tool("okr-progress", "查询 OKR 进度", "okr",
-                            self._handle_okr_progress)
-
-        self._register_tool("debt-register", "注册债务", "omo",
-                            self._handle_debt_register)
-        self._register_tool("task-create", "创建任务", "omo",
-                            self._handle_task_create)
-        self._register_tool("audit-record", "记录审计", "omo",
-                            self._handle_audit_record)
-
-        self._register_tool("collab-create", "创建协作任务", "collab",
-                            self._handle_collab_create)
-        self._register_tool("collab-assign", "分配协作任务", "collab",
-                            self._handle_collab_assign)
-        self._register_tool("collab-status", "查询协作状态", "collab",
-                            self._handle_collab_status)
-
-        self._register_tool("model-execute", "执行模型驱动工具", "toolchain",
-                            self._handle_model_execute)
-        self._register_tool("model-tools", "列出可用模型工具", "toolchain",
-                            self._handle_model_tools)
-
-        self._register_tool("ssot-drift-check", "检查 SSOT 漂移", "ssot",
-                            self._handle_ssot_drift_check)
-        self._register_tool("cross-stage-check", "跨阶段一致性检查", "ssot",
-                            self._handle_cross_stage_check)
-        self._register_tool("value-roi", "计算 ROI", "ssot",
-                            self._handle_value_roi)
-
-        # Trigger 工具
-        self._register_tool("trigger-list", "列出所有 Trigger (支持按类型/层过滤)", "trigger",
-                            self._handle_trigger_list)
-        self._register_tool("trigger-status", "检查 Trigger 健康状态 (M1+M0)", "trigger",
-                            self._handle_trigger_status)
-        self._register_tool("trigger-derive", "执行 Trigger 推导规则", "trigger",
-                            self._handle_trigger_derive)
-        self._register_tool("trigger-heal", "执行 Trigger 自动修复", "trigger",
-                            self._handle_trigger_heal)
-        self._register_tool("trigger-dashboard", "Trigger 统一仪表板", "trigger",
-                            self._handle_trigger_dashboard)
-        self._register_tool("trigger-drift", "检测 Trigger M1↔M0 漂移", "trigger",
-                            self._handle_trigger_drift)
+        self._register_tool(
+            "trigger-list", "列出所有 Trigger (支持按类型/层过滤)", "trigger", self._handle_trigger_list
+        )
+        self._register_tool("trigger-status", "检查 Trigger 健康状态 (M1+M0)", "trigger", self._handle_trigger_status)
+        self._register_tool("trigger-derive", "执行 Trigger 推导规则", "trigger", self._handle_trigger_derive)
+        self._register_tool("trigger-heal", "执行 Trigger 自动修复", "trigger", self._handle_trigger_heal)
+        self._register_tool("trigger-dashboard", "Trigger 统一仪表板", "trigger", self._handle_trigger_dashboard)
+        self._register_tool("trigger-drift", "检测 Trigger M1↔M0 漂移", "trigger", self._handle_trigger_drift)
 
     def _register_tool(self, name: str, description: str, category: str, handler: callable) -> None:
         self._tools[name] = MCPTool(name=name, description=description, category=category, handler=handler)
@@ -145,11 +143,13 @@ class MCPServer:
         for tool in self._tools.values():
             if category and tool.category != category:
                 continue
-            tools.append({
-                "name": tool.name,
-                "description": tool.description,
-                "category": tool.category,
-            })
+            tools.append(
+                {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "category": tool.category,
+                }
+            )
         return tools
 
     def execute(self, tool_name: str, **kwargs) -> dict[str, Any]:
@@ -159,18 +159,20 @@ class MCPServer:
             return {"success": False, "error": f"工具不存在: {tool_name}"}
         try:
             return tool.handler(**kwargs)
+        except (TypeError, ValueError) as e:
+            return {"success": False, "error": str(e)}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     # ── Handlers ──
 
     def _handle_lifecycle_create(self, entity_id: str, entity_type: str = "", **kwargs) -> dict:
-        tracker = self._lifecycle_manager.create_tracker(entity_id, entity_type)
+        self._lifecycle_manager.create_tracker(entity_id, entity_type)
         return {"success": True, "entity_id": entity_id, "message": "生命周期追踪器已创建"}
 
     def _handle_lifecycle_advance(self, entity_id: str, target_stage: str, **kwargs) -> dict:
-        from model_driven.mof.m3_extended import LifecycleStage
         from model_driven.lifecycle.transitions import TransitionEngine
+        from model_driven.mof.m3_extended import LifecycleStage
 
         tracker = self._lifecycle_manager.get_tracker(entity_id)
         if not tracker:
@@ -185,7 +187,11 @@ class MCPServer:
             self._transition_engine = TransitionEngine()
 
         success, msg, _ = self._transition_engine.try_transition(tracker, target, kwargs)
-        return {"success": success, "message": msg, "current_stage": tracker.current_stage.value if tracker.current_stage else None}
+        return {
+            "success": success,
+            "message": msg,
+            "current_stage": tracker.current_stage.value if tracker.current_stage else None,
+        }
 
     def _handle_lifecycle_status(self, entity_id: str, **kwargs) -> dict:
         summary = self._lifecycle_manager.get_stage_summary(entity_id)
@@ -195,12 +201,15 @@ class MCPServer:
 
     def _handle_lifecycle_dashboard(self, **kwargs) -> dict:
         dashboard = self._lifecycle_manager.generate_dashboard()
-        return {"success": True, "dashboard": {
-            "total_entities": dashboard.total_entities,
-            "by_stage": dashboard.entities_by_stage,
-            "blockers": dashboard.blockers,
-            "avg_progress": dashboard.avg_progress,
-        }}
+        return {
+            "success": True,
+            "dashboard": {
+                "total_entities": dashboard.total_entities,
+                "by_stage": dashboard.entities_by_stage,
+                "blockers": dashboard.blockers,
+                "avg_progress": dashboard.avg_progress,
+            },
+        }
 
     def _handle_lifecycle_blockers(self, **kwargs) -> dict:
         blockers = self._lifecycle_manager.get_all_blockers()
@@ -213,6 +222,7 @@ class MCPServer:
     def _handle_spec_list(self, status: str = "", **kwargs) -> dict:
         if status:
             from model_driven.management.spec import SpecStatus
+
             try:
                 st = SpecStatus(status)
                 specs = self._spec_manager.list_by_status(st)
@@ -274,7 +284,10 @@ class MCPServer:
 
     def _handle_model_tools(self, category: str = "", **kwargs) -> dict:
         tools = self._toolchain_bus.list_tools(category or None)
-        return {"success": True, "tools": [{"name": t.name, "description": t.description, "category": t.category} for t in tools]}
+        return {
+            "success": True,
+            "tools": [{"name": t.name, "description": t.description, "category": t.category} for t in tools],
+        }
 
     def _handle_ssot_drift_check(self, entity_id: str, **kwargs) -> dict:
         current = self._lifecycle_ssot.get_current_state(entity_id)
@@ -303,6 +316,7 @@ class MCPServer:
         """懒加载 TriggerRegistry (避免每次工具调用都重新加载 YAML)"""
         if self._trigger_registry is None:
             from model_driven.toolchain.trigger_registry import TriggerRegistry
+
             self._trigger_registry = TriggerRegistry()
         return self._trigger_registry
 

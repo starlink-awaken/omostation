@@ -11,7 +11,7 @@ model_driven.lifecycle.tracking — 全生命周期追踪
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from model_driven.mof.m3_extended import LifecycleStage
@@ -29,7 +29,7 @@ class LifecycleDashboard:
     blockers: list[dict[str, Any]] = field(default_factory=list)
     avg_progress: float = 0.0
     stage_distribution: dict[str, list[str]] = field(default_factory=dict)
-    generated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    generated_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 class LifecycleManager:
@@ -69,11 +69,13 @@ class LifecycleManager:
                 instance = tracker.stages[stage]
                 if instance.status == StageStatus.BLOCKED:
                     for issue in instance.issues:
-                        blockers.append({
-                            "entity_id": entity_id,
-                            "stage": stage.value,
-                            "issue": issue,
-                        })
+                        blockers.append(
+                            {
+                                "entity_id": entity_id,
+                                "stage": stage.value,
+                                "issue": issue,
+                            }
+                        )
         return blockers
 
     def generate_dashboard(self) -> LifecycleDashboard:
@@ -115,8 +117,7 @@ class LifecycleManager:
         # 平均进度
         if self._trackers:
             total_progress = sum(
-                sum(1 for s in LifecycleStage if t.stages[s].status == StageStatus.COMPLETED)
-                / len(LifecycleStage)
+                sum(1 for s in LifecycleStage if t.stages[s].status == StageStatus.COMPLETED) / len(LifecycleStage)
                 for t in self._trackers.values()
             )
             dashboard.avg_progress = round(total_progress / len(self._trackers) * 100, 1)
@@ -137,3 +138,61 @@ class LifecycleManager:
         if not tracker:
             return None
         return tracker.get_progress()
+
+    # ── 持久化 ──────────────────────────────────
+
+    def to_dict(self) -> dict[str, Any]:
+        """序列化为 dict"""
+        return {
+            "trackers": {
+                eid: t.to_dict() if hasattr(t, "to_dict") else {"entity_id": t.entity_id, "entity_type": t.entity_type}
+                for eid, t in self._trackers.items()
+            }
+        }
+
+    def save(self, state_dir: str | None = None) -> bool:
+        """持久化到文件"""
+        from pathlib import Path
+
+        if state_dir is None:
+            from model_driven._paths import get_state_dir
+
+            state_dir = str(get_state_dir())
+
+        file_path = Path(state_dir) / "lifecycle.yaml"
+        try:
+            import yaml
+
+            with open(file_path, "w") as f:
+                yaml.dump(self.to_dict(), f, allow_unicode=True, sort_keys=False)
+            return True
+        except (OSError, ImportError, yaml.YAMLError):
+            return False
+
+    @classmethod
+    def load(cls, state_dir: str | None = None) -> LifecycleManager | None:
+        """从文件加载"""
+        from pathlib import Path
+
+        if state_dir is None:
+            from model_driven._paths import get_state_dir
+
+            state_dir = str(get_state_dir())
+
+        file_path = Path(state_dir) / "lifecycle.yaml"
+        if not file_path.exists():
+            return None
+
+        try:
+            import yaml
+
+            with open(file_path) as f:
+                data = yaml.safe_load(f)
+        except (OSError, ImportError, yaml.YAMLError):
+            return None
+
+        manager = cls()
+        for eid, tdata in (data or {}).get("trackers", {}).items():
+            tracker = LifecycleTracker(entity_id=tdata["entity_id"], entity_type=tdata.get("entity_type", ""))
+            manager._trackers[eid] = tracker
+        return manager

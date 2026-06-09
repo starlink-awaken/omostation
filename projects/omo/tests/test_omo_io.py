@@ -189,6 +189,75 @@ class TestGroupBy:
         assert result == {"1": 1}
 
 
+# ── AppendOnlyLog.rotate (Round 8 P0) ──────────────────────────
+
+
+class TestRotate:
+    def test_rotate_below_threshold_does_nothing(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        log.append({"a": 1})
+        result = log.rotate(max_bytes=10_000)
+        assert result is False
+        # 文件不变
+        assert log.path.exists()
+        assert len(log.read_all()) == 1
+
+    def test_rotate_above_threshold_creates_backup(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        for i in range(100):
+            log.append({"i": i})
+        result = log.rotate(max_bytes=100)  # 当前文件 > 100B
+        assert result is True
+        # 当前文件不存在 (被 rename)
+        assert not log.path.exists()
+        # backup 存在
+        backup = tmp_path / "test.jsonl.1"
+        assert backup.exists()
+        # backup 含全部 100 records (从 .1 读, 不是从原 path 读)
+        backup_records = AppendOnlyLog(backup).read_all()
+        assert len(backup_records) == 100
+        assert backup_records[0] == {"i": 0}
+        assert backup_records[99] == {"i": 99}
+
+    def test_rotate_overwrites_previous_backup(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        # 第 1 次 rotate
+        for i in range(50):
+            log.append({"first": i})
+        log.rotate(max_bytes=100)
+        # 第 2 次 rotate — 新数据写新位置, 旧 backup 被覆盖
+        log2 = AppendOnlyLog(tmp_path / "test.jsonl")
+        for i in range(50):
+            log2.append({"second": i})
+        result = log2.rotate(max_bytes=100)
+        assert result is True
+        # backup 现在含 "second" records
+        backup_records = AppendOnlyLog(tmp_path / "test.jsonl.1").read_all()
+        assert all("second" in r for r in backup_records)
+
+    def test_rotate_nonexistent_returns_false(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "nope.jsonl")
+        result = log.rotate(max_bytes=1)
+        assert result is False
+
+    def test_rotate_zero_max_bytes_does_nothing(self, tmp_path):
+        """Round 8 P0 锁: max_bytes=0 应永远不 rotate (防 0 字节 = 0 触发 = 死循环)."""
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        for i in range(100):
+            log.append({"i": i})
+        result = log.rotate(max_bytes=0)
+        assert result is False
+        assert log.path.exists()
+        assert len(log.read_all()) == 100
+
+    def test_rotate_negative_max_bytes_does_nothing(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        log.append({"a": 1})
+        result = log.rotate(max_bytes=-1)
+        assert result is False
+        assert log.path.exists()
+
+
 # ── 并发安全 ─────────────────────────────────────────────
 
 

@@ -14,14 +14,16 @@ model_driven.toolchain.mof_extract — 资产 → M1 逆向提炼
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-
-def now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+from model_driven.constants import (
+    DECISION_CONFIDENCE_DIVISOR,
+    LESSON_CONFIDENCE_DIVISOR,
+    SPEC_CONFIDENCE_DIVISOR,
+)
+from model_driven.toolchain.common import now
 
 
 @dataclass
@@ -47,13 +49,22 @@ def extract_lessons_from_markdown(
         return ExtractResult(source=str(path), extracted_type="lesson", nodes=[])
 
     section_patterns = section_patterns or [
-        "教训", "经验", "复盘", "问题", "修复", "Lesson", "Root Cause",
-        "根因", "原因", "解决方案", "预防措施",
+        "教训",
+        "经验",
+        "复盘",
+        "问题",
+        "修复",
+        "Lesson",
+        "Root Cause",
+        "根因",
+        "原因",
+        "解决方案",
+        "预防措施",
     ]
 
     try:
         content = path.read_text(encoding="utf-8")
-    except Exception:
+    except (OSError, UnicodeDecodeError):
         return ExtractResult(source=str(path), extracted_type="lesson", nodes=[])
 
     nodes = []
@@ -67,21 +78,23 @@ def extract_lessons_from_markdown(
             # 保存上一个 section
             if current_section and current_content:
                 if any(pat in current_section for pat in section_patterns):
-                    nodes.append({
-                        "id": f"LESSON-EXTRACT-{path.stem}-{len(nodes):03d}",
-                        "type": "lesson",
-                        "name": current_section.strip("# "),
-                        "description": "\n".join(current_content[:5]),
-                        "status": "recorded",
-                        "source": str(path),
-                        "created": now(),
-                        "version": "1.0.0",
-                        "properties": {
-                            "source_file": str(path),
-                            "section": current_section.strip("# "),
-                            "content_preview": "\n".join(current_content[:3]),
-                        },
-                    })
+                    nodes.append(
+                        {
+                            "id": f"LESSON-EXTRACT-{path.stem}-{len(nodes):03d}",
+                            "type": "lesson",
+                            "name": current_section.strip("# "),
+                            "description": "\n".join(current_content[:5]),
+                            "status": "recorded",
+                            "source": str(path),
+                            "created": now(),
+                            "version": "1.0.0",
+                            "properties": {
+                                "source_file": str(path),
+                                "section": current_section.strip("# "),
+                                "content_preview": "\n".join(current_content[:3]),
+                            },
+                        }
+                    )
             current_section = stripped
             current_content = []
         else:
@@ -90,22 +103,24 @@ def extract_lessons_from_markdown(
     # 最后一个 section
     if current_section and current_content:
         if any(pat in current_section for pat in section_patterns):
-            nodes.append({
-                "id": f"LESSON-EXTRACT-{path.stem}-{len(nodes):03d}",
-                "type": "lesson",
-                "name": current_section.strip("# "),
-                "description": "\n".join(current_content[:5]),
-                "status": "recorded",
-                "source": str(path),
-                "created": now(),
-                "version": "1.0.0",
-                "properties": {
-                    "source_file": str(path),
-                    "section": current_section.strip("# "),
-                },
-            })
+            nodes.append(
+                {
+                    "id": f"LESSON-EXTRACT-{path.stem}-{len(nodes):03d}",
+                    "type": "lesson",
+                    "name": current_section.strip("# "),
+                    "description": "\n".join(current_content[:5]),
+                    "status": "recorded",
+                    "source": str(path),
+                    "created": now(),
+                    "version": "1.0.0",
+                    "properties": {
+                        "source_file": str(path),
+                        "section": current_section.strip("# "),
+                    },
+                }
+            )
 
-    confidence = min(len(nodes) / 5.0, 1.0) if nodes else 0.0
+    confidence = min(len(nodes) / LESSON_CONFIDENCE_DIVISOR, 1.0) if nodes else 0.0
     return ExtractResult(
         source=str(path),
         extracted_type="lesson",
@@ -124,12 +139,17 @@ def extract_decisions_from_markdown(
 
     try:
         content = path.read_text(encoding="utf-8")
-    except Exception:
+    except (OSError, UnicodeDecodeError):
         return ExtractResult(source=str(path), extracted_type="decision", nodes=[])
 
     nodes = []
     decision_patterns = [
-        "决策", "决定", "Decision", "ADR", "选择", "方案",
+        "决策",
+        "决定",
+        "Decision",
+        "ADR",
+        "选择",
+        "方案",
     ]
 
     lines = content.split("\n")
@@ -147,23 +167,25 @@ def extract_decisions_from_markdown(
                         desc_lines.append(nl)
 
                 if desc_lines:
-                    nodes.append({
-                        "id": f"DECISION-EXTRACT-{path.stem}-{len(nodes):03d}",
-                        "type": "decision",
-                        "name": stripped.strip("# ")[:80],
-                        "description": " ".join(desc_lines[:3])[:200],
-                        "status": "proposed",
-                        "source": str(path),
-                        "created": now(),
-                        "version": "1.0.0",
-                        "properties": {
-                            "source_file": str(path),
-                            "title": stripped.strip("# "),
-                            "content": " ".join(desc_lines[:5]),
-                        },
-                    })
+                    nodes.append(
+                        {
+                            "id": f"DECISION-EXTRACT-{path.stem}-{len(nodes):03d}",
+                            "type": "decision",
+                            "name": stripped.strip("# ")[:80],
+                            "description": " ".join(desc_lines[:3])[:200],
+                            "status": "proposed",
+                            "source": str(path),
+                            "created": now(),
+                            "version": "1.0.0",
+                            "properties": {
+                                "source_file": str(path),
+                                "title": stripped.strip("# "),
+                                "content": " ".join(desc_lines[:5]),
+                            },
+                        }
+                    )
 
-    confidence = min(len(nodes) / 3.0, 1.0) if nodes else 0.0
+    confidence = min(len(nodes) / DECISION_CONFIDENCE_DIVISOR, 1.0) if nodes else 0.0
     return ExtractResult(
         source=str(path),
         extracted_type="decision",
@@ -182,7 +204,7 @@ def extract_specs_from_agent_contract(
 
     try:
         content = path.read_text(encoding="utf-8")
-    except Exception:
+    except (OSError, UnicodeDecodeError):
         return ExtractResult(source=str(path), extracted_type="specification", nodes=[])
 
     nodes = []
@@ -195,24 +217,26 @@ def extract_specs_from_agent_contract(
             current_rules.append(stripped[2:])
         elif stripped.startswith("##") and current_rules:
             if len(current_rules) >= 3:
-                nodes.append({
-                    "id": f"SPEC-EXTRACT-{path.stem}-{len(nodes):03d}",
-                    "type": "specification",
-                    "name": f"规则组: {path.name}",
-                    "description": f"从 {path.name} 提炼的规范组",
-                    "status": "active",
-                    "source": str(path),
-                    "created": now(),
-                    "version": "1.0.0",
-                    "properties": {
-                        "source_file": str(path),
-                        "rules": current_rules.copy(),
-                        "rule_count": len(current_rules),
-                    },
-                })
+                nodes.append(
+                    {
+                        "id": f"SPEC-EXTRACT-{path.stem}-{len(nodes):03d}",
+                        "type": "specification",
+                        "name": f"规则组: {path.name}",
+                        "description": f"从 {path.name} 提炼的规范组",
+                        "status": "active",
+                        "source": str(path),
+                        "created": now(),
+                        "version": "1.0.0",
+                        "properties": {
+                            "source_file": str(path),
+                            "rules": current_rules.copy(),
+                            "rule_count": len(current_rules),
+                        },
+                    }
+                )
             current_rules = []
 
-    confidence = min(len(nodes) / 2.0, 1.0) if nodes else 0.0
+    confidence = min(len(nodes) / SPEC_CONFIDENCE_DIVISOR, 1.0) if nodes else 0.0
     return ExtractResult(
         source=str(path),
         extracted_type="specification",
@@ -230,8 +254,9 @@ def extract_all(
 ) -> dict[str, Any]:
     """统一提炼入口 — 从目录中批量提炼 M1 节点"""
     if directory is None:
-        import os
-        directory = os.environ.get("ECOS_WORKSPACE", str(Path.home() / "Workspace"))
+        from model_driven._paths import get_workspace_dir
+
+        directory = str(get_workspace_dir())
     root = Path(directory)
     if not root.exists():
         return {"success": False, "error": f"目录不存在: {root}"}

@@ -10,11 +10,11 @@ model_driven.lifecycle.gates — 门禁检查引擎
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
-from model_driven.mof.m3_extended import Gate, LifecycleStage, STANDARD_GATES
+from model_driven.mof.m3_extended import STANDARD_GATES, Gate, LifecycleStage
 
 
 class GateResult(Enum):
@@ -74,7 +74,7 @@ class GateEngine:
     ) -> GateExecution:
         """执行门禁检查"""
         context = context or {}
-        execution = GateExecution(gate=gate, executed_at=datetime.now(timezone.utc).isoformat())
+        execution = GateExecution(gate=gate, executed_at=datetime.now(UTC).isoformat())
 
         if gate.auto_pass:
             execution.result = GateResult.PASSED
@@ -88,12 +88,14 @@ class GateEngine:
             required = check.get("required", True)
 
             if not required:
-                execution.check_results.append(CheckResult(
-                    name=check_name,
-                    check_type=check_type,
-                    passed=True,
-                    message="非必需检查，已跳过",
-                ))
+                execution.check_results.append(
+                    CheckResult(
+                        name=check_name,
+                        check_type=check_type,
+                        passed=True,
+                        message="非必需检查，已跳过",
+                    )
+                )
                 continue
 
             # 执行检查
@@ -116,6 +118,8 @@ class GateEngine:
             try:
                 passed, message = self._custom_checks[check_type](check, context)
                 return CheckResult(name=check_name, check_type=check_type, passed=passed, message=message)
+            except (TypeError, ValueError) as e:
+                return CheckResult(name=check_name, check_type=check_type, passed=False, message=str(e))
             except Exception as e:
                 return CheckResult(name=check_name, check_type=check_type, passed=False, message=str(e))
 
@@ -177,12 +181,16 @@ class GateEngine:
         actual = metrics.get(metric_key, 0)
         if actual >= threshold:
             return CheckResult(
-                name=check_name, check_type="metric", passed=True,
+                name=check_name,
+                check_type="metric",
+                passed=True,
                 message=f"指标达标: {actual} >= {threshold}",
                 details={"actual": actual, "threshold": threshold},
             )
         return CheckResult(
-            name=check_name, check_type="metric", passed=False,
+            name=check_name,
+            check_type="metric",
+            passed=False,
             message=f"指标不达标: {actual} < {threshold}",
             details={"actual": actual, "threshold": threshold},
         )

@@ -14,7 +14,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 
@@ -212,11 +212,11 @@ def cmd_log_stats(log_type: str, file_filter: str | None = None) -> int:
     print(f"Size:     {file_size:,} bytes")
     print(f"Records:  {total}")
     if statuses:
-        print(f"\nBy status:")
+        print("\nBy status:")
         for s, c in sorted(statuses.items()):
             print(f"  {s}: {c}")
     if actions:
-        print(f"\nBy action:")
+        print("\nBy action:")
         for a, c in sorted(actions.items()):
             print(f"  {a}: {c}")
     return 0

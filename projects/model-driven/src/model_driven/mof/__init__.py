@@ -7,7 +7,17 @@ model_driven.mof — MOF 扩展模块
 - 本体论映射扩展
 """
 
+from .m2_lifecycle import (
+    ALL_M2_SCHEMAS,
+    M2Schema,
+    M2Type,
+    get_schema,
+    list_all_schema_names,
+    list_schemas_by_stage,
+)
 from .m3_extended import (
+    STANDARD_GATES,
+    STANDARD_STAGES,
     BenefitModel,
     CostModel,
     Gate,
@@ -16,18 +26,8 @@ from .m3_extended import (
     LifecycleStage,
     M3ElementType,
     M3RelationType,
-    STANDARD_GATES,
-    STANDARD_STAGES,
     Stage,
     Transition,
-)
-from .m2_lifecycle import (
-    ALL_M2_SCHEMAS,
-    M2Schema,
-    M2Type,
-    get_schema,
-    list_all_schema_names,
-    list_schemas_by_stage,
 )
 from .ontology_extended import (
     CROSS_STAGE_CONSISTENCY_RULES,

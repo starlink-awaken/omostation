@@ -10,7 +10,7 @@ model_driven.management.agent_collab — 多 Agent 协作
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -39,7 +39,7 @@ class CollabTask:
     priority: str = "P2"  # P0-P3
     dependencies: list[str] = field(default_factory=list)  # 依赖的任务 ID
     context: dict[str, Any] = field(default_factory=dict)
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     updated_at: str = ""
     completed_at: str = ""
 
@@ -69,7 +69,7 @@ class AgentCollabManager:
         if task and task.status == CollabTaskStatus.PENDING:
             task.status = CollabTaskStatus.ASSIGNED
             task.assigned_to = agent_name
-            task.updated_at = datetime.now(timezone.utc).isoformat()
+            task.updated_at = datetime.now(UTC).isoformat()
             if agent_name not in self._agent_tasks:
                 self._agent_tasks[agent_name] = []
             self._agent_tasks[agent_name].append(task_id)
@@ -86,7 +86,7 @@ class AgentCollabManager:
                 if dep and dep.status != CollabTaskStatus.COMPLETED:
                     return False
             task.status = CollabTaskStatus.IN_PROGRESS
-            task.updated_at = datetime.now(timezone.utc).isoformat()
+            task.updated_at = datetime.now(UTC).isoformat()
             return True
         return False
 
@@ -95,7 +95,7 @@ class AgentCollabManager:
         task = self._tasks.get(task_id)
         if task and task.status == CollabTaskStatus.IN_PROGRESS:
             task.status = CollabTaskStatus.COMPLETED
-            task.completed_at = datetime.now(timezone.utc).isoformat()
+            task.completed_at = datetime.now(UTC).isoformat()
             task.updated_at = task.completed_at
             return True
         return False
@@ -106,7 +106,7 @@ class AgentCollabManager:
         if task and task.status == CollabTaskStatus.IN_PROGRESS:
             task.status = CollabTaskStatus.BLOCKED
             task.context["block_reason"] = reason
-            task.updated_at = datetime.now(timezone.utc).isoformat()
+            task.updated_at = datetime.now(UTC).isoformat()
             return True
         return False
 
@@ -130,13 +130,14 @@ class AgentCollabManager:
         # 检测同一 Agent 的阻塞任务
         for agent_name, task_ids in self._agent_tasks.items():
             blocked = [
-                tid for tid in task_ids
-                if tid in self._tasks and self._tasks[tid].status == CollabTaskStatus.BLOCKED
+                tid for tid in task_ids if tid in self._tasks and self._tasks[tid].status == CollabTaskStatus.BLOCKED
             ]
             if blocked:
-                conflicts.append({
-                    "type": "agent_blocked",
-                    "agent": agent_name,
-                    "blocked_tasks": blocked,
-                })
+                conflicts.append(
+                    {
+                        "type": "agent_blocked",
+                        "agent": agent_name,
+                        "blocked_tasks": blocked,
+                    }
+                )
         return conflicts

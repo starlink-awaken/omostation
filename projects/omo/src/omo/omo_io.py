@@ -265,6 +265,36 @@ class AppendOnlyLog:
         write_text_atomic(self.path, "")
         return n
 
+    def rotate(self, max_bytes: int) -> bool:
+        """文件 > max_bytes 时, rename 当前到 ``.1``, 重新空文件 (Round 8 P0).
+
+        简单轮转策略: 只保留 1 个 backup (覆盖式). 无压缩 (append-only
+        log 本身已紧凑, gzip 一般在 daemon 周期外做).
+
+        Returns:
+            True 若实际 rotate, False 若未达阈值.
+
+        边界:
+          - max_bytes ≤ 0: 不做任何事, 返 False (锁: 0 字节 = 0 触发 = 永远不 rotate)
+          - 文件不存在: 返 False
+          - 文件 < max_bytes: 不 rotate (返 False)
+          - .1 已存在: 覆盖 (用户接受)
+
+        推荐阈值:
+          - bos-metrics: 10MB ≈ 100K records, 30 天 @ 50/min
+          - omo-history: 1MB (审计记录少, 文件小也无所谓)
+          - omo-alerts: 1MB
+        """
+        if max_bytes <= 0 or not self.path.exists():
+            return False
+        size = self.path.stat().st_size
+        if size < max_bytes:
+            return False
+        backup = self.path.with_suffix(self.path.suffix + ".1")
+        backup.unlink(missing_ok=True)
+        self.path.rename(backup)
+        return True
+
     def group_by(self, field: str, *, path: Path | None = None) -> dict[str, int]:
         """按 ``field`` 分组统计 record 数 (Round 7 P0 通用聚合).
 

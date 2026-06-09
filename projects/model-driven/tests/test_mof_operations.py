@@ -2,26 +2,24 @@
 Tests for model_driven.toolchain.mof_* — MOF 操作工具
 """
 
-import pytest
 import tempfile
 from pathlib import Path
-from model_driven.toolchain.mof_scan import (
-    scan_project_dir,
-    scan_workspace,
-    scan_system,
-    scan_yaml_configs,
-    scan_agent_contracts,
+
+from model_driven.toolchain.mof_extract import (
+    extract_all,
+    extract_decisions_from_markdown,
+    extract_lessons_from_markdown,
+    extract_specs_from_agent_contract,
 )
 from model_driven.toolchain.mof_model import (
-    model_project,
-    model_workspace,
     classify_by_lifecycle_stage,
+    model_project,
 )
-from model_driven.toolchain.mof_extract import (
-    extract_lessons_from_markdown,
-    extract_decisions_from_markdown,
-    extract_specs_from_agent_contract,
-    extract_all,
+from model_driven.toolchain.mof_scan import (
+    scan_agent_contracts,
+    scan_project_dir,
+    scan_system,
+    scan_yaml_configs,
 )
 
 

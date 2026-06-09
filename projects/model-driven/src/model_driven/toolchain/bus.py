@@ -9,10 +9,11 @@ model_driven.toolchain.bus — 模型驱动工具链总线
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
 
 class ToolStatus(Enum):
@@ -33,7 +34,7 @@ class ToolResult:
     data: Any = None
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
-    executed_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    executed_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     duration_ms: float = 0.0
 
 
@@ -100,10 +101,10 @@ class ToolchainBus:
                 message=f"工具不存在: {tool_name}",
             )
 
-        start = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
         try:
             result_data = func(**kwargs)
-            duration = (datetime.now(timezone.utc) - start).total_seconds() * 1000
+            duration = (datetime.now(UTC) - start).total_seconds() * 1000
 
             tool_result = ToolResult(
                 tool_name=tool_name,
@@ -112,8 +113,17 @@ class ToolchainBus:
                 data=result_data,
                 duration_ms=round(duration, 2),
             )
+        except (TypeError, ValueError) as e:
+            duration = (datetime.now(UTC) - start).total_seconds() * 1000
+            tool_result = ToolResult(
+                tool_name=tool_name,
+                success=False,
+                message=f"参数错误: {e}",
+                errors=[str(e)],
+                duration_ms=round(duration, 2),
+            )
         except Exception as e:
-            duration = (datetime.now(timezone.utc) - start).total_seconds() * 1000
+            duration = (datetime.now(UTC) - start).total_seconds() * 1000
             tool_result = ToolResult(
                 tool_name=tool_name,
                 success=False,
@@ -145,3 +155,74 @@ class ToolchainBus:
             "tools_count": len(self._tools),
             "categories": self.list_categories(),
         }
+
+    # ── 持久化 ──────────────────────────────────
+
+    def save_history(self, state_dir: str | None = None) -> bool:
+        """持久化工具执行历史"""
+        from pathlib import Path
+
+        if state_dir is None:
+            from model_driven._paths import get_state_dir
+
+            state_dir = str(get_state_dir())
+
+        file_path = Path(state_dir) / "toolchain-history.yaml"
+        try:
+            import yaml
+
+            data = {
+                "history": [
+                    {
+                        "tool_name": r.tool_name,
+                        "success": r.success,
+                        "message": r.message,
+                        "errors": r.errors,
+                        "warnings": r.warnings,
+                        "executed_at": r.executed_at,
+                        "duration_ms": r.duration_ms,
+                    }
+                    for r in self._history
+                ]
+            }
+            with open(file_path, "w") as f:
+                yaml.dump(data, f, allow_unicode=True, sort_keys=False)
+            return True
+        except (OSError, ImportError, yaml.YAMLError):
+            return False
+
+    def load_history(self, state_dir: str | None = None) -> list[ToolResult]:
+        """从文件加载工具执行历史"""
+        from pathlib import Path
+
+        if state_dir is None:
+            from model_driven._paths import get_state_dir
+
+            state_dir = str(get_state_dir())
+
+        file_path = Path(state_dir) / "toolchain-history.yaml"
+        if not file_path.exists():
+            return []
+
+        try:
+            import yaml
+
+            with open(file_path) as f:
+                data = yaml.safe_load(f)
+        except (OSError, ImportError, yaml.YAMLError):
+            return []
+
+        results = []
+        for rd in (data or {}).get("history", []):
+            results.append(
+                ToolResult(
+                    tool_name=rd["tool_name"],
+                    success=rd.get("success", False),
+                    message=rd.get("message", ""),
+                    errors=rd.get("errors", []),
+                    warnings=rd.get("warnings", []),
+                    executed_at=rd.get("executed_at", ""),
+                    duration_ms=rd.get("duration_ms", 0.0),
+                )
+            )
+        return results

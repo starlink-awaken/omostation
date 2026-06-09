@@ -11,9 +11,10 @@ model_driven.ssot — SSOT 全生命周期化
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
+from model_driven.constants import PERCENT_MULTIPLIER
 from model_driven.mof.m3_extended import LifecycleStage
 
 
@@ -27,7 +28,7 @@ class SSOTSnapshot:
     stage: LifecycleStage | None = None
     data: dict[str, Any] = field(default_factory=dict)
     checksum: str = ""
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 class LifecycleSSOT:
@@ -53,20 +54,20 @@ class LifecycleSSOT:
         """获取历史快照"""
         return self._snapshots.get(entity_id, [])
 
-    def detect_drift(
-        self, entity_id: str, declared_state: dict[str, Any]
-    ) -> list[dict[str, Any]]:
+    def detect_drift(self, entity_id: str, declared_state: dict[str, Any]) -> list[dict[str, Any]]:
         """检测漂移 (声明的 vs 实际的)"""
         current = self._current_state.get(entity_id, {})
         drifts = []
         for key, value in declared_state.items():
             if key in current and current[key] != value:
-                drifts.append({
-                    "entity_id": entity_id,
-                    "field": key,
-                    "declared": value,
-                    "actual": current[key],
-                })
+                drifts.append(
+                    {
+                        "entity_id": entity_id,
+                        "field": key,
+                        "declared": value,
+                        "actual": current[key],
+                    }
+                )
         return drifts
 
 
@@ -82,19 +83,23 @@ class ValueSSOT:
         """记录成本"""
         if entity_id not in self._costs:
             self._costs[entity_id] = []
-        self._costs[entity_id].append({
-            **cost_data,
-            "recorded_at": datetime.now(timezone.utc).isoformat(),
-        })
+        self._costs[entity_id].append(
+            {
+                **cost_data,
+                "recorded_at": datetime.now(UTC).isoformat(),
+            }
+        )
 
     def record_benefit(self, entity_id: str, benefit_data: dict[str, Any]) -> None:
         """记录收益"""
         if entity_id not in self._benefits:
             self._benefits[entity_id] = []
-        self._benefits[entity_id].append({
-            **benefit_data,
-            "recorded_at": datetime.now(timezone.utc).isoformat(),
-        })
+        self._benefits[entity_id].append(
+            {
+                **benefit_data,
+                "recorded_at": datetime.now(UTC).isoformat(),
+            }
+        )
 
     def get_total_cost(self, entity_id: str) -> float:
         """获取总成本"""
@@ -117,8 +122,8 @@ class ValueSSOT:
             "total_cost": total_cost,
             "total_benefit": total_benefit,
             "roi": round(roi, 4),
-            "roi_pct": round(roi * 100, 1),
-            "calculated_at": datetime.now(timezone.utc).isoformat(),
+            "roi_pct": round(roi * PERCENT_MULTIPLIER, 1),
+            "calculated_at": datetime.now(UTC).isoformat(),
         }
         self._roi_analyses[entity_id] = analysis
         return analysis
@@ -135,7 +140,7 @@ class ProcessSSOT:
         """定义流程"""
         self._processes[process_id] = {
             **definition,
-            "defined_at": datetime.now(timezone.utc).isoformat(),
+            "defined_at": datetime.now(UTC).isoformat(),
         }
 
     def record_step_execution(
@@ -149,28 +154,31 @@ class ProcessSSOT:
         key = f"{process_id}:{step_id}"
         if key not in self._step_executions:
             self._step_executions[key] = []
-        self._step_executions[key].append({
-            "process_id": process_id,
-            "step_id": step_id,
-            "status": status,
-            "output": output,
-            "executed_at": datetime.now(timezone.utc).isoformat(),
-        })
+        self._step_executions[key].append(
+            {
+                "process_id": process_id,
+                "step_id": step_id,
+                "status": status,
+                "output": output,
+                "executed_at": datetime.now(UTC).isoformat(),
+            }
+        )
 
     def get_process_progress(self, process_id: str) -> dict[str, Any]:
         """获取流程进度"""
         definition = self._processes.get(process_id, {})
         steps = definition.get("steps", [])
         total = len(steps)
-        completed = sum(
-            1 for s in steps
-            if self._step_executions.get(f"{process_id}:{s['id']}", [{}])[-1].get("status") == "completed"
-        )
+        completed = 0
+        for s in steps:
+            executions = self._step_executions.get(f"{process_id}:{s['id']}", [])
+            if executions and executions[-1].get("status") == "completed":
+                completed += 1
         return {
             "process_id": process_id,
             "total_steps": total,
             "completed_steps": completed,
-            "progress": round(completed / total * 100, 1) if total > 0 else 0,
+            "progress": round(completed / total * PERCENT_MULTIPLIER, 1) if total > 0 else 0,
         }
 
 
@@ -196,41 +204,47 @@ class CrossStageConsistencyChecker:
             if spec.get("type") == "spec_design":
                 related = spec.get("properties", {}).get("related_okrs", [])
                 if not related:
-                    issues.append({
-                        "rule": "CS-01",
-                        "severity": "error",
-                        "message": f"Spec {spec.get('id')} ({spec.get('name', '?')}) 未关联任何 OKR (可用 OKR: {list(okr_ids)[:3]})",
-                        "spec_id": spec.get("id"),
-                        "spec_name": spec.get("name", ""),
-                        "available_okrs": list(okr_ids),
-                    })
+                    issues.append(
+                        {
+                            "rule": "CS-01",
+                            "severity": "error",
+                            "message": f"Spec {spec.get('id')} ({spec.get('name', '?')}) 未关联任何 OKR (可用 OKR: {list(okr_ids)[:3]})",
+                            "spec_id": spec.get("id"),
+                            "spec_name": spec.get("name", ""),
+                            "available_okrs": list(okr_ids),
+                        }
+                    )
 
         # CS-02: 设计→开发一致性
         for code_mod in dev_models:
             if code_mod.get("type") == "code_module":
                 if not spec_ids:
-                    issues.append({
-                        "rule": "CS-02",
-                        "severity": "warning",
-                        "message": f"代码模块 {code_mod.get('id')} ({code_mod.get('name', '?')}) 无对应 Spec (可用 Spec: {list(spec_ids)[:3]})",
-                        "code_module_id": code_mod.get("id"),
-                        "available_specs": list(spec_ids),
-                    })
+                    issues.append(
+                        {
+                            "rule": "CS-02",
+                            "severity": "warning",
+                            "message": f"代码模块 {code_mod.get('id')} ({code_mod.get('name', '?')}) 无对应 Spec (可用 Spec: {list(spec_ids)[:3]})",
+                            "code_module_id": code_mod.get("id"),
+                            "available_specs": list(spec_ids),
+                        }
+                    )
 
         # CS-04: 部署→运行一致性
         runtime_services = {m.get("id") for m in runtime_models if m.get("type") == "alert_rule"}
         for deploy in deploy_models:
             if deploy.get("type") == "deployment_config":
                 if not runtime_services:
-                    issues.append({
-                        "rule": "CS-04",
-                        "severity": "error",
-                        "message": f"部署配置 {deploy.get('id')} ({deploy.get('name', '?')}) 无对应告警规则",
-                        "deploy_id": deploy.get("id"),
-                    })
+                    issues.append(
+                        {
+                            "rule": "CS-04",
+                            "severity": "error",
+                            "message": f"部署配置 {deploy.get('id')} ({deploy.get('name', '?')}) 无对应告警规则",
+                            "deploy_id": deploy.get("id"),
+                        }
+                    )
 
         return {
-            "checked_at": datetime.now(timezone.utc).isoformat(),
+            "checked_at": datetime.now(UTC).isoformat(),
             "total_issues": len(issues),
             "passed": len(issues) == 0,
             "issues": issues,

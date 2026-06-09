@@ -10,7 +10,7 @@ model_driven.management.spec — Spec 驱动管理
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -40,7 +40,7 @@ class Spec:
     related_okrs: list[str] = field(default_factory=list)
     dependencies: list[str] = field(default_factory=list)
     reviewers: list[str] = field(default_factory=list)
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     updated_at: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -48,7 +48,7 @@ class Spec:
         """提交评审"""
         if self.status == SpecStatus.DRAFT:
             self.status = SpecStatus.REVIEW
-            self.updated_at = datetime.now(timezone.utc).isoformat()
+            self.updated_at = datetime.now(UTC).isoformat()
             return True
         return False
 
@@ -56,7 +56,7 @@ class Spec:
         """批准"""
         if self.status == SpecStatus.REVIEW:
             self.status = SpecStatus.APPROVED
-            self.updated_at = datetime.now(timezone.utc).isoformat()
+            self.updated_at = datetime.now(UTC).isoformat()
             return True
         return False
 
@@ -64,7 +64,7 @@ class Spec:
         """开始实现"""
         if self.status == SpecStatus.APPROVED:
             self.status = SpecStatus.IMPLEMENTING
-            self.updated_at = datetime.now(timezone.utc).isoformat()
+            self.updated_at = datetime.now(UTC).isoformat()
             return True
         return False
 
@@ -72,7 +72,7 @@ class Spec:
         """标记完成"""
         if self.status == SpecStatus.IMPLEMENTING:
             self.status = SpecStatus.DONE
-            self.updated_at = datetime.now(timezone.utc).isoformat()
+            self.updated_at = datetime.now(UTC).isoformat()
             return True
         return False
 
@@ -80,7 +80,7 @@ class Spec:
         """修订"""
         if self.status in (SpecStatus.APPROVED, SpecStatus.IMPLEMENTING):
             self.status = SpecStatus.AMENDED
-            self.updated_at = datetime.now(timezone.utc).isoformat()
+            self.updated_at = datetime.now(UTC).isoformat()
             return True
         return False
 
@@ -88,9 +88,29 @@ class Spec:
         """归档"""
         if self.status == SpecStatus.DONE:
             self.status = SpecStatus.ARCHIVED
-            self.updated_at = datetime.now(timezone.utc).isoformat()
+            self.updated_at = datetime.now(UTC).isoformat()
             return True
         return False
+
+    def to_dict(self) -> dict[str, Any]:
+        """序列化为 dict"""
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "author": self.author,
+            "status": self.status.value,
+            "related_adrs": self.related_adrs,
+            "related_okrs": self.related_okrs,
+            "dependencies": self.dependencies,
+            "reviewers": self.reviewers,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+            "metadata": self.metadata,
+        }
+
+    def __repr__(self) -> str:
+        return f"Spec(id={self.id!r}, title={self.title!r}, status={self.status.value})"
 
 
 class SpecManager:
@@ -140,3 +160,87 @@ class SpecManager:
             stats[spec.status.value] += 1
         stats["total"] = len(self._specs)
         return stats
+
+    # ── 持久化 ──────────────────────────────────
+
+    def to_dict(self) -> dict[str, Any]:
+        """序列化为 dict"""
+        return {
+            "specs": {
+                sid: {
+                    "id": s.id,
+                    "title": s.title,
+                    "description": s.description,
+                    "author": s.author,
+                    "status": s.status.value,
+                    "related_adrs": s.related_adrs,
+                    "related_okrs": s.related_okrs,
+                    "dependencies": s.dependencies,
+                    "reviewers": s.reviewers,
+                    "created_at": s.created_at,
+                    "updated_at": s.updated_at,
+                    "metadata": s.metadata,
+                }
+                for sid, s in self._specs.items()
+            }
+        }
+
+    def save(self, state_dir: str | None = None) -> bool:
+        """持久化到文件"""
+        from pathlib import Path
+
+        if state_dir is None:
+            from model_driven._paths import get_state_dir
+
+            state_dir = str(get_state_dir())
+
+        file_path = Path(state_dir) / "specs.yaml"
+        try:
+            import yaml
+
+            with open(file_path, "w") as f:
+                yaml.dump(self.to_dict(), f, allow_unicode=True, sort_keys=False)
+            return True
+        except (OSError, ImportError, yaml.YAMLError):
+            return False
+
+    @classmethod
+    def load(cls, state_dir: str | None = None) -> SpecManager | None:
+        """从文件加载"""
+        from pathlib import Path
+
+        if state_dir is None:
+            from model_driven._paths import get_state_dir
+
+            state_dir = str(get_state_dir())
+
+        file_path = Path(state_dir) / "specs.yaml"
+        if not file_path.exists():
+            return None
+
+        try:
+            import yaml
+
+            with open(file_path) as f:
+                data = yaml.safe_load(f)
+        except (OSError, ImportError, yaml.YAMLError):
+            return None
+
+        manager = cls()
+        for sid, sdata in (data or {}).get("specs", {}).items():
+            spec = Spec(
+                id=sdata["id"],
+                title=sdata["title"],
+                description=sdata.get("description", ""),
+                author=sdata.get("author", ""),
+                status=SpecStatus(sdata.get("status", "draft")),
+                related_adrs=sdata.get("related_adrs", []),
+                related_okrs=sdata.get("related_okrs", []),
+                dependencies=sdata.get("dependencies", []),
+                reviewers=sdata.get("reviewers", []),
+                created_at=sdata.get("created_at", ""),
+                updated_at=sdata.get("updated_at", ""),
+                metadata=sdata.get("metadata", {}),
+            )
+            manager._specs[sid] = spec
+        return manager

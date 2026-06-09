@@ -2,7 +2,7 @@
 Tests for model_driven.ssot — SSOT 全生命周期化
 """
 
-import pytest
+from model_driven.mof.m3_extended import LifecycleStage
 from model_driven.ssot.lifecycle_ssot import (
     CrossStageConsistencyChecker,
     LifecycleSSOT,
@@ -10,7 +10,6 @@ from model_driven.ssot.lifecycle_ssot import (
     SSOTSnapshot,
     ValueSSOT,
 )
-from model_driven.mof.m3_extended import LifecycleStage
 
 
 class TestLifecycleSSOT:

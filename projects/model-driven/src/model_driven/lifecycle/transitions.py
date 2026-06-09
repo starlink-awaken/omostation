@@ -10,13 +10,13 @@ model_driven.lifecycle.transitions — 阶段转换规则
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from model_driven.mof.m3_extended import LifecycleStage
 
-from .gates import GateEngine, GateExecution, GateResult
-from .stages import LifecycleTracker, StageStatus
+from .gates import GateEngine, GateExecution
+from .stages import LifecycleTracker
 
 
 @dataclass
@@ -82,9 +82,7 @@ class TransitionEngine:
                 allowed.append(rule.to_stage)
         return allowed
 
-    def get_transition_rule(
-        self, from_stage: LifecycleStage, to_stage: LifecycleStage
-    ) -> TransitionRule | None:
+    def get_transition_rule(self, from_stage: LifecycleStage, to_stage: LifecycleStage) -> TransitionRule | None:
         """获取转换规则"""
         for rule in self._transition_rules:
             if rule.from_stage == from_stage and rule.to_stage == to_stage:
@@ -127,13 +125,15 @@ class TransitionEngine:
             return False, f"前置阶段未完成，无法推进到 {target_stage.value}", gate_exec
 
         # 记录历史
-        self._history.append({
-            "entity_id": tracker.entity_id,
-            "from": current.value,
-            "to": target_stage.value,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "gate_result": gate_exec.result.value if gate_exec else "no_gate",
-        })
+        self._history.append(
+            {
+                "entity_id": tracker.entity_id,
+                "from": current.value,
+                "to": target_stage.value,
+                "timestamp": datetime.now(UTC).isoformat(),
+                "gate_result": gate_exec.result.value if gate_exec else "no_gate",
+            }
+        )
 
         return True, f"成功从 {current.value} 转换到 {target_stage.value}", gate_exec
 

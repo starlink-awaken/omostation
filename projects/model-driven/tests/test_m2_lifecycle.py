@@ -2,10 +2,8 @@
 Tests for model_driven.mof.m2_lifecycle — M2 元模型扩展
 """
 
-import pytest
 from model_driven.mof.m2_lifecycle import (
     ALL_M2_SCHEMAS,
-    M2Schema,
     get_schema,
     list_all_schema_names,
     list_schemas_by_stage,

@@ -155,8 +155,16 @@ TRIGGER_EQUIVALENCES = [
 
 # Trigger 依赖关系: 运行时依赖拓扑
 TRIGGER_DEPENDENCIES = [
-    {"dependent": "TRIGGER-ECOS-DAEMON", "depends_on": "TRIGGER-AGORA-EVENTBUS", "note": "daemon 自反验证依赖 EventBus 可用"},
-    {"dependent": "TRIGGER-CRON-SERVICE", "depends_on": "TRIGGER-AGORA-LAUNCHD", "note": "Cron Service 依赖 Agora MCP Hub"},
+    {
+        "dependent": "TRIGGER-ECOS-DAEMON",
+        "depends_on": "TRIGGER-AGORA-EVENTBUS",
+        "note": "daemon 自反验证依赖 EventBus 可用",
+    },
+    {
+        "dependent": "TRIGGER-CRON-SERVICE",
+        "depends_on": "TRIGGER-AGORA-LAUNCHD",
+        "note": "Cron Service 依赖 Agora MCP Hub",
+    },
     {"dependent": "TRIGGER-SCHEDULER", "depends_on": "TRIGGER-OMO-DAEMON", "note": "Scheduler 依赖 OMO 治理守护进程"},
     {"dependent": "TRIGGER-AGORA-WATCHDOG", "depends_on": "TRIGGER-AGORA-LAUNCHD", "note": "Watchdog 监控 Agora 自身"},
 ]

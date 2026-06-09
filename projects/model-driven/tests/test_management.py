@@ -2,12 +2,11 @@
 Tests for model_driven.management — 管理面
 """
 
-import pytest
-from model_driven.management.spec import Spec, SpecManager, SpecStatus
 from model_driven.management.adr import ADR, ADRManager, ADRStatus
+from model_driven.management.agent_collab import AgentCollabManager, CollabTaskStatus
 from model_driven.management.okr import OKR, OKRManager, OKRStatus
 from model_driven.management.omo_bridge import OMOBridge, OMOEventType
-from model_driven.management.agent_collab import AgentCollabManager, CollabTaskStatus
+from model_driven.management.spec import Spec, SpecManager, SpecStatus
 from model_driven.mof.m3_extended import KeyResult
 
 
@@ -145,8 +144,8 @@ class TestOKRManager:
 
 class TestOKRDecomposer:
     def test_decompose_single_okr(self):
-        from model_driven.mof.m3_extended import KeyResult
         from model_driven.management.okr import OKR, OKRDecomposer
+        from model_driven.mof.m3_extended import KeyResult
 
         kr1 = KeyResult(id="KR-1", description="设计系统架构", target_value=100, current_value=0, weight=2.0)
         kr2 = KeyResult(id="KR-2", description="开发核心模块", target_value=5, current_value=0, weight=1.0)
@@ -180,8 +179,8 @@ class TestOKRDecomposer:
         assert not result["success"]
 
     def test_decompose_all(self):
-        from model_driven.mof.m3_extended import KeyResult
         from model_driven.management.okr import OKR, OKRDecomposer
+        from model_driven.mof.m3_extended import KeyResult
 
         okr1 = OKR(id="O-1", objective="目标1", key_results=[
             KeyResult(id="KR-1", description="开发功能", target_value=3, current_value=0),
@@ -197,8 +196,8 @@ class TestOKRDecomposer:
         assert result["total_phases"] == 2
 
     def test_decomposition_history(self):
-        from model_driven.mof.m3_extended import KeyResult
         from model_driven.management.okr import OKR, OKRDecomposer
+        from model_driven.mof.m3_extended import KeyResult
 
         okr = OKR(id="O-1", objective="测试", key_results=[
             KeyResult(id="KR-1", description="开发功能", target_value=1, current_value=0),
@@ -261,7 +260,7 @@ class TestAgentCollab:
         manager = AgentCollabManager()
         dep = manager.create_task("T-DEP", "依赖任务")
         dep.status = CollabTaskStatus.COMPLETED
-        task = manager.create_task("T-1", "主任务", dependencies=["T-DEP"])
+        manager.create_task("T-1", "主任务", dependencies=["T-DEP"])
         manager.assign_task("T-1", "agent-1")
         assert manager.start_task("T-1")
 
@@ -276,7 +275,7 @@ class TestAgentCollab:
 
     def test_conflict_detection(self):
         manager = AgentCollabManager()
-        task = manager.create_task("T-1", "测试")
+        manager.create_task("T-1", "测试")
         manager.assign_task("T-1", "agent-1")
         manager.start_task("T-1")
         manager.block_task("T-1", "阻塞原因")

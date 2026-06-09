@@ -11,11 +11,7 @@ model_driven — 全生命周期模型驱动平台
 - SSOT 全生命周期化: 生命周期/价值/过程 SSOT + 跨阶段一致性
 """
 
-from . import lifecycle
-from . import management
-from . import mof
-from . import ssot
-from . import toolchain
+from . import lifecycle, management, mof, ssot, toolchain
 from .mcp_server import MCPServer
 
 __version__ = "0.1.0"

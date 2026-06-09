@@ -2,13 +2,11 @@
 Tests for model_driven.lifecycle.pipeline — 三阶段宏观流水线
 """
 
-import pytest
 from model_driven.lifecycle.pipeline import (
+    STANDARD_PHASE_GATES,
+    PhaseStatus,
     PipelinePhase,
     PipelineTracker,
-    PhaseStatus,
-    PhaseGate,
-    STANDARD_PHASE_GATES,
 )
 from model_driven.mof.m3_extended import LifecycleStage
 
@@ -102,7 +100,7 @@ class TestPipelineTracker:
         # 不完成所有 7 阶段，直接尝试完成 Phase
         assert not tracker.complete_phase(PipelinePhase.COLD_START)
 
-    def test_complete_phase_after_stages(self):
+    def test_complete_phase_with_completed_at(self):
         from model_driven.lifecycle.stages import StageStatus
         tracker = PipelineTracker(entity_id="proj-1")
         tracker.start_phase(PipelinePhase.COLD_START)

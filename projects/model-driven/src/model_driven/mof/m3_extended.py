@@ -15,7 +15,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-
 # ── 生命周期阶段枚举 ──────────────────────────────────
 
 
@@ -31,12 +30,12 @@ class LifecycleStage(Enum):
     BUSINESS_OPS = "business_ops"  # 运营态
 
     @classmethod
-    def order(cls, stage: "LifecycleStage") -> int:
+    def order(cls, stage: LifecycleStage) -> int:
         """返回阶段序号 (0-6)"""
         return list(cls).index(stage)
 
     @classmethod
-    def from_str(cls, s: str) -> "LifecycleStage":
+    def from_str(cls, s: str) -> LifecycleStage:
         mapping = {e.value: e for e in cls}
         if s.lower() not in mapping:
             raise ValueError(f"未知生命周期阶段: {s}, 有效值: {list(mapping.keys())}")
@@ -139,7 +138,7 @@ class Goal:
     name: str
     description: str = ""
     objective: str = ""  # O: 目标描述
-    key_results: list["KeyResult"] = field(default_factory=list)
+    key_results: list[KeyResult] = field(default_factory=list)
     progress: float = 0.0  # 0.0 - 1.0
     deadline: str = ""
     owner: str = ""

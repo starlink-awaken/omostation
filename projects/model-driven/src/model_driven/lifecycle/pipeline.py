@@ -22,14 +22,14 @@ model_driven.lifecycle.pipeline — 三阶段宏观流水线
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
-from model_driven.mof.m3_extended import LifecycleStage
 from model_driven.lifecycle.stages import LifecycleTracker, StageStatus
-from model_driven.lifecycle.gates import GateEngine, GateResult
+from model_driven.mof.m3_extended import LifecycleStage
 
 
 class PipelinePhase(Enum):
@@ -40,7 +40,7 @@ class PipelinePhase(Enum):
     HARDENING = "hardening"  # 硬化: 运行+运维+运营
 
     @classmethod
-    def from_stage(cls, stage: LifecycleStage) -> "PipelinePhase":
+    def from_stage(cls, stage: LifecycleStage) -> PipelinePhase:
         """从 7 阶段映射到 3 Phase"""
         mapping = {
             LifecycleStage.PLANNING: cls.COLD_START,
@@ -54,7 +54,7 @@ class PipelinePhase(Enum):
         return mapping.get(stage, cls.EVOLUTION)
 
     @classmethod
-    def get_stages(cls, phase: "PipelinePhase") -> list[LifecycleStage]:
+    def get_stages(cls, phase: PipelinePhase) -> list[LifecycleStage]:
         """获取 Phase 包含的 7 阶段列表"""
         mapping = {
             cls.COLD_START: [LifecycleStage.PLANNING, LifecycleStage.DESIGN],
@@ -86,11 +86,11 @@ class PhaseInstance:
 
     def start(self) -> None:
         self.status = PhaseStatus.IN_PROGRESS
-        self.started_at = datetime.now(timezone.utc).isoformat()
+        self.started_at = datetime.now(UTC).isoformat()
 
     def complete(self) -> None:
         self.status = PhaseStatus.COMPLETED
-        self.completed_at = datetime.now(timezone.utc).isoformat()
+        self.completed_at = datetime.now(UTC).isoformat()
 
     def block(self, reason: str) -> None:
         self.status = PhaseStatus.BLOCKED
@@ -152,10 +152,7 @@ class PipelineTracker:
     ):
         self.entity_id = entity_id
         self.entity_type = entity_type
-        self.phases: dict[PipelinePhase, PhaseInstance] = {
-            phase: PhaseInstance(phase=phase)
-            for phase in PipelinePhase
-        }
+        self.phases: dict[PipelinePhase, PhaseInstance] = {phase: PhaseInstance(phase=phase) for phase in PipelinePhase}
         self.current_phase: PipelinePhase | None = None
         self.lifecycle_tracker: LifecycleTracker = LifecycleTracker(entity_id=entity_id, entity_type=entity_type)
         self._phase_gates = STANDARD_PHASE_GATES
@@ -193,11 +190,13 @@ class PipelineTracker:
         if stages:
             self.lifecycle_tracker.advance_to(stages[0])
 
-        self._emit({
-            "action": "start_phase",
-            "phase": phase.value,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
+        self._emit(
+            {
+                "action": "start_phase",
+                "phase": phase.value,
+                "timestamp": datetime.now(UTC).isoformat(),
+            }
+        )
         return True
 
     def complete_phase(self, phase: PipelinePhase) -> bool:
@@ -213,14 +212,18 @@ class PipelineTracker:
                 return False
 
         self.phases[phase].complete()
-        self._emit({
-            "action": "complete_phase",
-            "phase": phase.value,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
+        self._emit(
+            {
+                "action": "complete_phase",
+                "phase": phase.value,
+                "timestamp": datetime.now(UTC).isoformat(),
+            }
+        )
         return True
 
-    def check_phase_gate(self, from_phase: PipelinePhase, to_phase: PipelinePhase, context: dict[str, Any] | None = None) -> tuple[bool, str]:
+    def check_phase_gate(
+        self, from_phase: PipelinePhase, to_phase: PipelinePhase, context: dict[str, Any] | None = None
+    ) -> tuple[bool, str]:
         """检查 Phase 间门禁"""
         for gate in self._phase_gates:
             if gate.from_phase == from_phase and gate.to_phase == to_phase:
@@ -268,10 +271,7 @@ class PipelineTracker:
         phase_progress = {}
         for phase in PipelinePhase:
             stages = PipelinePhase.get_stages(phase)
-            completed = sum(
-                1 for s in stages
-                if self.lifecycle_tracker.stages[s].status == StageStatus.COMPLETED
-            )
+            completed = sum(1 for s in stages if self.lifecycle_tracker.stages[s].status == StageStatus.COMPLETED)
             phase_progress[phase.value] = {
                 "status": self.phases[phase].status.value,
                 "stages_completed": completed,
@@ -295,14 +295,14 @@ class PipelineTracker:
         """将 PipelineTracker 状态持久化到文件
 
         Args:
-            state_dir: 状态目录，默认 ~/Workspace/.omo/state/model-driven/
+            state_dir: 状态目录，默认由 get_state_dir() 获取 (.omo/state/model-driven/)
         """
         from pathlib import Path
 
         if state_dir is None:
-            import os
-            ws = os.environ.get("ECOS_WORKSPACE", str(Path.home() / "Workspace"))
-            state_dir = str(Path(ws) / ".omo" / "state" / "model-driven")
+            from model_driven._paths import get_state_dir
+
+            state_dir = str(get_state_dir())
 
         state_path = Path(state_dir)
         state_path.mkdir(parents=True, exist_ok=True)
@@ -310,11 +310,14 @@ class PipelineTracker:
         file_path = state_path / f"{self.entity_id}-pipeline.yaml"
         try:
             import yaml
+
             data = {
                 "entity_id": self.entity_id,
                 "entity_type": self.entity_type,
                 "current_phase": self.current_phase.value if self.current_phase else None,
-                "current_lifecycle_stage": self.lifecycle_tracker.current_stage.value if self.lifecycle_tracker.current_stage else None,
+                "current_lifecycle_stage": self.lifecycle_tracker.current_stage.value
+                if self.lifecycle_tracker.current_stage
+                else None,
                 "phases": {
                     p.value: {
                         "status": self.phases[p].status.value,
@@ -332,16 +335,65 @@ class PipelineTracker:
                     }
                     for s in LifecycleStage
                 },
-                "saved_at": datetime.now(timezone.utc).isoformat(),
+                "saved_at": datetime.now(UTC).isoformat(),
             }
             with open(file_path, "w") as f:
                 yaml.dump(data, f, allow_unicode=True, default_flow_style=False)
             return True
-        except Exception:
+        except (OSError, ImportError, yaml.YAMLError):
             return False
 
+    @staticmethod
+    def _restore_phase_state(data: dict[str, Any], tracker: PipelineTracker) -> None:
+        """从持久化数据恢复 Phase 状态"""
+        for phase in PipelinePhase:
+            phase_data = data.get("phases", {}).get(phase.value, {})
+            if phase_data.get("status") == "in_progress":
+                tracker.phases[phase].status = PhaseStatus.IN_PROGRESS
+                tracker.phases[phase].started_at = phase_data.get("started_at", "")
+                tracker.current_phase = phase
+            elif phase_data.get("status") == "completed":
+                tracker.phases[phase].status = PhaseStatus.COMPLETED
+                tracker.phases[phase].started_at = phase_data.get("started_at", "")
+                tracker.phases[phase].completed_at = phase_data.get("completed_at", "")
+            if phase_data.get("issues"):
+                tracker.phases[phase].issues = phase_data["issues"]
+
+    @staticmethod
+    def _restore_lifecycle_stages(data: dict[str, Any], tracker: PipelineTracker) -> None:
+        """从持久化数据恢复 Lifecycle 阶段状态"""
+        for stage in LifecycleStage:
+            stage_data = data.get("lifecycle_stages", {}).get(stage.value, {})
+            if stage_data.get("status") == "completed":
+                tracker.lifecycle_tracker.stages[stage].status = StageStatus.COMPLETED
+                tracker.lifecycle_tracker.stages[stage].completed_at = stage_data.get("completed_at", "")
+                tracker.lifecycle_tracker.stages[stage].started_at = stage_data.get("started_at", "")
+            elif stage_data.get("status") == "in_progress":
+                tracker.lifecycle_tracker.stages[stage].status = StageStatus.IN_PROGRESS
+                tracker.lifecycle_tracker.stages[stage].started_at = stage_data.get("started_at", "")
+
+    @staticmethod
+    def _restore_current_phase(data: dict[str, Any], tracker: PipelineTracker) -> None:
+        """从持久化数据恢复 current_phase (优先级: HARDENING > EVOLUTION > COLD_START)"""
+        for phase in [PipelinePhase.HARDENING, PipelinePhase.EVOLUTION, PipelinePhase.COLD_START]:
+            phase_data = data.get("phases", {}).get(phase.value, {})
+            if phase_data.get("status") in ("completed", "in_progress"):
+                if tracker.current_phase is None or phase_data.get("status") == "in_progress":
+                    tracker.current_phase = phase
+                    break
+
+    @staticmethod
+    def _restore_current_stage(data: dict[str, Any], tracker: PipelineTracker) -> None:
+        """从持久化数据恢复 lifecycle_tracker.current_stage"""
+        current_stage_str = data.get("current_lifecycle_stage")
+        if current_stage_str:
+            try:
+                tracker.lifecycle_tracker.current_stage = LifecycleStage(current_stage_str)
+            except ValueError:
+                pass
+
     @classmethod
-    def load(cls, entity_id: str, state_dir: str | None = None) -> "PipelineTracker | None":
+    def load(cls, entity_id: str, state_dir: str | None = None) -> PipelineTracker | None:
         """从文件加载 PipelineTracker 状态
 
         Args:
@@ -351,9 +403,9 @@ class PipelineTracker:
         from pathlib import Path
 
         if state_dir is None:
-            import os
-            ws = os.environ.get("ECOS_WORKSPACE", str(Path.home() / "Workspace"))
-            state_dir = str(Path(ws) / ".omo" / "state" / "model-driven")
+            from model_driven._paths import get_state_dir
+
+            state_dir = str(get_state_dir())
 
         file_path = Path(state_dir) / f"{entity_id}-pipeline.yaml"
         if not file_path.exists():
@@ -361,55 +413,20 @@ class PipelineTracker:
 
         try:
             import yaml
+
             with open(file_path) as f:
                 data = yaml.safe_load(f)
 
-            tracker = cls(entity_id=data.get("entity_id", entity_id),
-                          entity_type=data.get("entity_type", ""))
+            tracker = cls(entity_id=data.get("entity_id", entity_id), entity_type=data.get("entity_type", ""))
 
-            # 恢复 Phase 状态
-            for phase in PipelinePhase:
-                phase_data = data.get("phases", {}).get(phase.value, {})
-                if phase_data.get("status") == "in_progress":
-                    tracker.phases[phase].status = PhaseStatus.IN_PROGRESS
-                    tracker.phases[phase].started_at = phase_data.get("started_at", "")
-                    tracker.current_phase = phase
-                elif phase_data.get("status") == "completed":
-                    tracker.phases[phase].status = PhaseStatus.COMPLETED
-                    tracker.phases[phase].started_at = phase_data.get("started_at", "")
-                    tracker.phases[phase].completed_at = phase_data.get("completed_at", "")
-                if phase_data.get("issues"):
-                    tracker.phases[phase].issues = phase_data["issues"]
-
-            # 恢复 Lifecycle 阶段状态
-            for stage in LifecycleStage:
-                stage_data = data.get("lifecycle_stages", {}).get(stage.value, {})
-                if stage_data.get("status") == "completed":
-                    tracker.lifecycle_tracker.stages[stage].status = StageStatus.COMPLETED
-                    tracker.lifecycle_tracker.stages[stage].completed_at = stage_data.get("completed_at", "")
-                    tracker.lifecycle_tracker.stages[stage].started_at = stage_data.get("started_at", "")
-                elif stage_data.get("status") == "in_progress":
-                    tracker.lifecycle_tracker.stages[stage].status = StageStatus.IN_PROGRESS
-                    tracker.lifecycle_tracker.stages[stage].started_at = stage_data.get("started_at", "")
-
-            # 恢复 current_phase
-            for phase in [PipelinePhase.HARDENING, PipelinePhase.EVOLUTION, PipelinePhase.COLD_START]:
-                phase_data = data.get("phases", {}).get(phase.value, {})
-                if phase_data.get("status") in ("completed", "in_progress"):
-                    if tracker.current_phase is None or phase_data.get("status") == "in_progress":
-                        tracker.current_phase = phase
-                        break
-
-            # 恢复 lifecycle_tracker.current_stage
-            current_stage_str = data.get("current_lifecycle_stage")
-            if current_stage_str:
-                try:
-                    tracker.lifecycle_tracker.current_stage = LifecycleStage(current_stage_str)
-                except ValueError:
-                    pass
+            cls._restore_phase_state(data, tracker)
+            cls._restore_lifecycle_stages(data, tracker)
+            cls._restore_current_phase(data, tracker)
+            cls._restore_current_stage(data, tracker)
 
             return tracker
-        except Exception as e:
+        except (OSError, ImportError, yaml.YAMLError, KeyError, ValueError) as e:
             import sys
+
             print(f"[model-driven] PipelineTracker.load({entity_id}) 失败: {e}", file=sys.stderr)
             return None

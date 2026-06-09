@@ -17,10 +17,11 @@ model_driven.toolchain.trigger_registry — Trigger 统一注册与管理
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
-from model_driven.mof.m2_lifecycle import M2_TRIGGER
+from model_driven.constants import MAX_HEALTH_SCORE
 from model_driven.toolchain.derivation_engine import DerivationEngine
 from model_driven.toolchain.trigger_m0 import TriggerM0Manager, TriggerRuntimeSnapshot
 
@@ -37,7 +38,7 @@ class TriggerInfo:
     m0_status: str = "unknown"  # M0 运行时状态
     schedule: str = ""
     dependencies: list[str] = field(default_factory=list)
-    health_score: float = 100.0
+    health_score: float = MAX_HEALTH_SCORE
     last_execution: str = ""
     consecutive_failures: int = 0
     source: str = ""
@@ -71,9 +72,9 @@ class TriggerRegistry:
 
     def __init__(self, m1_dir: str | None = None):
         if m1_dir is None:
-            import os
-            from pathlib import Path
-            ws = os.environ.get("ECOS_WORKSPACE", str(Path.home() / "Workspace"))
+            from model_driven._paths import get_workspace_dir
+
+            ws = str(get_workspace_dir())
             self._m1_dir = Path(ws) / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "trigger"
         else:
             self._m1_dir = Path(m1_dir)
@@ -89,12 +90,14 @@ class TriggerRegistry:
         if not self._m1_dir.exists():
             return
         import yaml
+
         for f in sorted(self._m1_dir.glob("*.yaml")):
             try:
-                data = yaml.safe_load(open(f))
+                with open(f) as fh:
+                    data = yaml.safe_load(fh)
                 if data and data.get("type") == "trigger":
                     self._triggers[data["id"]] = data
-            except Exception:
+            except (OSError, yaml.YAMLError, KeyError):
                 pass
 
     def reload(self) -> int:
@@ -127,7 +130,7 @@ class TriggerRegistry:
                 m0_status=m0.status if m0 else "unknown",
                 schedule=m1.get("properties", {}).get("schedule", ""),
                 dependencies=m1.get("properties", {}).get("dependencies", []),
-                health_score=m0.health_score if m0 else 100.0,
+                health_score=m0.health_score if m0 else MAX_HEALTH_SCORE,
                 last_execution=m0.last_execution if m0 else "",
                 consecutive_failures=m0.consecutive_failures if m0 else 0,
                 source=m1.get("source", ""),
@@ -150,7 +153,7 @@ class TriggerRegistry:
             m0_status=m0.status if m0 else "unknown",
             schedule=m1.get("properties", {}).get("schedule", ""),
             dependencies=m1.get("properties", {}).get("dependencies", []),
-            health_score=m0.health_score if m0 else 100.0,
+            health_score=m0.health_score if m0 else MAX_HEALTH_SCORE,
             last_execution=m0.last_execution if m0 else "",
             consecutive_failures=m0.consecutive_failures if m0 else 0,
             source=m1.get("source", ""),
@@ -184,7 +187,9 @@ class TriggerRegistry:
                 return {"error": f"Trigger not found: {trigger_id}"}
             return {
                 "trigger": info.to_dict(),
-                "m0_snapshot": self._m0_manager.get_snapshot(trigger_id).to_dict() if self._m0_manager.get_snapshot(trigger_id) else None,
+                "m0_snapshot": self._m0_manager.get_snapshot(trigger_id).to_dict()
+                if self._m0_manager.get_snapshot(trigger_id)
+                else None,
             }
 
         # 全量健康检查
@@ -194,8 +199,8 @@ class TriggerRegistry:
             "summary": m0_summary,
             "triggers": [t.to_dict() for t in triggers],
             "by_type": {t: len([tr for tr in triggers if tr.trigger_type == t]) for t in self.list_types()},
-            "by_layer": {l: len([tr for tr in triggers if tr.layer == l]) for l in self.list_layers()},
-            "checked_at": datetime.now(timezone.utc).isoformat(),
+            "by_layer": {layer: len([tr for tr in triggers if tr.layer == layer]) for layer in self.list_layers()},
+            "checked_at": datetime.now(UTC).isoformat(),
         }
 
     # ── 推导 ──────────────────────────────────────
@@ -220,18 +225,20 @@ class TriggerRegistry:
             "triggered": sum(1 for r in results if r.triggered),
             "by_risk_level": {},
             "findings": [],
-            "executed_at": datetime.now(timezone.utc).isoformat(),
+            "executed_at": datetime.now(UTC).isoformat(),
         }
 
         for r in results:
             if r.triggered:
                 summary["by_risk_level"][r.risk_level] = summary["by_risk_level"].get(r.risk_level, 0) + 1
-                summary["findings"].append({
-                    "rule_id": r.rule_id,
-                    "risk_level": r.risk_level,
-                    "message": r.message,
-                    "details": r.details,
-                })
+                summary["findings"].append(
+                    {
+                        "rule_id": r.rule_id,
+                        "risk_level": r.risk_level,
+                        "message": r.message,
+                        "details": r.details,
+                    }
+                )
 
         return summary
 
@@ -251,7 +258,7 @@ class TriggerRegistry:
             "status": "healed" if heal_actions else "manual_intervention_needed",
             "findings_count": len(findings),
             "heal_actions": heal_actions,
-            "executed_at": datetime.now(timezone.utc).isoformat(),
+            "executed_at": datetime.now(UTC).isoformat(),
         }
 
     # ── 仪表板 ──────────────────────────────────
@@ -272,7 +279,9 @@ class TriggerRegistry:
             t.trigger_id: {
                 "health_score": t.health_score,
                 "status": t.m0_status,
-                "trend": "improving" if t.consecutive_failures == 0 else ("degrading" if t.consecutive_failures >= 3 else "stable"),
+                "trend": "improving"
+                if t.consecutive_failures == 0
+                else ("degrading" if t.consecutive_failures >= 3 else "stable"),
             }
             for t in triggers
         }
@@ -280,12 +289,12 @@ class TriggerRegistry:
         return {
             "total_triggers": len(triggers),
             "by_type": {t: len([tr for tr in triggers if tr.trigger_type == t]) for t in self.list_types()},
-            "by_layer": {l: len([tr for tr in triggers if tr.layer == l]) for l in self.list_layers()},
+            "by_layer": {layer: len([tr for tr in triggers if tr.layer == layer]) for layer in self.list_layers()},
             "m0_health": m0_summary,
             "dependency_graph": dependency_graph,
             "health_trend": health_trend,
             "triggers": [t.to_dict() for t in triggers],
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
         }
 
     # ── M0 操作 ──────────────────────────────────

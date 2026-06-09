@@ -3,18 +3,16 @@ Tests for model_driven.mof.m3_extended — M3 元元模型扩展
 """
 
 import pytest
+
 from model_driven.mof.m3_extended import (
     STANDARD_GATES,
     STANDARD_STAGES,
     BenefitModel,
     CostModel,
-    Gate,
     Goal,
     KeyResult,
     LifecycleStage,
     M3ElementType,
-    M3RelationType,
-    Stage,
     Transition,
 )
 
