@@ -243,9 +243,31 @@ Round 12-13 全部延续 §5 六原则, 0 偏离:
 
 ### §11.6 未来工作 (Round 14+)
 
-- **P0-1** 修 dashboard_monitor 守护进程让 record 合规 (date/total_score/grade/watchlist_count 必填)
-- **P0-2** audit 加 source 白名单: dashboard_monitor 等"已知非治理源" 跳过 schema 校验
-- **P1-1** baseline 时给 omo-trail 留 0 漂移位 (目前 trail 还没人写, baseline 还没纳入, 需 init 时加)
-- **P1-2** CI 跑 omo_lint (新增) 校验各 consumer 写入用 Pydantic schema (不是 dict 强转)
-- **P2** 把 §11.2-11.3 的范式 (OCP 验证 + baseline) 推广到其他 L1 子项目 (kairon, gbrain)
+- [x] **P0-1** ✅ Round 14 P0: 修 dashboard_monitor 守护进程让 record 合规 (补 4 必填字段占位值)
+- [~] **P0-2** ⛔ 取消: P0-1 已治本, 白名单逻辑会是 no-op, 不重复造轮
+- [ ] **P1-1** baseline 时给 omo-trail 留 0 漂移位 (目前 trail 还没人写, baseline 还没纳入, 需 init 时加)
+- [ ] **P1-2** CI 跑 omo_lint (新增) 校验各 consumer 写入用 Pydantic schema (不是 dict 强转)
+- [ ] **P2** 把 §11.2-11.3 的范式 (OCP 验证 + baseline) 推广到其他 L1 子项目 (kairon, gbrain)
+
+### §11.7 Round 14 收口 — baseline 自洽
+
+> **状态**: implemented
+> **commit**: `2185ab44` (Round 14 P0)
+> **新增**: dashboard_monitor 合规化 + 5 个新测试 + baseline 锁当前态
+
+**P0-1 实施**:
+- `dashboard_monitor.sh` 写 record 时塞 4 占位字段 (date / total_score=0.0 / grade="F" / watchlist_count=0)
+- 加 3 个 env override (LAUNCHD_STATE_OVERRIDE / HTTP_CODE_OVERRIDE / PID_OVERRIDE) 供测试 DI
+- `tests/test_dashboard_monitor_schema.py` 5/5 PASS
+
+**治本验证**:
+- 老 drift 1121 (历史缺字段 record) 锁在 baseline, 无法清理
+- 新 daemon 写入 = 0 漂移 (合规 record, 不再算 audit failure)
+- baseline-check 0 增量, pre-commit 自洽 (不再 5min 必 fail)
+
+**语义权衡** (写在 commit message 里):
+- dashboard_monitor 是健康监控点, 不是治理决策
+- 4 字段是占位值, grade="F" 语义 = "不参与评分" 不是 "真差"
+- 长期方案 (P2 范畴): 拆 dashboard_monitor 到独立 `omo_health` consumer (新 .jsonl), 治理历史不被健康监控污染
+
 
