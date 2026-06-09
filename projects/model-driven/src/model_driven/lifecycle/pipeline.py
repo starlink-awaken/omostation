@@ -25,7 +25,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any
+from typing import Any, Callable
 
 from model_driven.mof.m3_extended import LifecycleStage
 from model_driven.lifecycle.stages import LifecycleTracker, StageStatus
@@ -144,7 +144,12 @@ STANDARD_PHASE_GATES = [
 class PipelineTracker:
     """三阶段宏观流水线追踪器"""
 
-    def __init__(self, entity_id: str, entity_type: str = ""):
+    def __init__(
+        self,
+        entity_id: str,
+        entity_type: str = "",
+        on_event: Callable[[dict[str, Any]], None] | None = None,
+    ):
         self.entity_id = entity_id
         self.entity_type = entity_type
         self.phases: dict[PipelinePhase, PhaseInstance] = {
@@ -155,6 +160,20 @@ class PipelineTracker:
         self.lifecycle_tracker: LifecycleTracker = LifecycleTracker(entity_id=entity_id, entity_type=entity_type)
         self._phase_gates = STANDARD_PHASE_GATES
         self._history: list[dict[str, Any]] = []
+        # Round 5 (P2): opt-in event hook, 消费者 (omo) 注入 AppendOnlyLog 桥接
+        self._on_event = on_event
+
+    def _emit(self, event: dict[str, Any]) -> None:
+        """Emit event to history + optional on_event hook (Round 5 P2).
+
+        钩子失败不影响主流程 (try/except), 保证 0 业务耦合.
+        """
+        self._history.append(event)
+        if self._on_event is not None:
+            try:
+                self._on_event(event)
+            except Exception:
+                pass
 
     def start_phase(self, phase: PipelinePhase) -> bool:
         """开始一个 Phase"""
@@ -174,7 +193,7 @@ class PipelineTracker:
         if stages:
             self.lifecycle_tracker.advance_to(stages[0])
 
-        self._history.append({
+        self._emit({
             "action": "start_phase",
             "phase": phase.value,
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -194,7 +213,7 @@ class PipelineTracker:
                 return False
 
         self.phases[phase].complete()
-        self._history.append({
+        self._emit({
             "action": "complete_phase",
             "phase": phase.value,
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -281,7 +300,9 @@ class PipelineTracker:
         from pathlib import Path
 
         if state_dir is None:
-            state_dir = str(Path.home() / "Workspace" / ".omo" / "state" / "model-driven")
+            import os
+            ws = os.environ.get("ECOS_WORKSPACE", str(Path.home() / "Workspace"))
+            state_dir = str(Path(ws) / ".omo" / "state" / "model-driven")
 
         state_path = Path(state_dir)
         state_path.mkdir(parents=True, exist_ok=True)
@@ -330,7 +351,9 @@ class PipelineTracker:
         from pathlib import Path
 
         if state_dir is None:
-            state_dir = str(Path.home() / "Workspace" / ".omo" / "state" / "model-driven")
+            import os
+            ws = os.environ.get("ECOS_WORKSPACE", str(Path.home() / "Workspace"))
+            state_dir = str(Path(ws) / ".omo" / "state" / "model-driven")
 
         file_path = Path(state_dir) / f"{entity_id}-pipeline.yaml"
         if not file_path.exists():
