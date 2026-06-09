@@ -18,6 +18,7 @@ from typing import Any
 
 from omo.omo_audit import _utc_now  # 仍用: synced_at 字段时间戳
 from omo.omo_io import AppendOnlyLog
+from omo.omo_io_schemas import OmoSyncRecord  # Round 15 P0: 写时 Pydantic 校验
 
 AUDIT_CHECKS = 6
 
@@ -68,6 +69,7 @@ def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
 
         if not dry_run:
             # Round 3: 结构化 record — 字段含义固化, 不再 f-string 拍扁
+            # Round 15 P0: 加 schema=OmoSyncRecord 走 Pydantic 写时校验
             AppendOnlyLog(log_path).append(
                 {
                     "ts": _utc_now(),
@@ -77,7 +79,8 @@ def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
                     "dry_run": dry_run,
                     "audit_checks": AUDIT_CHECKS,
                     "status": "ok",
-                }
+                },
+                schema=OmoSyncRecord,
             )
 
         return {
@@ -91,13 +94,15 @@ def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
     except Exception as exc:
         # 错误也走结构化 log (便于事后审计: 哪些 sync 失败)
         try:
+            # Round 15 P0: 加 schema=OmoSyncRecord 走 Pydantic 写时校验
             AppendOnlyLog(log_path).append(
                 {
                     "ts": _utc_now(),
                     "kind": "omo_sync",
                     "status": "error",
                     "error": f"{type(exc).__name__}: {exc}"[:200],
-                }
+                },
+                schema=OmoSyncRecord,
             )
         except Exception:
             pass  # log 失败不阻塞错误返回

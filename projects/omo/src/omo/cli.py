@@ -167,6 +167,12 @@ def main(argv: list[str] | None = None) -> int:
 
         return logs_main(args[1:])
 
+    if args and args[0] == "lint":
+        # Round 15 P0 (P1-2 from pattern §11.6): 静态校验 7 consumer 写时走 Pydantic schema
+        from omo.omo_lint import main as lint_main
+
+        return lint_main(args[1:])
+
     # 兜底:有参但无匹配子命令 → 报错退出;无参 → 静默退出 0(保持原行为)
     if args:
         print(f"Unknown subcommand: {args[0]}", file=sys.stderr)
