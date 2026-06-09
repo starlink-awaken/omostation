@@ -259,6 +259,39 @@ class TestTail:
         log = AppendOnlyLog(tmp_path / "test.jsonl")
         assert log.tail(5) == []
 
+    # ── Round 7 P1: reverse-seek 性能优化 ──
+
+    def test_tail_reverse_seek_correctness_large_file(self, tmp_path):
+        """10000 records, tail(10) 应返回 9990-9999, 与 read_all()[-10:] 一致."""
+        log = AppendOnlyLog(tmp_path / "big.jsonl")
+        for i in range(10000):
+            log.append({"i": i})
+        # 与 read_all 对比
+        expected = log.read_all()[-10:]
+        result = log.tail(10)
+        assert result == expected
+        assert [r["i"] for r in result] == list(range(9990, 10000))
+
+    def test_tail_reverse_seek_chunk_size_1(self, tmp_path):
+        """chunk_size=1 (极端): 应仍能正确解析, 走多次小读."""
+        log = AppendOnlyLog(tmp_path / "tiny.jsonl")
+        for i in range(100):
+            log.append({"i": i})
+        result = log.tail(5, chunk_size=1)
+        assert [r["i"] for r in result] == [95, 96, 97, 98, 99]
+
+    def test_tail_reverse_seek_unicode(self, tmp_path):
+        """Unicode 内容跨 chunk 边界应不丢."""
+        log = AppendOnlyLog(tmp_path / "unicode.jsonl")
+        for i in range(100):
+            log.append({"i": i, "name": f"中文_{i}_emoji_{'🎉' * (i % 5)}"})
+        result = log.tail(3, chunk_size=128)  # 故意小 chunk
+        assert len(result) == 3
+        assert all("name" in r for r in result)
+        # 验证 unicode 完整
+        assert result[0]["name"].startswith("中文_97")
+        assert "🎉" in result[0]["name"]
+
 
 # ── AppendOnlyLog.since ────────────────────────────────────
 

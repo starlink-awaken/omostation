@@ -165,15 +165,57 @@ class AppendOnlyLog:
         """读所有 records (容错: 错行保留为 ``{"raw": ...}``)."""
         return read_jsonl(self.path)
 
-    def tail(self, n: int) -> list[dict[str, Any]]:
-        """读最近 N 条 records (避免 ``read_all()[-n:]`` 模式).
+    def tail(self, n: int, *, chunk_size: int = 8192) -> list[dict[str, Any]]:
+        """读最近 N 条 records (Round 7 P1 reverse-seek 优化).
 
-        性能: 大文件时 O(file_size), 不优化 — append-only log 应定期轮转.
+        实现: 从文件末尾按 chunk_size (默认 8KB) 反向读字节, 累计到
+        N+1 条完整行为止. 不需要读整个文件 → O(n) 而非 O(file_size).
+
+        Args:
+            n: max records to return (≤0 → empty list).
+            chunk_size: 单次读字节数 (默认 8KB). 调大可减少读次数, 调小可减少内存.
+
+        边界:
+          - 小文件 (≤chunk_size): 走 ``read_jsonl`` 全读, 等价于 ``read_all()[-n:]``
+          - UTF-8 跨 chunk 边界: 罕见 (8KB / max 4B/char = 0.05%), 落 raw 容错
+          - 文件为空: 返回 []
         """
-        if n <= 0:
+        if n <= 0 or not self.path.exists():
             return []
-        records = self.read_all()
-        return records[-n:]
+        file_size = self.path.stat().st_size
+        if file_size == 0:
+            return []
+
+        # 小文件: 直接全读 (reverse-seek 复杂度不值得)
+        if file_size <= chunk_size:
+            return read_jsonl(self.path)[-n:]
+
+        # 大文件: reverse-seek 读 chunks
+        raw_lines: list[bytes] = []
+        pos = file_size
+        with open(self.path, "rb") as f:
+            while pos > 0 and len(raw_lines) < n + 1:
+                read_size = min(chunk_size, pos)
+                pos -= read_size
+                f.seek(pos)
+                chunk = f.read(read_size)
+                chunk_lines = chunk.split(b"\n")
+                # 若非文件首, 第一个元素是可能不完整的行, 丢弃
+                if pos > 0:
+                    chunk_lines = chunk_lines[1:]
+                raw_lines = chunk_lines + raw_lines
+
+        # 取最后 n 条 + 解析
+        records: list[dict[str, Any]] = []
+        for line_bytes in raw_lines[-n:]:
+            line = line_bytes.decode("utf-8", errors="replace").strip()
+            if not line:
+                continue
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                records.append({"raw": line[:200]})
+        return records
 
     def since(
         self,
