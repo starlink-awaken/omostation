@@ -9,7 +9,7 @@ model_driven.toolchain — 模型驱动工具链
 from .bus import ToolchainBus, ToolDefinition, ToolResult, ToolStatus
 from .mof_extract import extract_all
 from .mof_model import model_project, model_workspace, classify_by_lifecycle_stage
-from .mof_scan import scan_project_dir, scan_system, scan_workspace
+from .mof_scan import load_m1_nodes, scan_project_dir, scan_system, scan_workspace
 from .tools import (
     tool_archive,
     tool_compile,

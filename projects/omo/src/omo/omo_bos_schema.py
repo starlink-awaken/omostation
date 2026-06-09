@@ -50,20 +50,13 @@ class BosRegistrationModel(BaseModel):
     @field_validator("uri")
     @classmethod
     def _validate_uri(cls, v: str) -> str:
-        if not BOS_URI_PATTERN.match(v):
-            # 兼容 3-段 legacy: 自动升级到 4-段
-            from omo.omo_bos import BOS_URI_LEGACY_PATTERN
-            m = BOS_URI_LEGACY_PATTERN.match(v)
-            if m and m.group("package") in LEGACY_DOMAIN_MAP:
-                domain = LEGACY_DOMAIN_MAP[m.group("package")]
-                v = f"bos://{domain}/{m.group('package')}/{m.group('action')}"
-                if not BOS_URI_PATTERN.match(v):
-                    raise ValueError(f"invalid BOS URI (legacy auto-map failed): {v}")
-                return v
-            raise ValueError(
-                f"URI must match bos://<domain>/<package>/<action> "
-                f"(domain in {ALLOWED_DOMAINS}), got: {v}"
-            )
+        # 复用 omo_bos.validate_bos_uri (含 4-段 + 3-段 legacy 自动升级),
+        # 避免 URI 规则在 3 处 (BOS_URI_PATTERN / validate_bos_uri / schema) 漂移.
+        from omo.omo_bos import validate_bos_uri
+        valid, info = validate_bos_uri(v)
+        if not valid:
+            raise ValueError(info)
+        # 4-段直接通过; 3-段 legacy 已被 validate_bos_uri 自动升级 (info 非空)
         return v
 
     @field_validator("endpoint")
@@ -85,11 +78,19 @@ class BosRegistrationModel(BaseModel):
 
     @model_validator(mode="after")
     def _uri_matches_domain(self) -> "BosRegistrationModel":
-        """强制 uri 内的 domain 与 domain 字段一致 (防止拼写漂移)."""
-        m = BOS_URI_PATTERN.match(self.uri)
-        if m and m.group("domain") != self.domain:
+        """强制 uri 内的 domain 与 domain 字段一致 (防止拼写漂移).
+
+        复用 omo_bos.parse_bos_uri (不再独立跑 BOS_URI_PATTERN) — 避免 regex 3 次
+        (BOS_URI_PATTERN / validate_bos_uri / 此处) 漂移风险.
+        """
+        from omo.omo_bos import parse_bos_uri
+        try:
+            parsed = parse_bos_uri(self.uri)
+        except ValueError:
+            return self  # _validate_uri 已拦截, 防御性兜底
+        if parsed["domain"] != self.domain:
             raise ValueError(
-                f"URI domain {m.group('domain')!r} != field domain {self.domain!r}"
+                f"URI domain {parsed['domain']!r} != field domain {self.domain!r}"
             )
         return self
 

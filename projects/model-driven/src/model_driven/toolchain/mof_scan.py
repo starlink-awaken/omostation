@@ -288,3 +288,41 @@ def scan_system(
         "scan_results": results,
         "scanned_at": now(),
     }
+
+
+# ── 公共函数: M1 节点加载 ────────────────────────
+
+
+def load_m1_nodes(m1_dir: str | Path | None = None) -> list[dict[str, Any]]:
+    """加载 ecos M1 节点 — daemon/cockpit 通用函数
+
+    Args:
+        m1_dir: M1 节点目录路径，默认从环境变量 ECOS_WORKSPACE 推断，
+                或使用 ~/Workspace/projects/ecos/src/ecos/ssot/mof/m1/
+
+    Returns:
+        M1 节点列表 (包含 type 字段的 dict)
+    """
+    import os
+    import yaml
+
+    if m1_dir is None:
+        ws = os.environ.get("ECOS_WORKSPACE", str(Path.home() / "Workspace"))
+        m1_dir = Path(ws) / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
+
+    m1_dir = Path(m1_dir)
+    if not m1_dir.exists():
+        return []
+
+    nodes = []
+    for d in sorted(m1_dir.iterdir()):
+        if d.is_dir():
+            for f in sorted(d.glob("*.yaml")):
+                try:
+                    data = yaml.safe_load(open(f))
+                    if data and "type" in data:
+                        nodes.append(data)
+                except Exception:
+                    pass
+
+    return nodes

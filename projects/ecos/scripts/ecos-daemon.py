@@ -131,20 +131,9 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
         _sys.path.insert(0, str(WORKSPACE / "projects" / "model-driven" / "src"))
         from model_driven.toolchain.tools import tool_validate
         from model_driven.toolchain.derivation_engine import DerivationEngine
-        import yaml as _yaml
-        from pathlib import Path as _Path
+        from model_driven.toolchain.mof_scan import load_m1_nodes
 
-        m1 = _Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
-        nodes = []
-        for d in sorted(m1.iterdir()):
-            if d.is_dir():
-                for f in sorted(d.glob("*.yaml")):
-                    try:
-                        data = _yaml.safe_load(open(f))
-                        if data and "type" in data:
-                            nodes.append(data)
-                    except Exception:
-                        pass
+        nodes = load_m1_nodes()
 
         r = tool_validate(models=nodes)
         print(f"  model-driven validate: passed={r['passed']}, errors={r['error_count']}, warnings={r['warning_count']}")

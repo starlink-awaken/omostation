@@ -369,5 +369,7 @@ class PipelineTracker:
                     tracker.lifecycle_tracker.stages[stage].started_at = stage_data.get("started_at", "")
 
             return tracker
-        except Exception:
+        except Exception as e:
+            import sys
+            print(f"[model-driven] PipelineTracker.load({entity_id}) 失败: {e}", file=sys.stderr)
             return None

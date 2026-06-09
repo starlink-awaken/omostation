@@ -19,6 +19,13 @@ from omo.omo_llm_bos_bridge import (  # type: ignore[import-not-found]
     list_bos_uris_tool,
 )
 
+# W3: 模块顶层 import (避免每个 dispatch 都跑 import + try/except ImportError).
+# 退化: metrics 模块不存在时 _time_invoke_ctx = None, 走无 instrument 分支.
+try:
+    from omo.omo_bos_metrics import time_invoke as _time_invoke_ctx  # type: ignore[import-not-found]
+except ImportError:
+    _time_invoke_ctx = None
+
 
 def _dispatch_sync(name: str, args: dict[str, Any]) -> dict[str, Any]:
     """同步派发 (供不支持 async 的 LLM client 用)."""
@@ -29,24 +36,29 @@ def _dispatch_sync(name: str, args: dict[str, Any]) -> dict[str, Any]:
     return {"error": f"unknown_tool: {name}"}
 
 
+# Status 白名单 — 镜像 omo_bos_metrics.Status, 用于 unknown-status 兜底.
+_KNOWN_STATUSES = (
+    "resolved", "agora_unavailable", "invalid_uri",
+    "endpoint_missing", "timeout", "error",
+)
+
+
 def _instrumented_invoke(args: dict[str, Any]) -> dict[str, Any]:
     """W3 instrumented invoke — 包 time_invoke() 自动记录 metrics.
 
     失败也不抛: 异常被转成 status="error" 入 metric, 然后 re-raise 让上层处理.
     """
     uri = args.get("uri", "")
-    try:
-        from omo.omo_bos_metrics import time_invoke
-    except ImportError:
-        # metrics 模块不可用, 退化到无 instrument
+
+    if _time_invoke_ctx is None:
+        # 退化: metrics 模块不可用, 走无 instrument
         return _dispatch_sync("invoke_bos_uri", args)
 
-    with time_invoke(uri, transport="dispatcher") as timer:
+    with _time_invoke_ctx(uri, transport="dispatcher") as timer:
         result = _dispatch_sync("invoke_bos_uri", args)
     # 把 dispatch 内的 status 透传到 metric
     status = result.get("status", "error") if isinstance(result, dict) else "error"
-    if status in ("resolved", "agora_unavailable", "invalid_uri",
-                  "endpoint_missing", "timeout", "error"):
+    if status in _KNOWN_STATUSES:
         timer.set_status(status, error=result.get("error", "") if isinstance(result, dict) else "")
     else:
         timer.set_status("error", error=f"unknown_status: {status}")

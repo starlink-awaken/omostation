@@ -396,6 +396,7 @@ class OMOBridge:
         """将 model-driven Pipeline 进度同步到 OMO 状态
 
         双向同步: model-driven PipelineTracker → .omo/state/system.yaml
+        使用文件锁 (fcntl.flock) 保护并发写入。
         """
         if not self._file_mode or not self._omo_dir:
             return False
@@ -405,21 +406,28 @@ class OMOBridge:
             return False
 
         try:
+            import fcntl
             import yaml
-            with open(state_path) as f:
+
+            # 文件锁保护并发写入
+            with open(state_path, "r+") as f:
+                fcntl.flock(f, fcntl.LOCK_EX)
+                f.seek(0)
                 state = yaml.safe_load(f) or {}
 
-            # 写入 Pipeline 进度
-            state["md_pipeline"] = {
-                "current_phase": pipeline_progress.get("current_phase", "unknown"),
-                "overall_progress": pipeline_progress.get("overall_progress", 0),
-                "phases": pipeline_progress.get("phases", {}),
-                "synced_at": datetime.now(timezone.utc).isoformat(),
-            }
-            state["updated_at"] = datetime.now(timezone.utc).isoformat()
+                # 写入 Pipeline 进度
+                state["md_pipeline"] = {
+                    "current_phase": pipeline_progress.get("current_phase", "unknown"),
+                    "overall_progress": pipeline_progress.get("overall_progress", 0),
+                    "phases": pipeline_progress.get("phases", {}),
+                    "synced_at": datetime.now(timezone.utc).isoformat(),
+                }
+                state["updated_at"] = datetime.now(timezone.utc).isoformat()
 
-            with open(state_path, "w") as f:
+                f.seek(0)
+                f.truncate()
                 yaml.dump(state, f, allow_unicode=True, default_flow_style=False)
+                fcntl.flock(f, fcntl.LOCK_UN)
             return True
         except Exception:
             return False

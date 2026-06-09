@@ -25,6 +25,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
+# 复用 omo_bos 的 parse_bos_uri (顶层 import, summary() 每次调用都需用到)
+from omo.omo_bos import parse_bos_uri  # noqa: E402
+
 # 复用 omo_bos 的工作区根
 _WORKSPACE = Path(
     os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
@@ -192,14 +195,18 @@ def summary(
     for r in recs:
         by_uri[r.get("uri", "unknown")].append(r)
 
-    from omo.omo_bos import parse_bos_uri  # 延迟 import 避免循环
-
     per_uri_summary: dict[str, dict[str, Any]] = {}
     by_domain_count: dict[str, int] = defaultdict(int)
     by_domain_success: dict[str, int] = defaultdict(int)
     by_status: dict[str, int] = defaultdict(int)
 
     for uri, items in by_uri.items():
+        # parse_bos_uri 依赖只与 uri 相关 — 在外层 group 内调用一次而非内层 record
+        try:
+            domain_for_uri = parse_bos_uri(uri)["domain"]
+        except ValueError:
+            domain_for_uri = None
+
         latencies = sorted(r.get("elapsed_ms", 0.0) for r in items)
         n = len(items)
         success = sum(1 for r in items if r.get("status") == "resolved")
@@ -219,13 +226,11 @@ def summary(
         }
         for r in items:
             by_status[r.get("status", "unknown")] += 1
-            try:
-                parsed = parse_bos_uri(uri)
-                by_domain_count[parsed["domain"]] += 1
-                if r.get("status") == "resolved":
-                    by_domain_success[parsed["domain"]] += 1
-            except ValueError:
-                pass
+            if domain_for_uri is None:
+                continue
+            by_domain_count[domain_for_uri] += 1
+            if r.get("status") == "resolved":
+                by_domain_success[domain_for_uri] += 1
 
     by_domain = {
         d: {
