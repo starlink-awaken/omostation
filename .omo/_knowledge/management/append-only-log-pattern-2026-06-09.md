@@ -246,8 +246,8 @@ Round 12-13 全部延续 §5 六原则, 0 偏离:
 - [x] **P0-1** ✅ Round 14 P0: 修 dashboard_monitor 守护进程让 record 合规 (补 4 必填字段占位值)
 - [~] **P0-2** ⛔ 取消: P0-1 已治本, 白名单逻辑会是 no-op, 不重复造轮
 - [ ] **P1-1** baseline 时给 omo-trail 留 0 漂移位 (目前 trail 还没人写, baseline 还没纳入, 需 init 时加)
-- [ ] **P1-2** CI 跑 omo_lint (新增) 校验各 consumer 写入用 Pydantic schema (不是 dict 强转)
-- [ ] **P2** 把 §11.2-11.3 的范式 (OCP 验证 + baseline) 推广到其他 L1 子项目 (kairon, gbrain)
+- [x] **P1-2** ✅ Round 15 P0: 新增 omo lint schemas + 修 omo_sync 2 处 + CI 集成 (5/5 consumer 合规)
+- [x] **P2** ✅ Round 16 P0: 写 `protocols/append-only-log-rollout.md` 跨仓推广指南 (不动 submodule)
 
 ### §11.7 Round 14 收口 — baseline 自洽
 
@@ -269,5 +269,45 @@ Round 12-13 全部延续 §5 六原则, 0 偏离:
 - dashboard_monitor 是健康监控点, 不是治理决策
 - 4 字段是占位值, grade="F" 语义 = "不参与评分" 不是 "真差"
 - 长期方案 (P2 范畴): 拆 dashboard_monitor 到独立 `omo_health` consumer (新 .jsonl), 治理历史不被健康监控污染
+
+### §11.8 Round 15-16 收口 — lint 契约 + 跨仓推广
+
+> **状态**: implemented (Round 15 P0+P1 + Round 16 P0)
+> **commit**: `8ea942be` + `45012cb9` (P0) + `489c0fc5` (P1)
+> **新增**: `omo lint schemas` 工具 + CI 集成 + 跨仓 Rollout Guide
+
+**Round 15 P0 — omo lint schemas**:
+- 新工具 `omo_lint.py` 用 ast 解析 5 consumer 模块, 校验 `.append()` 都传 `schema=`
+- cli 挂载 `omo lint schemas` (退出码 0/1)
+- 修 `omo_sync.py` 2 处 schema= 缺失 (lint 工具首跑抓到的真债)
+- 6 个新测试 (合规/违规/parse error/5 模块全合规/列表契约/CLI 子进程)
+- 排除说明: `omo_bos_metrics` (dataclass 架构) + `omo_history.append_entry` (宽容业务接口)
+
+**Round 15 P1 — CI 集成**:
+- `.github/workflows/ci-lint.yml` 加 `omo-lint-schemas` job (5th job)
+- 硬 fail 设计 (与 `omo-logs-audit` 的 warning 不阻塞形成对比)
+- 守住 §11 X1 审计契约: schema 校验 = 写时锁, 跳过 = 失去写时一致性
+
+**Round 16 P0 — 跨仓 Rollout Guide**:
+- `protocols/append-only-log-rollout.md` (~200 lines, 7 段)
+- 5 步接入清单 (copy 抽象 / schema / consumer / CLI / CI)
+- 模式选择决策树 (多 writer 共享才需要, YAGNI 边界)
+- 跨语言推广 (Python 已实现, TypeScript/Go/Rust 路径)
+- 不动 submodule 代码 (跨仓 commit 风险高, 文档驱动)
+
+**Rollout Guide 探查结论**:
+- kairon: meta-stub, 无真源码 (不评估)
+- gbrain: 真仓, 已有 `audit-week-file.ts` 抽象 (5 writer 共享), 缺 zod/Pydantic 校验
+- runtime / metaos: 未探查, Round 17 候选
+
+**度量 (Round 14 → Round 16)**:
+
+| 指标 | Round 14 | Round 16 | Δ |
+|------|---------|----------|---|
+| AppendOnlyLog consumer schema 契约 | 无 | **5/5 合规** (lint 守住) | +5 |
+| CI 工作流 job 数 | 4 | **5** (+omo-lint-schemas) | +1 |
+| 跨仓指南 | 无 | **1** (protocols/append-only-log-rollout.md) | +1 |
+| 单元测试 | 120+ | **126+** (+6 lint schemas) | +6 |
+| pre-commit 自洽 | 锁稳态 | 锁稳态 (持续 re-init) | 不变 |
 
 
