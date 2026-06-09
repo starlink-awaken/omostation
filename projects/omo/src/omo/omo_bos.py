@@ -1046,6 +1046,31 @@ def main(argv: list[str] | None = None) -> int:
         help=f"注册表路径 (默认: {DEFAULT_REGISTRY_PATH})",
     )
 
+    # W3: status (metrics) / discover (schema-validated listing) / health (verify + status)
+    st = sub.add_parser("status", help="显示 invoke metrics 汇总 (总调用/成功率/p95 latency)")
+    st.add_argument("--json", action="store_true", help="输出 JSON 格式")
+
+    disc = sub.add_parser(
+        "discover",
+        help="用 Pydantic schema 验证 + 按 domain 分组列出注册表",
+    )
+    disc.add_argument("--json", action="store_true", help="输出 JSON 格式")
+    disc.add_argument(
+        "--path",
+        default=None,
+        help=f"注册表路径 (默认: {DEFAULT_REGISTRY_PATH})",
+    )
+
+    hlt = sub.add_parser(
+        "health",
+        help="健康报告: endpoint 可达性 + metrics 状态 (一次性)",
+    )
+    hlt.add_argument(
+        "--path",
+        default=None,
+        help=f"注册表路径 (默认: {DEFAULT_REGISTRY_PATH})",
+    )
+
     args = parser.parse_args(argv)
 
     if args.cmd == "validate":
@@ -1119,6 +1144,103 @@ def main(argv: list[str] | None = None) -> int:
                 err = r.get("error") or ""
                 print(f"      error: {err}", file=sys.stderr)
         # 全部失败也是 0 (有结果就行), 任何 fail 不算 1 因为 m2 是"实测"而非"必须通过"
+        return 0
+
+    # W3 声明式 + 可观测性: status / discover / health
+    if args.cmd == "status":
+        # 显示 metrics 汇总 (总调用数, 成功率, p95 latency by domain)
+        try:
+            from omo.omo_bos_metrics import summary as metrics_summary
+        except ImportError as exc:
+            print(f"FAIL: metrics module not importable: {exc}", file=sys.stderr)
+            return 1
+        s = metrics_summary()
+        if args.json:
+            import json as _json
+            print(_json.dumps(s, ensure_ascii=False, indent=2))
+            return 0
+        print(f"BOS Metrics  (generated {s['generated_at']})")
+        print(f"  total_invocations: {s['total_invocations']}")
+        print(f"  by_status: {s['by_status']}")
+        print("\n  by_domain:")
+        for d, st in s["by_domain"].items():
+            print(f"    {d:12s} count={st['count']:5d} success_rate={st['success_rate']:.1%}")
+        if s["by_uri"]:
+            print(f"\n  by_uri (top {min(10, len(s['by_uri']))} of {len(s['by_uri'])}):")
+            for uri, st in sorted(s["by_uri"].items(), key=lambda kv: -kv[1]["count"])[:10]:
+                print(
+                    f"    {uri:48s} n={st['count']:4d} "
+                    f"success={st['success_rate']:.0%} "
+                    f"p50={st['p50_ms']:.1f}ms p95={st['p95_ms']:.1f}ms"
+                )
+        return 0
+
+    if args.cmd == "discover":
+        # W3 discover: 扫注册表 + 用 Pydantic schema 验证 + 按 domain 分组
+        from omo.omo_bos_schema import BosRegistrationModel, BosRegistryModel
+        path = Path(args.path) if args.path else DEFAULT_REGISTRY_PATH
+        raw = load_registry(path)
+        registry = BosRegistryModel(registrations=[
+            BosRegistrationModel.model_validate(r) for r in raw
+        ])
+        if args.json:
+            import json as _json
+            print(_json.dumps(
+                {
+                    "version": registry.version,
+                    "generated_at": registry.generated_at,
+                    "count": registry.count,
+                    "registrations": [r.to_legacy_dict() for r in registry.registrations],
+                },
+                ensure_ascii=False, indent=2,
+            ))
+            return 0
+        print(f"BOS Registry (schema-validated, {registry.count} entries)")
+        print(f"  source: {path}")
+        print(f"  version: {registry.version}")
+        for domain in ALLOWED_DOMAINS:
+            entries = registry.by_domain(domain)  # type: ignore[arg-type]
+            if not entries:
+                continue
+            print(f"\n  {domain} ({len(entries)}):")
+            for e in entries:
+                proto = f"[{e.protocol}]"
+                print(f"    {e.uri:50s} {proto:11s} {e.endpoint[:60]}")
+        return 0
+
+    if args.cmd == "health":
+        # W3 health: verify (endpoint reachability) + status (metrics) 一次性报告
+        path = Path(args.path) if args.path else DEFAULT_REGISTRY_PATH
+        ep_results = verify_all_endpoints(path=path)
+        ep_ok = sum(1 for r in ep_results if r.get("module_found"))
+        try:
+            from omo.omo_bos_metrics import summary as metrics_summary
+            metrics = metrics_summary()
+        except ImportError:
+            metrics = {"total_invocations": 0, "by_status": {}, "by_domain": {}}
+        print("BOS Health Report")
+        print(f"  registry: {path}")
+        print(f"  endpoints: {ep_ok}/{len(ep_results)} reachable")
+        print(f"  invocations: {metrics['total_invocations']} total")
+        if metrics.get("by_status"):
+            print(f"  status: {metrics['by_status']}")
+        # 健康判定分层:
+        #   - 0 invocation: 仅信息 (还没真流量, 不算 fail)
+        #   - 有 invocation + 失败率 > 25%: ⚠️ 告警
+        #   - 有 invocation + 失败率 < 25%: ✅
+        total_inv = metrics.get("total_invocations", 0)
+        if total_inv == 0:
+            print("\n  STATUS: 🟡 no traffic yet (endpoints informational only)")
+            return 0
+        failed = sum(
+            v for k, v in metrics.get("by_status", {}).items()
+            if k != "resolved"
+        )
+        fail_rate = failed / total_inv if total_inv else 0.0
+        if fail_rate > 0.25:
+            print(f"\n  STATUS: ⚠️  failure rate {fail_rate:.1%} > 25% (over threshold)")
+            return 1
+        print(f"\n  STATUS: ✅ healthy (failure rate {fail_rate:.1%})")
         return 0
 
     parser.print_help()

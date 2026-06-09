@@ -4,6 +4,8 @@ P37-W2 era: 原 omo_llm_bos_bridge.py 内含 TOOL_DISPATCHER + _dispatch_sync + 
 P59-W2: 抽出到独立 module, 单一职责: 派发 + 自测.
 
 facade (omo_llm_bos_bridge.py) 留: schema + invoke/list 入口 + backward compat re-export.
+
+W3: 集成 omo_bos_metrics — 每次 invoke 自动记录 (uri, status, elapsed_ms).
 """
 from __future__ import annotations
 
@@ -27,9 +29,33 @@ def _dispatch_sync(name: str, args: dict[str, Any]) -> dict[str, Any]:
     return {"error": f"unknown_tool: {name}"}
 
 
+def _instrumented_invoke(args: dict[str, Any]) -> dict[str, Any]:
+    """W3 instrumented invoke — 包 time_invoke() 自动记录 metrics.
+
+    失败也不抛: 异常被转成 status="error" 入 metric, 然后 re-raise 让上层处理.
+    """
+    uri = args.get("uri", "")
+    try:
+        from omo.omo_bos_metrics import time_invoke
+    except ImportError:
+        # metrics 模块不可用, 退化到无 instrument
+        return _dispatch_sync("invoke_bos_uri", args)
+
+    with time_invoke(uri, transport="dispatcher") as timer:
+        result = _dispatch_sync("invoke_bos_uri", args)
+    # 把 dispatch 内的 status 透传到 metric
+    status = result.get("status", "error") if isinstance(result, dict) else "error"
+    if status in ("resolved", "agora_unavailable", "invalid_uri",
+                  "endpoint_missing", "timeout", "error"):
+        timer.set_status(status, error=result.get("error", "") if isinstance(result, dict) else "")
+    else:
+        timer.set_status("error", error=f"unknown_status: {status}")
+    return result
+
+
 TOOL_DISPATCHER: dict[str, Any] = {
     # P59-W0: lambda 包装 (修复 P37-era _self_test 单 arg 调用 bug)
-    "invoke_bos_uri": lambda args: _dispatch_sync("invoke_bos_uri", args),
+    "invoke_bos_uri": _instrumented_invoke,
     "list_bos_uris": lambda args: _dispatch_sync("list_bos_uris", args),
 }
 
