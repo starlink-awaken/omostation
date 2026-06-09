@@ -34,9 +34,7 @@ from typing import Literal
 from omo.omo_paths import (
     DECISIONS_DIR,
     DEBT_ITEMS_DIR,
-    DELIVERY_DIR,
     KAIRON_PACKAGES,
-    OMO_ROOT,
     TASKS_PLANNED_DIR,
     WORKSPACE_ROOT,
 )
