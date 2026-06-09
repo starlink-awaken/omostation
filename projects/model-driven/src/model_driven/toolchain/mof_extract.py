@@ -222,13 +222,16 @@ def extract_specs_from_agent_contract(
 
 
 def extract_all(
-    directory: str | Path,
+    directory: str | Path | None = None,
     file_pattern: str = "*.md",
     extract_lessons: bool = True,
     extract_decisions: bool = True,
     extract_specs: bool = True,
 ) -> dict[str, Any]:
     """统一提炼入口 — 从目录中批量提炼 M1 节点"""
+    if directory is None:
+        import os
+        directory = os.environ.get("ECOS_WORKSPACE", str(Path.home() / "Workspace"))
     root = Path(directory)
     if not root.exists():
         return {"success": False, "error": f"目录不存在: {root}"}

@@ -147,11 +147,14 @@ def model_project(
 
 
 def model_workspace(
-    workspace_dir: str | Path,
+    workspace_dir: str | Path | None = None,
     projects_glob: str = "projects/*",
     exclude_patterns: list[str] | None = None,
 ) -> dict[str, Any]:
     """对整个工作区进行全量 M1 建模"""
+    if workspace_dir is None:
+        import os
+        workspace_dir = os.environ.get("ECOS_WORKSPACE", str(Path.home() / "Workspace"))
     root = Path(workspace_dir)
     exclude_patterns = exclude_patterns or ["_archived", ".git", "__pycache__", ".venv"]
 

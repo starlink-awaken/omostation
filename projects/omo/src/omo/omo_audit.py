@@ -40,6 +40,8 @@ from omo.omo_paths import (
     TASKS_PLANNED_DIR,
     WORKSPACE_ROOT,
 )
+# 复用 omo_io.AppendOnlyLog (P49+ AppendOnlyLog 抽象: JSONL 物理读写唯一入口)
+from omo.omo_io import AppendOnlyLog
 
 # =============================================================================
 # Section 1 — Debt action audit trail (X1-AUDIT-001, pre-existing)
@@ -57,6 +59,10 @@ def _utc_now() -> str:
 
 def _default_audit_file() -> Path:
     return Path.home() / "runtime" / "audit" / "governance-audit.jsonl"
+
+
+# 注: per-call log 创建 (与 omo_bos_metrics 一致), 便于 monkeypatch DEFAULT_METRICS_PATH.
+# AppendOnlyLog 构造轻量 (Path + Lock), per-call 创建开销可忽略.
 
 
 def record(
@@ -77,32 +83,21 @@ def record(
         "actor": actor,
         "details": details,
     }
-    path = Path(audit_file) if audit_file else _default_audit_file()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "a", encoding="utf-8") as f:
-        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    log = AppendOnlyLog(Path(audit_file) if audit_file else _default_audit_file())
+    log.append(entry)
     return entry
 
 
 def query(limit: int = 50, audit_file: str | Path | None = None) -> list[dict]:
     """Read the most recent audit records."""
-    path = Path(audit_file) if audit_file else _default_audit_file()
-    if not path.exists():
-        return []
-    lines = path.read_text(encoding="utf-8").strip().split("\n")
-    records = []
-    for line in lines:
-        if line.strip():
-            try:
-                records.append(json.loads(line))
-            except json.JSONDecodeError:
-                pass
-    return records[-limit:]
+    log = AppendOnlyLog(Path(audit_file) if audit_file else _default_audit_file())
+    return log.read_all()[-limit:]
 
 
 def summary(audit_file: str | Path | None = None) -> dict:
     """Return audit summary."""
-    records = query(limit=10000, audit_file=audit_file)
+    log = AppendOnlyLog(Path(audit_file) if audit_file else _default_audit_file())
+    records = log.read_all()
     if not records:
         return {"total": 0, "actions": {}, "with_debt": 0}
     actions: dict[str, int] = {}

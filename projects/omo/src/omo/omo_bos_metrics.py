@@ -14,9 +14,7 @@ API:
 """
 from __future__ import annotations
 
-import json
 import os
-import threading
 import time
 from collections import defaultdict
 from dataclasses import asdict, dataclass
@@ -27,10 +25,8 @@ from typing import Any, Literal
 from omo.omo_bos import parse_bos_uri  # noqa: E402
 # 复用 omo_audit._utc_now (统一时间戳格式为 "Z" 结尾, 消灭 3 种格式并存)
 from omo.omo_audit import _utc_now  # noqa: E402  (private import 是有意的, 见 #7)
-# 复用 omo_io.write_text_atomic (reset() 用, 消除 tempfile+fsync+fd close 重复)
-from omo.omo_io import write_text_atomic  # noqa: E402
-# 复用 omo_observability._read_jsonl (record list 读取, JSON 错行保留为 {"raw": ...})
-from omo.omo_observability import _read_jsonl  # noqa: E402  (private import 是有意的, 见 #2)
+# 复用 omo_io.AppendOnlyLog (Round 2: JSONL 物理读写唯一入口)
+from omo.omo_io import AppendOnlyLog
 
 # 复用 omo_bos 的工作区根
 _WORKSPACE = Path(
@@ -38,8 +34,8 @@ _WORKSPACE = Path(
 )
 DEFAULT_METRICS_PATH = _WORKSPACE / ".omo" / "_knowledge" / "bos-metrics.jsonl"
 
-# 文件锁 (跨进程; 单进程内 thread-safe 用 _LOCK)
-_LOCK = threading.Lock()
+# 注意: 不在模块级 instantiate log, 让 monkeypatch.DEFAULT_METRICS_PATH 仍生效.
+# AppendOnlyLog 构造轻量 (Path + Lock), per-call 创建开销可忽略.
 
 # Status 白名单
 Status = Literal[
@@ -76,12 +72,11 @@ def record(
     error: str = "",
     path: Path | None = None,
 ) -> None:
-    """记录 1 次 invoke 结果 (append-only, 文件锁).
+    """记录 1 次 invoke 结果.
 
     ``path`` 缺省走 ``DEFAULT_METRICS_PATH`` (运行时读, 支持 monkeypatch).
+    JSONL 物理写盘走 AppendOnlyLog (Round 2: SSOT).
     """
-    if path is None:
-        path = DEFAULT_METRICS_PATH
     rec = BosInvokeRecord(
         uri=uri,
         status=status,
@@ -89,17 +84,9 @@ def record(
         transport=transport,
         error=error,
     )
-    line = json.dumps(asdict(rec), ensure_ascii=False)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with _LOCK:
-        # 原子追加: tempfile + rename 不能用于 append. 改用 'a' mode + flush.
-        with open(path, "a", encoding="utf-8") as f:
-            f.write(line + "\n")
-            f.flush()
-            try:
-                os.fsync(f.fileno())
-            except OSError:
-                pass  # 某些 fs 不支持 fsync
+    if path is None:
+        path = DEFAULT_METRICS_PATH
+    AppendOnlyLog(path).append(asdict(rec))
 
 
 def time_invoke(uri: str, transport: str = "") -> "_Timer":
@@ -147,12 +134,11 @@ class _Timer:
 
 
 def _read_all(path: Path = DEFAULT_METRICS_PATH) -> list[dict[str, Any]]:
-    """读所有 metrics 记录 — 复用 omo_observability._read_jsonl (Reuse #2).
+    """读所有 metrics 记录 — 走 AppendOnlyLog.read_all (Round 2: SSOT).
 
-    注: 复用版本在 JSON parse 失败时保留为 ``{"raw": line}`` 而非 drop —
-    下游消费者用 ``r.get("uri")`` 等访问, 不存在的字段自然返回 None, 无害.
+    内部用 ``AppendOnlyLog(path).read_all()`` — 复用 omo_io 的容错 JSONL 读.
     """
-    return _read_jsonl(path)
+    return AppendOnlyLog(path).read_all()
 
 
 def get_metrics(
@@ -251,15 +237,11 @@ def summary(
 def reset(path: Path | None = None) -> int:
     """清空 metrics 文件. 返回清空前行数 (用于审计).
 
-    复用 omo_io.write_text_atomic (Reuse #1) — 消除 tempfile+fsync+fd close 重复.
+    Round 2: 走 AppendOnlyLog.clear (SSOT 原子清空).
     """
     if path is None:
         path = DEFAULT_METRICS_PATH
-    if not path.exists():
-        return 0
-    n = len([line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()])
-    write_text_atomic(path, "")
-    return n
+    return AppendOnlyLog(path).clear()
 
 
 __all__ = (

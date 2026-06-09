@@ -18,8 +18,8 @@ from model_driven.mof.m2_lifecycle import ALL_M2_SCHEMAS, get_schema, list_schem
 
 
 def tool_design(
-    m2_type: str,
-    name: str,
+    m2_type: str = "adr",
+    name: str = "auto-generated",
     description: str = "",
     properties: dict[str, Any] | None = None,
     **kwargs,
@@ -56,7 +56,7 @@ def tool_design(
 
 
 def tool_generate(
-    m2_type: str,
+    m2_type: str = "adr",
     count: int = 1,
     template: dict[str, Any] | None = None,
     target_format: str = "yaml",
