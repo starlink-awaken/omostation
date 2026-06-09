@@ -106,17 +106,17 @@ def test_cmd_lint_schemas_passes_for_real_consumer_modules(capsys):
     assert "pass" in captured.out
 
 
-# ── 5. CONSUMER_MODULES 列表是 5 个 + 排除 omo_bos_metrics / omo_history ──
+# ── 5. CONSUMER_MODULES 列表是 6 个 + 排除 omo_history ──
 
 
-def test_consumer_modules_list_excludes_bos_metrics_and_history():
-    """CONSUMER_MODULES 是 5 个, 显式排除 omo_bos_metrics (dataclass) + omo_history (宽容业务接口)."""
+def test_consumer_modules_list_excludes_history_only():
+    """CONSUMER_MODULES 是 6 个 (Round 17 P0 加 omo_bos_metrics), 排除 omo_history (宽容业务接口)."""
     from omo.omo_lint import CONSUMER_MODULES
 
-    assert len(CONSUMER_MODULES) == 5
-    assert "omo_bos_metrics.py" not in CONSUMER_MODULES
+    assert len(CONSUMER_MODULES) == 6
     assert "omo_history.py" not in CONSUMER_MODULES  # 宽容业务接口, caller 决定字段
     assert "omo_audit.py" in CONSUMER_MODULES
+    assert "omo_bos_metrics.py" in CONSUMER_MODULES  # Round 17 P0: 重构后纳入
     assert "omo_sync.py" in CONSUMER_MODULES
     assert "omo_alert.py" in CONSUMER_MODULES
     assert "omo_event.py" in CONSUMER_MODULES

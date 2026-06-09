@@ -4,20 +4,19 @@
 落点: .omo/_knowledge/bos-metrics.jsonl (append-only JSONL).
 
 API:
-    record(uri, status, elapsed_ms)   — 1 次调用记录
+    record(uri, status, elapsed_ms)   — 1 次调用记录 (走 Pydantic 写时校验)
     get_metrics(uri=None)             — 单 URI 或全 URI 汇总
     summary()                          — 5-domain 全景
 
-设计: 不引入新依赖 (stdlib only). 文件锁防并发写.
-    - P33 已有 omo_bos.py 用 tempfile+rename 原子写
-    - 本模块追加而非覆盖, 保留历史
+设计: Round 17 P0 重构 — 从 dataclass 升级到 Pydantic (OmoBosMetricsRecord),
+     写时 Pydantic 校验守住 §11 X1 审计契约.
+     与 omo_io_schemas.SCHEMA_REGISTRY 第 2 个 key 对齐.
 """
 from __future__ import annotations
 
 import os
 import time
 from collections import defaultdict
-from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Literal
 
@@ -27,6 +26,8 @@ from omo.omo_bos import parse_bos_uri  # noqa: E402
 from omo.omo_audit import _utc_now  # noqa: E402  (private import 是有意的, 见 #7)
 # 复用 omo_io.AppendOnlyLog (Round 2: JSONL 物理读写唯一入口)
 from omo.omo_io import AppendOnlyLog
+# Round 17 P0: 改用 Pydantic OmoBosMetricsRecord + BosStatus enum (替代旧 dataclass)
+from omo.omo_io_schemas import BosStatus, OmoBosMetricsRecord
 
 # 复用 omo_bos 的工作区根
 _WORKSPACE = Path(
@@ -37,7 +38,8 @@ DEFAULT_METRICS_PATH = _WORKSPACE / ".omo" / "_knowledge" / "bos-metrics.jsonl"
 # 注意: 不在模块级 instantiate log, 让 monkeypatch.DEFAULT_METRICS_PATH 仍生效.
 # AppendOnlyLog 构造轻量 (Path + Lock), per-call 创建开销可忽略.
 
-# Status 白名单
+# Status 白名单 (type hint, caller 兼容 — Round 17 P0 保留作为向后兼容)
+# 内部 record() 走 BosStatus enum (Pydantic 校验)
 Status = Literal[
     "resolved",         # invoke 成功 (含 agora / stdio / internal 各种 transport)
     "agora_unavailable",  # agora 不可达 (offline 模式)
@@ -46,22 +48,6 @@ Status = Literal[
     "timeout",          # invoke 超时
     "error",            # 其他 exception
 ]
-
-
-@dataclass
-class BosInvokeRecord:
-    """单次 invoke 记录."""
-
-    uri: str
-    status: Status
-    elapsed_ms: float
-    transport: str = ""  # internal / stdio / http / agora
-    error: str = ""  # 仅 status != resolved 时填
-    recorded_at: str = ""
-
-    def __post_init__(self) -> None:
-        if not self.recorded_at:
-            self.recorded_at = _utc_now()
 
 
 def record(
@@ -76,17 +62,20 @@ def record(
 
     ``path`` 缺省走 ``DEFAULT_METRICS_PATH`` (运行时读, 支持 monkeypatch).
     JSONL 物理写盘走 AppendOnlyLog (Round 2: SSOT).
+    Round 17 P0: 内部用 Pydantic OmoBosMetricsRecord + BosStatus enum + schema= 写时校验.
     """
-    rec = BosInvokeRecord(
+    if path is None:
+        path = DEFAULT_METRICS_PATH
+    # Pydantic 构造 (Status Literal -> BosStatus enum 转换)
+    rec = OmoBosMetricsRecord(
         uri=uri,
-        status=status,
+        status=BosStatus(status),
         elapsed_ms=elapsed_ms,
         transport=transport,
         error=error,
+        recorded_at=_utc_now(),
     )
-    if path is None:
-        path = DEFAULT_METRICS_PATH
-    AppendOnlyLog(path).append(asdict(rec))
+    AppendOnlyLog(path).append(rec.model_dump(), schema=OmoBosMetricsRecord)
 
 
 def time_invoke(uri: str, transport: str = "") -> "_Timer":
@@ -247,7 +236,8 @@ def reset(path: Path | None = None) -> int:
 __all__ = (
     "DEFAULT_METRICS_PATH",
     "Status",
-    "BosInvokeRecord",
+    "OmoBosMetricsRecord",  # Round 17 P0: Pydantic 替代旧 BosInvokeRecord dataclass
+    "BosStatus",             # Round 17 P0: Pydantic enum 替代旧 Literal
     "record",
     "time_invoke",
     "get_metrics",

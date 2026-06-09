@@ -20,14 +20,15 @@ from pathlib import Path
 
 OMO_SRC = Path(__file__).resolve().parent
 
-# 5 个走 Pydantic schema 的 consumer 模块 (按 SCHEMA_REGISTRY 1:1 映射)
+# 6 个走 Pydantic schema 的 consumer 模块 (按 SCHEMA_REGISTRY 1:1 映射)
 # 排除:
-#   - omo_bos_metrics.py: Round 9 P0 之前架构, 用 dataclass 不是 Pydantic,
-#     重构为 Pydantic 留 Round 16+ debt 范畴
 #   - omo_history.py: append_entry 是宽容业务接口, 字段由 caller 决定,
 #     不强加 Pydantic 校验 (caller omo_audit/omo_daemon 负责字段完整性)
+# Round 17 P0: omo_bos_metrics.py 从 dataclass 重构为 Pydantic (OmoBosMetricsRecord),
+#   重新纳入 lint 范围 (5/5 → 6/6)
 CONSUMER_MODULES = (
     "omo_audit.py",
+    "omo_bos_metrics.py",
     "omo_sync.py",
     "omo_alert.py",
     "omo_event.py",
