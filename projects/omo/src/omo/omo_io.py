@@ -149,16 +149,42 @@ class AppendOnlyLog:
 
     def append(
         self,
-        record: dict[str, Any],
+        record: dict[str, Any] | Any,  # dict 或 Pydantic BaseModel 实例
+        *,
+        schema: type | None = None,
         **json_kwargs: Any,
     ) -> dict[str, Any]:
         """追加一条 record. 自动创建父目录. 返回 record (供链式调用).
 
         Args:
-            record: 写入的 dict.
+            record: 写入的 dict, 或 Pydantic BaseModel 实例 (自动 model_dump).
+            schema: 可选 Pydantic BaseModel class. 若提供, record 写入前
+              经 ``schema.model_validate(record)`` 校验. 校验失败抛
+              ``pydantic.ValidationError`` (fail-fast, 不静默落 raw).
+              适用场景: 想在写盘前锁住 record 形状, 防止 schema 漂移.
             **json_kwargs: 透传给 ``json.dumps()`` (e.g. ``sort_keys=True``
               保 omo_history 与 kairon-governance 旧 JSONL 兼容).
+
+        Round 9 P1: 加 Pydantic 写时校验 (opt-in). 不传 schema = 旧行为不变.
+
+        Example:
+            from omo.omo_io import AppendOnlyLog
+            from omo.omo_io_schemas import OmoBosMetricsRecord
+
+            log = AppendOnlyLog(path)
+            log.append(
+                {"uri": "bos://x/y/z", "status": "resolved", ...},
+                schema=OmoBosMetricsRecord,  # 校验失败抛 ValidationError
+            )
         """
+        # 1. Pydantic instance → dict (透明转换)
+        if hasattr(record, "model_dump") and callable(getattr(record, "model_dump", None)):
+            record = record.model_dump()
+
+        # 2. Pydantic schema 校验 (fail-fast, 不静默)
+        if schema is not None:
+            schema.model_validate(record)  # 失败抛 pydantic.ValidationError
+
         self.path.parent.mkdir(parents=True, exist_ok=True)
         # 默认 ensure_ascii=False (中文不转 \\u), 但允许覆盖 (e.g. 测试)
         kwargs: dict[str, Any] = {"ensure_ascii": False}
