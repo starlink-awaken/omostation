@@ -33,7 +33,7 @@ TOOL_LIST=(
   "ontoderive:kairon"     "kronos:kairon"           "forge:kairon"
   "iris:kairon"           "codeanalyze:kairon"      "sophia:kairon"
   "kairon-cli:kairon"     "cloakbrowser:kairon"
-  "l4-kernel:l4-kernel"
+  "l4-kernel:l4-kernel"   "model-driven:model-driven"
 )
 
 # 已过期的旧文件 (不是 uv tool 管理的)

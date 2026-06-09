@@ -9,6 +9,7 @@ This root directory is a **multi-project workspace** organized in the 5+3+1 (eCO
 | Layer | Project | Stack | Location | Status |
 |-------|---------|-------|----------|--------|
 | L4 | `l4-kernel` | Python (uv, pytest) | `projects/l4-kernel/` | 🟢 Active — 自我层管理面 · 21域 · 250 tests · 43 MCP tools |
+| — | `model-driven` | Python (uv, pytest) | `projects/model-driven/` | 🟢 Active — 全生命周期模型驱动平台 · 24 M2类型 · 7阶段 · 12工具 · 120 tests |
 | L3 | `cockpit` | Python (uv, pytest) | `projects/cockpit/` | 🟢 Active — 统一入口 (CLI + Web) |
 | I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · 172 src, 1200 tests |
 | L2 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 知识引擎 · 19 active (+6 archived) packages |

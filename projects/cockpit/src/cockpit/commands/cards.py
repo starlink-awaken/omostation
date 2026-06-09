@@ -22,7 +22,15 @@ from pathlib import Path
 
 from .base import _get_console, _get_err
 
-CARDS_ROOT = Path.home() / "Documents" / "驾驶舱" / "CARDS"
+def _get_cockpit_dir() -> Path:
+    """Resolve standard @驾驶舱 or 驾驶舱 folder in Documents."""
+    d = Path.home() / "Documents" / "@驾驶舱"
+    if d.exists():
+        return d
+    return Path.home() / "Documents" / "驾驶舱"
+
+
+CARDS_ROOT = _get_cockpit_dir() / "CARDS"
 
 VALID_CATEGORIES = ("debts", "deliverys", "ideas", "researchs", "tasks")
 
