@@ -179,18 +179,20 @@ class AppendOnlyLog:
         return read_jsonl(self.path)
 
     def tail(self, n: int, *, chunk_size: int = 8192) -> list[dict[str, Any]]:
-        """读最近 N 条 records (Round 7 P1 reverse-seek 优化).
+        """读最近 N 条 records (Round 7 P1 reverse-seek 优化, Round 8 P1 容错强化).
 
-        实现: 从文件末尾按 chunk_size (默认 8KB) 反向读字节, 累计到
-        N+1 条完整行为止. 不需要读整个文件 → O(n) 而非 O(file_size).
+        算法: 读所有 chunks, parse 后取最后 N 条. 复杂度 O(file_size), 与 read_all 同.
+        区别于 read_all: 提供 'reverse-seek 风格' 内存访问模式 (chunked, 8KB).
+        真实 O(n) 性能优化需 'windowed seek' (按需扩大读窗口), 留 Round 9+.
 
         Args:
             n: max records to return (≤0 → empty list).
-            chunk_size: 单次读字节数 (默认 8KB). 调大可减少读次数, 调小可减少内存.
+            chunk_size: 单次读字节数 (默认 8KB). 当前未做 IO 优化, 仅语义.
 
         边界:
-          - 小文件 (≤chunk_size): 走 ``read_jsonl`` 全读, 等价于 ``read_all()[-n:]``
-          - UTF-8 跨 chunk 边界: 罕见 (8KB / max 4B/char = 0.05%), 落 raw 容错
+          - 小文件 (≤chunk_size): 走 ``read_jsonl`` 全读
+          - 大文件: 按 chunk 反向读, drop first 仅当 mid-line
+          - UTF-8 跨 chunk: ``errors='replace'`` 容错
           - 文件为空: 返回 []
         """
         if n <= 0 or not self.path.exists():
@@ -203,24 +205,33 @@ class AppendOnlyLog:
         if file_size <= chunk_size:
             return read_jsonl(self.path)[-n:]
 
-        # 大文件: reverse-seek 读 chunks
+        # 大文件: 按 chunk_size 反向读, 累计所有 lines
         raw_lines: list[bytes] = []
         pos = file_size
         with open(self.path, "rb") as f:
-            while pos > 0 and len(raw_lines) < n + 1:
+            while pos > 0:
                 read_size = min(chunk_size, pos)
                 pos -= read_size
                 f.seek(pos)
                 chunk = f.read(read_size)
-                chunk_lines = chunk.split(b"\n")
-                # 若非文件首, 第一个元素是可能不完整的行, 丢弃
+                # Drop first 仅当 chunk 起始 mid-line (前 1 byte 不是 \n).
+                # 若前 1 byte 是 \n, 第一行是完整行 (前一行以 \n 结尾), 不可丢.
                 if pos > 0:
-                    chunk_lines = chunk_lines[1:]
+                    f.seek(pos - 1)
+                    prev_byte = f.read(1)
+                    if prev_byte != b"\n":
+                        chunk_lines = chunk.split(b"\n")[1:]
+                    else:
+                        chunk_lines = chunk.split(b"\n")
+                else:
+                    chunk_lines = chunk.split(b"\n")
                 raw_lines = chunk_lines + raw_lines
 
-        # 取最后 n 条 + 解析
+        # 解析: parse all lines → take last n (skip empty, JSON 错入 raw)
+        # 设计: '先 parse 后取 n' 而非 'raw_lines[-n:] 再 parse' —
+        # 避免 chunk 边界 trailing empty 偏移最后 n 个真实 record.
         records: list[dict[str, Any]] = []
-        for line_bytes in raw_lines[-n:]:
+        for line_bytes in raw_lines:
             line = line_bytes.decode("utf-8", errors="replace").strip()
             if not line:
                 continue
@@ -228,6 +239,7 @@ class AppendOnlyLog:
                 records.append(json.loads(line))
             except json.JSONDecodeError:
                 records.append({"raw": line[:200]})
+        return records[-n:]
         return records
 
     def since(

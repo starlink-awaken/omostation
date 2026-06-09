@@ -361,6 +361,30 @@ class TestTail:
         assert result[0]["name"].startswith("中文_97")
         assert "🎉" in result[0]["name"]
 
+    def test_tail_reverse_seek_chunk_boundary_on_newline(self, tmp_path):
+        """Round 8 P1 锁: 当 chunk 起始 byte 是 \\n, 不应丢任何记录.
+
+        旧算法无条件 drop first, 当 chunk 边界正好落在 \\n 时会丢 1 行.
+        修法: 检查 byte pos-1 是否 \\n, 只有 mid-line 才 drop.
+        """
+        log = AppendOnlyLog(tmp_path / "boundary.jsonl")
+        # 写 100 条, 每条 \n 结尾 — chunk 边界大概率落在 \n 上
+        for i in range(100):
+            log.append({"i": i})
+        # 故意用 16 字节 chunk_size (每条记录 ~10 字节, 边界容易落在 \n)
+        result = log.tail(5, chunk_size=16)
+        assert len(result) == 5
+        assert [r["i"] for r in result] == [95, 96, 97, 98, 99]
+
+    def test_tail_reverse_seek_no_records_lost_at_1000(self, tmp_path):
+        """Round 8 P1 锁: 1000 records + 默认 8KB chunk, tail(10) 应返 10 条 (不丢 1)."""
+        log = AppendOnlyLog(tmp_path / "thousand.jsonl")
+        for i in range(1000):
+            log.append({"i": i, "kind": "bench", "name": f"item_{i}"})
+        result = log.tail(10)
+        assert len(result) == 10
+        assert [r["i"] for r in result] == list(range(990, 1000))
+
 
 # ── AppendOnlyLog.since ────────────────────────────────────
 
