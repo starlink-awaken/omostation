@@ -66,6 +66,9 @@ class MCPServer:
         self._value_ssot = ValueSSOT()
         self._cross_checker = CrossStageConsistencyChecker()
 
+        # Trigger (懒加载，避免每次初始化都加载 YAML)
+        self._trigger_registry = None
+
         # 注册工具
         self._register_tool("lifecycle-create", "创建实体的生命周期追踪器", "lifecycle",
                             self._handle_lifecycle_create)
@@ -296,9 +299,15 @@ class MCPServer:
 
     # ── Trigger 工具 ──────────────────────────────
 
+    def _get_trigger_registry(self):
+        """懒加载 TriggerRegistry (避免每次工具调用都重新加载 YAML)"""
+        if self._trigger_registry is None:
+            from model_driven.toolchain.trigger_registry import TriggerRegistry
+            self._trigger_registry = TriggerRegistry()
+        return self._trigger_registry
+
     def _handle_trigger_list(self, trigger_type: str = "", layer: str = "", **kwargs) -> dict:
-        from model_driven.toolchain.trigger_registry import TriggerRegistry
-        registry = TriggerRegistry()
+        registry = self._get_trigger_registry()
         triggers = registry.list_all(
             trigger_type=trigger_type or None,
             layer=layer or None,
@@ -312,27 +321,17 @@ class MCPServer:
         }
 
     def _handle_trigger_status(self, trigger_id: str = "", **kwargs) -> dict:
-        from model_driven.toolchain.trigger_registry import TriggerRegistry
-        registry = TriggerRegistry()
-        return registry.check_health(trigger_id or None)
+        return self._get_trigger_registry().check_health(trigger_id or None)
 
     def _handle_trigger_derive(self, **kwargs) -> dict:
-        from model_driven.toolchain.trigger_registry import TriggerRegistry
-        registry = TriggerRegistry()
-        return {"success": True, "derivation": registry.run_derivation()}
+        return {"success": True, "derivation": self._get_trigger_registry().run_derivation()}
 
     def _handle_trigger_heal(self, **kwargs) -> dict:
-        from model_driven.toolchain.trigger_registry import TriggerRegistry
-        registry = TriggerRegistry()
-        return {"success": True, "heal": registry.run_heal()}
+        return {"success": True, "heal": self._get_trigger_registry().run_heal()}
 
     def _handle_trigger_dashboard(self, **kwargs) -> dict:
-        from model_driven.toolchain.trigger_registry import TriggerRegistry
-        registry = TriggerRegistry()
-        return {"success": True, "dashboard": registry.get_dashboard()}
+        return {"success": True, "dashboard": self._get_trigger_registry().get_dashboard()}
 
     def _handle_trigger_drift(self, **kwargs) -> dict:
-        from model_driven.toolchain.trigger_registry import TriggerRegistry
-        registry = TriggerRegistry()
-        drifts = registry.detect_drift()
+        drifts = self._get_trigger_registry().detect_drift()
         return {"success": True, "drifts": drifts, "has_drift": len(drifts) > 0}

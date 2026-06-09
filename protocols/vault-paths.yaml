@@ -11,8 +11,8 @@
 # 解析器: scripts/check-vault-paths.py 提供 resolve_path() 函数
 #   用法: from protocols.vault_paths import resolve_path; p = resolve_path('cockpit_root')
 
-version: 1
-last_updated: '2026-06-08T23:32:00'
+version: 2
+last_updated: '2026-06-09T10:00:00'
 
 # ── 路径定义 ──────────────────────────────────
 # 任何 iCloud/L4 域路径必须在这里声明,硬编码一律报错
@@ -22,6 +22,11 @@ paths:
   cockpit_legacy: ~/Documents/@驾驶舱/_archive/legacy-2026-06-08  # 老 KEMS 驾驶舱归档
   vault_root: ~/Documents/@学习进化               # 知识进化 vault
   learning_root: ~/Documents/@学习进化             # alias
+  creative_root: ~/Documents/@创意创作             # 创意创作域（2026-06-09 独立）
+  personal_root: ~/Documents/@个人                 # 个人域
+  family_root: ~/Documents/@家庭生活               # 家庭生活域
+  shared_root: ~/Documents/@公共                   # 公共域
+  work_root: ~/Documents/@工作文档                 # 工作文档聚合
   cockpit_old: null                                # 老路径 (驾驶舱/ 无 @) — 显式 null 表示禁止使用
 
   # 关键子路径
@@ -35,6 +40,16 @@ paths:
   learning_control: ~/Documents/@学习进化/_control
   learning_status: ~/Documents/@学习进化/_control/STATUS.md
   learning_knowledge: ~/Documents/@学习进化/_knowledge
+
+  creative_claude: ~/Documents/@创意创作/CLAUDE.md
+  personal_claude: ~/Documents/@个人/CLAUDE.md
+  family_claude: ~/Documents/@家庭生活/CLAUDE.md
+  shared_claude: ~/Documents/@公共/CLAUDE.md
+  work_claude: ~/Documents/@工作文档/CLAUDE.md
+
+  # 公约
+  convention_root: ~/Documents/@公共/_control/CLAUDE-公约.md
+  claude_registry: ~/Documents/@驾驶舱/_control/CLAUDE-REGISTRY.md
 
   # mof 工具输出
   mof_m1_convention: ~/Workspace/projects/ecos/src/ecos/ssot/mof/m1/convention

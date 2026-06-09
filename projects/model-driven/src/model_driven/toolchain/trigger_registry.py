@@ -21,11 +21,8 @@ from datetime import datetime, timezone
 from typing import Any
 
 from model_driven.mof.m2_lifecycle import M2_TRIGGER
-from model_driven.toolchain.derivation_engine import (
-    DerivationEngine,
-    TriggerM0Manager,
-    TriggerRuntimeSnapshot,
-)
+from model_driven.toolchain.derivation_engine import DerivationEngine
+from model_driven.toolchain.trigger_m0 import TriggerM0Manager, TriggerRuntimeSnapshot
 
 
 @dataclass
@@ -74,8 +71,10 @@ class TriggerRegistry:
 
     def __init__(self, m1_dir: str | None = None):
         if m1_dir is None:
+            import os
             from pathlib import Path
-            self._m1_dir = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "trigger"
+            ws = os.environ.get("ECOS_WORKSPACE", str(Path.home() / "Workspace"))
+            self._m1_dir = Path(ws) / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "trigger"
         else:
             self._m1_dir = Path(m1_dir)
 
@@ -246,22 +245,8 @@ class TriggerRegistry:
         if not findings:
             return {"status": "ok", "message": "no issues found", "actions": []}
 
-        # 构建 DerivationResult 列表
-        results = []
-        for f in findings:
-            # 创建简化的 DerivationResult
-            class SimpleResult:
-                def __init__(self, **kwargs):
-                    for k, v in kwargs.items():
-                        setattr(self, k, v)
-            results.append(SimpleResult(
-                rule_id=f["rule_id"],
-                risk_level=f["risk_level"],
-                message=f["message"],
-                details=f.get("details", {}),
-            ))
-
-        heal_actions = self._derivation_engine.execute_trigger_driven_heal(results)
+        # 直接传递 dict 列表给 DerivationEngine
+        heal_actions = self._derivation_engine.execute_trigger_driven_heal_dict(findings)
         return {
             "status": "healed" if heal_actions else "manual_intervention_needed",
             "findings_count": len(findings),

@@ -29,6 +29,17 @@ from .m2_lifecycle import (
     list_all_schema_names,
     list_schemas_by_stage,
 )
+from .ontology_extended import (
+    CROSS_STAGE_CONSISTENCY_RULES,
+    DERIVATION_RULES_EXTENDED,
+    M2_TYPE_STAGE_MAPPING,
+    STAGE_DEPENDENCIES,
+    STAGE_EQUIVALENCES,
+    TRIGGER_DEPENDENCIES,
+    TRIGGER_DERIVATION_RULES,
+    TRIGGER_EQUIVALENCES,
+    TRIGGER_GENERALIZATIONS,
+)
 
 __all__ = [
     # M3
@@ -51,4 +62,14 @@ __all__ = [
     "get_schema",
     "list_schemas_by_stage",
     "list_all_schema_names",
+    # Ontology
+    "STAGE_EQUIVALENCES",
+    "STAGE_DEPENDENCIES",
+    "M2_TYPE_STAGE_MAPPING",
+    "DERIVATION_RULES_EXTENDED",
+    "CROSS_STAGE_CONSISTENCY_RULES",
+    "TRIGGER_EQUIVALENCES",
+    "TRIGGER_DEPENDENCIES",
+    "TRIGGER_GENERALIZATIONS",
+    "TRIGGER_DERIVATION_RULES",
 ]

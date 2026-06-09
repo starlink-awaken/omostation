@@ -484,13 +484,7 @@ class DerivationEngine:
         return [r for r in self._results if r.rule_id.startswith("DR-TRIGGER")]
 
     def execute_trigger_driven_heal(self, high_risk_triggers: list[DerivationResult]) -> list[dict[str, Any]]:
-        """闭环驱动: 对高风险 Trigger 执行自动修复
-
-        模型驱动的"驱动"体现在这里：
-        - 不是只报告问题，而是自动触发修复
-        - 修复动作通过 OMOBridge 注册为 Debt/Task
-        - 下次 daemon 循环验证修复是否生效
-        """
+        """闭环驱动: 对高风险 Trigger 执行自动修复"""
         heal_actions = []
         try:
             from model_driven.management.omo_bridge import OMOBridge
@@ -499,276 +493,92 @@ class DerivationEngine:
             for risk in high_risk_triggers:
                 action = risk.details.get("action", "")
                 trigger_id = risk.details.get("trigger", "")
+                self._do_heal_action(bridge, action, trigger_id, risk, heal_actions)
+
+        except ImportError:
+            pass
+        return heal_actions
+
+    def execute_trigger_driven_heal_dict(self, findings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """闭环驱动 (接受 dict 而非 DerivationResult) — 供 TriggerRegistry.run_heal() 调用"""
+        heal_actions = []
+        try:
+            from model_driven.management.omo_bridge import OMOBridge
+            bridge = OMOBridge()
+
+            for f in findings:
+                action = f.get("details", {}).get("action", "")
+                trigger_id = f.get("details", {}).get("trigger", "")
+                risk_level = f.get("risk_level", "medium")
+                message = f.get("message", "")
+                queue_size = f.get("details", {}).get("queue_size", 0)
+                dependency = f.get("details", {}).get("dependency", "")
+                dep_status = f.get("details", {}).get("dep_status", "")
 
                 if action == "register_debt":
                     debt = bridge.register_debt_and_persist(
                         title=f"Trigger 超时: {trigger_id}",
-                        description=risk.message,
-                        severity=risk.risk_level,
+                        description=message,
+                        severity=risk_level,
                     )
                     heal_actions.append({"type": "debt_registered", "trigger": trigger_id, "debt": debt})
 
-                elif action == "auto_restart" or action == "restart_daemon":
+                elif action in ("auto_restart", "restart_daemon"):
                     task = bridge.create_task_and_persist(
                         title=f"重启 Trigger: {trigger_id}",
-                        description=risk.message,
+                        description=message,
                         priority="P0",
                     )
                     heal_actions.append({"type": "restart_task_created", "trigger": trigger_id, "task": task})
 
                 elif action == "block_and_heal":
                     bridge.record_audit_and_persist(
-                        "trigger_dependency_blocked",
-                        "trigger",
-                        trigger_id,
-                        {"dependency": risk.details.get("dependency"), "status": risk.details.get("dep_status")},
+                        "trigger_dependency_blocked", "trigger", trigger_id,
+                        {"dependency": dependency, "status": dep_status},
                     )
                     heal_actions.append({"type": "audit_recorded", "trigger": trigger_id})
 
                 elif action == "truncate_events":
                     task = bridge.create_task_and_persist(
                         title=f"清理事件积压: {trigger_id}",
-                        description=f"事件队列超过阈值: {risk.details.get('queue_size', 0)}",
+                        description=f"事件队列超过阈值: {queue_size}",
                         priority="P1",
                     )
                     heal_actions.append({"type": "cleanup_task_created", "trigger": trigger_id, "task": task})
 
         except ImportError:
-            pass  # OMOBridge 不可用时静默跳过
-
+            pass
         return heal_actions
 
+    def _do_heal_action(self, bridge, action: str, trigger_id: str, risk: DerivationResult, heal_actions: list) -> None:
+        """执行单个修复动作"""
+        if action == "register_debt":
+            debt = bridge.register_debt_and_persist(
+                title=f"Trigger 超时: {trigger_id}",
+                description=risk.message,
+                severity=risk.risk_level,
+            )
+            heal_actions.append({"type": "debt_registered", "trigger": trigger_id, "debt": debt})
 
-# ── M0 运行时快照: TriggerRuntimeSnapshot ────────────────
+        elif action in ("auto_restart", "restart_daemon"):
+            task = bridge.create_task_and_persist(
+                title=f"重启 Trigger: {trigger_id}",
+                description=risk.message,
+                priority="P0",
+            )
+            heal_actions.append({"type": "restart_task_created", "trigger": trigger_id, "task": task})
 
+        elif action == "block_and_heal":
+            bridge.record_audit_and_persist(
+                "trigger_dependency_blocked", "trigger", trigger_id,
+                {"dependency": risk.details.get("dependency"), "status": risk.details.get("dep_status")},
+            )
+            heal_actions.append({"type": "audit_recorded", "trigger": trigger_id})
 
-@dataclass
-class TriggerRuntimeSnapshot:
-    """Trigger M0 运行时快照 — 记录 Trigger 的实际执行状态
-
-    对应 MOF 四层模型中的 M0 层:
-    - M3: BehavioralElement.Mechanism
-    - M2: trigger
-    - M1: TRIGGER-ECOS-DAEMON 等 10 个节点
-    - M0: TriggerRuntimeSnapshot (本类)
-    """
-
-    trigger_id: str
-    status: str = "unknown"  # healthy/degraded/stopped/unknown
-    last_execution: str = ""
-    last_duration_seconds: float = 0.0
-    consecutive_failures: int = 0
-    consecutive_successes: int = 0
-    health_score: float = 100.0  # 0-100
-    snapshotted_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    metadata: dict[str, Any] = field(default_factory=dict)
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "trigger_id": self.trigger_id,
-            "status": self.status,
-            "last_execution": self.last_execution,
-            "last_duration_seconds": self.last_duration_seconds,
-            "consecutive_failures": self.consecutive_failures,
-            "consecutive_successes": self.consecutive_successes,
-            "health_score": self.health_score,
-            "snapshotted_at": self.snapshotted_at,
-            "metadata": self.metadata,
-        }
-
-
-class TriggerM0Manager:
-    """Trigger M0 运行时管理器
-
-    职责:
-    1. 生成 Trigger 的 M0 运行时快照
-    2. 保存快照到文件 (.omo/state/model-driven/trigger-m0-snapshot.yaml)
-    3. 加载快照与 M1 声明对比检测漂移
-    4. 更新 Trigger 健康分
-    """
-
-    def __init__(self, state_dir: str | None = None):
-        if state_dir is None:
-            from pathlib import Path
-            self._state_dir = Path.home() / "Workspace" / ".omo" / "state" / "model-driven"
-        else:
-            self._state_dir = Path(state_dir)
-        self._state_dir.mkdir(parents=True, exist_ok=True)
-        self._snapshot_file = self._state_dir / "trigger-m0-snapshot.yaml"
-        self._snapshots: dict[str, TriggerRuntimeSnapshot] = {}
-
-    def record_execution(
-        self,
-        trigger_id: str,
-        success: bool,
-        duration_seconds: float = 0.0,
-        metadata: dict[str, Any] | None = None,
-    ) -> TriggerRuntimeSnapshot:
-        """记录一次 Trigger 执行"""
-        if trigger_id in self._snapshots:
-            snap = self._snapshots[trigger_id]
-        else:
-            snap = TriggerRuntimeSnapshot(trigger_id=trigger_id)
-
-        snap.last_execution = datetime.now(timezone.utc).isoformat()
-        snap.last_duration_seconds = duration_seconds
-        snap.metadata.update(metadata or {})
-
-        if success:
-            snap.consecutive_successes += 1
-            snap.consecutive_failures = 0
-            snap.health_score = min(100.0, snap.health_score + 5.0)
-            if snap.consecutive_successes >= 3:
-                snap.status = "healthy"
-        else:
-            snap.consecutive_failures += 1
-            snap.consecutive_successes = 0
-            snap.health_score = max(0.0, snap.health_score - 20.0)
-            if snap.consecutive_failures >= 3:
-                snap.status = "degraded"
-            if snap.consecutive_failures >= 5:
-                snap.status = "stopped"
-
-        snap.snapshotted_at = datetime.now(timezone.utc).isoformat()
-        self._snapshots[trigger_id] = snap
-        return snap
-
-    def get_snapshot(self, trigger_id: str) -> TriggerRuntimeSnapshot | None:
-        return self._snapshots.get(trigger_id)
-
-    def get_all_snapshots(self) -> dict[str, TriggerRuntimeSnapshot]:
-        return self._snapshots.copy()
-
-    def save(self) -> bool:
-        """保存 M0 快照到文件"""
-        try:
-            import yaml
-            data = {
-                "m0_type": "trigger_runtime_snapshot",
-                "generated_at": datetime.now(timezone.utc).isoformat(),
-                "triggers": {
-                    tid: snap.to_dict()
-                    for tid, snap in self._snapshots.items()
-                },
-            }
-            with open(self._snapshot_file, "w") as f:
-                yaml.dump(data, f, allow_unicode=True, default_flow_style=False)
-            return True
-        except Exception:
-            return False
-
-    def load(self) -> bool:
-        """从文件加载 M0 快照"""
-        if not self._snapshot_file.exists():
-            return False
-        try:
-            import yaml
-            with open(self._snapshot_file) as f:
-                data = yaml.safe_load(f)
-            if not data or "triggers" not in data:
-                return False
-            for tid, snap_data in data["triggers"].items():
-                snap = TriggerRuntimeSnapshot(
-                    trigger_id=tid,
-                    status=snap_data.get("status", "unknown"),
-                    last_execution=snap_data.get("last_execution", ""),
-                    last_duration_seconds=snap_data.get("last_duration_seconds", 0.0),
-                    consecutive_failures=snap_data.get("consecutive_failures", 0),
-                    consecutive_successes=snap_data.get("consecutive_successes", 0),
-                    health_score=snap_data.get("health_score", 100.0),
-                    snapshotted_at=snap_data.get("snapshotted_at", ""),
-                    metadata=snap_data.get("metadata", {}),
-                )
-                self._snapshots[tid] = snap
-            return True
-        except Exception:
-            return False
-
-    def detect_drift(
-        self, m1_triggers: list[dict[str, Any]]
-    ) -> list[dict[str, Any]]:
-        """M1 声明 vs M0 实际状态 漂移检测
-
-        这是 MOF 模型驱动的核心:
-        - M1 声明 trigger 应该是 active
-        - M0 实际状态可能是 degraded/stopped
-        - 漂移 = M1 期望 ≠ M0 实际
-        """
-        drifts = []
-        for m1 in m1_triggers:
-            tid = m1.get("id", "")
-            m1_status = m1.get("status", "active")
-            m0 = self._snapshots.get(tid)
-
-            if m0 is None:
-                drifts.append({
-                    "trigger_id": tid,
-                    "type": "missing_m0_snapshot",
-                    "m1_status": m1_status,
-                    "m0_status": "unknown",
-                    "severity": "warning",
-                    "message": f"Trigger {tid} 无 M0 运行时快照",
-                })
-            elif m0.status != "healthy" and m1_status == "active":
-                drifts.append({
-                    "trigger_id": tid,
-                    "type": "status_drift",
-                    "m1_status": m1_status,
-                    "m0_status": m0.status,
-                    "severity": "high",
-                    "health_score": m0.health_score,
-                    "consecutive_failures": m0.consecutive_failures,
-                    "message": f"Trigger {tid}: M1={m1_status}, M0={m0.status} (health={m0.health_score})",
-                })
-
-        return drifts
-
-    def get_health_summary(self) -> dict[str, Any]:
-        """获取 Trigger M0 健康摘要"""
-        total = len(self._snapshots)
-        healthy = sum(1 for s in self._snapshots.values() if s.status == "healthy")
-        degraded = sum(1 for s in self._snapshots.values() if s.status == "degraded")
-        stopped = sum(1 for s in self._snapshots.values() if s.status == "stopped")
-
-        return {
-            "total_triggers": total,
-            "healthy": healthy,
-            "degraded": degraded,
-            "stopped": stopped,
-            "health_pct": round(healthy / total * 100, 1) if total > 0 else 0,
-            "triggers": {
-                tid: {
-                    "status": snap.status,
-                    "health_score": snap.health_score,
-                    "consecutive_failures": snap.consecutive_failures,
-                    "last_execution": snap.last_execution,
-                }
-                for tid, snap in self._snapshots.items()
-            },
-            "generated_at": datetime.now(timezone.utc).isoformat(),
-        }
-
-    def get_health_summary(self) -> dict[str, Any]:
-        """获取 Trigger M0 健康摘要"""
-        total = len(self._snapshots)
-        healthy = sum(1 for s in self._snapshots.values() if s.status == "healthy")
-        degraded = sum(1 for s in self._snapshots.values() if s.status == "degraded")
-        stopped = sum(1 for s in self._snapshots.values() if s.status == "stopped")
-
-        return {
-            "total_triggers": total,
-            "healthy": healthy,
-            "degraded": degraded,
-            "stopped": stopped,
-            "health_pct": round(healthy / total * 100, 1) if total > 0 else 0,
-            "triggers": {
-                tid: {
-                    "status": snap.status,
-                    "health_score": snap.health_score,
-                    "consecutive_failures": snap.consecutive_failures,
-                    "last_execution": snap.last_execution,
-                }
-                for tid, snap in self._snapshots.items()
-            },
-            "generated_at": datetime.now(timezone.utc).isoformat(),
-        }
+        elif action == "truncate_events":
+            task = bridge.create_task_and_persist(
+                title=f"清理事件积压: {trigger_id}",
+                description=f"事件队列超过阈值: {risk.details.get('queue_size', 0)}",
+                priority="P1",
+            )
+            heal_actions.append({"type": "cleanup_task_created", "trigger": trigger_id, "task": task})
