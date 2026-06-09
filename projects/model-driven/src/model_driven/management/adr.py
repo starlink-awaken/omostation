@@ -13,6 +13,8 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
+import yaml
+
 
 class ADRStatus(Enum):
     """ADR 状态"""
@@ -170,12 +172,10 @@ class ADRManager:
 
         file_path = Path(state_dir) / "adrs.yaml"
         try:
-            import yaml
-
             with open(file_path, "w") as f:
                 yaml.dump(self.to_dict(), f, allow_unicode=True, sort_keys=False)
             return True
-        except (OSError, ImportError, yaml.YAMLError):
+        except (OSError, yaml.YAMLError):
             return False
 
     @classmethod
@@ -193,11 +193,9 @@ class ADRManager:
             return None
 
         try:
-            import yaml
-
             with open(file_path) as f:
                 data = yaml.safe_load(f)
-        except (OSError, ImportError, yaml.YAMLError):
+        except (OSError, yaml.YAMLError):
             return None
 
         manager = cls()

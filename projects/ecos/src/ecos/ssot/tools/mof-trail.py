@@ -14,7 +14,8 @@
     python3 mof-trail.py --json      # JSON
 """
 
-import sys, json, sqlite3
+import json
+import sqlite3
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 
@@ -24,19 +25,22 @@ DAEMON_DB = HOME / ".ecos" / "daemon-state.db"
 HEALER_DB = HOME / ".ecos" / "healer-state.db"
 
 
-def now(): return datetime.now(timezone.utc)
+def now():
+    return datetime.now(timezone.utc)
 
 
 def trail_cards(since: datetime | None = None) -> list[dict]:
     if not CARDS_DB.exists():
         return []
     conn = sqlite3.connect(str(CARDS_DB))
-    
+
     # Check if card_history table exists
-    tables = [r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")]
-    
+    tables = [
+        r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    ]
+
     events = []
-    
+
     if "card_history" in tables:
         try:
             # Try common column names
@@ -47,16 +51,18 @@ def trail_cards(since: datetime | None = None) -> list[dict]:
                 query += " WHERE timestamp >= ?" if "timestamp" in cols else ""
             cur = conn.execute(query + " ORDER BY 1 DESC LIMIT 10")
             for row in cur.fetchall():
-                events.append({
-                    "source": "CARDS",
-                    "id": str(row[0]),
-                    "action": "history",
-                    "detail": str(row[1]) if len(row) > 1 else "",
-                    "timestamp": str(row[-1]) if row[-1] else "",
-                })
-        except:
+                events.append(
+                    {
+                        "source": "CARDS",
+                        "id": str(row[0]),
+                        "action": "history",
+                        "detail": str(row[1]) if len(row) > 1 else "",
+                        "timestamp": str(row[-1]) if row[-1] else "",
+                    }
+                )
+        except Exception:
             pass
-    
+
     # Also check cards table for recent changes
     if "cards" in tables:
         query = "SELECT id, type, status, updated_at, substr(title,1,60) FROM cards"
@@ -66,14 +72,16 @@ def trail_cards(since: datetime | None = None) -> list[dict]:
         else:
             cur = conn.execute(query + " ORDER BY updated_at DESC LIMIT 20")
         for row in cur.fetchall():
-            events.append({
-                "source": "CARDS",
-                "id": row[0],
-                "action": f"{row[1]}:{row[2]}",
-                "detail": (row[4] or "")[:80],
-                "timestamp": row[3],
-            })
-    
+            events.append(
+                {
+                    "source": "CARDS",
+                    "id": row[0],
+                    "action": f"{row[1]}:{row[2]}",
+                    "detail": (row[4] or "")[:80],
+                    "timestamp": row[3],
+                }
+            )
+
     conn.close()
     return events
 
@@ -83,37 +91,43 @@ def trail_daemon(since: datetime | None = None) -> list[dict]:
         return []
     conn = sqlite3.connect(str(DAEMON_DB))
     events = []
-    
+
     query = "SELECT id, started_at, completed_at, exit_code, summary FROM cycles"
     if since:
         query += " WHERE started_at >= ?"
         cur = conn.execute(query, (since.isoformat(),))
     else:
         cur = conn.execute(query + " ORDER BY id DESC LIMIT 20")
-    
+
     for row in cur.fetchall():
-        events.append({
-            "source": "DAEMON",
-            "id": f"cycle-{row[0]}",
-            "action": f"exit={row[3]}",
-            "detail": (row[4] or "")[:80],
-            "timestamp": row[1],
-        })
-    
+        events.append(
+            {
+                "source": "DAEMON",
+                "id": f"cycle-{row[0]}",
+                "action": f"exit={row[3]}",
+                "detail": (row[4] or "")[:80],
+                "timestamp": row[1],
+            }
+        )
+
     # Also check alerts
     try:
-        cur = conn.execute("SELECT id, alert_type, message, created_at FROM alerts ORDER BY id DESC LIMIT 10")
+        cur = conn.execute(
+            "SELECT id, alert_type, message, created_at FROM alerts ORDER BY id DESC LIMIT 10"
+        )
         for row in cur.fetchall():
-            events.append({
-                "source": "DAEMON",
-                "id": f"alert-{row[0]}",
-                "action": row[1],
-                "detail": row[2][:80],
-                "timestamp": row[3],
-            })
-    except:
+            events.append(
+                {
+                    "source": "DAEMON",
+                    "id": f"alert-{row[0]}",
+                    "action": row[1],
+                    "detail": row[2][:80],
+                    "timestamp": row[3],
+                }
+            )
+    except Exception:
         pass
-    
+
     conn.close()
     return events
 
@@ -123,23 +137,25 @@ def trail_healer(since: datetime | None = None) -> list[dict]:
         return []
     conn = sqlite3.connect(str(HEALER_DB))
     events = []
-    
+
     query = "SELECT id, check_type, issue, action, result, timestamp FROM heal_attempts"
     if since:
         query += " WHERE timestamp >= ?"
         cur = conn.execute(query, (since.isoformat(),))
     else:
         cur = conn.execute(query + " ORDER BY id DESC LIMIT 20")
-    
+
     for row in cur.fetchall():
-        events.append({
-            "source": "HEALER",
-            "id": f"heal-{row[0]}",
-            "action": row[1],
-            "detail": f"{row[2][:40]} → {row[3][:30]}: {row[4][:20]}",
-            "timestamp": row[5],
-        })
-    
+        events.append(
+            {
+                "source": "HEALER",
+                "id": f"heal-{row[0]}",
+                "action": row[1],
+                "detail": f"{row[2][:40]} → {row[3][:30]}: {row[4][:20]}",
+                "timestamp": row[5],
+            }
+        )
+
     conn.close()
     return events
 
@@ -152,27 +168,34 @@ def get_mof_events(since: datetime | None = None) -> list[dict]:
     with open(snap) as f:
         data = json.load(f)
     ts = data.get("timestamp", "")
-    return [{
-        "source": "MOF",
-        "id": "gate-snapshot",
-        "action": "变更门禁基线",
-        "detail": f"{len(data.get('assets', {}))} 资产已注册",
-        "timestamp": ts,
-    }]
+    return [
+        {
+            "source": "MOF",
+            "id": "gate-snapshot",
+            "action": "变更门禁基线",
+            "detail": f"{len(data.get('assets', {}))} 资产已注册",
+            "timestamp": ts,
+        }
+    ]
 
 
 def format_trail(events: list[dict]) -> str:
     # Sort by timestamp descending
     events.sort(key=lambda e: e.get("timestamp", ""), reverse=True)
-    
-    lines = ["=" * 64, "  织星 MOF — 统一审计追踪", "=" * 64,
-             f"  时间: {now().isoformat()[:19]}",
-             f"  事件: {len(events)} 条", ""]
-    
+
+    lines = [
+        "=" * 64,
+        "  织星 MOF — 统一审计追踪",
+        "=" * 64,
+        f"  时间: {now().isoformat()[:19]}",
+        f"  事件: {len(events)} 条",
+        "",
+    ]
+
     by_source = {}
     for e in events:
         by_source.setdefault(e["source"], []).append(e)
-    
+
     for source in sorted(by_source.keys()):
         evts = by_source[source][:8]
         lines.append(f"  ── {source} ({len(by_source[source])} 条) ──")
@@ -180,12 +203,13 @@ def format_trail(events: list[dict]) -> str:
             ts = (e.get("timestamp", "") or "")[:19]
             lines.append(f"  {ts} | {e['action'][:20]:20s} | {e['detail'][:60]}")
         lines.append("")
-    
+
     return "\n".join(lines)
 
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--since", type=str, default="", help="时间范围 (24h/7d/30d)")
     parser.add_argument("--type", type=str, default="all")
@@ -213,7 +237,11 @@ def main():
         events.extend(get_mof_events(since))
 
     if args.json:
-        print(json.dumps({"events": len(events), "items": events}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"events": len(events), "items": events}, ensure_ascii=False, indent=2
+            )
+        )
     else:
         print(format_trail(events))
 

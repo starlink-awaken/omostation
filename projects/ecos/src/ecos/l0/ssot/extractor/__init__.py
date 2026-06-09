@@ -38,7 +38,13 @@ SSOT Kernel — 提取层
     ExtractionPipeline     — 流水线入口
 """
 
-from .base import Conflict, ExtractionCandidate, ExtractionResult, TextSource, ValidationResult
+from .base import (
+    Conflict,
+    ExtractionCandidate,
+    ExtractionResult,
+    TextSource,
+    ValidationResult,
+)
 from .pipeline import ExtractionPipeline
 
 __all__ = [

@@ -18,7 +18,6 @@
     python3 mof-derive.py --json             # JSON 输出
 """
 
-import sys
 import json
 import yaml
 import argparse
@@ -28,7 +27,9 @@ from datetime import datetime, timezone
 DOCS = Path.home() / "Documents"
 NODES_DIR = DOCS / "驾驶舱" / "元模型" / "nodes"
 ONTO_FILE = DOCS / "驾驶舱" / "元模型" / "M2-本体映射.yaml"
-CONSTRAINTS_FILE = DOCS / "学习进化" / "2-knowledge" / "基建架构" / "L0-constraints.yaml"
+CONSTRAINTS_FILE = (
+    DOCS / "学习进化" / "2-knowledge" / "基建架构" / "L0-constraints.yaml"
+)
 
 
 def load_yaml(path: Path) -> dict:
@@ -82,8 +83,8 @@ def derive_risks(nodes: list[dict], onto: dict) -> list[dict]:
     for rule in rules:
         rid = rule.get("id", "?")
         desc = rule.get("description", "")
-        rule_text = rule.get("rule", "")
-        priority = rule.get("priority", "medium")
+        rule.get("rule", "")
+        rule.get("priority", "medium")
 
         # DR-01: 协议衰减 → 依赖组件风险
         if "DR-01" in rid:
@@ -94,35 +95,71 @@ def derive_risks(nodes: list[dict], onto: dict) -> list[dict]:
                 if decay > 0.5:
                     # Find components that use this protocol
                     artifacts = by_type.get("Artifact", [])
-                    affected = [a["id"] for a in artifacts if pid.lower() in a.get("name", "").lower() or
-                                pid.lower() in a.get("description", "").lower()]
+                    affected = [
+                        a["id"]
+                        for a in artifacts
+                        if pid.lower() in a.get("name", "").lower()
+                        or pid.lower() in a.get("description", "").lower()
+                    ]
                     if affected:
-                        risks.append({"rule": rid, "severity": "medium", "description": desc,
-                                     "source": p["id"], "affected": affected,
-                                     "detail": f"协议 {pid} 衰减 {decay:.0%}, 影响 {len(affected)} 个组件"})
+                        risks.append(
+                            {
+                                "rule": rid,
+                                "severity": "medium",
+                                "description": desc,
+                                "source": p["id"],
+                                "affected": affected,
+                                "detail": f"协议 {pid} 衰减 {decay:.0%}, 影响 {len(affected)} 个组件",
+                            }
+                        )
 
         # DR-04: 架构演化但模型未更新
         if "DR-04" in rid:
             archs = by_type.get("Architecture", [])
             models = by_type.get("Model", [])
             for arch in archs:
-                arch_mtime = arch.get("properties", {}).get("mtime", arch.get("created", ""))
+                arch_mtime = arch.get("properties", {}).get(
+                    "mtime", arch.get("created", "")
+                )
                 for model in models:
                     model_mtime = model.get("created", "")
                     if arch_mtime > model_mtime:
-                        risks.append({"rule": rid, "severity": "high", "description": desc,
-                                     "source": arch["id"], "affected": [model["id"]],
-                                     "detail": f"架构 {arch['id']} 更新于 {arch_mtime}, 模型 {model['id']} 创建于 {model_mtime}"})
+                        risks.append(
+                            {
+                                "rule": rid,
+                                "severity": "high",
+                                "description": desc,
+                                "source": arch["id"],
+                                "affected": [model["id"]],
+                                "detail": f"架构 {arch['id']} 更新于 {arch_mtime}, 模型 {model['id']} 创建于 {model_mtime}",
+                            }
+                        )
 
         # DR-08: M1 节点缺失检测
         if "DR-08" in rid:
-            m2_types = ["Model", "Architecture", "Mechanism", "Protocol", "Pattern", "Specification", "Process", "Entity"]
+            m2_types = [
+                "Model",
+                "Architecture",
+                "Mechanism",
+                "Protocol",
+                "Pattern",
+                "Specification",
+                "Process",
+                "Entity",
+            ]
             for mt in m2_types:
                 count = len(by_type.get(mt, []))
                 if count == 0:
-                    risks.append({"rule": rid, "severity": "high", "description": desc,
-                                 "source": mt, "affected": [],
-                                 "detail": f"M2 类型 '{mt}' 无 M1 实例——模型覆盖缺口"})
+                    risks.append(
+                        {
+                            "rule": rid,
+                            "severity": "high",
+                            "description": desc,
+                            "source": mt,
+                            "affected": [],
+                            "detail": f"M2 类型 '{mt}' 无 M1 实例——模型覆盖缺口",
+                        }
+                    )
 
     return risks
 
@@ -135,12 +172,26 @@ def derive_gaps(nodes: list[dict], onto: dict) -> list[dict]:
         by_type.setdefault(n.get("type", "?"), []).append(n)
 
     # 检查所有 M2 类型的 M1 覆盖率
-    m2_types = ["Model", "Architecture", "Mechanism", "Protocol", "Pattern", "Specification", "Process", "Entity"]
+    m2_types = [
+        "Model",
+        "Architecture",
+        "Mechanism",
+        "Protocol",
+        "Pattern",
+        "Specification",
+        "Process",
+        "Entity",
+    ]
     for mt in m2_types:
         count = len(by_type.get(mt, []))
         if count < 2:
-            gaps.append({"type": mt, "severity": "medium" if count == 1 else "high",
-                        "detail": f"仅有 {count} 个 M1 节点 (推荐 ≥2)"})
+            gaps.append(
+                {
+                    "type": mt,
+                    "severity": "medium" if count == 1 else "high",
+                    "detail": f"仅有 {count} 个 M1 节点 (推荐 ≥2)",
+                }
+            )
 
     # 检查跨层覆盖
     layers = set()
@@ -151,8 +202,13 @@ def derive_gaps(nodes: list[dict], onto: dict) -> list[dict]:
     expected_layers = {"L0", "L1", "L2", "L3", "L4", "I0", "X1", "X2", "X3", "X4"}
     missing_layers = expected_layers - layers
     if missing_layers:
-        gaps.append({"type": "Layer", "severity": "medium",
-                    "detail": f"无 M1 节点覆盖的层: {missing_layers}"})
+        gaps.append(
+            {
+                "type": "Layer",
+                "severity": "medium",
+                "detail": f"无 M1 节点覆盖的层: {missing_layers}",
+            }
+        )
 
     return gaps
 
@@ -200,8 +256,8 @@ def format_report(risks: list[dict], gaps: list[dict]) -> str:
         for r in risks:
             icon = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(r["severity"], "⚪")
             lines.append(f"  {icon} [{r['rule']}] {r['description'][:60]}")
-            lines.append(f"     源: {r['source']} | 影响: {r.get('affected',[])}")
-            lines.append(f"     {r.get('detail','')}")
+            lines.append(f"     源: {r['source']} | 影响: {r.get('affected', [])}")
+            lines.append(f"     {r.get('detail', '')}")
     else:
         lines.append("  ✅ 未发现风险")
     lines.append("")
@@ -214,7 +270,7 @@ def format_report(risks: list[dict], gaps: list[dict]) -> str:
     else:
         lines.append("  ✅ 未发现缺口")
 
-    lines.append(f"\n{'='*64}")
+    lines.append(f"\n{'=' * 64}")
     return "\n".join(lines)
 
 
@@ -237,13 +293,24 @@ def main():
             print(json.dumps(impact, ensure_ascii=False, indent=2))
         else:
             print(f"  🎯 影响分析: {args.impact}")
-            print(f"  直接影响 ({len(impact.get('direct',[]))}): {impact['direct'][:5]}")
-            print(f"  依赖链: {impact.get('chain',[])}")
+            print(
+                f"  直接影响 ({len(impact.get('direct', []))}): {impact['direct'][:5]}"
+            )
+            print(f"  依赖链: {impact.get('chain', [])}")
         return
 
     if args.json:
-        print(json.dumps({"generated_at": datetime.now(timezone.utc).isoformat(),
-                          "risks": risks, "gaps": gaps}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "risks": risks,
+                    "gaps": gaps,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         print(format_report(risks, gaps))
 

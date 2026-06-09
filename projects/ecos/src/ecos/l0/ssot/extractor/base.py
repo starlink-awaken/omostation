@@ -196,7 +196,17 @@ class CandidateValidator:
 
     def _check_id_prefix(self, cid: str, category: str) -> bool:
         prefix_map = {
-            "entity": ["ORG-", "ROL-", "PRJ-", "RES-", "PERSON-", "person-", "org-", "project-", "ROL-person-"],
+            "entity": [
+                "ORG-",
+                "ROL-",
+                "PRJ-",
+                "RES-",
+                "PERSON-",
+                "person-",
+                "org-",
+                "project-",
+                "ROL-person-",
+            ],
             "fact": ["DAT-", "POL-", "P-"],
             "inference": ["INF-"],
             "relation": [],  # 关系没有 ID 前缀要求
@@ -268,7 +278,9 @@ class YamlWriter:
 
             filepath = dd / filename
             if filepath.exists():
-                existing: dict[str, Any] = yaml.safe_load(filepath.read_text("utf-8")) or {}
+                existing: dict[str, Any] = (
+                    yaml.safe_load(filepath.read_text("utf-8")) or {}
+                )
             else:
                 existing = {}
 
@@ -289,7 +301,13 @@ class YamlWriter:
                     existing[key].append(c.content)
 
             filepath.write_text(
-                yaml.dump(existing, allow_unicode=True, default_flow_style=False, sort_keys=False), encoding="utf-8"
+                yaml.dump(
+                    existing,
+                    allow_unicode=True,
+                    default_flow_style=False,
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
             )
             applied.append(str(filepath))
 

@@ -15,6 +15,8 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
+import yaml
+
 
 class ToolStatus(Enum):
     """工具状态"""
@@ -169,8 +171,6 @@ class ToolchainBus:
 
         file_path = Path(state_dir) / "toolchain-history.yaml"
         try:
-            import yaml
-
             data = {
                 "history": [
                     {
@@ -188,7 +188,7 @@ class ToolchainBus:
             with open(file_path, "w") as f:
                 yaml.dump(data, f, allow_unicode=True, sort_keys=False)
             return True
-        except (OSError, ImportError, yaml.YAMLError):
+        except (OSError, yaml.YAMLError):
             return False
 
     def load_history(self, state_dir: str | None = None) -> list[ToolResult]:
@@ -205,11 +205,9 @@ class ToolchainBus:
             return []
 
         try:
-            import yaml
-
             with open(file_path) as f:
                 data = yaml.safe_load(f)
-        except (OSError, ImportError, yaml.YAMLError):
+        except (OSError, yaml.YAMLError):
             return []
 
         results = []

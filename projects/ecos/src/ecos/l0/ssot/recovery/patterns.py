@@ -9,7 +9,6 @@ SSOT Kernel — Recovery Patterns
 3. 关联历史学习数据
 """
 
-
 from ..strategies.base import (
     BaseRecoveryStrategy,
     RecoveryAction,
@@ -131,7 +130,13 @@ PATTERN_ATTRIBUTE_ERROR = RecoveryPattern(
 PATTERN_VALUE_ERROR = RecoveryPattern(
     id="pattern_value_error",
     name="值错误恢复",
-    error_patterns=["invalid literal", "type mismatch", "int()", "too many values", "none"],
+    error_patterns=[
+        "invalid literal",
+        "type mismatch",
+        "int()",
+        "too many values",
+        "none",
+    ],
     actions=[
         RecoveryAction(
             id="type_conversion",

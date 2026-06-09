@@ -21,6 +21,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from model_driven.constants import MAX_HEALTH_SCORE
 from model_driven.toolchain.derivation_engine import DerivationEngine
 from model_driven.toolchain.trigger_m0 import TriggerM0Manager, TriggerRuntimeSnapshot
@@ -89,8 +91,6 @@ class TriggerRegistry:
         """从 M1 节点加载 Trigger 定义"""
         if not self._m1_dir.exists():
             return
-        import yaml
-
         for f in sorted(self._m1_dir.glob("*.yaml")):
             try:
                 with open(f) as fh:
@@ -195,11 +195,16 @@ class TriggerRegistry:
         # 全量健康检查
         m0_summary = self._m0_manager.get_health_summary()
         triggers = self.list_all()
+        by_type: dict[str, int] = {}
+        by_layer: dict[str, int] = {}
+        for tr in triggers:
+            by_type[tr.trigger_type] = by_type.get(tr.trigger_type, 0) + 1
+            by_layer[tr.layer] = by_layer.get(tr.layer, 0) + 1
         return {
             "summary": m0_summary,
             "triggers": [t.to_dict() for t in triggers],
-            "by_type": {t: len([tr for tr in triggers if tr.trigger_type == t]) for t in self.list_types()},
-            "by_layer": {layer: len([tr for tr in triggers if tr.layer == layer]) for layer in self.list_layers()},
+            "by_type": by_type,
+            "by_layer": by_layer,
             "checked_at": datetime.now(UTC).isoformat(),
         }
 
@@ -286,10 +291,16 @@ class TriggerRegistry:
             for t in triggers
         }
 
+        by_type: dict[str, int] = {}
+        by_layer: dict[str, int] = {}
+        for tr in triggers:
+            by_type[tr.trigger_type] = by_type.get(tr.trigger_type, 0) + 1
+            by_layer[tr.layer] = by_layer.get(tr.layer, 0) + 1
+
         return {
             "total_triggers": len(triggers),
-            "by_type": {t: len([tr for tr in triggers if tr.trigger_type == t]) for t in self.list_types()},
-            "by_layer": {layer: len([tr for tr in triggers if tr.layer == layer]) for layer in self.list_layers()},
+            "by_type": by_type,
+            "by_layer": by_layer,
             "m0_health": m0_summary,
             "dependency_graph": dependency_graph,
             "health_trend": health_trend,

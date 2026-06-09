@@ -6,6 +6,7 @@ import argparse
 from unittest import mock
 
 from rich.console import Console
+
 from cockpit import cli
 
 

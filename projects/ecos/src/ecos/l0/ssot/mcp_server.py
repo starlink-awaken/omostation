@@ -22,13 +22,13 @@ _SRC_DIR = _SCRIPT_DIR / "src"
 _PROJECT_ROOT = _SCRIPT_DIR.parent.parent  # SSOT 项目根
 sys.path.insert(0, str(_SRC_DIR))
 
-from .config_loader import load_domain
-from .engine import RuleEngine
-from .evolution.evolver import Evolver
-from .extractor import TextSource
-from .extractor.pipeline import ExtractionPipeline
-from .reporter import Reporter
-from .sync import sync_yaml_to_markdown
+from .config_loader import load_domain  # noqa: E402
+from .engine import RuleEngine  # noqa: E402
+from .evolution.evolver import Evolver  # noqa: E402
+from .extractor import TextSource  # noqa: E402
+from .extractor.pipeline import ExtractionPipeline  # noqa: E402
+from .reporter import Reporter  # noqa: E402
+from .sync import sync_yaml_to_markdown  # noqa: E402
 
 # ── 工具定义 ─────────────────────────────────────────
 
@@ -47,7 +47,9 @@ def _domain_path(dd: str) -> str:
     alt2 = _PROJECT_ROOT / dd
     if alt2.exists():
         return str(alt2.resolve())
-    raise FileNotFoundError(f"领域目录不存在: {dd}（已尝试: {p}, {alt}, {alt2}）\n  可用路径示例: domains/guozhuan")
+    raise FileNotFoundError(
+        f"领域目录不存在: {dd}（已尝试: {p}, {alt}, {alt2}）\n  可用路径示例: domains/guozhuan"
+    )
 
 
 TOOLS = [
@@ -364,10 +366,22 @@ def handle_message(msg: dict) -> dict | None:
             text = result.pop("text", str(result))
             content = [{"type": "text", "text": text}]
             if error:
-                return {"jsonrpc": "2.0", "id": msg_id, "error": {"code": -1, "message": error}}
-            return {"jsonrpc": "2.0", "id": msg_id, "result": {"content": content, "meta": result}}
+                return {
+                    "jsonrpc": "2.0",
+                    "id": msg_id,
+                    "error": {"code": -1, "message": error},
+                }
+            return {
+                "jsonrpc": "2.0",
+                "id": msg_id,
+                "result": {"content": content, "meta": result},
+            }
         except Exception as e:
-            return {"jsonrpc": "2.0", "id": msg_id, "error": {"code": -1, "message": f"{type(e).__name__}: {e}"}}
+            return {
+                "jsonrpc": "2.0",
+                "id": msg_id,
+                "error": {"code": -1, "message": f"{type(e).__name__}: {e}"},
+            }
 
     elif method == "initialize":
         return {
@@ -383,7 +397,11 @@ def handle_message(msg: dict) -> dict | None:
     elif method == "notifications/initialized":
         return None
 
-    return {"jsonrpc": "2.0", "id": msg_id, "error": {"code": -32601, "message": f"未知方法: {method}"}}
+    return {
+        "jsonrpc": "2.0",
+        "id": msg_id,
+        "error": {"code": -32601, "message": f"未知方法: {method}"},
+    }
 
 
 # ── 主循环（stdio） ──────────────────────────────────

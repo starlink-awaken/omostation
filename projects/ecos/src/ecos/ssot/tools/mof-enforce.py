@@ -32,7 +32,16 @@ from datetime import datetime, timezone
 HOME = Path.home()
 DOCS = HOME / "Documents"
 WS = HOME / "Workspace"
-BOUNDARY_FILE = WS / "projects" / "ecos" / "src" / "ecos" / "ssot" / "registry" / "layer-boundary.yaml"
+BOUNDARY_FILE = (
+    WS
+    / "projects"
+    / "ecos"
+    / "src"
+    / "ecos"
+    / "ssot"
+    / "registry"
+    / "layer-boundary.yaml"
+)
 CARDS_DB = WS / "data" / "cards" / "cards.db"
 
 
@@ -48,30 +57,80 @@ def scan_assets() -> list[dict]:
     # Scan Documents (L4)
     if DOCS.exists():
         for f in DOCS.rglob("*"):
-            if f.is_file() and not any(s in str(f) for s in [".git", ".obsidian", "node_modules", ".venv", "Zotero", "__pycache__", ".pytest_cache", ".ruff_cache"]):
-                assets.append({"path": str(f), "layer": "L4", "type": f.suffix, "name": f.name, "size": f.stat().st_size})
+            if f.is_file() and not any(
+                s in str(f)
+                for s in [
+                    ".git",
+                    ".obsidian",
+                    "node_modules",
+                    ".venv",
+                    "Zotero",
+                    "__pycache__",
+                    ".pytest_cache",
+                    ".ruff_cache",
+                ]
+            ):
+                assets.append(
+                    {
+                        "path": str(f),
+                        "layer": "L4",
+                        "type": f.suffix,
+                        "name": f.name,
+                        "size": f.stat().st_size,
+                    }
+                )
 
     # Scan Workspace (L0-L3+I0)
     if WS.exists():
         ws_projects = WS / "projects"
-        scan_dirs = [WS / "agora", WS / "cockpit", WS / "ecos", WS / "runtime", WS / "kairon", WS / "gbrain"]
+        scan_dirs = [
+            WS / "agora",
+            WS / "cockpit",
+            WS / "ecos",
+            WS / "runtime",
+            WS / "kairon",
+            WS / "gbrain",
+        ]
         if ws_projects.exists():
             scan_dirs.append(ws_projects)
-        
+
         for scan_dir in scan_dirs:
             if not scan_dir.exists():
                 continue
             # Infer layer
             layer = "L2"
             name = scan_dir.name
-            if name in ["ecos"]: layer = "L0"
-            elif name in ["runtime", "agent-runtime"]: layer = "L1"
-            elif name in ["cockpit", "hermes-console"]: layer = "L3"
-            elif name in ["agora"]: layer = "I0"
-            
+            if name in ["ecos"]:
+                layer = "L0"
+            elif name in ["runtime", "agent-runtime"]:
+                layer = "L1"
+            elif name in ["cockpit", "hermes-console"]:
+                layer = "L3"
+            elif name in ["agora"]:
+                layer = "I0"
+
             for f in scan_dir.rglob("*"):
-                if f.is_file() and not any(s in str(f) for s in [".git", "node_modules", ".venv", "__pycache__", ".pytest_cache", ".ruff_cache", "dist/"]):
-                    assets.append({"path": str(f), "layer": layer, "type": f.suffix, "name": f.name, "size": f.stat().st_size})
+                if f.is_file() and not any(
+                    s in str(f)
+                    for s in [
+                        ".git",
+                        "node_modules",
+                        ".venv",
+                        "__pycache__",
+                        ".pytest_cache",
+                        ".ruff_cache",
+                        "dist/",
+                    ]
+                ):
+                    assets.append(
+                        {
+                            "path": str(f),
+                            "layer": layer,
+                            "type": f.suffix,
+                            "name": f.name,
+                            "size": f.stat().st_size,
+                        }
+                    )
 
     return assets
 
@@ -99,11 +158,15 @@ def check_violation(asset: dict, boundary: dict) -> dict | None:
                 continue
             return {
                 "asset": name,
-                "path": str(Path(path).relative_to(HOME)) if str(path).startswith(str(HOME)) else path,
+                "path": str(Path(path).relative_to(HOME))
+                if str(path).startswith(str(HOME))
+                else path,
                 "current_layer": layer,
                 "violation": f"禁止在 {layer} 中存放: {note}",
                 "suggested_layer": suggest_layer(name, path),
-                "severity": "high" if layer == "L4" and name.endswith(".py") else "medium",
+                "severity": "high"
+                if layer == "L4" and name.endswith(".py")
+                else "medium",
             }
 
     # Check if L4 Python script is on the exclusion list
@@ -120,7 +183,9 @@ def check_violation(asset: dict, boundary: dict) -> dict | None:
         if not is_allowed:
             return {
                 "asset": name,
-                "path": str(Path(path).relative_to(HOME)) if str(path).startswith(str(HOME)) else path,
+                "path": str(Path(path).relative_to(HOME))
+                if str(path).startswith(str(HOME))
+                else path,
                 "current_layer": layer,
                 "violation": "L4 Python 脚本不在允许列表中——应下沉到 L0/L1/L3",
                 "suggested_layer": suggest_layer(name, path),
@@ -132,7 +197,10 @@ def check_violation(asset: dict, boundary: dict) -> dict | None:
 
 def suggest_layer(name: str, path: str) -> str:
     """根据文件名推断正确层级"""
-    if any(k in name for k in ["mof-", "constraint", "compiler", "protocol", "topology", "pattern"]):
+    if any(
+        k in name
+        for k in ["mof-", "constraint", "compiler", "protocol", "topology", "pattern"]
+    ):
         return "L0"
     if any(k in name for k in ["daemon", "healer", "sla", "runtime", "matrix"]):
         return "L1"
@@ -151,21 +219,28 @@ def create_debt_card(violation: dict) -> bool:
         conn = sqlite3.connect(str(CARDS_DB))
         now = datetime.now(timezone.utc).isoformat()
         debt_id = f"DEBT-ENFORCE-{now[:10]}-{violation['asset'][:20]}"
-        debt_id = re.sub(r'[^a-zA-Z0-9_\-]', '-', debt_id)[:50]
-        
+        debt_id = re.sub(r"[^a-zA-Z0-9_\-]", "-", debt_id)[:50]
+
         cur = conn.execute("SELECT id FROM cards WHERE id = ?", (debt_id,))
         if cur.fetchone():
             conn.close()
             return False  # Already exists
-        
+
         title = f"层违规: {violation['asset']} 在 {violation['current_layer']} → 应下沉到 {violation['suggested_layer']}"
-        conn.execute("""
+        conn.execute(
+            """
             INSERT INTO cards (id, type, status, title, domain, priority, summary, content, created_at, updated_at)
             VALUES (?, 'debt', 'identified', ?, 'meta', 'P2', ?, ?, ?, ?)
-        """, (debt_id, title[:100],
-              f"{violation['violation']} | 建议: {violation['suggested_layer']}",
-              f"## mof-enforce 自动检测\n- 资产: {violation['path']}\n- 当前层: {violation['current_layer']}\n- 建议层: {violation['suggested_layer']}\n- 违规: {violation['violation']}",
-              now, now))
+        """,
+            (
+                debt_id,
+                title[:100],
+                f"{violation['violation']} | 建议: {violation['suggested_layer']}",
+                f"## mof-enforce 自动检测\n- 资产: {violation['path']}\n- 当前层: {violation['current_layer']}\n- 建议层: {violation['suggested_layer']}\n- 违规: {violation['violation']}",
+                now,
+                now,
+            ),
+        )
         conn.commit()
         conn.close()
         return True
@@ -175,21 +250,28 @@ def create_debt_card(violation: dict) -> bool:
 
 def format_report(violations: list[dict]) -> str:
     now = datetime.now(timezone.utc)
-    lines = ["=" * 64, "  织星 MOF — 层合规报告", "=" * 64,
-             f"  时间: {now.strftime('%Y-%m-%d %H:%M:%S')}",
-             f"  违规: {len(violations)} 项", ""]
+    lines = [
+        "=" * 64,
+        "  织星 MOF — 层合规报告",
+        "=" * 64,
+        f"  时间: {now.strftime('%Y-%m-%d %H:%M:%S')}",
+        f"  违规: {len(violations)} 项",
+        "",
+    ]
 
     if not violations:
         lines.append("  ✅ 全部资产在正确的架构层中")
     else:
         by_layer = {}
         for v in violations:
-            l = v["current_layer"]
-            by_layer.setdefault(l, []).append(v)
+            cur_layer = v["current_layer"]
+            by_layer.setdefault(cur_layer, []).append(v)
         for layer in sorted(by_layer):
             lines.append(f"  [{layer}] {len(by_layer[layer])} 项:")
             for v in by_layer[layer]:
-                icon = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(v["severity"], "⚪")
+                icon = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(
+                    v["severity"], "⚪"
+                )
                 lines.append(f"    {icon} {v['asset']:30s} → {v['suggested_layer']}")
                 lines.append(f"       {v['violation'][:70]}")
 
@@ -210,7 +292,7 @@ def main():
 
     boundary = load_boundary()
     assets = scan_assets()
-    
+
     violations = []
     for asset in assets:
         v = check_violation(asset, boundary)
@@ -218,7 +300,13 @@ def main():
             violations.append(v)
 
     if args.json:
-        print(json.dumps({"violations": len(violations), "items": violations}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"violations": len(violations), "items": violations},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         print(format_report(violations))
 

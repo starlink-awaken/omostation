@@ -14,6 +14,8 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
+import yaml
+
 from model_driven.mof.m3_extended import LifecycleStage
 
 from .stages import LifecycleTracker, StageStatus
@@ -83,32 +85,27 @@ class LifecycleManager:
         dashboard = LifecycleDashboard()
         dashboard.total_entities = len(self._trackers)
 
-        # 按阶段统计
-        stage_counts: dict[str, int] = {}
-        stage_entities: dict[str, list[str]] = {}
-        for stage in LifecycleStage:
-            stage_counts[stage.value] = 0
-            stage_entities[stage.value] = []
+        # 单次遍历: 阶段统计 + 状态统计 + 平均进度
+        stage_counts: dict[str, int] = {stage.value: 0 for stage in LifecycleStage}
+        stage_entities: dict[str, list[str]] = {stage.value: [] for stage in LifecycleStage}
+        status_counts: dict[str, int] = {"not_started": 0, "in_progress": 0, "blocked": 0, "completed": 0}
+        total_progress = 0.0
+        num_stages = len(LifecycleStage)
 
         for entity_id, tracker in self._trackers.items():
             if tracker.current_stage:
                 stage_counts[tracker.current_stage.value] += 1
                 stage_entities[tracker.current_stage.value].append(entity_id)
 
-        dashboard.entities_by_stage = stage_counts
-        dashboard.stage_distribution = stage_entities
-
-        # 按状态统计
-        status_counts: dict[str, int] = {
-            "not_started": 0,
-            "in_progress": 0,
-            "blocked": 0,
-            "completed": 0,
-        }
-        for tracker in self._trackers.values():
             for stage in LifecycleStage:
                 status = tracker.stages[stage].status.value
                 status_counts[status] = status_counts.get(status, 0) + 1
+
+            completed = sum(1 for s in LifecycleStage if tracker.stages[s].status == StageStatus.COMPLETED)
+            total_progress += completed / num_stages
+
+        dashboard.entities_by_stage = stage_counts
+        dashboard.stage_distribution = stage_entities
         dashboard.entities_by_status = status_counts
 
         # 阻塞项
@@ -116,10 +113,6 @@ class LifecycleManager:
 
         # 平均进度
         if self._trackers:
-            total_progress = sum(
-                sum(1 for s in LifecycleStage if t.stages[s].status == StageStatus.COMPLETED) / len(LifecycleStage)
-                for t in self._trackers.values()
-            )
             dashboard.avg_progress = round(total_progress / len(self._trackers) * 100, 1)
 
         return dashboard
@@ -161,12 +154,10 @@ class LifecycleManager:
 
         file_path = Path(state_dir) / "lifecycle.yaml"
         try:
-            import yaml
-
             with open(file_path, "w") as f:
                 yaml.dump(self.to_dict(), f, allow_unicode=True, sort_keys=False)
             return True
-        except (OSError, ImportError, yaml.YAMLError):
+        except (OSError, yaml.YAMLError):
             return False
 
     @classmethod
@@ -184,8 +175,6 @@ class LifecycleManager:
             return None
 
         try:
-            import yaml
-
             with open(file_path) as f:
                 data = yaml.safe_load(f)
         except (OSError, ImportError, yaml.YAMLError):

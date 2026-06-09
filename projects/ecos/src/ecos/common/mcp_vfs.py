@@ -7,7 +7,7 @@ from ecos.protocol.ssb.ssb_client import SSBClient  # type: ignore[import-not-fo
 
 # Define the base workspace and documents paths
 WORKSPACE_ROOT = Path(
-    os.environ.get("WORKSPACE_ROOT", "/Users/xiamingxing/Workspace")
+    os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
 ).resolve()
 HOME_DIR = Path.home()
 DOCS_ROOT = HOME_DIR / "Documents"
@@ -151,11 +151,13 @@ def main():
 if __name__ == "__main__":
     main()
 
+
 class SSBLogRequest(BaseModel):
     event_type: str
     agent_name: str
     summary: str
     detail: str = ""
+
 
 @mcp.tool()
 async def append_ssb_log(req: SSBLogRequest) -> str:
@@ -168,7 +170,7 @@ async def append_ssb_log(req: SSBLogRequest) -> str:
         event = {
             "event": {"type": req.event_type},
             "source": {"agent": req.agent_name, "instance": "mcp-vfs"},
-            "payload": {"summary": req.summary, "detail": req.detail}
+            "payload": {"summary": req.summary, "detail": req.detail},
         }
         event_id = ssb.publish(event)
         return f"Successfully anchored event {event_id} to L0 SSB Log."

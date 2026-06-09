@@ -12,7 +12,6 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Any
 
 import yaml
 
@@ -28,10 +27,12 @@ if HAS_FASTMCP:
     _tool = mcp.tool
 else:
     mcp = None  # type: ignore[assignment]
+
     # no-op decorator when fastmcp is unavailable
     def _tool(*d_args, **d_kwargs):  # type: ignore[no-redef]
         def decorator(f):
             return f
+
         return decorator
 
 
@@ -255,10 +256,7 @@ def status_summary() -> str:
     total = len(items)
     active = sum(1 for r in items if r.get("archived_at") is None)
     archived = sum(1 for r in items if r.get("archived_at") is not None)
-    stale = sum(
-        1 for r in items
-        if r.get("archived_at") is None and (now - r.get("created_at", 0)) > _STALE_SECONDS
-    )
+    stale = sum(1 for r in items if r.get("archived_at") is None and (now - r.get("created_at", 0)) > _STALE_SECONDS)
     health = "idle" if total == 0 else "good" if active > 0 else "warning"
     return json.dumps({"total": total, "active": active, "archived": archived, "stale": stale, "health": health})
 
@@ -267,7 +265,9 @@ def status_summary() -> str:
 def status_json() -> str:
     """获取工作区详细 JSON 状态。"""
     if _da is None:
-        return json.dumps({"status": "ok", "total": 0, "active": 0, "archived": 0, "stale": 0, "health": "idle", "recent": []})
+        return json.dumps(
+            {"status": "ok", "total": 0, "active": 0, "archived": 0, "stale": 0, "health": "idle", "recent": []}
+        )
     items = _da.list_research(limit=100)
     now = _now()
     total = len(items)
@@ -343,7 +343,7 @@ def daily_summary(days: int = 1) -> str:
 
 try:
     from l4_kernel import DomainRegistry
-    from l4_kernel.kems import KemsPlane, CardsPlane
+    from l4_kernel.kems import CardsPlane, KemsPlane
 
     _registry = DomainRegistry()
     _HAS_L4_KERNEL = True
@@ -355,6 +355,11 @@ _CARDS_DIR = Path.home() / "Documents" / "@驾驶舱" / "CARDS"
 _VAULT_DIR = Path.home() / "Documents" / "@学习进化"
 _WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[4])))
 _OMO_GOALS = _WORKSPACE_ROOT / ".omo" / "_truth" / "goals" / "current.yaml"
+
+_L4_DOMAINS: dict[str, Path] = {
+    "cards": _CARDS_DIR,
+    "vault": _VAULT_DIR,
+}
 
 
 def _scan_cards() -> list[dict[str, str]]:
@@ -374,16 +379,18 @@ def _scan_cards() -> list[dict[str, str]]:
                 _, fm, __ = text.split("---", 2)
                 meta = yaml.safe_load(fm) or {}
                 if isinstance(meta, dict) and meta.get("id") and meta.get("type"):
-                    cards.append({
-                        "id": str(meta.get("id", "")),
-                        "type": str(meta.get("type", "")),
-                        "status": str(meta.get("status", "")),
-                        "title": str(meta.get("title", "")),
-                        "priority": str(meta.get("priority", "")),
-                        "domain": str(meta.get("domain", "")),
-                        "created": str(meta.get("created", "")),
-                        "tags": str(meta.get("tags", "[]")),
-                    })
+                    cards.append(
+                        {
+                            "id": str(meta.get("id", "")),
+                            "type": str(meta.get("type", "")),
+                            "status": str(meta.get("status", "")),
+                            "title": str(meta.get("title", "")),
+                            "priority": str(meta.get("priority", "")),
+                            "domain": str(meta.get("domain", "")),
+                            "created": str(meta.get("created", "")),
+                            "tags": str(meta.get("tags", "[]")),
+                        }
+                    )
         except (OSError, ValueError, yaml.YAMLError):
             continue
     cards.sort(key=lambda c: ({"P0": 0, "P1": 1, "P2": 2, "P3": 3}.get(c["priority"], 9), c["created"]), reverse=True)
@@ -448,11 +455,13 @@ def _search_vault(keyword: str, base_dir: Path | None = None) -> list[dict]:
                 title = lines[0].replace("# ", "").strip() if lines else md_file.stem
                 snippet_start = max(0, text.lower().index(kw) - 40)
                 snippet_end = min(len(text), text.lower().index(kw) + 120)
-                results.append({
-                    "path": str(md_file.relative_to(vault_dir)),
-                    "title": title,
-                    "snippet": "..." + text[snippet_start:snippet_end].replace("\n", " ").strip() + "...",
-                })
+                results.append(
+                    {
+                        "path": str(md_file.relative_to(vault_dir)),
+                        "title": title,
+                        "snippet": "..." + text[snippet_start:snippet_end].replace("\n", " ").strip() + "...",
+                    }
+                )
                 if len(results) >= 10:
                     break
         except (OSError, ValueError):
@@ -481,8 +490,7 @@ def workspace_context() -> str:
             "theme": omo.get("theme", ""),
             "phase_status": omo.get("status", ""),
             "active_goals": [
-                {"id": g.get("id", ""), "desc": g.get("desc", ""), "status": g.get("status", "")}
-                for g in goals_list
+                {"id": g.get("id", ""), "desc": g.get("desc", ""), "status": g.get("status", "")} for g in goals_list
             ],
             "cards_summary": {
                 "total": len(active_cards),
@@ -514,8 +522,15 @@ def cards_status() -> str:
     active = [c for c in cards if c["status"] not in ("closed", "done")]
     return json.dumps(
         [
-            {"id": c["id"], "type": c["type"], "status": c["status"], "title": c["title"],
-             "priority": c["priority"], "domain": c["domain"], "created": c["created"]}
+            {
+                "id": c["id"],
+                "type": c["type"],
+                "status": c["status"],
+                "title": c["title"],
+                "priority": c["priority"],
+                "domain": c["domain"],
+                "created": c["created"],
+            }
             for c in active
         ],
         ensure_ascii=False,
@@ -555,8 +570,7 @@ def cards_check(card_id: str = "") -> str:
             "violations": violations,
             "constraints_checked": len(constraints),
             "guidance": (
-                "合规, 可以执行" if not violations
-                else f"需要解决 {len(violations)} 个违规项: " + "; ".join(violations)
+                "合规, 可以执行" if not violations else f"需要解决 {len(violations)} 个违规项: " + "; ".join(violations)
             ),
         },
         ensure_ascii=False,
@@ -595,11 +609,13 @@ def domains_list() -> str:
     """
     domains = []
     for name, path in _L4_DOMAINS.items():
-        domains.append({
-            "name": name,
-            "path": str(path),
-            "exists": path.is_dir(),
-        })
+        domains.append(
+            {
+                "name": name,
+                "path": str(path),
+                "exists": path.is_dir(),
+            }
+        )
     return json.dumps({"domains": domains, "total": len(domains)}, ensure_ascii=False)
 
 
@@ -607,12 +623,14 @@ def domains_list() -> str:
 # Module execution
 # ══════════════════════════════════════════════════════════════
 
+
 def main() -> None:
     """Entry point for cockpit MCP server. Use `cockpit-mcp` CLI or `uv run --package cockpit cockpit-mcp`."""
     if not HAS_FASTMCP or mcp is None:
         print("错误: 需安装 fastmcp 才能运行 MCP server", file=sys.stderr)
         sys.exit(1)
     mcp.run(transport="stdio")
+
 
 if __name__ == "__main__":
     main()

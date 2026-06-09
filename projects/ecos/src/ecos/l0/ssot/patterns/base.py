@@ -59,7 +59,9 @@ class BasePattern(ABC):
         ...
 
     @abstractmethod
-    def evaluate(self, rule: Rule, domain: DomainConfig, context: dict[str, Any] | None = None) -> CheckResult:
+    def evaluate(
+        self, rule: Rule, domain: DomainConfig, context: dict[str, Any] | None = None
+    ) -> CheckResult:
         """执行规则检查，返回结构化的检查结果。
 
         Args:
@@ -97,7 +99,11 @@ class DependencyValidator:
             # 提取 fact_ratio("DAT-ID", "DAT-ID") 中的 ID
             for m in re.finditer(r'fact_ratio\("([^"]+)",\s*"([^"]+)"\)', cond):
                 for ref_id in (m.group(1), m.group(2)):
-                    if not self._entity_exists(ref_id) and not self._fact_exists(ref_id) and ref_id not in missing:
+                    if (
+                        not self._entity_exists(ref_id)
+                        and not self._fact_exists(ref_id)
+                        and ref_id not in missing
+                    ):
                         missing.append(ref_id)
 
             # 提取 entity_attr("ORG-ID", ...) 中的 ID

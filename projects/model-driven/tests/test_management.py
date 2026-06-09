@@ -2,6 +2,7 @@
 Tests for model_driven.management — 管理面
 """
 
+from model_driven.lifecycle.tracking import LifecycleManager
 from model_driven.management.adr import ADR, ADRManager, ADRStatus
 from model_driven.management.agent_collab import AgentCollabManager, CollabTaskStatus
 from model_driven.management.okr import OKR, OKRManager, OKRStatus
@@ -288,3 +289,100 @@ class TestAgentCollab:
         manager.create_task("T-2", "任务2")
         stats = manager.get_stats()
         assert stats["total"] == 2
+
+
+# ── 持久化往返测试 ──────────────────────────────
+
+
+class TestPersistence:
+    """测试 Manager 类的 save/load 往返"""
+
+    def test_spec_manager_roundtrip(self, tmp_path):
+
+        d = str(tmp_path)
+        manager = SpecManager()
+        manager.create("S-1", "往返测试1", author="tester", status=SpecStatus.DRAFT)
+        manager.create("S-2", "往返测试2", author="tester", status=SpecStatus.APPROVED)
+
+        # 保存
+        assert manager.save(state_dir=d)
+
+        # 加载
+        restored = SpecManager.load(state_dir=d)
+        assert restored is not None
+        assert len(restored.list_all()) == 2
+        assert restored.get("S-1").title == "往返测试1"
+        assert restored.get("S-2").title == "往返测试2"
+        assert restored.get("S-2").status == SpecStatus.APPROVED
+
+    def test_adr_manager_roundtrip(self, tmp_path):
+        d = str(tmp_path)
+        manager = ADRManager()
+        manager.create("ADR-1", "测试决策1", decision="采用方案A", context="背景1")
+        manager.create("ADR-2", "测试决策2", status=ADRStatus.ACCEPTED, decision="采用方案B")
+
+        assert manager.save(state_dir=d)
+
+        restored = ADRManager.load(state_dir=d)
+        assert restored is not None
+        assert len(restored.list_all()) == 2
+        assert restored.get("ADR-1").title == "测试决策1"
+        assert restored.get("ADR-2").status == ADRStatus.ACCEPTED
+
+    def test_okr_manager_roundtrip(self, tmp_path):
+        d = str(tmp_path)
+        manager = OKRManager()
+        kr1 = KeyResult(id="KR-1", description="完成核心模块", weight=1.0, target_value=100, current_value=0)
+        manager.create("O-1", "季度目标", key_results=[kr1], owner="owner1")
+
+        assert manager.save(state_dir=d)
+
+        restored = OKRManager.load(state_dir=d)
+        assert restored is not None
+        assert len(restored.list_all()) == 1
+        o = restored.get("O-1")
+        assert o.objective == "季度目标"
+        assert len(o.key_results) == 1
+        assert o.key_results[0].id == "KR-1"
+
+    def test_lifecycle_manager_roundtrip(self, tmp_path):
+        d = str(tmp_path)
+        manager = LifecycleManager()
+        manager.create_tracker("entity-1", "project")
+        manager.create_tracker("entity-2", "service")
+
+        assert manager.save(state_dir=d)
+
+        restored = LifecycleManager.load(state_dir=d)
+        assert restored is not None
+        assert len(restored.list_entities()) == 2
+        assert "entity-1" in restored.list_entities()
+        assert "entity-2" in restored.list_entities()
+
+    def test_toolchain_bus_history_roundtrip(self, tmp_path):
+        d = str(tmp_path)
+        from model_driven.toolchain.bus import ToolchainBus
+
+        bus = ToolchainBus()
+        bus.register("dummy", lambda **kw: {"ok": True}, None)
+
+        bus.save_history(state_dir=d)
+
+        results = bus.load_history(state_dir=d)
+        assert isinstance(results, list)
+
+    def test_save_load_empty_manager(self, tmp_path):
+        """保存和加载空管理器"""
+        d = str(tmp_path)
+        manager = SpecManager()
+        assert manager.save(state_dir=d)
+
+        restored = SpecManager.load(state_dir=d)
+        assert restored is not None
+        assert len(restored.list_all()) == 0
+
+    def test_load_nonexistent_file(self, tmp_path):
+        """加载不存在的持久化文件应返回 None"""
+        d = str(tmp_path)
+        restored = SpecManager.load(state_dir=d)
+        assert restored is None

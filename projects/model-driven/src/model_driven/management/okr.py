@@ -14,6 +14,8 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
+import yaml
+
 from model_driven.constants import (
     PRIORITY_P0_THRESHOLD,
     PRIORITY_P1_THRESHOLD,
@@ -192,12 +194,10 @@ class OKRManager:
 
         file_path = Path(state_dir) / "okrs.yaml"
         try:
-            import yaml
-
             with open(file_path, "w") as f:
                 yaml.dump(self.to_dict(), f, allow_unicode=True, sort_keys=False)
             return True
-        except (OSError, ImportError, yaml.YAMLError):
+        except (OSError, yaml.YAMLError):
             return False
 
     @classmethod
@@ -215,11 +215,9 @@ class OKRManager:
             return None
 
         try:
-            import yaml
-
             with open(file_path) as f:
                 data = yaml.safe_load(f)
-        except (OSError, ImportError, yaml.YAMLError):
+        except (OSError, yaml.YAMLError):
             return None
 
         manager = cls()
@@ -277,7 +275,7 @@ class OKRDecomposer:
             return ("hardening", "硬化")
         if any(kw in kr_lower for kw in ["部署", "上线", "deploy", "发布", "release"]):
             return ("evolution", "演进")
-        if any(kw in kr_lower for kw in ["开发", "实现", "代码", "code", "开发", "build", "测试", "test"]):
+        if any(kw in kr_lower for kw in ["开发", "实现", "代码", "code", "build", "测试", "test"]):
             return ("evolution", "演进")
         if any(kw in kr_lower for kw in ["设计", "架构", "spec", "design", "adr"]):
             return ("cold_start", "冷启动")

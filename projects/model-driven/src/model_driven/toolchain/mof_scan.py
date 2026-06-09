@@ -21,6 +21,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from model_driven.toolchain.common import now
 
 
@@ -214,8 +216,6 @@ def scan_mof_m1_nodes(
 
     for yaml_file in sorted(root.rglob("*.yaml")):
         try:
-            import yaml
-
             with open(yaml_file) as f:
                 data = yaml.safe_load(f)
             if isinstance(data, dict) and "type" in data:
@@ -331,8 +331,6 @@ def load_m1_nodes(m1_dir: str | Path | None = None) -> list[dict[str, Any]]:
     Returns:
         M1 节点列表 (包含 type 字段的 dict)
     """
-    import yaml
-
     if m1_dir is None:
         from model_driven._paths import get_workspace_dir
 

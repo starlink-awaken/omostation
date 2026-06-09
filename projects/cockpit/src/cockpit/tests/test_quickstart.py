@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import Mock
 
 from rich.console import Console
+
 from cockpit.commands.quickstart import (
     _auto_fix,
     _check_cli_tools,

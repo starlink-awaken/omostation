@@ -1,1 +1,1 @@
-from ecos.services.integration.model_balancer import *
+from ecos.services.integration.model_balancer import *  # noqa: F403

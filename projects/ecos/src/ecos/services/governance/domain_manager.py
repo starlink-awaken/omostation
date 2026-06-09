@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Domain Manager v2 — L4域生命周期管理 | ecos domain <cmd>"""
-import sys, os, json, yaml
+import sys
+import os
+import json
+import yaml
 from pathlib import Path
 from datetime import datetime
 
@@ -181,9 +184,11 @@ def resolve_path(domain):
         s = domain.get(key)
         if s:
             p = Path(s)
-            if p.exists(): return p
+            if p.exists():
+                return p
             p2 = DOCS / s.lstrip("/")
-            if p2.exists(): return p2
+            if p2.exists():
+                return p2
             # Return the explicit path even if not found (for diagnostics)
             return p
     
@@ -192,7 +197,8 @@ def resolve_path(domain):
     parent = domain.get("parent_path","")
     if parent:
         p = DOCS / parent / name
-        if p.exists(): return p
+        if p.exists():
+            return p
         return DOCS / f"@{name}"  # fallback
     return DOCS / f"@{name}"
 
@@ -200,26 +206,32 @@ def scan_filesystem():
     """扫描文件系统发现候选域，排除已知非域目录"""
     found = []
     for root in [DOCS, H/"SharedWork", H, Path("/Volumes/SharedDisk")]:
-        if not root.exists(): continue
+        if not root.exists():
+            continue
         try:
             for item in root.iterdir():
-                if item.name in SKIP_AUDIT: continue
+                if item.name in SKIP_AUDIT:
+                    continue
                 if item.is_symlink() or item.is_dir():
-                    if item.name.startswith("."): continue
+                    if item.name.startswith("."):
+                        continue
                     if (item/"CLAUDE.md").exists() or any((item/p).exists() for p in ["_control","_knowledge"]):
                         found.append(item)
-        except PermissionError: continue
+        except PermissionError:
+            continue
     return found
 
 # ── 校验 ──
 def _count_files(dir_path: Path, suffix: str = ".md") -> int:
     """Count files recursively in a directory (skip hidden)."""
-    if not dir_path.is_dir(): return 0
+    if not dir_path.is_dir():
+        return 0
     return sum(1 for f in dir_path.rglob(f"*{suffix}") if not f.name.startswith(".") and ".git" not in f.parts)
 
 def _check_frontmatter(file_path: Path) -> bool:
     """Check if a file has YAML frontmatter."""
-    if not file_path.exists(): return False
+    if not file_path.exists():
+        return False
     content = file_path.read_text(encoding="utf-8", errors="ignore")
     return content.startswith("---") and "---" in content[3:20]
 
@@ -271,7 +283,8 @@ def validate_domain(path, dtype="document", tier=1):
 def cmd_list(args):
     registry = load_registry()
     by_type = defaultdict(list)
-    for d in registry: by_type[d.get("domain_type","document")].append(d)
+    for d in registry:
+        by_type[d.get("domain_type","document")].append(d)
     
     if "--json" in args:
         print(json.dumps([{k:d.get(k) for k in ["id","name","domain_type","layer","status"]} for d in registry], indent=2, ensure_ascii=False))
@@ -289,25 +302,38 @@ def cmd_list(args):
 
 def cmd_status(args):
     registry = load_registry()
-    if not args: print("用法: ecos domain status <域>"); return
+    if not args:
+        print("用法: ecos domain status <域>")
+
+        return
     d = find_domain(registry, args[0])
-    if not d: print(f"❌ '{args[0]}' 未注册"); return
+    if not d:
+        print(f"❌ '{args[0]}' 未注册")
+        return
     
     p = resolve_path(d)
     print(f"\n  {TYPE_ICONS.get(d.get('domain_type',''),'')} {d.get('name',d['id'])}")
     print(f"  ID: {d['id']}  |  类型: {d.get('domain_type','?')}  |  层: {d.get('layer','?')}  |  Tier: {d.get('governance_tier','-')}")
     print(f"  路径: {p} {'✅' if p.exists() else '❌'}")
-    if d.get("description"): print(f"  说明: {d['description'][:100]}")
+    if d.get("description"):
+        print(f"  说明: {d['description'][:100]}")
     print()
 
 def cmd_validate(args):
     registry = load_registry()
-    if not args: print("用法: ecos domain validate <域>"); return
+    if not args:
+        print("用法: ecos domain validate <域>")
+
+        return
     d = find_domain(registry, args[0])
-    if not d: print(f"❌ '{args[0]}' 未注册"); return
+    if not d:
+        print(f"❌ '{args[0]}' 未注册")
+        return
     
     p = resolve_path(d)
-    if not p.exists(): print(f"❌ 路径不存在: {p}"); return
+    if not p.exists():
+        print(f"❌ 路径不存在: {p}")
+        return
     
     dtype = d.get("domain_type","document")
     tier = d.get("governance_tier",1)
@@ -324,18 +350,26 @@ def cmd_validate(args):
 def cmd_tree(args):
     """目录树——标注KEMS面"""
     registry = load_registry()
-    if not args: print("用法: ecos domain tree <域>"); return
+    if not args:
+        print("用法: ecos domain tree <域>")
+
+        return
     d = find_domain(registry, args[0])
-    if not d: print(f"❌ '{args[0]}' 未注册"); return
+    if not d:
+        print(f"❌ '{args[0]}' 未注册")
+        return
     
     p = resolve_path(d)
-    if not p.exists(): print(f"❌ {p}"); return
+    if not p.exists():
+        print(f"❌ {p}")
+        return
     
     planes = {pl for pl in KEMS_PLANES.get(d.get("domain_type",""),[])}
     print(f"\n  {d.get('name',d['id'])}/")
     
     def tree(dir_path, prefix="", depth=0):
-        if depth>3: return
+        if depth>3:
+            return
         items = sorted([i for i in dir_path.iterdir() if not i.name.startswith(".") and not i.name.startswith("__")],
                       key=lambda x: (not x.is_dir(), x.name))
         for i,item in enumerate(items):
@@ -343,8 +377,10 @@ def cmd_tree(args):
             branch = "└── " if is_last else "├── "
             marker = ""
             if item.is_dir():
-                if item.name in planes: marker = " ← KEMS"
-                elif item.name.startswith("_"): marker = " ← sys"
+                if item.name in planes:
+                    marker = " ← KEMS"
+                elif item.name.startswith("_"):
+                    marker = " ← sys"
                 branch += f"📁 {item.name}{marker}"
             else:
                 branch += f"📄 {item.name}"
@@ -360,17 +396,21 @@ def cmd_audit(args):
     reg_paths = set()
     for d in registry:
         p = resolve_path(d)
-        if p: reg_paths.add(str(p.resolve()))
+        if p:
+            reg_paths.add(str(p.resolve()))
     
     # Phase 1: registered check
     print("\n  === 已注册域 ===\n")
-    ok=0;miss=0
+    ok=0
+    miss=0
     for d in registry:
         p = resolve_path(d)
         exists = p.exists() if p else False
         print(f"  {'✅' if exists else '❌'} {d.get('name',d['id']):<20} {p}")
-        if exists: ok+=1
-        else: miss+=1
+        if exists:
+            ok+=1
+        else:
+            miss+=1
     print(f"\n  存在:{ok}  缺失:{miss}")
     
     # Phase 2: unregistered scan
@@ -388,7 +428,7 @@ def cmd_audit(args):
 
 def cmd_relations(args):
     """域间关系图"""
-    registry = load_registry()
+    load_registry()
     print("\n  域间关系:")
     relations = {
         "governs":       ("@驾驶舱", "所有Document域"),
@@ -413,16 +453,16 @@ def cmd_stats(args):
         by_type[d.get("domain_type","document")].append(d)
         by_layer[d.get("layer","L4")].append(d)
     
-    print(f"\n  ═══ 全域统计 ═══\n")
+    print("\n  ═══ 全域统计 ═══\n")
     print(f"  总域数:   {len(registry)}")
     print(f"  类型数:   {len(by_type)}")
-    print(f"\n  按类型:")
+    print("\n  按类型:")
     for t in ["document","config","engine","tool","workspace","storage","model","view"]:
         if t in by_type:
             print(f"    {TYPE_ICONS.get(t,'')} {t:<12} {len(by_type[t])}")
-    print(f"\n  按层:")
-    for l in sorted(by_layer.keys()):
-        print(f"    {l:<12} {len(by_layer[l])}")
+    print("\n  按层:")
+    for layer in sorted(by_layer.keys()):
+        print(f"    {layer:<12} {len(by_layer[layer])}")
     
     # Path health
     ok = sum(1 for d in registry if resolve_path(d).exists())
@@ -437,7 +477,8 @@ def cmd_stats(args):
             p = resolve_path(d)
             if p.exists():
                 missing = [pl for pl in KEMS_PLANES.get("document",[]) if not (p/pl).is_dir()]
-                if missing: print(f"    ⚠️  {d.get('name','?')}: 缺 {' '.join(missing)}")
+                if missing:
+                    print(f"    ⚠️  {d.get('name','?')}: 缺 {' '.join(missing)}")
     print()
 
 def cmd_create(args):
@@ -446,11 +487,14 @@ def cmd_create(args):
     
     # 1. Name
     name = input("  域名称 (如: @我的域): ").strip()
-    if not name: print("❌ 取消"); return
-    if not name.startswith("@"): name = "@"+name
+    if not name:
+        print("❌ 取消")
+        return
+    if not name.startswith("@"):
+        name = "@"+name
     
     # 2. Type
-    print(f"\n  域类型:")
+    print("\n  域类型:")
     for i,t in enumerate(["document","config","engine","tool","workspace"],1):
         print(f"    {i}. {TYPE_ICONS.get(t,'')} {t}")
     ti = input("  选择 [1]: ").strip() or "1"
@@ -463,7 +507,8 @@ def cmd_create(args):
     
     # 4. ID
     domain_id = input(f"  ID [{name.replace('@','').replace(' ','-').lower()}]: ").strip()
-    if not domain_id: domain_id = name.replace("@","").replace(" ","-").lower()
+    if not domain_id:
+        domain_id = name.replace("@","").replace(" ","-").lower()
     
     # 5. Tier
     tier_str = input("  Tier [1-完整/3-最小] [1]: ").strip() or "1"
@@ -475,14 +520,17 @@ def cmd_create(args):
         for v in audit["violations"]:
             print(f"     - {v['constraint']}: {v.get('note','')}")
         if input("  继续? [y/N]: ").strip().lower() != 'y':
-            print("❌ 取消"); return
+            print("❌ 取消")
+            return
     tier = int(tier_str) if tier_str in ("1","3") else 1
     
-    print(f"\n  确认创建:")
+    print("\n  确认创建:")
     print(f"    名称: {name}  |  ID: {domain_id}  |  类型: {dtype}  |  Tier: {tier}")
     print(f"    路径: {path}")
     ok = input("\n  创建? [Y/n]: ").strip().lower()
-    if ok and ok != "y": print("❌ 取消"); return
+    if ok and ok != "y":
+        print("❌ 取消")
+        return
     
     # Create
     path.mkdir(parents=True, exist_ok=True)
@@ -526,7 +574,8 @@ def cmd_all_validate(args):
     docs = [d for d in registry if d.get("domain_type","document")=="document"]
     print(f"\n  校验 {len(docs)} 个 document 域:\n")
     
-    total_pass = 0; total_fail = 0
+    total_pass = 0
+    total_fail = 0
     for d in docs:
         p = resolve_path(d)
         if not p.exists():
@@ -536,7 +585,8 @@ def cmd_all_validate(args):
         results = validate_domain(p, "document", d.get("governance_tier",1))
         passed = sum(1 for _,ok,_ in results if ok)
         failed = len(results)-passed
-        total_pass += passed; total_fail += failed
+        total_pass += passed
+        total_fail += failed
         icon = "✅" if failed==0 else "⚠️"
         print(f"  {icon} {d.get('name',d['id']):<16} {passed}/{len(results)} passed" + (f"  (缺: {', '.join(n for n,ok,_ in results if not ok)[:50]})" if failed else ""))
     
@@ -550,16 +600,20 @@ def cmd_register(args):
     
     path = Path(args[0])
     if not path.exists():
-        print(f"❌ 路径不存在: {path}"); return
+        print(f"❌ 路径不存在: {path}")
+        return
     
     # Parse flags
     dtype = "document"
     name = path.name
     domain_id = name.replace("@","").replace(" ","-").lower()
     for i,a in enumerate(args[1:],1):
-        if a=="--type" and i+1<len(args): dtype = args[i+1]
-        if a=="--name" and i+1<len(args): name = args[i+1]
-        if a=="--id" and i+1<len(args): domain_id = args[i+1]
+        if a=="--type" and i+1<len(args):
+            dtype = args[i+1]
+        if a=="--name" and i+1<len(args):
+            name = args[i+1]
+        if a=="--id" and i+1<len(args):
+            domain_id = args[i+1]
     
     # Tier auto-detect
     tier = 1 if (path/"_control"/"STATE.md").exists() else 3
@@ -580,9 +634,11 @@ def cmd_register(args):
     existing_ids = {d.get("id") for d in registry if isinstance(d, dict)}
     existing_paths = {d.get("storage") for d in registry if isinstance(d, dict)}
     if domain_id in existing_ids:
-        print(f"⚠️  ID '{domain_id}' 已存在"); return
+        print(f"⚠️  ID '{domain_id}' 已存在")
+        return
     if str(path) in existing_paths:
-        print(f"⚠️  路径 '{path}' 已注册"); return
+        print(f"⚠️  路径 '{path}' 已注册")
+        return
     
     # Build entry as dict (safe YAML serialization — no f-string injection risk)
     new_entry = {
@@ -604,17 +660,24 @@ def cmd_register(args):
     with open(L0_CONSTRAINTS, 'w') as f:
         yaml.dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
     print(f"✅ 已注册: {name} ({domain_id}) → L0-constraints.yaml\n")
-    print(f"   ℹ️  注意: yaml.dump 会重排文件格式（注释丢失）。用 git diff 确认变更。\n")
+    print("   ℹ️  注意: yaml.dump 会重排文件格式（注释丢失）。用 git diff 确认变更。\n")
 
 def cmd_fix(args):
     """自动修复常见问题"""
-    if not args: print("用法: ecos domain fix <域> [--dry-run]"); return
+    if not args:
+        print("用法: ecos domain fix <域> [--dry-run]")
+
+        return
     registry = load_registry()
     d = find_domain(registry, args[0])
-    if not d: print(f"❌ '{args[0]}' 未注册"); return
+    if not d:
+        print(f"❌ '{args[0]}' 未注册")
+        return
     
     p = resolve_path(d)
-    if not p.exists(): print(f"❌ {p}"); return
+    if not p.exists():
+        print(f"❌ {p}")
+        return
     
     dry = "--dry-run" in args
     dtype = d.get("domain_type","document")
@@ -625,49 +688,59 @@ def cmd_fix(args):
     print(f"\n  🔧 修复: {d.get('name',d['id'])} {'(dry-run)' if dry else ''}\n")
     
     for name, ok, detail in results:
-        if ok: continue
+        if ok:
+            continue
         
         if name == "KEMS/_archive/":
-            if not dry: (p/"_archive").mkdir(exist_ok=True)
-            print(f"  ✅ 创建 _archive/")
+            if not dry:
+                (p/"_archive").mkdir(exist_ok=True)
+            print("  ✅ 创建 _archive/")
             fixes += 1
         
         elif name == "_control/TIMELINE.md" and tier==1:
-            if not dry: (p/"_control"/"TIMELINE.md").write_text(
+            if not dry:
+                (p/"_control"/"TIMELINE.md").write_text(
                 f"# TIMELINE — {d.get('name',d['id'])}\n\n> 创建: {datetime.now().strftime('%Y-%m-%d')}\n\n| 日期 | 事件 |\n|------|------|\n")
-            print(f"  ✅ 创建 _control/TIMELINE.md 模板")
+            print("  ✅ 创建 _control/TIMELINE.md 模板")
             fixes += 1
         
         elif name == "_entities/ENTITIES.md" and tier==1:
             (p/"_entities").mkdir(exist_ok=True)
-            if not dry: (p/"_entities"/"ENTITIES.md").write_text(
+            if not dry:
+                (p/"_entities"/"ENTITIES.md").write_text(
                 f"# ENTITIES — {d.get('name',d['id'])}\n\n> 创建: {datetime.now().strftime('%Y-%m-%d')}\n")
-            print(f"  ✅ 创建 _entities/ENTITIES.md 模板")
+            print("  ✅ 创建 _entities/ENTITIES.md 模板")
             fixes += 1
         
         elif "KEMS/" in name:
             plane = name.replace("KEMS/","").replace("/","")
-            if not dry: (p/plane).mkdir(exist_ok=True)
+            if not dry:
+                (p/plane).mkdir(exist_ok=True)
             print(f"  ✅ 创建 {plane}/")
             fixes += 1
     
-    if fixes==0: print("  ✅ 无需修复")
-    elif not dry: print(f"\n  ✅ {fixes} 项已修复 · ecos domain validate 重新校验")
-    else: print(f"\n  📋 {fixes} 项待修复 · 去掉 --dry-run 执行")
+    if fixes==0:
+        print("  ✅ 无需修复")
+    elif not dry:
+        print(f"\n  ✅ {fixes} 项已修复 · ecos domain validate 重新校验")
+    else:
+        print(f"\n  📋 {fixes} 项待修复 · 去掉 --dry-run 执行")
 
 def cmd_sync(args):
     registry = load_registry()
     by_type = defaultdict(list)
-    for d in registry: by_type[d.get("domain_type","document")].append(d)
+    for d in registry:
+        by_type[d.get("domain_type","document")].append(d)
     
     lines = [
-        f"# DOMAIN-INDEX — 全域注册表\n",
+        "# DOMAIN-INDEX — 全域注册表\n",
         f"> @驾驶舱/_control/ | auto-generated {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n",
         f"## {len(registry)} 域 · {len(by_type)} 类型\n\n",
     ]
     for dtype in ["document","config","engine","tool","workspace","storage","model","view"]:
         items = by_type.get(dtype,[])
-        if not items: continue
+        if not items:
+            continue
         lines.append(f"### {TYPE_ICONS.get(dtype,'')} {dtype} ({len(items)})\n\n")
         lines.append("| ID | 名称 | 层 | Tier | 路径 |\n|---|---|---|---|---|\n")
         for d in items:
@@ -676,7 +749,8 @@ def cmd_sync(args):
         lines.append("\n")
     
     lines.append(f"---\n*auto: {datetime.now().isoformat()}*\n")
-    with open(DOMAIN_INDEX,'w') as f: f.writelines(lines)
+    with open(DOMAIN_INDEX,'w') as f:
+        f.writelines(lines)
     print(f"✅ DOMAIN-INDEX.md ({len(registry)}域)\n")
 
 # ── BOS URI 支持 ──
@@ -772,18 +846,22 @@ def _enrich_with_lifecycle(uri: str, result: dict) -> dict:
 
 def resolve_semantic(domain: dict, shortcut: str) -> str:
     """将 _state/_memory 等语义快捷方式解析为实际文件路径"""
-    if shortcut not in SEMANTIC_MAP: return None
+    if shortcut not in SEMANTIC_MAP:
+        return None
     candidates = SEMANTIC_MAP[shortcut]
-    if candidates is None: return shortcut  # 特殊处理
+    if candidates is None:
+        return shortcut  # 特殊处理
     base = resolve_path(domain)
     for c in candidates:
         full = base / c
-        if full.exists(): return c
+        if full.exists():
+            return c
     return candidates[0]  # fallback
 
 def parse_bos_uri(uri: str, registry: list):
     """bos://{domain}[/{path}] → (domain, subpath)  v2格式"""
-    if not uri.startswith("bos://"): return None, None
+    if not uri.startswith("bos://"):
+        return None, None
     
     # Strip prefix
     rest = uri.replace("bos://","")
@@ -801,11 +879,15 @@ def parse_bos_uri(uri: str, registry: list):
     
     # Unified domain lookup helper
     def match_domain(d, q):
-        if d["id"]==q: return True
+        if d["id"]==q:
+            return True
         name = d.get("name","").replace("@","")
-        if name==q or name.replace(" ","")==q: return True
-        if name.startswith(q): return True
-        if q in d["id"]: return True
+        if name==q or name.replace(" ","")==q:
+            return True
+        if name.startswith(q):
+            return True
+        if q in d["id"]:
+            return True
         return False
     
     # Handle semantic shortcuts (_state, _memory, etc.)
@@ -822,27 +904,33 @@ def parse_bos_uri(uri: str, registry: list):
     
     # Strip .md extension for lookup flexibility
     if subpath.endswith(".md"):
-        subpath_no_ext = subpath[:-3]
+        subpath[:-3]
     else:
-        subpath_no_ext = subpath
+        pass
     
     # Find domain (unified lookup)
     for d in registry:
         if match_domain(d, domain_id):
             # Try exact subpath first
             p = resolve_path(d)
-            if not subpath: return d, ""
+            if not subpath:
+                return d, ""
             full = p / subpath
-            if full.exists(): return d, subpath
+            if full.exists():
+                return d, subpath
             full2 = p / (subpath+".md")
-            if full2.exists(): return d, subpath+".md"
+            if full2.exists():
+                return d, subpath+".md"
             return d, subpath
     
     return None, None
 
 def cmd_resolve(args):
     """BOS URI → 物理路径解析"""
-    if not args: print("用法: ecos domain resolve <bos://l4/vault/...>"); return
+    if not args:
+        print("用法: ecos domain resolve <bos://l4/vault/...>")
+
+        return
     registry = load_registry()
     uri = args[0]
     d, sub = parse_bos_uri(uri, registry)
@@ -861,7 +949,8 @@ def cmd_resolve(args):
     full = base / sub if sub else base
     exists = full.exists()
     print(f"\n  {uri}")
-    if warning: print(f"  {warning}")
+    if warning:
+        print(f"  {warning}")
     print(f"  → {full} {'✅' if exists else '❌'}")
     print(f"  域: {d.get('name',d['id'])} | 类型: {d.get('domain_type','?')} | 大小: {full.stat().st_size if exists else 0} bytes")
     print(f"  生命周期: {result['lifecycle']}\n")
@@ -918,7 +1007,7 @@ def _evaluate_bos_constraints(uri: str, registry: list, lifecycle: dict = None) 
     # Evaluate each constraint
     for c in constraints:
         cid = c["id"]
-        rule = c.get("rule", "")
+        c.get("rule", "")
         severity = c.get("type", "required")  # required / preferred
         violation_msg = c.get("violation", f"违反 {cid}")
         
@@ -1008,13 +1097,13 @@ def cmd_bos_validate(args):
                 total_violations += 1
     
     # Summary
-    print(f"\n  ═══ 摘要 ═══")
+    print("\n  ═══ 摘要 ═══")
     print(f"  URI 总数: {total_uris}")
     print(f"  通过: {total_ok}✅")
     print(f"  违规: {total_violations}❌/⚠️")
     
     if all_violations:
-        print(f"\n  违规明细:")
+        print("\n  违规明细:")
         by_severity = {"required": 0, "preferred": 0, "critical": 0}
         for _, sv, cid, _ in all_violations:
             by_severity[sv] = by_severity.get(sv, 0) + 1
@@ -1063,14 +1152,19 @@ def cmd_routes(args):
 
 def cmd_search(args):
     """跨域搜索"""
-    if not args: print("用法: ecos domain search <关键词> [--domains d1,d2] [--max 20]"); return
+    if not args:
+        print("用法: ecos domain search <关键词> [--domains d1,d2] [--max 20]")
+
+        return
     query = args[0]
     domains = None
     max_results = 20
     
     for i,a in enumerate(args[1:],1):
-        if a == "--domains" and i < len(args)-1: domains = args[i+1].split(",")
-        if a == "--max" and i < len(args)-1: max_results = int(args[i+1])
+        if a == "--domains" and i < len(args)-1:
+            domains = args[i+1].split(",")
+        if a == "--max" and i < len(args)-1:
+            max_results = int(args[i+1])
     
     registry = load_registry()
     results = []
@@ -1082,14 +1176,17 @@ def cmd_search(args):
     
     for d in registry:
         did = d["id"]
-        if target_domains and did not in target_domains: continue
+        if target_domains and did not in target_domains:
+            continue
         p = resolve_path(d)
-        if not p.exists(): continue
+        if not p.exists():
+            continue
         
         search_dirs = []
         for sd in ["CLAUDE.md", "_control/STATE.md", "_control/MEMORY.md", "_knowledge"]:
             sp = p / sd
-            if sp.exists(): search_dirs.append(str(sp))
+            if sp.exists():
+                search_dirs.append(str(sp))
         
         for sp in search_dirs:
             try:
@@ -1099,7 +1196,8 @@ def cmd_search(args):
                     if line and len(results) < max_results:
                         rel = Path(line).relative_to(p) if p in Path(line).parents else line
                         results.append((did, str(rel)))
-            except: pass
+            except Exception:
+                pass
     
     if results:
         for did, fpath in results:
@@ -1110,38 +1208,46 @@ def cmd_search(args):
 
 def cmd_read(args):
     """通过BOS URI读取域资源"""
-    if not args: print("用法: ecos domain read <bos://l4/vault/...>"); return
+    if not args:
+        print("用法: ecos domain read <bos://l4/vault/...>")
+
+        return
     registry = load_registry()
     uri = args[0]
     d, sub = parse_bos_uri(uri, registry)
     if not d:
-        print(f"❌ 无法解析: {uri}"); return
+        print(f"❌ 无法解析: {uri}")
+        return
     
     # Check lifecycle
     result = _enrich_with_lifecycle(uri, {"domain": d, "subpath": sub})
     if result.get("_error"):
         print(f"  {result['_error']}")
         return
-    warning = result.get("_warning", "")
+    result.get("_warning", "")
     
     base = resolve_path(d)
     full = base / sub if sub else base
     if not full.exists():
-        print(f"❌ 不存在: {full}"); return
+        print(f"❌ 不存在: {full}")
+        return
     if full.is_dir():
         items = os.listdir(full)
         print(f"\n  📁 {uri}/ ({len(items)} items)")
         for i in sorted(items)[:20]:
             ip = full/i
             print(f"    {'📁' if ip.is_dir() else '📄'} {i}")
-        if len(items)>20: print(f"    ... +{len(items)-20}")
+        if len(items)>20:
+            print(f"    ... +{len(items)-20}")
     else:
         content = full.read_text()
         max_lines = int(args[1]) if len(args)>1 else 50
         lines = content.split("\n")[:max_lines]
         print(f"\n  📄 {uri} ({len(content)} bytes)\n")
-        for l in lines: print(f"  {l}")
-        if len(content.split("\n"))>max_lines: print(f"\n  ... (共{len(content.split('\n'))}行)")
+        for line in lines:
+            print(f"  {line}")
+        if len(content.split("\n"))>max_lines:
+            print(f"\n  ... (共{len(content.split('\n'))}行)")
     print()
 
 # ── URI 生命周期 CLI ──
@@ -1199,7 +1305,7 @@ def cmd_lifecycle_status(args):
     for info in uris.values():
         s = info.get("state", "?")
         counts[s] = counts.get(s, 0) + 1
-    print(f"\n  ═══ URI 生命周期统计 ═══\n")
+    print("\n  ═══ URI 生命周期统计 ═══\n")
     for state in URI_LIFECYCLE_STATES:
         c = counts.get(state, 0)
         icons = {"proposed": "🆕", "active": "✅", "deprecated": "⚠️", "removed": "❌"}
@@ -1228,11 +1334,13 @@ def cmd_cache_status(args):
     for p in [L0_CONSTRAINTS, L0_CONSTRAINTS_L4]:
         try:
             m = p.stat().st_mtime if p.exists() else 0
-            if m > mtime: mtime = m
-        except: pass
+            if m > mtime:
+                mtime = m
+        except Exception:
+            pass
     ssot_age = int(__import__("time").time() - mtime) if mtime else 0
     
-    print(f"\n  ═══ 三层缓存状态 ═══\n")
+    print("\n  ═══ 三层缓存状态 ═══\n")
     print(f"  L1 (内存):  {l1_size} 条目  TTL={L1_TTL}s")
     print(f"  L2 (JSON):  {l2_size} 条目  TTL={L2_TTL}s  年龄={l2_age}s")
     print(f"  L3 (SSOT):  L0-constraints.yaml  年龄={ssot_age}s")
@@ -1240,14 +1348,14 @@ def cmd_cache_status(args):
     
     # Key detail
     if l1_size > 0:
-        print(f"\n  L1 键列表:")
+        print("\n  L1 键列表:")
         for k in sorted(_L1_CACHE.keys()):
             print(f"    • {k}")
     
     # Warm options
-    print(f"\n  操作:")
-    print(f"    ecos domain cache-warm   预热 L1 从 L2")
-    print(f"    ecos domain cache-clear  清空所有缓存\n")
+    print("\n  操作:")
+    print("    ecos domain cache-warm   预热 L1 从 L2")
+    print("    ecos domain cache-clear  清空所有缓存\n")
 
 def cmd_cache_warm(args):
     """预热 L1 缓存从 L2"""
@@ -1260,7 +1368,8 @@ def cmd_cache_clear(args):
     try:
         if BOS_CACHE_FILE.exists():
             BOS_CACHE_FILE.unlink()
-    except: pass
+    except Exception:
+        pass
     print("  ✅ 所有缓存已清空 (L1 + L2)")
 
 
@@ -1300,7 +1409,10 @@ def cmd_audit_unified(args):
 
 def cmd_info(args):
     """域综合报告 (status+validate+tree)"""
-    if not args: print("用法: ecos domain info <域>"); return
+    if not args:
+        print("用法: ecos domain info <域>")
+
+        return
     cmd_status(args)
     cmd_validate(args)
     cmd_tree(args)
@@ -1351,7 +1463,8 @@ def cmd_check_refs(args):
     broken = 0
     for d in registry:
         claude = resolve_path(d) / "CLAUDE.md" if resolve_path(d).exists() else None
-        if not claude or not claude.exists(): continue
+        if not claude or not claude.exists():
+            continue
         
         content = claude.read_text()
         # Find potential path references (words containing /)
@@ -1362,17 +1475,21 @@ def cmd_check_refs(args):
         for ref in refs:
             # Try resolving relative to domain path
             full = resolve_path(d) / ref
-            if full.exists(): continue
+            if full.exists():
+                continue
             # Try relative to DOCS
             full2 = DOCS / ref
-            if full2.exists(): continue
+            if full2.exists():
+                continue
             # Only report if it looks like a domain path
             if any(p in ref for p in ["@","驾驶舱","学习进化","个人","公共","工作文档","家庭生活","_control","_knowledge"]):
                 broken += 1
                 print(f"  ❌ {d.get('name',d['id'])}: `{ref[:60]}` → 不可解析")
     
-    if broken==0: print("  ✅ 所有引用可解析")
-    else: print(f"\n  {broken} 个断链引用")
+    if broken==0:
+        print("  ✅ 所有引用可解析")
+    else:
+        print(f"\n  {broken} 个断链引用")
     print()
 
 def cmd_capabilities(args):
@@ -1392,10 +1509,12 @@ def cmd_capabilities(args):
     for f in sorted(M1_DOMAIN.glob("*.yaml")):
         with open(f) as fh:
             node = yaml.safe_load(fh)
-        if not node: continue
+        if not node:
+            continue
         props = node.get("properties",{})
         did = node.get("id","").replace("DOMAIN-","")
-        if targets and did not in targets: continue
+        if targets and did not in targets:
+            continue
         found += 1
         caps = props.get("capabilities",[])
         entry = props.get("entry_points",{})
@@ -1404,11 +1523,13 @@ def cmd_capabilities(args):
         print(f"\n  {did}")
         print(f"    类型: {dtype}  BOS: {bos}")
         if caps:
-            print(f"    能力:")
-            for c in caps: print(f"      - {c}")
+            print("    能力:")
+            for c in caps:
+                print(f"      - {c}")
         if entry:
-            print(f"    入口:")
-            for k,v in entry.items(): print(f"      {k}: {v}")
+            print("    入口:")
+            for k,v in entry.items():
+                print(f"      {k}: {v}")
     if not found:
         print(f"❌ 未找到域: {args[0] if args else 'any'}")
 
@@ -1417,11 +1538,16 @@ def main():
     cmds = {"list":cmd_list,"status":cmd_status,"validate":cmd_validate,"validate-all":cmd_all_validate,"tree":cmd_tree,"audit":cmd_audit,"relations":cmd_relations,"sync":cmd_sync,"stats":cmd_stats,"create":cmd_create,"register":cmd_register,"fix":cmd_fix,"info":cmd_info,"check-refs":cmd_check_refs,"resolve":cmd_resolve,"read":cmd_read,"bos-validate":cmd_bos_validate,"routes":cmd_routes,"search":cmd_search,"audit-log":cmd_audit_log,"workflow":cmd_workflow,"capabilities":cmd_capabilities,"lifecycle-set":cmd_lifecycle_set,"lifecycle-list":cmd_lifecycle_list,"lifecycle-status":cmd_lifecycle_status,"cache-status":cmd_cache_status,"cache-warm":cmd_cache_warm,"cache-clear":cmd_cache_clear,"audit-unified":cmd_audit_unified}
     if len(sys.argv)<2:
         print("\necos domain <cmd> [args]\n")
-        for c,f in cmds.items(): print(f"  {c:<12} {f.__doc__ or ''}")
+        for c,f in cmds.items():
+            print(f"  {c:<12} {f.__doc__ or ''}")
         print()
         return
-    cmd = sys.argv[1]; args = sys.argv[2:]
-    if cmd in cmds: cmds[cmd](args)
-    else: print(f"❌ {cmd}\n可用: {' '.join(cmds)}")
+    cmd = sys.argv[1]
+    args = sys.argv[2:]
+    if cmd in cmds:
+        cmds[cmd](args)
+    else:
+        print(f"❌ {cmd}\n可用: {' '.join(cmds)}")
 
-if __name__=="__main__": main()
+if __name__=="__main__":
+    main()

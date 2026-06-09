@@ -9,6 +9,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
+import yaml
+
 from model_driven.constants import HEALTH_ISSUE_PENALTY, MAX_HEALTH_SCORE
 from model_driven.mof.m2_lifecycle import ALL_M2_SCHEMAS, get_schema
 
@@ -92,8 +94,6 @@ def tool_generate(
 
     # 按目标格式生成
     if target_format == "yaml":
-        import yaml
-
         output = yaml.dump(generated, allow_unicode=True, default_flow_style=False)
     elif target_format == "json":
         import json

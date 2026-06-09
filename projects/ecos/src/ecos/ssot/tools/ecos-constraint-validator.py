@@ -49,10 +49,20 @@ def check_system_state() -> dict:
     freshness_script = Path(__file__).parent / "check-claude-freshness.py"
     if freshness_script.exists():
         import subprocess
+
         result = subprocess.run(
-            ["python3", str(freshness_script), "--root", str(DOCS),
-             "--max-age-days", "60", "--json"],
-            capture_output=True, text=True, timeout=15,
+            [
+                "python3",
+                str(freshness_script),
+                "--root",
+                str(DOCS),
+                "--max-age-days",
+                "60",
+                "--json",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=15,
         )
         if result.returncode == 0:
             try:
@@ -107,22 +117,26 @@ def evaluate_constraints(constraints: list[dict], state: dict) -> list[dict]:
             detail = f"最旧 CLAUDE.md: {age} 天"
         elif "value_tier" in rule:
             # 简化: 检查是否有域缺少 value_tier
-            missing = [d for d, v in state["domain"].items() if v.get("value_tier") is None]
+            missing = [
+                d for d, v in state["domain"].items() if v.get("value_tier") is None
+            ]
             passed = len(missing) == 0
             detail = f"缺失: {missing}" if missing else "全部已声明"
         else:
             passed = True
             detail = "规则评估未实现（PoC 限制）"
 
-        results.append({
-            "id": c["id"],
-            "type": ctype,
-            "dimension": c["dimension"],
-            "description": c["description"],
-            "passed": passed,
-            "detail": detail,
-            "violation": c["violation"] if not passed else None,
-        })
+        results.append(
+            {
+                "id": c["id"],
+                "type": ctype,
+                "dimension": c["dimension"],
+                "description": c["description"],
+                "passed": passed,
+                "detail": detail,
+                "violation": c["violation"] if not passed else None,
+            }
+        )
 
     return results
 
@@ -146,14 +160,18 @@ def format_report(results: list[dict], mode: str, constraints: dict = None) -> s
             half = p["half_life_days"]
             decay = min(1.0, age_days / half)
             value_remaining = max(0, (1 - decay) * 100)
-            bar = "█" * int(value_remaining / 10) + "░" * (10 - int(value_remaining / 10))
+            bar = "█" * int(value_remaining / 10) + "░" * (
+                10 - int(value_remaining / 10)
+            )
 
             age_str = f"{age_days}d" if age_days > 0 else "0d"
             status = "⚠️ 超期" if decay > 1.0 else "✅" if decay < 0.5 else "⏳"
 
-            lines.append(f"  {status} {p['id']:10s} v{p['version']:10s} "
-                         f"{age_str:5s}/{p['half_life_days']}d  "
-                         f"衰减 {decay:.0%} 剩余 {value_remaining:.0f}% {bar}")
+            lines.append(
+                f"  {status} {p['id']:10s} v{p['version']:10s} "
+                f"{age_str:5s}/{p['half_life_days']}d  "
+                f"衰减 {decay:.0%} 剩余 {value_remaining:.0f}% {bar}"
+            )
         lines.append("")
 
     lines.append(f"  ── 约束校验 ({len(results)} 项) ──")
@@ -190,18 +208,26 @@ def main():
     mode = "enforce" if args.enforce else "warn"
 
     if args.json:
-        print(json.dumps({
-            "generated_at": datetime.now().isoformat(),
-            "mode": mode,
-            "constraints": len(results),
-            "protocols": constraints.get("protocol_registry", []),
-            "results": results,
-        }, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "generated_at": datetime.now().isoformat(),
+                    "mode": mode,
+                    "constraints": len(results),
+                    "protocols": constraints.get("protocol_registry", []),
+                    "results": results,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         print(format_report(results, mode, constraints))
 
     if args.enforce:
-        required_fail = [r for r in results if r["type"] == "required" and not r["passed"]]
+        required_fail = [
+            r for r in results if r["type"] == "required" and not r["passed"]
+        ]
         sys.exit(1 if required_fail else 0)
     else:
         sys.exit(0)

@@ -12,6 +12,7 @@ bos://persona/cards/* URI, 让 5 仓 (L3 cockpit + I0 agora + L2 引擎 + L1 run
 
 SSOT: data/cards/cards.db (SQLite), MD 文件是 cards generate 自动生成.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -21,6 +22,7 @@ import sys
 from pathlib import Path
 
 from .base import _get_console, _get_err
+
 
 def _get_cockpit_dir() -> Path:
     """Resolve standard @驾驶舱 or 驾驶舱 folder in Documents."""
@@ -158,14 +160,16 @@ def _serve_stdio() -> int:
         if action == "list":
             cards = []
             for cat, path, fm, _ in _iter_cards():
-                cards.append({
-                    "category": cat,
-                    "id": path.stem,
-                    "title": fm.get("title", ""),
-                    "status": fm.get("status", ""),
-                    "priority": fm.get("priority", ""),
-                    "path": str(path),
-                })
+                cards.append(
+                    {
+                        "category": cat,
+                        "id": path.stem,
+                        "title": fm.get("title", ""),
+                        "status": fm.get("status", ""),
+                        "priority": fm.get("priority", ""),
+                        "path": str(path),
+                    }
+                )
             resp = {"status": "ok", "result": {"count": len(cards), "cards": cards}}
         elif action == "get":
             card_id = args.get("id", "")
@@ -179,7 +183,7 @@ def _serve_stdio() -> int:
                             "path": str(path),
                             "frontmatter": fm,
                             "body": body,
-                        }
+                        },
                     }
                     break
             else:

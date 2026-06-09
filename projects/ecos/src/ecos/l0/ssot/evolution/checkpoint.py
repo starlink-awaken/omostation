@@ -30,7 +30,11 @@ class CheckpointManager:
         cp_path = self._cp_dir / cp_name
         cp_path.mkdir(parents=True, exist_ok=True)
 
-        manifest: dict[str, Any] = {"created_at": timestamp, "label": label, "files": []}
+        manifest: dict[str, Any] = {
+            "created_at": timestamp,
+            "label": label,
+            "files": [],
+        }
 
         for yaml_file in sorted(self.domain_dir.glob("*.yaml")):
             if yaml_file.parent == self._cp_dir:

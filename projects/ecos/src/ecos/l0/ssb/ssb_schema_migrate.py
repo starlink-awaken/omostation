@@ -83,8 +83,12 @@ def migrate():
 
     ts_count = sum(1 for e in verify_events if e.get("timestamp", 0) > 0)
     schema_count = sum(1 for e in verify_events if e.get("schema_version") == "1.0")
-    print(f"\n📊 迁移: total={stats['total']} schema={stats['added_schema']} ts={stats['added_timestamp']}")
-    print(f"✅ 验证: ts={ts_count}/{len(verify_events)} schema={schema_count}/{len(verify_events)}")
+    print(
+        f"\n📊 迁移: total={stats['total']} schema={stats['added_schema']} ts={stats['added_timestamp']}"
+    )
+    print(
+        f"✅ 验证: ts={ts_count}/{len(verify_events)} schema={schema_count}/{len(verify_events)}"
+    )
 
 
 if __name__ == "__main__":

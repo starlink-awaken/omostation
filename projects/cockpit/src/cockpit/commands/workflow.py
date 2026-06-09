@@ -11,14 +11,15 @@
 from __future__ import annotations
 
 import subprocess
-import sys
 from pathlib import Path
 
 
 def _run_metaos(*args: str) -> int:
     """调用 MetaOS CLI，透传所有参数。"""
     cmd = [
-        "uv", "run", "--directory",
+        "uv",
+        "run",
+        "--directory",
         str(Path(__file__).parents[5] / "projects" / "metaos"),
         "metaos",
         *args,
@@ -38,7 +39,7 @@ def handle_workflow(args):
 
     if action == "plan":
         if not rest:
-            print("❌ 用法: workspace workflow plan \"<任务描述>\" [--dry-run] [--no-llm] [--save <file>]")
+            print('❌ 用法: workspace workflow plan "<任务描述>" [--dry-run] [--no-llm] [--save <file>]')
             return 1
         return _run_metaos("plan", *rest)
 

@@ -18,7 +18,6 @@ Phase 38-39: 从被动监听升级为主动自愈。
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 import subprocess
@@ -437,7 +436,6 @@ class SelfHealingEngine:
     ) -> None:
         """向 Agora 发布自愈事件。"""
         try:
-            import json
 
             import httpx
 

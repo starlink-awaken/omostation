@@ -42,19 +42,9 @@ class TestCLIRouting:
         assert callable(cmd_skill)
 
     def test_model_driven_commands_importable(self):
-        """Model-driven bridge commands should be importable."""
-        from cockpit.commands.l4bridge import (
-            cmd_model_driven_lifecycle,
-            cmd_model_driven_spec,
-            cmd_model_driven_okr,
-            cmd_model_driven_derive,
-            cmd_model_driven_pipeline,
-        )
-        assert callable(cmd_model_driven_lifecycle)
-        assert callable(cmd_model_driven_spec)
-        assert callable(cmd_model_driven_okr)
-        assert callable(cmd_model_driven_derive)
-        assert callable(cmd_model_driven_pipeline)
+        """Model-driven bridge command (unified entry) should be importable."""
+        from cockpit.commands.l4bridge import cmd_model_driven
+        assert callable(cmd_model_driven)
 
 
 class TestCLISubcommands:

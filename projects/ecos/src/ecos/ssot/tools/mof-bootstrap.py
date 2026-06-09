@@ -18,7 +18,10 @@ L0 对自己的 M1 节点做自反性校验——L0 管全系统，谁管 L0？L
     python3 mof-bootstrap.py --fix           # 尝试自动修复
 """
 
-import sys, json, yaml, subprocess, sqlite3
+import json
+import yaml
+import subprocess
+import sqlite3
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -51,7 +54,8 @@ def check_1_self_validate() -> dict:
             results = data.get("results", [])
             errors = sum(1 for r in results if r.get("level") == "error")
             passed = errors == 0
-        except: pass
+        except Exception:
+            pass
     
     return {"check": "L0 自校验", "passed": passed, "detail": f"{count} 节点通过", "severity": "critical" if not passed else "ok"}
 
@@ -112,7 +116,8 @@ def check_4_m1_coverage() -> dict:
             data = yaml.safe_load(open(f))
             t = data.get("type", "?")
             coverage[t] = coverage.get(t, 0) + 1
-        except: pass
+        except Exception:
+            pass
     
     gaps = [t for t in m2_types if coverage.get(t, 0) < 2]
     passed = len(gaps) == 0
@@ -125,7 +130,7 @@ def check_5_l0_boundary_self() -> dict:
         return {"check": "L0 边界自检", "passed": False, "detail": "layer-boundary.yaml 不存在", "severity": "critical"}
     
     boundary = yaml.safe_load(open(BOUNDARY_FILE))
-    l0_rules = boundary.get("layers", {}).get("L0", {})
+    boundary.get("layers", {}).get("L0", {})
     
     # Check: all files in L0_SSOT conform to L0 rules
     violations = []
@@ -173,7 +178,8 @@ def create_bootstrap_debt(issue: dict):
               now_dt, now_dt))
         conn.commit()
         conn.close()
-    except: pass
+    except Exception:
+        pass
 
 
 def format_report(checks: list[dict]) -> str:
@@ -217,7 +223,7 @@ def main():
         for c in checks:
             if not c["passed"]:
                 create_bootstrap_debt(c)
-        print(f"\n  📋 已为自举问题创建 CARDS")
+        print("\n  📋 已为自举问题创建 CARDS")
 
 
 if __name__ == "__main__":

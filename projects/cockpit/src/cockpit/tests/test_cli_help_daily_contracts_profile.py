@@ -7,6 +7,7 @@ import json
 from unittest import mock
 
 from rich.console import Console
+
 from cockpit import cli
 from cockpit.tests.conftest import MockDataAccess
 
@@ -1381,7 +1382,9 @@ class TestCmdContractsExportResearchResidual:
         monkeypatch.setattr(cli, "get_data_access", lambda: mock_da)
 
         # Force envelope validation to fail
-        monkeypatch.setattr("cockpit.commands.contracts._validate_workspace_object_envelope", lambda data: ["fake issue"])
+        monkeypatch.setattr(
+            "cockpit.commands.contracts._validate_workspace_object_envelope", lambda data: ["fake issue"]
+        )
 
         from cockpit.commands.contracts import cmd_contracts_export_research
 

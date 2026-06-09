@@ -5,6 +5,7 @@ import sys
 
 import pytest
 from rich.console import Console
+
 from cockpit import cli
 from cockpit.tests.conftest import MockDataAccess
 

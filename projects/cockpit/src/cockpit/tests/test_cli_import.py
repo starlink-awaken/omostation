@@ -8,6 +8,7 @@ from urllib import error as urlerror
 
 import pytest
 from rich.console import Console
+
 from cockpit import cli
 from cockpit.commands import importer as importer_mod
 from cockpit.tests.conftest import MockDataAccess

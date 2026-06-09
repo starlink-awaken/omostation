@@ -26,6 +26,7 @@ from .base import (
     _get_err,
     _looks_like_research_failure,
     _notify_research_complete,
+    _ollama_timeout,
     _panel,
     _print_research_help_suggestions,
     _render_markdown_block,
@@ -33,7 +34,6 @@ from .base import (
     _research_progress,
     _run_ollama,
     _run_ollama_stream,
-    _ollama_timeout,
     _short,
     _topic_text,
 )
@@ -127,7 +127,9 @@ def cmd_research(args: argparse.Namespace) -> int:
                 transient=False,
             ) as progress:
                 progress.add_task(f"[yellow]ollama 降级研究中 · {_short(topic, 40)}", total=None)
-                ollama_out = _run_ollama(f"请对以下主题进行简要研究分析，用中文输出:\n\n{topic}", timeout=ollama_timeout)
+                ollama_out = _run_ollama(
+                    f"请对以下主题进行简要研究分析，用中文输出:\n\n{topic}", timeout=ollama_timeout
+                )
         if ollama_out:
             output = f"[ollama 回复] {ollama_out}\n\n---\n⚠️ **注意：此为 ollama 降级回复，非 minerva 研究引擎结果。**"
             source = "ollama"

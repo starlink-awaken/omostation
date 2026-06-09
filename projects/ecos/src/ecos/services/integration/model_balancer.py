@@ -6,7 +6,9 @@ MODEL_STATS = {
 
 
 def get_model_usage(stats: bool = False):
-    imbalance = max(v["reasoning"] for v in MODEL_STATS.values()) - min(v["reasoning"] for v in MODEL_STATS.values())
+    imbalance = max(v["reasoning"] for v in MODEL_STATS.values()) - min(
+        v["reasoning"] for v in MODEL_STATS.values()
+    )
     if stats:
         return MODEL_STATS, imbalance
     return MODEL_STATS

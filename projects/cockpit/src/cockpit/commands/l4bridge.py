@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import sys
 from argparse import Namespace
 from pathlib import Path
 
@@ -11,10 +10,10 @@ from .base import _get_console, _get_err, _panel
 
 try:
     from cockpit.scripts.cockpit_mcp import (
-        workspace_context,
-        cards_status,
         cards_check,
+        cards_status,
         vault_search,
+        workspace_context,
     )
 
     _HAS_L4 = True
@@ -64,7 +63,7 @@ def cmd_context(_args: Namespace) -> int:
     # Guidance
     guidance = ctx.get("next_guidance", "")
     if guidance:
-        console.print(f"\n[bold blue]🧭 下一步:[/]")
+        console.print("\n[bold blue]🧭 下一步:[/]")
         for line in guidance.split("."):
             if line.strip():
                 console.print(f"  [blue]→[/] {line.strip()}.")
@@ -109,8 +108,16 @@ def cmd_skill(args: Namespace) -> int:
     console.print(f"[cyan]⏳ 执行技能: {skill_name}...[/]")
 
     skill_file = (
-        Path(__file__).resolve().parents[4] / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof"
-        / "m1" / "skill" / f"SKILL-SCHEDULED-{skill_name}.yaml"
+        Path(__file__).resolve().parents[4]
+        / "projects"
+        / "ecos"
+        / "src"
+        / "ecos"
+        / "ssot"
+        / "mof"
+        / "m1"
+        / "skill"
+        / f"SKILL-SCHEDULED-{skill_name}.yaml"
     )
 
     if not skill_file.exists():
@@ -123,7 +130,7 @@ def cmd_skill(args: Namespace) -> int:
         skill_def = yaml.safe_load(skill_file.read_text(encoding="utf-8"))
         desc = skill_def.get("description", skill_def.get("name", skill_name))
         console.print(f"  [dim]描述: {desc}[/]")
-        console.print(f"  [green]✓ 技能已调度 (由 cron_service 执行)[/]")
+        console.print("  [green]✓ 技能已调度 (由 cron_service 执行)[/]")
         return 0
     except Exception as e:
         _get_err().print(f"[red]❌ 技能执行失败: {e}[/]")
@@ -195,7 +202,7 @@ def cmd_vault(args: Namespace) -> int:
         _get_err().print(f"[red]❌ vault_search 失败: {e}[/]")
         return 1
 
-    console.print(f"[bold cyan]🔍 Vault 搜索: \"{keyword}\" ({result['total']} 结果)[/]\n")
+    console.print(f'[bold cyan]🔍 Vault 搜索: "{keyword}" ({result["total"]} 结果)[/]\n')
 
     for r in result.get("results", []):
         console.print(f"  [bold]{r['title']}[/]")
@@ -277,10 +284,11 @@ def _md_lifecycle(args: Namespace, console) -> int:
 
 def _md_spec(args: Namespace, console) -> int:
     from model_driven.management.spec import SpecManager
+
     mgr = SpecManager()
     action = getattr(args, "md_action", "list")
     if action == "create":
-        sid = getattr(args, "md_id", f"SPEC-{len(mgr.list_all())+1}")
+        sid = getattr(args, "md_id", f"SPEC-{len(mgr.list_all()) + 1}")
         spec = mgr.create(sid, getattr(args, "md_title", "未命名"))
         console.print(f"[green]✅ Spec: {spec.id} - {spec.title}[/]")
     else:
@@ -294,10 +302,11 @@ def _md_spec(args: Namespace, console) -> int:
 
 def _md_okr(args: Namespace, console) -> int:
     from model_driven.management.okr import OKRManager
+
     mgr = OKRManager()
     action = getattr(args, "md_action", "list")
     if action == "create":
-        oid = getattr(args, "md_id", f"OKR-{len(mgr.list_all())+1}")
+        oid = getattr(args, "md_id", f"OKR-{len(mgr.list_all()) + 1}")
         okr = mgr.create(oid, getattr(args, "md_objective", "未定义"))
         console.print(f"[green]✅ OKR: {okr.id} - {okr.objective}[/]")
     else:
@@ -325,7 +334,7 @@ def _md_derive(args: Namespace, console) -> int:
 
 
 def _md_pipeline(args: Namespace, console) -> int:
-    from model_driven.lifecycle.pipeline import PipelineTracker, PipelinePhase
+    from model_driven.lifecycle.pipeline import PipelinePhase, PipelineTracker
 
     entity_id = getattr(args, "md_entity", "ecos")
     action = getattr(args, "md_action", "status")
@@ -337,14 +346,14 @@ def _md_pipeline(args: Namespace, console) -> int:
             tracker.save()
             console.print(f"[green]✅ 启动: {phase.value}[/]")
         else:
-            console.print(f"[red]❌ 前置 Phase 未完成[/]")
+            console.print("[red]❌ 前置 Phase 未完成[/]")
     elif action == "complete":
         phase = PipelinePhase(getattr(args, "md_phase", "cold_start"))
         if tracker.complete_phase(phase):
             tracker.save()
             console.print(f"[green]✅ 完成: {phase.value}[/]")
         else:
-            console.print(f"[red]❌ 阶段未全部完成[/]")
+            console.print("[red]❌ 阶段未全部完成[/]")
     else:
         p = tracker.get_progress()
         console.print(f"[bold cyan]📊 流水线: {entity_id}[/] Phase:{p['current_phase']}")
@@ -357,6 +366,7 @@ def _md_pipeline(args: Namespace, console) -> int:
 def cmd_model_driven_derive(args: Namespace) -> int:
     """[已废弃] 使用 cmd_model_driven(args, md_subcmd='derive') 替代"""
     return cmd_model_driven(args)
+
 
 def cmd_model_driven_pipeline(args: Namespace) -> int:
     """[已废弃] 使用 cmd_model_driven(args, md_subcmd='pipeline') 替代"""

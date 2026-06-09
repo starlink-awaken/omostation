@@ -41,11 +41,31 @@ def check(operation: str, auto_deny: bool = False):
             }
     for pattern in LEVEL2_PATTERNS:
         if pattern in op:
-            return {"allowed": False, "level": 2, "reason": f"needs triangle check: {operation}", "requires": "TRIANGLE_CHECK"}
+            return {
+                "allowed": False,
+                "level": 2,
+                "reason": f"needs triangle check: {operation}",
+                "requires": "TRIANGLE_CHECK",
+            }
     for pattern in LEVEL1_PATTERNS:
         if pattern in op:
-            return {"allowed": True, "level": 1, "reason": f"reversible operation: {operation}", "requires": None}
+            return {
+                "allowed": True,
+                "level": 1,
+                "reason": f"reversible operation: {operation}",
+                "requires": None,
+            }
     for pattern in LEVEL0_PATTERNS:
         if pattern in op:
-            return {"allowed": True, "level": 0, "reason": f"read-only operation: {operation}", "requires": None}
-    return {"allowed": True, "level": 0, "reason": f"default allow: {operation}", "requires": None}
+            return {
+                "allowed": True,
+                "level": 0,
+                "reason": f"read-only operation: {operation}",
+                "requires": None,
+            }
+    return {
+        "allowed": True,
+        "level": 0,
+        "reason": f"default allow: {operation}",
+        "requires": None,
+    }

@@ -163,7 +163,12 @@ class IntelligentAlertingSystem:
                 severity=AlertSeverity.WARNING,
                 cooldown_seconds=600,
                 description="执行时间过长，可能存在性能问题",
-                recommendations=["分析性能瓶颈", "检查规则复杂度", "考虑规则并行执行", "优化条件评估逻辑"],
+                recommendations=[
+                    "分析性能瓶颈",
+                    "检查规则复杂度",
+                    "考虑规则并行执行",
+                    "优化条件评估逻辑",
+                ],
             )
         )
 
@@ -177,7 +182,12 @@ class IntelligentAlertingSystem:
                 severity=AlertSeverity.WARNING,
                 cooldown_seconds=900,
                 description="内存使用率过高",
-                recommendations=["检查内存泄漏", "优化数据结构", "实现数据分批处理", "清理不必要的缓存"],
+                recommendations=[
+                    "检查内存泄漏",
+                    "优化数据结构",
+                    "实现数据分批处理",
+                    "清理不必要的缓存",
+                ],
             )
         )
 
@@ -191,7 +201,12 @@ class IntelligentAlertingSystem:
                 severity=AlertSeverity.WARNING,
                 cooldown_seconds=600,
                 description="CPU使用率过高",
-                recommendations=["检查是否有死循环", "优化算法复杂度", "减少不必要的计算", "考虑异步处理"],
+                recommendations=[
+                    "检查是否有死循环",
+                    "优化算法复杂度",
+                    "减少不必要的计算",
+                    "考虑异步处理",
+                ],
             )
         )
 
@@ -205,7 +220,12 @@ class IntelligentAlertingSystem:
                 severity=AlertSeverity.WARNING,
                 cooldown_seconds=900,
                 description="规则执行吞吐量过低",
-                recommendations=["分析规则执行效率", "检查规则依赖关系", "考虑规则缓存优化", "验证数据加载性能"],
+                recommendations=[
+                    "分析规则执行效率",
+                    "检查规则依赖关系",
+                    "考虑规则缓存优化",
+                    "验证数据加载性能",
+                ],
             )
         )
 
@@ -219,7 +239,12 @@ class IntelligentAlertingSystem:
                 severity=AlertSeverity.ERROR,
                 cooldown_seconds=300,
                 description="存在阻塞规则，影响正常执行",
-                recommendations=["检查规则依赖完整性", "验证实体/事实是否存在", "修复依赖引用问题", "考虑依赖自动恢复"],
+                recommendations=[
+                    "检查规则依赖完整性",
+                    "验证实体/事实是否存在",
+                    "修复依赖引用问题",
+                    "考虑依赖自动恢复",
+                ],
             )
         )
 
@@ -233,7 +258,12 @@ class IntelligentAlertingSystem:
                 severity=AlertSeverity.WARNING,
                 cooldown_seconds=600,
                 description="执行质量得分过低",
-                recommendations=["分析失败规则原因", "检查数据质量问题", "优化规则定义", "提升测试覆盖率"],
+                recommendations=[
+                    "分析失败规则原因",
+                    "检查数据质量问题",
+                    "优化规则定义",
+                    "提升测试覆盖率",
+                ],
             )
         )
 
@@ -304,7 +334,9 @@ class IntelligentAlertingSystem:
 
         return new_alerts
 
-    def _create_alert(self, rule: AlertRule, trigger_value: float, all_metrics: dict[str, float]) -> Alert:
+    def _create_alert(
+        self, rule: AlertRule, trigger_value: float, all_metrics: dict[str, float]
+    ) -> Alert:
         """创建告警"""
         alert_id = f"{rule.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
@@ -323,11 +355,17 @@ class IntelligentAlertingSystem:
                 "all_metrics": all_metrics,
             },
             recommendations=rule.recommendations.copy(),
-            metadata={"rule_id": rule.id, "cooldown_seconds": rule.cooldown_seconds, "rule_metadata": rule.metadata},
+            metadata={
+                "rule_id": rule.id,
+                "cooldown_seconds": rule.cooldown_seconds,
+                "rule_metadata": rule.metadata,
+            },
         )
 
         # 生成增强建议
-        enhanced_recommendations = self._generate_enhanced_recommendations(rule, trigger_value, all_metrics)
+        enhanced_recommendations = self._generate_enhanced_recommendations(
+            rule, trigger_value, all_metrics
+        )
         alert.recommendations.extend(enhanced_recommendations)
 
         return alert
@@ -463,9 +501,14 @@ class IntelligentAlertingSystem:
 
     def _get_most_frequent_rules(self, top_n: int = 5) -> list[dict]:
         """获取最频繁触发的规则"""
-        sorted_rules = sorted(self.stats["by_rule"].items(), key=lambda x: x[1], reverse=True)
+        sorted_rules = sorted(
+            self.stats["by_rule"].items(), key=lambda x: x[1], reverse=True
+        )
 
-        return [{"rule_id": rule_id, "count": count} for rule_id, count in sorted_rules[:top_n]]
+        return [
+            {"rule_id": rule_id, "count": count}
+            for rule_id, count in sorted_rules[:top_n]
+        ]
 
     def register_callback(self, callback: Callable[[Alert], None]):
         """注册告警回调函数"""
@@ -518,7 +561,9 @@ class IntelligentAlertingSystem:
         report.append("\n📊 活跃告警统计:")
         report.append(f"  总计: {active_count}")
         for severity, count in severity_counts.items():
-            icon = {"CRITICAL": "🔴", "ERROR": "🟠", "WARNING": "🟡", "INFO": "🔵"}.get(severity, "⚪")
+            icon = {"CRITICAL": "🔴", "ERROR": "🟠", "WARNING": "🟡", "INFO": "🔵"}.get(
+                severity, "⚪"
+            )
             report.append(f"  {icon} {severity}: {count}")
 
         # 历史统计
@@ -532,10 +577,15 @@ class IntelligentAlertingSystem:
         if active_alerts:
             report.append("\n🚨 活跃告警详情:")
             for alert in active_alerts[:10]:  # 最多显示10个
-                severity_icon = {"CRITICAL": "🔴", "ERROR": "🟠", "WARNING": "🟡", "INFO": "🔵"}.get(
-                    alert.severity.value, "⚪"
+                severity_icon = {
+                    "CRITICAL": "🔴",
+                    "ERROR": "🟠",
+                    "WARNING": "🟡",
+                    "INFO": "🔵",
+                }.get(alert.severity.value, "⚪")
+                report.append(
+                    f"  {severity_icon} [{alert.severity.value}] {alert.name}"
                 )
-                report.append(f"  {severity_icon} [{alert.severity.value}] {alert.name}")
                 report.append(f"      时间: {alert.timestamp}")
                 report.append(f"      消息: {alert.message}")
                 if alert.recommendations:

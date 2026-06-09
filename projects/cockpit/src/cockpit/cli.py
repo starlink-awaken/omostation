@@ -4,9 +4,11 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import time as _time_mod
-from pathlib import Path  # noqa: F401
+from argparse import Namespace
+from pathlib import Path
 from urllib import request as urlrequest  # noqa: F401
 
 from rich import box
@@ -25,6 +27,7 @@ time = _time_mod
 from .commands.base import (
     _SCRIPT_DIR,
     _find_cli,  # noqa: F401
+    _panel,
 )
 from .commands.contracts import (
     cmd_contracts_export_event,
@@ -243,20 +246,22 @@ def main() -> int:
     gov_p.add_argument("extra_args", nargs=argparse.REMAINDER, help="传递给 arcnode-* 脚本的额外参数")
 
     # ── L4 Bridge commands ────────────────────────────────────
-    ctx_p = sub.add_parser("context", help="显示系统上下文 (Phase/CARDS/约束/引导)")
+    sub.add_parser("context", help="显示系统上下文 (Phase/CARDS/约束/引导)")
     cards_p = sub.add_parser("cards", help="显示 CARDS 卡片状态")
     cards_p.add_argument("--check", action="store_true", help="检查当前操作合规性")
     cards_p.add_argument("--card-id", type=str, help="检查指定卡片")
     vault_p = sub.add_parser("vault", help="搜索 L4 Vault 知识库")
     vault_p.add_argument("keyword", nargs="?", help="搜索关键词")
 
-    domains_p = sub.add_parser("domains", help="列出 L4 所有域及其状态")
+    sub.add_parser("domains", help="列出 L4 所有域及其状态")
     skill_p = sub.add_parser("skill", help="运行 L4 定时技能")
     skill_p.add_argument("skill_name", help="技能名称 (如 kos-daily-ontology-sync)")
 
     health_p = sub.add_parser("health", help="一键系统健康检查")
     health_p.add_argument("--json", action="store_true", help="JSON 格式输出")
-    health_p.add_argument("--full", action="store_true", help="全栈检查 (含 Agora 服务健康 + Runtime Matrix + OMO 债务)")
+    health_p.add_argument(
+        "--full", action="store_true", help="全栈检查 (含 Agora 服务健康 + Runtime Matrix + OMO 债务)"
+    )
 
     brief_p = sub.add_parser("brief", help="会话简报")
     brief_p.add_argument("--force", action="store_true", help="强制重新生成")
@@ -292,9 +297,11 @@ def main() -> int:
     if args.command == "code":
         if args.code_command == "workflow":
             from cockpit.commands.code import cmd_code_workflow
+
             return cmd_code_workflow(args)
         elif args.code_command:
             from cockpit.commands.code import cmd_code_base
+
             return cmd_code_base(args)
         else:
             code_p.print_help()
@@ -420,18 +427,23 @@ def main() -> int:
         return cmd_mcp(args)
     if args.command == "context":
         from .commands.l4bridge import cmd_context
+
         return cmd_context(args)
     if args.command == "cards":
         from .commands.l4bridge import cmd_cards
+
         return cmd_cards(args)
     if args.command == "vault":
         from .commands.l4bridge import cmd_vault
+
         return cmd_vault(args)
     if args.command == "domains":
         from .commands.l4bridge import cmd_domains
+
         return cmd_domains(args)
     if args.command == "skill":
         from .commands.l4bridge import cmd_skill
+
         return cmd_skill(args)
     if args.command == "health":
         return _cmd_health(args)
@@ -439,16 +451,19 @@ def main() -> int:
         return _cmd_brief(args)
     if args.command == "events":
         from .commands.events import run_events_dashboard
+
         run_events_dashboard(args.url)
         return 0
     if args.command == "version":
         from cockpit import __version__
+
         console.print(f"[bold cyan]cockpit[/] v[bold]{__version__}[/]")
         console.print("[dim]L3 统一入口 · 5+3+1 架构[/]")
         return 0
 
     if args.command == "workflow":
         from cockpit.commands.workflow import handle_workflow
+
         return handle_workflow(getattr(args, "workflow_args", []))
 
     console.print(
@@ -462,7 +477,7 @@ def main() -> int:
             "  [cyan]workspace health[/]           — 一键系统健康\n"
             "  [cyan]workspace brief[/]            — 会话简报\n\n"
             "[bold]研究对象[/]\n"
-            "  [cyan]workspace research \"主题\"[/]   — 发起研究\n"
+            '  [cyan]workspace research "主题"[/]   — 发起研究\n'
             "  [cyan]workspace research --list[/]   — 查看历史\n\n"
             "[bold]工具[/]\n"
             "  [cyan]workspace status[/]            — 工作台\n"
@@ -525,6 +540,7 @@ def _cmd_health(args: Namespace) -> int:
     console.print("\n[bold cyan]═══ L4 上下文 ═══[/]\n")
     try:
         from .commands.l4bridge import cmd_context
+
         cmd_context(args)
     except Exception:
         console.print("[yellow]⚠ L4 bridge 不可用[/]")
@@ -535,6 +551,7 @@ def _cmd_health(args: Namespace) -> int:
     try:
         if args.json:
             from cockpit.scripts.cockpit_mcp import workspace_context
+
             print(workspace_context())
         else:
             cmd_status(args)
@@ -549,17 +566,20 @@ def _cmd_health(args: Namespace) -> int:
             # Try l4-kernel for domain health first
             try:
                 from l4_kernel import DomainRegistry
+
                 reg = DomainRegistry()
                 h = reg.aggregate_health()
                 if not args.json:
-                    console.print(f"  [dim]域总数: {h['total']}  |  存在: {h['existing']}  |  健康率: {h['health_rate']}[/]")
+                    console.print(
+                        f"  [dim]域总数: {h['total']}  |  存在: {h['existing']}  |  健康率: {h['health_rate']}[/]"
+                    )
             except ImportError:
                 pass
 
             # Agora stats via subprocess as fallback
             import subprocess as _sp
-            from pathlib import Path as _P
-            ws = _P(os.environ.get("WORKSPACE_ROOT", str(_P(__file__).resolve().parents[4])))
+
+            ws = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[4])))
             agora_bin = ws / "projects" / "agora" / ".venv" / "bin" / "agora"
             if agora_bin.exists():
                 result = _sp.run([str(agora_bin), "stats"], capture_output=True, text=True, timeout=15)
@@ -577,6 +597,7 @@ def _cmd_health(args: Namespace) -> int:
         try:
             from l4_kernel import DomainRegistry
             from l4_kernel.health import DomainHealth
+
             reg = DomainRegistry()
             dh = DomainHealth(reg)
             dashboard = dh.generate_dashboard()
@@ -594,11 +615,12 @@ def _cmd_health(args: Namespace) -> int:
         if not args.json and matrix_path.exists():
             try:
                 import json as _j
+
                 state = _j.loads(matrix_path.read_text())
                 console.print(f"  [dim]服务注册: {len(state.get('services', {}))} 项[/]")
                 h = sum(1 for s in state.get("services", {}).values() if s.get("healthy"))
                 t = max(len(state.get("services", {})), 1)
-                console.print(f"  [{'green' if h==t else 'yellow'}]健康: {h}/{t}[/]")
+                console.print(f"  [{'green' if h == t else 'yellow'}]健康: {h}/{t}[/]")
             except Exception:
                 console.print("[yellow]⚠ Matrix state 解析失败[/]")
         elif not args.json:
@@ -610,6 +632,7 @@ def _cmd_health(args: Namespace) -> int:
         if debt_path.exists():
             try:
                 import yaml
+
                 sys_data = yaml.safe_load(debt_path.read_text())
                 if not args.json:
                     phase = sys_data.get("current_phase", "?")
@@ -621,7 +644,7 @@ def _cmd_health(args: Namespace) -> int:
         elif not args.json:
             console.print("[yellow]⚠ OMO state 未生成[/]")
 
-        console.print(f"\n[bold green]✅ 全栈健康检查完成[/]\n")
+        console.print("\n[bold green]✅ 全栈健康检查完成[/]\n")
 
     return return_code
 
@@ -645,7 +668,7 @@ def _cmd_brief(args: Namespace) -> int:
 
         if cards and args.force:
             console.print("\n[bold]P0 优先:[/]")
-            for c in [c for c in cards if c['priority'] == 'P0']:
+            for c in [c for c in cards if c["priority"] == "P0"]:
                 console.print(f"  [red]▪[/] {c['title']}")
 
         console.print(f"\n[dim]生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M')}[/]")

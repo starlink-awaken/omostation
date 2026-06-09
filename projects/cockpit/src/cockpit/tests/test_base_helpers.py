@@ -20,6 +20,7 @@ from unittest import mock
 from urllib import error as urlerror
 
 from rich.console import Console
+
 from cockpit.commands.base import (
     _compare_focus,
     _derive_import_title,
@@ -691,7 +692,6 @@ class TestLoadProfile:
     def test_profile_not_found(self, monkeypatch):
         """无 profile 文件→返回空字典"""
         from pathlib import Path
-
 
         mock_path = Path("/tmp") / "_test_nonexistent_profile.yaml"
         monkeypatch.setattr("cockpit.commands.base._PROFILE_PATH", mock_path)

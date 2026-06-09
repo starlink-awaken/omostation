@@ -86,7 +86,9 @@ class AutoRecoveryStrategy(BaseRecoveryStrategy):
                 "domain_entities": len(context.get("domain", {}).get("entities", [])),
                 "domain_facts": len(context.get("domain", {}).get("facts", [])),
                 "execution_time_ms": context.get("execution_time_ms", 0),
-                "environment": self.monitor.environment_type.value if hasattr(self, "monitor") else "unknown",
+                "environment": self.monitor.environment_type.value
+                if hasattr(self, "monitor")
+                else "unknown",
             },
         }
 
@@ -96,7 +98,9 @@ class AutoRecoveryStrategy(BaseRecoveryStrategy):
         if matching_pattern:
             analysis["matched_pattern"] = matching_pattern.name
             analysis["recovery_patterns"] = self._list_available_patterns()
-            analysis["suggested_actions"] = [action.name for action in matching_pattern.actions]
+            analysis["suggested_actions"] = [
+                action.name for action in matching_pattern.actions
+            ]
         else:
             analysis["matched_pattern"] = None
             analysis["suggested_actions"] = []
@@ -107,7 +111,9 @@ class AutoRecoveryStrategy(BaseRecoveryStrategy):
 
         return analysis
 
-    def _find_matching_pattern(self, error_info: dict[str, Any]) -> RecoveryPattern | None:
+    def _find_matching_pattern(
+        self, error_info: dict[str, Any]
+    ) -> RecoveryPattern | None:
         """查找匹配的错误模式"""
         error_info["type"]
         error_message = error_info["message"].lower()
@@ -117,7 +123,13 @@ class AutoRecoveryStrategy(BaseRecoveryStrategy):
             "memoryerror": {
                 "pattern_id": "pattern_memory_error",
                 "name": "内存错误恢复",
-                "error_patterns": ["cannot", "memory", "allocation", "out of memory", "exceeded"],
+                "error_patterns": [
+                    "cannot",
+                    "memory",
+                    "allocation",
+                    "out of memory",
+                    "exceeded",
+                ],
             },
             "keyerror": {
                 "pattern_id": "pattern_key_error",
@@ -132,7 +144,13 @@ class AutoRecoveryStrategy(BaseRecoveryStrategy):
             "valueerror": {
                 "pattern_id": "pattern_value_error",
                 "name": "值错误恢复",
-                "error_patterns": ["invalid literal", "type mismatch", "int()", "too many values", "none"],
+                "error_patterns": [
+                    "invalid literal",
+                    "type mismatch",
+                    "int()",
+                    "too many values",
+                    "none",
+                ],
             },
             "ioerror": {
                 "pattern_id": "pattern_io_error",
@@ -168,8 +186,16 @@ class AutoRecoveryStrategy(BaseRecoveryStrategy):
         matches: list[dict[str, Any]] = []
 
         [
-            {"error_type": error_info["type"], "solution": "创建默认实体", "time": "1-3分钟"},
-            {"error_type": error_info["type"], "solution": "检查规则依赖", "time": "3-5分钟"},
+            {
+                "error_type": error_info["type"],
+                "solution": "创建默认实体",
+                "time": "1-3分钟",
+            },
+            {
+                "error_type": error_info["type"],
+                "solution": "检查规则依赖",
+                "time": "3-5分钟",
+            },
         ]
 
         return matches
@@ -245,7 +271,10 @@ class AutoRecoveryStrategy(BaseRecoveryStrategy):
             )
 
     def _select_best_action(
-        self, actions: list[RecoveryAction], error_info: dict[str, Any], context: dict[str, Any]
+        self,
+        actions: list[RecoveryAction],
+        error_info: dict[str, Any],
+        context: dict[str, Any],
     ) -> RecoveryAction | None:
         """选择最佳恢复动作"""
         # 按风险和复杂度排序
@@ -309,7 +338,9 @@ class AutoRecoveryStrategy(BaseRecoveryStrategy):
             return scored_actions[0][1] if scored_actions else None
         return None
 
-    def _record_recovery_result(self, error_info: dict[str, Any], action: RecoveryAction, success: bool):
+    def _record_recovery_result(
+        self, error_info: dict[str, Any], action: RecoveryAction, success: bool
+    ):
         """记录恢复结果用于学习"""
         # 如果有对应的模式，更新成功/失败率
         if action.id in self.patterns:

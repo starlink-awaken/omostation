@@ -45,17 +45,31 @@ def get_baseline():
 def check_drift(current_count: int, current_zones: dict[str, int]) -> list[dict]:
     alerts = []
     if current_count is None:
-        alerts.append({"metric": "total_docs", "level": "critical", "message": "DB_UNAVAILABLE"})
+        alerts.append(
+            {"metric": "total_docs", "level": "critical", "message": "DB_UNAVAILABLE"}
+        )
         return alerts
-    drift_pct = (current_count - BASELINE["documents"]) / max(BASELINE["documents"], 1) * 100
+    drift_pct = (
+        (current_count - BASELINE["documents"]) / max(BASELINE["documents"], 1) * 100
+    )
     t = THRESHOLDS["total_docs"]
     if abs(drift_pct) >= t["critical"]:
         alerts.append(
-            {"metric": "total_docs", "level": "critical", "drift_pct": round(drift_pct, 2), "action": "NO_AUTO_REINDEX"}
+            {
+                "metric": "total_docs",
+                "level": "critical",
+                "drift_pct": round(drift_pct, 2),
+                "action": "NO_AUTO_REINDEX",
+            }
         )
     elif abs(drift_pct) >= t["warning"]:
         alerts.append(
-            {"metric": "total_docs", "level": "warning", "drift_pct": round(drift_pct, 2), "action": "LOG_ONLY"}
+            {
+                "metric": "total_docs",
+                "level": "warning",
+                "drift_pct": round(drift_pct, 2),
+                "action": "LOG_ONLY",
+            }
         )
     if current_zones:
         for zone, baseline_count in BASELINE["zones"].items():
@@ -83,7 +97,12 @@ def check_drift(current_count: int, current_zones: dict[str, int]) -> list[dict]
                 )
             elif abs(z_drift) >= zt["warning"]:
                 alerts.append(
-                    {"metric": f"zone_{zone}", "level": "warning", "drift_pct": round(z_drift, 2), "action": "LOG_ONLY"}
+                    {
+                        "metric": f"zone_{zone}",
+                        "level": "warning",
+                        "drift_pct": round(z_drift, 2),
+                        "action": "LOG_ONLY",
+                    }
                 )
     return alerts
 
@@ -97,7 +116,7 @@ def check_known_docs(search_fn) -> dict:
                 found += 1
             else:
                 failed.append(doc_id)
-        except:  # noqa: E722
+        except Exception:
             failed.append(doc_id)
     return {
         "found": found,

@@ -49,7 +49,7 @@ def cmd_lifecycle(args: list[str]) -> None:
         try:
             target = LifecycleStage.from_str(stage_str)
         except ValueError:
-            print(f"❌ 无效阶段: {stage_str}")
+            print(f"❌ 无效阶段: {stage_str}, 有效值: {[s.value for s in LifecycleStage]}")
             return
         success, msg, _ = engine.try_transition(tracker, target)
         print(f"{'✅' if success else '❌'} {msg}")

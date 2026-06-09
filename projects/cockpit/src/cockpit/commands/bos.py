@@ -15,6 +15,7 @@ def cmd_bos_status(args):
     # BOS metrics from core modules
     try:
         import sys
+
         sys.path.insert(0, str(Path.home() / "Workspace" / "projects" / "agora" / "src"))
         from agora.mcp.bos_metrics import bos_metrics
         from agora.mcp.bos_middleware import bos_cache
@@ -24,7 +25,7 @@ def cmd_bos_status(args):
 
         print("🔗 BOS Metrics:")
         print(f"   Calls: {summary['total_calls']}")
-        print(f"   Success rate: {summary['success_rate']*100:.1f}%")
+        print(f"   Success rate: {summary['success_rate'] * 100:.1f}%")
         print(f"   Avg latency: {summary['avg_latency_ms']:.1f}ms")
         print(f"   Cache: {cache['active_entries']} active / {cache['total']} total")
     except Exception as e:
@@ -33,8 +34,10 @@ def cmd_bos_status(args):
     # Swarm status
     try:
         import sys
+
         sys.path.insert(0, str(Path.home() / "Workspace" / "projects" / "agora" / "src"))
         from agora.mcp.swarm import get_swarm
+
         swarm = get_swarm()
         status = swarm.status()
 
@@ -53,11 +56,12 @@ def cmd_bos_status(args):
 
 def cmd_bos_workflow(args):
     """委托给 mof workflow CLI (L0 层)"""
-    cmd_name = args.subcommand if hasattr(args, 'subcommand') else 'list'
-    extra = getattr(args, 'extra', [])
+    cmd_name = args.subcommand if hasattr(args, "subcommand") else "list"
+    extra = getattr(args, "extra", [])
     result = subprocess.run(
         ["python3", MOF_WORKFLOW, cmd_name] + extra,
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     print(result.stdout[:2000])
     if result.returncode != 0:

@@ -8,7 +8,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import sys
 from pathlib import Path
@@ -115,7 +114,7 @@ def cmd_dashboard_serve(port: int) -> int:
 
     server = HTTPServer(("0.0.0.0", port), DashboardHandler)  # noqa: S104
     print(f"🚀 eCOS Dashboard: http://localhost:{port}")
-    print(f"   Auto-refresh: 30s")
+    print("   Auto-refresh: 30s")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

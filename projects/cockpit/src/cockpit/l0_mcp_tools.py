@@ -14,13 +14,14 @@ MCP Tools:
 
 集成方式 (在 cockpit MCP server 中):
     from l0_mcp_tools import l0_status, l0_validate, l0_audit
-    
+
     @server.tool()
     def l0_status() -> str:
         return l0_status()
 """
 
-import subprocess, json
+import json
+import subprocess
 from pathlib import Path
 
 HOME = Path.home()
@@ -32,41 +33,42 @@ MOF_AUDIT = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" /
 def _run_tool(tool_path: Path, args: list = None) -> dict:
     try:
         result = subprocess.run(
-            ["python3", str(tool_path)] + (args or []) + ["--json"],
-            capture_output=True, text=True, timeout=30
+            ["python3", str(tool_path)] + (args or []) + ["--json"], capture_output=True, text=True, timeout=30
         )
         if result.returncode == 0 and result.stdout.strip():
             return json.loads(result.stdout)
-    except:
+    except Exception:
         pass
     return {"error": "tool execution failed"}
 
 
 def l0_status() -> str:
     """L0 系统状态摘要 — Agent 启动时调用"""
-    result = _run_tool(MOF, ["status"]) if False else {}
-    
+    _run_tool(MOF, ["status"]) if False else {}
+
     # Direct status computation (bypass subprocess for speed)
-    from pathlib import Path
-    m1_count = sum(1 for _ in (HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1").rglob("*.yaml"))
-    m2_count = len(list((HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m2").glob("*.yaml")))
-    
+    m1_count = sum(
+        1 for _ in (HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1").rglob("*.yaml")
+    )
+    m2_count = len(
+        list((HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m2").glob("*.yaml"))
+    )
+
     # Get protocol health
     sla_result = _run_tool(
-        HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-sla.py",
-        ["--snapshot-only"]
+        HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-sla.py", ["--snapshot-only"]
     )
-    
+
     lines = [
-        f"织星 L0 状态:",
+        "织星 L0 状态:",
         f"  M2 类型: {m2_count}",
         f"  M1 节点: {m1_count}",
         f"  校验: {'✅ 全部通过' if m1_count > 0 else '⚠️'}",
     ]
-    
+
     if sla_result and "protocols" not in str(sla_result):
         pass  # skip error
-    
+
     return "\n".join(lines)
 
 
@@ -75,11 +77,11 @@ def l0_validate() -> str:
     result = _run_tool(MOF_VALIDATE)
     if "error" in result:
         return f"❌ 校验失败: {result['error']}"
-    
+
     node_count = result.get("node_count", "?")
     total = len(result.get("results", []))
     errors = sum(1 for r in result.get("results", []) if r.get("level") == "error")
-    
+
     return f"L0 校验: {node_count} 节点 | 通过: {total - errors}/{total} | {'✅ 全部通过' if errors == 0 else f'❌ {errors} 错误'}"
 
 
@@ -91,7 +93,7 @@ def l0_audit() -> str:
         drift_count = len(drifts)
     else:
         drift_count = drifts
-    
+
     if drift_count == 0:
         return "L0 审计: ✅ 无漂移 — M1 声明与 M0 运行时一致"
     else:
@@ -101,8 +103,7 @@ def l0_audit() -> str:
 def l0_protocols() -> str:
     """协议健康度"""
     sla = _run_tool(
-        HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-sla.py",
-        ["--snapshot-only"]
+        HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-sla.py", ["--snapshot-only"]
     )
     lines = ["协议健康度:"]
     protocols = sla.get("protocols", {}) if isinstance(sla, dict) else {}
@@ -117,10 +118,11 @@ def l0_protocols() -> str:
 def l0_adr_list() -> str:
     """ADR 列表"""
     import yaml
+
     decisions_dir = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "decision"
     if not decisions_dir.exists():
         return "L0 ADR: 无决策记录"
-    
+
     lines = ["架构决策记录 (ADR):"]
     for f in sorted(decisions_dir.glob("*.yaml")):
         try:
@@ -129,7 +131,7 @@ def l0_adr_list() -> str:
             name = d.get("name", f.stem)[:60]
             icon = {"accepted": "✅", "proposed": "📋", "rejected": "❌"}.get(status, "❓")
             lines.append(f"  {icon} {name}")
-        except:
+        except Exception:
             pass
     return "\n".join(lines)
 
@@ -138,12 +140,12 @@ def l0_entity_resolve(query: str) -> str:
     """跨域实体解析"""
     result = _run_tool(
         HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-entity.py",
-        ["resolve", query]
+        ["resolve", query],
     )
     entities = result.get("entities", [])
     if not entities:
         return f"实体 '{query}': 未找到"
-    
+
     lines = [f"实体 '{query}' ({len(entities)} 处):"]
     for e in entities:
         lines.append(f"  📍 {e.get('name', '?')} — {e.get('domain', '?')} [{e.get('entity_type', '?')}]")
@@ -152,10 +154,12 @@ def l0_entity_resolve(query: str) -> str:
 
 # ── model-driven 桥接 ──
 
+
 def md_lifecycle_status(entity_id: str = "ecos") -> str:
     """model-driven 生命周期状态 — 查询实体的全生命周期阶段进度"""
     try:
         from model_driven.lifecycle.tracking import LifecycleManager
+
         mgr = LifecycleManager()
         summary = mgr.get_stage_summary(entity_id)
         if summary:
@@ -168,8 +172,9 @@ def md_lifecycle_status(entity_id: str = "ecos") -> str:
 def md_validate() -> str:
     """model-driven 自反验证 — 用 model-validate 校验 L0 MOF M1 节点"""
     try:
-        import yaml
         from pathlib import Path
+
+        import yaml
         from model_driven.toolchain.tools import tool_validate
 
         m1_dir = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
@@ -239,17 +244,25 @@ MCP_TOOLS = {
 # ── CLI for testing ──
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) < 2:
         print("L0 MCP Tools — 可用工具:")
         for name, info in MCP_TOOLS.items():
             print(f"  {name}: {info['description']}")
         sys.exit(0)
-    
+
     tool = sys.argv[1]
-    if tool == "status": print(l0_status())
-    elif tool == "validate": print(l0_validate())
-    elif tool == "audit": print(l0_audit())
-    elif tool == "protocols": print(l0_protocols())
-    elif tool == "adr": print(l0_adr_list())
-    elif tool == "entity" and len(sys.argv) > 2: print(l0_entity_resolve(sys.argv[2]))
-    else: print(f"未知工具: {tool}")
+    if tool == "status":
+        print(l0_status())
+    elif tool == "validate":
+        print(l0_validate())
+    elif tool == "audit":
+        print(l0_audit())
+    elif tool == "protocols":
+        print(l0_protocols())
+    elif tool == "adr":
+        print(l0_adr_list())
+    elif tool == "entity" and len(sys.argv) > 2:
+        print(l0_entity_resolve(sys.argv[2]))
+    else:
+        print(f"未知工具: {tool}")

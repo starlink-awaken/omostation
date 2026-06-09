@@ -53,7 +53,9 @@ def run():
         SELECT source_agent FROM ssb_events ORDER BY seq
     """).fetchall()
     ]
-    switches = sum(1 for i in range(1, len(agents_only)) if agents_only[i] != agents_only[i - 1])
+    switches = sum(
+        1 for i in range(1, len(agents_only)) if agents_only[i] != agents_only[i - 1]
+    )
     switch_rate = round(switches / len(agents_only), 3) if agents_only else 0
 
     # 每日事件量
@@ -98,7 +100,9 @@ def run():
     print(f"risk_med_count={risk_med}")
     print(f"knowledge_velocity={total}")
     print(f'daily_breakdown="{"".join(f"{d}:{c} " for d, c in daily_rows).strip()}"')
-    print(f'hourly_breakdown="{"".join(f"{h}:00-{c} " for h, c in hourly_rows).strip()}"')
+    print(
+        f'hourly_breakdown="{"".join(f"{h}:00-{c} " for h, c in hourly_rows).strip()}"'
+    )
 
 
 if __name__ == "__main__":

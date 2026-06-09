@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest import mock
 
 from rich.console import Console
+
 from cockpit.commands.research import cmd_research_backup, cmd_research_backup_restore
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -74,7 +75,9 @@ class TestCmdResearchBackup:
         capture = Console(record=True, force_terminal=True, width=140)
         monkeypatch.setattr("cockpit.commands.research._get_console", lambda: capture)
         monkeypatch.setattr("cockpit.commands.research._get_err", lambda: capture)
-        monkeypatch.setattr("cockpit.commands.research.Path.write_text", mock.Mock(side_effect=PermissionError("denied")))
+        monkeypatch.setattr(
+            "cockpit.commands.research.Path.write_text", mock.Mock(side_effect=PermissionError("denied"))
+        )
 
         mock_da = mock.Mock()
         mock_da.export_backup.return_value = {

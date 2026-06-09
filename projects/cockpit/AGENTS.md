@@ -98,7 +98,7 @@ uv run pytest src/cockpit/tests/test_cli_research_*.py -q
 
 ## Gotchas
 
-1. **Python 3.10+** — 非 kairon 的 3.13+
+1. **Python 3.13+** — 与 kairon 一致
 2. **测试路径是 src/cockpit/tests/** — 不要在根目录 tests/ 放测试
 3. **runtime 是硬依赖** — agent_runtime_* 模块需要 runtime 可导入
 4. **storage.py IDataAccess Protocol** — 新增存储操作需实现协议接口

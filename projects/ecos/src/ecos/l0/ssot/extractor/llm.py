@@ -47,7 +47,9 @@ class OllamaBackend(LLMBackend):
         # 可被 OLLAMA_MODEL 环境变量覆盖
         default_model = os.environ.get("OLLAMA_MODEL", "qwen3.5:4b")
         self.model = model or default_model
-        self.base_url = (base_url or os.environ.get("OLLAMA_HOST", "") or "http://localhost:11434").rstrip("/")
+        self.base_url = (
+            base_url or os.environ.get("OLLAMA_HOST", "") or "http://localhost:11434"
+        ).rstrip("/")
 
     def health_check(self) -> str:
         """快速检测 Ollama 是否可达。
@@ -133,7 +135,12 @@ class OllamaBackend(LLMBackend):
 class OpenAIBackend(LLMBackend):
     """OpenAI 兼容 API 后端（也支持 vLLM / 硅基流动等）"""
 
-    def __init__(self, model: str = "gpt-4o-mini", api_key: str = "", base_url: str = "https://api.openai.com/v1"):
+    def __init__(
+        self,
+        model: str = "gpt-4o-mini",
+        api_key: str = "",
+        base_url: str = "https://api.openai.com/v1",
+    ):
         self.model = model
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
@@ -251,7 +258,9 @@ class LLMExtractor(Extractor):
         3. backends=[OllamaBackend("qwen3.5:4b")] — 只用 Ollama
     """
 
-    def __init__(self, backends: list[LLMBackend] | None = None, auto_detect: bool = True):
+    def __init__(
+        self, backends: list[LLMBackend] | None = None, auto_detect: bool = True
+    ):
         self.backends = backends or []
         if not self.backends and auto_detect:
             self.backends = self._detect_backends()
@@ -287,7 +296,9 @@ class LLMExtractor(Extractor):
             return self._chunked_extract(text, source.source_name)
 
         if len(text) > 6000:
-            text = text[:8000] + f"\n\n（原文共 {len(text)} 字符，已截断至前 8000 字符）"
+            text = (
+                text[:8000] + f"\n\n（原文共 {len(text)} 字符，已截断至前 8000 字符）"
+            )
 
         user_prompt = f"""从以下文本中提取实体和事实：
 
@@ -338,7 +349,9 @@ class LLMExtractor(Extractor):
 
         chunker = Chunker(max_chars=7000)
         chunks = chunker.chunk_by_sections(text)
-        print(f"  📦 大文档: {len(text)}字 → {len(chunks)} 块 (完整章节)", file=sys.stderr)
+        print(
+            f"  📦 大文档: {len(text)}字 → {len(chunks)} 块 (完整章节)", file=sys.stderr
+        )
 
         all_candidates = []
         seen_ids = set()
@@ -363,7 +376,9 @@ class LLMExtractor(Extractor):
 输出 YAML 格式。只输出 entities: 和 facts: 字段。如果某类没有内容就写空列表。"""
 
             try:
-                response = backend.complete(SYSTEM_PROMPT, context_prompt, temperature=0.1)
+                response = backend.complete(
+                    SYSTEM_PROMPT, context_prompt, temperature=0.1
+                )
             except Exception as e:
                 print(f"    ❌ 块{i + 1} {backend.name} 调用失败: {e}", file=sys.stderr)
                 import traceback
@@ -389,7 +404,10 @@ class LLMExtractor(Extractor):
                     deduped.append(c)
             chunk_candidates = deduped
             after_dedup = before - (len(chunk_candidates) + (before - len(deduped)))
-            print(f"    → 确权过滤 {before - len(chunk_candidates)} 幻觉, {after_dedup} 重复", file=sys.stderr)
+            print(
+                f"    → 确权过滤 {before - len(chunk_candidates)} 幻觉, {after_dedup} 重复",
+                file=sys.stderr,
+            )
 
             # 合并去重
             for c in chunk_candidates:
@@ -418,7 +436,9 @@ class LLMExtractor(Extractor):
         # 没有健康的后端 → 再试第一个，让它抛异常给上层
         return self.backends[0] if self.backends else None
 
-    def _confirm_candidates(self, candidates: list[ExtractionCandidate], source_text: str) -> list[ExtractionCandidate]:
+    def _confirm_candidates(
+        self, candidates: list[ExtractionCandidate], source_text: str
+    ) -> list[ExtractionCandidate]:
         """确权过滤：只保留在原文中出现过的候选（去 LLM 幻觉）"""
         result = []
         for c in candidates:
@@ -550,7 +570,10 @@ class LLMExtractor(Extractor):
         standard_backend = _standard_backend_from_env()
         if standard_backend is not None:
             backends.append(standard_backend)
-            print(f"  🔌 [{len(backends)}] 标准 LLM 路由 ({standard_backend.name})", file=sys.stderr)
+            print(
+                f"  🔌 [{len(backends)}] 标准 LLM 路由 ({standard_backend.name})",
+                file=sys.stderr,
+            )
 
         # ── 1. Ollama（本地，免费，最快） ──────────────
         try:
@@ -585,7 +608,9 @@ class LLMExtractor(Extractor):
                 if ":" not in chosen:
                     chosen = f"{chosen}:latest"
                 backends.append(OllamaBackend(model=chosen))
-                print(f"  🔌 [{len(backends)}] Ollama (模型: {chosen})", file=sys.stderr)
+                print(
+                    f"  🔌 [{len(backends)}] Ollama (模型: {chosen})", file=sys.stderr
+                )
         except Exception:
             pass
 
@@ -593,7 +618,9 @@ class LLMExtractor(Extractor):
         sf_key = os.environ.get("SILICONFLOW_API_KEY", "")
         if sf_key:
             sf_model = os.environ.get("SILICONFLOW_MODEL", "Qwen/Qwen2.5-7B-Instruct")
-            sf_url = os.environ.get("SILICONFLOW_BASE_URL", "https://api.siliconflow.cn/v1")
+            sf_url = os.environ.get(
+                "SILICONFLOW_BASE_URL", "https://api.siliconflow.cn/v1"
+            )
             backends.append(
                 OpenAIBackend(
                     model=sf_model,
@@ -601,7 +628,9 @@ class LLMExtractor(Extractor):
                     base_url=sf_url,
                 )
             )
-            print(f"  🔌 [{len(backends)}] 硅基流动 (模型: {sf_model})", file=sys.stderr)
+            print(
+                f"  🔌 [{len(backends)}] 硅基流动 (模型: {sf_model})", file=sys.stderr
+            )
 
         # ── 3. DeepSeek（国内，价格便宜） ──────────────
         ds_key = os.environ.get("DEEPSEEK_API_KEY", "")
@@ -615,7 +644,9 @@ class LLMExtractor(Extractor):
                     base_url=ds_url,
                 )
             )
-            print(f"  🔌 [{len(backends)}] DeepSeek (模型: {ds_model})", file=sys.stderr)
+            print(
+                f"  🔌 [{len(backends)}] DeepSeek (模型: {ds_model})", file=sys.stderr
+            )
 
         # ── 4. OpenAI（通用，较贵） ────────────────────
         oa_key = os.environ.get("OPENAI_API_KEY", "")

@@ -60,7 +60,9 @@ class ExtractionPipeline:
         """注册自定义提取器"""
         self.extractors.append(extractor)
 
-    def run(self, source: TextSource, auto_write: bool = False, auto_confirm: bool = False) -> dict:
+    def run(
+        self, source: TextSource, auto_write: bool = False, auto_confirm: bool = False
+    ) -> dict:
         """执行完整提取流水线。
 
         Args:

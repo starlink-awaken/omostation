@@ -4,6 +4,7 @@
 """
 
 import os
+import warnings
 from pathlib import Path
 
 
@@ -11,8 +12,22 @@ def get_workspace_dir() -> Path:
     """获取 eCOS workspace 根目录。
 
     优先使用 ECOS_WORKSPACE 环境变量，fallback 到 ~/Workspace。
+    当环境变量未设置时发出 UserWarning，提醒显式配置。
     """
-    return Path(os.environ.get("ECOS_WORKSPACE", str(Path.home() / "Workspace")))
+    env_path = os.environ.get("ECOS_WORKSPACE")
+    if env_path:
+        ws = Path(env_path)
+        if not ws.exists():
+            warnings.warn(f"ECOS_WORKSPACE 指向的路径不存在: {ws}", stacklevel=2)
+        return ws
+
+    fallback = Path.home() / "Workspace"
+    warnings.warn(
+        f"ECOS_WORKSPACE 环境变量未设置，使用默认路径: {fallback}。"
+        f"建议设置 export ECOS_WORKSPACE=/path/to/workspace",
+        stacklevel=2,
+    )
+    return fallback
 
 
 def get_state_dir() -> Path:

@@ -12,8 +12,6 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from pathlib import Path
-from typing import Optional
 
 DB_PATH = Path(__file__).resolve().parents[4] / "data" / "cards" / "cards.db"
 
@@ -249,7 +247,7 @@ def cmd_show(args):
         (args.id,)
     ).fetchall()
     if history:
-        print(f"\nHistory:")
+        print("\nHistory:")
         for h in history:
             arrow = f"{h['old_status'] or '∅'} → {h['new_status']}"
             print(f"  {h['changed_at']}  {arrow:20s}  {h['note']}")
@@ -320,18 +318,18 @@ def cmd_dashboard(args):
     print(f"  CARDS DASHBOARD  —  {_now()}")
     print(f"{'═' * 70}")
 
-    print(f"\n  By Priority:")
+    print("\n  By Priority:")
     print(f"  {'─' * 40}")
     for r in rows:
         bar = "█" * min(r["cnt"], 20)
         print(f"  {r['priority']:4s}  {r['cnt']:2d} cards  {bar}")
 
-    print(f"\n  By Type:")
+    print("\n  By Type:")
     print(f"  {'─' * 40}")
     for r in type_rows:
         print(f"  {r['type']:12s}  {r['cnt']:2d}")
 
-    print(f"\n  By Domain:")
+    print("\n  By Domain:")
     print(f"  {'─' * 40}")
     for r in domain_rows:
         print(f"  {r['domain']:16s}  {r['cnt']:2d}")
@@ -452,7 +450,6 @@ def cmd_generate(args=None):
         md_path = type_dir / f"{row['id']}.md"
 
         tags = json.loads(row['tags'] or '[]')
-        tag_str = " ".join(f"#{t}" for t in tags) if tags else ""
         deadline_line = f"deadline: {row['deadline']}\n" if row['deadline'] else ""
         review_line = f"review_due: {row['review_due']}\n" if row['review_due'] else ""
         parent_line = f"parent: {row['parent_id']}\n" if row['parent_id'] else ""
@@ -546,7 +543,6 @@ def cmd_daemon(args=None):
         if marker in orig:
             before = orig[:orig.index(marker)]
             after = orig[orig.index(marker):]
-            end_marker = "## 当前信号"
             if "## 当前信号" in after:
                 after = after[after.index("## 当前信号"):]
             else:
@@ -557,7 +553,7 @@ def cmd_daemon(args=None):
         dashboard_path.write_text(new_dashboard, encoding="utf-8")
         print("  → DASHBOARD updated")
 
-    print(f"✅ Daemon complete")
+    print("✅ Daemon complete")
     return ret
 
 

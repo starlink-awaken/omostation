@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 """ecos MCP Server — 织星生态统一对外入口 | v1.0"""
-import sys, os, json, subprocess
+import sys
+import os
+import json
+import subprocess
 from pathlib import Path
 
 ECOS_SRC = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ECOS_SRC))
 
+# F821: define missing variables
+SCRIPTS = ECOS_SRC / "scripts"
+H = Path.home()
+
 # 复用 domain-manager 逻辑
-from importlib.machinery import SourceFileLoader
+from importlib.machinery import SourceFileLoader  # noqa: E402
 DM_PATH = ECOS_SRC / "services" / "domain_manager.py"
 dm = SourceFileLoader("dm", str(DM_PATH)).load_module()
 
@@ -43,7 +50,8 @@ def handle_domain_list(args):
     dt = args.get("type")
     result = []
     for d in r:
-        if dt and d.get("domain_type")!=dt: continue
+        if dt and d.get("domain_type")!=dt:
+            continue
         result.append({"id":d["id"],"name":d.get("name",""),"type":d.get("domain_type","document"),"layer":d.get("layer","L4"),"bos_uri":f"bos://{d['id']}"})
     return {"domains":result,"total":len(result)}
 
@@ -58,9 +66,11 @@ def handle_domain_validate(args):
     domain = args.get("domain","")
     r = dm.load_registry()
     d = dm.find_domain(r, domain)
-    if not d: return {"error":f"域未注册: {domain}"}
+    if not d:
+        return {"error":f"域未注册: {domain}"}
     p = dm.resolve_path(d)
-    if not p.exists(): return {"error":f"路径不存在: {p}"}
+    if not p.exists():
+        return {"error":f"路径不存在: {p}"}
     results = dm.validate_domain(p, d.get("domain_type","document"), d.get("governance_tier",1))
     return {"domain":d.get("name",d["id"]),"path":str(p),"checks":[{"name":n,"pass":ok,"detail":dt} for n,ok,dt in results],"passed":sum(1 for _,ok,_ in results if ok),"failed":sum(1 for _,ok,_ in results if not ok)}
 
@@ -68,12 +78,15 @@ def handle_domain_tree(args):
     domain = args.get("domain","")
     r = dm.load_registry()
     d = dm.find_domain(r, domain)
-    if not d: return {"error":f"域未注册: {domain}"}
+    if not d:
+        return {"error":f"域未注册: {domain}"}
     p = dm.resolve_path(d)
-    if not p.exists(): return {"error":f"路径不存在: {p}"}
+    if not p.exists():
+        return {"error":f"路径不存在: {p}"}
     
     def tree(dir_path, depth=0):
-        if depth>3: return []
+        if depth>3:
+            return []
         items = sorted([i for i in dir_path.iterdir() if not i.name.startswith(".") and not i.name.startswith("__")], key=lambda x:(not x.is_dir(),x.name))
         result = []
         for item in items:
@@ -87,22 +100,27 @@ def handle_domain_tree(args):
 
 def handle_ecos_health(args):
     r = subprocess.run(["python3",str(SCRIPTS/"ecos-health-check.py"),"--json"],capture_output=True,text=True,timeout=30)
-    try: return json.loads(r.stdout)
-    except: return {"output":r.stdout[:500]}
+    try:
+        return json.loads(r.stdout)
+    except Exception:
+        return {"output":r.stdout[:500]}
 
 def handle_ecos_brief(args):
     r = subprocess.run(["python3",str(SCRIPTS/"ecos-brief.py"),"--json"],capture_output=True,text=True,timeout=10)
-    try: return json.loads(r.stdout)
-    except: return {"output":r.stdout[:500]}
+    try:
+        return json.loads(r.stdout)
+    except Exception:
+        return {"output":r.stdout[:500]}
 
 def handle_bos_routes(args):
     rf = H/".ecos"/"bos"/"routes.json"
     if rf.exists():
-        with open(rf) as f: return json.load(f)
+        with open(rf) as f:
+            return json.load(f)
     return {"error":"routes.json未生成·运行 ecos domain routes"}
 
 # ── Workflow handlers (Phase 33) ──
-import yaml
+import yaml  # noqa: E402
 W = Path(__file__).resolve().parent.parent / "ssot"
 M1_WF_DIR = W / "mof" / "m1" / "workflow"
 WF_CATALOG = W / "registry" / "workflow-catalog.yaml"
@@ -115,7 +133,8 @@ def _load_workflow_nodes():
                 node = yaml.safe_load(open(f))
                 if node and node.get("type") == "Workflow":
                     nodes.append(node)
-            except: pass
+            except Exception:
+                pass
     return nodes
 
 def handle_workflow_list(args):
@@ -125,9 +144,12 @@ def handle_workflow_list(args):
     status = args.get("status")
     filtered = []
     for n in nodes:
-        if domain and n.get("domain") != domain: continue
-        if layer and n.get("layer") != layer: continue
-        if status and n.get("status") != status: continue
+        if domain and n.get("domain") != domain:
+            continue
+        if layer and n.get("layer") != layer:
+            continue
+        if status and n.get("status") != status:
+            continue
         filtered.append({"id":n.get("id"),"name":n.get("name"),"subtype":n.get("subtype"),
                          "domain":n.get("domain"),"layer":n.get("layer"),
                          "bos_uri":n.get("bos_uri"),"description":n.get("description","")})
@@ -148,15 +170,18 @@ def handle_workflow_relations(args):
     name = args.get("name")
     catalog = {}
     if WF_CATALOG.exists():
-        try: catalog = yaml.safe_load(open(WF_CATALOG))
-        except: pass
+        try:
+            catalog = yaml.safe_load(open(WF_CATALOG))
+        except Exception:
+            pass
     global_rels = catalog.get("global_relations",{})
     if name:
         nodes = _load_workflow_nodes()
         node = None
         for n in nodes:
             if name.lower() in n.get("id","").lower() or name.lower() in n.get("name","").lower():
-                node = n; break
+                node = n
+                break
         if not node:
             return {"error":f"工作流未找到: {name}"}
         nid = node.get("id")
@@ -170,7 +195,8 @@ def handle_workflow_relations(args):
 def handle_resolve(args):
     r = dm.load_registry()
     d,s = dm.parse_bos_uri(args["uri"], r)
-    if not d: return {"error":f"无法解析: {args['uri']}"}
+    if not d:
+        return {"error":f"无法解析: {args['uri']}"}
     p = dm.resolve_path(d)
     full = str(p/s if s else p)
     return {"uri":args["uri"],"physical_path":full,"exists":os.path.exists(full),"domain":d.get("name",d["id"]),"type":d.get("domain_type","?")}
@@ -178,10 +204,12 @@ def handle_resolve(args):
 def handle_read(args):
     r = dm.load_registry()
     d,s = dm.parse_bos_uri(args.get("uri",""), r)
-    if not d: return {"error":"无法解析"}
+    if not d:
+        return {"error":"无法解析"}
     p = dm.resolve_path(d)
     full = p/s if s else p
-    if not full.exists(): return {"error":f"不存在: {full}"}
+    if not full.exists():
+        return {"error":f"不存在: {full}"}
     if full.is_dir():
         items = sorted(os.listdir(full))
         return {"uri":args["uri"],"type":"directory","items":items[:50],"total":len(items)}
@@ -198,21 +226,27 @@ def handle_search(args):
     results = []
     for d in r:
         did = d["id"]
-        if domains and did not in domains: continue
+        if domains and did not in domains:
+            continue
         p = dm.resolve_path(d)
-        if not p.exists(): continue
+        if not p.exists():
+            continue
         for sd in ["CLAUDE.md","_control/STATE.md","_knowledge"]:
             sp = p/sd
-            if not sp.exists(): continue
+            if not sp.exists():
+                continue
             try:
                 cmd = ["grep","-rn","--include=*.md","--include=*.yaml","-l",query,str(sp)]
                 rr = subprocess.run(cmd,capture_output=True,text=True,timeout=10)
                 for line in rr.stdout.strip().split("\n"):
                     if line and len(results)<max_r:
-                        try: rel = str(Path(line).relative_to(p))
-                        except: rel = line
+                        try:
+                            rel = str(Path(line).relative_to(p))
+                        except Exception:
+                            rel = line
                         results.append({"uri":f"bos://{did}/{rel}","domain":did,"file":rel})
-            except: pass
+            except Exception:
+                pass
     return {"results":results,"total":len(results)}
 
 HANDLERS = {
@@ -226,9 +260,12 @@ HANDLERS = {
 
 def main():
     for line in sys.stdin:
-        try: req = json.loads(line)
-        except: continue
-        method = req.get("method",""); rid = req.get("id")
+        try:
+            req = json.loads(line)
+        except Exception:
+            continue
+        method = req.get("method","")
+        rid = req.get("id")
         if method == "tools/list":
             resp = {"jsonrpc":"2.0","id":rid,"result":{"tools":TOOLS}}
         elif method == "tools/call":
@@ -240,6 +277,109 @@ def main():
             resp = {"jsonrpc":"2.0","id":rid,"result":{"content":[{"type":"text","text":json.dumps(result,indent=2,ensure_ascii=False)}]}}
         else:
             resp = {"jsonrpc":"2.0","id":rid,"error":{"code":-32601,"message":"Method not found"}}
-        sys.stdout.write(json.dumps(resp)+"\n"); sys.stdout.flush()
+        sys.stdout.write(json.dumps(resp)+"\n")
+        sys.stdout.flush()
 
-if __name__ == "__main__": main()
+if __name__ == "__main__":
+    main()
+
+
+def handle_search(args):
+    r = dm.load_registry()
+    query = args.get("query", "")
+    domains = set(args.get("domains", [])) if args.get("domains") else None
+    max_r = args.get("max_results", 10)
+    results = []
+    for d in r:
+        did = d["id"]
+        if domains and did not in domains:
+            continue
+        p = dm.resolve_path(d)
+        if not p.exists():
+            continue
+        for sd in ["CLAUDE.md", "_control/STATE.md", "_knowledge"]:
+            sp = p / sd
+            if not sp.exists():
+                continue
+            try:
+                cmd = [
+                    "grep",
+                    "-rn",
+                    "--include=*.md",
+                    "--include=*.yaml",
+                    "-l",
+                    query,
+                    str(sp),
+                ]
+                rr = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+                for line in rr.stdout.strip().split("\n"):
+                    if line and len(results) < max_r:
+                        try:
+                            rel = str(Path(line).relative_to(p))
+                        except Exception:
+                            rel = line
+                        results.append(
+                            {"uri": f"bos://{did}/{rel}", "domain": did, "file": rel}
+                        )
+            except Exception:
+                pass
+    return {"results": results, "total": len(results)}
+
+
+HANDLERS = {
+    "domain_list": handle_domain_list,
+    "domain_stats": handle_domain_stats,
+    "domain_resolve": handle_resolve,
+    "domain_read": handle_read,
+    "domain_search": handle_search,
+    "domain_validate": handle_domain_validate,
+    "domain_tree": handle_domain_tree,
+    "ecos_health": handle_ecos_health,
+    "ecos_brief": handle_ecos_brief,
+    "bos_routes": handle_bos_routes,
+    "workflow_list": handle_workflow_list,
+    "workflow_show": handle_workflow_show,
+    "workflow_relations": handle_workflow_relations,
+}
+
+
+def main():
+    for line in sys.stdin:
+        try:
+            req = json.loads(line)
+        except Exception:
+            continue
+        method = req.get("method", "")
+        rid = req.get("id")
+        if method == "tools/list":
+            resp = {"jsonrpc": "2.0", "id": rid, "result": {"tools": TOOLS}}
+        elif method == "tools/call":
+            params = req.get("params", {})
+            name = params.get("name", "")
+            args = params.get("arguments", {})
+            handler = HANDLERS.get(name)
+            result = handler(args) if handler else {"error": f"Unknown: {name}"}
+            resp = {
+                "jsonrpc": "2.0",
+                "id": rid,
+                "result": {
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": json.dumps(result, indent=2, ensure_ascii=False),
+                        }
+                    ]
+                },
+            }
+        else:
+            resp = {
+                "jsonrpc": "2.0",
+                "id": rid,
+                "error": {"code": -32601, "message": "Method not found"},
+            }
+        sys.stdout.write(json.dumps(resp) + "\n")
+        sys.stdout.flush()
+
+
+if __name__ == "__main__":
+    main()

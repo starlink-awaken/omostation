@@ -37,7 +37,9 @@ def _run(*args, capture=True):
     cmd = [HERMES_BIN] + list(args)
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
     if r.returncode != 0:
-        print(f"⚠️  `{' '.join(cmd)}` failed:\n{r.stderr.strip()[:200]}", file=sys.stderr)
+        print(
+            f"⚠️  `{' '.join(cmd)}` failed:\n{r.stderr.strip()[:200]}", file=sys.stderr
+        )
         return None
     return r.stdout.strip()
 
@@ -196,7 +198,11 @@ def run_manual_driver(schedule: dict):
         if deps:
             print(f"  等待: {', '.join(deps)}")
         print()
-        print(textwrap.fill(detail, width=72, initial_indent="  任务: ", subsequent_indent="       "))
+        print(
+            textwrap.fill(
+                detail, width=72, initial_indent="  任务: ", subsequent_indent="       "
+            )
+        )
         print()
 
         if step["step"] == "S05":
@@ -251,10 +257,14 @@ def show_status(schedule: dict):
 
 def load_schedule(schedule_id: str) -> dict:
     """Load YAML schedule by ID (e.g. 'WF-004')."""
-    files = list(SCHEDULE_DIR.glob(f"{schedule_id}.yaml")) or list(SCHEDULE_DIR.glob(f"{schedule_id}.yml"))
+    files = list(SCHEDULE_DIR.glob(f"{schedule_id}.yaml")) or list(
+        SCHEDULE_DIR.glob(f"{schedule_id}.yml")
+    )
     if not files:
         print(f"❌ Schedule '{schedule_id}' not found in {SCHEDULE_DIR}")
-        known = [f.stem for f in SCHEDULE_DIR.glob("*.yaml")] + [f.stem for f in SCHEDULE_DIR.glob("*.yml")]
+        known = [f.stem for f in SCHEDULE_DIR.glob("*.yaml")] + [
+            f.stem for f in SCHEDULE_DIR.glob("*.yml")
+        ]
         if known:
             print(f"   Known schedules: {', '.join(known)}")
         sys.exit(1)
@@ -266,7 +276,9 @@ def main():
     if len(sys.argv) < 2 or sys.argv[1] in ("--help", "-h"):
         print(__doc__)
         print("Available schedules:")
-        for f in sorted(SCHEDULE_DIR.glob("*.yaml")) + sorted(SCHEDULE_DIR.glob("*.yml")):
+        for f in sorted(SCHEDULE_DIR.glob("*.yaml")) + sorted(
+            SCHEDULE_DIR.glob("*.yml")
+        ):
             print(f"  {f.stem}")
         sys.exit(0)
 

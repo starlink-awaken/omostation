@@ -91,7 +91,9 @@ class TriggerEngine:
             self._triggers[trigger_id].enabled = False
             logger.info(f"触发器已禁用：{trigger_id}")
 
-    def evaluate_and_trigger(self, context: dict[str, Any] | None = None) -> list[TriggerResult]:
+    def evaluate_and_trigger(
+        self, context: dict[str, Any] | None = None
+    ) -> list[TriggerResult]:
         """
         评估所有触发器并执行
 
@@ -111,7 +113,9 @@ class TriggerEngine:
                 context = {}
 
         # 按优先级排序
-        sorted_triggers = sorted(self._triggers.values(), key=lambda t: t.priority, reverse=True)
+        sorted_triggers = sorted(
+            self._triggers.values(), key=lambda t: t.priority, reverse=True
+        )
 
         for trigger in sorted_triggers:
             if not trigger.enabled:
@@ -143,7 +147,13 @@ class TriggerEngine:
 
             except Exception as e:
                 logger.error(f"触发器 {trigger.name} 执行失败：{e}")
-                results.append(TriggerResult(trigger_id=trigger.id, triggered=False, message=f"触发器执行失败：{e}"))
+                results.append(
+                    TriggerResult(
+                        trigger_id=trigger.id,
+                        triggered=False,
+                        message=f"触发器执行失败：{e}",
+                    )
+                )
 
         return results
 
@@ -214,7 +224,9 @@ class TriggerEngine:
         return {
             "total_triggers": len(self._triggers),
             "enabled_triggers": sum(1 for t in self._triggers.values() if t.enabled),
-            "disabled_triggers": sum(1 for t in self._triggers.values() if not t.enabled),
+            "disabled_triggers": sum(
+                1 for t in self._triggers.values() if not t.enabled
+            ),
             "is_running": self._running,
             "history_count": len(self._history),
             "trigger_names": list(self._triggers.keys()),

@@ -28,6 +28,8 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
+import yaml
+
 from model_driven.lifecycle.stages import LifecycleTracker, StageStatus
 from model_driven.mof.m3_extended import LifecycleStage
 
@@ -309,8 +311,6 @@ class PipelineTracker:
 
         file_path = state_path / f"{self.entity_id}-pipeline.yaml"
         try:
-            import yaml
-
             data = {
                 "entity_id": self.entity_id,
                 "entity_type": self.entity_type,
@@ -340,7 +340,7 @@ class PipelineTracker:
             with open(file_path, "w") as f:
                 yaml.dump(data, f, allow_unicode=True, default_flow_style=False)
             return True
-        except (OSError, ImportError, yaml.YAMLError):
+        except (OSError, yaml.YAMLError):
             return False
 
     @staticmethod
@@ -412,8 +412,6 @@ class PipelineTracker:
             return None
 
         try:
-            import yaml
-
             with open(file_path) as f:
                 data = yaml.safe_load(f)
 

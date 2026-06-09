@@ -1,8 +1,16 @@
 # =============================================================================
-# SharedBrain × kairon Integration Test Pipeline
+# SharedBrain × kairon Integration Test Pipeline (ARCHIVED)
 # Phase A-0: Infrastructure verification + Phase A: Protocol bridging
+#
+# 状态: 已废弃 (2026-06-09)
+# 原因: SharedBrain 已归档至 projects/_archived/SharedBrain-original/
+#       agora 已从 kairon 拆分为独立项目 projects/agora/
+#       kairon 被 .gitignore 排除在 monorepo 之外
+#       整个 workflow 已被 if: false 禁用 (P41-W1 fix)
+# 替代: kairon E2E 由 projects/kairon 独立 repo 的 CI 覆盖
+#       agora E2E 由 projects/agora/.github/workflows/ 覆盖
 # =============================================================================
-name: SharedBrain × kairon Integration
+name: SharedBrain × kairon Integration (ARCHIVED)
 
 on:
   push:

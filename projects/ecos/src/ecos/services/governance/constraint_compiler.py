@@ -23,7 +23,6 @@ import json
 import argparse
 import hashlib
 import importlib.util
-import os
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -70,7 +69,7 @@ def compile_constraints(data: dict) -> str:
         lines.append(f'        "half_life_days": {p["half_life_days"]},')
         lines.append(f'        "status": "{p["status"]}",')
         lines.append(f'        "value_tier": {p["value_tier"]},')
-        lines.append(f'    }},')
+        lines.append('    },')
     lines.append('}')
     lines.append('')
 
@@ -109,7 +108,6 @@ def compile_constraints(data: dict) -> str:
     lines.append('def check_constraints(state: dict) -> list[dict]:')
     lines.append('    """检查所有约束"""')
     lines.append('    results = []')
-    results = []
     for c in constraints:
         cid = c["id"]
         desc = c["description"]
@@ -119,36 +117,36 @@ def compile_constraints(data: dict) -> str:
 
         # 为每个约束生成检查代码
         lines.append(f'    # {cid}: {desc}')
-        lines.append(f'    passed = True')
-        lines.append(f'    detail = ""')
+        lines.append('    passed = True')
+        lines.append('    detail = ""')
 
         if rule == "protocol.registered == true":
-            lines.append(f'    passed = state.get("protocol", {{}}).get("registered", False)')
-            lines.append(f'    detail = "协议已注册" if passed else "协议未注册"')
+            lines.append('    passed = state.get("protocol", {}).get("registered", False)')
+            lines.append('    detail = "协议已注册" if passed else "协议未注册"')
         elif rule == "layer.cross_call.route == \'I0/Agora\'":
-            lines.append(f'    passed = state.get("layer", {{}}).get("cross_call", {{}}).get("route", "") == "I0/Agora"')
-            lines.append(f'    detail = f\'路由: {{state.get("layer",{{}}).get("cross_call",{{}}).get("route","?")}}\'')
+            lines.append('    passed = state.get("layer", {}).get("cross_call", {}).get("route", "") == "I0/Agora"')
+            lines.append('    detail = f\'路由: {state.get("layer",{}).get("cross_call",{}).get("route","?")}\'')
         elif rule == "claude_md.age_days <= 60":
-            lines.append(f'    age = state.get("claude_md", {{}}).get("age_days", 0)')
-            lines.append(f'    passed = age <= 60')
-            lines.append(f'    detail = f"最旧 CLAUDE.md: {{age}} 天"')
+            lines.append('    age = state.get("claude_md", {}).get("age_days", 0)')
+            lines.append('    passed = age <= 60')
+            lines.append('    detail = f"最旧 CLAUDE.md: {age} 天"')
         elif "value_tier" in rule:
-            lines.append(f'    domains = state.get("domain", {{}})')
-            lines.append(f'    missing = [d for d, v in domains.items() if v.get("value_tier") is None]')
-            lines.append(f'    passed = len(missing) == 0')
-            lines.append(f'    detail = f"缺失: {{missing}}" if missing else "全部已声明"')
+            lines.append('    domains = state.get("domain", {})')
+            lines.append('    missing = [d for d, v in domains.items() if v.get("value_tier") is None]')
+            lines.append('    passed = len(missing) == 0')
+            lines.append('    detail = f"缺失: {missing}" if missing else "全部已声明"')
         else:
             lines.append(f'    passed = True  # 规则评估: {rule}')
 
-        lines.append(f'    results.append({{')
+        lines.append('    results.append({')
         lines.append(f'        "id": "{cid}",')
         lines.append(f'        "type": "{ctype}",')
         lines.append(f'        "description": """{desc}""",')
-        lines.append(f'        "passed": passed,')
-        lines.append(f'        "detail": detail,')
+        lines.append('        "passed": passed,')
+        lines.append('        "detail": detail,')
         lines.append(f'        "violation": "{violation}" if not passed else None,')
 
-        lines.append(f'    }})')
+        lines.append('    })')
         lines.append('')
 
     lines.append('    return results')
@@ -245,7 +243,6 @@ def format_report(result: dict) -> str:
 
 def watch_and_compile(output_path: Path, interval: int = 60):
     """监听约束文件变更自动重编译"""
-    import yaml
     last_mtime = CONSTRAINTS_FILE.stat().st_mtime if CONSTRAINTS_FILE.exists() else 0
 
     print(f"  🔍 监听: {CONSTRAINTS_FILE}")

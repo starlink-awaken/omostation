@@ -76,9 +76,20 @@ def collect_metrics() -> dict:
     sig_cov = round(sig / total, 3) if total > 0 else 0
 
     # 角色切换率
-    agents = [r[0] for r in cur.execute("SELECT source_agent FROM ssb_events ORDER BY seq").fetchall()]
+    agents = [
+        r[0]
+        for r in cur.execute(
+            "SELECT source_agent FROM ssb_events ORDER BY seq"
+        ).fetchall()
+    ]
     switch_rate = (
-        round(sum(1 for i in range(1, len(agents)) if agents[i] != agents[i - 1]) / len(agents), 3) if agents else 0
+        round(
+            sum(1 for i in range(1, len(agents)) if agents[i] != agents[i - 1])
+            / len(agents),
+            3,
+        )
+        if agents
+        else 0
     )
 
     # 角色均匀度
@@ -285,7 +296,9 @@ def main():
                 print(f"\n📊 与昨日对比 ({snapshots[-2].stem} → {snapshots[-1].stem}):")
                 for d in diffs[:8]:
                     arrow = "↑" if d["deviation"] > 0 else "↓"
-                    print(f"  {arrow} {d['label']}: {d['previous']} → {d['current']} ({d['deviation']:+.1%})")
+                    print(
+                        f"  {arrow} {d['label']}: {d['previous']} → {d['current']} ({d['deviation']:+.1%})"
+                    )
 
                 # 检查严重偏离
                 severe = [d for d in diffs if d["abs_deviation"] > 0.30]
@@ -310,7 +323,9 @@ def main():
         print(f"比较: {snapshots[-2].stem} ↔ {snapshots[-1].stem}")
         for d in diffs:
             arrow = "↑" if d["deviation"] > 0 else "↓"
-            print(f"  {arrow} {d['label']}: {d['previous']} → {d['current']} ({d['deviation']:+.1%})")
+            print(
+                f"  {arrow} {d['label']}: {d['previous']} → {d['current']} ({d['deviation']:+.1%})"
+            )
         if args.json:
             print(json.dumps(diffs, ensure_ascii=False, indent=2))
         return 0

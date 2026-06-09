@@ -14,8 +14,8 @@ sys.modules["runtime.executor.engine"] = _mock_runtime_engine
 sys.modules["runtime.executor.config"] = mock.MagicMock()
 
 # Now safe to import
+
 from cockpit import agent_runtime_mcp_server
-import pytest
 
 
 class TestGetRuntime:

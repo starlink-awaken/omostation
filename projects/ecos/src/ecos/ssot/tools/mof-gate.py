@@ -19,7 +19,9 @@
     python3 mof-gate.py --json          # JSON 输出
 """
 
-import sys, json, yaml, sqlite3, hashlib
+import json
+import yaml
+import sqlite3
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -38,13 +40,18 @@ def now():
 def scan_current_assets() -> dict:
     """扫描当前系统资产，生成指纹"""
     assets = {}
-    
+
     # Scan Documents scripts
     scripts_dir = DOCS / "驾驶舱" / "scripts"
     if scripts_dir.exists():
         for f in scripts_dir.glob("*.py"):
             key = f"L4-SCRIPT-{f.stem}"
-            assets[key] = {"path": str(f.relative_to(HOME)), "size": f.stat().st_size, "layer": "L4", "type": "Script"}
+            assets[key] = {
+                "path": str(f.relative_to(HOME)),
+                "size": f.stat().st_size,
+                "layer": "L4",
+                "type": "Script",
+            }
 
     # Scan Workspace projects (key ones)
     ws_projects = WS / "projects"
@@ -56,7 +63,19 @@ def scan_current_assets() -> dict:
             py_files = list(proj_dir.rglob("*.py"))
             yaml_files = list(proj_dir.rglob("*.yaml"))
             key = f"COMP-WS-{proj}"
-            assets[key] = {"path": str(proj_dir.relative_to(HOME)), "py_count": len(py_files), "yaml_count": len(yaml_files), "layer": {"ecos":"L0","agora":"I0","cockpit":"L3","runtime":"L1","kairon":"L2"}.get(proj, "L2"), "type": "Component"}
+            assets[key] = {
+                "path": str(proj_dir.relative_to(HOME)),
+                "py_count": len(py_files),
+                "yaml_count": len(yaml_files),
+                "layer": {
+                    "ecos": "L0",
+                    "agora": "I0",
+                    "cockpit": "L3",
+                    "runtime": "L1",
+                    "kairon": "L2",
+                }.get(proj, "L2"),
+                "type": "Component",
+            }
 
     # Scan CARDS
     if CARDS_DB.exists():
@@ -84,7 +103,7 @@ def load_registered_m1_ids() -> set:
                 sources = props.get("sources", [])
                 for s in sources:
                     ids.add(f"SOURCE-{s}")
-        except:
+        except Exception:
             pass
     return ids
 
@@ -98,29 +117,31 @@ def load_previous_snapshot() -> dict:
 
 def save_snapshot(assets: dict):
     SNAPSHOT_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with open(SNAPSHOT_FILE, 'w') as f:
+    with open(SNAPSHOT_FILE, "w") as f:
         json.dump({"timestamp": now().isoformat(), "assets": assets}, f, indent=2)
 
 
 def detect_changes(current: dict, previous: dict, registered: set) -> list[dict]:
     """检测变更"""
     violations = []
-    
+
     # New assets not in previous snapshot
     new_keys = set(current.keys()) - set(previous.get("assets", {}).keys())
     for key in new_keys:
-        asset = current[key]
+        current[key]
         # Check if registered in L0
         is_registered = any(key in rid or rid in key for rid in registered)
         if not is_registered:
-            violations.append({
-                "asset": key,
-                "type": "new_unregistered",
-                "severity": "medium",
-                "detail": f"新资产未在 L0 注册: {key}",
-                "suggested": f"运行 mof-scan 或手动创建 L0 M1 节点",
-            })
-    
+            violations.append(
+                {
+                    "asset": key,
+                    "type": "new_unregistered",
+                    "severity": "medium",
+                    "detail": f"新资产未在 L0 注册: {key}",
+                    "suggested": "运行 mof-scan 或手动创建 L0 M1 节点",
+                }
+            )
+
     # Changed assets
     for key in set(current.keys()) & set(previous.get("assets", {}).keys()):
         prev = previous["assets"][key]
@@ -128,14 +149,16 @@ def detect_changes(current: dict, previous: dict, registered: set) -> list[dict]
         if prev != curr:
             is_registered = any(key in rid or rid in key for rid in registered)
             if not is_registered:
-                violations.append({
-                    "asset": key,
-                    "type": "changed_unregistered",
-                    "severity": "low",
-                    "detail": f"资产已变更但 L0 未更新: {key}",
-                    "suggested": f"更新对应的 L0 M1 节点",
-                })
-    
+                violations.append(
+                    {
+                        "asset": key,
+                        "type": "changed_unregistered",
+                        "severity": "low",
+                        "detail": f"资产已变更但 L0 未更新: {key}",
+                        "suggested": "更新对应的 L0 M1 节点",
+                    }
+                )
+
     return violations
 
 
@@ -147,25 +170,37 @@ def create_gate_card(violation: dict):
         now_str = now().isoformat()
         debt_id = f"DEBT-GATE-{now_str[:10]}-{violation['asset'][:20]}"
         debt_id = debt_id.replace(" ", "-")[:50]
-        conn.execute("""
+        conn.execute(
+            """
             INSERT OR IGNORE INTO cards (id, type, status, title, domain, priority, summary, content, created_at, updated_at)
             VALUES (?, 'debt', 'identified', ?, 'meta', 'P2', ?, ?, ?, ?)
-        """, (debt_id, f"变更门禁: {violation['asset'][:60]}",
-              violation['detail'],
-              f"## mof-gate 自动检测\n- 类型: {violation['type']}\n- {violation['detail']}\n- 建议: {violation['suggested']}",
-              now_str, now_str))
+        """,
+            (
+                debt_id,
+                f"变更门禁: {violation['asset'][:60]}",
+                violation["detail"],
+                f"## mof-gate 自动检测\n- 类型: {violation['type']}\n- {violation['detail']}\n- 建议: {violation['suggested']}",
+                now_str,
+                now_str,
+            ),
+        )
         conn.commit()
         conn.close()
         return True
-    except:
+    except Exception:
         return False
 
 
 def format_report(violations: list[dict]) -> str:
-    lines = ["=" * 64, "  织星 MOF — 变更门禁报告", "=" * 64,
-             f"  时间: {now().strftime('%Y-%m-%d %H:%M:%S')}",
-             f"  违规: {len(violations)} 项", ""]
-    
+    lines = [
+        "=" * 64,
+        "  织星 MOF — 变更门禁报告",
+        "=" * 64,
+        f"  时间: {now().strftime('%Y-%m-%d %H:%M:%S')}",
+        f"  违规: {len(violations)} 项",
+        "",
+    ]
+
     if not violations:
         lines.append("  ✅ 所有变更已通过 L0 注册")
     else:
@@ -174,13 +209,14 @@ def format_report(violations: list[dict]) -> str:
             lines.append(f"  {icon} [{v['type']}] {v['asset'][:50]}")
             lines.append(f"     {v['detail']}")
             lines.append(f"     → {v['suggested']}")
-    
+
     lines.append("=" * 64)
     return "\n".join(lines)
 
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--strict", action="store_true")
     parser.add_argument("--json", action="store_true")
@@ -190,12 +226,18 @@ def main():
     current = scan_current_assets()
     previous = load_previous_snapshot()
     registered = load_registered_m1_ids()
-    
+
     violations = detect_changes(current, previous, registered)
     save_snapshot(current)
 
     if args.json:
-        print(json.dumps({"violations": len(violations), "items": violations}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"violations": len(violations), "items": violations},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         print(format_report(violations))
 

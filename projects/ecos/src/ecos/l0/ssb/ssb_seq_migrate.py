@@ -129,7 +129,9 @@ def migrate(dry_run=False):
     conn.row_factory = sqlite3.Row
 
     total, unique, dupes, max_seq = count_collisions(conn)
-    print(f"\n📊 迁移前: {total} 事件, {unique} 唯一seq, {dupes} 重复 ({dupes / total * 100:.1f}%)")
+    print(
+        f"\n📊 迁移前: {total} 事件, {unique} 唯一seq, {dupes} 重复 ({dupes / total * 100:.1f}%)"
+    )
 
     if dupes == 0:
         print("  ✅ 已经无碰撞，跳过迁移")
@@ -172,7 +174,9 @@ def migrate(dry_run=False):
             # 如果是未签名或 seq 变了，重新签名
             re_sign = not ev["old_sig"] or ev["old_seq"] != ev["new_seq"]
             sig = (
-                compute_signature(ev["new_seq"], ev["id"], ev["source_agent"], payload_str)
+                compute_signature(
+                    ev["new_seq"], ev["id"], ev["source_agent"], payload_str
+                )
                 if re_sign
                 else ev["old_sig"]
             )
@@ -232,7 +236,11 @@ def verify():
     rows = conn.execute("""
         SELECT seq, timestamp FROM ssb_events ORDER BY seq
     """).fetchall()
-    inversions = sum(1 for i in range(1, len(rows)) if rows[i]["timestamp"] < rows[i - 1]["timestamp"])
+    inversions = sum(
+        1
+        for i in range(1, len(rows))
+        if rows[i]["timestamp"] < rows[i - 1]["timestamp"]
+    )
     print(f"  时间戳逆序: {inversions}")
 
     # 签名覆盖率
@@ -255,7 +263,10 @@ def verify():
     print(f"  时间戳格式: {fmt_counts}")
 
     # seq 连续性（非严格要求，因为可能有外部 seq 空间假设）
-    seqs = [r["seq"] for r in conn.execute("SELECT seq FROM ssb_events ORDER BY seq").fetchall()]
+    seqs = [
+        r["seq"]
+        for r in conn.execute("SELECT seq FROM ssb_events ORDER BY seq").fetchall()
+    ]
     if seqs:
         expected = list(range(1, len(seqs) + 1))
         gaps = sum(1 for i in range(len(seqs)) if seqs[i] != expected[i])
@@ -263,7 +274,9 @@ def verify():
 
     # UNIQUE 约束存在性
     try:
-        conn.execute("SELECT sql FROM sqlite_master WHERE type='index' AND name='idx_ssb_seq_unique'").fetchone()
+        conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type='index' AND name='idx_ssb_seq_unique'"
+        ).fetchone()
         # 尝试插入重复 seq 验证约束
         conn.execute("INSERT INTO ssb_events (id, seq) VALUES ('_test_dup_seq_', 0)")
         conn.execute("DELETE FROM ssb_events WHERE id = '_test_dup_seq_'")
@@ -274,7 +287,9 @@ def verify():
 
     conn.close()
 
-    all_ok = dupes == 0 and inversions == 0 and sig_ok == total and fmt_counts["Naive"] == 0
+    all_ok = (
+        dupes == 0 and inversions == 0 and sig_ok == total and fmt_counts["Naive"] == 0
+    )
     return all_ok
 
 

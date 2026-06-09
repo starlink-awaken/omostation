@@ -27,7 +27,15 @@ class TestToolDefinitions:
     def test_tools_names(self):
         """Check expected tool names."""
         names = [t["name"] for t in TOOLS]
-        for expected in ("check", "derive", "compile", "evolve", "stats", "sync", "extract_from_file"):
+        for expected in (
+            "check",
+            "derive",
+            "compile",
+            "evolve",
+            "stats",
+            "sync",
+            "extract_from_file",
+        ):
             assert expected in names
 
 

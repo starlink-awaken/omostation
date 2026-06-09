@@ -110,7 +110,11 @@ class Chunker:
                 heading_path.append(node.title[:30])
 
             # 获取这个节点的原文行
-            node_text = node.to_text() if node.type != "heading" else f"{'#' * node.level} {node.title}"
+            node_text = (
+                node.to_text()
+                if node.type != "heading"
+                else f"{'#' * node.level} {node.title}"
+            )
             node_lines = node_text.split("\n")
             node_chars = len(node_text)
 
@@ -158,7 +162,9 @@ def extract_entities(text: str) -> list[NamedEntity]:
         key = f"{etype}:{name}"
         if key not in seen and len(name) >= 2:
             seen.add(key)
-            entities.append(NamedEntity(text=name, type=etype, position=pos, confidence=conf))
+            entities.append(
+                NamedEntity(text=name, type=etype, position=pos, confidence=conf)
+            )
 
     # 1. 提取带职位的人名
     for pattern in _PERSON_TITLE_PATTERNS:

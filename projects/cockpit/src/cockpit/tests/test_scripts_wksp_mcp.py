@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from cockpit.tests.conftest import MockDataAccess
 
 

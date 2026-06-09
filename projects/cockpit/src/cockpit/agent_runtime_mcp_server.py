@@ -24,7 +24,6 @@ _runtime = None
 _log = logging.getLogger(__name__)
 
 
-
 def _log_execution(task_name: str, status: str, summary: str, result: dict[str, Any], elapsed: float) -> None:
     """Log task execution details."""
     _log.info("Task %s [%s] in %.2fs — %s", task_name, status, elapsed, summary)

@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+
 from cockpit import cli
 
 # Sentinel values for special-case routes

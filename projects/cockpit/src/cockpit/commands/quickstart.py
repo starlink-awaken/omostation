@@ -13,7 +13,6 @@ from urllib import request as urlrequest
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.table import Table
 
 from .base import _get_console, _panel
@@ -97,7 +96,13 @@ def _auto_fix(c: Console, args: argparse.Namespace) -> int:
                 )
                 # 等待启动 (带进度指示)
                 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
-                with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), TimeElapsedColumn(), transient=True) as progress:
+
+                with Progress(
+                    SpinnerColumn(),
+                    TextColumn("[progress.description]{task.description}"),
+                    TimeElapsedColumn(),
+                    transient=True,
+                ) as progress:
                     task = progress.add_task("[yellow]等待 ollama 启动...[/]", total=30)
                     for i in range(30):
                         time.sleep(1)

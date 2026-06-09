@@ -19,7 +19,6 @@ API:
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -54,6 +53,8 @@ def append_entry(
     entry["date"] = now_iso[:10]  # "YYYY-MM-DD"
     entry["timestamp"] = now_iso
     # sort_keys=True 通过 AppendOnlyLog.append 的 **json_kwargs 透传
+    # Round 15 P0 注: append_entry 是宽容业务接口, 字段 caller 决定, 不走 Pydantic 强校验
+    # (caller omo_audit/omo_daemon 都传齐 4 必填字段, 但 append_entry 接口契约不强制)
     AppendOnlyLog(target).append(entry, sort_keys=True)
     return target
 

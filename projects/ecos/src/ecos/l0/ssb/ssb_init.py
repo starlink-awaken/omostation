@@ -33,7 +33,9 @@ def do_init():
     ssb = SSBClient(auto_init=True)
 
     if SSB_DB_PATH.exists() and SSB_DB_PATH.stat().st_size > 0:
-        print(f"ℹ️  SSB database already exists: {SSB_DB_PATH} ({SSB_DB_PATH.stat().st_size:,} bytes)")
+        print(
+            f"ℹ️  SSB database already exists: {SSB_DB_PATH} ({SSB_DB_PATH.stat().st_size:,} bytes)"
+        )
         print("   Use --recover to rebuild from files, or --reset to start fresh.")
         return False
 
@@ -124,7 +126,9 @@ def do_verify():
 
         # Latest events
         print("\n   Latest events:")
-        latest = conn.execute("SELECT seq, event_type, summary FROM ssb_events ORDER BY seq DESC LIMIT 5").fetchall()
+        latest = conn.execute(
+            "SELECT seq, event_type, summary FROM ssb_events ORDER BY seq DESC LIMIT 5"
+        ).fetchall()
         for r in latest:
             print(f"     #{r['seq']} {r['event_type']:<14} {r['summary'][:50]}")
 
@@ -212,7 +216,9 @@ def main():
         print(__doc__)
     else:
         print(f"Unknown option: {cmd}")
-        print("Usage: python3 ssb_init.py [--init|--recover|--verify|--stats|--reset|--help]")
+        print(
+            "Usage: python3 ssb_init.py [--init|--recover|--verify|--stats|--reset|--help]"
+        )
         sys.exit(1)
 
 

@@ -1,5 +1,8 @@
 """Workflow Engine — BOS URI编排执行 | 每步L0审计 | v2.0 支持 M1 节点加载"""
-import yaml, json, subprocess, os, sys
+import yaml
+import json
+import subprocess
+import sys
 from pathlib import Path
 from datetime import datetime
 
@@ -7,7 +10,7 @@ H = Path.home()
 WF_DIR = Path(__file__).parent / "definitions"
 M1_WF_DIR = Path(__file__).parent.parent / "ssot" / "mof" / "m1" / "workflow"
 sys.path.insert(0, str(Path(__file__).parent.parent / "services"))
-from l0_audit import validate_operation, log_operation
+from l0_audit import validate_operation, log_operation  # noqa: E402
 
 def load_workflow(name: str) -> dict:
     """加载工作流定义·优先从 M1 节点目录加载"""
@@ -141,7 +144,7 @@ def execute_workflow(name: str, params: dict = None, dry_run: bool = False) -> d
         action = step.get("action", "")
 
         # L0 audit: pre-check
-        audit = validate_operation("_workflow", "workflow_step", f"bos://_workflow/{name}#{step_name}")
+        validate_operation("_workflow", "workflow_step", f"bos://_workflow/{name}#{step_name}")
 
         print(f"  [{i}/{len(steps)}] {step_name}")
 
@@ -158,8 +161,10 @@ def execute_workflow(name: str, params: dict = None, dry_run: bool = False) -> d
                 step_result = _execute_step(action, params)
             ok = step_result.get("passed", True)
             results["steps"].append({"name": step_name, "status": "ok" if ok else "failed", "result": step_result})
-            if ok: results["passed"] += 1
-            else: results["failed"] += 1
+            if ok:
+                results["passed"] += 1
+            else:
+                results["failed"] += 1
             print(f"    {'✅' if ok else '❌'} {step_result.get('summary', '')}")
         except Exception as e:
             results["steps"].append({"name": step_name, "status": "error", "error": str(e)})
@@ -167,7 +172,7 @@ def execute_workflow(name: str, params: dict = None, dry_run: bool = False) -> d
             print(f"    ❌ {e}")
             on_failure = step.get("on_failure") or (wf.get("execution", {}).get("on_failure") if is_m1 else None) or "continue"
             if on_failure == "abort":
-                print(f"    ⚠️ 中止执行")
+                print("    ⚠️ 中止执行")
                 break
 
     results["finished"] = datetime.now().isoformat()
@@ -197,14 +202,14 @@ def _execute_step(action: str, params: dict = None) -> dict:
             data = json.loads(r.stdout)
             ok = all(c.get("pass", True) for c in data.get("results", []))
             return {"passed": ok, "summary": f"健康检查: {'✅' if ok else '❌'}"}
-        except:
+        except Exception:
             return {"passed": False, "summary": "健康检查解析失败"}
     
     elif action == "domain_validate_all":
         r = subprocess.run(["python3", str(H/"bin"/"ecos"), "domain", "validate-all"],
                           capture_output=True, text=True, timeout=30)
         ok = "0❌" in r.stdout or "0 failed" in r.stdout.lower()
-        return {"passed": ok, "summary": f"域校验完成"}
+        return {"passed": ok, "summary": "域校验完成"}
     
     elif action == "domain_audit":
         r = subprocess.run(["python3", str(H/"bin"/"ecos"), "domain", "audit"],

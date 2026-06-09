@@ -14,6 +14,8 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
+import yaml
+
 
 class SpecStatus(Enum):
     """Spec 状态"""
@@ -196,12 +198,10 @@ class SpecManager:
 
         file_path = Path(state_dir) / "specs.yaml"
         try:
-            import yaml
-
             with open(file_path, "w") as f:
                 yaml.dump(self.to_dict(), f, allow_unicode=True, sort_keys=False)
             return True
-        except (OSError, ImportError, yaml.YAMLError):
+        except (OSError, yaml.YAMLError):
             return False
 
     @classmethod
@@ -219,11 +219,9 @@ class SpecManager:
             return None
 
         try:
-            import yaml
-
             with open(file_path) as f:
                 data = yaml.safe_load(f)
-        except (OSError, ImportError, yaml.YAMLError):
+        except (OSError, yaml.YAMLError):
             return None
 
         manager = cls()

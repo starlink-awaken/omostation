@@ -88,6 +88,7 @@ class TestCLI:
         """测试 trigger dashboard"""
         out = self._run(["trigger", "dashboard"], capsys)
         assert "Trigger" in out
+        assert "总数" in out
 
     def test_unknown_command(self, capsys):
         """测试未知命令"""

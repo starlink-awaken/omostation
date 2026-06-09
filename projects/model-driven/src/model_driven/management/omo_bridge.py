@@ -16,6 +16,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 
 class OMOEventType(Enum):
     """OMO 事件类型"""
@@ -180,8 +182,6 @@ class OMOBridge:
         file_path = tasks_dir / f"{task_id}.yaml"
 
         try:
-            import yaml
-
             with open(file_path, "w") as f:
                 yaml.dump(
                     {
@@ -199,7 +199,7 @@ class OMOBridge:
                     default_flow_style=False,
                 )
             return True
-        except (OSError, ImportError, yaml.YAMLError):
+        except (OSError, yaml.YAMLError):
             return False
 
     def write_debt_to_file(self, debt: dict[str, Any]) -> bool:
@@ -214,8 +214,6 @@ class OMOBridge:
         file_path = debt_dir / f"{debt_id}.yaml"
 
         try:
-            import yaml
-
             with open(file_path, "w") as f:
                 yaml.dump(
                     {
@@ -232,7 +230,7 @@ class OMOBridge:
                     default_flow_style=False,
                 )
             return True
-        except (OSError, ImportError, yaml.YAMLError):
+        except (OSError, yaml.YAMLError):
             return False
 
     def write_audit_to_log(
@@ -276,8 +274,6 @@ class OMOBridge:
             return False
 
         try:
-            import yaml
-
             with open(state_path) as f:
                 state = yaml.safe_load(f) or {}
 
@@ -345,8 +341,6 @@ class OMOBridge:
             return {"error": f"state file not found: {state_path}"}
 
         try:
-            import yaml
-
             with open(state_path) as f:
                 state = yaml.safe_load(f) or {}
             return {
@@ -363,7 +357,7 @@ class OMOBridge:
                 else 0,
                 "raw": state,
             }
-        except (OSError, ImportError, yaml.YAMLError) as e:
+        except (OSError, yaml.YAMLError) as e:
             return {"error": str(e)}
 
     def read_omo_tasks(self, status: str = "active") -> list[dict[str, Any]]:
@@ -377,8 +371,6 @@ class OMOBridge:
 
         tasks = []
         try:
-            import yaml
-
             for f in sorted(tasks_dir.glob("*.yaml")):
                 try:
                     with open(f) as fh:
@@ -387,7 +379,7 @@ class OMOBridge:
                         tasks.append(data)
                 except (OSError, yaml.YAMLError):
                     pass
-        except (OSError, ImportError):
+        except OSError:
             pass
 
         return tasks
@@ -403,8 +395,6 @@ class OMOBridge:
 
         debts = []
         try:
-            import yaml
-
             for f in sorted(debt_dir.glob("*.yaml")):
                 try:
                     with open(f) as fh:
@@ -413,7 +403,7 @@ class OMOBridge:
                         debts.append(data)
                 except (OSError, yaml.YAMLError):
                     pass
-        except (OSError, ImportError):
+        except OSError:
             pass
 
         return debts
@@ -433,8 +423,6 @@ class OMOBridge:
 
         try:
             import fcntl
-
-            import yaml
 
             # 文件锁保护并发写入
             with open(state_path, "r+") as f:
@@ -456,7 +444,7 @@ class OMOBridge:
                 yaml.dump(state, f, allow_unicode=True, default_flow_style=False)
                 fcntl.flock(f, fcntl.LOCK_UN)
             return True
-        except (OSError, ImportError, yaml.YAMLError):
+        except (OSError, yaml.YAMLError):
             return False
 
     def get_omo_health_summary(self) -> dict[str, Any]:

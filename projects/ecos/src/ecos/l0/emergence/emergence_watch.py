@@ -99,13 +99,26 @@ def get_current():
     sig_coverage = round(sig / total, 3) if total > 0 else 0
 
     # 角色切换率
-    agents = [r[0] for r in cur.execute("SELECT source_agent FROM ssb_events ORDER BY seq").fetchall()]
+    agents = [
+        r[0]
+        for r in cur.execute(
+            "SELECT source_agent FROM ssb_events ORDER BY seq"
+        ).fetchall()
+    ]
     switch_rate = (
-        round(sum(1 for i in range(1, len(agents)) if agents[i] != agents[i - 1]) / len(agents), 3) if agents else 0
+        round(
+            sum(1 for i in range(1, len(agents)) if agents[i] != agents[i - 1])
+            / len(agents),
+            3,
+        )
+        if agents
+        else 0
     )
 
     # 角色均匀度
-    rows = cur.execute("SELECT source_agent, COUNT(*) as c FROM ssb_events GROUP BY source_agent").fetchall()
+    rows = cur.execute(
+        "SELECT source_agent, COUNT(*) as c FROM ssb_events GROUP BY source_agent"
+    ).fetchall()
     total_evt = sum(r[1] for r in rows)
     core = [(a, c) for a, c in rows if not a.startswith("sub_test")]
     share_sq = sum((c / total_evt) ** 2 for _, c in core)
@@ -165,7 +178,9 @@ def write_ssb_alert(metric_name, metric_label, baseline, current, deviation, sev
     try:
         db = sqlite3.connect(SSB_DB)
         db.execute("BEGIN")
-        last_seq = db.execute("SELECT COALESCE(MAX(seq), 0) FROM ssb_events").fetchone()[0]
+        last_seq = db.execute(
+            "SELECT COALESCE(MAX(seq), 0) FROM ssb_events"
+        ).fetchone()[0]
         new_seq = last_seq + 1
 
         db.execute(
@@ -197,7 +212,10 @@ def write_ssb_alert(metric_name, metric_label, baseline, current, deviation, sev
 
         sig = compute_signature(new_seq, event_id, "EMERGENCE_WATCH", "{}")
         if sig:
-            db.execute("UPDATE ssb_events SET agent_signature = ? WHERE id = ?", (sig, event_id))
+            db.execute(
+                "UPDATE ssb_events SET agent_signature = ? WHERE id = ?",
+                (sig, event_id),
+            )
 
         db.commit()
     except Exception:

@@ -13,7 +13,8 @@
     python3 mof-skills.py --json           # JSON (供 Agent MCP 消费)
 """
 
-import sys, json, yaml
+import json
+import yaml
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -31,7 +32,7 @@ def load_nodes(m2type: str) -> list[dict]:
             data = yaml.safe_load(open(f))
             if isinstance(data, dict):
                 nodes.append(data)
-        except:
+        except Exception:
             pass
     return nodes
 
@@ -52,7 +53,7 @@ def generate_skills_md() -> str:
     for s in skills:
         name = s.get("name", "?")[:60]
         desc = s.get("description", "")[:80]
-        status = s.get("status", "?")
+        s.get("status", "?")
         trigger = (s.get("properties", {}) or {}).get("trigger", "?")
         lines.append(f"- **{name}** `[{trigger}]` — {desc}")
     lines.append("")

@@ -15,6 +15,7 @@ from typing import Any
 # 尝试从 agora 导入 rich 版本
 try:
     from agora.cli.output import OutputFormatter as _AgoraFormatter  # type: ignore[import-not-found]
+
     print_success = _AgoraFormatter().print_success
     print_error = _AgoraFormatter().print_error
     print_warning = _AgoraFormatter().print_warning
@@ -35,8 +36,15 @@ class OutputFormatter:
     @staticmethod
     def _style(text: str, code: str) -> str:
         """简单 ANSI 样式包装"""
-        styles = {"green": "32", "red": "31", "yellow": "33", "blue": "34",
-                  "cyan": "36", "dim": "2", "bold": "1"}
+        styles = {
+            "green": "32",
+            "red": "31",
+            "yellow": "33",
+            "blue": "34",
+            "cyan": "36",
+            "dim": "2",
+            "bold": "1",
+        }
         c = styles.get(code, "")
         return f"\033[{c}m{text}\033[0m" if c else text
 
@@ -49,7 +57,12 @@ class OutputFormatter:
     def print_error(self, msg: str, suggestion: str = "") -> None:
         if self.json_mode:
             import sys as _sys
-            json_str = _json.dumps({"status": "error", "message": msg, "hint": suggestion}, ensure_ascii=False, default=str)
+
+            json_str = _json.dumps(
+                {"status": "error", "message": msg, "hint": suggestion},
+                ensure_ascii=False,
+                default=str,
+            )
             print(json_str, file=_sys.stderr)
         else:
             print(f"\033[31m✗ Error:\033[0m {msg}", file=sys.stderr)
@@ -83,8 +96,9 @@ class OutputFormatter:
             print()
 
     # ── 表格 ──
-    def print_table(self, headers: list[str], rows: list[list[Any]],
-                    title: str = "") -> None:
+    def print_table(
+        self, headers: list[str], rows: list[list[Any]], title: str = ""
+    ) -> None:
         if self.json_mode:
             result = [dict(zip(headers, [str(c) for c in row])) for row in rows]
             self.print_json({"table": result, "title": title, "count": len(rows)})
@@ -103,7 +117,9 @@ class OutputFormatter:
             print(f"\n{self._style(title, 'bold')}")
 
         # Header
-        header = " │ ".join(("\033[1m" + h.ljust(w) + "\033[0m") for h, w in zip(headers, widths))
+        header = " │ ".join(
+            ("\033[1m" + h.ljust(w) + "\033[0m") for h, w in zip(headers, widths)
+        )
         sep = "─┼─".join("─" * w for w in widths)
         print(f"  {header}")
         print(f"  {sep}")
@@ -114,8 +130,13 @@ class OutputFormatter:
 
         print(f"  \033[2m共 {len(rows)} 项\033[0m\n")
 
-    def print_list(self, items: list[dict[str, Any]], key_field: str = "name",
-                   description_field: str = "description", title: str = "") -> None:
+    def print_list(
+        self,
+        items: list[dict[str, Any]],
+        key_field: str = "name",
+        description_field: str = "description",
+        title: str = "",
+    ) -> None:
         if self.json_mode:
             self.print_json({"items": items, "title": title, "count": len(items)})
             return
@@ -152,7 +173,18 @@ class OutputFormatter:
 # ── 便捷函数 ──
 _default = OutputFormatter()
 
-def print_success(msg: str): _default.print_success(msg)
-def print_error(msg: str, suggestion: str = ""): _default.print_error(msg, suggestion)
-def print_warning(msg: str): _default.print_warning(msg)
-def print_info(msg: str): _default.print_info(msg)
+
+def print_success(msg: str):
+    _default.print_success(msg)
+
+
+def print_error(msg: str, suggestion: str = ""):
+    _default.print_error(msg, suggestion)
+
+
+def print_warning(msg: str):
+    _default.print_warning(msg)
+
+
+def print_info(msg: str):
+    _default.print_info(msg)

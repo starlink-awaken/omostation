@@ -13,6 +13,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from model_driven.constants import (
     DEGRADED_CONSECUTIVE_FAILURES,
     HEALTH_PENALTY_DECREMENT,
@@ -125,8 +127,6 @@ class TriggerM0Manager:
     def save(self) -> bool:
         """保存 M0 快照到文件"""
         try:
-            import yaml
-
             data = {
                 "m0_type": "trigger_runtime_snapshot",
                 "generated_at": datetime.now(UTC).isoformat(),
@@ -135,7 +135,7 @@ class TriggerM0Manager:
             with open(self._snapshot_file, "w") as f:
                 yaml.dump(data, f, allow_unicode=True, default_flow_style=False)
             return True
-        except (OSError, ImportError, yaml.YAMLError):
+        except (OSError, yaml.YAMLError):
             return False
 
     def load(self) -> bool:
@@ -143,8 +143,6 @@ class TriggerM0Manager:
         if not self._snapshot_file.exists():
             return False
         try:
-            import yaml
-
             with open(self._snapshot_file) as f:
                 data = yaml.safe_load(f)
             if not data or "triggers" not in data:
@@ -163,7 +161,7 @@ class TriggerM0Manager:
                 )
                 self._snapshots[tid] = snap
             return True
-        except (OSError, ImportError, yaml.YAMLError, KeyError):
+        except (OSError, yaml.YAMLError, KeyError):
             return False
 
     def detect_drift(self, m1_triggers: list[dict[str, Any]]) -> list[dict[str, Any]]:

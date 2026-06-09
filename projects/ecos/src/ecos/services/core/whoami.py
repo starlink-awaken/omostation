@@ -13,7 +13,6 @@ eCOS v5 — 系统自述 (ecos-whoami)
     python3 ecos-whoami.py --topology       # 只输出拓扑结构
 """
 
-import sys
 import json
 import subprocess
 import argparse
@@ -56,7 +55,13 @@ def get_topology() -> dict:
             },
             "L3_entry": {
                 "name": "入口桥接层",
-                "adapters": ["CLI", "WeChat(stub)", "Web(stub)", "API(stub)", "Event(stub)"],
+                "adapters": [
+                    "CLI",
+                    "WeChat(stub)",
+                    "Web(stub)",
+                    "API(stub)",
+                    "Event(stub)",
+                ],
                 "mcp_server": True,
                 "scripts": 2,
                 "health": "active",
@@ -71,7 +76,9 @@ def get_topology() -> dict:
             "L1_runtime": {
                 "name": "运行时矩阵",
                 "daemon": True,
-                "sla_uptime": run(["python3", str(SCRIPTS / "ecos-sla-tracker.py"), "--json"]),
+                "sla_uptime": run(
+                    ["python3", str(SCRIPTS / "ecos-sla-tracker.py"), "--json"]
+                ),
                 "scripts": 3,
                 "health": "active",
             },
@@ -85,20 +92,39 @@ def get_topology() -> dict:
             },
             "I0_fabric": {
                 "name": "集成织物",
-                "events": len(list((ECOS / "events").glob("*.jsonl"))) if (ECOS / "events").exists() else 0,
+                "events": len(list((ECOS / "events").glob("*.jsonl")))
+                if (ECOS / "events").exists()
+                else 0,
                 "registry": True,
                 "scripts": 2,
                 "health": "active",
             },
-            "X1_gov": {"name": "治理安全", "coverage": "100%", "depth_l2": "40%", "health": "active"},
-            "X2_anti": {"name": "抗熵进化", "coverage": "100%", "depth_l2": "80%", "health": "active"},
-            "X3_value": {"name": "价值堆栈", "coverage": "100%", "depth_l2": "40%", "health": "active"},
+            "X1_gov": {
+                "name": "治理安全",
+                "coverage": "100%",
+                "depth_l2": "40%",
+                "health": "active",
+            },
+            "X2_anti": {
+                "name": "抗熵进化",
+                "coverage": "100%",
+                "depth_l2": "80%",
+                "health": "active",
+            },
+            "X3_value": {
+                "name": "价值堆栈",
+                "coverage": "100%",
+                "depth_l2": "40%",
+                "health": "active",
+            },
         },
     }
 
 
 def get_health() -> dict:
-    health_out = run(["python3", str(SCRIPTS / "ecos-health-check.py"), "--json"], silent=False)
+    health_out = run(
+        ["python3", str(SCRIPTS / "ecos-health-check.py"), "--json"], silent=False
+    )
     try:
         data = json.loads(health_out)
         results = data.get("results", [])
@@ -133,27 +159,103 @@ def get_scripts() -> list:
 
 def get_capabilities() -> list:
     return [
-        {"id": "brief", "description": "会话简报 (健康+SLA+卡片+风险)", "command": "ecos-brief.py"},
-        {"id": "health", "description": "9 项全系统健康检查", "command": "ecos-health-check.py"},
+        {
+            "id": "brief",
+            "description": "会话简报 (健康+SLA+卡片+风险)",
+            "command": "ecos-brief.py",
+        },
+        {
+            "id": "health",
+            "description": "9 项全系统健康检查",
+            "command": "ecos-health-check.py",
+        },
         {"id": "sla", "description": "历史 SLA 追踪", "command": "ecos-sla-tracker.py"},
-        {"id": "coverage", "description": "X 轴覆盖率双矩阵", "command": "x3-coverage-report.py"},
-        {"id": "freshness", "description": "CLAUDE.md 保鲜", "command": "check-claude-freshness.py"},
-        {"id": "audit", "description": "Vault Git 变更审计", "command": "check-vault-audit.py"},
-        {"id": "consistency", "description": "CARDS↔STATE 一致性", "command": "~/.ecos/scripts/check-cards-state-consistency.py"},
-        {"id": "protocol", "description": "L0 协议约束+half_life", "command": "ecos-constraint-validator.py"},
-        {"id": "compiler", "description": "L0 协议编译器", "command": "ecos-constraint-compiler.py"},
+        {
+            "id": "coverage",
+            "description": "X 轴覆盖率双矩阵",
+            "command": "x3-coverage-report.py",
+        },
+        {
+            "id": "freshness",
+            "description": "CLAUDE.md 保鲜",
+            "command": "check-claude-freshness.py",
+        },
+        {
+            "id": "audit",
+            "description": "Vault Git 变更审计",
+            "command": "check-vault-audit.py",
+        },
+        {
+            "id": "consistency",
+            "description": "CARDS↔STATE 一致性",
+            "command": "~/.ecos/scripts/check-cards-state-consistency.py",
+        },
+        {
+            "id": "protocol",
+            "description": "L0 协议约束+half_life",
+            "command": "ecos-constraint-validator.py",
+        },
+        {
+            "id": "compiler",
+            "description": "L0 协议编译器",
+            "command": "ecos-constraint-compiler.py",
+        },
         {"id": "healer", "description": "自治愈(4 规则)", "command": "ecos-healer.py"},
-        {"id": "daemon", "description": "自治运维守护进程", "command": "ecos-daemon.py"},
-        {"id": "entry_profiler", "description": "L3 入口深度统计", "command": "ecos-entry-profiler.py"},
-        {"id": "event_watcher", "description": "L1 事件驱动保鲜", "command": "ecos-event-watcher.py"},
-        {"id": "mcp_server", "description": "L3 MCP 服务(7 tools)", "command": "runtime-mcp-server.py"},
-        {"id": "adapter_stubs", "description": "L3 适配器桩(4 入口)", "command": "adapter-stubs.py"},
-        {"id": "onboard", "description": "新 Agent 接入向导", "command": "ecos-onboard.py"},
-        {"id": "value_cards", "description": "CARDS 价值归因", "command": "~/.ecos/scripts/cards-value-attribution.py"},
-        {"id": "value_vault", "description": "Vault 文件价值归因", "command": "vault-value-attribution.py"},
-        {"id": "value_domain", "description": "域系统活跃度", "command": "domain-value-attribution.py"},
-        {"id": "value_kairon", "description": "Kairon 成本核算", "command": "~/.ecos/scripts/kairon-cost-attribution.py"},
-        {"id": "kairon_gov", "description": "Kairon 治理检查", "command": "~/.ecos/scripts/check-kairon-governance.py"},
+        {
+            "id": "daemon",
+            "description": "自治运维守护进程",
+            "command": "ecos-daemon.py",
+        },
+        {
+            "id": "entry_profiler",
+            "description": "L3 入口深度统计",
+            "command": "ecos-entry-profiler.py",
+        },
+        {
+            "id": "event_watcher",
+            "description": "L1 事件驱动保鲜",
+            "command": "ecos-event-watcher.py",
+        },
+        {
+            "id": "mcp_server",
+            "description": "L3 MCP 服务(7 tools)",
+            "command": "runtime-mcp-server.py",
+        },
+        {
+            "id": "adapter_stubs",
+            "description": "L3 适配器桩(4 入口)",
+            "command": "adapter-stubs.py",
+        },
+        {
+            "id": "onboard",
+            "description": "新 Agent 接入向导",
+            "command": "ecos-onboard.py",
+        },
+        {
+            "id": "value_cards",
+            "description": "CARDS 价值归因",
+            "command": "~/.ecos/scripts/cards-value-attribution.py",
+        },
+        {
+            "id": "value_vault",
+            "description": "Vault 文件价值归因",
+            "command": "vault-value-attribution.py",
+        },
+        {
+            "id": "value_domain",
+            "description": "域系统活跃度",
+            "command": "domain-value-attribution.py",
+        },
+        {
+            "id": "value_kairon",
+            "description": "Kairon 成本核算",
+            "command": "~/.ecos/scripts/kairon-cost-attribution.py",
+        },
+        {
+            "id": "kairon_gov",
+            "description": "Kairon 治理检查",
+            "command": "~/.ecos/scripts/check-kairon-governance.py",
+        },
     ]
 
 
@@ -163,14 +265,20 @@ def format_brief(topology: dict, health: dict, debts: dict, scripts_count: int) 
     lines.append(f"# eCOS v5 — 系统自述 ({now.strftime('%Y-%m-%d %H:%M')})")
     lines.append("")
 
-    lines.append(f"**{topology['version']}** · {topology['phases'][0]} → {topology['phases'][1]}")
+    lines.append(
+        f"**{topology['version']}** · {topology['phases'][0]} → {topology['phases'][1]}"
+    )
     lines.append("")
 
     # 拓扑
     lines.append("## 架构拓扑")
     for lid, layer in topology["layers"].items():
         name = layer.get("name", lid)
-        health_icon = "✅" if layer.get("health") == "active" else ("⚠️" if layer.get("health") == "partial" else "❌")
+        health_icon = (
+            "✅"
+            if layer.get("health") == "active"
+            else ("⚠️" if layer.get("health") == "partial" else "❌")
+        )
         extra = ""
         if "sla_uptime" in layer:
             extra = f" SLA: {layer['sla_uptime'][:30]}"
@@ -187,12 +295,16 @@ def format_brief(topology: dict, health: dict, debts: dict, scripts_count: int) 
     if health.get("all_pass") is True:
         lines.append(f"✅ {health['passed']}/{health['total']} 全部通过")
     elif health.get("all_pass") is False:
-        lines.append(f"⚠️ {health['passed']}/{health['total']} 通过, {health['failed']} 项失败")
+        lines.append(
+            f"⚠️ {health['passed']}/{health['total']} 通过, {health['failed']} 项失败"
+        )
     else:
         lines.append("⏳ 健康数据累积中")
 
     # 债务
-    lines.append(f"\n📊 债务: {debts['total']} 项, {debts['open']} 开放, {debts['closed']} 已关闭")
+    lines.append(
+        f"\n📊 债务: {debts['total']} 项, {debts['open']} 开放, {debts['closed']} 已关闭"
+    )
 
     # 脚本
     lines.append(f"\n📜 脚本: {scripts_count} 个")
@@ -243,7 +355,7 @@ def main():
             print(json.dumps(topology, ensure_ascii=False, indent=2))
         else:
             for lid, layer in topology["layers"].items():
-                print(f"  {lid}: {layer.get('name','?')} — {layer.get('health','?')}")
+                print(f"  {lid}: {layer.get('name', '?')} — {layer.get('health', '?')}")
         return
 
     if args.json:
@@ -255,31 +367,37 @@ def main():
         return
 
     # 完整自述
-    print(f"\n{'='*56}")
-    print(f"  eCOS v5 — 系统自述 (whoami)")
+    print(f"\n{'=' * 56}")
+    print("  eCOS v5 — 系统自述 (whoami)")
     print(f"  版本: {topology['version']}")
     print(f"  Phase: {topology['phases'][0]} → {topology['phases'][1]}")
     print(f"  生成: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"{'='*56}")
+    print(f"{'=' * 56}")
 
-    print(f"\n  📐 架构拓扑")
+    print("\n  📐 架构拓扑")
     for lid, layer in topology["layers"].items():
-        hid = "🟢" if layer.get("health") == "active" else ("🟡" if layer.get("health") == "partial" else "🔴")
+        hid = (
+            "🟢"
+            if layer.get("health") == "active"
+            else ("🟡" if layer.get("health") == "partial" else "🔴")
+        )
         name = layer.get("name", lid)
         print(f"  {hid} {lid}: {name}")
 
     h = health
-    health_str = f"🟢 {h['passed']}/{h['total']} 通过" if h.get("all_pass") else "⏳ 累积中"
+    health_str = (
+        f"🟢 {h['passed']}/{h['total']} 通过" if h.get("all_pass") else "⏳ 累积中"
+    )
     print(f"\n  🩺 健康: {health_str}")
     print(f"  📊 债务: {debts['total']} 项 (0 开放)")
     print(f"  📜 脚本: {len(scripts)} 个")
     print(f"  🛠️  能力: {len(caps)} 项")
 
-    print(f"\n{'-'*56}")
-    print(f"  Agent 启动: python3 ~/Documents/@驾驶舱/scripts/ecos-brief.py --force")
-    print(f"  一键治理: python3 ~/Documents/@驾驶舱/scripts/ecos-health-check.py")
-    print(f"  接管手册: ~/Documents/@驾驶舱/OPS.md")
-    print(f"{'='*56}\n")
+    print(f"\n{'-' * 56}")
+    print("  Agent 启动: python3 ~/Documents/@驾驶舱/scripts/ecos-brief.py --force")
+    print("  一键治理: python3 ~/Documents/@驾驶舱/scripts/ecos-health-check.py")
+    print("  接管手册: ~/Documents/@驾驶舱/OPS.md")
+    print(f"{'=' * 56}\n")
 
 
 if __name__ == "__main__":

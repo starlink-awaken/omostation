@@ -36,7 +36,7 @@ def now():
 def detect_paths() -> dict:
     """自动检测路径"""
     home = Path.home()
-    
+
     # Try Documents
     docs = home / "Documents"
     if docs.exists():
@@ -45,7 +45,7 @@ def detect_paths() -> dict:
             "reviews": docs / "驾驶舱",
             "claude_root": docs,
         }
-    
+
     # Fallback: no Documents accessible
     return {"lessons": None, "reviews": None, "claude_root": None}
 
@@ -55,67 +55,71 @@ def extract_lessons(lessons_dir: Path) -> list[dict]:
     nodes = []
     if not lessons_dir or not lessons_dir.exists():
         return nodes
-    
+
     for md in sorted(lessons_dir.glob("*.md")):
         # Skip DEPRECATED/INDEX files
         if any(s in md.name.lower() for s in ["deprecated", "index", "readme"]):
             continue
-        
+
         try:
-            with open(md, encoding='utf-8') as f:
+            with open(md, encoding="utf-8") as f:
                 content = f.read()
         except Exception:
             continue
-        
+
         # Extract title from first heading
-        title_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
+        title_match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
         title = title_match.group(1).strip() if title_match else md.stem
-        
+
         # Extract key sentences
         # Look for "问题:" "教训:" "规则:" patterns
         lesson = ""
         incident = ""
         root_cause = ""
-        
-        for line in content.split('\n'):
+
+        for line in content.split("\n"):
             line = line.strip()
-            if '问题' in line and '：' in line and not incident:
-                incident = line.split('：', 1)[1].strip()[:200]
-            elif '教训' in line and '：' in line and not lesson:
-                lesson = line.split('：', 1)[1].strip()[:200]
-            elif '根因' in line and '：' in line and not root_cause:
-                root_cause = line.split('：', 1)[1].strip()[:200]
-        
+            if "问题" in line and "：" in line and not incident:
+                incident = line.split("：", 1)[1].strip()[:200]
+            elif "教训" in line and "：" in line and not lesson:
+                lesson = line.split("：", 1)[1].strip()[:200]
+            elif "根因" in line and "：" in line and not root_cause:
+                root_cause = line.split("：", 1)[1].strip()[:200]
+
         # Fallback: use title as incident and first substantial paragraph as lesson
         if not incident:
             incident = title[:200]
         if not lesson:
             # Grab first paragraph after heading
-            para_match = re.search(r'^#\s+.+\n\n(.+?)(?:\n\n|\n#)', content, re.DOTALL)
+            para_match = re.search(r"^#\s+.+\n\n(.+?)(?:\n\n|\n#)", content, re.DOTALL)
             if para_match:
                 lesson = para_match.group(1).strip()[:200]
-        
+
         if lesson or incident:
             node_id = f"LESSON-EXTRACT-{md.stem[:30]}"
-            nodes.append({
-                "id": node_id,
-                "type": "Lesson",
-                "name": title[:60],
-                "description": lesson[:150] if lesson else incident[:150],
-                "status": "recorded",
-                "domain": "meta",
-                "created": now(),
-                "version": "1.0.0",
-                "layer": "X2",
-                "properties": {
-                    "incident": incident[:200],
-                    "lesson": lesson[:200],
-                    "root_cause": root_cause[:200] if root_cause else "",
-                    "source": str(md.relative_to(Path.home())) if str(md).startswith(str(Path.home())) else str(md),
-                    "severity": "medium",
-                },
-            })
-    
+            nodes.append(
+                {
+                    "id": node_id,
+                    "type": "Lesson",
+                    "name": title[:60],
+                    "description": lesson[:150] if lesson else incident[:150],
+                    "status": "recorded",
+                    "domain": "meta",
+                    "created": now(),
+                    "version": "1.0.0",
+                    "layer": "X2",
+                    "properties": {
+                        "incident": incident[:200],
+                        "lesson": lesson[:200],
+                        "root_cause": root_cause[:200] if root_cause else "",
+                        "source": str(md.relative_to(Path.home()))
+                        if str(md).startswith(str(Path.home()))
+                        else str(md),
+                        "severity": "medium",
+                    },
+                }
+            )
+
     return nodes
 
 
@@ -124,53 +128,55 @@ def extract_decisions(reviews_dir: Path) -> list[dict]:
     nodes = []
     if not reviews_dir or not reviews_dir.exists():
         return nodes
-    
+
     for md in sorted(reviews_dir.glob("复盘_*.md")):
         try:
-            with open(md, encoding='utf-8') as f:
+            with open(md, encoding="utf-8") as f:
                 content = f.read()
         except Exception:
             continue
-        
-        title_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
+
+        title_match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
         title = title_match.group(1).strip() if title_match else md.stem
-        
+
         # Extract key architectural decisions
         # Look for "决策:" "修复:" "升级:" patterns
         decisions_found = []
-        for line in content.split('\n'):
+        for line in content.split("\n"):
             line = line.strip()
-            for keyword in ['决策', '修复', '升级', '范式翻转', '核心洞察']:
-                if keyword in line and ('：' in line or ':' in line):
+            for keyword in ["决策", "修复", "升级", "范式翻转", "核心洞察"]:
+                if keyword in line and ("：" in line or ":" in line):
                     decisions_found.append(line[:200])
                     break
-        
+
         if decisions_found:
             # Create a Decision node per significant finding
             for i, d in enumerate(decisions_found[:3]):  # Max 3 per document
-                node_id = f"DECISION-EXTRACT-{md.stem[:20]}-{i+1}"
+                node_id = f"DECISION-EXTRACT-{md.stem[:20]}-{i + 1}"
                 # Try to split into problem/decision
-                parts = d.split('：', 1) if '：' in d else d.split(':', 1)
+                parts = d.split("：", 1) if "：" in d else d.split(":", 1)
                 problem = parts[0].strip()[:100] if len(parts) > 1 else "架构演进"
                 decision = parts[1].strip()[:200] if len(parts) > 1 else d[:200]
-                
-                nodes.append({
-                    "id": node_id,
-                    "type": "Decision",
-                    "name": f"{title[:30]}: {problem[:30]}",
-                    "description": decision[:150],
-                    "status": "accepted",
-                    "domain": "meta",
-                    "created": now(),
-                    "version": "1.0.0",
-                    "layer": "L4",
-                    "properties": {
-                        "problem": problem[:200],
-                        "decision": decision[:200],
-                        "rationale": f"来源: {md.name}",
-                    },
-                })
-    
+
+                nodes.append(
+                    {
+                        "id": node_id,
+                        "type": "Decision",
+                        "name": f"{title[:30]}: {problem[:30]}",
+                        "description": decision[:150],
+                        "status": "accepted",
+                        "domain": "meta",
+                        "created": now(),
+                        "version": "1.0.0",
+                        "layer": "L4",
+                        "properties": {
+                            "problem": problem[:200],
+                            "decision": decision[:200],
+                            "rationale": f"来源: {md.name}",
+                        },
+                    }
+                )
+
     return nodes
 
 
@@ -179,14 +185,14 @@ def extract_conventions(claude_root: Path) -> list[dict]:
     nodes = []
     if not claude_root or not claude_root.exists():
         return nodes
-    
+
     # Scan key CLAUDE.md files for structural conventions
-    key_files = [
+    [
         claude_root / "CLAUDE_COWORK_GLOBAL.md",
         claude_root / "驾驶舱" / "CLAUDE.md",
         claude_root / "学习进化" / "CLAUDE.md",
     ]
-    
+
     # Known conventions to extract
     conventions = [
         {
@@ -214,26 +220,28 @@ def extract_conventions(claude_root: Path) -> list[dict]:
             "enforcement": "recommended",
         },
     ]
-    
+
     for c in conventions:
-        nodes.append({
-            "id": c["id"],
-            "type": "Convention",
-            "name": c["rule"][:60],
-            "description": c["rule"],
-            "status": "adopted",
-            "domain": "meta",
-            "created": now(),
-            "version": "1.0.0",
-            "layer": "L4",
-            "properties": {
-                "rule": c["rule"],
-                "scope": c["scope"],
-                "enforcement": c["enforcement"],
-                "auto_check": True,
-            },
-        })
-    
+        nodes.append(
+            {
+                "id": c["id"],
+                "type": "Convention",
+                "name": c["rule"][:60],
+                "description": c["rule"],
+                "status": "adopted",
+                "domain": "meta",
+                "created": now(),
+                "version": "1.0.0",
+                "layer": "L4",
+                "properties": {
+                    "rule": c["rule"],
+                    "scope": c["scope"],
+                    "enforcement": c["enforcement"],
+                    "auto_check": True,
+                },
+            }
+        )
+
     return nodes
 
 
@@ -243,12 +251,14 @@ def save_nodes(nodes: list[dict], output_dir: Path):
     saved = 0
     for n in nodes:
         fp = output_dir / f"{n['id']}.yaml"
-        with open(fp, 'w', encoding='utf-8') as f:
+        with open(fp, "w", encoding="utf-8") as f:
             f.write(f"# M1 Node: {n['id']}\n")
             f.write(f"# Type: {n['type']}\n")
             f.write(f"# Extracted by mof-extract: {now()}\n")
             f.write("# ⚠️ 待人工审核\n\n")
-            yaml.dump(n, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+            yaml.dump(
+                n, f, allow_unicode=True, default_flow_style=False, sort_keys=False
+            )
         saved += 1
     return saved
 
@@ -260,16 +270,16 @@ def format_summary(all_nodes: list[dict]) -> str:
     lines.append("=" * 64)
     lines.append(f"  时间: {now()[:19]}")
     lines.append("")
-    
+
     by_type = {}
     for n in all_nodes:
         t = n["type"]
         by_type[t] = by_type.get(t, 0) + 1
-    
+
     lines.append(f"  提炼总计: {len(all_nodes)} 个 M1 节点")
     for t, c in sorted(by_type.items()):
         lines.append(f"    {t:15s}: {c} 个")
-    
+
     lines.append("\n  ⚠️ 所有节点标记为 '待人工审核'")
     lines.append("  审核后运行 mof-validate 校验")
     lines.append("=" * 64)
@@ -279,7 +289,12 @@ def format_summary(all_nodes: list[dict]) -> str:
 def main():
     parser = argparse.ArgumentParser(description="织星 MOF 逆向提炼器")
     parser.add_argument("--dry-run", action="store_true", help="仅预览不保存")
-    parser.add_argument("--source", type=str, default="all", choices=["all", "lessons", "decisions", "conventions"])
+    parser.add_argument(
+        "--source",
+        type=str,
+        default="all",
+        choices=["all", "lessons", "decisions", "conventions"],
+    )
     parser.add_argument("--output", type=Path, help="输出目录")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
@@ -290,18 +305,23 @@ def main():
     if args.source in ("all", "lessons"):
         lessons = extract_lessons(paths["lessons"])
         all_nodes.extend(lessons)
-    
+
     if args.source in ("all", "decisions"):
         decisions = extract_decisions(paths["reviews"])
         all_nodes.extend(decisions)
-    
+
     if args.source in ("all", "conventions"):
         conventions = extract_conventions(paths["claude_root"])
         all_nodes.extend(conventions)
 
     if args.json:
-        print(json.dumps({"node_count": len(all_nodes), "nodes": all_nodes},
-                        ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"node_count": len(all_nodes), "nodes": all_nodes},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return
 
     print(format_summary(all_nodes))
@@ -335,7 +355,17 @@ def _resolve_output_dir() -> Path:
         return Path(explicit)
     workspace = os.environ.get("WORKSPACE_ROOT")
     if workspace:
-        return Path(workspace) / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "convention"
+        return (
+            Path(workspace)
+            / "projects"
+            / "ecos"
+            / "src"
+            / "ecos"
+            / "ssot"
+            / "mof"
+            / "m1"
+            / "convention"
+        )
     print(
         "  ❌ mof-extract: 无法解析输出目录。\n"
         "     设置 WORKSPACE_ROOT env(指向 ~/Workspace) 或 MOF_EXTRACT_OUTPUT 指向目标目录。\n"

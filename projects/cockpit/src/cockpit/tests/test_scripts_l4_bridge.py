@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -28,7 +27,7 @@ def _mock_cards_dir(tmp_path, monkeypatch):
     debt_dir.mkdir()
     (debt_dir / "DEBT-001.md").write_text(
         "---\nid: DEBT-001\ntype: debt\nstatus: in_progress\n"
-        'title: 修复 cockpit MCP\npriority: P0\ndomain: meta\ncreated: 2026-06-06\ntags: []\n---\n\n# 修复 cockpit MCP\n'
+        "title: 修复 cockpit MCP\npriority: P0\ndomain: meta\ncreated: 2026-06-06\ntags: []\n---\n\n# 修复 cockpit MCP\n"
     )
 
     # Create a closed card
@@ -36,7 +35,7 @@ def _mock_cards_dir(tmp_path, monkeypatch):
     task_dir.mkdir()
     (task_dir / "TASK-old.md").write_text(
         "---\nid: TASK-old\ntype: task\nstatus: closed\n"
-        'title: 旧任务\npriority: P1\ndomain: meta\ncreated: 2026-06-01\ntags: []\n---\n'
+        "title: 旧任务\npriority: P1\ndomain: meta\ncreated: 2026-06-01\ntags: []\n---\n"
     )
 
     monkeypatch.setattr("scripts.cockpit_mcp._CARDS_DIR", cards_dir)

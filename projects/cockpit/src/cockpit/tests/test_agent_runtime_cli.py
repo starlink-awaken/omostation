@@ -23,8 +23,9 @@ sys.modules["runtime.executor.server"] = mock.MagicMock()
 sys.modules["uvicorn"] = mock.MagicMock()
 
 # Now safe to import
-from cockpit import agent_runtime_cli
 import pytest
+
+from cockpit import agent_runtime_cli
 
 
 class TestCliMain:

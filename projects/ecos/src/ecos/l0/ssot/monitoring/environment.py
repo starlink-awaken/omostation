@@ -117,7 +117,9 @@ class EnvironmentAwareMonitor:
     def __init__(self, config: EnvironmentConfig | None = None):
         self.environment_type = EnvironmentDetector.detect()
         self.environment_id = EnvironmentDetector.generate_environment_id()
-        self.config = config or EnvironmentConfig.from_environment(self.environment_type)
+        self.config = config or EnvironmentConfig.from_environment(
+            self.environment_type
+        )
         self.system_info = EnvironmentDetector.get_system_info()
 
         # 监控历史
@@ -196,7 +198,9 @@ class EnvironmentAwareMonitor:
 
         return strategies[self.environment_type]
 
-    def adapt_metric_config(self, metric_definition: MetricDefinition) -> MetricDefinition:
+    def adapt_metric_config(
+        self, metric_definition: MetricDefinition
+    ) -> MetricDefinition:
         """根据环境适配指标配置"""
         # 创建配置副本
         adapted_config = metric_definition
@@ -213,12 +217,16 @@ class EnvironmentAwareMonitor:
 
         # 开发环境启用详细监控
         if self.environment_type == EnvironmentType.DEVELOPMENT:
-            adapted_config.collection_interval = min(adapted_config.collection_interval, 5)
+            adapted_config.collection_interval = min(
+                adapted_config.collection_interval, 5
+            )
             adapted_config.retention_days = 1
 
         return adapted_config
 
-    def record_collection(self, metric_name: str, value: Any, tags: dict[str, str] | None = None):
+    def record_collection(
+        self, metric_name: str, value: Any, tags: dict[str, str] | None = None
+    ):
         """记录指标收集"""
         record = {
             "timestamp": datetime.now().isoformat(),
@@ -237,7 +245,13 @@ class EnvironmentAwareMonitor:
         if len(self.collection_history) > 10000:
             self.collection_history = self.collection_history[-5000:]
 
-    def record_alert(self, alert_name: str, severity: str, message: str, metadata: dict[str, Any] | None = None):
+    def record_alert(
+        self,
+        alert_name: str,
+        severity: str,
+        message: str,
+        metadata: dict[str, Any] | None = None,
+    ):
         """记录告警"""
         # 检查是否应该生成告警
         if not self.should_alert(severity):
@@ -279,7 +293,10 @@ class EnvironmentAwareMonitor:
             "system_info": self.system_info,
             "sampling_strategy": self.get_sampling_strategy(),
             "statistics": self.stats,
-            "history": {"collections": len(self.collection_history), "alerts": len(self.alert_history)},
+            "history": {
+                "collections": len(self.collection_history),
+                "alerts": len(self.alert_history),
+            },
         }
 
     def generate_isolation_key(self, component: str, metric_name: str) -> str:
@@ -294,15 +311,30 @@ class EnvironmentAwareMonitor:
     def get_retention_policy(self) -> dict[str, Any]:
         """获取数据保留策略"""
         policies = {
-            EnvironmentType.DEVELOPMENT: {"metrics_days": 1, "alerts_days": 1, "logs_days": 1, "cleanup_enabled": True},
-            EnvironmentType.CI: {"metrics_days": 3, "alerts_days": 3, "logs_days": 3, "cleanup_enabled": True},
+            EnvironmentType.DEVELOPMENT: {
+                "metrics_days": 1,
+                "alerts_days": 1,
+                "logs_days": 1,
+                "cleanup_enabled": True,
+            },
+            EnvironmentType.CI: {
+                "metrics_days": 3,
+                "alerts_days": 3,
+                "logs_days": 3,
+                "cleanup_enabled": True,
+            },
             EnvironmentType.PRODUCTION: {
                 "metrics_days": 30,
                 "alerts_days": 90,
                 "logs_days": 30,
                 "cleanup_enabled": True,
             },
-            EnvironmentType.TESTING: {"metrics_days": 1, "alerts_days": 1, "logs_days": 1, "cleanup_enabled": True},
+            EnvironmentType.TESTING: {
+                "metrics_days": 1,
+                "alerts_days": 1,
+                "logs_days": 1,
+                "cleanup_enabled": True,
+            },
         }
 
         return policies[self.environment_type]
@@ -314,22 +346,33 @@ class EnvironmentAwareMonitor:
     def get_environment_specific_config(self) -> dict[str, Any]:
         """获取环境特定配置"""
         return {
-            "monitoring": {"enabled": True, "level": self.config.log_level, "alerting": self.config.alert_enabled},
+            "monitoring": {
+                "enabled": True,
+                "level": self.config.log_level,
+                "alerting": self.config.alert_enabled,
+            },
             "storage": {
-                "backend": "in_memory" if self.environment_type == EnvironmentType.DEVELOPMENT else "json",
+                "backend": "in_memory"
+                if self.environment_type == EnvironmentType.DEVELOPMENT
+                else "json",
                 "retention_days": self.get_retention_policy()["metrics_days"],
             },
             "performance": {
                 "async_enabled": self.environment_type != EnvironmentType.CI,
-                "compression_enabled": self.environment_type == EnvironmentType.PRODUCTION,
+                "compression_enabled": self.environment_type
+                == EnvironmentType.PRODUCTION,
             },
             "debugging": {
-                "enabled": self.environment_type in [EnvironmentType.DEVELOPMENT, EnvironmentType.TESTING],
-                "detailed_logging": self.environment_type == EnvironmentType.DEVELOPMENT,
+                "enabled": self.environment_type
+                in [EnvironmentType.DEVELOPMENT, EnvironmentType.TESTING],
+                "detailed_logging": self.environment_type
+                == EnvironmentType.DEVELOPMENT,
             },
         }
 
-    def create_environment_tag(self, additional_tags: dict[str, str] | None = None) -> dict[str, str]:
+    def create_environment_tag(
+        self, additional_tags: dict[str, str] | None = None
+    ) -> dict[str, str]:
         """创建环境标签"""
         tags = {
             "environment": self.environment_type.value,
@@ -404,7 +447,9 @@ class EnvironmentManager:
                 datetime.now().isoformat()
                 # 简化的清理逻辑
                 old_count = len(monitor.collection_history)
-                monitor.collection_history = [record for record in monitor.collection_history[-1000:]]
+                monitor.collection_history = [
+                    record for record in monitor.collection_history[-1000:]
+                ]
                 cleaned_count = old_count - len(monitor.collection_history)
 
                 if cleaned_count > 0:

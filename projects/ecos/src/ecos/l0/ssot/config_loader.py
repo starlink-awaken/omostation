@@ -35,7 +35,16 @@ class ConfigLoader:
     """领域配置加载器"""
 
     CACHE_FILE = ".ssot_cache.json"
-    YAML_FILES = ["domain", "entities", "facts", "inferences", "rules", "relations", "machines", "constraints"]
+    YAML_FILES = [
+        "domain",
+        "entities",
+        "facts",
+        "inferences",
+        "rules",
+        "relations",
+        "machines",
+        "constraints",
+    ]
 
     def __init__(self, domain_dir: str | Path, use_cache: bool = True):
         self.domain_dir = Path(domain_dir)
@@ -116,7 +125,9 @@ class ConfigLoader:
             state_machines = []
             for sm_data in data.get("state_machines", []):
                 sm_states = [StateNode(**s) for s in sm_data.pop("states", [])]
-                sm_transitions = [Transition(**t) for t in sm_data.pop("transitions", [])]
+                sm_transitions = [
+                    Transition(**t) for t in sm_data.pop("transitions", [])
+                ]
                 sm_data["states"] = sm_states
                 sm_data["transitions"] = sm_transitions
                 state_machines.append(StateMachine(**sm_data))
@@ -181,19 +192,26 @@ class ConfigLoader:
 
         config.domain = self._load_yaml("domain") or {}
         domain_meta = config.domain.get("domain", config.domain)
-        config.domain = domain_meta if isinstance(domain_meta, dict) else {"name": str(domain_meta)}
+        config.domain = (
+            domain_meta if isinstance(domain_meta, dict) else {"name": str(domain_meta)}
+        )
 
         entities_raw = self._load_yaml("entities") or {"entities": []}
-        config.entities = [self._parse_entity(e) for e in entities_raw.get("entities", [])]
+        config.entities = [
+            self._parse_entity(e) for e in entities_raw.get("entities", [])
+        ]
         self._deduplicate(config.entities, "实体")
 
         facts_raw = self._load_yaml("facts") or {}
-        config.facts = [self._parse_fact(f, "policy") for f in facts_raw.get("policy", [])]
+        config.facts = [
+            self._parse_fact(f, "policy") for f in facts_raw.get("policy", [])
+        ]
         config.facts += [self._parse_fact(f, "data") for f in facts_raw.get("data", [])]
         self._deduplicate(config.facts, "事实")
 
         config.inferences = [
-            self._parse_inference(i) for i in (self._load_yaml("inferences") or {}).get("inferences", [])
+            self._parse_inference(i)
+            for i in (self._load_yaml("inferences") or {}).get("inferences", [])
         ]
         self._deduplicate(config.inferences, "推论")
 
@@ -201,18 +219,33 @@ class ConfigLoader:
         config.rules = [self._parse_rule(r) for r in rules_raw.get("rules", [])]
 
         rels_raw = self._load_yaml("relations") or {"relations": []}
-        config.relations = [self._parse_relation(r) for r in rels_raw.get("relations", [])]
+        config.relations = [
+            self._parse_relation(r) for r in rels_raw.get("relations", [])
+        ]
 
         machines_raw = self._load_yaml("machines") or {"machines": []}
-        config.state_machines = [self._parse_machine(m) for m in machines_raw.get("machines", [])]
+        config.state_machines = [
+            self._parse_machine(m) for m in machines_raw.get("machines", [])
+        ]
 
         constraints_raw = self._load_yaml("constraints") or {"constraints": []}
-        config.constraints = [self._parse_constraint(c) for c in constraints_raw.get("constraints", [])]
+        config.constraints = [
+            self._parse_constraint(c) for c in constraints_raw.get("constraints", [])
+        ]
 
         # Schema 校验
         from .meta_model import validate_yaml_schema
 
-        for yaml_name in ["domain", "entities", "facts", "inferences", "rules", "relations", "machines", "constraints"]:
+        for yaml_name in [
+            "domain",
+            "entities",
+            "facts",
+            "inferences",
+            "rules",
+            "relations",
+            "machines",
+            "constraints",
+        ]:
             raw = self._cache.get(yaml_name)
             if raw is None:
                 continue
@@ -363,7 +396,9 @@ class ConfigLoader:
             if not item_id:
                 continue
             if item_id in seen:
-                print(f"  ⚠️ [P1] 重复{label} ID: '{item_id}' (第{i + 1}项覆盖第{seen[item_id] + 1}项)")
+                print(
+                    f"  ⚠️ [P1] 重复{label} ID: '{item_id}' (第{i + 1}项覆盖第{seen[item_id] + 1}项)"
+                )
                 to_remove.append(seen[item_id])
             seen[item_id] = i
         if to_remove:

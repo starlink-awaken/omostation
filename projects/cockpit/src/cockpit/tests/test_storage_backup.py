@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 
 import pytest
+
 from cockpit.storage import SQLiteDataAccess
 
 

@@ -56,11 +56,16 @@ class AgentMatcher:
         if self._reputation_ledger is None or not agent_ids:
             return
         now = time.time()
-        if self._reputation_cache and (now - self._reputation_cache_time) < self._reputation_cache_ttl:
+        if (
+            self._reputation_cache
+            and (now - self._reputation_cache_time) < self._reputation_cache_ttl
+        ):
             return
         try:
             all_nodes = self._reputation_ledger.list_all_nodes(sort_by="node_id")  # type: ignore[union-attr]
-            self._reputation_cache = {node["node_id"]: node["reputation"] for node in all_nodes}
+            self._reputation_cache = {
+                node["node_id"]: node["reputation"] for node in all_nodes
+            }
             self._reputation_cache_time = now
         except Exception:
             self._reputation_cache = {}
@@ -92,7 +97,9 @@ class AgentMatcher:
             )
         return task
 
-    def match(self, task: TaskRequirement, agents: list[AgentProfile]) -> tuple[AgentProfile, MatchResult]:
+    def match(
+        self, task: TaskRequirement, agents: list[AgentProfile]
+    ) -> tuple[AgentProfile, MatchResult]:
         if not agents:
             raise ValueError("agent pool is empty")
 
@@ -128,38 +135,54 @@ class AgentMatcher:
         return best_agent, result
 
     def match_multiple(
-        self, tasks: list[TaskRequirement], agents: list[AgentProfile], max_assignments_per_agent: int = 3
+        self,
+        tasks: list[TaskRequirement],
+        agents: list[AgentProfile],
+        max_assignments_per_agent: int = 3,
     ) -> dict[str, tuple[str, float]]:
         assignments: dict[str, tuple[str, float]] = {}
         agent_assignment_count: dict[str, int] = {a.agent_id: 0 for a in agents}
         sorted_tasks = sorted(tasks, key=lambda t: t.priority, reverse=True)
 
         for task in sorted_tasks:
-            available_agents = [a for a in agents if agent_assignment_count[a.agent_id] < max_assignments_per_agent]
+            available_agents = [
+                a
+                for a in agents
+                if agent_assignment_count[a.agent_id] < max_assignments_per_agent
+            ]
             if not available_agents:
                 continue
-            adjusted_agents = self._adjust_for_load(available_agents, agent_assignment_count)
+            adjusted_agents = self._adjust_for_load(
+                available_agents, agent_assignment_count
+            )
             agent, result = self.match(task, adjusted_agents)
             assignments[task.task_id] = (agent.agent_id, result.score)
             agent_assignment_count[agent.agent_id] += 1
-            agent.current_load = agent_assignment_count[agent.agent_id] / max_assignments_per_agent
+            agent.current_load = (
+                agent_assignment_count[agent.agent_id] / max_assignments_per_agent
+            )
 
         return assignments
 
-    def _adjust_for_load(self, agents: list[AgentProfile], assignment_count: dict[str, int]) -> list[AgentProfile]:
+    def _adjust_for_load(
+        self, agents: list[AgentProfile], assignment_count: dict[str, int]
+    ) -> list[AgentProfile]:
         adjusted = []
         for agent in agents:
             adjusted_agent = AgentProfile(
                 agent_id=agent.agent_id,
                 capabilities=agent.capabilities.copy(),
                 historical_performance=agent.historical_performance.copy(),
-                current_load=assignment_count.get(agent.agent_id, 0) / max(1, len(agents)),
+                current_load=assignment_count.get(agent.agent_id, 0)
+                / max(1, len(agents)),
                 specialization=agent.specialization,
             )
             adjusted.append(adjusted_agent)
         return adjusted
 
-    def _calculate_match_score(self, task: TaskRequirement, agent: AgentProfile) -> tuple[float, dict[str, float]]:
+    def _calculate_match_score(
+        self, task: TaskRequirement, agent: AgentProfile
+    ) -> tuple[float, dict[str, float]]:
         capability_score = self._calculate_capability_score(task, agent)
         performance_score = self._calculate_performance_score(agent)
         load_score = 1.0 - agent.current_load
@@ -182,10 +205,14 @@ class AgentMatcher:
             "reputation": reputation_score,
         }
 
-    def _calculate_capability_score(self, task: TaskRequirement, agent: AgentProfile) -> float:
+    def _calculate_capability_score(
+        self, task: TaskRequirement, agent: AgentProfile
+    ) -> float:
         if not task.required_capabilities:
             return 0.5
-        matching_scores = [agent.capabilities.get(cap, 0.0) for cap in task.required_capabilities]
+        matching_scores = [
+            agent.capabilities.get(cap, 0.0) for cap in task.required_capabilities
+        ]
         return sum(matching_scores) / len(matching_scores)
 
     @staticmethod
@@ -196,13 +223,17 @@ class AgentMatcher:
         avg_performance = sum(performance_data.values()) / len(performance_data)
         recent_tasks = list(performance_data.values())[-10:]
         if recent_tasks:
-            trend_bonus = max(0, sum(recent_tasks) / len(recent_tasks) - avg_performance) * 0.2
+            trend_bonus = (
+                max(0, sum(recent_tasks) / len(recent_tasks) - avg_performance) * 0.2
+            )
         else:
             trend_bonus = 0.0
         return min(1.0, avg_performance + trend_bonus)
 
     @staticmethod
-    def _calculate_specialization_score(task: TaskRequirement, agent: AgentProfile) -> float:
+    def _calculate_specialization_score(
+        task: TaskRequirement, agent: AgentProfile
+    ) -> float:
         if not agent.specialization:
             return 0.5
         task_domain = str(task.task_id).split("_")[0].lower()
@@ -226,13 +257,20 @@ class AgentMatcher:
     def get_agent_ranking(
         self, task: TaskRequirement, agents: list[AgentProfile]
     ) -> list[tuple[AgentProfile, float, dict[str, float]]]:
-        rankings = [(agent, *self._calculate_match_score(task, agent)) for agent in agents]
+        rankings = [
+            (agent, *self._calculate_match_score(task, agent)) for agent in agents
+        ]
         rankings.sort(key=lambda x: x[1], reverse=True)
         return rankings
 
-    def get_capability_gap(self, task: TaskRequirement, agents: list[AgentProfile]) -> dict[AgentCapability, float]:
+    def get_capability_gap(
+        self, task: TaskRequirement, agents: list[AgentProfile]
+    ) -> dict[AgentCapability, float]:
         gaps: dict[AgentCapability, float] = {}
         for capability in task.required_capabilities:
-            max_capability = max((agent.capabilities.get(capability, 0.0) for agent in agents), default=0.0)
+            max_capability = max(
+                (agent.capabilities.get(capability, 0.0) for agent in agents),
+                default=0.0,
+            )
             gaps[capability] = 1.0 - max_capability
         return gaps

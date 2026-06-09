@@ -60,7 +60,8 @@ def load_m2(m2_path: Path) -> dict:
     if m2_path.is_dir():
         # New structure: mof/m2/*.yaml (one per type)
         for f in sorted(m2_path.glob("*.yaml")):
-            if f.name.startswith('.'): continue
+            if f.name.startswith('.'):
+                continue
             data = load_yaml(f)
             for key in data:
                 if key not in ('m2_type', 'version', 'created'):
@@ -78,7 +79,8 @@ def load_all_m1_nodes(m1_dir: Path) -> list[dict]:
     if not m1_dir.exists():
         return nodes
     for f in sorted(m1_dir.rglob("*.yaml")):
-        if f.name.startswith('.'): continue
+        if f.name.startswith('.'):
+            continue
         try:
             data = load_yaml(f)
             if isinstance(data, dict) and "id" in data:
@@ -155,7 +157,7 @@ def format_report(all_results: list[dict], node_count: int, m2_file: Path) -> st
         lines.append(f"  {icon} {t:15s}: {counts['ok']}/{counts['ok']+counts['err']}")
 
     if errors > 0:
-        lines.append(f"\n  ── 错误 ──")
+        lines.append("\n  ── 错误 ──")
         for r in all_results:
             if r.get("level") == "error":
                 lines.append(f"  ❌ {r['id']}: {r['message']}")

@@ -108,5 +108,5 @@ uv sync
 2. **runtime 是硬依赖** — `agent_runtime_*` 模块直接 import `runtime.executor.*`
 3. **Web Dashboard 有可选 Bearer 认证** — `cockpit dashboard_server.py` 中的 `AUTH_TOKEN` 环境变量控制
 4. **storage.py 使用 IDataAccess Protocol** — 修改存储层时需更新 `get_data_access()` 实现
-5. **Python 3.10+** — 非 3.13+，与 kairon 不同
+5. **Python 3.13+** — 与 kairon 一致
 6. **hatchling 构建** — 与 kairon/agora 一致，与 runtime 的 setuptools 不同
