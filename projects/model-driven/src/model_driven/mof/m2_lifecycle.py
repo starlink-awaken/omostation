@@ -372,6 +372,15 @@ M2_RELEASE_PLAN = M2Schema(
     optional_properties={
         "rollback_plan": {"type": "string", "description": "回滚计划"},
         "approval_chain": {"type": "list", "description": "审批链"},
+        "hardening_stage": {
+            "type": "enum",
+            "description": "代码硬化阶段 — 从可变到不可变的渐进式固化 (预留接口，当前未完全实现)",
+            "values": ["none", "canary", "blue_green", "full", "hardened"],
+        },
+        "hardening_verified_runs": {
+            "type": "integer",
+            "description": "硬化前已验证的运行次数 (达到阈值后自动进入 hardened 状态)",
+        },
     },
 )
 

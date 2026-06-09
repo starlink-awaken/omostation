@@ -6,7 +6,7 @@ model_driven.management — 管理面
 
 from .adr import ADR, ADRManager, ADRStatus
 from .agent_collab import AgentCollabManager, CollabTask, CollabTaskStatus
-from .okr import OKR, OKRManager, OKRStatus
+from .okr import OKR, OKRDecomposer, OKRManager, OKRStatus
 from .omo_bridge import OMOBridge, OMOEvent, OMOEventType
 from .spec import Spec, SpecManager, SpecStatus
 

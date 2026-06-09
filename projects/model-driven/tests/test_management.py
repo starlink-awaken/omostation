@@ -143,6 +143,77 @@ class TestOKRManager:
         assert len(overdue) == 1
 
 
+class TestOKRDecomposer:
+    def test_decompose_single_okr(self):
+        from model_driven.mof.m3_extended import KeyResult
+        from model_driven.management.okr import OKR, OKRDecomposer
+
+        kr1 = KeyResult(id="KR-1", description="设计系统架构", target_value=100, current_value=0, weight=2.0)
+        kr2 = KeyResult(id="KR-2", description="开发核心模块", target_value=5, current_value=0, weight=1.0)
+        kr3 = KeyResult(id="KR-3", description="部署上线监控", target_value=3, current_value=0, weight=0.5)
+        okr = OKR(id="O-1", objective="完成系统建设", key_results=[kr1, kr2, kr3])
+
+        decomposer = OKRDecomposer()
+        result = decomposer.decompose(okr, owner="测试")
+
+        assert result["success"]
+        assert result["phase_count"] == 3
+        assert result["task_count"] > 0
+        assert len(result["phases"]) == 3
+        assert len(result["tasks"]) > 0
+
+        # 检查 Phase 推断
+        phases = result["phases"]
+        assert phases[0]["phase"] == "cold_start"  # 设计 → 冷启动
+        assert phases[1]["phase"] == "evolution"  # 开发 → 演进
+        assert phases[2]["phase"] == "evolution"  # 部署 → 演进
+
+        # 检查优先级
+        assert phases[0]["priority"] == "P0"  # weight=2.0 → P0
+        assert phases[1]["priority"] == "P1"  # weight=1.0 → P1
+
+    def test_decompose_empty_kr(self):
+        from model_driven.management.okr import OKR, OKRDecomposer
+        okr = OKR(id="O-1", objective="测试", key_results=[])
+        decomposer = OKRDecomposer()
+        result = decomposer.decompose(okr)
+        assert not result["success"]
+
+    def test_decompose_all(self):
+        from model_driven.mof.m3_extended import KeyResult
+        from model_driven.management.okr import OKR, OKRDecomposer
+
+        okr1 = OKR(id="O-1", objective="目标1", key_results=[
+            KeyResult(id="KR-1", description="开发功能", target_value=3, current_value=0),
+        ])
+        okr2 = OKR(id="O-2", objective="目标2", key_results=[
+            KeyResult(id="KR-2", description="设计接口", target_value=100, current_value=0),
+        ])
+
+        decomposer = OKRDecomposer()
+        result = decomposer.decompose_all([okr1, okr2])
+        assert result["success"]
+        assert result["okr_count"] == 2
+        assert result["total_phases"] == 2
+
+    def test_decomposition_history(self):
+        from model_driven.mof.m3_extended import KeyResult
+        from model_driven.management.okr import OKR, OKRDecomposer
+
+        okr = OKR(id="O-1", objective="测试", key_results=[
+            KeyResult(id="KR-1", description="开发功能", target_value=1, current_value=0),
+        ])
+        decomposer = OKRDecomposer()
+        decomposer.decompose(okr)
+
+        last = decomposer.get_last_decomposition()
+        assert last is not None
+        assert last["okr_id"] == "O-1"
+
+        all_decomps = decomposer.get_all_decompositions()
+        assert len(all_decomps) == 1
+
+
 class TestOMOBridge:
     def test_emit_event(self):
         bridge = OMOBridge()

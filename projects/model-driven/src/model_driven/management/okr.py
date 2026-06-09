@@ -130,3 +130,140 @@ class OKRManager:
             o for o in self._okrs.values()
             if o.status == OKRStatus.ACTIVE and o.deadline and o.deadline < now
         ]
+
+
+# ── OKR 自动分解 ──────────────────────────────────
+
+
+class OKRDecomposer:
+    """OKR 自动分解器 — 将 OKR 的 KeyResult 自动分解为 Phase 和 Task"""
+
+    def __init__(self):
+        self._decomposition_results: list[dict[str, Any]] = []
+
+    def decompose(self, okr: OKR, owner: str = "") -> dict[str, Any]:
+        """将一个 OKR 分解为 Phase 和 Task 列表
+
+        Args:
+            okr: OKR 对象
+            owner: 默认负责人
+
+        Returns:
+            分解结果，包含 phases 和 tasks
+        """
+        if not okr.key_results:
+            return {
+                "success": False,
+                "error": "OKR 没有 KeyResult，无法分解",
+                "okr_id": okr.id,
+            }
+
+        phases: list[dict[str, Any]] = []
+        tasks: list[dict[str, Any]] = []
+
+        for i, kr in enumerate(okr.key_results):
+            # 根据 KR 描述推断 Phase 和 Task
+            kr_lower = kr.description.lower()
+
+            # 推断阶段
+            if any(kw in kr_lower for kw in ["设计", "架构", "spec", "design", "adr"]):
+                phase = "cold_start"
+                phase_name = "冷启动"
+            elif any(kw in kr_lower for kw in ["开发", "实现", "代码", "code", "开发", "build"]):
+                phase = "evolution"
+                phase_name = "演进"
+            elif any(kw in kr_lower for kw in ["部署", "上线", "deploy", "发布", "release"]):
+                phase = "evolution"
+                phase_name = "演进"
+            elif any(kw in kr_lower for kw in ["运行", "运维", "监控", "run", "ops", "monitor"]):
+                phase = "hardening"
+                phase_name = "硬化"
+            elif any(kw in kr_lower for kw in ["规划", "计划", "目标", "plan", "goal", "okr"]):
+                phase = "cold_start"
+                phase_name = "冷启动"
+            else:
+                phase = "evolution"
+                phase_name = "演进"
+
+            # 推断优先级
+            if kr.weight >= 2.0:
+                priority = "P0"
+            elif kr.weight >= 1.0:
+                priority = "P1"
+            elif kr.weight >= 0.5:
+                priority = "P2"
+            else:
+                priority = "P3"
+
+            # 创建 Phase
+            phase_id = f"PHASE-{okr.id}-{i + 1:02d}"
+            phases.append({
+                "id": phase_id,
+                "name": f"{phase_name}: {kr.description[:40]}",
+                "phase": phase,
+                "kr_id": kr.id,
+                "kr_description": kr.description,
+                "target_value": kr.target_value,
+                "current_value": kr.current_value,
+                "weight": kr.weight,
+                "priority": priority,
+                "owner": owner or okr.owner,
+            })
+
+            # 创建 Task
+            task_count = max(1, int(kr.target_value / 10) if kr.target_value > 0 else 1)
+            for t in range(task_count):
+                task_id = f"TASK-{okr.id}-{i + 1:02d}-{t + 1:02d}"
+                tasks.append({
+                    "id": task_id,
+                    "title": f"[{priority}] {kr.description} — 第 {t + 1}/{task_count} 步",
+                    "description": f"OKR: {okr.objective}\nKR: {kr.description}\n目标值: {kr.target_value} {kr.unit}",
+                    "phase_id": phase_id,
+                    "kr_id": kr.id,
+                    "priority": priority,
+                    "assignee": owner or okr.owner,
+                    "weight": kr.weight / task_count,
+                    "target_progress": round((t + 1) / task_count * 100, 1),
+                })
+
+        result = {
+            "success": True,
+            "okr_id": okr.id,
+            "okr_objective": okr.objective,
+            "phase_count": len(phases),
+            "task_count": len(tasks),
+            "phases": phases,
+            "tasks": tasks,
+            "decomposed_at": datetime.now(timezone.utc).isoformat(),
+        }
+        self._decomposition_results.append(result)
+        return result
+
+    def decompose_all(self, okrs: list[OKR], owner: str = "") -> dict[str, Any]:
+        """批量分解多个 OKR"""
+        results = []
+        total_phases = 0
+        total_tasks = 0
+
+        for okr in okrs:
+            result = self.decompose(okr, owner)
+            results.append(result)
+            if result["success"]:
+                total_phases += result["phase_count"]
+                total_tasks += result["task_count"]
+
+        return {
+            "success": True,
+            "okr_count": len(okrs),
+            "total_phases": total_phases,
+            "total_tasks": total_tasks,
+            "results": results,
+        }
+
+    def get_last_decomposition(self) -> dict[str, Any] | None:
+        """获取最近一次分解结果"""
+        return self._decomposition_results[-1] if self._decomposition_results else None
+
+    def get_all_decompositions(self) -> list[dict[str, Any]]:
+        """获取所有分解历史"""
+        return self._decomposition_results.copy()

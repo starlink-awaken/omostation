@@ -190,16 +190,11 @@ def tool_derive(
                     "stage": schema.lifecycle_stage.value if schema.lifecycle_stage else "cross_stage",
                 })
 
-    # 4. 推导规则执行 (来自 ontology_extended)
-    from model_driven.mof.ontology_extended import DERIVATION_RULES_EXTENDED
-    rule_results = []
-    for rule in DERIVATION_RULES_EXTENDED:
-        rule_results.append({
-            "rule_id": rule["id"],
-            "description": rule["description"],
-            "priority": rule["priority"],
-            "applied": True,
-        })
+    # 4. 推导规则执行 (来自 derivation_engine)
+    from model_driven.toolchain.derivation_engine import DerivationEngine
+    engine = DerivationEngine()
+    derivation_results = engine.execute_all(models, kwargs)
+    derivation_summary = engine.get_summary()
 
     return {
         "success": True,
@@ -207,9 +202,18 @@ def tool_derive(
         "risks": risks,
         "gaps": gaps,
         "transitive_chains": transitive_chains,
-        "derivation_rules": rule_results,
+        "derivation_results": [
+            {
+                "rule_id": r.rule_id,
+                "triggered": r.triggered,
+                "risk_level": r.risk_level,
+                "message": r.message,
+            }
+            for r in derivation_results
+        ],
+        "derivation_summary": derivation_summary,
         "models_analyzed": len(models),
-        "total_findings": len(risks) + len(gaps) + len(transitive_chains),
+        "total_findings": len(risks) + len(gaps) + len(transitive_chains) + derivation_summary["triggered"],
     }
 
 
