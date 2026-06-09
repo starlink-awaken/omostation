@@ -204,21 +204,26 @@ class AppendOnlyLog:
         """读所有 records (容错: 错行保留为 ``{"raw": ...}``)."""
         return read_jsonl(self.path)
 
-    def tail(self, n: int, *, chunk_size: int = 8192) -> list[dict[str, Any]]:
-        """读最近 N 条 records (Round 7 P1 reverse-seek 优化, Round 8 P1 容错强化).
+    def tail(self, n: int, *, initial_chunk_size: int = 8192, max_chunk_size: int = 1_048_576) -> list[dict[str, Any]]:
+        """读最近 N 条 records (Round 9 P2 真正 O(n) 性能).
 
-        算法: 读所有 chunks, parse 后取最后 N 条. 复杂度 O(file_size), 与 read_all 同.
-        区别于 read_all: 提供 'reverse-seek 风格' 内存访问模式 (chunked, 8KB).
-        真实 O(n) 性能优化需 'windowed seek' (按需扩大读窗口), 留 Round 9+.
+        算法: windowed seek — 从末尾 8KB 起始, 读 + parse 累计, 不够 n 条就
+        把窗口翻倍 (doubling), 直到满足或触顶 1MB. 真正 O(n) 而非 O(file_size).
+
+        Round 9 P2 关键改进 vs Round 8 P1:
+          - Round 8 P1: '总是读完所有 chunks' → 1GB 文件 1GB IO
+          - Round 9 P2: 'doubling window, 早停当 ≥ n' → 1GB 文件 8KB IO (小 record)
+          - 大 record (>8KB) 场景自动扩展窗口, 1MB 触顶时退回全读
 
         Args:
             n: max records to return (≤0 → empty list).
-            chunk_size: 单次读字节数 (默认 8KB). 当前未做 IO 优化, 仅语义.
+            initial_chunk_size: 起始窗口 (默认 8KB). 1 record << window 时 1 iter 够.
+            max_chunk_size: 窗口触顶 (默认 1MB). 大 record (e.g. 50KB/条) 场景避免无限翻倍.
 
         边界:
-          - 小文件 (≤chunk_size): 走 ``read_jsonl`` 全读
-          - 大文件: 按 chunk 反向读, drop first 仅当 mid-line
-          - UTF-8 跨 chunk: ``errors='replace'`` 容错
+          - 小文件 (≤initial_chunk_size): 走 ``read_jsonl`` 全读
+          - 大文件: windowed seek, doubling until ≥ n parsed
+          - 1MB 触顶: 退化为 '读剩余文件' (大 record 场景, 应不常见)
           - 文件为空: 返回 []
         """
         if n <= 0 or not self.path.exists():
@@ -227,12 +232,13 @@ class AppendOnlyLog:
         if file_size == 0:
             return []
 
-        # 小文件: 直接全读 (reverse-seek 复杂度不值得)
-        if file_size <= chunk_size:
+        # 小文件: 直接全读 (windowed seek 复杂度不值得)
+        if file_size <= initial_chunk_size:
             return read_jsonl(self.path)[-n:]
 
-        # 大文件: 按 chunk_size 反向读, 累计所有 lines
-        raw_lines: list[bytes] = []
+        # 大文件: windowed seek (doubling chunk, 早停当 ≥ n real records)
+        chunk_size = initial_chunk_size
+        all_lines: list[bytes] = []
         pos = file_size
         with open(self.path, "rb") as f:
             while pos > 0:
@@ -241,7 +247,6 @@ class AppendOnlyLog:
                 f.seek(pos)
                 chunk = f.read(read_size)
                 # Drop first 仅当 chunk 起始 mid-line (前 1 byte 不是 \n).
-                # 若前 1 byte 是 \n, 第一行是完整行 (前一行以 \n 结尾), 不可丢.
                 if pos > 0:
                     f.seek(pos - 1)
                     prev_byte = f.read(1)
@@ -251,13 +256,38 @@ class AppendOnlyLog:
                         chunk_lines = chunk.split(b"\n")
                 else:
                     chunk_lines = chunk.split(b"\n")
-                raw_lines = chunk_lines + raw_lines
+                # Prepend (we're reading backwards in time)
+                all_lines = chunk_lines + all_lines
+                # 累计非空行数 (cheap, 不 full parse)
+                real_count = sum(1 for l in all_lines if l.strip())
+                if real_count >= n:
+                    # 够了, 跳出循环
+                    break
+                # 不够: 翻倍窗口, 下一轮读更多
+                if chunk_size >= max_chunk_size:
+                    # 触顶: 已读 1MB+ 但仍不够 n, 退化到 '读完剩余文件'
+                    # (大 record 场景, 应极少见)
+                    while pos > 0:
+                        read_size = min(chunk_size, pos)
+                        pos -= read_size
+                        f.seek(pos)
+                        chunk = f.read(read_size)
+                        if pos > 0:
+                            f.seek(pos - 1)
+                            prev_byte = f.read(1)
+                            if prev_byte != b"\n":
+                                chunk_lines = chunk.split(b"\n")[1:]
+                            else:
+                                chunk_lines = chunk.split(b"\n")
+                        else:
+                            chunk_lines = chunk.split(b"\n")
+                        all_lines = chunk_lines + all_lines
+                    break
+                chunk_size = min(chunk_size * 2, max_chunk_size)
 
-        # 解析: parse all lines → take last n (skip empty, JSON 错入 raw)
-        # 设计: '先 parse 后取 n' 而非 'raw_lines[-n:] 再 parse' —
-        # 避免 chunk 边界 trailing empty 偏移最后 n 个真实 record.
+        # 解析: '先 parse 后取 n' (避免 chunk 边界 trailing empty 偏移)
         records: list[dict[str, Any]] = []
-        for line_bytes in raw_lines:
+        for line_bytes in all_lines:
             line = line_bytes.decode("utf-8", errors="replace").strip()
             if not line:
                 continue
