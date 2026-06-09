@@ -1,16 +1,36 @@
-# Pre-commit hooks for omostation (Round 12 P0)
+# Pre-commit hooks for omostation (Round 12 P0 + P1)
 #
 # Installs: pre-commit install
 # Run manually: pre-commit run --all-files
 #
-# Hook 设计:
-#   - omo-logs-audit: 跑 omo logs audit, 0 drift 才通过.
-#     若 .omo/_knowledge/ 下没有 .jsonl, 跳过 (新项目可零数据启动).
-#   - ruff: 各项目自带 ruff (在 kairon/agora/omo 等 pyproject.toml 中配).
+# Hook 设计 (Round 12 P1 扩展):
+#   - check-yaml:        官方 pre-commit-hooks, 校验所有 .yml/.yaml 可解析
+#                        (actionlint 留给 CI 工作流, 避免本地下载二进制)
+#   - omo-logs-audit:    跑 omo logs audit, 0 drift 才通过.
+#                        若 .omo/_knowledge/ 下没有 .jsonl, 跳过 (新项目可零数据启动).
+#   - ruff:              各项目自带 ruff (在 kairon/agora/omo 等 pyproject.toml 中配).
 #
 # 性能考虑: omo logs audit 是 IO-bound (读 .jsonl), 不会显著拖慢 commit.
+#          check-yaml 是纯文本解析, <1s. 两者组合 < 3s per commit.
+# 走 CI 周期跑的 (见 .github/workflows/ci-lint.yml):
+#   - actionlint (GitHub Actions 工作流静态分析, 二进制 1.5MB, 不在 pre-commit 拉)
+#   - shellcheck (scripts/*.sh, 系统包, CI 装一次)
 
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+        # Round 12 P1: 锁住所有 .yml/.yaml 可解析
+        # exclude: kairon 是 submodule, 单独 lint; protocols/ 含故意宽松 YAML
+        exclude: |
+          (?x)^(
+            projects/kairon/.*\.ya?ml
+            | protocols/.*\.ya?ml
+            )$
+        args: ["--allow-multiple-documents", "--unsafe"]
+        stages: [pre-commit]
+
   - repo: local
     hooks:
       - id: omo-logs-audit

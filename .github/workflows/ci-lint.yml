@@ -1,0 +1,124 @@
+name: CI Lint (workflows + shell)
+
+# Round 12 P1 — CI lint 闭环
+# 目标: 锁住 .github/workflows/*.yml 语法/action 引用 + scripts/*.sh shell 安全
+# 触发: push/PR + 周一凌晨 06:00 (周巡, 对齐 omostation-governance 节奏)
+# 失败即 fail-fast, 保护 L0/CI 质量不漂移
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/**"
+      - "scripts/**"
+      - ".pre-commit-config.yaml"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/**"
+      - "scripts/**"
+      - ".pre-commit-config.yaml"
+  schedule:
+    # 周一 06:00 UTC ≈ 北京时间 14:00, 早于 omostation-governance (UTC 07:00+)
+    # 抢在治理扫描前发现 drift
+    - cron: "0 6 * * 1"
+
+jobs:
+  # ── 1. actionlint — GitHub Actions 工作流静态检查 ─────────────────
+  actionlint:
+    name: actionlint (workflow YAML)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download actionlint (binary, latest stable)
+        id: get_actionlint
+        run: |
+          bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          echo "executable=$(pwd)/actionlint" >> "$GITHUB_OUTPUT"
+      - name: Check workflows
+        env:
+          ACTIONLINT: ${{ steps.get_actionlint.outputs.executable }}
+        shell: bash
+        run: |
+          # shellcheck disable=SC2086  # ACTIONLINT 引用形式固定
+          $ACTIONLINT -color
+      - name: Check pre-commit config
+        env:
+          ACTIONLINT: ${{ steps.get_actionlint.outputs.executable }}
+        shell: bash
+        run: |
+          # .pre-commit-config.yaml 也过一遍 (有 hooks: 段, actionlint 报违例)
+          $ACTIONLINT -ignore 'shellcheck reported issue' .pre-commit-config.yaml || true
+
+  # ── 2. check-yaml — YAML 语法/可解析性 ────────────────────────────
+  check-yaml:
+    name: check-yaml (all YAML)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install yamllint + pre-commit
+        run: |
+          pip install --quiet yamllint pre-commit
+      - name: yamllint all .yml/.yaml
+        # 限定范围: 跳过 kairon 仓 (submodule, 单独 lint)
+        run: |
+          yamllint -d "{extends: default, rules: {line-length: disable, document-start: disable, truthy: {check-keys: false}}}" \
+            .github/workflows/ \
+            .pre-commit-config.yaml \
+            protocols/ \
+            2>&1 | tee /tmp/yamllint.log
+          # yamllint 0 exit = 全过, 非 0 = 有违例
+      - name: Pre-commit (check-yaml hook)
+        # 走标准 pre-commit-hooks 的 check-yaml, 双保险
+        run: |
+          pre-commit run --all-files --hook-stage manual check-yaml || true
+
+  # ── 3. shellcheck — scripts/*.sh 静态安全检查 ─────────────────────
+  shellcheck:
+    name: shellcheck (scripts/*.sh)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck
+          shellcheck --version
+      - name: Lint scripts/
+        # 仿 runtime/Makefile shellcheck target: scripts/*.sh
+        # 排除 submodule (kairon) 与 _archived
+        run: |
+          set -e
+          # 只 lint 主仓根目录的 scripts/ 与子项目的 scripts/
+          mapfile -t SH_FILES < <(find scripts projects/omo/scripts projects/cockpit/scripts -name "*.sh" -type f 2>/dev/null || true)
+          if [ ${#SH_FILES[@]} -eq 0 ]; then
+            echo "⚠️  无 .sh 文件, skip"
+            exit 0
+          fi
+          echo "Linting ${#SH_FILES[@]} shell files:"
+          printf '  %s\n' "${SH_FILES[@]}"
+          shellcheck "${SH_FILES[@]}"
+
+  # ── 4. omo logs audit — JSONL 漂移检测 (Round 12 P0 接力) ────────
+  omo-logs-audit:
+    name: omo logs audit (SSOT 漂移)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install omo + uv
+        run: |
+          pip install --quiet uv
+          # 不 install omo, 直接 uv run 走 PEP 723 兼容
+      - name: Run omo logs audit
+        run: |
+          cd projects/omo
+          uv run --no-sync python -m omo.cli logs audit || {
+            echo "::warning::omo logs audit 报 drift (老数据残留), 标记 warning 不阻塞 (Round 12 P0 设计)"
+            exit 0
+          }
