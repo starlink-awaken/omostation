@@ -159,3 +159,93 @@ last_24h = log.since("2026-06-08T00:00:00Z")
 - P2 (low-priority): `group_by(field)` 通用聚合 (API 设计讨论, 暂不做)
 - 性能: tail 用 reverse-seek 读大文件 (O(file_size) 优化)
 - 接入更多领域: omo_capability (注册表类), omo_daemon (事件流类)
+
+---
+
+## §11 Round 12-13 扩展 — 团队层落地 + 模式可扩展性
+
+> **状态**: implemented (Round 12 P0+P1 + Round 13 P0)
+> **作者**: 老王
+> **新增**: 第 7 consumer `omo_trail` · CI lint 基建 · audit baseline 机制
+
+### §11.1 动机
+
+Round 5 收口时 `§10 未来工作` 写"接入更多领域: omo_capability / omo_daemon" — Round 12 把"接入"这件事**从"是否做"推进到"怎么做更可扩展"**:
+- 第 7 consumer `omo_trail` 落地, 证明模式 OCP: 6→7 改动 = 加 1 个文件 + 1 个 Pydantic schema + SCHEMA_REGISTRY 1 行
+- SSOT 从 omo 仓内部走到**团队层**: CI lint 工作流 + pre-commit hook
+- audit 机制从"任何 drift 都 fail"升级为"baseline 锚定 + 增量 fail" (历史漂移不阻塞新代码)
+
+### §11.2 Round 12 — 第 7 consumer + CI lint
+
+| Commit | 主题 | 关键产出 |
+|--------|------|----------|
+| Round 12 P0 | 第 7 consumer `omo_trail` | `omo_trail.py` 200 行 · `OmoTrailRecord` 7 字段 · `omo_trail record/show` CLI · `tests/test_omo_trail.py` 10/10 PASS |
+| Round 12 P1 | CI lint + pre-commit 收口 | `.github/workflows/ci-lint.yml` 4 jobs (actionlint/check-yaml/shellcheck/omo-logs-audit) · `.pre-commit-config.yaml` 加 check-yaml + omo-logs-audit 旧版 |
+
+**omo_trail 区别于既有 6 consumer**:
+- 细粒度 step-by-step 操作轨迹 (vs 周期性快照)
+- 强制 `actor` (谁做的) + `duration_ms` (耗时) + `parent_step_id` (嵌套调用图)
+- 适合"agent 走完几步完成任务"场景, 跟 `omo_audit` (决策) 互补
+
+**OCP 验证**:
+- 加 `omo_trail` 改了 0 行 AppendOnlyLog 物理层
+- 加 `omo_trail` 改了 0 行既有 6 consumer
+- 只动了: `omo_io_schemas.py` (新 schema) + `omo_trail.py` (新文件) + SCHEMA_REGISTRY 1 行
+- → 模式可扩展性从"承诺"变"证明"
+
+### §11.3 Round 13 — Audit Baseline 机制
+
+| Commit | 主题 | 关键产出 |
+|--------|------|----------|
+| Round 13 P0 | baseline-init / baseline-check | `omo_logs.py` 加 2 模式 (135 行) · 5 个新测试 (init/check pass/regression/improvement/missing) · `.omo/_knowledge/_audit_baseline.json` 锚定 drift 1116 · `.pre-commit-config.yaml` 升级用 baseline-check |
+
+**问题**: 1100+ drift 都是 omo_history 老 schema 缺字段 (与新代码无关), pre-commit 跑 audit 必 fail → 失去"增量检测"价值.
+
+**方案**: 3 模式 dispatch
+```
+omo logs audit                           # 默认: fail on any drift (CLI 用)
+omo logs audit --baseline-init <path>    # 写当前 drift 为 baseline (lock-file 风格)
+omo logs audit --baseline-check <path>   # 对比 baseline, 增量 > 0 才 fail (pre-commit 用)
+```
+
+**实现细节**:
+- 抽象: `drift_by_consumer: dict[str, int]` 一次扫描计算, 三模式共用
+- 输出: baseline-check 区分 3 种状态 (✅ 不变 / ✅ 改善 / ❌ 回归) 写入 stdout
+- 退出码: 0 (pass/改善) 或 1 (回归/缺文件)
+- JSON 结构: `{_comment, generated_at, drift_by_consumer, total_drift, total_records}`
+
+**局限 (待 P1)**:
+- `dashboard_monitor` 守护进程每 5min 写 1 条 record 缺 4 必填字段 (date/total_score/grade/watchlist_count) → drift 持续上行
+- 当前 baseline 反映"这一刻", daemon 持续写入会推高 baseline
+- P1 解法: 修 daemon 写合规 OmoHistoryRecord (新增字段用占位值), 或 audit 加 source 白名单
+
+### §11.4 度量增量 (Round 5 → Round 13)
+
+| 指标 | Round 5 | Round 13 | Δ |
+|------|---------|----------|---|
+| AppendOnlyLog consumer | 5 | **7** | +2 (omo_history + omo_trail) |
+| Pydantic schema | 5 | **7** | +2 |
+| SCHEMA_REGISTRY 条目 | 5 | **7** | +2 |
+| omo 单元测试 | 100+ | **115+** | +15 (omo_trail 10 + omo_logs_baseline 5) |
+| pre-commit hook | 0 | **2** (check-yaml + omo-logs-audit) | +2 |
+| CI 工作流 | 0 | **1** (ci-lint.yml, 4 jobs) | +1 |
+| audit baseline 文件 | 0 | **1** (lock-file 风格) | +1 |
+
+### §11.5 守原则延续
+
+Round 12-13 全部延续 §5 六原则, 0 偏离:
+- **OCP**: 第 7 consumer 加 0 行既有代码 (真·开闭)
+- **SSOT**: baseline 是 1 个 lock-file, 1 个生成命令, 1 个检查命令
+- **DRY**: 5 个新测试 + 10 个 omo_trail 测试 = 15 个, 0 重复
+- **KISS**: baseline 机制 = init/check 2 个 bool flag, 0 抽象
+- **SRP**: omo_logs 读/查, AppendOnlyLog 写, OmoTrailRecord 校验 — 边界清晰
+- **DIP**: omo_trail 依赖 AppendOnlyLog 抽象 (同 Round 1-5)
+
+### §11.6 未来工作 (Round 14+)
+
+- **P0-1** 修 dashboard_monitor 守护进程让 record 合规 (date/total_score/grade/watchlist_count 必填)
+- **P0-2** audit 加 source 白名单: dashboard_monitor 等"已知非治理源" 跳过 schema 校验
+- **P1-1** baseline 时给 omo-trail 留 0 漂移位 (目前 trail 还没人写, baseline 还没纳入, 需 init 时加)
+- **P1-2** CI 跑 omo_lint (新增) 校验各 consumer 写入用 Pydantic schema (不是 dict 强转)
+- **P2** 把 §11.2-11.3 的范式 (OCP 验证 + baseline) 推广到其他 L1 子项目 (kairon, gbrain)
+
