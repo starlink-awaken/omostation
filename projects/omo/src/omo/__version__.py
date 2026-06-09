@@ -4,7 +4,7 @@
 """
 from pathlib import Path
 
-_workspace_root = Path(__file__).resolve().parent.parent.parent.parent.parent
+_workspace_root = Path(__file__).resolve().parent.parent.parent.parent
 try:
     __version__ = (_workspace_root / "VERSION").read_text().strip()
 except FileNotFoundError:
