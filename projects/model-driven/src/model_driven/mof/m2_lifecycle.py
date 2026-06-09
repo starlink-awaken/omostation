@@ -694,6 +694,50 @@ M2_ROI_ANALYSIS = M2Schema(
 )
 
 
+# ── 运维态类型: Trigger (异步触发机制) ─────────────
+
+M2_TRIGGER = M2Schema(
+    m2_type="trigger",
+    m3_parent="BehavioralElement.Mechanism",
+    description="异步触发机制 — 统一管理 git hooks/cron/daemon/watchdog/event bus 等触发机制。回答'什么触发什么'。",
+    icon="🔌",
+    lifecycle_stage=LifecycleStage.OPERATIONS,
+    state_machine={
+        "defined": {"description": "已定义·待激活", "transitions": ["active"]},
+        "active": {"description": "运行中", "transitions": ["degraded", "stopped"]},
+        "degraded": {"description": "降级运行", "transitions": ["active", "stopped"]},
+        "stopped": {"description": "已停止", "transitions": ["active", "archived"]},
+        "archived": {"description": "已归档", "transitions": []},
+    },
+    required_properties={
+        "trigger_type": {
+            "type": "enum",
+            "description": "触发机制类型",
+            "values": ["git_hook", "cron", "daemon", "watchdog", "event_bus", "sse", "file_watch", "bus_consumer", "launchd", "scheduler"],
+        },
+        "trigger_source": {"type": "string", "description": "触发源 (git commit / cron schedule / file change / http request)"},
+        "trigger_action": {"type": "string", "description": "触发后执行的动作"},
+        "schedule": {"type": "string", "description": "调度策略 (cron表达式 / on_push / on_file_change / every Ns / continuous)"},
+    },
+    optional_properties={
+        "interval_seconds": {"type": "integer", "description": "间隔秒数"},
+        "dependencies": {"type": "list", "description": "依赖的其他 trigger ID 列表"},
+        "health_check": {"type": "map", "description": "{endpoint, expected_status, timeout}"},
+        "retry_policy": {"type": "map", "description": "{max_retries, backoff_strategy}"},
+        "gate_checks": {"type": "list", "description": "触发前门禁检查项"},
+    },
+    validation_rules=[
+        {"rule": "trigger_type in ['git_hook','cron','daemon','watchdog','event_bus','sse','file_watch','bus_consumer','launchd','scheduler']",
+         "level": "error", "message": "trigger_type 必须是已知类型"},
+        {"rule": "trigger_source != ''", "level": "error", "message": "必须声明触发源"},
+    ],
+    relation_constraints={
+        "can_be_source_of": ["DependsOn", "Triggers"],
+        "can_be_target_of": ["Constrains", "Audits"],
+    },
+)
+
+
 # ── 全量 M2 Schema 注册表 ──────────────────────────
 
 
@@ -730,6 +774,8 @@ ALL_M2_SCHEMAS: dict[str, M2Schema] = {
     "cost_model": M2_COST_MODEL,
     "benefit_model": M2_BENEFIT_MODEL,
     "roi_analysis": M2_ROI_ANALYSIS,
+    # 触发机制
+    "trigger": M2_TRIGGER,
 }
 
 

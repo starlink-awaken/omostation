@@ -16,17 +16,21 @@ from __future__ import annotations
 
 import json
 import os
-import tempfile
 import threading
 import time
 from collections import defaultdict
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
-# 复用 omo_bos 的 parse_bos_uri (顶层 import, summary() 每次调用都需用到)
+# 复用 omo_bos.parse_bos_uri (顶层 import, summary() 每次调用都需用到)
 from omo.omo_bos import parse_bos_uri  # noqa: E402
+# 复用 omo_audit._utc_now (统一时间戳格式为 "Z" 结尾, 消灭 3 种格式并存)
+from omo.omo_audit import _utc_now  # noqa: E402  (private import 是有意的, 见 #7)
+# 复用 omo_io.write_text_atomic (reset() 用, 消除 tempfile+fsync+fd close 重复)
+from omo.omo_io import write_text_atomic  # noqa: E402
+# 复用 omo_observability._read_jsonl (record list 读取, JSON 错行保留为 {"raw": ...})
+from omo.omo_observability import _read_jsonl  # noqa: E402  (private import 是有意的, 见 #2)
 
 # 复用 omo_bos 的工作区根
 _WORKSPACE = Path(
@@ -61,7 +65,7 @@ class BosInvokeRecord:
 
     def __post_init__(self) -> None:
         if not self.recorded_at:
-            self.recorded_at = datetime.now(timezone.utc).isoformat()
+            self.recorded_at = _utc_now()
 
 
 def record(
@@ -143,19 +147,12 @@ class _Timer:
 
 
 def _read_all(path: Path = DEFAULT_METRICS_PATH) -> list[dict[str, Any]]:
-    """读所有 metrics 记录 (内存级)."""
-    if not path.exists():
-        return []
-    out: list[dict[str, Any]] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            out.append(json.loads(line))
-        except json.JSONDecodeError:
-            continue
-    return out
+    """读所有 metrics 记录 — 复用 omo_observability._read_jsonl (Reuse #2).
+
+    注: 复用版本在 JSON parse 失败时保留为 ``{"raw": line}`` 而非 drop —
+    下游消费者用 ``r.get("uri")`` 等访问, 不存在的字段自然返回 None, 无害.
+    """
+    return _read_jsonl(path)
 
 
 def get_metrics(
@@ -247,30 +244,21 @@ def summary(
         "by_uri": per_uri_summary,
         "by_domain": by_domain,
         "by_status": dict(by_status),
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": _utc_now(),
     }
 
 
 def reset(path: Path | None = None) -> int:
-    """清空 metrics 文件. 返回清空前行数 (用于审计)."""
+    """清空 metrics 文件. 返回清空前行数 (用于审计).
+
+    复用 omo_io.write_text_atomic (Reuse #1) — 消除 tempfile+fsync+fd close 重复.
+    """
     if path is None:
         path = DEFAULT_METRICS_PATH
     if not path.exists():
         return 0
-    lines = [
-        line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
-    ]
-    n = len(lines)
-    # 原子清空
-    fd, tmp = tempfile.mkstemp(prefix=".bos-metrics.", suffix=".jsonl.tmp", dir=path.parent)
-    try:
-        Path(tmp).write_text("", encoding="utf-8")
-        Path(tmp).replace(path)
-    finally:
-        try:
-            os.close(fd)
-        except OSError:
-            pass
+    n = len([line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()])
+    write_text_atomic(path, "")
     return n
 
 

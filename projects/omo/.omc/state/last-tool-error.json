@@ -1,7 +1,7 @@
 {
   "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"cd projects/omo && .venv/bin/python -m omo.omo_bos_metrics 2>&1 | head -10\",\"description\":\"Self-test metrics module\"}",
-  "error": "Exit code 1\n(eval):cd:1: no such file or directory: projects/omo",
-  "timestamp": "2026-06-09T02:19:19.936Z",
+  "tool_input_preview": "{\"command\":\"git add projects/omo/src/omo/omo_bos.py projects/omo/src/omo/omo_bos_schema.py projects/omo/src/omo/omo_bos_metrics.py projects/omo/src/omo/omo_bos_dispatcher.py 2>&1 && git status --short...",
+  "error": "Exit code 128\nwarning: could not open directory 'projects/omo/projects/omo/src/omo/': No such file or directory\nfatal: pathspec 'projects/omo/src/omo/omo_bos.py' did not match any files",
+  "timestamp": "2026-06-09T02:48:05.477Z",
   "retry_count": 1
 }

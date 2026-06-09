@@ -60,6 +60,11 @@ class DerivationEngine:
         self._dr14(by_type, context)
         self._dr15(by_type, context)
 
+        # DR-TRIGGER-01~05 + DEP (触发机制推导)
+        triggers = by_type.get("trigger", [])
+        if triggers:
+            self.execute_trigger_rules(triggers, context)
+
         return self._results
 
     def _index_by_type(self, models: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
@@ -372,6 +377,146 @@ class DerivationEngine:
 
         if not triggered:
             self._add_result("DR-15", "价值流存在瓶颈 → 运营态风险", False)
+
+    # ── DR-TRIGGER: 触发机制推导规则 ─────────────────────────
+
+    def execute_trigger_rules(self, trigger_nodes: list[dict[str, Any]], context: dict[str, Any] | None = None) -> list[DerivationResult]:
+        """执行 Trigger 专用推导规则 (DR-TRIGGER-01~05)
+
+        这些规则体现模型驱动的"驱动"本质：
+        - 运行时检查 Trigger 依赖是否满足
+        - 发现问题时自动注册 OMO Debt
+        - 形成"检测→债务→修复→验证"闭环
+        """
+        context = context or {}
+        trigger_status = context.get("trigger_status", {})
+
+        # 按 ID 索引
+        by_id = {t.get("id"): t for t in trigger_nodes}
+
+        # DR-TRIGGER-01: Cron 任务超时未执行 → 调度器健康风险
+        cron_triggers = [t for t in trigger_nodes if t.get("properties", {}).get("trigger_type") == "cron"]
+        for ct in cron_triggers:
+            last_exec = context.get(f"last_exec_{ct['id']}", "")
+            expected_next = context.get(f"expected_next_{ct['id']}", "")
+            if last_exec and expected_next and last_exec > expected_next:
+                self._add_result("DR-TRIGGER-01", "Cron 任务超时未执行 → 调度器健康风险",
+                                 True, "high",
+                                 f"Trigger {ct['id']} 超时未执行",
+                                 trigger=ct["id"], action="register_debt")
+
+        # DR-TRIGGER-02: Watchdog 连续失败超过阈值 → 服务不可用风险
+        watchdog_triggers = [t for t in trigger_nodes if t.get("properties", {}).get("trigger_type") == "watchdog"]
+        for wt in watchdog_triggers:
+            failures = context.get(f"failures_{wt['id']}", 0)
+            max_failures = wt.get("properties", {}).get("retry_policy", {}).get("max_retries", 3)
+            if failures >= max_failures:
+                self._add_result("DR-TRIGGER-02", "Watchdog 连续失败超过阈值 → 服务不可用风险",
+                                 True, "critical",
+                                 f"Trigger {wt['id']} 连续失败 {failures}/{max_failures}",
+                                 trigger=wt["id"], failures=failures, action="auto_restart")
+
+        # DR-TRIGGER-03: Git Hook 触发但 MOF 萃取失败 → 知识丢失风险
+        git_hooks = [t for t in trigger_nodes if t.get("properties", {}).get("trigger_type") == "git_hook"]
+        for gh in git_hooks:
+            extraction_status = context.get(f"extraction_{gh['id']}", "unknown")
+            if extraction_status == "failed":
+                self._add_result("DR-TRIGGER-03", "Git Hook 触发但 MOF 萃取失败 → 知识丢失风险",
+                                 True, "high",
+                                 f"Trigger {gh['id']} MOF 萃取失败",
+                                 trigger=gh["id"], action="retry_extraction")
+
+        # DR-TRIGGER-04: EventBus 事件积压超过阈值 → 事件处理延迟风险
+        event_buses = [t for t in trigger_nodes if t.get("properties", {}).get("trigger_type") == "event_bus"]
+        for eb in event_buses:
+            queue_size = context.get(f"queue_{eb['id']}", 0)
+            if queue_size > 1000:
+                self._add_result("DR-TRIGGER-04", "EventBus 事件积压超过阈值 → 事件处理延迟风险",
+                                 True, "high",
+                                 f"Trigger {eb['id']} 事件积压 {queue_size}",
+                                 trigger=eb["id"], queue_size=queue_size, action="truncate_events")
+
+        # DR-TRIGGER-05: Daemon 周期超过预期 2 倍 → 守护进程卡死风险
+        daemon_triggers = [t for t in trigger_nodes if t.get("properties", {}).get("trigger_type") == "daemon"]
+        for dt in daemon_triggers:
+            interval = dt.get("properties", {}).get("interval_seconds", 21600)
+            last_duration = context.get(f"duration_{dt['id']}", 0)
+            if last_duration > 2 * interval:
+                self._add_result("DR-TRIGGER-05", "Daemon 周期超过预期 2 倍 → 守护进程卡死风险",
+                                 True, "critical",
+                                 f"Trigger {dt['id']} 周期 {last_duration}s > {2*interval}s",
+                                 trigger=dt["id"], duration=last_duration, action="restart_daemon")
+
+        # DR-TRIGGER-DEP: 运行时依赖检查 (模型驱动的"驱动"核心)
+        for trigger in trigger_nodes:
+            deps = trigger.get("properties", {}).get("dependencies", [])
+            for dep_id in deps:
+                dep_status = trigger_status.get(dep_id, "unknown")
+                if dep_status != "healthy":
+                    dep = by_id.get(dep_id, {})
+                    self._add_result("DR-TRIGGER-DEP",
+                                     f"Trigger 依赖检查: {trigger['id']} → {dep_id}",
+                                     True, "high",
+                                     f"Trigger {trigger['id']} 依赖 {dep_id} 状态为 {dep_status}",
+                                     trigger=trigger["id"], dependency=dep_id, dep_status=dep_status,
+                                     action="block_and_heal")
+
+        return [r for r in self._results if r.rule_id.startswith("DR-TRIGGER")]
+
+    def execute_trigger_driven_heal(self, high_risk_triggers: list[DerivationResult]) -> list[dict[str, Any]]:
+        """闭环驱动: 对高风险 Trigger 执行自动修复
+
+        模型驱动的"驱动"体现在这里：
+        - 不是只报告问题，而是自动触发修复
+        - 修复动作通过 OMOBridge 注册为 Debt/Task
+        - 下次 daemon 循环验证修复是否生效
+        """
+        heal_actions = []
+        try:
+            from model_driven.management.omo_bridge import OMOBridge
+            bridge = OMOBridge()
+
+            for risk in high_risk_triggers:
+                action = risk.details.get("action", "")
+                trigger_id = risk.details.get("trigger", "")
+
+                if action == "register_debt":
+                    debt = bridge.register_debt_and_persist(
+                        title=f"Trigger 超时: {trigger_id}",
+                        description=risk.message,
+                        severity=risk.risk_level,
+                    )
+                    heal_actions.append({"type": "debt_registered", "trigger": trigger_id, "debt": debt})
+
+                elif action == "auto_restart" or action == "restart_daemon":
+                    task = bridge.create_task_and_persist(
+                        title=f"重启 Trigger: {trigger_id}",
+                        description=risk.message,
+                        priority="P0",
+                    )
+                    heal_actions.append({"type": "restart_task_created", "trigger": trigger_id, "task": task})
+
+                elif action == "block_and_heal":
+                    bridge.record_audit_and_persist(
+                        "trigger_dependency_blocked",
+                        "trigger",
+                        trigger_id,
+                        {"dependency": risk.details.get("dependency"), "status": risk.details.get("dep_status")},
+                    )
+                    heal_actions.append({"type": "audit_recorded", "trigger": trigger_id})
+
+                elif action == "truncate_events":
+                    task = bridge.create_task_and_persist(
+                        title=f"清理事件积压: {trigger_id}",
+                        description=f"事件队列超过阈值: {risk.details.get('queue_size', 0)}",
+                        priority="P1",
+                    )
+                    heal_actions.append({"type": "cleanup_task_created", "trigger": trigger_id, "task": task})
+
+        except ImportError:
+            pass  # OMOBridge 不可用时静默跳过
+
+        return heal_actions
 
     def get_summary(self) -> dict[str, Any]:
         """获取执行摘要"""

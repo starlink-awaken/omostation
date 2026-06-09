@@ -146,6 +146,10 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
         if s.get("high_risks"):
             for risk in s["high_risks"][:3]:
                 print(f"    🔴 {risk.rule_id}: {risk.message[:80]}")
+            # 闭环驱动: 对高风险自动触发修复
+            heal_actions = engine.execute_trigger_driven_heal(s["high_risks"])
+            if heal_actions:
+                print(f"    🔧 自动修复: {len(heal_actions)} actions")
     except ImportError:
         print("  ℹ️ model-driven 未安装, 跳过")
     except Exception as e:

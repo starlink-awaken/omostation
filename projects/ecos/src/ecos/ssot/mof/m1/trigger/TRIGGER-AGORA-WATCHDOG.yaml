@@ -1,0 +1,21 @@
+id: "TRIGGER-AGORA-WATCHDOG"
+type: "trigger"
+name: "Agora Watchdog"
+description: "Agora 服务健康监控 — 每 10 秒检查，连续 3 次失败自动重启"
+status: "active"
+domain: "meta"
+layer: "I0"
+created: "2026-06-09"
+version: "1.0.0"
+properties:
+  trigger_type: "watchdog"
+  trigger_source: "while True sleep(10s)"
+  trigger_action: "health check + auto kill/restart"
+  schedule: "every 10s"
+  interval_seconds: 10
+  dependencies:
+    - "TRIGGER-AGORA-LAUNCHD"
+  retry_policy:
+    max_retries: 3
+    backoff_strategy: "fixed_15s"
+source: "agora/agora_watchdog.py"

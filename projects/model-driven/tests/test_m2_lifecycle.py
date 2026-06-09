@@ -15,7 +15,7 @@ from model_driven.mof.m3_extended import LifecycleStage
 
 class TestM2SchemaCount:
     def test_total_schemas(self):
-        assert len(ALL_M2_SCHEMAS) == 24
+        assert len(ALL_M2_SCHEMAS) == 25
 
     def test_all_schema_names(self):
         names = list_all_schema_names()
