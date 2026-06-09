@@ -312,3 +312,77 @@ def cmd_model_driven_okr(args: Namespace) -> int:
     except ImportError:
         _get_err().print("[red]❌ model-driven 不可用[/]")
         return 1
+
+
+def cmd_model_driven_derive(args: Namespace) -> int:
+    """model-driven derive 子命令 — 运行推导规则引擎。"""
+    console = _get_console()
+    try:
+        from model_driven.toolchain.derivation_engine import DerivationEngine
+        import yaml
+        from pathlib import Path
+
+        m1_dir = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
+        nodes = []
+        for d in sorted(m1_dir.iterdir()):
+            if d.is_dir():
+                for f in sorted(d.glob("*.yaml")):
+                    try:
+                        data = yaml.safe_load(open(f))
+                        if data and "type" in data:
+                            nodes.append(data)
+                    except Exception:
+                        pass
+
+        engine = DerivationEngine()
+        engine.execute_all(nodes, {"expected_progress": 0.5})
+        summary = engine.get_summary()
+
+        console.print(f"[bold cyan]📊 推导规则执行报告[/]")
+        console.print(f"总规则: {summary['total_rules']} | 触发: {summary['triggered']} | 未触发: {summary['not_triggered']}")
+        console.print(f"风险分布: {summary['by_risk_level']}")
+        if summary["high_risks"]:
+            console.print(f"\n[bold red]🔴 高风险 ({len(summary['high_risks'])}):[/]")
+            for r in summary["high_risks"][:5]:
+                console.print(f"  [{r.risk_level}] {r.rule_id}: {r.message[:80]}")
+
+        return 0
+    except ImportError:
+        _get_err().print("[red]❌ model-driven 不可用[/]")
+        return 1
+
+
+def cmd_model_driven_pipeline(args: Namespace) -> int:
+    """model-driven pipeline 子命令 — 三阶段宏观流水线。"""
+    console = _get_console()
+    try:
+        from model_driven.lifecycle.pipeline import PipelineTracker, PipelinePhase
+
+        entity_id = getattr(args, "md_entity", "ecos")
+        subcmd = getattr(args, "md_subcmd", "status")
+        tracker = PipelineTracker(entity_id=entity_id)
+
+        if subcmd == "start":
+            phase = PipelinePhase(getattr(args, "md_phase", "cold_start"))
+            if tracker.start_phase(phase):
+                console.print(f"[green]✅ 已启动 Phase: {phase.value}[/]")
+            else:
+                console.print(f"[red]❌ 无法启动 Phase: {phase.value} (前置 Phase 未完成)[/]")
+        elif subcmd == "complete":
+            phase = PipelinePhase(getattr(args, "md_phase", "cold_start"))
+            if tracker.complete_phase(phase):
+                console.print(f"[green]✅ 已完成 Phase: {phase.value}[/]")
+            else:
+                console.print(f"[red]❌ 无法完成 Phase (Phase 内阶段未全部完成)[/]")
+        else:
+            progress = tracker.get_progress()
+            console.print(f"[bold cyan]📊 三阶段流水线: {entity_id}[/]")
+            console.print(f"当前 Phase: {progress['current_phase']}")
+            for pn, pi in progress["phases"].items():
+                icon = "✅" if pi["status"] == "completed" else ("🔄" if pi["status"] == "in_progress" else "⏳")
+                console.print(f"  {icon} {pn}: {pi['progress_pct']}% ({pi['stages_completed']}/{pi['stages_total']})")
+
+        return 0
+    except ImportError:
+        _get_err().print("[red]❌ model-driven 不可用[/]")
+        return 1

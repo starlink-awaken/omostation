@@ -133,11 +133,16 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
             result = _sp.run(
                 ["uv", "run", "python3", "-c",
                  "from model_driven.toolchain.tools import tool_validate; "
+                 "from model_driven.toolchain.derivation_engine import DerivationEngine; "
                  "import yaml; from pathlib import Path; "
                  "m1 = Path.home() / 'Workspace/projects/ecos/src/ecos/ssot/mof/m1'; "
                  "nodes = [yaml.safe_load(open(f)) for d in sorted(m1.iterdir()) if d.is_dir() for f in sorted(d.glob('*.yaml')) if (yaml.safe_load(open(f)) or {}).get('type')]; "
                  "r = tool_validate(models=nodes); "
-                 "print(f'model-driven validate: passed={r[\"passed\"]}, errors={r[\"error_count\"]}, warnings={r[\"warning_count\"]}')"],
+                 "print(f'model-driven validate: passed={r[\"passed\"]}, errors={r[\"error_count\"]}, warnings={r[\"warning_count\"]}'); "
+                 "engine = DerivationEngine(); "
+                 "engine.execute_all(nodes, {'expected_progress': 0.5}); "
+                 "s = engine.get_summary(); "
+                 "print(f'model-driven derive: rules={s[\"total_rules\"]}, triggered={s[\"triggered\"]}, high_risks={len(s.get(\"high_risks\", []))}')"],
                 cwd=str(md_dir), capture_output=True, text=True, timeout=30
             )
             for line in result.stdout.strip().split("\n"):
@@ -149,6 +154,26 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
             print("  ℹ️ model-driven 未安装, 跳过")
     except Exception as e:
         print(f"  ⚠️ model-driven 验证异常: {e} (non-fatal)")
+
+    # 0.4 model-driven 三阶段流水线 (追踪 daemon 自身生命周期)
+    try:
+        md_dir = WORKSPACE / "projects" / "model-driven"
+        if md_dir.exists() and (md_dir / "pyproject.toml").exists():
+            import subprocess as _sp
+            result = _sp.run(
+                ["uv", "run", "python3", "-c",
+                 "from model_driven.lifecycle.pipeline import PipelineTracker, PipelinePhase; "
+                 "pt = PipelineTracker('ecos-daemon', 'daemon'); "
+                 "pt.start_phase(PipelinePhase.HARDENING); "
+                 "p = pt.get_progress(); "
+                 "print(f'model-driven pipeline: phase={p[\"current_phase\"]}, overall={p[\"overall_progress\"]}%')"],
+                cwd=str(md_dir), capture_output=True, text=True, timeout=10
+            )
+            for line in result.stdout.strip().split("\n"):
+                if line.strip():
+                    print(f"  {line.strip()}")
+    except Exception:
+        pass  # 静默跳过
 
     # 1. L0 协议约束 (非关键路径 — 缺失或失败不阻塞 daemon)
     print("\n── L0 协议约束 ──")
