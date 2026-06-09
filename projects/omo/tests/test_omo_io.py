@@ -149,6 +149,46 @@ class TestAppendOnlyLogClear:
         assert log.read_all() == [{"b": 2}]
 
 
+# ── AppendOnlyLog.group_by (Round 7 P0) ──────────────────────
+
+
+class TestGroupBy:
+    def test_group_by_counts_occurrences(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        for action in ["a", "b", "a", "c", "b", "a"]:
+            log.append({"action": action})
+        result = log.group_by("action")
+        assert result == {"a": 3, "b": 2, "c": 1}
+
+    def test_group_by_missing_field_groups_as_missing(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        log.append({"a": 1})
+        log.append({"b": 2})
+        result = log.group_by("nope")
+        assert result == {"<missing>": 2}
+
+    def test_group_by_normalizes_non_str_values(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        log.append({"n": 1})
+        log.append({"n": 2})
+        log.append({"n": True})
+        result = log.group_by("n")
+        # str(1)="1", str(2)="2", str(True)="True"
+        assert result == {"1": 1, "2": 1, "True": 1}
+
+    def test_group_by_empty_log(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        assert log.group_by("anything") == {}
+
+    def test_group_by_with_explicit_path(self, tmp_path):
+        """Round 7 P0: group_by 接受 path 参数, 适配测试场景."""
+        log = AppendOnlyLog(tmp_path / "default.jsonl")
+        log.append({"x": 1})
+        # 显式传 path, 应该读该 path 而非 self.path
+        result = log.group_by("x", path=tmp_path / "default.jsonl")
+        assert result == {"1": 1}
+
+
 # ── 并发安全 ─────────────────────────────────────────────
 
 

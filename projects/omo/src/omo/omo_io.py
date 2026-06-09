@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import os
 import threading
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, ContextManager
 
@@ -208,6 +209,26 @@ class AppendOnlyLog:
         n = len(self.read_all())
         write_text_atomic(self.path, "")
         return n
+
+    def group_by(self, field: str, *, path: Path | None = None) -> dict[str, int]:
+        """按 ``field`` 分组统计 record 数 (Round 7 P0 通用聚合).
+
+        返回 ``{field_value: count}`` dict. 适用于:
+          - omo_audit.summary: ``log.group_by("action")`` → 替代手写 Counter
+          - omo_bos_metrics.summary: ``log.group_by("status")`` → by_status
+          - 任何"按某字段分组计数"场景
+
+        边界:
+          - field 缺失 → 归到 ``"<missing>"`` 分组 (不抛)
+          - field 非 str (int/bool) → 走 ``str(v)`` 归一化
+          - 大文件: O(file_size), 暂不优化 (与 read_all 一致)
+        """
+        log = AppendOnlyLog(path) if path is not None else self
+        counter: dict[str, int] = defaultdict(int)
+        for r in log.read_all():
+            v = r.get(field, "<missing>")
+            counter[str(v)] += 1
+        return dict(counter)
 
 
 __all__ = (
