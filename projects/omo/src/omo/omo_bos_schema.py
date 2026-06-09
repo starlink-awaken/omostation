@@ -19,7 +19,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 # 复用 omo_bos 的白名单 (避免循环 import)
-from omo.omo_bos import ALLOWED_DOMAINS, BOS_URI_PATTERN, LEGACY_DOMAIN_MAP
+# 注: parse_bos_uri 在 field_validator 内部 lazy import, 这里不引 (避免 Pyright 误报)
 
 Domain = Literal["memory", "governance", "analysis", "persona", "capability"]
 Protocol = Literal["http", "stdio", "internal"]
@@ -50,14 +50,15 @@ class BosRegistrationModel(BaseModel):
     @field_validator("uri")
     @classmethod
     def _validate_uri(cls, v: str) -> str:
-        # 复用 omo_bos.validate_bos_uri (含 4-段 + 3-段 legacy 自动升级),
+        # 复用 omo_bos.parse_bos_uri (含 4-段 + 3-段 legacy 自动升级到 4-段),
         # 避免 URI 规则在 3 处 (BOS_URI_PATTERN / validate_bos_uri / schema) 漂移.
-        from omo.omo_bos import validate_bos_uri
-        valid, info = validate_bos_uri(v)
-        if not valid:
-            raise ValueError(info)
-        # 4-段直接通过; 3-段 legacy 已被 validate_bos_uri 自动升级 (info 非空)
-        return v
+        from omo.omo_bos import parse_bos_uri
+        try:
+            parsed = parse_bos_uri(v)
+        except ValueError as exc:
+            raise ValueError(str(exc))
+        # 重建规范 4-段形式 — 3-段 legacy 会被升级
+        return f"bos://{parsed['domain']}/{parsed['package']}/{parsed['action']}"
 
     @field_validator("endpoint")
     @classmethod
