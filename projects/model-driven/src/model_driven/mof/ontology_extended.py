@@ -139,3 +139,70 @@ CROSS_STAGE_CONSISTENCY_RULES = [
         "severity": "error",
     },
 ]
+
+# ── Trigger 本体论映射 ──────────────────────────────
+
+# Trigger 等价映射: 概念等价
+TRIGGER_EQUIVALENCES = [
+    {"a": "git_hook", "b": "Git Hook", "relation": "EquivalentTo", "note": "触发类型与实现概念等价"},
+    {"a": "cron", "b": "定时任务调度", "relation": "EquivalentTo", "note": "触发类型与实现概念等价"},
+    {"a": "daemon", "b": "守护进程", "relation": "EquivalentTo", "note": "触发类型与实现概念等价"},
+    {"a": "watchdog", "b": "健康监控", "relation": "EquivalentTo", "note": "触发类型与实现概念等价"},
+    {"a": "event_bus", "b": "事件总线", "relation": "EquivalentTo", "note": "触发类型与实现概念等价"},
+    {"a": "launchd", "b": "系统服务管理", "relation": "EquivalentTo", "note": "触发类型与实现概念等价"},
+    {"a": "TriggerM0Manager", "b": "M0 运行时快照", "relation": "EquivalentTo", "note": "Trigger 的 M0 层实现"},
+]
+
+# Trigger 依赖关系: 运行时依赖拓扑
+TRIGGER_DEPENDENCIES = [
+    {"dependent": "TRIGGER-ECOS-DAEMON", "depends_on": "TRIGGER-AGORA-EVENTBUS", "note": "daemon 自反验证依赖 EventBus 可用"},
+    {"dependent": "TRIGGER-CRON-SERVICE", "depends_on": "TRIGGER-AGORA-LAUNCHD", "note": "Cron Service 依赖 Agora MCP Hub"},
+    {"dependent": "TRIGGER-SCHEDULER", "depends_on": "TRIGGER-OMO-DAEMON", "note": "Scheduler 依赖 OMO 治理守护进程"},
+    {"dependent": "TRIGGER-AGORA-WATCHDOG", "depends_on": "TRIGGER-AGORA-LAUNCHD", "note": "Watchdog 监控 Agora 自身"},
+]
+
+# Trigger 泛化层次: M3 继承
+TRIGGER_GENERALIZATIONS = [
+    {"child": "trigger", "parent": "Mechanism", "note": "Trigger 是 Mechanism 的子类型 (M3→M2)"},
+    {"child": "TriggerRuntimeSnapshot", "parent": "M0_Snapshot", "note": "M0 快照是 M0 层的实例"},
+]
+
+# Trigger 推导规则 (本体论层, 供 DerivationEngine 执行)
+TRIGGER_DERIVATION_RULES = [
+    {
+        "id": "DR-TRIGGER-01",
+        "description": "Cron 任务超时未执行 → 调度器健康风险",
+        "rule": "if (Trigger.schedule matches cron) and (last_execution > expected_next) then Trigger.risk += 'overdue'",
+        "priority": "high",
+    },
+    {
+        "id": "DR-TRIGGER-02",
+        "description": "Watchdog 连续失败超过阈值 → 服务不可用风险",
+        "rule": "if (Trigger.type == 'watchdog') and (consecutive_failures >= 3) then Service.risk += 'unavailable'",
+        "priority": "critical",
+    },
+    {
+        "id": "DR-TRIGGER-03",
+        "description": "Git Hook 触发但 MOF 萃取失败 → 知识丢失风险",
+        "rule": "if (Trigger.type == 'git_hook') and (post_commit.extraction_failed) then Knowledge.risk += 'loss'",
+        "priority": "high",
+    },
+    {
+        "id": "DR-TRIGGER-04",
+        "description": "EventBus 事件积压超过阈值 → 事件处理延迟风险",
+        "rule": "if (Trigger.type == 'event_bus') and (event_queue_size > 1000) then EventBus.risk += 'backlog'",
+        "priority": "high",
+    },
+    {
+        "id": "DR-TRIGGER-05",
+        "description": "Daemon 周期超过预期 2 倍 → 守护进程卡死风险",
+        "rule": "if (Trigger.type == 'daemon') and (last_cycle_duration > 2 * expected_interval) then Daemon.risk += 'stuck'",
+        "priority": "critical",
+    },
+    {
+        "id": "DR-TRIGGER-DEP",
+        "description": "Trigger 依赖不满足 → 级联风险",
+        "rule": "for each Trigger.dependencies: if dep.status != 'healthy' then Trigger.risk += 'dependency_unhealthy'",
+        "priority": "high",
+    },
+]

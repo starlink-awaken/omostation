@@ -174,6 +174,18 @@ class TestBosMetrics:
         assert recs[0]["transport"] == "stdio"
         assert recs[0]["elapsed_ms"] >= 1.0  # 至少 1ms (sleep 1ms + 测时开销)
 
+    def test_timestamp_format_uses_z_suffix(self, tmp_path, monkeypatch):
+        """Reuse #7 锁: timestamp 格式必须以 'Z' 结尾 (与 omo_audit 对齐, 消灭 3 种格式)."""
+        from omo import omo_bos_metrics
+        metrics_path = tmp_path / "bos-metrics.jsonl"
+        monkeypatch.setattr(omo_bos_metrics, "DEFAULT_METRICS_PATH", metrics_path)
+        omo_bos_metrics.record("bos://test/foo", "resolved", 1.0)
+        recs = omo_bos_metrics.get_metrics(path=metrics_path)
+        ts = recs[0]["recorded_at"]
+        # 必须以 'Z' 结尾, 不能是 '+00:00' 或 naive
+        assert ts.endswith("Z"), f"timestamp must end with 'Z' (omo_audit convention), got: {ts!r}"
+        assert "+00:00" not in ts, f"timestamp must not contain '+00:00' (replaced by 'Z'), got: {ts!r}"
+
     def test_percentile_calculation(self, tmp_path, monkeypatch):
         from omo import omo_bos_metrics
         metrics_path = tmp_path / "bos-metrics.jsonl"

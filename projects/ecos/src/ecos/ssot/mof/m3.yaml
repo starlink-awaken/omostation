@@ -429,6 +429,8 @@ m3:
     - "M3.Relation 是 M3.Element 的一个实例"
     - "M3.property_types 是 M3.StructuralElement 的一个实例"
     - "本文件本身是 M3.Specification 的一个 M1 实例"
+    - "M3.Mechanism.trigger 是 M2.trigger 的 M3 父类型 (Trigger 自反闭环)"
+    - "TriggerRuntimeSnapshot 是 M0.Snapshot 的一个 M0 实例 (Trigger M0 自反闭环)"
 
   # =========================================================================
   # §5 生命周期元素 — LifecycleElement (第 5 大类)
@@ -564,3 +566,4 @@ meta:
   change_log:
     - "v1.0.0 (2026-06-06): 初始版本 — 16 Element 类型(4大类) + 12 Relation 类型(4大类) + 属性系统"
     - "v1.1.0 (2026-06-09): 新增第5大类 LifecycleElement (Stage/Gate/Transition) + 第6大类 ValueElement (Goal/CostModel/BenefitModel) + Decision 类型 — 与 model-driven M3 对齐"
+    - "v1.2.0 (2026-06-09): 新增 Trigger 自反闭环声明 — M3.Mechanism.trigger ↔ M2.trigger ↔ M1.TRIGGER-* ↔ M0.TriggerRuntimeSnapshot 四层完整自反"

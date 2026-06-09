@@ -118,3 +118,54 @@ protocol_registry:
   value_tier: 2
   version: 1.0.0
 version: 1.0.0
+
+# ── Trigger 约束 (CR-TRIGGER-01 ~ CR-TRIGGER-05) ──
+
+trigger_constraints:
+  - id: CR-TRIGGER-01
+    name: "Trigger 注册约束"
+    description: "所有异步触发机制必须在 L0 Trigger Registry 注册为 M1 节点"
+    rule: "for each Trigger in system: exists M1 node with type='trigger'"
+    type: required
+    severity: error
+    violation: "未注册的触发机制无法被系统感知和治理"
+
+  - id: CR-TRIGGER-02
+    name: "Trigger Pipeline 约束"
+    description: "所有触发机制必须通过标准五步 Pipeline (pre-check → execute → post-validate → audit → heal)"
+    rule: "for each Trigger execution: must complete all 5 pipeline steps"
+    type: required
+    severity: error
+    violation: "跳过 Pipeline 的触发机制无审计追踪，无法自愈"
+
+  - id: CR-TRIGGER-03
+    name: "Trigger 依赖声明约束"
+    description: "触发机制之间的依赖必须显式声明在 dependencies 字段"
+    rule: "if Trigger A depends on Trigger B: B must be in A.dependencies"
+    type: required
+    severity: error
+    violation: "隐式依赖导致触发顺序不可控"
+
+  - id: CR-TRIGGER-04
+    name: "Trigger 审计约束"
+    description: "每次触发执行必须记录审计日志"
+    rule: "for each Trigger execution: OMOBridge.record_audit must be called"
+    type: required
+    severity: error
+    violation: "无审计日志的触发执行无法追溯问题"
+
+  - id: CR-TRIGGER-05
+    name: "Trigger 健康检查约束"
+    description: "触发机制必须有 health_check 或 freshness 指标"
+    rule: "for each Trigger: properties.health_check must be defined"
+    type: preferred
+    severity: warning
+    violation: "无法判断触发机制是否正常运行"
+
+  - id: CR-TRIGGER-06
+    name: "Trigger M0 快照约束"
+    description: "Trigger 必须有 M0 运行时快照 (TriggerM0Manager)"
+    rule: "for each Trigger: exists TriggerRuntimeSnapshot in .omo/state/model-driven/"
+    type: required
+    severity: error
+    violation: "无 M0 快照的 Trigger 无法进行漂移检测"
