@@ -161,6 +161,12 @@ def main(argv: list[str] | None = None) -> int:
     if args and args[0] == "healing":
         return _cmd_healing(args[1:])
 
+    if args and args[0] == "logs":
+        # Round 10 P0: 统一管理 .omo/_knowledge/*.jsonl (list/inspect/tail/audit)
+        from omo.omo_logs import main as logs_main
+
+        return logs_main(args[1:])
+
     # 兜底:有参但无匹配子命令 → 报错退出;无参 → 静默退出 0(保持原行为)
     if args:
         print(f"Unknown subcommand: {args[0]}", file=sys.stderr)
@@ -231,10 +237,6 @@ def _cmd_healing(args: list[str]) -> int:
         return 1
 
     return 0
-
-    from omo.omo_worker import main as worker_main
-
-    return worker_main(args)
 
 
 if __name__ == "__main__":
