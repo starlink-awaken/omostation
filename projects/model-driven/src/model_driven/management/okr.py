@@ -165,19 +165,22 @@ class OKRDecomposer:
             # 根据 KR 描述推断 Phase 和 Task
             kr_lower = kr.description.lower()
 
-            # 推断阶段
-            if any(kw in kr_lower for kw in ["设计", "架构", "spec", "design", "adr"]):
-                phase = "cold_start"
-                phase_name = "冷启动"
-            elif any(kw in kr_lower for kw in ["开发", "实现", "代码", "code", "开发", "build"]):
-                phase = "evolution"
-                phase_name = "演进"
-            elif any(kw in kr_lower for kw in ["部署", "上线", "deploy", "发布", "release"]):
-                phase = "evolution"
-                phase_name = "演进"
+            # 推断阶段 (顺序重要: hardening 关键词优先检查)
+            if any(kw in kr_lower for kw in ["运营", "报告", "价值", "优化", "business", "report", "value"]):
+                phase = "hardening"
+                phase_name = "硬化"
             elif any(kw in kr_lower for kw in ["运行", "运维", "监控", "run", "ops", "monitor"]):
                 phase = "hardening"
                 phase_name = "硬化"
+            elif any(kw in kr_lower for kw in ["部署", "上线", "deploy", "发布", "release"]):
+                phase = "evolution"
+                phase_name = "演进"
+            elif any(kw in kr_lower for kw in ["开发", "实现", "代码", "code", "开发", "build", "测试", "test"]):
+                phase = "evolution"
+                phase_name = "演进"
+            elif any(kw in kr_lower for kw in ["设计", "架构", "spec", "design", "adr"]):
+                phase = "cold_start"
+                phase_name = "冷启动"
             elif any(kw in kr_lower for kw in ["规划", "计划", "目标", "plan", "goal", "okr"]):
                 phase = "cold_start"
                 phase_name = "冷启动"

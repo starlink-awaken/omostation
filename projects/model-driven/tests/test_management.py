@@ -166,7 +166,7 @@ class TestOKRDecomposer:
         phases = result["phases"]
         assert phases[0]["phase"] == "cold_start"  # 设计 → 冷启动
         assert phases[1]["phase"] == "evolution"  # 开发 → 演进
-        assert phases[2]["phase"] == "evolution"  # 部署 → 演进
+        assert phases[2]["phase"] == "hardening"  # 部署→硬化 (关键词优化后)
 
         # 检查优先级
         assert phases[0]["priority"] == "P0"  # weight=2.0 → P0

@@ -368,6 +368,14 @@ class PipelineTracker:
                     tracker.lifecycle_tracker.stages[stage].status = StageStatus.IN_PROGRESS
                     tracker.lifecycle_tracker.stages[stage].started_at = stage_data.get("started_at", "")
 
+            # 恢复 current_phase: 找最后一个 completed 或 in_progress 的 phase
+            for phase in [PipelinePhase.HARDENING, PipelinePhase.EVOLUTION, PipelinePhase.COLD_START]:
+                phase_data = data.get("phases", {}).get(phase.value, {})
+                if phase_data.get("status") in ("completed", "in_progress"):
+                    if tracker.current_phase is None or phase_data.get("status") == "in_progress":
+                        tracker.current_phase = phase
+                        break
+
             return tracker
         except Exception as e:
             import sys

@@ -1,33 +1,103 @@
-generated_at: '2026-06-09T03:44:31.368847+00:00'
+generated_at: '2026-06-09T03:53:19.218668+00:00'
 m0_type: trigger_runtime_snapshot
 triggers:
+  TRIGGER-AGORA-EVENTBUS:
+    consecutive_failures: 0
+    consecutive_successes: 5
+    health_score: 100.0
+    last_duration_seconds: 1.2771951570435165
+    last_execution: '2026-06-09T03:53:19.218660+00:00'
+    metadata: {}
+    snapshotted_at: '2026-06-09T03:53:19.218660+00:00'
+    status: healthy
+    trigger_id: TRIGGER-AGORA-EVENTBUS
   TRIGGER-AGORA-LAUNCHD:
     consecutive_failures: 0
-    consecutive_successes: 1
+    consecutive_successes: 5
     health_score: 100.0
-    last_duration_seconds: 1.5
-    last_execution: '2026-06-09T03:44:31.368834+00:00'
+    last_duration_seconds: 1.1736950448059376
+    last_execution: '2026-06-09T03:53:19.218651+00:00'
     metadata: {}
-    snapshotted_at: '2026-06-09T03:44:31.368837+00:00'
-    status: unknown
+    snapshotted_at: '2026-06-09T03:53:19.218654+00:00'
+    status: healthy
     trigger_id: TRIGGER-AGORA-LAUNCHD
   TRIGGER-AGORA-WATCHDOG:
     consecutive_failures: 0
-    consecutive_successes: 1
-    health_score: 100.0
-    last_duration_seconds: 1.5
-    last_execution: '2026-06-09T03:44:31.368840+00:00'
+    consecutive_successes: 3
+    health_score: 95.0
+    last_duration_seconds: 0.10416015014111624
+    last_execution: '2026-06-09T03:53:19.218655+00:00'
     metadata: {}
-    snapshotted_at: '2026-06-09T03:44:31.368842+00:00'
-    status: unknown
+    snapshotted_at: '2026-06-09T03:53:19.218656+00:00'
+    status: healthy
     trigger_id: TRIGGER-AGORA-WATCHDOG
   TRIGGER-CRON-SERVICE:
     consecutive_failures: 0
     consecutive_successes: 1
-    health_score: 100.0
-    last_duration_seconds: 1.5
-    last_execution: '2026-06-09T03:44:31.368844+00:00'
+    health_score: 85.0
+    last_duration_seconds: 4.329294076453345
+    last_execution: '2026-06-09T03:53:19.218657+00:00'
     metadata: {}
-    snapshotted_at: '2026-06-09T03:44:31.368845+00:00'
-    status: unknown
+    snapshotted_at: '2026-06-09T03:53:19.218657+00:00'
+    status: healthy
     trigger_id: TRIGGER-CRON-SERVICE
+  TRIGGER-ECOS-DAEMON:
+    consecutive_failures: 0
+    consecutive_successes: 5
+    health_score: 100.0
+    last_duration_seconds: 0.8821862104545464
+    last_execution: '2026-06-09T03:53:19.218658+00:00'
+    metadata: {}
+    snapshotted_at: '2026-06-09T03:53:19.218659+00:00'
+    status: healthy
+    trigger_id: TRIGGER-ECOS-DAEMON
+  TRIGGER-FILE-WATCH:
+    consecutive_failures: 0
+    consecutive_successes: 5
+    health_score: 100.0
+    last_duration_seconds: 2.5803055858962116
+    last_execution: '2026-06-09T03:53:19.218661+00:00'
+    metadata: {}
+    snapshotted_at: '2026-06-09T03:53:19.218662+00:00'
+    status: healthy
+    trigger_id: TRIGGER-FILE-WATCH
+  TRIGGER-GIT-POSTCOMMIT:
+    consecutive_failures: 0
+    consecutive_successes: 5
+    health_score: 100.0
+    last_duration_seconds: 2.4181946267079932
+    last_execution: '2026-06-09T03:53:19.218663+00:00'
+    metadata: {}
+    snapshotted_at: '2026-06-09T03:53:19.218663+00:00'
+    status: healthy
+    trigger_id: TRIGGER-GIT-POSTCOMMIT
+  TRIGGER-GIT-PRECOMMIT:
+    consecutive_failures: 0
+    consecutive_successes: 5
+    health_score: 100.0
+    last_duration_seconds: 0.8703745290913929
+    last_execution: '2026-06-09T03:53:19.218664+00:00'
+    metadata: {}
+    snapshotted_at: '2026-06-09T03:53:19.218665+00:00'
+    status: healthy
+    trigger_id: TRIGGER-GIT-PRECOMMIT
+  TRIGGER-OMO-DAEMON:
+    consecutive_failures: 0
+    consecutive_successes: 2
+    health_score: 90.0
+    last_duration_seconds: 1.8220156859614802
+    last_execution: '2026-06-09T03:53:19.218665+00:00'
+    metadata: {}
+    snapshotted_at: '2026-06-09T03:53:19.218666+00:00'
+    status: unknown
+    trigger_id: TRIGGER-OMO-DAEMON
+  TRIGGER-SCHEDULER:
+    consecutive_failures: 0
+    consecutive_successes: 5
+    health_score: 100.0
+    last_duration_seconds: 1.7271153333662796
+    last_execution: '2026-06-09T03:53:19.218667+00:00'
+    metadata: {}
+    snapshotted_at: '2026-06-09T03:53:19.218667+00:00'
+    status: healthy
+    trigger_id: TRIGGER-SCHEDULER

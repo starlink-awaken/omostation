@@ -148,10 +148,13 @@ def scan_yaml_configs(
 
 
 def scan_agent_contracts(
-    root_dir: str | Path,
+    root_dir: str | Path | None = None,
     file_names: list[str] | None = None,
 ) -> ScanResult:
     """扫描 Agent 契约文件 (CLAUDE.md/AGENTS.md) → Specification 节点"""
+    if root_dir is None:
+        import os
+        root_dir = os.environ.get("ECOS_WORKSPACE", str(Path.home() / "Workspace"))
     root = Path(root_dir)
     file_names = file_names or ["CLAUDE.md", "AGENTS.md", "CODEBUDDY.md"]
     nodes = []
@@ -208,10 +211,13 @@ def scan_mof_m1_nodes(
 
 
 def scan_workspace(
-    workspace_dir: str | Path,
+    workspace_dir: str | Path | None = None,
     project_pattern: str = "projects/*",
 ) -> ScanResult:
     """扫描整个工作区 → 全量资产建模"""
+    if workspace_dir is None:
+        import os
+        workspace_dir = os.environ.get("ECOS_WORKSPACE", str(Path.home() / "Workspace"))
     root = Path(workspace_dir)
     if not root.exists():
         return ScanResult(source=str(root), nodes=[], errors=[f"目录不存在: {root}"])
