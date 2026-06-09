@@ -74,14 +74,14 @@ class TestToolchainBus:
         assert bus.unregister("model-design")
         assert not bus.unregister("nonexistent")
         tools = bus.list_tools()
-        assert len(tools) == 11
+        assert len(tools) == 14
 
 
 class TestDefaultBus:
     def test_all_tools_registered(self):
         bus = create_default_bus()
         tools = bus.list_tools()
-        assert len(tools) == 12
+        assert len(tools) == 15  # 12 core + 3 MOF
 
     def test_tool_names(self):
         bus = create_default_bus()
@@ -98,6 +98,10 @@ class TestDefaultBus:
         assert "model-observe" in names
         assert "model-report" in names
         assert "model-archive" in names
+        # MOF tools
+        assert "mof-scan" in names
+        assert "mof-model" in names
+        assert "mof-extract" in names
 
 
 class TestToolDesign:
@@ -128,13 +132,13 @@ class TestToolValidate:
             "type": "adr",
             "status": "proposed",
             "properties": {
-                "context": "背景",
-                "decision": "决策",
-                "consequences": "后果",
+                "context": "这是一个背景描述",
+                "decision": "这是一个决策",
+                "consequences": "这是一个后果",
             },
         }
         result = tool_validate(model=model)
-        assert result["passed"]
+        assert result["passed"], f"Expected passed but got errors: {result.get('errors', [])}"
 
     def test_validate_invalid_model(self):
         model = {

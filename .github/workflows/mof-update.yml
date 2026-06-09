@@ -1,9 +1,12 @@
-name: mof-update (L0 周期化)
+name: mof-update (L0 周期化 + 硬编码扫描)
 
 # 织星 MOF L0 周期化(2026-06-08)
-# 每周一 06:00 跑 mof check + mof-extract + mof status,任一 RED 提交 issue
+# + vault-paths 反 sed 周一扫描(2026-06-08 加)
+# 每周一 06:00 跑 mof check + mof-extract + mof status + check-vault-paths,
+# 任一 RED 提交 issue
 # 设计目的: 解决 X-Plane 战役发现的"声明/现实分裂"长期无人发现
 # 关联设计: .omo/_knowledge/management/x-plane-architecture-design-v1.md §9
+# SSOT 治理: .omo/_knowledge/management/vault-paths-ssot-design.md
 
 on:
   schedule:
@@ -59,6 +62,15 @@ jobs:
           uv run python3 src/ecos/ssot/tools/mof-extract.py | tee ../../mof-extract.txt
           echo "## mof-extract" >> $GITHUB_STEP_SUMMARY
           cat ../../mof-extract.txt >> $GITHUB_STEP_SUMMARY
+
+      - name: check-vault-paths (SSOT 反 sed)
+        env:
+          WORKSPACE_ROOT: ${{ github.workspace }}
+        run: |
+          # 反 sed 扫路径 + 端口硬编码,任一命中→ 失败
+          python3 scripts/check-vault-paths.py --all | tee ../../vault-paths-check.txt
+          echo "## check-vault-paths" >> $GITHUB_STEP_SUMMARY
+          cat ../../vault-paths-check.txt >> $GITHUB_STEP_SUMMARY
 
       - name: 失败 → 自动开 issue
         if: failure()

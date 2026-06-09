@@ -13,6 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
+from pathlib import Path
 from typing import Any
 
 
@@ -40,12 +41,31 @@ class OMOEvent:
 
 
 class OMOBridge:
-    """OMO 桥接器 — 将 model-driven 事件同步到 OMO 治理体系"""
+    """OMO 桥接器 — 将 model-driven 事件同步到 OMO 治理体系
 
-    def __init__(self):
+    支持两种模式:
+    1. 内存模式 (默认): 事件保留在内存中，通过 get_* 方法获取
+    2. 文件模式: 直接写入 .omo/ 目录，与 omo CLI 互通
+    """
+
+    def __init__(self, omo_dir: str | None = None):
         self._events: list[OMOEvent] = []
         self._pending_debts: list[dict[str, Any]] = []
         self._pending_tasks: list[dict[str, Any]] = []
+        self._audit_log: list[dict[str, Any]] = []
+
+        # 文件模式: 自动检测或手动指定 .omo/ 目录
+        if omo_dir:
+            self._omo_dir = Path(omo_dir)
+        else:
+            # 尝试自动检测 workspace 的 .omo/ 目录
+            ws = Path.home() / "Workspace"
+            if (ws / ".omo").exists():
+                self._omo_dir = ws / ".omo"
+            else:
+                self._omo_dir = None
+
+        self._file_mode = self._omo_dir is not None and self._omo_dir.exists()
 
     def emit(self, event_type: str, payload: dict[str, Any]) -> OMOEvent:
         """发送 OMO 事件"""
@@ -134,8 +154,162 @@ class OMOBridge:
             "total_events": len(self._events),
             "pending_debts": len(self._pending_debts),
             "pending_tasks": len(self._pending_tasks),
+            "audit_records": len(self._audit_log),
+            "file_mode": self._file_mode,
+            "omo_dir": str(self._omo_dir) if self._omo_dir else None,
             "events_by_type": {
                 et.value: len([e for e in self._events if e.event_type == et.value])
                 for et in OMOEventType
             },
         }
+
+    # ── 文件模式: 直接写入 .omo/ 目录 ──────────────
+
+    def write_task_to_file(self, task: dict[str, Any]) -> bool:
+        """将任务写入 .omo/tasks/ 目录"""
+        if not self._file_mode or not self._omo_dir:
+            return False
+
+        tasks_dir = self._omo_dir / "tasks" / "active"
+        tasks_dir.mkdir(parents=True, exist_ok=True)
+
+        task_id = task.get("id", f"TASK-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}")
+        file_path = tasks_dir / f"{task_id}.yaml"
+
+        try:
+            import yaml
+            with open(file_path, "w") as f:
+                yaml.dump({
+                    "id": task_id,
+                    "subject": task.get("title", ""),
+                    "description": task.get("description", ""),
+                    "status": "pending",
+                    "priority": task.get("priority", "P2"),
+                    "assignee": task.get("assignee", ""),
+                    "source": "model-driven",
+                    "created_at": task.get("created_at", datetime.now(timezone.utc).isoformat()),
+                }, f, allow_unicode=True, default_flow_style=False)
+            return True
+        except Exception:
+            return False
+
+    def write_debt_to_file(self, debt: dict[str, Any]) -> bool:
+        """将债务写入 .omo/debt/ 目录"""
+        if not self._file_mode or not self._omo_dir:
+            return False
+
+        debt_dir = self._omo_dir / "debt"
+        debt_dir.mkdir(parents=True, exist_ok=True)
+
+        debt_id = debt.get("id", f"DEBT-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}")
+        file_path = debt_dir / f"{debt_id}.yaml"
+
+        try:
+            import yaml
+            with open(file_path, "w") as f:
+                yaml.dump({
+                    "id": debt_id,
+                    "title": debt.get("title", ""),
+                    "description": debt.get("description", ""),
+                    "severity": debt.get("severity", "medium"),
+                    "status": "registered",
+                    "source": "model-driven",
+                    "registered_at": debt.get("registered_at", datetime.now(timezone.utc).isoformat()),
+                }, f, allow_unicode=True, default_flow_style=False)
+            return True
+        except Exception:
+            return False
+
+    def write_audit_to_log(self, action: str, entity_type: str = "", entity_id: str = "", details: dict[str, Any] | None = None) -> bool:
+        """将审计记录写入 .omo/ 审计日志"""
+        if not self._file_mode or not self._omo_dir:
+            return False
+
+        audit_entry = {
+            "action": action,
+            "entity_type": entity_type,
+            "entity_id": entity_id,
+            "details": details or {},
+            "source": "model-driven",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        self._audit_log.append(audit_entry)
+
+        # 写入 JSONL 日志
+        log_dir = self._omo_dir / "_knowledge"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_path = log_dir / "model-driven-audit.jsonl"
+
+        try:
+            import json
+            with open(log_path, "a") as f:
+                f.write(json.dumps(audit_entry, ensure_ascii=False) + "\n")
+            return True
+        except Exception:
+            return False
+
+    def sync_phase(self, phase_id: str, status: str, details: dict[str, Any] | None = None) -> bool:
+        """同步 Phase 状态到 .omo/state/system.yaml"""
+        if not self._file_mode or not self._omo_dir:
+            return False
+
+        state_path = self._omo_dir / "state" / "system.yaml"
+        if not state_path.exists():
+            return False
+
+        try:
+            import yaml
+            with open(state_path) as f:
+                state = yaml.safe_load(f) or {}
+
+            key = f"{phase_id}_status"
+            state[key] = status
+            if details:
+                state[f"{phase_id}_details"] = details
+            state["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+            with open(state_path, "w") as f:
+                yaml.dump(state, f, allow_unicode=True, default_flow_style=False)
+            return True
+        except Exception:
+            return False
+
+    # ── 便捷方法: 自动选择内存/文件模式 ──────────────
+
+    def register_debt_and_persist(
+        self,
+        title: str,
+        description: str = "",
+        severity: str = "medium",
+    ) -> dict[str, Any]:
+        """注册债务 (内存 + 文件双写)"""
+        debt = self.register_debt(title, description, severity)
+        if self._file_mode:
+            self.write_debt_to_file(debt)
+        return debt
+
+    def create_task_and_persist(
+        self,
+        title: str,
+        description: str = "",
+        priority: str = "P2",
+        assignee: str = "",
+    ) -> dict[str, Any]:
+        """创建任务 (内存 + 文件双写)"""
+        task = self.create_task(title, description, priority, assignee)
+        if self._file_mode:
+            self.write_task_to_file(task)
+        return task
+
+    def record_audit_and_persist(
+        self,
+        action: str,
+        entity_type: str = "",
+        entity_id: str = "",
+        details: dict[str, Any] | None = None,
+    ) -> OMOEvent:
+        """记录审计 (内存 + 文件双写)"""
+        event = self.record_audit(action, entity_type, entity_id, details)
+        if self._file_mode:
+            self.write_audit_to_log(action, entity_type, entity_id, details)
+        return event

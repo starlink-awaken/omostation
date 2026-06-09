@@ -205,3 +205,110 @@ def cmd_vault(args: Namespace) -> int:
             console.print(f"  {snippet}\n")
 
     return 0
+
+
+# ── model-driven 桥接命令 ────────────────────────────────────────────
+
+
+def cmd_model_driven_lifecycle(args: Namespace) -> int:
+    """model-driven lifecycle 子命令 (通过 cockpit CLI 入口)。"""
+    console = _get_console()
+    try:
+        from model_driven.lifecycle.tracking import LifecycleManager
+        from model_driven.lifecycle.transitions import TransitionEngine
+        from model_driven.mof.m3_extended import LifecycleStage
+
+        mgr = LifecycleManager()
+        engine = TransitionEngine()
+
+        subcmd = getattr(args, "md_subcmd", "status")
+        entity_id = getattr(args, "md_entity", "cockpit")
+
+        if subcmd == "create":
+            mgr.create_tracker(entity_id, getattr(args, "md_type", ""))
+            console.print(f"[green]✅ 已创建生命周期追踪: {entity_id}[/]")
+
+        elif subcmd == "advance":
+            target = LifecycleStage.from_str(getattr(args, "md_stage", "planning"))
+            tracker = mgr.get_tracker(entity_id)
+            if not tracker:
+                tracker = mgr.create_tracker(entity_id)
+            success, msg, _ = engine.try_transition(tracker, target)
+            icon = "✅" if success else "❌"
+            console.print(f"[{'green' if success else 'red'}]{icon} {msg}[/]")
+
+        elif subcmd == "dashboard":
+            dashboard = mgr.generate_dashboard()
+            console.print(f"[bold cyan]全生命周期仪表板[/]")
+            console.print(f"实体: {dashboard.total_entities} | 进度: {dashboard.avg_progress}%")
+            for blocker in dashboard.blockers:
+                console.print(f"  [red]🔴 [{blocker['entity_id']}] {blocker['stage']}: {blocker['issue']}[/]")
+
+        else:  # status
+            summary = mgr.get_stage_summary(entity_id)
+            if summary:
+                console.print(f"[bold]实体: {summary['entity_id']}[/]")
+                console.print(f"阶段: {summary['current_stage']} | 进度: {summary['progress_pct']}%")
+            else:
+                console.print(f"[yellow]⚠️ 未找到实体: {entity_id}[/]")
+
+        return 0
+    except ImportError:
+        _get_err().print("[red]❌ model-driven 不可用[/]")
+        return 1
+
+
+def cmd_model_driven_spec(args: Namespace) -> int:
+    """model-driven spec 子命令。"""
+    console = _get_console()
+    try:
+        from model_driven.management.spec import SpecManager, SpecStatus
+
+        mgr = SpecManager()
+        subcmd = getattr(args, "md_subcmd", "list")
+
+        if subcmd == "create":
+            spec_id = getattr(args, "md_id", f"SPEC-{len(mgr.list_all()) + 1}")
+            title = getattr(args, "md_title", "未命名")
+            spec = mgr.create(spec_id, title)
+            console.print(f"[green]✅ 已创建 Spec: {spec.id} - {spec.title}[/]")
+        else:
+            specs = mgr.list_all()
+            if specs:
+                for s in specs:
+                    console.print(f"  [{s.status.value}] {s.id}: {s.title}")
+            else:
+                console.print("[dim]无 Spec[/]")
+
+        return 0
+    except ImportError:
+        _get_err().print("[red]❌ model-driven 不可用[/]")
+        return 1
+
+
+def cmd_model_driven_okr(args: Namespace) -> int:
+    """model-driven okr 子命令。"""
+    console = _get_console()
+    try:
+        from model_driven.management.okr import OKRManager
+
+        mgr = OKRManager()
+        subcmd = getattr(args, "md_subcmd", "list")
+
+        if subcmd == "create":
+            okr_id = getattr(args, "md_id", f"OKR-{len(mgr.list_all()) + 1}")
+            objective = getattr(args, "md_objective", "未定义目标")
+            okr = mgr.create(okr_id, objective)
+            console.print(f"[green]✅ 已创建 OKR: {okr.id} - {okr.objective}[/]")
+        else:
+            okrs = mgr.list_all()
+            if okrs:
+                for o in okrs:
+                    console.print(f"  [{o.status.value}] {o.id}: {o.objective} ({o.progress:.0%})")
+            else:
+                console.print("[dim]无 OKR[/]")
+
+        return 0
+    except ImportError:
+        _get_err().print("[red]❌ model-driven 不可用[/]")
+        return 1
