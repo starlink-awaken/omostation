@@ -89,7 +89,9 @@ async def with_retry(
     for attempt in range(cfg.max_retries + 1):
         try:
             result = await fn()
-            status = getattr(result, "status", 200) if hasattr(result, "status") else 200
+            status = (
+                getattr(result, "status", 200) if hasattr(result, "status") else 200
+            )
 
             if status in cfg.retryable_statuses and attempt < cfg.max_retries:
                 delay = cfg.get_delay(attempt)

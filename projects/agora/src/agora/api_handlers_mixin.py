@@ -43,7 +43,9 @@ class _APIHandlersMixin:
     Mixed into APIGateway.
     """
 
-    async def handshake_handler(self: _GatewayHandlersSelf, request: APIRequest) -> APIResponse:
+    async def handshake_handler(
+        self: _GatewayHandlersSelf, request: APIRequest
+    ) -> APIResponse:
         """Handle soul handshake requests from peer nodes."""
         try:
             local_node_id = os.environ.get("BOS_NODE_ID", socket.gethostname())
@@ -59,7 +61,9 @@ class _APIHandlersMixin:
             _log.exception("handshake_handler error: %s", e)
             return APIResponse.error(str(e), status_code=500)
 
-    async def task_dispatch_handler(self: _GatewayHandlersSelf, request: APIRequest) -> APIResponse:
+    async def task_dispatch_handler(
+        self: _GatewayHandlersSelf, request: APIRequest
+    ) -> APIResponse:
         """Handle a task delegated from a remote node.
 
         Authenticates the caller using the ``BOS_CLUSTER_KEY`` env var via a
@@ -69,12 +73,18 @@ class _APIHandlersMixin:
             expected_key = _get_cluster_key()
         except ValueError as exc:
             _log.error("task_dispatch_handler: cluster key not configured: %s", exc)
-            return APIResponse.error("Server misconfiguration", status_code=500, code="internal_error")
+            return APIResponse.error(
+                "Server misconfiguration", status_code=500, code="internal_error"
+            )
 
         auth_header = request.headers.get("Authorization", "")
-        provided_key = auth_header[len("Bearer ") :] if auth_header.startswith("Bearer ") else ""
+        provided_key = (
+            auth_header[len("Bearer ") :] if auth_header.startswith("Bearer ") else ""
+        )
         if not hmac.compare_digest(provided_key, expected_key):
-            return APIResponse.error("Invalid Cluster Key", status_code=401, code="auth_failed")
+            return APIResponse.error(
+                "Invalid Cluster Key", status_code=401, code="auth_failed"
+            )
 
         try:
             payload = request.body or {}
@@ -92,18 +102,26 @@ class _APIHandlersMixin:
         except (TypeError, KeyError, AttributeError) as e:
             return APIResponse.error(str(e), status_code=500, code="internal_error")
 
-    async def fact_graph_query_handler(self: _GatewayHandlersSelf, request: APIRequest) -> APIResponse:
+    async def fact_graph_query_handler(
+        self: _GatewayHandlersSelf, request: APIRequest
+    ) -> APIResponse:
         """Handle a federated FactGraph query from a remote node."""
         try:
             expected_key = _get_cluster_key()
         except ValueError as exc:
             _log.error("fact_graph_query_handler: cluster key not configured: %s", exc)
-            return APIResponse.error("Server misconfiguration", status_code=500, code="internal_error")
+            return APIResponse.error(
+                "Server misconfiguration", status_code=500, code="internal_error"
+            )
 
         auth_header = request.headers.get("Authorization", "")
-        provided_key = auth_header[len("Bearer ") :] if auth_header.startswith("Bearer ") else ""
+        provided_key = (
+            auth_header[len("Bearer ") :] if auth_header.startswith("Bearer ") else ""
+        )
         if not hmac.compare_digest(provided_key, expected_key):
-            return APIResponse.error("Invalid Cluster Key", status_code=401, code="auth_failed")
+            return APIResponse.error(
+                "Invalid Cluster Key", status_code=401, code="auth_failed"
+            )
 
         try:
             entity = request.query_params.get("entity", "")
@@ -112,14 +130,18 @@ class _APIHandlersMixin:
         except (TypeError, ValueError, RuntimeError) as e:
             return APIResponse.error(str(e), status_code=500, code="internal_error")
 
-    async def swarm_nodes_handler(self: _GatewayHandlersSelf, request: APIRequest) -> APIResponse:
+    async def swarm_nodes_handler(
+        self: _GatewayHandlersSelf, request: APIRequest
+    ) -> APIResponse:
         """Return the list of discovered swarm nodes."""
         try:
             return APIResponse.ok({"nodes": []})
         except (TypeError, RuntimeError) as e:
             return APIResponse.error(str(e), status_code=500)
 
-    async def _metrics_handler(self: _GatewayHandlersSelf, request: web.Request) -> web.Response:
+    async def _metrics_handler(
+        self: _GatewayHandlersSelf, request: web.Request
+    ) -> web.Response:
         """Expose Prometheus-compatible metrics at ``/metrics``."""
         with self._metrics_lock:
             m = dict(self.metrics)
@@ -140,7 +162,9 @@ class _APIHandlersMixin:
         ]
         return web.Response(text="\n".join(lines) + "\n", content_type="text/plain")
 
-    async def _health_handler(self: _GatewayHandlersSelf, request: web.Request) -> web.Response:
+    async def _health_handler(
+        self: _GatewayHandlersSelf, request: web.Request
+    ) -> web.Response:
         """Expose JSON health status at ``/health``."""
         import json as _json
 

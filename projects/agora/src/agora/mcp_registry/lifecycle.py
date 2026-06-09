@@ -61,7 +61,9 @@ class LifecycleManager:
         if self._proxy:
             config = self._build_service_config(tool)
             if config is None:
-                logger.error("load_tool_no_config", tool_id=tool_id, name=tool.get("name"))
+                logger.error(
+                    "load_tool_no_config", tool_id=tool_id, name=tool.get("name")
+                )
                 return False
 
             last_error = ""
@@ -82,7 +84,9 @@ class LifecycleManager:
                     await asyncio.sleep(1.0 * attempt)  # linear backoff
 
             if last_error:
-                logger.error("load_tool_proxy_failed", tool_id=tool_id, result=last_error)
+                logger.error(
+                    "load_tool_proxy_failed", tool_id=tool_id, result=last_error
+                )
                 return False
 
             # Wire usage callback once to refresh idle timeout on every tool dispatch
@@ -154,7 +158,9 @@ class LifecycleManager:
             ok = await self.load_tool(tid)
             if ok:
                 count += 1
-        logger.info("load_by_status_complete", status=status, requested=len(tools), loaded=count)
+        logger.info(
+            "load_by_status_complete", status=status, requested=len(tools), loaded=count
+        )
         return count
 
     async def unload_by_status(self, status: str = "loaded") -> int:
@@ -175,7 +181,12 @@ class LifecycleManager:
             ok = await self.unload_tool(tid)
             if ok:
                 count += 1
-        logger.info("unload_by_status_complete", status=status, requested=len(tools), unloaded=count)
+        logger.info(
+            "unload_by_status_complete",
+            status=status,
+            requested=len(tools),
+            unloaded=count,
+        )
         return count
 
     # ── Status reporting ────────────────────────────────────────────
@@ -240,11 +251,15 @@ class LifecycleManager:
     async def _health_watch_loop(self):
         """Periodically check if loaded tools are still connected in the proxy."""
         while True:
-            await asyncio.sleep(self._check_interval * 2)  # less frequent than idle check
+            await asyncio.sleep(
+                self._check_interval * 2
+            )  # less frequent than idle check
             if not self._proxy or not self._last_used:
                 continue
 
-            connected = set(self._proxy.registry._clients.keys()) if self._proxy else set()
+            connected = (
+                set(self._proxy.registry._clients.keys()) if self._proxy else set()
+            )
             stale: list[str] = []
             async with self._lock:
                 for tool_id in self._last_used:
@@ -273,7 +288,11 @@ class LifecycleManager:
         if self._idle_watch_task is not None:
             return
         self._idle_watch_task = asyncio.create_task(self._idle_watch_loop())
-        logger.info("idle_watch_started", idle_timeout=self._idle_timeout, check_interval=self._check_interval)
+        logger.info(
+            "idle_watch_started",
+            idle_timeout=self._idle_timeout,
+            check_interval=self._check_interval,
+        )
 
     async def stop_idle_watch(self):
         """Stop the background idle-timeout watcher."""
@@ -321,7 +340,9 @@ class LifecycleManager:
 
     # ── Internal helpers ────────────────────────────────────────────
 
-    async def _record_usage_from_proxy(self, service_name: str, _tool_name: str, _arguments: dict):
+    async def _record_usage_from_proxy(
+        self, service_name: str, _tool_name: str, _arguments: dict
+    ):
         """Usage callback invoked by ProxyRegistry on every tool dispatch.
 
         Refreshes the idle timeout for the service whose tool was called.

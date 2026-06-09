@@ -14,9 +14,7 @@ from omo.omo_governance import approve_truth_mutation, apply_truth_mutation
 from omo.omo_io import write_text_atomic, write_yaml_atomic
 from omo.omo_provider_plane import write_provider_plane_snapshot
 from omo.omo_redaction import redact_sensitive_text
-from omo.omo_worker import (
-    collect_worker_status,
-    dispatch_task,
+from omo.omo_worker import (  # noqa: F401
     main as omo_worker_main,
 )
 from omo.omo_worker_core import _build_launch_argv

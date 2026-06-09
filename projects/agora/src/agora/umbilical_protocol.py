@@ -124,7 +124,9 @@ class UmbilicalProtocol:
             self._running = True
             self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
 
-            self._logger.info("Umbilical connected: %s -> %s", self._instance_id, self._parent_url)
+            self._logger.info(
+                "Umbilical connected: %s -> %s", self._instance_id, self._parent_url
+            )
             return True
 
         except TimeoutError:
@@ -220,7 +222,9 @@ class UmbilicalProtocol:
                 if message.type == MessageType.CONFIG_SYNC:
                     await self.sync_config(message.payload)
                 elif message.type == MessageType.ERROR:
-                    self._logger.error("Error from parent: %s", message.payload.get("message"))
+                    self._logger.error(
+                        "Error from parent: %s", message.payload.get("message")
+                    )
 
             except (OSError, ConnectionError) as exc:
                 self._logger.error("Message receive failed: %s", exc)

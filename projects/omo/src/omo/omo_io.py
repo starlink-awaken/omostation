@@ -259,7 +259,7 @@ class AppendOnlyLog:
                 # Prepend (we're reading backwards in time)
                 all_lines = chunk_lines + all_lines
                 # 累计非空行数 (cheap, 不 full parse)
-                real_count = sum(1 for l in all_lines if l.strip())
+                real_count = sum(1 for _ in all_lines if _.strip())
                 if real_count >= n:
                     # 够了, 跳出循环
                     break

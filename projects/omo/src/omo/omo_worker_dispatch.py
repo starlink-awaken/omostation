@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-from datetime import datetime, timezone
+import subprocess
 from pathlib import Path
 
 from .omo_io import write_text_atomic

@@ -83,9 +83,13 @@ class QualityScorer:
     def evaluate(tool_info: dict) -> float:
         """Calculate composite quality score (0.0-1.0)."""
         stars = QualityScorer.normalize_stars(tool_info.get("stars", 0))
-        freshness = QualityScorer.normalize_freshness((tool_info.get("metadata") or {}).get("updated_at"))
+        freshness = QualityScorer.normalize_freshness(
+            (tool_info.get("metadata") or {}).get("updated_at")
+        )
         version = QualityScorer.normalize_version(tool_info.get("version", ""))
-        local_usage = QualityScorer.normalize_local_usage(tool_info.get("usage_count", 0))
+        local_usage = QualityScorer.normalize_local_usage(
+            tool_info.get("usage_count", 0)
+        )
         success_rate = tool_info.get("success_rate", 0.5)
         verified = 1.0 if (tool_info.get("metadata") or {}).get("verified") else 0.0
 

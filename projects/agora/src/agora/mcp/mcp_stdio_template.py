@@ -22,13 +22,17 @@ class MCPStdioServer:
         self.version = version
         self._tools: list[dict] = []
 
-    def register_tool(self, name: str, description: str, input_schema: dict | None = None):
+    def register_tool(
+        self, name: str, description: str, input_schema: dict | None = None
+    ):
         """注册一个工具。"""
-        self._tools.append({
-            "name": name,
-            "description": description,
-            "inputSchema": input_schema or {"type": "object"},
-        })
+        self._tools.append(
+            {
+                "name": name,
+                "description": description,
+                "inputSchema": input_schema or {"type": "object"},
+            }
+        )
 
     def handle_tool_call(self, tool_name: str, arguments: dict) -> dict:
         """子类重写: 处理工具调用, 返回结果。"""
@@ -50,9 +54,7 @@ class MCPStdioServer:
             elif method == "tools/list":
                 response = self._handle_tools_list(req_id)
             elif method == "tools/call":
-                response = self._handle_tools_call(
-                    req_id, request.get("params", {})
-                )
+                response = self._handle_tools_call(req_id, request.get("params", {}))
             else:
                 response = self._error(req_id, -32601, f"Method not found: {method}")
 
@@ -61,7 +63,8 @@ class MCPStdioServer:
 
     def _handle_initialize(self, req_id) -> dict:
         return {
-            "jsonrpc": "2.0", "id": req_id,
+            "jsonrpc": "2.0",
+            "id": req_id,
             "result": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {"tools": {}},
@@ -71,7 +74,8 @@ class MCPStdioServer:
 
     def _handle_tools_list(self, req_id) -> dict:
         return {
-            "jsonrpc": "2.0", "id": req_id,
+            "jsonrpc": "2.0",
+            "id": req_id,
             "result": {"tools": self._tools},
         }
 
@@ -82,7 +86,8 @@ class MCPStdioServer:
         try:
             result = self.handle_tool_call(tool_name, arguments)
             return {
-                "jsonrpc": "2.0", "id": req_id,
+                "jsonrpc": "2.0",
+                "id": req_id,
                 "result": {
                     "content": [{"type": "text", "text": json.dumps(result)}],
                 },
@@ -91,7 +96,11 @@ class MCPStdioServer:
             return self._error(req_id, -32000, str(e))
 
     def _error(self, req_id, code: int, message: str) -> dict:
-        return {"jsonrpc": "2.0", "id": req_id, "error": {"code": code, "message": message}}
+        return {
+            "jsonrpc": "2.0",
+            "id": req_id,
+            "error": {"code": code, "message": message},
+        }
 
 
 # ══ 示例: 下游包如何使用 ══
@@ -102,13 +111,17 @@ class ExampleKOSServer(MCPStdioServer):
 
     def __init__(self):
         super().__init__("kos", "1.0.0")
-        self.register_tool("search", "KOS 跨域语义搜索", {
-            "type": "object",
-            "properties": {
-                "query": {"type": "string", "description": "搜索查询"},
-                "limit": {"type": "integer", "default": 10},
+        self.register_tool(
+            "search",
+            "KOS 跨域语义搜索",
+            {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "搜索查询"},
+                    "limit": {"type": "integer", "default": 10},
+                },
             },
-        })
+        )
 
     def handle_tool_call(self, tool_name: str, arguments: dict) -> dict:
         if tool_name == "search":

@@ -366,7 +366,7 @@ def _ollama_request(prompt: str, *, stream: bool, timeout: int) -> bytes:
             "options": {"num_predict": 500, "temperature": 0.3},
         }
     ).encode()
-    req = urlrequest.Request(_OLLAMA_BASE, data=body, headers={"Content-Type": "application/json"})
+    req = urlrequest.Request(_OLLAMA_BASE, data=body, headers={"Content-Type": "application/json"})  # noqa: S310
     with urlrequest.urlopen(req, timeout=timeout) as resp:  # noqa: S310
         return resp.read()
 
@@ -409,7 +409,7 @@ def _run_ollama_stream(prompt: str, *, timeout: int = 120) -> str | None:
                 chunk = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            token = (chunk.get("response") or "")
+            token = chunk.get("response") or ""
             done = chunk.get("done", False)
             if done and not token:
                 break
@@ -437,7 +437,7 @@ def _discover_services() -> list[tuple[str, str, str | None, str, str]]:
     """通过 Agora /api/services 动态发现服务，失败则回退到硬编码列表。"""
     try:
         agora_url = os.environ.get("AGORA_ENDPOINT", "http://localhost:7430")
-        req = urlrequest.Request(f"{agora_url}/api/services", headers={"Accept": "application/json"})
+        req = urlrequest.Request(f"{agora_url}/api/services", headers={"Accept": "application/json"})  # noqa: S310
         resp = urlrequest.urlopen(req, timeout=3)  # noqa: S310
         data = json.loads(resp.read())
         if isinstance(data, list) and data:

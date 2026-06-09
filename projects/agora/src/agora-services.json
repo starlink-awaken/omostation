@@ -495,30 +495,6 @@
       "provider_info": null,
       "healthy": true,
       "last_health_check": 0.0
-    },
-    {
-      "name": "model-driven",
-      "description": "全生命周期模型驱动平台 — 7阶段引擎 + 15工具链 + Spec/ADR/OKR管理 + 推导规则",
-      "protocol": "mcp",
-      "protocol_config": {
-        "method": "GET"
-      },
-      "mcp_endpoint": "cli://model-driven",
-      "health_endpoint": "",
-      "port": 0,
-      "tags": [
-        "lifecycle",
-        "model-driven",
-        "mof",
-        "spec",
-        "adr",
-        "okr",
-        "derivation"
-      ],
-      "instances": [],
-      "provider_info": null,
-      "healthy": true,
-      "last_health_check": 0.0
     }
   ]
 }

@@ -14,52 +14,71 @@ from agora.pipeline import Pipeline  # type: ignore[import-not-found]
 
 def cmd_pipeline(args):
     """Run a named pipeline."""
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         registry = get_registry()
         router = Router(registry)
         pl = Pipeline(registry, router)
-        variables = {"goal": args.goal, "context": args.context, "project": args.project}
+        variables = {
+            "goal": args.goal,
+            "context": args.context,
+            "project": args.project,
+        }
 
         if args.stream:
 
             async def _stream():
                 async for step in pl.run_stream(args.name, variables):
                     icon = "OK" if step["status"] == "ok" else "FAIL"
-                    print(f"  {icon} Step {step['step']}: {step['tool']} - {step['status']}")
+                    print(
+                        f"  {icon} Step {step['step']}: {step['tool']} - {step['status']}"
+                    )
                     if "error" in step:
                         print(f"     Error: {step['error']}")
 
             try:
                 asyncio.run(_stream())
             except Exception as e:
-                raise CLIError(f"Pipeline stream failed: {e}", suggestion="检查 Pipeline 定义和工具状态")
+                raise CLIError(
+                    f"Pipeline stream failed: {e}",
+                    suggestion="检查 Pipeline 定义和工具状态",
+                )
         elif args.parallel:
             try:
                 result = asyncio.run(pl.run_parallel(args.name, variables))
             except Exception as e:
-                raise CLIError(f"Pipeline parallel execute failed: {e}", suggestion="检查 Pipeline 定义和工具状态")
+                raise CLIError(
+                    f"Pipeline parallel execute failed: {e}",
+                    suggestion="检查 Pipeline 定义和工具状态",
+                )
             if args.json:
                 print(json.dumps(result, ensure_ascii=False, indent=2))
             else:
                 print(f"Pipeline: {result['pipeline']} (parallel)")
                 for r in result["results"]:
                     status_icon = "OK" if r["status"] == "ok" else "FAIL"
-                    print(f"  {status_icon} Step {r['step']}: {r['tool']} - {r['status']}")
+                    print(
+                        f"  {status_icon} Step {r['step']}: {r['tool']} - {r['status']}"
+                    )
                     if "error" in r:
                         print(f"     Error: {r['error']}")
         else:
             try:
                 result = asyncio.run(pl.run(args.name, variables))
             except Exception as e:
-                raise CLIError(f"Pipeline execute failed: {e}", suggestion="检查 Pipeline 定义和工具状态")
+                raise CLIError(
+                    f"Pipeline execute failed: {e}",
+                    suggestion="检查 Pipeline 定义和工具状态",
+                )
             if args.json:
                 print(json.dumps(result, ensure_ascii=False, indent=2))
             else:
                 print(f"Pipeline: {result['pipeline']}")
                 for r in result["results"]:
                     status_icon = "OK" if r["status"] == "ok" else "FAIL"
-                    print(f"  {status_icon} Step {r['step']}: {r['tool']} - {r['status']}")
+                    print(
+                        f"  {status_icon} Step {r['step']}: {r['tool']} - {r['status']}"
+                    )
                     if "error" in r:
                         print(f"     Error: {r['error']}")
         return 0
@@ -73,7 +92,7 @@ def cmd_pipeline(args):
 
 def cmd_pipelines(args):
     """List available pipelines."""
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         registry = get_registry()
         router = Router(registry)
@@ -95,7 +114,7 @@ def cmd_pipelines(args):
 
 def cmd_pipeline_define(args):
     """Define a custom pipeline from JSON file."""
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         registry = get_registry()
         router = Router(registry)

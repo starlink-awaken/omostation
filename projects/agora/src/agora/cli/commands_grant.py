@@ -13,13 +13,17 @@ def cmd_grant(args):
     """Grant 子命令分发：create / revoke / list / check。"""
     from agora.auth.authorizer import Authorizer  # type: ignore[import-not-found]
 
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         az = Authorizer()
         if args.grant_cmd == "create":
             constraints = {}
             if hasattr(args, "constraints") and args.constraints:
-                constraints = json.loads(args.constraints) if isinstance(args.constraints, str) else args.constraints
+                constraints = (
+                    json.loads(args.constraints)
+                    if isinstance(args.constraints, str)
+                    else args.constraints
+                )
             r = az.create_grant(
                 subject=args.subject,
                 capability=args.capability,
@@ -39,7 +43,9 @@ def cmd_grant(args):
                 return 0
             for g in grants:
                 status = "REVOKED" if g.get("revoked") else "active"
-                print(f"  {g.get('grant_id', '?'):25s} {g.get('subject', '?'):20s} {g.get('capability', '?'):20s} {status}")
+                print(
+                    f"  {g.get('grant_id', '?'):25s} {g.get('subject', '?'):20s} {g.get('capability', '?'):20s} {status}"
+                )
             return 0
         elif args.grant_cmd == "check":
             subject = getattr(args, "subject", "")

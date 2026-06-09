@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import ItemsView
 from typing import Any
 
 _log = logging.getLogger(__name__)
@@ -132,7 +131,9 @@ class BOSRouter:
 
     # ── 公共 API ───────────────────────────────────────
 
-    def register(self, prefix: str, adapter: str, config: dict[str, Any] | None = None) -> None:
+    def register(
+        self, prefix: str, adapter: str, config: dict[str, Any] | None = None
+    ) -> None:
         """注册一条路由。
 
         Args:
@@ -143,7 +144,11 @@ class BOSRouter:
         if not prefix.endswith("/"):
             prefix += "/"
         if prefix in self._routes:
-            _log.warning("[BOSRouter] Skipping duplicate: %s (already %s)", prefix, self._routes[prefix]["adapter"])
+            _log.warning(
+                "[BOSRouter] Skipping duplicate: %s (already %s)",
+                prefix,
+                self._routes[prefix]["adapter"],
+            )
             return
         route = {
             "adapter": adapter,
@@ -171,11 +176,13 @@ class BOSRouter:
         for prefix, route in self._routes.items():
             if prefix_filter and not prefix.startswith(prefix_filter):
                 continue
-            result.append({
-                "prefix": prefix,
-                "adapter": route["adapter"],
-                "config": route.get("config", {}),
-            })
+            result.append(
+                {
+                    "prefix": prefix,
+                    "adapter": route["adapter"],
+                    "config": route.get("config", {}),
+                }
+            )
         result.sort(key=lambda r: r["prefix"])
         return result
 
@@ -185,6 +192,7 @@ class BOSRouter:
     def stats(self) -> dict[str, int]:
         """按 adapter 类型统计。"""
         from collections import Counter
+
         c = Counter(r["adapter"] for r in self._routes.values())
         return dict(c)
 
@@ -199,11 +207,15 @@ class BOSRouter:
         """
         count = 0
         for uri, svc in poc_services.items():
-            self.register(uri, adapter="poc", config={
-                "domain": getattr(svc, "domain", ""),
-                "transport": getattr(svc, "transport", ""),
-                "description": getattr(svc, "description", ""),
-            })
+            self.register(
+                uri,
+                adapter="poc",
+                config={
+                    "domain": getattr(svc, "domain", ""),
+                    "transport": getattr(svc, "transport", ""),
+                    "description": getattr(svc, "description", ""),
+                },
+            )
             count += 1
         _log.info("BOSRouter seeded from POC: %d routes", count)
         return count
@@ -219,6 +231,7 @@ class BOSRouter:
             count = bos_router.reload_from_m1()
         """
         from agora.mcp.bos_auto_register import auto_register_from_m1
+
         count = auto_register_from_m1(bos_router=self)
         _log.info("[BOSRouter] reload_from_m1: %d new routes", count)
         return count
@@ -229,6 +242,7 @@ class BOSRouter:
         返回新注册数量。
         """
         from agora.mcp.bos_discovery import discover_from_workspace
+
         count = discover_from_workspace()
         _log.info("[BOSRouter] reload_from_discovery: %d new routes", count)
         return count

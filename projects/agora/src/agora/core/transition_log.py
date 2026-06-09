@@ -14,7 +14,9 @@ class TransitionLog:
     def __init__(self):
         self._transitions: list[dict] = []
 
-    def add(self, service: str, state_from: str, state_to: str, reason: str, source: str):
+    def add(
+        self, service: str, state_from: str, state_to: str, reason: str, source: str
+    ):
         """Record a state transition."""
         transition = {
             "id": "tr_" + secrets.token_hex(4),

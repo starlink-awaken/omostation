@@ -18,7 +18,11 @@ class SmartRouter:
     """Natural language → tool routing engine."""
 
     def __init__(
-        self, catalog: ToolCatalog, embeddings: EmbeddingStore | None = None, lifecycle=None, orchestrator=None
+        self,
+        catalog: ToolCatalog,
+        embeddings: EmbeddingStore | None = None,
+        lifecycle=None,
+        orchestrator=None,
     ):
         self._catalog = catalog
         self._embeddings = embeddings
@@ -189,7 +193,11 @@ class SmartRouter:
             }
         except Exception as e:
             logger.exception("auto_discover_failed")
-            return {"status": "error", "mode": "auto_discover", "error": f"Auto-discover failed: {e}"}
+            return {
+                "status": "error",
+                "mode": "auto_discover",
+                "error": f"Auto-discover failed: {e}",
+            }
 
     # ── Semantic search ─────────────────────────────────────────────────
 
@@ -207,7 +215,10 @@ class SmartRouter:
                         if t:
                             t["_similarity"] = round(score, 4)
                             tools.append(t)
-                tools.sort(key=lambda x: x.get("_similarity", 0) * x.get("quality_score", 0.5), reverse=True)
+                tools.sort(
+                    key=lambda x: x.get("_similarity", 0) * x.get("quality_score", 0.5),
+                    reverse=True,
+                )
                 return tools
         return []
 
@@ -237,7 +248,9 @@ class SmartRouter:
                     "status": "ok",
                     "mode": "llm_selected",
                     "tool": t,
-                    "action": "load_and_call" if t.get("status") != "loaded" else "call",
+                    "action": "load_and_call"
+                    if t.get("status") != "loaded"
+                    else "call",
                     "message": f"LLM selected '{t['name']}' (quality: {t.get('quality_score', 0):.2f})",
                 }
 
@@ -274,7 +287,9 @@ Available tools:
         return {
             "mode": "smart_router",
             "llm_available": self.llm_available,
-            "embeddings_available": self._embeddings.available if self._embeddings else False,
+            "embeddings_available": self._embeddings.available
+            if self._embeddings
+            else False,
             "lifecycle_available": self._lifecycle is not None,
             "orchestrator_available": self._orchestrator is not None,
         }

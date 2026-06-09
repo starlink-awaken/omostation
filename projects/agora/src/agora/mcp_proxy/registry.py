@@ -230,10 +230,18 @@ class ProxyRegistry:
 
         try:
             client = create_client(
-                service_name, mcp_endpoint, command, args, cwd=cwd, env=env, init_timeout=init_timeout
+                service_name,
+                mcp_endpoint,
+                command,
+                args,
+                cwd=cwd,
+                env=env,
+                init_timeout=init_timeout,
             )
         except ValueError as e:
-            logger.error("proxy_lazy_connect_create_failed", service=service_name, error=str(e))
+            logger.error(
+                "proxy_lazy_connect_create_failed", service=service_name, error=str(e)
+            )
             return False
 
         return await self.register_service(service_name, client)
@@ -265,7 +273,11 @@ class ProxyRegistry:
                 except RuntimeError:
                     pass  # No running event loop — skip callback
                 except Exception as e:
-                    logger.warning("proxy_unload_callback_failed", service=service_name, error=str(e))
+                    logger.warning(
+                        "proxy_unload_callback_failed",
+                        service=service_name,
+                        error=str(e),
+                    )
         else:
             self._ref_counts[service_name] = new_count
         return new_count
@@ -312,7 +324,11 @@ class ProxyRegistry:
         later.  To permanently remove, call :meth:`forget_config` first.
         """
         # Remove all entries for this service
-        to_remove = [name for name, entry in self._entries.items() if entry.service_name == service_name]
+        to_remove = [
+            name
+            for name, entry in self._entries.items()
+            if entry.service_name == service_name
+        ]
         for name in to_remove:
             del self._entries[name]
 
@@ -321,14 +337,20 @@ class ProxyRegistry:
         if client:
             await client.disconnect()
 
-        logger.info("proxy_service_unregistered", service=service_name, tools_removed=len(to_remove))
+        logger.info(
+            "proxy_service_unregistered",
+            service=service_name,
+            tools_removed=len(to_remove),
+        )
 
     async def unregister_and_forget(self, service_name: str):
         """Disconnect a service and permanently delete its saved config."""
         self.forget_config(service_name)
         await self.unregister_service(service_name)
 
-    async def register_from_registry(self, service_registry: ServiceRegistry, proxy_configs: list[dict] | None = None):
+    async def register_from_registry(
+        self, service_registry: ServiceRegistry, proxy_configs: list[dict] | None = None
+    ):
         """Register all services from the existing ServiceRegistry into proxy connections.
 
         Args:
@@ -351,7 +373,11 @@ class ProxyRegistry:
                 from agora.core.service_base import is_safe_url  # type: ignore[import-not-found]
 
                 if not is_safe_url(svc.mcp_endpoint):
-                    logger.warning("proxy_skip_unsafe_endpoint", service=svc.name, endpoint=svc.mcp_endpoint)
+                    logger.warning(
+                        "proxy_skip_unsafe_endpoint",
+                        service=svc.name,
+                        endpoint=svc.mcp_endpoint,
+                    )
                     continue
                 client = create_client(svc.name, svc.mcp_endpoint)
                 await self.register_service(svc.name, client)
@@ -387,7 +413,10 @@ class ProxyRegistry:
         """
         entry = self.get_entry(tool_name)
         if not entry:
-            return {"status": "error", "error": f"Tool '{tool_name}' not found in proxy"}
+            return {
+                "status": "error",
+                "error": f"Tool '{tool_name}' not found in proxy",
+            }
 
         svc_name = entry.service_name
 
@@ -402,31 +431,40 @@ class ProxyRegistry:
             # Re-fetch entry after reconnect (entry.client pointer has been replaced)
             entry = self.get_entry(tool_name)
             if not entry:
-                return {"status": "error", "error": f"Tool '{tool_name}' lost after reconnect"}
+                return {
+                    "status": "error",
+                    "error": f"Tool '{tool_name}' lost after reconnect",
+                }
 
         try:
             result = await entry.client.call_tool(entry.original_name, arguments)
             try:
                 from agora.audit import AuditLogger
+
                 AuditLogger().log(
                     action="mcp.tool_call",
                     actor="system",
                     resource=tool_name,
                     result="success",
-                    detail=str(arguments)[:1000]
+                    detail=str(arguments)[:1000],
                 )
             except Exception as audit_e:
-                logger.warning("proxy_audit_log_failed", tool=tool_name, error=str(audit_e))
+                logger.warning(
+                    "proxy_audit_log_failed", tool=tool_name, error=str(audit_e)
+                )
         except Exception as e:
-            logger.error("proxy_dispatch_failed", tool=tool_name, service=svc_name, error=str(e))
+            logger.error(
+                "proxy_dispatch_failed", tool=tool_name, service=svc_name, error=str(e)
+            )
             try:
                 from agora.audit import AuditLogger
+
                 AuditLogger().log(
                     action="mcp.tool_call",
                     actor="system",
                     resource=tool_name,
                     result="error",
-                    detail=str(e)[:1000]
+                    detail=str(e)[:1000],
                 )
             except Exception:
                 pass
@@ -438,7 +476,12 @@ class ProxyRegistry:
                 try:
                     await cb(svc_name, entry.original_name, arguments)
                 except Exception as e:
-                    logger.warning("proxy_usage_callback_failed", tool=tool_name, callback=cb.__name__, error=str(e))
+                    logger.warning(
+                        "proxy_usage_callback_failed",
+                        tool=tool_name,
+                        callback=cb.__name__,
+                        error=str(e),
+                    )
 
         return result if isinstance(result, dict) else {"status": "ok", "data": result}
 

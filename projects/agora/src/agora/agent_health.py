@@ -108,7 +108,9 @@ async def check_all_providers(config: ModelGatewayConfig) -> list[dict[str, Any]
     """Check health of all configured providers."""
 
     async def _check(name: str, cfg: Any) -> dict[str, Any]:
-        api_key = os.environ.get(getattr(cfg, "api_key_env", ""), "") or getattr(cfg, "api_key", "")
+        api_key = os.environ.get(getattr(cfg, "api_key_env", ""), "") or getattr(
+            cfg, "api_key", ""
+        )
         if not api_key:
             return {
                 "provider": name,
@@ -127,7 +129,9 @@ async def check_all_providers(config: ModelGatewayConfig) -> list[dict[str, Any]
         return_exceptions=True,
     )
     return [
-        r if isinstance(r, dict) else {
+        r
+        if isinstance(r, dict)
+        else {
             "provider": "unknown",
             "status": "unhealthy",
             "latency_ms": 0,

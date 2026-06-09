@@ -37,10 +37,10 @@ Wraps NKSMCPBridge to extract role-relevant knowledge without requiring full NKS
 # 外延 ≝ {e | e ∈ D-Gateway ∧ injects(e, Knowledge)}
 # 功能 ⊢ {StaticKnowledge, NKSKnowledge, Inject, Serialize}
 # =============================================================================
-import json
-import logging
-from dataclasses import asdict, dataclass, field
-from typing import Any
+import json  # noqa: E402
+import logging  # noqa: E402
+from dataclasses import asdict, dataclass, field  # noqa: E402
+from typing import Any  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -239,7 +239,9 @@ class KnowledgeInjector:
                     "nks_query_entity",
                     {"name_pattern": concept, "limit": 3},
                 )
-                entities = result.get("entities", []) if isinstance(result, dict) else []
+                entities = (
+                    result.get("entities", []) if isinstance(result, dict) else []
+                )
                 for ent in entities:
                     slices.append(
                         KnowledgeSlice(
@@ -296,7 +298,9 @@ class KnowledgeInjector:
         payload = json.dumps([asdict(s) for s in slices], ensure_ascii=False)
         if len(payload) > _MAX_ENV_BYTES:
             for n in range(len(slices), 0, -1):
-                candidate = json.dumps([asdict(s) for s in slices[:n]], ensure_ascii=False)
+                candidate = json.dumps(
+                    [asdict(s) for s in slices[:n]], ensure_ascii=False
+                )
                 if len(candidate) <= _MAX_ENV_BYTES:
                     return candidate
             return "[]"

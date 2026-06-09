@@ -16,7 +16,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import os
 import subprocess
 from typing import Any
 
@@ -57,11 +56,14 @@ class MCPStdioAdapter:
                 text=True,
             )
             # initialize
-            init_result = await self._request("initialize", {
-                "protocolVersion": MCP_VERSION,
-                "capabilities": {},
-                "clientInfo": {"name": "agora-mcp-stdio-adapter", "version": "1.0"},
-            })
+            init_result = await self._request(
+                "initialize",
+                {
+                    "protocolVersion": MCP_VERSION,
+                    "capabilities": {},
+                    "clientInfo": {"name": "agora-mcp-stdio-adapter", "version": "1.0"},
+                },
+            )
             if init_result.get("error"):
                 _log.error("mcp_initialize_failed: %s", init_result["error"])
                 return False
@@ -71,38 +73,52 @@ class MCPStdioAdapter:
             tools_result = await self._request("tools/list", {})
             for tool in tools_result.get("result", {}).get("tools", []):
                 self._tools[tool["name"]] = tool
-            _log.info("mcp_adapter_initialized: %s (%d tools)", self.command, len(self._tools))
+            _log.info(
+                "mcp_adapter_initialized: %s (%d tools)", self.command, len(self._tools)
+            )
             return True
         except Exception as e:
             _log.error("mcp_adapter_start_failed: %s — %s", self.command, e)
             return False
 
-    async def call(self, tool_name: str, arguments: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def call(
+        self, tool_name: str, arguments: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """调用 MCP 工具。"""
         if not self._initialized or self._proc is None:
             return {"status": "error", "error": "adapter not initialized"}
         if tool_name not in self._tools:
             return {"status": "error", "error": f"tool not found: {tool_name}"}
         try:
-            result = await self._request("tools/call", {
-                "name": tool_name,
-                "arguments": arguments or {},
-            })
+            result = await self._request(
+                "tools/call",
+                {
+                    "name": tool_name,
+                    "arguments": arguments or {},
+                },
+            )
             content = result.get("result", {}).get("content", [])
-            text_results = [c.get("text", "") for c in content if c.get("type") == "text"]
-            return {"status": "ok", "result": text_results[0] if len(text_results) == 1 else text_results}
+            text_results = [
+                c.get("text", "") for c in content if c.get("type") == "text"
+            ]
+            return {
+                "status": "ok",
+                "result": text_results[0] if len(text_results) == 1 else text_results,
+            }
         except Exception as e:
             return {"status": "error", "error": str(e)}
 
     async def _request(self, method: str, params: dict) -> dict:
         """发送 JSON-RPC 2.0 请求并等待响应。"""
         self._request_id += 1
-        request = json.dumps({
-            "jsonrpc": JSONRPC_VERSION,
-            "id": self._request_id,
-            "method": method,
-            "params": params,
-        })
+        request = json.dumps(
+            {
+                "jsonrpc": JSONRPC_VERSION,
+                "id": self._request_id,
+                "method": method,
+                "params": params,
+            }
+        )
         if self._proc is None or self._proc.stdin is None:
             raise RuntimeError("process not started")
         self._proc.stdin.write(request + "\n")

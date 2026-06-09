@@ -24,7 +24,7 @@ from __future__ import annotations
 import asyncio
 import time
 
-from agora.mcp.bos_resolver import POC_SERVICES, resolve_bos_uri
+from agora.mcp.bos_resolver import POC_SERVICES, normalize_bos_uri, resolve_bos_uri
 
 
 # ── 5 场景链 (每链 2-3 URI) ──────────────────────────
@@ -235,7 +235,7 @@ def test_w1_gap_5_uris_all_registered():
         "bos://capability/forge/list-tools",
         "bos://governance/omo/inspect",
     ]
-    missing = [u for u in spec_uris if u not in POC_SERVICES]
+    missing = [u for u in spec_uris if normalize_bos_uri(u) not in POC_SERVICES]
     assert not missing, f"P36-W1 GAP 补失败, 仍缺: {missing}"
     print("\nP36-W1 GAP 全补: 5/5 URI 已注册")
 

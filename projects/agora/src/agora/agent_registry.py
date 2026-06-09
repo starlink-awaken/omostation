@@ -41,9 +41,13 @@ HEARTBEAT_TTL = int(os.environ.get("AGENT_HEARTBEAT_TTL", "60"))  # 60s
 STALE_AFTER = int(os.environ.get("AGENT_STALE_AFTER", "180"))  # 180s = 3 misses
 ZOMBIE_AFTER = int(os.environ.get("AGENT_ZOMBIE_AFTER", "3600"))  # 1h
 CACHE_FILE = os.environ.get("AGENT_REGISTRY_CACHE", "/tmp/agent-registry-cache.json")
-BACKUP_CACHE_FILE = os.environ.get("AGENT_REGISTRY_BACKUP_CACHE", "/tmp/agent-registry-backup.json")
+BACKUP_CACHE_FILE = os.environ.get(
+    "AGENT_REGISTRY_BACKUP_CACHE", "/tmp/agent-registry-backup.json"
+)
 MAX_AGENTS_PER_KEY = int(os.environ.get("AGENT_MAX_PER_KEY", "5"))
-CHALLENGE_WINDOW = int(os.environ.get("AGENT_CHALLENGE_WINDOW", "30"))  # 30s 签名挑战时间窗口
+CHALLENGE_WINDOW = int(
+    os.environ.get("AGENT_CHALLENGE_WINDOW", "30")
+)  # 30s 签名挑战时间窗口
 
 
 # ── Ed25519 辅助函数 ─────────────────────────────────────
@@ -79,7 +83,9 @@ def sign_challenge(agent_id: str, private_key_b64: str) -> str:
     return base64.b64encode(signature).decode()
 
 
-def verify_signature(agent_id: str, signature_b64: str, verification_key_b64: str) -> bool:
+def verify_signature(
+    agent_id: str, signature_b64: str, verification_key_b64: str
+) -> bool:
     """验证 Ed25519 签名。
 
     检查当前时间窗口及前后各一个窗口（允许时钟偏差 ±30s）。
@@ -218,7 +224,11 @@ class AgentRegistry:
             # 限额检查
             meta = metadata or {}
             identity_key = meta.get("identity_key", "default")
-            count = sum(1 for a in self._agents.values() if a.metadata.get("identity_key", "default") == identity_key)
+            count = sum(
+                1
+                for a in self._agents.values()
+                if a.metadata.get("identity_key", "default") == identity_key
+            )
             if count >= MAX_AGENTS_PER_KEY:
                 return {
                     "status": "error",
@@ -270,18 +280,35 @@ class AgentRegistry:
         with self._lock:
             agent = self._agents.get(agent_id)
             if not agent:
-                return {"status": "error", "error": f"Agent '{agent_id}' not registered"}
+                return {
+                    "status": "error",
+                    "error": f"Agent '{agent_id}' not registered",
+                }
 
             # Ed25519 签名验证（优先）
             if agent.verification_key_b64 and signature_b64:
-                if not verify_signature(agent_id, signature_b64, agent.verification_key_b64):
-                    return {"status": "error", "error": "Ed25519 signature verification failed"}
+                if not verify_signature(
+                    agent_id, signature_b64, agent.verification_key_b64
+                ):
+                    return {
+                        "status": "error",
+                        "error": "Ed25519 signature verification failed",
+                    }
             # 旧版 token 验证
-            elif identity_token and agent.identity_token and identity_token != agent.identity_token:
+            elif (
+                identity_token
+                and agent.identity_token
+                and identity_token != agent.identity_token
+            ):
                 return {"status": "error", "error": "Identity token mismatch"}
             # 如果 agent 有 verification_key 但未提供签名 → 拒绝
-            elif agent.verification_key_b64 and not signature_b64 and not identity_token:
-                return {"status": "error", "error": "Ed25519 signature required for this agent"}
+            elif (
+                agent.verification_key_b64 and not signature_b64 and not identity_token
+            ):
+                return {
+                    "status": "error",
+                    "error": "Ed25519 signature required for this agent",
+                }
 
             agent.last_heartbeat = time.time()
             agent.status = "active"
@@ -392,7 +419,9 @@ class AgentRegistry:
         if not self._backup_cache_file:
             return
         try:
-            data = {agent_id: agent.to_dict() for agent_id, agent in self._agents.items()}
+            data = {
+                agent_id: agent.to_dict() for agent_id, agent in self._agents.items()
+            }
             Path(self._backup_cache_file).parent.mkdir(parents=True, exist_ok=True)
             with open(self._backup_cache_file, "w") as f:
                 json.dump(data, f, indent=2)
@@ -404,7 +433,9 @@ class AgentRegistry:
     def _save_cache(self) -> None:
         """保存到本地缓存 + 同步 backup。"""
         try:
-            data = {agent_id: agent.to_dict() for agent_id, agent in self._agents.items()}
+            data = {
+                agent_id: agent.to_dict() for agent_id, agent in self._agents.items()
+            }
             Path(self._cache_file).parent.mkdir(parents=True, exist_ok=True)
             with open(self._cache_file, "w") as f:
                 json.dump(data, f, indent=2)

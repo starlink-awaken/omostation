@@ -26,10 +26,10 @@ Authority: organs/D-Gateway/AGENTS.md
 # 功能 ⊢ {bootstrap, discover_peers, announce, get_announcements, ping}
 # =============================================================================
 
-import logging
-import time
-import uuid
-from typing import Any
+import logging  # noqa: E402
+import time  # noqa: E402
+import uuid  # noqa: E402
+from typing import Any  # noqa: E402
 
 try:
     from agora.dht_routing import DHTRoutingTable  # type: ignore[import-not-found]
@@ -202,7 +202,9 @@ class PeerDiscovery:
             pass
 
         # Fallback to simple table check if RPC fails or environment is not ready
-        reachable = peer_id in {p["peer_id"] for p in self._routing_table.get_all_peers()}
+        reachable = peer_id in {
+            p["peer_id"] for p in self._routing_table.get_all_peers()
+        }
         _log.debug("ping %s → %s (fallback to table check)", peer_id[:8], reachable)
         return reachable
 

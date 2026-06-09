@@ -20,13 +20,13 @@ Authority: organs/D-Gateway/AGENTS.md
 # 功能 ⊢ {Soul_Handshake, Init_Soul, Validate_Handshake}
 # =============================================================================
 
-import hashlib
-import hmac
-import logging
-import os
-import threading
-import time
-from typing import Any
+import hashlib  # noqa: E402
+import hmac  # noqa: E402
+import logging  # noqa: E402
+import os  # noqa: E402
+import threading  # noqa: E402
+import time  # noqa: E402
+from typing import Any  # noqa: E402
 
 try:
     import httpx
@@ -35,6 +35,7 @@ except ImportError:
 
 _log = logging.getLogger(__name__)
 logger = logging.getLogger("bos.soul_handshake")
+
 
 class ClusterRegistry:
     """In-memory cluster membership registry with TTL-based expiry."""
@@ -67,7 +68,11 @@ class ClusterRegistry:
         """Return node info dicts whose TTL has not yet expired."""
         now = time.time()
         with self._lock:
-            return [dict(info) for info in self._nodes.values() if now - info.get("registered_at", 0) < self.node_ttl]
+            return [
+                dict(info)
+                for info in self._nodes.values()
+                if now - info.get("registered_at", 0) < self.node_ttl
+            ]
 
     def get_node(self, node_id: str) -> dict | None:
         """Return node info dict or None if not registered."""
@@ -78,6 +83,7 @@ class ClusterRegistry:
     def size(self) -> int:
         """Count of alive nodes."""
         return len(self.get_alive_nodes())
+
 
 class SoulHandshake:
     """
@@ -97,7 +103,9 @@ class SoulHandshake:
         self.cluster_key = cluster_key or os.environ.get("BOS_CLUSTER_KEY")
         if not self.cluster_key:
             raise ValueError("BOS_CLUSTER_KEY environment variable is required")
-        self.peer_scheme = (peer_scheme or os.environ.get("BOS_P2P_SCHEME", "http")).lower()
+        self.peer_scheme = (
+            peer_scheme or os.environ.get("BOS_P2P_SCHEME", "http")
+        ).lower()
         if self.peer_scheme not in {"http", "https"}:
             raise ValueError("peer_scheme must be either 'http' or 'https'")
         self.registry = ClusterRegistry()
@@ -109,7 +117,9 @@ class SoulHandshake:
     def _hmac_sign(self, payload: dict) -> str:
         """Compute HMAC-SHA256 signature over canonical JSON bytes of payload."""
         canonical = __import__("json").dumps(payload, sort_keys=True).encode()
-        return hmac.new(self.cluster_key.encode(), canonical, hashlib.sha256).hexdigest()
+        return hmac.new(
+            self.cluster_key.encode(), canonical, hashlib.sha256
+        ).hexdigest()
 
     def _verify_hmac(self, payload: dict) -> bool:
         """Verify HMAC signature on received payload; reject if missing or invalid."""
@@ -129,9 +139,13 @@ class SoulHandshake:
         *,
         scheme: str | None = None,
     ) -> str:
-        return f"{(scheme or self.peer_scheme).lower()}://{remote_ip}:{remote_port}{path}"
+        return (
+            f"{(scheme or self.peer_scheme).lower()}://{remote_ip}:{remote_port}{path}"
+        )
 
-    async def initiate_handshake(self, remote_ip: str, remote_port: int) -> dict[str, Any] | None:
+    async def initiate_handshake(
+        self, remote_ip: str, remote_port: int
+    ) -> dict[str, Any] | None:
         """
         向远程节点发起握手请求
         """
@@ -157,13 +171,19 @@ class SoulHandshake:
                     data = response.json()
                     if data.get("success"):
                         peer_id = data["data"]["node_id"]
-                        logger.info(f"✅ [SoulHandshake] Handshake successful with {peer_id}")
+                        logger.info(
+                            f"✅ [SoulHandshake] Handshake successful with {peer_id}"
+                        )
                         return data["data"]
                     else:
                         msg = data.get("message")
-                        logger.warning(f"❌ [SoulHandshake] Handshake rejected by {remote_ip}: {msg}")
+                        logger.warning(
+                            f"❌ [SoulHandshake] Handshake rejected by {remote_ip}: {msg}"
+                        )
                 else:
-                    logger.warning(f"⚠️ [SoulHandshake] Handshake failed with status {response.status_code}")
+                    logger.warning(
+                        f"⚠️ [SoulHandshake] Handshake failed with status {response.status_code}"
+                    )
         except (
             httpx.HTTPError,
             OSError,
@@ -189,7 +209,9 @@ class SoulHandshake:
 
         received_key = payload.get("cluster_key")
         if received_key != self.cluster_key:
-            logger.warning(f"🛡️ [SoulHandshake] Unauthorized handshake attempt from {remote_node_id}")
+            logger.warning(
+                f"🛡️ [SoulHandshake] Unauthorized handshake attempt from {remote_node_id}"
+            )
             raise ValueError("Invalid cluster key")
 
         logger.info(f"🤝 [SoulHandshake] Verified handshake from {remote_node_id}")
@@ -231,10 +253,14 @@ class SoulHandshake:
                 self.registry.register(peer_id, peer_info)
                 self._peer_nodes[peer_id] = peer_info
                 joined.append(peer_id)
-                logger.info(f"✅ [SoulHandshake] Joined cluster via {ip}:{port} (peer={peer_id})")
+                logger.info(
+                    f"✅ [SoulHandshake] Joined cluster via {ip}:{port} (peer={peer_id})"
+                )
             else:
                 failed.append(f"{ip}:{port}")
-                logger.warning(f"⚠️ [SoulHandshake] Failed to reach seed node {ip}:{port}")
+                logger.warning(
+                    f"⚠️ [SoulHandshake] Failed to reach seed node {ip}:{port}"
+                )
 
         return {
             "joined_nodes": joined,
@@ -266,7 +292,9 @@ class SoulHandshake:
                 failed.append(peer_id)
                 continue
             scheme = str(node.get("scheme", self.peer_scheme)).lower()
-            url = self._peer_url(peer_ip, peer_port, "/api/v1/state_sync", scheme=scheme)
+            url = self._peer_url(
+                peer_ip, peer_port, "/api/v1/state_sync", scheme=scheme
+            )
             try:
                 request_kwargs: dict[str, Any] = {
                     "url": url,

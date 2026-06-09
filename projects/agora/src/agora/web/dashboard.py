@@ -6,12 +6,14 @@ Serves an HTML dashboard with real-time gateway status.
 注意: 完整 Dashboard 在 extras/web/dashboard.py (port 7430, agora web CLI)。
 此文件仅保留轻量路由注册入口。
 """
+
 from __future__ import annotations
 
 from typing import Any
 
 try:
     from fastapi.responses import HTMLResponse
+
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False

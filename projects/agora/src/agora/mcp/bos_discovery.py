@@ -29,7 +29,9 @@ _BOS_DECL_PATTERN = re.compile(
 )
 
 # 简化版：只匹配 `bos://domain/package/action`
-_SIMPLE_PATTERN = re.compile(r"`bos://(?P<domain>[a-z0-9-]+)/(?P<package>[a-z0-9-]+)/(?P<action>[a-z0-9-]+)`")
+_SIMPLE_PATTERN = re.compile(
+    r"`bos://(?P<domain>[a-z0-9-]+)/(?P<package>[a-z0-9-]+)/(?P<action>[a-z0-9-]+)`"
+)
 
 # 默认扫描的项目目录（相对于 HOME/Workspace/projects/）
 _DEFAULT_PROJECTS = [
@@ -53,7 +55,11 @@ def discover_from_workspace(workspace_root: str = "") -> int:
     Returns:
         注册的 BOS URI 数量
     """
-    ws = Path(workspace_root) if workspace_root else Path.home() / "Workspace" / "projects"
+    ws = (
+        Path(workspace_root)
+        if workspace_root
+        else Path.home() / "Workspace" / "projects"
+    )
     if not ws.exists():
         _log.warning("Workspace 目录不存在: %s", ws)
         return 0
@@ -77,13 +83,17 @@ def discover_from_workspace(workspace_root: str = "") -> int:
 
             for match in _BOS_DECL_PATTERN.finditer(section):
                 uri = f"bos://{match['domain']}/{match['package']}/{match['action']}"
-                bos_router.register(uri, adapter=match["adapter"], config={
-                    "domain": match["domain"],
-                    "description": match["desc"].strip(),
-                    "command": match["command"].strip(),
-                    "project": proj,
-                    "source": "AGENTS.md",
-                })
+                bos_router.register(
+                    uri,
+                    adapter=match["adapter"],
+                    config={
+                        "domain": match["domain"],
+                        "description": match["desc"].strip(),
+                        "command": match["command"].strip(),
+                        "project": proj,
+                        "source": "AGENTS.md",
+                    },
+                )
                 registered += 1
 
             # 简化版：只有 URI，没有命令（标记为 poc adapter）
@@ -96,11 +106,15 @@ def discover_from_workspace(workspace_root: str = "") -> int:
                         already = True
                         break
                 if not already:
-                    bos_router.register(uri, adapter="poc", config={
-                        "domain": match["domain"],
-                        "project": proj,
-                        "source": "AGENTS.md",
-                    })
+                    bos_router.register(
+                        uri,
+                        adapter="poc",
+                        config={
+                            "domain": match["domain"],
+                            "project": proj,
+                            "source": "AGENTS.md",
+                        },
+                    )
                     registered += 1
         except Exception as e:
             _log.warning("Failed to parse %s: %s", agents_md, e)

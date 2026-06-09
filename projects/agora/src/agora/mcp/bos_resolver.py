@@ -19,6 +19,7 @@ P46 W2 升级: StdioAdapter 协议抽象封装, 支持渐进迁移到标准 MCP.
 
 11 POC service 覆盖 5 Domain (memory / governance / analysis / persona / capability).
 """
+
 from __future__ import annotations
 
 import importlib
@@ -57,7 +58,8 @@ _LEGACY_BOS_URI_ALIASES = {
 }
 
 # ── 路径常量 ────────────────────────────────────────
-import os as _os
+import os as _os  # noqa: E402
+
 _WS = _os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
 KAIRON_ROOT = Path(_WS) / "projects" / "kairon"
 METAOS_ROOT = Path(_WS) / "projects" / "metaos"
@@ -123,8 +125,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="search",
         transport="mcp_stdio",  # P54-W0: 渐进迁移到标准 MCP stdio
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "kos", "serve", "--action", "search",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "kos",
+            "serve",
+            "--action",
+            "search",
         ],
         description="KOS 跨域语义搜索 (POC stdio)",
     ),
@@ -135,8 +145,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="ingest",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "kronos", "serve", "--action", "ingest",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "kronos",
+            "serve",
+            "--action",
+            "ingest",
         ],
         description="Kronos 知识摄入 (POC stdio)",
     ),
@@ -158,8 +176,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="gate",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(METAOS_ROOT),
-            "python", "-m", "metaos", "serve", "--action", "gate",
+            "uv",
+            "run",
+            "--directory",
+            str(METAOS_ROOT),
+            "python",
+            "-m",
+            "metaos",
+            "serve",
+            "--action",
+            "gate",
         ],
         description="MetaOS 门控检查 (POC stdio)",
     ),
@@ -170,8 +196,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="register",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "sot_bridge", "serve", "--action", "register",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "sot_bridge",
+            "serve",
+            "--action",
+            "register",
         ],
         description="SOT-Bridge 注册 (POC stdio)",
     ),
@@ -182,8 +216,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="trigger",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "protocols_layer", "serve", "--action", "trigger",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "protocols_layer",
+            "serve",
+            "--action",
+            "trigger",
         ],
         description="Protocols-Layer 触发 (POC stdio)",
     ),
@@ -195,8 +237,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="research",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "minerva", "serve", "--action", "research",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "minerva",
+            "serve",
+            "--action",
+            "research",
         ],
         description="Minerva 深度研究 (POC stdio)",
     ),
@@ -207,8 +257,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="draft",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "minerva", "serve", "--action", "draft",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "minerva",
+            "serve",
+            "--action",
+            "draft",
         ],
         description="Minerva 草稿生成 (POC stdio)",
     ),
@@ -219,8 +277,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="audit",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "minerva", "serve", "--action", "audit",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "minerva",
+            "serve",
+            "--action",
+            "audit",
         ],
         description="Minerva 审计 (POC stdio)",
     ),
@@ -231,8 +297,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="derive",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "ontoderive", "serve", "--action", "derive",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "ontoderive",
+            "serve",
+            "--action",
+            "derive",
         ],
         description="Ontoderive 事实推导 (POC stdio)",
     ),
@@ -243,8 +317,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="audit",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "ontoderive", "serve", "--action", "audit",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "ontoderive",
+            "serve",
+            "--action",
+            "audit",
         ],
         description="Ontoderive 审计 (POC stdio)",
     ),
@@ -255,8 +337,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="fact-check",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "ontoderive", "serve", "--action", "fact-check",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "ontoderive",
+            "serve",
+            "--action",
+            "fact-check",
         ],
         description="Ontoderive 事实校验 (POC stdio)",
     ),
@@ -267,8 +357,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="scan",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "codeanalyze", "serve", "--action", "scan",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "codeanalyze",
+            "serve",
+            "--action",
+            "scan",
         ],
         description="CodeAnalyze 代码扫描 (POC stdio)",
     ),
@@ -279,8 +377,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="report",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "codeanalyze", "serve", "--action", "report",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "codeanalyze",
+            "serve",
+            "--action",
+            "report",
         ],
         description="CodeAnalyze 分析报告 (POC stdio)",
     ),
@@ -291,8 +397,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="lint",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "codeanalyze", "serve", "--action", "lint",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "codeanalyze",
+            "serve",
+            "--action",
+            "lint",
         ],
         description="CodeAnalyze Lint (POC stdio)",
     ),
@@ -303,8 +417,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="connect",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "iris", "serve", "--action", "connect",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "iris",
+            "serve",
+            "--action",
+            "connect",
         ],
         description="Iris 连接 (POC stdio)",
     ),
@@ -315,8 +437,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="transform",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "iris", "serve", "--action", "transform",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "iris",
+            "serve",
+            "--action",
+            "transform",
         ],
         description="Iris 数据转换 (POC stdio)",
     ),
@@ -327,8 +457,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="validate",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "iris", "serve", "--action", "validate",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "iris",
+            "serve",
+            "--action",
+            "validate",
         ],
         description="Iris 数据校验 (POC stdio)",
     ),
@@ -340,8 +478,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="summary",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "health_profile", "serve", "--action", "summary",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "health_profile",
+            "serve",
+            "--action",
+            "summary",
         ],
         description="Health-Profile 健康摘要 (POC stdio)",
     ),
@@ -353,8 +499,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="register-tool",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "forge", "serve", "--action", "register-tool",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "forge",
+            "serve",
+            "--action",
+            "register-tool",
         ],
         description="Forge 工具注册 (POC stdio)",
     ),
@@ -369,8 +523,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="recall-entity",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "sot_bridge.sharedbrain_bridge", "serve", "--action", "recall-entity",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "sot_bridge.sharedbrain_bridge",
+            "serve",
+            "--action",
+            "recall-entity",
         ],
         description="Legacy persona bridge entity recall (canonical compatibility URI, P36-W1 补, POC stdio)",
     ),
@@ -381,8 +543,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="alert",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "health_profile", "serve", "--action", "alert",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "health_profile",
+            "serve",
+            "--action",
+            "alert",
         ],
         description="Health-Profile 健康告警 (P36-W1 补, POC stdio)",
     ),
@@ -393,8 +563,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="exec-tool",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "forge", "serve", "--action", "exec-tool",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "forge",
+            "serve",
+            "--action",
+            "exec-tool",
         ],
         description="Forge 工具执行 (P36-W1 补, POC stdio)",
     ),
@@ -405,8 +583,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="list-tools",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "forge", "serve", "--action", "list-tools",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "forge",
+            "serve",
+            "--action",
+            "list-tools",
         ],
         description="Forge 工具列表 (P36-W1 补, POC stdio)",
     ),
@@ -428,8 +614,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="recall",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "sot_bridge.sharedbrain_bridge", "serve", "--action", "recall",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "sot_bridge.sharedbrain_bridge",
+            "serve",
+            "--action",
+            "recall",
         ],
         description="Legacy persona bridge semantic recall (canonical compatibility URI, P45-W0, POC stdio, recall-entity 的泛化版)",
     ),
@@ -440,8 +634,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="discover",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "forge", "serve", "--action", "discover",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "forge",
+            "serve",
+            "--action",
+            "discover",
         ],
         description="Forge 工具发现 (P45-W0, POC stdio, LLM 工具选择关键)",
     ),
@@ -452,8 +654,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="ingest",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "kos", "serve", "--action", "ingest",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "kos",
+            "serve",
+            "--action",
+            "ingest",
         ],
         description="KOS 实体写入 (P45-W0, POC stdio, search 的对偶)",
     ),
@@ -465,8 +675,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="query",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "kronos", "serve", "--action", "query",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "kronos",
+            "serve",
+            "--action",
+            "query",
         ],
         description="KRONOS 时间序列查询 (P45-W1, POC stdio, ingest 的对偶)",
     ),
@@ -477,8 +695,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="schedule",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "kronos", "serve", "--action", "schedule",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "kronos",
+            "serve",
+            "--action",
+            "schedule",
         ],
         description="KRONOS 调度任务 (P45-W1, POC stdio)",
     ),
@@ -490,8 +716,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="register",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(METAOS_ROOT),
-            "python", "-m", "metaos", "serve", "--action", "register",
+            "uv",
+            "run",
+            "--directory",
+            str(METAOS_ROOT),
+            "python",
+            "-m",
+            "metaos",
+            "serve",
+            "--action",
+            "register",
         ],
         description="MetaOS 包注册 (P45-W2, POC stdio, gate 的对偶)",
     ),
@@ -502,8 +736,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="query",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "sot_bridge", "serve", "--action", "query",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "sot_bridge",
+            "serve",
+            "--action",
+            "query",
         ],
         description="SOT-Bridge 跨系统查询 (legacy compatibility URI, P45-W2, POC stdio, register 的对偶)",
     ),
@@ -515,8 +757,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="schema",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "core_models", "serve", "--action", "schema",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "core_models",
+            "serve",
+            "--action",
+            "schema",
         ],
         description="core-models schema (P45-W3, POC stdio)",
     ),
@@ -527,8 +777,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="validate",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "core_models", "serve", "--action", "validate",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "core_models",
+            "serve",
+            "--action",
+            "validate",
         ],
         description="core-models 验证 (P45-W3, POC stdio, schema 的对偶)",
     ),
@@ -539,8 +797,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="sync",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(KAIRON_ROOT),
-            "python", "-m", "sot_bridge.sharedbrain_bridge", "serve", "--action", "sync",
+            "uv",
+            "run",
+            "--directory",
+            str(KAIRON_ROOT),
+            "python",
+            "-m",
+            "sot_bridge.sharedbrain_bridge",
+            "serve",
+            "--action",
+            "sync",
         ],
         description="Legacy persona bridge sync (canonical compatibility URI, P45-W3, POC stdio, recall-entity 的对偶)",
     ),
@@ -552,8 +818,14 @@ POC_SERVICES: dict[str, BosService] = {
         action="sync",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(OMOSTATION_ROOT / "projects" / "omo"),
-            "python", "-m", "omo", "serve",
+            "uv",
+            "run",
+            "--directory",
+            str(OMOSTATION_ROOT / "projects" / "omo"),
+            "python",
+            "-m",
+            "omo",
+            "serve",
         ],
         description="OMO 状态同步 (P48-W2 真重构, stdio transport 跨进程, 替代 P47 internal)",
     ),
@@ -565,8 +837,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="agent-list",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(OMOSTATION_ROOT / "projects" / "runtime"),
-            "python", "-m", "runtime.executor.agent_hub", "serve", "--action", "agent-list",
+            "uv",
+            "run",
+            "--directory",
+            str(OMOSTATION_ROOT / "projects" / "runtime"),
+            "python",
+            "-m",
+            "runtime.executor.agent_hub",
+            "serve",
+            "--action",
+            "agent-list",
         ],
         description="Agent-runtime agent-list (P46, POC stdio, 跨项目 spawn runtime, 待 runtime serve dispatcher 适配)",
     ),
@@ -577,8 +857,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="chat",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(OMOSTATION_ROOT / "projects" / "runtime"),
-            "python", "-m", "runtime.executor.agent_runner", "serve", "--action", "chat",
+            "uv",
+            "run",
+            "--directory",
+            str(OMOSTATION_ROOT / "projects" / "runtime"),
+            "python",
+            "-m",
+            "runtime.executor.agent_runner",
+            "serve",
+            "--action",
+            "chat",
         ],
         description="Agent-runtime chat (P46, POC stdio, 跨项目 spawn runtime, P39-W1 卫健委可能用)",
     ),
@@ -589,8 +877,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="run-task",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(OMOSTATION_ROOT / "projects" / "runtime"),
-            "python", "-m", "runtime.executor.agent_executor", "serve", "--action", "run-task",
+            "uv",
+            "run",
+            "--directory",
+            str(OMOSTATION_ROOT / "projects" / "runtime"),
+            "python",
+            "-m",
+            "runtime.executor.agent_executor",
+            "serve",
+            "--action",
+            "run-task",
         ],
         description="Agent-runtime run-task (P46, POC stdio, 跨项目 spawn runtime)",
     ),
@@ -601,8 +897,16 @@ POC_SERVICES: dict[str, BosService] = {
         action="task-status",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory", str(OMOSTATION_ROOT / "projects" / "runtime"),
-            "python", "-m", "runtime.executor.agent_hub", "serve", "--action", "task-status",
+            "uv",
+            "run",
+            "--directory",
+            str(OMOSTATION_ROOT / "projects" / "runtime"),
+            "python",
+            "-m",
+            "runtime.executor.agent_hub",
+            "serve",
+            "--action",
+            "task-status",
         ],
         description="Agent-runtime task-status (P46, POC stdio, 跨项目 spawn runtime)",
     ),
@@ -630,7 +934,9 @@ class ProcessPool:
         self.request_id += 1
         return f"req-{self.request_id}-{uuid.uuid4().hex[:8]}"
 
-    def get_or_spawn(self, service: BosService, force_respawn: bool = False) -> subprocess.Popen:
+    def get_or_spawn(
+        self, service: BosService, force_respawn: bool = False
+    ) -> subprocess.Popen:
         """懒加载 spawn + 自动 respawn 死进程 (P35-W1 升级).
 
         Args:
@@ -719,7 +1025,9 @@ class ProcessPool:
                 self.processes.pop(uri, None)
             self.get_or_spawn(service)
             respawned.append(uri)
-            _log.warning("Respawned process: %s (new pid=%d)", uri, self.processes[uri].pid)
+            _log.warning(
+                "Respawned process: %s (new pid=%d)", uri, self.processes[uri].pid
+            )
         return respawned
 
     def shutdown(self, uri: str | None = None) -> int:
@@ -763,7 +1071,9 @@ def parse_bos_uri(uri: str) -> dict[str, str]:
     normalized = normalize_bos_uri(uri)
     m = BOS_URI_PATTERN.match(normalized)
     if not m:
-        raise ValueError(f"Invalid BOS URI: {uri!r} (expected bos://<domain>/<package>/<action>)")
+        raise ValueError(
+            f"Invalid BOS URI: {uri!r} (expected bos://<domain>/<package>/<action>)"
+        )
     return m.groupdict()
 
 
@@ -803,7 +1113,9 @@ def _call_internal(service: BosService, *args: Any, **kwargs: Any) -> dict:
     }
 
 
-def _call_stdio(service: BosService, *args: Any, request_uri: str | None = None, **kwargs: Any) -> dict:
+def _call_stdio(
+    service: BosService, *args: Any, request_uri: str | None = None, **kwargs: Any
+) -> dict:
     """stdio transport: 真 stdio JSON 协议 (P34-W1 升级).
 
     流程:
@@ -820,7 +1132,13 @@ def _call_stdio(service: BosService, *args: Any, request_uri: str | None = None,
 
     返回字段: 包装 invoke_stdio 响应, 加 transport + 兼容 alive_at_spawn 字段.
     """
-    response = invoke_stdio(request_uri or service.uri, service.action, args, kwargs, timeout=_STDIO_TIMEOUT_DEFAULT)
+    response = invoke_stdio(
+        request_uri or service.uri,
+        service.action,
+        args,
+        kwargs,
+        timeout=_STDIO_TIMEOUT_DEFAULT,
+    )
     # 包装: 补 transport 字段 + alive_at_spawn (兼容 P33 测试)
     response["transport"] = "stdio"
     if response.get("status") == "ok":
@@ -858,6 +1176,7 @@ def invoke_stdio(
         # 提供类似 URI 推荐
         suggestions = []
         from agora.mcp.bos_router import bos_router as _br
+
         known = _br.list_all()
         uri_parts = uri.strip("/").split("/")
         for r in known:
@@ -1000,6 +1319,7 @@ def invoke_stdio(
 
 # ── Protocol Adapter (P46 W2) ───────────────────────
 
+
 class StdioAdapter:
     """stdio 协议适配器 — 封装 invoke_stdio 为统一接口。
 
@@ -1014,7 +1334,13 @@ class StdioAdapter:
     def __init__(self, timeout: float = 5.0):
         self.timeout = timeout
 
-    def call(self, uri: str, action: str, args: list | None = None, kwargs: dict | None = None) -> dict:
+    def call(
+        self,
+        uri: str,
+        action: str,
+        args: list | None = None,
+        kwargs: dict | None = None,
+    ) -> dict:
         """调用 stdio 子进程。
 
         Args:
@@ -1049,7 +1375,9 @@ def get_stdio_adapter(timeout: float = 5.0) -> StdioAdapter:
     return StdioAdapter(timeout=timeout)
 
 
-async def _call_mcp_stdio(service: BosService, *args: Any, request_uri: str | None = None, **kwargs: Any) -> dict:
+async def _call_mcp_stdio(
+    service: BosService, *args: Any, request_uri: str | None = None, **kwargs: Any
+) -> dict:
     """mcp_stdio transport: 标准 MCP JSON-RPC 2.0 (P54-W0).
 
     使用 mcp_stdio_bridge.py 桥接自定义 POC 协议到标准 MCP stdio。
@@ -1058,9 +1386,13 @@ async def _call_mcp_stdio(service: BosService, *args: Any, request_uri: str | No
     from agora.mcp.bos_protocol import MCPStdioAdapter
 
     action = service.action
-    bridge_cmd = " ".join([
-        "python3", str(Path(__file__).parent / "mcp_stdio_bridge.py"),
-    ] + service.command)
+    bridge_cmd = " ".join(
+        [
+            "python3",
+            str(Path(__file__).parent / "mcp_stdio_bridge.py"),
+        ]
+        + service.command
+    )
 
     try:
         adapter = MCPStdioAdapter(bridge_cmd, timeout=5.0)
@@ -1072,12 +1404,17 @@ async def _call_mcp_stdio(service: BosService, *args: Any, request_uri: str | No
                 "status": "error",
                 "error": "mcp_stdio_initialize_failed",
             }
-        result = await adapter.call("poc_exec", {
-            "action": action,
-            "args": list(args),
-        })
+        result = await adapter.call(
+            "poc_exec",
+            {
+                "action": action,
+                "args": list(args),
+            },
+        )
         adapter.shutdown()
-        return result if isinstance(result, dict) else {"status": "ok", "result": result}
+        return (
+            result if isinstance(result, dict) else {"status": "ok", "result": result}
+        )
     except Exception as e:
         return {
             "uri": request_uri or "",
@@ -1125,16 +1462,18 @@ def list_services() -> list[dict]:
     out = []
     for uri, svc in POC_SERVICES.items():
         proc = pool.processes.get(uri) if svc.transport == "stdio" else None
-        out.append({
-            "uri": uri,
-            "domain": svc.domain,
-            "package": svc.package,
-            "action": svc.action,
-            "transport": svc.transport,
-            "alive": pool.is_alive(uri) if svc.transport == "stdio" else None,
-            "pid": proc.pid if proc and proc.pid else None,
-            "description": svc.description,
-        })
+        out.append(
+            {
+                "uri": uri,
+                "domain": svc.domain,
+                "package": svc.package,
+                "action": svc.action,
+                "transport": svc.transport,
+                "alive": pool.is_alive(uri) if svc.transport == "stdio" else None,
+                "pid": proc.pid if proc and proc.pid else None,
+                "description": svc.description,
+            }
+        )
     return out
 
 
@@ -1191,6 +1530,7 @@ __all__ = (
 if __name__ == "__main__":
     # CLI 自检模式: python -m agora.mcp.bos_resolver self-check
     import sys
+
     if len(sys.argv) > 1 and sys.argv[1] == "self-check":
         print(json.dumps(protocol_self_check(), indent=2, ensure_ascii=False))
     else:

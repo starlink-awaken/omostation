@@ -19,10 +19,10 @@ Authority: organs/D-Gateway/AGENTS.md
 # 外延 ≝ {e | e ∈ D-Gateway ∧ implements(e, RedisMessageQueue)}
 # 功能 ⊢ {Redis_Message, Message_Queue, Queue_Init}
 # =============================================================================
-import json
-import logging
-import os
-from typing import Any
+import json  # noqa: E402
+import logging  # noqa: E402
+import os  # noqa: E402
+from typing import Any  # noqa: E402
 
 _log = logging.getLogger(__name__)
 
@@ -90,7 +90,9 @@ class RedisMessageQueue:
 
                 time.sleep(wait)
 
-        _log.warning("Redis unavailable after 3 attempts (%s); using SQLite fallback", last_exc)
+        _log.warning(
+            "Redis unavailable after 3 attempts (%s); using SQLite fallback", last_exc
+        )
         self._redis = None
 
     # ── Public interface ──────────────────────────────────────────────────────

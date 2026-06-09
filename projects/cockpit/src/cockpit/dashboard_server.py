@@ -23,6 +23,7 @@ Usage:
     # or
     python3 -m cockpit.dashboard_server
 """
+
 from __future__ import annotations
 
 import json
@@ -32,10 +33,9 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any
 
 import yaml
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 
@@ -54,7 +54,8 @@ for p in [_runtime_src, _omo_src]:
 
 # L4 bridge imports (try/except for graceful degradation)
 try:
-    from cockpit.scripts.cockpit_mcp import workspace_context, cards_status, cards_check, vault_search
+    from cockpit.scripts.cockpit_mcp import cards_check, cards_status, workspace_context
+
     _HAS_L4_BRIDGE = True
 except ImportError:
     _HAS_L4_BRIDGE = False
@@ -92,9 +93,9 @@ async def healthz():
 
 _LAYER_SOURCES: list[dict] = [
     {"layer": "I0", "name": "agora", "url": "http://localhost:7430/api/bos/status", "port": 7430},
-    {"layer": "L2", "name": "omo",   "url": "http://localhost:9090/api/v1/status",   "port": 9090},
-    {"layer": "L1", "name": "runtime", "url": "http://localhost:9876/api/v1/status",  "port": 9876},
-    {"layer": "L0", "name": "ecos",  "url": "file://m0_snapshot", "port": None, "source": "m0_snapshot"},
+    {"layer": "L2", "name": "omo", "url": "http://localhost:9090/api/v1/status", "port": 9090},
+    {"layer": "L1", "name": "runtime", "url": "http://localhost:9876/api/v1/status", "port": 9876},
+    {"layer": "L0", "name": "ecos", "url": "file://m0_snapshot", "port": None, "source": "m0_snapshot"},
 ]
 
 
@@ -109,8 +110,8 @@ def _fetch_layer_status(source: dict) -> dict:
     if source["layer"] == "L2":
         try:
             from omo.omo_dashboard import _load_json as _omo_load
-            omo_dir = Path(os.environ.get("OMO_DIR",
-                            str(Path.home() / "Workspace" / ".omo")))
+
+            omo_dir = Path(os.environ.get("OMO_DIR", str(Path.home() / "Workspace" / ".omo")))
             system = _omo_load(omo_dir / "state" / "system.yaml")
             return {
                 "layer": "L2",
@@ -125,13 +126,13 @@ def _fetch_layer_status(source: dict) -> dict:
     if source["layer"] == "L1":
         try:
             from runtime.i0 import i0_status
+
             status = i0_status() if i0_status else {}
             return {
                 "layer": "L1",
                 "name": "runtime",
                 "status": "ok",
-                "data": {"summary": {"total_layers": 3, "healthy": 1},
-                         "status": status, "source": "direct_import"},
+                "data": {"summary": {"total_layers": 3, "healthy": 1}, "status": status, "source": "direct_import"},
             }
         except Exception:
             return _fetch_http(source)
@@ -181,9 +182,10 @@ def _read_m0_snapshot() -> dict:
 def _fetch_http(source: dict) -> dict:
     """Fetch a layer's status via HTTP."""
     import urllib.request
+
     try:
-        req = urllib.request.Request(source["url"], method="GET")
-        with urllib.request.urlopen(req, timeout=3) as resp:
+        req = urllib.request.Request(source["url"], method="GET")  # noqa: S310
+        with urllib.request.urlopen(req, timeout=3) as resp:  # noqa: S310
             data = json.loads(resp.read().decode())
         return {
             "layer": source["layer"],
@@ -213,34 +215,40 @@ async def api_v1_status():
                 layers.append(future.result())
             except Exception as e:
                 source = futures[future]
-                layers.append({
-                    "layer": source["layer"],
-                    "name": source["name"],
-                    "status": "down",
-                    "error": str(e),
-                })
+                layers.append(
+                    {
+                        "layer": source["layer"],
+                        "name": source["name"],
+                        "status": "down",
+                        "error": str(e),
+                    }
+                )
 
     # Sort by layer name for consistent output
     layers.sort(key=lambda x: x["layer"])
 
     # Compute overall health
     total = len(layers)
-    ok = sum(1 for l in layers if l["status"] == "ok")
-    degraded = sum(1 for l in layers if l["status"] == "degraded")
+    ok = sum(1 for layer in layers if layer["status"] == "ok")
+    degraded = sum(1 for layer in layers if layer["status"] == "degraded")
 
-    return JSONResponse({
-        "service": "cockpit-dashboard",
-        "version": "2.0.0",
-        "timestamp": time.time(),
-        "layers": layers,
-        "summary": {
-            "total_layers": total,
-            "healthy": ok,
-            "degraded": degraded,
-            "down": total - ok - degraded,
-        },
-        "sources": [{"layer": s["layer"], "name": s["name"], "url": s["url"], "port": s["port"]} for s in _LAYER_SOURCES],
-    })
+    return JSONResponse(
+        {
+            "service": "cockpit-dashboard",
+            "version": "2.0.0",
+            "timestamp": time.time(),
+            "layers": layers,
+            "summary": {
+                "total_layers": total,
+                "healthy": ok,
+                "degraded": degraded,
+                "down": total - ok - degraded,
+            },
+            "sources": [
+                {"layer": s["layer"], "name": s["name"], "url": s["url"], "port": s["port"]} for s in _LAYER_SOURCES
+            ],
+        }
+    )
 
 
 @app.get("/api/v1/m0")
@@ -329,7 +337,7 @@ d.layers.forEach(l=>{
     // L0 M0 snapshot protocol health
     if(l.data.snapshot){
       const snap=l.data.snapshot;
-      body+='<div class="stat"><span class="label">Daemon</span><span class="val">'+(snap.daemon.healthy?'\u2705 \u5065\u5eb7':'\u274C \u5f02\u5e38')+'</span></div>';
+      body+='<div class="stat"><span class="label">Daemon</span><span class="val">'+(snap.daemon.healthy?'\u2705 \u5065\u5eb7':'\u274c \u5f02\u5e38')+'</span></div>';
       body+='<div class="stat"><span class="label">M1 \u8282\u70b9</span><span class="val">'+snap.m1_node_count+'</span></div>';
       body+='<div class="stat"><span class="label">\u5feb\u7167\u7248\u672c</span><span class="val">'+(snap.version||'N/A')+'</span></div>';
       body+='<div style="margin-top:8px;font-size:11px;color:#8b949e">\u534f\u8bae\u8870\u51cf</div>';
@@ -380,7 +388,7 @@ async def overview_page():
 # ═══════════════════════════════════════════════════════════════
 
 # 注入 JS 片段 (从原 dashboard_server.py 迁移)
-_LIVE_DATA_JS = r'''
+_LIVE_DATA_JS = r"""
 <script>
 const STATIC_DEBTS = typeof DEBTS !== 'undefined' ? DEBTS : [];
 const STATIC_TIERS = typeof TIERS !== 'undefined' ? TIERS : [];
@@ -441,7 +449,7 @@ async function loadLiveStatus() {
 loadLiveDebt(); loadLiveStatus();
 setInterval(loadLiveStatus, 30000);
 setInterval(loadLiveDebt, 60000);
-</script>'''
+</script>"""
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -467,6 +475,7 @@ async def dashboard_page():
 async def api_status():
     try:
         from runtime.i0 import i0_status
+
         return JSONResponse(content=(i0_status() if i0_status else {"error": "runtime.i0 not available"}))
     except ImportError:
         return JSONResponse(content={"error": "runtime.i0 not available"})
@@ -476,6 +485,7 @@ async def api_status():
 async def api_services():
     try:
         from runtime.i0 import i0_services
+
         return JSONResponse(content=(i0_services() if i0_services else {"error": "runtime.i0 not available"}))
     except ImportError:
         return JSONResponse(content={"error": "runtime.i0 not available"})
@@ -485,6 +495,7 @@ async def api_services():
 async def api_events():
     try:
         from runtime.i0 import i0_events
+
         return JSONResponse(content=(i0_events(50) if i0_events else {"error": "runtime.i0 not available"}))
     except ImportError:
         return JSONResponse(content={"error": "runtime.i0 not available"})
@@ -494,6 +505,7 @@ async def api_events():
 async def api_protocols():
     try:
         from runtime.i0 import i0_protocols
+
         return JSONResponse(content=(i0_protocols() if i0_protocols else {"error": "runtime.i0 not available"}))
     except ImportError:
         return JSONResponse(content={"error": "runtime.i0 not available"})
@@ -553,34 +565,36 @@ def _load_debt() -> dict:
 
         items = []
         for i in ledger.items:
-            items.append({
-                "id": i.id,
-                "title": i.title,
-                "dimension": i.dimension,
-                "subdimension": i.subdimension,
-                "domain": i.domain,
-                "scope": i.scope,
-                "severity": i.severity,
-                "weight": i.weight,
-                "entropy_class": i.entropy_class,
-                "lifecycle_state": i.lifecycle_state,
-                "owner": i.owner,
-                "affected_roots": list(i.affected_roots),
-                "evidence_refs": list(i.evidence_refs),
-                "mitigation_refs": list(i.mitigation_refs),
-                "opened_at": i.opened_at,
-                "last_reviewed_at": i.last_reviewed_at,
-                "next_review_at": i.next_review_at,
-                "gate_level": i.gate_level,
-                "history": list(i.history),
-                "x1_policy_refs": [i.x1_policy_ref] if i.x1_policy_ref else [],
-                "x1_policy_ref": i.x1_policy_ref,
-                "x1": [i.x1_policy_ref] if i.x1_policy_ref else [],
-                "x2_freshness": i.x2_freshness,
-                "x2": [],
-                "x3_tier": i.x3_tier,
-                "x3": i.x3_tier,
-            })
+            items.append(
+                {
+                    "id": i.id,
+                    "title": i.title,
+                    "dimension": i.dimension,
+                    "subdimension": i.subdimension,
+                    "domain": i.domain,
+                    "scope": i.scope,
+                    "severity": i.severity,
+                    "weight": i.weight,
+                    "entropy_class": i.entropy_class,
+                    "lifecycle_state": i.lifecycle_state,
+                    "owner": i.owner,
+                    "affected_roots": list(i.affected_roots),
+                    "evidence_refs": list(i.evidence_refs),
+                    "mitigation_refs": list(i.mitigation_refs),
+                    "opened_at": i.opened_at,
+                    "last_reviewed_at": i.last_reviewed_at,
+                    "next_review_at": i.next_review_at,
+                    "gate_level": i.gate_level,
+                    "history": list(i.history),
+                    "x1_policy_refs": [i.x1_policy_ref] if i.x1_policy_ref else [],
+                    "x1_policy_ref": i.x1_policy_ref,
+                    "x1": [i.x1_policy_ref] if i.x1_policy_ref else [],
+                    "x2_freshness": i.x2_freshness,
+                    "x2": [],
+                    "x3_tier": i.x3_tier,
+                    "x3": i.x3_tier,
+                }
+            )
 
         return {
             "total": len(items),
@@ -599,7 +613,9 @@ def _run_e2e() -> dict:
     try:
         result = subprocess.run(
             [sys.executable, "-m", "runtime.e2e"],
-            capture_output=True, text=True, timeout=30,
+            capture_output=True,
+            text=True,
+            timeout=30,
             cwd=str(PROJECT_ROOT),
         )
         stdout = result.stdout
@@ -622,6 +638,7 @@ def _omo_report() -> dict:
         items = []
         for f in files:
             import yaml
+
             d = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
             items.append(d)
         open_count = sum(1 for i in items if i.get("lifecycle_state") not in ("closed", "resolved"))
@@ -645,7 +662,7 @@ def main():
     """Start the dashboard HTTP server via uvicorn."""
     import uvicorn
 
-    print(f"🚀 Cockpit Web Dashboard (FastAPI)")
+    print("🚀 Cockpit Web Dashboard (FastAPI)")
     print(f"   Overview: http://127.0.0.1:{PORT}/overview")
     print(f"   Legacy:   http://127.0.0.1:{PORT}/ (原有债务驾驶舱)")
     print(f"   API:      http://127.0.0.1:{PORT}/api/v1/status")

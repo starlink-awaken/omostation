@@ -43,7 +43,9 @@ class SSEManager:
 
     async def broadcast(self, event_type: str, data: Any) -> int:
         """Broadcast an event to all connected clients."""
-        message = json.dumps({"type": event_type, "data": data, "timestamp": time.time() * 1000})
+        message = json.dumps(
+            {"type": event_type, "data": data, "timestamp": time.time() * 1000}
+        )
         sent = 0
         for client in list(self._clients.values()):
             try:
@@ -58,7 +60,9 @@ class SSEManager:
         client = self._clients.get(client_id)
         if not client:
             return False
-        message = json.dumps({"type": event_type, "data": data, "timestamp": time.time() * 1000})
+        message = json.dumps(
+            {"type": event_type, "data": data, "timestamp": time.time() * 1000}
+        )
         try:
             await client.queue.put(f"data: {message}\n\n")
             return True

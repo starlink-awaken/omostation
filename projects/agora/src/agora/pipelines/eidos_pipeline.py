@@ -31,7 +31,9 @@ EIDOS_PIPELINE_SERVICE: dict[str, Any] = {
 def route(action: str) -> list[str]:
     cmd_str = EIDOS_PIPELINE_SERVICE["commands"].get(action)
     if not cmd_str:
-        raise ValueError(f"Unknown: {action}. Available: {list(EIDOS_PIPELINE_SERVICE['commands'].keys())}")
+        raise ValueError(
+            f"Unknown: {action}. Available: {list(EIDOS_PIPELINE_SERVICE['commands'].keys())}"
+        )
     return cmd_str.split()
 
 

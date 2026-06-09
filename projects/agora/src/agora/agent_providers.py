@@ -20,6 +20,7 @@ from agora.retry import with_retry as retry_with_retry
 @dataclass
 class ModelProviderConfig:
     """Configuration for a single model provider."""
+
     base_url: str
     api_key_env: str = ""
     api_key: str = ""
@@ -29,6 +30,7 @@ class ModelProviderConfig:
 @dataclass
 class ModelGatewayConfig:
     """Top-level model gateway configuration."""
+
     default_model: str = ""
     providers: dict[str, ModelProviderConfig] = field(default_factory=dict)
     fallback_chain: list[str] = field(default_factory=list)
@@ -40,6 +42,7 @@ class ModelGatewayConfig:
 @dataclass
 class ResolvedProvider:
     """A resolved provider with an API key."""
+
     name: str
     base_url: str
     api_key: str
@@ -48,6 +51,7 @@ class ResolvedProvider:
 @dataclass
 class QuotaInfo:
     """Provider quota information."""
+
     provider: str
     available: bool
     used_percent: float | None = None
@@ -155,7 +159,9 @@ def resolve_provider(model: str) -> ResolvedProvider | None:
             continue
         key = _resolve_api_key(name, provider_cfg)
         if key:
-            return ResolvedProvider(name=name, base_url=provider_cfg.base_url, api_key=key)
+            return ResolvedProvider(
+                name=name, base_url=provider_cfg.base_url, api_key=key
+            )
 
     return None
 

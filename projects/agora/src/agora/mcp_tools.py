@@ -26,20 +26,20 @@ Layer: L3
 """Tool implementations and typed registry for the BOS MCP server."""
 
 
-import dataclasses
-import json
-import logging
-import os
-import re
-import sqlite3
-import threading
-import time
-import urllib.error
-import urllib.request
-import uuid
-from collections.abc import Callable
-from pathlib import Path
-from typing import Any
+import dataclasses  # noqa: E402
+import json  # noqa: E402
+import logging  # noqa: E402
+import os  # noqa: E402
+import re  # noqa: E402
+import sqlite3  # noqa: E402
+import threading  # noqa: E402
+import time  # noqa: E402
+import urllib.error  # noqa: E402
+import urllib.request  # noqa: E402
+import uuid  # noqa: E402
+from collections.abc import Callable  # noqa: E402
+from pathlib import Path  # noqa: E402
+from typing import Any  # noqa: E402
 
 # TODO-migrate: from nucleus.Z_Spore.interfaces.surface_contract import SurfaceContract, SurfaceContractError, SurfaceIngressKind
 SurfaceContract: Any = None
@@ -64,8 +64,12 @@ except ImportError:
     _psutil = None
     _HAS_PSUTIL = False
 try:
-    _TaskResult = __import__("nucleus.Z_Spore.interfaces.swarm", fromlist=["TaskResult"]).TaskResult
-    _ResultBus = __import__("organs.D_Execution.organs.engine.result_bus", fromlist=["ResultBus"]).ResultBus
+    _TaskResult = __import__(
+        "nucleus.Z_Spore.interfaces.swarm", fromlist=["TaskResult"]
+    ).TaskResult
+    _ResultBus = __import__(
+        "organs.D_Execution.organs.engine.result_bus", fromlist=["ResultBus"]
+    ).ResultBus
     _HAS_RESULT_BUS = True
 except ImportError:
     _HAS_RESULT_BUS = False
@@ -149,7 +153,9 @@ def _mcp_surface_contract(
     try:
         ingress_kind = SurfaceIngressKind(raw_kind)
     except ValueError as exc:
-        raise SurfaceContractError(f"{operation} received invalid surface_kind '{raw_kind}'") from exc
+        raise SurfaceContractError(
+            f"{operation} received invalid surface_kind '{raw_kind}'"
+        ) from exc
     if control_plane == "cockpit":
         ingress_kind = SurfaceIngressKind.SOVEREIGN_CONTROL
     return SurfaceContract.mcp(
@@ -314,7 +320,11 @@ def tool_get_swarm_health(params: JSONDict, ctx: ToolContext) -> JSONDict:
         except (ValueError, json.JSONDecodeError, OSError) as exc:
             _log.warning("[MCPServer] worker registry read failed: %s", exc)
     wc, active = len(workers), sum(1 for w in workers if w.get("status") == "active")
-    overall = "healthy" if wc and active == wc else ("degraded" if wc == 0 or active > 0 else "unhealthy")
+    overall = (
+        "healthy"
+        if wc and active == wc
+        else ("degraded" if wc == 0 or active > 0 else "unhealthy")
+    )
     return {
         "overall": overall,
         "worker_count": wc,
@@ -359,7 +369,9 @@ def tool_get_metrics_snapshot(params: JSONDict, ctx: ToolContext) -> JSONDict:
     daemon_port = int(os.environ.get("BOS_API_PORT", "7420"))
     tasks_total = tasks_success = active_workers = p99_latency_ms = 0.0
     try:
-        req = urllib.request.Request(f"http://localhost:{daemon_port}/metrics", headers={"Accept": "text/plain"})
+        req = urllib.request.Request(
+            f"http://localhost:{daemon_port}/metrics", headers={"Accept": "text/plain"}
+        )
         with urllib.request.urlopen(req, timeout=2) as resp:  # noqa: S310
             text = resp.read().decode("utf-8")
         for line in text.splitlines():
@@ -377,7 +389,10 @@ def tool_get_metrics_snapshot(params: JSONDict, ctx: ToolContext) -> JSONDict:
                 active_workers = val
             elif line.startswith("bos_eu_balance "):
                 eu_balance = val
-            elif 'quantile="0.99"' in line and "bos_http_request_duration_seconds" in line:
+            elif (
+                'quantile="0.99"' in line
+                and "bos_http_request_duration_seconds" in line
+            ):
                 p99_latency_ms = val * 1000
     except (OSError, ValueError, TypeError):
         pass
@@ -435,7 +450,12 @@ def tool_memory_query(params: JSONDict, ctx: ToolContext) -> JSONDict:
             results = []
         return {"results": results, "count": len(results), "query": query}
     except (ImportError, KeyError, AttributeError):
-        return {"results": [], "count": 0, "query": query, "note": "memory subsystem queried"}
+        return {
+            "results": [],
+            "count": 0,
+            "query": query,
+            "note": "memory subsystem queried",
+        }
 
 
 def tool_execution_submit_task(params: JSONDict, ctx: ToolContext) -> JSONDict:
@@ -476,7 +496,9 @@ def tool_governance_submit_request(params: JSONDict, ctx: ToolContext) -> JSONDi
             "type": "invalid",
             "error": "request_type must be a string",
         }
-    canonical_request_type = re.sub(r"[^a-z0-9]+", "_", request_type_raw.strip().lower()).strip("_")
+    canonical_request_type = re.sub(
+        r"[^a-z0-9]+", "_", request_type_raw.strip().lower()
+    ).strip("_")
     if not canonical_request_type:
         return {
             "status": "failed",
@@ -503,10 +525,14 @@ def tool_governance_submit_request(params: JSONDict, ctx: ToolContext) -> JSONDi
         "destructive_action": "destructive_action",
         "privileged_action": "privileged_action",
     }
-    classified_request_type = risky_request_type_map.get(canonical_request_type, canonical_request_type)
+    classified_request_type = risky_request_type_map.get(
+        canonical_request_type, canonical_request_type
+    )
     is_risky = canonical_request_type in risky_request_type_map
     requester = params.get("requester", "mcp-client")
-    requester_id = str(requester).strip() if isinstance(requester, str) else "mcp-client"
+    requester_id = (
+        str(requester).strip() if isinstance(requester, str) else "mcp-client"
+    )
     if not requester_id:
         requester_id = "mcp-client"
     try:
@@ -543,7 +569,8 @@ def tool_governance_submit_request(params: JSONDict, ctx: ToolContext) -> JSONDi
 def tool_evolution_status(params: JSONDict, ctx: ToolContext) -> JSONDict:
     try:
         EvolutionScheduler = __import__(  # noqa: N806
-            "organs.D_Genesis.organs.evolution_scheduler", fromlist=["EvolutionScheduler"]
+            "organs.D_Genesis.organs.evolution_scheduler",
+            fromlist=["EvolutionScheduler"],
         ).EvolutionScheduler
         raw = EvolutionScheduler().get_status()
         if not isinstance(raw, dict):
@@ -552,7 +579,12 @@ def tool_evolution_status(params: JSONDict, ctx: ToolContext) -> JSONDict:
             raw["status"] = "running" if raw.get("running") else "idle"
         return raw
     except ImportError as exc:
-        return {"running": False, "trigger_count": 0, "status": "unavailable", "error": str(exc)}
+        return {
+            "running": False,
+            "trigger_count": 0,
+            "status": "unavailable",
+            "error": str(exc),
+        }
 
 
 def tool_mail_handler(params: JSONDict, ctx: ToolContext) -> JSONDict:
@@ -560,7 +592,10 @@ def tool_mail_handler(params: JSONDict, ctx: ToolContext) -> JSONDict:
     try:
         from organs.D_Gateway.tools.mail_tool import MailTool  # type: ignore[import-not-found]
     except ImportError:
-        return {"error": "MailTool not available (missing mail_tool.py)", "success": False}
+        return {
+            "error": "MailTool not available (missing mail_tool.py)",
+            "success": False,
+        }
 
     try:
         tool = MailTool()
@@ -609,15 +644,22 @@ def tool_voice_speak(params: JSONDict, ctx: ToolContext) -> JSONDict:
         )
         surface.require(SurfaceIngressKind.SOVEREIGN_CONTROL, operation="voice/speak")
     except SurfaceContractError as exc:
-        payload: dict[str, Any] = _surface_payload(surface) if surface is not None else {}
+        payload: dict[str, Any] = (
+            _surface_payload(surface) if surface is not None else {}
+        )
         error = str(exc)
-        if surface is not None and surface.ingress_kind is not SurfaceIngressKind.SOVEREIGN_CONTROL:
+        if (
+            surface is not None
+            and surface.ingress_kind is not SurfaceIngressKind.SOVEREIGN_CONTROL
+        ):
             error = f"{error}; cockpit control_plane is required"
         return {"error": error, "success": False, **payload}
 
     try:
         provider_type = params.get("provider", "elevenlabs")
-        config = VoiceConfig(provider_type=provider_type, metadata=params.get("config", {}))
+        config = VoiceConfig(
+            provider_type=provider_type, metadata=params.get("config", {})
+        )
         factory = TTSProviderFactory()
         tts = factory.create(provider_type, config)
         text = params.get("text", "")
@@ -650,13 +692,19 @@ def tool_voice_session_info(params: JSONDict, ctx: ToolContext) -> JSONDict:
             operation="voice/session_info",
         )
     except SurfaceContractError as exc:
-        payload: dict[str, Any] = _surface_payload(surface) if surface is not None else {}
+        payload: dict[str, Any] = (
+            _surface_payload(surface) if surface is not None else {}
+        )
         return {"error": str(exc), "success": False, **payload}
 
     try:
         from organs.D_Voice.voice_session_manager import VoiceSessionManager  # type: ignore[import-not-found]
     except ImportError:
-        return {"error": "VoiceSessionManager not available", "success": False, **_surface_payload(surface)}
+        return {
+            "error": "VoiceSessionManager not available",
+            "success": False,
+            **_surface_payload(surface),
+        }
 
     try:
         session = VoiceSessionManager()
@@ -692,7 +740,9 @@ def tool_voice_intent_digest(params: JSONDict, ctx: ToolContext) -> JSONDict:
             operation="voice/intent_digest",
         )
     except SurfaceContractError as exc:
-        payload: dict[str, Any] = _surface_payload(surface) if surface is not None else {}
+        payload: dict[str, Any] = (
+            _surface_payload(surface) if surface is not None else {}
+        )
         return {"error": str(exc), "success": False, **payload}
 
     try:
@@ -716,7 +766,9 @@ def tool_swarm_dispatch(params: JSONDict, ctx: ToolContext) -> JSONDict:
             "organs.D_Execution.organs.agent_orchestrator",
             fromlist=["Orchestrator"],
         )
-        vision_id = orchestrator_module.Orchestrator.receive_vision(params.get("content", ""))
+        vision_id = orchestrator_module.Orchestrator.receive_vision(
+            params.get("content", "")
+        )
         return {"vision_id": vision_id, "status": "dispatched", "worker_count": 0}
     except ImportError as exc:
         return {
@@ -749,16 +801,38 @@ def build_default_registry() -> MCPToolRegistry:
 
         _dt_tool_registry.extend(
             [
-                ("calendar/list_calendars", tool_calendar_list_calendars, "calendar_events"),
+                (
+                    "calendar/list_calendars",
+                    tool_calendar_list_calendars,
+                    "calendar_events",
+                ),
                 ("calendar/get_events", tool_calendar_get_events, "calendar_events"),
-                ("calendar/create_event", tool_calendar_create_event, "calendar_events"),
-                ("calendar/update_event", tool_calendar_update_event, "calendar_events"),
-                ("calendar/delete_event", tool_calendar_delete_event, "calendar_events"),
-                ("calendar/check_conflicts", tool_calendar_check_conflicts, "calendar_events"),
+                (
+                    "calendar/create_event",
+                    tool_calendar_create_event,
+                    "calendar_events",
+                ),
+                (
+                    "calendar/update_event",
+                    tool_calendar_update_event,
+                    "calendar_events",
+                ),
+                (
+                    "calendar/delete_event",
+                    tool_calendar_delete_event,
+                    "calendar_events",
+                ),
+                (
+                    "calendar/check_conflicts",
+                    tool_calendar_check_conflicts,
+                    "calendar_events",
+                ),
             ]
         )
     except ImportError:
-        _log.warning("[MCPToolRegistry] Calendar tool could not be loaded (missing dependencies)")
+        _log.warning(
+            "[MCPToolRegistry] Calendar tool could not be loaded (missing dependencies)"
+        )
 
     # --- Mail Tool registration ---
     _dt_tool_registry.extend(

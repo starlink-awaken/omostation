@@ -5,7 +5,7 @@ Single-registry hub-spoke topology: every service knows only Agora; Agora
 knows every service.
 """
 
-__version__ = "2.0.0"
+__version__ = "3.0.0"
 
 # ── D-Gateway extracted modules (zero/low coupling) ──────────────────────────
 # These were migrated from SharedBrain/organs/D_Gateway/ and are self-contained

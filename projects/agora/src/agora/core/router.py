@@ -72,7 +72,9 @@ class Router:
         self._strategy = strategy
         self._rr_index: dict[str, int] = {}  # service_name → next instance index
         self._latencies: deque[float] = deque(maxlen=1000)  # auto-FIFO truncation
-        self._degraded_services: set[str] = set()  # track services in degrade mode for exit events
+        self._degraded_services: set[str] = (
+            set()
+        )  # track services in degrade mode for exit events
         self._trace_buffer: list[str] = []  # batched disk writes
         self._trace_path = _Path(__file__).parent.parent.parent / "trace_log.jsonl"
         if routes_path:
@@ -80,8 +82,14 @@ class Router:
         else:
             package_root = _Path(__file__).resolve().parents[3]
             package_root_routes = package_root / "agora-routes.json"
-            storage_sibling_routes = _Path(registry._storage_path).parent / "agora-routes.json"
-            self._routes_path = package_root_routes if package_root_routes.exists() else storage_sibling_routes
+            storage_sibling_routes = (
+                _Path(registry._storage_path).parent / "agora-routes.json"
+            )
+            self._routes_path = (
+                package_root_routes
+                if package_root_routes.exists()
+                else storage_sibling_routes
+            )
         self._load_routes()
         global _routers, _atexit_registered
         _routers.append(self)
@@ -91,7 +99,6 @@ class Router:
 
     def _load_routes(self):
         """Load route mappings from L0 registry + JSON fallback."""
-        import json
 
         # Try L0 registry first
         try:
@@ -102,6 +109,7 @@ class Router:
                 self._routes = l0
                 # Also load JSON for agora-internal routes not in L0
                 from agora.persistence import json_load
+
                 data = json_load(self._routes_path, default={})
                 json_routes = data.get("routes", {})
                 # JSON agora-internal routes supplement L0
@@ -114,6 +122,7 @@ class Router:
 
         # Fallback: JSON file
         from agora.persistence import json_load
+
         data = json_load(self._routes_path, default={})
         self._routes = data.get("routes", {})
 
@@ -241,7 +250,13 @@ class Router:
         services = [_convert(s) for s in self.registry.list_all()]
         return _save_service_cache(services)
 
-    def _add_instance(self, service_name: str, mcp_endpoint: str, health_endpoint: str = "", port: int = 0):
+    def _add_instance(
+        self,
+        service_name: str,
+        mcp_endpoint: str,
+        health_endpoint: str = "",
+        port: int = 0,
+    ):
         """Add a load-balanced instance to an existing service."""
         svc = self.registry.get(service_name)
         if not svc:
@@ -288,7 +303,9 @@ class Router:
 
         service_name = self.resolve(tool_name)
         if not service_name:
-            self._trace(tool_name, service_name or "unknown", _start, "error", "not_found")
+            self._trace(
+                tool_name, service_name or "unknown", _start, "error", "not_found"
+            )
             logger.warning("route_not_found", tool=tool_name)
             return {"status": "error", "error": "Tool not available"}
 
@@ -354,7 +371,9 @@ emit('AGORA_DEGRADE_ENTERED', {{"service": "agora", "reason": "{reason}"}})
             return {"status": "error", "error": "Service temporarily unavailable"}
 
         # Check for explicit compress flag in request arguments
-        compress_requested = arguments.pop("_compress", False) if isinstance(arguments, dict) else False
+        compress_requested = (
+            arguments.pop("_compress", False) if isinstance(arguments, dict) else False
+        )
 
         try:
             result = await _dispatch(instance, tool_name, arguments)
@@ -380,15 +399,22 @@ emit('AGORA_DEGRADE_ENTERED', {{"service": "agora", "reason": "{reason}"}})
                         else result.get("usage") or {}
                     )
                     if isinstance(usage, dict):
-                        input_tokens = usage.get("inputTokens") or usage.get("input_tokens") or 0
-                        output_tokens = usage.get("outputTokens") or usage.get("output_tokens") or 0
+                        input_tokens = (
+                            usage.get("inputTokens") or usage.get("input_tokens") or 0
+                        )
+                        output_tokens = (
+                            usage.get("outputTokens") or usage.get("output_tokens") or 0
+                        )
                     # Pattern 2: result.result.usage (nested MCP response)
                     inner = result.get("result") or {}
                     if isinstance(inner, dict):
                         inner_usage = inner.get("usage") or {}
                         if isinstance(inner_usage, dict):
                             input_tokens = (
-                                input_tokens or inner_usage.get("inputTokens") or inner_usage.get("input_tokens") or 0
+                                input_tokens
+                                or inner_usage.get("inputTokens")
+                                or inner_usage.get("input_tokens")
+                                or 0
                             )
                             output_tokens = (
                                 output_tokens
@@ -418,20 +444,34 @@ emit('AGORA_DEGRADE_ENTERED', {{"service": "agora", "reason": "{reason}"}})
                     from kaironcloud_billing.pricing.eu_ledger import EULedger  # type: ignore[import-not-found]
 
                     # Map tool name to EU operation — fall back to tool prefix
-                    eu_operation = tool_name.split(".")[0] if "." in tool_name else tool_name
+                    eu_operation = (
+                        tool_name.split(".")[0] if "." in tool_name else tool_name
+                    )
                     tx = EULedger().consume(caller.actor, eu_operation)
                     if not tx.success:
                         logger.info(
-                            "eu_cost_tracking_failed", caller=caller.actor, operation=eu_operation, error=tx.error
+                            "eu_cost_tracking_failed",
+                            caller=caller.actor,
+                            operation=eu_operation,
+                            error=tx.error,
                         )
                 except Exception as eu_err:
                     logger.warning("eu_cost_tracking_failed", error=str(eu_err))
             # ── End EU cost tracking middleware ────────────────────────────
 
             if result.get("status") == "error":
-                self._trace(tool_name, service_name, _start, "error", result.get("error", "")[:100])
+                self._trace(
+                    tool_name,
+                    service_name,
+                    _start,
+                    "error",
+                    result.get("error", "")[:100],
+                )
                 logger.warning(
-                    "route_dispatch_failed", tool=tool_name, service=service_name, error=result.get("error", "")
+                    "route_dispatch_failed",
+                    tool=tool_name,
+                    service=service_name,
+                    error=result.get("error", ""),
                 )
                 self.registry.mark_failure(service_name)
                 self._maybe_publish(
@@ -447,7 +487,13 @@ emit('AGORA_DEGRADE_ENTERED', {{"service": "agora", "reason": "{reason}"}})
                 try:
                     from agora.audit import AuditLogger  # type: ignore[import-not-found]
 
-                    AuditLogger().log("route.call", caller.actor, service_name, "error", result.get("error", "")[:100])
+                    AuditLogger().log(
+                        "route.call",
+                        caller.actor,
+                        service_name,
+                        "error",
+                        result.get("error", "")[:100],
+                    )
                 except Exception:
                     pass
             else:
@@ -485,7 +531,9 @@ emit('AGORA_DEGRADE_ENTERED', {{"service": "agora", "reason": "{reason}"}})
             return result
         except Exception as e:
             self._trace(tool_name, service_name, _start, "error", str(e)[:100])
-            logger.warning("route_failed", tool=tool_name, service=service_name, error=str(e))
+            logger.warning(
+                "route_failed", tool=tool_name, service=service_name, error=str(e)
+            )
             self.registry.mark_failure(service_name)
             self._maybe_publish(
                 "route:call.failed",
@@ -503,7 +551,9 @@ emit('AGORA_DEGRADE_ENTERED', {{"service": "agora", "reason": "{reason}"}})
         if self._event_bus:
             self._event_bus.publish(event_type, payload, "agora-router")
 
-    def _trace(self, tool: str, service: str, start: float, status: str, detail: str = ""):
+    def _trace(
+        self, tool: str, service: str, start: float, status: str, detail: str = ""
+    ):
         """Buffer trace entry; flush to disk every 50 calls."""
         elapsed = round(_time.monotonic() - start, 4)
 
@@ -530,7 +580,10 @@ emit('AGORA_DEGRADE_ENTERED', {{"service": "agora", "reason": "{reason}"}})
             return
         try:
             # Rotate if exceeds 1MB
-            if self._trace_path.exists() and self._trace_path.stat().st_size > 1_048_576:
+            if (
+                self._trace_path.exists()
+                and self._trace_path.stat().st_size > 1_048_576
+            ):
                 rotated = self._trace_path.with_suffix(".jsonl.1")
                 if rotated.exists():
                     rotated.unlink()

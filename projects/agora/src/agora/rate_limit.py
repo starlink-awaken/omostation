@@ -104,7 +104,11 @@ class RateLimiter:
     def _cleanup_old_buckets(self) -> None:
         now = time.time()
         with self._lock:
-            stale = [k for k, b in self._buckets.items() if now - b.last_refill > BUCKET_IDLE_TTL_SECONDS]
+            stale = [
+                k
+                for k, b in self._buckets.items()
+                if now - b.last_refill > BUCKET_IDLE_TTL_SECONDS
+            ]
             for k in stale:
                 del self._buckets[k]
 

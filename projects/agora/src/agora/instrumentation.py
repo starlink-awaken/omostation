@@ -1,4 +1,4 @@
-""""OpenTelemetry instrumentation bootstrap for the gateway.
+""" "OpenTelemetry instrumentation bootstrap for the gateway.
 
 Must be imported early to ensure auto-instrumentation hooks apply.
 Checks for OTel dependencies; silently no-ops if not installed.
@@ -42,9 +42,11 @@ def init_otel(
         from opentelemetry.sdk.trace import TracerProvider  # type: ignore[import-not-found]
         from opentelemetry.sdk.trace.export import BatchSpanProcessor  # type: ignore[import-not-found]
 
-        resource = Resource.create({
-            "service.name": os.environ.get("OTEL_SERVICE_NAME", service_name),
-        })
+        resource = Resource.create(
+            {
+                "service.name": os.environ.get("OTEL_SERVICE_NAME", service_name),
+            }
+        )
 
         provider = TracerProvider(resource=resource)
 
@@ -55,11 +57,15 @@ def init_otel(
 
         trace.set_tracer_provider(provider)
         _OTEL_INITIALIZED = True
-        logger.info("[OTel] SDK initialized (service: %s, endpoint: %s)", service_name, endpoint)
+        logger.info(
+            "[OTel] SDK initialized (service: %s, endpoint: %s)", service_name, endpoint
+        )
         return True
 
     except ImportError:
-        logger.info("[OTel] OpenTelemetry packages not installed — instrumentation disabled")
+        logger.info(
+            "[OTel] OpenTelemetry packages not installed — instrumentation disabled"
+        )
         return False
     except Exception as e:
         logger.warning("[OTel] Failed to initialize: %s", e)
@@ -78,7 +84,9 @@ def get_tracer(name: str = "agora.gateway"):
     """
     try:
         from opentelemetry import trace
+
         return trace.get_tracer(name)
     except ImportError:
         import opentelemetry.trace
+
         return opentelemetry.trace.NoOpTracer()

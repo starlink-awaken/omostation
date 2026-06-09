@@ -27,7 +27,7 @@ import sys
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import structlog
 from fastmcp import FastMCP
@@ -51,13 +51,25 @@ from agora.mcp_registry.router import SmartRouter  # type: ignore[import-not-fou
 
 # L0 审计 hook — BOS URI 前置校验 + 后置审计
 import sys as _sys
-_sys.path.insert(0, str(Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools"))
+
+_sys.path.insert(
+    0,
+    str(
+        Path.home()
+        / "Workspace"
+        / "projects"
+        / "ecos"
+        / "src"
+        / "ecos"
+        / "ssot"
+        / "tools"
+    ),
+)
 from mof_agora_hook import pre_check as _bos_pre_check, post_audit as _bos_post_audit  # type: ignore[import-not-found]
 
 # BOS URI 解析器 (P45 W1) — 统一 POC_SERVICES 路由
 from agora.mcp.bos_resolver import resolve_bos_uri as _resolve_bos_uri  # type: ignore[import-not-found]
-from agora.mcp.bos_resolver import list_services as _list_poc_services        # type: ignore[import-not-found]
-from agora.mcp.bos_resolver import POC_SERVICES as _POC_SERVICES              # type: ignore[import-not-found]
+from agora.mcp.bos_resolver import POC_SERVICES as _POC_SERVICES  # type: ignore[import-not-found]
 
 # BOSRouter (P45 W2) — 统一路由注册表
 from agora.mcp.bos_router import bos_router as _bos_router  # type: ignore[import-not-found]
@@ -67,7 +79,11 @@ from agora.mcp.bos_middleware import bos_rate_limiter, bos_circuit_breaker, bos_
 from agora.mcp.bos_middleware import config_watcher  # type: ignore[import-not-found]
 
 # 响应工具 (God Module 拆分)
-from agora.server._response import FORMAT_VERSION, _error, _get_cache_ttl, _ok, _load_cache_ttl_config
+from agora.server._response import (
+    FORMAT_VERSION,
+    _error,
+    _ok,
+)
 
 # BOS 工具 (God Module 拆分 — 13个工具 + 路由/事件/鉴权)
 from agora.server.tools_bos import register_bos_tools
@@ -120,7 +136,10 @@ async def _proxy_lifespan(server: FastMCP):
         swarm_role = os.environ.get("AGORA_SWARM_ROLE", "")
         if swarm_role:
             from agora.mcp.swarm import get_swarm, SWARM_DEFAULT_PORT
-            swarm_port = int(os.environ.get("AGORA_SWARM_PORT", str(SWARM_DEFAULT_PORT)))
+
+            swarm_port = int(
+                os.environ.get("AGORA_SWARM_PORT", str(SWARM_DEFAULT_PORT))
+            )
             _swarm = get_swarm(role=swarm_role, port=swarm_port)
             _swarm.start()
             logger.info("swarm_started", role=swarm_role, port=swarm_port)
@@ -155,16 +174,13 @@ async def _proxy_lifespan(server: FastMCP):
         logger.info("swarm_stopped")
 
 
-from agora.middleware.middleware import FastMCPAuditMiddleware
+from agora.middleware.middleware import FastMCPAuditMiddleware  # noqa: E402
 
 mcp = FastMCP(
     "Agora — Service Convergence Hub",
     lifespan=_proxy_lifespan,
     mask_error_details=True,
-    middleware=[
-        AuthMiddleware(auth=_require_agora_api_key),
-        FastMCPAuditMiddleware()
-    ],
+    middleware=[AuthMiddleware(auth=_require_agora_api_key), FastMCPAuditMiddleware()],
 )
 registry = get_registry()
 _bus = get_event_bus(registry)
@@ -176,10 +192,11 @@ router = get_router(registry, _bus)
 # ── BOS Tools Registration ──────────────────────────────────────────
 # 注册在 mcp 实例创建后、任何工具定义之前
 
-from agora.server.tools_bos import register_bos_tools  # type: ignore[import-not-found]
+
 register_bos_tools(mcp, _bus)
 
-from agora.server.tools_swarm import register_swarm_tools  # type: ignore[import-not-found]
+from agora.server.tools_swarm import register_swarm_tools  # type: ignore[import-not-found]  # noqa: E402
+
 register_swarm_tools(mcp)
 
 # ── A2A Task Manager ──────────────────────────────────────────────────
@@ -200,7 +217,9 @@ def _get_task_manager() -> TaskManager:  # noqa: F821
 # ── MCP Proxy ───────────────────────────────────────────────────────
 
 _proxy_manager: ProxyManager | None = None
-_lifecycle_manager: LifecycleManager | None = None  # singleton for background watch tasks
+_lifecycle_manager: LifecycleManager | None = (
+    None  # singleton for background watch tasks
+)
 
 # Path to enriched service config (with command/args for stdio services)
 # Resolved relative to project root (same convention as registry.py's agora-services.json)
@@ -331,16 +350,21 @@ async def _init_proxy():
 
     # ── Phase 4 (P45 W2): Seed BOSRouter from POC_SERVICES ──
     for uri, svc in _POC_SERVICES.items():
-        _bos_router.register(uri, adapter="poc", config={
-            "domain": getattr(svc, "domain", ""),
-            "transport": getattr(svc, "transport", ""),
-            "description": getattr(svc, "description", ""),
-        })
+        _bos_router.register(
+            uri,
+            adapter="poc",
+            config={
+                "domain": getattr(svc, "domain", ""),
+                "transport": getattr(svc, "transport", ""),
+                "description": getattr(svc, "description", ""),
+            },
+        )
     logger.info("bos_router_seeded", poc_count=_bos_router.count())
 
     # ── Phase 5 (P46 W0): 配置 BOS 中间件 ──
     # 从配置文件读取限流 QPS，硬编码作为回退
     import yaml
+
     rates_path = Path(__file__).parent.parent / "agora-bos-rates.yaml"
     if rates_path.exists():
         rates = yaml.safe_load(open(rates_path))
@@ -356,11 +380,13 @@ async def _init_proxy():
 
     # ── Phase 6 (P46 W1): 从 M1 Workflow 节点自动注册 BOS 路由 ──
     from agora.mcp.bos_auto_register import auto_register_from_m1  # type: ignore[import-not-found]
+
     count = auto_register_from_m1()
     logger.info("auto_register_from_m1: %d workflow routes seeded", count)
 
     # ── Phase 7 (P47): 从 AGENTS.md 自动发现 + 信号热加载 ──
     from agora.mcp.bos_discovery import discover_from_workspace  # type: ignore[import-not-found]
+
     discovered = discover_from_workspace()
     logger.info("bos_discovery: %d URIs discovered from AGENTS.md", discovered)
     _install_signal_handler()
@@ -368,15 +394,21 @@ async def _init_proxy():
     # ── Phase 8 (P48): 启动配置文件监听 ──
     rates_path = Path(__file__).parent.parent / "agora-bos-rates.yaml"
     if rates_path.exists():
+
         def _reload_rates():
             import yaml
+
             try:
                 rates = yaml.safe_load(open(rates_path))
                 for route in rates.get("routes", []):
                     bos_rate_limiter.configure(route["prefix"], qps=route["qps"])
-                logger.info("config_watcher: rates reloaded (%d routes)", len(rates.get("routes", [])))
+                logger.info(
+                    "config_watcher: rates reloaded (%d routes)",
+                    len(rates.get("routes", [])),
+                )
             except Exception as e:
                 logger.error("config_watcher: reload failed: %s", e)
+
         config_watcher.file_path = str(rates_path)
         config_watcher._on_change = _reload_rates
         config_watcher.start(interval=5)
@@ -384,6 +416,7 @@ async def _init_proxy():
 
 
 # ── 信号处理 (P46 W2) ─────────────────────────────────
+
 
 def _install_signal_handler() -> None:
     """安装 SIGUSR1 信号处理器 — 热加载 BOS 配置。"""
@@ -398,20 +431,32 @@ def _install_signal_handler() -> None:
                 rates = yaml.safe_load(open(rates_path))
                 for route in rates.get("routes", []):
                     bos_rate_limiter.configure(route["prefix"], qps=route["qps"])
-                logger.info("signal_handler: rate limits reloaded (%d routes)", len(rates.get("routes", [])))
+                logger.info(
+                    "signal_handler: rate limits reloaded (%d routes)",
+                    len(rates.get("routes", [])),
+                )
             except Exception as e:
                 logger.error("signal_handler: failed to reload rates: %s", e)
         # Reload BOSRouter from POC_SERVICES
         for uri, svc in _POC_SERVICES.items():
-            _bos_router.register(uri, adapter="poc", config={
-                "domain": getattr(svc, "domain", ""),
-                "transport": getattr(svc, "transport", ""),
-            })
-        logger.info("signal_handler: BOSRouter reloaded (%d routes)", _bos_router.count())
+            _bos_router.register(
+                uri,
+                adapter="poc",
+                config={
+                    "domain": getattr(svc, "domain", ""),
+                    "transport": getattr(svc, "transport", ""),
+                },
+            )
+        logger.info(
+            "signal_handler: BOSRouter reloaded (%d routes)", _bos_router.count()
+        )
 
     try:
         signal.signal(signal.SIGUSR1, _reload_handler)
-        logger.info("signal_handler: SIGUSR1 handler installed (kill -USR1 %d to reload)", os.getpid())
+        logger.info(
+            "signal_handler: SIGUSR1 handler installed (kill -USR1 %d to reload)",
+            os.getpid(),
+        )
     except (AttributeError, ValueError):
         pass  # Windows 不支持 SIGUSR1
 
@@ -426,7 +471,9 @@ def _identity_from_auth_token() -> dict | None:
         return None
 
     claims = getattr(token, "claims", {}) or {}
-    subject_id = claims.get("sub") or claims.get("subject_id") or getattr(token, "client_id", "")
+    subject_id = (
+        claims.get("sub") or claims.get("subject_id") or getattr(token, "client_id", "")
+    )
     if not subject_id:
         return None
 
@@ -436,7 +483,11 @@ def _identity_from_auth_token() -> dict | None:
     }
     if issuer := claims.get("iss") or claims.get("issuer"):
         identity["issuer"] = issuer
-    if tenant := claims.get("tenant") or claims.get("org") or getattr(token, "resource", None):
+    if (
+        tenant := claims.get("tenant")
+        or claims.get("org")
+        or getattr(token, "resource", None)
+    ):
         identity["tenant"] = tenant
     if scopes := getattr(token, "scopes", None):
         identity["scopes"] = list(scopes)
@@ -446,7 +497,9 @@ def _identity_from_auth_token() -> dict | None:
 def _resolve_caller_identity(caller_identity: str | dict | None) -> str | dict:
     try:
         explicit_identity = (
-            json.loads(caller_identity) if isinstance(caller_identity, str) and caller_identity else caller_identity
+            json.loads(caller_identity)
+            if isinstance(caller_identity, str) and caller_identity
+            else caller_identity
         )
     except json.JSONDecodeError:
         explicit_identity = "unknown"
@@ -490,7 +543,9 @@ class ProxyForwardTool(Tool):
         except ValueError as e:
             return self.convert_result({"status": "error", "error": str(e)})
         except Exception as e:
-            return self.convert_result({"status": "error", "error": f"Proxy call failed: {str(e)[:200]}"})
+            return self.convert_result(
+                {"status": "error", "error": f"Proxy call failed: {str(e)[:200]}"}
+            )
 
 
 # Track which proxy tools have been registered as FastMCP tools,
@@ -618,7 +673,9 @@ async def _proxy_sync_loop():
             continue
         try:
             proxy_configs = _load_proxy_services()
-            await _proxy_manager.registry.register_from_registry(registry, proxy_configs)
+            await _proxy_manager.registry.register_from_registry(
+                registry, proxy_configs
+            )
             backoff = 10  # reset on success
         except Exception:
             logger.exception("proxy_sync_loop_error")
@@ -627,17 +684,24 @@ async def _proxy_sync_loop():
 
 # ── Phase 34: Agora Mesh V2 (Agent Experience Layer) ────────────────
 
+
 @mcp.resource("bos://agora/registry")
 def agora_registry() -> str:
     """Introspection: returns a JSON dump of all registered tools and resources."""
     import json
+
     if _proxy_manager:
         tools = _proxy_manager.list_tools()
         resources = _proxy_manager.list_resources()
-        return json.dumps({
-            "tools": [{"name": t.name, "description": t.description} for t in tools],
-            "resources": [{"uri": r.uri, "name": r.name} for r in resources]
-        }, indent=2)
+        return json.dumps(
+            {
+                "tools": [
+                    {"name": t.name, "description": t.description} for t in tools
+                ],
+                "resources": [{"uri": r.uri, "name": r.name} for r in resources],
+            },
+            indent=2,
+        )
     return json.dumps({"error": "proxy manager not initialized"})
 
 
@@ -648,6 +712,7 @@ async def bos_agora_status() -> str:
     Agent 单次调用即可获取 BOS 系统全貌，无需调多个工具。
     """
     import json
+
     status = {
         "format_version": FORMAT_VERSION,
         "service": "agora",
@@ -662,7 +727,7 @@ async def bos_agora_status() -> str:
             },
             "cache": bos_cache.status(),
         },
-        "metrics": bos_metrics.summary(),
+        "metrics": bos_metrics.summary(),  # noqa: F821
         "resources_total": _bos_router.count() + len(_POC_SERVICES),
     }
     return json.dumps(status, ensure_ascii=False, indent=2)
@@ -671,10 +736,11 @@ async def bos_agora_status() -> str:
 @mcp.resource("bos://{domain}/{package}/{action}")
 async def bos_universal_resource(domain: str, package: str, action: str) -> str:
     """P45 W2: Universal BOS URI resource handler — 匹配所有 bos:// 请求。
-    
+
     路由优先级: BOSRouter (POC) → ProxyManager (MCP 代理) → 404
     """
     import json
+
     uri = f"bos://{domain}/{package}/{action}"
     # Step 1: BOSRouter
     route = _bos_router.resolve(uri)
@@ -682,24 +748,49 @@ async def bos_universal_resource(domain: str, package: str, action: str) -> str:
         if route["adapter"] == "poc":
             try:
                 result = await _resolve_bos_uri(uri)
-                return json.dumps({"status": "ok", "uri": uri, "source": "bos_router",
-                                  "result": result, "format_version": FORMAT_VERSION})
+                return json.dumps(
+                    {
+                        "status": "ok",
+                        "uri": uri,
+                        "source": "bos_router",
+                        "result": result,
+                        "format_version": FORMAT_VERSION,
+                    }
+                )
             except Exception as e:
-                return json.dumps({"status": "error", "uri": uri, "error": str(e),
-                                  "format_version": FORMAT_VERSION})
+                return json.dumps(
+                    {
+                        "status": "error",
+                        "uri": uri,
+                        "error": str(e),
+                        "format_version": FORMAT_VERSION,
+                    }
+                )
     # Step 2: ProxyManager
     if _proxy_manager:
         try:
             result = await _proxy_manager.read_resource(uri)
             if isinstance(result, dict) and "contents" in result:
-                return json.dumps({"status": "ok", "uri": uri, "source": "proxy",
-                                  "contents": result["contents"], "format_version": FORMAT_VERSION})
+                return json.dumps(
+                    {
+                        "status": "ok",
+                        "uri": uri,
+                        "source": "proxy",
+                        "contents": result["contents"],
+                        "format_version": FORMAT_VERSION,
+                    }
+                )
         except Exception:
             pass
     # Step 3: Not found
-    return json.dumps({"status": "error", "uri": uri,
-                      "error": f"Resource not found or no provider for: {uri}",
-                      "format_version": FORMAT_VERSION})
+    return json.dumps(
+        {
+            "status": "error",
+            "uri": uri,
+            "error": f"Resource not found or no provider for: {uri}",
+            "format_version": FORMAT_VERSION,
+        }
+    )
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -764,16 +855,16 @@ async def proxy_call(tool_name: str, arguments: str = "{}") -> dict:
         logger.warning("bos_pre_check_blocked", uri=_bos_uri, reason=_reason)
         return _error(_reason)
 
-    _t0 = __import__('time').time()
+    _t0 = __import__("time").time()
     try:
         result = await _proxy_manager.dispatch(tool_name, args)
-        _bos_post_audit(_bos_uri, 200, int((__import__('time').time() - _t0) * 1000))
+        _bos_post_audit(_bos_uri, 200, int((__import__("time").time() - _t0) * 1000))
         return _ok({"format_version": FORMAT_VERSION, **result})
     except ValueError as e:
-        _bos_post_audit(_bos_uri, 400, int((__import__('time').time() - _t0) * 1000))
+        _bos_post_audit(_bos_uri, 400, int((__import__("time").time() - _t0) * 1000))
         return _error(str(e))
     except Exception as e:
-        _bos_post_audit(_bos_uri, 500, int((__import__('time').time() - _t0) * 1000))
+        _bos_post_audit(_bos_uri, 500, int((__import__("time").time() - _t0) * 1000))
         return _error(f"Proxy call failed: {str(e)[:200]}")
 
 
@@ -876,7 +967,6 @@ async def proxy_remove_service(name: str) -> dict:
 
 
 # ── Service management tools ─────────────────────────────────────
-
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -988,9 +1078,15 @@ async def register_service(
             proxy_svc["args"] = cfg.mcp_args.split() if cfg.mcp_args else []
         proxy_result = await _proxy_manager.add_service(proxy_svc)
         if proxy_result.startswith("error"):
-            logger.warning("register_service_proxy_add_failed", service=cfg.name, reason=proxy_result)
+            logger.warning(
+                "register_service_proxy_add_failed",
+                service=cfg.name,
+                reason=proxy_result,
+            )
 
-    _bus.publish("registry:service.registered", {"name": cfg.name}, source="agora.server.mcp")
+    _bus.publish(
+        "registry:service.registered", {"name": cfg.name}, source="agora.server.mcp"
+    )
 
     return _ok(
         {
@@ -1010,7 +1106,6 @@ def _save_proxy_service(svc: dict):
     existing = [s for s in existing if s.get("name") != svc.get("name")]
     existing.append(svc)
     json_save(_PROXY_CONFIG_PATH, existing)
-
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1078,7 +1173,9 @@ def list_routes() -> dict:
 
 
 @mcp.tool()
-async def route_call(tool_name: str, arguments: str = "{}", caller_identity: str = "") -> dict:
+async def route_call(
+    tool_name: str, arguments: str = "{}", caller_identity: str = ""
+) -> dict:
     """Route a tool call to the appropriate service.
 
     Args:
@@ -1167,12 +1264,17 @@ def get_event_log(limit: int = 50, since: str = "") -> dict:
 # ── Governance tools (v2.0) ─────────────────────────────────────
 
 
-
 # ═══════════════════════════════════════════════════════════════
 # Section 5: Audit Tools
 # ═══════════════════════════════════════════════════════════════
 @mcp.tool()
-def audit_query(actor: str = "", resource: str = "", event_type: str = "", since: str = "", limit: int = 50) -> dict:
+def audit_query(
+    actor: str = "",
+    resource: str = "",
+    event_type: str = "",
+    since: str = "",
+    limit: int = 50,
+) -> dict:
     """Query the audit log for persisted events.
 
     Use this for debugging, compliance checks, and understanding
@@ -1187,7 +1289,9 @@ def audit_query(actor: str = "", resource: str = "", event_type: str = "", since
 
     Returns filtered audit log entries with metadata.
     """
-    entries = _auditor.query(actor=actor, resource=resource, event_type=event_type, since=since, limit=limit)
+    entries = _auditor.query(
+        actor=actor, resource=resource, event_type=event_type, since=since, limit=limit
+    )
     return _ok(
         {
             "format_version": FORMAT_VERSION,
@@ -1215,17 +1319,15 @@ def audit_stats(since: str = "") -> dict:
     )
 
 
-
 # ═══════════════════════════════════════════════════════════════
 # Section 6: API Key Tools (extracted → server/tools_api_keys.py)
 # ═══════════════════════════════════════════════════════════════
-from agora.server.tools_api_keys import register_tools as _register_api_keys
+from agora.server.tools_api_keys import register_tools as _register_api_keys  # noqa: E402
 
 _register_api_keys(mcp, _ok, FORMAT_VERSION)
 
 
 # ── Push Notification tools (A2A-compatible) ──────────────────────────
-
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1269,7 +1371,9 @@ def register_push_notification(callback_url: str, event_types: str = "*") -> dic
 
 
 @mcp.tool()
-async def a2a_send_task(tool_name: str, arguments: str = "{}", session_id: str = "") -> dict:
+async def a2a_send_task(
+    tool_name: str, arguments: str = "{}", session_id: str = ""
+) -> dict:
     """Submit a tool call as an A2A task and execute it.
 
     Creates a task, routes it to the appropriate service via the router,
@@ -1344,7 +1448,9 @@ def a2a_cancel_task(task_id: str) -> dict:
 
 
 @mcp.tool()
-def a2a_list_tasks(service: str = "", status: str = "", since: str = "", limit: int = 50) -> dict:
+def a2a_list_tasks(
+    service: str = "", status: str = "", since: str = "", limit: int = 50
+) -> dict:
     """List A2A tasks with optional filters.
 
     Args:
@@ -1424,7 +1530,11 @@ def _build_agent_card(service_name: str) -> tuple[dict | None, str | None]:
         return None, f"Service '{service_name}' not found"
     try:
         tools = _get_proxy_tools(service_name)
-        tags = svc.tags if isinstance(svc.tags, list) else (svc.tags.split(",") if svc.tags else [])
+        tags = (
+            svc.tags
+            if isinstance(svc.tags, list)
+            else (svc.tags.split(",") if svc.tags else [])
+        )
 
         # Check if authentication is configured
         from agora.governance import KeyManager
@@ -1448,7 +1558,6 @@ def _build_agent_card(service_name: str) -> tuple[dict | None, str | None]:
         return card.to_dict(), None
     except Exception as e:
         return None, str(e)
-
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1503,7 +1612,6 @@ def get_agent_card(name: str) -> dict:
 # ── MCP Registry tools (Phase 1) ────────────────────────────────────
 
 
-
 # ═══════════════════════════════════════════════════════════════
 # Section 9: Repository/Registry Tools
 # ═══════════════════════════════════════════════════════════════
@@ -1540,7 +1648,13 @@ async def repo_search(query: str = "", source: str = "local", limit: int = 20) -
                 results = results[:limit]
             else:
                 results = catalog.search_tools(query, limit=limit)
-            return _ok({"format_version": FORMAT_VERSION, "tools": results, "count": len(results)})
+            return _ok(
+                {
+                    "format_version": FORMAT_VERSION,
+                    "tools": results,
+                    "count": len(results),
+                }
+            )
         finally:
             catalog.close()
     except Exception as e:
@@ -1613,7 +1727,9 @@ async def repo_install(name: str) -> dict:
                 return _ok(
                     {
                         "format_version": FORMAT_VERSION,
-                        "action": "installed" if "installed" in msg else "already_installed",
+                        "action": "installed"
+                        if "installed" in msg
+                        else "already_installed",
                         "name": name,
                         "msg": msg,
                     }
@@ -1739,7 +1855,6 @@ def _build_registry_orchestrator(catalog: ToolCatalog) -> Orchestrator:
 # ── Lifecycle Management tools (Phase 2) ──────────────────────────────
 
 
-
 # ═══════════════════════════════════════════════════════════════
 # Section 10: Lifecycle Tools
 # ═══════════════════════════════════════════════════════════════
@@ -1758,14 +1873,17 @@ async def lifecycle_status() -> dict:
                 "id": tool_id,
                 "name": tool.get("name", tool_id) if tool else tool_id,
                 "last_used": last_used,
-                "idle_for_seconds": round(time.time() - last_used, 1) if last_used else 0,
+                "idle_for_seconds": round(time.time() - last_used, 1)
+                if last_used
+                else 0,
             }
         )
 
     return _ok(
         {
             "format_version": FORMAT_VERSION,
-            "watch_running": lm._idle_watch_task is not None and not lm._idle_watch_task.done(),
+            "watch_running": lm._idle_watch_task is not None
+            and not lm._idle_watch_task.done(),
             "idle_timeout": lm._idle_timeout,
             "check_interval": lm._check_interval,
             "loaded_count": len(loaded),
@@ -1775,7 +1893,9 @@ async def lifecycle_status() -> dict:
 
 
 @mcp.tool()
-async def lifecycle_start_watch(idle_timeout: int = 300, check_interval: int = 60) -> dict:
+async def lifecycle_start_watch(
+    idle_timeout: int = 300, check_interval: int = 60
+) -> dict:
     """Start the idle timeout background watcher.
 
     Automatically unloads tools that have not been used for longer than
@@ -1879,10 +1999,10 @@ async def lifecycle_unload_all() -> dict:
         return _error(f"Unload all failed: {e}")
 
 
-
 # ═══════════════════════════════════════════════════════════════
 # Section: 执行引擎
 # ═══════════════════════════════════════════════════════════════
+
 
 @mcp.tool()
 async def agora_execute(query: str, mode: str = "auto") -> dict:
@@ -1906,7 +2026,6 @@ async def agora_execute(query: str, mode: str = "auto") -> dict:
         return _error(f"Execution failed: {e}")
 
 
-
 def main():
     """Start the Agora MCP server in stdio mode with proxy initialization.
 
@@ -1926,7 +2045,7 @@ def http_main():
     """
     import asyncio
 
-    asyncio.run(mcp.run_http_async(host="0.0.0.0", port=7422))
+    asyncio.run(mcp.run_http_async(host="0.0.0.0", port=7422))  # noqa: S104 — MCP server intentionally binds all interfaces
 
 
 def sse_main():
@@ -1938,7 +2057,7 @@ def sse_main():
     import asyncio
 
     sys.stderr.write("Agora MCP Server (SSE) starting on port 7431...\n")
-    asyncio.run(mcp.run_http_async(transport="sse", host="0.0.0.0", port=7431))
+    asyncio.run(mcp.run_http_async(transport="sse", host="0.0.0.0", port=7431))  # noqa: S104 — MCP SSE server intentionally binds all interfaces
 
 
 if __name__ == "__main__":

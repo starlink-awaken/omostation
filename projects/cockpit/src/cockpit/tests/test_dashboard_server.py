@@ -1,6 +1,5 @@
 """Dashboard server 安全测试 — 认证/CORS/端点路由 + loader 函数单元测试。"""
 
-import json
 import threading
 import time
 from http.server import HTTPServer
@@ -8,6 +7,7 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 
 import pytest
+
 from cockpit.dashboard_server import _load_debt, _omo_report, _run_e2e
 
 
@@ -17,6 +17,7 @@ def test_server(monkeypatch):
     monkeypatch.setenv("COCKPIT_DASHBOARD_PORT", "0")
     monkeypatch.setenv("COCKPIT_DASHBOARD_TOKEN", "")
     import importlib
+
     import cockpit.dashboard_server as ds
 
     importlib.reload(ds)
@@ -33,31 +34,31 @@ def test_server(monkeypatch):
 class TestDashboardEndpoints:
     def test_root_endpoint_reachable(self, test_server):
         try:
-            resp = urlopen(Request(test_server.base), timeout=3)
+            resp = urlopen(Request(test_server.base), timeout=3)  # noqa: S310
             assert resp.status in (200, 404)
         except Exception:
             pass
 
     def test_api_status_endpoint(self, test_server):
         try:
-            req = Request(f"{test_server.base}/api/status")
-            resp = urlopen(req, timeout=3)
+            req = Request(f"{test_server.base}/api/status")  # noqa: S310
+            resp = urlopen(req, timeout=3)  # noqa: S310
             assert resp.status == 200
         except Exception:
             pass
 
     def test_favicon_returns_404(self, test_server):
         try:
-            req = Request(f"{test_server.base}/favicon.ico")
-            resp = urlopen(req, timeout=3)
+            req = Request(f"{test_server.base}/favicon.ico")  # noqa: S310
+            resp = urlopen(req, timeout=3)  # noqa: S310
             assert resp.status == 404
         except Exception:
             pass
 
     def test_unknown_path_returns_404(self, test_server):
         try:
-            req = Request(f"{test_server.base}/nonexistent")
-            resp = urlopen(req, timeout=3)
+            req = Request(f"{test_server.base}/nonexistent")  # noqa: S310
+            resp = urlopen(req, timeout=3)  # noqa: S310
             assert resp.status == 404
         except Exception:
             pass
@@ -66,8 +67,8 @@ class TestDashboardEndpoints:
 class TestDashboardAuth:
     def test_auth_bypassed_when_token_empty(self, test_server):
         try:
-            req = Request(f"{test_server.base}/api/status")
-            resp = urlopen(req, timeout=3)
+            req = Request(f"{test_server.base}/api/status")  # noqa: S310
+            resp = urlopen(req, timeout=3)  # noqa: S310
             assert resp.status == 200
         except Exception:
             pass
@@ -77,12 +78,13 @@ class TestDashboardAuth:
         # 验证逻辑：设置 token 后模块变量正确加载。
         import os
 
-        os.environ["COCKPIT_DASHBOARD_TOKEN"] = "secret-key"
+        os.environ["COCKPIT_DASHBOARD_TOKEN"] = "secret-key"  # noqa: S105
         import importlib
+
         import cockpit.dashboard_server as ds
 
         importlib.reload(ds)
-        assert ds.DASHBOARD_TOKEN == "secret-key"
+        assert ds.DASHBOARD_TOKEN == "secret-key"  # noqa: S105
         # token 非空时，无 Authorization 应拒绝
         assert ds.DASHBOARD_TOKEN != ""
 
@@ -126,12 +128,13 @@ class TestDashboardCORS:
     def test_cors_header_on_api(self, test_server, monkeypatch):
         monkeypatch.setenv("COCKPIT_DASHBOARD_CORS_ORIGIN", "http://myapp.local")
         import importlib
+
         import cockpit.dashboard_server as ds
 
         importlib.reload(ds)
         try:
-            req = Request(f"{test_server.base}/api/status")
-            resp = urlopen(req, timeout=3)
+            req = Request(f"{test_server.base}/api/status")  # noqa: S310
+            resp = urlopen(req, timeout=3)  # noqa: S310
             cors = resp.getheader("Access-Control-Allow-Origin", "")
             assert cors == "http://myapp.local"
         except Exception:
@@ -168,8 +171,8 @@ class TestRateLimiter:
         assert rl.allow("ip_a") is False
 
     def test_window_expiry(self):
+
         from cockpit.dashboard_server import _RateLimiter
-        import time
 
         rl = _RateLimiter(max_requests=2, window_seconds=0)
         assert rl.allow("test") is True
@@ -178,4 +181,6 @@ class TestRateLimiter:
         assert rl.allow("test") is True
 
     def test_config_from_env(self):
-        assert hasattr(__import__("cockpit.dashboard_server", fromlist=["DASHBOARD_RATE_LIMIT"]), "DASHBOARD_RATE_LIMIT")
+        assert hasattr(
+            __import__("cockpit.dashboard_server", fromlist=["DASHBOARD_RATE_LIMIT"]), "DASHBOARD_RATE_LIMIT"
+        )

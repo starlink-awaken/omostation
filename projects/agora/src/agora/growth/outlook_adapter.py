@@ -31,13 +31,13 @@ OutlookAdapter - Microsoft Graph API adapter for BOS digital twin.
 """
 
 
-import logging
-import os
-import time
-from dataclasses import dataclass, field
-from enum import StrEnum
-from pathlib import Path
-from typing import Any
+import logging  # noqa: E402
+import os  # noqa: E402
+import time  # noqa: E402
+from dataclasses import dataclass, field  # noqa: E402
+from enum import StrEnum  # noqa: E402
+from pathlib import Path  # noqa: E402
+from typing import Any  # noqa: E402
 
 _log = logging.getLogger(__name__)
 
@@ -151,12 +151,18 @@ class OutlookAdapter:
         if not _HAS_MSAL:
             raise RuntimeError("MSAL library required. Install: pip install msal")
         if not _HAS_REQUESTS:
-            raise RuntimeError("requests library required. Install: pip install requests")
+            raise RuntimeError(
+                "requests library required. Install: pip install requests"
+            )
 
         self._client_id = client_id or os.environ.get("OUTLOOK_CLIENT_ID", "")
         self._tenant_id = tenant_id or os.environ.get("OUTLOOK_TENANT_ID", "common")
-        self._client_secret = client_secret or os.environ.get("OUTLOOK_CLIENT_SECRET", "")
-        self._auth_type = OutlookAuthType(auth_type) if isinstance(auth_type, str) else auth_type
+        self._client_secret = client_secret or os.environ.get(
+            "OUTLOOK_CLIENT_SECRET", ""
+        )
+        self._auth_type = (
+            OutlookAuthType(auth_type) if isinstance(auth_type, str) else auth_type
+        )
         self._token_cache_path = token_cache_path or self._default_token_cache_path()
         self._token_cache = self._load_token_cache()
         self._timeout = timeout
@@ -229,7 +235,9 @@ class OutlookAdapter:
         accounts = self._msal_app.get_accounts()
         if accounts:
             self._account = accounts[0]
-            result = self._msal_app.acquire_token_silent_with_error(scopes=scopes, account=self._account)
+            result = self._msal_app.acquire_token_silent_with_error(
+                scopes=scopes, account=self._account
+            )
             if result and "access_token" in result:
                 self._update_token(result)
                 return True
@@ -260,7 +268,9 @@ class OutlookAdapter:
         accounts = self._msal_app.get_accounts()
         if accounts:
             self._account = accounts[0]
-            result = self._msal_app.acquire_token_silent_with_error(scopes=scopes, account=self._account)
+            result = self._msal_app.acquire_token_silent_with_error(
+                scopes=scopes, account=self._account
+            )
             if result and "access_token" in result:
                 self._update_token(result)
                 return True
@@ -283,7 +293,9 @@ class OutlookAdapter:
     def authenticate_application(self) -> bool:
         """Authenticate using client credentials flow."""
         if self._auth_type != OutlookAuthType.APPLICATION:
-            raise RuntimeError("authenticate_application requires APPLICATION auth type")
+            raise RuntimeError(
+                "authenticate_application requires APPLICATION auth type"
+            )
         if not self._client_secret:
             raise ValueError("client_secret required for application authentication")
 
@@ -312,10 +324,14 @@ class OutlookAdapter:
         if time.time() > (self._token_expires_at - 300):
             if self._auth_type == OutlookAuthType.DELEGATED and self._account:
                 result = self._msal_app.acquire_token_silent_with_error(
-                    scopes=self.DEFAULT_SCOPES, account=self._account, force_refresh=True
+                    scopes=self.DEFAULT_SCOPES,
+                    account=self._account,
+                    force_refresh=True,
                 )
             elif self._auth_type == OutlookAuthType.APPLICATION:
-                result = self._msal_app.acquire_token_for_client(scopes=self.APPLICATION_SCOPES)
+                result = self._msal_app.acquire_token_for_client(
+                    scopes=self.APPLICATION_SCOPES
+                )
             else:
                 raise RuntimeError("Unable to refresh token")
 

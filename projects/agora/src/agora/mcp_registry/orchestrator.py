@@ -160,7 +160,10 @@ class Orchestrator:
                 return True, f"Tool '{name}' loaded"
             return False, f"Failed to load tool '{name}'"
 
-        return False, f"Tool '{name}' status: {tool.get('status', 'unknown')}. Use 'install' first."
+        return (
+            False,
+            f"Tool '{name}' status: {tool.get('status', 'unknown')}. Use 'install' first.",
+        )
 
     async def load_tool(self, name: str) -> tuple[bool, str]:
         """Load a tool via the LifecycleManager.

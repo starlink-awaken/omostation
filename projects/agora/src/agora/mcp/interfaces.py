@@ -24,7 +24,9 @@ class IOAuth2Server(Protocol):
         """
         ...
 
-    def issue_token(self, client_id: str, client_secret: str, *args: Any, **kwargs: Any) -> Any:
+    def issue_token(
+        self, client_id: str, client_secret: str, *args: Any, **kwargs: Any
+    ) -> Any:
         """Issue a new OAuth2 token for the given client credentials."""
         ...
 
@@ -46,7 +48,9 @@ class IRateLimiter(Protocol):
 class IFederationRouter(Protocol):
     """Protocol for inter-node federation routing."""
 
-    def register_node(self, node_id: str, endpoint: str, capabilities: list[str] | None = None) -> None:
+    def register_node(
+        self, node_id: str, endpoint: str, capabilities: list[str] | None = None
+    ) -> None:
         """Register or update a remote node."""
         ...
 

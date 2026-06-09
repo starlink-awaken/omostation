@@ -36,6 +36,7 @@ def _get_tm():
     global _task_manager
     if _task_manager is None:
         from agora.task_manager import task_manager as tm  # type: ignore[import-not-found]
+
         _task_manager = tm
     return _task_manager
 
@@ -44,6 +45,7 @@ def _get_router():
     global _router
     if _router is None:
         from agora.core.router import router as r  # type: ignore[import-not-found]
+
         _router = r
     return _router
 
@@ -52,6 +54,7 @@ def _get_cm():
     global _context_manager
     if _context_manager is None:
         from agora.context import context_manager as cm  # type: ignore[import-not-found]
+
         _context_manager = cm
     return _context_manager
 
@@ -60,6 +63,7 @@ def _get_scheduler():
     global _scheduler
     if _scheduler is None:
         from agora.core.scheduler import scheduler as s  # type: ignore[import-not-found]
+
         _scheduler = s
     return _scheduler
 
@@ -68,6 +72,7 @@ def _get_pipeline():
     global _pipeline
     if _pipeline is None:
         from agora.pipeline import agent_pipeline as p  # type: ignore[import-not-found]
+
         _pipeline = p
     return _pipeline
 
@@ -128,7 +133,10 @@ async def handle_get_task(task_id: str) -> dict:
     """Get a specific task's status."""
     task = _get_tm().get_task(task_id)
     if not task:
-        raise HTTPException(status_code=404, detail={"code": "TASK_NOT_FOUND", "message": f"Task {task_id} not found"})
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "TASK_NOT_FOUND", "message": f"Task {task_id} not found"},
+        )
     return {
         "id": task.id,
         "status": task.status,
@@ -159,7 +167,13 @@ async def handle_cancel_task(task_id: str) -> dict:
     """Cancel a task."""
     ok = _get_tm().cancel_task(task_id)
     if not ok:
-        raise HTTPException(status_code=404, detail={"code": "CANCEL_FAILED", "message": "Task not found or already completed"})
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "CANCEL_FAILED",
+                "message": "Task not found or already completed",
+            },
+        )
     return {"task_id": task_id, "status": "cancelled"}
 
 
@@ -172,7 +186,13 @@ async def handle_create_schedule(body: dict) -> dict:
     cron = body.get("cron")
     task = body.get("task")
     if not name or not cron or not task:
-        raise HTTPException(status_code=400, detail={"code": "MISSING_FIELDS", "message": "name, cron, and task are required"})
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "MISSING_FIELDS",
+                "message": "name, cron, and task are required",
+            },
+        )
     sid = _get_scheduler().add(name, cron, task)
     return {"schedule_id": sid, "name": name, "cron": cron}
 
@@ -181,15 +201,17 @@ async def handle_list_schedules() -> list[dict]:
     """List all schedules."""
     jobs = _get_scheduler().list()
     return [
-        {"id": j.id, "name": j.name, "cron": j.cron, "enabled": j.enabled}
-        for j in jobs
+        {"id": j.id, "name": j.name, "cron": j.cron, "enabled": j.enabled} for j in jobs
     ]
 
 
 async def handle_delete_schedule(schedule_id: str) -> dict:
     """Delete a schedule."""
     if not _get_scheduler().remove(schedule_id):
-        raise HTTPException(status_code=404, detail={"code": "NOT_FOUND", "message": "Schedule not found"})
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "NOT_FOUND", "message": "Schedule not found"},
+        )
     return {"status": "removed"}
 
 
@@ -198,7 +220,13 @@ async def handle_run_pipeline(body: dict) -> dict:
     steps = body.get("steps", [])
     input_data = body.get("input", "")
     if not steps or not input_data:
-        raise HTTPException(status_code=400, detail={"code": "MISSING_FIELDS", "message": "steps (array) and input (string) are required"})
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "MISSING_FIELDS",
+                "message": "steps (array) and input (string) are required",
+            },
+        )
     return await _get_pipeline().execute(steps, input_data)
 
 
@@ -212,7 +240,13 @@ async def handle_get_space(space_id: str) -> dict:
     """Get a shared space."""
     context = await _get_cm().get_shared_space(space_id)
     if not context:
-        raise HTTPException(status_code=404, detail={"code": "SPACE_NOT_FOUND", "message": f"Shared space {space_id} not found"})
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "SPACE_NOT_FOUND",
+                "message": f"Shared space {space_id} not found",
+            },
+        )
     return {
         "shared_space_id": context.shared_space_id,
         "message_count": len(context.messages),
@@ -227,19 +261,22 @@ async def handle_list_agents() -> list[dict]:
 
 async def handle_register_agent(body: dict) -> dict:
     """Register a new agent."""
-    _get_router().register_agent({
-        "id": body.get("id", "unknown"),
-        "name": body.get("name", "Unknown"),
-        "type": body.get("type", "process"),
-        "capabilities": body.get("capabilities", []),
-        "status": "online",
-        "endpoint": body.get("endpoint"),
-        "last_seen": int(time.time() * 1000),
-    })
+    _get_router().register_agent(
+        {
+            "id": body.get("id", "unknown"),
+            "name": body.get("name", "Unknown"),
+            "type": body.get("type", "process"),
+            "capabilities": body.get("capabilities", []),
+            "status": "online",
+            "endpoint": body.get("endpoint"),
+            "last_seen": int(time.time() * 1000),
+        }
+    )
     return {"id": body.get("id"), "status": "registered"}
 
 
 # ── Phase 34 Wave 3: SSE Event Bus ──────────────────────────────────────────────
+
 
 async def handle_events(request: Any, replay: int = 50):
     """Phase 34 Wave 3: SSE Pub/Sub Event Bus endpoint.
@@ -248,19 +285,20 @@ async def handle_events(request: Any, replay: int = 50):
     from fastapi.responses import StreamingResponse
     import asyncio
     from agora.core.state import get_event_bus, get_registry  # type: ignore[import-not-found]
-    
+
     bus = get_event_bus(get_registry())
-    
+
     async def event_generator():
         queue = asyncio.Queue()
         seen_ids = set()
-        
+
         def on_event(event: dict):
             queue.put_nowait(event)
-            
+
         bus.register_hook(on_event)
         try:
             import json
+
             # 1. Replay historical events
             if replay > 0:
                 history = bus.get_event_log(limit=replay)
@@ -269,7 +307,7 @@ async def handle_events(request: Any, replay: int = 50):
                     if event_id:
                         seen_ids.add(event_id)
                     yield f"id: {event_id}\ndata: {json.dumps(event)}\n\n"
-                    
+
             # 2. Stream live events
             while True:
                 if await request.is_disconnected():
@@ -282,7 +320,7 @@ async def handle_events(request: Any, replay: int = 50):
                         continue
                     if event_id:
                         seen_ids.add(event_id)
-                        
+
                     yield f"id: {event_id}\ndata: {json.dumps(event)}\n\n"
                 except asyncio.TimeoutError:
                     yield ": ping\n\n"
@@ -291,7 +329,7 @@ async def handle_events(request: Any, replay: int = 50):
                 bus.remove_hook(on_event)
             except Exception:
                 pass
-                
+
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
@@ -311,7 +349,9 @@ def register_routes(router: Any, prefix: str = "/v1") -> None:
 
     # Health
     router.add_api_route(f"{prefix}/health", handle_health, methods=["GET"])
-    router.add_api_route(f"{prefix}/health/detailed", handle_detailed_health, methods=["GET"])
+    router.add_api_route(
+        f"{prefix}/health/detailed", handle_detailed_health, methods=["GET"]
+    )
 
     # Phase 34 Wave 3: Event Bus
     router.add_api_route(f"{prefix}/events", handle_events, methods=["GET"])
@@ -319,20 +359,32 @@ def register_routes(router: Any, prefix: str = "/v1") -> None:
     # Tasks
     router.add_api_route(f"{prefix}/tasks", handle_submit_task, methods=["POST"])
     router.add_api_route(f"{prefix}/tasks", handle_list_tasks, methods=["GET"])
-    router.add_api_route(f"{prefix}/tasks/{{task_id}}", handle_get_task, methods=["GET"])
-    router.add_api_route(f"{prefix}/tasks/{{task_id}}/cancel", handle_cancel_task, methods=["POST"])
+    router.add_api_route(
+        f"{prefix}/tasks/{{task_id}}", handle_get_task, methods=["GET"]
+    )
+    router.add_api_route(
+        f"{prefix}/tasks/{{task_id}}/cancel", handle_cancel_task, methods=["POST"]
+    )
 
     # Scheduler
-    router.add_api_route(f"{prefix}/scheduler", handle_create_schedule, methods=["POST"])
+    router.add_api_route(
+        f"{prefix}/scheduler", handle_create_schedule, methods=["POST"]
+    )
     router.add_api_route(f"{prefix}/scheduler", handle_list_schedules, methods=["GET"])
-    router.add_api_route(f"{prefix}/scheduler/{{schedule_id}}", handle_delete_schedule, methods=["DELETE"])
+    router.add_api_route(
+        f"{prefix}/scheduler/{{schedule_id}}",
+        handle_delete_schedule,
+        methods=["DELETE"],
+    )
 
     # Pipeline
     router.add_api_route(f"{prefix}/pipeline", handle_run_pipeline, methods=["POST"])
 
     # Spaces
     router.add_api_route(f"{prefix}/spaces", handle_create_space, methods=["POST"])
-    router.add_api_route(f"{prefix}/spaces/{{space_id}}", handle_get_space, methods=["GET"])
+    router.add_api_route(
+        f"{prefix}/spaces/{{space_id}}", handle_get_space, methods=["GET"]
+    )
 
     # Agents
     router.add_api_route(f"{prefix}/agents", handle_list_agents, methods=["GET"])

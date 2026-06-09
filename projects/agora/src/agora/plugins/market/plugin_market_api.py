@@ -25,11 +25,11 @@ Authority: nucleus/Z-Core/L2-Law/plugin-spec.md
 # 外延 ≝ {e | e ∈ Organs ∧ uses(e, PluginMarketAPI)}
 # 功能 ⊢ {List_Plugins, Get_Plugin, Install_Plugin, Search_Plugins}
 # =============================================================================
-import time
-from dataclasses import dataclass, field
-from pathlib import Path
+import time  # noqa: E402
+from dataclasses import dataclass, field  # noqa: E402
+from pathlib import Path  # noqa: E402
 
-import yaml  # type: ignore[import-untyped]
+import yaml  # type: ignore[import-untyped]  # noqa: E402
 
 PLUGIN_REGISTRY_PATH = Path("config/plugin_registry.yaml")
 
@@ -119,7 +119,10 @@ class PluginMarketAPI:
         Returns a success/error dict suitable for API consumers.
         """
         if name not in self._plugins:
-            return {"success": False, "error": f"Plugin {name!r} not found in marketplace"}
+            return {
+                "success": False,
+                "error": f"Plugin {name!r} not found in marketplace",
+            }
         self._plugins[name].downloads += 1
         return {
             "success": True,
@@ -133,7 +136,11 @@ class PluginMarketAPI:
         q = query.lower()
         results = []
         for p in self._plugins.values():
-            if q in p.name.lower() or q in p.description.lower() or any(q in tag for tag in p.tags):
+            if (
+                q in p.name.lower()
+                or q in p.description.lower()
+                or any(q in tag for tag in p.tags)
+            ):
                 results.append(self._to_dict(p))
         return results
 

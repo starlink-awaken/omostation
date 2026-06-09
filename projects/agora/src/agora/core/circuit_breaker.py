@@ -41,7 +41,9 @@ class CircuitBreaker:
             import structlog
 
             logger = structlog.get_logger(__name__)
-            logger.warning("webhook_alert_blocked", service=name, webhook=self._alert_webhook)
+            logger.warning(
+                "webhook_alert_blocked", service=name, webhook=self._alert_webhook
+            )
             return
         import httpx
 
@@ -68,12 +70,22 @@ class CircuitBreaker:
 
     def try_half_open(self, svc: Service) -> bool:
         """Attempt a half-open probe on a service. Returns True if probe should proceed."""
-        if not svc.healthy and not svc.half_open and time.monotonic() >= svc.cooldown_until:
+        if (
+            not svc.healthy
+            and not svc.half_open
+            and time.monotonic() >= svc.cooldown_until
+        ):
             svc.half_open = True
             return True
         return False
 
-    def mark_failure(self, svc: Service, name: str, add_transition: Callable, alert_name: str | None = None):
+    def mark_failure(
+        self,
+        svc: Service,
+        name: str,
+        add_transition: Callable,
+        alert_name: str | None = None,
+    ):
         """Record a failure and potentially open the circuit."""
         prev_state = svc.circuit_state
         svc.failure_count += 1
@@ -84,8 +96,16 @@ class CircuitBreaker:
             svc.half_open = False
             svc.consecutive_successes = 0
             svc.cooldown_until = time.monotonic() + (self._cooldown * 2)
-            add_transition(alert_name, prev_state, "OPEN", "Circuit breaker: half-open probe failed", "health_check")
-            self._fire_alert(alert_name, prev_state, "OPEN (HALF_OPEN->OPEN)", svc.failure_count)
+            add_transition(
+                alert_name,
+                prev_state,
+                "OPEN",
+                "Circuit breaker: half-open probe failed",
+                "health_check",
+            )
+            self._fire_alert(
+                alert_name, prev_state, "OPEN (HALF_OPEN->OPEN)", svc.failure_count
+            )
         elif svc.failure_count >= self._max_failures:
             svc.cooldown_until = time.monotonic() + self._cooldown
             svc.healthy = False
@@ -112,7 +132,13 @@ class CircuitBreaker:
                 svc.half_open = False
                 svc.consecutive_successes = 0
                 svc.cooldown_until = 0.0
-                add_transition(name, prev_state, "CLOSED", "Circuit breaker recovered", "health_check")
+                add_transition(
+                    name,
+                    prev_state,
+                    "CLOSED",
+                    "Circuit breaker recovered",
+                    "health_check",
+                )
         else:
             svc.failure_count = max(0, svc.failure_count - 1)
             if svc.failure_count < self._max_failures and not svc.healthy:
@@ -120,7 +146,13 @@ class CircuitBreaker:
                 svc.cooldown_until = 0.0
                 new_state = svc.circuit_state
                 if prev_state != new_state:
-                    add_transition(name, prev_state, new_state, "Service recovered after degradation", "health_check")
+                    add_transition(
+                        name,
+                        prev_state,
+                        new_state,
+                        "Service recovered after degradation",
+                        "health_check",
+                    )
 
     def get_status(self, svc: Service, name: str) -> dict:
         """Get detailed circuit breaker status for a service."""
@@ -129,7 +161,9 @@ class CircuitBreaker:
             "state": svc.circuit_state,
             "healthy": svc.healthy,
             "failure_count": svc.failure_count,
-            "cooldown_remaining": max(0, svc.cooldown_until - time.monotonic()) if not svc.healthy else 0,
+            "cooldown_remaining": max(0, svc.cooldown_until - time.monotonic())
+            if not svc.healthy
+            else 0,
         }
 
     def _fire_alert(self, name: str, prev: str, new: str, failures: int):

@@ -83,7 +83,7 @@ def _find_cli(cmd: str, pkg: str) -> str | None:
 
 
 def pcmd_match(args):
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         _ontoderive_cmd = _find_cli("ontoderive", "ontoderive")
         if not _ontoderive_cmd:
@@ -105,7 +105,7 @@ def pcmd_match(args):
 
 
 def pcmd_derive(args):
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         _ontoderive_cmd = _find_cli("ontoderive", "ontoderive")
         if not _ontoderive_cmd:
@@ -127,7 +127,7 @@ def pcmd_derive(args):
 
 
 def pcmd_check(args):
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         _ontoderive_cmd = _find_cli("ontoderive", "ontoderive")
         if not _ontoderive_cmd:
@@ -143,7 +143,7 @@ def pcmd_check(args):
 
 
 def pcmd_pipeline(args):
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         _ontoderive_cmd = _find_cli("ontoderive", "ontoderive")
         if not _ontoderive_cmd:
@@ -194,7 +194,7 @@ def pcmd_pipeline(args):
 
 
 def pcmd_init(args):
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         _ontoderive_cmd = _find_cli("ontoderive", "ontoderive")
         if not _ontoderive_cmd:
@@ -210,7 +210,7 @@ def pcmd_init(args):
 
 
 def pcmd_serve(args):
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         out.print_info("Starting Agora MCP Hub...")
         agora_path = shutil.which("agora")
@@ -254,7 +254,7 @@ def _forge_mcp_call(tool_name: str, arguments: dict | None = None) -> dict | Non
 
 
 def pcmd_toolbox(args):
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         if args.toolbox_command == "search":
             print(f"Searching tools: {args.query}")
@@ -270,7 +270,9 @@ def pcmd_toolbox(args):
             result = _forge_mcp_call("ai_toolbox_status")
             if result:
                 print("Forge status")
-                print(f"  Tool count: {result.get('tools', result.get('tool_count', '?'))}")
+                print(
+                    f"  Tool count: {result.get('tools', result.get('tool_count', '?'))}"
+                )
                 g = result.get("graph", {})
                 print(f"  Graph nodes: {g.get('total_nodes', '?')}")
                 print(f"  Graph edges: {g.get('total_edges', '?')}")
@@ -279,10 +281,14 @@ def pcmd_toolbox(args):
             result = _forge_mcp_call("query_graph_mcp", {"query": args.query})
             if result:
                 nodes = result.get("nodes", result)
-                count = result.get("count", len(nodes) if isinstance(nodes, list) else 0)
+                count = result.get(
+                    "count", len(nodes) if isinstance(nodes, list) else 0
+                )
                 print(f"  Matched {count} nodes")
                 for node in (nodes if isinstance(nodes, list) else [])[:20]:
-                    print(f"  - {node.get('label', node.get('id', '?'))}  [{node.get('type', '?')}]")
+                    print(
+                        f"  - {node.get('label', node.get('id', '?'))}  [{node.get('type', '?')}]"
+                    )
         return 0
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
@@ -294,20 +300,27 @@ def pcmd_toolbox(args):
 
 def add_pallas_subparser(subparsers):
     """Add the 'pallas' subcommand group to an argparse subparsers object."""
-    p = subparsers.add_parser("pallas", help="Knowledge engineering toolset (match/derive/check/pipeline/toolbox)")
+    p = subparsers.add_parser(
+        "pallas",
+        help="Knowledge engineering toolset (match/derive/check/pipeline/toolbox)",
+    )
     p_sub = p.add_subparsers(dest="pallas_cmd", help="Pallas subcommand")
 
     # match
     m = p_sub.add_parser("match", help="ToolForge tool matching")
     m.add_argument("goal", help="Goal description")
     m.add_argument("--context", default="", help="Context keywords")
-    m.add_argument("--inference-guide", action="store_true", help="Output inference guide")
+    m.add_argument(
+        "--inference-guide", action="store_true", help="Output inference guide"
+    )
     m.add_argument("--json", action="store_true", help="JSON output")
 
     # derive
     d = p_sub.add_parser("derive", help="OntoDerive fact derivation")
     d.add_argument("--project", default=".", help="Project path")
-    d.add_argument("--with-tools", action="store_true", help="Pre-run ToolForge matching")
+    d.add_argument(
+        "--with-tools", action="store_true", help="Pre-run ToolForge matching"
+    )
     d.add_argument("--goal", default="", help="Goal description")
     d.add_argument("--tool-context", default="", help="ToolForge context")
 
@@ -340,7 +353,7 @@ def add_pallas_subparser(subparsers):
 
 def dispatch_pallas(args):
     """Dispatch pallas subcommand."""
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         commands = {
             "match": pcmd_match,
@@ -355,7 +368,9 @@ def dispatch_pallas(args):
         if handler:
             return handler(args)
         else:
-            print("Usage: agora pallas {match|derive|check|pipeline|init|serve|toolbox} [options]")
+            print(
+                "Usage: agora pallas {match|derive|check|pipeline|init|serve|toolbox} [options]"
+            )
             return 1
     except CLIError as e:
         out.print_error(e.message, e.suggestion)

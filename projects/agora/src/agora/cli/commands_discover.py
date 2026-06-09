@@ -13,7 +13,7 @@ from agora.core.state import get_registry  # type: ignore[import-not-found]
 
 def cmd_discover(args):
     """Auto-discover MCP services."""
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         from agora.core.discovery import DiscoveryEngine  # type: ignore[import-not-found]
 
@@ -31,18 +31,26 @@ def cmd_discover(args):
                 try:
                     asyncio.run(_watch())
                 except Exception as e:
-                    raise CLIError(f"服务监听失败: {e}", suggestion="检查 workspace 路径和网络连接")
+                    raise CLIError(
+                        f"服务监听失败: {e}", suggestion="检查 workspace 路径和网络连接"
+                    )
             return 0
 
         if args.probe:
             try:
                 services = asyncio.run(engine.discover_all_async())
             except Exception as e:
-                raise CLIError(f"异步发现失败: {e}", suggestion="检查网络连接和服务端口")
-            print(f"Discovered {len(services)} MCP-capable services (incl. port probe):\n")
+                raise CLIError(
+                    f"异步发现失败: {e}", suggestion="检查网络连接和服务端口"
+                )
+            print(
+                f"Discovered {len(services)} MCP-capable services (incl. port probe):\n"
+            )
         else:
             services = engine.discover_all()
-            print(f"Discovered {len(services)} MCP-capable services (strategies: known + pyproject + compose):\n")
+            print(
+                f"Discovered {len(services)} MCP-capable services (strategies: known + pyproject + compose):\n"
+            )
 
         if args.register:
             registry = get_registry()
@@ -68,7 +76,9 @@ def cmd_discover(args):
             print(json.dumps(result, ensure_ascii=False, indent=2))
         else:
             for s in services:
-                conf_bar = "#" * int(s.confidence * 10) + "-" * (10 - int(s.confidence * 10))
+                conf_bar = "#" * int(s.confidence * 10) + "-" * (
+                    10 - int(s.confidence * 10)
+                )
                 print(f"  [{conf_bar}] {s.name}")
                 print(f"         {s.description}")
                 if s.mcp_endpoint:
@@ -93,7 +103,7 @@ def cmd_sync(args):
 
     Auto-discovers MCP services and registers them + prefix routes.
     """
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         from agora.core.discovery import DiscoveryEngine
         from agora.core.registry import Service  # type: ignore[import-not-found]
@@ -107,8 +117,12 @@ def cmd_sync(args):
 
         services = engine.discover_all()
 
-        to_register = [s for s in services if s.name not in {s2.name for s2 in registry.list_all()}]
-        existing = [s for s in services if s.name in {s2.name for s2 in registry.list_all()}]
+        to_register = [
+            s for s in services if s.name not in {s2.name for s2 in registry.list_all()}
+        ]
+        existing = [
+            s for s in services if s.name in {s2.name for s2 in registry.list_all()}
+        ]
 
         if dry_run:
             print(f"{len(services)} services discovered in workspace")
@@ -141,7 +155,9 @@ def cmd_sync(args):
                 router.add_route(svc.name, svc.name)
                 print(f"  Routed: {svc.name}")
 
-        print(f"\nSync complete: {len(to_register)} registered, {len(services)} services total")
+        print(
+            f"\nSync complete: {len(to_register)} registered, {len(services)} services total"
+        )
         return 0
     except CLIError as e:
         out.print_error(e.message, e.suggestion)

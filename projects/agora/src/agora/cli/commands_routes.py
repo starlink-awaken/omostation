@@ -10,7 +10,7 @@ from agora.core.state import get_registry  # type: ignore[import-not-found]
 
 def cmd_route(args):
     """Add a tool route."""
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         registry = get_registry()
         router = Router(registry)
@@ -27,7 +27,7 @@ def cmd_route(args):
 
 def cmd_routes(args):
     """List all routes."""
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         registry = get_registry()
         router = Router(registry)
@@ -47,7 +47,7 @@ def cmd_routes(args):
                 out.print_panel(
                     f"共 {len(routes)} 条路由 · {len(groups)} 个域",
                     title="路由表",
-                    style="cyan"
+                    style="cyan",
                 )
                 rows = [[tool, svc] for tool, svc in sorted(routes.items())]
                 out.print_table(
@@ -65,7 +65,7 @@ def cmd_routes(args):
 
 def cmd_instance(args):
     """Load-balanced instance operations."""
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         registry = get_registry()
         router = Router(registry)

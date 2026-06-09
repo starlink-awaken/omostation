@@ -59,13 +59,23 @@ class Marketplace:
         oid = f"offer:{secrets.token_hex(6)}"
         conn.execute(
             "INSERT INTO offerings (offering_id, name, description, provider, capability_type, entry_point, pricing) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (oid, name, description, provider, capability_type, entry_point, json.dumps(pricing or {})),
+            (
+                oid,
+                name,
+                description,
+                provider,
+                capability_type,
+                entry_point,
+                json.dumps(pricing or {}),
+            ),
         )
         conn.commit()
         conn.close()
         return {"offering_id": oid, "name": name, "status": "published"}
 
-    def search(self, query: str, type_filter: str = "", min_rating: float = 0.0) -> list[dict]:
+    def search(
+        self, query: str, type_filter: str = "", min_rating: float = 0.0
+    ) -> list[dict]:
         """搜索市场中的能力。"""
         conn = self._get_conn()
         sql = "SELECT * FROM offerings WHERE status='active' AND (name LIKE ? OR description LIKE ?)"
@@ -118,7 +128,11 @@ class Marketplace:
         )
         conn.commit()
         conn.close()
-        return {"offering_id": offering_id, "subscriber": subscriber, "status": "subscribed"}
+        return {
+            "offering_id": offering_id,
+            "subscriber": subscriber,
+            "status": "subscribed",
+        }
 
 
 # ─── 跨组织计费 (T163) ───
@@ -153,7 +167,14 @@ class CrossOrgBilling:
         conn.commit()
         conn.close()
 
-    def record_usage(self, from_org: str, to_org: str, service: str, amount: float, description: str = "") -> dict:
+    def record_usage(
+        self,
+        from_org: str,
+        to_org: str,
+        service: str,
+        amount: float,
+        description: str = "",
+    ) -> dict:
         """记录一次跨组织调用费用。"""
         conn = self._get_conn()
         conn.execute(
@@ -176,7 +197,12 @@ class CrossOrgBilling:
             (org,),
         ).fetchone()[0]
         conn.close()
-        return {"org": org, "due": round(due, 4), "owed": round(owed, 4), "net": round(owed - due, 4)}
+        return {
+            "org": org,
+            "due": round(due, 4),
+            "owed": round(owed, 4),
+            "net": round(owed - due, 4),
+        }
 
     def settle(self, from_org: str, to_org: str) -> dict:
         """结算两个组织之间的未结费用。"""
@@ -201,11 +227,15 @@ if __name__ == "__main__":
     elif len(sys.argv) > 1 and sys.argv[1] == "search":
         m = Marketplace()
         for o in m.search(sys.argv[2]):
-            print(f"  {o['offering_id']:25s} {o['name']:20s} {o['provider']:20s} rate={o['rating']}")
+            print(
+                f"  {o['offering_id']:25s} {o['name']:20s} {o['provider']:20s} rate={o['rating']}"
+            )
     elif len(sys.argv) > 1 and sys.argv[1] == "bill":
         b = CrossOrgBilling()
         if sys.argv[2] == "record":
-            r = b.record_usage(sys.argv[3], sys.argv[4], sys.argv[5], float(sys.argv[6]))
+            r = b.record_usage(
+                sys.argv[3], sys.argv[4], sys.argv[5], float(sys.argv[6])
+            )
             print(f"Recorded: {r['status']}")
         elif sys.argv[2] == "balance":
             r = b.get_balance(sys.argv[3])

@@ -20,15 +20,15 @@ Summary: 'FederationRouter — Enhanced with Token Bucket and Strict Circuit Bre
 # 功能 ⊢ {Federation_Router, Init_Federation, Validate_Router}
 # =============================================================================
 
-import asyncio
-import enum
-import json
-import logging
-import threading
-import time
-import uuid
-from dataclasses import dataclass, field
-from typing import Any, Protocol, runtime_checkable
+import asyncio  # noqa: E402
+import enum  # noqa: E402
+import json  # noqa: E402
+import logging  # noqa: E402
+import threading  # noqa: E402
+import time  # noqa: E402
+import uuid  # noqa: E402
+from dataclasses import dataclass, field  # noqa: E402
+from typing import Any, Protocol, runtime_checkable  # noqa: E402
 
 _log = logging.getLogger(__name__)
 
@@ -41,7 +41,9 @@ try:
 except ImportError:
 
     class _MetricsFallback:
-        def increment(self, name: str, value: int = 1, labels: dict | None = None) -> None:
+        def increment(
+            self, name: str, value: int = 1, labels: dict | None = None
+        ) -> None:
             pass
 
         def gauge(self, name: str, value: float) -> None:
@@ -92,7 +94,9 @@ class TokenBucket:
         with self._lock:
             now = time.monotonic()
             # 补充令牌
-            self.tokens = min(self.capacity, self.tokens + (now - self.last_update) * self.fill_rate)
+            self.tokens = min(
+                self.capacity, self.tokens + (now - self.last_update) * self.fill_rate
+            )
             self.last_update = now
             if self.tokens >= amount:
                 self.tokens -= amount
@@ -117,7 +121,9 @@ class _CircuitBreaker:
     open_until: float = 0.0
     FAILURE_THRESHOLD: int = 5
     OPEN_DURATION_S: float = 30.0
-    _lock: threading.Lock = field(default_factory=threading.Lock, compare=False, repr=False)
+    _lock: threading.Lock = field(
+        default_factory=threading.Lock, compare=False, repr=False
+    )
     _state: CBState = CBState.CLOSED
     _probe_in_flight: bool = False
 
@@ -147,11 +153,16 @@ class _CircuitBreaker:
     def record_failure(self) -> None:
         with self._lock:
             self.failure_count += 1
-            if self.failure_count >= self.FAILURE_THRESHOLD or self._state == CBState.HALF_OPEN:
+            if (
+                self.failure_count >= self.FAILURE_THRESHOLD
+                or self._state == CBState.HALF_OPEN
+            ):
                 self.open_until = time.monotonic() + self.OPEN_DURATION_S
                 self._state = CBState.OPEN
                 self._probe_in_flight = False
-                _log.warning("Circuit breaker OPEN for %s seconds", self.OPEN_DURATION_S)
+                _log.warning(
+                    "Circuit breaker OPEN for %s seconds", self.OPEN_DURATION_S
+                )
 
 
 # ---------------------------------------------------------------------------
@@ -208,12 +219,16 @@ class FederationRouter:
         self._timeout = timeout_s
         self._max_retries = max_retries
 
-    def register_node(self, node_id: str, endpoint: str, capabilities: list[str] | None = None) -> None:
+    def register_node(
+        self, node_id: str, endpoint: str, capabilities: list[str] | None = None
+    ) -> None:
         from agora.ssrf_guard import validate_external_url
 
         validate_external_url(endpoint)
         self._nodes[node_id] = NodeRecord(
-            node_id=node_id, endpoint=endpoint.rstrip("/"), capabilities=capabilities or []
+            node_id=node_id,
+            endpoint=endpoint.rstrip("/"),
+            capabilities=capabilities or [],
         )
         if node_id not in self._breakers:
             self._breakers[node_id] = _CircuitBreaker()
@@ -235,7 +250,9 @@ class FederationRouter:
             return False
         try:
             if self._http is not None:
-                resp = await self._http.get(f"{record.endpoint}/health", timeout=self._timeout)
+                resp = await self._http.get(
+                    f"{record.endpoint}/health", timeout=self._timeout
+                )
                 # Support both httpx-style (.status_code) and stdlib-style (.status)
                 for attr in ("status_code", "status"):
                     code = getattr(resp, attr, None)
@@ -291,17 +308,25 @@ class FederationRouter:
         """Evaluate routing for a parsed BOS-URI. Returns a RoutingDecision."""
         node_id = getattr(uri, "node_id", None)
         if node_id is None:
-            return RoutingDecision(local=True, target_node=None, reason="local_preferred")
+            return RoutingDecision(
+                local=True, target_node=None, reason="local_preferred"
+            )
 
         record = self._nodes.get(node_id)
         if record is None:
-            return RoutingDecision(local=True, target_node=None, reason="local_fallback")
+            return RoutingDecision(
+                local=True, target_node=None, reason="local_fallback"
+            )
 
         cb = self._breakers.get(node_id)
         if cb and not cb.can_execute():
-            return RoutingDecision(local=True, target_node=None, reason="local_fallback")
+            return RoutingDecision(
+                local=True, target_node=None, reason="local_fallback"
+            )
 
-        remote = RemoteNode(node_id=record.node_id, endpoint=record.endpoint, online=True)
+        remote = RemoteNode(
+            node_id=record.node_id, endpoint=record.endpoint, online=True
+        )
         return RoutingDecision(
             local=False,
             target_node=remote,
@@ -327,7 +352,9 @@ class FederationRouter:
         for attempt in range(2):
             try:
                 if self._http is not None:
-                    resp = await self._http.post(url, json=request_body, timeout=self._timeout)
+                    resp = await self._http.post(
+                        url, json=request_body, timeout=self._timeout
+                    )
                     return resp.json() if hasattr(resp, "json") else resp
                 return {"status": "error", "error": "no http client"}
             except (TimeoutError, OSError, ConnectionError) as exc:
@@ -354,7 +381,10 @@ class FederationRouter:
         cb = self._breakers[node_id]
         if not cb.can_execute():
             _metrics.increment("gateway.errors_total", labels={"type": "circuit_open"})
-            return {"status": "error", "error": f"Circuit breaker OPEN for node {node_id}"}
+            return {
+                "status": "error",
+                "error": f"Circuit breaker OPEN for node {node_id}",
+            }
 
         url = f"{record.endpoint}/synapse/accept"
         payload = self._serialise(envelope)
@@ -372,10 +402,14 @@ class FederationRouter:
                 cb.record_failure()
                 if attempt < self._max_retries - 1:  # 如果还有重试机会
                     wait_s = (2**attempt) + 0.1
-                    _log.debug(f"Retrying federation route to {node_id} in {wait_s}s (attempt {attempt + 1})")
+                    _log.debug(
+                        f"Retrying federation route to {node_id} in {wait_s}s (attempt {attempt + 1})"
+                    )
                     await asyncio.sleep(wait_s)
 
-        _metrics.increment("gateway.errors_total", labels={"type": "federation_exhausted"})
+        _metrics.increment(
+            "gateway.errors_total", labels={"type": "federation_exhausted"}
+        )
         trace.finish("error")
         return {"status": "error", "error": f"Max retries exceeded: {last_exc}"}
 
@@ -401,12 +435,16 @@ class FederationRouter:
 
         loop = asyncio.get_running_loop()
         with ThreadPoolExecutor(max_workers=1) as executor:
-            return await loop.run_in_executor(executor, self._urllib_post, url, payload, method)
+            return await loop.run_in_executor(
+                executor, self._urllib_post, url, payload, method
+            )
 
     def _urllib_post(self, url: str, payload: dict, method: str) -> dict:
         import urllib.request
 
         data = json.dumps(payload).encode() if method == "POST" else None
-        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"}, method=method)  # noqa: S310
+        req = urllib.request.Request(  # noqa: S310
+            url, data=data, headers={"Content-Type": "application/json"}, method=method
+        )
         with urllib.request.urlopen(req, timeout=self._timeout) as resp:  # noqa: S310
             return json.loads(resp.read().decode("utf-8"))

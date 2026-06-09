@@ -47,7 +47,9 @@ class Pipeline:
 
     def _load_builtins(self):
         """Load built-in pipeline definitions from external config."""
-        builtin_path = Path(__file__).with_suffix("").parent / "pipelines" / "builtin.json"
+        builtin_path = (
+            Path(__file__).with_suffix("").parent / "pipelines" / "builtin.json"
+        )
         try:
             data = json.loads(builtin_path.read_text(encoding="utf-8"))
             if isinstance(data, dict):
@@ -55,7 +57,9 @@ class Pipeline:
         except FileNotFoundError:
             logger.warning("builtin_pipelines_not_found", path=str(builtin_path))
         except Exception as e:
-            logger.warning("builtin_pipelines_load_failed", path=str(builtin_path), error=str(e))
+            logger.warning(
+                "builtin_pipelines_load_failed", path=str(builtin_path), error=str(e)
+            )
 
     def define(self, name: str, steps: list[dict]):
         """Register a custom pipeline definition."""
@@ -77,13 +81,19 @@ class Pipeline:
     ) -> dict[str, Any]:
         """Execute a named pipeline sequentially."""
         results = []
-        async for step in self.run_stream(name, variables, caller_identity=caller_identity):
+        async for step in self.run_stream(
+            name, variables, caller_identity=caller_identity
+        ):
             results.append(step)
         return {
             "pipeline": name,
             "variables": variables,
             "results": results,
-            "outputs": {r["tool"]: r.get("output", "")[:200] for r in results if r["status"] == "ok"},
+            "outputs": {
+                r["tool"]: r.get("output", "")[:200]
+                for r in results
+                if r["status"] == "ok"
+            },
         }
 
     def _publish(self, event_type: str, payload: dict):
@@ -109,7 +119,11 @@ class Pipeline:
 
         outputs: dict[str, Any] = {}
         identity_payload = self._identity_payload(caller_identity)
-        started_payload = {"pipeline": name, "variables": variables, "step_count": len(steps)}
+        started_payload = {
+            "pipeline": name,
+            "variables": variables,
+            "step_count": len(steps),
+        }
         if identity_payload:
             started_payload["identity"] = identity_payload
         self._publish("pipeline:started", started_payload)
@@ -122,16 +136,35 @@ class Pipeline:
             logger.info("pipeline_step", pipeline=name, step=i, tool=tool_name)
 
             try:
-                result = await self.router.route(tool_name, args, caller_id=caller_identity or "pipeline")
+                result = await self.router.route(
+                    tool_name, args, caller_id=caller_identity or "pipeline"
+                )
                 outputs[label] = result
-                ok_payload = {"pipeline": name, "step": i, "tool": tool_name, "output_as": label}
+                ok_payload = {
+                    "pipeline": name,
+                    "step": i,
+                    "tool": tool_name,
+                    "output_as": label,
+                }
                 if identity_payload:
                     ok_payload["identity"] = identity_payload
                 self._publish("pipeline:step:ok", ok_payload)
-                yield {"step": i, "tool": tool_name, "status": "ok", "output": str(result)[:200]}
+                yield {
+                    "step": i,
+                    "tool": tool_name,
+                    "status": "ok",
+                    "output": str(result)[:200],
+                }
             except Exception as e:
-                logger.error("pipeline_step_failed", pipeline=name, step=i, error=str(e))
-                error_payload = {"pipeline": name, "step": i, "tool": tool_name, "error": str(e)}
+                logger.error(
+                    "pipeline_step_failed", pipeline=name, step=i, error=str(e)
+                )
+                error_payload = {
+                    "pipeline": name,
+                    "step": i,
+                    "tool": tool_name,
+                    "error": str(e),
+                }
                 if identity_payload:
                     error_payload["identity"] = identity_payload
                 self._publish("pipeline:step:error", error_payload)
@@ -180,7 +213,12 @@ class Pipeline:
                 # Deadlock: remaining steps have unresolvable deps
                 for i, step in still_waiting:
                     results.append(
-                        {"step": i, "tool": step["tool"], "status": "error", "error": "Unresolved dependency"}
+                        {
+                            "step": i,
+                            "tool": step["tool"],
+                            "status": "error",
+                            "error": "Unresolved dependency",
+                        }
                     )
                 break
 
@@ -190,7 +228,9 @@ class Pipeline:
                 args = self._render_args(step.get("args", {}), variables, outputs)
                 label = step.get("output_as", f"step_{i}")
                 try:
-                    result = await self.router.route(tool_name, args, caller_id=caller_identity or "pipeline")
+                    result = await self.router.route(
+                        tool_name, args, caller_id=caller_identity or "pipeline"
+                    )
                     return i, label, result, None
                 except Exception as e:
                     return i, label, None, str(e)
@@ -202,7 +242,14 @@ class Pipeline:
             for i, label, result, error in batch_results:
                 step = steps[i]
                 if error:
-                    results.append({"step": i, "tool": step["tool"], "status": "error", "error": error})
+                    results.append(
+                        {
+                            "step": i,
+                            "tool": step["tool"],
+                            "status": "error",
+                            "error": error,
+                        }
+                    )
                     if step.get("critical", False):
                         critical_failed = True
                         break
@@ -245,7 +292,9 @@ class Pipeline:
             raise ValueError(f"Pipeline not found: {name}")
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(json.dumps({"name": name, "steps": steps}, indent=2, ensure_ascii=False))
+        p.write_text(
+            json.dumps({"name": name, "steps": steps}, indent=2, ensure_ascii=False)
+        )
 
     def load_definition(self, path: str | Path):
         """Load a pipeline definition from a JSON file."""

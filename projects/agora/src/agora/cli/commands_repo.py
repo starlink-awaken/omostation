@@ -63,8 +63,16 @@ def _cmd_repo_list(catalog: ToolCatalog, args: argparse.Namespace) -> int:
         if not tools:
             out.print_info("No tools in catalog.")
             return 0
-        rows = [[t["id"], t["name"], t.get("status", "?"), f"{t.get('quality_score', 0):.4f}", str(t.get("stars", 0))]
-                for t in tools]
+        rows = [
+            [
+                t["id"],
+                t["name"],
+                t.get("status", "?"),
+                f"{t.get('quality_score', 0):.4f}",
+                str(t.get("stars", 0)),
+            ]
+            for t in tools
+        ]
         out.print_table(["ID", "Name", "Status", "Score", "Stars"], rows)
     return 0
 
@@ -73,7 +81,10 @@ def _cmd_repo_search(catalog: ToolCatalog, args: argparse.Namespace) -> int:
     """Search local catalog by keyword."""
     out = OutputFormatter(json_mode=args.json)
     if not args.query:
-        out.print_error("search requires a query string.", suggestion="Usage: agora repo search <query> [--status STATUS] [--json]")
+        out.print_error(
+            "search requires a query string.",
+            suggestion="Usage: agora repo search <query> [--status STATUS] [--json]",
+        )
         return 1
     tools = catalog.search_tools(args.query, status=getattr(args, "status", None))
     if args.json:
@@ -83,8 +94,15 @@ def _cmd_repo_search(catalog: ToolCatalog, args: argparse.Namespace) -> int:
             out.print_info(f"No results for '{args.query}'.")
             return 0
         out.print_info(f"Found {len(tools)} tool(s) matching '{args.query}':")
-        rows = [[t["id"], t["name"], t.get("status", "?"), f"{t.get('quality_score', 0):.4f}"]
-                for t in tools]
+        rows = [
+            [
+                t["id"],
+                t["name"],
+                t.get("status", "?"),
+                f"{t.get('quality_score', 0):.4f}",
+            ]
+            for t in tools
+        ]
         out.print_table(["ID", "Name", "Status", "Score"], rows)
     return 0
 
@@ -206,7 +224,9 @@ def _cmd_repo_pipeline(catalog: ToolCatalog, args: argparse.Namespace) -> int:
     if args.json:
         out.print_json(result)
     else:
-        out.print_success(f"Discovered: {result['discovered']}, Installed: {result['installed']}, Loaded: {result['loaded']}")
+        out.print_success(
+            f"Discovered: {result['discovered']}, Installed: {result['installed']}, Loaded: {result['loaded']}"
+        )
     return 0
 
 
@@ -228,7 +248,10 @@ def _cmd_repo_run(catalog: ToolCatalog, args: argparse.Namespace) -> int:
 
     out = OutputFormatter()
     if not args.query:
-        out.print_error("run requires a query string.", suggestion="Usage: agora repo run <query> [--mode direct|recommend|auto]")
+        out.print_error(
+            "run requires a query string.",
+            suggestion="Usage: agora repo run <query> [--mode direct|recommend|auto]",
+        )
         return 1
 
     async def _run():

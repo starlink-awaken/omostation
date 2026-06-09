@@ -16,15 +16,14 @@ Usage:
 
 from __future__ import annotations
 
-import json
-import os
 import time
 import yaml
 from pathlib import Path
-from typing import Any
 
 HOME = Path.home()
-L0_M1 = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
+L0_M1 = (
+    HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
+)
 OVERRIDE_PATH = Path(__file__).parent / "l0_registry_overrides.yaml"
 CACHE_TTL = 300  # seconds
 
@@ -54,18 +53,24 @@ def _scan_bosroute_nodes() -> list[dict]:
         try:
             with open(f) as fh:
                 data = yaml.safe_load(fh)
-            if not data or data.get("type") != "Component" or data.get("subtype") != "BOSRoute":
+            if (
+                not data
+                or data.get("type") != "Component"
+                or data.get("subtype") != "BOSRoute"
+            ):
                 continue
             uri = data.get("name", "")
             if not uri:
                 continue
-            routes.append({
-                "uri": uri,
-                "service": _uri_to_service(uri),
-                "status": data.get("status", "active"),
-                "layer": data.get("layer", "?"),
-                "description": data.get("description", ""),
-            })
+            routes.append(
+                {
+                    "uri": uri,
+                    "service": _uri_to_service(uri),
+                    "status": data.get("status", "active"),
+                    "layer": data.get("layer", "?"),
+                    "description": data.get("description", ""),
+                }
+            )
         except Exception:
             continue
     return routes
@@ -83,16 +88,18 @@ def _scan_component_nodes() -> list[dict]:
                 data = yaml.safe_load(fh)
             if not data:
                 continue
-            props = (data.get("properties") or {})
+            props = data.get("properties") or {}
             if props.get("protocol") != "BOS_URI":
                 continue
-            comps.append({
-                "name": data.get("name", ""),
-                "status": data.get("status", "active"),
-                "layer": props.get("layer", "?"),
-                "description": data.get("description", ""),
-                "domain": data.get("domain", ""),
-            })
+            comps.append(
+                {
+                    "name": data.get("name", ""),
+                    "status": data.get("status", "active"),
+                    "layer": props.get("layer", "?"),
+                    "description": data.get("description", ""),
+                    "domain": data.get("domain", ""),
+                }
+            )
         except Exception:
             continue
     return comps
@@ -129,9 +136,9 @@ def _ensure_cache():
 
 def load_routes() -> dict[str, str]:
     """Load tool→service route mappings from L0 M1 nodes.
-    
+
     Returns dict like {"research_now": "minerva", "cards_status": "cockpit", ...}
-    
+
     Merges with static overrides (overrides win).
     """
     _ensure_cache()
@@ -141,14 +148,14 @@ def load_routes() -> dict[str, str]:
     routes = {}
     for r in _Cache._routes:
         svc = r["service"]
-        uri = r["uri"]
+        r["uri"]
         if svc == "agora-internal":
             continue  # internal routes stay in bootstrap
         # Derive tool names from URI pattern
         # bos://cockpit/tools/* → tools under cockpit
         # bos://kairon/minerva → minerva_* tools
         routes[f"{svc}_default"] = svc
-    
+
     # Apply overrides (the detailed 80+ mapping)
     routes.update(overrides)
     return routes
@@ -156,7 +163,7 @@ def load_routes() -> dict[str, str]:
 
 def load_services() -> list[dict]:
     """Load service definitions for agora-services.json replacement.
-    
+
     Each entry: {"name": "...", "protocol": "mcp", "mcp_endpoint": "...", ...}
     """
     _ensure_cache()
@@ -193,7 +200,7 @@ def load_services() -> list[dict]:
 
 def load_known_services() -> dict[str, dict]:
     """Load known service startup configs for mcp_bootstrap replacement.
-    
+
     Returns dict like KNOWN_SERVICES in mcp_bootstrap.py:
     {"minerva": {"command": "uv", "args": [...], "description": "...", "source": "kairon"}}
     """
@@ -219,22 +226,24 @@ def load_known_services() -> dict[str, dict]:
 # CLI: inspect current L0 registry state
 if __name__ == "__main__":
     import sys
-    
+
     if "--invalidate" in sys.argv:
         _invalidate_cache()
         print("Cache invalidated.")
-    
+
     routes = load_routes()
     services = load_services()
     known = load_known_services()
-    
-    print(f"L0 Registry Loader — {len(routes)} routes, {len(services)} services, {len(known)} known")
+
+    print(
+        f"L0 Registry Loader — {len(routes)} routes, {len(services)} services, {len(known)} known"
+    )
     print()
     print("Routes (tool → service):")
     for tool, svc in sorted(routes.items())[:15]:
         print(f"  {tool:30s} → {svc}")
     if len(routes) > 15:
-        print(f"  ... and {len(routes)-15} more")
+        print(f"  ... and {len(routes) - 15} more")
     print()
     print("Known services:")
     for name, cfg in sorted(known.items()):

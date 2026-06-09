@@ -24,11 +24,11 @@ Layer: L3
 # status: active
 # ---
 
-import logging
-import queue
-import threading
-import uuid
-from typing import Any
+import logging  # noqa: E402
+import queue  # noqa: E402
+import threading  # noqa: E402
+import uuid  # noqa: E402
+from typing import Any  # noqa: E402
 
 _log = logging.getLogger(__name__)
 
@@ -130,7 +130,9 @@ class A2ATransport:
             "a2a.message.received",
             {"agent_id": source_agent_id, "msg_id": msg_id},
         )
-        _log.debug("[A2ATransport] received msg_id=%s for agent=%s", msg_id, source_agent_id)
+        _log.debug(
+            "[A2ATransport] received msg_id=%s for agent=%s", msg_id, source_agent_id
+        )
         return envelope
 
     def broadcast(

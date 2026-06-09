@@ -30,17 +30,17 @@ Handles HTTP request/response, JSON-RPC 2.0 envelope parsing,
 and dispatches method calls through the typed :class:`MCPToolRegistry`.
 """
 
-import json
-import logging
-import threading
-import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from pathlib import Path
-from socketserver import ThreadingMixIn
-from typing import Any
+import json  # noqa: E402
+import logging  # noqa: E402
+import threading  # noqa: E402
+import time  # noqa: E402
+from http.server import BaseHTTPRequestHandler, HTTPServer  # noqa: E402
+from pathlib import Path  # noqa: E402
+from socketserver import ThreadingMixIn  # noqa: E402
+from typing import Any  # noqa: E402
 
-from agora.auth.mcp_auth import MCPAuthError, get_auth_middleware  # type: ignore[import-not-found]
-from agora.mcp.mcp_protocol import (  # type: ignore[import-not-found]
+from agora.auth.mcp_auth import MCPAuthError, get_auth_middleware  # type: ignore[import-not-found]  # noqa: E402
+from agora.mcp.mcp_protocol import (  # type: ignore[import-not-found]  # noqa: E402
     handle_initialize,
     handle_prompts_get,
     handle_prompts_list,
@@ -49,7 +49,7 @@ from agora.mcp.mcp_protocol import (  # type: ignore[import-not-found]
     handle_tools_call,
     handle_tools_list,
 )
-from agora.mcp_tools import (  # type: ignore[import-not-found]
+from agora.mcp_tools import (  # type: ignore[import-not-found]  # noqa: E402
     MCPToolRegistry,
     ToolContext,
     _ParamError,
@@ -136,7 +136,10 @@ class _MCPRequestHandler(BaseHTTPRequestHandler):
                     "protocol": "JSON-RPC 2.0 (Model Context Protocol)",
                     "version": "1.0.0",
                     "endpoints": {
-                        "/mcp": {"method": "POST", "description": "JSON-RPC 2.0 MCP handler"},
+                        "/mcp": {
+                            "method": "POST",
+                            "description": "JSON-RPC 2.0 MCP handler",
+                        },
                         "/health": {"method": "GET", "description": "Health check"},
                     },
                     "documentation": "https://modelcontextprotocol.io",
@@ -215,7 +218,9 @@ class _MCPRequestHandler(BaseHTTPRequestHandler):
         if handler_func is None:
             entry = self.__class__._registry.get(method)
             if entry is None:
-                self._send_rpc_error(rpc_id, _METHOD_NOT_FOUND, f"Method '{method}' not found")
+                self._send_rpc_error(
+                    rpc_id, _METHOD_NOT_FOUND, f"Method '{method}' not found"
+                )
                 return
             handler_func = entry.handler
 
@@ -259,7 +264,13 @@ class _MCPRequestHandler(BaseHTTPRequestHandler):
         self._send_json({"jsonrpc": "2.0", "id": rpc_id, "result": result})
 
     def _send_rpc_error(self, rpc_id: Any, code: int, message: str) -> None:
-        self._send_json({"jsonrpc": "2.0", "id": rpc_id, "error": {"code": code, "message": message}})
+        self._send_json(
+            {
+                "jsonrpc": "2.0",
+                "id": rpc_id,
+                "error": {"code": code, "message": message},
+            }
+        )
 
     def _send_json(self, data: Any, status: int = 200) -> None:
         body = json.dumps(data).encode("utf-8")

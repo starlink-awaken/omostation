@@ -3,6 +3,7 @@
 依赖: _response.py 提供 _ok/_error/FORMAT_VERSION/_get_cache_ttl。
 mcp.py 提供 FastMCP 实例、EventBus、ProxyManager 实例。
 """
+
 from __future__ import annotations
 
 import json
@@ -22,11 +23,9 @@ from agora.mcp.bos_middleware import (  # type: ignore[import-not-found]
     bos_cache,
     bos_circuit_breaker,
     bos_rate_limiter,
-    config_watcher,
 )
 from agora.mcp.bos_metrics import bos_metrics  # type: ignore[import-not-found]
 from agora.mcp.bos_resolver import (  # type: ignore[import-not-found]
-    POC_SERVICES as _POC_SERVICES,
     list_services as _list_poc_services,
     resolve_bos_uri as _resolve_bos_uri,
 )
@@ -34,11 +33,12 @@ from agora.mcp.bos_router import bos_router as _bos_router  # type: ignore[impor
 
 # L0 审计 hook
 import sys as _sys
+
 _CURRENT_FILE = Path(__file__).resolve()
 _PROJECTS_DIR = _CURRENT_FILE.parents[4]
 _ECOS_SSOT_TOOLS = _PROJECTS_DIR / "ecos" / "src" / "ecos" / "ssot" / "tools"
 _sys.path.insert(0, str(_ECOS_SSOT_TOOLS))
-from mof_agora_hook import (  # type: ignore[import-not-found]
+from mof_agora_hook import (  # type: ignore[import-not-found]  # noqa: E402
     post_audit as _bos_post_audit,
     pre_check as _bos_pre_check,
 )
@@ -49,19 +49,21 @@ logger = structlog.get_logger(__name__)
 def _get_proxy_manager():
     """Lazy import ProxyManager from mcp.py (avoid circular import at module level)."""
     from agora.server.mcp import _proxy_manager as _pm  # type: ignore[import-not-found]
+
     return _pm
+
 
 # ── BOS 域鉴权 ──────────────────────────────────────────────
 
 _BOS_DOMAIN_ACCESS: dict[str, list[str]] = {
-    "memory":    ["read", "write"],
-    "omo":       ["read", "write"],
-    "analysis":  ["read", "write"],
-    "persona":   ["read", "write"],
-    "forge":     ["read", "write"],
-    "meta":      ["read"],
-    "ecos":      ["read"],
-    "agora":     ["read"],
+    "memory": ["read", "write"],
+    "omo": ["read", "write"],
+    "analysis": ["read", "write"],
+    "persona": ["read", "write"],
+    "forge": ["read", "write"],
+    "meta": ["read"],
+    "ecos": ["read"],
+    "agora": ["read"],
 }
 
 _AGORA_API_KEY = os.environ.get("AGORA_API_KEY", "")
@@ -77,6 +79,7 @@ def _bos_domain_authorized(uri: str, operation: str = "read") -> bool:
 
 
 # ── 路由辅助 ──────────────────────────────────────────────
+
 
 async def _resolve_with_router(
     uri: str,
@@ -143,16 +146,21 @@ def _bos_uri_to_event_type(uri: str) -> str:
     return uri.replace("://", ":").replace("/", ":")
 
 
-def _publish_bos_event(bus, uri: str, operation: str, status: str = "ok",
-                       duration_ms: int = 0) -> None:
+def _publish_bos_event(
+    bus, uri: str, operation: str, status: str = "ok", duration_ms: int = 0
+) -> None:
     """发布 BOS URI 操作事件到总线。"""
     event_type = _bos_uri_to_event_type(uri)
-    bus.publish(event_type, {
-        "uri": uri,
-        "operation": operation,
-        "status": status,
-        "duration_ms": duration_ms,
-    }, source="bos")
+    bus.publish(
+        event_type,
+        {
+            "uri": uri,
+            "operation": operation,
+            "status": status,
+            "duration_ms": duration_ms,
+        },
+        source="bos",
+    )
 
 
 # ═══════════════════════════════════════════════════════════
@@ -173,7 +181,9 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
     # ── mutate_resource ──────────────────────────────────
 
     @mcp.tool()
-    async def mutate_resource(uri: str, payload: dict | str = "{}", action: str = "update") -> dict:
+    async def mutate_resource(
+        uri: str, payload: dict | str = "{}", action: str = "update"
+    ) -> dict:
         """Unified BOS URI mutation protocol. Routes to downstream service via resolve_bos_uri.
 
         Args:
@@ -183,7 +193,9 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         """
         logger.info("mutate_resource", uri=uri, action=action)
         if not uri.startswith("bos://"):
-            return _error(f"Invalid URI scheme. Must start with bos://. Received: {uri}")
+            return _error(
+                f"Invalid URI scheme. Must start with bos://. Received: {uri}"
+            )
 
         if not bos_rate_limiter.acquire(uri):
             return _error(f"Rate limit exceeded for: {uri}")
@@ -205,8 +217,15 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             bos_cache.invalidate(uri)
             _bos_post_audit(uri, 200, _duration_ms)
             _publish_bos_event(_bus_ref, uri, "mutate", "ok", _duration_ms)
-            return _ok({"format_version": FORMAT_VERSION, "uri": uri, "action": action,
-                        "source": source, "result": result})
+            return _ok(
+                {
+                    "format_version": FORMAT_VERSION,
+                    "uri": uri,
+                    "action": action,
+                    "source": source,
+                    "result": result,
+                }
+            )
         except Exception as e:
             _duration_ms = int((_time.time() - _t0) * 1000)
             _bos_post_audit(uri, 500, _duration_ms)
@@ -246,22 +265,40 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             cached = bos_cache.get(uri, args)
             if cached:
                 bos_circuit_breaker.record_success(uri)
-                return _ok({"format_version": FORMAT_VERSION, "uri": uri,
-                            "source": "cache", "result": cached})
+                return _ok(
+                    {
+                        "format_version": FORMAT_VERSION,
+                        "uri": uri,
+                        "source": "cache",
+                        "result": cached,
+                    }
+                )
 
-            result, source = await _resolve_with_router(uri, proxy_manager=_get_proxy_manager(), **args)
+            result, source = await _resolve_with_router(
+                uri, proxy_manager=_get_proxy_manager(), **args
+            )
             bos_cache.set(uri, args, result, ttl=_get_cache_ttl(uri))
             bos_circuit_breaker.record_success(uri)
             _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
-            _publish_bos_event(bus, uri, "resolve", "ok", int((_time.time() - _t0) * 1000))
-            return _ok({"format_version": FORMAT_VERSION, "uri": uri,
-                        "source": source, "result": result})
+            _publish_bos_event(
+                bus, uri, "resolve", "ok", int((_time.time() - _t0) * 1000)
+            )
+            return _ok(
+                {
+                    "format_version": FORMAT_VERSION,
+                    "uri": uri,
+                    "source": source,
+                    "result": result,
+                }
+            )
         except json.JSONDecodeError:
             return _error(f"Invalid JSON arguments: {arguments}")
         except Exception as e:
             bos_circuit_breaker.record_failure(uri)
             _bos_post_audit(uri, 500, int((_time.time() - _t0) * 1000))
-            _publish_bos_event(bus, uri, "resolve", "error", int((_time.time() - _t0) * 1000))
+            _publish_bos_event(
+                bus, uri, "resolve", "error", int((_time.time() - _t0) * 1000)
+            )
             logger.exception("resolve_bos_uri_failed", uri=uri)
             return _error(f"BOS URI resolve failed: {e}")
 
@@ -292,20 +329,36 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
 
         cached = bos_cache.get(uri, args)
         if cached:
-            return _ok({"format_version": FORMAT_VERSION, "uri": uri,
-                        "source": "cache", "result": cached})
+            return _ok(
+                {
+                    "format_version": FORMAT_VERSION,
+                    "uri": uri,
+                    "source": "cache",
+                    "result": cached,
+                }
+            )
 
         _t0 = _time.time()
         # Step 1: BOSRouter → POC 统一路由链
         try:
-            result, source = await _resolve_with_router(uri, proxy_manager=_get_proxy_manager(), **args)
+            result, source = await _resolve_with_router(
+                uri, proxy_manager=_get_proxy_manager(), **args
+            )
             if isinstance(result, dict) and result.get("status") != "error":
                 bos_cache.set(uri, args, result, ttl=_get_cache_ttl(uri))
                 bos_circuit_breaker.record_success(uri)
                 _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
-                _publish_bos_event(bus, uri, "read", "ok", int((_time.time() - _t0) * 1000))
-                return _ok({"format_version": FORMAT_VERSION, "uri": uri,
-                            "source": source, "result": result})
+                _publish_bos_event(
+                    bus, uri, "read", "ok", int((_time.time() - _t0) * 1000)
+                )
+                return _ok(
+                    {
+                        "format_version": FORMAT_VERSION,
+                        "uri": uri,
+                        "source": source,
+                        "result": result,
+                    }
+                )
         except Exception:
             pass
 
@@ -315,12 +368,22 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             try:
                 result = await _pm.read_resource(uri)
                 if isinstance(result, dict) and "contents" in result:
-                    bos_cache.set(uri, args, result["contents"], ttl=_get_cache_ttl(uri))
+                    bos_cache.set(
+                        uri, args, result["contents"], ttl=_get_cache_ttl(uri)
+                    )
                     bos_circuit_breaker.record_success(uri)
                     _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
-                    _publish_bos_event(bus, uri, "read", "ok", int((_time.time() - _t0) * 1000))
-                    return _ok({"format_version": FORMAT_VERSION, "uri": uri,
-                                "source": "proxy", "contents": result["contents"]})
+                    _publish_bos_event(
+                        bus, uri, "read", "ok", int((_time.time() - _t0) * 1000)
+                    )
+                    return _ok(
+                        {
+                            "format_version": FORMAT_VERSION,
+                            "uri": uri,
+                            "source": "proxy",
+                            "contents": result["contents"],
+                        }
+                    )
             except Exception:
                 pass
 
@@ -331,12 +394,20 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             bos_circuit_breaker.record_success(uri)
             _bos_post_audit(uri, 200, int((_time.time() - _t0) * 1000))
             _publish_bos_event(bus, uri, "read", "ok", int((_time.time() - _t0) * 1000))
-            return _ok({"format_version": FORMAT_VERSION, "uri": uri,
-                        "source": "bos_resolver", "result": result})
+            return _ok(
+                {
+                    "format_version": FORMAT_VERSION,
+                    "uri": uri,
+                    "source": "bos_resolver",
+                    "result": result,
+                }
+            )
         except Exception as e:
             bos_circuit_breaker.record_failure(uri)
             _bos_post_audit(uri, 500, int((_time.time() - _t0) * 1000))
-            _publish_bos_event(bus, uri, "read", "error", int((_time.time() - _t0) * 1000))
+            _publish_bos_event(
+                bus, uri, "read", "error", int((_time.time() - _t0) * 1000)
+            )
             logger.exception("read_resource_failed", uri=uri)
             return _error(f"Resource read failed: {e}")
 
@@ -354,49 +425,73 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         for route in _bos_router.list_all(prefix_filter=prefix):
             uri_val = route["prefix"].rstrip("/")
             config = route.get("config", {})
-            resources.append({
-                "uri": uri_val,
-                "domain": config.get("domain", uri_val.split("/")[2] if "/" in uri_val else "unknown"),
-                "source": "bos_router",
-                "adapter": route["adapter"],
-                "description": config.get("description", config.get("workflow",
-                                        f"BOSRouter: {route['adapter']}")),
-                "schema_available": bool(config.get("steps", 0) or config.get("workflow")),
-            })
+            resources.append(
+                {
+                    "uri": uri_val,
+                    "domain": config.get(
+                        "domain", uri_val.split("/")[2] if "/" in uri_val else "unknown"
+                    ),
+                    "source": "bos_router",
+                    "adapter": route["adapter"],
+                    "description": config.get(
+                        "description",
+                        config.get("workflow", f"BOSRouter: {route['adapter']}"),
+                    ),
+                    "schema_available": bool(
+                        config.get("steps", 0) or config.get("workflow")
+                    ),
+                }
+            )
         # Part B: POC services (legacy)
         for svc in _list_poc_services():
             uri_val = svc.get("uri", "")
             if any(r["uri"] == uri_val for r in resources):
                 continue
-            resources.append({
-                "uri": uri_val,
-                "domain": svc.get("domain", ""),
-                "source": "poc",
-                "transport": svc.get("transport", ""),
-                "description": svc.get("description", ""),
-                "schema_available": False,
-            })
+            resources.append(
+                {
+                    "uri": uri_val,
+                    "domain": svc.get("domain", ""),
+                    "source": "poc",
+                    "transport": svc.get("transport", ""),
+                    "description": svc.get("description", ""),
+                    "schema_available": False,
+                }
+            )
         # Part C: ProxyManager configs
         _pm_for_list = _get_proxy_manager()
         if _pm_for_list is not None:
-            for name, cfg in getattr(_pm_for_list, '_configs', {}).items():
+            for name, cfg in getattr(_pm_for_list, "_configs", {}).items():
                 if isinstance(cfg, dict):
                     for bos_prefix in cfg.get("bos_prefixes", []):
-                        resources.append({
-                            "uri": bos_prefix,
-                            "domain": bos_prefix.split("/")[2] if "/" in bos_prefix else "unknown",
-                            "source": "proxy",
-                            "transport": "mcp_proxy",
-                            "description": cfg.get("description", f"Proxy: {name}"),
-                        })
+                        resources.append(
+                            {
+                                "uri": bos_prefix,
+                                "domain": bos_prefix.split("/")[2]
+                                if "/" in bos_prefix
+                                else "unknown",
+                                "source": "proxy",
+                                "transport": "mcp_proxy",
+                                "description": cfg.get("description", f"Proxy: {name}"),
+                            }
+                        )
         if prefix:
             resources = [r for r in resources if r["uri"].startswith(prefix)]
 
         # Schema 标注
         try:
-            wf_dir = _PROJECTS_DIR / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "workflow"
+            wf_dir = (
+                _PROJECTS_DIR
+                / "ecos"
+                / "src"
+                / "ecos"
+                / "ssot"
+                / "mof"
+                / "m1"
+                / "workflow"
+            )
             if wf_dir.exists():
                 import yaml
+
                 known_actions = set()
                 for f in wf_dir.glob("WORKFLOW-*.yaml"):
                     node = yaml.safe_load(open(f))
@@ -412,8 +507,13 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         except Exception:
             pass
 
-        return _ok({"format_version": FORMAT_VERSION, "resources": resources,
-                    "total": len(resources)})
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "resources": resources,
+                "total": len(resources),
+            }
+        )
 
     # ── list_bos_domains ─────────────────────────────────
 
@@ -421,6 +521,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
     async def list_bos_domains() -> dict:
         """列出所有已注册的 BOS 域及其路由摘要。"""
         from collections import Counter
+
         doms: Counter = Counter()
         for svc in _list_poc_services():
             doms[svc.get("domain", "unknown")] += 1
@@ -431,11 +532,19 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                 bos_domains.add(d)
         for d in bos_domains:
             if d not in doms:
-                doms[d] = sum(1 for r in _bos_router.list_all()
-                              if r.get("config", {}).get("domain") == d)
-        return _ok({"format_version": FORMAT_VERSION, "domains": dict(doms),
-                    "description": "BOS URI 5+1+扩展域: memory/omo/analysis/persona/forge + M1 扩展",
-                    "total_routes": _bos_router.count()})
+                doms[d] = sum(
+                    1
+                    for r in _bos_router.list_all()
+                    if r.get("config", {}).get("domain") == d
+                )
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "domains": dict(doms),
+                "description": "BOS URI 5+1+扩展域: memory/omo/analysis/persona/forge + M1 扩展",
+                "total_routes": _bos_router.count(),
+            }
+        )
 
     # ── get_bos_schema ───────────────────────────────────
 
@@ -448,8 +557,18 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                  不传则返回所有已知 schema 摘要
         """
         import yaml
+
         try:
-            wf_dir = _PROJECTS_DIR / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "workflow"
+            wf_dir = (
+                _PROJECTS_DIR
+                / "ecos"
+                / "src"
+                / "ecos"
+                / "ssot"
+                / "mof"
+                / "m1"
+                / "workflow"
+            )
             if not wf_dir.exists():
                 return _error("M1 Workflow 目录不存在")
 
@@ -484,17 +603,35 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                     if len(parts) >= 3:
                         action_key = f"{parts[1]}.{parts[2]}"
                 if action_key in schemas:
-                    return _ok({"format_version": FORMAT_VERSION, "uri": uri,
-                                "schema": schemas[action_key]})
+                    return _ok(
+                        {
+                            "format_version": FORMAT_VERSION,
+                            "uri": uri,
+                            "schema": schemas[action_key],
+                        }
+                    )
                 matches = {k: v for k, v in schemas.items() if action_key in k}
                 if matches:
-                    return _ok({"format_version": FORMAT_VERSION, "uri": uri,
-                                "schemas": matches, "match_count": len(matches)})
-                return _error(f"No schema found for: {uri}. Use get_bos_schema() without args to list all.")
+                    return _ok(
+                        {
+                            "format_version": FORMAT_VERSION,
+                            "uri": uri,
+                            "schemas": matches,
+                            "match_count": len(matches),
+                        }
+                    )
+                return _error(
+                    f"No schema found for: {uri}. Use get_bos_schema() without args to list all."
+                )
 
-            return _ok({"format_version": FORMAT_VERSION, "total_schemas": len(schemas),
-                        "schemas": schemas,
-                        "hint": "Use get_bos_schema('minerva.research') for specific"})
+            return _ok(
+                {
+                    "format_version": FORMAT_VERSION,
+                    "total_schemas": len(schemas),
+                    "schemas": schemas,
+                    "hint": "Use get_bos_schema('minerva.research') for specific",
+                }
+            )
         except Exception as e:
             return _error(f"Schema lookup failed: {e}")
 
@@ -503,13 +640,18 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
     @mcp.tool()
     async def bos_middleware_status() -> dict:
         """BOS 中间件状态查询 — 限流/熔断/缓存实时状态。"""
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "rate_limiter": bos_rate_limiter.status(),
-            "circuit_breaker": {"open_circuits": bos_circuit_breaker.status()},
-            "cache": bos_cache.status(),
-            "router": {"total_routes": _bos_router.count(), "stats": _bos_router.stats()},
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "rate_limiter": bos_rate_limiter.status(),
+                "circuit_breaker": {"open_circuits": bos_circuit_breaker.status()},
+                "cache": bos_cache.status(),
+                "router": {
+                    "total_routes": _bos_router.count(),
+                    "stats": _bos_router.stats(),
+                },
+            }
+        )
 
     # ── bos_reload_m1 ────────────────────────────────────
 
@@ -518,12 +660,14 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         """热加载 M1 Workflow 路由 — 从 YAML 重新注册 (不重启服务器)."""
         count = _bos_router.reload_from_m1()
         logger.info("bos_reload_m1: %d new routes", count)
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "action": "reload_m1",
-            "new_routes": count,
-            "total_routes": _bos_router.count(),
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "action": "reload_m1",
+                "new_routes": count,
+                "total_routes": _bos_router.count(),
+            }
+        )
 
     # ── bos_reload_discovery ─────────────────────────────
 
@@ -532,12 +676,14 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         """热加载 Discovery 路由 — 从 AGENTS.md 重新发现 (不重启服务器)."""
         count = _bos_router.reload_from_discovery()
         logger.info("bos_reload_discovery: %d new routes", count)
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "action": "reload_discovery",
-            "new_routes": count,
-            "total_routes": _bos_router.count(),
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "action": "reload_discovery",
+                "new_routes": count,
+                "total_routes": _bos_router.count(),
+            }
+        )
 
     # ── bos_metrics_status ───────────────────────────────
 
@@ -553,7 +699,7 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             lines = []
             status = bos_metrics.status(prefix)
             for p, s in sorted(status.items()):
-                labels = p.replace("://", "_").replace("/", "_").replace("-", "_")
+                p.replace("://", "_").replace("/", "_").replace("-", "_")
                 lines.append("# HELP bos_calls_total Total BOS calls per prefix")
                 lines.append("# TYPE bos_calls_total counter")
                 lines.append(f'bos_calls_total{{prefix="{p}"}} {s["calls"]}')
@@ -562,16 +708,24 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                 lines.append(f'bos_success_rate{{prefix="{p}"}} {s["success_rate"]}')
                 lines.append("# HELP bos_latency_ms_avg Average latency per prefix")
                 lines.append("# TYPE bos_latency_ms_avg gauge")
-                lines.append(f'bos_latency_ms_avg{{prefix="{p}"}} {s["avg_latency_ms"]}')
+                lines.append(
+                    f'bos_latency_ms_avg{{prefix="{p}"}} {s["avg_latency_ms"]}'
+                )
             return "\n".join(lines) + "\n"
         if prefix:
-            return _ok({"format_version": FORMAT_VERSION,
-                        "metrics": bos_metrics.status(prefix)})
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "summary": bos_metrics.summary(),
-            "detail": bos_metrics.status(),
-        })
+            return _ok(
+                {
+                    "format_version": FORMAT_VERSION,
+                    "metrics": bos_metrics.status(prefix),
+                }
+            )
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "summary": bos_metrics.summary(),
+                "detail": bos_metrics.status(),
+            }
+        )
 
     # ── watch_resource ───────────────────────────────────
 
@@ -595,17 +749,23 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         event_pattern = _bos_uri_to_event_type(uri_pattern)
         sub_id = bus.subscribe("bos-watch", event_pattern, callback_url)
 
-        logger.info("watch_resource_registered", uri_pattern=uri_pattern,
-                    event_pattern=event_pattern, sub_id=sub_id)
+        logger.info(
+            "watch_resource_registered",
+            uri_pattern=uri_pattern,
+            event_pattern=event_pattern,
+            sub_id=sub_id,
+        )
 
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "action": "watching",
-            "uri_pattern": uri_pattern,
-            "event_pattern": event_pattern,
-            "subscription_id": sub_id,
-            "hint": "Use get_event_log() to poll events, or provide callback_url for push delivery",
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "action": "watching",
+                "uri_pattern": uri_pattern,
+                "event_pattern": event_pattern,
+                "subscription_id": sub_id,
+                "hint": "Use get_event_log() to poll events, or provide callback_url for push delivery",
+            }
+        )
 
     # ── unwatch_resource ────────────────────────────────
 
@@ -618,11 +778,13 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         """
         bus.unsubscribe(subscription_id)
         logger.info("watch_resource_unregistered", sub_id=subscription_id)
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "action": "unwatched",
-            "subscription_id": subscription_id,
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "action": "unwatched",
+                "subscription_id": subscription_id,
+            }
+        )
 
     # ── list_bos_tools ──────────────────────────────────
 
@@ -630,13 +792,51 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
     async def list_bos_tools() -> dict:
         """列出所有可用的 BOS MCP 工具及 schema — Agent 统一发现入口。"""
         tools = [
-            {"name": "resolve_bos_uri", "description": "将 BOS URI 解析为实际调用，路由到后端服务", "arguments": {"uri": "BOS URI", "arguments": "JSON 参数字符串"}},
-            {"name": "read_resource", "description": "通过 BOS URI 读取资源 (Proxy→POC 降级)", "arguments": {"uri": "BOS URI", "arguments": "JSON 参数字符串"}},
-            {"name": "mutate_resource", "description": "通过 BOS URI 修改资源 (真路由 + L0 审计)", "arguments": {"uri": "BOS URI", "payload": "JSON 负载", "action": "update"}},
-            {"name": "list_bos_resources", "description": "列出所有已注册 BOS 资源", "arguments": {"prefix": "可选前缀过滤"}},
-            {"name": "list_bos_domains", "description": "列出 BOS 域及路由统计", "arguments": {}},
-            {"name": "get_bos_schema", "description": "查询 BOS URI 的参数规范 (从 M1 节点)", "arguments": {"uri": "BOS URI 或 action 名"}},
-            {"name": "bos_metrics_status", "description": "BOS 调用指标 (JSON/Prometheus)", "arguments": {"prefix": "可选前缀", "format": "json|prometheus"}},
-            {"name": "bos_middleware_status", "description": "限流/熔断/缓存/路由实时状态", "arguments": {}},
+            {
+                "name": "resolve_bos_uri",
+                "description": "将 BOS URI 解析为实际调用，路由到后端服务",
+                "arguments": {"uri": "BOS URI", "arguments": "JSON 参数字符串"},
+            },
+            {
+                "name": "read_resource",
+                "description": "通过 BOS URI 读取资源 (Proxy→POC 降级)",
+                "arguments": {"uri": "BOS URI", "arguments": "JSON 参数字符串"},
+            },
+            {
+                "name": "mutate_resource",
+                "description": "通过 BOS URI 修改资源 (真路由 + L0 审计)",
+                "arguments": {
+                    "uri": "BOS URI",
+                    "payload": "JSON 负载",
+                    "action": "update",
+                },
+            },
+            {
+                "name": "list_bos_resources",
+                "description": "列出所有已注册 BOS 资源",
+                "arguments": {"prefix": "可选前缀过滤"},
+            },
+            {
+                "name": "list_bos_domains",
+                "description": "列出 BOS 域及路由统计",
+                "arguments": {},
+            },
+            {
+                "name": "get_bos_schema",
+                "description": "查询 BOS URI 的参数规范 (从 M1 节点)",
+                "arguments": {"uri": "BOS URI 或 action 名"},
+            },
+            {
+                "name": "bos_metrics_status",
+                "description": "BOS 调用指标 (JSON/Prometheus)",
+                "arguments": {"prefix": "可选前缀", "format": "json|prometheus"},
+            },
+            {
+                "name": "bos_middleware_status",
+                "description": "限流/熔断/缓存/路由实时状态",
+                "arguments": {},
+            },
         ]
-        return _ok({"format_version": FORMAT_VERSION, "tools": tools, "total": len(tools)})
+        return _ok(
+            {"format_version": FORMAT_VERSION, "tools": tools, "total": len(tools)}
+        )

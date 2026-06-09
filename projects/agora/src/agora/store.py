@@ -51,14 +51,18 @@ class TaskStore:
             )"""
         )
         conn.execute("CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_tasks_created ON tasks(created_at)")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_tasks_created ON tasks(created_at)"
+        )
         conn.commit()
 
     def load_all(self) -> list[dict[str, Any]]:
         """Load all tasks, ordered by most recent first."""
-        rows = self._conn().execute(
-            "SELECT * FROM tasks ORDER BY created_at DESC"
-        ).fetchall()
+        rows = (
+            self._conn()
+            .execute("SELECT * FROM tasks ORDER BY created_at DESC")
+            .fetchall()
+        )
         return [self._row_to_dict(r) for r in rows]
 
     def save(self, task: dict[str, Any]) -> None:

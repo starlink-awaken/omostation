@@ -33,11 +33,11 @@ Adaptive Circuit Breaker - 自适应熔断器
 根据历史成功率动态调整阈值，实现更智能的熔断决策。
 """
 
-import enum
-import logging
-import time
-from dataclasses import dataclass
-from typing import Any
+import enum  # noqa: E402
+import logging  # noqa: E402
+import time  # noqa: E402
+from dataclasses import dataclass  # noqa: E402
+from typing import Any  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -207,7 +207,9 @@ class AdaptiveCircuitBreaker:
 
     def _update_ewma(self, value: float) -> None:
         """更新EWMA成功率"""
-        self.ewma_success_rate = self.EWMA_ALPHA * value + (1 - self.EWMA_ALPHA) * self.ewma_success_rate
+        self.ewma_success_rate = (
+            self.EWMA_ALPHA * value + (1 - self.EWMA_ALPHA) * self.ewma_success_rate
+        )
 
     def _adapt_thresholds(self) -> None:
         """调整自适应阈值"""
@@ -234,7 +236,9 @@ class AdaptiveCircuitBreaker:
             self.adaptive_failure_threshold = self.base_failure_threshold * 2.0
 
         # 限制阈值范围
-        self.adaptive_failure_threshold = max(0.1, min(0.9, self.adaptive_failure_threshold))
+        self.adaptive_failure_threshold = max(
+            0.1, min(0.9, self.adaptive_failure_threshold)
+        )
 
     def _should_open(self) -> bool:
         """判断是否应该熔断"""
@@ -261,7 +265,9 @@ class AdaptiveCircuitBreaker:
         self.half_open_requests = 0
 
         if was_open:
-            logger.info(f"[CB:{self.name}] Circuit CLOSED. Success rate: {self.metrics.success_rate:.2%}")
+            logger.info(
+                f"[CB:{self.name}] Circuit CLOSED. Success rate: {self.metrics.success_rate:.2%}"
+            )
 
     def get_status(self) -> dict:
         """获取熔断器状态"""

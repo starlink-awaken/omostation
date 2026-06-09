@@ -49,7 +49,9 @@ class InstanceManager:
 
     def list(self, type_filter: str = "") -> list[AgoraInstance]:
         if type_filter:
-            return [i for i in self._instances.values() if i.instance_type == type_filter]
+            return [
+                i for i in self._instances.values() if i.instance_type == type_filter
+            ]
         return list(self._instances.values())
 
     def add_peer(self, instance_id: str, peer_id: str) -> None:
@@ -69,7 +71,9 @@ class InstanceManager:
             instance_type="personal",
             display_name="Default",
             endpoint=os.environ.get("AGORA_ENDPOINT", "http://localhost:7430"),
-            a2a_endpoint=os.environ.get("AGORA_A2A_ENDPOINT", "http://localhost:7430/a2a"),
+            a2a_endpoint=os.environ.get(
+                "AGORA_A2A_ENDPOINT", "http://localhost:7430/a2a"
+            ),
             owner="org:starlink",
             capabilities=["identity", "capability", "event", "knowledge", "task"],
             services=[],

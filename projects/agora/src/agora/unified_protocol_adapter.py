@@ -59,10 +59,22 @@ class UnifiedProtocolAdapter:
         "mcp": {"min_version": "1.0.0", "status": "stable", "adapter": "native"},
         "a2a": {"min_version": "1.0.0", "status": "stable", "adapter": "native"},
         "langgraph": {"min_version": "0.2.0", "status": "validated", "adapter": "a2a"},
-        "openai_agents_sdk": {"min_version": "0.0.14", "status": "validated", "adapter": "mcp"},
-        "semantic_kernel": {"min_version": "1.18.0", "status": "validated", "adapter": "http"},
+        "openai_agents_sdk": {
+            "min_version": "0.0.14",
+            "status": "validated",
+            "adapter": "mcp",
+        },
+        "semantic_kernel": {
+            "min_version": "1.18.0",
+            "status": "validated",
+            "adapter": "http",
+        },
         "crewai": {"min_version": "0.79.0", "status": "experimental", "adapter": "a2a"},
-        "haystack": {"min_version": "2.7.0", "status": "experimental", "adapter": "http"},
+        "haystack": {
+            "min_version": "2.7.0",
+            "status": "experimental",
+            "adapter": "http",
+        },
         "microsoft_agent_framework": {
             "min_version": "0.4.0",
             "status": "experimental",
@@ -95,7 +107,9 @@ class UnifiedProtocolAdapter:
         """Register a protocol handler."""
         key = f"{endpoint}:{version or self.CURRENT_VERSION}"
         self._handlers[protocol][key] = handler
-        logger.info("[ProtocolAdapter] Registered %s handler: %s", protocol.name, endpoint)
+        logger.info(
+            "[ProtocolAdapter] Registered %s handler: %s", protocol.name, endpoint
+        )
 
     def register_validator(self, schema_name: str, validator: Callable) -> None:
         """Register a schema validator."""
@@ -107,7 +121,10 @@ class UnifiedProtocolAdapter:
 
     def detect_protocol(self, request_data: dict[str, Any]) -> ProtocolType:
         """Auto-detect protocol type from request."""
-        if request_data.get("channel") == "a2a" or request_data.get("protocol") == "a2a":
+        if (
+            request_data.get("channel") == "a2a"
+            or request_data.get("protocol") == "a2a"
+        ):
             return ProtocolType.A2A
         if "target_agent_id" in request_data or "agent_id" in request_data:
             return ProtocolType.A2A
@@ -133,7 +150,11 @@ class UnifiedProtocolAdapter:
         context = {"protocol": protocol, "request": request_data}
         for middleware in self._middleware_chain:
             try:
-                context = await middleware(context) if inspect.iscoroutinefunction(middleware) else middleware(context)
+                context = (
+                    await middleware(context)
+                    if inspect.iscoroutinefunction(middleware)
+                    else middleware(context)
+                )
             except (OSError, ValueError, RuntimeError, KeyError) as e:
                 logger.error("[ProtocolAdapter] Middleware error: %s", str(e))
                 return self._error_response(str(e), 500)
@@ -152,7 +173,9 @@ class UnifiedProtocolAdapter:
         if schema_name and schema_name in self._schema_validators:
             validator = self._schema_validators[schema_name]
             is_valid = (
-                await validator(request_data) if inspect.iscoroutinefunction(validator) else validator(request_data)
+                await validator(request_data)
+                if inspect.iscoroutinefunction(validator)
+                else validator(request_data)
             )
             if not is_valid:
                 return self._error_response("Schema validation failed", 400)
@@ -168,7 +191,9 @@ class UnifiedProtocolAdapter:
             logger.error("[ProtocolAdapter] Handler error: %s", str(e))
             return self._error_response(str(e), 500)
 
-    def _extract_endpoint(self, request_data: dict[str, Any], protocol: ProtocolType) -> str:
+    def _extract_endpoint(
+        self, request_data: dict[str, Any], protocol: ProtocolType
+    ) -> str:
         """Extract endpoint from request."""
         if protocol == ProtocolType.MCP:
             return request_data.get("method", "")
@@ -211,7 +236,9 @@ class UnifiedProtocolAdapter:
 
         row = self.RUNTIME_COMPATIBILITY[key]
         min_version = row["min_version"]
-        supported = self._version_tuple(runtime_version) >= self._version_tuple(min_version)
+        supported = self._version_tuple(runtime_version) >= self._version_tuple(
+            min_version
+        )
         return {
             "runtime": key,
             "requested_version": runtime_version,
@@ -232,7 +259,9 @@ class UnifiedProtocolAdapter:
             patch=int(parts[2]) if len(parts) > 2 else 0,
         )
 
-    def _find_handler(self, protocol: ProtocolType, endpoint: str, version: ProtocolVersion) -> Callable | None:
+    def _find_handler(
+        self, protocol: ProtocolType, endpoint: str, version: ProtocolVersion
+    ) -> Callable | None:
         """Find appropriate handler for protocol/endpoint/version."""
         handlers = self._handlers[protocol]
 

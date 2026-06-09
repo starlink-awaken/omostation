@@ -48,9 +48,13 @@ def _probe_provider(provider: str) -> dict[str, Any]:
     """
     import json
     from pathlib import Path
-    
-    cache_file = Path(os.environ.get("RUNTIME_HOME", str(Path.home() / ".runtime"))) / "cache" / "quota_rates.json"
-    
+
+    cache_file = (
+        Path(os.environ.get("RUNTIME_HOME", str(Path.home() / ".runtime")))
+        / "cache"
+        / "quota_rates.json"
+    )
+
     env_key_map = {
         "deepseek": "DEEPSEEK_API_KEY",
         "openai": "OPENAI_API_KEY",
@@ -60,7 +64,7 @@ def _probe_provider(provider: str) -> dict[str, Any]:
         "ollama": "",
     }
     key = os.environ.get(env_key_map.get(provider, ""), "")
-    
+
     if cache_file.exists():
         try:
             data = json.loads(cache_file.read_text())
@@ -74,7 +78,10 @@ def _probe_provider(provider: str) -> dict[str, Any]:
 
     if provider == "ollama":
         return {"available": True, "error": None}
-    return {"available": bool(key), "error": None if key else {"message": "no API key configured"}}
+    return {
+        "available": bool(key),
+        "error": None if key else {"message": "no API key configured"},
+    }
 
 
 def _parse_quota(provider: str, entry: dict[str, Any]) -> QuotaInfo:

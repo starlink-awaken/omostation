@@ -98,7 +98,9 @@ class TaskSync:
             if callback_url not in self._subscribers[task_id]:
                 self._subscribers[task_id].append(callback_url)
 
-    def get_history(self, task_id: str, since_version: int = 0, limit: int = 50) -> list[dict]:
+    def get_history(
+        self, task_id: str, since_version: int = 0, limit: int = 50
+    ) -> list[dict]:
         """获取Task变更历史(用于断线重连后的增量同步)。"""
         conn = self._get_conn()
         rows = conn.execute(
@@ -141,7 +143,12 @@ class TaskSync:
                         "payload": payload,
                     }
                 ).encode()
-                req = request.Request(url, data=data, headers={"Content-Type": "application/json"})  # noqa: S310
+                # Validate URL scheme (security)
+                if not url.startswith(("http://", "https://")):
+                    raise ValueError(f"Unsafe URL: {url}")
+                req = request.Request(  # noqa: S310
+                    url, data=data, headers={"Content-Type": "application/json"}
+                )
                 request.urlopen(req, timeout=5)  # noqa: S310
                 pushed += 1
             except Exception:
@@ -203,7 +210,9 @@ class CollaborativeEdit:
             }
         return {"entity_id": entity_id, "content": "", "checksum": "", "version": 0}
 
-    def submit_edit(self, entity_id: str, editor: str, content: str, expected_version: int) -> dict:
+    def submit_edit(
+        self, entity_id: str, editor: str, content: str, expected_version: int
+    ) -> dict:
         """提交编辑 (乐观锁: 版本号不匹配=冲突)。"""
         current_version = self._get_version(entity_id)
         if current_version != expected_version:
@@ -265,7 +274,9 @@ if __name__ == "__main__":
             print(f"Event recorded: v{r['version']}")
         elif sys.argv[2] == "history":
             for e in ts.get_history(sys.argv[3]):
-                print(f"  v{e['version']} {e['event_type']}: {json.dumps(e['payload'])[:60]}")
+                print(
+                    f"  v{e['version']} {e['event_type']}: {json.dumps(e['payload'])[:60]}"
+                )
         elif sys.argv[2] == "snapshot":
             s = ts.get_snapshot(sys.argv[3])
             print(f"Snapshot: v{s['version']}" if s else "No snapshot")

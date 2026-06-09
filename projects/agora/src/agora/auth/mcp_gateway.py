@@ -32,7 +32,14 @@ KNOWN_BACKENDS: list[dict] = [
         "name": "agent-runtime",
         "mcp_endpoint": "",
         "command": "uv",
-        "args": ["run", "--package", "cockpit", "python", "-m", "cockpit.agent_runtime_mcp_server"],
+        "args": [
+            "run",
+            "--package",
+            "cockpit",
+            "python",
+            "-m",
+            "cockpit.agent_runtime_mcp_server",
+        ],
     },
     {
         "name": "eidos",
@@ -62,13 +69,27 @@ KNOWN_BACKENDS: list[dict] = [
         "name": "minerva",
         "mcp_endpoint": "",
         "command": "uv",
-        "args": ["run", "--package", "minerva", "python", "-m", "minerva.mcp_server.server"],
+        "args": [
+            "run",
+            "--package",
+            "minerva",
+            "python",
+            "-m",
+            "minerva.mcp_server.server",
+        ],
     },
     {
         "name": "sophia",
         "mcp_endpoint": "",
         "command": "uv",
-        "args": ["run", "--package", "sophia", "python", "-m", "sophia.server.mcp_server"],
+        "args": [
+            "run",
+            "--package",
+            "sophia",
+            "python",
+            "-m",
+            "sophia.server.mcp_server",
+        ],
     },
     {
         "name": "cron-service",
@@ -98,7 +119,14 @@ KNOWN_BACKENDS: list[dict] = [
         "name": "sot-bridge-persona",
         "mcp_endpoint": "",
         "command": "uv",
-        "args": ["run", "--package", "sot-bridge", "python", "-m", "sot_bridge.sharedbrain_bridge.mcp"],
+        "args": [
+            "run",
+            "--package",
+            "sot-bridge",
+            "python",
+            "-m",
+            "sot_bridge.sharedbrain_bridge.mcp",
+        ],
     },
     {
         "name": "forge",
@@ -124,7 +152,12 @@ async def start_all() -> dict[str, str]:
 
     results = await _gateway_manager.start(KNOWN_BACKENDS)
     ok_count = sum(1 for v in results.values() if v.startswith("ok"))
-    logger.info("mcp_gateway_started", ok=ok_count, failed=len(results) - ok_count, services=list(results.keys()))
+    logger.info(
+        "mcp_gateway_started",
+        ok=ok_count,
+        failed=len(results) - ok_count,
+        services=list(results.keys()),
+    )
     return results
 
 

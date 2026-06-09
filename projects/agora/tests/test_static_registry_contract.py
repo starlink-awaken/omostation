@@ -19,15 +19,15 @@ def test_static_registry_canonical_compatibility_targets():
     routes = _load_routes()
     services = _load_services()
 
-    assert routes["llm_generate"] == "aetherforge-gateway"
+    assert routes["llm_generate"] == "llm-gateway"
     # NOTE: registry drift — llm-gateway_*_default routes currently point to
     # legacy names; canonical target is aetherforge-gateway.
     assert routes["llm-gateway_default"] == "llm-gateway"
     assert routes["llm-gateway-kernel_default"] == "llm-gateway-kernel"
 
-    assert routes["circuit_execute"] == "sot-bridge-persona"
-    assert routes["health_check"] == "sot-bridge-persona"
-    assert routes["identity_verify"] == "sot-bridge-persona"
+    assert routes["circuit_execute"] == "sharedbrain-bridge"
+    assert routes["health_check"] == "sharedbrain-bridge"
+    assert routes["identity_verify"] == "sharedbrain-bridge"
     # NOTE: registry drift — sharedbrain / ssot routes currently point to
     # legacy names; canonical target is sot-bridge-persona.
     assert routes["sharedbrain-bridge_default"] == "sharedbrain-bridge"

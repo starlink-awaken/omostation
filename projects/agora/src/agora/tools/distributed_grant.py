@@ -26,7 +26,9 @@ class DistributedGrantManager:
         return []
 
     def _save(self):
-        DISTRIBUTED_GRANTS_DB.write_text(json.dumps(self._grants, ensure_ascii=False, indent=2))
+        DISTRIBUTED_GRANTS_DB.write_text(
+            json.dumps(self._grants, ensure_ascii=False, indent=2)
+        )
 
     def issue_cross_instance(
         self,
@@ -54,7 +56,9 @@ class DistributedGrantManager:
         self._save()
         return grant
 
-    def verify_cross_instance(self, grant_id: str, caller: str, tool: str, cost: float = 0) -> dict:
+    def verify_cross_instance(
+        self, grant_id: str, caller: str, tool: str, cost: float = 0
+    ) -> dict:
         """验证跨实例grant（含WoT信任检查）。"""
         grant = next((g for g in self._grants if g["grant_id"] == grant_id), None)
         if not grant:
@@ -63,7 +67,10 @@ class DistributedGrantManager:
         # 1. 检查capability匹配
         cap = grant["capability"]
         if cap != "*" and not tool.startswith(cap.rstrip("*")):
-            return {"allowed": False, "reason": f"capability mismatch: {tool} not in {cap}"}
+            return {
+                "allowed": False,
+                "reason": f"capability mismatch: {tool} not in {cap}",
+            }
 
         # 2. 检查约束
         cons = grant["constraints"]
@@ -76,7 +83,10 @@ class DistributedGrantManager:
         wot = WebOfTrust()
         trust = wot.get_trust_score(caller, grant["subject"])
         if trust["score"] < 5.0:
-            return {"allowed": False, "reason": f"insufficient trust ({trust['score']}), need >= 5.0"}
+            return {
+                "allowed": False,
+                "reason": f"insufficient trust ({trust['score']}), need >= 5.0",
+            }
 
         # 更新计数器
         grant["call_count"] += 1

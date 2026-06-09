@@ -19,7 +19,9 @@ from agora.core.scheduler import scheduler  # type: ignore[import-not-found]
 from agora.task_manager import task_manager  # type: ignore[import-not-found]
 from agora.types import Agent, AgentMessage, GatewayConfig, Task  # type: ignore[import-not-found]
 
-gateway_agent_registry: Any = _importlib.import_module("agora.agent_registry").gateway_agent_registry
+gateway_agent_registry: Any = _importlib.import_module(
+    "agora.agent_registry"
+).gateway_agent_registry
 gateway_event_bus: Any = _importlib.import_module("agora.event_bus").gateway_event_bus
 gateway_pipeline: Any = _importlib.import_module("agora.pipeline").gateway_pipeline
 gateway_router: Any = _importlib.import_module("agora.router").gateway_router
@@ -63,7 +65,9 @@ class Gateway:
         if self._started:
             return
         if self.config.routing:
-            self.router.configure(self.config.routing.rules, self.config.routing.default_agent)
+            self.router.configure(
+                self.config.routing.rules, self.config.routing.default_agent
+            )
         for agent_cfg in self.config.agents:
             agent = Agent(
                 id=agent_cfg.id,

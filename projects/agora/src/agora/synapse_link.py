@@ -20,20 +20,20 @@ Authority: organs/D-Gateway/AGENTS.md
 # 外延 ≝ {e | e ∈ D-Gateway ∧ implements(e, SynapseLink)}
 # 功能 ⊢ {Handshake, Heartbeat, Peer_Registry}
 # =============================================================================
-import asyncio
-import hashlib
-import hmac
-import json
-import logging
-import os
-import time
-import urllib.error
-import urllib.request
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
-from enum import StrEnum
+import asyncio  # noqa: E402
+import hashlib  # noqa: E402
+import hmac  # noqa: E402
+import json  # noqa: E402
+import logging  # noqa: E402
+import os  # noqa: E402
+import time  # noqa: E402
+import urllib.error  # noqa: E402
+import urllib.request  # noqa: E402
+from dataclasses import dataclass, field  # noqa: E402
+from datetime import UTC, datetime  # noqa: E402
+from enum import StrEnum  # noqa: E402
 
-from agora.auth.node_identity import NodeIdentity  # type: ignore[import-not-found]
+from agora.auth.node_identity import NodeIdentity  # type: ignore[import-not-found]  # noqa: E402
 
 _log = logging.getLogger(__name__)
 
@@ -47,7 +47,9 @@ _SOVEREIGN_KEY_ENV = "SHAREDBRAIN_SOVEREIGN_KEY"
 _SIGNATURE_WINDOW_S = 30  # seconds; reject messages older than this
 
 
-def _compute_handshake_signature(node_id: str, timestamp: float, sovereign_key: str) -> str:
+def _compute_handshake_signature(
+    node_id: str, timestamp: float, sovereign_key: str
+) -> str:
     """Compute HMAC-SHA256 signature for a handshake message.
 
     The signed message is ``"{node_id}:{timestamp:.3f}"``.
@@ -149,7 +151,9 @@ class SynapseLink:
     def add_node(self, node: RemoteNode) -> None:
         """Register a remote node (upsert by node_id)."""
         self._nodes[node.node_id] = node
-        _log.debug("SynapseLink: added node %s (%s:%d)", node.node_id, node.host, node.port)
+        _log.debug(
+            "SynapseLink: added node %s (%s:%d)", node.node_id, node.host, node.port
+        )
 
     def remove_node(self, node_id: str) -> None:
         """Deregister a remote node by node_id (no-op if unknown)."""
@@ -190,11 +194,15 @@ class SynapseLink:
         if sovereign_key:
             ts = time.time()
             payload["timestamp"] = ts
-            payload["signature"] = _compute_handshake_signature(self._identity.node_id, ts, sovereign_key)
+            payload["signature"] = _compute_handshake_signature(
+                self._identity.node_id, ts, sovereign_key
+            )
         url = f"{node.endpoint}/synapse/hello"
         try:
             t0 = time.monotonic()
-            response = await self._http_post(url, payload, timeout=self._handshake_timeout)
+            response = await self._http_post(
+                url, payload, timeout=self._handshake_timeout
+            )
             elapsed_ms = (time.monotonic() - t0) * 1000
 
             # Update remote node metadata from response
@@ -217,7 +225,12 @@ class SynapseLink:
             )
             return True
         except (TimeoutError, OSError, ConnectionError, RuntimeError) as exc:
-            _log.warning("SynapseLink: handshake FAILED with %s:%d — %s", node.host, node.port, exc)
+            _log.warning(
+                "SynapseLink: handshake FAILED with %s:%d — %s",
+                node.host,
+                node.port,
+                exc,
+            )
             node.status = NodeStatus.OFFLINE
             return False
 
@@ -271,14 +284,21 @@ class SynapseLink:
         Designed to be started via ``asyncio.create_task(link.start_heartbeat_loop())``.
         Runs until cancelled.
         """
-        _log.info("SynapseLink: heartbeat loop started (interval=%ds)", self._heartbeat_interval)
+        _log.info(
+            "SynapseLink: heartbeat loop started (interval=%ds)",
+            self._heartbeat_interval,
+        )
         while True:
             await asyncio.sleep(self._heartbeat_interval)
             for node in list(self._nodes.values()):
                 try:
                     await self.heartbeat(node)
                 except (OSError, ValueError) as exc:
-                    _log.error("SynapseLink: unexpected heartbeat error for %s: %s", node.node_id, exc)
+                    _log.error(
+                        "SynapseLink: unexpected heartbeat error for %s: %s",
+                        node.node_id,
+                        exc,
+                    )
 
     # ------------------------------------------------------------------
     # Incoming hello handler
@@ -303,7 +323,10 @@ class SynapseLink:
             sig = payload.get("signature", "")
             ts = float(payload.get("timestamp", 0.0))
             if not _verify_handshake_signature(remote_id, ts, sig, sovereign_key):
-                _log.warning("SynapseLink: rejected hello from %s — invalid or expired signature", remote_id)
+                _log.warning(
+                    "SynapseLink: rejected hello from %s — invalid or expired signature",
+                    remote_id,
+                )
                 return {
                     "error": "invalid_signature",
                     "node_id": self._identity.node_id,
@@ -337,7 +360,9 @@ class SynapseLink:
     # Internal HTTP
     # ------------------------------------------------------------------
 
-    async def _http_post(self, url: str, payload: dict, *, timeout: float = 5.0) -> dict:
+    async def _http_post(
+        self, url: str, payload: dict, *, timeout: float = 5.0
+    ) -> dict:
         """Async HTTP POST — tries httpx, falls back to urllib in an executor."""
         try:
             import httpx  # type: ignore[import]
@@ -351,10 +376,14 @@ class SynapseLink:
 
         # urllib fallback — run in executor to avoid blocking the event loop
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, self._urllib_post_sync, url, payload, timeout)
+        return await loop.run_in_executor(
+            None, self._urllib_post_sync, url, payload, timeout
+        )
 
     @staticmethod
-    def _urllib_post_sync(url: str, payload: dict, timeout: float) -> dict:  # pragma: no cover
+    def _urllib_post_sync(
+        url: str, payload: dict, timeout: float
+    ) -> dict:  # pragma: no cover
         data = json.dumps(payload).encode()
         req = urllib.request.Request(  # noqa: S310
             url,

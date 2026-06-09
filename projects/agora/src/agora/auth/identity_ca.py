@@ -17,7 +17,9 @@ CA_DB_PATH = Path.home() / ".kos" / "identity.db"
 class IdentityCA:
     """Local CA — 签发/吊销/验证身份凭证。"""
 
-    def __init__(self, db_path: str | None = None, ca_id: str = "ca:agora.starlink.local"):
+    def __init__(
+        self, db_path: str | None = None, ca_id: str = "ca:agora.starlink.local"
+    ):
         self._db_path = db_path or str(CA_DB_PATH)
         self.ca_id = ca_id
         self._ensure_schema()
@@ -140,7 +142,9 @@ class IdentityCA:
                 # New format: hmac:salt:hash_prefix
                 try:
                     salt = bytes.fromhex(parts[1])
-                    expected_prefix = hashlib.pbkdf2_hmac("sha256", proof_secret.encode(), salt, 6000).hex()[:16]
+                    expected_prefix = hashlib.pbkdf2_hmac(
+                        "sha256", proof_secret.encode(), salt, 6000
+                    ).hex()[:16]
                     if expected_prefix != parts[2]:
                         return {"valid": False, "reason": "proof_mismatch"}
                 except (ValueError, IndexError):
@@ -236,9 +240,15 @@ def run_mcp_stdio():
                                     "type": "object",
                                     "properties": {
                                         "subject_id": {"type": "string"},
-                                        "subject_type": {"type": "string", "enum": ["user", "agent", "org", "node"]},
+                                        "subject_type": {
+                                            "type": "string",
+                                            "enum": ["user", "agent", "org", "node"],
+                                        },
                                         "tenant": {"type": "string"},
-                                        "expires_days": {"type": "integer", "default": 365},
+                                        "expires_days": {
+                                            "type": "integer",
+                                            "default": 365,
+                                        },
                                     },
                                     "required": ["subject_id", "subject_type"],
                                 },
@@ -264,7 +274,10 @@ def run_mcp_stdio():
                             {
                                 "name": "identity.list",
                                 "description": "列出所有凭证",
-                                "inputSchema": {"type": "object", "properties": {"tenant": {"type": "string"}}},
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {"tenant": {"type": "string"}},
+                                },
                             },
                         ]
                     },
@@ -288,7 +301,9 @@ def run_mcp_stdio():
                         {
                             "jsonrpc": "2.0",
                             "id": msg["id"],
-                            "result": {"content": [{"type": "text", "text": json.dumps(r)}]},
+                            "result": {
+                                "content": [{"type": "text", "text": json.dumps(r)}]
+                            },
                         }
                     )
                 except Exception as e:
@@ -296,7 +311,14 @@ def run_mcp_stdio():
                         {
                             "jsonrpc": "2.0",
                             "id": msg["id"],
-                            "result": {"content": [{"type": "text", "text": json.dumps({"error": str(e)})}]},
+                            "result": {
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": json.dumps({"error": str(e)}),
+                                    }
+                                ]
+                            },
                         }
                     )
 

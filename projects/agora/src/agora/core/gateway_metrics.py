@@ -64,21 +64,23 @@ def get_metrics() -> dict[str, Any]:
         providers[name] = {
             "requests": m.requests,
             "success_rate": (
-                f"{(m.success / m.requests * 100):.1f}%"
-                if m.requests > 0
-                else "N/A"
+                f"{(m.success / m.requests * 100):.1f}%" if m.requests > 0 else "N/A"
             ),
             "avg_latency_ms": (
                 round(m.total_latency_ms / m.requests) if m.requests > 0 else 0
             ),
             "last_success": (
-                __import__("datetime").datetime.fromtimestamp(m.last_success_time).isoformat()
+                __import__("datetime")
+                .datetime.fromtimestamp(m.last_success_time)
+                .isoformat()
                 if m.last_success_time
                 else None
             ),
             "last_error": m.last_error,
             "last_error_time": (
-                __import__("datetime").datetime.fromtimestamp(m.last_error_time).isoformat()
+                __import__("datetime")
+                .datetime.fromtimestamp(m.last_error_time)
+                .isoformat()
                 if m.last_error_time
                 else None
             ),
@@ -91,7 +93,9 @@ def get_metrics() -> dict[str, Any]:
         "providers": providers,
         "recent": [
             {
-                "time": __import__("datetime").datetime.fromtimestamp(r.get("timestamp", 0)).isoformat(),
+                "time": __import__("datetime")
+                .datetime.fromtimestamp(r.get("timestamp", 0))
+                .isoformat(),
                 "model": r.get("model", ""),
                 "provider": r.get("provider", ""),
                 "actual": r.get("actual_model", ""),

@@ -36,13 +36,17 @@ def get_event_bus(registry: ServiceRegistry | None = None) -> EventBus:
     return _bus
 
 
-def get_router(registry: ServiceRegistry | None = None, event_bus: EventBus | None = None) -> Router:
+def get_router(
+    registry: ServiceRegistry | None = None, event_bus: EventBus | None = None
+) -> Router:
     """Return the global Router singleton (lazy-init)."""
     global _router
     if _router is None:
         from agora.core.router import Router
 
-        _router = Router(registry or get_registry(), event_bus=event_bus or get_event_bus())
+        _router = Router(
+            registry or get_registry(), event_bus=event_bus or get_event_bus()
+        )
     return _router
 
 

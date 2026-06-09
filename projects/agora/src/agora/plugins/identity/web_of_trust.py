@@ -52,7 +52,9 @@ class WebOfTrust:
         conn.commit()
         return conn
 
-    def set_trust(self, from_entity: str, to_entity: str, score: float, context: str = "general") -> dict:
+    def set_trust(
+        self, from_entity: str, to_entity: str, score: float, context: str = "general"
+    ) -> dict:
         """建立或更新直接信任关系。"""
         conn = self._get_conn()
         ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
@@ -62,7 +64,12 @@ class WebOfTrust:
         )
         conn.commit()
         conn.close()
-        return {"from": from_entity, "to": to_entity, "score": score, "context": context}
+        return {
+            "from": from_entity,
+            "to": to_entity,
+            "score": score,
+            "context": context,
+        }
 
     def get_trust_score(self, from_entity: str, to_entity: str) -> dict:
         """计算从from到to的信任分数（含传递链）。"""
@@ -75,7 +82,12 @@ class WebOfTrust:
 
         if row:
             conn.close()
-            return {"score": row[0], "path": [f"{from_entity}→{to_entity}"], "hops": 1, "source": "direct"}
+            return {
+                "score": row[0],
+                "path": [f"{from_entity}→{to_entity}"],
+                "hops": 1,
+                "source": "direct",
+            }
 
         # BFS遍历间接信任 (最多3跳)
         # 信任链公式: n跳信任 = (score1 * score2 * ... * scoreN) ^ (1/N)  — 几何均值
@@ -88,7 +100,12 @@ class WebOfTrust:
                 if len(path) > 1 and current == to_entity:
                     hops = len(path) - 1
                     score = round(10.0 * (product ** (1.0 / hops)), 2)
-                    return {"score": score, "path": "→".join(path), "hops": hops, "source": "indirect"}
+                    return {
+                        "score": score,
+                        "path": "→".join(path),
+                        "hops": hops,
+                        "source": "indirect",
+                    }
                 if len(path) > 3:  # 最多3跳
                     continue
 
@@ -100,7 +117,13 @@ class WebOfTrust:
                     if next_entity not in visited:
                         visited.add(next_entity)
                         # 累计乘积，最终取几何均值
-                        queue.append((next_entity, product * (score / 10.0), path + [next_entity]))
+                        queue.append(
+                            (
+                                next_entity,
+                                product * (score / 10.0),
+                                path + [next_entity],
+                            )
+                        )
 
             return {"score": 0, "path": "", "hops": 0, "source": "unreachable"}
         finally:
@@ -110,7 +133,9 @@ class WebOfTrust:
         """对所有信任评分做时效衰退。"""
         conn = self._get_conn()
         # 每月-0.5, 最低0
-        count = conn.execute("UPDATE trust_edges SET score = MAX(0, score - 0.5) WHERE score > 0").rowcount
+        count = conn.execute(
+            "UPDATE trust_edges SET score = MAX(0, score - 0.5) WHERE score > 0"
+        ).rowcount
         conn.commit()
         conn.close()
         return count
@@ -124,9 +149,18 @@ class WebOfTrust:
                 (entity, entity),
             ).fetchall()
         else:
-            rows = conn.execute("SELECT * FROM trust_edges ORDER BY score DESC").fetchall()
+            rows = conn.execute(
+                "SELECT * FROM trust_edges ORDER BY score DESC"
+            ).fetchall()
         conn.close()
-        cols = ["from_entity", "to_entity", "score", "context", "created_at", "expires_at"]
+        cols = [
+            "from_entity",
+            "to_entity",
+            "score",
+            "context",
+            "created_at",
+            "expires_at",
+        ]
         return [dict(zip(cols, r, strict=True)) for r in rows]
 
     def validate_capability_grant(self, grant: dict, from_entity: str) -> dict:
@@ -153,7 +187,9 @@ if __name__ == "__main__":
 
     wot = WebOfTrust()
     if len(sys.argv) > 2 and sys.argv[1] == "set":
-        r = wot.set_trust(sys.argv[2], sys.argv[3], float(sys.argv[4]) if len(sys.argv) > 4 else 5.0)
+        r = wot.set_trust(
+            sys.argv[2], sys.argv[3], float(sys.argv[4]) if len(sys.argv) > 4 else 5.0
+        )
         print(f"Trust set: {r['from']} → {r['to']} = {r['score']}")
     elif len(sys.argv) > 2 and sys.argv[1] == "get":
         r = wot.get_trust_score(sys.argv[2], sys.argv[3])

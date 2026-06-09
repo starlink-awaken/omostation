@@ -32,8 +32,8 @@ from typing import TYPE_CHECKING, Any, NoReturn, Protocol, cast
 _log = logging.getLogger(__name__)
 logger = logging.getLogger(__name__)
 
-from .auth_models import AuthenticatedUser, AuthenticationError
-from .oauth2_server import OAuth2Server
+from .auth_models import AuthenticatedUser, AuthenticationError  # noqa: E402
+from .oauth2_server import OAuth2Server  # noqa: E402
 
 if TYPE_CHECKING:
     from websockets.asyncio.server import Server as WebSocketServer
@@ -186,7 +186,9 @@ class WSServer:
         Uses ``websockets.serve`` to start the server; runs until stopped.
         """
         if not WEBSOCKETS_AVAILABLE:
-            logger.error("websockets library not installed. Cannot start WebSocket server.")
+            logger.error(
+                "websockets library not installed. Cannot start WebSocket server."
+            )
             raise RuntimeError("websockets library not installed")
 
         self._running = True
@@ -216,7 +218,9 @@ class WSServer:
         # 关闭所有连接
         close_tasks = []
         for conn_id in list(self._connections.keys()):
-            close_tasks.append(self._close_connection(conn_id, 1001, "Server shutting down"))
+            close_tasks.append(
+                self._close_connection(conn_id, 1001, "Server shutting down")
+            )
 
         if close_tasks:
             await asyncio.gather(*close_tasks, return_exceptions=True)
@@ -228,7 +232,9 @@ class WSServer:
 
         logger.info("WebSocket server stopped")
 
-    async def _handle_connection(self, websocket: WebSocketServerProtocol) -> None:  # pragma: no cover
+    async def _handle_connection(
+        self, websocket: WebSocketServerProtocol
+    ) -> None:  # pragma: no cover
         """
         处理客户端连接
 
@@ -246,12 +252,16 @@ class WSServer:
                 try:
                     user = self._oauth2_server.validate_token(auth_token)
 
-                    connection = WebSocketConnection(connection_id=connection_id, websocket=websocket, user=user)
+                    connection = WebSocketConnection(
+                        connection_id=connection_id, websocket=websocket, user=user
+                    )
 
                     # 注册连接
                     self._register_connection(connection)
 
-                    logger.info(f"User {user.user_id} connected via WebSocket ({connection_id})")
+                    logger.info(
+                        f"User {user.user_id} connected via WebSocket ({connection_id})"
+                    )
 
                     # 发送欢迎消息
                     await self._send_message(
@@ -280,7 +290,9 @@ class WSServer:
 
         except _RuntimeConnectionClosed as e:
             close_code = getattr(e, "code", "unknown")
-            logger.info(f"WebSocket connection closed naturally: {connection_id} (code={close_code})")
+            logger.info(
+                f"WebSocket connection closed naturally: {connection_id} (code={close_code})"
+            )
         except Exception as e:
             logger.exception(f"WebSocket error: {e}")
         finally:
@@ -288,7 +300,9 @@ class WSServer:
             if connection:
                 self._cleanup_connection(connection_id)
 
-    async def _handle_message(self, connection: WebSocketConnection, message: Data) -> None:
+    async def _handle_message(
+        self, connection: WebSocketConnection, message: Data
+    ) -> None:
         """
         处理客户端消息
 
@@ -340,7 +354,10 @@ class WSServer:
         except (UnicodeDecodeError, json.JSONDecodeError):
             await self._send_message(
                 connection.websocket,
-                WebSocketEvent(type="error", data={"message": "Invalid JSON", "code": "invalid_json"}),
+                WebSocketEvent(
+                    type="error",
+                    data={"message": "Invalid JSON", "code": "invalid_json"},
+                ),
             )
 
     @staticmethod
@@ -384,7 +401,9 @@ class WSServer:
 
             logger.info(f"WebSocket connection cleaned up: {connection_id}")
 
-    async def _close_connection(self, connection_id: int, code: int = 1000, reason: str = "") -> None:
+    async def _close_connection(
+        self, connection_id: int, code: int = 1000, reason: str = ""
+    ) -> None:
         """关闭连接"""
         connection = self._connections.get(connection_id)
         if connection:
@@ -401,7 +420,9 @@ class WSServer:
             return auth_header[7:]
         return None
 
-    async def _send_message(self, websocket: WebSocketServerProtocol, event: WebSocketEvent) -> None:
+    async def _send_message(
+        self, websocket: WebSocketServerProtocol, event: WebSocketEvent
+    ) -> None:
         """发送消息"""
         try:
             await websocket.send(event.to_json())
@@ -412,7 +433,9 @@ class WSServer:
 
     # ========== 公共 API ==========
 
-    async def broadcast(self, event_type: str, data: JSONDict, channel: str | None = None) -> None:
+    async def broadcast(
+        self, event_type: str, data: JSONDict, channel: str | None = None
+    ) -> None:
         """
         广播事件给所有连接
 
@@ -429,7 +452,11 @@ class WSServer:
         if channel:
             # 广播给频道订阅者
             subscriber_ids = self._channel_subscribers.get(channel, set())
-            targets = [(cid, self._connections[cid]) for cid in subscriber_ids if cid in self._connections]
+            targets = [
+                (cid, self._connections[cid])
+                for cid in subscriber_ids
+                if cid in self._connections
+            ]
         else:
             # 广播给所有连接
             targets = list(self._connections.items())
@@ -469,13 +496,17 @@ class WSServer:
                 except _RuntimeConnectionClosed:
                     disconnected.append(connection_id)
                 except (OSError, RuntimeError) as e:
-                    logger.warning(f"Error sending to user {user_id} conn {connection_id}: {e}")
+                    logger.warning(
+                        f"Error sending to user {user_id} conn {connection_id}: {e}"
+                    )
 
         # 清理断开的连接
         for connection_id in disconnected:
             self._cleanup_connection(connection_id)
 
-    async def send_to_channel(self, channel: str, event_type: str, data: JSONDict) -> None:
+    async def send_to_channel(
+        self, channel: str, event_type: str, data: JSONDict
+    ) -> None:
         """
         发送事件给指定频道
 
@@ -498,7 +529,9 @@ class WSServer:
                 except _RuntimeConnectionClosed:
                     disconnected.append(connection_id)
                 except (OSError, RuntimeError) as e:
-                    logger.warning(f"Error sending to channel {channel} conn {connection_id}: {e}")
+                    logger.warning(
+                        f"Error sending to channel {channel} conn {connection_id}: {e}"
+                    )
 
         # 清理断开的连接
         for connection_id in disconnected:

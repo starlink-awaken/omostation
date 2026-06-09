@@ -89,7 +89,9 @@ class FederationManager:
         import sqlite3
 
         conn = sqlite3.connect(str(FEDERATION_DB))
-        peers = conn.execute("SELECT instance_id, endpoint, a2a_endpoint FROM peers WHERE status='active'").fetchall()
+        peers = conn.execute(
+            "SELECT instance_id, endpoint, a2a_endpoint FROM peers WHERE status='active'"
+        ).fetchall()
         conn.close()
 
         results: list[AgentCard | dict[str, str]] = []
@@ -98,7 +100,9 @@ class FederationManager:
                 cards = self._fetch_agent_cards(a2a_endpoint or endpoint)
                 for card_data in cards:
                     card = AgentCard(
-                        agent_id=card_data.get("agent_id", card_data.get("name", "unknown")),
+                        agent_id=card_data.get(
+                            "agent_id", card_data.get("name", "unknown")
+                        ),
                         name=card_data.get("name", "Unknown"),
                         description=card_data.get("description", ""),
                         capabilities=card_data.get("capabilities", []),
@@ -128,7 +132,9 @@ class FederationManager:
 
         conn = sqlite3.connect(str(FEDERATION_DB))
         ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        conn.execute("UPDATE peers SET last_sync=? WHERE instance_id=?", (ts, instance_id))
+        conn.execute(
+            "UPDATE peers SET last_sync=? WHERE instance_id=?", (ts, instance_id)
+        )
         conn.commit()
         conn.close()
 
@@ -156,7 +162,9 @@ class FederationManager:
                 (f"%{capability_filter}%",),
             ).fetchall()
         else:
-            rows = conn.execute("SELECT * FROM agent_cards ORDER BY trust_score DESC").fetchall()
+            rows = conn.execute(
+                "SELECT * FROM agent_cards ORDER BY trust_score DESC"
+            ).fetchall()
         conn.close()
         cols = [
             "agent_id",

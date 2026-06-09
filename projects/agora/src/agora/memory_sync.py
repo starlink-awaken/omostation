@@ -54,7 +54,9 @@ class MemorySyncManager:
     a local entry when ``remote.timestamp > local.timestamp``.
     """
 
-    def __init__(self, local_node_id: str, storage_path: str = "data/holo_memory/") -> None:
+    def __init__(
+        self, local_node_id: str, storage_path: str = "data/holo_memory/"
+    ) -> None:
         self.status = "active"
         self.local_node_id = local_node_id
         self.storage_path = storage_path
@@ -106,7 +108,9 @@ class MemorySyncManager:
                     )
                     self._store[entry.key] = entry
                 except (OSError, KeyError, json.JSONDecodeError) as exc:
-                    _log.warning("MemorySyncManager: skipping corrupt entry %s: %s", fname, exc)
+                    _log.warning(
+                        "MemorySyncManager: skipping corrupt entry %s: %s", fname, exc
+                    )
         except OSError:  # pragma: no cover
             pass
 
@@ -163,7 +167,11 @@ class MemorySyncManager:
                     version=int(raw.get("version", 1)),
                 )
             except (KeyError, TypeError, ValueError) as exc:
-                _log.warning("MemorySyncManager: invalid remote entry %s — skipping: %s", raw, exc)
+                _log.warning(
+                    "MemorySyncManager: invalid remote entry %s — skipping: %s",
+                    raw,
+                    exc,
+                )
                 continue
 
             local = self._store.get(remote.key)

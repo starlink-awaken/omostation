@@ -40,7 +40,9 @@ class ServiceRegistry:
     ):
         self._services: dict[str, Service] = {}
         self._last_health_check: float = 0.0
-        self._storage_path = storage_path or str(Path(__file__).parent.parent.parent / "agora-services.json")
+        self._storage_path = storage_path or str(
+            Path(__file__).parent.parent.parent / "agora-services.json"
+        )
         self._transitions = TransitionLog()
         self._circuit_breaker = CircuitBreaker(
             max_failures=cb_max_failures,
@@ -70,7 +72,9 @@ class ServiceRegistry:
         for s in services:
             if not isinstance(s, dict):
                 continue
-            svc = Service(**{k: v for k, v in s.items() if k in Service.__dataclass_fields__})
+            svc = Service(
+                **{k: v for k, v in s.items() if k in Service.__dataclass_fields__}
+            )
             self._services[svc.name] = svc
 
     def _save(self):
@@ -107,10 +111,16 @@ class ServiceRegistry:
             raise ValueError(f"Service limit reached ({self._MAX_SERVICES})")
         if service.health_endpoint and not is_safe_url(service.health_endpoint):
             raise ValueError(f"Health endpoint URL blocked: {service.health_endpoint}")
-        if service.mcp_endpoint and service.mcp_endpoint.startswith("http") and not is_safe_url(service.mcp_endpoint):
+        if (
+            service.mcp_endpoint
+            and service.mcp_endpoint.startswith("http")
+            and not is_safe_url(service.mcp_endpoint)
+        ):
             raise ValueError(f"Endpoint URL blocked: {service.mcp_endpoint}")
         if service.protocol not in KNOWN_PROTOCOLS:
-            raise ValueError(f"Unknown protocol: {service.protocol}. Known: {sorted(KNOWN_PROTOCOLS)}")
+            raise ValueError(
+                f"Unknown protocol: {service.protocol}. Known: {sorted(KNOWN_PROTOCOLS)}"
+            )
         # Port conflict detection (if port > 0)
         if service.port and service.port > 0:
             for existing in self._services.values():
@@ -121,7 +131,9 @@ class ServiceRegistry:
                     )
         self._services[service.name] = service
         self._save()
-        self._transitions.add(service.name, "", "registered", "Service registered", "register")
+        self._transitions.add(
+            service.name, "", "registered", "Service registered", "register"
+        )
         try:
             from agora.audit import AuditLogger  # type: ignore[import-not-found]
 
@@ -134,7 +146,9 @@ class ServiceRegistry:
         state = svc.circuit_state if svc else "UNKNOWN"
         self._services.pop(name, None)
         self._save()
-        self._transitions.add(name, state, "unregistered", "Service unregistered", "unregister")
+        self._transitions.add(
+            name, state, "unregistered", "Service unregistered", "unregister"
+        )
 
     def clear_all(self) -> int:
         """Remove all services. Returns count removed. Single disk write."""
@@ -154,7 +168,9 @@ class ServiceRegistry:
 
     # ── Heartbeat / cache runtime ─────────────────────────
 
-    def register_heartbeat(self, name: str, identity: dict | None = None, now: float | None = None) -> dict:
+    def register_heartbeat(
+        self, name: str, identity: dict | None = None, now: float | None = None
+    ) -> dict:
         """Record a runtime heartbeat for a registered service."""
         svc = self._services.get(name)
         if svc is None:
@@ -165,10 +181,22 @@ class ServiceRegistry:
         if identity is not None:
             svc.provider_info = identity
         self._save()
-        self._transitions.add(name, svc.circuit_state, "heartbeat", "Service heartbeat registered", "heartbeat")
-        return {"name": name, "status": "heartbeat_registered", "last_heartbeat": timestamp}
+        self._transitions.add(
+            name,
+            svc.circuit_state,
+            "heartbeat",
+            "Service heartbeat registered",
+            "heartbeat",
+        )
+        return {
+            "name": name,
+            "status": "heartbeat_registered",
+            "last_heartbeat": timestamp,
+        }
 
-    def stale_heartbeats(self, max_age_seconds: float, now: float | None = None) -> list[dict]:
+    def stale_heartbeats(
+        self, max_age_seconds: float, now: float | None = None
+    ) -> list[dict]:
         """Return services whose last heartbeat is older than max_age_seconds."""
         current = time.time() if now is None else now
         stale = []
@@ -177,7 +205,13 @@ class ServiceRegistry:
                 continue
             age = current - svc.last_health_check
             if age > max_age_seconds:
-                stale.append({"name": svc.name, "age_seconds": age, "last_heartbeat": svc.last_health_check})
+                stale.append(
+                    {
+                        "name": svc.name,
+                        "age_seconds": age,
+                        "last_heartbeat": svc.last_health_check,
+                    }
+                )
         return sorted(stale, key=lambda item: item["name"])
 
     def save_cache_snapshot(self, cache_path: str) -> dict:
@@ -186,10 +220,16 @@ class ServiceRegistry:
         path = Path(cache_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-        return {"status": "saved", "service_count": len(payload["services"]), "path": str(path)}
+        return {
+            "status": "saved",
+            "service_count": len(payload["services"]),
+            "path": str(path),
+        }
 
     @staticmethod
-    def load_cache_snapshot(cache_path: str, max_age_seconds: float, now: float | None = None) -> list[Service]:
+    def load_cache_snapshot(
+        cache_path: str, max_age_seconds: float, now: float | None = None
+    ) -> list[Service]:
         """Load services from a fresh local cache snapshot."""
         path = Path(cache_path)
         if not path.exists():
@@ -237,7 +277,9 @@ class ServiceRegistry:
 
     # ── Transition log ───────────────────────────────────────────
 
-    def get_transitions(self, service: str = "", since: str = "", limit: int = 50) -> list[dict]:
+    def get_transitions(
+        self, service: str = "", since: str = "", limit: int = 50
+    ) -> list[dict]:
         return self._transitions.query(service, since, limit)
 
     def clear_transitions(self):
@@ -284,7 +326,9 @@ class ServiceRegistry:
                 if (
                     svc.protocol in ("mcp", "stdio")
                     and svc.mcp_endpoint
-                    and not svc.mcp_endpoint.startswith(("http", "https", "proxy:", "stdio:"))
+                    and not svc.mcp_endpoint.startswith(
+                        ("http", "https", "proxy:", "stdio:")
+                    )
                 ):
                     proc = None
                     try:
@@ -305,7 +349,10 @@ class ServiceRegistry:
                                 "params": {
                                     "protocolVersion": "2024-11-05",
                                     "capabilities": {},
-                                    "clientInfo": {"name": "agora-health", "version": "1.0"},
+                                    "clientInfo": {
+                                        "name": "agora-health",
+                                        "version": "1.0",
+                                    },
                                 },
                             }
                         )
@@ -315,7 +362,9 @@ class ServiceRegistry:
                         ok = False
                         while asyncio.get_event_loop().time() < deadline:
                             try:
-                                line = await asyncio.wait_for(proc.stdout.readline(), timeout=0.5)
+                                line = await asyncio.wait_for(
+                                    proc.stdout.readline(), timeout=0.5
+                                )
                                 if not line:
                                     break
                                 try:

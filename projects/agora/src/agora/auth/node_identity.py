@@ -20,15 +20,15 @@ Authority: organs/D-Gateway/AGENTS.md
 # 外延 ≝ {e | e ∈ D-Gateway ∧ implements(e, NodeIdentity)}
 # 功能 ⊢ {Load_Or_Create, Generate_Identity, Persist_Identity}
 # =============================================================================
-import base64
-import json
-import logging
-import os
-import socket
-import uuid
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
-from pathlib import Path
+import base64  # noqa: E402
+import json  # noqa: E402
+import logging  # noqa: E402
+import os  # noqa: E402
+import socket  # noqa: E402
+import uuid  # noqa: E402
+from dataclasses import asdict, dataclass  # noqa: E402
+from datetime import UTC, datetime  # noqa: E402
+from pathlib import Path  # noqa: E402
 
 _log = logging.getLogger(__name__)
 
@@ -69,7 +69,9 @@ def _generate_ed25519_keypair() -> tuple[str, str]:
             base64.b64encode(public_bytes).decode(),
         )
     except ImportError:
-        _log.debug("cryptography package not available — using random 32-byte fallback for key material")
+        _log.debug(
+            "cryptography package not available — using random 32-byte fallback for key material"
+        )
         private_bytes = os.urandom(32)
         # Derive a deterministic "public key" via XOR mask (not real Ed25519,
         # but sufficient as a unique opaque identifier for the fallback path).
@@ -142,10 +144,16 @@ class NodeIdentityManager:
         if self._path.exists():
             try:
                 self._identity = self._load()
-                _log.debug("Loaded node identity %s from %s", self._identity.node_id, self._path)
+                _log.debug(
+                    "Loaded node identity %s from %s",
+                    self._identity.node_id,
+                    self._path,
+                )
                 return self._identity
             except (KeyError, json.JSONDecodeError, ValueError) as exc:
-                _log.warning("Corrupt identity file at %s (%s) — regenerating.", self._path, exc)
+                _log.warning(
+                    "Corrupt identity file at %s (%s) — regenerating.", self._path, exc
+                )
 
         self._identity = self._generate()
         return self._identity

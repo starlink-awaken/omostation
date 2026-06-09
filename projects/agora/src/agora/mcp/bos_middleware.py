@@ -41,7 +41,7 @@ class RateLimiter:
     """
 
     def __init__(self, default_qps: int = 10, window_s: float = 1.0):
-        self._qps: dict[str, int] = {}       # uri → max requests per window
+        self._qps: dict[str, int] = {}  # uri → max requests per window
         self._windows: dict[str, tuple[float, int]] = {}  # uri → (window_start, count)
         self._default_qps = default_qps
         self._window_s = window_s
@@ -99,7 +99,9 @@ class CircuitBreaker:
         self._failure_threshold = failure_threshold
         self._recovery_timeout = recovery_timeout
         self._stop_event = threading.Event()
-        self._recovery_thread = threading.Thread(target=self._recovery_loop, daemon=True)
+        self._recovery_thread = threading.Thread(
+            target=self._recovery_loop, daemon=True
+        )
         self._recovery_thread.start()
 
     def _recovery_loop(self) -> None:
@@ -134,20 +136,30 @@ class CircuitBreaker:
     def record_success(self, uri: str) -> None:
         """记录成功 — 恢复/维持 CLOSED。"""
         key = self._match_key(uri)
-        self._states[key] = {"state": self.CLOSED, "failures": 0, "last_failure_time": 0}
+        self._states[key] = {
+            "state": self.CLOSED,
+            "failures": 0,
+            "last_failure_time": 0,
+        }
 
     def record_failure(self, uri: str) -> None:
         """记录失败 — 可能触发 OPEN。"""
         key = self._match_key(uri)
         if key not in self._states:
-            self._states[key] = {"state": self.CLOSED, "failures": 1, "last_failure_time": time.time()}
+            self._states[key] = {
+                "state": self.CLOSED,
+                "failures": 1,
+                "last_failure_time": time.time(),
+            }
         else:
             s = self._states[key]
             s["failures"] += 1
             s["last_failure_time"] = time.time()
             if s["failures"] >= self._failure_threshold:
                 s["state"] = self.OPEN
-                _log.warning("circuit_breaker_open for %s (failures=%d)", key, s["failures"])
+                _log.warning(
+                    "circuit_breaker_open for %s (failures=%d)", key, s["failures"]
+                )
 
     def status(self, uri: str = "") -> dict:
         """查询熔断状态。"""
@@ -226,7 +238,11 @@ class Cache:
         now = time.time()
         active = sum(1 for exp, _ in self._store.values() if exp > now)
         expired = len(self._store) - active
-        return {"active_entries": active, "expired_entries": expired, "total": len(self._store)}
+        return {
+            "active_entries": active,
+            "expired_entries": expired,
+            "total": len(self._store),
+        }
 
 
 # ── 全局单例 ──
@@ -238,6 +254,7 @@ bos_cache = Cache()
 # ═══════════════════════════════════════════════════════════════
 # RetryPolicy (P47)
 # ═══════════════════════════════════════════════════════════════
+
 
 class RetryPolicy:
     """BOS 调用重试策略。
@@ -260,6 +277,7 @@ class RetryPolicy:
             (result, success: bool)
         """
         import asyncio
+
         last_error = None
         for attempt in range(self.max_retries + 1):
             try:
@@ -272,9 +290,14 @@ class RetryPolicy:
                 key = self._key(uri)
                 self._attempts[key] = attempt + 1
                 if attempt < self.max_retries:
-                    delay = self.base_delay * (2 ** attempt)
-                    _log.warning("retry_policy: attempt %d/%d for %s, waiting %.1fs",
-                               attempt + 1, self.max_retries, uri, delay)
+                    delay = self.base_delay * (2**attempt)
+                    _log.warning(
+                        "retry_policy: attempt %d/%d for %s, waiting %.1fs",
+                        attempt + 1,
+                        self.max_retries,
+                        uri,
+                        delay,
+                    )
                     await asyncio.sleep(delay)
         return (last_error, False)
 
@@ -298,6 +321,7 @@ retry_policy = RetryPolicy()
 # ConfigWatcher (P48) — polling 文件监听
 # ═══════════════════════════════════════════════════════════════
 
+
 class ConfigWatcher:
     """Polling 方式监听配置文件变化，自动 reload。
 
@@ -316,12 +340,17 @@ class ConfigWatcher:
     def start(self, interval: float = 5.0) -> None:
         """启动 polling 监听。"""
         import os
+
         if os.path.exists(self.file_path):
             self._mtime = os.path.getmtime(self.file_path)
         self._running = True
-        self._thread = threading.Thread(target=self._poll_loop, args=(interval,), daemon=True)
+        self._thread = threading.Thread(
+            target=self._poll_loop, args=(interval,), daemon=True
+        )
         self._thread.start()
-        _log.info("config_watcher: watching %s (interval=%ds)", self.file_path, interval)
+        _log.info(
+            "config_watcher: watching %s (interval=%ds)", self.file_path, interval
+        )
 
     def stop(self) -> None:
         """停止监听。"""
@@ -329,6 +358,7 @@ class ConfigWatcher:
 
     def _poll_loop(self, interval: float) -> None:
         import os
+
         while self._running:
             time.sleep(interval)
             try:
@@ -337,7 +367,9 @@ class ConfigWatcher:
                 mtime = os.path.getmtime(self.file_path)
                 if mtime != self._mtime:
                     self._mtime = mtime
-                    _log.info("config_watcher: file changed, reloading %s", self.file_path)
+                    _log.info(
+                        "config_watcher: file changed, reloading %s", self.file_path
+                    )
                     if self._on_change:
                         self._on_change()
             except Exception as e:

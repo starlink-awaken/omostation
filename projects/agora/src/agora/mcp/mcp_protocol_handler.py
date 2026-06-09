@@ -21,14 +21,14 @@ Authority: D-Gateway/AGENTS.md
 # =============================================================================
 
 
-import json
-import logging
-import time
-from collections.abc import Callable
-from dataclasses import dataclass, field
-from typing import Any
+import json  # noqa: E402
+import logging  # noqa: E402
+import time  # noqa: E402
+from collections.abc import Callable  # noqa: E402
+from dataclasses import dataclass, field  # noqa: E402
+from typing import Any  # noqa: E402
 
-from agora.unified_protocol_adapter import ProtocolVersion  # type: ignore[import-not-found]
+from agora.unified_protocol_adapter import ProtocolVersion  # type: ignore[import-not-found]  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -94,16 +94,22 @@ class MCPProtocolHandler:
         self._methods: dict[str, tuple[Callable, ProtocolVersion]] = {}
         self._middleware: list[Callable] = []
 
-    def register_method(self, name: str, handler: Callable, version: ProtocolVersion | None = None) -> None:
+    def register_method(
+        self, name: str, handler: Callable, version: ProtocolVersion | None = None
+    ) -> None:
         """Register an MCP method handler."""
         self._methods[name] = (handler, version or self.SUPPORTED_VERSION)
-        logger.info("[MCP] Registered method: %s (v%s)", name, version or self.SUPPORTED_VERSION)
+        logger.info(
+            "[MCP] Registered method: %s (v%s)", name, version or self.SUPPORTED_VERSION
+        )
 
     def add_middleware(self, middleware: Callable) -> None:
         """Add request middleware."""
         self._middleware.append(middleware)
 
-    async def handle(self, request_data: dict[str, Any] | list[Any]) -> dict[str, Any] | list[Any] | None:
+    async def handle(
+        self, request_data: dict[str, Any] | list[Any]
+    ) -> dict[str, Any] | list[Any] | None:
         """Handle MCP request(s).
 
         Supports single requests and batch requests.
@@ -111,7 +117,9 @@ class MCPProtocolHandler:
         # Batch request
         if isinstance(request_data, list):
             if not request_data:
-                return self._error_response(None, self.ERROR_INVALID_REQUEST, "Invalid batch")
+                return self._error_response(
+                    None, self.ERROR_INVALID_REQUEST, "Invalid batch"
+                )
 
             responses = []
             for req in request_data:
@@ -123,7 +131,9 @@ class MCPProtocolHandler:
         # Single request
         return await self._handle_single(request_data)
 
-    async def _handle_single(self, request_data: dict[str, Any]) -> dict[str, Any] | None:
+    async def _handle_single(
+        self, request_data: dict[str, Any]
+    ) -> dict[str, Any] | None:
         """Handle a single MCP request."""
         # Parse request
         try:
@@ -131,7 +141,9 @@ class MCPProtocolHandler:
         except (KeyError, ValueError, TypeError) as e:
             return self._error_response(None, self.ERROR_PARSE_ERROR, str(e))
         if request.jsonrpc != "2.0":
-            return self._error_response(request.id, self.ERROR_INVALID_REQUEST, "Invalid JSON-RPC version")
+            return self._error_response(
+                request.id, self.ERROR_INVALID_REQUEST, "Invalid JSON-RPC version"
+            )
 
         # Run middleware
         context = {"request": request, "timestamp": time.time()}
@@ -145,11 +157,17 @@ class MCPProtocolHandler:
                     context = middleware(context)
             except (OSError, ValueError, RuntimeError, KeyError) as e:
                 logger.error("[MCP] Middleware error: %s", str(e))
-                return self._error_response(request.id, self.ERROR_INTERNAL_ERROR, str(e))
+                return self._error_response(
+                    request.id, self.ERROR_INTERNAL_ERROR, str(e)
+                )
 
         # Find method
         if request.method not in self._methods:
-            return self._error_response(request.id, self.ERROR_METHOD_NOT_FOUND, f"Method not found: {request.method}")
+            return self._error_response(
+                request.id,
+                self.ERROR_METHOD_NOT_FOUND,
+                f"Method not found: {request.method}",
+            )
 
         handler, version = self._methods[request.method]
 
@@ -174,11 +192,15 @@ class MCPProtocolHandler:
             logger.error("[MCP] Handler error for %s: %s", request.method, str(e))
             return self._error_response(request.id, self.ERROR_INTERNAL_ERROR, str(e))
 
-    def _success_response(self, req_id: int | str | None, result: Any) -> dict[str, Any]:
+    def _success_response(
+        self, req_id: int | str | None, result: Any
+    ) -> dict[str, Any]:
         """Build success response."""
         return MCPResponse(id=req_id, result=result).to_dict()
 
-    def _error_response(self, req_id: int | str | None, code: int, message: str, data: Any = None) -> dict[str, Any]:
+    def _error_response(
+        self, req_id: int | str | None, code: int, message: str, data: Any = None
+    ) -> dict[str, Any]:
         """Build error response."""
         error = {"code": code, "message": message}
         if data:
@@ -253,7 +275,11 @@ class MCPResourceManager:
                     "uri": uri,
                     "name": resource.get("name", uri),
                     "mimeType": resource.get("mimeType", "application/json"),
-                    **{k: v for k, v in resource.items() if k not in ["name", "mimeType", "content"]},
+                    **{
+                        k: v
+                        for k, v in resource.items()
+                        if k not in ["name", "mimeType", "content"]
+                    },
                 }
             )
         return resources
@@ -266,7 +292,9 @@ class MCPToolManager:
         self._tools: dict[str, dict[str, Any]] = {}
         self._handlers: dict[str, Callable] = {}
 
-    def register_tool(self, name: str, schema: dict[str, Any], handler: Callable) -> None:
+    def register_tool(
+        self, name: str, schema: dict[str, Any], handler: Callable
+    ) -> None:
         """Register an MCP tool."""
         self._tools[name] = {
             "name": name,
@@ -276,7 +304,9 @@ class MCPToolManager:
         self._handlers[name] = handler
         logger.info("[MCP] Registered tool: %s", name)
 
-    async def call_tool(self, name: str, arguments: dict[str, Any]) -> list[dict[str, Any]]:
+    async def call_tool(
+        self, name: str, arguments: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Call an MCP tool."""
         if name not in self._handlers:
             raise ValueError(f"Tool not found: {name}")

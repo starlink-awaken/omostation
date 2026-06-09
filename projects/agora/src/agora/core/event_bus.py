@@ -42,20 +42,27 @@ class EventBus:
         registry: ServiceRegistry | None = None,
         subscription_ttl_hours: float = 24.0,
     ):
-        self._storage_path = Path(storage_path or str(Path(__file__).parent.parent.parent / "agora-events.json"))
+        self._storage_path = Path(
+            storage_path
+            or str(Path(__file__).parent.parent.parent / "agora-events.json")
+        )
         self._registry = registry
         self._events: list[dict] = []
         self._subscriptions: dict[str, Subscription] = {}
         self._max_events = 1000
         self._subscription_ttl = subscription_ttl_hours * 3600
-        self._hooks: list[Callable[[dict], None]] = []  # registered hooks (for audit, metrics, etc.)
+        self._hooks: list[
+            Callable[[dict], None]
+        ] = []  # registered hooks (for audit, metrics, etc.)
         self._save_counter = 0  # batch save counter: save every N publishes
         self._load()
 
     def _load(self):
         from agora.persistence import json_load  # type: ignore[import-not-found]
 
-        data = json_load(self._storage_path, default={"events": [], "subscriptions": []})
+        data = json_load(
+            self._storage_path, default={"events": [], "subscriptions": []}
+        )
         if not isinstance(data, dict):
             data = {}
 
@@ -102,7 +109,9 @@ class EventBus:
             return event_type.startswith(pattern[:-1])
         return pattern == event_type
 
-    def publish(self, event_type: str, payload: dict, source: str = "", trace_id: str = "") -> str:
+    def publish(
+        self, event_type: str, payload: dict, source: str = "", trace_id: str = ""
+    ) -> str:
         """Publish event. Returns event_id.
 
         Args:
@@ -172,7 +181,10 @@ class EventBus:
 
                         _logger = structlog.get_logger(__name__)
                         _logger.warning(
-                            "event_delivery_failed", event_id=event["id"], subscriber=sub.id, callback=callback
+                            "event_delivery_failed",
+                            event_id=event["id"],
+                            subscriber=sub.id,
+                            callback=callback,
                         )
 
     def subscribe(self, service: str, pattern: str, callback_url: str = "") -> str:
@@ -194,7 +206,11 @@ class EventBus:
     def _cleanup_expired(self):
         """Remove subscriptions older than TTL (dead subscriber cleanup)."""
         now = time.time()
-        expired = [sid for sid, sub in self._subscriptions.items() if now - sub.last_seen > self._subscription_ttl]
+        expired = [
+            sid
+            for sid, sub in self._subscriptions.items()
+            if now - sub.last_seen > self._subscription_ttl
+        ]
         for sid in expired:
             del self._subscriptions[sid]
         if expired:

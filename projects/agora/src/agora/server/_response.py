@@ -1,4 +1,5 @@
 """响应工具与共享常量 — 用于 MCP 工具接口的标准化响应格式。"""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -31,6 +32,7 @@ def _load_cache_ttl_config() -> None:
     if not rates_path.exists():
         return
     import yaml
+
     try:
         rates = yaml.safe_load(open(rates_path))
         _RATES_CACHE_TTL = {}

@@ -25,7 +25,9 @@ logger = structlog.get_logger(__name__)
 # ── MCP JSON-RPC helpers ──────────────────────────────────────────
 
 
-def _make_request(method: str, params: dict | None = None, req_id: str | None = None) -> str:
+def _make_request(
+    method: str, params: dict | None = None, req_id: str | None = None
+) -> str:
     """Build a JSON-RPC 2.0 request as JSON string (for stdio transport)."""
     return json.dumps(
         {
@@ -38,7 +40,9 @@ def _make_request(method: str, params: dict | None = None, req_id: str | None = 
     )
 
 
-def _make_request_dict(method: str, params: dict | None = None, req_id: str | None = None) -> dict:
+def _make_request_dict(
+    method: str, params: dict | None = None, req_id: str | None = None
+) -> dict:
     """Build a JSON-RPC 2.0 request as dict (for HTTP transport via httpx json=)."""
     return {
         "jsonrpc": "2.0",
@@ -49,11 +53,17 @@ def _make_request_dict(method: str, params: dict | None = None, req_id: str | No
 
 
 def _make_tool_call(tool_name: str, arguments: dict, req_id: str | None = None) -> str:
-    return _make_request("tools/call", {"name": tool_name, "arguments": arguments}, req_id)
+    return _make_request(
+        "tools/call", {"name": tool_name, "arguments": arguments}, req_id
+    )
 
 
-def _make_tool_call_dict(tool_name: str, arguments: dict, req_id: str | None = None) -> dict:
-    return _make_request_dict("tools/call", {"name": tool_name, "arguments": arguments}, req_id)
+def _make_tool_call_dict(
+    tool_name: str, arguments: dict, req_id: str | None = None
+) -> dict:
+    return _make_request_dict(
+        "tools/call", {"name": tool_name, "arguments": arguments}, req_id
+    )
 
 
 def _make_resource_read(uri: str, req_id: str | None = None) -> str:
@@ -186,10 +196,16 @@ class StdioMCPClient(MCPClient):
                 limit=2**20,  # 1MB buffer for large MCP responses
             )
         except FileNotFoundError:
-            logger.error("proxy_subprocess_not_found", service=self.service_name, command=self._command)
+            logger.error(
+                "proxy_subprocess_not_found",
+                service=self.service_name,
+                command=self._command,
+            )
             return False
         except Exception as e:
-            logger.error("proxy_subprocess_spawn_failed", service=self.service_name, error=str(e))
+            logger.error(
+                "proxy_subprocess_spawn_failed", service=self.service_name, error=str(e)
+            )
             return False
 
         # Start reader loop for processing stdout responses
@@ -204,10 +220,14 @@ class StdioMCPClient(MCPClient):
             result = await self._mcp_initialize()
             if result:
                 self._connected = True
-                logger.info("proxy_connected", service=self.service_name, transport="stdio")
+                logger.info(
+                    "proxy_connected", service=self.service_name, transport="stdio"
+                )
                 return True
         except Exception as e:
-            logger.error("proxy_initialize_failed", service=self.service_name, error=str(e))
+            logger.error(
+                "proxy_initialize_failed", service=self.service_name, error=str(e)
+            )
             await self.disconnect()
             return False
 
@@ -267,7 +287,9 @@ class StdioMCPClient(MCPClient):
                 return False
             # Send notifications/initialized to satisfy servers that
             # consume this notification before entering the message loop
-            await self._send(json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}))
+            await self._send(
+                json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"})
+            )
             return True
         except TimeoutError:
             logger.error("proxy_initialize_timeout", service=self.service_name)
@@ -301,7 +323,10 @@ class StdioMCPClient(MCPClient):
             if response and "result" in response:
                 return response["result"]
             if response and "error" in response:
-                return {"status": "error", "error": response["error"].get("message", "Unknown error")}
+                return {
+                    "status": "error",
+                    "error": response["error"].get("message", "Unknown error"),
+                }
             return {"status": "error", "error": "Empty response"}
         except TimeoutError:
             return {"status": "error", "error": "Tool call timed out"}
@@ -334,7 +359,10 @@ class StdioMCPClient(MCPClient):
             if response and "result" in response:
                 return response["result"]
             if response and "error" in response:
-                return {"status": "error", "error": response["error"].get("message", "Unknown error")}
+                return {
+                    "status": "error",
+                    "error": response["error"].get("message", "Unknown error"),
+                }
             return {"status": "error", "error": "Empty response"}
         except TimeoutError:
             return {"status": "error", "error": "Resource read timed out"}
@@ -367,7 +395,9 @@ class StdioMCPClient(MCPClient):
         except asyncio.CancelledError:
             pass
         except Exception as e:
-            logger.error("proxy_read_loop_error", service=self.service_name, error=str(e))
+            logger.error(
+                "proxy_read_loop_error", service=self.service_name, error=str(e)
+            )
         finally:
             for _req_id, fut in self._pending.items():
                 if not fut.done():
@@ -439,10 +469,19 @@ class HttpMCPClient(MCPClient):
 
         if connected:
             self._connected = True
-            logger.info("proxy_connected", service=self.service_name, transport="http", endpoint=self._endpoint)
+            logger.info(
+                "proxy_connected",
+                service=self.service_name,
+                transport="http",
+                endpoint=self._endpoint,
+            )
             return True
 
-        logger.warning("proxy_http_probe_failed", service=self.service_name, endpoint=self._endpoint)
+        logger.warning(
+            "proxy_http_probe_failed",
+            service=self.service_name,
+            endpoint=self._endpoint,
+        )
         return False
 
     async def disconnect(self):
@@ -465,7 +504,9 @@ class HttpMCPClient(MCPClient):
             data = resp.json()
             return data.get("result", {}).get("tools", [])
         except Exception as e:
-            logger.error("proxy_http_list_tools_failed", service=self.service_name, error=str(e))
+            logger.error(
+                "proxy_http_list_tools_failed", service=self.service_name, error=str(e)
+            )
             return []
 
     async def call_tool(self, name: str, arguments: dict) -> Any:
@@ -483,7 +524,10 @@ class HttpMCPClient(MCPClient):
             if "result" in data:
                 return data["result"]
             if "error" in data:
-                return {"status": "error", "error": data["error"].get("message", "Unknown error")}
+                return {
+                    "status": "error",
+                    "error": data["error"].get("message", "Unknown error"),
+                }
             return data
         except Exception as e:
             return {"status": "error", "error": str(e)}
@@ -501,7 +545,11 @@ class HttpMCPClient(MCPClient):
             data = resp.json()
             return data.get("result", {}).get("resources", [])
         except Exception as e:
-            logger.error("proxy_http_list_resources_failed", service=self.service_name, error=str(e))
+            logger.error(
+                "proxy_http_list_resources_failed",
+                service=self.service_name,
+                error=str(e),
+            )
             return []
 
     async def read_resource(self, uri: str) -> Any:
@@ -518,7 +566,10 @@ class HttpMCPClient(MCPClient):
             if "result" in data:
                 return data["result"]
             if "error" in data:
-                return {"status": "error", "error": data["error"].get("message", "Unknown error")}
+                return {
+                    "status": "error",
+                    "error": data["error"].get("message", "Unknown error"),
+                }
             return data
         except Exception as e:
             return {"status": "error", "error": str(e)}
@@ -553,7 +604,18 @@ def create_client(
         return HttpMCPClient(service_name, endpoint)
     elif endpoint == "stdio" or (not endpoint and command):
         # Treat empty endpoint + command as stdio transport
-        return StdioMCPClient(service_name, command, args or [], cwd=cwd, env=env, init_timeout=init_timeout)
+        return StdioMCPClient(
+            service_name,
+            command,
+            args or [],
+            cwd=cwd,
+            env=env,
+            init_timeout=init_timeout,
+        )
     else:
-        logger.warning("proxy_unknown_transport", service=service_name, endpoint=endpoint)
-        raise ValueError(f"Cannot create client for {service_name}: endpoint={endpoint!r}, command={command!r}")
+        logger.warning(
+            "proxy_unknown_transport", service=service_name, endpoint=endpoint
+        )
+        raise ValueError(
+            f"Cannot create client for {service_name}: endpoint={endpoint!r}, command={command!r}"
+        )

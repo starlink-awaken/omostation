@@ -136,7 +136,9 @@ class ConnectionPool:
 
         # 连接池已满时，等待可复用的连接槽
         try:
-            conn_id = await asyncio.wait_for(self._available.get(), timeout=self.acquire_timeout)
+            conn_id = await asyncio.wait_for(
+                self._available.get(), timeout=self.acquire_timeout
+            )
             async with self._lock:
                 if conn_id in self._pool:
                     conn = self._pool[conn_id]
@@ -145,7 +147,9 @@ class ConnectionPool:
                     return conn
         except TimeoutError:
             raise
-        raise RuntimeError("Connection pool signaled an available slot but no connection was found.")
+        raise RuntimeError(
+            "Connection pool signaled an available slot but no connection was found."
+        )
 
     async def _cleanup_loop(self) -> None:
         """清理过期连接的后台任务"""

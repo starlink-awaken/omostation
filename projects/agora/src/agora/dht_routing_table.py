@@ -20,10 +20,10 @@ Authority: organs/D-Gateway/AGENTS.md
 # 外延 ≝ {e | e ∈ D-Gateway ∧ implements(e, DHTRoutingTable)}
 # 功能 ⊢ {Add_Node, Remove_Node, Find_Closest, Serialize}
 # =============================================================================
-import logging
-import time
-from dataclasses import dataclass, field
-from typing import ClassVar
+import logging  # noqa: E402
+import time  # noqa: E402
+from dataclasses import dataclass, field  # noqa: E402
+from typing import ClassVar  # noqa: E402
 
 _log = logging.getLogger(__name__)
 

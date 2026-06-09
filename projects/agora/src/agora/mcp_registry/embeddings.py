@@ -27,7 +27,9 @@ class EmbeddingCache:
             self._tool_ids = tool_ids
             self._embeddings = np.array(embeddings, dtype=np.float32)
 
-    def search(self, query_embedding: "np.ndarray", top_k: int = 10) -> list[tuple[str, float]]:  # noqa: F821
+    def search(
+        self, query_embedding: "np.ndarray", top_k: int = 10  # noqa: F821
+    ) -> list[tuple[str, float]]:  # noqa: F821
         """Return top-k (tool_id, score) pairs via vectorized cosine similarity."""
         if self._embeddings is None or len(self._tool_ids) == 0:
             return []
@@ -213,7 +215,9 @@ class EmbeddingStore:
         """Return cache and database statistics."""
         conn = self._get_conn()
         try:
-            total_in_db = conn.execute("SELECT COUNT(*) as cnt FROM tool_embeddings").fetchone()["cnt"]
+            total_in_db = conn.execute(
+                "SELECT COUNT(*) as cnt FROM tool_embeddings"
+            ).fetchone()["cnt"]
         except Exception:
             total_in_db = 0
         return {

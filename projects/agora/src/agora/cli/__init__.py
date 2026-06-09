@@ -13,8 +13,9 @@ def main():
     parser = build_parser()
     args = parser.parse_args()
 
-    if getattr(args, 'version', False):
+    if getattr(args, "version", False):
         from agora import __version__
+
         print(f"agora v{__version__}")
         return 0
 
@@ -237,10 +238,14 @@ if __name__ == "__main__":
         print("\nInterrupted.")
         sys.exit(130)
     except Exception as e:
-        from agora.cli.errors import CLIError
+        from agora.cli.errors import CLIError  # noqa: F401
         import traceback
+
         print(f"\nError: {e}", file=sys.stderr)
-        print("  Hint: Run 'agora config' to check setup, or 'agora init' to re-run setup.", file=sys.stderr)
+        print(
+            "  Hint: Run 'agora config' to check setup, or 'agora init' to re-run setup.",
+            file=sys.stderr,
+        )
         if os.environ.get("AGORA_DEBUG"):
             traceback.print_exc()
         sys.exit(1)

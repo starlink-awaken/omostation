@@ -32,6 +32,7 @@ _DEFAULT_CONFIG_FILE = "agora-proxy-services.json"
 _HAVE_L0_LOADER = False
 try:
     from agora.l0_registry_loader import load_known_services as _l0_load_known
+
     _HAVE_L0_LOADER = True
 except ImportError:
     pass
@@ -76,7 +77,12 @@ def migrate_legacy_data() -> None:
             shutil.copy2(old_path, new_path)
             msg = f"[agora] Migrated {filename} to {new_path}\n"
             sys.stderr.write(msg)
-            logger.info("legacy_data_migrated", name=filename, from_path=str(old_path), to_path=str(new_path))
+            logger.info(
+                "legacy_data_migrated",
+                name=filename,
+                from_path=str(old_path),
+                to_path=str(new_path),
+            )
 
 
 # Auto-migrate legacy data on import
@@ -87,6 +93,7 @@ migrate_legacy_data()
 # Each entry defines how to launch the service via `uv run --package`.
 # SSOT: l0_registry_overrides.yaml → L0 M1 nodes → KNOWN_SERVICES (fallback)
 # Static dict retained as fallback; new services should register in L0.
+
 
 def _get_known_services() -> dict[str, dict[str, Any]]:
     """Merge L0 registry entries with static KNOWN_SERVICES (L0 wins)."""
@@ -103,12 +110,18 @@ def _get_known_services() -> dict[str, dict[str, Any]]:
 
 
 _KNOWN_FALLBACK: dict[str, dict[str, Any]] = {
-
     # ── Kairon 工作空间 MCP 服务 ──────────────────────────────
     # 通过 agora 代理由子进程加载的服务
     "agent-runtime": {
         "command": "uv",
-        "args": ["run", "--package", "cockpit", "python", "-m", "cockpit.agent_runtime_mcp_server"],
+        "args": [
+            "run",
+            "--package",
+            "cockpit",
+            "python",
+            "-m",
+            "cockpit.agent_runtime_mcp_server",
+        ],
         "description": "Agent Runtime — 任务执行、对话、终端和文件工具运行时",
         "source": "kairon",
     },
@@ -150,13 +163,27 @@ _KNOWN_FALLBACK: dict[str, dict[str, Any]] = {
     },
     "minerva": {
         "command": "uv",
-        "args": ["run", "--package", "minerva", "python", "-m", "minerva.mcp_server.server"],
+        "args": [
+            "run",
+            "--package",
+            "minerva",
+            "python",
+            "-m",
+            "minerva.mcp_server.server",
+        ],
         "description": "深度研究系统 — 检索、推理、报告与研究管线",
         "source": "kairon",
     },
     "sophia": {
         "command": "uv",
-        "args": ["run", "--package", "sophia", "python", "-m", "sophia.server.mcp_server"],
+        "args": [
+            "run",
+            "--package",
+            "sophia",
+            "python",
+            "-m",
+            "sophia.server.mcp_server",
+        ],
         "description": "符号化研究范式引擎 — 状态机驱动的研究方法运行时",
         "source": "kairon",
     },
@@ -277,7 +304,10 @@ def _find_workspace_root() -> Path | None:
                 return parent
 
     # 3. File-relative detection (for ``uv run`` from workspace)
-    if _KAIRON_PACKAGES_DIR.name == "packages" and _KAIRON_WORKSPACE_ROOT.name == "kairon":
+    if (
+        _KAIRON_PACKAGES_DIR.name == "packages"
+        and _KAIRON_WORKSPACE_ROOT.name == "kairon"
+    ):
         if _KAIRON_PACKAGES_DIR.is_dir():
             return _KAIRON_WORKSPACE_ROOT
 
@@ -378,7 +408,16 @@ def _check_package_installed(package_name: str, workspace: Path | None) -> bool:
         return False
     try:
         result = subprocess.run(
-            ["uv", "run", "--package", package_name, "--", sys.executable, "-c", "import sys; print('ok')"],
+            [
+                "uv",
+                "run",
+                "--package",
+                package_name,
+                "--",
+                sys.executable,
+                "-c",
+                "import sys; print('ok')",
+            ],
             capture_output=True,
             text=True,
             timeout=15,
@@ -440,11 +479,19 @@ def load_or_generate_config() -> tuple[list[dict[str, Any]], Path]:
 
         if services:
             # Fix stale _workspace field if needed
-            if isinstance(raw, dict) and workspace and raw.get("_workspace") == "auto-detect":
+            if (
+                isinstance(raw, dict)
+                and workspace
+                and raw.get("_workspace") == "auto-detect"
+            ):
                 raw["_workspace"] = str(workspace)
-                config_path.write_text(json.dumps(raw, indent=2, ensure_ascii=False), encoding="utf-8")
+                config_path.write_text(
+                    json.dumps(raw, indent=2, ensure_ascii=False), encoding="utf-8"
+                )
 
-            logger.info("proxy_config_loaded", path=str(config_path), count=len(services))
+            logger.info(
+                "proxy_config_loaded", path=str(config_path), count=len(services)
+            )
             return services, config_path
 
     # Generate default config
@@ -457,7 +504,9 @@ def load_or_generate_config() -> tuple[list[dict[str, Any]], Path]:
         json.dumps(config, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
-    logger.info("proxy_config_generated", path=str(config_path), count=len(config["services"]))
+    logger.info(
+        "proxy_config_generated", path=str(config_path), count=len(config["services"])
+    )
 
     return config["services"], config_path
 
@@ -497,7 +546,11 @@ def get_config_status() -> dict[str, Any]:
     for name, info in _get_known_services().items():
         available = _check_tool_available(name, info)
         source = info.get("source", "kairon")
-        installed = _check_package_installed(name, workspace) if source == "kairon" and available else available
+        installed = (
+            _check_package_installed(name, workspace)
+            if source == "kairon" and available
+            else available
+        )
         services.append(
             {
                 "name": name,
@@ -521,7 +574,9 @@ def get_config_status() -> dict[str, Any]:
 # ── Bootstrap orchestration ─────────────────────────────────────────
 
 
-def _build_enabled_services(config_services: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _build_enabled_services(
+    config_services: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     """Build ProxyManager-compatible service configs for enabled services.
 
     Filters config list to enabled=true services and enriches with

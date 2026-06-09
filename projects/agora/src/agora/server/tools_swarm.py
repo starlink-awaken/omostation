@@ -1,4 +1,5 @@
 """Swarm MCP Tools — 蜂群状态查询与节点管理"""
+
 from __future__ import annotations
 
 from fastmcp import FastMCP
@@ -12,6 +13,7 @@ def register_swarm_tools(mcp: FastMCP) -> None:
         """查询蜂群状态: 节点列表、角色分布、在线状态。"""
         try:
             from agora.mcp.swarm import get_swarm
+
             swarm = get_swarm()
             return swarm.status()
         except Exception as e:
@@ -26,6 +28,7 @@ def register_swarm_tools(mcp: FastMCP) -> None:
         """
         try:
             from agora.mcp.swarm import get_swarm
+
             swarm = get_swarm()
             nodes = swarm.get_online_nodes(role=role)
             return {
@@ -44,10 +47,15 @@ def register_swarm_tools(mcp: FastMCP) -> None:
         """
         try:
             from agora.mcp.swarm import get_swarm
+
             swarm = get_swarm()
             node = swarm.get_node_by_uri(uri)
             if node:
                 return {"found": True, "node": node.to_dict()}
-            return {"found": False, "uri": uri, "hint": "No online node can handle this URI"}
+            return {
+                "found": False,
+                "uri": uri,
+                "hint": "No online node can handle this URI",
+            }
         except Exception as e:
             return {"status": "error", "error": str(e)}

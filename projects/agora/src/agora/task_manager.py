@@ -146,7 +146,9 @@ class TaskManager:
         task = await self.create_task(message)
         agent_ids, strategy = route_fn(message)
         if not agent_ids:
-            await self.fail_task(task.id, Error(code="NO_AGENT_AVAILABLE", message="No available agents"))
+            await self.fail_task(
+                task.id, Error(code="NO_AGENT_AVAILABLE", message="No available agents")
+            )
             raise RuntimeError("No available agents")
         self.assign_task(task.id, agent_ids)
         self.start_task(task.id)
@@ -155,7 +157,12 @@ class TaskManager:
 
     async def _execute(self, task: Task, agent_ids: list[str], strategy: str) -> None:
         if self._adapter_lookup is None:
-            await self.fail_task(task.id, Error(code="NO_ADAPTER_LOOKUP", message="Adapter lookup not configured"))
+            await self.fail_task(
+                task.id,
+                Error(
+                    code="NO_ADAPTER_LOOKUP", message="Adapter lookup not configured"
+                ),
+            )
             return
 
         results: dict[str, Any] = {}
@@ -165,7 +172,12 @@ class TaskManager:
             agent_id = agent_ids[0]
             invoker = self._adapter_lookup(agent_id)
             if invoker is None:
-                await self.fail_task(task.id, Error(code="AGENT_NOT_FOUND", message=f"Agent {agent_id} not found"))
+                await self.fail_task(
+                    task.id,
+                    Error(
+                        code="AGENT_NOT_FOUND", message=f"Agent {agent_id} not found"
+                    ),
+                )
                 return
             try:
                 result = await invoker(request)
@@ -175,8 +187,11 @@ class TaskManager:
             except Exception as e:
                 if self.is_cancelled(task.id):
                     return
-                await self.fail_task(task.id, Error(code="EXECUTION_ERROR", message=str(e)))
+                await self.fail_task(
+                    task.id, Error(code="EXECUTION_ERROR", message=str(e))
+                )
         else:
+
             async def _invoke_one(aid: str) -> None:
                 invoker = self._adapter_lookup(aid) if self._adapter_lookup else None
                 if invoker is None:

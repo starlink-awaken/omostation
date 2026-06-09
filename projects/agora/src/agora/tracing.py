@@ -202,11 +202,15 @@ class Tracer:
                 result = future.result(timeout=timeout_ms / 1000.0)
                 return result
             except concurrent.futures.TimeoutError:
-                raise TimeoutError(f"Operation {span.name} timed out after {timeout_ms}ms") from None
+                raise TimeoutError(
+                    f"Operation {span.name} timed out after {timeout_ms}ms"
+                ) from None
             finally:
                 self.finish_span(span)
 
-    async def with_timeout_async(self, span: Span, timeout_ms: int, coro_fn: Callable[[], T]) -> T:
+    async def with_timeout_async(
+        self, span: Span, timeout_ms: int, coro_fn: Callable[[], T]
+    ) -> T:
         """带超时的异步执行包装 (推荐)"""
         import asyncio
 
@@ -285,7 +289,9 @@ def start_trace(service: str, phase: str = "") -> TraceContext:
     return tracer.start_trace(service, phase)
 
 
-def with_span_and_timeout(span: Span, operation_name: str, timeout_ms: int, fn: Callable[[], T]) -> T:
+def with_span_and_timeout(
+    span: Span, operation_name: str, timeout_ms: int, fn: Callable[[], T]
+) -> T:
     """带超时的执行包装"""
     return tracer.with_timeout(span, timeout_ms, fn)
 

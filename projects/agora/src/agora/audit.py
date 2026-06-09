@@ -53,7 +53,9 @@ class AuditLogger:
         """)
         conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_log(actor)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_log(action)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp)")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp)"
+        )
         conn.commit()
 
     def log(
@@ -69,7 +71,9 @@ class AuditLogger:
         eid = str(uuid.uuid4())[:8]
         ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         actor_value = (
-            normalize_identity(actor).actor if not isinstance(actor, str) or actor != "anonymous" else "anonymous"
+            normalize_identity(actor).actor
+            if not isinstance(actor, str) or actor != "anonymous"
+            else "anonymous"
         )
         if isinstance(actor, str) and actor and actor != "anonymous":
             actor_value = normalize_identity(actor).actor
@@ -82,7 +86,12 @@ class AuditLogger:
         return eid
 
     def query(
-        self, actor: str = "", action: str = "", resource: str = "", since: str = "", limit: int = 50
+        self,
+        actor: str = "",
+        action: str = "",
+        resource: str = "",
+        since: str = "",
+        limit: int = 50,
     ) -> list[dict]:
         """Query audit entries with optional filters."""
         conditions = []
@@ -116,13 +125,15 @@ class AuditLogger:
 
         actions = {}
         for row in conn.execute(
-            f"SELECT action, COUNT(*) as cnt FROM audit_log {cond} GROUP BY action", params
+            f"SELECT action, COUNT(*) as cnt FROM audit_log {cond} GROUP BY action",
+            params,
         ).fetchall():
             actions[row[0]] = row[1]
 
         actors = {}
         for row in conn.execute(
-            f"SELECT actor, COUNT(*) as cnt FROM audit_log {cond} GROUP BY actor", params
+            f"SELECT actor, COUNT(*) as cnt FROM audit_log {cond} GROUP BY actor",
+            params,
         ).fetchall():
             actors[row[0]] = row[1]
 

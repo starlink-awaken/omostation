@@ -12,6 +12,7 @@ logger = structlog.get_logger(__name__)
 
 _DB_PATH = get_data_dir() / "repository.db"
 
+
 def _now():
     return datetime.now(UTC).isoformat()
 
@@ -154,13 +155,18 @@ class ToolCatalog:
         conn = self._get_conn()
         if status:
             rows = conn.execute(
-                "SELECT * FROM tools WHERE status = ? ORDER BY quality_score DESC", (status,)
+                "SELECT * FROM tools WHERE status = ? ORDER BY quality_score DESC",
+                (status,),
             ).fetchall()
         else:
-            rows = conn.execute("SELECT * FROM tools ORDER BY quality_score DESC").fetchall()
+            rows = conn.execute(
+                "SELECT * FROM tools ORDER BY quality_score DESC"
+            ).fetchall()
         return [self._row_to_dict(r) for r in rows]
 
-    def search_tools(self, query: str = "", status: str | None = None, limit: int = 20) -> list[dict]:
+    def search_tools(
+        self, query: str = "", status: str | None = None, limit: int = 20
+    ) -> list[dict]:
         """Search tools by name/description/tags."""
         conn = self._get_conn()
         if not query:
@@ -182,15 +188,21 @@ class ToolCatalog:
     def count_by_status(self) -> dict[str, int]:
         """Return counts of tools grouped by status."""
         conn = self._get_conn()
-        rows = conn.execute("SELECT status, COUNT(*) as cnt FROM tools GROUP BY status").fetchall()
+        rows = conn.execute(
+            "SELECT status, COUNT(*) as cnt FROM tools GROUP BY status"
+        ).fetchall()
         return {r["status"]: r["cnt"] for r in rows}
 
     def update_status(self, tool_id: str, status: str) -> bool:
         """Update tool status. Returns True if updated."""
         if status not in self._TOOL_STATUSES:
-            raise ValueError(f"Invalid status '{status}'. Must be one of {self._TOOL_STATUSES}")
+            raise ValueError(
+                f"Invalid status '{status}'. Must be one of {self._TOOL_STATUSES}"
+            )
         conn = self._get_conn()
-        cur = conn.execute("UPDATE tools SET status = ? WHERE id = ?", (status, tool_id))
+        cur = conn.execute(
+            "UPDATE tools SET status = ? WHERE id = ?", (status, tool_id)
+        )
         conn.commit()
         return cur.rowcount > 0
 
@@ -208,11 +220,19 @@ class ToolCatalog:
     def update_quality(self, tool_id: str, score: float) -> bool:
         """Update the quality score for a tool."""
         conn = self._get_conn()
-        cur = conn.execute("UPDATE tools SET quality_score = ? WHERE id = ?", (score, tool_id))
+        cur = conn.execute(
+            "UPDATE tools SET quality_score = ? WHERE id = ?", (score, tool_id)
+        )
         conn.commit()
         return cur.rowcount > 0
 
-    def update_entry(self, tool_id: str, entry: str = "", install_path: str = "", metadata: dict | None = None) -> bool:
+    def update_entry(
+        self,
+        tool_id: str,
+        entry: str = "",
+        install_path: str = "",
+        metadata: dict | None = None,
+    ) -> bool:
         """Update a tool's entry point and related config after installation.
 
         Args:
@@ -244,7 +264,9 @@ class ToolCatalog:
         conn.commit()
         return cur.rowcount > 0
 
-    def update_install(self, tool_id: str, install_path: str, install_error: str = "") -> bool:
+    def update_install(
+        self, tool_id: str, install_path: str, install_error: str = ""
+    ) -> bool:
         """Record installation result and set status to installed."""
         conn = self._get_conn()
         cur = conn.execute(

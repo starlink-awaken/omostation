@@ -37,7 +37,9 @@ def run_wizard() -> int:
     # Step 2: Register
     if _confirm("Step 2/4", "Register services?"):
         count = engine.auto_register(registry)
-        print(f"   ✅ Registered {count} new services ({len(registry.list_all())} total)")
+        print(
+            f"   ✅ Registered {count} new services ({len(registry.list_all())} total)"
+        )
 
     # Step 3: Health check
     if _confirm("Step 3/4", "Run health check?"):

@@ -19,7 +19,9 @@ class APIKeyAuthMiddleware:
     Skips auth for health check endpoints.
     """
 
-    def __init__(self, api_key: str | None = None, skip_paths: set[str] | None = None) -> None:
+    def __init__(
+        self, api_key: str | None = None, skip_paths: set[str] | None = None
+    ) -> None:
         self._api_key = api_key or os.environ.get("API_KEY", "")
         self._skip_paths = skip_paths or {"/health", "/healthz"}
         env_skip = os.environ.get("API_KEY_SKIP_PATHS", "")
@@ -73,14 +75,16 @@ class LoggingMiddleware:
         )
         return message
 
+
 try:
     from fastmcp.server.middleware import Middleware
-    
+
     class FastMCPAuditMiddleware(Middleware):
         """Audit middleware for FastMCP tool calls."""
-        
+
         def __init__(self, logger: Any | None = None) -> None:
             import structlog
+
             self._logger = logger or structlog.get_logger("agora.audit")
 
         async def _apply_shield_and_cleanup(self, result: Any, target_name: str) -> Any:
@@ -88,52 +92,68 @@ try:
             has_content = hasattr(result, "content")
             if not has_contents and not has_content:
                 return result
-                
-            items = getattr(result, "contents", None) if has_contents else getattr(result, "content", None)
+
+            items = (
+                getattr(result, "contents", None)
+                if has_contents
+                else getattr(result, "content", None)
+            )
             if not isinstance(items, list):
                 return result
-                
+
             MAX_LEN = 10000
             for item in items:
                 if hasattr(item, "text") and item.text and len(item.text) > MAX_LEN:
-                    self._logger.warning("mcp_payload_truncated", target=target_name, length=len(item.text))
+                    self._logger.warning(
+                        "mcp_payload_truncated",
+                        target=target_name,
+                        length=len(item.text),
+                    )
                     import uuid
                     import os
                     import json
                     import time
                     import random
-                    
+
                     cache_id = str(uuid.uuid4())
                     cache_dir = os.path.expanduser("~/Workspace/LADS/agora_cache")
                     os.makedirs(cache_dir, exist_ok=True)
-                    
+
                     # Probabilistic TTL cleanup (5% chance to run)
                     if random.random() < 0.05:
                         try:
                             now = time.time()
                             for fname in os.listdir(cache_dir):
                                 fpath = os.path.join(cache_dir, fname)
-                                if os.path.isfile(fpath) and (now - os.path.getmtime(fpath) > 86400):
+                                if os.path.isfile(fpath) and (
+                                    now - os.path.getmtime(fpath) > 86400
+                                ):
                                     os.remove(fpath)
                         except Exception as ce:
-                            self._logger.warning("mcp_cache_cleanup_error", error=str(ce))
-                    
+                            self._logger.warning(
+                                "mcp_cache_cleanup_error", error=str(ce)
+                            )
+
                     cache_path = os.path.join(cache_dir, f"{cache_id}.json")
                     with open(cache_path, "w", encoding="utf-8") as f:
                         json.dump({"target": target_name, "full_text": item.text}, f)
-                        
-                    truncated_text = item.text[:MAX_LEN] + f"\n\n...[TRUNCATED: Payload exceeded {MAX_LEN} chars. To read the rest, use read_resource('bos://agora/cache/{cache_id}?page=2')]..."
+
+                    truncated_text = (
+                        item.text[:MAX_LEN]
+                        + f"\n\n...[TRUNCATED: Payload exceeded {MAX_LEN} chars. To read the rest, use read_resource('bos://agora/cache/{cache_id}?page=2')]..."
+                    )
                     item.text = truncated_text
-                    
+
             return result
 
         def _validate_agent_token(self, meta: dict) -> str:
             """Phase 34: Token-based Identity Trust (Anti-Spoofing)"""
             import os
+
             token = meta.get("x-agent-token", "")
             agent_id = meta.get("x-agent-id", "anonymous")
             expected_token = os.environ.get("AGORA_AGENT_TOKEN", "eCOS-v5-Trust-Token")
-            
+
             if agent_id != "anonymous" and token != expected_token:
                 self._logger.warning("agent_spoofing_detected", claimed_id=agent_id)
                 return "untrusted-agent"
@@ -141,50 +161,55 @@ try:
 
         async def on_call_tool(self, context: Any, call_next: Any) -> Any:
             from structlog.contextvars import bind_contextvars
+
             # Extract Trace ID with anti-spoofing
             meta = getattr(context.request, "meta", {}) or {}
             agent_id = self._validate_agent_token(meta)
             conv_id = meta.get("x-conversation-id", "none")
             bind_contextvars(agent_id=agent_id, conversation_id=conv_id)
-            
+
             try:
                 # FastMCP context.request is CallToolRequestParams which has 'name' and 'arguments'
                 tool_name = context.request.name
                 args = context.request.arguments
                 self._logger.info("mcp_tool_call", tool=tool_name, arguments=args)
                 result = await call_next(context)
-                
+
                 # Context Window Shield
-                result = await self._apply_shield_and_cleanup(result, f"tool:{tool_name}")
-                
+                result = await self._apply_shield_and_cleanup(
+                    result, f"tool:{tool_name}"
+                )
+
                 self._logger.info("mcp_tool_success", tool=tool_name)
                 return result
             except Exception as e:
                 # fallback if context doesn't have request.name
-                tool_name = getattr(getattr(context, "request", None), "name", "unknown")
+                tool_name = getattr(
+                    getattr(context, "request", None), "name", "unknown"
+                )
                 self._logger.error("mcp_tool_error", tool=tool_name, error=str(e))
                 raise
 
         async def on_read_resource(self, context: Any, call_next: Any) -> Any:
             from structlog.contextvars import bind_contextvars
+
             # Extract Trace ID with anti-spoofing
             meta = getattr(context.request, "meta", {}) or {}
             agent_id = self._validate_agent_token(meta)
             conv_id = meta.get("x-conversation-id", "none")
             bind_contextvars(agent_id=agent_id, conversation_id=conv_id)
-            
+
             uri = getattr(context.request, "uri", "unknown")
             self._logger.info("mcp_read_resource", uri=uri)
             try:
                 result = await call_next(context)
-                
+
                 # Context Window Shield
                 result = await self._apply_shield_and_cleanup(result, f"uri:{uri}")
-                
+
                 return result
             except Exception as e:
                 self._logger.error("mcp_read_error", uri=uri, error=str(e))
                 raise
 except ImportError:
     pass
-

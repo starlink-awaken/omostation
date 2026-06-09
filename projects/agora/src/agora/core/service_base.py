@@ -50,7 +50,6 @@ def is_safe_url(url: str) -> bool:
     Delegates to ssrf_guard.validate_external_url for strict checking,
     but allows loopback for local development mode.
     """
-    from urllib.parse import urlparse
 
     parsed = urlparse(url)
     hostname = parsed.hostname
@@ -62,6 +61,7 @@ def is_safe_url(url: str) -> bool:
     # Delegate to strict SSRF guard for all other URLs
     try:
         from agora.ssrf_guard import validate_external_url
+
         validate_external_url(url)
         return True
     except ValueError:

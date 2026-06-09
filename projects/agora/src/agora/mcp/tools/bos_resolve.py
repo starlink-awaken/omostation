@@ -7,6 +7,7 @@ MCP 工具入口: 把 BOS URI 解析/调用 暴露为 fastmcp tool.
   - bos_resolve(uri, *args, **kwargs)  → 实际调用结果
   - bos_list()                         → 注册表 + 实时状态
 """
+
 from __future__ import annotations
 
 from fastmcp import FastMCP

@@ -54,7 +54,14 @@ class FullNodeAdapter(NodeAdapter):
         from urllib import request
 
         payload = json.dumps({"tool": tool, "arguments": args}).encode()
-        req = request.Request(f"{self.endpoint}/api/call", data=payload, headers={"Content-Type": "application/json"})  # noqa: S310
+        # Validate URL scheme before opening (security: prevent file:// SSRF)
+        if not self.endpoint.startswith(("http://", "https://")):
+            raise ValueError(f"Unsafe endpoint URL scheme: {self.endpoint}")
+        req = request.Request(  # noqa: S310
+            f"{self.endpoint}/api/call",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+        )
         return json.loads(request.urlopen(req, timeout=30).read().decode())  # noqa: S310
 
     def submit_task(self, task_data: dict) -> dict:

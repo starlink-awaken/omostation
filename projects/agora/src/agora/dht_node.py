@@ -47,7 +47,9 @@ class DHTNode:
         """Start the DHT RPC server (TCP-based for reliability in this prototype)."""
         self.server = await asyncio.start_server(self._handle_rpc, self.host, self.port)
         self.running = True
-        _log.info(f"🌐 [DHT] Node {self.node_id[:8]} listening on {self.host}:{self.port}")
+        _log.info(
+            f"🌐 [DHT] Node {self.node_id[:8]} listening on {self.host}:{self.port}"
+        )
         async with self.server:
             await self.server.serve_forever()
 
@@ -57,7 +59,9 @@ class DHTNode:
             self.server.close()
             await self.server.wait_closed()
 
-    async def _handle_rpc(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+    async def _handle_rpc(
+        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ) -> None:
         """Handle incoming RPC requests."""
         data = await reader.read(4096)
         if not data:
@@ -78,7 +82,11 @@ class DHTNode:
             response: dict[str, Any] = {"status": "error", "message": "Unknown RPC"}
 
             if rpc_type == "PING":
-                response = {"status": "success", "echo": "PONG", "node_id": self.node_id}
+                response = {
+                    "status": "success",
+                    "echo": "PONG",
+                    "node_id": self.node_id,
+                }
 
             elif rpc_type == "STORE":
                 key = request.get("key")
@@ -132,7 +140,11 @@ class DHTNode:
                     ) as exc:
                         _log.debug(f"[DHT] Failed to relay fact to memory: {exc}")
 
-                response = {"status": "success", "received": len(facts), "persisted": success_count}
+                response = {
+                    "status": "success",
+                    "received": len(facts),
+                    "persisted": success_count,
+                }
 
             elif rpc_type == "QUERY_FACTS":
                 params = request.get("query", {})
@@ -197,7 +209,9 @@ class DHTNode:
             TypeError,
             ValueError,
         ) as e:
-            _log.debug(f"[DHT] Failed to call RPC {rpc_data.get('rpc')} on {host}:{port}: {e}")
+            _log.debug(
+                f"[DHT] Failed to call RPC {rpc_data.get('rpc')} on {host}:{port}: {e}"
+            )
             return None
 
     async def bootstrap(self, seeds: list[dict[str, Any]]) -> bool:
@@ -232,14 +246,24 @@ class DHTNode:
             tasks = []
             for node in to_query:
                 visited.add(node["peer_id"])
-                tasks.append(self.call_rpc(node["address"], node["port"], {"rpc": "FIND_NODE", "target_id": target_id}))
+                tasks.append(
+                    self.call_rpc(
+                        node["address"],
+                        node["port"],
+                        {"rpc": "FIND_NODE", "target_id": target_id},
+                    )
+                )
 
             responses = await asyncio.gather(*tasks)
             for res in responses:
                 if res and res.get("status") == "success":
                     for new_node in res.get("nodes", []):
                         if new_node["peer_id"] != self.node_id:
-                            self.routing_table.add_peer(new_node["peer_id"], new_node["address"], new_node["port"])
+                            self.routing_table.add_peer(
+                                new_node["peer_id"],
+                                new_node["address"],
+                                new_node["port"],
+                            )
                             added_any = True
 
             if not added_any:
@@ -257,7 +281,11 @@ class DHTNode:
 
         tasks = []
         for peer in peers:
-            tasks.append(self.call_rpc(peer["address"], peer["port"], {"rpc": "SYNC_FACTS", "facts": facts}))
+            tasks.append(
+                self.call_rpc(
+                    peer["address"], peer["port"], {"rpc": "SYNC_FACTS", "facts": facts}
+                )
+            )
 
         if tasks:
             await asyncio.gather(*tasks)
@@ -271,7 +299,13 @@ class DHTNode:
 
         tasks = []
         for peer in peers:
-            tasks.append(self.call_rpc(peer["address"], peer["port"], {"rpc": "QUERY_FACTS", "query": query_params}))
+            tasks.append(
+                self.call_rpc(
+                    peer["address"],
+                    peer["port"],
+                    {"rpc": "QUERY_FACTS", "query": query_params},
+                )
+            )
 
         responses = await asyncio.gather(*tasks, return_exceptions=True)
         all_facts = []
@@ -279,5 +313,7 @@ class DHTNode:
             if isinstance(res, dict) and res.get("status") == "success":
                 all_facts.extend(res.get("facts", []))
 
-        _log.info(f"🔍 [DHT] Queried {len(peers)} peers, found {len(all_facts)} remote facts.")
+        _log.info(
+            f"🔍 [DHT] Queried {len(peers)} peers, found {len(all_facts)} remote facts."
+        )
         return all_facts

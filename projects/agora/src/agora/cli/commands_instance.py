@@ -7,16 +7,20 @@ from agora.cli.output import OutputFormatter
 def cmd_instance(args):
     from agora.instance import AgoraInstance, InstanceManager  # type: ignore[import-not-found]
 
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         im = InstanceManager()
         if args.instance_cmd == "list":
             insts = im.list()
             if not insts:
-                out.print_info("没有注册的实例。使用 'agora instance register' 注册新实例")
+                out.print_info(
+                    "没有注册的实例。使用 'agora instance register' 注册新实例"
+                )
                 return 0
             for inst in insts:
-                print(f"  {inst.instance_id:30s} {inst.instance_type:12s} {inst.display_name}")
+                print(
+                    f"  {inst.instance_id:30s} {inst.instance_type:12s} {inst.display_name}"
+                )
                 print(f"  {'':30s} A2A: {inst.a2a_endpoint}")
                 print(f"  {'':30s} peers: {', '.join(inst.peers[:3])}")
                 print()
@@ -29,7 +33,9 @@ def cmd_instance(args):
                 endpoint=args.endpoint,
                 a2a_endpoint=args.a2a_endpoint or f"{args.endpoint}/a2a",
                 owner=args.owner or "org:starlink",
-                capabilities=args.capabilities.split(",") if args.capabilities else ["identity"],
+                capabilities=args.capabilities.split(",")
+                if args.capabilities
+                else ["identity"],
                 services=[],
                 peers=[],
             )

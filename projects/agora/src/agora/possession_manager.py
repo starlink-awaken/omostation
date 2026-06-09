@@ -64,17 +64,17 @@ reading or mutating internal state.  The RLock allows re-entrant
 acquisition from the same thread without deadlock.
 """
 
-import json
-import logging
-import os
-import threading
-import time
-import uuid
-from abc import ABC, abstractmethod
-from collections.abc import Callable
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any
+import json  # noqa: E402
+import logging  # noqa: E402
+import os  # noqa: E402
+import threading  # noqa: E402
+import time  # noqa: E402
+import uuid  # noqa: E402
+from abc import ABC, abstractmethod  # noqa: E402
+from collections.abc import Callable  # noqa: E402
+from dataclasses import dataclass, field  # noqa: E402
+from enum import Enum  # noqa: E402
+from typing import Any  # noqa: E402
 
 # ===========================================================================
 # Local type definitions (migrated from nucleus.Z_Spore.interfaces.possession)
@@ -125,14 +125,18 @@ class PossessionSession:
             "cockpit_mode": cockpit_mode,
             "control_plane": "cockpit" if cockpit_mode else "passive",
             "controller_session_id": self.session_id if cockpit_mode else "",
-            "controller_node_id": str(identity.get("node_id", "")) if cockpit_mode else "",
+            "controller_node_id": str(identity.get("node_id", ""))
+            if cockpit_mode
+            else "",
             "controlled_worker_ids": self.soul_data.get("_controlled_worker_ids", []),
             "binding_mode": "exclusive-single-session",
             "session_kind": "cockpit" if cockpit_mode else "worker-bound",
             "persona": identity.get("persona", ""),
             "name": identity.get("name", ""),
             "avatar_type": identity.get("avatar_type", ""),
-            "capabilities": identity.get("capabilities", self.soul_data.get("capabilities", [])),
+            "capabilities": identity.get(
+                "capabilities", self.soul_data.get("capabilities", [])
+            ),
             "constraints": self.soul_data.get("constraints", []),
             "soul_md": self.soul_data.get("_soul_md", ""),
             "soul_path": self.soul_data.get("_soul_path", ""),
@@ -217,7 +221,9 @@ def _notify_soul_context(soul_context: dict | None) -> None:
         try:
             fn(soul_context)
         except Exception as exc:
-            _log.warning("PossessionManager: soul_context callback %r raised: %s", fn, exc)
+            _log.warning(
+                "PossessionManager: soul_context callback %r raised: %s", fn, exc
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -314,7 +320,9 @@ class PossessionManager(IPossessionManager):
         """
         # --- validation (before lock to keep the critical section short) ---
         if not isinstance(soul_data, dict):
-            raise PossessionError(f"soul_data must be a dict, got {type(soul_data).__name__!r}")
+            raise PossessionError(
+                f"soul_data must be a dict, got {type(soul_data).__name__!r}"
+            )
         if "identity" not in soul_data:
             raise PossessionError("soul_data is missing required 'identity' key")
 
@@ -365,7 +373,9 @@ class PossessionManager(IPossessionManager):
         with self._lock:
             self._check_and_expire()
             if self._session is None or self._session.session_id != session_id:
-                raise PossessionError(f"exit_possession: no active session matching id={session_id!r}")
+                raise PossessionError(
+                    f"exit_possession: no active session matching id={session_id!r}"
+                )
 
             _log.info(
                 "PossessionManager: exiting possession — session=%s role=%s",
@@ -397,7 +407,9 @@ class PossessionManager(IPossessionManager):
             # Do NOT call _check_and_expire here — we want to evict even
             # sessions that happen to be expired but are still referenced.
             if self._session is None or self._session.session_id != session_id:
-                raise PossessionError(f"evict_possession: no session matching id={session_id!r} — reason={reason!r}")
+                raise PossessionError(
+                    f"evict_possession: no session matching id={session_id!r} — reason={reason!r}"
+                )
 
             _log.warning(
                 "PossessionManager: EVICTING session=%s role=%s reason=%r",
@@ -446,7 +458,9 @@ class PossessionManager(IPossessionManager):
         with self._lock:
             self._check_and_expire()
             if self._session is None or self._session.session_id != session_id:
-                raise PossessionError(f"heartbeat: no active session matching id={session_id!r}")
+                raise PossessionError(
+                    f"heartbeat: no active session matching id={session_id!r}"
+                )
             self._session.last_heartbeat = time.time()
             _log.debug(
                 "PossessionManager: heartbeat — session=%s ts=%.3f",

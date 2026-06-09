@@ -42,12 +42,12 @@ Maturity: 99
 Author: @Prime
 """
 
-import asyncio
-import json
-import time
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any
+import asyncio  # noqa: E402
+import json  # noqa: E402
+import time  # noqa: E402
+from dataclasses import dataclass, field  # noqa: E402
+from enum import Enum  # noqa: E402
+from typing import Any  # noqa: E402
 
 
 class EdgeMode(Enum):
@@ -187,7 +187,9 @@ class EdgeSyncManager:
             "data_downloaded_mb": 0,
         }
 
-    async def sync_to_cloud(self, updates: list[EdgeTask] | list[dict[str, Any]]) -> bool:
+    async def sync_to_cloud(
+        self, updates: list[EdgeTask] | list[dict[str, Any]]
+    ) -> bool:
         """Sync edge updates to cloud"""
         # Compress and batch
         compressed = self._compress(updates)
@@ -288,8 +290,8 @@ class EdgeComputingPlatform:
         # Check if AI task
         if task.type == "ai_inference":
             result = await self.ai_engine.infer(
-            str(task.data.get("model_id", "")), task.data.get("input", {})
-        )
+                str(task.data.get("model_id", "")), task.data.get("input", {})
+            )
             self.stats["inferences_run"] += 1
             return result
 
@@ -358,7 +360,9 @@ async def test_edge_computing() -> None:
 
     # Test 1: Local execution
     print("\n1. Testing local task execution...")
-    task1 = EdgeTask(id="task-001", type="gateway", data={"action": "route", "target": "D-Memory"})
+    task1 = EdgeTask(
+        id="task-001", type="gateway", data={"action": "route", "target": "D-Memory"}
+    )
     result1 = await platform.process_task(task1)
     print(f"  Status: {result1['status']}")
     print(f"  Latency: {result1.get('latency_ms')}ms")
@@ -378,7 +382,9 @@ async def test_edge_computing() -> None:
 
     # Test 3: Cloud offload
     print("\n3. Testing cloud offload...")
-    task3 = EdgeTask(id="task-003", type="heavy_computation", data={"compute": "complex_analysis"})
+    task3 = EdgeTask(
+        id="task-003", type="heavy_computation", data={"compute": "complex_analysis"}
+    )
     result3 = await platform.process_task(task3)
     print(f"  Status: {result3['status']}")
 

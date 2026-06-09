@@ -22,13 +22,13 @@ Authority: organs/D-Gateway/AGENTS.md
 # 外延 ≝ {v | v ∈ D-Gateway ∧ verifies(v, Extension_Signature)}
 # 功能 ⊢ {Ed25519_Signing, X509_Chain, Revocation_Check, Trust_Store}
 # =============================================================================
-import base64
-import binascii
-import json
-import logging
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, cast
+import base64  # noqa: E402
+import binascii  # noqa: E402
+import json  # noqa: E402
+import logging  # noqa: E402
+from dataclasses import dataclass  # noqa: E402
+from pathlib import Path  # noqa: E402
+from typing import Any, cast  # noqa: E402
 
 _log = logging.getLogger(__name__)
 
@@ -88,7 +88,10 @@ class ExtensionSignatureVerifier:
         self._trusted_authors: dict[str, TrustedAuthor] = {}
         self._load_trust_store()
 
-        _log.info("ExtensionSignatureVerifier initialized: %d authors", len(self._trusted_authors))
+        _log.info(
+            "ExtensionSignatureVerifier initialized: %d authors",
+            len(self._trusted_authors),
+        )
 
     def _load_trust_store(self) -> None:
         """Load trusted authors from disk."""
@@ -111,7 +114,13 @@ class ExtensionSignatureVerifier:
                     )
                     self._trusted_authors[author.author_id] = author
 
-            except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
+            except (
+                OSError,
+                KeyError,
+                TypeError,
+                ValueError,
+                json.JSONDecodeError,
+            ) as e:
                 _log.error("Failed to load trust store: %s", e)
 
     def _save_trust_store(self) -> None:
@@ -240,7 +249,9 @@ class ExtensionSignatureVerifier:
                 error=str(e),
             )
 
-    def _verify_ed25519(self, data: bytes, signature: bytes, public_key: str | None) -> bool:
+    def _verify_ed25519(
+        self, data: bytes, signature: bytes, public_key: str | None
+    ) -> bool:
         """Verify Ed25519 signature."""
         try:
             from cryptography.exceptions import InvalidSignature
@@ -271,7 +282,9 @@ class ExtensionSignatureVerifier:
             _log.debug("Ed25519 verification failed: %s", e)
             return False
 
-    def _verify_rsa_pss(self, data: bytes, signature: bytes, public_key: str | None) -> bool:
+    def _verify_rsa_pss(
+        self, data: bytes, signature: bytes, public_key: str | None
+    ) -> bool:
         """Verify RSA-PSS-SHA256 signature."""
         try:
             from cryptography.exceptions import InvalidSignature, UnsupportedAlgorithm
@@ -286,7 +299,9 @@ class ExtensionSignatureVerifier:
                 return False
 
             # Parse PEM public key
-            key_bytes = public_key.encode() if isinstance(public_key, str) else public_key
+            key_bytes = (
+                public_key.encode() if isinstance(public_key, str) else public_key
+            )
             if not key_bytes.startswith(b"-----"):
                 key_bytes = base64.b64decode(public_key)
 
@@ -303,11 +318,19 @@ class ExtensionSignatureVerifier:
             )
             return True
 
-        except (InvalidSignature, TypeError, UnsupportedAlgorithm, ValueError, binascii.Error) as e:
+        except (
+            InvalidSignature,
+            TypeError,
+            UnsupportedAlgorithm,
+            ValueError,
+            binascii.Error,
+        ) as e:
             _log.debug("RSA-PSS verification failed: %s", e)
             return False
 
-    def _verify_cosign(self, data: bytes, signature: bytes, public_key: str | None) -> bool:
+    def _verify_cosign(
+        self, data: bytes, signature: bytes, public_key: str | None
+    ) -> bool:
         """Verify using Sigstore/Cosign."""
         # This would integrate with Sigstore for keyless signing
         # For now, fallback to standard verification
@@ -491,8 +514,12 @@ class ExtensionSignatureVerifier:
         from cryptography.hazmat.primitives import hashes, serialization
         from cryptography.hazmat.primitives.asymmetric import padding
 
-        key_bytes = private_key.encode() if isinstance(private_key, str) else private_key
-        private_key_obj = cast(Any, serialization.load_pem_private_key(key_bytes, password=None))
+        key_bytes = (
+            private_key.encode() if isinstance(private_key, str) else private_key
+        )
+        private_key_obj = cast(
+            Any, serialization.load_pem_private_key(key_bytes, password=None)
+        )
 
         return private_key_obj.sign(
             data,
@@ -613,7 +640,7 @@ class ExtensionSignatureVerifier:
 
 
 # Import for key generation
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import serialization  # noqa: E402
 
 # Singleton
 _signature_verifier: ExtensionSignatureVerifier | None = None

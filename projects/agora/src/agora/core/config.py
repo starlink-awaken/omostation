@@ -67,7 +67,9 @@ def _merge_config(raw: dict[str, Any]) -> GatewayConfig:
         data_dir=raw.get("data_dir", DEFAULT_CONFIG.data_dir),
         log_dir=raw.get("log_dir", DEFAULT_CONFIG.log_dir),
         log_level=raw.get("log_level", DEFAULT_CONFIG.log_level),
-        routing=RoutingConfig(default_agent=routing_raw.get("default_agent"), rules=rules),
+        routing=RoutingConfig(
+            default_agent=routing_raw.get("default_agent"), rules=rules
+        ),
         agents=agents,
         models=raw.get("models"),
     )

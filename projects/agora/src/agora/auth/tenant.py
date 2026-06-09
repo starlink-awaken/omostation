@@ -58,7 +58,9 @@ class TenantManager:
     DEFAULT_TOKEN_ENV = "AGORA_TOKEN"  # noqa: S105
 
     def __init__(self, config_path: str | None = None):
-        self._path = Path(config_path or os.path.expanduser("~/.config/agora/tenants.yaml"))
+        self._path = Path(
+            config_path or os.path.expanduser("~/.config/agora/tenants.yaml")
+        )
         self._tenants: dict[str, Tenant] = {}  # name → Tenant
         self._token_map: dict[str, str] = {}  # token_hash → tenant_name
         self._rate_windows: dict[str, list[float]] = {}  # name → [timestamps]
@@ -70,7 +72,13 @@ class TenantManager:
     def _hash_token(token: str) -> str:
         """Hash a token using PBKDF2-SHA256. Returns formatted string for storage."""
         salt = secrets.token_hex(16)
-        dk = hashlib.pbkdf2_hmac("sha256", token.encode(), salt.encode(), _PBKDF2_ITERATIONS, _PBKDF2_HASH_LENGTH)
+        dk = hashlib.pbkdf2_hmac(
+            "sha256",
+            token.encode(),
+            salt.encode(),
+            _PBKDF2_ITERATIONS,
+            _PBKDF2_HASH_LENGTH,
+        )
         return f"{_PBKDF2_PREFIX}:{_PBKDF2_ITERATIONS}:{salt}:{dk.hex()}"
 
     @staticmethod
@@ -86,7 +94,9 @@ class TenantManager:
                 return False
             _, _, iterations_str, salt, expected_hex = parts
             iterations = int(iterations_str)
-            dk = hashlib.pbkdf2_hmac("sha256", token.encode(), salt.encode(), iterations, _PBKDF2_HASH_LENGTH)
+            dk = hashlib.pbkdf2_hmac(
+                "sha256", token.encode(), salt.encode(), iterations, _PBKDF2_HASH_LENGTH
+            )
             return secrets.compare_digest(dk.hex(), expected_hex)
         except (ValueError, AttributeError):
             return False
@@ -130,7 +140,9 @@ class TenantManager:
     def _create_default(self):
         """Create default tenant config with a hashed auto-generated token."""
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        raw_token = os.environ.get(self.DEFAULT_TOKEN_ENV, f"sk-{secrets.token_hex(16)}")
+        raw_token = os.environ.get(
+            self.DEFAULT_TOKEN_ENV, f"sk-{secrets.token_hex(16)}"
+        )
         token_hash = self._hash_token(raw_token)
 
         self._tenants["default"] = Tenant(
@@ -147,8 +159,10 @@ class TenantManager:
 
         # Log the raw token so the user can capture it (this is the only time it's visible)
         import logging
+
         logging.getLogger(__name__).warning(
-            "Generated new default tenant token: %s  (save this — it will not be shown again)", raw_token
+            "Generated new default tenant token: %s  (save this — it will not be shown again)",
+            raw_token,
         )
 
     def _save(self):
@@ -195,7 +209,9 @@ class TenantManager:
 
         # Prune old entries
         window_start = now - window
-        self._rate_windows[tenant_name] = [ts for ts in self._rate_windows[tenant_name] if ts > window_start]
+        self._rate_windows[tenant_name] = [
+            ts for ts in self._rate_windows[tenant_name] if ts > window_start
+        ]
 
         if len(self._rate_windows[tenant_name]) >= max_reqs:
             return False
@@ -226,7 +242,9 @@ class TenantManager:
             for t in self._tenants.values()
         ]
 
-    def add_tenant(self, name: str, services: list[str] | None = None, rate_limit: int = 60) -> str:
+    def add_tenant(
+        self, name: str, services: list[str] | None = None, rate_limit: int = 60
+    ) -> str:
         """Add a new tenant. Returns the **raw token** (only time it is visible)."""
         raw_token = f"sk-{secrets.token_hex(16)}"
         token_hash = self._hash_token(raw_token)

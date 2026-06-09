@@ -125,7 +125,11 @@ async def _execute_hermes_task(task: HermesTask) -> None:
         task.result = content or "(empty response)"
         task.status = "completed"
 
-        logger.info("[Hermes] Task %s completed in %.0fms", task.id, (time.time() - start) * 1000)
+        logger.info(
+            "[Hermes] Task %s completed in %.0fms",
+            task.id,
+            (time.time() - start) * 1000,
+        )
     except Exception as e:
         task.status = "failed"
         task.error = str(e)

@@ -8,6 +8,7 @@
 P33-W4 战役 1 已让 21 BOS URI 真活 (静态注册).
 P33-W5 战役 3 让 URI 集 *热加载* — 不重启 agora, 动态注入 POC_SERVICES.
 """
+
 from __future__ import annotations
 
 from fastmcp import FastMCP
@@ -45,7 +46,9 @@ def forge_load(name: str | None = None) -> dict:
             market = list_market_tools()
             tool = next((t for t in market if t.get("name") == name), None)
             if tool is None:
-                return _error(f"tool_not_found: {name} (registered: {[t.get('name') for t in market]})")
+                return _error(
+                    f"tool_not_found: {name} (registered: {[t.get('name') for t in market]})"
+                )
             result = loader.load_tool(tool)
             if "error" in result:
                 return _error(result["error"])

@@ -9,6 +9,7 @@ P33-W5 战役 3: 动态加载额外服务, **不重启 agora**.
   - 修改 ProcessPool (P33-W4 战役 1 同款, 复用)
   - 不破 P32 修复 (12/12 健康 + 0 ruff)
 """
+
 from __future__ import annotations
 
 import json
@@ -28,7 +29,11 @@ from agora.mcp.bos_resolver import (
 
 _log = logging.getLogger(__name__)
 
-CAPS_ROOT = Path(os.environ.get("OMO_CAPABILITIES_ROOT", "/Users/xiamingxing/Workspace/.omo/capabilities"))
+CAPS_ROOT = Path(
+    os.environ.get(
+        "OMO_CAPABILITIES_ROOT", str(Path.home() / "Workspace/.omo/capabilities")
+    )
+)
 MARKET_REGISTRY = CAPS_ROOT / "market.json"
 
 
@@ -90,7 +95,8 @@ def _build_service(tool: dict) -> BosService | None:
         action=action,
         transport="stdio",
         command=command,
-        description=tool.get("description", "") or f"forge-loaded tool: {tool.get('name', '')}",
+        description=tool.get("description", "")
+        or f"forge-loaded tool: {tool.get('name', '')}",
     )
 
 

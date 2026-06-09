@@ -44,7 +44,9 @@ def normalize_identity(value: Identity | Mapping[str, Any] | str | None) -> Iden
 
     if isinstance(value, str) or value is None:
         subject_id = (value or "unknown").strip() or "unknown"
-        return Identity(subject_id=subject_id, subject_type="legacy", issuer="legacy", tenant="")
+        return Identity(
+            subject_id=subject_id, subject_type="legacy", issuer="legacy", tenant=""
+        )
 
     if isinstance(value, Mapping):
         subject_id = str(value.get("subject_id") or "unknown").strip() or "unknown"
@@ -58,7 +60,10 @@ def normalize_identity(value: Identity | Mapping[str, Any] | str | None) -> Iden
             tenant=tenant,
         )
 
-    if all(hasattr(value, attr) for attr in ("subject_id", "subject_type", "issuer", "tenant")):
+    if all(
+        hasattr(value, attr)
+        for attr in ("subject_id", "subject_type", "issuer", "tenant")
+    ):
         subject_id = str(value.subject_id or "unknown").strip() or "unknown"
         subject_type = str(value.subject_type or "user").strip() or "user"
         issuer = str(value.issuer or "unknown").strip() or "unknown"
@@ -70,4 +75,6 @@ def normalize_identity(value: Identity | Mapping[str, Any] | str | None) -> Iden
             tenant=tenant,
         )
 
-    return Identity(subject_id="unknown", subject_type="legacy", issuer="legacy", tenant="")
+    return Identity(
+        subject_id="unknown", subject_type="legacy", issuer="legacy", tenant=""
+    )

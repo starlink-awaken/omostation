@@ -18,8 +18,12 @@ def cmd_enforce(args):
             else:
                 print(f"Enforce tools: {current}")
             # 显示当前通过率
-            print(f"  Sample: collab.create_task → {'ENFORCED' if is_enforced('collab.create_task') else 'PASS-THROUGH'}")
-            print(f"  Sample: minerva.research → {'ENFORCED' if is_enforced('minerva.research') else 'PASS-THROUGH'}")
+            print(
+                f"  Sample: collab.create_task → {'ENFORCED' if is_enforced('collab.create_task') else 'PASS-THROUGH'}"
+            )
+            print(
+                f"  Sample: minerva.research → {'ENFORCED' if is_enforced('minerva.research') else 'PASS-THROUGH'}"
+            )
         elif args.enforce_cmd == "set":
             tools = getattr(args, "tool", []) if hasattr(args, "tool") else []
             # Filter out empty strings from parsing

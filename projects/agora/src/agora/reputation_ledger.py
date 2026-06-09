@@ -20,11 +20,11 @@ Authority: nucleus/Z-Core/L0-Genome/R0-ACT-SYS-AX01-10_holographic_metadata_axio
 # 功能 ⊢ {Reputation_Ledger, Init_Reputation, Validate_Ledger}
 # =============================================================================
 
-import logging
-import sqlite3
-from typing import Any
+import logging  # noqa: E402
+import sqlite3  # noqa: E402
+from typing import Any  # noqa: E402
 
-from nucleus.Z_Microkernel.facades.path_resolver_facade import get_path_resolver  # type: ignore[import-not-found]
+from nucleus.Z_Microkernel.facades.path_resolver_facade import get_path_resolver  # type: ignore[import-not-found]  # noqa: E402
 
 _log = logging.getLogger(__name__)
 _DEFAULT_ROLE = "General"
@@ -65,17 +65,24 @@ class ReputationLedger:
             conn.commit()
 
     def _ensure_role_column(self, conn: sqlite3.Connection) -> None:
-        columns = {row["name"] for row in conn.execute("PRAGMA table_info(node_reputation)").fetchall()}
+        columns = {
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(node_reputation)").fetchall()
+        }
         if "role" in columns:
             return
 
-        conn.execute(f"ALTER TABLE node_reputation ADD COLUMN role TEXT DEFAULT '{_DEFAULT_ROLE}'")
+        conn.execute(
+            f"ALTER TABLE node_reputation ADD COLUMN role TEXT DEFAULT '{_DEFAULT_ROLE}'"
+        )
 
     def get_score(self, node_id: str) -> float:
         """获取节点的当前声誉分。"""
         try:
             with self._get_conn() as conn:
-                row = conn.execute("SELECT score FROM node_reputation WHERE node_id = ?", (node_id,)).fetchone()
+                row = conn.execute(
+                    "SELECT score FROM node_reputation WHERE node_id = ?", (node_id,)
+                ).fetchone()
                 return row["score"] if row else 0.0
         except sqlite3.Error as e:
             _log.error("❌ [Reputation] Failed to get score: %s", e)
@@ -86,7 +93,9 @@ class ReputationLedger:
         try:
             with self._get_conn() as conn:
                 # 检查是否存在
-                row = conn.execute("SELECT score FROM node_reputation WHERE node_id = ?", (node_id,)).fetchone()
+                row = conn.execute(
+                    "SELECT score FROM node_reputation WHERE node_id = ?", (node_id,)
+                ).fetchone()
                 if not row:
                     conn.execute(
                         "INSERT INTO node_reputation (node_id, score, last_action) VALUES (?, ?, ?)",

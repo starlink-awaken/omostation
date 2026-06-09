@@ -30,15 +30,15 @@ Provides JWT-like token validation with TTL expiration checking
 for SharedBrain SOVEREIGN_KEY based authentication.
 """
 
-import base64
-import hashlib
-import hmac
-import json
-import logging
-import os
-import secrets
-import time
-from typing import Any
+import base64  # noqa: E402
+import hashlib  # noqa: E402
+import hmac  # noqa: E402
+import json  # noqa: E402
+import logging  # noqa: E402
+import os  # noqa: E402
+import secrets  # noqa: E402
+import time  # noqa: E402
+from typing import Any  # noqa: E402
 
 _log = logging.getLogger(__name__)
 
@@ -68,7 +68,9 @@ class MCPAuthMiddleware:
     ERR_INVALID_TOKEN = -32002
     ERR_TOKEN_EXPIRED = -32003
 
-    def __init__(self, sovereign_key: str | None = None, token_ttl: int = _DEFAULT_TOKEN_TTL) -> None:
+    def __init__(
+        self, sovereign_key: str | None = None, token_ttl: int = _DEFAULT_TOKEN_TTL
+    ) -> None:
         """
         Initialize authentication middleware.
 
@@ -116,7 +118,9 @@ class MCPAuthMiddleware:
             raise MCPAuthError(self.ERR_UNAUTHORIZED, "Missing Authorization header")
 
         if not auth_header.startswith("Bearer "):
-            raise MCPAuthError(self.ERR_UNAUTHORIZED, "Invalid authorization type (expected Bearer)")
+            raise MCPAuthError(
+                self.ERR_UNAUTHORIZED, "Invalid authorization type (expected Bearer)"
+            )
 
         token = auth_header[7:].strip()  # Remove "Bearer " prefix
         if not token:
@@ -125,7 +129,9 @@ class MCPAuthMiddleware:
         try:
             # Split token into payload and signature
             if "." not in token:
-                raise MCPAuthError(self.ERR_INVALID_TOKEN, "Malformed token (missing signature)")
+                raise MCPAuthError(
+                    self.ERR_INVALID_TOKEN, "Malformed token (missing signature)"
+                )
 
             payload_b64, signature_b64 = token.rsplit(".", 1)
 
@@ -147,17 +153,23 @@ class MCPAuthMiddleware:
                 raise MCPAuthError(self.ERR_INVALID_TOKEN, "Token missing expiration")
 
             if time.time() > exp:
-                raise MCPAuthError(self.ERR_TOKEN_EXPIRED, f"Token expired at {time.ctime(exp)}")
+                raise MCPAuthError(
+                    self.ERR_TOKEN_EXPIRED, f"Token expired at {time.ctime(exp)}"
+                )
 
             return payload
 
         except (json.JSONDecodeError, ValueError, KeyError) as exc:
             _log.debug("[MCPAuth] Token decode error: %s", exc)
-            raise MCPAuthError(self.ERR_INVALID_TOKEN, f"Malformed token: {exc}") from exc
+            raise MCPAuthError(
+                self.ERR_INVALID_TOKEN, f"Malformed token: {exc}"
+            ) from exc
 
     def _sign_payload(self, payload_b64: str, key: str) -> str:
         """Create HMAC-SHA256 signature for base64url-encoded payload."""
-        signature = hmac.new(key.encode("utf-8"), payload_b64.encode("utf-8"), hashlib.sha256).digest()
+        signature = hmac.new(
+            key.encode("utf-8"), payload_b64.encode("utf-8"), hashlib.sha256
+        ).digest()
         # Return base64url-encoded signature (without padding)
         return base64.b64encode(signature).decode("utf-8").rstrip("=")
 

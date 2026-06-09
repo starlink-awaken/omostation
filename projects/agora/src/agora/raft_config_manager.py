@@ -33,12 +33,12 @@ Raft Config Manager - Raft分布式配置管理
 使用Raft算法实现配置变更的分布式共识，确保多节点环境下配置一致性。
 """
 
-import asyncio
-import json
-import logging
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any
+import asyncio  # noqa: E402
+import json  # noqa: E402
+import logging  # noqa: E402
+from dataclasses import dataclass, field  # noqa: E402
+from pathlib import Path  # noqa: E402
+from typing import Any  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -189,7 +189,10 @@ class RaftConfigManager:
 
         # 创建日志条目
         entry = RaftLogEntry(
-            term=self.state.current_term, index=len(self.state.log) + 1, command="config_update", data=config_update
+            term=self.state.current_term,
+            index=len(self.state.log) + 1,
+            command="config_update",
+            data=config_update,
         )
 
         # 追加到本地日志
@@ -230,7 +233,9 @@ class RaftConfigManager:
         # 启动心跳任务
         self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
 
-        logger.info(f"[Raft] Node {self.node_id} became leader for term {self.state.current_term}")
+        logger.info(
+            f"[Raft] Node {self.node_id} became leader for term {self.state.current_term}"
+        )
 
     def _become_follower(self, term: int) -> None:
         """成为Follower"""
@@ -252,7 +257,9 @@ class RaftConfigManager:
         self.state.current_term += 1
         self.state.voted_for = self.node_id
 
-        logger.info(f"[Raft] Node {self.node_id} became candidate for term {self.state.current_term}")
+        logger.info(
+            f"[Raft] Node {self.node_id} became candidate for term {self.state.current_term}"
+        )
 
     async def _election_timer_loop(self) -> None:
         """选举定时器循环"""

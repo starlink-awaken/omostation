@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from agora.core.registry import ServiceRegistry  # type: ignore[import-not-found]
 
 # Default audit DB path (relative to agora project root)
-from agora.mcp.mcp_bootstrap import get_data_dir  # type: ignore[import-not-found]
+from agora.mcp.mcp_bootstrap import get_data_dir  # type: ignore[import-not-found]  # noqa: E402
 
 AUDIT_DB = Path(os.environ.get("AGORA_AUDIT_DB", get_data_dir() / "agora-audit.db"))
 
@@ -116,14 +116,20 @@ class AuditSubscriber:
             "error": {"actor": "system", "resource": "system", "risk": "ERROR"},
             "security": {"actor": "security", "resource": "system", "risk": "CRITICAL"},
             "PERCEPTION": {"actor": "perception", "resource": "signal", "risk": "INFO"},
-            "INTEGRATE": {"actor": "integrator", "resource": "knowledge", "risk": "INFO"},
+            "INTEGRATE": {
+                "actor": "integrator",
+                "resource": "knowledge",
+                "risk": "INFO",
+            },
             "SIGNAL": {"actor": "signal", "resource": "signal", "risk": "MEDIUM"},
             "STATE_CHANGE": {"actor": "system", "resource": "state", "risk": "INFO"},
             "ALERT": {"actor": "system", "resource": "system", "risk": "HIGH"},
             "SYSTEM": {"actor": "system", "resource": "system", "risk": "INFO"},
         }
 
-        info = mapping.get(category, {"actor": "unknown", "resource": "event_bus", "risk": "INFO"})
+        info = mapping.get(
+            category, {"actor": "unknown", "resource": "event_bus", "risk": "INFO"}
+        )
         return {
             "actor": info["actor"],
             "resource": info["resource"],
@@ -257,7 +263,9 @@ class AuditSubscriber:
                 ).fetchall()
                 stats["total"] = sum(r[1] for r in rows)
             else:
-                rows = conn.execute("SELECT risk_level, COUNT(*) as cnt FROM audit_log GROUP BY risk_level").fetchall()
+                rows = conn.execute(
+                    "SELECT risk_level, COUNT(*) as cnt FROM audit_log GROUP BY risk_level"
+                ).fetchall()
                 total_row = conn.execute("SELECT COUNT(*) FROM audit_log").fetchone()
                 stats["total"] = total_row[0] if total_row else 0
 

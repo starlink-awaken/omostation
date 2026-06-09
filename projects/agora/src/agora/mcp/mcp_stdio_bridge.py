@@ -87,8 +87,14 @@ class MCPStdioBridge:
                         "inputSchema": {
                             "type": "object",
                             "properties": {
-                                "action": {"type": "string", "description": "POC action name"},
-                                "args": {"type": "array", "description": "Positional arguments"},
+                                "action": {
+                                    "type": "string",
+                                    "description": "POC action name",
+                                },
+                                "args": {
+                                    "type": "array",
+                                    "description": "Positional arguments",
+                                },
                             },
                         },
                     }
@@ -102,11 +108,13 @@ class MCPStdioBridge:
 
         # 使用自定义 POC 协议调用子进程
         self._request_id += 1
-        poc_request = json.dumps({
-            "request_id": f"req-{self._request_id}",
-            "action": action,
-            "args": args_list,
-        })
+        poc_request = json.dumps(
+            {
+                "request_id": f"req-{self._request_id}",
+                "action": action,
+                "args": args_list,
+            }
+        )
 
         try:
             self._proc.stdin.write(poc_request + "\n")
@@ -119,16 +127,29 @@ class MCPStdioBridge:
                     "jsonrpc": "2.0",
                     "id": req_id,
                     "result": {
-                        "content": [{"type": "text", "text": json.dumps(poc_result.get("result", poc_result))}],
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": json.dumps(
+                                    poc_result.get("result", poc_result)
+                                ),
+                            }
+                        ],
                     },
                 }
             else:
-                return self._error(req_id, -32000, poc_result.get("error", "POC execution failed"))
+                return self._error(
+                    req_id, -32000, poc_result.get("error", "POC execution failed")
+                )
         except (BrokenPipeError, json.JSONDecodeError, OSError) as e:
             return self._error(req_id, -32000, str(e))
 
     def _error(self, req_id: Any, code: int, message: str) -> dict:
-        return {"jsonrpc": "2.0", "id": req_id, "error": {"code": code, "message": message}}
+        return {
+            "jsonrpc": "2.0",
+            "id": req_id,
+            "error": {"code": code, "message": message},
+        }
 
     def shutdown(self) -> None:
         if self._proc:

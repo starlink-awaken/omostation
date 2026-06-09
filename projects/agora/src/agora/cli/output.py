@@ -24,9 +24,10 @@ from typing import Any
 try:
     from rich.console import Console
     from rich.panel import Panel
-    from rich.text import Text
+    from rich.text import Text  # noqa: F401
     from rich.theme import Theme
     from rich.progress import Progress, SpinnerColumn, TextColumn
+
     _RICH = True
 except ImportError:
     _RICH = False
@@ -43,15 +44,17 @@ class OutputFormatter:
     def __init__(self, json_mode: bool = False):
         self.json_mode = json_mode
         if _RICH:
-            theme = Theme({
-                "success": "green",
-                "error": "red bold",
-                "warning": "yellow",
-                "info": "blue",
-                "dim": "dim",
-                "highlight": "cyan",
-                "header": "bold cyan",
-            })
+            theme = Theme(
+                {
+                    "success": "green",
+                    "error": "red bold",
+                    "warning": "yellow",
+                    "info": "blue",
+                    "dim": "dim",
+                    "highlight": "cyan",
+                    "header": "bold cyan",
+                }
+            )
             self.console = Console(theme=theme)
         else:
             self.console = None
@@ -122,8 +125,13 @@ class OutputFormatter:
                 print(f"{self._icon('progress')} {msg}...")
 
     # ── 表格 ──
-    def print_table(self, headers: list[str], rows: list[list[Any]],
-                    title: str = "", caption: str = "") -> None:
+    def print_table(
+        self,
+        headers: list[str],
+        rows: list[list[Any]],
+        title: str = "",
+        caption: str = "",
+    ) -> None:
         """表格输出，自动截断长字段"""
         if self.json_mode:
             result = [dict(zip(headers, [str(c) for c in row])) for row in rows]
@@ -138,7 +146,11 @@ class OutputFormatter:
             import rich.table
             import rich.text
 
-            table = rich.table.Table(title=title, caption=caption, caption_style="dim") if title else rich.table.Table(caption=caption)
+            table = (
+                rich.table.Table(title=title, caption=caption, caption_style="dim")
+                if title
+                else rich.table.Table(caption=caption)
+            )
             for h in headers:
                 table.add_column(h, overflow="fold", max_width=60)
             for row in rows:
@@ -155,7 +167,10 @@ class OutputFormatter:
             # 回退到 ASCII 表格
             if title:
                 print(f"\n{title}")
-            widths = [max(len(h), max((len(str(r[i])) for r in rows), default=0)) for i, h in enumerate(headers)]
+            widths = [
+                max(len(h), max((len(str(r[i])) for r in rows), default=0))
+                for i, h in enumerate(headers)
+            ]
             header_line = " | ".join(h.ljust(w) for h, w in zip(headers, widths))
             sep = "-+-".join("-" * w for w in widths)
             print(header_line)
@@ -170,10 +185,13 @@ class OutputFormatter:
         print(_json.dumps(data, ensure_ascii=False, indent=2, default=str))
 
     # ── 列表 ──
-    def print_list(self, items: list[dict[str, Any]],
-                   key_field: str = "name",
-                   description_field: str = "description",
-                   title: str = "") -> None:
+    def print_list(
+        self,
+        items: list[dict[str, Any]],
+        key_field: str = "name",
+        description_field: str = "description",
+        title: str = "",
+    ) -> None:
         """简洁列表输出"""
         if self.json_mode:
             self.print_json({"items": items, "title": title, "count": len(items)})
@@ -190,7 +208,9 @@ class OutputFormatter:
                 key = str(item.get(key_field, ""))
                 desc = str(item.get(description_field, "")) if description_field else ""
                 if desc:
-                    self.console.print(f"  [highlight]{key}[/highlight]  [dim]{desc}[/dim]")
+                    self.console.print(
+                        f"  [highlight]{key}[/highlight]  [dim]{desc}[/dim]"
+                    )
                 else:
                     self.console.print(f"  [highlight]{key}[/highlight]")
             if title:
@@ -253,14 +273,19 @@ class OutputFormatter:
         else:
             print(f"\n── {title} ──")
 
-    def print_panel(self, content: str, title: str = "", style: str = "highlight") -> None:
+    def print_panel(
+        self, content: str, title: str = "", style: str = "highlight"
+    ) -> None:
         """面板输出 — 用于汇总卡片"""
         if self.json_mode:
             return
         if self._uses_rich() or self.supports_color():
             try:
                 from rich.markdown import Markdown
-                self.console.print(Panel(Markdown(content), title=title, border_style=style))
+
+                self.console.print(
+                    Panel(Markdown(content), title=title, border_style=style)
+                )
             except ImportError:
                 self.console.print(Panel(content, title=title, border_style=style))
         else:
@@ -284,7 +309,9 @@ class OutputFormatter:
         """创建进度条上下文"""
         if not _RICH or self.json_mode:
             return None
-        return Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"))
+        return Progress(
+            SpinnerColumn(), TextColumn("[progress.description]{task.description}")
+        )
 
 
 def output_result(data: Any, json_mode: bool = False, **kwargs) -> None:

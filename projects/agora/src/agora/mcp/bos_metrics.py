@@ -28,7 +28,9 @@ class BOSMetrics:
 
     def __init__(self):
         # prefix → {"calls": int, "success": int, "failure": int, "total_latency_ms": int}
-        self._stats: dict[str, dict[str, int]] = defaultdict(lambda: {"calls": 0, "success": 0, "failure": 0, "total_latency_ms": 0})
+        self._stats: dict[str, dict[str, int]] = defaultdict(
+            lambda: {"calls": 0, "success": 0, "failure": 0, "total_latency_ms": 0}
+        )
 
     def record(self, uri: str, success: bool = True, latency_ms: int = 0) -> None:
         """记录一次调用。"""
@@ -51,6 +53,7 @@ class BOSMetrics:
 
         函数必须包含 `uri` 参数（第一个位置参数或关键字参数）。
         """
+
         def decorator(func):
             @functools.wraps(func)
             async def async_wrapper(*args, **kwargs):
@@ -81,6 +84,7 @@ class BOSMetrics:
                     raise
 
             import asyncio
+
             if asyncio.iscoroutinefunction(func):
                 return async_wrapper
             return sync_wrapper
@@ -119,8 +123,12 @@ class BOSMetrics:
             "total_calls": total_calls,
             "total_success": total_success,
             "total_failure": total_failure,
-            "success_rate": round(total_success / total_calls, 4) if total_calls > 0 else 0,
-            "avg_latency_ms": round(total_latency / total_calls, 1) if total_calls > 0 else 0,
+            "success_rate": round(total_success / total_calls, 4)
+            if total_calls > 0
+            else 0,
+            "avg_latency_ms": round(total_latency / total_calls, 1)
+            if total_calls > 0
+            else 0,
             "prefixes": len(self._stats),
         }
 

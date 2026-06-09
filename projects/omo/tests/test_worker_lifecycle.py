@@ -14,11 +14,10 @@ if str(_ws_root) not in sys.path:
 from scripts.sync_omo_state import sync_state
 from omo.omo_handoff_index import write_handoff_index
 from omo.omo_metrics import write_worker_utilization_summary
-from omo.omo_worker import (
-    dispatch_task,
+from omo.omo_worker import (  # noqa: F401
     main as omo_worker_main,
-    reclaim_task,
 )
+from omo.omo_worker_dispatch import dispatch_task, reclaim_task
 from omo.omo_worker_status import (
     collect_worker_status,
     scan_runtime_watchdog,

@@ -30,7 +30,18 @@ def auto_register_from_m1(bos_router=None) -> int:
     from agora.mcp.bos_router import bos_router as _br
 
     router = bos_router or _br
-    wf_dir = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "workflow"
+    wf_dir = (
+        Path.home()
+        / "Workspace"
+        / "projects"
+        / "ecos"
+        / "src"
+        / "ecos"
+        / "ssot"
+        / "mof"
+        / "m1"
+        / "workflow"
+    )
 
     if not wf_dir.exists():
         _log.warning("M1 Workflow 目录不存在: %s", wf_dir)
@@ -57,14 +68,18 @@ def auto_register_from_m1(bos_router=None) -> int:
             domain = node.get("domain", "")
 
             # 注册主路由
-            router.register(bos_uri, adapter=adapter, config={
-                "domain": domain,
-                "project": project,
-                "package": pkg,
-                "workflow": node.get("name", ""),
-                "steps": len(node.get("steps", [])),
-                "entrypoint": realized.get("entrypoint", ""),
-            })
+            router.register(
+                bos_uri,
+                adapter=adapter,
+                config={
+                    "domain": domain,
+                    "project": project,
+                    "package": pkg,
+                    "workflow": node.get("name", ""),
+                    "steps": len(node.get("steps", [])),
+                    "entrypoint": realized.get("entrypoint", ""),
+                },
+            )
             registered += 1
 
         except Exception:

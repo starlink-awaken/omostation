@@ -20,13 +20,13 @@ Authority: organs/D-Gateway/AGENTS.md
 # 外延 ≝ {e | e ∈ D-Gateway ∧ implements(e, Integrations)}
 # 功能 ⊢ {Init_Integrations, Execute_Integrations, Validate_Integrations}
 # =============================================================================
-import hashlib
-import hmac
-import json
-import logging
-import time
-from collections.abc import Callable
-from typing import Any
+import hashlib  # noqa: E402
+import hmac  # noqa: E402
+import json  # noqa: E402
+import logging  # noqa: E402
+import time  # noqa: E402
+from collections.abc import Callable  # noqa: E402
+from typing import Any  # noqa: E402
 
 _log = logging.getLogger(__name__)
 logger = logging.getLogger(__name__)
@@ -58,6 +58,7 @@ if AIOHTTP_AVAILABLE:
 # =============================================================================
 # GitHub Webhook Handler
 # =============================================================================
+
 
 class GitHubWebhookHandler:
     """
@@ -115,7 +116,12 @@ class GitHubWebhookHandler:
 
         # 构建签名字符串
         sig_basestring = f"{event_type}.{payload.decode()}"
-        expected_signature = "sha256=" + hmac.new(self._secret, sig_basestring.encode(), hashlib.sha256).hexdigest()
+        expected_signature = (
+            "sha256="
+            + hmac.new(
+                self._secret, sig_basestring.encode(), hashlib.sha256
+            ).hexdigest()
+        )
 
         return hmac.compare_digest(signature, expected_signature)
 
@@ -188,7 +194,9 @@ class GitHubWebhookHandler:
             "branch": branch,
             "commits_count": len(commits),
             "pusher": pusher,
-            "commit_shas": [c.get("id", "")[:7] for c in commits[:5]],  # 最近 5 个 commit
+            "commit_shas": [
+                c.get("id", "")[:7] for c in commits[:5]
+            ],  # 最近 5 个 commit
         }
 
     async def _handle_pull_request(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -235,7 +243,9 @@ class GitHubWebhookHandler:
 
         # 检查是否是 @sharedbrain 命令
         if comment.startswith("@sharedbrain"):
-            return await self._handle_command(comment, {"repo": repo, "issue_number": issue_number, "author": author})
+            return await self._handle_command(
+                comment, {"repo": repo, "issue_number": issue_number, "author": author}
+            )
 
         return {
             "event": "issue_comment",
@@ -264,7 +274,9 @@ class GitHubWebhookHandler:
             "conclusion": conclusion,
         }
 
-    async def _handle_command(self, command: str, context: dict[str, Any]) -> dict[str, Any]:
+    async def _handle_command(
+        self, command: str, context: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         处理 SharedBrain 命令
 
@@ -282,17 +294,28 @@ class GitHubWebhookHandler:
 
         # 内置命令处理
         commands = {
-            "help": lambda ctx, a: {"command": "help", "message": self._get_help_message()},
+            "help": lambda ctx, a: {
+                "command": "help",
+                "message": self._get_help_message(),
+            },
             "status": lambda ctx, a: {"command": "status", "repo": ctx.get("repo")},
             "info": lambda ctx, a: {"command": "info", "context": ctx},
         }
 
         handler = commands.get(cmd)
         if handler:
-            result = await handler(context, args) if asyncio.iscoroutinefunction(handler) else handler(context, args)
+            result = (
+                await handler(context, args)
+                if asyncio.iscoroutinefunction(handler)
+                else handler(context, args)
+            )
             return {"status": "command_processed", **result}
 
-        return {"status": "command_unknown", "command": cmd, "message": f"Unknown command: {cmd}"}
+        return {
+            "status": "command_unknown",
+            "command": cmd,
+            "message": f"Unknown command: {cmd}",
+        }
 
     def _get_help_message(self) -> str:
         """获取帮助消息"""
@@ -302,9 +325,11 @@ class GitHubWebhookHandler:
 - @sharedbrain/info - Show context information
 """
 
+
 # =============================================================================
 # Slack Bot Handler
 # =============================================================================
+
 
 class SlackBotHandler:
     """
@@ -366,12 +391,17 @@ class SlackBotHandler:
         # 验证签名
         sig_basestring = f"v0:{timestamp}:{body.decode()}"
         expected_signature = (
-            "v0=" + hmac.new(self._signing_secret.encode(), sig_basestring.encode(), hashlib.sha256).hexdigest()
+            "v0="
+            + hmac.new(
+                self._signing_secret.encode(), sig_basestring.encode(), hashlib.sha256
+            ).hexdigest()
         )
 
         return hmac.compare_digest(signature, expected_signature)
 
-    async def handle_event(self, event: dict[str, Any], raw_body: bytes | None = None) -> dict[str, Any]:
+    async def handle_event(
+        self, event: dict[str, Any], raw_body: bytes | None = None
+    ) -> dict[str, Any]:
         """
         处理 Slack 事件
 
@@ -431,7 +461,9 @@ class SlackBotHandler:
         results = []
         for action in actions:
             action_id = action.get("action_id")
-            action_value = action.get("value") or action.get("selected_option", {}).get("value")
+            action_value = action.get("value") or action.get("selected_option", {}).get(
+                "value"
+            )
 
             results.append(
                 {
@@ -457,11 +489,15 @@ class SlackBotHandler:
             "state_values": state_values,
         }
 
-    def register_event_handler(self, event_type: str, handler: Callable[..., object]) -> None:
+    def register_event_handler(
+        self, event_type: str, handler: Callable[..., object]
+    ) -> None:
         """注册事件处理器"""
         self._event_handlers[event_type] = handler
 
-    def register_slash_command(self, command: str, handler: Callable[..., object]) -> None:
+    def register_slash_command(
+        self, command: str, handler: Callable[..., object]
+    ) -> None:
         """
         注册 Slash 命令处理器
 
@@ -472,7 +508,11 @@ class SlackBotHandler:
         self._slash_commands[command] = handler
 
     async def _send_message(
-        self, channel: str, text: str, blocks: list[dict[str, Any]] | None = None, thread_ts: str | None = None
+        self,
+        channel: str,
+        text: str,
+        blocks: list[dict[str, Any]] | None = None,
+        thread_ts: str | None = None,
     ) -> dict[str, Any]:
         """
         发送消息到 Slack
@@ -510,7 +550,13 @@ class SlackBotHandler:
             logger.exception(f"Error sending Slack message: {e}")
             return {"status": "error", "error": str(e)}
 
-    async def send_ephemeral(self, channel: str, user: str, text: str, blocks: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    async def send_ephemeral(
+        self,
+        channel: str,
+        user: str,
+        text: str,
+        blocks: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
         """
         发送临时消息 (仅用户可见)
 
@@ -541,9 +587,11 @@ class SlackBotHandler:
             logger.exception(f"Error sending Slack ephemeral message: {e}")
             return {"status": "error", "error": str(e)}
 
+
 # =============================================================================
 # Integration Hub (统一集成中心)
 # =============================================================================
+
 
 class IntegrationHub:
     """
@@ -607,10 +655,15 @@ class IntegrationHub:
         elif hasattr(handler, "handle_event"):
             return await handler.handle_event(payload, **kwargs)
         else:
-            return {"status": "error", "error": f"Handler {source} has no handle method"}
+            return {
+                "status": "error",
+                "error": f"Handler {source} has no handle method",
+            }
+
 
 # 全局单例
 _global_integration_hub: IntegrationHub | None = None
+
 
 def get_integration_hub() -> IntegrationHub:
     """获取全局集成中心实例"""
@@ -618,6 +671,7 @@ def get_integration_hub() -> IntegrationHub:
     if _global_integration_hub is None:
         _global_integration_hub = IntegrationHub()
     return _global_integration_hub
+
 
 # ========== async 导入支持 ==========
 try:

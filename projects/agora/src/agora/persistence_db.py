@@ -42,7 +42,9 @@ def json_load(file_path: str | Path, default=None) -> dict | list:
     key = str(Path(file_path).name)
     conn = _get_db(str(Path(file_path).parent / "agora.db"))
     try:
-        row = conn.execute("SELECT value FROM kv_store WHERE key = ?", (key,)).fetchone()
+        row = conn.execute(
+            "SELECT value FROM kv_store WHERE key = ?", (key,)
+        ).fetchone()
         if row:
             return json.loads(row[0])
     except Exception as e:

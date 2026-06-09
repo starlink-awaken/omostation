@@ -107,9 +107,7 @@ class VectorStore:
         """Delete all documents for a space."""
         if not self._initialized:
             return
-        keys = [
-            k for k, v in self._documents.items() if v.get("space_id") == space_id
-        ]
+        keys = [k for k, v in self._documents.items() if v.get("space_id") == space_id]
         for k in keys:
             self._documents.pop(k, None)
 
@@ -128,7 +126,9 @@ class VectorStore:
             parts.append(f"Result: {json.dumps(message['result'], default=str)}")
         if message.get("error"):
             err = message["error"]
-            parts.append(f"Error: {err if isinstance(err, str) else err.get('message', '')}")
+            parts.append(
+                f"Error: {err if isinstance(err, str) else err.get('message', '')}"
+            )
         return "\n".join(parts) or json.dumps(message, default=str)
 
     @staticmethod

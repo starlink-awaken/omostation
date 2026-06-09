@@ -36,12 +36,12 @@ Works with both the local HoloMemory store and the session-level memory system.
 # 外延 ≝ {e | e ∈ D-Gateway ∧ injects(e, Memory)}
 # 功能 ⊢ {Store, Retrieve, Inject, Serialize}
 # =============================================================================
-import json
-import logging
-import time
-from dataclasses import asdict, dataclass, field
-from pathlib import Path
-from typing import Any
+import json  # noqa: E402
+import logging  # noqa: E402
+import time  # noqa: E402
+from dataclasses import asdict, dataclass, field  # noqa: E402
+from pathlib import Path  # noqa: E402
+from typing import Any  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -140,9 +140,13 @@ class HoloMemoryInjector:
             safe_key = key.replace("/", "_").replace(" ", "_")
             dest = self._store_path / f"{safe_key}.json"
             try:
-                dest.write_text(json.dumps(slice_data, ensure_ascii=False), encoding="utf-8")
+                dest.write_text(
+                    json.dumps(slice_data, ensure_ascii=False), encoding="utf-8"
+                )
             except OSError as exc:
-                logger.warning("[HoloMemoryInjector] Failed to write '%s': %s", dest, exc)
+                logger.warning(
+                    "[HoloMemoryInjector] Failed to write '%s': %s", dest, exc
+                )
                 self._in_memory[key] = slice_data
         else:
             self._in_memory[key] = slice_data
@@ -255,7 +259,9 @@ class HoloMemoryInjector:
         if len(payload) > _MAX_ENV_BYTES:
             # Trim: drop trailing slices until it fits
             for n in range(len(slices), 0, -1):
-                candidate = json.dumps([asdict(s) for s in slices[:n]], ensure_ascii=False)
+                candidate = json.dumps(
+                    [asdict(s) for s in slices[:n]], ensure_ascii=False
+                )
                 if len(candidate) <= _MAX_ENV_BYTES:
                     return candidate
             return "[]"
@@ -275,7 +281,9 @@ class HoloMemoryInjector:
                     data = json.loads(fp.read_text(encoding="utf-8"))
                     results.append(data)
                 except (OSError, json.JSONDecodeError) as exc:
-                    logger.warning("[HoloMemoryInjector] Skipping corrupt file '%s': %s", fp, exc)
+                    logger.warning(
+                        "[HoloMemoryInjector] Skipping corrupt file '%s': %s", fp, exc
+                    )
 
         # In-memory always included (may overlap file keys — that's fine for retrieval)
         results.extend(self._in_memory.values())

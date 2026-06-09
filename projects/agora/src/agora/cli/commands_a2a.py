@@ -18,13 +18,17 @@ def cmd_a2a(args):
     router = Router(registry)
     from agora.a2a.task_manager import TaskManager  # type: ignore[import-not-found]
 
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         tm = TaskManager(router)
 
         if args.a2a_cmd == "send":
             try:
-                arguments = json.loads(args.arguments) if isinstance(args.arguments, str) else {}
+                arguments = (
+                    json.loads(args.arguments)
+                    if isinstance(args.arguments, str)
+                    else {}
+                )
             except json.JSONDecodeError:
                 arguments = {"raw": args.arguments}
             task = tm.create_task("", args.tool_name, arguments, args.session)
@@ -43,14 +47,19 @@ def cmd_a2a(args):
             if task:
                 out.print_json(task.to_dict())
             else:
-                out.print_error(f"Task '{args.task_id}' not found", suggestion="使用 'agora a2a list' 查看所有任务")
+                out.print_error(
+                    f"Task '{args.task_id}' not found",
+                    suggestion="使用 'agora a2a list' 查看所有任务",
+                )
                 return 1
 
         elif args.a2a_cmd == "cancel":
             if tm.cancel_task(args.task_id):
                 out.print_success(f"Canceled: {args.task_id}")
             else:
-                out.print_warning(f"Cannot cancel '{args.task_id}' - not found or already completed")
+                out.print_warning(
+                    f"Cannot cancel '{args.task_id}' - not found or already completed"
+                )
 
         elif args.a2a_cmd == "list":
             tasks = tm.list_tasks(
@@ -69,7 +78,9 @@ def cmd_a2a(args):
                     "submitted": "PEND",
                     "canceled": "CANCEL",
                 }.get(t.status, "?")
-                print(f"  [{icon}] [{t.id}] {t.tool_name:30s} -> {t.status:12s} | {t.created_at}")
+                print(
+                    f"  [{icon}] [{t.id}] {t.tool_name:30s} -> {t.status:12s} | {t.created_at}"
+                )
         return 0
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
@@ -84,7 +95,7 @@ def cmd_agent_card(args):
     registry = get_registry()
     from agora.server.mcp import _build_agent_card  # type: ignore[import-not-found]
 
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         if args.agent_card_cmd == "list":
             cards = {}
@@ -95,7 +106,9 @@ def cmd_agent_card(args):
         elif args.agent_card_cmd == "get":
             card, err = _build_agent_card(args.name)
             if card is None:
-                out.print_error(f"Agent card not available: {err}", suggestion="检查服务名称和端点")
+                out.print_error(
+                    f"Agent card not available: {err}", suggestion="检查服务名称和端点"
+                )
                 return 1
             out.print_json(card)
         return 0
@@ -110,9 +123,11 @@ def cmd_agent_card(args):
 def cmd_transitions(args):
     """State transition history."""
     registry = get_registry()
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
-        transitions = registry.get_transitions(service=args.service, since=args.since, limit=args.limit)
+        transitions = registry.get_transitions(
+            service=args.service, since=args.since, limit=args.limit
+        )
         if args.json:
             out.print_json({"transitions": transitions, "count": len(transitions)})
         else:
@@ -121,7 +136,9 @@ def cmd_transitions(args):
             for t in transitions:
                 src = t.get("state_from", "")
                 to_state = t.get("state_to", "")
-                print(f"  [{t.get('timestamp', '?')}] {t.get('service', '?'):15s} {src or '':>12s} -> {to_state:<12s} | {t.get('reason', '?')}")
+                print(
+                    f"  [{t.get('timestamp', '?')}] {t.get('service', '?'):15s} {src or '':>12s} -> {to_state:<12s} | {t.get('reason', '?')}"
+                )
         return 0
     except CLIError as e:
         out.print_error(e.message, e.suggestion)
@@ -136,7 +153,7 @@ def cmd_event(args):
     registry = get_registry()
     bus = EventBus(registry=registry)
 
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         if args.event_cmd == "publish":
             try:

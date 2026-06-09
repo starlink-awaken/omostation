@@ -10,7 +10,9 @@ def register_tools(mcp, _ok, FORMAT_VERSION):
     """向 FastMCP 实例注册 API Key 工具。"""
 
     @mcp.tool()
-    def create_api_key(name: str, scopes: str = "read", tenant: str = "", expires_days: int = 0) -> dict:
+    def create_api_key(
+        name: str, scopes: str = "read", tenant: str = "", expires_days: int = 0
+    ) -> dict:
         """Create a new API key. The raw secret is shown only once."""
         from agora.governance import KeyManager  # type: ignore[import-not-found]
 

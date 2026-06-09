@@ -20,10 +20,10 @@ Authority: nucleus/Z-Core/L0-Genome/R0-ACT-SYS-AX01-10_holographic_metadata_axio
 # 功能 ⊢ {State_Lock, Init_State, Validate_Lock}
 # =============================================================================
 
-import asyncio
-import logging
-import time
-from typing import Any
+import asyncio  # noqa: E402
+import logging  # noqa: E402
+import time  # noqa: E402
+from typing import Any  # noqa: E402
 
 _log = logging.getLogger(__name__)
 
@@ -60,14 +60,23 @@ class DHTStateLock:
                 expires_at = current_lock.get("expires_at", 0.0)
                 if now < expires_at:
                     # 锁已被占用且未过期
-                    _log.debug("🔒 [StateLock] Lock %s already held by %s", lock_id, current_lock.get("owner"))
+                    _log.debug(
+                        "🔒 [StateLock] Lock %s already held by %s",
+                        lock_id,
+                        current_lock.get("owner"),
+                    )
                     return False
 
             # 写入新锁
             lock_data = {"owner": owner, "expires_at": now + ttl, "created_at": now}
 
             await self._dht.set(key, lock_data)
-            _log.info("🔓 [StateLock] Lock %s acquired by %s (TTL: %.1fs)", lock_id, owner, ttl)
+            _log.info(
+                "🔓 [StateLock] Lock %s acquired by %s (TTL: %.1fs)",
+                lock_id,
+                owner,
+                ttl,
+            )
             return True
 
     async def release(self, lock_id: str, owner: str) -> None:

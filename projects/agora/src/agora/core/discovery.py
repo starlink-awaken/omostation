@@ -108,11 +108,17 @@ class DiscoveryEngine:
         cwd = Path.cwd()
         for ancestor in [cwd] + list(cwd.parents):
             # 新布局: eCOS v5 5+3+1 architecture
-            if (ancestor / "projects" / "agora").is_dir() and (ancestor / "projects" / "kairon").is_dir():
+            if (ancestor / "projects" / "agora").is_dir() and (
+                ancestor / "projects" / "kairon"
+            ).is_dir():
                 return str(ancestor)
             # monorepo 结构优先（packages/*/agora）
             pkgs = ancestor / "packages"
-            if pkgs.is_dir() and (pkgs / "agora").is_dir() and (pkgs / "minerva").is_dir():
+            if (
+                pkgs.is_dir()
+                and (pkgs / "agora").is_dir()
+                and (pkgs / "minerva").is_dir()
+            ):
                 return str(ancestor)
             # 传统扁平结构
             if (ancestor / "agora").is_dir() and (ancestor / "minerva").is_dir():
@@ -131,10 +137,14 @@ class DiscoveryEngine:
                 if (self.root / "projects" / proj_name).is_dir():
                     proj_dir = self.root / "projects" / proj_name
                     venv_bin = proj_dir / ".venv" / "bin"
-                elif (self.root / "projects" / "kairon" / "packages" / proj_name).is_dir():
-                    proj_dir = self.root / "projects" / "kairon" / "packages" / proj_name
+                elif (
+                    self.root / "projects" / "kairon" / "packages" / proj_name
+                ).is_dir():
+                    proj_dir = (
+                        self.root / "projects" / "kairon" / "packages" / proj_name
+                    )
                     venv_bin = self.root / "projects" / "kairon" / ".venv" / "bin"
-            
+
             # 2. Fallbacks for old structures
             if not proj_dir.is_dir():
                 proj_dir = self.root / "packages" / proj_name  # monorepo 结构
@@ -146,14 +156,19 @@ class DiscoveryEngine:
                 continue
 
             if not venv_bin.is_dir():
-                if not (proj_dir / "node_modules").is_dir() and not (proj_dir.parent.parent / "node_modules").is_dir():
+                if (
+                    not (proj_dir / "node_modules").is_dir()
+                    and not (proj_dir.parent.parent / "node_modules").is_dir()
+                ):
                     continue
 
             service = DiscoveredService(
                 name=proj_name,
                 description=info.get("description", proj_name),
                 mcp_endpoint=info.get("mcp_endpoint", ""),
-                health_endpoint=f"http://localhost:{info['health_port']}/health" if info.get("health_port") else "",
+                health_endpoint=f"http://localhost:{info['health_port']}/health"
+                if info.get("health_port")
+                else "",
                 port=info.get("health_port", 0),
                 tags=info.get("tags", []),
                 source=f"known-project:{proj_dir}",
@@ -191,7 +206,10 @@ class DiscoveryEngine:
                         content = pyproject.read_text()
                     except Exception:  # noqa: S112
                         continue
-                    if "mcp" not in content.lower() and "fastmcp" not in content.lower():
+                    if (
+                        "mcp" not in content.lower()
+                        and "fastmcp" not in content.lower()
+                    ):
                         continue
                     name = project_dir.name
                     found.append(
@@ -209,7 +227,10 @@ class DiscoveryEngine:
                     continue
 
                 # Check if any script has mcp-related name or value
-                has_mcp = any("mcp" in k.lower() or "mcp" in str(v).lower() for k, v in scripts.items())
+                has_mcp = any(
+                    "mcp" in k.lower() or "mcp" in str(v).lower()
+                    for k, v in scripts.items()
+                )
                 # Also check dependencies for fastmcp
                 deps = data.get("project", {}).get("dependencies", [])
                 has_fastmcp = any("fastmcp" in str(d).lower() for d in deps)
@@ -234,7 +255,11 @@ class DiscoveryEngine:
         found = []
         for compose_file in self.root.rglob("docker-compose*.yml"):
             try:
-                data = tomllib.loads(compose_file.read_text()) if compose_file.suffix == ".toml" else None
+                data = (
+                    tomllib.loads(compose_file.read_text())
+                    if compose_file.suffix == ".toml"
+                    else None
+                )
                 if data is None:
                     try:
                         import yaml
@@ -251,7 +276,11 @@ class DiscoveryEngine:
                     # Look for MCP-related images or labels
                     image = svc_config.get("image", "")
                     labels = svc_config.get("labels", {})
-                    is_mcp = "mcp" in str(svc_config).lower() or "mcp" in image.lower() or labels.get("mcp") == "true"
+                    is_mcp = (
+                        "mcp" in str(svc_config).lower()
+                        or "mcp" in image.lower()
+                        or labels.get("mcp") == "true"
+                    )
                     if not is_mcp:
                         continue
 
@@ -261,8 +290,12 @@ class DiscoveryEngine:
                         DiscoveredService(
                             name=svc_name,
                             description=f"Docker MCP service: {image or svc_name}",
-                            mcp_endpoint=f"http://localhost:{host_port}/mcp" if host_port else "",
-                            health_endpoint=f"http://localhost:{host_port}/health" if host_port else "",
+                            mcp_endpoint=f"http://localhost:{host_port}/mcp"
+                            if host_port
+                            else "",
+                            health_endpoint=f"http://localhost:{host_port}/health"
+                            if host_port
+                            else "",
                             port=host_port,
                             tags=["docker", "mcp"],
                             source=f"compose:{compose_file}",
@@ -276,7 +309,9 @@ class DiscoveryEngine:
     async def _probe_port(self, host: str, port: int, timeout: float = 2.0) -> bool:
         """Check if a port is open."""
         try:
-            _, _, _, _, sockaddr = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM)[0]
+            _, _, _, _, sockaddr = socket.getaddrinfo(
+                host, port, socket.AF_INET, socket.SOCK_STREAM
+            )[0]
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.settimeout(timeout)
                 result = sock.connect_ex(sockaddr)
@@ -284,7 +319,9 @@ class DiscoveryEngine:
         except Exception:
             return False
 
-    async def _probe_mcp_endpoint(self, host: str, port: int, timeout: float = 2.0) -> str:
+    async def _probe_mcp_endpoint(
+        self, host: str, port: int, timeout: float = 2.0
+    ) -> str:
         """Probe a port for MCP .well-known endpoint. Returns endpoint URL or empty string."""
         import httpx
 
@@ -304,7 +341,9 @@ class DiscoveryEngine:
                 continue
         return ""
 
-    async def scan_port_range(self, hosts: list[str] | None = None) -> list[DiscoveredService]:
+    async def scan_port_range(
+        self, hosts: list[str] | None = None
+    ) -> list[DiscoveredService]:
         """Scan port ranges for MCP-capable services listening on given hosts.
 
         Probes each host:port in the configured ranges, then checks
@@ -351,11 +390,17 @@ class DiscoveryEngine:
             all_found[svc.name] = svc
 
         for svc in self.scan_pyproject_scripts():
-            if svc.name not in all_found or svc.confidence > all_found[svc.name].confidence:
+            if (
+                svc.name not in all_found
+                or svc.confidence > all_found[svc.name].confidence
+            ):
                 all_found[svc.name] = svc
 
         for svc in self.scan_docker_compose():
-            if svc.name not in all_found or svc.confidence > all_found[svc.name].confidence:
+            if (
+                svc.name not in all_found
+                or svc.confidence > all_found[svc.name].confidence
+            ):
                 all_found[svc.name] = svc
 
         return sorted(all_found.values(), key=lambda s: s.confidence, reverse=True)
@@ -368,7 +413,10 @@ class DiscoveryEngine:
         # Port probe
         port_services = await self.scan_port_range()
         for svc in port_services:
-            if svc.name not in all_found or svc.confidence > all_found[svc.name].confidence:
+            if (
+                svc.name not in all_found
+                or svc.confidence > all_found[svc.name].confidence
+            ):
                 all_found[svc.name] = svc
 
         return sorted(all_found.values(), key=lambda s: s.confidence, reverse=True)
@@ -386,7 +434,9 @@ class DiscoveryEngine:
                 if count > 0:
                     new = [s for s in registry.list_all() if s.name not in seen]
                     for s in new:
-                        print(f"  🆕 Discovered: {s.name} ({s.mcp_endpoint or 'no endpoint'})")
+                        print(
+                            f"  🆕 Discovered: {s.name} ({s.mcp_endpoint or 'no endpoint'})"
+                        )
                         yield s
                     seen = {s.name for s in registry.list_all()}
         except asyncio.CancelledError:

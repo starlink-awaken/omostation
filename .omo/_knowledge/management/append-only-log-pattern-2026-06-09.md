@@ -247,6 +247,7 @@ Round 12-13 全部延续 §5 六原则, 0 偏离:
 - [~] **P0-2** ⛔ 取消: P0-1 已治本, 白名单逻辑会是 no-op, 不重复造轮
 - [ ] **P1-1** baseline 时给 omo-trail 留 0 漂移位 (目前 trail 还没人写, baseline 还没纳入, 需 init 时加)
 - [x] **P1-2** ✅ Round 15 P0: 新增 omo lint schemas + 修 omo_sync 2 处 + CI 集成 (5/5 consumer 合规)
+- [x] **P1-3** ✅ Round 17 P0: omo_bos_metrics dataclass → Pydantic 重构, lint 范围 5→6
 - [x] **P2** ✅ Round 16 P0: 写 `protocols/append-only-log-rollout.md` 跨仓推广指南 (不动 submodule)
 
 ### §11.7 Round 14 收口 — baseline 自洽
@@ -309,5 +310,56 @@ Round 12-13 全部延续 §5 六原则, 0 偏离:
 | 跨仓指南 | 无 | **1** (protocols/append-only-log-rollout.md) | +1 |
 | 单元测试 | 120+ | **126+** (+6 lint schemas) | +6 |
 | pre-commit 自洽 | 锁稳态 | 锁稳态 (持续 re-init) | 不变 |
+
+### §11.9 Round 17 收口 — dataclass 债消除
+
+> **状态**: implemented
+> **commit**: `8a635bf6` (Round 17 P0)
+> **主题**: omo_bos_metrics 重构 dataclass → Pydantic, lint 范围 5→6
+
+**动机**:
+- omo_bos_metrics.py 是 Round 9 P0 之前唯一还保留 `@dataclass` 的 consumer
+- 其他 5 个 consumer (audit/bos_metrics/sync/alert/event/trail 排除 history) Round 9+ 都 Pydantic 化
+- §11 X1 审计债: dataclass 不走 Pydantic 校验, 写时一致性靠口头约定
+- Round 15 P0 起的 lint 工具被迫排除, §11.6 写"Round 16 升级路径第一步"
+
+**重构**:
+- 删 `@dataclass BosInvokeRecord` (~14 行)
+- `record()` 内部: `OmoBosMetricsRecord(...)` 构造 + `.model_dump()` + `schema=OmoBosMetricsRecord` 写时校验
+- `Status` Literal 保留 (caller type hint 向后兼容, 内部 `BosStatus(status)` 转换)
+- `time_invoke` / `_Timer` 走 Pydantic 路径
+- `__all__` 删 `BosInvokeRecord`, re-export `OmoBosMetricsRecord` + `BosStatus`
+
+**无 caller 破坏** (rg 验证):
+- `BosInvokeRecord` 实际无外部 import, 只在 `__all__` 暴露
+- `Status` Literal 保留, `omo_bos_dispatcher` 等 caller type hint 兼容
+- `omo_bos.py` 只用 `summary()` 函数 (返回 dict, 不受影响)
+
+**测试** (49/49 PASS):
+- test_omo_bos_w3.py 18/18 (含 dispatcher instrumentation / CLI / percentile)
+- test_omo_lint_schemas.py 6/6 (5→6 验证)
+- 其他 25 个既有测试全 PASS (history_w3 / trail / logs_baseline / dashboard_monitor_schema)
+
+**Lint 范围扩展**:
+```
+omo lint schemas (Round 17 P0):
+  ✅ omo_audit.py        schema 守住
+  ✅ omo_bos_metrics.py  schema 守住 (新纳入)
+  ✅ omo_sync.py         schema 守住
+  ✅ omo_alert.py        schema 守住
+  ✅ omo_event.py        schema 守住
+  ✅ omo_trail.py        schema 守住
+  6/6 consumer 合规
+```
+
+**§11 X1 审计契约**: 6/6 consumer 写时 Pydantic 锁, CI 自动 fail (omo-lint-schemas job)
+
+**度量 (Round 16 → Round 17)**:
+| 指标 | Round 16 | Round 17 | Δ |
+|------|---------|----------|---|
+| Lint 范围 | 5/5 | **6/6** | +1 (omo_bos_metrics) |
+| 单元测试 | 126+ | **132+** (+bos_metrics 18 + lint 6) | +6 |
+| dataclass 架构 consumer | 1 | **0** | -1 (治本) |
+| 已知债 | 4 | **3** | -1 |
 
 

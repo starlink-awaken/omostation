@@ -121,7 +121,9 @@ def _codex_generate(gw_url: str) -> dict | None:
         "content": {
             "model": "deepseek-v4-pro",
             "model_provider": "agentmesh",
-            "model_catalog_json": str(HOME / ".codex" / "model-catalogs" / "agentmesh-models.json"),
+            "model_catalog_json": str(
+                HOME / ".codex" / "model-catalogs" / "agentmesh-models.json"
+            ),
             "model_providers": {
                 "agentmesh": {
                     "name": "Agora Gateway",
@@ -144,7 +146,9 @@ def _cursor_detect() -> bool:
 
 
 def _cursor_config_path() -> str:
-    return str(HOME / "Library" / "Application Support" / "Cursor" / "User" / "settings.json")
+    return str(
+        HOME / "Library" / "Application Support" / "Cursor" / "User" / "settings.json"
+    )
 
 
 def _cursor_generate(gw_url: str) -> dict | None:
@@ -192,29 +196,43 @@ def _shell_has_gateway(config: Any) -> bool:
     return bool(config and "Agora Gateway" in str(config))
 
 
-ADAPTERS.extend([
-    ToolAdapter(
-        "codex-desktop", "OpenAI Codex Desktop (macOS)",
-        detect_fn=_codex_detect, config_path_fn=_codex_config_path,
-        generate_config_fn=_codex_generate, has_gateway_fn=_codex_has_gateway,
-    ),
-    ToolAdapter(
-        "cursor", "Cursor IDE",
-        detect_fn=_cursor_detect, config_path_fn=_cursor_config_path,
-        generate_config_fn=_cursor_generate, has_gateway_fn=_cursor_has_gateway,
-    ),
-    ToolAdapter(
-        "shell-env", "Shell environment variables",
-        detect_fn=_shell_detect, config_path_fn=_shell_config_path,
-        generate_config_fn=_shell_generate, has_gateway_fn=_shell_has_gateway,
-    ),
-    ToolAdapter(
-        "openai-compat", "Generic OpenAI-compatible tools",
-        detect_fn=lambda: True, config_path_fn=lambda: None,
-        generate_config_fn=lambda gw: None, has_gateway_fn=lambda c: False,
-        read_config_fn=lambda: None,
-    ),
-])
+ADAPTERS.extend(
+    [
+        ToolAdapter(
+            "codex-desktop",
+            "OpenAI Codex Desktop (macOS)",
+            detect_fn=_codex_detect,
+            config_path_fn=_codex_config_path,
+            generate_config_fn=_codex_generate,
+            has_gateway_fn=_codex_has_gateway,
+        ),
+        ToolAdapter(
+            "cursor",
+            "Cursor IDE",
+            detect_fn=_cursor_detect,
+            config_path_fn=_cursor_config_path,
+            generate_config_fn=_cursor_generate,
+            has_gateway_fn=_cursor_has_gateway,
+        ),
+        ToolAdapter(
+            "shell-env",
+            "Shell environment variables",
+            detect_fn=_shell_detect,
+            config_path_fn=_shell_config_path,
+            generate_config_fn=_shell_generate,
+            has_gateway_fn=_shell_has_gateway,
+        ),
+        ToolAdapter(
+            "openai-compat",
+            "Generic OpenAI-compatible tools",
+            detect_fn=lambda: True,
+            config_path_fn=lambda: None,
+            generate_config_fn=lambda gw: None,
+            has_gateway_fn=lambda c: False,
+            read_config_fn=lambda: None,
+        ),
+    ]
+)
 
 
 # ── Connect / Disconnect ─────────────────────────────────────────────────────
@@ -241,7 +259,11 @@ def connect_tools(
     results: list[dict[str, Any]] = []
 
     targets = (
-        [a for a in ADAPTERS if target_tools is None or "all" in target_tools or a.name in target_tools]
+        [
+            a
+            for a in ADAPTERS
+            if target_tools is None or "all" in target_tools or a.name in target_tools
+        ]
         if target_tools
         else ADAPTERS
     )
@@ -252,22 +274,46 @@ def connect_tools(
 
         installed = adapter.detect()
         if not installed:
-            results.append({"tool": adapter.name, "status": "not_installed", "detail": f"{adapter.description} not installed"})
+            results.append(
+                {
+                    "tool": adapter.name,
+                    "status": "not_installed",
+                    "detail": f"{adapter.description} not installed",
+                }
+            )
             continue
 
         config = adapter.read_config()
         generated = adapter.generate_config(gw_url)
 
         if not generated:
-            results.append({"tool": adapter.name, "status": "ok", "detail": f"Set env OPENAI_API_BASE={gw_url}"})
+            results.append(
+                {
+                    "tool": adapter.name,
+                    "status": "ok",
+                    "detail": f"Set env OPENAI_API_BASE={gw_url}",
+                }
+            )
             continue
 
         if adapter.has_gateway_config(config):
-            results.append({"tool": adapter.name, "status": "skipped", "detail": "Already configured"})
+            results.append(
+                {
+                    "tool": adapter.name,
+                    "status": "skipped",
+                    "detail": "Already configured",
+                }
+            )
             continue
 
         if dry_run:
-            results.append({"tool": adapter.name, "status": "ok", "detail": f"[DRY-RUN] Would modify {generated['path']}"})
+            results.append(
+                {
+                    "tool": adapter.name,
+                    "status": "ok",
+                    "detail": f"[DRY-RUN] Would modify {generated['path']}",
+                }
+            )
             continue
 
         backup_path = _backup_file(generated["path"])
@@ -279,16 +325,30 @@ def connect_tools(
 
             if fmt == "toml":
                 toml = _to_toml(content)
-                existing = Path(generated["path"]).read_text() if Path(generated["path"]).exists() else ""
-                Path(generated["path"]).write_text(existing.rstrip() + "\n\n# Added by agora connect\n" + toml + "\n")
+                existing = (
+                    Path(generated["path"]).read_text()
+                    if Path(generated["path"]).exists()
+                    else ""
+                )
+                Path(generated["path"]).write_text(
+                    existing.rstrip() + "\n\n# Added by agora connect\n" + toml + "\n"
+                )
 
             elif fmt == "json-merge":
-                existing = json.loads(Path(generated["path"]).read_text()) if Path(generated["path"]).exists() else {}
+                existing = (
+                    json.loads(Path(generated["path"]).read_text())
+                    if Path(generated["path"]).exists()
+                    else {}
+                )
                 merged = {**existing, **content}
                 Path(generated["path"]).write_text(json.dumps(merged, indent=2) + "\n")
 
             elif fmt == "env":
-                existing = Path(generated["path"]).read_text() if Path(generated["path"]).exists() else ""
+                existing = (
+                    Path(generated["path"]).read_text()
+                    if Path(generated["path"]).exists()
+                    else ""
+                )
                 Path(generated["path"]).write_text(existing.rstrip() + "\n" + content)
 
             elif fmt == "json":
@@ -313,34 +373,68 @@ def disconnect_tools(target_tools: list[str] | None = None) -> list[dict[str, An
     for tool_name in targets:
         adapter = next((a for a in ADAPTERS if a.name == tool_name), None)
         if not adapter:
-            results.append({"tool": tool_name, "status": "not_configured", "detail": "Unknown tool"})
+            results.append(
+                {
+                    "tool": tool_name,
+                    "status": "not_configured",
+                    "detail": "Unknown tool",
+                }
+            )
             continue
 
         config_path = adapter.get_config_path()
         if not config_path or not os.path.exists(config_path):
-            results.append({"tool": tool_name, "status": "no_backup", "detail": "Config file not found"})
+            results.append(
+                {
+                    "tool": tool_name,
+                    "status": "no_backup",
+                    "detail": "Config file not found",
+                }
+            )
             continue
 
         # Shell env: remove marker block
         if adapter.name == "shell-env":
             content = Path(config_path).read_text()
             if "Agora Gateway" not in content:
-                results.append({"tool": tool_name, "status": "not_configured", "detail": "No gateway config block found"})
+                results.append(
+                    {
+                        "tool": tool_name,
+                        "status": "not_configured",
+                        "detail": "No gateway config block found",
+                    }
+                )
                 continue
-            cleaned = re.sub(r"# >>> Agora Gateway[\s\S]*?# <<< Agora Gateway <<<\n?", "", content)
+            cleaned = re.sub(
+                r"# >>> Agora Gateway[\s\S]*?# <<< Agora Gateway <<<\n?", "", content
+            )
             Path(config_path).write_text(cleaned.strip() + "\n")
-            results.append({"tool": tool_name, "status": "ok", "detail": "Removed env config"})
+            results.append(
+                {"tool": tool_name, "status": "ok", "detail": "Removed env config"}
+            )
             continue
 
         # Other tools: restore from backup
         safe_name = config_path.replace("/", "_").lstrip("_")
-        backups = sorted(BACKUP_DIR.glob(f"{safe_name}.*.bak"), reverse=True) if BACKUP_DIR.exists() else []
+        backups = (
+            sorted(BACKUP_DIR.glob(f"{safe_name}.*.bak"), reverse=True)
+            if BACKUP_DIR.exists()
+            else []
+        )
 
         if backups:
             shutil.copy2(backups[0], config_path)
-            results.append({"tool": tool_name, "status": "ok", "detail": f"Restored from {backups[0]}"})
+            results.append(
+                {
+                    "tool": tool_name,
+                    "status": "ok",
+                    "detail": f"Restored from {backups[0]}",
+                }
+            )
         else:
-            results.append({"tool": tool_name, "status": "no_backup", "detail": "No backup found"})
+            results.append(
+                {"tool": tool_name, "status": "no_backup", "detail": "No backup found"}
+            )
 
     return results
 

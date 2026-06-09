@@ -40,3 +40,8 @@ ignore = ["S101", "S603", "S607", "S108", "S110", "S314", "S608", "E402", "E501"
 
 [tool.ruff.format]
 quote-style = "double"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]

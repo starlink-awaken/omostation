@@ -133,7 +133,10 @@ class APIResponse:
     @classmethod
     def ok(cls, data: Any, status_code: int = 200, message: str = "OK") -> APIResponse:
         """成功响应"""
-        return cls(status_code=status_code, body={"success": True, "message": message, "data": data})
+        return cls(
+            status_code=status_code,
+            body={"success": True, "message": message, "data": data},
+        )
 
     @classmethod
     def error(
@@ -177,4 +180,6 @@ class APIResponse:
 
     def to_aiohttp_response(self) -> web.Response:
         """转换为 aiohttp 响应"""
-        return web.json_response(self.body, status=self.status_code, headers=self.headers)
+        return web.json_response(
+            self.body, status=self.status_code, headers=self.headers
+        )

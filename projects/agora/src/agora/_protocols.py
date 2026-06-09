@@ -37,7 +37,9 @@ def _get_client() -> httpx.AsyncClient:
     """Return the shared httpx AsyncClient singleton."""
     global _client
     if _client is None:
-        _client = httpx.AsyncClient(timeout=30, limits=Limits(max_keepalive_connections=20))
+        _client = httpx.AsyncClient(
+            timeout=30, limits=Limits(max_keepalive_connections=20)
+        )
     return _client
 
 
@@ -73,7 +75,9 @@ async def dispatch(instance: dict, tool_name: str, arguments: dict) -> dict:
 # ── MCP handler ─────────────────────────────────────────────────────
 
 
-async def _call_mcp(tool_name: str, arguments: dict, mcp_endpoint: str, trace_ctx: dict | None = None) -> dict:
+async def _call_mcp(
+    tool_name: str, arguments: dict, mcp_endpoint: str, trace_ctx: dict | None = None
+) -> dict:
     """Execute an MCP tools/call request against the target endpoint.
 
     Args:
@@ -86,7 +90,10 @@ async def _call_mcp(tool_name: str, arguments: dict, mcp_endpoint: str, trace_ct
         return err
 
     # 构建请求，带 trace context
-    payload: dict = {"method": "tools/call", "params": {"name": tool_name, "arguments": arguments}}
+    payload: dict = {
+        "method": "tools/call",
+        "params": {"name": tool_name, "arguments": arguments},
+    }
 
     # 新增：注入 trace context 到请求
     if trace_ctx:
@@ -138,9 +145,13 @@ async def _call_rest(tool_name: str, arguments: dict, instance: dict) -> dict:
         try:
             client = _get_client()
             if method in ("POST", "PUT", "PATCH"):
-                resp = await client.request(method, url, json=arguments, headers=headers)
+                resp = await client.request(
+                    method, url, json=arguments, headers=headers
+                )
             else:
-                resp = await client.request(method, url, params=arguments, headers=headers)
+                resp = await client.request(
+                    method, url, params=arguments, headers=headers
+                )
             try:
                 body = resp.json()
             except Exception:
@@ -156,14 +167,21 @@ async def _call_rest(tool_name: str, arguments: dict, instance: dict) -> dict:
             if attempt < max_retries and status in (408, 429, 500, 502, 503, 504):
                 last_error = e
                 continue
-            return {"status": "error", "http_status": status, "error": f"REST call failed: {str(e)[:200]}"}
+            return {
+                "status": "error",
+                "http_status": status,
+                "error": f"REST call failed: {str(e)[:200]}",
+            }
         except Exception as e:
             if attempt < max_retries:
                 last_error = e
                 continue
             return {"status": "error", "error": f"REST call failed: {str(e)[:200]}"}
 
-    return {"status": "error", "error": f"REST call failed after {max_retries + 1} attempts: {str(last_error)[:200]}"}
+    return {
+        "status": "error",
+        "error": f"REST call failed after {max_retries + 1} attempts: {str(last_error)[:200]}",
+    }
 
 
 # ── gRPC handler ────────────────────────────────────────────────────
@@ -175,7 +193,10 @@ async def _call_grpc(tool_name: str, arguments: dict, instance: dict) -> dict:
         grpc = importlib.import_module("grpc")
         aio = importlib.import_module("grpc.aio")
     except ImportError:
-        return {"status": "error", "error": "grpcio not installed. Run: pip install grpcio grpcio-tools"}
+        return {
+            "status": "error",
+            "error": "grpcio not installed. Run: pip install grpcio grpcio-tools",
+        }
 
     cfg = instance.get("protocol_config", {})
     endpoint = instance["mcp_endpoint"]
@@ -199,14 +220,20 @@ async def _call_grpc(tool_name: str, arguments: dict, instance: dict) -> dict:
         stub_cls = getattr(mod, stub_cls_name, None)
         req_cls = getattr(mod, request_class, None)
         if not stub_cls or not req_cls:
-            return {"status": "error", "error": f"Stub class not found in {stub_module}"}
+            return {
+                "status": "error",
+                "error": f"Stub class not found in {stub_module}",
+            }
 
         async with aio.insecure_channel(host) as channel:
             stub = stub_cls(channel)
             method_name = cfg.get("grpc_method", tool_name).split("/")[-1]
             handler = getattr(stub, method_name, None)
             if not handler:
-                return {"status": "error", "error": f"Method {method_name} not found on stub"}
+                return {
+                    "status": "error",
+                    "error": f"Method {method_name} not found on stub",
+                }
             req = req_cls(**arguments) if isinstance(arguments, dict) else req_cls()
             resp = await handler(req)
             return {"status": "ok", "result": str(resp)[:2000]}
@@ -224,7 +251,10 @@ async def _call_ws(tool_name: str, arguments: dict, instance: dict) -> dict:
     try:
         import websockets
     except ImportError:
-        return {"status": "error", "error": "websockets not installed. Run: pip install websockets"}
+        return {
+            "status": "error",
+            "error": "websockets not installed. Run: pip install websockets",
+        }
 
     ws_url = instance["mcp_endpoint"]
     if not ws_url.startswith(("ws://", "wss://")):
@@ -240,9 +270,15 @@ async def _call_ws(tool_name: str, arguments: dict, instance: dict) -> dict:
     headers = cfg.get("headers", {})
 
     try:
-        async with websockets.connect(ws_url, extra_headers=headers, open_timeout=timeout) as ws:
+        async with websockets.connect(
+            ws_url, extra_headers=headers, open_timeout=timeout
+        ) as ws:
             if send_payload:
-                await ws.send(_json.dumps(send_payload) if not isinstance(send_payload, str) else send_payload)
+                await ws.send(
+                    _json.dumps(send_payload)
+                    if not isinstance(send_payload, str)
+                    else send_payload
+                )
             resp = await asyncio.wait_for(ws.recv(), timeout=timeout)
             try:
                 return _json.loads(resp)

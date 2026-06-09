@@ -25,10 +25,10 @@ Authority: nucleus/Z-Core/L0-Genome/R0-ACT-SYS-AX01-10_holographic_metadata_axio
 # 功能 ⊢ {Nks_Mcp, Mcp_Bridge, Bridge_Init}
 # =============================================================================
 
-import importlib
-import logging
-from pathlib import Path as P  # noqa: N817
-from typing import TYPE_CHECKING, Any
+import importlib  # noqa: E402
+import logging  # noqa: E402
+from pathlib import Path as P  # noqa: E402, N817
+from typing import TYPE_CHECKING, Any  # noqa: E402
 
 _log = logging.getLogger(__name__)
 
@@ -41,9 +41,15 @@ if TYPE_CHECKING:
 def _lazy_nks_imports() -> tuple[Any | None, Any | None, Any | None, Any | None]:
     """Lazy import to avoid cross-organ coupling with D-Memory."""
     try:
-        graph_store_module = importlib.import_module("organs.D_Memory.organs.nks.graph_store")
-        impact_analyzer_module = importlib.import_module("organs.D_Memory.organs.nks.impact_analyzer")
-        query_engine_module = importlib.import_module("organs.D_Memory.organs.nks.query_engine")
+        graph_store_module = importlib.import_module(
+            "organs.D_Memory.organs.nks.graph_store"
+        )
+        impact_analyzer_module = importlib.import_module(
+            "organs.D_Memory.organs.nks.impact_analyzer"
+        )
+        query_engine_module = importlib.import_module(
+            "organs.D_Memory.organs.nks.query_engine"
+        )
         GraphStore = graph_store_module.GraphStore  # noqa: N806
         Entity = graph_store_module.Entity  # noqa: N806
         ImpactAnalyzer = impact_analyzer_module.ImpactAnalyzer  # noqa: N806
@@ -228,7 +234,9 @@ class NKSMCPBridge:
             },
         ]
 
-    def execute_tool(self, tool_name: str, parameters: dict[str, Any]) -> dict[str, Any]:
+    def execute_tool(
+        self, tool_name: str, parameters: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Execute an MCP tool by name.
 
@@ -379,7 +387,9 @@ class NKSMCPBridge:
             "nodes": nodes,
         }
 
-    def _handle_analyze_change_impact(self, parameters: dict[str, Any]) -> dict[str, Any]:
+    def _handle_analyze_change_impact(
+        self, parameters: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Handle nks_analyze_change_impact tool.
 
@@ -405,7 +415,10 @@ class NKSMCPBridge:
             try:
                 ia = self._impact_analyzer
                 if ia is None:
-                    return {"status": "error", "message": "ImpactAnalyzer not initialized"}
+                    return {
+                        "status": "error",
+                        "message": "ImpactAnalyzer not initialized",
+                    }
                 report = ia.analyze_file_change(file_path, "modify")
 
                 # Merge results
@@ -452,9 +465,15 @@ class NKSMCPBridge:
                 "risk_level": risk_level,
             },
             "impact": {
-                "changed_entities": [self._entity_to_dict(e) for e in changed_ids.values()],
-                "direct_impacts": [self._entity_to_dict(e) for e in direct_ids.values()],
-                "transitive_impacts": [self._entity_to_dict(e) for e in transitive_ids.values()],
+                "changed_entities": [
+                    self._entity_to_dict(e) for e in changed_ids.values()
+                ],
+                "direct_impacts": [
+                    self._entity_to_dict(e) for e in direct_ids.values()
+                ],
+                "transitive_impacts": [
+                    self._entity_to_dict(e) for e in transitive_ids.values()
+                ],
             },
             "counts": {
                 "changed": len(changed_ids),
@@ -466,7 +485,9 @@ class NKSMCPBridge:
             "dependency_chains": all_dependency_chains[:10],  # Limit chains
         }
 
-    def _handle_get_file_architecture(self, parameters: dict[str, Any]) -> dict[str, Any]:
+    def _handle_get_file_architecture(
+        self, parameters: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Handle nks_get_file_architecture tool.
 
@@ -521,18 +542,29 @@ class NKSMCPBridge:
 
         # Calculate metrics
         incoming_count = sum(
-            1 for r in all_relations if r["target_id"] in entity_ids and r["source_id"] not in entity_ids
+            1
+            for r in all_relations
+            if r["target_id"] in entity_ids and r["source_id"] not in entity_ids
         )
         outgoing_count = sum(
-            1 for r in all_relations if r["source_id"] in entity_ids and r["target_id"] not in entity_ids
+            1
+            for r in all_relations
+            if r["source_id"] in entity_ids and r["target_id"] not in entity_ids
         )
-        internal_count = sum(1 for r in all_relations if r["source_id"] in entity_ids and r["target_id"] in entity_ids)
+        internal_count = sum(
+            1
+            for r in all_relations
+            if r["source_id"] in entity_ids and r["target_id"] in entity_ids
+        )
 
         # Get entry points (no incoming from outside)
         entry_points = []
         for entity in canonical_entities:
             incoming_external = [
-                r for r in all_relations if r["target_id"] == entity.entity_id and r["source_id"] not in entity_ids
+                r
+                for r in all_relations
+                if r["target_id"] == entity.entity_id
+                and r["source_id"] not in entity_ids
             ]
             if not incoming_external:
                 entry_points.append(entity.name)
@@ -553,7 +585,9 @@ class NKSMCPBridge:
             },
         }
 
-    def _handle_find_related_entities(self, parameters: dict[str, Any]) -> dict[str, Any]:
+    def _handle_find_related_entities(
+        self, parameters: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Handle nks_find_related_entities tool.
 
@@ -602,7 +636,9 @@ class NKSMCPBridge:
                     "relation_id": relation.relation_id,
                     "relation_type": relation.relation_type,
                     "confidence": relation.confidence,
-                    "direction": "outgoing" if relation.source_id == entity.entity_id else "incoming",
+                    "direction": "outgoing"
+                    if relation.source_id == entity.entity_id
+                    else "incoming",
                 },
             }
             related_entities.append(relation_info)
@@ -638,7 +674,9 @@ class NKSMCPBridge:
             self._ensure_initialized()
             store_ok = self._graph_store.ping() if self._graph_store else False
             engine_ok = self._query_engine.ping() if self._query_engine else False
-            analyzer_ok = self._impact_analyzer.ping() if self._impact_analyzer else False
+            analyzer_ok = (
+                self._impact_analyzer.ping() if self._impact_analyzer else False
+            )
             return store_ok and engine_ok and analyzer_ok
         except (OSError, ConnectionError, AttributeError):
             return False

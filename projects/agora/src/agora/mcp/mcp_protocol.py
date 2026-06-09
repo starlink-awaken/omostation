@@ -30,11 +30,10 @@ Implements the ``resources/*``, ``prompts/*``, and ``tools/*`` endpoints,
 plus the required MCP ``initialize`` handshake (2024-11-05).
 """
 
-import asyncio
-import logging
-from typing import Any  # noqa: F401
+import asyncio  # noqa: E402
+import logging  # noqa: E402
 
-from agora.mcp_tools import ToolContext, _ParamError  # type: ignore[import-not-found]
+from agora.mcp_tools import ToolContext, _ParamError  # type: ignore[import-not-found]  # noqa: E402
 
 _log = logging.getLogger(__name__)
 _SUPPORTED_PROTOCOL_VERSION = "2024-11-05"
@@ -69,7 +68,9 @@ _log = logging.getLogger(__name__)
 
 def _get_proxy_manager():
     from agora.auth.mcp_gateway import _gateway_manager
+
     return _gateway_manager
+
 
 def handle_resources_list(params: dict, ctx: ToolContext) -> dict:
     """MCP resources/list — enumerate available B-OS resources."""
@@ -94,9 +95,10 @@ def handle_resources_list(params: dict, ctx: ToolContext) -> dict:
             "mimeType": "application/json",
         },
     ]
-    
+
     if pm:
         import asyncio
+
         try:
             loop = asyncio.get_running_loop()
             proxy_resources = loop.run_until_complete(pm.list_resources())
@@ -104,32 +106,47 @@ def handle_resources_list(params: dict, ctx: ToolContext) -> dict:
                 base_resources.extend(proxy_resources)
         except Exception as exc:
             _log.warning("[MCPServer] resources/list proxy fetch failed: %s", exc)
-            
+
     return {"resources": base_resources}
 
 
 def handle_resources_read(params: dict, ctx: ToolContext) -> dict:
     """MCP resources/read — fetch a specific resource by URI."""
     uri = params.get("uri", "")
-    
+
     pm = _get_proxy_manager()
     if pm:
         import asyncio
+
         try:
             loop = asyncio.get_running_loop()
             res = loop.run_until_complete(pm.read_resource(uri))
             if res and "contents" in res:
                 return res
             if res and "error" in res:
-                _log.warning("[MCPServer] resources/read error from proxy: %s", res["error"])
+                _log.warning(
+                    "[MCPServer] resources/read error from proxy: %s", res["error"]
+                )
         except Exception as exc:
             _log.warning("[MCPServer] resources/read proxy fetch failed: %s", exc)
-            
+
     # Fallbacks for builtin endpoints
     if uri == "bos://execution/workers/status":
-        return {"contents": [{"uri": uri, "mimeType": "application/json", "text": '{"status": "ok"}'}]}
+        return {
+            "contents": [
+                {"uri": uri, "mimeType": "application/json", "text": '{"status": "ok"}'}
+            ]
+        }
     else:
-        return {"contents": [{"uri": uri, "mimeType": "text/plain", "text": f"Resource not found: {uri}"}]}
+        return {
+            "contents": [
+                {
+                    "uri": uri,
+                    "mimeType": "text/plain",
+                    "text": f"Resource not found: {uri}",
+                }
+            ]
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -145,7 +162,11 @@ def handle_prompts_list(params: dict, ctx: ToolContext) -> dict:
                 "name": "analyze_code",
                 "description": "Analyze a code snippet for quality and correctness",
                 "arguments": [
-                    {"name": "code", "description": "The code to analyze", "required": True},
+                    {
+                        "name": "code",
+                        "description": "The code to analyze",
+                        "required": True,
+                    },
                     {
                         "name": "language",
                         "description": "Programming language",
@@ -227,17 +248,23 @@ def handle_tools_list(params: dict, ctx: ToolContext) -> dict:
         registry = get_default_registry()
         tools = registry.to_anthropic_tools()
     except (ImportError, KeyError, AttributeError) as exc:
-        _log.warning("[MCPServer] tools/list: D-Execution registry unavailable — %s", exc)
+        _log.warning(
+            "[MCPServer] tools/list: D-Execution registry unavailable — %s", exc
+        )
 
     pm = _get_proxy_manager()
     if pm:
         proxy_schemas = pm.registry.get_tool_schemas()
         for s in proxy_schemas:
-            tools.append({
-                "name": s["name"],
-                "description": s["description"],
-                "inputSchema": s.get("parameters", {"type": "object", "properties": {}}),
-            })
+            tools.append(
+                {
+                    "name": s["name"],
+                    "description": s["description"],
+                    "inputSchema": s.get(
+                        "parameters", {"type": "object", "properties": {}}
+                    ),
+                }
+            )
 
     if not tools:
         tools = _get_builtin_mcp_tools()
@@ -291,22 +318,35 @@ def handle_tools_call(params: dict, ctx: ToolContext) -> dict:
             if pm and pm.registry.get_entry(tool_name):
                 res = loop.run_until_complete(pm.dispatch(tool_name, arguments))
                 if res.get("status") == "error":
-                    return {"content": [{"type": "text", "text": f"[tool error] {res.get('error')}"}], "isError": True}
+                    return {
+                        "content": [
+                            {"type": "text", "text": f"[tool error] {res.get('error')}"}
+                        ],
+                        "isError": True,
+                    }
                 return {"content": [{"type": "text", "text": str(res)}]}
             else:
-                tool_result = loop.run_until_complete(registry.invoke_async(tool_name, arguments))
+                tool_result = loop.run_until_complete(
+                    registry.invoke_async(tool_name, arguments)
+                )
 
                 if tool_result.is_error:
-                    error_msg = getattr(tool_result, "error_message", str(tool_result.content))
+                    error_msg = getattr(
+                        tool_result, "error_message", str(tool_result.content)
+                    )
                     return {
-                        "content": [{"type": "text", "text": f"[tool error] {error_msg}"}],
+                        "content": [
+                            {"type": "text", "text": f"[tool error] {error_msg}"}
+                        ],
                         "isError": True,
                     }
                 return {
                     "content": [
                         {
                             "type": "text",
-                            "text": str(tool_result.content) if tool_result.content is not None else "",
+                            "text": str(tool_result.content)
+                            if tool_result.content is not None
+                            else "",
                         }
                     ]
                 }
@@ -342,7 +382,9 @@ def _handle_builtin_tool(tool_name: str, arguments: dict) -> dict | None:
                             "status": "healthy",
                             "service": "BOS MCP Server",
                             "version": "1.0.0",
-                            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                            "timestamp": time.strftime(
+                                "%Y-%m-%dT%H:%M:%SZ", time.gmtime()
+                            ),
                         },
                         indent=2,
                     ),

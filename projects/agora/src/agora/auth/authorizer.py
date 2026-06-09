@@ -78,7 +78,15 @@ class Authorizer:
         ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         conn.execute(
             "INSERT INTO grants (grant_id, subject, capability, resource_scope, constraints, issued_by, issued_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (grant_id, subject, capability, resource_scope, json.dumps(constraints or {}), issued_by, ts),
+            (
+                grant_id,
+                subject,
+                capability,
+                resource_scope,
+                json.dumps(constraints or {}),
+                issued_by,
+                ts,
+            ),
         )
         conn.commit()
         return {"grant_id": grant_id, "subject": subject, "capability": capability}
@@ -113,11 +121,18 @@ class Authorizer:
 
             # 通配符 capability 匹配
             cap = g["capability"]
-            if cap == "*" or cap == tool or (cap.endswith(".*") and tool.startswith(cap[:-2])):
+            if (
+                cap == "*"
+                or cap == tool
+                or (cap.endswith(".*") and tool.startswith(cap[:-2]))
+            ):
                 applicable.append(g)
 
         if not applicable:
-            return {"allowed": False, "reason": f"No grant for {subject} to call {tool}"}
+            return {
+                "allowed": False,
+                "reason": f"No grant for {subject} to call {tool}",
+            }
 
         # 检查约束
         now_ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
@@ -138,7 +153,10 @@ class Authorizer:
             conn.commit()
             return {"allowed": True, "grant_id": g["grant_id"]}
 
-        return {"allowed": False, "reason": "All applicable grants exceeded constraints"}
+        return {
+            "allowed": False,
+            "reason": "All applicable grants exceeded constraints",
+        }
 
     def revoke_grant(self, grant_id: str) -> bool:
         """吊销指定的 grant。"""
@@ -183,7 +201,9 @@ class Authorizer:
         return result
 
 
-def authorize_middleware(subject: str, tool: str, cost: float = 0, db_path: str | None = None) -> dict:
+def authorize_middleware(
+    subject: str, tool: str, cost: float = 0, db_path: str | None = None
+) -> dict:
     """在路由前调用的门禁中间件。
 
     当工具不在 ENFORCE_TOOLS 中时，仅记录日志（pass-through）。

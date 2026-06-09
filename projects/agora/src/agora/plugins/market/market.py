@@ -208,20 +208,25 @@ class Market:
         """Get market registry either from bos://forge or fallback to BUILTIN_MARKET."""
         try:
             import httpx
+
             # Try to read the dynamic registry from Agora gateway
             resp = httpx.post(
                 "http://127.0.0.1:8080/v1/resources/read",
                 json={"uri": "bos://forge/market/list"},
-                timeout=2.0
+                timeout=2.0,
             )
             if resp.status_code == 200:
                 import json
+
                 data = resp.json().get("content", [{}])[0].get("text", "{}")
                 forge_market = json.loads(data)
                 if forge_market:
                     return {**BUILTIN_MARKET, **forge_market}
         except Exception as e:
-            logger.debug("Failed to fetch dynamic market from bos://forge, using builtin", error=str(e))
+            logger.debug(
+                "Failed to fetch dynamic market from bos://forge, using builtin",
+                error=str(e),
+            )
         return BUILTIN_MARKET
 
     def search(self, query: str) -> list[dict]:
@@ -305,7 +310,13 @@ class Market:
                 }
         except Exception:
             pass
-        return {"name": repo.split("/")[-1], "description": "", "type": "python", "entry": "server.py", "tags": []}
+        return {
+            "name": repo.split("/")[-1],
+            "description": "",
+            "type": "python",
+            "entry": "server.py",
+            "tags": [],
+        }
 
     def publish(
         self,
@@ -349,6 +360,10 @@ class Market:
     @staticmethod
     def _run_cmd(cmd: list[str], cwd: str | None = None):
         """Run a shell command, raise on failure."""
-        result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=120)
+        result = subprocess.run(
+            cmd, cwd=cwd, capture_output=True, text=True, timeout=120
+        )
         if result.returncode != 0:
-            raise RuntimeError(f"Command failed: {' '.join(cmd)}\n{result.stderr[:500]}")
+            raise RuntimeError(
+                f"Command failed: {' '.join(cmd)}\n{result.stderr[:500]}"
+            )

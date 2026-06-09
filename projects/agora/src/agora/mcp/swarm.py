@@ -38,22 +38,25 @@ DISCOVERY_MSG = b"AGORA_SWARM_DISCOVER"
 RESPONSE_MSG = b"AGORA_SWARM_HERE"
 LEADER_ELECTION_MSG = b"AGORA_SWARM_ELECT"
 
+
 # ── 节点健康等级 (Kubernetes/Consul 风格) ──
 class NodeHealth:
-    GREEN = "green"     # 完全健康
-    YELLOW = "yellow"   # 负载较高但可用
-    RED = "red"         # 不可用/离线
+    GREEN = "green"  # 完全健康
+    YELLOW = "yellow"  # 负载较高但可用
+    RED = "red"  # 不可用/离线
 
 
 # ── Gossip 种子节点 ──
-GOSSIP_FANOUT = 3       # 每次传播目标数
-GOSSIP_INTERVAL = 2     # 传播间隔
+GOSSIP_FANOUT = 3  # 每次传播目标数
+GOSSIP_INTERVAL = 2  # 传播间隔
 
 # ── 节点模型 ──
+
 
 @dataclass
 class SwarmNode:
     """蜂群中的一个节点。"""
+
     node_id: str
     host: str
     port: int = SWARM_DEFAULT_PORT
@@ -63,11 +66,11 @@ class SwarmNode:
     last_heartbeat: float = 0.0
     status: str = "unknown"
     # ── P55-W1: 负载感知 (Consul/K8s 风格) ──
-    load_score: float = 0.0       # 0-100, 越低越好
+    load_score: float = 0.0  # 0-100, 越低越好
     cpu_percent: float = 0.0
     memory_mb: float = 0.0
-    queue_depth: int = 0          # 待处理任务数
-    generation: int = 0           # 选举 generation (用于 RAFT)
+    queue_depth: int = 0  # 待处理任务数
+    generation: int = 0  # 选举 generation (用于 RAFT)
 
     @property
     def is_online(self) -> bool:
@@ -84,15 +87,20 @@ class SwarmNode:
 
     def to_dict(self) -> dict:
         return {
-            "node_id": self.node_id, "host": self.host, "port": self.port,
-            "role": self.role, "bos_uris": self.bos_uris,
+            "node_id": self.node_id,
+            "host": self.host,
+            "port": self.port,
+            "role": self.role,
+            "bos_uris": self.bos_uris,
             "status": self.health,
-            "load_score": self.load_score, "queue_depth": self.queue_depth,
+            "load_score": self.load_score,
+            "queue_depth": self.queue_depth,
             "generation": self.generation,
         }
 
 
 # ── 蜂群协调器 ──
+
 
 class SwarmOrchestrator:
     """蜂群主节点协调器。
@@ -144,8 +152,12 @@ class SwarmOrchestrator:
     def register_node(self, node: SwarmNode) -> None:
         """注册一个节点 (手动注册)。"""
         self._nodes[node.node_id] = node
-        _log.info("Swarm: node registered: %s (%s, %d BOS URIs)",
-                  node.node_id, node.role, len(node.bos_uris))
+        _log.info(
+            "Swarm: node registered: %s (%s, %d BOS URIs)",
+            node.node_id,
+            node.role,
+            len(node.bos_uris),
+        )
 
     def unregister_node(self, node_id: str) -> None:
         """注销节点。"""
@@ -198,6 +210,7 @@ class SwarmOrchestrator:
             return
 
         import random
+
         targets = random.sample(online, min(GOSSIP_FANOUT, len(online)))
 
         for target in targets:
@@ -206,12 +219,18 @@ class SwarmOrchestrator:
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 sock.settimeout(1.0)
-                msg = json.dumps({
-                    "type": "gossip",
-                    "from": self.node_id,
-                    "nodes": {nid: n.to_dict() for nid, n in self._nodes.items() if n.is_online},
-                    "generation": getattr(self, '_generation', 0),
-                }).encode()
+                msg = json.dumps(
+                    {
+                        "type": "gossip",
+                        "from": self.node_id,
+                        "nodes": {
+                            nid: n.to_dict()
+                            for nid, n in self._nodes.items()
+                            if n.is_online
+                        },
+                        "generation": getattr(self, "_generation", 0),
+                    }
+                ).encode()
                 sock.sendto(msg, (target.host, target.port))
                 _log.debug("[Gossip] → %s (%d nodes)", target.node_id, len(self._nodes))
                 sock.close()
@@ -220,6 +239,7 @@ class SwarmOrchestrator:
 
     def _start_gossip_loop(self) -> None:
         """Gossip 后台循环 (master + worker 均参与)。"""
+
         def _loop():
             while self._running:
                 self.gossip_sync()
@@ -227,7 +247,11 @@ class SwarmOrchestrator:
 
         t = threading.Thread(target=_loop, daemon=True)
         t.start()
-        _log.info("[Gossip] loop started (fanout=%d, interval=%ds)", GOSSIP_FANOUT, GOSSIP_INTERVAL)
+        _log.info(
+            "[Gossip] loop started (fanout=%d, interval=%ds)",
+            GOSSIP_FANOUT,
+            GOSSIP_INTERVAL,
+        )
 
     # ── Leader Election (RAFT 简化版, 优先级制) ──
 
@@ -259,6 +283,7 @@ class SwarmOrchestrator:
 
     def _start_election_timer(self) -> None:
         """定期触发选举 (仅 master 角色参与)。"""
+
         def _timer():
             while self._running:
                 time.sleep(HEARTBEAT_TIMEOUT * 2)  # 30s 选举一次
@@ -272,8 +297,13 @@ class SwarmOrchestrator:
 
     # ── 健康等级上报 ──
 
-    def report_load(self, load_score: float = 0, queue_depth: int = 0,
-                    cpu_pct: float = 0, memory_mb: float = 0) -> None:
+    def report_load(
+        self,
+        load_score: float = 0,
+        queue_depth: int = 0,
+        cpu_pct: float = 0,
+        memory_mb: float = 0,
+    ) -> None:
         """本节点负载上报 (供 worker heartbeat 使用)。"""
         self_node = self._nodes.get(self.node_id)
         if self_node:
@@ -297,6 +327,7 @@ class SwarmOrchestrator:
 
     def _start_discovery_listener(self) -> None:
         """UDP 广播监听器 — 接收新节点发现请求。"""
+
         def _listen():
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -310,7 +341,7 @@ class SwarmOrchestrator:
                     if data.startswith(DISCOVERY_MSG):
                         # 解析节点信息
                         try:
-                            info = json.loads(data[len(DISCOVERY_MSG):])
+                            info = json.loads(data[len(DISCOVERY_MSG) :])
                             node = SwarmNode(
                                 node_id=info.get("node_id", f"{addr[0]}:unknown"),
                                 host=addr[0],
@@ -321,12 +352,20 @@ class SwarmOrchestrator:
                             )
                             self.register_node(node)
                             # 回复: 告知主节点位置
-                            sock.sendto(RESPONSE_MSG + json.dumps({
-                                "master_node_id": self.node_id,
-                                "master_host": socket.gethostname(),
-                                "master_port": self.port,
-                            }).encode(), addr)
-                            _log.info("Swarm: discovered %s at %s", node.node_id, addr[0])
+                            sock.sendto(
+                                RESPONSE_MSG
+                                + json.dumps(
+                                    {
+                                        "master_node_id": self.node_id,
+                                        "master_host": socket.gethostname(),
+                                        "master_port": self.port,
+                                    }
+                                ).encode(),
+                                addr,
+                            )
+                            _log.info(
+                                "Swarm: discovered %s at %s", node.node_id, addr[0]
+                            )
                         except (json.JSONDecodeError, KeyError):
                             pass
                 except socket.timeout:
@@ -339,6 +378,7 @@ class SwarmOrchestrator:
 
     def _start_heartbeat_sender(self) -> None:
         """心跳发送器 — worker 定期向 master 发送心跳。"""
+
         def _send():
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -346,12 +386,17 @@ class SwarmOrchestrator:
 
             while self._running:
                 try:
-                    msg = DISCOVERY_MSG + json.dumps({
-                        "node_id": self.node_id,
-                        "role": self.role,
-                        "port": self.port,
-                        "bos_uris": getattr(self, '_bos_uris', []),
-                    }).encode()
+                    msg = (
+                        DISCOVERY_MSG
+                        + json.dumps(
+                            {
+                                "node_id": self.node_id,
+                                "role": self.role,
+                                "port": self.port,
+                                "bos_uris": getattr(self, "_bos_uris", []),
+                            }
+                        ).encode()
+                    )
                     sock.sendto(msg, ("255.255.255.255", self.port))
                 except OSError:
                     pass
@@ -362,17 +407,24 @@ class SwarmOrchestrator:
 
     def _start_heartbeat_monitor(self) -> None:
         """心跳监控器 — master 检测离线节点。"""
+
         def _monitor():
             while self._running:
                 for node_id, node in list(self._nodes.items()):
                     if not node.is_online and node.status != "offline":
                         node.status = "offline"
-                        _log.warning("Swarm: node offline: %s (last heartbeat: %.0fs ago)",
-                                    node_id, time.time() - node.last_heartbeat)
+                        _log.warning(
+                            "Swarm: node offline: %s (last heartbeat: %.0fs ago)",
+                            node_id,
+                            time.time() - node.last_heartbeat,
+                        )
                         # 触发 failover: 重新分配该节点的 BOS URI 到其他在线节点
                         if node.bos_uris:
-                            _log.info("Swarm: failover — %d URIs from %s need reassignment",
-                                     len(node.bos_uris), node_id)
+                            _log.info(
+                                "Swarm: failover — %d URIs from %s need reassignment",
+                                len(node.bos_uris),
+                                node_id,
+                            )
                 time.sleep(HEARTBEAT_INTERVAL)
 
         self._heartbeat_thread = threading.Thread(target=_monitor, daemon=True)
@@ -383,7 +435,9 @@ class SwarmOrchestrator:
 _swarm: SwarmOrchestrator | None = None
 
 
-def get_swarm(role: str = "worker", port: int = SWARM_DEFAULT_PORT) -> SwarmOrchestrator:
+def get_swarm(
+    role: str = "worker", port: int = SWARM_DEFAULT_PORT
+) -> SwarmOrchestrator:
     global _swarm
     if _swarm is None:
         _swarm = SwarmOrchestrator(role=role, port=port)

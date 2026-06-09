@@ -24,8 +24,9 @@ class CLIError(Exception):
     exit_code: int = 1
     suggestion: str = ""
 
-    def __init__(self, message: str, exit_code: int | None = None,
-                 suggestion: str = ""):
+    def __init__(
+        self, message: str, exit_code: int | None = None, suggestion: str = ""
+    ):
         super().__init__(message)
         self.message = message
         if exit_code is not None:
@@ -35,37 +36,46 @@ class CLIError(Exception):
 
 # ── 专用异常子类 ──
 
+
 class ServiceNotFoundError(CLIError):
     """服务不存在"""
+
     exit_code = 1
     suggestion = "使用 'agora list' 查看所有已注册服务"
 
 
 class RegistrationError(CLIError):
     """注册失败"""
+
     exit_code = 1
     suggestion = "检查服务配置是否正确，或使用 --no-governance 跳过校验"
 
 
 class ConfigError(CLIError):
     """配置错误"""
+
     exit_code = 1
     suggestion = "运行 'agora config' 检查配置，或 'agora init' 重新初始化"
 
 
 class ToolNotFoundError(CLIError):
     """工具不存在"""
+
     exit_code = 1
-    suggestion = "使用 'agora repo list' 查看已有工具，或 'agora repo discover' 发现新工具"
+    suggestion = (
+        "使用 'agora repo list' 查看已有工具，或 'agora repo discover' 发现新工具"
+    )
 
 
 class AuthError(CLIError):
     """认证/授权错误"""
+
     exit_code = 1
     suggestion = "检查 API Key 是否有效: agora key list"
 
 
 # ── 装饰器 ──
+
 
 def handle_cli_error(func):
     """装饰器：捕获异常，格式化输出，返回正确 exit code。
@@ -87,8 +97,7 @@ def handle_cli_error(func):
             return 130
         except Exception as e:
             _print_formatted_error(
-                str(e),
-                "使用 'agora --help' 获取帮助，或检查日志了解详情"
+                str(e), "使用 'agora --help' 获取帮助，或检查日志了解详情"
             )
             if "AGORA_DEBUG" in os.environ:
                 traceback.print_exc()
@@ -107,7 +116,8 @@ def _print_formatted_error(message: str, suggestion: str = "") -> None:
 
 # ── 工具函数 ──
 
-import os
+import os  # noqa: E402
+
 
 def safe_exit(exit_code: int, message: str = "") -> None:
     """安全退出，确保输出最后一条消息"""

@@ -147,11 +147,17 @@ class Compressor:
                 pass
 
         # HTML detection — look for typical opening tags
-        if re.search(r"<\s*(html|div|span|p|body|head|table|article|section)", stripped[:500], re.IGNORECASE):
+        if re.search(
+            r"<\s*(html|div|span|p|body|head|table|article|section)",
+            stripped[:500],
+            re.IGNORECASE,
+        ):
             return "html"
 
         # Error / stacktrace detection
-        if re.search(r"Traceback\s*\(|Error|Exception|at\s+\S+\.\w+\(.*\)", stripped[:600]):
+        if re.search(
+            r"Traceback\s*\(|Error|Exception|at\s+\S+\.\w+\(.*\)", stripped[:600]
+        ):
             return "error"
 
         # Code detection — heuristics for source code blocks
@@ -319,7 +325,10 @@ class Compressor:
                 # How many times does this block repeat consecutively?
                 repeat = 1
                 j = i + block_len
-                while j + block_len <= len(lines) and tuple(lines[j : j + block_len]) == block:
+                while (
+                    j + block_len <= len(lines)
+                    and tuple(lines[j : j + block_len]) == block
+                ):
                     repeat += 1
                     j += block_len
                 if repeat > best_repeat:
@@ -353,7 +362,9 @@ class Compressor:
         tail_text = "\n\n".join(paragraphs[-2:])
 
         middle_count = len(paragraphs) - 3
-        summary_line = f"\n\n[... 省略 {middle_count} 段落，共约 {len(content)} 字符 ...]\n\n"
+        summary_line = (
+            f"\n\n[... 省略 {middle_count} 段落，共约 {len(content)} 字符 ...]\n\n"
+        )
 
         result = head + summary_line + tail_text
         stats["truncated"] = True
@@ -363,7 +374,9 @@ class Compressor:
 
     # ── 压缩统计持久化 ─────────────────────────────────────────────
 
-    def _record_stats(self, content_type: str, original_len: int, compressed_len: int) -> None:
+    def _record_stats(
+        self, content_type: str, original_len: int, compressed_len: int
+    ) -> None:
         """将单次压缩记录写入 usage.db 的 compression_stats 表。"""
         try:
             ratio = 1.0 - (compressed_len / max(original_len, 1))

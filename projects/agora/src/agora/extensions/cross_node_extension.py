@@ -22,15 +22,15 @@ Authority: organs/D-Gateway/AGENTS.md
 # 外延 ≝ {d | d ∈ D-Gateway ∧ federates(d, Extension)}
 # 功能 ⊢ {Extension_Advertisement, Cross_Node_Query, Secure_Transfer, Reputation}
 # =============================================================================
-import asyncio
-import hashlib
-import json
-import logging
-import time
-import zipfile
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any
+import asyncio  # noqa: E402
+import hashlib  # noqa: E402
+import json  # noqa: E402
+import logging  # noqa: E402
+import time  # noqa: E402
+import zipfile  # noqa: E402
+from dataclasses import dataclass, field  # noqa: E402
+from pathlib import Path  # noqa: E402
+from typing import Any  # noqa: E402
 
 _log = logging.getLogger(__name__)
 
@@ -122,7 +122,9 @@ class CrossNodeExtensionDiscovery:
         node_id: str | None = None,
         local_extensions_dir: Path = Path("config/extensions"),
     ) -> None:
-        super().__init__(metadata_path="organs/D-Gateway/organs/cross_node_extension_discovery.py")
+        super().__init__(
+            metadata_path="organs/D-Gateway/organs/cross_node_extension_discovery.py"
+        )
 
         self.node_id = node_id
         self.local_extensions_dir = local_extensions_dir
@@ -334,11 +336,20 @@ class CrossNodeExtensionDiscovery:
 
             return discovered
 
-        except (AttributeError, KeyError, OSError, RuntimeError, TypeError, ValueError) as e:
+        except (
+            AttributeError,
+            KeyError,
+            OSError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+        ) as e:
             _log.error("Discovery failed: %s", e)
             return []
 
-    async def search_by_capability(self, capability: str, min_reputation: float = 0.5) -> list[NodeExtensionInfo]:
+    async def search_by_capability(
+        self, capability: str, min_reputation: float = 0.5
+    ) -> list[NodeExtensionInfo]:
         """Search for extensions with specific capability."""
         query = DiscoveryQuery(
             capabilities=[capability],
@@ -391,7 +402,9 @@ class CrossNodeExtensionDiscovery:
             # Request transfer
             router = await self._get_federation_router()
             if not router:
-                return TransferResult(success=False, error="Federation router not available")
+                return TransferResult(
+                    success=False, error="Federation router not available"
+                )
 
             request = {
                 "type": "extension_transfer",
@@ -472,7 +485,14 @@ class CrossNodeExtensionDiscovery:
                 error=str(e),
                 transfer_time_ms=(time.time() - start_time) * 1000,
             )
-        except (AttributeError, OSError, RuntimeError, TypeError, ValueError, zipfile.BadZipFile) as e:
+        except (
+            AttributeError,
+            OSError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+            zipfile.BadZipFile,
+        ) as e:
             _log.exception("Transfer failed: %s", e)
             return TransferResult(
                 success=False,

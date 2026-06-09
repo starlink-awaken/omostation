@@ -81,7 +81,10 @@ def estimate_cost(
         input  = $0.15 / million tokens
         output = $0.60 / million tokens
     """
-    return input_tokens / 1_000_000 * input_rate_per_m + output_tokens / 1_000_000 * output_rate_per_m
+    return (
+        input_tokens / 1_000_000 * input_rate_per_m
+        + output_tokens / 1_000_000 * output_rate_per_m
+    )
 
 
 def _parse_period(period: str) -> datetime:
@@ -238,7 +241,9 @@ class ResourceAccountDB:
         total["by_service"] = [dict(r) for r in by_service]
         total["period"] = period
         total["avg_cost_per_call"] = (
-            round(total["total_cost"] / total["total_calls"], 6) if total["total_calls"] > 0 else 0.0
+            round(total["total_cost"] / total["total_calls"], 6)
+            if total["total_calls"] > 0
+            else 0.0
         )
         return total
 
@@ -249,7 +254,11 @@ class ResourceAccountDB:
             Dict with: caller_id, total_cost, today_cost
         """
         conn = self._get_conn()
-        today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+        today_start = (
+            datetime.now(UTC)
+            .replace(hour=0, minute=0, second=0, microsecond=0)
+            .isoformat()
+        )
 
         total = conn.execute(
             "SELECT COALESCE(SUM(cost_usd), 0.0) AS total_cost FROM calls WHERE caller_id = ?",

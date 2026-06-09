@@ -17,25 +17,27 @@ Authority: nucleus/Z-Core/L0-Genome/R0-ACT-SYS-AX01-10_holographic_metadata_axio
 # 功能 ⊢ {Api_Routing, Routing_Mixin, Mixin_Init}
 # =============================================================================
 
-import contextvars
-import json
-import logging
-import time as _time_module
-from collections.abc import Awaitable, Callable, Set
-from typing import Any, Protocol, cast
+import contextvars  # noqa: E402
+import json  # noqa: E402
+import logging  # noqa: E402
+import time as _time_module  # noqa: E402
+from collections.abc import Awaitable, Callable, Set  # noqa: E402
+from typing import Any, Protocol, cast  # noqa: E402
 
-from aiohttp import web  # pyright: ignore[reportMissingImports]
+from aiohttp import web  # pyright: ignore[reportMissingImports]  # noqa: E402
 
 # Tracing module is optional; if unavailable, tracing functions are no-ops.
 _Tracing = cast(Any, None)
 _clear_trace_impl = None
 _start_trace_impl = None
 _TRACING_AVAILABLE = False
-_tc_var: contextvars.ContextVar[Any] = contextvars.ContextVar("trace_context", default=None)
+_tc_var: contextvars.ContextVar[Any] = contextvars.ContextVar(
+    "trace_context", default=None
+)
 
-from .api_types import APIRequest, APIResponse, APIRoute, HTTPMethod  # noqa: F401
-from .auth_models import AuthenticationError
-from .interfaces import IOAuth2Server, IRateLimiter
+from .api_types import APIRequest, APIResponse, APIRoute  # noqa: E402
+from .auth_models import AuthenticationError  # noqa: E402
+from .interfaces import IOAuth2Server, IRateLimiter  # noqa: E402
 
 _log = logging.getLogger(__name__)
 _tracing_available = _TRACING_AVAILABLE
@@ -68,7 +70,9 @@ class _GatewayRoutingSelf(Protocol):
     _oauth2_server: IOAuth2Server
     _rate_limiter: IRateLimiter
 
-    def _create_handler(self, route: APIRoute) -> Callable[[web.Request], Awaitable[web.StreamResponse]]: ...
+    def _create_handler(
+        self, route: APIRoute
+    ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]: ...
     def _inc(self, key: str, amount: int = 1) -> None: ...
     def _record_latency(self, latency_ms: float) -> None: ...
     def _extract_token(self, request: web.Request) -> str | None: ...
@@ -93,7 +97,9 @@ class _APIRoutingMixin:
 
         # 为 aiohttp 注册路由处理器
         for method in route.methods:
-            self._app.router.add_route(method.value, route.path, self._create_handler(route))
+            self._app.router.add_route(
+                method.value, route.path, self._create_handler(route)
+            )
 
     def _create_handler(
         self: _GatewayRoutingSelf, route: APIRoute
@@ -300,10 +306,17 @@ class _APIRoutingMixin:
             return response
 
         self._app.middlewares.extend(
-            [error_middleware, cors_middleware, request_logging_middleware, version_middleware]
+            [
+                error_middleware,
+                cors_middleware,
+                request_logging_middleware,
+                version_middleware,
+            ]
         )
 
-    def _find_route(self: _GatewayRoutingSelf, path: str, method: str) -> APIRoute | None:
+    def _find_route(
+        self: _GatewayRoutingSelf, path: str, method: str
+    ) -> APIRoute | None:
         """查找匹配的路由"""
         for route in self._routes.values():
             if method in [m.value for m in route.methods]:

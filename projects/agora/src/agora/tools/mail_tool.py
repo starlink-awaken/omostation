@@ -35,20 +35,20 @@ Extracted metadata is injected into FactGraph as subject-predicate-object triple
 """
 
 
-import email
-import imaplib
-import logging
-import os
-import smtplib
-import ssl
-from datetime import datetime
-from email.errors import MessageError
-from email.header import decode_header
-from email.message import EmailMessage
-from typing import Any
+import email  # noqa: E402
+import imaplib  # noqa: E402
+import logging  # noqa: E402
+import os  # noqa: E402
+import smtplib  # noqa: E402
+import ssl  # noqa: E402
+from datetime import datetime  # noqa: E402
+from email.errors import MessageError  # noqa: E402
+from email.header import decode_header  # noqa: E402
+from email.message import EmailMessage  # noqa: E402
+from typing import Any  # noqa: E402
 
-from agora.mcp.interfaces.base_tool import BaseTool  # type: ignore[import-not-found]
-from agora.mcp.interfaces.tool_interface_contract import (  # type: ignore[import-not-found]
+from agora.mcp.interfaces.base_tool import BaseTool  # type: ignore[import-not-found]  # noqa: E402
+from agora.mcp.interfaces.tool_interface_contract import (  # type: ignore[import-not-found]  # noqa: E402
     ToolConfig,
     ToolRequest,
     ToolResult,
@@ -106,8 +106,25 @@ def _inject_factgraph(triples: list[dict[str, Any]]) -> None:
 # Sentiment analysis (keyword-based)
 # ---------------------------------------------------------------------------
 
-_SENTIMENT_POSITIVE = {"thanks", "great", "excellent", "happy", "appreciate", "wonderful", "love"}
-_SENTIMENT_NEGATIVE = {"sorry", "issue", "problem", "fail", "urgent", "broken", "error", "disappointed"}
+_SENTIMENT_POSITIVE = {
+    "thanks",
+    "great",
+    "excellent",
+    "happy",
+    "appreciate",
+    "wonderful",
+    "love",
+}
+_SENTIMENT_NEGATIVE = {
+    "sorry",
+    "issue",
+    "problem",
+    "fail",
+    "urgent",
+    "broken",
+    "error",
+    "disappointed",
+}
 
 
 def _analyze_sentiment(text: str) -> str:
@@ -211,11 +228,19 @@ class MailTool(BaseTool):
         oauth2_token_path: str | None = None,
         provider: str = "gmail",
     ) -> None:
-        super().__init__(config=config or ToolConfig(name="mail_inbox", mcp_namespace="mail_inbox"))
-        self._imap_host = imap_host or os.environ.get("MAIL_IMAP_HOST", "imap.gmail.com")
-        self._smtp_host = smtp_host or os.environ.get("MAIL_SMTP_HOST", "smtp.gmail.com")
+        super().__init__(
+            config=config or ToolConfig(name="mail_inbox", mcp_namespace="mail_inbox")
+        )
+        self._imap_host = imap_host or os.environ.get(
+            "MAIL_IMAP_HOST", "imap.gmail.com"
+        )
+        self._smtp_host = smtp_host or os.environ.get(
+            "MAIL_SMTP_HOST", "smtp.gmail.com"
+        )
         self._email_address = email_address or os.environ.get("MAIL_EMAIL_ADDRESS", "")
-        self._oauth2_token_path = oauth2_token_path or os.environ.get("MAIL_OAUTH2_TOKEN_PATH", "")
+        self._oauth2_token_path = oauth2_token_path or os.environ.get(
+            "MAIL_OAUTH2_TOKEN_PATH", ""
+        )
         self._provider = provider.lower()
         self._imap_conn: imaplib.IMAP4_SSL | imaplib.IMAP4 | None = None
         self._smtp_conn: smtplib.SMTP | smtplib.SMTP_SSL | None = None
@@ -273,7 +298,9 @@ class MailTool(BaseTool):
 
         context = ssl.create_default_context()
         if self._provider == "gmail":
-            conn: smtplib.SMTP | smtplib.SMTP_SSL = smtplib.SMTP_SSL(self._smtp_host, 465, context=context)
+            conn: smtplib.SMTP | smtplib.SMTP_SSL = smtplib.SMTP_SSL(
+                self._smtp_host, 465, context=context
+            )
         else:
             conn = smtplib.SMTP(self._smtp_host, 587)
             try:
@@ -290,7 +317,9 @@ class MailTool(BaseTool):
         if self._oauth2_access_token:
             conn.ehlo()
             if self._provider == "gmail" and _HAS_GOOGLE_AUTH:
-                auth_str = _xoauth2_string(self._email_address, self._oauth2_access_token)
+                auth_str = _xoauth2_string(
+                    self._email_address, self._oauth2_access_token
+                )
                 conn.auth("XOAUTH2", lambda ___auth_str___=auth_str: ___auth_str___)  # type: ignore[arg-type]
             elif self._provider == "outlook" and _HAS_MSAL:
                 token = self._load_outlook_token()
@@ -325,7 +354,9 @@ class MailTool(BaseTool):
         if not _HAS_GOOGLE_AUTH or _GoogleCredentials is None:
             return False
         try:
-            creds = _GoogleCredentials.from_authorized_user_file(self._oauth2_token_path)
+            creds = _GoogleCredentials.from_authorized_user_file(
+                self._oauth2_token_path
+            )
             if creds and creds.refresh_token and not creds.valid:
                 req = _GoogleRequest()
                 creds.refresh(req)
@@ -394,7 +425,9 @@ class MailTool(BaseTool):
                 return []
             result = []
             for folder in folders:
-                decoded = _decode_header_str(_decode_str(folder) if isinstance(folder, bytes) else str(folder))
+                decoded = _decode_header_str(
+                    _decode_str(folder) if isinstance(folder, bytes) else str(folder)
+                )
                 result.append(decoded)
             return result
         except Exception as exc:
@@ -433,7 +466,8 @@ class MailTool(BaseTool):
                 mid_b = mid if isinstance(mid, bytes) else mid
                 try:
                     status, msg_data = conn.fetch(
-                        str(mid_b, "utf-8") if isinstance(mid_b, bytes) else mid_b, "(RFC822)"
+                        str(mid_b, "utf-8") if isinstance(mid_b, bytes) else mid_b,
+                        "(RFC822)",
                     )
                     if status != "OK":
                         continue
@@ -488,8 +522,16 @@ class MailTool(BaseTool):
                 msg_id = e.get("message_id") or e.get("email_id", "")
                 triples.extend(
                     [
-                        {"subject": f"email:{msg_id}", "predicate": "from", "object": e.get("from", "")},
-                        {"subject": f"email:{msg_id}", "predicate": "has_subject", "object": e.get("subject", "")},
+                        {
+                            "subject": f"email:{msg_id}",
+                            "predicate": "from",
+                            "object": e.get("from", ""),
+                        },
+                        {
+                            "subject": f"email:{msg_id}",
+                            "predicate": "has_subject",
+                            "object": e.get("subject", ""),
+                        },
                         {
                             "subject": f"email:{msg_id}",
                             "predicate": "sentiment",
@@ -572,7 +614,14 @@ class MailTool(BaseTool):
         bcc: str,
         attachments: list[str],
     ) -> ToolResult:
-        result = self.send_email(to=to, subject=subject, body=body, cc=cc, bcc=bcc, attachments=attachments or [])
+        result = self.send_email(
+            to=to,
+            subject=subject,
+            body=body,
+            cc=cc,
+            bcc=bcc,
+            attachments=attachments or [],
+        )
         return ToolResult(
             success=result.get("success", False),
             data=result,
@@ -623,7 +672,8 @@ class MailTool(BaseTool):
                 mid_b = mid if isinstance(mid, bytes) else mid
                 try:
                     status, msg_data = conn.fetch(
-                        str(mid_b, "utf-8") if isinstance(mid_b, bytes) else mid_b, "(RFC822)"
+                        str(mid_b, "utf-8") if isinstance(mid_b, bytes) else mid_b,
+                        "(RFC822)",
                     )
                     if status != "OK":
                         continue
@@ -662,7 +712,12 @@ class MailTool(BaseTool):
         emails = self.search_emails(query=query, folder=folder, limit=limit)
         return ToolResult(
             success=True,
-            data={"emails": emails, "count": len(emails), "query": query, "folder": folder},
+            data={
+                "emails": emails,
+                "count": len(emails),
+                "query": query,
+                "folder": folder,
+            },
             status=ToolStatus.SUCCESS,
         )
 

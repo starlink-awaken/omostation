@@ -10,7 +10,7 @@ def cmd_identity(args):
     """Identity CA management."""
     from agora.auth.identity_ca import IdentityCA  # type: ignore[import-not-found]
 
-    out = OutputFormatter(json_mode=getattr(args, 'json', False))
+    out = OutputFormatter(json_mode=getattr(args, "json", False))
     try:
         ca = IdentityCA()
         if args.identity_cmd == "init":
@@ -36,11 +36,13 @@ def cmd_identity(args):
             v = ca.verify_identity(args.subject_id)
             if v.get("valid"):
                 print(f"Subject '{args.subject_id}' is VALID")
-                ident = v.get('identity', {})
+                ident = v.get("identity", {})
                 print(f"   Type:     {ident.get('subject_type', '?')}")
                 print(f"   Issuer:   {ident.get('issuer', '?')}")
             else:
-                print(f"Subject '{args.subject_id}' is INVALID: {v.get('reason', 'unknown')}")
+                print(
+                    f"Subject '{args.subject_id}' is INVALID: {v.get('reason', 'unknown')}"
+                )
         elif args.identity_cmd == "revoke":
             ca.revoke_identity(args.subject_id)
             out.print_success(f"Revoked: {args.subject_id}")
@@ -48,7 +50,9 @@ def cmd_identity(args):
             idents = ca.list_identities(tenant=args.tenant)
             for i in idents:
                 status = "REVOKED" if i.get("revoked") else "active"
-                print(f"  {i.get('subject_id', '?'):30s} {i.get('subject_type', '?'):8s} {status:8s} t:{i.get('tenant', '?'):15s} {i.get('expires_at', '?')}")
+                print(
+                    f"  {i.get('subject_id', '?'):30s} {i.get('subject_type', '?'):8s} {status:8s} t:{i.get('tenant', '?'):15s} {i.get('expires_at', '?')}"
+                )
         return 0
     except CLIError as e:
         out.print_error(e.message, e.suggestion)

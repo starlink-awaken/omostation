@@ -35,13 +35,13 @@ FamilyHiveNetwork - 联邦网络管理器
 实现多节点P2P通信，支持节点发现、心跳维持、消息广播
 """
 
-import asyncio
-import uuid
-from collections.abc import Callable
-from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
-from enum import StrEnum
-from typing import Any
+import asyncio  # noqa: E402
+import uuid  # noqa: E402
+from collections.abc import Callable  # noqa: E402
+from dataclasses import dataclass, field  # noqa: E402
+from datetime import UTC, datetime, timedelta  # noqa: E402
+from enum import StrEnum  # noqa: E402
+from typing import Any  # noqa: E402
 
 
 class NodeRole(StrEnum):
@@ -112,7 +112,11 @@ class FamilyHiveNetwork:
     OFFLINE_THRESHOLD = 90  # 秒无心跳视为离线
 
     def __init__(
-        self, node_id: str | None = None, role: NodeRole = NodeRole.SECONDARY, endpoint: str = "", public_key: str = ""
+        self,
+        node_id: str | None = None,
+        role: NodeRole = NodeRole.SECONDARY,
+        endpoint: str = "",
+        public_key: str = "",
     ) -> None:
         """初始化FamilyHive网络
 
@@ -140,7 +144,12 @@ class FamilyHiveNetwork:
         self._tasks: list[asyncio.Task] = []
 
         # 统计
-        self._stats = {"msgs_sent": 0, "msgs_received": 0, "heartbeats_sent": 0, "heartbeats_received": 0}
+        self._stats = {
+            "msgs_sent": 0,
+            "msgs_received": 0,
+            "heartbeats_sent": 0,
+            "heartbeats_received": 0,
+        }
 
     # ==================== 网络生命周期 ====================
 
@@ -186,7 +195,9 @@ class FamilyHiveNetwork:
         Returns:
             是否成功加入
         """
-        print(f"[FamilyHive] Joining network via {len(bootstrap_nodes)} bootstrap nodes")
+        print(
+            f"[FamilyHive] Joining network via {len(bootstrap_nodes)} bootstrap nodes"
+        )
 
         # 尝试连接种子节点
         for endpoint in bootstrap_nodes:
@@ -214,7 +225,9 @@ class FamilyHiveNetwork:
 
     # ==================== 消息通信 ====================
 
-    async def broadcast(self, msg_type: str, payload: dict[str, Any], exclude: set[str] | None = None) -> int:
+    async def broadcast(
+        self, msg_type: str, payload: dict[str, Any], exclude: set[str] | None = None
+    ) -> int:
         """广播消息
 
         Args:
@@ -249,7 +262,9 @@ class FamilyHiveNetwork:
         self._stats["msgs_sent"] += sent
         return sent
 
-    async def send_to(self, target_node: str, msg_type: str, payload: dict[str, Any]) -> bool:
+    async def send_to(
+        self, target_node: str, msg_type: str, payload: dict[str, Any]
+    ) -> bool:
         """发送消息到指定节点
 
         Args:
@@ -265,7 +280,12 @@ class FamilyHiveNetwork:
             return False
 
         msg = HiveMessage(
-            msg_id=str(uuid.uuid4()), msg_type=msg_type, source=self.node_id, target=target_node, payload=payload, ttl=3
+            msg_id=str(uuid.uuid4()),
+            msg_type=msg_type,
+            source=self.node_id,
+            target=target_node,
+            payload=payload,
+            ttl=3,
         )
 
         try:
@@ -276,7 +296,9 @@ class FamilyHiveNetwork:
             print(f"[FamilyHive] Failed to send to {target_node}: {e}")
             return False
 
-    def register_handler(self, msg_type: str, handler: Callable[[HiveMessage], None]) -> None:
+    def register_handler(
+        self, msg_type: str, handler: Callable[[HiveMessage], None]
+    ) -> None:
         """注册消息处理器"""
         if msg_type not in self._handlers:
             self._handlers[msg_type] = []
@@ -291,7 +313,11 @@ class FamilyHiveNetwork:
         node_id = f"node_{endpoint.replace(':', '_')}"
 
         self._nodes[node_id] = NodeInfo(
-            node_id=node_id, role=NodeRole.SECONDARY, endpoint=endpoint, public_key="", status=NodeStatus.ONLINE
+            node_id=node_id,
+            role=NodeRole.SECONDARY,
+            endpoint=endpoint,
+            public_key="",
+            status=NodeStatus.ONLINE,
         )
         self._peers.add(node_id)
 
@@ -313,7 +339,11 @@ class FamilyHiveNetwork:
             try:
                 await self.broadcast(
                     "heartbeat",
-                    {"node_id": self.node_id, "timestamp": datetime.now(UTC).isoformat(), "role": self.role.value},
+                    {
+                        "node_id": self.node_id,
+                        "timestamp": datetime.now(UTC).isoformat(),
+                        "role": self.role.value,
+                    },
                 )
                 self._stats["heartbeats_sent"] += 1
             except (OSError, ConnectionError, TimeoutError) as e:

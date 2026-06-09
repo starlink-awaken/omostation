@@ -34,7 +34,9 @@ def tool_calendar_list_calendars(params: dict, ctx: Any) -> dict:
     try:
         tool = CalendarTool(platform=_detect_platform())
         tool.initialize()
-        result = tool.execute(ToolRequest(tool_name="calendar", action="list_calendars", params={}))
+        result = tool.execute(
+            ToolRequest(tool_name="calendar", action="list_calendars", params={})
+        )
         return {
             "calendars": result.data,
             "count": result.metadata.get("count", 0),
@@ -105,7 +107,9 @@ def tool_calendar_update_event(params: dict, ctx: Any) -> dict:
     try:
         tool = CalendarTool(platform=_detect_platform())
         tool.initialize()
-        result = tool.execute(ToolRequest(tool_name="calendar", action="update_event", params=params))
+        result = tool.execute(
+            ToolRequest(tool_name="calendar", action="update_event", params=params)
+        )
         return {"event": result.data, "success": result.success, "error": result.error}
     except Exception as exc:
         return {"event": None, "success": False, "error": str(exc)}
@@ -145,7 +149,9 @@ def tool_calendar_check_conflicts(params: dict, ctx: Any) -> dict:
         )
         data = result.data
         return {
-            "has_conflicts": bool(data.get("has_conflicts") if isinstance(data, dict) else False),
+            "has_conflicts": bool(
+                data.get("has_conflicts") if isinstance(data, dict) else False
+            ),
             "conflicts": data.get("conflicts", []) if isinstance(data, dict) else [],
             "count": data.get("count", 0) if isinstance(data, dict) else 0,
             "success": result.success,

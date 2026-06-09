@@ -16,7 +16,9 @@ from agora.types import AgentMessage, ContextRef  # type: ignore[import-not-foun
 class ContextData:
     """In-memory representation of a shared space context."""
 
-    def __init__(self, shared_space_id: str, metadata: dict[str, Any] | None = None) -> None:
+    def __init__(
+        self, shared_space_id: str, metadata: dict[str, Any] | None = None
+    ) -> None:
         self.shared_space_id = shared_space_id
         self.messages: list[AgentMessage] = []
         self.artifacts: dict[str, str] = {}
@@ -55,7 +57,9 @@ class ContextManager:
         ctx.messages.append(message)
         ctx.updated_at = int(time.time() * 1000)
 
-    async def get_messages(self, space_id: str, limit: int | None = None) -> list[AgentMessage]:
+    async def get_messages(
+        self, space_id: str, limit: int | None = None
+    ) -> list[AgentMessage]:
         """Get messages from a shared space, optionally limited to the most recent N."""
         ctx = await self.get_shared_space(space_id)
         if ctx is None:

@@ -23,16 +23,16 @@ Authority: organs/D-Gateway/AGENTS.md
 # 外延 ≝ {g | g ∈ D-Gateway ∧ manages(g, Git_Extension)}
 # 功能 ⊢ {Git_Clone, Version_Resolution, Auto_Update, Manifest_Validation}
 # =============================================================================
-import logging
-import os
-import re
-import shutil
-import subprocess
-import tempfile
-import time
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
+import logging  # noqa: E402
+import os  # noqa: E402
+import re  # noqa: E402
+import shutil  # noqa: E402
+import subprocess  # noqa: E402
+import tempfile  # noqa: E402
+import time  # noqa: E402
+from dataclasses import dataclass  # noqa: E402
+from pathlib import Path  # noqa: E402
+from typing import Any  # noqa: E402
 
 _log = logging.getLogger(__name__)
 
@@ -123,7 +123,9 @@ class ExtensionGitIntegration:
         except (OSError, subprocess.SubprocessError, ValueError):
             return False
 
-    def _run_git(self, args: list[str], cwd: Path | None = None, env: dict | None = None) -> tuple[int, str, str]:
+    def _run_git(
+        self, args: list[str], cwd: Path | None = None, env: dict | None = None
+    ) -> tuple[int, str, str]:
         """Run git command."""
         cmd = [self.git_executable] + args
 
@@ -152,7 +154,9 @@ class ExtensionGitIntegration:
     # Clone Operations
     # =====================================================================
 
-    def clone(self, source: GitSource, target_name: str | None = None) -> GitCloneResult:
+    def clone(
+        self, source: GitSource, target_name: str | None = None
+    ) -> GitCloneResult:
         """
         Clone an extension from Git repository.
 
@@ -361,7 +365,11 @@ class ExtensionGitIntegration:
                 ref=metadata["ref"],
                 auth_token=metadata.get("auth_token"),
             )
-            env = self._setup_git_auth(source.url, source.auth_token) if source.auth_token else None
+            env = (
+                self._setup_git_auth(source.url, source.auth_token)
+                if source.auth_token
+                else None
+            )
 
             returncode, _, stderr = self._run_git(
                 ["fetch", "origin", source.ref],
@@ -423,7 +431,14 @@ class ExtensionGitIntegration:
                 changes=changes,
             )
 
-        except (AttributeError, KeyError, OSError, RuntimeError, TypeError, ValueError) as e:
+        except (
+            AttributeError,
+            KeyError,
+            OSError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+        ) as e:
             _log.exception("Sync failed: %s", e)
             return GitSyncResult(
                 success=False,
@@ -502,7 +517,14 @@ class ExtensionGitIntegration:
                 manifest=manifest,
             )
 
-        except (AttributeError, KeyError, OSError, RuntimeError, TypeError, ValueError) as e:
+        except (
+            AttributeError,
+            KeyError,
+            OSError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+        ) as e:
             return GitCloneResult(
                 success=False,
                 error=str(e),
@@ -624,7 +646,9 @@ class ExtensionGitIntegration:
         except (OSError, TypeError, ValueError, json.JSONDecodeError):
             return None
 
-    def _store_git_metadata(self, path: Path, source: GitSource, commit_hash: str) -> None:
+    def _store_git_metadata(
+        self, path: Path, source: GitSource, commit_hash: str
+    ) -> None:
         """Store git metadata."""
         import json
 
@@ -761,9 +785,9 @@ class ExtensionGitIntegration:
         if not base_match or not cand_match:
             return False
 
-        return base_match.group("major") == cand_match.group("major") and base_match.group("minor") == cand_match.group(
-            "minor"
-        )
+        return base_match.group("major") == cand_match.group(
+            "major"
+        ) and base_match.group("minor") == cand_match.group("minor")
 
     def _compare_versions(self, v1: str, v2: str) -> int:
         """Compare two versions. Returns -1, 0, or 1."""

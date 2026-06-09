@@ -20,9 +20,9 @@ sys.modules["runtime.executor.config"] = _mock_runtime_config
 sys.modules["runtime.executor.engine"] = _mock_runtime_engine
 
 # Now safe to import
-from cockpit import agent_runtime_server
-import pytest
 from fastapi.testclient import TestClient
+
+from cockpit import agent_runtime_server
 
 
 class TestCreateApp:
@@ -50,7 +50,7 @@ class TestCreateApp:
 
     def test_health_bypasses_auth(self):
         """GET /health 有认证配置仍应放行"""
-        app = self._make_app(auth_token="test-token")
+        app = self._make_app(auth_token="test-token")  # noqa: S106
         client = TestClient(app)
         response = client.get("/health")
         assert response.status_code == 200
@@ -127,11 +127,13 @@ class TestCreateApp:
         # 始终返回 tool_calls 使循环耗尽
         responses = []
         for _ in range(30):
-            responses.append({
-                "content": "calling tool",
-                "finish_reason": "tool_calls",
-                "tool_calls": [{"id": "1", "function": {"name": "always_call", "arguments": "{}"}}],
-            })
+            responses.append(
+                {
+                    "content": "calling tool",
+                    "finish_reason": "tool_calls",
+                    "tool_calls": [{"id": "1", "function": {"name": "always_call", "arguments": "{}"}}],
+                }
+            )
         mock_rt._call_llm.side_effect = responses
         mock_rt._execute_tool.return_value = {"role": "tool", "content": "data"}
         _mock_runtime_engine.AgentRuntime.return_value = mock_rt
@@ -200,9 +202,7 @@ class TestCreateApp:
 
             app = agent_runtime_server.create_app()
             client = TestClient(app)
-            response = client.post(
-                "/chat", json={"message": "hi"}, headers={"Authorization": "Bearer secret"}
-            )
+            response = client.post("/chat", json={"message": "hi"}, headers={"Authorization": "Bearer secret"})
             assert response.status_code == 200
             assert response.json()["response"] == "authorized"
 
@@ -216,7 +216,5 @@ class TestCreateApp:
 
             app = agent_runtime_server.create_app()
             client = TestClient(app)
-            response = client.post(
-                "/chat", json={"message": "hi"}, headers={"Authorization": "Bearer wrong"}
-            )
+            response = client.post("/chat", json={"message": "hi"}, headers={"Authorization": "Bearer wrong"})
             assert response.status_code == 401

@@ -38,9 +38,7 @@ class AgentMessage:
         self.error = error
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            k: v for k, v in self.__dict__.items() if v is not None
-        }
+        return {k: v for k, v in self.__dict__.items() if v is not None}
 
 
 class AgentAdapter(ABC):
@@ -75,8 +73,8 @@ class AgentAdapter(ABC):
     async def health(self) -> bool: ...
 
 
-import uuid
-from collections.abc import AsyncGenerator
+import uuid  # noqa: E402
+from collections.abc import AsyncGenerator  # noqa: E402
 
 
 class ClaudeCodeAdapter(AgentAdapter):
@@ -100,8 +98,12 @@ class ClaudeCodeAdapter(AgentAdapter):
     @property
     def capabilities(self) -> list[str]:
         return [
-            "code-generation", "code-review", "debugging",
-            "refactoring", "documentation", "file-operations",
+            "code-generation",
+            "code-review",
+            "debugging",
+            "refactoring",
+            "documentation",
+            "file-operations",
         ]
 
     async def invoke(self, request: AgentMessage) -> AgentMessage:
@@ -111,7 +113,8 @@ class ClaudeCodeAdapter(AgentAdapter):
 
         try:
             proc = await asyncio.create_subprocess_exec(
-                self._cli_path, "-p",
+                self._cli_path,
+                "-p",
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
@@ -142,7 +145,8 @@ class ClaudeCodeAdapter(AgentAdapter):
     async def health(self) -> bool:
         try:
             proc = await asyncio.create_subprocess_exec(
-                self._cli_path, "--version",
+                self._cli_path,
+                "--version",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -181,7 +185,9 @@ class OpenClawAdapter(AgentAdapter):
 
         try:
             proc = await asyncio.create_subprocess_exec(
-                self._cli_path, "--task", task,
+                self._cli_path,
+                "--task",
+                task,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -209,8 +215,10 @@ class OpenClawAdapter(AgentAdapter):
     async def health(self) -> bool:
         try:
             proc = await asyncio.create_subprocess_exec(
-                self._cli_path, "--version",
-                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+                self._cli_path,
+                "--version",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
             await asyncio.wait_for(proc.wait(), timeout=5)
             return proc.returncode == 0
@@ -260,7 +268,9 @@ class ProcessAdapter(AgentAdapter):
 
         try:
             proc = await asyncio.create_subprocess_exec(
-                self._command, *self._args, task,
+                self._command,
+                *self._args,
+                task,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 env={**__import__("os").environ, **(self._env or {})},
@@ -290,8 +300,10 @@ class ProcessAdapter(AgentAdapter):
         for flag in ("--version", "-v"):
             try:
                 proc = await asyncio.create_subprocess_exec(
-                    self._command, flag,
-                    stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+                    self._command,
+                    flag,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
                 )
                 await asyncio.wait_for(proc.wait(), timeout=5)
                 if proc.returncode == 0:

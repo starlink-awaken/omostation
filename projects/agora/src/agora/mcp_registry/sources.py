@@ -12,7 +12,9 @@ from agora.mcp_registry.evaluator import QualityScorer  # type: ignore[import-no
 
 logger = structlog.get_logger(__name__)
 
-_DEFAULT_REGISTRY_URL = "https://raw.githubusercontent.com/starlink-awaken/mcp-registry/main/registry.json"
+_DEFAULT_REGISTRY_URL = (
+    "https://raw.githubusercontent.com/starlink-awaken/mcp-registry/main/registry.json"
+)
 _GITHUB_API = "https://api.github.com"
 
 
@@ -91,7 +93,9 @@ async def search_github(
                     "language": language,
                     "updated_at": item.get("updated_at", ""),
                     "open_issues": item.get("open_issues_count", 0),
-                    "license": item.get("license", {}).get("spdx_id", "") if item.get("license") else "",
+                    "license": item.get("license", {}).get("spdx_id", "")
+                    if item.get("license")
+                    else "",
                 },
             }
         )
@@ -199,7 +203,11 @@ async def search_all(
         "registry": search_registry,
     }
 
-    tasks = [source_map[source_name]() for source_name in sources if source_name in source_map]
+    tasks = [
+        source_map[source_name]()
+        for source_name in sources
+        if source_name in source_map
+    ]
     if not tasks:
         logger.warning("search_all_no_valid_sources", sources=sources)
         return []

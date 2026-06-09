@@ -184,14 +184,24 @@ class ProxyManager:
             await self.registry.unregister_service(name)
 
         try:
-            client = create_client(name, mcp_endpoint, command, args, cwd=cwd, env=env, init_timeout=init_timeout)
+            client = create_client(
+                name,
+                mcp_endpoint,
+                command,
+                args,
+                cwd=cwd,
+                env=env,
+                init_timeout=init_timeout,
+            )
         except ValueError as e:
             logger.error("proxy_create_client_failed", service=name, error=str(e))
             return f"error: {str(e)[:100]}"
 
         ok = await self.registry.register_service(name, client)
         if ok:
-            count = len([e for e in self.registry.entries.values() if e.service_name == name])
+            count = len(
+                [e for e in self.registry.entries.values() if e.service_name == name]
+            )
             logger.info("proxy_service_connected", service=name, tools=count)
             return f"ok: {count} tools registered"
         else:
@@ -292,6 +302,7 @@ class ProxyManager:
     async def list_resources(self) -> list[dict]:
         """Aggregate resources from all connected/known downstream services."""
         import asyncio
+
         all_resources = []
         tasks = []
         # Connect lazy services if needed, but for list we only query currently connected ones to be fast
@@ -308,17 +319,17 @@ class ProxyManager:
 
     async def read_resource(self, uri: str) -> dict:
         """Route a resource read request based on its prefix.
-        
-        Currently tries all connected clients until one returns the resource, 
+
+        Currently tries all connected clients until one returns the resource,
         or we can use a prefix mapping. For now we will fan-out or route by known prefixes.
         """
         # Use MountRegistry to dynamically resolve routing instead of hardcoded if/else
         from agora.mcp.mount_registry import get_mount_registry
-        
+
         registry = get_mount_registry()
         # Fallback to simple prefixes mapping if not registered dynamically
         # In the future, everything should be registered through MountRegistry
-        
+
         service_name = registry.resolve_provider(uri)
         if not service_name:
             if uri.startswith("bos://omo/"):
@@ -339,9 +350,9 @@ class ProxyManager:
                 service_name = "minerva"
             elif uri.startswith("bos://forge/registry/"):
                 service_name = "forge"
-                
+
         if service_name:
-            if isinstance(service_name, str): # Downstream proxy client by service name
+            if isinstance(service_name, str):  # Downstream proxy client by service name
                 await self.ensure_connected(service_name)
                 client = self.registry._clients.get(service_name)
                 if client and client.connected:
@@ -349,7 +360,7 @@ class ProxyManager:
             else:
                 # If provider is a direct local handler (not implemented yet, but for future)
                 pass
-                
+
         # Fallback: broadcast to all connected
         for name, client in self.registry._clients.items():
             if name == service_name:
@@ -358,7 +369,10 @@ class ProxyManager:
                 res = await client.read_resource(uri)
                 if isinstance(res, dict) and "contents" in res:
                     return res
-        return {"status": "error", "error": f"Resource not found or no provider for: {uri}"}
+        return {
+            "status": "error",
+            "error": f"Resource not found or no provider for: {uri}",
+        }
 
     # ── Status ────────────────────────────────────────────────────────
 
@@ -386,7 +400,13 @@ class ProxyManager:
             services_info = {}
             for name in self.registry.known_services:
                 client = self.registry._clients.get(name)
-                tool_count = len([e for e in self.registry.entries.values() if e.service_name == name])
+                tool_count = len(
+                    [
+                        e
+                        for e in self.registry.entries.values()
+                        if e.service_name == name
+                    ]
+                )
                 services_info[name] = {
                     "connected": client.connected if client else False,
                     "tools": tool_count,

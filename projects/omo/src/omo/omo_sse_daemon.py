@@ -19,7 +19,7 @@ from omo.omo_daemon import run_once, _write_pid_file, _clear_pid_file, _setup_lo
 from omo.omo_paths import OMO_ROOT
 SSE_DAEMON_PORT = os.environ.get("OMO_SSE_DAEMON_PORT", "9091")
 
-from omo.omo_self_healing import get_healing_engine, start_http_status_server, start_hot_reload, notify_webhook
+from omo.omo_self_healing import get_healing_engine, start_http_status_server, start_hot_reload, notify_webhook  # noqa: E402
 
 DAEMON_PID_FILE = OMO_ROOT / ".omo" / "_delivery" / "sse_daemon.pid"
 DAEMON_LOG_FILE = OMO_ROOT / ".omo" / "_delivery" / "sse_daemon.log"

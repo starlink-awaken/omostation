@@ -27,14 +27,14 @@ Layer: L3
 MailAPIRoutes — optimized mail endpoints with <200ms response guarantee.
 """
 
-import asyncio
-import logging
-import sqlite3
-import time
-from typing import Any
+import asyncio  # noqa: E402
+import logging  # noqa: E402
+import sqlite3  # noqa: E402
+import time  # noqa: E402
+from typing import Any  # noqa: E402
 
-from . import _infrastructure as _infra
-from ._infrastructure import (  # type: ignore[import-not-found]
+from . import _infrastructure as _infra  # noqa: E402
+from ._infrastructure import (  # type: ignore[import-not-found]  # noqa: E402
     DatabaseIndexManager,
     OptimizedCache,
     performance_monitored,
@@ -89,7 +89,12 @@ class MailAPIRoutes:
             Today's email summary with metadata
         """
         cache_key = self._cache._generate_key(
-            "mail_today", {"category": category, "include_read": include_read, "date": time.strftime("%Y-%m-%d")}
+            "mail_today",
+            {
+                "category": category,
+                "include_read": include_read,
+                "date": time.strftime("%Y-%m-%d"),
+            },
         )
 
         # Try cache first
@@ -150,7 +155,12 @@ class MailAPIRoutes:
         }
 
         # Cache result
-        await self._cache.set(cache_key, result, ttl=_infra.REDIS_CACHE_TTL_SECONDS, tags=["mail", "today"])
+        await self._cache.set(
+            cache_key,
+            result,
+            ttl=_infra.REDIS_CACHE_TTL_SECONDS,
+            tags=["mail", "today"],
+        )
 
         return result
 
@@ -226,7 +236,9 @@ class MailAPIRoutes:
         }
 
         # Cache search results (shorter TTL for search)
-        await self._cache.set(cache_key, result, ttl=60, tags=["mail", "search", f"search:{query}"])
+        await self._cache.set(
+            cache_key, result, ttl=60, tags=["mail", "search", f"search:{query}"]
+        )
 
         return result
 
@@ -241,7 +253,9 @@ class MailAPIRoutes:
         try:
             with sqlite3.connect(_infra.FTS_DB_PATH) as conn:
                 # Use FTS5 match
-                fts_query = " OR ".join(f"{word}*" for word in query.split() if len(word) >= 2)
+                fts_query = " OR ".join(
+                    f"{word}*" for word in query.split() if len(word) >= 2
+                )
 
                 cursor = conn.execute(
                     """SELECT rowid, rank FROM email_fts
@@ -275,8 +289,13 @@ class MailAPIRoutes:
         """Get total count for search query."""
         try:
             with sqlite3.connect(_infra.FTS_DB_PATH) as conn:
-                fts_query = " OR ".join(f"{word}*" for word in query.split() if len(word) >= 2)
-                cursor = conn.execute("SELECT COUNT(*) FROM email_fts WHERE email_fts MATCH ?", (fts_query,))
+                fts_query = " OR ".join(
+                    f"{word}*" for word in query.split() if len(word) >= 2
+                )
+                cursor = conn.execute(
+                    "SELECT COUNT(*) FROM email_fts WHERE email_fts MATCH ?",
+                    (fts_query,),
+                )
                 return cursor.fetchone()[0]
         except sqlite3.Error:
             return 0
@@ -344,13 +363,18 @@ class MailAPIRoutes:
             "first_message_date": thread_meta.get("first_message_date"),
             "last_updated": thread_meta.get("last_updated"),
             "emails": pruned_emails,
-            "has_more_history": len(emails) >= history_limit if include_history else False,
+            "has_more_history": len(emails) >= history_limit
+            if include_history
+            else False,
         }
 
         # Cache if not full detail
         if detail_level != "full":
             await self._cache.set(
-                cache_key, result, ttl=_infra.REDIS_CACHE_TTL_SECONDS, tags=["mail", "thread", f"thread:{thread_id}"]
+                cache_key,
+                result,
+                ttl=_infra.REDIS_CACHE_TTL_SECONDS,
+                tags=["mail", "thread", f"thread:{thread_id}"],
             )
 
         return result
@@ -359,7 +383,9 @@ class MailAPIRoutes:
         """Get thread metadata."""
         with sqlite3.connect(_infra.MAIL_DB_PATH) as conn:
             conn.row_factory = sqlite3.Row
-            cursor = conn.execute("SELECT * FROM email_threads WHERE thread_id = ?", (thread_id,))
+            cursor = conn.execute(
+                "SELECT * FROM email_threads WHERE thread_id = ?", (thread_id,)
+            )
             row = cursor.fetchone()
             if row:
                 return dict(row)
@@ -444,7 +470,9 @@ class MailAPIRoutes:
                    ORDER BY received_date DESC LIMIT ?""",
                 (since_timestamp, since_timestamp, max_results),
             )
-            new_emails = [prune_email(dict(row), "minimal") for row in cursor.fetchall()]
+            new_emails = [
+                prune_email(dict(row), "minimal") for row in cursor.fetchall()
+            ]
 
             # Get updated read status
             cursor = conn.execute(

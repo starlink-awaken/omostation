@@ -119,7 +119,9 @@ class PipelineMetricsCollector:
         except Exception as e:
             logger.error("metrics_save_failed path=%s error=%s", filepath, e)
 
-    def record_pipeline_execution(self, pipeline_name: str, steps: list[dict[str, Any]], completed: bool) -> None:
+    def record_pipeline_execution(
+        self, pipeline_name: str, steps: list[dict[str, Any]], completed: bool
+    ) -> None:
         """
         记录Pipeline执行
 
@@ -203,7 +205,9 @@ class PipelineMetricsCollector:
         """
         return self.metrics.get_average_duration(pipeline_name)
 
-    def get_recent_executions(self, pipeline_name: str | None = None, limit: int = 10) -> list[PipelineExecution]:
+    def get_recent_executions(
+        self, pipeline_name: str | None = None, limit: int = 10
+    ) -> list[PipelineExecution]:
         """
         获取最近的执行记录
 
@@ -215,7 +219,11 @@ class PipelineMetricsCollector:
             执行记录列表
         """
         if pipeline_name:
-            recent = [exec for exec in self.metrics.recent_executions if exec.name == pipeline_name]
+            recent = [
+                exec
+                for exec in self.metrics.recent_executions
+                if exec.name == pipeline_name
+            ]
         else:
             recent = self.metrics.recent_executions
 
@@ -244,9 +252,13 @@ class PipelineMetricsCollector:
             [
                 {
                     "name": name,
-                    "average_duration": stats.get("total_duration", 0) / max(stats.get("total", 1), 1),
+                    "average_duration": stats.get("total_duration", 0)
+                    / max(stats.get("total", 1), 1),
                     "total_executions": stats.get("total", 0),
-                    "completion_rate": (stats.get("successful", 0) / max(stats.get("total", 1), 1)) * 100,
+                    "completion_rate": (
+                        stats.get("successful", 0) / max(stats.get("total", 1), 1)
+                    )
+                    * 100,
                 }
                 for name, stats in self.metrics.pipeline_stats.items()
             ],
@@ -304,7 +316,9 @@ def get_pipeline_collector() -> PipelineMetricsCollector:
 
 
 # 便捷函数
-def record_execution(pipeline_name: str, steps: list[dict[str, Any]], completed: bool) -> None:
+def record_execution(
+    pipeline_name: str, steps: list[dict[str, Any]], completed: bool
+) -> None:
     """记录Pipeline执行（便捷函数）"""
     collector = get_pipeline_collector()
     collector.record_pipeline_execution(pipeline_name, steps, completed)

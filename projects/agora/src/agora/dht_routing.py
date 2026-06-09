@@ -26,9 +26,9 @@ Authority: organs/D-Gateway/AGENTS.md
 # 功能 ⊢ {add_peer, remove_peer, find_closest, get_all_peers, peer_count}
 # =============================================================================
 
-import hashlib
-import logging
-from dataclasses import dataclass
+import hashlib  # noqa: E402
+import logging  # noqa: E402
+from dataclasses import dataclass  # noqa: E402
 
 _log = logging.getLogger(__name__)
 
@@ -121,7 +121,11 @@ class DHTRoutingTable:
         """Retrieve a specific peer by ID."""
         entry = self._peers.get(peer_id)
         if entry:
-            return {"peer_id": entry.peer_id, "address": entry.address, "port": entry.port}
+            return {
+                "peer_id": entry.peer_id,
+                "address": entry.address,
+                "port": entry.port,
+            }
         return None
 
     def remove_peer(self, peer_id: str) -> bool:
@@ -168,7 +172,10 @@ class DHTRoutingTable:
 
         Each dict contains: ``peer_id``, ``address``, ``port``.
         """
-        return [{"peer_id": e.peer_id, "address": e.address, "port": e.port} for e in self._peers.values()]
+        return [
+            {"peer_id": e.peer_id, "address": e.address, "port": e.port}
+            for e in self._peers.values()
+        ]
 
     def peer_count(self) -> int:
         """Number of peers currently in the routing table."""

@@ -12,7 +12,7 @@ Authority: organs/D-Gateway/AGENTS.md
 ---
 """
 
-import base64 as _base64
+import base64 as _base64  # noqa: E402
 
 # =============================================================================
 # 0. 形式化摘要 ≝
@@ -22,15 +22,15 @@ import base64 as _base64
 # 外延 ≝ {e | e ∈ D-Gateway ∧ implements(e, Oauth2Server)}
 # 功能 ⊢ {Oauth2_Server, Init_Oauth2, Validate_Server}
 # =============================================================================
-import hashlib
-import hmac
-import json as _json
-import logging
-import secrets
-import threading
-import time
-from datetime import UTC, datetime, timedelta
-from typing import Any
+import hashlib  # noqa: E402
+import hmac  # noqa: E402
+import json as _json  # noqa: E402
+import logging  # noqa: E402
+import secrets  # noqa: E402
+import threading  # noqa: E402
+import time  # noqa: E402
+from datetime import UTC, datetime, timedelta  # noqa: E402
+from typing import Any  # noqa: E402
 
 
 class _JWTShimInvalidTokenError(ValueError):
@@ -59,10 +59,16 @@ class _JWTShim:
         if algorithm != "HS256":
             raise _JWTShimInvalidTokenError(f"Unsupported algorithm: {algorithm}")
         header = {"alg": "HS256", "typ": "JWT"}
-        header_segment = _jwt_b64_encode(_json.dumps(header, separators=(",", ":"), sort_keys=True).encode("utf-8"))
-        payload_segment = _jwt_b64_encode(_json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8"))
+        header_segment = _jwt_b64_encode(
+            _json.dumps(header, separators=(",", ":"), sort_keys=True).encode("utf-8")
+        )
+        payload_segment = _jwt_b64_encode(
+            _json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
+        )
         signing_input = f"{header_segment}.{payload_segment}".encode("ascii")
-        signature = hmac.new(key.encode("utf-8"), signing_input, hashlib.sha256).digest()
+        signature = hmac.new(
+            key.encode("utf-8"), signing_input, hashlib.sha256
+        ).digest()
         return f"{header_segment}.{payload_segment}.{_jwt_b64_encode(signature)}"
 
     @staticmethod
@@ -95,7 +101,9 @@ class _JWTShim:
             if not key:
                 raise _JWTShimInvalidTokenError("Signing key required")
             signing_input = f"{header_segment}.{payload_segment}".encode("ascii")
-            expected_signature = hmac.new(key.encode("utf-8"), signing_input, hashlib.sha256).digest()
+            expected_signature = hmac.new(
+                key.encode("utf-8"), signing_input, hashlib.sha256
+            ).digest()
             actual_signature = _jwt_b64_decode(signature_segment)
             if not hmac.compare_digest(expected_signature, actual_signature):
                 raise _JWTShimInvalidTokenError("Signature verification failed")
@@ -141,7 +149,7 @@ except ImportError:  # pragma: no cover — optional dependency
     base64 = None  # type: ignore[assignment, unused-ignores]
     _FERNET_AVAILABLE = False
 
-from agora.auth.auth_models import (  # type: ignore[import-not-found]
+from agora.auth.auth_models import (  # type: ignore[import-not-found]  # noqa: E402
     AuthenticatedUser,
     AuthenticationError,
     AuthorizationError,
@@ -211,7 +219,9 @@ class OAuth2Server:
         elif _FERNET_AVAILABLE:
             self._fernet = Fernet(Fernet.generate_key())
         else:
-            _log.warning("Fernet not available — refresh tokens stored in plaintext (NOT for production)")
+            _log.warning(
+                "Fernet not available — refresh tokens stored in plaintext (NOT for production)"
+            )
 
     # ------------------------------------------------------------------
     # Token encryption helpers (Fernet: AES-CBC + HMAC, base64-encoded)
@@ -353,7 +363,10 @@ class OAuth2Server:
 
         # 2. 验证授权类型
         if grant_type not in client.grant_types:
-            raise AuthorizationError(f"Grant type {grant_type.value} not allowed", code="unsupported_grant_type")
+            raise AuthorizationError(
+                f"Grant type {grant_type.value} not allowed",
+                code="unsupported_grant_type",
+            )
 
         # 3. 根据授权类型处理
         if grant_type == GrantType.AUTHORIZATION_CODE:
@@ -366,24 +379,37 @@ class OAuth2Server:
                 code="method_not_allowed",
             )
         else:
-            raise AuthorizationError(f"Unsupported grant type: {grant_type.value}", code="unsupported_grant_type")
+            raise AuthorizationError(
+                f"Unsupported grant type: {grant_type.value}",
+                code="unsupported_grant_type",
+            )
 
-    def _issue_token_auth_code(self, client: OAuth2Client, code: str | None, scope: str | None) -> OAuth2Token:
+    def _issue_token_auth_code(
+        self, client: OAuth2Client, code: str | None, scope: str | None
+    ) -> OAuth2Token:
         """Authorization Code Flow 签发令牌"""
         if not code:
-            raise AuthorizationError("Authorization code required", code="invalid_request")
+            raise AuthorizationError(
+                "Authorization code required", code="invalid_request"
+            )
 
         with self._lock:
             # 验证授权码
             code_data = self._authorization_codes.get(code)
             if not code_data:
-                raise AuthorizationError("Invalid authorization code", code="invalid_grant")
+                raise AuthorizationError(
+                    "Invalid authorization code", code="invalid_grant"
+                )
 
             if code_data["client_id"] != client.client_id:
-                raise AuthorizationError("Authorization code client mismatch", code="invalid_grant")
+                raise AuthorizationError(
+                    "Authorization code client mismatch", code="invalid_grant"
+                )
 
             if code_data.get("expired", False):
-                raise AuthorizationError("Authorization code expired", code="invalid_grant")
+                raise AuthorizationError(
+                    "Authorization code expired", code="invalid_grant"
+                )
 
             # 使用授权码中的用户和范围
             user = code_data.get("user")
@@ -394,7 +420,9 @@ class OAuth2Server:
 
         return self._create_token(client, scope or "", user)
 
-    def _issue_token_client_credentials(self, client: OAuth2Client, scope: str | None) -> OAuth2Token:
+    def _issue_token_client_credentials(
+        self, client: OAuth2Client, scope: str | None
+    ) -> OAuth2Token:
         """Client Credentials Flow 签发令牌"""
         # 验证范围
         if scope:
@@ -407,7 +435,9 @@ class OAuth2Server:
         # Client Credentials Flow 没有用户上下文
         return self._create_token(client, scope, user=None)
 
-    def _create_token(self, client: OAuth2Client, scope: str, user: AuthenticatedUser | None) -> OAuth2Token:
+    def _create_token(
+        self, client: OAuth2Client, scope: str, user: AuthenticatedUser | None
+    ) -> OAuth2Token:
         """创建 JWT 令牌"""
         now = datetime.now(UTC)
 
@@ -489,7 +519,9 @@ class OAuth2Server:
             client_id = None
 
         if not client_id:
-            raise AuthenticationError("Cannot extract client from token", code="server_error")
+            raise AuthenticationError(
+                "Cannot extract client from token", code="server_error"
+            )
 
         client = self.get_client(client_id)
         if not client:
@@ -518,7 +550,10 @@ class OAuth2Server:
 
         # 1. 检查是否被吊销（线程安全读）
         with self._lock:
-            revoked = token in self._revoked_tokens or self._token_key(token) in self._revoked_tokens
+            revoked = (
+                token in self._revoked_tokens
+                or self._token_key(token) in self._revoked_tokens
+            )
 
         if revoked:
             raise TokenRevokedError()
@@ -546,7 +581,9 @@ class OAuth2Server:
             username=payload.get("username", payload["sub"]),
             email=payload.get("email", ""),
             roles=payload.get("roles", []),
-            scopes=set(payload.get("scope", "").split()) if payload.get("scope") else set(),
+            scopes=set(payload.get("scope", "").split())
+            if payload.get("scope")
+            else set(),
         )
 
     def validate_token_safe(self, token: str) -> AuthenticatedUser | None:
@@ -561,7 +598,12 @@ class OAuth2Server:
         """
         try:
             return self.validate_token(token)
-        except (TokenRevokedError, TokenExpiredError, InvalidTokenError, AuthenticationError):
+        except (
+            TokenRevokedError,
+            TokenExpiredError,
+            InvalidTokenError,
+            AuthenticationError,
+        ):
             return None
 
     def cleanup_expired_tokens(self) -> int:
@@ -572,7 +614,9 @@ class OAuth2Server:
             清理的过期令牌数量
         """
         with self._lock:
-            expired_keys = [key for key, token in self._tokens.items() if token.is_expired]
+            expired_keys = [
+                key for key, token in self._tokens.items() if token.is_expired
+            ]
             for key in expired_keys:
                 del self._tokens[key]
         if expired_keys:
@@ -683,9 +727,13 @@ class OAuth2Server:
 _global_oauth2_server: OAuth2Server | None = None
 
 
-def get_oauth2_server(jwt_secret: str | None = None, jwt_issuer: str = "sharedbrain-gateway") -> OAuth2Server:
+def get_oauth2_server(
+    jwt_secret: str | None = None, jwt_issuer: str = "sharedbrain-gateway"
+) -> OAuth2Server:
     """获取全局 OAuth2 服务器实例"""
     global _global_oauth2_server
     if _global_oauth2_server is None:
-        _global_oauth2_server = OAuth2Server(jwt_secret=jwt_secret, jwt_issuer=jwt_issuer)
+        _global_oauth2_server = OAuth2Server(
+            jwt_secret=jwt_secret, jwt_issuer=jwt_issuer
+        )
     return _global_oauth2_server
