@@ -91,7 +91,8 @@ class TriggerM0Manager:
             snap.consecutive_successes += 1
             snap.consecutive_failures = 0
             snap.health_score = min(100.0, snap.health_score + 5.0)
-            if snap.consecutive_successes >= 3:
+            # 首次成功 → healthy; 或连续 3 次 → healthy (防御性)
+            if snap.status == "unknown" or snap.consecutive_successes >= 3:
                 snap.status = "healthy"
         else:
             snap.consecutive_failures += 1

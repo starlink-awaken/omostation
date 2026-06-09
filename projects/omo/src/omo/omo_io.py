@@ -4,6 +4,7 @@
   1. ``write_text_atomic`` / ``write_yaml_atomic`` — 原子写 (tempfile + fsync + replace)
   2. ``read_jsonl`` — 公开 JSONL 容错读 (JSON 错行保留为 ``{"raw": ...}``)
   3. ``AppendOnlyLog`` — append-only JSONL 物理读写抽象 (SSOT)
+  4. ``fcntl_lock`` — POSIX 跨进程文件锁 (供 AppendOnlyLog 注入升级)
 
 设计原则:
   - **SSOT**: JSONL 物理写盘只此一处, 3+ 领域 (omo_audit / omo_bos_metrics / omo_sync) 共享
@@ -69,6 +70,44 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
     return out
 
 
+# ── 跨进程文件锁 (POSIX) ──────────────────────────────────────
+
+
+class fcntl_lock:
+    """POSIX 文件锁 — 跨进程安全 (Round 4 fcntl 注入样板).
+
+    用途: AppendOnlyLog 跨进程并发写时, 默认 ``threading.Lock`` 不够 —
+    不同进程拿不到同一个 threading.Lock, 会产生交错半行.
+    解法: 用 ``fcntl.flock`` (POSIX 咨询锁) 锁住 .lock sidecar 文件.
+
+    用法:
+        log = AppendOnlyLog(path, lock=fcntl_lock(path.with_suffix(".lock")))
+        # 跨 2 进程并发 100 次 append, 0 交错, 0 丢行
+
+    平台: 仅 POSIX (Linux/macOS). Windows 需 portalocker 替代, 老王不写.
+    """
+
+    def __init__(self, lock_path: Path) -> None:
+        self.lock_path = Path(lock_path)
+        self._fd: int | None = None
+
+    def __enter__(self) -> "fcntl_lock":
+        import fcntl  # POSIX-only; 延迟 import 让 Windows 测试可 import omo_io
+        self.lock_path.parent.mkdir(parents=True, exist_ok=True)
+        self._fd = os.open(str(self.lock_path), os.O_CREAT | os.O_RDWR, 0o644)
+        fcntl.flock(self._fd, fcntl.LOCK_EX)
+        return self
+
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+        if self._fd is not None:
+            import fcntl
+            try:
+                fcntl.flock(self._fd, fcntl.LOCK_UN)
+            finally:
+                os.close(self._fd)
+                self._fd = None
+
+
 # ── AppendOnlyLog 抽象 (高层) ──────────────────────────────
 
 
@@ -78,6 +117,7 @@ class AppendOnlyLog:
     责任 (只做这一件事):
       - 追加一条 record (单行, 原子, 带锁)
       - 读所有 records (容错)
+      - 读最近 N 条 / 过滤 since ts
       - 清空文件 (原子, 返回行数供审计)
 
     不知道:
@@ -86,12 +126,14 @@ class AppendOnlyLog:
 
     锁策略:
       - 默认 ``threading.Lock`` (单进程, 线程安全)
-      - 跨进程: 注入 fcntl wrapper 或 portalocker
+      - 跨进程: 注入 ``fcntl_lock`` (POSIX)
 
     用法:
         log = AppendOnlyLog(Path("audit.jsonl"))
         log.append({"ts": _utc_now(), "action": "x"})
         records = log.read_all()
+        last10 = log.tail(10)
+        recent = log.since("2026-06-09T00:00:00Z")
         n = log.clear()
     """
 
@@ -122,6 +164,40 @@ class AppendOnlyLog:
         """读所有 records (容错: 错行保留为 ``{"raw": ...}``)."""
         return read_jsonl(self.path)
 
+    def tail(self, n: int) -> list[dict[str, Any]]:
+        """读最近 N 条 records (避免 ``read_all()[-n:]`` 模式).
+
+        性能: 大文件时 O(file_size), 不优化 — append-only log 应定期轮转.
+        """
+        if n <= 0:
+            return []
+        records = self.read_all()
+        return records[-n:]
+
+    def since(
+        self,
+        ts: str,
+        *,
+        field: str = "ts",
+    ) -> list[dict[str, Any]]:
+        """过滤 ``field >= ts`` 的 records.
+
+        Args:
+            ts: ISO8601 时间戳 (e.g. ``"2026-06-09T00:00:00Z"``).
+            field: 时间戳字段名. omo_audit 用 ``ts`` (默认), omo_bos_metrics 用
+              ``recorded_at``. 显式传 field 避免 2 种约定混用.
+
+        Returns:
+            records where ``record[field] >= ts``. 字符串比较对 ISO8601 也成立
+            (lexicographic = chronological for ISO 8601 with same format).
+
+        Note:
+            字符串比较对 ``"2026-06-09T01:00:00Z"`` vs ``"2026-06-09T00:00:00Z"``
+            成立 (Z 结尾统一). 但混用 ``"2026-06-09T00:00:00Z"`` 和
+            ``"2026-06-09T00:00:00+00:00"`` 时, 字符串比较会失真 — 调用方负责.
+        """
+        return [r for r in self.read_all() if r.get(field, "") >= ts]
+
     def clear(self) -> int:
         """原子清空文件. 返回清空前 records 数 (供审计).
 
@@ -136,6 +212,7 @@ class AppendOnlyLog:
 
 __all__ = (
     "AppendOnlyLog",
+    "fcntl_lock",
     "read_jsonl",
     "write_text_atomic",
     "write_yaml_atomic",

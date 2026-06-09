@@ -20,6 +20,7 @@ if str(OMO_SRC) not in sys.path:
 
 from omo.omo_io import (  # noqa: E402
     AppendOnlyLog,
+    fcntl_lock,
     read_jsonl,
     write_text_atomic,
     write_yaml_atomic,
@@ -186,3 +187,116 @@ class TestExistingHelpers:
         p = tmp_path / "atomic.yaml"
         write_yaml_atomic(p, {"key": "value", "中文": "测试"})
         assert p.read_text(encoding="utf-8").startswith("key:")
+
+
+# ── AppendOnlyLog.tail ──────────────────────────────────────
+
+
+class TestTail:
+    def test_tail_n_returns_last_n(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        for i in range(10):
+            log.append({"i": i})
+        assert log.tail(3) == [{"i": 7}, {"i": 8}, {"i": 9}]
+
+    def test_tail_zero_returns_empty(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        log.append({"a": 1})
+        assert log.tail(0) == []
+
+    def test_tail_negative_returns_empty(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        log.append({"a": 1})
+        assert log.tail(-1) == []
+
+    def test_tail_more_than_total_returns_all(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        for i in range(3):
+            log.append({"i": i})
+        assert log.tail(10) == [{"i": 0}, {"i": 1}, {"i": 2}]
+
+    def test_tail_empty_log(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        assert log.tail(5) == []
+
+
+# ── AppendOnlyLog.since ────────────────────────────────────
+
+
+class TestSince:
+    def test_since_filters_by_default_ts_field(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        for ts in ["2026-06-09T00:00:00Z", "2026-06-09T01:00:00Z", "2026-06-09T02:00:00Z"]:
+            log.append({"ts": ts, "value": "x"})
+        result = log.since("2026-06-09T01:00:00Z")
+        assert len(result) == 2
+        assert result[0]["ts"] == "2026-06-09T01:00:00Z"
+        assert result[1]["ts"] == "2026-06-09T02:00:00Z"
+
+    def test_since_with_explicit_field(self, tmp_path):
+        """omo_bos_metrics 用 'recorded_at' 字段, 显式传 field 即可."""
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        for ts in ["2026-06-09T00:00:00Z", "2026-06-09T01:00:00Z"]:
+            log.append({"recorded_at": ts, "uri": "x"})
+        result = log.since("2026-06-09T01:00:00Z", field="recorded_at")
+        assert len(result) == 1
+        assert result[0]["recorded_at"] == "2026-06-09T01:00:00Z"
+
+    def test_since_inclusive_equal(self, tmp_path):
+        """since(ts) 应包含 ts 自身 (>= 不是 >)."""
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        log.append({"ts": "2026-06-09T01:00:00Z"})
+        log.append({"ts": "2026-06-09T00:59:59Z"})
+        result = log.since("2026-06-09T01:00:00Z")
+        assert len(result) == 1
+        assert result[0]["ts"] == "2026-06-09T01:00:00Z"
+
+    def test_since_no_matches_returns_empty(self, tmp_path):
+        log = AppendOnlyLog(tmp_path / "test.jsonl")
+        log.append({"ts": "2026-06-09T00:00:00Z"})
+        assert log.since("2030-01-01T00:00:00Z") == []
+
+
+# ── fcntl_lock (跨进程) ─────────────────────────────────────
+
+
+class TestFcntlLock:
+    def test_lock_creates_sidecar_file(self, tmp_path):
+        """fcntl_lock 应创建 .lock sidecar 文件."""
+        lock_path = tmp_path / "test.lock"
+        with fcntl_lock(lock_path):
+            assert lock_path.exists()
+
+    def test_lock_creates_parent_dir(self, tmp_path):
+        """fcntl_lock 应创建父目录 (AppendOnlyLog 不会自动创 .lock 父目录)."""
+        lock_path = tmp_path / "subdir" / "nested" / "test.lock"
+        with fcntl_lock(lock_path):
+            assert lock_path.exists()
+
+    def test_lock_is_reentrant_after_release(self, tmp_path):
+        """同一线程 2 次获取 (嵌套) 应该不卡死."""
+        lock_path = tmp_path / "test.lock"
+        with fcntl_lock(lock_path):
+            with fcntl_lock(lock_path):
+                pass  # 嵌套 OK, 内层 flock 是 advisory lock 同一线程会立即返回
+
+    def test_fcntl_lock_with_append_only_log_across_threads(self, tmp_path):
+        """验证 fcntl_lock 注入 AppendOnlyLog 后, 4 线程 100 次无丢失."""
+        log_path = tmp_path / "test.jsonl"
+        lock_path = tmp_path / "test.lock"
+        log = AppendOnlyLog(log_path, lock=fcntl_lock(lock_path))
+
+        def worker(wid: int) -> None:
+            for j in range(100):
+                log.append({"worker": wid, "j": j})
+
+        threads = [Thread(target=worker, args=(i,)) for i in range(4)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        records = log.read_all()
+        assert len(records) == 400, f"expected 400 records, got {len(records)}"
+        # 验证每行 JSON 完整
+        for r in records:
+            assert "worker" in r and "j" in r

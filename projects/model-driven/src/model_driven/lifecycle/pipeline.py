@@ -293,6 +293,7 @@ class PipelineTracker:
                 "entity_id": self.entity_id,
                 "entity_type": self.entity_type,
                 "current_phase": self.current_phase.value if self.current_phase else None,
+                "current_lifecycle_stage": self.lifecycle_tracker.current_stage.value if self.lifecycle_tracker.current_stage else None,
                 "phases": {
                     p.value: {
                         "status": self.phases[p].status.value,
@@ -368,13 +369,21 @@ class PipelineTracker:
                     tracker.lifecycle_tracker.stages[stage].status = StageStatus.IN_PROGRESS
                     tracker.lifecycle_tracker.stages[stage].started_at = stage_data.get("started_at", "")
 
-            # 恢复 current_phase: 找最后一个 completed 或 in_progress 的 phase
+            # 恢复 current_phase
             for phase in [PipelinePhase.HARDENING, PipelinePhase.EVOLUTION, PipelinePhase.COLD_START]:
                 phase_data = data.get("phases", {}).get(phase.value, {})
                 if phase_data.get("status") in ("completed", "in_progress"):
                     if tracker.current_phase is None or phase_data.get("status") == "in_progress":
                         tracker.current_phase = phase
                         break
+
+            # 恢复 lifecycle_tracker.current_stage
+            current_stage_str = data.get("current_lifecycle_stage")
+            if current_stage_str:
+                try:
+                    tracker.lifecycle_tracker.current_stage = LifecycleStage(current_stage_str)
+                except ValueError:
+                    pass
 
             return tracker
         except Exception as e:

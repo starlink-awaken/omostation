@@ -199,7 +199,10 @@ class CrossStageConsistencyChecker:
                     issues.append({
                         "rule": "CS-01",
                         "severity": "error",
-                        "message": f"Spec {spec.get('id')} 未关联任何 OKR",
+                        "message": f"Spec {spec.get('id')} ({spec.get('name', '?')}) 未关联任何 OKR (可用 OKR: {list(okr_ids)[:3]})",
+                        "spec_id": spec.get("id"),
+                        "spec_name": spec.get("name", ""),
+                        "available_okrs": list(okr_ids),
                     })
 
         # CS-02: 设计→开发一致性
@@ -209,7 +212,9 @@ class CrossStageConsistencyChecker:
                     issues.append({
                         "rule": "CS-02",
                         "severity": "warning",
-                        "message": f"代码模块 {code_mod.get('id')} 无对应 Spec",
+                        "message": f"代码模块 {code_mod.get('id')} ({code_mod.get('name', '?')}) 无对应 Spec (可用 Spec: {list(spec_ids)[:3]})",
+                        "code_module_id": code_mod.get("id"),
+                        "available_specs": list(spec_ids),
                     })
 
         # CS-04: 部署→运行一致性
@@ -220,7 +225,8 @@ class CrossStageConsistencyChecker:
                     issues.append({
                         "rule": "CS-04",
                         "severity": "error",
-                        "message": f"部署配置 {deploy.get('id')} 无对应告警规则",
+                        "message": f"部署配置 {deploy.get('id')} ({deploy.get('name', '?')}) 无对应告警规则",
+                        "deploy_id": deploy.get("id"),
                     })
 
         return {

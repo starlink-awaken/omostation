@@ -1109,3 +1109,9 @@
 2142","port":9090}
 {"source":"dashboard_monitor","timestamp":"2026-06-09T03:57:48Z","launchd_state":"running","http_code":"200","pid":"7777
 11388","port":9090}
+{"checks": [{"category": "lint", "name": "ruff lint", "score": 0.0, "severity": "fail"}, {"category": "tests", "name": "test coverage", "score": 100.0, "severity": "ok"}, {"category": "debt", "name": "debt integrity", "score": 100.0, "severity": "ok"}, {"category": "knowledge", "name": "adr links", "score": 100.0, "severity": "ok"}, {"category": "tasks", "name": "task consistency", "score": 100.0, "severity": "ok"}, {"category": "agora", "name": "agora health", "score": 75.0, "severity": "warn"}], "date": "2026-06-09", "grade": "C", "timestamp": "2026-06-09T04:00:05.963706+00:00", "total_score": 79.2, "watchlist_count": 2}
+{"date": "2026-06-09", "grade": "A", "source": "omo_daemon", "timestamp": "2026-06-09T04:02:27.857270+00:00", "total_score": 92.5, "watchlist_count": 0}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T04:02:48Z","launchd_state":"running","http_code":"200","pid":"7777
+15477","port":9090}
+{"source":"dashboard_monitor","timestamp":"2026-06-09T04:07:48Z","launchd_state":"running","http_code":"200","pid":"7777
+19945","port":9090}
