@@ -311,7 +311,167 @@ def cmd_model_driven_okr(args: Namespace) -> int:
         return 0
     except ImportError:
         _get_err().print("[red]❌ model-driven 不可用[/]")
+        _get_err().print("[dim]  请确保 model-driven 已安装: cd ~/Workspace/projects/model-driven && uv sync[/]")
         return 1
+
+
+# ── 统一 model-driven 入口 ────────────────────────────────────────
+
+
+def _md_not_available() -> int:
+    _get_err().print("[red]❌ model-driven 不可用[/]")
+    _get_err().print("[dim]  请确保 model-driven 已安装:[/]")
+    _get_err().print("[dim]    cd ~/Workspace/projects/model-driven && uv sync[/]")
+    return 1
+
+
+def cmd_model_driven(args: Namespace) -> int:
+    """统一 model-driven 入口 — 合并 lifecycle/spec/okr/derive/pipeline 为一个子命令。
+
+    用法: cockpit model-driven <lifecycle|spec|okr|derive|pipeline> [action] [args]
+    """
+    console = _get_console()
+    subcmd = getattr(args, "md_subcmd", "lifecycle")
+    try:
+        if subcmd == "lifecycle":
+            return _md_lifecycle(args, console)
+        elif subcmd == "spec":
+            return _md_spec(args, console)
+        elif subcmd == "okr":
+            return _md_okr(args, console)
+        elif subcmd == "derive":
+            return _md_derive(args, console)
+        elif subcmd == "pipeline":
+            return _md_pipeline(args, console)
+        else:
+            console.print(f"[yellow]未知 model-driven 子命令: {subcmd}[/]")
+            console.print("可用: lifecycle, spec, okr, derive, pipeline")
+            return 1
+    except ImportError:
+        return _md_not_available()
+
+
+def _md_lifecycle(args: Namespace, console) -> int:
+    from model_driven.lifecycle.tracking import LifecycleManager
+    from model_driven.lifecycle.transitions import TransitionEngine
+    from model_driven.mof.m3_extended import LifecycleStage
+
+    mgr = LifecycleManager()
+    engine = TransitionEngine()
+    action = getattr(args, "md_action", "status")
+    entity_id = getattr(args, "md_entity", "cockpit")
+
+    if action == "create":
+        mgr.create_tracker(entity_id, getattr(args, "md_type", ""))
+        console.print(f"[green]✅ 已创建: {entity_id}[/]")
+    elif action == "advance":
+        target = LifecycleStage.from_str(getattr(args, "md_stage", "planning"))
+        tracker = mgr.get_tracker(entity_id) or mgr.create_tracker(entity_id)
+        success, msg, _ = engine.try_transition(tracker, target)
+        console.print(f"[{'green' if success else 'red'}]{'✅' if success else '❌'} {msg}[/]")
+    elif action == "dashboard":
+        dashboard = mgr.generate_dashboard()
+        console.print(f"[bold cyan]仪表板[/] 实体:{dashboard.total_entities} 进度:{dashboard.avg_progress}%")
+        for b in dashboard.blockers[:5]:
+            console.print(f"  [red]🔴 [{b['entity_id']}] {b['stage']}: {b['issue']}[/]")
+    else:
+        summary = mgr.get_stage_summary(entity_id)
+        if summary:
+            console.print(f"[bold]{entity_id}[/] 阶段:{summary['current_stage']} 进度:{summary['progress_pct']}%")
+        else:
+            console.print(f"[yellow]⚠️ 未找到: {entity_id}[/]")
+    return 0
+
+
+def _md_spec(args: Namespace, console) -> int:
+    from model_driven.management.spec import SpecManager
+    mgr = SpecManager()
+    action = getattr(args, "md_action", "list")
+    if action == "create":
+        sid = getattr(args, "md_id", f"SPEC-{len(mgr.list_all())+1}")
+        spec = mgr.create(sid, getattr(args, "md_title", "未命名"))
+        console.print(f"[green]✅ Spec: {spec.id} - {spec.title}[/]")
+    else:
+        specs = mgr.list_all()
+        for s in specs:
+            console.print(f"  [{s.status.value}] {s.id}: {s.title}")
+        if not specs:
+            console.print("[dim]无 Spec[/]")
+    return 0
+
+
+def _md_okr(args: Namespace, console) -> int:
+    from model_driven.management.okr import OKRManager
+    mgr = OKRManager()
+    action = getattr(args, "md_action", "list")
+    if action == "create":
+        oid = getattr(args, "md_id", f"OKR-{len(mgr.list_all())+1}")
+        okr = mgr.create(oid, getattr(args, "md_objective", "未定义"))
+        console.print(f"[green]✅ OKR: {okr.id} - {okr.objective}[/]")
+    else:
+        okrs = mgr.list_all()
+        for o in okrs:
+            console.print(f"  [{o.status.value}] {o.id}: {o.objective} ({o.progress:.0%})")
+        if not okrs:
+            console.print("[dim]无 OKR[/]")
+    return 0
+
+
+def _md_derive(args: Namespace, console) -> int:
+    from model_driven.toolchain.derivation_engine import DerivationEngine
+    import yaml
+    from pathlib import Path
+
+    m1_dir = Path.home() / "Workspace/projects/ecos/src/ecos/ssot/mof/m1"
+    nodes = []
+    for d in sorted(m1_dir.iterdir()):
+        if d.is_dir():
+            for f in sorted(d.glob("*.yaml")):
+                try:
+                    data = yaml.safe_load(open(f))
+                    if data and "type" in data:
+                        nodes.append(data)
+                except Exception:
+                    pass
+
+    engine = DerivationEngine()
+    engine.execute_all(nodes, {"expected_progress": 0.5})
+    s = engine.get_summary()
+    console.print(f"[bold cyan]📊 推导报告[/] 规则:{s['total_rules']} 触发:{s['triggered']} 风险:{s['by_risk_level']}")
+    if s["high_risks"]:
+        for r in s["high_risks"][:5]:
+            console.print(f"  [red]🔴 {r.rule_id}: {r.message[:80]}[/]")
+    return 0
+
+
+def _md_pipeline(args: Namespace, console) -> int:
+    from model_driven.lifecycle.pipeline import PipelineTracker, PipelinePhase
+
+    entity_id = getattr(args, "md_entity", "ecos")
+    action = getattr(args, "md_action", "status")
+    tracker = PipelineTracker.load(entity_id) or PipelineTracker(entity_id=entity_id)
+
+    if action == "start":
+        phase = PipelinePhase(getattr(args, "md_phase", "cold_start"))
+        if tracker.start_phase(phase):
+            tracker.save()
+            console.print(f"[green]✅ 启动: {phase.value}[/]")
+        else:
+            console.print(f"[red]❌ 前置 Phase 未完成[/]")
+    elif action == "complete":
+        phase = PipelinePhase(getattr(args, "md_phase", "cold_start"))
+        if tracker.complete_phase(phase):
+            tracker.save()
+            console.print(f"[green]✅ 完成: {phase.value}[/]")
+        else:
+            console.print(f"[red]❌ 阶段未全部完成[/]")
+    else:
+        p = tracker.get_progress()
+        console.print(f"[bold cyan]📊 流水线: {entity_id}[/] Phase:{p['current_phase']}")
+        for pn, pi in p["phases"].items():
+            icon = "✅" if pi["status"] == "completed" else ("🔄" if pi["status"] == "in_progress" else "⏳")
+            console.print(f"  {icon} {pn}: {pi['progress_pct']}%")
+    return 0
 
 
 def cmd_model_driven_derive(args: Namespace) -> int:

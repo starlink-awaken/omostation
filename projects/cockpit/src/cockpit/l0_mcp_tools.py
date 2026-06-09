@@ -162,7 +162,7 @@ def md_lifecycle_status(entity_id: str = "ecos") -> str:
             return f"实体 '{entity_id}': 阶段={summary['current_stage']} 进度={summary['progress_pct']}%"
         return f"实体 '{entity_id}': 未追踪"
     except ImportError:
-        return "model-driven 不可用"
+        return "model-driven 不可用 (安装: cd ~/Workspace/projects/model-driven && uv sync)"
 
 
 def md_validate() -> str:
@@ -187,7 +187,7 @@ def md_validate() -> str:
         result = tool_validate(models=nodes)
         return f"model-driven 自反验证: passed={result['passed']}, errors={result['error_count']}, warnings={result['warning_count']}, nodes={len(nodes)}"
     except ImportError:
-        return "model-driven 不可用"
+        return "model-driven 不可用 (安装: cd ~/Workspace/projects/model-driven && uv sync)"
 
 
 # ── MCP Tool Registry ──

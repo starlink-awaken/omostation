@@ -127,51 +127,55 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
     # 0.3 model-driven 自反验证 (并行验证层, 非关键路径 — 失败不阻塞 daemon)
     print("\n── model-driven 自反验证 ──")
     try:
-        md_dir = WORKSPACE / "projects" / "model-driven"
-        if md_dir.exists() and (md_dir / "pyproject.toml").exists():
-            import subprocess as _sp
-            result = _sp.run(
-                ["uv", "run", "python3", "-c",
-                 "from model_driven.toolchain.tools import tool_validate; "
-                 "from model_driven.toolchain.derivation_engine import DerivationEngine; "
-                 "import yaml; from pathlib import Path; "
-                 "m1 = Path.home() / 'Workspace/projects/ecos/src/ecos/ssot/mof/m1'; "
-                 "nodes = [yaml.safe_load(open(f)) for d in sorted(m1.iterdir()) if d.is_dir() for f in sorted(d.glob('*.yaml')) if (yaml.safe_load(open(f)) or {}).get('type')]; "
-                 "r = tool_validate(models=nodes); "
-                 "print(f'model-driven validate: passed={r[\"passed\"]}, errors={r[\"error_count\"]}, warnings={r[\"warning_count\"]}'); "
-                 "engine = DerivationEngine(); "
-                 "engine.execute_all(nodes, {'expected_progress': 0.5}); "
-                 "s = engine.get_summary(); "
-                 "print(f'model-driven derive: rules={s[\"total_rules\"]}, triggered={s[\"triggered\"]}, high_risks={len(s.get(\"high_risks\", []))}')"],
-                cwd=str(md_dir), capture_output=True, text=True, timeout=30
-            )
-            for line in result.stdout.strip().split("\n"):
-                if line.strip():
-                    print(f"  {line.strip()}")
-            if result.returncode != 0:
-                print(f"  ⚠️ model-driven 验证异常 (non-fatal): {result.stderr[:100]}")
-        else:
-            print("  ℹ️ model-driven 未安装, 跳过")
+        import sys as _sys
+        _sys.path.insert(0, str(WORKSPACE / "projects" / "model-driven" / "src"))
+        from model_driven.toolchain.tools import tool_validate
+        from model_driven.toolchain.derivation_engine import DerivationEngine
+        import yaml as _yaml
+        from pathlib import Path as _Path
+
+        m1 = _Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
+        nodes = []
+        for d in sorted(m1.iterdir()):
+            if d.is_dir():
+                for f in sorted(d.glob("*.yaml")):
+                    try:
+                        data = _yaml.safe_load(open(f))
+                        if data and "type" in data:
+                            nodes.append(data)
+                    except Exception:
+                        pass
+
+        r = tool_validate(models=nodes)
+        print(f"  model-driven validate: passed={r['passed']}, errors={r['error_count']}, warnings={r['warning_count']}")
+
+        engine = DerivationEngine()
+        engine.execute_all(nodes, {"expected_progress": 0.5})
+        s = engine.get_summary()
+        print(f"  model-driven derive: rules={s['total_rules']}, triggered={s['triggered']}, high_risks={len(s.get('high_risks', []))}")
+
+        if s.get("high_risks"):
+            for risk in s["high_risks"][:3]:
+                print(f"    🔴 {risk.rule_id}: {risk.message[:80]}")
+    except ImportError:
+        print("  ℹ️ model-driven 未安装, 跳过")
     except Exception as e:
         print(f"  ⚠️ model-driven 验证异常: {e} (non-fatal)")
 
     # 0.4 model-driven 三阶段流水线 (追踪 daemon 自身生命周期)
     try:
-        md_dir = WORKSPACE / "projects" / "model-driven"
-        if md_dir.exists() and (md_dir / "pyproject.toml").exists():
-            import subprocess as _sp
-            result = _sp.run(
-                ["uv", "run", "python3", "-c",
-                 "from model_driven.lifecycle.pipeline import PipelineTracker, PipelinePhase; "
-                 "pt = PipelineTracker('ecos-daemon', 'daemon'); "
-                 "pt.start_phase(PipelinePhase.HARDENING); "
-                 "p = pt.get_progress(); "
-                 "print(f'model-driven pipeline: phase={p[\"current_phase\"]}, overall={p[\"overall_progress\"]}%')"],
-                cwd=str(md_dir), capture_output=True, text=True, timeout=10
-            )
-            for line in result.stdout.strip().split("\n"):
-                if line.strip():
-                    print(f"  {line.strip()}")
+        import sys as _sys
+        _sys.path.insert(0, str(WORKSPACE / "projects" / "model-driven" / "src"))
+        from model_driven.lifecycle.pipeline import PipelineTracker, PipelinePhase
+
+        pt = PipelineTracker.load("ecos-daemon") or PipelineTracker("ecos-daemon", "daemon")
+        if pt.current_phase is None:
+            pt.start_phase(PipelinePhase.HARDENING)
+        pt.save()
+        p = pt.get_progress()
+        print(f"  model-driven pipeline: phase={p['current_phase']}, overall={p['overall_progress']}%")
+    except ImportError:
+        pass
     except Exception:
         pass  # 静默跳过
 
