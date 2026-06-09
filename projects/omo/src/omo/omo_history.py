@@ -23,6 +23,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from omo.omo_io import AppendOnlyLog
 from omo.omo_paths import GOVERNANCE_HISTORY_PATH
 
 # 默认历史文件路径
@@ -41,16 +42,17 @@ def append_entry(
 
     Returns:
         最终写入的文件路径
+
+    Round 7 P2: 内部用 AppendOnlyLog (第 6 个 consumer) 替代手写 open+json.dumps+write.
+    sort_keys=True 保与 kairon-governance 旧 JSONL 字节级兼容.
     """
     target = Path(path) if path is not None else DEFAULT_PATH
-    target.parent.mkdir(parents=True, exist_ok=True)
     now = datetime.now(UTC)
     entry: dict[str, Any] = dict(data)
     entry["date"] = now.strftime("%Y-%m-%d")
     entry["timestamp"] = now.isoformat()
-    line = json.dumps(entry, ensure_ascii=False, sort_keys=True)
-    with open(target, "a", encoding="utf-8") as f:
-        f.write(line + "\n")
+    # sort_keys=True 通过 AppendOnlyLog.append 的 **json_kwargs 透传
+    AppendOnlyLog(target).append(entry, sort_keys=True)
     return target
 
 

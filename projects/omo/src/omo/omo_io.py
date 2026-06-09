@@ -147,10 +147,23 @@ class AppendOnlyLog:
         self.path = Path(path)
         self._lock = lock if lock is not None else threading.Lock()
 
-    def append(self, record: dict[str, Any]) -> dict[str, Any]:
-        """追加一条 record. 自动创建父目录. 返回 record (供链式调用)."""
+    def append(
+        self,
+        record: dict[str, Any],
+        **json_kwargs: Any,
+    ) -> dict[str, Any]:
+        """追加一条 record. 自动创建父目录. 返回 record (供链式调用).
+
+        Args:
+            record: 写入的 dict.
+            **json_kwargs: 透传给 ``json.dumps()`` (e.g. ``sort_keys=True``
+              保 omo_history 与 kairon-governance 旧 JSONL 兼容).
+        """
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        line = json.dumps(record, ensure_ascii=False)
+        # 默认 ensure_ascii=False (中文不转 \\u), 但允许覆盖 (e.g. 测试)
+        kwargs: dict[str, Any] = {"ensure_ascii": False}
+        kwargs.update(json_kwargs)
+        line = json.dumps(record, **kwargs)
         with self._lock:
             with open(self.path, "a", encoding="utf-8") as f:
                 f.write(line + "\n")
