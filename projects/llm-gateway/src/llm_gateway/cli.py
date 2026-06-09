@@ -10,6 +10,7 @@ Usage:
 """
 
 from __future__ import annotations
+import os
 
 import argparse
 import sys
@@ -108,7 +109,7 @@ def main(argv: list[str] | None = None) -> int:
     mcp_p.add_argument("--ssot", action="store_true", help="从 L0 M1 节点加载模型")
 
     srv = sub.add_parser("serve", help="Start HTTP server")
-    srv.add_argument("--port", "-p", type=int, default=9290)
+    srv.add_argument("--port", "-p", type=int, default=int(os.environ.get("LLM_GATEWAY_PORT", "9290")))
 
     args = parser.parse_args(argv)
     if args.cmd == "list":
