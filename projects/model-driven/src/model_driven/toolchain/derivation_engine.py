@@ -750,4 +750,25 @@ class TriggerM0Manager:
 
     def get_health_summary(self) -> dict[str, Any]:
         """获取 Trigger M0 健康摘要"""
-        return self.get_trigger_health_summary()
+        total = len(self._snapshots)
+        healthy = sum(1 for s in self._snapshots.values() if s.status == "healthy")
+        degraded = sum(1 for s in self._snapshots.values() if s.status == "degraded")
+        stopped = sum(1 for s in self._snapshots.values() if s.status == "stopped")
+
+        return {
+            "total_triggers": total,
+            "healthy": healthy,
+            "degraded": degraded,
+            "stopped": stopped,
+            "health_pct": round(healthy / total * 100, 1) if total > 0 else 0,
+            "triggers": {
+                tid: {
+                    "status": snap.status,
+                    "health_score": snap.health_score,
+                    "consecutive_failures": snap.consecutive_failures,
+                    "last_execution": snap.last_execution,
+                }
+                for tid, snap in self._snapshots.items()
+            },
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        }

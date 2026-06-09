@@ -10,6 +10,7 @@ from .bus import ToolchainBus, ToolDefinition, ToolResult, ToolStatus
 from .mof_extract import extract_all
 from .mof_model import model_project, model_workspace, classify_by_lifecycle_stage
 from .mof_scan import load_m1_nodes, scan_project_dir, scan_system, scan_workspace
+from .trigger_registry import TriggerInfo, TriggerRegistry
 from .tools import (
     tool_archive,
     tool_compile,
@@ -146,4 +147,7 @@ __all__ = [
     "model_workspace",
     "classify_by_lifecycle_stage",
     "extract_all",
+    # Trigger
+    "TriggerInfo",
+    "TriggerRegistry",
 ]

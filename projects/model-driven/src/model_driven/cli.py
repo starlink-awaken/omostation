@@ -232,6 +232,7 @@ def main():
         print("  okr         OKR 管理")
         print("  tool        工具链")
         print("  mcp         MCP Server")
+        print("  trigger     Trigger 管理")
         return
 
     cmd = args[0]
@@ -244,6 +245,7 @@ def main():
         "okr": cmd_okr,
         "tool": cmd_tool,
         "mcp": cmd_mcp,
+        "trigger": cmd_trigger,
     }
 
     if cmd in commands:
@@ -251,6 +253,87 @@ def main():
     else:
         print(f"未知命令: {cmd}")
         print(f"可用命令: {', '.join(commands.keys())}")
+
+
+def cmd_trigger(args: list[str]) -> None:
+    """Trigger 管理命令"""
+    from model_driven.toolchain.trigger_registry import TriggerRegistry
+
+    registry = TriggerRegistry()
+
+    if not args:
+        print("用法: model-driven trigger <list|status|derive|heal|dashboard|drift|reload>")
+        return
+
+    subcmd = args[0]
+
+    if subcmd == "list":
+        ttype = args[1] if len(args) > 1 else None
+        layer = args[2] if len(args) > 2 else None
+        triggers = registry.list_all(trigger_type=ttype, layer=layer)
+        print(f"Trigger 总数: {len(triggers)}")
+        for t in triggers:
+            icon = "🟢" if t.m0_status == "healthy" else ("🟡" if t.m0_status == "degraded" else "🔴")
+            print(f"  {icon} [{t.layer}] {t.trigger_type}: {t.name} (health={t.health_score})")
+        if not triggers:
+            print("  无匹配 Trigger")
+
+    elif subcmd == "status":
+        tid = args[1] if len(args) > 1 else None
+        result = registry.check_health(tid)
+        if tid:
+            t = result.get("trigger", {})
+            print(f"Trigger: {t.get('trigger_id')} ({t.get('name')})")
+            print(f"  M1 状态: {t.get('status')}")
+            print(f"  M0 状态: {t.get('m0_status')}")
+            print(f"  健康分: {t.get('health_score')}")
+            print(f"  依赖: {t.get('dependencies')}")
+        else:
+            s = result.get("summary", {})
+            print(f"Trigger 健康摘要: {s.get('healthy')}/{s.get('total_triggers')} healthy ({s.get('health_pct')}%)")
+            for tid, info in s.get("triggers", {}).items():
+                icon = "🟢" if info["status"] == "healthy" else ("🟡" if info["status"] == "degraded" else "🔴")
+                print(f"  {icon} {tid}: {info['status']} (score={info['health_score']})")
+
+    elif subcmd == "derive":
+        result = registry.run_derivation()
+        d = result.get("derivation", result)
+        print(f"推导规则: {d.get('total_rules', 0)} 条, 触发 {d.get('triggered', 0)} 条")
+        for f in d.get("findings", []):
+            icon = "🔴" if f["risk_level"] in ("high", "critical") else "🟡"
+            print(f"  {icon} {f['rule_id']}: {f['message'][:100]}")
+
+    elif subcmd == "heal":
+        result = registry.run_heal()
+        print(f"修复状态: {result.get('status')}")
+        print(f"发现问题: {result.get('findings_count')} 个")
+        print(f"修复动作: {len(result.get('heal_actions', []))} 个")
+        for a in result.get("heal_actions", []):
+            print(f"  🔧 {a['type']}: {a.get('trigger', '?')}")
+
+    elif subcmd == "dashboard":
+        dashboard = registry.get_dashboard()
+        print(f"=== Trigger 统一仪表板 ===")
+        print(f"总数: {dashboard['total_triggers']}")
+        print(f"按类型: {dashboard['by_type']}")
+        print(f"按层: {dashboard['by_layer']}")
+        m0 = dashboard["m0_health"]
+        print(f"M0 健康: {m0.get('healthy', 0)}/{m0.get('total_triggers', 0)} healthy")
+        print(f"依赖拓扑: {dashboard['dependency_graph']}")
+
+    elif subcmd == "drift":
+        drifts = registry.detect_drift()
+        if drifts:
+            print(f"M1↔M0 漂移: {len(drifts)} 处")
+            for d in drifts:
+                icon = "🔴" if d["severity"] == "high" else "🟡"
+                print(f"  {icon} {d['trigger_id']}: {d['message']}")
+        else:
+            print("✅ 无漂移")
+
+    elif subcmd == "reload":
+        count = registry.reload()
+        print(f"✅ 已重新加载 {count} 个 Trigger")
 
 
 if __name__ == "__main__":

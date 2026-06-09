@@ -119,6 +119,20 @@ class MCPServer:
         self._register_tool("value-roi", "计算 ROI", "ssot",
                             self._handle_value_roi)
 
+        # Trigger 工具
+        self._register_tool("trigger-list", "列出所有 Trigger (支持按类型/层过滤)", "trigger",
+                            self._handle_trigger_list)
+        self._register_tool("trigger-status", "检查 Trigger 健康状态 (M1+M0)", "trigger",
+                            self._handle_trigger_status)
+        self._register_tool("trigger-derive", "执行 Trigger 推导规则", "trigger",
+                            self._handle_trigger_derive)
+        self._register_tool("trigger-heal", "执行 Trigger 自动修复", "trigger",
+                            self._handle_trigger_heal)
+        self._register_tool("trigger-dashboard", "Trigger 统一仪表板", "trigger",
+                            self._handle_trigger_dashboard)
+        self._register_tool("trigger-drift", "检测 Trigger M1↔M0 漂移", "trigger",
+                            self._handle_trigger_drift)
+
     def _register_tool(self, name: str, description: str, category: str, handler: callable) -> None:
         self._tools[name] = MCPTool(name=name, description=description, category=category, handler=handler)
 
@@ -279,3 +293,46 @@ class MCPServer:
     def _handle_value_roi(self, entity_id: str, **kwargs) -> dict:
         roi = self._value_ssot.calculate_roi(entity_id)
         return {"success": True, "roi": roi}
+
+    # ── Trigger 工具 ──────────────────────────────
+
+    def _handle_trigger_list(self, trigger_type: str = "", layer: str = "", **kwargs) -> dict:
+        from model_driven.toolchain.trigger_registry import TriggerRegistry
+        registry = TriggerRegistry()
+        triggers = registry.list_all(
+            trigger_type=trigger_type or None,
+            layer=layer or None,
+        )
+        return {
+            "success": True,
+            "total": len(triggers),
+            "triggers": [t.to_dict() for t in triggers],
+            "types": registry.list_types(),
+            "layers": registry.list_layers(),
+        }
+
+    def _handle_trigger_status(self, trigger_id: str = "", **kwargs) -> dict:
+        from model_driven.toolchain.trigger_registry import TriggerRegistry
+        registry = TriggerRegistry()
+        return registry.check_health(trigger_id or None)
+
+    def _handle_trigger_derive(self, **kwargs) -> dict:
+        from model_driven.toolchain.trigger_registry import TriggerRegistry
+        registry = TriggerRegistry()
+        return {"success": True, "derivation": registry.run_derivation()}
+
+    def _handle_trigger_heal(self, **kwargs) -> dict:
+        from model_driven.toolchain.trigger_registry import TriggerRegistry
+        registry = TriggerRegistry()
+        return {"success": True, "heal": registry.run_heal()}
+
+    def _handle_trigger_dashboard(self, **kwargs) -> dict:
+        from model_driven.toolchain.trigger_registry import TriggerRegistry
+        registry = TriggerRegistry()
+        return {"success": True, "dashboard": registry.get_dashboard()}
+
+    def _handle_trigger_drift(self, **kwargs) -> dict:
+        from model_driven.toolchain.trigger_registry import TriggerRegistry
+        registry = TriggerRegistry()
+        drifts = registry.detect_drift()
+        return {"success": True, "drifts": drifts, "has_drift": len(drifts) > 0}
