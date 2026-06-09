@@ -16,7 +16,7 @@ properties:
   domain_type: workspace
   layer: L0-L4
   governance_tier: 1
-  storage: /Users/xiamingxing/Workspace
+  storage: ~/Workspace
   capabilities:
   - workspace.root
   - project.index

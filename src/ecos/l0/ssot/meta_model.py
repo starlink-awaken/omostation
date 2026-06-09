@@ -78,7 +78,9 @@ _RELATION_MATRIX: dict[tuple[str, str], list[MetaRelationType]] = {
 }
 
 
-def check_relation_allowed(source_type: MetaType, target_type: MetaType, relation_type: MetaRelationType) -> bool:
+def check_relation_allowed(
+    source_type: MetaType, target_type: MetaType, relation_type: MetaRelationType
+) -> bool:
     """检查给定的元关系是否被元矩阵允许"""
     key = (source_type.value, target_type.value)
     allowed = _RELATION_MATRIX.get(key, [])
@@ -361,7 +363,10 @@ YAML_SCHEMAS: dict[str, dict] = {
                         "type": {"type": "string"},
                         "meta_type": {"type": "string"},
                         "name": {"type": "string"},
-                        "status": {"type": "string", "enum": ["active", "draft", "deprecated"]},
+                        "status": {
+                            "type": "string",
+                            "enum": ["active", "draft", "deprecated"],
+                        },
                     },
                 },
             },
@@ -538,19 +543,27 @@ def validate_yaml_schema(yaml_name: str, data: dict) -> list[str]:
 
             if prop_type == "string":
                 if not isinstance(value, str):
-                    errors.append(f"{path}.{prop_name}: 应为字符串，实际为 {type(value).__name__}")
+                    errors.append(
+                        f"{path}.{prop_name}: 应为字符串，实际为 {type(value).__name__}"
+                    )
                 elif prop_schema.get("minLength", 0) > 0 and len(value) == 0:
                     errors.append(f"{path}.{prop_name}: 字符串不能为空")
                 elif "enum" in prop_schema and value not in prop_schema["enum"]:
-                    errors.append(f"{path}.{prop_name}: 值 '{value}' 不在允许范围内 {prop_schema['enum']}")
+                    errors.append(
+                        f"{path}.{prop_name}: 值 '{value}' 不在允许范围内 {prop_schema['enum']}"
+                    )
 
             elif prop_type == "array":
                 if not isinstance(value, list):
-                    errors.append(f"{path}.{prop_name}: 应为数组，实际为 {type(value).__name__}")
+                    errors.append(
+                        f"{path}.{prop_name}: 应为数组，实际为 {type(value).__name__}"
+                    )
                 elif "items" in prop_schema:
                     for idx, item in enumerate(value):
                         if isinstance(item, dict):
-                            _check(item, prop_schema["items"], f"{path}.{prop_name}[{idx}]")
+                            _check(
+                                item, prop_schema["items"], f"{path}.{prop_name}[{idx}]"
+                            )
 
     _check(data, schema, yaml_name)
     return errors
@@ -558,7 +571,7 @@ def validate_yaml_schema(yaml_name: str, data: dict) -> list[str]:
 
 # ── 跨文件引用校验 ────────────────────────────────────
 
-import re as _re
+import re as _re  # noqa: E402
 
 
 def validate_cross_references(config: DomainConfig) -> list[str]:
@@ -590,9 +603,13 @@ def validate_cross_references(config: DomainConfig) -> list[str]:
     # 1. 关系引用
     for r in config.relations:
         if r.source_id not in known_ids:
-            errors.append(f"关系源 '{r.source_id}' 未定义（引用了不存在的实体/事实/状态）")
+            errors.append(
+                f"关系源 '{r.source_id}' 未定义（引用了不存在的实体/事实/状态）"
+            )
         if r.target_id not in known_ids:
-            errors.append(f"关系目标 '{r.target_id}' 未定义（引用了不存在的实体/事实/状态）")
+            errors.append(
+                f"关系目标 '{r.target_id}' 未定义（引用了不存在的实体/事实/状态）"
+            )
 
     # 2. 推论依赖
     for inf in config.inferences:
@@ -620,9 +637,13 @@ def validate_cross_references(config: DomainConfig) -> list[str]:
         state_ids = {s.id for s in sm.states}
         for t in sm.transitions:
             if t.from_state not in state_ids:
-                errors.append(f"状态机 {sm.id} 转换 from_state='{t.from_state}' 不在状态列表中")
+                errors.append(
+                    f"状态机 {sm.id} 转换 from_state='{t.from_state}' 不在状态列表中"
+                )
             if t.to_state not in state_ids:
-                errors.append(f"状态机 {sm.id} 转换 to_state='{t.to_state}' 不在状态列表中")
+                errors.append(
+                    f"状态机 {sm.id} 转换 to_state='{t.to_state}' 不在状态列表中"
+                )
 
     # 5. 实体引用的 facts
     for e in config.entities:

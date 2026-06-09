@@ -108,7 +108,9 @@ def write_ssb_event(event_type, summary, detail, risk="LOW", action="NONE"):
     try:
         db = sqlite3.connect(str(SSB_DB))
         db.execute("BEGIN")
-        last_seq = db.execute("SELECT COALESCE(MAX(seq), 0) FROM ssb_events").fetchone()[0]
+        last_seq = db.execute(
+            "SELECT COALESCE(MAX(seq), 0) FROM ssb_events"
+        ).fetchone()[0]
         eid = f"EMERGENCE-AUTO-{_ts().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6]}"
         db.execute(
             """
@@ -185,14 +187,22 @@ def run_critic_analysis(deviations: list) -> dict:
     topic_parts = []
     for d in deviations:
         arrow = "↑" if d["deviation"] > 0 else "↓"
-        topic_parts.append(f"{d['label']} {arrow}{abs(d['deviation'] * 100):.0f}% ({d['previous']}→{d['current']})")
+        topic_parts.append(
+            f"{d['label']} {arrow}{abs(d['deviation'] * 100):.0f}% ({d['previous']}→{d['current']})"
+        )
 
     topic = "偏离诊断: " + " | ".join(topic_parts[:3])
 
     try:
         # 尝试调用委员会
         r = subprocess.run(
-            [sys.executable, str(SCRIPTS / "multi_model_committee.py"), "--risk", "MED", topic],
+            [
+                sys.executable,
+                str(SCRIPTS / "multi_model_committee.py"),
+                "--risk",
+                "MED",
+                topic,
+            ],
             capture_output=True,
             text=True,
             timeout=200,
@@ -301,7 +311,9 @@ def analyze():
 
     for d in diffs:
         arrow = "↑" if d["deviation"] > 0 else "↓"
-        print(f"  {arrow} {d['label']}: {d['deviation']:+.1%} ({d['previous']}→{d['current']})")
+        print(
+            f"  {arrow} {d['label']}: {d['deviation']:+.1%} ({d['previous']}→{d['current']})"
+        )
 
     # Step 3: 分类
     print("\n▶ 步骤3: 偏离分类")
@@ -313,7 +325,9 @@ def analyze():
         ("P2 ⚪", classified["p2"]),
     ]:
         for item in items:
-            print(f"  {level}: {item['label']} ({item['deviation']:+.1%}) → {item['action']}")
+            print(
+                f"  {level}: {item['label']} ({item['deviation']:+.1%}) → {item['action']}"
+            )
 
     # Step 4: CRITIC 分析 (P0+P1)
     all_critic = classified["p0"] + classified["p1"]
@@ -325,7 +339,9 @@ def analyze():
         write_ssb_event(
             "CRITIC",
             f"CRITIC分析: {len(all_critic)} 个偏离",
-            json.dumps({"deviations": all_critic, "critic": critic_result}, ensure_ascii=False),
+            json.dumps(
+                {"deviations": all_critic, "critic": critic_result}, ensure_ascii=False
+            ),
             "MED" if classified["p0"] else "LOW",
             "EXECUTE" if classified["p1"] else "NONE",
         )
@@ -398,7 +414,9 @@ def main():
 
     if args.rollback:
         ok = auto_rollback()
-        print(f"回滚: {'成功' if ok['success'] else '失败: ' + ok.get('reason', '未知')}")
+        print(
+            f"回滚: {'成功' if ok['success'] else '失败: ' + ok.get('reason', '未知')}"
+        )
         return 0 if ok["success"] else 1
 
     return analyze()

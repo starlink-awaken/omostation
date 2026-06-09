@@ -17,13 +17,11 @@ _LAZY_IMPORTS = {
     "ssb_integrity": ".l0.ssb.ssb_integrity",
     "ssb_schema_migrate": ".l0.ssb.ssb_schema_migrate",
     "ssb_seq_migrate": ".l0.ssb.ssb_seq_migrate",
-    
     # l0.emergence
     "calc_emergence": ".l0.emergence.calc_emergence",
     "emergence_auto": ".l0.emergence.emergence_auto",
     "emergence_watch": ".l0.emergence.emergence_watch",
     "snapshot_emergence": ".l0.emergence.snapshot_emergence",
-    
     # services
     "constitution_watcher": ".services.constitution_watcher",
     "realtime_guard": ".services.realtime_guard",
@@ -32,7 +30,6 @@ _LAZY_IMPORTS = {
     "model_balancer": ".services.model_balancer",
     "planner": ".services.planner",
     "email_sender": ".services.email_sender",
-    
     # common
     "common": ".common.common",
     "ecos_common": ".common.ecos_common",

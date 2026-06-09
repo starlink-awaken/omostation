@@ -355,7 +355,9 @@ class ExecutionMetricsCollector:
         self.monitor = monitor or get_environment_manager().get_monitor("default")
         self.execution_history: deque = deque(maxlen=1000)
 
-    def collect(self, report: DerivationReport, execution_time_ms: float) -> list[MetricValue]:
+    def collect(
+        self, report: DerivationReport, execution_time_ms: float
+    ) -> list[MetricValue]:
         """收集执行指标"""
         metrics = []
         timestamp = datetime.now().isoformat()
@@ -374,22 +376,49 @@ class ExecutionMetricsCollector:
 
         # 规则处理指标
         metrics.append(
-            MetricValue(name="execution.total_rules", value=report.total_rules, timestamp=timestamp, tags=env_tags)
+            MetricValue(
+                name="execution.total_rules",
+                value=report.total_rules,
+                timestamp=timestamp,
+                tags=env_tags,
+            )
         )
 
         metrics.append(
-            MetricValue(name="execution.passed_rules", value=report.passed, timestamp=timestamp, tags=env_tags)
+            MetricValue(
+                name="execution.passed_rules",
+                value=report.passed,
+                timestamp=timestamp,
+                tags=env_tags,
+            )
         )
 
         metrics.append(
-            MetricValue(name="execution.failed_rules", value=report.error, timestamp=timestamp, tags=env_tags)
+            MetricValue(
+                name="execution.failed_rules",
+                value=report.error,
+                timestamp=timestamp,
+                tags=env_tags,
+            )
         )
 
         metrics.append(
-            MetricValue(name="execution.blocked_rules", value=report.blocker, timestamp=timestamp, tags=env_tags)
+            MetricValue(
+                name="execution.blocked_rules",
+                value=report.blocker,
+                timestamp=timestamp,
+                tags=env_tags,
+            )
         )
 
-        metrics.append(MetricValue(name="execution.warn_rules", value=report.warn, timestamp=timestamp, tags=env_tags))
+        metrics.append(
+            MetricValue(
+                name="execution.warn_rules",
+                value=report.warn,
+                timestamp=timestamp,
+                tags=env_tags,
+            )
+        )
 
         # 计算衍生指标
         if report.total_rules > 0:
@@ -397,24 +426,42 @@ class ExecutionMetricsCollector:
             failure_rate = (report.error + report.blocker) / report.total_rules
 
             metrics.append(
-                MetricValue(name="execution.success_rate", value=success_rate, timestamp=timestamp, tags=env_tags)
+                MetricValue(
+                    name="execution.success_rate",
+                    value=success_rate,
+                    timestamp=timestamp,
+                    tags=env_tags,
+                )
             )
 
             metrics.append(
-                MetricValue(name="execution.failure_rate", value=failure_rate, timestamp=timestamp, tags=env_tags)
+                MetricValue(
+                    name="execution.failure_rate",
+                    value=failure_rate,
+                    timestamp=timestamp,
+                    tags=env_tags,
+                )
             )
 
             # 规则吞吐量
             if execution_time_ms > 0:
                 throughput = report.total_rules / (execution_time_ms / 1000)
                 metrics.append(
-                    MetricValue(name="execution.rules_per_second", value=throughput, timestamp=timestamp, tags=env_tags)
+                    MetricValue(
+                        name="execution.rules_per_second",
+                        value=throughput,
+                        timestamp=timestamp,
+                        tags=env_tags,
+                    )
                 )
 
         # 执行状态
         metrics.append(
             MetricValue(
-                name="execution.all_passed", value=1.0 if report.all_passed else 0.0, timestamp=timestamp, tags=env_tags
+                name="execution.all_passed",
+                value=1.0 if report.all_passed else 0.0,
+                timestamp=timestamp,
+                tags=env_tags,
             )
         )
 
@@ -435,7 +482,9 @@ class ExecutionMetricsCollector:
         cutoff_time = datetime.now() - timedelta(minutes=window_minutes)
 
         recent_executions = [
-            record for record in self.execution_history if datetime.fromisoformat(record["timestamp"]) >= cutoff_time
+            record
+            for record in self.execution_history
+            if datetime.fromisoformat(record["timestamp"]) >= cutoff_time
         ]
 
         if not recent_executions:
@@ -449,13 +498,17 @@ class ExecutionMetricsCollector:
 
         # 计算统计指标
         times = [record["execution_time_ms"] for record in recent_executions]
-        success_count = sum(1 for record in recent_executions if record["report"].all_passed)
+        success_count = sum(
+            1 for record in recent_executions if record["report"].all_passed
+        )
 
         avg_time = statistics.mean(times)
         success_rate = success_count / len(recent_executions)
 
         total_rules = sum(record["report"].total_rules for record in recent_executions)
-        total_time_sec = sum(record["execution_time_ms"] for record in recent_executions) / 1000
+        total_time_sec = (
+            sum(record["execution_time_ms"] for record in recent_executions) / 1000
+        )
         throughput = total_rules / total_time_sec if total_time_sec > 0 else 0
 
         return {
@@ -485,47 +538,85 @@ class BusinessMetricsCollector:
 
         # 实体指标
         metrics.append(
-            MetricValue(name="business.entity_count", value=len(domain.entities), timestamp=timestamp, tags=env_tags)
+            MetricValue(
+                name="business.entity_count",
+                value=len(domain.entities),
+                timestamp=timestamp,
+                tags=env_tags,
+            )
         )
 
         # 事实指标
         metrics.append(
-            MetricValue(name="business.fact_count", value=len(domain.facts), timestamp=timestamp, tags=env_tags)
+            MetricValue(
+                name="business.fact_count",
+                value=len(domain.facts),
+                timestamp=timestamp,
+                tags=env_tags,
+            )
         )
 
         # 规则指标
         metrics.append(
-            MetricValue(name="business.rule_count", value=len(domain.rules), timestamp=timestamp, tags=env_tags)
+            MetricValue(
+                name="business.rule_count",
+                value=len(domain.rules),
+                timestamp=timestamp,
+                tags=env_tags,
+            )
         )
 
         # 推论指标
         metrics.append(
             MetricValue(
-                name="business.inference_count", value=len(domain.inferences), timestamp=timestamp, tags=env_tags
+                name="business.inference_count",
+                value=len(domain.inferences),
+                timestamp=timestamp,
+                tags=env_tags,
             )
         )
 
         # 关系指标
         metrics.append(
-            MetricValue(name="business.relation_count", value=len(domain.relations), timestamp=timestamp, tags=env_tags)
+            MetricValue(
+                name="business.relation_count",
+                value=len(domain.relations),
+                timestamp=timestamp,
+                tags=env_tags,
+            )
         )
 
         # 计算复杂度指标
         entity_complexity = self._calculate_entity_complexity(domain.entities)
         metrics.append(
-            MetricValue(name="business.entity_complexity", value=entity_complexity, timestamp=timestamp, tags=env_tags)
+            MetricValue(
+                name="business.entity_complexity",
+                value=entity_complexity,
+                timestamp=timestamp,
+                tags=env_tags,
+            )
         )
 
         # 计算关系密度
         relation_density = self._calculate_relation_density(domain)
         metrics.append(
-            MetricValue(name="business.relation_density", value=relation_density, timestamp=timestamp, tags=env_tags)
+            MetricValue(
+                name="business.relation_density",
+                value=relation_density,
+                timestamp=timestamp,
+                tags=env_tags,
+            )
         )
 
         # 估算数据规模
         domain_size_mb = self._estimate_domain_size(domain)
         metrics.append(
-            MetricValue(name="business.domain_size_mb", value=domain_size_mb, timestamp=timestamp, tags=env_tags)
+            MetricValue(
+                name="business.domain_size_mb",
+                value=domain_size_mb,
+                timestamp=timestamp,
+                tags=env_tags,
+            )
         )
 
         return metrics
@@ -596,7 +687,9 @@ class QualityMetricsCollector:
         metrics.append(
             MetricValue(
                 name="quality.passed_ratio",
-                value=report.passed / report.total_rules if report.total_rules > 0 else 0,
+                value=report.passed / report.total_rules
+                if report.total_rules > 0
+                else 0,
                 timestamp=timestamp,
                 tags=env_tags,
             )
@@ -605,7 +698,9 @@ class QualityMetricsCollector:
         metrics.append(
             MetricValue(
                 name="quality.failed_ratio",
-                value=report.error / report.total_rules if report.total_rules > 0 else 0,
+                value=report.error / report.total_rules
+                if report.total_rules > 0
+                else 0,
                 timestamp=timestamp,
                 tags=env_tags,
             )
@@ -614,7 +709,9 @@ class QualityMetricsCollector:
         metrics.append(
             MetricValue(
                 name="quality.blocked_ratio",
-                value=report.blocker / report.total_rules if report.total_rules > 0 else 0,
+                value=report.blocker / report.total_rules
+                if report.total_rules > 0
+                else 0,
                 timestamp=timestamp,
                 tags=env_tags,
             )
@@ -703,7 +800,10 @@ class EnhancedMetricsCollector:
         self.aggregated_metrics: dict[str, AggregatedMetric] = {}
 
     def collect_all(
-        self, report: DerivationReport | None = None, execution_time_ms: float = 0, domain: DomainConfig | None = None
+        self,
+        report: DerivationReport | None = None,
+        execution_time_ms: float = 0,
+        domain: DomainConfig | None = None,
     ) -> dict[str, list[MetricValue]]:
         """收集所有指标"""
         all_metrics = {"system": [], "execution": [], "business": [], "quality": []}
@@ -717,7 +817,9 @@ class EnhancedMetricsCollector:
         # 执行指标
         if report:
             if self.monitor.should_collect():
-                execution_metrics = self.execution_collector.collect(report, execution_time_ms)
+                execution_metrics = self.execution_collector.collect(
+                    report, execution_time_ms
+                )
                 all_metrics["execution"].extend(execution_metrics)
                 self._cache_metrics("execution", execution_metrics)
 
@@ -746,7 +848,9 @@ class EnhancedMetricsCollector:
             # 记录到监控器
             self.monitor.record_collection(metric.name, metric.value, metric.tags)
 
-    def aggregate_metrics(self, metric_name: str, time_window_minutes: int = 5) -> AggregatedMetric | None:
+    def aggregate_metrics(
+        self, metric_name: str, time_window_minutes: int = 5
+    ) -> AggregatedMetric | None:
         """聚合指标"""
         self.monitor.generate_isolation_key("all", metric_name)
 
@@ -755,7 +859,11 @@ class EnhancedMetricsCollector:
         for cache_key, cached_metrics in self.metrics_cache.items():
             if metric_name in cache_key:
                 cutoff_time = datetime.now() - timedelta(minutes=time_window_minutes)
-                recent_metrics = [m for m in cached_metrics if datetime.fromisoformat(m.timestamp) >= cutoff_time]
+                recent_metrics = [
+                    m
+                    for m in cached_metrics
+                    if datetime.fromisoformat(m.timestamp) >= cutoff_time
+                ]
                 all_metrics.extend(recent_metrics)
 
         if not all_metrics:
@@ -801,7 +909,9 @@ class EnhancedMetricsCollector:
             "business_metrics": self._get_latest_metrics("business"),
             "quality_metrics": self._get_latest_metrics("quality"),
             "cache_stats": {
-                "total_cached_metrics": sum(len(cache) for cache in self.metrics_cache.values()),
+                "total_cached_metrics": sum(
+                    len(cache) for cache in self.metrics_cache.values()
+                ),
                 "categories": len(self.metrics_cache),
             },
         }
@@ -852,7 +962,9 @@ class EnhancedMetricsCollector:
 
         # 执行统计（如果有）
         if hasattr(self.execution_collector, "get_execution_statistics"):
-            exec_stats = self.execution_collector.get_execution_statistics(window_minutes=60)
+            exec_stats = self.execution_collector.get_execution_statistics(
+                window_minutes=60
+            )
             report.append("\n⚡ 执行统计 (最近60分钟):")
             report.append(f"  总执行次数: {exec_stats['total_executions']}")
             report.append(f"  平均执行时间: {exec_stats['average_time_ms']:.2f}ms")

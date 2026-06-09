@@ -158,20 +158,21 @@ class RuleMiner:
                 # 单一配对 → 精确描述
                 m = top3[0]
                 name = f"{m['small'].title} vs {big_fact.title} 矛盾"
-                rationale = (
-                    f"{m['small'].id}({m['small'].value}) / {big_fact.id}({big_fact.value}) = {m['ratio'] * 100:.1f}%"
-                )
+                rationale = f"{m['small'].id}({m['small'].value}) / {big_fact.id}({big_fact.value}) = {m['ratio'] * 100:.1f}%"
                 logic = f"{m['small'].title}远低于{big_fact.title}，需要相应的解决方案"
-                conditions = [f'fact_ratio("{m["small"].id}", "{big_fact.id}") < {m["ratio"] * 2:.2f}']
+                conditions = [
+                    f'fact_ratio("{m["small"].id}", "{big_fact.id}") < {m["ratio"] * 2:.2f}'
+                ]
             else:
                 # 多配对 → 聚合描述
                 small_names = "、".join(m["small"].title for m in top3)
                 name = f"{big_fact.title} 资源错配（vs {small_names} 等）"
-                rationale = (
-                    f"{big_fact.title}({big_fact.value}) 与多个指标({', '.join(m['small'].id for m in top3)})比例悬殊"
-                )
+                rationale = f"{big_fact.title}({big_fact.value}) 与多个指标({', '.join(m['small'].id for m in top3)})比例悬殊"
                 logic = f"{big_fact.title}与多个下游指标之间存在结构性断层，需要系统性解决方案"
-                conditions = [f'fact_ratio("{m["small"].id}", "{big_fact.id}") < {m["ratio"] * 2:.2f}' for m in top3]
+                conditions = [
+                    f'fact_ratio("{m["small"].id}", "{big_fact.id}") < {m["ratio"] * 2:.2f}'
+                    for m in top3
+                ]
 
             # 置信度取最高比例的那个（最悬殊 = 最高置信度）
             best_ratio = top3[0]["ratio"]
@@ -187,7 +188,9 @@ class RuleMiner:
                     conditions=conditions,
                     logic=logic,
                     source="UNPAIRED_FACTS",
-                    yaml_snippet=self._generate_yaml_snippet("contradiction", name, conditions),
+                    yaml_snippet=self._generate_yaml_snippet(
+                        "contradiction", name, conditions
+                    ),
                 )
             )
 
@@ -217,7 +220,10 @@ class RuleMiner:
                 has_interlock = False
                 for s_a in sm_a.states:
                     for s_b in sm_b.states:
-                        if (s_a.id, s_b.id) in existing_interlocks or (s_b.id, s_a.id) in existing_interlocks:
+                        if (s_a.id, s_b.id) in existing_interlocks or (
+                            s_b.id,
+                            s_a.id,
+                        ) in existing_interlocks:
                             has_interlock = True
                             break
                     if has_interlock:
@@ -300,7 +306,9 @@ class RuleMiner:
                     return True
         return False
 
-    def _generate_yaml_snippet(self, pattern: str, name: str, conditions: list[str]) -> str:
+    def _generate_yaml_snippet(
+        self, pattern: str, name: str, conditions: list[str]
+    ) -> str:
         """生成可直接粘贴到 rules.yaml 的片段"""
         lines = [f"# 建议规则（{self._source_label(self._current_source)}）"]
         lines.append("  - id: INF-SUG-001")

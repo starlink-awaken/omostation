@@ -59,7 +59,9 @@ missed:
 class EnsembleExtractor(Extractor):
     """集成提取器：模板 + LLM 验证"""
 
-    def __init__(self, template: TemplateExtractor | None = None, llm: LLMExtractor | None = None):
+    def __init__(
+        self, template: TemplateExtractor | None = None, llm: LLMExtractor | None = None
+    ):
         self.template = template or TemplateExtractor()
         self.llm = llm or LLMExtractor(auto_detect=True)
 

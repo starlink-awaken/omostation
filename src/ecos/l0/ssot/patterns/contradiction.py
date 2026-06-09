@@ -30,12 +30,19 @@ class ContradictionPattern(BasePattern):
     def pattern_name(self) -> str:
         return "contradiction"
 
-    def evaluate(self, rule: Rule, domain: DomainConfig, context: dict | None = None) -> CheckResult:
+    def evaluate(
+        self, rule: Rule, domain: DomainConfig, context: dict | None = None
+    ) -> CheckResult:
         rule_id = rule.id
         rule_name = rule.name or rule_id
 
         if not rule.premises:
-            return CheckResult(protocol_id=rule_id, name=rule_name, passed=True, details=["⚠️ 无前提条件，跳过"])
+            return CheckResult(
+                protocol_id=rule_id,
+                name=rule_name,
+                passed=True,
+                details=["⚠️ 无前提条件，跳过"],
+            )
 
         triggered = []
         for premise in rule.premises:
@@ -62,7 +69,9 @@ class ContradictionPattern(BasePattern):
 
             details = [f"⚡ 矛盾触发: {rule_name}"]
             for t in triggered:
-                details.append(f"  ├─ {t['condition']} → {'⚠️ 匹配' if t['matched'] else '不匹配'}")
+                details.append(
+                    f"  ├─ {t['condition']} → {'⚠️ 匹配' if t['matched'] else '不匹配'}"
+                )
             details.append(f"  └─ 结论: {conclusion[:80]}...")
 
             return CheckResult(
@@ -98,9 +107,16 @@ class ContradictionPattern(BasePattern):
         condition = condition.strip()
 
         # entity_attr(id, attr) op value
-        m = re.match(r'entity_attr\("([^"]+)",\s*"([^"]+)"\)\s*(==|!=|in)\s*(.+)$', condition)
+        m = re.match(
+            r'entity_attr\("([^"]+)",\s*"([^"]+)"\)\s*(==|!=|in)\s*(.+)$', condition
+        )
         if m:
-            eid, attr, op, val = m.group(1), m.group(2), m.group(3), m.group(4).strip().strip('"')
+            eid, attr, op, val = (
+                m.group(1),
+                m.group(2),
+                m.group(3),
+                m.group(4).strip().strip('"'),
+            )
             entity = domain.find_entity(eid)
             if not entity:
                 return False
@@ -114,7 +130,10 @@ class ContradictionPattern(BasePattern):
                 return op_table[op]
 
         # fact_ratio(id_a, id_b) op threshold
-        m = re.match(r'fact_ratio\("([^"]+)",\s*"([^"]+)"\)\s*(<|<=|==|>|>=)\s*([\d.]+)$', condition)
+        m = re.match(
+            r'fact_ratio\("([^"]+)",\s*"([^"]+)"\)\s*(<|<=|==|>|>=)\s*([\d.]+)$',
+            condition,
+        )
         if m:
             fa_id, fb_id = m.group(1), m.group(2)
             op = m.group(3)
@@ -142,7 +161,9 @@ class ContradictionPattern(BasePattern):
         if m:
             prefix, keyword = m.group(1), m.group(2)
             for e in domain.entities:
-                if e.id.startswith(prefix) and (keyword in str(e.attributes) or keyword in e.name):
+                if e.id.startswith(prefix) and (
+                    keyword in str(e.attributes) or keyword in e.name
+                ):
                     return True
             return False
 

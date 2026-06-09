@@ -16,7 +16,7 @@ properties:
   domain_type: engine
   layer: L4
   governance_tier: 1
-  storage: /Users/xiamingxing/Workspace/projects/l4-kernel
+  storage: ~/Workspace/projects/l4-kernel
   capabilities:
   - domain.registry
   - domain.health

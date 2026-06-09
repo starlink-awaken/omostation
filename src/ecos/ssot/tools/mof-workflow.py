@@ -20,7 +20,6 @@ Examples:
 """
 
 import sys
-import os
 import json
 import yaml
 from pathlib import Path
@@ -35,7 +34,7 @@ REGISTRY_FILE = SSOT_DIR / "registry" / "workflow-catalog.yaml"
 # 引入统一输出
 TOOLS_DIR = Path(__file__).parent
 sys.path.insert(0, str(TOOLS_DIR))
-from _output import OutputFormatter, print_error
+from _output import OutputFormatter, print_error  # noqa: E402
 
 
 def _load_nodes():
@@ -57,8 +56,12 @@ def _find(name_or_id):
         nid = n.get("id", "").lower()
         kebab = nid.replace("workflow-", "").replace("_", "-")
         nname = n.get("name", "").lower()
-        if (name_lower == nid or name_lower == kebab or
-            name_lower == nname or name_lower in nid):
+        if (
+            name_lower == nid
+            or name_lower == kebab
+            or name_lower == nname
+            or name_lower in nid
+        ):
             return n
     return None
 
@@ -76,6 +79,7 @@ def _load_catalog():
 # 命令实现
 # ═══════════════════════════════════════════════════════════════
 
+
 def cmd_list(args):
     out = OutputFormatter(json_mode=args.json)
     nodes = _load_nodes()
@@ -92,14 +96,20 @@ def cmd_list(args):
         filtered.append(n)
 
     if args.json:
-        result = [{
-            "id": n.get("id"), "name": n.get("name"),
-            "subtype": n.get("subtype"), "domain": n.get("domain"),
-            "layer": n.get("layer"), "bos_uri": n.get("bos_uri"),
-            "description": n.get("description", ""),
-            "steps_count": len(n.get("steps", [])),
-            "status": n.get("status"),
-        } for n in filtered]
+        result = [
+            {
+                "id": n.get("id"),
+                "name": n.get("name"),
+                "subtype": n.get("subtype"),
+                "domain": n.get("domain"),
+                "layer": n.get("layer"),
+                "bos_uri": n.get("bos_uri"),
+                "description": n.get("description", ""),
+                "steps_count": len(n.get("steps", [])),
+                "status": n.get("status"),
+            }
+            for n in filtered
+        ]
         out.print_json({"workflows": result, "total": len(result)})
         return 0
 
@@ -111,8 +121,10 @@ def cmd_list(args):
         by_domain.setdefault(d, []).append(n)
 
     subtype_icons = {
-        "PipelineWorkflow": "🔗", "AgentWorkflow": "🤖",
-        "ScheduledWorkflow": "⏰", "MCPWorkflow": "🔌",
+        "PipelineWorkflow": "🔗",
+        "AgentWorkflow": "🤖",
+        "ScheduledWorkflow": "⏰",
+        "MCPWorkflow": "🔌",
     }
     out.print_header(f"工作流清单 ({len(filtered)}/{len(nodes)})")
 
@@ -125,13 +137,15 @@ def cmd_list(args):
         rows = []
         for w in sorted(wfs, key=lambda x: x.get("layer", "")):
             icon = subtype_icons.get(w.get("subtype", ""), "📋")
-            rows.append([
-                icon,
-                w.get("layer", "?"),
-                w.get("name", w.get("id", "?")),
-                w.get("subtype", "?"),
-                w.get("id", "?"),
-            ])
+            rows.append(
+                [
+                    icon,
+                    w.get("layer", "?"),
+                    w.get("name", w.get("id", "?")),
+                    w.get("subtype", "?"),
+                    w.get("id", "?"),
+                ]
+            )
         out.print_table(
             ["", "层", "名称", "类型", "ID"],
             rows,
@@ -141,11 +155,13 @@ def cmd_list(args):
     layer_counter = Counter(n.get("layer", "?") for n in filtered)
     subtype_counter = Counter(n.get("subtype", "?") for n in filtered)
     out.print_section("统计摘要")
-    out.print_key_value({
-        "按层": str(dict(layer_counter)),
-        "按类型": str(dict(subtype_counter)),
-        "总步骤": str(sum(len(n.get("steps", [])) for n in filtered)),
-    })
+    out.print_key_value(
+        {
+            "按层": str(dict(layer_counter)),
+            "按类型": str(dict(subtype_counter)),
+            "总步骤": str(sum(len(n.get("steps", [])) for n in filtered)),
+        }
+    )
     return 0
 
 
@@ -153,7 +169,9 @@ def cmd_show(args):
     out = OutputFormatter(json_mode=args.json)
     node = _find(args.name)
     if not node:
-        print_error(f"工作流未找到: {args.name}", "使用 'mof workflow list' 查看所有工作流")
+        print_error(
+            f"工作流未找到: {args.name}", "使用 'mof workflow list' 查看所有工作流"
+        )
         return 1
 
     if args.json:
@@ -163,16 +181,19 @@ def cmd_show(args):
     out.print_header(node.get("name", node.get("id")))
 
     # 基本信息
-    out.print_key_value({
-        "ID": node.get("id", "?"),
-        "类型": node.get("subtype", "?"),
-        "域": node.get("domain", "?") or "",
-        "层": node.get("layer", "?") or "",
-        "BOS URI": node.get("bos_uri", "?"),
-        "状态": node.get("status", "?"),
-        "版本": node.get("version", "?"),
-        "维护方": node.get("maintained_by", "?"),
-    }, "基本信息")
+    out.print_key_value(
+        {
+            "ID": node.get("id", "?"),
+            "类型": node.get("subtype", "?"),
+            "域": node.get("domain", "?") or "",
+            "层": node.get("layer", "?") or "",
+            "BOS URI": node.get("bos_uri", "?"),
+            "状态": node.get("status", "?"),
+            "版本": node.get("version", "?"),
+            "维护方": node.get("maintained_by", "?"),
+        },
+        "基本信息",
+    )
 
     out.print_info(f"描述: {node.get('description', '')}")
 
@@ -182,10 +203,14 @@ def cmd_show(args):
         out.print_section("跨层映射")
         if cl.get("realized_by"):
             for r in cl["realized_by"]:
-                print(f"  实现方: \033[36m{r.get('project', '?')}/{r.get('package', r.get('package', ''))}\033[0m → {r.get('entrypoint', '?')}")
+                print(
+                    f"  实现方: \033[36m{r.get('project', '?')}/{r.get('package', r.get('package', ''))}\033[0m → {r.get('entrypoint', '?')}"
+                )
         if cl.get("invoked_by"):
             for i in cl["invoked_by"]:
-                print(f"  调用方: [{i.get('layer', '?')}] {i.get('component', '?')} ({i.get('mechanism', '?')})")
+                print(
+                    f"  调用方: [{i.get('layer', '?')}] {i.get('component', '?')} ({i.get('mechanism', '?')})"
+                )
 
     # 步骤
     steps = node.get("steps", [])
@@ -206,23 +231,27 @@ def cmd_show(args):
     ex = node.get("execution", {})
     if ex:
         out.print_section("执行配置")
-        out.print_key_value({
-            "模式": ex.get("mode", "?"),
-            "最大重试": str(ex.get("max_retries", "?")),
-            "超时": f"{ex.get('timeout', '?')}s",
-            "失败策略": ex.get("on_failure", "?"),
-            "L0审计": "是" if ex.get("audit_enabled") else "否",
-        })
+        out.print_key_value(
+            {
+                "模式": ex.get("mode", "?"),
+                "最大重试": str(ex.get("max_retries", "?")),
+                "超时": f"{ex.get('timeout', '?')}s",
+                "失败策略": ex.get("on_failure", "?"),
+                "L0审计": "是" if ex.get("audit_enabled") else "否",
+            }
+        )
 
     # SLA
     sla = node.get("sla", {})
     if sla:
         out.print_section("SLA")
-        out.print_key_value({
-            "最大执行时间": f"{sla.get('max_execution_time', '?')}s",
-            "期望完成率": f"{sla.get('expected_completion_rate', 0.95)}",
-            "关键路径": "是" if sla.get("critical") else "否",
-        })
+        out.print_key_value(
+            {
+                "最大执行时间": f"{sla.get('max_execution_time', '?')}s",
+                "期望完成率": f"{sla.get('expected_completion_rate', 0.95)}",
+                "关键路径": "是" if sla.get("critical") else "否",
+            }
+        )
 
     # 关系
     rels = node.get("relations", [])
@@ -249,7 +278,9 @@ def cmd_validate(args):
     if name:
         node = _find(name)
         if not node:
-            print_error(f"工作流未找到: {name}", "使用 'mof workflow list' 查看所有工作流")
+            print_error(
+                f"工作流未找到: {name}", "使用 'mof workflow list' 查看所有工作流"
+            )
             return 1
         nodes = [node]
     else:
@@ -261,15 +292,37 @@ def cmd_validate(args):
     for n in nodes:
         nid = n.get("id", "?")
 
-        for field in ["id", "type", "subtype", "name", "description", "domain", "layer", "bos_uri"]:
+        for field in [
+            "id",
+            "type",
+            "subtype",
+            "name",
+            "description",
+            "domain",
+            "layer",
+            "bos_uri",
+        ]:
             if not n.get(field):
                 errors.append(f"{nid}: 缺少必填字段 {field}")
 
-        valid_subtypes = ["PipelineWorkflow", "AgentWorkflow", "ScheduledWorkflow", "MCPWorkflow"]
+        valid_subtypes = [
+            "PipelineWorkflow",
+            "AgentWorkflow",
+            "ScheduledWorkflow",
+            "MCPWorkflow",
+        ]
         if n.get("subtype") not in valid_subtypes:
             errors.append(f"{nid}: 无效的 subtype '{n.get('subtype')}'")
 
-        valid_domains = ["memory", "omo", "analysis", "persona", "forge", "meta", "infra"]
+        valid_domains = [
+            "memory",
+            "omo",
+            "analysis",
+            "persona",
+            "forge",
+            "meta",
+            "infra",
+        ]
         if n.get("domain") not in valid_domains:
             errors.append(f"{nid}: 无效的 domain '{n.get('domain')}'")
 
@@ -284,10 +337,14 @@ def cmd_validate(args):
             warnings.append(f"{nid}: BOS URI 格式非标准")
 
     if args.json:
-        out.print_json({
-            "total": len(nodes), "passed": len(nodes) - len(errors),
-            "errors": errors, "warnings": warnings,
-        })
+        out.print_json(
+            {
+                "total": len(nodes),
+                "passed": len(nodes) - len(errors),
+                "errors": errors,
+                "warnings": warnings,
+            }
+        )
         return 1 if errors else 0
 
     if not args.ci:
@@ -303,7 +360,10 @@ def cmd_validate(args):
         return 1
     else:
         if not args.ci:
-            out.print_success(f"全部 {len(nodes)} 个通过" + (f" ({len(warnings)} 个警告)" if warnings else ""))
+            out.print_success(
+                f"全部 {len(nodes)} 个通过"
+                + (f" ({len(warnings)} 个警告)" if warnings else "")
+            )
         return 0
 
 
@@ -316,45 +376,62 @@ def cmd_run(args):
 
     bos_uri = node.get("bos_uri", "")
     out.print_header(f"执行: {node.get('name')}")
-    out.print_key_value({
-        "BOS URI": bos_uri,
-        "实现方": node.get("cross_layer", {}).get("realized_by", [{}])[0].get("project", "?"),
-        "步骤数": str(len(node.get("steps", []))),
-    }, "基本信息")
+    out.print_key_value(
+        {
+            "BOS URI": bos_uri,
+            "实现方": node.get("cross_layer", {})
+            .get("realized_by", [{}])[0]
+            .get("project", "?"),
+            "步骤数": str(len(node.get("steps", []))),
+        },
+        "基本信息",
+    )
 
     if args.dry_run:
         out.print_progress("干运行模式 — 仅验证步骤")
         for s in node.get("steps", []):
             dep_ok = True
             if s.get("depends_on"):
-                dep_ok = all(d in [st.get("name") for st in node.get("steps", [])] for d in s["depends_on"])
+                dep_ok = all(
+                    d in [st.get("name") for st in node.get("steps", [])]
+                    for d in s["depends_on"]
+                )
             icon = "\033[32m✓\033[0m" if dep_ok else "\033[33m!\033[0m"
             print(f"  {icon} {s.get('order')}. {s.get('name')} → {s.get('action')}")
         out.print_success(f"干运行完成 ({len(node.get('steps', []))} 步骤)")
         return 0
 
     # 尝试通过 BOS URI 实际执行
-    import json
+
     if bos_uri:
         out.print_progress(f"通过 BOS URI 路由执行: {bos_uri}")
         try:
             import asyncio
             from agora.mcp.bos_resolver import resolve_bos_uri, parse_bos_uri
+
             target_uri = bos_uri.replace("ecos/workflow/", "")
             info = parse_bos_uri(target_uri)
-            out.print_progress(f"解析: {info.get('domain', '?')}/{info.get('package', '?')}/{info.get('action', '?')}")
+            out.print_progress(
+                f"解析: {info.get('domain', '?')}/{info.get('package', '?')}/{info.get('action', '?')}"
+            )
             result = asyncio.run(resolve_bos_uri(target_uri))
             out.print_success("执行完成")
-            print(f"\n\033[2m{json.dumps(result, ensure_ascii=False, default=str)[:500]}\033[0m")
+            print(
+                f"\n\033[2m{json.dumps(result, ensure_ascii=False, default=str)[:500]}\033[0m"
+            )
             return 0
         except ImportError:
             out.print_warning("Agora 模块未安装，无法直接执行")
-            out.print_info("提示: 使用 'agora pipeline <name> --goal \"...\"' 通过 Agora 执行")
+            out.print_info(
+                "提示: 使用 'agora pipeline <name> --goal \"...\"' 通过 Agora 执行"
+            )
         except Exception as e:
             out.print_error(f"执行失败: {e}")
     else:
         out.print_warning("该工作流无 BOS URI，需通过 Agora Service Mesh 路由")
-        out.print_info("提示: 使用 'agora pipeline <name> --goal \"...\"' 通过 Agora 执行")
+        out.print_info(
+            "提示: 使用 'agora pipeline <name> --goal \"...\"' 通过 Agora 执行"
+        )
 
     return 0
 
@@ -372,18 +449,22 @@ def cmd_relations(args):
         nid = node.get("id")
 
         upstream = [t for t in global_rels.get("triggers", []) if t.get("to") == nid]
-        downstream = [t for t in global_rels.get("triggers", []) if t.get("from") == nid]
-        deps = [d for d in global_rels.get("dependencies", []) if d.get("dependent") == nid]
-        flows_in = []
-        flows_out = []
+        downstream = [
+            t for t in global_rels.get("triggers", []) if t.get("from") == nid
+        ]
+        deps = [
+            d for d in global_rels.get("dependencies", []) if d.get("dependent") == nid
+        ]
 
         if args.json:
-            out.print_json({
-                "workflow": nid,
-                "upstream_triggers": upstream,
-                "downstream_triggers": downstream,
-                "dependencies": deps,
-            })
+            out.print_json(
+                {
+                    "workflow": nid,
+                    "upstream_triggers": upstream,
+                    "downstream_triggers": downstream,
+                    "dependencies": deps,
+                }
+            )
             return 0
 
         out.print_header(f"关系图: {node.get('name')}")
@@ -391,21 +472,27 @@ def cmd_relations(args):
         if upstream:
             out.print_section("上游触发")
             for u in upstream:
-                print(f"  ← \033[36m{u.get('from')}\033[0m \033[2m({u.get('note', '')})\033[0m")
+                print(
+                    f"  ← \033[36m{u.get('from')}\033[0m \033[2m({u.get('note', '')})\033[0m"
+                )
         else:
             out.print_info("上游触发: (无)")
 
         if downstream:
             out.print_section("下游触发")
             for d in downstream:
-                print(f"  → \033[36m{d.get('to')}\033[0m \033[2m({d.get('note', '')})\033[0m")
+                print(
+                    f"  → \033[36m{d.get('to')}\033[0m \033[2m({d.get('note', '')})\033[0m"
+                )
         else:
             out.print_info("下游触发: (无)")
 
         if deps:
             out.print_section("依赖")
             for d in deps:
-                print(f"  \033[36m{nid}\033[0m 需要 \033[36m{d.get('depends_on')}\033[0m \033[2m({d.get('note', '')})\033[0m")
+                print(
+                    f"  \033[36m{nid}\033[0m 需要 \033[36m{d.get('depends_on')}\033[0m \033[2m({d.get('note', '')})\033[0m"
+                )
 
         out.print_divider()
         return 0
@@ -420,7 +507,10 @@ def cmd_relations(args):
     triggers = global_rels.get("triggers", [])
     if triggers:
         out.print_section("触发链")
-        rows = [[t.get("from", "?"), "→", t.get("to", "?"), t.get("note", "")] for t in triggers]
+        rows = [
+            [t.get("from", "?"), "→", t.get("to", "?"), t.get("note", "")]
+            for t in triggers
+        ]
         out.print_table(["源", "", "目标", "说明"], rows)
 
     data_flows = global_rels.get("data_flows", [])
@@ -434,7 +524,9 @@ def cmd_relations(args):
     if deps:
         out.print_section("依赖关系")
         for d in deps:
-            print(f"  \033[36m{d.get('dependent')}\033[0m 依赖 \033[36m{d.get('depends_on')}\033[0m")
+            print(
+                f"  \033[36m{d.get('dependent')}\033[0m 依赖 \033[36m{d.get('depends_on')}\033[0m"
+            )
             if d.get("note"):
                 print(f"    \033[2m{d.get('note')}\033[0m")
 
@@ -456,33 +548,40 @@ def cmd_stats(args):
     critical = [n.get("name") for n in nodes if n.get("sla", {}).get("critical")]
 
     if args.json:
-        out.print_json({
-            "total": len(nodes),
-            "total_steps": total_steps,
-            "avg_steps": round(avg_steps, 1),
-            "by_layer": dict(sorted(layer_counter.items())),
-            "by_domain": dict(sorted(domain_counter.items())),
-            "by_subtype": dict(subtype_counter),
-            "critical_paths": critical,
-        })
+        out.print_json(
+            {
+                "total": len(nodes),
+                "total_steps": total_steps,
+                "avg_steps": round(avg_steps, 1),
+                "by_layer": dict(sorted(layer_counter.items())),
+                "by_domain": dict(sorted(domain_counter.items())),
+                "by_subtype": dict(subtype_counter),
+                "critical_paths": critical,
+            }
+        )
         return 0
 
     out.print_header("工作流统计")
-    out.print_key_value({
-        "总数": str(len(nodes)),
-        "总步骤": str(total_steps),
-        "平均步骤": f"{avg_steps:.1f}",
-    }, "核心指标")
+    out.print_key_value(
+        {
+            "总数": str(len(nodes)),
+            "总步骤": str(total_steps),
+            "平均步骤": f"{avg_steps:.1f}",
+        },
+        "核心指标",
+    )
 
     out.print_section("分布")
-    out.print_key_value({
-        "按层": str(dict(sorted(layer_counter.items()))),
-        "按域": str(dict(sorted(domain_counter.items()))),
-        "按类型": str(dict(subtype_counter)),
-    })
+    out.print_key_value(
+        {
+            "按层": str(dict(sorted(layer_counter.items()))),
+            "按域": str(dict(sorted(domain_counter.items()))),
+            "按类型": str(dict(subtype_counter)),
+        }
+    )
 
     if not nodes:
-        out.print_info('暂无工作流数据')
+        out.print_info("暂无工作流数据")
         return 0
 
     if critical:
@@ -492,7 +591,9 @@ def cmd_stats(args):
 
     catalog_stats = _load_catalog().get("stats", {})
     if catalog_stats.get("total", 0) != len(nodes):
-        out.print_warning(f"注册表不一致: catalog={catalog_stats.get('total', 0)}, M1节点={len(nodes)}")
+        out.print_warning(
+            f"注册表不一致: catalog={catalog_stats.get('total', 0)}, M1节点={len(nodes)}"
+        )
 
     out.print_divider()
     return 0
@@ -511,13 +612,18 @@ def cmd_graph(args):
     fmt = args.format
 
     if fmt == "dot":
-        lines = ["digraph BOS_Workflows {", '  rankdir=TB;', '  node [shape=box, style=filled, fillcolor=lightyellow];']
+        lines = [
+            "digraph BOS_Workflows {",
+            "  rankdir=TB;",
+            "  node [shape=box, style=filled, fillcolor=lightyellow];",
+        ]
         nodes = set()
         edges = []
         for t in global_rels.get("triggers", []):
             src = t["from"].replace("-", "_").replace(":", "_")
             dst = t["to"].replace("-", "_").replace(":", "_")
-            nodes.add(src); nodes.add(dst)
+            nodes.add(src)
+            nodes.add(dst)
             edges.append(f'  "{src}" -> "{dst}" [label="triggers", fontsize=9];')
         for n in sorted(nodes):
             lines.append(f'  "{n}";')
@@ -529,8 +635,15 @@ def cmd_graph(args):
     elif fmt == "mermaid":
         lines = ["graph TD"]
         for t in global_rels.get("triggers", []):
-            src = t["from"].replace("-", "_").replace("WORKFLOW_", "").replace("MECH_", "")
-            dst = t["to"].replace("-", "_").replace("WORKFLOW_", "").replace("MECH_", "")
+            src = (
+                t["from"]
+                .replace("-", "_")
+                .replace("WORKFLOW_", "")
+                .replace("MECH_", "")
+            )
+            dst = (
+                t["to"].replace("-", "_").replace("WORKFLOW_", "").replace("MECH_", "")
+            )
             lines.append(f"  {src} -->|triggers| {dst}")
         for d in global_rels.get("dependencies", []):
             dep = d["dependent"].replace("-", "_").replace("WORKFLOW_", "")
@@ -546,8 +659,8 @@ def cmd_graph(args):
             src = t["from"].replace("WORKFLOW-", "").replace("MECH-", "")[:30]
             dst = t["to"].replace("WORKFLOW-", "").replace("MECH-", "")[:30]
             print(f"  \033[36m{src}\033[0m")
-            print(f"    │ triggers")
-            print(f"    ▼")
+            print("    │ triggers")
+            print("    ▼")
             print(f"  \033[36m{dst}\033[0m")
             if t.get("note"):
                 print(f"    \033[2m{t['note'][:60]}\033[0m")
@@ -586,7 +699,9 @@ def cmd_check_refs(args):
                 errors.append(f"Dependency {field}: '{ref}' 无对应 M1 节点")
 
     if args.json:
-        out.print_json({"errors": errors, "warnings": warnings, "total_nodes": len(nodes)})
+        out.print_json(
+            {"errors": errors, "warnings": warnings, "total_nodes": len(nodes)}
+        )
         return 1 if errors else 0
 
     out.print_header(f"交叉引用校验 ({len(nodes)} 节点)")
@@ -623,9 +738,9 @@ def cmd_schema_report(args):
             continue
 
         has_structured = any(
-            isinstance(s.get("input", {}), dict) and any(
-                isinstance(v, dict) and "type" in v
-                for v in s.get("input", {}).values()
+            isinstance(s.get("input", {}), dict)
+            and any(
+                isinstance(v, dict) and "type" in v for v in s.get("input", {}).values()
             )
             for s in steps
         )
@@ -637,23 +752,27 @@ def cmd_schema_report(args):
             missing.append(nid)
 
     if args.json:
-        out.print_json({
-            "total": len(nodes),
-            "complete": complete,
-            "partial": partial,
-            "missing": missing,
-            "coverage": round(len(complete) / len(nodes) * 100, 1) if nodes else 0,
-        })
+        out.print_json(
+            {
+                "total": len(nodes),
+                "complete": complete,
+                "partial": partial,
+                "missing": missing,
+                "coverage": round(len(complete) / len(nodes) * 100, 1) if nodes else 0,
+            }
+        )
         return 0
 
     out.print_header(f"Schema 覆盖度报告 ({len(nodes)} 工作流)")
     coverage = round(len(complete) / len(nodes) * 100, 1) if nodes else 0
-    out.print_key_value({
-        "完成 (结构化)": str(len(complete)),
-        "部分 (数组格式)": str(len(partial)),
-        "缺失": str(len(missing)),
-        "覆盖度": f"{coverage}%",
-    })
+    out.print_key_value(
+        {
+            "完成 (结构化)": str(len(complete)),
+            "部分 (数组格式)": str(len(partial)),
+            "缺失": str(len(missing)),
+            "覆盖度": f"{coverage}%",
+        }
+    )
 
     if complete:
         out.print_section(f"已完成 ({len(complete)})")
@@ -689,25 +808,32 @@ def cmd_seed_bos(args):
         bos_uri = n.get("bos_uri", "")
         if not bos_uri or not bos_uri.startswith("bos://"):
             continue
-        bos_router.register(bos_uri, adapter="poc", config={
-            "domain": n.get("domain", "unknown"),
-            "workflow": n.get("name", ""),
-            "steps": len(n.get("steps", [])),
-        })
+        bos_router.register(
+            bos_uri,
+            adapter="poc",
+            config={
+                "domain": n.get("domain", "unknown"),
+                "workflow": n.get("name", ""),
+                "steps": len(n.get("steps", [])),
+            },
+        )
         registered += 1
 
     out.print_header("BOSRouter 注册")
-    out.print_key_value({
-        "已注册": str(registered),
-        "BOSRouter 总数": str(bos_router.count()),
-        "按适配器": str(bos_router.stats()),
-    })
+    out.print_key_value(
+        {
+            "已注册": str(registered),
+            "BOSRouter 总数": str(bos_router.count()),
+            "按适配器": str(bos_router.stats()),
+        }
+    )
     return 0
 
 
 # ═══════════════════════════════════════════════════════════════
 # Argparse 入口
 # ═══════════════════════════════════════════════════════════════
+
 
 def build_parser():
     import argparse
@@ -731,12 +857,21 @@ def build_parser():
     sub = p.add_subparsers(dest="subcommand", help="子命令")
 
     # list
-    l = sub.add_parser("list", help="列出所有工作流")
-    l.add_argument("--domain", choices=["memory", "omo", "analysis", "persona", "forge", "meta", "infra"],
-                   help="按 BOS 域过滤")
-    l.add_argument("--layer", choices=["L0", "L1", "L2", "I0", "L3", "L4"], help="按架构层过滤")
-    l.add_argument("--status", choices=["defined", "active", "deprecated", "archived"], help="按状态过滤")
-    l.add_argument("--json", action="store_true", help="JSON 输出")
+    list_parser = sub.add_parser("list", help="列出所有工作流")
+    list_parser.add_argument(
+        "--domain",
+        choices=["memory", "omo", "analysis", "persona", "forge", "meta", "infra"],
+        help="按 BOS 域过滤",
+    )
+    list_parser.add_argument(
+        "--layer", choices=["L0", "L1", "L2", "I0", "L3", "L4"], help="按架构层过滤"
+    )
+    list_parser.add_argument(
+        "--status",
+        choices=["defined", "active", "deprecated", "archived"],
+        help="按状态过滤",
+    )
+    list_parser.add_argument("--json", action="store_true", help="JSON 输出")
 
     # show
     s = sub.add_parser("show", help="查看工作流详情")
@@ -766,7 +901,12 @@ def build_parser():
 
     # graph
     g = sub.add_parser("graph", help="工作流依赖图")
-    g.add_argument("--format", choices=["dot", "mermaid", "ascii"], default="ascii", help="输出格式")
+    g.add_argument(
+        "--format",
+        choices=["dot", "mermaid", "ascii"],
+        default="ascii",
+        help="输出格式",
+    )
     g.add_argument("--json", action="store_true", help="JSON 输出")
 
     # check-refs
@@ -778,7 +918,7 @@ def build_parser():
     sr.add_argument("--json", action="store_true", help="JSON 输出")
 
     # seed-bos
-    sb = sub.add_parser("seed-bos", help="将 Workflow M1 节点注册到 BOSRouter")
+    sub.add_parser("seed-bos", help="将 Workflow M1 节点注册到 BOSRouter")
 
     return p
 

@@ -23,7 +23,9 @@ class ChainTriggerPattern(BasePattern):
     def pattern_name(self) -> str:
         return "chain_trigger"
 
-    def evaluate(self, rule: Rule, domain: DomainConfig, context: dict | None = None) -> CheckResult:
+    def evaluate(
+        self, rule: Rule, domain: DomainConfig, context: dict | None = None
+    ) -> CheckResult:
         rule_id = rule.id
         rule_name = rule.name or rule_id
 
@@ -40,7 +42,9 @@ class ChainTriggerPattern(BasePattern):
                 )
 
         # 检查是否有实体定义但无 interlocks_with
-        state_entities = [e for e in domain.entities if e.meta_type.value == "MET-STATE"]
+        state_entities = [
+            e for e in domain.entities if e.meta_type.value == "MET-STATE"
+        ]
 
         details = [f"📊 {rule_name}: {len(triggers)} 个咬合点"]
         for t in triggers[:10]:

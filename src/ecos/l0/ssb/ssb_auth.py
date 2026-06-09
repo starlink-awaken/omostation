@@ -30,7 +30,12 @@ def _load_key():
 
 def _ensure_schema(db: sqlite3.Connection):
     """确保 ssb_events 表存在且有 agent_signature 列"""
-    tables = [r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
+    tables = [
+        r[0]
+        for r in db.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        ).fetchall()
+    ]
     if "ssb_events" not in tables:
         db.execute("""
             CREATE TABLE ssb_events (
@@ -133,7 +138,9 @@ def sign_new_events(limit: int = 50, all_events: bool = False):
     for eid, seq, payload, agent in rows:
         sig = compute_signature(seq, eid, agent, payload or "")
         if sig:
-            db.execute("UPDATE ssb_events SET agent_signature = ? WHERE id = ?", (sig, eid))
+            db.execute(
+                "UPDATE ssb_events SET agent_signature = ? WHERE id = ?", (sig, eid)
+            )
             signed += 1
 
     db.commit()

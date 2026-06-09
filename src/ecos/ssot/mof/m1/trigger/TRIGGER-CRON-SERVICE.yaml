@@ -1,0 +1,21 @@
+id: "TRIGGER-CRON-SERVICE"
+type: "trigger"
+name: "Runtime Cron Service"
+description: "定时任务调度器 — 管理 30+ 定时任务 (日/周/月/季)"
+status: "active"
+domain: "meta"
+layer: "L1"
+created: "2026-06-09"
+version: "1.0.0"
+properties:
+  trigger_type: "cron"
+  trigger_source: "cron expressions + every Nm/Nh"
+  trigger_action: "runtime cron_service scheduler"
+  schedule: "every 60s (tick)"
+  interval_seconds: 60
+  dependencies:
+    - "TRIGGER-AGORA-LAUNCHD"
+  health_check:
+    endpoint: "http://127.0.0.1:7450/health"
+    expected_status: "200"
+source: "runtime/cron_service/scheduler.py"

@@ -219,7 +219,14 @@ class TestRuleEngine:
 class TestDependencyValidator:
     def test_no_deps_no_missing(self):
         config = DomainConfig(
-            entities=[Entity(id="ORG-A", name="A", meta_type=MetaType.DOMAIN, entity_type="Organization")],
+            entities=[
+                Entity(
+                    id="ORG-A",
+                    name="A",
+                    meta_type=MetaType.DOMAIN,
+                    entity_type="Organization",
+                )
+            ],
         )
         validator = DependencyValidator(config)
         rule = Rule(id="R-001", pattern="test", premises=[])
@@ -255,7 +262,14 @@ class TestDependencyValidator:
 
     def test_existing_entity_attr_ref(self):
         config = DomainConfig(
-            entities=[Entity(id="ORG-A", name="A", meta_type=MetaType.DOMAIN, entity_type="Organization")],
+            entities=[
+                Entity(
+                    id="ORG-A",
+                    name="A",
+                    meta_type=MetaType.DOMAIN,
+                    entity_type="Organization",
+                )
+            ],
         )
         validator = DependencyValidator(config)
         rule = Rule(
@@ -267,7 +281,14 @@ class TestDependencyValidator:
 
     def test_prefix_exists(self):
         config = DomainConfig(
-            entities=[Entity(id="ORG-A", name="A", meta_type=MetaType.DOMAIN, entity_type="Organization")],
+            entities=[
+                Entity(
+                    id="ORG-A",
+                    name="A",
+                    meta_type=MetaType.DOMAIN,
+                    entity_type="Organization",
+                )
+            ],
         )
         validator = DependencyValidator(config)
         rule = Rule(

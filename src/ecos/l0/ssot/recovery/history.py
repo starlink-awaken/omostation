@@ -131,8 +131,20 @@ class RecoveryHistoryManager:
             count = len([r for r in self.records if r.pattern_id == pattern_name])
             pattern_counts[pattern_name] = {
                 "total": count,
-                "successful": len([r for r in self.records if r.pattern_id == pattern_name and r.success]),
-                "failed": len([r for r in self.records if r.pattern_id == pattern_name and not r.success]),
+                "successful": len(
+                    [
+                        r
+                        for r in self.records
+                        if r.pattern_id == pattern_name and r.success
+                    ]
+                ),
+                "failed": len(
+                    [
+                        r
+                        for r in self.records
+                        if r.pattern_id == pattern_name and not r.success
+                    ]
+                ),
             }
 
         return {
@@ -154,13 +166,19 @@ class RecoveryHistoryManager:
 
     def _get_avg_recovery_time(self) -> float:
         """获取平均恢复时间"""
-        successful_records = [r for r in self.records if r.success and r.recovery_time_ms > 0]
+        successful_records = [
+            r for r in self.records if r.success and r.recovery_time_ms > 0
+        ]
         if not successful_records:
             return 0.0
 
-        return sum(r.recovery_time_ms for r in successful_records) / len(successful_records)
+        return sum(r.recovery_time_ms for r in successful_records) / len(
+            successful_records
+        )
 
-    def find_similar_errors(self, current_error_info: dict[str, Any]) -> list[RecoveryRecord]:
+    def find_similar_errors(
+        self, current_error_info: dict[str, Any]
+    ) -> list[RecoveryRecord]:
         """查找相似的历史记录"""
         current_error_type = current_error_info.get("type", "")
         current_error_msg = current_error_info.get("message", "").lower()
@@ -170,7 +188,10 @@ class RecoveryHistoryManager:
         for record in self.records:
             if record.error_type == current_error_type:
                 # 检查消息相似性（简单关键词匹配）
-                if any(keyword in current_error_msg for keyword in record.error_message.lower()):
+                if any(
+                    keyword in current_error_msg
+                    for keyword in record.error_message.lower()
+                ):
                     similar_records.append(record)
 
         # 按时间排序，最近的优先
@@ -198,7 +219,9 @@ class RecoveryHistoryManager:
         learning_opportunities = 0
 
         for pattern_name, pattern in self.patterns.items():
-            success_count = len([r for r in self.records if r.pattern_id == pattern_name and r.success])
+            success_count = len(
+                [r for r in self.records if r.pattern_id == pattern_name and r.success]
+            )
             total_count = len([r for r in self.records if r.pattern_id == pattern_name])
 
             if total_count > 5:  # 至少5次才评估

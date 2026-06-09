@@ -35,10 +35,10 @@ def validate_topology(workspace_root: str, topology_path: str) -> bool:
     topology = load_yaml(topology_path)
     layers = topology.get('layers', [])
     print(f"  ✅ 加载 {len(layers)} 层定义")
-    for l in layers:
-        deps = l.get('allowed_dependencies', [])
-        pkgs = l.get('packages', [])
-        print(f"     {l['id']:4s} → deps={deps} pkgs={pkgs}")
+    for layer in layers:
+        deps = layer.get('allowed_dependencies', [])
+        pkgs = layer.get('packages', [])
+        print(f"     {layer['id']:4s} → deps={deps} pkgs={pkgs}")
     
     pkg_to_layer = {}
     for layer in layers:
@@ -65,7 +65,7 @@ def validate_mof(workspace_root: str) -> bool:
     ssot_dir = Path(workspace_root) / 'src' / 'ecos' / 'ssot'
     tools_dir = Path(workspace_root) / 'tools'
     
-    print(f"\n🔍 [3/4] MOF 元模型校验")
+    print("\n🔍 [3/4] MOF 元模型校验")
     mof_validate = tools_dir / 'mof-validate.py'
     if mof_validate.exists():
         # Adjust paths for workspace context
@@ -85,7 +85,7 @@ def validate_mof(workspace_root: str) -> bool:
             print(f"  ⚠️ {result.stderr[:200]}")
             return False
     else:
-        print(f"  ⚠️ mof-validate.py 未找到，跳过")
+        print("  ⚠️ mof-validate.py 未找到，跳过")
         return True
 
 
@@ -93,7 +93,7 @@ def validate_mof_audit(workspace_root: str) -> bool:
     """运行 MOF 漂移审计"""
     tools_dir = Path(workspace_root) / 'tools'
     
-    print(f"\n🔍 [4/4] MOF M1↔M0 漂移审计")
+    print("\n🔍 [4/4] MOF M1↔M0 漂移审计")
     mof_audit = tools_dir / 'mof-audit.py'
     if mof_audit.exists():
         result = subprocess.run(
@@ -106,7 +106,7 @@ def validate_mof_audit(workspace_root: str) -> bool:
                 print(f"  {line.strip()}")
         return result.returncode == 0
     else:
-        print(f"  ⚠️ mof-audit.py 未找到，跳过")
+        print("  ⚠️ mof-audit.py 未找到，跳过")
         return True
 
 

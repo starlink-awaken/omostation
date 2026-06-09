@@ -21,7 +21,10 @@
     python3 mof-bos.py --json                                        # JSON 输出
 """
 
-import sys, json, yaml, sqlite3
+import sys
+import json
+import yaml
+import sqlite3
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -45,7 +48,7 @@ def load_routes() -> dict:
             data = yaml.safe_load(open(f))
             uri = data.get("name", "")
             routes[uri] = data
-        except:
+        except Exception:
             pass
     # Also include components registered with BOS_URI protocol
     comp_dir = L0_M1 / "component"
@@ -55,7 +58,7 @@ def load_routes() -> dict:
             props = data.get("properties", {}) or {}
             if props.get("protocol") == "BOS_URI":
                 routes[f"bos://{data.get('name', '?')}/*"] = data
-        except:
+        except Exception:
             pass
     return routes
 
@@ -69,7 +72,7 @@ def load_topology() -> dict:
 def check_bos_call(bos_uri: str) -> dict:
     """前置校验: BOS 调用是否合规"""
     routes = load_routes()
-    topology = load_topology()
+    load_topology()
 
     # 1. Route exists?
     matched_route = None
@@ -141,7 +144,7 @@ def audit_bos_call(bos_uri: str, status_code: int = 200, duration_ms: int = 0):
                   now_str, now_str))
             conn.commit()
             conn.close()
-        except:
+        except Exception:
             pass
     
     return audit_entry
@@ -150,7 +153,7 @@ def audit_bos_call(bos_uri: str, status_code: int = 200, duration_ms: int = 0):
 def cmd_check(args):
     uri = args[0] if args else "bos://cockpit/tools/*"
     result = check_bos_call(uri)
-    print(f"═══ BOS 前置校验 ═══")
+    print("═══ BOS 前置校验 ═══")
     print(f"  URI:     {uri}")
     print(f"  结果:    {'✅ 放行' if result['allowed'] else '❌ 拒绝'}")
     if not result["allowed"]:
@@ -166,7 +169,7 @@ def cmd_audit(args):
     uri = args[0] if args else "bos://cockpit/tools/test"
     code = int(args[1]) if len(args) > 1 else 200
     result = audit_bos_call(uri, code)
-    print(f"═══ BOS 后置审计 ═══")
+    print("═══ BOS 后置审计 ═══")
     print(f"  URI:     {uri}")
     print(f"  Status:  {code}")
     print(f"  异常:    {'⚠️ 是' if result['anomaly'] else '✅ 否'}")
@@ -190,9 +193,12 @@ def main():
     cmd = sys.argv[1]
     args = sys.argv[2:]
     
-    if cmd == "check": cmd_check(args)
-    elif cmd == "audit": cmd_audit(args)
-    elif cmd == "routes": cmd_routes()
+    if cmd == "check":
+        cmd_check(args)
+    elif cmd == "audit":
+        cmd_audit(args)
+    elif cmd == "routes":
+        cmd_routes()
     else:
         # Support direct check: mof-bos.py bos://xxx
         cmd_check([cmd] + args)

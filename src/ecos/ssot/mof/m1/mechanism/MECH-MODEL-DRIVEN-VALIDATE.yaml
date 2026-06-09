@@ -1,0 +1,17 @@
+id: "MECH-MODEL-DRIVEN-VALIDATE"
+type: "Mechanism"
+subtype: "ValidationMechanism"
+name: "model-driven 自反验证机制"
+description: "每次 daemon 循环后，运行 model-driven 的 validate/derive/evolve 工具对 L0 MOF 进行自反验证"
+status: "active"
+domain: "meta"
+layer: "L0"
+created: "2026-06-09"
+version: "1.0.0"
+properties:
+  trigger: "daemon 循环完成后"
+  action: "model-driven validate + derive + evolve"
+  interval: 21600
+  feedback: "验证报告输出到 docs/self-referential-report.yaml"
+  fallback: "model-driven 不可用时跳过，不阻塞 daemon"
+source: "model-driven/toolchain/tools.py"

@@ -17,7 +17,10 @@ DEFAULT_THEORIES = {
         "scope": "探索性活动和利用性活动需要不同的组织结构、文化和激励",
     },
     "激励错配": {
-        "theories": ["委托代理理论 (Jensen & Meckling, 1976)", "信息不对称理论 (Akerlof, 1970)"],
+        "theories": [
+            "委托代理理论 (Jensen & Meckling, 1976)",
+            "信息不对称理论 (Akerlof, 1970)",
+        ],
         "scope": "当利益不一致且信息不对称时，代理人采取机会主义行为",
     },
     "风险决策": {
@@ -38,7 +41,9 @@ class TheoryMatchPattern(BasePattern):
     def pattern_name(self) -> str:
         return "theory_match"
 
-    def evaluate(self, rule: Rule, domain: DomainConfig, context: dict | None = None) -> CheckResult:
+    def evaluate(
+        self, rule: Rule, domain: DomainConfig, context: dict | None = None
+    ) -> CheckResult:
         rule_id = rule.id
         rule_name = rule.name or rule_id
 
@@ -60,15 +65,25 @@ class TheoryMatchPattern(BasePattern):
                     break
 
             if found_theory:
-                matched.append({"inference": inf.id, "theory": found_theory["theories"][0], "auto_matched": True})
+                matched.append(
+                    {
+                        "inference": inf.id,
+                        "theory": found_theory["theories"][0],
+                        "auto_matched": True,
+                    }
+                )
             else:
-                unmatched.append({"inference": inf.id, "conclusion": inf.conclusion[:60]})
+                unmatched.append(
+                    {"inference": inf.id, "conclusion": inf.conclusion[:60]}
+                )
 
         details = [f"📊 {rule_name}: {len(matched)} 已匹配 / {len(unmatched)} 未匹配"]
         for m in matched[:5]:
             label = "🔗" if not m.get("auto_matched") else "🔄"
             theory = m["theory"]
-            details.append(f"  ├─ {label} {m['inference']}: {theory[:50] if isinstance(theory, str) else theory}")
+            details.append(
+                f"  ├─ {label} {m['inference']}: {theory[:50] if isinstance(theory, str) else theory}"
+            )
 
         return CheckResult(
             protocol_id=rule_id,

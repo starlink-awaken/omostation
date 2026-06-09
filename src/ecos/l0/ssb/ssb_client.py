@@ -95,7 +95,9 @@ def _validate_event(event: dict):
 _FILE_RULES = {
     "HANDOFF": {
         "file": lambda e: HANDOFF_LATEST,
-        "archive": lambda e: HANDOFF_HISTORY / f"{e['timestamp'][:19].replace(':', '-')}.md",
+        "archive": lambda e: (
+            HANDOFF_HISTORY / f"{e['timestamp'][:19].replace(':', '-')}.md"
+        ),
         "content": lambda e: _format_handoff_md(e),
     },
     "STATE_CHANGE": {
@@ -250,9 +252,13 @@ class SSBClient:
                 CREATE INDEX IF NOT EXISTS idx_ssb_seq
                     ON ssb_events(seq);
             """)
-            cols = {row["name"] for row in conn.execute("PRAGMA table_info(ssb_events)")}
+            cols = {
+                row["name"] for row in conn.execute("PRAGMA table_info(ssb_events)")
+            }
             if "agent_signature" not in cols:
-                conn.execute("ALTER TABLE ssb_events ADD COLUMN agent_signature TEXT DEFAULT ''")
+                conn.execute(
+                    "ALTER TABLE ssb_events ADD COLUMN agent_signature TEXT DEFAULT ''"
+                )
             conn.commit()
         finally:
             conn.close()
@@ -261,7 +267,9 @@ class SSBClient:
         """Get the current max sequence number."""
         conn = self._get_conn()
         try:
-            row = conn.execute("SELECT COALESCE(MAX(seq), 0) AS seq FROM ssb_events").fetchone()
+            row = conn.execute(
+                "SELECT COALESCE(MAX(seq), 0) AS seq FROM ssb_events"
+            ).fetchone()
             return row["seq"]
         finally:
             conn.close()
@@ -285,30 +293,30 @@ class SSBClient:
         # ── Phase 34 Wave 2: Audit Flood Debounce (Rate Limiting) ──
         if not hasattr(self, "_rate_limit_cache"):
             self._rate_limit_cache = {}
-            
+
         import time
         import hashlib
         import uuid
-        
+
         # We define uniqueness by type, agent, and the exact summary text
         ev_type = event.get("event", {}).get("type", "UNKNOWN")
         source_agent = event.get("source", {}).get("agent", "UNKNOWN")
         payload_summary = event.get("payload", {}).get("summary", "")
-        
+
         sig_str = f"{ev_type}:{source_agent}:{payload_summary}"
-        sig = hashlib.md5(sig_str.encode('utf-8')).hexdigest()
-        
+        sig = hashlib.md5(sig_str.encode("utf-8")).hexdigest()
+
         now = time.time()
         history = self._rate_limit_cache.setdefault(sig, [])
         # Sliding window: keep events from the last 60 seconds
         history = [ts for ts in history if now - ts < 60]
         self._rate_limit_cache[sig] = history
-        
+
         # Threshold: max 10 identical events per minute
         if len(history) >= 10:
             # We silently drop the DB write, but return a valid UUID structure to not break clients
             return f"debounced-{uuid.uuid4()}"
-            
+
         self._rate_limit_cache[sig].append(now)
         # ──────────────────────────────────────────────────────────
 
@@ -332,10 +340,17 @@ class SSBClient:
         conn = self._get_conn()
         try:
             conn.execute("BEGIN IMMEDIATE")
-            row = conn.execute("SELECT COALESCE(MAX(seq), 0) + 1 AS next_seq FROM ssb_events").fetchone()
+            row = conn.execute(
+                "SELECT COALESCE(MAX(seq), 0) + 1 AS next_seq FROM ssb_events"
+            ).fetchone()
             seq = row["next_seq"]
             event["_seq"] = seq
-            sig = compute_signature(seq, event_id, source.get("agent", "UNKNOWN"), payload_json_str) or ""
+            sig = (
+                compute_signature(
+                    seq, event_id, source.get("agent", "UNKNOWN"), payload_json_str
+                )
+                or ""
+            )
 
             conn.execute(
                 """
@@ -513,7 +528,9 @@ class SSBClient:
 
     # ─── Subscribe ────────────────────────────────────────────────────
 
-    def subscribe(self, event_type: str | None = None, block: bool = True, interval: float = 2.0) -> list:
+    def subscribe(
+        self, event_type: str | None = None, block: bool = True, interval: float = 2.0
+    ) -> list:
         """轮询新事件 (生产代码请使用 query() 获取精确结果)"""
         deadline = time.time() + 30
         while True:
@@ -704,7 +721,9 @@ def main():
                 "SELECT seq, event_type, summary, timestamp FROM ssb_events ORDER BY seq DESC LIMIT 50"
             ).fetchall()
             for r in rows:
-                print(f"{r['seq']:>4} | {r['event_type']:<14} | {r['summary'][:60]:<60} | {r['timestamp'][:19]}")
+                print(
+                    f"{r['seq']:>4} | {r['event_type']:<14} | {r['summary'][:60]:<60} | {r['timestamp'][:19]}"
+                )
         finally:
             conn.close()
 

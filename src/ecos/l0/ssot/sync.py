@@ -105,11 +105,41 @@ def _inference_to_md(i) -> str:
 # ── 文件映射 ───────────────────────────────────────────
 
 FILE_MAP = [
-    ("entities", "entity", "01-实体本体/01-组织实体.md", lambda e: e.entity_type == "Organization", _entity_to_md),
-    ("entities", "entity", "01-实体本体/02-角色实体.md", lambda e: e.entity_type == "Role", _entity_to_md),
-    ("entities", "entity", "01-实体本体/03-项目实体.md", lambda e: e.entity_type == "Project", _entity_to_md),
-    ("facts", "fact", "02-事实基座/01-政策事实.md", lambda f: f.id.startswith("POL-"), _fact_to_md),
-    ("facts", "fact", "02-事实基座/02-数据事实.md", lambda f: f.id.startswith("DAT-"), _fact_to_md),
+    (
+        "entities",
+        "entity",
+        "01-实体本体/01-组织实体.md",
+        lambda e: e.entity_type == "Organization",
+        _entity_to_md,
+    ),
+    (
+        "entities",
+        "entity",
+        "01-实体本体/02-角色实体.md",
+        lambda e: e.entity_type == "Role",
+        _entity_to_md,
+    ),
+    (
+        "entities",
+        "entity",
+        "01-实体本体/03-项目实体.md",
+        lambda e: e.entity_type == "Project",
+        _entity_to_md,
+    ),
+    (
+        "facts",
+        "fact",
+        "02-事实基座/01-政策事实.md",
+        lambda f: f.id.startswith("POL-"),
+        _fact_to_md,
+    ),
+    (
+        "facts",
+        "fact",
+        "02-事实基座/02-数据事实.md",
+        lambda f: f.id.startswith("DAT-"),
+        _fact_to_md,
+    ),
     ("inferences", "inference", "03-推论体系/01-矛盾诊断.md", None, _inference_to_md),
 ]
 
@@ -194,7 +224,9 @@ def sync_yaml_to_markdown(
 
         # 获取 YAML 数据源
         if yaml_key == "entities":
-            items: list[Entity] | list[Fact] | list[Inference] = [e for e in config.entities if not filter_fn or filter_fn(e)]
+            items: list[Entity] | list[Fact] | list[Inference] = [
+                e for e in config.entities if not filter_fn or filter_fn(e)
+            ]
             parser = _parse_markdown_entities
         elif yaml_key == "facts":
             items = [f for f in config.facts if not filter_fn or filter_fn(f)]
@@ -224,7 +256,9 @@ def sync_yaml_to_markdown(
 
         # 追加到文件
         if not dry_run:
-            sync_note = f"\n<!-- 同步自 ssot-kernel {datetime.date.today().isoformat()} -->\n"
+            sync_note = (
+                f"\n<!-- 同步自 ssot-kernel {datetime.date.today().isoformat()} -->\n"
+            )
             new_section = sync_note + "\n".join(new_entries)
             md_path.write_text(md_text.rstrip() + "\n" + new_section, encoding="utf-8")
         else:
@@ -249,9 +283,17 @@ def add_subcommand(subparsers, common_parent):
         parents=[common_parent],
         help="同步 YAML 引擎数据到 Markdown 知识库",
     )
-    p.add_argument("--yaml-dir", required=True, help="YAML 领域目录（如 tool/ssot-kernel/domains/guozhuan）")
-    p.add_argument("--md-dir", required=True, help="Markdown 知识本体根目录（如 domain/）")
-    p.add_argument("--write", action="store_true", help="实际写入（默认 dry-run 仅预览）")
+    p.add_argument(
+        "--yaml-dir",
+        required=True,
+        help="YAML 领域目录（如 tool/ssot-kernel/domains/guozhuan）",
+    )
+    p.add_argument(
+        "--md-dir", required=True, help="Markdown 知识本体根目录（如 domain/）"
+    )
+    p.add_argument(
+        "--write", action="store_true", help="实际写入（默认 dry-run 仅预览）"
+    )
     return p
 
 

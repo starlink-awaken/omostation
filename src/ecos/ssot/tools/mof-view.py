@@ -23,7 +23,8 @@
     python3 mof-view.py --json           # JSON (供 Agent MCP 消费)
 """
 
-import sys, json, yaml
+import json
+import yaml
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -43,7 +44,7 @@ def load_nodes(m2type: str) -> list[dict]:
             data = yaml.safe_load(open(f))
             if isinstance(data, dict):
                 nodes.append(data)
-        except:
+        except Exception:
             pass
     return nodes
 
@@ -201,7 +202,7 @@ def view_quick() -> str:
             lines.append(f"- 🟡 {a}: {m0[a].get('remaining_pct','?')}% 剩余")
     
     lines.append("")
-    lines.append(f"> 完整视图: `mof view` | 状态: `mof status` | 校验: `mof validate`")
+    lines.append("> 完整视图: `mof view` | 状态: `mof status` | 校验: `mof validate`")
     return "\n".join(lines)
 
 

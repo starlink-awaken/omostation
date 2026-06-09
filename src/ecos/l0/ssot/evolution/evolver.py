@@ -52,7 +52,9 @@ class Evolver:
             summary=f"发现 {len(suggestions)} 条潜在规则建议 (已自动创建检查点: {cp_name})",
         )
 
-    def apply_suggestion(self, suggestion: RuleSuggestion, auto_confirm: bool = False) -> bool:
+    def apply_suggestion(
+        self, suggestion: RuleSuggestion, auto_confirm: bool = False
+    ) -> bool:
         """应用一条规则建议到 rules.yaml
 
         Args:
@@ -95,7 +97,9 @@ class Evolver:
 
         # 写回
         rules_path.write_text(
-            yaml.dump(existing, allow_unicode=True, default_flow_style=False, sort_keys=False),
+            yaml.dump(
+                existing, allow_unicode=True, default_flow_style=False, sort_keys=False
+            ),
             encoding="utf-8",
         )
         return True

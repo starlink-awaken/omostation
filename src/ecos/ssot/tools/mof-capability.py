@@ -12,9 +12,9 @@
     mof capability deprecate <id> <reason>  废弃能力
 """
 
-import sys, json, yaml
+import sys
+import yaml
 from pathlib import Path
-from datetime import datetime, timezone
 
 HOME = Path.home()
 L0_M1 = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
@@ -34,7 +34,7 @@ def load_capabilities(m2type: str = None) -> list[dict]:
                 if isinstance(data, dict):
                     data["_m2type"] = t
                     caps.append(data)
-            except:
+            except Exception:
                 pass
     return caps
 
@@ -73,7 +73,7 @@ def cmd_health():
     archived = sum(1 for c in caps if c.get("status") == "archived")
     other = len(caps) - active - deprecated - archived
     
-    print(f"═══ 能力健康 ═══")
+    print("═══ 能力健康 ═══")
     print(f"  活跃:     {active}")
     print(f"  废弃:     {deprecated} (需清理)")
     print(f"  归档:     {archived}")
@@ -87,7 +87,7 @@ def cmd_health():
         and not (c.get("properties", {}) or {}).get("successor")
     ]
     if deprecated_no_successor:
-        print(f"\n  ⚠️ 废弃但无 successor:")
+        print("\n  ⚠️ 废弃但无 successor:")
         for c in deprecated_no_successor:
             print(f"     {c['_m2type']}: {c.get('name', '?')[:50]}")
 
@@ -103,19 +103,19 @@ def cmd_stats():
         by_type[t] = by_type.get(t, 0) + 1
         by_status[s] = by_status.get(s, 0) + 1
     
-    print(f"═══ 能力统计 ═══")
-    print(f"\n按类型:")
+    print("═══ 能力统计 ═══")
+    print("\n按类型:")
     for t in CAPABILITY_TYPES:
         if t in by_type:
             print(f"  {t:15s}: {by_type[t]:4d}")
     
-    print(f"\n按状态:")
+    print("\n按状态:")
     for s, c in sorted(by_status.items()):
         icon = {"active": "🟢", "defined": "📋", "deprecated": "⚠️", "archived": "🗄️"}.get(s, "❓")
         print(f"  {icon} {s:12s}: {c:4d}")
     
     # Coverage: which types have M1 nodes
-    print(f"\n类型覆盖:")
+    print("\n类型覆盖:")
     for t in CAPABILITY_TYPES:
         ndir = L0_M1 / t
         count = len(list(ndir.glob("*.yaml"))) if ndir.exists() else 0
@@ -156,10 +156,14 @@ def main():
     cmd = sys.argv[1]
     args = sys.argv[2:]
     
-    if cmd == "list": cmd_list(args)
-    elif cmd == "health": cmd_health()
-    elif cmd == "stats": cmd_stats()
-    elif cmd == "deprecate": cmd_deprecate(args)
+    if cmd == "list":
+        cmd_list(args)
+    elif cmd == "health":
+        cmd_health()
+    elif cmd == "stats":
+        cmd_stats()
+    elif cmd == "deprecate":
+        cmd_deprecate(args)
     else:
         print(f"未知子命令: {cmd}")
 

@@ -37,7 +37,9 @@ def domain_dir(tmp_path: Path) -> Path:
     # domain.yaml
     (d / "domain.yaml").write_text("domain:\n  name: test-domain\n  version: 1.0")
     # entities.yaml
-    (d / "entities.yaml").write_text("entities:\n  - id: ORG-001\n    type: Organization\n    name: TestOrg\n")
+    (d / "entities.yaml").write_text(
+        "entities:\n  - id: ORG-001\n    type: Organization\n    name: TestOrg\n"
+    )
     # facts.yaml
     (d / "facts.yaml").write_text(
         "policy:\n"
@@ -83,9 +85,13 @@ def domain_dir_json(tmp_path: Path) -> Path:
     d.mkdir()
     (d / "domain.json").write_text(json.dumps({"domain": {"name": "json-domain"}}))
     (d / "entities.json").write_text(
-        json.dumps({"entities": [{"id": "ORG-001", "type": "Organization", "name": "Org1"}]})
+        json.dumps(
+            {"entities": [{"id": "ORG-001", "type": "Organization", "name": "Org1"}]}
+        )
     )
-    (d / "facts.json").write_text(json.dumps({"policy": [{"id": "POL-001", "title": "P1"}], "data": []}))
+    (d / "facts.json").write_text(
+        json.dumps({"policy": [{"id": "POL-001", "title": "P1"}], "data": []})
+    )
     return d
 
 
@@ -207,7 +213,14 @@ class TestLoadDomainFunction:
 class TestParsing:
     def test_parse_entity(self, domain_dir: Path):
         loader = ConfigLoader(domain_dir, use_cache=False)
-        e = loader._parse_entity({"id": "ORG-002", "type": "Organization", "name": "Org2", "meta_type": "MET-DOMAIN"})
+        e = loader._parse_entity(
+            {
+                "id": "ORG-002",
+                "type": "Organization",
+                "name": "Org2",
+                "meta_type": "MET-DOMAIN",
+            }
+        )
         assert isinstance(e, Entity)
         assert e.id == "ORG-002"
         assert e.meta_type == MetaType.DOMAIN
@@ -219,7 +232,9 @@ class TestParsing:
 
     def test_parse_fact(self, domain_dir: Path):
         loader = ConfigLoader(domain_dir, use_cache=False)
-        f = loader._parse_fact({"id": "DAT-010", "title": "Data point", "value": 42, "unit": "kg"}, "data")
+        f = loader._parse_fact(
+            {"id": "DAT-010", "title": "Data point", "value": 42, "unit": "kg"}, "data"
+        )
         assert isinstance(f, Fact)
         assert f.value == 42
         assert f.unit == "kg"
@@ -242,13 +257,17 @@ class TestParsing:
 
     def test_parse_rule(self, domain_dir: Path):
         loader = ConfigLoader(domain_dir, use_cache=False)
-        r = loader._parse_rule({"id": "R-010", "pattern": "contradiction", "name": "Rule10"})
+        r = loader._parse_rule(
+            {"id": "R-010", "pattern": "contradiction", "name": "Rule10"}
+        )
         assert isinstance(r, Rule)
         assert r.pattern == "contradiction"
 
     def test_parse_relation(self, domain_dir: Path):
         loader = ConfigLoader(domain_dir, use_cache=False)
-        r = loader._parse_relation({"source_id": "ORG-A", "target_id": "ORG-B", "relation_type": "part_of"})
+        r = loader._parse_relation(
+            {"source_id": "ORG-A", "target_id": "ORG-B", "relation_type": "part_of"}
+        )
         assert r.source_id == "ORG-A"
         assert r.target_id == "ORG-B"
         assert r.relation_type == "part_of"
@@ -256,8 +275,18 @@ class TestParsing:
     def test_deduplicate_no_dup(self, domain_dir: Path):
         loader = ConfigLoader(domain_dir, use_cache=False)
         items = [
-            Entity(id="ORG-A", name="A", meta_type=MetaType.DOMAIN, entity_type="Organization"),
-            Entity(id="ORG-B", name="B", meta_type=MetaType.DOMAIN, entity_type="Organization"),
+            Entity(
+                id="ORG-A",
+                name="A",
+                meta_type=MetaType.DOMAIN,
+                entity_type="Organization",
+            ),
+            Entity(
+                id="ORG-B",
+                name="B",
+                meta_type=MetaType.DOMAIN,
+                entity_type="Organization",
+            ),
         ]
         loader._deduplicate(items, "实体")
         assert len(items) == 2
@@ -265,8 +294,18 @@ class TestParsing:
     def test_deduplicate_removes_dup(self, domain_dir: Path, capsys):
         loader = ConfigLoader(domain_dir, use_cache=False)
         items = [
-            Entity(id="ORG-A", name="A", meta_type=MetaType.DOMAIN, entity_type="Organization"),
-            Entity(id="ORG-A", name="A-dup", meta_type=MetaType.DOMAIN, entity_type="Organization"),
+            Entity(
+                id="ORG-A",
+                name="A",
+                meta_type=MetaType.DOMAIN,
+                entity_type="Organization",
+            ),
+            Entity(
+                id="ORG-A",
+                name="A-dup",
+                meta_type=MetaType.DOMAIN,
+                entity_type="Organization",
+            ),
         ]
         loader._deduplicate(items, "实体")
         assert len(items) == 1

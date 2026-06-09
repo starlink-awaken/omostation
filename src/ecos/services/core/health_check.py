@@ -32,9 +32,9 @@ from datetime import datetime
 from pathlib import Path
 
 
-RUNTIME_DIR = Path(__file__).parent.parent     # @驾驶舱/_runtime/
-L1_DIR = RUNTIME_DIR / "_l1"                    # L1运行时脚本
-X_DIR = RUNTIME_DIR / "_x"                      # X轴治理脚本
+RUNTIME_DIR = Path(__file__).parent.parent  # @驾驶舱/_runtime/
+L1_DIR = RUNTIME_DIR / "_l1"  # L1运行时脚本
+X_DIR = RUNTIME_DIR / "_x"  # X轴治理脚本
 ECOS_SCRIPTS = Path.home() / ".ecos" / "scripts"  # ~/.ecos/scripts/
 DOCS = Path.home() / "Documents"
 WORKSPACE = Path.home() / "Workspace"
@@ -45,61 +45,99 @@ CHECKS = [
         "id": "claude-freshness",
         "name": "CLAUDE.md 保鲜",
         "dim": "X2",
-        "cmd": ["python3", str(L1_DIR / "check-claude-freshness.py"),
-                "--root", str(DOCS), "--max-age-days", "60"],
+        "cmd": [
+            "python3",
+            str(L1_DIR / "check-claude-freshness.py"),
+            "--root",
+            str(DOCS),
+            "--max-age-days",
+            "60",
+        ],
     },
     {
         "id": "cards-state",
         "name": "CARDS↔STATE 一致性",
         "dim": "X2",
-        "cmd": ["python3", str(ECOS_SCRIPTS / "check-cards-state-consistency.py"),
-                "--db", str(CARDS_DB), "--vault", str(DOCS)],
+        "cmd": [
+            "python3",
+            str(ECOS_SCRIPTS / "check-cards-state-consistency.py"),
+            "--db",
+            str(CARDS_DB),
+            "--vault",
+            str(DOCS),
+        ],
         "requires": [CARDS_DB],
     },
     {
         "id": "cards-value",
         "name": "CARDS 价值归因",
         "dim": "X3",
-        "cmd": ["python3", str(ECOS_SCRIPTS / "cards-value-attribution.py"),
-                "--db", str(CARDS_DB)],
+        "cmd": [
+            "python3",
+            str(ECOS_SCRIPTS / "cards-value-attribution.py"),
+            "--db",
+            str(CARDS_DB),
+        ],
         "requires": [CARDS_DB],
     },
     {
         "id": "vault-audit",
         "name": "Vault 审计",
         "dim": "X1",
-        "cmd": ["python3", str(L1_DIR / "check-vault-audit.py"),
-                "--vault", str(DOCS), "--since", "7 days ago"],
+        "cmd": [
+            "python3",
+            str(L1_DIR / "check-vault-audit.py"),
+            "--vault",
+            str(DOCS),
+            "--since",
+            "7 days ago",
+        ],
     },
     {
         "id": "vault-value",
         "name": "Vault 价值归因",
         "dim": "X3",
-        "cmd": ["python3", str(X_DIR / "vault-value-attribution.py"),
-                "--vault", str(DOCS)],
+        "cmd": [
+            "python3",
+            str(X_DIR / "vault-value-attribution.py"),
+            "--vault",
+            str(DOCS),
+        ],
     },
     {
         "id": "kairon-gov",
         "name": "Kairon 治理检查",
         "dim": "X1+X2",
-        "cmd": ["python3", str(ECOS_SCRIPTS / "check-kairon-governance.py"),
-                "--workspace", str(WORKSPACE)],
+        "cmd": [
+            "python3",
+            str(ECOS_SCRIPTS / "check-kairon-governance.py"),
+            "--workspace",
+            str(WORKSPACE),
+        ],
         "requires": [WORKSPACE / "projects" / "kairon"],
     },
     {
         "id": "kairon-cost",
         "name": "Kairon 成本核算",
         "dim": "X3",
-        "cmd": ["python3", str(ECOS_SCRIPTS / "kairon-cost-attribution.py"),
-                "--workspace", str(WORKSPACE)],
+        "cmd": [
+            "python3",
+            str(ECOS_SCRIPTS / "kairon-cost-attribution.py"),
+            "--workspace",
+            str(WORKSPACE),
+        ],
         "requires": [WORKSPACE / "projects" / "kairon"],
     },
     {
         "id": "domain-value",
         "name": "域系统价值归因",
         "dim": "X3",
-        "cmd": ["python3", str(X_DIR / "domain-value-attribution.py"),
-                "--vault", str(DOCS)],
+        "cmd": [
+            "python3",
+            str(X_DIR / "domain-value-attribution.py"),
+            "--vault",
+            str(DOCS),
+        ],
     },
     {
         "id": "coverage",
@@ -150,19 +188,29 @@ def run_check(check: dict) -> dict:
             "dim": check["dim"],
             "pass": passed,
             "status": "pass" if passed else "fail",
-            "reason": "" if passed else (result.stderr.strip() or result.stdout.strip())[:200],
+            "reason": ""
+            if passed
+            else (result.stderr.strip() or result.stdout.strip())[:200],
             "duration_ms": round(duration, 1),
         }
     except subprocess.TimeoutExpired:
         return {
-            "id": check["id"], "name": check["name"], "dim": check["dim"],
-            "pass": False, "status": "timeout", "reason": "30s 超时",
+            "id": check["id"],
+            "name": check["name"],
+            "dim": check["dim"],
+            "pass": False,
+            "status": "timeout",
+            "reason": "30s 超时",
             "duration_ms": 30000,
         }
     except Exception as e:
         return {
-            "id": check["id"], "name": check["name"], "dim": check["dim"],
-            "pass": False, "status": "error", "reason": str(e)[:200],
+            "id": check["id"],
+            "name": check["name"],
+            "dim": check["dim"],
+            "pass": False,
+            "status": "error",
+            "reason": str(e)[:200],
             "duration_ms": 0,
         }
 
@@ -179,14 +227,25 @@ def format_report(results: list[dict]) -> str:
     lines.append("  eCOS v5 — 治理健康检查 (X1-X3 集成测试)")
     lines.append("=" * 64)
     lines.append(f"  时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    lines.append(f"  检查: {total} 项  |  通过: {passed}  |  失败: {failed}  |  跳过: {skipped}")
+    lines.append(
+        f"  检查: {total} 项  |  通过: {passed}  |  失败: {failed}  |  跳过: {skipped}"
+    )
     lines.append("")
 
     for r in results:
-        icon = {"pass": "✅", "fail": "❌", "skipped": "⏭️", "missing": "❓", "timeout": "⏰", "error": "💥"}
+        icon = {
+            "pass": "✅",
+            "fail": "❌",
+            "skipped": "⏭️",
+            "missing": "❓",
+            "timeout": "⏰",
+            "error": "💥",
+        }
         dim_tag = f"[{r['dim']}]"
-        lines.append(f"  {icon.get(r['status'], '?')} {dim_tag:6s} {r['name']:20s}  "
-                     f"{r['duration_ms']:6.0f}ms")
+        lines.append(
+            f"  {icon.get(r['status'], '?')} {dim_tag:6s} {r['name']:20s}  "
+            f"{r['duration_ms']:6.0f}ms"
+        )
 
         if r["reason"] and r["status"] != "pass":
             lines.append(f"       → {r['reason']}")
@@ -228,18 +287,31 @@ def main():
 
     for check in CHECKS:
         if check["id"] in skip_ids:
-            results.append({
-                "id": check["id"], "name": check["name"], "dim": check["dim"],
-                "pass": None, "status": "skipped", "reason": "手动跳过", "duration_ms": 0,
-            })
+            results.append(
+                {
+                    "id": check["id"],
+                    "name": check["name"],
+                    "dim": check["dim"],
+                    "pass": None,
+                    "status": "skipped",
+                    "reason": "手动跳过",
+                    "duration_ms": 0,
+                }
+            )
             continue
         results.append(run_check(check))
 
     if args.json:
-        print(json.dumps({
-            "generated_at": datetime.now().isoformat(),
-            "results": results,
-        }, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "generated_at": datetime.now().isoformat(),
+                    "results": results,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         print(format_report(results))
 

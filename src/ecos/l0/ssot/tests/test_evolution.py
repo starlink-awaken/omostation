@@ -8,7 +8,11 @@ from pathlib import Path
 from sot_bridge.ssot_kernel.engine import RuleEngine
 from sot_bridge.ssot_kernel.evolution.checkpoint import CheckpointManager
 from sot_bridge.ssot_kernel.evolution.evolver import Evolver
-from sot_bridge.ssot_kernel.evolution.rule_miner import EvolutionReport, RuleMiner, RuleSuggestion
+from sot_bridge.ssot_kernel.evolution.rule_miner import (
+    EvolutionReport,
+    RuleMiner,
+    RuleSuggestion,
+)
 from sot_bridge.ssot_kernel.meta_model import (
     DomainConfig,
 )

@@ -11,7 +11,9 @@
     python3 mof-sla.py --snapshot-only   # 仅生成 M0 快照
 """
 
-import sys, json, yaml, sqlite3
+import json
+import yaml
+import sqlite3
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -38,7 +40,8 @@ def check_task_sla() -> list[dict]:
     for f in L0_NODES.glob("MECH-*.yaml"):
         try:
             data = yaml.safe_load(open(f))
-        except: continue
+        except Exception:
+            continue
         
         props = data.get("properties", {}) or {}
         sla = props.get("sla_target", {}) or {}
@@ -52,7 +55,7 @@ def check_task_sla() -> list[dict]:
             if mtime.tzinfo is not None:
                 mtime = mtime.replace(tzinfo=None)
             hours_since = (now().replace(tzinfo=None) - mtime).total_seconds() / 3600
-        except:
+        except Exception:
             hours_since = 0
         
         if hours_since > max_stale:
@@ -99,7 +102,7 @@ def generate_m0_snapshot() -> dict:
                 if intro.tzinfo is not None:
                     intro = intro.replace(tzinfo=None)
                 age = (now_dt.replace(tzinfo=None) - intro).days
-            except:
+            except Exception:
                 age = 0
             half = p["half_life_days"]
             decay = min(1.0, age / half) if half > 0 else 1.0
@@ -137,7 +140,8 @@ def create_stale_card(task: dict):
               now_dt, now_dt))
         conn.commit()
         conn.close()
-    except: pass
+    except Exception:
+        pass
 
 
 def main():
@@ -162,7 +166,7 @@ def main():
     print("  织星 MOF — SLA + M0 快照")
     print("=" * 56)
     print(f"  时间: {now().isoformat()[:19]}")
-    print(f"\n  ── M0 快照 ──")
+    print("\n  ── M0 快照 ──")
     print(f"  Daemon: {snap.get('daemon',{})}")
     protocols = snap.get("protocols", {})
     for pid, state in protocols.items():
@@ -175,7 +179,7 @@ def main():
             print(f"  {'🔴' if s['severity']=='critical' else '🟡'} {s['task'][:40]}: {s['hours_stale']}h (上限 {s['max_allowed']}h)")
             create_stale_card(s)
     else:
-        print(f"\n  ✅ 无 SLA 逾期")
+        print("\n  ✅ 无 SLA 逾期")
     print("=" * 56)
 
 

@@ -5,7 +5,12 @@ from uuid import uuid4
 
 
 def _write_alert(level: str, message: str, payload: dict | None = None) -> str:
-    _ = {"level": level, "message": message, "payload": payload or {}, "timestamp": datetime.now().isoformat()}
+    _ = {
+        "level": level,
+        "message": message,
+        "payload": payload or {},
+        "timestamp": datetime.now().isoformat(),
+    }
     return f"CONSTITUTION-{uuid4().hex[:12].upper()}"
 
 

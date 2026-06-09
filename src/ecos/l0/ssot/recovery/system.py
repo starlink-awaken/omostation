@@ -57,9 +57,9 @@ class RecoveryContext:
             self.metadata = {}
 
         if self.domain_config:
-            entities = getattr(self.domain_config, 'entities', [])
-            facts = getattr(self.domain_config, 'facts', [])
-            rules = getattr(self.domain_config, 'rules', [])
+            entities = getattr(self.domain_config, "entities", [])
+            facts = getattr(self.domain_config, "facts", [])
+            rules = getattr(self.domain_config, "rules", [])
             self.performance_metrics["entity_count"] = len(entities)
             self.performance_metrics["fact_count"] = len(facts)
             self.performance_metrics["rule_count"] = len(rules)
@@ -71,7 +71,13 @@ class RecoveryContext:
             return RecoverySeverity.INFO
 
         # 检查错误类型
-        critical_types = ("SystemError", "OSError", "RuntimeError", "MemoryError", "KeyboardInterrupt")
+        critical_types = (
+            "SystemError",
+            "OSError",
+            "RuntimeError",
+            "MemoryError",
+            "KeyboardInterrupt",
+        )
 
         if any(t in self.error.__class__.__name__ for t in critical_types):
             return RecoverySeverity.CRITICAL
@@ -79,7 +85,13 @@ class RecoveryContext:
         # 检查错误消息
         error_msg = str(self.error).lower()
 
-        critical_keywords = ["segmentation fault", "core dump", "deadlock", "system crashed", "kernel panic"]
+        critical_keywords = [
+            "segmentation fault",
+            "core dump",
+            "deadlock",
+            "system crashed",
+            "kernel panic",
+        ]
 
         if any(keyword in error_msg for keyword in critical_keywords):
             return RecoverySeverity.CRITICAL
@@ -91,8 +103,8 @@ class RecoveryContext:
             return RecoverySeverity.MEDIUM
 
         if self.report:
-            blocker = getattr(self.report, 'blocker', 0)
-            error_count = getattr(self.report, 'error', 0)
+            blocker = getattr(self.report, "blocker", 0)
+            error_count = getattr(self.report, "error", 0)
             if blocker > 0:
                 return RecoverySeverity.HIGH
             if error_count > 0:
@@ -183,7 +195,10 @@ class IntelligentRecoverySystem:
 
         # 创建上下文
         context = RecoveryContext(
-            error=error, domain_config=domain_config, report=report, execution_time_ms=execution_time_ms
+            error=error,
+            domain_config=domain_config,
+            report=report,
+            execution_time_ms=execution_time_ms,
         )
 
         # 评估严重程度
@@ -231,14 +246,18 @@ class IntelligentRecoverySystem:
         except (ImportError, AttributeError) as _e:
             raise ValueError(f"Unknown strategy: {strategy_name}")
 
-    def _select_recovery_strategy(self, context: RecoveryContext, severity: RecoverySeverity) -> str | None:
+    def _select_recovery_strategy(
+        self, context: RecoveryContext, severity: RecoverySeverity
+    ) -> str | None:
         """根据上下文选择最佳策略"""
         # 查找历史成功模式
         similar_history = self.history_manager.find_similar_errors(context.error_info)
 
         # 如果有历史记录，使用成功率最高的策略
         if similar_history:
-            best_record = sorted(similar_history, key=lambda r: r.success_rate, reverse=True)[0]
+            best_record = sorted(
+                similar_history, key=lambda r: r.success_rate, reverse=True
+            )[0]
             if best_record.success_rate > 0.7:  # 成功率>70%
                 return best_record.action_id
 
@@ -260,7 +279,9 @@ class IntelligentRecoverySystem:
             print("🟢 低严重错误，使用自动策略")
             return "auto"
 
-    def _record_recovery_attempt(self, error: Exception, context: RecoveryContext, success: bool):
+    def _record_recovery_attempt(
+        self, error: Exception, context: RecoveryContext, success: bool
+    ):
         """记录恢复尝试"""
         self.total_recoveries += 1
 
@@ -273,7 +294,9 @@ class IntelligentRecoverySystem:
         if success and context.execution_time_ms > 0:
             # 更新平均恢复时间
             current_avg = self.performance_stats["avg_recovery_time_ms"]
-            new_avg = (current_avg * self.total_recoveries + context.execution_time_ms) / (self.total_recoveries + 1)
+            new_avg = (
+                current_avg * self.total_recoveries + context.execution_time_ms
+            ) / (self.total_recoveries + 1)
             self.performance_stats["avg_recovery_time_ms"] = new_avg
 
         # 严重错误记录到文件
@@ -288,7 +311,9 @@ class IntelligentRecoverySystem:
             "timestamp": context.timestamp,
             "reason": reason,
             "context_summary": {
-                "domain_entities": len(context.domain_config.entities) if context.domain_config else 0,
+                "domain_entities": len(context.domain_config.entities)
+                if context.domain_config
+                else 0,
                 "execution_time_ms": context.execution_time_ms,
                 "environment": context.metadata.get("environment", "unknown"),
             },
@@ -312,9 +337,7 @@ class IntelligentRecoverySystem:
         log_file = self.storage_path.replace(".json", "_failures.log")
 
         with open(log_file, "a", encoding="utf-8") as f:
-            log_entry = (
-                f"[{datetime.now().isoformat()}] FAILED: {failure_record['error_type']}: {failure_record['error_message']}\n"
-            )
+            log_entry = f"[{datetime.now().isoformat()}] FAILED: {failure_record['error_type']}: {failure_record['error_message']}\n"
             f.write(log_entry)
 
     def get_system_health_status(self) -> dict[str, Any]:
@@ -324,7 +347,9 @@ class IntelligentRecoverySystem:
             "total_recoveries": self.total_recoveries,
             "successful_recoveries": self.successful_recoveries,
             "failed_recoveries": self.failed_recoveries,
-            "success_rate": self.successful_recoveries / self.total_recoveries if self.total_recoveries > 0 else 0,
+            "success_rate": self.successful_recoveries / self.total_recoveries
+            if self.total_recoveries > 0
+            else 0,
             "performance_stats": self.performance_stats,
             "available_patterns": len(self.patterns),
             "timestamp": datetime.now().isoformat(),

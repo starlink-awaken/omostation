@@ -19,7 +19,8 @@
     python3 mof-generate.py --dry-run          # 预览不执行
 """
 
-import sys, yaml, argparse
+import yaml
+import argparse
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -39,7 +40,7 @@ def load_nodes(m2type: str) -> list[dict]:
             data = yaml.safe_load(open(f))
             if isinstance(data, dict):
                 nodes.append(data)
-        except:
+        except Exception:
             pass
     return nodes
 
@@ -61,7 +62,7 @@ status: active
 value_tier: {props.get('value_tier', 3)}
 description: "{node.get('description', '')[:100]}"
 
-# TODO: Define protocol operations
+# TODO: Define protocol operations  # noqa: T101
 operations:
   # - name: example_op
   #   input: ...
@@ -86,7 +87,7 @@ version = "0.1.0"
 description = "{node.get('description', '')[:80]}"
 
 # Layer: {layer}
-# TODO: Add dependencies, entry points, etc.
+# TODO: Add dependencies, entry points, etc.  # noqa: T101
 """
     filename = f"component_{name.lower().replace(' ', '_')}.toml"
     return filename, skeleton
@@ -95,7 +96,7 @@ description = "{node.get('description', '')[:80]}"
 def generate_domain(node: dict) -> tuple[str, str]:
     """从 Entity Domain 节点生成 CLAUDE.md 模板"""
     name = node.get("name", node.get("id", "unknown"))
-    props = node.get("properties", {}) or {}
+    node.get("properties", {}) or {}
     
     skeleton = f"""# {name} — Agent 操作契约
 
@@ -157,7 +158,7 @@ def generate_all(dry_run: bool = True):
     print(f"\n{'═'*40}")
     if dry_run:
         print(f"  预览: {generated} 个文件可生成")
-        print(f"  执行: mof-generate --execute")
+        print("  执行: mof-generate --execute")
     else:
         print(f"  已生成: {generated} 个文件 → {OUTPUT_DIR}")
     print(f"{'═'*40}")

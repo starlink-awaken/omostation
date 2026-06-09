@@ -23,7 +23,9 @@ class CapabilityGapPattern(BasePattern):
     def pattern_name(self) -> str:
         return "capability_gap"
 
-    def evaluate(self, rule: Rule, domain: DomainConfig, context: dict | None = None) -> CheckResult:
+    def evaluate(
+        self, rule: Rule, domain: DomainConfig, context: dict | None = None
+    ) -> CheckResult:
         rule_id = rule.id
         rule_name = rule.name or rule_id
 
@@ -37,11 +39,19 @@ class CapabilityGapPattern(BasePattern):
             needs = self._extract_needs(conclusion)
             for need in needs:
                 # 检查是否有对应的实体
-                found = any(need in e.name or need in str(e.attributes) for e in domain.entities)
+                found = any(
+                    need in e.name or need in str(e.attributes) for e in domain.entities
+                )
                 if found:
                     covered.append({"inference": inf.id, "need": need})
                 else:
-                    gaps.append({"inference": inf.id, "need": need, "gap": f"缺少'{need}'对应的 Resource 或 Project"})
+                    gaps.append(
+                        {
+                            "inference": inf.id,
+                            "need": need,
+                            "gap": f"缺少'{need}'对应的 Resource 或 Project",
+                        }
+                    )
 
         if gaps:
             details = [f"⚠️ {rule_name}: 发现 {len(gaps)} 项能力缺失"]
@@ -53,7 +63,10 @@ class CapabilityGapPattern(BasePattern):
                 passed=False,
                 severity="WARN",
                 details=details,
-                fixes=["为缺失的能力添加对应的 Resource 或 Project 实体", "或在推论中补充实现路径"],
+                fixes=[
+                    "为缺失的能力添加对应的 Resource 或 Project 实体",
+                    "或在推论中补充实现路径",
+                ],
                 meta={"gaps": gaps, "covered": covered},
             )
         else:

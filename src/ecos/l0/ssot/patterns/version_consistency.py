@@ -34,7 +34,9 @@ class VersionConsistencyPattern(BasePattern):
     def pattern_name(self) -> str:
         return "version_consistency"
 
-    def evaluate(self, rule: Rule, domain: DomainConfig, context: dict | None = None) -> CheckResult:
+    def evaluate(
+        self, rule: Rule, domain: DomainConfig, context: dict | None = None
+    ) -> CheckResult:
         rule_id = rule.id
         rule_name = rule.name or rule_id
 
@@ -129,7 +131,11 @@ class VersionConsistencyPattern(BasePattern):
                 passed=False,
                 severity="ERROR",
                 details=details,
-                fixes=["更新版本号以符合 SemVer", "标记过期版本为 deprecated", "更新依赖约束以匹配当前版本"],
+                fixes=[
+                    "更新版本号以符合 SemVer",
+                    "标记过期版本为 deprecated",
+                    "更新依赖约束以匹配当前版本",
+                ],
                 meta={"issues": issues},
             )
         else:

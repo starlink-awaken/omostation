@@ -1,0 +1,17 @@
+id: "COST-MODEL-ECOS-INFRA"
+type: "CostModel"
+subtype: "Infrastructure"
+name: "eCOS 基础设施成本模型"
+description: "eCOS v5 全栈的基础设施运行成本归因"
+status: "active"
+domain: "meta"
+layer: "L0"
+created: "2026-06-09"
+version: "1.0.0"
+properties:
+  resource_type: "compute"
+  unit_cost: 0.0
+  period: "monthly"
+  estimated_annual_cost: 0.0
+  attribution_target: "ecos-v5"
+source: "model-driven/mof/m3_extended.py"

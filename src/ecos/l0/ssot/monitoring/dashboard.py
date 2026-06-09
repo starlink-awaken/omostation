@@ -94,7 +94,13 @@ class MonitoringDashboard:
                     position={"row": 2, "col": 1},
                     size={"rows": 2, "cols": 2},
                     refresh_interval=15,
-                    config={"metrics": ["system.cpu_percent", "system.memory_percent", "execution.rules_per_second"]},
+                    config={
+                        "metrics": [
+                            "system.cpu_percent",
+                            "system.memory_percent",
+                            "execution.rules_per_second",
+                        ]
+                    },
                 ),
                 WidgetConfig(
                     widget_type="alerts",
@@ -106,7 +112,11 @@ class MonitoringDashboard:
             ],
         )
 
-    def initialize(self, metrics_collector: EnhancedMetricsCollector, alerting_system: IntelligentAlertingSystem):
+    def initialize(
+        self,
+        metrics_collector: EnhancedMetricsCollector,
+        alerting_system: IntelligentAlertingSystem,
+    ):
         """初始化仪表板组件"""
         self.metrics_collector = metrics_collector
         self.alerting_system = alerting_system
@@ -121,7 +131,9 @@ class MonitoringDashboard:
         self.data_cache["system_status"] = self._get_system_status()
 
         # 更新指标数据
-        self.data_cache["metrics_snapshot"] = self.metrics_collector.get_realtime_snapshot()
+        self.data_cache["metrics_snapshot"] = (
+            self.metrics_collector.get_realtime_snapshot()
+        )
 
         # 更新告警数据
         self.data_cache["alert_summary"] = self.alerting_system.get_alert_summary()
@@ -135,8 +147,12 @@ class MonitoringDashboard:
             snapshot = self.metrics_collector.get_realtime_snapshot()
 
             # 计算系统健康度
-            cpu_percent = snapshot.get("system_metrics", {}).get("system.cpu_percent", 0)
-            memory_percent = snapshot.get("system_metrics", {}).get("system.memory_percent", 0)
+            cpu_percent = snapshot.get("system_metrics", {}).get(
+                "system.cpu_percent", 0
+            )
+            memory_percent = snapshot.get("system_metrics", {}).get(
+                "system.memory_percent", 0
+            )
 
             if cpu_percent > 80 or memory_percent > 80:
                 health = "warning"
@@ -159,7 +175,8 @@ class MonitoringDashboard:
         # 简化版本：从缓存中获取趋势分析
         if hasattr(self.trend_analyzer, "trend_cache"):
             self.data_cache["trend_analysis"] = {
-                metric_name: analysis.to_dict() for metric_name, analysis in self.trend_analyzer.trend_cache.items()
+                metric_name: analysis.to_dict()
+                for metric_name, analysis in self.trend_analyzer.trend_cache.items()
             }
 
     def render_dashboard(self) -> str:
@@ -179,9 +196,13 @@ class MonitoringDashboard:
         dashboard.append("-" * 70)
         system_status = self.data_cache.get("system_status", {})
 
-        status_icon = {"healthy": "✅", "warning": "⚠️", "error": "❌"}.get(system_status.get("health", "unknown"), "❓")
+        status_icon = {"healthy": "✅", "warning": "⚠️", "error": "❌"}.get(
+            system_status.get("health", "unknown"), "❓"
+        )
 
-        dashboard.append(f"{status_icon} 系统状态: {system_status.get('health', 'unknown')}")
+        dashboard.append(
+            f"{status_icon} 系统状态: {system_status.get('health', 'unknown')}"
+        )
         dashboard.append(f"🖥️  CPU: {system_status.get('cpu_percent', 0):.1f}%")
         dashboard.append(f"💾 内存: {system_status.get('memory_percent', 0):.1f}%")
 
@@ -221,7 +242,12 @@ class MonitoringDashboard:
 
         if active_count > 0:
             for severity, count in severity_counts.items():
-                icon = {"CRITICAL": "🔴", "ERROR": "🟠", "WARNING": "🟡", "INFO": "🔵"}.get(severity, "⚪")
+                icon = {
+                    "CRITICAL": "🔴",
+                    "ERROR": "🟠",
+                    "WARNING": "🟡",
+                    "INFO": "🔵",
+                }.get(severity, "⚪")
                 dashboard.append(f"  {icon} {severity}: {count}")
         else:
             dashboard.append("✅ 当前没有活跃告警")
@@ -233,9 +259,12 @@ class MonitoringDashboard:
             dashboard.append("-" * 70)
 
             for metric_name, analysis in list(trend_analysis.items())[:5]:
-                direction_icon = {"increasing": "📈", "decreasing": "📉", "stable": "➡️", "unknown": "❓"}.get(
-                    analysis["trend_direction"], "❓"
-                )
+                direction_icon = {
+                    "increasing": "📈",
+                    "decreasing": "📉",
+                    "stable": "➡️",
+                    "unknown": "❓",
+                }.get(analysis["trend_direction"], "❓")
 
                 dashboard.append(f"{direction_icon} {metric_name}:")
                 dashboard.append(f"  方向: {analysis['trend_direction']}")

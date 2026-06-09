@@ -9,19 +9,16 @@ Usage:
     log_event(source="l0", event_type="domain_read", uri="bos://vault", passed=True)
     events = query_events(hours=24, source="all")
 """
+
 from __future__ import annotations
 
 import json
-import os
 import re
 import sqlite3
-import subprocess
 import sys
-import time as time_module
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
 
 H = Path.home()
 
@@ -35,11 +32,11 @@ UNIFIED_AUDIT_LOG = H / ".ecos" / "audit" / "unified.jsonl"
 
 # ── 统一 Schema 字段 ──
 REQUIRED_FIELDS = [
-    "id",           # 唯一ID: unified-{date}-{seq}
-    "source",       # l0 | bos | ssb | daemon | healer | cards
-    "event_type",   # domain_read | bos_call | cycle_run | heal_attempt | ...
-    "timestamp",    # ISO-8601
-    "summary",      # 简短描述 (≤120 chars)
+    "id",  # 唯一ID: unified-{date}-{seq}
+    "source",  # l0 | bos | ssb | daemon | healer | cards
+    "event_type",  # domain_read | bos_call | cycle_run | heal_attempt | ...
+    "timestamp",  # ISO-8601
+    "summary",  # 简短描述 (≤120 chars)
 ]
 OPTIONAL_FIELDS = [
     "detail",
@@ -57,6 +54,7 @@ OPTIONAL_FIELDS = [
 ]
 
 # ── 顺序 ID 生成器 ──
+
 
 def _generate_id() -> str:
     ts = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -123,7 +121,10 @@ def _ssb_publish(event: dict) -> str | None:
                 "",
                 json.dumps(event.get("metadata", {}), ensure_ascii=False),
                 json.dumps(
-                    {"source": event.get("source", ""), "cards_id": event.get("cards_id")},
+                    {
+                        "source": event.get("source", ""),
+                        "cards_id": event.get("cards_id"),
+                    },
                     ensure_ascii=False,
                 ),
                 "",
@@ -227,7 +228,9 @@ def create_audit_debt(uri: str, anomaly_type: str, detail: str) -> str | None:
         from datetime import date
 
         today = date.today().isoformat()
-        safe_uri = re.sub(r'[^a-zA-Z0-9_-]', '_', uri.split("://")[-1] if "://" in uri else uri)[:30]
+        safe_uri = re.sub(
+            r"[^a-zA-Z0-9_-]", "_", uri.split("://")[-1] if "://" in uri else uri
+        )[:30]
         cards_id = f"DEBT-AUDIT-{today}-{safe_uri}"
 
         conn = sqlite3.connect(str(cards_db))
@@ -434,7 +437,9 @@ def query_events(
 
     # When source=all, skip "unified" to avoid double-counting (unified.jsonl aggregates
     # events that also appear in l0/bos JSONLs). Use --source unified to query only the aggregate.
-    sources_to_query = ["l0", "bos", "ssb", "daemon", "healer"] if source == "all" else [source]
+    sources_to_query = (
+        ["l0", "bos", "ssb", "daemon", "healer"] if source == "all" else [source]
+    )
 
     for s in sources_to_query:
         if s == "unified":
@@ -479,11 +484,13 @@ def query_events(
 
 def print_audit_report(result: dict) -> None:
     """打印审计查询报告"""
-    print(f"\n  ═══ 统一审计查询 ═══\n")
+    print("\n  ═══ 统一审计查询 ═══\n")
 
     src_parts = [f"{k}={v}" for k, v in sorted(result["sources"].items()) if v > 0]
     print(f"  来源: {', '.join(src_parts)}")
-    print(f"  事件: {result['total']} 条  |  ✅通过={result['passed']}  ❌失败={result['failed']}  ⚠️异常={result['anomalies']}")
+    print(
+        f"  事件: {result['total']} 条  |  ✅通过={result['passed']}  ❌失败={result['failed']}  ⚠️异常={result['anomalies']}"
+    )
     print()
 
     if not result["events"]:
@@ -491,7 +498,7 @@ def print_audit_report(result: dict) -> None:
         return
 
     print(f"  {'时间':<22} {'源':<8} {'类型':<18} {'通过':<6} {'摘要'}")
-    print(f"  {'─'*22} {'─'*8} {'─'*18} {'─'*6} {'─'*50}")
+    print(f"  {'─' * 22} {'─' * 8} {'─' * 18} {'─' * 6} {'─' * 50}")
 
     for e in result["events"]:
         ts = (e.get("timestamp") or "?")[:19]
@@ -508,8 +515,8 @@ def print_audit_report(result: dict) -> None:
         print(f"  {ts} {src:<8} {etype:<18} {p_icon:<6} {summary}")
 
     print(
-        f"\n  提示: 使用 --source ssb 查看 SSB 事件, --source daemon 查看 daemon cycles, "
-        f"--source healer 查看修复记录\n"
+        "\n  提示: 使用 --source ssb 查看 SSB 事件, --source daemon 查看 daemon cycles, "
+        "--source healer 查看修复记录\n"
     )
 
 
@@ -536,7 +543,9 @@ def main():
         elif a == "--event-type" and i + 1 < len(args):
             event_type = args[i + 1]
 
-    result = query_events(hours=hours, source=source, domain=domain, event_type=event_type)
+    result = query_events(
+        hours=hours, source=source, domain=domain, event_type=event_type
+    )
     print_audit_report(result)
     return 0
 

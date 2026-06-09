@@ -135,7 +135,9 @@ class MarkdownParser:
                 # 子内容的 stop_level = 当前标题级别（同级别标题会终止子内容）
                 children, i = self._parse_lines(lines, i + 1, stop_level=level)
                 # 如果子节点中第一个是段落而且是纯文本，作为摘要
-                node = DocNode(type="heading", level=level, title=title, children=children)
+                node = DocNode(
+                    type="heading", level=level, title=title, children=children
+                )
                 nodes.append(node)
                 continue
 
@@ -147,7 +149,12 @@ class MarkdownParser:
                 indent = len(list_m.group(1))
                 text_content = list_m.group(2).strip()
                 children, i = self._parse_list_item(lines, i + 1, indent)
-                node = DocNode(type="list_item", level=indent // 2, title=text_content, children=children)
+                node = DocNode(
+                    type="list_item",
+                    level=indent // 2,
+                    title=text_content,
+                    children=children,
+                )
                 nodes.append(node)
                 continue
 
@@ -207,7 +214,9 @@ class MarkdownParser:
 
         return DocNode(type="table", headers=header_row, rows=rows), i
 
-    def _parse_list_item(self, lines: list[str], start: int, parent_indent: int) -> tuple:
+    def _parse_list_item(
+        self, lines: list[str], start: int, parent_indent: int
+    ) -> tuple:
         """解析列表项的子内容"""
         children = []
         i = start
@@ -223,11 +232,17 @@ class MarkdownParser:
 
             # 检查：缩进的列表项 → 作为子列表
             leading = len(lines[i]) - len(lines[i].lstrip())
-            if stripped.startswith("- ") or stripped.startswith("* ") or re.match(r"^\d+[.)]\s", stripped):
+            if (
+                stripped.startswith("- ")
+                or stripped.startswith("* ")
+                or re.match(r"^\d+[.)]\s", stripped)
+            ):
                 # 只有明确缩进的才算子项
                 if leading > parent_indent:
                     indent = leading // 2
-                    text = re.sub(r"^[\s]*[-*+]\s*|^\s*\d+[.)]\s*", "", lines[i]).strip()
+                    text = re.sub(
+                        r"^[\s]*[-*+]\s*|^\s*\d+[.)]\s*", "", lines[i]
+                    ).strip()
                     children.append(DocNode(type="list_item", level=indent, title=text))
                     i += 1
                     continue

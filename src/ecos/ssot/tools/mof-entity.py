@@ -13,9 +13,9 @@
     python3 mof-entity.py --json                # JSON 输出
 """
 
-import sys, json, yaml
+import json
+import yaml
 from pathlib import Path
-from datetime import datetime, timezone
 
 HOME = Path.home()
 L0_M1 = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "entity"
@@ -31,7 +31,7 @@ def load_entities() -> list[dict]:
             data = yaml.safe_load(open(f))
             if isinstance(data, dict) and data.get("type") == "Entity":
                 entities.append(data)
-        except:
+        except Exception:
             pass
     return entities
 
@@ -48,11 +48,11 @@ def build_index(entities: list[dict]) -> dict:
     """构建实体索引: {identity_key: [entity]}"""
     index = {}
     for e in entities:
-        eid = e.get("id", "")
+        e.get("id", "")
         name = e.get("name", "")
         props = e.get("properties", {}) or {}
         identity = props.get("identity", {})
-        sources = props.get("sources", [])
+        props.get("sources", [])
         domain = e.get("domain", "?")
         
         # Index by name

@@ -29,6 +29,4 @@ SSOT Kernel — 单一事实源知识工程通用引擎
 """
 
 __version__ = "1.0.0"
-__all__ = (
-    "__version__",
-)
+__all__ = ("__version__",)

@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """BOS MCP Server — 暴露 domain_read/resolve/search 给 cockpit MCP"""
-import sys, os, json, yaml
+
+import sys
+import os
+import json
+import yaml
 from pathlib import Path
 
 H = Path.home()
 ECOS_SRC = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ECOS_SRC))
 
-from importlib.machinery import SourceFileLoader
+from importlib.machinery import SourceFileLoader  # noqa: E402
+
 DM_PATH = ECOS_SRC / "services" / "domain_manager.py"
 dm = SourceFileLoader("dm", str(DM_PATH)).load_module()
 
@@ -18,10 +23,13 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "uri": {"type": "string", "description": "BOS URI, e.g. bos://vault/_state"}
+                "uri": {
+                    "type": "string",
+                    "description": "BOS URI, e.g. bos://vault/_state",
+                }
             },
-            "required": ["uri"]
-        }
+            "required": ["uri"],
+        },
     },
     {
         "name": "domain_read",
@@ -30,9 +38,9 @@ TOOLS = [
             "type": "object",
             "properties": {
                 "uri": {"type": "string", "description": "BOS URI"},
-                "max_lines": {"type": "integer", "description": "最大行数·默认50"}
-            }
-        }
+                "max_lines": {"type": "integer", "description": "最大行数·默认50"},
+            },
+        },
     },
     {
         "name": "domain_list",
@@ -40,9 +48,20 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "type": {"type": "string", "enum": ["document","config","engine","tool","workspace","storage","model"]}
-            }
-        }
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "document",
+                        "config",
+                        "engine",
+                        "tool",
+                        "workspace",
+                        "storage",
+                        "model",
+                    ],
+                }
+            },
+        },
     },
     {
         "name": "domain_search",
@@ -51,11 +70,15 @@ TOOLS = [
             "type": "object",
             "properties": {
                 "query": {"type": "string", "description": "搜索关键词"},
-                "domains": {"type": "array", "items": {"type": "string"}, "description": "限定域ID列表"},
-                "max_results": {"type": "integer", "default": 10}
+                "domains": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "限定域ID列表",
+                },
+                "max_results": {"type": "integer", "default": 10},
             },
-            "required": ["query"]
-        }
+            "required": ["query"],
+        },
     },
     {
         "name": "workflow_run",
@@ -65,12 +88,13 @@ TOOLS = [
             "properties": {
                 "name": {"type": "string", "description": "工作流名称或 WORKFLOW-ID"},
                 "params": {"type": "object", "description": "执行参数"},
-                "dry_run": {"type": "boolean", "default": False}
+                "dry_run": {"type": "boolean", "default": False},
             },
-            "required": ["name"]
-        }
+            "required": ["name"],
+        },
     },
 ]
+
 
 def handle_resolve(uri):
     registry = dm.load_registry()
@@ -85,8 +109,9 @@ def handle_resolve(uri):
         "exists": os.path.exists(full),
         "domain": d.get("name", d["id"]),
         "type": d.get("domain_type", "?"),
-        "layer": d.get("layer", "?")
+        "layer": d.get("layer", "?"),
     }
+
 
 def handle_read(uri, max_lines=50):
     registry = dm.load_registry()
@@ -99,7 +124,12 @@ def handle_read(uri, max_lines=50):
         return {"error": f"不存在: {full}"}
     if full.is_dir():
         items = sorted(os.listdir(full))
-        return {"uri": uri, "type": "directory", "items": items[:50], "total": len(items)}
+        return {
+            "uri": uri,
+            "type": "directory",
+            "items": items[:50],
+            "total": len(items),
+        }
     content = full.read_text()
     lines = content.split("\n")
     return {
@@ -108,8 +138,9 @@ def handle_read(uri, max_lines=50):
         "size": len(content),
         "lines": len(lines),
         "content": "\n".join(lines[:max_lines]),
-        "truncated": len(lines) > max_lines
+        "truncated": len(lines) > max_lines,
     }
+
 
 def handle_list(domain_type=None):
     registry = dm.load_registry()
@@ -117,23 +148,26 @@ def handle_list(domain_type=None):
     for d in registry:
         if domain_type and d.get("domain_type") != domain_type:
             continue
-        result.append({
-            "id": d["id"],
-            "name": d.get("name", ""),
-            "type": d.get("domain_type", "document"),
-            "layer": d.get("layer", "L4"),
-            "status": d.get("status", "active"),
-            "bos_uri": f"bos://{d['id']}"
-        })
+        result.append(
+            {
+                "id": d["id"],
+                "name": d.get("name", ""),
+                "type": d.get("domain_type", "document"),
+                "layer": d.get("layer", "L4"),
+                "status": d.get("status", "active"),
+                "bos_uri": f"bos://{d['id']}",
+            }
+        )
     return {"domains": result, "total": len(result)}
+
 
 def handle_search(query, domains=None, max_results=10):
     registry = dm.load_registry()
     results = []
     import subprocess
-    
+
     target_domains = set(domains) if domains else None
-    
+
     for d in registry:
         did = d["id"]
         if target_domains and did not in target_domains:
@@ -141,13 +175,13 @@ def handle_search(query, domains=None, max_results=10):
         p = dm.resolve_path(d)
         if not p.exists():
             continue
-        
+
         # grep in CLAUDE.md, STATE.md, and _knowledge/
         search_paths = [p / "CLAUDE.md", p / "_control" / "STATE.md"]
         kd = p / "_knowledge"
         if kd.exists():
             search_paths.append(kd)
-        
+
         for sp in search_paths:
             if not sp.exists():
                 continue
@@ -159,15 +193,18 @@ def handle_search(query, domains=None, max_results=10):
                 r = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
                 for line in r.stdout.strip().split("\n"):
                     if line and len(results) < max_results:
-                        results.append({
-                            "uri": f"bos://{did}/{Path(line).relative_to(p)}",
-                            "domain": did,
-                            "file": str(Path(line).relative_to(p))
-                        })
-            except:
+                        results.append(
+                            {
+                                "uri": f"bos://{did}/{Path(line).relative_to(p)}",
+                                "domain": did,
+                                "file": str(Path(line).relative_to(p)),
+                            }
+                        )
+            except Exception:
                 pass
-    
+
     return {"results": results, "total": len(results)}
+
 
 def handle_workflow_run(name, params=None, dry_run=False):
     """通过 BOS URI 触发工作流执行"""
@@ -185,8 +222,10 @@ def handle_workflow_run(name, params=None, dry_run=False):
                 nid = n.get("id", "").lower()
                 kebab = nid.replace("workflow-", "").replace("_", "-")
                 if name_lower == nid or name_lower in nid or name_lower == kebab:
-                    node = n; break
-        except: pass
+                    node = n
+                    break
+        except Exception:
+            pass
 
     if not node:
         return {"error": f"工作流未找到: {name}"}
@@ -215,29 +254,32 @@ def handle_workflow_run(name, params=None, dry_run=False):
         ]
     else:
         result["status"] = "routed"
-        result["message"] = f"已通过 BOS URI 路由到 {result['layer']} 层 {result['realized_by']} 执行器"
+        result["message"] = (
+            f"已通过 BOS URI 路由到 {result['layer']} 层 {result['realized_by']} 执行器"
+        )
         result["note"] = "实际执行需 Agora Service Mesh 动态代理"
 
     return result
+
 
 def main():
     # MCP stdio protocol
     for line in sys.stdin:
         try:
             req = json.loads(line)
-        except:
+        except Exception:
             continue
-        
+
         method = req.get("method", "")
         req_id = req.get("id")
-        
+
         if method == "tools/list":
             resp = {"jsonrpc": "2.0", "id": req_id, "result": {"tools": TOOLS}}
         elif method == "tools/call":
             params = req.get("params", {})
             tool_name = params.get("name", "")
             args = params.get("arguments", {})
-            
+
             if tool_name == "domain_resolve":
                 result = handle_resolve(args.get("uri", ""))
             elif tool_name == "domain_read":
@@ -245,18 +287,40 @@ def main():
             elif tool_name == "domain_list":
                 result = handle_list(args.get("type"))
             elif tool_name == "domain_search":
-                result = handle_search(args.get("query", ""), args.get("domains"), args.get("max_results", 10))
+                result = handle_search(
+                    args.get("query", ""),
+                    args.get("domains"),
+                    args.get("max_results", 10),
+                )
             elif tool_name == "workflow_run":
-                result = handle_workflow_run(args.get("name", ""), args.get("params"), args.get("dry_run", False))
+                result = handle_workflow_run(
+                    args.get("name", ""), args.get("params"), args.get("dry_run", False)
+                )
             else:
                 result = {"error": f"Unknown tool: {tool_name}"}
-            
-            resp = {"jsonrpc": "2.0", "id": req_id, "result": {"content": [{"type": "text", "text": json.dumps(result, indent=2, ensure_ascii=False)}]}}
+
+            resp = {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": json.dumps(result, indent=2, ensure_ascii=False),
+                        }
+                    ]
+                },
+            }
         else:
-            resp = {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32601, "message": "Method not found"}}
-        
+            resp = {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "error": {"code": -32601, "message": "Method not found"},
+            }
+
         sys.stdout.write(json.dumps(resp) + "\n")
         sys.stdout.flush()
+
 
 if __name__ == "__main__":
     main()

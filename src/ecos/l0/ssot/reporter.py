@@ -45,17 +45,27 @@ class Reporter:
         lines.append(f"| 🟠 ERROR | {report.error} |")
         lines.append(f"| 🟡 WARN | {report.warn} |")
         lines.append("")
-        lines.append(f"**总评**: {'✅ 全部通过' if report.all_passed else '⚠️ 有待处理缺口'}")
+        lines.append(
+            f"**总评**: {'✅ 全部通过' if report.all_passed else '⚠️ 有待处理缺口'}"
+        )
         lines.append("")
 
         for result in report.results:
             icon = (
                 "✅"
                 if result.passed
-                else ("🔴" if result.severity == "BLOCKER" else "🟠" if result.severity == "ERROR" else "🟡")
+                else (
+                    "🔴"
+                    if result.severity == "BLOCKER"
+                    else "🟠"
+                    if result.severity == "ERROR"
+                    else "🟡"
+                )
             )
             lines.append(f"### {icon} {result.protocol_id}: {result.name}")
-            lines.append(f"- **状态**: {'通过' if result.passed else '未通过'} | **严重度**: {result.severity}")
+            lines.append(
+                f"- **状态**: {'通过' if result.passed else '未通过'} | **严重度**: {result.severity}"
+            )
             for d in result.details:
                 lines.append(f"- {d}")
             if not result.passed and result.fixes:
@@ -63,7 +73,9 @@ class Reporter:
                     lines.append(f"- 🔧 {f}")
             lines.append("")
 
-        lines.append(f"*报告自动生成于 {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}*")
+        lines.append(
+            f"*报告自动生成于 {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}*"
+        )
         return "\n".join(lines)
 
     @staticmethod

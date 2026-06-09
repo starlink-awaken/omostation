@@ -1,0 +1,18 @@
+id: "TRIGGER-AGORA-EVENTBUS"
+type: "trigger"
+name: "Agora EventBus"
+description: "核心事件总线 — JSON 持久化 + HTTP POST 推送 + 订阅模式"
+status: "active"
+domain: "meta"
+layer: "I0"
+created: "2026-06-09"
+version: "1.0.0"
+properties:
+  trigger_type: "event_bus"
+  trigger_source: "publish(event) call"
+  trigger_action: "event persistence + subscription delivery"
+  schedule: "on_publish"
+  health_check:
+    endpoint: "agora-events.json"
+    expected_status: "event_count < 1000"
+source: "agora/core/event_bus.py"

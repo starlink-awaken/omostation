@@ -11,7 +11,12 @@ def check_integrity(text: str) -> dict:
     top_repeat = max(repeated.values(), default=0)
     suspicious_markers = sum(
         1
-        for marker in ("comprehensive analysis", "methodology", "further research is needed", "keyword")
+        for marker in (
+            "comprehensive analysis",
+            "methodology",
+            "further research is needed",
+            "keyword",
+        )
         if marker in lowered
     )
     suspicious = top_repeat >= 8 or suspicious_markers >= 2

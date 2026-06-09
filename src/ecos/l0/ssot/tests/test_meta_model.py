@@ -83,7 +83,12 @@ class TestConfidence:
 
 class TestEntity:
     def test_default_creation(self):
-        e = Entity(id="ORG-test", name="Test", meta_type=MetaType.DOMAIN, entity_type="Organization")
+        e = Entity(
+            id="ORG-test",
+            name="Test",
+            meta_type=MetaType.DOMAIN,
+            entity_type="Organization",
+        )
         assert e.status == "active"
         assert e.confidence == Confidence.FACT
         assert e.source == ""
@@ -91,11 +96,21 @@ class TestEntity:
         assert e.metadata == {}
 
     def test_id_prefix(self):
-        e = Entity(id="ORG-test-123", name="Test", meta_type=MetaType.DOMAIN, entity_type="Organization")
+        e = Entity(
+            id="ORG-test-123",
+            name="Test",
+            meta_type=MetaType.DOMAIN,
+            entity_type="Organization",
+        )
         assert e.id_prefix == "ORG-"
 
     def test_id_prefix_no_dash(self):
-        e = Entity(id="test", name="Test", meta_type=MetaType.DOMAIN, entity_type="Organization")
+        e = Entity(
+            id="test",
+            name="Test",
+            meta_type=MetaType.DOMAIN,
+            entity_type="Organization",
+        )
         assert e.id_prefix == "test"
 
     def test_with_relations(self):
@@ -157,7 +172,9 @@ class TestInference:
         assert len(i.derives_from) == 2
 
     def test_status_default(self):
-        i = Inference(id="INF-002", title="Another", derives_from=[], logic="", conclusion="")
+        i = Inference(
+            id="INF-002", title="Another", derives_from=[], logic="", conclusion=""
+        )
         assert i.status == "active"
 
 
@@ -219,8 +236,12 @@ class TestDomainConfig:
         assert config.facts == []
 
     def test_find_entity(self):
-        e1 = Entity(id="ORG-a", name="A", meta_type=MetaType.DOMAIN, entity_type="Organization")
-        e2 = Entity(id="ORG-b", name="B", meta_type=MetaType.DOMAIN, entity_type="Organization")
+        e1 = Entity(
+            id="ORG-a", name="A", meta_type=MetaType.DOMAIN, entity_type="Organization"
+        )
+        e2 = Entity(
+            id="ORG-b", name="B", meta_type=MetaType.DOMAIN, entity_type="Organization"
+        )
         config = DomainConfig(entities=[e1, e2])
         assert config.find_entity("ORG-a") is e1
         assert config.find_entity("nonexistent") is None
@@ -243,14 +264,20 @@ class TestDomainConfig:
 
 class TestCheckRelationAllowed:
     def test_valid_relation(self):
-        assert check_relation_allowed(MetaType.DOMAIN, MetaType.DOMAIN, MetaRelationType.STRUCT)
+        assert check_relation_allowed(
+            MetaType.DOMAIN, MetaType.DOMAIN, MetaRelationType.STRUCT
+        )
 
     def test_invalid_relation(self):
-        assert not check_relation_allowed(MetaType.DOMAIN, MetaType.DOMAIN, MetaRelationType.DERIVE)
+        assert not check_relation_allowed(
+            MetaType.DOMAIN, MetaType.DOMAIN, MetaRelationType.DERIVE
+        )
 
     def test_unknown_pair(self):
         # Use RELATION type which is not in the matrix
-        assert not check_relation_allowed(MetaType.RELATION, MetaType.DOMAIN, MetaRelationType.STRUCT)
+        assert not check_relation_allowed(
+            MetaType.RELATION, MetaType.DOMAIN, MetaRelationType.STRUCT
+        )
 
 
 class TestDescribeMetaType:
@@ -283,15 +310,21 @@ class TestValidateYamlSchema:
         assert isinstance(errors, list)
 
     def test_valid_entities(self):
-        errors = validate_yaml_schema("entities", {"entities": [{"id": "E1", "type": "Organization"}]})
+        errors = validate_yaml_schema(
+            "entities", {"entities": [{"id": "E1", "type": "Organization"}]}
+        )
         assert errors == []
 
     def test_entity_missing_id(self):
-        errors = validate_yaml_schema("entities", {"entities": [{"type": "Organization"}]})
+        errors = validate_yaml_schema(
+            "entities", {"entities": [{"type": "Organization"}]}
+        )
         assert len(errors) >= 1
 
     def test_facts_section(self):
-        errors = validate_yaml_schema("facts", {"policy": [{"id": "POL-001", "title": "Policy1"}]})
+        errors = validate_yaml_schema(
+            "facts", {"policy": [{"id": "POL-001", "title": "Policy1"}]}
+        )
         assert errors == []
 
     def test_unknown_schema(self):
@@ -311,22 +344,43 @@ class TestValidateYamlSchema:
 class TestValidateCrossReferences:
     def test_no_errors(self):
         config = DomainConfig(
-            entities=[Entity(id="ORG-a", name="A", meta_type=MetaType.DOMAIN, entity_type="Organization")],
-            relations=[Relation(source_id="ORG-a", target_id="ORG-a", relation_type="part_of")],
+            entities=[
+                Entity(
+                    id="ORG-a",
+                    name="A",
+                    meta_type=MetaType.DOMAIN,
+                    entity_type="Organization",
+                )
+            ],
+            relations=[
+                Relation(source_id="ORG-a", target_id="ORG-a", relation_type="part_of")
+            ],
         )
         errors = validate_cross_references(config)
         assert errors == []
 
     def test_relation_source_missing(self):
         config = DomainConfig(
-            relations=[Relation(source_id="nonexistent", target_id="ORG-a", relation_type="part_of")],
+            relations=[
+                Relation(
+                    source_id="nonexistent", target_id="ORG-a", relation_type="part_of"
+                )
+            ],
         )
         errors = validate_cross_references(config)
         assert any("nonexistent" in e for e in errors)
 
     def test_inference_dep_missing(self):
         config = DomainConfig(
-            inferences=[Inference(id="INF-001", title="T", derives_from=["MISSING"], logic="", conclusion="")],
+            inferences=[
+                Inference(
+                    id="INF-001",
+                    title="T",
+                    derives_from=["MISSING"],
+                    logic="",
+                    conclusion="",
+                )
+            ],
         )
         errors = validate_cross_references(config)
         assert any("MISSING" in e for e in errors)

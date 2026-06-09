@@ -1,0 +1,15 @@
+id: "VAULT-PATH-DEFAULT"
+type: "VaultPath"
+name: "默认 Vault 路径映射"
+description: "Vault 路径与 BOS URI 的映射关系"
+status: "active"
+domain: "meta"
+layer: "L4"
+created: "2026-06-09"
+version: "1.0.0"
+properties:
+  paths:
+    - "~/Documents/@驾驶舱 → bos://cockpit/**"
+    - "~/Documents/@学习进化 → bos://vault/**"
+    - "~/Documents/@个人 → bos://personal/**"
+source: "protocols/vault-paths.yaml"

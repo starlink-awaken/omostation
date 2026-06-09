@@ -67,7 +67,10 @@ def get_ssb_stats() -> dict:
             "coverage_pct": round(signed / total * 100, 1) if total > 0 else 0,
             "max_seq": max_seq,
             "types": [{"type": r[0], "count": r[1]} for r in types],
-            "recent": [{"seq": r[0], "type": r[1], "agent": r[2], "summary": r[3], "ts": r[4]} for r in recent],
+            "recent": [
+                {"seq": r[0], "type": r[1], "agent": r[2], "summary": r[3], "ts": r[4]}
+                for r in recent
+            ],
         }
     except Exception as e:
         return {
@@ -85,17 +88,37 @@ def get_cron_status() -> list:
     """获取 cron 状态 (通过 hermes cron list 或手动节选)"""
     return [
         {"id": "WF-001", "name": "KOS索引", "schedule": "02:00", "status": "active"},
-        {"id": "WF-002", "name": "Minerva研究", "schedule": "周日03:00", "status": "active"},
+        {
+            "id": "WF-002",
+            "name": "Minerva研究",
+            "schedule": "周日03:00",
+            "status": "active",
+        },
         {"id": "WF-003", "name": "健康检查", "schedule": "09:00", "status": "active"},
         {"id": "WF-005", "name": "HANDOFF更新", "schedule": "每2h", "status": "active"},
         {"id": "WF-006", "name": "感知管道", "schedule": "每小时", "status": "active"},
         {"id": "WF-007", "name": "安全检查", "schedule": "每6h", "status": "active"},
-        {"id": "WF-008", "name": "Kanban桥接", "schedule": "每5min", "status": "active"},
-        {"id": "WF-009", "name": "委员会周检", "schedule": "周一09:00", "status": "active"},
+        {
+            "id": "WF-008",
+            "name": "Kanban桥接",
+            "schedule": "每5min",
+            "status": "active",
+        },
+        {
+            "id": "WF-009",
+            "name": "委员会周检",
+            "schedule": "周一09:00",
+            "status": "active",
+        },
         {"id": "WF-010", "name": "宪法执行器", "schedule": "04:00", "status": "active"},
         {"id": "WF-011", "name": "每日摘要", "schedule": "12:00", "status": "active"},
         {"id": "WF-012", "name": "研究推送", "schedule": "12:00", "status": "active"},
-        {"id": "WF-013", "name": "知识缺口检测", "schedule": "每天", "status": "active"},
+        {
+            "id": "WF-013",
+            "name": "知识缺口检测",
+            "schedule": "每天",
+            "status": "active",
+        },
     ]
 
 
@@ -131,19 +154,25 @@ def get_bos_health() -> dict:
     try:
         from agora.mcp.bos_metrics import bos_metrics
         from agora.mcp.bos_middleware import bos_cache
+
         return {
             "metrics_calls": bos_metrics.summary()["total_calls"],
-            "metrics_rate": f'{bos_metrics.summary()["success_rate"]*100:.1f}%',
+            "metrics_rate": f"{bos_metrics.summary()['success_rate'] * 100:.1f}%",
             "cache_active": bos_cache.status()["active_entries"],
         }
     except ImportError:
-        return {"metrics_calls": 0, "metrics_rate": "N/A (install agora)", "cache_active": 0}
+        return {
+            "metrics_calls": 0,
+            "metrics_rate": "N/A (install agora)",
+            "cache_active": 0,
+        }
 
 
 def get_swarm_health() -> dict:
     """Agora Swarm 蜂群健康数据 (P55) — 需要 agora[dashboard] 可选依赖"""
     try:
         from agora.mcp.swarm import get_swarm
+
         swarm = get_swarm()
         status = swarm.status()
         return {
@@ -152,7 +181,11 @@ def get_swarm_health() -> dict:
             "swarm_role": status["role"],
         }
     except ImportError:
-        return {"swarm_nodes": 1, "swarm_online": 1, "swarm_role": "standalone (install agora)"}
+        return {
+            "swarm_nodes": 1,
+            "swarm_online": 1,
+            "swarm_role": "standalone (install agora)",
+        }
 
 
 def get_agentmesh_health() -> dict:
@@ -362,13 +395,17 @@ class DashboardHandler(BaseHTTPRequestHandler):
         state["scripts"] = scripts_count
         state["cron"] = len(crons)
 
-        html = DASHBOARD_HTML.replace("{STATE_JSON}", json.dumps(state, ensure_ascii=False))
+        html = DASHBOARD_HTML.replace(
+            "{STATE_JSON}", json.dumps(state, ensure_ascii=False)
+        )
         html = html.replace("{SSB_JSON}", json.dumps(ssb, ensure_ascii=False))
         html = html.replace("{CRON_JSON}", json.dumps(crons, ensure_ascii=False))
         html = html.replace("{WATCHDOG_JSON}", json.dumps(watchdog, ensure_ascii=False))
         html = html.replace("{AGORA_JSON}", json.dumps(agora_svcs, ensure_ascii=False))
         html = html.replace("{FORGE_JSON}", json.dumps(forge_stats, ensure_ascii=False))
-        html = html.replace("{AGENTMESH_JSON}", json.dumps(agentmesh_health, ensure_ascii=False))
+        html = html.replace(
+            "{AGENTMESH_JSON}", json.dumps(agentmesh_health, ensure_ascii=False)
+        )
         html = html.replace("{BOS_JSON}", json.dumps(bos_health, ensure_ascii=False))
 
         self.send_response(200)
@@ -385,7 +422,9 @@ def main():
     if "--help" in sys.argv or "-h" in sys.argv:
         print("Usage: ecos-dashboard [--port PORT]")
         print()
-        print("eCOS Web Dashboard — 展示 SSB 系统状态、Watchdog、Agora、Forge、agentmesh 面板。")
+        print(
+            "eCOS Web Dashboard — 展示 SSB 系统状态、Watchdog、Agora、Forge、agentmesh 面板。"
+        )
         print()
         print("Options:")
         print("  --port PORT  指定 HTTP 端口 (default: 9090)")

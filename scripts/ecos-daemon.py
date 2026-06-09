@@ -124,6 +124,54 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
     if (WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-sla.py").exists():
         run_script(WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-sla.py")
 
+    # 0.3 model-driven 自反验证 (并行验证层, 非关键路径 — 失败不阻塞 daemon)
+    print("\n── model-driven 自反验证 ──")
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(WORKSPACE / "projects" / "model-driven" / "src"))
+        from model_driven.toolchain.tools import tool_validate
+        from model_driven.toolchain.derivation_engine import DerivationEngine
+        from model_driven.toolchain.mof_scan import load_m1_nodes
+
+        nodes = load_m1_nodes()
+
+        r = tool_validate(models=nodes)
+        print(f"  model-driven validate: passed={r['passed']}, errors={r['error_count']}, warnings={r['warning_count']}")
+
+        engine = DerivationEngine()
+        engine.execute_all(nodes, {"expected_progress": 0.5})
+        s = engine.get_summary()
+        print(f"  model-driven derive: rules={s['total_rules']}, triggered={s['triggered']}, high_risks={len(s.get('high_risks', []))}")
+
+        if s.get("high_risks"):
+            for risk in s["high_risks"][:3]:
+                print(f"    🔴 {risk.rule_id}: {risk.message[:80]}")
+            # 闭环驱动: 对高风险自动触发修复
+            heal_actions = engine.execute_trigger_driven_heal(s["high_risks"])
+            if heal_actions:
+                print(f"    🔧 自动修复: {len(heal_actions)} actions")
+    except ImportError:
+        print("  ℹ️ model-driven 未安装, 跳过")
+    except Exception as e:
+        print(f"  ⚠️ model-driven 验证异常: {e} (non-fatal)")
+
+    # 0.4 model-driven 三阶段流水线 (追踪 daemon 自身生命周期)
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(WORKSPACE / "projects" / "model-driven" / "src"))
+        from model_driven.lifecycle.pipeline import PipelineTracker, PipelinePhase
+
+        pt = PipelineTracker.load("ecos-daemon") or PipelineTracker("ecos-daemon", "daemon")
+        if pt.current_phase is None:
+            pt.start_phase(PipelinePhase.HARDENING)
+        pt.save()
+        p = pt.get_progress()
+        print(f"  model-driven pipeline: phase={p['current_phase']}, overall={p['overall_progress']}%")
+    except ImportError:
+        pass
+    except Exception:
+        pass  # 静默跳过
+
     # 1. L0 协议约束 (非关键路径 — 缺失或失败不阻塞 daemon)
     print("\n── L0 协议约束 ──")
     try:

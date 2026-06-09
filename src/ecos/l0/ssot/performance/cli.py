@@ -95,7 +95,9 @@ class PerformanceCLI:
             if args.check_regression:
                 baseline = self.regression_detector.load_baseline()
                 if baseline:
-                    report = self.regression_detector.detect_regression(result, baseline)
+                    report = self.regression_detector.detect_regression(
+                        result, baseline
+                    )
                     report.print_summary()
 
     def _run_scenario_benchmark(self, args):
@@ -113,12 +115,16 @@ class PerformanceCLI:
             results = benchmark.run(verbose=True)
 
             for rounds, result in results.items():
-                print(f"  轮次 {rounds}: {result.metrics.total_execution_time_ms / 1000:.2f}s")
+                print(
+                    f"  轮次 {rounds}: {result.metrics.total_execution_time_ms / 1000:.2f}s"
+                )
 
         elif scenario == "complex_dependency":
             print("🔗 运行复杂依赖场景测试...")
             benchmark = ComplexDependencyBenchmark()
-            result = benchmark.run(complexity_level=args.complexity or "medium", verbose=True)
+            result = benchmark.run(
+                complexity_level=args.complexity or "medium", verbose=True
+            )
 
         else:
             print(f"❌ 未知场景: {scenario}")
@@ -134,7 +140,9 @@ class PerformanceCLI:
             print("⚠️  未找到性能基线，将使用当前结果创建新基线")
 
             # 创建新基线
-            self.regression_detector.create_baseline(results, name="initial_baseline", version="1.0")
+            self.regression_detector.create_baseline(
+                results, name="initial_baseline", version="1.0"
+            )
             print("✅ 新基线已创建")
             return
 
@@ -252,7 +260,9 @@ class PerformanceCLI:
                 print("  🚨 检测到性能回归!")
 
         # 检查是否有严重回归
-        severe_regressions = [size for size, data in comparison.items() if data["regression_detected"]]
+        severe_regressions = [
+            size for size, data in comparison.items() if data["regression_detected"]
+        ]
         if severe_regressions:
             print(f"\n🚨 检测到性能回归: {', '.join(severe_regressions)}")
             return 1
@@ -286,7 +296,9 @@ class PerformanceCLI:
             summary = self.monitor.get_performance_summary()
             print("\n📊 性能监控摘要:")
             print(f"  总执行次数: {summary.get('total_executions', 0)}")
-            print(f"  平均执行时间: {summary.get('average_duration_ms', 0) / 1000:.2f}s")
+            print(
+                f"  平均执行时间: {summary.get('average_duration_ms', 0) / 1000:.2f}s"
+            )
 
             if summary.get("resource_usage"):
                 resource = summary["resource_usage"]
@@ -314,7 +326,9 @@ class PerformanceCLI:
                 relation_count=args.relation_count or 20,
             )
         elif args.dataset_type == "contradiction":
-            domain = generator.generate_contradiction_test_domain(rule_count=args.rule_count or 800)
+            domain = generator.generate_contradiction_test_domain(
+                rule_count=args.rule_count or 800
+            )
         elif args.dataset_type == "complex_dependency":
             domain = generator.generate_complex_dependency_domain(
                 entity_count=args.entity_count or 150,
@@ -357,22 +371,34 @@ class PerformanceCLI:
 
 def main():
     """主函数"""
-    parser = argparse.ArgumentParser(prog="ssot-performance", description="SSOT 性能测试工具")
+    parser = argparse.ArgumentParser(
+        prog="ssot-performance", description="SSOT 性能测试工具"
+    )
 
     subparsers = parser.add_subparsers(dest="command", help="子命令")
 
     # benchmark 子命令
     p_benchmark = subparsers.add_parser("benchmark", help="运行性能基准测试")
-    p_benchmark.add_argument("--size", choices=["small", "medium", "large"], help="测试规模")
     p_benchmark.add_argument(
-        "--scenario", choices=["contradiction", "multi_round", "complex_dependency"], help="测试场景"
+        "--size", choices=["small", "medium", "large"], help="测试规模"
     )
-    p_benchmark.add_argument("--all-sizes", action="store_true", help="运行所有规模的基准测试")
+    p_benchmark.add_argument(
+        "--scenario",
+        choices=["contradiction", "multi_round", "complex_dependency"],
+        help="测试场景",
+    )
+    p_benchmark.add_argument(
+        "--all-sizes", action="store_true", help="运行所有规模的基准测试"
+    )
     p_benchmark.add_argument("--rule-count", type=int, help="规则数量（用于场景测试）")
-    p_benchmark.add_argument("--complexity", choices=["low", "medium", "high"], help="复杂依赖测试的复杂度")
+    p_benchmark.add_argument(
+        "--complexity", choices=["low", "medium", "high"], help="复杂依赖测试的复杂度"
+    )
     p_benchmark.add_argument("--verbose", "-v", action="store_true", help="详细输出")
     p_benchmark.add_argument("--save", help="保存结果到文件")
-    p_benchmark.add_argument("--check-regression", action="store_true", help="检查性能回归")
+    p_benchmark.add_argument(
+        "--check-regression", action="store_true", help="检查性能回归"
+    )
 
     # baseline 子命令
     p_baseline = subparsers.add_parser("baseline", help="管理性能基线")

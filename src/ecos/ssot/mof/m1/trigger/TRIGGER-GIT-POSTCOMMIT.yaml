@@ -1,0 +1,16 @@
+id: "TRIGGER-GIT-POSTCOMMIT"
+type: "trigger"
+name: "Git Post-commit Hook"
+description: "知识萃取 — 每次 git commit 后触发 MOF 模型更新"
+status: "active"
+domain: "meta"
+layer: "L0"
+created: "2026-06-09"
+version: "1.0.0"
+properties:
+  trigger_type: "git_hook"
+  trigger_source: "git post-commit"
+  trigger_action: "mof-extract + governance history append"
+  schedule: "on_commit"
+  dependencies: []
+source: "ecos/.git/hooks/post-commit"

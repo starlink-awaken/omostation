@@ -20,7 +20,8 @@ MCP Tools:
         return l0_status()
 """
 
-import subprocess, json
+import subprocess
+import json
 from pathlib import Path
 
 HOME = Path.home()
@@ -37,17 +38,16 @@ def _run_tool(tool_path: Path, args: list = None) -> dict:
         )
         if result.returncode == 0 and result.stdout.strip():
             return json.loads(result.stdout)
-    except:
+    except Exception:
         pass
     return {"error": "tool execution failed"}
 
 
 def l0_status() -> str:
     """L0 系统状态摘要 — Agent 启动时调用"""
-    result = _run_tool(MOF, ["status"]) if False else {}
+    _run_tool(MOF, ["status"]) if False else {}
     
     # Direct status computation (bypass subprocess for speed)
-    from pathlib import Path
     m1_count = sum(1 for _ in (HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1").rglob("*.yaml"))
     m2_count = len(list((HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m2").glob("*.yaml")))
     
@@ -58,7 +58,7 @@ def l0_status() -> str:
     )
     
     lines = [
-        f"织星 L0 状态:",
+        "织星 L0 状态:",
         f"  M2 类型: {m2_count}",
         f"  M1 节点: {m1_count}",
         f"  校验: {'✅ 全部通过' if m1_count > 0 else '⚠️'}",
@@ -129,7 +129,7 @@ def l0_adr_list() -> str:
             name = d.get("name", f.stem)[:60]
             icon = {"accepted": "✅", "proposed": "📋", "rejected": "❌"}.get(status, "❓")
             lines.append(f"  {icon} {name}")
-        except:
+        except Exception:
             pass
     return "\n".join(lines)
 
@@ -196,10 +196,17 @@ if __name__ == "__main__":
         sys.exit(0)
     
     tool = sys.argv[1]
-    if tool == "status": print(l0_status())
-    elif tool == "validate": print(l0_validate())
-    elif tool == "audit": print(l0_audit())
-    elif tool == "protocols": print(l0_protocols())
-    elif tool == "adr": print(l0_adr_list())
-    elif tool == "entity" and len(sys.argv) > 2: print(l0_entity_resolve(sys.argv[2]))
-    else: print(f"未知工具: {tool}")
+    if tool == "status":
+        print(l0_status())
+    elif tool == "validate":
+        print(l0_validate())
+    elif tool == "audit":
+        print(l0_audit())
+    elif tool == "protocols":
+        print(l0_protocols())
+    elif tool == "adr":
+        print(l0_adr_list())
+    elif tool == "entity" and len(sys.argv) > 2:
+        print(l0_entity_resolve(sys.argv[2]))
+    else:
+        print(f"未知工具: {tool}")

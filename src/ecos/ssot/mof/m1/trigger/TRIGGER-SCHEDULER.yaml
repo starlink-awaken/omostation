@@ -1,0 +1,21 @@
+id: "TRIGGER-SCHEDULER"
+type: "trigger"
+name: "Runtime Scheduler"
+description: "健康监控调度器 — 每 15 秒检查服务状态，自动修复"
+status: "active"
+domain: "meta"
+layer: "L1"
+created: "2026-06-09"
+version: "1.0.0"
+properties:
+  trigger_type: "scheduler"
+  trigger_source: "while True sleep(15s)"
+  trigger_action: "scheduler health check + auto_heal"
+  schedule: "every 15s"
+  interval_seconds: 15
+  dependencies:
+    - "TRIGGER-OMO-DAEMON"
+  health_check:
+    endpoint: "~/runtime/matrix_state.json"
+    expected_status: "freshness > 0"
+source: "runtime/scheduler.py"

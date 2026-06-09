@@ -35,7 +35,8 @@ from .sync import cmd_sync
 # 导入监控系统模块（可选）
 try:
     from .monitoring.alerting import IntelligentAlertingSystem  # noqa: F401
-    from .monitoring.architecture import MonitoringArchitecture, get_monitoring_architecture  # noqa: F401
+    from .monitoring.architecture import MonitoringArchitecture  # noqa: F401
+    from .monitoring.architecture import get_monitoring_architecture  # noqa: F401
     from .monitoring.cli import MonitoringCLI  # noqa: F401
     from .monitoring.collectors import EnhancedMetricsCollector  # noqa: F401
     from .monitoring.dashboard import MonitoringDashboard  # noqa: F401
@@ -229,7 +230,9 @@ def cmd_compile(args):
     }
 
     json_path = Path(args.dir) / "compiled.json"
-    json_path.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
+    json_path.write_text(
+        json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
     print(f"✅ 编译完成: {json_path}")
     print(f"   实体: {output['entity_count']}")
@@ -264,7 +267,9 @@ def _derive_watch(args):
                 engine = RuleEngine()
                 report = engine.execute(config, rounds=args.rounds)
                 elapsed = time.time() - _t0
-                print(f"  ✅ 推导完成: {elapsed:.2f}s | {Reporter.summary_line(report)}")
+                print(
+                    f"  ✅ 推导完成: {elapsed:.2f}s | {Reporter.summary_line(report)}"
+                )
             except Exception as e:
                 print(f"  ❌ {e}")
 
@@ -332,7 +337,9 @@ def cmd_derive(args):
 
     # 输出 Markdown
     md = Reporter.to_markdown(report)
-    md_path = output_dir / f"derive-{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}.md"
+    md_path = (
+        output_dir / f"derive-{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}.md"
+    )
     md_path.write_text(md, encoding="utf-8")
     print(f"📄 报告: {md_path}")
 
@@ -442,7 +449,9 @@ def cmd_graph(args):
         if not diagram_blocks:
             diagram_blocks = ["\n".join(pure_lines)]
 
-        diagrams_html = "\n".join(f'<pre class="mermaid">\n{block}\n</pre>' for block in diagram_blocks)
+        diagrams_html = "\n".join(
+            f'<pre class="mermaid">\n{block}\n</pre>' for block in diagram_blocks
+        )
 
         html = f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -576,7 +585,9 @@ def cmd_evolve(args):
                 print(f"     {line}")
 
         print(f"\n检查点: {report.checkpoint}")
-        print(f"建议: ssot-kernel evolve --dir {args.dir} --action apply --id <suggestion_id>")
+        print(
+            f"建议: ssot-kernel evolve --dir {args.dir} --action apply --id <suggestion_id>"
+        )
 
     elif args.action == "apply":
         # 通过 ID 应用建议
@@ -603,7 +614,9 @@ def cmd_evolve(args):
             return 0
         print(f"\n检查点列表 ({len(cps)}):")
         for cp in cps[:10]:
-            print(f"  {cp['created_at']} | {cp['label'] or '未标记'} | {len(cp['files'])} 文件")
+            print(
+                f"  {cp['created_at']} | {cp['label'] or '未标记'} | {len(cp['files'])} 文件"
+            )
 
     elif args.action == "restore":
         cp_name = args.name
@@ -700,7 +713,9 @@ def cmd_extract(args):
     if validation.conflicts:
         print(f"冲突 ({len(validation.conflicts)}):")
         for cf in validation.conflicts[:5]:
-            print(f"  [{cf.severity}] {cf.field}: {cf.existing_value} vs {cf.extracted_value}")
+            print(
+                f"  [{cf.severity}] {cf.field}: {cf.existing_value} vs {cf.extracted_value}"
+            )
 
     # 写入确认
     if args.write and extraction.candidates:
@@ -740,7 +755,11 @@ def cmd_stats(args):
     orgs = [e for e in config.entities if e.entity_type == "Organization"]
     roles = [e for e in config.entities if e.entity_type == "Role"]
     projects = [e for e in config.entities if e.entity_type == "Project"]
-    others = [e for e in config.entities if e.entity_type not in ("Organization", "Role", "Project")]
+    others = [
+        e
+        for e in config.entities
+        if e.entity_type not in ("Organization", "Role", "Project")
+    ]
 
     # 事实统计
     policies = [f for f in config.facts if f.tags and "policy" in f.tags]
@@ -825,7 +844,13 @@ def cmd_export(args):
                 for e in config.entities
             ],
             "facts": [
-                {"id": f.id, "title": f.title, "value": f.value, "unit": f.unit, "source": f.source}
+                {
+                    "id": f.id,
+                    "title": f.title,
+                    "value": f.value,
+                    "unit": f.unit,
+                    "source": f.source,
+                }
                 for f in config.facts
             ],
             "inferences": [
@@ -839,16 +864,24 @@ def cmd_export(args):
                 for i in config.inferences
             ],
             "relations": [
-                {"source": r.source_id, "type": r.relation_type, "target": r.target_id} for r in config.relations
+                {"source": r.source_id, "type": r.relation_type, "target": r.target_id}
+                for r in config.relations
             ],
-            "rules": [{"id": r.id, "pattern": r.pattern, "name": r.name} for r in config.rules],
+            "rules": [
+                {"id": r.id, "pattern": r.pattern, "name": r.name} for r in config.rules
+            ],
             "state_machines": [
                 {
                     "id": sm.id,
                     "name": sm.name,
                     "states": [{"id": s.id, "name": s.name} for s in sm.states],
                     "transitions": [
-                        {"from": t.from_state, "to": t.to_state, "condition": t.condition} for t in sm.transitions
+                        {
+                            "from": t.from_state,
+                            "to": t.to_state,
+                            "condition": t.condition,
+                        }
+                        for t in sm.transitions
                     ],
                 }
                 for sm in config.state_machines
@@ -871,7 +904,9 @@ def cmd_export(args):
         for i in config.inferences:
             w.writerow(["inference", i.id, i.title, i.conclusion[:60]])
         for r in config.relations:
-            w.writerow(["relation", f"{r.source_id}→{r.target_id}", r.relation_type, ""])
+            w.writerow(
+                ["relation", f"{r.source_id}→{r.target_id}", r.relation_type, ""]
+            )
         output = buf.getvalue()
 
     elif fmt == "md":
@@ -919,7 +954,9 @@ def main(argv: list[str] | None = None) -> int:
         description="SSOT Kernel — 单一事实源知识工程通用引擎 v2.0",
     )
     parser.add_argument("--verbose", "-v", action="store_true", help="详细输出")
-    parser.add_argument("--debug", action="store_true", help="出错时显示完整 Python 错误栈")
+    parser.add_argument(
+        "--debug", action="store_true", help="出错时显示完整 Python 错误栈"
+    )
 
     # 共享参数：所有子命令都继承 --debug
     _common = argparse.ArgumentParser(add_help=False)
@@ -943,14 +980,18 @@ def main(argv: list[str] | None = None) -> int:
     # compile
     p_compile = sub.add_parser("compile", help="编译 YAML 为 JSON", parents=[_common])
     p_compile.add_argument("--dir", default=".")
-    p_compile.add_argument("--no-cache", action="store_true", help="跳过缓存，强制重新加载")
+    p_compile.add_argument(
+        "--no-cache", action="store_true", help="跳过缓存，强制重新加载"
+    )
 
     # derive
     p_derive = sub.add_parser("derive", help="执行规则引擎", parents=[_common])
     p_derive.add_argument("--dir", default=".")
     p_derive.add_argument("--rounds", type=int, default=1, help="多轮迭代次数")
     p_derive.add_argument("--verbose", "-v", action="store_true", help="详细输出")
-    p_derive.add_argument("--watch", "-w", action="store_true", help="监听 YAML 文件变更自动重跑")
+    p_derive.add_argument(
+        "--watch", "-w", action="store_true", help="监听 YAML 文件变更自动重跑"
+    )
 
     # check
     p_check = sub.add_parser("check", help="只检查不输出报告", parents=[_common])
@@ -958,12 +999,23 @@ def main(argv: list[str] | None = None) -> int:
     p_check.add_argument("--verbose", "-v", action="store_true")
 
     # graph
-    p_graph = sub.add_parser("graph", help="可视化（mermaid 实体图/状态机）", parents=[_common])
+    p_graph = sub.add_parser(
+        "graph", help="可视化（mermaid 实体图/状态机）", parents=[_common]
+    )
     p_graph.add_argument("--dir", default=".")
-    p_graph.add_argument("--type", choices=["entities", "state-machine"], default="entities")
-    p_graph.add_argument("--html", action="store_true", help="输出自包含 HTML（内嵌 mermaid.js CDN，浏览器可直接打开）")
     p_graph.add_argument(
-        "--output", "-o", default="", help="HTML 输出路径（默认: {dir}/entities.html 或 machines.html）"
+        "--type", choices=["entities", "state-machine"], default="entities"
+    )
+    p_graph.add_argument(
+        "--html",
+        action="store_true",
+        help="输出自包含 HTML（内嵌 mermaid.js CDN，浏览器可直接打开）",
+    )
+    p_graph.add_argument(
+        "--output",
+        "-o",
+        default="",
+        help="HTML 输出路径（默认: {dir}/entities.html 或 machines.html）",
     )
 
     # report
@@ -987,13 +1039,23 @@ def main(argv: list[str] | None = None) -> int:
         help="源文本类型",
     )
     p_extract.add_argument("--name", "-n", default="", help="源名称（用于元信息）")
-    p_extract.add_argument("--write", "-w", action="store_true", help="校验通过后自动写入 YAML")
-    p_extract.add_argument("--llm", action="store_true", help="强制使用 LLM 提取（跳过模板）")
-    p_extract.add_argument("--llm-model", default="", help="LLM 模型名（如 qwen2.5:7b，默认自动检测）")
+    p_extract.add_argument(
+        "--write", "-w", action="store_true", help="校验通过后自动写入 YAML"
+    )
+    p_extract.add_argument(
+        "--llm", action="store_true", help="强制使用 LLM 提取（跳过模板）"
+    )
+    p_extract.add_argument(
+        "--llm-model", default="", help="LLM 模型名（如 qwen2.5:7b，默认自动检测）"
+    )
 
     # completion
-    p_comp = sub.add_parser("completion", help="输出 Shell 自动补全脚本", parents=[_common])
-    p_comp.add_argument("--shell", default="bash", choices=["bash", "zsh"], help="Shell 类型")
+    p_comp = sub.add_parser(
+        "completion", help="输出 Shell 自动补全脚本", parents=[_common]
+    )
+    p_comp.add_argument(
+        "--shell", default="bash", choices=["bash", "zsh"], help="Shell 类型"
+    )
 
     # stats
     p_stats = sub.add_parser("stats", help="输出知识库统计信息", parents=[_common])
@@ -1002,26 +1064,37 @@ def main(argv: list[str] | None = None) -> int:
     # export
     p_export = sub.add_parser("export", help="导出知识库为通用格式", parents=[_common])
     p_export.add_argument("--dir", default=".", help="领域配置目录")
-    p_export.add_argument("--format", choices=["json", "csv", "md"], default="md", help="导出格式")
+    p_export.add_argument(
+        "--format", choices=["json", "csv", "md"], default="md", help="导出格式"
+    )
     p_export.add_argument("--output", "-o", default="", help="输出文件路径")
 
     # sync
     add_sync_subcommand(sub, _common)
 
     # evolve
-    p_evolve = sub.add_parser("evolve", help="进化分析：从数据挖掘新规则", parents=[_common])
+    p_evolve = sub.add_parser(
+        "evolve", help="进化分析：从数据挖掘新规则", parents=[_common]
+    )
     p_evolve.add_argument("--dir", default=".")
     p_evolve.add_argument(
-        "--action", default="analyze", choices=["analyze", "apply", "checkpoints", "restore"], help="操作"
+        "--action",
+        default="analyze",
+        choices=["analyze", "apply", "checkpoints", "restore"],
+        help="操作",
     )
     p_evolve.add_argument("--id", default="", help="要应用的规则建议 ID")
     p_evolve.add_argument("--name", default="", help="检查点名称（用于 restore）")
 
     # 监控子命令
     if MONITORING_AVAILABLE:
-        monitoring_sub = sub.add_parser("monitor", help="智能监控系统", parents=[_common])
+        monitoring_sub = sub.add_parser(
+            "monitor", help="智能监控系统", parents=[_common]
+        )
 
-        monitor_subparsers = monitoring_sub.add_subparsers(dest="monitor_command", help="监控子命令")
+        monitor_subparsers = monitoring_sub.add_subparsers(
+            dest="monitor_command", help="监控子命令"
+        )
 
         # monitor start
         p_monitor_start = monitor_subparsers.add_parser("start", help="启动监控")
@@ -1034,15 +1107,24 @@ def main(argv: list[str] | None = None) -> int:
         # monitor alerts
         p_monitor_alerts = monitor_subparsers.add_parser("alerts", help="查看告警信息")
         p_monitor_alerts.add_argument("--severity", help="过滤严重程度")
-        p_monitor_alerts.add_argument("--stats", action="store_true", help="显示统计信息")
-        p_monitor_alerts.add_argument("--report", action="store_true", help="生成告警报告")
+        p_monitor_alerts.add_argument(
+            "--stats", action="store_true", help="显示统计信息"
+        )
+        p_monitor_alerts.add_argument(
+            "--report", action="store_true", help="生成告警报告"
+        )
 
         # monitor metrics
         p_monitor_metrics = monitor_subparsers.add_parser("metrics", help="查看指标")
         p_monitor_metrics.add_argument(
-            "--category", choices=["system", "execution", "business", "quality", "all"], default="all", help="指标类别"
+            "--category",
+            choices=["system", "execution", "business", "quality", "all"],
+            default="all",
+            help="指标类别",
         )
-        p_monitor_metrics.add_argument("--history", type=int, help="历史时间窗口（分钟）")
+        p_monitor_metrics.add_argument(
+            "--history", type=int, help="历史时间窗口（分钟）"
+        )
         p_monitor_metrics.add_argument("--export", help="导出数据到文件")
 
         # monitor report
@@ -1050,8 +1132,12 @@ def main(argv: list[str] | None = None) -> int:
         p_monitor_report.add_argument("--export", help="导出报告到文件")
 
         # monitor dashboard
-        p_monitor_dashboard = monitor_subparsers.add_parser("dashboard", help="监控仪表板")
-        p_monitor_dashboard.add_argument("--html", action="store_true", help="生成HTML仪表板")
+        p_monitor_dashboard = monitor_subparsers.add_parser(
+            "dashboard", help="监控仪表板"
+        )
+        p_monitor_dashboard.add_argument(
+            "--html", action="store_true", help="生成HTML仪表板"
+        )
         p_monitor_dashboard.add_argument("--export", help="导出仪表板数据")
 
     args = parser.parse_args(argv)

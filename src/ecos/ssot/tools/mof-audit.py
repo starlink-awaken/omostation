@@ -19,7 +19,6 @@
     python3 mof-audit.py --json              # JSON 输出
 """
 
-import sys
 import json
 import yaml
 import sqlite3
@@ -127,7 +126,7 @@ def audit_mechanisms(m1_nodes: list[dict], m0_daemon: dict) -> list[dict]:
         if "DAEMON" in m["id"]:
             if not m0_daemon["healthy"] and m.get("status") == "active":
                 drifts.append({"id": m["id"], "type": "Mechanism", "severity": "high",
-                              "drift": f"Daemon 健康检查未通过但 M1 状态为 active",
+                              "drift": "Daemon 健康检查未通过但 M1 状态为 active",
                               "detail": f"cycles={m0_daemon['cycles']}, healthy={m0_daemon['healthy']}"})
     return drifts
 

@@ -20,8 +20,6 @@
     python3 mof-scan.py --type=Protocol    # 仅扫描指定类型
 """
 
-import sys
-import os
 import json
 import sqlite3
 import argparse
@@ -190,8 +188,7 @@ def scan_cards() -> list[dict]:
 def scan_architecture() -> list[dict]:
     """扫描架构文档 → Architecture 节点"""
     nodes = []
-    spec_file = DOCS / "学习进化" / "2-knowledge" / "基建架构" / "eCOS-v5-Architecture-SSOT.md"
-    arch_file = ARCH_FILE
+    DOCS / "学习进化" / "2-knowledge" / "基建架构" / "eCOS-v5-Architecture-SSOT.md"
 
     nodes.append({
         "id": "ARCH-ECOS-V5",
@@ -329,13 +326,13 @@ def main():
         for n in all_nodes:
             t = n["type"]
             type_counts[t] = type_counts.get(t, 0) + 1
-        print(f"\n── 扫描汇总 ──")
+        print("\n── 扫描汇总 ──")
         print(f"  总计: {len(all_nodes)} M1 节点")
         for t, c in sorted(type_counts.items()):
             print(f"  {t:20s}: {c:3d}")
         # Check M2 coverage
         m2_types = ["Model", "Architecture", "Mechanism", "Protocol", "Pattern", "Specification", "Process", "Entity"]
-        print(f"\n── M2 类型覆盖 ──")
+        print("\n── M2 类型覆盖 ──")
         for mt in m2_types:
             count = sum(1 for n in all_nodes if n["type"] == mt)
             icon = "✅" if count >= 2 else ("⚠️" if count >= 1 else "❌")

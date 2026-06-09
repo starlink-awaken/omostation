@@ -8,7 +8,9 @@ from pathlib import Path
 
 from ecos.common.common import SSB_DB_PATH as DB_PATH  # type: ignore[import-not-found]
 
-CHAIN_CHECKPOINT = Path(__file__).resolve().parent.parent / "LADS" / "ssb" / ".chain_hash"
+CHAIN_CHECKPOINT = (
+    Path(__file__).resolve().parent.parent / "LADS" / "ssb" / ".chain_hash"
+)
 
 
 def compute_chain_hash(db):
@@ -70,7 +72,9 @@ def verify():
     if seqs:
         missing = sorted(set(range(1, seqs[-1] + 1)) - set(seqs))
         if missing:
-            issues.append(f"Missing seq: {missing[:10]}{'...' if len(missing) > 10 else ''}")
+            issues.append(
+                f"Missing seq: {missing[:10]}{'...' if len(missing) > 10 else ''}"
+            )
 
     # 3. Duplicate IDs
     ids = db.execute("SELECT id FROM ssb_events").fetchall()

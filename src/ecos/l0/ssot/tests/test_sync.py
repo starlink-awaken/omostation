@@ -58,14 +58,26 @@ class TestMarkdownParsing:
 
 class TestEntityToMd:
     def test_active_entity(self):
-        e = Entity(id="ORG-001", name="TestOrg", meta_type=MetaType.DOMAIN, entity_type="Organization", source="doc")
+        e = Entity(
+            id="ORG-001",
+            name="TestOrg",
+            meta_type=MetaType.DOMAIN,
+            entity_type="Organization",
+            source="doc",
+        )
         md = _entity_to_md(e)
         assert "ORG-001" in md
         assert "✅" in md
         assert "doc" in md
 
     def test_draft_entity(self):
-        e = Entity(id="ROL-001", name="Role1", meta_type=MetaType.DOMAIN, entity_type="Role", status="draft")
+        e = Entity(
+            id="ROL-001",
+            name="Role1",
+            meta_type=MetaType.DOMAIN,
+            entity_type="Role",
+            status="draft",
+        )
         md = _entity_to_md(e)
         assert "ROL-001" in md
         assert "📋" in md
@@ -138,7 +150,13 @@ class TestInferenceToMd:
         assert "Game theory" in md
 
     def test_inference_minimal(self):
-        i = Inference(id="INF-002", title="Minimal", derives_from=[], logic="", conclusion="Nothing")
+        i = Inference(
+            id="INF-002",
+            title="Minimal",
+            derives_from=[],
+            logic="",
+            conclusion="Nothing",
+        )
         md = _inference_to_md(i)
         assert "INF-002" in md
 

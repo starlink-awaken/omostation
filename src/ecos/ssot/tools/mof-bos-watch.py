@@ -16,7 +16,7 @@
     python3 mof-bos-watch.py --watch             # 持续监控
 """
 
-import sys, json
+import json
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
@@ -38,7 +38,7 @@ def load_audit_log(hours: int = 24) -> list[dict]:
                 ts = datetime.fromisoformat(e.get("timestamp", ""))
                 if ts > cutoff:
                     entries.append(e)
-            except:
+            except Exception:
                 pass
     return entries
 
@@ -49,7 +49,7 @@ def build_baseline():
     if not entries:
         print("⚠️ 无审计数据，无法建立基线")
         return
-    
+
     # Per-route stats
     routes = defaultdict(lambda: {"count": 0, "errors": 0, "durations": []})
     for e in entries:
@@ -58,13 +58,13 @@ def build_baseline():
         if e.get("status_code", 200) >= 500:
             routes[uri]["errors"] += 1
         routes[uri]["durations"].append(e.get("duration_ms", 0))
-    
+
     baseline = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "total_entries": len(entries),
         "routes": {},
     }
-    
+
     for uri, stats in routes.items():
         durations = sorted(stats["durations"])
         if not durations:
@@ -76,10 +76,10 @@ def build_baseline():
             "avg_duration_ms": sum(durations) / n,
             "p95_duration_ms": durations[int(n * 0.95)] if n >= 20 else durations[-1],
         }
-    
+
     with open(BASELINE_FILE, "w") as f:
         json.dump(baseline, f, indent=2)
-    
+
     print(f"✅ 基线已建立: {len(baseline['routes'])} routes, {len(entries)} entries")
 
 
@@ -87,41 +87,45 @@ def detect_anomalies() -> list[dict]:
     """检测异常"""
     if not BASELINE_FILE.exists():
         return [{"type": "no_baseline", "detail": "基线未建立，运行 --baseline 先"}]
-    
+
     baseline = json.load(open(BASELINE_FILE))
     recent = load_audit_log(1)  # Last hour
-    
+
     anomalies = []
-    
+
     # 1. Error rate spike
     for uri, bl in baseline["routes"].items():
         recent_for_route = [e for e in recent if e.get("bos_uri") == uri]
         if not recent_for_route:
             continue
-        
+
         errors = sum(1 for e in recent_for_route if e.get("status_code", 200) >= 500)
         error_rate = errors / len(recent_for_route)
         bl_rate = bl["error_rate"]
-        
+
         if bl_rate < 0.05 and error_rate > 0.3:
-            anomalies.append({
-                "type": "error_spike",
-                "route": uri,
-                "severity": "high",
-                "detail": f"错误率 {error_rate:.0%} (基线 {bl_rate:.0%})",
-            })
-    
+            anomalies.append(
+                {
+                    "type": "error_spike",
+                    "route": uri,
+                    "severity": "high",
+                    "detail": f"错误率 {error_rate:.0%} (基线 {bl_rate:.0%})",
+                }
+            )
+
     # 2. New route burst
     for e in recent:
         uri = e.get("bos_uri", "")
         if uri not in baseline["routes"]:
-            anomalies.append({
-                "type": "new_route_burst",
-                "route": uri,
-                "severity": "low",
-                "detail": "新路由未在基线中",
-            })
-    
+            anomalies.append(
+                {
+                    "type": "new_route_burst",
+                    "route": uri,
+                    "severity": "low",
+                    "detail": "新路由未在基线中",
+                }
+            )
+
     # 3. Duration spike
     for uri, bl in baseline["routes"].items():
         recent_for_route = [e for e in recent if e.get("bos_uri") == uri]
@@ -130,25 +134,27 @@ def detect_anomalies() -> list[dict]:
         durations = [e.get("duration_ms", 0) for e in recent_for_route]
         avg = sum(durations) / len(durations)
         if bl["avg_duration_ms"] > 0 and avg > bl["p95_duration_ms"] * 2:
-            anomalies.append({
-                "type": "latency_spike",
-                "route": uri,
-                "severity": "medium",
-                "detail": f"平均延迟 {avg:.0f}ms (基线 P95 {bl['p95_duration_ms']:.0f}ms)",
-            })
-    
+            anomalies.append(
+                {
+                    "type": "latency_spike",
+                    "route": uri,
+                    "severity": "medium",
+                    "detail": f"平均延迟 {avg:.0f}ms (基线 P95 {bl['p95_duration_ms']:.0f}ms)",
+                }
+            )
+
     return anomalies
 
 
 def format_report(anomalies: list[dict]):
-    print(f"═══ BOS 异常检测 ═══")
+    print("═══ BOS 异常检测 ═══")
     print(f"  时间: {datetime.now(timezone.utc).isoformat()[:19]}")
     print(f"  异常: {len(anomalies)} 项\n")
-    
+
     if not anomalies:
         print("  ✅ 无异常")
         return
-    
+
     for a in anomalies:
         icon = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(a["severity"], "❓")
         print(f"  {icon} [{a['type']}] {a.get('route', '?')[:50]}")
@@ -157,6 +163,7 @@ def format_report(anomalies: list[dict]):
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline", action="store_true")
     parser.add_argument("--watch", action="store_true")
@@ -168,9 +175,15 @@ def main():
         return
 
     anomalies = detect_anomalies()
-    
+
     if args.json:
-        print(json.dumps({"anomalies": len(anomalies), "items": anomalies}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"anomalies": len(anomalies), "items": anomalies},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         format_report(anomalies)
 
