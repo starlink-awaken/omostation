@@ -1,0 +1,25 @@
+# Pre-commit hooks for omostation (Round 12 P0)
+#
+# Installs: pre-commit install
+# Run manually: pre-commit run --all-files
+#
+# Hook 设计:
+#   - omo-logs-audit: 跑 omo logs audit, 0 drift 才通过.
+#     若 .omo/_knowledge/ 下没有 .jsonl, 跳过 (新项目可零数据启动).
+#   - ruff: 各项目自带 ruff (在 kairon/agora/omo 等 pyproject.toml 中配).
+#
+# 性能考虑: omo logs audit 是 IO-bound (读 .jsonl), 不会显著拖慢 commit.
+
+repos:
+  - repo: local
+    hooks:
+      - id: omo-logs-audit
+        name: omo logs audit (SSOT schema 漂移检测)
+        entry: uv run --directory projects/omo python -m omo.cli logs audit
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        # Round 12 P0 锁: 提交时自动验, 0 drift 才通过 (与 Round 8 P2 SSOT 一致).
+        # 若 .omo/_knowledge/ 下没 .jsonl, omo logs audit 返 0, 仍然通过.
+        # 老 governance-history.jsonl 已知有 1078 drift (Round 10 P1 验证),
+        # 提交时若 drift > 0 则 fail. 这是有意的 fail-fast, 锁住未来新代码不引入 drift.
