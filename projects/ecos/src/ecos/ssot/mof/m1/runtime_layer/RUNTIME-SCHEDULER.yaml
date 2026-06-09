@@ -1,0 +1,16 @@
+id: "RUNTIME-SCHEDULER"
+type: "Mechanism"
+name: "Runtime Scheduler"
+description: "健康监控调度器 — 每 15 秒检查服务状态，自动修复异常"
+status: "active"
+domain: "meta"
+layer: "L1"
+created: "2026-06-09"
+version: "1.0.0"
+properties:
+  trigger: "while True sleep(15s)"
+  action: "health_check + auto_heal"
+  interval: 15
+  feedback: "matrix_state.json"
+  fallback: "launchctl restart"
+source: "runtime/scheduler.py"
