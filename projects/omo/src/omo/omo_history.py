@@ -24,6 +24,7 @@ from typing import Any
 
 from omo.omo_io import AppendOnlyLog
 from omo.omo_audit import _utc_now  # Round 8 P2 锁: 时间戳 Z 结尾统一
+from omo.omo_io_schemas import OmoHistoryRecord  # Round 18 P0: 写时 Pydantic 校验 (X1 审计契约)
 from omo.omo_paths import GOVERNANCE_HISTORY_PATH
 
 # 默认历史文件路径
@@ -53,9 +54,10 @@ def append_entry(
     entry["date"] = now_iso[:10]  # "YYYY-MM-DD"
     entry["timestamp"] = now_iso
     # sort_keys=True 通过 AppendOnlyLog.append 的 **json_kwargs 透传
-    # Round 15 P0 注: append_entry 是宽容业务接口, 字段 caller 决定, 不走 Pydantic 强校验
-    # (caller omo_audit/omo_daemon 都传齐 4 必填字段, 但 append_entry 接口契约不强制)
-    AppendOnlyLog(target).append(entry, sort_keys=True)
+    # Round 18 P0 升级: 加 schema=OmoHistoryRecord 走 Pydantic 写时校验
+    # (X1 审计契约 — caller 必须传 total_score/grade/watchlist_count 4 必填字段)
+    # 旧测试 caller (test_omo_history_w3.py) 同步补 4 字段, 见 §11.9
+    AppendOnlyLog(target).append(entry, sort_keys=True, schema=OmoHistoryRecord)
     return target
 
 

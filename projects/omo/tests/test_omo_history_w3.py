@@ -18,7 +18,7 @@ def test_append_entry_uses_append_only_log(tmp_path):
 
     log_path = tmp_path / "history.jsonl"
     result = append_entry(
-        {"total_score": 99.0, "grade": "A+", "source": "pytest"},
+        {"total_score": 99.0, "grade": "A+", "watchlist_count": 0, "source": "pytest"},
         path=log_path,
     )
     assert result == log_path
@@ -39,18 +39,27 @@ def test_append_entry_preserves_sort_keys_compatibility(tmp_path):
     from omo.omo_history import append_entry
 
     log_path = tmp_path / "history.jsonl"
+    # Round 18 P0 必填字段 (total_score/grade/watchlist_count) + 测试字段
     append_entry(
-        {"z_field": "z", "a_field": "a", "m_field": "m"},
+        {
+            "total_score": 95.0,
+            "grade": "A",
+            "watchlist_count": 0,
+            "z_field": "z",
+            "a_field": "a",
+            "m_field": "m",
+        },
         path=log_path,
     )
-    # 读行 — sort_keys=True 让所有 key 字母序 (a_field, date, m_field, timestamp, z_field)
+    # 读行 — sort_keys=True 让所有 key 字母序
     raw_line = log_path.read_text(encoding="utf-8").strip()
     parsed = json.loads(raw_line, object_pairs_hook=list)
     keys = [k for k, _ in parsed]
-    # 5 个 key 全字母序: a_field, date, m_field, timestamp, z_field
-    assert keys == ["a_field", "date", "m_field", "timestamp", "z_field"], (
-        f"keys must be globally sorted (sort_keys=True), got: {keys}"
-    )
+    # 8 个 key 全字母序: a_field, date, grade, m_field, timestamp, total_score, watchlist_count, z_field
+    assert keys == [
+        "a_field", "date", "grade", "m_field", "timestamp",
+        "total_score", "watchlist_count", "z_field",
+    ], f"keys must be globally sorted (sort_keys=True), got: {keys}"
 
 
 def test_append_entry_overrides_user_date_timestamp(tmp_path):
@@ -58,8 +67,15 @@ def test_append_entry_overrides_user_date_timestamp(tmp_path):
     from omo.omo_history import append_entry
 
     log_path = tmp_path / "history.jsonl"
+    # Round 18 P0 必填字段 + 故意错 date/timestamp 测覆盖
     append_entry(
-        {"date": "user-attempt-1900-01-01", "timestamp": "user-bad-ts"},
+        {
+            "total_score": 0.0,
+            "grade": "F",
+            "watchlist_count": 0,
+            "date": "user-attempt-1900-01-01",
+            "timestamp": "user-bad-ts",
+        },
         path=log_path,
     )
     records = [json.loads(l) for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()]
@@ -75,7 +91,11 @@ def test_append_entry_creates_parent_dir(tmp_path):
     from omo.omo_history import append_entry
 
     log_path = tmp_path / "subdir" / "nested" / "history.jsonl"
-    append_entry({"x": 1}, path=log_path)
+    # Round 18 P0 必填字段
+    append_entry(
+        {"total_score": 0.0, "grade": "F", "watchlist_count": 0, "x": 1},
+        path=log_path,
+    )
     assert log_path.exists()
 
 
@@ -86,7 +106,11 @@ def test_append_entry_via_append_only_log_class(tmp_path):
 
     # 间接验证: append_entry 走 AppendOnlyLog.append, 故 sort_keys=True 通过 kwargs 传入
     log_path = tmp_path / "trace.jsonl"
-    append_entry({"b": 2, "a": 1}, path=log_path)
+    # Round 18 P0 必填字段
+    append_entry(
+        {"total_score": 0.0, "grade": "F", "watchlist_count": 0, "b": 2, "a": 1},
+        path=log_path,
+    )
     raw = log_path.read_text(encoding="utf-8").strip()
     # sort_keys 验证: "a" 应在 "b" 之前
     assert raw.index('"a"') < raw.index('"b"')
