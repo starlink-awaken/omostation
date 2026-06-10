@@ -779,6 +779,61 @@ omo lint schemas (Round 18 P0):
 | Round | 主题 | commit |
 |-------|------|--------|
 | 12-22 | 既有 11 段 | (前 20 commit) |
-| 23 | §12.2 实质化 (5 步代码示例) | `cb118f23` (P0) + (本 commit P1) |
+| 23 | §12.2 实质化 (5 步代码示例) | `cb118f23` (P0) + `ad109f8b` (P1) |
+
+### §11.16 Round 24 收口 — AppendOnlyLog 抽到 omo._shared (§12 跨仓 SSOT 落地)
+
+> **状态**: implemented
+> **commit**: `cca88e69` (Round 24 P0)
+> **主题**: AppendOnlyLog + fcntl_lock 实现搬到 `omo._shared.append_only_log`
+> **链接**: §12.2.1 Step 1 跨仓接入示例 + 仓内 SSOT 化
+
+**动机**:
+- §12 跨仓契约要求"物理写盘 SSOT" 不变量 (§12.1.1)
+- 但 §12 起步时**实际代码 SSOT 仍在 omo_io.py** (Round 1-5 收口位置)
+- 跨仓 owner 想 §12 接入, 必须从 omo 仓复制 280 行代码 — 违反 DRY
+- §12.8 候选首位: "抽 AppendOnlyLog 到 `protocols/_shared/`" 实质化
+
+**实施**:
+- 新建 `projects/omo/src/omo/_shared/__init__.py` (空, package 标识)
+- 新建 `projects/omo/src/omo/_shared/append_only_log.py` (~280 行)
+  - AppendOnlyLog 类 (物理 SSOT, 7 consumer 共享)
+  - fcntl_lock 类 (POSIX 跨进程锁)
+- `omo_io.py` 改 (~393 → ~80 行):
+  - 删原 AppendOnlyLog / fcntl_lock 类定义
+  - 顶部加 `from omo._shared.append_only_log import AppendOnlyLog, fcntl_lock` (re-export)
+  - 保留 `write_text_atomic` / `write_yaml_atomic` / `read_jsonl` (非 SSOT 物理, 留在 omo_io.py)
+  - `__all__` 不变 (backward compat 100%)
+
+**Backward compat 验证**:
+- `from omo.omo_io import AppendOnlyLog, fcntl_lock` 仍可 import ✓
+- 7 consumer (audit/bos_metrics/sync/alert/event/history/trail) 全部 `from omo.omo_io import AppendOnlyLog` 不变 ✓
+- `AppendOnlyLog` 是同一类 (`A1 is A2 is ... is A7 is AppendOnlyLog`) ✓
+- `omo lint schemas` 7/7 PASS, `SCHEMA_REGISTRY` 8/8 PASS ✓
+- smoke test: append + read_all 双向 ✓
+
+**§12 跨仓接入更近一步**:
+- 跨仓 owner 现在可写:
+  ```python
+  from omo._shared.append_only_log import AppendOnlyLog, fcntl_lock
+  ```
+- 之前必须从 omo_io.py 复制 280 行 — DRY 违反
+- §12.8 Round 24+ 候选剩余: ZTimestampModel 抽 (留 §13+)
+
+**度量 (Round 23 → Round 24)**:
+
+| 指标 | Round 23 | Round 24 | Δ |
+|------|----------|----------|---|
+| `omo_io.py` 行数 | ~393 | ~80 | **-313 (-80%)** |
+| `_shared` 包 | 无 | **2 文件 ~280 行** | 新 |
+| 跨仓 owner 复制成本 | 280 行 copy | 1 行 import | **-279** |
+| 7 consumer 共享 SSOT 验证 | 分散在 omo_io | **同一类引用** | ↑↑ |
+| Backward compat | 100% | **100%** | 不变 |
+
+**§11 13 段全收 + §12 12 子节 + §12.8 实质化** (Round 12-24, 23 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-23 | 既有 12 段 | (前 21 commit) |
+| 24 | AppendOnlyLog → omo._shared (§12 SSOT) | `cca88e69` (P0) + (本 commit P1 文档) |
 
 
