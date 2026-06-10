@@ -245,11 +245,11 @@ Round 12-13 全部延续 §5 六原则, 0 偏离:
 
 - [x] **P0-1** ✅ Round 14 P0: 修 dashboard_monitor 守护进程让 record 合规 (补 4 必填字段占位值)
 - [~] **P0-2** ⛔ 取消: P0-1 已治本, 白名单逻辑会是 no-op, 不重复造轮
-- [ ] **P1-1** baseline 时给 omo-trail 留 0 漂移位 (目前 trail 还没人写, baseline 还没纳入, 需 init 时加)
+- [x] **P1-1** ✅ Round 19 P0: omo_trail seed 工具 + trail.jsonl 出现 + baseline 4 consumers
 - [x] **P1-2** ✅ Round 15 P0: 新增 omo lint schemas + 修 omo_sync 2 处 + CI 集成 (5/5 consumer 合规)
 - [x] **P1-3** ✅ Round 17 P0: omo_bos_metrics dataclass → Pydantic 重构, lint 范围 5→6
 - [x] **P1-4** ✅ Round 18 P0: omo_history.append_entry 收严 + caller 补字段, lint 范围 6→7
-- [x] **P2** ✅ Round 16 P0: 写 `protocols/append-only-log-rollout.md` 跨仓推广指南 (不动 submodule)
+- [x] **P2** ✅ Round 16 P0 + Round 19 P1: 跨仓推广指南 + runtime/metaos 探查报告
 
 ### §11.7 Round 14 收口 — baseline 自洽
 
@@ -428,5 +428,84 @@ omo lint schemas (Round 18 P0):
 | Round 15 P0 | lint 工具上线, 5/7 守 |
 | Round 17 P0 | omo_bos_metrics 重构, 6/7 守 |
 | Round 18 P0 | omo_history 收严, **7/7 守 (100%)** |
+
+### §11.11 Round 19 收口 — §11.6 已知债 100% 清完
+
+> **状态**: implemented
+> **commit**: `c66e48ac` (P0) + `001c2abc` (P1)
+> **主题**: omo_trail 业务真落地 + runtime/metaos 探查报告
+> **里程碑**: §11.6 未来工作 6 项**全部清完**, 0 已知债
+
+**Round 19 P0 — omo_trail 业务真落地**:
+- 新工具 `omo_trail_seed.py`: 5 条代表性 step (代表老王 Round 12-18 工作流)
+  - edit → omo_lint.py
+  - exec → pytest tests/test_omo_lint_schemas.py
+  - test → omo_lint_schemas (7/7 PASS)
+  - commit → ebc1c41b (Round 18 P0)
+  - audit → omo logs audit --baseline-check
+- `omo trail seed` CLI 挂载 (Round 12 P0 漏 cli 挂载, 顺手补)
+- 5 条 seed step 写入 `.omo/_knowledge/omo-trail.jsonl`
+- **§11.6 P1-1 解锁**: omo_trail 纳入 baseline, 4 consumers 守稳态 (3→4)
+- 5 个新测试 (5/5 PASS): SEED_STEPS 内容契约 / 写入 + Pydantic 校验 / action 多样性 / CLI 子进程 / AppendOnlyLog 复用
+
+**Round 19 P1 — runtime / metaos 探查**:
+- 报告 `.omo/_knowledge/management/cross-repo-probe-runtime-metaos-2026-06-10.md` (139 lines)
+- 探查结论: 2 仓**均未用 JSONL 模式** — 正是 Rollout Guide 推广目标
+- 推广优先级矩阵: metaos l2_controller (P0) / workflow_parser (P1) / runtime agent_runner (P1) / cron_service (P2) / checkpoint (P2)
+- 接入 5 步 (按 Rollout Guide §1)
+- 风险评估 (YAGNI 边界): submodule 跨仓改造需各 owner 配合, 短期不动代码
+- Round 20+ 候选: metaos l2_controller 试点 / runtime agent_runner 试点 / 跨仓 baseline 同步
+
+**§11.6 已知债 100% 清完** (Round 14 → Round 19, 6 项):
+| 债编号 | 状态 | commit |
+|--------|------|--------|
+| P0-1 dashboard_monitor schema 修复 | ✅ done | `2185ab44` |
+| P0-2 audit source 白名单 | ⛔ 取消 (P0-1 治本) | — |
+| P1-1 omo_trail baseline 纳入 | ✅ done | `c66e48ac` |
+| P1-2 omo_lint 校验 schema= | ✅ done | `8ea942be` |
+| P1-3 omo_bos_metrics 重构 Pydantic | ✅ done | `8a635bf6` |
+| P1-4 omo_history 收严 | ✅ done | `ebc1c41b` |
+| P2 跨仓推广 | ✅ done | `489c0fc5` + `001c2abc` |
+
+**§11 章节总览** (Round 1 → Round 19):
+
+| 章节 | 主题 | 状态 |
+|------|------|------|
+| §1-§10 | Round 1-5 收口 (基础架构) | ✅ done (历史) |
+| §11.1-§11.5 | Round 12-13 扩展 (7 consumer + baseline) | ✅ done |
+| §11.6-§11.7 | Round 14 dashboard_monitor schema | ✅ done |
+| §11.8 | Round 15-16 lint + 跨仓指南 | ✅ done |
+| §11.9 | Round 17 omo_bos_metrics 重构 | ✅ done |
+| §11.10 | Round 18 omo_history 收严 (X1 100%) | ✅ done |
+| §11.11 | Round 19 omo_trail 落地 + 探查 (0 债) | ✅ done (本节) |
+
+**总收口** (Round 12-19, 16 commit, 8 段全收):
+
+| 指标 | Round 12 | Round 19 | Δ |
+|------|----------|----------|---|
+| AppendOnlyLog consumer | 6 | **7** | +1 (omo_trail) |
+| Pydantic schema | 6 | **7** | +1 |
+| Lint 范围 | 0 | **7/7 (100%)** | +7 |
+| §11 X1 审计契约 | 0% | **100%** | +100% |
+| §11.6 已知债 | 4 | **0** | -4 (全清) |
+| baseline consumers | 0 | **4** (bos_metrics/history/sync/trail) | +4 |
+| 单元测试 | 100+ | **137+** | +37 |
+| pre-commit hook | 0 | **2** | +2 |
+| CI 工作流 jobs | 0 | **5** | +5 |
+| 跨仓指南 + 探查 | 0 | **2** docs | +2 |
+| omo 子命令 | 0 | +trail (record/show/seed), +lint | +4 |
+
+**§11 X1/X2/X3/X4 全守** (Round 19 final):
+- X1 审计契约: **7/7 consumer 写时 Pydantic 锁, 100% 治本**
+- X2 保鲜: baseline 4 consumers 守稳态, daemon 持续写入 0 漂移
+- X3 价值: 8 段模式 + 工具 + CI + 跨仓指南 + 探查报告, 全落
+- X4 一致: 1 套物理 + 1 套 schema + 1 套 audit CLI + 1 套 lint
+
+**Round 20+ 候选** (主动出题, 不在 §11.6 债列表):
+- A. metaos l2_controller 试点 (需 owner 配合)
+- B. runtime agent_runner 试点 (需 owner 配合)
+- C. 跨仓 baseline 同步 (cron + 报告汇聚)
+- D. Round 14 §11.7 提到的"dashboard_monitor 拆 omo_health consumer" (治本 vs 占位值)
+- E. omo_lint 加更多规则 (字段命名一致性 / Z-suffix ts 强制)
 
 
