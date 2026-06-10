@@ -1,0 +1,427 @@
+active_tasks: 0
+planned_tasks: 4
+blocked_tasks: 0
+completed_tasks: 0
+total_tasks: 4
+health_score_raw: 0.0
+debt_weight: 0.3
+health_score: 0.0
+debt_registry_ref: .omo/debt/registry.yaml
+debt_dashboard_ref: .omo/debt/dashboard/latest.yaml
+debt_review_pack_ref: .omo/debt/review/latest.yaml
+debt_reporting_ref: .omo/debt/reporting/latest.yaml
+debt_metrics:
+  debt_health: 0.0
+  classification_entropy: 0.0
+  state_entropy: 0.0
+  pointer_entropy: 2.0
+  time_entropy: 0.0
+  backlog_pressure: 196.0
+  coupling_load: 2.0
+debt_watchlist_count: 0
+debt_gate_count: 0
+resolved_debt_items:
+- DEBT-OMO-001
+- DEBT-OMO-002
+- DEBT-OMO-003
+- DEBT-OMO-004
+- DEBT-OMO-005
+- DEBT-OMO-006
+- DEBT-OMO-007
+- DEBT-OMO-008
+- DEBT-OMO-009
+- DEBT-OMO-010
+- DEBT-OMO-011
+- DEBT-OMO-012
+- DEBT-OMO-013
+- DEBT-OMO-014
+- DEBT-OMO-015
+- DEBT-OMO-016
+- DEBT-OMO-017
+- DEBT-OMO-018
+- DEBT-OMO-019
+- DEBT-OMO-020
+- DEBT-OMO-021
+- DEBT-OMO-023
+- DEBT-OMO-024
+- DEBT-OMO-025
+- DEBT-OMO-026
+- DEBT-OMO-027
+- DEBT-OMO-028
+- DEBT-OMO-029
+- DEBT-OMO-030
+- DEBT-OMO-031
+debt_weight_items:
+  DEBT-OMO-001:
+    resolved: true
+    weight: 0.05
+    desc: 集成测试依赖真实 .omo 工作区状态
+  DEBT-OMO-002:
+    resolved: true
+    weight: 0.05
+    desc: 'CLI 入口损坏: scripts/omo_debt.py 不存在'
+  DEBT-OMO-003:
+    resolved: true
+    weight: 0.05
+    desc: test_omo_automation.py 仍依赖 scripts.sync_omo_state (sys.path.insert)
+  DEBT-OMO-004:
+    resolved: true
+    weight: 0.2
+    desc: 'I0: Agora SSE不可达 (Agora SSE endpoint unreachable)'
+  DEBT-OMO-005:
+    resolved: true
+    weight: 0.1
+    desc: 'I0: Agora双实例 — native + Docker 并行运行冲突'
+  DEBT-OMO-006:
+    resolved: true
+    weight: 0.1
+    desc: 'X1: 沙箱空转 — KEI sandbox registered but never executed audit'
+  DEBT-OMO-007:
+    resolved: true
+    weight: 0.08
+    desc: 'L0: 协议幽灵 — 16个协议中只有MCP真正在用'
+  DEBT-OMO-008:
+    resolved: true
+    weight: 0.08
+    desc: 'L1: 调度器缺失 — 无统一任务调度机制'
+  DEBT-OMO-009:
+    resolved: true
+    weight: 0.05
+    desc: 'L1: 健康检查陈旧 — health check data outdated'
+  DEBT-OMO-010:
+    resolved: true
+    weight: 0.08
+    desc: 'X2: 无保鲜实现 — no freshness validation mechanism in place'
+  DEBT-OMO-011:
+    resolved: true
+    weight: 0.12
+    desc: 'X1: 无审计链 — no audit chain established'
+  DEBT-OMO-012:
+    resolved: true
+    weight: 0.05
+    desc: 'X3: 无成本追踪 — no cost tracking mechanism'
+  DEBT-OMO-013:
+    resolved: true
+    weight: 0.04
+    desc: 'L0: TaskObject未实际使用 — TaskObject defined but never adopted'
+  DEBT-OMO-014:
+    resolved: true
+    weight: 0.06
+    desc: 'X1-AUTH-001: 身份追踪 — 债务变更无操作者记录'
+  DEBT-OMO-015:
+    resolved: true
+    weight: 0.05
+    desc: 'L4: CLAUDE_COWORK_GLOBAL.md 放错位置 — 应从学习进化/移至~/Documents/根级'
+  DEBT-OMO-016:
+    resolved: true
+    weight: 0.12
+    desc: 'L3: TaskObject 适配器未实现 — 导管不存在'
+  DEBT-OMO-017:
+    resolved: true
+    weight: 0.08
+    desc: 'L2/I0: Agora 契约边界不清晰 — 不确定是L2内核还是I0织物'
+  DEBT-OMO-018:
+    resolved: true
+    weight: 0.04
+    desc: 'L2: LLM Gateway (1453 LOC) 未投入运行时 — 代码存在但闲置'
+  DEBT-OMO-019:
+    resolved: true
+    weight: 0.08
+    desc: 'L1: Runtime 项目状态/代码边界混乱 — $RUNTIME_HOME vs projects/runtime 混用'
+  DEBT-OMO-020:
+    resolved: true
+    weight: 0.08
+    desc: 'L0: 元模型/本体/协议层次未落地 — 7实体×6关系只停留在文档'
+  DEBT-OMO-021:
+    resolved: true
+    weight: 0.03
+    desc: 'L0: BOS URI 零实现 — 列入架构矩阵但代码中不存在'
+  DEBT-OMO-023:
+    resolved: true
+    weight: 0.05
+    desc: 'P0: Dashboard升级为eCOS驾驶舱 — 统一入口聚合'
+  DEBT-OMO-024:
+    resolved: true
+    weight: 0.05
+    desc: 'P0: 智能通知管道 — 事件驱动+每日摘要简报'
+  DEBT-OMO-025:
+    resolved: true
+    weight: 0.03
+    desc: 'P1: TaskObject真正启用 — 从Hermes自动路由任务到服务'
+  DEBT-OMO-026:
+    resolved: true
+    weight: 0.05
+    desc: 'P1: 自动修复 — 服务挂了自动重启而非仅告警'
+  DEBT-OMO-027:
+    resolved: true
+    weight: 0.03
+    desc: 'P2: X2保鲜自动化 — 自动检查协议实现是否过期'
+  DEBT-OMO-028:
+    resolved: true
+    weight: 0.03
+    desc: 'P2: KEI沙箱做真实扩展 — 新服务注册自动触发审计链'
+  DEBT-OMO-029:
+    resolved: true
+    weight: 0.02
+    desc: 'P2: 元模型校验自动化为CI门禁 — git hook'
+  DEBT-OMO-030:
+    resolved: true
+    weight: 0.05
+    desc: 'P3: 红蓝对抗第二轮 — 集成层面安全审计'
+  DEBT-OMO-031:
+    resolved: true
+    weight: 0.05
+    desc: 'P3: 敏感文件权限修复 — env.sh/matrix.yaml 644'
+  auto-test-1780786320:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780786320:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780786320:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780786326:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780786326:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780786326:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780786329:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780786329:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780786329:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780786626:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780786626:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780786626:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780786655:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780786655:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780786655:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780786846:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780786846:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780786846:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780786936:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780786936:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780786936:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780786962:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780786962:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780786962:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780787066:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780787066:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780787066:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780788119:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780788119:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780788119:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780788173:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1780788209:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1780788236:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1780788241:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780788241:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780788241:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780788260:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1780788879:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780788879:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780788879:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780788903:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1780789237:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780789237:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780789237:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780789263:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1780789467:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780789467:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780789467:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780789505:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+divergence_flags:
+- missing_debt_generated_ref:action_packet_ref
+- missing_debt_generated_ref:campaign_ref
+- missing_debt_generated_ref:dashboard_ref
+- missing_debt_generated_ref:dispatch_ref
+- missing_debt_generated_ref:owner_routing_ref
+- missing_debt_generated_ref:reporting_ref
+- missing_debt_generated_ref:review_pack_ref
+- missing_debt_generated_ref:review_queue_ref
+divergence_detail_refs:
+  debt_generated_refs:
+    count: 8
+    ref: .omo/evidence/divergence/debt_generated_refs.yaml
+task_gate_summary: {}
+promotion_blockers: {}
+divergence_triage_summary:
+  missing_debt_generated_ref:action_packet_ref:
+    severity: low
+    owner: control
+    disposition: monitor
+  missing_debt_generated_ref:campaign_ref:
+    severity: low
+    owner: control
+    disposition: monitor
+  missing_debt_generated_ref:dashboard_ref:
+    severity: low
+    owner: control
+    disposition: monitor
+  missing_debt_generated_ref:dispatch_ref:
+    severity: low
+    owner: control
+    disposition: monitor
+  missing_debt_generated_ref:owner_routing_ref:
+    severity: low
+    owner: control
+    disposition: monitor
+  missing_debt_generated_ref:reporting_ref:
+    severity: low
+    owner: control
+    disposition: monitor
+  missing_debt_generated_ref:review_pack_ref:
+    severity: low
+    owner: control
+    disposition: monitor
+  missing_debt_generated_ref:review_queue_ref:
+    severity: low
+    owner: control
+    disposition: monitor
+next_active_tasks:
+- (No active tasks)
+next_planned_tasks:
+- Current planned queue from .omo/tasks/planned/ (4 tasks)
+- IMPORTED-1975c8
+- IMPORTED-9aff51
+- IMPORTED-d4ff45
+- IMPORTED-fe172c
+updated_at: '2026-06-07T00:30:54Z'

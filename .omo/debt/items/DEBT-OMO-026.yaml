@@ -1,0 +1,33 @@
+id: DEBT-OMO-026
+title: 'P1: 自动修复 — 服务挂了自动重启而非仅告警'
+dimension: reliability
+subdimension: layer-l1
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: closed
+owner: omo-agent
+affected_roots:
+  - $RUNTIME_HOME/matrix.yaml
+  - ~/Workspace/projects/runtime/src/runtime
+  - ~/Library/LaunchAgents/
+  - ~/runtime/scripts/autoheal.sh
+evidence_refs:
+  - ~/Workspace/projects/runtime/scripts/autoheal.sh
+mitigation_refs: []
+opened_at: '2026-06-05T09:30:00Z'
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+x1_policy_ref: X1-AUDIT-002
+x2_freshness: ''
+x3_tier: Skill
+history:
+  - at: '2026-06-05T09:30:00Z'
+    action: register
+    note: 'cron-service有launchd保活，但Agora/AgentRT/Dashboard无自动恢复，需要自愈机制'
+  - at: '2026-06-05T17:50:00Z'
+    action: close
+    note: 'Created autoheal.sh — reads matrix.yaml, detects offline services, executes start_command. Integrated into notify-alerts.sh (runs autoheal before alerting). Also fixed check_services_down.py NoneType bug and matrix.sh sed pattern indent bug. All healable services currently healthy.'

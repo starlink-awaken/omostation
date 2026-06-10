@@ -1,0 +1,302 @@
+{
+  "/Users/xiamingxing/Workspace/.omo/tests/__init__.py": {
+    "mtime": 1779274235.431772,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_architecture_baseline_phase15_phase16.py": {
+    "mtime": 1780299831.135261,
+    "ast_hash": "65270bd052df8b413f07e2522aef9127",
+    "semantic_hash": "65270bd052df8b413f07e2522aef9127"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_external_omo_reroot.py": {
+    "mtime": 1780363990.9432874,
+    "ast_hash": "7e78641c48aacf308a2cfabddeae7829",
+    "semantic_hash": "7e78641c48aacf308a2cfabddeae7829"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_fusion_optimization_docs.py": {
+    "mtime": 1780184558.8403833,
+    "ast_hash": "732da8d2e8fad71999c193c3fa474dc8",
+    "semantic_hash": "732da8d2e8fad71999c193c3fa474dc8"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_admission.py": {
+    "mtime": 1780230594.985986,
+    "ast_hash": "e0e5bc2c95fc156668a7a3eaf5e164b7",
+    "semantic_hash": "e0e5bc2c95fc156668a7a3eaf5e164b7"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_automation.py": {
+    "mtime": 1780466732.8206801,
+    "ast_hash": "6b4a338e2b68b96df6d0dcb204960e3d",
+    "semantic_hash": "6b4a338e2b68b96df6d0dcb204960e3d"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_contract_request.py": {
+    "mtime": 1780443127.5307815,
+    "ast_hash": "47b6747544cf09cf8ad40ca00c874ee4",
+    "semantic_hash": "47b6747544cf09cf8ad40ca00c874ee4"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_action_packet.py": {
+    "mtime": 1780384381.052736,
+    "ast_hash": "806d32a9db5f4158491c401fda676113",
+    "semantic_hash": "806d32a9db5f4158491c401fda676113"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_approval.py": {
+    "mtime": 1780387911.9211109,
+    "ast_hash": "e28e3f98812bc762176da5b7fc53f5c0",
+    "semantic_hash": "e28e3f98812bc762176da5b7fc53f5c0"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_campaign.py": {
+    "mtime": 1780391669.880078,
+    "ast_hash": "a1ee43f423751ad67cee6502fc9ba8b3",
+    "semantic_hash": "a1ee43f423751ad67cee6502fc9ba8b3"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_cli.py": {
+    "mtime": 1780453410.571857,
+    "ast_hash": "6254ca5b3caf917ddc7accaa018156ed",
+    "semantic_hash": "6254ca5b3caf917ddc7accaa018156ed"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_dispatch.py": {
+    "mtime": 1780390400.9788558,
+    "ast_hash": "4a7cb28d140d2d01ad34be87fbcae6b6",
+    "semantic_hash": "4a7cb28d140d2d01ad34be87fbcae6b6"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_docs.py": {
+    "mtime": 1780414033.4905853,
+    "ast_hash": "65ba6e6dd49898c6e2048353c3259a75",
+    "semantic_hash": "65ba6e6dd49898c6e2048353c3259a75"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_execution.py": {
+    "mtime": 1780389706.9980016,
+    "ast_hash": "25679b17d109df802667342757589853",
+    "semantic_hash": "25679b17d109df802667342757589853"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_metrics.py": {
+    "mtime": 1780453197.1001074,
+    "ast_hash": "0719745ceaefb8443eb045276975ca78",
+    "semantic_hash": "0719745ceaefb8443eb045276975ca78"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_outputs.py": {
+    "mtime": 1780453418.9289005,
+    "ast_hash": "46d226cd9a4246b8f3863f61ed958ad4",
+    "semantic_hash": "46d226cd9a4246b8f3863f61ed958ad4"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_owner_routing.py": {
+    "mtime": 1780384559.3521514,
+    "ast_hash": "8d67468f27c61403e5533c5b2dd66a3d",
+    "semantic_hash": "8d67468f27c61403e5533c5b2dd66a3d"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_registry.py": {
+    "mtime": 1780453197.1229544,
+    "ast_hash": "25cadf97b30c8257331f54a4a2d4b18f",
+    "semantic_hash": "25cadf97b30c8257331f54a4a2d4b18f"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_reporting.py": {
+    "mtime": 1780393286.3439722,
+    "ast_hash": "7a18dbdfddd2b92b5f6e2a09181f5ee5",
+    "semantic_hash": "7a18dbdfddd2b92b5f6e2a09181f5ee5"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_reporting_diff.py": {
+    "mtime": 1780403599.7497232,
+    "ast_hash": "67447a0f2235ac8c34c4d96ec4b0dc19",
+    "semantic_hash": "67447a0f2235ac8c34c4d96ec4b0dc19"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_reporting_history.py": {
+    "mtime": 1780400181.720093,
+    "ast_hash": "8f3f4a1d0176d0a19f80a5504c475b98",
+    "semantic_hash": "8f3f4a1d0176d0a19f80a5504c475b98"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_reporting_trend.py": {
+    "mtime": 1780413781.9124694,
+    "ast_hash": "83c20bcb0beb7a45abea2224a2add52f",
+    "semantic_hash": "83c20bcb0beb7a45abea2224a2add52f"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_debt_review_queue.py": {
+    "mtime": 1780381617.1110973,
+    "ast_hash": "bb73fdedbb75e4934c9c1f0fa3e3a43c",
+    "semantic_hash": "bb73fdedbb75e4934c9c1f0fa3e3a43c"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_discovery.py": {
+    "mtime": 1780211442.1357245,
+    "ast_hash": "285bb91d0dac7ad76fd3c64ecd981394",
+    "semantic_hash": "285bb91d0dac7ad76fd3c64ecd981394"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_experience.py": {
+    "mtime": 1780222251.187955,
+    "ast_hash": "095ae775a6b635af716cc702c35bf77b",
+    "semantic_hash": "095ae775a6b635af716cc702c35bf77b"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_governance.py": {
+    "mtime": 1780211332.7617939,
+    "ast_hash": "ae2226b2dcf28c5e9024fd1adb9b9204",
+    "semantic_hash": "ae2226b2dcf28c5e9024fd1adb9b9204"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_governance_overlay.py": {
+    "mtime": 1780455780.6726952,
+    "ast_hash": "8337a9b75d58cc542eb0e2f5d5fe85f0",
+    "semantic_hash": "8337a9b75d58cc542eb0e2f5d5fe85f0"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_governance_overlay_approval_prep.py": {
+    "mtime": 1780455547.319774,
+    "ast_hash": "ea4c1e03857e5333445ec36cf3f92fa4",
+    "semantic_hash": "ea4c1e03857e5333445ec36cf3f92fa4"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_governance_overlay_loop.py": {
+    "mtime": 1780453053.4996727,
+    "ast_hash": "9bdd0014d442949a6254aba3bad194af",
+    "semantic_hash": "9bdd0014d442949a6254aba3bad194af"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_promotion_approval.py": {
+    "mtime": 1780430488.6629322,
+    "ast_hash": "8e0ee7681f2b74f1a269c5effdb90d7f",
+    "semantic_hash": "8e0ee7681f2b74f1a269c5effdb90d7f"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_promotion_approval_analytics.py": {
+    "mtime": 1780438944.192842,
+    "ast_hash": "5e844961ce5092e98fe4e925a4c6ea3d",
+    "semantic_hash": "5e844961ce5092e98fe4e925a4c6ea3d"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_promotion_approval_history.py": {
+    "mtime": 1780438322.7355554,
+    "ast_hash": "8bb128a3b64ffa4669e9aa42e5af5e7a",
+    "semantic_hash": "8bb128a3b64ffa4669e9aa42e5af5e7a"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_promotion_approval_status.py": {
+    "mtime": 1780437516.8299232,
+    "ast_hash": "a6ade85a5ffae611ad648de52a4c5c18",
+    "semantic_hash": "a6ade85a5ffae611ad648de52a4c5c18"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_promotion_history.py": {
+    "mtime": 1780431739.8698347,
+    "ast_hash": "b91da2d3496efba5c036493409d1122f",
+    "semantic_hash": "b91da2d3496efba5c036493409d1122f"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_promotion_readiness.py": {
+    "mtime": 1780429912.4256623,
+    "ast_hash": "eb49c1579f82d5333f8ab4bee6e72bde",
+    "semantic_hash": "eb49c1579f82d5333f8ab4bee6e72bde"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_promotion_request.py": {
+    "mtime": 1780431532.8828733,
+    "ast_hash": "6ce87659f2f1abf2b2bc30b36c724756",
+    "semantic_hash": "6ce87659f2f1abf2b2bc30b36c724756"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_skill.py": {
+    "mtime": 1780211478.9651575,
+    "ast_hash": "49246fbf44c8e3227adf7cba0aa405e0",
+    "semantic_hash": "49246fbf44c8e3227adf7cba0aa405e0"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_omo_verification_contract.py": {
+    "mtime": 1780366070.511066,
+    "ast_hash": "ad570ebdd8d30b10562d7a9faa11e8ba",
+    "semantic_hash": "ad570ebdd8d30b10562d7a9faa11e8ba"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase10_cross_root_rules.py": {
+    "mtime": 1780235844.5397735,
+    "ast_hash": "c103c3b184dfafc3bc4b7f00079261c5",
+    "semantic_hash": "c103c3b184dfafc3bc4b7f00079261c5"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase10_wave2_normalization.py": {
+    "mtime": 1780233704.7742534,
+    "ast_hash": "ce99b6d88f703b9981362b6494a1555b",
+    "semantic_hash": "ce99b6d88f703b9981362b6494a1555b"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase10_wave3_matrix.py": {
+    "mtime": 1780234717.036712,
+    "ast_hash": "cfe924e20842d73271a40249028c8aea",
+    "semantic_hash": "cfe924e20842d73271a40249028c8aea"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase10_wave4_cross_space.py": {
+    "mtime": 1780235844.5331476,
+    "ast_hash": "19f23a3f602e70eff69cd05843181a5b",
+    "semantic_hash": "19f23a3f602e70eff69cd05843181a5b"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase11_wave2_ci_baseline.py": {
+    "mtime": 1780241441.094363,
+    "ast_hash": "35698d8669fee17909a1169eefa57ace",
+    "semantic_hash": "35698d8669fee17909a1169eefa57ace"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase11_wave2_path_debt.py": {
+    "mtime": 1780244387.7476535,
+    "ast_hash": "959ffa9a0c5af76c8aa00b5196fc2538",
+    "semantic_hash": "959ffa9a0c5af76c8aa00b5196fc2538"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase11_wave4_absolute_paths.py": {
+    "mtime": 1780250301.5233967,
+    "ast_hash": "f00ab2ead9a37660716ed1f21968b23d",
+    "semantic_hash": "f00ab2ead9a37660716ed1f21968b23d"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase11_wave4_governance_ci.py": {
+    "mtime": 1780366070.52436,
+    "ast_hash": "9fb723f77a66a612d4ddfa643975c215",
+    "semantic_hash": "9fb723f77a66a612d4ddfa643975c215"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase15_execution.py": {
+    "mtime": 1780418987.055486,
+    "ast_hash": "bcd2c679459a7d5dc9a94e99c63e93b7",
+    "semantic_hash": "bcd2c679459a7d5dc9a94e99c63e93b7"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase16_execution.py": {
+    "mtime": 1780418987.0612242,
+    "ast_hash": "59fe586008a179210ac3632a0f809cfb",
+    "semantic_hash": "59fe586008a179210ac3632a0f809cfb"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase2_integration.py": {
+    "mtime": 1780148423.7391117,
+    "ast_hash": "84b362bd0201ef56dbe30b3dc6d7e866",
+    "semantic_hash": "84b362bd0201ef56dbe30b3dc6d7e866"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase3_acceptance_runner.py": {
+    "mtime": 1780466784.845979,
+    "ast_hash": "34d3dce9b53620931ca6cc032a2ad204",
+    "semantic_hash": "34d3dce9b53620931ca6cc032a2ad204"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase4_wave2_docs.py": {
+    "mtime": 1780232112.067538,
+    "ast_hash": "1c47e1a4565185551fefaa2c26320426",
+    "semantic_hash": "1c47e1a4565185551fefaa2c26320426"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase6_entry_hardening_packet_docs.py": {
+    "mtime": 1780219677.1216798,
+    "ast_hash": "ee6300b7ae04e21139c9f0656c820cd5",
+    "semantic_hash": "ee6300b7ae04e21139c9f0656c820cd5"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase8_wave1_closeout_docs.py": {
+    "mtime": 1780223388.2615657,
+    "ast_hash": "858a42c35a63d15c5e98e5daf6f44deb",
+    "semantic_hash": "858a42c35a63d15c5e98e5daf6f44deb"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase9_identity_admission_contract.py": {
+    "mtime": 1780230102.7868648,
+    "ast_hash": "67deec3eb26468303ad9d8d1b3d0e34d",
+    "semantic_hash": "67deec3eb26468303ad9d8d1b3d0e34d"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase9_rollout_governance.py": {
+    "mtime": 1780235844.538038,
+    "ast_hash": "b49b72327fd5247570c4598d27c4c05a",
+    "semantic_hash": "b49b72327fd5247570c4598d27c4c05a"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase9_runtime_boundary_refactor.py": {
+    "mtime": 1780226388.6203606,
+    "ast_hash": "9df5c656aa1cd43efbebb46fbe5a2998",
+    "semantic_hash": "9df5c656aa1cd43efbebb46fbe5a2998"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_phase9_space_registry.py": {
+    "mtime": 1780235844.5363472,
+    "ast_hash": "b99225496dcf283deac6ff9b1db33853",
+    "semantic_hash": "b99225496dcf283deac6ff9b1db33853"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_provider_plane.py": {
+    "mtime": 1780155269.5194924,
+    "ast_hash": "89efb53e241743235ee376b02666cb4b",
+    "semantic_hash": "89efb53e241743235ee376b02666cb4b"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/test_worker_mechanism_consistency.py": {
+    "mtime": 1780443366.4731047,
+    "ast_hash": "09d39e984dc360a3121dbc468c2e0fc8",
+    "semantic_hash": "09d39e984dc360a3121dbc468c2e0fc8"
+  },
+  "/Users/xiamingxing/Workspace/.omo/tests/README.md": {
+    "mtime": 1780417436.126371,
+    "ast_hash": "d9f3dc15ae1408c65850585f311c6b0d",
+    "semantic_hash": "d9f3dc15ae1408c65850585f311c6b0d"
+  }
+}

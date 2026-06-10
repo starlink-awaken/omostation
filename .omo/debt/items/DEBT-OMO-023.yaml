@@ -1,0 +1,30 @@
+id: DEBT-OMO-023
+title: 'P0: Dashboard升级为eCOS驾驶舱 — 统一入口聚合'
+dimension: product_value
+subdimension: layer-l3
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: closed
+owner: omo-agent
+affected_roots:
+  - ~/Workspace/projects/runtime/src/runtime/dashboard_server.py
+  - ~/runtime/matrix.yaml
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-05T09:30:00Z'
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+x1_policy_ref: X1-AUDIT-001
+x2_freshness: ''
+x3_tier: Tool
+history:
+  - at: '2026-06-05T09:30:00Z'
+    action: register
+    note: 'Dashboard从纯债务看板升级为eCOS驾驶舱 — 聚合服务健康+事件+快速入口，是产品5原则中「一条路径」的落地'
+  - at: '2026-06-05T17:28:00Z'
+    action: close
+    note: 'Dashboard已升级为eCOS驾驶舱(dashboard_cockpit.html)，旧dashboard.html已归档。已验证DEBT-OMO-023~030 YAML可读，registry已包含所有新债务项。关闭。'

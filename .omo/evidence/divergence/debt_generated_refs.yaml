@@ -1,0 +1,11 @@
+rule: debt_generated_refs
+count: 8
+missing_refs:
+  dashboard_ref: .omo/debt/dashboard/latest.yaml
+  review_pack_ref: .omo/debt/review/latest.yaml
+  review_queue_ref: .omo/debt/queue/latest.yaml
+  action_packet_ref: .omo/debt/action/latest.yaml
+  owner_routing_ref: .omo/debt/routing/latest.yaml
+  dispatch_ref: .omo/debt/dispatch/latest.yaml
+  campaign_ref: .omo/debt/campaign/latest.yaml
+  reporting_ref: .omo/debt/reporting/latest.yaml

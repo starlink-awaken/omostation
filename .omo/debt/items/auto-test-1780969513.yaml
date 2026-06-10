@@ -1,0 +1,29 @@
+id: auto-test-1780969513
+title: '[自动] test: ANY × 1'
+dimension: operational
+subdimension: auto_healing
+domain: ecos
+scope: auto_detected
+severity: warning
+weight: 4.0
+entropy_class: dynamic
+lifecycle_state: open
+owner: omo-self-healing
+affected_roots:
+- omo
+- agora
+evidence_refs:
+- sse://event/ANY
+mitigation_refs: []
+opened_at: '2026-06-09T01:45:13.999081+00:00'
+last_reviewed_at: null
+next_review_at: '2026-06-10T01:45:13.999092+00:00'
+gate_level: L1
+history:
+- at: '2026-06-09T01:45:13.999081+00:00'
+  action: created
+  trigger: self_healing_rule:test
+  event_count: '1'
+x1_policy_ref: auto-healing-policy
+x2_freshness: new
+x3_tier: warning

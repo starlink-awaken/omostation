@@ -1,0 +1,55 @@
+# MetaOS 自愈工作流 — auto-healing
+# 当 OMO 自愈引擎检测到系统错误激增时自动触发
+
+workflow_id: "auto-healing"
+name: "Auto-Healing Response Workflow"
+description: "系统错误事件激增时的自动修复工作流"
+
+nodes:
+  - id: "diagnose_errors"
+    type: "reasoning"
+    prompt: >
+      分析最近的系统错误日志 (来自 Agora Event Bus)。
+      1. 错误类型分类: 按 SYSTEM_ERROR / IMPORT_ERROR / TIMEOUT 分组
+      2. 频率分析: 过去 5 分钟内的事件计数
+      3. 根因推测: 基于错误模式推测可能原因
+      4. 输出格式: JSON 包含 {classified: {...}, root_cause: "...", severity: "..."}
+
+  - id: "generate_debt"
+    type: "domain_analysis"
+    prompt: >
+      基于上一步的错误诊断结果，生成一条 OMO 技术债务条目:
+      1. 标题: "[自动] <错误类型> 激增: <根因>"
+      2. 维度: operational / subdimension: auto_healing
+      3. 严重度: 基于错误频率和影响范围评估
+      4. 缓解建议: 基于错误类型推荐修复策略
+      5. 输出 YAML 格式并保存到 .omo/debt/items/
+    depends_on: ["diagnose_errors"]
+
+  - id: "attempt_fix"
+    type: "code_gen"
+    prompt: >
+      基于错误诊断结果，执行自动修复:
+      1. 如果是 IMPORT_ERROR: 检查 pyproject.toml 依赖完整性
+      2. 如果是 TIMEOUT: 重启相关服务 (agora / minerva)
+      3. 如果是 HEALTH_DOWN: 运行 health check
+      4. 记录修复结果: success/failure + output
+    depends_on: ["diagnose_errors"]
+
+  - id: "notify"
+    type: "info_retrieval"
+    prompt: >
+      汇总自愈工作流结果并生成通知:
+      1. 诊断摘要: <错误类型> <次数> <根因>
+      2. 修复状态: <成功/失败>
+      3. 债务 ID: <创建或更新>
+      4. 输出 Markdown 格式摘要
+    depends_on: ["generate_debt", "attempt_fix"]
+
+  - id: "publish_result"
+    type: "reasoning"
+    prompt: >
+      将修复结果发布到 Agora Event Bus (POST :8080/v1/events):
+      event_type: "omo:healing:completed"
+      payload: {workflow_id, status, actions, summary}
+    depends_on: ["notify"]

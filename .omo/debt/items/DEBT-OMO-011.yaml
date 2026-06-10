@@ -1,0 +1,31 @@
+id: DEBT-OMO-011
+title: 'X1: 无审计链 — no audit chain established'
+dimension: governance
+subdimension: audit-chain
+domain: workspace
+scope: governance_kernel
+severity: high
+weight: 0.12
+entropy_class: classification
+lifecycle_state: closed
+owner: omo-engineer
+affected_roots:
+- .omo
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-05T12:00:00Z'
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+x1_policy_ref: X1-AUDIT-001
+x2_freshness: '2026-06-05T06:10:13Z'
+x3_tier: Principle
+history:
+- at: '2026-06-05T12:00:00Z'
+  action: register
+  note: Registered debt item DEBT-OMO-011 from audit findings. No audit chain exists
+    — audit findings cannot be traced or verified end-to-end.
+- at: '2026-06-05T06:18:42Z'
+  action: close
+  note: Closed debt item.
+  actor: omo-agent

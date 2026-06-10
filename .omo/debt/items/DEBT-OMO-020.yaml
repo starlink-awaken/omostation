@@ -1,0 +1,32 @@
+id: DEBT-OMO-020
+title: 'L0: 元模型/本体/协议层次未落地 — 7实体×6关系只停留在文档'
+dimension: architecture
+subdimension: layer-l0
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.08
+entropy_class: classification
+lifecycle_state: closed
+owner: omo-agent
+affected_roots:
+- ~/Documents/学习进化/2-knowledge/基建架构/宪法/ONTOLOGY.md
+- ~/Documents/学习进化/2-knowledge/基建架构/phase6-完成化/pat-45-eCOS-v5-architecture.md
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-05T16:00:00Z'
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+x1_policy_ref: X1-AUDIT-001
+x2_freshness: ''
+x3_tier: Theory
+history:
+- at: '2026-06-05T16:00:00Z'
+  action: register
+  note: L0 meta-model defines 7 entities × 6 relationships — all in documentation,
+    zero executable artifacts
+- at: '2026-06-05T06:46:42Z'
+  action: close
+  note: Closed debt item.
+  actor: omo-agent

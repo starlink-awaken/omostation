@@ -1,0 +1,21 @@
+generated_at: '2026-06-05T05:26:57Z'
+trend_status: insufficient_history
+window_requested: null
+from_run_stamp_requested: null
+to_run_stamp_requested: null
+window_run_count: 1
+oldest_run_stamp: 2026-06-05T14-00-00Z
+latest_run_stamp: 2026-06-05T14-00-00Z
+runs:
+- run_stamp: 2026-06-05T14-00-00Z
+  dispatch_run_ref: .omo/debt/dispatch/runs/2026-06-05T14-00-00Z.yaml
+  reporting_ref: .omo/debt/reporting/runs/2026-06-05T14-00-00Z/current.yaml
+  total_items: 11
+  executed_item_count: 0
+  approval_coverage_rate: 1.0
+  execution_completion_rate: 0.0
+intervals: []
+owners: null
+owner_presence: null
+execution_progress: null
+state_progress: null

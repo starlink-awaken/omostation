@@ -1,0 +1,32 @@
+id: DEBT-TEST-002
+title: Test fixture debt item bravo
+dimension: architecture
+subdimension: consistency
+domain: workspace
+scope: governance_kernel
+severity: high
+weight: 0.1
+entropy_class: classification
+lifecycle_state: scheduled
+owner: omo-engineer
+affected_roots:
+- .omo
+- scripts
+evidence_refs:
+- .omo/tasks/active/TEST-DECISION.yaml
+mitigation_refs:
+- .omo/_knowledge/design/test-plan.md
+opened_at: '2026-06-02T00:00:00Z'
+last_reviewed_at: '2026-06-03T00:00:00Z'
+next_review_at: '2026-07-01T00:00:00Z'
+gate_level: none
+history:
+- at: '2026-06-02T00:00:00Z'
+  action: register
+  note: Registered test item DEBT-TEST-002.
+- at: '2026-06-03T00:00:00Z'
+  action: review
+  note: Reviewed, scheduled for next sprint.
+x1_policy_ref: X1-AUDIT-002
+x2_freshness: '2026-06-05T06:00:00Z'
+x3_tier: Principle

@@ -1,0 +1,30 @@
+id: DEBT-OMO-018
+title: 'L2: LLM Gateway (1453 LOC) 未投入运行时 — 代码存在但闲置'
+dimension: architecture
+subdimension: layer-l2
+domain: workspace
+scope: governance_kernel
+severity: low
+weight: 0.04
+entropy_class: classification
+lifecycle_state: closed
+owner: omo-agent
+affected_roots:
+- ~/Workspace/projects/kairon
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-05T16:00:00Z'
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+x1_policy_ref: X1-AUDIT-001
+x2_freshness: ''
+x3_tier: Skill
+history:
+- at: '2026-06-05T16:00:00Z'
+  action: register
+  note: LLM Gateway code exists in kairon packages but not registered in Runtime Matrix or active
+- at: '2026-06-05T14:36:00Z'
+  action: close
+  note: Closed debt item.
+  actor: omo-agent
