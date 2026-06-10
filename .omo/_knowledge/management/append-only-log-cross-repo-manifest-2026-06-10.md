@@ -283,9 +283,137 @@ const TargetEvent = z.object({
 | §11 维度 | 跨仓要求 |
 |---------|----------|
 | X1 审计契约 | 跨仓 schema 校验统一 — 各仓 schema 必须满足 §12.1.2 (Pydantic) + §12.1.3 (Z-suffix) |
-| X2 保鲜 | 跨仓 baseline 同步 — 每月 1 号 cron 各仓 init, 汇聚到 `workspace/.omo/_delivery/audit-rollout/` |
+| X2 保鲜 | 跨仓 baseline 同步 — 每月 1 号 cron 各仓 init, 汇聚到 `workspace/.omo/_delivery/audit-rollout/` (见 §12.5.1) |
 | X3 价值 | §11 模式**复用**而非**重造** — 节省各仓研发成本 + 治理覆盖度从 1 仓扩到 N 仓 |
 | X4 一致 | 1 套 §11 物理 (AppendOnlyLog) + 1 套 §11.1.3 (Z-suffix 校验) + N 套 Pydantic/zod schema 适配 |
+
+## §12.5.1 跨仓 baseline 同步机制 (Round 26 P0 设计)
+
+**目标**: 让 §12.2 跨仓接入的 5 consumers 守"每月 1 号 + 持续 0 增量"基线, 跨仓报告自动汇聚.
+
+**机制组成** (3 块):
+
+### 1. 各仓 baseline 文件
+
+各仓 (`kairon` / `gbrain` / `runtime` / `metaos` / `omostation` 根) 都有 `<repo>/.omo/_knowledge/_audit_baseline.json` (Round 13 P0 lock-file 风格).
+
+例 (`omostation` 根, Round 19-25 累积):
+```json
+{
+  "_comment": "AppendOnlyLog audit baseline (Round 13 P0)...",
+  "drift_by_consumer": {
+    "omo_bos_metrics": 0,
+    "omo_health": 0,
+    "omo_history": 1531,
+    "omo_sync": 1,
+    "omo_trail": 0
+  },
+  "total_drift": 1532,
+  "total_records": 1838
+}
+```
+
+### 2. 每月 1 号 cron 触发 (GitHub Action)
+
+各仓 `.github/workflows/audit-baseline-monthly.yml`:
+```yaml
+name: audit-baseline-monthly
+on:
+  schedule:
+    - cron: '0 0 1 * *'  # 每月 1 号 00:00 UTC
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  refresh-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - run: pip install uv
+      - name: Refresh audit baseline
+        run: |
+          cd <repo>
+          uv run python -m <pkg>.cli logs audit --baseline-init .omo/_knowledge/_audit_baseline.json
+      - name: Commit refreshed baseline
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .omo/_knowledge/_audit_baseline.json
+          git commit -m "audit: refresh baseline $(date -u +%Y-%m-%d)" || echo "no drift change"
+          git push
+```
+
+各仓独立跑, 互不依赖.
+
+### 3. 跨仓报告汇聚 (omostation 根 `omo audit-rollout` 工具)
+
+新 CLI: `projects/omostation-cli/audit-rollout.py` (新工具, Round 26 P0 目标).
+
+**输入**: 各仓 `<repo>/.omo/_knowledge/_audit_baseline.json` (git submodule / 直接 read).
+**输出**: `workspace/.omo/_delivery/audit-rollout/<YYYY-MM-DD>.json` + 终端汇总表.
+
+**输出 schema** (示例):
+```json
+{
+  "generated_at": "2026-07-01T00:00:00Z",
+  "repos": {
+    "omostation": {
+      "drift_by_consumer": {"omo_bos_metrics": 0, "omo_health": 0, "omo_history": 1540, "omo_sync": 1, "omo_trail": 0},
+      "total_drift": 1541,
+      "total_records": 1850
+    },
+    "kairon": {"drift_by_consumer": {"kairon_event": 0}, "total_drift": 0, "total_records": 100},
+    "metaos": {"drift_by_consumer": {"metaos_gate": 0}, "total_drift": 0, "total_records": 50}
+  },
+  "summary": {
+    "total_repos": 3,
+    "total_drift": 1541,
+    "total_records": 2000,
+    "repos_with_drift": 1
+  }
+}
+```
+
+**CLI 用法**:
+```bash
+uv run --no-sync python -m omostation_cli audit-rollout \
+  --repos omostation:.,kairon:projects/kairon,metaos:projects/metaos \
+  --output .omo/_delivery/audit-rollout/2026-07-01.json
+
+# 终端汇总表:
+📊 audit-rollout 2026-07-01 (3 repos):
+  omostation:  1541 drift / 1850 records (5 consumers)
+  kairon:        0 drift /  100 records (1 consumers)
+  metaos:        0 drift /   50 records (1 consumers)
+  ─────────
+  TOTAL:       1541 drift / 2000 records
+```
+
+### 实现 §12.5.1 的 3 步
+
+| # | 步骤 | 文件 | 行数 |
+|---|------|------|------|
+| 1 | 新工具 `audit-rollout.py` 读各仓 baseline + 聚合 | `projects/omostation-cli/audit-rollout.py` | ~80 |
+| 2 | 加 CI / cron (各仓 refresh-baseline) | 各仓 `.github/workflows/audit-baseline-monthly.yml` | ~30/仓 |
+| 3 | 加 `workspace/.omo/_delivery/audit-rollout/` 目录 + README | `workspace/.omo/_delivery/audit-rollout/README.md` | ~30 |
+
+总计 ~200 行新代码. Round 26 P0 目标 = 步骤 1 (聚合工具). 步骤 2+3 留 §12.8 Round 26+.
+
+### §12.5.1 何时启动
+
+- **现在 (§12 起步)**: omostation 仓内 1 仓运行
+- **R26 P0**: 写 `audit-rollout.py` 工具, 跑 omostation 1 仓 (验证工具)
+- **R26+ (跨仓接入后)**: kairon/gbrain/runtime/metaos 各自接入 §12.2, 加自己的 `_audit_baseline.json`
+- **R26++ (跨仓 cron)**: 各仓加 `audit-baseline-monthly.yml`, 月底自动 refresh
+- **R26+++ (跨仓聚合)**: `audit-rollout.py` 跨 N 仓聚合, 写 `audit-rollout-<date>.json`
+
+### §12.5.1 已知债 (E1-E4 与跨仓 baseline 同步关联)
+
+- **E1** 各仓 ZTimestampModel 等价物: Round 25 P0 已 R25 实质化 ✓
+- **E2** 跨仓 audit 报告汇聚: Round 26 P0 实质化 (audit-rollout.py 工具) — 本节
+- **E3** 各仓 baseline 同步 cron: 留 R26+
+- **E4** kairon 真实源码缺失 (meta-stub): 留跨仓 owner 配合
 
 ## §12.6 已知债 (跨仓接入本身)
 
