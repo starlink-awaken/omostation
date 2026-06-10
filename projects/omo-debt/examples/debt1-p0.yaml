@@ -1,8 +1,0 @@
-id: GBR-D01
-title: 未实现跨表关联查询
-impact: 9
-frequency: 8
-cost: 7
-stage: rapid_evolution
-project: gbrain
-created_at: "2026-05-15"

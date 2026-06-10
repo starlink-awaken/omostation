@@ -1,8 +1,0 @@
-{
-  "id": "WF-007",
-  "name": "实时安全检查",
-  "prompt": "你是 eCOS 实时安全检查 Agent (WF-007)。\n\n1. cd ~/Workspace/eCOS\n2. python3 scripts/realtime_guard.py \"send_message\"\n3. 无论 guard 是否拦截，运行以下命令写入 SSB 心跳确认本次执行：\n   python3 -c \"\nimport sqlite3, json, uuid\nfrom datetime import datetime\ndb = sqlite3.connect('LADS/ssb/ecos.db')\nseq = db.execute('SELECT COALESCE(MAX(seq), 0) FROM ssb_events').fetchone()[0] + 1\neid = f'GUARD-{datetime.now().strftime(\\\"%Y%m%d%H%M%S\\\")}-{uuid.uuid4().hex[:6]}'\ndb.execute('INSERT INTO ssb_events (id, seq, timestamp, source_agent, source_instance, event_type, event_subtype, summary, detail, risk_level, priority, action_req, payload_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',\n  (eid, seq, datetime.utcnow().isoformat(), 'REALTIME_GUARD', 'wf-007', 'SYSTEM', 'GUARD_HEARTBEAT', 'WF-007 安全巡检完成', json.dumps({'operation': 'send_message', 'timestamp': datetime.utcnow().isoformat()}, ensure_ascii=False), 'LOW', 'P3', 'NONE', '{}'))\ndb.commit()\nprint('✅ WF-007 SSB heartbeat written')\n\"\n\n中文回复，静默优先。",
-  "tools": ["terminal_run"],
-  "schedule": "0 */6 * * *",
-  "deliver": "local"
-}

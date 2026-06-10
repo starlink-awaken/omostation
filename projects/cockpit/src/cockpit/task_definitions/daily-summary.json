@@ -1,8 +1,0 @@
-{
-  "id": "daily-summary",
-  "name": "Agent Runtime 每日运行摘要",
-  "prompt": "Generate a daily summary of Agent Runtime execution.\n\nSteps:\n1. Read the execution log at /Users/xiamingxing/Workspace/agent-runtime/execution_log.jsonl\n2. Analyze the last 24 hours of task runs\n3. Report: how many tasks ran, success rate, total tokens used, any failures\n4. If everything was fine (no failures), output [SILENT]\n5. If there were failures, output a brief alert summary",
-  "tools": ["file_read"],
-  "schedule": "0 8 * * *",
-  "deliver": "origin"
-}

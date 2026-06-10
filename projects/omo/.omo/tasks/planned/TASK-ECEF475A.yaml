@@ -1,6 +1,0 @@
-id: TASK-ECEF475A
-title: L4 Kernel kems.py — KemsPlane 六面读写 + CardsPlane
-description: STATE/MEMORY/TIMELINE/signals/control-rules/STATUS 统一读写接口，替代 _scan_cards/_search_vault
-status: planned
-priority: P0
-created_at: '2026-06-08T08:48:25.333960Z'

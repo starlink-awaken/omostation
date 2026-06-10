@@ -1,8 +1,0 @@
-version: 1
-updated: "2026-06-05"
-domain_refs:
-  x1: ".omo/_truth/x1-governance-policies.yaml"
-  x2: ".omo/_truth/x2-lifecycle-rules.yaml"
-  x3: ".omo/_truth/x3-value-stack.yaml"
-schema_version: "1.0"
-note: "These files codify the X1/X2/X3 cross-cutting policies as OMO truth objects. They are referenced by DebtItem.x1_policy_ref, x2_freshness, x3_tier fields."

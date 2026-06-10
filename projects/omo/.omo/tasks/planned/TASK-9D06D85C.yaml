@@ -1,7 +1,0 @@
-id: TASK-9D06D85C
-title: L4 Kernel 独立项目创建
-description: 创建 projects/l4-kernel/ 独立项目，实现 DomainRegistry + KemsPlane + DomainHealth
-  核心模块
-status: planned
-priority: P0
-created_at: '2026-06-08T08:48:17.090173Z'

@@ -1,6 +1,0 @@
-id: TASK-8F6D06F9
-title: L4 Kernel registry.py — DomainRegistry + DOMAIN-INDEX.md 同步
-description: 实现 19 域统一注册表，resolve_path 消除硬编码，sync_to_index 双向同步
-status: planned
-priority: P0
-created_at: '2026-06-08T08:48:25.257952Z'
