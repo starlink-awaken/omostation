@@ -34,10 +34,12 @@ uv sync
 
 ```
 L3 Cockpit
-├── CLI 入口        ← cli.py (argparse dispatch → 23 commands)
-│   └── commands/   ← research, status, contracts, quickstart, ...
-├── MCP Server      ← scripts/cockpit_mcp.py (20 tools, stdio)
-├── Web Dashboard   ← dashboard_server.py (FastAPI, :8090)
+├── CLI 入口        ← cli.py (argparse dispatch → 25 subcommands)
+│   └── commands/   ← research, status, contracts, cards, mcp, ...
+├── MCP Server      ← scripts/cockpit_mcp.py + l0_mcp_tools.py (37 tools, stdio)
+├── Agent Runtime   ← agent_runtime_mcp_server.py (2 tools, stdio)
+├── Legacy Runtime  ← _runtime_mcp_server_legacy.py (7 tools, stdio, deprecated)
+├── Web Dashboard   ← dashboard_server.py (FastAPI, :8090) — 16 REST APIs
 ├── Agent Runtime   ← agent_runtime_cli.py/server.py/mcp_server.py
 └── Storage         ← storage.py (SQLite + IDataAccess Protocol)
 ```

@@ -1,6 +1,6 @@
 # CLAUDE.md — Cockpit 统一驾驶舱
 
-> eCOS v5 L3 Entry Layer — 用户/Agent 的唯一交互面 · CLI 23 子命令 + MCP 20 tools + Web Dashboard
+> eCOS v5 L3 Entry Layer — 用户/Agent 的唯一交互面 · CLI 25 子命令 + MCP 37 tools + Web Dashboard
 
 ---
 
@@ -9,8 +9,8 @@
 cockpit 是 eCOS v5 7 层架构的 **L3 入口层**。所有用户和 AI Agent 通过 cockpit 与系统交互。
 
 **核心职责**：
-1. **CLI 驾驶舱** — `cockpit`/`workspace` 23 个子命令
-2. **MCP Server** — 20 个工具暴露给 Agora Mesh
+1. **CLI 驾驶舱** — `cockpit`/`workspace` 25 个子命令
+2. **MCP Server** — 37 个工具（主 MCP 20 + Agent Runtime 2 + L0 工具 8 + 遗留 Runtime 7）暴露给 Agora Mesh
 3. **Web Dashboard** — FastAPI + 基础认证 (:8090)
 4. **Agent Runtime 桥接** — 通过 runtime 调度 executor 引擎
 

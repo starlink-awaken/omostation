@@ -902,6 +902,61 @@ omo lint schemas (Round 18 P0):
 | Round | 主题 | commit |
 |-------|------|--------|
 | 12-24 | 既有 13 段 | (前 22 commit) |
-| 25 | ZTimestampModel → omo._shared (§12.1.3 SSOT) | `779fc13` (P0) + (本 commit P1 文档) |
+| 25 | ZTimestampModel → omo._shared (§12.1.3 SSOT) | `779fc13` (P0) + `170ccbfa` (P1) |
+
+### §11.18 Round 26 收口 — §12.5.1 跨仓 baseline 同步机制设计
+
+> **状态**: 设计
+> **commit**: `2e0a04ca` (Round 26 P0)
+> **主题**: §12.5 扩 §12.5.1 跨仓 baseline 同步 (3 块机制)
+> **链接**: §12.5.1 + §12.6 E2 已知债
+
+**动机**:
+- §12.5 跨仓 X2 保鲜原写"每月 1 号 cron 各仓 init, 汇聚到 .../", 但**无具体机制**
+- §12.6 已知债 E2: "跨仓 audit 报告汇聚机制缺" — 长期未实质化
+- §12.8 候选 3: 跨仓 baseline 同步 — 本节设计
+
+**§12.5.1 三块机制** (设计稿):
+1. **各仓 baseline 文件** — `<repo>/.omo/_knowledge/_audit_baseline.json` (Round 13 P0 lock-file 风格, omostation 根已就位, 其他仓待接入)
+2. **每月 1 号 cron** — 各仓 `.github/workflows/audit-baseline-monthly.yml` (cron + workflow_dispatch 双触发, 自动 refresh baseline + commit)
+3. **跨仓报告汇聚** — 新工具 `omostation-cli/audit-rollout.py` (~80 行) 读各仓 baseline, 写 `workspace/.omo/_delivery/audit-rollout/<date>.json` + 终端汇总表
+
+**输出 schema** (示例):
+```json
+{
+  "generated_at": "2026-07-01T00:00:00Z",
+  "repos": {"omostation": {...}, "kairon": {...}, "metaos": {...}},
+  "summary": {"total_repos": 3, "total_drift": 1541, "total_records": 2000, "repos_with_drift": 1}
+}
+```
+
+**5 阶段启动**:
+- 现在: omostation 1 仓跑
+- R26 P0: 写 audit-rollout.py, 跑 1 仓验证 (本 commit)
+- R26+: kairon/gbrain/runtime/metaos 各自接入 §12.2, 加 baseline
+- R26++: 各仓加 audit-baseline-monthly.yml
+- R26+++: audit-rollout.py 跨 N 仓聚合
+
+**§12.8 候选完成度更新**:
+- ✅ 候选 1: AppendOnlyLog → `_shared/` (R24 P0)
+- ✅ 候选 2: ZTimestampModel → `_shared/` (R25 P0)
+- 🆕 候选 3: §12.5.1 跨仓 baseline 同步机制设计 (R26 P0, 设计稿)
+- ⏳ 候选 4: §12.6 跨仓债 E1-E4 落地 (需各仓 owner 配合, 推不动)
+
+**度量 (Round 25 → Round 26)**:
+
+| 指标 | Round 25 | Round 26 | Δ |
+|------|----------|----------|---|
+| §12.5 子节数 | 1 | **2** (+§12.5.1) | +1 |
+| §12 manifest 总行数 | 328 | 457 | +129 |
+| §12.8 候选完成度 | 2/4 | **3/4** (设计稿) | +1 |
+| 跨仓 baseline 同步 | 无 | **设计稿** | +1 |
+| `audit-rollout.py` 工具 | 无 | 设计, 实施 R26+ | 设计稿 |
+
+**§11 15 段全收 + §12 13 子节 + §12.8 候选 3/4** (Round 12-26, 25 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-25 | 既有 14 段 | (前 23 commit) |
+| 26 | §12.5.1 跨仓 baseline 同步设计 | `2e0a04ca` (P0) + (本 commit P1 文档) |
 
 
