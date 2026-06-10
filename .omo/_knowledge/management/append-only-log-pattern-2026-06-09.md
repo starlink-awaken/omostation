@@ -957,6 +957,80 @@ omo lint schemas (Round 18 P0):
 | Round | 主题 | commit |
 |-------|------|--------|
 | 12-25 | 既有 14 段 | (前 23 commit) |
-| 26 | §12.5.1 跨仓 baseline 同步设计 | `2e0a04ca` (P0) + (本 commit P1 文档) |
+| 26 | §12.5.1 跨仓 baseline 同步设计 | `2e0a04ca` (P0) + `092cfc4d` (P1) |
+
+### §11.19 Round 27 收口 — omo audit-rollout 工具 (§12.5.1 步骤 1 实质化)
+
+> **状态**: implemented
+> **commit**: `e69fe3a5` (Round 27 P0)
+> **主题**: 新 CLI `omo audit-rollout` 读各仓 baseline + 聚合 + 写 rollout 报告
+> **链接**: §12.5.1 设计稿 + 步骤 1 实质化
+
+**动机**:
+- §12.5.1 跨仓 baseline 同步设计稿 (Round 26 P0) 已落地机制 3 块 (各仓 baseline / cron / 聚合工具)
+- §12.5.1 步骤 1: 写聚合工具 — 本轮实质化
+- §12.6 E2 已知债 "跨仓 audit 报告汇聚机制缺" — 实质化
+
+**实施**:
+- 新工具 `omo_audit_rollout.py` (~150 行):
+  - `_read_baseline(repo_path)`: 读单仓 `.omo/_knowledge/_audit_baseline.json` 返回结构化 dict
+  - `aggregate_baselines(repos)`: 多仓聚合 + summary 计算 (total_repos/total_drift/total_records/repos_with_drift)
+  - `render_rollout_table(rollout)`: 终端汇总表 (纯文本, 不依赖 rich)
+  - `parse_repos_arg(repos_arg)`: 解析 `--repos name:path` 多值参数
+  - `cmd_audit_rollout(args)`: CLI 主入口
+- `cli.py` 加 `omo audit-rollout` 子命令 dispatch (~10 lines)
+- 9 个新测试 (`tests/test_omo_audit_rollout.py` 9/9 PASS):
+  - 读 baseline / 缺文件 / 聚合 / 失败容错 / 终端表 / 参数解析 / CLI 退出码 3 种
+
+**CLI 用法** (Round 27 P0 验证):
+```bash
+$ uv run --no-sync python -m omo.cli audit-rollout \
+    --repos omostation:. \
+    --output /tmp/rollout-test.json
+
+📊 audit-rollout 2026-06-10T06:57:30Z (1 repos):
+  omostation          :   1106 drift /   1369 records (3 consumers)
+  ──────────────────────────────────────────────────
+  TOTAL               :   1106 drift /   1369 records (1/1 with drift)
+
+✅ 写 rollout 报告: /tmp/rollout-test.json
+   1 repos / 1106 drift / 1369 records
+```
+
+**退出码语义** (CI 友好):
+- `0` = 0 漂移 (完美, baseline 守稳态)
+- `1` = 有漂移 (报告生成成功, 但需关注)
+- `2` = 错误 (file not found / parse error / 参数错)
+
+**单仓失败容错**: 1 仓 baseline 缺文件 → rollout 标 "error" 字段 + 其他仓仍聚合, 不阻塞整体.
+
+**§12.5.1 步骤 1 完成度**:
+| # | 步骤 | 状态 | 备注 |
+|---|------|------|------|
+| 1 | 聚合工具 `audit-rollout.py` | ✅ Round 27 P0 实质化 | (本 commit) |
+| 2 | 各仓加 `audit-baseline-monthly.yml` cron | ⏳ R27+ | 跨仓 owner 配合 |
+| 3 | 加 `audit-rollout/` 目录 + README | ⏳ R27+ | omostation 根 |
+
+**§12.8 候选完成度更新**:
+- ✅ 候选 1: AppendOnlyLog → `_shared/` (R24 P0)
+- ✅ 候选 2: ZTimestampModel → `_shared/` (R25 P0)
+- ✅ 候选 3 步骤 1: `omo audit-rollout` 工具 (R27 P0)
+- ⏳ 候选 3 步骤 2-3 + 候选 4: 跨仓债 E1-E4 落地
+
+**度量 (Round 26 → Round 27)**:
+
+| 指标 | Round 26 | Round 27 | Δ |
+|------|----------|----------|---|
+| omo 子命令数 | +trail / +lint | **+audit-rollout** | +1 |
+| 单元测试 (audit-rollout) | 0 | **9** | +9 |
+| 单元测试 (总) | 148+ | **157+** | +9 |
+| §12.5.1 步骤 1 | 设计稿 | **实质化** | +1 |
+| 跨仓聚合能力 | 无 | **omo audit-rollout** | 新 |
+
+**§11 16 段全收 + §12 13 子节 + §12.5.1 步骤 1 实质化** (Round 12-27, 26 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-26 | 既有 15 段 | (前 24 commit) |
+| 27 | omo audit-rollout 工具 (§12.5.1 步骤 1) | `e69fe3a5` (P0) + (本 commit P1 文档) |
 
 
