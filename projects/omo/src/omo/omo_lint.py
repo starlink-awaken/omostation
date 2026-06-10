@@ -1,4 +1,4 @@
-"""omo lint — 静态校验 7 个 AppendOnlyLog consumer 写时都走 Pydantic schema (Round 14 P1-2).
+"""omo lint — 静态校验 7 个 AppendOnlyLog consumer 写时都走 Pydantic schema (Round 15 P0).
 
 设计:
   - 扫 projects/omo/src/omo/omo_*.py 7 个 consumer 模块
@@ -7,8 +7,14 @@
   - 报未传 schema= 的位置 (file:line)
   - 退出码: 0 全合规, 1 有缺失
 
-意义 (Round 14 P1-2 落地):
+Round 21 P0 扩展 — 2 个新 schema 完整性规则:
+  - Z-suffix 覆盖: SCHEMA_REGISTRY 所有 schema 继承 ZTimestampModel (timestamp 字段 Z 结尾校验)
+  - 必填字段非空: 每个 schema 至少 1 必填字段 (防空架子)
+
+意义:
   - 防止"以后有人绕过 Pydantic schema 校验, 直接 AppendOnlyLog.append(dict)"
+  - 防止"未来 schema 漏继承 ZTimestampModel, 失去 Z-suffix ISO8601 校验"
+  - 防止"未来 schema 全 Optional = 空架子, 没实际约束"
   - 守住 §11 X1 审计: schema 校验 = 写时锁, 跳过 = 失去写时一致性保证
   - CI 自动跑 (计划集成 ci-lint.yml 新 job)
 """
@@ -92,10 +98,47 @@ def _check_module_append_has_schema(module_path: Path) -> list[tuple[int, str]]:
     return violations
 
 
+def _check_schema_registry_integrity() -> list[tuple[str, str, str]]:
+    """校验 SCHEMA_REGISTRY 所有 schema 满足: ZTimestampModel 覆盖 + 至少 1 必填字段.
+
+    Round 21 P0 新增. 防未来 schema:
+      - 漏继承 ZTimestampModel (timestamp 字段无 Z 校验)
+      - 全 Optional (空架子, 无实际约束)
+
+    Returns:
+        list of (schema_name, issue_type, detail) tuples. 空 list = 全合规.
+    """
+    from omo.omo_io_schemas import SCHEMA_REGISTRY, ZTimestampModel
+
+    issues: list[tuple[str, str, str]] = []
+    for schema_name, schema_cls in SCHEMA_REGISTRY.items():
+        # 规则 1: 继承 ZTimestampModel (Z-suffix 校验自动覆盖)
+        if not issubclass(schema_cls, ZTimestampModel):
+            issues.append((
+                schema_name,
+                "missing-z-timestamp",
+                f"{schema_cls.__name__} 未继承 ZTimestampModel (timestamp 字段无 Z 校验)",
+            ))
+        # 规则 2: 至少 1 必填字段 (防空架子)
+        required_fields = [
+            name for name, field in schema_cls.model_fields.items()
+            if field.is_required()
+        ]
+        if not required_fields:
+            issues.append((
+                schema_name,
+                "no-required-fields",
+                f"{schema_cls.__name__} 无必填字段 (空架子, 无实际约束)",
+            ))
+    return issues
+
+
 def cmd_lint_schemas() -> int:
     """扫 7 个 consumer 模块, 校验 .append() 都传 schema=."""
     print(f"🔍 omo lint schemas — {len(CONSUMER_MODULES)} consumer 写时 schema 校验\n")
     total_violations = 0
+
+    # 规则 1: 7 consumer 模块 .append() 都传 schema= (Round 15 P0)
     for module_name in CONSUMER_MODULES:
         module_path = OMO_SRC / module_name
         if not module_path.exists():
@@ -111,11 +154,24 @@ def cmd_lint_schemas() -> int:
         for line, snippet in violations:
             print(f"   line {line}: {snippet.strip()[:80]}")
 
+    # 规则 2 (Round 21 P0): SCHEMA_REGISTRY 完整性 — Z-suffix 覆盖 + 必填字段非空
+    print()
+    schema_issues = _check_schema_registry_integrity()
+    if schema_issues:
+        total_violations += len(schema_issues)
+        print(f"❌ SCHEMA_REGISTRY 完整性: {len(schema_issues)} 处问题")
+        for schema_name, issue_type, detail in schema_issues:
+            print(f"   - {schema_name} [{issue_type}]: {detail}")
+    else:
+        from omo.omo_io_schemas import SCHEMA_REGISTRY
+        print(f"✅ SCHEMA_REGISTRY 完整性: {len(SCHEMA_REGISTRY)}/{len(SCHEMA_REGISTRY)} schema 守 Z-suffix + 必填字段")
+
     print()
     if total_violations:
-        print(f"❌ omo lint schemas fail: {total_violations} 处 schema 校验缺失 (X1 审计风险)")
+        print(f"❌ omo lint schemas fail: {total_violations} 处违规 (X1 审计风险)")
         return 1
-    print(f"✅ omo lint schemas pass: {len(CONSUMER_MODULES)}/{len(CONSUMER_MODULES)} consumer 合规, schema 写时锁守住")
+    print(f"✅ omo lint schemas pass: {len(CONSUMER_MODULES)}/{len(CONSUMER_MODULES)} consumer 合规 + "
+          f"SCHEMA_REGISTRY 完整, schema 写时锁守住")
     return 0
 
 

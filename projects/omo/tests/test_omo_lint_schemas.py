@@ -137,3 +137,71 @@ def test_cli_lint_schemas_subprocess():
     )
     assert r.returncode == 0, f"stderr: {r.stderr}"
     assert "pass" in r.stdout
+
+
+# ── 7. Round 21 P0 新规则: SCHEMA_REGISTRY 完整性 ─────
+
+
+def test_check_schema_registry_integrity_passes_for_real_schemas():
+    """SCHEMA_REGISTRY 8 schema 全部继承 ZTimestampModel + 至少 1 必填字段."""
+    from omo.omo_lint import _check_schema_registry_integrity
+
+    issues = _check_schema_registry_integrity()
+    assert issues == [], f"expected no issues, got {issues}"
+
+
+def test_check_schema_registry_integrity_detects_missing_z_timestamp(tmp_path, monkeypatch):
+    """故意加 1 个非 ZTimestampModel schema, 应被检测出 'missing-z-timestamp'."""
+    from omo.omo_io_schemas import SCHEMA_REGISTRY, OmoTrailRecord
+    from pydantic import BaseModel
+
+    # 在 SCHEMA_REGISTRY 临时加 1 个不继承 ZTimestampModel 的 schema
+    class FakeNotZ(BaseModel):
+        ts: str  # 没 Z 校验
+
+    monkeypatch.setitem(SCHEMA_REGISTRY, "fake_not_z", FakeNotZ)
+    try:
+        from omo.omo_lint import _check_schema_registry_integrity
+        issues = _check_schema_registry_integrity()
+        # 找到 fake_not_z 的 missing-z-timestamp 违规
+        z_issues = [i for i in issues if i[0] == "fake_not_z" and i[1] == "missing-z-timestamp"]
+        assert len(z_issues) == 1, f"expected 1 missing-z-timestamp for fake_not_z, got {z_issues}"
+    finally:
+        # 清理 (monkeypatch 自动还原 setitem, 但显式 del 更稳)
+        SCHEMA_REGISTRY.pop("fake_not_z", None)
+
+
+def test_check_schema_registry_integrity_detects_empty_required(tmp_path, monkeypatch):
+    """故意加 1 个全 Optional 的 schema, 应被检测出 'no-required-fields'."""
+    from omo.omo_io_schemas import SCHEMA_REGISTRY, ZTimestampModel
+    from pydantic import Field
+
+    class FakeEmpty(ZTimestampModel):
+        # 全 Optional = 空架子
+        ts: str = ""  # 默认值, 非必填
+
+    monkeypatch.setitem(SCHEMA_REGISTRY, "fake_empty", FakeEmpty)
+    try:
+        from omo.omo_lint import _check_schema_registry_integrity
+        issues = _check_schema_registry_integrity()
+        empty_issues = [i for i in issues if i[0] == "fake_empty" and i[1] == "no-required-fields"]
+        assert len(empty_issues) == 1, f"expected 1 no-required-fields for fake_empty, got {empty_issues}"
+    finally:
+        SCHEMA_REGISTRY.pop("fake_empty", None)
+
+
+# ── 8. CLI 集成: omo.cli lint schemas 打印 SCHEMA_REGISTRY 完整性 ──
+
+
+def test_cli_lint_schemas_prints_schema_registry_check():
+    """omo.cli lint schemas 输出含 'SCHEMA_REGISTRY 完整性' 段."""
+    import subprocess
+    OMO_PROJ = Path(__file__).resolve().parents[1]
+    r = subprocess.run(
+        [sys.executable, "-m", "omo.cli", "lint", "schemas"],
+        capture_output=True, text=True, timeout=15,
+        cwd=str(OMO_PROJ),
+    )
+    assert r.returncode == 0
+    assert "SCHEMA_REGISTRY 完整性" in r.stdout
+    assert "8/8 schema 守 Z-suffix + 必填字段" in r.stdout
