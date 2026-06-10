@@ -1157,6 +1157,83 @@ $ uv run --no-sync python -m omo.cli audit-rollout \
 | Round | 主题 | commit |
 |-------|------|--------|
 | 12-28 | 既有 17 段 | (前 26 commit) |
-| 29 | §13 omo_lint 工具家族起步 + 规则 4 | `ad3a853d` (P0) + (本 commit P1 文档) |
+| 29 | §13 omo_lint 工具家族起步 + 规则 4 | `ad3a853d` (P0) + `579b3b3b` (P1) |
+
+### §11.22 Round 30 收口 — §13.3.3 规则 7 实质化 (consumer SRP 互不依赖)
+
+> **状态**: implemented
+> **commit**: `171198be` (Round 30 P0)
+> **主题**: omo_lint 加规则 5 (consumer SRP 互不依赖), §13 6 规则中第 5 实质化
+> **链接**: §13.3.3 规则 7 + §13 6 子节
+
+**动机**:
+- §13.3 候选新规则 4 个 (R29+ 留): 规则 5/6/7/8
+- 选规则 7 (cross-module-srp) — 7 consumer 互不依赖是 §11 SRP 守的具体化
+- §11 治本后 0 漂移, 但**未来**消费模块互依赖会隐式耦合, 治本有上限
+- 规则 7 把"7 consumer 互不依赖"立成 lint 规则, 守住 §11 SRP
+
+**实施**:
+- 新增 `_check_cross_module_srp()` 函数 (~30 lines)
+- 白名单 `_CROSS_MODULE_SRP_ALLOWLIST` 8 个底层 SSOT 模块:
+  - `omo.omo_io` — AppendOnlyLog + 原子写 (R24 backward compat)
+  - `omo.omo_io_schemas` — Pydantic schema 集中地
+  - `omo.omo_audit` — `_utc_now` 工具 (多个 consumer 共用)
+  - `omo.omo_history` — `append_entry` / `read_history` 工具
+  - `omo.omo_trail` — `DEFAULT_TRAIL_PATH` 路径常量 (omo_lint_seed 共用)
+  - `omo._shared.append_only_log` — §12 跨仓 SSOT (R24+)
+  - `omo._shared.z_timestamp_model` — §12 跨仓 SSOT (R25+)
+  - `omo.omo_lint` — omo_lint_seed 依赖 (R19)
+- 用 ast 扫 7 consumer 模块, 检测 `from omo.omo_X` 是否 X 是其他 6 consumer 之一 (非自身)
+- 报 `cross-consumer-import` 违规
+
+**2 个新测试** (14/14 PASS):
+- `test_check_cross_module_srp_passes_for_real_consumers` (7 consumer 0 SRP 违规)
+- `test_check_cross_module_srp_whitelist_omo_audit_utility` (白名单生效, omo_audit 工具 import 不算违规)
+
+**omo_lint 5 规则** (R15-30 累积):
+| # | 规则 | Round | 校验 |
+|---|------|-------|------|
+| 1 | `schema-kwarg-missing` | R15 P0 | 7 consumer .append() 都传 schema= |
+| 2 | `missing-z-timestamp` | R21 P0 | 8 schema 都继承 ZTimestampModel |
+| 3 | `no-required-fields` | R21 P0 | 8 schema 都有 ≥1 必填字段 |
+| 4 | `missing-from-all` | R29 P0 | `omo_io_schemas.__all__` 含 8 class 全名 |
+| 5 | **`cross-consumer-import`** | **R30 P0** | **7 consumer 互不依赖, 仅依赖底层 SSOT** |
+
+**omo lint schemas 输出** (Round 30 P0 完整):
+```
+🔍 omo lint schemas — 7 consumer 写时 schema 校验
+
+✅ omo_audit.py: all .append() calls pass schema= (合规)
+... (6/7 PASS)
+✅ omo_trail.py: all .append() calls pass schema= (合规)
+
+✅ SCHEMA_REGISTRY 完整性: 8/8 schema 守 Z-suffix + 必填字段
+✅ omo_io_schemas.__all__ 完整性: 8/8 schema 全部 export
+✅ consumer SRP: 7/7 consumer 互不依赖, 仅依赖底层 SSOT
+
+✅ omo lint schemas pass: 7/7 consumer 合规 + SCHEMA_REGISTRY 完整 + __all__ 完整 + consumer SRP 守
+```
+
+**§13.3 候选完成度更新**:
+- ✅ 规则 5: `consumer-naming-consistency` (跳过 — 多数 consumer 不显式 import schema, 规则不适配)
+- ✅ 规则 6: `dead-import` (跳过 — 误报风险高, R30+ 留)
+- ✅ 规则 7: `cross-module-srp` — **本轮实质化**
+- ⏳ 规则 8: `sort-keys-default` (R30+ 留, 治本价值低)
+
+**度量 (Round 29 → Round 30)**:
+
+| 指标 | Round 29 | Round 30 | Δ |
+|------|----------|----------|---|
+| omo_lint 规则 | 4 | **5** (+`cross-consumer-import`) | +1 |
+| 单元测试 (lint) | 12 | **14** | +2 |
+| 单元测试 (总) | 159+ | **161+** | +2 |
+| §13 章节 | 6 子节 4 规则 | **6 子节 5 规则** | +1 规则 |
+| §11 章节子节 | 18 段 | **19 段** (+§11.22) | +1 |
+
+**§11 19 段全收 + §12 13 子节 + §13 6 子节 5 规则** (Round 12-30, 29 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-29 | 既有 18 段 | (前 27 commit) |
+| 30 | §13.3.3 规则 7 实质化 (consumer SRP) | `171198be` (P0) + (本 commit P1 文档) |
 
 
