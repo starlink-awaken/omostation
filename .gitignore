@@ -86,3 +86,6 @@ data/**/*.sqlite3
 
 # 治理审计日志（运行时 JSONL）
 .omo/_knowledge/*.jsonl
+
+# 运行时备份（自动创建，不入仓）
+data/backups/
