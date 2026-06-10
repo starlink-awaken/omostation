@@ -721,6 +721,64 @@ omo lint schemas (Round 18 P0):
 | Round | 主题 | commit |
 |-------|------|--------|
 | 12-21 | 既有 10 段 | (前 19 commit) |
-| 22 | §12 跨仓契约章节起步 | `3b9d7044` (P0) + (本 commit P1) |
+| 22 | §12 跨仓契约章节起步 | `3b9d7044` (P0) + `a5939c63` (P1) |
+
+### §11.15 Round 23 收口 — §12 实质化 (5 步代码示例)
+
+> **状态**: implemented
+> **commit**: `cb118f23` (Round 23 P0)
+> **主题**: §12.2 接入清单 4 语言代码示例 (Python/TS/Go/Rust)
+> **链接**: `.omo/_knowledge/management/append-only-log-cross-repo-manifest-2026-06-10.md` §12.2.1-§12.2.3
+
+**动机**:
+- §12 起步 (Round 22) 给"4 不变量"契约, 但**无具体代码** — 跨仓 owner 拿到 manifest 仍要从 §11 反推代码
+- §12.2 扩为 4 段代码示例, 让"接入"从"设计原则"变"可复制模板"
+
+**§12.2 实质化**:
+- **§12.2.1 Python 5 步代码示例** (完整可跑):
+  - Step 1: `AppendOnlyLog` + `fcntl_lock` (~30 行, 含跨进程锁)
+  - Step 2: `ZTimestampModel` mixin (~15 行, Z-suffix 自动校验)
+  - Step 3+4: Pydantic schema + `SCHEMA_REGISTRY`
+  - Step 5: 接入 consumer (Before/After 对比)
+  - Step 6+7+8: audit CLI + baseline + CI (指向 omo 仓参考)
+- **§12.2.2 TypeScript zod 适配** (gbrain 等):
+  - `AppendOnlyLog<T>` 用 zod schema 替换 Pydantic
+  - `ZTimestamp = z.string().regex(/Z$/)` 替代 ZTimestampModel
+- **§12.2.3 Go / Rust 轻量适配**:
+  - Go: `go-playground/validator` derive
+  - Rust: `serde::Serialize` + `validator` derive
+  - §12.1 4 不变量硬要求, 语言实现软
+
+**§12 章节总览** (Round 22-23 累积):
+| 子节 | 主题 | 行数 | 状态 |
+|------|------|------|------|
+| §12.0 | 一句话总结 | 8 | ✅ Round 22 |
+| §12.1 | 跨仓 4 不变量 | 25 | ✅ Round 22 |
+| §12.2 | 8 步接入清单 | 12 | ✅ Round 22 |
+| §12.2.1 | Python 5 步代码 | ~120 | ✅ Round 23 |
+| §12.2.2 | TypeScript 适配 | ~30 | ✅ Round 23 |
+| §12.2.3 | Go/Rust 轻量 | ~10 | ✅ Round 23 |
+| §12.3 | 跨仓消费者索引 | 12 | ✅ Round 22 |
+| §12.4 | 跨仓治理债 | 8 | ✅ Round 22 |
+| §12.5 | §11 X1-X4 对应 | 8 | ✅ Round 22 |
+| §12.6 | 已知债 E1-E4 | 6 | ✅ Round 22 |
+| §12.7 | §11 关系 | 6 | ✅ Round 22 |
+| §12.8 | Round 22+ 候选 | 8 | ✅ Round 22 |
+| **总** | **§12 12 子节** | **~250 lines** | ✅ |
+
+**度量 (Round 22 → Round 23)**:
+
+| 指标 | Round 22 | Round 23 | Δ |
+|------|----------|----------|---|
+| §12 章节行数 | 139 | 328 | +189 |
+| §12 代码示例 | 0 | Python/TS/Go/Rust 4 段 | +4 |
+| 跨仓 owner 可用性 | 抽象 | **可复制模板** | ↑↑ |
+| 已知债 (§11.6) | 0 | 0 | 不变 |
+
+**§11 12 段全收 + §12 12 子节 100%** (Round 12-23, 22 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-22 | 既有 11 段 | (前 20 commit) |
+| 23 | §12.2 实质化 (5 步代码示例) | `cb118f23` (P0) + (本 commit P1) |
 
 
