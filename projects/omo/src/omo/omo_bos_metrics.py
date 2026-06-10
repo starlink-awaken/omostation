@@ -75,7 +75,7 @@ def record(
         error=error,
         recorded_at=_utc_now(),
     )
-    AppendOnlyLog(path).append(rec.model_dump(), schema=OmoBosMetricsRecord)
+    AppendOnlyLog(path).append(rec.model_dump(), schema=OmoBosMetricsRecord, sort_keys=True)
 
 
 def time_invoke(uri: str, transport: str = "") -> "_Timer":

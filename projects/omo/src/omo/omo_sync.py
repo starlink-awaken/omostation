@@ -70,6 +70,7 @@ def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
         if not dry_run:
             # Round 3: 结构化 record — 字段含义固化, 不再 f-string 拍扁
             # Round 15 P0: 加 schema=OmoSyncRecord 走 Pydantic 写时校验
+            # Round 35 P0: 加 sort_keys=True 守 §12.1.4 跨仓 4 不变量
             AppendOnlyLog(log_path).append(
                 {
                     "ts": _utc_now(),
@@ -81,6 +82,7 @@ def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
                     "status": "ok",
                 },
                 schema=OmoSyncRecord,
+                sort_keys=True,
             )
 
         return {
@@ -95,6 +97,7 @@ def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
         # 错误也走结构化 log (便于事后审计: 哪些 sync 失败)
         try:
             # Round 15 P0: 加 schema=OmoSyncRecord 走 Pydantic 写时校验
+            # Round 35 P0: 加 sort_keys=True 守 §12.1.4 跨仓 4 不变量
             AppendOnlyLog(log_path).append(
                 {
                     "ts": _utc_now(),
@@ -103,6 +106,7 @@ def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
                     "error": f"{type(exc).__name__}: {exc}"[:200],
                 },
                 schema=OmoSyncRecord,
+                sort_keys=True,
             )
         except Exception:
             pass  # log 失败不阻塞错误返回

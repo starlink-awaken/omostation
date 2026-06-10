@@ -88,7 +88,7 @@ def record_step(
     )
     record = record_obj.model_dump()
     # Round 9 P0: 写时 Pydantic 校验 (schema= 参数)
-    AppendOnlyLog(Path(log_path)).append(record, schema=OmoTrailRecord)
+    AppendOnlyLog(Path(log_path)).append(record, schema=OmoTrailRecord, sort_keys=True)
     return record
 
 
