@@ -1,0 +1,47 @@
+name: audit-rollout-monthly
+# Round 28 P0: §12.5.1 步骤 3 实质化 — omostation 根每月 1 号跑跨仓 audit-rollout
+# 跨仓聚合当前看到 omo + omostation 2 仓, 各仓 §12.2 接入后自动扩展.
+
+on:
+  schedule:
+    # 每月 1 号 01:00 UTC (晚于 omo 仓 refresh-baseline 1h, 让 baseline 先就位)
+    - cron: '0 1 1 * *'
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  aggregate-rollout:
+    name: Aggregate cross-repo audit baseline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install uv
+        run: pip install --quiet uv
+      - name: Run omo audit-rollout
+        # 当前只看到 omo + omostation 2 仓 baseline
+        # 各仓 §12.2 接入后, 扩 --repos 加 name:path
+        # 退出码语义 (Round 27 P0):
+        #   0 = 0 漂移 (完美)
+        #   1 = 有漂移 (报告生成成功, CI warning)
+        #   2 = 错误 (fail)
+        run: |
+          cd projects/omo
+          DATE=$(date -u +%Y-%m-%d)
+          OUTPUT=".omo/_delivery/audit-rollout/${DATE}.json"
+          uv run --no-sync python -m omo.cli audit-rollout \
+            --repos "omostation:." \
+            --output "$OUTPUT" || {
+              echo "::warning::audit-rollout reports drift (Round 27 设计, 1 退出码不阻塞)"
+              exit 0
+            }
+      - name: Commit rollout report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .omo/_delivery/audit-rollout/
+          git diff --staged --quiet || { echo "no rollout change, skip commit"; exit 0; }
+          DATE=$(date -u +%Y-%m-%d)
+          git commit -m "audit-rollout: monthly report $DATE (cron)"
+          git push

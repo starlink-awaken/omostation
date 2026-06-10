@@ -1,0 +1,36 @@
+name: audit-baseline-monthly
+# Round 28 P0: §12.5.1 步骤 2 实质化 — omo 仓每月 1 号 refresh baseline
+# 之前 baseline-init 是手动操作 (Round 13 P0 设计), cron 让 X2 保鲜自动化.
+
+on:
+  schedule:
+    # 每月 1 号 00:00 UTC (与 §12.5.1 设计稿一致)
+    - cron: '0 0 1 * *'
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  refresh-baseline:
+    name: Refresh audit baseline (auto-lock current drift)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install uv
+        run: pip install --quiet uv
+      - name: Refresh baseline
+        # 跑 baseline-init 把当前 drift 写入 lock-file
+        run: |
+          cd projects/omo
+          uv run --no-sync python -m omo.cli logs audit --baseline-init /Users/xiamingxing/Workspace/.omo/_knowledge/_audit_baseline.json
+      - name: Commit refreshed baseline
+        # baseline 漂移变化才 commit (避免无变化空 commit)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .omo/_knowledge/_audit_baseline.json
+          git diff --staged --quiet || { echo "no drift change, skip commit"; exit 0; }
+          DATE=$(date -u +%Y-%m-%d)
+          git commit -m "audit: refresh baseline $DATE (cron monthly)"
+          git push
