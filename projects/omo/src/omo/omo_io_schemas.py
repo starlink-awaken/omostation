@@ -18,45 +18,15 @@ SSOT: 与 ``.omo/_knowledge/management/append-only-log-schemas-2026-06-09.md`` �
 """
 from __future__ import annotations
 
-from datetime import datetime
 from enum import Enum
 from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-
-# ── 通用 validators ──────────────────────────────────────────
-
-
-def _validate_z_suffix_iso8601(v: str) -> str:
-    """校验 ISO8601 UTC 时间戳以 'Z' 结尾 (与 omo_audit._utc_now() 协议)."""
-    if not v.endswith("Z"):
-        raise ValueError(f"timestamp must end with 'Z' (omo_audit convention), got: {v!r}")
-    try:
-        datetime.fromisoformat(v.replace("Z", "+00:00"))
-    except ValueError as exc:
-        raise ValueError(f"invalid ISO8601 timestamp: {v!r} ({exc})")
-    return v
-
-
-# 已知时间戳字段名 (按 SSOT, 不同 consumer 用不同名)
-_TIMESTAMP_FIELDS = ("ts", "recorded_at", "timestamp")
-
-
-class ZTimestampModel(BaseModel):
-    """AppendOnlyLog 6 个 consumer 共享的 Z-suffix ISO8601 校验基类 (Round 11 /simplify).
-
-    自动 model_validator 扫描已知时间戳字段名, 校验 Z 结尾 + ISO8601 格式.
-    子类只需定义字段 (ts: str 或 recorded_at: str 等), 无需重写 @field_validator.
-    """
-
-    @model_validator(mode="after")
-    def _check_all_timestamps(self) -> "ZTimestampModel":
-        for field_name in _TIMESTAMP_FIELDS:
-            v = getattr(self, field_name, None)
-            if v is not None and isinstance(v, str):
-                _validate_z_suffix_iso8601(v)
-        return self
+# Round 25 P0: ZTimestampModel + 通用 validator 抽到 omo._shared (跨仓 SSOT 落地)
+# 之前 Round 8 P2 + Round 11 /simplify 收口位置在 omo_io_schemas.py 内.
+# §12.1.3 跨仓契约配套: 任何仓 Pydantic schema 继承 ZTimestampModel 即得 Z-suffix 校验.
+from omo._shared.z_timestamp_model import ZTimestampModel  # noqa: F401  (re-export)
 
 
 # ── Consumer 1: omo_audit ───────────────────────────────────
