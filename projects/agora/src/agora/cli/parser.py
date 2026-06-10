@@ -669,7 +669,120 @@ For more: https://github.com/starlink-awaken/agora#readme""",
 
     add_pallas_subparser(sub)
 
+    # ═══════════════════════════════════════════════════════════════
+    # feature subcommand — Feature Gate 控制
+    # ═══════════════════════════════════════════════════════════════
+    feature = sub.add_parser("feature", help="Control feature groups and BOS domains")
+    feature_sub = feature.add_subparsers(dest="feature_cmd")
+
+    feature_sub.add_parser("list", help="List all feature groups and BOS domains state")
+    feature_sub.add_parser("status", help="Alias for list")
+    
+    feature_enable = feature_sub.add_parser("enable", help="Enable a feature group")
+    feature_enable.add_argument("group_name", help="Group name (e.g. L0, L2-engine, external)")
+    
+    feature_disable = feature_sub.add_parser("disable", help="Disable a feature group")
+    feature_disable.add_argument("group_name", help="Group name")
+    
+    # feature domain subcommands
+    domain = feature_sub.add_parser("domain", help="Control BOS domains")
+    domain_sub = domain.add_subparsers(dest="domain_cmd")
+    domain_enable = domain_sub.add_parser("enable", help="Enable a BOS domain")
+    domain_enable.add_argument("domain_name", help="Domain name (e.g. memory, analysis)")
+    domain_disable = domain_sub.add_parser("disable", help="Disable a BOS domain")
+    domain_disable.add_argument("domain_name", help="Domain name")
+
+    feature.set_defaults(func=run_feature)
+    for cmd_name in ("enable", "disable"):
+        feature_sub.choices.get(cmd_name).set_defaults(func=run_feature_cmd)
+    domain.set_defaults(func=run_domain_cmd)
+
+    # ═══════════════════════════════════════════════════════════════
+    # proxy subcommand — 扩展 proxy 组控制
+    # ═══════════════════════════════════════════════════════════════
+    proxy = sub.add_parser("proxy", help="Proxy management")
+    proxy_sub = proxy.add_subparsers(dest="proxy_cmd")
+
+    # proxy group
+    proxy_group = proxy_sub.add_parser("group", help="Control proxy groups")
+    proxy_group_sub = proxy_group.add_subparsers(dest="proxy_group_cmd")
+    proxy_group_sub.add_parser("list", help="List proxy groups")
+    proxy_group_enable = proxy_group_sub.add_parser("enable", help="Enable a proxy group")
+    proxy_group_enable.add_argument("name", help="Group name")
+    proxy_group_disable = proxy_group_sub.add_parser("disable", help="Disable a proxy group")
+    proxy_group_disable.add_argument("name", help="Group name")
+
+    proxy_group.set_defaults(func=run_proxy_group)
+    for cmd_name in ("enable", "disable"):
+        proxy_group_sub.choices.get(cmd_name).set_defaults(func=run_proxy_group_cmd)
+
     return p
+
+
+# ── Feature Gate & Proxy Group dispatch wrappers ──────────────
+
+
+def run_feature(args):
+    """Default: show feature list."""
+    if args.feature_cmd:
+        return run_feature_cmd(args)
+    from agora.cli.commands_feature import cmd_feature_list
+
+    return cmd_feature_list(args)
+
+
+def run_feature_cmd(args):
+    """Dispatch to enable/disable."""
+    from agora.cli.commands_feature import (
+        cmd_feature_disable,
+        cmd_feature_enable,
+        cmd_feature_list,
+    )
+
+    if args.feature_cmd == "enable":
+        return cmd_feature_enable(args)
+    elif args.feature_cmd == "disable":
+        return cmd_feature_disable(args)
+    else:
+        return cmd_feature_list(args)
+
+
+def run_domain_cmd(args):
+    """Dispatch to domain enable/disable."""
+    from agora.cli.commands_feature import cmd_domain_enable, cmd_domain_disable
+
+    if args.domain_cmd == "enable":
+        return cmd_domain_enable(args)
+    elif args.domain_cmd == "disable":
+        return cmd_domain_disable(args)
+    else:
+        print(f"Usage: agora feature domain {{enable|disable}} <name>")
+        return 0
+
+
+def run_proxy_group(args):
+    """Default: show group list."""
+    if args.proxy_group_cmd:
+        return run_proxy_group_cmd(args)
+    from agora.cli.commands_feature import cmd_proxy_group_list
+
+    return cmd_proxy_group_list(args)
+
+
+def run_proxy_group_cmd(args):
+    """Dispatch to proxy group enable/disable/list."""
+    from agora.cli.commands_feature import (
+        cmd_proxy_group_enable,
+        cmd_proxy_group_disable,
+        cmd_proxy_group_list,
+    )
+
+    if args.proxy_group_cmd == "enable":
+        return cmd_proxy_group_enable(args)
+    elif args.proxy_group_cmd == "disable":
+        return cmd_proxy_group_disable(args)
+    else:
+        return cmd_proxy_group_list(args)
 
 
 def start_pipeline_command(args):

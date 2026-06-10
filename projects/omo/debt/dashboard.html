@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMO Debt Dashboard</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #141420;
+    --surface-2: #1a1a2e;
+    --border: #282840;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-glow: rgba(56, 189, 248, 0.15);
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+  .dashboard { max-width: 1400px; margin: 0 auto; padding: 24px 20px; }
+  .header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 24px; margin-bottom: 28px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .header h1 {
+    font-size: 24px; font-weight: 700; margin: 0;
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header .meta { font-size: 13px; color: var(--text-muted); }
+  .header .meta span { margin-left: 16px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .card-stat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px;
+  }
+  .card-stat .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-stat .value { font-size: 28px; font-weight: 700; margin-top: 4px; }
+  .card-stat .value.accent { color: var(--accent); }
+  .card-stat .value.green { color: #4ade80; }
+  .card-stat .value.red { color: #f87171; }
+  .card-stat .value.yellow { color: #fbbf24; }
+
+  .section { margin-bottom: 28px; }
+  .section-title {
+    font-size: 16px; font-weight: 600; margin-bottom: 12px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border);
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  .tier-chart { display: flex; gap: 8px; height: 200px; align-items: flex-end; padding: 8px 0; }
+  .tier-bar {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-end; position: relative; min-width: 50px;
+  }
+  .tier-bar-inner {
+    width: 100%; max-width: 60px; border-radius: 6px 6px 0 0;
+    min-height: 8px; transition: height 0.5s ease;
+    position: relative;
+  }
+  .tier-bar .count {
+    position: absolute; top: -24px; font-size: 18px; font-weight: 700;
+  }
+  .tier-bar .tier-label { margin-top: 8px; font-size: 11px; color: var(--text-muted); text-align: center; }
+
+  .filters { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filters select {
+    background: var(--surface-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 14px; font-size: 13px;
+    cursor: pointer; min-width: 150px;
+  }
+  .filters select:focus { outline: none; border-color: var(--accent); }
+  .filter-count { font-size: 13px; color: var(--text-muted); padding: 8px 0; }
+
+  .table-wrap {
+    overflow-x: auto; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--surface);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: var(--surface-2); padding: 10px 12px; text-align: left;
+    font-weight: 600; color: var(--text-muted); text-transform: uppercase;
+    font-size: 11px; letter-spacing: 0.5px; border-bottom: 1px solid var(--border);
+    white-space: nowrap; cursor: pointer; user-select: none;
+  }
+  th:hover { color: var(--accent); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover { background: rgba(56, 189, 248, 0.04); }
+  tr.row-closed { opacity: 0.55; }
+  .badge-sev {
+    display: inline-block; padding: 2px 10px; border-radius: 4px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+  }
+  .badge-tier {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 500;
+  }
+  .badge-state-open {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 500; background: rgba(56, 189, 248, 0.15); color: #38bdf8;
+  }
+  .badge-state-closed {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 500; background: rgba(74, 222, 128, 0.15); color: #4ade80;
+  }
+  .badge-policy {
+    display: inline-block; padding: 1px 6px; border-radius: 3px;
+    font-size: 10px; font-weight: 500; background: rgba(129, 140, 248, 0.15); color: #818cf8;
+    margin: 1px 2px;
+  }
+  .id-cell { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: var(--accent); }
+  .title-cell { max-width: 300px; }
+  .policy-cell { max-width: 200px; }
+
+  .policy-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px; margin-bottom: 20px;
+  }
+  .policy-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .policy-card .pol-id { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; color: var(--accent); }
+  .policy-card .pol-name { font-size: 14px; font-weight: 600; margin: 2px 0; }
+  .policy-card .pol-meta { font-size: 11px; color: var(--text-muted); }
+  .policy-card .pol-count { font-size: 20px; font-weight: 700; margin-top: 6px; }
+  .policy-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+  .policy-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+
+  .x2-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px; margin-bottom: 20px;
+  }
+  .x2-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px;
+  }
+  .x2-card .x2-id { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 10px; color: #4ade80; }
+  .x2-card .x2-name { font-size: 13px; font-weight: 500; }
+  .x2-card .x2-count { font-size: 18px; font-weight: 700; color: var(--accent); }
+
+  @media (max-width: 768px) {
+    .header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .header .meta span { display: block; margin-left: 0; }
+    .cards { grid-template-columns: repeat(2, 1fr); }
+    .tier-chart { height: 140px; }
+    .filters { flex-direction: column; }
+    .filters select { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="dashboard">
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <h1>⚡ OMO Debt Dashboard</h1>
+      <div class="meta">
+        <span>📦 3 items</span>
+        <span>🔓 0 open</span>
+        <span>✅ 0 closed</span>
+        <span>🔄 Generated: 2026-06-10 10:00 UTC</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="cards">
+    <div class="card-stat">
+      <div class="label">Total Items</div>
+      <div class="value accent">3</div>
+    </div>
+    <div class="card-stat">
+      <div class="label">Open Items</div>
+      <div class="value yellow">0</div>
+    </div>
+    <div class="card-stat">
+      <div class="label">Critical Items</div>
+      <div class="value red">0</div>
+    </div>
+    <div class="card-stat">
+      <div class="label">X1 Coverage</div>
+      <div class="value green">1/5</div>
+    </div>
+    <div class="card-stat">
+      <div class="label">Policies Referenced</div>
+      <div class="value accent">20%</div>
+    </div>
+  </div>
+
+  <!-- X3 Tier Breakdown -->
+  <div class="section">
+    <div class="section-title">📊 X3 Value Tier Breakdown</div>
+    <div class="tier-chart" id="tierChart"></div>
+  </div>
+
+  <!-- X1 Policy Coverage -->
+  <div class="section">
+    <div class="section-title">🔒 X1 Governance Policy Coverage</div>
+    <div class="policy-grid" id="policyGrid"></div>
+  </div>
+
+  <!-- X2 Lifecycle Rule Coverage -->
+  <div class="section">
+    <div class="section-title">🔄 X2 Anti-Entropy Lifecycle Rules</div>
+    <div class="x2-grid" id="x2Grid"></div>
+  </div>
+
+  <!-- Filter Controls -->
+  <div class="section">
+    <div class="section-title">🔍 Debt Explorer</div>
+    <div class="filters">
+      <select id="filterSeverity" onchange="applyFilters()"><option value="">All Severities</option></select>
+      <select id="filterTier" onchange="applyFilters()"><option value="">All X3 Tiers</option></select>
+      <select id="filterPolicy" onchange="applyFilters()"><option value="">All X1 Policies</option></select>
+      <select id="filterState" onchange="applyFilters()"><option value="">All States</option>
+        <option value="open">Open</option><option value="closed">Closed</option>
+      </select>
+      <select id="filterLens" onchange="applyFilters()"><option value="">All Lenses</option>
+        <option value="X1">X1 (has policy ref)</option><option value="X2">X2 (has freshness)</option><option value="X3">X3 (has tier)</option>
+      </select>
+      <div class="filter-count" id="filterCount"></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Severity</th>
+            <th>X3 Tier</th>
+            <th>X1 Policy</th>
+            <th>State</th>
+            <th>Freshness</th>
+            <th>Dimension</th>
+          </tr>
+        </thead>
+        <tbody id="debtTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="text-align:center; padding: 20px; color: var(--text-muted); font-size: 12px;">
+    OMO Debt Dashboard · Generated 2026-06-10 10:00 UTC · 3 debt items from .omo/debt/items/
+  </div>
+</div>
+
+<script>
+const DEBTS = [{"id": "AUDIT-2026-06-07", "title": "全景审计台账 (22项)", "status": "active", "priority": "P0", "category": "quality", "items": [{"id": "A1", "severity": "🔴", "title": "resolve_bos_uri/read_resource JSON 参数命名统一", "file": "server/mcp.py", "status": "pending"}, {"id": "A2", "severity": "🔴", "title": "mof 入口循环导入修复", "file": "ecos/__init__.py", "status": "pending"}, {"id": "A3", "severity": "🔴", "title": "无统一 BOS 工具发现口", "file": "server/mcp.py", "status": "pending"}, {"id": "A4", "severity": "🔴", "title": "9 个独立 MCP 工具注册到主 server", "file": "bos_resolve.py + forge.py", "status": "pending"}, {"id": "A5", "severity": "🔴", "title": "resolve_bos_uri/read_resource 功能合并", "file": "server/mcp.py", "status": "pending"}, {"id": "A6", "severity": "🔴", "title": "JSON 参数 str→dict 类型统一", "file": "server/mcp.py", "status": "pending"}, {"id": "A7", "severity": "🔴", "title": "20 个 M1 workflow 文件恢复", "file": "m1/workflow/", "status": "resolved", "note": "2026-06-08: 47 bosroute + 26 workflow YAML 全部恢复, + BOS Route 测试"}, {"id": "A8", "severity": "🟡", "title": "BOS 工具命名统一 (bos_前缀)", "file": "server/mcp.py", "status": "pending"}, {"id": "A9", "severity": "🟡", "title": "错误消息增加 hint/retry_after", "file": "server/mcp.py", "status": "pending"}, {"id": "A10", "severity": "🟡", "title": "bos_metrics_status 返回类型统一", "file": "server/mcp.py", "status": "pending"}, {"id": "A11", "severity": "🟡", "title": "硬编码路径改为相对路径", "file": "server/mcp.py", "status": "pending"}, {"id": "A12", "severity": "🟡", "title": "epilog 补充新命令示例", "file": "mof-workflow.py", "status": "pending"}, {"id": "A13", "severity": "🟡", "title": "api-reference BOS URI 字段补全", "file": "bos-api-reference.md", "status": "pending"}, {"id": "A14", "severity": "🟡", "title": "seed-bos 独立可用 (不依赖 agora)", "file": "mof-workflow.py", "status": "pending"}, {"id": "A15", "severity": "🟡", "title": "validate nonexistent 添加 hint", "file": "mof-workflow.py", "status": "pending"}, {"id": "A16", "severity": "🟡", "title": "错误输出流统一 (stderr)", "file": "mof-workflow.py", "status": "pending"}, {"id": "A17", "severity": "🟡", "title": "空统计值处理优化", "file": "mof-workflow.py", "status": "pending"}, {"id": "A18", "severity": "🟢", "title": "list_bos_domains 补文档", "file": "server/mcp.py", "status": "pending"}, {"id": "A19", "severity": "🟢", "title": "watch_resource/unwatch_resource 实现", "file": "server/mcp.py", "status": "pending"}, {"id": "A20", "severity": "🟢", "title": "文档补充 mof workflow 引用", "file": "ecos/README.md", "status": "pending"}, {"id": "A21", "severity": "🟢", "title": "api-reference BOS URI 补全", "file": "bos-api-reference.md", "status": "pending"}, {"id": "A22", "severity": "🟢", "title": "--help exit code 改为 0", "file": "mof-workflow.py", "status": "pending"}], "stats": {"total": 22, "critical": 7, "major": 10, "minor": 5, "fixed": 1, "pending": 21}, "x3_tier": "Knowledge", "x1_policy_refs": ["X1-CONST-001"], "x2_rules": ["X2-LIFECYCLE-002"], "x2_freshness": ""}, {"id": "DEBT-M1-GIT-RESET", "title": "M1 文件被 git reset 反复删除", "status": "resolved", "priority": "P1", "resolved": "2026-06-08", "resolution": "根因：post-commit hook (Phase 3) 中 mof-validate.py 因 M2 workflow.yaml 第98行\nYAML 语法错误（冒号未引用导致解析失败）抛出异常，hook 执行 git checkout -- ../mof/m1/\n回退整个 M1 目录。\n\n修复：\n1. mof/m2/workflow.yaml 第98行 description 加引号\n2. mof-validate.py 增加 M2 加载异常 catch 分支\n3. post-commit hook 移除 git checkout -- ../mof/m1/ 行，改为仅清理 *.tmp\n4. 12 个 BOSRoute type: BosRoute → type: Component (M2 合规)\n5. 11 个 BOSRoute 补 runtime: active\n6. 移除 68 个 --assume-unchanged flag\n", "category": "infra", "risk": "resolved", "description": "projects/ecos/src/ecos/ssot/mof/m1/ 下的 workflow/bosroute/mechanism YAML 文件\n在每次 git commit 时被静默删除。根因不明，可能与 git hooks 或 submodule 交互有关。\n", "workaround": "当前使用 git update-index --assume-unchanged 保护 37 个文件。\n每次创建新 M1 文件后需手动添加保护。\n", "affected_files": ["projects/ecos/src/ecos/ssot/mof/m1/workflow/*.yaml", "projects/ecos/src/ecos/ssot/mof/m1/bosroute/*.yaml", "projects/ecos/src/ecos/ssot/mof/m1/mechanism/MECH-BOS-*.yaml"], "notes": "- 每次 session 平均发生 5-8 次文件丢失\n- scripts/preserve-m1-files.sh 作为急救脚本存在\n- 根因可能: .gitignore 规则 / pre-commit hook / submodule 边界\n", "x3_tier": "Knowledge", "x1_policy_refs": ["X1-CONST-001"], "x2_rules": ["X2-LIFECYCLE-002"], "x2_freshness": ""}, {"id": "DEBT-SERVER-MCP-SPLIT", "title": "server/mcp.py 单体拆分 (2200行 → 3文件)", "status": "planned", "priority": "P2", "created": "2026-06-07", "category": "refactor", "risk": "medium", "effort": "1-2天", "description": "server/mcp.py 从 P45-P48 持续膨胀至 ~2200 行。\n需拆分为:\n  server/tools_bos.py    — BOS 工具 (resolve_bos_uri, read_resource, mutate_resource 等 8 个)\n  server/lifecycle_bos.py — BOS 生命周期 (_init_proxy Phase 4-8)\n  server/mcp.py          — 精简后的编排层\n\nBOS 工具段约 482 行，生命周期约 80 行。\n", "affected_files": ["projects/agora/src/agora/server/mcp.py"], "blocked_by": [], "blocking": [], "notes": "- 当前实现功能正确，拆分是纯重构（不应改变行为）\n- 风险：拆分后需全量回归测试（agora 1200+ 测试）\n- 建议作为独立 Phase (P54) 执行\n- 可先拆分 tools_bos.py，验证后再拆 lifecycle\n", "x3_tier": "Knowledge", "x1_policy_refs": ["X1-CONST-001"], "x2_rules": ["X2-LIFECYCLE-002"], "x2_freshness": ""}];
+const TIERS = [{"id": "Axiom", "color": "#c084fc", "weight": 2.0, "half_life": "50 years"}, {"id": "Principle", "color": "#818cf8", "weight": 1.5, "half_life": "8 years"}, {"id": "Theory", "color": "#38bdf8", "weight": 1.5, "half_life": "20 years"}, {"id": "Framework", "color": "#4ade80", "weight": 1.2, "half_life": "4 years"}, {"id": "Knowledge", "color": "#fbbf24", "weight": 1.0, "half_life": "2 years"}, {"id": "Skill", "color": "#fb923c", "weight": 0.8, "half_life": "9 months"}, {"id": "Tool", "color": "#f87171", "weight": 0.6, "half_life": "3 months"}];
+const POLICIES = [{"id": "X1-AUDIT-001", "name": "\u5ba1\u8ba1\u5b8c\u6574\u6027", "category": "audit", "level": "mandatory"}, {"id": "X1-AUDIT-002", "name": "\u6743\u9650\u6700\u5c0f\u5316", "category": "authorization", "level": "mandatory"}, {"id": "X1-AUTH-001", "name": "\u8eab\u4efd\u8ffd\u8e2a", "category": "identity", "level": "advisory"}, {"id": "X1-TRUST-001", "name": "\u6cbb\u7406\u94fe\u5b8c\u6574\u6027", "category": "trust", "level": "advisory"}, {"id": "X1-CONST-001", "name": "\u5baa\u6cd5\u9075\u4ece", "category": "constitution", "level": "mandatory"}];
+const RULES = [{"id": "X2-FRESH-001", "name": "\u670d\u52a1\u4fdd\u9c9c", "category": "freshness", "interval": "30 days"}, {"id": "X2-FRESH-002", "name": "\u77e5\u8bc6\u4fdd\u9c9c", "category": "freshness", "interval": "7 days"}, {"id": "X2-LIFECYCLE-001", "name": "\u95f2\u7f6e\u9000\u5f79", "category": "lifecycle", "interval": "30 days"}, {"id": "X2-LIFECYCLE-002", "name": "\u503a\u52a1\u534a\u8870\u671f", "category": "lifecycle", "interval": "N/A"}];
+const TIER_COUNTS = {"Axiom": {"count": 0, "color": "#c084fc"}, "Principle": {"count": 0, "color": "#818cf8"}, "Theory": {"count": 0, "color": "#38bdf8"}, "Framework": {"count": 0, "color": "#4ade80"}, "Knowledge": {"count": 3, "color": "#fbbf24"}, "Skill": {"count": 0, "color": "#fb923c"}, "Tool": {"count": 0, "color": "#f87171"}};
+const POLICY_COUNTS = {"X1-AUDIT-001": {"name": "\u5ba1\u8ba1\u5b8c\u6574\u6027", "count": 0, "category": "audit", "level": "mandatory"}, "X1-AUDIT-002": {"name": "\u6743\u9650\u6700\u5c0f\u5316", "count": 0, "category": "authorization", "level": "mandatory"}, "X1-AUTH-001": {"name": "\u8eab\u4efd\u8ffd\u8e2a", "count": 0, "category": "identity", "level": "advisory"}, "X1-TRUST-001": {"name": "\u6cbb\u7406\u94fe\u5b8c\u6574\u6027", "count": 0, "category": "trust", "level": "advisory"}, "X1-CONST-001": {"name": "\u5baa\u6cd5\u9075\u4ece", "count": 3, "category": "constitution", "level": "mandatory"}};
+const RULE_COUNTS = {"X2-FRESH-001": {"name": "\u670d\u52a1\u4fdd\u9c9c", "count": 0, "category": "freshness"}, "X2-FRESH-002": {"name": "\u77e5\u8bc6\u4fdd\u9c9c", "count": 0, "category": "freshness"}, "X2-LIFECYCLE-001": {"name": "\u95f2\u7f6e\u9000\u5f79", "count": 0, "category": "lifecycle"}, "X2-LIFECYCLE-002": {"name": "\u503a\u52a1\u534a\u8870\u671f", "count": 3, "category": "lifecycle"}};
+const SEV_COLORS = {"critical": "#f87171", "high": "#fb923c", "medium": "#fbbf24", "low": "#a3e635"};
+
+// Populate tier chart
+function renderTierChart() {
+  const chart = document.getElementById('tierChart');
+  const maxCount = Math.max(1, ...Object.values(TIER_COUNTS).map(t => t.count));
+  chart.innerHTML = '';
+  TIERS.forEach(tier => {
+    const tc = TIER_COUNTS[tier.id] || {count: 0, color: tier.color};
+    const pct = (tc.count / maxCount) * 100;
+    const bar = document.createElement('div');
+    bar.className = 'tier-bar';
+    bar.innerHTML = `
+      <div class="tier-bar-inner" style="height:${pct}%;background:${tier.color};">
+        <div class="count" style="color:${tier.color}">${tc.count}</div>
+      </div>
+      <div class="tier-label">${tier.id}<br><span style="font-size:10px;opacity:0.6">×${tier.weight}</span></div>
+    `;
+    chart.appendChild(bar);
+  });
+}
+
+// Populate policy grid
+function renderPolicyGrid() {
+  const grid = document.getElementById('policyGrid');
+  const maxCount = Math.max(1, ...Object.values(POLICY_COUNTS).map(p => p.count));
+  grid.innerHTML = '';
+  POLICIES.forEach(p => {
+    const pc = POLICY_COUNTS[p.id] || {count: 0, name: p.name, category: p.category, level: p.level};
+    const pct = (pc.count / maxCount) * 100;
+    const card = document.createElement('div');
+    card.className = 'policy-card';
+    card.innerHTML = `
+      <div class="pol-id">${p.id}</div>
+      <div class="pol-name">${pc.name}</div>
+      <div class="pol-meta">${pc.category} · ${pc.level}</div>
+      <div class="pol-count" style="color:${pc.count > 0 ? '#38bdf8' : '#64748b'}">${pc.count} debts</div>
+      <div class="policy-bar-wrap"><div class="policy-bar-fill" style="width:${pct}%;background:${pc.count > 0 ? '#38bdf8' : '#64748b'}"></div></div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// Populate X2 grid
+function renderX2Grid() {
+  const grid = document.getElementById('x2Grid');
+  grid.innerHTML = '';
+  RULES.forEach(r => {
+    const rc = RULE_COUNTS[r.id] || {count: 0, name: r.name, category: r.category};
+    const card = document.createElement('div');
+    card.className = 'x2-card';
+    card.innerHTML = `
+      <div class="x2-id">${r.id}</div>
+      <div class="x2-name">${rc.name}</div>
+      <div class="x2-count">${rc.count} debts</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${rc.category}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// Render debt table
+function renderTable(items) {
+  const body = document.getElementById('debtTableBody');
+  body.innerHTML = '';
+  items.forEach(d => {
+    const sevColor = SEV_COLORS[d.severity] || '#94a3b8';
+    const tier = TIERS.find(t => t.id === d.x3_tier) || {color: '#94a3b8', id: d.x3_tier || '?'};
+    const isClosed = d.lifecycle_state === 'closed';
+    const policies = (d.x1_policy_refs || []).map(p => `<span class="badge-policy">${p}</span>`).join('');
+
+    const row = document.createElement('tr');
+    row.className = isClosed ? 'row-closed' : '';
+    const freshness = d.x2_freshness || '';
+    row.innerHTML = `
+      <td class="id-cell">${d.id}</td>
+      <td class="title-cell">${d.title || d.id}</td>
+      <td><span class="badge-sev" style="background:${sevColor}22;color:${sevColor}">${d.severity||'?'}</span></td>
+      <td><span class="badge-tier" style="background:${tier.color}22;color:${tier.color}">${tier.id}</span></td>
+      <td class="policy-cell">${policies}</td>
+      <td><span class="badge-state-${d.lifecycle_state||'open'}">${d.lifecycle_state||'open'}</span></td>
+      <td style="font-size:11px;color:var(--text-muted)">${freshness ? freshness.slice(0,10) : '—'}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${d.dimension||''}</td>
+    `;
+    body.appendChild(row);
+  });
+  document.getElementById('filterCount').textContent = `Showing ${items.length} of ${DEBTS.length} items`;
+}
+
+// Populate filter dropdowns
+function populateFilters() {
+  const sevSet = new Set(); const tierSet = new Set(); const polSet = new Set();
+  DEBTS.forEach(d => {
+    if (d.severity) sevSet.add(d.severity);
+    if (d.x3_tier) tierSet.add(d.x3_tier);
+    (d.x1_policy_refs || []).forEach(p => polSet.add(p));
+  });
+
+  const sev = document.getElementById('filterSeverity');
+  ['critical','high','medium','low'].forEach(s => {
+    if (sevSet.has(s)) { const o = document.createElement('option'); o.value=s; o.textContent=s.charAt(0).toUpperCase()+s.slice(1); sev.appendChild(o); }
+  });
+
+  const tier = document.getElementById('filterTier');
+  TIERS.forEach(t => {
+    if (tierSet.has(t.id)) { const o = document.createElement('option'); o.value=t.id; o.textContent=t.id; tier.appendChild(o); }
+  });
+
+  const pol = document.getElementById('filterPolicy');
+  [...polSet].sort().forEach(p => { const o = document.createElement('option'); o.value=p; o.textContent=p; pol.appendChild(o); });
+}
+
+// Apply filters
+function applyFilters() {
+  const sev = document.getElementById('filterSeverity').value;
+  const tier = document.getElementById('filterTier').value;
+  const pol = document.getElementById('filterPolicy').value;
+  const state = document.getElementById('filterState').value;
+  const lens = document.getElementById('filterLens').value;
+
+  let filtered = DEBTS.filter(d => {
+    if (sev && d.severity !== sev) return false;
+    if (tier && d.x3_tier !== tier) return false;
+    if (pol && !(d.x1_policy_refs || []).includes(pol)) return false;
+    if (state && d.lifecycle_state !== state) return false;
+    if (lens === 'X1' && (!d.x1_policy_refs || d.x1_policy_refs.length === 0)) return false;
+    if (lens === 'X2' && !d.x2_freshness) return false;
+    if (lens === 'X3' && !d.x3_tier) return false;
+    return true;
+  });
+  renderTable(filtered);
+}
+
+// Init
+renderTierChart();
+renderPolicyGrid();
+renderX2Grid();
+populateFilters();
+renderTable(DEBTS);
+</script>
+</body>
+</html>

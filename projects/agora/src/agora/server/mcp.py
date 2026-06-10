@@ -328,6 +328,11 @@ async def _init_proxy():
     if _proxy_manager is not None:
         return
 
+    # ── Phase 0 (BOS-ONLY): 立即裁剪非 BOS 工具，不等 proxy 初始化 ──
+    if os.environ.get("AGORA_BOS_ONLY", "").lower() in ("1", "true", "yes"):
+        await _bos_only_cleanup(mcp)
+        logger.info("bos_only_mode: removed non-BOS management tools")
+
     _proxy_manager = ProxyManager()
     _lifecycle_manager = _get_lifecycle_manager()
 
@@ -361,8 +366,25 @@ async def _init_proxy():
         )
     logger.info("bos_router_seeded", poc_count=_bos_router.count())
 
-    # ── Phase 5 (P46 W0): 配置 BOS 中间件 ──
-    # 从配置文件读取限流 QPS，硬编码作为回退
+    # ── Phase 5.5 (FeatureGate): 加载 feature_groups + bos_domains ──
+    from agora.mcp_proxy.feature_gate import FeatureGate
+
+    gate = FeatureGate.get_instance()
+    # 从代理配置文件预加载 feature_groups & bos_domains
+    proxy_config_path = mcp_bootstrap.get_data_dir() / "agora-proxy-services.json"
+    if proxy_config_path.exists():
+        try:
+            proxy_data = json.loads(proxy_config_path.read_text(encoding="utf-8"))
+            gate.load(proxy_data)
+            logger.info("feature_gate_initialized_from_proxy_config")
+        except (json.JSONDecodeError, OSError):
+            gate.load()
+            logger.info("feature_gate_initialized_defaults")
+    else:
+        gate.load()
+        logger.info("feature_gate_initialized_defaults")
+
+    # ── Phase 6 (P46 W0): 配置 BOS 中间件 ──
     import yaml
 
     rates_path = Path(__file__).parent.parent / "agora-bos-rates.yaml"
@@ -413,6 +435,49 @@ async def _init_proxy():
         config_watcher._on_change = _reload_rates
         config_watcher.start(interval=5)
         logger.info("config_watcher: started")
+
+
+async def _bos_only_cleanup(mcp_server: FastMCP) -> None:
+    """移除所有非 BOS URI 相关的管理工具。
+
+    BOS-only 模式下只保留:
+      - BOS URI 解析 (resolve_bos_uri, read_resource, mutate_resource, ...)
+      - BOS 资源 (bos://...)
+      移除: proxy 基础设施、代理下游工具、路由/健康、管理噪声
+    """
+    # 只保留纯 BOS URI 工具
+    KEEP_TOOLS = {
+        "mutate_resource", "resolve_bos_uri", "read_resource",
+        "list_bos_resources", "list_bos_domains", "get_bos_schema",
+        "bos_middleware_status", "bos_reload_m1", "bos_reload_discovery",
+        "bos_metrics_status", "watch_resource", "unwatch_resource",
+        "list_bos_tools",
+    }
+
+    # 获取所有已注册工具
+    try:
+        provider = getattr(mcp_server, "_local_provider", None)
+        if provider is None:
+            return
+        tools = await provider.list_tools()
+    except Exception:
+        return
+
+    removed = 0
+    for tool in tools:
+        name = tool.name if hasattr(tool, "name") else str(tool)
+        # 仅保留白名单中的 BOS URI 工具
+        if name in KEEP_TOOLS:
+            continue
+        # 其余全部移除（含代理下游工具、proxy 基础设施、路由、管理工具）
+        try:
+            provider.remove_tool(name)
+            removed += 1
+        except (KeyError, Exception):
+            pass
+
+    if removed:
+        logger.info("bos_only_cleanup: removed %d management tools", removed)
 
 
 # ── 信号处理 (P46 W2) ─────────────────────────────────
@@ -2053,8 +2118,25 @@ def sse_main():
 
     Proxy connections are initialized inside the lifespan context manager,
     keeping subprocesses alive for the entire server lifetime.
+    Exposes a /health HTTP endpoint alongside the SSE transport.
     """
     import asyncio
+    from starlette.responses import JSONResponse
+    from starlette.routing import Route
+
+    async def health_endpoint(request):
+        return JSONResponse(
+            {
+                "status": "ok",
+                "service": "agora-mcp-sse",
+                "tools": len(await mcp.list_tools()),
+            }
+        )
+
+    # Add /health route alongside the SSE transport
+    mcp._additional_http_routes.append(
+        Route("/health", endpoint=health_endpoint)
+    )
 
     sys.stderr.write("Agora MCP Server (SSE) starting on port 7431...\n")
     asyncio.run(mcp.run_http_async(transport="sse", host="0.0.0.0", port=7431))  # noqa: S104 — MCP SSE server intentionally binds all interfaces

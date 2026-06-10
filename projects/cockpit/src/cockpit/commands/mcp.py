@@ -11,7 +11,7 @@ from .base import _get_console, _get_err, _panel
 def cmd_mcp(args: argparse.Namespace) -> int:
     """启动 workspace MCP server 或列出可用工具。"""
     try:
-        from scripts.cockpit_mcp import mcp
+        from cockpit.scripts.cockpit_mcp import mcp
     except ImportError as e:
         _get_err().print(f"[red]❌ 无法加载 MCP server: {e}[/red]")
         return 1

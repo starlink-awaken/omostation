@@ -1,9 +1,0 @@
-id: ENG-OLLAMA-MACMINI
-type: compute_engine
-node_ref: NODE-MACMINI
-engine_type: local_daemon
-base_url: "http://macmini.local:11434/v1"
-supported_protocols: ["openai"]
-cost_multiplier: 0.0001
-status: active
-description: "MacMini 上的 Ollama 常驻服务"

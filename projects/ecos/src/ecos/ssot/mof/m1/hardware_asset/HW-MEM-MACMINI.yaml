@@ -1,7 +1,0 @@
-id: HW-MEM-MACMINI
-type: hardware_asset
-node_ref: NODE-MACMINI
-device_type: memory
-ram_gb: 24.0
-status: active
-description: "MacMini 统一内存空间，可共享给 NPU/GPU 使用，适合常驻量化模型"

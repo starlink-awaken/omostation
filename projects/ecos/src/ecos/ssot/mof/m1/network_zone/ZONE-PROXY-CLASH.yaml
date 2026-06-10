@@ -1,7 +1,0 @@
-id: ZONE-PROXY-CLASH
-type: network_zone
-zone_type: proxy
-latency_profile: high
-gateway: "127.0.0.1:7890" # 假设 Clash 默认本地混流代理端口
-status: active
-description: "翻墙代理网络（Clash + iCloud 远端配置）。流量通过 V2Ray/搬瓦工 VPS 中转，用于访问 OpenAI 和 Anthropic 等被墙 API。"

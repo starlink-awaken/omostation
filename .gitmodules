@@ -1,0 +1,21 @@
+[submodule "projects/kairon"]
+	path = projects/kairon
+	url = https://github.com/starlink-awaken/kairon.git
+[submodule "projects/runtime"]
+	path = projects/runtime
+	url = https://github.com/starlink-awaken/omostation-runtime.git
+[submodule "projects/metaos"]
+	path = projects/metaos
+	url = https://github.com/starlink-awaken/omostation-metaos.git
+[submodule "projects/l4-kernel"]
+	path = projects/l4-kernel
+	url = https://github.com/starlink-awaken/omostation-l4-kernel.git
+[submodule "scripts"]
+	path = scripts
+	url = https://github.com/starlink-awaken/omostation-scripts.git
+[submodule "projects/ecos"]
+	path = projects/ecos
+	url = https://github.com/starlink-awaken/omostation-ecos.git
+[submodule "projects/gbrain"]
+	path = projects/gbrain
+	url = https://github.com/starlink-awaken/omostation-gbrain.git

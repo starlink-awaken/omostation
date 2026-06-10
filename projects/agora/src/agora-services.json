@@ -495,6 +495,20 @@
       "provider_info": null,
       "healthy": true,
       "last_health_check": 0.0
+    },
+    {
+      "name": "model-driven",
+      "description": "Model-Driven Lifecycle Platform — 全生命周期模型驱动平台：MOF扩展 + 7阶段引擎 + 12工具链 + 管理面",
+      "protocol": "mcp",
+      "protocol_config": {},
+      "mcp_endpoint": "",
+      "health_endpoint": "",
+      "port": 0,
+      "tags": [],
+      "instances": [],
+      "provider_info": null,
+      "healthy": true,
+      "last_health_check": 0.0
     }
   ]
 }

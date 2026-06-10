@@ -8,7 +8,7 @@ phase41_completed_at: '2026-06-16T00:00:00Z'
 phase_status: active
 current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
-health_score: 98.0
+health_score: 73.75
 health_score_raw: 100.0
 active_agents: 0
 idle_agents: 4
@@ -53,7 +53,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-10T04:00:00Z'
+updated_at: '2026-06-10T10:00:04Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -121,13 +121,13 @@ debt_registry_ref: .omo/debt/registry.yaml
 debt_dashboard_ref: .omo/debt/dashboard/current.yaml
 debt_review_pack_ref: .omo/debt/reviews/current.md
 debt_metrics:
-  debt_health: 98.0
+  debt_health: 62.5
   classification_entropy: 0.0
   state_entropy: 0.0
-  pointer_entropy: 0.0
+  pointer_entropy: 2.0
   time_entropy: 0.0
   backlog_pressure: 0.0
-  coupling_load: 0.0
+  coupling_load: 1.33
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
@@ -205,5 +205,5 @@ runtime_health_summary:
   unhealthy_services: []
   stale_services: []
 phase46_status: active
-xplane_score: 85.0
+xplane_score: 12.5
 xplane_coverage: 100.0

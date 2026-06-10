@@ -1,6 +1,0 @@
-id: ZONE-PUBLIC-WAN
-type: network_zone
-zone_type: wan
-latency_profile: high
-status: active
-description: "公网，用于访问 Anthropic / OpenAI 等云端接口"

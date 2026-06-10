@@ -1,9 +1,0 @@
-id: ENG-OMLX-LOCAL
-type: compute_engine
-node_ref: NODE-LOCAL-MAC
-engine_type: local_inference
-base_url: "http://127.0.0.1:8080/v1"
-supported_protocols: ["openai"]
-cost_multiplier: 0.0001
-status: active
-description: "本地开发机的 omlx 推理框架"

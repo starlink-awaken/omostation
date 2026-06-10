@@ -3,6 +3,9 @@
 # 项目代码在各子仓库中独立管理。
 
 # ---- 项目目录（独立 git 仓库） ----
+projects/kairon/
+projects/gbrain/
+projects/_archived/
 
 # ---- 运行时数据 ----
 data/sharedbrain/data/

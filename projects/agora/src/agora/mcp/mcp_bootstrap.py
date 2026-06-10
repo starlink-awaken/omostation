@@ -579,14 +579,24 @@ def _build_enabled_services(
 ) -> list[dict[str, Any]]:
     """Build ProxyManager-compatible service configs for enabled services.
 
-    Filters config list to enabled=true services and enriches with
-    workspace cwd for stdio launching.
+    Filters config list through FeatureGate (env groups + feature_groups +
+    per-service enabled flag) and enriches with workspace cwd for stdio launching.
     """
+    from agora.mcp_proxy.feature_gate import FeatureGate
+
+    gate = FeatureGate.get_instance()
+
     workspace = _find_workspace_root()
     result: list[dict[str, Any]] = []
 
     for svc in config_services:
-        if not svc.get("enabled", False):
+        # Legacy: skip if explicitly disabled
+        if not svc.get("enabled", True):
+            continue
+
+        # FeatureGate check: is_service_enabled handles groups + env overrides
+        name = svc.get("name", "")
+        if name and not gate.is_service_enabled(name, svc):
             continue
 
         name = svc.get("name", "")

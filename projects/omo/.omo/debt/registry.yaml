@@ -128,6 +128,10 @@ seed_items:
 - .omo/debt/items/auto-r1-1780977005.yaml
 - .omo/debt/items/auto-r2-1780977005.yaml
 - .omo/debt/items/auto-test-1780977041.yaml
+- .omo/debt/items/auto-test-1781043044.yaml
+- .omo/debt/items/auto-r1-1781043044.yaml
+- .omo/debt/items/auto-r2-1781043044.yaml
+- .omo/debt/items/auto-test-1781043082.yaml
 dashboard_ref: .omo/debt/dashboard/latest.yaml
 review_pack_ref: .omo/debt/review/latest.yaml
 review_queue_ref: .omo/debt/queue/latest.yaml

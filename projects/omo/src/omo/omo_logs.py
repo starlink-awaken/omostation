@@ -200,6 +200,7 @@ def cmd_logs_audit(
     consumer: str | None = None,
     baseline_init: str | None = None,
     baseline_check: str | None = None,
+    metrics: bool = False,
 ) -> int:
     """走 SSOT schema 检查所有 .jsonl, 报漂移.
 
@@ -339,6 +340,40 @@ def cmd_logs_audit(
         else:
             print(f"✅ {p.stem} ({schema_name}): {len(AppendOnlyLog(p).read_all()):,} records 符合 SSOT")
 
+    # Round 39 P0: --metrics flag 输出 §17 度量 JSON + R0-R5 健康度
+    if metrics:
+        from datetime import datetime as _dt, timezone as _tz
+        density = total_failures / total_records if total_records > 0 else 0.0
+        if density <= 0.01:
+            grade = "R0"
+            exit_code = 0
+        elif density <= 0.05:
+            grade = "R1"
+            exit_code = 1
+        elif density <= 0.10:
+            grade = "R2"
+            exit_code = 1
+        elif density <= 0.30:
+            grade = "R3"
+            exit_code = 2
+        elif density <= 0.50:
+            grade = "R4"
+            exit_code = 2
+        else:
+            grade = "R5"
+            exit_code = 2
+        metrics_payload = {
+            "generated_at": _dt.now(_tz.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "drift_count": total_failures,
+            "total_records": total_records,
+            "debt_density": round(density, 6),
+            "health_grade": grade,
+            "consumers": dict(sorted(drift_by_consumer.items())),
+        }
+        print(f"\n📊 §17 metrics (Round 39 P0):")
+        print(json.dumps(metrics_payload, indent=2, ensure_ascii=False, sort_keys=True))
+        return exit_code
+
     print(f"\n总计: {total_records:,} records, {total_failures} 漂移")
     if total_failures:
         print("   提示: 用 --baseline-init 生成 baseline, 后续 --baseline-check 仅查增量")
@@ -380,6 +415,11 @@ def main(argv: list[str] | None = None) -> int:
         metavar="PATH",
         help="对比 baseline, 增量 drift > 0 才 fail (pre-commit 用)",
     )
+    au.add_argument(
+        "--metrics",
+        action="store_true",
+        help="输出 §17 度量 JSON + R0-R5 健康度评分 (Round 39 P0, 与 baseline 互斥)",
+    )
 
     args = parser.parse_args(argv)
     if args.command == "list":
@@ -393,6 +433,7 @@ def main(argv: list[str] | None = None) -> int:
             consumer=args.consumer,
             baseline_init=args.baseline_init,
             baseline_check=args.baseline_check,
+            metrics=args.metrics,
         )
     parser.print_help()
     return 1

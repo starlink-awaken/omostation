@@ -1,6 +1,0 @@
-id: NODE-CLOUD
-type: compute_node
-architecture: any
-tier: cloud
-status: active
-description: "公有云大模型算力资源池"

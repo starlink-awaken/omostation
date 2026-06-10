@@ -1,7 +1,0 @@
-id: NODE-MACMINI
-type: compute_node
-architecture: arm64
-os: darwin
-tier: edge
-status: active
-description: "局域网常驻服务器，统一内存架构，适合跑轻量级量化模型兜底"
