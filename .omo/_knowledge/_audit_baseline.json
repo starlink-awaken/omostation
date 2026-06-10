@@ -3,11 +3,11 @@
   "drift_by_consumer": {
     "omo_bos_metrics": 0,
     "omo_health": 0,
-    "omo_history": 1530,
+    "omo_history": 1531,
     "omo_sync": 1,
     "omo_trail": 0
   },
-  "generated_at": "2026-06-10T03:48:01Z",
-  "total_drift": 1531,
-  "total_records": 1855
+  "generated_at": "2026-06-10T06:46:20Z",
+  "total_drift": 1532,
+  "total_records": 1892
 }

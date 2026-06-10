@@ -834,6 +834,74 @@ omo lint schemas (Round 18 P0):
 | Round | 主题 | commit |
 |-------|------|--------|
 | 12-23 | 既有 12 段 | (前 21 commit) |
-| 24 | AppendOnlyLog → omo._shared (§12 SSOT) | `cca88e69` (P0) + (本 commit P1 文档) |
+| 24 | AppendOnlyLog → omo._shared (§12 SSOT) | `cca88e69` (P0) + `7f3575f4` (P1) |
+
+### §11.17 Round 25 收口 — ZTimestampModel 抽到 omo._shared (§12.1.3 跨仓 SSOT 落地)
+
+> **状态**: implemented
+> **commit**: `779fc13` (Round 25 P0)
+> **主题**: ZTimestampModel + 通用 validator 抽到 `omo._shared.z_timestamp_model`
+> **链接**: §12.1.3 跨仓 Z-suffix 不变量 + §12.2.1 Step 2 跨仓接入示例
+
+**动机**:
+- §12.1.3 跨仓不变量要求"schema 继承 Z-suffix 校验基类"
+- 之前 ZTimestampModel 在 omo_io_schemas.py (Round 8 P2 + Round 11 /simplify 收口位置)
+- 跨仓 owner 想 §12 接入, 必须从 omo 仓复制 ~35 行 (ZTimestampModel + validator + TIMESTAMP_FIELDS) — DRY 违反
+- §12.8 候选 2: "抽 ZTimestampModel 到 `_shared/`" 实质化
+
+**实施**:
+- 新建 `projects/omo/src/omo/_shared/z_timestamp_model.py` (~65 行)
+  - `_validate_z_suffix_iso8601` 函数 (单 timestamp 字段校验)
+  - `TIMESTAMP_FIELDS = ("ts", "recorded_at", "timestamp")` (已知 timestamp 字段名)
+  - `ZTimestampModel` 类 (model_validator 自动扫描)
+  - `__all__ = ("ZTimestampModel", "TIMESTAMP_FIELDS", "_validate_z_suffix_iso8601")`
+- `omo_io_schemas.py` 改:
+  - 删原 `_validate_z_suffix_iso8601` 函数 + `TIMESTAMP_FIELDS` + `ZTimestampModel` 类
+  - 顶部加 `from omo._shared.z_timestamp_model import ZTimestampModel` (re-export)
+  - 8 schema (omo_audit/bos_metrics/sync/alert/event/history/trail/health) 仍继承 ZTimestampModel 不变
+
+**Backward compat 验证**:
+- `from omo.omo_io_schemas import ZTimestampModel` 仍可 import ✓
+- `omo_lint._check_schema_registry_integrity()` 仍可 `from omo.omo_io_schemas import ..., ZTimestampModel` ✓
+- 8 schema 仍 `class Xxx(ZTimestampModel)` 不变 ✓
+- `ZTimestampModel` 是同一类 (`omo_io_schemas.ZTimestampModel is _shared.z_timestamp_model.ZTimestampModel`) ✓
+- `omo lint schemas` 7/7 PASS, `SCHEMA_REGISTRY` 8/8 PASS ✓
+- Z-suffix 校验实测: `OmoAuditRecord(ts="2026-06-10T01:00:00+00:00", ...)` 仍抛 ValidationError ✓
+
+**§12 跨仓接入 Step 2 完成**:
+- 跨仓 owner 现在可写:
+  ```python
+  from omo._shared.z_timestamp_model import ZTimestampModel
+  from pydantic import Field
+
+  class TargetEventRecord(ZTimestampModel):
+      ts: str  # 自动校验 Z-suffix
+      actor: str = Field(..., min_length=1)
+  ```
+- 之前必须从 omo_io_schemas.py 复制 ~35 行 — DRY 违反
+- 与 R24 AppendOnlyLog 抽 `_shared` 配套, 共同构成 §12.1.1+§12.1.3 跨仓 SSOT 入口
+
+**§12.8 候选完成度**:
+- ✅ 候选 1: 抽 AppendOnlyLog 到 `_shared/` (Round 24 P0)
+- ✅ 候选 2: 抽 ZTimestampModel 到 `_shared/` (Round 25 P0)
+- ⏳ 候选 3: §12.5 扩"跨仓 baseline 同步机制" (cron + 报告汇聚)
+- ⏳ 候选 4: §12.6 跨仓债 E1-E4 落地 (需各仓 owner 配合)
+
+**度量 (Round 24 → Round 25)**:
+
+| 指标 | Round 24 | Round 25 | Δ |
+|------|----------|----------|---|
+| `_shared` 包文件数 | 2 | **3** | +1 (z_timestamp_model) |
+| `_shared` 总行数 | ~280 | **~345** | +65 |
+| 跨仓 owner 复制成本 (Step 1+2) | 280 行 | **0** (1 行 import) | -280 |
+| §12.1.1+§12.1.3 跨仓 SSOT | 部分 | **完整** | +1 |
+| §12.8 候选完成度 | 1/4 | **2/4** | +1 |
+| Backward compat | 100% | **100%** | 不变 |
+
+**§11 14 段全收 + §12 12 子节 + §12.8 候选 2/4** (Round 12-25, 24 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-24 | 既有 13 段 | (前 22 commit) |
+| 25 | ZTimestampModel → omo._shared (§12.1.3 SSOT) | `779fc13` (P0) + (本 commit P1 文档) |
 
 
