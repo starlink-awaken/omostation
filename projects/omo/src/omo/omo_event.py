@@ -67,7 +67,7 @@ def cmd_event_emit(
         "payload": payload,
     }
     log = AppendOnlyLog(log_path)
-    log.append(record)
+    log.append(record, sort_keys=True)
     print(f"✅ event emitted: kind={event_type} source={source}")
     print(f"   log: {log_path}")
     return 0

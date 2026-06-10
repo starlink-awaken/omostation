@@ -82,7 +82,7 @@ def record(
         "details": details,
     }
     log = AppendOnlyLog(Path(audit_file) if audit_file else _default_audit_file())
-    log.append(entry)
+    log.append(entry, sort_keys=True)
     return entry
 
 

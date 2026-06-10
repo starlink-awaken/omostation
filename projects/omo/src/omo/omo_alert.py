@@ -61,6 +61,7 @@ def cmd_alert_check(threshold: int, notify: bool) -> int:
         print(f"  {a}")
 
     # Round 4: 每次 alert 触发, 落 ALERT_LOG 一行 (结构化, 便于事后审计)
+    # Round 37 P0: 加 sort_keys=True 守 §12.1.4 跨仓 4 不变量
     alert_log = AppendOnlyLog(ALERT_LOG)
     for a in alerts:
         alert_log.append(
@@ -72,7 +73,8 @@ def cmd_alert_check(threshold: int, notify: bool) -> int:
                 "blocked_rate": blocked_rate,
                 "failed_rate": failed_rate,
                 "threshold": threshold,
-            }
+            },
+            sort_keys=True,
         )
 
     if notify:

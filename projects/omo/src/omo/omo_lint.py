@@ -120,9 +120,14 @@ _SORT_KEYS_DEFAULT_EXEMPT_MODULES = frozenset({
 
 
 def _check_sort_keys_default() -> list[tuple[str, str, str]]:
-    """扫 7 consumer 模块, 检测 .append() 未传 sort_keys=True (§13.3 规则 8 — Round 34 P0).
+    """扫 7 consumer 模块, 检测 .append() 未传 sort_keys=True (§13.3 规则 8 — Round 34 P0 + §16.3 扩 R37 P0).
 
     §12.1.4 跨仓不变量要求 sort_keys=True 默认值一致 (字节级兼容).
+
+    检测模式 (R37 P0 扩):
+      1. AppendOnlyLog(...).append(...) — immediate chain (R34)
+      2. log = AppendOnlyLog(...); log.append(...) — 临时变量 (R37 扩)
+
     omo_history 已传 sort_keys=True (R30 probe), 其他 6 consumer 待治.
 
     Returns:
@@ -141,27 +146,51 @@ def _check_sort_keys_default() -> list[tuple[str, str, str]]:
         except (SyntaxError, UnicodeDecodeError):
             continue
 
-        # 找 AppendOnlyLog(...).append(...) 调用
+        # R37 P0 扩: 收集所有 `name = AppendOnlyLog(...)` 临时变量绑定
+        bound_log_vars: set[str] = set()
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Assign):
+                continue
+            if not isinstance(node.value, ast.Call):
+                continue
+            if not isinstance(node.value.func, ast.Name):
+                continue
+            if node.value.func.id != "AppendOnlyLog":
+                continue
+            # 收集 target 名 (e.g. `log = AppendOnlyLog(path)` → "log")
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    bound_log_vars.add(target.id)
+
+        # 扫 .append() 调用 (含 immediate chain + 临时变量)
         for node in ast.walk(tree):
             if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
                 continue
             if node.func.attr != "append":
                 continue
-            if not (isinstance(node.func.value, ast.Call) and isinstance(node.func.value.func, ast.Name)):
+            # 模式 1: AppendOnlyLog(...).append(...) immediate chain
+            is_immediate_chain = (
+                isinstance(node.func.value, ast.Call)
+                and isinstance(node.func.value.func, ast.Name)
+                and node.func.value.func.id == "AppendOnlyLog"
+            )
+            # 模式 2: log.append(...) 临时变量
+            is_temp_var = (
+                isinstance(node.func.value, ast.Name)
+                and node.func.value.id in bound_log_vars
+            )
+            if not (is_immediate_chain or is_temp_var):
                 continue
-            if node.func.value.func.id != "AppendOnlyLog":
-                continue
-            # 检查 kwargs: sort_keys= 必须是 True (sort_keys=False 也算违规)
+            # 检查 kwargs: sort_keys= 必须是 True
             sort_keys_kwarg = next((kw for kw in node.keywords if kw.arg == "sort_keys"), None)
             if sort_keys_kwarg is None:
+                pattern = "immediate chain" if is_immediate_chain else f"temp var '{node.func.value.id}'"
                 issues.append((
                     module_name,
                     "missing-sort-keys",
-                    f".append() 调用未传 sort_keys=True (违反 §12.1.4 跨仓契约)",
+                    f".append() ({pattern}) 未传 sort_keys=True (违反 §12.1.4 跨仓契约)",
                 ))
             elif sort_keys_kwarg.value is not None:
-                # sort_keys=... 但值不是 True
-                # 简化: 不深入解析 (可能是 Name(id=True) 或 Constant(True))
                 if isinstance(sort_keys_kwarg.value, ast.Constant) and sort_keys_kwarg.value.value is True:
                     continue
                 if isinstance(sort_keys_kwarg.value, ast.Name) and sort_keys_kwarg.value.id == "True":
