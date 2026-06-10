@@ -61,6 +61,195 @@
 
 总计 ~250 行新代码 + 1 个 baseline 文件, 1 个 CI job.
 
+## §12.2.1 5 步代码示例 (Python, 完整可跑)
+
+下面是从 0 到跑通的**完整 Python 接入代码**, 跨仓 owner 复制改路径即可。
+
+### Step 1: `src/<pkg>/io.py` (AppendOnlyLog 抽象, ~30 行)
+
+```python
+"""AppendOnlyLog — 仓内 JSONL 物理写盘 SSOT (本仓实现, 跨仓契约见 §12.1.1)."""
+from __future__ import annotations
+
+import json
+import threading
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, Optional
+
+
+class AppendOnlyLog:
+    def __init__(self, path: Path, *, lock: Optional[Any] = None):
+        self.path = Path(path)
+        self._lock = lock or threading.Lock()
+
+    def append(self, record: Any, *, schema: Optional[type] = None, **json_kwargs) -> dict:
+        # Pydantic 校验 (§12.1.2)
+        if hasattr(record, "model_dump"):
+            record = record.model_dump()
+        if schema is not None:
+            schema.model_validate(record)  # fail-fast
+        with self._lock:
+            with self.path.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(record, ensure_ascii=False, **json_kwargs) + "\n")
+        return record
+
+    def read_all(self) -> list[dict]:
+        if not self.path.exists():
+            return []
+        return [json.loads(l) for l in self.path.read_text(encoding="utf-8").splitlines() if l.strip()]
+
+
+@contextmanager
+def fcntl_lock(lock_path: Path):
+    """POSIX 跨进程锁 (§12.1.1 注). Windows 需 portalocker 替代."""
+    import fcntl
+    lock_path = Path(lock_path)
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    fd = lock_path.open("w")
+    try:
+        fcntl.flock(fd.fileno(), fcntl.LOCK_EX)
+        yield
+    finally:
+        fcntl.flock(fd.fileno(), fcntl.LOCK_UN)
+        fd.close()
+```
+
+### Step 2: `src/<pkg>/io_schemas_base.py` (ZTimestampModel mixin, ~15 行)
+
+```python
+"""Z-suffix ISO8601 时间戳 mixin (§12.1.3 跨仓必须)."""
+from __future__ import annotations
+
+from datetime import datetime
+from pydantic import BaseModel, model_validator
+
+_TIMESTAMP_FIELDS = ("ts", "recorded_at", "timestamp")
+
+
+class ZTimestampModel(BaseModel):
+    @model_validator(mode="after")
+    def _check_all_timestamps(self) -> "ZTimestampModel":
+        for field_name in _TIMESTAMP_FIELDS:
+            v = getattr(self, field_name, None)
+            if v is not None and isinstance(v, str):
+                if not v.endswith("Z"):
+                    raise ValueError(f"timestamp must end with 'Z', got: {v!r}")
+                try:
+                    datetime.fromisoformat(v.replace("Z", "+00:00"))
+                except ValueError as exc:
+                    raise ValueError(f"invalid ISO8601: {v!r} ({exc})")
+        return self
+```
+
+### Step 3+4: `src/<pkg>/io_schemas.py` (Pydantic schema + SCHEMA_REGISTRY)
+
+```python
+"""本仓 Pydantic schema (per consumer)."""
+from __future__ import annotations
+
+from enum import Enum
+from pydantic import Field
+from .io_schemas_base import ZTimestampModel
+
+
+class TargetStatus(str, Enum):
+    OK = "ok"
+    ERROR = "error"
+
+
+class TargetEventRecord(ZTimestampModel):
+    """本仓 consumer 1 样板 — 任何仓定义 1 个 schema, Z-suffix + 必填字段守 §12.1.3."""
+    ts: str
+    actor: str = Field(..., min_length=1)
+    action: str = Field(..., min_length=1)
+    status: TargetStatus
+
+
+SCHEMA_REGISTRY: dict[str, type[ZTimestampModel]] = {
+    "target_event": TargetEventRecord,  # §12.1.2 写入时用此 key
+}
+```
+
+### Step 5: 接入 consumer (替换裸 open+write)
+
+**Before** (违反 §12.1.1):
+```python
+# 旧代码 — 禁
+with open("/path/to/log.jsonl", "a") as f:
+    f.write(json.dumps({"ts": datetime.now().isoformat(), "x": 1}) + "\n")
+```
+
+**After** (满足 §12.1.1 + §12.1.2 + §12.1.4):
+```python
+from .io import AppendOnlyLog
+from .io_schemas import TargetEventRecord
+
+def record_event(actor: str, action: str) -> None:
+    log = AppendOnlyLog(Path(".omo/_knowledge/target-events.jsonl"))
+    log.append(
+        {"ts": _utc_now(), "actor": actor, "action": action, "status": "ok"},
+        schema=TargetEventRecord,        # §12.1.2 写时 Pydantic
+        sort_keys=True,                   # §12.1.4 字节级兼容
+    )
+```
+
+### Step 6+7+8: audit CLI + baseline + CI
+
+`src/<pkg>/cli.py` 调 `cmd_logs_audit()` 跑 3 模式 (default / `--baseline-init` / `--baseline-check`) — 完整代码见 omo 仓 `omo_logs.py:200-346`, 复制改 `KNOWNLEDGE_DIR` 路径即可。
+
+baseline 文件: `<repo>/.omo/_knowledge/_audit_baseline.json` (lock-file 风格, commit 入仓).
+
+CI 集成: 仿 `.github/workflows/ci-lint.yml` 加 4 jobs (actionlint / check-yaml / shellcheck / `audit --baseline-check`).
+
+## §12.2.2 TypeScript 适配 (gbrain 等)
+
+`AppendOnlyLog` 抽象: 用 `zod` schema 替换 Pydantic. 例:
+
+```typescript
+// src/io.ts
+import { z, ZodTypeAny } from 'zod';
+import * as fsp from 'fs/promises';
+import { appendFile, readFile } from 'fs/promises';
+
+export class AppendOnlyLog<T extends ZodTypeAny> {
+  constructor(private path: string, private schema?: T) {}
+
+  async append(record: z.infer<T>): Promise<void> {
+    if (this.schema) this.schema.parse(record);  // §12.1.2 写时校验
+    const json = JSON.stringify(record) + '\n';
+    await appendFile(this.path, json);  // §12.1.1 物理 SSOT
+  }
+
+  async readAll(): Promise<Array<z.infer<T>>> {
+    const content = await readFile(this.path, 'utf-8').catch(() => '');
+    return content.split('\n').filter(Boolean).map(l => JSON.parse(l));
+  }
+}
+```
+
+`ZTimestampModel` 等价: zod `.regex(/Z$/)` 校验.
+
+```typescript
+// §12.1.3 Z-suffix
+const ZTimestamp = z.string().regex(/Z$/, "must end with Z");
+
+// schema 定义
+const TargetEvent = z.object({
+  ts: ZTimestamp,
+  actor: z.string().min(1),
+  action: z.string().min(1),
+  status: z.enum(['ok', 'error']),
+});
+```
+
+## §12.2.3 Go / Rust 适配 (轻量)
+
+- **Go**: `AppendOnlyLog` 用 struct + `os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)` + `go-playground/validator` 校验
+- **Rust**: `AppendOnlyLog` 用 `BufWriter<File>` + `serde::Serialize` + `validator` derive
+
+实际跨仓接入按仓现有栈选, 不强求 Pydantic 等价. §12.1 4 不变量 (物理 SSOT / 写时校验 / Z-suffix / sort_keys) 是硬要求, 语言具体实现软.
+
 ## §12.3 跨仓消费者索引 (omo 仓 8 schema)
 
 §11 实现已覆盖 8 schema (Round 12-20 收口), 索引给跨仓参考:
