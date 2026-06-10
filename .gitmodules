@@ -55,6 +55,3 @@
 [submodule "projects/aetherforge-swarm-ext"]
 	path = projects/aetherforge-swarm-ext
 	url = https://github.com/starlink-awaken/omostation-aetherforge-swarm-ext.git
-[submodule "projects/scripts"]
-	path = projects/scripts
-	url = https://github.com/starlink-awaken/omostation-scripts.git
