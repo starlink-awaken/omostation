@@ -1,0 +1,107 @@
+--- src/agora/mcp_proxy/client.py
++++ src/agora/mcp_proxy/client.py
+@@ -56,6 +56,12 @@
+ def _make_tool_call_dict(tool_name: str, arguments: dict, req_id: str | None = None) -> dict:
+     return _make_request_dict("tools/call", {"name": tool_name, "arguments": arguments}, req_id)
+ 
++def _make_resource_read(uri: str, req_id: str | None = None) -> str:
++    return _make_request("resources/read", {"uri": uri}, req_id)
++
++def _make_resource_read_dict(uri: str, req_id: str | None = None) -> dict:
++    return _make_request_dict("resources/read", {"uri": uri}, req_id)
++
+ 
+ _SENSITIVE_ENV_KEYS = frozenset(
+     {
+@@ -109,6 +115,14 @@
+     @abstractmethod
+     async def call_tool(self, name: str, arguments: dict) -> Any:
+         """Call a tool on the downstream service."""
++        
++    @abstractmethod
++    async def list_resources(self) -> list[dict]:
++        """Call resources/list and return resource schemas."""
++
++    @abstractmethod
++    async def read_resource(self, uri: str) -> Any:
++        """Call a resource on the downstream service."""
+ 
+     async def __aenter__(self):
+         await self.connect()
+@@ -290,6 +304,36 @@
+             return {"status": "error", "error": "Tool call timed out"}
+ 
++    async def list_resources(self) -> list[dict]:
++        req_id = self._next_id()
++        fut = asyncio.get_event_loop().create_future()
++        self._pending[req_id] = fut
++
++        await self._send(_make_request("resources/list", req_id=req_id))
++
++        try:
++            response = await asyncio.wait_for(fut, timeout=30)
++            if response and "result" in response:
++                return response["result"].get("resources", [])
++            return []
++        except TimeoutError:
++            logger.error("proxy_list_resources_timeout", service=self.service_name)
++            return []
++            
++    async def read_resource(self, uri: str) -> Any:
++        req_id = self._next_id()
++        fut = asyncio.get_event_loop().create_future()
++        self._pending[req_id] = fut
++
++        await self._send(_make_resource_read(uri, req_id))
++
++        try:
++            response = await asyncio.wait_for(fut, timeout=120)
++            if response and "result" in response:
++                return response["result"]
++            if response and "error" in response:
++                return {"status": "error", "error": response["error"].get("message", "Unknown error")}
++            return {"status": "error", "error": "Empty response"}
++        except TimeoutError:
++            return {"status": "error", "error": "Resource read timed out"}
++
+     async def _send(self, data: str):
+         if self._writer and not self._writer.is_closing():
+@@ -439,6 +483,38 @@
+         except Exception as e:
+             return {"status": "error", "error": str(e)}
+ 
++    async def list_resources(self) -> list[dict]:
++        if not self._client:
++            return []
++        try:
++            resp = await self._client.post(
++                self._endpoint,
++                json=_make_request_dict("resources/list"),
++                timeout=30,
++                headers={"Connection": "close"},
++            )
++            data = resp.json()
++            return data.get("result", {}).get("resources", [])
++        except Exception as e:
++            logger.error("proxy_http_list_resources_failed", service=self.service_name, error=str(e))
++            return []
++
++    async def read_resource(self, uri: str) -> Any:
++        if not self._client:
++            return {"status": "error", "error": "Not connected"}
++        try:
++            resp = await self._client.post(
++                self._endpoint,
++                json=_make_resource_read_dict(uri),
++                timeout=120,
++                headers={"Connection": "close"},
++            )
++            data = resp.json()
++            if "result" in data:
++                return data["result"]
++            if "error" in data:
++                return {"status": "error", "error": data["error"].get("message", "Unknown error")}
++            return data
++        except Exception as e:
++            return {"status": "error", "error": str(e)}
++

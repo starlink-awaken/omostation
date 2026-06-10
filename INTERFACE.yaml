@@ -1,0 +1,39 @@
+# Agora Interface Registry
+# 文件: projects/agora/INTERFACE.yaml
+
+project: agora
+layer: I0
+description: MCP 服务发现/路由/代理 Hub
+
+cli:
+  - name: agora
+    module: agora.cli:main
+    description: MCP 服务汇聚中心 CLI (35 子命令)
+  - name: agora-mcp
+    module: agora.server.mcp:main
+    description: 统一 MCP 服务器 (42 tools, stdio)
+  - name: agora-mcp-gateway
+    module: agora.auth.mcp_gateway:main
+    description: 集中式 MCP 后端注册
+
+mcp:
+  server: agora.server.mcp
+  tools: 42
+  transport: [stdio, http, sse]
+  proxy_enabled: true
+
+http:
+  - port: 7422
+    protocol: FastMCP HTTP
+  - port: 7430
+    protocol: FastAPI (Web Dashboard)
+  - port: 7431
+    protocol: FastMCP SSE
+  - port: 8080
+    protocol: aiohttp (REST API Gateway)
+
+dependencies:
+  runtime: [fastmcp, httpx, aiohttp, fastapi, uvicorn, structlog, cryptography, prometheus-client]
+  dev: [pytest, pytest-asyncio, ruff, mypy]
+
+tests: 1112

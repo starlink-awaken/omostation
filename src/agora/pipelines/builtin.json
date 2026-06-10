@@ -1,0 +1,66 @@
+{
+  "match-derive": [
+    {
+      "tool": "toolforge.match",
+      "args": {"goal": "{{goal}}", "context": "{{context}}"},
+      "output_as": "matched_tools"
+    },
+    {
+      "tool": "ontoderive.derive",
+      "args": {"project": "{{project}}"},
+      "depends_on": ["matched_tools"]
+    }
+  ],
+  "research-derive": [
+    {
+      "tool": "toolforge.match",
+      "args": {"goal": "{{goal}}", "context": "{{context}}"},
+      "output_as": "matched_tools"
+    },
+    {
+      "tool": "toolforge.guide",
+      "args": {"goal": "{{goal}}", "context": "{{context}}"},
+      "output_as": "derivation_guide"
+    },
+    {
+      "tool": "ontoderive.derive",
+      "args": {"project": "{{project}}"},
+      "depends_on": ["matched_tools", "derivation_guide"]
+    }
+  ],
+  "derive-check": [
+    {
+      "tool": "ontoderive.derive",
+      "args": {"project": "{{project}}"},
+      "output_as": "derive_result"
+    },
+    {
+      "tool": "ontoderive.check",
+      "args": {"project": "{{project}}"},
+      "depends_on": ["derive_result"]
+    }
+  ],
+  "full-pipeline": [
+    {
+      "tool": "toolforge.match",
+      "args": {"goal": "{{goal}}", "context": "{{context}}"},
+      "output_as": "matched_tools"
+    },
+    {
+      "tool": "minerva.research",
+      "args": {"query": "{{goal}}", "level": "L1"},
+      "output_as": "research_result"
+    },
+    {
+      "tool": "ontoderive.derive",
+      "args": {"project": "{{project}}"},
+      "depends_on": ["matched_tools", "research_result"],
+      "output_as": "derive_result"
+    },
+    {
+      "tool": "ontoderive.check",
+      "args": {"project": "{{project}}"},
+      "depends_on": ["derive_result"]
+    }
+  ]
+}
