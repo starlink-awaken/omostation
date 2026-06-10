@@ -98,6 +98,62 @@ def _check_module_append_has_schema(module_path: Path) -> list[tuple[int, str]]:
     return violations
 
 
+# 跨模块 import 白名单 (§13.3.3 规则 7 — 允许 7 consumer 依赖的底层模块)
+# 设计: 7 consumer 互不依赖, 仅依赖底层 SSOT (omo_io / omo_io_schemas / omo_audit 工具 / omo_history 工具 / _shared)
+_CROSS_MODULE_SRP_ALLOWLIST = {
+    "omo.omo_io",                    # AppendOnlyLog + 原子写 (R24 抽 _shared 后保留 backward compat)
+    "omo.omo_io_schemas",            # Pydantic schema 集中地
+    "omo.omo_audit",                 # _utc_now 工具 (多个 consumer 共用)
+    "omo.omo_history",               # append_entry / read_history 工具
+    "omo.omo_trail",                 # DEFAULT_TRAIL_PATH 路径常量 (omo_lint_seed 共用)
+    "omo._shared.append_only_log",   # §12 跨仓 SSOT (R24+)
+    "omo._shared.z_timestamp_model", # §12 跨仓 SSOT (R25+)
+    "omo.omo_lint",                  # omo_lint_seed 依赖 (Round 19)
+}
+
+
+def _check_cross_module_srp() -> list[tuple[str, str, str]]:
+    """校验 7 consumer 互不依赖 (§13.3.3 规则 7 — Round 30 P0).
+
+    防未来: 7 consumer 互相 import → SRP 违反 → 隐式耦合.
+    底层 SSOT 模块 (omo_io / omo_io_schemas / omo_audit 工具 / omo_history 工具 / _shared) 是白名单.
+
+    Returns:
+        list of (consumer_module, issue_type, detail) tuples. 空 list = 全合规.
+    """
+    issues: list[tuple[str, str, str]] = []
+    consumer_stems = [Path(m).stem for m in CONSUMER_MODULES]
+    for module_name in CONSUMER_MODULES:
+        module_path = OMO_SRC / module_name
+        if not module_path.exists():
+            continue
+        try:
+            source = module_path.read_text(encoding="utf-8")
+            tree = ast.parse(source, filename=str(module_path))
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            if not node.module or not node.module.startswith("omo."):
+                continue
+            # 模块名: omo.omo_X 或 omo._shared.X
+            if node.module in _CROSS_MODULE_SRP_ALLOWLIST:
+                continue  # 白名单放行
+            # 检查是否 omo.omo_X (X 是 7 consumer 之一)
+            if node.module.startswith("omo.omo_"):
+                imported_stem = node.module.removeprefix("omo.omo_")
+                if imported_stem in consumer_stems and imported_stem != Path(module_name).stem:
+                    # 7 consumer 之间互依赖 (非自身)
+                    issues.append((
+                        module_name,
+                        "cross-consumer-import",
+                        f"{module_name} import {node.module!r} (consumer 之间不应互依赖, 白名单仅含底层 SSOT)",
+                    ))
+    return issues
+
+
 def _check_all_schemas_exported() -> list[tuple[str, str, str]]:
     """校验 omo_io_schemas.py 的 __all__ 包含 SCHEMA_REGISTRY 全部 class (Round 29 P0).
 
@@ -203,12 +259,23 @@ def cmd_lint_schemas() -> int:
         from omo.omo_io_schemas import SCHEMA_REGISTRY
         print(f"✅ omo_io_schemas.__all__ 完整性: {len(SCHEMA_REGISTRY)}/{len(SCHEMA_REGISTRY)} schema 全部 export")
 
+    # 规则 4 (Round 30 P0): cross-module-srp — 7 consumer 互不依赖
+    print()
+    srp_issues = _check_cross_module_srp()
+    if srp_issues:
+        total_violations += len(srp_issues)
+        print(f"❌ consumer SRP: {len(srp_issues)} 处跨模块 import")
+        for module_name, issue_type, detail in srp_issues:
+            print(f"   - {module_name} [{issue_type}]: {detail}")
+    else:
+        print(f"✅ consumer SRP: 7/7 consumer 互不依赖, 仅依赖底层 SSOT (omo_io/omo_io_schemas/omo_audit/omo_history/_shared)")
+
     print()
     if total_violations:
         print(f"❌ omo lint schemas fail: {total_violations} 处违规 (X1 审计风险)")
         return 1
     print(f"✅ omo lint schemas pass: {len(CONSUMER_MODULES)}/{len(CONSUMER_MODULES)} consumer 合规 + "
-          f"SCHEMA_REGISTRY 完整 + __all__ 完整, schema 写时锁守住")
+          f"SCHEMA_REGISTRY 完整 + __all__ 完整 + consumer SRP 守, schema 写时锁守住")
     return 0
 
 
