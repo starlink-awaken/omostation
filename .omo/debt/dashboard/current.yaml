@@ -2,8 +2,12 @@ debt_metrics:
   backlog_pressure: 0.0
   classification_entropy: 0.0
   coupling_load: 0.0
-  debt_health: 1.0
+  debt_health: 98.0
   pointer_entropy: 0.0
   state_entropy: 0.0
   time_entropy: 0.0
-generated_at: '2026-06-05T13:26:29Z'
+generated_at: '2026-06-10T08:55:00Z'
+sources:
+  - .omo/debt/items/_archived/2026-06-10 (3 noise debts archived)
+  - L4 CARDS/debts (22 GATE debts resolved by _runtime/ scripts)
+  - @驾驶舱/_runtime/ecos-health-check.py (2026-06-10)

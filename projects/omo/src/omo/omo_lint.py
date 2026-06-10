@@ -112,6 +112,68 @@ _CROSS_MODULE_SRP_ALLOWLIST = {
 }
 
 
+# §12.1.4 跨仓不变量豁免: omo_history.append_entry 显式传 sort_keys=True (kairon-governance 字节级兼容)
+# 实施 lint 规则时, 这些模块不应被判违规
+_SORT_KEYS_DEFAULT_EXEMPT_MODULES = frozenset({
+    "omo_history.py",  # Round 7 P2 显式传 sort_keys=True (R30 probe 验证)
+})
+
+
+def _check_sort_keys_default() -> list[tuple[str, str, str]]:
+    """扫 7 consumer 模块, 检测 .append() 未传 sort_keys=True (§13.3 规则 8 — Round 34 P0).
+
+    §12.1.4 跨仓不变量要求 sort_keys=True 默认值一致 (字节级兼容).
+    omo_history 已传 sort_keys=True (R30 probe), 其他 6 consumer 待治.
+
+    Returns:
+        list of (module_name, issue_type, detail) tuples. 空 list = 全合规.
+    """
+    issues: list[tuple[str, str, str]] = []
+    for module_name in CONSUMER_MODULES:
+        if module_name in _SORT_KEYS_DEFAULT_EXEMPT_MODULES:
+            continue  # 已合规, 豁免
+        module_path = OMO_SRC / module_name
+        if not module_path.exists():
+            continue
+        try:
+            source = module_path.read_text(encoding="utf-8")
+            tree = ast.parse(source, filename=str(module_path))
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+
+        # 找 AppendOnlyLog(...).append(...) 调用
+        for node in ast.walk(tree):
+            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
+                continue
+            if node.func.attr != "append":
+                continue
+            if not (isinstance(node.func.value, ast.Call) and isinstance(node.func.value.func, ast.Name)):
+                continue
+            if node.func.value.func.id != "AppendOnlyLog":
+                continue
+            # 检查 kwargs: sort_keys= 必须是 True (sort_keys=False 也算违规)
+            sort_keys_kwarg = next((kw for kw in node.keywords if kw.arg == "sort_keys"), None)
+            if sort_keys_kwarg is None:
+                issues.append((
+                    module_name,
+                    "missing-sort-keys",
+                    f".append() 调用未传 sort_keys=True (违反 §12.1.4 跨仓契约)",
+                ))
+            elif sort_keys_kwarg.value is not None:
+                # sort_keys=... 但值不是 True
+                # 简化: 不深入解析 (可能是 Name(id=True) 或 Constant(True))
+                if isinstance(sort_keys_kwarg.value, ast.Constant) and sort_keys_kwarg.value.value is True:
+                    continue
+                if isinstance(sort_keys_kwarg.value, ast.Name) and sort_keys_kwarg.value.id == "True":
+                    continue
+                issues.append((
+                    module_name,
+                    "wrong-sort-keys-value",
+                    f".append() 传 sort_keys= 但值不是 True (§12.1.4 跨仓契约)",
+                ))
+    return issues
+
+
 def _check_dead_imports() -> list[tuple[str, str, str]]:
     """扫 7 consumer 模块, 检测 import 但未用 (dead code) (§13.3 规则 6 — Round 32 P0).
 
@@ -336,12 +398,23 @@ def cmd_lint_schemas() -> int:
     else:
         print(f"✅ dead imports: 7/7 consumer 0 dead code")
 
+    # 规则 6 (Round 34 P0): sort-keys-default — §12.1.4 跨仓 4 不变量
+    print()
+    sort_issues = _check_sort_keys_default()
+    if sort_issues:
+        total_violations += len(sort_issues)
+        print(f"❌ sort_keys default (§12.1.4): {len(sort_issues)} 处 .append() 未传 sort_keys=True")
+        for module_name, issue_type, detail in sort_issues:
+            print(f"   - {module_name} [{issue_type}]: {detail}")
+    else:
+        print(f"✅ sort_keys default (§12.1.4): 7/7 consumer 字节级兼容")
+
     print()
     if total_violations:
         print(f"❌ omo lint schemas fail: {total_violations} 处违规 (X1 审计风险)")
         return 1
     print(f"✅ omo lint schemas pass: {len(CONSUMER_MODULES)}/{len(CONSUMER_MODULES)} consumer 合规 + "
-          f"SCHEMA_REGISTRY 完整 + __all__ 完整 + consumer SRP 守 + 0 dead code, schema 写时锁守住")
+          f"SCHEMA_REGISTRY 完整 + __all__ 完整 + consumer SRP 守 + 0 dead code + sort_keys 守, schema 写时锁守住")
     return 0
 
 
