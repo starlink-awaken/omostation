@@ -661,6 +661,66 @@ omo lint schemas (Round 18 P0):
 | 18 | omo_history 收严 (X1 100%) | `ebc1c41b` + `9927fa22` |
 | 19 | omo_trail 落地 + 探查 | `c66e48ac` + `001c2abc` + `595aa35c` |
 | 20 | omo_health 拆出 (治本) | `7a15df79` + `c86735e5` |
-| 21 | lint 扩 SCHEMA_REGISTRY 完整性 (深) | `86b1f4fa` (P0) + (本 commit P1 文档) |
+| 21 | lint 扩 SCHEMA_REGISTRY 完整性 (深) | `86b1f4fa` (P0) + `31d830ce` (P1) |
+
+### §11.14 Round 22 收口 — §12 跨仓契约章节起步
+
+> **状态**: 起步
+> **commit**: `3b9d7044` (Round 22 P0)
+> **主题**: §12 跨仓契约 manifest 入口, §11/§12 互补
+> **链接**: `.omo/_knowledge/management/append-only-log-cross-repo-manifest-2026-06-10.md`
+
+**动机**:
+- §11 9 段 (Round 12-21) 收口完整 — omo 仓内 AppendOnlyLog 模式治本 100%
+- §11.6 债 100% 清完 (8 项全 done/取消)
+- 但 §11 是**omo 仓内**实现, 跨仓 (kairon/gbrain/runtime/metaos) 接入缺 SSOT 入口
+- §12 = 跨仓契约 manifest: 4 不变量 + 8 步接入清单 + 跨仓债索引
+
+**§11 vs §12 定位**:
+- §11 = **how** (omo 仓内实现, 9 段细节, 含 §11.1-§11.13)
+- §12 = **what** (跨仓契约, 4 不变量, 8 步接入, 跨仓债)
+- 互补: §11.6 治理债 = omo 仓内 / §12.6 治理债 = 跨仓接入本身
+
+**§12 子节** (Round 22 P0 9 子节全 done):
+- §12.0 一句话总结
+- §12.1 跨仓 4 不变量 (物理 SSOT / 写时 Pydantic / Z-suffix / sort_keys)
+- §12.2 8 步接入清单
+- §12.3 跨仓消费者索引 (7 schema 可复用 + omo_bos_metrics 独有)
+- §12.4 跨仓治理债 (kairon meta-stub / gbrain 5 writer / runtime 4 模块 / metaos 4 模块)
+- §12.5 §11 X1-X4 跨仓对应
+- §12.6 已知债 E1-E4 (Pydantic/zod 适配 / 报告汇聚 / cron 同步 / kairon 真仓)
+- §12.7 §11 关系
+- §12.8 Round 22+ 候选
+
+**§12 接入 4 不变量** (跨仓必须满足):
+1. 物理写盘 SSOT — 走 `AppendOnlyLog`, 禁止 `open+write` 裸写
+2. 写时 Pydantic 校验 (X1) — `.append(..., schema=...)` 必传, 跨仓等价物 zod
+3. Z-suffix ISO8601 ts — schema 继承 `ZTimestampModel` (Python) / zod `.regex(/Z$/)` (TS)
+4. sort_keys=True — `.append(..., sort_keys=True)` 默认, 字节级兼容
+
+**§12 接入 8 步** (新仓复制, ~250 行新代码):
+1. copy `AppendOnlyLog` 抽象 (~30 行)
+2. copy `ZTimestampModel` mixin (~15 行)
+3. 定义本仓 Pydantic schema (per consumer)
+4. 注册 `SCHEMA_REGISTRY` (1 dict)
+5. 接入 consumer (替换裸 open+write)
+6. 加 `audit` CLI 3 模式 (~100 行)
+7. 加 baseline 文件
+8. CI 集成 4 jobs (~80 行)
+
+**度量 (Round 21 → Round 22)**:
+
+| 指标 | Round 21 | Round 22 | Δ |
+|------|----------|----------|---|
+| 治理章节 | §11 10 段 | **§11 10 段 + §12 9 子节** | +1 章 |
+| 跨仓契约 SSOT | 无 | **§12 manifest** | +1 |
+| 已知债 (§11.6) | 0 | 0 | 不变 |
+| 跨仓已知债 (§12.6) | — | E1-E4 | 显式化 |
+
+**§11 11 段全收** (Round 12-22, 21 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-21 | 既有 10 段 | (前 19 commit) |
+| 22 | §12 跨仓契约章节起步 | `3b9d7044` (P0) + (本 commit P1) |
 
 
