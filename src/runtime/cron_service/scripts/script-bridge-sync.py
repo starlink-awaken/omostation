@@ -24,20 +24,18 @@ import os
 import sys
 from pathlib import Path
 
-HOME = Path.home()
-HERMES_SCRIPTS = HOME / ".hermes" / "scripts"
-WORKSPACE = HOME / "Workspace"
-
 # ── 复用分类逻辑 ──────────────────────────────────────────────
 # ── 脚本分类规则（从 classify.py SSOT 读取）─────────────────
-sys.path.insert(0, str(HOME / "Workspace" / "cron-service"))
+sys.path.insert(0, str(Path.home() / "Workspace" / "cron-service"))
 from runtime.cron_service.classify import (
     SCRIPT_PREFIX_MAP,
     classify,
-)
-from runtime.cron_service.classify import (
     should_bridge as _should_include,
 )
+
+HOME = Path.home()
+HERMES_SCRIPTS = HOME / ".hermes" / "scripts"
+WORKSPACE = HOME / "Workspace"
 
 
 def list_workspace_scripts():

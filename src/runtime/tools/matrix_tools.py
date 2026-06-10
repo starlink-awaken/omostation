@@ -12,16 +12,23 @@ def _matrix_list() -> str:
 def _matrix_get(name: str) -> str:
     from runtime.matrix import get_service, resolve_path
     svc = get_service(name)
-    if not svc: return f"❌ Service not found: {name}"
+    if not svc:
+        return f"❌ Service not found: {name}"
     lines = [f"Name:     {svc.name}", f"Type:     {svc.type}", f"Status:   {svc.status}"]
-    if svc.port: lines.append(f"Port:     {svc.port}")
-    if svc.launchd_label: lines.append(f"Launchd:  {svc.launchd_label}")
-    if svc.health_url: lines.append(f"Health:   {svc.health_url}")
-    if svc.docker_container: lines.append(f"Docker:   {svc.docker_container}")
+    if svc.port:
+        lines.append(f"Port:     {svc.port}")
+    if svc.launchd_label:
+        lines.append(f"Launchd:  {svc.launchd_label}")
+    if svc.health_url:
+        lines.append(f"Health:   {svc.health_url}")
+    if svc.docker_container:
+        lines.append(f"Docker:   {svc.docker_container}")
     dp = resolve_path(svc.deploy_path)
-    if dp: lines.append(f"Deploy:   {dp}")
+    if dp:
+        lines.append(f"Deploy:   {dp}")
     lp = resolve_path(svc.log_path)
-    if lp: lines.append(f"Logs:     {lp}")
+    if lp:
+        lines.append(f"Logs:     {lp}")
     return "\n".join(lines)
 
 TOOLS = [

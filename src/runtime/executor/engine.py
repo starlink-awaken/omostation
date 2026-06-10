@@ -18,7 +18,7 @@ from runtime.executor.config import (
     WORKSPACE,
     log,
 )
-from runtime.executor.matrix_bridge import register_executor_service, report_execution
+from runtime.executor.matrix_bridge import report_execution
 from runtime.executor.tools import Tools
 
 

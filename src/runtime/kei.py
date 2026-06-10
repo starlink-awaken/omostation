@@ -5,7 +5,7 @@ external Skills/Plugins connecting to the eCOS v5 Kernel.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import List
 from pathlib import Path
 import yaml
 

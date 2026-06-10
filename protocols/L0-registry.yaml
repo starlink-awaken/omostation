@@ -203,12 +203,23 @@ protocols:
     category: "self-layer"
     status: "active"
     usage: "active"
-    description: "L4 自我层管理面 — 21域统一注册 + KEMS六面 + 域生命周期 + 42 MCP tools"
+    description: "L4 自我层管理面 — 21域统一注册 + KEMS六面 + 域生命周期 + 43 MCP tools"
     port_range: "7455"
     transport: ["stdio", "http", "sse"]
     implementations:
       - "projects/l4-kernel"
-    notes: "42 MCP tools 分 7 组: domain_*(7), kems_*(8), search/validate(5), cards_*(5), health/dashboard(4), plugin_*(5), config/tool/storage/model/engine(8)。启动: l4-kernel mcp --http"
+    notes: "43 MCP tools 分 7 组: domain_*(7), kems_*(8), search/validate(5), cards_*(5), health/dashboard(4), plugin_*(5), config/tool/storage/model/engine(8)。启动: l4-kernel mcp --http"
+
+  - name: "Model-Driven MCP"
+    version: "0.1.0"
+    category: "self-layer"
+    status: "active"
+    usage: "active"
+    description: "全生命周期模型驱动平台 — 24 M2类型 + 7阶段引擎 + 12工具链 + 管理面 (25 MCP tools)"
+    transport: ["cli", "mcp"]
+    implementations:
+      - "projects/model-driven"
+    notes: "基于 MOF 本体论正交分解 + SSOT 化。MCP tools 分 8 组: lifecycle(5), spec(2), adr(2), okr(2), omo(3), collab(3), toolchain(2), ssot(3)。启动: model-driven mcp execute <tool>"
 
   # ── State Sync ─────────────────────────────────────────────────────
   - name: "KOS State"

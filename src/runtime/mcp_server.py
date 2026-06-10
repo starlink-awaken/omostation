@@ -16,17 +16,24 @@ Phase 8.2 / DEBT-L3-001 (🔴)
     - fastmcp 库 (uv add fastmcp)
 """
 
-import sys
 import json
 import argparse
 from datetime import datetime
 from pathlib import Path
 
 
+def _get_cockpit_dir() -> Path:
+    """Resolve standard @驾驶舱 or 驾驶舱 folder in Documents."""
+    d = Path.home() / "Documents" / "@驾驶舱"
+    if d.exists():
+        return d
+    return Path.home() / "Documents" / "驾驶舱"
+
+
 def handle_health() -> dict:
     """runtime_health: 全系统健康"""
     import subprocess
-    script = Path.home() / "Documents" / "驾驶舱" / "scripts" / "ecos-health-check.py"
+    script = _get_cockpit_dir() / "scripts" / "ecos-health-check.py"
     if not script.exists():
         return {"status": "error", "detail": "health-check 脚本不存在"}
     r = subprocess.run(["python3", str(script), "--json"],
@@ -93,7 +100,7 @@ def handle_protocol_get(protocol_id: str) -> dict:
 
 def handle_ontology() -> dict:
     """runtime_ontology_get: 元模型本体"""
-    meta_file = Path.home() / "Documents" / "驾驶舱" / "meta-model-ecos.yaml"
+    meta_file = _get_cockpit_dir() / "meta-model-ecos.yaml"
     if meta_file.exists():
         import yaml
         return yaml.safe_load(meta_file.read_text())
@@ -103,7 +110,7 @@ def handle_ontology() -> dict:
 def handle_brief() -> dict:
     """runtime_brief: 会话简报"""
     import subprocess
-    script = Path.home() / "Documents" / "驾驶舱" / "scripts" / "ecos-brief.py"
+    script = _get_cockpit_dir() / "scripts" / "ecos-brief.py"
     if not script.exists():
         return {"error": "ecos-brief.py 不存在"}
     r = subprocess.run(["python3", str(script), "--json"],

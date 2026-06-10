@@ -149,7 +149,7 @@ def enable_sandbox(config_path: str = "kei.yaml", audit_file: str | None = None)
     record_audit("validate", "ecos.kernel.sandbox", "pass",
                  f"KEI Sandbox enabled (rules={config_path}, audit={audit_file})")
     import sys as _sys
-    print(f"KEI Sandbox enabled", file=_sys.stderr)
+    print("KEI Sandbox enabled", file=_sys.stderr)
 
 
 if __name__ == "__main__":

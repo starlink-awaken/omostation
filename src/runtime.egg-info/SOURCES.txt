@@ -1,3 +1,4 @@
+README.md
 pyproject.toml
 src/runtime/__init__.py
 src/runtime/__main__.py
@@ -11,8 +12,10 @@ src/runtime/kei_service_registration.py
 src/runtime/matrix.py
 src/runtime/mcp_server.py
 src/runtime/protocol.py
+src/runtime/runtime_serve.py
 src/runtime/scheduler.py
 src/runtime/state_schema.py
+src/runtime/stdio_rpc.py
 src/runtime/taskobject_adapter.py
 src/runtime.egg-info/PKG-INFO
 src/runtime.egg-info/SOURCES.txt
@@ -76,6 +79,7 @@ src/runtime/executor/isc_errors.py
 src/runtime/executor/isc_evaluator.py
 src/runtime/executor/isc_parser.py
 src/runtime/executor/isc_validator.py
+src/runtime/executor/matrix_bridge.py
 src/runtime/executor/memory.py
 src/runtime/executor/message_bus.py
 src/runtime/executor/orchestrator.py
@@ -153,6 +157,7 @@ src/runtime/tools/task_tools.py
 tests/test_core.py
 tests/test_cron-service_basic.py
 tests/test_cron_service_basic.py
+tests/test_executor_engine.py
 tests/test_kei_sandbox.py
 tests/test_matrix.py
 tests/test_mcp_integration.py

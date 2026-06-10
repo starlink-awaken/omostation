@@ -13,10 +13,13 @@ def _protocol_list() -> str:
 def _protocol_get(name: str) -> str:
     from runtime.protocol import get_protocol
     p = get_protocol(name)
-    if not p: return f"❌ Protocol not found: {name}"
+    if not p:
+        return f"❌ Protocol not found: {name}"
     lines = [f"Protocol:  {p.name} v{p.version}", f"Category:  {p.category}", f"Status:    {p.status}", f"Desc:      {p.description}"]
-    if p.spec_url: lines.append(f"Spec:      {p.spec_url}")
-    if p.port_range: lines.append(f"Ports:     {p.port_range}")
+    if p.spec_url:
+        lines.append(f"Spec:      {p.spec_url}")
+    if p.port_range:
+        lines.append(f"Ports:     {p.port_range}")
     lines.append(f"Transport: {', '.join(p.transport)}")
     return "\n".join(lines)
 

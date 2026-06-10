@@ -9,13 +9,18 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from typing import Any
 from urllib.request import Request, urlopen
 
 _log = logging.getLogger(__name__)
 
-
-DEFAULT_SHAREDBRAIN_ENDPOINT = "http://localhost:7421"
+DEFAULT_SHAREDBRAIN_ENDPOINT = os.environ.get(
+    "SHAREDBRAIN_ENDPOINT", "http://localhost:7421"
+)
+DEFAULT_AGORA_ENDPOINT = os.environ.get(
+    "AGORA_ENDPOINT", "http://localhost:7430"
+)
 
 
 class SharedBrainIdentityProvider:
@@ -27,7 +32,7 @@ class SharedBrainIdentityProvider:
 
     def __init__(
         self,
-        agora_endpoint: str = "http://localhost:7430",
+        agora_endpoint: str = DEFAULT_AGORA_ENDPOINT,
         sharedbrain_endpoint: str = DEFAULT_SHAREDBRAIN_ENDPOINT,
         timeout: int = 10,
     ):

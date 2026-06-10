@@ -24,10 +24,10 @@ from pathlib import Path
 from . import __version__
 from .matrix import (
     RUNTIME_HOME, RUNTIME_MATRIX,
-    load_matrix, get_service, resolve_path,
-    list_services, ServiceEntry,
+    get_service, resolve_path,
+    list_services,
 )
-from .protocol import L0_PROTOCOLS, get_protocol, by_category, validate_protocol_message
+from .protocol import L0_PROTOCOLS, get_protocol, validate_protocol_message
 
 
 # ─── Helpers ────────────────────────────────────────────────────────────────
@@ -192,7 +192,7 @@ def cmd_kei_dashboard() -> int:
             actions[a] = actions.get(a, 0) + 1
             s = record.get("status", "unknown")
             statuses[s] = statuses.get(s, 0) + 1
-        print(f"KEI Audit Dashboard")
+        print("KEI Audit Dashboard")
         print(f"{'='*40}")
         print(f"Total records:  {total}")
         print(f"File:           {audit_file}")

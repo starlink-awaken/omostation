@@ -5,10 +5,9 @@ from __future__ import annotations
 import importlib
 
 from . import config as _config
+from .config import *  # noqa: F403
 
 importlib.reload(_config)
-
-from .config import *  # noqa: F403
 
 REGISTRY_PATH = _config.REGISTRY_PATH
 

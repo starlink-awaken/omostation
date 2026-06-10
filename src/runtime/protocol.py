@@ -183,9 +183,9 @@ def validate_protocol_message(protocol_name: str, message: dict) -> tuple[bool, 
         return False, f"Deprecated protocol: {protocol_name}"
 
     required = ["version"]
-    for field in required:
-        if field not in message:
-            return False, f"Missing required field '{field}' for {protocol_name}"
+    for req_field in required:
+        if req_field not in message:
+            return False, f"Missing required field '{req_field}' for {protocol_name}"
 
     if "transport" in message:
         transport = message["transport"]

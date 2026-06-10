@@ -2,8 +2,8 @@
 
 > L1 服务注册、健康监控与协议管理 · 5+3+1 架构运行时底座
 
-[![Tests](https://img.shields.io/badge/tests-175-blue)](tests/)
-[![Python](https://img.shields.io/badge/python-3.10+-blue)](pyproject.toml)
+[![Tests](https://img.shields.io/badge/tests-184-blue)](tests/)
+[![Python](https://img.shields.io/badge/python-3.13+-blue)](pyproject.toml)
 
 ---
 
@@ -35,7 +35,7 @@ L0 协议    ── ecos
 # 安装
 cd projects/runtime && make install
 
-# 运行测试 (175 用例)
+# 运行测试 (184 用例)
 make test
 
 # 格式化与检查

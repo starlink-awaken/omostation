@@ -19,7 +19,7 @@ import urllib.request
 import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 import yaml
 
@@ -167,7 +167,7 @@ def i0_status() -> dict:
 
 def i0_services() -> list[dict]:
     """All services with live probe data."""
-    from runtime.matrix import list_services, resolve_path
+    from runtime.matrix import list_services
 
     try:
         matrix_services = list_services()

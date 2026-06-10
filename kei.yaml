@@ -13,11 +13,11 @@ permissions:
       - "/dev"
       - "/tmp"
       - "/var/folders"
-      - "/Users/xiamingxing/Workspace"
-      - "/Users/xiamingxing/.runtime"
-      - "/Users/xiamingxing/runtime"
-      - "/Users/xiamingxing/.hermes"
-      - "/Users/xiamingxing/.local"
-      - "/Users/xiamingxing/Library/Mobile Documents"
+      - "${HOME}/Workspace"
+      - "${HOME}/.runtime"
+      - "${HOME}/runtime"
+      - "${HOME}/.hermes"
+      - "${HOME}/.local"
+      - "${HOME}/Library/Mobile Documents"
   execution:
     allow_subprocess: true

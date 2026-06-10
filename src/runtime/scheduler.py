@@ -3,12 +3,11 @@
 import time
 import json
 import subprocess
-import threading
 from pathlib import Path
 import os
 from datetime import datetime, timezone
 
-from runtime.matrix import list_services, ServiceEntry, health_check_url
+from runtime.matrix import list_services, health_check_url
 from runtime.state_schema import validate_runtime_health_snapshot
 
 import yaml
@@ -57,7 +56,7 @@ class MatrixScheduler:
                         last_exit = parts[1].strip().strip(';')
 
             if pid and pid != "0":
-                return {"status": f"running", "pid": pid}
+                return {"status": "running", "pid": pid}
             elif last_exit == "0":
                 return {"status": "idle"}
             else:
