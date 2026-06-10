@@ -42,7 +42,7 @@ from agora.legacy_compat import (
 _log = logging.getLogger(__name__)
 
 # ── stdio 协议默认超时 (秒) ──────────────────────────
-_STDIO_TIMEOUT_DEFAULT = 5.0
+_STDIO_TIMEOUT_DEFAULT = 10.0  # 可通过环境变量 BOS_STDIO_TIMEOUT 覆盖（见 _WS 处）
 
 # ── 4 段标准 (W1 北星 → P45 扩展域名) ──────────────
 # P45: governance→omo, capability→forge, 新增 meta/ecos/agora
@@ -60,7 +60,14 @@ _LEGACY_BOS_URI_ALIASES = {
 # ── 路径常量 ────────────────────────────────────────
 import os as _os  # noqa: E402
 
-_WS = _os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))
+# 环境变量覆盖默认超时
+if "BOS_STDIO_TIMEOUT" in _os.environ:
+    _STDIO_TIMEOUT_DEFAULT = float(_os.environ["BOS_STDIO_TIMEOUT"])
+
+_WS = _os.environ.get("WORKSPACE_ROOT") or str(Path.home() / "Workspace")
+if not Path(_WS).exists():
+    _log.warning("WORKSPACE_ROOT 路径不存在 (%s), 使用默认: %s", _os.environ.get("WORKSPACE_ROOT"), _WS)
+    _WS = str(Path.home() / "Workspace")
 KAIRON_ROOT = Path(_WS) / "projects" / "kairon"
 METAOS_ROOT = Path(_WS) / "projects" / "metaos"
 OMOSTATION_ROOT = Path(_WS)

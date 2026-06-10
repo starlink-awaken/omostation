@@ -255,12 +255,17 @@ class SQLiteDataAccess:
         self._ensure_db()
         conn = self._connect()
         conn.row_factory = sqlite3.Row
+        # 转义 FTS5 特殊字符，防止 MATCH 语法错误
+        import re as _fts_re
+        sanitized = keyword
+        if _fts_re.search(r'["*()^$:\\]', keyword):
+            sanitized = _fts_re.sub(r'\\\1', keyword)
         rows = conn.execute(
             "SELECT r.id, r.topic, r.summary, r.created_at, r.source_count, r.tags, r.archived_at, r.archive_reason, r.quarantined_at, r.quarantine_reason, r.agent, "
             "snippet(research_fts, 1, '<mark>', '</mark>', '...', 40) as snippet "
             "FROM research_fts f JOIN research r ON f.rowid = r.id "
             "WHERE research_fts MATCH ? AND r.quarantined_at IS NULL AND r.archived_at IS NULL ORDER BY bm25(research_fts, 0, 10.0, 5.0) LIMIT ?",
-            (keyword, limit),
+            (sanitized, limit),
         ).fetchall()
         conn.close()
         results = [dict(r) for r in rows]

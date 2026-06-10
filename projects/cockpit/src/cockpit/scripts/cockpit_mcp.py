@@ -352,6 +352,8 @@ except ImportError:
     _HAS_L4_KERNEL = False
 
 _CARDS_DIR = Path.home() / "Documents" / "@驾驶舱" / "CARDS"
+if not _CARDS_DIR.exists():
+    _log.warning("CARDS 目录不存在: %s. cockpit cards 功能不可用", _CARDS_DIR)
 _VAULT_DIR = Path.home() / "Documents" / "@学习进化"
 _WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[4])))
 _OMO_GOALS = _WORKSPACE_ROOT / ".omo" / "_truth" / "goals" / "current.yaml"
@@ -391,7 +393,8 @@ def _scan_cards() -> list[dict[str, str]]:
                             "tags": str(meta.get("tags", "[]")),
                         }
                     )
-        except (OSError, ValueError, yaml.YAMLError):
+        except (OSError, ValueError, yaml.YAMLError) as _fm_exc:
+            _log.warning("无法解析卡片 frontmatter: %s (%s)", fp, _fm_exc)
             continue
     cards.sort(key=lambda c: ({"P0": 0, "P1": 1, "P2": 2, "P3": 3}.get(c["priority"], 9), c["created"]), reverse=True)
     return cards
