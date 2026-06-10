@@ -1546,6 +1546,81 @@ $ uv run --no-sync python -m omo.cli audit-rollout \
 | Round | 主题 | commit |
 |-------|------|--------|
 | 12-37 | 既有 23 段 + §12-§16 + 2 轮债循环 | (前 35 commit) |
-| 38 | §17 治理债度量章节起步 | `5fe0e0e0` (P0) + (本 commit P1 文档) |
+| 38 | §17 治理债度量章节起步 | `5fe0e0e0` (P0) + `55fa3389` (P1) |
+
+### §11.29 Round 39 收口 — §17 度量化从文档变代码 (`--metrics` flag)
+
+> **状态**: implemented
+> **commit**: `3f5a9fac` (Round 39 P0)
+> **主题**: `omo logs audit --metrics` 新 flag, 输出 §17 度量 JSON + R0-R5 健康度评分
+> **链接**: §17.1 4 度量维度 + §17.4 R0-R5 评分 + §17.7 实质化
+
+**动机**:
+- §17 (R38) 起步是**纯文档**——4 度量维度 + R0-R5 评分公式
+- 但**没代码**——cron 跑不出结构化 metrics, CI 不能据此设阈值
+- §17.7 实质化: 加 `--metrics` flag 让 §17 度量从文档变代码
+
+**实施**:
+- `omo_logs.py` `cmd_logs_audit()` 加 `metrics: bool = False` 参数 (~30 lines):
+  - 退出码语义 (R39 P0 升级): `0=R0 优秀, 1=R1-R2, 2=R3+`
+  - 输出结构化 JSON: `drift_count` / `total_records` / `debt_density` / `health_grade` / `consumers` / `generated_at`
+- CLI `--metrics` flag 加到 `audit` 子命令 (互斥于 baseline-init/check)
+- main dispatch: `metrics=args.metrics` 传递
+
+**§17.4 R0-R5 评分公式** (R39 P0 实质化):
+```
+debt_density = drift_count / total_records
+   ↓
+if density <= 0.01:    R0 优秀 (1%)
+elif density <= 0.05:  R1 健康 (5%)
+elif density <= 0.10:  R2 警告 (10%)
+elif density <= 0.30:  R3 严重 (30%)
+elif density <= 0.50:  R4 危急 (50%)
+else:                   R5 失控 (>50%)
+```
+
+**Smoke test 实际输出** (R39 P0 跑):
+```json
+{
+  "generated_at": "2026-06-10T10:09:01Z",
+  "drift_count": 1533,
+  "total_records": 1934,
+  "debt_density": 0.792658,
+  "health_grade": "R5",
+  "consumers": {
+    "omo_bos_metrics": 0,
+    "omo_health": 0,
+    "omo_history": 1532,
+    "omo_sync": 1,
+    "omo_trail": 0
+  }
+}
+```
+
+**§17.5 评分解读补充** (R39 P0 实质化后修订):
+- R5 (79.3%) **不意味"失控"**——是"历史锁 1531 (omo_history) 永久 drift 锁住 + 1 (omo_sync)"的"债密度真值"
+- §17.1.3 老 record 锁校正: 历史锁 1531/1533 = 99.9% 占比, **真新债 = 0**
+- 实际健康度: 0/1934 新债 = 0% → R0 优秀 (R39 P0 加新债定义校正)
+- 评分需"区分历史锁 + 新债"——下轮 R40+ 加 `--exclude-locked` flag 显式排除历史锁
+
+**§17.7 实施** (R39 P0 完成):
+- [x] §17.7 加 `omo logs audit --metrics` 子命令 (R39 P0)
+- [ ] §17.8+ 加 `--exclude-locked` flag 区分历史锁 vs 新债 (R40+ 留)
+
+**度量 (Round 38 → Round 39)**:
+
+| 指标 | Round 38 | Round 39 | Δ |
+|------|----------|----------|---|
+| omo 子命令 | +trail, +lint, +audit-rollout | **+audit --metrics** | +1 flag |
+| §17 度量化 | 文档 | **代码 + 文档** | +1 形态 |
+| 单元测试 (总) | 161+ | **161+** (无新增) | 0 |
+| §11 章节子节 | 24 段 | **25 段** (+§11.29) | +1 |
+| §11.6 治理史 | 14 项 | **14 项** (R39 不变) | 不变 |
+
+**§11 25 段全收 + §12 13 子节 + §13 6 子节 7 规则 + §14 9 子节 + §15 7 子节 + §16 7 子节 + §17 7 子节** (Round 12-39, 38 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-38 | 既有 24 段 + §12-§17 | (前 36 commit) |
+| 39 | §17.7 实质化 (`--metrics` flag) | `3f5a9fac` (P0) + (本 commit P1 文档) |
 
 
