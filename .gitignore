@@ -1,12 +1,55 @@
-# ecos L0 — gitignore
+# ── Python ──
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# ── Virtual environment ──
 .venv/
+venv/
+.venv.bak/
+
+# ── uv ──
+uv.lock
+
+# ── IDE ──
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Environment & Secrets ──
+.env
+.env.*
+*.key
+*.pem
+credentials.json
+*.cred
+auth.json
+
+# ── Testing & Coverage ──
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
-*.egg-info/
-dist/
-.env
-.ecos/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# ── Build artifacts ──
+*.so
+*.dylib
+*.dll
+
+# ── Docker ──
+.docker/
