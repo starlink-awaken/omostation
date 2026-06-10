@@ -112,6 +112,61 @@ _CROSS_MODULE_SRP_ALLOWLIST = {
 }
 
 
+def _check_dead_imports() -> list[tuple[str, str, str]]:
+    """扫 7 consumer 模块, 检测 import 但未用 (dead code) (§13.3 规则 6 — Round 32 P0).
+
+    简化版: 用 ast.Name 节点追踪, 任何 `from X import Y` 后 Y 在模块中未用 → 违规.
+    豁免:
+      - `from __future__ import X` (Python 协议, 改变行为, 非普通 import)
+      - `__all__` re-export (NotImplementedError 等)
+      - `_` 前缀 (私有 / `from .X import _internal`)
+
+    Returns:
+        list of (module_name, issue_type, detail) tuples. 空 list = 全合规.
+    """
+    issues: list[tuple[str, str, str]] = []
+    for module_name in CONSUMER_MODULES:
+        module_path = OMO_SRC / module_name
+        if not module_path.exists():
+            continue
+        try:
+            source = module_path.read_text(encoding="utf-8")
+            tree = ast.parse(source, filename=str(module_path))
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+
+        imported_names: set[tuple[str, str]] = set()  # (module, name) 配对, 用于识别 __future__
+        used_names: set[str] = set()
+
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                for alias in node.names:
+                    name_to_track = alias.asname or alias.name
+                    if name_to_track == "*":
+                        continue
+                    imported_names.add((node.module or "", name_to_track))
+            elif isinstance(node, ast.Name):
+                used_names.add(node.id)
+            elif isinstance(node, ast.Attribute):
+                if isinstance(node.value, ast.Name):
+                    used_names.add(node.value.id)
+
+        # 检查未使用的 imports, 排除豁免
+        for module, name in sorted(imported_names):
+            if name in used_names:
+                continue  # 用了
+            if name.startswith("_"):
+                continue  # 私有 / `from __future__ import annotations` (下划线开头)
+            if module == "__future__":
+                continue  # Python 协议级 import
+            issues.append((
+                module_name,
+                "dead-import",
+                f"import '{name}' (from {module!r}) 但模块中未使用 (dead code, 删或加 noqa)",
+            ))
+    return issues
+
+
 def _check_cross_module_srp() -> list[tuple[str, str, str]]:
     """校验 7 consumer 互不依赖 (§13.3.3 规则 7 — Round 30 P0).
 
@@ -270,12 +325,23 @@ def cmd_lint_schemas() -> int:
     else:
         print(f"✅ consumer SRP: 7/7 consumer 互不依赖, 仅依赖底层 SSOT (omo_io/omo_io_schemas/omo_audit/omo_history/_shared)")
 
+    # 规则 5 (Round 32 P0): dead-imports — import 但未用 (dead code)
+    print()
+    dead_issues = _check_dead_imports()
+    if dead_issues:
+        total_violations += len(dead_issues)
+        print(f"❌ dead imports: {len(dead_issues)} 处 import 未用")
+        for module_name, issue_type, detail in dead_issues:
+            print(f"   - {module_name} [{issue_type}]: {detail}")
+    else:
+        print(f"✅ dead imports: 7/7 consumer 0 dead code")
+
     print()
     if total_violations:
         print(f"❌ omo lint schemas fail: {total_violations} 处违规 (X1 审计风险)")
         return 1
     print(f"✅ omo lint schemas pass: {len(CONSUMER_MODULES)}/{len(CONSUMER_MODULES)} consumer 合规 + "
-          f"SCHEMA_REGISTRY 完整 + __all__ 完整 + consumer SRP 守, schema 写时锁守住")
+          f"SCHEMA_REGISTRY 完整 + __all__ 完整 + consumer SRP 守 + 0 dead code, schema 写时锁守住")
     return 0
 
 

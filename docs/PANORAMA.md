@@ -1,383 +1,212 @@
-# PANORAMA.md — omostation 全景梳理
+# PANORAMA.md — eCOS v5 系统全景架构
 
-> 2026-06-08 | 功能地图 · 系统架构 · 核心流程 · 模块依赖 · 用户旅程 · 对外接人抓手
-> 6 视角合 1 doc, 配套 Mermaid 图. 深度架构见 [ARCHITECTURE.md](./ARCHITECTURE.md) + 评审见 [ARCHITECTURE_REVIEW.md](./ARCHITECTURE_REVIEW.md) + 分层见 [LAYER-INDEX.md](./LAYER-INDEX.md).
-
----
-
-## 一、功能地图 (Feature Map)
-
-> 视角: 用户/Agent 能用 omostation 做什么, 按 5 BOS 域 + L4 域分类.
-
-### 1.1 5 BOS 域 (Business Operating System)
-
-| 域 | URI 前缀 | 核心能力 | 关键项目 |
-|---|---|---|---|
-| **memory** | `bos://memory/...` | 知识存储 / 检索 / 跨域搜索 / 本体 | kairon (kos/eidos/sophia) + gbrain |
-| **governance** | `bos://governance/...` | 债务 / 阶段 / 健康 / 治理 | omo + metaos |
-| **analysis** | `bos://analysis/...` | 推演 / 报告 / 模式 / 假设验证 | minerva + iris (data) + ontoderive |
-| **persona** | `bos://persona/...` | 数字人 / 身份 / 桥接 | runtime (matrix/scheduler) + cockpit (CLI 入口) |
-| **capability** | `bos://capability/...` | 工具 / 能力 / 集成 | forge (kairon) + agora (proxy) + family-hub (个人应用) |
-
-### 1.2 L4 自我层 (12 域)
-
-| 域 | 数据 | 访问方式 |
-|---|---|---|
-| **CARDS** | 个人实体卡 (家人/朋友/项目) | cockpit MCP + `bos://persona/cards` |
-| **Vault** | 凭据 / API key / 密钥 (PBKDF2 哈希) | cockpit CLI + `vault` 子命令 |
-| **Personal** | 饮食 / 健康 / 日程 | family-hub 集成 |
-| **Work** | 任务 / 工时 / 笔记 | cockpit dashboard + `omo task` |
-| **Knowledge** | 知识卡 / 总结 / 决策 | gbrain MCP + WIKI |
-| **Health** | 系统健康 / 债务 / 审计 | omo audit + agora health |
+> 2026-06-10 | 功能地图 · 系统架构 · 核心流程 · 模块依赖 · 用户旅程 · 对外接入
+> 8 层 5+4+1+1 架构: L0-L4 + X1-X4 + I0 + M0
 
 ---
 
-## 二、系统架构 (System Architecture)
+## 一、架构总览 (5+4+1+1)
 
-### 2.1 4 层架构 (5+3+1 eCOS v5)
-
-```mermaid
-graph TB
-    subgraph L4["L4 · 自我层 (12 域)"]
-        L4a[CARDS/Vault/Personal/Work/...]
-    end
-
-    subgraph L3["L3 · 统一入口层"]
-        L3a[cockpit<br/>CLI 18 + MCP 20 + Web]
-    end
-
-    subgraph I0["I0 · 集成织层 (Agora Mesh)"]
-        I0a[agora<br/>MCP 代理 + 断路器<br/>17 service · 10 connected]
-    end
-
-    subgraph L2["L2 · 引擎面"]
-        L2a[kairon<br/>16 包 知识引擎]
-        L2b[gbrain<br/>TS 知识脑]
-        L2c[omo<br/>治理面]
-        L2d[metaos<br/>决策门控]
-    end
-
-    subgraph L1["L1 · 运行时基础设施"]
-        L1a[runtime<br/>Matrix + Scheduler + KEI]
-    end
-
-    subgraph L0["L0 · 协议编织"]
-        L0a[ecos<br/>SSB 签名链]
-    end
-
-    L4a -.MCP.-> L3a
-    L3a -->|bos:// URI| I0a
-    I0a -->|stdio subprocess| L2a
-    I0a --> L2b
-    I0a --> L2c
-    I0a --> L2d
-    I0a -->|agent_runtime| L1a
-    I0a --> L0a
-    L2a -.L0 协议.-> L0a
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  L4 自我层 (Documents + l4-kernel)                              │
+│  ├── @驾驶舱 — 24 域 (7类型: document/config/engine/...)        │
+│  ├── l4-kernel — 统一管理面 (22域注册表 · 250 tests · 43 MCP)   │
+│  └── CARDS — 个人事务跟踪 (文件系统 + SQLite 双系统)              │
+├─────────────────────────────────────────────────────────────────┤
+│  L3 入口层 (cockpit)                                            │
+│  ├── CLI — 25 子命令 (research/status/cards/health/...)          │
+│  ├── MCP Server — 37 工具 (主 + Agent Runtime + L0 + 遗留)       │
+│  └── Web Dashboard — 16 REST API (:8090)                       │
+├─────────────────────────────────────────────────────────────────┤
+│  I0 织层 (agora)                                                │
+│  ├── MCP Mesh — 42 工具 · 40 BOS 路由 · 三层路由链               │
+│  ├── BOS URI 体系 — 5 域 (memory/governance/analysis/persona/capability) │
+│  └── Proxy Manager — 限流/熔断/缓存/L0 审计钩子                   │
+├─────────────────────────────────────────────────────────────────┤
+│  L2 引擎面                                                       │
+│  ├── kairon — 19+6 packages (kos/minerva/sophia/ontoderive/...) │
+│  ├── gbrain — TS 知识数据库 (67 MCP tools, ~9700 tests)          │
+│  ├── omo — 治理面 (AppendOnlyLog·fcntl跨进程锁·100+ tests)       │
+│  └── metaos — 编排引擎 (11 MCP tools, 189 tests, 0 lint)        │
+├─────────────────────────────────────────────────────────────────┤
+│  L1 运行时 (runtime)                                            │
+│  ├── Matrix Scheduler — 服务注册表 + 健康监控                     │
+│  ├── KEI — 沙箱执行 + Ephemeral Agents                          │
+│  └── MCP — 30 工具 (171 tests)                                  │
+├─────────────────────────────────────────────────────────────────┤
+│  L0 协议层 (ecos)                                               │
+│  ├── SSB 签名链 — 不可变日志 + 认知操作记录                        │
+│  ├── MOF 元模型 — 984 M1 YAML 节点 + 24 M2 类型                   │
+│  └── BOS URI 路由 — 25 mof-* 工具链 (195 tests)                  │
+├─────────────────────────────────────────────────────────────────┤
+│  M0 横切框架 (model-driven)                                     │
+│  ├── 全生命周期引擎 — 7 阶段 (OKR→Spec→ADR→Dev→Deploy→Ops→BizOps) │
+│  ├── 12 工具链 — 推导/触发/OKR/管道/自反验证                       │
+│  └── 被 L0/I0/L3/L4 四层消费 (190 tests, 零内部依赖)               │
+├─────────────────────────────────────────────────────────────────┤
+│  X1-X4 治理维                                                   │
+│  ├── X1 审计 — 变更追踪 (facts.md/vault)                         │
+│  ├── X2 保鲜 — CLAUDE.md 保鲜状态                                 │
+│  ├── X3 价值 — 域活跃度评估                                       │
+│  └── X4 一致性 — 域注册表契约 (eCOS ecos MOF)                     │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 关键架构决策 (P58-P71 期间)
+### 架构命名空间
 
-| 决策 | 阶段 | 收益 |
-|---|---|---|
-| **3 helper 镜像 daemon_mode** (kairon/omo/runtime) | P63-P68 | launchd plist 启动 stdin EOF 兼容 |
-| **16 kairon 包 stdio_rpc 派发** | P51-P68 | 跨仓 stdio JSON-RPC 替代 HTTP |
-| **4 仓 helper 3 模式** (False / forever / sleep+exit) | P68 | launchd 周期重启 60s 周期 |
-| **DEBT-OMO-PLIST 100% 清账** | P63-P67 | 2 plist 持久运行 + 14/14 service |
+```
+bos://memory/        ← kairon (kos/kronos/sophia) + gbrain      — 记忆与事实
+bos://governance/    ← omo + metaos                              — 治理与律法
+bos://analysis/      ← minerva + ontoderive + codeanalyze        — 认知与推演
+bos://persona/       ← runtime + cockpit                         — 人格与心智
+bos://capability/    ← forge + agora + family-hub                — 能力与生态
+```
 
 ---
 
-## 三、核心流程 (Core Flows)
+## 二、项目全景
 
-### 3.1 端到端 BOS URI 派发 (P32-W4 主流程)
+### 2.1 项目健康度 (全栈 lint 清零 ✅)
 
-```mermaid
-sequenceDiagram
-    participant U as User/Agent
-    participant C as cockpit (L3 入口)
-    participant A as agora (I0 织层)
-    participant P as long-lived pool (P44-W0)
-    participant K as kairon_kos (L2 引擎)
-    participant G as gbrain (L2 知识脑)
+| 项目 | 层 | 栈 | 测试 | Lint | 定位 |
+|------|:--:|:--:|:----:|:----:|------|
+| l4-kernel | L4 | Python | 250+ | 0 | 自我层统一管理面 · 22 域注册表 · 43 MCP |
+| cockpit | L3 | Python | 567 | 0 | 统一入口 · 25 CLI · 37 MCP · 16 REST |
+| agora | I0 | Python | 1371 | 0 | MCP Mesh · 42 工具 · 40 BOS 路由 |
+| kairon | L2 | Python | ~4000 | 0 | 知识引擎 · 19+6 packages |
+| gbrain | L2 | TS | ~9700 | — | 知识数据库 · 67 MCP |
+| omo | L2 | Python | 100+ | 0 | 治理面 · AppendOnlyLog · fcntl |
+| metaos | L2 | Python | 189 | 0 | 编排引擎 · 11 MCP |
+| runtime | L1 | Python | 171 | 0 | 运行时 · Matrix + KEI |
+| ecos | L0 | Python | 195 | 0 | SSB 协议 · MOF 元模型 |
+| model-driven | M0 | Python | 190 | 0 | 全生命周期 · 12 工具链 |
 
-    U->>C: 自然语言请求
-    C->>C: parse + route to BOS URI
-    C->>A: bos://memory/kos/search (LLM tool call)
-    A->>P: 派发到空闲连接
-    P->>K: URI <json_payload>\n (stdin)
-    activate K
-    K->>G: 跨域知识查询
-    G-->>K: 知识结果
-    K-->>P: JSON <result>\n (stdout)
-    deactivate K
-    P->>A: 归还连接 (alive=True)
-    A-->>C: 标准化响应
-    C-->>U: 自然语言结果
-```
+### 2.2 L4 自我层域注册表 (24 域)
 
-**关键指标**: end-to-end latency 1-3s (P44-W0 long-lived pool 消除 10-15s 启动开销).
-
-### 3.2 治理闭环 (P32-W4 治理面)
-
-```mermaid
-flowchart LR
-    A[Agent 改文件] -->|PostToolUse| B[SecurityPipeline hook]
-    B -->|commit| C[git commit]
-    C -->|PostToolUse| D[post_commit_update_agent_docs hook]
-    D -->|log| E[agent_doc_update.log]
-    E -.下次 SessionStart.-> F[SessionStart hook]
-    F -->|LoadContext| G[看 debt card + commit 影响]
-    G -->|manual review| H[更新 CLAUDE.md/AGENTS.md]
-    H -->|commit| C
-```
-
-**强制闭环**: Agent 改文件 → 必须 commit (P58-P71 期间强化) → hook 自动 log 哪些 agent doc 需 manual review (P71-W2 装好).
+| 类型 | 域数 | 域 ID |
+|:----:|:----:|-------|
+| document | 11 | cockpit, vault, creative, personal, shared, family, work-weijian, work-guozhuan, opc, family-shared, obsidian-vault |
+| config | 3 | ai-config, agents-config, icloud-sharedconf |
+| engine | 3 | minerva, knowledge-engine, l4-kernel |
+| tool | 2 | bin, toolbox-tools |
+| workspace | 2 | sharedwork, ecos-workbench |
+| storage | 1 | shareddisk |
+| model | 2 | model-volume, sharedmodel |
 
 ---
 
-## 四、模块依赖 (Module Dependencies)
+## 三、核心流程
 
-### 4.1 仓依赖矩阵 (P58-P71 现状)
+### 3.1 BOS URI 派发
 
-```mermaid
-graph LR
-    subgraph "5 BOS 域服务"
-        K[kairon<br/>16 包 stdio_rpc]
-        G[gbrain<br/>TS 知识脑]
-    end
-
-    subgraph "I0 织层"
-        AG[agora<br/>MCP proxy + 17 service]
-    end
-
-    subgraph "L3 入口"
-        CK[cockpit<br/>CLI + MCP 20]
-        OM[omo<br/>治理 + 长驻池 + daemon]
-    end
-
-    subgraph "L1 运行时"
-        RT[runtime<br/>agent_runtime_mcp]
-    end
-
-    subgraph "L0 协议"
-        EC[ecos<br/>SSB 签名链]
-    end
-
-    K -->|stdio subprocess| AG
-    G -.可选 HTTP.-> AG
-    RT -->|stdio| AG
-    CK -->|MCP| AG
-    AG -->|bos_resolve| OM
-    OM -->|KVSync| AG
-    AG -->|protocol| EC
-    CK -->|invoke_bos_uri| OM
-    OM -.KSSB 凭据.-> EC
+```
+User/Agent → cockpit (L3)
+  → bos://memory/kos/search {query}
+  → agora (I0) — BOSRouter Trie → POC_SERVICES → ProxyManager
+  → stdio subprocess → kairon_kos (L2)
+  → gbrain (L2) — 跨域知识查询
+  → JSON 响应返回
 ```
 
-### 4.2 仓内 kairon 16 包依赖
+**三层路由链**: `BOSRouter(前缀匹配) → POC_SERVICES(40条) → ProxyManager(限流/熔断/缓存)`
 
-```mermaid
-graph TB
-    subgraph "kairon 仓 16 包"
-        EID[eidos<br/>知识建模]
-        KOS[kos<br/>知识操作系统]
-        MIN[minerva<br/>深度研究]
-        SOP[sophia<br/>范式引擎]
-        ONT[ontoderive<br/>推导]
-        KRN[kronos<br/>摄取]
-        IRS[iris<br/>连接器]
-        CDA[codeanalyze<br/>分析]
-        OTH[其他 8 包<br/>core-models / health-profile / kairon-*]
-    end
+**跨层路由:**
+- L4 @驾驶舱 → cockpit MCP (cards_status/cards_check)
+- L4 l4-kernel → 43 MCP 工具
+- L3 cockpit → I0 agora via bos:// URI
+- I0 agora → L2 kairon/kos via stdio JSON-RPC
+- I0 agora → L1 runtime via agent_runtime
+- M0 model-driven → 被任意层消费
 
-    UTIL[kairon_utils<br/>stdio_rpc helper]
-    KOS -->|schema| EID
-    MIN -->|data source| KOS
-    SOP -->|symbol| KOS
-    ONT -->|schema| EID
-    IRS -->|connector| KOS
-    KRN -->|ingest| KOS
-    CDA -->|analyze| KOS
-    EID -->|shared| UTIL
-    KOS -->|shared| UTIL
-    MIN -->|shared| UTIL
-    OTH -->|shared| UTIL
+### 3.2 OMO 治理闭环
+
+```
+Agent 操作 → Phase 检查 (omo state)
+           → CARDS 检查 (cockpit cards --check)
+           → 约束检查 (X1-X4 规则)
+           → 执行 → Audit 日志 (AppendOnlyLog 5 consumer)
+           → Task 同步 (CARDS state)
+           → Debt 注册 (如发现异常/违规)
+           → Signal 发射 (SignalBus)
 ```
 
-**关键点**: 16 包都共享 1 个 `kairon_utils.stdio_rpc` helper (3 模式 daemon, P63-P68 镜像).
+### 3.3 L4 健康检查
+
+```
+python3 @驾驶舱/_runtime/ecos-health-check.py
+  → 解析 DOMAIN-INDEX (22 域)
+  → 逐域检查: KEMS 平面 + CLAUDE.md + STATE.md
+  → 输出: 🟢/🟡/🔴 状态表
+
+cockpit health --full
+  → L4 Context (l4-kernel bridge)
+  → L4 文档域 (@驾驶舱/_runtime)
+  → L3 Cockpit Status
+  → I0 Agora Stats
+  → L2 OMO Governance
+  → L1 Runtime Matrix
+```
 
 ---
 
-## 五、用户旅程 (User Journeys)
+## 四、对外接入
 
-### 5.1 4 persona 典型旅程
-
-#### Persona 1: 个人开发者 (老王)
-
-```
-[调研] 知识检索
-  ↓
-  cockpit CLI "ask 'kairon P58-P71 commit 趋势'"
-  ↓
-  omo 派发 bos://memory/kos/search
-  ↓
-  agora 跨仓派发 kairon_kos (P67-W0 后 14/14 service 健康)
-  ↓
-  kos.search() 返回 P58-P71 12 阶段 22 commits 列表
-  ↓
-[决策] 接下来推什么
-  ↓
-  cockpit MCP "P60+ 大版本 kairon 615 reset 怎么规划"
-  ↓
-  metaos 决策门控 + omo debt card 历史
-  ↓
-[执行] 选定方案
-  ↓
-  bash p60_kairon_reset.sh (P60+ 大版本)
-  ↓
-  audit 100.0 A+ 36+ 连续维持
-```
-
-#### Persona 2: 数据分析师
-
-```
-[数据接入] iris 拉取第三方 (Notion / Slack / GitHub)
-  ↓
-[分析] minerva 跨域研究
-  ↓
-[导出] ontoderive 推导入参
-  ↓
-[报告] 写 WIKI + 通知 cockpit dashboard
-```
-
-#### Persona 3: Agent 自动化
-
-```
-[LLM tool call] bos://memory/kos/search
-  ↓
-[自动派发] agora long-lived pool (P44-W0 优化)
-  ↓
-[响应] JSON 标准化
-  ↓
-[LLM 二轮 round] 解读结果 + 下一步决策
-```
-
-#### Persona 4: 治理运维
-
-```
-[监控] omo audit + agora health
-  ↓
-[检测] debt card 累积 + audit 分数下降
-  ↓
-[响应] PostToolUse hook 自动 log commit → agent doc
-  ↓
-[决策] 标 P-wave 任务 → git commit debt card
-  ↓
-[验证] audit 100.0 A+ 36+ 连续
-```
-
-### 5.2 5 关键用户路径对比
-
-| 路径 | 入口 | 后端调用 | 典型延迟 |
-|---|---|---|---|
-| CLI 直接调 | cockpit | LLM + agora + kairon | 1-3s |
-| LLM 派发 | LLM tool_use | agora pool + stdio | 1-3s |
-| Web dashboard | cockpit web | LLM stream | 5-30s |
-| Agent 跨仓 | 4 仓 stdio | 各仓 helper | 100-500ms |
-| 治理审计 | omo audit | 6 项检查 | 5-15s |
+| 入口 | 协议 | 端口 | 用途 |
+|:----:|:----:|:----:|------|
+| cockpit CLI | subprocess | — | 终端入口 |
+| cockpit MCP | stdio | — | Agent 调用 |
+| cockpit HTTP | HTTP | :8090 | Web Dashboard |
+| agora MCP | SSE | :7431 | LLM tool call |
+| agora HTTP | HTTP | :7422 | 自动化脚本 |
+| runtime MCP | stdio | — | Ephemeral Agents |
+| l4-kernel MCP | stdio | — | L4 管理 |
 
 ---
 
-## 六、对外接人抓手 (External Integration Points)
+## 五、关键 SSOT
 
-### 6.1 5 集成接入点 (Integration Surfaces)
-
-```mermaid
-graph LR
-    subgraph "对外"
-        LLM[LLM Clients<br/>Claude/GPT/Gemini]
-        EXT[External MCP<br/>claude/serena/codex]
-        TEN[Tenant Apps<br/>family-hub]
-        IDP[IDP/SSO<br/>SSB 签名链]
-    end
-
-    subgraph "omostation 对外抓手"
-        S1[MCP Server :7431<br/>42 tools · SSE]
-        S2[HTTP REST :7422<br/>swagger]
-        S3[CLI :cockpit 18 cmd]
-        S4[FS Manifest<br/>spaces/ + .omo/]
-        S5[DB Direct<br/>agora.db / gbrain/]
-    end
-
-    LLM -->|SSE / tool_use| S1
-    LLM -->|HTTP| S2
-    EXT -->|stdio subprocess| S1
-    TEN -->|bos:// URI| S1
-    TEN -->|manifest| S4
-    IDP -->|SSB signature| S1
-    S3 -->|bos:// URI| S1
-    S5 -->|SQLite| S1
-```
-
-### 6.2 5 抓手详细规格
-
-| # | 抓手 | 协议 | 端口 | 鉴权 | 用途 |
-|---|---|---|---|---|---|
-| 1 | **MCP Server (SSE)** | SSE/JSON-RPC | :7431 | API key | LLM tool call 主流入口 (P32-W4) |
-| 2 | **HTTP REST** | HTTP/JSON | :7422 | API key + SSB | 自动化脚本 + 第三方集成 |
-| 3 | **CLI** | subprocess | — | shell 鉴权 | ops 运维 + 仓内调 |
-| 4 | **FS Manifest** | YAML/JSON | — | 路径权限 | 租户空间 + .omo/ 治理 |
-| 5 | **DB Direct** | SQLite | — | 文件权限 | 治理审计 + 知识图谱批量导入 |
-
-### 6.3 集成示例 (P50-P71 期间真实用)
-
-| 集成 | 入口 | 调用示例 |
-|---|---|---|
-| **Claude Code MCP** | S1 (:7431 SSE) | `mcp__agora__invoke_bos_uri("bos://memory/kos/search", {query: "kairon P58"})` |
-| **omo daemon** | launchd plist | `~/.agora/agora-proxy-services.json` 17 service 配置 |
-| **family-hub** | S4 (FS manifest) | `spaces/tenant-foo/manifest.yaml` 含 tenant workspace |
-| **GBrain 图谱** | S5 (DB Direct) | `gbrain/graph.db` 知识卡 + traversal |
-| **runtime 派发** | stdio subprocess | `python -m runtime serve` (4 action: agent_list/chat/run_task/task_status) |
-
-### 6.4 5 抓手的稳态指标 (P67-W0 + P71-W1 后)
-
-| 抓手 | 当前状态 |
-|---|---|
-| MCP Server | ✅ 10 connected + 4 daemon_mode 周期 + 0 not_found |
-| HTTP REST | ✅ swagger 可用, :7422 端口 |
-| CLI | ✅ 18 子命令 (P32-W4) |
-| FS Manifest | ✅ spaces/ 12 tenant (P60+ era) |
-| DB Direct | ✅ agora.db 0 entries (P70 调查发现) + gbrain/graph.db 知识卡 |
+| 数据 | 唯一读源 |
+|------|---------|
+| L4 域注册表 | `@驾驶舱/_control/DOMAIN-INDEX.md` (回退: l4-kernel registry.py) |
+| Workspace Phase | `.omo/state/system.yaml` |
+| Documents Phase | `@驾驶舱/_control/DASHBOARD.md` |
+| MOF M1 | `projects/ecos/src/ecos/ssot/mof/m1/` (984 YAML) |
+| BOS 路由表 | `projects/agora/src/agora-events.json` |
+| 任务状态 | `.omo/tasks/active/` (YAML) |
+| CARDS | `@驾驶舱/CARDS/` (文件) + `data/cards/cards.db` (SQLite) |
+| 标准 | `.omo/standards/` |
+| 目标 | `.omo/goals/current.yaml` |
+| 治理审计 | `.omo/state/system.yaml` |
 
 ---
 
-## 七、稳态 invariant 快照 (P58-P71 期间)
+## 六、Phase 映射
 
-| 维度 | 状态 |
-|---|---|
-| audit 健康分 | **100.0 (A+) 36+ 连续** |
-| 14 phase 26 commits | P58-P71 11 phase 26 commits |
-| 8 DEBT 清账 | SELFTEST/DODEFAULT/REFLECT/ACTION-MAPPING/RUNTIME-CALL/RUNTIME-ACTION-MAPPING/OMO-PLIST/HTTP-PROBE-FAIL |
-| 1 DEBT 留 P72+ | DEBT-KAIRON-2026-06-16 (kairon 615 dirty + 28 ahead) |
-| 2 plist 持久 | omo 68897 + agora 90771 稳态 |
-| 14/14 agora service | 10 connected + 4 daemon_mode 周期 + 0 not_found |
-| 16 kairon 包 8 do_<action> | 36/36 端到端 ✅ |
-| 4 仓 stdio_rpc 镜像 | kairon_utils + omo + runtime (3 模式 daemon) |
-| omo 跨仓 BOS | 6/6 resolved |
-| post_commit hook | 自动 log 哪些 agent doc 受 commit 影响 (P71-W2) |
+> 当前存在两套独立 Phase 编号系统，不可交叉引用。
+
+| 系统 | 范围 | Phase | 读源 |
+|------|------|:-----:|------|
+| Documents Phase | L4 自我层·个人知识管理 | 0→8.3 | `@驾驶舱/_control/DASHBOARD.md` |
+| Workspace Phase | eCOS v5 工程 | 1→33+ | `.omo/state/system.yaml` |
 
 ---
 
-## 八、相关文档 (Related Docs)
+## 七、集成验证 (Documents ↔ Workspace)
 
-- [ARCHITECTURE.md](./ARCHITECTURE.md) — 深度分层架构 (351 行, 7 层 5 域 4 切面)
-- [ARCHITECTURE_REVIEW.md](./ARCHITECTURE_REVIEW.md) — 评审报告 (12 修复项, 综合 🟡 中等风险)
-- [LAYER-INDEX.md](./LAYER-INDEX.md) — 5+3+1 9 项目索引
-- [WIKI.md](./WIKI.md) — 用户面向 wiki
-- [AGENTS.md](./AGENTS.md) — 开发者指南
-- [CLAUDE.md](./CLAUDE.md) — Claude 工作约束
-- `.omo/_delivery/phase58-p58-debt-card.md` ~ `phase71-p71-debt-card.md` — 各 phase debt card 详档
+| 集成点 | 状态 |
+|--------|:----:|
+| cockpit MCP `workspace_context` | ✅ 真实存在 (cockpit_mcp.py) |
+| cockpit HTTP `/api/context` | ✅ 真实存在 (dashboard_server.py) |
+| cockpit MCP `cards_status/cards_check` | ✅ 真实存在 (cockpit_mcp.py) |
+| cockpit CLI `cards --check` | ✅ 真实存在 (cli.py) |
+| l4-kernel 域注册表 ↔ DOMAIN-INDEX | ✅ 24 域 100% ID 对齐 |
+| l4-kernel registry ↔ DOMAIN-INDEX 路径 | ✅ 路径展开一致 |
+| `_runtime/` 治理脚本 | ✅ 5 脚本 + 共享库 |
+| `cockpit health --full` L4 集成 | ✅ 新增 L4 文档域检查 |
+| 架构版本一致性 | ✅ 统一 5+4+1+1 |
+| Phase 双系统标注 | ✅ §3 Phase 映射 |
 
 ---
 
-**P72-W0 全景梳理完成**. 6 章节 + Mermaid 图, link 现有 ARCHITECTURE/LAYER-INDEX/WIKI 避免重复, audit 100.0 A+ 36+ 连续, 14/14 service 真实可用.
+*最后更新: 2026-06-10 | 全栈 lint: 0 errors | 全栈测试通过率: 95%+*
