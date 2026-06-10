@@ -1098,6 +1098,65 @@ $ uv run --no-sync python -m omo.cli audit-rollout \
 | Round | 主题 | commit |
 |-------|------|--------|
 | 12-27 | 既有 16 段 | (前 25 commit) |
-| 28 | §12.5.1 步骤 2+3 cron workflow | `19d4f361` (P0) + (本 commit P1 文档) |
+| 28 | §12.5.1 步骤 2+3 cron workflow | `19d4f361` (P0) + `b2afc59e` (P1) |
+
+### §11.21 Round 29 收口 — §13 omo_lint 工具家族章节起步
+
+> **状态**: 起步
+> **commit**: `ad3a853d` (Round 29 P0)
+> **主题**: §13 独立成章 + omo_lint 加规则 4 (`__all__` 完整性)
+> **链接**: `.omo/_knowledge/management/omo-lint-tool-family-2026-06-10.md`
+
+**动机**:
+- §11.13 (R21) 提到 "omo_lint 加更多规则" 候选 — 散在 §11 章节不便管理
+- §11.16 (R24) 抽 `_shared` 时, omo_lint 工具本身值得独立成章
+- §13 起步: 把"静态校验工具家族"作为独立治理主题
+
+**§13 6 子节** (Round 29 P0 起步):
+- §13.0 一句话总结 — omo_lint = X1 审计契约自动守门人
+- §13.1 现有 4 规则 (R15-29 累积)
+- §13.2 工具 API + CLI + CI 集成
+- §13.3 候选新规则 4 个 (R29+ 留)
+- §13.4 §11 关系 (互补非替代)
+- §13.5 Round 29+ 候选 (本节填充)
+
+**omo_lint 4 规则** (R15-29 累积):
+| # | 规则 | Round | 校验 |
+|---|------|-------|------|
+| 1 | `schema-kwarg-missing` | R15 P0 | 7 consumer .append() 都传 schema= |
+| 2 | `missing-z-timestamp` | R21 P0 | 8 schema 都继承 ZTimestampModel |
+| 3 | `no-required-fields` | R21 P0 | 8 schema 都有 ≥1 必填字段 |
+| 4 | `missing-from-all` | **R29 P0 (新)** | `omo_io_schemas.__all__` 含 8 class 全名 |
+
+**§13.3 候选新规则 4 个** (R29+ 留):
+- 规则 5: `consumer-naming-consistency` — `omo_*.py` 模块名 ↔ schema 命名一致
+- 规则 6: `dead-import` — consumer 模块 dead code 检测
+- 规则 7: `cross-module-srp` — `omo_X.py` 不应 import `omo_Y.py` (单向 SSOT)
+- 规则 8: `sort-keys-default` — `AppendOnlyLog.append(..., sort_keys=True)` 默认值
+
+**实施细节**:
+- 规则 4 实质化: `_check_all_schemas_exported()` 函数
+  - 校验 class 名 (e.g. `OmoAuditRecord`) — **不是** dict key (e.g. "omo_audit")
+  - 误报修复: 早期版本错把 key 字符串当 module attribute
+- 2 个新测试 (12/12 PASS):
+  - `test_check_all_schemas_exported_passes_for_real_schemas` (生产代码 8/8 合规)
+  - `test_check_all_schemas_exported_detects_missing_class` (mock 删 1 class, 验证检测能力)
+- `omo lint schemas` 输出: 4 段 (每规则一段) + 1 总 pass/fail
+
+**度量 (Round 28 → Round 29)**:
+
+| 指标 | Round 28 | Round 29 | Δ |
+|------|----------|----------|---|
+| omo_lint 规则 | 3 | **4** (+`missing-from-all`) | +1 |
+| 单元测试 (lint) | 10 | **12** | +2 |
+| 单元测试 (总) | 157+ | **159+** | +2 |
+| §13 章节 | 无 | **6 子节** (起步) | +1 章 |
+| §11 章节子节 | 17 段 | **18 段** (+§11.21) | +1 |
+
+**§11 18 段全收 + §12 13 子节 + §13 6 子节** (Round 12-29, 28 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-28 | 既有 17 段 | (前 26 commit) |
+| 29 | §13 omo_lint 工具家族起步 + 规则 4 | `ad3a853d` (P0) + (本 commit P1 文档) |
 
 
