@@ -223,11 +223,20 @@ def main(argv: list[str] | None = None) -> int:
     show.add_argument("--action", default=None, help="按 action 过滤")
     show.add_argument("--log", type=Path, default=DEFAULT_TRAIL_PATH, help=f"源 .jsonl (默认: {DEFAULT_TRAIL_PATH})")
 
+    # seed 子命令 (Round 19 P0: 让 trail 业务真落地, 写 5 条样例 step)
+    seed = sub.add_parser("seed", help="写 5 条样例 step (Round 19 P0 — 让 trail.jsonl 出现)")
+    seed.add_argument("--log", type=str, default=str(DEFAULT_TRAIL_PATH), help=f"落点 .jsonl (默认: {DEFAULT_TRAIL_PATH})")
+
     args = parser.parse_args(argv)
     if args.command == "record":
         return cmd_trail_record(args)
     if args.command == "show":
         return cmd_trail_show(args)
+    if args.command == "seed":
+        from omo.omo_trail_seed import cmd_trail_seed
+        # 把 str 转 Path-like 给 record_step (record_step 接 Path | str)
+        args.log = Path(args.log)
+        return cmd_trail_seed(args)
     parser.print_help()
     return 1
 

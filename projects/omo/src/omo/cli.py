@@ -173,6 +173,13 @@ def main(argv: list[str] | None = None) -> int:
 
         return lint_main(args[1:])
 
+    if args and args[0] == "trail":
+        # Round 12 P0: omo_trail 第 7 consumer CLI (record/show)
+        # Round 19 P0: 加 seed 子命令, 让 trail 业务真落地
+        from omo.omo_trail import main as trail_main
+
+        return trail_main(args[1:])
+
     # 兜底:有参但无匹配子命令 → 报错退出;无参 → 静默退出 0(保持原行为)
     if args:
         print(f"Unknown subcommand: {args[0]}", file=sys.stderr)
