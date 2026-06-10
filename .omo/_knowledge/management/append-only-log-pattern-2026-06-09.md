@@ -250,6 +250,7 @@ Round 12-13 全部延续 §5 六原则, 0 偏离:
 - [x] **P1-3** ✅ Round 17 P0: omo_bos_metrics dataclass → Pydantic 重构, lint 范围 5→6
 - [x] **P1-4** ✅ Round 18 P0: omo_history.append_entry 收严 + caller 补字段, lint 范围 6→7
 - [x] **P2** ✅ Round 16 P0 + Round 19 P1: 跨仓推广指南 + runtime/metaos 探查报告
+- [x] **P3** ✅ Round 20 P0: dashboard_monitor 拆 omo_health consumer (治本 §11.7 长期方案)
 
 ### §11.7 Round 14 收口 — baseline 自洽
 
@@ -507,5 +508,84 @@ omo lint schemas (Round 18 P0):
 - C. 跨仓 baseline 同步 (cron + 报告汇聚)
 - D. Round 14 §11.7 提到的"dashboard_monitor 拆 omo_health consumer" (治本 vs 占位值)
 - E. omo_lint 加更多规则 (字段命名一致性 / Z-suffix ts 强制)
+
+### §11.12 Round 20 收口 — 第 8 consumer omo_health 上线 (治本)
+
+> **状态**: implemented
+> **commit**: `7a15df79` (Round 20 P0)
+> **主题**: dashboard_monitor 拆 omo_health consumer (治本 §11.7 长期方案)
+> **里程碑**: §11 演进到 **8 consumer**, 治理历史不被健康监控污染
+
+**动机 (§11.7 长期方案)**:
+- Round 14 P0 是"治标": dashboard_monitor 写 governance-history.jsonl, 补 4 占位字段 (date/total_score/grade/watchlist_count)
+- 治标遗留问题: grade="F" 污染治理评分面板 (健康监控点不该参与评分, 但 record 落在 governance 仓里)
+- §11.7 长期方案: 拆到独立 `omo-health.jsonl` + OmoHealthRecord schema (新 consumer)
+
+**实施**:
+- `OmoHealthRecord` Pydantic schema (6 字段: source/launchd_state/http_code/pid/port/timestamp)
+- `OmoHealthLaunchdState` Enum (RUNNING/DOWN)
+- `SCHEMA_REGISTRY["omo_health"]` 第 8 个 key
+- `dashboard_monitor.sh` 默认路径改 `$WORKSPACE/.omo/_knowledge/omo-health.jsonl`
+- `dashboard_monitor.sh` 写 record 字段集简化为 6 (去掉 date/total_score/grade/watchlist_count)
+- 副作用修: `grep -m1` 替代 `grep` (防 multi-line PID 注入 newline 让 JSON 硬换行)
+- 副作用修: `tr -d '\n'` 删 PID 变量 trailing newline (同上)
+
+**测试** (7/7 PASS):
+- test_dashboard_monitor_writes_valid_omo_health_record (新 schema 校验)
+- test_dashboard_monitor_record_has_all_required_fields (6 字段齐 + 不含 OmoHistoryRecord 字段)
+- test_dashboard_monitor_exit_codes[3 cases] (down/running/ok)
+- test_dashboard_monitor_writes_to_omo_health_not_governance_history (拆路径)
+- test_omo_health_schema_is_eighth_in_registry (第 8 个)
+
+**§11 章节总览** (Round 1 → Round 20):
+
+| 章节 | 主题 | 状态 |
+|------|------|------|
+| §1-§10 | Round 1-5 收口 (基础架构) | ✅ done (历史) |
+| §11.1-§11.5 | Round 12-13 扩展 (7 consumer + baseline) | ✅ done |
+| §11.6-§11.7 | Round 14 dashboard_monitor schema (治标) | ✅ done |
+| §11.8 | Round 15-16 lint + 跨仓指南 | ✅ done |
+| §11.9 | Round 17 omo_bos_metrics 重构 | ✅ done |
+| §11.10 | Round 18 omo_history 收严 (X1 100%) | ✅ done |
+| §11.11 | Round 19 omo_trail 落地 + 探查 (0 债) | ✅ done |
+| §11.12 | Round 20 omo_health 拆出 (治本) | ✅ done (本节) |
+
+**度量 (Round 19 → Round 20)**:
+
+| 指标 | Round 19 | Round 20 | Δ |
+|------|----------|----------|---|
+| AppendOnlyLog consumer | 7 | **8** | +1 (omo_health) |
+| Pydantic schema | 7 | **8** | +1 |
+| baseline consumers | 4 | **5** | +1 (omo_health) |
+| Lint 范围 | 7/7 | **7/7** | 不变 (omo_health 是 shell, 不在 Python lint) |
+| §11 X1 审计契约 | 100% | **100%** | 不变 (omo_health 走 Pydantic, X1 自动守) |
+| 单元测试 | 137+ | **144+** (+7 dashboard_monitor_schema) | +7 |
+| omo-history 漂移来源 | 含 dashboard_monitor | **不含** (新 daemon 写到 omo-health) | 治本 |
+| 老 governance-history drift | 1530 | 1530 | 锁住 (AppendOnlyLog 不删) |
+
+**§11 X1/X2/X3/X4 全守** (Round 20 final):
+- X1 审计契约: 8 consumer (omo_audit/bos_metrics/sync/alert/event/history/trail/health) 写时 Pydantic 锁, 100% 治本
+- X2 保鲜: baseline 5 consumers 守稳态, daemon 持续写入 0 漂移
+- X3 价值: 8 段模式 + 工具 + CI + 跨仓指南 + 探查报告, 全落
+- X4 一致: 1 套物理 + 1 套 schema + 1 套 audit CLI + 1 套 lint
+
+**§11 9 段全收** (Round 12-20, 19 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12 | 7th consumer omo_trail + CI lint | `e7a749bf` + `0f747926` |
+| 13 | audit baseline 机制 | `bc780ca6` + `4b44e5ec` |
+| 14 | dashboard_monitor 治标 (4 占位字段) | `2185ab44` + `e8caaec2` |
+| 15 | omo lint schemas + CI 集成 | `8ea942be` + `45012cb9` |
+| 16 | 跨仓 Rollout Guide | `489c0fc5` + `7901c662` |
+| 17 | omo_bos_metrics Pydantic 重构 | `8a635bf6` |
+| 18 | omo_history 收严 (X1 7/7) | `ebc1c41b` + `9927fa22` |
+| 19 | omo_trail 落地 + 探查 (0 债) | `c66e48ac` + `001c2abc` + `595aa35c` |
+| 20 | omo_health 拆出 (治本) | `7a15df79` (P0) + (本 commit P1 文档) |
+
+**§11 X1 审计契约演化** (Round 9 → Round 20):
+- Round 9: 引入 Pydantic, 5/7 (audit/bos_metrics/sync/alert/event)
+- Round 17: omo_bos_metrics 重构, 6/7
+- Round 18: omo_history 收严, 7/7 (100%)
+- **Round 20: omo_health 拆出, schema 守 8/8 (X1 继续 100%)**
 
 
