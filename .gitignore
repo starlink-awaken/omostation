@@ -53,3 +53,6 @@ coverage.xml
 
 # ── Docker ──
 .docker/
+
+# MOF 快照（自动生成）
+src/ecos/ssot/mof/m0/snapshot.yaml
