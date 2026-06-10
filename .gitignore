@@ -14,6 +14,19 @@ data/驾驶舱/
 
 # ---- 运行时日志 ----
 runtime/agent-runtime/
+agent-runtime/
+
+# ---- Daemon 日志 ----
+.omo/_delivery/
+
+# ---- 治理审计日志 ----
+.omo/_knowledge/governance-history.jsonl
+
+# ---- 债务仪表板（自动生成） ----
+.omo/debt/
+
+# ---- MOF 快照（自动生成） ----
+projects/ecos/src/ecos/ssot/mof/m0/snapshot.yaml
 
 # ---- 构建产物 ----
 .env
