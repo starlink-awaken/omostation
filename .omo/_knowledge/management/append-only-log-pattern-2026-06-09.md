@@ -1234,6 +1234,63 @@ $ uv run --no-sync python -m omo.cli audit-rollout \
 | Round | 主题 | commit |
 |-------|------|--------|
 | 12-29 | 既有 18 段 | (前 27 commit) |
-| 30 | §13.3.3 规则 7 实质化 (consumer SRP) | `171198be` (P0) + (本 commit P1 文档) |
+| 30 | §13.3.3 规则 7 实质化 (consumer SRP) | `171198be` (P0) + `b4a368db` (P1) |
+
+### §11.23 Round 31 收口 — §14 omo 仓 CI/CD 全栈章节起步
+
+> **状态**: 起步
+> **commit**: `99158752` (Round 31 P0)
+> **主题**: §14 独立成章, 4 workflow + 2 cron + pre-commit + 5 守门点总览
+> **链接**: `.omo/_knowledge/management/omo-cicd-stack-2026-06-10.md`
+
+**动机**:
+- §11.2 (omo_io) + §11.4 (omo_lint) + §12.5.1 (跨仓 baseline 同步) + §13 (omo_lint 工具家族) 累积 5+ workflow 散落各章节
+- reviewer 需 5+ 文件拼凑 omo 仓 CI/CD 全栈视图
+- §14 起步: 把"所有 workflow + pre-commit + cron"收口成 5 守门点总览, 跨仓 owner 拿模板
+
+**§14 9 子节** (Round 31 P0 起步):
+- §14.0 一句话总结
+- §14.1 omostation 根 4 workflows (含 ci-lint.yml 5 jobs)
+- §14.2 omo 仓 2 workflows (ci.yml + audit-baseline-monthly.yml)
+- §14.3 pre-commit 链 (check-yaml + omo-logs-audit)
+- §14.4 omo_lint 5 规则 (引用 §13)
+- §14.5 跨仓 baseline 同步 (引用 §12.5.1)
+- §14.6 自动化总览 (5 守门点)
+- §14.7 §11/§12/§13 关系
+- §14.8 Round 31+ 候选
+
+**4 章完整闭环**:
+- **§11** = omo 仓内 AppendOnlyLog 模式 (19 段)
+- **§12** = 跨仓契约 + baseline 同步 (13 子节)
+- **§13** = omo_lint 工具家族 (6 子节 5 规则)
+- **§14** = omo 仓 CI/CD 全栈 (9 子节)
+
+**5 守门点** (Round 31 final):
+```
+[代码 commit] → pre-commit omo-logs-audit (baseline-check)
+   ↓
+[git push] → ci-lint.yml 5 jobs (actionlint/check-yaml/shellcheck/omo-logs-audit/omo-lint-schemas)
+   ↓
+[PR merge]
+   ↓
+[每月 1 号 00:00 UTC: audit-baseline-monthly] → omo 仓 baseline refresh
+   ↓
+[每月 1 号 01:00 UTC: audit-rollout-monthly] → 跨仓聚合
+```
+
+**度量 (Round 30 → Round 31)**:
+
+| 指标 | Round 30 | Round 31 | Δ |
+|------|----------|----------|---|
+| 治理章节 | §11+§12+§13 | **§11+§12+§13+§14** | +1 章 |
+| §14 章节 | 无 | **9 子节** (起步) | +1 |
+| 总治理文档 | 3 docs (~1000 lines) | **4 docs (~1150 lines)** | +150 |
+| §11 章节子节 | 19 段 | **20 段** (+§11.23) | +1 |
+
+**§11 20 段全收 + §12 13 子节 + §13 6 子节 + §14 9 子节** (Round 12-31, 30 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-30 | 既有 19 段 + §12/§13 | (前 28 commit) |
+| 31 | §14 omo 仓 CI/CD 全栈章节起步 | `99158752` (P0) + (本 commit P1 文档) |
 
 
