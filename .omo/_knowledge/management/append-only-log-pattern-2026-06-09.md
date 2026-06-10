@@ -1031,6 +1031,73 @@ $ uv run --no-sync python -m omo.cli audit-rollout \
 | Round | 主题 | commit |
 |-------|------|--------|
 | 12-26 | 既有 15 段 | (前 24 commit) |
-| 27 | omo audit-rollout 工具 (§12.5.1 步骤 1) | `e69fe3a5` (P0) + (本 commit P1 文档) |
+| 27 | omo audit-rollout 工具 (§12.5.1 步骤 1) | `e69fe3a5` (P0) + `d97ec380` (P1) |
+
+### §11.20 Round 28 收口 — §12.5.1 步骤 2+3 实质化 (2 cron workflow)
+
+> **状态**: implemented
+> **commit**: `19d4f361` (Round 28 P0)
+> **主题**: 2 个 GitHub Action cron workflow 落地 (omo 仓 baseline + omostation 根 audit-rollout)
+> **链接**: §12.5.1 设计稿 (R26) + 步骤 1 工具 (R27) + 步骤 2/3 cron (本轮)
+
+**动机**:
+- §12.5.1 设计稿 (R26) 写"每月 1 号 cron 各仓 init, 汇聚到 audit-rollout/<date>.json", 但无 cron
+- §12.5.1 步骤 1 (R27) 写好 `omo audit-rollout` 工具, 但需人工跑
+- 步骤 2+3 实质化: 让 cron 自动化 (CI 友好, 每月自动)
+
+**实施 2 个 cron workflow**:
+
+### 1. `projects/omo/.github/workflows/audit-baseline-monthly.yml`
+- **触发**: cron `0 0 1 * *` (每月 1 号 00:00 UTC) + workflow_dispatch
+- **步骤**:
+  1. checkout v4 + setup-python 3.13
+  2. install uv
+  3. 跑 `omo logs audit --baseline-init` refresh baseline
+  4. commit + push (baseline 漂移变化才 commit, 避免空 commit)
+- **作用**: omo 仓 baseline 每月自动 refresh, X2 保鲜自动化
+
+### 2. `.github/workflows/audit-rollout-monthly.yml`
+- **触发**: cron `0 1 1 * *` (每月 1 号 01:00 UTC, 晚于 omo cron 1h) + workflow_dispatch
+- **步骤**:
+  1. checkout v4 + setup-python 3.13
+  2. install uv
+  3. 跑 `omo audit-rollout --repos "omostation:." --output .omo/_delivery/audit-rollout/<date>.json`
+  4. commit + push rollout 报告
+- **作用**: omostation 根每月自动跨仓聚合 (当前看到 omostation 1 仓, 各仓 §12.2 接入后自动扩展)
+
+**退出码语义** (R27):
+- `0` = 0 漂移 (完美, baseline 守稳态)
+- `1` = 有漂移 (报告生成成功, 标 warning 不阻塞)
+- `2` = 错误 (fail)
+
+**§12.5.1 三块全部实质化** (R26-28):
+| # | 步骤 | 状态 | commit |
+|---|------|------|--------|
+| 1 | 聚合工具 `omo audit-rollout` | ✅ R27 P0 | `e69fe3a5` |
+| 2 | 各仓 `audit-baseline-monthly.yml` cron | ✅ R28 P0 (omo 仓) | `19d4f361` |
+| 3 | omostation 根 `audit-rollout-monthly.yml` + 报告目录 | ✅ R28 P0 (本 commit) | `19d4f361` |
+
+**§12.8 候选完成度更新**:
+- ✅ 候选 1: AppendOnlyLog → `_shared/` (R24 P0)
+- ✅ 候选 2: ZTimestampModel → `_shared/` (R25 P0)
+- ✅ 候选 3 步骤 1: `omo audit-rollout` 工具 (R27 P0)
+- ✅ 候选 3 步骤 2-3: 2 cron workflow (R28 P0)
+- ⏳ 候选 4: 跨仓债 E1-E4 落地 (需各仓 owner 配合, 推不动)
+
+**度量 (Round 27 → Round 28)**:
+
+| 指标 | Round 27 | Round 28 | Δ |
+|------|----------|----------|---|
+| omo 仓 workflows | 1 (ci.yml) | **2** (+audit-baseline-monthly) | +1 |
+| omostation 根 workflows | 18 | **19** (+audit-rollout-monthly) | +1 |
+| cron 自动化 | 0 | **2** (cron + workflow_dispatch) | +2 |
+| §12.5.1 实质化 | 步骤 1 | **步骤 1+2+3 全 done** | +2 |
+| 跨仓聚合触发 | 手动 | **每月自动** | ↑↑ |
+
+**§11 17 段全收 + §12 13 子节 + §12.5.1 3 步骤全 done** (Round 12-28, 27 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-27 | 既有 16 段 | (前 25 commit) |
+| 28 | §12.5.1 步骤 2+3 cron workflow | `19d4f361` (P0) + (本 commit P1 文档) |
 
 
