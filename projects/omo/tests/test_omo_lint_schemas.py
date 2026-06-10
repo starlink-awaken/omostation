@@ -205,3 +205,32 @@ def test_cli_lint_schemas_prints_schema_registry_check():
     assert r.returncode == 0
     assert "SCHEMA_REGISTRY 完整性" in r.stdout
     assert "8/8 schema 守 Z-suffix + 必填字段" in r.stdout
+
+
+# ── 9. Round 29 P0 新规则: __all__ 完整性 ─────────────
+
+
+def test_check_all_schemas_exported_passes_for_real_schemas():
+    """omo_io_schemas.__all__ 包含 8 schema class 全名."""
+    from omo.omo_lint import _check_all_schemas_exported
+
+    issues = _check_all_schemas_exported()
+    assert issues == [], f"expected no issues, got {issues}"
+
+
+def test_check_all_schemas_exported_detects_missing_class(monkeypatch):
+    """故意从 __all__ 删 1 个 schema class, 应被检测出 'missing-from-all'."""
+    from omo.omo_io_schemas import SCHEMA_REGISTRY
+    from omo import omo_io_schemas
+
+    # 临时备份 + 删 1 个 class 名
+    original = omo_io_schemas.__all__
+    new_all = [n for n in original if n != "OmoAuditRecord"]
+    monkeypatch.setattr(omo_io_schemas, "__all__", new_all)
+    try:
+        from omo.omo_lint import _check_all_schemas_exported
+        issues = _check_all_schemas_exported()
+        audit_issues = [i for i in issues if i[0] == "OmoAuditRecord" and i[1] == "missing-from-all"]
+        assert len(audit_issues) == 1, f"expected 1 missing-from-all for OmoAuditRecord, got {audit_issues}"
+    finally:
+        monkeypatch.setattr(omo_io_schemas, "__all__", original)

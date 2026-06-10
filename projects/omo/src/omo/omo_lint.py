@@ -98,6 +98,31 @@ def _check_module_append_has_schema(module_path: Path) -> list[tuple[int, str]]:
     return violations
 
 
+def _check_all_schemas_exported() -> list[tuple[str, str, str]]:
+    """校验 omo_io_schemas.py 的 __all__ 包含 SCHEMA_REGISTRY 全部 class (Round 29 P0).
+
+    防未来: 加新 schema 但漏更新 __all__ → 用户 `from omo.omo_io_schemas import NewSchema` 失败.
+    注: 校验 class 名 (e.g. OmoAuditRecord) 不是 key 字符串 (e.g. "omo_audit") —
+        key 是 SCHEMA_REGISTRY dict 的 key, 不是 module attribute.
+
+    Returns:
+        list of (class_name, issue_type, detail) tuples. 空 list = 全合规.
+    """
+    from omo.omo_io_schemas import SCHEMA_REGISTRY
+    import omo.omo_io_schemas as schemas_module
+
+    issues: list[tuple[str, str, str]] = []
+    exported = set(getattr(schemas_module, "__all__", []))
+    for schema_name, schema_cls in SCHEMA_REGISTRY.items():
+        if schema_cls.__name__ not in exported:
+            issues.append((
+                schema_cls.__name__,
+                "missing-from-all",
+                f"{schema_cls.__name__} (SCHEMA_REGISTRY[{schema_name!r}]) 未在 omo_io_schemas.__all__ 暴露",
+            ))
+    return issues
+
+
 def _check_schema_registry_integrity() -> list[tuple[str, str, str]]:
     """校验 SCHEMA_REGISTRY 所有 schema 满足: ZTimestampModel 覆盖 + 至少 1 必填字段.
 
@@ -166,12 +191,24 @@ def cmd_lint_schemas() -> int:
         from omo.omo_io_schemas import SCHEMA_REGISTRY
         print(f"✅ SCHEMA_REGISTRY 完整性: {len(SCHEMA_REGISTRY)}/{len(SCHEMA_REGISTRY)} schema 守 Z-suffix + 必填字段")
 
+    # 规则 3 (Round 29 P0): __all__ 完整性 — 全部 SCHEMA_REGISTRY key 都在 __all__ 暴露
+    print()
+    all_issues = _check_all_schemas_exported()
+    if all_issues:
+        total_violations += len(all_issues)
+        print(f"❌ omo_io_schemas.__all__ 完整性: {len(all_issues)} 处问题")
+        for schema_name, issue_type, detail in all_issues:
+            print(f"   - {schema_name} [{issue_type}]: {detail}")
+    else:
+        from omo.omo_io_schemas import SCHEMA_REGISTRY
+        print(f"✅ omo_io_schemas.__all__ 完整性: {len(SCHEMA_REGISTRY)}/{len(SCHEMA_REGISTRY)} schema 全部 export")
+
     print()
     if total_violations:
         print(f"❌ omo lint schemas fail: {total_violations} 处违规 (X1 审计风险)")
         return 1
     print(f"✅ omo lint schemas pass: {len(CONSUMER_MODULES)}/{len(CONSUMER_MODULES)} consumer 合规 + "
-          f"SCHEMA_REGISTRY 完整, schema 写时锁守住")
+          f"SCHEMA_REGISTRY 完整 + __all__ 完整, schema 写时锁守住")
     return 0
 
 
