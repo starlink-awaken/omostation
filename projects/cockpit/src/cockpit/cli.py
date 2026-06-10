@@ -644,6 +644,26 @@ def _cmd_health(args: Namespace) -> int:
         elif not args.json:
             console.print("[yellow]⚠ OMO state 未生成[/]")
 
+        # ── Full: L4 文档域健康 ─────────────────────────────────
+        console.print("\n[bold cyan]═══ L4 文档域 ═══[/]\n")
+        l4_health = Path.home() / "Documents" / "@驾驶舱" / "_runtime" / "ecos-health-check.py"
+        if l4_health.exists():
+            try:
+                import subprocess as _l4sp
+                result = _l4sp.run(
+                    [sys.executable, str(l4_health)],
+                    capture_output=True, text=True, timeout=30,
+                )
+                if not args.json:
+                    for line in result.stdout.split("\n"):
+                        stripped = line.strip()
+                        if stripped and not stripped.startswith("L4"):
+                            console.print(f"  [dim]{stripped}[/]")
+            except Exception as e:
+                console.print(f"[yellow]⚠ L4 文档域检查跳过: {e}[/]")
+        elif not args.json:
+            console.print("[yellow]⚠ L4 健康脚本未找到 (创建 _runtime/ecos-health-check.py)[/]")
+
         console.print("\n[bold green]✅ 全栈健康检查完成[/]\n")
 
     return return_code
