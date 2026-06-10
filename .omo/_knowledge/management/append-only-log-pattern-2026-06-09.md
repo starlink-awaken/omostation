@@ -248,6 +248,7 @@ Round 12-13 全部延续 §5 六原则, 0 偏离:
 - [ ] **P1-1** baseline 时给 omo-trail 留 0 漂移位 (目前 trail 还没人写, baseline 还没纳入, 需 init 时加)
 - [x] **P1-2** ✅ Round 15 P0: 新增 omo lint schemas + 修 omo_sync 2 处 + CI 集成 (5/5 consumer 合规)
 - [x] **P1-3** ✅ Round 17 P0: omo_bos_metrics dataclass → Pydantic 重构, lint 范围 5→6
+- [x] **P1-4** ✅ Round 18 P0: omo_history.append_entry 收严 + caller 补字段, lint 范围 6→7
 - [x] **P2** ✅ Round 16 P0: 写 `protocols/append-only-log-rollout.md` 跨仓推广指南 (不动 submodule)
 
 ### §11.7 Round 14 收口 — baseline 自洽
@@ -361,5 +362,71 @@ omo lint schemas (Round 17 P0):
 | 单元测试 | 126+ | **132+** (+bos_metrics 18 + lint 6) | +6 |
 | dataclass 架构 consumer | 1 | **0** | -1 (治本) |
 | 已知债 | 4 | **3** | -1 |
+
+### §11.10 Round 18 收口 — §11 X1 审计债 100% 消除
+
+> **状态**: implemented
+> **commit**: `ebc1c41b` (Round 18 P0)
+> **主题**: omo_history.append_entry 收严, lint 范围 6→7, 7/7 全部写时 Pydantic 锁
+
+**动机**:
+- §11 X1 审计契约 = 7 consumer 写时 Pydantic 锁, 1 个都不能少
+- Round 15 P0 起的 lint 工具 (omo lint schemas) 6/6 守 + 1 排除 (omo_history.append_entry)
+- 排除原因: append_entry 是"宽容业务接口", 字段 caller 决定, 不强校验
+- §11.6 写"Round 18 候选: caller 收严"
+
+**收严内容**:
+- `omo_history.append_entry` 加 `schema=OmoHistoryRecord` 写时 Pydantic 校验
+- `caller` 必须传 `total_score/grade/watchlist_count` 4 必填字段
+- `date/timestamp` 由函数自动注入 (caller 传入会被覆盖)
+- AppendOnlyLog.append(..., schema=OmoHistoryRecord) 走 Pydantic fail-fast
+
+**Caller 同步**:
+- `omo_audit.py:732` — 已传齐 4 字段, 0 破坏
+- `omo_daemon.py:183` — 已传齐 4 字段, 0 破坏
+- `test_omo_history_w3.py` 5 个测试 — 补 4 字段 (data 完整化, 不破坏测试意图)
+  - sort_keys 验证从 5 key 升到 8 key (a/date/grade/m/timestamp/total/watchlist/z)
+  - 3 个测试加占位字段 (total=0.0, grade="F", watchlist=0) 表 "测试桩"
+
+**Lint 范围扩展**:
+```
+omo lint schemas (Round 18 P0):
+  ✅ omo_audit.py        schema 守住
+  ✅ omo_bos_metrics.py  schema 守住
+  ✅ omo_history.py      schema 守住 (新纳入)
+  ✅ omo_sync.py         schema 守住
+  ✅ omo_alert.py        schema 守住
+  ✅ omo_event.py        schema 守住
+  ✅ omo_trail.py        schema 守住
+  7/7 consumer 合规 (§11 X1 审计债 100% 消除)
+```
+
+**§11 X1 审计契约 100% 守住**:
+- 任何 caller 漏 4 必填字段 → Pydantic ValidationError → fail-fast
+- CI (omo-lint-schemas job) 自动 fail 任何回归
+- 跨 7 轮收口 (Round 9 P0 写时锁 + Round 12-15 lint 工具 + Round 17-18 扩范围)
+
+**测试** (49/49 PASS):
+- test_omo_history_w3.py 5/5 (5 测试补字段后仍按原意图 PASS)
+- test_omo_lint_schemas.py 6/6 (5→6→7 验证)
+- 其他 38 个既有测试全 PASS
+
+**度量 (Round 17 → Round 18)**:
+| 指标 | Round 17 | Round 18 | Δ |
+|------|---------|----------|---|
+| Lint 范围 | 6/6 | **7/7** | +1 (omo_history) |
+| §11 X1 审计债 | 1 | **0** | -1 (治本) |
+| 已知债 | 3 | **2** | -1 |
+| dataclass 架构 consumer | 0 | 0 | 不变 |
+| 单元测试 | 132+ | 132+ | 不变 (5 测试 patch) |
+
+**§11 X1 审计债演化史** (Round 1 → Round 18):
+| Round | X1 审计债状态 |
+|-------|---------------|
+| Round 1-5 | 0 校验 (无 schema) |
+| Round 9 P0 | 引入 Pydantic, 5/7 consumer 守 |
+| Round 15 P0 | lint 工具上线, 5/7 守 |
+| Round 17 P0 | omo_bos_metrics 重构, 6/7 守 |
+| Round 18 P0 | omo_history 收严, **7/7 守 (100%)** |
 
 
