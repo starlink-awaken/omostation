@@ -117,6 +117,9 @@ def normalize_bos_uri(uri: str) -> str:
 # 命名规范: python -m <package> serve --action <action>
 # 实际 stdio 协议: stdin JSON 行 → stdout JSON 行 (POC 简化版)
 POC_SERVICES: dict[str, BosService] = {
+    # ⚠️ 新增域需同时注册两处:
+    #  1. 此处 POC_SERVICES (agora BOS 路由)
+    #  2. l4-kernel /registry.py _BUILTIN_DOMAINS (24 域注册表)
     # Memory (2)
     "bos://memory/kos/search": BosService(
         uri="bos://memory/kos/search",
@@ -1153,6 +1156,7 @@ def invoke_stdio(
     args: list | None = None,
     kwargs: dict | None = None,
     timeout: float = _STDIO_TIMEOUT_DEFAULT,
+    max_retries: int = 1,
 ) -> dict:
     """通过 stdio JSON 协议调用 BOS 服务 (P34-W1 主入口).
 
@@ -1166,6 +1170,7 @@ def invoke_stdio(
         args: 位置参数列表
         kwargs: 关键字参数字典
         timeout: 超时秒数 (默认 5.0)
+        max_retries: 失败重试次数 (默认 1, 0=不重试)
 
     Returns:
         dict: 含 status + result/error + request_id + pid 等字段
@@ -1224,7 +1229,7 @@ def invoke_stdio(
         return {
             "uri": uri,
             "status": "error",
-            "error": f"command_not_found: {exc}",
+            "error": f"command_not_found: {exc}. 请确认 {service.package} 已安装 (cd projects/kairon && uv sync)",
         }
     except Exception as exc:  # noqa: BLE001
         return {
@@ -1266,28 +1271,48 @@ def invoke_stdio(
         proc.stdin.write(request_line.encode("utf-8"))
         proc.stdin.flush()
 
-        # 读响应 (select 避免阻塞)
-        ready, _, _ = select.select([proc.stdout], [], [], timeout)
-        if not ready:
-            return {
-                "uri": uri,
-                "status": "error",
-                "error": f"timeout_after_{timeout}s",
-                "request_id": request_id,
-                "pid": proc.pid,
-            }
+        # 读响应 (select 避免阻塞) — 失败时自动重试一次
+        for attempt in range(max_retries + 1):
+            ready, _, _ = select.select([proc.stdout], [], [], timeout)
+            if not ready:
+                if attempt < max_retries:
+                    _log.warning("Timeout on invoke %s (attempt %d), retrying...", canonical_uri, attempt + 1)
+                    continue
+                return {
+                    "uri": uri,
+                    "status": "error",
+                    "error": f"timeout_after_{timeout}s",
+                    "request_id": request_id,
+                    "pid": proc.pid,
+                }
 
-        response_line = proc.stdout.readline()
-        if not response_line:
-            return {
-                "uri": uri,
-                "status": "error",
-                "error": "eof_no_response",
-                "request_id": request_id,
-                "pid": proc.pid,
-            }
+            response_line = proc.stdout.readline()
+            if not response_line:
+                if attempt < max_retries:
+                    _log.warning("EOF on invoke %s (attempt %d), retrying...", canonical_uri, attempt + 1)
+                    continue
+                return {
+                    "uri": uri,
+                    "status": "error",
+                    "error": "eof_no_response",
+                    "request_id": request_id,
+                    "pid": proc.pid,
+                }
 
-        response = json.loads(response_line.decode("utf-8"))
+            try:
+                response = json.loads(response_line.decode("utf-8"))
+                break  # 解析成功
+            except json.JSONDecodeError:
+                if attempt < max_retries:
+                    _log.warning("JSON decode error on invoke %s (attempt %d), retrying...", canonical_uri, attempt + 1)
+                    continue
+                return {
+                    "uri": uri,
+                    "status": "error",
+                    "error": f"json_decode_error: {response_line.decode('utf-8', errors='replace')[:200]}",
+                    "request_id": request_id,
+                }
+
         response["uri"] = uri
         response["canonical_uri"] = canonical_uri
         response["request_id"] = response.get("request_id", request_id)
@@ -1308,11 +1333,12 @@ def invoke_stdio(
             "error": f"stdio_io_error: {exc}",
             "request_id": request_id,
         }
-    except json.JSONDecodeError as exc:
+
+    except Exception as exc:  # noqa: BLE001
         return {
             "uri": uri,
             "status": "error",
-            "error": f"json_decode_error: {exc}",
+            "error": f"stdio_invoke_error: {exc}",
             "request_id": request_id,
         }
 
@@ -1425,7 +1451,7 @@ async def _call_mcp_stdio(
 
 
 async def resolve_bos_uri(uri: str, *args: Any, **kwargs: Any) -> dict:
-    """解析 BOS URI 到实际调用 (主入口, async 兼容)."""
+    """解析 BOS URI 到实际调用 (async 兼容)."""
     parsed = parse_bos_uri(uri)
     canonical_uri = normalize_bos_uri(uri)
     service = POC_SERVICES.get(canonical_uri)
@@ -1437,6 +1463,23 @@ async def resolve_bos_uri(uri: str, *args: Any, **kwargs: Any) -> dict:
             "status": "error",
             "error": f"unknown_bos_uri: {uri} (registered: {len(POC_SERVICES)})",
         }
+
+    # FeatureGate: 检查域是否启用
+    try:
+        from agora.mcp_proxy.feature_gate import FeatureGate
+
+        gate = FeatureGate.get_instance()
+        if not gate.is_bos_domain_enabled(service.domain):
+            return {
+                "uri": uri,
+                "canonical_uri": canonical_uri,
+                "parsed": parsed,
+                "domain": service.domain,
+                "status": "error",
+                "error": f"bos_domain_disabled: {service.domain}",
+            }
+    except ImportError:
+        pass  # 无 FeatureGate 时向后兼容
     if service.transport == "internal":
         return _call_internal(service, *args, **kwargs)
     if service.transport == "stdio":

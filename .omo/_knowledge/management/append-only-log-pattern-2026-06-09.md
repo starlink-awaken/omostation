@@ -251,6 +251,7 @@ Round 12-13 全部延续 §5 六原则, 0 偏离:
 - [x] **P1-4** ✅ Round 18 P0: omo_history.append_entry 收严 + caller 补字段, lint 范围 6→7
 - [x] **P2** ✅ Round 16 P0 + Round 19 P1: 跨仓推广指南 + runtime/metaos 探查报告
 - [x] **P3** ✅ Round 20 P0: dashboard_monitor 拆 omo_health consumer (治本 §11.7 长期方案)
+- [ ] **P3-X** 🆕 Round 34 P0 重开: sort_keys_default (§12.1.4 跨仓 4 不变量) — 4 处 .append() 待治 (omo_bos_metrics/sync×2/trail)
 
 ### §11.7 Round 14 收口 — baseline 自洽
 
