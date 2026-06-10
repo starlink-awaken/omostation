@@ -588,4 +588,79 @@ omo lint schemas (Round 18 P0):
 - Round 18: omo_history 收严, 7/7 (100%)
 - **Round 20: omo_health 拆出, schema 守 8/8 (X1 继续 100%)**
 
+### §11.13 Round 21 收口 — lint 扩 SCHEMA_REGISTRY 完整性 (Z-suffix + 必填)
+
+> **状态**: implemented
+> **commit**: `86b1f4fa` (Round 21 P0)
+> **主题**: omo_lint 加 2 个 SCHEMA_REGISTRY 完整性规则, X1 审计深度扩展
+
+**动机**:
+- §11 X1 审计契约之前只守 "7 consumer .append() 传 schema=" (Round 15 P0 起步)
+- 但**未守** SCHEMA_REGISTRY 完整性:
+  - 未来 schema 可能漏继承 ZTimestampModel → timestamp 字段无 Z 校验
+  - 未来 schema 可能全 Optional = 空架子, 无实际约束
+- §11 X1 深度扩 — 不仅"写入走 Pydantic", 还要"Pydantic schema 自身合规"
+
+**实施**:
+- 新函数 `_check_schema_registry_integrity()` 返回 `(schema_name, issue_type, detail)` 列表
+- 规则 1: `missing-z-timestamp` — schema 未继承 ZTimestampModel
+- 规则 2: `no-required-fields` — schema 无必填字段 (空架子)
+- `cmd_lint_schemas` 调新规则, 输出 "SCHEMA_REGISTRY 完整性" 段
+- 4 个新测试 (合规 / 2 类违规各 1 / CLI 输出含新段)
+
+**测试** (10/10 PASS):
+- test_check_schema_registry_integrity_passes_for_real_schemas (8 schema 都合规)
+- test_check_schema_registry_integrity_detects_missing_z_timestamp (mock 1 违规)
+- test_check_schema_registry_integrity_detects_empty_required (mock 1 违规)
+- test_cli_lint_schemas_prints_schema_registry_check (CLI 输出含新段)
+- 既有 6 个测试 仍 PASS
+
+**omo_lint 输出** (Round 21 P0):
+```
+🔍 omo lint schemas — 7 consumer 写时 schema 校验
+
+✅ omo_audit.py: all .append() calls pass schema= (合规)
+✅ omo_bos_metrics.py: all .append() calls pass schema= (合规)
+✅ omo_history.py: all .append() calls pass schema= (合规)
+✅ omo_sync.py: all .append() calls pass schema= (合规)
+✅ omo_alert.py: all .append() calls pass schema= (合规)
+✅ omo_event.py: all .append() calls pass schema= (合规)
+✅ omo_trail.py: all .append() calls pass schema= (合规)
+
+✅ SCHEMA_REGISTRY 完整性: 8/8 schema 守 Z-suffix + 必填字段
+
+✅ omo lint schemas pass: 7/7 consumer 合规 + SCHEMA_REGISTRY 完整
+```
+
+**§11 X1 审计契约深度演化** (Round 15 → Round 21):
+| Round | X1 守 | 深度 |
+|-------|------|------|
+| Round 15 P0 | 7 consumer 写 schema= | 浅 (只守 schema= kwarg) |
+| Round 18 P0 | 7/7 consumer 写时锁 (100%) | 浅 |
+| Round 20 P0 | 8 schema (omo_health 拆出) | 浅 |
+| **Round 21 P0** | 8 schema + 完整性校验 (Z-suffix + 必填) | **深** |
+
+**度量 (Round 20 → Round 21)**:
+
+| 指标 | Round 20 | Round 21 | Δ |
+|------|----------|----------|---|
+| omo_lint 规则数 | 1 (.append() schema=) | **3** (+Z-suffix + 必填) | +2 |
+| 单元测试 (lint) | 6 | **10** | +4 |
+| §11 X1 审计深度 | 浅 | **深** | +1 |
+| 总单元测试 | 144+ | **148+** | +4 |
+
+**§11 10 段全收** (Round 12-21, 20 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12 | 7th consumer omo_trail + CI lint | `e7a749bf` + `0f747926` |
+| 13 | audit baseline 机制 | `bc780ca6` + `4b44e5ec` |
+| 14 | dashboard_monitor 治标 | `2185ab44` + `e8caaec2` |
+| 15 | omo lint schemas + CI 集成 | `8ea942be` + `45012cb9` |
+| 16 | 跨仓 Rollout Guide | `489c0fc5` + `7901c662` |
+| 17 | omo_bos_metrics Pydantic | `8a635bf6` |
+| 18 | omo_history 收严 (X1 100%) | `ebc1c41b` + `9927fa22` |
+| 19 | omo_trail 落地 + 探查 | `c66e48ac` + `001c2abc` + `595aa35c` |
+| 20 | omo_health 拆出 (治本) | `7a15df79` + `c86735e5` |
+| 21 | lint 扩 SCHEMA_REGISTRY 完整性 (深) | `86b1f4fa` (P0) + (本 commit P1 文档) |
+
 
