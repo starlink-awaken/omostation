@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# omostation dashboard 监控 + 健康检查 + 异常治理历史 append — P40-W2
-# Round 14 P0 升级: 写合规 OmoHistoryRecord (补 date/total_score/grade/watchlist_count 4 必填字段)
-# 之前 record 缺 4 必填字段 → 每次写都增加 audit drift → baseline 持续 stale
+# omostation dashboard 监控 + 健康检查 — P40-W2
+# Round 14 P0 升级: 写合规 OmoHistoryRecord (补 4 必填字段占位值)
+# Round 20 P0 升级: 拆到独立 omo-health.jsonl (新 .jsonl), 治理历史不再被健康监控污染
+#  - HISTORY_PATH 默认 = $WORKSPACE/.omo/_knowledge/omo-health.jsonl
+#  - 旧 governance-history.jsonl 不再被 dashboard_monitor 写入 (历史 1500+ drift 锁在 baseline)
 # 用法:
 #   bash scripts/dashboard_monitor.sh
 # 可配 crontab 每 5min 跑.
@@ -9,7 +11,8 @@
 set -uo pipefail
 
 WORKSPACE="${WORKSPACE:-/Users/xiamingxing/Workspace}"
-HISTORY="$WORKSPACE/.omo/_knowledge/governance-history.jsonl"
+# Round 20 P0: 默认路径 = omo-health.jsonl (新), 旧 governance-history.jsonl 不再被本脚本写入
+HISTORY="${HISTORY:-$WORKSPACE/.omo/_knowledge/omo-health.jsonl}"
 PLIST_NAME="com.omo.dashboard"
 PORT="${PORT:-9090}"
 DASHBOARD_URL="http://localhost:${PORT}/"
@@ -18,7 +21,8 @@ DASHBOARD_URL="http://localhost:${PORT}/"
 if [ -n "${LAUNCHD_STATE_OVERRIDE:-}" ]; then
     LAUNCHD_STATE="${LAUNCHD_STATE_OVERRIDE}"
 else
-    LAUNCHD_LINE=$(launchctl list | grep "${PLIST_NAME}" || true)
+    # Round 20 P0 修: grep -m1 只取第一行匹配 (旧版拿到多行导致 PID 变量含 \n, JSON 字符串硬换行 → 6/7 raw)
+    LAUNCHD_LINE=$(launchctl list | grep -m1 "${PLIST_NAME}" || true)
     if [ -z "${LAUNCHD_LINE}" ]; then
         LAUNCHD_STATE="down"
     else
@@ -44,21 +48,22 @@ fi
 if [ -n "${PID_OVERRIDE:-}" ]; then
     PID="${PID_OVERRIDE}"
 else
-    PID=$(echo "${LAUNCHD_LINE}" | awk '{print $1}')
+    # Round 20 P0 修: tr -d 删 \n, 防 PID 变量含字面 newline 让 JSON 字符串硬换行
+    PID=$(echo "${LAUNCHD_LINE}" | tr -d '\n' | awk '{print $1}')
     [ -z "${PID}" ] && PID="-"
 fi
 
-# 4. 写治理历史 JSONL (一行 = 一条合规 OmoHistoryRecord)
-# Round 14 P0 关键变更: 补 date/total_score/grade/watchlist_count 4 必填字段
-# 语义说明: dashboard_monitor 是健康监控点, 不参与治理评分; 4 字段用占位值:
-#   - date: 当天 UTC 日期 (供按日聚合, 真实可观察)
-#   - total_score: 0.0 (健康监控点不评分)
-#   - grade: "F" (语义: 不参与评分, 不是真"差")
-#   - watchlist_count: 0 (健康监控点不入 watchlist)
-# 替代方案见 §11.6 P0-2 (audit source 白名单) — 那是治标, 这是治本
+# 4. 写健康监控 JSONL (一行 = 一条合规 OmoHealthRecord, Round 20 P0)
+# Round 20 P0 关键变更: 写到独立 omo-health.jsonl, 字段集 7 个:
+#   - source: "dashboard_monitor" (写方标识)
+#   - launchd_state: "running" / "down"
+#   - http_code: "200" / "000" (兜底)
+#   - pid: launchd PID (或 "-" 当 down)
+#   - port: 9090
+#   - timestamp: ISO8601 Z 结尾
+# 不再写 governance-history.jsonl (治理历史), 避免"健康监控点 grade=F 污染评分面板"
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-DATE=$(date -u +%Y-%m-%d)
-JSON_ENTRY="{\"source\":\"dashboard_monitor\",\"date\":\"${DATE}\",\"timestamp\":\"${TIMESTAMP}\",\"total_score\":0.0,\"grade\":\"F\",\"watchlist_count\":0,\"launchd_state\":\"${LAUNCHD_STATE}\",\"http_code\":\"${HTTP_CODE}\",\"pid\":\"${PID}\",\"port\":${PORT}}"
+JSON_ENTRY="{\"source\":\"dashboard_monitor\",\"launchd_state\":\"${LAUNCHD_STATE}\",\"http_code\":\"${HTTP_CODE}\",\"pid\":\"${PID}\",\"port\":${PORT},\"timestamp\":\"${TIMESTAMP}\"}"
 echo "${JSON_ENTRY}" >> "${HISTORY}"
 
 # 5. 决策 + 退出码

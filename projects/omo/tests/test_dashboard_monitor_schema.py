@@ -1,15 +1,15 @@
-"""Tests for dashboard_monitor.sh Round 14 P0 — 写合规 OmoHistoryRecord.
+"""Tests for dashboard_monitor.sh Round 14 P0 + Round 20 P0.
+
+Round 14 P0: 写合规 OmoHistoryRecord (4 占位字段, 治标)
+Round 20 P0: 拆到独立 OmoHealthRecord + 写 omo-health.jsonl (治本)
 
 覆盖:
-  1. override env var 注入: bash 脚本写出的 record 通过 OmoHistoryRecord schema 校验
-  2. 必填字段全部就位: date/total_score/grade/watchlist_count 4 字段不缺失
+  1. override env var 注入: bash 脚本写出的 record 通过 OmoHealthRecord schema 校验
+  2. 必填字段全部就位: source/launchd_state/http_code/pid/port/timestamp 6 字段
   3. exit code 仍正确: launchd_state=down → exit 2, http_code=500 → exit 1, 都 200 → exit 0
-  4. 不污染生产: 跑完测试后 unset override env (防止下游 test 误用)
-
-设计: bash 脚本在测试环境无法真起 launchd / dashboard HTTP server.
-      所以脚本加 LAUNCHD_STATE_OVERRIDE / HTTP_CODE_OVERRIDE / PID_OVERRIDE 3 个 env var
-      让测试可以注入 mock 值, 跳过真 launchd/curl 调用.
-      生产环境这些 var 不应被设 (脚本里默认值 = 真 launchd/curl 路径).
+  4. 写到 omo-health.jsonl (新), 不写 governance-history.jsonl (Round 20 P0 拆)
+  5. OmoHealthRecord 在 SCHEMA_REGISTRY 第 8 个
+  6. 不污染生产: 跑完测试后 unset override env
 """
 from __future__ import annotations
 
@@ -30,14 +30,15 @@ SCRIPT = OMO_ROOT / "scripts" / "dashboard_monitor.sh"
 
 @pytest.fixture
 def fake_workspace(tmp_path, monkeypatch):
-    """设 WORKSPACE 指向 tmp_path, 重置 3 个 override env, 起一个空 history."""
+    """设 WORKSPACE 指向 tmp_path, 重置 3 个 override env, 起一个空 omo-health.jsonl."""
     monkeypatch.setenv("WORKSPACE", str(tmp_path))
     monkeypatch.delenv("LAUNCHD_STATE_OVERRIDE", raising=False)
     monkeypatch.delenv("HTTP_CODE_OVERRIDE", raising=False)
     monkeypatch.delenv("PID_OVERRIDE", raising=False)
-    history = tmp_path / ".omo" / "_knowledge" / "governance-history.jsonl"
-    history.parent.mkdir(parents=True, exist_ok=True)
-    history.write_text("", encoding="utf-8")
+    monkeypatch.delenv("HISTORY", raising=False)  # Round 20 P0: 不让外部 HISTORY 干扰
+    health = tmp_path / ".omo" / "_knowledge" / "omo-health.jsonl"
+    health.parent.mkdir(parents=True, exist_ok=True)
+    health.write_text("", encoding="utf-8")
     return tmp_path
 
 
@@ -55,7 +56,7 @@ def _run_dashboard_monitor(
         "LAUNCHD_STATE_OVERRIDE": launchd_state,
         "HTTP_CODE_OVERRIDE": http_code,
         "PID_OVERRIDE": pid,
-        "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",  # 限制 PATH 防止意外
+        "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
     }
     return subprocess.run(
         ["bash", str(SCRIPT)],
@@ -67,19 +68,19 @@ def _run_dashboard_monitor(
 
 
 def _read_last_record(tmp_path: Path) -> dict:
-    """读 history 最后一条 JSON record."""
-    history = tmp_path / ".omo" / "_knowledge" / "governance-history.jsonl"
-    lines = [l for l in history.read_text(encoding="utf-8").splitlines() if l.strip()]
+    """读 omo-health.jsonl 最后一条 JSON record (Round 20 P0: 新路径)."""
+    health = tmp_path / ".omo" / "_knowledge" / "omo-health.jsonl"
+    lines = [l for l in health.read_text(encoding="utf-8").splitlines() if l.strip()]
     assert len(lines) == 1, f"expected 1 record, got {len(lines)}"
     return json.loads(lines[-1])
 
 
-# ── 1. record 合规 OmoHistoryRecord schema ───────────────
+# ── 1. record 合规 OmoHealthRecord schema ─────────────────
 
 
-def test_dashboard_monitor_writes_valid_omo_history_record(fake_workspace):
-    """脚本写出的 record 必须通过 OmoHistoryRecord.model_validate()."""
-    from omo.omo_io_schemas import OmoHistoryRecord
+def test_dashboard_monitor_writes_valid_omo_health_record(fake_workspace):
+    """脚本写出的 record 必须通过 OmoHealthRecord.model_validate()."""
+    from omo.omo_io_schemas import OmoHealthRecord
 
     r = _run_dashboard_monitor(
         fake_workspace,
@@ -91,42 +92,38 @@ def test_dashboard_monitor_writes_valid_omo_history_record(fake_workspace):
 
     rec = _read_last_record(fake_workspace)
     # Pydantic 校验: 不抛 = 通过
-    validated = OmoHistoryRecord.model_validate(rec)
+    validated = OmoHealthRecord.model_validate(rec)
     assert validated.source == "dashboard_monitor"
-    assert validated.date == "2026-06-09" or len(validated.date) == 10  # YYYY-MM-DD
-    assert validated.total_score == 0.0
-    assert validated.grade.value == "F"  # Enum 自动转
-    assert validated.watchlist_count == 0
+    assert validated.launchd_state.value == "running"
+    assert validated.http_code == "200"
+    assert validated.pid == "12345"
+    assert validated.port == 9090
 
 
-# ── 2. 必填字段全部就位 (防回归) ────────────────────────
+# ── 2. 必填字段全部就位 (防回归) ──────────────────────────
 
 
 def test_dashboard_monitor_record_has_all_required_fields(fake_workspace):
-    """record 含 OmoHistoryRecord 6 必填字段 (date/timestamp/total_score/grade/watchlist_count + Z-suffix ts)."""
-    from omo.omo_io_schemas import OmoHistoryRecord
+    """record 含 OmoHealthRecord 6 必填字段 (source/launchd_state/http_code/pid/port/timestamp + Z-suffix ts)."""
+    from omo.omo_io_schemas import OmoHealthRecord
 
     _run_dashboard_monitor(
         fake_workspace, launchd_state="running", http_code="200", pid="99"
     )
     rec = _read_last_record(fake_workspace)
 
-    required = set(OmoHistoryRecord.model_fields.keys())
+    required = set(OmoHealthRecord.model_fields.keys())
     missing = required - set(rec.keys())
     assert not missing, f"record 缺必填字段: {missing} (audit 会报 drift)"
 
-    # 额外字段保留 (extra='allow'): launchd_state/http_code/pid/port
-    extra = set(rec.keys()) - required
-    assert "launchd_state" in extra
-    assert "http_code" in extra
-    assert "pid" in extra
-    assert "port" in extra
-
     # ts 必须是 Z 结尾 (ZTimestampModel)
     assert rec["timestamp"].endswith("Z")
-    # date 必须是 YYYY-MM-DD
-    import re
-    assert re.match(r"^\d{4}-\d{2}-\d{2}$", rec["date"])
+
+    # 不含 OmoHistoryRecord 字段 (Round 20 P0: 治理历史不再被污染)
+    assert "date" not in rec
+    assert "total_score" not in rec
+    assert "grade" not in rec
+    assert "watchlist_count" not in rec
 
 
 # ── 3. exit code 仍正确 (3 种状态) ─────────────────────
@@ -135,9 +132,9 @@ def test_dashboard_monitor_record_has_all_required_fields(fake_workspace):
 @pytest.mark.parametrize(
     "launchd_state,http_code,expected_exit",
     [
-        ("down", "000", 2),  # launchd 未跑
-        ("running", "500", 1),  # launchd 跑但 HTTP 异常
-        ("running", "200", 0),  # 全 OK
+        ("down", "000", 2),
+        ("running", "500", 1),
+        ("running", "200", 0),
     ],
 )
 def test_dashboard_monitor_exit_codes(fake_workspace, launchd_state, http_code, expected_exit):
@@ -151,7 +148,49 @@ def test_dashboard_monitor_exit_codes(fake_workspace, launchd_state, http_code, 
         f"launchd={launchd_state} http={http_code}: expected exit {expected_exit}, "
         f"got {r.returncode}, stderr: {r.stderr}"
     )
-    # record 仍写入 (无论状态)
     rec = _read_last_record(fake_workspace)
     assert rec["launchd_state"] == launchd_state
     assert rec["http_code"] == http_code
+
+
+# ── 4. 写到 omo-health.jsonl, 不写 governance-history.jsonl ─
+
+
+def test_dashboard_monitor_writes_to_omo_health_not_governance_history(fake_workspace):
+    """Round 20 P0: dashboard_monitor 写 .omo/_knowledge/omo-health.jsonl, 不再写 governance-history.jsonl."""
+    _run_dashboard_monitor(fake_workspace, launchd_state="running", http_code="200", pid="42")
+
+    knowledge_dir = fake_workspace / ".omo" / "_knowledge"
+    health_log = knowledge_dir / "omo-health.jsonl"
+    governance_log = knowledge_dir / "governance-history.jsonl"
+
+    # omo-health.jsonl 必须出现 (1 条)
+    assert health_log.exists(), "omo-health.jsonl 必须出现 (Round 20 P0)"
+    health_lines = [l for l in health_log.read_text(encoding="utf-8").splitlines() if l.strip()]
+    assert len(health_lines) == 1
+
+    # governance-history.jsonl 必须 NOT 出现 (本脚本不再写)
+    assert not governance_log.exists(), (
+        "governance-history.jsonl 不应被 dashboard_monitor 创建 "
+        "(Round 20 P0 拆 — 治理历史不被健康监控污染)"
+    )
+
+
+# ── 5. OmoHealthRecord 在 SCHEMA_REGISTRY 第 8 个 ─────
+
+
+def test_omo_health_schema_is_eighth_in_registry():
+    """OmoHealthRecord 是 SCHEMA_REGISTRY 第 8 个 key (Round 20 P0)."""
+    from omo.omo_io_schemas import SCHEMA_REGISTRY, OmoHealthRecord
+
+    assert "omo_health" in SCHEMA_REGISTRY
+    assert SCHEMA_REGISTRY["omo_health"] is OmoHealthRecord
+    assert len(SCHEMA_REGISTRY) >= 8, f"expected ≥ 8 consumers, got {len(SCHEMA_REGISTRY)}"
+    expected_keys = {
+        "omo_audit", "omo_bos_metrics", "omo_sync", "omo_alert",
+        "omo_event", "omo_history", "omo_trail", "omo_health",
+    }
+    actual_keys = set(SCHEMA_REGISTRY.keys())
+    assert expected_keys.issubset(actual_keys), (
+        f"missing: {expected_keys - actual_keys}"
+    )

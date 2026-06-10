@@ -226,6 +226,32 @@ class OmoTrailRecord(ZTimestampModel):
     parent_step_id: str = ""  # 空串 = 顶层
 
 
+# ── Consumer 8: omo_health ──────────────────────────────────
+
+
+class OmoHealthLaunchdState(str, Enum):
+    """launchd 守护进程状态 (Round 20 P0)."""
+
+    RUNNING = "running"
+    DOWN = "down"
+
+
+class OmoHealthRecord(ZTimestampModel):
+    """健康监控记录 (Round 20 P0 — 第 8 个 consumer).
+
+    区别于 omo_history: dashboard_monitor 是健康监控点, 不参与治理评分.
+    拆到独立 .jsonl (omo-health.jsonl), 治理历史不被健康监控污染.
+    字段集: launchd 状态 + HTTP 探活 + PID + port + 时间戳.
+    """
+
+    source: str = Field(..., min_length=1)  # "dashboard_monitor"
+    launchd_state: OmoHealthLaunchdState
+    http_code: str = Field(..., min_length=1)  # "200" / "000" (down)
+    pid: str = Field(..., min_length=1)  # "-" 当 down
+    port: int = Field(..., ge=0, le=65535)
+    timestamp: str
+
+
 # ── 索引 (AppendOnlyLog.append 用 schema= 参数查) ────────────
 
 
@@ -237,6 +263,7 @@ SCHEMA_REGISTRY: dict[str, type[BaseModel]] = {
     "omo_event": OmoEventRecord,
     "omo_history": OmoHistoryRecord,
     "omo_trail": OmoTrailRecord,  # Round 12 P0 — 第 7 个 consumer
+    "omo_health": OmoHealthRecord,  # Round 20 P0 — 第 8 个 consumer (dashboard_monitor 拆出)
 }
 
 
@@ -247,6 +274,8 @@ __all__ = (
     "OmoAuditRecord",
     "OmoBosMetricsRecord",
     "OmoEventRecord",
+    "OmoHealthLaunchdState",
+    "OmoHealthRecord",
     "OmoHistoryGrade",
     "OmoHistoryRecord",
     "OmoSyncRecord",
