@@ -180,6 +180,12 @@ def main(argv: list[str] | None = None) -> int:
 
         return trail_main(args[1:])
 
+    if args and args[0] == "audit-rollout":
+        # Round 27 P0: 跨仓 baseline 聚合 (§12.5.1 步骤 1)
+        from omo.omo_audit_rollout import main as rollout_main
+
+        return rollout_main(args[1:])
+
     # 兜底:有参但无匹配子命令 → 报错退出;无参 → 静默退出 0(保持原行为)
     if args:
         print(f"Unknown subcommand: {args[0]}", file=sys.stderr)
