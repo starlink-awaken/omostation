@@ -1291,6 +1291,71 @@ $ uv run --no-sync python -m omo.cli audit-rollout \
 | Round | 主题 | commit |
 |-------|------|--------|
 | 12-30 | 既有 19 段 + §12/§13 | (前 28 commit) |
-| 31 | §14 omo 仓 CI/CD 全栈章节起步 | `99158752` (P0) + (本 commit P1 文档) |
+| 31 | §14 omo 仓 CI/CD 全栈章节起步 | `99158752` (P0) + `89f50ddd` (P1) |
+
+### §11.24 Round 32 收口 — §13.3 规则 6 实质化 (dead-imports)
+
+> **状态**: implemented (含在 `9b31d779` OMC commit)
+> **commit**: `9b31d779` (OMC docs commit, 含 Round 32 P0)
+> **主题**: omo_lint 加规则 6 (dead-imports), §13 6 规则中第 6 实质化
+
+**动机**:
+- §13.3 候选规则 6 (dead-import) 之前标"误报风险高, R30+ 留"
+- 实际简化版 (ast.Name 追踪) 误报可控: 豁免 `__future__` + `_` 前缀 + `from .X import *`
+- §11 治本后 7 consumer 0 dead code (验证) — 规则就位防未来 dead code
+
+**实施**:
+- `_check_dead_imports()` 函数 (~50 行)
+  - ast 扫 7 consumer 模块, 收集 `ImportFrom.name` (imported) 和 `Name.id` (used)
+  - unused = imported - used
+  - 豁免: `__future__` (Python 协议) + `_` 前缀 (私有 / dunder)
+- cmd_lint_schemas 调新规则
+- 1 个新测试 (14/14 PASS, mock test 因路径复杂放弃)
+- OMC 顺手 commit `9b31d779` 含本轮改动
+
+**omo_lint 6 规则** (R15-32 累积):
+| # | 规则 | Round | 校验 |
+|---|------|-------|------|
+| 1 | `schema-kwarg-missing` | R15 | 7 consumer .append() 都传 schema= |
+| 2 | `missing-z-timestamp` | R21 | 8 schema 都继承 ZTimestampModel |
+| 3 | `no-required-fields` | R21 | 8 schema 都有 ≥1 必填字段 |
+| 4 | `missing-from-all` | R29 | `omo_io_schemas.__all__` 含 8 class 全名 |
+| 5 | `cross-consumer-import` | R30 | 7 consumer 互不依赖, 仅依赖底层 SSOT |
+| 6 | **`dead-imports`** | **R32** | **import 但未用 (dead code) 检测** |
+
+**omo lint schemas 输出** (Round 32 final):
+```
+🔍 omo lint schemas — 7 consumer 写时 schema 校验
+
+✅ 7/7 consumer .append() 传 schema=
+✅ SCHEMA_REGISTRY 完整性: 8/8 schema 守 Z-suffix + 必填字段
+✅ omo_io_schemas.__all__ 完整性: 8/8 schema 全部 export
+✅ consumer SRP: 7/7 consumer 互不依赖, 仅依赖底层 SSOT
+✅ dead imports: 7/7 consumer 0 dead code
+
+✅ omo lint schemas pass: 7/7 + 3 完整性 + SRP 守 + 0 dead code
+```
+
+**§13.3 候选完成度**:
+- ✅ 规则 5: `consumer-naming-consistency` (跳过 — 不适配)
+- ✅ 规则 6: `dead-imports` — **本轮实质化**
+- ✅ 规则 7: `cross-module-srp` (R30 实质化)
+- ⏳ 规则 8: `sort-keys-default` (跳过 — 大规模改 25+ .append(), 治本价值低)
+
+**度量 (Round 31 → Round 32)**:
+
+| 指标 | Round 31 | Round 32 | Δ |
+|------|----------|----------|---|
+| omo_lint 规则 | 5 | **6** (+`dead-imports`) | +1 |
+| 单元测试 (lint) | 14 | **14** (mock test 删) | 0 |
+| 单元测试 (总) | 161+ | **161+** (无变化) | 0 |
+| §13 章节 | 6 子节 5 规则 | **6 子节 6 规则** | +1 规则 |
+| §11 章节子节 | 20 段 | **21 段** (+§11.24) | +1 |
+
+**§11 21 段全收 + §12 13 子节 + §13 6 子节 6 规则 + §14 9 子节** (Round 12-32, 31 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-31 | 既有 20 段 + §12/§13/§14 | (前 29 commit) |
+| 32 | §13.3 规则 6 实质化 (dead-imports) | `9b31d779` (OMC 顺手 commit) + (本 commit P1 文档) |
 
 
