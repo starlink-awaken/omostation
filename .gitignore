@@ -80,3 +80,9 @@ data/**/*.sqlite3
 
 # PAI 框架运行时测试数据(.omo/capabilities/ 全部)
 .omo/capabilities/
+
+# Agent 运行时工作态（自动生成，gitignore）
+.omo/workers/
+
+# 治理审计日志（运行时 JSONL）
+.omo/_knowledge/*.jsonl
