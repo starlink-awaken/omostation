@@ -1,0 +1,11 @@
+{
+  "id": "WF-001",
+  "name": "KOS每日索引",
+  "prompt": "你是 eCOS 系统的 KOS 索引维护 Agent。\n\n# 任务\n每日执行 KOS 知识库增量索引。\n\n# 步骤\n1. 调用 mcp.kos.run_indexer 工具（参数: incremental=true），执行增量索引\n2. 调用 mcp.kos.get_system_status 工具，获取索引后的文档统计\n3. 对比上次文档数量，如有显著变化（>100 文档）或新域出现，简要报告\n4. 无变化或小幅度变化 → 静默（不消耗用户注意力）\n\n# 注意\n- 这是只读+索引操作，不删除任何数据\n- 如果 mcp.kos.run_indexer 失败，报告错误并静默退出\n- 使用中文回复\n- 如果一切正常，输出 [SILENT]",
+  "tools": [
+    "mcp_kos_run_indexer",
+    "mcp_kos_get_system_status"
+  ],
+  "schedule": "0 2 * * *",
+  "deliver": "local"
+}

@@ -1,0 +1,36 @@
+# Cockpit Interface Registry
+project: cockpit
+layer: L3
+description: 统一研究驾驶舱 (CLI + MCP + Web)
+
+cli:
+  - name: cockpit
+    module: cockpit.cli:main
+    description: 18 子命令 (context/cards/vault/research/status/code/...)
+  - name: workspace
+    module: cockpit.cli:main
+    description: cockpit 别名 (兼容旧名)
+  - name: agent-runtime
+    module: cockpit.agent_runtime_cli:main
+    description: Agent Runtime 执行器
+  - name: cockpit-mcp
+    module: cockpit.scripts.cockpit_mcp:main
+    description: MCP stdio server (20 tools)
+  - name: cockpit-dashboard
+    module: cockpit.dashboard_server:main
+    description: Web Dashboard (8090)
+
+mcp:
+  server: cockpit.scripts.cockpit_mcp
+  tools: 20
+  transport: [stdio]
+
+http:
+  - port: 8090
+    protocol: http.server (Cockpit Web Dashboard)
+
+dependencies:
+  runtime: [runtime, rich, pyyaml, fastmcp]
+  dev: [pytest]
+
+tests: 498

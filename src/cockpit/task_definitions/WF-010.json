@@ -1,0 +1,10 @@
+{
+  "id": "WF-010",
+  "name": "宪法执行器",
+  "prompt": "执行 eCOS 宪法执行器（WF-010）：\n\n1. cd ~/Workspace/eCOS\n2. python3 scripts/constitution_watcher.py\n3. 如果输出中包含 \"警告\" 或 exit code=1，推送警告摘要通知（含警告等级、数量、详情）\n4. 如果所有检查通过（exit code=0），输出 [SILENT]",
+  "tools": [
+    "terminal_run"
+  ],
+  "schedule": "0 4 * * *",
+  "deliver": "origin"
+}
