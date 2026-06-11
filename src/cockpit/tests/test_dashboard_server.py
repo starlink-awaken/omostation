@@ -1,7 +1,6 @@
 """Dashboard server 测试 — 端点路由/认证/CORS + loader 函数单元测试。"""
 
 from pathlib import Path
-from urllib.request import Request, urlopen
 
 import pytest
 from fastapi.testclient import TestClient
@@ -46,7 +45,7 @@ class TestDashboardAuth:
         import cockpit.dashboard_server as ds
 
         importlib.reload(ds)
-        assert ds.DASHBOARD_TOKEN == "test-secret"
+        assert ds.DASHBOARD_TOKEN == "test-secret"  # noqa: S105
         assert ds.DASHBOARD_TOKEN != ""
 
 

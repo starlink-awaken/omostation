@@ -8,10 +8,13 @@ restore, tag, rename, dossier, half-life, agent-list) and status tools
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sys
 import time
 from pathlib import Path
+
+_log = logging.getLogger(__name__)
 
 import yaml
 
@@ -394,7 +397,7 @@ def _scan_cards() -> list[dict[str, str]]:
                         }
                     )
         except (OSError, ValueError, yaml.YAMLError) as _fm_exc:
-            _log.warning("无法解析卡片 frontmatter: %s (%s)", fp, _fm_exc)
+            _log.warning("无法解析卡片 frontmatter: %s (%s)", md_file, _fm_exc)
             continue
     cards.sort(key=lambda c: ({"P0": 0, "P1": 1, "P2": 2, "P3": 3}.get(c["priority"], 9), c["created"]), reverse=True)
     return cards
