@@ -146,7 +146,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "search",
         ],
-        description="KOS 跨域语义搜索 (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - KOS 跨域语义搜索 (POC stdio)",
     ),
     "bos://memory/kronos/ingest": BosService(
         uri="bos://memory/kronos/ingest",
@@ -166,7 +166,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "ingest",
         ],
-        description="Kronos 知识摄入 (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - Kronos 知识摄入 (POC stdio)",
     ),
     # Governance (4)
     "bos://governance/omo/audit": BosService(
@@ -199,46 +199,7 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="MetaOS 门控检查 (POC stdio)",
     ),
-    "bos://governance/sot-bridge/register": BosService(
-        uri="bos://governance/sot-bridge/register",
-        domain="governance",
-        package="sot-bridge",
-        action="register",
-        transport="mcp_stdio",
-        command=[
-            "uv",
-            "run",
-            "--directory",
-            str(KAIRON_ROOT),
-            "python",
-            "-m",
-            "sot_bridge",
-            "serve",
-            "--action",
-            "register",
-        ],
-        description="SOT-Bridge 注册 (POC stdio)",
-    ),
-    "bos://governance/protocols-layer/trigger": BosService(
-        uri="bos://governance/protocols-layer/trigger",
-        domain="governance",
-        package="protocols-layer",
-        action="trigger",
-        transport="mcp_stdio",
-        command=[
-            "uv",
-            "run",
-            "--directory",
-            str(KAIRON_ROOT),
-            "python",
-            "-m",
-            "protocols_layer",
-            "serve",
-            "--action",
-            "trigger",
-        ],
-        description="Protocols-Layer 触发 (POC stdio)",
-    ),
+
     # Analysis (12 POC — P34-W5 补 minerva.draft/audit, codeanalyze.report/lint, iris.connect/transform/validate, ontoderive.audit/fact-check)
     "bos://analysis/minerva/research": BosService(
         uri="bos://analysis/minerva/research",
@@ -258,7 +219,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "research",
         ],
-        description="Minerva 深度研究 (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - Minerva 深度研究 (POC stdio)",
     ),
     "bos://analysis/minerva/draft": BosService(
         uri="bos://analysis/minerva/draft",
@@ -278,7 +239,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "draft",
         ],
-        description="Minerva 草稿生成 (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - Minerva 草稿生成 (POC stdio)",
     ),
     "bos://analysis/minerva/audit": BosService(
         uri="bos://analysis/minerva/audit",
@@ -298,7 +259,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "audit",
         ],
-        description="Minerva 审计 (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - Minerva 审计 (POC stdio)",
     ),
     "bos://analysis/ontoderive/derive": BosService(
         uri="bos://analysis/ontoderive/derive",
@@ -318,7 +279,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "derive",
         ],
-        description="Ontoderive 事实推导 (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - Ontoderive 事实推导 (POC stdio)",
     ),
     "bos://analysis/ontoderive/audit": BosService(
         uri="bos://analysis/ontoderive/audit",
@@ -338,7 +299,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "audit",
         ],
-        description="Ontoderive 审计 (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - Ontoderive 审计 (POC stdio)",
     ),
     "bos://analysis/ontoderive/fact-check": BosService(
         uri="bos://analysis/ontoderive/fact-check",
@@ -358,7 +319,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "fact-check",
         ],
-        description="Ontoderive 事实校验 (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - Ontoderive 事实校验 (POC stdio)",
     ),
     "bos://analysis/codeanalyze/scan": BosService(
         uri="bos://analysis/codeanalyze/scan",
@@ -378,7 +339,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "scan",
         ],
-        description="CodeAnalyze 代码扫描 (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - CodeAnalyze 代码扫描 (POC stdio)",
     ),
     "bos://analysis/codeanalyze/report": BosService(
         uri="bos://analysis/codeanalyze/report",
@@ -398,7 +359,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "report",
         ],
-        description="CodeAnalyze 分析报告 (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - CodeAnalyze 分析报告 (POC stdio)",
     ),
     "bos://analysis/codeanalyze/lint": BosService(
         uri="bos://analysis/codeanalyze/lint",
@@ -418,7 +379,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "lint",
         ],
-        description="CodeAnalyze Lint (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - CodeAnalyze Lint (POC stdio)",
     ),
     "bos://analysis/iris/connect": BosService(
         uri="bos://analysis/iris/connect",
@@ -438,7 +399,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "connect",
         ],
-        description="Iris 连接 (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - Iris 连接 (POC stdio)",
     ),
     "bos://analysis/iris/transform": BosService(
         uri="bos://analysis/iris/transform",
@@ -458,7 +419,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "transform",
         ],
-        description="Iris 数据转换 (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - Iris 数据转换 (POC stdio)",
     ),
     "bos://analysis/iris/validate": BosService(
         uri="bos://analysis/iris/validate",
@@ -478,7 +439,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "validate",
         ],
-        description="Iris 数据校验 (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - Iris 数据校验 (POC stdio)",
     ),
     # Persona (1 POC)
     "bos://persona/health-profile/summary": BosService(
@@ -499,7 +460,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "summary",
         ],
-        description="Health-Profile 健康摘要 (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - Health-Profile 健康摘要 (POC stdio)",
     ),
     # Capability (1 POC)
     "bos://capability/forge/register-tool": BosService(
@@ -520,32 +481,9 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "register-tool",
         ],
-        description="Forge 工具注册 (POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - Forge 工具注册 (POC stdio)",
     ),
-    # P36-W1 跨域 GAP 补 5 条 (P35-W0 spec 注册但未在 resolver)
-    # Note: sharedbrain-bridge / sot-bridge are legacy BOS compatibility names.
-    # They no longer correspond to live installable packages in the current
-    # kairon tree, but tests and downstream routing still depend on the URI layer.
-    f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}recall-entity": BosService(
-        uri=f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}recall-entity",
-        domain="persona",
-        package=LEGACY_PERSONA_BRIDGE_SERVICE,
-        action="recall-entity",
-        transport="mcp_stdio",
-        command=[
-            "uv",
-            "run",
-            "--directory",
-            str(KAIRON_ROOT),
-            "python",
-            "-m",
-            "sot_bridge.sharedbrain_bridge",
-            "serve",
-            "--action",
-            "recall-entity",
-        ],
-        description="Legacy persona bridge entity recall (canonical compatibility URI, P36-W1 补, POC stdio)",
-    ),
+
     "bos://persona/health-profile/alert": BosService(
         uri="bos://persona/health-profile/alert",
         domain="persona",
@@ -564,7 +502,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "alert",
         ],
-        description="Health-Profile 健康告警 (P36-W1 补, POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - Health-Profile 健康告警 (P36-W1 补, POC stdio)",
     ),
     "bos://capability/forge/exec-tool": BosService(
         uri="bos://capability/forge/exec-tool",
@@ -584,7 +522,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "exec-tool",
         ],
-        description="Forge 工具执行 (P36-W1 补, POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - Forge 工具执行 (P36-W1 补, POC stdio)",
     ),
     "bos://capability/forge/list-tools": BosService(
         uri="bos://capability/forge/list-tools",
@@ -604,7 +542,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "list-tools",
         ],
-        description="Forge 工具列表 (P36-W1 补, POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - Forge 工具列表 (P36-W1 补, POC stdio)",
     ),
     "bos://governance/omo/inspect": BosService(
         uri="bos://governance/omo/inspect",
@@ -616,27 +554,7 @@ POC_SERVICES: dict[str, BosService] = {
         func_name="run_full_inspection",
         description="OMO 系统检查 (P36-W1 补, internal 同进程)",
     ),
-    # ── P45-W0 战役 1: 3 个高 ROI GAP URI 实施 (P44-W2 评估) ──
-    f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}recall": BosService(
-        uri=f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}recall",
-        domain="persona",
-        package=LEGACY_PERSONA_BRIDGE_SERVICE,
-        action="recall",
-        transport="mcp_stdio",
-        command=[
-            "uv",
-            "run",
-            "--directory",
-            str(KAIRON_ROOT),
-            "python",
-            "-m",
-            "sot_bridge.sharedbrain_bridge",
-            "serve",
-            "--action",
-            "recall",
-        ],
-        description="Legacy persona bridge semantic recall (canonical compatibility URI, P45-W0, POC stdio, recall-entity 的泛化版)",
-    ),
+
     "bos://capability/forge/discover": BosService(
         uri="bos://capability/forge/discover",
         domain="capability",
@@ -655,7 +573,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "discover",
         ],
-        description="Forge 工具发现 (P45-W0, POC stdio, LLM 工具选择关键)",
+        description="[UNIMPLEMENTED] - no serve CLI - Forge 工具发现 (P45-W0, POC stdio, LLM 工具选择关键)",
     ),
     "bos://memory/kos/ingest": BosService(
         uri="bos://memory/kos/ingest",
@@ -675,7 +593,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "ingest",
         ],
-        description="KOS 实体写入 (P45-W0, POC stdio, search 的对偶)",
+        description="[UNIMPLEMENTED] - no serve CLI - KOS 实体写入 (P45-W0, POC stdio, search 的对偶)",
     ),
     # ── P45-W1 战役 1: 2 个 kronos GAP URI (P44-W2 评估) ──
     "bos://memory/kronos/query": BosService(
@@ -696,7 +614,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "query",
         ],
-        description="KRONOS 时间序列查询 (P45-W1, POC stdio, ingest 的对偶)",
+        description="[UNIMPLEMENTED] - no serve CLI - KRONOS 时间序列查询 (P45-W1, POC stdio, ingest 的对偶)",
     ),
     "bos://memory/kronos/schedule": BosService(
         uri="bos://memory/kronos/schedule",
@@ -716,7 +634,7 @@ POC_SERVICES: dict[str, BosService] = {
             "--action",
             "schedule",
         ],
-        description="KRONOS 调度任务 (P45-W1, POC stdio)",
+        description="[UNIMPLEMENTED] - no serve CLI - KRONOS 调度任务 (P45-W1, POC stdio)",
     ),
     # ── P45-W2 战役 1: 2 个 governance GAP URI (P44-W2 评估, 跳 omo/sync 复杂度 5) ──
     "bos://governance/metaos/register": BosService(
@@ -739,26 +657,7 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="MetaOS 包注册 (P45-W2, POC stdio, gate 的对偶)",
     ),
-    "bos://governance/sot-bridge/query": BosService(
-        uri="bos://governance/sot-bridge/query",
-        domain="governance",
-        package="sot-bridge",
-        action="query",
-        transport="mcp_stdio",
-        command=[
-            "uv",
-            "run",
-            "--directory",
-            str(KAIRON_ROOT),
-            "python",
-            "-m",
-            "sot_bridge",
-            "serve",
-            "--action",
-            "query",
-        ],
-        description="SOT-Bridge 跨系统查询 (legacy compatibility URI, P45-W2, POC stdio, register 的对偶)",
-    ),
+
     # ── P45-W3 战役 1: 3 个 persona GAP URI (P44-W2 评估) ──
     "bos://persona/core-models/schema": BosService(
         uri="bos://persona/core-models/schema",
@@ -800,26 +699,7 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="core-models 验证 (P45-W3, POC stdio, schema 的对偶)",
     ),
-    f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}sync": BosService(
-        uri=f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}sync",
-        domain="persona",
-        package=LEGACY_PERSONA_BRIDGE_SERVICE,
-        action="sync",
-        transport="mcp_stdio",
-        command=[
-            "uv",
-            "run",
-            "--directory",
-            str(KAIRON_ROOT),
-            "python",
-            "-m",
-            "sot_bridge.sharedbrain_bridge",
-            "serve",
-            "--action",
-            "sync",
-        ],
-        description="Legacy persona bridge sync (canonical compatibility URI, P45-W3, POC stdio, recall-entity 的对偶)",
-    ),
+
     # ── P48-W2 omo/sync 真重构 (stdio transport, 替代 P47 internal) ──
     "bos://governance/omo/sync": BosService(
         uri="bos://governance/omo/sync",
