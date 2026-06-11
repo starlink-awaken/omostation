@@ -37,5 +37,10 @@ def dump():
     print(f"Dumped {count} events to {DUMP_PATH}")
 
 
+def cli_main():
+    """CLI entry point for ecos-ssb-dump"""
+    dump()
+
+
 if __name__ == "__main__":
     dump()
