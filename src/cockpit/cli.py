@@ -271,6 +271,14 @@ def main() -> int:
 
     sub.add_parser("version", help="版本信息")
 
+    # ── CLI 收敛: SSB 签名链 ────────────────────────────────
+    ssb_p = sub.add_parser("ssb", help="SSB 签名链操作 (委派 ecos-ssb)")
+    ssb_p.add_argument("extra", nargs=argparse.REMAINDER, help="传递给 ecos-ssb 的参数")
+
+    # ── CLI 收敛: MOF 元模型 ────────────────────────────────
+    mof_p = sub.add_parser("mof", help="MOF 元模型操作 (委派 mof CLI)")
+    mof_p.add_argument("extra", nargs=argparse.REMAINDER, help="传递给 mof 的参数")
+
     # Gap #7: MetaOS 工作流编排入口
     wf_p = sub.add_parser("workflow", help="🧠 MetaOS 工作流编排（动态规划 / 执行 / 历史）")
     wf_p.add_argument("workflow_args", nargs="*", help="workflow 子命令和参数")
@@ -465,6 +473,16 @@ def main() -> int:
         from cockpit.commands.workflow import handle_workflow
 
         return handle_workflow(getattr(args, "workflow_args", []))
+
+    if args.command == "ssb":
+        from cockpit.commands.ssb import cmd_ssb
+
+        return cmd_ssb(args)
+
+    if args.command == "mof":
+        from cockpit.commands.mof import cmd_mof
+
+        return cmd_mof(args)
 
     console.print(
         Panel.fit(

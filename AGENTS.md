@@ -34,8 +34,8 @@ uv sync
 
 ```
 L3 Cockpit
-├── CLI 入口        ← cli.py (argparse dispatch → 25 subcommands)
-│   └── commands/   ← research, status, contracts, cards, mcp, ...
+├── CLI 入口        ← cli.py (argparse dispatch → 27 subcommands)
+│   └── commands/   ← research, status, contracts, cards, mcp, ssb, mof, ...
 ├── MCP Server      ← scripts/cockpit_mcp.py + l0_mcp_tools.py (37 tools, stdio)
 ├── Agent Runtime   ← agent_runtime_mcp_server.py (2 tools, stdio)
 ├── Legacy Runtime  ← _runtime_mcp_server_legacy.py (7 tools, stdio, deprecated)
@@ -65,6 +65,18 @@ CLI → cli.py → commands/<cmd>.py → storage.py (SQLite)
 | `cockpit data` | `cmd_data_*()` | commands/data.py |
 | `cockpit code` | `cmd_code()` | commands/code.py |
 | `cockpit bos` | `cmd_bos()` | commands/bos.py |
+| `cockpit ssb` | `cmd_ssb()` | commands/ssb.py (委派 ecos-ssb) |
+| `cockpit mof` | `cmd_mof()` | commands/mof.py (委派 mof CLI) |
+
+### CLI Convergence (2026-06-11)
+
+Cockpit = **sole human-facing CLI entry point**. Other CLIs (`agora`, `runtime`, `ecos-ssb`, `omo`, `metaos`) remain as internal/programmatic API only, not for direct human use.
+
+**Wrapped CLIs:**
+- `workspace ssb <args>` → delegates to `ecos-ssb`
+- `workspace mof <args>` → delegates to `mof` CLI (ecos)
+
+**Thin wrapper pattern:** `subprocess.run()` to the underlying CLI module. Wrappers live in `commands/ssb.py` and `commands/mof.py`. Easy to expand as needed.
 
 ## Key Dependencies
 
@@ -93,7 +105,7 @@ uv run pytest src/cockpit/tests/test_cli_research_*.py -q
 ## File Organization
 
 - `src/cockpit/` — 源码 (29 .py 文件)
-- `src/cockpit/commands/` — CLI 子命令 (16 文件)
+- `src/cockpit/commands/` — CLI 子命令 (18 文件)
 - `src/cockpit/scripts/` — MCP Server
 - `src/cockpit/tests/` — 测试 (48 文件, 567 tests)
 - `tests/` — 根级测试 (conftest.py + test_basic.py)
