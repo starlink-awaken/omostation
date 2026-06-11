@@ -826,6 +826,60 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="Cockpit MCP (短路径别名) — 入口收敛 Phase 1",
     ),
+    # ── L4 Kernel MCP (Phase 2: 入口收敛) ────────────────────
+    "bos://governance/l4-kernel/domains": BosService(
+        uri="bos://governance/l4-kernel/domains",
+        domain="governance",
+        package="l4-kernel",
+        action="mcp",
+        transport="mcp_stdio",
+        command=[
+            "uv", "run", "--directory",
+            str(OMOSTATION_ROOT / "projects" / "l4-kernel"),
+            "python", "-m", "l4_kernel.mcp_server",
+        ],
+        description="L4 Domain Kernel MCP — 24域管理，入口收敛 Phase 2",
+    ),
+    "bos://l4-kernel/domains": BosService(  # 短路径别名
+        uri="bos://l4-kernel/domains",
+        domain="governance",
+        package="l4-kernel",
+        action="mcp",
+        transport="mcp_stdio",
+        command=[
+            "uv", "run", "--directory",
+            str(OMOSTATION_ROOT / "projects" / "l4-kernel"),
+            "python", "-m", "l4_kernel.mcp_server",
+        ],
+        description="L4 Kernel MCP (短路径别名) — 入口收敛 Phase 2",
+    ),
+    # ── Runtime MCP (Phase 2: 入口收敛) ───────────────────────
+    "bos://capability/runtime/health": BosService(
+        uri="bos://capability/runtime/health",
+        domain="capability",
+        package="runtime",
+        action="mcp",
+        transport="mcp_stdio",
+        command=[
+            "uv", "run", "--directory",
+            str(OMOSTATION_ROOT / "projects" / "runtime"),
+            "python", "-m", "runtime.mcp_server",
+        ],
+        description="Runtime MCP — 服务注册表/健康/协议/KEI，入口收敛 Phase 2",
+    ),
+    "bos://runtime/health": BosService(  # 短路径别名
+        uri="bos://runtime/health",
+        domain="capability",
+        package="runtime",
+        action="mcp",
+        transport="mcp_stdio",
+        command=[
+            "uv", "run", "--directory",
+            str(OMOSTATION_ROOT / "projects" / "runtime"),
+            "python", "-m", "runtime.mcp_server",
+        ],
+        description="Runtime MCP (短路径别名) — 入口收敛 Phase 2",
+    ),
 }
 
 

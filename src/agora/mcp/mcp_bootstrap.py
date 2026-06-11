@@ -174,6 +174,36 @@ _KNOWN_FALLBACK: dict[str, dict[str, Any]] = {
         "description": "Cockpit MCP — 研究(12)、状态(3)、L4桥接(workspace_context/cards_status/cards_check/vault_search/domains_list) 共20工具",
         "source": "kairon",
     },
+    # ── L4 Domain Kernel MCP — 入口收敛 Phase 2 ─────────────
+    "l4-kernel": {
+        "command": "uv",
+        "args": [
+            "run",
+            "--directory",
+            str(Path(__file__).resolve().parents[4] / "projects" / "l4-kernel"),
+            "python",
+            "-m",
+            "l4_kernel.mcp_server",
+        ],
+        "description": "L4 Domain Kernel — 24域统一注册表、KEMS六面操作、健康聚合、域生命周期管理",
+        "source": "l4-kernel",
+        "init_timeout": 15,
+    },
+    # ── Runtime MCP — 入口收敛 Phase 2 ─────────────────────
+    "runtime": {
+        "command": "uv",
+        "args": [
+            "run",
+            "--directory",
+            str(Path(__file__).resolve().parents[4] / "projects" / "runtime"),
+            "python",
+            "-m",
+            "runtime.mcp_server",
+        ],
+        "description": "Runtime MCP — 服务注册表、健康监控、协议管理、KEI执行、cron-service",
+        "source": "runtime",
+        "init_timeout": 15,
+    },
     "minerva": {
         "command": "uv",
         "args": [
