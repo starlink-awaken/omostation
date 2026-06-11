@@ -36,12 +36,29 @@ jobs:
               echo "::warning::audit-rollout reports drift (Round 27 设计, 1 退出码不阻塞)"
               exit 0
             }
-      - name: Commit rollout report
+      - name: Run omo logs audit --metrics (Round 41 P0 — §17 度量接 cron)
+        # §17.8 实质化 (`--exclude-locked` 默认 True) 让 §17.6 健康度评分可执行
+        # 退出码语义 (R39 P0):
+        #   0 = R0 优秀
+        #   1 = R1-R2 (warning)
+        #   2 = R3+ (fail)
+        run: |
+          cd projects/omo
+          DATE=$(date -u +%Y-%m-%d)
+          METRICS_OUTPUT=".omo/_delivery/audit-rollout/${DATE}-metrics.json"
+          uv run --no-sync python -m omo.cli logs audit --metrics \
+            > "$METRICS_OUTPUT" 2>&1 || {
+              echo "::warning::§17 metrics 跑出 R3+ (R39 P0 退出码 2), 标 warning 不阻塞"
+              exit 0
+            }
+          # 终端输出当前健康度评分 (CI log 友好)
+          cat "$METRICS_OUTPUT" | python3 -c "import sys, json; d=json.load(sys.stdin); print(f'§17 metrics: drift={d[\"drift_count\"]} locked={d[\"locked_drift\"]} new_debt={d[\"drift_count_excluding_locked\"]} density={d[\"debt_density\"]:.6f} grade={d[\"health_grade\"]}')"
+      - name: Commit rollout + metrics reports
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .omo/_delivery/audit-rollout/
           git diff --staged --quiet || { echo "no rollout change, skip commit"; exit 0; }
           DATE=$(date -u +%Y-%m-%d)
-          git commit -m "audit-rollout: monthly report $DATE (cron)"
+          git commit -m "audit-rollout: monthly report $DATE (cron, 含 §17 metrics)"
           git push
