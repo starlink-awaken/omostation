@@ -473,3 +473,161 @@ class TestP2GateC3VaultActivation:
                        "_freshness", "_owner", "_reuse_policy", "_retrieved_at"}
         for item in response["results"]:
             assert required_t4 <= set(item.keys()), f"missing T4 in {item.get('id', '?')}"
+
+
+# ═══ OPC P2 Gate C4 — Real Trace Closure (Playbook §7) ═══
+class TestP2GateC4TraceClosure:
+    """P2 Gate C4 验收: 至少一个 query 留下可复现的 trace。
+
+    验收条件 (Playbook §7 P2.4 Gate C4):
+      - 至少一个 query 留 trace (input, zones queried, result count, writeback)
+      - trace 可通过命令和文件引用复现
+    """
+
+    def test_writeback_creates_persistent_trace(self, monkeypatch):
+        """Red line 守护: 第一次 run 写入 trace 到 research, 返回 deduped=False。"""
+        import time
+
+        from cockpit.cli import _writeback_search_trace
+
+        # 清理可能存在的同 query trace
+        from cockpit.storage import get_data_access
+        da = get_data_access()
+        da._ensure_db()
+        conn = da._connect()
+        test_query = f"c4-trace-test-{int(time.time())}"
+        conn.execute(
+            "DELETE FROM research WHERE topic = ? AND agent = ?",
+            (f"search-trace: {test_query}", "opc-p2-trace"),
+        )
+        conn.commit()
+        conn.close()
+
+        # 第一次 run
+        trace1 = _writeback_search_trace(
+            query=test_query,
+            zone_count={"local": 0, "kos": 5, "vault": 3},
+            total=8,
+            limit=10,
+        )
+        assert trace1.get("trace_id"), "first run must create trace"
+        assert trace1.get("deduped") is False
+        assert trace1.get("query") == test_query
+        assert trace1.get("zone_count") == {"local": 0, "kos": 5, "vault": 3}
+        assert trace1.get("total") == 8
+
+        # 第二次 run (60s 内) → 命中 dedup
+        trace2 = _writeback_search_trace(
+            query=test_query,
+            zone_count={"local": 1, "kos": 5, "vault": 3},
+            total=9,
+            limit=10,
+        )
+        assert trace2.get("trace_id") == trace1.get("trace_id"), "dedup must return same id"
+        assert trace2.get("deduped") is True
+
+        # 验证 trace 真的持久化到 research 表
+        da = get_data_access()
+        conn = da._connect()
+        row = conn.execute(
+            "SELECT id, topic, summary, source_count, agent FROM research WHERE id = ?",
+            (trace1["trace_id"],),
+        ).fetchone()
+        conn.close()
+        assert row is not None, "trace must be persisted"
+        assert row[1] == f"search-trace: {test_query}"
+        assert row[4] == "opc-p2-trace"
+        # summary 包含 zone_count JSON
+        import json
+        summary_dict = json.loads(row[2])
+        assert "zone_count" in summary_dict
+        assert "query" in summary_dict
+        assert "total" in summary_dict
+        assert "timestamp" in summary_dict
+
+        # 清理
+        da = get_data_access()
+        conn = da._connect()
+        conn.execute("DELETE FROM research WHERE id = ?", (trace1["trace_id"],))
+        conn.commit()
+        conn.close()
+
+    def test_writeback_silent_on_subprocess_failure(self, monkeypatch):
+        """Red line 守护: writeback 失败时静默返回 {}, 不阻塞 _cmd_search。"""
+        from cockpit.cli import _writeback_search_trace
+
+        # 强制 save_research 失败
+        def _raise(*args, **kwargs):
+            raise OSError("disk full")
+        from cockpit.storage import get_data_access
+        monkeypatch.setattr(get_data_access(), "save_research", _raise)
+        # 用唯一 query 避免 dedup
+        import time
+        trace = _writeback_search_trace(
+            query=f"fail-test-{int(time.time())}",
+            zone_count={"local": 0},
+            total=0,
+            limit=10,
+        )
+        # 任何步骤失败 → 静默返回 {}
+        assert trace == {}
+
+    def test_cmd_search_emits_trace_in_response(self, capsys, monkeypatch):
+        """验证 _cmd_search --all 在响应中包含 _trace 字段。"""
+        import json
+        from argparse import Namespace
+
+        from cockpit import storage as _storage_mod
+        from cockpit.cli import _cmd_search
+
+        # 清理可能存在的 trace
+        from cockpit.storage import get_data_access
+        da = get_data_access()
+        conn = da._connect()
+        import time
+        test_query = f"trace-cmd-search-{int(time.time())}"
+        conn.execute(
+            "DELETE FROM research WHERE topic = ? AND agent = ?",
+            (f"search-trace: {test_query}", "opc-p2-trace"),
+        )
+        conn.commit()
+        conn.close()
+
+        # Stub 外部依赖, 让 _cmd_search 走完所有 zone
+        monkeypatch.setattr(
+            _storage_mod.get_data_access(), "search_research",
+            lambda keyword, limit: [],
+        )
+        monkeypatch.setattr(
+            "cockpit.cli._invoke_kos_search",
+            lambda query, limit=10, **kw: [],
+        )
+        monkeypatch.setattr(
+            "cockpit.cli._invoke_vault_search",
+            lambda query, limit=10, **kw: [],
+        )
+
+        args = Namespace(query=test_query, all=True, json=True, limit=10)
+        rc = _cmd_search(args)
+        assert rc == 0
+
+        out = capsys.readouterr().out
+        response = json.loads(out)
+        # 关键: 响应必须包含 _trace
+        assert "_trace" in response, "response must contain _trace"
+        trace = response["_trace"]
+        assert "trace_id" in trace
+        assert trace.get("query") == test_query
+        assert "zone_count" in trace
+        assert "total" in trace
+        assert "timestamp" in trace
+
+        # 清理
+        da = get_data_access()
+        conn = da._connect()
+        conn.execute(
+            "DELETE FROM research WHERE topic = ? AND agent = ?",
+            (f"search-trace: {test_query}", "opc-p2-trace"),
+        )
+        conn.commit()
+        conn.close()

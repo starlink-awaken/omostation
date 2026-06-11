@@ -813,6 +813,18 @@ def _cmd_search(args: Namespace) -> int:
         except Exception as e:
             _log_vault_skip(f"unexpected: {type(e).__name__}: {e}")
 
+    # Zone 4: Trace Closure (Gate C4).
+    # 把本次 search 的 input + zones + counts 持久化到 cockpit research
+    # (writeback), 并把 list_research 命中作为 evidence 返回。
+    # 红线: 不重复 writeback (用 query+now 简单去重), 不阻塞用户响应
+    # (subprocess 静默错误)。
+    trace: dict = {}
+    if search_all:
+        try:
+            trace = _writeback_search_trace(query, zone_count, len(merged_results), limit)
+        except Exception as e:
+            _log_trace_skip(f"unexpected: {type(e).__name__}: {e}")
+
     # ═══ P2 统一响应契约: zone, query, zone_count, results, total ═══
     response = {
         "zone": "all",
@@ -821,6 +833,9 @@ def _cmd_search(args: Namespace) -> int:
         "results": merged_results[:limit],
         "total": len(merged_results),
     }
+    if trace.get("trace_id"):
+        response["_trace"] = trace
+
     if args.json:
         import json as _json
         import sys as _sys
@@ -845,6 +860,8 @@ def _cmd_search(args: Namespace) -> int:
             console.print(f"  ▸ [{zone}] {title}  [dim]{src}[/dim]")
         if not search_all:
             console.print("[dim]提示: 加 --all 搜索 BOS 知识引擎[/]")
+        if trace.get("trace_id"):
+            console.print(f"[dim]trace_id: {trace['trace_id']} ({'deduped' if trace.get('deduped') else 'new'})[/dim]")
 
     return 0
 
@@ -1165,6 +1182,104 @@ def _infer_vault_zone(rel_path: str) -> str:
     if parts and parts[0].startswith("_"):
         return parts[0].lstrip("_")
     return "knowledge"
+
+
+def _log_trace_skip(reason: str) -> None:
+    """记录 trace 跳过原因 (debug-level)。"""
+    import logging as _logging
+    _logging.getLogger("cockpit.cli.trace").debug("trace skip: %s", reason)
+
+
+def _writeback_search_trace(
+    query: str,
+    zone_count: dict,
+    total: int,
+    limit: int,
+) -> dict:
+    """Gate C4 — 持久化 search trace 到 cockpit research (writeback)。
+
+    流程:
+      1. 检查 recent 60s 内是否有同 query 的 trace (去重, 避免重复 writeback)
+      2. 调 cockpit storage.save_research, 把 trace 写入 research 表
+        - topic:    "search-trace: <query>" (限长 200)
+        - summary:  zone_count 字典 (JSON) + total + limit + 时间戳
+        - full_text: 各 zone top-3 item (id/title/source_path/timestamp)
+        - source_count: total
+        - agent:     "opc-p2-trace"
+      3. 返回 trace dict: {trace_id, query, zone_count, total, timestamp, deduped}
+
+    设计原则 (OPC P2.2 red lines):
+      - 不重复 writeback: 同 query 在 60s 内已存在则返回已有 trace (deduped=True)
+      - 不阻塞: 任何步骤 except, 静默返回 {}
+      - 不重试: 单次 save 失败 → 返回 {}
+    """
+    import json as _json
+    import time as _time
+    try:
+        from .storage import get_data_access
+    except ImportError:
+        from cockpit.storage import get_data_access
+    da = get_data_access()
+    now = _time.time()
+
+    # 1) dedup check: 60s 内同 query 的 trace
+    # 用直接 SQL 查询 (避免 search_research 的 FTS5 特殊字符 bug:
+    #  `search-trace: foo` 的冒号会让 FTS5 MATCH 报 no such column)
+    try:
+        da._ensure_db()
+        _conn = da._connect()
+        _rows = _conn.execute(
+            "SELECT id, created_at FROM research "
+            "WHERE topic LIKE ? AND agent = ? AND created_at > ? "
+            "ORDER BY created_at DESC LIMIT 3",
+            (f"search-trace: {query[:50]}%", "opc-p2-trace", now - 60),
+        ).fetchall()
+        _conn.close()
+        recent = [{"id": r[0], "created_at": r[1]} for r in _rows]
+    except Exception as e:
+        _log_trace_skip(f"dedup check failed: {type(e).__name__}: {e}")
+        recent = []
+
+    for r in recent:
+        created = r.get("created_at", 0)
+        if created and (now - float(created)) < 60:
+            return {
+                "trace_id": r.get("id"),
+                "query": query,
+                "zone_count": zone_count,
+                "total": total,
+                "timestamp": _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime(float(created))),
+                "deduped": True,
+            }
+
+    # 2) 写入新 trace
+    summary_dict = {
+        "query": query,
+        "zone_count": zone_count,
+        "total": total,
+        "limit": limit,
+        "timestamp": _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime(now)),
+    }
+    try:
+        trace_id = da.save_research(
+            topic=f"search-trace: {query[:200]}",
+            summary=_json.dumps(summary_dict, ensure_ascii=False),
+            full_text="P2 C4 search-trace writeback (zones + counts).",
+            source_count=total,
+            agent="opc-p2-trace",
+        )
+    except Exception as e:
+        _log_trace_skip(f"save failed: {type(e).__name__}: {e}")
+        return {}
+
+    return {
+        "trace_id": trace_id,
+        "query": query,
+        "zone_count": zone_count,
+        "total": total,
+        "timestamp": summary_dict["timestamp"],
+        "deduped": False,
+    }
 
 
 def _cmd_discover(args: Namespace) -> int:
