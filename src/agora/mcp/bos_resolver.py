@@ -880,6 +880,17 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="Runtime MCP (短路径别名) — 入口收敛 Phase 2",
     ),
+    # ── Meta: 发现/BOS 目录 (产品体验) ─────────────────────────
+    "bos://meta/discover": BosService(
+        uri="bos://meta/discover",
+        domain="governance",
+        package="meta",
+        action="discover",
+        transport="internal",
+        module_path="agora.mcp.bos_resolver",
+        func_name="_meta_discover",
+        description="发现所有可用 BOS 资源和入口 — Agent 首次接入时调用",
+    ),
 }
 
 
@@ -1517,6 +1528,27 @@ def protocol_self_check() -> dict:
     }
 
 
+def _meta_discover() -> dict:
+    """发现所有可用 BOS 资源和入口 — Agent 首次接入时调用。"""
+    services = list_services()
+    return {
+        "version": "1.0",
+        "entry_points": {
+            "cli": "cockpit",
+            "mcp": "agora :7431 (SSE, resolve_bos_uri 入口收敛)",
+            "http": "cockpit :8090 (Web Dashboard)",
+        },
+        "bos_domains": {domain: uris for domain, uris in list_domains().items()},
+        "total_services": len(services),
+        "by_transport": {
+            t: sum(1 for s in services if s["transport"] == t)
+            for t in ("stdio", "internal", "http", "mcp_stdio")
+        },
+        "services": services,
+        "hint": "通过 cockpit CLI 或 agora MCP resolve_bos_uri 访问以上资源",
+    }
+
+
 # Re-export 关键 API
 __all__ = (
     "BOS_URI_PATTERN",
@@ -1534,6 +1566,7 @@ __all__ = (
     "list_domains",
     "get_service",
     "protocol_self_check",
+    "_meta_discover",
 )
 
 
