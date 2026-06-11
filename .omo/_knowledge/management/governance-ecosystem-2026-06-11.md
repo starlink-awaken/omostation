@@ -62,7 +62,7 @@
 
 **§19 候选**: 留 §19.5 R48 跟进.
 
-## §19.3 §18.8 候选 2: §12.5.1 步骤 4 加 §17 metrics 跨仓聚合 (R46)
+## §19.3 §18.8 候选 2: §12.5.1 步骤 4 加 §17 metrics 跨仓聚合 (R46 ✅)
 
 **动机**: §12.5.1 (R26 起步) 3 步骤全实质化 (步骤 1-3 R27-R28), 步骤 4 (§17 metrics 跨仓聚合) 留候选.
 
@@ -72,6 +72,14 @@
 - 跨仓聚合报告 + 健康度评分, 让"跨仓债" + "跨仓健康度"可比较
 
 **§15 节奏**: R46 实质化后, 跨仓健康度报告可对比 (omostation R0 vs kairon R?).
+
+**R46 P0 ✅实质化** (2026-06-11):
+- `projects/omo/src/omo/omo_audit_rollout.py` 加 `--include-metrics` flag
+- `_run_logs_metrics()` 跨仓跑 `omo logs audit --metrics` (优先 venv python →兜底 uv run)
+- `aggregate_baselines(..., include_metrics=True)`聚合 `health_grade` + `debt_density`
+- `render_rollout_table()` 加健康度列 (✅ R0 / ⚠️ R1-R2 / ❌ R3+)
+- 退出码 3 = R3+ 危急, 报告仍生成
+- 实测: omostation 仓 ✅ R0 (density=0.0000, 1535 locked drift 全历史锁)
 
 ## §19.4 §18.8 候选 3: ci-lint.yml 加 §17 metrics 输出 + 健康度趋势图 (R47)
 
