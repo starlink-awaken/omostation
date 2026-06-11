@@ -733,7 +733,7 @@ def _cmd_brief(args: Namespace) -> int:
 
 def _cmd_search(args: Namespace) -> int:
     """跨源搜索 — 搜索本地数据库和/或 BOS 知识引擎。"""
-    console = _get_console()
+    console = Console()
     query = getattr(args, "query", "")
     if not query:
         console.print("[yellow]请输入搜索关键词[/]")
@@ -788,7 +788,7 @@ def _cmd_search(args: Namespace) -> int:
 
 def _cmd_discover(args: Namespace) -> int:
     """发现可用功能和资源。"""
-    console = _get_console()
+    console = Console()
     console.print("[bold cyan]🛸 cockpit 可用功能[/bold cyan]\n")
     console.print("[bold]入口[/]")
     console.print("  [cyan]cockpit[/]                — 本帮助菜单")
