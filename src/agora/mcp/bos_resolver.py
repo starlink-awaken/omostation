@@ -800,6 +800,32 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="Agent-runtime task-status (P46, POC stdio, 跨项目 spawn runtime)",
     ),
+    # ── Cockpit MCP (Phase 1: 入口收敛) ──────────────────────
+    "bos://governance/cockpit/context": BosService(
+        uri="bos://governance/cockpit/context",
+        domain="governance",
+        package="cockpit",
+        action="mcp",
+        transport="mcp_stdio",
+        command=[
+            "uv", "run", "--package", "cockpit",
+            "python", "-m", "cockpit.scripts.cockpit_mcp",
+        ],
+        description="Cockpit MCP Server — 20 工具 (研究/状态/L4桥接)，入口收敛 Phase 1",
+    ),
+    # 别名: cockpit 核心工具直接路由
+    "bos://cockpit/context": BosService(  # 短路径别名
+        uri="bos://cockpit/context",
+        domain="governance",
+        package="cockpit",
+        action="mcp",
+        transport="mcp_stdio",
+        command=[
+            "uv", "run", "--package", "cockpit",
+            "python", "-m", "cockpit.scripts.cockpit_mcp",
+        ],
+        description="Cockpit MCP (短路径别名) — 入口收敛 Phase 1",
+    ),
 }
 
 
