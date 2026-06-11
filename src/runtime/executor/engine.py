@@ -18,14 +18,17 @@ from runtime.executor.config import (
     WORKSPACE,
     log,
 )
+from runtime.executor.io import AppendOnlyLog
+from runtime.executor.io_schemas import ExecutorLogRecord
 from runtime.executor.matrix_bridge import report_execution
 from runtime.executor.tools import Tools
 
 
 def _log_execution(task_id: str, status: str, summary: str, result: dict, duration_sec: float):
-    """写入执行日志到 JSONL 文件。"""
+    """写入执行日志到 JSONL 文件。R51 P0: AppendOnlyLog.append() 替换裸 open()"""
     entry = {
-        "ts": datetime.now(UTC).isoformat(),
+        # Python 3.14 isoformat() 返回 +00:00 而非 Z，用 strftime 硬编码 Z
+        "ts": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "task_id": task_id,
         "status": status,
         "summary": summary[:500],
@@ -33,8 +36,7 @@ def _log_execution(task_id: str, status: str, summary: str, result: dict, durati
         "tokens_used": result.get("usage", {}).get("total_tokens", 0),
         "duration_sec": round(duration_sec, 2),
     }
-    with open(EXEC_LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    AppendOnlyLog(str(EXEC_LOG_FILE)).append(entry, schema=ExecutorLogRecord)
 
     # Bridge to Matrix for observability
     try:
