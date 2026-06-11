@@ -201,6 +201,7 @@ def cmd_logs_audit(
     baseline_init: str | None = None,
     baseline_check: str | None = None,
     metrics: bool = False,
+    exclude_locked: bool = True,
 ) -> int:
     """走 SSOT schema 检查所有 .jsonl, 报漂移.
 
@@ -340,10 +341,23 @@ def cmd_logs_audit(
         else:
             print(f"✅ {p.stem} ({schema_name}): {len(AppendOnlyLog(p).read_all()):,} records 符合 SSOT")
 
+    # Round 40 P0: --exclude-locked flag 区分历史锁 vs 新债 (默认 True)
+    # 历史锁消费者: omo_history (R14 之前的 1100+ 老 record 永久锁住)
+    #              + omo_sync (1 record 漂移, R20 治本未全清)
+    # §17.1.3 老 record 锁校正: 这些"债" 永久不可清理, 不应误报 R5
+    if exclude_locked:
+        locked_consumers = {"omo_history", "omo_sync"}
+        locked_drift = sum(v for k, v in drift_by_consumer.items() if k in locked_consumers)
+        new_debt_drift = total_failures - locked_drift
+    else:
+        locked_drift = 0
+        new_debt_drift = total_failures
+
     # Round 39 P0: --metrics flag 输出 §17 度量 JSON + R0-R5 健康度
     if metrics:
         from datetime import datetime as _dt, timezone as _tz
-        density = total_failures / total_records if total_records > 0 else 0.0
+        # Round 40 P0: 基于"新债"算 density (排除历史锁)
+        density = new_debt_drift / total_records if total_records > 0 else 0.0
         if density <= 0.01:
             grade = "R0"
             exit_code = 0
@@ -365,12 +379,14 @@ def cmd_logs_audit(
         metrics_payload = {
             "generated_at": _dt.now(_tz.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "drift_count": total_failures,
+            "drift_count_excluding_locked": new_debt_drift,
+            "locked_drift": locked_drift,
             "total_records": total_records,
             "debt_density": round(density, 6),
             "health_grade": grade,
             "consumers": dict(sorted(drift_by_consumer.items())),
         }
-        print(f"\n📊 §17 metrics (Round 39 P0):")
+        print(f"\n📊 §17 metrics (Round 40 P0, --exclude-locked 默认 True):")
         print(json.dumps(metrics_payload, indent=2, ensure_ascii=False, sort_keys=True))
         return exit_code
 
@@ -420,6 +436,12 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="输出 §17 度量 JSON + R0-R5 健康度评分 (Round 39 P0, 与 baseline 互斥)",
     )
+    au.add_argument(
+        "--exclude-locked",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="排除历史锁 (omo_history + omo_sync) 漂移 (Round 40 P0, 默认 True)",
+    )
 
     args = parser.parse_args(argv)
     if args.command == "list":
@@ -434,6 +456,7 @@ def main(argv: list[str] | None = None) -> int:
             baseline_init=args.baseline_init,
             baseline_check=args.baseline_check,
             metrics=args.metrics,
+            exclude_locked=args.exclude_locked,
         )
     parser.print_help()
     return 1
