@@ -17,9 +17,9 @@
 ├────────────────────────────────────────────────────────────────────┤
 │  L3 入口层 (cockpit)                                               │
 │  ├── CLI — 25 子命令 (research/status/cards/health/...)             │
-│  ├── MCP Server — 37 工具 (主20 + Agent 2 + L0 8 + 遗留7)           │
+│  ├── MCP Server — 37 工具【已通过 agora :7431 代理 — stdio deprecated】│
 │  ├── Web Dashboard — FastAPI · 16 REST API (:8090)                 │
-│  └── 测试: 562 collected / 542 passed (567 total, 20 字符串比较)     │
+│  └── 测试: 562 collected / 542 passed                                │
 ├────────────────────────────────────────────────────────────────────┤
 │  I0 织层 (agora)                                                   │
 │  ├── MCP Mesh — 42 工具 · 40 BOS 路由 · 三层路由链                  │
@@ -170,17 +170,21 @@ Agent 操作
 
 ---
 
-## 四、对外接入
+## 四、对外接入 (入口收敛后 3 入口)
 
-| 入口 | 协议 | 端口 | 用途 | 鉴权 |
-|:----:|:----:|:----:|------|:----:|
-| cockpit CLI | subprocess | — | 终端入口 | shell 鉴权 |
-| cockpit MCP | stdio | — | Agent 调用 | — |
-| cockpit HTTP | FastAPI | :8090 | Web Dashboard | API key |
-| agora MCP | SSE | :7431 | LLM tool call | API key |
-| agora HTTP | aiohttp | :7422 | 自动化脚本 | API key + SSB |
-| runtime MCP | stdio | — | Ephemeral Agents | — |
-| l4-kernel MCP | stdio | — | L4 管理 | — |
+| 入口 | 协议 | 端口 | 用途 | 鉴权 | 状态 |
+|:----:|:----:|:----:|------|:----:|:----:|
+| **cockpit CLI** | subprocess | — | 终端入口（人类唯一） | shell | 🟢 |
+| **agora MCP** | SSE | **:7431** | 统一 MCP 入口（135 工具） | API key | 🟢 已收敛 |
+| **cockpit HTTP** | FastAPI | :8090 | Web Dashboard / REST | API key | 🟢 |
+
+**已下线入口**:
+| 原入口 | 协议 | 下线原因 | 替代方式 |
+|:------:|:----:|---------|---------|
+| cockpit MCP | stdio | 入口收敛 Phase 1 | agora MCP `bos://cockpit/context` |
+| l4-kernel MCP | stdio | 入口收敛 Phase 2 | agora MCP `bos://l4-kernel/domains` |
+| runtime MCP | stdio | 入口收敛 Phase 2 | agora MCP `bos://runtime/health` |
+| agora HTTP | — | 从未独立存在 | cockpit HTTP :8090 |
 
 ---
 
