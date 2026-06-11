@@ -631,3 +631,295 @@ class TestP2GateC4TraceClosure:
         )
         conn.commit()
         conn.close()
+
+
+# ═══ OPC P2 Closeout — 3 缺口补丁 (2026-06-11) ═══
+class TestP2CloseoutInterleave:
+    """Task 2: multi-zone results visibility.
+
+    Hard requirement (red line): when zone_count.X > 0, the response.results
+    list must contain at least 1 item from zone X. Without an interleaver,
+    a long local-zone prefix pushes later zones past the slice boundary.
+    """
+
+    def test_interleave_keeps_every_nonzero_zone_visible(self):
+        """3 zones, 6 items each, limit=5 → all 3 zones visible in output."""
+        from cockpit.cli import _interleave_by_source
+        local = [
+            {"id": f"L{i}", "_source": "cockpit-local", "title": f"local {i}"}
+            for i in range(6)
+        ]
+        kos = [
+            {"id": f"K{i}", "_source": "kairon-kos", "title": f"kos {i}"}
+            for i in range(6)
+        ]
+        vault = [
+            {"id": f"V{i}", "_source": "@学习进化", "title": f"vault {i}"}
+            for i in range(6)
+        ]
+        merged = local + kos + vault
+        out = _interleave_by_source(merged, limit=5)
+        sources = {it["_source"] for it in out}
+        assert "cockpit-local" in sources, f"local missing: {sources}"
+        assert "kairon-kos" in sources, f"kos missing: {sources}"
+        assert "@学习进化" in sources, f"vault missing: {sources}"
+        assert len(out) == 5
+
+    def test_interleave_one_item_per_zone_first(self):
+        """Pass 1 guarantees 1 item per non-empty bucket before round-robin."""
+        from cockpit.cli import _interleave_by_source
+        merged = (
+            [{"id": f"L{i}", "_source": "cockpit-local", "title": f"L{i}"} for i in range(10)]
+            + [{"id": f"K{i}", "_source": "kairon-kos", "title": f"K{i}"} for i in range(2)]
+            + [{"id": f"V{i}", "_source": "@学习进化", "title": f"V{i}"} for i in range(1)]
+        )
+        out = _interleave_by_source(merged, limit=3)
+        assert len(out) == 3
+        assert {it["_source"] for it in out} == {
+            "cockpit-local",
+            "kairon-kos",
+            "@学习进化",
+        }
+
+    def test_interleave_handles_single_zone(self):
+        """Single zone → behave like slice."""
+        from cockpit.cli import _interleave_by_source
+        merged = [{"id": f"L{i}", "_source": "cockpit-local", "title": f"L{i}"} for i in range(20)]
+        out = _interleave_by_source(merged, limit=5)
+        assert len(out) == 5
+        assert all(it["_source"] == "cockpit-local" for it in out)
+
+    def test_interleave_handles_empty(self):
+        from cockpit.cli import _interleave_by_source
+        assert _interleave_by_source([], limit=5) == []
+        assert _interleave_by_source([{"_source": "x"}], limit=0) == []
+
+    def test_cmd_search_preserves_vault_when_kos_dominates(self, capsys, monkeypatch):
+        """End-to-end: real cmd_search --all must include vault when zone_count.vault > 0.
+
+        Regression guard for Task 2 — even with kos=20 and local=20, a
+        10-slot response that includes vault must keep at least 1 vault item.
+        """
+        import time as _t
+        from argparse import Namespace
+
+        from cockpit import storage as _storage_mod
+        from cockpit.cli import _cmd_search
+        # Use a unique query to avoid dedup collision with prior tests
+        q = f"c2 interleave test {_t.time_ns()}"
+
+        # Clean any prior trace for this query (none expected, but defensive)
+        from cockpit.storage import get_data_access
+        da = get_data_access()
+        da._ensure_db()
+        conn = da._connect()
+        conn.execute(
+            "DELETE FROM research WHERE topic = ? AND agent = ?",
+            (f"search-trace: {q[:50]}", "opc-p2-trace"),
+        )
+        conn.commit()
+        conn.close()
+
+        # Stub zones: 20 local + 20 kos + 5 vault
+        local_items = [
+            {
+                "id": j, "topic": f"local {j}", "summary": "s", "snippet": "sn",
+                "tags": [], "agent": "",
+                "_source": "cockpit-local", "_source_path": f"research/{j}",
+                "_zone": "personal-knowledge", "_type": "research",
+                "_freshness": "fresh", "_owner": "opc",
+                "_reuse_policy": "reference-only", "_retrieved_at": "2026-06-11T00:00:00",
+            }
+            for j in range(20)
+        ]
+        kos_items = [
+            {
+                "id": f"k{j}", "title": f"kos {j}", "source": "kairon-kos",
+                "source_path": f"kos::k{j}", "timestamp": "2026-05-30T13:38:45Z",
+                "type": "knowledge", "snippet": "",
+                "_source": "kairon-kos", "_source_path": "bos://memory/kos/search",
+                "_zone": "structured-memory", "_type": "knowledge",
+                "_freshness": "unknown", "_owner": "kairon",
+                "_reuse_policy": "reference-only", "_retrieved_at": "2026-06-11T00:00:00",
+            }
+            for j in range(20)
+        ]
+        vault_items = [
+            {
+                "id": f"_knowledge/{j}.md", "title": f"vault {j}", "source": "@学习进化",
+                "source_path": f"_knowledge/{j}.md", "timestamp": "2026-06-01T00:00:00+00:00",
+                "type": "document", "snippet": "x", "vault_zone": "knowledge",
+                "_source": "@学习进化", "_source_path": f"_knowledge/{j}.md",
+                "_zone": "document-vault", "_type": "document",
+                "_freshness": "unknown", "_owner": "vault",
+                "_reuse_policy": "derived-allowed", "_retrieved_at": "2026-06-11T00:00:00",
+            }
+            for j in range(5)
+        ]
+
+        monkeypatch.setattr(
+            _storage_mod.get_data_access(), "search_research",
+            lambda keyword, limit: local_items[:limit],
+        )
+        monkeypatch.setattr("cockpit.cli._invoke_kos_search", lambda q, limit=10, **kw: kos_items)
+        monkeypatch.setattr("cockpit.cli._invoke_vault_search", lambda q, limit=10, **kw: vault_items)
+
+        args = Namespace(query=q, all=True, json=True, limit=10)
+        rc = _cmd_search(args)
+        assert rc == 0
+
+        import json as _json
+        response = _json.loads(capsys.readouterr().out)
+        sources = {it["_source"] for it in response["results"]}
+        # Hard red line: vault must be visible
+        assert "@学习进化" in sources, (
+            f"vault zone missing from results: sources={sources}, "
+            f"zone_count={response['zone_count']}"
+        )
+        assert "kairon-kos" in sources
+        assert "cockpit-local" in sources
+
+        # Cleanup the trace written by this test
+        da = get_data_access()
+        conn = da._connect()
+        conn.execute(
+            "DELETE FROM research WHERE topic = ? AND agent = ?",
+            (f"search-trace: {q[:50]}", "opc-p2-trace"),
+        )
+        conn.commit()
+        conn.close()
+
+
+class TestP2CloseoutTraceFullText:
+    """Task 3: trace full_text must contain real hit summary, not placeholder."""
+
+    def test_full_text_lists_per_zone_hits(self):
+        from cockpit.cli import _build_hit_summary, _format_trace_full_text
+        items = [
+            {
+                "id": "L0", "_source": "cockpit-local", "title": "t1",
+                "source_path": "research/1", "timestamp": "2026-06-11T00:00:00",
+                "_zone": "personal-knowledge",
+            },
+            {
+                "id": "K0", "_source": "kairon-kos", "title": "t2",
+                "source_path": "bos://memory/kos/search", "timestamp": "2026-05-30T13:38:45Z",
+                "_zone": "structured-memory",
+            },
+            {
+                "id": "_knowledge/0.md", "_source": "@学习进化", "title": "t3",
+                "source_path": "_knowledge/0.md", "timestamp": "2026-06-01T00:00:00+00:00",
+                "_zone": "document-vault",
+            },
+        ]
+        hit = _build_hit_summary(items, per_zone=3)
+        text = _format_trace_full_text(
+            "c4 closeout", {"local": 1, "kos": 1, "vault": 1}, hit
+        )
+        # Real content (not placeholder)
+        assert "c4 closeout" in text
+        assert "zone_count" in text
+        # Each non-zero zone appears with its hit count
+        assert "hits[structured-memory]: count=1" in text
+        assert "hits[document-vault]: count=1" in text
+        assert "hits[personal-knowledge]: count=1" in text
+        # Each item's id and source is present
+        assert "id=L0" in text
+        assert "id=K0" in text
+        assert "id=_knowledge/0.md" in text
+        assert "source=kairon-kos" in text
+        assert "source=@学习进化" in text
+        # And the placeholder string must NOT appear
+        assert "P2 C4 search-trace writeback (zones + counts)." not in text
+
+    def test_full_text_handles_empty_hits(self):
+        from cockpit.cli import _format_trace_full_text
+        text = _format_trace_full_text(
+            "nothing here", {"local": 0, "kos": 0, "vault": 0}, []
+        )
+        assert "nothing here" in text
+        assert "hits: <none>" in text
+
+    def test_build_hit_summary_caps_per_zone(self):
+        from cockpit.cli import _build_hit_summary
+        items = [
+            {"id": f"x{i}", "_source": "kairon-kos", "title": f"k{i}",
+             "source_path": f"k::{i}", "timestamp": f"t{i}",
+             "_zone": "structured-memory"}
+            for i in range(20)
+        ]
+        hit = _build_hit_summary(items, per_zone=3)
+        assert len(hit) == 1
+        assert hit[0]["zone"] == "structured-memory"
+        assert hit[0]["count"] == 20
+        assert len(hit[0]["sample"]) == 3
+
+    def test_writeback_full_text_is_real_not_placeholder(self, capsys, monkeypatch):
+        """End-to-end: write a new trace, read it back, full_text is a real summary."""
+        import json as _json
+        import time as _t
+        from argparse import Namespace
+
+        from cockpit import storage as _storage_mod
+        from cockpit.cli import _cmd_search
+        from cockpit.storage import get_data_access
+
+        q = f"c4 full text test {_t.time_ns()}"
+
+        da = get_data_access()
+        da._ensure_db()
+        conn = da._connect()
+        conn.execute(
+            "DELETE FROM research WHERE topic = ? AND agent = ?",
+            (f"search-trace: {q[:50]}", "opc-p2-trace"),
+        )
+        conn.commit()
+        conn.close()
+
+        # 2 zones stubbed
+        monkeypatch.setattr(
+            _storage_mod.get_data_access(), "search_research",
+            lambda keyword, limit: [],
+        )
+        monkeypatch.setattr("cockpit.cli._invoke_kos_search", lambda q, limit=10, **kw: [
+            {
+                "id": "fake-kos-1", "title": "kos hit 1", "source": "kairon-kos",
+                "source_path": "kos::k1", "timestamp": "2026-05-30T13:38:45Z",
+                "type": "knowledge", "snippet": "s",
+                "_source": "kairon-kos", "_source_path": "bos://memory/kos/search",
+                "_zone": "structured-memory", "_type": "knowledge",
+                "_freshness": "unknown", "_owner": "kairon",
+                "_reuse_policy": "reference-only", "_retrieved_at": "2026-06-11T00:00:00",
+            },
+        ])
+        monkeypatch.setattr("cockpit.cli._invoke_vault_search", lambda q, limit=10, **kw: [])
+
+        args = Namespace(query=q, all=True, json=True, limit=10)
+        rc = _cmd_search(args)
+        assert rc == 0
+        _json.loads(capsys.readouterr().out)
+
+        # Read back the new trace row
+        da = get_data_access()
+        conn = da._connect()
+        row = conn.execute(
+            "SELECT id, summary, full_text FROM research "
+            "WHERE topic = ? AND agent = ?",
+            (f"search-trace: {q[:50]}", "opc-p2-trace"),
+        ).fetchone()
+        assert row is not None
+        trace_id, summary_json, full_text = row
+        assert "kos hit 1" in full_text, (
+            f"full_text missing the real hit title:\n{full_text[:500]}"
+        )
+        assert "id=fake-kos-1" in full_text
+        assert "source=kairon-kos" in full_text
+        # summary must include hit_summary
+        summary = _json.loads(summary_json)
+        assert "hit_summary" in summary
+        assert len(summary["hit_summary"]) >= 1
+        # Cleanup
+        conn.execute("DELETE FROM research WHERE id = ?", (trace_id,))
+        conn.commit()
+        conn.close()
+

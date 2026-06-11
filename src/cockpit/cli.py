@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import time as _time_mod
@@ -821,16 +822,22 @@ def _cmd_search(args: Namespace) -> int:
     trace: dict = {}
     if search_all:
         try:
-            trace = _writeback_search_trace(query, zone_count, len(merged_results), limit)
+            trace = _writeback_search_trace(
+                query, zone_count, len(merged_results), limit, merged_results
+            )
         except Exception as e:
             _log_trace_skip(f"unexpected: {type(e).__name__}: {e}")
 
     # ═══ P2 统一响应契约: zone, query, zone_count, results, total ═══
+    # Task 2 (P2 closeout): multi-zone results visibility.
+    # 必须保证每个 non-zero zone 至少 1 条代表项在 results[:limit] 中,
+    # 然后 round-robin 补满. 否则 vault/kos 易被前面 zone 全部挤掉.
+    interleaved = _interleave_by_source(merged_results, limit)
     response = {
         "zone": "all",
         "query": query,
         "zone_count": zone_count,
-        "results": merged_results[:limit],
+        "results": interleaved,
         "total": len(merged_results),
     }
     if trace.get("trace_id"):
@@ -853,7 +860,7 @@ def _cmd_search(args: Namespace) -> int:
             f"[bold cyan]total:[/] {len(merged_results)}  "
             f"[bold cyan]zones:[/] {zone_count}"
         )
-        for item in merged_results[:limit]:
+        for item in interleaved:
             title = str(item.get("topic", item.get("title", str(item)[:80])))[:70]
             zone = item.get("_zone", "?")
             src = item.get("_source", "?")
@@ -864,6 +871,47 @@ def _cmd_search(args: Namespace) -> int:
             console.print(f"[dim]trace_id: {trace['trace_id']} ({'deduped' if trace.get('deduped') else 'new'})[/dim]")
 
     return 0
+
+
+def _interleave_by_source(items: list[dict], limit: int) -> list[dict]:
+    """Task 2 (P2 closeout): multi-zone results visibility.
+
+    Guarantees that every non-zero zone (by _source) gets at least 1
+    representative in the first `limit` results, then fills the remainder
+    round-robin across the zones.
+
+    Without this, a long local-zone prefix would push vault/kos items
+    past the slice boundary even when zone_count shows them as non-zero.
+
+    Strategy: bucket items by _source, then round-robin one item from
+    each bucket per pass, until we hit `limit` or all buckets are empty.
+    Order of zones = first-seen order (preserves caller-intended ordering).
+    """
+    if limit <= 0 or not items:
+        return items[:limit] if limit > 0 else []
+    buckets: dict[str, list[dict]] = {}
+    order: list[str] = []
+    for it in items:
+        src = it.get("_source", "_unknown")
+        if src not in buckets:
+            buckets[src] = []
+            order.append(src)
+        buckets[src].append(it)
+    out: list[dict] = []
+    # Pass 1: ensure every non-empty bucket contributes at least 1
+    for src in order:
+        if buckets[src] and len(out) < limit:
+            out.append(buckets[src].pop(0))
+    # Pass 2: round-robin the remaining until limit or empty
+    while len(out) < limit:
+        progressed = False
+        for src in order:
+            if buckets[src] and len(out) < limit:
+                out.append(buckets[src].pop(0))
+                progressed = True
+        if not progressed:
+            break
+    return out[:limit]
 
 
 def _log_kos_skip(reason: str) -> None:
@@ -1195,6 +1243,7 @@ def _writeback_search_trace(
     zone_count: dict,
     total: int,
     limit: int,
+    merged_results: list[dict] | None = None,
 ) -> dict:
     """Gate C4 — 持久化 search trace 到 cockpit research (writeback)。
 
@@ -1203,15 +1252,18 @@ def _writeback_search_trace(
       2. 调 cockpit storage.save_research, 把 trace 写入 research 表
         - topic:    "search-trace: <query>" (限长 200)
         - summary:  zone_count 字典 (JSON) + total + limit + 时间戳
-        - full_text: 各 zone top-3 item (id/title/source_path/timestamp)
+        - full_text: 可复盘摘要, 每个非零 zone 列出 top-3 项
+                     (source / title / source_path / timestamp)
         - source_count: total
         - agent:     "opc-p2-trace"
-      3. 返回 trace dict: {trace_id, query, zone_count, total, timestamp, deduped}
+      3. 返回 trace dict: {trace_id, query, zone_count, total, timestamp, deduped,
+                            hit_summary:[{zone, count, sample:[{...}]}]}
 
     设计原则 (OPC P2.2 red lines):
       - 不重复 writeback: 同 query 在 60s 内已存在则返回已有 trace (deduped=True)
       - 不阻塞: 任何步骤 except, 静默返回 {}
       - 不重试: 单次 save 失败 → 返回 {}
+      - full_text 不再是固定占位串, 必须含真实命中摘要
     """
     import json as _json
     import time as _time
@@ -1221,6 +1273,9 @@ def _writeback_search_trace(
         from cockpit.storage import get_data_access
     da = get_data_access()
     now = _time.time()
+
+    # 0) Build hit_summary (per-zone top-3) — used in both summary and full_text
+    hit_summary = _build_hit_summary(merged_results or [], per_zone=3)
 
     # 1) dedup check: 60s 内同 query 的 trace
     # 用直接 SQL 查询 (避免 search_research 的 FTS5 特殊字符 bug:
@@ -1250,6 +1305,7 @@ def _writeback_search_trace(
                 "total": total,
                 "timestamp": _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime(float(created))),
                 "deduped": True,
+                "hit_summary": hit_summary,
             }
 
     # 2) 写入新 trace
@@ -1259,12 +1315,13 @@ def _writeback_search_trace(
         "total": total,
         "limit": limit,
         "timestamp": _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime(now)),
+        "hit_summary": hit_summary,
     }
     try:
         trace_id = da.save_research(
             topic=f"search-trace: {query[:200]}",
             summary=_json.dumps(summary_dict, ensure_ascii=False),
-            full_text="P2 C4 search-trace writeback (zones + counts).",
+            full_text=_format_trace_full_text(query, zone_count, hit_summary),
             source_count=total,
             agent="opc-p2-trace",
         )
@@ -1279,7 +1336,76 @@ def _writeback_search_trace(
         "total": total,
         "timestamp": summary_dict["timestamp"],
         "deduped": False,
+        "hit_summary": hit_summary,
     }
+
+
+def _build_hit_summary(
+    items: list[dict], per_zone: int = 3
+) -> list[dict]:
+    """Build a per-zone hit summary for trace writeback.
+
+    Returns: [{"zone": str, "count": int, "sample": [{id, title, source, source_path, timestamp}, ...]}, ...]
+    Order: first-seen zone order. Sample capped at `per_zone` items.
+    """
+    if not items:
+        return []
+    by_zone: dict[str, list[dict]] = {}
+    order: list[str] = []
+    for it in items:
+        zone = it.get("_zone") or it.get("source") or "_unknown"
+        if zone not in by_zone:
+            by_zone[zone] = []
+            order.append(zone)
+        by_zone[zone].append(it)
+    out: list[dict] = []
+    for zone in order:
+        bucket = by_zone[zone]
+        sample = []
+        for it in bucket[:per_zone]:
+            sample.append(
+                {
+                    "id": it.get("id"),
+                    "title": it.get("title") or it.get("topic") or "",
+                    "source": it.get("source") or it.get("_source") or "",
+                    "source_path": it.get("source_path")
+                    or it.get("_source_path")
+                    or "",
+                    "timestamp": it.get("timestamp") or it.get("_retrieved_at") or "",
+                }
+            )
+        out.append({"zone": zone, "count": len(bucket), "sample": sample})
+    return out
+
+
+def _format_trace_full_text(query: str, zone_count: dict, hit_summary: list[dict]) -> str:
+    """Render trace full_text as a multi-line, human-readable summary.
+
+    Per zone: zone, count, top sample (id / title / source / source_path / timestamp).
+    Not a full blob — only what's needed to recap the recall.
+    """
+    lines: list[str] = []
+    lines.append("P2 C4 search-trace writeback")
+    lines.append(f"query: {query}")
+    lines.append(f"zone_count: {json.dumps(zone_count, ensure_ascii=False, sort_keys=True)}")
+    if not hit_summary:
+        lines.append("hits: <none>")
+        return "\n".join(lines) + "\n"
+    for entry in hit_summary:
+        zone = entry.get("zone", "?")
+        count = entry.get("count", 0)
+        lines.append(f"hits[{zone}]: count={count}")
+        for s in entry.get("sample", []):
+            sid = s.get("id", "")
+            title = s.get("title", "")
+            source = s.get("source", "")
+            spath = s.get("source_path", "")
+            ts = s.get("timestamp", "")
+            lines.append(f"  - id={sid} title={title!r}")
+            lines.append(f"    source={source} source_path={spath}")
+            if ts:
+                lines.append(f"    timestamp={ts}")
+    return "\n".join(lines) + "\n"
 
 
 def _cmd_discover(args: Namespace) -> int:

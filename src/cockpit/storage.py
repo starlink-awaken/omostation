@@ -6,6 +6,7 @@ IDataAccess Protocol 接口层支持 SQLite 和未来 MCP/HTTP 后端切换。
 import json
 import sqlite3
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
@@ -269,8 +270,19 @@ class SQLiteDataAccess:
         ).fetchall()
         conn.close()
         results = [dict(r) for r in rows]
+        now = datetime.now().isoformat()
         for item in results:
             item["tags"] = json.loads(item.get("tags", "[]"))
+            # ═══ P2 memory spine — source metadata (T4 schema, 8 fields) ═══
+            item["_source"] = "cockpit-local"
+            item["_source_path"] = f"research/{item.get('id', '?')}"
+            item["_zone"] = "personal-knowledge"
+            item["_type"] = "research"
+            item["_freshness"] = "fresh"
+            item["_owner"] = "opc"
+            item["_reuse_policy"] = "reference-only"
+            item["_retrieved_at"] = now
+            # ═══════════════════════════════════════════════════════════════
         return results
 
     def get_research(self, research_id: int) -> dict[str, Any] | None:
