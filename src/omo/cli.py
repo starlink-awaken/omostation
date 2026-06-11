@@ -173,6 +173,11 @@ def main(argv: list[str] | None = None) -> int:
 
         return lint_main(args[1:])
 
+    if args and args[0] == "lint-metrics":
+        # Round 42 P0: omo lint schemas + §17 metrics (单命令跑两者, CI 友好)
+        from omo.omo_lint import cmd_lint_schemas
+        return cmd_lint_schemas(metrics=True)
+
     if args and args[0] == "trail":
         # Round 12 P0: omo_trail 第 7 consumer CLI (record/show)
         # Round 19 P0: 加 seed 子命令, 让 trail 业务真落地

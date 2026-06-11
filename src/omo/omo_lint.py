@@ -360,7 +360,7 @@ def _check_schema_registry_integrity() -> list[tuple[str, str, str]]:
     return issues
 
 
-def cmd_lint_schemas() -> int:
+def cmd_lint_schemas(metrics: bool = False) -> int:
     """扫 7 个 consumer 模块, 校验 .append() 都传 schema=."""
     print(f"🔍 omo lint schemas — {len(CONSUMER_MODULES)} consumer 写时 schema 校验\n")
     total_violations = 0
@@ -444,6 +444,20 @@ def cmd_lint_schemas() -> int:
         return 1
     print(f"✅ omo lint schemas pass: {len(CONSUMER_MODULES)}/{len(CONSUMER_MODULES)} consumer 合规 + "
           f"SCHEMA_REGISTRY 完整 + __all__ 完整 + consumer SRP 守 + 0 dead code + sort_keys 守, schema 写时锁守住")
+
+    # Round 42 P0: --metrics flag 输出 §17 健康度评分
+    if metrics:
+        from omo.omo_logs import cmd_logs_audit
+        print()
+        print("📊 §17 健康度评分 (Round 42 P0, omo lint --metrics):")
+        metrics_exit = cmd_logs_audit(metrics=True)
+        if metrics_exit >= 2:
+            print(f"❌ §17 metrics R3+ (exit {metrics_exit})")
+        elif metrics_exit == 1:
+            print(f"⚠️  §17 metrics R1-R2 (exit 1, warning)")
+        else:
+            print(f"✅ §17 metrics R0 优秀 (exit 0)")
+        return max(0, metrics_exit)
     return 0
 
 
