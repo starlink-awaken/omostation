@@ -1,0 +1,28 @@
+version: 1
+promotion_id: TASK-D1-CHILD1-promotion-2026-06-11T09-36-30Z
+task_id: TASK-D1-CHILD1
+task_ref_before: .omo/tasks/planned/TASK-D1-CHILD1.yaml
+task_ref_after: .omo/tasks/active/TASK-D1-CHILD1.yaml
+promotion_status: approved
+promoted_by: opc-p3-d1
+promoted_at: '2026-06-11T09:36:30Z'
+phase_gate:
+  current_phase: 28
+  target_phase: 29
+  allowed_by_rule: true
+approval:
+  required: false
+  approval_ref: null
+checks:
+  queue_membership_ok: true
+  status_ok: true
+  phase_ok: true
+  approval_ready: true
+  target_path_clear: true
+  active_schema_ready: true
+rollback:
+  supported: true
+  rollback_action: move task back to planned and rerun sync
+refs:
+  state_ref: .omo/state/system.yaml
+  goals_ref: .omo/goals/current.yaml

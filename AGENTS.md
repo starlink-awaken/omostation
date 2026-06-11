@@ -71,9 +71,14 @@ cd projects/kairon && make test           # All packages
 cd projects/kairon && make test-fast      # Unit tests only
 cd projects/kairon && make test-diff      # Only packages changed since HEAD (推荐日常)
 cd projects/kairon && make test-parallel  # All packages, up to 4 concurrent
+cd projects/kairon && make test-e2e       # E2E: Postgres + gbrain + kairon (容器化)
 cd projects/kairon && make lint           # Ruff check
 cd projects/kairon && make format         # Ruff format
 cd projects/kairon && make clean          # Clean __pycache__, .ruff_cache, .venv
+
+# kairon — E2E 环境管理
+cd projects/kairon && make e2e-up         # 启动 E2E 环境 (Postgres:5433, gbrain:3000)
+cd projects/kairon && make e2e-down       # 停止并清理 E2E 环境
 
 # kairon — 单个包/单个测试
 cd projects/kairon/packages/eidos && uv run pytest tests/ -q

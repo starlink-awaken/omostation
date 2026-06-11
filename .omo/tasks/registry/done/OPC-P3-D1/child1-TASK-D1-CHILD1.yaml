@@ -1,0 +1,27 @@
+id: TASK-D1-CHILD1
+title: D1 child 1 - coder
+description: OPC P3 D1 demo child 1
+status: pending
+priority: P0
+created_at: '2026-06-11T09:36:00Z'
+phase: 29
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs:
+- .omo/workers/runs/TASK-D1-CHILD1-promotion-2026-06-11T09-36-30Z.yaml
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+source_docs:
+- bos://memory/local/TASK-D1-CHILD1
+entry_gate: []
+evidence_required:
+- D1 lineage proof
+test_plan:
+- step: link
+  expect: parent linkage
+parent_task_id: TASK-FEC5E158
