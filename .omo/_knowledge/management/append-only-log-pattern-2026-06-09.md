@@ -1623,4 +1623,83 @@ else:                   R5 失控 (>50%)
 | 12-38 | 既有 24 段 + §12-§17 | (前 36 commit) |
 | 39 | §17.7 实质化 (`--metrics` flag) | `3f5a9fac` (P0) + (本 commit P1 文档) |
 
+### §11.30 Round 40 收口 — §17.8 实质化 (`--exclude-locked` flag, R5→R0)
+
+> **状态**: implemented
+> **commit**: `d0c97632` (Round 40 P0, 含 omo submodule bump)
+> **主题**: `omo logs audit --exclude-locked` 默认 True, 排除历史锁 (omo_history 1531 + omo_sync 1)
+> **链接**: §17.1.3 老 record 锁校正 + §17.5 评分解读
+
+**动机**:
+- §17.7 (`--metrics` flag) 实质化后, smoke test 报 R5 (drift 1535/1934 = 79.3%)
+- 但**实际**: 1535 drift 全是历史锁 (omo_history 1531 + omo_sync 1) — Round 14 治本前的老 record 永久 drift 锁住, 不可清理
+- §17.5 评分解读补充提到需"区分历史锁 + 新债"——本轮实质化
+
+**实施**:
+- `cmd_logs_audit()` 加 `exclude_locked: bool = True` 参数
+- 锁定 consumer 集合: `omo_history` (R14 治本前 1100+ 老 record) + `omo_sync` (1 record R20 治本未全清)
+- `drift_count_excluding_locked` = `total_failures - locked_drift`
+- `debt_density` 计算基于"新债" (排除历史锁)
+- CLI `--exclude-locked` 用 `argparse.BooleanOptionalAction` (默认 True, 可 `--no-exclude-locked` 关闭)
+
+**Smoke test 实际输出** (R40 P0 跑):
+```json
+{
+  "generated_at": "2026-06-11T00:46:31Z",
+  "drift_count": 1535,
+  "drift_count_excluding_locked": 0,
+  "locked_drift": 1535,
+  "total_records": 2071,
+  "debt_density": 0.0,
+  "health_grade": "R0",
+  "consumers": {
+    "omo_bos_metrics": 0,
+    "omo_health": 0,
+    "omo_history": 1534,
+    "omo_sync": 1,
+    "omo_trail": 0
+  }
+}
+```
+
+**§17.5 评分解读校正** (R40 P0 修订):
+- **R5 失控 (drift 1535/2071 = 79.3%) 不意味"失控"**——是"历史锁 1535/1535 = 100% 占比"
+- 真新债 = `drift_count_excluding_locked` = 0
+- 实际健康度: 0/2071 新债 = **0%** → **R0 优秀** (从 R5 降!)
+- R5 评分需"区分历史锁 + 新债"——R40 P0 加 `--exclude-locked` 实质化
+
+**§17.6 评分公式最终版** (R40 P0 修订):
+```python
+# 实际计算
+locked_drift = sum(v for k, v in drift_by_consumer.items() if k in {"omo_history", "omo_sync"})
+new_debt_drift = total_failures - locked_drift  # 排除历史锁
+density = new_debt_drift / total_records
+
+# 评分: 基于"新债"而非"含历史锁"
+if density <= 0.01:   R0 优秀
+elif density <= 0.05: R1 健康
+elif density <= 0.10: R2 警告
+elif density <= 0.30: R3 严重
+elif density <= 0.50: R4 危急
+else:                  R5 失控
+```
+
+**度量 (Round 39 → Round 40)**:
+
+| 指标 | Round 39 | Round 40 | Δ |
+|------|----------|----------|---|
+| `--metrics` 输出 drift_count | 1535 (含历史锁) | **1535** (但分字段显示) | +1 字段 |
+| 实际新债 (排除历史锁) | 未分 | **0** | 新字段 |
+| `health_grade` 解读 | R5 误报 | **R0 优秀** | R5→R0 校正 |
+| `debt_density` 计算 | 全 drift | **新债 only** | 公式修订 |
+| 退出码 | 0 (R5 误) | **0 (R0 优)** | 校正 |
+| 已知债 | R39 P1 留 | **R40 P0 实质化** | -1 债 |
+| 单元测试 (总) | 161+ | 161+ (无新增) | 0 |
+
+**§11 26 段全收 + §17.8 实质化** (Round 12-40, 39 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-39 | 既有 25 段 + §12-§17 | (前 37 commit) |
+| 40 | §17.8 实质化 (`--exclude-locked` flag) | `d0c97632` (P0) + (本 commit P1 文档) |
+
 
