@@ -1,9 +1,56 @@
 # OPC-P3: Swarm Execution Spine
 
 > Date: 2026-06-11
-> P2: design baseline accepted (P2 remaining tasks complete — T4 8-field schema ✅)
+> P2: Gate C passed (C1+C2+C3+C4 closed, 21/21 tests pass)
 > Source: OPC-ROADMAP.md §M3, opc-roadmap-omo-plan.md §Phase 3
-> Status: design baseline delivered
+> Status: design baseline delivered; implementation deferred per D1 blockers
+
+---
+
+## D1 Blockers (Recorded 2026-06-11)
+
+P3 D1 (Task Object Runtime Binding) attempted but blocked by:
+
+1. **swarm-engine refactor drift**: `lifecycle_manager.py` imports from
+   `.organs.engine.lifecycle.*` and `.organs.swarm_worker_governance_controller`
+   which do not exist in the current tree. `SwarmLifecycleManager` cannot be
+   instantiated without stubbing 12 missing classes (WorkerHatchAttempt,
+   WorkerHatchGatekeeper, WorkerReapOrchestrator, WorkerGovernanceController,
+   SporeRegistry, Hatcher, SwarmResultCollector, ...). Patching this drift
+   is out of scope for a D1 mini-close and risks regression in the
+   refactored SOLID layout.
+
+2. **omo CLI dispatcher gap**: `omo_worker_cmd_task.py` exposes a full
+   `task {validate,promote-eval,promote-apply,promote-readiness,...}`
+   subcommand tree, but `cli.py` only dispatches `omo task list` and
+   `omo task create`. `promote-apply` (the actual state-transition entry
+   point) is unreachable from the CLI. Direct Python invocation requires
+   running from the workspace root, not from `projects/omo/`.
+
+3. **omo `_promotion_eval` schema mismatch**: the eval gate requires
+   `task.status in {candidate, pending}` and `task.phase == goals.phase + 1`.
+   `omo task create` defaults to `status: planned` with no `phase` field.
+   Without manual task YAML editing, the gate stays ineligible.
+
+4. **Path authority split**: `omo task create` writes to
+   `projects/omo/.omo/tasks/planned/`, but `_promotion_eval` reads from
+   `/Users/xiamingxing/Workspace/.omo/tasks/planned/`. Two `.omo/`
+   roots exist; SSOT is unclear.
+
+### Strategic options (deferred — awaiting human input)
+
+| Option | Approach | Risk |
+|:-------|:---------|:-----|
+| A | Patch swarm-engine organs.* imports | High — refactor regression |
+| B | Build thin P3 binding using only omo + cockpit, document swarm-engine debt | Medium — deviates from OPC-P3 design |
+| C | Block P3 entirely until swarm-engine upstream refactor lands | High — blocks OPC roadmap |
+
+Per OPC-MASTER-EXECUTION-PLAYBOOK §3 "no agent may apply for a later gate
+while an earlier gate in the same phase is still open" — D2–D5 are
+blocked until D1 closes. Per §4.1 "do not write passed before runtime
+evidence exists" — D1 is **not** claimed passed.
+
+Tracking file: `.omo/tasks/registry/done/OPC-P3-GATE-D-OPENING.yaml`
 
 ---
 

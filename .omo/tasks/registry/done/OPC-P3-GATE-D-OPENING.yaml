@@ -1,0 +1,63 @@
+id: OPC-P3-GATE-D-OPENING
+title: "OPC-P3 Gate D 实施追踪 (D1→D2→D3→D4→D5→D)"
+status: in_progress
+priority: P0
+domain: opc
+created: "2026-06-11"
+parent_task: OPC-P3-SWARM-SPINE
+prerequisites:
+  - opc_phase2_gate_c_passed
+  - opc_p2_implementation_complete
+description: |
+  Track P3 Gate D implementation sub-gates per OPC-MASTER-EXECUTION-PLAYBOOK §8.
+  Each sub-gate requires real runtime evidence before being claimed passed.
+
+  Strategic note (2026-06-11): P3 D1 (Task Object Runtime Binding) was attempted
+  and blocked by:
+    1. swarm-engine: deep refactor drift (organs.* imports broken since SOLID
+       refactor). SwarmLifecycleManager cannot be instantiated without stubbing
+       12 missing modules. Patching this is out of scope for D1 mini-close.
+    2. omo: _promotion_eval expects task status=candidate/pending and phase
+       matching goals current+1, but task create defaults to status=planned
+       with no phase field. Worker-cmd task subcommands are not wired into
+       the omo CLI dispatcher (only task list/create are exposed).
+  Strategic options to break the block:
+    A) Patch swarm-engine imports (low priority, high risk of regression)
+    B) Build a thin P3 binding using only omo + cockpit (skip swarm-engine)
+       and document the architectural debt
+    C) Escalate to upstream (block P3 entirely until swarm-engine refactor
+       lands)
+  Per Playbook §3 "no agent may apply for a later gate while an earlier gate
+  in the same phase is still open" — D2-D5 are blocked until D1 closes.
+  Per Playbook §4.1 "do not write passed before runtime evidence exists" —
+  we don't claim D1 passed.
+sub_gates:
+  - id: OPC-P3-D1
+    title: "Task Object Runtime Binding"
+    status: blocked
+    claimed_verdict: defer
+    blockers:
+      - "swarm-engine SwarmLifecycleManager cannot instantiate (organs.* imports broken)"
+      - "omo worker-cmd task subcommands not in CLI dispatcher (only list/create)"
+      - "omo _promotion_eval needs status=candidate/pending + phase=current+1 (default create gives status=planned, no phase)"
+    criteria_pending:
+      - "one task can move through planned/assigned/running/completed"
+      - "audit fields update through runtime"
+      - "parent/child lineage is inspectable"
+  - id: OPC-P3-D2
+    title: "Dispatch and Heartbeat"
+    status: not_started
+  - id: OPC-P3-D3
+    title: "Role Realization"
+    status: not_started
+  - id: OPC-P3-D4
+    title: "Result Writeback and Audit"
+    status: not_started
+  - id: OPC-P3-D5
+    title: "Minimal Demo"
+    status: not_started
+gate: Gate D
+gate_status: not_yet_passed
+gate_note: |
+  P3 D1 blocked by swarm-engine refactor drift and omo CLI dispatcher gap.
+  Strategic decision pending. D2-D5 not yet started.
