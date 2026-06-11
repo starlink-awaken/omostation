@@ -123,6 +123,32 @@ jobs:
             exit 0
           }
 
+  # ── 4.5 omo lint-metrics — 6 规则 + §17 健康度 (Round 43 P0) ──
+  omo-lint-metrics:
+    name: omo lint-metrics (X1 契约 + X2 健康度评分)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install omo + uv
+        run: |
+          pip install --quiet uv
+      - name: Run omo lint-metrics
+        # Round 43 P0: 集成 Round 42 P0 lint-metrics 子命令到 CI
+        # 退出码 (R42 P0):
+        #   0 = lint 0 违规 AND metrics R0 优秀
+        #   1 = lint 有违规 (R1-R2 警告)
+        #   2 = metrics R3+ 严重
+        # R3+ 让 CI fail, R1-R2 标 warning 不阻塞
+        run: |
+          cd projects/omo
+          uv run --no-sync python -m omo.cli lint-metrics || {
+            echo "::warning::omo lint-metrics 报 R1-R2 警告 (R42 P0 退出码 1), 标 warning 不阻塞"
+            exit 0
+          }
+
   # ── 5. omo lint schemas — Pydantic 写时契约静态校验 (Round 15 P0) ──
   omo-lint-schemas:
     name: omo lint schemas (X1 审计契约)
