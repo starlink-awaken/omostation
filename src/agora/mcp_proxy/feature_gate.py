@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 from pathlib import Path
 from typing import Any
 
@@ -389,7 +388,6 @@ class FeatureGate:
         self.load()
 
         # 计算各服务的启用状态摘要
-        all_services: dict[str, list[str]] = {}
         service_groups: dict[str, list[str]] = {}
         for gname, gconf in self._groups.items():
             for svc in gconf.get("services", []):

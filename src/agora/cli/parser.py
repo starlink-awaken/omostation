@@ -756,7 +756,7 @@ def run_domain_cmd(args):
     elif args.domain_cmd == "disable":
         return cmd_domain_disable(args)
     else:
-        print(f"Usage: agora feature domain {{enable|disable}} <name>")
+        print("Usage: agora feature domain {enable|disable} <name>")
         return 0
 
 

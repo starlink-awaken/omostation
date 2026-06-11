@@ -53,7 +53,7 @@ def main() -> int:
         @app.get("/")
         async def index():
             return HTMLResponse(
-                f"""<!DOCTYPE html>
+                """<!DOCTYPE html>
 <html lang="zh-CN">
 <head><meta charset="UTF-8"><title>Agora Dashboard</title>
 <style>body{{font-family:monospace;background:#0d1117;color:#c9d1d9;padding:40px;max-width:600px;margin:auto}}

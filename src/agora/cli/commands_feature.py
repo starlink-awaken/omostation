@@ -14,8 +14,6 @@ Usage:
 from __future__ import annotations
 
 import json
-import os
-from pathlib import Path
 
 from agora.cli.output import OutputFormatter
 from agora.mcp_proxy.feature_gate import FeatureGate
