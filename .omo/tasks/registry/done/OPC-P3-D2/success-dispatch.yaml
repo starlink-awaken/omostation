@@ -1,0 +1,41 @@
+version: 1
+dispatch_id: task-d2-success-coder-001-20260611-095358
+task_id: TASK-D2-SUCCESS
+worker_id: coder-001
+transport_mode: cli_prompt
+run_ref: .omo/workers/runs/task-d2-success-coder-001-20260611-095358-dispatch.yaml
+dispatch_state: dispatched
+coordinator: copilot-cli
+launched_at: '2026-06-11T09:53:58Z'
+lease:
+  heartbeat_interval_seconds: 300
+  warning_after_seconds: 900
+  lease_expired_after_seconds: 1200
+  reclaim_after_seconds: 1800
+  last_checkpoint_at: null
+  last_material_write_at: null
+inputs:
+  task_yaml: .omo/tasks/active/TASK-D2-SUCCESS.yaml
+  envelope_file: .omo/workers/runs/task-d2-success-coder-001-20260611-095358-envelope.yaml
+  prompt_file: .omo/workers/runs/task-d2-success-coder-001-20260611-095358-prompt.md
+  source_docs:
+  - bos://memory/local/TASK-D2-SUCCESS
+execution:
+  launch_command: cat <prompt:.omo/workers/runs/task-d2-success-coder-001-20260611-095358-prompt.md>
+  approval_ref: null
+  session_ref: null
+  log_ref: .omo/workers/runs/task-d2-success-coder-001-20260611-095358-stdout.log
+  checkpoint_refs:
+  - .omo/workers/runs/task-d2-success-coder-001-20260611-095358-checkpoint.md
+handoff:
+  output_summary_ref: .omo/workers/runs/task-d2-success-coder-001-20260611-095358-review.md
+  evidence_paths: []
+  unresolved_risks: []
+  next_handoff: null
+reclaim:
+  required: false
+  reason: null
+  reclaimed_at: null
+  successor_worker_id: null
+  successor_dispatch_id: null
+  note_ref: .omo/workers/runs/task-d2-success-coder-001-20260611-095358-reclaim.md

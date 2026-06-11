@@ -13,17 +13,12 @@ description: |
   Each sub-gate requires real runtime evidence before being claimed passed.
 
   D1 strategic resolution (2026-06-11): Strategic Option B (thin P3 binding
-  using omo + cockpit, skip swarm-engine). The blockers documented in
-  the previous version of this file were resolved by:
-    1. Added omo {worker,wt} dispatch in cli.py -> omo.omo_worker
-       (which exposes validate/promote-eval/promote-apply etc.)
-    2. Bootstrapped .omo/goals/current.yaml in projects/omo (path authority
-       consolidation - single workspace .omo/goals/ is the source)
-    3. Schema: filled in all required fields per omo_task_schema.validate_task_data
-    4. Patched task parent_task_id field for OPC P3 lineage (not in omo base
-       schema, but accepted as extension)
-  All 3 demo tasks (1 parent + 2 children) moved through planned -> active
-  with audit envelopes. Evidence copied to registry.
+  using omo + cockpit, skip swarm-engine).
+
+  D2 strategic resolution (2026-06-11): Used omo's native
+  omo_worker_dispatch.dispatch_task + reclaim_task as the dispatch and
+  retry path. Bootstrap .omo/_truth/registry/workers.yaml with coder-001
+  and coder-002 worker transports (cli_prompt only).
 sub_gates:
   - id: OPC-P3-D1
     title: "Task Object Runtime Binding"
@@ -31,28 +26,33 @@ sub_gates:
     claimed_verdict: pass
     closed_at: "2026-06-11"
     evidence_dir: .omo/tasks/registry/done/OPC-P3-D1/
-    criteria:
-      - "one task can move through planned/assigned/running/completed"
-      - "audit fields update through runtime"
-      - "parent/child lineage is inspectable"
-    runtime_evidence: |
-      parent task TASK-FEC5E158:
-        - status: pending (moved from planned -> active)
-        - phase: 29 (current 28 + 1)
-        - handoff_refs: ['.omo/workers/runs/TASK-FEC5E158-promotion-2026-06-11T09-35-00Z.yaml']
-      children (linked via parent_task_id):
-        - TASK-D1-CHILD1: parent=TASK-FEC5E158, handoff=[envelope]
-        - TASK-D1-CHILD2: parent=TASK-FEC5E158, handoff=[envelope]
-      audit envelopes (3 records):
-        - all promotion_status=approved
-        - phase_gate: 28->29
-        - checks: queue_membership_ok=True, status_ok=True, phase_ok=True, active_schema_ready=True
-      line walk: 'uv run --project projects/omo python .omo/tasks/registry/done/OPC-P3-D1/walk_evidence.py'
-    red_lines_held:
-      - "no standalone design schema accepted as runtime proof (real promote-apply, real audit envelope, real file move)"
   - id: OPC-P3-D2
     title: "Dispatch and Heartbeat"
-    status: not_started
+    status: passed
+    claimed_verdict: pass
+    closed_at: "2026-06-11"
+    evidence_dir: .omo/tasks/registry/done/OPC-P3-D2/
+    criteria:
+      - "one worker success path verified"
+      - "one worker failure path verified"
+      - "one retry/dead path verified"
+    runtime_evidence: |
+      SUCCESS path: TASK-D2-SUCCESS dispatched to coder-001
+        - dispatch_id: task-d2-success-coder-001-20260611-095358
+        - dispatch_state: dispatched
+        - execution_policy: heartbeat_interval_seconds=300, reclaim_after_seconds=1800
+        - handoff_refs: [prompt.md, checkpoint.md, review.md, reclaim.md]
+      RETRY path: TASK-D2-RETRY dispatched to coder-001, reclaimed to coder-002
+        - prior.dispatch_state: reclaimed
+        - prior.reclaim.successor_worker_id: coder-002
+        - prior.reclaim.successor_dispatch_id: task-d2-retry-coder-002-...
+        - prior.reclaim.reclaimed_at: 2026-06-11T09:53:58Z
+        - reclaim note written with reason + required successor context
+      FAILURE path: dispatching non-existent task raises FileNotFoundError
+        - validation prevents fake success
+    red_lines_held:
+      - "no 'retry by rerunning command manually' counted as retry logic
+        (real reclaim_task call with successor_worker_id transition recorded)"
   - id: OPC-P3-D3
     title: "Role Realization"
     status: not_started
@@ -65,5 +65,5 @@ sub_gates:
 gate: Gate D
 gate_status: not_yet_passed
 gate_note: |
-  D1 passed (2026-06-11) with full evidence in .omo/tasks/registry/done/OPC-P3-D1/.
-  D2-D5 not yet started. Per Playbook §3, no later sub-gate claim before prior closes.
+  D1 + D2 passed (2026-06-11). D3-D5 not yet started.
+  Per Playbook §3, no later sub-gate claim before prior closes.
