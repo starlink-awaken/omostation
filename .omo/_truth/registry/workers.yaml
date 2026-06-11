@@ -1,0 +1,19 @@
+workers:
+  - id: coder-001
+    role: coder
+    transports:
+      cli_prompt:
+        command: 'cat {prompt}'
+  - id: coder-002
+    role: coder
+    transports:
+      cli_prompt:
+        command: 'cat {prompt}'
+  - id: reviewer-001
+    role: reviewer
+    transports:
+      cli_prompt:
+        command: 'cat {prompt}'
+heartbeat_interval_seconds: 300
+last_heartbeat: '2026-06-11T09:40:00Z'
+default_worker_role: coder
