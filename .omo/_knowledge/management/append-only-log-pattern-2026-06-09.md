@@ -1700,6 +1700,60 @@ else:                  R5 失控
 | Round | 主题 | commit |
 |-------|------|--------|
 | 12-39 | 既有 25 段 + §12-§17 | (前 37 commit) |
-| 40 | §17.8 实质化 (`--exclude-locked` flag) | `d0c97632` (P0) + (本 commit P1 文档) |
+| 40 | §17.8 实质化 (`--exclude-locked` flag) | `d0c97632` (P0) + `34d0d473` (P1) |
+
+### §11.31 Round 41 收口 — cron audit-rollout 接 §17 度量自动化
+
+> **状态**: implemented
+> **commit**: `1442c1c0` (Round 41 P0)
+> **主题**: `.github/workflows/audit-rollout-monthly.yml` 加 `omo logs audit --metrics` step
+> **链接**: §14 5 守门点 + §17.8 度量 + §18 候选
+
+**动机**:
+- §14.5 5 守门点 (R28 起步) 全是 §11 X2 保鲜自动化, 但**没接 §17 度量**——cron 跑出 baseline 但跑不出健康度评分
+- §17.8 (`--exclude-locked`) 实质化后, 月度 cron 跑 `--metrics` 写 `<date>-metrics.json` 让健康度**可观察**
+- 实施路径: cron 加新 step 跑 `omo logs audit --metrics` + 写报告
+
+**实施**:
+- `.github/workflows/audit-rollout-monthly.yml` 加第 2 个 step (`Run omo logs audit --metrics`)
+- 跑命令: `uv run --no-sync python -m omo.cli logs audit --metrics`
+- 输出文件: `.omo/_delivery/audit-rollout/${DATE}-metrics.json` (与 baseline 报告并列)
+- 终端输出: 简化的健康度摘要 (drift / locked / new_debt / density / grade)
+- 退出码 R3+ 标 warning 不阻塞 (R39 P0 设计)
+
+**月度聚合报告** (R41 P0 跑后):
+- `${DATE}.json` — 跨仓 baseline 聚合 (R28 设计)
+- `${DATE}-metrics.json` — §17.6 健康度评分 (R41 P0 扩)
+- 同一 git commit, 月度对比可观察健康度趋势
+
+**5 守门点 → 5 守门点 + 1 度量点**:
+```
+[代码 commit]      →  pre-commit omo-logs-audit
+[git push]         →  ci-lint.yml 5 jobs
+[PR merge]         →  人工 review
+[每月 1 号 00:00]  →  audit-baseline-monthly (omo 仓)
+[每月 1 号 01:00]  →  audit-rollout-monthly (omostation 根) + §17 metrics
+```
+
+**§17.6 健康度评分** (R41 P0 跑后, R0 优秀):
+- drift_count: 1535 (含历史锁)
+- drift_count_excluding_locked: 0
+- debt_density: 0.0
+- health_grade: R0
+
+**度量 (Round 40 → Round 41)**:
+
+| 指标 | Round 40 | Round 41 | Δ |
+|------|----------|----------|---|
+| cron workflows | 2 (R28 起步) | **2** (+ metrics step) | +1 step |
+| 自动化覆盖率 | 5 守门点 | **5 + 1 度量** | +1 度量点 |
+| 月度报告数 | 1 (baseline) | **2** (+ metrics) | +1 文件 |
+| 已知债 | R40 实质化 0 | 0 (新增) | 不变 |
+
+**§11 27 段全收 + §17.8 实质化 + §17 度量自动化** (Round 12-41, 40 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-40 | 既有 26 段 + §17.8 | (前 38 commit) |
+| 41 | cron audit-rollout 接 §17 度量自动化 | `1442c1c0` (P0) + (本 commit P1 文档) |
 
 
