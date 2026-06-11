@@ -215,12 +215,59 @@ else:                   R5 失控
 - [x] §18.6 7 章 + 6 守门点 + 5 阶段 + 4 度量整合图
 - [x] §18.7 §11-§17 vs §18 关系
 - [x] §18.8 Round 44+ 候选
-- [x] §18.9+ ✅ R45实质化 — cross-repo-rollout-template-2026-06-11.md (2026-06-11)
-- [x] §18.10+ ✅ R46 实质化 — `--include-metrics` flag + 跨仓聚合 (2026-06-11)
+- [x] §18.9 ✅ R54 实质化 — §18.10 多仓对比表 (2026-06-11)
 
 ---
 
-**§18 章节总览** (Round 44 起步):
+## §18.10 多仓治理对比 (R54 ✅)
+
+**目标**: §18 从 omo 单仓全景扩为 5 仓对比视图，2026-06-11 实质化。
+
+### 5 仓 AppendOnlyLog 接入状态
+
+| 仓 | 类型 | AppendOnlyLog | ZTimestampModel | §17 Metrics | cron Audit | 接入难度 | 状态 |
+|----|------|--------------|-----------------|-------------|-----------|---------|------|
+| **omostation/omo** | Python | ✅ 原生 | ✅ 原生 | ✅ `--metrics` | ✅ audit-rollout-monthly | — | R0 ✅ |
+| **runtime** | Python | ✅ R51 P0 | ✅ R51 P0 | ✅ R53 P0 `--metrics` | ✅ R52 P0 | 低 | R0 ✅ |
+| **gbrain** | TypeScript | 🔄 待接入 | 🔄 待接入 zod | 🔄 待接入 | 🔄 待接入 | 中等 | R? |
+| **kairon** | Python | 🔄 待接入 (async) | 🔄 待接入 | 🔄 待接入 | 🔄 待接入 | 复杂 | R? |
+| **metaos** | Python | 🔄 无jsonl写 | 🔄 无 | 🔄 无 | 🔄 无 | 特殊 | R? |
+
+### 关键发现 (2026-06-11 探路)
+
+**gbrain** — 最佳优先接入目标:
+- 5 处 `fs.appendFileSync`，共享 `audit-week-file.ts` 模式
+- 1 处竞争风险: `memory-tree.ts` 的 `writePinFile` (非原子覆盖)
+- zod `^4.3.6` 已就位，零额外依赖
+
+**kairon** — 复杂接入:
+- 真仓 (非 meta-stub)，16 个 live packages
+- 2 处 jsonl 写跨 `kairon-utils` + `eidos` 两包
+- `versioning.py` 是 async 函数，需同步适配层
+
+**metaos** — 特殊路径:
+- 无任何 `.jsonl` 直接写入
+- 纯 SQLite + JSON 文件 (D Layer / A2A)
+- 从 D Layer 数字资产写入或 A2A 任务状态切入
+
+**runtime** — 已完成接入:
+- `engine.py` 裸 `open()` → R51 P0 AppendOnlyLog ✅
+- `audit_execution_log.py` R52 P0 + R53 P0 `--metrics` ✅
+- 159 条记录，R0 健康度 ✅
+
+### §18 vs §19 生态圈关系
+
+| 章节 | 视角 | 2026-06-11 状态 |
+|------|------|-----------------|
+| §18 | 全景图 | ✅ R54 实质化：5 仓对比表 |
+| §19 | 路线图 | ✅ R46-R47 完成，R48-R50 探路完成，R51-R53 完成 |
+| §12 | 跨仓契约 | ✅ 4 不变量 + §12.2.3 5 步清单就绪 |
+
+**结论**: §18.10 + §19 生态圈路线图 = 完整多仓治理闭环。gbrain 是最佳优先接入目标（无 async 复杂度，zod 已就位）。
+
+---
+
+**§18 章节总览** (Round 54 实质化):
 
 | 子节 | 主题 | 状态 |
 |------|------|------|
@@ -232,5 +279,9 @@ else:                   R5 失控
 | §18.5 | X4 度量 (4 维度 + R0-R5) | ✅ Round 44 |
 | §18.6 | 整合图 | ✅ Round 44 |
 | §18.7 | §11-§17 vs §18 关系 | ✅ Round 44 |
+| §18.8 | Round 44+ 候选 | ✅ Round 44 |
+| §18.9 | R45 §18.8 候选1 实质化 | ✅ Round 45 |
+| §18.10 | **R54 多仓对比表** | ✅ Round 54 |
+| **总** | **§18 11 子节** | ✅ 实质化 |
 | §18.8 | Round 44+ 候选 | ✅ Round 44 |
 | **总** | **§18 9 子节** | ✅ 起步 |
