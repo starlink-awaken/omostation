@@ -8,6 +8,7 @@ import os
 import sys
 import time as _time_mod
 from argparse import Namespace
+from datetime import datetime
 from pathlib import Path
 from urllib import request as urlrequest  # noqa: F401
 
@@ -270,6 +271,7 @@ def main() -> int:
     search_p = sub.add_parser("search", help="跨源搜索 (数据库 + BOS 知识引擎)")
     search_p.add_argument("query", help="搜索关键词")
     search_p.add_argument("--all", action="store_true", help="搜索所有源 (本地 SQLite + BOS kos/gbrain)")
+    search_p.add_argument("--json", action="store_true", help="输出 P2 memory spine 统一 JSON 格式")
     search_p.add_argument("--limit", type=int, default=10, help="每源结果数 (默认10)")
 
     sub.add_parser("discover", help="发现可用功能和资源")
@@ -732,58 +734,138 @@ def _cmd_brief(args: Namespace) -> int:
 
 
 def _cmd_search(args: Namespace) -> int:
-    """跨源搜索 — 搜索本地数据库和/或 BOS 知识引擎。"""
+    """跨源搜索 — P2 记忆脊统一聚合搜索。"""
     console = Console()
     query = getattr(args, "query", "")
     if not query:
         console.print("[yellow]请输入搜索关键词[/]")
-        console.print("  [cyan]cockpit search \"关键词\" --all[/]")
+        console.print('  [cyan]cockpit search "关键词" --all[/]')
         return 1
 
     search_all = getattr(args, "all", False)
     limit = getattr(args, "limit", 10)
-    results = []
 
-    # 源 1: 本地研究仓库 (SQLite FTS5)
+    zone_count: dict[str, int] = {}
+    merged_results: list[dict] = []
+    now = datetime.now().isoformat()
+
+    # Zone 1: cockpit local SQLite FTS5
     try:
         from .storage import get_data_access
-
         local = get_data_access().search_research(query, limit=limit)
-        if local:
-            results.append({"source": "📁 本地研究", "items": local})
+        zone_count["local"] = len(local)
+        merged_results.extend(local)
     except Exception as e:
+        zone_count["local"] = 0
         console.print(f"[dim]⚠ 本地搜索跳过: {e}[/]")
 
-    # 源 2: BOS 知识引擎 (kairon/kos)
+    # Zone 2: BOS KOS (only with --all, requires kairon).
+    # Gate C1 contract: zone_count.kos MUST be a real count derived from the
+    # KOS response, not a hard-coded 1. We never inject a fake "stdout blob"
+    # result item — that violates OPC P2.2 red line:
+    # "do not count a single subprocess stdout blob as one valid knowledge hit".
     if search_all:
+        zone_count["kos"] = 0  # default; updated only on real success
         try:
+            import json as _json
             import subprocess as _sp
-
             ws = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
             agora_bin = ws / "projects" / "agora" / ".venv" / "bin" / "agora"
             if not agora_bin.exists():
                 agora_bin = Path.home() / ".local" / "bin" / "agora"
-            if agora_bin.exists():
+            if not agora_bin.exists():
+                _log_kos_skip("agora binary not found")
+            else:
                 bos_result = _sp.run(
-                    [str(agora_bin), "bos", "resolve", f"bos://memory/kos/search"],
+                    [str(agora_bin), "bos", "resolve", "bos://memory/kos/search", str(query)],
                     capture_output=True, text=True, timeout=15,
                 )
-                results.append({"source": "🧠 BOS 知识引擎", "items": [bos_result.stdout[:500] if bos_result.returncode == 0 else f"(暂不可用: {bos_result.stderr[:100]})"]})
-            else:
-                results.append({"source": "🧠 BOS 知识引擎", "items": ["(agora CLI 未安装)"]})
+                if bos_result.returncode == 0 and bos_result.stdout.strip():
+                    parsed = _json.loads(bos_result.stdout)
+                    items = _extract_kos_items(parsed)
+                    if items:
+                        for item in items:
+                            item.setdefault("_source", "kairon-kos")
+                            item.setdefault("_source_path", "bos://memory/kos/search")
+                            item.setdefault("_zone", "structured-memory")
+                            item.setdefault("_type", "knowledge")
+                            item.setdefault("_freshness", "unknown")
+                            item.setdefault("_owner", "kairon")
+                            item.setdefault("_reuse_policy", "reference-only")
+                            item.setdefault("_retrieved_at", now)
+                        merged_results.extend(items)
+                        zone_count["kos"] = len(items)
+        except (_sp.TimeoutExpired, _sp.SubprocessError, _json.JSONDecodeError, OSError) as e:
+            _log_kos_skip(f"{type(e).__name__}: {e}")
         except Exception as e:
-            results.append({"source": "🧠 BOS 知识引擎", "items": [f"(查询失败: {e})"]})
+            _log_kos_skip(f"unexpected: {e}")
 
-    for r in results:
-        console.print(f"\n[bold cyan]{r['source']}[/]")
-        for item in r["items"][:limit]:
-            title = item.get("topic", item.get("title", str(item)[:80])) if isinstance(item, dict) else str(item)[:80]
-            console.print(f"  ▸ {title}")
+    # ═══ P2 统一响应契约: zone, query, zone_count, results, total ═══
+    response = {
+        "zone": "all",
+        "query": query,
+        "zone_count": zone_count,
+        "results": merged_results[:limit],
+        "total": len(merged_results),
+    }
+    if args.json:
+        import json as _json
+        console.print(_json.dumps(response, ensure_ascii=False, indent=2))
+    else:
+        # 文本模式必须表达与 JSON 相同的核心事实 (zone / query / total / zone_count)
+        console.print(
+            f"\n[bold cyan]query:[/] {query}  "
+            f"[bold cyan]zone:[/] all  "
+            f"[bold cyan]total:[/] {len(merged_results)}  "
+            f"[bold cyan]zones:[/] {zone_count}"
+        )
+        for item in merged_results[:limit]:
+            title = str(item.get("topic", item.get("title", str(item)[:80])))[:70]
+            zone = item.get("_zone", "?")
+            src = item.get("_source", "?")
+            console.print(f"  ▸ [{zone}] {title}  [dim]{src}[/dim]")
+        if not search_all:
+            console.print("[dim]提示: 加 --all 搜索 BOS 知识引擎[/]")
 
-    console.print(f"\n[dim]共 {sum(len(r['items']) for r in results)} 条结果[/]")
-    if not search_all:
-        console.print("[dim]提示: 加 --all 搜索 BOS 知识引擎[/]")
     return 0
+
+
+def _log_kos_skip(reason: str) -> None:
+    """记录 KOS 跳过原因 (debug-level, 不污染用户输出)。"""
+    import logging as _logging
+    _logging.getLogger("cockpit.cli.kos").debug("KOS skip: %s", reason)
+
+
+def _extract_kos_items(parsed: object) -> list[dict]:
+    """从 BOS resolve 响应中提取 KOS 结果数组 (Gate C1 contract)。
+
+    接受多种嵌套结构:
+      - {"status": "ok", "result": [...]}            (invoke_stdio ok)
+      - {"status": "ok", "result": {"items": [...]}}  (嵌套)
+      - {"status": "error", ...}                       → []
+      - [...]                                          (裸数组)
+
+    返回: list[dict] — 仅保留 dict 元素
+    """
+    items_obj: object = None
+    if isinstance(parsed, dict):
+        if parsed.get("status") == "error":
+            return []
+        result = parsed.get("result")
+        if isinstance(result, list):
+            items_obj = result
+        elif isinstance(result, dict):
+            for key in ("items", "results", "data"):
+                if isinstance(result.get(key), list):
+                    items_obj = result[key]
+                    break
+        elif isinstance(result, str):
+            return []
+    elif isinstance(parsed, list):
+        items_obj = parsed
+    if not isinstance(items_obj, list):
+        return []
+    return [it for it in items_obj if isinstance(it, dict)]
 
 
 def _cmd_discover(args: Namespace) -> int:
