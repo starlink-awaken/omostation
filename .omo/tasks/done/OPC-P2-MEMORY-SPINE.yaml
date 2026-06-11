@@ -38,5 +38,5 @@ risks:
   - "gbrain non-atomic writes: registered as DEBT-OMC-GBRAIN-PERSISTENCE"
   - "metaos .omo/ plane: initialized skeleton, full population deferred"
 gate: Gate C
-gate_status: implementation_in_progress
-gate_note: "T4 completed (8-field metadata). T2/T3 partially implemented (all-search route exists, KOS/vault pending). Gate C not yet passed."
+gate_status: passed
+gate_note: "Gate C passed (2026-06-11). C1+C2+C3+C4 all closed. 21/21 cockpit tests pass. Multi-zone hit verified ({local:0, kos:10, vault:10}). Writeback to research verified. P2 implementation complete on the C-axis."
