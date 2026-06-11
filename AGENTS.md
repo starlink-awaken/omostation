@@ -11,7 +11,7 @@ This root directory is a **multi-project workspace** organized in the 5+4+1+1 (e
 | L4 | `l4-kernel` | Python (uv, pytest) | `projects/l4-kernel/` | 🟢 Active — 自我层管理面 · 21域 · 250 tests · 43 MCP tools |
 | — | `model-driven` | Python (uv, pytest) | `projects/model-driven/` | 🟢 Active — 全生命周期模型驱动平台 · 24 M2类型 · 7阶段 · 12工具 · 190 tests |
 | L3 | `cockpit` | Python (uv, pytest) | `projects/cockpit/` | 🟢 Active — 统一入口 (CLI + Web) · 33 tests |
-| I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · 172 src, 1200 tests |
+| I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · 172 src, 1371 tests |
 | L2 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 知识引擎 · 19 active (+6 archived) packages |
 | L2 | `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — 知识数据库 · 163K TS |
 | L2 | `omo` | Python (uv, pytest) | `projects/omo/` | 🟢 Active — 治理面 · 100+ tests · **AppendOnlyLog 5 consumers + fcntl 跨进程锁** |
@@ -81,7 +81,7 @@ cd projects/kairon/packages/kos && uv run pytest tests/test_xxx.py -q
 cd projects/kairon/packages/kos && uv run pytest tests/ -k "keyword" -q
 
 # agora (projects/agora/)
-cd projects/agora && uv run pytest tests/ -q            # 1165/1200 pass
+cd projects/agora && uv run pytest tests/ -q            # 1165/1371 pass
 cd projects/agora && uv run pytest tests/ -k "keyword" -q
 
 # cockpit (projects/cockpit/)
@@ -145,7 +145,7 @@ L0 协议   ── ecos ── SSB 协议层，承载系统决策的 Immutable L
 
 | 项目 | 总测试 | 通过 | 通过率 |
 |------|--------|------|--------|
-| agora | 1200 | 1165 | 97.1% |
+| agora | 1371 | 1165 | 85.0% |
 | cockpit | 514 | 498 | 96.9% |
 | kairon | 4199 | 4157 | 99.8% |
 | runtime | 176 | 171 | 97.2% |
