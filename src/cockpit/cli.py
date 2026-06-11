@@ -788,6 +788,31 @@ def _cmd_search(args: Namespace) -> int:
         except Exception as e:
             _log_kos_skip(f"unexpected: {type(e).__name__}: {e}")
 
+    # Zone 3: Vault (@学习进化 markdown 知识库).
+    # Gate C3 contract: at least one real query must hit two zones.
+    # Vault activation invokes the existing vault-search.sh (deterministic
+    # fulltext/concept/tag/filename search) — which is the "确定范围" layer
+    # of KEMS ("确定范围应该是确定性的，推理应该是概率性的").
+    # Real subprocess call, real rg output, no fake file listing.
+    if search_all:
+        zone_count["vault"] = 0
+        try:
+            vault_items = _invoke_vault_search(query, limit=limit)
+            if vault_items:
+                for item in vault_items:
+                    item.setdefault("_source", "@学习进化")
+                    item.setdefault("_source_path", item.get("source_path", "vault://学习进化"))
+                    item.setdefault("_zone", "document-vault")
+                    item.setdefault("_type", "document")
+                    item.setdefault("_freshness", "unknown")
+                    item.setdefault("_owner", "vault")
+                    item.setdefault("_reuse_policy", "derived-allowed")
+                    item.setdefault("_retrieved_at", now)
+                merged_results.extend(vault_items)
+                zone_count["vault"] = len(vault_items)
+        except Exception as e:
+            _log_vault_skip(f"unexpected: {type(e).__name__}: {e}")
+
     # ═══ P2 统一响应契约: zone, query, zone_count, results, total ═══
     response = {
         "zone": "all",
@@ -998,6 +1023,148 @@ def _clean_control_chars(s: str) -> str:
     # 替换 \n \r \t \v \f 以及其他控制字符为单空格, 合并连续空格
     cleaned = _re.sub(r"[\x00-\x1f\x7f]+", " ", s)
     return _re.sub(r"\s+", " ", cleaned).strip()
+
+
+def _log_vault_skip(reason: str) -> None:
+    """记录 Vault 跳过原因 (debug-level)。"""
+    import logging as _logging
+    _logging.getLogger("cockpit.cli.vault").debug("vault skip: %s", reason)
+
+
+def _invoke_vault_search(query: str, limit: int = 10, timeout: float = 30.0) -> list[dict]:
+    """Gate C3 — 真实调用 @学习进化 vault-search.sh 提取结果。
+
+    流程:
+      1. 找到 @学习进化 Vault 根目录 (PATH 优先 / WORKSPACE_ROOT 推导 / 固定 fallback)
+      2. spawn `bash _control/executors/vault-search.sh <query>` (cwd = vault root)
+      3. 解析 stdout: 每个非空行 = 一个相对路径 (rg 命中 .md 文件)
+      4. 把每个 path 映射到 P2 contract (id, title, snippet, source_path, ...)
+      5. 标题: 路径 basename (去除 .md 后缀)
+      6. snippet: 尝试读 file 第一段非 frontmatter 的标题/正文 (best effort)
+      7. 返回 P2 items (空列表 if 任何一步失败)
+
+    设计原则 (OPC P2.2 red lines):
+      - 不重试 fake listing: 任何步骤失败返回 [], 绝不注入假数据
+      - 实际执行真实脚本, 不绕过 rg
+      - 完整错误捕获: subprocess / IO / OSError 全部 except
+      - snippet 截断 200 字符 + 控制字符清洗
+    """
+    import os as _os
+    import re as _re
+    import subprocess as _sp
+
+    # 1) 定位 Vault 根目录
+    candidates = [
+        _os.environ.get("LEARNING_VAULT"),
+        _os.path.expanduser("~/Documents/@学习进化"),
+        str(Path(_os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))).parent / "Documents" / "@学习进化"),
+    ]
+    vault_root = None
+    for c in candidates:
+        if c and Path(c).is_dir() and (Path(c) / "_control" / "executors" / "vault-search.sh").is_file():
+            vault_root = c
+            break
+    if vault_root is None:
+        _log_vault_skip("vault root not found")
+        return []
+
+    script = Path(vault_root) / "_control" / "executors" / "vault-search.sh"
+
+    try:
+        proc = _sp.Popen(
+            ["bash", str(script), query],
+            cwd=vault_root,
+            stdout=_sp.PIPE, stderr=_sp.PIPE,
+            text=True, bufsize=1,
+        )
+        try:
+            stdout, _ = proc.communicate(timeout=timeout)
+        except _sp.TimeoutExpired:
+            proc.kill()
+            proc.communicate()
+            _log_vault_skip(f"timeout after {timeout}s")
+            return []
+    except (OSError, _sp.SubprocessError) as e:
+        _log_vault_skip(f"spawn failed: {type(e).__name__}: {e}")
+        return []
+
+    if proc.returncode != 0 or not stdout:
+        return []  # vault 真实返回 0 → zone_count.vault=0
+
+    # 2) 解析输出: 第 1 行是 "🔍 全文搜索: QUERY" 头, 后续每行 = 一个相对路径
+    raw_items: list[dict] = []
+    path_re = _re.compile(r"^\./.+\.md$")
+    for line in stdout.splitlines():
+        line = line.strip()
+        if not line or line.startswith("🔍"):
+            continue
+        if not path_re.match(line):
+            continue  # 跳过非文件路径行
+        raw_items.append({"rel_path": line[2:]})  # strip "./"
+        if len(raw_items) >= limit:
+            break
+
+    if not raw_items:
+        return []
+
+    # 3) 映射到 P2 contract
+    mapped: list[dict] = []
+    for r in raw_items:
+        rel = r["rel_path"]
+        abs_path = Path(vault_root) / rel
+        title = abs_path.stem
+        # 尝试读文件头 (snippet = 第一行非 frontmatter 的内容, 截断 200)
+        snippet = _read_vault_snippet(abs_path)
+        mapped.append({
+            "id": rel,  # 用相对路径作为 ID (在 vault 内唯一)
+            "title": _clean_control_chars(title),
+            "snippet": snippet,
+            "source": "@学习进化",  # P2 contract
+            "source_path": rel,
+            "timestamp": _vault_file_mtime(abs_path),
+            "type": "document",
+            "relevance": 1.0,
+            "vault_zone": _infer_vault_zone(rel),
+        })
+    return mapped
+
+
+def _read_vault_snippet(abs_path: Path) -> str:
+    """读 vault 文件第一段非 frontmatter 内容, 截断 200 字符。失败返回空。"""
+    try:
+        text = abs_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+    # 跳过 frontmatter
+    if text.startswith("---"):
+        end = text.find("\n---", 3)
+        if end > 0:
+            text = text[end + 4 :]
+    # 取第一个非空行
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        return _clean_control_chars(line)[:200]
+    return ""
+
+
+def _vault_file_mtime(abs_path: Path) -> str:
+    """读文件 mtime, 转 ISO 8601。失败返回 unknown。"""
+    try:
+        import datetime as _dt2
+        mtime = abs_path.stat().st_mtime
+        return _dt2.datetime.fromtimestamp(mtime, tz=_dt2.UTC).isoformat()
+    except OSError:
+        return "unknown"
+
+
+def _infer_vault_zone(rel_path: str) -> str:
+    """从相对路径推导 vault zone (control/entities/knowledge/storage/inbox/archive)。"""
+    parts = rel_path.split("/", 1)
+    if parts and parts[0].startswith("_"):
+        return parts[0].lstrip("_")
+    return "knowledge"
 
 
 def _cmd_discover(args: Namespace) -> int:
