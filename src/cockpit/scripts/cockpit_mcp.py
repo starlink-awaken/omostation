@@ -631,7 +631,12 @@ def domains_list() -> str:
 
 
 def main() -> None:
-    """Entry point for cockpit MCP server. Use `cockpit-mcp` CLI or `uv run --package cockpit cockpit-mcp`."""
+    """Entry point for cockpit MCP server. Use `cockpit-mcp` CLI or `uv run --package cockpit cockpit-mcp`.
+
+    ⚠️ 入口收敛 (Phase 1+2): 此 stdio 入口已标记 deprecated。
+    新方式: Agent 通过 agora MCP (:7431) 的 resolve_bos_uri("bos://cockpit/context") 访问。
+    向后兼容期: 保留此 stdio 入口至 Phase 4 完成。
+    """
     if not HAS_FASTMCP or mcp is None:
         print("错误: 需安装 fastmcp 才能运行 MCP server", file=sys.stderr)
         sys.exit(1)
