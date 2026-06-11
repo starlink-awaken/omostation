@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""cockpit — eCOS v5 L3 入口层 (workspace 为兼容别名)。"""
+"""cockpit — eCOS v5 L3 入口层。"""
 
 from __future__ import annotations
 
@@ -105,35 +105,36 @@ def main() -> int:
   status      系统健康 & 研究状态
   demo        快速演示闭环
   daily       每日研究简报
+  display     查看所有 export 内容
   dashboard   打开 Web Dashboard
 
 示例:
-  workspace research "attention mechanism"
-  workspace research --list
-  workspace research --search "keyword"
-  workspace research --open 1
-  workspace research --ask 1 "追问问题"
-  workspace research --publish 1 --style brief
-  workspace research --dossier 1
-  workspace research --timeline 1
-  workspace research --tag 1 --labels llm agents
-  workspace research --rename 1 --new-title better title
-  workspace research --archive 1
-  workspace research --unarchive 1
-  workspace research --compare 1 2
-  workspace research --merge 1 2
-  workspace research --digest 1 2
-  workspace research --audit
-  workspace research --quarantine 4 5
-  workspace research --restore 4 5
-  workspace import ~/Desktop/note.md
-  workspace status
-  workspace status --watch --interval 2
-  workspace contracts validate
-  workspace contracts export-research 1
-  workspace demo
-  workspace daily
-  workspace dashboard
+  cockpit research "attention mechanism"
+  cockpit research --list
+  cockpit research --search "keyword"
+  cockpit research --open 1
+  cockpit research --ask 1 "追问问题"
+  cockpit research --publish 1 --style brief
+  cockpit research --dossier 1
+  cockpit research --timeline 1
+  cockpit research --tag 1 --labels llm agents
+  cockpit research --rename 1 --new-title better title
+  cockpit research --archive 1
+  cockpit research --unarchive 1
+  cockpit research --compare 1 2
+  cockpit research --merge 1 2
+  cockpit research --digest 1 2
+  cockpit research --audit
+  cockpit research --quarantine 4 5
+  cockpit research --restore 4 5
+  cockpit import ~/Desktop/note.md
+  cockpit status
+  cockpit status --watch --interval 2
+  cockpit contracts validate
+  cockpit contracts export-research 1
+  cockpit demo
+  cockpit daily
+  cockpit dashboard
         """,
     )
     sub = parser.add_subparsers(dest="command", parser_class=WorkspaceParser)

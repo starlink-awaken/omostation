@@ -25,7 +25,6 @@ web = []  # Web UI lives in web/ (TypeScript), no Python deps needed
 
 [project.scripts]
 cockpit = "cockpit.cli:main"
-workspace = "cockpit.cli:main"  # 旧名兼容
 agent-runtime = "cockpit.agent_runtime_cli:main"
 cockpit-mcp = "cockpit.scripts.cockpit_mcp:main"  # MCP stdio server
 cockpit-dashboard = "cockpit.dashboard_server:main"  # Web dashboard
