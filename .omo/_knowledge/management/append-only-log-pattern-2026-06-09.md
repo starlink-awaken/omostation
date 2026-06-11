@@ -1754,6 +1754,83 @@ else:                  R5 失控
 | Round | 主题 | commit |
 |-------|------|--------|
 | 12-40 | 既有 26 段 + §17.8 | (前 38 commit) |
-| 41 | cron audit-rollout 接 §17 度量自动化 | `1442c1c0` (P0) + (本 commit P1 文档) |
+| 41 | cron audit-rollout 接 §17 度量自动化 | `1442c1c0` (P0) + `aa4c3899` (P1) |
+
+### §11.32 Round 42 收口 — omo lint-metrics 子命令 (§17 健康度接 lint 守门)
+
+> **状态**: implemented
+> **commit**: `ef1e649` (Round 42 P0, in omo submodule) + `124e134d` (workspace 根 submodule bump)
+> **主题**: `omo lint-metrics` 新子命令, 跑 6 lint 规则 + §17 健康度评分
+> **链接**: §13 omo_lint + §17 度量 + §11 X1 审计契约
+
+**动机**:
+- §17.8 (`--exclude-locked`) 实质化后, §17 健康度评分可执行
+- 但 lint 与 metrics 是 2 个独立命令 (`omo lint schemas` + `omo logs audit --metrics`)
+- CI 跑 lint + metrics 要 2 条命令, §14 5 守门点扩到 6 守门点 (加 metrics)
+- Round 42 P0 扩: 加 `omo lint-metrics` 单命令, 跑 6 lint 规则 + §17 健康度评分
+
+**实施**:
+- `cmd_lint_schemas()` 加 `metrics: bool = False` 参数
+- `metrics=True` 时: 跑 6 lint 规则, 末尾调 `cmd_logs_audit(metrics=True)` 拿 §17 健康度
+- cli.py 加 `lint-metrics` 子命令: `cmd_lint_schemas(metrics=True)` 直接调
+- 退出码语义 (R42 P0):
+  - `0` = lint 0 违规 AND metrics R0 优秀
+  - `1` = lint 有违规 (R1-R2 警告)
+  - `2` = metrics R3+ 严重
+  - `max(0/1, metrics_exit)` 综合退出码
+
+**smoke test 实际输出** (R42 P0 跑):
+```
+🔍 omo lint schemas — 7 consumer 写时 schema 校验
+
+✅ omo_audit.py: all .append() calls pass schema= (合规)
+... (6 规则全 PASS)
+
+📊 §17 健康度评分 (Round 42 P0, omo lint --metrics):
+{
+  "consumers": {...},
+  "debt_density": 0.0,
+  "drift_count": 1535,
+  "drift_count_excluding_locked": 0,
+  "health_grade": "R0",
+  "locked_drift": 1535,
+  "total_records": 2073
+}
+✅ §17 metrics R0 优秀 (exit 0)
+
+EXIT=0
+```
+
+**5 守门点 → 6 守门点**:
+```
+[代码 commit]      →  pre-commit omo-logs-audit
+[git push]         →  ci-lint.yml 5 jobs (含 omo-lint-schemas)
+[PR merge]         →  人工 review
+[每月 1 号 00:00]  →  audit-baseline-monthly (omo 仓)
+[每月 1 号 01:00]  →  audit-rollout-monthly (跨仓 baseline + §17 metrics)
+[未来: omo lint-metrics 加 ci-lint]  →  CI 跑 6 规则 + §17 健康度 (R42 P0 加子命令, R42+ 留 CI 集成)
+```
+
+**§17.6 R0 优秀最终版** (R42 P0 跑后):
+- drift_count: 1535 (含历史锁)
+- drift_count_excluding_locked: 0
+- debt_density: 0.0
+- health_grade: R0
+- EXIT: 0
+
+**度量 (Round 41 → Round 42)**:
+
+| 指标 | Round 41 | Round 42 | Δ |
+|------|----------|----------|---|
+| omo 子命令 | +trail, +lint, +audit-rollout, +audit (--metrics) | **+lint-metrics** | +1 |
+| CI 守门点 | 5 (4 个 + §17 metrics) | **6** (5 个 + §17 metrics 守门) | +1 |
+| 退出码语义 (lint) | 0/1 | **0/1/2** (R0/R1-R2/R3+) | +1 等级 |
+| 已知债 | R41 0 | 0 (无新增) | 不变 |
+
+**§11 28 段全收 + §17 6 守门点扩 lint-metrics** (Round 12-42, 41 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-41 | 既有 27 段 + §12-§17 | (前 39 commit) |
+| 42 | `omo lint-metrics` 子命令 (§17 健康度接 lint) | `ef1e649` (P0) + `124e134d` (bump) + (本 commit P1 文档) |
 
 
