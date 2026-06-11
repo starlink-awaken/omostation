@@ -759,46 +759,34 @@ def _cmd_search(args: Namespace) -> int:
         zone_count["local"] = 0
         console.print(f"[dim]⚠ 本地搜索跳过: {e}[/]")
 
-    # Zone 2: BOS KOS (only with --all, requires kairon).
+    # Zone 2: KOS (kairon/kos MCP stdio).
     # Gate C1 contract: zone_count.kos MUST be a real count derived from the
     # KOS response, not a hard-coded 1. We never inject a fake "stdout blob"
-    # result item — that violates OPC P2.2 red line:
-    # "do not count a single subprocess stdout blob as one valid knowledge hit".
+    # result item — that violates OPC P2.2 red line.
+    #
+    # Gate C2 contract: must actually invoke kairon/kos MCP server
+    # (uv run python -m kos.mcp.server) over JSON-RPC stdio, parse
+    # search_knowledge response, and map KOS schema
+    # (doc_id/title/zone/canonical_path/updated_at/body_preview)
+    # to P2 contract (id/title/snippet/_source/_source_path/_zone/_type/...).
     if search_all:
         zone_count["kos"] = 0  # default; updated only on real success
         try:
-            import json as _json
-            import subprocess as _sp
-            ws = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
-            agora_bin = ws / "projects" / "agora" / ".venv" / "bin" / "agora"
-            if not agora_bin.exists():
-                agora_bin = Path.home() / ".local" / "bin" / "agora"
-            if not agora_bin.exists():
-                _log_kos_skip("agora binary not found")
-            else:
-                bos_result = _sp.run(
-                    [str(agora_bin), "bos", "resolve", "bos://memory/kos/search", str(query)],
-                    capture_output=True, text=True, timeout=15,
-                )
-                if bos_result.returncode == 0 and bos_result.stdout.strip():
-                    parsed = _json.loads(bos_result.stdout)
-                    items = _extract_kos_items(parsed)
-                    if items:
-                        for item in items:
-                            item.setdefault("_source", "kairon-kos")
-                            item.setdefault("_source_path", "bos://memory/kos/search")
-                            item.setdefault("_zone", "structured-memory")
-                            item.setdefault("_type", "knowledge")
-                            item.setdefault("_freshness", "unknown")
-                            item.setdefault("_owner", "kairon")
-                            item.setdefault("_reuse_policy", "reference-only")
-                            item.setdefault("_retrieved_at", now)
-                        merged_results.extend(items)
-                        zone_count["kos"] = len(items)
-        except (_sp.TimeoutExpired, _sp.SubprocessError, _json.JSONDecodeError, OSError) as e:
-            _log_kos_skip(f"{type(e).__name__}: {e}")
+            kos_items = _invoke_kos_search(query, limit=limit)
+            if kos_items:
+                for item in kos_items:
+                    item.setdefault("_source", "kairon-kos")
+                    item.setdefault("_source_path", item.get("canonical_path", "bos://memory/kos/search"))
+                    item.setdefault("_zone", "structured-memory")
+                    item.setdefault("_type", "knowledge")
+                    item.setdefault("_freshness", "unknown")
+                    item.setdefault("_owner", "kairon")
+                    item.setdefault("_reuse_policy", "reference-only")
+                    item.setdefault("_retrieved_at", now)
+                merged_results.extend(kos_items)
+                zone_count["kos"] = len(kos_items)
         except Exception as e:
-            _log_kos_skip(f"unexpected: {e}")
+            _log_kos_skip(f"unexpected: {type(e).__name__}: {e}")
 
     # ═══ P2 统一响应契约: zone, query, zone_count, results, total ═══
     response = {
@@ -810,7 +798,13 @@ def _cmd_search(args: Namespace) -> int:
     }
     if args.json:
         import json as _json
-        console.print(_json.dumps(response, ensure_ascii=False, indent=2))
+        import sys as _sys
+        # Gate C2: 必须 sys.stdout.write 直写, 绕过 rich console.print
+        # (rich 会把 JSON 字符串里的 \\n literal 解释为 ANSI/控制字符,
+        #  破坏 JSON 序列化)
+        _sys.stdout.write(_json.dumps(response, ensure_ascii=False, indent=2))
+        _sys.stdout.write("\n")
+        _sys.stdout.flush()
     else:
         # 文本模式必须表达与 JSON 相同的核心事实 (zone / query / total / zone_count)
         console.print(
@@ -836,36 +830,174 @@ def _log_kos_skip(reason: str) -> None:
     _logging.getLogger("cockpit.cli.kos").debug("KOS skip: %s", reason)
 
 
-def _extract_kos_items(parsed: object) -> list[dict]:
-    """从 BOS resolve 响应中提取 KOS 结果数组 (Gate C1 contract)。
+def _invoke_kos_search(query: str, limit: int = 10, timeout: float = 60.0) -> list[dict]:
+    """Gate C2 — 真实调用 kairon/kos MCP server (JSON-RPC stdio) 并提取结果。
 
-    接受多种嵌套结构:
-      - {"status": "ok", "result": [...]}            (invoke_stdio ok)
-      - {"status": "ok", "result": {"items": [...]}}  (嵌套)
-      - {"status": "error", ...}                       → []
-      - [...]                                          (裸数组)
+    流程:
+      1. spawn `uv run python -m kos.mcp.server` (cwd = projects/kairon)
+      2. MCP 握手 (initialize → initialized notification)
+      3. tools/call search_knowledge {query, limit}
+      4. 解析响应: result.content[0].text → JSON {query, results[], count}
+      5. 把 KOS schema 映射到 P2 contract (id/title/snippet/timestamp/source_path)
+      6. 返回 P2 items (空列表 if 任何一步失败)
 
-    返回: list[dict] — 仅保留 dict 元素
+    设计原则 (OPC P2.2 red lines):
+      - 不重试 fake blob: 任何步骤失败返回 [], 绝不注入假数据
+      - 不修改原始 KOS schema: 仅追加 P2 contract 字段
+      - 完整错误捕获: subprocess / JSON / IO 全部 except
     """
-    items_obj: object = None
-    if isinstance(parsed, dict):
-        if parsed.get("status") == "error":
-            return []
-        result = parsed.get("result")
-        if isinstance(result, list):
-            items_obj = result
-        elif isinstance(result, dict):
-            for key in ("items", "results", "data"):
-                if isinstance(result.get(key), list):
-                    items_obj = result[key]
-                    break
-        elif isinstance(result, str):
-            return []
-    elif isinstance(parsed, list):
-        items_obj = parsed
-    if not isinstance(items_obj, list):
+    import json as _json
+    import os as _os
+    import select as _sel
+    import subprocess as _sp
+
+    ws_root = Path(_os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+    kairon_dir = ws_root / "projects" / "kairon"
+    if not kairon_dir.exists():
+        _log_kos_skip(f"kairon dir not found: {kairon_dir}")
         return []
-    return [it for it in items_obj if isinstance(it, dict)]
+
+    try:
+        proc = _sp.Popen(
+            ["uv", "run", "python", "-m", "kos.mcp.server"],
+            stdin=_sp.PIPE, stdout=_sp.PIPE, stderr=_sp.PIPE,
+            text=True, bufsize=1, cwd=str(kairon_dir),
+        )
+    except (OSError, _sp.SubprocessError) as e:
+        _log_kos_skip(f"spawn failed: {type(e).__name__}: {e}")
+        return []
+
+    try:
+        # 1) initialize
+        proc.stdin.write(_json.dumps({
+            "jsonrpc": "2.0", "id": 1, "method": "initialize",
+            "params": {"protocolVersion": "2024-11-05"},
+        }) + "\n")
+        proc.stdin.flush()
+        # 2) initialized notification
+        proc.stdin.write(_json.dumps({
+            "jsonrpc": "2.0", "method": "notifications/initialized",
+        }) + "\n")
+        proc.stdin.flush()
+        # 3) tools/call search_knowledge
+        proc.stdin.write(_json.dumps({
+            "jsonrpc": "2.0", "id": 2, "method": "tools/call",
+            "params": {
+                "name": "search_knowledge",
+                "arguments": {"query": query, "limit": limit},
+            },
+        }) + "\n")
+        proc.stdin.flush()
+        proc.stdin.close()
+
+        # 4) blocking read with timeout, wait for "id": 2 response line
+        buf = ""
+        import time as _time
+        deadline = _time.time() + timeout
+        while _time.time() < deadline:
+            r, _, _ = _sel.select([proc.stdout], [], [], 0.5)
+            if r:
+                chunk = _os.read(proc.stdout.fileno(), 65536).decode("utf-8", errors="replace")
+                if not chunk:
+                    break
+                buf += chunk
+                if '"id": 2' in buf and buf.rstrip().endswith("}"):
+                    break
+        else:
+            _log_kos_skip(f"read timeout after {timeout}s")
+            return []
+
+        # 5) parse JSON-RPC response
+        raw_results: list[dict] = []
+        for line in buf.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                msg = _json.loads(line)
+            except _json.JSONDecodeError:
+                continue
+            if msg.get("id") != 2:
+                continue
+            if "error" in msg:
+                _log_kos_skip(f"kos error: {msg['error']}")
+                return []
+            content = msg.get("result", {}).get("content", [])
+            for c in content:
+                if c.get("type") == "text":
+                    try:
+                        payload = _json.loads(c["text"])
+                    except _json.JSONDecodeError:
+                        continue
+                    if isinstance(payload, dict) and isinstance(payload.get("results"), list):
+                        raw_results = [r for r in payload["results"] if isinstance(r, dict)]
+                    break
+            break
+
+        if not raw_results:
+            return []  # KOS 真实返回 0 → zone_count.kos=0, 不视为失败
+
+        # 6) map KOS schema → P2 contract
+        mapped: list[dict] = []
+        for r in raw_results:
+            # KOS schema: doc_id, title, kind, zone, status, canonical_path,
+            #             trust_level, updated_at, body_preview
+            title = str(r.get("title", r.get("canonical_path", "?")))
+            updated = str(r.get("updated_at", ""))
+            # 转换 YYYYMMDDHHMMSS → ISO 8601 (best effort)
+            timestamp = _kos_ts_to_iso(updated)
+            body_preview_raw = r.get("body_preview", "")
+            # 控制字符清洗: KOS body_preview 实际含真换行符, 不清洗会破坏 JSON 序列化
+            body_preview = _clean_control_chars(str(body_preview_raw))
+            mapped.append({
+                "id": r.get("doc_id", ""),
+                "title": _clean_control_chars(title),
+                "snippet": body_preview[:200],
+                "source": "kairon-kos",  # P2 contract: producer
+                "source_path": r.get("canonical_path", "bos://memory/kos/search"),
+                "timestamp": timestamp,
+                "type": "knowledge",
+                "relevance": 1.0,
+                # KOS native fields preserved
+                "kind": r.get("kind", ""),
+                "zone": r.get("zone", ""),
+                "status": r.get("status", ""),
+                "trust_level": r.get("trust_level", ""),
+                "updated_at": updated,
+                "body_preview": body_preview,
+            })
+        return mapped
+
+    except Exception as e:
+        _log_kos_skip(f"invoke error: {type(e).__name__}: {e}")
+        return []
+    finally:
+        try:
+            proc.terminate()
+            proc.wait(timeout=3)
+        except Exception:
+            pass
+
+
+def _kos_ts_to_iso(ts: str) -> str:
+    """转换 KOS 时间戳 (YYYYMMDDHHMMSS) → ISO 8601。失败返回原值。"""
+    if not ts or not ts.isdigit() or len(ts) != 14:
+        return ts
+    try:
+        from datetime import datetime as _dt
+        return _dt.strptime(ts, "%Y%m%d%H%M%S").isoformat() + "Z"
+    except ValueError:
+        return ts
+
+
+def _clean_control_chars(s: str) -> str:
+    """把字符串中的控制字符 (\\n \\r \\t 等) 替换为单空格, 保留可读性并避免破坏 JSON 序列化。"""
+    if not s:
+        return s
+    import re as _re
+    # 替换 \n \r \t \v \f 以及其他控制字符为单空格, 合并连续空格
+    cleaned = _re.sub(r"[\x00-\x1f\x7f]+", " ", s)
+    return _re.sub(r"\s+", " ", cleaned).strip()
 
 
 def _cmd_discover(args: Namespace) -> int:
