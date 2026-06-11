@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""workspace — 产品级终端体验入口。"""
+"""cockpit — eCOS v5 L3 入口层 (workspace 为兼容别名)。"""
 
 from __future__ import annotations
 
@@ -87,15 +87,15 @@ def main() -> int:
             parser_console = Console()
             parser_console.print(f"\n[red]Error: {message}[/]")
             parser_console.print("[yellow]试试以下命令:[/]")
-            parser_console.print('  [cyan]workspace research "你的主题"[/]')
-            parser_console.print("  [cyan]workspace research --list[/]")
-            parser_console.print("  [cyan]workspace status[/]")
-            parser_console.print("  [cyan]workspace demo[/]")
+            parser_console.print('  [cyan]cockpit research "你的主题"[/]')
+            parser_console.print("  [cyan]cockpit research --list[/]")
+            parser_console.print("  [cyan]cockpit status[/]")
+            parser_console.print("  [cyan]cockpit demo[/]")
             parser_console.print()
             sys.exit(2)
 
     parser = WorkspaceParser(
-        prog="workspace",
+        prog="cockpit",
         description="Workspace — 产品级统一入口",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
@@ -263,8 +263,15 @@ def main() -> int:
         "--full", action="store_true", help="全栈检查 (含 Agora 服务健康 + Runtime Matrix + OMO 债务)"
     )
 
-    brief_p = sub.add_parser("brief", help="会话简报")
+    brief_p =     sub.add_parser("brief", help="会话简报")
     brief_p.add_argument("--force", action="store_true", help="强制重新生成")
+
+    search_p = sub.add_parser("search", help="跨源搜索 (数据库 + BOS 知识引擎)")
+    search_p.add_argument("query", help="搜索关键词")
+    search_p.add_argument("--all", action="store_true", help="搜索所有源 (本地 SQLite + BOS kos/gbrain)")
+    search_p.add_argument("--limit", type=int, default=10, help="每源结果数 (默认10)")
+
+    sub.add_parser("discover", help="发现可用功能和资源")
 
     events_p = sub.add_parser("events", help="实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard)")
     events_p.add_argument("--url", default="http://127.0.0.1:8080/v1/events", help="Agora SSE Endpoint")
@@ -392,7 +399,7 @@ def main() -> int:
         if args.data_command == "gc":
             return cmd_data_gc(args)
         console.print(
-            "[yellow]试试: [cyan]workspace data index[/] 或 [cyan]workspace data types[/] 或 [cyan]workspace data gc[/][/]"
+            "[yellow]试试: [cyan]cockpit data index[/] 或 [cyan]cockpit data types[/] 或 [cyan]cockpit data gc[/][/]"
         )
         return 1
     if args.command == "contracts":
@@ -408,11 +415,11 @@ def main() -> int:
             elif args.contracts_export_type == "event":
                 return cmd_contracts_export_event(args)
             console.print(
-                "[yellow]试试: [cyan]workspace contracts export identity[/] 或 [cyan]workspace contracts export event --id 1[/][/]"
+                "[yellow]试试: [cyan]cockpit contracts export identity[/] 或 [cyan]cockpit contracts export event --id 1[/][/]"
             )
             return 1
         console.print(
-            "[yellow]试试: [cyan]workspace contracts validate[/] 或 [cyan]workspace contracts list[/] 或 [cyan]workspace contracts export-research 1[/] 或 [cyan]workspace contracts export identity[/][/]"
+            "[yellow]试试: [cyan]cockpit contracts validate[/] 或 [cyan]cockpit contracts list[/] 或 [cyan]cockpit contracts export-research 1[/] 或 [cyan]cockpit contracts export identity[/][/]"
         )
         return 1
     if args.command == "dashboard":
@@ -455,6 +462,10 @@ def main() -> int:
         return cmd_skill(args)
     if args.command == "health":
         return _cmd_health(args)
+    if args.command == "search":
+        return _cmd_search(args)
+    if args.command == "discover":
+        return _cmd_discover(args)
     if args.command == "brief":
         return _cmd_brief(args)
     if args.command == "events":
@@ -488,22 +499,24 @@ def main() -> int:
         Panel.fit(
             "[bold cyan]🛸 Cockpit · L3 统一入口[/bold cyan]\n\n"
             "[bold]上下文[/]\n"
-            "  [cyan]workspace context[/]          — 系统上下文 (Phase/P0/约束)\n"
-            "  [cyan]workspace cards[/]            — CARDS 卡片列表\n"
-            "  [cyan]workspace cards --check[/]    — 操作合规检查\n"
-            "  [cyan]workspace vault search KEY[/] — 搜索知识库\n"
-            "  [cyan]workspace health[/]           — 一键系统健康\n"
-            "  [cyan]workspace brief[/]            — 会话简报\n\n"
+            "  [cyan]cockpit context[/]          — 系统上下文 (Phase/P0/约束)\n"
+            "  [cyan]cockpit cards[/]            — CARDS 卡片列表\n"
+            "  [cyan]cockpit cards --check[/]    — 操作合规检查\n"
+            "  [cyan]cockpit vault search KEY[/] — 搜索知识库\n"
+            "  [cyan]cockpit health[/]           — 一键系统健康\n"
+            "  [cyan]cockpit brief[/]            — 会话简报\n\n"
             "[bold]研究对象[/]\n"
-            '  [cyan]workspace research "主题"[/]   — 发起研究\n'
-            "  [cyan]workspace research --list[/]   — 查看历史\n\n"
+            '  [cyan]cockpit research "主题"[/]   — 发起研究\n'
+            "  [cyan]cockpit research --list[/]   — 查看历史\n\n"
             "[bold]工具[/]\n"
-            "  [cyan]workspace status[/]            — 工作台\n"
-            "  [cyan]workspace dashboard[/]         — Web 驾驶舱\n"
-            "  [cyan]workspace mcp[/]               — MCP Server\n"
-            "  [cyan]workspace demo[/]              — 5 分钟体验\n"
-            "  [cyan]workspace code analyze[/]      — 代码分析\n"
-            "  [cyan]workspace version[/]           — 版本信息\n\n"
+            "  [cyan]cockpit search --all KEY[/]  — 跨源搜索 (本地+BOS)\n"
+            "  [cyan]cockpit discover[/]           — 发现可用功能\n"
+            "  [cyan]cockpit status[/]            — 工作台\n"
+            "  [cyan]cockpit dashboard[/]         — Web 驾驶舱\n"
+            "  [cyan]cockpit mcp[/]               — MCP Server\n"
+            "  [cyan]cockpit demo[/]              — 5 分钟体验\n"
+            "  [cyan]cockpit code analyze[/]      — 代码分析\n"
+            "  [cyan]cockpit version[/]           — 版本信息\n\n"
             "[dim]快捷键: F1帮助 · Ctrl+C 退出[/]",
             border_style="cyan",
             box=box.ROUNDED,
@@ -714,6 +727,84 @@ def _cmd_brief(args: Namespace) -> int:
         console.print(f"[yellow]⚠ Brief generation limited: {e}[/]")
 
     return 0
+    return 0
+
+
+def _cmd_search(args: Namespace) -> int:
+    """跨源搜索 — 搜索本地数据库和/或 BOS 知识引擎。"""
+    console = _get_console()
+    query = getattr(args, "query", "")
+    if not query:
+        console.print("[yellow]请输入搜索关键词[/]")
+        console.print("  [cyan]cockpit search \"关键词\" --all[/]")
+        return 1
+
+    search_all = getattr(args, "all", False)
+    limit = getattr(args, "limit", 10)
+    results = []
+
+    # 源 1: 本地研究仓库 (SQLite FTS5)
+    try:
+        from .storage import get_data_access
+
+        local = get_data_access().search_research(query, limit=limit)
+        if local:
+            results.append({"source": "📁 本地研究", "items": local})
+    except Exception as e:
+        console.print(f"[dim]⚠ 本地搜索跳过: {e}[/]")
+
+    # 源 2: BOS 知识引擎 (kairon/kos)
+    if search_all:
+        try:
+            import subprocess as _sp
+
+            ws = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+            agora_bin = ws / "projects" / "agora" / ".venv" / "bin" / "agora"
+            if not agora_bin.exists():
+                agora_bin = Path.home() / ".local" / "bin" / "agora"
+            if agora_bin.exists():
+                bos_result = _sp.run(
+                    [str(agora_bin), "bos", "resolve", f"bos://memory/kos/search"],
+                    capture_output=True, text=True, timeout=15,
+                )
+                results.append({"source": "🧠 BOS 知识引擎", "items": [bos_result.stdout[:500] if bos_result.returncode == 0 else f"(暂不可用: {bos_result.stderr[:100]})"]})
+            else:
+                results.append({"source": "🧠 BOS 知识引擎", "items": ["(agora CLI 未安装)"]})
+        except Exception as e:
+            results.append({"source": "🧠 BOS 知识引擎", "items": [f"(查询失败: {e})"]})
+
+    for r in results:
+        console.print(f"\n[bold cyan]{r['source']}[/]")
+        for item in r["items"][:limit]:
+            title = item.get("topic", item.get("title", str(item)[:80])) if isinstance(item, dict) else str(item)[:80]
+            console.print(f"  ▸ {title}")
+
+    console.print(f"\n[dim]共 {sum(len(r['items']) for r in results)} 条结果[/]")
+    if not search_all:
+        console.print("[dim]提示: 加 --all 搜索 BOS 知识引擎[/]")
+    return 0
+
+
+def _cmd_discover(args: Namespace) -> int:
+    """发现可用功能和资源。"""
+    console = _get_console()
+    console.print("[bold cyan]🛸 cockpit 可用功能[/bold cyan]\n")
+    console.print("[bold]入口[/]")
+    console.print("  [cyan]cockpit[/]                — 本帮助菜单")
+    console.print("  [cyan]cockpit health --full[/]   — 全栈健康检查")
+    console.print("  [cyan]cockpit search --all KEY[/]— 跨源搜索")
+    console.print("  [cyan]cockpit discover[/]        — 本页面\n")
+    console.print("[bold]BOS 资源域 (通过 agora MCP :7431)[/]")
+    console.print("  [cyan]memory/[/]     — 知识存储 (kairon: kos/kronos/sophia)")
+    console.print("  [cyan]governance/[/] — 治理 (omo + cockpit MCP)")
+    console.print("  [cyan]analysis/[/]   — 分析 (minerva/ontoderive/codeanalyze)")
+    console.print("  [cyan]persona/[/]    — 人格 (runtime)")
+    console.print("  [cyan]capability/[/] — 能力 (forge/agora-proxy)\n")
+    console.print("[bold]文档[/]")
+    console.print("  [cyan]docs/PANORAMA.md[/]           — 系统全景架构")
+    console.print("  [cyan]docs/JOURNEY-PROBES.md[/]     — 用户旅程探针")
+    console.print("  [cyan]docs/ENTRY-CONVERGENCE.md[/]  — 入口收敛方案\n")
+    console.print("[dim]提示: agora MCP 连接后可直接调用 resolve_bos_uri 使用所有功能[/]")
     return 0
 
 
