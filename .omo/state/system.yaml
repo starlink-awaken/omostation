@@ -8,7 +8,7 @@ phase41_completed_at: '2026-06-16T00:00:00Z'
 phase_status: active
 current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
-health_score: 73.75
+health_score: 22.12
 health_score_raw: 100.0
 active_agents: 0
 idle_agents: 4
@@ -53,7 +53,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-10T22:00:00Z'
+updated_at: '2026-06-11T04:00:00Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -101,20 +101,44 @@ phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
 phase32_completed_at: '2026-06-07T00:00:00Z'
-debt_weight: 1.0
+debt_weight: 0.3
 debt_weight_items:
-  AUDIT-2026-06-07:
+  D2_CI_E2E:
     resolved: false
-    weight: 0.0
-    desc: 全景审计台账 (22项)
-  DEBT-M1-GIT-RESET:
+    weight: 0.15
+    desc: CI E2E 测试环境容器化
+  D3_EU_PRICING:
     resolved: false
-    weight: 0.0
-    desc: M1 文件被 git reset 反复删除
-  DEBT-SERVER-MCP-SPLIT:
+    weight: 0.15
+    desc: eu-pricing 独立测试覆盖
+  SB_DECOMPOSITION:
     resolved: false
-    weight: 0.0
-    desc: server/mcp.py 单体拆分 (2200行 → 3文件)
+    weight: 0.2
+    desc: SharedBrain 拆解进度 (19器官→核+迁移+废弃)
+  SB_UNTESTED_PKGS:
+    resolved: false
+    weight: 0.15
+    desc: kairon 4个untested包 (core-models, shared-lib, sharedbrain-bridge, wksp)
+  SB_ORPHANED_TASKS:
+    resolved: false
+    weight: 0.1
+    desc: orphaned_tasks 结构化 registry
+  SB_ROOT_CLEANUP:
+    resolved: false
+    weight: 0.05
+    desc: 根目录 SharedBrain/ 空壳清理
+  SB_BRIDGE_FIX:
+    resolved: false
+    weight: 0.1
+    desc: sharedbrain-bridge 死代码清理或重连
+  SB_PROJECTS_YAML:
+    resolved: false
+    weight: 0.05
+    desc: PROJECTS.yaml 行数更新 (71K→824K)
+  SB_PHASE17_PLAN:
+    resolved: false
+    weight: 0.05
+    desc: Phase 17 Wave 1 实施计划创建
 resolved_debt_items: []
 orphaned_tasks_ref: .omo/tasks/registry/INDEX.md
 debt_registry_ref: .omo/debt/registry.yaml

@@ -227,6 +227,12 @@ GitHub Actions workflows — **19/20 子模块 + 根仓库全部 CI 覆盖** (sp
 10. **快速差异测试: `make test-diff`** — 只测试自 HEAD 以来修改过的包，取代全量 `make test-fast`。修改单个包时用此命令。
 11. **修改多项目时**: 优先用各项目的 `make test-diff`（kairon）或 `uv run pytest -k` 定向测试，而非全量 `make test`，节省 CI 时间和开发迭代周期。
 
+12. **Agent 默认入口**: Agent 始终通过 **agora MCP :7431** 接入系统。`resolve_bos_uri()` 是唯一推荐的 MCP 调用方式。cockpit/l4-kernel/runtime 的独立 stdio MCP 入口已标记 deprecated，仅供向后兼容。
+
+13. **三入口架构**: 人类用 `cockpit CLI`，Agent 用 `agora MCP :7431`，Web/API 用 `cockpit HTTP :8090`。不再使用其他入口。
+
+14. **BOS URI 是跨层调用的唯一路径**: 所有跨项目、跨层调用必须通过 `bos://` URI 经由 Agora 路由。不要直接调用子进程或内部 MCP。
+
 ## 📋 子模块管理 (2026-06-10 确立)
 
 ### 子模块指针更新

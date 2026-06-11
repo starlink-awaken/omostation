@@ -1,0 +1,36 @@
+id: OPC-P3-SWARM-SPINE
+title: "OPC-P3: Swarm Execution Spine"
+status: planned
+priority: P0
+domain: opc
+created: "2026-06-11"
+prerequisites:
+  - opc_phase2_design_baseline_accepted
+  - opc_p2_t4_completed
+description: |
+  Define swarm task object, architecture boundaries, agent roles,
+  worker dispatch protocol, and a minimal three-worker demo.
+tasks:
+  - id: OPC-P3-01
+    title: "Define swarm task object schema"
+    status: completed
+    evidence: "docs/OPC-PHASE3-SWARM-SPINE.md §T1"
+  - id: OPC-P3-02
+    title: "Define swarm boundary among OMO/swarm-engine/aetherforge/runtime"
+    status: completed
+    evidence: "docs/OPC-PHASE3-SWARM-SPINE.md §T2"
+  - id: OPC-P3-03
+    title: "Define 6 agent roles"
+    status: completed
+    evidence: "docs/OPC-PHASE3-SWARM-SPINE.md §T3"
+  - id: OPC-P3-04
+    title: "Design worker dispatch + heartbeat + retry + failure debt"
+    status: completed
+    evidence: "docs/OPC-PHASE3-SWARM-SPINE.md §T4"
+  - id: OPC-P3-05
+    title: "Specify minimal three-worker demo"
+    status: completed
+    evidence: "docs/OPC-PHASE3-SWARM-SPINE.md §T5"
+gate: Gate D
+gate_status: not_yet_passed
+gate_note: "Design baseline delivered. Implementation requires swarm-engine/runtime/aetherforge activation."

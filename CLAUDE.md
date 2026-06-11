@@ -222,12 +222,12 @@ bash tests/integration/run-all.sh
 
 ## Phase 上下文
 
-- **当前 Phase**: 28 (5+3+1 全量审计纪元 — X-Plane 治理控制面已落地)
-- **下一里程碑**: Phase 28 X-Plane 档位③ 战果已落盘,探活覆盖率 90.5%,待推进 Phase 29
-- **健康分**: 77.5/100 (X-Plane 接入后真实值,2026-06-08 实测,健康分因子 = raw(100) × dw(1.0) × xplane_factor(0.775))
-- **完成度**: Phase 1-28 已完成,X-Plane 战役 5 笔 commit 落盘,档位①②③ 全部交付;xplane_score=25,coverage=90.5%,真戳破 5+ 真 RED
-- **当前活跃任务**: (无活跃任务;预存 9 bug 已登记)
-- **关键原则**: OMO MCP 化完成,agora 网关隔离固化,llm-gateway 统一算力调度,gbrain 图谱记忆共享上线,**X-Plane 戳破声明/现实分裂**
+- **当前 Phase**: 28 (5+3+1 全量审计纪元 — X-Plane 治理控制面已落地;code_freeze=true)
+- **下一里程碑**: 债务结构化完成(9项),X-Plane 档位③ 探活覆盖率 19%,待推进全量 probe 至 90%+
+- **健康分**: **22.12**/100 (2026-06-11 实测,公式 = raw(100) × debt_weight(0.3) × xplane_factor(0.738);上次更新由 debt_weight 1→0.3 触发骤降;raw 质量分仍为 100)
+- **完成度**: Phase 1-28 已完成;xplane_coverage=100% registry 注册 21 项机制,但沙箱实测 coverage=19%(4/21 可探),survival=0%(all PENDING/RED/DEAD);debt_health=62.5;9项债务全部 unresolved
+- **当前活跃任务**: (无活跃任务;planned/ 47 任务排队中;OPC-P2 已完工待迁至 done/)
+- **关键原则**: OMO MCP 化完成,agora 网关隔离固化,llm-gateway 统一算力调度,gbrain 图谱记忆共享上线,**X-Plane 全量探活未跑通(survival=0%),INDEX.md 声明/现实分裂已修复**
 
 ---
 

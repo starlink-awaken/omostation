@@ -1,6 +1,8 @@
 # 用户旅程白盒探针报告
 
-> 2026-06-10 | 6 条核心旅程 · 逐层调用链 · 输入/输出/故障点分析
+> 2026-06-11 | 6 条核心旅程 · 逐层调用链 · 输入/输出/故障点分析
+> ⚠️ 入口收敛后：所有 Agent 旅程通过 `agora MCP :7431` 的 `resolve_bos_uri()` 接入。
+> cockpit/l4-kernel/runtime 的独立 stdio MCP 已标记 deprecated，仅供向后兼容。
 
 ---
 
@@ -292,38 +294,47 @@ Agent LLM
 
 ---
 
-## 旅程 E: cockpit MCP `cards_status`（活跃卡片列表）
+## 旅程 E: Agent → agora MCP → `bos://cockpit/context`（cards_status 主路径）
 
-**触发器**: Agent 调用 `cards_status` MCP 工具
+> **主路径**（入口收敛后）: Agent → agora MCP :7431 → `resolve_bos_uri("bos://cockpit/context")`
+> **兼容路径**（deprecated）: Agent → cockpit MCP (stdio) — 已标记 deprecated，供向后兼容
 
-### 调用链
+**触发器**: Agent 调用 Agora 获取 cockpit 上下文/cards 状态
+
+### 主路径调用链
 
 ```
-Agent → cockpit MCP (stdio)
-  │  "tools/call" → {"name": "cards_status"}
+Agent → agora MCP :7431 (SSE)
+  │  resolve_bos_uri("bos://cockpit/context")
+  │     → POC_SERVICES → mcp_stdio transport
+  │     → ProcessPool → cockpit-mcp subprocess
   │
   ▼
-cockpit_mcp.py:514 → @_tool() def cards_status()
+cockpit_mcp.py → FastMCP("cockpit") stdio server
+  │  "tools/call" → {"name": "cards_status"}
   │
   ▼
 cockpit_mcp.py:521 → _scan_cards()
   │
-  ├── 主路径（l4-kernel 可用）:
-  │     kems.py:223 → CardsPlane.scan_cards()
-  │     → 扫描 ~/Documents/@驾驶舱/CARDS/**/*.md
-  │     → 解析 YAML frontmatter
-  │     → 返回 [dict, ...]
-  │
-  └── 回退路径（l4-kernel 不可用）:
-        cockpit_mcp.py:375-396 → rglob("*.md") → yaml.safe_load
-        → 同样读文件系统
+  ├── l4-kernel 可用: kems.py:223 → CardsPlane.scan_cards()
+  └── l4-kernel 不可用: cockpit_mcp.py:375-396 → rglob("*.md")
   │
   ▼
-cockpit_mcp.py:522 → 过滤: status not in ("closed", "done")
-  │  ← 活跃卡片列表
-  │
-  ▼ 返回 JSON string → FastMCP 包装 → Agent
+  过滤 closed/done → 返回 JSON → Agora → Agent
 ```
+
+### 兼容路径（deprecated, 向后兼容）
+
+<details>
+<summary>Agent → cockpit MCP (stdio) path</summary>
+
+```
+Agent → cockpit MCP (stdio) [deprecated]
+  → FastMCP stdio server
+  → cards_status()
+```
+此路径保留仅供向后兼容。推荐 `resolve_bos_uri("bos://cockpit/context")`。
+</details>
 
 ### 数据来源
 
@@ -355,15 +366,21 @@ cockpit_mcp.py:522 → 过滤: status not in ("closed", "done")
 
 ---
 
-## 旅程 F: Agent → l4-kernel MCP → 域管理
+## 旅程 F: Agent → agora MCP → `bos://l4-kernel/domains`（域管理主路径）
+
+> **主路径**（入口收敛后）: Agent → agora MCP :7431 → `resolve_bos_uri("bos://l4-kernel/domains")`
+> **兼容路径**（deprecated）: Agent → l4-kernel MCP (stdio) — 已标记 deprecated
 
 **触发器**: Agent 管理 L4 域注册表
 
-### 调用链
+### 主路径调用链
 
 ```
-Agent → cockpit (stdio)
-  │  l4_domains_list → l4-kernel MCP
+Agent → agora MCP :7431 (SSE)
+  │  resolve_bos_uri("bos://l4-kernel/domains")
+  │     → POC_SERVICES → mcp_stdio transport
+  │     → ProcessPool → subprocess.Popen
+  │     → l4-kernel MCP server
   │
   ▼
 l4-kernel mcp_server.py
@@ -379,6 +396,18 @@ l4-kernel registry.py
   │  list_by_type("document") → 11 域
   │  aggregate_health() → {total:24, existing:N, health_rate:N%}
 ```
+
+### 兼容路径（deprecated, 向后兼容）
+
+<details>
+<summary>Agent → l4-kernel MCP (stdio) path</summary>
+
+```
+Agent → l4-kernel MCP (stdio) [deprecated]
+  → l4-kernel mcp_server.py
+```
+此路径保留仅供向后兼容。推荐 `resolve_bos_uri("bos://l4-kernel/domains")`。
+</details>
 
 ### 故障点
 
