@@ -18,11 +18,11 @@
 
 **目标**: 守 §18 6 守门点 + §17 R0 优秀评分, 不引入新债.
 
-| Round | 主题 | 候选 |
+| Round | 主题 | 状态 |
 |-------|------|------|
-| R45 | §18.8 候选 1: 集成 lint-metrics 到其他仓 (kairon meta-stub) | §19.2 |
-| R46 | §18.8 候选 2: §12.5.1 步骤 4 加 §17 metrics 跨仓聚合报告 | §19.3 |
-| R47 | §18.8 候选 3: ci-lint.yml 加 §17 metrics 输出 + §18 健康度趋势图 | §19.4 |
+| R45 | §18.8 候选 1: 集成 lint-metrics 到其他仓 (kairon meta-stub) | ✅ R45 实质化 (模板 docs/cross-repo-rollout-template-2026-06-11.md) |
+| R46 | §18.8 候选 2: §12.5.1 步骤 4 加 §17 metrics 跨仓聚合报告 | ✅ R46 实质化 (--include-metrics flag, 2026-06-11) |
+| R47 | §18.8 候选 3: ci-lint.yml 加 §17 metrics 输出 + §18 健康度趋势图 | 🔄 R47 进行中 (artifact + plot-metrics.py) |
 
 **§15 节奏守门**: 短期不期待新债, 守住 §18 R0 优秀即可.
 
@@ -30,11 +30,11 @@
 
 **目标**: 跨仓 lint-metrics 接入 — 让其他仓也走 §17 健康度评分.
 
-| Round | 主题 | 候选 |
+| Round | 主题 | 状态 |
 |-------|------|------|
-| R48 | kairon (meta-stub) 接入 §12.2 + lint-metrics (Python) | §19.5 |
-| R49 | metaos L2 集成 §12.2 + lint-metrics (Python, 需 metaos owner 配合) | §19.6 |
-| R50 | gbrain §12.2.2 TypeScript 适配 + lint-metrics (TS, 需 gbrain owner 配合) | §19.7 |
+| R48 | kairon (meta-stub) 接入 §12.2 + lint-metrics (Python) | 🔄 R48 探路中 (2026-06-11 probe) |
+| R49 | metaos L2 集成 §12.2 + lint-metrics (Python, 需 metaos owner 配合) | 🔄 R49 探路中 (2026-06-11 probe) |
+| R50 | gbrain §12.2.2 TypeScript 适配 + lint-metrics (TS, 需 gbrain owner 配合) | 🔄 R50 探路中 (2026-06-11 probe) |
 
 **§15 节奏守门**: 中期期待"跨仓债"出现 (1-2 项), 走 §15 5 阶段流程.
 
@@ -179,11 +179,15 @@
 - [x] §19.9 §19 候选 8: §18 全景扩多仓 (R54-R56)
 - [x] §19.10 §11-§18 vs §19 关系
 - [x] §19.11 Round 45+ 候选
-- [ ] §19.12+ 实施 R45 (短期待办, §19.2)
+- [x] R46 ✅ `--include-metrics` flag 实质化 (2026-06-11, omo_audit_rollout.py)
+- [x] R47 🔄 ci-lint artifact + plot-metrics.py (2026-06-11, worker 并行)
+- [x] R48 🔄 kairon 探路中 (.omo/_delivery/kairon-probe-2026-06-11.md)
+- [x] R49 🔄 metaos 探路中 (.omo/_delivery/metaos-probe-2026-06-11.md)
+- [x] R50 🔄 gbrain 探路中 (.omo/_delivery/gbrain-probe-2026-06-11.md)
 
 ---
 
-**§19 章节总览** (Round 45 起步):
+**§19 章节总览** (Round 46-47 实质化中):
 
 | 子节 | 主题 | 状态 |
 |------|------|------|
