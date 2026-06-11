@@ -1,20 +1,31 @@
-.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint governance-check governance-sync governance-validate governance-index-check governance-verify
+.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit debt-check doc-lint
 
 help:
 	@echo "Workspace 根 Makefile — 委派到 projects/"
 	@echo ""
+	@echo "=== 测试 ==="
 	@echo "make kairon-test       运行 kairon 全部测试"
 	@echo "make kairon-test-fast  运行 kairon 单元测试 (跳过集成/基准)"
 	@echo "make kairon-test-diff  运行 kairon 差异测试 (仅修改的包)"
 	@echo "make kairon-test-e2e   运行 kairon E2E 测试 (Postgres+gbrian+kairon 容器化)"
 	@echo "make kairon-lint       ruff 检查所有包"
 	@echo "make kairon-build      安装 kairon 依赖 (uv sync)"
-	@echo "make governance-verify  运行 canonical .omo 验证链 (sync → validate → test)"
-	@echo "make governance-check   全量治理检查 (canonical verify → index)"
-	@echo "make governance-sync    同步 .omo/state/system.yaml"
+	@echo ""
+	@echo "=== 治理 ==="
+	@echo "make governance-verify   运行 canonical .omo 验证链"
+	@echo "make governance-check    全量治理检查 (verify → index)"
+	@echo "make governance-audit    全量治理审计 (债务+文档+健康度)"
+	@echo "make governance-sync     同步 .omo/state/system.yaml"
 	@echo "make governance-validate 验证任务 Schema"
 	@echo "make governance-index-check 检查 INDEX.md 覆盖率"
-	@echo "make help              显示本消息"
+	@echo ""
+	@echo "=== 债务 ==="
+	@echo "make debt-check          检查债务状态"
+	@echo ""
+	@echo "=== 文档 ==="
+	@echo "make doc-lint            检查文档格式"
+	@echo ""
+	@echo "make help                显示本消息"
 
 kairon-test:
 	cd projects/kairon && make test
@@ -48,3 +59,45 @@ governance-validate:
 
 governance-index-check:
 	python3 scripts/check-index-coverage.py
+
+# ── 治理审计 ────────────────────────────────────────────────────────────────────
+
+governance-audit: governance-check debt-check doc-lint
+	@echo "=== 治理审计完成 ==="
+
+# ── 债务检查 ────────────────────────────────────────────────────────────────────
+
+debt-check:
+	@echo "=== 债务状态检查 ==="
+	@echo ""
+	@echo "--- debt_weight ---"
+	@grep "debt_weight:" .omo/state/system.yaml | head -1
+	@echo ""
+	@echo "--- debt_health ---"
+	@grep "debt_health:" .omo/state/system.yaml | head -1
+	@echo ""
+	@echo "--- resolved_count ---"
+	@grep "resolved_count:" .omo/state/system.yaml | head -1
+	@echo ""
+	@echo "--- unresolved_count ---"
+	@grep "unresolved_count:" .omo/state/system.yaml | head -1
+	@echo ""
+	@echo "=== 债务检查完成 ==="
+
+# ── 文档检查 ────────────────────────────────────────────────────────────────────
+
+doc-lint:
+	@echo "=== 文档格式检查 ==="
+	@echo ""
+	@echo "--- 检查文档版本信息 ---"
+	@for f in AGENTS.md CLAUDE.md .omo/_knowledge/governance/README.md; do \
+		if [ -f "$$f" ]; then \
+			if grep -q "最后更新" "$$f" 2>/dev/null; then \
+				echo "  ✓ $$f — 有版本信息"; \
+			else \
+				echo "  ⚠️  $$f — 缺少版本信息"; \
+			fi; \
+		fi; \
+	done
+	@echo ""
+	@echo "=== 文档检查完成 ==="
