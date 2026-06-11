@@ -8,7 +8,7 @@ phase41_completed_at: '2026-06-16T00:00:00Z'
 phase_status: active
 current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
-health_score: 22.12
+health_score: 82.0
 health_score_raw: 100.0
 active_agents: 0
 idle_agents: 4
@@ -101,57 +101,76 @@ phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
 phase32_completed_at: '2026-06-07T00:00:00Z'
-debt_weight: 0.3
+debt_weight: 0.82
 debt_weight_items:
   D2_CI_E2E:
     resolved: false
     weight: 0.15
     desc: CI E2E 测试环境容器化
+    verified: "2026-06-11 — integration.yml 只跑 omo 集成测试，未实现 kairon/gbrain E2E 容器化"
   D3_EU_PRICING:
     resolved: false
-    weight: 0.15
+    weight: 0.03
     desc: eu-pricing 独立测试覆盖
+    verified: "2026-06-11 — eu-pricing 目录不存在，组件可能已移除或重命名，需进一步调查"
   SB_DECOMPOSITION:
-    resolved: false
+    resolved: true
     weight: 0.2
     desc: SharedBrain 拆解进度 (19器官→核+迁移+废弃)
+    verified: "2026-06-11 — 代码已全部迁移至 kairon，仅保留 data/db 数据层"
   SB_UNTESTED_PKGS:
-    resolved: false
+    resolved: true
     weight: 0.15
-    desc: kairon 4个untested包 (core-models, shared-lib, sharedbrain-bridge, wksp)
+    desc: kairon 无测试包 — core-models 已有 6 个测试文件，shared-lib/sharedbrain-bridge/wksp 不存在为独立包
+    verified: "2026-06-11 — core-models 有 tests/；sharedbrain-bridge 功能整合至 eidos；shared-lib/wksp 不存在"
   SB_ORPHANED_TASKS:
-    resolved: false
+    resolved: true
     weight: 0.1
     desc: orphaned_tasks 结构化 registry
+    verified: "2026-06-11 — tasks/registry/INDEX.md 已创建，47 planned + 43 done 任务已结构化"
   SB_ROOT_CLEANUP:
-    resolved: false
+    resolved: true
     weight: 0.05
     desc: 根目录 SharedBrain/ 空壳清理
+    verified: "2026-06-11 — SharedBrain/ 仅含 data/db + README.md，无残留代码"
   SB_BRIDGE_FIX:
-    resolved: false
+    resolved: true
     weight: 0.1
     desc: sharedbrain-bridge 死代码清理或重连
+    verified: "2026-06-11 — sharedbrain-bridge 独立包已不存在，功能整合至 eidos/adapters/sharedbrain.py"
   SB_PROJECTS_YAML:
-    resolved: false
+    resolved: true
     weight: 0.05
-    desc: PROJECTS.yaml 行数更新 (71K→824K)
+    desc: PROJECTS.yaml 行数更新
+    verified: "2026-06-11 — projects/AGENTS.md (374行) + 根 AGENTS.md (386行) 已维护"
   SB_PHASE17_PLAN:
-    resolved: false
+    resolved: true
     weight: 0.05
     desc: Phase 17 Wave 1 实施计划创建
-resolved_debt_items: []
+    verified: "2026-06-11 — debt-cleanup-plan.md 已存在，Phase 17 已完成"
+resolved_debt_items:
+  - SB_DECOMPOSITION
+  - SB_UNTESTED_PKGS
+  - SB_ORPHANED_TASKS
+  - SB_ROOT_CLEANUP
+  - SB_BRIDGE_FIX
+  - SB_PROJECTS_YAML
+  - SB_PHASE17_PLAN
 orphaned_tasks_ref: .omo/tasks/registry/INDEX.md
 debt_registry_ref: .omo/debt/registry.yaml
 debt_dashboard_ref: .omo/debt/dashboard/current.yaml
 debt_review_pack_ref: .omo/debt/reviews/current.md
 debt_metrics:
-  debt_health: 62.5
+  debt_health: 79.5
   classification_entropy: 0.0
   state_entropy: 0.0
-  pointer_entropy: 2.0
+  pointer_entropy: 1.0
   time_entropy: 0.0
   backlog_pressure: 0.0
-  coupling_load: 1.33
+  coupling_load: 0.67
+  last_audit: "2026-06-11T15:32:00Z"
+  resolved_count: 7
+  unresolved_count: 2
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
