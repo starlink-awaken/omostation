@@ -191,6 +191,14 @@ def main(argv: list[str] | None = None) -> int:
 
         return rollout_main(args[1:])
 
+    # OPC-P3 D1 wiring: omo_worker module 暴露 worker/task 全套子命令
+    # (validate / promote-apply / promote-eval / promote-readiness / ...),
+    # 原 cli.py 没有 dispatch 此入口
+    if args and args[0] in {"worker", "wt"}:
+        from omo.omo_worker import main as worker_main
+
+        return worker_main(args[1:])
+
     # 兜底:有参但无匹配子命令 → 报错退出;无参 → 静默退出 0(保持原行为)
     if args:
         print(f"Unknown subcommand: {args[0]}", file=sys.stderr)

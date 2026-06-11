@@ -1,8 +1,8 @@
-active_tasks: 0
-planned_tasks: 4
+active_tasks: 3
+planned_tasks: 8
 blocked_tasks: 0
 completed_tasks: 0
-total_tasks: 4
+total_tasks: 11
 health_score_raw: 0.0
 debt_weight: 0.3
 health_score: 0.0
@@ -15,8 +15,8 @@ debt_metrics:
   classification_entropy: 0.0
   state_entropy: 0.0
   pointer_entropy: 2.0
-  time_entropy: 0.0
-  backlog_pressure: 196.0
+  time_entropy: 1.0
+  backlog_pressure: 408.0
   coupling_load: 2.0
 debt_watchlist_count: 0
 debt_gate_count: 0
@@ -368,6 +368,218 @@ debt_weight_items:
     resolved: false
     weight: 4.0
     desc: '[自动] test: TEST × 2'
+  auto-test-1780792723:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780792723:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780792723:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780792758:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1780792845:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780792845:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780792845:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780792871:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1780873203:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780873203:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780873203:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780873231:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1780873347:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780873347:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780873347:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780873373:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1780873415:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 2'
+  auto-test-1780873416:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780873416:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780873416:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780873444:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1780887207:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780887207:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780887207:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780903232:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 2'
+  auto-test-1780903233:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780903233:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780903233:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780903259:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1780904868:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780904868:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780904868:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780904898:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1780905476:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780905476:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780905476:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780905507:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1780922957:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780922957:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780922957:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780922993:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1780969477:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780969477:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780969477:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780969513:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ANY × 1'
+  auto-test-1780977005:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1780977005:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1780977005:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1780977041:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
+  auto-test-1781043044:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: ERROR × 1'
+  auto-r1-1781043044:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r1: ERROR × 1'
+  auto-r2-1781043044:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] r2: ERROR × 1'
+  auto-test-1781043082:
+    resolved: false
+    weight: 4.0
+    desc: '[自动] test: TEST × 2'
 divergence_flags:
 - missing_debt_generated_ref:action_packet_ref
 - missing_debt_generated_ref:campaign_ref
@@ -381,8 +593,20 @@ divergence_detail_refs:
   debt_generated_refs:
     count: 8
     ref: .omo/evidence/divergence/debt_generated_refs.yaml
-task_gate_summary: {}
-promotion_blockers: {}
+task_gate_summary:
+  TASK-D1-CHILD1:
+    canonical_status: pending
+    gate_facts: []
+  TASK-D1-CHILD2:
+    canonical_status: pending
+    gate_facts: []
+  TASK-FEC5E158:
+    canonical_status: pending
+    gate_facts: []
+promotion_blockers:
+  TASK-D1-CHILD1: []
+  TASK-D1-CHILD2: []
+  TASK-FEC5E158: []
 divergence_triage_summary:
   missing_debt_generated_ref:action_packet_ref:
     severity: low
@@ -417,11 +641,23 @@ divergence_triage_summary:
     owner: control
     disposition: monitor
 next_active_tasks:
-- (No active tasks)
+- Current active queue from .omo/tasks/active/ (3 tasks)
+- TASK-D1-CHILD1
+- TASK-D1-CHILD2
+- TASK-FEC5E158
 next_planned_tasks:
-- Current planned queue from .omo/tasks/planned/ (4 tasks)
+- Current planned queue from .omo/tasks/planned/ (8 tasks)
 - IMPORTED-1975c8
 - IMPORTED-9aff51
 - IMPORTED-d4ff45
 - IMPORTED-fe172c
-updated_at: '2026-06-07T00:30:54Z'
+- TASK-42AC4BA3
+- TASK-8F6D06F9
+- TASK-9D06D85C
+- TASK-ECEF475A
+updated_at: '2026-06-11T09:34:45Z'
+current_phase: 28
+phase_status: active
+phase28_status: active
+xplane_score: 25.0
+xplane_coverage: 100.0
