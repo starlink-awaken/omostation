@@ -156,6 +156,7 @@ class TestRunOllama:
         """场景 1：API 成功返回有效 response→返回剥离后文本"""
         raw_response = json.dumps({"response": "<think>\n\n</think>\n\nTransformer 的核心创新。"})
         mock_resp = mock.MagicMock()
+        mock_resp.__enter__.return_value = mock_resp
         mock_resp.read.return_value = raw_response.encode()
 
         with mock.patch("cockpit.commands.base.urlrequest.urlopen", return_value=mock_resp):
@@ -167,6 +168,7 @@ class TestRunOllama:
         """场景 2：API 返回空 response→返回 None"""
         raw_response = json.dumps({"response": ""})
         mock_resp = mock.MagicMock()
+        mock_resp.__enter__.return_value = mock_resp
         mock_resp.read.return_value = raw_response.encode()
 
         with mock.patch("cockpit.commands.base.urlrequest.urlopen", return_value=mock_resp):
@@ -178,6 +180,7 @@ class TestRunOllama:
         """场景 3：API 返回缺少 response 键→返回 None"""
         raw_response = json.dumps({"error": "model not found"})
         mock_resp = mock.MagicMock()
+        mock_resp.__enter__.return_value = mock_resp
         mock_resp.read.return_value = raw_response.encode()
 
         with mock.patch("cockpit.commands.base.urlrequest.urlopen", return_value=mock_resp):

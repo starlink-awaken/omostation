@@ -136,6 +136,8 @@ def _auto_fix(c: Console, args: argparse.Namespace) -> int:
                 else:
                     c.print(f"  [yellow]⏳ 正在拉取模型 {default_model}（首次拉取可能需要几分钟）...[/yellow]")
                     fixes.append(f"拉取模型 {default_model}")
+                    from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn  # noqa: F811
+
                     with Progress(
                         SpinnerColumn(style="yellow"),
                         TextColumn("[bold]{task.description}[/bold]"),

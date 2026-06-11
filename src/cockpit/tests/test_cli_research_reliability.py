@@ -127,6 +127,7 @@ def test_cmd_research_minerva_subprocess_exception(monkeypatch):
                 {
                     "run": lambda *args, **kwargs: (_ for _ in ()).throw(OSError("minerva not found")),
                     "CompletedProcess": subprocess.CompletedProcess,
+                    "TimeoutExpired": subprocess.TimeoutExpired,
                 },
             )(),
         },
@@ -205,6 +206,7 @@ def test_cmd_research_saves_local_fallback_when_traceback_and_ollama_fail(monkey
                         stderr="Traceback (most recent call last):\nModuleNotFoundError: broken",
                     ),
                     "CompletedProcess": subprocess.CompletedProcess,
+                    "TimeoutExpired": subprocess.TimeoutExpired,
                 },
             )(),
         },
@@ -247,6 +249,7 @@ def test_cmd_research_saves_successful_output(monkeypatch):
                         args=["minerva"], returncode=0, stdout="# Result\n\nUseful research body.", stderr=""
                     ),
                     "CompletedProcess": subprocess.CompletedProcess,
+                    "TimeoutExpired": subprocess.TimeoutExpired,
                 },
             )(),
         },
