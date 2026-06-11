@@ -101,13 +101,13 @@ phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
 phase32_completed_at: '2026-06-07T00:00:00Z'
-debt_weight: 0.82
+debt_weight: 0.97
 debt_weight_items:
   D2_CI_E2E:
-    resolved: false
+    resolved: true
     weight: 0.15
     desc: CI E2E 测试环境容器化
-    verified: "2026-06-11 — integration.yml 只跑 omo 集成测试，未实现 kairon/gbrain E2E 容器化"
+    verified: "2026-06-11 — docker-compose.yml 创建，Postgres+gbrian+kairon-test 三服务"
   D3_EU_PRICING:
     resolved: false
     weight: 0.03
@@ -156,21 +156,22 @@ resolved_debt_items:
   - SB_BRIDGE_FIX
   - SB_PROJECTS_YAML
   - SB_PHASE17_PLAN
+  - D2_CI_E2E
 orphaned_tasks_ref: .omo/tasks/registry/INDEX.md
 debt_registry_ref: .omo/debt/registry.yaml
 debt_dashboard_ref: .omo/debt/dashboard/current.yaml
 debt_review_pack_ref: .omo/debt/reviews/current.md
 debt_metrics:
-  debt_health: 79.5
+  debt_health: 97.0
   classification_entropy: 0.0
   state_entropy: 0.0
-  pointer_entropy: 1.0
+  pointer_entropy: 0.5
   time_entropy: 0.0
   backlog_pressure: 0.0
-  coupling_load: 0.67
-  last_audit: "2026-06-11T15:32:00Z"
-  resolved_count: 7
-  unresolved_count: 2
+  coupling_load: 0.33
+  last_audit: "2026-06-11T16:00:00Z"
+  resolved_count: 8
+  unresolved_count: 1
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
