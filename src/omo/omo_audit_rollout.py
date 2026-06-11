@@ -52,23 +52,38 @@ from typing import Any
 
 
 def _run_logs_metrics(repo_path: Path) -> dict[str, Any]:
-    """跑单仓 `omo logs audit --metrics`, 返回 §17 metrics dict.
+    """跑单仓 §17 metrics, 返回 health_grade + debt_density dict.
+
+    E2 P0 改造: dispatcher 模式 — 按子仓类型路由:
+      1. omo 子仓 → `omo logs audit --metrics` (原路径)
+      2. tools/audit.sh → bash 调用拿 §17 R0 JSON
+      3. 无 audit 脚本 → 标记 "n/a" (仓无 §17 metrics 实现)
 
     失败时返回含 "error" 的 dict, 不阻塞其他仓.
-
-    Args:
-        repo_path: 仓根路径 (含 .omo/_knowledge/*.jsonl)
     """
     import subprocess
 
-    # 找 omo 仓路径 (可能是 omostation/projects/omo 或独立仓)
     omo_project = repo_path / "projects" / "omo"
-    if not omo_project.exists():
-        omo_project = repo_path / "omo"
-    if not omo_project.exists():
-        return {"error": f"omo project not found in {repo_path}", "health_grade": "?", "debt_density": -1.0}
+    if omo_project.exists():
+        return _run_omo_metrics(omo_project)
 
-    #优先用 venv python (omostation 本仓) →兜底 uv run (跨仓独立仓)
+    # E2 P0: 子仓有 tools/audit.sh → bash 调用
+    audit_sh = repo_path / "tools" / "audit.sh"
+    if audit_sh.exists():
+        return _run_bash_audit(repo_path, audit_sh)
+
+    # E2 P0: 无 omo + 无 audit.sh → 标记 n/a
+    return {
+        "error": "no §17 metrics source (neither omo/ nor tools/audit.sh)",
+        "health_grade": "n/a",
+        "debt_density": -1.0,
+    }
+
+
+def _run_omo_metrics(omo_project: Path) -> dict[str, Any]:
+    """原路径: omo logs audit --metrics (R46 P0 实质化)."""
+    import subprocess
+
     venv_python = omo_project / ".venv" / "bin" / "python"
     if venv_python.exists():
         cmd = [str(venv_python), "-m", "omo.cli", "logs", "audit", "--metrics", "--exclude-locked"]
@@ -76,13 +91,8 @@ def _run_logs_metrics(repo_path: Path) -> dict[str, Any]:
         cmd = ["uv", "run", "--no-sync", "python", "-m", "omo.cli", "logs", "audit", "--metrics", "--exclude-locked"]
     try:
         result = subprocess.run(
-            cmd,
-            cwd=str(omo_project),
-            capture_output=True,
-            text=True,
-            timeout=60,
+            cmd, cwd=str(omo_project), capture_output=True, text=True, timeout=60,
         )
-        # metrics JSON 是 json.dumps(indent=2) 多行格式，直接用 slice 截
         stdout = result.stdout
         start = stdout.find("{\n")
         end = stdout.rfind("\n}")
@@ -111,6 +121,53 @@ def _run_logs_metrics(repo_path: Path) -> dict[str, Any]:
         return {"error": str(exc), "health_grade": "?", "debt_density": -1.0}
 
 
+def _run_bash_audit(repo_path: Path, audit_sh: Path) -> dict[str, Any]:
+    """E2 P0: 跑 tools/audit.sh 拿 §17 metrics JSON.
+
+    适用于 kairon/metaos/runtime 等无 omo 子仓但有 tools/audit.sh 的仓.
+    """
+    import os
+    import subprocess
+
+    # E2 P0: 保留完整 os.environ (PATH/bun/uv 等), 追加 VENV_PYTHON 覆盖
+    env = {**os.environ, "VENV_PYTHON": str(repo_path / ".venv" / "bin" / "python")}
+    try:
+        result = subprocess.run(
+            ["bash", str(audit_sh), str(repo_path)],
+            cwd=str(repo_path), capture_output=True, text=True, timeout=60, env=env,
+        )
+        # audit.sh 输出含 "drift_count" + "health_grade" JSON 段
+        stdout = result.stdout
+        # 找 {"generated_at" 开头的 JSON 段
+        for marker in ('{\n  "generated_at"', '{"generated_at"'):
+            idx = stdout.rfind(marker)
+            if idx != -1:
+                end = stdout.find("}", idx)
+                if end != -1:
+                    try:
+                        payload = json.loads(stdout[idx : end + 1])
+                        if "health_grade" in payload:
+                            return {
+                                "health_grade": payload["health_grade"],
+                                "debt_density": payload["debt_density"],
+                                "drift_count": payload.get("drift_count", 0),
+                                "drift_count_excluding_locked": payload.get("drift_count", 0),
+                                "locked_drift": 0,
+                                "total_records": payload.get("total_records", 0),
+                            }
+                    except json.JSONDecodeError:
+                        pass
+        return {
+            "error": f"no metrics JSON in audit.sh output (exit {result.returncode})",
+            "health_grade": "?",
+            "debt_density": -1.0,
+        }
+    except subprocess.TimeoutExpired:
+        return {"error": "audit.sh timeout (>60s)", "health_grade": "?", "debt_density": -1.0}
+    except Exception as exc:
+        return {"error": str(exc), "health_grade": "?", "debt_density": -1.0}
+
+
 def _read_baseline(repo_path: Path) -> dict[str, Any]:
     """读单仓 baseline 文件, 返回结构化 dict.
 
@@ -130,8 +187,11 @@ def _read_baseline(repo_path: Path) -> dict[str, Any]:
 
 
 def _health_grade_rank(grade: str) -> int:
-    """R0最好 (rank 0), R5 最差 (rank 5). 用于 max() 比较."""
-    rank_map = {"R0": 0, "R1": 1, "R2": 2, "R3": 3, "R4": 4, "R5": 5, "?": 99}
+    """R0最好 (rank 0), R5 最差 (rank 5). 用于 max() 比较.
+
+    E2 P0: "n/a" (仓无 §17 metrics) 视作 R0 (不影响 worst_grade).
+    """
+    rank_map = {"R0": 0, "R1": 1, "R2": 2, "R3": 3, "R4": 4, "R5": 5, "?": 99, "n/a": 0}
     return rank_map.get(grade, 99)
 
 
