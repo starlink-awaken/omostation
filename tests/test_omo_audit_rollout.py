@@ -183,9 +183,11 @@ def test_cli_audit_rollout_with_drift_returns_1(tmp_path):
     )
 
     OMO_PROJ = Path(__file__).resolve().parents[1]
+    venv_python = OMO_PROJ / ".venv" / "bin" / "python"
+    py = str(venv_python if venv_python.exists() else sys.executable)
     r = subprocess.run(
         [
-            sys.executable, "-m", "omo.cli", "audit-rollout",
+            py, "-m", "omo.cli", "audit-rollout",
             "--repos", f"test:{r1}",
             "--output", str(tmp_path / "out.json"),
         ],
@@ -208,9 +210,12 @@ def test_cli_audit_rollout_zero_drift_returns_0(tmp_path):
     )
 
     OMO_PROJ = Path(__file__).resolve().parents[1]
+    #优先用 omo venv python, 避免被 kairon venv 污染 sys.executable
+    venv_python = OMO_PROJ / ".venv" / "bin" / "python"
+    py = str(venv_python if venv_python.exists() else sys.executable)
     r = subprocess.run(
         [
-            sys.executable, "-m", "omo.cli", "audit-rollout",
+            py, "-m", "omo.cli", "audit-rollout",
             "--repos", f"test:{r1}",
             "--output", str(tmp_path / "out.json"),
         ],
