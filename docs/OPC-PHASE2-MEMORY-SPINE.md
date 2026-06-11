@@ -194,11 +194,11 @@ Every output item must carry:
 |:---------|:------|:------:|:---------|
 | **C1** | Local Contract Hardening | ✅ **passed** (2026-06-11) | `.omo/tasks/done/OPC-P2-GATE-C.yaml` — 5/5 tests, runtime commands verified |
 | **C2** | KOS Activation | ✅ **passed** (2026-06-11) | `.omo/tasks/done/OPC-P2-GATE-C.yaml` — 15/15 tests, real kairon/kos MCP stdio call returns 10 items for q='kairon' |
-| C3 | Vault Activation | ⏳ not started | — |
+| **C3** | Vault Activation | ✅ **passed** (2026-06-11) | `.omo/tasks/done/OPC-P2-GATE-C.yaml` — 18/18 tests, real vault-search.sh call returns 10 items for q='AGENTS' (multi-zone: {kos:10, vault:10}) |
 | C4 | Real Trace Closure | ⏳ not started | — |
 | **C** | Final | not yet passed | requires C1-C4 all closed |
 
-**Gate C verdict**: T4 complete (8/8 metadata). T2 response contract wired into CLI search output (text + JSON consistent). C1 (Local Contract Hardening) passed with red-line guard against fake KOS `zone_count`. C2 (KOS Activation) passed — real kairon/kos MCP stdio invocation returns 10 items for q='kairon', all 8/8 T4 + 7/7 P2 fields present, no fake blob injection. Gate C not yet passed. P2 implementation in progress. C3/C4 still open.
+**Gate C verdict**: T4 complete (8/8 metadata). T2 response contract wired into CLI search output (text + JSON consistent). C1 (Local Contract Hardening) passed with red-line guard against fake KOS `zone_count`. C2 (KOS Activation) passed — real kairon/kos MCP stdio invocation returns 10 items for q='kairon', all 8/8 T4 + 7/7 P2 fields present, no fake blob injection. C3 (Vault Activation) passed — real `@学习进化/vault-search.sh` invocation returns 10 items for q='AGENTS', multi-zone hit confirmed ({local:0, kos:10, vault:10}). Gate C not yet passed. P2 implementation in progress. C4 still open.
 
 ---
 
@@ -222,9 +222,10 @@ Every output item must carry:
 opc_phase2_memory_spine_designed  (not: implemented)
 opc_phase2_gate_c1_local_contract_passed  (2026-06-11)
 opc_phase2_gate_c2_kos_activation_passed  (2026-06-11)
+opc_phase2_gate_c3_vault_activation_passed  (2026-06-11)
 ```
 
-Gate C: not yet passed. T4 complete (8/8). T2 wired into CLI search output. T3 multi-zone implementation in progress. C1 + C2 sub-gates passed; C3/C4 still open.
+Gate C: not yet passed. T4 complete (8/8). T2 wired into CLI search output. T3 multi-zone implementation in progress. C1 + C2 + C3 sub-gates passed; C4 still open.
 
 ---
 

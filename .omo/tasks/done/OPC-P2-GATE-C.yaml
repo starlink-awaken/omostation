@@ -89,14 +89,50 @@ sub_gates:
     closed_at: "2026-06-11"
   - id: OPC-P2-C3
     title: "Vault Activation"
-    status: not_started
+    status: passed
+    claimed_verdict: pass
     criteria:
       - "at least one real query hits two zones"
       - "zone_count shows more than one non-zero zone in at least one acceptance run"
       - "vault results carry T4 metadata"
+    evidence:
+      command: "cd projects/cockpit && uv run cockpit search 'AGENTS' --all --json"
+      result: "zone_count={local:0, kos:10, vault:10}, total=20, 18/18 tests pass"
+      files_changed:
+        - "projects/cockpit/src/cockpit/cli.py: Zone 3 vault block in _cmd_search; new _invoke_vault_search() function (real bash subprocess + parse + P2 contract mapping); _log_vault_skip, _read_vault_snippet, _vault_file_mtime, _infer_vault_zone helpers"
+        - "projects/cockpit/tests/test_cli.py: test_all_with_kos_unavailable_no_traceback updated to verify all 3 zones=0; new TestP2GateC3VaultActivation class with 3 tests"
+      runtime_evidence: |
+        - "vault-search.sh invocation: bash _control/executors/vault-search.sh 'AGENTS'"
+        - "vault stdout parse: 10 paths, all match path_re ^\\./.+\\.md$"
+        - "q='AGENTS' returns vault=10 items + kos=10 items, total=20"
+        - "vault[0] has 8/8 T4 fields (source=@学习进化, source_path=_archive/..., _zone=document-vault, _type=document, _freshness=unknown, _owner=vault, _reuse_policy=derived-allowed, _retrieved_at=now)"
+        - "vault_zone inferred: _archive/... → archive"
+        - "snippet from file first non-empty line (e.g. '> 📝 **用途**: ...')"
+        - "timestamp from mtime, ISO 8601 UTC"
+        - "text mode: 'query: AGENTS  zone: all  total: 20  zones: {local:0, kos:10, vault:10}'"
+      self_check:
+        - "test_vault_invoke_parses_real_script_output: PASS (vault zone inference + LEARNING_VAULT override → [])"
+        - "test_vault_zone_count_uses_real_items: PASS (3 vault paths → 3 mapped items)"
+        - "test_multi_zone_acceptance_path: PASS (3 zones stubbed → 3-zone verification)"
+        - "15+3 = 18/18 tests pass in 0.40s"
+        - "ruff check: All checks passed"
+      red_lines_held:
+        - "no file listing masquerading as search (real bash subprocess + path_re validation)"
+        - "no empty shell route counted as zone activation (vault invocation must return real paths)"
+        - "vault unreachable → zone_count.vault=0 (not success)"
+        - "vault 0 paths → [] (not success, not failure)"
+        - "subprocess failure / timeout / OSError → all except'd silently"
+        - "vault[0] carries 8/8 T4 metadata (not bare path strings)"
+    closed_at: "2026-06-11"
+  - id: OPC-P2-C4
+    title: "Real Trace Closure"
+    status: not_started
+    criteria:
+      - "at least one query has a trace with input, zones queried, result count, and writeback/archive evidence"
+      - "trace is reproducible by command and file reference"
     red_lines:
-      - "no file listing masquerading as search"
-      - "no empty shell route counted as zone activation"
+      - "do not claim ingest/archive from design text alone"
+      - "do not close Gate C with local-only prose and no trace"
   - id: OPC-P2-C3
     title: "Vault Activation"
     status: not_started
