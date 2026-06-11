@@ -2,9 +2,9 @@
 
 import asyncio
 
-from agora.server.mcp import (
+from agora.server.tools_diagnostics import check_health
+from agora.server.tools_registry import (
     add_route,
-    check_health,
     get_event_log,
     list_routes,
     list_services,
