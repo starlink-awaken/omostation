@@ -184,11 +184,21 @@ Every output item must carry:
 
 | Gate criterion | Design | Implementation | Score |
 |:---------------|:------|:--------------|:-----|
-| One question: collect→ingest→search→output→archive | ✅ flow designed (T3) | ⚠️ local zone working; KOS/vault multi-zone deferred (requires kairon subprocess running) | partial |
-| Search responses declare scope | ✅ zone_count in response contract (T2) | ✅ `cockpit search --all` outputs zone/total/zones headers | ✅ |
+| One question: collect→ingest→search→output→archive | ✅ flow designed (T3) | ⚠️ local zone working; KOS/vault multi-zone deferred (Gate C2/C3) | partial |
+| Search responses declare scope | ✅ zone_count in response contract (T2) | ✅ `cockpit search --all` outputs zone/query/total/zone_count (text + JSON express same facts) | ✅ |
 | Outputs include source metadata | ✅ schema defined (T4) | ✅ **8/8 fields complete**: `_source/_source_path/_zone/_type/_freshness/_owner/_reuse_policy/_retrieved_at` in all local search results | ✅ |
 
-**Gate C verdict**: T4 complete (8/8 metadata). T2 response contract wired into CLI search output. T3 multi-zone (KOS/vault) requires kairon subprocess activation. Gate C not yet passed. P2 implementation in progress.
+### Sub-gate Status (per OPC-MASTER-EXECUTION-PLAYBOOK §7)
+
+| Sub-gate | Title | Status | Evidence |
+|:---------|:------|:------:|:---------|
+| **C1** | Local Contract Hardening | ✅ **passed** (2026-06-11) | `.omo/tasks/done/OPC-P2-GATE-C.yaml` — 5/5 tests, runtime commands verified |
+| C2 | KOS Activation | ⏳ not started | — |
+| C3 | Vault Activation | ⏳ not started | — |
+| C4 | Real Trace Closure | ⏳ not started | — |
+| **C** | Final | not yet passed | requires C1-C4 all closed |
+
+**Gate C verdict**: T4 complete (8/8 metadata). T2 response contract wired into CLI search output (text + JSON consistent). C1 (Local Contract Hardening) passed with red-line guard against fake KOS `zone_count`. Gate C not yet passed. P2 implementation in progress. C2/C3/C4 still open.
 
 ---
 
@@ -210,9 +220,10 @@ Every output item must carry:
 
 ```
 opc_phase2_memory_spine_designed  (not: implemented)
+opc_phase2_gate_c1_local_contract_passed  (2026-06-11)
 ```
 
-Gate C: not yet passed. T4 complete (8/8). T2 wired into CLI search output. T3 multi-zone implementation in progress.
+Gate C: not yet passed. T4 complete (8/8). T2 wired into CLI search output. T3 multi-zone implementation in progress. C1 sub-gate passed; C2/C3/C4 still open.
 
 ---
 

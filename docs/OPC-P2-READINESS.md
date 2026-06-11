@@ -3,9 +3,9 @@
 > Date: 2026-06-11
 > P1: conditionally passed (Gate B accepted as conditional)
 > P1.5: documentation/governance baseline for P2 (Gate B2 accepted)
-> P2: design baseline accepted, remaining tasks complete (T4 8-field ✅)
-> P3: design baseline delivered, ready for review
-> Status: P2→P3 过渡完成
+> P2: implementation in progress (T4 complete, T2 wired, C1 sub-gate passed, C2/C3/C4 pending)
+> P3: not yet opened (P2 Gate C pending)
+> Gate C: not yet passed (C1 closed; C2/C3/C4 open)
 
 ---
 
@@ -36,7 +36,7 @@
 | OPC-P15-MET-01 | ~same~ |
 | OPC-P15-GBR-01 | ~same~ |
 | OPC-P15-GBR-02 | ~same~ |
-| OPC-P2-MEMORY-SPINE | `.omo/tasks/planned/OPC-P2-MEMORY-SPINE.yaml` (5 design tasks, 1 partial) |
+| OPC-P2-MEMORY-SPINE | `.omo/tasks/done/OPC-P2-MEMORY-SPINE.yaml` |
 
 ### Carried Debt (P0 D001-D010)
 
@@ -56,7 +56,7 @@
 | P1 entry convergence hardened | ✅ conditional | `docs/OPC-PHASE1-CONVERGENCE.md` |
 | P1.5 cross-repo governance baseline | ✅ | `docs/OPC-PHASE15-GOVERNANCE.md` |
 | Persistence risks registered | ✅ | 3 debt items in `.omo/debt/items/` |
-| Memory design tasks planned | ✅ | `.omo/tasks/planned/OPC-P2-MEMORY-SPINE.yaml` (5 tasks) |
+| Memory design tasks completed | ✅ | `.omo/tasks/done/OPC-P2-MEMORY-SPINE.yaml` |
 | Readiness table reflects reality | ✅ | OPC-PHASE15-GOVERNANCE.md corrected |
 
 ### P2 Design-Phase Delivery Status
@@ -83,6 +83,7 @@
 
 ```
 opc_p2_design_complete_implementation_pending
+opc_p2_gate_c1_local_contract_passed  (2026-06-11)
 ```
 
-P2 — Personal Memory Spine — T4 complete (8/8 metadata). T2 response contract wired into CLI search output. T3 multi-zone implementation in progress. Gate C not yet passed.
+P2 — Personal Memory Spine — T4 complete (8/8 metadata). T2 response contract wired into CLI search output (text + JSON consistent). Gate C sub-gate C1 (Local Contract Hardening) passed with 5/5 tests and runtime evidence. C2 (KOS Activation), C3 (Vault Activation), C4 (Real Trace Closure) still open. Gate C not yet passed.
