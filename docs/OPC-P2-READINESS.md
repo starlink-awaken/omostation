@@ -3,9 +3,9 @@
 > Date: 2026-06-11
 > P1: conditionally passed (Gate B accepted as conditional)
 > P1.5: documentation/governance baseline for P2 (Gate B2 accepted)
-> P2: implementation in progress (T4 complete, T2 wired, C1 sub-gate passed, C2/C3/C4 pending)
+> P2: implementation in progress (T4 complete, T2 wired, C1+C2 sub-gates passed, C3/C4 pending)
 > P3: not yet opened (P2 Gate C pending)
-> Gate C: not yet passed (C1 closed; C2/C3/C4 open)
+> Gate C: not yet passed (C1+C2 closed; C3/C4 open)
 
 ---
 
@@ -84,6 +84,7 @@
 ```
 opc_p2_design_complete_implementation_pending
 opc_p2_gate_c1_local_contract_passed  (2026-06-11)
+opc_p2_gate_c2_kos_activation_passed  (2026-06-11)
 ```
 
-P2 — Personal Memory Spine — T4 complete (8/8 metadata). T2 response contract wired into CLI search output (text + JSON consistent). Gate C sub-gate C1 (Local Contract Hardening) passed with 5/5 tests and runtime evidence. C2 (KOS Activation), C3 (Vault Activation), C4 (Real Trace Closure) still open. Gate C not yet passed.
+P2 — Personal Memory Spine — T4 complete (8/8 metadata). T2 response contract wired into CLI search output (text + JSON consistent). Gate C sub-gate C1 (Local Contract Hardening) and C2 (KOS Activation) passed with 15/15 tests and runtime evidence (real kairon/kos MCP stdio invocation returns 10 items for q='kairon'). C3 (Vault Activation) and C4 (Real Trace Closure) still open. Gate C not yet passed.

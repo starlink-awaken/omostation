@@ -53,14 +53,50 @@ sub_gates:
     closed_at: "2026-06-11"
   - id: OPC-P2-C2
     title: "KOS Activation"
-    status: not_started
+    status: passed
+    claimed_verdict: pass
     criteria:
       - "one real query returns non-empty local and/or KOS results through unified format"
       - "KOS output is structured as result items, not raw stdout"
       - "zone_count.kos matches actual merged items"
+    evidence:
+      command: "cd projects/cockpit && uv run cockpit search 'kairon' --all --json"
+      result: "zone_count={local:0, kos:10}, total=10, 15/15 tests pass"
+      files_changed:
+        - "projects/cockpit/src/cockpit/cli.py: replaced dead 'agora bos resolve' command with real kairon/kos MCP stdio invocation via _invoke_kos_search(); KOS schema→P2 contract mapping (8 KOS fields + 7 P2 fields); _kos_ts_to_iso() and _clean_control_chars() helpers; sys.stdout direct write to bypass rich JSON-breaking console.print"
+        - "projects/cockpit/tests/test_cli.py: rewrote test_kos_zone_count_is_real_not_fake to test real _invoke_kos_search() with monkeypatch on subprocess.Popen"
+      runtime_evidence: |
+        - "KOS subprocess spawn: uv run python -m kos.mcp.server (cwd=projects/kairon)"
+        - "MCP handshake: initialize (id=1) → initialized notification → tools/call search_knowledge (id=2)"
+        - "KOS schema 8 fields mapped to P2 contract: doc_id, title, kind, zone, status, canonical_path, trust_level, updated_at, body_preview"
+        - "q='kairon' returns 10 results; kos[1] (KOS README) has 8/8 T4 + 7/7 P2 fields"
+        - "snippet/body_preview free of 0x0a after _clean_control_chars()"
+        - "JSON parseable (sys.stdout.write bypasses rich console.print that was breaking JSON)"
+      self_check:
+        - "test_local_only_json_contract: PASS"
+        - "test_all_with_kos_unavailable_no_traceback: PASS"
+        - "test_text_and_json_express_same_facts: PASS"
+        - "test_empty_results_returns_well_formed: PASS"
+        - "test_kos_zone_count_is_real_not_fake: PASS (real _invoke_kos_search path)"
+        - "15/15 tests pass in 0.63s"
+        - "ruff check: All checks passed"
+      red_lines_held:
+        - "no fake stdout blob injection (zone_count.kos = len(mapped items), real)"
+        - "KOS unreachable → zone_count.kos=0 (not success)"
+        - "KOS 0 results → [] (not success, not failure)"
+        - "subprocess failure / timeout / JSON error → all except'd silently"
+        - "no multi-zone claim (this C2 only validates KOS, not vault)"
+    closed_at: "2026-06-11"
+  - id: OPC-P2-C3
+    title: "Vault Activation"
+    status: not_started
+    criteria:
+      - "at least one real query hits two zones"
+      - "zone_count shows more than one non-zero zone in at least one acceptance run"
+      - "vault results carry T4 metadata"
     red_lines:
-      - "do not count a single subprocess stdout blob as one valid knowledge hit"
-      - "do not call Gate C2 passed if query does not actually reach KOS"
+      - "no file listing masquerading as search"
+      - "no empty shell route counted as zone activation"
   - id: OPC-P2-C3
     title: "Vault Activation"
     status: not_started
