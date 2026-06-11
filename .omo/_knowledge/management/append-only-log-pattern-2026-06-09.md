@@ -1831,6 +1831,59 @@ EXIT=0
 | Round | 主题 | commit |
 |-------|------|--------|
 | 12-41 | 既有 27 段 + §12-§17 | (前 39 commit) |
-| 42 | `omo lint-metrics` 子命令 (§17 健康度接 lint) | `ef1e649` (P0) + `124e134d` (bump) + (本 commit P1 文档) |
+| 42 | `omo lint-metrics` 子命令 (§17 健康度接 lint) | `ef1e649` (P0) + `124e134d` (bump) + `f00084b5` (P1) |
+
+### §11.33 Round 43 收口 — ci-lint.yml 加 omo-lint-metrics job (第 6 守门点完整)
+
+> **状态**: implemented
+> **commit**: `9409c365` (Round 43 P0)
+> **主题**: `.github/workflows/ci-lint.yml` 加 `omo-lint-metrics` job, 让 Round 42 P0 子命令 CI 集成
+> **链接**: §14.5 5 守门点 + R42 P0 + §17.6 R0 优秀
+
+**动机**:
+- §14.5 5 守门点 (R28 起步) 都是 §11 X2 保鲜自动化, 但**没接 §17 健康度**
+- Round 42 P0 `omo lint-metrics` 子命令 (R39 P0 §17.7 + R40 P0 §17.8 合并) 让 §17 健康度可执行
+- Round 43 P0 集成: ci-lint.yml 加 6th job `omo-lint-metrics` 让 R3+ 立即 fail CI
+
+**实施**:
+- `.github/workflows/ci-lint.yml` 加第 4.5 job (插 omo-logs-audit 与 omo-lint-schemas 之间):
+  - 跑 `uv run --no-sync python -m omo.cli lint-metrics`
+  - 退出码 R3+ → CI fail (硬约束, R1-R2 标 warning 不阻塞)
+  - 退出码 R0 优秀 → 0
+  - 退出码 R1-R2 → 1 (warning)
+
+**5 守门点 → 6 守门点 (ci-lint.yml)**:
+```
+1. actionlint     — GitHub Actions YAML 静态分析
+2. check-yaml     — 所有 .yml/.yaml 可解析
+3. shellcheck     — scripts/*.sh 静态安全检查
+4. omo-logs-audit — JSONL 漂移检测 (R12 P0)
+4.5 omo-lint-metrics — 6 规则 + §17 健康度评分 (R43 P0) ⭐ 新
+5. omo-lint-schemas — Pydantic 写时契约静态校验 (R15 P0)
+```
+
+**完整 6 守门点** (R28 5 守门点 + R43 1 守门点):
+```
+[代码 commit]      →  pre-commit omo-logs-audit
+[git push]         →  ci-lint.yml 6 jobs ⭐ 含 lint-metrics
+[PR merge]         →  人工 review
+[每月 1 号 00:00]  →  audit basel-monthly (omo 仓)
+[每月 1 号 01:00]  →  audit-rollout-monthly (跨仓 + §17 metrics)
+```
+
+**度量 (Round 42 → Round 43)**:
+
+| 指标 | Round 42 | Round 43 | Δ |
+|------|----------|----------|---|
+| ci-lint.yml jobs | 5 (R12+R15) | **6** (+lint-metrics) | +1 |
+| CI 守门点 | 5 | **6** (lint-metrics 加 §17 健康度守门) | +1 |
+| R3+ 自动化 fail | 无 | **有** (lint-metrics R3+ 退出码 2) | 新能力 |
+| 已知债 | R42 0 | 0 (无新增) | 不变 |
+
+**§11 29 段全收 + ci-lint.yml 6 守门点完整** (Round 12-43, 42 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-42 | 既有 28 段 + §12-§17 + lint-metrics | (前 40 commit) |
+| 43 | ci-lint.yml 加 omo-lint-metrics job | `9409c365` (P0) + (本 commit P1 文档) |
 
 
