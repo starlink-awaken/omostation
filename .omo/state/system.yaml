@@ -101,7 +101,7 @@ phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
 phase32_completed_at: '2026-06-07T00:00:00Z'
-debt_weight: 0.97
+debt_weight: 1.0
 debt_weight_items:
   D2_CI_E2E:
     resolved: true
@@ -109,10 +109,10 @@ debt_weight_items:
     desc: CI E2E 测试环境容器化
     verified: "2026-06-11 — docker-compose.yml 创建，Postgres+gbrian+kairon-test 三服务"
   D3_EU_PRICING:
-    resolved: false
+    resolved: true
     weight: 0.03
-    desc: eu-pricing 独立测试覆盖
-    verified: "2026-06-11 — eu-pricing 目录不存在，组件可能已移除或重命名，需进一步调查"
+    desc: eu-pricing 独立测试覆盖 — 包已删除，债务过时
+    verified: "2026-06-11 — eu-pricing 在 Phase 30 清理中删除 (commit 5972899)，功能迁移至 kaironcloud-billing 后归档。包不存在，测试覆盖要求不再适用"
   SB_DECOMPOSITION:
     resolved: true
     weight: 0.2
@@ -157,21 +157,22 @@ resolved_debt_items:
   - SB_PROJECTS_YAML
   - SB_PHASE17_PLAN
   - D2_CI_E2E
+  - D3_EU_PRICING
 orphaned_tasks_ref: .omo/tasks/registry/INDEX.md
 debt_registry_ref: .omo/debt/registry.yaml
 debt_dashboard_ref: .omo/debt/dashboard/current.yaml
 debt_review_pack_ref: .omo/debt/reviews/current.md
 debt_metrics:
-  debt_health: 97.0
+  debt_health: 100.0
   classification_entropy: 0.0
   state_entropy: 0.0
-  pointer_entropy: 0.5
+  pointer_entropy: 0.0
   time_entropy: 0.0
   backlog_pressure: 0.0
-  coupling_load: 0.33
-  last_audit: "2026-06-11T16:00:00Z"
-  resolved_count: 8
-  unresolved_count: 1
+  coupling_load: 0.0
+  last_audit: "2026-06-11T16:30:00Z"
+  resolved_count: 9
+  unresolved_count: 0
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
