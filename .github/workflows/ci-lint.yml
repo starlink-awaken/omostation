@@ -142,12 +142,19 @@ jobs:
         #   1 = lint 有违规 (R1-R2 警告)
         #   2 = metrics R3+ 严重
         # R3+ 让 CI fail, R1-R2 标 warning 不阻塞
+        # tee捕获 stdout (含 JSON metrics 块), 90d artifact 供后续 pipeline 分析
         run: |
-          cd projects/omo
-          uv run --no-sync python -m omo.cli lint-metrics || {
-            echo "::warning::omo lint-metrics 报 R1-R2 警告 (R42 P0 退出码 1), 标 warning 不阻塞"
-            exit 0
-          }
+          (cd projects/omo
+            uv run --no-sync python -m omo.cli lint-metrics || {
+              echo "::warning::omo lint-metrics 报 R1-R2 警告 (R42 P0 退出码 1), 标 warning 不阻塞"
+              exit 0
+            }) 2>&1 | tee /tmp/lint-metrics-out.txt
+      - name: Upload omo-lint-metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: omo-lint-metrics
+          path: /tmp/lint-metrics-out.txt
+          retention-days: 90
 
   # ── 5. omo lint schemas — Pydantic 写时契约静态校验 (Round 15 P0) ──
   omo-lint-schemas:
