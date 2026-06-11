@@ -2052,6 +2052,57 @@ EXIT=0
 | Round | 主题 | commit |
 |-------|------|--------|
 | 12-44 | 既有 30 段 + §12-§18 | (前 42 commit) |
-| 45 | §19 治理债生态圈路线图章节起步 | `8dd855ae` (P0) + (本 commit P1 文档) |
+| 45 | §19 治理债生态圈路线图章节起步 | `8dd855ae` (P0) + `6937720d` (P1) |
+
+### §11.36 Round 45 P0 补 — §19.2 跨仓 lint-metrics 接入模板
+
+> **状态**: 模板就位
+> **commit**: `cd61be09` (Round 45 P0 补)
+> **主题**: 跨仓接入模板 (`docs/cross-repo-rollout-template-2026-06-11.md`) — 4 仓 5 步接入清单
+> **链接**: §12 跨仓契约 + §19.2 R45 P0
+
+**动机**:
+- §19.1 路线图短期 (R45-R47) 第 1 步是"集成 lint-metrics 到其他仓"
+- 但**需各仓 owner 配合** (kairon/metaos/gbrain/runtime) — 跨仓 owner 需 1 份"5 步接入清单"
+- §19.2 R45 实质化: 写 1 份跨仓接入模板 (Python + TypeScript), owner 拿模板照做
+
+**实施**:
+- `docs/cross-repo-rollout-template-2026-06-11.md` (10 子节, 233 lines):
+  - §19.2.1 适用仓 (kairon / metaos / gbrain / runtime)
+  - §19.2.2 通用要求 (§12.1 4 不变量: 物理 SSOT / 写时 Pydantic / Z-suffix / sort_keys)
+  - §19.2.3 Python 5 步接入 (kairon/metaos/runtime 模板)
+  - §19.2.4 TypeScript 5 步接入 (gbrain 模板)
+  - §19.2.5 lint-metrics 集成 (跨 Python/TS)
+  - §19.2.6 跨仓 audit-rollout 接入 (R46 候选 `--include-metrics`)
+  - §19.2.7 验证清单 (9 项 checklist)
+  - §19.2.8 已知债 (E1-E4)
+  - §19.2.9 Round 45+ 实质化路径
+  - §19.2.10 跨仓 owner 行动项 (具体 4 仓)
+
+**度量 (Round 45 P0 → P0 补)**:
+
+| 指标 | Round 45 P0 | Round 45 P0 补 | Δ |
+|------|-------------|----------------|---|
+| 治理文档 | 9 docs | **10 docs** (+跨仓模板) | +1 |
+| 跨仓 owner 接入入口 | §19.2 描述 | **docs/cross-repo-rollout-template-2026-06-11.md 完整模板** | +1 实质模板 |
+| 已知债 | R45 0 | **R45 0** (无新增) | 不变 |
+
+**§19.2 模板结构** (跨仓 owner 拿模板):
+1. §19.2.1 适用仓 (4 仓优先级: kairon R48 P0+ / metaos R49 / gbrain R50 / runtime R51-R53)
+2. §19.2.2 通用要求 (§12.1 4 不变量)
+3. §19.2.3 Python 5 步接入 (Step 1-5: io.py / io_schemas_base.py / io_schemas.py / consumer / audit CLI)
+4. §19.2.4 TypeScript 5 步接入 (zod 适配)
+5. §19.2.5 lint-metrics 集成 (跨 Python/TS)
+6. §19.2.6 跨仓 audit-rollout 接入 (R46 候选 `--include-metrics`)
+7. §19.2.7 验证清单 (9 项 checklist)
+8. §19.2.8 已知债 (E1-E4)
+9. §19.2.9 Round 45+ 实质化路径
+10. §19.2.10 跨仓 owner 行动项 (具体 4 仓指令)
+
+**§11 32 段全收 + §12-§19 完整 + §19.2 跨仓模板就位** (Round 12-45, 45 commit):
+| Round | 主题 | commit |
+|-------|------|--------|
+| 12-44 | 既有 31 段 + §12-§18 | (前 42 commit) |
+| 45 | §19 治理债生态圈 + §19.2 跨仓模板 | `8dd855ae` + `cd61be09` (P0) + `6937720d` (P1) |
 
 
