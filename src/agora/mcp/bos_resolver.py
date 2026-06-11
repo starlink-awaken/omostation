@@ -1172,8 +1172,9 @@ def invoke_stdio(
         return {
             "uri": uri,
             "status": "error",
-            "error": f"unknown_bos_uri: {uri} (registered: {len(POC_SERVICES)})",
-            "hint": hint.strip(),
+            "error": f"未识别的 BOS URI: {uri}",
+            "detail": f"unknown_bos_uri (registered: {len(POC_SERVICES)})",
+            "hint": hint.strip() or "通过 `bos://meta/discover` 查看所有可用 URI",
         }
     if service.transport == "mcp_stdio":
         # P54-W0: mcp_stdio 通过 resolve_bos_uri 调用 (async → sync bridge)
@@ -1259,9 +1260,11 @@ def invoke_stdio(
                 return {
                     "uri": uri,
                     "status": "error",
-                    "error": f"timeout_after_{timeout}s",
+                    "error": f"知识引擎超时 ({timeout}s)",
+                    "detail": f"timeout_after_{timeout}s",
                     "request_id": request_id,
                     "pid": proc.pid,
+                    "hint": "建议增大超时: export BOS_STDIO_TIMEOUT=15",
                 }
 
             response_line = proc.stdout.readline()
@@ -1272,9 +1275,11 @@ def invoke_stdio(
                 return {
                     "uri": uri,
                     "status": "error",
-                    "error": "eof_no_response",
+                    "error": "知识引擎无响应",
+                    "detail": "eof_no_response",
                     "request_id": request_id,
                     "pid": proc.pid,
+                    "hint": "检查 kairon: cd projects/kairon && uv sync",
                 }
 
             try:
