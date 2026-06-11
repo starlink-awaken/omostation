@@ -6,6 +6,8 @@
 > P2: implementation complete (T4 done, T2 wired, Gate C ✅ passed — C1+C2+C3+C4 all closed)
 > P3: ready to open
 > Gate C: ✅ passed (2026-06-11)
+> Closeout: ✅ P2 closeout pass (2026-06-11) — multi-zone visibility + trace full_text + YAML hygiene all patched
+> Cockpit tests: 30/30 pass (21 baseline + 9 closeout)
 
 ---
 
@@ -88,6 +90,7 @@ opc_p2_gate_c2_kos_activation_passed  (2026-06-11)
 opc_p2_gate_c3_vault_activation_passed  (2026-06-11)
 opc_p2_gate_c4_trace_closure_passed  (2026-06-11)
 opc_p2_gate_c_passed  (2026-06-11)
+opc_p2_closeout_passed  (2026-06-11)  # multi-zone visibility + trace full_text + YAML hygiene
 ```
 
-P2 — Personal Memory Spine — Implementation complete. T4 (8/8 metadata). T2 response contract wired into CLI search output (text + JSON consistent). Gate C passed with all 4 sub-gates closed: C1 (Local Contract Hardening), C2 (KOS Activation), C3 (Vault Activation), C4 (Real Trace Closure). 21/21 tests pass. Multi-zone hit verified ({local:0, kos:10, vault:10} for q='AGENTS'). Writeback to cockpit research verified (trace_ids 31 and 32). P3 ready to open.
+P2 — Personal Memory Spine — Implementation complete. T4 (8/8 metadata). T2 response contract wired into CLI search output (text + JSON consistent). Gate C passed with all 4 sub-gates closed: C1 (Local Contract Hardening), C2 (KOS Activation), C3 (Vault Activation), C4 (Real Trace Closure). 30/30 tests pass (21 baseline + 9 closeout). Multi-zone hit verified ({local:0, kos:10, vault:10} for q='AGENTS' with interleave-bucket visibility). Writeback to cockpit research verified (trace_ids 31 and 32; new writeback includes per-zone top-3 hit summary in `full_text` and `summary.hit_summary`). YAML self-check: `python3 .omo/tasks/done/OPC-P2-GATE-C.check.py` → 10/10 PASS. P3 ready to open.

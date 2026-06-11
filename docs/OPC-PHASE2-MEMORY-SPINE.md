@@ -198,7 +198,18 @@ Every output item must carry:
 | **C4** | Real Trace Closure | ✅ **passed** (2026-06-11) | `.omo/tasks/done/OPC-P2-GATE-C.yaml` — 21/21 tests, 2 acceptance queries (trace_id=31,32) written to cockpit research table |
 | **C** | Final | ✅ **passed** (2026-06-11) | C1-C4 all closed, 21/21 tests pass, multi-zone {local:0, kos:10, vault:10} verified for q='AGENTS' |
 
-**Gate C verdict**: T4 complete (8/8 metadata). T2 response contract wired into CLI search output (text + JSON consistent). C1 (Local Contract Hardening) passed with red-line guard against fake KOS `zone_count`. C2 (KOS Activation) passed — real kairon/kos MCP stdio invocation returns 10 items for q='kairon', all 8/8 T4 + 7/7 P2 fields present, no fake blob injection. C3 (Vault Activation) passed — real `@学习进化/vault-search.sh` invocation returns 10 items for q='AGENTS', multi-zone hit confirmed ({local:0, kos:10, vault:10}). C4 (Real Trace Closure) passed — writeback to cockpit research table with dedup window, 2 acceptance queries produced distinct trace_ids 31 and 32, all 4 sub-gates closed. **Gate C passed**. P2 implementation complete on the C-axis (T1-T5 design + C1-C4 runtime).
+**Gate C verdict (post closeout, 2026-06-11)**: T4 complete (8/8 metadata). T2 response contract wired into CLI search output (text + JSON consistent). C1 (Local Contract Hardening) passed with red-line guard against fake KOS `zone_count`. C2 (KOS Activation) passed — real kairon/kos MCP stdio invocation returns 10 items for q='kairon', all 8/8 T4 + 7/7 P2 fields present, no fake blob injection. C3 (Vault Activation) passed — real `@学习进化/vault-search.sh` invocation returns 10 items for q='AGENTS', multi-zone hit confirmed ({local:0, kos:10, vault:10}). C4 (Real Trace Closure) passed — writeback to cockpit research table with dedup window, 2 acceptance queries produced distinct trace_ids 31 and 32, all 4 sub-gates closed. **Gate C passed**. P2 implementation complete on the C-axis (T1-T5 design + C1-C4 runtime).
+
+**P2 closeout (2026-06-11)**: 3 缺口补丁已合并, 30/30 tests pass (21 旧 + 9 新).
+- Task 2 (multi-zone visibility): `cockpit search --all` 使用 `_interleave_by_source()`
+  round-robin, 保证 `zone_count.vault > 0` 时 results 至少 1 条 `@学习进化`,
+  `zone_count.kos > 0` 时至少 1 条 `kairon-kos`.
+- Task 3 (trace full_text): `_writeback_search_trace()` 现在把每个非零 zone 的 top-3
+  命中写入 full_text (id / title / source / source_path / timestamp), 摘要
+  也包含在 `summary.hit_summary` 字段. 不再是固定占位串.
+- Task 1 (YAML hygiene): `.omo/tasks/done/OPC-P2-GATE-C.yaml` 顶层 status=completed,
+  gate_status=passed, 4 sub-gates 全部 passed, 重复段已清理. 自检脚本:
+  `python3 .omo/tasks/done/OPC-P2-GATE-C.check.py` → 10/10 PASS.
 
 ---
 

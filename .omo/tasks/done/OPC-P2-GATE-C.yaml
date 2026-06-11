@@ -1,6 +1,6 @@
 id: OPC-P2-GATE-C
-title: "OPC-P2 Gate C 实施追踪 (C1→C4→C)"
-status: in_progress
+title: "OPC-P2 Gate C 实施追踪 (C1→C2→C3→C4→C)"
+status: completed
 priority: P0
 domain: opc
 created: "2026-06-11"
@@ -19,11 +19,17 @@ description: |
     - no single subprocess stdout blob counted as a knowledge hit
     - do not claim ingest/archive from design text alone
     - do not close Gate C with local-only prose and no trace
+
+  Status (2026-06-11, after docs-tasks-runtime alignment pass):
+    C1 + C2 + C3 + C4 all closed with runtime evidence.
+    Gate C is the canonical pass-state; 21/21 tests pass in projects/cockpit.
+    P2 implementation complete on the C-axis.
 sub_gates:
   - id: OPC-P2-C1
     title: "Local Contract Hardening"
     status: passed
     claimed_verdict: pass
+    closed_at: "2026-06-11"
     criteria:
       - "cockpit search --all --json returns valid JSON"
       - "top-level response fields complete (zone, query, zone_count, results, total)"
@@ -37,7 +43,7 @@ sub_gates:
         - "projects/cockpit/tests/test_cli.py (added TestP2GateC1LocalContract class with 5 tests)"
       runtime_evidence: |
         - "cockpit search 'test' --json → {zone:all, query:test, total:2, zone_count:{local:2}, results:[2 items with 8 T4 fields]}"
-        - "cockpit search 'test' --all --json → zone_count:{local:2, kos:0}, total:2, KOS results injected: 0"
+        - "cockpit search 'test' --all --json → zone_count:{local:2, kos:0}, total=2, KOS results injected: 0"
         - "cockpit search 'x' --all (KOS unavailable) → exit 0, no traceback, zone_count:{local:0, kos:0}"
         - "ruff check cli.py + test_cli.py → All checks passed!"
       self_check:
@@ -50,11 +56,11 @@ sub_gates:
         - "KOS zone still 0 — Gate C2 will activate real KOS query path"
         - "Vault zone still missing — Gate C3 will add vault source"
         - "P2-T0 persistence debts (kairon JSONL, gbrain non-atomic) remain open, non-blocking for C1"
-    closed_at: "2026-06-11"
   - id: OPC-P2-C2
     title: "KOS Activation"
     status: passed
     claimed_verdict: pass
+    closed_at: "2026-06-11"
     criteria:
       - "one real query returns non-empty local and/or KOS results through unified format"
       - "KOS output is structured as result items, not raw stdout"
@@ -86,11 +92,11 @@ sub_gates:
         - "KOS 0 results → [] (not success, not failure)"
         - "subprocess failure / timeout / JSON error → all except'd silently"
         - "no multi-zone claim (this C2 only validates KOS, not vault)"
-    closed_at: "2026-06-11"
   - id: OPC-P2-C3
     title: "Vault Activation"
     status: passed
     claimed_verdict: pass
+    closed_at: "2026-06-11"
     criteria:
       - "at least one real query hits two zones"
       - "zone_count shows more than one non-zero zone in at least one acceptance run"
@@ -123,11 +129,11 @@ sub_gates:
         - "vault 0 paths → [] (not success, not failure)"
         - "subprocess failure / timeout / OSError → all except'd silently"
         - "vault[0] carries 8/8 T4 metadata (not bare path strings)"
-    closed_at: "2026-06-11"
   - id: OPC-P2-C4
     title: "Real Trace Closure"
     status: passed
     claimed_verdict: pass
+    closed_at: "2026-06-11"
     criteria:
       - "at least one query has a trace with input, zones queried, result count, and writeback/archive evidence"
       - "trace is reproducible by command and file reference"
@@ -161,26 +167,6 @@ sub_gates:
         - "no duplicate writeback (60s dedup window)"
         - "no blocking on error (subprocess/timeout 异常静默返回 {})"
         - "trace reproducible (two queries produce two distinct trace_ids 31 and 32)"
-    closed_at: "2026-06-11"
-  - id: OPC-P2-C3
-    title: "Vault Activation"
-    status: not_started
-    criteria:
-      - "at least one real query hits two zones"
-      - "zone_count shows more than one non-zero zone in at least one acceptance run"
-      - "vault results carry T4 metadata"
-    red_lines:
-      - "no file listing masquerading as search"
-      - "no empty shell route counted as zone activation"
-  - id: OPC-P2-C4
-    title: "Real Trace Closure"
-    status: not_started
-    criteria:
-      - "at least one query has a trace with input, zones queried, result count, and writeback/archive evidence"
-      - "trace is reproducible by command and file reference"
-    red_lines:
-      - "do not claim ingest/archive from design text alone"
-      - "do not close Gate C with local-only prose and no trace"
 gate: Gate C
 gate_status: passed
 gate_note: |
@@ -189,5 +175,3 @@ gate_note: |
   Multi-zone hit {local:0, kos:10, vault:10} verified for q='AGENTS'.
   Writeback to cockpit research verified (trace_ids 31 and 32).
   P3 ready to open.
-</content>
-</invoke>
