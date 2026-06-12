@@ -1,0 +1,89 @@
+m2_type: GovernancePolicy
+version: 1.0.0
+created: '2026-06-12'
+governance_policy:
+  m3_parent: GovernanceElement.Policy
+  description: 治理策略——定义 X1-X4 的阈值、SLA 和行为规则
+  icon: 📋
+  stateMachine:
+    draft:
+      description: 草稿
+      transitions:
+        - active
+        - archived
+    active:
+      description: 生效中
+      transitions:
+        - deprecated
+        - archived
+    deprecated:
+      description: 已弃用
+      transitions:
+        - archived
+    archived:
+      description: 已归档
+      transitions: []
+  properties:
+    policy_id:
+      type: string
+      description: 策略唯一标识
+      required: true
+      examples:
+        - x1-audit-policy
+        - x2-staleness-policy
+        - x3-value-policy
+        - x4-consistency-policy
+    dimension:
+      type: enum
+      description: 适用的治理维度
+      values: [X1, X2, X3, X4, all]
+      required: true
+    thresholds:
+      type: object
+      description: 阈值配置
+      properties:
+        warn_threshold:
+          type: number
+          description: 警告阈值
+        fail_threshold:
+          type: number
+          description: 失败阈值
+        debt_weight_min:
+          type: number
+          description: 最低债务权重
+        debt_health_min:
+          type: number
+          description: 最低债务健康度
+    sla:
+      type: object
+      description: SLA 配置
+      properties:
+        response_hours:
+          type: integer
+          description: 响应时间 (小时)
+        resolution_hours:
+          type: integer
+          description: 解决时间 (小时)
+    behavior:
+      type: object
+      description: 行为配置
+      properties:
+        max_warn_before_fail:
+          type: integer
+          description: 警告次数上限
+        max_fail_before_alert:
+          type: integer
+          description: 失败次数上限
+        auto_fix_enabled:
+          type: boolean
+          description: 是否启用自动修复
+  relations:
+    - type: governs
+      target: GovernanceCheck
+      description: 策略约束检查器行为
+    - type: defines
+      target: GovernanceSLA
+      description: 策略定义 SLA 标准
+    - type: triggers
+      target: GovernanceAlert
+      description: 策略触发告警

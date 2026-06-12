@@ -1,0 +1,65 @@
+m2_type: GovernanceEvent
+version: 1.0.0
+created: '2026-06-12'
+governance_event:
+  m3_parent: GovernanceElement.Event
+  description: 治理事件——检查器执行过程中产生的事件流
+  icon: 📡
+  stateMachine:
+    emitted:
+      description: 已发射
+      transitions:
+        - processing
+    processing:
+      description: 处理中
+      transitions:
+        - handled
+        - failed
+    handled:
+      description: 已处理
+      transitions: []
+    failed:
+      description: 处理失败
+      transitions:
+        - retrying
+    retrying:
+      description: 重试中
+      transitions:
+        - handled
+        - failed
+  properties:
+    event_type:
+      type: enum
+      description: 事件类型
+      values:
+        - check_started
+        - check_completed
+        - alert_triggered
+        - state_changed
+      required: true
+    dimension:
+      type: enum
+      description: 治理维度
+      values: [X1, X2, X3, X4]
+      required: true
+    check_id:
+      type: string
+      description: 关联的检查器 ID
+      required: true
+    result:
+      type: GovernanceCheck
+      description: 检查结果
+    timestamp:
+      type: datetime
+      description: 事件时间
+      required: true
+  relations:
+    - type: produced_by
+      target: GovernanceCheck
+      description: 事件由检查器产生
+    - type: consumed_by
+      target: GovernanceEventBus
+      description: 事件由事件总线消费
+    - type: triggers
+      target: GovernanceAlert
+      description: 事件可能触发告警

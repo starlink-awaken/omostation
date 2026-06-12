@@ -1,0 +1,87 @@
+m2_type: GovernanceCheck
+version: 1.0.0
+created: '2026-06-12'
+governance_check:
+  m3_parent: GovernanceElement.Check
+  description: 治理检查器——定义 X1-X4 检查器的标准接口和数据结构
+  icon: 🔍
+  stateMachine:
+    registered:
+      description: 已注册
+      transitions:
+        - running
+        - disabled
+    running:
+      description: 运行中
+      transitions:
+        - passed
+        - warning
+        - failed
+    passed:
+      description: 通过
+      transitions:
+        - running
+    warning:
+      description: 警告
+      transitions:
+        - running
+        - failed
+    failed:
+      description: 失败
+      transitions:
+        - running
+        - resolved
+    resolved:
+      description: 已解决
+      transitions:
+        - running
+    disabled:
+      description: 已禁用
+      transitions:
+        - registered
+  properties:
+    check_id:
+      type: string
+      description: 检查器唯一标识
+      required: true
+      examples:
+        - x1-audit-chain
+        - x2-staleness
+        - x3-value
+        - x4-consistency
+    dimension:
+      type: enum
+      description: 治理维度
+      values: [X1, X2, X3, X4]
+      required: true
+    status:
+      type: enum
+      description: 检查状态
+      values: [pass, warn, fail, skip]
+      required: true
+    severity:
+      type: enum
+      description: 严重程度
+      values: [critical, high, medium, low]
+      default: medium
+    message:
+      type: string
+      description: 检查结果消息
+      required: true
+    timestamp:
+      type: datetime
+      description: 检查时间
+      required: true
+    metadata:
+      type: object
+      description: 元数据
+  relations:
+    - type: validates
+      target: ConstraintMgmt
+      description: 检查器验证约束
+    - type: emits
+      target: GovernanceEvent
+      description: 检查器发射事件
+    - type: governed_by
+      target: GovernancePolicy
+      description: 检查器受策略约束
