@@ -1,0 +1,123 @@
+# 治理告警规则配置
+#
+> 定义 X1-X4 检查失败时的告警规则
+
+version: 1.0
+description: X1-X4 治理告警规则
+
+rules:
+  # ══════════════════════════════════════════════════════════════
+  # X1 审计链
+  # ══════════════════════════════════════════════════════════════
+  
+  - id: x1-audit-fail
+    dimension: X1
+    name: "审计链检查失败"
+    condition: "fail"
+    severity: critical
+    channels: [log, webhook]
+    enabled: true
+    
+  - id: x1-audit-warn
+    dimension: X1
+    name: "审计链检查警告"
+    condition: "warn"
+    severity: high
+    channels: [log]
+    enabled: true
+
+  # ══════════════════════════════════════════════════════════════
+  # X2 抗熵
+  # ══════════════════════════════════════════════════════════════
+  
+  - id: x2-debt-weight-critical
+    dimension: X2
+    name: "债务权重严重偏低"
+    condition: "debt_weight < 0.6"
+    severity: critical
+    channels: [log, webhook]
+    enabled: true
+    
+  - id: x2-debt-weight-low
+    dimension: X2
+    name: "债务权重偏低"
+    condition: "debt_weight < 0.8"
+    severity: high
+    channels: [log]
+    enabled: true
+    
+  - id: x2-debt-health-critical
+    dimension: X2
+    name: "债务健康度严重偏低"
+    condition: "debt_health < 60"
+    severity: critical
+    channels: [log, webhook]
+    enabled: true
+    
+  - id: x2-debt-health-low
+    dimension: X2
+    name: "债务健康度偏低"
+    condition: "debt_health < 80"
+    severity: high
+    channels: [log]
+    enabled: true
+
+  # ══════════════════════════════════════════════════════════════
+  # X3 价值栈
+  # ══════════════════════════════════════════════════════════════
+  
+  - id: x3-critical-debt
+    dimension: X3
+    name: "存在 critical 债务"
+    condition: "critical_count > 0"
+    severity: high
+    channels: [log, webhook]
+    enabled: true
+    
+  - id: x3-sla-violated
+    dimension: X3
+    name: "SLA 超时"
+    condition: "sla_violated"
+    severity: high
+    channels: [log, webhook]
+    enabled: true
+
+  # ══════════════════════════════════════════════════════════════
+  # X4 一致性
+  # ══════════════════════════════════════════════════════════════
+  
+  - id: x4-ci-missing
+    dimension: X4
+    name: "CI 工作流不足"
+    condition: "ci_count < 5"
+    severity: medium
+    channels: [log]
+    enabled: true
+    
+  - id: x4-githooks-missing
+    dimension: X4
+    name: "缺少 pre-commit 配置"
+    condition: "missing_githooks > 0"
+    severity: medium
+    channels: [log]
+    enabled: true
+
+# 通知渠道配置
+channels:
+  log:
+    enabled: true
+    path: "/tmp/governance-alerts.log"
+    
+  webhook:
+    enabled: false
+    url: ""
+    timeout: 10
+    
+  email:
+    enabled: false
+    smtp_host: ""
+    smtp_port: 587
+    use_tls: true
+    username: ""
+    password: ""
+    recipients: []
