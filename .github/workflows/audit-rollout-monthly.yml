@@ -34,6 +34,7 @@ jobs:
             --repos "omostation:." \
             --repos "gbrain:../gbrain" \
             --repos "metaos:../metaos" \
+            --repos "model-driven:../model-driven" \
             --output "$OUTPUT" || {
               echo "::warning::audit-rollout reports drift (Round 27 设计, 1 退出码不阻塞)"
               exit 0
