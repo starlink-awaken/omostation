@@ -72,7 +72,13 @@ def _error(msg: str) -> dict:   # 失败: {"ok": False, "error": msg}
 3. **无 Pydantic** — envelope 暂用 simple class, Phase A.1 升 Pydantic
 
 ### Owner
-bus/ 子包由 agora team 维护 (Phase B owner 决策见 ADR-0008 5 硬条件)
+**Phase B (R66-R69) complete**: bus moved to standalone package
+`projects/bus-foundation/`. See `projects/bus-foundation/CLAUDE.md` and
+`projects/bus-foundation/OWNERS.md` for the new home.
+
+agora.bus continues to exist as a backward-compat alias / premium-backend
+shim (persistent EventBusBackend + global sse_manager). New code should
+import from `bus_foundation` (zero agora dep).
 
 ### 安全检查清单
 - [ ] bus adapter 自身不重试 (透传给底层)
