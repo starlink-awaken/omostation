@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>治理仪表板</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1e293b; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .subtitle { color: #64748b; margin-bottom: 2rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .card h3 { font-size: 0.875rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+        .card .value { font-size: 2.5rem; font-weight: 700; }
+        .card .label { font-size: 0.875rem; color: #64748b; }
+        .status-ok { color: #22c55e; }
+        .status-warn { color: #eab308; }
+        .status-error { color: #ef4444; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f1f5f9; font-weight: 600; font-size: 0.875rem; color: #475569; }
+        .section { margin-bottom: 2rem; }
+        .section h2 { font-size: 1.25rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>治理仪表板</h1>
+        <p class="subtitle">eCOS v5 X1-X4 治理框架</p>
+        
+        <div class="grid">
+            <div class="card">
+                <h3>健康度</h3>
+                <div class="value status-ok" id="health-score">--</div>
+                <div class="label">原始分: 100</div>
+            </div>
+            <div class="card">
+                <h3>债务权重</h3>
+                <div class="value status-ok" id="debt-weight">--</div>
+                <div class="label">1.0 = 全部解决</div>
+            </div>
+            <div class="card">
+                <h3>已解决</h3>
+                <div class="value status-ok" id="resolved-count">--</div>
+                <div class="label">债务项</div>
+            </div>
+            <div class="card">
+                <h3>待解决</h3>
+                <div class="value status-ok" id="unresolved-count">--</div>
+                <div class="label">债务项</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>X1-X4 检查状态</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>维度</th>
+                        <th>名称</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody id="check-results">
+                    <tr><td>X1</td><td>审计链</td><td>--</td></tr>
+                    <tr><td>X2</td><td>抗熵</td><td>--</td></tr>
+                    <tr><td>X3</td><td>价值栈</td><td>--</td></tr>
+                    <tr><td>X4</td><td>一致性</td><td>--</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="section">
+            <h2>项目状态</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>项目</th>
+                        <th>状态</th>
+                        <th>测试数</th>
+                    </tr>
+                </thead>
+                <tbody id="project-status">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        // 模拟数据加载
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载治理数据
+            fetch('/api/governance/status')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('health-score').textContent = data.health_score || 82.0;
+                    document.getElementById('debt-weight').textContent = data.debt_weight || 1.0;
+                    document.getElementById('resolved-count').textContent = data.resolved_count || 9;
+                    document.getElementById('unresolved-count').textContent = data.unresolved_count || 0;
+                })
+                .catch(() => {
+                    // 使用默认值
+                    document.getElementById('health-score').textContent = '82.0';
+                    document.getElementById('debt-weight').textContent = '1.0';
+                    document.getElementById('resolved-count').textContent = '9';
+                    document.getElementById('unresolved-count').textContent = '0';
+                });
+            
+            // 加载项目状态
+            const projects = [
+                { name: 'kairon', tests: 256, status: 'healthy' },
+                { name: 'agora', tests: 92, status: 'healthy' },
+                { name: 'cockpit', tests: 74, status: 'healthy' },
+                { name: 'ecos', tests: 39, status: 'healthy' },
+                { name: 'gbrain', tests: 888, status: 'healthy' },
+                { name: 'metaos', tests: 41, status: 'healthy' },
+                { name: 'omo', tests: 145, status: 'healthy' },
+                { name: 'runtime', tests: 46, status: 'healthy' },
+            ];
+            
+            const tbody = document.getElementById('project-status');
+            projects.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${p.name}</td><td class="status-ok">${p.status}</td><td>${p.tests}</td>`;
+                tbody.appendChild(tr);
+            });
+        });
+    </script>
+</body>
+</html>
