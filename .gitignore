@@ -89,3 +89,6 @@ data/**/*.sqlite3
 
 # 运行时备份（自动创建，不入仓）
 data/backups/
+
+# 防 pytest 误把 .omo/ 当 test root 产生 dummy 文件
+.omo/tests/
