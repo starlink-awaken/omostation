@@ -1,6 +1,17 @@
 """BusEnvelope — wire-format envelope for all bus events.
 
 Phase A.0: extend agora/core/event_bus.py:124-131 envelope with schema_version.
+Phase R59: add field reference docstring for cross-repo adapter authors
+           (hermes-console TS adapter mirrors this shape — keep in sync).
+
+Wire-format fields (all required unless noted):
+  id             : str  — unique event id ("evt_<epoch>_<6 hex>")
+  time           : str  — ISO 8601 UTC ("YYYY-MM-DDTHH:MM:SSZ")
+  type           : str  — event type, e.g. "pipeline:completed"
+  source         : str  — emitting component, e.g. "agora.bus"
+  schema_version : int  — wire schema version (default 1; bump on breaking change)
+  trace_id       : str? — optional distributed trace correlation id
+  payload        : dict — event body (caller-defined, JSON-serializable)
 """
 from __future__ import annotations
 
@@ -12,6 +23,8 @@ from typing import Any
 
 
 class EventType(str, Enum):
+    """Canonical event types. Custom types are allowed as plain strings."""
+
     PIPELINE_COMPLETED = "pipeline:completed"
     PIPELINE_STARTED = "pipeline:started"
     MESSAGE_RECEIVED = "message:received"
