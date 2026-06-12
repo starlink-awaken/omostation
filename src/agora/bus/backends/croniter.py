@@ -30,7 +30,13 @@ class CroniterBackend:
         return True
 
     def publish(self, envelope: BusEnvelope) -> str:
-        """Publish is not the primary use of this backend; raises."""
+        """Publish is not the primary use of this backend; raises.
+
+        CroniterBackend is one-way: jobs are added via add_cron_job() and
+        fire callbacks on schedule. Calling publish() is treated as a
+        programmer error and raises NotImplementedError so the router
+        can route the event to DLQ (RETRY-OWNERSHIP: backend never swallows).
+        """
         raise NotImplementedError(
             "CroniterBackend does not support publish() — use add_cron_job()"
         )
