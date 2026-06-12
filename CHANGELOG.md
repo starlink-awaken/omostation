@@ -31,14 +31,24 @@
   - 索引清理重建
 
 - **文档完善**:
-  - 8 个项目能力地图
-  - 7 个项目 CHANGELOG + CONTRIBUTING + LICENSE
+  - 17 个项目能力地图
+  - 17 个项目 CHANGELOG + CONTRIBUTING + LICENSE
   - ARCHITECTURE.md 更新
+
+- **版本号统一**:
+  - 11 个项目统一到 1.0.0
+
+- **Git Hooks**:
+  - 18 个项目配置 .githooks
+
+- **治理仪表板**:
+  - Web 化 (HTML + API)
+  - 告警消息处理
 
 ### Architecture
 - X1-X4 治理框架体系化
 - L0 治理模块与 M1/M2 SSOT 对齐
-- 能力地图覆盖 9 个核心项目
+- 能力地图覆盖 17 个项目
 
 ## [0.1.2] - 2026-06-09
 
