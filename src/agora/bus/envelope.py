@@ -43,6 +43,10 @@ class BusEnvelope:
     ):
         if isinstance(type, EventType):
             type = type.value
+        if not isinstance(type, str) or not type:
+            raise ValueError(f"BusEnvelope.type must be non-empty str, got {type!r}")
+        if not isinstance(source, str) or not source:
+            raise ValueError(f"BusEnvelope.source must be non-empty str, got {source!r}")
         # 用 datetime.now() 拿 epoch, 避免 `time` 模块名与 self.time 字段冲突
         epoch = int(datetime.now(UTC).timestamp())
         self.id = id or f"evt_{epoch}_{uuid.uuid4().hex[:6]}"
