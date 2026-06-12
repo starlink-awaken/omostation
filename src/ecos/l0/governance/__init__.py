@@ -1,4 +1,4 @@
-"""L0 治理模块 — X1-X4 治理框架
+"""L0 治理模块 — X1-X4 治理框架 + 优化原语
 
 M1 SSOT: ecos/ssot/mof/m1/governance/
 M2 Schema: ecos/ssot/mof/m2/governance_*.yaml
@@ -20,6 +20,22 @@ from .checkers import (
 )
 from .event_bus import GovernanceEventBus
 from .registry import GovernanceRegistry, CheckerRegistration
+from .optimization import (
+    AlertSeverity,
+    AlertChannel,
+    GovernanceAlert,
+    AlertRule,
+    AlertHandler,
+    DashboardMetric,
+    DashboardData,
+    DashboardProvider,
+    HealthSnapshot,
+    TrendAnalysis,
+    Prediction,
+    HistoryAnalyzer,
+)
+from .alert_engine import AlertEngine, LogHandler, WebhookHandler
+from .history_store import SQLiteHistoryStore
 
 __all__ = [
     # 原语
@@ -38,4 +54,23 @@ __all__ = [
     # 注册表
     "GovernanceRegistry",
     "CheckerRegistration",
+    # 优化原语
+    "AlertSeverity",
+    "AlertChannel",
+    "GovernanceAlert",
+    "AlertRule",
+    "AlertHandler",
+    "DashboardMetric",
+    "DashboardData",
+    "DashboardProvider",
+    "HealthSnapshot",
+    "TrendAnalysis",
+    "Prediction",
+    "HistoryAnalyzer",
+    # 告警引擎
+    "AlertEngine",
+    "LogHandler",
+    "WebhookHandler",
+    # 历史存储
+    "SQLiteHistoryStore",
 ]
