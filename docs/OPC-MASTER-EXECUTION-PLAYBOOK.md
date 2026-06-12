@@ -29,8 +29,8 @@ As of this document:
 - P1: conditionally passed
 - P1.5: governance baseline accepted
 - P2: implementation complete; Gate C passed (2026-06-11)
-- P3: opened for implementation; Gate D sub-gates D1–D5 pending
-- P3 D1: blocked (swarm-engine refactor drift + omo CLI dispatcher gap) — see `.omo/tasks/registry/done/OPC-P3-GATE-D-OPENING.yaml`
+- P3: implementation complete; Gate D passed (2026-06-12)
+- P4: implementation complete; Gate E passed (2026-06-12, E1-E4 closed)
 
 Current known truths:
 
@@ -38,6 +38,9 @@ Current known truths:
 - T3: multi-zone recall verified {local:0, kos:10, vault:10} for q='AGENTS'
 - T4: 8/8 source metadata complete on local search
 - C4: trace writeback to cockpit research verified (dedup window, archive retention)
+- D3: planner/researcher/reviewer thin-binding role split verified
+- D4: completed-result handoff index + reclaim_due follow-up verified
+- D5: replayable three-worker thin-binding demo verified
 - cross-repo persistence risks remain tracked via formal OMO debt
 
 ---

@@ -95,8 +95,24 @@ sub_gates:
       - 'sample.json 是从 demo 跑后真实 jsonl 复制, 非手写 fixture'
       - 'drift 比例 73.8% 属 §19 历史债, 不在 E4 关账范围'
 
+  - id: P4-FINAL
+    title: "Gate E 三面一致收口"
+    status: passed
+    closed_at: "2026-06-12T03:10:00Z"
+    evidence:
+      - "docs/OPC-PHASE4-MODEL-COMPUTE.md (Status: Gate E passed)"
+      - "docs/OPC-MASTER-EXECUTION-PLAYBOOK.md (P4 line: Gate E passed)"
+      - "projects/omo/tests/test_opc_phase_governance_alignment.py (2 new tests)"
+    closeout: |
+      Gate E closed 2026-06-12: 三面一致 (docs/omo tests/projects).
+      - docs/OPC-PHASE4-MODEL-COMPUTE.md: Status: Gate E passed, signal opc_phase4_gate_e_passed
+      - docs/OPC-MASTER-EXECUTION-PLAYBOOK.md: P4 line: implementation complete; Gate E passed (2026-06-12, E1-E4 closed)
+      - omo tests: test_p4_gate_e_three_way_alignment_closed_2026_06_12 + test_p5_prerequisite_signal_now_satisfied
+      - 9/9 omo alignment tests pass
+
 gate: Gate E
-gate_status: not_yet_passed
+gate_status: passed
+gate_closed_at: "2026-06-12T02:55:00Z"
 gate_note: |
   P4 implementation entry opened on 2026-06-12 after P3 Gate D passed.
   E1 passed on 2026-06-12: static registry seeds + loader + CLI route landed,
@@ -118,12 +134,14 @@ gate_note: |
   P4 audit 测试通过. omo audit-rollout 跨仓聚合: workspace R0 (density=0.0)
   + omo 子仓 n/a (显式诚实标记). 真实 audit 样本: task_id=opc-p4-audit-demo.
   证据: `.omo/tasks/registry/done/OPC-P4-E4/evidence-package.md`.
+  Gate E closed on 2026-06-12 after E1-E4 all passed and
+  docs/omo tests/projects three-way alignment verified.
 signals:
-  - opc_phase4_gate_e_not_yet_passed   # Gate E 仍 not_yet_passed 等人工 final review
+  - opc_phase4_gate_e_passed
   - opc_phase4_subgate_e1_passed
   - opc_phase4_subgate_e2_passed
   - opc_phase4_subgate_e3_passed
-  - opc_phase4_subgate_e4_passed       # 2026-06-12 E4 closeout
+  - opc_phase4_subgate_e4_passed
 
 red_lines:
   - 'business module 直接 import openai/anthropic/vertexai'

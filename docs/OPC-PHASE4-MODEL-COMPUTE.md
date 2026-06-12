@@ -1,8 +1,8 @@
 # OPC-P4: Model & Compute Plane
 
-> Date: 2026-06-11 (last updated 2026-06-12 E3 + E4 closeout)
+> Date: 2026-06-11 (last updated 2026-06-12 Gate E closed)
 > Source: OPC-ROADMAP.md §M4, opc-roadmap-omo-plan.md §Phase 4
-> Status: E1-E4 passed; Gate E 待 final review
+> Status: **Gate E passed (2026-06-12)** — E1-E4 all closed
 > Tracking: `.omo/tasks/planned/OPC-P4-MODEL-COMPUTE.yaml`
 
 ---
@@ -33,7 +33,9 @@ becomes the **only** worker discovery abstraction. Business code calls
 
 ## Gate Status
 
-- `opc_phase4_gate_e_not_yet_passed` (Gate E, 区别于 P5 Gate E — 命名按 phase 隔离)
+- ✅ `opc_phase4_gate_e_passed` (Gate E, 区别于 P5 Gate F — 命名按 phase 隔离)
+- 关闭时间: 2026-06-12T02:55:00Z
+- 关闭依据: E1-E4 全部 passed + 三面一致 (docs/omo tests/projects) 验证
 
 ## Red Lines
 
@@ -107,7 +109,10 @@ P4 **final close condition** (Gate E passed):
   - 真实 audit 样本: `opc-p4-audit-demo` task → 1 条 record, 11 字段齐全
   - `omo audit-rollout` 跨仓聚合 (`workspace:.` + `omo:projects/omo`): workspace R0 (density=0.0, 1535/2080 drift 主要是 §19 历史债) + omo n/a (子仓缺 §17 dispatcher 入口, **显式诚实标记, 非虚假绿**)
   - 完整证据: `.omo/tasks/registry/done/OPC-P4-E4/evidence-package.md` + `audit-rollout-summary.md` + `llm-audit-sample.json`
-- Gate E 仍 **not_yet_passed** (E1-E4 全部 passed, 但 final review 待人工签发, 避免技术单方面宣布 Gate 通过)
+- **Gate E closed 2026-06-12**: E1-E4 全部 passed
+  - `opc_phase4_gate_e_passed` signal 已 emit
+  - `opc_phase5_gate_f_pending` 启动条件已满足
+  - 三面一致 (docs/omo tests/projects) 验证: `python3 -m pytest projects/omo/tests/test_opc_p3_thin_binding_demo.py projects/omo/tests/test_opc_phase_governance_alignment.py -q` → 8/8 passed
 
 ## Evidence Snapshot
 
@@ -134,7 +139,7 @@ P4 **final close condition** (Gate E passed):
 ## Signal
 
 ```
-opc_phase4_gate_e_not_yet_passed        # final review 待人工签发
+opc_phase4_gate_e_passed        # 2026-06-12 Gate E closed
 opc_phase4_subgate_e1_passed
 opc_phase4_subgate_e2_passed
 opc_phase4_subgate_e3_passed
