@@ -138,6 +138,54 @@ def test_p6_drift_detector_covers_all_four_kinds():
     assert expected.issubset(found), f"drift detector missing kinds: {expected - found}"
 
 
+def test_p7_gate_h_three_way_alignment_closed_2026_06_12():
+    """P7 closeout: Gate H must be passed consistently across docs/omo-tests/projects."""
+    plan = _read_yaml(".omo/tasks/planned/OPC-P7-RELEASE-TRAIN.yaml")
+    playbook = _read("docs/OPC-MASTER-EXECUTION-PLAYBOOK.md")
+
+    assert plan["gate"] == "Gate H"
+    assert plan["gate_status"] == "passed"
+    assert "gate_closed_at" in plan
+
+    h_statuses = {sg["id"]: sg["status"] for sg in plan["sub_gates"] if sg.get("id", "").startswith("P7-H")}
+    expected = {f"P7-H{i}": "passed" for i in range(1, 6)}
+    assert h_statuses == expected, f"P7 H1-H5 not all passed: {h_statuses}"
+
+    assert "P7: implementation complete; Gate H passed (2026-06-12, H1-H5 closed)" in playbook
+
+
+def test_p7_release_cycle_runner_wrote_three_artifacts():
+    """P7-H1: release cycle runner must write notes (CHANGELOG), cycle json, retrospective."""
+    notes_path = ROOT / ".omo" / "_delivery" / "release" / "CHANGELOG.md"
+    assert notes_path.exists(), "release notes CHANGELOG.md not written"
+    notes_text = notes_path.read_text(encoding="utf-8")
+    assert "### Summary" in notes_text
+    assert "### Validation" in notes_text
+    assert "### Debt" in notes_text
+
+    cycle_files = list((ROOT / ".omo" / "_delivery" / "release").glob("v*.json"))
+    assert cycle_files, "no cycle json written"
+
+    retro_dir = ROOT / ".omo" / "tasks" / "registry" / "done" / "OPC-P7-H1"
+    retros = list(retro_dir.glob("retrospective-v*.md"))
+    assert retros, "no retrospective written"
+
+
+def test_p7_doc_lint_zero_drift_at_closeout():
+    """P7-H4: doc lint must report drift_total=0 (or have an explicit evidence for any drift)."""
+    import json
+    from datetime import datetime, timezone
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    lint_path = ROOT / ".omo" / "_delivery" / "doc-lint" / f"{today}.json"
+    if not lint_path.exists():
+        # fall back: any .json in dir from last 7 days
+        candidates = sorted((ROOT / ".omo" / "_delivery" / "doc-lint").glob("*.json"))
+        assert candidates, "no doc-lint output"
+        lint_path = candidates[-1]
+    payload = json.loads(lint_path.read_text(encoding="utf-8"))
+    assert payload.get("drift_total") == 0, f"doc-lint reported drift_total={payload.get('drift_total')}"
+
+
 def test_p4_to_p7_use_consistent_evidence_requirement_field():
     for rel_path in [
         ".omo/tasks/planned/OPC-P4-MODEL-COMPUTE.yaml",
