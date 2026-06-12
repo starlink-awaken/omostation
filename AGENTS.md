@@ -156,3 +156,21 @@ agora --help              # 30+ 子命令
 mof workflow --help       # 11 workflow 管理命令
 ```
 
+## Bus 子包 (Phase A.0)
+
+### Key files
+| File | LOC | Purpose |
+|------|-----|---------|
+| `agora/bus/__init__.py` | ~50 | facade — publish/subscribe/schedule |
+| `agora/bus/envelope.py` | ~75 | BusEnvelope wire format |
+| `agora/bus/router.py` | ~50 | backend dispatch + DLQ fallback |
+| `agora/bus/dlq.py` | ~130 | SQLite DLQ (WAL + GC) |
+| `agora/bus/backends/eventbus.py` | ~75 | wraps agora.core.event_bus |
+
+### Gotchas
+- **RETRY**: bus adapter 自身不重试 (透传), 详见 `bus/RETRY-OWNERSHIP.md`
+- **DLQ**: 落 `~/.runtime/bus_dlq.db`, 50MB 滚动
+- **Backend selection**: Phase A.0 只 1 个, A.1 加 7 个
+- **schedule()**: stub, NotImplementedError, Phase A.1
+- **Cross-repo usage**: omo 已加 `agora = { path = "../agora" }` 依赖, 可直接 `from agora.bus import publish`
+

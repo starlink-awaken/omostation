@@ -54,6 +54,31 @@ def _error(msg: str) -> dict:   # 失败: {"ok": False, "error": msg}
 3. **ecos/omo 依赖声明但无静态 import** — pyproject.toml 有声明但实际通过 subprocess
 4. **缺少 mypy 配置** — pyproject.toml 无 `[tool.mypy]`
 
+## §bus 子包 (Phase A.0, R57)
+
+### 文件职责
+| 文件 | 职责 | 风险 |
+|------|------|------|
+| `bus/__init__.py` | facade (publish/subscribe/schedule) | god module 风险 — 单文件 < 50 行 |
+| `bus/envelope.py` | BusEnvelope wire format | - |
+| `bus/router.py` | backend 分发 + DLQ fallback | 路由逻辑集中点 |
+| `bus/dlq.py` | SQLite DLQ (WAL + 50MB GC) | 落 `~/.runtime/bus_dlq.db` |
+| `bus/backends/base.py` | BusBackend Protocol | - |
+| `bus/backends/eventbus.py` | 包裹 agora EventBus (Phase A.0 唯一) | - |
+
+### 已知技术债
+1. **bus/ 子包只有 1 个 backend** (eventbus) — Phase A.1 (R58) 加 7 个
+2. **schedule() stub** — NotImplementedError, Phase A.1 实现
+3. **无 Pydantic** — envelope 暂用 simple class, Phase A.1 升 Pydantic
+
+### Owner
+bus/ 子包由 agora team 维护 (Phase B owner 决策见 ADR-0008 5 硬条件)
+
+### 安全检查清单
+- [ ] bus adapter 自身不重试 (透传给底层)
+- [ ] DLQ 路径用 WAL + busy_timeout
+- [ ] 失败 event 入 DLQ 不抛 (避免丢失)
+
 ## 安全检查清单
 
 修改涉及网络请求/端点/认证的代码时：
