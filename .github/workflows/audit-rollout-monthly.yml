@@ -32,6 +32,7 @@ jobs:
           OUTPUT=".omo/_delivery/audit-rollout/${DATE}.json"
           uv run --no-sync python -m omo.cli audit-rollout \
             --repos "omostation:." \
+            --repos "gbrain:../gbrain" \
             --output "$OUTPUT" || {
               echo "::warning::audit-rollout reports drift (Round 27 设计, 1 退出码不阻塞)"
               exit 0

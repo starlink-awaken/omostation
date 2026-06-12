@@ -1,0 +1,13 @@
+id: OPC-P15-GBR-02
+title: "gbrain .omo/ governance plane initialization"
+status: completed
+priority: P1
+domain: gbrain
+created: "2026-06-11"
+description: |
+  gbrain 缺少 .omo/ 治理平面。在 OPC 跨仓治理审计中确认为缺失。
+  需要创建 .omo/state/system.yaml 并注册到 OMO debt 跨仓雷达。
+tasks:
+  - create: 创建 .omo/state/ .omo/debt/ .omo/goals/ 目录
+  - populate: 填充 .omo/state/system.yaml
+  - register: 注册到 OMO debt 跨仓雷达
