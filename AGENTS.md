@@ -1,6 +1,7 @@
 # AGENTS.md — Workspace Development Guide
 
 > Multi-project knowledge engineering & research workspace (root directory).
+> 最后更新: 2026-06-12
 
 ## Project Overview
 
@@ -10,17 +11,16 @@ This root directory is a **multi-project workspace** organized in the 5+4+1+1 (e
 |-------|---------|-------|----------|--------|
 | L4 | `l4-kernel` | Python (uv, pytest) | `projects/l4-kernel/` | 🟢 Active — 自我层管理面 · 21域 · 250 tests · 43 MCP tools |
 | — | `model-driven` | Python (uv, pytest) | `projects/model-driven/` | 🟢 Active — 全生命周期模型驱动平台 · 24 M2类型 · 7阶段 · 12工具 · 190 tests |
-| L3 | `cockpit` | Python (uv, pytest) | `projects/cockpit/` | 🟢 Active — 统一入口 (CLI + Web) · 33 tests |
-| I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · 172 src, 1371 tests |
-| L2 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 知识引擎 · 19 active (+6 archived) packages |
-| L2 | `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — 知识数据库 · 163K TS |
-| L2 | `omo` | Python (uv, pytest) | `projects/omo/` | 🟢 Active — 治理面 · 100+ tests · **AppendOnlyLog 5 consumers + fcntl 跨进程锁** |
-| L2 | `metaos` | Python (uv, pytest) | `projects/metaos/` | 🟢 Active — 编排引擎 · 188 tests |
-| L1 | `runtime` | Python (uv, pytest) | `projects/runtime/` | 🟢 Active — 运行时 · matrix + scheduler + kei |
-| L0 | `ecos` | Python (uv, pytest) | `projects/ecos/` | 🟢 Active — SSB 协议 · 195 tests |
+| L3 | `cockpit` | Python (uv, pytest) | `projects/cockpit/` | 🟢 Active — 统一入口 (CLI + MCP + Web) · 74 tests · 治理 MCP 工具 |
+| I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · 91 tests |
+| L2 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 知识引擎 · 16 packages · 能力地图 + 使用指南 |
+| L2 | `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — 知识数据库 · 888 tests · 能力地图 |
+| L2 | `omo` | Python (uv, pytest) | `projects/omo/` | 🟢 Active — 治理面 · 144 tests · 债务管理 |
+| L2 | `metaos` | Python (uv, pytest) | `projects/metaos/` | 🟢 Active — 编排引擎 · 41 tests · 决策门控/免疫/路由 |
+| L1 | `runtime` | Python (uv, pytest) | `projects/runtime/` | 🟢 Active — 运行时 · 46 tests · 服务注册/健康/协议 |
+| L0 | `ecos` | Python (uv, pytest) | `projects/ecos/` | 🟢 Active — L0 协议层 · 39 tests · X1-X4 治理框架 |
+| — | `aetherforge` | Python (uv, pytest) | `projects/aetherforge/` | 🟢 Active — 算力网格 + LLM 网关 + 群体智能 · 21 tests |
 | — | `hermes-console` | TypeScript | `projects/hermes-console/` | 🟡 待集成至 cockpit |
-| — | `SharedBrain` | Python | `projects/_archived/SharedBrain-original/` | ⚪ Archived |
-| — | `agentmesh` | TypeScript (bun) | `projects/_archived/` | ⚪ Archived — 已拆分为独立项目 (agora/runtime/cockpit/aetherforge) |
 
 **Also contains:**
 - `.omo/` — Workspace governance (goals, state, standards, tasks, audits)

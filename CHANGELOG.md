@@ -1,8 +1,44 @@
 # omostation Changelog
 
 > 多仓库统一发布. 工作区根 VERSION 文件权威.
-> 6 项目 (agora / kairon / gbrain / omo / metaos / cockpit / runtime) 共享版本号.
+> 9 项目 (agora / kairon / gbrain / omo / metaos / cockpit / runtime / ecos / aetherforge) 共享版本号.
 > 详见 ADR-0007.
+
+## [0.2.0] - 2026-06-12
+
+### Added (治理框架 + 能力地图 + 文档完善)
+
+- **债务治理**:
+  - 9/9 权重债务全部解决 (debt_weight: 0.3→1.0)
+  - debt_health: 62.5→100.0
+  - 清理 5 个过时债务引用
+
+- **X1-X4 治理框架**:
+  - L0 治理模块 (ecos/l0/governance/)
+  - X1-X4 检查器实现
+  - 治理注册表 + 告警规则
+  - cockpit MCP 治理工具 (6 个)
+
+- **kairon 优化**:
+  - 16 个包全部验证通过 (100%)
+  - 能力地图 (CAPABILITY-MAP.md)
+  - 使用指南 (USAGE-GUIDE.md)
+  - atomic_write_json 工具
+
+- **KOS 修复**:
+  - manifest.json 重构 (10 域)
+  - README 对齐实际配置
+  - 索引清理重建
+
+- **文档完善**:
+  - 8 个项目能力地图
+  - 7 个项目 CHANGELOG + CONTRIBUTING + LICENSE
+  - ARCHITECTURE.md 更新
+
+### Architecture
+- X1-X4 治理框架体系化
+- L0 治理模块与 M1/M2 SSOT 对齐
+- 能力地图覆盖 9 个核心项目
 
 ## [0.1.2] - 2026-06-09
 
