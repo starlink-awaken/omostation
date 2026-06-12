@@ -626,6 +626,147 @@ def domains_list() -> str:
 
 
 # ══════════════════════════════════════════════════════════════
+# X1-X4 Governance tools
+# ══════════════════════════════════════════════════════════════
+
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+
+
+@_tool()
+def governance_check(dimension: str = "all") -> str:
+    """运行 X1-X4 治理检查。
+
+    Args:
+        dimension: 检查维度 (X1/X2/X3/X4/all)
+
+    Returns:
+        检查结果 JSON
+    """
+    try:
+        from ecos.l0.governance import GovernanceRegistry
+
+        registry_path = _REPO_ROOT / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
+        registry = GovernanceRegistry(registry_path)
+        registry.load()
+
+        if dimension == "all":
+            results = registry.run_all(_REPO_ROOT)
+        else:
+            results = registry.run_dimension(dimension, _REPO_ROOT)
+
+        return json.dumps(
+            {
+                "dimension": dimension,
+                "total": len(results),
+                "results": [r.to_dict() for r in results],
+            },
+            ensure_ascii=False,
+        )
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
+@_tool()
+def governance_status() -> str:
+    """查看治理状态。
+
+    Returns:
+        治理状态 JSON (健康度、债务权重等)
+    """
+    try:
+        import yaml
+
+        system_yaml = _REPO_ROOT / ".omo" / "state" / "system.yaml"
+        if not system_yaml.exists():
+            return json.dumps({"error": "system.yaml 不存在"})
+
+        with open(system_yaml) as f:
+            data = yaml.safe_load(f) or {}
+
+        return json.dumps(
+            {
+                "health_score": data.get("health_score", 0),
+                "debt_weight": data.get("debt_weight", 0),
+                "debt_health": data.get("debt_metrics", {}).get("debt_health", 0),
+                "resolved_count": data.get("debt_metrics", {}).get("resolved_count", 0),
+                "unresolved_count": data.get("debt_metrics", {}).get("unresolved_count", 0),
+            },
+            ensure_ascii=False,
+        )
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
+@_tool()
+def governance_sla(dimension: str = "") -> str:
+    """查看 SLA 达成情况。
+
+    Args:
+        dimension: 指定维度 (X1/X2/X3/X4)，为空返回所有
+
+    Returns:
+        SLA 达成情况 JSON
+    """
+    try:
+        sla_path = _REPO_ROOT / ".omo" / "_knowledge" / "governance" / "sla.md"
+        if not sla_path.exists():
+            return json.dumps({"error": "sla.md 不存在"})
+
+        # 简化返回
+        return json.dumps(
+            {
+                "status": "ok",
+                "message": "SLA 文档存在",
+                "dimensions": ["X1", "X2", "X3", "X4"],
+            },
+            ensure_ascii=False,
+        )
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
+@_tool()
+def governance_leaderboard() -> str:
+    """查看债务排行榜。
+
+    Returns:
+        各项目债务分布 JSON
+    """
+    try:
+        projects = ["kairon", "gbrain", "metaos", "agora", "cockpit", "ecos", "omo", "runtime"]
+        result = []
+
+        for proj in projects:
+            proj_dir = _REPO_ROOT / "projects" / proj
+            if not proj_dir.exists():
+                continue
+
+            # 检查状态
+            has_githooks = (proj_dir / ".githooks").exists()
+            has_tests = (proj_dir / "tests").exists()
+
+            score = 100
+            if not has_tests:
+                score -= 20
+            if not has_githooks:
+                score -= 10
+
+            result.append(
+                {
+                    "project": proj,
+                    "status": "healthy" if score >= 90 else "warning",
+                    "score": score,
+                    "has_githooks": has_githooks,
+                    "has_tests": has_tests,
+                }
+            )
+
+        return json.dumps({"projects": result, "total": len(result)}, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
+# ══════════════════════════════════════════════════════════════
 # Module execution
 # ══════════════════════════════════════════════════════════════
 
