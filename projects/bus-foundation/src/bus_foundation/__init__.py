@@ -80,6 +80,8 @@ def subscribe(pattern: str) -> Callable:
 
 def schedule(expr: str) -> Callable:
     """Decorator: schedule a recurring task via the croniter backend."""
+    if not isinstance(expr, str):
+        raise TypeError(f"schedule expression must be str, got {type(expr)}")
 
     def decorator(fn: Callable) -> Callable:
         sub_id = _croniter.subscribe(expr, fn)
