@@ -8,6 +8,7 @@ dependencies = [
     "httpx[socks]>=0.28.1",
     "aetherforge-gateway",
     "agora",
+    "bus-foundation",
     "openai>=2.41.0",
     "pyyaml>=6.0.3",
 ]
@@ -29,6 +30,7 @@ build-backend = "uv_build"
 [tool.uv.sources]
 aetherforge-gateway = { path = "../aetherforge/packages/gateway" }
 agora = { path = "../agora" }
+bus-foundation = { path = "../bus-foundation" }
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

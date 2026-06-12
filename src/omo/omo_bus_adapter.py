@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Callable
 
-from agora.bus import subscribe as bus_subscribe
+from bus_foundation import subscribe as bus_subscribe
 
 
 def subscribe_to_governance_events(callback: Callable) -> Callable:

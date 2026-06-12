@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import uuid
 
-from agora.bus import BusEnvelope, publish  # agora 是 omo 显式依赖, 不需要 sys.path hack
+from bus_foundation import BusEnvelope, publish  # bus-foundation 是 omo 显式依赖 (R67 migration)
 
 
 def emit_demo_event(task_id: str, dispatch_id: str | None = None) -> str:
