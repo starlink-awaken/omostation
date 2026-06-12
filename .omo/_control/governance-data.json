@@ -1,0 +1,93 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-06-12T01:35:06.416981+00:00",
+  "governance": {
+    "health_score": 82.0,
+    "health_score_raw": 100.0,
+    "debt_weight": 1.0,
+    "debt_health": 100.0
+  },
+  "debt": {
+    "resolved_count": 9,
+    "unresolved_count": 0,
+    "total_count": 9,
+    "resolution_rate": 1.0
+  },
+  "categories": {
+    "technical": {
+      "resolved": 1,
+      "partial": 2,
+      "unresolved": 0
+    },
+    "governance": {
+      "resolved": 8,
+      "partial": 0,
+      "unresolved": 0
+    },
+    "process": {
+      "resolved": 0,
+      "partial": 0,
+      "unresolved": 0
+    }
+  },
+  "trend": [
+    {
+      "date": "2026-06-11",
+      "debt_weight": 0.3,
+      "debt_health": 62.5,
+      "note": "初始状态：9项债务未解决"
+    },
+    {
+      "date": "2026-06-11",
+      "debt_weight": 0.82,
+      "debt_health": 79.5,
+      "note": "7项 SharedBrain 债务已解决"
+    },
+    {
+      "date": "2026-06-11",
+      "debt_weight": 0.97,
+      "debt_health": 97.0,
+      "note": "D2_CI_E2E 容器化已解决"
+    },
+    {
+      "date": "2026-06-11",
+      "debt_weight": 1.0,
+      "debt_health": 100.0,
+      "note": "D3_EU_PRICING 已解决（包已删除）"
+    }
+  ],
+  "projects": {
+    "kairon": {
+      "status": "healthy",
+      "debt_count": 0
+    },
+    "gbrain": {
+      "status": "healthy",
+      "debt_count": 0
+    },
+    "metaos": {
+      "status": "healthy",
+      "debt_count": 0
+    },
+    "agora": {
+      "status": "healthy",
+      "debt_count": 0
+    },
+    "cockpit": {
+      "status": "healthy",
+      "debt_count": 0
+    },
+    "ecos": {
+      "status": "healthy",
+      "debt_count": 0
+    },
+    "omo": {
+      "status": "healthy",
+      "debt_count": 0
+    },
+    "runtime": {
+      "status": "healthy",
+      "debt_count": 0
+    }
+  }
+}

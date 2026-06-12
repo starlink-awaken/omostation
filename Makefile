@@ -112,3 +112,8 @@ governance-dashboard:
 
 debt-audit:
 	bash scripts/debt-audit.sh
+
+# ── 治理数据 ────────────────────────────────────────────────────────────────────
+
+governance-data:
+	python3 scripts/generate-governance-data.py
