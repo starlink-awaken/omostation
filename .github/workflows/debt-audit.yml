@@ -1,0 +1,74 @@
+name: Debt Audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # 每周一早上 9 点运行
+    - cron: '0 9 * * 1'
+
+jobs:
+  debt-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+      
+      - name: Run debt audit
+        run: bash scripts/debt-audit.sh
+      
+      - name: Generate governance data
+        run: python3 scripts/generate-governance-data.py
+      
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debt-audit-report
+          path: |
+            debt-audit-report.md
+            .omo/_control/governance-data.json
+          retention-days: 30
+      
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('debt-audit-report.md', 'utf8');
+            
+            // 提取关键信息
+            const errors = report.match(/错误: (\d+)/)?.[1] || '0';
+            const warnings = report.match(/警告: (\d+)/)?.[1] || '0';
+            
+            const body = `## 📊 债务审计报告
+            
+            | 指标 | 值 |
+            |------|-----|
+            | 错误 | ${errors} |
+            | 警告 | ${warnings} |
+            
+            <details>
+            <summary>详细报告</summary>
+            
+            ${report}
+            
+            </details>`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
