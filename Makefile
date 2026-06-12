@@ -101,3 +101,9 @@ doc-lint:
 	done
 	@echo ""
 	@echo "=== 文档检查完成 ==="
+
+# ── 治理仪表板 ──────────────────────────────────────────────────────────────────
+
+governance-dashboard:
+	python3 scripts/generate-governance-dashboard.py -o governance-report.html
+	@echo "打开: open governance-report.html"
