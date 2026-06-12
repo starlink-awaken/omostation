@@ -40,7 +40,9 @@ class AsyncioBackend:
                 try:
                     queue.put_nowait(envelope)
                 except asyncio.QueueFull:
-                    logger.warning("asyncio_queue_full", sub_id, envelope.id)
+                    # Log includes sub_id and event id for observability.
+                    # Drop the event — caller (router) decides DLQ policy.
+                    logger.warning("asyncio_queue_full sub_id=%s event_id=%s", sub_id, envelope.id)
         return envelope.id
 
     def subscribe(self, pattern: str, callback: Callable) -> str:
@@ -56,7 +58,7 @@ class AsyncioBackend:
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
-            logger.warning("asyncio_subscribe_no_loop", sub_id)
+            logger.warning("asyncio_subscribe_no_loop sub_id=%s", sub_id)
             return sub_id
 
         async def _drain() -> None:
@@ -65,7 +67,7 @@ class AsyncioBackend:
                 try:
                     callback(env)
                 except Exception as e:
-                    logger.error("asyncio_callback_error", e)
+                    logger.error("asyncio_callback_error err=%s", e)
 
         loop.create_task(_drain())
         return sub_id
