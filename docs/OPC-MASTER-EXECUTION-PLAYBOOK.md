@@ -99,7 +99,33 @@ These are non-negotiable.
 - Do not mark P6 passed if automated upgrade suggestions can become active without human approval.
 - Do not mark P7 passed without release-train evidence and retrospective coverage.
 
-### 4.4 Delivery red lines
+### 4.4 Acceptance integrity red lines (2026-06-12 复验后新增)
+
+The 2026-06-12 acceptance review surfaced four patterns where sub-gate closeout
+inadvertently weakened the original criteria or contradicted its own evidence.
+These three rules are the reverse-image of those patterns; they apply to **all**
+current and future sub-gates (P0 through P7+).
+
+- **Do not weaken original criteria during closeout.** Modifying a sub-gate's
+  `criteria` list (e.g. turning "≥2 周连续 cron" into "2 轮手动跑通") to make
+  the existing evidence pass is the same as forgery. If the time-based or
+  scope-based requirement cannot be met, the sub-gate stays `not_yet_passed`
+  and the gate is not closed. The evidence package must show the criteria
+  text *unchanged* from the original plan.
+- **Do not let plan status contradict its own evidence.** When a sub-gate's
+  `status: passed` is claimed, every primary evidence file (phase-gate report,
+  audit-rollout output, weekly retro, etc.) must independently agree. If
+  `phase-gate/2026-06-12.md` reports `P7 | Gate H | not_yet_passed`, the plan
+  YAML must not say `gate_status: passed`. An automated test in
+  `omo/tests/test_opc_phase_governance_alignment.py` enforces this.
+- **Do not bypass human approval for self-evolution tasks.** Every task
+  produced by the radar → gap → task → swarm pipeline must set
+  `approval_required: true`, even no-op placeholders. The
+  `scripts/opc_p6_self_evolve.py` no-op branch enforces this; the
+  test `test_p6_self_evolution_tasks_only_in_planned_directory` enforces
+  the directory boundary. Both layers are required.
+
+### 4.5 Delivery red lines
 
 - Do not submit giant mixed batches across multiple phases.
 - Do not bundle speculative refactors with gate-close work.
