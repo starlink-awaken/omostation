@@ -117,3 +117,8 @@ debt-audit:
 
 governance-data:
 	python3 scripts/generate-governance-data.py
+
+# ── 债务排行榜 ──────────────────────────────────────────────────────────────────
+
+debt-leaderboard:
+	bash scripts/debt-leaderboard.sh
