@@ -1,5 +1,7 @@
 """L0 治理模块测试"""
 
+from datetime import datetime, timezone
+
 from ecos.l0.governance import (
     CheckResult,
     CheckSeverity,
@@ -10,6 +12,17 @@ from ecos.l0.governance import (
     X2StalenessChecker,
     X3ValueChecker,
     X4ConsistencyChecker,
+    AlertSeverity,
+    AlertChannel,
+    GovernanceAlert,
+    AlertRule,
+    AlertEngine,
+    LogHandler,
+    HealthSnapshot,
+    TrendAnalysis,
+    Prediction,
+    SQLiteHistoryStore,
+    GovernanceRegistry,
 )
 
 
@@ -171,3 +184,257 @@ class TestX4ConsistencyChecker:
         
         assert result.dimension == "X4"
         assert result.status == CheckStatus.PASS
+
+
+# ══════════════════════════════════════════════════════════════
+# 优化原语测试
+# ══════════════════════════════════════════════════════════════
+
+class TestGovernanceAlert:
+    """GovernanceAlert 测试"""
+    
+    def test_create_alert(self):
+        alert = GovernanceAlert(
+            alert_id="alert-001",
+            severity=AlertSeverity.HIGH,
+            dimension="X1",
+            check_id="x1-check",
+            message="测试告警",
+        )
+        assert alert.alert_id == "alert-001"
+        assert alert.severity == AlertSeverity.HIGH
+    
+    def test_to_dict(self):
+        alert = GovernanceAlert(
+            alert_id="alert-001",
+            severity=AlertSeverity.CRITICAL,
+            dimension="X2",
+            check_id="x2-check",
+            message="测试告警",
+            channels=[AlertChannel.LOG, AlertChannel.WEBHOOK],
+        )
+        d = alert.to_dict()
+        assert d["severity"] == "critical"
+        assert "log" in d["channels"]
+
+
+class TestAlertEngine:
+    """AlertEngine 测试"""
+    
+    def test_evaluate_fail(self):
+        engine = AlertEngine()
+        engine.rules = [
+            AlertRule(
+                rule_id="test-rule",
+                dimension="X1",
+                condition="fail",
+                severity=AlertSeverity.HIGH,
+                channels=[AlertChannel.LOG],
+            )
+        ]
+        
+        result = CheckResult(
+            check_id="x1-test",
+            dimension="X1",
+            status=CheckStatus.FAIL,
+            message="测试失败",
+        )
+        
+        alerts = engine.evaluate([result])
+        assert len(alerts) == 1
+        assert alerts[0].severity == AlertSeverity.HIGH
+    
+    def test_evaluate_pass_no_alert(self):
+        engine = AlertEngine()
+        engine.rules = [
+            AlertRule(
+                rule_id="test-rule",
+                dimension="X1",
+                condition="fail",
+                severity=AlertSeverity.HIGH,
+                channels=[AlertChannel.LOG],
+            )
+        ]
+        
+        result = CheckResult(
+            check_id="x1-test",
+            dimension="X1",
+            status=CheckStatus.PASS,
+            message="测试通过",
+        )
+        
+        alerts = engine.evaluate([result])
+        assert len(alerts) == 0
+
+
+class TestLogHandler:
+    """LogHandler 测试"""
+    
+    def test_handle(self, tmp_path):
+        log_path = tmp_path / "test.log"
+        handler = LogHandler(log_path)
+        
+        alert = GovernanceAlert(
+            alert_id="alert-001",
+            severity=AlertSeverity.HIGH,
+            dimension="X1",
+            check_id="x1-test",
+            message="测试告警",
+        )
+        
+        success = handler.handle(alert)
+        assert success
+        assert log_path.exists()
+
+
+class TestHealthSnapshot:
+    """HealthSnapshot 测试"""
+    
+    def test_create_snapshot(self):
+        snapshot = HealthSnapshot(
+            timestamp=datetime.now(timezone.utc),
+            health_score=82.0,
+            debt_weight=1.0,
+            debt_health=100.0,
+            resolved_count=9,
+            unresolved_count=0,
+        )
+        assert snapshot.health_score == 82.0
+        assert snapshot.resolved_count == 9
+    
+    def test_to_dict(self):
+        snapshot = HealthSnapshot(
+            timestamp=datetime.now(timezone.utc),
+            health_score=82.0,
+            debt_weight=1.0,
+            debt_health=100.0,
+            resolved_count=9,
+            unresolved_count=0,
+        )
+        d = snapshot.to_dict()
+        assert d["health_score"] == 82.0
+        assert "timestamp" in d
+
+
+class TestSQLiteHistoryStore:
+    """SQLiteHistoryStore 测试"""
+    
+    def test_record_and_query(self, tmp_path):
+        db_path = tmp_path / "test.db"
+        store = SQLiteHistoryStore(db_path)
+        
+        snapshot = HealthSnapshot(
+            timestamp=datetime.now(timezone.utc),
+            health_score=82.0,
+            debt_weight=1.0,
+            debt_health=100.0,
+            resolved_count=9,
+            unresolved_count=0,
+        )
+        
+        store.record(snapshot)
+        snapshots = store.get_snapshots(days=1)
+        
+        assert len(snapshots) == 1
+        assert snapshots[0].health_score == 82.0
+    
+    def test_analyze_trend(self, tmp_path):
+        db_path = tmp_path / "test.db"
+        store = SQLiteHistoryStore(db_path)
+        
+        # 记录多个快照
+        for i in range(5):
+            snapshot = HealthSnapshot(
+                timestamp=datetime.now(timezone.utc),
+                health_score=70.0 + i * 5,
+                debt_weight=0.8 + i * 0.05,
+                debt_health=80.0 + i * 5,
+                resolved_count=9,
+                unresolved_count=0,
+            )
+            store.record(snapshot)
+        
+        trend = store.analyze_trend("health_score", days=1)
+        assert trend.metric == "health_score"
+        assert trend.trend == "improving"
+
+
+class TestTrendAnalysis:
+    """TrendAnalysis 测试"""
+    
+    def test_create_trend(self):
+        trend = TrendAnalysis(
+            metric="health_score",
+            current=82.0,
+            previous=75.0,
+            change=7.0,
+            trend="improving",
+        )
+        assert trend.trend == "improving"
+    
+    def test_to_dict(self):
+        trend = TrendAnalysis(
+            metric="health_score",
+            current=82.0,
+            previous=75.0,
+            change=7.0,
+            trend="improving",
+        )
+        d = trend.to_dict()
+        assert d["trend"] == "improving"
+
+
+class TestPrediction:
+    """Prediction 测试"""
+    
+    def test_create_prediction(self):
+        pred = Prediction(
+            metric="health_score",
+            days=7,
+            predicted_value=90.0,
+        )
+        assert pred.days == 7
+    
+    def test_to_dict(self):
+        pred = Prediction(
+            metric="health_score",
+            days=7,
+            predicted_value=90.0,
+        )
+        d = pred.to_dict()
+        assert d["predicted_value"] == 90.0
+
+
+class TestGovernanceRegistry:
+    """GovernanceRegistry 测试"""
+    
+    def test_load_and_run(self, tmp_path):
+        # 创建注册表文件
+        registry_yaml = tmp_path / "registry.yaml"
+        registry_yaml.write_text("""
+checkers:
+  - id: x1-test
+    dimension: X1
+    name: "测试检查器"
+    description: "测试"
+    module: "ecos.l0.governance.checkers"
+    class: "X1AuditChainChecker"
+    enabled: true
+""")
+        
+        # 创建必要的文件结构
+        (tmp_path / "scripts").mkdir()
+        (tmp_path / "scripts" / "debt-audit.sh").touch()
+        (tmp_path / "debt-audit-report.md").touch()
+        for proj in ["kairon", "agora", "cockpit", "ecos", "omo", "metaos", "runtime"]:
+            (tmp_path / "projects" / proj / ".githooks").mkdir(parents=True)
+            (tmp_path / "projects" / proj / ".githooks" / "pre-commit").touch()
+        
+        registry = GovernanceRegistry(registry_yaml)
+        registry.load()
+        
+        assert len(registry.checkers) == 1
+        assert registry.checkers[0].id == "x1-test"
+        
+        results = registry.run_all(tmp_path)
+        assert len(results) == 1
