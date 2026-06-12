@@ -1,0 +1,21 @@
+id: OPC-P16-MEM-02
+title: "Phase 1.2: Memθ 算子体系设计"
+status: completed
+priority: P0
+domain: opc
+created: "2026-06-13"
+description: |
+  执行了 2026-v6.1-strategic-plan.md Phase 1 (记忆系统升级) 的第二项任务：Memθ算子体系设计。
+  规定了 Update, Merge, Filter 的确切输入签名与执行边界，并为双轨管线 (Dual-Track Pipeline) 构建了架构指南。
+sub_gates:
+  - id: MEM-1.2
+    title: "算子体系设计落地"
+    status: passed
+    criteria:
+      - "产出 Update/Merge/Filter 的接口规范"
+      - "涵盖时间与访问频率的遗忘淘汰算法说明"
+    evidence:
+      - ".omo/_knowledge/designs/2026-06-13-memtheta-operators.md"
+gate: Gate MEM-1.2
+gate_status: passed
+gate_closed_at: "2026-06-13T07:40:00Z"
