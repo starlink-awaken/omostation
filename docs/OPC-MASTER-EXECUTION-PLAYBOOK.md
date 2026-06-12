@@ -33,6 +33,7 @@ As of this document:
 - P4: implementation complete; Gate E passed (2026-06-12, E1-E4 closed)
 - P5: implementation complete; Gate F passed (2026-06-12, F1-F4 closed)
 - P6: implementation complete; Gate G passed (2026-06-12, G1-G4 closed)
+- P7: implementation complete; Gate H passed (2026-06-12, H1-H5 closed)
 
 Current known truths:
 

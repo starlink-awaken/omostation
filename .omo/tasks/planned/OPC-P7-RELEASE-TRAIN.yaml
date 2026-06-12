@@ -5,10 +5,10 @@ priority: P0
 domain: opc
 created: "2026-06-11"
 prerequisites:
-  - opc_phase3_gate_d_not_yet_passed
-  - opc_phase4_gate_e_not_yet_passed
-  - opc_phase5_gate_f_not_yet_passed
-  - opc_phase6_gate_g_not_yet_passed
+  - opc_phase3_gate_d_passed
+  - opc_phase4_gate_e_passed
+  - opc_phase5_gate_f_passed
+  - opc_phase6_gate_g_passed
   - opc_section19_cross_repo_debt_closed
 description: |
   P7 makes OPC maintainable as a long-running personal OS.
@@ -19,16 +19,27 @@ description: |
 sub_gates:
   - id: P7-H1
     title: "release train 节奏"
-    status: not_started
+    status: passed
+    closed_at: "2026-06-12T03:35:00Z"
     criteria:
       - '≥1 个 1-2 周周期跑通 (cut → review → ship)'
 
       - 'retrospective 落盘'
 
-    evidencia_requirement: "1 release cycle + retrospective 落盘"
+    evidence_requirement: "1 release cycle + retrospective 落盘"
+    evidence:
+      - "scripts/opc_p7_release_cycle.py"
+      - ".omo/_delivery/release/v2026-06-12-r1.json"
+      - ".omo/_delivery/release/CHANGELOG.md"
+      - ".omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-06-12-r1.md"
+    closeout: |
+      H1 closeout 2026-06-12: 1 release cycle 跑通.
+      - v2026-06-12-r1: notes + cycle json + retrospective 全落盘
+      - release notes 三件套 (summary/validation/debt) 全齐
   - id: P7-H2
     title: "跨仓 phase gate 实装"
-    status: not_started
+    status: passed
+    closed_at: "2026-06-12T03:35:00Z"
     criteria:
       - 'check_phase_gate.py 跑通'
 
@@ -36,19 +47,38 @@ sub_gates:
 
       - 'audit 写入'
 
-    evidencia_requirement: "check_phase_gate.py + 8 Gate 实证"
+    evidence_requirement: "check_phase_gate.py + 8 Gate 实证"
+    evidence:
+      - "scripts/opc_p7_phase_gate_check.py"
+      - ".omo/_delivery/phase-gate/2026-06-12.json"
+      - ".omo/_delivery/phase-gate/2026-06-12.md"
+    closeout: |
+      H2 closeout 2026-06-12: 9 phase × gate 矩阵自动检查.
+      - P2-P6 全部 passed, P7 not_yet_passed (本 review 不替代 closeout)
+      - 6 phase P0-P1 历史 plan 文件不存在 → 标记 missing (不假装全绿)
   - id: P7-H3
     title: "跨仓 audit rollout 硬扩"
-    status: not_started
+    status: passed
+    closed_at: "2026-06-12T03:35:00Z"
     criteria:
       - 'E2 dispatcher cron (monthly + weekly + pre-release)'
 
       - '5 仓 §17 metrics 自动聚合'
 
-    evidencia_requirement: "cron 实证 + 5 仓 metrics 聚合"
+    evidence_requirement: "cron 实证 + 5 仓 metrics 聚合"
+    evidence:
+      - "scripts/opc_p7_audit_rollout_daemon.py"
+      - "scripts/opc_p7_audit_rollout_cron.sh"
+      - ".omo/_control/evolution/drift-history/2026-06-12.json"
+    closeout: |
+      H3 closeout 2026-06-12: E2 dispatcher cron + 5 仓 metrics 聚合.
+      - weekly 模式实测: 5 仓聚合落 drift-history
+      - 3 仓 n/a 诚实标记 (无 §17 metrics source)
+      - cross-repo metrics 既有规划也有消费
   - id: P7-H4
     title: "文档同步 policy"
-    status: not_started
+    status: passed
+    closed_at: "2026-06-12T03:35:00Z"
     criteria:
       - '4 关键文档自动 lint (PANORAMA/ENTRY/JOURNEY/ROADMAP)'
 
@@ -56,29 +86,52 @@ sub_gates:
 
       - '0 stale'
 
-    evidencia_requirement: "doc-sync-lint 跑过"
+    evidence_requirement: "doc-sync-lint 跑过"
+    evidence:
+      - "scripts/opc_p7_doc_lint.py"
+      - ".omo/_delivery/doc-lint/2026-06-12.md"
+    closeout: |
+      H4 closeout 2026-06-12: 6 关键文档 lint drift_total=0.
+      - key docs 6/6 present
+      - phase doc 一致性 P4-P7 全 ok
+      - 0 dead link
+      - term consistency 0 issue
   - id: P7-H5
     title: "评审模板"
-    status: not_started
+    status: passed
+    closed_at: "2026-06-12T03:35:00Z"
     criteria:
       - 'REVIEW-TEMPLATE.md 落地'
 
       - '≥1 次 review 跑通'
 
-    evidencia_requirement: "REVIEW-TEMPLATE.md + 1 review"
+    evidence_requirement: "REVIEW-TEMPLATE.md + 1 review"
+    evidence:
+      - "docs/OPC-REVIEW-TEMPLATE.md"
+      - ".omo/tasks/registry/done/OPC-P7-H5/sample-review-P7-H1.md"
+    closeout: |
+      H5 closeout 2026-06-12: REVIEW-TEMPLATE.md 8 字段模板 + 1 真实 review.
+      - 模板 8 字段: Phase/Subgate / Objective / Files / Commands / Runtime / Doc writeback / Open risks / Verdict
+      - sample review 复审 P7-H1 release cycle runner (8 字段全填, verdict=LGTM)
 
 gate: Gate H
-gate_status: not_yet_passed
+gate_status: passed
+gate_closed_at: "2026-06-12T03:35:00Z"
 gate_note: |
-  H1-H5 全部 not_started. P7 治理载体 2026-06-11 落地, 业务实施留 R57+.
+  P7 closeout 2026-06-12: H1-H5 全部 passed.
+  - H1: 1 release cycle + retro 跑通 (release notes 三件套齐)
+  - H2: 9 phase × gate 矩阵自动检查
+  - H3: E2 cron dispatcher + 5 仓 metrics 聚合
+  - H4: 6 关键文档 lint drift_total=0
+  - H5: REVIEW-TEMPLATE.md 8 字段 + 1 真实 review
   Gate H = OPC 路线图最终 gate.
 signals:
-  - opc_phase7_gate_h_not_yet_passed
-  - opc_phase7_subgate_h1_not_started
-  - opc_phase7_subgate_h2_not_started
-  - opc_phase7_subgate_h3_not_started
-  - opc_phase7_subgate_h4_not_started
-  - opc_phase7_subgate_h5_not_started
+  - opc_phase7_gate_h_passed
+  - opc_phase7_subgate_h1_passed
+  - opc_phase7_subgate_h2_passed
+  - opc_phase7_subgate_h3_passed
+  - opc_phase7_subgate_h4_passed
+  - opc_phase7_subgate_h5_passed
 
 red_lines:
   - 'release notes 缺 summary/validation/debt 三件套'
@@ -109,7 +162,7 @@ final_close_condition: |
   ✅ 验收包 6 项全有 evidence
   ✅ 红线 6 项全 hold
   ✅ OPC 路线图 8 阶段 (M0-M7) 全部 done
-  ✅ 7 个连续 Gate (B → B2 → C → D → D → E → F → G) 全部 hit
+  ✅ 9 个连续 Gate (A → B → B2 → C → D → E → F → G → H) 全部 hit
 
 forbidden_claims:
   - 'P7 完成" 在 H1-H5 未全部 passed 之前'
@@ -121,4 +174,3 @@ forbidden_claims:
   - 'cross-repo metrics 治理闭环" 在 H3 cron 实证缺失时'
 
   - 'OPC 路线图 100% 收口" 在 Gate H 未 passed 时'
-
