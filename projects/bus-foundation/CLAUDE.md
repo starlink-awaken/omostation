@@ -65,3 +65,21 @@ from agora.bus import publish, BusEnvelope  # agora-only
 bus-foundation 接收 7 仓内采用 (omo, metaos, runtime, aetherforge, kairon-pipeline,
 llm-gateway, hermes-console) 作为 Condition 4 (eCOS-external usage) 的代理。
 详细条件见 `/Users/xiamingxing/Workspace/projects/agora/docs/ADR-0008-bus-foundation-strategy.md`。
+
+## Phase C 决策 (R70-R72, 2027-07 → 2027-09)
+
+**Phase C 评估结果: Path C (Defer Indefinitely)** — bus-foundation 不提升到 L0 协议层,
+继续保持 standalone repo 状态。
+
+触发再评估的条件 (5 硬条件中 Condition 4 真正外部采用时):
+- 0 → 1 个 external issue / PR referencing bus-foundation
+- 0 → 1 个 academic citation
+- 0 → 2 个 distinct organizations using as dep
+
+详见:
+- `docs/ADR-0002-phase-c-trigger-reality-DRAFT.md` — 3 路径分析
+- `.omo/_delivery/r70-monthly-evidence-2027-07-12.md` — R70 audit
+- `.omo/_delivery/r71-phase-c-recommendation-memo.md` — R71 推荐
+- `.omo/_delivery/r72-final-retrospective-2027-09-12.md` — R72 retrospective
+
+**未来改进走普通 feature work (bug fix / 新 backend / 新 helper),不经过 Phase D governance gate。**
