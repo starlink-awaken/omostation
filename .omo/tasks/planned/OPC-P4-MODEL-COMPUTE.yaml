@@ -1,11 +1,11 @@
 id: OPC-P4-MODEL-COMPUTE
 title: "OPC-P4: Model & Compute Plane"
-status: planned
+status: in_progress
 priority: P0
 domain: opc
 created: "2026-06-11"
 prerequisites:
-  - opc_phase3_gate_d_not_yet_passed       # P3 业务未收口, P4 业务实施 blocked (但治理载体建立可进行)
+  - opc_phase3_gate_d_passed
   - llm_gateway_repo_available
   - compute_mesh_repo_available
   - opc_p2_section5_boundaries_established
@@ -20,16 +20,16 @@ description: |
 sub_gates:
   - id: P4-E1
     title: "Model Registry SSOT (models.yaml in llm-gateway)"
-    status: not_started
+    status: passed
     criteria:
       - '≥3 provider × ≥2 model per provider'
 
       - '字段含 provider/model_id/context/cost/latency'
 
-    evidencia_requirement: "llm-gateway/src/llm_gateway/registry/models.yaml 落地 + ≥10 model"
+    evidence_requirement: "llm-gateway/src/llm_gateway/registry_data/models.yaml 落地 + ≥10 model"
   - id: P4-E2
     title: "Compute Mesh Worker Discovery"
-    status: not_started
+    status: passed
     criteria:
       - '≥1 worker (本地 ollama 或 stub) registered'
 
@@ -37,16 +37,32 @@ sub_gates:
 
       - '≥1 任务端到端 dispatch 成功'
 
-    evidencia_requirement: "compute-mesh worker registered + heartbeat trace"
+    evidence_requirement: "compute-mesh worker registered + heartbeat trace"
   - id: P4-E3
     title: "任务 budget policy 落地"
-    status: not_started
+    status: passed
+    closed_at: "2026-06-12T02:35:00Z"
     criteria:
       - '≥1 业务调用 (P3 D5 demo) 实测 budget 拒绝路径'
 
       - '触发 §19 debt register'
 
-    evidencia_requirement: "P3 D5 demo 跑通 + §19 debt register hit"
+    evidence_requirement: "P3 D5 demo 跑通 + §19 debt register hit"
+    evidence:
+      - ".omo/tasks/registry/done/OPC-P4-E3/evidence-package.md"
+      - ".omo/tasks/registry/done/OPC-P4-E3/budget-reject-summary.md"
+      - ".omo/debt/items/DEBT-OPC-P4-BUDGET-OPC-P4-BUDGET-DEMO.yaml"
+    closeout: |
+      E3 closeout 2026-06-12: budget policy governance hardened.
+      - 5 fields in route_info.budget_policy (task_id/budget_usd/estimated_cost_usd/model/debt_path)
+      - Debt file reuse policy: same task_id → same file, refresh in-place
+        with occurrence_count + first_seen_at + last_seen_at (no junk accumulation)
+      - 20/20 executor engine tests pass (3 new closeout tests added)
+      - scripts/opc_p4_budget_audit_demo.py exit=0, debt file produced
+    red_lines_followed:
+      - 'no business path bypassed llm-gateway'
+      - 'no traceback leaked — structured error dict returned'
+      - 'no debt file accumulation on repeat triggers'
   - id: P4-E4
     title: "跨仓 audit trail 归因"
     status: not_started
@@ -57,17 +73,30 @@ sub_gates:
 
       - 'omo audit-rollout 跨仓聚合'
 
-    evidencia_requirement: "audit trail + omo audit-rollout report 实证"
+    evidence_requirement: "audit trail + omo audit-rollout report 实证"
 
 gate: Gate E
 gate_status: not_yet_passed
 gate_note: |
-  E1-E4 全部 not_started. P4 治理载体 2026-06-11 落地, 业务实施留 R57+.
+  P4 implementation entry opened on 2026-06-12 after P3 Gate D passed.
+  E1 passed on 2026-06-12: static registry seeds + loader + CLI route landed,
+  and runtime executor `_call_llm()` now routes one real business path through
+  llm-gateway registry role selection.
+  E2 passed on 2026-06-12: compute-mesh now has a minimal worker registry,
+  5s heartbeat, and dispatch demo (`compute_mesh.api.cli worker-demo --json`).
+  E3 passed on 2026-06-12: budget policy governance closeout landed.
+  Engine `_call_llm()` enforces budget pre-provider-call, registers/refreshes
+  OMO debt at `.omo/debt/items/DEBT-OPC-P4-BUDGET-*.yaml`, exposes 5 governance
+  fields in `route_info.budget_policy` (task_id/budget_usd/estimated_cost_usd/
+  model/debt_path), and refuses budget overflow without raising tracebacks.
+  20/20 executor engine tests pass; evidence at
+  `.omo/tasks/registry/done/OPC-P4-E3/evidence-package.md`.
+  E4 remains not passed.
 signals:
   - opc_phase4_gate_e_not_yet_passed
-  - opc_phase4_subgate_e1_not_started
-  - opc_phase4_subgate_e2_not_started
-  - opc_phase4_subgate_e3_not_started
+  - opc_phase4_subgate_e1_passed
+  - opc_phase4_subgate_e2_passed
+  - opc_phase4_subgate_e3_passed
   - opc_phase4_subgate_e4_not_started
 
 red_lines:
@@ -83,13 +112,13 @@ red_lines:
 # Phase open / blocked / close (任务 4 readiness)
 phase_open_condition: |
   P4 可开始 当且仅当:
-  ✅ P3 D1+D2 passed (现状满足)
+  ✅ P3 Gate D passed
   ✅ llm-gateway 仓可用
   ✅ compute-mesh 仓可用
   ✅ OPC-P2 §19 跨仓债 E1-E4 收口 (现状满足)
-  ⏳ P3 Gate D 收口 (P3 D3-D5) — 不阻塞 P4 治理载体, 阻塞 P4 业务实施
+  ✅ P4 仅从 E1 起顺序推进
 phase_blocked_condition: |
-  ❌ P3 D1/D2 退回到 not_started (不允许回退)
+  ❌ P3 Gate D 退回到 not_yet_passed
   ❌ llm-gateway/compute-mesh 仓未拉取
 final_close_condition: |
   ✅ E1-E4 全部 runtime 实证
@@ -104,4 +133,3 @@ forbidden_claims:
   - '成本可视化" 在 E4 audit trail 归因未跑通之前'
 
   - 'business code 切到 llm-gateway— 这是 E3 实装后业务侧动作, 不属 P4 范围'
-
