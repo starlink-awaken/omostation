@@ -29,6 +29,7 @@ sub_gates:
       - '含 source + timestamp + next-action'
 
     evidence_requirement: "2 周周报 markdown + OMO planned task YAML"
+    note: "本轮推进: 配 opc-closeout-crontab Mon 09:00 weekly_loop, 4 份 ISO-week 报告 (W23/W24/W25/W26) 已落盘, 均为同日跑出. 复验要求 ≥2 周真实时间窗口, 待 Mon 09:00 cron 真实触发后 closeout."
   - id: P5-F2
     title: "work-assistant scenario"
     status: not_yet_passed
@@ -40,7 +41,11 @@ sub_gates:
       - '含 source + timestamp + next-action'
 
     evidence_requirement: "1 work query 输出 + 5 仓 audit trail"
-    closeout_pending: "F2 待 F1 cron 跑通后一起 closeout (F1 没真实 2 周, F2 不算完成)"
+    note: "本轮推进: 真实 query 'OPC P6 evolution loop retro plan' 跑通, returncode=0, draft.title/body/sections 三段齐 + audit_ref 关联 cockpit:research:audit. 缺 5 仓 audit trail 跨仓消费, 留 R57+ 范围."
+    pending_evidence:
+      query: "OPC P6 evolution loop retro plan"
+      generated_at: "2026-06-12T04:40:10Z"
+      audit_ref: "cockpit:research:audit:2026-06-12T04:40:10Z"
   - id: P5-F3
     title: "family-health scenario"
     status: not_yet_passed
@@ -52,7 +57,11 @@ sub_gates:
       - 'privacy_class=confidential'
 
     evidence_requirement: "1 family-health query 输出 + privacy 路径实证"
-    closeout_pending: "F3 待 F1 真实周跑通后再 closeout; 当前仅 schema 实证, 不算 1 次真实 query"
+    note: "本轮推进: 3 真实 query 三级全实证 (urgent 高烧/attention 复查/normal 体检), privacy_class=confidential 强制 + 3 red_lines_followed. 留 documents.db 实际 vault 写入留 R57+ 范围."
+    pending_evidence:
+      urgent_query: "孩子高烧 39 度已 3 天需要去医院吗"
+      attention_query: "本月奶奶血压复查要准备什么"
+      normal_query: "体检日程安排建议"
   - id: P5-F4
     title: "cockpit 统一入口"
     status: passed
