@@ -1,8 +1,8 @@
 # OPC-P4: Model & Compute Plane
 
-> Date: 2026-06-11 (last updated 2026-06-12 E3 closeout)
+> Date: 2026-06-11 (last updated 2026-06-12 E3 + E4 closeout)
 > Source: OPC-ROADMAP.md §M4, opc-roadmap-omo-plan.md §Phase 4
-> Status: E1-E3 passed; E4 in progress
+> Status: E1-E4 passed; Gate E 待 final review
 > Tracking: `.omo/tasks/planned/OPC-P4-MODEL-COMPUTE.yaml`
 
 ---
@@ -29,7 +29,7 @@ becomes the **only** worker discovery abstraction. Business code calls
 | P4-E1 | Model Registry SSOT | ✅ passed | `llm-gateway/src/llm_gateway/registry_data/models.yaml` 含 ≥3 provider × ≥2 model per provider, 字段含 provider/model_id/context/cost/latency；`runtime.executor.engine._call_llm()` 已通过 role route 接入 |
 | P4-E2 | Compute Mesh Worker Discovery | ✅ passed | `compute-mesh` ≥1 worker (本地 stub) registered, 5s heartbeat 跑通, ≥1 任务端到端 dispatch 成功 |
 | P4-E3 | 任务 budget policy 落地 | ✅ passed (2026-06-12 closeout) | 业务调用 (P3 D5 demo) 实测 budget 拒绝路径 + 触发 §19 debt register; `_call_llm()` 治理字段齐 5 项 (task_id/budget_usd/estimated_cost_usd/model/debt_path); 20/20 executor engine tests pass; 复用策略: 同 task_id = 同 debt ID + occurrence_count/first_seen_at 持久; evidence: `.omo/tasks/registry/done/OPC-P4-E3/evidence-package.md` |
-| P4-E4 | 跨仓 audit trail 归因 | 📋 not_started | 每次 LLM 调用写入 `llm-gateway/audit/...`, 含 task_id/role/model/cost/latency, omo audit-rollout 跨仓聚合 |
+| P4-E4 | 跨仓 audit trail 归因 | ✅ passed (2026-06-12 closeout) | 每次 LLM 调用写入 `llm-gateway/audit/llm_calls.jsonl` (fcntl 进程锁); `LLMCallAuditRecord` Pydantic schema 强制 8 必填字段 (task_id/role/provider/model/input_tokens/output_tokens/total_cost_usd/latency_ms) + ts/route/metadata; 5/5 llm-gateway P4 audit tests pass; omo audit-rollout 跨仓聚合 (workspace R0 + omo n/a); evidence: `.omo/tasks/registry/done/OPC-P4-E4/evidence-package.md` + `audit-rollout-summary.md` + `llm-audit-sample.json` |
 
 ## Gate Status
 
@@ -46,12 +46,12 @@ becomes the **only** worker discovery abstraction. Business code calls
 
 ## Acceptance Package (E1-E4 全部 passed 所需)
 
-1. `llm-gateway/src/llm_gateway/registry_data/models.yaml` 落地
-2. `llm-gateway/src/llm_gateway/registry_data/role_routes.yaml` 落地
-3. `compute-mesh` 至少 1 worker registered + heartbeat 实证
-4. ≥1 P3 D5 demo task 跑通, audit trail 含 cost/latency/model
-5. 跨仓 omo audit-rollout 报告含 4 仓 §17 metrics
-6. 红线全部 hold (无 business module 绕过 llm-gateway)
+1. `llm-gateway/src/llm_gateway/registry_data/models.yaml` 落地 ✅
+2. `llm-gateway/src/llm_gateway/registry_data/role_routes.yaml` 落地 ✅
+3. `compute-mesh` 至少 1 worker registered + heartbeat 实证 ✅
+4. ≥1 P3 D5 demo task 跑通, audit trail 含 cost/latency/model ✅
+5. 跨仓 omo audit-rollout 报告含 4 仓 §17 metrics ✅ (workspace R0 + omo n/a 显式)
+6. 红线全部 hold (无 business module 绕过 llm-gateway) ✅
 
 ## Phase Open Condition (任务 4 readiness)
 
@@ -99,7 +99,15 @@ P4 **final close condition** (Gate E passed):
   - 20/20 `projects/runtime/tests/test_executor_engine.py` pass (3 新增 closeout 测试)
   - `scripts/opc_p4_budget_audit_demo.py` 跑通, debt 文件落 `.omo/debt/items/DEBT-OPC-P4-BUDGET-OPC-P4-BUDGET-DEMO.yaml`
   - 完整证据包: `.omo/tasks/registry/done/OPC-P4-E3/evidence-package.md`
-- Gate E 仍未 passed，因为 E4 尚未落地
+- E4 closeout (2026-06-12): LLM audit trail 跨仓归因闭环
+  - `LLMCallAuditRecord` Pydantic schema 强制 8 必填字段: task_id/role/provider/model/input_tokens/output_tokens/total_cost_usd/latency_ms (+ ts UTC Z + route + metadata)
+  - 空字符串 task_id/role 触发 ValueError (schema-level guard, 防止 contributor 静默丢字段)
+  - `_append_jsonl()` 用 fcntl 进程锁保证并发写安全
+  - 5/5 `projects/llm-gateway/tests/test_phase4_budget_and_audit.py` 通过 (3 新增 closeout 测试: schema 全字段声明 / 空字符串拒绝 / 跨 task_id 归因)
+  - 真实 audit 样本: `opc-p4-audit-demo` task → 1 条 record, 11 字段齐全
+  - `omo audit-rollout` 跨仓聚合 (`workspace:.` + `omo:projects/omo`): workspace R0 (density=0.0, 1535/2080 drift 主要是 §19 历史债) + omo n/a (子仓缺 §17 dispatcher 入口, **显式诚实标记, 非虚假绿**)
+  - 完整证据: `.omo/tasks/registry/done/OPC-P4-E4/evidence-package.md` + `audit-rollout-summary.md` + `llm-audit-sample.json`
+- Gate E 仍 **not_yet_passed** (E1-E4 全部 passed, 但 final review 待人工签发, 避免技术单方面宣布 Gate 通过)
 
 ## Evidence Snapshot
 
@@ -126,11 +134,11 @@ P4 **final close condition** (Gate E passed):
 ## Signal
 
 ```
-opc_phase4_gate_e_not_yet_passed
+opc_phase4_gate_e_not_yet_passed        # final review 待人工签发
 opc_phase4_subgate_e1_passed
 opc_phase4_subgate_e2_passed
-opc_phase4_subgate_e3_passed       # 2026-06-12 closeout
-opc_phase4_subgate_e4_not_started
+opc_phase4_subgate_e3_passed
+opc_phase4_subgate_e4_passed
 ```
 
 (待 E1-E4 全部 passed 后 emit `opc_phase4_gate_e_passed`)

@@ -65,7 +65,8 @@ sub_gates:
       - 'no debt file accumulation on repeat triggers'
   - id: P4-E4
     title: "跨仓 audit trail 归因"
-    status: not_started
+    status: passed
+    closed_at: "2026-06-12T02:48:00Z"
     criteria:
       - '每次 LLM 调用写入 llm-gateway/audit/...'
 
@@ -74,6 +75,25 @@ sub_gates:
       - 'omo audit-rollout 跨仓聚合'
 
     evidence_requirement: "audit trail + omo audit-rollout report 实证"
+    evidence:
+      - ".omo/tasks/registry/done/OPC-P4-E4/evidence-package.md"
+      - ".omo/tasks/registry/done/OPC-P4-E4/audit-rollout-summary.md"
+      - ".omo/tasks/registry/done/OPC-P4-E4/llm-audit-sample.json"
+    closeout: |
+      E4 closeout 2026-06-12: LLM audit trail 跨仓归因闭环.
+      - Pydantic schema (LLMCallAuditRecord) 强制 8 必填字段:
+        task_id/role/provider/model/input_tokens/output_tokens/total_cost_usd/latency_ms
+        + ts (UTC Z) / route / metadata
+      - 空字符串 task_id/role 触发 ValueError (schema-level guard)
+      - fcntl 进程锁保证 jsonl 并发写安全
+      - 5/5 llm-gateway P4 audit 测试通过 (3 新增 closeout 测试)
+      - omo audit-rollout 跨仓聚合: workspace R0 (density=0.0) + omo n/a
+        (子仓缺 §17 dispatcher 入口, 显式诚实标记, 非虚假绿)
+      - 真实 audit 样本: llm-audit-sample.json = 1 条 record (task_id=opc-p4-audit-demo)
+    red_lines_followed:
+      - 'audit-rollout 不假装全绿 (omo n/a 诚实标记)'
+      - 'sample.json 是从 demo 跑后真实 jsonl 复制, 非手写 fixture'
+      - 'drift 比例 73.8% 属 §19 历史债, 不在 E4 关账范围'
 
 gate: Gate E
 gate_status: not_yet_passed
@@ -91,13 +111,19 @@ gate_note: |
   model/debt_path), and refuses budget overflow without raising tracebacks.
   20/20 executor engine tests pass; evidence at
   `.omo/tasks/registry/done/OPC-P4-E3/evidence-package.md`.
-  E4 remains not passed.
+  E4 passed on 2026-06-12: LLM audit trail 跨仓归因闭环.
+  `LLMCallAuditRecord` Pydantic schema 强制 8 必填字段
+  (task_id/role/provider/model/input_tokens/output_tokens/total_cost_usd/latency_ms)
+  + ts/route/metadata. fcntl 进程锁保证 jsonl 并发写安全. 5/5 llm-gateway
+  P4 audit 测试通过. omo audit-rollout 跨仓聚合: workspace R0 (density=0.0)
+  + omo 子仓 n/a (显式诚实标记). 真实 audit 样本: task_id=opc-p4-audit-demo.
+  证据: `.omo/tasks/registry/done/OPC-P4-E4/evidence-package.md`.
 signals:
-  - opc_phase4_gate_e_not_yet_passed
+  - opc_phase4_gate_e_not_yet_passed   # Gate E 仍 not_yet_passed 等人工 final review
   - opc_phase4_subgate_e1_passed
   - opc_phase4_subgate_e2_passed
   - opc_phase4_subgate_e3_passed
-  - opc_phase4_subgate_e4_not_started
+  - opc_phase4_subgate_e4_passed       # 2026-06-12 E4 closeout
 
 red_lines:
   - 'business module 直接 import openai/anthropic/vertexai'
