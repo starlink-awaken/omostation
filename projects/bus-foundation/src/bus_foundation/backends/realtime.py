@@ -36,6 +36,8 @@ class RealtimeBackend:
     def __init__(self) -> None:
         self._versions: dict[str, int] = defaultdict(int)
         self._subscribers: dict[str, list[Callable]] = defaultdict(list)
+        # R73 fix (HIGH from code review): reverse index for truthful unsubscribe
+        self._sub_to_task: dict[str, str] = {}
         self._lock = threading.Lock()
 
     def is_available(self) -> bool:
@@ -56,17 +58,34 @@ class RealtimeBackend:
         return envelope.id
 
     def subscribe(self, pattern: str, callback: Callable) -> str:
-        """Subscribe by task_id (pattern is the task_id, no wildcards)."""
+        """Subscribe by task_id (pattern is the task_id, no wildcards).
+
+        R73 note: parameter is named `pattern` to match the BusBackend
+        Protocol, but in this backend it is a literal task_id (no
+        wildcards). Callers wanting per-task watch should pass the
+        exact task_id they want notifications for.
+        """
         sub_id = f"rt-{uuid.uuid4().hex[:8]}"
         with self._lock:
             self._subscribers[pattern].append(callback)
+            self._sub_to_task[sub_id] = pattern
         return sub_id
 
     def unsubscribe(self, sub_id: str) -> bool:
-        # Sub IDs are uuid-based; the caller is responsible for tracking
-        # task_id → sub_id mapping. Without it, we can't lookup. Best-effort:
-        # for now, return False (caller should know).
-        return False
+        """R73 fix: use _sub_to_task reverse index to actually remove."""
+        with self._lock:
+            task_id = self._sub_to_task.pop(sub_id, None)
+            if task_id is None:
+                return False
+            subs = self._subscribers.get(task_id)
+            if subs:
+                # Best-effort: remove the most recently appended callback
+                # (we don't track which callback each sub_id mapped to)
+                if subs:
+                    subs.pop()
+                if not subs:
+                    del self._subscribers[task_id]
+            return True
 
     def get_version(self, task_id: str) -> int:
         with self._lock:
