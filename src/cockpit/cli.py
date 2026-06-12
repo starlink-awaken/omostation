@@ -290,6 +290,33 @@ def main() -> int:
     mof_p = sub.add_parser("mof", help="MOF 元模型操作 (委派 mof CLI)")
     mof_p.add_argument("extra", nargs=argparse.REMAINDER, help="传递给 mof 的参数")
 
+    # OPC P5-F4: 统一 scenario 入口 — 用户无需理解仓边界
+    scenario_p = sub.add_parser(
+        "scenario",
+        help="P5 统一 scenario 入口 (radar/assistant/health)",
+    )
+    scenario_sub = scenario_p.add_subparsers(
+        dest="scenario_sub", parser_class=WorkspaceParser
+    )
+    scenario_radar = scenario_sub.add_parser(
+        "radar", help="P5-F1 technical-radar: 扫描研究活动, 产出 ≥3 upgrade candidates"
+    )
+    scenario_radar.add_argument(
+        "--limit", type=int, default=10, help="最多产出多少 candidates (默认 10, 红线 ≥3)"
+    )
+    scenario_assistant = scenario_sub.add_parser(
+        "assistant", help="P5-F2 work-assistant: 1 真实工作 query → 结构化草稿"
+    )
+    scenario_assistant.add_argument(
+        "--query", type=str, default="OPC P5 progress", help="真实工作 query"
+    )
+    scenario_health = scenario_sub.add_parser(
+        "health", help="P5-F3 family-health: 1 真实家庭健康 query → 3 级 next-action (privacy=confidential)"
+    )
+    scenario_health.add_argument(
+        "--query", type=str, default="日常家庭健康问询", help="真实家庭健康 query"
+    )
+
     # Gap #7: MetaOS 工作流编排入口
     wf_p = sub.add_parser("workflow", help="🧠 MetaOS 工作流编排（动态规划 / 执行 / 历史）")
     wf_p.add_argument("workflow_args", nargs="*", help="workflow 子命令和参数")
@@ -498,6 +525,11 @@ def main() -> int:
         from cockpit.commands.mof import cmd_mof
 
         return cmd_mof(args)
+
+    if args.command == "scenario":
+        from cockpit.commands.scenario import cmd_scenario
+
+        return cmd_scenario(args)
 
     console.print(
         Panel.fit(
