@@ -122,3 +122,8 @@ governance-data:
 
 debt-leaderboard:
 	bash scripts/debt-leaderboard.sh
+
+# ── 治理查询 ────────────────────────────────────────────────────────────────────
+
+governance-query:
+	python3 scripts/governance-query.py all
