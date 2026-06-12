@@ -27,11 +27,17 @@ def _workspace_root() -> Path:
 
 
 def _research_db_path() -> Path:
-    """Resolve cockpit research DB across the two known locations."""
+    """Resolve cockpit research DB across the two known locations.
+
+    No hard-coded ``/Users/xiamingxing/Workspace`` fallback: the workspace
+    root is derived from ``$WORKSPACE`` first, then ``Path.cwd()``, then
+    ``Path.home() / .workspace`` (the cockpit home convention). This keeps
+    the script portable across users and machines, and respects the
+    Playbook's "no hard-coded ``~/Workspace``" rule.
+    """
     candidates = [
         Path.home() / ".workspace" / "data.db",
         _workspace_root() / "data" / "db" / "research.db",
-        Path("/Users/xiamingxing/Workspace") / "data" / "db" / "research.db",
     ]
     for c in candidates:
         if c.exists():
