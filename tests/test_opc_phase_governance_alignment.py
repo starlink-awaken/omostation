@@ -92,21 +92,33 @@ def test_p5_prerequisite_signal_now_satisfied():
     assert p5["prerequisites"][1] == "opc_phase4_gate_e_passed"
 
 
-def test_p6_gate_g_three_way_alignment_closed_2026_06_12():
-    """P6 closeout: Gate G must be passed consistently across docs/omo-tests/projects."""
+def test_p6_gate_g_three_way_alignment_consistent_with_plan():
+    """P6 status 必须与 plan yaml 一致; 复验后 not_yet_passed 也要一致."""
     plan = _read_yaml(".omo/tasks/planned/OPC-P6-EVOLUTION-LOOP.yaml")
     playbook = _read("docs/OPC-MASTER-EXECUTION-PLAYBOOK.md")
 
-    assert plan["gate"] == "Gate G"
-    assert plan["gate_status"] == "passed"
-    assert "gate_closed_at" in plan
-
     g_statuses = {sg["id"]: sg["status"] for sg in plan["sub_gates"] if sg.get("id", "").startswith("P6-G")}
-    expected = {f"P6-G{i}": "passed" for i in range(1, 5)}
-    assert g_statuses == expected, f"P6 G1-G4 not all passed: {g_statuses}"
+    assert len(g_statuses) == 4, f"应该 4 个 P6-G sub-gate, 实际 {len(g_statuses)}"
 
-    assert "P6: implementation complete; Gate G passed (2026-06-12, G1-G4 closed)" in playbook
-    assert "P6: opened for implementation" not in playbook
+    # 无论 plan 是 passed 还是 not_yet_passed, signals 必须一致
+    if plan.get("gate_status") == "not_yet_passed":
+        assert all(
+            s == "not_yet_passed" for s in g_statuses.values()
+        ), f"P6 not_yet_passed 但 sub-gate 状态非全 not_yet_passed: {g_statuses}"
+        # playbook 必须说 P6 仍 in progress, 不假装 passed
+        assert "P6: opened for implementation; Gate G in progress" in playbook, (
+            f"playbook 应反映 P6 not_yet_passed 状态: \n{playbook[:1000]}"
+        )
+        # gate_status=not_yet_passed 必须有匹配的 not_yet_passed signal
+        assert any(
+            "gate_g_not_yet_passed" in sig for sig in plan.get("signals", [])
+        ), "P6 not_yet_passed 但缺 gate_g_not_yet_passed signal"
+        return
+
+    # passed 路径 (历史回放, 当前没启用)
+    assert plan["gate_status"] == "passed"
+    expected = {f"P6-G{i}": "passed" for i in range(1, 5)}
+    assert g_statuses == expected
 
 
 def test_p6_self_evolution_tasks_only_in_planned_directory():
@@ -139,19 +151,52 @@ def test_p6_drift_detector_covers_all_four_kinds():
 
 
 def test_p7_gate_h_three_way_alignment_closed_2026_06_12():
-    """P7 closeout: Gate H must be passed consistently across docs/omo-tests/projects."""
+    """P7 status 必须与 plan yaml + 自身 phase-gate 报告一致.
+
+    2026-06-12 复验: H2 closeout 自身 phase-gate 报告反证 (P7 not_yet_passed).
+    防止 task yaml 标 passed 但 phase-gate 报告说不 passed 的自相矛盾.
+    """
     plan = _read_yaml(".omo/tasks/planned/OPC-P7-RELEASE-TRAIN.yaml")
     playbook = _read("docs/OPC-MASTER-EXECUTION-PLAYBOOK.md")
 
-    assert plan["gate"] == "Gate H"
-    assert plan["gate_status"] == "passed"
-    assert "gate_closed_at" in plan
-
     h_statuses = {sg["id"]: sg["status"] for sg in plan["sub_gates"] if sg.get("id", "").startswith("P7-H")}
-    expected = {f"P7-H{i}": "passed" for i in range(1, 6)}
-    assert h_statuses == expected, f"P7 H1-H5 not all passed: {h_statuses}"
+    assert len(h_statuses) == 5, f"应该 5 个 P7-H sub-gate, 实际 {len(h_statuses)}"
 
-    assert "P7: implementation complete; Gate H passed (2026-06-12, H1-H5 closed)" in playbook
+    # 自洽: phase-gate 报告里 P7 | Gate H | not_yet_passed,
+    # 则 plan.yaml 的 gate_status 也必须 not_yet_passed
+    phase_gate_path = ROOT / ".omo" / "_delivery" / "phase-gate" / "2026-06-12.md"
+    if phase_gate_path.exists():
+        gate_report = phase_gate_path.read_text(encoding="utf-8")
+        report_says_p7_not_passed = "P7 | Gate H | not_yet_passed" in gate_report
+        report_says_p7_passed = "P7 | Gate H | passed" in gate_report
+        if report_says_p7_not_passed:
+            # 报告说 P7 没 passed → plan 不能说 passed
+            assert plan.get("gate_status") != "passed", (
+                "phase-gate 报告说 P7 not_yet_passed, 但 plan.yaml gate_status=passed. 自相矛盾."
+            )
+        if report_says_p7_passed:
+            assert plan.get("gate_status") == "passed", (
+                "phase-gate 报告说 P7 passed, 但 plan.yaml gate_status != passed. "
+                "自相矛盾."
+            )
+
+    if plan.get("gate_status") == "not_yet_passed":
+        # 当前状态: 复验后回退, H5 单独 passed, H1-H4 not_yet_passed
+        assert any(
+            s == "passed" for s in h_statuses.values()
+        ), f"当前应至少 H5 passed: {h_statuses}"
+        assert "P7: opened for implementation; Gate H in progress" in playbook
+        # gate_status=not_yet_passed 必须有匹配的 not_yet_passed signal
+        # (允许混有 passed sub-gate signal 如 h5_passed)
+        assert any(
+            "gate_h_not_yet_passed" in sig for sig in plan.get("signals", [])
+        ), "P7 not_yet_passed 但缺 gate_h_not_yet_passed signal"
+        return
+
+    # 历史回放路径
+    assert plan["gate_status"] == "passed"
+    expected = {f"P7-H{i}": "passed" for i in range(1, 6)}
+    assert h_statuses == expected
 
 
 def test_p7_release_cycle_runner_wrote_three_artifacts():
