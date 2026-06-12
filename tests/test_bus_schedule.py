@@ -15,12 +15,15 @@ class TestSchedule:
         def fn() -> None:
             pass
 
-        # Job should be registered in croniter backend
-        from agora.bus import _croniter
-        assert len(_croniter._jobs) >= 1
+        # Job should be registered in bus-foundation's croniter backend
+        # (the new public surface — bus-foundation owns _jobs internally)
+        import bus_foundation
+
+        croniter = bus_foundation._backends["croniter"]
+        assert len(croniter._jobs) >= 1
         # Find our job
         found = any(
-            cron_expr == "every 1h" for cron_expr, _, _ in _croniter._jobs.values()
+            cron_expr == "every 1h" for cron_expr, _, _ in croniter._jobs.values()
         )
         assert found
 

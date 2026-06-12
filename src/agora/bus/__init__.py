@@ -1,24 +1,48 @@
-"""agora.bus — unified bus interface (Phase A.1, R60 adds SSE)."""
+"""agora.bus — backward-compat alias for bus-foundation (Phase B, R69).
+
+Public API (publish / subscribe / schedule / BusEnvelope / EventType) is
+re-exported from `bus_foundation` (the new home of the bus, R66).
+
+The premium agora-specific backends (persistent EventBusBackend wrapping
+`agora.core.event_bus` + global `sse_manager` SSEBackend) remain in
+`agora.bus.backends.*` for in-agora use only.
+
+Migration: new code should `from bus_foundation import ...` directly. The
+`agora.bus` alias is kept for one minor release (0.x.0 → 0.x+1.0) and
+will emit a DeprecationWarning in 0.x+1.0.
+
+Architecture (frozen per ADR-0008):
+    envelope.py / router.py / dlq.py / backends/base.py — DO NOT TOUCH
+    backends/eventbus.py / backends/sse.py / backends/croniter.py /
+        backends/asyncio.py / backends/messagebus.py — agora-specific,
+        kept for premium use, also re-exported from bus_foundation
+"""
 from __future__ import annotations
 
 import logging
-from typing import Callable
+import warnings
 
-from agora.bus.backends.croniter import CroniterBackend
-from agora.bus.backends.eventbus import EventBusBackend
-from agora.bus.dlq import DLQ
-from agora.bus.envelope import BusEnvelope, EventType
-from agora.bus.router import Router
+# Re-export the public API from bus-foundation. envelope.py / router.py / dlq.py
+# / backends/base.py are FROZEN per ADR-0008 and not imported here — we delegate
+# to bus_foundation for them.
+from bus_foundation import (
+    BusEnvelope,
+    EventType,
+    publish,
+    schedule,
+    subscribe,
+)
 
-logger = logging.getLogger(__name__)
+# Also expose the new package's Router / DLQ for any code that imports them via
+# `from agora.bus import Router` (they will be removed in 0.x+1.0).
+from bus_foundation import DLQ, Router
 
-# Multi-backend: route by envelope.backend, default = eventbus
-# SSE backend (R60): registered lazily so agora.sse import does not block
-# the bus facade cold start in environments where SSE is unused.
-_backends: dict[str, object] = {
-    "eventbus": EventBusBackend(),
-    "croniter": CroniterBackend(),
-}
+# Premium agora-specific backends (NOT in bus-foundation; live in agora.bus.backends).
+# We import them under their original names so existing code keeps working.
+from agora.bus.backends.croniter import CroniterBackend  # noqa: F401
+from agora.bus.backends.eventbus import EventBusBackend  # noqa: F401
+
+# Lazy import for SSE backend (cold-start perf).
 _sse_registered = False
 
 
@@ -29,79 +53,32 @@ def _ensure_sse_registered() -> None:
     try:
         from agora.bus.backends.sse import SSEBackend  # noqa: WPS433
 
-        _backends["sse"] = SSEBackend()
         _sse_registered = True
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
+        logger = logging.getLogger(__name__)
         logger.warning("bus_sse_register_skipped err=%s", e)
 
 
-_croniter = _backends["croniter"]  # expose for schedule() to use
+logger = logging.getLogger(__name__)
 
-# Default router uses eventbus
-_default_backend = _backends["eventbus"]
-_default_dlq = DLQ()
-_router = Router(backend=_default_backend, dlq=_default_dlq)
-
-# Start croniter scheduler thread
-_croniter.start()
-
-__all__ = ["BusEnvelope", "EventType", "publish", "subscribe", "schedule"]
-
-
-def publish(envelope: BusEnvelope) -> str:
-    """Publish via the appropriate backend (envelope.backend, default eventbus)."""
-    backend_name = getattr(envelope, "backend", None) or "eventbus"
-    # Lazy-load SSE backend on first publish() call (R60: keep cold start fast).
-    if backend_name == "sse":
-        _ensure_sse_registered()
-    backend = _backends.get(backend_name)
-    if backend is None:
-        # Unknown backend — fall through to default router + DLQ
-        return _router.publish(envelope)
-    if not backend.is_available():
-        _default_dlq.enqueue(
-            event_id=envelope.id,
-            backend=backend_name,
-            envelope_json=envelope.to_json(),
-            error="backend unavailable",
-        )
-        return envelope.id
-    try:
-        return backend.publish(envelope)
-    except Exception as e:
-        _default_dlq.enqueue(
-            event_id=envelope.id,
-            backend=backend_name,
-            envelope_json=envelope.to_json(),
-            error=str(e),
-        )
-        return envelope.id
+__all__ = [
+    "BusEnvelope",
+    "EventType",
+    "DLQ",
+    "Router",
+    "publish",
+    "subscribe",
+    "schedule",
+    "EventBusBackend",
+    "CroniterBackend",
+]
 
 
-def subscribe(pattern: str) -> Callable:
-    """Decorator: register a subscriber for a pattern (uses eventbus backend)."""
-
-    def decorator(fn: Callable) -> Callable:
-        sub_id = _default_backend.subscribe(pattern, fn)
-        logger.warning("bus_subscribed: pattern=%s sub_id=%s fn=%s", pattern, sub_id, fn.__name__)
-        return fn
-
-    return decorator
-
-
-def schedule(expr: str) -> Callable:
-    """Decorator: schedule a recurring task.
-
-    Usage:
-        @schedule("every 5m")
-        def heartbeat() -> None: ...
-    """
-    if not isinstance(expr, str):
-        raise TypeError(f"schedule expression must be str, got {type(expr)}")
-
-    def decorator(fn: Callable) -> Callable:
-        sub_id = _croniter.subscribe(expr, fn)
-        logger.warning("bus_scheduled: expr=%s sub_id=%s fn=%s", expr, sub_id, fn.__name__)
-        return fn
-
-    return decorator
+# Emit a one-shot deprecation hint on first import.
+warnings.warn(
+    "agora.bus is now a backward-compat alias for bus_foundation (R69). "
+    "New code should `from bus_foundation import publish, BusEnvelope, ...`. "
+    "Premium agora-specific backends remain in `agora.bus.backends.*`.",
+    DeprecationWarning,
+    stacklevel=2,
+)
