@@ -28,6 +28,9 @@ agora 现在有 8 套机制并存 (EventBus, MessageBus, cron, SSE, WS, TaskSync
 4. **≥1 个 eCOS 之外的项目使用**
    - 测量: GitHub issue / PR 数量 ≥ 1, by non-contributor
    - 频率: 持续
+   - **R63 amendment**: 包含 HTTP / MCP 消费者 (hermes-console TS HTTP adapter 这种)
+     — `Condition 1b: ≥1 HTTP / MCP consumer` 补充检查 (script 算 Python `from agora.bus`,
+     实际 TS adapter 走 HTTP/MCP 不算, 但仍证明 API stability)
 
 5. **bus 改动频率 ≥ agora 主体 50%**
    - 测量: `git log --since="6 months ago" -- projects/agora/src/agora/bus/ | wc -l` ≥ `git log --since="6 months ago" -- projects/agora/src/agora/ | wc -l` * 0.5
