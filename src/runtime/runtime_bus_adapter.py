@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from typing import Callable
 
-from agora.bus import schedule as bus_schedule
+from bus_foundation import schedule as bus_schedule
 
 logger = logging.getLogger(__name__)
 

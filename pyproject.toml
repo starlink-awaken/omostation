@@ -19,6 +19,7 @@ dependencies = [
     # import: from llm_gateway.detection import detect_backends
     "aetherforge-gateway",
     "agora",
+    "bus-foundation",
 ]
 
 [project.scripts]
@@ -36,6 +37,7 @@ where = ["src"]
 [tool.uv.sources]
 aetherforge-gateway = { path = "../aetherforge/packages/gateway" }
 agora = { path = "../agora" }
+bus-foundation = { path = "../bus-foundation" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
