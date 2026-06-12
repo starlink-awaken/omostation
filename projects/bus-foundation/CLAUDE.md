@@ -3,6 +3,12 @@
 > Standalone Python package providing the unified bus interface for omostation.
 > Split from `agora/bus/` in Phase B (R66) per ADR-0008.1.
 
+## Owner / Maintainers
+
+- **Primary owner**: 夏 (Xia Mingxing)
+- **Maintainers**: omostation bus-foundation team (see `OWNERS.md`)
+- **Decision protocol**: see `OWNERS.md` (1 reviewer for patch, 2 for minor, 2+ADR for major)
+
 ## 项目身份
 
 bus-foundation 是 eCOS 跨项目共用的事件总线基础库。它的关键边界:
