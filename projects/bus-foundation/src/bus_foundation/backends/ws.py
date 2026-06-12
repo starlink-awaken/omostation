@@ -40,6 +40,12 @@ class WebSocketBackend:
         self._clients: dict[str, tuple[str, asyncio.Queue[BusEnvelope], asyncio.Task]] = {}
 
     def is_available(self) -> bool:
+        """R74 fix: documented honest semantics.
+
+        Returns True unconditionally (matches asyncio / sse / croniter
+        pattern). The actual delivery still requires a running event
+        loop; subscribe() will log a warning if called without one.
+        """
         try:
             asyncio.get_running_loop()
             return True

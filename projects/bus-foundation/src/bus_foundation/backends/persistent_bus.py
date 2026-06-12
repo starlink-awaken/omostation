@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Any
 
 from bus_foundation.envelope import BusEnvelope
+from bus_foundation.backends.pattern_match import match_pattern
 
 logger = logging.getLogger(__name__)
 
@@ -127,26 +128,27 @@ class PersistentBusBackend:
 
     def subscribe(self, pattern: str, callback: Callable) -> str:
         sub_id = f"persistent-{uuid.uuid4().hex[:8]}"
-        self._subscribers[sub_id] = (pattern, time.time(), callback)
+        self._subscribers[sub_id] = (pattern, time.monotonic(), callback)
         return sub_id
 
     def unsubscribe(self, sub_id: str) -> bool:
         return self._subscribers.pop(sub_id, None) is not None
 
     def _cleanup_subs(self) -> None:
-        """Drop subscribers that haven't been seen in SUBSCRIBER_TTL_SECONDS."""
-        now = time.time()
+        """Drop subscribers that haven't been seen in SUBSCRIBER_TTL_SECONDS.
+
+        R74 fix: use time.monotonic() for TTL delta (right call for elapsed
+        time; immune to system clock changes).
+        """
+        now = time.monotonic()
         expired = [sid for sid, (_, _last, _) in self._subscribers.items() if now - _last > SUBSCRIBER_TTL_SECONDS]
         for sid in expired:
             del self._subscribers[sid]
 
     @staticmethod
     def _match(pattern: str, event_type: str) -> bool:
-        if pattern == "*":
-            return True
-        if pattern.endswith("*"):
-            return event_type.startswith(pattern[:-1])
-        return pattern == event_type
+        # R74 LOW fix: delegate to shared helper (deduplicates 6 copies)
+        return match_pattern(pattern, event_type)
 
     def get_recent(self, event_type: str = "", limit: int = 100) -> list[dict[str, Any]]:
         """Query historical events (for catch-up on restart)."""

@@ -58,12 +58,11 @@ class RealtimeBackend:
         return envelope.id
 
     def subscribe(self, pattern: str, callback: Callable) -> str:
-        """Subscribe by task_id (pattern is the task_id, no wildcards).
+        """Subscribe by task_id (parameter is named `pattern` for Protocol
+        compat, but in this backend it is a literal task_id — no wildcards).
 
-        R73 note: parameter is named `pattern` to match the BusBackend
-        Protocol, but in this backend it is a literal task_id (no
-        wildcards). Callers wanting per-task watch should pass the
-        exact task_id they want notifications for.
+        R74 docstring clarification: callers wanting per-task watch
+        should pass the exact task_id they want notifications for.
         """
         sub_id = f"rt-{uuid.uuid4().hex[:8]}"
         with self._lock:
