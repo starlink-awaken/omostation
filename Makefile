@@ -107,3 +107,8 @@ doc-lint:
 governance-dashboard:
 	python3 scripts/generate-governance-dashboard.py -o governance-report.html
 	@echo "打开: open governance-report.html"
+
+# ── 债务审计 ────────────────────────────────────────────────────────────────────
+
+debt-audit:
+	bash scripts/debt-audit.sh
