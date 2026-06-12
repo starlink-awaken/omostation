@@ -52,7 +52,10 @@ becomes the **only** worker discovery abstraction. Business code calls
 2. `llm-gateway/src/llm_gateway/registry_data/role_routes.yaml` 落地 ✅
 3. `compute-mesh` 至少 1 worker registered + heartbeat 实证 ✅
 4. ≥1 P3 D5 demo task 跑通, audit trail 含 cost/latency/model ✅
-5. 跨仓 omo audit-rollout 报告含 4 仓 §17 metrics ✅ (workspace R0 + omo n/a 显式)
+5. 跨仓 omo audit-rollout 报告: 实际只聚合 2 仓 (workspace + omo), 含 4 仓 §17 metrics 暂未达到 ⚠️
+   - 当前: workspace R0 (density=0.0) + omo n/a 显式标记
+   - 待补: llm-gateway / compute-mesh / runtime 三仓的 §17 metrics dispatcher
+   - 2026-06-12 复验: "4 仓" 描述与实际 2 仓 rollout 报告不符, 已改为诚实标记
 6. 红线全部 hold (无 business module 绕过 llm-gateway) ✅
 
 ## Phase Open Condition (任务 4 readiness)

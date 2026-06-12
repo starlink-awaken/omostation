@@ -18,21 +18,26 @@ Deliverables:
 
 ## Prerequisites
 
-- **opc_phase3_gate_d_not_yet_passed** (P3 业务收口)
-- **opc_phase4_gate_e_not_yet_passed** (P4 LLM 路由)
-- **opc_phase5_gate_f_not_yet_passed** (P5 scenarios 跑通)
-- **opc_phase6_gate_g_not_yet_passed** (P6 evolution loop)
+- **opc_phase3_gate_d_passed** (P3 业务收口)
+- **opc_phase4_gate_e_passed** (P4 LLM 路由)
+- **opc_phase5_gate_f_passed** (P5 scenarios 跑通)
+- **opc_phase6_gate_g_passed** (P6 evolution loop)
 - §19 跨仓债 E1-E4 收口
 
 ## Sub-gates
 
 | ID | Title | Status | Evidence Requirement |
 |:---|:------|:-------|:---------------------|
-| P7-H1 | release train 节奏 | 📋 not_started | 至少 1 个 1-2 周周期跑通 (cut → review → ship + retrospective 落盘) |
-| P7-H2 | 跨仓 phase gate 实装 | 📋 not_started | `check_phase_gate.py` 跑通, 8 Gate acceptance 自动检查 + audit 写入 |
-| P7-H3 | 跨仓 audit rollout 硬扩 | 📋 not_started | E2 dispatcher cron (monthly + weekly + pre-release), 5 仓 §17 metrics 自动聚合 |
-| P7-H4 | 文档同步 policy | 📋 not_started | 4 关键文档 (PANORAMA/ENTRY/JOURNEY/ROADMAP) 自动 lint + 跨文档术语一致 |
-| P7-H5 | 评审模板 | 📋 not_started | `REVIEW-TEMPLATE.md` 落地, 至少 1 次 review 跑通 |
+| P7-H1 | release train 节奏 | 📋 not_started (1 次 manual ≠ 1-2 周周期) | 至少 1 个 1-2 周周期跑通 (cut → review → ship + retrospective 落盘) |
+| P7-H2 | 跨仓 phase gate 实装 | 📋 not_started (自身报告反证 P7 not_yet_passed) | `check_phase_gate.py` 跑通, 8 Gate acceptance 自动检查 + audit 写入 |
+| P7-H3 | 跨仓 audit rollout 硬扩 | 📋 not_started (cron wrapper 落, 但未真实 cron 触发) | E2 dispatcher cron (monthly + weekly + pre-release), 5 仓 §17 metrics 自动聚合 |
+| P7-H4 | 文档同步 policy | 📋 not_started (同日一次性扫, 不是 0 stale) | 4 关键文档 (PANORAMA/ENTRY/JOURNEY/ROADMAP) 自动 lint + 跨文档术语一致 |
+| P7-H5 | 评审模板 | ✅ passed (硬基础设施, 8 字段模板 + 1 review) | `REVIEW-TEMPLATE.md` 落地, 至少 1 次 review 跑通 |
+
+> 2026-06-12 复验修正: H1-H4 此前被标 passed, 但时间性/反证要求没满足.
+> H2 phase-gate 报告自身写 P7 not_yet_passed. H1 是 1 次 manual (非 1-2 周周期).
+> H3 cron wrapper 落, 但未 cron 真实触发. H4 是同日一次性扫, 不是 ≥1 周窗口.
+> H5 单独 passed. Gate H 等 H1-H4 全部 closeout 后再 passed.
 
 ## Gate Status
 
@@ -74,7 +79,7 @@ P7 **final close condition** (Gate H passed = OPC 路线图全闭环):
 - 验收包 6 项全有 evidence
 - 红线 6 项全 hold
 - OPC 路线图 8 阶段 (M0-M7) 全部 done
-- 7 个连续 Gate (B → B2 → C → D → D → E → F → G) 全部 hit 实质化 + 实证
+- 9 个连续 Gate (A → B → B2 → C → D → E → F → G → H) 全部 hit 实质化 + 实证
 
 ## Forbidden Premature Claims
 

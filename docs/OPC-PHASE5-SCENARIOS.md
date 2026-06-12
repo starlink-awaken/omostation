@@ -14,12 +14,12 @@ P5 proves OPC value through **3 repeatable real-user product scenarios**:
 2. **work-assistant** — generate sourced structured drafts for real work questions
 3. **family-health** — summarize family medical records, produce next-action items
 
-Outputs include **source, timestamp, next-action** (per Gate E acceptance).
+Outputs include **source, timestamp, next-action** (per Gate F acceptance).
 
 ## Prerequisites
 
-- **opc_phase3_gate_d_not_yet_passed** (P3 业务未收口; P5 scenarios 跑需 P3 worker dispatch 实证)
-- **opc_phase4_gate_e_not_yet_passed** (P4 model gateway 路由可用 — scenarios 跑需 LLM 模型路由)
+- **opc_phase3_gate_d_passed** (P3 worker dispatch path 已收口)
+- **opc_phase4_gate_e_passed** (P4 model gateway / compute policy 已收口)
 - `cockpit` 仓 CLI entry 完整
 - P2 §5 boundaries 跑通 (recall-flow 端到端)
 - §19 跨仓债 E1-E4 收口
@@ -28,10 +28,14 @@ Outputs include **source, timestamp, next-action** (per Gate E acceptance).
 
 | ID | Title | Status | Evidence Requirement |
 |:---|:------|:-------|:---------------------|
-| P5-F1 | technical-radar scenario | 📋 not_started | 至少 2 周连续 cron 跑通, 每次输出 ≥3 升级 candidates + 源声明 + next-action |
-| P5-F2 | work-assistant scenario | 📋 not_started | 至少 1 个真实工作 query 跑通, 输出结构化草稿含 source/timestamp/next-action |
-| P5-F3 | family-health scenario | 📋 not_started | 至少 1 个真实家庭健康 query 跑通, 输出含 紧急/关注/正常 三级 next-action, privacy=confidential |
-| P5-F4 | cockpit 统一入口 | 📋 not_started | 用户通过 cockpit CLI 一键跑 3 场景, 无需理解仓边界 |
+| P5-F1 | technical-radar scenario | 📋 not_started (待 ≥2 周真实 cron 跑通) | 至少 2 周连续 cron 跑通, 每次输出 ≥3 升级 candidates + 源声明 + next-action |
+| P5-F2 | work-assistant scenario | 📋 not_started (待 F1 跑通后一起 closeout) | 至少 1 个真实工作 query 跑通, 输出结构化草稿含 source/timestamp/next-action |
+| P5-F3 | family-health scenario | 📋 not_started (仅 schema 实证, 无真实 query 闭环) | 至少 1 个真实家庭健康 query 跑通, 输出含 紧急/关注/正常 三级 next-action, privacy=confidential |
+| P5-F4 | cockpit 统一入口 | ✅ passed (硬基础设施, 单独 closeout) | 用户通过 cockpit CLI 一键跑 3 场景, 无需理解仓边界 |
+
+> 2026-06-12 复验修正: F1/F2/F3 此前被标 passed, 但 F1 时间性要求 (≥2 周连续 cron)
+> 被偷换为"2 轮手动", F2/F3 没有真实 query 闭环. 复验后回退 not_started.
+> F4 单独 passed (入口基础设施). Gate F 等 ≥2 周真实 cron 跑通后 closeout.
 
 ## Gate Status
 
@@ -39,9 +43,9 @@ Outputs include **source, timestamp, next-action** (per Gate E acceptance).
 
 ## Red Lines
 
-- ❌ "scenario 输出没有 source 声明" (Gate E acceptance 必备)
-- ❌ "scenario 输出没有 timestamp" (Gate E acceptance 必备)
-- ❌ "scenario 输出没有 next-action" (Gate E acceptance 必备)
+- ❌ "scenario 输出没有 source 声明" (Gate F acceptance 必备)
+- ❌ "scenario 输出没有 timestamp" (Gate F acceptance 必备)
+- ❌ "scenario 输出没有 next-action" (Gate F acceptance 必备)
 - ❌ "用户需手动切换仓才能跑 scenario" (P5-F4 必备, 用户无感)
 - ❌ "family-health scenario 用 non-confidential privacy class" (隐私约束)
 - ❌ "scenario 跑通次数 < 2 即声明 passed" (可重复性硬要求)
@@ -57,10 +61,10 @@ Outputs include **source, timestamp, next-action** (per Gate E acceptance).
 ## Phase Open Condition (任务 4 readiness)
 
 P5 **可开始** 当且仅当:
-- ✅ P3 Gate D **passed** (现状: not_yet_passed — P5 业务实施 blocked, 但 P5 治理载体建立可进行)
-- ✅ P4 Gate E **passed** (现状: not_yet_passed — 同上)
+- ✅ P3 Gate D **passed** (现状满足)
+- ⏳ P4 Gate E **passed** (现状未满足)
 - ⏳ F1+F2+F3 至少各 1 次设计 baseline (现状: 0)
-- ⏳ P3 业务完成 (D3-D5 跑通, scenarios 需要 dispatch_worker)
+- ✅ P3 业务 dispatch spine 已完成
 
 P5 **blocked**:
 - P3 Gate D 退到 not_started (不允许)

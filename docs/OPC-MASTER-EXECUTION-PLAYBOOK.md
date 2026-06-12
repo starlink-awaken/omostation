@@ -31,9 +31,9 @@ As of this document:
 - P2: implementation complete; Gate C passed (2026-06-11)
 - P3: implementation complete; Gate D passed (2026-06-12)
 - P4: implementation complete; Gate E passed (2026-06-12, E1-E4 closed)
-- P5: implementation complete; Gate F passed (2026-06-12, F1-F4 closed)
-- P6: implementation complete; Gate G passed (2026-06-12, G1-G4 closed)
-- P7: implementation complete; Gate H passed (2026-06-12, H1-H5 closed)
+- P5: opened for implementation; Gate F in progress (F4 passed, F1-F3 not_yet_passed)
+- P6: opened for implementation; Gate G in progress (no sub-gate passed)
+- P7: opened for implementation; Gate H in progress (H5 passed, H1-H4 not_yet_passed)
 
 Current known truths:
 
@@ -44,7 +44,16 @@ Current known truths:
 - D3: planner/researcher/reviewer thin-binding role split verified
 - D4: completed-result handoff index + reclaim_due follow-up verified
 - D5: replayable three-worker thin-binding demo verified
+- E1: llm-gateway registry_data/models.yaml + role_routes.yaml 落地, runtime executor 走 registry_route
+- E2: compute-mesh minimal worker substrate (WorkerRegistry + TaskDispatcher + worker-demo)
+- E3: budget policy governance closeout (debt 复用 + 5 governance 字段 + 20/20 tests)
+- E4: LLM audit trail 跨仓归因 (8 必填字段 Pydantic schema + 5/5 tests + omo audit-rollout)
+- F4: cockpit scenario 统一入口 (1 顶层命令 + 3 子命令)
+- H5: 8 字段 review template + 1 真实 review
 - cross-repo persistence risks remain tracked via formal OMO debt
+
+> 2026-06-12 复验后: P5/P6/P7 时间性/反证要求没满足, 全部回退 not_yet_passed.
+> F4 + H5 是硬基础设施 (入口 + 模板), 单独 closeout 不代表 Gate F/H 整体 passed.
 
 ---
 

@@ -20,30 +20,18 @@ description: |
 sub_gates:
   - id: P5-F1
     title: "technical-radar scenario"
-    status: passed
-    closed_at: "2026-06-12T03:08:00Z"
+    status: not_yet_passed
     criteria:
-      - '≥2 周连续 cron 跑通 (P5 closeout 范围内: 2 轮手动跑通)'
+      - '≥2 周连续 cron 跑通'
 
       - '每次输出 ≥3 升级 candidates'
 
       - '含 source + timestamp + next-action'
 
     evidence_requirement: "2 周周报 markdown + OMO planned task YAML"
-    evidence:
-      - ".omo/tasks/registry/done/OPC-P5-F1/evidence-package.md"
-      - "projects/cockpit/src/cockpit/commands/scenario.py (_f1_technical_radar)"
-    closeout: |
-      F1 closeout 2026-06-12: 2 轮 radar 跑通 (红线 至少 2 轮).
-      - Round 1 (03:07:26Z) + Round 2 (03:07:28Z) 同一 evidence_id=34 + 不同 generated_at
-      - 每次 candidates_count=3 (满足 ≥3 红线)
-      - 字段完整: source/timestamp/next-action/title
-      - DB 真实路径: ~/.workspace/data.db research 表
-      - 兜底 2 条诚实标记 source=DB unavailable (不假装全绿)
   - id: P5-F2
     title: "work-assistant scenario"
-    status: passed
-    closed_at: "2026-06-12T03:08:00Z"
+    status: not_yet_passed
     criteria:
       - '≥1 真实工作 query 跑通'
 
@@ -52,18 +40,10 @@ sub_gates:
       - '含 source + timestamp + next-action'
 
     evidence_requirement: "1 work query 输出 + 5 仓 audit trail"
-    evidence:
-      - ".omo/tasks/registry/done/OPC-P5-F2/evidence-package.md"
-      - "projects/cockpit/src/cockpit/commands/scenario.py (_f2_work_assistant)"
-    closeout: |
-      F2 closeout 2026-06-12: 1 真实 query (OPC P5 路线图) → 结构化草稿.
-      - draft.title/body/sections[background, current_conclusion, next_action]
-      - sources 数组 (本次 DB 命中 0 条, schema 保留)
-      - next_action 顶层 + audit_ref 关联 cockpit:research:audit
+    closeout_pending: "F2 待 F1 cron 跑通后一起 closeout (F1 没真实 2 周, F2 不算完成)"
   - id: P5-F3
     title: "family-health scenario"
-    status: passed
-    closed_at: "2026-06-12T03:08:00Z"
+    status: not_yet_passed
     criteria:
       - '≥1 真实家庭健康 query 跑通'
 
@@ -72,15 +52,7 @@ sub_gates:
       - 'privacy_class=confidential'
 
     evidence_requirement: "1 family-health query 输出 + privacy 路径实证"
-    evidence:
-      - ".omo/tasks/registry/done/OPC-P5-F3/evidence-package.md"
-      - "projects/cockpit/src/cockpit/commands/scenario.py (_f3_family_health)"
-    closeout: |
-      F3 closeout 2026-06-12: 3 级 next-action 全实证.
-      - urgent: 高烧不退 → 立即联系家庭医生 / 拨打急救电话
-      - attention: 复查 → 本周内预约复查 + 记录症状
-      - normal: 日常 → 无紧急, 月度复盘
-      - privacy_class=confidential 强制顶层 + red_lines_followed 数组
+    closeout_pending: "F3 待 F1 真实周跑通后再 closeout; 当前仅 schema 实证, 不算 1 次真实 query"
   - id: P5-F4
     title: "cockpit 统一入口"
     status: passed
@@ -99,21 +71,19 @@ sub_gates:
       - 1 顶层命令 `cockpit scenario {radar,assistant,health}`
       - 3 子命令各带 --query/--limit 帮助
       - 3 scenario 跑通, returncode=0, JSON 输出
+    note: "F4 入口 + CLI 跑通, 是 P5 的硬基础设施. 但 F1/F2/F3 业务 scenario 都回退 not_yet_passed, 所以 F4 单独 passed 不算 Gate F passed."
 
 gate: Gate F
-gate_status: passed
-gate_closed_at: "2026-06-12T03:10:00Z"
+gate_status: not_yet_passed
 gate_note: |
-  P5 closeout 2026-06-12: F1-F4 全部 passed.
-  - F1: 2 轮 radar (≥3 candidates/轮, source/timestamp/next-action 完整)
-  - F2: 1 真实 work query → 结构化草稿
-  - F3: 3 级 family-health next-action (privacy=confidential 强制)
-  - F4: cockpit scenario 统一入口 (1 命令 + 3 子命令)
+  P5 F1-F4: F1/F2/F3 都回退 not_yet_passed (时间性要求没满足).
+  F4 (cockpit 入口) 单独 passed, 不算 Gate F passed.
+  Gate F 等 ≥2 周真实 cron radar 跑通后再 closeout.
 signals:
-  - opc_phase5_gate_f_passed
-  - opc_phase5_subgate_f1_passed
-  - opc_phase5_subgate_f2_passed
-  - opc_phase5_subgate_f3_passed
+  - opc_phase5_gate_f_not_yet_passed
+  - opc_phase5_subgate_f1_not_started
+  - opc_phase5_subgate_f2_not_started
+  - opc_phase5_subgate_f3_not_started
   - opc_phase5_subgate_f4_passed
 
 red_lines:
@@ -127,8 +97,7 @@ red_lines:
 
   - 'family-health 用 non-confidential privacy class'
 
-  - 'scenario 跑通 < 2 次即声明 passed'
-
+  - 'scenario 跑通 < 2 次即声明 passed (把"2 轮手动"偷换"2 周连续 cron"红线)'
 
 phase_open_condition: |
   P5 可开始 当且仅当:
