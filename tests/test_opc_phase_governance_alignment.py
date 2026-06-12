@@ -92,6 +92,52 @@ def test_p5_prerequisite_signal_now_satisfied():
     assert p5["prerequisites"][1] == "opc_phase4_gate_e_passed"
 
 
+def test_p6_gate_g_three_way_alignment_closed_2026_06_12():
+    """P6 closeout: Gate G must be passed consistently across docs/omo-tests/projects."""
+    plan = _read_yaml(".omo/tasks/planned/OPC-P6-EVOLUTION-LOOP.yaml")
+    playbook = _read("docs/OPC-MASTER-EXECUTION-PLAYBOOK.md")
+
+    assert plan["gate"] == "Gate G"
+    assert plan["gate_status"] == "passed"
+    assert "gate_closed_at" in plan
+
+    g_statuses = {sg["id"]: sg["status"] for sg in plan["sub_gates"] if sg.get("id", "").startswith("P6-G")}
+    expected = {f"P6-G{i}": "passed" for i in range(1, 5)}
+    assert g_statuses == expected, f"P6 G1-G4 not all passed: {g_statuses}"
+
+    assert "P6: implementation complete; Gate G passed (2026-06-12, G1-G4 closed)" in playbook
+    assert "P6: opened for implementation" not in playbook
+
+
+def test_p6_self_evolution_tasks_only_in_planned_directory():
+    """P6 closeout: self-evolution tasks may only land in planned/, never active/."""
+    planned_dir = ROOT / ".omo" / "tasks" / "planned"
+    active_dir = ROOT / ".omo" / "tasks" / "active"
+    self_evo_planned = list(planned_dir.glob("OPC-P6-SELF-EVOLUTION-*.yaml")) if planned_dir.exists() else []
+    self_evo_active = list(active_dir.glob("OPC-P6-SELF-EVOLUTION-*.yaml")) if active_dir.exists() else []
+    assert self_evo_active == [], (
+        f"self-evolution task leaked into active/: {[p.name for p in self_evo_active]}"
+    )
+    # planned 中至少 1 条 (n-1 兜底 OR drift fix)
+    assert self_evo_planned, "self-evolve produced no planned tasks (drift_count=0 expected 1 nop)"
+
+
+def test_p6_drift_detector_covers_all_four_kinds():
+    """P6-G3: drift detector must scan 4 known kinds (entry/doc/duplicate_facts/agora_bypass)."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "opc_p6_drift_detector", ROOT / "scripts" / "opc_p6_drift_detector.py"
+    )
+    assert spec is not None and spec.loader is not None
+    expected = {"entry_drift", "doc_drift", "duplicate_facts", "agora_bypass"}
+    import re
+
+    src = (ROOT / "scripts" / "opc_p6_drift_detector.py").read_text(encoding="utf-8")
+    found = {m.group(1) for m in re.finditer(r"detect_(\w+)\(", src) if not m.group(1).startswith("_")}
+    assert expected.issubset(found), f"drift detector missing kinds: {expected - found}"
+
+
 def test_p4_to_p7_use_consistent_evidence_requirement_field():
     for rel_path in [
         ".omo/tasks/planned/OPC-P4-MODEL-COMPUTE.yaml",
