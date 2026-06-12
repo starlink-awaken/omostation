@@ -317,6 +317,32 @@ make x4-check      # X4 一致性检查
 make x1-x4-check   # X1-X4 全维度检查
 ```
 
+### 治理优化组件
+
+| 组件 | L0 位置 | 说明 |
+|------|---------|------|
+| 告警引擎 | ecos/l0/governance/alert_engine.py | 基于规则的告警触发 |
+| 历史存储 | ecos/l0/governance/history_store.py | SQLite 历史数据 |
+| 优化原语 | ecos/l0/governance/optimization.py | Alert/Dashboard/History 原语 |
+
+### 治理 MCP 工具 (cockpit)
+
+| 工具 | 说明 |
+|------|------|
+| governance_check | 运行 X1-X4 检查 |
+| governance_status | 查看治理状态 |
+| governance_sla | 查看 SLA 达成 |
+| governance_leaderboard | 债务排行榜 |
+| governance_dashboard | 仪表板数据 |
+| governance_history | 历史数据 |
+
+### 治理注册表
+
+| 注册表 | 路径 | 说明 |
+|--------|------|------|
+| 检查器注册 | .omo/_truth/registry/governance-checks.yaml | X1-X4 检查器 |
+| 告警规则 | .omo/_truth/registry/governance-alerts.yaml | 告警配置 |
+
 ---
 
 ## 六、治理体系 (.omo/ 四平面)
