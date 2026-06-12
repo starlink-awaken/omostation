@@ -1,7 +1,9 @@
 """Tests for runtime executor engine core functions."""
 
 import json
+import sys
 import tempfile
+import types
 from pathlib import Path
 from unittest import mock
 
@@ -258,6 +260,355 @@ def test_run_task_direct_answer():
             assert result["usage"]["total_tokens"] == 50
 
 
+def test_call_llm_uses_registry_route_for_matching_provider():
+    """_call_llm should prefer the registry-routed provider over providers[0]."""
+
+    class _FakeProvider:
+        provider_name = "anthropic"
+        default_model = "claude-default"
+
+        async def generate(self, request):
+            return types.SimpleNamespace(
+                content=f"provider={self.provider_name} model={request.model}",
+                provider=self.provider_name,
+                model=request.model,
+                finish_reason="stop",
+                input_tokens=12,
+                output_tokens=8,
+            )
+
+    class _FallbackProvider:
+        provider_name = "openai"
+        default_model = "gpt-default"
+
+        async def generate(self, request):
+            return types.SimpleNamespace(
+                content=f"provider={self.provider_name} model={request.model}",
+                provider=self.provider_name,
+                model=request.model,
+                finish_reason="stop",
+                input_tokens=1,
+                output_tokens=1,
+            )
+
+    class _LLMRequest:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
+    class _ToolSchema:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
+    fake_detection = types.ModuleType("llm_gateway.detection")
+    fake_detection.detect_backends = lambda: [_FallbackProvider(), _FakeProvider()]
+
+    fake_provider = types.ModuleType("llm_gateway.provider")
+    fake_provider.LLMRequest = _LLMRequest
+    fake_provider.ToolSchema = _ToolSchema
+
+    fake_registry_loader = types.ModuleType("llm_gateway.registry_data_loader")
+    fake_registry_loader.route_role_request = lambda role, required_capabilities=None: types.SimpleNamespace(
+        provider_name="anthropic",
+        model=types.SimpleNamespace(id="anthropic/claude-sonnet-4", name="claude-sonnet-4"),
+        reasoning="Matched route anthropic/claude-sonnet-4",
+    )
+    fake_registry_loader.estimate_model_cost = lambda model_id, input_tokens, output_tokens: 0.0
+
+    fake_audit = types.ModuleType("llm_gateway.audit")
+    fake_audit.record_llm_audit = lambda **kwargs: Path("/tmp/llm_calls.jsonl")
+
+    with mock.patch.dict(
+        sys.modules,
+        {
+            "llm_gateway.detection": fake_detection,
+            "llm_gateway.provider": fake_provider,
+            "llm_gateway.registry_data_loader": fake_registry_loader,
+            "llm_gateway.audit": fake_audit,
+        },
+    ):
+        from runtime.executor.engine import AgentRuntime
+
+        rt = AgentRuntime()
+        response = rt._call_llm([{"role": "user", "content": "hello"}], tools=[{"function": {"name": "x"}}])
+
+    assert response["content"] == "provider=anthropic model=claude-sonnet-4"
+    assert response["provider"] == "anthropic"
+    assert response["model"] == "claude-sonnet-4"
+    assert response["route"]["role"] == "planner"
+    assert response["route"]["fallback_used"] is False
+    assert response["route"]["selected_model"] == "anthropic/claude-sonnet-4"
+
+
+def test_call_llm_falls_back_when_routed_provider_unavailable():
+    """_call_llm should fall back to the first detected provider when route target is unavailable."""
+
+    class _FakeProvider:
+        provider_name = "openai"
+        default_model = "gpt-default"
+
+        async def generate(self, request):
+            return types.SimpleNamespace(
+                content=f"provider={self.provider_name} model={request.model}",
+                provider=self.provider_name,
+                model=request.model,
+                finish_reason="stop",
+                input_tokens=6,
+                output_tokens=4,
+            )
+
+    class _LLMRequest:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
+    class _ToolSchema:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
+    fake_detection = types.ModuleType("llm_gateway.detection")
+    fake_detection.detect_backends = lambda: [_FakeProvider()]
+
+    fake_provider = types.ModuleType("llm_gateway.provider")
+    fake_provider.LLMRequest = _LLMRequest
+    fake_provider.ToolSchema = _ToolSchema
+
+    fake_registry_loader = types.ModuleType("llm_gateway.registry_data_loader")
+    fake_registry_loader.route_role_request = lambda role, required_capabilities=None: types.SimpleNamespace(
+        provider_name="anthropic",
+        model=types.SimpleNamespace(id="anthropic/claude-sonnet-4", name="claude-sonnet-4"),
+        reasoning="Matched route anthropic/claude-sonnet-4",
+    )
+    fake_registry_loader.estimate_model_cost = lambda model_id, input_tokens, output_tokens: 0.0
+
+    fake_audit = types.ModuleType("llm_gateway.audit")
+    fake_audit.record_llm_audit = lambda **kwargs: Path("/tmp/llm_calls.jsonl")
+
+    with mock.patch.dict(
+        sys.modules,
+        {
+            "llm_gateway.detection": fake_detection,
+            "llm_gateway.provider": fake_provider,
+            "llm_gateway.registry_data_loader": fake_registry_loader,
+            "llm_gateway.audit": fake_audit,
+        },
+    ):
+        from runtime.executor.engine import AgentRuntime
+
+        rt = AgentRuntime()
+        response = rt._call_llm([{"role": "user", "content": "hello"}], tools=None)
+
+    assert response["content"] == "provider=openai model=gpt-default"
+    assert response["provider"] == "openai"
+    assert response["route"]["role"] == "operator"
+    assert response["route"]["fallback_used"] is True
+    assert response["route"]["fallback_provider"] == "openai"
+
+
+def test_call_llm_budget_policy_rejects_and_registers_debt(tmp_path):
+    """_call_llm should block when estimated cost exceeds the declared budget."""
+
+    class _FakeProvider:
+        provider_name = "openai"
+        default_model = "gpt-4.1"
+
+        async def generate(self, request):
+            raise AssertionError("generate should not be called when budget rejects first")
+
+    class _LLMRequest:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
+    class _ToolSchema:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
+    fake_detection = types.ModuleType("llm_gateway.detection")
+    fake_detection.detect_backends = lambda: [_FakeProvider()]
+
+    fake_provider = types.ModuleType("llm_gateway.provider")
+    fake_provider.LLMRequest = _LLMRequest
+    fake_provider.ToolSchema = _ToolSchema
+
+    fake_registry_loader = types.ModuleType("llm_gateway.registry_data_loader")
+    fake_registry_loader.route_role_request = lambda role, required_capabilities=None: types.SimpleNamespace(
+        provider_name="openai",
+        model=types.SimpleNamespace(id="openai/gpt-4.1", name="gpt-4.1"),
+        reasoning="Matched route openai/gpt-4.1",
+    )
+    fake_registry_loader.estimate_model_cost = lambda model_id, input_tokens, output_tokens: 0.42
+
+    fake_audit = types.ModuleType("llm_gateway.audit")
+    fake_audit.record_llm_audit = lambda **kwargs: tmp_path / "unused.jsonl"
+
+    with mock.patch.dict(
+        sys.modules,
+        {
+            "llm_gateway.detection": fake_detection,
+            "llm_gateway.provider": fake_provider,
+            "llm_gateway.registry_data_loader": fake_registry_loader,
+            "llm_gateway.audit": fake_audit,
+        },
+    ):
+        from runtime.executor import engine as engine_mod
+        from runtime.executor.engine import AgentRuntime
+
+        with mock.patch.object(engine_mod, "OMO_DEBT_DIR", tmp_path / "debt"):
+            rt = AgentRuntime()
+            response = rt._call_llm(
+                [{"role": "user", "content": "hello"}],
+                tools=None,
+                request_context={"task_id": "opc-p4-budget-demo", "llm_budget_usd": 0.01},
+            )
+
+    assert "Budget policy blocked task opc-p4-budget-demo" in response["error"]
+    debt_files = list((tmp_path / "debt").glob("DEBT-OPC-P4-BUDGET-*.yaml"))
+    assert len(debt_files) == 1
+    debt_text = debt_files[0].read_text(encoding="utf-8")
+    assert "estimated cost 0.420000 USD exceeded budget 0.010000 USD" in debt_text
+    # 治本 4 守护: debt YAML 必须可被 yaml.safe_load 解析 (无格式破坏)
+    import yaml
+    parsed = yaml.safe_load(debt_text)
+    assert isinstance(parsed, dict)
+    assert parsed["id"].startswith("DEBT-OPC-P4-BUDGET-")
+    assert parsed["status"] == "open"
+    assert parsed["severity"] == "medium"
+    # 即便 task_id 含 YAML 特殊字符 (含 `:`, `#`, 换行) 也不会破格式
+    assert "\n- " not in debt_text or "  " in debt_text, (
+        "debt YAML 含未缩进的列表项, 表明字符串拼接导致格式破坏"
+    )
+
+
+def test_budget_debt_lock_prevents_concurrent_occurrence_loss(tmp_path):
+    """治本 2 守护: read-modify-write 跨进程锁, 并发触发不丢 occurrence."""
+    import yaml
+    # 模拟两个 runtime agent 并发调用同 task_id 的 budget 拒绝
+    from runtime.executor.engine import _register_budget_debt
+    debt_dir = tmp_path / "debt"
+    debt_dir.mkdir(parents=True, exist_ok=True)
+    with mock.patch("runtime.executor.engine.OMO_DEBT_DIR", debt_dir):
+        # 跑 5 次 (单进程顺序执行, 但验证 file 锁路径 + yaml.dump 都 OK)
+        for i in range(5):
+            _register_budget_debt(
+                task_id="opc-p4-concurrent-test",
+                role="planner",
+                model="openai/gpt-4.1",
+                budget_usd=0.01,
+                estimated_cost_usd=0.5,
+            )
+    debt_files = list(debt_dir.glob("DEBT-OPC-P4-BUDGET-*.yaml"))
+    assert len(debt_files) == 1
+    parsed = yaml.safe_load(debt_files[0].read_text(encoding="utf-8"))
+    # 5 次顺序调用: occurrence_count 应从 1 累加到 5
+    assert parsed["occurrence_count"] == 5, (
+        f"5 次顺序调用 occurrence_count 应=5, 实际 {parsed['occurrence_count']} "
+        f"(说明 read-modify-write 竞态)"
+    )
+    # 锁文件应被创建
+    lock_files = list(debt_dir.glob("DEBT-OPC-P4-BUDGET-*.lock"))
+    assert lock_files, "并发锁 sidecar 文件未创建"
+
+
+def test_budget_debt_yaml_safe_for_special_chars_in_task_id(tmp_path):
+    """治本 4 守护: task_id 含 YAML 特殊字符时, debt 文件可被 safe_load 解析."""
+    import yaml
+    from runtime.executor.engine import _register_budget_debt
+    debt_dir = tmp_path / "debt"
+    debt_dir.mkdir(parents=True, exist_ok=True)
+    # 含冒号/井号/换行/前导横线
+    weird_task_id = "task:foo #bar\n-baz end"
+    with mock.patch("runtime.executor.engine.OMO_DEBT_DIR", debt_dir):
+        _register_budget_debt(
+            task_id=weird_task_id,
+            role="planner",
+            model="openai/gpt-4.1",
+            budget_usd=0.01,
+            estimated_cost_usd=0.5,
+        )
+    debt_files = list(debt_dir.glob("DEBT-OPC-P4-BUDGET-*.yaml"))
+    assert debt_files
+    # 必须可解析 + special chars 已 sanitize (转 `-` 在 sanitized suffix 中)
+    parsed = yaml.safe_load(debt_files[0].read_text(encoding="utf-8"))
+    assert parsed["status"] == "open"
+    # debt_id 用 sanitized suffix, 安全
+    assert "FOO" in parsed["id"] or "BAR" in parsed["id"] or "BAZ" in parsed["id"]
+
+
+def test_call_llm_records_audit_log(tmp_path):
+    """_call_llm should record llm-gateway audit with task_id/role/model/cost/latency."""
+
+    class _FakeProvider:
+        provider_name = "anthropic"
+        default_model = "claude-sonnet-4"
+
+        async def generate(self, request):
+            return types.SimpleNamespace(
+                content="done",
+                provider="anthropic",
+                model="claude-sonnet-4",
+                finish_reason="stop",
+                input_tokens=20,
+                output_tokens=10,
+            )
+
+    class _LLMRequest:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
+    class _ToolSchema:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
+    audit_log = tmp_path / "llm_calls.jsonl"
+
+    def _record_llm_audit(**kwargs):
+        audit_log.write_text(json.dumps(kwargs, ensure_ascii=False), encoding="utf-8")
+        return audit_log
+
+    fake_detection = types.ModuleType("llm_gateway.detection")
+    fake_detection.detect_backends = lambda: [_FakeProvider()]
+
+    fake_provider = types.ModuleType("llm_gateway.provider")
+    fake_provider.LLMRequest = _LLMRequest
+    fake_provider.ToolSchema = _ToolSchema
+
+    fake_registry_loader = types.ModuleType("llm_gateway.registry_data_loader")
+    fake_registry_loader.route_role_request = lambda role, required_capabilities=None: types.SimpleNamespace(
+        provider_name="anthropic",
+        model=types.SimpleNamespace(id="anthropic/claude-sonnet-4", name="claude-sonnet-4"),
+        reasoning="Matched route anthropic/claude-sonnet-4",
+    )
+    fake_registry_loader.estimate_model_cost = lambda model_id, input_tokens, output_tokens: 0.123
+
+    fake_audit = types.ModuleType("llm_gateway.audit")
+    fake_audit.record_llm_audit = _record_llm_audit
+
+    with mock.patch.dict(
+        sys.modules,
+        {
+            "llm_gateway.detection": fake_detection,
+            "llm_gateway.provider": fake_provider,
+            "llm_gateway.registry_data_loader": fake_registry_loader,
+            "llm_gateway.audit": fake_audit,
+        },
+    ):
+        from runtime.executor.engine import AgentRuntime
+
+        rt = AgentRuntime()
+        response = rt._call_llm(
+            [{"role": "user", "content": "hello"}],
+            tools=[{"function": {"name": "x"}}],
+            request_context={"task_id": "opc-p4-audit-demo"},
+        )
+
+    payload = json.loads(audit_log.read_text(encoding="utf-8"))
+    assert response["content"] == "done"
+    assert payload["task_id"] == "opc-p4-audit-demo"
+    assert payload["role"] == "planner"
+    assert payload["provider"] == "anthropic"
+    assert payload["model"] == "claude-sonnet-4"
+    assert payload["total_cost_usd"] == 0.123
+    assert payload["latency_ms"] >= 0.0
+
+
 def test_run_task_truncated_on_max_turns():
     """run_task returns truncated after 30 turns of tool calls."""
     with mock.patch("runtime.executor.engine.EXEC_LOG_FILE", Path("/dev/null")):
@@ -285,3 +636,174 @@ def test_run_task_truncated_on_max_turns():
             result = rt.run_task("loop")
             assert result["truncated"] is True
             assert result["turns"] == 30
+
+
+# ── P4-E3 budget governance closeout ─────────────────────────────────────
+
+
+def test_budget_policy_includes_task_id_and_model_in_route_info(tmp_path):
+    """E3 closeout: budget_policy must record task_id, budget_usd, estimated_cost_usd, model."""
+
+    class _FakeProvider:
+        provider_name = "anthropic"
+        default_model = "claude-sonnet-4"
+
+        async def generate(self, request):
+            raise AssertionError("budget must reject before provider call")
+
+    fake_detection = types.ModuleType("llm_gateway.detection")
+    fake_detection.detect_backends = lambda: [_FakeProvider()]
+
+    fake_provider = types.ModuleType("llm_gateway.provider")
+    fake_provider.LLMRequest = lambda **kwargs: types.SimpleNamespace(**kwargs)
+    fake_provider.ToolSchema = lambda **kwargs: types.SimpleNamespace(**kwargs)
+
+    fake_registry_loader = types.ModuleType("llm_gateway.registry_data_loader")
+    fake_registry_loader.route_role_request = lambda role, required_capabilities=None: types.SimpleNamespace(
+        provider_name="anthropic",
+        model=types.SimpleNamespace(id="anthropic/claude-sonnet-4", name="claude-sonnet-4"),
+        reasoning="Matched",
+    )
+    fake_registry_loader.estimate_model_cost = lambda mid, inp, out: 0.02
+
+    fake_audit = types.ModuleType("llm_gateway.audit")
+    fake_audit.record_llm_audit = lambda **kwargs: tmp_path / "unused.jsonl"
+
+    with mock.patch.dict(
+        sys.modules,
+        {
+            "llm_gateway.detection": fake_detection,
+            "llm_gateway.provider": fake_provider,
+            "llm_gateway.registry_data_loader": fake_registry_loader,
+            "llm_gateway.audit": fake_audit,
+        },
+    ):
+        from runtime.executor import engine as engine_mod
+        from runtime.executor.engine import AgentRuntime
+
+        with mock.patch.object(engine_mod, "OMO_DEBT_DIR", tmp_path / "debt"):
+            rt = AgentRuntime()
+            response = rt._call_llm(
+                [{"role": "user", "content": "hi"}],
+                tools=None,
+                request_context={"task_id": "opc-p4-budget-policy-fields", "llm_budget_usd": 0.005},
+            )
+
+    assert "Budget policy blocked" in response["error"]
+    policy = response["route"]["budget_policy"]
+    assert policy["task_id"] == "opc-p4-budget-policy-fields"
+    assert policy["budget_usd"] == 0.005
+    assert policy["estimated_cost_usd"] == 0.02
+    assert policy["model"] == "anthropic/claude-sonnet-4"
+    assert "debt_path" in policy
+
+
+def test_budget_debt_reuse_does_not_create_duplicate_files(tmp_path):
+    """E3 closeout: same task_id hitting the budget guard twice must not create a second debt file."""
+
+    class _FakeProvider:
+        provider_name = "openai"
+        default_model = "gpt-4.1"
+
+        async def generate(self, request):
+            raise AssertionError("generate should not be called when budget rejects")
+
+    fake_detection = types.ModuleType("llm_gateway.detection")
+    fake_detection.detect_backends = lambda: [_FakeProvider()]
+
+    fake_provider = types.ModuleType("llm_gateway.provider")
+    fake_provider.LLMRequest = lambda **kwargs: types.SimpleNamespace(**kwargs)
+    fake_provider.ToolSchema = lambda **kwargs: types.SimpleNamespace(**kwargs)
+
+    fake_registry_loader = types.ModuleType("llm_gateway.registry_data_loader")
+    fake_registry_loader.route_role_request = lambda role, required_capabilities=None: types.SimpleNamespace(
+        provider_name="openai",
+        model=types.SimpleNamespace(id="openai/gpt-4.1", name="gpt-4.1"),
+        reasoning="Matched",
+    )
+    fake_registry_loader.estimate_model_cost = lambda mid, inp, out: 0.5
+
+    fake_audit = types.ModuleType("llm_gateway.audit")
+    fake_audit.record_llm_audit = lambda **kwargs: tmp_path / "unused.jsonl"
+
+    with mock.patch.dict(
+        sys.modules,
+        {
+            "llm_gateway.detection": fake_detection,
+            "llm_gateway.provider": fake_provider,
+            "llm_gateway.registry_data_loader": fake_registry_loader,
+            "llm_gateway.audit": fake_audit,
+        },
+    ):
+        from runtime.executor import engine as engine_mod
+        from runtime.executor.engine import AgentRuntime
+
+        with mock.patch.object(engine_mod, "OMO_DEBT_DIR", tmp_path / "debt"):
+            rt = AgentRuntime()
+            ctx = {"task_id": "opc-p4-budget-reuse", "llm_budget_usd": 0.01}
+            rt._call_llm([{"role": "user", "content": "x"}], tools=None, request_context=ctx)
+            rt._call_llm([{"role": "user", "content": "y"}], tools=None, request_context=ctx)
+            rt._call_llm([{"role": "user", "content": "z"}], tools=None, request_context=ctx)
+
+    debt_files = sorted((tmp_path / "debt").glob("DEBT-OPC-P4-BUDGET-*.yaml"))
+    assert len(debt_files) == 1, f"expected single debt file, got {debt_files}"
+    body = debt_files[0].read_text(encoding="utf-8")
+    assert "occurrence_count: 3" in body
+    assert "first_seen_at:" in body
+    assert "last_seen_at:" in body
+
+
+def test_budget_reject_returns_error_dict_not_traceback(tmp_path):
+    """E3 closeout: budget reject must propagate as a structured error dict, never raise."""
+
+    class _FakeProvider:
+        provider_name = "openai"
+        default_model = "gpt-4.1"
+
+        async def generate(self, request):
+            raise AssertionError("must not be reached")
+
+    fake_detection = types.ModuleType("llm_gateway.detection")
+    fake_detection.detect_backends = lambda: [_FakeProvider()]
+
+    fake_provider = types.ModuleType("llm_gateway.provider")
+    fake_provider.LLMRequest = lambda **kwargs: types.SimpleNamespace(**kwargs)
+    fake_provider.ToolSchema = lambda **kwargs: types.SimpleNamespace(**kwargs)
+
+    fake_registry_loader = types.ModuleType("llm_gateway.registry_data_loader")
+    fake_registry_loader.route_role_request = lambda role, required_capabilities=None: types.SimpleNamespace(
+        provider_name="openai",
+        model=types.SimpleNamespace(id="openai/gpt-4.1", name="gpt-4.1"),
+        reasoning="Matched",
+    )
+    fake_registry_loader.estimate_model_cost = lambda mid, inp, out: 1.0
+
+    fake_audit = types.ModuleType("llm_gateway.audit")
+    fake_audit.record_llm_audit = lambda **kwargs: tmp_path / "unused.jsonl"
+
+    with mock.patch.dict(
+        sys.modules,
+        {
+            "llm_gateway.detection": fake_detection,
+            "llm_gateway.provider": fake_provider,
+            "llm_gateway.registry_data_loader": fake_registry_loader,
+            "llm_gateway.audit": fake_audit,
+        },
+    ):
+        from runtime.executor import engine as engine_mod
+        from runtime.executor.engine import AgentRuntime
+
+        with mock.patch.object(engine_mod, "OMO_DEBT_DIR", tmp_path / "debt"):
+            rt = AgentRuntime()
+            ctx = {"task_id": "opc-p4-budget-structured-error", "llm_budget_usd": 0.1}
+            # Must NOT raise — return dict
+            response = rt._call_llm(
+                [{"role": "user", "content": "hello"}], tools=None, request_context=ctx
+            )
+
+    assert isinstance(response, dict)
+    assert response["finish_reason"] == "error"
+    assert "Budget policy blocked task opc-p4-budget-structured-error" in response["error"]
+    assert "openai/gpt-4.1" in response["error"]
+    assert "debt_path" in response["route"]["budget_policy"]
+    assert response["route"]["role"] in {"planner", "operator"}
