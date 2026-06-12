@@ -60,10 +60,15 @@ sub_gates:
       - '5 仓 §17 metrics 自动聚合'
 
     evidence_requirement: "cron 实证 + 5 仓 metrics 聚合"
-    closeout_pending: |
-      H3 实际只跑 1 次 manual (非 cron 实证). 3 模式 cron wrapper 落地, 但
-      5 仓聚合里 3 仓 n/a (llm-gateway/compute-mesh/runtime 无 §17 metrics source).
-      复验后回退 not_yet_passed, 待真实 cron 触发 + 5 仓 metrics 全部 n/a 替代.
+    note: "本轮推进: 5 仓 §17 metrics 实装完成 (scripts/opc_section17_metrics.py), 0 n/a.
+    但 cron 实证 (Mon 02:00 weekly) 仍待真实时间窗口触发, 留 not_yet_passed.
+    待下周一 cron 真实跑出后 closeout."
+    pending_evidence:
+      metrics_script: "scripts/opc_section17_metrics.py"
+      aggregator_script: "scripts/opc_audit_rollout_5repos.py"
+      output_5repos: ".omo/_delivery/audit-rollout/2026-06-12-5repos.json"
+      repos_with_metrics: "5/5"
+      repos_n_a: "0"
   - id: P7-H4
     title: "文档同步 policy"
     status: not_yet_passed

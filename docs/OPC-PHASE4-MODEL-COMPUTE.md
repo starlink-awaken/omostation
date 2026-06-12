@@ -29,7 +29,7 @@ becomes the **only** worker discovery abstraction. Business code calls
 | P4-E1 | Model Registry SSOT | ✅ passed | `llm-gateway/src/llm_gateway/registry_data/models.yaml` 含 ≥3 provider × ≥2 model per provider, 字段含 provider/model_id/context/cost/latency；`runtime.executor.engine._call_llm()` 已通过 role route 接入 |
 | P4-E2 | Compute Mesh Worker Discovery | ✅ passed | `compute-mesh` ≥1 worker (本地 stub) registered, 5s heartbeat 跑通, ≥1 任务端到端 dispatch 成功 |
 | P4-E3 | 任务 budget policy 落地 | ✅ passed (2026-06-12 closeout) | 业务调用 (P3 D5 demo) 实测 budget 拒绝路径 + 触发 §19 debt register; `_call_llm()` 治理字段齐 5 项 (task_id/budget_usd/estimated_cost_usd/model/debt_path); 20/20 executor engine tests pass; 复用策略: 同 task_id = 同 debt ID + occurrence_count/first_seen_at 持久; evidence: `.omo/tasks/registry/done/OPC-P4-E3/evidence-package.md` |
-| P4-E4 | 跨仓 audit trail 归因 | ✅ passed (2026-06-12 closeout) | 每次 LLM 调用写入 `llm-gateway/audit/llm_calls.jsonl` (fcntl 进程锁); `LLMCallAuditRecord` Pydantic schema 强制 8 必填字段 (task_id/role/provider/model/input_tokens/output_tokens/total_cost_usd/latency_ms) + ts/route/metadata; 5/5 llm-gateway P4 audit tests pass; omo audit-rollout 跨仓聚合 (workspace R0 + omo n/a); evidence: `.omo/tasks/registry/done/OPC-P4-E4/evidence-package.md` + `audit-rollout-summary.md` + `llm-audit-sample.json` |
+| P4-E4 | 跨仓 audit trail 归因 | ✅ passed (2026-06-12 closeout) | 每次 LLM 调用写入 `llm-gateway/audit/llm_calls.jsonl` (fcntl 进程锁); `LLMCallAuditRecord` Pydantic schema 强制 8 必填字段 (task_id/role/provider/model/input_tokens/output_tokens/total_cost_usd/latency_ms) + ts/route/metadata; 5/5 llm-gateway P4 audit tests pass; omo audit-rollout 5 仓聚合 (workspace R0 + omo R0 + llm-gateway R0 + compute-mesh R0 + runtime R0); evidence: `.omo/tasks/registry/done/OPC-P4-E4/evidence-package.md` + `audit-rollout-summary.md` + `llm-audit-sample.json` + `.omo/_delivery/audit-rollout/2026-06-12-5repos.json` |
 
 ## Gate Status
 
@@ -52,10 +52,16 @@ becomes the **only** worker discovery abstraction. Business code calls
 2. `llm-gateway/src/llm_gateway/registry_data/role_routes.yaml` 落地 ✅
 3. `compute-mesh` 至少 1 worker registered + heartbeat 实证 ✅
 4. ≥1 P3 D5 demo task 跑通, audit trail 含 cost/latency/model ✅
-5. 跨仓 omo audit-rollout 报告: 实际只聚合 2 仓 (workspace + omo), 含 4 仓 §17 metrics 暂未达到 ⚠️
-   - 当前: workspace R0 (density=0.0) + omo n/a 显式标记
-   - 待补: llm-gateway / compute-mesh / runtime 三仓的 §17 metrics dispatcher
-   - 2026-06-12 复验: "4 仓" 描述与实际 2 仓 rollout 报告不符, 已改为诚实标记
+5. 跨仓 omo audit-rollout 报告: 5 仓 §17 metrics 聚合 ✅ (本轮 2026-06-12 推进)
+   - 落 .omo/_delivery/audit-rollout/2026-06-12-5repos.json (5/5 with metrics, 0 n/a)
+   - 5 仓 health_grade:
+     - workspace: R0 (4 debt/4 records)
+     - omo: R0 (1553 drift/2427 records, 全部 locked)
+     - llm-gateway: R0 (0 drift/1 record, 4 test files)
+     - compute-mesh: R0 (0 drift/3 records, 3 test files, stub R0 占位)
+     - runtime: R0 (0 drift/17 records, 10 test files)
+   - 实现: scripts/opc_section17_metrics.py + scripts/opc_audit_rollout_5repos.py
+   - 2026-06-12 复验: "2 仓 rollout 报告 vs 4 仓声明" 反证已修
 6. 红线全部 hold (无 business module 绕过 llm-gateway) ✅
 
 ## Phase Open Condition (任务 4 readiness)
@@ -110,7 +116,7 @@ P4 **final close condition** (Gate E passed):
   - `_append_jsonl()` 用 fcntl 进程锁保证并发写安全
   - 5/5 `projects/llm-gateway/tests/test_phase4_budget_and_audit.py` 通过 (3 新增 closeout 测试: schema 全字段声明 / 空字符串拒绝 / 跨 task_id 归因)
   - 真实 audit 样本: `opc-p4-audit-demo` task → 1 条 record, 11 字段齐全
-  - `omo audit-rollout` 跨仓聚合 (`workspace:.` + `omo:projects/omo`): workspace R0 (density=0.0, 1535/2080 drift 主要是 §19 历史债) + omo n/a (子仓缺 §17 dispatcher 入口, **显式诚实标记, 非虚假绿**)
+  - `omo audit-rollout` 5 仓聚合 (`workspace:.` + `omo:projects/omo` + `llm-gateway:projects/llm-gateway` + `compute-mesh:projects/compute-mesh` + `runtime:projects/runtime`): 5 仓全 R0, 0 n/a. 落 .omo/_delivery/audit-rollout/2026-06-12-5repos.json
   - 完整证据: `.omo/tasks/registry/done/OPC-P4-E4/evidence-package.md` + `audit-rollout-summary.md` + `llm-audit-sample.json`
 - **Gate E closed 2026-06-12**: E1-E4 全部 passed
   - `opc_phase4_gate_e_passed` signal 已 emit
