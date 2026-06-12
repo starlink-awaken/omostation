@@ -1,4 +1,4 @@
-.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit debt-check doc-lint
+.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit debt-check doc-lint x1-check x2-check x3-check x4-check x1-x4-check
 
 help:
 	@echo "Workspace 根 Makefile — 委派到 projects/"
@@ -19,8 +19,22 @@ help:
 	@echo "make governance-validate 验证任务 Schema"
 	@echo "make governance-index-check 检查 INDEX.md 覆盖率"
 	@echo ""
+	@echo "=== X1-X4 治理框架 ==="
+	@echo "make x1-check           X1 审计链检查"
+	@echo "make x2-check           X2 抗熵检查"
+	@echo "make x3-check           X3 价值栈检查"
+	@echo "make x4-check           X4 一致性检查"
+	@echo "make x1-x4-check        X1-X4 全维度检查"
+	@echo ""
 	@echo "=== 债务 ==="
 	@echo "make debt-check          检查债务状态"
+	@echo "make debt-audit          定期债务审计"
+	@echo "make debt-leaderboard    债务排行榜"
+	@echo ""
+	@echo "=== 可视化 ==="
+	@echo "make governance-dashboard 生成 HTML 报告"
+	@echo "make governance-data      生成 JSON 数据"
+	@echo "make governance-query     查询治理数据"
 	@echo ""
 	@echo "=== 文档 ==="
 	@echo "make doc-lint            检查文档格式"
@@ -127,3 +141,20 @@ debt-leaderboard:
 
 governance-query:
 	python3 scripts/governance-query.py all
+
+# ── X1-X4 治理框架 ─────────────────────────────────────────────────────────────
+
+x1-check:
+	bash scripts/x1-audit-check.sh
+
+x2-check:
+	bash scripts/x2-staleness-check.sh
+
+x3-check:
+	bash scripts/x3-value-check.sh
+
+x4-check:
+	bash scripts/x4-consistency-check.sh
+
+x1-x4-check:
+	bash scripts/x1-x4-check.sh
