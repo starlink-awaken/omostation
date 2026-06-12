@@ -1,0 +1,15 @@
+id: OPC-P15-KAI-01
+title: "kairon JSONL write path audit and schema check hardening"
+status: planned
+priority: P1
+domain: kairon
+created: "2026-06-11"
+prerequisite_for: OPC-P2
+description: |
+  kairon 多包工作区(16 packages)的 JSONL 写入路径审计。替换直接
+  json.dumps+open("a") 为 schema-checked AppendOnlyLog 或等效原子写。
+  R48 探路报告确认存在高风险直接 JSONL 追加路径。
+tasks:
+  - audit: 查找所有 json.dumps + open("a") JSONL 写入点
+  - replace: 替换为 AppendOnlyLog 或带 schema 校验的写入
+  - verify: 确保写入有 fsync + atomic rename

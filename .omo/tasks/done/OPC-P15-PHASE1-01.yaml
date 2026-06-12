@@ -1,0 +1,14 @@
+id: OPC-P15-PHASE1-01
+title: "Phase 1: Memory Adapter and Architecture Decoupling"
+status: done
+priority: P0
+domain: kairon
+created: "2026-06-12"
+description: |
+  Implementation of eCOS v6.1 Roadmap Phase 1:
+  1. Decouple ecos <-> agora dependency loop via Dependency Inversion.
+  2. Implement Mem0 adapter in kairon/kos for dual-track memory pipeline.
+tasks:
+  - decouple: apply dependency inversion principle for ecos and agora
+  - mem0_adapter: create memory_adapter.py in kairon/kos integrating Mem0
+  - routing: mount adapter to agora routing
