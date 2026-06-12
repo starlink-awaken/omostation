@@ -1,0 +1,15 @@
+# 治理检查 Cron 配置
+#
+> 定时执行 X1-X4 治理检查
+>
+> 安装: crontab .omo/cron/governance-crontab
+> 查看: crontab -l | grep governance
+
+# 每天早上 9 点运行 X1-X4 全维度检查
+0 9 * * * cd /Users/xiamingxing/Workspace && bash scripts/x1-x4-check.sh >> /tmp/governance-check.log 2>&1
+
+# 每周一早上 10 点运行债务审计
+0 10 * * 1 cd /Users/xiamingxing/Workspace && bash scripts/debt-audit.sh >> /tmp/debt-audit.log 2>&1
+
+# 每月 1 号早上 11 点生成治理报告
+0 11 1 * * cd /Users/xiamingxing/Workspace && python3 scripts/generate-governance-dashboard.py >> /tmp/governance-report.log 2>&1
