@@ -1,4 +1,4 @@
-"""agora.bus — unified bus interface (Phase A.1)."""
+"""agora.bus — unified bus interface (Phase A.1, R60 adds SSE)."""
 from __future__ import annotations
 
 import logging
@@ -13,10 +13,28 @@ from agora.bus.router import Router
 logger = logging.getLogger(__name__)
 
 # Multi-backend: route by envelope.backend, default = eventbus
+# SSE backend (R60): registered lazily so agora.sse import does not block
+# the bus facade cold start in environments where SSE is unused.
 _backends: dict[str, object] = {
     "eventbus": EventBusBackend(),
     "croniter": CroniterBackend(),
 }
+_sse_registered = False
+
+
+def _ensure_sse_registered() -> None:
+    global _sse_registered
+    if _sse_registered:
+        return
+    try:
+        from agora.bus.backends.sse import SSEBackend  # noqa: WPS433
+
+        _backends["sse"] = SSEBackend()
+        _sse_registered = True
+    except Exception as e:
+        logger.warning("bus_sse_register_skipped err=%s", e)
+
+
 _croniter = _backends["croniter"]  # expose for schedule() to use
 
 # Default router uses eventbus
@@ -33,6 +51,9 @@ __all__ = ["BusEnvelope", "EventType", "publish", "subscribe", "schedule"]
 def publish(envelope: BusEnvelope) -> str:
     """Publish via the appropriate backend (envelope.backend, default eventbus)."""
     backend_name = getattr(envelope, "backend", None) or "eventbus"
+    # Lazy-load SSE backend on first publish() call (R60: keep cold start fast).
+    if backend_name == "sse":
+        _ensure_sse_registered()
     backend = _backends.get(backend_name)
     if backend is None:
         # Unknown backend — fall through to default router + DLQ
