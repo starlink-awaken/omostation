@@ -23,7 +23,9 @@ class Router:
     def publish(self, envelope: BusEnvelope) -> str:
         if not self.backend.is_available():
             logger.warning(
-                "router_backend_unavailable", self.backend.name, envelope.id
+                "router_backend_unavailable: backend=%s event_id=%s",
+                self.backend.name,
+                envelope.id,
             )
             self.dlq.enqueue(
                 event_id=envelope.id,
@@ -37,7 +39,10 @@ class Router:
             return self.backend.publish(envelope)
         except Exception as e:
             logger.error(
-                "router_publish_failed", self.backend.name, envelope.id, e
+                "router_publish_failed: backend=%s event_id=%s error=%s",
+                self.backend.name,
+                envelope.id,
+                e,
             )
             self.dlq.enqueue(
                 event_id=envelope.id,
