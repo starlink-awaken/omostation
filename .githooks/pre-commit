@@ -1,0 +1,37 @@
+#!/bin/bash
+# Pre-commit hook: ruff check + debt prevention
+set -euo pipefail
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+REPO_NAME=$(basename "$REPO_ROOT")
+DEBT_WARNINGS=0
+
+echo "🔍 Pre-commit: $REPO_NAME"
+
+# Ruff check on staged Python files
+STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM -- '*.py' 2>/dev/null | grep -v "__pycache__" | grep -v ".venv" || true)
+if [ -n "$STAGED_PY" ] && command -v ruff &>/dev/null; then
+    ruff check $STAGED_PY 2>&1 || { echo "❌ ruff check failed"; exit 1; }
+fi
+
+# Debt prevention: non-atomic write check
+if [ -n "$STAGED_PY" ]; then
+    for f in $STAGED_PY; do
+        FULL_PATH="$REPO_ROOT/$f"
+        if [ ! -f "$FULL_PATH" ] || echo "$f" | grep -q "test\|conftest"; then
+            continue
+        fi
+        if grep -qE "write_text|open\([^)]*['\"]w['\"]" "$FULL_PATH" 2>/dev/null; then
+            if ! grep -q "atomic_write" "$FULL_PATH" 2>/dev/null; then
+                echo "⚠️  潜在非原子写入: $f"
+                DEBT_WARNINGS=$((DEBT_WARNINGS + 1))
+            fi
+        fi
+    done
+fi
+
+if [ "$DEBT_WARNINGS" -gt 0 ]; then
+    echo "⚠️  债务预防警告: $DEBT_WARNINGS 项"
+fi
+
+echo "✅ Pre-commit check complete"
