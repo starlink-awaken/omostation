@@ -1,0 +1,103 @@
+# X1-X4 治理检查器注册表
+#
+> 统一管理所有治理检查器，支持动态注册和执行
+> 位置: .omo/_truth/registry/governance-checks.yaml
+
+version: 1.0
+description: X1-X4 治理检查器注册表
+
+# 检查器注册
+checkers:
+  # X1 审计链
+  - id: x1-audit-chain
+    dimension: X1
+    name: "审计链检查器"
+    description: "检查操作是否安全：债务审计 + 操作审计"
+    module: "ecos.l0.governance.checkers"
+    class: "X1AuditChainChecker"
+    type: python  # python / shell / mcp
+    severity: high
+    enabled: true
+    schedule: "daily"  # daily / weekly / on-demand
+    
+  # X2 抗熵
+  - id: x2-staleness
+    dimension: X2
+    name: "抗熵检查器"
+    description: "检查数据是否新鲜：债务新鲜度 + 健康度趋势"
+    module: "ecos.l0.governance.checkers"
+    class: "X2StalenessChecker"
+    type: python
+    severity: medium
+    enabled: true
+    schedule: "daily"
+    
+  # X3 价值栈
+  - id: x3-value
+    dimension: X3
+    name: "价值栈检查器"
+    description: "检查投入是否合理：债务优先级 + SLA 达成"
+    module: "ecos.l0.governance.checkers"
+    class: "X3ValueChecker"
+    type: python
+    severity: medium
+    enabled: true
+    schedule: "weekly"
+    
+  # X4 一致性
+  - id: x4-consistency
+    dimension: X4
+    name: "一致性检查器"
+    description: "检查规则是否被遵守：CI + pre-commit + 文档"
+    module: "ecos.l0.governance.checkers"
+    class: "X4ConsistencyChecker"
+    type: python
+    severity: high
+    enabled: true
+    schedule: "daily"
+
+# 执行策略
+execution:
+  # 并发执行
+  parallel: true
+  max_workers: 4
+  
+  # 超时设置
+  timeout_seconds: 300
+  
+  # 重试策略
+  retry:
+    enabled: true
+    max_retries: 2
+    backoff_seconds: 5
+
+# 告警配置
+alerting:
+  # 告警渠道
+  channels:
+    - type: log
+      enabled: true
+    - type: webhook
+      enabled: false
+      url: ""
+  
+  # 告警阈值
+  thresholds:
+    critical: 1   # 1 个 critical 立即告警
+    high: 3       # 3 个 high 告警
+    medium: 10    # 10 个 medium 汇总告警
+
+# SLA 配置
+sla:
+  X1:
+    response_hours: 1
+    resolution_hours: 24
+  X2:
+    response_hours: 24
+    resolution_hours: 168
+  X3:
+    response_hours: 24
+    resolution_hours: 168
+  X4:
+    response_hours: 24
+    resolution_hours: 72
