@@ -767,6 +767,117 @@ def governance_leaderboard() -> str:
 
 
 # ══════════════════════════════════════════════════════════════
+# 治理仪表板 API
+# ══════════════════════════════════════════════════════════════
+
+@_tool()
+def governance_dashboard() -> str:
+    """获取治理仪表板数据。
+
+    Returns:
+        仪表板数据 JSON (健康度、债务、趋势、项目状态)
+    """
+    try:
+        import yaml
+
+        # 读取系统状态
+        system_yaml = _REPO_ROOT / ".omo" / "state" / "system.yaml"
+        if not system_yaml.exists():
+            return json.dumps({"error": "system.yaml 不存在"})
+
+        with open(system_yaml) as f:
+            data = yaml.safe_load(f) or {}
+
+        # 读取趋势数据
+        trend_path = _REPO_ROOT / ".omo" / "_control" / "debt-dashboard" / "health-trend.md"
+        trend_data = []
+        if trend_path.exists():
+            with open(trend_path) as f:
+                for line in f:
+                    if "|" in line and "2026" in line:
+                        parts = [p.strip() for p in line.split("|") if p.strip()]
+                        if len(parts) >= 3:
+                            try:
+                                trend_data.append({
+                                    "date": parts[0],
+                                    "debt_weight": float(parts[1]),
+                                    "debt_health": float(parts[2]),
+                                })
+                            except (ValueError, IndexError):
+                                pass
+
+        # 读取项目状态
+        projects = ["kairon", "gbrain", "metaos", "agora", "cockpit", "ecos", "omo", "runtime"]
+        project_status = []
+        for proj in projects:
+            proj_dir = _REPO_ROOT / "projects" / proj
+            if proj_dir.exists():
+                has_githooks = (proj_dir / ".githooks").exists()
+                project_status.append({
+                    "name": proj,
+                    "status": "healthy" if has_githooks else "warning",
+                    "has_githooks": has_githooks,
+                })
+
+        return json.dumps(
+            {
+                "health_score": data.get("health_score", 0),
+                "debt_weight": data.get("debt_weight", 0),
+                "debt_health": data.get("debt_metrics", {}).get("debt_health", 0),
+                "resolved_count": data.get("debt_metrics", {}).get("resolved_count", 0),
+                "unresolved_count": data.get("debt_metrics", {}).get("unresolved_count", 0),
+                "trend": trend_data[-10:] if trend_data else [],
+                "projects": project_status,
+            },
+            ensure_ascii=False,
+        )
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
+@_tool()
+def governance_history(days: int = 30) -> str:
+    """获取治理历史数据。
+
+    Args:
+        days: 查询天数 (默认 30)
+
+    Returns:
+        历史数据 JSON
+    """
+    try:
+        trend_path = _REPO_ROOT / ".omo" / "_control" / "debt-dashboard" / "health-trend.md"
+        if not trend_path.exists():
+            return json.dumps({"error": "health-trend.md 不存在", "days": days, "data": []})
+
+        trend_data = []
+        with open(trend_path) as f:
+            for line in f:
+                if "|" in line and "2026" in line:
+                    parts = [p.strip() for p in line.split("|") if p.strip()]
+                    if len(parts) >= 3:
+                        try:
+                            trend_data.append({
+                                "date": parts[0],
+                                "debt_weight": float(parts[1]),
+                                "debt_health": float(parts[2]),
+                            })
+                        except (ValueError, IndexError):
+                            pass
+
+        return json.dumps(
+            {
+                "days": days,
+                "total": len(trend_data),
+                "data": trend_data,
+            },
+            ensure_ascii=False,
+        )
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
+# ══════════════════════════════════════════════════════════════
 # Module execution
 # ══════════════════════════════════════════════════════════════
 
