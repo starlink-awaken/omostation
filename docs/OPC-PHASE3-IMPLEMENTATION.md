@@ -1,123 +1,81 @@
 # OPC-P3: Swarm Execution Spine — Implementation Baseline
 
-> Date: 2026-06-11
-> P2: T4 completed, implementation in progress
-> Source: OPC-ROADMAP.md §M3, opc-roadmap-omo-plan.md §Phase 3
-> Status: implementation entry; Gate D opened (D1+D2 passed, D3-D5 not started)
+> Date: 2026-06-12
+> P2: Gate C passed (C1+C2+C3+C4 closed, 21/21 tests pass)
+> Source: `OPC-ROADMAP.md` §M3, `opc-roadmap-omo-plan.md` §Phase 3
+> Status: implementation complete; Gate D passed
 > Source-of-truth: `.omo/tasks/registry/done/OPC-P3-GATE-D-OPENING.yaml`
 
 ---
 
-## Current P2 State (carried in, ACTUAL)
+## Current State
 
-| Task | Status | Note |
-|:----|:------|:-----|
-| T4 8-field metadata | ✅ completed | All searches tagged with full schema |
-| T3 all-search route | ✅ implemented | `bos://memory/local/all-search` in POC_SERVICES |
-| T3 multi-zone (KOS/vault) | 📝 deferred | Requires running kairon subprocess |
-| Gate C | ✅ **passed** | C1+C2+C3+C4 closed, 21/21 tests (DO NOT mark as pending) |
+| Sub-gate | Status | Evidence |
+|:---------|:-------|:---------|
+| D1 Task Object Runtime Binding | ✅ passed | `.omo/tasks/registry/done/OPC-P3-D1/` |
+| D2 Dispatch and Heartbeat | ✅ passed | `.omo/tasks/registry/done/OPC-P3-D2/` |
+| D3 Role Realization | ✅ passed | `.omo/tasks/registry/done/OPC-P3-D3/role-realization-summary.yaml` |
+| D4 Result Writeback and Audit | ✅ passed | `.omo/tasks/registry/done/OPC-P3-D4/writeback-audit-summary.md` |
+| D5 Minimal Demo | ✅ passed | `.omo/tasks/registry/done/OPC-P3-D5/minimal-demo-report.md` |
+| Gate D | ✅ passed | D1-D5 closed, replayable thin-binding demo verified |
 
----
+## Strategic Choice
 
-## P3: Swarm Execution Spine — Architecture
+P3 最终采用 **thin binding** 路径收口：
 
-### Architecture
+- task lifecycle / dispatch / reclaim / watchdog 全部复用 `projects/omo`
+- 不把 `swarm-engine` refactor 缺口纳入本轮 Gate D blocking item
+- 通过 replayable demo 证明角色分工、结果写回、失败跟进都已经是实物，不再停留在设计稿
 
-```
+当前主路径：
+
+```text
 User Goal
-  │
-  ▼
-OMO Task ("decompose P2 into implementation tasks")
-  │  decompose (planner)
-  ▼
-Swarm DAG (3 worker nodes)
-  │
-  ├── Worker 1: researcher  —  search cockpit + BOS
-  ├── Worker 2: reviewer    —  code review + lint check
-  └── Worker 3: verifier    —  test suite run
-  │
-  ▼
-Dispatch → runtime worker → execute → result
-  │                                  │
-  ┌──────────────────────────────────┘
-  │ result → OMO audit → task status update
-  │ failure → retry (max 3x) → dead → OMO debt
-  ▼
+  -> OMO task packet
+  -> omo_worker_dispatch
+  -> workers.yaml (planner / researcher / reviewer / operator)
+  -> checkpoint / review / handoff index
+  -> task done + governed follow-up
 ```
 
-### Task Object
+## D3-D5 Replay
 
-```yaml
-id: TASK-xxx
-status: planned | assigned | running | completed | failed | dead
-priority: P0-P3
-owner: researcher | planner | coder | reviewer | operator | critic
-retries: 0-3
-input: {uri, args}
-output: {result, artifacts}
-audit: {started, heartbeat_last, heartbeat_count, failures}
-debt: {trigger_count, max_failures: 3}
+固定回放命令：
+
+```bash
+python3 scripts/opc_p3_thin_binding_demo.py
 ```
 
-### Component Boundaries
+回放输出：
 
-| Component | Role | Implementation |
-|:----------|:-----|:---------------|
-| OMO | Task creation, goal decomposition | `.omo/tasks/`, `system.yaml` |
-| swarm-engine | Task market, DAG, dispatch | `projects/swarm-engine/` |
-| aetherforge | Product aggregation API | `projects/aetherforge/` |
-| runtime | Execution isolation, KEI | `projects/runtime/` |
-| agora | Agent capability discovery | `project/agora/` (BOS registry) |
-| metaos | High-risk execution gates | `projects/metaos/` |
+- D3 role summary: `.omo/tasks/registry/done/OPC-P3-D3/role-realization-summary.yaml`
+- D4 writeback summary: `.omo/tasks/registry/done/OPC-P3-D4/writeback-audit-summary.md`
+- D5 demo report: `.omo/tasks/registry/done/OPC-P3-D5/minimal-demo-report.md`
+- shared runtime root: `.omo/tasks/registry/done/OPC-P3-D5/runtime-root/`
 
-### Six Agent Roles
+## What Was Proven
 
-| Role | System | Budget | Slot |
-|:-----|:-------|:------|:----:|
-| researcher | kairon KOS, cockpit local | Low | 2 |
-| planner | swarm-engine, OMO | Medium | 1 |
-| coder | runtime sandbox | High | 2 |
-| reviewer | cockpit code analyze | Medium | 1 |
-| operator | runtime KEI, cron-service | Medium | 1 |
-| critic | metaos, model-driven | Low | 1 |
+### D3 — Role Realization
 
-### Failure Protocol
+- 至少 3 个角色参与同一个真实固定目标：planner / researcher / reviewer
+- 每个角色都有独立 `task_id`、`worker_id`、输入引用和输出 deliverable
+- 角色边界通过 worker prompt contract 和 allowed write path 落到运行产物
 
-1. Heartbeat: 30s intervals
-2. 2 missed heartbeats → worker marked failed
-3. Immediate retry (max 3 attempts)
-4. Exhausted → task dead, OMO debt registered
-5. Peer review: planer → coder → reviewer → verifier (independent)
+### D4 — Result Writeback and Audit
 
----
+- 完成任务可通过 handoff index 回查
+- review note / checkpoint / dispatch record / deliverable 全部可追溯
+- 一个 `reclaim_due` 失败 worker 会触发 governed follow-up packet，而不是口头说明
 
-## P3 Task Registry
+### D5 — Minimal Demo
 
-| Task ID | Title | Status |
-|:--------|:------|:------|
-| OPC-P3-01 | Swarm task object schema | ✅ design complete |
-| OPC-P3-02 | Component boundary map (6 owners) | ✅ design complete |
-| OPC-P3-03 | 6 agent role definitions | ✅ design complete |
-| OPC-P3-04 | Worker dispatch + heartbeat + retry | ✅ design complete |
-| OPC-P3-05 | Three-worker demo specification | ✅ design complete |
+- 固定目标被拆成三个 worker task
+- 角色分离执行后形成最终 answer artifact
+- 整条链路可 replay，不依赖人工口述或单次终端截图
 
----
+## Exit Condition
 
-## Signal
+P3 已不再阻塞后续 phase：
 
-```
-opc_phase3_implementation_entry
-```
-
-P3 design baseline complete. Implementation requires swarm-engine/runtime/aetherforge activation.
-
-### Current Panorama
-
-```
-OPC-P0  ✅ passed          Gate A: passed
-OPC-P1  ✅ conditional     Gate B: accepted
-OPC-P1.5 ✅ baseline       Gate B2: accepted
-OPC-P2  ⏳ in progress     Gate C: evidence submitted
-OPC-P3  ⏳ design ready    Gate D: awaiting
-OPC-P4  ⬜                 model gateway + compute
-```
+- P4 可以正式进入 E1-E4 implementation entry
+- P5-P7 仍保持后续 phase，等前置 gate 顺序推进

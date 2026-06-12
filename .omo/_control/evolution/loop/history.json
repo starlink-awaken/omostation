@@ -1,0 +1,41 @@
+{
+  "runs": [
+    {
+      "week": "2026-W24",
+      "generated_at": "2026-06-12T07:48:59Z",
+      "candidate_count": 8,
+      "planned_count": 8,
+      "drift_count": 0,
+      "approval_required_all": true
+    },
+    {
+      "week": "2026-W27",
+      "generated_at": "2026-06-12T07:32:37Z",
+      "candidate_count": 8,
+      "planned_count": 8,
+      "drift_count": 0,
+      "approval_required_all": true
+    },
+    {
+      "week": "2026-W28",
+      "generated_at": "2026-06-12T07:32:41Z",
+      "candidate_count": 8,
+      "planned_count": 8,
+      "drift_count": 0,
+      "approval_required_all": true
+    },
+    {
+      "week": "2026-W29",
+      "generated_at": "2026-06-12T07:32:44Z",
+      "candidate_count": 8,
+      "planned_count": 8,
+      "drift_count": 0,
+      "approval_required_all": true
+    }
+  ],
+  "summary": {
+    "weeks_recorded": 4,
+    "max_consecutive_weeks": 3,
+    "latest_week": "2026-W29"
+  }
+}

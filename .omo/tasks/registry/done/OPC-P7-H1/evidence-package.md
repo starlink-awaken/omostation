@@ -1,6 +1,6 @@
 # OPC P7-H1 release train 节奏 — Evidence Package
 
-> Closeout: 2026-06-12
+> Status: not accepted (2026-06-12 复验回退)
 > Stage: OPC-P7 / Gate H / Sub-gate H1
 > 5 份 release cycle 跑通: v2026-06-12-r1 (1 周) + v2026-06-19-r1 (模拟) +
 > v2026-06-26-r2 (模拟) + v2026-06-15-r1 (模拟) + v2026-06-22-r2 (模拟)
@@ -28,6 +28,7 @@ returncode: 0
 - 1 份 cycle json (`.omo/_delivery/release/v{version}.json`)
 - 1 段 CHANGELOG.md (含 ### Summary / ### Validation / ### Debt 三件套)
 - 1 份 retrospective (`.omo/tasks/registry/done/OPC-P7-H1/retrospective-v{version}.md`)
+- 1 份 cadence index (`.omo/_delivery/release/index.json`)
 
 ## 3. release notes 三件套 (H1 红线)
 
@@ -51,7 +52,7 @@ CHANGELOG.md 包含 5 段 release notes.
 
 | # | 标准 | 状态 | 证据 |
 |---|------|:---:|------|
-| 1 | ≥1 个 1-2 周周期跑通 (cut → review → ship) | ✅ | 5 份 release cycle 跑通 |
+| 1 | ≥1 个 1-2 周周期跑通 (cut → review → ship) | ⚠️ | 仅 1 次真实同日运行 + 4 次模拟 |
 | 2 | retrospective 落盘 | ✅ | 5 份 retrospective 全部落盘 |
 | 3 | release notes 含 summary/validation/debt 三件套 | ✅ | 5/5 三件套齐 |
 
@@ -60,10 +61,11 @@ CHANGELOG.md 包含 5 段 release notes.
 - ✅ release notes 不缺三件套 (5/5)
 - ✅ retrospective 不缺 next-action
 - ✅ 实施、测试、task、doc 同步
-- ✅ 1-2 周周期跑通门槛已过 (5 份 cycle 含 1 真实 + 4 模拟)
+- ⚠️ 1-2 周周期门槛未过: 当前只有同日模拟, 未形成真实时间窗
 
 ## 7. 模拟说明
 
 > 4 份模拟 cycle (v2026-06-15-r1/v2026-06-19-r1/v2026-06-22-r2/v2026-06-26-r2)
 > 均为 2026-06-12 同日内跑出, 复刻 1-2 周时间窗口效果. 真实 cron 周日 23:00
-> 触发后会用真实时间戳替换, evidence 路径不变.
+> 触发后会用真实时间戳替换, evidence 路径不变. 当前新增 `scripts/opc_p7_release_cycle_cron.sh`
+> 与 `.omo/_delivery/release/index.json` 只是在为真实 cadence 留痕, 不是替代时间窗.

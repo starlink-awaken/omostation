@@ -1,0 +1,434 @@
+{
+  "week": "2026-W28",
+  "generated_at": "2026-06-12T07:32:41Z",
+  "radar": {
+    "stage": "radar",
+    "ts": "2026-06-12T07:32:41Z",
+    "output": {
+      "scenario": "technical-radar",
+      "generated_at": "2026-06-12T07:32:41Z",
+      "candidates": [
+        {
+          "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:45",
+          "timestamp": "2026-06-12T06:55:51Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 45,
+          "score": 12
+        },
+        {
+          "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:43",
+          "timestamp": "2026-06-12T06:46:58Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 43,
+          "score": 12
+        },
+        {
+          "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:41",
+          "timestamp": "2026-06-11T10:11:55Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 41,
+          "score": 12
+        },
+        {
+          "title": "Platform: consolidate 'search-trace: closeout acceptance 1781172355924474000' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:39",
+          "timestamp": "2026-06-11T10:05:55Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 39,
+          "score": 12
+        },
+        {
+          "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:38",
+          "timestamp": "2026-06-11T10:04:48Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 38,
+          "score": 12
+        },
+        {
+          "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:36",
+          "timestamp": "2026-06-11T10:02:13Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 36,
+          "score": 12
+        },
+        {
+          "title": "Platform: consolidate 'search-trace: AGENTS' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:34",
+          "timestamp": "2026-06-11T09:49:15Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 34,
+          "score": 12
+        },
+        {
+          "title": "Platform: consolidate 'search-trace: query' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:44",
+          "timestamp": "2026-06-12T06:55:51Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 44,
+          "score": 9
+        }
+      ],
+      "candidates_count": 8,
+      "source": "cockpit:research",
+      "db_path": "/Users/xiamingxing/.workspace/data.db",
+      "trigger_source": "cron",
+      "archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260612T073241Z-technical-radar-c884da7c.json"
+    }
+  },
+  "drift": {
+    "generated_at": "2026-06-12T07:32:41Z",
+    "kinds": 4,
+    "drift_count": 0,
+    "results": [
+      {
+        "kind": "entry_drift",
+        "ts": "2026-06-12T07:32:41Z",
+        "expected": [
+          "radar",
+          "assistant",
+          "health"
+        ],
+        "present": [
+          "radar",
+          "assistant",
+          "health"
+        ],
+        "missing": [],
+        "drift": false
+      },
+      {
+        "kind": "doc_drift",
+        "ts": "2026-06-12T07:32:41Z",
+        "plan_gate_status": "passed",
+        "doc_says_passed": true,
+        "consistent": true,
+        "drift": false
+      },
+      {
+        "kind": "duplicate_facts",
+        "ts": "2026-06-12T07:32:41Z",
+        "findings": [],
+        "drift": false
+      },
+      {
+        "kind": "agora_bypass",
+        "ts": "2026-06-12T07:32:41Z",
+        "scanned_files": [
+          "projects/runtime/src/runtime/executor/engine.py",
+          "projects/cockpit/src/cockpit/commands/scenario.py",
+          "projects/runtime/src/runtime/executor/config/__init__.py"
+        ],
+        "bypass_patterns": [],
+        "drift": false
+      }
+    ]
+  },
+  "gap": {
+    "stage": "gap",
+    "ts": "2026-06-12T07:32:41Z",
+    "candidates": [
+      {
+        "candidate": {
+          "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:45",
+          "timestamp": "2026-06-12T06:55:51Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 45,
+          "score": 12
+        },
+        "score": 1.0,
+        "lane": "radar"
+      },
+      {
+        "candidate": {
+          "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:43",
+          "timestamp": "2026-06-12T06:46:58Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 43,
+          "score": 12
+        },
+        "score": 1.0,
+        "lane": "radar"
+      },
+      {
+        "candidate": {
+          "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:41",
+          "timestamp": "2026-06-11T10:11:55Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 41,
+          "score": 12
+        },
+        "score": 1.0,
+        "lane": "radar"
+      },
+      {
+        "candidate": {
+          "title": "Platform: consolidate 'search-trace: closeout acceptance 1781172355924474000' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:39",
+          "timestamp": "2026-06-11T10:05:55Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 39,
+          "score": 12
+        },
+        "score": 1.0,
+        "lane": "radar"
+      },
+      {
+        "candidate": {
+          "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:38",
+          "timestamp": "2026-06-11T10:04:48Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 38,
+          "score": 12
+        },
+        "score": 1.0,
+        "lane": "radar"
+      },
+      {
+        "candidate": {
+          "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:36",
+          "timestamp": "2026-06-11T10:02:13Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 36,
+          "score": 12
+        },
+        "score": 1.0,
+        "lane": "radar"
+      },
+      {
+        "candidate": {
+          "title": "Platform: consolidate 'search-trace: AGENTS' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:34",
+          "timestamp": "2026-06-11T09:49:15Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 34,
+          "score": 12
+        },
+        "score": 1.0,
+        "lane": "radar"
+      },
+      {
+        "candidate": {
+          "title": "Platform: consolidate 'search-trace: query' into a shared module",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:44",
+          "timestamp": "2026-06-12T06:55:51Z",
+          "next_action": "create OPC follow-up task + link to source research",
+          "evidence_id": 44,
+          "score": 9
+        },
+        "score": 1.0,
+        "lane": "radar"
+      }
+    ],
+    "candidates_count": 8
+  },
+  "task": {
+    "stage": "task",
+    "ts": "2026-06-12T07:32:41Z",
+    "planned": [
+      {
+        "id": "OPC-P6-LOOP-2026-W24-00",
+        "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
+        "source": "cockpit:research",
+        "score": 1.0,
+        "lane": "radar",
+        "status": "planned",
+        "approval_required": true,
+        "ts": "2026-06-12T07:32:41Z"
+      },
+      {
+        "id": "OPC-P6-LOOP-2026-W24-01",
+        "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
+        "source": "cockpit:research",
+        "score": 1.0,
+        "lane": "radar",
+        "status": "planned",
+        "approval_required": true,
+        "ts": "2026-06-12T07:32:41Z"
+      },
+      {
+        "id": "OPC-P6-LOOP-2026-W24-02",
+        "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
+        "source": "cockpit:research",
+        "score": 1.0,
+        "lane": "radar",
+        "status": "planned",
+        "approval_required": true,
+        "ts": "2026-06-12T07:32:41Z"
+      },
+      {
+        "id": "OPC-P6-LOOP-2026-W24-03",
+        "title": "Platform: consolidate 'search-trace: closeout acceptance 1781172355924474000' into a shared module",
+        "source": "cockpit:research",
+        "score": 1.0,
+        "lane": "radar",
+        "status": "planned",
+        "approval_required": true,
+        "ts": "2026-06-12T07:32:41Z"
+      },
+      {
+        "id": "OPC-P6-LOOP-2026-W24-04",
+        "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
+        "source": "cockpit:research",
+        "score": 1.0,
+        "lane": "radar",
+        "status": "planned",
+        "approval_required": true,
+        "ts": "2026-06-12T07:32:41Z"
+      },
+      {
+        "id": "OPC-P6-LOOP-2026-W24-05",
+        "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
+        "source": "cockpit:research",
+        "score": 1.0,
+        "lane": "radar",
+        "status": "planned",
+        "approval_required": true,
+        "ts": "2026-06-12T07:32:41Z"
+      },
+      {
+        "id": "OPC-P6-LOOP-2026-W24-06",
+        "title": "Platform: consolidate 'search-trace: AGENTS' into a shared module",
+        "source": "cockpit:research",
+        "score": 1.0,
+        "lane": "radar",
+        "status": "planned",
+        "approval_required": true,
+        "ts": "2026-06-12T07:32:41Z"
+      },
+      {
+        "id": "OPC-P6-LOOP-2026-W24-07",
+        "title": "Platform: consolidate 'search-trace: query' into a shared module",
+        "source": "cockpit:research",
+        "score": 1.0,
+        "lane": "radar",
+        "status": "planned",
+        "approval_required": true,
+        "ts": "2026-06-12T07:32:41Z"
+      }
+    ],
+    "red_line_held": "all tasks status=planned; human approval required for active"
+  },
+  "swarm": {
+    "stage": "swarm",
+    "ts": "2026-06-12T07:32:41Z",
+    "note": "P6 closeout 范围内只 plan; 实际派发受红线 'self-evolution task 仅落 planned' 约束",
+    "planned_dispatch": [
+      "OPC-P6-LOOP-2026-W24-00",
+      "OPC-P6-LOOP-2026-W24-01",
+      "OPC-P6-LOOP-2026-W24-02",
+      "OPC-P6-LOOP-2026-W24-03",
+      "OPC-P6-LOOP-2026-W24-04",
+      "OPC-P6-LOOP-2026-W24-05",
+      "OPC-P6-LOOP-2026-W24-06",
+      "OPC-P6-LOOP-2026-W24-07"
+    ],
+    "approval_lane": "opc-p6-self-evolution-board"
+  },
+  "audit": {
+    "stage": "audit",
+    "ts": "2026-06-12T07:32:41Z",
+    "llm_audit_tail": [
+      {
+        "input_tokens": 120,
+        "latency_ms": 0.251,
+        "metadata": {
+          "tool_count": 10
+        },
+        "model": "claude-sonnet-4",
+        "output_tokens": 40,
+        "provider": "anthropic",
+        "role": "planner",
+        "route": {
+          "fallback_used": false,
+          "required_capabilities": [
+            "chat",
+            "tool_use"
+          ],
+          "role": "planner",
+          "selected_model": "anthropic/claude-sonnet-4",
+          "selected_provider": "anthropic",
+          "selection_mode": "registry_route",
+          "selection_reasoning": "Matched demo route anthropic/claude-sonnet-4"
+        },
+        "task_id": "opc-p4-audit-demo",
+        "total_cost_usd": 0.02,
+        "ts": "2026-06-12T02:45:58Z"
+      }
+    ],
+    "llm_audit_count": 1
+  },
+  "history": {
+    "runs": [
+      {
+        "week": "2026-W24",
+        "generated_at": "2026-06-12T07:05:50Z",
+        "candidate_count": 8,
+        "planned_count": 8,
+        "drift_count": 0,
+        "approval_required_all": true
+      },
+      {
+        "week": "2026-W27",
+        "generated_at": "2026-06-12T07:32:37Z",
+        "candidate_count": 8,
+        "planned_count": 8,
+        "drift_count": 0,
+        "approval_required_all": true
+      },
+      {
+        "week": "2026-W28",
+        "generated_at": "2026-06-12T07:32:41Z",
+        "candidate_count": 8,
+        "planned_count": 8,
+        "drift_count": 0,
+        "approval_required_all": true
+      }
+    ],
+    "summary": {
+      "weeks_recorded": 3,
+      "max_consecutive_weeks": 2,
+      "latest_week": "2026-W28"
+    }
+  },
+  "retro": {
+    "stage": "retro",
+    "ts": "2026-06-12T07:32:41Z",
+    "summary": {
+      "radar_candidates": 8,
+      "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260612T073241Z-technical-radar-c884da7c.json",
+      "drift_count": 0,
+      "planned_tasks": 8,
+      "audit_records": 1,
+      "history_weeks_recorded": 3,
+      "history_max_consecutive_weeks": 2
+    },
+    "next_action": "next week's loop continues; if drift > 0 trigger self-evolve register",
+    "evidence_complete": true
+  }
+}

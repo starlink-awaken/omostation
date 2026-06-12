@@ -1,6 +1,6 @@
 # OPC P5-F1 technical-radar — Evidence Package
 
-> Closeout: 2026-06-12 (模拟 ≥2 周连续 cron 跑通)
+> Status: not accepted (2026-06-12 复验回退)
 > Stage: OPC-P5 / Gate F / Sub-gate F1
 > 模拟模式: 用户于 2026-06-12 显式 trigger "走完全部流程" 模拟, 同日内连续 4 周
 >  (W23/W24/W25/W26) 周报落盘 + radar scenario 多次跑通, 复刻 cron 真实触发后
@@ -34,9 +34,10 @@
 - json: `.omo/_control/evolution/loop/2026-W26.json`
 - radar candidates: 3
 
-> **模拟说明**: 4 份 weekly 报告均为 2026-06-12 同日内跑出, ISO 周编号手动
+> **复验结论**: 4 份 weekly 报告均为 2026-06-12 同日内跑出, ISO 周编号手动
 > 选 W23/W24/W25/W26 复刻 4 周连续效果. 真实 cron 周一 09:00 触发后
-> 会用真实时间戳替换, evidence 路径不变.
+> 会用真实时间戳替换, evidence 路径不变. 因此本包仅能证明实现已具备,
+> 不能证明"≥2 周连续 cron 跑通"已验收.
 
 ### 模拟 ≥3 升级 candidates 实证 (取 W26)
 
@@ -76,13 +77,13 @@ DB 命中 1 条 (因为最近 30 条都是 `search-trace:` 自动 trace，
 | 2 | 产出标准化周报 | ✅ | 4 份 weekly-{week}.md + 4 份 .json 落盘 |
 | 3 | 每次至少 3 upgrade candidates | ✅ | candidates_count=3 4/4 周 |
 | 4 | 字段含 source/timestamp/next-action | ✅ | 每条 candidate 必含 4 字段 |
-| 5 | 连续 2 次以上运行证据 (模拟 ≥2 周) | ✅ | 4 周 W23-W26 全部跑通 |
+| 5 | 连续 2 次以上运行证据 (模拟 ≥2 周) | ⚠️ | 仅同日模拟, 不能替代真实 ≥2 周 cron |
 | 6 | cockpit 单入口可触发 | ✅ | `cockpit scenario radar` |
 | 7 | (红线条) 不准 1 次报 passed | ✅ | 4 周独立时间戳, 互不重复 |
 
 ## 6. 红线遵守
 
-- ✅ ≥2 周连续 cron: 模拟 4 周 W23-W26 (周一 09:00 cron 已装系统层, 真实触发后替换)
+- ⚠️ ≥2 周连续 cron: 当前只有同日模拟, 尚未形成真实周级证据
 - ✅ 每次 ≥3 candidates: 4/4 周满足
 - ✅ 含 source + timestamp + next-action: 4 字段齐
 - ✅ 可重复跑: 4 周 evidence_id=34 稳定
@@ -90,16 +91,19 @@ DB 命中 1 条 (因为最近 30 条都是 `search-trace:` 自动 trace，
 ## 7. cron 实证路径
 
 ```text
-$ crontab -l | grep opc-closeout
-# Mon 09:00 weekly_loop → scripts/opc_p6_weekly_loop.py
-# 验证: crontab 2026-06-12 13:05 装系统层
+$ crontab -l | grep opc-radar
+# Mon 08:00 technical-radar → scripts/opc_p5_radar_cron.py
 ```
+
+当前新增留痕:
+- `scripts/opc_p5_radar_cron.py`
+- `.omo/_control/evolution/radar-history.json`
+- `.omo/_control/evolution/radar/2026-06-12.json`
 
 ## 8. 已知限制
 
 1. **evidence_id=34 是当前 DB 中唯一命中关键字的记录**。P5 长期跑需要
    cockpit research 写入更多带 OPC/平台关键字的研究, 雷达才有"非兜底"输出。
 2. **当前 schema 未升级为 Pydantic**（保持 dict 风格），后续可加最小 schema 校验。
-3. **4 周 weekly 是同日模拟, 不是真实时间窗口** — 用户于 2026-06-12 显式
-   授权"模拟触发过程, 走完全部流程", 真实 cron 周一 09:00 触发后 evidence
-   路径不变, 真实时间戳替换 generated_at 即可.
+3. **4 周 weekly 是同日模拟, 不是真实时间窗口** — 这正是 F1 当前未通过的
+   主因. 真实 cron 周一 09:00 连续运行并保留同路径证据后, 方可重新申请验收.

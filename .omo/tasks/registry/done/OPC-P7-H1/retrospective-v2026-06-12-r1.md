@@ -1,6 +1,6 @@
 # OPC P7-H1 retrospective — v2026-06-12-r1
 
-Generated: 2026-06-12T03:32:51Z
+Generated: 2026-06-12T06:46:58Z
 
 ## cycle state
 - stage: ship
@@ -11,13 +11,13 @@ Generated: 2026-06-12T03:32:51Z
 ```json
 {
   "summary": {
-    "commit_count": 217,
+    "commit_count": 666,
     "drift_count": 0
   },
   "validation": {
     "omo_tests": {
       "returncode": 0,
-      "summary": "12 passed in 0.18s"
+      "summary": "20 passed in 0.24s"
     },
     "drift": {
       "kinds": 4,

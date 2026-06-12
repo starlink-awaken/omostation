@@ -1,0 +1,17 @@
+workers:
+- id: planner-001
+  transports:
+    cli_prompt:
+      command: planner "{prompt}"
+- id: researcher-001
+  transports:
+    cli_prompt:
+      command: researcher "{prompt}"
+- id: reviewer-001
+  transports:
+    cli_prompt:
+      command: reviewer "{prompt}"
+- id: operator-001
+  transports:
+    cli_prompt:
+      command: operator "{prompt}"

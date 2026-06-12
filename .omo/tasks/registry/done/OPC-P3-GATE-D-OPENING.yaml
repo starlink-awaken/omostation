@@ -55,15 +55,60 @@ sub_gates:
         (real reclaim_task call with successor_worker_id transition recorded)"
   - id: OPC-P3-D3
     title: "Role Realization"
-    status: not_started
+    status: passed
+    claimed_verdict: pass
+    closed_at: "2026-06-12"
+    evidence_dir: .omo/tasks/registry/done/OPC-P3-D3/
+    criteria:
+      - "at least three roles participate in one real goal"
+      - "each role has clear input/output boundaries"
+    runtime_evidence: |
+      THIN-BINDING role demo: TASK-P3-DEMO-GOAL decomposed into 3 worker tasks
+        - planner-001 -> TASK-P3-PLAN -> delivery/planner-plan.md
+        - researcher-001 -> TASK-P3-RESEARCH -> delivery/research-findings.md
+        - reviewer-001 -> TASK-P3-REVIEW -> delivery/final-answer.md
+      Role summary written to:
+        - .omo/tasks/registry/done/OPC-P3-D3/role-realization-summary.yaml
+      Each role records:
+        - worker_id
+        - input_refs
+        - output_ref
+        - review_ref
   - id: OPC-P3-D4
     title: "Result Writeback and Audit"
-    status: not_started
+    status: passed
+    claimed_verdict: pass
+    closed_at: "2026-06-12"
+    evidence_dir: .omo/tasks/registry/done/OPC-P3-D4/
+    criteria:
+      - "one completed worker result is queryable after execution"
+      - "one failed worker creates governed follow-up"
+    runtime_evidence: |
+      COMPLETED results:
+        - handoff indexes written for TASK-P3-PLAN / TASK-P3-RESEARCH / TASK-P3-REVIEW / TASK-P3-DEMO-GOAL
+        - worker utilization summary written
+      FAILURE follow-up:
+        - TASK-P3-FAILED aged into reclaim_due via watchdog
+        - planned follow-up packet TASK-P3-FAILED-FOLLOWUP created
+      Summary written to:
+        - .omo/tasks/registry/done/OPC-P3-D4/writeback-audit-summary.md
   - id: OPC-P3-D5
     title: "Minimal Demo"
-    status: not_started
+    status: passed
+    claimed_verdict: pass
+    closed_at: "2026-06-12"
+    evidence_dir: .omo/tasks/registry/done/OPC-P3-D5/
+    criteria:
+      - "one replayable three-worker demo succeeds"
+    runtime_evidence: |
+      Replay command:
+        - python3 scripts/opc_p3_thin_binding_demo.py
+      Fixed goal:
+        - Answer current OPC phase status through a governed thin-binding swarm
+      Report written to:
+        - .omo/tasks/registry/done/OPC-P3-D5/minimal-demo-report.md
 gate: Gate D
-gate_status: not_yet_passed
+gate_status: passed
 gate_note: |
-  D1 + D2 passed (2026-06-11). D3-D5 not yet started.
-  Per Playbook §3, no later sub-gate claim before prior closes.
+  D1-D5 all passed. Gate D closed on 2026-06-12.
+  Thin-binding swarm path is now replayable and no longer blocked on swarm-engine refactor recovery.

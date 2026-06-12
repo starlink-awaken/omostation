@@ -1,19 +1,28 @@
 # OPC P5/P6/P7 closeout crontab
 #
-# 5 个 cron job 满足复验后时间性要求:
-#   weekly_loop    - 周一 09:00 (radar 真实周跑通, 推进 P5-F1 + P6-G1/G2)
+# 8 个 cron job 满足复验后时间性要求:
+#   radar          - 周一 08:00 (technical-radar 真实周跑通, 推进 P5-F1)
+#   weekly_loop    - 周一 09:00 (radar 真实周跑通, 推进 P6-G1/G2)
 #   drift_detector - 每天 02:00 (≥1 周窗口收集漂移数据, 推进 P6-G3)
 #   self_evolve    - 每天 02:05 (drift → planned task, 需 human approval)
+#   approval_board - 每天 02:10 (汇总 planned task, 供 reviewer)
 #   release_cycle  - 周日 23:00 (1-2 周周期收口, 推进 P7-H1)
 #   audit_rollout  - 周一 02:00 (5 仓 metrics 聚合, 推进 P7-H3)
 #   doc_lint       - 每天 04:00 (累计 0 stale 证据, 推进 P7-H4)
 #
+# 触发源语义 (scripts/opc_p7_*/opc_p6_*/opc_p5_*_cron.sh + INVOCATION_ID):
+#   INVOCATION_ID=cron + OPC_TRIGGER=cron → wrapper 注入, index 写 trigger_source=cron
+#   manual 调用 (INVOCATION_ID unset)     → wrapper 注入 OPC_TRIGGER=manual, index 写 manual
+#   OPC_TRIGGER 显式设值                  → 透传 (优先级最高)
+#
 # 安装: crontab .omo/cron/opc-closeout-crontab
 # 查看: crontab -l | grep opc-
 
-0 9 * * 1 cd /Users/xiamingxing/Workspace && WORKSPACE=/Users/xiamingxing/Workspace python3 scripts/opc_p6_weekly_loop.py >> /tmp/opc-weekly-loop.log 2>&1
+0 8 * * 1 cd /Users/xiamingxing/Workspace && INVOCATION_ID=cron OPC_TRIGGER=cron WORKSPACE=/Users/xiamingxing/Workspace python3 scripts/opc_p5_radar_cron.py >> /tmp/opc-radar.log 2>&1
+0 9 * * 1 cd /Users/xiamingxing/Workspace && INVOCATION_ID=cron OPC_TRIGGER=cron WORKSPACE=/Users/xiamingxing/Workspace bash scripts/opc_p6_weekly_loop_cron.sh >> /tmp/opc-weekly-loop.log 2>&1
 0 2 * * * cd /Users/xiamingxing/Workspace && python3 scripts/opc_p6_drift_detector.py >> /tmp/opc-drift-detector.log 2>&1
-5 2 * * * cd /Users/xiamingxing/Workspace && python3 scripts/opc_p6_self_evolve.py >> /tmp/opc-self-evolve.log 2>&1
-0 23 * * 0 cd /Users/xiamingxing/Workspace && OPC_RELEASE_CUTOFF="7 days ago" python3 scripts/opc_p7_release_cycle.py >> /tmp/opc-release-cycle.log 2>&1
-0 2 * * 1 cd /Users/xiamingxing/Workspace && OPC_MODE=weekly WORKSPACE=/Users/xiamingxing/Workspace PYTHONPATH=projects/omo/src python3 -m omo.cli audit-rollout --repos workspace:. --repos omo:projects/omo --repos llm-gateway:projects/llm-gateway --repos compute-mesh:projects/compute-mesh --repos runtime:projects/runtime --include-metrics --output .omo/_delivery/audit-rollout/weekly.json >> /tmp/opc-audit-rollout.log 2>&1
+5 2 * * * cd /Users/xiamingxing/Workspace && INVOCATION_ID=cron OPC_TRIGGER=cron WORKSPACE=/Users/xiamingxing/Workspace bash scripts/opc_p6_self_evolve_cron.sh >> /tmp/opc-self-evolve.log 2>&1
+10 2 * * * cd /Users/xiamingxing/Workspace && python3 scripts/opc_p6_approval_board.py >> /tmp/opc-p6-approval-board.log 2>&1
+0 23 * * 0 cd /Users/xiamingxing/Workspace && INVOCATION_ID=cron OPC_TRIGGER=cron WORKSPACE=/Users/xiamingxing/Workspace OPC_RELEASE_CUTOFF="7 days ago" bash scripts/opc_p7_release_cycle_cron.sh >> /tmp/opc-release-cycle.log 2>&1
+0 2 * * 1 cd /Users/xiamingxing/Workspace && INVOCATION_ID=cron OPC_TRIGGER=cron OPC_MODE=weekly WORKSPACE=/Users/xiamingxing/Workspace PYTHONPATH=projects/omo/src python3 -m omo.cli audit-rollout --repos workspace:. --repos omo:projects/omo --repos llm-gateway:projects/llm-gateway --repos compute-mesh:projects/compute-mesh --repos runtime:projects/runtime --include-metrics --output .omo/_delivery/audit-rollout/weekly.json >> /tmp/opc-audit-rollout.log 2>&1
 0 4 * * * cd /Users/xiamingxing/Workspace && python3 scripts/opc_p7_doc_lint.py >> /tmp/opc-doc-lint.log 2>&1

@@ -5,119 +5,115 @@
 
 ## 1. 目标
 
-1 个真实家庭健康 query 闭环；强制 privacy_class=confidential；输出
-紧急/关注/正常 三级 next-action。
+真实家庭健康 query 闭环；强制 `privacy_class=confidential`；输出
+urgent/attention/normal 三级 next-action；隐私路径限定在本地家庭 confidential store。
 
-## 2. 三级 next-action 实证 (3 真实 query)
+## 2. 三级 next-action 实证
 
-### 2.1 紧急 (urgent) — 孩子高烧 39 度已 3 天需要去医院吗
+### 2.1 urgent
 
 ```text
-$ PYTHONPATH=/Users/xiamingxing/Workspace/projects/cockpit/src \
-  python3 -m cockpit scenario health --query "孩子高烧 39 度已 3 天需要去医院吗"
+$ cd /Users/xiamingxing/Workspace/projects/cockpit
+$ PYTHONPATH=src python3 -m cockpit.cli scenario health --query "孩子高烧39度已3天"
 ```
 
 ```json
 {
-  "scenario": "family-health",
-  "query": "孩子高烧 39 度已 3 天需要去医院吗",
-  "generated_at": "2026-06-12T05:05:30Z",
+  "generated_at": "2026-06-12T06:51:42Z",
   "privacy_class": "confidential",
-  "privacy_path": "/Users/xiamingxing/Workspace/data/驾驶舱/documents.db",
-  "sources": [],
-  "next_action": {
-    "level": "urgent",
-    "instruction": "立即联系家庭医生 / 拨打急救电话"
-  },
-  "red_lines_followed": [
-    "no provider call",
-    "no llm-gateway audit write",
-    "documents vault only"
-  ]
+  "privacy_path": "/Users/xiamingxing/Workspace/data/cards/cards.db",
+  "source_count": 5,
+  "next_action": {"level": "urgent", "instruction": "立即联系家庭医生 / 拨打急救电话"},
+  "archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/family-health/20260612T065142Z-孩子高烧39度已3天-04998f4b.json"
 }
 ```
 
-### 2.2 关注 (attention) — 本月奶奶血压复查要准备什么
+### 2.2 attention
 
 ```text
-$ python3 -m cockpit scenario health --query "本月奶奶血压复查要准备什么"
+$ PYTHONPATH=src python3 -m cockpit.cli scenario health --query "奶奶血压复查要准备什么"
 ```
 
 ```json
 {
-  "scenario": "family-health",
-  "query": "本月奶奶血压复查要准备什么",
-  "generated_at": "2026-06-12T05:05:35Z",
+  "generated_at": "2026-06-12T06:51:42Z",
   "privacy_class": "confidential",
-  "privacy_path": "/Users/xiamingxing/Workspace/data/驾驶舱/documents.db",
-  "sources": [],
-  "next_action": {
-    "level": "attention",
-    "instruction": "本周内预约复查 + 记录症状到 vault"
-  },
-  "red_lines_followed": ["no provider call", "no llm-gateway audit write", "documents vault only"]
+  "privacy_path": "/Users/xiamingxing/Workspace/data/cards/cards.db",
+  "source_count": 5,
+  "next_action": {"level": "attention", "instruction": "本周内预约复查 + 记录症状到 vault"},
+  "archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/family-health/20260612T065142Z-奶奶血压复查要准备什么-3c565da3.json"
 }
 ```
 
-### 2.3 正常 (normal) — 体检日程安排建议
+### 2.3 normal
 
 ```text
-$ python3 -m cockpit scenario health --query "体检日程安排建议"
+$ PYTHONPATH=src python3 -m cockpit.cli scenario health --query "本周体检安排建议"
 ```
 
 ```json
 {
-  "scenario": "family-health",
-  "query": "体检日程安排建议",
-  "generated_at": "2026-06-12T05:05:40Z",
+  "generated_at": "2026-06-12T06:51:42Z",
   "privacy_class": "confidential",
-  "privacy_path": "/Users/xiamingxing/Workspace/data/驾驶舱/documents.db",
-  "sources": [],
-  "next_action": {
-    "level": "normal",
-    "instruction": "无紧急, 月度复盘"
-  },
-  "red_lines_followed": ["no provider call", "no llm-gateway audit write", "documents vault only"]
+  "privacy_path": "/Users/xiamingxing/Workspace/data/cards/cards.db",
+  "source_count": 5,
+  "next_action": {"level": "normal", "instruction": "无紧急, 月度复盘"},
+  "archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/family-health/20260612T065142Z-本周体检安排建议-e1643744.json"
 }
 ```
 
-## 3. privacy 路径证据 (documents.db 实际 vault 写入实证)
+## 3. 隐私路径与红线
 
-- **privacy_path**: `/Users/xiamingxing/Workspace/data/驾驶舱/documents.db` (documents vault)
-- **privacy_class**: `"confidential"` (强制顶层字段, 不可改)
-- **路径约束** (`scenario._f3_family_health` 实现):
-  - ❌ 不调任何 provider (没有 `from llm_gateway...` 导入)
-  - ❌ 不写 llm-gateway audit (没有 `record_llm_audit` 调用)
-  - ✅ 只读 documents vault (本地 SQLite)
-  - 三个 red_lines 全部 `True`
+### 3.1 本地 confidential store
 
-### 3.1 documents.db 实际 vault 读取实证
+- `privacy_path`: `/Users/xiamingxing/Workspace/data/cards/cards.db`
+- `privacy_class`: `confidential`
+- `source`: `cards:family`
 
-```text
-$ sqlite3 /Users/xiamingxing/Workspace/data/驾驶舱/documents.db \
-  "SELECT count(*) FROM family_health WHERE ts >= '2026-06-12';"
-# count: N  (3 query 全部命中 vault)
+### 3.2 red_lines_followed
+
+```json
+[
+  "no provider call",
+  "no llm-gateway audit write",
+  "confidential local family store only"
+]
 ```
 
-> 注: 3 query 的 next_action 级别判定逻辑在 `scenario._f3_family_health` 中
-> 实现, 通过对 vault 中历史 family_health 记录 (symptoms/recent_visits/next_checkup)
-> 联合查询. 实证 vault 可读 + next_action 级别判断正确.
+### 3.3 source attribution 片段
+
+```json
+[
+  {
+    "id": "DEBT-2026-06-05-004",
+    "source": "cards:family",
+    "source_path": "/Users/xiamingxing/Workspace/data/cards/cards.db#DEBT-2026-06-05-004",
+    "privacy_class": "confidential"
+  },
+  {
+    "id": "TASK-2026-06-05-006",
+    "source": "cards:family",
+    "source_path": "/Users/xiamingxing/Workspace/data/cards/cards.db#TASK-2026-06-05-006",
+    "privacy_class": "confidential"
+  }
+]
+```
 
 ## 4. 通过标准 checklist
 
 | # | 标准 | 状态 | 证据 |
 |---|------|:---:|------|
-| 1 | ≥1 真实家庭健康 query 跑通 | ✅ | 3 个 query (高烧/复查/体检) 全部跑通 |
-| 2 | 输出含 紧急/关注/正常 三级 next-action | ✅ | urgent/attention/normal 三级全实证 |
-| 3 | privacy_class=confidential | ✅ | 顶层字段强制 `confidential` |
-| 4 | 有 privacy 路径证据 | ✅ | `privacy_path` 字段 + 3 条 red_lines |
-| 5 | 不准用 mock 数据冒充真实隐私路径 | ✅ | privacy_path 指向真实 `data/驾驶舱/documents.db`, 无 mock |
-| 6 | documents.db 实际 vault 写入/读取实证 | ✅ | sqlite3 查询实证, vault 可读 |
+| 1 | ≥1 真实家庭健康 query 跑通 | ✅ | 3 个 query 均运行成功 |
+| 2 | 输出含 urgent/attention/normal | ✅ | 三级全实证 |
+| 3 | privacy_class=confidential | ✅ | 顶层字段固定 |
+| 4 | 有 privacy 路径实证 | ✅ | `privacy_path=data/cards/cards.db` |
+| 5 | source attribution 存在 | ✅ | `source_count=5` + `cards:family` |
+| 6 | 不调用 provider / 不写 llm-gateway audit | ✅ | `red_lines_followed` |
+| 7 | archive receipt 落盘 | ✅ | 3 个 scenario receipt |
 
 ## 5. 红线遵守
 
-- ✅ family-health 用 `confidential` privacy class (红线)
-- ✅ 不调 provider (硬性 `red_lines_followed` 数组)
-- ✅ 不写 llm-gateway audit
-- ✅ 仅 documents vault 路径
-- ✅ 3 真实 query 三级全实证 (而非"留 R57+ 范围")
+- ✅ 不把 `documents.db` 旧描述继续拿来冒充当前隐私路径
+- ✅ family-health 始终 `confidential`
+- ✅ 只读本地家庭存储，不走 provider
+- ✅ 三级 next-action 用真实 query 跑出，不靠静态样例

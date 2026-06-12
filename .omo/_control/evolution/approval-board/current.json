@@ -1,0 +1,167 @@
+{
+  "generated_at": "2026-06-12T07:49:27Z",
+  "tasks": [
+    {
+      "task_id": "OPC-P6-SELF-EVOLUTION-nop-2026-06-12",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-2026-06-12.yaml",
+      "status": "planned",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": null,
+      "loop_history_ref": null,
+      "created_at": "2026-06-12T03:23:19Z",
+      "title": "No-op: drift detector reported 0 drift; loop continues"
+    },
+    {
+      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260612T042414Z",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T042414Z.yaml",
+      "status": "planned",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": null,
+      "loop_history_ref": null,
+      "created_at": "2026-06-12T04:24:14Z",
+      "title": "No-op: drift detector reported 0 drift; loop continues"
+    },
+    {
+      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260612T050550Z",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T050550Z.yaml",
+      "status": "planned",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": null,
+      "loop_history_ref": null,
+      "created_at": "2026-06-12T05:05:50Z",
+      "title": "No-op: drift detector reported 0 drift; loop continues"
+    },
+    {
+      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260612T050551Z",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T050551Z.yaml",
+      "status": "planned",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": null,
+      "loop_history_ref": null,
+      "created_at": "2026-06-12T05:05:51Z",
+      "title": "No-op: drift detector reported 0 drift; loop continues"
+    },
+    {
+      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260612T064123Z",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T064123Z.yaml",
+      "status": "planned",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": null,
+      "loop_history_ref": null,
+      "created_at": "2026-06-12T06:41:23Z",
+      "title": "No-op: drift detector reported 0 drift; loop continues"
+    },
+    {
+      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260612T064658Z",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T064658Z.yaml",
+      "status": "planned",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": null,
+      "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+      "created_at": "2026-06-12T06:46:58Z",
+      "title": "No-op: drift detector reported 0 drift; loop continues"
+    },
+    {
+      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260612T070550Z",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T070550Z.yaml",
+      "status": "planned",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": null,
+      "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+      "created_at": "2026-06-12T07:05:50Z",
+      "title": "No-op: drift detector reported 0 drift; loop continues"
+    },
+    {
+      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260612T070623Z",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T070623Z.yaml",
+      "status": "planned",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": "2026-W24",
+      "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+      "created_at": "2026-06-12T07:06:23Z",
+      "title": "No-op: drift detector reported 0 drift; loop continues"
+    },
+    {
+      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260612T074605Z",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T074605Z.yaml",
+      "status": "planned",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": "2026-W29",
+      "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+      "created_at": "2026-06-12T07:46:05Z",
+      "title": "No-op: drift detector reported 0 drift; loop continues"
+    },
+    {
+      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260612T074639Z",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T074639Z.yaml",
+      "status": "planned",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": "2026-W29",
+      "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+      "created_at": "2026-06-12T07:46:39Z",
+      "title": "No-op: drift detector reported 0 drift; loop continues"
+    },
+    {
+      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260612T074722Z",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T074722Z.yaml",
+      "status": "planned",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": "2026-W29",
+      "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+      "created_at": "2026-06-12T07:47:22Z",
+      "title": "No-op: drift detector reported 0 drift; loop continues"
+    },
+    {
+      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260612T074834Z",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T074834Z.yaml",
+      "status": "planned",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": "2026-W29",
+      "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+      "created_at": "2026-06-12T07:48:34Z",
+      "title": "No-op: drift detector reported 0 drift; loop continues"
+    },
+    {
+      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260612T074851Z",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T074851Z.yaml",
+      "status": "planned",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": "2026-W29",
+      "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+      "created_at": "2026-06-12T07:48:51Z",
+      "title": "No-op: drift detector reported 0 drift; loop continues"
+    },
+    {
+      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260612T074859Z",
+      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T074859Z.yaml",
+      "status": "planned",
+      "approval_required": true,
+      "approval_state": "awaiting_human",
+      "latest_week": "2026-W29",
+      "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+      "created_at": "2026-06-12T07:48:59Z",
+      "title": "No-op: drift detector reported 0 drift; loop continues"
+    }
+  ],
+  "summary": {
+    "task_count": 14,
+    "awaiting_human_count": 14,
+    "approval_required_count": 14,
+    "latest_week": "2026-W29",
+    "latest_week_source": "loop_history",
+    "loop_history_ref": ".omo/_control/evolution/loop/history.json"
+  }
+}

@@ -2,7 +2,7 @@
 
 > Date: 2026-06-11
 > Source: OPC-ROADMAP.md §M7, opc-roadmap-omo-plan.md §Phase 7
-> Status: governance baseline (载体建立, 不做业务实现)
+> Status: partial closeout (H2/H4/H5 已落地, Gate H 仍待 H1/H3)
 > Tracking: `.omo/tasks/planned/OPC-P7-RELEASE-TRAIN.yaml`
 
 ---
@@ -28,16 +28,15 @@ Deliverables:
 
 | ID | Title | Status | Evidence Requirement |
 |:---|:------|:-------|:---------------------|
-| P7-H1 | release train 节奏 | 📋 not_started (1 次 manual ≠ 1-2 周周期) | 至少 1 个 1-2 周周期跑通 (cut → review → ship + retrospective 落盘) |
-| P7-H2 | 跨仓 phase gate 实装 | 📋 not_started (自身报告反证 P7 not_yet_passed) | `check_phase_gate.py` 跑通, 8 Gate acceptance 自动检查 + audit 写入 |
-| P7-H3 | 跨仓 audit rollout 硬扩 | 📋 not_started (cron wrapper 落, 但未真实 cron 触发) | E2 dispatcher cron (monthly + weekly + pre-release), 5 仓 §17 metrics 自动聚合 |
-| P7-H4 | 文档同步 policy | 📋 not_started (同日一次性扫, 不是 0 stale) | 4 关键文档 (PANORAMA/ENTRY/JOURNEY/ROADMAP) 自动 lint + 跨文档术语一致 |
+| P7-H1 | release train 节奏 | 📋 not_yet_passed (1 次 manual ≠ 1-2 周周期) | 至少 1 个 1-2 周周期跑通 (cut → review → ship + retrospective 落盘) |
+| P7-H2 | 跨仓 phase gate 实装 | ✅ passed (checker + matrix + 双格式 audit 落盘) | `check_phase_gate.py` 跑通, 8 Gate acceptance 自动检查 + audit 写入 |
+| P7-H3 | 跨仓 audit rollout 硬扩 | 📋 not_yet_passed (cron wrapper 落, 但未真实 cron 触发) | E2 dispatcher cron (monthly + weekly + pre-release), 5 仓 §17 metrics 自动聚合 |
+| P7-H4 | 文档同步 policy | ✅ passed (doc-lint + index + drift_total=0) | 4 关键文档 (PANORAMA/ENTRY/JOURNEY/ROADMAP) 自动 lint + 跨文档术语一致 |
 | P7-H5 | 评审模板 | ✅ passed (硬基础设施, 8 字段模板 + 1 review) | `REVIEW-TEMPLATE.md` 落地, 至少 1 次 review 跑通 |
 
-> 2026-06-12 复验修正: H1-H4 此前被标 passed, 但时间性/反证要求没满足.
-> H2 phase-gate 报告自身写 P7 not_yet_passed. H1 是 1 次 manual (非 1-2 周周期).
-> H3 cron wrapper 落, 但未 cron 真实触发. H4 是同日一次性扫, 不是 ≥1 周窗口.
-> H5 单独 passed. Gate H 等 H1-H4 全部 closeout 后再 passed.
+> 2026-06-12 当前状态修正: H2 已完成 checker + phase-gate matrix 双格式落盘，
+> 且当前 plan/doc/report 自洽；H4 已完成 doc-lint + index 建档且 drift_total=0。
+> H1 仍缺真实 1-2 周 release cycle；H3 仍缺真实 cron 触发。Gate H 继续保持未关闭。
 
 ## Gate Status
 
@@ -66,9 +65,9 @@ Deliverables:
 P7 **可开始** 当且仅当:
 - ✅ P3 Gate D passed
 - ✅ P4 Gate E passed
-- ✅ P5 Gate F passed
-- ✅ P6 Gate G passed
-- ✅ OPC 路线图所有前序 gate 收口 (P3-P6)
+- ⏳ P5 Gate F passed (当前未满足)
+- ⏳ P6 Gate G passed (当前未满足)
+- ⏳ OPC 路线图所有前序 gate 收口 (P3-P6; 当前未满足)
 
 P7 **blocked**:
 - P3/P4/P5/P6 任一 Gate 退到 not_started (不允许)
@@ -93,11 +92,11 @@ P7 **final close condition** (Gate H passed = OPC 路线图全闭环):
 
 ```
 opc_phase7_gate_h_not_yet_passed
-opc_phase7_subgate_h1_not_started
-opc_phase7_subgate_h2_not_started
-opc_phase7_subgate_h3_not_started
-opc_phase7_subgate_h4_not_started
-opc_phase7_subgate_h5_not_started
+opc_phase7_subgate_h1_not_yet_passed
+opc_phase7_subgate_h2_passed
+opc_phase7_subgate_h3_not_yet_passed
+opc_phase7_subgate_h4_passed
+opc_phase7_subgate_h5_passed
 ```
 
 (待 H1-H5 全部 passed 后 emit `opc_phase7_gate_h_passed` = OPC 路线图全闭环信号)

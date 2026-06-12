@@ -1,73 +1,73 @@
 id: OPC-P3-SWARM-SPINE
 title: "OPC-P3: Swarm Execution Spine"
-status: in_progress
+status: completed
 priority: P0
 domain: opc
 created: "2026-06-11"
-updated: "2026-06-11"
+updated: "2026-06-12"
 prerequisites:
   - opc_phase2_gate_c_passed       # ACTUAL: passed (not "design baselined")
   - opc_p2_implementation_complete    # ACTUAL: T4 8-field metadata complete
 description: |
-  P3 swarm execution spine: design baseline (T1-T5) + implementation entry
-  (D1+D2 passed via thin binding, D3-D5 not started).
+  P3 swarm execution spine: design baseline (T1-T5) + full Gate D implementation.
 
   Strategic decision (2026-06-11): thin P3 binding using omo + cockpit,
-  skip swarm-engine for now (D1+D2 implementation path).
+  skip swarm-engine for now (D1-D5 implementation path).
 
   Source-of-truth: .omo/tasks/registry/done/OPC-P3-GATE-D-OPENING.yaml
-  (D1+D2 evidence + D3-D5 sub-gate status).
+  (D1-D5 evidence + Gate D pass-state).
 tasks:
   - id: OPC-P3-01
     title: "Define swarm task object schema"
     status: completed
-    evidencia: "docs/OPC-PHASE3-SWARM-SPINE.md §T1"
+    evidence: "docs/OPC-PHASE3-SWARM-SPINE.md"
   - id: OPC-P3-02
     title: "Define swarm boundary among OMO/swarm-engine/aetherforge/runtime"
     status: completed
-    evidencia: "docs/OPC-PHASE3-SWARM-SPINE.md §T2"
+    evidence: "docs/OPC-PHASE3-SWARM-SPINE.md"
   - id: OPC-P3-03
     title: "Define 6 agent roles"
     status: completed
-    evidencia: "docs/OPC-PHASE3-SWARM-SPINE.md §T3"
+    evidence: "docs/OPC-PHASE3-SWARM-SPINE.md"
   - id: OPC-P3-04
     title: "Design worker dispatch + heartbeat + retry + failure debt"
     status: completed
-    evidencia: "docs/OPC-PHASE3-SWARM-SPINE.md §T4"
+    evidence: "docs/OPC-PHASE3-SWARM-SPINE.md"
   - id: OPC-P3-05
     title: "Specify minimal three-worker demo"
     status: completed
-    evidencia: "docs/OPC-PHASE3-SWARM-SPINE.md §T5"
+    evidence: "docs/OPC-PHASE3-SWARM-SPINE.md"
   - id: OPC-P3-D1
     title: "Task Object Runtime Binding"
     status: completed
-    evidencia: ".omo/tasks/registry/done/OPC-P3-D1/"
+    evidence: ".omo/tasks/registry/done/OPC-P3-D1/"
   - id: OPC-P3-D2
     title: "Dispatch and Heartbeat"
     status: completed
-    evidencia: ".omo/tasks/registry/done/OPC-P3-D2/"
+    evidence: ".omo/tasks/registry/done/OPC-P3-D2/"
   - id: OPC-P3-D3
     title: "Role Realization (thin binding)"
-    status: not_started
+    status: completed
+    evidence: ".omo/tasks/registry/done/OPC-P3-D3/"
   - id: OPC-P3-D4
     title: "Result Writeback and Audit"
-    status: not_started
+    status: completed
+    evidence: ".omo/tasks/registry/done/OPC-P3-D4/"
   - id: OPC-P3-D5
     title: "Minimal Demo (3 worker task end-to-end)"
-    status: not_started
+    status: completed
+    evidence: ".omo/tasks/registry/done/OPC-P3-D5/"
 gate: Gate D
-gate_status: not_yet_passed
+gate_status: passed
 gate_note: |
-  D1+D2 passed (2026-06-11). D3-D5 not started. No runtime evidence for D3-D5.
-  Per Playbook §3, no later sub-gate claim before prior closes.
+  D1-D5 passed. Gate D closed on 2026-06-12 with replayable thin-binding evidence.
 signals:
-  - opc_phase3_gate_d_opened
+  - opc_phase3_gate_d_passed
   - opc_phase3_subgate_d1_passed
   - opc_phase3_subgate_d2_passed
-  - opc_phase3_subgate_d3_not_started
-  - opc_phase3_subgate_d4_not_started
-  - opc_phase3_subgate_d5_not_started
-  - opc_phase3_gate_d_not_yet_passed
+  - opc_phase3_subgate_d3_passed
+  - opc_phase3_subgate_d4_passed
+  - opc_phase3_subgate_d5_passed
 
 # Red lines — must hold to claim P3 (D1+D2) + later sub-gate progress
 red_lines:
@@ -80,9 +80,8 @@ red_lines:
 forbidden_claims:
   - "swarm-engine organs.* imports repaired"   # refactor not done, 12 stubs remain
   - "swarm-engine wired in P3 dispatch path"    # thin binding bypasses swarm-engine
-  - "Gate D passed"                            # requires D3+D4+D5 runtime evidence
   - "\"D3-D5 not yet started\" → \"D3 done\" without sub-gate evidence"
-  - "D1+D2 implementation complete 在 D1/D2 evidence dir 缺失时"
+  - "D1-D5 implementation complete 在 evidence dir 缺失时"
 
 # Phase open / blocked / close (任务 4 readiness — 字段对齐 P4-P7)
 phase_open_condition: |

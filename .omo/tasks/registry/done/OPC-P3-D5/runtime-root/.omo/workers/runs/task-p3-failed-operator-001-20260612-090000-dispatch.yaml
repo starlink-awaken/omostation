@@ -1,0 +1,41 @@
+version: 1
+dispatch_id: task-p3-failed-operator-001-20260612-090000
+task_id: TASK-P3-FAILED
+worker_id: operator-001
+transport_mode: cli_prompt
+run_ref: .omo/workers/runs/task-p3-failed-operator-001-20260612-090000-dispatch.yaml
+dispatch_state: dispatched
+coordinator: copilot-cli
+launched_at: '2026-06-12T09:00:00Z'
+lease:
+  heartbeat_interval_seconds: 300
+  warning_after_seconds: 60
+  lease_expired_after_seconds: 120
+  reclaim_after_seconds: 180
+  last_checkpoint_at: '2026-06-12T09:00:00Z'
+  last_material_write_at: '2026-06-12T09:00:00Z'
+inputs:
+  task_yaml: .omo/tasks/active/TASK-P3-FAILED.yaml
+  envelope_file: .omo/workers/runs/task-p3-failed-operator-001-20260612-090000-envelope.yaml
+  prompt_file: .omo/workers/runs/task-p3-failed-operator-001-20260612-090000-prompt.md
+  source_docs:
+  - docs/OPC-MASTER-EXECUTION-PLAYBOOK.md
+execution:
+  launch_command: operator "<prompt:.omo/workers/runs/task-p3-failed-operator-001-20260612-090000-prompt.md>"
+  approval_ref: null
+  session_ref: null
+  log_ref: .omo/workers/runs/task-p3-failed-operator-001-20260612-090000-stdout.log
+  checkpoint_refs:
+  - .omo/workers/runs/task-p3-failed-operator-001-20260612-090000-checkpoint.md
+handoff:
+  output_summary_ref: .omo/workers/runs/task-p3-failed-operator-001-20260612-090000-review.md
+  evidence_paths: []
+  unresolved_risks: []
+  next_handoff: null
+reclaim:
+  required: false
+  reason: null
+  reclaimed_at: null
+  successor_worker_id: null
+  successor_dispatch_id: null
+  note_ref: .omo/workers/runs/task-p3-failed-operator-001-20260612-090000-reclaim.md

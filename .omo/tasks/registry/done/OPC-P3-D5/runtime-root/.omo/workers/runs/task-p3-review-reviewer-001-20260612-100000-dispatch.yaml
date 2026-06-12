@@ -1,0 +1,46 @@
+version: 1
+dispatch_id: task-p3-review-reviewer-001-20260612-100000
+task_id: TASK-P3-REVIEW
+worker_id: reviewer-001
+transport_mode: cli_prompt
+run_ref: .omo/workers/runs/task-p3-review-reviewer-001-20260612-100000-dispatch.yaml
+dispatch_state: completed
+coordinator: copilot-cli
+launched_at: '2026-06-12T10:00:00Z'
+lease:
+  heartbeat_interval_seconds: 300
+  warning_after_seconds: 900
+  lease_expired_after_seconds: 1200
+  reclaim_after_seconds: 1800
+  last_checkpoint_at: '2026-06-12T10:00:00Z'
+  last_material_write_at: '2026-06-12T10:00:00Z'
+inputs:
+  task_yaml: .omo/tasks/active/TASK-P3-REVIEW.yaml
+  envelope_file: .omo/workers/runs/task-p3-review-reviewer-001-20260612-100000-envelope.yaml
+  prompt_file: .omo/workers/runs/task-p3-review-reviewer-001-20260612-100000-prompt.md
+  source_docs:
+  - delivery/planner-plan.md
+  - delivery/research-findings.md
+  - .omo/tasks/done/TASK-P3-PLAN.yaml
+  - .omo/tasks/done/TASK-P3-RESEARCH.yaml
+execution:
+  launch_command: reviewer "<prompt:.omo/workers/runs/task-p3-review-reviewer-001-20260612-100000-prompt.md>"
+  approval_ref: null
+  session_ref: null
+  log_ref: .omo/workers/runs/task-p3-review-reviewer-001-20260612-100000-stdout.log
+  checkpoint_refs:
+  - .omo/workers/runs/task-p3-review-reviewer-001-20260612-100000-checkpoint.md
+handoff:
+  output_summary_ref: .omo/workers/runs/task-p3-review-reviewer-001-20260612-100000-review.md
+  evidence_paths:
+  - delivery/final-answer.md
+  unresolved_risks: []
+  next_handoff: coordinator can package the answer and acceptance report.
+reclaim:
+  required: false
+  reason: null
+  reclaimed_at: null
+  successor_worker_id: null
+  successor_dispatch_id: null
+  note_ref: .omo/workers/runs/task-p3-review-reviewer-001-20260612-100000-reclaim.md
+completed_at: '2026-06-12T10:00:00Z'

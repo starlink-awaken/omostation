@@ -1,0 +1,18 @@
+id: TASK-P3-FAILED-FOLLOWUP
+title: Investigate reclaim_due operator dispatch from OPC P3 demo
+status: planned
+priority: P1
+phase: 29
+role: operator
+depends_on:
+- TASK-P3-FAILED
+source_docs:
+- .omo/workers/runs/task-p3-failed-operator-001-20260612-090000-dispatch.yaml
+- .omo/workers/runs/task-p3-failed-operator-001-20260612-090000-reclaim.md
+evidence_required:
+- reclaim_due dispatch triaged
+- follow-up recovery documented
+test_plan:
+- review watchdog output
+- repair dispatch inputs
+- re-run operator flow

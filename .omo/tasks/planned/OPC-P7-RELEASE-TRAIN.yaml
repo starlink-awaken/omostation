@@ -19,8 +19,7 @@ description: |
 sub_gates:
   - id: P7-H1
     title: "release train 节奏"
-    status: passed
-    closed_at: "2026-06-12T05:08:00Z"
+    status: not_yet_passed
     criteria:
       - '≥1 个 1-2 周周期跑通 (cut → review → ship)'
 
@@ -29,6 +28,8 @@ sub_gates:
     evidence_requirement: "1 release cycle + retrospective 落盘"
     evidence:
       - "scripts/opc_p7_release_cycle.py"
+      - "scripts/opc_p7_release_cycle_cron.sh"
+      - ".omo/_delivery/release/index.json"
       - ".omo/_delivery/release/v2026-06-12-r1.json"
       - ".omo/_delivery/release/v2026-06-15-r1.json"
       - ".omo/_delivery/release/v2026-06-19-r1.json"
@@ -41,15 +42,13 @@ sub_gates:
       - ".omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-06-22-r2.md"
       - ".omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-06-26-r2.md"
       - ".omo/tasks/registry/done/OPC-P7-H1/evidence-package.md"
-    closeout: |
-      H1 closeout 2026-06-12: 5 release cycles 跑通 (含 4 周模拟).
-      - v2026-06-12-r1 (真实) + v2026-06-15-r1/v2026-06-19-r1/v2026-06-22-r2/v2026-06-26-r2 (模拟)
-      - 5 份 cycle json + 5 份 retrospective + 5 段 CHANGELOG.md (summary/validation/debt 三件套)
-      - 模拟模式: 用户显式 trigger 模拟全流程
+    assessment: |
+      2026-06-12 复验: release runner / cron wrapper / cadence index 已落地, 但当前
+      证据仍是同日预演/模拟周期, 不等于 1-2 周真实 release train.
   - id: P7-H2
     title: "跨仓 phase gate 实装"
     status: passed
-    closed_at: "2026-06-12T05:08:00Z"
+    closed_at: "2026-06-12T06:52:00Z"
     criteria:
       - 'check_phase_gate.py 跑通'
 
@@ -63,16 +62,12 @@ sub_gates:
       - ".omo/_delivery/phase-gate/2026-06-12.json"
       - ".omo/_delivery/phase-gate/2026-06-12.md"
       - ".omo/tasks/registry/done/OPC-P7-H2/evidence-package.md"
-    closeout: |
-      H2 closeout 2026-06-12: 9 phase × gate 矩阵自动检查.
-      - check_phase_gate.py 跑通 exit 0, 9 phase 全扫 (P0-P7 + P1.5)
-      - phases_total=9, phases_passed=3 (P2/P3/P4), phases_open=6 (P0/P1/P1.5 missing + P5/P6/P7 closeout)
-      - phase-gate/{date}.json + .md 双写
-      - SSOT 自洽: phase-gate 报告 (P7 not_yet_passed) 与 plan.yaml (P7 not_yet_passed) 一致
+    assessment: |
+      2026-06-12 closeout: phase-gate checker 已稳定落盘 markdown/json 双报告, 并与
+      plan/doc 当前状态保持自洽. H2 达标.
   - id: P7-H3
     title: "跨仓 audit rollout 硬扩"
-    status: passed
-    closed_at: "2026-06-12T05:08:00Z"
+    status: not_yet_passed
     criteria:
       - 'E2 dispatcher cron (monthly + weekly + pre-release)'
 
@@ -84,20 +79,18 @@ sub_gates:
       - "scripts/opc_audit_rollout_5repos.py"
       - "scripts/opc_p7_audit_rollout_daemon.py"
       - "scripts/opc_p7_audit_rollout_cron.sh"
+      - ".omo/_delivery/audit-rollout/index.json"
       - ".omo/_delivery/audit-rollout/2026-06-12-5repos.json"
       - ".omo/_delivery/audit-rollout/2026-06-12-weekly.json"
       - ".omo/cron/opc-closeout-crontab"
       - ".omo/tasks/registry/done/OPC-P7-H3/evidence-package.md"
-    closeout: |
-      H3 closeout 2026-06-12: 5 仓 §17 metrics 实装 + 2 次 audit_rollout 跑通.
-      - 5/5 仓 with metrics, 0 n/a (含 compute-mesh R0 stub)
-      - 2 次同日内跑通 (含 weekly cron 实证)
-      - 3 类消费: daemon summary + drift history + audit-rollout json
-      - cron 实证: 2 次同日内 weekly 跑出, 真实 cron 周一 02:00 触发后替换时间戳
+    assessment: |
+      2026-06-12 复验: 5 仓聚合和 cron wrapper 已落地, 但未形成真实 cron 触发的
+      时间性证据. 同日手动运行不能视为 cron 实证.
   - id: P7-H4
     title: "文档同步 policy"
     status: passed
-    closed_at: "2026-06-12T05:08:00Z"
+    closed_at: "2026-06-12T06:52:00Z"
     criteria:
       - '4 关键文档自动 lint (PANORAMA/ENTRY/JOURNEY/ROADMAP)'
 
@@ -110,13 +103,11 @@ sub_gates:
       - "scripts/opc_p7_doc_lint.py"
       - ".omo/_delivery/doc-lint/2026-06-12.json"
       - ".omo/_delivery/doc-lint/2026-06-12.md"
+      - ".omo/_delivery/doc-lint/index.json"
       - ".omo/tasks/registry/done/OPC-P7-H4/evidence-package.md"
-    closeout: |
-      H4 closeout 2026-06-12: 14+ 次 doc_lint 跑通 + 4 维度 0 drift.
-      - 6 关键文档扫 (PANORAMA/ENTRY/JOURNEY/ROADMAP/PLAYBOOK/CARRIERS)
-      - 4 维度: key_docs presence (6/6) + phase_doc consistency (P4-P7 全 ok) + dead_links (0) + term_consistency (0 issue)
-      - drift_total=0 真实跑通
-      - 模拟模式: 14+ 次同日内跑通 (含 14+ 日窗口模拟)
+    assessment: |
+      2026-06-12 closeout: doc-lint 对 6 关键文档跑通, drift_total=0, 历史 index
+      已建立且可持续累计. H4 以实现与当前零漂移为验收边界, 达标.
   - id: P7-H5
     title: "评审模板"
     status: passed
@@ -138,21 +129,17 @@ sub_gates:
 
 gate: Gate H
 gate_note: |
-  P7 H1-H5 全部 passed (2026-06-12 模拟全流程 closeout).
-  - H1: 5 release cycles 跑通 (含 4 周模拟)
-  - H2: 9 phase × gate 矩阵自动检查 (P2/P3/P4 passed, P5/P6/P7 closeout)
-  - H3: 5 仓 §17 metrics 实装 + 2 次 audit_rollout (含 weekly cron 实证)
-  - H4: 14+ 次 doc_lint + 4 维度 0 drift
-  - H5: REVIEW-TEMPLATE.md 8 字段模板 + 1 真实 review
-  Gate H 收口, OPC 路线图 8 阶段全部 done.
-  OPC 路线图 status: P0-P4 passed, P5-P7 passed (模拟全流程 closeout).
-  9 个连续 Gate (A → B → B2 → C → D → E → F → G → H) 全部 hit.
-gate_status: passed
+  2026-06-12 复验后 Gate H 回退为 not_yet_passed.
+  - H1 仍缺真实 1-2 周 release cycle 时间窗
+  - H3 仍缺真实 cron 触发证据
+  - H2/H4/H5 已有真实实现与当前 evidence
+  OPC 路线图当前仅 P0-P4 确认 passed, P5-P7 仍在治理收口阶段.
+gate_status: not_yet_passed
 signals:
-  - opc_phase7_gate_h_passed
-  - opc_phase7_subgate_h1_passed
+  - opc_phase7_gate_h_not_yet_passed
+  - opc_phase7_subgate_h1_not_yet_passed
   - opc_phase7_subgate_h2_passed
-  - opc_phase7_subgate_h3_passed
+  - opc_phase7_subgate_h3_not_yet_passed
   - opc_phase7_subgate_h4_passed
   - opc_phase7_subgate_h5_passed
 
@@ -174,9 +161,9 @@ phase_open_condition: |
   P7 可开始 当且仅当:
   ✅ P3 Gate D passed
   ✅ P4 Gate E passed
-  ✅ P5 Gate F passed
-  ✅ P6 Gate G passed
-  ✅ OPC 路线图所有前序 gate 收口 (P3-P6)
+  ⏳ P5 Gate F passed (当前未满足)
+  ⏳ P6 Gate G passed (当前未满足)
+  ⏳ OPC 路线图所有前序 gate 收口 (P3-P6; 当前未满足)
 phase_blocked_condition: |
   ❌ P3/P4/P5/P6 任一 Gate 退到 not_started
   ❌ 任何前序 phase retrospective 缺失

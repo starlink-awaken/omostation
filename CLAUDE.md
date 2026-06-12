@@ -2,6 +2,7 @@
 
 > Personal AI Operating System · Multi-project Knowledge Engineering Workspace
 > 基于 omostation (starlink-awaken/omostation) 根仓库
+> **v2.0** | 2026-06-12 | 架构对齐 5+4+1+1 · SSOT 重构 · 与 ~/Documents/CLAUDE.md 分层协作
 
 ---
 
@@ -28,17 +29,24 @@
 
 ---
 
-## 架构总览
+## 架构总览 (5+4+1+1)
 
-### 4-Layer 架构 (I0-L4)
+> ⚠️ 统一采用 5+4+1+1 表述，与 Documents 层架构一致。旧 4-layer (I0→L4) 视图已废弃。
 
-| 层级 | 角色 | 项目 |
-|------|------|------|
-| **I0 — 路由层** | MCP 服务发现/代理/断路 | `kairon/agora` |
-| **L1 — 知识工程层** | 31 包 Python monorepo | `kairon/` (eidos, kos, minerva, sophia...) |
-| **L2 — 集成层** | 跨系统桥接 | `kairon/sharedbrain-bridge` |
-| **L3 — Agent 层** | 多 Agent 网关 | `kairon/agent-runtime`, `kairon/agent-hub`, `kairon/agora`, `kairon/llm-gateway` |
-| **L4 — 知识存储层** | Postgres 原生知识脑 | `gbrain/` (TypeScript) |
+```
+L4  自我层     文档域 (纯文档)
+L3  入口层     cockpit (CLI + MCP + Web)
+L2  引擎面     omo(治理) + kairon(引擎) + gbrain(记忆) + metaos(编排)
+L1  运行时     runtime + 健康监控 + KEI + 矩阵调度
+L0  协议层     ecos — SSB + MOF + BOS URI（984 M1 节点）
+
+I0  织层       agora — MCP Hub（43 MCP 工具 · 1200+ 测试）
+
+X1-X4          审计 · 抗熵 · 价值栈 · 一致性
+
+M0             model-driven — 7阶段引擎 · 12工具链 · 190测试
+               （跨层消费，零内部依赖）
+```
 
 ### 4-Plane 治理架构 (.omo/)
 
@@ -61,22 +69,20 @@ Worker/User → SharedBrain (轻量数据持久层)
 
 ---
 
-## 子项目清单 (9 项目 · 5+3+1 架构)
+## 子项目清单 (10 项目 · 5+4+1+1 架构)
 
-| 项目 | 层 | 位置 | 栈 | 规模 | 状态 |
-|------|-----|------|-----|------|------|
-| **cockpit** | L3 | `projects/cockpit/` | Python (uv, pytest) | CLI 13 + MCP 15 | 🟢 486 tests |
-| **agora** | I0 | `projects/agora/` | Python (uv, pytest) | MCP 42 + HTTP 30+ | 🟢 1105 tests |
-| **kairon** | L2 | `projects/kairon/` | Python (uv, pytest) | 25 包 | 🟢 1810+ tests |
-| **gbrain** | L2 | `projects/gbrain/` | TypeScript (bun) | MCP 67, 163K TS | 🟢 |
-| **omo** | L2 | `projects/omo/` | Python (uv, pytest) | CLI 35 + MCP 10 + AppendOnlyLog 5 consumers | 🟢 100+ tests + 3 集成 |
-| **metaos** | L2 | `projects/metaos/` | Python (uv, pytest) | MCP 11 | 🟢 163 tests |
-| **runtime** | L1 | `projects/runtime/` | Python (uv, pytest) | MCP 30 + HTTP 5 | 🟢 171 tests |
-| **ecos** | L0 | `projects/ecos/` | Python (uv, pytest) | SSB + emergence | 🟢 122 tests |
-| **protocols** | L0 | `protocols/` | YAML | 16 protocols | 🟢 |
-| **SharedBrain** | — | `projects/_archived/` | Python | 已归档 | ⚪ |
-| **agentmesh** | — | `projects/_archived/` | TypeScript | 100% 迁移至 kairon | ⚪ |
-| **hermes-console** | — | `projects/hermes-console/` | TypeScript | 待集成至 cockpit | 🟡 |
+| 项目 | 层 | 位置 | 栈 | 测试 | 状态 |
+|------|:---:|------|:---:|:----:|:----:|
+| **cockpit** | L3 | `projects/cockpit/` | Python (uv, pytest) | 486 | 🟢 |
+| **agora** | I0 | `projects/agora/` | Python (uv, pytest) | 1371 | 🟢 |
+| **kairon** | L2 | `projects/kairon/` | Python 31 包 monorepo | ~4000 | 🟢 |
+| **gbrain** | L2 | `projects/gbrain/` | TypeScript (bun) | ~9700 | 🟢 |
+| **omo** | L2 | `projects/omo/` | Python (uv, pytest) | 100+ | 🟢 |
+| **metaos** | L2 | `projects/metaos/` | Python (uv, pytest) | 189 | 🟢 |
+| **runtime** | L1 | `projects/runtime/` | Python (uv, pytest) | 171 | 🟢 |
+| **ecos** | L0 | `projects/ecos/` | Python (uv, pytest) | 195 | 🟢 |
+| **protocols** | L0 | `protocols/` | YAML | — | 🟢 |
+| **model-driven** | M0 | `projects/model-driven/` | Python | 190 | 🟢 |
 
 ---
 
@@ -84,29 +90,15 @@ Worker/User → SharedBrain (轻量数据持久层)
 
 每次新会话按以下顺序执行：
 
-```mermaid
-graph TD
-    A[启动] --> B[读 Cowork MEMORY]
-    B --> C[读 ~/knowledge-protocol/IDENTITY.md]
-    C --> D[读 AGENTS.md 了解项目边界]
-    D --> E[读 .omo/AGENT.md 治理规范]
-    E --> F[读 state/system.yaml 当前状态]
-    F --> G{有活跃任务?}
-    G -->|是| H[读 goals/current.yaml]
-    G -->|否| I[检查 KOS 或直接处理请求]
 ```
-
-具体步骤：
-
-| # | 动作 | 目的 |
-|---|------|------|
-| 1 | 读 Cowork MEMORY | 了解上次会话遗留 |
-| 2 | 读 `~/knowledge-protocol/IDENTITY.md` | 了解用户身份与偏好 |
-| 3 | 读 `AGENTS.md` | 项目边界、命令、注意事项 |
-| 4 | 读 `.omo/INDEX.md` | 治理知识库导航 |
-| 5 | 读 `.omo/state/system.yaml` | 当前 Phase、健康分、活跃任务 |
-| 6 | 读 `.omo/goals/current.yaml` | 当前目标和 KPI |
-| 7 | 检查 `.omo/tasks/active/` | 可认领的活跃任务 |
+[1] 读 Cowork MEMORY                         → 上次会话遗留
+[2] 读 AGENTS.md                              → 项目边界
+[3] 读 .omo/AGENT.md                          → 治理规范
+[4] 读 .omo/INDEX.md                          → 治理知识库导航
+[5] 读 .omo/state/system.yaml                 → 当前 Phase·健康分·活跃任务
+[6] 读 .omo/goals/current.yaml                → 当前目标和 KPI
+[7] 检查 .omo/tasks/active/                   → 可认领的活跃任务
+```
 
 ---
 
@@ -179,13 +171,16 @@ bash tests/integration/run-all.sh
 
 ## 路由规则
 
+> 文档域路由 → 全局系统级指令 `~/Documents/CLAUDE_GLOBAL.md` §A
+> 全量路由表 → 异步引用只写了文档域R，未写RWorkspa（当前工作区直接操作）
+
 | 场景 | 路由 |
 |------|------|
-| 找知识/跨域搜索 | 优先用 KOS (`kos/`, `kairon/kos` 包) |
-| 工作公文 | `~/Documents/公文/CLAUDE.md` |
-| 借调事务 | `~/Documents/国转中心/CLAUDE.md` |
-| 随手记录 | WPS Note，标签路由 |
-| 运行 Worker | 遵循 `.omo/workers/` 注册表 |
+| 找知识/跨域搜索 | KOS (`kairon/kos` 包) |
+| 工程治理 | `.omo/_control/` |
+| 运行 Worker | `.omo/workers/` 注册表 |
+| 随手记录 | WPS Note |
+| 深度研究 | `minerva` |
 
 ---
 
@@ -205,29 +200,23 @@ bash tests/integration/run-all.sh
 |------|------|
 | `README.md` | 项目总览、快速开始 |
 | `AGENTS.md` | 开发者指南、命令、陷阱 |
-| `LAYER-INDEX.md` | 分层架构索引（I0-L4） |
-| `convergence.yaml` | 融合治理状态 |
-| `.omo/_knowledge/management/append-only-log-pattern-2026-06-09.md` | **AppendOnlyLog 模式 (5 轮收口)** |
+| `LAYER-INDEX.md` | 分层架构索引（5+4+1+1） |
 | `.omo/_knowledge/management/governance-charter-v1.md` | 5+3+1 治理宪章 |
 | `.omo/INDEX.md` | 治理知识库导航 |
-| `data/` | 数据层（`db/`, `kos/`, `sharedbrain/`） |
 | `.omo/state/system.yaml` | 当前系统运行状态 |
 | `.omo/goals/current.yaml` | 当前 Phase 目标 |
-| `.omo/MASTER-BLUEPRINT.md` | 长期蓝图 |
-| `projects/kairon/CLAUDE.md` | kairon 31 包 monorepo 指南 |
-| `projects/gbrain/AGENTS.md` | gbrain 开发者指南 |
-| `projects/*/AGENTS.md` | 各子项目开发者指南 |
+| `projects/ecos/src/ecos/ssot/mof/m3.yaml` | MOF M3 元元模型 |
+| `projects/ecos/src/ecos/ssot/mof/m1/domain/` | 24 域实例模型 |
 
 ---
 
 ## Phase 上下文
 
 - **当前 Phase**: 28 (5+3+1 全量审计纪元 — X-Plane 治理控制面已落地;code_freeze=true)
-- **下一里程碑**: 债务结构化完成(9项),X-Plane 档位③ 探活覆盖率 19%,待推进全量 probe 至 90%+
-- **健康分**: **22.12**/100 (2026-06-11 实测,公式 = raw(100) × debt_weight(0.3) × xplane_factor(0.738);上次更新由 debt_weight 1→0.3 触发骤降;raw 质量分仍为 100)
-- **完成度**: Phase 1-28 已完成;xplane_coverage=100% registry 注册 21 项机制,但沙箱实测 coverage=19%(4/21 可探),survival=0%(all PENDING/RED/DEAD);debt_health=62.5;9项债务全部 unresolved
-- **当前活跃任务**: (无活跃任务;planned/ 47 任务排队中;OPC-P2 已完工待迁至 done/)
-- **关键原则**: OMO MCP 化完成,agora 网关隔离固化,llm-gateway 统一算力调度,gbrain 图谱记忆共享上线,**X-Plane 全量探活未跑通(survival=0%),INDEX.md 声明/现实分裂已修复**
+- **健康分**: 22.12/100 (2026-06-11 实测)
+- **完成度**: Phase 1-28 已完成; xplane_coverage=100% registry, 沙箱实测 19%
+- **当前活跃任务**: (无; planned/ 47 任务排队中)
+- **关键原则**: OMO MCP 化完成, agora 网关隔离固化, llm-gateway 统一算力调度, gbrain 图谱记忆
 
 ---
 
@@ -235,11 +224,15 @@ bash tests/integration/run-all.sh
 
 1. ✅ kairon 用 **uv**，不是 pip/poetry
 2. ✅ Python 目标版本 **3.13+**
-3. ✅ agentmesh 和 gbrain 用 **bun**，非 Node/npm
+3. ✅ gbrain 用 **bun**，非 Node/npm
 4. ✅ 数据库路径 (`data/db/`) 已 gitignore
-5. ✅ 根目录 `SharedBrain/` 是轻量化数据持久层（Phase 17），非独立项目
-6. ✅ `.omo/` 是治理核心
-7. ❌ 不要直接从旧快照文件 (HEALTH_DASHBOARD.md) 取状态
-8. ❌ 不要复制事实到知识面文档 —— 用指针引用
-9. ❌ 不要修改 goals/current.yaml（仅人类可改）
-10. ❌ 不要删除旧的运行记录（仅可标记 archived）
+5. ✅ `.omo/` 是治理核心
+6. ❌ 不要从旧快照文件取状态 (HEALTH_DASHBOARD.md 不是 SSOT)
+7. ❌ 不要复制事实到知识面文档 —— 用指针引用
+8. ❌ 不要修改 goals/current.yaml（仅人类可改）
+9. ❌ 不要删除旧的运行记录（仅可标记 archived）
+
+---
+
+*~Workspace 层网关 v2.0 · 2026-06-12 · 架构对齐 5+4+1+1 · SSOT 重构*
+*全局入口 → ~/Documents/CLAUDE_GLOBAL.md*

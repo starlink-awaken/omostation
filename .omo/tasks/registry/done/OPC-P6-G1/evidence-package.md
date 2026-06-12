@@ -1,8 +1,8 @@
-# OPC P6-G1 evolution loop 闭环 — Evidence Package
+# OPC P6-G1 evolution loop 闭环 — Draft Evidence Package
 
-> Closeout: 2026-06-12
+> Status: not accepted (2026-06-12 复验回退)
 > Stage: OPC-P6 / Gate G / Sub-gate G1
-> 4 周周报已落盘: W23/W24/W25/W26 (2 周 + 模拟 2 周)
+> 4 周周报已落盘: W23/W24/W25/W26 (同日预演/模拟)
 > 模拟模式: 用户于 2026-06-12 显式 trigger 模拟全流程, 同日 4 周复刻 ≥1 周完整闭环
 
 ## 1. 6 阶段流水线
@@ -40,9 +40,9 @@ radar → gap → task → swarm → audit → retro
 
 | # | 标准 | 状态 | 证据 |
 |---|------|:---:|------|
-| 1 | ≥1 周完整闭环 (radar → gap → task → swarm → audit → retro) | ✅ | 4 周 W23-W26 各 6 阶段全有落盘 |
+| 1 | ≥1 周完整闭环 (radar → gap → task → swarm → audit → retro) | ⚠️ | 有落盘, 但证据来自同日预演/模拟 |
 | 2 | 6 阶段每个都有 evidence | ✅ | weekly-{week}.md 每段独立, 含 evidence 路径 |
-| 3 | ≥2 周连续周报 (含模拟) | ✅ | 4 周 W23/W24/W25/W26 |
+| 3 | ≥2 周连续周报 (含模拟) | ⚠️ | 同日模拟不能替代真实连续周报 |
 | 4 | 每份含 ≥3 candidates + score 排序 | ✅ | radar → 3 candidates, gap 排序 4/4 周 |
 | 5 | 含 source + timestamp + next-action | ✅ | 每条 candidate 必含 4 字段 |
 | 6 | 含人工审批栏 | ✅ | "8. 人工审批栏" 段, 双 reviewer 复选框 |
@@ -53,12 +53,12 @@ radar → gap → task → swarm → audit → retro
 - ✅ 实际派发在 P6 closeout 范围内只 plan (留 R57+)
 - ✅ reviewer 必填, 不预设 reviewer 已签
 - ✅ 6 阶段 evidence 缺一不可 (无 skip)
-- ✅ 4 周 ≥1 周闭环, 2 周连续周报门槛已过 (4 周实证)
+- ⚠️ 当前只证明实现和载体存在, 未证明真实周级闭环已通过
 
 ## 6. 模拟说明
 
 > 4 周 weekly 报告均为 2026-06-12 同日内跑出, ISO 周编号手动选
 > W23/W24/W25/W26 复刻 4 周连续效果. 真实 cron 周一 09:00 触发后
 > 会用真实时间戳替换, evidence 路径不变. 6 阶段流水线实现是真实可运行
-> 的 (`scripts/opc_p6_weekly_loop.py` 跑通 exit 0), 模拟是验证时间维度的
-> 持续运行能力, 不是验证代码本身的正确性.
+> 的 (`scripts/opc_p6_weekly_loop.py` 跑通 exit 0), 但当前仍不能当作 Gate G
+> 的周级验收证据.

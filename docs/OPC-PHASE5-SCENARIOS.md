@@ -2,7 +2,7 @@
 
 > Date: 2026-06-11
 > Source: OPC-ROADMAP.md §M5, opc-roadmap-omo-plan.md §Phase 5
-> Status: governance baseline (载体建立, 不做业务实现)
+> Status: partial closeout (F2/F3/F4 已落地, Gate F 仍待 F1 时间窗)
 > Tracking: `.omo/tasks/planned/OPC-P5-SCENARIOS.yaml`
 
 ---
@@ -28,14 +28,15 @@ Outputs include **source, timestamp, next-action** (per Gate F acceptance).
 
 | ID | Title | Status | Evidence Requirement |
 |:---|:------|:-------|:---------------------|
-| P5-F1 | technical-radar scenario | 📋 not_started (待 ≥2 周真实 cron 跑通) | 至少 2 周连续 cron 跑通, 每次输出 ≥3 升级 candidates + 源声明 + next-action |
-| P5-F2 | work-assistant scenario | 📋 not_started (待 F1 跑通后一起 closeout) | 至少 1 个真实工作 query 跑通, 输出结构化草稿含 source/timestamp/next-action |
-| P5-F3 | family-health scenario | 📋 not_started (仅 schema 实证, 无真实 query 闭环) | 至少 1 个真实家庭健康 query 跑通, 输出含 紧急/关注/正常 三级 next-action, privacy=confidential |
+| P5-F1 | technical-radar scenario | 📋 not_yet_passed (待 ≥2 周真实 cron 跑通) | 至少 2 周连续 cron 跑通, 每次输出 ≥3 升级 candidates + 源声明 + next-action |
+| P5-F2 | work-assistant scenario | ✅ passed (真实 query + 5 sources + audit trail) | 至少 1 个真实工作 query 跑通, 输出结构化草稿含 source/timestamp/next-action |
+| P5-F3 | family-health scenario | ✅ passed (3 级 next-action + confidential local store) | 至少 1 个真实家庭健康 query 跑通, 输出含 紧急/关注/正常 三级 next-action, privacy=confidential |
 | P5-F4 | cockpit 统一入口 | ✅ passed (硬基础设施, 单独 closeout) | 用户通过 cockpit CLI 一键跑 3 场景, 无需理解仓边界 |
 
-> 2026-06-12 复验修正: F1/F2/F3 此前被标 passed, 但 F1 时间性要求 (≥2 周连续 cron)
-> 被偷换为"2 轮手动", F2/F3 没有真实 query 闭环. 复验后回退 not_started.
-> F4 单独 passed (入口基础设施). Gate F 等 ≥2 周真实 cron 跑通后 closeout.
+> 2026-06-12 当前状态修正: F1 仍未满足 "≥2 周连续 cron" 的原始时间性要求；
+> F2 已以真实工作 query 跑通并写入 archive receipt；F3 已以 3 个真实家庭 query
+> 跑出 urgent/attention/normal 且 privacy_path 固定为本地 confidential family store；
+> F4 保持 passed。Gate F 仍等待 F1 closeout.
 
 ## Gate Status
 
@@ -62,8 +63,9 @@ Outputs include **source, timestamp, next-action** (per Gate F acceptance).
 
 P5 **可开始** 当且仅当:
 - ✅ P3 Gate D **passed** (现状满足)
-- ⏳ P4 Gate E **passed** (现状未满足)
-- ⏳ F1+F2+F3 至少各 1 次设计 baseline (现状: 0)
+- ✅ P4 Gate E **passed** (现状满足)
+- ⏳ F1 至少 1 次设计 baseline 且进入真实 cron 窗口 (现状: 未满足)
+- ✅ F2/F3 已有真实 runtime baseline
 - ✅ P3 业务 dispatch spine 已完成
 
 P5 **blocked**:
@@ -87,10 +89,10 @@ P5 **final close condition** (Gate F passed):
 
 ```
 opc_phase5_gate_f_not_yet_passed
-opc_phase5_subgate_f1_not_started
-opc_phase5_subgate_f2_not_started
-opc_phase5_subgate_f3_not_started
-opc_phase5_subgate_f4_not_started
+opc_phase5_subgate_f1_not_yet_passed
+opc_phase5_subgate_f2_passed
+opc_phase5_subgate_f3_passed
+opc_phase5_subgate_f4_passed
 ```
 
 (待 F1-F4 全部 passed 后 emit `opc_phase5_gate_f_passed`)

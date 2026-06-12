@@ -2,7 +2,7 @@
 
 > Date: 2026-06-11
 > Source: OPC-ROADMAP.md §M6, opc-roadmap-omo-plan.md §Phase 6
-> Status: passed (2026-06-12 closeout, 模拟全流程)
+> Status: in progress (实现/预演存在, Gate G 未通过)
 > Tracking: `.omo/tasks/planned/OPC-P6-EVOLUTION-LOOP.yaml`
 
 ---
@@ -21,6 +21,11 @@ The 6-stage loop:
 **Key constraint** (from OPC-ROADMAP §6.2):
 > "Self-evolution tasks may enter planned state only; human approval is required for active execution."
 
+当前补充载体:
+- `scripts/opc_p6_weekly_loop_cron.sh` / `scripts/opc_p6_self_evolve_cron.sh`
+- `.omo/_control/evolution/loop/trace-index.json`
+- `.omo/_control/evolution/approval-board/current.{json,md}`
+
 ## Prerequisites
 
 - **opc_phase5_gate_f_passed** (P5 scenarios 跑通, radar source 来自 F1)
@@ -33,15 +38,15 @@ The 6-stage loop:
 
 | ID | Title | Status | Evidence Requirement |
 |:---|:------|:-------|:---------------------|
-| P6-G1 | evolution loop 闭环 | ✅ passed (2026-06-12) | 至少 1 周完整闭环 (radar → gap → task → swarm → audit → retro), 6 阶段每个都有 evidence |
-| P6-G2 | 周更升级报告 | ✅ passed (2026-06-12) | 至少 2 周连续周报, 每份含 ≥3 candidates + score 排序 + source + timestamp + next-action + 人工审批栏 |
-| P6-G3 | drift detector | ✅ passed (2026-06-12) | 4 类漂移 (entry/doc/duplicate_facts/agora_bypass) 检测器, 跑 ≥1 周零漂移 OR 全漂移 + 自动 fix 路径 |
-| P6-G4 | 闭环实证 | ✅ passed (2026-06-12) | 至少 1 个 candidate 从 radar 跑到 retrospective 闭环实证, ≥3 仓 audit trail 完整 |
+| P6-G1 | evolution loop 闭环 | 📋 not_yet_passed (有实现/预演, 无周级实证) | 至少 1 周完整闭环 (radar → gap → task → swarm → audit → retro), 6 阶段每个都有 evidence |
+| P6-G2 | 周更升级报告 | 📋 not_yet_passed (格式齐, 但未满足真实连续周报) | 至少 2 周连续周报, 每份含 ≥3 candidates + score 排序 + source + timestamp + next-action + 人工审批栏 |
+| P6-G3 | drift detector | 📋 not_yet_passed (检测器与 approval board 已落地, 无 ≥1 周观测证据) | 4 类漂移 (entry/doc/duplicate_facts/agora_bypass) 检测器, 跑 ≥1 周零漂移 OR 全漂移 + 自动 fix 路径 |
+| P6-G4 | 闭环实证 | 📋 not_yet_passed (trace index 存在, 但依赖前序未通过) | 至少 1 个 candidate 从 radar 跑到 retrospective 闭环实证, ≥3 仓 audit trail 完整 |
 
 ## Gate Status
 
-- `opc_phase6_gate_g_passed` (Gate G, 区别于 P7 Gate G — phase 隔离)
-- 2026-06-12 模拟全流程 closeout: 4 周 W23-W26 完整闭环 + 17 次 drift detector + evidence_id=34 端到端追溯 + 5 仓 audit trail
+- `opc_phase6_gate_g_not_yet_passed` (Gate G, 区别于 P7 Gate G — phase 隔离)
+- 2026-06-12 复验修正: G1-G4 均存在实现或预演证据, 但周级时间窗与人工审批红线未满足, Gate G 不得宣告 passed
 
 ## Red Lines
 
@@ -65,8 +70,8 @@ The 6-stage loop:
 P6 **可开始** 当且仅当:
 - ✅ P3 Gate D passed (现状满足)
 - ✅ P4 Gate E passed (现状满足)
-- ✅ P5 Gate F passed (现状满足) — P6 radar 来源依赖 F1
-- ✅ 1 周 retrospective 模板 + 4 周 W23-W26 实证 (含 2 周模拟)
+- ⏳ P5 Gate F passed (现状未满足) — P6 radar 来源依赖 F1
+- ⏳ 1 周 retrospective 模板 + 真实周级实证 (现状未满足)
 
 P6 **blocked**:
 - P3/P4/P5 任何 gate 退到 not_started (不允许)
@@ -87,11 +92,11 @@ P6 **final close condition** (Gate G passed):
 ## Signal
 
 ```
-opc_phase6_gate_g_passed
-opc_phase6_subgate_g1_passed
-opc_phase6_subgate_g2_passed
-opc_phase6_subgate_g3_passed
-opc_phase6_subgate_g4_passed
+opc_phase6_gate_g_not_yet_passed
+opc_phase6_subgate_g1_not_yet_passed
+opc_phase6_subgate_g2_not_yet_passed
+opc_phase6_subgate_g3_not_yet_passed
+opc_phase6_subgate_g4_not_yet_passed
 ```
 
-(2026-06-12 模拟全流程 closeout 后 emit `opc_phase6_gate_g_passed` + 4 个 sub-gate passed)
+(待 G1-G4 全部满足真实时间窗与审批红线后 emit `opc_phase6_gate_g_passed`)
