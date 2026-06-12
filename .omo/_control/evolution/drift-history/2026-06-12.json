@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-06-12T07:49:08Z",
-  "mode": "weekly",
+  "generated_at": "2026-06-12T09:11:19Z",
+  "mode": "pre-release",
   "rollout": {
     "returncode": 0,
     "fallback_used": true,
@@ -15,7 +15,7 @@
     "omo": {
       "health_grade": "R0",
       "drift": null,
-      "records": 2461
+      "records": 2478
     },
     "llm-gateway": {
       "health_grade": "R0",
@@ -30,7 +30,7 @@
     "runtime": {
       "health_grade": "R0",
       "drift": null,
-      "records": 28
+      "records": 33
     }
   }
 }

@@ -1,12 +1,12 @@
 {
   "week": "2026-W24",
-  "generated_at": "2026-06-12T07:48:59Z",
+  "generated_at": "2026-06-12T09:10:37Z",
   "radar": {
     "stage": "radar",
-    "ts": "2026-06-12T07:48:59Z",
+    "ts": "2026-06-12T09:10:37Z",
     "output": {
       "scenario": "technical-radar",
-      "generated_at": "2026-06-12T07:48:59Z",
+      "generated_at": "2026-06-12T09:10:37Z",
       "candidates": [
         {
           "title": "Platform: consolidate 'search-trace: multi-zone' into a shared module",
@@ -85,17 +85,17 @@
       "source": "cockpit:research",
       "db_path": "/Users/xiamingxing/.workspace/data.db",
       "trigger_source": "cron",
-      "archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260612T074859Z-technical-radar-6d979911.json"
+      "archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260612T091037Z-technical-radar-74cb3a61.json"
     }
   },
   "drift": {
-    "generated_at": "2026-06-12T07:48:59Z",
+    "generated_at": "2026-06-12T09:10:37Z",
     "kinds": 4,
     "drift_count": 0,
     "results": [
       {
         "kind": "entry_drift",
-        "ts": "2026-06-12T07:48:59Z",
+        "ts": "2026-06-12T09:10:37Z",
         "expected": [
           "radar",
           "assistant",
@@ -111,7 +111,7 @@
       },
       {
         "kind": "doc_drift",
-        "ts": "2026-06-12T07:48:59Z",
+        "ts": "2026-06-12T09:10:37Z",
         "plan_gate_status": "passed",
         "doc_says_passed": true,
         "consistent": true,
@@ -119,13 +119,13 @@
       },
       {
         "kind": "duplicate_facts",
-        "ts": "2026-06-12T07:48:59Z",
+        "ts": "2026-06-12T09:10:37Z",
         "findings": [],
         "drift": false
       },
       {
         "kind": "agora_bypass",
-        "ts": "2026-06-12T07:48:59Z",
+        "ts": "2026-06-12T09:10:37Z",
         "scanned_files": [
           "projects/runtime/src/runtime/executor/engine.py",
           "projects/cockpit/src/cockpit/commands/scenario.py",
@@ -138,7 +138,7 @@
   },
   "gap": {
     "stage": "gap",
-    "ts": "2026-06-12T07:48:59Z",
+    "ts": "2026-06-12T09:10:37Z",
     "candidates": [
       {
         "candidate": {
@@ -249,7 +249,7 @@
   },
   "task": {
     "stage": "task",
-    "ts": "2026-06-12T07:48:59Z",
+    "ts": "2026-06-12T09:10:37Z",
     "planned": [
       {
         "id": "OPC-P6-LOOP-2026-W24-00",
@@ -259,7 +259,7 @@
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-06-12T07:48:59Z"
+        "ts": "2026-06-12T09:10:37Z"
       },
       {
         "id": "OPC-P6-LOOP-2026-W24-01",
@@ -269,7 +269,7 @@
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-06-12T07:48:59Z"
+        "ts": "2026-06-12T09:10:37Z"
       },
       {
         "id": "OPC-P6-LOOP-2026-W24-02",
@@ -279,7 +279,7 @@
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-06-12T07:48:59Z"
+        "ts": "2026-06-12T09:10:37Z"
       },
       {
         "id": "OPC-P6-LOOP-2026-W24-03",
@@ -289,7 +289,7 @@
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-06-12T07:48:59Z"
+        "ts": "2026-06-12T09:10:37Z"
       },
       {
         "id": "OPC-P6-LOOP-2026-W24-04",
@@ -299,7 +299,7 @@
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-06-12T07:48:59Z"
+        "ts": "2026-06-12T09:10:37Z"
       },
       {
         "id": "OPC-P6-LOOP-2026-W24-05",
@@ -309,7 +309,7 @@
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-06-12T07:48:59Z"
+        "ts": "2026-06-12T09:10:37Z"
       },
       {
         "id": "OPC-P6-LOOP-2026-W24-06",
@@ -319,7 +319,7 @@
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-06-12T07:48:59Z"
+        "ts": "2026-06-12T09:10:37Z"
       },
       {
         "id": "OPC-P6-LOOP-2026-W24-07",
@@ -329,14 +329,14 @@
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-06-12T07:48:59Z"
+        "ts": "2026-06-12T09:10:37Z"
       }
     ],
     "red_line_held": "all tasks status=planned; human approval required for active"
   },
   "swarm": {
     "stage": "swarm",
-    "ts": "2026-06-12T07:48:59Z",
+    "ts": "2026-06-12T09:10:37Z",
     "note": "P6 closeout 范围内只 plan; 实际派发受红线 'self-evolution task 仅落 planned' 约束",
     "planned_dispatch": [
       "OPC-P6-LOOP-2026-W24-00",
@@ -352,7 +352,7 @@
   },
   "audit": {
     "stage": "audit",
-    "ts": "2026-06-12T07:48:59Z",
+    "ts": "2026-06-12T09:10:37Z",
     "llm_audit_tail": [
       {
         "input_tokens": 120,
@@ -387,7 +387,7 @@
     "runs": [
       {
         "week": "2026-W24",
-        "generated_at": "2026-06-12T07:48:59Z",
+        "generated_at": "2026-06-12T09:10:37Z",
         "candidate_count": 8,
         "planned_count": 8,
         "drift_count": 0,
@@ -426,10 +426,10 @@
   },
   "retro": {
     "stage": "retro",
-    "ts": "2026-06-12T07:48:59Z",
+    "ts": "2026-06-12T09:10:37Z",
     "summary": {
       "radar_candidates": 8,
-      "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260612T074859Z-technical-radar-6d979911.json",
+      "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260612T091037Z-technical-radar-74cb3a61.json",
       "drift_count": 0,
       "planned_tasks": 8,
       "audit_records": 1,
