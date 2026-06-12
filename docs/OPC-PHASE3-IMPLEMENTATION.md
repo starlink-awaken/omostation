@@ -3,18 +3,19 @@
 > Date: 2026-06-11
 > P2: T4 completed, implementation in progress
 > Source: OPC-ROADMAP.md §M3, opc-roadmap-omo-plan.md §Phase 3
-> Status: design baseline → implementation entry
+> Status: implementation entry; Gate D opened (D1+D2 passed, D3-D5 not started)
+> Source-of-truth: `.omo/tasks/registry/done/OPC-P3-GATE-D-OPENING.yaml`
 
 ---
 
-## Current P2 State (carried in)
+## Current P2 State (carried in, ACTUAL)
 
 | Task | Status | Note |
 |:----|:------|:-----|
 | T4 8-field metadata | ✅ completed | All searches tagged with full schema |
 | T3 all-search route | ✅ implemented | `bos://memory/local/all-search` in POC_SERVICES |
 | T3 multi-zone (KOS/vault) | 📝 deferred | Requires running kairon subprocess |
-| Gate C | pending | Evidence provided, awaiting review |
+| Gate C | ✅ **passed** | C1+C2+C3+C4 closed, 21/21 tests (DO NOT mark as pending) |
 
 ---
 

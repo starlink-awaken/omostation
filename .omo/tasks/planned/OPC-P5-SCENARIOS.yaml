@@ -1,0 +1,112 @@
+id: OPC-P5-SCENARIOS
+title: "OPC-P5: North Star Scenarios"
+status: planned
+priority: P0
+domain: opc
+created: "2026-06-11"
+prerequisites:
+  - opc_phase3_gate_d_not_yet_passed
+  - opc_phase4_gate_e_not_yet_passed
+  - cockpit_cli_entry_complete
+  - opc_p2_section5_boundaries_established
+  - opc_section19_cross_repo_debt_closed
+description: |
+  P5 proves OPC value through 3 repeatable real-user product scenarios:
+  1. technical-radar (AI/agent/knowledge-engineering signals)
+  2. work-assistant (real work question → sourced structured draft)
+  3. family-health (family medical records → next-action)
+
+  Source-of-truth: docs/OPC-PHASE5-SCENARIOS.md
+sub_gates:
+  - id: P5-F1
+    title: "technical-radar scenario"
+    status: not_started
+    criteria:
+      - '≥2 周连续 cron 跑通'
+
+      - '每次输出 ≥3 升级 candidates'
+
+      - '含 source + timestamp + next-action'
+
+    evidencia_requirement: "2 周周报 markdown + OMO planned task YAML"
+  - id: P5-F2
+    title: "work-assistant scenario"
+    status: not_started
+    criteria:
+      - '≥1 真实工作 query 跑通'
+
+      - '输出结构化草稿'
+
+      - '含 source + timestamp + next-action'
+
+    evidencia_requirement: "1 work query 输出 + 5 仓 audit trail"
+  - id: P5-F3
+    title: "family-health scenario"
+    status: not_started
+    criteria:
+      - '≥1 真实家庭健康 query 跑通'
+
+      - '输出含 紧急/关注/正常 三级 next-action'
+
+      - 'privacy_class=confidential'
+
+    evidencia_requirement: "1 family-health query 输出 + privacy 路径实证"
+  - id: P5-F4
+    title: "cockpit 统一入口"
+    status: not_started
+    criteria:
+      - '用户通过 cockpit CLI 一键跑 3 scenario'
+
+      - '无需理解仓边界'
+
+    evidencia_requirement: "cockpit CLI 3 scenario 跑通"
+
+gate: Gate F
+gate_status: not_yet_passed
+gate_note: |
+  F1-F4 全部 not_started. P5 治理载体 2026-06-11 落地, 业务实施留 R57+.
+signals:
+  - opc_phase5_gate_f_not_yet_passed
+  - opc_phase5_subgate_f1_not_started
+  - opc_phase5_subgate_f2_not_started
+  - opc_phase5_subgate_f3_not_started
+  - opc_phase5_subgate_f4_not_started
+
+red_lines:
+  - 'scenario 输出没有 source 声明'
+
+  - 'scenario 输出没有 timestamp'
+
+  - 'scenario 输出没有 next-action'
+
+  - '用户需手动切换仓才能跑 scenario'
+
+  - 'family-health 用 non-confidential privacy class'
+
+  - 'scenario 跑通 < 2 次即声明 passed'
+
+
+phase_open_condition: |
+  P5 可开始 当且仅当:
+  ✅ P3 Gate D passed
+  ✅ P4 Gate E passed
+  ⏳ F1+F2+F3 至少各 1 次设计 baseline
+  ⏳ P3 业务完成 (D3-D5 跑通, scenarios 需要 dispatch_worker)
+phase_blocked_condition: |
+  ❌ P3 Gate D 退到 not_started
+  ❌ P4 Gate E 退到 not_started
+  ❌ cockpit 入口降级
+final_close_condition: |
+  ✅ F1-F4 全部 runtime 实证
+  ✅ 验收包 5 项全有 evidence
+  ✅ 红线 6 项全 hold
+
+forbidden_claims:
+  - 'P5 实施完成" 在 F1-F4 未全部 passed 之前'
+
+  - 'scenario 通过验收" 在 2 次以下重复跑之前'
+
+  - '用户可以跑 scenario" 在 F4 入口落地之前'
+
+  - 'family-health 可用" 在 F3 privacy 路径实证之前'
+

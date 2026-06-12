@@ -1,0 +1,107 @@
+id: OPC-P4-MODEL-COMPUTE
+title: "OPC-P4: Model & Compute Plane"
+status: planned
+priority: P0
+domain: opc
+created: "2026-06-11"
+prerequisites:
+  - opc_phase3_gate_d_not_yet_passed       # P3 业务未收口, P4 业务实施 blocked (但治理载体建立可进行)
+  - llm_gateway_repo_available
+  - compute_mesh_repo_available
+  - opc_p2_section5_boundaries_established
+  - opc_section19_cross_repo_debt_closed   # E1-E4 收口
+description: |
+  P4 removes direct model/provider coupling from business modules.
+  llm-gateway = only model provider; compute-mesh = only worker discovery.
+  Business code NEVER imports openai/anthropic/vertexai or runs subprocess
+  for inference directly.
+
+  Source-of-truth: docs/OPC-PHASE4-MODEL-COMPUTE.md
+sub_gates:
+  - id: P4-E1
+    title: "Model Registry SSOT (models.yaml in llm-gateway)"
+    status: not_started
+    criteria:
+      - '≥3 provider × ≥2 model per provider'
+
+      - '字段含 provider/model_id/context/cost/latency'
+
+    evidencia_requirement: "llm-gateway/src/llm_gateway/registry/models.yaml 落地 + ≥10 model"
+  - id: P4-E2
+    title: "Compute Mesh Worker Discovery"
+    status: not_started
+    criteria:
+      - '≥1 worker (本地 ollama 或 stub) registered'
+
+      - '5s heartbeat 跑通'
+
+      - '≥1 任务端到端 dispatch 成功'
+
+    evidencia_requirement: "compute-mesh worker registered + heartbeat trace"
+  - id: P4-E3
+    title: "任务 budget policy 落地"
+    status: not_started
+    criteria:
+      - '≥1 业务调用 (P3 D5 demo) 实测 budget 拒绝路径'
+
+      - '触发 §19 debt register'
+
+    evidencia_requirement: "P3 D5 demo 跑通 + §19 debt register hit"
+  - id: P4-E4
+    title: "跨仓 audit trail 归因"
+    status: not_started
+    criteria:
+      - '每次 LLM 调用写入 llm-gateway/audit/...'
+
+      - '含 task_id/role/model/cost/latency'
+
+      - 'omo audit-rollout 跨仓聚合'
+
+    evidencia_requirement: "audit trail + omo audit-rollout report 实证"
+
+gate: Gate E
+gate_status: not_yet_passed
+gate_note: |
+  E1-E4 全部 not_started. P4 治理载体 2026-06-11 落地, 业务实施留 R57+.
+signals:
+  - opc_phase4_gate_e_not_yet_passed
+  - opc_phase4_subgate_e1_not_started
+  - opc_phase4_subgate_e2_not_started
+  - opc_phase4_subgate_e3_not_started
+  - opc_phase4_subgate_e4_not_started
+
+red_lines:
+  - 'business module 直接 import openai/anthropic/vertexai'
+
+  - 'business module 直接 subprocess 跑 inference'
+
+  - 'P3 Gate D 未 passed 之前申请 P4 Gate E'
+
+  - '未跑通 E1-E4 runtime 就声明 Gate E passed'
+
+
+# Phase open / blocked / close (任务 4 readiness)
+phase_open_condition: |
+  P4 可开始 当且仅当:
+  ✅ P3 D1+D2 passed (现状满足)
+  ✅ llm-gateway 仓可用
+  ✅ compute-mesh 仓可用
+  ✅ OPC-P2 §19 跨仓债 E1-E4 收口 (现状满足)
+  ⏳ P3 Gate D 收口 (P3 D3-D5) — 不阻塞 P4 治理载体, 阻塞 P4 业务实施
+phase_blocked_condition: |
+  ❌ P3 D1/D2 退回到 not_started (不允许回退)
+  ❌ llm-gateway/compute-mesh 仓未拉取
+final_close_condition: |
+  ✅ E1-E4 全部 runtime 实证
+  ✅ 验收包 6 项全有 evidence
+  ✅ 红线 6 项全 hold
+
+forbidden_claims:
+  - 'P4 实施完成" 在 E1-E4 未全部 passed 之前'
+
+  - 'LLM 路由统一" 在 E1 models.yaml 未落地之前'
+
+  - '成本可视化" 在 E4 audit trail 归因未跑通之前'
+
+  - 'business code 切到 llm-gateway— 这是 E3 实装后业务侧动作, 不属 P4 范围'
+

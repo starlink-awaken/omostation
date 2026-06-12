@@ -1,0 +1,92 @@
+# OPC-P5: North Star Scenarios
+
+> Date: 2026-06-11
+> Source: OPC-ROADMAP.md §M5, opc-roadmap-omo-plan.md §Phase 5
+> Status: governance baseline (载体建立, 不做业务实现)
+> Tracking: `.omo/tasks/planned/OPC-P5-SCENARIOS.yaml`
+
+---
+
+## Objective
+
+P5 proves OPC value through **3 repeatable real-user product scenarios**:
+1. **technical-radar** — collect AI/agent/knowledge-engineering updates, score relevance, emit upgrade tasks
+2. **work-assistant** — generate sourced structured drafts for real work questions
+3. **family-health** — summarize family medical records, produce next-action items
+
+Outputs include **source, timestamp, next-action** (per Gate E acceptance).
+
+## Prerequisites
+
+- **opc_phase3_gate_d_not_yet_passed** (P3 业务未收口; P5 scenarios 跑需 P3 worker dispatch 实证)
+- **opc_phase4_gate_e_not_yet_passed** (P4 model gateway 路由可用 — scenarios 跑需 LLM 模型路由)
+- `cockpit` 仓 CLI entry 完整
+- P2 §5 boundaries 跑通 (recall-flow 端到端)
+- §19 跨仓债 E1-E4 收口
+
+## Sub-gates
+
+| ID | Title | Status | Evidence Requirement |
+|:---|:------|:-------|:---------------------|
+| P5-F1 | technical-radar scenario | 📋 not_started | 至少 2 周连续 cron 跑通, 每次输出 ≥3 升级 candidates + 源声明 + next-action |
+| P5-F2 | work-assistant scenario | 📋 not_started | 至少 1 个真实工作 query 跑通, 输出结构化草稿含 source/timestamp/next-action |
+| P5-F3 | family-health scenario | 📋 not_started | 至少 1 个真实家庭健康 query 跑通, 输出含 紧急/关注/正常 三级 next-action, privacy=confidential |
+| P5-F4 | cockpit 统一入口 | 📋 not_started | 用户通过 cockpit CLI 一键跑 3 场景, 无需理解仓边界 |
+
+## Gate Status
+
+- `opc_phase5_gate_f_not_yet_passed` (命名: Gate F, 区别于 P6 Gate F — phase 隔离)
+
+## Red Lines
+
+- ❌ "scenario 输出没有 source 声明" (Gate E acceptance 必备)
+- ❌ "scenario 输出没有 timestamp" (Gate E acceptance 必备)
+- ❌ "scenario 输出没有 next-action" (Gate E acceptance 必备)
+- ❌ "用户需手动切换仓才能跑 scenario" (P5-F4 必备, 用户无感)
+- ❌ "family-health scenario 用 non-confidential privacy class" (隐私约束)
+- ❌ "scenario 跑通次数 < 2 即声明 passed" (可重复性硬要求)
+
+## Acceptance Package (F1-F4 全部 passed 所需)
+
+1. F1: 2 次 cron 输出各含 ≥3 candidates + source + timestamp + next-action
+2. F2: 1 个真实 work query 输出 + 5 仓 audit trail
+3. F3: 1 个 family-health query 输出 + privacy 路径实证
+4. F4: cockpit CLI 3 scenario 跑通, 用户不需切仓
+5. 红线 6 项全 hold
+
+## Phase Open Condition (任务 4 readiness)
+
+P5 **可开始** 当且仅当:
+- ✅ P3 Gate D **passed** (现状: not_yet_passed — P5 业务实施 blocked, 但 P5 治理载体建立可进行)
+- ✅ P4 Gate E **passed** (现状: not_yet_passed — 同上)
+- ⏳ F1+F2+F3 至少各 1 次设计 baseline (现状: 0)
+- ⏳ P3 业务完成 (D3-D5 跑通, scenarios 需要 dispatch_worker)
+
+P5 **blocked**:
+- P3 Gate D 退到 not_started (不允许)
+- P4 Gate E 退到 not_started (不允许)
+- cockpit 入口降级 (3 scenario 走不通)
+
+P5 **final close condition** (Gate F passed):
+- F1-F4 全部 runtime 实证
+- 验收包 5 项全有 evidence
+- 红线 6 项全 hold
+
+## Forbidden Premature Claims
+
+- ❌ "P5 实施完成" 在 F1-F4 未全部 passed 之前
+- ❌ "scenario 通过验收" 在 2 次以下重复跑之前
+- ❌ "用户可以跑 scenario" 在 F4 入口落地之前
+- ❌ "family-health 可用" 在 F3 privacy 路径实证之前
+
+## Signal
+
+```
+opc_phase5_gate_f_not_yet_passed
+opc_phase5_subgate_f1_not_started
+opc_phase5_subgate_f2_not_started
+opc_phase5_subgate_f3_not_started
+opc_phase5_subgate_f4_not_started
+```
+
+(待 F1-F4 全部 passed 后 emit `opc_phase5_gate_f_passed`)

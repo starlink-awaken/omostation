@@ -1,0 +1,108 @@
+id: OPC-P6-EVOLUTION-LOOP
+title: "OPC-P6: Self-Evolution Loop"
+status: planned
+priority: P0
+domain: opc
+created: "2026-06-11"
+prerequisites:
+  - opc_phase3_gate_d_not_yet_passed
+  - opc_phase4_gate_e_not_yet_passed
+  - opc_phase5_gate_f_not_yet_passed
+  - opc_section19_cross_repo_debt_closed
+description: |
+  P6 makes system improvement a governed recurring workflow, not ad-hoc.
+  6-stage loop: radar → gap → task → swarm → audit → retrospective.
+
+  Key constraint (OPC-ROADMAP §6.2):
+  > Self-evolution tasks may enter planned state only; human approval is
+  > required for active execution.
+
+  Source-of-truth: docs/OPC-PHASE6-EVOLUTION-LOOP.md
+sub_gates:
+  - id: P6-G1
+    title: "evolution loop 闭环"
+    status: not_started
+    criteria:
+      - '≥1 周完整闭环 (radar → gap → task → swarm → audit → retro)'
+
+      - '6 阶段每个都有 evidence'
+
+    evidencia_requirement: "1 周闭环 evidence"
+  - id: P6-G2
+    title: "周更升级报告"
+    status: not_started
+    criteria:
+      - '≥2 周连续周报'
+
+      - '每份含 ≥3 candidates + score 排序'
+
+      - '含 source + timestamp + next-action + 人工审批栏'
+
+    evidencia_requirement: "2 周连续周报 markdown"
+  - id: P6-G3
+    title: "drift detector"
+    status: not_started
+    criteria:
+      - '4 类漂移 (entry/doc/duplicate_facts/agora_bypass) 检测器'
+
+      - '跑 ≥1 周零漂移 OR 全漂移 + 自动 fix 路径'
+
+    evidencia_requirement: "drift detector 跑 ≥1 周报告"
+  - id: P6-G4
+    title: "闭环实证"
+    status: not_started
+    criteria:
+      - '≥1 candidate 从 radar 跑到 retrospective 闭环实证'
+
+      - '≥3 仓 audit trail 完整'
+
+    evidencia_requirement: "1 candidate 端到端追溯"
+
+gate: Gate G
+gate_status: not_yet_passed
+gate_note: |
+  G1-G4 全部 not_started. P6 治理载体 2026-06-11 落地, 业务实施留 R57+.
+signals:
+  - opc_phase6_gate_g_not_yet_passed
+  - opc_phase6_subgate_g1_not_started
+  - opc_phase6_subgate_g2_not_started
+  - opc_phase6_subgate_g3_not_started
+  - opc_phase6_subgate_g4_not_started
+
+red_lines:
+  - 'self-evolution task 自动 active (无 human approval)'
+
+  - '周报 candidate < 3'
+
+  - 'drift detector 0 漂移就 claim passed (没跑 ≥1 周不算)'
+
+  - 'retrospective 缺失 source'
+
+  - 'retrospective 缺失 next-action'
+
+  - 'candidate 未变 OMO planned task 即算闭环'
+
+
+phase_open_condition: |
+  P6 可开始 当且仅当:
+  ✅ P3 Gate D passed
+  ✅ P4 Gate E passed
+  ✅ P5 Gate F passed (P6 radar 来源依赖 F1)
+  ⏳ 至少 1 周 retrospective 模板
+phase_blocked_condition: |
+  ❌ P3/P4/P5 任一 Gate 退到 not_started
+  ❌ 闭环任何阶段缺 evidence
+final_close_condition: |
+  ✅ G1-G4 全部 runtime 实证
+  ✅ 验收包 5 项全有 evidence
+  ✅ 红线 6 项全 hold
+
+forbidden_claims:
+  - 'evolution loop 跑通" 在 G1 闭环 evidence 缺失时'
+
+  - '周报格式正确" 在 G2 2 周连续周报缺失时'
+
+  - '无 drift" 在 G3 跑 ≥1 周缺失时'
+
+  - '闭环实证" 在 G4 candidate 端到端追溯缺失时'
+

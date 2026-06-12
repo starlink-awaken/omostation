@@ -3,54 +3,69 @@
 > Date: 2026-06-11
 > P2: Gate C passed (C1+C2+C3+C4 closed, 21/21 tests pass)
 > Source: OPC-ROADMAP.md §M3, opc-roadmap-omo-plan.md §Phase 3
-> Status: design baseline delivered; implementation deferred per D1 blockers
+> Status: implementation entry; Gate D opened (D1+D2 passed, D3-D5 not started)
+> Tracking: `.omo/tasks/registry/done/OPC-P3-GATE-D-OPENING.yaml` (single source of truth)
 
 ---
 
-## D1 Blockers (Recorded 2026-06-11)
+## Current Implementation State (as of 2026-06-11)
 
-P3 D1 (Task Object Runtime Binding) attempted but blocked by:
+| Sub-gate | Status | Evidence |
+|:---------|:-------|:---------|
+| **D1** Task Object Runtime Binding | ✅ **passed** | `.omo/tasks/registry/done/OPC-P3-D1/` |
+| **D2** Dispatch and Heartbeat | ✅ **passed** | `.omo/tasks/registry/done/OPC-P3-D2/` (SUCCESS/RETRY/FAILURE 三路 runtime 实证) |
+| **D3** Role Realization | 📋 not_started | — |
+| **D4** Result Writeback and Audit | 📋 not_started | — |
+| **D5** Minimal Demo | 📋 not_started | — |
+| **Gate D** | ⏳ not_yet_passed | D1+D2 passed; D3-D5 未启动, 无 runtime 实证 |
 
-1. **swarm-engine refactor drift**: `lifecycle_manager.py` imports from
-   `.organs.engine.lifecycle.*` and `.organs.swarm_worker_governance_controller`
-   which do not exist in the current tree. `SwarmLifecycleManager` cannot be
-   instantiated without stubbing 12 missing classes (WorkerHatchAttempt,
-   WorkerHatchGatekeeper, WorkerReapOrchestrator, WorkerGovernanceController,
-   SporeRegistry, Hatcher, SwarmResultCollector, ...). Patching this drift
-   is out of scope for a D1 mini-close and risks regression in the
-   refactored SOLID layout.
+**Strategic decision (D1+D2, 2026-06-11)**: Option B — thin P3 binding using omo + cockpit, skip swarm-engine
+- Dispatch + retry 路径: `omo_worker_dispatch.dispatch_task` + `reclaim_task` (omo 本地)
+- Workers registry: `.omo/_truth/registry/workers.yaml` (coder-001, coder-002 transports=cli_prompt)
+- Swarm-engine organs.* imports 12 个 stub 缺口保留, 不修 (refactor regression 风险)
+- aetherforge / runtime 不参与当前 P3 实施 (留 R57+ 切换)
 
-2. **omo CLI dispatcher gap**: `omo_worker_cmd_task.py` exposes a full
-   `task {validate,promote-eval,promote-apply,promote-readiness,...}`
-   subcommand tree, but `cli.py` only dispatches `omo task list` and
-   `omo task create`. `promote-apply` (the actual state-transition entry
-   point) is unreachable from the CLI. Direct Python invocation requires
-   running from the workspace root, not from `projects/omo/`.
+> **之前的"Strategic options (deferred)" + "D1 Blockers" 已 obsolete**。GATE-D-OPENING.yaml 是当前唯一事实依据。
 
-3. **omo `_promotion_eval` schema mismatch**: the eval gate requires
-   `task.status in {candidate, pending}` and `task.phase == goals.phase + 1`.
-   `omo task create` defaults to `status: planned` with no `phase` field.
-   Without manual task YAML editing, the gate stays ineligible.
+---
 
-4. **Path authority split**: `omo task create` writes to
-   `projects/omo/.omo/tasks/planned/`, but `_promotion_eval` reads from
-   `/Users/xiamingxing/Workspace/.omo/tasks/planned/`. Two `.omo/`
-   roots exist; SSOT is unclear.
+## Architecture: Target vs Current
 
-### Strategic options (deferred — awaiting human input)
+### Target architecture (OPC-PHASE3 design baseline, §T2)
 
-| Option | Approach | Risk |
-|:-------|:---------|:-----|
-| A | Patch swarm-engine organs.* imports | High — refactor regression |
-| B | Build thin P3 binding using only omo + cockpit, document swarm-engine debt | Medium — deviates from OPC-P3 design |
-| C | Block P3 entirely until swarm-engine upstream refactor lands | High — blocks OPC roadmap |
+```
+User Goal → OMO Task → swarm DAG → swarm-engine → runtime → gbrain → omo
+```
 
-Per OPC-MASTER-EXECUTION-PLAYBOOK §3 "no agent may apply for a later gate
-while an earlier gate in the same phase is still open" — D2–D5 are
-blocked until D1 closes. Per §4.1 "do not write passed before runtime
-evidence exists" — D1 is **not** claimed passed.
+### Current implementation path (D1+D2 thin binding, 2026-06-11)
 
-Tracking file: `.omo/tasks/registry/done/OPC-P3-GATE-D-OPENING.yaml`
+```
+User Goal → OMO Task → omo_worker_dispatch → workers.yaml → coder-001/002 (cli_prompt) → omo audit
+```
+
+**差异**: 当前路径不经过 swarm-engine / runtime / aetherforge。swarm-engine 12 个 stub 缺口 + KEI sandbox + aetherforge 集成 均未做。
+
+### When to revisit architecture split (D3 entry decision)
+
+D3 (Role Realization) 实施时, **必须显式选择**:
+
+| Option | Approach | Risk | When to choose |
+|:-------|:---------|:-----|:---------------|
+| A. 继续 thin binding | 用 omo + cockpit 实施 6 角色 | Low — D1+D2 实证能跑 | **默认推荐** (保持当前路径, 避免回退) |
+| B. 回到 target architecture | 修 swarm-engine organs.* imports 12 缺口 | High — refactor regression | swarm-engine 上游修复完成时 |
+| C. 双轨并行 | thin binding 主线 + swarm-engine 备线, 失败回退 | Medium — 双维护成本 | D5 需 swarm-engine 核心能力时 |
+
+**D3 entry 时 (本 session 后续)** 必须显式选定 Option A/B/C 并写入 GATE-D-OPENING.yaml 子任务。
+
+---
+
+## P3 红线 (from MASTER-PLAYBOOK §6.2 + OPC-ROADMAP §6)
+
+- ❌ "do not write passed before runtime evidence exists"
+- ❌ "no agent may apply for a later sub-gate while an earlier one is still open"
+- ❌ "swarm-engine D1 修复不在 P3 范围, 避免 refactor regression"
+- ❌ "禁止同时声明 D1 blocked 和 D1 passed" (本文档之前冲突, 已收口)
+- ❌ "禁止重提 strategic options as open question" (D1+D2 已选定 Option B)
 
 ---
 
@@ -229,10 +244,19 @@ Result → writeback to OMO audit
 
 ---
 
-## P3 Readiness Checklist
+## P3 Readiness Checklist (实际状态, 2026-06-11)
 
 | Criterion | Status | Evidence |
 |:----------|:------|:---------|
+| P2 Gate C passed | ✅ | `OPC-P2-GATE-C.yaml` (C1+C2+C3+C4 closed, 21/21 tests) |
+| P2-T4 8-field metadata schema | ✅ | `storage.py` — all 8 fields in local search output |
+| D1 Task Object Runtime Binding | ✅ **passed** | `OPC-P3-D1/` (runtime evidence) |
+| D2 Dispatch and Heartbeat | ✅ **passed** | `OPC-P3-D2/` (SUCCESS/RETRY/FAILURE 三路) |
+| D3 Role Realization | 📋 not_started | — |
+| D4 Result Writeback and Audit | 📋 not_started | — |
+| D5 Minimal Demo | 📋 not_started | — |
+
+----------|:------|:---------|
 | P2 design baseline accepted | ✅ | Gate C doc revision accepted |
 | P2-T4 8-field schema complete | ✅ | `storage.py` — all 8 P2 metadata fields in local search output |
 | Swarm task object defined | ✅ | §T1 |
@@ -246,7 +270,19 @@ Result → writeback to OMO audit
 ## Signal
 
 ```
-opc_phase3_swarm_spine_designed
+opc_phase3_gate_d_opened
+opc_phase3_subgate_d1_passed
+opc_phase3_subgate_d2_passed
+opc_phase3_subgate_d3_not_started
+opc_phase3_subgate_d4_not_started
+opc_phase3_subgate_d5_not_started
+opc_phase3_gate_d_not_yet_passed
 ```
 
-P2 remaining tasks complete. P3 design baseline delivered. Swarm execution spine architecture defined with task object schema, 6 agent roles, dispatch flow, and minimal three-worker demo specification.
+Signal 命名规范: `opc_phaseN_gate_XN_subgate_YN_<status>`
+- `_passed` / `_not_started` / `_not_yet_passed` (only these 3)
+- 禁止模糊 signal (e.g. "design ready", "implementation entry", "baseline delivered" 不带 gate)
+
+**Gate D 收口 signal** (待 D3+D4+D5 全部 passed): `opc_phase3_gate_d_passed`
+
+**当前已发出 signal (2026-06-11)**: `opc_phase3_subgate_d1_passed`, `opc_phase3_subgate_d2_passed`, `opc_phase3_gate_d_opened`

@@ -1,0 +1,124 @@
+id: OPC-P7-RELEASE-TRAIN
+title: "OPC-P7: Governance Hardening & Release Train"
+status: planned
+priority: P0
+domain: opc
+created: "2026-06-11"
+prerequisites:
+  - opc_phase3_gate_d_not_yet_passed
+  - opc_phase4_gate_e_not_yet_passed
+  - opc_phase5_gate_f_not_yet_passed
+  - opc_phase6_gate_g_not_yet_passed
+  - opc_section19_cross_repo_debt_closed
+description: |
+  P7 makes OPC maintainable as a long-running personal OS.
+  1-2 周 release train (cut → review → ship) + phase gates + cross-repo
+  audit rollout + 文档同步 policy.
+
+  Source-of-truth: docs/OPC-PHASE7-RELEASE-TRAIN.md
+sub_gates:
+  - id: P7-H1
+    title: "release train 节奏"
+    status: not_started
+    criteria:
+      - '≥1 个 1-2 周周期跑通 (cut → review → ship)'
+
+      - 'retrospective 落盘'
+
+    evidencia_requirement: "1 release cycle + retrospective 落盘"
+  - id: P7-H2
+    title: "跨仓 phase gate 实装"
+    status: not_started
+    criteria:
+      - 'check_phase_gate.py 跑通'
+
+      - '8 Gate acceptance 自动检查'
+
+      - 'audit 写入'
+
+    evidencia_requirement: "check_phase_gate.py + 8 Gate 实证"
+  - id: P7-H3
+    title: "跨仓 audit rollout 硬扩"
+    status: not_started
+    criteria:
+      - 'E2 dispatcher cron (monthly + weekly + pre-release)'
+
+      - '5 仓 §17 metrics 自动聚合'
+
+    evidencia_requirement: "cron 实证 + 5 仓 metrics 聚合"
+  - id: P7-H4
+    title: "文档同步 policy"
+    status: not_started
+    criteria:
+      - '4 关键文档自动 lint (PANORAMA/ENTRY/JOURNEY/ROADMAP)'
+
+      - '跨文档术语一致'
+
+      - '0 stale'
+
+    evidencia_requirement: "doc-sync-lint 跑过"
+  - id: P7-H5
+    title: "评审模板"
+    status: not_started
+    criteria:
+      - 'REVIEW-TEMPLATE.md 落地'
+
+      - '≥1 次 review 跑通'
+
+    evidencia_requirement: "REVIEW-TEMPLATE.md + 1 review"
+
+gate: Gate H
+gate_status: not_yet_passed
+gate_note: |
+  H1-H5 全部 not_started. P7 治理载体 2026-06-11 落地, 业务实施留 R57+.
+  Gate H = OPC 路线图最终 gate.
+signals:
+  - opc_phase7_gate_h_not_yet_passed
+  - opc_phase7_subgate_h1_not_started
+  - opc_phase7_subgate_h2_not_started
+  - opc_phase7_subgate_h3_not_started
+  - opc_phase7_subgate_h4_not_started
+  - opc_phase7_subgate_h5_not_started
+
+red_lines:
+  - 'release notes 缺 summary/validation/debt 三件套'
+
+  - 'phase 缺 retrospective 落盘'
+
+  - 'dashboard 缺 phase/milestone/blockers/debt 4 字段'
+
+  - 'cross-repo metrics 仅规划无消费'
+
+  - '在 P3/P4/P5/P6 任一 Gate 未 passed 前 claim P7 Gate H'
+
+  - 'P7 业务实施跳 H1-H5 顺序'
+
+
+phase_open_condition: |
+  P7 可开始 当且仅当:
+  ✅ P3 Gate D passed
+  ✅ P4 Gate E passed
+  ✅ P5 Gate F passed
+  ✅ P6 Gate G passed
+  ✅ OPC 路线图所有前序 gate 收口 (P3-P6)
+phase_blocked_condition: |
+  ❌ P3/P4/P5/P6 任一 Gate 退到 not_started
+  ❌ 任何前序 phase retrospective 缺失
+final_close_condition: |
+  ✅ H1-H5 全部 runtime 实证
+  ✅ 验收包 6 项全有 evidence
+  ✅ 红线 6 项全 hold
+  ✅ OPC 路线图 8 阶段 (M0-M7) 全部 done
+  ✅ 7 个连续 Gate (B → B2 → C → D → D → E → F → G) 全部 hit
+
+forbidden_claims:
+  - 'P7 完成" 在 H1-H5 未全部 passed 之前'
+
+  - 'release train 跑通" 在 H1 retrospective 落盘缺失时'
+
+  - 'phase gate 自动化" 在 H2 实证缺失时'
+
+  - 'cross-repo metrics 治理闭环" 在 H3 cron 实证缺失时'
+
+  - 'OPC 路线图 100% 收口" 在 Gate H 未 passed 时'
+
