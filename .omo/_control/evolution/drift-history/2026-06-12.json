@@ -1,0 +1,35 @@
+{
+  "generated_at": "2026-06-12T03:34:45Z",
+  "mode": "weekly",
+  "rollout": {
+    "returncode": 1,
+    "output_path": ".omo/_delivery/audit-rollout/2026-06-12-weekly.json"
+  },
+  "per_repo": {
+    "compute-mesh": {
+      "health_grade": "?",
+      "drift": -1,
+      "records": 0
+    },
+    "llm-gateway": {
+      "health_grade": "?",
+      "drift": -1,
+      "records": 0
+    },
+    "omo": {
+      "health_grade": "n/a",
+      "drift": 1106,
+      "records": 1369
+    },
+    "runtime": {
+      "health_grade": "?",
+      "drift": -1,
+      "records": 0
+    },
+    "workspace": {
+      "health_grade": "R0",
+      "drift": 1535,
+      "records": 2080
+    }
+  }
+}

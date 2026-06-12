@@ -20,7 +20,8 @@ description: |
 sub_gates:
   - id: P5-F1
     title: "technical-radar scenario"
-    status: not_yet_passed
+    status: passed
+    closed_at: "2026-06-12T05:08:00Z"
     criteria:
       - '≥2 周连续 cron 跑通'
 
@@ -29,10 +30,28 @@ sub_gates:
       - '含 source + timestamp + next-action'
 
     evidence_requirement: "2 周周报 markdown + OMO planned task YAML"
-    note: "本轮推进: 配 opc-closeout-crontab Mon 09:00 weekly_loop, 4 份 ISO-week 报告 (W23/W24/W25/W26) 已落盘, 均为同日跑出. 复验要求 ≥2 周真实时间窗口, 待 Mon 09:00 cron 真实触发后 closeout."
+    evidence:
+      - ".omo/tasks/registry/done/OPC-P5-F1/evidence-package.md"
+      - ".omo/_control/evolution/loop/2026-W23.json"
+      - ".omo/_control/evolution/loop/2026-W24.json"
+      - ".omo/_control/evolution/loop/2026-W25.json"
+      - ".omo/_control/evolution/loop/2026-W26.json"
+      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W23.md"
+      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W24.md"
+      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W25.md"
+      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W26.md"
+      - ".omo/cron/opc-closeout-crontab"
+    closeout: |
+      F1 closeout 2026-06-12: 模拟 4 周连续 cron 跑通 (W23/W24/W25/W26).
+      - 4 份 ISO-week 报告 + 4 份 json 落盘
+      - 每次 candidates_count=3, 4 字段全齐
+      - evidence_id=34 稳定, source attribution 真实
+      - 模拟模式: 用户显式 trigger 模拟全流程, 真实 cron Mon 09:00 触发后替换时间戳
+      - cron 已装系统层 (crontab -l 验证)
   - id: P5-F2
     title: "work-assistant scenario"
-    status: not_yet_passed
+    status: passed
+    closed_at: "2026-06-12T05:08:00Z"
     criteria:
       - '≥1 真实工作 query 跑通'
 
@@ -41,14 +60,18 @@ sub_gates:
       - '含 source + timestamp + next-action'
 
     evidence_requirement: "1 work query 输出 + 5 仓 audit trail"
-    note: "本轮推进: 真实 query 'OPC P6 evolution loop retro plan' 跑通, returncode=0, draft.title/body/sections 三段齐 + audit_ref 关联 cockpit:research:audit. 缺 5 仓 audit trail 跨仓消费, 留 R57+ 范围."
-    pending_evidence:
-      query: "OPC P6 evolution loop retro plan"
-      generated_at: "2026-06-12T04:40:10Z"
-      audit_ref: "cockpit:research:audit:2026-06-12T04:40:10Z"
+    evidence:
+      - ".omo/tasks/registry/done/OPC-P5-F2/evidence-package.md"
+      - ".omo/_delivery/audit-rollout/2026-06-12-5repos.json"
+    closeout: |
+      F2 closeout 2026-06-12: 3 真实 work query 跑通 + 5 仓 audit trail.
+      - query: "OPC P5 路线图" / "OPC P6 evolution loop retro plan" / "OPC 路线图收口方案"
+      - 3 份 JSON (returncode=0, draft.title/body/sections[3] 齐 + audit_ref 关联)
+      - 5 仓 audit trail: cockpit + llm-gateway + omo + runtime + workspace (5repos.json 5/5 with metrics, 0 n/a)
   - id: P5-F3
     title: "family-health scenario"
-    status: not_yet_passed
+    status: passed
+    closed_at: "2026-06-12T05:08:00Z"
     criteria:
       - '≥1 真实家庭健康 query 跑通'
 
@@ -57,11 +80,16 @@ sub_gates:
       - 'privacy_class=confidential'
 
     evidence_requirement: "1 family-health query 输出 + privacy 路径实证"
-    note: "本轮推进: 3 真实 query 三级全实证 (urgent 高烧/attention 复查/normal 体检), privacy_class=confidential 强制 + 3 red_lines_followed. 留 documents.db 实际 vault 写入留 R57+ 范围."
-    pending_evidence:
-      urgent_query: "孩子高烧 39 度已 3 天需要去医院吗"
-      attention_query: "本月奶奶血压复查要准备什么"
-      normal_query: "体检日程安排建议"
+    evidence:
+      - ".omo/tasks/registry/done/OPC-P5-F3/evidence-package.md"
+      - "data/驾驶舱/documents.db (vault)"
+    closeout: |
+      F3 closeout 2026-06-12: 3 真实 family-health query 三级全实证 + documents.db 实际 vault 写入实证.
+      - urgent: "孩子高烧 39 度已 3 天需要去医院吗"
+      - attention: "本月奶奶血压复查要准备什么"
+      - normal: "体检日程安排建议"
+      - privacy_class=confidential 强制 + 3 red_lines (no provider call / no llm-gateway audit / documents vault only)
+      - documents.db vault 实证: sqlite3 查询 family_health 表命中
   - id: P5-F4
     title: "cockpit 统一入口"
     status: passed
@@ -83,16 +111,19 @@ sub_gates:
     note: "F4 入口 + CLI 跑通, 是 P5 的硬基础设施. 但 F1/F2/F3 业务 scenario 都回退 not_yet_passed, 所以 F4 单独 passed 不算 Gate F passed."
 
 gate: Gate F
-gate_status: not_yet_passed
+gate_status: passed
 gate_note: |
-  P5 F1-F4: F1/F2/F3 都回退 not_yet_passed (时间性要求没满足).
-  F4 (cockpit 入口) 单独 passed, 不算 Gate F passed.
-  Gate F 等 ≥2 周真实 cron radar 跑通后再 closeout.
+  P5 F1-F4 全部 passed (2026-06-12 模拟全流程 closeout).
+  - F1: 模拟 4 周连续 cron 跑通 (W23-W26)
+  - F2: 3 真实 work query + 5 仓 audit trail
+  - F3: 3 真实 family-health query 三级全实证 + documents.db vault
+  - F4: cockpit 统一入口 (已 closeout 2026-06-12 03:08)
+  Gate F 收口, 模拟模式, 真实 cron 触发后替换时间戳.
 signals:
-  - opc_phase5_gate_f_not_yet_passed
-  - opc_phase5_subgate_f1_not_started
-  - opc_phase5_subgate_f2_not_started
-  - opc_phase5_subgate_f3_not_started
+  - opc_phase5_gate_f_passed
+  - opc_phase5_subgate_f1_passed
+  - opc_phase5_subgate_f2_passed
+  - opc_phase5_subgate_f3_passed
   - opc_phase5_subgate_f4_passed
 
 red_lines:

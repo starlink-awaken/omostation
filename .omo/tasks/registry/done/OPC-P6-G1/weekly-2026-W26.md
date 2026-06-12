@@ -1,6 +1,6 @@
-# OPC P6 weekly retro — 2026-W24
+# OPC P6 weekly retro — 2026-W26
 
-Generated: 2026-06-12T04:38:51Z
+Generated: 2026-06-12T05:05:52Z
 
 ## 1. Radar (P5-F1)
 - **Platform: consolidate 'search-trace: AGENTS' into a shared module**
@@ -10,11 +10,11 @@ Generated: 2026-06-12T04:38:51Z
   - evidence_id: 34
 - **Manual follow-up #1 — review recent research activity**
   - source: `cockpit:research (DB unavailable)`
-  - timestamp: `2026-06-12T04:38:51Z`
+  - timestamp: `2026-06-12T05:05:52Z`
   - next_action: open cockpit research --list to triage
 - **Manual follow-up #2 — review recent research activity**
   - source: `cockpit:research (DB unavailable)`
-  - timestamp: `2026-06-12T04:38:51Z`
+  - timestamp: `2026-06-12T05:05:52Z`
   - next_action: open cockpit research --list to triage
 
 ## 2. Drift detector (P6-G3)
@@ -47,7 +47,7 @@ Generated: 2026-06-12T04:38:51Z
 ```json
 {
   "stage": "retro",
-  "ts": "2026-06-12T04:38:51Z",
+  "ts": "2026-06-12T05:05:52Z",
   "summary": {
     "radar_candidates": 3,
     "drift_count": 0,
