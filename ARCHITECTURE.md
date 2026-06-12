@@ -300,12 +300,22 @@ cockpit/
          审计链  抗熵   价值栈  一致性
 ```
 
-| 轴 | 定义 | 实现位置 |
-|----|------|---------|
-| **X1 审计链** | 操作是否安全 | kei_sandbox (audit hook), agora auth (JWT), metaos gate (决策门控) |
-| **X2 抗熵** | 数据是否新鲜 | runtime scheduler (15s 健康心跳), matrix auto-heal, omo debt staleness |
-| **X3 价值栈** | 投入是否合理 | omo cost tracking, cockpit priority, kairon health-profile |
-| **X4 一致性** | 规则是否被遵守 | CI (20 workflows), pre-commit hooks (ruff + mof-validate), protocol validation |
+| 轴 | 定义 | 实现位置 | 债务治理融合 |
+|----|------|---------|-------------|
+| **X1 审计链** | 操作是否安全 | kei_sandbox (audit hook), agora auth (JWT), metaos gate (决策门控) | debt-audit.sh, pre-commit hook |
+| **X2 抗熵** | 数据是否新鲜 | runtime scheduler (15s 健康心跳), matrix auto-heal, omo debt staleness | debt_weight, debt_health, health-trend |
+| **X3 价值栈** | 投入是否合理 | omo cost tracking, cockpit priority, kairon health-profile | 债务优先级, SLA 标准 |
+| **X4 一致性** | 规则是否被遵守 | CI (20 workflows), pre-commit hooks (ruff + mof-validate), protocol validation | x1-x4-check, debt-audit.yml |
+
+### X1-X4 检查命令
+
+```bash
+make x1-check      # X1 审计链检查
+make x2-check      # X2 抗熵检查
+make x3-check      # X3 价值栈检查
+make x4-check      # X4 一致性检查
+make x1-x4-check   # X1-X4 全维度检查
+```
 
 ---
 
