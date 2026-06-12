@@ -5,6 +5,9 @@
 > Status: baseline (载体建立, 不做业务实现)
 > Lint: `python3 scripts/lint-opc-carriers.py`
 
+补充入口:
+- [OPC-READINESS-SNAPSHOT.md](OPC-READINESS-SNAPSHOT.md) — 面向快收口场景，区分 Engineering Readiness 与 Cadence / Time Window
+
 ---
 
 ## 什么是治理载体

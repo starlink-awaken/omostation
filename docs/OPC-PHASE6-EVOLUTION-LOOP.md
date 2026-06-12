@@ -26,6 +26,21 @@ The 6-stage loop:
 - `.omo/_control/evolution/loop/trace-index.json`
 - `.omo/_control/evolution/approval-board/current.{json,md}`
 
+## Readiness / Cadence
+
+- **Readiness**: 已满足
+  - G1 loop runner / trace-index 可用
+  - G2 weekly 格式与审批栏可用
+  - G3 drift detector / self-evolve / approval board 可用
+  - G4 candidate trace / audit trail 可追
+- **Cadence**: 未满足
+  - G1-G4 都缺真实周级窗口
+
+原则:
+- Readiness 用于确认工程闭环已经搭起来
+- Cadence 保留原始时间窗和真实周窗标准
+- Gate G 不因 readiness passed 而自动 passed
+
 ## Prerequisites
 
 - **opc_phase5_gate_f_passed** (P5 scenarios 跑通, radar source 来自 F1)

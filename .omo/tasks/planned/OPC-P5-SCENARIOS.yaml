@@ -21,6 +21,8 @@ sub_gates:
   - id: P5-F1
     title: "technical-radar scenario"
     status: not_yet_passed
+    readiness_status: passed
+    cadence_status: not_yet_passed
     criteria:
       - '≥2 周连续 cron 跑通'
 
@@ -43,6 +45,25 @@ sub_gates:
       - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W25.md"
       - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W26.md"
       - ".omo/cron/opc-closeout-crontab"
+    readiness:
+      status: passed
+      criteria:
+        - 'radar runner / archive receipt / history index 已落地'
+        - '单次运行可产出 ≥3 candidates 且字段完整'
+        - 'crontab 已安装真实 cron 入口'
+      evidence:
+        - "scripts/opc_p5_radar_cron.py"
+        - ".omo/_control/evolution/radar-history.json"
+        - ".omo/_control/evolution/radar/2026-06-12.json"
+        - ".omo/cron/opc-closeout-crontab"
+      note: "Readiness 只表示工程链路可运行，不表示 ≥2 周真实 cadence 已满足。"
+    cadence:
+      status: not_yet_passed
+      criteria:
+        - '≥2 周连续 cron 跑通'
+        - '每次输出 ≥3 upgrade candidates'
+        - '真实 cron 记录与 manual 记录可区分'
+      note: "当前只有同日预演 / 演练周号，无真实周窗。"
     assessment: |
       2026-06-12 复验: radar runner / archive receipt / history index 已落地, 有模拟
       4 周 evidence, 但仍未满足"≥2 周连续 cron 跑通"的原始时间性标准.
@@ -111,11 +132,20 @@ sub_gates:
 
 gate: Gate F
 gate_status: not_yet_passed
+gate_readiness_status: passed
+gate_cadence_status: not_yet_passed
 gate_note: |
   2026-06-12 复验后 Gate F 回退为 not_yet_passed.
   - F1 仍缺 "≥2 周连续 cron 跑通" 的原始时间性标准
   - F2/F3/F4 已有真实 runtime evidence 并通过 closeout
   Gate F 仍需等待 F1 时间窗补齐后再申请总体验收.
+gate_readiness_note: |
+  Gate F readiness 已满足:
+  - F1 runner / history / cron 入口 已落地
+  - F2/F3/F4 已通过真实 runtime closeout
+  但 readiness 不替代 cadence 验收.
+gate_cadence_note: |
+  Gate F cadence 仍未满足, 因 F1 缺 ≥2 周真实 cron 时间窗.
 signals:
   - opc_phase5_gate_f_not_yet_passed
   - opc_phase5_subgate_f1_not_yet_passed

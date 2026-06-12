@@ -38,6 +38,19 @@ Outputs include **source, timestamp, next-action** (per Gate F acceptance).
 > 跑出 urgent/attention/normal 且 privacy_path 固定为本地 confidential family store；
 > F4 保持 passed。Gate F 仍等待 F1 closeout.
 
+## Readiness / Cadence
+
+- **Readiness**: 已满足
+  - F1 runner / history / archive / cron 入口 已落地
+  - F2/F3/F4 已真实通过
+- **Cadence**: 未满足
+  - F1 仍缺 `≥2 周连续 cron`
+
+原则:
+- Readiness passed = 工程链路可运行
+- Cadence passed = 原始时间窗标准满足
+- Gate F 只有在 Cadence 也满足时才可 passed
+
 ## Gate Status
 
 - `opc_phase5_gate_f_not_yet_passed` (命名: Gate F, 区别于 P6 Gate F — phase 隔离)

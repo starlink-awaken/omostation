@@ -20,6 +20,8 @@ sub_gates:
   - id: P7-H1
     title: "release train 节奏"
     status: not_yet_passed
+    readiness_status: passed
+    cadence_status: not_yet_passed
     criteria:
       - '≥1 个 1-2 周周期跑通 (cut → review → ship)'
 
@@ -42,6 +44,24 @@ sub_gates:
       - ".omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-06-22-r2.md"
       - ".omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-06-26-r2.md"
       - ".omo/tasks/registry/done/OPC-P7-H1/evidence-package.md"
+    readiness:
+      status: passed
+      criteria:
+        - 'release runner / wrapper / index / retro 已落地'
+        - 'summary/validation/debt 三件套可生成'
+        - 'manual / cron trigger 可区分'
+      evidence:
+        - "scripts/opc_p7_release_cycle.py"
+        - "scripts/opc_p7_release_cycle_cron.sh"
+        - ".omo/_delivery/release/index.json"
+        - ".omo/_delivery/release/CHANGELOG.md"
+      note: "Readiness 只表示 release train 工程面就绪。"
+    cadence:
+      status: not_yet_passed
+      criteria:
+        - '≥1 个真实 1-2 周周期'
+        - 'interval_days 反映真实间隔'
+      note: "当前 release 大量同日生成，不能作为 cadence 证据。"
     assessment: |
       2026-06-12 复验: release runner / cron wrapper / cadence index 已落地, 但当前
       证据仍是同日预演/模拟周期, 不等于 1-2 周真实 release train.
@@ -68,6 +88,8 @@ sub_gates:
   - id: P7-H3
     title: "跨仓 audit rollout 硬扩"
     status: not_yet_passed
+    readiness_status: passed
+    cadence_status: not_yet_passed
     criteria:
       - 'E2 dispatcher cron (monthly + weekly + pre-release)'
 
@@ -84,6 +106,23 @@ sub_gates:
       - ".omo/_delivery/audit-rollout/2026-06-12-weekly.json"
       - ".omo/cron/opc-closeout-crontab"
       - ".omo/tasks/registry/done/OPC-P7-H3/evidence-package.md"
+    readiness:
+      status: passed
+      criteria:
+        - 'daemon / wrapper / fallback / index 三态写回已落地'
+        - '失败时也能写入 index'
+        - '5 仓 metrics 可聚合'
+      evidence:
+        - "scripts/opc_p7_audit_rollout_daemon.py"
+        - "scripts/opc_p7_audit_rollout_cron.sh"
+        - ".omo/_delivery/audit-rollout/index.json"
+      note: "Readiness 表示 H3 已可观测、可留痕、可 fallback。"
+    cadence:
+      status: not_yet_passed
+      criteria:
+        - 'weekly/monthly/pre-release 三类真实 cron 记录'
+        - '非同日手动演练'
+      note: "当前 weekly_runs 累积不等于 monthly/pre-release cadence 已满足。"
     assessment: |
       2026-06-12 复验: 5 仓聚合和 cron wrapper 已落地, 但未形成真实 cron 触发的
       时间性证据. 同日手动运行不能视为 cron 实证.
@@ -135,6 +174,17 @@ gate_note: |
   - H2/H4/H5 已有真实实现与当前 evidence
   OPC 路线图当前仅 P0-P4 确认 passed, P5-P7 仍在治理收口阶段.
 gate_status: not_yet_passed
+gate_readiness_status: passed
+gate_cadence_status: not_yet_passed
+gate_readiness_note: |
+  Gate H readiness 已满足:
+  - H1/H3 工具链与 evidence writer 已落地
+  - H2/H4/H5 已通过 closeout
+  但真实 cadence 仍未满足.
+gate_cadence_note: |
+  Gate H cadence 仍未满足:
+  - H1 缺真实 1-2 周 release interval
+  - H3 缺 weekly/monthly/pre-release 真实时间窗
 signals:
   - opc_phase7_gate_h_not_yet_passed
   - opc_phase7_subgate_h1_not_yet_passed

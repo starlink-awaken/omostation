@@ -38,6 +38,21 @@ Deliverables:
 > 且当前 plan/doc/report 自洽；H4 已完成 doc-lint + index 建档且 drift_total=0。
 > H1 仍缺真实 1-2 周 release cycle；H3 仍缺真实 cron 触发。Gate H 继续保持未关闭。
 
+## Readiness / Cadence
+
+- **Readiness**: 已满足
+  - H1 release runner / wrapper / changelog / retro / index 已可运行
+  - H3 daemon / fallback / index / metrics aggregation 已可运行
+  - H2/H4/H5 已 closeout
+- **Cadence**: 未满足
+  - H1 缺真实 1-2 周 interval
+  - H3 缺 weekly/monthly/pre-release 真实 cron 时间窗
+
+原则:
+- Readiness passed = 工程层与证据 writer 已就绪
+- Cadence passed = 原始时间窗标准满足
+- Gate H 只有在 H1/H3 cadence 满足后才可能 passed
+
 ## Gate Status
 
 - `opc_phase7_gate_h_not_yet_passed` (Gate H — **最终 gate**)

@@ -22,6 +22,8 @@ sub_gates:
   - id: P6-G1
     title: "evolution loop 闭环"
     status: not_yet_passed
+    readiness_status: passed
+    cadence_status: not_yet_passed
     criteria:
       - '≥1 周完整闭环 (radar → gap → task → swarm → audit → retro)'
 
@@ -40,12 +42,31 @@ sub_gates:
       - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W24.md"
       - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W25.md"
       - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W26.md"
+    readiness:
+      status: passed
+      criteria:
+        - '6 阶段脚本链路可运行'
+        - 'trace-index / weekly markdown / loop json 可落盘'
+        - 'approval lane 已连到 P6 approval board'
+      evidence:
+        - "scripts/opc_p6_weekly_loop.py"
+        - ".omo/_control/evolution/loop/trace-index.json"
+        - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W24.md"
+      note: "Readiness 表示闭环工程骨架已成。"
+    cadence:
+      status: not_yet_passed
+      criteria:
+        - '≥1 周完整闭环'
+        - '6 阶段 evidence 来自真实周窗'
+      note: "当前 week 标签为演练标签，不是自然周窗。"
     assessment: |
       2026-06-12 复验: 6 阶段实现与 weekly 载体存在, 但周级闭环证据主要来自
       同日模拟/预演, 未达到"≥1 周完整闭环"验收边界.
   - id: P6-G2
     title: "周更升级报告"
     status: not_yet_passed
+    readiness_status: passed
+    cadence_status: not_yet_passed
     criteria:
       - '≥2 周连续周报'
 
@@ -61,12 +82,29 @@ sub_gates:
       - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W25.md"
       - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W26.md"
       - ".omo/_control/evolution/approval-board/current.json"
+    readiness:
+      status: passed
+      criteria:
+        - 'weekly markdown 包含 source/timestamp/next-action/人工审批栏'
+        - 'approval board 可汇总 reviewer 待审队列'
+      evidence:
+        - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W24.md"
+        - ".omo/_control/evolution/approval-board/current.md"
+      note: "周报格式与审批栏已具备。"
+    cadence:
+      status: not_yet_passed
+      criteria:
+        - '≥2 周连续周报'
+        - '连续周报来自真实 cron / 周窗'
+      note: "目前仍是同日演练生成。"
     assessment: |
       2026-06-12 复验: 周报格式与字段实现已具备, 但未满足"≥2 周连续周报"的
       真实时间窗口要求, 暂不通过.
   - id: P6-G3
     title: "drift detector"
     status: not_yet_passed
+    readiness_status: passed
+    cadence_status: not_yet_passed
     criteria:
       - '4 类漂移 (entry/doc/duplicate_facts/agora_bypass) 检测器'
 
@@ -82,12 +120,31 @@ sub_gates:
       - ".omo/_control/evolution/drift/2026-06-12T044316.json"
       - ".omo/_control/evolution/drift/2026-06-12T050610.json"
       - ".omo/_control/evolution/drift/ (17 files total)"
+    readiness:
+      status: passed
+      criteria:
+        - '4 类 drift detector 已实现'
+        - 'self-evolve 仍保持 planned-only'
+        - 'approval board 可见待审任务'
+      evidence:
+        - "scripts/opc_p6_drift_detector.py"
+        - "scripts/opc_p6_self_evolve.py"
+        - ".omo/_control/evolution/approval-board/current.json"
+      note: "检测器和治理面已可工作。"
+    cadence:
+      status: not_yet_passed
+      criteria:
+        - '跑 ≥1 周零漂移 OR 漂移+fix'
+        - '观测来自真实连续运行'
+      note: "尚无真实周级 drift 观测。"
     assessment: |
       2026-06-12 复验: 4 类 detector 已落地, 但尚无"跑 ≥1 周"的真实时间性证据.
       同日多次运行不能替代周级观测.
   - id: P6-G4
     title: "闭环实证"
     status: not_yet_passed
+    readiness_status: passed
+    cadence_status: not_yet_passed
     criteria:
       - '≥1 candidate 从 radar 跑到 retrospective 闭环实证'
 
@@ -99,17 +156,42 @@ sub_gates:
       - ".omo/_control/evolution/loop/2026-W23.json"
       - ".omo/_control/evolution/loop/trace-index.json"
       - ".omo/_delivery/audit-rollout/2026-06-12-5repos.json"
+    readiness:
+      status: passed
+      criteria:
+        - 'trace-index 可追 candidate -> weekly -> approval lane'
+        - '≥3 仓 audit trail 路径存在'
+      evidence:
+        - ".omo/_control/evolution/loop/trace-index.json"
+        - ".omo/_delivery/audit-rollout/2026-06-12-5repos.json"
+      note: "端到端追溯骨架已具备。"
+    cadence:
+      status: not_yet_passed
+      criteria:
+        - 'candidate 追溯来自真实周窗'
+        - '闭环依赖 G1/G2 的真实 cadence'
+      note: "前序 cadence 未满足, 因此闭环验收仍 pending。"
     assessment: |
       2026-06-12 复验: 存在端到端 candidate trace 和跨仓 audit trail, 但依赖
       未通过的周级闭环与升级报告, 因此前置标准未满足, G4 暂不通过.
 
 gate: Gate G
 gate_status: not_yet_passed
+gate_readiness_status: passed
+gate_cadence_status: not_yet_passed
 gate_note: |
   2026-06-12 复验后 Gate G 回退为 not_yet_passed.
   - G1-G4 均有实现或预演证据
   - 但时间性要求与人工审批红线未被硬证据满足
   Gate G 在真实周级运行和审批约束完成前不得再次申请通过.
+gate_readiness_note: |
+  Gate G readiness 已满足:
+  - loop / report / detector / trace / approval board 全部已落地
+  - planned-only 人审红线被工具链守住
+  但 readiness 不等于真实周窗验收通过.
+gate_cadence_note: |
+  Gate G cadence 仍未满足:
+  - G1/G2/G3/G4 都缺真实周级运行窗口.
 signals:
   - opc_phase6_gate_g_not_yet_passed
   - opc_phase6_subgate_g1_not_yet_passed
