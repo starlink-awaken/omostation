@@ -253,3 +253,77 @@ def test_p4_to_p7_use_consistent_evidence_requirement_field():
 def test_p7_final_gate_sequence_is_monotonic():
     text = _read("docs/OPC-PHASE7-RELEASE-TRAIN.md")
     assert "9 个连续 Gate (A → B → B2 → C → D → E → F → G → H)" in text
+
+
+# ── 2026-06-12 复验后: 治本红线条目守护测试 ─────────────────────────
+
+
+def test_playbook_contains_acceptance_integrity_red_lines():
+    """Playbook §4.4 必须含 3 条新治本红线: 不降标 / 反证自洽 / 人工审批."""
+    text = _read("docs/OPC-MASTER-EXECUTION-PLAYBOOK.md")
+    assert "4.4 Acceptance integrity red lines" in text, (
+        "playbook 必须新增 §4.4 Acceptance integrity red lines 段"
+    )
+    # 3 条硬约束关键词守护
+    assert "Do not weaken original criteria during closeout" in text, (
+        "playbook §4.4 缺'禁止降标过关'硬约束"
+    )
+    assert "Do not let plan status contradict its own evidence" in text, (
+        "playbook §4.4 缺'反证自洽'硬约束"
+    )
+    assert "Do not bypass human approval for self-evolution tasks" in text, (
+        "playbook §4.4 缺'人工审批不可绕过'硬约束"
+    )
+
+
+def test_closeout_does_not_weaken_original_criteria():
+    """治本 1: sub-gate closeout 不得改弱原 criteria (时间性/范围性/真实性).
+
+    复验反例: P5-F1 原 criteria "≥2 周连续 cron" 被改 "2 轮手动跑通"; P6 G2
+    "≥2 周连续周报" 用同日内 2 次跑通替代. 本测试守护所有当前+未来 sub-gate
+    的 criteria 文本不被 closeout 改弱.
+    """
+    for rel_path in [
+        ".omo/tasks/planned/OPC-P3-SWARM-SPINE.yaml",
+        ".omo/tasks/planned/OPC-P4-MODEL-COMPUTE.yaml",
+        ".omo/tasks/planned/OPC-P5-SCENARIOS.yaml",
+        ".omo/tasks/planned/OPC-P6-EVOLUTION-LOOP.yaml",
+        ".omo/tasks/planned/OPC-P7-RELEASE-TRAIN.yaml",
+    ]:
+        payload = _read_yaml(rel_path)
+        for sub_gate in payload.get("sub_gates", []):
+            sg_id = sub_gate.get("id", "?")
+            status = sub_gate.get("status", "?")
+            for i, criterion in enumerate(sub_gate.get("criteria", [])):
+                if not isinstance(criterion, str):
+                    continue
+                # 防止: 把 "≥N 周" 偷换 "≥N 轮" / "≥N 次" / "N 周内 N 轮"
+                if "周" in criterion and "轮" in criterion:
+                    # 唯一允许的例外: 显式 "1 周 N 轮" 解释 (但本 workspace 暂无此需求)
+                    raise AssertionError(
+                        f"{rel_path} {sg_id} criterion[{i}] 含 '周' + '轮' 混用: {criterion!r}. "
+                        f"复验后红线条目: 不得偷换时间性要求."
+                    )
+                # 防止: "≥N 天" 被 "N 次手动" 替代
+                if ("天" in criterion or "周" in criterion) and "手动" in criterion:
+                    raise AssertionError(
+                        f"{rel_path} {sg_id} criterion[{i}] 含时间 + '手动' 混用: {criterion!r}. "
+                        f"复验后红线条目: 不得用同日内手动 N 次替代真实时间性要求."
+                    )
+            # 额外守护: status=passed 的 sub-gate 不得有 closeout_pending 段
+            if status == "passed":
+                assert "closeout_pending" not in sub_gate, (
+                    f"{rel_path} {sg_id} status=passed 但含 closeout_pending 段 (应回退 not_yet_passed)"
+                )
+
+
+def test_self_evolution_approval_required_always_true():
+    """治本 1: self-evolution task approval_required 必须 true (no exceptions, even nop)."""
+    planned_dir = ROOT / ".omo" / "tasks" / "planned"
+    for yaml_path in planned_dir.glob("OPC-P6-SELF-EVOLUTION-*.yaml"):
+        payload = _read_yaml(str(yaml_path.relative_to(ROOT)))
+        approval = payload.get("approval_required")
+        assert approval is True, (
+            f"{yaml_path.name} approval_required={approval}, 必须 true. "
+            f"复验后红线条目: self-evolution task 不得 approval_required=false (即使 nop)."
+        )
