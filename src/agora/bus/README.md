@@ -27,16 +27,22 @@ def heartbeat() -> None:
 
 ## backend 选型表
 
-| 场景 | backend | Phase |
-|------|---------|-------|
-| 跨进程事件 | `eventbus` | A.0 ✅ |
-| 进程内 await | `asyncio` | A.1 |
-| 推客户端 (单向) | `sse` | A.1 |
-| 双向通信 | `ws` | A.1 |
-| Task 状态同步 | `realtime` | A.1 |
-| Agent 通信 (req/resp) | `messagebus` | A.1 |
-| 定时任务 | `croniter` | A.1 |
-| omo 旧 daemon (deprecating) | `cron_daemon` | A.1 |
+> R62 status: 5 backends actually exist on disk (asyncio / croniter / eventbus /
+> messagebus / sse). The ws / realtime / cron_daemon entries below are
+> **planned** backends; they are tracked here for visibility but have not
+> landed. Do not mark a project as using one of these without a corresponding
+> file in `bus/backends/`.
+
+| 场景 | backend | Status | File |
+|------|---------|--------|------|
+| 跨进程事件 (default) | `eventbus` | A.0 ✅ | `backends/eventbus.py` |
+| 进程内 await | `asyncio` | A.1 ✅ | `backends/asyncio.py` |
+| 推客户端 (SSE 单向) | `sse` | R60 ✅ | `backends/sse.py` |
+| Agent 通信 (req/resp) | `messagebus` | A.1 ✅ | `backends/messagebus.py` |
+| 定时任务 | `croniter` | A.1 ✅ | `backends/croniter.py` |
+| WebSocket 双向 | `ws` | planned | — |
+| Task 状态同步 | `realtime` | planned | — |
+| omo 旧 daemon 兼容 | `cron_daemon` | planned | — |
 
 ## 红线
 - 单文件 < 500 行
