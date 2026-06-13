@@ -1,0 +1,18 @@
+# M1 Node: COMP-WS-agora-dashboard
+# Type: component
+# Context: L3 入口层，多模态观察大盘项目
+
+id: COMP-WS-agora-dashboard
+type: "Component"
+name: "agora-dashboard"
+description: 'L3 入口层 Web 大盘 (Next.js)。负责可视化呈现 .omo/ 状态和自我进化数据。'
+status: "active"
+domain: "agora-dashboard"
+layer: "L3"
+created: "2026-06-13"
+version: "1.0.0"
+properties:
+  component_type: "workspace_project"
+  language: "typescript"
+  framework: "nextjs"
+  has_tests: false

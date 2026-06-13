@@ -1,0 +1,18 @@
+# M1 Node: DOMAIN-agora-dashboard
+# Type: domain
+# Context: L3 入口层，多模态观察大盘
+
+id: DOMAIN-agora-dashboard
+type: "Domain"
+name: "agora-dashboard"
+description: "L3 多模态观察视界。直连底层状态用于 Web UI 展示 (Next.js)。与 cockpit 平级。"
+status: "active"
+domain: "agora-dashboard"
+layer: "L3"
+created: "2026-06-13"
+version: "1.0.0"
+properties:
+  bos_uri_pattern: bos://agora-dashboard/**
+  layer: L3
+  tech_stack: ["nextjs", "react", "tailwindcss"]
+  is_entry_layer: true
