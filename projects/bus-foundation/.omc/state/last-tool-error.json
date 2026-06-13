@@ -1,7 +1,7 @@
 {
   "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"cd /Users/xiamingxing/Workspace/projects/bus-foundation\\nls src/bus_foundation/backends/persistent* 2>&1\\necho \\\"---\\\"\\n# 实际路径含空格, quote\\nwc -l \\\"src/bus_foundation/backends/persistent bus...",
-  "error": "Exit code 1\nsrc/bus_foundation/backends/persistent_bus.py\n---\nwc: src/bus_foundation/backends/persistent bus.py: open: No such file or directory",
-  "timestamp": "2026-06-12T23:30:02.023Z",
+  "tool_input_preview": "{\"command\":\"rtk grep -n \\\"Decision log\\\" /Users/xiamingxing/Workspace/projects/bus-foundation/GOVERNANCE.md\",\"description\":\"Find decision log line\"}",
+  "error": "Exit code 1\n[rtk] /!\\ No hook installed — run `rtk init -g` for automatic token savings\n0 matches for 'Decision log'",
+  "timestamp": "2026-06-13T11:57:38.608Z",
   "retry_count": 1
 }

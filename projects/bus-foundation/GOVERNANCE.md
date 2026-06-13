@@ -56,6 +56,18 @@ dependency on agora's I0 service mesh.
 
 See `OWNERS.md` for the current maintainer list.
 
+## Decision log (governance-relevant only)
+
+| Date | Decision | Source |
+|------|----------|--------|
+| 2027-04-12 | Initial release 0.1.0 | R66 close |
+| 2027-09-12 | Phase C closed (Path C: Defer Indefinitely) | R72 retro |
+| 2026-06-13 | 4/5 LOW review fixes; pattern_match dedup pilot | R74 |
+| 2026-06-13 | 5 backends delegate to match_pattern (-15 LOC) | R74 simplify |
+| 2026-06-13 | ruff auto-fix (UP035 + I001); collections.abc enforced | R75 |
+| 2026-06-13 | 0.1.1 patch (rate-limit cleanup, file rename, ADR-0003) | R76 |
+| 2026-06-13 | docs/ARCHITECTURE.md added; AGENTS.md refreshed | R77 |
+
 ## 5 hard conditions (re-evaluated monthly)
 
 Per `docs/ADR-0008-bus-foundation-strategy.md`:

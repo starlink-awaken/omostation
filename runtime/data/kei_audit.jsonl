@@ -37,3 +37,5 @@
 {"ts": "2026-06-12T23:20:29.908650+00:00", "action": "reject", "extension_id": "ecos.kernel.sandbox", "status": "blocked", "details": "Write blocked: /Users/xiamingxing/Library/Application Support/fastmcp/version_cache.json (mode=w)"}
 {"ts": "2026-06-13T11:29:20.018390+00:00", "action": "reject", "extension_id": "ecos.kernel.sandbox", "status": "blocked", "details": "Write blocked: /Users/xiamingxing/Library/Application Support/fastmcp/version_cache.json (mode=w)"}
 {"ts": "2026-06-13T11:30:46.027296+00:00", "action": "reject", "extension_id": "ecos.kernel.sandbox", "status": "blocked", "details": "Write blocked: /Users/xiamingxing/Library/Application Support/fastmcp/version_cache.json (mode=w)"}
+{"ts": "2026-06-13T11:40:23.808597+00:00", "action": "reject", "extension_id": "ecos.kernel.sandbox", "status": "blocked", "details": "Write blocked: /Users/xiamingxing/Library/Application Support/fastmcp/version_cache.json (mode=w)"}
+{"ts": "2026-06-13T11:46:04.585897+00:00", "action": "reject", "extension_id": "ecos.kernel.sandbox", "status": "blocked", "details": "Write blocked: /Users/xiamingxing/Library/Application Support/fastmcp/version_cache.json (mode=w)"}
