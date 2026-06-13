@@ -11,6 +11,7 @@ documents_vault 内 "family" tag 的 vault item, 严格不调 provider)。
 
 所有 scenario 共享同一入口: `cockpit scenario {radar|assistant|health} [--query Q]`。
 """
+
 from __future__ import annotations
 
 import json
@@ -131,9 +132,7 @@ def _f1_technical_radar(*, limit: int = 10) -> dict[str, Any]:
         ts_iso = _now_iso()
         try:
             if ts_raw and float(ts_raw) > 0:
-                ts_iso = datetime.fromtimestamp(float(ts_raw), UTC).strftime(
-                    "%Y-%m-%dT%H:%M:%SZ"
-                )
+                ts_iso = datetime.fromtimestamp(float(ts_raw), UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         except (TypeError, ValueError, OSError):
             pass
         keywords = ("opc", "p4", "p5", "p6", "cockpit", "agora", "runtime", "llm", "agent", "search-trace")
@@ -219,9 +218,7 @@ def _f2_work_assistant(*, query: str) -> dict[str, Any]:
         ts_iso = _now_iso()
         try:
             if ts_raw and float(ts_raw) > 0:
-                ts_iso = datetime.fromtimestamp(float(ts_raw), UTC).strftime(
-                    "%Y-%m-%dT%H:%M:%SZ"
-                )
+                ts_iso = datetime.fromtimestamp(float(ts_raw), UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         except (TypeError, ValueError, OSError):
             pass
         sources.append(
@@ -362,6 +359,37 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
                 }
             )
 
+    # Enhance: Pull from Family Hub local DB (domain specific model)
+    family_hub_db_path = _workspace_root() / "projects" / "family-hub" / "family_hub.db"
+    hub_data = {}
+    if family_hub_db_path.exists():
+        try:
+            conn = sqlite3.connect(str(family_hub_db_path), timeout=2.0)
+            conn.row_factory = sqlite3.Row
+            profiles = conn.execute(
+                "SELECT role, name, level, wisdomPoints, responsibilityPoints, inventory FROM profiles"
+            ).fetchall()
+            quests = conn.execute(
+                "SELECT title, type, reward, completed, assignee FROM quests WHERE completed = 0"
+            ).fetchall()
+            conn.close()
+
+            hub_data["profiles"] = [dict(p) for p in profiles]
+            hub_data["active_quests"] = [dict(q) for q in quests]
+
+            sources.append(
+                {
+                    "id": "family-hub-db",
+                    "title": "Family Hub SQLite Database",
+                    "source": "family-hub:local",
+                    "source_path": str(family_hub_db_path),
+                    "timestamp": _now_iso(),
+                    "privacy_class": "confidential",
+                }
+            )
+        except Exception:
+            pass
+
     if not sources:
         sources, privacy_fallback = _family_cards_sources(limit=5)
         if sources:
@@ -384,13 +412,14 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
         "query": query,
         "generated_at": _now_iso(),
         "privacy_class": "confidential",
-        "privacy_path": str(privacy_path),
+        "type": "domain_model:family_health",
+        "privacy_enforced": True,
+        "sources_count": len(sources),
         "sources": sources,
-        "source_count": len(sources),
-        "next_action": {
-            "level": next_action_level,
-            "instruction": next_action,
-        },
+        "hub_data": hub_data,
+        "next_action_level": next_action_level,
+        "next_action": next_action,
+        "timestamp": _now_iso(),
         "red_lines_followed": [
             "no provider call",
             "no llm-gateway audit write",
