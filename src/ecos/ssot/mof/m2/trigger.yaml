@@ -1,0 +1,71 @@
+m2_type: Trigger
+version: 1.0.0
+created: '2026-06-13'
+updated: '2026-06-13'
+trigger:
+  m3_parent: BehavioralElement.Trigger
+  description: 触发器——定义"何时做什么"的事件源
+  icon: ⚡
+  stateMachine:
+    draft:
+      description: 草稿
+      transitions: [active, deprecated]
+    active:
+      description: 激活
+      transitions: [paused, deprecated]
+    paused:
+      description: 暂停
+      transitions: [active, deprecated]
+    deprecated:
+      description: 弃用
+      transitions: [archived]
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    trigger_type:
+      type: string
+      description: 触发器类型 (cron/launchd/launchd_keepalive/file_watch/git_hook/eventbus)
+    trigger_source:
+      type: string
+      description: 触发源 (e.g. crontab 表达式, file path, git hook name)
+    trigger_action:
+      type: string
+      description: 触发动作 (e.g. 命令路径 + 参数)
+  optionalProperties:
+    schedule:
+      type: string
+      description: 调度表达式 (cron 表达式 / launchd plist 路径)
+    dependencies:
+      type: list
+      description: 依赖的其他 trigger 节点 ID
+    health_check:
+      type: object
+      description: 健康检查配置 {endpoint, expected_status}
+    interval_seconds:
+      type: number
+      description: 触发间隔 (秒, 对 watchdog 适用)
+    retry_policy:
+      type: object
+      description: 重试策略 {max_retries, backoff_strategy}
+  validationRules:
+    - rule: trigger_type != null and trigger_source != null and trigger_action != null
+      level: error
+      message: Trigger 必须有 trigger_type / trigger_source / trigger_action 三元组
+    - rule: status == 'active' implies health_check != null
+      level: warning
+      message: 激活的 trigger 建议配置 health_check
+  relationConstraints:
+    can_be_source_of:
+      - Triggers
+      - Realizes
+    can_be_target_of:
+      - References
+      - DependsOn
+  examples:
+    - id: TRIGGER-CRON-SERVICE
+      name: Cron Service 触发器
+      description: 周期性 cron 任务触发
+    - id: TRIGGER-AGORA-LAUNCHD
+      name: Agora launchd 触发器
+      description: macOS launchd 守护进程触发
