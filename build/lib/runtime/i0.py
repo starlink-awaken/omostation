@@ -19,7 +19,7 @@ import urllib.request
 import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 import yaml
 
@@ -36,7 +36,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 _SERVICE_LAYER: dict[str, str] = {
     # I0 — Fabric/Infrastructure (core daemons)
     "hermes-gateway": "I0",
-    "agent-runtime": "I0",
     "cron-service": "I0",
     "agora": "I0",
     "runtime-mcp": "I0",
@@ -44,9 +43,9 @@ _SERVICE_LAYER: dict[str, str] = {
     "ollama": "L0",
     # L1 — Runtime / Knowledge
     "kos": "L1",
-    "gbrain-index": "L1",
+    # gbrain-index moved to Hermes cron (PGLite mode), no longer a persistent service
     # L2 — Kernel (stateful backends)
-    "sharedbrain-bos": "L2",
+    # "sharedbrain-bos": "L2",  # 已废弃，2026-06-06移除
     "gbrain": "L2",
 }
 
@@ -168,7 +167,7 @@ def i0_status() -> dict:
 
 def i0_services() -> list[dict]:
     """All services with live probe data."""
-    from runtime.matrix import list_services, resolve_path
+    from runtime.matrix import list_services
 
     try:
         matrix_services = list_services()

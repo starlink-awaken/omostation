@@ -1,3 +1,4 @@
+LICENSE
 README.md
 pyproject.toml
 src/runtime/__init__.py
@@ -7,11 +8,13 @@ src/runtime/cli.py
 src/runtime/cli_i0.py
 src/runtime/i0.py
 src/runtime/kei.py
+src/runtime/kei_probe.py
 src/runtime/kei_sandbox.py
 src/runtime/kei_service_registration.py
 src/runtime/matrix.py
 src/runtime/mcp_server.py
 src/runtime/protocol.py
+src/runtime/runtime_bus_adapter.py
 src/runtime/runtime_serve.py
 src/runtime/scheduler.py
 src/runtime/state_schema.py
@@ -75,6 +78,8 @@ src/runtime/executor/governance.py
 src/runtime/executor/guardian.py
 src/runtime/executor/interactive_control.py
 src/runtime/executor/intervention.py
+src/runtime/executor/io.py
+src/runtime/executor/io_schemas.py
 src/runtime/executor/isc_errors.py
 src/runtime/executor/isc_evaluator.py
 src/runtime/executor/isc_parser.py
@@ -141,7 +146,6 @@ src/runtime/executor/workflows/scenario2/inject_personal_conflicts.py
 src/runtime/executor/workflows/scenario2/recall_verification.py
 src/runtime/executor/workflows/scenario2/run_council_deliberation.py
 src/runtime/executor/workflows/scenario2/run_pipeline.py
-src/runtime/executor/workflows/scenario2/test_scenario2.py
 src/runtime/executor/workflows/scenario3/__init__.py
 src/runtime/executor/workflows/scenario3/insight_generator.py
 src/runtime/executor/workflows/scenario3/knowledge_retriever.py

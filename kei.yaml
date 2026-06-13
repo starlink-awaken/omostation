@@ -21,3 +21,24 @@ permissions:
       - "${HOME}/Library/Mobile Documents"
   execution:
     allow_subprocess: true
+
+roles:
+  generator:
+    permissions:
+      network:
+        allow:
+          - "localhost"
+          - "127.0.0.1"
+      execution:
+        allow_subprocess: true  # Generator can execute tools and compile code
+  evaluator:
+    permissions:
+      network:
+        allow:
+          - "*"  # Evaluator might need to reach external truth/APIs
+      filesystem:
+        allow_write:
+          - "/tmp"
+          - "${HOME}/Workspace/.omo"  # Evaluator writes judgments to OMO
+      execution:
+        allow_subprocess: false # Evaluator strictly evaluates, no side-effect execution

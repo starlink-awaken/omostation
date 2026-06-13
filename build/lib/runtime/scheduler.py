@@ -3,12 +3,11 @@
 import time
 import json
 import subprocess
-import threading
 from pathlib import Path
 import os
 from datetime import datetime, timezone
 
-from runtime.matrix import list_services, ServiceEntry, health_check_url
+from runtime.matrix import list_services, health_check_url
 from runtime.state_schema import validate_runtime_health_snapshot
 
 import yaml
@@ -16,7 +15,11 @@ import shutil
 import hashlib
 
 STATE_FILE = Path(os.environ.get("RUNTIME_HOME", Path.home() / "runtime")) / "matrix_state.json"
-OMO_STATE_FILE = Path("/Users/xiamingxing/Workspace/.omo/state/system_health.yaml")
+# Compute OMO state path from RUNTIME_HOME or workspace root
+_workspace_root = Path(__file__).resolve().parents[4]  # runtime/src/runtime/scheduler.py → workspace root
+OMO_STATE_FILE = Path(
+    os.environ.get("OMO_STATE_FILE", str(_workspace_root / ".omo" / "state" / "system_health.yaml"))
+)
 
 class MatrixScheduler:
     def __init__(self):
@@ -53,7 +56,7 @@ class MatrixScheduler:
                         last_exit = parts[1].strip().strip(';')
 
             if pid and pid != "0":
-                return {"status": f"running", "pid": pid}
+                return {"status": "running", "pid": pid}
             elif last_exit == "0":
                 return {"status": "idle"}
             else:
@@ -296,7 +299,7 @@ class MatrixScheduler:
 
     def run_entropy_gc(self):
         print("🧹 [X2 Anti-Entropy] Running Pan-Entropy GC...")
-        workspace = Path("/Users/xiamingxing/Workspace")
+        workspace = _workspace_root
         # 1. GC debt ledger
         debt_dir = workspace / ".omo/debt/items"
         archive_dir = workspace / ".omo/debt/archive"

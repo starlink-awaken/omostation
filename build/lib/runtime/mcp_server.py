@@ -1,107 +1,251 @@
-"""Runtime MCP Server — expose L1 operations as MCP tools.
-
-Connects via stdio transport (launched by MCP client).
-No port management needed. No daemon.
+#!/usr/bin/env python3
 """
-import sys
+eCOS v5 L3 — Runtime MCP Server 最小实现
+==========================================
+Phase 8.2 / DEBT-L3-001 (🔴)
+通过 MCP stdio 协议暴露 7 个入口工具。
+
+用法:
+    # 直接运行 (stdio 模式，供 MCP 客户端调用)
+    python3 runtime-mcp-server.py
+
+    # 测试模式 (无 MCP 客户端时查看输出)
+    python3 runtime-mcp-server.py --test health
+
+依赖:
+    - fastmcp 库 (uv add fastmcp)
+"""
+
 import json
-from runtime.tools.shared import _STATS, _record_taskobject_envelope
-from runtime.tools import TOOLS, TOOL_MAP
+import argparse
+from datetime import datetime
+from pathlib import Path
 
-def send_response(msg: dict) -> None:
-    sys.stdout.write(json.dumps(msg) + "\n")
-    sys.stdout.flush()
 
-def handle_request(req: dict) -> dict | None:
-    method = req.get("method", "")
-    req_id = req.get("id")
-    params = req.get("params", {})
+def _get_cockpit_dir() -> Path:
+    """Resolve standard @驾驶舱 or 驾驶舱 folder in Documents."""
+    d = Path.home() / "Documents" / "@驾驶舱"
+    if d.exists():
+        return d
+    return Path.home() / "Documents" / "驾驶舱"
 
-    if method == "tools/list":
-        return {
-            "jsonrpc": "2.0", "id": req_id,
-            "result": {
-                "tools": [
-                    {"name": t["name"], "description": t["description"],
-                     "inputSchema": t["inputSchema"],
-                     "callCount": _STATS.get(t["name"], 0)}
-                    for t in TOOLS
-                ]
-            }
-        }
 
-    elif method == "tools/call":
-        tool_name = params.get("name", "")
-        arguments = params.get("arguments", {})
-        tool = TOOL_MAP.get(tool_name)
-        if not tool:
-            return {
-                "jsonrpc": "2.0", "id": req_id,
-                "error": {"code": -32601, "message": f"Tool not found: {tool_name}"}
-            }
+def handle_health() -> dict:
+    """runtime_health: 全系统健康"""
+    import subprocess
+    script = _get_cockpit_dir() / "scripts" / "ecos-health-check.py"
+    if not script.exists():
+        return {"status": "error", "detail": "health-check 脚本不存在"}
+    r = subprocess.run(["python3", str(script), "--json"],
+                       capture_output=True, text=True, timeout=30)
+    try:
+        return json.loads(r.stdout)
+    except json.JSONDecodeError:
+        return {"status": "error", "detail": r.stdout[:200]}
+
+
+def handle_matrix_list() -> dict:
+    """runtime_matrix_list: 服务注册表"""
+    import subprocess
+    reg = Path.home() / ".ecos" / "runtime" / "registry.json"
+    if reg.exists():
+        return json.loads(reg.read_text())
+    script = Path.home() / ".ecos" / "scripts" / "ecos-register.py"
+    if script.exists():
+        r = subprocess.run(["python3", str(script), "--status"],
+                           capture_output=True, text=True, timeout=10)
         try:
-            from runtime.kei_sandbox import record_audit
-            record_audit("execute", "ecos.runtime.mcp", "pass", f"Tool called: {tool_name}")
-            _STATS[tool_name] = _STATS.get(tool_name, 0) + 1
-            result = tool["handler"](arguments)
-            _record_taskobject_envelope(tool_name, arguments, "ok")
+            return json.loads(r.stdout)
+        except json.JSONDecodeError:
+            pass
+    return {"services": [], "note": "Runtime Registry 不可用"}
+
+
+def handle_protocol_list() -> dict:
+    """runtime_protocol_list: L0 协议注册表"""
+    import yaml
+    constraint_file = Path.home() / "Documents" / "学习进化" / "2-knowledge" / \
+                      "基建架构" / "L0-constraints.yaml"
+    if constraint_file.exists():
+        data = yaml.safe_load(constraint_file.read_text())
+        return {"protocols": data.get("protocol_registry", []),
+                "last_updated": data.get("generated", "")}
+    return {"protocols": [], "note": "L0 constraints 文件不可读"}
+
+
+def handle_protocol_get(protocol_id: str) -> dict:
+    """runtime_protocol_get: 单个协议详情"""
+    import yaml
+    constraint_file = Path.home() / "Documents" / "学习进化" / "2-knowledge" / \
+                      "基建架构" / "L0-constraints.yaml"
+    if not constraint_file.exists():
+        return {"error": "constraints 文件不存在"}
+
+    data = yaml.safe_load(constraint_file.read_text())
+    for p in data.get("protocol_registry", []):
+        if p["id"].lower() == protocol_id.lower():
+            now = datetime.now()
+            intro = datetime.strptime(p["introduced"], "%Y-%m-%d")
+            age_days = (now - intro).days
+            decay = min(1.0, age_days / p["half_life_days"]) if p["half_life_days"] > 0 else 1.0
             return {
-                "jsonrpc": "2.0", "id": req_id,
-                "result": {"content": [{"type": "text", "text": str(result)}]}
+                "protocol": p,
+                "age_days": age_days,
+                "decay": round(decay, 2),
+                "remaining_value": max(0, (1 - decay) * 100),
+                "status": "fresh" if decay < 0.5 else ("aging" if decay < 1.0 else "expired"),
             }
-        except Exception as e:
-            from runtime.kei_sandbox import record_audit
-            record_audit("execute", "ecos.runtime.mcp", "fail", f"Tool failed: {tool_name}: {e}")
-            _STATS[tool_name] = _STATS.get(tool_name, 0) + 1
-            _record_taskobject_envelope(tool_name, arguments, "error")
-            return {
-                "jsonrpc": "2.0", "id": req_id,
-                "error": {"code": -32000, "message": str(e)}
-            }
+    return {"error": f"协议 {protocol_id} 未找到"}
 
-    elif method == "ping":
-        return {"jsonrpc": "2.0", "id": req_id, "result": {}}
 
-    elif method == "initialize":
-        return {
-            "jsonrpc": "2.0", "id": req_id,
-            "result": {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {"tools": {}},
-                "serverInfo": {"name": "eCOS Runtime", "version": "0.1.0"}
-            }
-        }
+def handle_ontology() -> dict:
+    """runtime_ontology_get: 元模型本体"""
+    meta_file = _get_cockpit_dir() / "meta-model-ecos.yaml"
+    if meta_file.exists():
+        import yaml
+        return yaml.safe_load(meta_file.read_text())
+    return {"error": "元模型文件不可用"}
 
-    elif method == "notifications/initialized":
-        return None
 
+def handle_brief() -> dict:
+    """runtime_brief: 会话简报"""
+    import subprocess
+    script = _get_cockpit_dir() / "scripts" / "ecos-brief.py"
+    if not script.exists():
+        return {"error": "ecos-brief.py 不存在"}
+    r = subprocess.run(["python3", str(script), "--json"],
+                       capture_output=True, text=True, timeout=45)
+    try:
+        return json.loads(r.stdout)
+    except json.JSONDecodeError:
+        return {"error": "brief 生成失败"}
+
+
+def handle_kv_get(key: str) -> dict:
+    """runtime_kv_get: daemon-state 查询"""
+    import sqlite3
+    state_db = Path.home() / ".ecos" / "daemon-state.db"
+    if not state_db.exists():
+        return {"key": key, "value": None, "note": "daemon-state 不存在"}
+
+    conn = sqlite3.connect(str(state_db))
+    conn.row_factory = sqlite3.Row
+
+    if key == "daemon":
+        cursor = conn.execute("SELECT COUNT(*) as total, COALESCE(SUM(CASE WHEN exit_code=0 THEN 1 ELSE 0 END),0) as passed, MAX(started_at) as last FROM cycles")
+        row = cursor.fetchone()
+        result = dict(row) if row else {}
+    elif key == "sla":
+        cursor = conn.execute("SELECT COUNT(*) as total, COALESCE(SUM(CASE WHEN exit_code=0 THEN 1 ELSE 0 END),0) as passes FROM cycles")
+        row = cursor.fetchone()
+        result = dict(row) if row else {}
+        if result.get("total", 0) > 0:
+            result["uptime"] = round(result["passes"] / result["total"] * 100, 1)
+    elif key == "health":
+        cursor = conn.execute("SELECT alert_type, message, created_at FROM alerts ORDER BY created_at DESC LIMIT 10")
+        result = {"alerts": [dict(r) for r in cursor.fetchall()]}
+    elif key == "protocols":
+        result = handle_protocol_list()
     else:
-        return {
-            "jsonrpc": "2.0", "id": req_id,
-            "error": {"code": -32601, "message": f"Method not found: {method}"}
-        }
+        result = {"key": key, "note": f"未知键: {key}"}
+
+    conn.close()
+    result["_key"] = key
+    return result
+
+
+# ── FastMCP server ──────────────────────────────────────────────────────────
+
+try:
+    from fastmcp import FastMCP
+    mcp = FastMCP("ecos-runtime")
+
+    @mcp.tool()
+    def runtime_health() -> dict:
+        return handle_health()
+
+    @mcp.tool()
+    def runtime_matrix_list() -> dict:
+        return handle_matrix_list()
+
+    @mcp.tool()
+    def runtime_protocol_list() -> dict:
+        return handle_protocol_list()
+
+    @mcp.tool()
+    def runtime_protocol_get(protocol_id: str) -> dict:
+        return handle_protocol_get(protocol_id)
+
+    @mcp.tool()
+    def runtime_ontology_get() -> dict:
+        return handle_ontology()
+
+    @mcp.tool()
+    def runtime_brief() -> dict:
+        return handle_brief()
+
+    @mcp.tool()
+    def runtime_kv_get(key: str) -> dict:
+        return handle_kv_get(key)
+
+except ImportError as _e:
+    mcp = None
+    _import_error = _e
+
 
 def main():
-    """Main loop: read JSON-RPC from stdin, write to stdout."""
-    for line in sys.stdin:
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            req = json.loads(line)
-            resp = handle_request(req)
-            if resp is not None:
-                send_response(resp)
-        except json.JSONDecodeError:
-            send_response({
-                "jsonrpc": "2.0", "id": None,
-                "error": {"code": -32700, "message": "Parse error"}
-            })
-        except Exception as e:
-            send_response({
-                "jsonrpc": "2.0", "id": None,
-                "error": {"code": -32000, "message": str(e)}
-            })
+    parser = argparse.ArgumentParser(description="eCOS v5 Runtime MCP Server")
+    parser.add_argument("--test", type=str, help="测试模式: 工具名")
+    parser.add_argument("--list", action="store_true", help="列出所有工具")
+    args = parser.parse_args()
+
+    # Enable KEI Sandbox
+    try:
+        from runtime.kei_sandbox import enable_sandbox
+        kei_config = str(Path(__file__).resolve().parent.parent.parent / "kei.yaml")
+        enable_sandbox(config_path=kei_config)
+    except ImportError:
+        pass
+
+    # 测试模式: 直接调用并打印
+    if args.test:
+        handlers = {
+            "health": handle_health,
+            "matrix": handle_matrix_list,
+            "protocols": handle_protocol_list,
+            "ontology": handle_ontology,
+            "brief": handle_brief,
+        }
+        handler = handlers.get(args.test)
+        if handler:
+            print(json.dumps(handler(), ensure_ascii=False, indent=2))
+        else:
+            print(f"未知测试: {args.test}")
+        return
+
+    if args.list:
+        tools = [
+            "runtime_health",
+            "runtime_matrix_list",
+            "runtime_protocol_list",
+            "runtime_protocol_get",
+            "runtime_ontology_get",
+            "runtime_brief",
+            "runtime_kv_get",
+        ]
+        for t in tools:
+            print(f"  {t}")
+        return
+
+    # MCP stdio 模式
+    if mcp is None:
+        print(f"⚠️  fastmcp 库未安装: {_import_error}")
+        print("   测试模式可用: --test health|matrix|protocols|ontology|brief")
+        print("   列出工具: --list")
+        return
+
+    mcp.run()
+
 
 if __name__ == "__main__":
     main()

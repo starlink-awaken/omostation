@@ -34,25 +34,25 @@ def cmd_i0_status() -> int:
         return 1
 
     layers = status.get("layers", {})
-    print(f"╔════════════════════════════════════════╗")
-    print(f"║     I0 Integration Fabric — Status     ║")
-    print(f"╠════════════════════════════════════════╣")
+    print("╔════════════════════════════════════════╗")
+    print("║     I0 Integration Fabric — Status     ║")
+    print("╠════════════════════════════════════════╣")
     print(f"║  Timestamp:   {status['timestamp']}   ║")
-    print(f"║                                        ║")
+    print("║                                        ║")
     print(f"║  Services:    {status['total_services']:3d} total               ║")
     print(f"║              {status['services_online']:3d} online               ║")
     print(f"║              {status['services_offline']:3d} offline              ║")
-    print(f"║                                        ║")
+    print("║                                        ║")
     print(f"║  Protocols:   {status['total_protocols']:3d} total               ║")
     print(f"║              {status['active_protocols']:3d} active              ║")
-    print(f"║                                        ║")
+    print("║                                        ║")
     print(f"║  Events:      {status['event_count']:3d} cached               ║")
-    print(f"╠════════════════════════════════════════╣")
-    print(f"║  Layer Breakdown:                       ║")
+    print("╠════════════════════════════════════════╣")
+    print("║  Layer Breakdown:                       ║")
     for layer_key in sorted(layers):
-        l = layers[layer_key]
-        print(f"║    {layer_key}: {l['services']:2d} services, {l['online']:2d} online    ║")
-    print(f"╚════════════════════════════════════════╝")
+        layer_data = layers[layer_key]
+        print(f"║    {layer_key}: {layer_data['services']:2d} services, {layer_data['online']:2d} online    ║")
+    print("╚════════════════════════════════════════╝")
     return 0
 
 

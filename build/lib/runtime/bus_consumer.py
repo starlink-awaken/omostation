@@ -4,7 +4,6 @@ import requests
 import sqlite3
 import os
 import json
-import tempfile
 import jwt
 from pathlib import Path
 import logging

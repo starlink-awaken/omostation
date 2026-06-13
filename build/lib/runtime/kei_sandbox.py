@@ -30,7 +30,9 @@ def _load_kei_rules(config_path: str = "kei.yaml") -> dict:
 
 
 _RULES = _load_kei_rules(os.environ.get("KEI_CONFIG_PATH", "kei.yaml"))
-_AUDIT_FILE = Path('/Users/xiamingxing/runtime/data/kei_audit.jsonl')  # Set by enable_sandbox()
+_workspace_root = Path(__file__).resolve().parents[4]  # runtime/src/runtime/kei_sandbox.py → workspace root
+_DEFAULT_AUDIT = _workspace_root / "runtime" / "data" / "kei_audit.jsonl"
+_AUDIT_FILE = Path(os.environ.get("KEI_AUDIT_FILE", str(_DEFAULT_AUDIT)))  # Set by enable_sandbox()
 _IN_AUDIT = False   # Recursion guard
 
 
@@ -138,7 +140,7 @@ def enable_sandbox(config_path: str = "kei.yaml", audit_file: str | None = None)
     if audit_file is None:
         audit_file = os.environ.get(
             "AUDIT_FILE_PATH",
-            str(Path('/Users/xiamingxing/runtime/data/kei_audit.jsonl'))
+            str(_DEFAULT_AUDIT)
         )
     _AUDIT_FILE = Path(audit_file)
     _AUDIT_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -147,7 +149,7 @@ def enable_sandbox(config_path: str = "kei.yaml", audit_file: str | None = None)
     record_audit("validate", "ecos.kernel.sandbox", "pass",
                  f"KEI Sandbox enabled (rules={config_path}, audit={audit_file})")
     import sys as _sys
-    print(f"KEI Sandbox enabled", file=_sys.stderr)
+    print("KEI Sandbox enabled", file=_sys.stderr)
 
 
 if __name__ == "__main__":

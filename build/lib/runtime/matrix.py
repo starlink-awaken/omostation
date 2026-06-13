@@ -61,7 +61,6 @@ def load_matrix(path: Optional[Path] = None) -> list[ServiceEntry]:
 
     # States
     IN_SERVICES = 1     # Inside the 'services:' block
-    IN_SERVICE = 2      # Inside a single service entry
     IN_GROUPS = 3       # Inside 'groups:' or 'migrations:' block — skip
     OUTSIDE = 0         # Before 'services:' or after it
 

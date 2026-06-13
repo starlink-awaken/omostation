@@ -27,11 +27,11 @@ def _kei_inspect(ext_id: str) -> str:
              f"Type:        {e.get('type','?')}", f"Status:      {e.get('status','?')}",
              f"Entry:       {e.get('entrypoint','?')}", f"Desc:        {e.get('description','')}", ""]
     perms = e.get("permissions", {})
-    lines.append(f"Permissions:")
+    lines.append("Permissions:")
     for k, v in perms.items():
         lines.append(f"  {k}: {v}")
     rules = e.get("kei_rules", {})
-    lines.append(f"\nKEI Rules:")
+    lines.append("\nKEI Rules:")
     for k, v in rules.items():
         lines.append(f"  {k}: {v}")
     return "\n".join(lines)

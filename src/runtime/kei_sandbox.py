@@ -13,12 +13,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-def _load_kei_rules(config_path: str = "kei.yaml") -> dict:
+def _load_kei_rules(config_path: str = "kei.yaml", role: str = "default") -> dict:
     path = Path(config_path)
     if not path.exists():
         # Default strict rules if no kei.yaml
         return {
             "version": "1.0",
+            "role": role,
             "permissions": {
                 "network": {"allow": ["localhost", "127.0.0.1"]},
                 "filesystem": {"allow_read": ["/"], "allow_write": ["/tmp", str(Path.home() / "Workspace")]},
@@ -26,10 +27,31 @@ def _load_kei_rules(config_path: str = "kei.yaml") -> dict:
             }
         }
     with open(path, "r") as f:
-        return yaml.safe_load(f)
+        data = yaml.safe_load(f) or {}
+
+    # Extract global permissions
+    perms = data.get("permissions", {})
+
+    # If a role is specified and exists, merge/override its specific permissions
+    if role and role != "default":
+        roles_config = data.get("roles", {})
+        if role in roles_config:
+            role_perms = roles_config[role].get("permissions", {})
+            # Merge logic: deep update dicts
+            for k, v in role_perms.items():
+                if isinstance(v, dict) and k in perms:
+                    perms[k].update(v)
+                else:
+                    perms[k] = v
+                    
+    return {
+        "version": data.get("version", "1.0"),
+        "role": role,
+        "permissions": perms
+    }
 
 
-_RULES = _load_kei_rules(os.environ.get("KEI_CONFIG_PATH", "kei.yaml"))
+_RULES = _load_kei_rules(os.environ.get("KEI_CONFIG_PATH", "kei.yaml"), os.environ.get("ECOS_EXECUTION_ROLE", "default"))
 _workspace_root = Path(__file__).resolve().parents[4]  # runtime/src/runtime/kei_sandbox.py → workspace root
 _DEFAULT_AUDIT = _workspace_root / "runtime" / "data" / "kei_audit.jsonl"
 _AUDIT_FILE = Path(os.environ.get("KEI_AUDIT_FILE", str(_DEFAULT_AUDIT)))  # Set by enable_sandbox()
@@ -106,6 +128,7 @@ def _audit_hook(event: str, args: tuple):
         if "w" in mode or "a" in mode or "+" in mode:
             allowed_writes = perms.get("filesystem", {}).get("allow_write", ["*"])
             if "*" not in allowed_writes:
+                allowed_writes = [os.path.expandvars(p) for p in allowed_writes]
                 allowed = any(file_path.startswith(prefix) for prefix in allowed_writes)
                 if not allowed:
                     record_audit("reject", "ecos.kernel.sandbox", "blocked",
@@ -116,6 +139,7 @@ def _audit_hook(event: str, args: tuple):
         else:
             allowed_reads = perms.get("filesystem", {}).get("allow_read", ["*"])
             if "*" not in allowed_reads:
+                allowed_reads = [os.path.expandvars(p) for p in allowed_reads]
                 allowed = any(file_path.startswith(prefix) for prefix in allowed_reads)
                 if not allowed:
                     record_audit("reject", "ecos.kernel.sandbox", "blocked",
@@ -125,7 +149,7 @@ def _audit_hook(event: str, args: tuple):
                          f"Read allowed: {file_path}")
 
 
-def enable_sandbox(config_path: str = "kei.yaml", audit_file: str | None = None) -> None:
+def enable_sandbox(config_path: str = "kei.yaml", audit_file: str | None = None, role: str = "default") -> None:
     """Enable the KEI Sandbox.
 
     Args:
@@ -133,9 +157,17 @@ def enable_sandbox(config_path: str = "kei.yaml", audit_file: str | None = None)
         audit_file:  Path where audit records are written (JSONL).
                      Falls back to $AUDIT_FILE_PATH env var, then
                      $HOME/runtime/audit/kei-audit.jsonl.
+        role:        The execution role (e.g. 'generator', 'evaluator') used to load
+                     role-specific rules from the 'roles' section of kei.yaml.
     """
     global _RULES, _AUDIT_FILE
-    _RULES = _load_kei_rules(config_path)
+    
+    # If passed via env var, override the argument
+    env_role = os.environ.get("ECOS_EXECUTION_ROLE")
+    if env_role and role == "default":
+        role = env_role
+        
+    _RULES = _load_kei_rules(config_path, role)
 
     if audit_file is None:
         audit_file = os.environ.get(
@@ -147,9 +179,9 @@ def enable_sandbox(config_path: str = "kei.yaml", audit_file: str | None = None)
 
     sys.addaudithook(_audit_hook)
     record_audit("validate", "ecos.kernel.sandbox", "pass",
-                 f"KEI Sandbox enabled (rules={config_path}, audit={audit_file})")
+                 f"KEI Sandbox enabled (rules={config_path}, role={role}, audit={audit_file})")
     import sys as _sys
-    print("KEI Sandbox enabled", file=_sys.stderr)
+    print(f"KEI Sandbox enabled [Role: {role}]", file=_sys.stderr)
 
 
 if __name__ == "__main__":
