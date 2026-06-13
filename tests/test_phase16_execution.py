@@ -167,7 +167,7 @@ def test_phase16_cli_commands_are_usable(tmp_path: Path) -> None:
 
 
 def test_phase16_closeout_and_live_state_are_completed_with_only_authorized_active_tasks() -> None:
-    goals = _read_yaml("_truth/goals/current.yaml")
+    goals = _read_yaml("goals/current.yaml")
     state = _read_yaml("state/system.yaml")
     active_tasks = list((OMO_ROOT / "tasks" / "active").glob("*.yaml"))
     active_payloads = [yaml.safe_load(path.read_text(encoding="utf-8")) for path in active_tasks]

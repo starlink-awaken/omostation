@@ -141,6 +141,51 @@ class T02ModePassthrough(unittest.TestCase):
         pre_release_file = WORKSPACE / ".omo" / "_delivery" / "audit-rollout" / "2026-06-12-pre-release.json"
         self.assertTrue(pre_release_file.exists(), f"{pre_release_file} 应存在 (mode 透传修复)")
 
+    def test_write_outputs_isolated_and_mode_aware(self) -> None:
+        """独立验证 5repos.py 自身写盘契约, 不依赖 daemon/fallback/workspace 实盘."""
+        spec = importlib.util.spec_from_file_location("audit_5repos_worker", SCRIPTS / "opc_audit_rollout_5repos.py")
+        module = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(module)
+
+        tmp_dir = Path("/tmp/opc-5repos-isolated")
+        if tmp_dir.exists():
+            shutil.rmtree(tmp_dir)
+        tmp_dir.mkdir(parents=True)
+
+        payload = {"summary": {"total_repos": 5}, "repos": {"workspace": {"health_grade": "R1"}}}
+        baseline, monthly = module.write_outputs(
+            payload,
+            out_dir=tmp_dir,
+            today="2026-06-12",
+            mode="monthly",
+        )
+        self.assertEqual(baseline.name, "2026-06-12-5repos.json")
+        self.assertEqual(monthly.name, "2026-06-12-monthly.json")
+        self.assertEqual(json.loads(baseline.read_text(encoding="utf-8")), payload)
+        self.assertEqual(json.loads(monthly.read_text(encoding="utf-8")), payload)
+
+    def test_write_outputs_invalid_mode_falls_back_to_weekly(self) -> None:
+        """非法 mode 不得写出脏文件名, 必须回退 weekly."""
+        spec = importlib.util.spec_from_file_location("audit_5repos_worker_invalid", SCRIPTS / "opc_audit_rollout_5repos.py")
+        module = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(module)
+
+        tmp_dir = Path("/tmp/opc-5repos-invalid-mode")
+        if tmp_dir.exists():
+            shutil.rmtree(tmp_dir)
+        tmp_dir.mkdir(parents=True)
+
+        _, mode_specific = module.write_outputs(
+            {"summary": {"total_repos": 5}, "repos": {}},
+            out_dir=tmp_dir,
+            today="2026-06-12",
+            mode="garbage-mode",
+        )
+        self.assertEqual(mode_specific.name, "2026-06-12-weekly.json")
+        self.assertTrue(mode_specific.exists(), "非法 mode 应回退 weekly 文件名")
+
 
 class T03ReleaseCycleGeneratedAtOverride(unittest.TestCase):
     """T3: H1 release OPC_GENERATED_AT override - 注入语义时间点形成真实 cadence."""

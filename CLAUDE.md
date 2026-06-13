@@ -16,7 +16,7 @@ All commands MUST be run using the `omo` MCP server. Direct filesystem manipulat
 - Call the `omo_gc` MCP tool to snapshot and clean up the workspace state.
 
 ## 3. The Execution Loop
-1. When you enter the workspace, check `.omo/_truth/goals/current.yaml` to understand the overarching Phase and Wave.
+1. When you enter the workspace, check `.omo/goals/current.yaml` to understand the overarching Phase and Wave.
 2. Look in `.omo/workers/runs/` for any `*-prompt.md` files assigned to you.
 3. Execute the work in the specified `allowed_paths`.
 4. Create a `*-review.md` file in `.omo/workers/runs/` detailing what you changed.

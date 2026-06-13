@@ -21,8 +21,8 @@
 
 必须检查：
 
-1. `plans/README.md` 的 EXECUTION/REFERENCE 状态与 `goals/current.yaml` 一致。
-2. `goals/current.yaml` 的 phase 与 `state/system.yaml.current_phase` 一致，除非 `state/system.yaml.phase_status = limited_go` 并说明原因。
+1. `plans/README.md` 的 EXECUTION/REFERENCE 状态与 `.omo/goals/current.yaml` 一致。
+2. `.omo/goals/current.yaml` 的 phase 与 `.omo/state/system.yaml.current_phase` 一致，除非 `state/system.yaml.phase_status = limited_go` 并说明原因。
 3. 每个 active goal 至少有一个 `.omo/tasks/active/*.yaml`。
 4. `_archive/TASK_POOL.md` 不再是唯一任务源。
 5. Phase 关闭证据必须存在于 `goals/history/` 或 `summaries/`。

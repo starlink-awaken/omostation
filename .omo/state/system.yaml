@@ -1,8 +1,8 @@
-active_tasks: 5
+active_tasks: 0
 planned_tasks: 8
 blocked_tasks: 0
 completed_tasks: 0
-total_tasks: 13
+total_tasks: 8
 health_score_raw: 0.0
 debt_weight: 0.3
 health_score: 0.0
@@ -593,28 +593,8 @@ divergence_detail_refs:
   debt_generated_refs:
     count: 8
     ref: .omo/evidence/divergence/debt_generated_refs.yaml
-task_gate_summary:
-  TASK-D1-CHILD1:
-    canonical_status: pending
-    gate_facts: []
-  TASK-D1-CHILD2:
-    canonical_status: pending
-    gate_facts: []
-  TASK-D2-RETRY:
-    canonical_status: pending
-    gate_facts: []
-  TASK-D2-SUCCESS:
-    canonical_status: pending
-    gate_facts: []
-  TASK-FEC5E158:
-    canonical_status: pending
-    gate_facts: []
-promotion_blockers:
-  TASK-D1-CHILD1: []
-  TASK-D1-CHILD2: []
-  TASK-D2-RETRY: []
-  TASK-D2-SUCCESS: []
-  TASK-FEC5E158: []
+task_gate_summary: {}
+promotion_blockers: {}
 divergence_triage_summary:
   missing_debt_generated_ref:action_packet_ref:
     severity: low
@@ -649,12 +629,7 @@ divergence_triage_summary:
     owner: control
     disposition: monitor
 next_active_tasks:
-- Current active queue from .omo/tasks/active/ (5 tasks)
-- TASK-D1-CHILD1
-- TASK-D1-CHILD2
-- TASK-D2-RETRY
-- TASK-D2-SUCCESS
-- TASK-FEC5E158
+- (No active tasks)
 next_planned_tasks:
 - Current planned queue from .omo/tasks/planned/ (8 tasks)
 - IMPORTED-1975c8
@@ -665,7 +640,7 @@ next_planned_tasks:
 - TASK-8F6D06F9
 - TASK-9D06D85C
 - TASK-ECEF475A
-updated_at: '2026-06-11T09:53:53Z'
+updated_at: '2026-06-13T12:07:51Z'
 current_phase: 28
 phase_status: active
 phase28_status: active

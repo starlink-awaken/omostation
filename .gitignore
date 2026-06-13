@@ -19,6 +19,7 @@ uv.lock
 # ── IDE ──
 .idea/
 .vscode/
+.serena/
 *.swp
 *.swo
 *~
@@ -53,6 +54,14 @@ coverage.xml
 
 # ── Runtime state ──
 .omc/
+.omo/_delivery/audit-rollout/*.json
+.omo/workers/runs/
+
+# ── Local historical archives (keep on disk, out of VCS) ──
+.omo/_archive/demo-phase29/
+.omo/_archive/probes/
+.omo/tasks/archive/demo-phase29/
+tests/archive/test_opc_p3_thin_binding_demo.py
 
 # ── Docker ──
 .docker/
