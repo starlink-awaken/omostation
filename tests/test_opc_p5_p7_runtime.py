@@ -177,6 +177,10 @@ def test_p7_audit_rollout_history_index_tracks_mode_and_trigger(tmp_path):
 
 
 def test_p7_audit_rollout_fallback_writes_mode_output(tmp_path):
+    """fallback 成功时 5repos.py 自身写 mode-specific 副本, daemon 不再硬编码.
+
+    fake_run 模拟 5repos.py 跑出 mode-specific 文件 (5repos.py 内部读 OPC_MODE).
+    """
     module = _load_module("opc_p7_audit_rollout_daemon_fallback_test", ROOT / "scripts" / "opc_p7_audit_rollout_daemon.py")
     module.ROOT = tmp_path
     module._today = lambda: "2026-06-12"
@@ -191,9 +195,15 @@ def test_p7_audit_rollout_fallback_writes_mode_output(tmp_path):
                 self.stderr = stderr
 
         if "opc_audit_rollout_5repos.py" in " ".join(cmd):
+            # 5repos.py 内部同时写 5repos.json + mode-specific 副本
+            payload = {"repos": {"workspace": {}}, "summary": {"total_repos": 1}}
             (out_dir / "2026-06-12-5repos.json").write_text(
-                json.dumps({"repos": {"workspace": {}}, "summary": {"total_repos": 1}}),
-                encoding="utf-8",
+                json.dumps(payload), encoding="utf-8"
+            )
+            # 5repos.py 读 OPC_MODE env 决定 mode (fake 这里硬编码 weekly)
+            mode = (env or {}).get("OPC_MODE", "weekly")
+            (out_dir / f"2026-06-12-{mode}.json").write_text(
+                json.dumps(payload), encoding="utf-8"
             )
             return Result(0, stdout='{"ok": true}')
         return Result(1, stderr="primary failed")
@@ -203,10 +213,10 @@ def test_p7_audit_rollout_fallback_writes_mode_output(tmp_path):
     try:
         rollout = module._run_audit_rollout("weekly")
     finally:
-        # 关键: 恢复原始 subprocess.run, 避免污染后续测试
         module.subprocess.run = original_subprocess_run
     assert rollout["returncode"] == 0
     assert rollout["fallback_used"] is True
+    # 5repos.py 自身写 mode-specific 副本 (P7-H3 acceptance 仍满足)
     assert (out_dir / "2026-06-12-weekly.json").exists()
 
 

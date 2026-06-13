@@ -92,9 +92,30 @@ def test_p5_prerequisite_signal_now_satisfied():
     assert p5["prerequisites"][1] == "opc_phase4_gate_e_passed"
 
 
+def test_p5_gate_f_alignment_reflects_f1_open_and_f2_f4_closed():
+    plan = _read_yaml(".omo/tasks/planned/OPC-P5-SCENARIOS.yaml")
+    phase_doc = _read("docs/OPC-PHASE5-SCENARIOS.md")
+    playbook = _read("docs/OPC-MASTER-EXECUTION-PLAYBOOK.md")
+
+    statuses = {sg["id"]: sg["status"] for sg in plan["sub_gates"] if sg.get("id", "").startswith("P5-F")}
+    assert statuses == {
+        "P5-F1": "not_yet_passed",
+        "P5-F2": "passed",
+        "P5-F3": "passed",
+        "P5-F4": "passed",
+    }
+    assert plan["gate_status"] == "not_yet_passed"
+    assert any("gate_f_not_yet_passed" in sig for sig in plan["signals"])
+    assert "opc_phase5_subgate_f2_passed" in phase_doc
+    assert "opc_phase5_subgate_f3_passed" in phase_doc
+    assert "opc_phase5_subgate_f4_passed" in phase_doc
+    assert "P5: opened for implementation; Gate F in progress" in playbook
+
+
 def test_p6_gate_g_three_way_alignment_consistent_with_plan():
     """P6 status 必须与 plan yaml 一致; 复验后 not_yet_passed 也要一致."""
     plan = _read_yaml(".omo/tasks/planned/OPC-P6-EVOLUTION-LOOP.yaml")
+    phase_doc = _read("docs/OPC-PHASE6-EVOLUTION-LOOP.md")
     playbook = _read("docs/OPC-MASTER-EXECUTION-PLAYBOOK.md")
 
     g_statuses = {sg["id"]: sg["status"] for sg in plan["sub_gates"] if sg.get("id", "").startswith("P6-G")}
@@ -109,6 +130,10 @@ def test_p6_gate_g_three_way_alignment_consistent_with_plan():
         assert "P6: opened for implementation; Gate G in progress" in playbook, (
             f"playbook 应反映 P6 not_yet_passed 状态: \n{playbook[:1000]}"
         )
+        assert "Status: in progress" in phase_doc
+        assert "opc_phase6_gate_g_not_yet_passed" in phase_doc
+        signal_block = phase_doc.split("## Signal", 1)[1]
+        assert "opc_phase6_gate_g_passed\n" not in signal_block
         # gate_status=not_yet_passed 必须有匹配的 not_yet_passed signal
         assert any(
             "gate_g_not_yet_passed" in sig for sig in plan.get("signals", [])
@@ -181,10 +206,14 @@ def test_p7_gate_h_three_way_alignment_closed_2026_06_12():
             )
 
     if plan.get("gate_status") == "not_yet_passed":
-        # 当前状态: 复验后回退, H5 单独 passed, H1-H4 not_yet_passed
-        assert any(
-            s == "passed" for s in h_statuses.values()
-        ), f"当前应至少 H5 passed: {h_statuses}"
+        # 当前状态: H2/H4/H5 passed; H1/H3 not_yet_passed
+        assert h_statuses == {
+            "P7-H1": "not_yet_passed",
+            "P7-H2": "passed",
+            "P7-H3": "not_yet_passed",
+            "P7-H4": "passed",
+            "P7-H5": "passed",
+        }, f"当前应为 H2/H4/H5 passed: {h_statuses}"
         assert "P7: opened for implementation; Gate H in progress" in playbook
         # gate_status=not_yet_passed 必须有匹配的 not_yet_passed signal
         # (允许混有 passed sub-gate signal 如 h5_passed)
@@ -228,7 +257,12 @@ def test_p7_doc_lint_zero_drift_at_closeout():
         assert candidates, "no doc-lint output"
         lint_path = candidates[-1]
     payload = json.loads(lint_path.read_text(encoding="utf-8"))
-    assert payload.get("drift_total") == 0, f"doc-lint reported drift_total={payload.get('drift_total')}"
+    # doc-lint/index.json schema: {"runs": [...], "summary": {"latest_drift_total": N, ...}}
+    # 兼容 summary.latest_drift_total 字段
+    actual_drift = payload.get("drift_total")
+    if actual_drift is None:
+        actual_drift = payload.get("summary", {}).get("latest_drift_total")
+    assert actual_drift == 0, f"doc-lint reported drift_total={actual_drift}"
 
 
 def test_p4_to_p7_use_consistent_evidence_requirement_field():
@@ -253,6 +287,28 @@ def test_p4_to_p7_use_consistent_evidence_requirement_field():
 def test_p7_final_gate_sequence_is_monotonic():
     text = _read("docs/OPC-PHASE7-RELEASE-TRAIN.md")
     assert "9 个连续 Gate (A → B → B2 → C → D → E → F → G → H)" in text
+
+
+def test_phase_gate_snapshot_matches_reviewed_truth():
+    phase_gate_md = _read(".omo/_delivery/phase-gate/2026-06-12.md")
+    phase_gate_json = _read_yaml(".omo/_delivery/phase-gate/2026-06-12.json")
+
+    assert "phases_passed: **3**" in phase_gate_md
+    assert "phases_open: 6" in phase_gate_md
+    assert "| P5 | Gate F | not_yet_passed | 3/4 passed, 1 open |" in phase_gate_md
+    assert "| P6 | Gate G | not_yet_passed | 0/4 passed, 4 open |" in phase_gate_md
+    assert "| P7 | Gate H | not_yet_passed | 3/5 passed, 2 open |" in phase_gate_md
+
+    rows = {row["phase"]: row for row in phase_gate_json["rows"]}
+    assert phase_gate_json["summary"] == {"phases_total": 9, "phases_passed": 3, "phases_open": 6}
+    assert rows["P5"]["gate_status"] == "not_yet_passed"
+    assert rows["P5"]["sub_gate_passed"] == 3
+    assert rows["P5"]["sub_gate_open"] == 1
+    assert rows["P6"]["gate_status"] == "not_yet_passed"
+    assert rows["P6"]["sub_gate_passed"] == 0
+    assert rows["P7"]["gate_status"] == "not_yet_passed"
+    assert rows["P7"]["sub_gate_passed"] == 3
+    assert rows["P7"]["sub_gate_open"] == 2
 
 
 # ── 2026-06-12 复验后: 治本红线条目守护测试 ─────────────────────────
