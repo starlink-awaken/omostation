@@ -15,11 +15,11 @@
 │  ├── _runtime/ — 6 治理脚本 (X1-X3 全维健康)                       │
 │  └── CARDS — 61 活跃卡片 (文件系统 + l4-kernel CardsPlane)          │
 ├────────────────────────────────────────────────────────────────────┤
-│  L3 入口层 (cockpit)                                               │
-│  ├── CLI — 25 子命令 (research/status/cards/health/...)             │
-│  ├── MCP Server — 37 工具【已通过 agora :7431 代理 — stdio deprecated】│
-│  ├── Web Dashboard — FastAPI · 16 REST API (:8090)                 │
-│  └── 测试: 562 collected / 542 passed                                │
+│  L3 入口层 (cockpit & agora-dashboard)                             │
+│  ├── CLI (cockpit) — 25 子命令 (research/status/cards/health/...)   │
+│  ├── MCP Server — 38 工具【已通过 agora :7431 代理 — stdio deprecated】│
+│  ├── Web Dashboard (agora-dashboard) — Next.js 15+ 多模态观察视界  │
+│  └── 测试: 564 collected / 544 passed                                │
 ├────────────────────────────────────────────────────────────────────┤
 │  I0 织层 (agora)                                                   │
 │  ├── MCP Mesh — 42 工具 · 40 BOS 路由 · 三层路由链                  │
@@ -78,6 +78,7 @@ bos://capability/    ← forge + agora + family-hub                — 能力与
 
 | 项目 | 层 | 栈 | 测试 | Lint | 域管理 | MCP |
 |:----:|:--:|:--:|:----:|:----:|:------:|:---:|
+| agora-dashboard | L3 | Next.js/React | 待定 | 0 | - | - |
 | l4-kernel | L4 | Python | 250+ | 0 | 24 域 | 43 |
 | cockpit | L3 | Python | 542/562 | 0 | — | 37 |
 | agora | I0 | Python | 1371 | 0 | 40 BOS | 42 |

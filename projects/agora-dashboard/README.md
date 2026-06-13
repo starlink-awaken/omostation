@@ -1,36 +1,24 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Agora Dashboard (eCOS v5 L3 Entry Layer)
 
-## Getting Started
+## 身份定位
+`agora-dashboard` 是 eCOS v5 体系下的 **多模态观察视界**，与 `cockpit` (CLI) 平级，同属 L3 入口层。
 
-First, run the development server:
+它提供基于 Web 的现代化 UI（Next.js 15+ 栈，赛博朋克暗黑主题），直连底层的 `system.yaml` 等 L0/M0 知识库文件，为人类指挥官提供**零损耗**的状态直觉。
 
+## 核心特性
+1. **L0 物理穿透**：Next.js Server Components 直接读取 `.omo/state/system.yaml` 物理文件，确保 Dashboard 与 OMO 治理层零延迟同步。
+2. **Phase 6 引擎大盘**：内置对 OPC-P6 (自我进化飞轮) 状态机、系统健康度 (Health Score)、遗留债务 (System Debt) 和活跃节点数的全景展示。
+3. **沉浸式赛博美学**：全局引入 Glitch 特效与扫描线，采用 `lucide-react` 构建高科技质感的工业级图表组件。
+
+## 快速启动
 ```bash
+cd projects/agora-dashboard
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+打开 `http://localhost:3000` 即可进入控制枢纽。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 架构约束 (SSOT 协议)
+- 本组件作为 L3 观察层，**仅拥有 L0 态的只读权限**。
+- 所有数据写入必须通过 L3 `cockpit` CLI 或者触发 I0 `agora` 的 BOS 路由进行，`agora-dashboard` 绝不能直接修改 `.omo/` 目录中的文件。
