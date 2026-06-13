@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-06-13T05:16:32Z",
+  "generated_at": "2026-06-13T11:22:19Z",
   "tasks_emitted": 1,
   "tasks_written": 0,
   "red_line_held": "all tasks written to planned/ only, never active/",
   "tasks": [
     {
-      "id": "OPC-P6-SELF-EVOLUTION-nop-20260613T051632Z",
+      "id": "OPC-P6-SELF-EVOLUTION-nop-20260613T112219Z",
       "approval_required": true
     }
   ],

@@ -1,10 +1,10 @@
 # OPC P6 approval board
 
-Generated: 2026-06-12T09:10:37Z
+Generated: 2026-06-13T11:22:19Z
 
-- task_count: 17
-- awaiting_human_count: 17
-- approval_required_count: 17
+- task_count: 22
+- awaiting_human_count: 22
+- approval_required_count: 22
 - latest_week: 2026-W29
 - latest_week_source: loop_history
 
@@ -27,3 +27,8 @@ Generated: 2026-06-12T09:10:37Z
 | OPC-P6-SELF-EVOLUTION-nop-20260612T090659Z | planned | awaiting_human | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T090659Z.yaml` |
 | OPC-P6-SELF-EVOLUTION-nop-20260612T090822Z | planned | awaiting_human | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T090822Z.yaml` |
 | OPC-P6-SELF-EVOLUTION-nop-20260612T091037Z | planned | awaiting_human | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260612T091037Z.yaml` |
+| OPC-P6-SELF-EVOLUTION-nop-20260613T051133Z | planned | awaiting_human | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260613T051133Z.yaml` |
+| OPC-P6-SELF-EVOLUTION-nop-20260613T051412Z | planned | awaiting_human | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260613T051412Z.yaml` |
+| OPC-P6-SELF-EVOLUTION-nop-20260613T051449Z | planned | awaiting_human | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260613T051449Z.yaml` |
+| OPC-P6-SELF-EVOLUTION-nop-20260613T051632Z | planned | awaiting_human | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260613T051632Z.yaml` |
+| OPC-P6-SELF-EVOLUTION-nop-20260613T112219Z | planned | awaiting_human | 2026-W29 | `.omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260613T112219Z.yaml` |

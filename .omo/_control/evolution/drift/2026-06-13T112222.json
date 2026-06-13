@@ -1,0 +1,48 @@
+{
+  "generated_at": "2026-06-13T11:22:22Z",
+  "kinds": 4,
+  "drift_count": 0,
+  "results": [
+    {
+      "kind": "entry_drift",
+      "ts": "2026-06-13T11:22:22Z",
+      "expected": [
+        "radar",
+        "assistant",
+        "health"
+      ],
+      "present": [
+        "radar",
+        "assistant",
+        "health"
+      ],
+      "missing": [],
+      "drift": false
+    },
+    {
+      "kind": "doc_drift",
+      "ts": "2026-06-13T11:22:22Z",
+      "plan_gate_status": "passed",
+      "doc_says_passed": true,
+      "consistent": true,
+      "drift": false
+    },
+    {
+      "kind": "duplicate_facts",
+      "ts": "2026-06-13T11:22:22Z",
+      "findings": [],
+      "drift": false
+    },
+    {
+      "kind": "agora_bypass",
+      "ts": "2026-06-13T11:22:22Z",
+      "scanned_files": [
+        "projects/runtime/src/runtime/executor/engine.py",
+        "projects/cockpit/src/cockpit/commands/scenario.py",
+        "projects/runtime/src/runtime/executor/config/__init__.py"
+      ],
+      "bypass_patterns": [],
+      "drift": false
+    }
+  ]
+}
