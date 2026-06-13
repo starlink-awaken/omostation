@@ -562,3 +562,277 @@ class TestPersonalKnowledgePrimitive:
         # 获取推荐
         recs = manager.get_recommendation("user-1", {})
         assert len(recs) > 0
+
+
+# ══════════════════════════════════════════════════════════════
+# 蜂群式AI原语扩展测试 (提升覆盖率)
+# ══════════════════════════════════════════════════════════════
+
+class TestDistributedPrimitiveExtended:
+    """分布式原语扩展测试"""
+    
+    def test_crdt_sync_version_conflict(self):
+        from ecos.l0.governance import CRDTSync, StateSnapshot
+        
+        sync = CRDTSync("node-1")
+        sync.version = 5
+        
+        snapshot = StateSnapshot(
+            node_id="node-2",
+            version=3,  # 旧版本
+            data={"key": "value"},
+        )
+        
+        result = sync.sync(snapshot)
+        assert not result.success  # 版本冲突
+        assert result.merged_version == 5
+    
+    def test_crdt_get_version(self):
+        from ecos.l0.governance import CRDTSync
+        
+        sync = CRDTSync("node-1")
+        assert sync.get_version() == 0
+        
+        sync.version = 10
+        assert sync.get_version() == 10
+    
+    def test_crdt_get_node_status(self):
+        from ecos.l0.governance import CRDTSync, NodeStatus
+        
+        sync = CRDTSync("node-1")
+        status = sync.get_node_status("node-2")
+        assert status == NodeStatus.OFFLINE
+
+
+class TestRolePrimitiveExtended:
+    """角色原语扩展测试"""
+    
+    def test_role_switch(self):
+        from ecos.l0.governance import RoleManager, RoleDefinition, RoleType
+        
+        manager = RoleManager()
+        
+        # 定义两个角色
+        worker = RoleDefinition(
+            role_id="worker",
+            role_type=RoleType.WORKER,
+            capabilities=["task"],
+            constraints={},
+        )
+        manager = RoleManager()
+        manager.define_role(worker)
+        
+        manager = RoleManager()
+        manager.define_role(worker)
+        specialist = RoleDefinition(
+            role_id="specialist",
+            role_type=RoleType.SPECIALIST,
+            capabilities=["expert"],
+            constraints={},
+        )
+        manager.define_role(specialist)
+        
+        # 分配角色
+        manager.assign_role("agent-1", "worker")
+        
+        # 切换角色
+        assert manager.switch_role("agent-1", "specialist")
+        
+        # 验证切换
+        retrieved = manager.get_role("agent-1")
+        assert retrieved.role_id == "specialist"
+    
+    def test_role_assign_nonexistent(self):
+        from ecos.l0.governance import RoleManager, RoleDefinition, RoleType
+        
+        manager = RoleManager()
+        role = RoleDefinition(
+            role_id="worker",
+            role_type=RoleType.WORKER,
+            capabilities=["task"],
+            constraints={},
+        )
+        manager.define_role(role)
+        
+        # 分配不存在的角色
+        assert not manager.assign_role("agent-1", "nonexistent")
+    
+    def test_role_switch_nonexistent_agent(self):
+        from ecos.l0.governance import RoleManager, RoleDefinition, RoleType
+        
+        manager = RoleManager()
+        role = RoleDefinition(
+            role_id="worker",
+            role_type=RoleType.WORKER,
+            capabilities=["task"],
+            constraints={},
+        )
+        manager.define_role(role)
+        
+        # 切换不存在的 agent
+        assert not manager.switch_role("nonexistent", "worker")
+    
+    def test_role_to_dict(self):
+        from ecos.l0.governance import RoleDefinition, RoleType, AgentRole, RoleStatus
+        
+        role = RoleDefinition(
+            role_id="worker",
+            role_type=RoleType.WORKER,
+            capabilities=["task"],
+            constraints={"max_tasks": 5},
+        )
+        d = role.to_dict()
+        assert d["role_id"] == "worker"
+        assert d["role_type"] == "worker"
+        assert "task" in d["capabilities"]
+        
+        agent_role = AgentRole(
+            agent_id="agent-1",
+            role_id="worker",
+            status=RoleStatus.ACTIVE,
+        )
+        d = agent_role.to_dict()
+        assert d["agent_id"] == "agent-1"
+        assert d["status"] == "active"
+
+
+class TestSwarmPrimitiveExtended:
+    """蜂群原语扩展测试"""
+    
+    def test_swarm_predict_emergence(self):
+        from ecos.l0.governance import SwarmManager, SwarmState, EmergentBehavior, EmergencePattern
+        
+        manager = SwarmManager()
+        manager.agents = ["agent-1", "agent-2"]
+        
+        state = SwarmState(
+            agents=manager.agents,
+            behaviors=[
+                EmergentBehavior(
+                    pattern=EmergencePattern.CLUSTERING,
+                    agents=["agent-1"],
+                    confidence=0.8,
+                )
+            ],
+        )
+        
+        predicted = manager.predict_emergence(state)
+        assert len(predicted) > 0
+        assert predicted[0].pattern == EmergencePattern.SPECIALIZATION
+    
+    def test_swarm_control_emergence(self):
+        from ecos.l0.governance import SwarmManager, EmergentBehavior, EmergencePattern
+        
+        manager = SwarmManager()
+        
+        behavior = EmergentBehavior(
+            pattern=EmergencePattern.CASCADE,
+            agents=["agent-1", "agent-2"],
+            confidence=0.9,
+        )
+        
+        # 控制涌现
+        assert manager.control_emergence(behavior, "suppress")
+        assert manager.control_emergence(behavior, "amplify")
+    
+    def test_swarm_get_state(self):
+        from ecos.l0.governance import SwarmManager, EmergentBehavior, EmergencePattern
+        
+        manager = SwarmManager()
+        manager.agents = ["agent-1", "agent-2"]
+        manager.behaviors = [
+            EmergentBehavior(
+                pattern=EmergencePattern.CLUSTERING,
+                agents=["agent-1"],
+                confidence=0.8,
+            )
+        ]
+        
+        state = manager.get_swarm_state()
+        assert len(state.agents) == 2
+        assert len(state.behaviors) == 1
+    
+    def test_emergent_behavior_to_dict(self):
+        from ecos.l0.governance import EmergentBehavior, EmergencePattern, EmergenceLevel
+        
+        behavior = EmergentBehavior(
+            pattern=EmergencePattern.OSCILLATION,
+            agents=["agent-1", "agent-2", "agent-3"],
+            confidence=0.7,
+            level=EmergenceLevel.HIGH,
+        )
+        
+        d = behavior.to_dict()
+        assert d["pattern"] == "oscillation"
+        assert len(d["agents"]) == 3
+        assert d["confidence"] == 0.7
+        assert d["level"] == "high"
+
+
+class TestPersonalKnowledgePrimitiveExtended:
+    """个人知识原语扩展测试"""
+    
+    def test_knowledge_graph(self):
+        from ecos.l0.governance import (
+            PersonalKnowledgeManager,
+            KnowledgeNode,
+            KnowledgeType,
+        )
+        
+        manager = PersonalKnowledgeManager()
+        
+        # 添加有关系的知识
+        node1 = KnowledgeNode(
+            node_id="k1",
+            knowledge_type=KnowledgeType.CONCEPT,
+            content={"topic": "AI"},
+            relations=["k2"],
+        )
+        node2 = KnowledgeNode(
+            node_id="k2",
+            knowledge_type=KnowledgeType.FACT,
+            content={"topic": "ML"},
+            relations=["k1"],
+        )
+        
+        manager.add_knowledge(node1)
+        manager.add_knowledge(node2)
+        
+        graph = manager.get_knowledge_graph()
+        assert "k1" in graph
+        assert "k2" in graph
+        assert "k2" in graph["k1"]
+    
+    def test_query_knowledge_no_match(self):
+        from ecos.l0.governance import (
+            PersonalKnowledgeManager,
+            KnowledgeNode,
+            KnowledgeType,
+        )
+        
+        manager = PersonalKnowledgeManager()
+        
+        node = KnowledgeNode(
+            node_id="k1",
+            knowledge_type=KnowledgeType.FACT,
+            content={"topic": "AI"},
+        )
+        manager.add_knowledge(node)
+        
+        results = manager.query_knowledge("quantum")
+        assert len(results) == 0
+    
+    def test_knowledge_node_to_dict(self):
+        from ecos.l0.governance import KnowledgeNode, KnowledgeType
+        
+        node = KnowledgeNode(
+            node_id="k1",
+            knowledge_type=KnowledgeType.PROCEDURE,
+            content={"steps": ["step1", "step2"]},
+            relations=["k2"],
+        )
+        
+        d = node.to_dict()
+        assert d["node_id"] == "k1"
+        assert d["knowledge_type"] == "procedure"
+        assert "created_at" in d
