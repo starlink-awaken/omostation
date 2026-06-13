@@ -30,7 +30,12 @@ M1_DIR = ROOT / "m1"
 
 
 def load_m2_schemas():
-    """加载 M2 schemas, 支持 PascalCase + snake_case + lowercase section 命名."""
+    """加载 M2 schemas, 支持 PascalCase + snake_case + lowercase section 命名.
+
+    返回 schema dict: m2_type -> {requiredProperties, optionalProperties, stateMachine, ...}
+
+    同时支持 alias: m2_type 与 section key (snake_case) 双向都接受。
+    """
     schemas = {}
     for f in sorted(M2_DIR.glob("*.yaml")):
         data = yaml.safe_load(f.read_text(encoding="utf-8"))
@@ -56,18 +61,34 @@ def load_m2_schemas():
     return schemas
 
 
+def get_m2_type_aliases(m2_schemas):
+    """获取 M2 type 全部 alias (m2_type + snake_case + section_key) 双向.
+
+    解决历史 M1 节点用 snake_case (如 constraint_mgmt) 但 M2 m2_type 是 PascalCase (如 ConstraintMgmt) 的命名漂移问题.
+    """
+    aliases = set()
+    for mt in m2_schemas:
+        aliases.add(mt)
+        aliases.add(mt[0].lower() + mt[1:])
+        aliases.add(mt.lower())
+    return aliases
+
+
 def check_m1_node(data, schema, m2_type):
-    """校验单个 M1 节点 vs M2 schema."""
+    """校验单个 M1 节点 vs M2 schema.
+
+    双向校验: 字段在 properties 或 top-level 都被接受 (历史 M1 节点字段位置不一致).
+    """
     issues = []
     props = data.get("properties") or {}
     if not isinstance(props, dict):
         props = {}
     status = data.get("status")
 
-    # 校验 1: requiredProperties
+    # 校验 1: requiredProperties (双向: top-level + properties)
     req = list((schema.get("requiredProperties") or {}).keys())
     for k in req:
-        if k not in props:
+        if k not in props and k not in data:
             issues.append(f"  - missing required: {k}")
 
     # 校验 2: state machine
@@ -89,6 +110,7 @@ def main():
         focus_dirs = set(args.focus.split(","))
 
     schemas = load_m2_schemas()
+    type_aliases = get_m2_type_aliases(schemas)
     print(f"=== M2 schemas loaded: {len(schemas)} ===")
     print()
 
@@ -117,12 +139,26 @@ def main():
             if t:
                 type_counter[t] += 1
 
-            if t not in schemas:
+            # 用 alias 校验 (支持 m2_type + snake_case + section key 双向)
+            if t and t not in type_aliases:
                 type_drift_counter[(t, f.relative_to(M1_DIR))] += 1
                 drift.append((nid, t, str(f.relative_to(M1_DIR))))
                 continue
 
-            schema = schemas[t]
+            if t not in schemas:
+                # type 用了 alias 但 M2 schema 实际只认 m2_type 名字, 需找到对应 schema
+                # 找 alias 关系
+                matched_schema = None
+                for mt, sch in schemas.items():
+                    if t == mt or t == mt.lower() or t == mt[0].lower() + mt[1:]:
+                        matched_schema = sch
+                        break
+                if matched_schema is None:
+                    continue
+                schema = matched_schema
+            else:
+                schema = schemas[t]
+
             issues = check_m1_node(data, schema, t)
             for issue in issues:
                 if "missing required" in issue:
