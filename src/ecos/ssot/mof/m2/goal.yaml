@@ -1,0 +1,54 @@
+m2_type: Goal
+version: 1.0.0
+created: '2026-06-13'
+updated: '2026-06-13'
+Goal:
+  m3_parent: ValueElement.Goal
+  description: 目标——OKR/KR 体系
+  icon: 🎯
+  stateMachine:
+    draft:
+      description: 草稿
+      transitions: [active, archived]
+    active:
+      description: 激活
+      transitions: [achieved, missed, archived]
+    achieved:
+      description: 已达成
+      transitions: [archived]
+    missed:
+      description: 未达成
+      transitions: [active, archived]
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    key_results:
+      type: list
+      description: 关键结果列表 (KR)
+  optionalProperties:
+    owner:
+      type: string
+      description: 目标 owner
+    deadline:
+      type: string
+      description: 截止日期 (ISO 8601)
+    progress:
+      type: number
+      description: 当前进度 (0-100)
+  validationRules:
+    - rule: key_results.size >= 1
+      level: error
+      message: Goal 必须有 ≥1 个 key_result
+    - rule: status == 'active' implies owner != null
+      level: warning
+      message: 激活的 Goal 建议配置 owner
+  relationConstraints:
+    can_be_source_of:
+      - Achieves
+    can_be_target_of:
+      - References
+  examples:
+    - id: GOAL-ECOS-V5-COMPLETE
+      name: eCOS v5 全栈交付
+      description: 4 KRs (9 层集成 / 250 tests / 43 MCP tools / lifecycle)
