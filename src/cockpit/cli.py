@@ -84,6 +84,12 @@ from .commands.status import (
 
 
 def main() -> int:
+    try:
+        from kairon_observability.tracing import setup_tracing
+        setup_tracing("cockpit-cli")
+    except ImportError:
+        pass  # Skip if observability package isn't installed
+
     class WorkspaceParser(argparse.ArgumentParser):
         def error(self, message):
             parser_console = Console()
