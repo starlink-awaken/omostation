@@ -387,6 +387,53 @@ git push origin main
 - **For governance**: Read `.omo/standards/` for architectural standards
 - **For integration tests**: Read individual test scripts in `tests/integration/`
 
+## 🛡️ OPC Self-Correction Discipline (2026-06-13 确立)
+
+OPC 路线图 P5-P7 收口阶段建立的 self-correction 闭环, 任何 Phase / Sub-gate / Self-correction 报告必须按此标准产出。
+
+### SSOT 引用链
+
+| 层级 | 路径 | 用途 |
+|------|------|------|
+| 配置 SSOT | `.omo/_control/evolution/config.yaml` | cron wrapper 路径 / 5repos fallback 链 / OPC_MODE/OPC_GENERATED_AT/OPC_TODAY env 默认值 / fcntl 锁路径 / 5 红线 |
+| 模板 | `.omo/standards/opc-review-template.md` | 8 字段 review template (Phase/Subgate/Objective/Files/Commands/Runtime/Doc-writeback/Risks/Verdict) |
+| 模板 | `.omo/standards/task-yaml-rules.md` (规则 5/6/7) | plan.yaml gate_status 单一字段 / fallback 禁硬编码 mode / multi-mode 副本单 owner |
+| L0 约束 | `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml:opc_cadence_constraints` | 7 条治理约束 (CR-CADENCE-01 / CR-INDEX-LOCK-01 / CR-MODE-ENV-01 / CR-TIME-ENV-01 / CR-MODE-COPY-01 / CR-DRIFT-LOOP-01 / CR-AUDIT-5REPOS-01) |
+| X4 一致性 | `projects/ecos/src/ecos/ssot/mof/m1/governance/GOV-X4-CONSISTENCY.yaml:rules` | CS-06 gate 字段 / CS-07 路径唯一 / CS-08 cron 触发窗口 |
+| L0 子模型 | `projects/ecos/src/ecos/ssot/mof/m1/omo_layer/OMO-SELF-CORRECTION-PATTERN.yaml` | 8 段硬结构 + 5 红线 + 6 遗留争议 M1 节点 |
+| l4-kernel 域 | `projects/l4-kernel/src/l4_kernel/registry.py:opc` | 9 个 capability (含 7 新增 self-correction) |
+| Closeout 报告 | `.omo/_knowledge/audits/2026-06-13-opc-p5-p7-self-correction-closeout.md` | 8 阶段演练 4 反模式全闭环范本 |
+
+### 5 红线 (任一违反 → request changes)
+
+1. `gate_status` 一律维持 `not_yet_passed`, 不得改为 `passed`
+2. `planned/` 任务不得推 `active/`, 必须经人工审批
+3. manual 演练仅限 1 次 (单测 / wrapper 探针 / 冒烟), evidence 必须真 cron
+4. 子仓指针不自动 bump, 根仓只 commit 元数据 (plan/doc/evidence)
+5. 无 §17 证据 / 无 5repos.json / 无 audit 报告 → 不得宣称 `passed`
+
+### Closeout 报告 8 段 (缺一即 request changes)
+
+1. 诚实话语前置 (Reader-Disambiguation)
+2. 精确命令段 (含实测输出, 不写"已验证")
+3. 工作区状态分区域表 (根仓 .omo/ docs/ yaml + 子仓指针 + mof-extract hook 产物)
+4. 次优解承认段 (第三方强建议未执行时显式承认)
+5. 反模式修复轨迹表 (4 反模式 → 修复 commit → 修复方式)
+6. Self-Correction Trajectory (commit 序号 + 内容 + 类别)
+7. 显式遗留争议 (Next-Action, 6 处标 P0-P3 红黄绿)
+8. Redline Audit (5/5 守住状态)
+
+### 关键 memory 引用
+
+- `feedback_opc_closeout_reviewer_acceptable_20260613.md` — 8 段硬结构必含
+- `feedback_no_standard_weakening_20260612.md` — 禁止降标过关
+- `feedback_real_cron_window_stop_manual_practice_20260612.md` — 停止 manual 刷 evidence
+- `feedback_opc_cron_wrapper_trigger_injection_20260612.md` — INVOCATION_ID+OPC_TRIGGER 显式
+- `feedback_p6_self_evolution_planned_only.md` — self-evolution 永不入 active/
+- `feedback_submodule_state_decoupling_20260612.md` — 子仓指针不自动 bump
+- `feedback_8field_review_template_20260612.md` — review template 8 字段
+- `feedback_release_notes_three_piece_20260612.md` — release notes 三件套 (summary/validation/debt)
+
 ## Panoramic View
 
 - **Full feature map / architecture / core flows / module deps / user journeys / integration surfaces**: See [`docs/PANORAMA.md`](./docs/PANORAMA.md) (6-section overview with Mermaid diagrams, P58-P71 14 phase steady state snapshot).
