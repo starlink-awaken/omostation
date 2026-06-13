@@ -1,7 +1,7 @@
 id: "GOV-X1-CONSTRAINT"
 type: "GovernancePolicy"
 name: "X1 约束维 — 系统边界与约束治理"
-description: "X1 治理维: 定义系统边界、硬性约束和合规规则。9 条 L0 硬性约束 + 层边界规则"
+description: "X1 治理维: 定义系统边界、硬性约束和合规规则。9 条历史 L0 硬性约束 + 7 条 OPC cadence + 3 条 MOF schema 校验 = 19 条治理规则"
 status: "active"
 domain: "meta"
 layer: "X1"
@@ -21,6 +21,9 @@ properties:
     - "CR-MODE-COPY-01: {date}-{mode}.json 副本单一 owner (5repos.py)"
     - "CR-DRIFT-LOOP-01: drift>0 必须 emit self-evolution task 落 planned/ approval_required=true"
     - "CR-AUDIT-5REPOS-01: 5repos.py 路径唯一 .omo/_delivery/audit-rollout/{date}-5repos.json"
+    - "CR-MOF-VALIDATE-01: MOF Schema 必跑校验 (mof-schema-validate.py 0 drift/missing/invalid)"
+    - "CR-MOF-ALIAS-01: MOF Type Alias 双向匹配 (m2_type ∪ section_key 双向 alias)"
+    - "CR-MOF-BIDIR-01: MOF Required 双向字段 (properties ∪ top-level 双向查找)"
   scope: "全层 (L0-L4, I0)"
   thresholds:
     warn_threshold: 0.7
