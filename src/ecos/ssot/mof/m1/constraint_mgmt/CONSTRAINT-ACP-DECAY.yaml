@@ -1,5 +1,5 @@
 id: CONSTRAINT-ACP-DECAY
-type: constraint_mgmt
+type: ConstraintMgmt
 name: ACP 协议衰减 87%
 description: ACP 协议已超半衰期——需审查或升级
 status: identified
