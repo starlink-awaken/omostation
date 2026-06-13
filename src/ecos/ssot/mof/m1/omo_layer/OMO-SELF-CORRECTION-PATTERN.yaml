@@ -1,0 +1,28 @@
+id: "OMO-SELF-CORRECTION-PATTERN"
+type: "Pattern"
+name: "OMO Self-Correction Discipline 模式"
+description: "OMO 路线图 P5-P7 closeout 阶段建立的 self-correction 8 段硬结构 + 5 红线 + 6 遗留争议显式段. 用于所有 OPC Phase / Sub-gate / Self-correction 收口报告."
+status: "active"
+domain: "meta"
+layer: "L2"
+created: "2026-06-13"
+version: "1.0.0"
+properties:
+  domain: ".omo"
+  lifecycle: "active"
+  relations:
+    - "self_correction_closeout_report_path: .omo/_knowledge/audits/{date}-*-self-correction-closeout.md"
+    - "self_correction_evidence_root: .omo/_delivery/audit-rollout/{date}-5repos.json"
+    - "self_correction_8_sections_template: 诚实前置/精确命令/分区域/次优承认/反模式轨迹/Self-Correction/遗留争议/Redline"
+    - "self_correction_5_red_lines: gate_status-not_passed/planned-not-active/manual-only-1-time/子仓指针不自动bump/无证据不宣称"
+    - "self_correction_6_next_action: 6 处遗留争议必显式列 (P2/P3 红黄绿)"
+  references:
+    - "feedback_opc_closeout_reviewer_acceptable_20260613.md"
+    - "feedback_no_standard_weakening_20260612.md"
+    - "feedback_real_cron_window_stop_manual_practice_20260612.md"
+    - ".omo/standards/opc-review-template.md"
+    - "GOV-X1-CONSTRAINT.yaml: CR-CADENCE-01 / CR-INDEX-LOCK-01 / CR-MODE-ENV-01 / CR-TIME-ENV-01 / CR-MODE-COPY-01 / CR-DRIFT-LOOP-01 / CR-AUDIT-5REPOS-01"
+    - "GOV-X4-CONSISTENCY.yaml: CS-06 / CS-07 / CS-08"
+  incident_history:
+    - "2026-06-13 OPC P5-P7 closeout (8 阶段模拟演练) — reviewer 揭示 4 反模式, 全部闭环"
+source: ".omo/_knowledge/audits/2026-06-13-opc-p5-p7-self-correction-closeout.md"
