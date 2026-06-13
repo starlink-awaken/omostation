@@ -28,14 +28,15 @@ import logging
 import re
 import select
 import subprocess
+import sys
 import uuid
+import asyncio
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
 from agora.legacy_compat import (
     CANONICAL_PERSONA_BRIDGE_URI_PREFIX,
-    LEGACY_PERSONA_BRIDGE_SERVICE,
     LEGACY_PERSONA_BRIDGE_URI_PREFIX,
 )
 
@@ -128,6 +129,30 @@ POC_SERVICES: dict[str, BosService] = {
     #  1. 此处 POC_SERVICES (agora BOS 路由)
     #  2. l4-kernel /registry.py _BUILTIN_DOMAINS (24 域注册表)
     # Memory (2)
+    "bos://memory/local/all-search": BosService(
+        uri="bos://memory/local/all-search",
+        domain="memory",
+        package="memory",
+        action="all-search",
+        transport="internal",
+        module_path="agora.mcp.bos_resolver",
+        func_name="_memory_all_search",
+        description="P2 多区聚合搜索 — cockpit local + KOS + vault, 返回 zone_count",
+    ),
+    "bos://persona/family-hub/health": BosService(
+        uri="bos://persona/family-hub/health",
+        domain="persona",
+        package="family-hub",
+        action="health",
+        transport="mcp_stdio",
+        command=[
+            "uv",
+            "run",
+            "python",
+            str(Path(_WS) / "projects" / "family-hub" / "mcp_server.py"),
+        ],
+        description="Family Hub local MCP Server (Python FastMCP)",
+    ),
     "bos://memory/kos/search": BosService(
         uri="bos://memory/kos/search",
         domain="memory",
@@ -1554,6 +1579,102 @@ def _meta_discover() -> dict:
     }
 
 
+def _memory_all_search(args: dict | None = None) -> dict:
+    """P2 记忆脊 — 多区聚合搜索 (bos://memory/local/all-search 路由)。
+
+    搜索 cockpit SQLite 本地研究结果 + (可选) bos://memory/kos/search + vault。
+
+    返回格式遵循 P2 T2 搜索响应契约: {zone, query, results[], total, zone_count}
+    """
+    args = args or {}
+    query = args.get("query", "")
+    limit = args.get("limit", 10)
+    zones = args.get("zones", ["local", "kos", "vault"])
+
+    results = []
+    zone_count = {}
+
+    # Zone 1: cockpit local (SQLite FTS5)
+    if "local" in zones:
+        try:
+            import importlib.machinery
+            cockpit_storage = importlib.machinery.SourceFileLoader(
+                "cockpit_storage",
+                str(OMOSTATION_ROOT / "projects" / "cockpit" / "src" / "cockpit" / "storage.py"),
+            ).load_module()
+            da = cockpit_storage.SQLiteDataAccess()
+            local = da.search_research(query, limit=limit)
+            zone_count["local"] = len(local)
+            results.extend(local)
+        except Exception as e:
+            zone_count["local"] = 0
+            _log.warning("P2 all-search: local zone failed: %s", e)
+
+    # Zone 2: kairon KOS (BOS stdio)
+    if "kos" in zones:
+        try:
+            svc = POC_SERVICES.get("bos://memory/kos/search")
+            if svc and svc.transport == "mcp_stdio":
+                kos_result = asyncio.run(resolve_bos_uri(
+                    "bos://memory/kos/search",
+                    {"query": query},
+                ))
+                if kos_result.get("status") == "ok":
+                    kos_items = kos_result.get("result", [])
+                    if isinstance(kos_items, list):
+                        for item in kos_items:
+                            if isinstance(item, dict):
+                                item.setdefault("_source", "kairon-kos")
+                                item.setdefault("_zone", "structured-memory")
+                                item.setdefault("_type", "knowledge")
+                                item.setdefault("_freshness", "unknown")
+                                item.setdefault("_owner", "kairon")
+                                item.setdefault("_reuse_policy", "reference-only")
+                                item.setdefault("_source_path", "bos://memory/kos/search")
+                        results.extend(kos_items)
+                        zone_count["kos"] = len(kos_items)
+                    else:
+                        zone_count["kos"] = 0
+                else:
+                    zone_count["kos"] = 0
+            else:
+                zone_count["kos"] = 0
+        except Exception as e:
+            zone_count["kos"] = 0
+            _log.warning("P2 all-search: kos zone failed: %s", e)
+
+    # Zone 3: Vault (document search via cockpit)
+    if "vault" in zones:
+        try:
+            from cockpit.scripts.cockpit_mcp import vault_search
+            vault_result = json.loads(vault_search(keyword=query))
+            if isinstance(vault_result, list):
+                for item in vault_result:
+                    if isinstance(item, dict):
+                        item.setdefault("_source", "document-vault")
+                        item.setdefault("_zone", "document-vault")
+                        item.setdefault("_type", "document")
+                        item.setdefault("_freshness", "unknown")
+                        item.setdefault("_owner", "opc")
+                        item.setdefault("_reuse_policy", "reference-only")
+                        item.setdefault("_source_path", "bos://memory/vault/search")
+                results.extend(vault_result)
+                zone_count["vault"] = len(vault_result)
+            else:
+                zone_count["vault"] = 0
+        except Exception as e:
+            zone_count["vault"] = 0
+            _log.warning("P2 all-search: vault zone failed: %s", e)
+
+    return {
+        "zone": "all",
+        "query": query,
+        "results": results[:limit * len(zones)],
+        "total": len(results),
+        "zone_count": zone_count,
+    }
+
+
 # Re-export 关键 API
 __all__ = (
     "BOS_URI_PATTERN",
@@ -1572,6 +1693,7 @@ __all__ = (
     "get_service",
     "protocol_self_check",
     "_meta_discover",
+    "_memory_all_search",
 )
 
 
