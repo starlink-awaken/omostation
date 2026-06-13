@@ -1,0 +1,51 @@
+m2_type: Gate
+version: 1.0.0
+created: '2026-06-13'
+updated: '2026-06-13'
+Gate:
+  m3_parent: LifecycleElement.Gate
+  description: 阶段门禁——生命周期阶段间的质量检查点
+  icon: 🚪
+  stateMachine:
+    draft:
+      description: 草稿
+      transitions: [active, archived]
+    active:
+      description: 激活
+      transitions: [deprecated]
+    deprecated:
+      description: 弃用
+      transitions: [archived]
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    from_stage:
+      type: string
+      description: 源阶段 (e.g. planning)
+    to_stage:
+      type: string
+      description: 目标阶段 (e.g. design)
+    checks:
+      type: list
+      description: 检查项列表 [{name, type, required}]
+  optionalProperties:
+    required_approvals:
+      type: list
+      description: 必需审批人/角色
+    auto_proceed:
+      type: boolean
+      description: 是否自动通过 (true 时无审批)
+  validationRules:
+    - rule: from_stage != null and to_stage != null and checks.size >= 1
+      level: error
+      message: Gate 必须有 from_stage + to_stage + ≥1 checks
+  relationConstraints:
+    can_be_source_of:
+      - Guards
+    can_be_target_of:
+      - References
+  examples:
+    - id: GATE-PLAN-TO-DESIGN
+      name: 规划→设计门禁
+      description: 3 检查项 (OKR/Spec/ADR)
