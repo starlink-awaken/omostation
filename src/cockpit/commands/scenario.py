@@ -359,36 +359,40 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
                 }
             )
 
-    # Enhance: Pull from Family Hub local DB (domain specific model)
-    family_hub_db_path = _workspace_root() / "projects" / "family-hub" / "family_hub.db"
+    # Enhance: Pull from Family Hub local DB via Agora BOS (domain specific model)
     hub_data = {}
-    if family_hub_db_path.exists():
-        try:
-            conn = sqlite3.connect(str(family_hub_db_path), timeout=2.0)
-            conn.row_factory = sqlite3.Row
-            profiles = conn.execute(
-                "SELECT role, name, level, wisdomPoints, responsibilityPoints, inventory FROM profiles"
-            ).fetchall()
-            quests = conn.execute(
-                "SELECT title, type, reward, completed, assignee FROM quests WHERE completed = 0"
-            ).fetchall()
-            conn.close()
+    try:
+        import asyncio
+        import sys
+        agora_src = str(_workspace_root() / "projects" / "agora" / "src")
+        if agora_src not in sys.path:
+            sys.path.insert(0, agora_src)
+        from agora.mcp.bos_resolver import resolve_bos_uri
 
-            hub_data["profiles"] = [dict(p) for p in profiles]
-            hub_data["active_quests"] = [dict(q) for q in quests]
+        result = asyncio.run(resolve_bos_uri("bos://persona/family-hub/health"))
+        if result.get("status") == "ok":
+            # 适配 POC 协议返回
+            res_data = result.get("result", {})
+            if isinstance(res_data, str):
+                import json
+                res_data = json.loads(res_data)
 
-            sources.append(
-                {
-                    "id": "family-hub-db",
-                    "title": "Family Hub SQLite Database",
-                    "source": "family-hub:local",
-                    "source_path": str(family_hub_db_path),
-                    "timestamp": _now_iso(),
-                    "privacy_class": "confidential",
-                }
-            )
-        except Exception:
-            pass
+            if "profiles" in res_data:
+                hub_data["profiles"] = res_data["profiles"]
+                hub_data["active_quests"] = res_data.get("active_quests", [])
+
+                sources.append(
+                    {
+                        "id": "family-hub-mcp",
+                        "title": "Family Hub MCP Service",
+                        "source": "bos://persona/family-hub/health",
+                        "source_path": "bos://persona/family-hub/health",
+                        "timestamp": _now_iso(),
+                        "privacy_class": "confidential",
+                    }
+                )
+    except Exception:
+        pass
 
     if not sources:
         sources, privacy_fallback = _family_cards_sources(limit=5)
