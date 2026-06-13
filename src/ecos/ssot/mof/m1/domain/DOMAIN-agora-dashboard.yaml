@@ -16,3 +16,4 @@ properties:
   layer: L3
   tech_stack: ["nextjs", "react", "tailwindcss"]
   is_entry_layer: true
+  domain_type: "workspace"
