@@ -16,3 +16,5 @@ properties:
   language: "typescript"
   framework: "nextjs"
   has_tests: false
+  layer: "L3"
+  runtime: "active"
