@@ -46,10 +46,11 @@ Outputs include **source, timestamp, next-action** (per Gate F acceptance).
 - **Cadence**: 未满足
   - F1 仍缺 `≥2 周连续 cron`
 
-原则:
-- Readiness passed = 工程链路可运行
-- Cadence passed = 原始时间窗标准满足
+原则 (2026-06-12 复验重新校准):
+- Readiness satisfied = 工程链路可运行
+- Cadence satisfied = 原始时间窗标准满足
 - Gate F 只有在 Cadence 也满足时才可 passed
+- 本节仅作为 reviewer 复验信号, 不在 plan.yaml 增加新 status 字段
 
 ## Gate Status
 
