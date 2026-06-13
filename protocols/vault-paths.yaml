@@ -21,14 +21,31 @@ paths:
   cockpit_root: ~/Documents/@驾驶舱              # 驾驶舱(新 KEMS,带 @ 前缀)
   cockpit_legacy: ~/Documents/@驾驶舱/_archive/legacy-2026-06-08  # 老 KEMS 驾驶舱归档
   vault_root: ~/Documents/@学习进化               # 知识进化 vault
-  learning_root: ~/Documents/@学习进化             # alias
   creative_root: ~/Documents/@创意创作             # 创意创作域（2026-06-09 独立）
   personal_root: ~/Documents/@个人                 # 个人域
-  family_root: ~/Documents/@家庭生活               # 家庭生活域
   shared_root: ~/Documents/@公共                   # 公共域
-  work_root: ~/Documents/@工作文档                 # 工作文档聚合
-  weijian_root: ~/Documents/@工作文档/卫健委         # @工作文档/卫健委
-  guozhuan_root: ~/Documents/@工作文档/国转中心       # @工作文档/国转中心
+  family_root: ~/Documents/@家庭生活               # 家庭生活域
+  work-weijian_root: ~/Documents/@工作文档/卫健委         # @工作文档/卫健委
+  work-guozhuan_root: ~/Documents/@工作文档/国转中心       # @工作文档/国转中心
+  opc_root: ~/Documents/@OPC
+  family-shared_root: ~/Documents/FamilyShared
+  obsidian-vault_root: ~/Library/Mobile Documents/iCloud~md~obsidian/Documents
+  
+  ai-config_root: ~/.ai
+  agents-config_root: ~/.agents
+  icloud-sharedconf_root: ~/SharedConf
+  bin_root: ~/bin
+  toolbox-tools_root: ~/ToolBox
+  sharedwork_root: /Users/SharedWork
+  shareddisk_root: /Volumes/SharedDisk
+  model-volume_root: /Volumes/Model
+  sharedmodel_root: /Volumes/SharedModel
+  minerva_root: ~/minerva
+  knowledge-engine_root: ~/knowledge
+  l4-kernel_root: ~/Workspace/projects/l4-kernel
+  ecos-workbench_root: ~/Workspace
+  runtime_root: ~/runtime
+  
   cockpit_old: null                                # 老路径 (驾驶舱/ 无 @) — 显式 null 表示禁止使用
 
   # 关键子路径
@@ -50,14 +67,13 @@ paths:
   work_claude: ~/Documents/@工作文档/CLAUDE.md
 
   # 公约
-  convention_root: ~/Documents/@公共/_control/CLAUDE-公约.md
+  convention_file: ~/Documents/@公共/_control/CLAUDE-公约.md
   claude_registry: ~/Documents/@驾驶舱/_control/CLAUDE-REGISTRY.md
 
   # mof 工具输出
   mof_m1_convention: ~/Workspace/projects/ecos/src/ecos/ssot/mof/m1/convention
 
   # 数据层
-  runtime_root: ~/runtime                          # runtime 数据根(matrix/cards/keiprobe 等)
   kei_audit_log: ~/runtime/data/kei_audit.jsonl
   llm_cost_log: ~/runtime/data/llm_cost.jsonl
 

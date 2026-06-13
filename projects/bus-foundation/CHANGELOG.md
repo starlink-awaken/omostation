@@ -45,7 +45,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 - **56 tests, 100% pass** (R75)
 - **ruff**: 0 errors (after R75 auto-fix)
 
-## Backlog (deferred to normal feature work)
+
+### R78 (governance propagation, no code change)
+
+- **X4 added to charter**: `projects/AGENTS.md` and
+  `.omo/_truth/governance-charter-v1.md` §1.2 now lists all 4
+  cross-cutting concerns (X1 审计, X2 抗熵, X3 价值栈, X4 一致性).
+  X4 was previously in `LAYER-INDEX.md:114` but missing from the
+  charter table. Caught during R77 governance audit propagation.
+- **L0 decision propagated to `projects/AGENTS.md`**: the "bus-foundation
+  defer L0" status (R72) is now explicitly cross-referenced in the
+  workspace root. Future maintainers can find the rationale via
+  `projects/bus-foundation/docs/ADR-0003-no-l0-promotion.md`.
+- **5 consumer AGENTS.md updated**: omo / metaos / runtime / kairon /
+  llm-gateway now have a `## Bus foundation` section pointing at
+  the adapter file and the import pattern. hermes-console (TS HTTP
+  adapter) intentionally skipped — TS adapter imports differ.
+
+## ## Backlog (deferred to normal feature work)
 
 - **R75-LOW-1**: PersistentBusBackend.publish() runs `_cleanup_subs`
   on every publish. For high-subscriber counts (>100) this is O(N)
