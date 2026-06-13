@@ -2,7 +2,7 @@ id: BOSROUTE-KAIRON-engine-core
 type: Component
 subtype: BOSRoute
 name: bos://kairon/engine-core
-description: 'Kairon 子包: engine-core'
+description: "Kairon \u5B50\u5305: engine-core"
 status: active
 domain: infra
 created: '2026-06-06'
@@ -12,3 +12,7 @@ properties:
   layer: L2
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: kairon
+    entrypoint: packages/core/

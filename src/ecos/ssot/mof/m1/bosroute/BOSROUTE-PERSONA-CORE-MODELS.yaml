@@ -2,7 +2,7 @@ id: BOSROUTE-PERSONA-CORE-MODELS
 type: Component
 subtype: BOSRoute
 name: bos://persona/core-models/*
-description: core-models 别名 — schema, validate
+description: "core-models \u522B\u540D \u2014 schema, validate"
 status: active
 domain: persona
 created: '2026-06-08'
@@ -12,3 +12,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: kairon
+    entrypoint: packages/iris/

@@ -2,9 +2,10 @@ id: BOSROUTE-GOVERNANCE-OMO
 type: Component
 subtype: BOSRoute
 name: bos://governance/omo/*
-description: 别名映射到 omo 治理域 — omo/audit, omo/inspect, omo/sync
+description: "\u522B\u540D\u6620\u5C04\u5230 omo \u6CBB\u7406\u57DF \u2014 omo/audit,\
+  \ omo/inspect, omo/sync"
 status: active
-domain: governance
+domain: omo
 created: '2026-06-08'
 version: 1.0.0
 layer: I0
@@ -12,3 +13,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: omo
+    entrypoint: src/omo/

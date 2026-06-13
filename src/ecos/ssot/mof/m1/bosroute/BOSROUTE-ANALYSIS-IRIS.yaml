@@ -2,9 +2,9 @@ id: BOSROUTE-ANALYSIS-IRIS
 type: Component
 subtype: BOSRoute
 name: bos://analysis/iris/*
-description: iris 别名 — connect, transform, validate
+description: "iris \u522B\u540D \u2014 connect, transform, validate"
 status: active
-domain: analysis
+domain: infra
 created: '2026-06-08'
 version: 1.0.0
 layer: I0
@@ -12,3 +12,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: agora
+    entrypoint: src/

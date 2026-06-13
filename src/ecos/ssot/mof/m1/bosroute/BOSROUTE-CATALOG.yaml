@@ -2,7 +2,7 @@ id: BOSROUTE-CATALOG
 type: Component
 subtype: BOSRoute
 name: bos://catalog/**
-description: 文件目录索引 — 按卷查询
+description: "\u6587\u4EF6\u76EE\u5F55\u7D22\u5F15 \u2014 \u6309\u5377\u67E5\u8BE2"
 status: active
 domain: infra
 created: '2026-06-07'
@@ -12,3 +12,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: agora
+    entrypoint: src/

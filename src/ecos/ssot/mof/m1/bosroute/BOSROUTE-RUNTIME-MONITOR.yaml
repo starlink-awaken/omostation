@@ -2,9 +2,9 @@ id: BOSROUTE-RUNTIME-MONITOR
 type: Component
 subtype: BOSRoute
 name: bos://runtime/monitor/*
-description: Runtime 健康监控路由
+description: "Runtime \u5065\u5EB7\u76D1\u63A7\u8DEF\u7531"
 status: active
-domain: infra
+domain: forge
 created: '2026-06-06'
 version: 1.0.0
 layer: I0
@@ -12,3 +12,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: runtime
+    entrypoint: src/runtime/

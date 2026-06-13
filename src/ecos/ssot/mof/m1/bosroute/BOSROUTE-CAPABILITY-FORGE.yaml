@@ -2,9 +2,10 @@ id: BOSROUTE-CAPABILITY-FORGE
 type: Component
 subtype: BOSRoute
 name: bos://capability/*
-description: 能力域 for 工具集市 — forge(register-tool/exec-tool/list-tools/discover), agent-runtime(agent-list/chat/run-task/task-status)
+description: "\u80FD\u529B\u57DF for \u5DE5\u5177\u96C6\u5E02 \u2014 forge(register-tool/exec-tool/list-tools/discover),\
+  \ agent-runtime(agent-list/chat/run-task/task-status)"
 status: active
-domain: capability
+domain: forge
 created: '2026-06-08'
 version: 1.0.0
 layer: I0
@@ -12,3 +13,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: kairon
+    entrypoint: packages/forge/

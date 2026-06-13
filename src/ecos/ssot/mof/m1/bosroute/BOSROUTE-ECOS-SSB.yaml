@@ -2,7 +2,7 @@ id: BOSROUTE-ECOS-SSB
 type: Component
 subtype: BOSRoute
 name: bos://ecos/ssb/*
-description: SSB 不可变日志路由
+description: "SSB \u4E0D\u53EF\u53D8\u65E5\u5FD7\u8DEF\u7531"
 status: active
 domain: infra
 created: '2026-06-06'
@@ -12,3 +12,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: agora
+    entrypoint: src/

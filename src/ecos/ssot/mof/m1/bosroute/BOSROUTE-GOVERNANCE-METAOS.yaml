@@ -2,9 +2,10 @@ id: BOSROUTE-GOVERNANCE-METAOS
 type: Component
 subtype: BOSRoute
 name: bos://governance/metaos/*
-description: 别名映射到 metaos 治理域 — metaos/gate, metaos/register
+description: "\u522B\u540D\u6620\u5C04\u5230 metaos \u6CBB\u7406\u57DF \u2014 metaos/gate,\
+  \ metaos/register"
 status: active
-domain: governance
+domain: omo
 created: '2026-06-08'
 version: 1.0.0
 layer: I0
@@ -12,3 +13,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: metaos
+    entrypoint: src/metaos/

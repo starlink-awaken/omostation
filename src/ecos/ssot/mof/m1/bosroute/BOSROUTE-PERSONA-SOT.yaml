@@ -1,27 +1,26 @@
 id: BOSROUTE-PERSONA-SOT
 type: Component
-name: "bos://persona/sot/* → SOT Bridge 人格桥接"
-description: "bos://persona/sot/* → kairon/sot-bridge，SharedBrain 人格桥接"
+name: "bos://persona/sot/* \u2192 SOT Bridge \u4EBA\u683C\u6865\u63A5"
+description: "bos://persona/sot/* \u2192 kairon/sot-bridge\uFF0CSharedBrain \u4EBA\
+  \u683C\u6865\u63A5"
 domain: persona
 layer: I0
 status: active
-version: "1.0.0"
-created: "2026-06-07"
-
+version: 1.0.0
+created: '2026-06-07'
 properties:
   runtime: active
-  uri_pattern: "bos://persona/sot/*"
+  uri_pattern: bos://persona/sot/*
   adapter_type: mcp_proxy
   adapter_config:
-    service_name: "sot-bridge-persona"
+    service_name: sot-bridge-persona
     protocol: mcp
-  health_endpoint: "/health"
-
+  health_endpoint: /health
 cross_references:
   realized_by:
     project: kairon
     package: sot-bridge
     entrypoint: src/sot_bridge/
   related_workflows:
-    - WORKFLOW-SHAREDBRAIN-BRIDGE
-    - WORKFLOW-SOT-BRIDGE-SYNC
+  - WORKFLOW-SHAREDBRAIN-BRIDGE
+  - WORKFLOW-SOT-BRIDGE-SYNC

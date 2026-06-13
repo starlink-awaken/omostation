@@ -1,26 +1,25 @@
 id: BOSROUTE-MEMORY-KOS
 type: Component
-name: "bos://memory/kos/* → KOS 知识索引"
-description: "bos://memory/kos/* → kairon/kos，跨域知识搜索"
+name: "bos://memory/kos/* \u2192 KOS \u77E5\u8BC6\u7D22\u5F15"
+description: "bos://memory/kos/* \u2192 kairon/kos\uFF0C\u8DE8\u57DF\u77E5\u8BC6\u641C\
+  \u7D22"
 domain: memory
 layer: I0
 status: active
-version: "1.0.0"
-created: "2026-06-07"
-
+version: 1.0.0
+created: '2026-06-07'
 properties:
   runtime: active
-  uri_pattern: "bos://memory/kos/*"
+  uri_pattern: bos://memory/kos/*
   adapter_type: mcp_proxy
   adapter_config:
-    service_name: "kos"
+    service_name: kos
     protocol: mcp
-  health_endpoint: "/health"
-
+  health_endpoint: /health
 cross_references:
   realized_by:
     project: kairon
     package: kos
     entrypoint: src/kos/
   related_workflows:
-    - WORKFLOW-KOS-CROSS-SEARCH
+  - WORKFLOW-KOS-CROSS-SEARCH

@@ -3,7 +3,7 @@ id: BOSROUTE-TOOLBOX
 type: Component
 subtype: BOSRoute
 name: bos://toolbox/**
-description: 工具域路由
+description: "\u5DE5\u5177\u57DF\u8DEF\u7531"
 status: active
 domain: infra
 created: '2026-06-07'
@@ -13,3 +13,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: agora
+    entrypoint: src/

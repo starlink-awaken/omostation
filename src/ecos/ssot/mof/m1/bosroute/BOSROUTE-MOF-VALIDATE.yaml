@@ -2,7 +2,7 @@ id: BOSROUTE-MOF-VALIDATE
 type: Component
 subtype: BOSRoute
 name: bos://l0/mof/validate
-description: L0 MOF 校验路由
+description: "L0 MOF \u6821\u9A8C\u8DEF\u7531"
 status: active
 domain: infra
 created: '2026-06-06'
@@ -12,3 +12,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: agora
+    entrypoint: src/

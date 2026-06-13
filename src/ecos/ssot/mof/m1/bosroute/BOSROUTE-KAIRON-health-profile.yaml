@@ -2,7 +2,7 @@ id: BOSROUTE-KAIRON-health-profile
 type: Component
 subtype: BOSRoute
 name: bos://kairon/health-profile
-description: 'Kairon 子包: health-profile'
+description: "Kairon \u5B50\u5305: health-profile"
 status: active
 domain: infra
 created: '2026-06-06'
@@ -12,3 +12,7 @@ properties:
   layer: L2
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: kairon
+    entrypoint: packages/profile/

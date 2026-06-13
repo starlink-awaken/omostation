@@ -2,7 +2,7 @@ id: BOSROUTE-KAIRON-KOS
 type: Component
 subtype: BOSRoute
 name: bos://kairon/kos/*
-description: KOS 知识索引路由
+description: "KOS \u77E5\u8BC6\u7D22\u5F15\u8DEF\u7531"
 status: active
 domain: infra
 created: '2026-06-06'
@@ -12,3 +12,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: kairon
+    entrypoint: packages/kos/

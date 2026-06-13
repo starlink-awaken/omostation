@@ -2,7 +2,7 @@ id: BOSROUTE-FORGE-MARKET
 type: Component
 subtype: BOSRoute
 name: bos://forge/market/*
-description: Forge 能力市场路由
+description: "Forge \u80FD\u529B\u5E02\u573A\u8DEF\u7531"
 status: active
 domain: infra
 created: '2026-06-06'
@@ -12,3 +12,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: agora
+    entrypoint: src/

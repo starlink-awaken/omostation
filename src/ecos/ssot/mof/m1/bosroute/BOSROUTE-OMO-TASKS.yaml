@@ -2,9 +2,9 @@ id: BOSROUTE-OMO-TASKS
 type: Component
 subtype: BOSRoute
 name: bos://omo/tasks/*
-description: OMO 任务调度路由
+description: "OMO \u4EFB\u52A1\u8C03\u5EA6\u8DEF\u7531"
 status: active
-domain: infra
+domain: omo
 created: '2026-06-06'
 version: 1.0.0
 layer: I0
@@ -12,3 +12,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: omo
+    entrypoint: src/omo/

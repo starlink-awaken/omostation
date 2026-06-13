@@ -2,9 +2,9 @@ id: BOSROUTE-ANALYSIS-CODEANALYZE
 type: Component
 subtype: BOSRoute
 name: bos://analysis/codeanalyze/*
-description: codeanalyze 别名 — scan, report, lint
+description: "codeanalyze \u522B\u540D \u2014 scan, report, lint"
 status: active
-domain: analysis
+domain: infra
 created: '2026-06-08'
 version: 1.0.0
 layer: I0
@@ -12,3 +12,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: agora
+    entrypoint: src/

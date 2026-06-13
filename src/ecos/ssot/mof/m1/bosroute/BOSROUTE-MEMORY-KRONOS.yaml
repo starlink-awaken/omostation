@@ -2,7 +2,8 @@ id: BOSROUTE-MEMORY-KRONOS
 type: Component
 subtype: BOSRoute
 name: bos://memory/kronos/*
-description: kronos 时间序列知识引擎别名 — kronos/ingest, kronos/query, kronos/schedule
+description: "kronos \u65F6\u95F4\u5E8F\u5217\u77E5\u8BC6\u5F15\u64CE\u522B\u540D\
+  \ \u2014 kronos/ingest, kronos/query, kronos/schedule"
 status: active
 domain: memory
 created: '2026-06-08'
@@ -12,3 +13,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: kairon
+    entrypoint: packages/kronos/

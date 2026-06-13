@@ -2,7 +2,7 @@ id: BOSROUTE-PERSONA-HEALTH
 type: Component
 subtype: BOSRoute
 name: bos://persona/health-profile/*
-description: health-profile 别名 — summary, alert
+description: "health-profile \u522B\u540D \u2014 summary, alert"
 status: active
 domain: persona
 created: '2026-06-08'
@@ -12,3 +12,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: kairon
+    entrypoint: packages/iris/

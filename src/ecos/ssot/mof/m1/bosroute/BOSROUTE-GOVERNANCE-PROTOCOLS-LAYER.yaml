@@ -2,9 +2,9 @@ id: BOSROUTE-GOVERNANCE-PROTOCOLS-LAYER
 type: Component
 subtype: BOSRoute
 name: bos://governance/protocols-layer/*
-description: 别名映射到 protocols-layer 域 — protocols-layer/trigger
+description: "\u522B\u540D\u6620\u5C04\u5230 protocols-layer \u57DF \u2014 protocols-layer/trigger"
 status: active
-domain: governance
+domain: infra
 created: '2026-06-08'
 version: 1.0.0
 layer: I0
@@ -12,3 +12,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: agora
+    entrypoint: src/

@@ -1,12 +1,11 @@
-# M1 Node: BOSROUTE-FAMILY
-id: BOSROUTE-FAMILY
+id: BOSROUTE-FAMILY-SHARED
 type: Component
 subtype: BOSRoute
-name: bos://family/**
-description: "\u5BB6\u5EAD\u57DF\u8DEF\u7531"
+name: bos://family-shared/**
+description: "家庭共享文档域路由"
 status: active
-domain: persona
-created: '2026-06-07'
+domain: work
+created: '2026-06-13'
 version: 1.0.0
 layer: I0
 properties:

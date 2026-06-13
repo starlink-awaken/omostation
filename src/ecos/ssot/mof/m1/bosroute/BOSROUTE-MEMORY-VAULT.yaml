@@ -1,25 +1,24 @@
 id: BOSROUTE-MEMORY-VAULT
 type: Component
-name: "bos://memory/vault/* → 文件系统挂载"
-description: "bos://memory/vault/* → cockpit ecos-bos-mounter，文件系统知识挂载"
+name: "bos://memory/vault/* \u2192 \u6587\u4EF6\u7CFB\u7EDF\u6302\u8F7D"
+description: "bos://memory/vault/* \u2192 cockpit ecos-bos-mounter\uFF0C\u6587\u4EF6\
+  \u7CFB\u7EDF\u77E5\u8BC6\u6302\u8F7D"
 domain: memory
 layer: I0
 status: active
-version: "1.0.0"
-created: "2026-06-07"
-
+version: 1.0.0
+created: '2026-06-07'
 properties:
   runtime: active
-  uri_pattern: "bos://memory/vault/*"
+  uri_pattern: bos://memory/vault/*
   adapter_type: mcp_proxy
   adapter_config:
-    service_name: "ecos-bos-mounter"
+    service_name: ecos-bos-mounter
     protocol: mcp
-  health_endpoint: "/health"
-
+  health_endpoint: /health
 cross_references:
   realized_by:
     project: ecos
     entrypoint: src/ecos/services/bos_mcp.py
   related_workflows:
-    - WORKFLOW-SOT-BRIDGE-SYNC
+  - WORKFLOW-SOT-BRIDGE-SYNC

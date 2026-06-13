@@ -2,9 +2,9 @@ id: BOSROUTE-COCKPIT-TOOLS
 type: Component
 subtype: BOSRoute
 name: bos://cockpit/tools/*
-description: cockpit MCP 工具调用路由
+description: "cockpit MCP \u5DE5\u5177\u8C03\u7528\u8DEF\u7531"
 status: active
-domain: infra
+domain: work
 created: '2026-06-06'
 version: 1.0.0
 layer: I0
@@ -12,3 +12,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: cockpit
+    entrypoint: src/cockpit/

@@ -1,22 +1,21 @@
 id: BOSROUTE-ANALYSIS-CODE
 type: Component
-name: "bos://analysis/code/* → CodeAnalyze 代码理解"
-description: "bos://analysis/code/* → kairon/codeanalyze，AST 代码理解"
+name: "bos://analysis/code/* \u2192 CodeAnalyze \u4EE3\u7801\u7406\u89E3"
+description: "bos://analysis/code/* \u2192 kairon/codeanalyze\uFF0CAST \u4EE3\u7801\
+  \u7406\u89E3"
 domain: analysis
 layer: I0
 status: active
-version: "1.0.0"
-created: "2026-06-07"
-
+version: 1.0.0
+created: '2026-06-07'
 properties:
   runtime: active
-  uri_pattern: "bos://analysis/code/*"
+  uri_pattern: bos://analysis/code/*
   adapter_type: mcp_proxy
   adapter_config:
-    service_name: "codeanalyze"
+    service_name: codeanalyze
     protocol: mcp
-  health_endpoint: "/health"
-
+  health_endpoint: /health
 cross_references:
   realized_by:
     project: kairon

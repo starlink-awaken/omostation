@@ -2,9 +2,9 @@ id: BOSROUTE-KAIRON-ontoderive
 type: Component
 subtype: BOSRoute
 name: bos://kairon/ontoderive
-description: 'Kairon 子包: ontoderive'
+description: "Kairon \u5B50\u5305: ontoderive"
 status: active
-domain: infra
+domain: analysis
 created: '2026-06-06'
 version: 1.0.0
 layer: L2
@@ -12,3 +12,7 @@ properties:
   layer: L2
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: kairon
+    entrypoint: packages/ontoderive/

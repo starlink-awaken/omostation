@@ -2,7 +2,7 @@ id: BOSROUTE-AGORA-REGISTRY
 type: Component
 subtype: BOSRoute
 name: bos://agora/registry/*
-description: Agora 服务注册发现路由
+description: "Agora \u670D\u52A1\u6CE8\u518C\u53D1\u73B0\u8DEF\u7531"
 status: active
 domain: infra
 created: '2026-06-06'
@@ -12,3 +12,7 @@ properties:
   layer: I0
   runtime: active
   protocol: BOS_URI
+cross_references:
+  realized_by:
+    project: agora
+    entrypoint: src/agora/
