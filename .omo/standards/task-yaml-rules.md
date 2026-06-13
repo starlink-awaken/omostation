@@ -76,3 +76,78 @@ P36-W0 验收:
 - [x] 文档写入 .omo/standards/
 - [x] omo governance audit 检查项引用本规范
 - [x] 未来 P36+ 任务 YAML 严格遵守
+
+---
+
+## 规则 5: plan.yaml gate_status 单一字段 (CR-CS-06, 2026-06-13)
+
+**禁止** plan.yaml (在 `.omo/tasks/planned/`) self-add 衍生状态字段, 包括但不限于:
+
+- `readiness_status` (不得与 `gate_status` 并列)
+- `cadence_status` (不得与 `gate_status` 并列)
+- `sub_gate_status` (不得作为子级 gate_status)
+- 任何 `*_status` 衍生字段 (除非白名单)
+
+**唯一合法 status 字段**:
+- `gate_status: not_yet_passed` (默认)
+- `gate_status: conditionally_passed`
+- `gate_status: passed`
+
+**衍生信息只允许放在**:
+- `gate_note: |` (YAML 块, 自由描述 readiness / cadence / drift 等)
+- `assessment: |` (YAML 块, 含 drill-down 列表)
+
+**为什么**: 2026-06-13 OPC P5-P7 8 阶段演练时, 我自加 `readiness_status: passed` + `cadence_status: not_yet_passed` 两个字段, 试图"细分" gate 状态, 但这破坏了 closeout 报告的可审计性, reviewer 一票否决。
+
+**自动检查**: `omo governance audit` + `test_opc_phase_governance_alignment.py` (18 tests) 阻断 self-add 字段回归。
+
+## 规则 6: fallback 不得硬编码 mode-specific 路径 (CR-CR-MODE-ENV-01, 2026-06-13)
+
+**禁止** daemon / fallback 脚本内部硬编码:
+
+```python
+# ❌ 禁止
+mode_specific_path = f"{date}-weekly.json"
+if not os.path.exists(mode_specific_path):
+    # fallback 双写
+    with open(mode_specific_path, 'w') as f:
+        json.dump(payload, f)
+```
+
+**必须** 通过 env 透传:
+
+```python
+# ✅ 正确
+mode = os.environ.get("OPC_MODE", "weekly")
+mode_specific_path = f"{date}-{mode}.json"
+# 副本由 5repos.py (唯一 owner) 写, daemon 不双写
+```
+
+**为什么**: 2026-06-13 OPC P7-H3 closeout 时, `_run_fallback_5repos()` 硬编码 `weekly.json`, 导致 monthly/pre-release cron 复用 weekly 副本, evidence 不可审计。
+
+**白名单**: 5repos.py (`scripts/opc_audit_rollout_5repos.py`) 是 `{date}-{mode}.json` 副本唯一 owner, 其他脚本不得再写该模式文件。
+
+## 规则 7: multi-mode 副本单一 owner (CR-MODE-COPY-01, 2026-06-13)
+
+**适用范围**: 任何生成 `{date}-{mode}.{json,md,yaml}` 命名约定的脚本。
+
+**约束**:
+- 副本写入权归一个脚本 (通常为 `*_5repos.py` 聚合器)
+- 上层 daemon / orchestrator 只写 5repos 原始产物, 不得双写 mode-specific 副本
+- 双写导致内容漂移, fallback chain 不可信
+
+**检测方法**:
+```bash
+grep -l "{date}-{mode}" scripts/*.py
+# 期望: 只有 opc_audit_rollout_5repos.py 命中
+```
+
+**违规示例**: `opc_p7_audit_rollout_daemon.py` 在 `_run_audit_rollout(fallback_ok path)` 内部曾写 `{date}-{mode}.json`, 2026-06-13 已撤回双写逻辑, 仅保留 5repos.json 原始产物。
+
+## 参考 (新增 2026-06-13)
+
+- `feedback_no_standard_weakening_20260612.md` — 禁止降标过关
+- `feedback_opc_closeout_reviewer_acceptable_20260613.md` — 8 段硬结构
+- `feedback_opc_cron_wrapper_trigger_injection_20260612.md` — cadence wrapper 注入
+- `.omo/standards/opc-review-template.md` — 8 字段 review template
+- `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml:opc_cadence_constraints` — 7 条新规
