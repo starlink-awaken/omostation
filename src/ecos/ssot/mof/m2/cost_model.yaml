@@ -1,0 +1,51 @@
+m2_type: CostModel
+version: 1.0.0
+created: '2026-06-13'
+updated: '2026-06-13'
+CostModel:
+  m3_parent: ValueElement.CostModel
+  description: 成本模型——定义资源计费与归因
+  icon: 💰
+  stateMachine:
+    draft:
+      description: 草稿
+      transitions: [active, archived]
+    active:
+      description: 激活
+      transitions: [deprecated, archived]
+    deprecated:
+      description: 弃用
+      transitions: [archived]
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    resource_type:
+      type: string
+      description: 资源类型 (compute/storage/bandwidth)
+    unit_cost:
+      type: number
+      description: 单位成本
+  optionalProperties:
+    period:
+      type: string
+      description: 计费周期 (hourly/monthly/yearly)
+    estimated_annual_cost:
+      type: number
+      description: 估算年成本
+    attribution_target:
+      type: string
+      description: 归因目标 (project/department/...)
+  validationRules:
+    - rule: resource_type != null and unit_cost >= 0
+      level: error
+      message: CostModel 必须有 resource_type + unit_cost>=0
+  relationConstraints:
+    can_be_source_of:
+      - Costs
+    can_be_target_of:
+      - References
+  examples:
+    - id: COST-MODEL-ECOS-INFRA
+      name: eCOS 基础设施成本
+      description: eCOS v5 全栈基础设施成本归因
