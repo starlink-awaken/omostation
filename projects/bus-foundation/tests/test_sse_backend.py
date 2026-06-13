@@ -1,4 +1,5 @@
 """Test SSEBackend — bus-foundation flavor (in-process fan-out + client tracking)."""
+
 from __future__ import annotations
 
 from bus_foundation.backends.sse import SSEBackend

@@ -1,4 +1,5 @@
 """Test bus_foundation facade — publish/subscribe/schedule."""
+
 from __future__ import annotations
 
 from bus_foundation import BusEnvelope, EventType, publish, schedule, subscribe

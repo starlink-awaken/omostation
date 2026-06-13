@@ -1,4 +1,5 @@
 """Test DLQ — first 5 of 15 cases covering WAL, busy_timeout, GC, rotate."""
+
 from __future__ import annotations
 
 import sqlite3

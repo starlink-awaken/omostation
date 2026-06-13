@@ -1,4 +1,5 @@
 """Test RealtimeBackend — 4 cases."""
+
 from bus_foundation.backends.base import BusBackend
 from bus_foundation.backends.realtime import RealtimeBackend
 from bus_foundation.envelope import BusEnvelope, EventType

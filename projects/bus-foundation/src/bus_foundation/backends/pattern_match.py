@@ -12,6 +12,7 @@ Used by: eventbus / asyncio / croniter / messagebus / sse / ws /
 persistent_bus. (Realtime is special: it uses task_id as a literal
 key, not a pattern — see realtime.py:59 for the divergence note.)
 """
+
 from __future__ import annotations
 
 

@@ -1,4 +1,5 @@
 """Test BusEnvelope — first 3 of 12 cases."""
+
 from __future__ import annotations
 
 from bus_foundation.envelope import BusEnvelope, EventType

@@ -10,13 +10,14 @@ remains for backward compat).
 Each subscribed task_id has a current version. publish() upserts
 a new version; subscribers get notified of the new version.
 """
+
 from __future__ import annotations
 
 import logging
 import threading
 import uuid
 from collections import defaultdict
-from typing import Callable
+from collections.abc import Callable
 
 from bus_foundation.envelope import BusEnvelope
 

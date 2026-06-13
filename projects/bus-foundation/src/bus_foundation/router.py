@@ -1,4 +1,5 @@
 """Router — dispatch envelope to backend, fall back to DLQ on failure."""
+
 from __future__ import annotations
 
 import logging

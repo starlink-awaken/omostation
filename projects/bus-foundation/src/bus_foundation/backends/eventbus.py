@@ -6,15 +6,16 @@ premium backend that consumers can opt into). The bus-foundation version
 here is a simple in-process dict-of-lists pubsub for projects that don't
 need agora's persistent-event-log semantics.
 """
+
 from __future__ import annotations
 
 import logging
 import threading
 import uuid
-from typing import Callable
+from collections.abc import Callable
 
-from bus_foundation.envelope import BusEnvelope
 from bus_foundation.backends.pattern_match import match_pattern
+from bus_foundation.envelope import BusEnvelope
 
 logger = logging.getLogger(__name__)
 

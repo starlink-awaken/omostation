@@ -3,12 +3,13 @@
 Phase A.1: thin wrapper that exposes cron-style scheduling as a bus backend.
 RETRY: passes through to underlying scheduler.
 """
+
 from __future__ import annotations
 
 import logging
 import threading
 import time
-from typing import Callable
+from collections.abc import Callable
 
 from bus_foundation.envelope import BusEnvelope
 
@@ -31,9 +32,7 @@ class CroniterBackend:
 
     def publish(self, envelope: BusEnvelope) -> str:
         """Publish is not the primary use of this backend; raises."""
-        raise NotImplementedError(
-            "CroniterBackend does not support publish() — use add_cron_job()"
-        )
+        raise NotImplementedError("CroniterBackend does not support publish() — use add_cron_job()")
 
     def add_cron_job(self, job_id: str, cron_expr: str, callback: Callable) -> None:
         with self._lock:

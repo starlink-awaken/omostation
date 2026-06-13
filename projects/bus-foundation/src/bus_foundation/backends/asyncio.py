@@ -2,15 +2,16 @@
 
 Phase A.1: uses asyncio.Queue per subscriber, no external deps.
 """
+
 from __future__ import annotations
 
 import asyncio
 import logging
 import uuid
-from typing import Callable
+from collections.abc import Callable
 
-from bus_foundation.envelope import BusEnvelope
 from bus_foundation.backends.pattern_match import match_pattern
+from bus_foundation.envelope import BusEnvelope
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,5 @@
 """Test WebSocketBackend — 4 cases."""
+
 import pytest
 
 from bus_foundation.backends.base import BusBackend

@@ -1,4 +1,5 @@
 """Test shared pattern_match helper (R74 LOW fix)."""
+
 from bus_foundation.backends.pattern_match import match_pattern
 
 

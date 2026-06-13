@@ -11,10 +11,11 @@ The bus-foundation package is agora-independent. Consumers that want
 agora's premium backends (persistent EventBus, global sse_manager) can
 import them from `agora.bus.backends` directly.
 """
+
 from __future__ import annotations
 
 import logging
-from typing import Callable
+from collections.abc import Callable
 
 from bus_foundation.backends.croniter import CroniterBackend
 from bus_foundation.backends.eventbus import EventBusBackend

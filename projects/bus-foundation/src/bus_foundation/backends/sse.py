@@ -7,14 +7,15 @@ without depending on agora.sse. The premium backend that wraps the global
 exposes only `client_count()`, `broadcast()`, and the BusBackend Protocol
 methods; consumers wire their own SSE/HTTP layer to it.
 """
+
 from __future__ import annotations
 
 import logging
 import uuid
-from typing import Callable
+from collections.abc import Callable
 
-from bus_foundation.envelope import BusEnvelope
 from bus_foundation.backends.pattern_match import match_pattern
+from bus_foundation.envelope import BusEnvelope
 
 logger = logging.getLogger(__name__)
 

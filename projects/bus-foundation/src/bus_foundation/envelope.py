@@ -9,6 +9,7 @@ Wire-format fields (all required unless noted):
   trace_id       : str? — optional distributed trace correlation id
   payload        : dict — event body (caller-defined, JSON-serializable)
 """
+
 from __future__ import annotations
 
 import json
@@ -68,7 +69,7 @@ class BusEnvelope:
         return json.dumps(self.to_dict(), sort_keys=True, ensure_ascii=False)
 
     @classmethod
-    def from_dict(cls, d: dict[str, Any]) -> "BusEnvelope":
+    def from_dict(cls, d: dict[str, Any]) -> BusEnvelope:
         return cls(
             id=d.get("id"),
             time=d.get("time"),
@@ -80,7 +81,7 @@ class BusEnvelope:
         )
 
     @classmethod
-    def from_json(cls, s: str) -> "BusEnvelope":
+    def from_json(cls, s: str) -> BusEnvelope:
         return cls.from_dict(json.loads(s))
 
     def __repr__(self) -> str:

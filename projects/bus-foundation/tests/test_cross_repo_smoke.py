@@ -8,6 +8,7 @@ Verifies:
    is part of `uv run pytest`).
 4. agora.bus remains importable (backward-compat shim — see agora.bus.__init__).
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -16,7 +17,6 @@ from pathlib import Path
 
 import bus_foundation
 from bus_foundation import BusEnvelope, EventType, publish, schedule, subscribe
-
 
 REQUIRED_PUBLIC_API = {
     "BusEnvelope": BusEnvelope,
@@ -88,5 +88,6 @@ def test_all_bus_foundation_unit_tests_present() -> None:
         assert fpath.exists(), f"missing test file: {fpath}"
         # Quick syntax check by importing
         import importlib.util
+
         spec = importlib.util.spec_from_file_location(fname.replace(".py", ""), fpath)
         assert spec is not None and spec.loader is not None

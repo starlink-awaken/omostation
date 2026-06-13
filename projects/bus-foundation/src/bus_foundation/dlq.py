@@ -2,6 +2,7 @@
 
 Phase B (R66): WAL mode + busy_timeout 5000 + 50MB rolling GC.
 """
+
 from __future__ import annotations
 
 import logging
@@ -15,9 +16,7 @@ logger = logging.getLogger(__name__)
 
 DLQ_MAX_SIZE_MB = 50
 DLQ_MAX_RETRIES = 3
-DEFAULT_DB_PATH = Path(
-    os.environ.get("BUS_DLQ_PATH", str(Path.home() / ".runtime" / "bus_dlq.db"))
-)
+DEFAULT_DB_PATH = Path(os.environ.get("BUS_DLQ_PATH", str(Path.home() / ".runtime" / "bus_dlq.db")))
 
 
 class DLQ:
@@ -96,9 +95,7 @@ class DLQ:
     def requeue(self, event_id: str, error: str) -> None:
         now = self._now()
         with self._lock:
-            row = self._conn.execute(
-                "SELECT retries FROM dlq WHERE event_id = ?", (event_id,)
-            ).fetchone()
+            row = self._conn.execute("SELECT retries FROM dlq WHERE event_id = ?", (event_id,)).fetchone()
             if row is None:
                 logger.warning("dlq_requeue_missing", event_id)
                 return
@@ -116,9 +113,7 @@ class DLQ:
 
     def list_all(self) -> list[dict]:
         with self._lock:
-            rows = self._conn.execute(
-                "SELECT * FROM dlq ORDER BY created_at DESC"
-            ).fetchall()
+            rows = self._conn.execute("SELECT * FROM dlq ORDER BY created_at DESC").fetchall()
         return [dict(r) for r in rows]
 
     def close(self) -> None:

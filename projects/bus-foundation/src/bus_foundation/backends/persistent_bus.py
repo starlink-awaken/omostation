@@ -15,6 +15,7 @@ Design (intentionally simple):
 - Subscriber register_hook for in-process delivery (reuses BusBackend
   protocol contract)
 """
+
 from __future__ import annotations
 
 import logging
@@ -27,8 +28,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from bus_foundation.envelope import BusEnvelope
 from bus_foundation.backends.pattern_match import match_pattern
+from bus_foundation.envelope import BusEnvelope
 
 logger = logging.getLogger(__name__)
 

@@ -1,12 +1,13 @@
 """MessageBusBackend — in-process agent-to-agent pub/sub with req/resp correlation."""
+
 from __future__ import annotations
 
 import logging
 import uuid
-from typing import Callable
+from collections.abc import Callable
 
-from bus_foundation.envelope import BusEnvelope
 from bus_foundation.backends.pattern_match import match_pattern
+from bus_foundation.envelope import BusEnvelope
 
 logger = logging.getLogger(__name__)
 

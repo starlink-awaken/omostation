@@ -12,15 +12,16 @@ R73 design notes:
   the pattern-match + delivery semantics; transport stub
 - Future R74+: add real `websockets` dep + actual socket loop
 """
+
 from __future__ import annotations
 
 import asyncio
 import logging
 import uuid
-from typing import Callable
+from collections.abc import Callable
 
-from bus_foundation.envelope import BusEnvelope
 from bus_foundation.backends.pattern_match import match_pattern
+from bus_foundation.envelope import BusEnvelope
 
 logger = logging.getLogger(__name__)
 

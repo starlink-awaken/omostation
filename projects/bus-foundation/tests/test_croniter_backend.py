@@ -1,4 +1,5 @@
 """Test CroniterBackend — add_cron_job + publish raises."""
+
 from __future__ import annotations
 
 import pytest

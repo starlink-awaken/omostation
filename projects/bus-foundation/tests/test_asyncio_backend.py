@@ -1,4 +1,5 @@
 """Test AsyncioBackend — in-process pubsub via asyncio.Queue."""
+
 from __future__ import annotations
 
 import asyncio

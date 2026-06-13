@@ -1,4 +1,5 @@
 """Test MessageBusBackend — in-process agent pub/sub with pattern dispatch."""
+
 from __future__ import annotations
 
 from bus_foundation.backends.messagebus import MessageBusBackend

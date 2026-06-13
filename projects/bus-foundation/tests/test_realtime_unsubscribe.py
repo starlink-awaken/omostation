@@ -1,4 +1,5 @@
 """Test RealtimeBackend + WebSocketBackend fix from R73 code review."""
+
 from bus_foundation.backends.realtime import RealtimeBackend
 from bus_foundation.envelope import BusEnvelope
 
