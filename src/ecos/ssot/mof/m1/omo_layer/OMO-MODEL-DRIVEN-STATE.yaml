@@ -16,4 +16,7 @@ properties:
     - "PipelineTracker 持久化状态"
     - "Trigger M0 运行时快照"
     - "OMO 双向通道健康摘要"
+    - "self_correction_discipline: 4 反模式全闭环 (readiness/cadence 撤回 + fallback 硬编码 + test 断言同步 + 86-file commit 次优承认)"
+    - "self_correction_template: .omo/_knowledge/audits/*-self-correction-closeout.md (8 段硬结构)"
+    - "drift_evidence_loop: weekly_loop → drift_detector → self_evolve_planned_only → human_approval → closeout"
 source: ".omo/state/model-driven/"
