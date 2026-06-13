@@ -1,0 +1,22 @@
+id: OPC-P16-MEM-04
+title: "Phase 1.4: 淘汰机制落地"
+status: completed
+priority: P0
+domain: opc
+created: "2026-06-13"
+description: |
+  执行了 2026-v6.1-strategic-plan.md Phase 1 (记忆系统升级) 的第四项任务：淘汰机制落地。
+  编写并注册了基于 MemTheta Filter 的 Nightly Cron 任务，实现基于衰减天数与低频访问次数的冷数据剔除。
+sub_gates:
+  - id: MEM-1.4
+    title: "Filter Cron Job 注册"
+    status: passed
+    criteria:
+      - "opc_p1_memtheta_filter.py 验证通过"
+      - "写入 .omo/cron/opc-closeout-crontab (每天凌晨 3:00 执行)"
+    evidence:
+      - "scripts/opc_p1_memtheta_filter.py"
+      - ".omo/cron/opc-closeout-crontab"
+gate: Gate MEM-1.4
+gate_status: passed
+gate_closed_at: "2026-06-13T07:50:00Z"
