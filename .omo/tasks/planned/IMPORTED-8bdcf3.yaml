@@ -1,0 +1,11 @@
+id: IMPORTED-8bdcf3
+title: 'P42-W0-SYNC-OMO-STATE: 跑 sync_omo_state.py 一次性把 system.yaml 字段全刷新'
+status: planned
+task_type: feature
+risk_level: L0
+depends_on:
+- P42-W0-INDEX-REFRESH
+source_docs:
+- /Users/xiamingxing/Workspace/.omo/_delivery/p42-w0-sync-governance-state-spec.md
+deliverables: []
+imported_via: omo_bridge
