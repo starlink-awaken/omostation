@@ -1,94 +1,110 @@
 # PROJECTS.yaml — 全系统项目注册表
-# 基于 omostation unified repo 架构（2026-05-29 更新）
+# 基于 eCOS v5 5+4+1+1 架构（2026-06-13 更新）
 
-# 嵌入式仓库（projects/ 下，每个有自己的 .git）
 embedded:
+  l4-kernel:
+    path: projects/l4-kernel
+    status: active
+    type: python
+    tech: uv, pytest
+    desc: "L4 自我层管理面 · 21域 · 250 tests · 43 MCP tools"
+  
+  model-driven:
+    path: projects/model-driven
+    status: active
+    type: python
+    tech: uv, pytest
+    desc: "M0 全生命周期模型驱动平台 · 24 M2类型 · 7阶段"
+
+  cockpit:
+    path: projects/cockpit
+    status: active
+    type: python
+    tech: uv, pytest, FastAPI
+    desc: "L3 统一入口层 (CLI + MCP + Web) · 治理 MCP 工具"
+
+  agora-dashboard:
+    path: projects/agora-dashboard
+    status: active
+    type: typescript-react
+    tech: Next.js, React 19, Tailwind
+    desc: "L3 多模态观察视界 · eCOS v5 Observatory"
+
+  agora:
+    path: projects/agora
+    status: active
+    type: python
+    tech: uv, pytest, fastmcp
+    desc: "I0 织层 / MCP Hub · 服务网格"
+
   kairon:
     path: projects/kairon
     status: active
     type: python-monorepo
-    packages: 31
-    tech: UV workspace, hatchling, ruff
-    desc: 知识工程与研究栈（知识摄取/推理/研究/治理/认知）— 完整吸收 SharedBrain + agentmesh
-    subpackages:
-      agent-hub: "多 Agent 注册与发现"
-      agent-runtime: "Agent 执行引擎（原 agentmesh Engine）"
-      agora: "MCP 服务发现/代理/断路器（原 agentmesh Gateway）"
-      codeanalyze: "代码分析工具"
-      core-models: "核心数据模型（原 SharedBrain core-models）"
-      cron-service: "定时调度服务"
-      ecos: "外化认知系统"
-      eidos: "知识处理（7 MCP tools）"
-      engine-core: "引擎核心"
-      eu-pricing: "经济/计价"
-      forge: "工具注册/资产清册（111 tools，原 agentmesh Toolkit）"
-      gc-engine: "垃圾回收/排泄"
-      iris: "平台连接器"
-      kairon-assistant: "助手"
-      kairon-voice: "语音"
-      kaironcloud-billing: "计费"
-      kos: "知识操作系统（26 tools）"
-      kronos: "时间管理"
-      llm-gateway: "模型编排（原 agentmesh Model-Orchestrator）"
-      metaos: "免疫/身份系统"
-      minerva: "深度研究（5 super-tools）"
-      observability: "监控/可观测"
-      ontoderive: "本体推导"
-      pontus: "管道引擎"
-      shared-lib: "共享工具库（原 SharedBrain shared-lib）"
-      sharedbrain-bridge: "kairon × SharedBrain 桥接层"
-      sharedbrain-standalone: "SharedBrain 独立服务器"
-      sophia: "智能分析（8 tools）"
-      ssot: "单一事实源"
-      symphony-protocol: "协议层"
-      wksp: "工作区管理"
-
-  SharedBrain:
-    path: projects/SharedBrain
-    status: archived
-    type: python
-    lines: 1.3K
-    tech: documentation-only (data-persistence-shell)
-    desc: 数字化生命 OS — 已全部迁移到 kairon，留存仅做数据持久壳
-
-  agentmesh:
-    path: projects/agentmesh
-    status: archived
-    type: typescript-monorepo
-    packages: 0
-    tech: archived (residual shell removed 2026-06-03)
-    desc: 多 Agent SDK — 100% 迁移到 kairon (agent-hub/agent-runtime/agora/forge/llm-gateway)。残留壳已清理，参考文档归档在 _archived/agentmesh-docs/
-
-  hermes-console:
-    path: projects/hermes-console
-    status: active
-    type: typescript-react
-    tech: React 18, TypeScript, Vite, MCP SDK
-    desc: 统一管理控制台（知识仪表盘/Agent控制台/健康监控/设置）
-    tests: 35
-    phase: B
+    packages: 19
+    tech: uv, ruff, pytest
+    desc: "L2 知识引擎面 · 能力地图"
 
   gbrain:
     path: projects/gbrain
     status: active
     type: typescript
-    tech: bun, TypeScript, Postgres (TypeORM)
-    desc: Postgres 原生知识脑
+    tech: bun, Postgres
+    desc: "L2 知识数据库 · TS知识库"
+
+  omo:
+    path: projects/omo
+    status: active
+    type: python
+    tech: uv, pytest
+    desc: "L2 治理面 · 债务与任务管理"
+
+  metaos:
+    path: projects/metaos
+    status: active
+    type: python
+    tech: uv, pytest
+    desc: "L2 编排引擎 · 决策门控/免疫/路由"
+
+  runtime:
+    path: projects/runtime
+    status: active
+    type: python
+    tech: uv, pytest
+    desc: "L1 运行时 · 服务注册/健康/协议沙箱"
+
+  ecos:
+    path: projects/ecos
+    status: active
+    type: python
+    tech: uv, pytest
+    desc: "L0 协议层 · X1-X4 治理框架 · MOF"
+
+  aetherforge:
+    path: projects/aetherforge
+    status: active
+    type: python
+    tech: uv, pytest
+    desc: "算力网格 + LLM 网关 + 群体智能"
+
+  hermes-console:
+    path: projects/hermes-console
+    status: archived
+    type: typescript-react
+    desc: "旧控制台，待集成或归档"
 
   _archived:
     path: projects/_archived
     status: archived
     type: archive
-    items: 22
-    desc: 已迁移旧项目的统一备份
+    desc: "已迁移旧项目的统一备份"
 
-# 根仓库元项目
 root:
   omostation:
     path: .
     status: active
     type: root-repo
-    desc: 统一入口 + 治理 + CI/CD
+    desc: "统一入口 + 治理 + CI/CD"
     remote: starlink-awaken/omostation
 
 workspace_roots:
@@ -96,37 +112,9 @@ workspace_roots:
     path: spaces
     status: active
     type: user-space-registry
-    desc: 用户空间 / 租户空间 manifest 与边界元数据
+    desc: "用户空间 / 租户空间 manifest 与边界元数据"
   data:
     path: data
     status: active
-    type: shared-data-substrate
-    desc: 共享数据、索引、快照、数据库等状态化存储契约
-  runtime:
-    path: runtime
-    status: active
-    type: ephemeral-runtime-root
-    desc: 本地日志、临时态、pid/socket 与非持久运行残留
-
-# 治理（omostation 根仓库的一部分）
-governance:
-  .omo:
-    path: .omo
-    status: active
-    type: governance-control-kb
-    files: 89+ tracked
-    desc: 治理 + 控制 + 控制事实知识库（goals/state/tasks/plans/standards/tests）
-    execution_sources:
-      goals: .omo/goals/current.yaml
-      tasks: .omo/tasks/active
-      state: .omo/state/system.yaml
-      standards:
-        - .omo/standards/planning-blueprint-delivery-test-standard.md
-        - .omo/standards/post-phase1-governance-and-phase2-entry.md
-    current_mode: phase9_workspace_plane_refactor
-
-  .github:
-    path: .github/workflows
-    status: active
-    type: ci-cd
-    desc: GitHub Actions 工作流
+    type: storage-volume
+    desc: "数据库文件、知识索引、离线缓存"
