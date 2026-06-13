@@ -169,3 +169,107 @@ trigger_constraints:
     type: required
     severity: error
     violation: "无 M0 快照的 Trigger 无法进行漂移检测"
+
+# ── OPC Cadence 约束 (CR-CADENCE-* / CR-INDEX-LOCK-* / CR-MODE-ENV-* / CR-TIME-ENV-* / CR-MODE-COPY-* / CR-DRIFT-LOOP-* / CR-AUDIT-5REPOS-*) ──
+# 2026-06-13 P5-P7 closeout 落地的 7 条治理约束
+# SSOT: .omo/_control/evolution/config.yaml
+# 关联: scripts/opc_p7_audit_rollout_daemon.py, scripts/opc_audit_rollout_5repos.py, scripts/opc_p6_*.py
+# 关联: feedback_opc_cron_wrapper_trigger_injection_20260612.md, feedback_no_standard_weakening_20260612.md
+
+opc_cadence_constraints:
+  - id: CR-CADENCE-01
+    name: "Cadence wrapper trigger 注入约束"
+    description: "所有 OPC cron wrapper 必须显式注入 INVOCATION_ID + OPC_TRIGGER 环境变量, 禁止 daemon 兜底推断"
+    rule: "for each opc cron wrapper: env INVOCATION_ID and OPC_TRIGGER must be set before exec"
+    type: required
+    severity: error
+    violation: "manual 入口被 cron 兜底污染, evidence type 不可区分"
+    introduced: '2026-06-12'
+    value_tier: 1
+    references:
+      - ".omo/cron/opc-closeout-crontab"
+      - "scripts/opc_p7_audit_rollout_cron.sh"
+      - "scripts/opc_p6_weekly_loop_cron.sh"
+      - "scripts/opc_p6_self_evolve_cron.sh"
+
+  - id: CR-INDEX-LOCK-01
+    name: "Index 写入 race 保护约束"
+    description: "所有 *.omo/_control/evolution/{loop,drift,radar,self-evolve}/index.json 写入必须使用 fcntl.flock 互斥锁, 禁止裸 write"
+    rule: "for each index.json writer: must use fcntl.flock(fcntl.LOCK_EX) context manager"
+    type: required
+    severity: error
+    violation: "并发 cron 触发导致 index 漂移, audit 历史断裂"
+    introduced: '2026-06-12'
+    value_tier: 1
+    references:
+      - "scripts/opc_p6_weekly_loop.py"
+      - "scripts/opc_p6_drift_detector.py"
+      - "scripts/opc_p5_radar_cron.py"
+
+  - id: CR-MODE-ENV-01
+    name: "OPC_MODE 环境变量透传约束"
+    description: "OPC 模式 (weekly/monthly/pre-release) 必须通过 OPC_MODE env 透传, 禁止 daemon 内部硬编码 mode-specific 路径"
+    rule: "for each OPC mode-aware script: mode = os.environ.get('OPC_MODE', 'weekly')"
+    type: required
+    severity: error
+    violation: "硬编码 weekly.json 导致 monthly/pre-release cron 复用 weekly 副本, 不可审计"
+    introduced: '2026-06-12'
+    value_tier: 1
+    references:
+      - "scripts/opc_p7_audit_rollout_daemon.py"
+      - "scripts/opc_audit_rollout_5repos.py"
+      - ".omo/cron/opc-closeout-crontab"
+
+  - id: CR-TIME-ENV-01
+    name: "语义时间环境变量覆盖约束"
+    description: "OPC 生成的语义时间戳 (generated_at/today) 必须可通过 OPC_GENERATED_AT / OPC_TODAY env 覆盖, 禁止仅用 datetime.now()"
+    rule: "for each OPC script writing timestamp: must read OPC_GENERATED_AT/OPC_TODAY env with datetime.now() fallback"
+    type: required
+    severity: error
+    violation: "回放/replay/手动演练无法注入时间, evidence 不可重现"
+    introduced: '2026-06-12'
+    value_tier: 1
+    references:
+      - "scripts/opc_p6_weekly_loop.py"
+      - "scripts/opc_p5_radar_cron.py"
+      - "scripts/opc_p7_audit_rollout_daemon.py"
+
+  - id: CR-MODE-COPY-01
+    name: "Mode-specific 副本单一 owner 约束"
+    description: "{date}-{mode}.json 副本必须由唯一 owner 脚本 (5repos.py) 写入, daemon 不得双写"
+    rule: "only opc_audit_rollout_5repos.py may write {date}-{mode}.json, opc_p7_audit_rollout_daemon.py writes 5repos.json only"
+    type: required
+    severity: error
+    violation: "daemon 双写导致 5repos.json 与 {date}-{mode}.json 内容漂移, fallback chain 不可信"
+    introduced: '2026-06-12'
+    value_tier: 1
+    references:
+      - "scripts/opc_p7_audit_rollout_daemon.py"
+      - "scripts/opc_audit_rollout_5repos.py"
+
+  - id: CR-DRIFT-LOOP-01
+    name: "Drift → Self-evolve 闭环约束"
+    description: "Drift detector 检测到非零 drift 必须生成 self-evolution task 落 planned/, 且 task approval_required=true, 永不入 active/"
+    rule: "for each drift report with drift_total > 0: emit self-evolution task in planned/ with approval_required=true"
+    type: required
+    severity: error
+    violation: "self-evolution task 推 active/ 绕过人工审批, governance 失效"
+    introduced: '2026-06-12'
+    value_tier: 1
+    references:
+      - "scripts/opc_p6_drift_detector.py"
+      - "scripts/opc_p6_self_evolve.py"
+      - "feedback_p6_self_evolution_planned_only.md"
+
+  - id: CR-AUDIT-5REPOS-01
+    name: "5-Repo §17 Metrics 路径约束"
+    description: "5repos.py 写入 §17 metrics 必须落到 .omo/_delivery/audit-rollout/{date}-5repos.json, 路径唯一"
+    rule: "opc_audit_rollout_5repos.py output path == .omo/_delivery/audit-rollout/{date}-5repos.json"
+    type: required
+    severity: error
+    violation: "metrics 路径不一致导致 §17 报告与 cron log 无法 cross-reference"
+    introduced: '2026-06-12'
+    value_tier: 1
+    references:
+      - "scripts/opc_audit_rollout_5repos.py"
+      - ".omo/_knowledge/audits/2026-06-13-opc-p5-p7-self-correction-closeout.md"
