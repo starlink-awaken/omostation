@@ -53,3 +53,6 @@ coverage.xml
 
 # ── Docker ──
 .docker/
+
+# ── Local OMO runtime state ──
+.omo/
