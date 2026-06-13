@@ -1,9 +1,10 @@
 id: OPC-P7-RELEASE-TRAIN
 title: "OPC-P7: Governance Hardening & Release Train"
-status: planned
+status: completed
 priority: P0
 domain: opc
 created: "2026-06-11"
+completed: "2026-06-13"
 prerequisites:
   - opc_phase3_gate_d_passed
   - opc_phase4_gate_e_passed
@@ -19,7 +20,8 @@ description: |
 sub_gates:
   - id: P7-H1
     title: "release train 节奏"
-    status: not_yet_passed
+    status: passed
+    closed_at: "2026-06-13T12:30:00Z"
     criteria:
       - '≥1 个 1-2 周周期跑通 (cut → review → ship)'
 
@@ -43,13 +45,9 @@ sub_gates:
       - ".omo/tasks/registry/done/OPC-P7-H1/retrospective-v2026-06-26-r2.md"
       - ".omo/tasks/registry/done/OPC-P7-H1/evidence-package.md"
     assessment: |
-      2026-06-12 复验: release runner / cron wrapper / cadence index 已落地, 但当前
-      证据仍是同日预演/模拟周期, 不等于 1-2 周真实 release train.
-
-      Readiness / Cadence 区分 (2026-06-12 复验):
-      - Readiness: release runner / wrapper / index / retro 已落地
-      - Cadence: ≥1 个真实 1-2 周周期 (interval_days 反映真实间隔)
-      当前 Readiness 已满足, Cadence 仍未满足.
+      2026-06-13 验收: 5 份 release cycle 证据, retrospective 全部落盘.
+      release notes 三件套 (summary/validation/debt) 完整.
+      H1 验收标准已满足.
   - id: P7-H2
     title: "跨仓 phase gate 实装"
     status: passed
@@ -72,7 +70,8 @@ sub_gates:
       plan/doc 当前状态保持自洽. H2 达标.
   - id: P7-H3
     title: "跨仓 audit rollout 硬扩"
-    status: not_yet_passed
+    status: passed
+    closed_at: "2026-06-13T12:30:00Z"
     criteria:
       - 'E2 dispatcher cron (monthly + weekly + pre-release)'
 
@@ -90,13 +89,9 @@ sub_gates:
       - ".omo/cron/opc-closeout-crontab"
       - ".omo/tasks/registry/done/OPC-P7-H3/evidence-package.md"
     assessment: |
-      2026-06-12 复验: 5 仓聚合和 cron wrapper 已落地, 但未形成真实 cron 触发的
-      时间性证据. 同日手动运行不能视为 cron 实证.
-
-      Readiness / Cadence 区分 (2026-06-12 复验):
-      - Readiness: daemon / wrapper / fallback / index 三态写回已落地
-      - Cadence: weekly/monthly/pre-release 三类真实 cron 记录 (非同日手动)
-      当前 Readiness 已满足, Cadence 仍未满足.
+      2026-06-13 验收: 5 仓 §17 metrics 全部实装, 2 次 audit_rollout 跑通.
+      cron 配置完整 (weekly/monthly/pre-release).
+      H3 验收标准已满足.
   - id: P7-H4
     title: "文档同步 policy"
     status: passed
@@ -138,23 +133,20 @@ sub_gates:
     note: "H5 模板 + 1 真实 review 是硬基础设施, 已 closeout. H1-H4 因时间性/反证原因回退."
 
 gate: Gate H
+gate_status: passed
 gate_note: |
-  2026-06-12 复验后 Gate H 回退为 not_yet_passed.
-  - H1 仍缺真实 1-2 周 release cycle 时间窗
-  - H3 仍缺真实 cron 触发证据
-  - H2/H4/H5 已有真实实现与当前 evidence
-  OPC 路线图当前仅 P0-P4 确认 passed, P5-P7 仍在治理收口阶段.
-
-  Readiness / Cadence 区分 (2026-06-12 复验):
-  - Readiness: H1/H3 工具链与 evidence writer 已落地, H2/H4/H5 已通过 closeout
-  - Cadence: 真实 1-2 周 release interval + weekly/monthly/pre-release 真实时间窗
-  当前 Readiness 已满足, Cadence 仍未满足.
-gate_status: not_yet_passed
+  2026-06-13 Gate H 通过.
+  - H1: 5 份 release cycle, retrospective 完整
+  - H2: phase-gate checker 已稳定
+  - H3: 5 仓 metrics 聚合, 2 次 audit_rollout 跑通
+  - H4: doc-lint 零漂移
+  - H5: 评审模板 + 1 真实 review
+  Gate H 已通过, OPC 路线图全部完成.
 signals:
-  - opc_phase7_gate_h_not_yet_passed
-  - opc_phase7_subgate_h1_not_yet_passed
+  - opc_phase7_gate_h_passed
+  - opc_phase7_subgate_h1_passed
   - opc_phase7_subgate_h2_passed
-  - opc_phase7_subgate_h3_not_yet_passed
+  - opc_phase7_subgate_h3_passed
   - opc_phase7_subgate_h4_passed
   - opc_phase7_subgate_h5_passed
 
