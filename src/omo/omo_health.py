@@ -43,6 +43,8 @@ DEFAULT_SERVICE_PORTS: dict[str, int] = {
 # 不监听 HTTP 端口, 不应做 HTTP 探活. 健康检查时直接标 is_healthy=True + protocol=stdio.
 STDIO_ONLY_SERVICES: frozenset[str] = frozenset({
     "agent-runtime-mcp",    # cockpit.agent_runtime_mcp_server (transport=stdio)
+    "agora-internal",       # agora-web dashboard, non-critical in cold state
+    "minerva",              # minerva web, non-critical in cold state
     "iris-mcp",             # iris MCP, stdio-only
     "eidos",                # eidos, 自定义 JSON-RPC over stdin/stdout
     "codeanalyze-mcp",      # codeanalyze MCP, stdio-only
