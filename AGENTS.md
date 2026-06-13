@@ -12,6 +12,7 @@ This root directory is a **multi-project workspace** organized in the 5+4+1+1 (e
 | L4 | `l4-kernel` | Python (uv, pytest) | `projects/l4-kernel/` | 🟢 Active — 自我层管理面 · 21域 · 250 tests · 43 MCP tools |
 | — | `model-driven` | Python (uv, pytest) | `projects/model-driven/` | 🟢 Active — 全生命周期模型驱动平台 · 24 M2类型 · 7阶段 · 12工具 · 190 tests |
 | L3 | `cockpit` | Python (uv, pytest) | `projects/cockpit/` | 🟢 Active — 统一入口 (CLI + MCP + Web) · 74 tests · 治理 MCP 工具 |
+| L3 | `agora-dashboard` | Next.js (bun) | `projects/agora-dashboard/` | 🟢 Active — 赛博朋克大盘 (Web) · eCOS v5 Observatory |
 | I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · 91 tests |
 | L2 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 知识引擎 · 16 packages · 能力地图 + 使用指南 |
 | L2 | `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — 知识数据库 · 888 tests · 能力地图 |
