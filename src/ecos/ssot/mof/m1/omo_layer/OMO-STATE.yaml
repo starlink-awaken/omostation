@@ -9,6 +9,7 @@ created: "2026-06-09"
 version: "1.0.0"
 properties:
   domain: ".omo"
+  entity_type: "system_state"
   identity:
     path: ".omo/state/system.yaml"
   lifecycle: "active"
