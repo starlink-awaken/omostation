@@ -52,12 +52,10 @@ uv run pytest \
 | 根仓 `docs/` | ✅ 0 dirty | — |
 | 根仓 `*.yaml` | ✅ 0 dirty | — |
 | 根仓 `runtime/data/` | ✅ 0 dirty | kei_audit 已 commit (`88c56a08`) |
-| **子仓 `projects/cockpit` (新)** | ✅ 已 commit (`a602377`) | scenario.py + test_scenario.py (339+/55-) |
-| **子仓 `projects/omo`** | 🟡 18 内部 dirty (ahead=19) | 含本批 plan.yaml/daemon/tests 修复，待 bump 根仓指针 |
-| **子仓 `projects/cockpit` (根指针)** | 🟡 根仓仍指向 `909c0e4` | 子仓实际 HEAD `a602377` 待 bump |
-| **其他 14 个子仓指针** | 🟡 全部 ahead=N | model-driven 15+, scripts 15+, kairon/ecos/l4-kernel 等 |
+| **mof-extract hook 产物** (closeout 后) | ✅ 已 commit (`fea6f493`) | post-commit hook 自动写入 evolution artifacts |
+| **untracked: `OPC-P6-SELF-EVOLUTION-nop-*`** | 🟢 符合红线 | hook 自动落 `planned/` + `approval_required: true` + `approval_state: awaiting_human`，不需 commit |
 
-> **修正表述**：**根仓自身工作区 0 dirty**。子仓 14 个 ahead 是历史累积 dirty（含本次 commit），按 `feedback_submodule_state_decoupling_20260612.md` 规则**根仓只 commit 元数据**，**子仓指针不自动 bump**——本次 closeout 不强求 bump，留作 next-action。
+> **修正表述**：**根仓自身工作区 0 dirty**（含 mof-extract hook 产物）。子仓 14 个 ahead 是历史累积 dirty（含本次 commit），按 `feedback_submodule_state_decoupling_20260612.md` 规则**根仓只 commit 元数据**，**子仓指针不自动 bump**——本次 closeout 不强求 bump，留作 next-action。
 
 ---
 
@@ -98,6 +96,8 @@ reviewer 提出过 **2 个强建议**：
 | 5 | `02efd867` | 根仓只 commit 元数据 (plan/doc/evidence) | 收敛 |
 | 6 | `88c56a08` | kei_audit 1 条新 sandbox reject 证据 | 增量 |
 | 7 | `a602377` (cockpit) | scenario.py 智能 _workspace_root + 18 tests | 子仓新增 |
+| 8 | `84e5d43f` | closeout 报告 (reviewer-acceptable) | 文档 |
+| 9 | `fea6f493` | mof-extract hook 产物收尾 | 收敛 |
 
 ---
 

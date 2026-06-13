@@ -1,6 +1,6 @@
 # OPC P6 weekly retro — 2026-W24
 
-Generated: 2026-06-13T11:22:19Z
+Generated: 2026-06-13T11:34:28Z
 
 ## 1. Radar (P5-F1)
 - **Platform: consolidate 'search-trace: multi-zone' into a shared module**
@@ -84,10 +84,10 @@ Generated: 2026-06-13T11:22:19Z
 ```json
 {
   "stage": "retro",
-  "ts": "2026-06-13T11:22:19Z",
+  "ts": "2026-06-13T11:34:28Z",
   "summary": {
     "radar_candidates": 8,
-    "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260613T112219Z-technical-radar-31e36438.json",
+    "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260613T113428Z-technical-radar-8df69f73.json",
     "drift_count": 0,
     "planned_tasks": 8,
     "audit_records": 1,
