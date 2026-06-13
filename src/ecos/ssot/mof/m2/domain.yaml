@@ -67,6 +67,10 @@ Domain:
     storage:
       type: string
       description: 物理存储路径
+    doc_subtype:
+      type: enum
+      description: 文档域子类型 (A-Aggregate/F-Functional/I-Infrastructure/S-Sub/T-Transient)
+      values: [Aggregate, Functional, Infrastructure, Sub, Transient]
     claude_md:
       type: string
       description: CLAUDE.md 入口文件路径

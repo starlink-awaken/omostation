@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dashboard = ["agora"]  # Dashboard/MOF BOS features require agora runtime
+dashboard = []  # Dashboard/MOF BOS features use HTTP/MCP or fallback instead of direct agora import
 
 [project.scripts]
 # SSB — 签名链操作
