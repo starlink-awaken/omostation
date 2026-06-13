@@ -1,0 +1,60 @@
+m2_type: Stage
+version: 1.0.0
+created: '2026-06-13'
+updated: '2026-06-13'
+Stage:
+  m3_parent: LifecycleElement.Stage
+  description: 生命周期阶段——某一固定状态
+  icon: 📍
+  stateMachine:
+    draft:
+      description: 草稿
+      transitions: [active, deprecated]
+    active:
+      description: 激活
+      transitions: [deprecated]
+    deprecated:
+      description: 弃用
+      transitions: [archived]
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    order:
+      type: number
+      description: 阶段顺序 (0-based)
+    stage:
+      type: string
+      description: 阶段 ID (e.g. planning/design/...)
+  optionalProperties:
+    entry_criteria:
+      type: list
+      description: 进入条件
+    exit_criteria:
+      type: list
+      description: 退出条件
+    core_activities:
+      type: list
+      description: 核心活动列表
+    deliverables:
+      type: list
+      description: 交付物列表
+    duration_target_days:
+      type: number
+      description: 目标周期 (天)
+  validationRules:
+    - rule: order != null and stage != null
+      level: error
+      message: Stage 必须有 order + stage
+    - rule: order >= 0
+      level: error
+      message: Stage order 必须 >= 0
+  relationConstraints:
+    can_be_source_of:
+      - Transitions
+    can_be_target_of:
+      - References
+  examples:
+    - id: STAGE-MODEL-DRIVEN-PLANNING
+      name: 规划态
+      description: 7 阶段标准生命周期第 1 阶段
