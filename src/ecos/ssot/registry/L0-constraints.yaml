@@ -273,3 +273,60 @@ opc_cadence_constraints:
     references:
       - "scripts/opc_audit_rollout_5repos.py"
       - ".omo/_knowledge/audits/2026-06-13-opc-p5-p7-self-correction-closeout.md"
+
+# ── MOF Schema 校验约束 (CR-MOF-VALIDATE-* / CR-MOF-ALIAS-* / CR-MOF-BIDIR-*) ──
+# 2026-06-13 P5-P7 深度修复阶段落地的 3 条 MOF 治理约束
+# SSOT: projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py
+# 关联: feedback_m1_m2_schema_validation_20260613.md, OMO-SELF-CORRECTION-PATTERN.yaml
+# 关联: 930 个 M1 节点 + 44 个 M2 schema 校验全闭环
+
+mof_schema_validate_constraints:
+  - id: CR-MOF-VALIDATE-01
+    name: "MOF Schema 必跑校验约束"
+    description: "任何 M1 节点新增/修改后必跑 mof-schema-validate.py 校验, 0 drift / 0 missing / 0 state machine invalid 才能 commit"
+    rule: "for each M1 node change: mof-schema-validate.py must pass with Type drift=0, Required missing=0, State machine invalid=0"
+    type: required
+    severity: error
+    violation: "未跑校验或校验失败, M1 节点不合 M2 schema, governance 失效"
+    introduced: '2026-06-13'
+    value_tier: 1
+    enforcement:
+      ci_pre_commit: "projects/ecos/.githooks/pre-commit 调用 mof-schema-validate.py"
+      cli_invoke: "cd projects/ecos && python3 src/ecos/ssot/tools/mof-schema-validate.py --strict"
+    references:
+      - "projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py"
+      - "feedback_m1_m2_schema_validation_20260613.md"
+      - "OMO-SELF-CORRECTION-PATTERN.yaml (8 段硬结构)"
+
+  - id: CR-MOF-ALIAS-01
+    name: "MOF Type Alias 双向匹配约束"
+    description: "M1 节点 type 字段必须命中 M2 m2_type, 容许 PascalCase / snake_case / section key 双向 alias, 但禁止 type 在 M2 中完全缺"
+    rule: "for each M1 node: data.type in (M2 m2_type ∪ section_key) else drift"
+    type: required
+    severity: error
+    violation: "type 在 M2 中完全缺, 表示 M1 节点没有对应 M2 schema 定义, 必须补 M2 schema 或改 M1 type"
+    introduced: '2026-06-13'
+    value_tier: 1
+    references:
+      - "M2 schema: 44 个 m2_type 定义 (Action/Agent/Pattern/Entity/Component/GovernancePolicy/...)"
+      - "section_key 9 例: constraint_mgmt / governance_policy / network_zone / vault_path / ..."
+    alias_examples:
+      - "M2: Trigger (PascalCase) / M1: type=trigger (lowercase) - 14 节点 case 漂移已修复"
+      - "M2: ConstraintMgmt (PascalCase) / M1: type=constraint_mgmt (snake_case) - 3 节点 case 漂移已修复"
+      - "M2: vault_path (snake_case) / M1: type=vault_path - 1 节点已修复"
+
+  - id: CR-MOF-BIDIR-01
+    name: "MOF Required 双向字段约束"
+    description: "M2 requiredProperties 字段必须出现在 M1 节点的 properties 或 top-level, 校验脚本双向查找避免历史节点字段位置不一致导致的虚报"
+    rule: "for each required field k: (k in m1.properties) OR (k in m1 top-level) else missing"
+    type: required
+    severity: error
+    violation: "required field 缺失, 但 mof-schema-validate.py 虚报 226 个 (实际只有 3 个), 双向校验后真实缺失 0 个, 任何新缺失立即 fail"
+    introduced: '2026-06-13'
+    value_tier: 1
+    references:
+      - "M1 Entity 138 节点: properties.domain 字段实际在 top-level (历史 mof-extract 输出格式)"
+      - "M1 Specification 122 节点: requiredProperties 字段散落在 properties + 顶层 (双向查找覆盖)"
+    history:
+      - "2026-06-13: 校验脚本初版单查 properties 虚报 226 required missing, 双向校验后真实 0"
+      - "2026-06-13: Decision/Component/Domain 3 节点真实缺失已修复 (problem+rationale, layer+runtime, domain_type)"
