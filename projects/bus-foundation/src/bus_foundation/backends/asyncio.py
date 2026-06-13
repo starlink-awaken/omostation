@@ -10,6 +10,7 @@ import uuid
 from typing import Callable
 
 from bus_foundation.envelope import BusEnvelope
+from bus_foundation.backends.pattern_match import match_pattern
 
 logger = logging.getLogger(__name__)
 
@@ -74,8 +75,4 @@ class AsyncioBackend:
 
     @staticmethod
     def _match(pattern: str, event_type: str) -> bool:
-        if pattern == "*":
-            return True
-        if pattern.endswith("*"):
-            return event_type.startswith(pattern[:-1])
-        return pattern == event_type
+        return match_pattern(pattern, event_type)
