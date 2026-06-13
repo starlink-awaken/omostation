@@ -43,8 +43,6 @@ sub_gates:
       - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W25.md"
       - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W26.md"
       - ".omo/cron/opc-closeout-crontab"
-    assessment: |        - '真实 cron 记录与 manual 记录可区分'
-      note: "当前只有同日预演 / 演练周号，无真实周窗。"
     assessment: |
       2026-06-12 复验: radar runner / archive receipt / history index 已落地, 有模拟
       4 周 evidence, 但仍未满足"≥2 周连续 cron 跑通"的原始时间性标准.

@@ -1,6 +1,7 @@
 id: OPC-P4-MODEL-COMPUTE
 title: "OPC-P4: Model & Compute Plane"
-status: in_progress
+status: completed
+closed_at: "2026-06-13T11:20:00Z"
 priority: P0
 domain: opc
 created: "2026-06-11"
