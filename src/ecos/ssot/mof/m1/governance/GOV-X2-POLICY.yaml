@@ -1,5 +1,5 @@
 id: "GOV-X2-POLICY"
-type: "Specification"
+type: "GovernancePolicy"
 name: "X2 策略维 — 可配置治理策略与自动化规则"
 description: "X2 治理维: 保鲜周期、告警阈值、降级条件等可配置策略"
 status: "active"
@@ -8,8 +8,25 @@ layer: "X2"
 created: "2026-06-09"
 version: "1.0.0"
 properties:
+  policy_id: "x2-staleness-policy"
   dimension: "X2"
+  constraints:
+    - "freshness_max_age_days: 60"
+    - "alert_threshold: 3 consecutive failures"
+    - "health_check_interval: 6h (daemon)"
   scope: "全层"
+  thresholds:
+    warn_threshold: 0.7
+    fail_threshold: 0.5
+    debt_weight_min: 1.0
+    debt_health_min: 60
+  sla:
+    check_frequency: "every-6h"
+    response_time_hours: 1
+  behavior:
+    enforcement: "alert"
+    auto_remediation: true
+  domain_field: "meta"
   policies:
     - "freshness_max_age_days: 60"
     - "alert_threshold: 3 consecutive failures"
