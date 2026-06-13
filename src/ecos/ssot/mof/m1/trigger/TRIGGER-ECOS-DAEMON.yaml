@@ -1,5 +1,5 @@
 id: "TRIGGER-ECOS-DAEMON"
-type: "trigger"
+type: "Trigger"
 name: "eCOS Daemon"
 description: "自治运维守护进程 — 每 6 小时执行健康检查+SLA+约束验证+自反验证"
 status: "active"

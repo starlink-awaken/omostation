@@ -1,5 +1,5 @@
 id: "TRIGGER-FILE-WATCH"
-type: "trigger"
+type: "Trigger"
 name: "File Watch (ecos-event-watcher)"
 description: "文件变更监控 — fswatch/watchdog 双方案，检测 CLAUDE.md/STATE.md 变更触发保鲜"
 status: "active"

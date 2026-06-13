@@ -1,5 +1,5 @@
 id: "TRIGGER-GIT-PRECOMMIT"
-type: "trigger"
+type: "Trigger"
 name: "Git Pre-commit Hook"
 description: "代码质量门禁 — 每次 git commit 前检查 Python 文件变更"
 status: "active"

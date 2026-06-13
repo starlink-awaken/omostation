@@ -1,5 +1,5 @@
 id: "TRIGGER-AGORA-WATCHDOG"
-type: "trigger"
+type: "Trigger"
 name: "Agora Watchdog"
 description: "Agora 服务健康监控 — 每 10 秒检查，连续 3 次失败自动重启"
 status: "active"

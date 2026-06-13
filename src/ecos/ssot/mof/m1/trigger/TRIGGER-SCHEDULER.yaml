@@ -1,5 +1,5 @@
 id: "TRIGGER-SCHEDULER"
-type: "trigger"
+type: "Trigger"
 name: "Runtime Scheduler"
 description: "健康监控调度器 — 每 15 秒检查服务状态，自动修复"
 status: "active"

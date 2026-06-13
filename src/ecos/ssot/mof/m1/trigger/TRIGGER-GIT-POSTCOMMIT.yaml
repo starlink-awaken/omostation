@@ -1,5 +1,5 @@
 id: "TRIGGER-GIT-POSTCOMMIT"
-type: "trigger"
+type: "Trigger"
 name: "Git Post-commit Hook"
 description: "知识萃取 — 每次 git commit 后触发 MOF 模型更新"
 status: "active"

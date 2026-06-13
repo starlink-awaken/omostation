@@ -1,5 +1,5 @@
 id: "TRIGGER-AGORA-EVENTBUS"
-type: "trigger"
+type: "Trigger"
 name: "Agora EventBus"
 description: "核心事件总线 — JSON 持久化 + HTTP POST 推送 + 订阅模式"
 status: "active"

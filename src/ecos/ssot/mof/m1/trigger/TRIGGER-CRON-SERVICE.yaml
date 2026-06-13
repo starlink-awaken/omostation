@@ -1,5 +1,5 @@
 id: "TRIGGER-CRON-SERVICE"
-type: "trigger"
+type: "Trigger"
 name: "Runtime Cron Service"
 description: "定时任务调度器 — 管理 30+ 定时任务 (日/周/月/季)"
 status: "active"
