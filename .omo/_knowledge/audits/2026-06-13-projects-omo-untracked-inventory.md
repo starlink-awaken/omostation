@@ -6,18 +6,19 @@
 
 ## 1. 摘要
 
-- untracked 总数: **51**
-- tracked modification: `tests/test_opc_p7_cadence_fixes.py`（本轮新增 isolated tests）
+- untracked 总数: **1**
+- tracked modification:
+  - `.gitignore`（新增 runtime-state / local archive ignore 规则）
+  - `.omo/state/system.yaml`（sync 后 active queue 已清空）
+  - `tests/test_opc_p7_cadence_fixes.py`（本轮新增 isolated tests）
 
 分类计数：
 
 | 类别 | 数量 |
 |------|------|
-| A. 治理证据 / worker runs | 39 |
-| B. 历史 demo / probe / 临时 delivery | 6 |
-| C. 状态文件 / 活动任务 | 6 |
+| C. 状态文件 / 当前 SSOT | 1 |
 
-## 2. A 类 — 治理证据 / worker runs（保留追溯，不做伪 clean）
+## 2. A 类 — 治理证据 / worker runs（已转本地 ignore）
 
 ### A1. promotion records
 
@@ -67,43 +68,51 @@
 治理结论：
 
 - 这 39 个文件属于运行/审批/追溯证据
+- 当前通过 `projects/omo/.gitignore` 作为本地运行证据处理，不再污染子仓 untracked 面
 - 不得为了“看起来干净”直接删除
-- 后续若归档，必须保留引用链
 
-## 3. B 类 — 历史 demo / probe / 临时 delivery（待 relocate 或 archive）
+## 3. B 类 — 历史 demo / probe / 临时 delivery（已转本地 ignore）
 
 - `.omo/_delivery/audit-rollout/2026-06-12-5repos.json`
-- `.omo/_delivery/gbrain-probe-2026-06-11.md`
-- `.omo/_delivery/kairon-probe-2026-06-11.md`
-- `.omo/_delivery/metaos-probe-2026-06-11.md`
-- `.omo/d2_demo.py`
-- `tests/test_opc_p3_thin_binding_demo.py`
+- `.omo/_archive/probes/2026-06-11/gbrain-probe-2026-06-11.md`
+- `.omo/_archive/probes/2026-06-11/kairon-probe-2026-06-11.md`
+- `.omo/_archive/probes/2026-06-11/metaos-probe-2026-06-11.md`
+- `.omo/_archive/demo-phase29/d2_demo.py`
+- `tests/archive/test_opc_p3_thin_binding_demo.py`
 
 治理结论：
 
-- 这 6 个文件不应继续混在 “当前收口成果” 里
-- 后续动作是 relocate / archive / remove 三选一
-- 未决前统一标记为 historical artifacts
+- 这 6 个文件已从主叙事面移走
+- 当前通过 `projects/omo/.gitignore` 作为本地保留物处理，不再污染子仓 untracked 面
+- 后续是否纳入版本库，另做仓库治理决策
 
-## 4. C 类 — 状态文件 / 活动任务（先定 SSOT，再决定版本管理）
+## 4. C 类 — 状态文件 / 当前 SSOT
 
 - `.omo/goals/current.yaml`
-- `.omo/tasks/active/TASK-D1-CHILD1.yaml`
-- `.omo/tasks/active/TASK-D1-CHILD2.yaml`
-- `.omo/tasks/active/TASK-D2-RETRY.yaml`
-- `.omo/tasks/active/TASK-D2-SUCCESS.yaml`
-- `.omo/tasks/active/TASK-FEC5E158.yaml`
 
 治理结论：
 
-- 这 6 个文件影响系统行为，不是普通垃圾文件
+- 该文件影响系统行为，不是普通垃圾文件
 - 不得直接靠 `.gitignore` 掩掉
-- 必须先回答：它们是不是该由运行时生成、是不是该进版本库、谁是 SSOT
+- 必须先回答：它是不是该由运行时生成、是不是该进版本库、谁是 SSOT
 - 当前归类结论见 `2026-06-13-projects-omo-c-class-decision-packet.md`
-- 其中 5 个 demo active task 的迁移方案见 `2026-06-13-projects-omo-demo-active-archive-plan.md`
+- 5 个 demo active task 已不再属于当前 active 面
 
-## 5. 后续执行顺序
+## 5. D 类 — 已归档的历史 task / script（已转本地 ignore）
 
-1. 先处理 C 类：明确 `goals/current.yaml` 与 `tasks/active/*.yaml` 的版本管理规则  
-2. 再处理 B 类：把 demo / probe / 临时 delivery 移出主叙事面  
-3. A 类最后做 archive 策略，不做破坏性清理
+- `.omo/tasks/archive/demo-phase29/TASK-D1-CHILD1.yaml`
+- `.omo/tasks/archive/demo-phase29/TASK-D1-CHILD2.yaml`
+- `.omo/tasks/archive/demo-phase29/TASK-D2-RETRY.yaml`
+- `.omo/tasks/archive/demo-phase29/TASK-D2-SUCCESS.yaml`
+- `.omo/tasks/archive/demo-phase29/TASK-FEC5E158.yaml`
+
+治理结论：
+
+- 它们已从 active 面退出
+- 当前应被视为 historical artifact，而不是 live state
+- 当前通过 `projects/omo/.gitignore` 作为本地保留物处理，不再污染子仓 untracked 面
+
+## 6. 后续执行顺序
+
+1. 先处理 C 类：明确 `goals/current.yaml` 的版本管理规则  
+2. A 类是否转持久归档目录，后续再定；本轮不做破坏性清理

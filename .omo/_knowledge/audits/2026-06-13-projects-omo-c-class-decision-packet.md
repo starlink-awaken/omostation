@@ -7,6 +7,7 @@
 ## 1. 待决文件
 
 - `.omo/goals/current.yaml`
+- `.omo/_delivery/audit-rollout/2026-06-12-5repos.json`
 - `.omo/tasks/active/TASK-D1-CHILD1.yaml`
 - `.omo/tasks/active/TASK-D1-CHILD2.yaml`
 - `.omo/tasks/active/TASK-D2-RETRY.yaml`
@@ -53,7 +54,7 @@
 
 ## 6. Reviewer 验收标准
 
-- 6 个文件全部有归类结论
+- 7 个文件全部有归类结论
 - 每个结论都有代码/测试/文档证据
 - 没有发生破坏性清理
 - 没有偷换成“workspace clean”
@@ -63,6 +64,7 @@
 | 文件 | 归类 | 证据 | 说明 |
 |------|------|------|------|
 | `.omo/goals/current.yaml` | `tracked-ssot` | `src/omo/omo_goal.py` 直接读写；`src/omo/omo_worker_dispatch.py` 明确列为 forbidden global state；`tests/README.md` / `tests/test_omo_governance.py` 把它当当前目标事实源 | 这是活的系统状态文件，不应被当作垃圾文件或简单 ignore |
+| `.omo/_delivery/audit-rollout/2026-06-12-5repos.json` | `runtime-state` | `src/omo/omo_audit_rollout.py` 明确把 audit-rollout JSON 作为输出落盘；`tests/test_opc_p5_p7_runtime.py` / `tests/test_opc_trigger_regression.py` 都把 `5repos.json` 当作运行产物来写入和消费；本轮已写入 `projects/omo/.gitignore` | 这是 daemon / rollout 的输出物，不是人工维护的事实源；当前已按 ignore 规则治理，不当 tracked SSOT |
 | `.omo/tasks/active/TASK-D1-CHILD1.yaml` | `historical-artifact` | 文件自述 `OPC P3 D1 demo child 1`，`phase: 29`；只在 `.omo/state/system.yaml`、worker runs、demo 证据链里出现 | 属于已完成 demo 的具体实例残留，不是泛化的 active queue 规则文件 |
 | `.omo/tasks/active/TASK-D1-CHILD2.yaml` | `historical-artifact` | 文件自述 `OPC P3 D1 demo child 2`，`phase: 29`；引用面与 CHILD1 相同 | 同上 |
 | `.omo/tasks/active/TASK-D2-RETRY.yaml` | `historical-artifact` | 文件自述 `D2 demo: D2 retry path`，`phase: 29`；`.omo/d2_demo.py` 直接引用该文件名；worker dispatch/envelope/prompt 全链路引用 | 它是 D2 demo 产物，不是当前运行必须存在的稳定 SSOT |
@@ -84,9 +86,13 @@
 
 1. `goals/current.yaml`
    - 保持纳入版本管理
-   - 单独核对它与 `.omo/state/system.yaml` / `tests/README.md` 的一致性
+   - 已核对并统一入口口径到 `.omo/goals/current.yaml`
 
-2. 5 个 demo active task 文件
+2. `2026-06-12-5repos.json`
+   - 已归类为运行产物，不作为 tracked SSOT
+   - 已落入 `projects/omo/.gitignore`，不在本轮 closeout 里偷换成 clean
+
+3. 5 个 demo active task 文件
    - 不直接删除
    - 先补一份“archive / relocate 方案” (见 `2026-06-13-projects-omo-demo-active-archive-plan.md`)
    - 同步更新 `.omo/state/system.yaml` 里 active queue / task index 的残留引用
