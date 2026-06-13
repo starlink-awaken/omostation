@@ -1,14 +1,32 @@
-# Bus Unification (Phase A.0) Implementation Plan
+# Bus Unification — 18-Month Implementation Plan (R57-R75, COMPLETE)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Status (2026-06-13)**: **Phase D NOT planned**. All phases A-C closed
+> (R57-R72). R73-R75 is "normal feature work" period. The 18-month
+> unification effort is complete; this plan is now a historical record.
+>
+> **For agentic workers (historical context)**: REQUIRED SUB-SKILL: Use
+> superpowers:subagent-driven-development (recommended) or
+> superpowers:executing-plans to implement this plan task-by-task. Steps
+> use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在 `agora/bus/` 子包里建一个 1-backend 的统一接口骨架, 解决"8 套异步/事件/调度机制没有统一入口"问题, 不动 omo/metaos/runtime 业务代码。
+**Original Goal:** 在 `agora/bus/` 子包里建一个 1-backend 的统一接口骨架, 解决"8 套异步/事件/调度机制没有统一入口"问题, 不动 omo/metaos/runtime 业务代码。
 
-**Architecture:** facade 模式 — 1 个 `__init__.py` 暴露 `publish/subscribe/schedule` 三个函数 → `router.py` 根据 envelope 的 `backend` 字段分发 → 1 个 backend (`eventbus`) 实现 `BusBackend` Protocol → 失败时写入 `dlq.py` 管理的 SQLite。**retry 所有权** = bus adapter 自身不重试, 透传给底层。
+**Final state (R75):**
+- bus-foundation 独立仓 (`projects/bus-foundation/`), 8 backend, 56 tests, 100% pass
+- 7 consumers migrated (omo / metaos / runtime / aetherforge / kairon-pipeline / llm-gateway / hermes-console)
+- 2 ADR ratified (ADR-0008 Phase B trigger + ADR-0008.1 Condition 4 proxy)
+- Phase A (R57-R65): 9 月 sedimentation + 治理
+- Phase B (R66-R69): 4 月 split + migration
+- Phase C (R70-R72): 3 月 Path C Defer Indefinitely (1-way ratchet 不适用)
+- Phase D (R73-R75): 3 月 3 new backends + code review + simplify + ruff fix
 
-**Tech Stack:** Python 3.13, Pydantic v2, SQLite (WAL mode), structlog, ruff; agora 仓依赖.
+**Architecture:** facade 模式 — `__init__.py` 暴露 `publish/subscribe/schedule` →
+`router.py` 分发 envelope → 8 backends (eventbus/asyncio/croniter/messagebus/sse/ws/realtime/persistent_bus) → 失败时写入 `dlq.py` 管理的 SQLite. **retry 所有权** = bus adapter 自身不重试, 透传给底层.
+
+**Tech Stack:** Python 3.13, Pydantic v2, SQLite (WAL mode), structlog, ruff; bus-foundation 零 agora 依赖 (R66 split).
 
 ---
+
 
 ## 文件结构 (新增/修改一览)
 
