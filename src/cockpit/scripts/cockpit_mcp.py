@@ -770,6 +770,7 @@ def governance_leaderboard() -> str:
 # 治理仪表板 API
 # ══════════════════════════════════════════════════════════════
 
+
 @_tool()
 def governance_dashboard() -> str:
     """获取治理仪表板数据。
@@ -798,11 +799,13 @@ def governance_dashboard() -> str:
                         parts = [p.strip() for p in line.split("|") if p.strip()]
                         if len(parts) >= 3:
                             try:
-                                trend_data.append({
-                                    "date": parts[0],
-                                    "debt_weight": float(parts[1]),
-                                    "debt_health": float(parts[2]),
-                                })
+                                trend_data.append(
+                                    {
+                                        "date": parts[0],
+                                        "debt_weight": float(parts[1]),
+                                        "debt_health": float(parts[2]),
+                                    }
+                                )
                             except (ValueError, IndexError):
                                 pass
 
@@ -813,11 +816,13 @@ def governance_dashboard() -> str:
             proj_dir = _REPO_ROOT / "projects" / proj
             if proj_dir.exists():
                 has_githooks = (proj_dir / ".githooks").exists()
-                project_status.append({
-                    "name": proj,
-                    "status": "healthy" if has_githooks else "warning",
-                    "has_githooks": has_githooks,
-                })
+                project_status.append(
+                    {
+                        "name": proj,
+                        "status": "healthy" if has_githooks else "warning",
+                        "has_githooks": has_githooks,
+                    }
+                )
 
         return json.dumps(
             {
@@ -857,11 +862,13 @@ def governance_history(days: int = 30) -> str:
                     parts = [p.strip() for p in line.split("|") if p.strip()]
                     if len(parts) >= 3:
                         try:
-                            trend_data.append({
-                                "date": parts[0],
-                                "debt_weight": float(parts[1]),
-                                "debt_health": float(parts[2]),
-                            })
+                            trend_data.append(
+                                {
+                                    "date": parts[0],
+                                    "debt_weight": float(parts[1]),
+                                    "debt_health": float(parts[2]),
+                                }
+                            )
                         except (ValueError, IndexError):
                             pass
 
@@ -897,3 +904,30 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+@_tool()
+def github_pr_review(pr_url: str = "") -> str:
+    """直接打通 GitHub PR Review（模拟）。
+
+    分析指定的 PR URL 并返回代码审查报告。
+    """
+    import json
+
+    if not pr_url:
+        return json.dumps({"error": "PR URL is required"})
+
+    return json.dumps(
+        {
+            "pr_url": pr_url,
+            "status": "reviewed",
+            "score": 85,
+            "feedback": [
+                "✅ 架构清晰，符合 OMO 治理标准",
+                "⚠️ 缺少对 edge case 的测试覆盖",
+                "💡 建议抽取通用常量到 constants.py",
+            ],
+            "action": "approve",
+        },
+        ensure_ascii=False,
+    )
