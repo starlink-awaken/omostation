@@ -91,6 +91,11 @@ class TestEventBusLog:
         filtered = bus.get_event_log(10, since=since)
         assert len(filtered) == 2
 
+    def test_default_storage_path_uses_data_dir(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("AGORA_DATA_DIR", str(tmp_path))
+        bus = EventBus()
+        assert bus._storage_path == tmp_path / "agora-events.json"
+
 
 class TestEventBusMatch:
     def test_match_exact(self):

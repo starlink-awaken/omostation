@@ -711,6 +711,14 @@ class TestRouterAdvanced:
         lines = content.strip().split("\n")
         assert len(lines) == 50
 
+    def test_default_trace_path_uses_data_dir(self, monkeypatch, tmp_path):
+        from agora.core.router import Router as Router2
+
+        monkeypatch.setenv("AGORA_DATA_DIR", str(tmp_path))
+        registry = _reg()
+        router = Router2(registry)
+        assert router._trace_path == tmp_path / "trace_log.jsonl"
+
     def test_maybe_publish_with_event_bus(self):
         """_maybe_publish sends event when event_bus is configured."""
         from agora.core.event_bus import EventBus

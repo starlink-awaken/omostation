@@ -21,6 +21,7 @@ from agora.auth.identity import Identity, normalize_identity  # type: ignore[imp
 from agora.compressor import Compressor as _Compressor  # type: ignore[import-not-found]
 from agora.core.event_bus import EventBus  # type: ignore[import-not-found]
 from agora.core.registry import ServiceRegistry  # type: ignore[import-not-found]
+from agora.mcp.mcp_bootstrap import get_data_dir  # type: ignore[import-not-found]
 from agora.core.service_cache import (  # type: ignore[import-not-found]
     load_service_cache as _load_service_cache,
 )
@@ -76,7 +77,7 @@ class Router:
             set()
         )  # track services in degrade mode for exit events
         self._trace_buffer: list[str] = []  # batched disk writes
-        self._trace_path = _Path(__file__).parent.parent.parent / "trace_log.jsonl"
+        self._trace_path = get_data_dir() / "trace_log.jsonl"
         if routes_path:
             self._routes_path = _Path(routes_path)
         else:

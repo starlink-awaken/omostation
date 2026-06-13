@@ -10,6 +10,7 @@ from datetime import datetime
 
 from agora.cli.output import OutputFormatter
 from agora.core.state import get_registry  # type: ignore[import-not-found]
+from agora.mcp import mcp_bootstrap  # type: ignore[import-not-found]
 
 
 def cmd_register(args):
@@ -219,12 +220,13 @@ def cmd_config(_args):
     """Show config paths and status."""
     registry = get_registry()
     out = OutputFormatter(json_mode=getattr(_args, "json", False))
+    data_dir = mcp_bootstrap.get_data_dir()
     config_data = {
         "Services file": registry._storage_path,
         "Registered": len(registry.list_all()),
         "Healthy": len(registry.list_healthy()),
-        "Events file": "agora-events.json",
-        "Trace file": "trace_log.jsonl",
+        "Events file": data_dir / "agora-events.json",
+        "Trace file": data_dir / "trace_log.jsonl",
         "Dashboard": os.environ.get("AGORA_DASHBOARD_URL", "http://localhost:7430"),
         "Metrics": os.environ.get("AGORA_METRICS_URL", "http://localhost:7430/metrics"),
     }

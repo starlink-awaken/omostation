@@ -53,3 +53,6 @@ coverage.xml
 
 # ── Docker ──
 .docker/
+
+# ── Local OMC runtime state ──
+.omc/

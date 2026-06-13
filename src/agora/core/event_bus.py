@@ -19,6 +19,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from agora.mcp.mcp_bootstrap import get_data_dir  # type: ignore[import-not-found]
+
 if TYPE_CHECKING:
     from agora.core.registry import ServiceRegistry  # type: ignore[import-not-found]
 
@@ -44,7 +46,7 @@ class EventBus:
     ):
         self._storage_path = Path(
             storage_path
-            or str(Path(__file__).parent.parent.parent / "agora-events.json")
+            or str(get_data_dir() / "agora-events.json")
         )
         self._registry = registry
         self._events: list[dict] = []
