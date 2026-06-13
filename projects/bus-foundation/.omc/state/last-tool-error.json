@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd /Users/xiamingxing/Workspace/projects/bus-foundation\\nls src/bus_foundation/backends/persistent* 2>&1\\necho \\\"---\\\"\\n# 实际路径含空格, quote\\nwc -l \\\"src/bus_foundation/backends/persistent bus...",
+  "error": "Exit code 1\nsrc/bus_foundation/backends/persistent_bus.py\n---\nwc: src/bus_foundation/backends/persistent bus.py: open: No such file or directory",
+  "timestamp": "2026-06-12T23:30:02.023Z",
+  "retry_count": 1
+}

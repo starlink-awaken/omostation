@@ -36,6 +36,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_DB_PATH = Path.home() / ".runtime" / "bus_persistent.db"
 MAX_EVENTS = 10_000
 SUBSCRIBER_TTL_SECONDS = 24 * 3600
+# R75-LOW-1: rate-limit subscriber cleanup (was O(N) per publish)
+CLEANUP_EVERY_N_PUBLISHES = 100
 
 
 class PersistentBusBackend:
@@ -55,6 +57,10 @@ class PersistentBusBackend:
         self._conn = self._open_conn()
         self._init_schema()
         self._subscribers: dict[str, tuple[str, float, Callable]] = {}
+        # R75-LOW-1: rate-limit counter (cleanup runs every Nth publish,
+        # not every publish). Avoids O(N) per publish for high-subscriber
+        # counts.
+        self._publish_count = 0
         self._gc()
 
     def _open_conn(self) -> sqlite3.Connection:
@@ -117,8 +123,11 @@ class PersistentBusBackend:
                 (envelope.id, envelope.type, envelope.source, now, envelope.to_json()),
             )
             self._conn.commit()
-        # In-process fanout
-        self._cleanup_subs()
+            # R75-LOW-1: rate-limit cleanup (was every publish, now every Nth)
+            self._publish_count += 1
+            if self._publish_count % CLEANUP_EVERY_N_PUBLISHES == 0:
+                self._cleanup_subs_locked()
+        # In-process fanout (outside the lock, callbacks may be slow)
         for sub_id, (pattern, _last_seen, callback) in self._subscribers.items():
             if self._match(pattern, envelope.type):
                 try:
@@ -136,10 +145,16 @@ class PersistentBusBackend:
         return self._subscribers.pop(sub_id, None) is not None
 
     def _cleanup_subs(self) -> None:
+        """Public wrapper: acquires the lock."""
+        with self._lock:
+            self._cleanup_subs_locked()
+
+    def _cleanup_subs_locked(self) -> None:
         """Drop subscribers that haven't been seen in SUBSCRIBER_TTL_SECONDS.
 
-        R74 fix: use time.monotonic() for TTL delta (right call for elapsed
-        time; immune to system clock changes).
+        R74 fix: use time.monotonic() for TTL delta.
+        R75-LOW-1: caller is rate-limited (every Nth publish); this
+        function assumes the lock is already held.
         """
         now = time.monotonic()
         expired = [sid for sid, (_, _last, _) in self._subscribers.items() if now - _last > SUBSCRIBER_TTL_SECONDS]
