@@ -1,62 +1,51 @@
-# M2: Plugin
-# 插件扩展框架类型定义
-
-id: plugin
-type: Type
-name: 插件
-description: 域类型插件扩展 — 为不同域类型提供业务动作、工作流、规范、机制
-m3_parent: StructuralElement.Component
-layer: L4
-status: active
-created: '2026-06-08'
+m2_type: Plugin
 version: 1.0.0
-
-properties:
-  domain_type:
-    type: enum
-    description: 适用的域类型
-    values: [document, config, engine, tool, workspace, storage, model]
-
-  plugin_type:
-    type: enum
-    description: 插件类型
-    values: [builtin, external, community]
-
-requiredProperties:
-  domain_type:
-    type: string
-  name:
-    type: string
-
-optionalProperties:
-  actions:
-    type: list
-    description: 业务动作列表
-    items:
+created: '2026-06-13'
+updated: '2026-06-13'
+Plugin:
+  m3_parent: ArchitectureElement.Plugin
+  description: 插件——为系统提供可插拔的能力扩展
+  icon: 🧩
+  stateMachine:
+    draft:
+      description: 草稿
+      transitions: [active, deprecated]
+    active:
+      description: 激活
+      transitions: [deprecated]
+    deprecated:
+      description: 弃用
+      transitions: [archived]
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    plugin_type:
       type: string
-  workflows:
-    type: list
-    description: 工作流模板列表
-    items:
-      type: ref
-      target: Workflow
-  specifications:
-    type: list
-    description: 规范列表
-    items:
-      type: ref
-      target: Specification
-  mechanisms:
-    type: list
-    description: 自动机制列表
-    items:
-      type: ref
-      target: Mechanism
-
-relationConstraints:
-  can_be_source_of: [Contains, References]
-  can_be_target_of: [Contains]
-
-examples:
-  - { id: PLUGIN-document-kems, domain_type: document, name: "DocumentKemsPlugin", actions: [state_review, signal_respond, status_evaluate] }
-  - { id: PLUGIN-config-schema, domain_type: config, name: "ConfigSchemaPlugin", actions: [validate_schema, diff_config] }
+      description: 插件类型 (builtin/external/dynamic_loaded)
+    actions:
+      type: list
+      description: 插件提供的 actions 列表
+  optionalProperties:
+    domain_type:
+      type: string
+      description: 插件服务的 domain 类型 (e.g. config/document)
+    version_constraint:
+      type: string
+      description: 版本约束 (semver 表达式)
+  validationRules:
+    - rule: plugin_type != null and actions.size >= 1
+      level: error
+      message: Plugin 必须有 plugin_type 与 ≥1 个 action
+  relationConstraints:
+    can_be_source_of:
+      - Extends
+    can_be_target_of:
+      - References
+  examples:
+    - id: PLUGIN-CONFIG-DOMAIN
+      name: ConfigDomainPlugin
+      description: 配置域的 4-action 插件
+    - id: PLUGIN-DOCUMENT-KEMS
+      name: DocumentKEMSPlugin
+      description: 文档域的 KEMS 5 面插件
