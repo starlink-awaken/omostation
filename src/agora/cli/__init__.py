@@ -10,6 +10,12 @@ from agora.cli.parser import build_parser  # type: ignore[import-not-found]
 
 def main():
     """Main entry point — build parser, parse args, dispatch."""
+    try:
+        from kairon_observability.tracing import setup_tracing
+        setup_tracing("agora-cli")
+    except ImportError:
+        pass  # Skip if observability package isn't installed
+
     parser = build_parser()
     args = parser.parse_args()
 
