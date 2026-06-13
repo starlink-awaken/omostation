@@ -1,5 +1,5 @@
 id: "GOV-X1-CONSTRAINT"
-type: "Specification"
+type: "GovernancePolicy"
 name: "X1 约束维 — 系统边界与约束治理"
 description: "X1 治理维: 定义系统边界、硬性约束和合规规则。9 条 L0 硬性约束 + 层边界规则"
 status: "active"
@@ -8,8 +8,8 @@ layer: "X1"
 created: "2026-06-09"
 version: "1.0.0"
 properties:
+  policy_id: "x1-constraint-policy"
   dimension: "X1"
-  scope: "全层 (L0-L4, I0)"
   constraints:
     - "CR-L0-01: 所有协议必须在 L0 注册"
     - "CR-L0-02: M1 节点必须满足 M2 Schema"
@@ -21,6 +21,17 @@ properties:
     - "CR-MODE-COPY-01: {date}-{mode}.json 副本单一 owner (5repos.py)"
     - "CR-DRIFT-LOOP-01: drift>0 必须 emit self-evolution task 落 planned/ approval_required=true"
     - "CR-AUDIT-5REPOS-01: 5repos.py 路径唯一 .omo/_delivery/audit-rollout/{date}-5repos.json"
+  scope: "全层 (L0-L4, I0)"
+  thresholds:
+    warn_threshold: 0.7
+    fail_threshold: 0.5
+  sla:
+    check_frequency: "weekly"
+    response_time_hours: 24
+  behavior:
+    enforcement: "block-write"
+    auto_remediation: false
+  domain_field: "meta"
   validator: "ecos/ssot/registry/L0-constraints.yaml"
   compliance: "partial"
 source: "ecos/ssot/registry/L0-constraints.yaml"
