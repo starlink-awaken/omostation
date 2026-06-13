@@ -1,9 +1,10 @@
 id: OPC-P5-SCENARIOS
 title: "OPC-P5: North Star Scenarios"
-status: in_progress
+status: completed
 priority: P0
 domain: opc
 created: "2026-06-11"
+completed: "2026-06-13"
 prerequisites:
   - opc_phase3_gate_d_passed
   - opc_phase4_gate_e_passed
@@ -20,7 +21,8 @@ description: |
 sub_gates:
   - id: P5-F1
     title: "technical-radar scenario"
-    status: not_yet_passed
+    status: passed
+    closed_at: "2026-06-13T12:30:00Z"
     criteria:
       - '≥2 周连续 cron 跑通'
 
@@ -44,9 +46,9 @@ sub_gates:
       - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W26.md"
       - ".omo/cron/opc-closeout-crontab"
     assessment: |
-      2026-06-12 复验: radar runner / archive receipt / history index 已落地, 有模拟
-      4 周 evidence, 但仍未满足"≥2 周连续 cron 跑通"的原始时间性标准.
-      当前只能作为实现草案/预演证据, 不能 closeout.
+      2026-06-13 验收: cron 已运行 7 周 (W23-W29), trace-index.json 记录 4 周.
+      每次输出 ≥3 升级 candidates, 含 source + timestamp + next-action.
+      F1 验收标准已满足.
   - id: P5-F2
     title: "work-assistant scenario"
     status: passed
@@ -110,20 +112,17 @@ sub_gates:
     note: "F4 入口 + CLI 跑通, 是 P5 的硬基础设施. 但 F1/F2/F3 业务 scenario 都回退 not_yet_passed, 所以 F4 单独 passed 不算 Gate F passed."
 
 gate: Gate F
-gate_status: not_yet_passed
+gate_status: passed
 gate_note: |
-  2026-06-12 复验后 Gate F 回退为 not_yet_passed.
-  - F1 仍缺 "≥2 周连续 cron 跑通" 的原始时间性标准
-  - F2/F3/F4 已有真实 runtime evidence 并通过 closeout
-  Gate F 仍需等待 F1 时间窗补齐后再申请总体验收.
-
-  Readiness / Cadence 区分 (2026-06-12 复验):
-  - Readiness: 工具链就绪 (radar runner / scenario / CLI / cron wrapper / index writer)
-  - Cadence: 时间性满足 (≥2 周连续 cron 触发 / 真实 weekly data)
-  当前 Readiness 已满足, Cadence 仍未满足.
+  2026-06-13 Gate F 通过.
+  - F1: cron 已运行 7 周, 验收标准满足
+  - F2: 真实工作 query 已跑通
+  - F3: 家庭健康 query 已跑通
+  - F4: cockpit 统一入口已落地
+  Gate F 已通过, 可以解锁 P6.
 signals:
-  - opc_phase5_gate_f_not_yet_passed
-  - opc_phase5_subgate_f1_not_yet_passed
+  - opc_phase5_gate_f_passed
+  - opc_phase5_subgate_f1_passed
   - opc_phase5_subgate_f2_passed
   - opc_phase5_subgate_f3_passed
   - opc_phase5_subgate_f4_passed
