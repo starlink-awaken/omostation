@@ -9,8 +9,8 @@
 cockpit 是 eCOS v5 7 层架构的 **L3 入口层**。所有用户和 AI Agent 通过 cockpit 与系统交互。
 
 **核心职责**：
-1. **CLI 驾驶舱** — `cockpit`/`workspace` 25 个子命令
-2. **MCP Server** — 37 个工具（主 MCP 20 + Agent Runtime 2 + L0 工具 8 + 遗留 Runtime 7）暴露给 Agora Mesh
+1. **CLI 驾驶舱** — `cockpit`/`workspace` 26 个子命令
+2. **MCP Server** — 38 个工具（主 MCP 21 + Agent Runtime 2 + L0 工具 8 + 遗留 Runtime 7）暴露给 Agora Mesh
 3. **Web Dashboard** — FastAPI + 基础认证 (:8090)
 4. **Agent Runtime 桥接** — 通过 runtime 调度 executor 引擎
 
@@ -94,6 +94,7 @@ uv sync
 | `cockpit governance` | 治理检查 |
 | `cockpit code` | 代码分析 |
 | `cockpit workflow` | 工作流管理 |
+| `cockpit scenario` | 场景联动与家庭中枢驱动 (直连 SQLite) |
 | `cockpit bos` | BOS URI 操作 |
 | `cockpit events` | 事件流 |
 | `cockpit import` | 数据导入 |
