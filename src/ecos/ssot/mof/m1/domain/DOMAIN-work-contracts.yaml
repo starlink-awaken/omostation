@@ -1,0 +1,28 @@
+# M1 Node: DOMAIN-work-contracts
+# Type: Domain | Subtype: FileLibrary
+# Generated: 2026-06-12
+
+id: DOMAIN-work-contracts
+type: Domain
+name: 合同法规
+description: 文件库 — 卫健委合同·法律法规·政策文件
+status: active
+domain: work-docs
+created: '2026-06-12'
+version: 1.0.0
+layer: L4
+properties:
+  bos_uri_pattern: bos://work-docs/contracts/**
+  domain_type: document
+  doc_subtype: Sub
+  layer: L4
+  governance_tier: 1
+  storage: /Users/xiamingxing/Documents/@工作文档/合同法规
+  kems_planes:
+  - _storage
+  capabilities:
+  - document.read
+  - document.search
+  entry_points:
+    mcp: domain_read
+subtype: FileLibrary

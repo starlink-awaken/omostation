@@ -14,6 +14,7 @@ layer: L4
 properties:
   bos_uri_pattern: bos://shared/**
   domain_type: document
+  doc_subtype: Infrastructure
   layer: L4
   governance_tier: 3
   storage: /Users/xiamingxing/Documents/@公共

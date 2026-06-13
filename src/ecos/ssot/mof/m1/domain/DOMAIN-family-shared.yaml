@@ -1,0 +1,25 @@
+# M1 Node: DOMAIN-family-shared
+# Type: Domain | Subtype: DocumentDomain
+
+id: DOMAIN-family-shared
+type: Domain
+name: FamilyShared
+description: 家庭共享文档域
+status: active
+domain: family-shared
+layer: L4
+created: '2026-06-13'
+version: 1.0.0
+properties:
+  bos_uri_pattern: bos://family-shared/**
+  domain_type: document
+  layer: L4
+  governance_tier: 2
+  storage: /Users/xiamingxing/Documents/FamilyShared
+  kems_planes:
+  - _control
+  - _entities
+  - _knowledge
+  - _storage
+  capabilities: []
+subtype: DocumentDomain

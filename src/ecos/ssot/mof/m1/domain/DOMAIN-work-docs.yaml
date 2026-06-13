@@ -1,0 +1,29 @@
+# M1 Node: DOMAIN-work-docs
+# Type: Domain | Subtype: AggregateDomain
+# Generated: 2026-06-12
+
+id: DOMAIN-work-docs
+type: Domain
+name: '@工作文档'
+description: 聚合入口 — 卫健委·国转中心·合同法规子域路由
+status: active
+domain: meta
+created: '2026-06-12'
+version: 1.0.0
+layer: L4
+properties:
+  bos_uri_pattern: bos://work-docs/**
+  domain_type: document
+  doc_subtype: Aggregate
+  layer: L4
+  governance_tier: 1
+  storage: /Users/xiamingxing/Documents/@工作文档
+  subdomains:
+  - DOMAIN-work-weijian
+  - DOMAIN-work-guozhuan
+  - DOMAIN-work-contracts
+  capabilities:
+  - domain.route
+  entry_points:
+    mcp: domain_read
+subtype: AggregateDomain

@@ -19,6 +19,7 @@ properties:
     - "CS-06: gate_status 单一字段一致性 (plan.yaml 不得 self-add readiness/cadence 字段)"
     - "CS-07: 5repos 路径唯一一致性 (.omo/_delivery/audit-rollout/{date}-5repos.json)"
     - "CS-08: cron 触发窗口一致性 (manual 演练与 cron evidence 必须可区分)"
+    - "CS-09: L4 域三源一致性 (L4 Registry、Vault-Paths、DOMAIN-INDEX 数量与内容必须绝对对齐)"
   scope: "全层"
   thresholds:
     warn_threshold: 0.8
@@ -41,6 +42,7 @@ properties:
     - "CS-06: gate_status 单一字段一致性 (plan.yaml 不得 self-add readiness/cadence 字段)"
     - "CS-07: 5repos 路径唯一一致性 (.omo/_delivery/audit-rollout/{date}-5repos.json)"
     - "CS-08: cron 触发窗口一致性 (manual 演练与 cron evidence 必须可区分)"
+    - "CS-09: L4 域三源一致性 (L4 Registry、Vault-Paths、DOMAIN-INDEX 数量与内容必须绝对对齐)"
   validator: "model-driven/ssot/lifecycle_ssot.py"
   compliance: "partial"
 source: "model-driven/mof/ontology_extended.py"

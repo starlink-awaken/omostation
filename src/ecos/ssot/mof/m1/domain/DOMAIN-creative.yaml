@@ -1,23 +1,23 @@
-# M1 Node: DOMAIN-personal
+# M1 Node: DOMAIN-creative
 # Type: Domain | Subtype: DocumentDomain
-# Generated: 2026-06-07
+# Generated: 2026-06-12
 
-id: DOMAIN-personal
+id: DOMAIN-creative
 type: Domain
-name: '@个人'
-description: 自我认知·个人资料存储
+name: '@创意创作'
+description: 创作管线 — 小说·世界观·渠道发布·作品资产
 status: active
 domain: meta
-created: '2026-06-07'
+created: '2026-06-12'
 version: 1.0.0
 layer: L4
 properties:
-  bos_uri_pattern: bos://personal/**
+  bos_uri_pattern: bos://creative/**
   domain_type: document
   doc_subtype: Functional
   layer: L4
   governance_tier: 1
-  storage: /Users/xiamingxing/Documents/@个人
+  storage: /Users/xiamingxing/Documents/@创意创作
   kems_planes:
   - _control
   - _entities
@@ -25,8 +25,9 @@ properties:
   - _storage
   - _archive
   capabilities:
-  - knowledge.read
-  - knowledge.search
+  - creative.read
+  - creative.publish
+  - asset.query
   entry_points:
     mcp: domain_read
 subtype: DocumentDomain

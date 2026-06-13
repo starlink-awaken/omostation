@@ -2,7 +2,7 @@
 # Type: Domain | Subtype: EngineDomain
 # Generated: 2026-06-08 · l4-kernel 对齐
 
-id: DOMAIN-knowledge
+id: DOMAIN-knowledge-engine
 type: Domain
 name: Knowledge 引擎
 description: 知识处理引擎配置域

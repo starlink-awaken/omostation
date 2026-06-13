@@ -14,6 +14,7 @@ layer: L4
 properties:
   bos_uri_pattern: bos://family/**
   domain_type: document
+  doc_subtype: Functional
   layer: L4
   governance_tier: 1
   storage: /Users/xiamingxing/Documents/@家庭生活

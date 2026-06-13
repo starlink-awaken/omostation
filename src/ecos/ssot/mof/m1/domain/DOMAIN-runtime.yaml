@@ -1,0 +1,20 @@
+# M1 Node: DOMAIN-runtime
+# Type: Domain | Subtype: WorkspaceDomain
+
+id: DOMAIN-runtime
+type: Domain
+name: Runtime Data
+description: "沙箱数据层和执行上下文。存储 kei_audit, llm_cost, mcp matrix 状态"
+status: active
+domain: runtime
+layer: L1
+created: '2026-06-13'
+version: 1.0.0
+properties:
+  bos_uri_pattern: bos://runtime/**
+  domain_type: workspace
+  layer: L1
+  governance_tier: 1
+  storage: /Users/xiamingxing/runtime
+  capabilities: []
+subtype: WorkspaceDomain
