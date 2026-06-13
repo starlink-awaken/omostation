@@ -45,6 +45,7 @@ L0 协议编织 · 数据定义
 | **X1 审计** | KEI 沙箱 + 审计链 | runtime/kei_sandbox.py |
 | **X2 抗熵** | 健康监控 + 自愈 | runtime/scheduler.py + autoheal.sh |
 | **X3 价值栈** | LLM 成本 + 服务计量 | llm-gateway + omo/omo_cost.py |
+| **X4 一致性** | CLI/端口/依赖/文档/CI/Phase 全量检查 | LAYER-INDEX.md + scripts/audit |
 
 ### §1.3 不变法则
 

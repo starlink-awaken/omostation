@@ -51,6 +51,14 @@ L1 运行时 ── runtime ── 受控沙箱，随 protocols 规则产生 Eph
 L0 协议   ── ecos ── SSB 协议层，承载系统决策的 Immutable Log 上链与涌现计算
 ```
 
+> **L0 协议候选 (bus-foundation)**：bus-foundation 在 R57-R76 期间评估过 L0 协议层提升
+> （ADR-0003），结论为 **Path C: Defer Indefinitely**。原因：L0 是 one-way ratchet，
+> bus-foundation 8 backend + 56 tests + 7 internal eCOS consumers 证明 "the bus
+> works"，但不证明 "the bus deserves L0 status"（需 external adoption 信号，
+> 8 月审计 0/0/0）。详见 `projects/bus-foundation/docs/ADR-0003-no-l0-promotion.md`。
+> 现状：bus-foundation 保持 standalone repo 状态（`projects/bus-foundation/`），
+> 普通 feature work 节奏，未来 external adoption 出现可 supersede ADR-0003。
+
 **五大 BOS URI 域**（所有跨层通信必须经 Agora Mesh 路由）：
 
 | 域 | 命名空间 | 承载项目 |
