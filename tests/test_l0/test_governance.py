@@ -1023,7 +1023,6 @@ class TestSwarmPrimitiveExtended:
             confidence=0.9,
         )
         
-        # 控制涌现
         assert manager.control_emergence(behavior, "suppress")
         assert manager.control_emergence(behavior, "amplify")
     
@@ -1059,6 +1058,64 @@ class TestSwarmPrimitiveExtended:
         assert len(d["agents"]) == 3
         assert d["confidence"] == 0.7
         assert d["level"] == "high"
+    
+    def test_emergence_detector(self):
+        """测试涌现检测器"""
+        from ecos.l0.governance import EmergenceDetector, SwarmState, EmergencePattern
+        
+        detector = EmergenceDetector()
+        state = SwarmState(agents=["a1", "a2", "a3"], behaviors=[])
+        
+        detected = detector.detect(state)
+        assert len(detected) == 1
+        assert detected[0].pattern == EmergencePattern.CLUSTERING
+        
+        history = detector.get_history()
+        assert len(history) == 1
+    
+    def test_collective_decision(self):
+        """测试集体决策引擎"""
+        from ecos.l0.governance import CollectiveDecision, DecisionMethod
+        
+        engine = CollectiveDecision()
+        
+        # 创建提案
+        proposal = engine.create_proposal("p1", "选择方案", ["A", "B", "C"], DecisionMethod.MAJORITY_VOTE)
+        assert proposal.proposal_id == "p1"
+        
+        # 投票
+        engine.vote("p1", "agent-1", "A")
+        engine.vote("p1", "agent-2", "A")
+        engine.vote("p1", "agent-3", "B")
+        
+        # 决策
+        result = engine.decide("p1")
+        assert result == "A"
+        assert proposal.status == "decided"
+    
+    def test_swarm_visualizer(self):
+        """测试蜂群可视化"""
+        from ecos.l0.governance import SwarmVisualizer, SwarmState, EmergentBehavior, EmergencePattern
+        
+        state = SwarmState(
+            agents=["agent-1", "agent-2"],
+            behaviors=[
+                EmergentBehavior(
+                    pattern=EmergencePattern.CLUSTERING,
+                    agents=["agent-1", "agent-2"],
+                    confidence=0.8,
+                )
+            ],
+        )
+        
+        viz = SwarmVisualizer.visualize(state)
+        assert len(viz.agents) == 2
+        assert len(viz.behaviors) == 1
+        assert viz.metrics["agent_count"] == 2
+        
+        mermaid = SwarmVisualizer.to_mermaid(state)
+        assert "agent-1" in mermaid
+        assert "agent-2" in mermaid
 
 
 class TestPersonalKnowledgePrimitiveExtended:

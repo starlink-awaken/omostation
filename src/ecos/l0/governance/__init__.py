@@ -71,10 +71,16 @@ from .role import (
 from .swarm import (
     EmergencePattern,
     EmergenceLevel,
+    DecisionMethod,
     EmergentBehavior,
     SwarmState,
+    DecisionProposal,
+    SwarmVisualization,
     SwarmPrimitive,
     SwarmManager,
+    EmergenceDetector,
+    CollectiveDecision,
+    SwarmVisualizer,
 )
 from .personal import (
     KnowledgeType,
@@ -161,10 +167,16 @@ __all__ = [
     # 蜂群原语
     "EmergencePattern",
     "EmergenceLevel",
+    "DecisionMethod",
     "EmergentBehavior",
     "SwarmState",
+    "DecisionProposal",
+    "SwarmVisualization",
     "SwarmPrimitive",
     "SwarmManager",
+    "EmergenceDetector",
+    "CollectiveDecision",
+    "SwarmVisualizer",
     # 个人知识原语
     "KnowledgeType",
     "PreferenceType",
