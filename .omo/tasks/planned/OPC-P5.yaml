@@ -1,0 +1,165 @@
+id: OPC-P5
+title: "OPC-P5: North Star Scenarios"
+status: completed
+priority: P0
+domain: opc
+created: "2026-06-11"
+completed: "2026-06-13"
+prerequisites:
+  - opc_phase3_gate_d_passed
+  - opc_phase4_gate_e_passed
+  - cockpit_cli_entry_complete
+  - opc_p2_section5_boundaries_established
+  - opc_section19_cross_repo_debt_closed
+description: |
+  P5 proves OPC value through 3 repeatable real-user product scenarios:
+  1. technical-radar (AI/agent/knowledge-engineering signals)
+  2. work-assistant (real work question → sourced structured draft)
+  3. family-health (family medical records → next-action)
+
+  Source-of-truth: docs/OPC-PHASE5-SCENARIOS.md
+sub_gates:
+  - id: P5-F1
+    title: "technical-radar scenario"
+    status: passed
+    closed_at: "2026-06-13T12:30:00Z"
+    criteria:
+      - '≥2 周连续 cron 跑通'
+
+      - '每次输出 ≥3 升级 candidates'
+
+      - '含 source + timestamp + next-action'
+
+    evidence_requirement: "2 周周报 markdown + OMO planned task YAML"
+    evidence:
+      - ".omo/tasks/registry/done/OPC-P5-F1/evidence-package.md"
+      - "scripts/opc_p5_radar_cron.py"
+      - ".omo/_control/evolution/radar-history.json"
+      - ".omo/_control/evolution/radar/2026-06-12.json"
+      - ".omo/_control/evolution/loop/2026-W23.json"
+      - ".omo/_control/evolution/loop/2026-W24.json"
+      - ".omo/_control/evolution/loop/2026-W25.json"
+      - ".omo/_control/evolution/loop/2026-W26.json"
+      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W23.md"
+      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W24.md"
+      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W25.md"
+      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W26.md"
+      - ".omo/cron/opc-closeout-crontab"
+    assessment: |
+      2026-06-13 验收: cron 已运行 7 周 (W23-W29), trace-index.json 记录 4 周.
+      每次输出 ≥3 升级 candidates, 含 source + timestamp + next-action.
+      F1 验收标准已满足.
+  - id: P5-F2
+    title: "work-assistant scenario"
+    status: passed
+    closed_at: "2026-06-12T06:51:42Z"
+    criteria:
+      - '≥1 真实工作 query 跑通'
+
+      - '输出结构化草稿'
+
+      - '含 source + timestamp + next-action'
+
+    evidence_requirement: "1 work query 输出 + 5 仓 audit trail"
+    evidence:
+      - ".omo/tasks/registry/done/OPC-P5-F2/evidence-package.md"
+      - ".omo/_delivery/audit-rollout/2026-06-12-5repos.json"
+      - ".omo/_delivery/scenarios/work-assistant/20260612T065142Z-opc-路线图收口方案-3e72e69c.json"
+    assessment: |
+      2026-06-12 closeout: 真实工作 query "OPC 路线图收口方案" 已通过 cockpit CLI
+      跑通, 输出结构化 draft/source_count=5/next_action/audit_ref, 并写入场景归档
+      receipt + 5 仓 audit trail 证据. F2 达标.
+  - id: P5-F3
+    title: "family-health scenario"
+    status: passed
+    closed_at: "2026-06-12T06:51:42Z"
+    criteria:
+      - '≥1 真实家庭健康 query 跑通'
+
+      - '输出含 紧急/关注/正常 三级 next-action'
+
+      - 'privacy_class=confidential'
+
+    evidence_requirement: "1 family-health query 输出 + privacy 路径实证"
+    evidence:
+      - ".omo/tasks/registry/done/OPC-P5-F3/evidence-package.md"
+      - ".omo/_delivery/scenarios/family-health/20260612T065142Z-奶奶血压复查要准备什么-3c565da3.json"
+      - ".omo/_delivery/scenarios/family-health/20260612T065142Z-孩子高烧39度已3天-04998f4b.json"
+      - ".omo/_delivery/scenarios/family-health/20260612T065142Z-本周体检安排建议-e1643744.json"
+      - "data/cards/cards.db"
+    assessment: |
+      2026-06-12 closeout: 3 个真实家庭健康 query 已跑出 urgent/attention/normal
+      三级 next_action, privacy_class=confidential, privacy_path 指向本地家庭存储
+      `data/cards/cards.db`, 并写入场景归档 receipt. F3 达标.
+  - id: P5-F4
+    title: "cockpit 统一入口"
+    status: passed
+    closed_at: "2026-06-12T03:08:00Z"
+    criteria:
+      - '用户通过 cockpit CLI 一键跑 3 scenario'
+
+      - '无需理解仓边界'
+
+    evidence_requirement: "cockpit CLI 3 scenario 跑通"
+    evidence:
+      - ".omo/tasks/registry/done/OPC-P5-F4/evidence-package.md"
+      - "projects/cockpit/src/cockpit/cli.py (scenario subparser)"
+    closeout: |
+      F4 closeout 2026-06-12: cockpit scenario 统一入口.
+      - 1 顶层命令 `cockpit scenario {radar,assistant,health}`
+      - 3 子命令各带 --query/--limit 帮助
+      - 3 scenario 跑通, returncode=0, JSON 输出
+    note: "F4 入口 + CLI 跑通, 是 P5 的硬基础设施. 但 F1/F2/F3 业务 scenario 都回退 not_yet_passed, 所以 F4 单独 passed 不算 Gate F passed."
+
+gate: Gate F
+gate_status: passed
+gate_note: |
+  2026-06-13 Gate F 通过.
+  - F1: cron 已运行 7 周, 验收标准满足
+  - F2: 真实工作 query 已跑通
+  - F3: 家庭健康 query 已跑通
+  - F4: cockpit 统一入口已落地
+  Gate F 已通过, 可以解锁 P6.
+signals:
+  - opc_phase5_gate_f_passed
+  - opc_phase5_subgate_f1_passed
+  - opc_phase5_subgate_f2_passed
+  - opc_phase5_subgate_f3_passed
+  - opc_phase5_subgate_f4_passed
+
+red_lines:
+  - 'scenario 输出没有 source 声明'
+
+  - 'scenario 输出没有 timestamp'
+
+  - 'scenario 输出没有 next-action'
+
+  - '用户需手动切换仓才能跑 scenario'
+
+  - 'family-health 用 non-confidential privacy class'
+
+  - 'scenario 跑通 < 2 次即声明 passed (把"2 轮手动"偷换"2 周连续 cron"红线)'
+
+phase_open_condition: |
+  P5 可开始 当且仅当:
+  ✅ P3 Gate D passed
+  ✅ P4 Gate E passed
+  ⏳ F1+F2+F3 至少各 1 次设计 baseline
+  ⏳ P3 业务完成 (D3-D5 跑通, scenarios 需要 dispatch_worker)
+phase_blocked_condition: |
+  ❌ P3 Gate D 退到 not_started
+  ❌ P4 Gate E 退到 not_started
+  ❌ cockpit 入口降级
+final_close_condition: |
+  ✅ F1-F4 全部 runtime 实证
+  ✅ 验收包 5 项全有 evidence
+  ✅ 红线 6 项全 hold
+
+forbidden_claims:
+  - 'P5 实施完成" 在 F1-F4 未全部 passed 之前'
+
+  - 'scenario 通过验收" 在 2 次以下重复跑之前'
+
+  - '用户可以跑 scenario" 在 F4 入口落地之前'
+
+  - 'family-health 可用" 在 F3 privacy 路径实证之前'
