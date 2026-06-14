@@ -1,0 +1,39 @@
+id: "STAGE-DESIGN"
+type: "Stage"
+subtype: "StandardStage"
+name: "设计态"
+description: "架构设计、接口定义、ADR 记录 — 7 阶段标准生命周期第 2 阶段"
+status: "active"
+domain: "meta"
+layer: "L0"
+created: "2026-06-13"
+version: "1.0.0"
+properties:
+  order: 1
+  stage: "design"
+  m3_parent: "LifecycleElement.Stage"
+  model_driven_ref:
+    - "projects/model-driven/src/model_driven/mof/m3_extended.py:STANDARD_STAGES[LifecycleStage.DESIGN]"
+  entry_criteria:
+    - "Spec 已起草"
+    - "关键 ADR 已记录"
+  exit_criteria:
+    - "Spec 已审批"
+    - "接口契约已定义"
+    - "设计评审通过"
+  core_activities:
+    - "架构设计"
+    - "接口定义"
+    - "ADR 记录"
+    - "设计评审"
+  deliverables:
+    - "设计文档"
+    - "接口契约"
+    - "ADR 记录"
+    - "设计评审报告"
+  stakeholders:
+    - "架构师"
+    - "技术负责人"
+    - "开发团队"
+  duration_target_days: 7
+source: "model-driven/mof/m3_extended.py:STANDARD_STAGES"
