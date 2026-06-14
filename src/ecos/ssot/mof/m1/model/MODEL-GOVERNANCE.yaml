@@ -19,3 +19,9 @@ properties:
     X3: value-attribution·cost
     X4: mof-audit·cards-state-consistency
   formality: semiformal
+  m3_parent: DescriptiveElement.Model
+  model_driven_refs:
+    - projects/model-driven/src/model_driven/management/hybrid_judge.py:HybridJudge
+    - projects/model-driven/src/model_driven/management/evaluator.py:GovernanceEvaluator
+    - projects/ecos/src/ecos/ssot/mof/m1/governance/GOV-X1-CONSTRAINT.yaml
+    - projects/ecos/src/ecos/ssot/mof/m1/governance/GOV-X4-CONSISTENCY.yaml
