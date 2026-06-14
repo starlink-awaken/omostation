@@ -435,6 +435,42 @@ OPC 路线图 P5-P7 收口阶段建立的 self-correction 闭环, 任何 Phase /
 - `feedback_8field_review_template_20260612.md` — review template 8 字段
 - `feedback_release_notes_three_piece_20260612.md` — release notes 三件套 (summary/validation/debt)
 
+## 🧬 Model-Driven Bridge (2026-06-14 确立)
+
+> `projects/model-driven` 是 eCOS v5 的**横切面框架 (Cross-Cutting Framework)**, 被 L0/L2/L3/L4 四层消费, 零内部依赖。
+> 通过 M3→M2→M1 链路把"模型驱动"理念物化到 SSOT, 任何新增阶段/门禁都必须双向追溯。
+
+### 桥接 SSOT 链
+
+| 层级 | 路径 | 用途 |
+|------|------|------|
+| M3 标准定义 | `projects/model-driven/src/model_driven/mof/m3_extended.py:STANDARD_STAGES` | 7 阶段 + 4 门禁 + 3 PipelinePhase 单一来源 |
+| M2 schema | `projects/ecos/src/ecos/ssot/mof/m2/omo_task.yaml` 等 45 个 YAML | 建模契约: required/optional/stateMachine/validationRules |
+| M1 实例节点 | `projects/ecos/src/ecos/ssot/mof/m1/**` 946 个 YAML | 真实实例, 每个含 `m3_parent` + `model_driven_refs` 双向引用 |
+| 校验 | `projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py` | 4 flags (--strict/--check-types/--check-transitions/--check-refs) |
+
+### 桥接铁律
+
+1. **M3 是 SSOT** — `model-driven/m3_extended.py:STANDARD_STAGES/...` 不得在别处复制定义
+2. **M1 必含双向引用** — 每个 M1 节点必须有 `m3_parent` (指向 M3 类型) + `model_driven_refs` (反向追溯 model-driven 源文件/类)
+3. **M2 schema 必含 validationRules** — 不只是声明字段, 必须有 `gate_status=passed implies evidence>=1` 等硬约束
+4. **任何新增阶段/门禁** 必须同时落: model-driven 源 + M2 schema + M1 节点 + schema-validate 校验
+5. **pre-commit hook 强制** — 任何 M1 YAML 改动触发 `mof-schema-validate.py --staged --strict`, 失败即拒绝提交
+
+### 当前桥接状态 (2026-06-14 收口)
+
+- 946 M1 节点 / 45 M2 schema / 95.6% type coverage
+- 7/7 阶段实例化 (was 1/7) / 4/4 门禁实例化 (was 1/4) / 5/5 MODEL-* 节点反向追溯
+- 3 OMOTASK-OPC-P5/P6/P7 节点全部 status=done + evidence>=1
+- 0 drift / 0 missing / 0 sm_invalid / 0 lint
+- 收口报告: `.omo/_knowledge/audits/2026-06-14-model-driven-bridge-closeout.md`
+
+### 关键 memory 引用
+
+- `project_model_driven_layer_positioning_20260609.md` — model-driven 是横切面框架, 非 L4
+- `project_model_driven_debt_fix_p0_p1_20260609.md` — 34 源文件, 0 lint, 29/29 验证通过
+- `feedback_mof_schema_governance_rule_registration_20260613.md` — 校验纳入 L0 治理规则 3 步法
+
 ## Panoramic View
 
 - **Full feature map / architecture / core flows / module deps / user journeys / integration surfaces**: See [`docs/PANORAMA.md`](./docs/PANORAMA.md) (6-section overview with Mermaid diagrams, P58-P71 14 phase steady state snapshot).
