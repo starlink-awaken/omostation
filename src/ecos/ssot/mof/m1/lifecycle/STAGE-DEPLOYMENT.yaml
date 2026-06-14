@@ -1,0 +1,45 @@
+id: "STAGE-DEPLOYMENT"
+type: "Stage"
+subtype: "StandardStage"
+name: "部署态"
+description: "CI/CD、灰度发布、生产部署 — 7 阶段标准生命周期第 4 阶段"
+status: "active"
+domain: "meta"
+layer: "L0"
+created: "2026-06-13"
+version: "1.0.0"
+properties:
+  order: 3
+  stage: "deployment"
+  m3_parent: "LifecycleElement.Stage"
+  model_driven_ref:
+    - "projects/model-driven/src/model_driven/mof/m3_extended.py:STANDARD_STAGES[LifecycleStage.DEPLOYMENT]"
+  entry_criteria:
+    - "代码完成"
+    - "单元测试通过率 >= 80%"
+    - "Code Review 通过"
+    - "CI 首次绿灯"
+  exit_criteria:
+    - "CI/CD 流水线就绪"
+    - "灰度发布验证通过"
+    - "生产部署成功"
+    - "冒烟测试通过"
+    - "监控已配置"
+  core_activities:
+    - "CI/CD 流水线构建"
+    - "灰度发布 (1% → 10% → 50% → 100%)"
+    - "生产环境部署"
+    - "冒烟测试"
+    - "监控/告警配置"
+  deliverables:
+    - "CI/CD 配置"
+    - "部署脚本"
+    - "灰度发布报告"
+    - "生产部署记录"
+    - "监控仪表板"
+  stakeholders:
+    - "DevOps 工程师"
+    - "SRE 工程师"
+    - "技术负责人"
+  duration_target_days: 7
+source: "model-driven/mof/m3_extended.py:STANDARD_STAGES"
