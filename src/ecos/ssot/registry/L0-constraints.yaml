@@ -404,3 +404,22 @@ mof_schema_validate_constraints:
     matching_strategy:
       stage: "按 stage key (planning/design/development/...) 匹配, 容忍 _ vs - 命名差异"
       gate: "按 (from_stage, to_stage) transition 匹配, 不依赖 id 命名"
+
+  - id: CR-MOF-STATE-BRIDGE-01
+    name: "MOF State-Bridge .omo/tasks/ 双向同步约束"
+    description: "任何 M1 omo_layer/OMOTASK-*.yaml 节点新增/修改后必跑 mof-state-bridge.py --strict, 验证 .omo/tasks/{active,planned,done}/*.yaml ↔ M1 OMOTask 双向同步; m1_only=0 即失同步"
+    rule: "for each OMOTASK-* change: mof-state-bridge.py --strict must pass with m1_only=0 (双向配对 100%)"
+    type: required
+    severity: error
+    violation: "M1 OMOTask 节点无 .omo/tasks/ 配对 (m1_only > 0), 或反之 (.omo 任务无 M1 OMOTask 节点)"
+    introduced: '2026-06-14'
+    value_tier: 1
+    enforcement:
+      ci_pre_commit: "projects/ecos/.githooks/pre-commit 调用 mof-state-bridge.py (omo_layer 改动触发)"
+      cli_invoke: "cd projects/ecos && python3 src/ecos/ssot/tools/mof-state-bridge.py --strict"
+    references:
+      - "projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py (双向桥接 + alias 模糊匹配, 2026-06-14)"
+      - ".omo/tasks/{active,planned,done}/*.yaml (3 目录 83 个任务 SSOT)"
+    alias_strategy:
+      title: "前 8/12 字符 or 子串包含 (M1 name ↔ .omo title)"
+      status: "done/completed, in_progress/active, proposed/planned 双向兼容"
