@@ -35,3 +35,18 @@ if [ "$DEBT_WARNINGS" -gt 0 ]; then
 fi
 
 echo "✅ Pre-commit check complete"
+
+# MOF Schema 校验 (CR-MOF-VALIDATE-01 强制)
+# 任何 M1 节点变更后必跑 mof-schema-validate.py --staged --strict
+STAGED_M1=$(git diff --cached --name-only --diff-filter=ACM -- 'src/ecos/ssot/mof/m1/**/*.yaml' 2>/dev/null)
+if [ -n "$STAGED_M1" ]; then
+    if command -v uv &>/dev/null; then
+        echo "🔍 MOF schema 校验 (staged M1)..."
+        cd "$REPO_ROOT" && uv run --no-project --with pyyaml python3 src/ecos/ssot/tools/mof-schema-validate.py --staged --strict 2>&1 || {
+            echo "❌ mof-schema-validate 失败, 见上方错误"
+            exit 1
+        }
+    else
+        echo "⚠️  uv 未安装, 跳过 mof-schema-validate"
+    fi
+fi

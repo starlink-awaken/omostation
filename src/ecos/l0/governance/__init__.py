@@ -48,6 +48,8 @@ from .distributed import (
     SyncResult,
     DistributedPrimitive,
     CRDTSync,
+    NodeManager,
+    NodeInfo,
 )
 from .role import (
     RoleType,
@@ -117,6 +119,8 @@ __all__ = [
     "SyncResult",
     "DistributedPrimitive",
     "CRDTSync",
+    "NodeManager",
+    "NodeInfo",
     # 角色原语
     "RoleType",
     "RoleStatus",
