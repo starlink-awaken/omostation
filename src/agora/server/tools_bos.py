@@ -55,16 +55,6 @@ def _get_proxy_manager():
 
 # ── BOS 域鉴权 ──────────────────────────────────────────────
 
-_BOS_DOMAIN_ACCESS: dict[str, list[str]] = {
-    "memory": ["read", "write"],
-    "omo": ["read", "write"],
-    "analysis": ["read", "write"],
-    "persona": ["read", "write"],
-    "forge": ["read", "write"],
-    "meta": ["read"],
-    "ecos": ["read"],
-    "agora": ["read"],
-}
 
 _AGORA_API_KEY = os.environ.get("AGORA_API_KEY", "")
 
@@ -87,9 +77,16 @@ def _bos_domain_authorized(uri: str, operation: str = "read") -> tuple[bool, str
         return True, ""  # 本地开发模式
 
     domain = uri.split("/")[2] if uri.startswith("bos://") and "/" in uri else ""
-    allowed = _BOS_DOMAIN_ACCESS.get(domain, [])
-    if operation not in allowed:
-        return False, f"Domain '{domain}' does not allow operation '{operation}'"
+    if not domain:
+        return False, "Invalid URI format: Missing domain"
+
+    # CR-DOMAIN-AUTH-01: 注册表驱动的域鉴权
+    # 如果 bos_router 中存在该 domain 的任何路由，即视为合法域
+    # (更精细的 read/write 权限由 L0 审计与 IAM 中间件后续接管)
+    routes = _bos_router.list_all(prefix=f"bos://{domain}/")
+    if not routes:
+        return False, f"Domain '{domain}' is not registered in BOSRouter"
+        
     return True, ""
 
 
