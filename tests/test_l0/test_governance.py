@@ -624,7 +624,7 @@ class TestTaskScheduler:
     
     def test_task_priority(self):
         """测试任务优先级"""
-        from ecos.l0.governance import TaskScheduler, TaskStatus
+        from ecos.l0.governance import TaskScheduler
         
         scheduler = TaskScheduler()
         

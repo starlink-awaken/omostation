@@ -13,7 +13,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import Any
 import hashlib
 import json
 
@@ -182,18 +182,14 @@ class CRDTSync(DistributedPrimitive):
         # LWW: 时间戳最新的获胜
         if remote.timestamp > local.timestamp:
             merged_data = remote.data.copy()
-            merged_version = remote.version
         elif remote.timestamp < local.timestamp:
             merged_data = local.data.copy()
-            merged_version = local.version
         else:
             # 相同时间戳，node_id 字典序较大的获胜
             if remote.node_id > local.node_id:
                 merged_data = remote.data.copy()
-                merged_version = remote.version
             else:
                 merged_data = local.data.copy()
-                merged_version = local.version
         
         return StateSnapshot(
             node_id=self.node_id,
