@@ -739,6 +739,60 @@ class TestRolePrimitive:
         # 列出角色
         roles = manager.list_roles()
         assert len(roles) == 1
+    
+    def test_role_collaboration(self):
+        """测试角色协作"""
+        from ecos.l0.governance import RoleManager, RoleDefinition, RoleType, RoleCollaboration, CollaborationMode
+        
+        manager = RoleManager()
+        collaboration = RoleCollaboration(manager)
+        
+        # 定义角色
+        manager.define_role(RoleDefinition(role_id="worker", role_type=RoleType.WORKER, capabilities=["task"], constraints={}))
+        manager.define_role(RoleDefinition(role_id="coordinator", role_type=RoleType.COORDINATOR, capabilities=["manage"], constraints={}))
+        
+        # 创建协作任务
+        task = collaboration.create_task("task-1", "协作任务", ["worker", "coordinator"], CollaborationMode.SEQUENTIAL)
+        assert task.task_id == "task-1"
+        
+        # 分配角色
+        assignments = {"worker": "agent-1", "coordinator": "agent-2"}
+        assert collaboration.assign_roles_to_task("task-1", assignments)
+        assert task.status == "assigned"
+        
+        # 开始任务
+        assert collaboration.start_task("task-1")
+        assert task.status == "running"
+        
+        # 完成任务
+        assert collaboration.complete_task("task-1", {"output": "done"})
+        assert task.status == "completed"
+    
+    def test_role_evaluator(self):
+        """测试角色评估"""
+        from ecos.l0.governance import RoleEvaluator
+        
+        evaluator = RoleEvaluator()
+        
+        # 评估
+        eval1 = evaluator.evaluate("agent-1", "worker", 85.0, {"speed": 0.9, "quality": 0.8})
+        assert eval1.score == 85.0
+        
+        evaluator.evaluate("agent-2", "worker", 92.0, {"speed": 0.95, "quality": 0.9})
+        
+        # 获取最新评估
+        latest = evaluator.get_evaluation("agent-1")
+        assert latest is not None
+        assert latest.score == 85.0
+        
+        # 获取平均分
+        avg = evaluator.get_average_score("worker")
+        assert avg == 88.5  # (85 + 92) / 2
+        
+        # 获取 top agents
+        top = evaluator.get_top_agents("worker", limit=1)
+        assert len(top) == 1
+        assert top[0].score == 92.0
 
 
 class TestSwarmPrimitive:

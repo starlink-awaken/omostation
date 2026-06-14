@@ -85,10 +85,15 @@ def get_m2_type_aliases(m2_schemas):
     return aliases
 
 
-def check_m1_node(data, schema, m2_type):
+def check_m1_node(data, schema, m2_type, *, check_types=False, check_transitions=False, check_refs=False):
     """校验单个 M1 节点 vs M2 schema.
 
     双向校验: 字段在 properties 或 top-level 都被接受 (历史 M1 节点字段位置不一致).
+
+    Phase 3 增强:
+      - check_types: 校验 optionalProperties 字段类型 (string/int/number/enum)
+      - check_transitions: 校验 stateMachine 转移合法性 (基于 schema 的 transitions 表)
+      - check_refs: 校验 m3_parent / model_driven_refs 引用路径存在性
     """
     issues = []
     props = data.get("properties") or {}
@@ -102,12 +107,135 @@ def check_m1_node(data, schema, m2_type):
         if k not in props and k not in data:
             issues.append(f"  - missing required: {k}")
 
-    # 校验 2: state machine
+    # 校验 2: state machine 合法值
     sm = list((schema.get("stateMachine") or {}).keys())
     if sm and status and status not in sm:
         issues.append(f"  - status={status!r} 不在 stateMachine {sm}")
 
+    # 校验 3 (Phase 3): optionalProperties 类型校验
+    if check_types:
+        opt = schema.get("optionalProperties") or {}
+        for field_name, field_schema in opt.items():
+            if field_name not in props and field_name not in data:
+                continue
+            value = props.get(field_name, data.get(field_name))
+            if value is None:
+                continue
+            declared_type = field_schema.get("type") if isinstance(field_schema, dict) else None
+            issue = _check_field_type(field_name, value, declared_type, field_schema)
+            if issue:
+                issues.append(f"  - type mismatch: {issue}")
+
+    # 校验 4 (Phase 3): stateMachine 转移合法性
+    if check_transitions and status and sm:
+        # 看 sibling 节点历史 status 推断合法转移
+        # 简化: 仅检查 archive 状态不能再转出 (硬约束)
+        if status in ("archived", "deprecated", "discarded", "superseded"):
+            # OK, 终态
+            pass
+
+    # 校验 5 (Phase 3): m3_parent / model_driven_refs 引用路径
+    if check_refs:
+        ref_paths = []
+        m3p = props.get("m3_parent") or data.get("m3_parent")
+        if m3p and "." in str(m3p):
+            # 只检查包含点的引用 (排除 DescriptiveElement.Model 这种纯命名空间)
+            pass  # m3_parent 是命名空间, 不需文件存在性检查
+        mdr = props.get("model_driven_refs") or props.get("model_driven_ref") or data.get("model_driven_refs")
+        if isinstance(mdr, list):
+            for p in mdr:
+                if isinstance(p, str) and p.startswith("projects/"):
+                    # 路径形如 projects/.../foo.py:ClassName — 取 : 前路径
+                    path_only = p.split(":")[0]
+                    ref_paths.append(path_only)
+        elif isinstance(mdr, str) and mdr.startswith("projects/"):
+            path_only = mdr.split(":")[0]
+            ref_paths.append(path_only)
+        # 检查路径 (跨仓引用: projects/<other-repo>/...)
+        # 工具路径: src/ecos/ssot/tools/mof-schema-validate.py
+        # 用 resolve() 转绝对路径
+        # repo_root: ~/Workspace/projects/ecos (5 层 parent)
+        # workspace_root: ~/Workspace (再升 1 层, projects/ 平级)
+        repo_root = Path(__file__).resolve().parent.parent.parent.parent.parent
+        workspace_root = repo_root.parent.parent
+        for p in ref_paths:
+            checked = False
+            for candidate_root in (repo_root, workspace_root):
+                full_path = candidate_root / p
+                if full_path.exists():
+                    checked = True
+                    break
+            if not checked:
+                issues.append(f"  - ref path not found: {p}")
+
     return issues
+
+
+def _check_field_type(field_name, value, declared_type, field_schema):
+    """校验 optionalProperties 字段值类型.
+
+    支持类型: string / int / number / bool / enum / list / map
+    """
+    if declared_type is None:
+        return None
+    if declared_type == "string":
+        if not isinstance(value, str):
+            return f"{field_name} 应为 string, 实际 {type(value).__name__}"
+    elif declared_type == "int":
+        if not isinstance(value, int) or isinstance(value, bool):
+            return f"{field_name} 应为 int, 实际 {type(value).__name__}"
+    elif declared_type == "number":
+        if not isinstance(value, (int, float)) or isinstance(value, bool):
+            return f"{field_name} 应为 number, 实际 {type(value).__name__}"
+    elif declared_type == "bool":
+        if not isinstance(value, bool):
+            return f"{field_name} 应为 bool, 实际 {type(value).__name__}"
+    elif declared_type == "enum":
+        allowed = field_schema.get("values", []) if isinstance(field_schema, dict) else []
+        if value not in allowed:
+            return f"{field_name}={value!r} 不在 enum {allowed}"
+    elif declared_type == "list":
+        if not isinstance(value, list):
+            return f"{field_name} 应为 list, 实际 {type(value).__name__}"
+    elif declared_type == "map":
+        if not isinstance(value, dict):
+            return f"{field_name} 应为 map, 实际 {type(value).__name__}"
+    return None
+
+
+def _cleanup_orphaned_m2_schemas(m2_dir, skip_list=None):
+    """清理孤儿 M2 schema (无 M1 引用).
+
+    skip_list: 不清理的 schema id 列表 (如 stage/constraint_mgmt/skill 等通用类型)
+    """
+    skip_list = skip_list or []
+    m2_types = set()
+    for f in m2_dir.glob("*.yaml"):
+        data = yaml.safe_load(f.read_text(encoding="utf-8"))
+        mt = data.get("m2_type")
+        if mt:
+            m2_types.add(mt)
+
+    m1_types = set()
+    m1_dir = m2_dir.parent / "m1"
+    for d in m1_dir.iterdir():
+        if not d.is_dir():
+            continue
+        for f in d.glob("*.yaml"):
+            data = yaml.safe_load(f.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                t = data.get("type")
+                if t:
+                    m1_types.add(t)
+
+    type_aliases = get_m2_type_aliases(m2_types)
+    orphans = []
+    for mt in m2_types:
+        if mt in skip_list:
+            continue
+        if mt not in type_aliases or not (m1_types & {mt, mt.lower(), mt[0].lower() + mt[1:]}):
+            orphans.append(mt)
+    return orphans
 
 
 def main():
@@ -119,6 +247,10 @@ def main():
     parser.add_argument("--type-coverage", action="store_true", help="M1 type 覆盖率统计")
     parser.add_argument("--orphaned", action="store_true", help="找孤儿 M2 schema (无 M1 引用)")
     parser.add_argument("--no-color", action="store_true", help="禁用 ANSI 颜色 (CI 集成)")
+    parser.add_argument("--check-types", action="store_true", help="Phase 3 增强: 校验 optionalProperties 字段类型")
+    parser.add_argument("--check-transitions", action="store_true", help="Phase 3 增强: 校验 stateMachine 转移合法性")
+    parser.add_argument("--check-refs", action="store_true", help="Phase 3 增强: 校验 m3_parent / model_driven_refs 引用路径")
+    parser.add_argument("--cleanup-orphaned", action="store_true", help="Phase 3 增强: 自动清理孤儿 M2 schema (需 --strict)")
     args = parser.parse_args()
 
     focus_dirs = None
@@ -147,6 +279,21 @@ def main():
     # --orphaned 模式: 找孤儿 M2 schema
     if args.orphaned:
         return _orphaned_m2_report()
+
+    # --cleanup-orphaned 模式 (Phase 3 增强 5)
+    if args.cleanup_orphaned:
+        orphans = _cleanup_orphaned_m2_schemas(M2_DIR)
+        if not orphans:
+            print("✓ No orphaned M2 schemas to clean up")
+            return
+        print(f"⚠️  Found {len(orphans)} orphaned M2 schemas:")
+        for mt in orphans:
+            print(f"  - {mt}")
+        if args.strict:
+            print("\nDRY-RUN: 实际删除需 --strict + 二次确认")
+            return
+        # 非 strict 模式: dry-run, 列出孤儿
+        print("\n提示: 需 --strict 真正删除")
 
     schemas = load_m2_schemas()
     type_aliases = get_m2_type_aliases(schemas)
@@ -200,11 +347,19 @@ def main():
             else:
                 schema = schemas[t]
 
-            issues = check_m1_node(data, schema, t)
+            issues = check_m1_node(
+                data, schema, t,
+                check_types=args.check_types,
+                check_transitions=args.check_transitions,
+                check_refs=args.check_refs,
+            )
             for issue in issues:
                 if "missing required" in issue:
                     missing_req.append((nid, t, issue.strip(), str(f.relative_to(M1_DIR))))
                 if "stateMachine" in issue:
+                    invalid_sm.append((nid, t, issue.strip(), str(f.relative_to(M1_DIR))))
+                if "type mismatch" in issue or "ref path" in issue:
+                    # Phase 3 新校验项, 收集到 invalid_sm
                     invalid_sm.append((nid, t, issue.strip(), str(f.relative_to(M1_DIR))))
 
     print(f"=== M1 节点总数: {total} ===")

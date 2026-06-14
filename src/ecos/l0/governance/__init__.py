@@ -58,10 +58,15 @@ from .load_balancer import LoadBalancer, LoadBalancingStrategy, NodeLoad
 from .role import (
     RoleType,
     RoleStatus,
+    CollaborationMode,
     RoleDefinition,
     AgentRole,
+    CollaborationTask,
+    RoleEvaluation,
     RolePrimitive,
     RoleManager,
+    RoleCollaboration,
+    RoleEvaluator,
 )
 from .swarm import (
     EmergencePattern,
@@ -144,10 +149,15 @@ __all__ = [
     # 角色原语
     "RoleType",
     "RoleStatus",
+    "CollaborationMode",
     "RoleDefinition",
     "AgentRole",
+    "CollaborationTask",
+    "RoleEvaluation",
     "RolePrimitive",
     "RoleManager",
+    "RoleCollaboration",
+    "RoleEvaluator",
     # 蜂群原语
     "EmergencePattern",
     "EmergenceLevel",
