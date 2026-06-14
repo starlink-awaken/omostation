@@ -562,7 +562,25 @@ def governance_check_agora_health() -> CheckResult:
                 score=50.0,
                 message="no endpoints discoverable",
             )
-        results = asyncio.run(check_all_health(endpoints))
+        import asyncio
+        import threading
+        
+        coro = check_all_health(endpoints)
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+            
+        if loop is not None and loop.is_running():
+            res_container = []
+            def _run_in_thread():
+                res_container.append(asyncio.run(coro))
+            t = threading.Thread(target=_run_in_thread)
+            t.start()
+            t.join()
+            results = res_container[0]
+        else:
+            results = asyncio.run(coro)
         if not results:
             return CheckResult(
                 name="agora health",
