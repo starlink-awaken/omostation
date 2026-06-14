@@ -97,18 +97,42 @@ _cached_router: SmartRouter | None = None
 _cached_lifecycle_mgr: LifecycleManager | None = None
 
 
+from contextvars import ContextVar  # noqa: E402
+import jwt  # noqa: E402
+
+# Phase 3: Capability-based RBAC Context
+agora_role_ctx: ContextVar[str] = ContextVar("agora_role_ctx", default="unknown")
+
+
 def _require_agora_api_key(ctx: AuthContext) -> bool:
-    """Auth check for AGORA_API_KEY.
+    """Auth check for AGORA_API_KEY and JWT tokens.
 
     - If AGORA_API_KEY is not configured → permissive mode (allow all, local dev).
-    - If configured → require exact bearer token match.
+    - If configured → require exact bearer token match OR valid JWT.
     """
     if not _AGORA_API_KEY:
+        agora_role_ctx.set("admin")
         return True  # permissive mode for local development
     if ctx.token is None:
         return False
-    # AccessToken.token holds the raw bearer token string
-    return ctx.token.token == _AGORA_API_KEY
+
+    token = ctx.token.token
+
+    if token.startswith("eyJ"):
+        try:
+            # Phase 3: Extract Role from JWT
+            decoded = jwt.decode(token, _AGORA_API_KEY, algorithms=["HS256"])
+            role = decoded.get("role", "unknown")
+            agora_role_ctx.set(role)
+            return True
+        except jwt.InvalidTokenError:
+            return False
+
+    if token == _AGORA_API_KEY:
+        agora_role_ctx.set("admin")
+        return True
+
+    return False
 
 
 @asynccontextmanager
@@ -199,7 +223,10 @@ register_swarm_tools(mcp)
 # Phase 1: extracted from God Module (server/mcp.py) into focused modules.
 # NOTE: imports are at module top level; registration calls are deferred
 # until after _PROXY_CONFIG_PATH / _FORGE_REGISTRY_PATH are defined.
-from agora.server.tools_proxy import register_proxy_tools, _set_constants as _set_proxy_constants  # noqa: E402, F811
+from agora.server.tools_proxy import (
+    register_proxy_tools,
+    _set_constants as _set_proxy_constants,
+)  # noqa: E402, F811
 from agora.server.tools_registry import register_registry_tools  # noqa: E402
 from agora.server.tools_diagnostics import register_diagnostics_tools  # noqa: E402
 from agora.server.tools_governance import register_governance_tools  # noqa: E402
@@ -272,6 +299,7 @@ async def _init_proxy():
     if not bootstrap_results:
         # No bootstrap available — load from proxy config file
         from agora.server.tools_proxy import _load_proxy_services  # type: ignore[import-not-found]  # noqa: F811
+
         services = _load_proxy_services()
         if services:
             await _proxy_manager.start(services)
@@ -279,8 +307,11 @@ async def _init_proxy():
 
     # ── Phase 2: Register HTTP services from ServiceRegistry ──
     from agora.server.tools_proxy import _load_proxy_services  # type: ignore[import-not-found]
+
     proxy_configs = _load_proxy_services()
-    await _proxy_manager.registry.register_from_registry(registry, proxy_configs, lazy=True)
+    await _proxy_manager.registry.register_from_registry(
+        registry, proxy_configs, lazy=True
+    )
 
     # ── Phase 3: Register proxy tools ──
     _register_proxy_tools(mcp, _proxy_manager)
@@ -379,10 +410,18 @@ async def _bos_only_cleanup(mcp_server: FastMCP) -> None:
     """
     # 只保留纯 BOS URI 工具
     KEEP_TOOLS = {
-        "mutate_resource", "resolve_bos_uri", "read_resource",
-        "list_bos_resources", "list_bos_domains", "get_bos_schema",
-        "bos_middleware_status", "bos_reload_m1", "bos_reload_discovery",
-        "bos_metrics_status", "watch_resource", "unwatch_resource",
+        "mutate_resource",
+        "resolve_bos_uri",
+        "read_resource",
+        "list_bos_resources",
+        "list_bos_domains",
+        "get_bos_schema",
+        "bos_middleware_status",
+        "bos_reload_m1",
+        "bos_reload_discovery",
+        "bos_metrics_status",
+        "watch_resource",
+        "unwatch_resource",
         "list_bos_tools",
     }
 
@@ -670,6 +709,7 @@ async def _proxy_sync_loop():
             continue
         try:
             from agora.server.tools_proxy import _load_proxy_services  # type: ignore[import-not-found]
+
             proxy_configs = _load_proxy_services()
             await _proxy_manager.registry.register_from_registry(
                 registry, proxy_configs
@@ -791,9 +831,7 @@ async def bos_universal_resource(domain: str, package: str, action: str) -> str:
     )
 
 
-
 # ── Service management tools ─────────────────────────────────────
-
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -874,9 +912,7 @@ def sse_main():
         )
 
     # Add /health route alongside the SSE transport
-    mcp._additional_http_routes.append(
-        Route("/health", endpoint=health_endpoint)
-    )
+    mcp._additional_http_routes.append(Route("/health", endpoint=health_endpoint))
 
     sys.stderr.write("Agora MCP Server (SSE) starting on port 7431...\n")
     asyncio.run(mcp.run_http_async(transport="sse", host="0.0.0.0", port=7431))  # noqa: S104 — MCP SSE server intentionally binds all interfaces

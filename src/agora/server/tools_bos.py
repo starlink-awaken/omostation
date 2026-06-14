@@ -69,13 +69,28 @@ _BOS_DOMAIN_ACCESS: dict[str, list[str]] = {
 _AGORA_API_KEY = os.environ.get("AGORA_API_KEY", "")
 
 
-def _bos_domain_authorized(uri: str, operation: str = "read") -> bool:
-    """检查 BOS URI 的域级别权限。"""
+def _bos_domain_authorized(uri: str, operation: str = "read") -> tuple[bool, str]:
+    """检查 BOS URI 的域级别权限，并执行 CR-RBAC-01 鉴权。"""
+    from agora.server.mcp import agora_role_ctx
+
+    role = agora_role_ctx.get()
+
+    # CR-RBAC-01 强制拦截
+    if uri.startswith("bos://capability/evaluator") and role != "evaluator":
+        if role != "admin":  # admin can bypass
+            return (
+                False,
+                f"CR-RBAC-01 violation: Role '{role}' cannot access evaluator domain.",
+            )
+
     if not _AGORA_API_KEY:
-        return True  # 本地开发模式
+        return True, ""  # 本地开发模式
+
     domain = uri.split("/")[2] if uri.startswith("bos://") and "/" in uri else ""
     allowed = _BOS_DOMAIN_ACCESS.get(domain, [])
-    return operation in allowed
+    if operation not in allowed:
+        return False, f"Domain '{domain}' does not allow operation '{operation}'"
+    return True, ""
 
 
 # ── 路由辅助 ──────────────────────────────────────────────
@@ -197,6 +212,10 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
                 f"Invalid URI scheme. Must start with bos://. Received: {uri}"
             )
 
+        auth_ok, auth_reason = _bos_domain_authorized(uri, "write")
+        if not auth_ok:
+            return _error(f"Access denied: {auth_reason}")
+
         if not bos_rate_limiter.acquire(uri):
             return _error(f"Rate limit exceeded for: {uri}")
 
@@ -249,8 +268,9 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         if not uri.startswith("bos://"):
             return _error(f"Invalid BOS URI: {uri}")
 
-        if not _bos_domain_authorized(uri, "read"):
-            return _error(f"Access denied to domain: {uri}")
+        auth_ok, auth_reason = _bos_domain_authorized(uri, "read")
+        if not auth_ok:
+            return _error(f"Access denied: {auth_reason}")
 
         if not bos_rate_limiter.acquire(uri):
             return _error(f"Rate limit exceeded for: {uri}")
@@ -316,8 +336,9 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         if not uri.startswith("bos://"):
             return _error(f"Invalid BOS URI: {uri}")
 
-        if not _bos_domain_authorized(uri, "read"):
-            return _error(f"Access denied to domain: {uri}")
+        auth_ok, auth_reason = _bos_domain_authorized(uri, "read")
+        if not auth_ok:
+            return _error(f"Access denied: {auth_reason}")
 
         if not bos_rate_limiter.acquire(uri):
             return _error(f"Rate limit exceeded for: {uri}")

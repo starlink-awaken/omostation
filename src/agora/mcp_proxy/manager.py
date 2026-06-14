@@ -177,6 +177,47 @@ class ProxyManager:
         env = svc.get("env")
         init_timeout = svc.get("init_timeout", 10)
 
+        # Phase 3: MetaOS Admission Gateway (CR-ADMISSION-01)
+        try:
+            import sys
+            from pathlib import Path
+
+            _metaos_dir = Path.home() / "Workspace" / "projects" / "metaos" / "src"
+            if str(_metaos_dir) not in sys.path:
+                sys.path.insert(0, str(_metaos_dir))
+            from metaos.layers.admission_gateway import AdmissionGateway
+
+            admission_meta = svc.get("metaos_admission")
+            if not admission_meta:
+                core_services = {
+                    "gbrain",
+                    "kairon",
+                    "omo",
+                    "runtime",
+                    "metaos",
+                    "ecos",
+                    "agora",
+                    "cockpit",
+                }
+                if name not in core_services and not name.startswith("sys-"):
+                    raise ValueError("Missing 'metaos_admission' metadata block.")
+                admission_meta = {
+                    "role": "evaluator" if name == "kairon" else "generator",
+                    "supports_otlp": True,
+                    "omo_audit_trail_id": "SYS-BOOTSTRAP",
+                    "declared_values": ["human-centric", "objective", "transparent"],
+                }
+
+            req = {"domain": name, **admission_meta}
+            decision = AdmissionGateway().evaluate_admission(req)
+            if decision["status"] != "admitted":
+                raise ValueError(f"Reasons: {decision['reasons']}")
+        except ImportError as e:
+            logger.warning("proxy_admission_skipped", reason=f"metaos not found: {e}")
+        except ValueError as e:
+            logger.error("proxy_admission_rejected", service=name, error=str(e))
+            return f"error: MetaOS Admission Rejected - {e}"
+
         # Save config for lazy reconnection (even if connection fails)
         self._configs[name] = dict(svc)
         self.registry.save_config(name, svc)
