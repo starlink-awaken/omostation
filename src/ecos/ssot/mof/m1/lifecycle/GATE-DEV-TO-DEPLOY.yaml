@@ -1,0 +1,29 @@
+id: "GATE-DEV-TO-DEPLOY"
+type: "Gate"
+subtype: "StandardGate"
+name: "开发→部署 门禁"
+description: "开发态到部署态的质量门禁检查点 — 跨阶段 3→4 门禁"
+status: "active"
+domain: "meta"
+layer: "L0"
+created: "2026-06-13"
+version: "1.0.0"
+properties:
+  m3_parent: "LifecycleElement.Gate"
+  model_driven_ref:
+    - "projects/model-driven/src/model_driven/mof/m3_extended.py:STANDARD_GATES[GATE-DEV-TO-DEPLOY]"
+  from_stage: "development"
+  to_stage: "deployment"
+  checks:
+    - name: "测试通过率 >= 95%"
+      type: metric
+      threshold: 95.0
+    - name: "CI 绿灯"
+      type: ci
+      required: true
+    - name: "Code Review 通过"
+      type: review
+      required: true
+  required_approvals:
+    - "技术负责人"
+source: "model-driven/mof/m3_extended.py:STANDARD_GATES"
