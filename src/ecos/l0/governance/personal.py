@@ -430,13 +430,13 @@ class KnowledgeGraphBuilder:
         if m == 0:
             return communities
 
-        improved = True
-        while improved:
+        max_iterations = len(self.nodes) * 2
+        for _ in range(max_iterations):
             improved = False
             for edge in self.edges:
-                src_comm = node_to_comm[edge.source]
-                tgt_comm = node_to_comm[edge.target]
-                if src_comm == tgt_comm:
+                src_comm = node_to_comm.get(edge.source)
+                tgt_comm = node_to_comm.get(edge.target)
+                if src_comm is None or tgt_comm is None or src_comm == tgt_comm:
                     continue
 
                 src_degree = len(self.get_neighbors(edge.source))
@@ -444,15 +444,20 @@ class KnowledgeGraphBuilder:
 
                 qi = edge.weight / m - (src_degree * tgt_degree) / (2 * m * m)
                 if qi > 0:
-                    old_comm = node_to_comm[edge.source]
-                    communities[old_comm].remove(edge.source)
+                    communities[src_comm].remove(edge.source)
                     communities[tgt_comm].append(edge.source)
-                    node_to_comm[edge.source] = tgt_comm
 
-                    if not communities[old_comm]:
-                        del communities[old_comm]
+                    communities = [c for c in communities if c]
+                    node_to_comm = {}
+                    for idx, comm in enumerate(communities):
+                        for nid in comm:
+                            node_to_comm[nid] = idx
+
                     improved = True
                     break
+
+            if not improved:
+                break
 
         return [c for c in communities if c]
 
