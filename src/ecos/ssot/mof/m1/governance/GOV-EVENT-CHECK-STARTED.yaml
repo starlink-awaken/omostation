@@ -1,0 +1,22 @@
+id: "GOV-EVENT-CHECK-STARTED"
+type: "GovernanceEvent"
+name: "治理检查启动事件"
+description: "治理事件 — 检查器执行过程中产生的事件流 (check_started/check_completed/alert_triggered/state_changed)"
+status: "active"
+domain: "meta"
+layer: "X1"
+created: "2026-06-14"
+version: "1.0.0"
+properties:
+  m3_parent: "GovernanceElement.Event"
+  event_type: "check_started"
+  dimension: "X1"
+  check_id: "x1-audit-chain"
+  result: null
+  timestamp: "2026-06-14T00:00:00Z"
+  metadata:
+    class: "GovernanceEvent"
+    bus: "GovernanceEventBus"
+    module: "ecos.l0.governance.event_bus"
+    m2_schema: "ecos/ssot/mof/m2/governance_event.yaml"
+source: "ecos/l0/governance/event_bus.py"
