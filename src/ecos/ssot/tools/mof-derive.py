@@ -46,13 +46,17 @@ except ImportError:
 # 5 层 parent: ~/Workspace/projects/ecos (repo_root)
 # 6 层 parent: ~/Workspace (workspace_root)
 TOOL_PATH = Path(__file__).resolve()
-REPO_ROOT = TOOL_PATH.parent.parent.parent.parent.parent
-WORKSPACE_ROOT = REPO_ROOT.parent
+REPO_ROOT = (
+    TOOL_PATH.parent.parent.parent.parent.parent
+)  # 5 层 = ~/Workspace/projects/ecos
+WORKSPACE_ROOT = (
+    TOOL_PATH.parent.parent.parent.parent.parent.parent.parent
+)  # 7 层 = ~/Workspace
 
 M2_DIR = REPO_ROOT / "src" / "ecos" / "ssot" / "mof" / "m2"
 M1_DIR = REPO_ROOT / "src" / "ecos" / "ssot" / "mof" / "m1"
 
-# model-driven 跨仓路径
+# model-driven 跨仓路径 (WORKSPACE_ROOT 已是 ~/Workspace)
 MODEL_DRIVEN_M3 = (
     WORKSPACE_ROOT
     / "projects"
@@ -160,7 +164,7 @@ def load_standard_stages() -> list[dict]:
     if not MODEL_DRIVEN_M3.exists():
         return fallback
     try:
-        sys.path.insert(0, str(MODEL_DRIVEN_M3.parent.parent))
+        sys.path.insert(0, str(MODEL_DRIVEN_M3.parent.parent.parent))
         from model_driven.mof.m3_extended import STANDARD_STAGES  # type: ignore[import-not-found]
 
         return [
@@ -214,7 +218,7 @@ def load_standard_gates() -> list[dict]:
     if not MODEL_DRIVEN_M3.exists():
         return fallback
     try:
-        sys.path.insert(0, str(MODEL_DRIVEN_M3.parent.parent))
+        sys.path.insert(0, str(MODEL_DRIVEN_M3.parent.parent.parent))
         from model_driven.mof.m3_extended import STANDARD_GATES  # type: ignore[import-not-found]
 
         return [
@@ -259,7 +263,7 @@ def load_pipeline_phases() -> list[dict]:
     if not MODEL_DRIVEN_PIPELINE.exists():
         return fallback
     try:
-        sys.path.insert(0, str(MODEL_DRIVEN_PIPELINE.parent.parent))
+        sys.path.insert(0, str(MODEL_DRIVEN_PIPELINE.parent.parent.parent))
         from model_driven.lifecycle.pipeline import PipelinePhase  # type: ignore[import-not-found]
 
         return [
