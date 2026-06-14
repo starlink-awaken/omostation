@@ -15,6 +15,6 @@ properties:
     - "model-driven 工具链与 ecos mof-* 工具并行运行，互不替代"
   scope: "全生命周期 (规划→设计→开发→部署→运行→运维→运营)"
   validator: "model-driven/mcp_server.py"
-  enforcement: "soft"
+  enforcement: "warn"
   compliance: "partial"
 source: "model-driven/mof/m2_lifecycle.py"
