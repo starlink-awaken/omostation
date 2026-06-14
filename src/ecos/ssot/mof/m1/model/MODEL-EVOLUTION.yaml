@@ -18,3 +18,7 @@ properties:
     v3: 5+4+1 (治理升级·X4新增)
     v4: 5+4+1+MOF (模型驱动·L0基座)
   formality: semiformal
+  m3_parent: DescriptiveElement.Model
+  model_driven_refs:
+    - projects/model-driven/src/model_driven/lifecycle/pipeline.py:PipelinePhase
+    - projects/model-driven/src/model_driven/lifecycle/stages.py:LifecycleTracker
