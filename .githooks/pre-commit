@@ -50,3 +50,23 @@ if [ -n "$STAGED_M1" ]; then
         echo "⚠️  uv 未安装, 跳过 mof-schema-validate"
     fi
 fi
+
+# MOF Bridge-Sync 校验 (CR-MOF-BRIDGE-01 强制, 2026-06-14 新增)
+# 任何 lifecycle/ 节点变更后必跑 mof-bridge-sync.py --strict
+STAGED_LIFECYCLE=$(git diff --cached --name-only --diff-filter=ACM -- 'src/ecos/ssot/mof/m1/lifecycle/**/*.yaml' 2>/dev/null)
+if [ -n "$STAGED_LIFECYCLE" ]; then
+    if command -v uv &>/dev/null; then
+        echo "🔗 MOF bridge-sync 校验 (staged lifecycle)..."
+        cd "$REPO_ROOT" && uv run --no-project --with pyyaml python3 src/ecos/ssot/tools/mof-bridge-sync.py --strict 2>&1 || {
+            echo "❌ mof-bridge-sync 失败, 见上方错误 (model-driven ↔ M1 失同步)"
+            exit 1
+        }
+        echo "📊 mof-derive 桥接验证 (7 阶段 + 4 门禁)..."
+        cd "$REPO_ROOT" && uv run --no-project --with pyyaml python3 src/ecos/ssot/tools/mof-derive.py --strict 2>&1 || {
+            echo "❌ mof-derive 失败, 见上方错误 (7 阶段 / 4 门禁 / 风险推理)"
+            exit 1
+        }
+    else
+        echo "⚠️  uv 未安装, 跳过 mof-bridge-sync / mof-derive"
+    fi
+fi
