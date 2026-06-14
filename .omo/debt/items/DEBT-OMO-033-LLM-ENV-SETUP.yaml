@@ -9,10 +9,22 @@ description: |
 priority: P1
 severity: high
 component: L2/OMO
-status: open
+lifecycle_state: closed
 created_at: '2026-06-07T07:51:00Z'
 owner: system
+evidence_refs:
+  - .omo/_truth/registry/workers.yaml
+  - scripts/omo/omo_worker.py
 tags:
   - llm
   - configuration
   - event-driven
+history:
+  - at: '2026-06-07T07:51:00Z'
+    action: register
+    note: Registered worker LLM environment setup debt.
+  - at: '2026-06-14T00:00:00Z'
+    action: close
+    note: >-
+      root worker registry points to installed CLI agents (codebuddy/reasonix),
+      and a live codebuddy prompt executed successfully in the current environment.

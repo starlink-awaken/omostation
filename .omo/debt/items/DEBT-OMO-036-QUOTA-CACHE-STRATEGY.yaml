@@ -12,7 +12,20 @@ component: L2/llm-gateway-kernel
 status: open
 created_at: '2026-06-07T08:20:00Z'
 owner: system
+evidence_refs:
+  - projects/llm-gateway/src/llm_gateway/scheduler.py
+  - projects/llm-gateway/tests/test_scheduler_quota_cache.py
 tags:
   - performance
   - caching
   - llm-gateway
+history:
+  - at: '2026-06-07T08:20:00Z'
+    action: register
+    note: Registered quota cache strategy debt.
+  - at: '2026-06-14T00:00:00Z'
+    action: review
+    note: >-
+      Scheduler now refreshes quota cache periodically and reloads rates on each
+      selection while quota is below threshold; optimistic accounting / true-up
+      loop remains open.

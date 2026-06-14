@@ -10,10 +10,23 @@ description: |
 priority: P2
 severity: high
 component: L0/L1
-status: open
+lifecycle_state: closed
 created_at: '2026-06-07T07:44:00Z'
 owner: system
+evidence_refs:
+  - .git/hooks/post-commit
+  - scripts/omo/omo_worker.py
+  - projects/omo/src/omo/omo_worker_promotion.py
 tags:
   - architecture
   - governance
   - event-driven
+history:
+  - at: '2026-06-07T07:44:00Z'
+    action: register
+    note: Registered async governance refactor debt.
+  - at: '2026-06-14T00:00:00Z'
+    action: close
+    note: >-
+      post-commit hook no longer runs direct mof-extract; it dispatches an async
+      OMO task, and governance overlay worker flows are implemented in omo_worker.
