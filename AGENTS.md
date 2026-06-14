@@ -445,17 +445,21 @@ OPC 路线图 P5-P7 收口阶段建立的 self-correction 闭环, 任何 Phase /
 | 层级 | 路径 | 用途 |
 |------|------|------|
 | M3 标准定义 | `projects/model-driven/src/model_driven/mof/m3_extended.py:STANDARD_STAGES` | 7 阶段 + 4 门禁 + 3 PipelinePhase 单一来源 |
+| M3 流水线 | `projects/model-driven/src/model_driven/lifecycle/pipeline.py:PipelinePhase` | 3 阶段宏观流水线 (COLD_START/EVOLUTION/HARDENING) |
 | M2 schema | `projects/ecos/src/ecos/ssot/mof/m2/omo_task.yaml` 等 45 个 YAML | 建模契约: required/optional/stateMachine/validationRules |
 | M1 实例节点 | `projects/ecos/src/ecos/ssot/mof/m1/**` 946 个 YAML | 真实实例, 每个含 `m3_parent` + `model_driven_refs` 双向引用 |
 | 校验 | `projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py` | 4 flags (--strict/--check-types/--check-transitions/--check-refs) |
+| 推理 | `projects/ecos/src/ecos/ssot/tools/mof-derive.py` v2 | 7 阶段 + 4 门禁 + 3 Phase 跨仓推理 (真实导入 model-driven 11 字段) |
+| 同步 | `projects/ecos/src/ecos/ssot/tools/mof-bridge-sync.py` B.3 | model-driven ↔ M1 lifecycle 增量 diff/sync (按 stage key + transition 匹配) |
 
 ### 桥接铁律
 
 1. **M3 是 SSOT** — `model-driven/m3_extended.py:STANDARD_STAGES/...` 不得在别处复制定义
 2. **M1 必含双向引用** — 每个 M1 节点必须有 `m3_parent` (指向 M3 类型) + `model_driven_refs` (反向追溯 model-driven 源文件/类)
 3. **M2 schema 必含 validationRules** — 不只是声明字段, 必须有 `gate_status=passed implies evidence>=1` 等硬约束
-4. **任何新增阶段/门禁** 必须同时落: model-driven 源 + M2 schema + M1 节点 + schema-validate 校验
+4. **任何新增阶段/门禁** 必须同时落: model-driven 源 + M2 schema + M1 节点 + schema-validate 校验 + mof-derive 验证 + mof-bridge-sync 同步
 5. **pre-commit hook 强制** — 任何 M1 YAML 改动触发 `mof-schema-validate.py --staged --strict`, 失败即拒绝提交
+6. **跨仓 import 真实字段数 ≥ 期望** — 任何 `from model_driven.X import Y` 必须实测 `Y` 字段数 ≥ 真实期望, 避免 fallback 替跑 (mof-derive v1 隐藏 bug 范式)
 
 ### 当前桥接状态 (2026-06-14 收口)
 
