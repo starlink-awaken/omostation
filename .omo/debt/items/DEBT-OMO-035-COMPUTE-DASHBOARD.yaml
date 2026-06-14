@@ -12,7 +12,19 @@ component: L3/Cockpit
 status: open
 created_at: '2026-06-07T08:20:00Z'
 owner: system
+evidence_refs:
+  - projects/cockpit/web/dashboard.html
+  - projects/cockpit/src/cockpit/dashboard_server.py
 tags:
   - ui
   - observability
   - llm-gateway
+history:
+  - at: '2026-06-07T08:20:00Z'
+    action: register
+    note: Registered compute dashboard debt.
+  - at: '2026-06-14T00:00:00Z'
+    action: review
+    note: >-
+      cockpit dashboard already renders service topology, but prompt traffic
+      tracing and codexbar-backed cost board are still missing; keep debt open.

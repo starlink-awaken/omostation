@@ -7,14 +7,15 @@ scope: governance_kernel
 severity: medium
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: closed
 owner: omo-governance
 affected_roots:
 - .omo
-evidence_refs: []
+evidence_refs:
+  - projects/omo/src/omo/omo_cards.py
 mitigation_refs: []
 opened_at: '2026-06-05T14:28:56Z'
-last_reviewed_at: null
+last_reviewed_at: '2026-06-14T00:00:00Z'
 next_review_at: null
 gate_level: none
 status: "resolved"
@@ -28,3 +29,12 @@ description: >
   cards CLI缺少priority筛选+research默认status错误已修复：
   - priority 现在支持逗号分隔多选 (IN 语句)。
   - research 的默认 status 修改为 identified。
+history:
+  - at: '2026-06-05T14:28:56Z'
+    action: register
+    note: Registered cards CLI filter/default status debt.
+  - at: '2026-06-14T00:00:00Z'
+    action: close
+    note: >-
+      cards CLI now supports multi-priority filtering and research cards default
+      to identified in omo_cards.py.
