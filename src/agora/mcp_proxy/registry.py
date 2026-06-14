@@ -348,7 +348,10 @@ class ProxyRegistry:
         await self.unregister_service(service_name)
 
     async def register_from_registry(
-        self, service_registry: Any, proxy_configs: list[dict] | None = None, lazy: bool = False
+        self,
+        service_registry: Any,
+        proxy_configs: list[dict] | None = None,
+        lazy: bool = False,
     ) -> None:
         """Sync HTTP and configured stdio services from the ServiceRegistry.
 
@@ -380,7 +383,9 @@ class ProxyRegistry:
                     continue
 
                 if lazy:
-                    self.save_config(svc.name, {"name": svc.name, "mcp_endpoint": svc.mcp_endpoint})
+                    self.save_config(
+                        svc.name, {"name": svc.name, "mcp_endpoint": svc.mcp_endpoint}
+                    )
                     continue
 
                 client = create_client(svc.name, svc.mcp_endpoint)
@@ -401,7 +406,9 @@ class ProxyRegistry:
                         await self.register_service(svc.name, client)
 
         if lazy:
-            logger.info("proxy_registry_lazy_sync_complete", saved=len(self._saved_configs))
+            logger.info(
+                "proxy_registry_lazy_sync_complete", saved=len(self._saved_configs)
+            )
         else:
             logger.info("proxy_registry_sync_complete", services=len(self._clients))
 
@@ -425,13 +432,13 @@ class ProxyRegistry:
         if not entry:
             # 尝试通过 L0 Registry 路由表解析 tool_name 对应的服务
             from agora.l0_registry_loader import load_routes
-            
+
             routes = load_routes()
             svc_name = routes.get(tool_name)
-            
+
             if not svc_name and "." in tool_name:
                 svc_name = tool_name.split(".", 1)[0]
-                
+
             if svc_name and self.has_saved_config(svc_name):
                 # 如果服务有保存的配置且尚未连接，则尝试懒加载
                 reconnect_ok = await self.lazy_connect(svc_name)

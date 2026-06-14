@@ -223,10 +223,7 @@ register_swarm_tools(mcp)
 # Phase 1: extracted from God Module (server/mcp.py) into focused modules.
 # NOTE: imports are at module top level; registration calls are deferred
 # until after _PROXY_CONFIG_PATH / _FORGE_REGISTRY_PATH are defined.
-from agora.server.tools_proxy import (
-    register_proxy_tools,
-    _set_constants as _set_proxy_constants,
-)  # noqa: E402, F811
+from agora.server.tools_proxy import register_proxy_tools, _set_constants as _set_proxy_constants  # noqa: E402, F811
 from agora.server.tools_registry import register_registry_tools  # noqa: E402
 from agora.server.tools_diagnostics import register_diagnostics_tools  # noqa: E402
 from agora.server.tools_governance import register_governance_tools  # noqa: E402

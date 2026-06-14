@@ -7,14 +7,12 @@ connect, call, status, list, add, remove.
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 
 import structlog
 from fastmcp import FastMCP
 
 from agora.core.service_base import is_safe_url  # type: ignore[import-not-found]
-from agora.mcp import mcp_bootstrap  # type: ignore[import-not-found]
 from agora.mcp_proxy.manager import ProxyManager  # type: ignore[import-not-found]
 from agora.server._response import FORMAT_VERSION, _error, _ok
 
@@ -25,9 +23,7 @@ _PROXY_CONFIG_PATH: Path | None = None
 _FORGE_REGISTRY_PATH: Path | None = None
 
 
-def _set_constants(
-    proxy_config_path: Path, forge_registry_path: Path
-) -> None:
+def _set_constants(proxy_config_path: Path, forge_registry_path: Path) -> None:
     """Set shared paths from the parent mcp.py module at init time."""
     global _PROXY_CONFIG_PATH, _FORGE_REGISTRY_PATH
     _PROXY_CONFIG_PATH = proxy_config_path
@@ -214,9 +210,7 @@ async def proxy_remove_service(name: str) -> dict:
 
     from agora.server.mcp import _bus
 
-    _bus.publish(
-        "registry:service.removed", {"name": name}, source="agora.server.mcp"
-    )
+    _bus.publish("registry:service.removed", {"name": name}, source="agora.server.mcp")
     return _ok(
         {
             "format_version": FORMAT_VERSION,
@@ -246,6 +240,7 @@ def register_proxy_tools(mcp: FastMCP) -> None:
         pm = _get_proxy_manager()
         if pm is None:
             from agora.server.mcp import _proxy_manager  # noqa: F811
+
             _proxy_manager = ProxyManager()  # type: ignore[possibly-undefined]
             pm = _proxy_manager
 
@@ -335,6 +330,7 @@ def register_proxy_tools(mcp: FastMCP) -> None:
         pm = _get_proxy_manager()
         if pm is None:
             from agora.server.mcp import _proxy_manager  # noqa: F811
+
             _proxy_manager = ProxyManager()  # type: ignore[possibly-undefined]
             pm = _proxy_manager
 

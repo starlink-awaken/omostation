@@ -81,7 +81,10 @@ cd ~/Workspace/projects/agora && uv run python3 extras/web/dashboard.py
     except ImportError as e:
         logger.error("Cannot start dashboard: %s", e)
         print(f"Agora Dashboard unavailable — missing dependency: {e}", file=sys.stderr)
-        print("Run the full dashboard: uv run python3 extras/web/dashboard.py", file=sys.stderr)
+        print(
+            "Run the full dashboard: uv run python3 extras/web/dashboard.py",
+            file=sys.stderr,
+        )
         return 1
 
 

@@ -17,6 +17,7 @@ Architecture (frozen per ADR-0008):
         backends/asyncio.py / backends/messagebus.py — agora-specific,
         kept for premium use, also re-exported from bus_foundation
 """
+
 from __future__ import annotations
 
 import logging

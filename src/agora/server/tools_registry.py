@@ -7,14 +7,12 @@ tool registry/repository management.
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 
 import structlog
 from fastmcp import FastMCP
 
-from agora.core.service_base import is_safe_url, parse_protocol_config, parse_tags  # type: ignore[import-not-found]
-from agora.mcp import mcp_bootstrap  # type: ignore[import-not-found]
+from agora.core.service_base import parse_protocol_config, parse_tags  # type: ignore[import-not-found]
 from agora.server._response import FORMAT_VERSION, _error, _ok
 
 logger = structlog.get_logger(__name__)

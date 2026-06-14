@@ -28,7 +28,9 @@ class EmbeddingCache:
             self._embeddings = np.array(embeddings, dtype=np.float32)
 
     def search(
-        self, query_embedding: "np.ndarray", top_k: int = 10  # noqa: F821
+        self,
+        query_embedding: "np.ndarray",
+        top_k: int = 10,  # noqa: F821
     ) -> list[tuple[str, float]]:  # noqa: F821
         """Return top-k (tool_id, score) pairs via vectorized cosine similarity."""
         if self._embeddings is None or len(self._tool_ids) == 0:

@@ -13,6 +13,7 @@ Wire-format fields (all required unless noted):
   trace_id       : str? — optional distributed trace correlation id
   payload        : dict — event body (caller-defined, JSON-serializable)
 """
+
 from __future__ import annotations
 
 import json
@@ -46,7 +47,9 @@ class BusEnvelope:
         if not isinstance(type, str) or not type:
             raise ValueError(f"BusEnvelope.type must be non-empty str, got {type!r}")
         if not isinstance(source, str) or not source:
-            raise ValueError(f"BusEnvelope.source must be non-empty str, got {source!r}")
+            raise ValueError(
+                f"BusEnvelope.source must be non-empty str, got {source!r}"
+            )
         # 用 datetime.now() 拿 epoch, 避免 `time` 模块名与 self.time 字段冲突
         epoch = int(datetime.now(UTC).timestamp())
         self.id = id or f"evt_{epoch}_{uuid.uuid4().hex[:6]}"
@@ -88,4 +91,6 @@ class BusEnvelope:
         return cls.from_dict(json.loads(s))
 
     def __repr__(self) -> str:
-        return f"BusEnvelope(id={self.id!r}, type={self.type!r}, source={self.source!r})"
+        return (
+            f"BusEnvelope(id={self.id!r}, type={self.type!r}, source={self.source!r})"
+        )

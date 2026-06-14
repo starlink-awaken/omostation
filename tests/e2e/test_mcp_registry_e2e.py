@@ -771,7 +771,6 @@ class TestMcpBootstrapConfig:
             "eidos",
             "sophia",
             "minerva",
-            "agent-runtime",
             "codeanalyze",
             "kos",
         }

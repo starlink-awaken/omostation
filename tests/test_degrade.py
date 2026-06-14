@@ -22,11 +22,6 @@ from agora.core.service_cache import (
     save_service_cache,
 )
 
-# Ensure agent-runtime is importable for degrade tests
-# agent-runtime is a sibling package in the kairon monorepo
-_AGENT_RUNTIME_DIR = Path(__file__).resolve().parent.parent.parent / "agent-runtime" / "src"
-if _AGENT_RUNTIME_DIR.is_dir() and str(_AGENT_RUNTIME_DIR) not in sys.path:
-    sys.path.insert(0, str(_AGENT_RUNTIME_DIR))
 
 
 # ── Fixtures ────────────────────────────────────────────────────────────────
@@ -252,53 +247,6 @@ class TestRouterCacheFallback:
 # ── Tests: Agent Runtime fallback ──────────────────────────────────────────
 
 
-class TestAgentRuntimeFallback:
-    """Test the agent-runtime MCP call fallback via direct test."""
-
-    @pytest.mark.skip(reason="agent-runtime is deprecated and moved to _archived")
-    def test_direct_mcp_call_unknown_server(self):
-        """Direct call to unknown server returns error."""
-        from agent_runtime.tools import _direct_mcp_call, reset_agora_degrade_state
-
-        reset_agora_degrade_state()
-        result = _direct_mcp_call("nonexistent_server", "test_tool", {})
-        assert result.get("error", "").startswith("Unknown MCP server")
-
-    @pytest.mark.skip(reason="agent-runtime is deprecated and moved to _archived")
-    def test_agora_fallback_state_transitions(self):
-        """Verify the degrade state machine: failures -> direct mode -> recovery."""
-        from agent_runtime.tools import (
-            _is_agora_direct_mode,
-            _record_agora_failure,
-            _record_agora_success,
-            reset_agora_degrade_state,
-        )
-
-        reset_agora_degrade_state()
-        assert _is_agora_direct_mode() is False
-
-        # First failure: should NOT trigger direct mode yet
-        _record_agora_failure()
-        assert _is_agora_direct_mode() is False
-
-        # Second failure (consecutive): SHOULD trigger direct mode
-        _record_agora_failure()
-        assert _is_agora_direct_mode() is True
-
-        # Success: reset counter
-        _record_agora_success()
-        from agent_runtime.tools import _agora_failure_count
-
-        assert _agora_failure_count == 0
-
-        # Reset function clears both
-        reset_agora_degrade_state()
-        assert _is_agora_direct_mode() is False
-
-
-# ── Integration: Simulate Agora being down ────────────────────────────────
-
-
 class TestDegradeIntegration:
     """End-to-end degrade scenario: Agora down -> cache fallback + direct mode."""
 
@@ -313,31 +261,3 @@ class TestDegradeIntegration:
         # The dispatch may fail (no real server), but it should NOT
         # immediately return "Service temporarily unavailable"
         assert result.get("error") != "Service temporarily unavailable"
-
-    @pytest.mark.skip(reason="agent-runtime is deprecated and moved to _archived")
-    def test_agent_runtime_fallback_imports(self):
-        """Verify agent-runtime degrade module imports correctly."""
-        from agent_runtime.tools import (
-            _direct_mcp_call,
-            _is_agora_direct_mode,
-            _record_agora_failure,
-            _record_agora_success,
-            reset_agora_degrade_state,
-        )
-
-        assert callable(_direct_mcp_call)
-        assert callable(_is_agora_direct_mode)
-        assert callable(_record_agora_failure)
-        assert callable(_record_agora_success)
-        assert callable(reset_agora_degrade_state)
-
-    @pytest.mark.skip(reason="agent-runtime is deprecated and moved to _archived")
-    def test_mcp_call_unknown_server(self):
-        """mcp_call with unknown server returns error gracefully."""
-        from agent_runtime.tools import Tools, reset_agora_degrade_state
-
-        reset_agora_degrade_state()
-        result = Tools.mcp_call("nonexistent_server", "test_tool", {})
-        # Without Agora configured, it falls through to direct mode
-        # Which also doesn't know 'nonexistent_server'
-        assert "error" in result

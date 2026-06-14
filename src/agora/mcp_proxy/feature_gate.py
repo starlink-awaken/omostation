@@ -26,9 +26,12 @@ logger = structlog.get_logger(__name__)
 # ── 默认 BOS 域定义 ──────────────────────────────────────────────
 DEFAULT_BOS_DOMAINS: dict[str, dict[str, Any]] = {
     "memory": {"enabled": True, "description": "记忆域 — kos/kronos/gbrain"},
-    "analysis": {"enabled": True, "description": "分析域 — minerva/ontoderive/codeanalyze/iris"},
+    "analysis": {
+        "enabled": True,
+        "description": "分析域 — minerva/ontoderive/codeanalyze/iris",
+    },
     "governance": {"enabled": True, "description": "治理域 — omo/metaos/sot-bridge"},
-    "capability": {"enabled": True, "description": "能力域 — forge/agent-runtime"},
+    "capability": {"enabled": True, "description": "能力域 — forge"},
     "persona": {"enabled": False, "description": "人格域 — sot-bridge-persona"},
     "meta": {"enabled": True, "description": "元域 — 系统元数据"},
     "ecos": {"enabled": True, "description": "协议域 — L0 协议层"},
@@ -42,8 +45,15 @@ DEFAULT_FEATURE_GROUPS: dict[str, dict[str, Any]] = {
     "L2-engine": {
         "enabled": True,
         "services": [
-            "kos", "eidos", "minerva", "kronos", "ontoderive",
-            "codeanalyze", "iris", "sophia", "gbrain",
+            "kos",
+            "eidos",
+            "minerva",
+            "kronos",
+            "ontoderive",
+            "codeanalyze",
+            "iris",
+            "sophia",
+            "gbrain",
         ],
         "description": "L2 引擎面 — 知识工程包",
     },
@@ -52,15 +62,28 @@ DEFAULT_FEATURE_GROUPS: dict[str, dict[str, Any]] = {
         "services": ["omo", "metaos"],
         "description": "L2 治理面 — OMO/MetaOS",
     },
-    "L4": {"enabled": True, "services": ["l4-kernel", "cockpit-cards"], "description": "L4 自我层"},
-    "runtime": {"enabled": True, "services": ["runtime", "agent-runtime"], "description": "L1 运行时"},
+    "L4": {
+        "enabled": True,
+        "services": ["l4-kernel", "cockpit-cards"],
+        "description": "L4 自我层",
+    },
+    "runtime": {
+        "enabled": True,
+        "services": ["runtime"],
+        "description": "L1 运行时",
+    },
     "external": {
         "enabled": False,
         "services": [
-            "docker-mcp-gateway", "serena", "gitnexus",
-            "chrome-devtools-mcp", "mcp-server-sqlite",
-            "mcp-server-apple-events", "claude-mcp-serve",
-            "codex-mcp-server", "zai-mcp-server",
+            "docker-mcp-gateway",
+            "serena",
+            "gitnexus",
+            "chrome-devtools-mcp",
+            "mcp-server-sqlite",
+            "mcp-server-apple-events",
+            "claude-mcp-serve",
+            "codex-mcp-server",
+            "zai-mcp-server",
         ],
         "description": "外部工具（npm/docker/homebrew）",
     },
@@ -270,7 +293,9 @@ class FeatureGate:
                     break
         return groups
 
-    def is_service_enabled(self, service_name: str, service_config: dict[str, Any] | None = None) -> bool:
+    def is_service_enabled(
+        self, service_name: str, service_config: dict[str, Any] | None = None
+    ) -> bool:
         """判断单个服务是否启用。
 
         优先级:
@@ -426,5 +451,7 @@ class FeatureGate:
             "groups": groups_status,
             "domains": domains_status,
             "env_overrides": active_env,
-            "config_path": str(self._resolve_config_path()) if self._resolve_config_path() else "N/A",
+            "config_path": str(self._resolve_config_path())
+            if self._resolve_config_path()
+            else "N/A",
         }

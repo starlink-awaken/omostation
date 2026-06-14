@@ -12,6 +12,7 @@ def main():
     """Main entry point — build parser, parse args, dispatch."""
     try:
         from kairon_observability.tracing import setup_tracing
+
         setup_tracing("agora-cli")
     except ImportError:
         pass  # Skip if observability package isn't installed

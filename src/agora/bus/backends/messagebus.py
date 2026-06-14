@@ -3,6 +3,7 @@
 Phase A.1: thin wrapper that exposes agent-to-agent messaging as a bus backend.
 Preserves request/response semantics (do NOT flatten to fire-and-forget).
 """
+
 from __future__ import annotations
 
 import logging
@@ -27,7 +28,9 @@ class MessageBusBackend:
     name = "messagebus"
 
     def __init__(self):
-        self._subscribers: dict[str, tuple[str, Callable]] = {}  # sub_id -> (pattern, callback)
+        self._subscribers: dict[
+            str, tuple[str, Callable]
+        ] = {}  # sub_id -> (pattern, callback)
 
     def is_available(self) -> bool:
         return True

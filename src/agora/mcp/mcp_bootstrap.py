@@ -112,19 +112,6 @@ def _get_known_services() -> dict[str, dict[str, Any]]:
 _KNOWN_FALLBACK: dict[str, dict[str, Any]] = {
     # ── Kairon 工作空间 MCP 服务 ──────────────────────────────
     # 通过 agora 代理由子进程加载的服务
-    "agent-runtime": {
-        "command": "uv",
-        "args": [
-            "run",
-            "--package",
-            "cockpit",
-            "python",
-            "-m",
-            "cockpit.agent_runtime_mcp_server",
-        ],
-        "description": "Agent Runtime — 任务执行、对话、终端和文件工具运行时",
-        "source": "kairon",
-    },
     "codeanalyze": {
         "command": "uv",
         "args": ["run", "--package", "codeanalyze", "python", "-m", "codeanalyze.mcp"],

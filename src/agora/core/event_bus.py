@@ -45,8 +45,7 @@ class EventBus:
         subscription_ttl_hours: float = 24.0,
     ):
         self._storage_path = Path(
-            storage_path
-            or str(get_data_dir() / "agora-events.json")
+            storage_path or str(get_data_dir() / "agora-events.json")
         )
         self._registry = registry
         self._events: list[dict] = []

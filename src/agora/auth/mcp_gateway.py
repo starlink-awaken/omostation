@@ -29,19 +29,6 @@ logger = structlog.get_logger(__name__)
 
 KNOWN_BACKENDS: list[dict] = [
     {
-        "name": "agent-runtime",
-        "mcp_endpoint": "",
-        "command": "uv",
-        "args": [
-            "run",
-            "--package",
-            "cockpit",
-            "python",
-            "-m",
-            "cockpit.agent_runtime_mcp_server",
-        ],
-    },
-    {
         "name": "eidos",
         "mcp_endpoint": "",
         "command": "uv",

@@ -3,6 +3,7 @@
 Phase A.0: thin wrapper, zero behavior change.
 RETRY: passes through to underlying EventBus (3x, exponential backoff).
 """
+
 from __future__ import annotations
 
 import logging
@@ -49,6 +50,7 @@ class EventBusBackend:
         NOTE: cross-process HTTP delivery is publisher's responsibility,
         not subscriber's.
         """
+
         def hook(event_dict: dict) -> None:
             envelope = BusEnvelope.from_dict(
                 {

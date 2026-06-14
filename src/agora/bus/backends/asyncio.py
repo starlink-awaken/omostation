@@ -2,6 +2,7 @@
 
 Phase A.1: uses asyncio.Queue per subscriber, no external deps.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -42,7 +43,9 @@ class AsyncioBackend:
                 except asyncio.QueueFull:
                     # Log includes sub_id and event id for observability.
                     # Drop the event — caller (router) decides DLQ policy.
-                    logger.warning("asyncio_queue_full sub_id=%s event_id=%s", sub_id, envelope.id)
+                    logger.warning(
+                        "asyncio_queue_full sub_id=%s event_id=%s", sub_id, envelope.id
+                    )
         return envelope.id
 
     def subscribe(self, pattern: str, callback: Callable) -> str:

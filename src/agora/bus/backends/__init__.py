@@ -11,6 +11,7 @@ Cross-repo adapter authors: use the `BusBackend` Protocol to type your
 own backend; register it in `agora.bus._backends` if you want the facade
 to dispatch to it by name.
 """
+
 from agora.bus.backends.asyncio import AsyncioBackend
 from agora.bus.backends.base import BusBackend
 from agora.bus.backends.croniter import CroniterBackend

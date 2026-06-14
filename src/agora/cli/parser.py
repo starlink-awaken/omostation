@@ -677,18 +677,22 @@ For more: https://github.com/starlink-awaken/agora#readme""",
 
     feature_sub.add_parser("list", help="List all feature groups and BOS domains state")
     feature_sub.add_parser("status", help="Alias for list")
-    
+
     feature_enable = feature_sub.add_parser("enable", help="Enable a feature group")
-    feature_enable.add_argument("group_name", help="Group name (e.g. L0, L2-engine, external)")
-    
+    feature_enable.add_argument(
+        "group_name", help="Group name (e.g. L0, L2-engine, external)"
+    )
+
     feature_disable = feature_sub.add_parser("disable", help="Disable a feature group")
     feature_disable.add_argument("group_name", help="Group name")
-    
+
     # feature domain subcommands
     domain = feature_sub.add_parser("domain", help="Control BOS domains")
     domain_sub = domain.add_subparsers(dest="domain_cmd")
     domain_enable = domain_sub.add_parser("enable", help="Enable a BOS domain")
-    domain_enable.add_argument("domain_name", help="Domain name (e.g. memory, analysis)")
+    domain_enable.add_argument(
+        "domain_name", help="Domain name (e.g. memory, analysis)"
+    )
     domain_disable = domain_sub.add_parser("disable", help="Disable a BOS domain")
     domain_disable.add_argument("domain_name", help="Domain name")
 
@@ -707,9 +711,13 @@ For more: https://github.com/starlink-awaken/agora#readme""",
     proxy_group = proxy_sub.add_parser("group", help="Control proxy groups")
     proxy_group_sub = proxy_group.add_subparsers(dest="proxy_group_cmd")
     proxy_group_sub.add_parser("list", help="List proxy groups")
-    proxy_group_enable = proxy_group_sub.add_parser("enable", help="Enable a proxy group")
+    proxy_group_enable = proxy_group_sub.add_parser(
+        "enable", help="Enable a proxy group"
+    )
     proxy_group_enable.add_argument("name", help="Group name")
-    proxy_group_disable = proxy_group_sub.add_parser("disable", help="Disable a proxy group")
+    proxy_group_disable = proxy_group_sub.add_parser(
+        "disable", help="Disable a proxy group"
+    )
     proxy_group_disable.add_argument("name", help="Group name")
 
     proxy_group.set_defaults(func=run_proxy_group)

@@ -1,4 +1,5 @@
 """BusBackend Protocol — contract all backends must satisfy."""
+
 from __future__ import annotations
 
 from typing import Protocol, runtime_checkable

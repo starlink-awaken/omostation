@@ -9,7 +9,6 @@ import time
 
 import structlog
 from fastmcp import FastMCP
-from fastmcp.tools import ToolResult
 
 from agora.server._response import FORMAT_VERSION, _error, _ok
 
@@ -71,7 +70,9 @@ def register_diagnostics_tools(mcp: FastMCP) -> None:
     # ── get_state_transitions ─────────────────────────────────────
 
     @mcp.tool()
-    def get_state_transitions(service: str = "", since: str = "", limit: int = 50) -> dict:
+    def get_state_transitions(
+        service: str = "", since: str = "", limit: int = 50
+    ) -> dict:
         """Query state transition history for services.
 
         Tracks circuit breaker state changes, service registration, and
@@ -84,7 +85,9 @@ def register_diagnostics_tools(mcp: FastMCP) -> None:
             limit: Max results (default 50)
         """
         registry = _get_registry()
-        transitions = registry.get_transitions(service=service, since=since, limit=limit)
+        transitions = registry.get_transitions(
+            service=service, since=since, limit=limit
+        )
         return _ok(
             {
                 "format_version": FORMAT_VERSION,

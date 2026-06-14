@@ -379,6 +379,15 @@ class LifecycleManager:
         repo_url = tool.get("repo_url", "")
 
         config: dict = {"name": name}
+        if "metaos_admission" in metadata:
+            config["metaos_admission"] = metadata["metaos_admission"]
+        else:
+            config["metaos_admission"] = {
+                "role": "generator",
+                "supports_otlp": True,
+                "omo_audit_trail_id": f"DYN-LOAD-{name.upper()}",
+                "declared_values": ["human-centric", "objective", "transparent"],
+            }
 
         # Priority 1: HTTP endpoint — use HTTP transport
         mcp_endpoint = tool.get("mcp_endpoint", metadata.get("mcp_endpoint", ""))

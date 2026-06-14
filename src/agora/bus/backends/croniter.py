@@ -3,6 +3,7 @@
 Phase A.1: thin wrapper that exposes cron-style scheduling as a bus backend.
 RETRY: passes through to underlying scheduler.
 """
+
 from __future__ import annotations
 
 import logging
@@ -21,7 +22,9 @@ class CroniterBackend:
     name = "croniter"
 
     def __init__(self):
-        self._jobs: dict[str, tuple[str, Callable, float]] = {}  # job_id -> (cron_expr, callback, last_run)
+        self._jobs: dict[
+            str, tuple[str, Callable, float]
+        ] = {}  # job_id -> (cron_expr, callback, last_run)
         self._lock = threading.Lock()
         self._running = False
         self._thread: threading.Thread | None = None

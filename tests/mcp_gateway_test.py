@@ -16,7 +16,6 @@ class TestKnownBackends:
 
     def test_known_backends_has_all_services(self):
         names = [b["name"] for b in mcp_gateway.KNOWN_BACKENDS]
-        assert "agent-runtime" in names
         assert "eidos" in names
         assert "iris" in names
         assert "kronos" in names

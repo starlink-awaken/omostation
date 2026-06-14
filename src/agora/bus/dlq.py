@@ -2,6 +2,7 @@
 
 Phase A.0: WAL mode + busy_timeout 5000 + 50MB rolling GC.
 """
+
 from __future__ import annotations
 
 import logging

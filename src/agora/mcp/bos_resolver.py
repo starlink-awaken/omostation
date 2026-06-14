@@ -67,7 +67,11 @@ if "BOS_STDIO_TIMEOUT" in _os.environ:
 
 _WS = _os.environ.get("WORKSPACE_ROOT") or str(Path.home() / "Workspace")
 if not Path(_WS).exists():
-    _log.warning("WORKSPACE_ROOT 路径不存在 (%s), 使用默认: %s", _os.environ.get("WORKSPACE_ROOT"), _WS)
+    _log.warning(
+        "WORKSPACE_ROOT 路径不存在 (%s), 使用默认: %s",
+        _os.environ.get("WORKSPACE_ROOT"),
+        _WS,
+    )
     _WS = str(Path.home() / "Workspace")
 KAIRON_ROOT = Path(_WS) / "projects" / "kairon"
 METAOS_ROOT = Path(_WS) / "projects" / "metaos"
@@ -224,7 +228,6 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="MetaOS 门控检查 (POC stdio)",
     ),
-
     # Analysis (12 POC — P34-W5 补 minerva.draft/audit, codeanalyze.report/lint, iris.connect/transform/validate, ontoderive.audit/fact-check)
     "bos://analysis/minerva/research": BosService(
         uri="bos://analysis/minerva/research",
@@ -467,6 +470,23 @@ POC_SERVICES: dict[str, BosService] = {
         description="[UNIMPLEMENTED] - no serve CLI - Iris 数据校验 (POC stdio)",
     ),
     # Persona (1 POC)
+    "bos://persona/sot-bridge-persona/recall-entity": BosService(
+        uri="bos://persona/sot-bridge-persona/recall-entity",
+        domain="persona",
+        package="sharedbrain-bridge",
+        action="recall-entity",
+        transport="mcp_stdio",
+        command=[
+            "uv",
+            "run",
+            "--package",
+            "sharedbrain-bridge",
+            "python",
+            "-m",
+            "sharedbrain_bridge.mcp_server",
+        ],
+        description="SharedBrain Bridge 实体召回",
+    ),
     "bos://persona/health-profile/summary": BosService(
         uri="bos://persona/health-profile/summary",
         domain="persona",
@@ -508,7 +528,6 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="[UNIMPLEMENTED] - no serve CLI - Forge 工具注册 (POC stdio)",
     ),
-
     "bos://persona/health-profile/alert": BosService(
         uri="bos://persona/health-profile/alert",
         domain="persona",
@@ -579,7 +598,6 @@ POC_SERVICES: dict[str, BosService] = {
         func_name="run_full_inspection",
         description="OMO 系统检查 (P36-W1 补, internal 同进程)",
     ),
-
     "bos://capability/forge/discover": BosService(
         uri="bos://capability/forge/discover",
         domain="capability",
@@ -682,7 +700,6 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="MetaOS 包注册 (P45-W2, POC stdio, gate 的对偶)",
     ),
-
     # ── P45-W3 战役 1: 3 个 persona GAP URI (P44-W2 评估) ──
     "bos://persona/core-models/schema": BosService(
         uri="bos://persona/core-models/schema",
@@ -724,7 +741,6 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="core-models 验证 (P45-W3, POC stdio, schema 的对偶)",
     ),
-
     # ── P48-W2 omo/sync 真重构 (stdio transport, 替代 P47 internal) ──
     "bos://governance/omo/sync": BosService(
         uri="bos://governance/omo/sync",
@@ -744,87 +760,7 @@ POC_SERVICES: dict[str, BosService] = {
         ],
         description="OMO 状态同步 (P48-W2 真重构, stdio transport 跨进程, 替代 P47 internal)",
     ),
-    # ── P46 战役 2: 4 个 agent-runtime URI 跨项目 spawn runtime (P44-W2 评估) ──
-    "bos://capability/agent-runtime/agent-list": BosService(
-        uri="bos://capability/agent-runtime/agent-list",
-        domain="capability",
-        package="agent-runtime",
-        action="agent-list",
-        transport="mcp_stdio",
-        command=[
-            "uv",
-            "run",
-            "--directory",
-            str(OMOSTATION_ROOT / "projects" / "runtime"),
-            "python",
-            "-m",
-            "runtime.executor.agent_hub",
-            "serve",
-            "--action",
-            "agent-list",
-        ],
-        description="Agent-runtime agent-list (P46, POC stdio, 跨项目 spawn runtime, 待 runtime serve dispatcher 适配)",
-    ),
-    "bos://capability/agent-runtime/chat": BosService(
-        uri="bos://capability/agent-runtime/chat",
-        domain="capability",
-        package="agent-runtime",
-        action="chat",
-        transport="mcp_stdio",
-        command=[
-            "uv",
-            "run",
-            "--directory",
-            str(OMOSTATION_ROOT / "projects" / "runtime"),
-            "python",
-            "-m",
-            "runtime.executor.agent_runner",
-            "serve",
-            "--action",
-            "chat",
-        ],
-        description="Agent-runtime chat (P46, POC stdio, 跨项目 spawn runtime, P39-W1 卫健委可能用)",
-    ),
-    "bos://capability/agent-runtime/run-task": BosService(
-        uri="bos://capability/agent-runtime/run-task",
-        domain="capability",
-        package="agent-runtime",
-        action="run-task",
-        transport="mcp_stdio",
-        command=[
-            "uv",
-            "run",
-            "--directory",
-            str(OMOSTATION_ROOT / "projects" / "runtime"),
-            "python",
-            "-m",
-            "runtime.executor.agent_executor",
-            "serve",
-            "--action",
-            "run-task",
-        ],
-        description="Agent-runtime run-task (P46, POC stdio, 跨项目 spawn runtime)",
-    ),
-    "bos://capability/agent-runtime/task-status": BosService(
-        uri="bos://capability/agent-runtime/task-status",
-        domain="capability",
-        package="agent-runtime",
-        action="task-status",
-        transport="mcp_stdio",
-        command=[
-            "uv",
-            "run",
-            "--directory",
-            str(OMOSTATION_ROOT / "projects" / "runtime"),
-            "python",
-            "-m",
-            "runtime.executor.agent_hub",
-            "serve",
-            "--action",
-            "task-status",
-        ],
-        description="Agent-runtime task-status (P46, POC stdio, 跨项目 spawn runtime)",
-    ),
+
     # ── Cockpit MCP (Phase 1: 入口收敛) ──────────────────────
     "bos://governance/cockpit/context": BosService(
         uri="bos://governance/cockpit/context",
@@ -833,8 +769,13 @@ POC_SERVICES: dict[str, BosService] = {
         action="mcp",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--package", "cockpit",
-            "python", "-m", "cockpit.scripts.cockpit_mcp",
+            "uv",
+            "run",
+            "--package",
+            "cockpit",
+            "python",
+            "-m",
+            "cockpit.scripts.cockpit_mcp",
         ],
         description="Cockpit MCP Server — 20 工具 (研究/状态/L4桥接)，入口收敛 Phase 1",
     ),
@@ -846,8 +787,13 @@ POC_SERVICES: dict[str, BosService] = {
         action="mcp",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--package", "cockpit",
-            "python", "-m", "cockpit.scripts.cockpit_mcp",
+            "uv",
+            "run",
+            "--package",
+            "cockpit",
+            "python",
+            "-m",
+            "cockpit.scripts.cockpit_mcp",
         ],
         description="Cockpit MCP (短路径别名) — 入口收敛 Phase 1",
     ),
@@ -859,9 +805,13 @@ POC_SERVICES: dict[str, BosService] = {
         action="mcp",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory",
+            "uv",
+            "run",
+            "--directory",
             str(OMOSTATION_ROOT / "projects" / "l4-kernel"),
-            "python", "-m", "l4_kernel.mcp_server",
+            "python",
+            "-m",
+            "l4_kernel.mcp_server",
         ],
         description="L4 Domain Kernel MCP — 24域管理，入口收敛 Phase 2",
     ),
@@ -872,9 +822,13 @@ POC_SERVICES: dict[str, BosService] = {
         action="mcp",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory",
+            "uv",
+            "run",
+            "--directory",
             str(OMOSTATION_ROOT / "projects" / "l4-kernel"),
-            "python", "-m", "l4_kernel.mcp_server",
+            "python",
+            "-m",
+            "l4_kernel.mcp_server",
         ],
         description="L4 Kernel MCP (短路径别名) — 入口收敛 Phase 2",
     ),
@@ -886,9 +840,13 @@ POC_SERVICES: dict[str, BosService] = {
         action="mcp",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory",
+            "uv",
+            "run",
+            "--directory",
             str(OMOSTATION_ROOT / "projects" / "runtime"),
-            "python", "-m", "runtime.mcp_server",
+            "python",
+            "-m",
+            "runtime.mcp_server",
         ],
         description="Runtime MCP — 服务注册表/健康/协议/KEI，入口收敛 Phase 2",
     ),
@@ -899,9 +857,13 @@ POC_SERVICES: dict[str, BosService] = {
         action="mcp",
         transport="mcp_stdio",
         command=[
-            "uv", "run", "--directory",
+            "uv",
+            "run",
+            "--directory",
             str(OMOSTATION_ROOT / "projects" / "runtime"),
-            "python", "-m", "runtime.mcp_server",
+            "python",
+            "-m",
+            "runtime.mcp_server",
         ],
         description="Runtime MCP (短路径别名) — 入口收敛 Phase 2",
     ),
@@ -1086,6 +1048,11 @@ def parse_bos_uri(uri: str) -> dict[str, str]:
 def _call_internal(service: BosService, *args: Any, **kwargs: Any) -> dict:
     """internal transport: 同进程 importlib 调用."""
     try:
+        if service.package and service.package != "agora":
+            import sys
+            pkg_path = str(OMOSTATION_ROOT / "projects" / service.package / "src")
+            if pkg_path not in sys.path:
+                sys.path.insert(0, pkg_path)
         mod = importlib.import_module(service.module_path)
         func = getattr(mod, service.func_name)
         result = func(*args, **kwargs)
@@ -1280,7 +1247,11 @@ def invoke_stdio(
             ready, _, _ = select.select([proc.stdout], [], [], timeout)
             if not ready:
                 if attempt < max_retries:
-                    _log.warning("Timeout on invoke %s (attempt %d), retrying...", canonical_uri, attempt + 1)
+                    _log.warning(
+                        "Timeout on invoke %s (attempt %d), retrying...",
+                        canonical_uri,
+                        attempt + 1,
+                    )
                     continue
                 return {
                     "uri": uri,
@@ -1295,7 +1266,11 @@ def invoke_stdio(
             response_line = proc.stdout.readline()
             if not response_line:
                 if attempt < max_retries:
-                    _log.warning("EOF on invoke %s (attempt %d), retrying...", canonical_uri, attempt + 1)
+                    _log.warning(
+                        "EOF on invoke %s (attempt %d), retrying...",
+                        canonical_uri,
+                        attempt + 1,
+                    )
                     continue
                 return {
                     "uri": uri,
@@ -1312,7 +1287,11 @@ def invoke_stdio(
                 break  # 解析成功
             except json.JSONDecodeError:
                 if attempt < max_retries:
-                    _log.warning("JSON decode error on invoke %s (attempt %d), retrying...", canonical_uri, attempt + 1)
+                    _log.warning(
+                        "JSON decode error on invoke %s (attempt %d), retrying...",
+                        canonical_uri,
+                        attempt + 1,
+                    )
                     continue
                 return {
                     "uri": uri,
@@ -1598,9 +1577,17 @@ def _memory_all_search(args: dict | None = None) -> dict:
     if "local" in zones:
         try:
             import importlib.machinery
+
             cockpit_storage = importlib.machinery.SourceFileLoader(
                 "cockpit_storage",
-                str(OMOSTATION_ROOT / "projects" / "cockpit" / "src" / "cockpit" / "storage.py"),
+                str(
+                    OMOSTATION_ROOT
+                    / "projects"
+                    / "cockpit"
+                    / "src"
+                    / "cockpit"
+                    / "storage.py"
+                ),
             ).load_module()
             da = cockpit_storage.SQLiteDataAccess()
             local = da.search_research(query, limit=limit)
@@ -1615,10 +1602,12 @@ def _memory_all_search(args: dict | None = None) -> dict:
         try:
             svc = POC_SERVICES.get("bos://memory/kos/search")
             if svc and svc.transport == "mcp_stdio":
-                kos_result = asyncio.run(resolve_bos_uri(
-                    "bos://memory/kos/search",
-                    {"query": query},
-                ))
+                kos_result = asyncio.run(
+                    resolve_bos_uri(
+                        "bos://memory/kos/search",
+                        {"query": query},
+                    )
+                )
                 if kos_result.get("status") == "ok":
                     kos_items = kos_result.get("result", [])
                     if isinstance(kos_items, list):
@@ -1630,7 +1619,9 @@ def _memory_all_search(args: dict | None = None) -> dict:
                                 item.setdefault("_freshness", "unknown")
                                 item.setdefault("_owner", "kairon")
                                 item.setdefault("_reuse_policy", "reference-only")
-                                item.setdefault("_source_path", "bos://memory/kos/search")
+                                item.setdefault(
+                                    "_source_path", "bos://memory/kos/search"
+                                )
                         results.extend(kos_items)
                         zone_count["kos"] = len(kos_items)
                     else:
@@ -1647,6 +1638,7 @@ def _memory_all_search(args: dict | None = None) -> dict:
     if "vault" in zones:
         try:
             from cockpit.scripts.cockpit_mcp import vault_search
+
             vault_result = json.loads(vault_search(keyword=query))
             if isinstance(vault_result, list):
                 for item in vault_result:
@@ -1669,7 +1661,7 @@ def _memory_all_search(args: dict | None = None) -> dict:
     return {
         "zone": "all",
         "query": query,
-        "results": results[:limit * len(zones)],
+        "results": results[: limit * len(zones)],
         "total": len(results),
         "zone_count": zone_count,
     }

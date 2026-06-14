@@ -34,8 +34,7 @@ class HermesToolRegistry:
             from agora.mcp.bos_resolver import resolve_bos_uri
 
             raw = await resolve_bos_uri(
-                "bos://memory/kos/search",
-                {"query": query, "limit": max_results}
+                "bos://memory/kos/search", {"query": query, "limit": max_results}
             )
             items = raw.get("results", raw) if isinstance(raw, dict) else raw
             for r in list(items)[:max_results]:
@@ -85,13 +84,7 @@ class HermesToolRegistry:
                 "score": 0.87,
                 "source": "kairon/kos",
             },
-            {
-                "id": "4",
-                "title": "Agent Runtime Engine Architecture",
-                "snippet": "Agent runtime provides orchestrator, DSL parser, swarm protocol, governance, and capability discovery.",
-                "score": 0.83,
-                "source": "kairon/agent-runtime",
-            },
+
             {
                 "id": "5",
                 "title": "Circuit Engine for Fault-Tolerant Workflows",
@@ -245,18 +238,9 @@ class HermesToolRegistry:
 
     async def _tool_agent_chat(self, message: str) -> dict[str, Any]:
         """Process a chat message and return a response."""
-        try:
-            from agent_runtime.engine import Engine  # type: ignore[attr-defined, import-not-found]
-
-            engine = Engine()
-            result = engine.run_task(message)
-            return {
-                "response": result.get("response", result.get("output", str(result)))
-            }
-        except ImportError:
-            return {
-                "response": f"Received: '{message}'. Connect to agent-runtime for live interaction."
-            }
+        return {
+            "response": f"Received: '{message}'. The agent-runtime module has been deprecated and moved to _archived."
+        }
 
     # ------------------------------------------------------------------
     # Tool: health.services

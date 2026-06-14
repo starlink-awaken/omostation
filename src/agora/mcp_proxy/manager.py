@@ -198,6 +198,14 @@ class ProxyManager:
                     "ecos",
                     "agora",
                     "cockpit",
+                    "kos",
+                    "eidos",
+                    "minerva",
+                    "kronos",
+                    "ontoderive",
+                    "codeanalyze",
+                    "iris",
+                    "sophia",
                 }
                 if name not in core_services and not name.startswith("sys-"):
                     raise ValueError("Missing 'metaos_admission' metadata block.")

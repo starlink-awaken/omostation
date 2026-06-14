@@ -10,6 +10,7 @@ Constraints (per RETRY-OWNERSHIP.md):
   - publish() MUST NOT retry (router catches + writes to DLQ).
   - publish() MUST raise on failure (router decides DLQ vs drop).
 """
+
 from __future__ import annotations
 
 import asyncio
