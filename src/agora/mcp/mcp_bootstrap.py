@@ -692,11 +692,11 @@ async def scan_and_launch(proxy_manager: Any) -> dict[str, str]:
         return {}
 
     logger.info(
-        "proxy_bootstrap_launching",
+        "proxy_bootstrap_launching_lazy",
         config_path=str(config_path),
         count=len(enabled_services),
         services=[s["name"] for s in enabled_services],
     )
 
-    results = await proxy_manager.start(enabled_services)
+    results = await proxy_manager.start(enabled_services, lazy=True)
     return results

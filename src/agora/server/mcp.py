@@ -24,7 +24,6 @@ import asyncio
 import json
 import os
 import sys
-import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import ClassVar
@@ -36,10 +35,8 @@ from fastmcp.server.dependencies import get_access_token
 from fastmcp.server.middleware import AuthMiddleware
 from fastmcp.tools import Tool, ToolResult
 
-from agora.plugins.identity.agent_card import service_to_agent_card  # type: ignore[import-not-found]
 from agora.audit_subscriber import AuditSubscriber  # type: ignore[import-not-found]
 from agora.auth.identity import normalize_identity  # type: ignore[import-not-found]
-from agora.core.service_base import is_safe_url, parse_protocol_config, parse_tags  # type: ignore[import-not-found]
 from agora.core.state import get_event_bus, get_registry, get_router  # type: ignore[import-not-found]
 from agora.mcp import mcp_bootstrap  # type: ignore[import-not-found]
 from agora.mcp_proxy.manager import ProxyManager  # type: ignore[import-not-found]
@@ -65,7 +62,6 @@ _sys.path.insert(
         / "tools"
     ),
 )
-from mof_agora_hook import pre_check as _bos_pre_check, post_audit as _bos_post_audit  # type: ignore[import-not-found]
 
 # BOS URI 解析器 (P45 W1) — 统一 POC_SERVICES 路由
 from agora.mcp.bos_resolver import resolve_bos_uri as _resolve_bos_uri  # type: ignore[import-not-found]
@@ -284,7 +280,7 @@ async def _init_proxy():
     # ── Phase 2: Register HTTP services from ServiceRegistry ──
     from agora.server.tools_proxy import _load_proxy_services  # type: ignore[import-not-found]
     proxy_configs = _load_proxy_services()
-    await _proxy_manager.registry.register_from_registry(registry, proxy_configs)
+    await _proxy_manager.registry.register_from_registry(registry, proxy_configs, lazy=True)
 
     # ── Phase 3: Register proxy tools ──
     _register_proxy_tools(mcp, _proxy_manager)
@@ -890,7 +886,7 @@ if __name__ == "__main__":
     sse_main()
 
 # Re-exports for test imports
-from agora.server.tools_registry import route_call as route_call
-from agora.server.tools_proxy import proxy_status as proxy_status
-from agora.server.tools_proxy import proxy_call as proxy_call
-from agora.server.tools_proxy import proxy_remove_service as proxy_remove_service
+from agora.server.tools_registry import route_call as route_call  # noqa: E402
+from agora.server.tools_proxy import proxy_status as proxy_status  # noqa: E402
+from agora.server.tools_proxy import proxy_call as proxy_call  # noqa: E402
+from agora.server.tools_proxy import proxy_remove_service as proxy_remove_service  # noqa: E402

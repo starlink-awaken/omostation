@@ -11,7 +11,6 @@ from typing import Any
 
 import structlog
 
-from agora.core.registry import ServiceRegistry  # type: ignore[import-not-found]
 from agora.mcp_proxy.client import MCPClient, create_client  # type: ignore[import-not-found]
 
 logger = structlog.get_logger(__name__)
@@ -349,14 +348,14 @@ class ProxyRegistry:
         await self.unregister_service(service_name)
 
     async def register_from_registry(
-        self, service_registry: ServiceRegistry, proxy_configs: list[dict] | None = None
-    ):
-        """Register all services from the existing ServiceRegistry into proxy connections.
+        self, service_registry: Any, proxy_configs: list[dict] | None = None, lazy: bool = False
+    ) -> None:
+        """Sync HTTP and configured stdio services from the ServiceRegistry.
 
         Args:
-            service_registry: The ServiceRegistry to sync from.
-            proxy_configs: Optional list of proxy service configs (from agora-proxy-services.json).
-                           Needed for stdio services whose command/args are not stored in Service.
+            service_registry: The system ServiceRegistry instance.
+            proxy_configs: List of explicit proxy configs (for stdio args).
+            lazy: If True, only save configs for lazy loading instead of connecting.
         """
         config_map: dict[str, dict] = {}
         if proxy_configs:
@@ -379,6 +378,11 @@ class ProxyRegistry:
                         endpoint=svc.mcp_endpoint,
                     )
                     continue
+
+                if lazy:
+                    self.save_config(svc.name, {"name": svc.name, "mcp_endpoint": svc.mcp_endpoint})
+                    continue
+
                 client = create_client(svc.name, svc.mcp_endpoint)
                 await self.register_service(svc.name, client)
                 continue
@@ -390,10 +394,16 @@ class ProxyRegistry:
                 args = cfg.get("args", [])
                 endpoint = cfg.get("mcp_endpoint", "")
                 if command or endpoint:
-                    client = create_client(svc.name, endpoint, command, args)
-                    await self.register_service(svc.name, client)
+                    if lazy:
+                        self.save_config(svc.name, cfg)
+                    else:
+                        client = create_client(svc.name, endpoint, command, args)
+                        await self.register_service(svc.name, client)
 
-        logger.info("proxy_registry_sync_complete", services=len(self._clients))
+        if lazy:
+            logger.info("proxy_registry_lazy_sync_complete", saved=len(self._saved_configs))
+        else:
+            logger.info("proxy_registry_sync_complete", services=len(self._clients))
 
     # ── Dispatch (with lazy reconnect) ─────────────────────────────────
 
