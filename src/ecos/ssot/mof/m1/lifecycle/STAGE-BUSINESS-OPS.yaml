@@ -1,0 +1,40 @@
+id: "STAGE-BUSINESS-OPS"
+type: "Stage"
+subtype: "StandardStage"
+name: "运营态"
+description: "业务运营、价值度量、ROI 分析 — 7 阶段标准生命周期第 7 阶段"
+status: "active"
+domain: "meta"
+layer: "L0"
+created: "2026-06-13"
+version: "1.0.0"
+properties:
+  order: 6
+  stage: "business_ops"
+  m3_parent: "LifecycleElement.Stage"
+  model_driven_ref:
+    - "projects/model-driven/src/model_driven/mof/m3_extended.py:STANDARD_STAGES[LifecycleStage.BUSINESS_OPS]"
+  entry_criteria:
+    - "Runbook 100% 覆盖"
+    - "On-call 成熟"
+  exit_criteria:
+    - "ROI 报告完成"
+    - "业务指标持续达标"
+    - "知识资产归档"
+  core_activities:
+    - "业务价值度量"
+    - "ROI 分析"
+    - "知识资产沉淀"
+    - "经验复盘"
+    - "下一代规划"
+  deliverables:
+    - "ROI 报告"
+    - "业务指标仪表板"
+    - "知识资产库"
+    - "经验复盘文档"
+  stakeholders:
+    - "产品负责人"
+    - "业务负责人"
+    - "架构师"
+  duration_target_days: 365
+source: "model-driven/mof/m3_extended.py:STANDARD_STAGES"
