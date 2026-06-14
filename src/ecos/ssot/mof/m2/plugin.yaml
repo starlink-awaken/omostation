@@ -27,6 +27,9 @@ Plugin:
       type: list
       description: 插件提供的 actions 列表
   optionalProperties:
+    metaos_admission:
+      type: object
+      description: MetaOS 准入白名单配置 (role, supports_otlp, omo_audit_trail_id, declared_values)
     domain_type:
       type: string
       description: 插件服务的 domain 类型 (e.g. config/document)
