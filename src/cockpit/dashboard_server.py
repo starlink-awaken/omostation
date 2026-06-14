@@ -44,6 +44,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent  # cockpit/src/cockpit/
 OMO_ROOT = Path.home() / "Workspace/projects/omo"
 DASHBOARD_HTML = PROJECT_ROOT / "templates" / "dashboard.html"
 M0_SNAPSHOT_PATH = Path.home() / "Workspace/projects/ecos/src/ecos/ssot/mof/m0/snapshot.yaml"
+HERMES_CONSOLE_DIST = Path.home() / "Workspace/projects/hermes-console/dist"
 
 # Ensure both runtime/src and omo/src are on sys.path for imports
 _runtime_src = str(PROJECT_ROOT / "src")
@@ -78,6 +79,10 @@ app.add_middleware(
     allow_methods=["GET", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
+
+if HERMES_CONSOLE_DIST.exists():
+    from fastapi.staticfiles import StaticFiles
+    app.mount("/hermes", StaticFiles(directory=str(HERMES_CONSOLE_DIST), html=True), name="hermes_console")
 
 # ─── 健康检查 ──────────────────────────────────────────────────
 
@@ -310,6 +315,7 @@ a{color:#58a6ff;text-decoration:none}a:hover{text-decoration:underline}
 <div class="sub">L3 聚合入口 · 自动检测各层状态</div>
 <div class="nav">
   <a href="/">&#x1F4CA; 债务驾驶舱 (原有)</a>
+  <a href="/hermes/">&#x2728; Hermes Console</a>
   <a href="/api/v1/status">&#x1F4CB; API JSON</a>
   <a href="/api/v1/m0">&#x1F4CA; M0 快照</a>
   <a href="http://localhost:7430">&#x2197; Agora (I0)</a>
