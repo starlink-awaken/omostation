@@ -1,0 +1,27 @@
+id: P45-W1-P0-BLOCKER-FIX
+phase: 45
+wave: W1
+title: "P0 阻断修复 — Agent 能通过 BOS URI 访问系统"
+status: done
+task_type: feature
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+  - "P45 W0 完成"
+depends_on:
+  - P45-W0-DESIGN-REGISTER
+deliverables:
+  - "server/mcp.py: 4 个新 MCP 工具 (resolve_bos_uri, read_resource, list_bos_resources, mutate_resource 真实现)"
+  - "mcp/bos_resolver.py: 域白名单从正则改为注册表驱动"
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+  - ".omo/_knowledge/design/plans/bos-uri-ideal-architecture.md"
+description: |
+  让 Agent 能通过 BOS URI 调用全系统:
+  T5: 暴露 resolve_bos_uri 到主 FastMCP @mcp.tool()
+  T6: mutate_resource 从空壳回显改为真实路由
+  T7: 实现 read_resource(uri, params) → 结构化结果
+  T8: 实现 list_bos_resources(prefix) → 统一发现口
+  T9: 域白名单从硬编码正则改为注册表驱动

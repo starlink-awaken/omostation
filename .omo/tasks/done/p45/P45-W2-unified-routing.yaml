@@ -2,7 +2,7 @@ id: P45-W2-UNIFIED-ROUTING
 phase: 45
 wave: W2
 title: "P1 统一路由 — 合并双表 + 通配注册 + 统一错误"
-status: pending
+status: done
 task_type: feature
 priority: P1
 assigned_to: null

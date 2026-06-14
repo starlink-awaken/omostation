@@ -2,7 +2,7 @@ id: P45-W3-GOVERNANCE-SCHEMA
 phase: 45
 wave: W3
 title: "P2 治理 + Schema — 鉴权/审计/Schema 契约"
-status: pending
+status: done
 task_type: feature
 priority: P2
 assigned_to: null
