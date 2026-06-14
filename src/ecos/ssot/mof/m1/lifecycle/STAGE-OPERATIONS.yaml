@@ -1,0 +1,40 @@
+id: "STAGE-OPERATIONS"
+type: "Stage"
+subtype: "StandardStage"
+name: "运维态"
+description: "运维规范化、Runbook、SLA 治理 — 7 阶段标准生命周期第 6 阶段"
+status: "active"
+domain: "meta"
+layer: "L0"
+created: "2026-06-13"
+version: "1.0.0"
+properties:
+  order: 5
+  stage: "operations"
+  m3_parent: "LifecycleElement.Stage"
+  model_driven_ref:
+    - "projects/model-driven/src/model_driven/mof/m3_extended.py:STANDARD_STAGES[LifecycleStage.OPERATIONS]"
+  entry_criteria:
+    - "SLA 达标 ≥ 30 天"
+    - "无 P0/P1 事故"
+  exit_criteria:
+    - "Runbook 100% 覆盖"
+    - "On-call 轮值成熟"
+    - "事故 MTTR < 30 分钟"
+  core_activities:
+    - "Runbook 编写与维护"
+    - "On-call 轮值调度"
+    - "事故复盘与改进"
+    - "运维 SOP 优化"
+    - "成本优化"
+  deliverables:
+    - "Runbook 库"
+    - "On-call 手册"
+    - "事故 postmortem 库"
+    - "运维 SOP 文档"
+  stakeholders:
+    - "SRE 工程师"
+    - "DevOps 工程师"
+    - "技术负责人"
+  duration_target_days: 180
+source: "model-driven/mof/m3_extended.py:STANDARD_STAGES"
