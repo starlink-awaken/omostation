@@ -1,0 +1,12 @@
+id: OMOTASK-C1-FIX-IMMUNE-NAMEERROR
+type: OMOTask
+subtype: Task
+name: Fix immune.py metacognitive_quality_report NameError (C1)
+description: ''
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/C1-FIX-IMMUNE-NAMEERROR.yaml

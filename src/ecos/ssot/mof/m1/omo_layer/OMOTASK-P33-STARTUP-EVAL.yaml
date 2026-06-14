@@ -1,0 +1,12 @@
+id: OMOTASK-P33-STARTUP-EVAL
+type: OMOTask
+subtype: Task
+name: P33 启动评估 — 3 战役可行性 + 建首批 3 任务
+description: 评估 plan-phase33 3 战役可行性, 决定首批 P33 任务。
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P33-STARTUP-EVAL.yaml

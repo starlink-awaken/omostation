@@ -1,0 +1,12 @@
+id: OMOTASK-P33-W0-NORTH-STAR
+type: OMOTask
+subtype: Task
+name: P33 北极星 — 人类审批 5 Domain + BOS URI 战略
+description: 'P33 北极星:'
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P33-W0-NORTH-STAR.yaml

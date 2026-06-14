@@ -1,0 +1,13 @@
+id: OMOTASK-OPC-P2-OBS-01
+type: OMOTask
+subtype: RoadmapPhase
+name: Phase 2 观测基建与评估飞轮 (T2.1-T2.3)
+description: 落地了 Langfuse 观测面板及 OTLP 追踪基建，并集成了 DeepEval 的 LLM-as-Judge 裁判引擎， 形成完整的
+  VibeOps (评估飞轮) 闭环。
+status: DONE
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPC-P2-OBS-01.yaml

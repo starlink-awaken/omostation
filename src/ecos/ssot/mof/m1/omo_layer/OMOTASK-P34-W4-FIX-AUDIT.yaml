@@ -1,0 +1,12 @@
+id: OMOTASK-P34-W4-FIX-AUDIT
+type: OMOTask
+subtype: Task
+name: 修任务 YAML 描述债务 — audit 95→100 (A+ 恢复)
+description: 修 P34-W0/W1 任务 YAML deliverables 描述式文本 -> 真实文件路径.
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P34-W4-FIX-AUDIT.yaml

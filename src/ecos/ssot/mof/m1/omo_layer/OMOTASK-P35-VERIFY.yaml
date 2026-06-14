@@ -1,0 +1,12 @@
+id: OMOTASK-P35-VERIFY
+type: OMOTask
+subtype: Task
+name: P35 验收 — 4 wave 全完成, 跨域 9/11 ok, audit 100 守 12+ wave
+description: 'P35 整体收官: 4 wave (跨域/W1+W2/W3) 全完成.'
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P35-VERIFY.yaml

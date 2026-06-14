@@ -1,0 +1,12 @@
+id: OMOTASK-P33-W0-FOLD
+type: OMOTask
+subtype: Task
+name: 归档 P30/P31/P32 — 让 planned/ 平面只剩 P33
+description: 归档 P30/P31/P32 任务到 archived/, 让 planned/ 平面清空为 P33 专用。
+status: done
+priority: P1
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P33-W0-FOLD.yaml

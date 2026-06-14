@@ -1,0 +1,17 @@
+id: OMOTASK-OPC-P15-PHASE1-01
+type: OMOTask
+subtype: RoadmapPhase
+name: 'Phase 1: Memory Adapter and Architecture Decoupling'
+description: 'Implementation of eCOS v6.1 Roadmap Phase 1:'
+status: done
+priority: P0
+domain: kairon
+created: '2026-06-12'
+properties:
+  tasks:
+  - decouple: apply dependency inversion principle for ecos and agora
+  - mem0_adapter: create memory_adapter.py in kairon/kos integrating Mem0
+  - routing: mount adapter to agora routing
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPC-P15-PHASE1-01.yaml

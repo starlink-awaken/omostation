@@ -1,0 +1,12 @@
+id: OMOTASK-IMPORTED-a4cfe7
+type: OMOTask
+subtype: Task
+name: 'P42-W0-INDEX-REFRESH: 刷新 .omo/INDEX.md 头条 + 表格 (内部表头指向真实 state)'
+description: ''
+status: proposed
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/IMPORTED-a4cfe7.yaml

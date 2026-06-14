@@ -1,0 +1,12 @@
+id: OMOTASK-P36-W2-W3-COMBO
+type: OMOTask
+subtype: Task
+name: 观测性落地 + P36 验收 (W2 + W3 合并)
+description: 'P36-W2 观测性 plan 真正落地: 验证 omo observability/cost/alert 三件套'
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P36-W2-W3-COMBO.yaml

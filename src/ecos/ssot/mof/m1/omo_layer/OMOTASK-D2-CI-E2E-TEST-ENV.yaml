@@ -1,0 +1,12 @@
+id: OMOTASK-D2-CI-E2E-TEST-ENV
+type: OMOTask
+subtype: Task
+name: CI E2E 测试环境容器化 (Resolve D2 debt)
+description: ''
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/D2-CI-E2E-TEST-ENV.yaml

@@ -1,0 +1,12 @@
+id: OMOTASK-P34-W3-MULTI-REPO-RELEASE
+type: OMOTask
+subtype: Task
+name: 多仓库统一版本发布 — release.sh + CHANGELOG + VERSION
+description: 'P34-W3 多仓库统一发布: VERSION + CHANGELOG + release.sh + ADR-0007.'
+status: done
+priority: P1
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P34-W3-MULTI-REPO-RELEASE.yaml

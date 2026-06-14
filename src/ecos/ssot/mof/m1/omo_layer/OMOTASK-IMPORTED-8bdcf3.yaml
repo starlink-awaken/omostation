@@ -1,0 +1,12 @@
+id: OMOTASK-IMPORTED-8bdcf3
+type: OMOTask
+subtype: Task
+name: 'P42-W0-SYNC-OMO-STATE: 跑 sync_omo_state.py 一次性把 system.yaml 字段全刷新'
+description: ''
+status: proposed
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/IMPORTED-8bdcf3.yaml

@@ -1,0 +1,12 @@
+id: OMOTASK-P44-W0-W4-COMBO
+type: OMOTask
+subtype: Task
+name: P44 5 wave 全面实施 (多连接池 + 僵死检测 + GAP 评估 + audit dedup + marker)
+description: P44-W0 agora 多连接 LRU 池 (max=4, _AgoraPoolManager).
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P44-W0-W4-COMBO.yaml

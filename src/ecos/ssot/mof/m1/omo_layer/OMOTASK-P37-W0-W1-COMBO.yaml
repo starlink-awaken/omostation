@@ -1,0 +1,12 @@
+id: OMOTASK-P37-W0-W1-COMBO
+type: OMOTask
+subtype: Task
+name: CI workflow 真启用 + 治理历史清仓 (W0 + W1 合并)
+description: 'P37-W0 CI workflow 真启用:'
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P37-W0-W1-COMBO.yaml

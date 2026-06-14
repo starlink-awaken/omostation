@@ -1,0 +1,12 @@
+id: OMOTASK-C5-FIX-TERMINAL-RUN-RCE
+type: OMOTask
+subtype: Task
+name: Fix terminal_run shell=True RCE vulnerability (C5)
+description: ''
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/C5-FIX-TERMINAL-RUN-RCE.yaml

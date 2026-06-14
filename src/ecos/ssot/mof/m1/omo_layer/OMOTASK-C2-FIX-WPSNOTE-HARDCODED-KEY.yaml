@@ -1,0 +1,12 @@
+id: OMOTASK-C2-FIX-WPSNOTE-HARDCODED-KEY
+type: OMOTask
+subtype: Task
+name: Fix wpsnote.py hardcoded production API key (C2)
+description: ''
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/C2-FIX-WPSNOTE-HARDCODED-KEY.yaml

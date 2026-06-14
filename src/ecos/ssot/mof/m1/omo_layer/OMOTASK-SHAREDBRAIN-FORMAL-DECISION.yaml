@@ -1,0 +1,12 @@
+id: OMOTASK-SHAREDBRAIN-FORMAL-DECISION
+type: OMOTask
+subtype: Task
+name: SharedBrain 正式去留决策与最低测试基线
+description: ''
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/SHAREDBRAIN-FORMAL-DECISION.yaml

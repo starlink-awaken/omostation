@@ -1,0 +1,12 @@
+id: OMOTASK-P34-W5-REAL-SCENARIO
+type: OMOTask
+subtype: Task
+name: 真实场景 5/5 ok — 修基础设施让 5 URI 串联全活
+description: '修 P34-W2 揭出的 3 错误:'
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P34-W5-REAL-SCENARIO.yaml

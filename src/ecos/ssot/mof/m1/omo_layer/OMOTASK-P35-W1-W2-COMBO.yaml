@@ -1,0 +1,12 @@
+id: OMOTASK-P35-W1-W2-COMBO
+type: OMOTask
+subtype: Task
+name: 战役 4 spawn 真替代 + CI 集成 omo audit (W1 + W2 合并)
+description: 'P35-W1 战役 4: agora spawn 真替代 (自动 respawn 死进程).'
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P35-W1-W2-COMBO.yaml

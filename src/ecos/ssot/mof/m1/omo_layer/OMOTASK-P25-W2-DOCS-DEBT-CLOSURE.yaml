@@ -1,0 +1,12 @@
+id: OMOTASK-P25-W2-DOCS-DEBT-CLOSURE
+type: OMOTask
+subtype: Task
+name: 文档终稿+债务关闭+健康分重算
+description: ''
+status: pending
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P25-W2-DOCS-DEBT-CLOSURE.yaml

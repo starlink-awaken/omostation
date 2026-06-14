@@ -1,0 +1,13 @@
+id: OMOTASK-IMPORTED-baf924
+type: OMOTask
+subtype: Task
+name: 'P42-W0-AUDIT-WORKING-TREE: 审计 11 modified submodules + 2 untracked (aetherforge-swarm-ext/cockpit)
+  + bus-foundation 2 新脚本'
+description: ''
+status: proposed
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/IMPORTED-baf924.yaml

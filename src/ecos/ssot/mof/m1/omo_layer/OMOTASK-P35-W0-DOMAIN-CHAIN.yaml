@@ -1,0 +1,12 @@
+id: OMOTASK-P35-W0-DOMAIN-CHAIN
+type: OMOTask
+subtype: Task
+name: 跨 Domain 串联 — 5 场景验证 (memory→analysis→persona→capability→governance)
+description: 'P35-W0 跨 Domain 串联: 5 场景验证 40 URI 真能跨域协同.'
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P35-W0-DOMAIN-CHAIN.yaml

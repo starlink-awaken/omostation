@@ -1,0 +1,12 @@
+id: OMOTASK-PILOT-EXTERNAL-WORKER-DISPATCH-VALIDATION
+type: OMOTask
+subtype: Task
+name: Run first external worker dispatch validation under OMO framework
+description: ''
+status: done
+priority: P1
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/PILOT-EXTERNAL-WORKER-DISPATCH-VALIDATION.yaml

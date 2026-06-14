@@ -1,0 +1,12 @@
+id: OMOTASK-P40-W0-W1-COMBO
+type: OMOTask
+subtype: Task
+name: GitHub 真启用 (gh CLI 推 origin main) + LLM 真 anthropic 综合 (mock 模式)
+description: P40-W0 GitHub 真启用 (gh CLI 真推 origin main, fast-forward 139 commits).
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P40-W0-W1-COMBO.yaml

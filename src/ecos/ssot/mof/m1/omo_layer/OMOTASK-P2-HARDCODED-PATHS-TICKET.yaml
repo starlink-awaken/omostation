@@ -1,0 +1,17 @@
+id: OMOTASK-P2-HARDCODED-PATHS-TICKET
+type: OMOTask
+subtype: Task
+name: Document and batch-fix ~25 hardcoded /Users/xiamingxing paths across active
+  source
+description: ''
+status: review
+priority: P2
+domain: opc
+properties:
+  evidence:
+  - 'Inventory: .omo/standards/hardcoded-paths-inventory.md'
+  - 2 paths fixed (sync.py, test_phase2_integration.py)
+  - Remaining 21 paths documented for follow-up
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P2-HARDCODED-PATHS-TICKET.yaml

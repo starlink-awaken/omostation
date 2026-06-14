@@ -1,0 +1,12 @@
+id: OMOTASK-P38-W2-W3-COMBO
+type: OMOTask
+subtype: Task
+name: 观测性 dashboard + P38 验收 (W2 + W3 合并)
+description: P38-W2 观测性 dashboard (omo.omo_observability_dashboard + HTTP server).
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P38-W2-W3-COMBO.yaml

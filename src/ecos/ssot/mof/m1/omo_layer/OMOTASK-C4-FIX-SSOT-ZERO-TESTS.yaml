@@ -1,0 +1,12 @@
+id: OMOTASK-C4-FIX-SSOT-ZERO-TESTS
+type: OMOTask
+subtype: Task
+name: Fix SSOT package zero test coverage (C4)
+description: ''
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/C4-FIX-SSOT-ZERO-TESTS.yaml

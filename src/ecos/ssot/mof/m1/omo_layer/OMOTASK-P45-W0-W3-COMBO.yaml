@@ -1,0 +1,12 @@
+id: OMOTASK-P45-W0-W3-COMBO
+type: OMOTask
+subtype: Task
+name: P45 战役 1 — 10 GAP URI 实施 (4 wave combo)
+description: 'P45 战役 1 — 10 GAP URI 实施 (P44-W2 评估路线图):'
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P45-W0-W3-COMBO.yaml

@@ -1,0 +1,12 @@
+id: OMOTASK-OPC-PHASE-PLAN
+type: OMOTask
+subtype: RoadmapPhase
+name: OPC personal swarm AI brain roadmap
+description: ''
+status: proposed
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPC-PHASE-PLAN.yaml

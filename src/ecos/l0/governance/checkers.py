@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from .primitives import CheckResult, CheckStatus, CheckSeverity, GovernanceCheck
 
@@ -246,3 +247,68 @@ class X4ConsistencyChecker(GovernanceCheck):
     
     def get_description(self) -> str:
         return "检查规则是否被遵守：CI + pre-commit + 文档"
+
+
+class SwarmBrainStructureChecker(GovernanceCheck):
+    """蜂群大脑结构检查器 — 检查 L0-L3 模块结构完整性"""
+
+    def __init__(self, repo_root: str | Path):
+        super().__init__("x-swarm-brain-structure", "X4")
+        self.repo_root = Path(repo_root)
+
+    def execute(self) -> CheckResult:
+        issues = []
+        details: dict[str, Any] = {}
+
+        l0_dir = self.repo_root / "src" / "ecos" / "l0" / "governance"
+        l1_dir = self.repo_root / "src" / "ecos" / "l1" / "runtime"
+        l2_dir = self.repo_root / "src" / "ecos" / "l2" / "engine"
+        l3_dir = self.repo_root / "src" / "ecos" / "l3" / "entry"
+
+        required_l0_files = [
+            "distributed.py", "role.py", "swarm.py", "personal.py",
+            "agent_registry.py", "task_scheduler.py", "failover.py", "load_balancer.py",
+        ]
+        for f in required_l0_files:
+            if not (l0_dir / f).exists():
+                issues.append(f"L0 缺少 {f}")
+
+        for layer, dir_path in [("L1", l1_dir), ("L2", l2_dir), ("L3", l3_dir)]:
+            init = dir_path / "__init__.py"
+            if not init.exists():
+                issues.append(f"{layer} 缺少 __init__.py")
+            elif init.stat().st_size < 500:
+                issues.append(f"{layer} __init__.py 过小 (< 500 bytes)")
+
+        test_files = list((self.repo_root / "tests" / "test_l0").glob("*.py")) + \
+                     list((self.repo_root / "tests" / "test_l1").glob("*.py")) + \
+                     list((self.repo_root / "tests" / "test_l2").glob("*.py")) + \
+                     list((self.repo_root / "tests" / "test_l3").glob("*.py"))
+        details["test_file_count"] = len(test_files)
+        if len(test_files) < 4:
+            issues.append(f"测试文件只有 {len(test_files)} 个 (< 4)")
+
+        l0_total = sum(f.stat().st_size for f in l0_dir.glob("*.py") if f.name != "__pycache__")
+        details["l0_bytes"] = l0_total
+        if l0_total < 10000:
+            issues.append(f"L0 代码量 {l0_total} bytes (< 10KB)")
+
+        if not issues:
+            return CheckResult(
+                check_id=self.check_id,
+                dimension=self.dimension,
+                status=CheckStatus.PASS,
+                message="蜂群大脑结构检查通过",
+                metadata=details,
+            )
+        else:
+            return CheckResult(
+                check_id=self.check_id,
+                dimension=self.dimension,
+                status=CheckStatus.WARN if len(issues) <= 2 else CheckStatus.FAIL,
+                message=f"蜂群大脑结构有 {len(issues)} 个问题",
+                metadata=details,
+            )
+
+    def get_description(self) -> str:
+        return "检查蜂群大脑 L0-L3 模块结构完整性"

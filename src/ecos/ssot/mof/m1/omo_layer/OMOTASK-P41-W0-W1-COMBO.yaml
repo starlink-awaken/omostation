@@ -1,0 +1,12 @@
+id: OMOTASK-P41-W0-W1-COMBO
+type: OMOTask
+subtype: Task
+name: LLM 用 ollama + 修 GitHub workflow failure (W0 + W1 合并)
+description: P41-W0 LLM 用 ollama 替代 anthropic (本地免费, 不需 API key).
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P41-W0-W1-COMBO.yaml

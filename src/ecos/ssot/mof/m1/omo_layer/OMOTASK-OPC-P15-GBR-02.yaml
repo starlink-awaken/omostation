@@ -1,0 +1,17 @@
+id: OMOTASK-OPC-P15-GBR-02
+type: OMOTask
+subtype: RoadmapPhase
+name: gbrain .omo/ governance plane initialization
+description: gbrain 缺少 .omo/ 治理平面。在 OPC 跨仓治理审计中确认为缺失。
+status: done
+priority: P1
+domain: gbrain
+created: '2026-06-11'
+properties:
+  tasks:
+  - create: 创建 .omo/state/ .omo/debt/ .omo/goals/ 目录
+  - populate: 填充 .omo/state/system.yaml
+  - register: 注册到 OMO debt 跨仓雷达
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPC-P15-GBR-02.yaml

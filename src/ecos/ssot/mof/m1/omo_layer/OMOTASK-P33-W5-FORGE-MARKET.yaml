@@ -1,0 +1,12 @@
+id: OMOTASK-P33-W5-FORGE-MARKET
+type: OMOTask
+subtype: Task
+name: '战役 3: forge 集市 + 工具热加载'
+description: 'P33-W5 战役 3: forge 集市 + 工具热加载.'
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P33-W5-FORGE-MARKET.yaml

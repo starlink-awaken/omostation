@@ -1,0 +1,12 @@
+id: OMOTASK-C6-FIX-AGENT-RUNTIME-AUTH
+type: OMOTask
+subtype: Task
+name: Fix Agent Runtime default auth bypass (C6)
+description: ''
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/C6-FIX-AGENT-RUNTIME-AUTH.yaml

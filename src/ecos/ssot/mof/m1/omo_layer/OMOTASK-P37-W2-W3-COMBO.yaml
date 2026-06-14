@@ -1,0 +1,12 @@
+id: OMOTASK-P37-W2-W3-COMBO
+type: OMOTask
+subtype: Task
+name: 跨域+LLM 实战 + P37 验收 (W2 + W3 合并)
+description: P37-W2 跨域+LLM 实战 (omo.llm_bos_bridge + llm_bos_demo).
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P37-W2-W3-COMBO.yaml

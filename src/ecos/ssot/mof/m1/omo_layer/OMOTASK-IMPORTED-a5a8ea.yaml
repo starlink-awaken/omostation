@@ -1,0 +1,12 @@
+id: OMOTASK-IMPORTED-a5a8ea
+type: OMOTask
+subtype: Task
+name: 'P42-W0-MERGE-STATE: 合并 14 个 phase 复盘 (P28-P41) 进 goals/state'
+description: ''
+status: proposed
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/IMPORTED-a5a8ea.yaml

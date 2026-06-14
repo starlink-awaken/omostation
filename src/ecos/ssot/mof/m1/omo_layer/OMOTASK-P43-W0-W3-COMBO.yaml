@@ -1,0 +1,12 @@
+id: OMOTASK-P43-W0-W3-COMBO
+type: OMOTask
+subtype: Task
+name: P43 4 wave 全面实施 (ProcessPool + 40 URI smoke + audit + 修测试)
+description: P43-W0 agora 长驻进程池 (75x 加速, 6 URI 0.80s vs P42-W2 60s).
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P43-W0-W3-COMBO.yaml

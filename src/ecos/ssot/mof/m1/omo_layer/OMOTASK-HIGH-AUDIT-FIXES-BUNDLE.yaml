@@ -1,0 +1,12 @@
+id: OMOTASK-HIGH-AUDIT-FIXES-BUNDLE
+type: OMOTask
+subtype: Task
+name: Fix all HIGH severity audit findings (H1-H12)
+description: ''
+status: done
+priority: P1
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/HIGH-AUDIT-FIXES-BUNDLE.yaml

@@ -1,0 +1,12 @@
+id: OMOTASK-P39-W2-W3-COMBO
+type: OMOTask
+subtype: Task
+name: dashboard 真服务化 + P39 验收 (W2 + W3 合并)
+description: P39-W2 dashboard 真服务化 (launchd plist + stop + health check).
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P39-W2-W3-COMBO.yaml

@@ -1,0 +1,18 @@
+id: OMOTASK-OPC-P15-KAI-01
+type: OMOTask
+subtype: RoadmapPhase
+name: kairon JSONL write path audit and schema check hardening
+description: kairon 多包工作区(16 packages) 的 JSONL 写入路径审计。替换直接
+status: done
+priority: P1
+domain: kairon
+created: '2026-06-11'
+completed: '2026-06-13'
+properties:
+  tasks:
+  - audit: 查找所有 json.dumps + open("a") JSONL 写入点 ✅
+  - replace: 替换为 AppendOnlyLog 或带 schema 校验的写入 ✅
+  - verify: 确保写入有 fsync + atomic rename ✅
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPC-P15-KAI-01.yaml

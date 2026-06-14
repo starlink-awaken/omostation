@@ -1,0 +1,18 @@
+id: OMOTASK-OPC-P15-GBR-01
+type: OMOTask
+subtype: RoadmapPhase
+name: gbrain JSONL writers audit and atomic write remediation
+description: gbrain TypeScript codebase 使用非原子覆盖写入(writeText)及
+status: done
+priority: P1
+domain: gbrain
+created: '2026-06-11'
+properties:
+  tasks:
+  - audit: 审计所有 writeText/writeFileSync 写入点
+  - fix: 替换为 tempfile + fsync + rename 原子写
+  - schema: 对 JSONL 添加 zod schema 校验
+  - plane: 初始化 gbrain .omo/ 治理平面
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPC-P15-GBR-01.yaml

@@ -1,0 +1,12 @@
+id: OMOTASK-P38-W0-W1-COMBO
+type: OMOTask
+subtype: Task
+name: CI 真触发 + 跨域 LLM 真调用 (W0 + W1 合并)
+description: P38-W0 CI 真触发 (ci_local.sh 模拟; act 未装).
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P38-W0-W1-COMBO.yaml

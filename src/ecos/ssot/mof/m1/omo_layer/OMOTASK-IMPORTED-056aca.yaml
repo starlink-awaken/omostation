@@ -1,0 +1,12 @@
+id: OMOTASK-IMPORTED-056aca
+type: OMOTask
+subtype: Task
+name: 审计所有 L1 包的 MCP 入口，找出非标准的直连调用
+description: ''
+status: done
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/IMPORTED-056aca.yaml

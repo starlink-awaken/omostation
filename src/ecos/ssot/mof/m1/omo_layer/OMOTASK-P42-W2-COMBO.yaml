@@ -1,0 +1,12 @@
+id: OMOTASK-P42-W2-COMBO
+type: OMOTask
+subtype: Task
+name: agora 跨进程 URI 派发闭环 (修 agora_unavailable)
+description: P42-W2 agora 跨进程 URI 派发闭环.
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P42-W2-COMBO.yaml

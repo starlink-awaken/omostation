@@ -1,0 +1,12 @@
+id: OMOTASK-P42-W0-W1-COMBO
+type: OMOTask
+subtype: Task
+name: audit 守回 100.0 + P41 收尾 (W0 + W1 合并)
+description: P42-W0 audit 守回 100.0 (A+).
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P42-W0-W1-COMBO.yaml

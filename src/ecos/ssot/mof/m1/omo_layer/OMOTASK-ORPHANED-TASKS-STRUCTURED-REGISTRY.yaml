@@ -1,0 +1,12 @@
+id: OMOTASK-ORPHANED-TASKS-STRUCTURED-REGISTRY
+type: OMOTask
+subtype: Task
+name: Orphaned_tasks blob 拆分为结构化 registry
+description: ''
+status: done
+priority: P1
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/ORPHANED-TASKS-STRUCTURED-REGISTRY.yaml

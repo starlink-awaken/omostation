@@ -1,0 +1,12 @@
+id: OMOTASK-P36-W0-W1-COMBO
+type: OMOTask
+subtype: Task
+name: 治理债务永久化 + 跨域 GAP 补 (W0 + W1 合并)
+description: P36-W0 治理债务永久化 (task-yaml-rules.md, 2106 字节).
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P36-W0-W1-COMBO.yaml

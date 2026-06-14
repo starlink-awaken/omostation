@@ -1,0 +1,12 @@
+id: OMOTASK-P35-W3-FIX-AUDIT
+type: OMOTask
+subtype: Task
+name: 修 P35 任务 YAML 描述债务 — audit 100 (A+ 守)
+description: 修 P35-W1-W2-COMBO 任务 YAML deliverables 描述式 -> 真实路径.
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P35-W3-FIX-AUDIT.yaml

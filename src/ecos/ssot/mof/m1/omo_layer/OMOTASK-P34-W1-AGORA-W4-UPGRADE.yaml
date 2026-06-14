@@ -1,0 +1,12 @@
+id: OMOTASK-P34-W1-AGORA-W4-UPGRADE
+type: OMOTask
+subtype: Task
+name: agora spawn 升级 — W4 POC 到生产 stdio MCP 协议
+description: 'P34-W1 战役 1 升级: agora stdio 协议从"alive 验证" 到 "真请求/响应".'
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P34-W1-AGORA-W4-UPGRADE.yaml

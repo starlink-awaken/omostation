@@ -1,0 +1,13 @@
+id: OMOTASK-P33-W1-CAMPAIGN-2-PRECHECK
+type: OMOTask
+subtype: Task
+name: '战役 2 前置: 5 Domain 边界 + BOS URI 命名约定 (ADR-0007)'
+description: '战役 2 前置: 定义 5 Domain (Memory/Governance/Analysis/Persona/Capability)
+  与 kairon 19 个活跃包'
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P33-W1-CAMPAIGN-2-PRECHECK.yaml

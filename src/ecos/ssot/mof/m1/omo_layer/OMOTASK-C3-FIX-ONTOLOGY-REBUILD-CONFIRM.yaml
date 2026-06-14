@@ -1,0 +1,12 @@
+id: OMOTASK-C3-FIX-ONTOLOGY-REBUILD-CONFIRM
+type: OMOTask
+subtype: Task
+name: Fix ontology_rebuild missing L2 confirmation check (C3)
+description: ''
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/C3-FIX-ONTOLOGY-REBUILD-CONFIRM.yaml

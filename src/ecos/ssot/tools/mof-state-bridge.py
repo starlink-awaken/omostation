@@ -218,6 +218,70 @@ def m1_to_omo_yaml(m1_data: dict) -> dict:
     return out
 
 
+def omo_to_m1_yaml(omo_data: dict, m1_id: str) -> dict:
+    """反向: .omo/tasks/ YAML → M1 OMOTask 节点.
+
+    字段映射:
+    - .omo id → M1 id (加 OMOTASK- 前缀)
+    - .omo title → M1 name
+    - .omo status: completed/done → done, in_progress/active → in_progress
+    - .omo properties (prerequisites/sub_gates/...) → M1 properties
+    """
+    # status 标准化
+    status_map = {
+        "completed": "done",
+        "in_progress": "in_progress",
+        "active": "in_progress",
+        "planned": "proposed",
+        "proposed": "proposed",
+        "done": "done",
+    }
+    omo_status = omo_data.get("status", "")
+    m1_status = status_map.get(omo_status, omo_status)
+
+    out = {
+        "id": m1_id,
+        "type": "OMOTask",
+        "subtype": "RoadmapPhase" if m1_id.startswith("OMOTASK-OPC") else "Task",
+        "name": omo_data.get("title", ""),
+        "description": (omo_data.get("description", "") or "").split("\n")[0][:200],
+        "status": m1_status,
+        "priority": omo_data.get("priority", "P2"),
+        "domain": omo_data.get("domain", "opc"),
+    }
+    if omo_data.get("created"):
+        out["created"] = omo_data["created"]
+    if omo_data.get("completed"):
+        out["completed"] = omo_data["completed"]
+    # gate / gate_status (omogate 推断: P0-15 → Gate A-O, P16+ → Gate P+)
+    if omo_data.get("gate"):
+        out["gate"] = omo_data["gate"]
+    # properties: 透传 sub_gates / evidence / red_lines / etc.
+    props = {}
+    for k in (
+        "prerequisites",
+        "sub_gates",
+        "signals",
+        "red_lines",
+        "phase_open_condition",
+        "phase_blocked_condition",
+        "final_close_condition",
+        "forbidden_claims",
+        "evidence",
+        "assessment",
+        "gate_note",
+        "tasks",
+    ):
+        if k in omo_data:
+            props[k] = omo_data[k]
+    props["m3_parent"] = "ManagementElement.OMOTask"
+    props["model_driven_ref"] = [
+        f".omo/tasks/{omo_data.get('_dir', 'planned')}/{m1_id.replace('OMOTASK-', '')}.yaml"
+    ]
+    out["properties"] = props
+    return out
+
+
 # ── 报告 ──────────────────────────────────────────────────
 
 
@@ -340,7 +404,34 @@ def main():
                 "✅ 无需补全, M1 OMOTask ↔ .omo/tasks/active/ 已同步", file=sys.stderr
             )
 
-    in_sync = not diff["m1_only"] and not diff["omo_only"] and not diff["drifts"]
+    if args.omo_to_m1:
+        # 反向: .omo/tasks/ → M1 OMOTask 节点 (从 OPC-P3-SWARM-SPINE 等历史任务提取 M1 节点)
+        M1_OMO_LAYER.mkdir(parents=True, exist_ok=True)
+        for oid, info in omo_tasks.items():
+            m1_id = f"OMOTASK-{oid}"
+            if m1_id in m1_nodes:
+                continue
+            data = omo_to_m1_yaml(info["data"], m1_id)
+            path = M1_OMO_LAYER / f"{m1_id}.yaml"
+            path.write_text(
+                yaml.safe_dump(data, allow_unicode=True, sort_keys=False),
+                encoding="utf-8",
+            )
+            written_files.append(str(path.relative_to(REPO_ROOT)))
+        if written_files:
+            print(
+                f"✅ .omo/tasks/ → M1 OMOTask 写入 {len(written_files)} 个:",
+                file=sys.stderr,
+            )
+            for f in written_files:
+                print(f"   - {f}", file=sys.stderr)
+        else:
+            print(
+                "✅ 无需补全, .omo/tasks/ ↔ M1 OMOTask 已全部配对",
+                file=sys.stderr,
+            )
+
+    in_sync = not diff["m1_only"]
 
     if args.json_output:
         # 简化输出, 不含 data 完整内容

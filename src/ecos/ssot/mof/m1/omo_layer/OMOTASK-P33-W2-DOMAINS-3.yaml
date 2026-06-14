@@ -1,0 +1,12 @@
+id: OMOTASK-P33-W2-DOMAINS-3
+type: OMOTask
+subtype: Task
+name: 战役 2 余下 3 Domain — Analysis + Persona + Capability
+description: 'P33-W2 战役 2 余下: Analysis (7) + Persona (4) + Capability (4) 15 条 URI.'
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P33-W2-DOMAINS-3.yaml

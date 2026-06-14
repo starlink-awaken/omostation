@@ -1,0 +1,17 @@
+id: OMOTASK-OPC-P15-MET-01
+type: OMOTask
+subtype: RoadmapPhase
+name: metaos .omo/ governance plane initialization and population
+description: metaos 缺少 .omo/ 治理平面，无法参与 OMO phase/task/debt/audit 流程。
+status: done
+priority: P1
+domain: metaos
+created: '2026-06-11'
+properties:
+  tasks:
+  - populate: 填充 .omo/state/system.yaml 为完整骨架
+  - register: 注册 metaos 到 OMO debt 跨仓雷达
+  - connect: 连接 metaos daemon/events 到 OMO 审计
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPC-P15-MET-01.yaml

@@ -1,0 +1,14 @@
+id: OMOTASK-OPC-P6-SELF-EVOLUTION-nop-20260614T114209Z
+type: OMOTask
+subtype: RoadmapPhase
+name: 'No-op: drift detector reported 0 drift; loop continues'
+description: ''
+status: proposed
+priority: P2
+domain: opc
+properties:
+  red_lines:
+  - self-evolution task 仅落 planned/, 永不入 active/ 除非 human approval
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260614T114209Z.yaml

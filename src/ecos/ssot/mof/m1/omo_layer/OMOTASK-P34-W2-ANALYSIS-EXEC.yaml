@@ -1,0 +1,12 @@
+id: OMOTASK-P34-W2-ANALYSIS-EXEC
+type: OMOTask
+subtype: Task
+name: Analysis 域 12 URI 实战化验证 — 真实 stdio 串联
+description: 'P34-W2 实战化: 12 Analysis URI 真实 stdio 验证 + 5 URI 真实场景串联.'
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P34-W2-ANALYSIS-EXEC.yaml

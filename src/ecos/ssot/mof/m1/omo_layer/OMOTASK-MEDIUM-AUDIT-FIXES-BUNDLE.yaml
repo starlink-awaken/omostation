@@ -1,0 +1,12 @@
+id: OMOTASK-MEDIUM-AUDIT-FIXES-BUNDLE
+type: OMOTask
+subtype: Task
+name: Fix all MEDIUM and LOW severity audit findings (M1-M14, L1-L4)
+description: ''
+status: done
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/MEDIUM-AUDIT-FIXES-BUNDLE.yaml

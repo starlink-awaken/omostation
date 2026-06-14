@@ -1,0 +1,12 @@
+id: OMOTASK-P19-W3-ARCHIVE-TS
+type: OMOTask
+subtype: Task
+name: agentmesh TypeScript代码归档 + 交叉验证无遗漏
+description: ''
+status: pending
+priority: P1
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P19-W3-ARCHIVE-TS.yaml

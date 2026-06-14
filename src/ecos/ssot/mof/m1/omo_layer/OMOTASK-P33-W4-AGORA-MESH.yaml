@@ -1,0 +1,13 @@
+id: OMOTASK-P33-W4-AGORA-MESH
+type: OMOTask
+subtype: Task
+name: '战役 1: agora BOS URI 解析器 + kairon stdio MCP server (POC 11)'
+description: 'P33-W4 战役 1: agora 接管 BOS URI 解析, 解决 M3 (omo verify_endpoint 20/21 kairon
+  URI 不可达).'
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P33-W4-AGORA-MESH.yaml

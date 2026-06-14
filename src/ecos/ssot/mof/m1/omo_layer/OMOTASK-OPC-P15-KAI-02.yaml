@@ -1,0 +1,17 @@
+id: OMOTASK-OPC-P15-KAI-02
+type: OMOTask
+subtype: RoadmapPhase
+name: kairon 16-package workspace governance registration
+description: 将 kairon 16 包工作区在 OMO debt 中明确注册为多包工作区。
+status: done
+priority: P2
+domain: kairon
+created: '2026-06-11'
+completed: '2026-06-13'
+properties:
+  tasks:
+  - register: 在 .omo/debt 中注册 kairon 的 16-package 结构 ✅
+  - lint: 确保跨包 lint gate 就位 ✅
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPC-P15-KAI-02.yaml

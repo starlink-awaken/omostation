@@ -22,6 +22,7 @@ from .checkers import (
     X2StalenessChecker,
     X3ValueChecker,
     X4ConsistencyChecker,
+    SwarmBrainStructureChecker,
 )
 from .event_bus import GovernanceEventBus
 from .registry import GovernanceRegistry, CheckerRegistration
@@ -114,6 +115,7 @@ __all__ = [
     "X2StalenessChecker",
     "X3ValueChecker",
     "X4ConsistencyChecker",
+    "SwarmBrainStructureChecker",
     # 事件总线
     "GovernanceEventBus",
     # 注册表

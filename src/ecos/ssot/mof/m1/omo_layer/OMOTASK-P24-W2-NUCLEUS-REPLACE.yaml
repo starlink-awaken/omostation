@@ -1,0 +1,12 @@
+id: OMOTASK-P24-W2-NUCLEUS-REPLACE
+type: OMOTask
+subtype: Task
+name: 'Nucleus替换: 320引用→Agora事件总线+pathlib'
+description: ''
+status: pending
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P24-W2-NUCLEUS-REPLACE.yaml
