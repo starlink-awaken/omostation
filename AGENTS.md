@@ -460,6 +460,8 @@ OPC 路线图 P5-P7 收口阶段建立的 self-correction 闭环, 任何 Phase /
 4. **任何新增阶段/门禁** 必须同时落: model-driven 源 + M2 schema + M1 节点 + schema-validate 校验 + mof-derive 验证 + mof-bridge-sync 同步
 5. **pre-commit hook 强制** — 任何 M1 YAML 改动触发 `mof-schema-validate.py --staged --strict`, 失败即拒绝提交
 6. **跨仓 import 真实字段数 ≥ 期望** — 任何 `from model_driven.X import Y` 必须实测 `Y` 字段数 ≥ 真实期望, 避免 fallback 替跑 (mof-derive v1 隐藏 bug 范式)
+7. **M2 schema 必有 ≥1 M1 实例** — M2 type 不应孤儿, 孤儿治理必须显式决策 (补 M1 / 裁 M2 / 标 deprecated)
+8. **L0 治理规则登记** — 任何新校验工具/规则必须同步登记到 `L0-constraints.yaml` 4-字段硬约束 (id/name/description/rule/type/severity/enforcement)
 
 ### 当前桥接状态 (2026-06-14 收口)
 

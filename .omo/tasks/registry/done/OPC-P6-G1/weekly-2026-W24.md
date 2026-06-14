@@ -1,8 +1,18 @@
 # OPC P6 weekly retro — 2026-W24
 
-Generated: 2026-06-13T12:23:17Z
+Generated: 2026-06-14T10:36:42Z
 
 ## 1. Radar (P5-F1)
+- **Platform: consolidate 'search-trace: multi-zone' into a shared module**
+  - source: `cockpit:research`
+  - timestamp: `2026-06-14T10:31:59Z`
+  - next_action: create OPC follow-up task + link to source research
+  - evidence_id: 49
+- **Platform: consolidate 'search-trace: multi-zone' into a shared module**
+  - source: `cockpit:research`
+  - timestamp: `2026-06-14T10:29:56Z`
+  - next_action: create OPC follow-up task + link to source research
+  - evidence_id: 47
 - **Platform: consolidate 'search-trace: multi-zone' into a shared module**
   - source: `cockpit:research`
   - timestamp: `2026-06-12T06:55:51Z`
@@ -33,16 +43,6 @@ Generated: 2026-06-13T12:23:17Z
   - timestamp: `2026-06-11T10:02:13Z`
   - next_action: create OPC follow-up task + link to source research
   - evidence_id: 36
-- **Platform: consolidate 'search-trace: AGENTS' into a shared module**
-  - source: `cockpit:research`
-  - timestamp: `2026-06-11T09:49:15Z`
-  - next_action: create OPC follow-up task + link to source research
-  - evidence_id: 34
-- **Platform: consolidate 'search-trace: query' into a shared module**
-  - source: `cockpit:research`
-  - timestamp: `2026-06-12T06:55:51Z`
-  - next_action: create OPC follow-up task + link to source research
-  - evidence_id: 44
 
 ## 2. Drift detector (P6-G3)
 - kinds: 4
@@ -56,21 +56,21 @@ Generated: 2026-06-13T12:23:17Z
 1. score=1.0 lane=radar title=Platform: consolidate 'search-trace: multi-zone' into a shared module
 2. score=1.0 lane=radar title=Platform: consolidate 'search-trace: multi-zone' into a shared module
 3. score=1.0 lane=radar title=Platform: consolidate 'search-trace: multi-zone' into a shared module
-4. score=1.0 lane=radar title=Platform: consolidate 'search-trace: closeout acceptance 1781172355924474000' into a shared module
+4. score=1.0 lane=radar title=Platform: consolidate 'search-trace: multi-zone' into a shared module
 5. score=1.0 lane=radar title=Platform: consolidate 'search-trace: multi-zone' into a shared module
-6. score=1.0 lane=radar title=Platform: consolidate 'search-trace: multi-zone' into a shared module
-7. score=1.0 lane=radar title=Platform: consolidate 'search-trace: AGENTS' into a shared module
-8. score=1.0 lane=radar title=Platform: consolidate 'search-trace: query' into a shared module
+6. score=1.0 lane=radar title=Platform: consolidate 'search-trace: closeout acceptance 1781172355924474000' into a shared module
+7. score=1.0 lane=radar title=Platform: consolidate 'search-trace: multi-zone' into a shared module
+8. score=1.0 lane=radar title=Platform: consolidate 'search-trace: multi-zone' into a shared module
 
 ## 4. Task (planned, 人工审批)
 - `OPC-P6-LOOP-2026-W24-00` | Platform: consolidate 'search-trace: multi-zone' into a shared module | approval_required=True
 - `OPC-P6-LOOP-2026-W24-01` | Platform: consolidate 'search-trace: multi-zone' into a shared module | approval_required=True
 - `OPC-P6-LOOP-2026-W24-02` | Platform: consolidate 'search-trace: multi-zone' into a shared module | approval_required=True
-- `OPC-P6-LOOP-2026-W24-03` | Platform: consolidate 'search-trace: closeout acceptance 1781172355924474000' into a shared module | approval_required=True
+- `OPC-P6-LOOP-2026-W24-03` | Platform: consolidate 'search-trace: multi-zone' into a shared module | approval_required=True
 - `OPC-P6-LOOP-2026-W24-04` | Platform: consolidate 'search-trace: multi-zone' into a shared module | approval_required=True
-- `OPC-P6-LOOP-2026-W24-05` | Platform: consolidate 'search-trace: multi-zone' into a shared module | approval_required=True
-- `OPC-P6-LOOP-2026-W24-06` | Platform: consolidate 'search-trace: AGENTS' into a shared module | approval_required=True
-- `OPC-P6-LOOP-2026-W24-07` | Platform: consolidate 'search-trace: query' into a shared module | approval_required=True
+- `OPC-P6-LOOP-2026-W24-05` | Platform: consolidate 'search-trace: closeout acceptance 1781172355924474000' into a shared module | approval_required=True
+- `OPC-P6-LOOP-2026-W24-06` | Platform: consolidate 'search-trace: multi-zone' into a shared module | approval_required=True
+- `OPC-P6-LOOP-2026-W24-07` | Platform: consolidate 'search-trace: multi-zone' into a shared module | approval_required=True
 
 ## 5. Swarm (派发受红线约束)
 - planned_dispatch: ['OPC-P6-LOOP-2026-W24-00', 'OPC-P6-LOOP-2026-W24-01', 'OPC-P6-LOOP-2026-W24-02', 'OPC-P6-LOOP-2026-W24-03', 'OPC-P6-LOOP-2026-W24-04', 'OPC-P6-LOOP-2026-W24-05', 'OPC-P6-LOOP-2026-W24-06', 'OPC-P6-LOOP-2026-W24-07']
@@ -84,10 +84,10 @@ Generated: 2026-06-13T12:23:17Z
 ```json
 {
   "stage": "retro",
-  "ts": "2026-06-13T12:23:17Z",
+  "ts": "2026-06-14T10:36:42Z",
   "summary": {
     "radar_candidates": 8,
-    "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260613T122317Z-technical-radar-b6b14e6c.json",
+    "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260614T103642Z-technical-radar-96a5a3b7.json",
     "drift_count": 0,
     "planned_tasks": 8,
     "audit_records": 1,
