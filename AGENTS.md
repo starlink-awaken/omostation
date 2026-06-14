@@ -22,7 +22,7 @@ This root directory is a **multi-project workspace** organized in the 5+4+1+1 (e
 | L1 | `runtime` | Python (uv, pytest) | `projects/runtime/` | 🟢 Active — 运行时 · 46 tests · 服务注册/健康/协议 |
 | L0 | `ecos` | Python (uv, pytest) | `projects/ecos/` | 🟢 Active — L0 协议层 · 39 tests · X1-X4 治理框架 |
 | — | `aetherforge` | Python (uv, pytest) | `projects/aetherforge/` | 🟢 Active — 算力网格 + LLM 网关 + 群体智能 · 21 tests |
-| — | `hermes-console` | TypeScript | `projects/hermes-console/` | 🟡 待集成至 cockpit |
+| — | `hermes-console` | TypeScript (Vite) | `projects/hermes-console/` | 🟢 Active — 已集成至 cockpit (`/hermes`) |
 
 **Also contains:**
 - `.omo/` — Workspace governance (goals, state, standards, tasks, audits)
