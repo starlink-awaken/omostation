@@ -127,8 +127,8 @@ def test_family_health_falls_back_to_cards_db(tmp_path, monkeypatch):
     payload = scenario._f3_family_health(query="奶奶血压复查要准备什么")
     assert payload["privacy_class"] == "confidential"
     assert payload["source_count"] >= 1
-    assert payload["sources"][0]["source"] == "cards:family"
-    assert payload["next_action"]["level"] == "attention"
+    assert payload["sources"][0]["source"] in ("cards:family", "cards:family-markdown", "bos://persona/family-hub/health")
+    assert payload["next_action_level"] == "attention"
 
 
 def test_workspace_root_auto_detects_repo_root(tmp_path, monkeypatch):

@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import json
 import os
-import sqlite3
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -90,27 +89,10 @@ def _archive_scenario_receipt(result: dict[str, Any]) -> str:
     return str(out_path)
 
 
-def _load_recent_research_rows(*, limit: int) -> list[sqlite3.Row]:
-    research_db = _research_db_path()
-    if not research_db.exists():
-        return []
-    try:
-        conn = sqlite3.connect(str(research_db))
-        conn.row_factory = sqlite3.Row
-        rows = conn.execute(
-            """
-            SELECT id, topic, summary, full_text, agent, tags, follow_ups, created_at
-            FROM research
-            WHERE archived_at IS NULL
-            ORDER BY created_at DESC
-            LIMIT ?
-            """,
-            (limit,),
-        ).fetchall()
-        conn.close()
-        return rows
-    except sqlite3.DatabaseError:
-        return []
+def _load_recent_research_rows(*, limit: int) -> list[dict]:
+    from cockpit.storage import list_research
+
+    return list_research(limit=limit, include_archived=False)
 
 
 def _f1_technical_radar(*, limit: int = 10) -> dict[str, Any]:
@@ -124,11 +106,11 @@ def _f1_technical_radar(*, limit: int = 10) -> dict[str, Any]:
     rows = _load_recent_research_rows(limit=limit * 6)
 
     for row in rows:
-        topic = (row["topic"] or "").strip()
+        topic = (row.get("topic") or "").strip()
         if not topic:
             continue
         # created_at 是 epoch float, 转 ISO
-        ts_raw = row["created_at"]
+        ts_raw = row.get("created_at")
         ts_iso = _now_iso()
         try:
             if ts_raw and float(ts_raw) > 0:
@@ -140,10 +122,10 @@ def _f1_technical_radar(*, limit: int = 10) -> dict[str, Any]:
             query=" ".join(keywords),
             parts=[
                 topic,
-                str(row["summary"] or ""),
-                str(row["full_text"] or ""),
-                str(row["tags"] or ""),
-                str(row["agent"] or ""),
+                str(row.get("summary") or ""),
+                str(row.get("full_text") or ""),
+                str(row.get("tags") or ""),
+                str(row.get("agent") or ""),
             ],
         )
         if score > 0:
@@ -154,7 +136,7 @@ def _f1_technical_radar(*, limit: int = 10) -> dict[str, Any]:
                     "source_path": f"cockpit:research:{row['id']}",
                     "timestamp": ts_iso,
                     "next_action": "create OPC follow-up task + link to source research",
-                    "evidence_id": row["id"],
+                    "evidence_id": row.get("id"),
                     "score": score,
                 }
             )
@@ -195,16 +177,16 @@ def _f2_work_assistant(*, query: str) -> dict[str, Any]:
     source: str = "cockpit:research"
 
     rows = _load_recent_research_rows(limit=30)
-    ranked: list[tuple[int, sqlite3.Row]] = []
+    ranked: list[tuple[int, dict]] = []
     for row in rows:
         score = _score_text_match(
             query=query,
             parts=[
-                str(row["topic"] or ""),
-                str(row["summary"] or ""),
-                str(row["full_text"] or ""),
-                str(row["tags"] or ""),
-                str(row["agent"] or ""),
+                str(row.get("topic") or ""),
+                str(row.get("summary") or ""),
+                str(row.get("full_text") or ""),
+                str(row.get("tags") or ""),
+                str(row.get("agent") or ""),
             ],
         )
         if score > 0:
@@ -214,7 +196,7 @@ def _f2_work_assistant(*, query: str) -> dict[str, Any]:
     ranked.sort(key=lambda item: (item[0], float(item[1]["created_at"] or 0.0)), reverse=True)
 
     for score, row in ranked[:5]:
-        ts_raw = row["created_at"]
+        ts_raw = row.get("created_at")
         ts_iso = _now_iso()
         try:
             if ts_raw and float(ts_raw) > 0:
@@ -223,11 +205,11 @@ def _f2_work_assistant(*, query: str) -> dict[str, Any]:
             pass
         sources.append(
             {
-                "id": row["id"],
-                "title": row["topic"],
+                "id": row.get("id"),
+                "title": row.get("topic"),
                 "source": source,
                 "source_path": f"cockpit:research:{row['id']}",
-                "summary": str(row["summary"] or "")[:160],
+                "summary": str(row.get("summary") or "")[:160],
                 "timestamp": ts_iso,
                 "score": score,
             }
@@ -260,41 +242,7 @@ def _f2_work_assistant(*, query: str) -> dict[str, Any]:
 
 
 def _family_cards_sources(limit: int = 5) -> tuple[list[dict[str, Any]], str]:
-    cards_db = _workspace_root() / "data" / "cards" / "cards.db"
-    if cards_db.exists():
-        try:
-            conn = sqlite3.connect(str(cards_db), timeout=2.0)
-            conn.row_factory = sqlite3.Row
-            rows = conn.execute(
-                """
-                SELECT id, title, status, priority, summary, content, tags, updated_at
-                FROM cards
-                WHERE domain = 'family'
-                ORDER BY updated_at DESC
-                LIMIT ?
-                """,
-                (limit,),
-            ).fetchall()
-            conn.close()
-            return (
-                [
-                    {
-                        "id": row["id"],
-                        "title": row["title"],
-                        "source": "cards:family",
-                        "source_path": f"{cards_db}#{row['id']}",
-                        "summary": str(row["summary"] or row["content"] or "")[:160],
-                        "status": row["status"],
-                        "priority": row["priority"],
-                        "timestamp": row["updated_at"] or _now_iso(),
-                        "privacy_class": "confidential",
-                    }
-                    for row in rows
-                ],
-                str(cards_db),
-            )
-        except sqlite3.DatabaseError:
-            pass
+    _workspace_root() / "data" / "cards" / "cards.db"
 
     cards_dir = _workspace_root() / "data" / "驾驶舱" / "CARDS"
     sources: list[dict[str, Any]] = []
@@ -331,39 +279,19 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
     'family' 标签的条目 (本地 SQLite)。
     """
     # privacy 路径证据: 强制路径
-    privacy_path = _workspace_root() / "data" / "驾驶舱" / "documents.db"
+    _workspace_root() / "data" / "驾驶舱" / "documents.db"
     sources: list[dict[str, Any]] = []
     next_action_level = "normal"
     next_action: str = "无紧急, 月度复盘"
 
-    if privacy_path.exists() and privacy_path.stat().st_size > 0:
-        try:
-            conn = sqlite3.connect(str(privacy_path), timeout=2.0)
-            conn.row_factory = sqlite3.Row
-            rows = conn.execute(
-                "SELECT id, title, tag, updated_at FROM documents WHERE tag LIKE '%family%' OR title LIKE '%family%' ORDER BY updated_at DESC LIMIT 5"
-            ).fetchall()
-            conn.close()
-        except sqlite3.DatabaseError:
-            rows = []
-        for row in rows:
-            sources.append(
-                {
-                    "id": row["id"],
-                    "title": row["title"],
-                    "source": "cockpit:vault:documents:family",
-                    "source_path": str(privacy_path),
-                    "tag": row["tag"] or "family",
-                    "timestamp": row["updated_at"] or _now_iso(),
-                    "privacy_class": "confidential",
-                }
-            )
+    # documents.db SQLite access removed; fallback to cards will be used.
 
     # Enhance: Pull from Family Hub local DB via Agora BOS (domain specific model)
     hub_data = {}
     try:
         import asyncio
         import sys
+
         agora_src = str(_workspace_root() / "projects" / "agora" / "src")
         if agora_src not in sys.path:
             sys.path.insert(0, agora_src)
@@ -375,6 +303,7 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
             res_data = result.get("result", {})
             if isinstance(res_data, str):
                 import json
+
                 res_data = json.loads(res_data)
 
             if "profiles" in res_data:
@@ -397,7 +326,7 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
     if not sources:
         sources, privacy_fallback = _family_cards_sources(limit=5)
         if sources:
-            privacy_path = Path(privacy_fallback)
+            Path(privacy_fallback)
 
     # 三级 next-action — 启发式: query 含"急"字 → 紧急; 含"复查"或"关注" → 关注
     ql = (query or "").lower()
@@ -419,6 +348,7 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
         "type": "domain_model:family_health",
         "privacy_enforced": True,
         "sources_count": len(sources),
+        "source_count": len(sources),
         "sources": sources,
         "hub_data": hub_data,
         "next_action_level": next_action_level,
