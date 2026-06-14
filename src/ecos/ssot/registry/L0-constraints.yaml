@@ -21,6 +21,25 @@ constraints:
   type: required
   violation: 'E-L0-002: 绕过 I0/Agora 的跨层直连'
 - applies_to:
+  - L1
+  - L2
+  - I0
+  description: Agora Proxy 必须采用 lazy initialization 避免循环依赖锁死
+  dimension: X1
+  id: CR-MCP-LAZY-01
+  rule: proxy.initialization == 'lazy'
+  type: required
+  violation: 'E-L0-011: 触发代理循环依赖 (Eager proxy initialization detected)'
+- applies_to:
+  - L0
+  - I0
+  description: BOS URI 路由表注册必须提供 domain 和 cross_references.realized_by 元数据
+  dimension: X1
+  id: CS-10
+  rule: bos_route.domain != null and bos_route.cross_references.realized_by != null
+  type: required
+  violation: 'E-L0-012: BOS URI 元数据缺失'
+- applies_to:
   - I0
   description: Agora register 是唯一写操作入口
   dimension: X1
