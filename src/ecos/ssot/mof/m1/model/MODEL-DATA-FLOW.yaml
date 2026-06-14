@@ -17,3 +17,7 @@ properties:
     read: I0/Agora→MCP
     write: CARDS MCP·mof-scan
   formality: semiformal
+  m3_parent: DescriptiveElement.Model
+  model_driven_refs:
+    - projects/model-driven/src/model_driven/ssot/lifecycle_ssot.py:LifecycleSSOT
+    - projects/model-driven/src/model_driven/ssot/lifecycle_ssot.py:SSOTSnapshot
