@@ -1,0 +1,30 @@
+id: "GATE-DESIGN-TO-DEV"
+type: "Gate"
+subtype: "StandardGate"
+name: "设计→开发 门禁"
+description: "设计态到开发态的质量门禁检查点 — 跨阶段 2→3 门禁"
+status: "active"
+domain: "meta"
+layer: "L0"
+created: "2026-06-13"
+version: "1.0.0"
+properties:
+  m3_parent: "LifecycleElement.Gate"
+  model_driven_ref:
+    - "projects/model-driven/src/model_driven/mof/m3_extended.py:STANDARD_GATES[GATE-DESIGN-TO-DEV]"
+  from_stage: "design"
+  to_stage: "development"
+  checks:
+    - name: "Spec 审批"
+      type: approval
+      required: true
+    - name: "接口契约定义"
+      type: document
+      required: true
+    - name: "设计评审通过"
+      type: review
+      required: true
+  required_approvals:
+    - "架构师"
+    - "技术负责人"
+source: "model-driven/mof/m3_extended.py:STANDARD_GATES"
