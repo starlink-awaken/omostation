@@ -59,6 +59,23 @@ constraints:
   violation: 'E-L0-014: LLM 裁判绕过内部 Gateway，破坏安全合规与成本追踪'
 - applies_to:
   - I0
+  description: bos://capability/evaluator 及其子域工具，拒绝任何 role != evaluator 的请求
+  dimension: X1
+  id: CR-RBAC-01
+  rule: request.target.startswith('bos://capability/evaluator') implies request.role == 'evaluator'
+  type: required
+  violation: 'E-L0-015: Generator 越权调用评估工具，破坏系统隔离性'
+- applies_to:
+  - I0
+  - L2
+  description: agora.ProxyManager 注册新路由前，必须通过 metaos 颁发的五大部件准入控制
+  dimension: X1
+  id: CR-ADMISSION-01
+  rule: bos_route.registration implies metaos.evaluate_admission(bos_route.metadata).status == 'admitted'
+  type: required
+  violation: 'E-L0-016: 未经 MetaOS 准入的黑户服务尝试接入 Agora'
+- applies_to:
+  - I0
   description: Agora register 是唯一写操作入口
   dimension: X1
   id: X1-C03

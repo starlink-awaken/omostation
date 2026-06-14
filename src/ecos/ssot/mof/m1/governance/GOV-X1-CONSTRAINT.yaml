@@ -28,6 +28,8 @@ properties:
     - "CS-10: BOS URI 注册必须包含 domain 和 cross_references.realized_by 元数据"
     - "CR-VIBEOPS-01: 混合裁判测试必须使用 @pytest.mark.vibeops 隔离"
     - "CR-VIBEOPS-02: LLM 裁判发包必须强制路由回 bos://capability/llm-gateway 计费网关"
+    - "CR-RBAC-01: Generator 角色无权访问 bos://capability/evaluator 裁判域"
+    - "CR-ADMISSION-01: Agora 路由注册前必须通过 metaos.evaluate_admission 准入审查"
   scope: "全层 (L0-L4, I0)"
   thresholds:
     warn_threshold: 0.7
