@@ -1,12 +1,26 @@
 #!/bin/bash
-# Pre-commit hook: ruff check + debt prevention
+# Pre-commit hook: ruff check + debt prevention + MOF 4 工具校验
+# 优化 (2026-06-14 P4): 用 venv python 而非 uv run --with, 启动从 0.83s 降到 0.55s (34% 提升)
 set -euo pipefail
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 REPO_NAME=$(basename "$REPO_ROOT")
 DEBT_WARNINGS=0
 
-echo "🔍 Pre-commit: $REPO_NAME"
+# 工具路径选择: venv 优先, 退回 uv
+VENV_PY="$REPO_ROOT/.venv/bin/python3"
+if [ -x "$VENV_PY" ]; then
+    PYTHON_BIN="$VENV_PY"
+    PYTHON_LABEL="venv"
+elif command -v uv &>/dev/null; then
+    PYTHON_BIN="uv run --no-project --with pyyaml python3"
+    PYTHON_LABEL="uv"
+else
+    PYTHON_BIN=""
+    PYTHON_LABEL="none"
+fi
+
+echo "🔍 Pre-commit: $REPO_NAME (python: $PYTHON_LABEL)"
 
 # Ruff check on staged Python files
 STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM -- '*.py' 2>/dev/null | grep -v "__pycache__" | grep -v ".venv" || true)
@@ -34,39 +48,55 @@ if [ "$DEBT_WARNINGS" -gt 0 ]; then
     echo "⚠️  债务预防警告: $DEBT_WARNINGS 项"
 fi
 
-echo "✅ Pre-commit check complete"
+# MOF 工具: 统一 _run_mof_tool helper
+_run_mof_tool() {
+    local tool="$1"
+    shift
+    if [ -z "$PYTHON_BIN" ]; then
+        echo "⚠️  Python 不可用, 跳过 $tool"
+        return 0
+    fi
+    if [[ "$PYTHON_BIN" == "uv"* ]]; then
+        (cd "$REPO_ROOT" && uv run --no-project --with pyyaml python3 "src/ecos/ssot/tools/$tool" "$@") || return $?
+    else
+        (cd "$REPO_ROOT" && "$PYTHON_BIN" "src/ecos/ssot/tools/$tool" "$@") || return $?
+    fi
+}
 
 # MOF Schema 校验 (CR-MOF-VALIDATE-01 强制)
-# 任何 M1 节点变更后必跑 mof-schema-validate.py --staged --strict
 STAGED_M1=$(git diff --cached --name-only --diff-filter=ACM -- 'src/ecos/ssot/mof/m1/**/*.yaml' 2>/dev/null)
 if [ -n "$STAGED_M1" ]; then
-    if command -v uv &>/dev/null; then
-        echo "🔍 MOF schema 校验 (staged M1)..."
-        cd "$REPO_ROOT" && uv run --no-project --with pyyaml python3 src/ecos/ssot/tools/mof-schema-validate.py --staged --strict 2>&1 || {
-            echo "❌ mof-schema-validate 失败, 见上方错误"
-            exit 1
-        }
-    else
-        echo "⚠️  uv 未安装, 跳过 mof-schema-validate"
-    fi
+    echo "🔍 MOF schema 校验 (staged M1)..."
+    _run_mof_tool mof-schema-validate.py --staged --strict || {
+        echo "❌ mof-schema-validate 失败, 见上方错误"
+        exit 1
+    }
 fi
 
-# MOF Bridge-Sync 校验 (CR-MOF-BRIDGE-01 强制, 2026-06-14 新增)
-# 任何 lifecycle/ 节点变更后必跑 mof-bridge-sync.py --strict
+# MOF Bridge-Sync + Derive 校验 (CR-MOF-BRIDGE-01 强制)
 STAGED_LIFECYCLE=$(git diff --cached --name-only --diff-filter=ACM -- 'src/ecos/ssot/mof/m1/lifecycle/**/*.yaml' 2>/dev/null)
 if [ -n "$STAGED_LIFECYCLE" ]; then
-    if command -v uv &>/dev/null; then
-        echo "🔗 MOF bridge-sync 校验 (staged lifecycle)..."
-        cd "$REPO_ROOT" && uv run --no-project --with pyyaml python3 src/ecos/ssot/tools/mof-bridge-sync.py --strict 2>&1 || {
-            echo "❌ mof-bridge-sync 失败, 见上方错误 (model-driven ↔ M1 失同步)"
-            exit 1
-        }
-        echo "📊 mof-derive 桥接验证 (7 阶段 + 4 门禁)..."
-        cd "$REPO_ROOT" && uv run --no-project --with pyyaml python3 src/ecos/ssot/tools/mof-derive.py --strict 2>&1 || {
-            echo "❌ mof-derive 失败, 见上方错误 (7 阶段 / 4 门禁 / 风险推理)"
-            exit 1
-        }
-    else
-        echo "⚠️  uv 未安装, 跳过 mof-bridge-sync / mof-derive"
-    fi
+    echo "🔗 MOF bridge-sync 校验 (model-driven ↔ M1)..."
+    _run_mof_tool mof-bridge-sync.py --strict || {
+        echo "❌ mof-bridge-sync 失败, 见上方错误 (model-driven ↔ M1 失同步)"
+        exit 1
+    }
+    echo "📊 mof-derive 桥接验证 (7 阶段 + 4 门禁)..."
+    _run_mof_tool mof-derive.py --strict || {
+        echo "❌ mof-derive 失败, 见上方错误 (7 阶段 / 4 门禁 / 风险推理)"
+        exit 1
+    }
 fi
+
+# MOF State-Bridge 校验 (CR-MOF-STATE-BRIDGE-01, 2026-06-14 P4 新增)
+# 任何 omo_layer/ OMOTask 节点变更触发 .omo/tasks/ ↔ M1 双向同步校验
+STAGED_OMOTASK=$(git diff --cached --name-only --diff-filter=ACM -- 'src/ecos/ssot/mof/m1/omo_layer/OMOTASK-*.yaml' 2>/dev/null)
+if [ -n "$STAGED_OMOTASK" ]; then
+    echo "🔄 MOF state-bridge 校验 (.omo/tasks/ ↔ M1 OMOTask)..."
+    _run_mof_tool mof-state-bridge.py --strict || {
+        echo "❌ mof-state-bridge 失败, 见上方错误 (m1_only > 0 即失同步)"
+        exit 1
+    }
+fi
+
+echo "✅ Pre-commit check complete"
