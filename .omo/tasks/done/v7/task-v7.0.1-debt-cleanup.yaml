@@ -1,0 +1,29 @@
+id: "TASK-V7.0.1-DEBT-CLEANUP"
+title: "eCOS v7.0.1 技术债清理 Sprint"
+status: "done"
+owner: "B.D.S.K. Virtual Board"
+priority: "P0"
+created: "2026-06-14"
+domain: "agora, metaos, cockpit"
+description: >
+  基于 2026-06-14 的深度复盘报告，彻底清理系统架构跃迁遗留的债务。
+  主要包括废弃模块代码剥离、第三方生态白名单模型声明、以及终端跨层通信鉴权断层修复。
+milestones:
+  - id: "M1"
+    name: "Ghost Code Exorcism (幽灵代码清退)"
+    status: "pending"
+    tasks:
+      - "清理 projects/agora 下所有关于 `agent-runtime` 的测试死链"
+      - "修复 test_degrade.py 报错"
+  - id: "M2"
+    name: "Plugin Manifest Schema (插件准入声明)"
+    status: "pending"
+    tasks:
+      - "在 L0 MetaOS 模型中扩展第三方插件准入字段"
+      - "为 github-source 等受限服务配置白名单，恢复其测试连通性"
+  - id: "M3"
+    name: "Cockpit CLI Token Provision (CLI 鉴权桥接)"
+    status: "pending"
+    tasks:
+      - "在 cockpit 终端请求链路上注入模拟或配置化的 JWT Token"
+      - "确保终端命令下发时能够平滑穿越 RBAC 与 MetaOS 拦截"
