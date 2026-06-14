@@ -433,11 +433,19 @@ def _status_services() -> list[tuple[str, str, str | None, str, str]]:
     ]
 
 
+def get_cockpit_jwt() -> str:
+    """获取或生成模拟的 JWT token，用于穿越 Agora/MetaOS 的 RBAC 拦截."""
+    return os.environ.get("COCKPIT_JWT_TOKEN", "mock_admin_token_for_cli")
+
 def _discover_services() -> list[tuple[str, str, str | None, str, str]]:
     """通过 Agora /api/services 动态发现服务，失败则回退到硬编码列表。"""
     try:
         agora_url = os.environ.get("AGORA_ENDPOINT", "http://localhost:7430")
-        req = urlrequest.Request(f"{agora_url}/api/services", headers={"Accept": "application/json"})  # noqa: S310
+        headers = {"Accept": "application/json"}
+        token = get_cockpit_jwt()
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        req = urlrequest.Request(f"{agora_url}/api/services", headers=headers)  # noqa: S310
         resp = urlrequest.urlopen(req, timeout=3)  # noqa: S310
         data = json.loads(resp.read())
         if isinstance(data, list) and data:

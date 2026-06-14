@@ -21,7 +21,12 @@ def run_events_dashboard(url: str = "http://127.0.0.1:8080/v1/events"):
 
     with Live(table, console=console, refresh_per_second=4) as live:
         try:
-            with httpx.Client(timeout=None) as client:  # noqa: S113
+            from cockpit.commands.base import get_cockpit_jwt
+            token = get_cockpit_jwt()
+            headers = {}
+            if token:
+                headers["Authorization"] = f"Bearer {token}"
+            with httpx.Client(timeout=None, headers=headers) as client:  # noqa: S113
                 with client.stream("GET", url) as response:
                     response.raise_for_status()
                     for line in response.iter_lines():
