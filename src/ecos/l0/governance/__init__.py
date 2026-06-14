@@ -87,8 +87,13 @@ from .personal import (
     PreferenceType,
     KnowledgeNode,
     UserPreference,
+    GraphEdge,
+    Recommendation,
     PersonalKnowledgePrimitive,
     PersonalKnowledgeManager,
+    KnowledgeGraphBuilder,
+    PreferenceEngine,
+    RecommendationEngine,
 )
 
 __all__ = [
@@ -182,6 +187,11 @@ __all__ = [
     "PreferenceType",
     "KnowledgeNode",
     "UserPreference",
+    "GraphEdge",
+    "Recommendation",
     "PersonalKnowledgePrimitive",
     "PersonalKnowledgeManager",
+    "KnowledgeGraphBuilder",
+    "PreferenceEngine",
+    "RecommendationEngine",
 ]

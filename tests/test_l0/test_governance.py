@@ -1130,7 +1130,6 @@ class TestPersonalKnowledgePrimitiveExtended:
         
         manager = PersonalKnowledgeManager()
         
-        # 添加有关系的知识
         node1 = KnowledgeNode(
             node_id="k1",
             knowledge_type=KnowledgeType.CONCEPT,
@@ -1185,3 +1184,70 @@ class TestPersonalKnowledgePrimitiveExtended:
         assert d["node_id"] == "k1"
         assert d["knowledge_type"] == "procedure"
         assert "created_at" in d
+    
+    def test_knowledge_graph_builder(self):
+        """测试知识图谱构建器"""
+        from ecos.l0.governance import KnowledgeGraphBuilder
+        
+        builder = KnowledgeGraphBuilder()
+        
+        builder.add_node("n1", {"type": "concept"})
+        builder.add_node("n2", {"type": "fact"})
+        builder.add_edge("n1", "n2", "related_to")
+        
+        neighbors = builder.get_neighbors("n1")
+        assert "n2" in neighbors
+        
+        paths = builder.find_path("n1", "n2")
+        assert len(paths) > 0
+        assert paths[0] == ["n1", "n2"]
+        
+        mermaid = builder.to_mermaid()
+        assert "n1" in mermaid
+        assert "n2" in mermaid
+    
+    def test_preference_engine(self):
+        """测试偏好学习引擎"""
+        from ecos.l0.governance import PreferenceEngine
+        
+        engine = PreferenceEngine()
+        
+        engine.learn("user-1", "AI", "topic", 1.0)
+        engine.learn("user-1", "ML", "topic", 0.8)
+        engine.learn("user-1", "Python", "topic", 0.6)
+        
+        pref = engine.get_preference("user-1", "AI")
+        assert pref == 1.0
+        
+        top = engine.get_top_preferences("user-1", 2)
+        assert len(top) == 2
+        assert top[0][0] == "AI"
+    
+    def test_recommendation_engine(self):
+        """测试推荐引擎"""
+        from ecos.l0.governance import (
+            PersonalKnowledgeManager,
+            KnowledgeNode,
+            KnowledgeType,
+            PreferenceEngine,
+            RecommendationEngine,
+        )
+        
+        km = PersonalKnowledgeManager()
+        pe = PreferenceEngine()
+        engine = RecommendationEngine(km, pe)
+        
+        # 添加知识
+        km.add_knowledge(KnowledgeNode(
+            node_id="k1",
+            knowledge_type=KnowledgeType.FACT,
+            content={"topic": "AI"},
+        ))
+        
+        # 学习偏好
+        pe.learn("user-1", "AI", "topic", 1.0)
+        
+        # 获取推荐
+        recs = engine.recommend("user-1")
+        assert len(recs) > 0
+        assert recs[0].node_id == "k1"
