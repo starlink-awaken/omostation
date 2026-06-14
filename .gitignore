@@ -92,3 +92,14 @@ data/backups/
 
 # 防 pytest 误把 .omo/ 当 test root 产生 dummy 文件
 .omo/tests/
+
+# ---- 一次性本地补丁脚本 ----
+/fix_indent.py
+/patch.py
+/patch_all.py
+/patch_scenario.py
+/patch_scenario2.py
+/patch_scenario3.py
+/patch_scenario4.py
+/patch_test.py
+/patch_test2.py
