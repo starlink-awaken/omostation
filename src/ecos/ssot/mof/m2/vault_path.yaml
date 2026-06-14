@@ -33,10 +33,12 @@ vault_path:
       description: 路径所属层(L0/L1/L2/L3/L4)
       values: [L0, L1, L2, L3, L4]
 
+  # 顶层 status 字段映射到 stateMachine (active/deprecated/archived/draft)
+  # 避免与 optionalProperties.migration_state 二义混淆
   optionalProperties:
-    status:
+    migration_state:
       type: enum
-      description: 状态
+      description: 路径迁移状态(从硬编码→managed→migrated→legacy)
       values: [managed, migrated, legacy]
 
   validationRules:
