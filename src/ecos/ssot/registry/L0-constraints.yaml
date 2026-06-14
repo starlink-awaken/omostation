@@ -40,6 +40,24 @@ constraints:
   type: required
   violation: 'E-L0-012: BOS URI 元数据缺失'
 - applies_to:
+  - L2
+  - L4
+  description: 混合裁判测试用例必须使用 @pytest.mark.vibeops 隔离
+  dimension: X1
+  id: CR-VIBEOPS-01
+  rule: test.is_vibeops implies 'vibeops' in test.markers
+  type: required
+  violation: 'E-L0-013: 混合裁判测试未被隔离，可能影响基础 CI 时效'
+- applies_to:
+  - L2
+  - I0
+  description: DeepEval/Ragas 等 LLM 裁判调用必须走 Agora LLM Gateway 进行计费与路由
+  dimension: X1
+  id: CR-VIBEOPS-02
+  rule: vibeops.llm_calls.target == 'bos://capability/llm-gateway'
+  type: required
+  violation: 'E-L0-014: LLM 裁判绕过内部 Gateway，破坏安全合规与成本追踪'
+- applies_to:
   - I0
   description: Agora register 是唯一写操作入口
   dimension: X1
