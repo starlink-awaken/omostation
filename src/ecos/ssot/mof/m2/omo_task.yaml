@@ -107,5 +107,5 @@ omo_task:
       - Blocks
   examples:
     - id: OMOTASK-OPC-P5
-      name: OPC-P5: North Star Scenarios
-      description: P5 proves OPC value through 3 repeatable real-user product scenarios
+      name: "OPC-P5: North Star Scenarios"
+      description: "P5 proves OPC value through 3 repeatable real-user product scenarios"
