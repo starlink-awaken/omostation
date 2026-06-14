@@ -2021,7 +2021,7 @@ class TestPhase2Acceptance:
     """Phase 2 验收: 4机任务调度成功率 > 99%"""
 
     def test_four_node_scheduling_success_rate(self):
-        from ecos.l0.governance import AgentRegistry, TaskScheduler, AgentStatus
+        from ecos.l0.governance import AgentRegistry, TaskScheduler
 
         registry = AgentRegistry()
         scheduler = TaskScheduler()
@@ -2033,7 +2033,7 @@ class TestPhase2Acceptance:
         success_count = 0
 
         for i in range(total_tasks):
-            task = scheduler.submit_task(f"task-{i}", f"任务{i}", required_capabilities=["task"])
+            scheduler.submit_task(f"task-{i}", f"任务{i}", required_capabilities=["task"])
             idle = registry.get_idle_agents()
             if idle:
                 scheduler.assign_task(f"task-{i}", idle[0].agent_id)
@@ -2075,7 +2075,7 @@ class TestPhase3Acceptance:
         success_count = 0
 
         for i in range(total_tasks):
-            task = collab.create_task(
+            collab.create_task(
                 f"task-{i}", f"协作任务{i}",
                 ["worker", "reviewer", "coordinator"],
                 CollaborationMode.SEQUENTIAL,
