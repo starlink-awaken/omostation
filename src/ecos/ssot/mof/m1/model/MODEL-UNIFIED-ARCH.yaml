@@ -18,6 +18,11 @@ properties:
   formality: semiformal
   projects_to:
   - MADF V1-V8
+  m3_parent: DescriptiveElement.Model
+  model_driven_refs:
+    - projects/model-driven/src/model_driven/mof/m3_extended.py:STANDARD_STAGES
+    - projects/model-driven/src/model_driven/mof/m3_extended.py:PipelinePhase
+    - projects/model-driven/src/model_driven/lifecycle/pipeline.py
 layer: multi
 sources:
 - 驾驶舱/统一架构模型.md
