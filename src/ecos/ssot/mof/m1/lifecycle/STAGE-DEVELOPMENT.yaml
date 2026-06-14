@@ -1,0 +1,42 @@
+id: "STAGE-DEVELOPMENT"
+type: "Stage"
+subtype: "StandardStage"
+name: "开发态"
+description: "编码、单元测试、Code Review — 7 阶段标准生命周期第 3 阶段"
+status: "active"
+domain: "meta"
+layer: "L0"
+created: "2026-06-13"
+version: "1.0.0"
+properties:
+  order: 2
+  stage: "development"
+  m3_parent: "LifecycleElement.Stage"
+  model_driven_ref:
+    - "projects/model-driven/src/model_driven/mof/m3_extended.py:STANDARD_STAGES[LifecycleStage.DEVELOPMENT]"
+  entry_criteria:
+    - "Spec 已审批"
+    - "接口契约已定义"
+    - "设计评审通过"
+  exit_criteria:
+    - "代码完成"
+    - "单元测试通过率 >= 80%"
+    - "Code Review 通过"
+    - "CI 首次绿灯"
+  core_activities:
+    - "编码实现"
+    - "单元测试编写"
+    - "集成测试"
+    - "Code Review 响应"
+    - "CI 流水线接入"
+  deliverables:
+    - "源代码"
+    - "单元测试套件"
+    - "集成测试报告"
+    - "CI 配置"
+  stakeholders:
+    - "开发工程师"
+    - "技术负责人"
+    - "测试工程师"
+  duration_target_days: 30
+source: "model-driven/mof/m3_extended.py:STANDARD_STAGES"
