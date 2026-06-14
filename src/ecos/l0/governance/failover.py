@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
@@ -41,6 +42,8 @@ class FailoverManager:
         self.rules: dict[str, FailoverRule] = {}
         self.node_loads: dict[str, int] = {}
         self.node_priorities: dict[str, int] = {}
+        self._round_robin_indices: dict[str, int] = {}
+        self._failover_history: list[dict[str, Any]] = []
     
     def add_rule(self, rule: FailoverRule) -> None:
         """添加故障转移规则"""
@@ -71,8 +74,10 @@ class FailoverManager:
             return random.choice(rule.target_nodes)
         
         elif rule.strategy == FailoverStrategy.ROUND_ROBIN:
-            # 简单轮询：返回第一个目标
-            return rule.target_nodes[0]
+            idx = self._round_robin_indices.get(rule.rule_id, 0)
+            target = rule.target_nodes[idx % len(rule.target_nodes)]
+            self._round_robin_indices[rule.rule_id] = idx + 1
+            return target
         
         elif rule.strategy == FailoverStrategy.LEAST_LOADED:
             # 选择负载最小的节点
@@ -104,14 +109,32 @@ class FailoverManager:
         if not rules:
             return None
         
-        # 使用第一个启用的规则
         for rule in rules:
             if rule.enabled:
                 target = self.select_target(rule)
                 if target:
+                    self._failover_history.append({
+                        "source": source_node,
+                        "target": target,
+                        "rule_id": rule.rule_id,
+                        "strategy": rule.strategy.value,
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    })
                     return target
         
         return None
+    
+    def get_failover_history(self, limit: int = 50) -> list[dict[str, Any]]:
+        """获取故障转移历史"""
+        return self._failover_history[-limit:]
+    
+    def get_failover_count(self) -> dict[str, int]:
+        """统计各节点的故障转移次数"""
+        counts: dict[str, int] = {}
+        for entry in self._failover_history:
+            source = entry["source"]
+            counts[source] = counts.get(source, 0) + 1
+        return counts
     
     def update_node_load(self, node_id: str, load: int) -> None:
         """更新节点负载"""
@@ -135,4 +158,6 @@ class FailoverManager:
             },
             "node_loads": self.node_loads,
             "node_priorities": self.node_priorities,
+            "failover_count": self.get_failover_count(),
+            "history_count": len(self._failover_history),
         }

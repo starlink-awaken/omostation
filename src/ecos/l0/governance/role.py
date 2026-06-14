@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
@@ -323,6 +324,38 @@ class RoleEvaluator:
         role_evals.sort(key=lambda e: e.score, reverse=True)
         return role_evals[:limit]
     
+    def get_improvement_trend(self, agent_id: str, role_id: str) -> Optional[str]:
+        """评估 Agent 改进趋势"""
+        agent_evals = sorted(
+            [e for e in self.evaluations if e.agent_id == agent_id and e.role_id == role_id],
+            key=lambda e: e.timestamp,
+        )
+        if len(agent_evals) < 2:
+            return None
+        
+        recent_avg = sum(e.score for e in agent_evals[-3:]) / min(len(agent_evals), 3)
+        older_avg = sum(e.score for e in agent_evals[:-3]) / max(len(agent_evals) - 3, 1)
+        
+        if recent_avg > older_avg + 5:
+            return "improving"
+        elif recent_avg < older_avg - 5:
+            return "declining"
+        return "stable"
+    
+    def get_role_ranking(self, role_id: str) -> list[tuple[str, float]]:
+        """获取角色的 Agent 排名"""
+        agent_scores: dict[str, list[float]] = defaultdict(list)
+        for e in self.evaluations:
+            if e.role_id == role_id:
+                agent_scores[e.agent_id].append(e.score)
+        
+        ranking = [
+            (agent_id, sum(scores) / len(scores))
+            for agent_id, scores in agent_scores.items()
+        ]
+        ranking.sort(key=lambda x: x[1], reverse=True)
+        return ranking
+    
     def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
@@ -336,4 +369,100 @@ class RoleEvaluator:
                 }
                 for e in self.evaluations
             ]
+        }
+
+
+class RoleSwitcher:
+    """角色动态切换器 — 支持冷却期、前置角色验证、切换历史"""
+    
+    def __init__(self, role_manager: RoleManager, cooldown_seconds: int = 5):
+        self.role_manager = role_manager
+        self.cooldown_seconds = cooldown_seconds
+        self._last_switch: dict[str, datetime] = {}
+        self._switch_history: list[dict[str, Any]] = []
+        self._role_prerequisites: dict[str, list[str]] = {}
+        self._role_conflicts: dict[str, set[str]] = {}
+    
+    def set_prerequisites(self, role_id: str, prerequisites: list[str]) -> None:
+        """设置角色前置条件 — Agent 必须先拥有前置角色才能切换"""
+        self._role_prerequisites[role_id] = prerequisites
+    
+    def set_conflicts(self, role_id: str, conflicting_roles: list[str]) -> None:
+        """设置角色冲突 — 不能同时拥有冲突的角色"""
+        self._role_conflicts[role_id] = set(conflicting_roles)
+    
+    def can_switch(self, agent_id: str, new_role_id: str) -> tuple[bool, str]:
+        """检查是否可以切换"""
+        now = datetime.now(timezone.utc)
+        
+        last = self._last_switch.get(agent_id)
+        if last:
+            elapsed = (now - last).total_seconds()
+            if elapsed < self.cooldown_seconds:
+                remaining = self.cooldown_seconds - elapsed
+                return False, f"冷却期未结束，还需 {remaining:.1f} 秒"
+        
+        if new_role_id not in self.role_manager.roles:
+            return False, f"角色 {new_role_id} 不存在"
+        
+        prereqs = self._role_prerequisites.get(new_role_id, [])
+        if prereqs:
+            current = self.role_manager.agent_roles.get(agent_id)
+            if current and current.role_id not in prereqs:
+                return False, f"需要前置角色: {', '.join(prereqs)}"
+        
+        current = self.role_manager.agent_roles.get(agent_id)
+        if current:
+            conflicts = self._role_conflicts.get(new_role_id, set())
+            if current.role_id in conflicts:
+                return False, f"与当前角色 {current.role_id} 冲突"
+        
+        return True, "可以切换"
+    
+    def switch(self, agent_id: str, new_role_id: str) -> tuple[bool, str]:
+        """执行角色切换"""
+        can, reason = self.can_switch(agent_id, new_role_id)
+        if not can:
+            return False, reason
+        
+        old_role_id = ""
+        if agent_id in self.role_manager.agent_roles:
+            old_role_id = self.role_manager.agent_roles[agent_id].role_id
+        
+        success = self.role_manager.switch_role(agent_id, new_role_id)
+        if success:
+            self._last_switch[agent_id] = datetime.now(timezone.utc)
+            self._switch_history.append({
+                "agent_id": agent_id,
+                "old_role": old_role_id,
+                "new_role": new_role_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+            return True, f"切换成功: {old_role_id} → {new_role_id}"
+        
+        return False, "切换失败"
+    
+    def get_switch_history(self, agent_id: str | None = None, limit: int = 50) -> list[dict[str, Any]]:
+        """获取切换历史"""
+        if agent_id:
+            history = [h for h in self._switch_history if h["agent_id"] == agent_id]
+        else:
+            history = self._switch_history
+        return history[-limit:]
+    
+    def get_role_distribution(self) -> dict[str, list[str]]:
+        """获取当前角色分布"""
+        distribution: dict[str, list[str]] = defaultdict(list)
+        for agent_id, agent_role in self.role_manager.agent_roles.items():
+            distribution[agent_role.role_id].append(agent_id)
+        return dict(distribution)
+    
+    def to_dict(self) -> dict[str, Any]:
+        """转换为字典"""
+        return {
+            "cooldown_seconds": self.cooldown_seconds,
+            "prerequisites": self._role_prerequisites,
+            "conflicts": {k: list(v) for k, v in self._role_conflicts.items()},
+            "switch_count": len(self._switch_history),
+            "distribution": self.get_role_distribution(),
         }

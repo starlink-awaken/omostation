@@ -44,12 +44,17 @@ from .history_store import SQLiteHistoryStore
 from .distributed import (
     SyncStrategy,
     NodeStatus,
+    ProtocolType,
+    MessageType,
+    Message,
     StateSnapshot,
     SyncResult,
     DistributedPrimitive,
     CRDTSync,
     NodeManager,
     NodeInfo,
+    StateSyncService,
+    CommunicationProtocol,
 )
 from .agent_registry import AgentRegistry, AgentInfo, AgentStatus
 from .task_scheduler import TaskScheduler, TaskInfo, TaskStatus
@@ -67,6 +72,7 @@ from .role import (
     RoleManager,
     RoleCollaboration,
     RoleEvaluator,
+    RoleSwitcher,
 )
 from .swarm import (
     EmergencePattern,
@@ -135,12 +141,17 @@ __all__ = [
     # 分布式原语
     "SyncStrategy",
     "NodeStatus",
+    "ProtocolType",
+    "MessageType",
+    "Message",
     "StateSnapshot",
     "SyncResult",
     "DistributedPrimitive",
     "CRDTSync",
     "NodeManager",
     "NodeInfo",
+    "StateSyncService",
+    "CommunicationProtocol",
     # Agent 注册中心
     "AgentRegistry",
     "AgentInfo",
@@ -169,6 +180,7 @@ __all__ = [
     "RoleManager",
     "RoleCollaboration",
     "RoleEvaluator",
+    "RoleSwitcher",
     # 蜂群原语
     "EmergencePattern",
     "EmergenceLevel",

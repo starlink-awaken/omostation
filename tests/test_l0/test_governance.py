@@ -542,6 +542,77 @@ class TestDistributedPrimitive:
         health = manager.check_health()
         assert health["node-1"] == NodeStatus.HEALTHY
 
+    def test_node_manager_version_and_cleanup_helpers(self):
+        """心跳应推进版本，离线节点可被过滤与清理。"""
+        from datetime import datetime, timedelta, timezone
+
+        from ecos.l0.governance import NodeManager
+
+        manager = NodeManager()
+        manager.heartbeat_interval = 1
+        node = manager.register("node-1")
+        old_version = node.version
+
+        assert manager.update_heartbeat("node-1") is True
+        assert manager.get_node("node-1").version == old_version + 1
+
+        healthy = manager.get_healthy_nodes()
+        assert [n.node_id for n in healthy] == ["node-1"]
+
+        manager.nodes["node-1"].last_heartbeat = datetime.now(timezone.utc) - timedelta(seconds=10)
+        removed = manager.remove_offline_nodes()
+        assert removed == ["node-1"]
+        assert manager.get_node("node-1") is None
+
+    def test_state_sync_service_snapshot_and_merge(self):
+        """StateSyncService 应生成快照并按策略合并远程状态。"""
+        from ecos.l0.governance import StateSnapshot, StateSyncService, SyncStrategy
+
+        service = StateSyncService("node-1", strategy=SyncStrategy.EVENTUAL)
+        service.set("key1", "local")
+        snapshot = service.generate_snapshot()
+        assert snapshot.node_id == "node-1"
+        assert snapshot.checksum
+
+        remote_snapshot = StateSnapshot(node_id="node-2", version=2, data={"key1": "remote", "key2": "new"})
+        result = service.sync_from_snapshot(remote_snapshot)
+
+        assert result.success is True
+        assert result.conflicts == ["key1"]
+        assert service.get("key1") == "remote"
+        assert service.get("key2") == "new"
+
+    def test_communication_protocol_send_dispatch_and_dead_letter(self):
+        """CommunicationProtocol 应支持连接、发送、分发和死信。"""
+        from ecos.l0.governance import CommunicationProtocol, Message, MessageType, ProtocolType
+
+        protocol = CommunicationProtocol("node-1", protocol_type=ProtocolType.TCP)
+        protocol.connect("node-2")
+
+        message = Message(
+            message_id="msg-1",
+            message_type=MessageType.SYNC,
+            source="node-1",
+            target="node-2",
+            payload={"ok": True},
+        )
+        assert protocol.send("node-2", message) is True
+
+        captured = []
+        protocol.register_handler(MessageType.SYNC, lambda msg: captured.append(msg.payload) or "done")
+        assert protocol.dispatch(message) == "done"
+        assert captured == [{"ok": True}]
+
+        failed = Message(
+            message_id="msg-2",
+            message_type=MessageType.HEARTBEAT,
+            source="node-1",
+            target="ghost",
+            payload={},
+        )
+        assert protocol.send("ghost", failed) is False
+        assert protocol.dead_letter_queue[-1]["message_id"] == "msg-2"
+
 
 class TestAgentRegistry:
     """Agent 注册中心测试"""
@@ -1217,7 +1288,7 @@ class TestPersonalKnowledgePrimitiveExtended:
         engine.learn("user-1", "Python", "topic", 0.6)
         
         pref = engine.get_preference("user-1", "AI")
-        assert pref == 1.0
+        assert abs(pref - 1.0) < 0.01  # 考虑时间衰减
         
         top = engine.get_top_preferences("user-1", 2)
         assert len(top) == 2

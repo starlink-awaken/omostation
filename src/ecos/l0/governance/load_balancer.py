@@ -88,27 +88,64 @@ class LoadBalancer:
             return min_node
         
         elif self.strategy == LoadBalancingStrategy.WEIGHTED_ROUND_ROBIN:
-            # 加权轮询
-            total_weight = sum(n.weight for n in healthy_nodes)
-            if total_weight == 0:
-                return None
-            
-            # 简化实现：返回权重最大的节点
-            max_weight = 0
-            max_node = None
-            for node in healthy_nodes:
-                if node.weight > max_weight:
-                    max_weight = node.weight
-                    max_node = node.node_id
-            return max_node
+            return self._weighted_round_robin(healthy_nodes)
         
         elif self.strategy == LoadBalancingStrategy.IP_HASH:
-            # IP 哈希 (简化：使用 node_id 哈希)
-            if healthy_nodes:
-                hash_value = hash(datetime.now().isoformat()) % len(healthy_nodes)
-                return healthy_nodes[hash_value].node_id
+            return self._ip_hash(healthy_nodes)
         
         return None
+    
+    def _weighted_round_robin(self, healthy_nodes: list[NodeLoad]) -> Optional[str]:
+        """Nginx 平滑加权轮询算法"""
+        if not healthy_nodes:
+            return None
+        
+        total_weight = sum(n.weight for n in healthy_nodes)
+        if total_weight == 0:
+            return healthy_nodes[0].node_id
+        
+        if not hasattr(self, '_current_weights'):
+            self._current_weights = {n.node_id: 0 for n in healthy_nodes}
+        
+        for node in healthy_nodes:
+            self._current_weights[node.node_id] = (
+                self._current_weights.get(node.node_id, 0) + node.weight
+            )
+        
+        selected = max(
+            healthy_nodes,
+            key=lambda n: self._current_weights.get(n.node_id, 0),
+        )
+        
+        self._current_weights[selected.node_id] -= total_weight
+        
+        return selected.node_id
+    
+    def _ip_hash(self, healthy_nodes: list[NodeLoad]) -> Optional[str]:
+        """一致性哈希 — 基于 node_id 哈希环"""
+        if not healthy_nodes:
+            return None
+        
+        import hashlib
+        ring: list[tuple[int, str]] = []
+        for node in healthy_nodes:
+            hash_val = int(hashlib.md5(node.node_id.encode()).hexdigest()[:8], 16)
+            ring.append((hash_val, node.node_id))
+        
+        ring.sort(key=lambda x: x[0])
+        
+        key_hash = int(
+            hashlib.md5(
+                f"{self.current_index}".encode()
+            ).hexdigest()[:8], 16
+        )
+        self.current_index += 1
+        
+        for ring_hash, node_id in ring:
+            if ring_hash >= key_hash:
+                return node_id
+        
+        return ring[0][1] if ring else None
     
     def get_all_nodes(self) -> list[NodeLoad]:
         """获取所有节点"""

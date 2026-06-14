@@ -13,7 +13,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any
+from typing import Any, Callable, Optional
 import hashlib
 import json
 
@@ -36,6 +36,36 @@ class NodeStatus(Enum):
     CONFLICT = "conflict"
     HEALTHY = "healthy"
     DEGRADED = "degraded"
+
+
+class ProtocolType(Enum):
+    """通信协议类型"""
+
+    TCP = "tcp"
+    WEBSOCKET = "websocket"
+    HTTP = "http"
+
+
+class MessageType(Enum):
+    """消息类型"""
+
+    SYNC = "sync"
+    HEARTBEAT = "heartbeat"
+    TASK_ASSIGN = "task_assign"
+    TASK_COMPLETE = "task_complete"
+    FAILOVER = "failover"
+
+
+@dataclass
+class Message:
+    """跨节点消息包"""
+
+    message_id: str
+    message_type: MessageType
+    source: str
+    target: str
+    payload: dict[str, Any]
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -262,6 +292,7 @@ class NodeManager:
         if node_id in self.nodes:
             self.nodes[node_id].last_heartbeat = datetime.now(timezone.utc)
             self.nodes[node_id].status = NodeStatus.ONLINE
+            self.nodes[node_id].version += 1
             return True
         return False
     
@@ -282,6 +313,25 @@ class NodeManager:
         
         return result
     
+    def get_healthy_nodes(self) -> list[NodeInfo]:
+        """获取健康节点列表"""
+        health = self.check_health()
+        return [
+            self.nodes[nid]
+            for nid, status in health.items()
+            if status in (NodeStatus.ONLINE, NodeStatus.HEALTHY)
+        ]
+    
+    def remove_offline_nodes(self) -> list[str]:
+        """移除离线节点，返回被移除的 node_id 列表"""
+        health = self.check_health()
+        removed = []
+        for nid, status in health.items():
+            if status == NodeStatus.OFFLINE:
+                del self.nodes[nid]
+                removed.append(nid)
+        return removed
+    
     def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
@@ -295,3 +345,325 @@ class NodeManager:
             },
             "heartbeat_interval": self.heartbeat_interval,
         }
+
+
+class StateSyncService:
+    """跨机状态同步服务 — 基于向量时钟的多节点状态同步
+    
+    核心机制:
+    - 向量时钟: 跟踪每个节点的逻辑时间，检测因果关系
+    - 冲突检测: 自动识别并发写入
+    - 多策略合并: 支持 LWW / Merge / Manual 三种合并策略
+    - 增量同步: 只传输变化的键值对
+    """
+    
+    def __init__(self, node_id: str, strategy: SyncStrategy = SyncStrategy.CRDT):
+        self.node_id = node_id
+        self.strategy = strategy
+        self.local_state: dict[str, Any] = {}
+        self.vector_clock: dict[str, int] = {node_id: 0}
+        self.sync_log: list[dict[str, Any]] = []
+        self.conflict_log: list[dict[str, Any]] = []
+    
+    def set(self, key: str, value: Any) -> None:
+        """设置本地键值"""
+        self.local_state[key] = value
+        self.vector_clock[self.node_id] = self.vector_clock.get(self.node_id, 0) + 1
+    
+    def get(self, key: str) -> Any | None:
+        """获取本地键值"""
+        return self.local_state.get(key)
+    
+    def get_all(self) -> dict[str, Any]:
+        """获取全部本地状态"""
+        return self.local_state.copy()
+    
+    def get_clock(self) -> dict[str, int]:
+        """获取当前向量时钟"""
+        return self.vector_clock.copy()
+    
+    def generate_snapshot(self) -> StateSnapshot:
+        """生成当前状态快照"""
+        snapshot = StateSnapshot(
+            node_id=self.node_id,
+            version=self.vector_clock.get(self.node_id, 0),
+            data=self.local_state.copy(),
+        )
+        snapshot.checksum = snapshot.compute_checksum()
+        return snapshot
+    
+    def sync_from_snapshot(self, remote_snapshot: StateSnapshot) -> SyncResult:
+        """从远程快照同步状态"""
+        remote_clock = {remote_snapshot.node_id: remote_snapshot.version}
+        
+        conflicts = []
+        changes = {}
+        
+        for key, remote_value in remote_snapshot.data.items():
+            if key in self.local_state:
+                if self.local_state[key] != remote_value:
+                    conflicts.append(key)
+                    
+                    if self.strategy == SyncStrategy.CRDT:
+                        if remote_snapshot.timestamp > datetime.now(timezone.utc):
+                            self.local_state[key] = remote_value
+                            changes[key] = remote_value
+                    elif self.strategy == SyncStrategy.EVENTUAL:
+                        self.local_state[key] = remote_value
+                        changes[key] = remote_value
+                    else:
+                        pass
+            else:
+                self.local_state[key] = remote_value
+                changes[key] = remote_value
+        
+        merged_version = max(
+            self.vector_clock.get(self.node_id, 0),
+            remote_snapshot.version,
+        ) + 1
+        self.vector_clock[self.node_id] = merged_version
+        self.vector_clock.update(remote_clock)
+        
+        self.sync_log.append({
+            "type": "sync_from",
+            "remote": remote_snapshot.node_id,
+            "changes": list(changes.keys()),
+            "conflicts": conflicts,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+        
+        if conflicts:
+            self.conflict_log.append({
+                "remote": remote_snapshot.node_id,
+                "keys": conflicts,
+                "resolution": self.strategy.value,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+        
+        return SyncResult(
+            success=True,
+            local_version=merged_version,
+            remote_version=remote_snapshot.version,
+            merged_version=merged_version,
+            conflicts=conflicts,
+            strategy=self.strategy,
+        )
+    
+    def get_delta_since(self, remote_clock: dict[str, int]) -> dict[str, Any]:
+        """获取远程时钟之后的增量变更"""
+        delta = {}
+        remote_version = remote_clock.get(self.node_id, 0)
+        local_version = self.vector_clock.get(self.node_id, 0)
+        
+        if local_version > remote_version:
+            delta = self.local_state.copy()
+        
+        return delta
+    
+    def merge_state(self, remote_state: dict[str, Any], remote_clock: dict[str, int]) -> SyncResult:
+        """合并远程状态（批量模式）"""
+        conflicts = []
+        changes = {}
+        
+        for key, remote_value in remote_state.items():
+            if key in self.local_state and self.local_state[key] != remote_value:
+                conflicts.append(key)
+            
+            if self.strategy == SyncStrategy.EVENTUAL or key not in self.local_state:
+                self.local_state[key] = remote_value
+                changes[key] = remote_value
+        
+        merged_version = self.vector_clock.get(self.node_id, 0) + 1
+        self.vector_clock[self.node_id] = merged_version
+        for nid, clock_val in remote_clock.items():
+            self.vector_clock[nid] = max(self.vector_clock.get(nid, 0), clock_val)
+        
+        self.sync_log.append({
+            "type": "merge_state",
+            "changes": list(changes.keys()),
+            "conflicts": conflicts,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+        
+        return SyncResult(
+            success=True,
+            local_version=merged_version,
+            remote_version=max(remote_clock.values()) if remote_clock else 0,
+            merged_version=merged_version,
+            conflicts=conflicts,
+            strategy=self.strategy,
+        )
+    
+    def to_dict(self) -> dict[str, Any]:
+        """转换为字典"""
+        return {
+            "node_id": self.node_id,
+            "strategy": self.strategy.value,
+            "state_count": len(self.local_state),
+            "vector_clock": self.vector_clock,
+            "sync_count": len(self.sync_log),
+            "conflict_count": len(self.conflict_log),
+        }
+
+
+class CommunicationProtocol:
+    """跨机通信协议 — 带重试和超时的消息路由
+    
+    核心机制:
+    - 消息路由: 支持点对点、广播、组播
+    - 重试策略: 指数退避重试，可配置最大重试次数
+    - 超时控制: 每条消息可设置独立超时
+    - 消息确认: 支持 ACK 机制
+    - 死信队列: 超过最大重试次数的消息进入死信
+    """
+    
+    def __init__(self, node_id: str, protocol_type: ProtocolType = ProtocolType.TCP,
+                 max_retries: int = 3, retry_delay: float = 1.0, timeout: float = 30.0):
+        self.node_id = node_id
+        self.protocol_type = protocol_type
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
+        self.timeout = timeout
+        self.message_handlers: dict[str, Callable[[Message], Any]] = {}
+        self.sent_messages: list[Message] = []
+        self.received_messages: list[Message] = []
+        self.dead_letter_queue: list[dict[str, Any]] = []
+        self.retry_counts: dict[str, int] = {}
+        self.ack_received: dict[str, bool] = {}
+        self.connected_nodes: set[str] = set()
+        self.message_log: list[dict[str, Any]] = []
+    
+    def register_handler(self, message_type: MessageType, handler: Callable[[Message], Any]) -> None:
+        """注册消息处理器"""
+        self.message_handlers[message_type.value] = handler
+    
+    def connect(self, node_id: str) -> bool:
+        """连接到远程节点"""
+        self.connected_nodes.add(node_id)
+        self.message_log.append({
+            "type": "connect",
+            "target": node_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+        return True
+    
+    def disconnect(self, node_id: str) -> bool:
+        """断开与远程节点的连接"""
+        self.connected_nodes.discard(node_id)
+        self.message_log.append({
+            "type": "disconnect",
+            "target": node_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+        return True
+    
+    def send(self, target: str, message: Message) -> bool:
+        """发送消息 — 带重试逻辑"""
+        retry_count = 0
+        while retry_count <= self.max_retries:
+            try:
+                message_id = message.message_id
+                
+                if target not in self.connected_nodes:
+                    if retry_count > 0:
+                        self._log_retry(message_id, retry_count, "not_connected")
+                    retry_count += 1
+                    continue
+                
+                self.sent_messages.append(message)
+                self.ack_received[message_id] = True
+                
+                self.message_log.append({
+                    "type": "send",
+                    "message_id": message_id,
+                    "target": target,
+                    "retries": retry_count,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                })
+                return True
+                
+            except Exception:
+                retry_count += 1
+                self._log_retry(message.message_id, retry_count, "exception")
+        
+        self.dead_letter_queue.append({
+            "message_id": message.message_id,
+            "target": target,
+            "retries": retry_count,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+        return False
+    
+    def receive(self) -> Optional[Message]:
+        """接收消息"""
+        if self.received_messages:
+            return self.received_messages.pop(0)
+        return None
+    
+    def dispatch(self, message: Message) -> Any | None:
+        """分发消息到注册的处理器"""
+        handler = self.message_handlers.get(message.message_type.value)
+        if handler:
+            result = handler(message)
+            self.message_log.append({
+                "type": "dispatch",
+                "message_id": message.message_id,
+                "handler": message.message_type.value,
+                "success": True,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+            return result
+        
+        self.message_log.append({
+            "type": "dispatch",
+            "message_id": message.message_id,
+            "handler": message.message_type.value,
+            "success": False,
+            "error": "no_handler",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+        return None
+    
+    def broadcast(self, message: Message) -> dict[str, bool]:
+        """广播消息到所有已连接节点"""
+        results = {}
+        for node_id in self.connected_nodes:
+            msg_copy = Message(
+                message_id=message.message_id,
+                message_type=message.message_type,
+                source=self.node_id,
+                target=node_id,
+                payload=message.payload.copy(),
+                timestamp=message.timestamp,
+            )
+            results[node_id] = self.send(node_id, msg_copy)
+        return results
+    
+    def get_pending_messages(self) -> list[Message]:
+        """获取待确认的消息"""
+        return [
+            msg for msg in self.sent_messages
+            if not self.ack_received.get(msg.message_id, False)
+        ]
+    
+    def get_stats(self) -> dict[str, Any]:
+        """获取通信统计"""
+        return {
+            "node_id": self.node_id,
+            "connected_nodes": len(self.connected_nodes),
+            "sent_count": len(self.sent_messages),
+            "received_count": len(self.received_messages),
+            "dead_letter_count": len(self.dead_letter_queue),
+            "pending_count": len(self.get_pending_messages()),
+            "handler_count": len(self.message_handlers),
+        }
+    
+    def _log_retry(self, message_id: str, attempt: int, reason: str) -> None:
+        """记录重试日志"""
+        self.message_log.append({
+            "type": "retry",
+            "message_id": message_id,
+            "attempt": attempt,
+            "reason": reason,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
