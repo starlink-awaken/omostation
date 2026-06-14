@@ -1,0 +1,29 @@
+id: "GATE-DEPLOY-TO-RUN"
+type: "Gate"
+subtype: "StandardGate"
+name: "部署→运行 门禁"
+description: "部署态到运行态的质量门禁检查点 — 跨阶段 4→5 门禁"
+status: "active"
+domain: "meta"
+layer: "L0"
+created: "2026-06-13"
+version: "1.0.0"
+properties:
+  m3_parent: "LifecycleElement.Gate"
+  model_driven_ref:
+    - "projects/model-driven/src/model_driven/mof/m3_extended.py:STANDARD_GATES[GATE-DEPLOY-TO-RUN]"
+  from_stage: "deployment"
+  to_stage: "runtime"
+  checks:
+    - name: "部署成功"
+      type: deploy
+      required: true
+    - name: "冒烟测试通过"
+      type: test
+      required: true
+    - name: "监控已配置"
+      type: config
+      required: true
+  auto_pass: true
+  required_approvals: []
+source: "model-driven/mof/m3_extended.py:STANDARD_GATES"
