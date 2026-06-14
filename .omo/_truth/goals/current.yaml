@@ -1,5 +1,5 @@
 current_wave: W1
-entry_gate: phase26_completed
+entry_gate: phase41_completed
 goals:
 - desc: Wave 1 — Agora MCP 隔离
   id: G27.1
@@ -88,10 +88,10 @@ objectives:
   id: W3
 - desc: Wave 4 — OMO MCP Server (硬件级剥夺与防越权)
   id: W4
-phase: 28
+phase: 42
 source_plan_refs:
 - .omo/plans/phase27-swarm-network.md
 - .omo/_knowledge/management/5+3+1-full-audit-2026-06-06.md
 start_date: '2026-06-04'
 status: active
-theme: OMO 蜂群网络纪元 — 全量审计与接口修复 (Swarm Audit & Interface Hardening)
+theme: P42 治理面 SSOT 同步纪元 — 14 phase 复盘合并 (Governance SSOT Catch-up)

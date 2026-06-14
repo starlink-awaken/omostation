@@ -118,23 +118,16 @@ gate_note: |
   - G3: 4 类检测器, 14 次跑通, 158 个 drift 文件
   - G4: 端到端追溯完整, 5 仓 audit trail
   Gate G 已通过, 可以解锁 P7.
+  - Readiness / Cadence 区分 (2026-06-12 复验):
+    Readiness: loop / report / detector / trace / approval board 全部已落地
+    Cadence: 真实周级运行窗口 (G1/G2/G3/G4 都缺)
+    当前 Readiness 已满足, Cadence 仍未满足.
 signals:
   - opc_phase6_gate_g_passed
   - opc_phase6_subgate_g1_passed
   - opc_phase6_subgate_g2_passed
   - opc_phase6_subgate_g3_passed
   - opc_phase6_subgate_g4_passed
-
-  Readiness / Cadence 区分 (2026-06-12 复验):
-  - Readiness: loop / report / detector / trace / approval board 全部已落地
-  - Cadence: 真实周级运行窗口 (G1/G2/G3/G4 都缺)
-  当前 Readiness 已满足, Cadence 仍未满足.
-signals:
-  - opc_phase6_gate_g_not_yet_passed
-  - opc_phase6_subgate_g1_not_yet_passed
-  - opc_phase6_subgate_g2_not_yet_passed
-  - opc_phase6_subgate_g3_not_yet_passed
-  - opc_phase6_subgate_g4_not_yet_passed
 
 red_lines:
   - 'self-evolution task 自动 active (无 human approval)'

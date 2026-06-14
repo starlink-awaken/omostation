@@ -1,0 +1,12 @@
+id: IMPORTED-a5a8ea
+title: 'P42-W0-MERGE-STATE: 合并 14 个 phase 复盘 (P28-P41) 进 goals/state'
+status: planned
+task_type: feature
+risk_level: L0
+depends_on: []
+source_docs:
+- /Users/xiamingxing/Workspace/.omo/_delivery/p42-w0-sync-governance-state-spec.md
+deliverables: []
+imported_via: omo_bridge
+phase: 42
+wave: W0
