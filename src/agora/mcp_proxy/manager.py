@@ -127,7 +127,7 @@ class ProxyManager:
 
     # ── Service lifecycle ─────────────────────────────────────────────
 
-    async def start(self, services: list[dict]) -> dict[str, str]:
+    async def start(self, services: list[dict], lazy: bool = False) -> dict[str, str]:
         """Connect to all configured downstream services in parallel.
 
         Args:
@@ -136,6 +136,7 @@ class ProxyManager:
                 - mcp_endpoint: HTTP endpoint URL or 'stdio'
                 - command: Command for stdio transport
                 - args: List of command arguments
+            lazy: If True, do not connect immediately; wait for first tool dispatch.
 
         Returns:
             Dict mapping service_name → result string
@@ -145,7 +146,7 @@ class ProxyManager:
         async def _connect_one(svc: dict) -> tuple[str, str]:
             name = svc.get("name", "unknown")
             try:
-                result = await self.add_service(svc)
+                result = await self.add_service(svc, lazy=lazy)
                 return name, result
             except Exception as e:
                 logger.error("proxy_start_failed", service=name, error=str(e))
@@ -155,7 +156,7 @@ class ProxyManager:
         gathered = await asyncio.gather(*tasks)
         return dict(gathered)
 
-    async def add_service(self, svc: dict) -> str:
+    async def add_service(self, svc: dict, lazy: bool = False) -> str:
         """Connect and register a single downstream service.
 
         Also saves the service config in the registry for later
@@ -163,6 +164,7 @@ class ProxyManager:
 
         Args:
             svc: Service config dict with name, mcp_endpoint/command/args.
+            lazy: If True, only save the config and do not connect yet.
 
         Returns:
             Result string: "ok: N tools registered" or error message.
@@ -178,6 +180,10 @@ class ProxyManager:
         # Save config for lazy reconnection (even if connection fails)
         self._configs[name] = dict(svc)
         self.registry.save_config(name, svc)
+
+        if lazy:
+            logger.info("proxy_service_lazy_configured", service=name)
+            return "ok: lazy configured"
 
         # Remove existing if reconnecting
         if name in self.registry._clients:

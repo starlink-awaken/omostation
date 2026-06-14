@@ -413,6 +413,23 @@ class ProxyRegistry:
         """
         entry = self.get_entry(tool_name)
         if not entry:
+            # 尝试通过 L0 Registry 路由表解析 tool_name 对应的服务
+            from agora.l0_registry_loader import load_routes
+            
+            routes = load_routes()
+            svc_name = routes.get(tool_name)
+            
+            if not svc_name and "." in tool_name:
+                svc_name = tool_name.split(".", 1)[0]
+                
+            if svc_name and self.has_saved_config(svc_name):
+                # 如果服务有保存的配置且尚未连接，则尝试懒加载
+                reconnect_ok = await self.lazy_connect(svc_name)
+                if reconnect_ok:
+                    # 重新获取 entry
+                    entry = self.get_entry(tool_name)
+
+        if not entry:
             return {
                 "status": "error",
                 "error": f"Tool '{tool_name}' not found in proxy",
