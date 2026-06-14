@@ -51,6 +51,10 @@ from .distributed import (
     NodeManager,
     NodeInfo,
 )
+from .agent_registry import AgentRegistry, AgentInfo, AgentStatus
+from .task_scheduler import TaskScheduler, TaskInfo, TaskStatus
+from .failover import FailoverManager, FailoverRule, FailoverStrategy
+from .load_balancer import LoadBalancer, LoadBalancingStrategy, NodeLoad
 from .role import (
     RoleType,
     RoleStatus,
@@ -121,6 +125,22 @@ __all__ = [
     "CRDTSync",
     "NodeManager",
     "NodeInfo",
+    # Agent 注册中心
+    "AgentRegistry",
+    "AgentInfo",
+    "AgentStatus",
+    # 任务调度
+    "TaskScheduler",
+    "TaskInfo",
+    "TaskStatus",
+    # 故障转移
+    "FailoverManager",
+    "FailoverRule",
+    "FailoverStrategy",
+    # 负载均衡
+    "LoadBalancer",
+    "LoadBalancingStrategy",
+    "NodeLoad",
     # 角色原语
     "RoleType",
     "RoleStatus",

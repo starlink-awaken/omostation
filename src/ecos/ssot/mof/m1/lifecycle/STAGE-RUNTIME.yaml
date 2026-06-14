@@ -1,0 +1,41 @@
+id: "STAGE-RUNTIME"
+type: "Stage"
+subtype: "StandardStage"
+name: "运行态"
+description: "线上服务运行、监控、应急响应 — 7 阶段标准生命周期第 5 阶段"
+status: "active"
+domain: "meta"
+layer: "L0"
+created: "2026-06-13"
+version: "1.0.0"
+properties:
+  order: 4
+  stage: "runtime"
+  m3_parent: "LifecycleElement.Stage"
+  model_driven_ref:
+    - "projects/model-driven/src/model_driven/mof/m3_extended.py:STANDARD_STAGES[LifecycleStage.RUNTIME]"
+  entry_criteria:
+    - "生产部署成功"
+    - "冒烟测试通过"
+    - "监控已配置"
+  exit_criteria:
+    - "SLA 达标 ≥ 30 天连续运行"
+    - "无 P0/P1 事故"
+    - "性能指标 (P99 < 200ms) 持续达标"
+  core_activities:
+    - "7x24 监控"
+    - "事故响应 (on-call)"
+    - "性能调优"
+    - "容量规划"
+    - "变更管理"
+  deliverables:
+    - "运行监控报告"
+    - "事故 postmortem"
+    - "性能调优记录"
+    - "容量规划报告"
+  stakeholders:
+    - "SRE 工程师"
+    - "技术支持"
+    - "产品负责人"
+  duration_target_days: 90
+source: "model-driven/mof/m3_extended.py:STANDARD_STAGES"

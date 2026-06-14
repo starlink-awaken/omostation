@@ -543,6 +543,174 @@ class TestDistributedPrimitive:
         assert health["node-1"] == NodeStatus.HEALTHY
 
 
+class TestAgentRegistry:
+    """Agent 注册中心测试"""
+    
+    def test_register_agent(self):
+        """测试注册 Agent"""
+        from ecos.l0.governance import AgentRegistry, AgentStatus
+        
+        registry = AgentRegistry()
+        agent = registry.register("agent-1", "worker-1", ["task", "compute"])
+        
+        assert agent.agent_id == "agent-1"
+        assert agent.name == "worker-1"
+        assert agent.status == AgentStatus.IDLE
+        assert "task" in agent.capabilities
+    
+    def test_discover_agents(self):
+        """测试发现 Agent"""
+        from ecos.l0.governance import AgentRegistry, AgentStatus
+        
+        registry = AgentRegistry()
+        registry.register("agent-1", "worker-1", ["task", "compute"])
+        registry.register("agent-2", "worker-2", ["compute"])
+        
+        # 按能力查找
+        agents = registry.discover_agents("task")
+        assert len(agents) == 1
+        assert agents[0].agent_id == "agent-1"
+        
+        # 按状态查找
+        registry.update_status("agent-1", AgentStatus.BUSY)
+        idle_agents = registry.get_idle_agents()
+        assert len(idle_agents) == 1
+        assert idle_agents[0].agent_id == "agent-2"
+
+
+class TestTaskScheduler:
+    """任务调度器测试"""
+    
+    def test_submit_and_assign(self):
+        """测试提交和分配任务"""
+        from ecos.l0.governance import TaskScheduler, TaskStatus
+        
+        scheduler = TaskScheduler()
+        
+        # 提交任务
+        task = scheduler.submit_task("task-1", "测试任务", required_capabilities=["task"])
+        assert task.task_id == "task-1"
+        assert task.status == TaskStatus.PENDING
+        
+        # 分配任务
+        assert scheduler.assign_task("task-1", "agent-1")
+        assert task.status == TaskStatus.ASSIGNED
+        assert task.assigned_agent == "agent-1"
+    
+    def test_task_lifecycle(self):
+        """测试任务生命周期"""
+        from ecos.l0.governance import TaskScheduler, TaskStatus
+        
+        scheduler = TaskScheduler()
+        
+        # 提交
+        task = scheduler.submit_task("task-1", "测试任务")
+        assert task.status == TaskStatus.PENDING
+        
+        # 分配
+        scheduler.assign_task("task-1", "agent-1")
+        assert task.status == TaskStatus.ASSIGNED
+        
+        # 开始
+        scheduler.start_task("task-1")
+        assert task.status == TaskStatus.RUNNING
+        assert task.started_at is not None
+        
+        # 完成
+        scheduler.complete_task("task-1", result={"output": "done"})
+        assert task.status == TaskStatus.COMPLETED
+        assert task.completed_at is not None
+        assert task.result == {"output": "done"}
+    
+    def test_task_priority(self):
+        """测试任务优先级"""
+        from ecos.l0.governance import TaskScheduler, TaskStatus
+        
+        scheduler = TaskScheduler()
+        
+        # 提交不同优先级的任务
+        scheduler.submit_task("task-1", "低优先级", priority=1)
+        scheduler.submit_task("task-2", "高优先级", priority=10)
+        scheduler.submit_task("task-3", "中优先级", priority=5)
+        
+        # 获取下一个任务应该是高优先级
+        next_task = scheduler.get_next_task()
+        assert next_task is not None
+        assert next_task.task_id == "task-2"
+        assert next_task.priority == 10
+
+
+class TestFailoverManager:
+    """故障转移管理器测试"""
+    
+    def test_add_rule(self):
+        """测试添加规则"""
+        from ecos.l0.governance import FailoverManager, FailoverRule, FailoverStrategy
+        
+        manager = FailoverManager()
+        rule = FailoverRule(
+            rule_id="rule-1",
+            source_node="node-1",
+            target_nodes=["node-2", "node-3"],
+            strategy=FailoverStrategy.ROUND_ROBIN,
+        )
+        
+        manager.add_rule(rule)
+        assert manager.get_rule("rule-1") is not None
+    
+    def test_execute_failover(self):
+        """测试执行故障转移"""
+        from ecos.l0.governance import FailoverManager, FailoverRule, FailoverStrategy
+        
+        manager = FailoverManager()
+        rule = FailoverRule(
+            rule_id="rule-1",
+            source_node="node-1",
+            target_nodes=["node-2", "node-3"],
+            strategy=FailoverStrategy.ROUND_ROBIN,
+        )
+        manager.add_rule(rule)
+        
+        # 执行故障转移
+        target = manager.execute_failover("node-1")
+        assert target in ["node-2", "node-3"]
+
+
+class TestLoadBalancer:
+    """负载均衡器测试"""
+    
+    def test_register_and_select(self):
+        """测试注册和选择节点"""
+        from ecos.l0.governance import LoadBalancer, LoadBalancingStrategy
+        
+        balancer = LoadBalancer(LoadBalancingStrategy.ROUND_ROBIN)
+        
+        # 注册节点
+        balancer.register_node("node-1", weight=1)
+        balancer.register_node("node-2", weight=2)
+        
+        # 选择节点
+        node = balancer.select_node()
+        assert node in ["node-1", "node-2"]
+    
+    def test_least_connections(self):
+        """测试最少连接策略"""
+        from ecos.l0.governance import LoadBalancer, LoadBalancingStrategy
+        
+        balancer = LoadBalancer(LoadBalancingStrategy.LEAST_CONNECTIONS)
+        
+        balancer.register_node("node-1", weight=1)
+        balancer.register_node("node-2", weight=1)
+        
+        # 设置连接数
+        balancer.update_connections("node-1", 10)
+        balancer.update_connections("node-2", 5)
+        
+        # 选择节点应该是 node-2 (连接数最少)
+        node = balancer.select_node()
+        assert node == "node-2"
+
+
 class TestRolePrimitive:
     """角色原语测试"""
     
