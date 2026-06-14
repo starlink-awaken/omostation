@@ -1,0 +1,111 @@
+m2_type: OMOTask
+version: 1.0.0
+created: '2026-06-13'
+omo_task:
+  m3_parent: ManagementElement.OMOTask
+  description: OMO 任务节点——建模 .omo/tasks/ 目录下 plan/done YAML 的全部字段
+  icon: 📋
+  stateMachine:
+    proposed:
+      description: 提案·待 human 审批
+      transitions: [in_progress, archived]
+    in_progress:
+      description: 进行中·WIP
+      transitions: [review, blocked, archived]
+    review:
+      description: 评审·接受审计
+      transitions: [done, in_progress, archived]
+    done:
+      description: 已完成·经验沉淀
+      transitions: [archived]
+    blocked:
+      description: 阻塞·等待依赖
+      transitions: [in_progress, archived]
+    archived:
+      description: 归档
+      transitions: []
+  requiredProperties:
+    id:
+      type: string
+      description: 任务 ID (格式 OPC-P{N}-{NAME} 或 IMP-{N})
+    title:
+      type: string
+      description: 任务标题
+    status:
+      type: string
+      description: 任务当前状态
+    priority:
+      type: enum
+      description: 优先级
+      values: [P0, P1, P2, P3]
+    domain:
+      type: string
+      description: 所属域 (opc/cockpit/...)
+    gate:
+      type: string
+      description: 关联 Gate 标识 (如 Gate H / Gate E)
+    gate_status:
+      type: enum
+      description: Gate 状态
+      values: [not_yet_passed, passed, conditionally_passed, failed]
+  optionalProperties:
+    created:
+      type: string
+      description: 创建日期 (ISO 8601)
+    completed:
+      type: string
+      description: 完成日期 (ISO 8601)
+    prerequisites:
+      type: list
+      description: 前置任务 ID 列表
+    sub_gates:
+      type: list
+      description: 子 Gate 列表 (e.g. P5-F1..F4 / P7-H1..H5)
+    signals:
+      type: list
+      description: 持续信号 (健康指标)
+    red_lines:
+      type: list
+      description: 红线 (不可违反的硬约束)
+    phase_open_condition:
+      type: string
+      description: 阶段开启条件
+    phase_blocked_condition:
+      type: string
+      description: 阶段阻塞条件
+    final_close_condition:
+      type: string
+      description: 最终关闭条件
+    forbidden_claims:
+      type: list
+      description: 禁止声明 (不可宣称)
+    evidence:
+      type: list
+      description: 证据文件路径列表
+    assessment:
+      type: string
+      description: 验收评估
+    gate_note:
+      type: string
+      description: Gate 备注
+  validationRules:
+    - rule: status != null and gate != null
+      level: error
+      message: OMOTask 必须声明 status 和 gate
+    - rule: gate_status == 'passed' implies evidence != null and evidence.size >= 1
+      level: error
+      message: gate_status=passed 必须有 ≥1 个 evidence 文件
+    - rule: priority in ['P0','P1','P2','P3']
+      level: error
+      message: 优先级必须是 P0/P1/P2/P3
+  relationConstraints:
+    can_be_source_of:
+      - Realizes
+      - References
+    can_be_target_of:
+      - DependsOn
+      - Blocks
+  examples:
+    - id: OMOTASK-OPC-P5
+      name: OPC-P5: North Star Scenarios
+      description: P5 proves OPC value through 3 repeatable real-user product scenarios
