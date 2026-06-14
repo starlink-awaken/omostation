@@ -384,3 +384,23 @@ mof_schema_validate_constraints:
     history:
       - "2026-06-13: 校验脚本初版单查 properties 虚报 226 required missing, 双向校验后真实 0"
       - "2026-06-13: Decision/Component/Domain 3 节点真实缺失已修复 (problem+rationale, layer+runtime, domain_type)"
+
+  - id: CR-MOF-BRIDGE-01
+    name: "MOF Bridge-Sync model-driven 桥接约束"
+    description: "任何 M1 lifecycle/ 节点新增/修改后必跑 mof-bridge-sync.py --strict, 验证 model-driven STANDARD_STAGES/STANDARD_GATES ↔ M1 lifecycle/ 双向同步; 同时跑 mof-derive.py --strict 验证 7 阶段 100% 覆盖 + 4 门禁 100% 满足"
+    rule: "for each M1 lifecycle/ change: mof-bridge-sync.py --strict AND mof-derive.py --strict must pass with 0 missing/extra/drift + 0 high risk"
+    type: required
+    severity: error
+    violation: "M1 lifecycle/ 与 model-driven 失同步, 新增阶段/门禁未落 M1, 桥接失败"
+    introduced: '2026-06-14'
+    value_tier: 1
+    enforcement:
+      ci_pre_commit: "projects/ecos/.githooks/pre-commit 调用 mof-bridge-sync.py + mof-derive.py"
+      cli_invoke: "cd projects/ecos && python3 src/ecos/ssot/tools/mof-bridge-sync.py --strict && python3 src/ecos/ssot/tools/mof-derive.py --strict"
+    references:
+      - "projects/ecos/src/ecos/ssot/tools/mof-bridge-sync.py (B.3 双向同步工具, 2026-06-14)"
+      - "projects/ecos/src/ecos/ssot/tools/mof-derive.py (跨仓推理引擎 v2, 2026-06-14)"
+      - "projects/model-driven/src/model_driven/mof/m3_extended.py (STANDARD_STAGES/STANDARD_GATES SSOT)"
+    matching_strategy:
+      stage: "按 stage key (planning/design/development/...) 匹配, 容忍 _ vs - 命名差异"
+      gate: "按 (from_stage, to_stage) transition 匹配, 不依赖 id 命名"
