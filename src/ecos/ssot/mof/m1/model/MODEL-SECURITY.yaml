@@ -18,3 +18,7 @@ properties:
     medium: 保留+强化SENSITIVE.md
     low: 维持现状
   formality: semiformal
+  m3_parent: DescriptiveElement.Model
+  model_driven_refs:
+    - projects/model-driven/src/model_driven/toolchain/mof_extract.py
+    - projects/ecos/src/ecos/ssot/mof/m1/convention/CONV-EXTRACT-CARDS-ID.yaml
