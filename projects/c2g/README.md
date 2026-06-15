@@ -43,7 +43,7 @@ c2g --adapter local gc --dry-run
 ## 🏗️ 架构解析 (Architecture)
 
 本项目采用严格的 **IOC (控制反转)** 原则进行设计。
-核心引擎 (`c2g.engine` / `c2g.bridge` / `c2g.strategy`) 不知道数据存在哪里，也不知道由谁来拦截不合规的提案。它只认两个 `Protocol`:
+核心引擎 (`c2g.bridge` / `c2g.strategy`) 不知道数据存在哪里，也不知道由谁来拦截不合规的提案。它只认两个 `Protocol`:
 
 - `IGovernanceProvider`: 你的团队对“提案”和“任务”有什么底线要求？（通过它注入）
 - `IStorageProvider`: 你的“提案库”和“目标库”存在哪里？是 Github Issues，还是本地 YAML，或是 Notion？（通过它注入）

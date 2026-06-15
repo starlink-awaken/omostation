@@ -9,7 +9,7 @@ def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
     parser = argparse.ArgumentParser(description="C2G (Concept-to-Goal) Engine - The Strategic Pipeline")
-    parser.add_argument("--adapter", type=str, default="ecos", choices=["ecos", "local"], help="Which backend adapter to use")
+    parser.add_argument("--adapter", type=str, default="local", choices=["ecos", "local"], help="Which backend adapter to use")
     subparsers = parser.add_subparsers(dest="command", required=True)
     
     # 1. Brainstorm (V2P) - a placeholder for MetaOS integration
@@ -29,7 +29,7 @@ def main(argv: list[str] | None = None) -> int:
     
     args = parser.parse_args(argv)
     
-    omo_dir = get_omo_dir(Path.cwd())
+    omo_dir = get_omo_dir(Path.cwd()) if args.adapter == "ecos" else Path.cwd()
     workspace_root = omo_dir.parent
     if omo_dir.name == ".omo":
         if workspace_root.name == "omo":
@@ -45,13 +45,13 @@ def main(argv: list[str] | None = None) -> int:
             print(f"❌ Error: Pitch file {source} not found.")
             return 1
         print(f"🌉 [C2G] 触发桥接，验证 M2 Schema 与 L0 约束...")
-        _import_pitch(source, omo_dir)
+        _import_pitch(source, omo_dir, args.adapter)
         
     elif args.command == "radar":
-        strategy_audit(omo_dir)
+        strategy_audit(omo_dir, args.adapter)
         
     elif args.command == "gc":
-        strategy_gc(workspace_root)
+        strategy_gc(workspace_root, args.adapter)
         
     return 0
 

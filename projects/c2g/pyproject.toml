@@ -1,10 +1,9 @@
 [project]
 name = "c2g"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
+description = "C2G: Concept-to-Goal strategic engine with IOC + Ports & Adapters"
 authors = [
-    { name = "X-Plane Audit Agent", email = "agent@omostation.local" }
+    { name = "Xiamingxing", email = "xiamingxing@example.com" }
 ]
 requires-python = ">=3.13"
 dependencies = [
