@@ -438,5 +438,27 @@
     "description": "任务状态查询 (P34-W0 战役 2 扩展)",
     "registered_at": "2026-06-06T16:14:12.326375+00:00",
     "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://governance/omo/strategy-audit",
+    "domain": "governance",
+    "package": "omo",
+    "action": "strategy-audit",
+    "endpoint": "omo.omo_strategy:strategy_audit",
+    "protocol": "internal",
+    "description": "omo 战略向导审计 (C2G v4)",
+    "registered_at": "2026-06-15T06:59:39.425226+00:00",
+    "registered_by": "omo-bos-cli"
+  },
+  {
+    "uri": "bos://governance/omo/strategy-gc",
+    "domain": "governance",
+    "package": "omo",
+    "action": "strategy-gc",
+    "endpoint": "omo.omo_strategy:strategy_gc",
+    "protocol": "internal",
+    "description": "omo 战略熵减 GC (C2G v4)",
+    "registered_at": "2026-06-15T06:59:39.425226+00:00",
+    "registered_by": "omo-bos-cli"
   }
 ]
