@@ -8,6 +8,8 @@
 from __future__ import annotations
 
 from ecos.common.logger import get_logger
+from ecos.common.security import InputValidator
+from ecos.common.exceptions import ECOSException
 
 from dataclasses import dataclass
 from typing import Any
@@ -388,11 +390,18 @@ class GovernanceMCP:
             self.tools[tool.name] = tool
 
     def call_tool(self, tool_name: str, parameters: dict[str, Any] | None = None) -> dict[str, Any]:
+        """调用 MCP 工具 - 带输入校验和错误处理"""
         if tool_name not in self.tools:
+            logger.warning("未知工具: %s", tool_name)
             return {"error": f"未知工具: {tool_name}", "available": list(self.tools.keys())}
 
         self._ensure_l0()
         params = parameters or {}
+
+        # 输入校验
+        if not InputValidator.validate_dict(params):
+            logger.warning("无效参数: %s", tool_name)
+            return {"error": "参数必须是字典类型"}
 
         handlers = {
             "governance_check": self._handle_check,
@@ -413,7 +422,17 @@ class GovernanceMCP:
 
         handler = handlers.get(tool_name)
         if handler:
-            return handler(params)
+            try:
+                logger.info("调用工具: %s", tool_name)
+                result = handler(params)
+                logger.info("工具调用成功: %s", tool_name)
+                return result
+            except ECOSException as e:
+                logger.error("工具调用失败: %s - %s", tool_name, str(e))
+                return {"error": str(e), "tool": tool_name}
+            except Exception as e:
+                logger.error("工具调用异常: %s - %s", tool_name, str(e))
+                return {"error": f"内部错误: {e}", "tool": tool_name}
         return {"error": f"未实现的工具: {tool_name}"}
 
     def list_tools(self) -> list[dict[str, Any]]:

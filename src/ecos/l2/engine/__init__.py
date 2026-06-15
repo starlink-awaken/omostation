@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 from ecos.common.logger import get_logger
+from ecos.common.exceptions import ECOSException
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -86,43 +87,64 @@ class CollaborationEngine:
         self._event_log: list[dict[str, Any]] = []
 
     def start(self) -> bool:
-        self.status = EngineStatus.RUNNING
-        self._log_event("engine_started")
-        return True
+        try:
+            self.status = EngineStatus.RUNNING
+            logger.info("协作引擎启动: %s", self.config.engine_id)
+            self._log_event("engine_started")
+            return True
+        except Exception as e:
+            logger.error("协作引擎启动失败: %s", str(e))
+            self.status = EngineStatus.ERROR
+            return False
 
     def stop(self) -> bool:
-        self.status = EngineStatus.STOPPED
-        self._log_event("engine_stopped")
-        return True
+        try:
+            self.status = EngineStatus.STOPPED
+            logger.info("协作引擎停止: %s", self.config.engine_id)
+            self._log_event("engine_stopped")
+            return True
+        except Exception as e:
+            logger.error("协作引擎停止失败: %s", str(e))
+            return False
 
     def register_agent(self, agent_id: str, capabilities: list[str]) -> None:
-        self._registry.register(agent_id, agent_id, capabilities)
-        self._role_manager.define_role(
-            __import__("ecos.l0.governance", fromlist=["RoleDefinition"]).RoleDefinition(
-                role_id=f"role-{agent_id}",
-                role_type=__import__("ecos.l0.governance", fromlist=["RoleType"]).RoleType.WORKER,
-                capabilities=capabilities,
-                constraints={},
+        try:
+            self._registry.register(agent_id, agent_id, capabilities)
+            self._role_manager.define_role(
+                __import__("ecos.l0.governance", fromlist=["RoleDefinition"]).RoleDefinition(
+                    role_id=f"role-{agent_id}",
+                    role_type=__import__("ecos.l0.governance", fromlist=["RoleType"]).RoleType.WORKER,
+                    capabilities=capabilities,
+                    constraints={},
+                )
             )
-        )
+            logger.info("注册 Agent: %s, capabilities=%s", agent_id, capabilities)
+        except Exception as e:
+            logger.error("注册 Agent 失败: %s - %s", agent_id, str(e))
+            raise ECOSException(f"注册 Agent 失败: {e}")
 
     def submit_task(self, task_id: str, name: str,
                     required_capabilities: list[str] | None = None,
                     priority: int = 0,
                     dependencies: list[str] | None = None) -> OrchestrationTask:
-        self._scheduler.submit_task(task_id, name, required_capabilities, priority)
-        self._task_stages[task_id] = TaskStage.PENDING
+        try:
+            self._scheduler.submit_task(task_id, name, required_capabilities, priority)
+            self._task_stages[task_id] = TaskStage.PENDING
 
-        if dependencies:
-            self._task_dependencies[task_id] = set(dependencies)
+            if dependencies:
+                self._task_dependencies[task_id] = set(dependencies)
 
-        task = OrchestrationTask(
-            task_id=task_id, name=name,
-            required_capabilities=required_capabilities or [],
-            priority=priority,
-        )
-        self._log_event("task_submitted", task_id=task_id, name=name)
-        return task
+            task = OrchestrationTask(
+                task_id=task_id, name=name,
+                required_capabilities=required_capabilities or [],
+                priority=priority,
+            )
+            logger.info("提交任务: %s, name=%s", task_id, name)
+            self._log_event("task_submitted", task_id=task_id, name=name)
+            return task
+        except Exception as e:
+            logger.error("提交任务失败: %s - %s", task_id, str(e))
+            raise ECOSException(f"提交任务失败: {e}")
 
     def set_dependency(self, task_id: str, depends_on: str) -> None:
         self._task_dependencies.setdefault(task_id, set()).add(depends_on)
