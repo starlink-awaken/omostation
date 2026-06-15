@@ -4,7 +4,7 @@ from pathlib import Path
 import time
 import shutil
 
-from omo.omo_bridge import get_omo_dir
+from .bridge import get_omo_dir
 
 def strategy_audit(omo_dir: Path):
     print("🧠 [Strategic Audit] 正在执行全盘战略向导检查...")
