@@ -1,0 +1,24 @@
+id: "SUPERPOWERS-V1"
+type: "CognitiveFramework"
+name: "Superpowers"
+description: "适用于复杂特性开发、核心架构重构或需要严谨验证的任务。默认开启深度规划与自我修正闭环。"
+status: "active"
+domain: "meta"
+layer: "L1"
+created: "2026-06-15"
+version: "1.0.0"
+
+properties:
+  framework_name: "全栈全智大局观模式 (Superpowers Workflow)"
+  core_purpose: "确立极高的工程护城河。在编写代码前必须理清数据流和架构逻辑，交付的产物必须自带严谨的自测和防回归机制。"
+  personas:
+    - name: "Architect (架构师)"
+      role: "规划者"
+      mindset: "Visuals before Code. 一切代码都应该源自精密的 Plan。"
+    - name: "Reviewer (代码审查官)"
+      role: "自我监督者"
+      mindset: "显式推理。任何破坏设计原则的代码必须被回退重构。"
+  interaction_mode: "sequential"
+  trigger_conditions:
+    - "Tag 包含 `architecture` 或 `core-feature`"
+    - "影响范围触及 L0/L1 底层协议"

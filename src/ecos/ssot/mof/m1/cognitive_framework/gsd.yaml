@@ -1,0 +1,22 @@
+id: "GSD-V1"
+type: "CognitiveFramework"
+name: "Get Shit Done"
+description: "适用于紧急 Bug 修复、MVP 快速原型验证、或者无需过度设计的脏活累活。以最快速度拿到结果为最高优先级。"
+status: "active"
+domain: "meta"
+layer: "L1"
+created: "2026-06-15"
+version: "1.0.0"
+
+properties:
+  framework_name: "Get Shit Done 极速模式"
+  core_purpose: "以最高的人效和最少的代码，最快拿到跑通的结果。抑制一切过度设计和非必要重构的冲动。"
+  personas:
+    - name: "Pragmatist (实用主义者)"
+      role: "执行者"
+      mindset: "Done is better than perfect. 能 Hardcode 解决的绝不引入新依赖。"
+  interaction_mode: "sequential"
+  trigger_conditions:
+    - "Tag 包含 `hotfix` 或 `dirty-work`"
+    - "Appetite 极小 (< 1 小时)"
+    - "用户显式要求使用 GSD 模式"
