@@ -4,9 +4,48 @@
 > 最后更新: 2026-06-15
 
 > **当前 Phase**: 42 — 治理面 SSOT 同步纪元 (Governance SSOT Catch-up)
-> **健康分**: 77.5/100 (raw 100.0, xplane 25.0)
-> **W3 目标**: BOS URI 声明式注册 + 可观测性
+> **健康分**: 95/100
 > **SSOT**: `.omo/goals/current.yaml` · `.omo/state/system.yaml`
+
+## 架构总览 (5+4+1+1)
+
+```
+L4 自我层  ── l4-kernel (43 MCP tools · 250 tests)
+L3 入口层  ── cockpit (CLI 27子命令 · MCP 37工具 · Web FastAPI :8090)
+              agora-dashboard (Next.js Web 可视化大盘 — cockpit 的 Web 视图扩展)
+I0 织层    ── agora (MCP Hub · 42+ tools · BOS 路由 · SSE :7431)
+L2 引擎面  ── kairon (19包 · 4157 tests) + gbrain (67 MCP · 9700 tests)
+              omo (治理面) + metaos (编排 · 188 tests)
+L1 运行时  ── runtime (KEI沙箱 · Matrix调度 · cron-service :7450)
+L0 协议层  ── ecos (SSB签名链 · MOF元模型 · 472 tests)
+X 横切框架 ── aetherforge (LLM网关) + compute-mesh + swarm-engine
+              model-driven (7阶段引擎 · 190 tests) + llm-gateway
+              c2g (战略需求引擎) + bus-foundation (pub/sub)
+              omo-debt (债务评分) + observability (Langfuse)
+              spaces (空间配置) + family-hub (家庭数字枢纽)
+              hermes-console (控制台UI · 待集成至 cockpit)
+```
+
+### BOS URI 5 域
+
+```
+bos://memory/     ← kos/kronos/gbrain/vault       — 记忆与事实源
+bos://governance/ ← omo/metaos/eidos/cockpit       — 治理与律法
+bos://analysis/   ← minerva/ontoderive/codeanalyze — 认知与推演
+bos://persona/    ← core-models/sot-bridge         — 人格与心智
+bos://capability/ ← forge/runtime                  — 能力与生态
+```
+
+**BOS 路由定义位置**: `projects/agora/src/agora/mcp/resolver/services.py` (POC_SERVICES list, 75+ 条目)
+**BOS URI 解析器**: `projects/agora/src/agora/mcp/resolver/` (5 模块: services/pool/adapter/api/__init__)
+
+### 架构决策
+
+| 决策 | 结论 |
+|:----|:-----|
+| L3 分裂 | cockpit (CLI+MCP) + agora-dashboard (Web) 同层并存。agora-dashboard 是 cockpit 的 Web 视图扩展，不合并（480MB Next.js 迁移成本 > 收益） |
+| CLI 收敛 | cockpit = 唯一人类 CLI 入口。其他 CLI (agora/runtime/ecos-ssb/omo/metaos) 保留为程序接口 |
+| 子模块 | 22 子模块，各自独立 git 仓库。根仓库只追踪元配置和子模块指针 |
 
 ## Project Overview
 
@@ -15,20 +54,27 @@ This root directory is a **multi-project workspace** organized in the 5+4+1+1 (e
 | Layer | Project | Stack | Location | Status |
 |-------|---------|-------|----------|--------|
 | L4 | `l4-kernel` | Python (uv, pytest) | `projects/l4-kernel/` | 🟢 Active — 自我层管理面 · 21域 · 250 tests · 43 MCP tools |
-| — | `model-driven` | Python (uv, pytest) | `projects/model-driven/` | 🟢 Active — 全生命周期模型驱动平台 · 24 M2类型 · 7阶段 · 12工具 · 190 tests |
-| L3 | `cockpit` | Python (uv, pytest) | `projects/cockpit/` | 🟢 Active — 统一入口 (CLI + MCP + Web) · 74 tests · 治理 MCP 工具 |
-| L3 | `agora-dashboard` | Next.js (bun) | `projects/agora-dashboard/` | 🟢 Active — 赛博朋克大盘 (Web) · eCOS v5 Observatory |
-| — | `c2g` | Python (uv) | `projects/c2g/` | 🟢 Active — 独立战略需求引擎 (V2P -> C2G) |
-| — | `family-hub` | Python (FastMCP) | `projects/family-hub/` | 🟢 Active — 家庭数字枢纽 (Persona domain) · BOS MCP |
-| I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · 91 tests |
-| L2 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 知识引擎 · 16 packages · 能力地图 + 使用指南 |
-| L2 | `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — 知识数据库 · 888 tests · 能力地图 |
-| L2 | `omo` | Python (uv, pytest) | `projects/omo/` | 🟢 Active — 治理面 · 144 tests · 债务管理 |
-| L2 | `metaos` | Python (uv, pytest) | `projects/metaos/` | 🟢 Active — 编排引擎 · 41 tests · 决策门控/免疫/路由 |
-| L1 | `runtime` | Python (uv, pytest) | `projects/runtime/` | 🟢 Active — 运行时 · 46 tests · 服务注册/健康/协议 |
-| L0 | `ecos` | Python (uv, pytest) | `projects/ecos/` | 🟢 Active — L0 协议层 · 39 tests · X1-X4 治理框架 |
-| — | `aetherforge` | Python (uv, pytest) | `projects/aetherforge/` | 🟢 Active — 算力网格 + LLM 网关 + 群体智能 · 21 tests |
-| — | `hermes-console` | TypeScript (Vite) | `projects/hermes-console/` | 🟢 Active — 已集成至 cockpit (`/hermes`) |
+| L3 | `cockpit` | Python (uv, pytest) | `projects/cockpit/` | 🟢 Active — 统一入口 (CLI 27 + MCP 37 + Web) · 562 tests |
+| L3 | `agora-dashboard` | Next.js (npm) | `projects/agora-dashboard/` | 🟢 Active — Web 可视化大盘 (cockpit 视图扩展) |
+| I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · BOS 路由 · 75+ services · SSE :7431 |
+| L2 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 知识引擎 · 19 packages · 4157 tests |
+| L2 | `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — 知识数据库 · 67 MCP · 9700 tests |
+| L2 | `omo` | Python (uv, pytest) | `projects/omo/` | 🟢 Active — 治理面 · 302/530 tests |
+| L2 | `metaos` | Python (uv, pytest) | `projects/metaos/` | 🟢 Active — 编排引擎 · 188 tests · 决策门控/免疫/路由 |
+| L1 | `runtime` | Python (uv, pytest) | `projects/runtime/` | 🟢 Active — 运行时 · 171 tests · KEI沙箱 · Matrix调度 |
+| L0 | `ecos` | Python (uv, pytest) | `projects/ecos/` | 🟢 Active — L0 协议层 · 472 tests · SSB签名链 · MOF元模型 |
+| X | `aetherforge` | Python (uv, pytest) | `projects/aetherforge/` | 🟢 Active — 算力网格 + LLM 网关 + 群体智能 |
+| X | `compute-mesh` | Python (uv, pytest) | `projects/compute-mesh/` | 🟢 Active — 算力发现/聚合/调度 |
+| X | `swarm-engine` | Python (uv, pytest) | `projects/swarm-engine/` | 🟢 Active — 多智能体任务编排 |
+| X | `model-driven` | Python (uv, pytest) | `projects/model-driven/` | 🟢 Active — 全生命周期模型驱动 · 190 tests |
+| X | `llm-gateway` | Python (uv) | `projects/llm-gateway/` | 🟢 Active — LLM 路由/降级 (待迁移至 aetherforge) |
+| X | `c2g` | Python (uv) | `projects/c2g/` | 🟢 Active — 战略需求引擎 (V2P → C2G) |
+| X | `bus-foundation` | Python (uv, pytest) | `projects/bus-foundation/` | 🟢 Active — pub/sub/schedule 总线 |
+| X | `omo-debt` | Python (uv, pytest) | `projects/omo-debt/` | 🟢 Active — 技术债务评分 CLI |
+| X | `observability` | Docker | `projects/observability/` | 🟢 Active — Langfuse 可观测性 |
+| X | `family-hub` | Python (FastMCP) | `projects/family-hub/` | 🟢 Active — 家庭数字枢纽 |
+| X | `hermes-console` | TypeScript (Vite) | `projects/hermes-console/` | 🟡 待集成至 cockpit |
+| X | `spaces` | YAML | `projects/spaces/` | 🟢 Active — 空间配置 |
 
 **Also contains:**
 - `.omo/` — Workspace governance (goals, state, standards, tasks, audits)
