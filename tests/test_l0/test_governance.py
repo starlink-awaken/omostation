@@ -2267,3 +2267,291 @@ class TestSwarmBrainStructureChecker:
         checker = SwarmBrainStructureChecker(tmp_path)
         desc = checker.get_description()
         assert "蜂群大脑" in desc
+
+
+# ══════════════════════════════════════════════════════════════
+# 跨层集成测试 — L0 → L1 → L2 → L3 全链路
+# ══════════════════════════════════════════════════════════════
+
+class TestCrossLayerIntegration:
+    """跨层集成测试 — 验证 L0-L3 全链路协作"""
+
+    def test_l0_swarm_to_l2_engine(self):
+        """L0 蜂群原语 → L2 蜂群引擎 集成"""
+        from ecos.l0.governance import SwarmManager
+        from ecos.l2.engine import SwarmEngine, EngineConfig
+
+        l0_manager = SwarmManager()
+        for i in range(5):
+            l0_manager.add_agent(f"a{i}", initial_state={"role": "worker"})
+
+        l2_engine = SwarmEngine(EngineConfig(engine_id="swarm-l2"))
+        l2_engine.start()
+        for aid in l0_manager.agents:
+            l2_engine.register_agent(aid, l0_manager.agent_states.get(aid, {}))
+
+        l0_state = l0_manager.get_swarm_state()
+        l0_behaviors = l0_manager.detect_emergence(l0_state)
+        l2_behaviors = l2_engine.detect_emergence()
+
+        assert len(l0_behaviors) >= 1
+        assert len(l2_behaviors) >= 1
+
+    def test_l0_role_to_l2_collaboration(self):
+        """L0 角色原语 → L2 协作引擎 集成"""
+        from ecos.l0.governance import RoleManager, RoleDefinition, RoleType
+        from ecos.l2.engine import CollaborationEngine, EngineConfig
+
+        rm = RoleManager()
+        rm.define_role(RoleDefinition(role_id="worker", role_type=RoleType.WORKER, capabilities=["execute"], constraints={}))
+
+        l2_engine = CollaborationEngine(EngineConfig(engine_id="collab-l2"))
+        l2_engine.start()
+
+        for i in range(4):
+            l2_engine.register_agent(f"agent-{i}", ["execute"])
+
+        for i in range(10):
+            l2_engine.submit_task(f"task-{i}", f"任务{i}", required_capabilities=["execute"])
+
+        assignments = l2_engine.auto_assign()
+        assert len(assignments) == 10
+
+        for task_id, agent_id in assignments:
+            l2_engine.start_task(task_id)
+            l2_engine.complete_task(task_id, {"output": "done"})
+
+        status = l2_engine.get_pipeline_status()
+        assert status["stage_distribution"].get("done", 0) == 10
+
+    def test_l0_personal_to_l2_knowledge(self):
+        """L0 个人知识原语 → L2 个人引擎 集成"""
+        from ecos.l0.governance import (
+            PersonalKnowledgeManager, KnowledgeNode, KnowledgeType,
+            PreferenceEngine, RecommendationEngine,
+        )
+        from ecos.l2.engine import PersonalEngine, EngineConfig
+
+        l0_km = PersonalKnowledgeManager()
+        l0_pe = PreferenceEngine()
+
+        l2_engine = PersonalEngine(EngineConfig(engine_id="personal-l2"))
+        l2_engine.start()
+
+        topics = ["AI", "ML", "Python", "Cooking", "Music"]
+        for t in topics:
+            l0_km.add_knowledge(KnowledgeNode(
+                node_id=t.lower(), knowledge_type=KnowledgeType.FACT,
+                content={"topic": t}, tags=[t.lower()],
+            ))
+            l2_engine.add_knowledge(t.lower(), {"topic": t}, tags=[t.lower()])
+
+        l0_pe.learn("user-1", "ai", "topic", 5.0)
+        l2_engine.learn_preference("user-1", "ai", 5.0)
+
+        l0_recs = RecommendationEngine(l0_km, l0_pe).recommend("user-1")
+        l2_recs = l2_engine.get_recommendations("user-1")
+
+        assert len(l0_recs) >= 1
+        assert len(l2_recs) >= 1
+
+    def test_l0_distributed_to_l1_sync(self):
+        """L0 分布式原语 → L1 状态同步 集成"""
+        from ecos.l0.governance import StateSyncService, SyncStrategy
+        from ecos.l1.runtime import StateSyncService as L1StateSync
+
+        l0_node_a = StateSyncService("node-a", SyncStrategy.EVENTUAL)
+        l0_node_b = StateSyncService("node-b", SyncStrategy.EVENTUAL)
+        l1_node = L1StateSync("node-l1")
+
+        l0_node_a.set("x", 1)
+        l0_node_a.set("y", 2)
+        l1_node.set("z", 3)
+
+        snap_a = l0_node_a.generate_snapshot()
+        l0_node_b.sync_from_snapshot(snap_a)
+
+        l1_node.sync_from(
+            {k: (v, 1) for k, v in l0_node_a.get_all().items()}
+        )
+
+        assert l0_node_b.get("x") == 1
+        assert l0_node_b.get("y") == 2
+        assert l1_node.get("x") == 1
+        assert l1_node.get("z") == 3
+
+    def test_l3_cli_to_l0_check(self):
+        """L3 CLI → L0 检查器 集成"""
+        from ecos.l3.entry import GovernanceCLI
+
+        cli = GovernanceCLI()
+        result = cli.run(["check", "--dimension", "X1"])
+        assert result == 0
+        output = cli.get_output()
+        assert any("X1" in line for line in output)
+
+    def test_l3_mcp_full_workflow(self):
+        """L3 MCP 完整工作流"""
+        from ecos.l3.entry import GovernanceMCP
+
+        mcp = GovernanceMCP()
+
+        status = mcp.call_tool("governance_status")
+        assert status["status"] == "ok"
+
+        cluster = mcp.call_tool("cluster_list")
+        assert cluster["status"] == "ok"
+        assert len(cluster["nodes"]) > 0
+
+        swarm = mcp.call_tool("swarm_status")
+        assert swarm["status"] == "ok"
+
+        knowledge = mcp.call_tool("knowledge_stats")
+        assert knowledge["status"] == "ok"
+
+        task = mcp.call_tool("task_submit", {"task_id": "t1", "name": "test"})
+        assert task["status"] == "ok"
+
+
+# ══════════════════════════════════════════════════════════════
+# 边界情况测试
+# ══════════════════════════════════════════════════════════════
+
+class TestEdgeCases:
+    """边界情况测试 — 空输入、极端值、异常路径"""
+
+    def test_empty_graph_pagerank(self):
+        from ecos.l0.governance import KnowledgeGraphBuilder
+
+        builder = KnowledgeGraphBuilder()
+        pr = builder.pagerank()
+        assert pr == {}
+
+    def test_single_node_pagerank(self):
+        from ecos.l0.governance import KnowledgeGraphBuilder
+
+        builder = KnowledgeGraphBuilder()
+        builder.add_node("only")
+        pr = builder.pagerank()
+        assert abs(pr["only"] - 1.0) < 0.01
+
+    def test_empty_swarm_detect(self):
+        from ecos.l0.governance import SwarmManager, SwarmState
+
+        manager = SwarmManager()
+        state = SwarmState(agents=[], behaviors=[])
+        behaviors = manager.detect_emergence(state)
+        assert len(behaviors) == 0
+
+    def test_single_agent_swarm(self):
+        from ecos.l0.governance import SwarmManager, SwarmState
+
+        manager = SwarmManager()
+        manager.add_agent("solo")
+        state = SwarmState(agents=["solo"], behaviors=[])
+        behaviors = manager.detect_emergence(state)
+        assert len(behaviors) == 0
+
+    def test_empty_knowledge_query(self):
+        from ecos.l0.governance import PersonalKnowledgeManager
+
+        km = PersonalKnowledgeManager()
+        results = km.query_knowledge("anything")
+        assert len(results) == 0
+
+    def test_empty_task_scheduler(self):
+        from ecos.l0.governance import TaskScheduler
+
+        scheduler = TaskScheduler()
+        assert scheduler.get_next_task() is None
+        assert len(scheduler.get_pending_tasks()) == 0
+
+    def test_crdt_empty_snapshot_sync(self):
+        from ecos.l0.governance import StateSyncService, SyncStrategy
+
+        a = StateSyncService("a", SyncStrategy.EVENTUAL)
+        b = StateSyncService("b", SyncStrategy.EVENTUAL)
+
+        snap = a.generate_snapshot()
+        result = b.sync_from_snapshot(snap)
+        assert result.success
+        assert len(result.conflicts) == 0
+
+    def test_failover_no_rules(self):
+        from ecos.l0.governance import FailoverManager
+
+        manager = FailoverManager()
+        target = manager.execute_failover("nonexistent")
+        assert target is None
+
+    def test_load_balancer_empty(self):
+        from ecos.l0.governance import LoadBalancer, LoadBalancingStrategy
+
+        balancer = LoadBalancer(LoadBalancingStrategy.ROUND_ROBIN)
+        assert balancer.select_node() is None
+
+    def test_role_manager_empty(self):
+        from ecos.l0.governance import RoleManager
+
+        rm = RoleManager()
+        assert rm.list_roles() == []
+        assert rm.get_role("nonexistent") is None
+
+    def test_collective_decision_no_votes(self):
+        from ecos.l0.governance import CollectiveDecision, DecisionMethod
+
+        engine = CollectiveDecision()
+        engine.create_proposal("p1", "空投票", ["A", "B"], DecisionMethod.MAJORITY_VOTE)
+        result = engine.decide("p1")
+        assert result is None
+
+    def test_preference_engine_empty(self):
+        from ecos.l0.governance import PreferenceEngine
+
+        engine = PreferenceEngine()
+        assert engine.get_preference("nobody", "nothing") == 0.0
+        assert engine.get_top_preferences("nobody") == []
+
+    def test_communication_protocol_no_connect(self):
+        from ecos.l1.runtime import CommunicationProtocol, Message, MessageType
+
+        protocol = CommunicationProtocol("node-1")
+        msg = Message.create(MessageType.SYNC, "node-1", "node-2", {})
+        result = protocol.send("node-2", msg)
+        assert result is False
+
+    def test_collaboration_engine_no_agents(self):
+        from ecos.l2.engine import CollaborationEngine, EngineConfig
+
+        engine = CollaborationEngine(EngineConfig(engine_id="e1"))
+        engine.start()
+        engine.submit_task("t1", "任务")
+        assignments = engine.auto_assign()
+        assert len(assignments) == 0
+
+    def test_swarm_engine_consensus_no_majority(self):
+        from ecos.l2.engine import SwarmEngine, EngineConfig
+
+        engine = SwarmEngine(EngineConfig(engine_id="s1"))
+        engine.start()
+        engine.propose_decision("p1", "分裂", ["X", "Y"], method="majority_vote")
+        engine.vote("p1", "a1", "X")
+        engine.vote("p1", "a2", "Y")
+        result = engine.resolve_decision("p1")
+        assert result is None
+
+    def test_governance_cli_help_all_commands(self):
+        from ecos.l3.entry import GovernanceCLI
+
+        cli = GovernanceCLI()
+        for cmd in ["check", "status", "cluster", "swarm", "knowledge", "help"]:
+            result = cli.run([cmd])
+            assert result == 0
+
+    def test_mcp_unknown_tool(self):
+        from ecos.l3.entry import GovernanceMCP
+
+        mcp = GovernanceMCP()
+        result = mcp.call_tool("nonexistent_tool")
+        assert "error" in result
+        assert "available" in result

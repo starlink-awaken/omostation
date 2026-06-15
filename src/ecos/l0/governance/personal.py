@@ -363,20 +363,25 @@ class KnowledgeGraphBuilder:
                 self._dfs(neighbor, target, path + [current], paths, max_depth)
 
     def pagerank(self, damping: float = 0.85, iterations: int = 20) -> dict[str, float]:
-        """PageRank 中心度计算"""
+        """PageRank 中心度计算 — 缓存邻居度数优化"""
         n = len(self.nodes)
         if n == 0:
             return {}
 
         scores: dict[str, float] = {nid: 1.0 / n for nid in self.nodes}
+        neighbor_counts: dict[str, int] = {
+            nid: max(len(self.get_neighbors(nid)), 1) for nid in self.nodes
+        }
+        neighbors_cache: dict[str, list[str]] = {
+            nid: self.get_neighbors(nid) for nid in self.nodes
+        }
 
         for _ in range(iterations):
             new_scores: dict[str, float] = {}
             for nid in self.nodes:
-                neighbors = self.get_neighbors(nid)
                 rank_sum = sum(
-                    scores.get(nb, 0) / max(len(self.get_neighbors(nb)), 1)
-                    for nb in neighbors
+                    scores.get(nb, 0) / neighbor_counts[nb]
+                    for nb in neighbors_cache[nid]
                 )
                 new_scores[nid] = (1 - damping) / n + damping * rank_sum
             scores = new_scores
