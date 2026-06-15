@@ -152,6 +152,7 @@ def _import_bmad(file_path: Path, omo_dir: Path, sequential: bool = False):
             "source_docs": [str(file_path.absolute())],
             "deliverables": ["执行记录与源码修改"],
             "imported_via": "omo_bridge",
+            "context_uri": f"bos://memory/openspecs/{file_path.name}#{task_id}",
             # [M2 CONTRACT] 必须的空位字段
             "assigned_to": None,
             "dispatch_id": None,
@@ -238,7 +239,7 @@ def _import_fast_track(source_topic: Path, omo_dir: Path):
         "task_type": "feature",
         "risk_level": "L0",
         "depends_on": [],
-        "source_docs": [],
+        "source_docs": ["bos://memory/fast-track/virtual-doc"],
         "deliverables": ["直接代码修改"],
         "imported_via": "fast_track_cli",
         "context_uri": f"bos://memory/fast-track/{task_id}",
@@ -246,6 +247,14 @@ def _import_fast_track(source_topic: Path, omo_dir: Path):
         "test_plan": ["冒烟测试"],
         "allowed_operation_level": "L0",
         "human_approval_required": False,
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "entry_gate": ["FAST_TRACK_L0"],
     }
 
     # [MODEL-DRIVEN M2 VALIDATION]
@@ -254,6 +263,8 @@ def _import_fast_track(source_topic: Path, omo_dir: Path):
     validation_errors = validate_task_data(task_data, group="planned")
     if validation_errors:
         print("  ❌ M2 防腐层拦截 (Schema Validation Failed)")
+        for err in validation_errors:
+            print(f"     - {err}")
         return
 
     task_file = planned_dir / f"{task_id}.yaml"
