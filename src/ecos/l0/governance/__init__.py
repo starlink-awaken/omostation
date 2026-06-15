@@ -1,13 +1,23 @@
-"""L0 治理模块 — X1-X4 治理框架 + 优化原语 + 蜂群式AI超级大脑原语
+"""L0 治理模块 — X1-X4 治理框架 + 蜂群式AI超级大脑原语
 
 M1 SSOT: ecos/ssot/mof/m1/governance/
 M2 Schema: ecos/ssot/mof/m2/governance_*.yaml
 注册表: .omo/_truth/registry/governance-checks.yaml
 
 本模块实现:
-1. X1-X4 治理框架原语
+1. X1-X4 治理框架原语 (5 个检查器)
 2. 优化原语 (告警/仪表板/历史)
-3. 蜂群式AI超级大脑原语 (分布式/角色/蜂群/个人知识)
+3. 蜂群式AI超级大脑原语:
+   - 分布式原语: CRDTSync + StateSyncService + NodeManager + CommunicationProtocol
+   - 角色原语: RoleManager + RoleCollaboration + RoleSwitcher + RoleEvaluator
+   - 蜂群原语: SwarmManager + EmergenceDetector + CollectiveDecision + SwarmVisualizer
+   - 个人知识原语: PersonalKnowledgeManager + KnowledgeGraphBuilder + PreferenceEngine + RecommendationEngine
+   - 任务调度: TaskScheduler + DAGScheduler
+   - 故障转移: FailoverManager
+   - 负载均衡: LoadBalancer
+   - Agent注册: AgentRegistry
+
+L1/L2/L3 层全部委托本模块原语。
 """
 
 from .primitives import (
