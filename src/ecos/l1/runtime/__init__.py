@@ -361,31 +361,48 @@ class StateSyncService:
 
 
 class FailoverExecutor:
-    """故障转移执行器 — 健康监控 + 自动恢复 + 指标跟踪
+    """故障转移执行器 — 委托 L0 FailoverManager + NodeManager
 
     L1 运行时: 基于 L0 原语构建的完整故障转移运行时
     """
 
     def __init__(self):
-        self.failover_count: int = 0
-        self.last_failover: Optional[datetime] = None
-        self._failover_log: list[dict[str, Any]] = []
-        self._node_status: dict[str, NodeHealth] = {}
+        from ecos.l0.governance import FailoverManager, NodeManager
+
+        self._fm = FailoverManager()
+        self._nm = NodeManager()
         self._recovery_callbacks: dict[str, Callable[[], bool]] = {}
+        self._failover_log: list[dict[str, Any]] = []
 
-    def execute(self, source: str, target: str) -> bool:
-        self.failover_count += 1
-        self.last_failover = datetime.now(timezone.utc)
-        self._node_status[source] = NodeHealth.UNHEALTHY
-        self._node_status[target] = NodeHealth.HEALTHY
+    def register_node(self, node_id: str) -> None:
+        self._nm.register(node_id)
 
-        self._failover_log.append({
-            "source": source,
-            "target": target,
-            "timestamp": self.last_failover.isoformat(),
-            "total_failovers": self.failover_count,
-        })
-        return True
+    def add_rule(self, rule_id: str, source: str, targets: list[str],
+                 strategy: str = "round_robin") -> None:
+        from ecos.l0.governance import FailoverRule, FailoverStrategy
+
+        strategy_map = {
+            "random": FailoverStrategy.RANDOM,
+            "round_robin": FailoverStrategy.ROUND_ROBIN,
+            "least_loaded": FailoverStrategy.LEAST_LOADED,
+            "priority": FailoverStrategy.PRIORITY,
+        }
+        self._fm.add_rule(FailoverRule(
+            rule_id=rule_id, source_node=source,
+            target_nodes=targets,
+            strategy=strategy_map.get(strategy, FailoverStrategy.ROUND_ROBIN),
+        ))
+
+    def execute(self, source: str) -> Optional[str]:
+        target = self._fm.execute_failover(source)
+        if target:
+            self._failover_log.append({
+                "source": source, "target": target,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+            self._nm.update_heartbeat(source)
+            self._nm.update_heartbeat(target)
+        return target
 
     def register_recovery(self, node_id: str, callback: Callable[[], bool]) -> None:
         self._recovery_callbacks[node_id] = callback
@@ -396,10 +413,9 @@ class FailoverExecutor:
             try:
                 success = callback()
                 if success:
-                    self._node_status[node_id] = NodeHealth.HEALTHY
+                    self._nm.update_heartbeat(node_id)
                     self._failover_log.append({
-                        "type": "recovery",
-                        "node_id": node_id,
+                        "type": "recovery", "node_id": node_id,
                         "success": True,
                         "timestamp": datetime.now(timezone.utc).isoformat(),
                     })
@@ -409,77 +425,97 @@ class FailoverExecutor:
         return False
 
     def get_node_health(self, node_id: str) -> NodeHealth:
-        return self._node_status.get(node_id, NodeHealth.UNKNOWN)
+        from ecos.l0.governance import NodeStatus as L0NodeStatus
+
+        l0_status = self._nm.get_node(node_id)
+        if not l0_status:
+            return NodeHealth.UNKNOWN
+
+        health = self._nm.check_health()
+        l0_health = health.get(node_id, L0NodeStatus.OFFLINE)
+
+        mapping = {
+            L0NodeStatus.ONLINE: NodeHealth.HEALTHY,
+            L0NodeStatus.HEALTHY: NodeHealth.HEALTHY,
+            L0NodeStatus.DEGRADED: NodeHealth.DEGRADED,
+            L0NodeStatus.OFFLINE: NodeHealth.UNHEALTHY,
+        }
+        return mapping.get(l0_health, NodeHealth.UNKNOWN)
+
+    def get_failover_history(self, limit: int = 50) -> list[dict[str, Any]]:
+        return self._failover_log[-limit:]
 
     def get_stats(self) -> dict[str, Any]:
+        health = self._nm.check_health()
         status_counts: dict[str, int] = {}
-        for status in self._node_status.values():
-            status_counts[status.value] = status_counts.get(status.value, 0) + 1
+        for s in health.values():
+            status_counts[s.value] = status_counts.get(s.value, 0) + 1
 
         return {
-            "failover_count": self.failover_count,
-            "last_failover": self.last_failover.isoformat() if self.last_failover else None,
+            "failover_count": self._fm.get_failover_count(),
+            "node_count": len(health),
             "node_status": status_counts,
             "recoverable_nodes": len(self._recovery_callbacks),
         }
 
 
 class LoadBalancerExecutor:
-    """负载均衡执行器 — 指标收集 + 自适应路由 + 节点权重
+    """负载均衡执行器 — 委托 L0 LoadBalancer + 指标收集
 
     L1 运行时: 基于 L0 原语构建的完整负载均衡运行时
     """
 
-    def __init__(self):
-        self.request_count: int = 0
-        self.node_requests: dict[str, int] = {}
-        self.node_latencies: dict[str, list[float]] = {}
-        self.node_weights: dict[str, float] = {}
-        self._route_log: list[dict[str, Any]] = []
+    def __init__(self, strategy: str = "round_robin"):
+        from ecos.l0.governance import LoadBalancer, LoadBalancingStrategy
+
+        strategy_map = {
+            "round_robin": LoadBalancingStrategy.ROUND_ROBIN,
+            "least_connections": LoadBalancingStrategy.LEAST_CONNECTIONS,
+            "weighted_round_robin": LoadBalancingStrategy.WEIGHTED_ROUND_ROBIN,
+            "ip_hash": LoadBalancingStrategy.IP_HASH,
+        }
+        self._lb = LoadBalancer(strategy_map.get(strategy, LoadBalancingStrategy.ROUND_ROBIN))
+        self._latencies: dict[str, list[float]] = {}
+
+    def register_node(self, node_id: str, weight: int = 1) -> None:
+        self._lb.register_node(node_id, weight)
+
+    def unregister_node(self, node_id: str) -> bool:
+        return self._lb.unregister_node(node_id)
 
     def route(self, target: str) -> str:
-        self.request_count += 1
-        self.node_requests[target] = self.node_requests.get(target, 0) + 1
+        self._lb.update_connections(target, self._lb.nodes.get(target, __import__("ecos.l0.governance.load_balancer", fromlist=["NodeLoad"]).NodeLoad(node_id=target)).connections + 1)
         return target
 
-    def record_latency(self, node_id: str, latency_ms: float) -> None:
-        if node_id not in self.node_latencies:
-            self.node_latencies[node_id] = []
-        self.node_latencies[node_id].append(latency_ms)
-        if len(self.node_latencies[node_id]) > 100:
-            self.node_latencies[node_id] = self.node_latencies[node_id][-100:]
+    def route_auto(self) -> Optional[str]:
+        node_id = self._lb.select_node()
+        if node_id:
+            node = self._lb.get_node(node_id)
+            if node:
+                self._lb.update_connections(node_id, node.connections + 1)
+        return node_id
 
-    def set_weight(self, node_id: str, weight: float) -> None:
-        self.node_weights[node_id] = weight
+    def release(self, node_id: str) -> None:
+        node = self._lb.get_node(node_id)
+        if node and node.connections > 0:
+            self._lb.update_connections(node_id, node.connections - 1)
+
+    def record_latency(self, node_id: str, latency_ms: float) -> None:
+        if node_id not in self._latencies:
+            self._latencies[node_id] = []
+        self._latencies[node_id].append(latency_ms)
+        if len(self._latencies[node_id]) > 100:
+            self._latencies[node_id] = self._latencies[node_id][-100:]
 
     def get_avg_latency(self, node_id: str) -> float:
-        latencies = self.node_latencies.get(node_id, [])
+        latencies = self._latencies.get(node_id, [])
         return sum(latencies) / len(latencies) if latencies else 0.0
-
-    def select_best_node(self, candidates: list[str]) -> Optional[str]:
-        if not candidates:
-            return None
-
-        scored: list[tuple[str, float]] = []
-        for node_id in candidates:
-            avg_latency = self.get_avg_latency(node_id)
-            weight = self.node_weights.get(node_id, 1.0)
-            request_count = self.node_requests.get(node_id, 0)
-            latency_score = 1.0 / (1.0 + avg_latency / 100.0)
-            load_penalty = request_count * 0.01
-            score = latency_score * weight - load_penalty
-            scored.append((node_id, score))
-
-        scored.sort(key=lambda x: x[1], reverse=True)
-        return scored[0][0]
 
     def get_stats(self) -> dict[str, Any]:
         return {
-            "total_requests": self.request_count,
-            "node_requests": self.node_requests.copy(),
-            "node_avg_latencies": {
-                nid: self.get_avg_latency(nid)
-                for nid in self.node_latencies
+            "strategy": self._lb.strategy.value,
+            "node_count": len(self._lb.nodes),
+            "node_latencies": {
+                nid: self.get_avg_latency(nid) for nid in self._latencies
             },
-            "node_weights": self.node_weights.copy(),
         }
