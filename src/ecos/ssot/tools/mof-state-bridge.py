@@ -152,11 +152,19 @@ def diff_m1_vs_omo(m1_nodes: dict, omo_tasks: dict) -> dict:
             m1_title = omo_title
         if status_match:
             m1_status = omo_status
+        # priority/domain None 视为 default (M1 OMOTask M2 schema 必填 P0-P3, opc 是 omotask 默认 domain)
+        PRIORITY_DEFAULT = "P2"
+        DOMAIN_DEFAULT = "opc"
+        m1_priority = m1d.get("priority") or PRIORITY_DEFAULT
+        omo_priority = omod.get("priority") or PRIORITY_DEFAULT
+        m1_domain = m1d.get("domain") or DOMAIN_DEFAULT
+        omo_domain = omod.get("domain") or DOMAIN_DEFAULT
+
         for field, m1_val, omo_val in [
             ("title", m1_title, omo_title),
             ("status", m1_status, omo_status),
-            ("priority", m1d.get("priority"), omod.get("priority")),
-            ("domain", m1d.get("domain"), omod.get("domain")),
+            ("priority", m1_priority, omo_priority),
+            ("domain", m1_domain, omo_domain),
         ]:
             if m1_val != omo_val:
                 drifts.append(
