@@ -199,6 +199,11 @@ def main(argv: list[str] | None = None) -> int:
 
         return worker_main(args[1:])
 
+    if args and args[0] == "strategy":
+        from omo.omo_strategy import main as strategy_main
+
+        return strategy_main(args[1:])
+
     # 兜底:有参但无匹配子命令 → 报错退出;无参 → 静默退出 0(保持原行为)
     if args:
         print(f"Unknown subcommand: {args[0]}", file=sys.stderr)

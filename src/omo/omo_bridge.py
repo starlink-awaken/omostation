@@ -279,11 +279,18 @@ def _import_pitch(source_file: Path, omo_dir: Path):
     print(f"🌉 [C2G v4] 正在将 Pitch 转化为 OMO Bet: {source_file.name}")
     content = source_file.read_text(encoding="utf-8")
 
-    # 提取 Appetite
+    # [C2G v4] CR-STRATEGY-01 孤儿拦截约束
+    upstream = None
     appetite = "Unknown"
     for line in content.split("\n"):
+        if "> **Upstream**" in line:
+            upstream = line.split(":", 1)[1].strip() if ":" in line else line.strip()
         if "**Appetite:**" in line:
             appetite = line.replace("**Appetite:**", "").strip()
+
+    if not upstream:
+        print("  ❌ [CR-STRATEGY-01 孤儿拦截] Pitch 缺乏 Upstream 锚点，拒绝转化为 Bet。请在文档头部声明 `> **Upstream**: MS-XXX`。")
+        return
 
     # 创建 Bet (Goal)
     bet_id = f"BET-{hashlib.md5(source_file.name.encode()).hexdigest()[:4]}"
