@@ -95,6 +95,11 @@ cd projects/agora && uv run pytest tests/ -k "keyword" -q
 cd projects/cockpit && uv run pytest tests/ -q          # 498/514 pass
 cd projects/cockpit && uv run pytest tests/ -k "keyword" -q
 
+# workspace iterate (C2G 双擎编排流宏入口)
+# 用于将 MetaOS 发散期的创意安全降维并导入 OMO CARDS
+workspace iterate "设计缓存层"
+workspace iterate "测试隔离区" --mock
+
 # runtime (projects/runtime/)
 cd projects/runtime && uv run pytest tests/ -q          # 171/176 pass
 cd projects/runtime && make sync-state                  # 同步状态到 ~/runtime/
@@ -134,7 +139,7 @@ cd projects/gbrain && bun run ci:local
 eCOS v5 已进入大一统阶段。通过 `agora` 作为服务网格 (Mesh) 动态反向代理，所有的项目和包都被抽象为 5 大 BOS URI 命名空间：
 
 *   **域 1：记忆与事实源 `bos://memory`** ── `kos` (跨域搜索)、`kronos` (摄取管线)、`gbrain` (TS知识库)、`sot-bridge` (SSOT 桥接)
-*   **域 2：治理与律法 `bos://omo`** ── `metaos` (决策/免疫)、`eidos` (Schema约束)、`protocols-layer` (触发器规则)、`omo` (治理引擎)
+*   **域 2：治理与律法 `bos://omo`** ── `metaos` (决策/免疫/认知沙箱)、`eidos` (Schema约束)、`protocols-layer` (触发器规则)、`omo` (治理引擎/C2G门控)
 *   **域 3：认知与推演 `bos://analysis`** ── `ontoderive` (推导)、`minerva` (深度研究)、`codeanalyze` (AST理解)
 *   **域 4：人格与心智 `bos://persona`** ── `sot-bridge` (SharedBrain 桥接)
 *   **域 5：能力与生态 `bos://forge`** ── `forge` (集市与注册表)、`runtime` (KEI 沙箱执行)
