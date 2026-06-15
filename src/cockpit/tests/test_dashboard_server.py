@@ -91,6 +91,7 @@ quota_summary:
     codex:
       available: true
       summary: balance=$8.50
+      remaining: 25
       balance: 8.5
       used_percent: 20.0
 """.strip(),
@@ -112,7 +113,9 @@ quota_summary:
         assert result["cost_board"]["interception_rate"] == 0.5
         assert result["cost_board"]["actual_cloud_cost_usd"] == 0.025
         assert result["cost_board"]["saved_vs_cloud_usd"] == 0.0025
-        assert result["cost_board"]["codex_remaining_credits"] is None
+        assert result["cost_board"]["codex_remaining_credits"] == 25
+        assert result["cost_board"]["codex_secondary_used_percent"] == 20.0
+        assert result["cost_board"]["codex_available"] is True
         assert result["provider"]["name"] == "DeepSeek"
         assert result["provider"]["quota_provider_count"] == 1
         assert result["observations"]["cross_day"] is True
