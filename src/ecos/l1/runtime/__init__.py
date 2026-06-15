@@ -187,33 +187,39 @@ class CommunicationProtocol:
         return True
 
     def send(self, target: str, message: Message) -> bool:
-        for attempt in range(message.max_retries + 1):
-            if target not in self.connected_nodes:
-                self._log("send_retry", message_id=message.message_id,
-                          target=target, attempt=attempt, reason="not_connected")
-                continue
+        """发送消息 - 带重试和错误处理"""
+        try:
+            for attempt in range(message.max_retries + 1):
+                if target not in self.connected_nodes:
+                    self._log("send_retry", message_id=message.message_id,
+                              target=target, attempt=attempt, reason="not_connected")
+                    continue
 
+                m = self.metrics.setdefault(target, RouteMetrics())
+                m.total_requests += 1
+                m.last_used = datetime.now(timezone.utc)
+
+                self._in_flight[message.message_id] = message
+                self._log("send", message_id=message.message_id, target=target, attempt=attempt)
+
+                m.successful_requests += 1
+                self._in_flight.pop(message.message_id, None)
+                return True
+
+            self.dead_letter_queue.append({
+                "message_id": message.message_id,
+                "target": target,
+                "retries": message.max_retries,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
             m = self.metrics.setdefault(target, RouteMetrics())
-            m.total_requests += 1
-            m.last_used = datetime.now(timezone.utc)
-
-            self._in_flight[message.message_id] = message
-            self._log("send", message_id=message.message_id, target=target, attempt=attempt)
-
-            m.successful_requests += 1
-            self._in_flight.pop(message.message_id, None)
-            return True
-
-        self.dead_letter_queue.append({
-            "message_id": message.message_id,
-            "target": target,
-            "retries": message.max_retries,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
-        m = self.metrics.setdefault(target, RouteMetrics())
-        m.failed_requests += 1
-        self._log("send_failed", message_id=message.message_id, target=target)
-        return False
+            m.failed_requests += 1
+            logger.warning("消息发送失败: %s -> %s (重试 %d 次)", message.message_id, target, message.max_retries)
+            self._log("send_failed", message_id=message.message_id, target=target)
+            return False
+        except Exception as e:
+            logger.error("消息发送异常: %s - %s", message.message_id, str(e))
+            return False
 
     def receive(self) -> Optional[Message]:
         return self.send_queue.dequeue()
