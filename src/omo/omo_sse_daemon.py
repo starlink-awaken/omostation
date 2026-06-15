@@ -24,7 +24,7 @@ from omo.omo_self_healing import get_healing_engine, start_http_status_server, s
 DAEMON_PID_FILE = OMO_ROOT / ".omo" / "_delivery" / "sse_daemon.pid"
 DAEMON_LOG_FILE = OMO_ROOT / ".omo" / "_delivery" / "sse_daemon.log"
 
-AGORA_SSE_URL = os.environ.get("AGORA_SSE_URL", "http://127.0.0.1:8080/v1/events")
+AGORA_SSE_URL = os.environ.get("AGORA_SSE_URL", "http://127.0.0.1:7431/sse")
 ENABLE_SELF_HEALING = os.environ.get("OMO_SELF_HEALING", "1") == "1"
 ENABLE_NOTIFICATIONS = os.environ.get("OMO_NOTIFY", "0") == "1"
 
