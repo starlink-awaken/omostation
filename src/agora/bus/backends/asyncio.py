@@ -25,7 +25,14 @@ class AsyncioBackend:
     name = "asyncio"
 
     def __init__(self):
-        self._subscribers: dict[str, tuple[str, asyncio.Queue]] = {}
+        self._subscribers: dict[str, tuple[str, asyncio.Queue, asyncio.Task | None]] = {}
+
+    def __del__(self) -> None:
+        # Best-effort teardown for short-lived test instances. The backend
+        # owns the drain tasks it creates; cancel them so loop shutdown does
+        # not report unraisable pending-task noise.
+        for sub_id in list(self._subscribers):
+            self.unsubscribe(sub_id)
 
     def is_available(self) -> bool:
         try:
@@ -36,7 +43,7 @@ class AsyncioBackend:
             return True
 
     def publish(self, envelope: BusEnvelope) -> str:
-        for sub_id, (pattern, queue) in self._subscribers.items():
+        for sub_id, (pattern, queue, _task) in self._subscribers.items():
             if self._match(pattern, envelope.type):
                 try:
                     queue.put_nowait(envelope)
@@ -55,7 +62,7 @@ class AsyncioBackend:
         """
         queue: asyncio.Queue = asyncio.Queue(maxsize=1000)
         sub_id = f"asyncio-{uuid.uuid4().hex[:8]}"
-        self._subscribers[sub_id] = (pattern, queue)
+        self._subscribers[sub_id] = (pattern, queue, None)
 
         # Spawn a task that drains the queue to the callback
         try:
@@ -66,18 +73,24 @@ class AsyncioBackend:
 
         async def _drain() -> None:
             while True:
-                env = await queue.get()
+                try:
+                    env = await queue.get()
+                except asyncio.CancelledError:
+                    break
                 try:
                     callback(env)
                 except Exception as e:
                     logger.error("asyncio_callback_error err=%s", e)
 
-        loop.create_task(_drain())
+        task = loop.create_task(_drain())
+        self._subscribers[sub_id] = (pattern, queue, task)
         return sub_id
 
     def unsubscribe(self, sub_id: str) -> bool:
         if sub_id in self._subscribers:
-            del self._subscribers[sub_id]
+            _pattern, _queue, task = self._subscribers.pop(sub_id)
+            if task is not None and not task.done():
+                task.cancel()
             return True
         return False
 

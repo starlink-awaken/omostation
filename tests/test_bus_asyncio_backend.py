@@ -44,3 +44,15 @@ class TestAsyncioBackend:
         b.publish(BusEnvelope(type="a:b", source="t"))
         await asyncio.sleep(0.05)
         assert len(received) == 2
+
+    @pytest.mark.asyncio
+    async def test_unsubscribe_cancels_drain_task(self):
+        b = AsyncioBackend()
+        sub_id = b.subscribe("pipeline:*", lambda env: None)
+        task = b._subscribers[sub_id][2]
+
+        assert task is not None
+        assert b.unsubscribe(sub_id) is True
+
+        await asyncio.sleep(0)
+        assert task.cancelled() or task.done()
