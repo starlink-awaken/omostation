@@ -1,0 +1,21 @@
+id: "WORKFLOW-ROUTER-V1"
+type: "CognitiveFramework"
+name: "Dynamic Workflow Router"
+description: "动态工作流编排引擎卡带。用于根据任务的特征（如紧急程度、复杂度、是否跨域），动态拼装并挂载不同的工作流节点。"
+status: "active"
+domain: "meta"
+layer: "L1"
+created: "2026-06-15"
+version: "1.0.0"
+
+properties:
+  framework_name: "Workflow Routing Engine"
+  core_purpose: "使执行链路不仅是静态的 A->B->C，而是能够条件分支 (If-Else) 和并行 (Parallel)。使得像 GSD 或 OpenSpec 这样的能力可以作为子程序按需调用。"
+  personas:
+    - name: "The Conductor (指挥家)"
+      role: "流程编排者"
+      mindset: "关注输入与输出的流转。只关心任务交给了谁，以及收到了什么结果，不干涉具体实现。"
+  interaction_mode: "orchestration"
+  trigger_conditions:
+    - "复合型大任务 (Epic 级别)"
+    - "需要同时调用多个 Cognitive Cartridge 的场景"

@@ -56,3 +56,8 @@ coverage.xml
 
 # MOF 快照（自动生成）
 src/ecos/ssot/mof/m0/snapshot.yaml
+
+# 数据库文件（运行时生成）
+*.db
+*.sqlite
+*.sqlite3

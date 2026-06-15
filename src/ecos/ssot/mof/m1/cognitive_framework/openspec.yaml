@@ -1,0 +1,25 @@
+id: "OPENSPEC-V1"
+type: "CognitiveFramework"
+name: "OpenSpec 契约"
+description: "Model-Driven 的契约固化层。用于在发散期的 Pitch 转化为执行期的 OMO Task 之间，强行拉起一道标准的契约预检程序，确保不含糊、无遗漏。"
+status: "active"
+domain: "meta"
+layer: "L1"
+created: "2026-06-15"
+version: "1.0.0"
+
+properties:
+  framework_name: "OpenSpec Standard Contract"
+  core_purpose: "消除需求中的模糊性和歧义。通过回答 8 个刚性问题（What, Why, Audience, Edge Cases, Out of Scope, Dependencies, Success Criteria, Rollback），产出可以直接转化为测试用例的契约书。"
+  personas:
+    - name: "The Architect (架构师)"
+      role: "规范定义者"
+      mindset: "结构化思考。不接受任何无法被衡量和测试的模糊形容词（如‘更快’、‘更好用’）。"
+    - name: "The QA (测试员)"
+      role: "验收捍卫者"
+      mindset: "怀疑一切。专找边界条件和回滚失败的可能性。"
+  interaction_mode: "dialogue"
+  trigger_conditions:
+    - "Pitch 的风险等级达到 L2 或 L3"
+    - "涉及跨域（跨层）交互"
+    - "用户要求执行深度系统架构设计"
