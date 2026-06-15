@@ -287,12 +287,28 @@ class MCPToolDef:
 class GovernanceMCP:
     """治理 MCP 工具 — 委托 L0 原语的 14 个工具"""
 
-    def __init__(self):
+    def __init__(self, secret_key: str | None = None):
+        from ecos.common.security import TokenManager
+
         self.tools: dict[str, MCPToolDef] = {}
+        self._token_manager = TokenManager(secret_key or "ecos-default-secret")
         self._node_manager = None
         self._swarm_manager = None
         self._km = None
         self._register_tools()
+
+    def generate_token(self, user_id: str, expires_in: int = 3600) -> str:
+        """生成认证 Token"""
+        return self._token_manager.generate_token(user_id, expires_in)
+
+    def authenticate(self, token: str) -> bool:
+        """验证 Token"""
+        user_id = self._token_manager.verify_token(token)
+        if user_id:
+            logger.info("认证成功: user=%s", user_id)
+            return True
+        logger.warning("认证失败: 无效 Token")
+        return False
 
     def _ensure_l0(self) -> None:
         if self._node_manager is None:
@@ -389,8 +405,13 @@ class GovernanceMCP:
         for tool in tool_defs:
             self.tools[tool.name] = tool
 
-    def call_tool(self, tool_name: str, parameters: dict[str, Any] | None = None) -> dict[str, Any]:
-        """调用 MCP 工具 - 带输入校验和错误处理"""
+    def call_tool(self, tool_name: str, parameters: dict[str, Any] | None = None,
+                  token: str | None = None) -> dict[str, Any]:
+        """调用 MCP 工具 - 带认证、输入校验和错误处理"""
+        # Token 认证 (可选)
+        if token and not self.authenticate(token):
+            return {"error": "认证失败: 无效 Token"}
+
         if tool_name not in self.tools:
             logger.warning("未知工具: %s", tool_name)
             return {"error": f"未知工具: {tool_name}", "available": list(self.tools.keys())}
