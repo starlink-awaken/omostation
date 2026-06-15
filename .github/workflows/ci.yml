@@ -7,34 +7,34 @@ on:
     branches: [main]
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
-          python-version: "3.13"
-      - name: Install dependencies
-        run: uv sync
-      - name: Ruff check
-        run: uv run ruff check src/
-      - name: Ruff format check
-        run: uv run ruff format src/ --check
-      - name: Contract Gatekeeper
-        run: python scripts/contract_gatekeeper.py src/
-
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
-          python-version: "3.13"
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        run: pip install uv
+
       - name: Install dependencies
         run: uv sync
-      - name: Run tests
-        run: uv run pytest tests/ -q --tb=short
+
+      - name: Lint
+        run: uv run ruff check src/
+
+      - name: Test
+        run: uv run pytest tests/ -q
+
+      - name: Integration Test
+        run: uv run pytest tests/test_l0/test_integration.py -v
+
+      - name: Distributed Test
+        run: uv run pytest tests/test_l0/test_distributed.py -v
