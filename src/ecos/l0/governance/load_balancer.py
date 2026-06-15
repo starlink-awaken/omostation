@@ -7,11 +7,15 @@
 
 from __future__ import annotations
 
+from ecos.common.logger import get_logger
+
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Optional
 
 
+
+logger = get_logger("load_balancer")
 class LoadBalancingStrategy(Enum):
     """负载均衡策略"""
     ROUND_ROBIN = "round_robin"       # 轮询

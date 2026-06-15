@@ -9,6 +9,8 @@
 
 from __future__ import annotations
 
+from ecos.common.logger import get_logger
+
 import math
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -18,6 +20,8 @@ from enum import Enum
 from typing import Any
 
 
+
+logger = get_logger("personal")
 class KnowledgeType(Enum):
     """知识类型
 

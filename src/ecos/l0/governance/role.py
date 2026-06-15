@@ -9,6 +9,8 @@
 
 from __future__ import annotations
 
+from ecos.common.logger import get_logger
+
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -17,6 +19,8 @@ from enum import Enum
 from typing import Any, Optional
 
 
+
+logger = get_logger("role")
 class RoleType(Enum):
     """角色类型
     

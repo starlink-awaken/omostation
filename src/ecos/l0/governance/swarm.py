@@ -15,6 +15,11 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
+import threading
+
+from ecos.common.logger import get_logger
+
+logger = get_logger("swarm")
 
 
 class EmergencePattern(Enum):
@@ -134,37 +139,44 @@ class SwarmManager(SwarmPrimitive):
         self.version: int = 0
         self._state_history: list[dict[str, Any]] = []
         self._control_log: list[dict[str, Any]] = []
+        self._lock = threading.RLock()
+        logger.debug("SwarmManager 初始化")
 
     def add_agent(self, agent_id: str, weight: float = 1.0,
                   initial_state: dict[str, Any] | None = None) -> None:
         """添加 Agent 到蜂群"""
-        if agent_id not in self.agents:
-            self.agents.append(agent_id)
-        self.agent_weights[agent_id] = weight
-        if initial_state:
-            self.agent_states[agent_id] = initial_state
+        with self._lock:
+            if agent_id not in self.agents:
+                self.agents.append(agent_id)
+            self.agent_weights[agent_id] = weight
+            if initial_state:
+                self.agent_states[agent_id] = initial_state
+            logger.debug("添加 Agent: %s, weight=%.2f", agent_id, weight)
 
     def remove_agent(self, agent_id: str) -> bool:
         """移除 Agent"""
-        if agent_id in self.agents:
-            self.agents.remove(agent_id)
-            self.agent_weights.pop(agent_id, None)
-            self.agent_states.pop(agent_id, None)
-            return True
-        return False
+        with self._lock:
+            if agent_id in self.agents:
+                self.agents.remove(agent_id)
+                self.agent_weights.pop(agent_id, None)
+                self.agent_states.pop(agent_id, None)
+                logger.debug("移除 Agent: %s", agent_id)
+                return True
+            return False
 
     def update_agent_state(self, agent_id: str, state: dict[str, Any]) -> bool:
         """更新 Agent 状态"""
-        if agent_id in self.agents:
-            self.agent_states[agent_id] = state
-            self._state_history.append({
-                "agent_id": agent_id,
-                "state": state,
-                "version": self.version,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
-            return True
-        return False
+        with self._lock:
+            if agent_id in self.agents:
+                self.agent_states[agent_id] = state
+                self._state_history.append({
+                    "agent_id": agent_id,
+                    "state": state,
+                    "version": self.version,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                })
+                return True
+            return False
 
     def detect_emergence(self, state: SwarmState) -> list[EmergentBehavior]:
         """多模式涌现检测"""

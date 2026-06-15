@@ -8,12 +8,16 @@
 
 from __future__ import annotations
 
+from ecos.common.logger import get_logger
+
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
 
+
+logger = get_logger("agent_registry")
 class AgentStatus(Enum):
     """Agent 状态"""
     IDLE = "idle"

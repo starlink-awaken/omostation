@@ -7,12 +7,16 @@
 
 from __future__ import annotations
 
+from ecos.common.logger import get_logger
+
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
 
+
+logger = get_logger("failover")
 class FailoverStrategy(Enum):
     """故障转移策略"""
     RANDOM = "random"           # 随机选择

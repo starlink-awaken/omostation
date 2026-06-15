@@ -8,12 +8,16 @@
 
 from __future__ import annotations
 
+from ecos.common.logger import get_logger
+
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
 
+
+logger = get_logger("task_scheduler")
 class TaskStatus(Enum):
     """任务状态"""
     PENDING = "pending"

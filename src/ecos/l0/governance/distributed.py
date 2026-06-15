@@ -16,6 +16,12 @@ from enum import Enum
 from typing import Any, Callable, Optional
 import hashlib
 import json
+import threading
+
+from ecos.common.logger import get_logger
+from ecos.common.exceptions import SyncException
+
+logger = get_logger("distributed")
 
 
 class SyncStrategy(Enum):
@@ -158,44 +164,52 @@ class CRDTSync(DistributedPrimitive):
         self.data: dict[str, Any] = {}
         self.nodes: dict[str, NodeStatus] = {}
         self.vector_clock: dict[str, int] = {node_id: 0}
+        self._lock = threading.RLock()
+        logger.debug("CRDTSync 初始化: node_id=%s", node_id)
     
     def sync(self, snapshot: StateSnapshot) -> SyncResult:
         """同步状态 — LWW-Register 策略"""
-        conflicts = []
-        
-        # 检查版本冲突
-        if snapshot.version < self.version:
-            # 远程版本较旧，检查是否有冲突的键
-            for key, remote_value in snapshot.data.items():
-                if key in self.data and self.data[key] != remote_value:
-                    conflicts.append(key)
-            
-            # LWW: 保留本地版本（因为本地更新）
-            return SyncResult(
-                success=True,
-                local_version=self.version,
-                remote_version=snapshot.version,
-                merged_version=self.version,
-                conflicts=conflicts,
-                strategy=SyncStrategy.CRDT,
-            )
-        
-        # 远程版本更新或相等，合并数据
-        merged_data = self._merge_data(self.data, snapshot.data, snapshot.timestamp)
-        self.data = merged_data
-        self.version = max(self.version, snapshot.version) + 1
-        
-        # 更新向量时钟
-        self.vector_clock[snapshot.node_id] = snapshot.version
-        
-        return SyncResult(
-            success=True,
-            local_version=self.version,
-            remote_version=snapshot.version,
-            merged_version=self.version,
-            conflicts=conflicts,
-            strategy=SyncStrategy.CRDT,
-        )
+        with self._lock:
+            try:
+                conflicts = []
+                
+                # 检查版本冲突
+                if snapshot.version < self.version:
+                    # 远程版本较旧，检查是否有冲突的键
+                    for key, remote_value in snapshot.data.items():
+                        if key in self.data and self.data[key] != remote_value:
+                            conflicts.append(key)
+                    
+                    logger.debug("版本冲突: local=%d, remote=%d", self.version, snapshot.version)
+                    return SyncResult(
+                        success=True,
+                        local_version=self.version,
+                        remote_version=snapshot.version,
+                        merged_version=self.version,
+                        conflicts=conflicts,
+                        strategy=SyncStrategy.CRDT,
+                    )
+                
+                # 远程版本更新或相等，合并数据
+                merged_data = self._merge_data(self.data, snapshot.data, snapshot.timestamp)
+                self.data = merged_data
+                self.version = max(self.version, snapshot.version) + 1
+                
+                # 更新向量时钟
+                self.vector_clock[snapshot.node_id] = snapshot.version
+                
+                logger.debug("同步完成: version=%d, conflicts=%d", self.version, len(conflicts))
+                return SyncResult(
+                    success=True,
+                    local_version=self.version,
+                    remote_version=snapshot.version,
+                    merged_version=self.version,
+                    conflicts=conflicts,
+                    strategy=SyncStrategy.CRDT,
+                )
+            except Exception as e:
+                logger.error("同步失败: %s", str(e))
+                raise SyncException(f"同步失败: {e}")
     
     def _merge_data(self, local: dict, remote: dict, remote_timestamp: datetime) -> dict:
         """合并数据 — LWW-Register 策略"""
@@ -257,23 +271,29 @@ class NodeManager:
     def __init__(self):
         self.nodes: dict[str, NodeInfo] = {}
         self.heartbeat_interval: int = 30  # 秒
+        self._lock = threading.RLock()
+        logger.debug("NodeManager 初始化")
     
     def register(self, node_id: str, metadata: dict[str, Any] | None = None) -> NodeInfo:
         """注册节点"""
-        node = NodeInfo(
-            node_id=node_id,
-            status=NodeStatus.ONLINE,
-            metadata=metadata or {},
-        )
-        self.nodes[node_id] = node
-        return node
+        with self._lock:
+            node = NodeInfo(
+                node_id=node_id,
+                status=NodeStatus.ONLINE,
+                metadata=metadata or {},
+            )
+            self.nodes[node_id] = node
+            logger.info("节点注册: %s", node_id)
+            return node
     
     def unregister(self, node_id: str) -> bool:
         """注销节点"""
-        if node_id in self.nodes:
-            del self.nodes[node_id]
-            return True
-        return False
+        with self._lock:
+            if node_id in self.nodes:
+                del self.nodes[node_id]
+                logger.info("节点注销: %s", node_id)
+                return True
+            return False
     
     def get_node(self, node_id: str) -> NodeInfo | None:
         """获取节点信息"""
@@ -289,12 +309,13 @@ class NodeManager:
     
     def update_heartbeat(self, node_id: str) -> bool:
         """更新心跳"""
-        if node_id in self.nodes:
-            self.nodes[node_id].last_heartbeat = datetime.now(timezone.utc)
-            self.nodes[node_id].status = NodeStatus.ONLINE
-            self.nodes[node_id].version += 1
-            return True
-        return False
+        with self._lock:
+            if node_id in self.nodes:
+                self.nodes[node_id].last_heartbeat = datetime.now(timezone.utc)
+                self.nodes[node_id].status = NodeStatus.ONLINE
+                self.nodes[node_id].version += 1
+                return True
+            return False
     
     def check_health(self) -> dict[str, NodeStatus]:
         """检查所有节点健康状态"""
@@ -364,11 +385,15 @@ class StateSyncService:
         self.vector_clock: dict[str, int] = {node_id: 0}
         self.sync_log: list[dict[str, Any]] = []
         self.conflict_log: list[dict[str, Any]] = []
+        self._lock = threading.RLock()
+        logger.debug("StateSyncService 初始化: node_id=%s, strategy=%s", node_id, strategy.value)
     
     def set(self, key: str, value: Any) -> None:
         """设置本地键值"""
-        self.local_state[key] = value
-        self.vector_clock[self.node_id] = self.vector_clock.get(self.node_id, 0) + 1
+        with self._lock:
+            self.local_state[key] = value
+            self.vector_clock[self.node_id] = self.vector_clock.get(self.node_id, 0) + 1
+            logger.debug("设置状态: key=%s", key)
     
     def get(self, key: str) -> Any | None:
         """获取本地键值"""
@@ -394,60 +419,66 @@ class StateSyncService:
     
     def sync_from_snapshot(self, remote_snapshot: StateSnapshot) -> SyncResult:
         """从远程快照同步状态"""
-        remote_clock = {remote_snapshot.node_id: remote_snapshot.version}
-        
-        conflicts = []
-        changes = {}
-        
-        for key, remote_value in remote_snapshot.data.items():
-            if key in self.local_state:
-                if self.local_state[key] != remote_value:
-                    conflicts.append(key)
-                    
-                    if self.strategy == SyncStrategy.CRDT:
-                        if remote_snapshot.timestamp > datetime.now(timezone.utc):
-                            self.local_state[key] = remote_value
-                            changes[key] = remote_value
-                    elif self.strategy == SyncStrategy.EVENTUAL:
+        with self._lock:
+            try:
+                remote_clock = {remote_snapshot.node_id: remote_snapshot.version}
+                
+                conflicts = []
+                changes = {}
+                
+                for key, remote_value in remote_snapshot.data.items():
+                    if key in self.local_state:
+                        if self.local_state[key] != remote_value:
+                            conflicts.append(key)
+                            
+                            if self.strategy == SyncStrategy.CRDT:
+                                if remote_snapshot.timestamp > datetime.now(timezone.utc):
+                                    self.local_state[key] = remote_value
+                                    changes[key] = remote_value
+                            elif self.strategy == SyncStrategy.EVENTUAL:
+                                self.local_state[key] = remote_value
+                                changes[key] = remote_value
+                            else:
+                                pass
+                    else:
                         self.local_state[key] = remote_value
                         changes[key] = remote_value
-                    else:
-                        pass
-            else:
-                self.local_state[key] = remote_value
-                changes[key] = remote_value
-        
-        merged_version = max(
-            self.vector_clock.get(self.node_id, 0),
-            remote_snapshot.version,
-        ) + 1
-        self.vector_clock[self.node_id] = merged_version
-        self.vector_clock.update(remote_clock)
-        
-        self.sync_log.append({
-            "type": "sync_from",
-            "remote": remote_snapshot.node_id,
-            "changes": list(changes.keys()),
-            "conflicts": conflicts,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
-        
-        if conflicts:
-            self.conflict_log.append({
-                "remote": remote_snapshot.node_id,
-                "keys": conflicts,
-                "resolution": self.strategy.value,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
-        
-        return SyncResult(
-            success=True,
-            local_version=merged_version,
-            remote_version=remote_snapshot.version,
-            merged_version=merged_version,
-            conflicts=conflicts,
-            strategy=self.strategy,
-        )
+                
+                merged_version = max(
+                    self.vector_clock.get(self.node_id, 0),
+                    remote_snapshot.version,
+                ) + 1
+                self.vector_clock[self.node_id] = merged_version
+                self.vector_clock.update(remote_clock)
+                
+                self.sync_log.append({
+                    "type": "sync_from",
+                    "remote": remote_snapshot.node_id,
+                    "changes": list(changes.keys()),
+                    "conflicts": conflicts,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                })
+                
+                if conflicts:
+                    self.conflict_log.append({
+                        "remote": remote_snapshot.node_id,
+                        "keys": conflicts,
+                        "resolution": self.strategy.value,
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    })
+                
+                logger.debug("同步完成: changes=%d, conflicts=%d", len(changes), len(conflicts))
+                return SyncResult(
+                    success=True,
+                    local_version=merged_version,
+                    remote_version=remote_snapshot.version,
+                    merged_version=merged_version,
+                    conflicts=conflicts,
+                    strategy=self.strategy,
+                )
+            except Exception as e:
+                logger.error("同步失败: %s", str(e))
+                raise SyncException(f"同步失败: {e}")
     
     def get_delta_since(self, remote_clock: dict[str, int]) -> dict[str, Any]:
         """获取远程时钟之后的增量变更"""
@@ -462,37 +493,43 @@ class StateSyncService:
     
     def merge_state(self, remote_state: dict[str, Any], remote_clock: dict[str, int]) -> SyncResult:
         """合并远程状态（批量模式）"""
-        conflicts = []
-        changes = {}
-        
-        for key, remote_value in remote_state.items():
-            if key in self.local_state and self.local_state[key] != remote_value:
-                conflicts.append(key)
-            
-            if self.strategy == SyncStrategy.EVENTUAL or key not in self.local_state:
-                self.local_state[key] = remote_value
-                changes[key] = remote_value
-        
-        merged_version = self.vector_clock.get(self.node_id, 0) + 1
-        self.vector_clock[self.node_id] = merged_version
-        for nid, clock_val in remote_clock.items():
-            self.vector_clock[nid] = max(self.vector_clock.get(nid, 0), clock_val)
-        
-        self.sync_log.append({
-            "type": "merge_state",
-            "changes": list(changes.keys()),
-            "conflicts": conflicts,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
-        
-        return SyncResult(
-            success=True,
-            local_version=merged_version,
-            remote_version=max(remote_clock.values()) if remote_clock else 0,
-            merged_version=merged_version,
-            conflicts=conflicts,
-            strategy=self.strategy,
-        )
+        with self._lock:
+            try:
+                conflicts = []
+                changes = {}
+                
+                for key, remote_value in remote_state.items():
+                    if key in self.local_state and self.local_state[key] != remote_value:
+                        conflicts.append(key)
+                    
+                    if self.strategy == SyncStrategy.EVENTUAL or key not in self.local_state:
+                        self.local_state[key] = remote_value
+                        changes[key] = remote_value
+                
+                merged_version = self.vector_clock.get(self.node_id, 0) + 1
+                self.vector_clock[self.node_id] = merged_version
+                for nid, clock_val in remote_clock.items():
+                    self.vector_clock[nid] = max(self.vector_clock.get(nid, 0), clock_val)
+                
+                self.sync_log.append({
+                    "type": "merge_state",
+                    "changes": list(changes.keys()),
+                    "conflicts": conflicts,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                })
+                
+                logger.debug("批量合并完成: changes=%d, conflicts=%d", len(changes), len(conflicts))
+                return SyncResult(
+                    success=True,
+                    local_version=merged_version,
+                    remote_version=max(remote_clock.values()) if remote_clock else 0,
+                    merged_version=merged_version,
+                    conflicts=conflicts,
+                    strategy=self.strategy,
+                )
+            except Exception as e:
+                logger.error("批量合并失败: %s", str(e))
+                raise SyncException(f"批量合并失败: {e}")
     
     def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
