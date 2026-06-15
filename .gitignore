@@ -13,6 +13,10 @@ data/驾驶舱/
 runtime/agent-runtime/
 agent-runtime/
 
+# ---- OMO C2G Sandbox 工作区（OMO 治理引擎 auto-loop 产物，勿 commit） ----
+runtime/sandbox/pitches/
+runtime/sandbox/decayed/
+
 # ---- Daemon 日志 ----
 .omo/_delivery/
 
