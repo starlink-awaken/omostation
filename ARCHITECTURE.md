@@ -1,8 +1,9 @@
-# ARCHITECTURE.md — eCOS v5 全景架构
+# ARCHITECTURE.md — eCOS v6 全景架构
 
-**2026-06-08 | 根仓库 `starlink-awaken/omostation`**
+**2026-06-15 | 根仓库 `starlink-awaken/omostation`**
 
-> 7 层 · 5 BOS 域 · 4 X 轴切面 · 8 核心项目 · ~2,600 Python + 500 TS 源文件
+> 5+4+1+1 架构 (5 层 L0-L4 + 4 维 X1-X4 + 1 织 I0 + 1 横切 M0) · 14+ 核心项目 · 20 子项目 · ~3,500+ Python + 500 TS 源文件
+> **当前 Phase 42** — 治理面 SSOT 同步纪元 (Governance SSOT Catch-up) · 健康分 77.5/100
 
 ---
 

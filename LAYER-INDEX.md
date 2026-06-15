@@ -1,6 +1,7 @@
-# LAYER-INDEX.md — 5+3+1 项目分层索引
+# LAYER-INDEX.md — 5+4+1+1 项目分层索引
 
-> 基于 eCOS v5 架构 · 2026-06-06 · 9 项目 · 30 包
+> 基于 eCOS v6 架构 (5 层 L0-L4 + 4 维 X1-X4 + 1 织 I0 + 1 横切 M0) · 2026-06-15 · 14 项目 · 30+ 包
+> **当前 Phase 42** — 治理面 SSOT 同步纪元 (Governance SSOT Catch-up) · 健康分 77.5/100
 
 ## I0 — 集成织层
 

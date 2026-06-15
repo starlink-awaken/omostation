@@ -17,6 +17,9 @@ agent-runtime/
 runtime/sandbox/pitches/
 runtime/sandbox/decayed/
 
+# ---- OMO 嵌套目录（OMO_ROOT 解析错导致 daemon log 落到 .omo/.omo/） ----
+.omo/.omo/
+
 # ---- Daemon 日志 ----
 .omo/_delivery/
 
