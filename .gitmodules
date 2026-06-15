@@ -55,3 +55,12 @@
 [submodule "projects/aetherforge-swarm-ext"]
 	path = projects/aetherforge-swarm-ext
 	url = https://github.com/starlink-awaken/omostation-aetherforge-swarm-ext.git
+[submodule "projects/observability"]
+	path = projects/observability
+	url = https://github.com/starlink-awaken/omostation-observability.git
+[submodule "projects/c2g"]
+	path = projects/c2g
+	url = https://github.com/starlink-awaken/omostation-c2g.git
+[submodule "projects/bus-foundation"]
+	path = projects/bus-foundation
+	url = https://github.com/starlink-awaken/omostation-bus-foundation.git
