@@ -10,6 +10,7 @@ ecos_dashboard.py — eCOS Web Dashboard 原型 (Phase 9)
 """
 
 import json
+import os
 import sqlite3
 import sys
 import urllib.request
@@ -352,8 +353,26 @@ document.getElementById('bos-cards').innerHTML =
 </html>"""
 
 
+_ECOS_DASHBOARD_API_KEY = os.environ.get("ECOS_DASHBOARD_API_KEY", "")
+
+
 class DashboardHandler(BaseHTTPRequestHandler):
+    def _check_auth(self) -> bool:
+        """Check Bearer token if ECOS_DASHBOARD_API_KEY is set."""
+        if not _ECOS_DASHBOARD_API_KEY:
+            return True  # permissive mode
+        auth = self.headers.get("Authorization", "")
+        if auth.startswith("Bearer ") and auth[len("Bearer "):] == _ECOS_DASHBOARD_API_KEY:
+            return True
+        self.send_response(401)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(b'{"error":"unauthorized"}')
+        return False
+
     def do_GET(self):
+        if not self._check_auth():
+            return
         if self.path == "/health":
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
