@@ -1,0 +1,20 @@
+# M1 Node: COMP-WS-l4-kernel
+# Type: Component
+# Modeled: 2026-06-15T08:24:00
+
+id: COMP-WS-l4-kernel
+type: Component
+subtype: Project
+name: l4-kernel
+description: '项目: l4-kernel (L4 自我层管理面)'
+status: active
+domain: meta
+created: '2026-06-15'
+version: 1.0.0
+layer: L4
+properties:
+  layer: L4
+  runtime: active
+  has_pyproject: true
+  has_package_json: false
+  has_tests: true

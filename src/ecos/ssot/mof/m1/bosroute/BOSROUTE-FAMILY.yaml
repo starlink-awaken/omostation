@@ -15,5 +15,5 @@ properties:
   protocol: BOS_URI
 cross_references:
   realized_by:
-    project: l4-kernel
-    entrypoint: src/l4_kernel/
+    project: family-hub
+    entrypoint: mcp_server.py

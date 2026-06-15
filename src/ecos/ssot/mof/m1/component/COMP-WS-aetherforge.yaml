@@ -1,0 +1,20 @@
+# M1 Node: COMP-WS-aetherforge
+# Type: Component
+# Modeled: 2026-06-15T08:24:00
+
+id: COMP-WS-aetherforge
+type: Component
+subtype: Project
+name: aetherforge
+description: '项目: aetherforge (算力网格 + LLM 网关 + 群体智能)'
+status: active
+domain: compute
+created: '2026-06-15'
+version: 1.0.0
+layer: L-
+properties:
+  layer: L-
+  runtime: active
+  has_pyproject: true
+  has_package_json: false
+  has_tests: true

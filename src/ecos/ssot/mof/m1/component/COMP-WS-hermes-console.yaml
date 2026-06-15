@@ -1,0 +1,20 @@
+# M1 Node: COMP-WS-hermes-console
+# Type: Component
+# Modeled: 2026-06-15T08:24:00
+
+id: COMP-WS-hermes-console
+type: Component
+subtype: Project
+name: hermes-console
+description: '项目: hermes-console (eCOS v5 Observatory Web)'
+status: active
+domain: meta
+created: '2026-06-15'
+version: 1.0.0
+layer: L-
+properties:
+  layer: L-
+  runtime: active
+  has_pyproject: false
+  has_package_json: true
+  has_tests: false
