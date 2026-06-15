@@ -1,7 +1,7 @@
 id: "GOV-X1-CONSTRAINT"
 type: "GovernancePolicy"
 name: "X1 约束维 — 系统边界与约束治理"
-description: "X1 治理维: 定义系统边界、硬性约束和合规规则。9 条历史 L0 硬性约束 + 7 条 OPC cadence + 3 条 MOF schema 校验 + 3 条 C2G v3 约束 = 22 条治理规则"
+description: "X1 治理维: 定义系统边界、硬性约束和合规规则。9 条历史 L0 硬性约束 + 7 条 OPC cadence + 3 条 MOF schema 校验 + 3 条 C2G v3 约束 + 3 条 C2G v4 战略约束 = 25 条治理规则"
 status: "active"
 domain: "meta"
 layer: "X1"
@@ -34,6 +34,9 @@ properties:
     - "CR-C2G-V3-01: C2G v3 SSOT Write-back 约束"
     - "CR-C2G-V3-02: C2G v3 Fast-Track Compaction 约束"
     - "CR-C2G-V3-03: C2G v3 Agent 战术退让约束"
+    - "CR-STRATEGY-01: C2G v4 Pitch 孤儿拦截约束 (必须有 Upstream)"
+    - "CR-STRATEGY-02: C2G v4 向量打分约束 (战略对齐衡量)"
+    - "CR-STRATEGY-03: C2G v4 熵减代谢约束 (Sandbox 超过 28 天 GC 归档)"
   scope: "全层 (L0-L4, I0)"
   thresholds:
     warn_threshold: 0.7
