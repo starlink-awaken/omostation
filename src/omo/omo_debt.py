@@ -930,7 +930,7 @@ def main() -> int:
         return 0
 
     if args.command == "close":
-        item_path, payload = update_item(omo_dir, args.id)
+        item_path, payload = update_item(omo_dir, args.id, _load_yaml)
         payload["lifecycle_state"] = "closed"
         payload["gate_level"] = "none"
         append_history(
@@ -944,7 +944,7 @@ def main() -> int:
         return 0
 
     if args.command == "reopen":
-        item_path, payload = update_item(omo_dir, args.id)
+        item_path, payload = update_item(omo_dir, args.id, _load_yaml)
         payload["lifecycle_state"] = "identified"
         append_history(
             payload,
