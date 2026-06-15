@@ -30,6 +30,7 @@ properties:
     - "CR-VIBEOPS-02: LLM 裁判发包必须强制路由回 bos://capability/llm-gateway 计费网关"
     - "CR-RBAC-01: Generator 角色无权访问 bos://capability/evaluator 裁判域"
     - "CR-ADMISSION-01: Agora 路由注册前必须通过 metaos.evaluate_admission 准入审查"
+    - "CR-C2G-01: 所有 OMO Planned Task 必须持有合法的 context_uri，指向设计的不可变契约或 Fast-Track 锚点。"
   scope: "全层 (L0-L4, I0)"
   thresholds:
     warn_threshold: 0.7

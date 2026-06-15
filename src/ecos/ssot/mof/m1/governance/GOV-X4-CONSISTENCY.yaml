@@ -22,6 +22,7 @@ properties:
     - "CS-09: L4 域三源一致性 (L4 Registry、Vault-Paths、DOMAIN-INDEX 数量与内容必须绝对对齐)"
     - "CS-10: BOS URI 实现溯源一致性 (BOSRoute 必须通过 cross_references.realized_by 指定明确的上下游归属)"
     - "CS-11: C2G 编排一致性 (OpenSpec 转入 OMO Planned Task 必须通过未决项预检门控)"
+    - "CS-12: C2G v2 柔性锚点一致性 (GSD 阶段必须具备可用的 context_uri 降维锚点，挂起任务必须进入 yield_to_ideation 循环)"
   scope: "全层"
   thresholds:
     warn_threshold: 0.8
@@ -47,6 +48,7 @@ properties:
     - "CS-09: L4 域三源一致性 (L4 Registry、Vault-Paths、DOMAIN-INDEX 数量与内容必须绝对对齐)"
     - "CS-10: BOS URI 实现溯源一致性 (BOSRoute 必须通过 cross_references.realized_by 指定明确的上下游归属)"
     - "CS-11: C2G 编排一致性 (OpenSpec 转入 OMO Planned Task 必须通过未决项预检门控)"
+    - "CS-12: C2G v2 柔性锚点一致性 (GSD 阶段必须具备可用的 context_uri 降维锚点，挂起任务必须进入 yield_to_ideation 循环)"
   validator: "model-driven/ssot/lifecycle_ssot.py"
   compliance: "partial"
 source: "model-driven/mof/ontology_extended.py"
