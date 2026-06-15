@@ -9,6 +9,11 @@
 
 ## [未发布]
 
+### Added
+- **C2G v3 (Cybernetic Solutions)**:
+  - 引入了 Fast-Track 碎片聚变机制 (`omo worker gc`)，支持自动打包微观任务为聚变报告。
+  - 引入 Agent 战术退让机制 (`omo_yield_task`)，防止执行长尾死锁卡点。
+
 ### 新增
 - 初始化项目
 
