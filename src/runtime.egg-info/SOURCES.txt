@@ -161,10 +161,12 @@ src/runtime/tools/task_tools.py
 tests/test_core.py
 tests/test_cron-service_basic.py
 tests/test_cron_service_basic.py
+tests/test_dsl_executors.py
 tests/test_executor_engine.py
 tests/test_kei_sandbox.py
 tests/test_matrix.py
 tests/test_mcp_integration.py
 tests/test_protocol_registry_hygiene.py
+tests/test_sandbox_enforcement.py
 tests/test_scheduler.py
 tests/test_state_schema.py

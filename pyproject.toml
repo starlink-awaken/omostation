@@ -43,3 +43,9 @@ bus-foundation = { path = "../bus-foundation" }
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = ["-q", "--tb=short"]
+asyncio_mode = "auto"
+
+[dependency-groups]
+dev = [
+    "pytest-asyncio>=1.4.0",
+]
