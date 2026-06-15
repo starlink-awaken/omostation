@@ -91,7 +91,7 @@ def get_protocol_reflector() -> MarkdownProtocolReflector:
     global _reflector
     if _reflector is None:
         _reflector = MarkdownProtocolReflector(
-            os.environ.get("OMO_STANDARDS_DIR", str(Path.home() / ".omo/standards"))
+            os.environ.get("OMO_STANDARDS_DIR", str(Path.home() / "Workspace/.omo/standards"))
             + "/interface_contract.md"
         )
     return _reflector
