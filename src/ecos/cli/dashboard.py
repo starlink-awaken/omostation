@@ -150,42 +150,21 @@ def get_forge_stats() -> dict:
 
 
 def get_bos_health() -> dict:
-    """BOS URI 系统健康数据 (实时) — 需要 agora[dashboard] 可选依赖"""
-    try:
-        from agora.mcp.bos_metrics import bos_metrics
-        from agora.mcp.bos_middleware import bos_cache
-
-        return {
-            "metrics_calls": bos_metrics.summary()["total_calls"],
-            "metrics_rate": f"{bos_metrics.summary()['success_rate'] * 100:.1f}%",
-            "cache_active": bos_cache.status()["active_entries"],
-        }
-    except ImportError:
-        return {
-            "metrics_calls": 0,
-            "metrics_rate": "N/A (install agora)",
-            "cache_active": 0,
-        }
+    """BOS URI 系统健康数据 (实时) — 需通过外部采集器注入"""
+    return {
+        "metrics_calls": 0,
+        "metrics_rate": "N/A",
+        "cache_active": 0,
+    }
 
 
 def get_swarm_health() -> dict:
-    """Agora Swarm 蜂群健康数据 (P55) — 需要 agora[dashboard] 可选依赖"""
-    try:
-        from agora.mcp.swarm import get_swarm
-
-        swarm = get_swarm()
-        status = swarm.status()
-        return {
-            "swarm_nodes": status["total_nodes"],
-            "swarm_online": status["online_nodes"],
-            "swarm_role": status["role"],
-        }
-    except ImportError:
-        return {
-            "swarm_nodes": 1,
-            "swarm_online": 1,
-            "swarm_role": "standalone (install agora)",
-        }
+    """Agora Swarm 蜂群健康数据 (P55) — 需通过外部采集器注入"""
+    return {
+        "swarm_nodes": 1,
+        "swarm_online": 1,
+        "swarm_role": "standalone",
+    }
 
 
 def get_agentmesh_health() -> dict:

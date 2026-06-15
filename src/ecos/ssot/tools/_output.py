@@ -12,19 +12,6 @@ import json as _json
 import sys
 from typing import Any
 
-# 尝试从 agora 导入 rich 版本
-try:
-    from agora.cli.output import OutputFormatter as _AgoraFormatter  # type: ignore[import-not-found]
-
-    print_success = _AgoraFormatter().print_success
-    print_error = _AgoraFormatter().print_error
-    print_warning = _AgoraFormatter().print_warning
-    print_info = _AgoraFormatter().print_info
-    OutputFormatter = _AgoraFormatter
-except ImportError:
-    # 回退: 独立 ANSI 实现
-    pass
-
 
 class OutputFormatter:
     """ecos 统一 CLI 输出格式化器"""

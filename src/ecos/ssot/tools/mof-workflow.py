@@ -20,7 +20,6 @@ Examples:
 """
 
 import sys
-import json
 import yaml
 from pathlib import Path
 from collections import Counter
@@ -401,32 +400,13 @@ def cmd_run(args):
         out.print_success(f"干运行完成 ({len(node.get('steps', []))} 步骤)")
         return 0
 
-    # 尝试通过 BOS URI 实际执行
+    # 建议通过 BOS URI 实际执行
 
     if bos_uri:
-        out.print_progress(f"通过 BOS URI 路由执行: {bos_uri}")
-        try:
-            import asyncio
-            from agora.mcp.bos_resolver import resolve_bos_uri, parse_bos_uri
-
-            target_uri = bos_uri.replace("ecos/workflow/", "")
-            info = parse_bos_uri(target_uri)
-            out.print_progress(
-                f"解析: {info.get('domain', '?')}/{info.get('package', '?')}/{info.get('action', '?')}"
-            )
-            result = asyncio.run(resolve_bos_uri(target_uri))
-            out.print_success("执行完成")
-            print(
-                f"\n\033[2m{json.dumps(result, ensure_ascii=False, default=str)[:500]}\033[0m"
-            )
-            return 0
-        except ImportError:
-            out.print_warning("Agora 模块未安装，无法直接执行")
-            out.print_info(
-                "提示: 使用 'agora pipeline <name> --goal \"...\"' 通过 Agora 执行"
-            )
-        except Exception as e:
-            out.print_error(f"执行失败: {e}")
+        out.print_info(f"BOS URI: {bos_uri}")
+        out.print_info(
+            f"提示: 使用 'agora call \"{bos_uri}\"' 执行该工作流"
+        )
     else:
         out.print_warning("该工作流无 BOS URI，需通过 Agora Service Mesh 路由")
         out.print_info(
@@ -793,40 +773,10 @@ def cmd_schema_report(args):
 
 
 def cmd_seed_bos(args):
-    """将 Workflow M1 节点的 BOS URI 注册到 BOSRouter"""
+    """将 Workflow M1 节点的 BOS URI 注册到 BOSRouter (逻辑已下沉至 Agora)"""
     out = OutputFormatter()
-    nodes = _load_nodes()
-    registered = 0
-
-    try:
-        from agora.mcp.bos_router import bos_router
-    except ImportError:
-        out.print_error("Agora 模块未安装，无法注册到 BOSRouter")
-        return 1
-
-    for n in nodes:
-        bos_uri = n.get("bos_uri", "")
-        if not bos_uri or not bos_uri.startswith("bos://"):
-            continue
-        bos_router.register(
-            bos_uri,
-            adapter="poc",
-            config={
-                "domain": n.get("domain", "unknown"),
-                "workflow": n.get("name", ""),
-                "steps": len(n.get("steps", [])),
-            },
-        )
-        registered += 1
-
-    out.print_header("BOSRouter 注册")
-    out.print_key_value(
-        {
-            "已注册": str(registered),
-            "BOSRouter 总数": str(bos_router.count()),
-            "按适配器": str(bos_router.stats()),
-        }
-    )
+    out.print_info("BOS 注册逻辑已遵循 eCOS v6 规范下沉至 Agora 核心层。")
+    out.print_info("提示: Agora 启动时会自动扫描 ecos M1 节点并完成路由注册。")
     return 0
 
 
