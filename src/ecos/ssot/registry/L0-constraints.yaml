@@ -423,3 +423,47 @@ mof_schema_validate_constraints:
     alias_strategy:
       title: "前 8/12 字符 or 子串包含 (M1 name ↔ .omo title)"
       status: "done/completed, in_progress/active, proposed/planned 双向兼容"
+
+# ── C2G v3 约束 (CR-C2G-V3-*) ──
+# 2026-06-15 C2G v3 升级落地的 3 条治理约束 (SSOT Write-back, Fast-Track GC, Agent Yield)
+
+c2g_v3_constraints:
+  - id: CR-C2G-V3-01
+    name: "C2G v3 SSOT Write-back 约束"
+    description: "当含有 context_uri 的 OMO 任务流转为 done 时，必须顺着 context_uri 将执行结果追加到原始 Markdown 文档底部，防止高维降维及上下文丢失"
+    rule: "task.status == 'done' and task.context_uri != null implies task.ssot_written_back == true"
+    type: required
+    severity: error
+    violation: "任务完成但未回写 SSOT 文档，引发知识图谱断裂"
+    introduced: '2026-06-15'
+    value_tier: 1
+    references:
+      - "projects/ecos/src/ecos/ssot/tools/mof-extract.py"
+      - "omo worker dispatch"
+
+  - id: CR-C2G-V3-02
+    name: "C2G v3 Fast-Track Compaction 约束"
+    description: "Worker GC 执行时必须触发微观碎片（FAST-* 任务）的聚变，生成统一 Markdown 报告，然后归档原始 yaml"
+    rule: "gc_execution implies fast_track_compaction_executed and fast_tasks.archived"
+    type: required
+    severity: error
+    violation: "FAST-* 碎片堆积未发生聚变，污染稳态区"
+    introduced: '2026-06-15'
+    value_tier: 2
+    references:
+      - "projects/omo/src/omo/omo_worker_dispatch.py:_fast_track_compaction"
+      - "omo worker gc"
+
+  - id: CR-C2G-V3-03
+    name: "C2G v3 Agent 战术退让约束"
+    description: "当 Agent 在执行长尾微观任务时遇到阻塞或陷入死胡同时，禁止暴力破解，必须显式调用 yield_task 工具返回原因并释放任务"
+    rule: "agent.blocked == true implies task.status == 'yielded' and task.yield_reason != null"
+    type: required
+    severity: error
+    violation: "Agent 强行死磕导致成本激增或任务状态失效"
+    introduced: '2026-06-15'
+    value_tier: 1
+    references:
+      - "projects/omo/src/omo/omo_worker_dispatch.py:yield_task"
+      - "projects/omo/src/omo/mcp_server.py:omo_yield_task"
+
