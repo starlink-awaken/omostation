@@ -63,22 +63,36 @@ class AgentRegistry:
     def register(self, agent_id: str, name: str, capabilities: list[str], 
                  node_id: str = "", metadata: dict[str, Any] | None = None) -> AgentInfo:
         """注册 Agent"""
-        agent = AgentInfo(
-            agent_id=agent_id,
-            name=name,
-            capabilities=capabilities,
-            node_id=node_id,
-            metadata=metadata or {},
-        )
-        self.agents[agent_id] = agent
-        return agent
+        try:
+            if agent_id in self.agents:
+                logger.warning("Agent 已存在: %s", agent_id)
+                return self.agents[agent_id]
+            
+            agent = AgentInfo(
+                agent_id=agent_id,
+                name=name,
+                capabilities=capabilities,
+                node_id=node_id,
+                metadata=metadata or {},
+            )
+            self.agents[agent_id] = agent
+            logger.info("注册 Agent: %s, name=%s, capabilities=%s", agent_id, name, capabilities)
+            return agent
+        except Exception as e:
+            logger.error("注册 Agent 失败: %s - %s", agent_id, str(e))
+            raise
     
     def unregister(self, agent_id: str) -> bool:
         """注销 Agent"""
-        if agent_id in self.agents:
-            del self.agents[agent_id]
-            return True
-        return False
+        try:
+            if agent_id in self.agents:
+                del self.agents[agent_id]
+                logger.info("注销 Agent: %s", agent_id)
+                return True
+            return False
+        except Exception as e:
+            logger.error("注销 Agent 失败: %s - %s", agent_id, str(e))
+            return False
     
     def get_agent(self, agent_id: str) -> AgentInfo | None:
         """获取 Agent 信息"""
