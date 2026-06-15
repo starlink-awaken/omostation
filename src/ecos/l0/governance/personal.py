@@ -135,30 +135,42 @@ class PersonalKnowledgeManager(PersonalKnowledgePrimitive):
         self._idf_dirty = True
 
     def add_knowledge(self, node: KnowledgeNode) -> bool:
-        self.knowledge[node.node_id] = node
-        for relation in node.relations:
-            self.relations.setdefault(node.node_id, set()).add(relation)
-            self.relations.setdefault(relation, set()).add(node.node_id)
-        for tag in node.tags:
-            self.tag_index[tag].add(node.node_id)
-        self._idf_dirty = True
-        return True
-
-    def remove_knowledge(self, node_id: str) -> bool:
-        if node_id not in self.knowledge:
+        """添加知识节点"""
+        try:
+            self.knowledge[node.node_id] = node
+            for relation in node.relations:
+                self.relations.setdefault(node.node_id, set()).add(relation)
+                self.relations.setdefault(relation, set()).add(node.node_id)
+            for tag in node.tags:
+                self.tag_index[tag].add(node.node_id)
+            self._idf_dirty = True
+            logger.info("添加知识: %s, type=%s", node.node_id, node.knowledge_type.value)
+            return True
+        except Exception as e:
+            logger.error("添加知识失败: %s - %s", node.node_id, str(e))
             return False
-        node = self.knowledge[node_id]
-        del self.knowledge[node_id]
+    
+    def remove_knowledge(self, node_id: str) -> bool:
+        """移除知识节点"""
+        try:
+            if node_id not in self.knowledge:
+                return False
+            node = self.knowledge[node_id]
+            del self.knowledge[node_id]
 
-        for rel in node.relations:
-            self.relations.get(rel, set()).discard(node_id)
-        self.relations.pop(node_id, None)
+            for rel in node.relations:
+                self.relations.get(rel, set()).discard(node_id)
+            self.relations.pop(node_id, None)
 
-        for tag in node.tags:
-            self.tag_index.get(tag, set()).discard(node_id)
+            for tag in node.tags:
+                self.tag_index.get(tag, set()).discard(node_id)
 
-        self._idf_dirty = True
-        return True
+            self._idf_dirty = True
+            logger.info("移除知识: %s", node_id)
+            return True
+        except Exception as e:
+            logger.error("移除知识失败: %s - %s", node_id, str(e))
+            return False
 
     def get_knowledge(self, node_id: str) -> KnowledgeNode | None:
         node = self.knowledge.get(node_id)
