@@ -109,24 +109,31 @@ class FailoverManager:
     
     def execute_failover(self, source_node: str) -> Optional[str]:
         """执行故障转移"""
-        rules = self.get_rules_for_node(source_node)
-        if not rules:
+        try:
+            rules = self.get_rules_for_node(source_node)
+            if not rules:
+                logger.warning("无故障转移规则: %s", source_node)
+                return None
+            
+            for rule in rules:
+                if rule.enabled:
+                    target = self.select_target(rule)
+                    if target:
+                        self._failover_history.append({
+                            "source": source_node,
+                            "target": target,
+                            "rule_id": rule.rule_id,
+                            "strategy": rule.strategy.value,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        })
+                        logger.info("故障转移: %s -> %s (rule=%s)", source_node, target, rule.rule_id)
+                        return target
+            
+            logger.warning("故障转移失败: 无可用目标节点 %s", source_node)
             return None
-        
-        for rule in rules:
-            if rule.enabled:
-                target = self.select_target(rule)
-                if target:
-                    self._failover_history.append({
-                        "source": source_node,
-                        "target": target,
-                        "rule_id": rule.rule_id,
-                        "strategy": rule.strategy.value,
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                    })
-                    return target
-        
-        return None
+        except Exception as e:
+            logger.error("故障转移异常: %s - %s", source_node, str(e))
+            return None
     
     def get_failover_history(self, limit: int = 50) -> list[dict[str, Any]]:
         """获取故障转移历史"""
