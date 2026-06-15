@@ -602,40 +602,47 @@ class CollectiveDecision:
 
     def decide(self, proposal_id: str) -> Optional[str]:
         """执行决策"""
-        if proposal_id not in self.proposals:
+        try:
+            if proposal_id not in self.proposals:
+                logger.warning("提案不存在: %s", proposal_id)
+                return None
+
+            proposal = self.proposals[proposal_id]
+            total_agents = len(proposal.votes)
+
+            if total_agents == 0:
+                logger.warning("提案无投票: %s", proposal_id)
+                return None
+
+            if proposal.method == DecisionMethod.MAJORITY_VOTE:
+                result = self._majority_vote(proposal)
+            elif proposal.method == DecisionMethod.WEIGHTED_VOTE:
+                result = self._weighted_vote(proposal)
+            elif proposal.method == DecisionMethod.CONSENSUS:
+                result = self._consensus(proposal)
+            elif proposal.method == DecisionMethod.LEADER:
+                result = self._leader_decision(proposal)
+            elif proposal.method == DecisionMethod.PHEROMONE:
+                result = self._pheromone_decision(proposal)
+            else:
+                return None
+
+            if result:
+                proposal.result = result
+                proposal.status = "decided"
+                self._decision_history.append({
+                    "proposal_id": proposal_id,
+                    "result": result,
+                    "method": proposal.method.value,
+                    "vote_count": total_agents,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                })
+                logger.info("决策完成: %s -> %s (method=%s)", proposal_id, result, proposal.method.value)
+
+            return result
+        except Exception as e:
+            logger.error("决策异常: %s - %s", proposal_id, str(e))
             return None
-
-        proposal = self.proposals[proposal_id]
-        total_agents = len(proposal.votes)
-
-        if total_agents == 0:
-            return None
-
-        if proposal.method == DecisionMethod.MAJORITY_VOTE:
-            result = self._majority_vote(proposal)
-        elif proposal.method == DecisionMethod.WEIGHTED_VOTE:
-            result = self._weighted_vote(proposal)
-        elif proposal.method == DecisionMethod.CONSENSUS:
-            result = self._consensus(proposal)
-        elif proposal.method == DecisionMethod.LEADER:
-            result = self._leader_decision(proposal)
-        elif proposal.method == DecisionMethod.PHEROMONE:
-            result = self._pheromone_decision(proposal)
-        else:
-            return None
-
-        if result:
-            proposal.result = result
-            proposal.status = "decided"
-            self._decision_history.append({
-                "proposal_id": proposal_id,
-                "result": result,
-                "method": proposal.method.value,
-                "vote_count": total_agents,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
-
-        return result
 
     def _majority_vote(self, proposal: DecisionProposal) -> Optional[str]:
         """多数投票 — 超过半数即通过"""
