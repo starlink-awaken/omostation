@@ -475,15 +475,17 @@ OPC 路线图 P5-P7 收口阶段建立的 self-correction 闭环, 任何 Phase /
 14. **OMOTask 字段完整性 1 步到位** — omo-fields-completeness-check 校验硬约束 (state machine/required) + RoadmapPhase 推荐
 15. **OMOTask status 硬约束** — status 必在 M2 stateMachine {proposed/in_progress/review/done/blocked/archived}, 大写 DONE/pending 等不在
 16. **m3_parent 必填** — M1 OMOTask 必含 m3_parent 反向追溯 (桥接铁律 2), 缺失即 warning
+17. **signals 业务信号补全** — Task 节点 signals 必填默认 (task-{id}-running), RoadmapPhase 业务信号不虚报
 
 ### 当前桥接状态 (2026-06-15 收口)
 
 - 1031 M1 节点 / 45 M2 schema / 100% type coverage / 0 orphan
 - 83/83 OMOTask 配对成功 (m1_only=0, 字段漂移 0)
-- 5 工具综合 (validate/derive/bridge-sync/state-bridge/fields-completeness + 5repos 集成)
+- 6 工具综合 (validate/derive/bridge-sync/state-bridge/fields-completeness + auto-backfill-v2)
 - 5 工具 strict 模式 全部退出码 0
+- 字段完整性: 0 error / 230 warning / 17 info (Task signals 100% 补全, RoadmapPhase 17 留空)
 - 7/7 阶段实例化 (was 1/7) / 4/4 门禁实例化 (was 1/4) / 5/5 MODEL-* 节点反向追溯
-- 22/22 gap 全部闭环 (P0(3)+P1(3)+P2(3)+P3(3)+P4(4)+P5(3)+P6(3))
+- 25/25 gap 全部闭环 (P0(3)+P1(3)+P2(3)+P3(3)+P4(4)+P5(3)+P6(3)+P7(3))
 - 3 OMOTASK-OPC-P5/P6/P7 节点全部 status=done + evidence>=1
 - 0 drift / 0 missing / 0 sm_invalid / 0 lint
 - 收口报告: `.omo/_knowledge/audits/2026-06-14-model-driven-bridge-closeout.md`
