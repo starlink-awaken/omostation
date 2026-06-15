@@ -74,17 +74,26 @@ class TaskScheduler:
                     required_capabilities: list[str] | None = None,
                     priority: int = 0) -> TaskInfo:
         """提交任务"""
-        task = TaskInfo(
-            task_id=task_id,
-            name=name,
-            description=description,
-            required_capabilities=required_capabilities or [],
-            priority=priority,
-        )
-        self.tasks[task_id] = task
-        self.task_queue.append(task_id)
-        self.task_queue.sort(key=lambda t: self.tasks[t].priority, reverse=True)
-        return task
+        try:
+            if task_id in self.tasks:
+                logger.warning("任务已存在: %s", task_id)
+                return self.tasks[task_id]
+            
+            task = TaskInfo(
+                task_id=task_id,
+                name=name,
+                description=description,
+                required_capabilities=required_capabilities or [],
+                priority=priority,
+            )
+            self.tasks[task_id] = task
+            self.task_queue.append(task_id)
+            self.task_queue.sort(key=lambda t: self.tasks[t].priority, reverse=True)
+            logger.info("提交任务: %s, name=%s, priority=%d", task_id, name, priority)
+            return task
+        except Exception as e:
+            logger.error("提交任务失败: %s - %s", task_id, str(e))
+            raise
     
     def assign_task(self, task_id: str, agent_id: str) -> bool:
         """分配任务"""
