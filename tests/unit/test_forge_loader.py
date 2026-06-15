@@ -9,8 +9,6 @@
 """
 from __future__ import annotations
 
-import asyncio
-import json
 import sys
 from pathlib import Path
 
@@ -23,17 +21,14 @@ for p in (str(_AGORA_SRC), str(_KAIRON_SRC)):
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from agora.mcp import bos_resolver  # noqa: E402
-from agora.mcp.bos_resolver import POC_SERVICES, parse_bos_uri, resolve_bos_uri  # noqa: E402
+from agora.mcp.bos_resolver import POC_SERVICES, parse_bos_uri  # noqa: E402
 from agora.mcp.forge_loader import (  # noqa: E402
-    CAPS_ROOT,
     ForgeLoader,
     install_local_tool,
     list_market_tools,
     remove_tool,
 )
 from forge.market import (  # noqa: E402
-    MARKET_REGISTRY,
     validate_bos_uri,
     validate_tool_name,
 )
@@ -176,7 +171,7 @@ class TestForgeLoader:
         r = fresh_loader.load_tool(market[0])
         assert r.get("loaded") == "forge-x"
         assert r.get("bos_uri") == new_uri
-        assert new_uri in POC_SERVICES  # W4 集成点
+        assert any(s.uri == new_uri for s in POC_SERVICES)  # W4 集成点
 
     def test_load_from_market_loads_all(
         self, clean_market: Path, fresh_loader: ForgeLoader, tmp_path: Path
@@ -260,11 +255,11 @@ class TestForgeLoader:
         )
         market = list_market_tools()
         fresh_loader.load_tool(market[0])
-        assert "bos://capability/tool-z/run" in POC_SERVICES
+        assert any(s.uri == "bos://capability/tool-z/run" for s in POC_SERVICES)
 
         ok = fresh_loader.unload_tool("tool-z")
         assert ok is True
-        assert "bos://capability/tool-z/run" not in POC_SERVICES
+        assert not any(s.uri == "bos://capability/tool-z/run" for s in POC_SERVICES)
         assert fresh_loader.get_loaded("tool-z") is None
 
     def test_unload_tool_not_loaded(
@@ -323,8 +318,8 @@ class TestW4Integration:
         assert parsed["action"] == "invoke"
 
         # W4 验证: POC_SERVICES 注册
-        assert new_uri in POC_SERVICES
-        svc = POC_SERVICES[new_uri]
+        assert any(s.uri == new_uri for s in POC_SERVICES)
+        svc = next((s for s in POC_SERVICES if s.uri == new_uri), None)
         assert svc.transport == "stdio"
         assert svc.command[0] == "uv"  # 仍是 stdio uv run
 
@@ -333,7 +328,7 @@ class TestW4Integration:
     ):
         """动态加载不能破坏 P33-W4 静态 11 POC services."""
         # 加载 1 个 fake
-        r = fresh_loader.load_tool(
+        fresh_loader.load_tool(
             {
                 "name": "x",
                 "bos_uri": "bos://capability/x/y",
@@ -349,4 +344,4 @@ class TestW4Integration:
             "bos://persona/health-profile/summary",
             "bos://capability/forge/register-tool",
         ):
-            assert uri in POC_SERVICES, f"P33-W4 static URI disappeared: {uri}"
+            assert any(s.uri == uri for s in POC_SERVICES), f"P33-W4 static URI disappeared: {uri}"

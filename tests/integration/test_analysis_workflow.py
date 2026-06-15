@@ -15,7 +15,6 @@ P34-W2 状态 (本测试快照):
 """
 from __future__ import annotations
 
-import asyncio
 import json
 import time
 from pathlib import Path
@@ -27,7 +26,6 @@ from agora.mcp.bos_resolver import (
     invoke_stdio,
     list_services,
     parse_bos_uri,
-    resolve_bos_uri,
 )
 
 
@@ -67,13 +65,12 @@ def test_registry_has_12_analysis_uris():
 
 
 def test_resolver_has_12_poc_analysis_uris():
-    """P34-W2 验证: agora resolver POC_SERVICES 已含全部 12 条 analysis URI."""
-    analysis_in_resolver = [u for u in POC_SERVICES if u.startswith("bos://analysis/")]
-    assert len(analysis_in_resolver) == 12, (
-        f"Expected 12 analysis URIs in resolver (P34-W2), got {len(analysis_in_resolver)}: "
+    """P34-W2 验证: agora resolver POC_SERVICES 已含全部 analysis URI."""
+    analysis_in_resolver = [u.uri for u in POC_SERVICES if u.uri.startswith("bos://analysis/")]
+    assert len(analysis_in_resolver) == 21, (
+        f"Expected 21 analysis URIs in resolver, got {len(analysis_in_resolver)}: "
         f"{analysis_in_resolver}"
     )
-    # 原 P33-W4 名称兼容 (test_resolver_has_3_poc_analysis_uris 已过时)
 
 
 def test_9_analysis_uris_now_in_resolver():
@@ -89,9 +86,9 @@ def test_9_analysis_uris_now_in_resolver():
         "bos://analysis/iris/transform",
         "bos://analysis/iris/validate",
     ]
-    for uri in previously_missing:
-        assert uri in POC_SERVICES, f"P34-W2 应已注册, 但仍缺失: {uri}"
-
+    resolver_uris = {u.uri for u in POC_SERVICES}
+    missing = [u for u in previously_missing if u not in resolver_uris]
+    assert not missing, f"Missing from resolver: {missing}"
 
 # ── 集成级别 (Stdio 真实调用) ─────────────────────────
 

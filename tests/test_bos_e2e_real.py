@@ -50,7 +50,7 @@ def test_bos_router_list():
 def test_bos_resolver_services():
     """验证 bos_resolver 的 POC_SERVICES 注册表"""
     try:
-        from agora.mcp.bos_resolver import list_services, parse_bos_uri, POC_SERVICES
+        from agora.mcp.bos_resolver import list_services, parse_bos_uri
 
         services = list_services()
         print(f"  POC Services: {len(services)}")

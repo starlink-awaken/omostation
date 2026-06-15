@@ -2,12 +2,10 @@
 
 import sys
 import time
-import threading
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-import pytest
 
 
 def make_node(node_id="test-node", role="worker", bos_uris=None):

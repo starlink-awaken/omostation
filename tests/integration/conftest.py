@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 
@@ -97,9 +96,9 @@ def patch_missing_backends(monkeypatch: pytest.MonkeyPatch):
     from agora.mcp import bos_resolver as br
 
     for uri, mock_response in _MOCK_RESPONSES.items():
-        if uri not in br.POC_SERVICES:
+        if not any(s.uri == uri for s in br.POC_SERVICES):
             continue
-        svc = br.POC_SERVICES[uri]
+        svc = next((s for s in br.POC_SERVICES if s.uri == uri), None)
         mock_cmd = _make_mock_script(uri, mock_response)
         monkeypatch.setattr(svc, "command", mock_cmd)
         # 降级 transport 到 stdio (避 mcp_stdio 的 asyncio.run())

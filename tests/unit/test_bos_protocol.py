@@ -12,7 +12,6 @@ from __future__ import annotations
 import asyncio
 import subprocess
 
-import pytest
 
 from agora.mcp.bos_protocol import MCPStdioAdapter  # type: ignore[import-not-found]
 

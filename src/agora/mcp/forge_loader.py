@@ -151,7 +151,7 @@ class ForgeLoader:
         if name in self.loaded:
             return {"skipped": name, "reason": "already_loaded"}
 
-        if bos_uri in POC_SERVICES:
+        if any(s.uri == bos_uri for s in POC_SERVICES):
             return {
                 "skipped": name,
                 "reason": f"bos_uri_already_registered: {bos_uri}",
@@ -162,7 +162,7 @@ class ForgeLoader:
             return {"error": f"invalid_bos_uri: {bos_uri}"}
 
         # 注入全局注册表 (动态扩容)
-        POC_SERVICES[bos_uri] = service
+        POC_SERVICES.append(service)
 
         self.loaded[name] = LoadedTool(
             name=name,
@@ -191,8 +191,9 @@ class ForgeLoader:
         if tool.service and tool.service.uri in self.pool.processes:
             self.pool.shutdown(tool.service.uri)
         # 从全局注册表移除
-        if tool.bos_uri in POC_SERVICES:
-            del POC_SERVICES[tool.bos_uri]
+        idx = next((i for i, s in enumerate(POC_SERVICES) if s.uri == tool.bos_uri), None)
+        if idx is not None:
+            POC_SERVICES.pop(idx)
         _log.info("forge.unloaded name=%s uri=%s", name, tool.bos_uri)
         return True
 

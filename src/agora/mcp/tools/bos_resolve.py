@@ -75,6 +75,8 @@ def bos_parse(uri: str) -> dict:
     """
     try:
         parsed = parse_bos_uri(uri)
+        if not parsed:
+            return _error(f"invalid_bos_uri: {uri}")
         return _ok(
             {
                 "format_version": FORMAT_VERSION,

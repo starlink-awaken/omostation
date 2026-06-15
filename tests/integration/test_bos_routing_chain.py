@@ -13,7 +13,6 @@
 """
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
@@ -151,9 +150,7 @@ class TestResolveWithRouter:
     @pytest.mark.asyncio
     async def test_chain_cache_invalidation(self):
         """mutate 成功后手动 invalidate 缓存."""
-        from unittest.mock import patch
 
-        from agora.server.tools_bos import _resolve_with_router
         from agora.mcp.bos_middleware import bos_cache
 
         uri = "bos://memory/kos/search"
@@ -243,10 +240,8 @@ class TestListBosResources:
     async def test_list_returns_poc_when_router_empty(self):
         """直接通过 POC_SERVICES 获取 (绕过 MCP 工具层)."""
         from agora.mcp.bos_resolver import POC_SERVICES
-        from agora.mcp.bos_router import bos_router as br
 
-        poc_uris = set(POC_SERVICES.keys())
-        router_uris = {r["prefix"].rstrip("/") for r in br.list_all()}
+        poc_uris = {s.uri for s in POC_SERVICES}
 
         # POC 应该有一些条目
         assert len(poc_uris) >= 11
@@ -278,7 +273,7 @@ class TestListBosResources:
         """POC_SERVICES 无重复."""
         from agora.mcp.bos_resolver import POC_SERVICES
 
-        uris = list(POC_SERVICES.keys())
+        uris = [s.uri for s in POC_SERVICES]
         dupes = [u for u in uris if uris.count(u) > 1]
         assert not dupes, f"重复: {set(dupes)}"
 

@@ -1,0 +1,715 @@
+"""BOS 服务注册表 — POC_SERVICES 定义"""
+
+from __future__ import annotations
+
+import re
+
+from dataclasses import dataclass, field
+from typing import Literal
+
+Transport = Literal["stdio", "internal", "http", "mcp_stdio"]
+
+# ── BOS URI 模式 ─────────────────────────────────────
+BOS_URI_PATTERN = re.compile(
+    r"^bos://(?P<domain>memory|governance|omo|analysis|persona|capability|forge|meta|ecos|agora)"
+    r"/(?P<package>[a-z][a-z0-9-]+)/(?P<action>[a-z][a-z0-9-]+)$"
+)
+
+
+@dataclass
+class BosService:
+    """BOS 服务描述 — 怎么调用一个 URI."""
+
+    uri: str
+    domain: str
+    package: str
+    action: str
+    transport: Transport = "stdio"
+    command: list[str] = field(default_factory=list)
+    module_path: str = ""
+    func_name: str = ""
+    http_url: str = ""
+    description: str = ""
+
+
+def _with_uv_package(service: BosService) -> list[str]:
+    """Normalize legacy uv run commands for workspace packages."""
+    cmd = list(service.command)
+    if len(cmd) < 2 or cmd[0] != "uv" or cmd[1] != "run":
+        return cmd
+    if "--package" in cmd:
+        return cmd
+    if "--directory" not in cmd:
+        return cmd
+    if not service.package:
+        return cmd
+    return ["uv", "run", "--package", service.package, *cmd[2:]]
+
+
+# ── POC_SERVICES: 34 条 BOS URI 路由 ──────────────────────
+# 5 Domain: memory(5) / governance(8) / analysis(12) / persona(7) / capability(8)
+POC_SERVICES: list[BosService] = [
+    # ════════════════════════════════════════════════════════════════
+    # Domain: memory (5)
+    # ════════════════════════════════════════════════════════════════
+    BosService(
+        uri="bos://memory/kos/search",
+        domain="memory",
+        package="kos",
+        action="search",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "kos.cli", "search"],
+        description="KOS 知识图谱检索入口 (P33-W1 战役 2 起步)",
+    ),
+    BosService(
+        uri="bos://memory/kos/ingest",
+        domain="memory",
+        package="kos",
+        action="ingest",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "kos.cli", "ingest"],
+        description="KOS 知识摄取入口",
+    ),
+    BosService(
+        uri="bos://memory/kos/schema",
+        domain="memory",
+        package="kos",
+        action="schema",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "kos.cli", "schema"],
+        description="KOS Schema 查询",
+    ),
+    BosService(
+        uri="bos://memory/kronos/ingest",
+        domain="memory",
+        package="kronos",
+        action="ingest",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos.cli", "ingest"],
+        description="Kronos 知识摄取管线入口",
+    ),
+    BosService(
+        uri="bos://memory/kronos/scan",
+        domain="memory",
+        package="kronos",
+        action="scan",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos.cli", "scan"],
+        description="Kronos 扫描入口",
+    ),
+    # ════════════════════════════════════════════════════════════════
+    # Domain: governance (8)
+    # ════════════════════════════════════════════════════════════════
+    BosService(
+        uri="bos://governance/metaos/decide",
+        domain="governance",
+        package="metaos",
+        action="decide",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos.cli", "decide"],
+        description="MetaOS 决策门控",
+    ),
+    BosService(
+        uri="bos://governance/metaos/immune",
+        domain="governance",
+        package="metaos",
+        action="immune",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos.cli", "immune"],
+        description="MetaOS 免疫响应",
+    ),
+    BosService(
+        uri="bos://governance/metaos/route",
+        domain="governance",
+        package="metaos",
+        action="route",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos.cli", "route"],
+        description="MetaOS 路由决策",
+    ),
+    BosService(
+        uri="bos://governance/omo/state",
+        domain="governance",
+        package="omo",
+        action="state",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/omo", "python", "-m", "omo.cli", "state"],
+        description="OMO 状态查询",
+    ),
+    BosService(
+        uri="bos://governance/omo/debt",
+        domain="governance",
+        package="omo",
+        action="debt",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/omo", "python", "-m", "omo.cli", "debt"],
+        description="OMO 债务查询",
+    ),
+    BosService(
+        uri="bos://governance/eidos/validate",
+        domain="governance",
+        package="eidos",
+        action="validate",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "eidos.cli", "validate"],
+        description="Eidos Schema 约束校验",
+    ),
+    BosService(
+        uri="bos://governance/protocols-layer/trigger",
+        domain="governance",
+        package="protocols-layer",
+        action="trigger",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "protocols_layer.cli", "trigger"],
+        description="Protocols Layer 触发器规则 (P33-W1 战役 2 起步)",
+    ),
+    # ════════════════════════════════════════════════════════════════
+    # Domain: analysis (12)
+    # ════════════════════════════════════════════════════════════════
+    BosService(
+        uri="bos://analysis/minerva/research",
+        domain="analysis",
+        package="minerva",
+        action="research",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva.cli", "research"],
+        description="Minerva 深度研究入口",
+    ),
+    BosService(
+        uri="bos://analysis/minerva/ask",
+        domain="analysis",
+        package="minerva",
+        action="ask",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva.cli", "ask"],
+        description="Minerva 追问入口",
+    ),
+    BosService(
+        uri="bos://analysis/minerva/summarize",
+        domain="analysis",
+        package="minerva",
+        action="summarize",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva.cli", "summarize"],
+        description="Minerva 摘要入口",
+    ),
+    BosService(
+        uri="bos://analysis/ontoderive/derive",
+        domain="analysis",
+        package="ontoderive",
+        action="derive",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.cli", "derive"],
+        description="OntoDerive 本体推导入口",
+    ),
+    BosService(
+        uri="bos://analysis/ontoderive/validate",
+        domain="analysis",
+        package="ontoderive",
+        action="validate",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.cli", "validate"],
+        description="OntoDerive 推导验证",
+    ),
+    BosService(
+        uri="bos://analysis/ontoderive/explain",
+        domain="analysis",
+        package="ontoderive",
+        action="explain",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.cli", "explain"],
+        description="OntoDerive 推导解释",
+    ),
+    BosService(
+        uri="bos://analysis/codeanalyze/scan",
+        domain="analysis",
+        package="codeanalyze",
+        action="scan",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze.cli", "scan"],
+        description="CodeAnalyze AST 扫描入口",
+    ),
+    BosService(
+        uri="bos://analysis/codeanalyze/analyze",
+        domain="analysis",
+        package="codeanalyze",
+        action="analyze",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze.cli", "analyze"],
+        description="CodeAnalyze 深度分析",
+    ),
+    BosService(
+        uri="bos://analysis/codeanalyze/metrics",
+        domain="analysis",
+        package="codeanalyze",
+        action="metrics",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze.cli", "metrics"],
+        description="CodeAnalyze 代码度量",
+    ),
+    BosService(
+        uri="bos://analysis/iris/discover",
+        domain="analysis",
+        package="iris",
+        action="discover",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris.cli", "discover"],
+        description="Iris 发现入口",
+    ),
+    BosService(
+        uri="bos://analysis/iris/scan",
+        domain="analysis",
+        package="iris",
+        action="scan",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris.cli", "scan"],
+        description="Iris 扫描入口",
+    ),
+    BosService(
+        uri="bos://analysis/iris/recall",
+        domain="analysis",
+        package="iris",
+        action="recall",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris.cli", "recall"],
+        description="Iris 召回入口",
+    ),
+    # ════════════════════════════════════════════════════════════════
+    # Domain: persona (7)
+    # ════════════════════════════════════════════════════════════════
+    BosService(
+        uri="bos://persona/core-models/schema",
+        domain="persona",
+        package="core-models",
+        action="schema",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "core_models.cli", "schema"],
+        description="Core Models Schema 查询",
+    ),
+    BosService(
+        uri="bos://persona/core-models/validate",
+        domain="persona",
+        package="core-models",
+        action="validate",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "core_models.cli", "validate"],
+        description="Core Models 校验",
+    ),
+    BosService(
+        uri="bos://persona/sharedbrain-bridge/recall-entity",
+        domain="persona",
+        package="sharedbrain-bridge",
+        action="recall-entity",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "recall-entity"],
+        description="SharedBrain Bridge 实体召回",
+    ),
+    BosService(
+        uri="bos://persona/sharedbrain-bridge/recall",
+        domain="persona",
+        package="sharedbrain-bridge",
+        action="recall",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "recall"],
+        description="SharedBrain Bridge 通用召回",
+    ),
+    BosService(
+        uri="bos://persona/sharedbrain-bridge/sync",
+        domain="persona",
+        package="sharedbrain-bridge",
+        action="sync",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "sync"],
+        description="SharedBrain Bridge 同步",
+    ),
+    BosService(
+        uri="bos://persona/health-profile/query",
+        domain="persona",
+        package="health-profile",
+        action="query",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "health_profile.cli", "query"],
+        description="Health Profile 查询",
+    ),
+    BosService(
+        uri="bos://persona/health-profile/update",
+        domain="persona",
+        package="health-profile",
+        action="update",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "health_profile.cli", "update"],
+        description="Health Profile 更新",
+    ),
+    # ════════════════════════════════════════════════════════════════
+    # Domain: capability (8)
+    # ════════════════════════════════════════════════════════════════
+    BosService(
+        uri="bos://capability/agent-runtime/execute",
+        domain="capability",
+        package="agent-runtime",
+        action="execute",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "execute"],
+        description="Agent Runtime 执行入口",
+    ),
+    BosService(
+        uri="bos://capability/agent-runtime/list-tools",
+        domain="capability",
+        package="agent-runtime",
+        action="list-tools",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "list-tools"],
+        description="Agent Runtime 工具列表",
+    ),
+    BosService(
+        uri="bos://capability/agent-runtime/status",
+        domain="capability",
+        package="agent-runtime",
+        action="status",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "status"],
+        description="Agent Runtime 状态",
+    ),
+    BosService(
+        uri="bos://capability/forge/agent-list",
+        domain="capability",
+        package="forge",
+        action="agent-list",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "agent-list"],
+        description="Forge 集市 Agent 列表",
+    ),
+    BosService(
+        uri="bos://capability/forge/agent-install",
+        domain="capability",
+        package="forge",
+        action="agent-install",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "agent-install"],
+        description="Forge 集市 Agent 安装",
+    ),
+    BosService(
+        uri="bos://capability/forge/registry",
+        domain="capability",
+        package="forge",
+        action="registry",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "registry"],
+        description="Forge 注册表查询",
+    ),
+    BosService(
+        uri="bos://capability/forge/publish",
+        domain="capability",
+        package="forge",
+        action="publish",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "publish"],
+        description="Forge 发布入口",
+    ),
+    BosService(
+        uri="bos://capability/forge/lint",
+        domain="capability",
+        package="forge",
+        action="lint",
+        transport="stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "lint"],
+        description="Forge Lint 检查",
+    ),
+    # ════════════════════════════════════════════════════════════════
+    # Internal / MCP-stdio services (from legacy POC_SERVICES dict)
+    # ════════════════════════════════════════════════════════════════
+    BosService(
+        uri="bos://memory/local/all-search",
+        domain="memory",
+        package="memory",
+        action="all-search",
+        transport="internal",
+        module_path="agora.mcp.bos_resolver",
+        func_name="_memory_all_search",
+        description="P2 多区聚合搜索 — cockpit local + KOS + vault",
+    ),
+    BosService(
+        uri="bos://persona/family-hub/health",
+        domain="persona",
+        package="family-hub",
+        action="health",
+        transport="mcp_stdio",
+        command=["uv", "run", "python", "projects/family-hub/mcp_server.py"],
+        description="Family Hub local MCP Server",
+    ),
+    BosService(
+        uri="bos://governance/omo/audit",
+        domain="governance",
+        package="omo",
+        action="audit",
+        transport="internal",
+        module_path="omo.omo_audit",
+        func_name="run_governance_audit",
+        description="OMO 治理审计 (internal — 同进程 importlib)",
+    ),
+    BosService(
+        uri="bos://governance/omo/inspect",
+        domain="governance",
+        package="omo",
+        action="inspect",
+        transport="internal",
+        module_path="omo.omo_inspect",
+        func_name="run_full_inspection",
+        description="OMO 系统检查 (internal 同进程)",
+    ),
+    BosService(
+        uri="bos://governance/omo/sync",
+        domain="governance",
+        package="omo",
+        action="sync",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/omo", "python", "-m", "omo", "serve"],
+        description="OMO 状态同步 (mcp_stdio transport 跨进程)",
+    ),
+    BosService(
+        uri="bos://governance/cockpit/context",
+        domain="governance",
+        package="cockpit",
+        action="mcp",
+        transport="mcp_stdio",
+        command=["uv", "run", "--package", "cockpit", "python", "-m", "cockpit.scripts.cockpit_mcp"],
+        description="Cockpit MCP Server — 20 工具",
+    ),
+    BosService(
+        uri="bos://cockpit/context",
+        domain="governance",
+        package="cockpit",
+        action="mcp",
+        transport="mcp_stdio",
+        command=["uv", "run", "--package", "cockpit", "python", "-m", "cockpit.scripts.cockpit_mcp"],
+        description="Cockpit MCP (短路径别名)",
+    ),
+    BosService(
+        uri="bos://governance/l4-kernel/domains",
+        domain="governance",
+        package="l4-kernel",
+        action="mcp",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/l4-kernel", "python", "-m", "l4_kernel.mcp_server"],
+        description="L4 Domain Kernel MCP — 24域管理",
+    ),
+    BosService(
+        uri="bos://l4-kernel/domains",
+        domain="governance",
+        package="l4-kernel",
+        action="mcp",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/l4-kernel", "python", "-m", "l4_kernel.mcp_server"],
+        description="L4 Kernel MCP (短路径别名)",
+    ),
+    BosService(
+        uri="bos://capability/runtime/health",
+        domain="capability",
+        package="runtime",
+        action="mcp",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"],
+        description="Runtime MCP — 服务注册表/健康/协议/KEI",
+    ),
+    BosService(
+        uri="bos://runtime/health",
+        domain="capability",
+        package="runtime",
+        action="mcp",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"],
+        description="Runtime MCP (短路径别名)",
+    ),
+    BosService(
+        uri="bos://meta/discover",
+        domain="governance",
+        package="meta",
+        action="discover",
+        transport="internal",
+        module_path="agora.mcp.bos_resolver",
+        func_name="_meta_discover",
+        description="发现所有可用 BOS 资源和入口",
+    ),
+    BosService(
+        uri="bos://memory/vault/search",
+        domain="memory",
+        package="memory",
+        action="vault-search",
+        transport="internal",
+        module_path="agora.mcp.bos_resolver",
+        func_name="_memory_vault_search",
+        description="L4 Vault 知识库搜索",
+    ),
+    # [UNIMPLEMENTED] POC stdio URIs — 标记为 mcp_stdio 但无 serve CLI
+    BosService(
+        uri="bos://analysis/minerva/draft",
+        domain="analysis",
+        package="minerva",
+        action="draft",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva", "serve", "--action", "draft"],
+        description="[UNIMPLEMENTED] Minerva 草稿生成 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://analysis/minerva/audit",
+        domain="analysis",
+        package="minerva",
+        action="audit",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva", "serve", "--action", "audit"],
+        description="[UNIMPLEMENTED] Minerva 审计 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://analysis/ontoderive/audit",
+        domain="analysis",
+        package="ontoderive",
+        action="audit",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive", "serve", "--action", "audit"],
+        description="[UNIMPLEMENTED] Ontoderive 审计 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://analysis/ontoderive/fact-check",
+        domain="analysis",
+        package="ontoderive",
+        action="fact-check",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive", "serve", "--action", "fact-check"],
+        description="[UNIMPLEMENTED] Ontoderive 事实校验 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://analysis/codeanalyze/report",
+        domain="analysis",
+        package="codeanalyze",
+        action="report",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze", "serve", "--action", "report"],
+        description="[UNIMPLEMENTED] CodeAnalyze 分析报告 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://analysis/codeanalyze/lint",
+        domain="analysis",
+        package="codeanalyze",
+        action="lint",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze", "serve", "--action", "lint"],
+        description="[UNIMPLEMENTED] CodeAnalyze Lint (POC stdio)",
+    ),
+    BosService(
+        uri="bos://analysis/iris/connect",
+        domain="analysis",
+        package="iris",
+        action="connect",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris", "serve", "--action", "connect"],
+        description="[UNIMPLEMENTED] Iris 连接 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://analysis/iris/transform",
+        domain="analysis",
+        package="iris",
+        action="transform",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris", "serve", "--action", "transform"],
+        description="[UNIMPLEMENTED] Iris 数据转换 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://analysis/iris/validate",
+        domain="analysis",
+        package="iris",
+        action="validate",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris", "serve", "--action", "validate"],
+        description="[UNIMPLEMENTED] Iris 数据校验 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://persona/health-profile/summary",
+        domain="persona",
+        package="health-profile",
+        action="summary",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "health_profile", "serve", "--action", "summary"],
+        description="[UNIMPLEMENTED] Health-Profile 健康摘要 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://persona/health-profile/alert",
+        domain="persona",
+        package="health-profile",
+        action="alert",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "health_profile", "serve", "--action", "alert"],
+        description="[UNIMPLEMENTED] Health-Profile 健康告警 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://capability/forge/discover",
+        domain="capability",
+        package="forge",
+        action="discover",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "discover"],
+        description="[UNIMPLEMENTED] Forge 工具发现 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://capability/forge/exec-tool",
+        domain="capability",
+        package="forge",
+        action="exec-tool",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "exec-tool"],
+        description="[UNIMPLEMENTED] Forge 工具执行 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://capability/forge/list-tools",
+        domain="capability",
+        package="forge",
+        action="list-tools",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "list-tools"],
+        description="[UNIMPLEMENTED] Forge 工具列表 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://capability/forge/register-tool",
+        domain="capability",
+        package="forge",
+        action="register-tool",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "register-tool"],
+        description="[UNIMPLEMENTED] Forge 工具注册 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://memory/kronos/query",
+        domain="memory",
+        package="kronos",
+        action="query",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos", "serve", "--action", "query"],
+        description="[UNIMPLEMENTED] KRONOS 时间序列查询 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://memory/kronos/schedule",
+        domain="memory",
+        package="kronos",
+        action="schedule",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos", "serve", "--action", "schedule"],
+        description="[UNIMPLEMENTED] KRONOS 调度任务 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://governance/metaos/gate",
+        domain="governance",
+        package="metaos",
+        action="gate",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos", "serve", "--action", "gate"],
+        description="MetaOS 门控检查 (POC stdio)",
+    ),
+    BosService(
+        uri="bos://governance/metaos/register",
+        domain="governance",
+        package="metaos",
+        action="register",
+        transport="mcp_stdio",
+        command=["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos", "serve", "--action", "register"],
+        description="MetaOS 包注册 (POC stdio)",
+    ),
+]

@@ -215,7 +215,7 @@ def test_chain_steps_respect_transport_modes():
     transport_modes: set[str] = set()
     for scenario in CHAIN_SCENARIOS:
         for uri, _ in scenario["chain"]:
-            svc = POC_SERVICES.get(uri)
+            svc = next((s for s in POC_SERVICES if s.uri == uri), None)
             if svc is not None:
                 transport_modes.add(svc.transport)
     # 至少 stdio + internal 二者

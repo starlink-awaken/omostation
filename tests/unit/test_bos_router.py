@@ -9,7 +9,6 @@
 """
 from __future__ import annotations
 
-import pytest
 
 from agora.mcp.bos_router import BOSRouter
 

@@ -10,8 +10,6 @@ POC_SERVICES 已升级到 mcp_stdio transport (P54-W0)，
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
 
 import pytest
 
@@ -84,6 +82,6 @@ def downgrade_mcp_stdio_to_stdio(monkeypatch: pytest.MonkeyPatch):
     """
     from agora.mcp import bos_resolver as br
 
-    for uri, svc in list(br.POC_SERVICES.items()):
+    for svc in br.POC_SERVICES:
         if hasattr(svc, "transport") and svc.transport == "mcp_stdio":
             monkeypatch.setattr(svc, "transport", "stdio")
