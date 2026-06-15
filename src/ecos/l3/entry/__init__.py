@@ -1,6 +1,6 @@
 """L3 入口层 — CLI 和 MCP 入口
 
-实现多机协作的入口层组件：
+基于 L0/L1/L2 原语构建的入口层组件：
 - GovernanceCLI: 治理 CLI (check/status/cluster/swarm/knowledge)
 - GovernanceMCP: 治理 MCP 工具 (14 个工具)
 """
@@ -22,15 +22,22 @@ class CLICommand:
 
 
 class GovernanceCLI:
-    """治理 CLI — 完整的命令行接口
-
-    L3 入口层: 提供系统管理、集群管理、蜂群管理、知识管理的命令行工具
-    """
+    """治理 CLI — 委托 L0 原语的命令行接口"""
 
     def __init__(self):
         self.commands: dict[str, CLICommand] = {}
         self._output: list[str] = []
+        self._node_manager = None
+        self._swarm_manager = None
+        self._km = None
         self._register_commands()
+
+    def _ensure_l0(self) -> None:
+        if self._node_manager is None:
+            from ecos.l0.governance import NodeManager, SwarmManager, PersonalKnowledgeManager
+            self._node_manager = NodeManager()
+            self._swarm_manager = SwarmManager()
+            self._km = PersonalKnowledgeManager()
 
     def _register_commands(self) -> None:
         self.commands["check"] = CLICommand(
@@ -69,6 +76,7 @@ class GovernanceCLI:
 
     def run(self, args: list[str]) -> int:
         self._output.clear()
+        self._ensure_l0()
 
         if not args:
             self._print_help()
@@ -101,6 +109,7 @@ class GovernanceCLI:
                 dimension = args[idx + 1]
 
         self._output.append(f"运行 X1-X4 治理检查 (维度: {dimension})...")
+
         checks = {
             "X1": {"status": "pass", "message": "审计链完整"},
             "X2": {"status": "pass", "message": "新鲜度正常"},
@@ -139,34 +148,39 @@ class GovernanceCLI:
         subcmd = args[0] if args else "list"
 
         if subcmd == "list":
+            health = self._node_manager.check_health()
             self._output.append("集群节点:")
-            nodes = [
-                {"id": "node-1", "status": "online", "role": "primary"},
-                {"id": "node-2", "status": "online", "role": "secondary"},
-                {"id": "node-3", "status": "degraded", "role": "worker"},
-            ]
-            for n in nodes:
-                self._output.append(f"  [{n['status'].upper():8s}] {n['id']:10s} ({n['role']})")
+            for nid, status in health.items():
+                self._output.append(f"  [{status.value.upper():8s}] {nid}")
+            if not health:
+                self._output.append("  (无节点)")
             return 0
 
         elif subcmd == "add":
             if len(args) < 2:
                 self._output.append("用法: cluster add <node-id>")
                 return 1
-            self._output.append(f"✅ 节点 {args[1]} 已添加到集群")
+            node = self._node_manager.register(args[1])
+            self._output.append(f"✅ 节点 {args[1]} 已添加到集群 (status: {node.status.value})")
             return 0
 
         elif subcmd == "remove":
             if len(args) < 2:
                 self._output.append("用法: cluster remove <node-id>")
                 return 1
-            self._output.append(f"✅ 节点 {args[1]} 已从集群移除")
+            removed = self._node_manager.unregister(args[1])
+            if removed:
+                self._output.append(f"✅ 节点 {args[1]} 已从集群移除")
+            else:
+                self._output.append(f"❌ 节点 {args[1]} 不存在")
             return 0
 
         elif subcmd == "health":
+            health = self._node_manager.check_health()
+            healthy = sum(1 for s in health.values() if s.value in ("online", "healthy"))
             self._output.append("集群健康检查:")
-            self._output.append("  在线节点: 2/3")
-            self._output.append("  整体状态: degraded")
+            self._output.append(f"  在线节点: {healthy}/{len(health)}")
+            self._output.append(f"  整体状态: {'healthy' if healthy == len(health) else 'degraded'}")
             return 0
 
         self._output.append(f"未知子命令: {subcmd}")
@@ -176,23 +190,28 @@ class GovernanceCLI:
         subcmd = args[0] if args else "status"
 
         if subcmd == "status":
+            state = self._swarm_manager.get_swarm_state()
+            metrics = self._swarm_manager.get_metrics()
             self._output.append("蜂群状态:")
-            self._output.append("  Agent 数量: 8")
-            self._output.append("  活跃行为: 3")
-            self._output.append("  待决策提案: 1")
+            self._output.append(f"  Agent 数量: {metrics['agent_count']}")
+            self._output.append(f"  活跃行为: {metrics['behavior_count']}")
+            self._output.append(f"  版本: {metrics['version']}")
             return 0
 
         elif subcmd == "detect":
+            state = self._swarm_manager.get_swarm_state()
+            behaviors = self._swarm_manager.detect_emergence(state)
             self._output.append("涌现检测:")
-            self._output.append("  [CLUSTERING] agents: [a1, a2, a3] confidence: 0.85")
-            self._output.append("  [SPECIALIZATION] roles: 4 diversity: 0.72")
+            if behaviors:
+                for b in behaviors:
+                    self._output.append(f"  [{b.pattern.value.upper()}] agents: {b.agents} confidence: {b.confidence:.2f}")
+            else:
+                self._output.append("  (未检测到涌现)")
             return 0
 
         elif subcmd == "decide":
             self._output.append("集体决策:")
-            self._output.append("  提案: 选择部署策略")
-            self._output.append("  投票: A=3, B=5, C=2")
-            self._output.append("  结果: B (多数投票)")
+            self._output.append("  (使用 MCP 工具进行决策)")
             return 0
 
         self._output.append(f"未知子命令: {subcmd}")
@@ -202,11 +221,12 @@ class GovernanceCLI:
         subcmd = args[0] if args else "stats"
 
         if subcmd == "stats":
+            stats = self._km.get_stats()
             self._output.append("知识库统计:")
-            self._output.append("  知识节点: 156")
-            self._output.append("  图谱边: 234")
-            self._output.append("  标签数: 42")
-            self._output.append("  用户偏好: 8")
+            self._output.append(f"  知识节点: {stats['node_count']}")
+            self._output.append(f"  标签数: {stats['total_tags']}")
+            self._output.append(f"  关系数: {stats['total_relations']}")
+            self._output.append(f"  用户数: {stats['user_count']}")
             return 0
 
         elif subcmd == "query":
@@ -214,14 +234,23 @@ class GovernanceCLI:
                 self._output.append("用法: knowledge query <query-text>")
                 return 1
             query = " ".join(args[1:])
+            results = self._km.query_knowledge(query)
             self._output.append(f"查询: {query}")
-            self._output.append("  结果: 3 条匹配")
+            self._output.append(f"  结果: {len(results)} 条匹配")
+            for r in results[:5]:
+                self._output.append(f"    - {r.node_id}")
             return 0
 
         elif subcmd == "add":
             if len(args) < 3:
                 self._output.append("用法: knowledge add <key> <content>")
                 return 1
+            from ecos.l0.governance import KnowledgeNode, KnowledgeType
+            node = KnowledgeNode(
+                node_id=args[1], knowledge_type=KnowledgeType.FACT,
+                content={"text": " ".join(args[2:])},
+            )
+            self._km.add_knowledge(node)
             self._output.append(f"✅ 知识 {args[1]} 已添加")
             return 0
 
@@ -249,15 +278,21 @@ class MCPToolDef:
 
 
 class GovernanceMCP:
-    """治理 MCP 工具 — 14 个完整的工具接口
-
-    L3 入口层: 提供 MCP 协议的工具接口
-    """
+    """治理 MCP 工具 — 委托 L0 原语的 14 个工具"""
 
     def __init__(self):
         self.tools: dict[str, MCPToolDef] = {}
-        self._results: dict[str, Any] = {}
+        self._node_manager = None
+        self._swarm_manager = None
+        self._km = None
         self._register_tools()
+
+    def _ensure_l0(self) -> None:
+        if self._node_manager is None:
+            from ecos.l0.governance import NodeManager, SwarmManager, PersonalKnowledgeManager
+            self._node_manager = NodeManager()
+            self._swarm_manager = SwarmManager()
+            self._km = PersonalKnowledgeManager()
 
     def _register_tools(self) -> None:
         tool_defs = [
@@ -351,6 +386,7 @@ class GovernanceMCP:
         if tool_name not in self.tools:
             return {"error": f"未知工具: {tool_name}", "available": list(self.tools.keys())}
 
+        self._ensure_l0()
         params = parameters or {}
 
         handlers = {
@@ -407,63 +443,68 @@ class GovernanceMCP:
         return {"status": "ok", "days": days, "records": [], "count": 0}
 
     def _handle_cluster_list(self, params: dict[str, Any]) -> dict[str, Any]:
-        return {
-            "status": "ok",
-            "nodes": [
-                {"id": "node-1", "status": "online", "role": "primary"},
-                {"id": "node-2", "status": "online", "role": "secondary"},
-                {"id": "node-3", "status": "degraded", "role": "worker"},
-            ],
-        }
+        health = self._node_manager.check_health()
+        nodes = [{"id": nid, "status": status.value} for nid, status in health.items()]
+        return {"status": "ok", "nodes": nodes}
 
     def _handle_cluster_health(self, params: dict[str, Any]) -> dict[str, Any]:
-        return {"status": "ok", "healthy": 2, "total": 3, "overall": "degraded"}
+        health = self._node_manager.check_health()
+        healthy = sum(1 for s in health.values() if s.value in ("online", "healthy"))
+        return {"status": "ok", "healthy": healthy, "total": len(health)}
 
     def _handle_swarm_status(self, params: dict[str, Any]) -> dict[str, Any]:
+        metrics = self._swarm_manager.get_metrics()
         return {
             "status": "ok",
-            "agent_count": 8,
-            "active_behaviors": 3,
-            "pending_decisions": 1,
+            "agent_count": metrics["agent_count"],
+            "behavior_count": metrics["behavior_count"],
+            "version": metrics["version"],
         }
 
     def _handle_swarm_detect(self, params: dict[str, Any]) -> dict[str, Any]:
+        state = self._swarm_manager.get_swarm_state()
+        behaviors = self._swarm_manager.detect_emergence(state)
         return {
             "status": "ok",
-            "behaviors": [
-                {"pattern": "clustering", "agents": ["a1", "a2", "a3"], "confidence": 0.85},
-                {"pattern": "specialization", "roles": 4, "confidence": 0.72},
-            ],
+            "behaviors": [b.to_dict() for b in behaviors],
         }
 
     def _handle_swarm_decide(self, params: dict[str, Any]) -> dict[str, Any]:
-        proposal_id = params.get("proposal_id", "")
-        agent_id = params.get("agent_id", "")
-        option = params.get("option", "")
-        return {"status": "ok", "vote_recorded": True, "proposal_id": proposal_id,
-                "agent_id": agent_id, "option": option}
+        return {"status": "ok", "vote_recorded": True, **params}
 
     def _handle_knowledge_stats(self, params: dict[str, Any]) -> dict[str, Any]:
-        return {"status": "ok", "nodes": 156, "edges": 234, "tags": 42, "users": 8}
+        stats = self._km.get_stats()
+        return {"status": "ok", **stats}
 
     def _handle_knowledge_query(self, params: dict[str, Any]) -> dict[str, Any]:
         query = params.get("query", "")
         limit = params.get("limit", 10)
-        return {"status": "ok", "query": query, "results": [], "count": 0, "limit": limit}
+        results = self._km.query_knowledge(query, limit)
+        return {
+            "status": "ok",
+            "query": query,
+            "results": [{"node_id": r.node_id, "content": r.content} for r in results],
+            "count": len(results),
+        }
 
     def _handle_knowledge_add(self, params: dict[str, Any]) -> dict[str, Any]:
+        from ecos.l0.governance import KnowledgeNode, KnowledgeType
         key = params.get("key", "")
+        content = params.get("content", {})
+        tags = params.get("tags", [])
+        node = KnowledgeNode(
+            node_id=key, knowledge_type=KnowledgeType.FACT,
+            content=content, tags=tags,
+        )
+        self._km.add_knowledge(node)
         return {"status": "ok", "key": key, "message": "知识已添加"}
 
     def _handle_task_submit(self, params: dict[str, Any]) -> dict[str, Any]:
-        task_id = params.get("task_id", "")
-        return {"status": "ok", "task_id": task_id, "message": "任务已提交"}
+        return {"status": "ok", "task_id": params.get("task_id", ""), "message": "任务已提交"}
 
     def _handle_task_status(self, params: dict[str, Any]) -> dict[str, Any]:
-        task_id = params.get("task_id", "")
-        return {"status": "ok", "task_id": task_id, "stage": "pending"}
+        return {"status": "ok", "task_id": params.get("task_id", ""), "stage": "pending"}
 
     def _handle_role_switch(self, params: dict[str, Any]) -> dict[str, Any]:
-        agent_id = params.get("agent_id", "")
-        new_role = params.get("new_role", "")
-        return {"status": "ok", "agent_id": agent_id, "new_role": new_role, "message": "角色已切换"}
+        return {"status": "ok", "agent_id": params.get("agent_id", ""),
+                "new_role": params.get("new_role", ""), "message": "角色已切换"}

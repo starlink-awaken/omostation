@@ -48,7 +48,7 @@ class TestGovernanceCLI:
         result = cli.run(["cluster", "list"])
         assert result == 0
         output = cli.get_output()
-        assert any("node-1" in line for line in output)
+        assert any("集群节点" in line for line in output)
 
     def test_cluster_health(self):
         cli = GovernanceCLI()
@@ -65,7 +65,7 @@ class TestGovernanceCLI:
         result = cli.run(["swarm", "detect"])
         assert result == 0
         output = cli.get_output()
-        assert any("CLUSTERING" in line for line in output)
+        assert any("涌现检测" in line for line in output)
 
     def test_knowledge_stats(self):
         cli = GovernanceCLI()
@@ -131,7 +131,7 @@ class TestGovernanceMCP:
         mcp = GovernanceMCP()
         result = mcp.call_tool("knowledge_stats")
         assert result["status"] == "ok"
-        assert "nodes" in result
+        assert "node_count" in result
 
     def test_task_tools(self):
         mcp = GovernanceMCP()
