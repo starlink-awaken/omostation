@@ -47,7 +47,11 @@ def _resolve_depends_on(
         matched = None
         for title, imported_id in title_to_imported.items():
             # ref 必须是 title 的前缀 (id 形式), 防止 P42 撞 P420
-            if title == ref or title.startswith(ref + ":") or title.startswith(ref + " "):
+            if (
+                title == ref
+                or title.startswith(ref + ":")
+                or title.startswith(ref + " ")
+            ):
                 matched = imported_id
                 break
         resolved.append(matched if matched else ref)
@@ -77,7 +81,9 @@ def _import_bmad(file_path: Path, omo_dir: Path, sequential: bool = False):
     # Pass 1: 收集所有 - [ ] 行的 title, 算好 title → IMPORTED id 映射.
     # Pass 2: 写文件时 depends_on 用映射回查, 避免断链.
     title_to_imported: dict[str, str] = {}
-    parsed_tasks: list[tuple[str, list[str]]] = []  # [(task_title, depends_on_raw), ...]
+    parsed_tasks: list[
+        tuple[str, list[str]]
+    ] = []  # [(task_title, depends_on_raw), ...]
 
     for line in content.split("\n"):
         if "- [ ]" not in line:
@@ -115,13 +121,28 @@ def _import_bmad(file_path: Path, omo_dir: Path, sequential: bool = False):
         task_data: dict = {
             "id": task_id,
             "title": task_title,
-            "status": "planned",
+            "status": "candidate",
             "task_type": "feature",
             "risk_level": "L0",
             "depends_on": depends_on,
             "source_docs": [str(file_path.absolute())],
-            "deliverables": [],
+            "deliverables": ["执行记录与源码修改"],
             "imported_via": "omo_bridge",
+            # [M2 CONTRACT] 必须的空位字段
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "entry_gate": [],
+            "evidence_required": ["X1-X4 治理合规自证", "单测覆盖率"],
+            "test_plan": [
+                "[X1-X4 Governance] 必须在代码实现前完成治理与架构依赖的白盒分析。"
+            ],
+            "allowed_operation_level": "L0",
+            "human_approval_required": False,
         }
         if phase is not None:
             task_data["phase"] = phase
@@ -130,18 +151,30 @@ def _import_bmad(file_path: Path, omo_dir: Path, sequential: bool = False):
 
         # [DEVIL'S GATEKEEPER]: OMO Pre-Check Before Materialization
         if "TODO" in task_title or "TBD" in task_title:
-            print(f"  ❌ 预检拦截 (Pre-check Failed): 任务 {task_id} 含有未决议项 ({task_title})，拒绝流入 OMO 稳态区。")
+            print(
+                f"  ❌ 预检拦截 (Pre-check Failed): 任务 {task_id} 含有未决议项 ({task_title})，拒绝流入 OMO 稳态区。"
+            )
+            continue
+
+        # [MODEL-DRIVEN M2 VALIDATION & X1-X4 Governance Checks]
+        from omo.omo_task_schema import validate_task_data
+
+        validation_errors = validate_task_data(task_data, group="planned")
+        if validation_errors:
+            print(
+                f"  ❌ M2 防腐层拦截 (Schema Validation Failed): 任务 {task_id} 违背 M2 契约！"
+            )
+            for err in validation_errors:
+                print(f"     - {err}")
             continue
 
         task_file = planned_dir / f"{task_id}.yaml"
-        task_file.write_text(
-            yaml.dump(task_data, allow_unicode=True, sort_keys=False)
-        )
-        print(f"  -> 创建了任务: {task_id} (依赖: {depends_on})")
+        task_file.write_text(yaml.dump(task_data, allow_unicode=True, sort_keys=False))
+        print(f"  -> 创建了任务: {task_id} (依赖: {depends_on}) [M2 Validated]")
         tasks_created += 1
         last_task_id = task_id
 
-    print(f"✅ 完成转换，共生成了 {tasks_created} 个任务。")
+    print(f"✅ 完成转换，共生成且经过 M2 强校验了 {tasks_created} 个任务。")
 
 
 def main(argv: list[str]) -> int:
