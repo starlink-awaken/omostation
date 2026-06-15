@@ -71,8 +71,8 @@ class TestDashboardLoaders:
         cost_path.write_text(
             "\n".join(
                 [
-                    '{"model":"gpt-4o","input_tokens":1000,"output_tokens":500,"timestamp":"2026-06-15T08:00:00Z"}',
-                    '{"model":"ollama/qwen3","input_tokens":100,"output_tokens":50,"timestamp":"2026-06-14T08:00:00Z"}',
+                    '{"model":"gpt-4o","provider":"openai","input_tokens":1000,"output_tokens":500,"timestamp":"2026-06-15T08:00:00Z","node_id":"cloud-cc-switch","node_label":"Cloud (cc-switch)","route_type":"cloud","latency_ms":1800.5,"tokens_per_second":833.1}',
+                    '{"model":"ollama/qwen3","provider":"ollama","input_tokens":100,"output_tokens":50,"timestamp":"2026-06-14T08:00:00Z","node_id":"macmini-ollama","node_label":"MacMini (Ollama)","route_type":"local","latency_ms":250.0,"tokens_per_second":600.0}',
                 ]
             ),
             encoding="utf-8",
@@ -105,12 +105,18 @@ quota_summary:
 
         assert result["summary"]["total_calls"] == 2
         assert result["summary"]["remaining_ratio"] == 0.42
+        assert result["summary"]["avg_latency_ms"] == 1025.25
+        assert result["summary"]["avg_tokens_per_second"] == 716.55
         assert result["provider"]["name"] == "DeepSeek"
         assert result["provider"]["quota_provider_count"] == 1
         assert result["observations"]["cross_day"] is True
         assert result["observations"]["cross_model"] is True
+        assert result["observations"]["latency_available"] is True
+        assert result["observations"]["throughput_mode"] == "trace"
         assert result["traffic_by_node"][0]["calls"] == 1
+        assert result["traffic_by_node"][0]["latency_ms_avg"] in (1800.5, 250.0)
         assert len(result["recent_traffic"]) == 2
+        assert result["recent_traffic"][0]["node_label"] == "Cloud (cc-switch)"
         assert any(item["label"] == "Cloud (cc-switch)" for item in result["topology"])
 
     def test_load_debt_no_omo_dir(self, monkeypatch):

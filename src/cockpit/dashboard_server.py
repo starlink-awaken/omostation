@@ -665,18 +665,29 @@ def _load_compute() -> dict:
             output_tokens = int(entry.get("output_tokens", 0) or 0)
             raw_ts = entry.get("timestamp") or entry.get("ts")
             ts = _parse_timestamp(raw_ts)
-            node = _infer_node(model, provider_name)
-            estimated_cost = float(entry.get("cost") or _estimate_cost(model, input_tokens, output_tokens))
+            provider_hint = entry.get("provider") or provider_name or "unknown"
+            inferred_node = _infer_node(model, provider_hint)
+            latency_ms = entry.get("latency_ms")
+            tokens_per_second = entry.get("tokens_per_second")
+            estimated_cost = float(
+                entry.get("estimated_cost_usd")
+                or entry.get("cost")
+                or _estimate_cost(model, input_tokens, output_tokens)
+            )
             records.append(
                 {
                     "timestamp": ts.isoformat() if ts else raw_ts,
                     "model": model,
-                    "provider_hint": provider_name or "unknown",
+                    "provider_hint": provider_hint,
                     "input_tokens": input_tokens,
                     "output_tokens": output_tokens,
                     "total_tokens": input_tokens + output_tokens,
                     "estimated_cost_usd": round(estimated_cost, 6),
-                    **node,
+                    "latency_ms": float(latency_ms) if latency_ms is not None else None,
+                    "tokens_per_second": float(tokens_per_second) if tokens_per_second is not None else None,
+                    "node_id": entry.get("node_id") or inferred_node["node_id"],
+                    "node_label": entry.get("node_label") or inferred_node["node_label"],
+                    "route_type": entry.get("route_type") or inferred_node["route_type"],
                 }
             )
 
@@ -701,11 +712,34 @@ def _load_compute() -> dict:
                 "calls": 0,
                 "tokens": 0,
                 "estimated_cost_usd": 0.0,
+                "latency_samples": 0,
+                "latency_ms_avg": None,
+                "tokens_per_second_avg": None,
+                "_latency_total": 0.0,
+                "_throughput_total": 0.0,
+                "_throughput_samples": 0,
             },
         )
         bucket["calls"] += 1
         bucket["tokens"] += record["total_tokens"]
         bucket["estimated_cost_usd"] = round(bucket["estimated_cost_usd"] + record["estimated_cost_usd"], 6)
+        if record["latency_ms"] is not None:
+            bucket["latency_samples"] += 1
+            bucket["_latency_total"] += record["latency_ms"]
+        if record["tokens_per_second"] is not None:
+            bucket["_throughput_samples"] += 1
+            bucket["_throughput_total"] += record["tokens_per_second"]
+
+    for bucket in traffic_by_node.values():
+        if bucket["latency_samples"]:
+            bucket["latency_ms_avg"] = round(bucket["_latency_total"] / bucket["latency_samples"], 3)
+        if bucket["_throughput_samples"]:
+            bucket["tokens_per_second_avg"] = round(
+                bucket["_throughput_total"] / bucket["_throughput_samples"], 3
+            )
+        del bucket["_latency_total"]
+        del bucket["_throughput_total"]
+        del bucket["_throughput_samples"]
 
     topology = []
     active_node_ids = set(traffic_by_node)
@@ -731,6 +765,9 @@ def _load_compute() -> dict:
             }
         )
 
+    latency_values = [item["latency_ms"] for item in records if item["latency_ms"] is not None]
+    throughput_values = [item["tokens_per_second"] for item in records if item["tokens_per_second"] is not None]
+
     return {
         "summary": {
             "generated_at": quota_summary.get("generated_at"),
@@ -750,6 +787,10 @@ def _load_compute() -> dict:
             "latest_request_at": latest_request_at,
             "earliest_request_at": earliest_request_at,
             "time_span_hours": span_hours,
+            "avg_latency_ms": round(sum(latency_values) / len(latency_values), 3) if latency_values else None,
+            "avg_tokens_per_second": round(sum(throughput_values) / len(throughput_values), 3)
+            if throughput_values
+            else None,
         },
         "provider": {
             "name": selected_provider.get("name"),
@@ -769,8 +810,8 @@ def _load_compute() -> dict:
                 latest_dt and earliest_dt and latest_dt.isocalendar()[:2] != earliest_dt.isocalendar()[:2]
             ),
             "cross_model": len({item["model"] for item in records}) > 1,
-            "latency_available": False,
-            "throughput_mode": "token-aggregate",
+            "latency_available": bool(latency_values),
+            "throughput_mode": "trace" if throughput_values else "token-aggregate",
         },
     }
 
