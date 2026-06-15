@@ -10,3 +10,5 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/P33-W0-NORTH-STAR.yaml
+  signals:
+  - task-P33-W0-NORTH-STAR-running

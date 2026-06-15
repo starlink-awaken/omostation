@@ -10,3 +10,5 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/P35-W1-W2-COMBO.yaml
+  signals:
+  - task-P35-W1-W2-COMBO-running

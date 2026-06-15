@@ -34,7 +34,7 @@ try:
 
     _YAML = YAML()
     _YAML.preserve_quotes = True
-    _YAML.indent(mapping=2, sequence=4, offset=2)
+    _YAML.indent(mapping=2, sequence=2, offset=0)
 except ImportError:
     print("FATAL: ruamel.yaml not installed. Run: uv add ruamel.yaml", file=sys.stderr)
     sys.exit(2)
@@ -96,7 +96,12 @@ def load_omo_tasks() -> dict:
 
 
 def backfill_node(file_path: Path, omo_tasks: dict) -> dict:
+    """dry-run: 读 + backfill in-memory (不改磁盘), 返回 result dict."""
     data = load_yaml_ruamel(file_path)
+    return backfill_data(data, file_path, omo_tasks)
+
+
+def backfill_data(data: dict, file_path: Path, omo_tasks: dict) -> dict:
     if not isinstance(data, dict) or "id" not in data:
         return {
             "id": "?",
@@ -202,11 +207,14 @@ def main():
     results = []
 
     for f in files:
-        result = backfill_node(f, omo_tasks)
-        if args.sync and result["changed"]:
+        if args.sync:
+            # 重新读 + backfill + 写盘, 保证内存和磁盘一致
             data = load_yaml_ruamel(f)
-            backfill_node(f, omo_tasks)
-            save_yaml_ruamel(f, data)
+            result = backfill_data(data, f, omo_tasks)
+            if result["changed"]:
+                save_yaml_ruamel(f, data)
+        else:
+            result = backfill_node(f, omo_tasks)
         results.append(result)
 
     if args.sync:

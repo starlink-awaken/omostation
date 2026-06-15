@@ -10,3 +10,5 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/P34-W0-URI-EXPAND.yaml
+  signals:
+  - task-P34-W0-URI-EXPAND-running

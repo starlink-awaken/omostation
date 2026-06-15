@@ -10,3 +10,5 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/P35-W0-DOMAIN-CHAIN.yaml
+  signals:
+  - task-P35-W0-DOMAIN-CHAIN-running

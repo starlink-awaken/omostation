@@ -10,3 +10,5 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/P34-W3-MULTI-REPO-RELEASE.yaml
+  signals:
+  - task-P34-W3-MULTI-REPO-RELEASE-running
