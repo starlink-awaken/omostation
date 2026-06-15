@@ -553,7 +553,8 @@ def main() -> int:
 
     if args.command == "compass":
         import subprocess
-        cmd = ["uv", "run", "--project", "/Users/xiamingxing/Workspace/projects/c2g", "c2g"] + args.compass_args
+        c2g_project = str((_SCRIPT_DIR.parent.parent.parent / "c2g").resolve())
+        cmd = ["uv", "run", "--project", c2g_project, "c2g"] + args.compass_args
         return subprocess.call(cmd)
 
     if args.command == "monitor":

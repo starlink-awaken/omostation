@@ -18,6 +18,7 @@ dependencies = [
     "runtime",
     "fastapi[standard]>=0.115.0",
     "uvicorn[standard]>=0.34.0",
+    "agora>=3.0.0",
 ]
 
 [project.optional-dependencies]
