@@ -1,3 +1,4 @@
+import os
 import time
 from pathlib import Path
 
@@ -18,7 +19,7 @@ def get_workspace_root() -> Path:
             return current
         current = current.parent
     # 默认 fallback
-    return Path("/Users/xiamingxing/Workspace")
+    return Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
 
 def read_sandbox_drafts(root: Path) -> list[str]:
     sandbox_dir = root / "runtime" / "sandbox"
