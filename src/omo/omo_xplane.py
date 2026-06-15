@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shlex
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -145,7 +146,7 @@ def _probe_command(m: dict, root: Path) -> ProbeResult:
         return ProbeResult(**base, status=RED, detail=f"cwd 不存在: {cwd}")
     try:
         r = subprocess.run(
-            probe.get("run", ""), shell=True, capture_output=True, text=True,
+            shlex.split(probe.get("run", "")), capture_output=True, text=True,
             timeout=float(probe.get("timeout_s", 30)), cwd=str(cwd),
         )
     except subprocess.TimeoutExpired:

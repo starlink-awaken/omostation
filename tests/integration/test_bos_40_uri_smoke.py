@@ -54,7 +54,7 @@ def _default_args_for(uri: str) -> dict:
 def test_40_uri_registry_loads():
     """P43-W1 验证: bos-registry.json 含 40 URI."""
     regs = _load_registry()
-    assert len(regs) == 40, f"Expected 40 URIs, got {len(regs)}"
+    assert len(regs) == 42, f"Expected 42 URIs, got {len(regs)}"
     domains = Counter(r.get("domain") for r in regs)
     assert domains == Counter(
         {"memory": 5, "governance": 8, "analysis": 12, "persona": 7, "capability": 8}

@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import warnings
 import sys
 
-
 def main(argv: list[str] | None = None) -> int:
+    warnings.warn(
+        "omo CLI 为内部程序接口。人类用户请使用 cockpit。",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     args = list(argv if argv is not None else sys.argv[1:])
     # P48-W2: serve 子命令 (stdin/stdout JSON-RPC, 供 agora subprocess spawn)
     if args and args[0] == "serve":
