@@ -227,6 +227,7 @@ from agora.server.tools_proxy import register_proxy_tools, _set_constants as _se
 from agora.server.tools_registry import register_registry_tools  # noqa: E402
 from agora.server.tools_diagnostics import register_diagnostics_tools  # noqa: E402
 from agora.server.tools_governance import register_governance_tools  # noqa: E402
+from agora.server.tools_workspace_audit import register_workspace_audit_tools  # noqa: E402
 
 # ── A2A Task Manager ──────────────────────────────────────────────────
 
@@ -263,6 +264,7 @@ register_proxy_tools(mcp)
 register_registry_tools(mcp)
 register_diagnostics_tools(mcp)
 register_governance_tools(mcp)
+register_workspace_audit_tools(mcp)  # Round 43 P1: 6 维度全方位审计 MCP 暴露
 
 
 async def _init_proxy():
