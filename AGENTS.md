@@ -465,12 +465,17 @@ OPC 路线图 P5-P7 收口阶段建立的 self-correction 闭环, 任何 Phase /
 9. **OMOTask 双向配对 m1_only=0** — 任何 M1 OMOTASK-*.yaml 改动必跑 mof-state-bridge --strict, 失同步即拒
 10. **alias 模糊匹配 (status/title)** — M1 name 与 .omo title, status done/completed 视为一致, 不虚报漂移
 11. **pre-commit venv python 优先** — 用 `.venv/bin/python3` 而非 `uv run --with pyyaml`, 启动 0.55s 远低于 5s
+12. **priority/domain default 兼容** — M1 OMOTask 字段 None 视同 P2/opc default, 不虚报漂移
+13. **cron wrapper 集成 mof-state-bridge** — 任何 OPC cron 跑完后必跑 mof-state-bridge --strict, 5repos 实时写
+14. **OMOTask 字段完整性 1 步到位** — omo-fields-completeness-check 校验硬约束 (state machine/required) + RoadmapPhase 推荐
 
-### 当前桥接状态 (2026-06-14 收口)
+### 当前桥接状态 (2026-06-15 收口)
 
 - 1031 M1 节点 / 45 M2 schema / 100% type coverage / 0 orphan
-- 83/83 OMOTask 配对成功 (m1_only=0)
+- 83/83 OMOTask 配对成功 (m1_only=0, 字段漂移 0)
+- 6 工具综合 (validate/derive/bridge-sync/state-bridge/fields-completeness + 5repos 集成)
 - 7/7 阶段实例化 (was 1/7) / 4/4 门禁实例化 (was 1/4) / 5/5 MODEL-* 节点反向追溯
+- 19/19 gap 全部闭环 (P0(3)+P1(3)+P2(3)+P3(3)+P4(4)+P5(3))
 - 3 OMOTASK-OPC-P5/P6/P7 节点全部 status=done + evidence>=1
 - 0 drift / 0 missing / 0 sm_invalid / 0 lint
 - 收口报告: `.omo/_knowledge/audits/2026-06-14-model-driven-bridge-closeout.md`
