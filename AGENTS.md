@@ -1,11 +1,16 @@
 # AGENTS.md — Workspace Development Guide
 
 > Multi-project knowledge engineering & research workspace (root directory).
-> 最后更新: 2026-06-12
+> 最后更新: 2026-06-15
+
+> **当前 Phase**: 42 — 治理面 SSOT 同步纪元 (Governance SSOT Catch-up)
+> **健康分**: 77.5/100 (raw 100.0, xplane 25.0)
+> **W3 目标**: BOS URI 声明式注册 + 可观测性
+> **SSOT**: `.omo/goals/current.yaml` · `.omo/state/system.yaml`
 
 ## Project Overview
 
-This root directory is a **multi-project workspace** organized in the 5+4+1+1 (eCOS v5) architecture:
+This root directory is a **multi-project workspace** organized in the 5+3+1+1 (eCOS v6) architecture:
 
 | Layer | Project | Stack | Location | Status |
 |-------|---------|-------|----------|--------|

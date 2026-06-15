@@ -1,14 +1,16 @@
-# omostation · eCOS v5
+# omostation · eCOS v6
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![CI Status](https://img.shields.io/badge/CI-20%20workflows-brightgreen)](.github/workflows/)
-[![Tests](https://img.shields.io/badge/tests-16,500+-blue)](AGENTS.md)
-[![SOTI](https://img.shields.io/badge/health-8.0%2F10-success)](.omo/state/system.yaml)
+[![Tests](https://img.shields.io/badge/tests-16,800+-blue)](AGENTS.md)
+[![SOTI](https://img.shields.io/badge/health-7.75%2F10-success)](.omo/state/system.yaml)
 
-> **eCOS v5** — 多项目知识工程与研究 Workspace。7 层架构，8 活跃项目，~490K 行代码，16,500+ 测试。
+> **eCOS v6** — 多项目知识工程与研究 Workspace。5+3+1+1 架构，20 子项目（8 活跃核心 + 12 扩展），~520K 行代码，16,800+ 测试。
+> **当前 Phase 42** — 治理面 SSOT 同步纪元（14 phase 复盘合并）。健康分 77.5/100。
 >
-> **eCOS v5** — Multi-project knowledge engineering & research workspace. 7-layer architecture, 8 active projects, ~490K LOC, 16,500+ tests.
+> **eCOS v6** — Multi-project knowledge engineering & research workspace. 5+3+1+1 architecture, 20 sub-projects (8 active core + 12 extensions), ~520K LOC, 16,800+ tests.
+> **Phase 42** — Governance SSOT Catch-up Era. Health 77.5/100.
 
 [English](#english) | [中文](#中文)
 
