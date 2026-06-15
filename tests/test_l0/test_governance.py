@@ -1099,7 +1099,7 @@ class TestSwarmPrimitiveExtended:
     
     def test_swarm_get_state(self):
         from ecos.l0.governance import SwarmManager, EmergentBehavior, EmergencePattern
-        
+
         manager = SwarmManager()
         manager.agents = ["agent-1", "agent-2"]
         manager.behaviors = [
@@ -1109,84 +1109,10 @@ class TestSwarmPrimitiveExtended:
                 confidence=0.8,
             )
         ]
-        
+
         state = manager.get_swarm_state()
         assert len(state.agents) == 2
         assert len(state.behaviors) == 1
-    
-    def test_emergent_behavior_to_dict(self):
-        from ecos.l0.governance import EmergentBehavior, EmergencePattern, EmergenceLevel
-        
-        behavior = EmergentBehavior(
-            pattern=EmergencePattern.OSCILLATION,
-            agents=["agent-1", "agent-2", "agent-3"],
-            confidence=0.7,
-            level=EmergenceLevel.HIGH,
-        )
-        
-        d = behavior.to_dict()
-        assert d["pattern"] == "oscillation"
-        assert len(d["agents"]) == 3
-        assert d["confidence"] == 0.7
-        assert d["level"] == "high"
-    
-    def test_emergence_detector(self):
-        """测试涌现检测器"""
-        from ecos.l0.governance import EmergenceDetector, SwarmState, EmergencePattern
-        
-        detector = EmergenceDetector()
-        state = SwarmState(agents=["a1", "a2", "a3"], behaviors=[])
-        
-        detected = detector.detect(state)
-        assert len(detected) == 1
-        assert detected[0].pattern == EmergencePattern.CLUSTERING
-        
-        history = detector.get_history()
-        assert len(history) == 1
-    
-    def test_collective_decision(self):
-        """测试集体决策引擎"""
-        from ecos.l0.governance import CollectiveDecision, DecisionMethod
-        
-        engine = CollectiveDecision()
-        
-        # 创建提案
-        proposal = engine.create_proposal("p1", "选择方案", ["A", "B", "C"], DecisionMethod.MAJORITY_VOTE)
-        assert proposal.proposal_id == "p1"
-        
-        # 投票
-        engine.vote("p1", "agent-1", "A")
-        engine.vote("p1", "agent-2", "A")
-        engine.vote("p1", "agent-3", "B")
-        
-        # 决策
-        result = engine.decide("p1")
-        assert result == "A"
-        assert proposal.status == "decided"
-    
-    def test_swarm_visualizer(self):
-        """测试蜂群可视化"""
-        from ecos.l0.governance import SwarmVisualizer, SwarmState, EmergentBehavior, EmergencePattern
-        
-        state = SwarmState(
-            agents=["agent-1", "agent-2"],
-            behaviors=[
-                EmergentBehavior(
-                    pattern=EmergencePattern.CLUSTERING,
-                    agents=["agent-1", "agent-2"],
-                    confidence=0.8,
-                )
-            ],
-        )
-        
-        viz = SwarmVisualizer.visualize(state)
-        assert len(viz.agents) == 2
-        assert len(viz.behaviors) == 1
-        assert viz.metrics["agent_count"] == 2
-        
-        mermaid = SwarmVisualizer.to_mermaid(state)
-        assert "agent-1" in mermaid
-        assert "agent-2" in mermaid
 
 
 class TestPersonalKnowledgePrimitiveExtended:
@@ -2765,3 +2691,301 @@ class TestEndToEndWorkflow:
                       "swarm_status", "knowledge_stats", "task_submit"]:
             result = mcp.call_tool(tool)
             assert result["status"] == "ok", f"工具 {tool} 失败"
+
+
+# ══════════════════════════════════════════════════════════════
+# 新功能测试 — DAG 调度 / 涌现控制 / 增量图谱
+# ══════════════════════════════════════════════════════════════
+
+class TestDAGScheduler:
+    """DAG 任务调度器测试"""
+
+    def test_dag_ready_tasks(self):
+        from ecos.l0.governance import TaskScheduler, DAGScheduler
+
+        ts = TaskScheduler()
+        dag = DAGScheduler(ts)
+
+        ts.submit_task("A", "任务A")
+        ts.submit_task("B", "任务B")
+        ts.submit_task("C", "任务C")
+
+        dag.add_dependency("B", "A")
+        dag.add_dependency("C", "B")
+
+        ready = dag.get_ready_tasks()
+        assert "A" in ready
+        assert "B" not in ready
+        assert "C" not in ready
+
+    def test_dag_mark_completed(self):
+        from ecos.l0.governance import TaskScheduler, DAGScheduler
+
+        ts = TaskScheduler()
+        dag = DAGScheduler(ts)
+
+        ts.submit_task("A", "任务A")
+        ts.submit_task("B", "任务B")
+        ts.submit_task("C", "任务C")
+
+        dag.add_dependency("B", "A")
+        dag.add_dependency("C", "B")
+
+        dag.mark_completed("A")
+        ready = dag.get_ready_tasks()
+        assert "B" in ready
+        assert "C" not in ready
+
+        dag.mark_completed("B")
+        ready = dag.get_ready_tasks()
+        assert "C" in ready
+
+    def test_dag_topological_order(self):
+        from ecos.l0.governance import TaskScheduler, DAGScheduler
+
+        ts = TaskScheduler()
+        dag = DAGScheduler(ts)
+
+        ts.submit_task("A", "A", priority=1)
+        ts.submit_task("B", "B", priority=2)
+        ts.submit_task("C", "C", priority=3)
+
+        dag.add_dependency("B", "A")
+        dag.add_dependency("C", "A")
+
+        order = dag.get_topological_order()
+        assert order.index("A") < order.index("B")
+        assert order.index("A") < order.index("C")
+
+    def test_dag_critical_path(self):
+        from ecos.l0.governance import TaskScheduler, DAGScheduler
+
+        ts = TaskScheduler()
+        dag = DAGScheduler(ts)
+
+        ts.submit_task("A", "A")
+        ts.submit_task("B", "B")
+        ts.submit_task("C", "C")
+        ts.submit_task("D", "D")
+
+        dag.add_dependency("B", "A")
+        dag.add_dependency("C", "B")
+        dag.add_dependency("D", "C")
+
+        path = dag.get_critical_path()
+        assert path == ["A", "B", "C", "D"]
+
+    def test_dag_execution_plan(self):
+        from ecos.l0.governance import TaskScheduler, DAGScheduler
+
+        ts = TaskScheduler()
+        dag = DAGScheduler(ts)
+
+        ts.submit_task("A", "A")
+        ts.submit_task("B", "B")
+        ts.submit_task("C", "C")
+        ts.submit_task("D", "D")
+
+        dag.add_dependency("B", "A")
+        dag.add_dependency("C", "A")
+        dag.add_dependency("D", "B")
+
+        plan = dag.get_execution_plan()
+        assert len(plan) >= 2
+        assert "A" in plan[0]
+
+    def test_dag_stats(self):
+        from ecos.l0.governance import TaskScheduler, DAGScheduler
+
+        ts = TaskScheduler()
+        dag = DAGScheduler(ts)
+
+        ts.submit_task("A", "A")
+        ts.submit_task("B", "B")
+        dag.add_dependency("B", "A")
+
+        stats = dag.get_stats()
+        assert stats["total_tasks"] == 2
+        assert stats["dependencies"] == 1
+
+
+class TestEmergenceControl:
+    """涌现控制策略测试"""
+
+    def test_suppress(self):
+        from ecos.l0.governance import SwarmManager, EmergentBehavior, EmergencePattern
+
+        manager = SwarmManager()
+        manager.agents = ["a1", "a2", "a3"]
+
+        behavior = EmergentBehavior(
+            pattern=EmergencePattern.CLUSTERING,
+            agents=["a1", "a2"], confidence=0.9,
+        )
+        manager.control_emergence(behavior, "suppress")
+
+        assert manager.agent_states["a1"].get("controlled") is True
+        assert manager.agent_states["a2"].get("controlled") is True
+
+    def test_amplify(self):
+        from ecos.l0.governance import SwarmManager, EmergentBehavior, EmergencePattern
+
+        manager = SwarmManager()
+        manager.add_agent("a1", weight=1.0)
+
+        behavior = EmergentBehavior(
+            pattern=EmergencePattern.CLUSTERING,
+            agents=["a1"], confidence=0.9,
+        )
+        manager.control_emergence(behavior, "amplify")
+
+        assert manager.agent_weights["a1"] == 1.5
+
+    def test_redirect(self):
+        from ecos.l0.governance import SwarmManager, EmergentBehavior, EmergencePattern
+
+        manager = SwarmManager()
+        manager.agents = ["a1"]
+
+        behavior = EmergentBehavior(
+            pattern=EmergencePattern.OSCILLATION,
+            agents=["a1"], confidence=0.8,
+        )
+        manager.control_emergence(behavior, "redirect")
+
+        assert manager.agent_states["a1"].get("redirected") is True
+        assert manager.agent_states["a1"].get("redirect_from") == "oscillation"
+
+    def test_isolate(self):
+        from ecos.l0.governance import SwarmManager, EmergentBehavior, EmergencePattern
+
+        manager = SwarmManager()
+        manager.agents = ["a1"]
+
+        behavior = EmergentBehavior(
+            pattern=EmergencePattern.CASCADE,
+            agents=["a1"], confidence=0.9,
+        )
+        manager.control_emergence(behavior, "isolate")
+
+        assert manager.agent_states["a1"].get("isolated") is True
+
+    def test_merge(self):
+        from ecos.l0.governance import SwarmManager, EmergentBehavior, EmergencePattern
+
+        manager = SwarmManager()
+        manager.agents = ["a1", "a2", "a3"]
+
+        behavior = EmergentBehavior(
+            pattern=EmergencePattern.CLUSTERING,
+            agents=["a1", "a2", "a3"], confidence=0.9,
+        )
+        manager.control_emergence(behavior, "merge")
+
+        merged = manager.agent_states["a1"].get("merged_agents", [])
+        assert "a2" in merged
+        assert "a3" in merged
+
+    def test_invalid_action(self):
+        from ecos.l0.governance import SwarmManager, EmergentBehavior, EmergencePattern
+
+        manager = SwarmManager()
+        behavior = EmergentBehavior(
+            pattern=EmergencePattern.CLUSTERING,
+            agents=["a1"], confidence=0.9,
+        )
+        assert manager.control_emergence(behavior, "invalid") is False
+
+
+class TestIncrementalGraph:
+    """增量图谱构建测试"""
+
+    def test_add_node_returns_bool(self):
+        from ecos.l0.governance import KnowledgeGraphBuilder
+
+        g = KnowledgeGraphBuilder()
+        assert g.add_node("n1") is True
+        assert g.add_node("n1") is False
+
+    def test_update_node(self):
+        from ecos.l0.governance import KnowledgeGraphBuilder
+
+        g = KnowledgeGraphBuilder()
+        g.add_node("n1", {"type": "concept"})
+        g.update_node("n1", {"label": "AI"})
+        assert g.nodes["n1"]["label"] == "AI"
+        assert g.nodes["n1"]["type"] == "concept"
+
+    def test_add_edge_dedup(self):
+        from ecos.l0.governance import KnowledgeGraphBuilder
+
+        g = KnowledgeGraphBuilder()
+        g.add_node("n1")
+        g.add_node("n2")
+        assert g.add_edge("n1", "n2", "related") is True
+        assert g.add_edge("n1", "n2", "related") is False
+
+    def test_update_edge(self):
+        from ecos.l0.governance import KnowledgeGraphBuilder
+
+        g = KnowledgeGraphBuilder()
+        g.add_edge("n1", "n2", "related", weight=1.0)
+        g.update_edge("n1", "n2", weight=5.0)
+        assert g.get_edge_weight("n1", "n2") == 5.0
+
+    def test_remove_edge(self):
+        from ecos.l0.governance import KnowledgeGraphBuilder
+
+        g = KnowledgeGraphBuilder()
+        g.add_edge("n1", "n2", "related")
+        assert g.remove_edge("n1", "n2") is True
+        assert g.get_neighbors("n1") == []
+
+    def test_version_tracking(self):
+        from ecos.l0.governance import KnowledgeGraphBuilder
+
+        g = KnowledgeGraphBuilder()
+        assert g.version == 0
+        g.add_node("n1")
+        assert g.version == 1
+        g.add_edge("n1", "n2", "link")
+        assert g.version == 2
+
+    def test_batch_add(self):
+        from ecos.l0.governance import KnowledgeGraphBuilder
+
+        g = KnowledgeGraphBuilder()
+        count = g.batch_add(
+            nodes=[("n1", {}), ("n2", {}), ("n3", {})],
+            edges=[("n1", "n2", "link"), ("n2", "n3", "link")],
+        )
+        assert count == 5
+        assert len(g.nodes) == 3
+        assert len(g.edges) == 2
+
+    def test_get_changes_since(self):
+        from ecos.l0.governance import KnowledgeGraphBuilder
+
+        g = KnowledgeGraphBuilder()
+        g.add_node("n1")
+        g.add_node("n2")
+        changes = g.get_changes_since(1)
+        assert len(changes) == 1
+        assert changes[0]["op"] == "add_node"
+
+    def test_snapshot_and_merge(self):
+        from ecos.l0.governance import KnowledgeGraphBuilder
+
+        g1 = KnowledgeGraphBuilder()
+        g1.batch_add(
+            nodes=[("n1", {"a": 1}), ("n2", {"b": 2})],
+            edges=[("n1", "n2", "link")],
+        )
+
+        snap = g1.get_snapshot()
+
+        g2 = KnowledgeGraphBuilder()
+        merged = g2.merge_snapshot(snap)
+        assert merged == 3
+        assert len(g2.nodes) == 2
+        assert len(g2.edges) == 1

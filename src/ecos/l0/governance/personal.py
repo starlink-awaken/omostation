@@ -308,15 +308,35 @@ class PersonalKnowledgeManager(PersonalKnowledgePrimitive):
 
 
 class KnowledgeGraphBuilder:
-    """知识图谱构建器 — PageRank 中心度 + 社区发现 + 路径搜索"""
+    """知识图谱构建器 — PageRank + 中心度 + 社区发现 + 增量构建"""
 
     def __init__(self):
         self.edges: list[GraphEdge] = []
         self.nodes: dict[str, dict[str, Any]] = {}
         self._adjacency: dict[str, list[str]] = defaultdict(list)
+        self._edge_index: dict[tuple[str, str], int] = {}
+        self._version: int = 0
+        self._change_log: list[dict[str, Any]] = []
 
-    def add_node(self, node_id: str, metadata: dict[str, Any] | None = None) -> None:
+    @property
+    def version(self) -> int:
+        return self._version
+
+    def add_node(self, node_id: str, metadata: dict[str, Any] | None = None) -> bool:
+        if node_id in self.nodes:
+            return False
         self.nodes[node_id] = metadata or {}
+        self._version += 1
+        self._change_log.append({"op": "add_node", "node_id": node_id, "v": self._version})
+        return True
+
+    def update_node(self, node_id: str, metadata: dict[str, Any]) -> bool:
+        if node_id not in self.nodes:
+            return False
+        self.nodes[node_id].update(metadata)
+        self._version += 1
+        self._change_log.append({"op": "update_node", "node_id": node_id, "v": self._version})
+        return True
 
     def remove_node(self, node_id: str) -> bool:
         if node_id not in self.nodes:
@@ -326,15 +346,89 @@ class KnowledgeGraphBuilder:
         self._adjacency.pop(node_id, None)
         for adj in self._adjacency.values():
             adj[:] = [n for n in adj if n != node_id]
+        self._edge_index = {(s, t): i for i, (s, t, *_) in enumerate(
+            [(e.source, e.target) for e in self.edges]
+        )}
+        self._version += 1
+        self._change_log.append({"op": "remove_node", "node_id": node_id, "v": self._version})
         return True
 
-    def add_edge(self, source: str, target: str, relation: str, weight: float = 1.0) -> None:
+    def add_edge(self, source: str, target: str, relation: str, weight: float = 1.0) -> bool:
+        edge_key = (source, target)
+        if edge_key in self._edge_index:
+            return False
         edge = GraphEdge(source=source, target=target, relation=relation, weight=weight)
         self.edges.append(edge)
+        self._edge_index[edge_key] = len(self.edges) - 1
         self._adjacency[source].append(target)
         self._adjacency[target].append(source)
         self.nodes.setdefault(source, {})
         self.nodes.setdefault(target, {})
+        self._version += 1
+        self._change_log.append({"op": "add_edge", "source": source, "target": target, "v": self._version})
+        return True
+
+    def update_edge(self, source: str, target: str, weight: float) -> bool:
+        edge_key = (source, target)
+        idx = self._edge_index.get(edge_key)
+        if idx is None:
+            return False
+        self.edges[idx] = GraphEdge(
+            source=source, target=target,
+            relation=self.edges[idx].relation, weight=weight,
+        )
+        self._version += 1
+        return True
+
+    def remove_edge(self, source: str, target: str) -> bool:
+        edge_key = (source, target)
+        idx = self._edge_index.pop(edge_key, None)
+        if idx is None:
+            return False
+        self.edges.pop(idx)
+        self._adjacency[source] = [n for n in self._adjacency[source] if n != target]
+        self._adjacency[target] = [n for n in self._adjacency[target] if n != source]
+        self._edge_index = {(e.source, e.target): i for i, e in enumerate(self.edges)}
+        self._version += 1
+        self._change_log.append({"op": "remove_edge", "source": source, "target": target, "v": self._version})
+        return True
+
+    def batch_add(self, nodes: list[tuple[str, dict[str, Any]]] | None = None,
+                  edges: list[tuple[str, str, str]] | None = None) -> int:
+        """批量添加，返回变更数"""
+        count = 0
+        for node_id, meta in (nodes or []):
+            if self.add_node(node_id, meta):
+                count += 1
+        for src, tgt, rel in (edges or []):
+            if self.add_edge(src, tgt, rel):
+                count += 1
+        return count
+
+    def get_changes_since(self, version: int) -> list[dict[str, Any]]:
+        """获取指定版本之后的变更"""
+        return [c for c in self._change_log if c["v"] > version]
+
+    def get_snapshot(self) -> dict[str, Any]:
+        """获取当前快照"""
+        return {
+            "version": self._version,
+            "nodes": {k: v.copy() for k, v in self.nodes.items()},
+            "edges": [(e.source, e.target, e.relation, e.weight) for e in self.edges],
+        }
+
+    def merge_snapshot(self, snapshot: dict[str, Any]) -> int:
+        """合并快照，返回变更数"""
+        count = 0
+        for node_id, meta in snapshot.get("nodes", {}).items():
+            if node_id not in self.nodes:
+                self.add_node(node_id, meta)
+                count += 1
+        for src, tgt, rel, weight in snapshot.get("edges", []):
+            if (src, tgt) not in self._edge_index:
+                self.add_edge(src, tgt, rel, weight)
+                count += 1
+        return count
 
     def get_neighbors(self, node_id: str) -> list[str]:
         return list(set(self._adjacency.get(node_id, [])))

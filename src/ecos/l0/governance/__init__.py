@@ -58,7 +58,7 @@ from .distributed import (
     CommunicationProtocol,
 )
 from .agent_registry import AgentRegistry, AgentInfo, AgentStatus
-from .task_scheduler import TaskScheduler, TaskInfo, TaskStatus
+from .task_scheduler import TaskScheduler, TaskInfo, TaskStatus, DAGScheduler
 from .failover import FailoverManager, FailoverRule, FailoverStrategy
 from .load_balancer import LoadBalancer, LoadBalancingStrategy, NodeLoad
 from .role import (
@@ -162,6 +162,7 @@ __all__ = [
     "TaskScheduler",
     "TaskInfo",
     "TaskStatus",
+    "DAGScheduler",
     # 故障转移
     "FailoverManager",
     "FailoverRule",

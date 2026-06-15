@@ -175,3 +175,130 @@ class TaskScheduler:
             },
             "queue": self.task_queue,
         }
+
+
+class DAGScheduler:
+    """DAG 任务调度器 — 拓扑排序 + 就绪检测 + 并行调度"""
+
+    def __init__(self, task_scheduler: TaskScheduler):
+        self._scheduler = task_scheduler
+        self._dependencies: dict[str, set[str]] = {}
+        self._dependents: dict[str, set[str]] = {}
+        self._completed: set[str] = set()
+
+    def add_dependency(self, task_id: str, depends_on: str) -> None:
+        """添加依赖: task_id 依赖 depends_on"""
+        self._dependencies.setdefault(task_id, set()).add(depends_on)
+        self._dependents.setdefault(depends_on, set()).add(task_id)
+
+    def get_ready_tasks(self) -> list[str]:
+        """获取就绪任务（所有依赖已完成）"""
+        ready = []
+        for task_id in self._scheduler.task_queue:
+            task = self._scheduler.get_task(task_id)
+            if not task or task.status != TaskStatus.PENDING:
+                continue
+
+            deps = self._dependencies.get(task_id, set())
+            if deps.issubset(self._completed):
+                ready.append(task_id)
+        return ready
+
+    def mark_completed(self, task_id: str) -> list[str]:
+        """标记任务完成，返回新就绪的任务"""
+        self._completed.add(task_id)
+        new_ready = []
+        for dependent in self._dependents.get(task_id, set()):
+            dep_task = self._scheduler.get_task(dependent)
+            if dep_task and dep_task.status == TaskStatus.PENDING:
+                deps = self._dependencies.get(dependent, set())
+                if deps.issubset(self._completed):
+                    new_ready.append(dependent)
+        return new_ready
+
+    def get_topological_order(self) -> list[str]:
+        """拓扑排序"""
+        in_degree: dict[str, int] = {}
+        all_tasks = set(self._scheduler.tasks.keys())
+
+        for task_id in all_tasks:
+            in_degree[task_id] = len(self._dependencies.get(task_id, set()))
+
+        queue = [tid for tid, deg in in_degree.items() if deg == 0]
+        order: list[str] = []
+
+        while queue:
+            queue.sort(key=lambda t: self._scheduler.tasks[t].priority, reverse=True)
+            current = queue.pop(0)
+            order.append(current)
+
+            for dependent in self._dependents.get(current, set()):
+                if dependent in in_degree:
+                    in_degree[dependent] -= 1
+                    if in_degree[dependent] == 0:
+                        queue.append(dependent)
+
+        return order
+
+    def get_execution_plan(self) -> list[list[str]]:
+        """生成并行执行计划（每层可并行）"""
+        order = self.get_topological_order()
+        if not order:
+            return []
+
+        levels: list[list[str]] = []
+        remaining = set(order)
+
+        while remaining:
+            level = []
+            for task_id in order:
+                if task_id not in remaining:
+                    continue
+                deps = self._dependencies.get(task_id, set())
+                if deps.issubset(self._completed | set(sum(levels, []))):
+                    level.append(task_id)
+
+            if not level:
+                break
+
+            levels.append(level)
+            remaining -= set(level)
+
+        return levels
+
+    def get_critical_path(self) -> list[str]:
+        """获取关键路径（最长依赖链）"""
+        order = self.get_topological_order()
+        if not order:
+            return []
+
+        dist: dict[str, int] = {tid: 0 for tid in order}
+        pred: dict[str, Optional[str]] = {tid: None for tid in order}
+
+        for task_id in order:
+            for dependent in self._dependents.get(task_id, set()):
+                if dependent in dist:
+                    new_dist = dist[task_id] + 1
+                    if new_dist > dist[dependent]:
+                        dist[dependent] = new_dist
+                        pred[dependent] = task_id
+
+        if not dist:
+            return []
+
+        end = max(dist, key=lambda k: dist[k])
+        path = []
+        current: Optional[str] = end
+        while current is not None:
+            path.append(current)
+            current = pred.get(current)
+        path.reverse()
+        return path
+
+    def get_stats(self) -> dict[str, Any]:
+        return {
+            "total_tasks": len(self._scheduler.tasks),
+            "completed": len(self._completed),
+            "dependencies": sum(len(v) for v in self._dependencies.values()),
+            "ready_tasks": len(self.get_ready_tasks()),
+        }

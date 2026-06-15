@@ -375,7 +375,7 @@ class SwarmManager(SwarmPrimitive):
 
     def control_emergence(self, behavior: EmergentBehavior, action: str) -> bool:
         """控制涌现行为"""
-        if action not in ("suppress", "amplify", "redirect", "observe"):
+        if action not in ("suppress", "amplify", "redirect", "observe", "isolate", "merge"):
             return False
 
         self._control_log.append({
@@ -389,9 +389,25 @@ class SwarmManager(SwarmPrimitive):
         if action == "suppress":
             for agent_id in behavior.agents:
                 self.agent_states.setdefault(agent_id, {})["controlled"] = True
+                self.agent_states[agent_id]["suppressed_at"] = datetime.now(timezone.utc).isoformat()
         elif action == "amplify":
             for agent_id in behavior.agents:
                 self.agent_weights[agent_id] = self.agent_weights.get(agent_id, 1.0) * 1.5
+                self.agent_states.setdefault(agent_id, {})["amplified"] = True
+        elif action == "redirect":
+            for agent_id in behavior.agents:
+                state = self.agent_states.setdefault(agent_id, {})
+                state["redirected"] = True
+                state["redirect_from"] = behavior.pattern.value
+        elif action == "isolate":
+            for agent_id in behavior.agents:
+                self.agent_states.setdefault(agent_id, {})["isolated"] = True
+        elif action == "merge":
+            if len(behavior.agents) >= 2:
+                primary = behavior.agents[0]
+                for agent_id in behavior.agents[1:]:
+                    self.agent_states.setdefault(primary, {}).setdefault("merged_agents", [])
+                    self.agent_states[primary]["merged_agents"].append(agent_id)
 
         return True
 
