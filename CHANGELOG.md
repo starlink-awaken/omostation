@@ -4,6 +4,14 @@
 > 9 项目 (agora / kairon / gbrain / omo / metaos / cockpit / runtime / ecos / aetherforge) 共享版本号.
 > 详见 ADR-0007.
 
+## [0.3.0] - 2026-06-15
+
+### Added (C2G v3 Cybernetic Solutions)
+- **SSOT Write-back**: 实现了 `context_uri` 回写机制，完成任务后自动向原始 Markdown 设计反向追加审计结果，防止上下文降维断裂 (ecos)。
+- **Fast-Track Compaction**: `omo worker gc` 自动汇聚微小交付任务 (FAST-*) 为聚合报告，保持稳态区纯净 (omo)。
+- **Agent Tactical Yield**: 新增 `omo_yield_task` 机制，解决 Agent 执行时的长尾阻塞卡死问题，引导回流重估 (omo)。
+- **L0 Governance**: 新增 C2G v3 系列 L0 X1 门禁约束 (`CR-C2G-V3-01~03`) 确保流程自愈 (ecos)。
+
 ## [0.2.0] - 2026-06-12
 
 ### Added (治理框架 + 能力地图 + 文档完善)
