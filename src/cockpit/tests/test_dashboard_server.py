@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from cockpit.dashboard_server import _load_debt, _omo_report, _run_e2e, app
+from cockpit.dashboard_server import _load_compute, _load_debt, _omo_report, _run_e2e, app
 
 
 @pytest.fixture
@@ -50,6 +50,69 @@ class TestDashboardAuth:
 
 
 class TestDashboardLoaders:
+    def test_load_compute_aggregates_runtime_and_provider_plane(self, monkeypatch, tmp_path):
+        runtime_home = tmp_path / "runtime"
+        quota_path = runtime_home / "data" / "llm_quota_summary.json"
+        cost_path = runtime_home / "data" / "llm_cost.jsonl"
+        provider_plane_path = tmp_path / ".omo" / "state" / "provider-plane.yaml"
+        quota_path.parent.mkdir(parents=True)
+        provider_plane_path.parent.mkdir(parents=True)
+
+        quota_path.write_text(
+            """{
+  "generated_at": "2026-06-15T09:00:00Z",
+  "entry_count": 2,
+  "total_estimated_cost_usd": 0.12,
+  "remaining_ratio": 0.42,
+  "quota_low": false
+}""",
+            encoding="utf-8",
+        )
+        cost_path.write_text(
+            "\n".join(
+                [
+                    '{"model":"gpt-4o","input_tokens":1000,"output_tokens":500,"timestamp":"2026-06-15T08:00:00Z"}',
+                    '{"model":"ollama/qwen3","input_tokens":100,"output_tokens":50,"timestamp":"2026-06-14T08:00:00Z"}',
+                ]
+            ),
+            encoding="utf-8",
+        )
+        provider_plane_path.write_text(
+            """
+selected_provider:
+  name: DeepSeek
+  model: gpt-4o
+  base_url: https://example.test
+  source: cc-switch
+  is_healthy: true
+quota_summary:
+  provider_count: 1
+  providers:
+    codex:
+      available: true
+      summary: balance=$8.50
+      balance: 8.5
+      used_percent: 20.0
+""".strip(),
+            encoding="utf-8",
+        )
+
+        monkeypatch.setattr("cockpit.dashboard_server.LLM_QUOTA_SUMMARY_PATH", quota_path)
+        monkeypatch.setattr("cockpit.dashboard_server.LLM_COST_LOG_PATH", cost_path)
+        monkeypatch.setattr("cockpit.dashboard_server.PROVIDER_PLANE_PATH", provider_plane_path)
+
+        result = _load_compute()
+
+        assert result["summary"]["total_calls"] == 2
+        assert result["summary"]["remaining_ratio"] == 0.42
+        assert result["provider"]["name"] == "DeepSeek"
+        assert result["provider"]["quota_provider_count"] == 1
+        assert result["observations"]["cross_day"] is True
+        assert result["observations"]["cross_model"] is True
+        assert result["traffic_by_node"][0]["calls"] == 1
+        assert len(result["recent_traffic"]) == 2
+        assert any(item["label"] == "Cloud (cc-switch)" for item in result["topology"])
+
     def test_load_debt_no_omo_dir(self, monkeypatch):
         monkeypatch.setattr(
             "cockpit.dashboard_server.OMO_ROOT",
@@ -94,3 +157,14 @@ class TestDashboardCORS:
 
         importlib.reload(ds)
         assert ds.DASHBOARD_CORS_ORIGIN == "http://myapp.local"
+
+
+class TestDashboardComputeApi:
+    def test_api_compute_endpoint(self, test_client, monkeypatch):
+        monkeypatch.setattr(
+            "cockpit.dashboard_server._load_compute",
+            lambda: {"summary": {"total_calls": 3}, "recent_traffic": [], "traffic_by_node": []},
+        )
+        resp = test_client.get("/api/compute")
+        assert resp.status_code == 200
+        assert resp.json()["summary"]["total_calls"] == 3

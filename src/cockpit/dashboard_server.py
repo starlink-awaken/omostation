@@ -32,6 +32,7 @@ import re
 import subprocess
 import sys
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -41,10 +42,15 @@ from fastapi.responses import HTMLResponse, JSONResponse
 
 # ─── Paths ──────────────────────────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).resolve().parent  # cockpit/src/cockpit/
+WORKSPACE_ROOT = Path.home() / "Workspace"
 OMO_ROOT = Path.home() / "Workspace/projects/omo"
-DASHBOARD_HTML = PROJECT_ROOT / "templates" / "dashboard.html"
+RUNTIME_HOME = Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime")))
+DASHBOARD_HTML = WORKSPACE_ROOT / "projects" / "cockpit" / "web" / "dashboard.html"
 M0_SNAPSHOT_PATH = Path.home() / "Workspace/projects/ecos/src/ecos/ssot/mof/m0/snapshot.yaml"
 HERMES_CONSOLE_DIST = Path.home() / "Workspace/projects/hermes-console/dist"
+PROVIDER_PLANE_PATH = WORKSPACE_ROOT / ".omo" / "state" / "provider-plane.yaml"
+LLM_QUOTA_SUMMARY_PATH = RUNTIME_HOME / "data" / "llm_quota_summary.json"
+LLM_COST_LOG_PATH = RUNTIME_HOME / "data" / "llm_cost.jsonl"
 
 # Ensure both runtime/src and omo/src are on sys.path for imports
 _runtime_src = str(PROJECT_ROOT / "src")
@@ -527,6 +533,11 @@ async def api_debt():
     return JSONResponse(content=_load_debt())
 
 
+@app.get("/api/compute")
+async def api_compute():
+    return JSONResponse(content=_load_compute())
+
+
 @app.get("/api/e2e")
 async def api_e2e():
     return JSONResponse(content=_run_e2e())
@@ -561,6 +572,207 @@ async def api_cards_check():
 # ═══════════════════════════════════════════════════════════════
 # 债务加载 / E2E / OMO 报告 (从原 dashboard_server.py 迁移)
 # ═══════════════════════════════════════════════════════════════
+
+_DEFAULT_COMPUTE_TOPOLOGY = [
+    {"id": "local-mac", "label": "Local-Mac", "kind": "local", "role": "Cockpit / Agent host"},
+    {"id": "macmini-ollama", "label": "MacMini (Ollama)", "kind": "local", "role": "Local inference"},
+    {"id": "y7000p-lmstudio", "label": "Y7000P (LMStudio)", "kind": "local", "role": "GPU workstation"},
+    {"id": "cloud-cc-switch", "label": "Cloud (cc-switch)", "kind": "cloud", "role": "Remote provider relay"},
+]
+
+
+def _read_json_file(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _parse_timestamp(raw: str | None) -> datetime | None:
+    if not raw:
+        return None
+    normalized = raw.replace("Z", "+00:00")
+    try:
+        dt = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt
+
+
+def _estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
+    model_lower = (model or "unknown").lower()
+    cost_map = {
+        "gpt-4": {"input": 0.03, "output": 0.06},
+        "gpt-4o": {"input": 0.01, "output": 0.03},
+        "gpt-4o-mini": {"input": 0.0015, "output": 0.006},
+        "claude-3-opus": {"input": 0.015, "output": 0.075},
+        "claude-3-sonnet": {"input": 0.003, "output": 0.015},
+        "claude-3-haiku": {"input": 0.00025, "output": 0.00125},
+        "deepseek-v4": {"input": 0.002, "output": 0.008},
+        "deepseek-v4-flash": {"input": 0.0005, "output": 0.002},
+        "gemini-1.5-pro": {"input": 0.0035, "output": 0.0105},
+        "ollama": {"input": 0.0, "output": 0.0},
+        "lmstudio": {"input": 0.0, "output": 0.0},
+        "mock-model": {"input": 0.0, "output": 0.0},
+    }
+    rates = None
+    for key, candidate in cost_map.items():
+        if model_lower.startswith(key):
+            rates = candidate
+            break
+    if rates is None:
+        rates = {"input": 0.002, "output": 0.008}
+    return round((input_tokens / 1000) * rates["input"] + (output_tokens / 1000) * rates["output"], 6)
+
+
+def _infer_node(model: str, provider_name: str | None) -> dict[str, str]:
+    model_lower = (model or "").lower()
+    provider_lower = (provider_name or "").lower()
+    if "ollama" in model_lower:
+        return {"node_id": "macmini-ollama", "node_label": "MacMini (Ollama)", "route_type": "local"}
+    if "lmstudio" in model_lower:
+        return {"node_id": "y7000p-lmstudio", "node_label": "Y7000P (LMStudio)", "route_type": "local"}
+    if any(key in model_lower for key in ("gpt", "claude", "deepseek", "gemini")) or "deepseek" in provider_lower:
+        return {"node_id": "cloud-cc-switch", "node_label": "Cloud (cc-switch)", "route_type": "cloud"}
+    return {"node_id": "local-mac", "node_label": "Local-Mac", "route_type": "local"}
+
+
+def _load_compute() -> dict:
+    quota_summary = _read_json_file(LLM_QUOTA_SUMMARY_PATH)
+    provider_plane = {}
+    if PROVIDER_PLANE_PATH.exists():
+        provider_plane = yaml.safe_load(PROVIDER_PLANE_PATH.read_text(encoding="utf-8")) or {}
+
+    selected_provider = provider_plane.get("selected_provider") or {}
+    provider_name = selected_provider.get("name")
+
+    records = []
+    if LLM_COST_LOG_PATH.exists():
+        for line in LLM_COST_LOG_PATH.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            model = entry.get("model", "unknown")
+            input_tokens = int(entry.get("input_tokens", 0) or 0)
+            output_tokens = int(entry.get("output_tokens", 0) or 0)
+            raw_ts = entry.get("timestamp") or entry.get("ts")
+            ts = _parse_timestamp(raw_ts)
+            node = _infer_node(model, provider_name)
+            estimated_cost = float(entry.get("cost") or _estimate_cost(model, input_tokens, output_tokens))
+            records.append(
+                {
+                    "timestamp": ts.isoformat() if ts else raw_ts,
+                    "model": model,
+                    "provider_hint": provider_name or "unknown",
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens,
+                    "total_tokens": input_tokens + output_tokens,
+                    "estimated_cost_usd": round(estimated_cost, 6),
+                    **node,
+                }
+            )
+
+    records.sort(key=lambda item: item.get("timestamp") or "", reverse=True)
+
+    latest_request_at = records[0].get("timestamp") if records else None
+    earliest_request_at = records[-1].get("timestamp") if records else None
+    latest_dt = _parse_timestamp(latest_request_at)
+    earliest_dt = _parse_timestamp(earliest_request_at)
+    span_hours = None
+    if latest_dt and earliest_dt:
+        span_hours = round((latest_dt - earliest_dt).total_seconds() / 3600, 2)
+
+    traffic_by_node: dict[str, dict] = {}
+    for record in records:
+        bucket = traffic_by_node.setdefault(
+            record["node_id"],
+            {
+                "node_id": record["node_id"],
+                "node_label": record["node_label"],
+                "route_type": record["route_type"],
+                "calls": 0,
+                "tokens": 0,
+                "estimated_cost_usd": 0.0,
+            },
+        )
+        bucket["calls"] += 1
+        bucket["tokens"] += record["total_tokens"]
+        bucket["estimated_cost_usd"] = round(bucket["estimated_cost_usd"] + record["estimated_cost_usd"], 6)
+
+    topology = []
+    active_node_ids = set(traffic_by_node)
+    selected_node_id = _infer_node(selected_provider.get("model", ""), provider_name).get("node_id")
+    for node in _DEFAULT_COMPUTE_TOPOLOGY:
+        topology.append(
+            {
+                **node,
+                "active": node["id"] in active_node_ids,
+                "selected_provider_route": node["id"] == selected_node_id,
+            }
+        )
+
+    quota_providers = []
+    for provider_id, details in (provider_plane.get("quota_summary", {}).get("providers", {}) or {}).items():
+        quota_providers.append(
+            {
+                "provider_id": provider_id,
+                "available": bool(details.get("available", False)),
+                "summary": details.get("summary"),
+                "balance": details.get("balance"),
+                "used_percent": details.get("used_percent"),
+            }
+        )
+
+    return {
+        "summary": {
+            "generated_at": quota_summary.get("generated_at"),
+            "entry_count": quota_summary.get("entry_count", len(records)),
+            "total_calls": len(records),
+            "recent_calls": len(records[:10]),
+            "total_input_tokens": sum(item["input_tokens"] for item in records),
+            "total_output_tokens": sum(item["output_tokens"] for item in records),
+            "total_estimated_cost_usd": round(
+                quota_summary.get("total_estimated_cost_usd", sum(item["estimated_cost_usd"] for item in records)),
+                6,
+            ),
+            "remaining_ratio": quota_summary.get("remaining_ratio"),
+            "remaining_budget_usd": quota_summary.get("remaining_budget_usd"),
+            "effective_remaining_budget_usd": quota_summary.get("effective_remaining_budget_usd"),
+            "quota_low": bool(quota_summary.get("quota_low", False)),
+            "latest_request_at": latest_request_at,
+            "earliest_request_at": earliest_request_at,
+            "time_span_hours": span_hours,
+        },
+        "provider": {
+            "name": selected_provider.get("name"),
+            "model": selected_provider.get("model"),
+            "base_url": selected_provider.get("base_url"),
+            "source": selected_provider.get("source"),
+            "is_healthy": selected_provider.get("is_healthy"),
+            "quota_provider_count": provider_plane.get("quota_summary", {}).get("provider_count", 0),
+            "quota_providers": quota_providers,
+        },
+        "topology": topology,
+        "traffic_by_node": sorted(traffic_by_node.values(), key=lambda item: item["calls"], reverse=True),
+        "recent_traffic": records[:10],
+        "observations": {
+            "cross_day": bool(latest_dt and earliest_dt and latest_dt.date() != earliest_dt.date()),
+            "cross_week": bool(
+                latest_dt and earliest_dt and latest_dt.isocalendar()[:2] != earliest_dt.isocalendar()[:2]
+            ),
+            "cross_model": len({item["model"] for item in records}) > 1,
+            "latency_available": False,
+            "throughput_mode": "token-aggregate",
+        },
+    }
 
 
 def _load_debt() -> dict:

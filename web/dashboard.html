@@ -266,6 +266,39 @@ textarea.mono-input:focus{outline:none;border-color:var(--border-active)}
   </div>
 </div>
 
+<!-- Compute / Cost / Traffic -->
+<div class="card" style="grid-column:1/-1">
+  <div class="card-header">
+    <h2>⚙️ 算力路由</h2>
+    <span class="card-badge" id="compute-badge">等待数据</span>
+  </div>
+  <div class="stats-grid" style="margin-bottom:1rem">
+    <div class="card-stat"><div class="label">调用数</div><div class="value" id="compute-total-calls">—</div></div>
+    <div class="card-stat"><div class="label">总 Token</div><div class="value" id="compute-total-tokens">—</div></div>
+    <div class="card-stat"><div class="label">估算成本</div><div class="value" id="compute-total-cost">—</div></div>
+    <div class="card-stat"><div class="label">剩余额度</div><div class="value" id="compute-remaining-ratio">—</div></div>
+  </div>
+  <div class="grid" style="grid-template-columns:1.2fr 1fr;gap:1rem">
+    <div>
+      <div class="text-dim" style="margin-bottom:0.5rem;font-size:0.82rem">节点拓扑</div>
+      <div id="compute-topology" class="output-panel" style="min-height:180px">加载中...</div>
+    </div>
+    <div>
+      <div class="text-dim" style="margin-bottom:0.5rem;font-size:0.82rem">节点流量汇总</div>
+      <div id="compute-traffic-summary" class="output-panel" style="min-height:180px">加载中...</div>
+    </div>
+  </div>
+  <div style="margin-top:1rem">
+    <div class="text-dim" style="margin-bottom:0.5rem;font-size:0.82rem">最近请求</div>
+    <table>
+      <thead><tr><th>时间</th><th>模型</th><th>节点</th><th>输入</th><th>输出</th><th>成本</th></tr></thead>
+      <tbody id="compute-traffic-table">
+        <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🧮</div>暂无算力流量数据</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 <!-- Pipeline + 事件日志 -->
 <div class="grid">
   <div class="card">
@@ -356,6 +389,7 @@ textarea.mono-input:focus{outline:none;border-color:var(--border-active)}
 <script>
 const API = '/api';
 let allServices = [];
+let computeSnapshot = null;
 
 function escapeHtml(value){
   return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -370,7 +404,20 @@ function formatResearchSnippet(value){
 
 function formatDate(value){
   if(!value) return '—';
-  return new Date(value*1000).toLocaleString('zh-CN');
+  if(typeof value === 'number') return new Date(value*1000).toLocaleString('zh-CN');
+  const parsed = new Date(value);
+  if(Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString('zh-CN');
+}
+
+function formatNumber(value){
+  if(value === null || value === undefined || value === '') return '—';
+  return Number(value).toLocaleString('zh-CN');
+}
+
+function formatUsd(value){
+  if(value === null || value === undefined || value === '') return '—';
+  return '$' + Number(value).toFixed(4);
 }
 
 function circuitName(s){
@@ -422,6 +469,75 @@ async function refresh(){
     }
     renderTopology(allServices);
   }catch(e){}
+}
+
+async function loadCompute(){
+  try{
+    const r = await fetch(API+'/compute');
+    const data = await r.json();
+    computeSnapshot = data;
+    renderCompute(data);
+  }catch(e){}
+}
+
+function renderCompute(data){
+  const summary = data.summary || {};
+  const provider = data.provider || {};
+  const observations = data.observations || {};
+  const totalTokens = Number(summary.total_input_tokens || 0) + Number(summary.total_output_tokens || 0);
+
+  document.getElementById('compute-total-calls').textContent = formatNumber(summary.total_calls || 0);
+  document.getElementById('compute-total-tokens').textContent = formatNumber(totalTokens);
+  document.getElementById('compute-total-cost').textContent = formatUsd(summary.total_estimated_cost_usd || 0);
+  document.getElementById('compute-remaining-ratio').textContent =
+    summary.remaining_ratio === null || summary.remaining_ratio === undefined ? '—' : Math.round(summary.remaining_ratio * 100) + '%';
+
+  const badge = document.getElementById('compute-badge');
+  const quotaLow = !!summary.quota_low;
+  badge.textContent = quotaLow ? '额度偏低' : (provider.name || '路由可见');
+  badge.className = 'card-badge' + (quotaLow ? '' : ' live');
+
+  const topology = (data.topology || []).map(node => {
+    const state = node.active ? '活跃' : (node.selected_provider_route ? '已选路由' : '待命');
+    const color = node.kind === 'cloud' ? 'var(--warning)' : 'var(--accent)';
+    return `<div style="display:flex;justify-content:space-between;gap:1rem;padding:0.45rem 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+      <div><span class="tag" style="background:rgba(56,189,248,0.12);color:${color}">${escapeHtml(node.kind)}</span> <span style="color:var(--text-bright)">${escapeHtml(node.label)}</span><div class="text-dim" style="font-size:0.74rem">${escapeHtml(node.role || '')}</div></div>
+      <div style="text-align:right"><div style="color:${node.active ? 'var(--success)' : 'var(--text-dim)'}">${state}</div></div>
+    </div>`;
+  }).join('') || '<span class="text-dim">暂无拓扑数据</span>';
+  document.getElementById('compute-topology').innerHTML = topology;
+
+  const trafficSummary = (data.traffic_by_node || []).map(item => `
+    <div style="display:flex;justify-content:space-between;gap:1rem;padding:0.45rem 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+      <div><span style="color:var(--text-bright)">${escapeHtml(item.node_label)}</span><div class="text-dim" style="font-size:0.74rem">${escapeHtml(item.route_type)}</div></div>
+      <div style="text-align:right">
+        <div>${formatNumber(item.calls)} calls</div>
+        <div class="text-dim" style="font-size:0.74rem">${formatNumber(item.tokens)} tokens · ${formatUsd(item.estimated_cost_usd)}</div>
+      </div>
+    </div>
+  `).join('') || '<span class="text-dim">暂无节点流量</span>';
+  document.getElementById('compute-traffic-summary').innerHTML =
+    trafficSummary +
+    `<div style="padding-top:0.6rem;font-size:0.74rem" class="text-dim">
+      provider=${escapeHtml(provider.name || '—')} · model=${escapeHtml(provider.model || '—')} · cross-day=${observations.cross_day ? 'yes' : 'no'} · cross-model=${observations.cross_model ? 'yes' : 'no'} · latency=${observations.latency_available ? 'yes' : 'no'}
+    </div>`;
+
+  const tbody = document.getElementById('compute-traffic-table');
+  const recent = data.recent_traffic || [];
+  if(!recent.length){
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🧮</div>暂无算力流量数据</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = recent.map(item => `
+    <tr>
+      <td class="text-dim">${formatDate(item.timestamp)}</td>
+      <td><span style="color:var(--text-bright)">${escapeHtml(item.model)}</span></td>
+      <td>${escapeHtml(item.node_label)}</td>
+      <td>${formatNumber(item.input_tokens)}</td>
+      <td>${formatNumber(item.output_tokens)}</td>
+      <td>${formatUsd(item.estimated_cost_usd)}</td>
+    </tr>
+  `).join('');
 }
 
 function showDetail(name){
@@ -701,8 +817,10 @@ async function publishEvent(){
 }
 
 refresh();
+loadCompute();
 loadEvents();
 let wsTimer = setInterval(refresh, 5000);
+setInterval(loadCompute, 30000);
 setInterval(loadEvents, 10000);
 
 /* ── WebSocket 实时推送 ─────────────────────────────────── */
