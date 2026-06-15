@@ -150,32 +150,54 @@ class RoleManager(RolePrimitive):
     
     def define_role(self, definition: RoleDefinition) -> bool:
         """定义角色"""
-        self.roles[definition.role_id] = definition
-        return True
+        try:
+            if definition.role_id in self.roles:
+                logger.warning("角色已存在: %s", definition.role_id)
+                return False
+            self.roles[definition.role_id] = definition
+            logger.info("定义角色: %s, type=%s", definition.role_id, definition.role_type.value)
+            return True
+        except Exception as e:
+            logger.error("定义角色失败: %s - %s", definition.role_id, str(e))
+            return False
     
     def assign_role(self, agent_id: str, role_id: str) -> bool:
         """分配角色"""
-        if role_id not in self.roles:
+        try:
+            if role_id not in self.roles:
+                logger.warning("角色不存在: %s", role_id)
+                return False
+            
+            self.agent_roles[agent_id] = AgentRole(
+                agent_id=agent_id,
+                role_id=role_id,
+                status=RoleStatus.ACTIVE,
+                assigned_at=datetime.now(timezone.utc),
+            )
+            logger.info("分配角色: agent=%s, role=%s", agent_id, role_id)
+            return True
+        except Exception as e:
+            logger.error("分配角色失败: agent=%s, role=%s - %s", agent_id, role_id, str(e))
             return False
-        
-        self.agent_roles[agent_id] = AgentRole(
-            agent_id=agent_id,
-            role_id=role_id,
-            status=RoleStatus.ACTIVE,
-            assigned_at=datetime.now(timezone.utc),
-        )
-        return True
     
     def switch_role(self, agent_id: str, new_role_id: str) -> bool:
         """切换角色"""
-        if agent_id not in self.agent_roles:
+        try:
+            if agent_id not in self.agent_roles:
+                logger.warning("Agent 不存在: %s", agent_id)
+                return False
+            if new_role_id not in self.roles:
+                logger.warning("角色不存在: %s", new_role_id)
+                return False
+            
+            old_role = self.agent_roles[agent_id].role_id
+            self.agent_roles[agent_id].role_id = new_role_id
+            self.agent_roles[agent_id].status = RoleStatus.ACTIVE
+            logger.info("切换角色: agent=%s, %s -> %s", agent_id, old_role, new_role_id)
+            return True
+        except Exception as e:
+            logger.error("切换角色失败: agent=%s - %s", agent_id, str(e))
             return False
-        if new_role_id not in self.roles:
-            return False
-        
-        self.agent_roles[agent_id].role_id = new_role_id
-        self.agent_roles[agent_id].status = RoleStatus.ACTIVE
-        return True
     
     def get_role(self, agent_id: str) -> Optional[RoleDefinition]:
         """获取角色"""
