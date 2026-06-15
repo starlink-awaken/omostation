@@ -9,6 +9,7 @@ def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
     parser = argparse.ArgumentParser(description="C2G (Concept-to-Goal) Engine - The Strategic Pipeline")
+    parser.add_argument("--adapter", type=str, default="ecos", choices=["ecos", "local"], help="Which backend adapter to use")
     subparsers = parser.add_subparsers(dest="command", required=True)
     
     # 1. Brainstorm (V2P) - a placeholder for MetaOS integration
