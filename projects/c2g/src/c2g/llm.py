@@ -1,19 +1,13 @@
-import os
 import json
 import httpx
 from typing import Dict, Any
 
 def extract_tasks_from_pitch(pitch_content: str) -> list[Dict[str, Any]]:
     """
-    调用 Gemini API 将 Markdown Pitch 解析为结构化的 OMO 任务列表。
-    如果没有 API Key，则回退到 Mock 逻辑。
+    通过 AetherForge LLM-Gateway 将 Markdown Pitch 解析为结构化的 OMO 任务列表。
+    如果 LLM-Gateway 服务不可用，则自动回退到 Mock 逻辑。
     """
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        print("  ⚠️ 未检测到 GEMINI_API_KEY，正在使用 Mock LLM 提取逻辑。")
-        return []
-        
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+    url = "http://localhost:9290/v1/generate"
     
     prompt = f"""
     你是一个 OMO 架构下的首席技术合伙人 (CTO)。
@@ -37,17 +31,17 @@ def extract_tasks_from_pitch(pitch_content: str) -> list[Dict[str, Any]]:
     """
     
     payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.2
-        }
+        "prompt": prompt,
+        "model": "default"
     }
     
     try:
         resp = httpx.post(url, json=payload, timeout=30.0)
         resp.raise_for_status()
         data = resp.json()
-        result_text = data["candidates"][0]["content"]["parts"][0]["text"]
+        
+        # gateway 的返回格式是 {"content": "...", "model": "...", ...}
+        result_text = data.get("content", "")
         
         # 简单清理可能的 markdown
         result_text = result_text.strip()
@@ -61,7 +55,9 @@ def extract_tasks_from_pitch(pitch_content: str) -> list[Dict[str, Any]]:
         tasks = json.loads(result_text)
         if not isinstance(tasks, list):
             tasks = [tasks]
+        
+        print("  ✅ 成功通过 LLM-Gateway 完成智能拆解！")
         return tasks
     except Exception as e:
-        print(f"  ❌ LLM 请求失败: {e}，回退到 Mock。")
+        print(f"  ⚠️ LLM-Gateway 请求失败或返回非预期格式: {e}，回退到 Mock 逻辑。")
         return []
