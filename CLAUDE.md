@@ -16,8 +16,13 @@ All commands MUST be run using the `omo` MCP server. Direct filesystem manipulat
 - Call the `omo_gc` MCP tool to snapshot and clean up the workspace state.
 
 ## 3. The C2G (Creative-to-Governance) Pipeline
-- When you need to brainstorm, do **not** write to `.omo/tasks/`. Use the MetaOS Sandbox (via `workspace iterate` macro) to generate an `OpenSpec.md` in the `runtime/sandbox/` directory.
-- Only when the design is completely resolved and free of `TODO` placeholders, use the `omo_bridge` tool to solidify it into OMO. This ensures chaos remains in the mind and order remains in the database.
+- **C2G v2 (Bridge & Sandbox)**:
+  - When you need to brainstorm, do **not** write to `.omo/tasks/`. Use the MetaOS Sandbox (via `workspace iterate` macro) to generate an `OpenSpec.md` in the `runtime/sandbox/` directory.
+  - Only when the design is completely resolved and free of `TODO` placeholders, use the `omo_bridge` tool to solidify it into OMO. This ensures chaos remains in the mind and order remains in the database.
+- **C2G v3 (Cybernetic Solutions)**:
+  - **SSOT Write-back**: When a bridged task with a `context_uri` is completed and moved to `done`, the system will automatically write back a completion audit to the original Markdown document to prevent context fragmentation.
+  - **Fast-Track Compaction**: If executing micro-tasks (labeled `FAST-*`), the system's `omo worker gc` will automatically compact these fragments into a single markdown audit report.
+  - **Agent Tactical Yield**: If you get blocked in a rabbit hole during execution, DO NOT brute force. Use the `omo_yield_task` tool to formally surrender the task back to the pool, stating the `yield_reason`. This delegates the roadblock to the Sage/Devil for strategic reassessment.
 
 ## 4. The Execution Loop
 1. When you enter the workspace, check `.omo/goals/current.yaml` to understand the overarching Phase and Wave.
