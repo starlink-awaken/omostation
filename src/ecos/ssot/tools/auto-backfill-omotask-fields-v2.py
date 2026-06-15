@@ -143,10 +143,9 @@ def backfill_data(data: dict, file_path: Path, omo_tasks: dict) -> dict:
             properties["m3_parent"] = "ManagementElement.OMOTask"
             added.append("m3_parent<-default")
         elif f == "signals" and subtype == "Task":
-            desc = (data.get("description") or "").split("\n")[0][:100]
-            if desc:
-                properties["signals"] = [f"task-{omo_id}-running"]
-                added.append("signals<-default")
+            # 不管 description 是否存在都给 signals (task 默认运行信号)
+            properties["signals"] = [f"task-{omo_id}-running"]
+            added.append("signals<-default")
 
     return {
         "id": nid,

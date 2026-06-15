@@ -11,3 +11,5 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/IMPORTED-3384bb.yaml
+  signals:
+  - task-IMPORTED-3384bb-running

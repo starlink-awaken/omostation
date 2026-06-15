@@ -10,3 +10,5 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/IMPORTED-056aca.yaml
+  signals:
+  - task-IMPORTED-056aca-running

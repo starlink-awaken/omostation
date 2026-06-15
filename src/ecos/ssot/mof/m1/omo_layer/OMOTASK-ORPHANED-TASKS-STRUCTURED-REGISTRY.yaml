@@ -10,3 +10,5 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/ORPHANED-TASKS-STRUCTURED-REGISTRY.yaml
+  signals:
+  - task-ORPHANED-TASKS-STRUCTURED-REGISTRY-running

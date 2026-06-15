@@ -10,3 +10,5 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/C3-FIX-ONTOLOGY-REBUILD-CONFIRM.yaml
+  signals:
+  - task-C3-FIX-ONTOLOGY-REBUILD-CONFIRM-running

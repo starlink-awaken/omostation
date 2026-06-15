@@ -10,3 +10,5 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/C1-FIX-IMMUNE-NAMEERROR.yaml
+  signals:
+  - task-C1-FIX-IMMUNE-NAMEERROR-running

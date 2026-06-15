@@ -10,3 +10,5 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/MEDIUM-AUDIT-FIXES-BUNDLE.yaml
+  signals:
+  - task-MEDIUM-AUDIT-FIXES-BUNDLE-running

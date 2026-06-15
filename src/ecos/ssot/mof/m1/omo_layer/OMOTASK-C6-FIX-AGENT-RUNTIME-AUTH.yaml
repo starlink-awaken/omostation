@@ -10,3 +10,5 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/C6-FIX-AGENT-RUNTIME-AUTH.yaml
+  signals:
+  - task-C6-FIX-AGENT-RUNTIME-AUTH-running

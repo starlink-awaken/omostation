@@ -10,3 +10,5 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/C5-FIX-TERMINAL-RUN-RCE.yaml
+  signals:
+  - task-C5-FIX-TERMINAL-RUN-RCE-running

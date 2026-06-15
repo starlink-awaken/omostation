@@ -10,3 +10,5 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/PILOT-EXTERNAL-WORKER-DISPATCH-VALIDATION.yaml
+  signals:
+  - task-PILOT-EXTERNAL-WORKER-DISPATCH-VALIDATION-running

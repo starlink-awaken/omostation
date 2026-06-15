@@ -10,3 +10,5 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/IMPORTED-a4cfe7.yaml
+  signals:
+  - task-IMPORTED-a4cfe7-running
