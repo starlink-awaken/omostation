@@ -26,6 +26,7 @@ time = _time_mod
 
 # ── Command modules ──
 # ── Compatibility re-exports (tests monkeypatch these via cli.xxx) ──
+from .commands.audit import cmd_audit
 from .commands.base import (
     _SCRIPT_DIR,
     _find_cli,  # noqa: F401
@@ -241,6 +242,13 @@ def main() -> int:
 
     sub.add_parser("product-health", help="产品健康度检测")
 
+    # ── Round 43 P1: 融合 bin/workspace-audit (6 维度全方位审计) ──
+    audit_p = sub.add_parser("audit", help="🔍 6 维度全方位审计 (调 bin/workspace-audit)")
+    audit_p.add_argument("--dim", type=str, choices=["governance", "lint", "radar", "ssot", "gitlink", "ops", "all"], default="all", help="只跑指定维度 (默认 all)")
+    audit_p.add_argument("--format", choices=["markdown", "json"], default="markdown", help="输出格式")
+    audit_p.add_argument("--output", type=str, default=None, help="写报告到文件")
+    audit_p.add_argument("--since", type=str, default="7d", help="agora 维度时间范围 (默认 7d)")
+
     mcp_p = sub.add_parser("mcp", help="启动 MCP server 或列出工具")
     mcp_p.add_argument("--transport", choices=["stdio", "sse"], default="stdio", help="传输协议（默认 stdio）")
     mcp_p.add_argument("--port", type=int, default=7431, help="SSE 模式监听端口（默认 7431）")
@@ -332,6 +340,9 @@ def main() -> int:
     iterate_p = sub.add_parser("iterate", help="♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行)")
     iterate_p.add_argument("topic", nargs="?", default="未命名探索主题", help="要发起探索的主题")
     iterate_p.add_argument("--mock", action="store_true", help="是否模拟生成带 TODO 的测试数据以触发门控")
+
+    compass_p = sub.add_parser("compass", help="🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)")
+    compass_p.add_argument("compass_args", nargs=argparse.REMAINDER, help="Arguments passed to c2g compass engine")
 
     sub.add_parser("monitor", help="📊 实时终端大盘 (C2G Pipeline 监控仪)")
 
@@ -484,6 +495,10 @@ def main() -> int:
         return returncode if isinstance(returncode, int) else 0
     if args.command == "governance":
         return cmd_governance(args)
+
+    # ── Round 43 P1: cockpit audit (调 bin/workspace-audit 6 维度全方位审计) ──
+    if args.command == "audit":
+        return cmd_audit(args)
     if args.command == "mcp":
         return cmd_mcp(args)
     if args.command == "context":
@@ -532,9 +547,14 @@ def main() -> int:
         return handle_workflow(args.workflow_args)
 
     if args.command == "iterate":
-        from cockpit.commands.iterate import cmd_iterate
-
+        # TODO: This will eventually be deprecated in favor of `compass brainstorm`
+        from .commands.iterate import cmd_iterate
         return cmd_iterate(args)
+
+    if args.command == "compass":
+        import subprocess
+        cmd = ["uv", "run", "--project", "/Users/xiamingxing/Workspace/projects/c2g", "c2g"] + args.compass_args
+        return subprocess.call(cmd)
 
     if args.command == "monitor":
         return cmd_monitor(args)
