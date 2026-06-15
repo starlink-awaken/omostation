@@ -181,13 +181,35 @@ def _import_bmad(file_path: Path, omo_dir: Path, sequential: bool = False):
         # [MODEL-DRIVEN M2 VALIDATION & X1-X4 Governance Checks]
         from omo.omo_task_schema import validate_task_data
 
-        validation_errors = validate_task_data(task_data, group="planned")
-        if validation_errors:
-            print(
-                f"  ❌ M2 防腐层拦截 (Schema Validation Failed): 任务 {task_id} 违背 M2 契约！"
-            )
-            for err in validation_errors:
-                print(f"     - {err}")
+        # [C2G v2] 解法四: Schema 逆向推导引擎与 Retry Loop 保护
+        max_retries = 3
+        attempt = 0
+        validation_passed = False
+
+        while attempt < max_retries and not validation_passed:
+            attempt += 1
+            validation_errors = validate_task_data(task_data, group="planned")
+            if validation_errors:
+                print(
+                    f"  [Attempt {attempt}] ⚠️ 逆向推导引擎拦截幻觉 (Schema Validation Failed): 任务 {task_id}"
+                )
+                for err in validation_errors:
+                    print(f"     - {err}")
+
+                if attempt < max_retries:
+                    print(
+                        "  🔄 触发重试逻辑 (Retry Loop) - 要求大模型基于 schema 修正脏数据..."
+                    )
+                    # TODO: Inject real LLM Structured Output API call here
+                    # task_data = llm_structured_output(prompt=f"Fix {validation_errors}", schema=OMO_TASK_SCHEMA)
+                    break  # Break loop for now since LLM is mocked
+                else:
+                    print("  ❌ 达到最大重试次数，拒绝脏数据流入 OMO。")
+                    break
+            else:
+                validation_passed = True
+
+        if not validation_passed:
             continue
 
         task_file = planned_dir / f"{task_id}.yaml"
@@ -199,6 +221,46 @@ def _import_bmad(file_path: Path, omo_dir: Path, sequential: bool = False):
     print(f"✅ 完成转换，共生成且经过 M2 强校验了 {tasks_created} 个任务。")
 
 
+def _import_fast_track(source_topic: Path, omo_dir: Path):
+    """[C2G v2] 解法二: Fast-Track 免签降维."""
+    import time
+
+    print(f"🚀 正在触发 Fast-Track 免签降维: {source_topic.name}")
+    planned_dir = omo_dir / "tasks" / "planned"
+    planned_dir.mkdir(parents=True, exist_ok=True)
+
+    # Generate task data directly without LLM
+    task_id = f"FAST-{int(time.time())}"
+    task_data = {
+        "id": task_id,
+        "title": str(source_topic.name),
+        "status": "candidate",
+        "task_type": "feature",
+        "risk_level": "L0",
+        "depends_on": [],
+        "source_docs": [],
+        "deliverables": ["直接代码修改"],
+        "imported_via": "fast_track_cli",
+        "context_uri": f"bos://memory/fast-track/{task_id}",
+        "evidence_required": ["代码修改自证"],
+        "test_plan": ["冒烟测试"],
+        "allowed_operation_level": "L0",
+        "human_approval_required": False,
+    }
+
+    # [MODEL-DRIVEN M2 VALIDATION]
+    from omo.omo_task_schema import validate_task_data
+
+    validation_errors = validate_task_data(task_data, group="planned")
+    if validation_errors:
+        print("  ❌ M2 防腐层拦截 (Schema Validation Failed)")
+        return
+
+    task_file = planned_dir / f"{task_id}.yaml"
+    task_file.write_text(yaml.dump(task_data, allow_unicode=True, sort_keys=False))
+    print(f"✅ Fast-Track 成功: 已落盘为 OMO CARDS ({task_id}.yaml)")
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(
         description="OMO Bridge (Connect external tools like BMAD, OpenSpec)"
@@ -207,7 +269,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument(
         "--format",
         type=str,
-        choices=["bmad", "openspec"],
+        choices=["bmad", "openspec", "fast_track"],
         default="bmad",
         help="Format of the source file",
     )
@@ -230,6 +292,8 @@ def main(argv: list[str]) -> int:
 
     if args.format in ["bmad", "openspec"]:
         _import_bmad(source, omo_dir, args.sequential)
+    elif args.format == "fast_track":
+        _import_fast_track(source, omo_dir)
 
     return 0
 
