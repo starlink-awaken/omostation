@@ -15,6 +15,7 @@ ecos_watchdog.py — eCOS Phase 3 告警自愈系统
 
 import json
 import os
+import shlex
 import subprocess
 import sys
 import time
@@ -137,8 +138,7 @@ def restart_daemon(name, cmd):
     expanded = os.path.expanduser(cmd)
     try:
         subprocess.Popen(  # noqa: S602
-            expanded,
-            shell=True,
+            shlex.split(expanded),
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             preexec_fn=os.setsid,

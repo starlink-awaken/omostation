@@ -4,6 +4,9 @@
 供 Agora 直接 import 使用的 BOS 审计模块。
 Agora 在处理每个 BOS 请求时调用 pre_check / post_audit。
 
+集成 SSB 事件写入：每次 post_audit 调用时，同步写入 SSB 签名链事件，
+确保 BOS 路由审计记录进入不可变日志。
+
 用法 (在 Agora 代码中):
     from mof_agora_hook import pre_check, post_audit
 
@@ -30,15 +33,16 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 HOME = Path.home()
+WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(HOME / "Workspace")))
 ROUTES_CACHE = None
 ROUTES_CACHE_TIME = 0
 CACHE_TTL = int(
     os.environ.get("BOS_ROUTES_CACHE_TTL", "300")
 )  # 5 min default, overridable
 AUDIT_LOG = HOME / ".ecos" / "bos-audit.jsonl"
-CARDS_DB = HOME / "Workspace" / "data" / "cards" / "cards.db"
+CARDS_DB = WORKSPACE_ROOT / "data" / "cards" / "cards.db"
 L0_M1 = (
-    HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
+    WORKSPACE_ROOT / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
 )
 
 # ── 性能统计 ──
@@ -49,6 +53,21 @@ stats = {
     "anomalies": 0,
     "start_time": time.time(),
 }
+
+# ── SSB 客户端 (惰性初始化) ──
+_SSB_CLIENT = None
+
+
+def _get_ssb_client():
+    """Lazy-init SSBClient for publishing audit events to the signature chain."""
+    global _SSB_CLIENT
+    if _SSB_CLIENT is None:
+        try:
+            from ecos.l0.ssb.ssb_client import SSBClient
+            _SSB_CLIENT = SSBClient(auto_init=False)
+        except Exception:
+            _SSB_CLIENT = False  # Sentinel: don't retry on every call
+    return _SSB_CLIENT if _SSB_CLIENT is not False else None
 
 
 def _load_routes() -> dict:
@@ -159,6 +178,43 @@ def post_audit(bos_uri: str, status_code: int, duration_ms: int = 0):
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
     except Exception:
         pass
+
+    # 写入 SSB 签名链 (惰性初始化，失败不阻塞)
+    try:
+        ssb = _get_ssb_client()
+        if ssb is not None:
+            ssb.publish(
+                {
+                    "event": {
+                        "type": "SIGNAL",
+                        "subtype": "BOS_AUDIT",
+                    },
+                    "source": {
+                        "agent": "AGORA",
+                        "instance": "mof_agora_hook",
+                    },
+                    "target": {
+                        "scope": "ALL",
+                        "routing_hint": bos_uri,
+                    },
+                    "payload": {
+                        "summary": f"BOS {bos_uri} → {status_code}",
+                        "detail": {
+                            "bos_uri": bos_uri,
+                            "status_code": status_code,
+                            "duration_ms": duration_ms,
+                            "anomaly": status_code >= 500,
+                        },
+                        "confidence": 1.0,
+                        "risk_level": "HIGH" if status_code >= 500 else "LOW",
+                        "priority": "P1" if status_code >= 500 else "P3",
+                        "action_required": "INVESTIGATE" if status_code >= 500 else "NONE",
+                    },
+                },
+                write_file=False,
+            )
+    except Exception:
+        pass  # Best-effort SSB write; never block the audit path
 
     # 异常时自动创建 CARDS 债务卡片
     if entry["anomaly"] and CARDS_DB.exists():

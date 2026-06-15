@@ -19,6 +19,7 @@ import argparse
 import datetime
 import io
 import json
+import warnings
 import sys
 from pathlib import Path
 
@@ -949,6 +950,11 @@ def cmd_export(args):
 
 
 def main(argv: list[str] | None = None) -> int:
+    warnings.warn(
+        "ecos CLI 为内部程序接口。人类用户请使用 cockpit。",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     parser = argparse.ArgumentParser(
         prog="ssot-kernel",
         description="SSOT Kernel — 单一事实源知识工程通用引擎 v2.0",

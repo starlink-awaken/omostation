@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import fnmatch
 import logging
+import os
 import re
 from pathlib import Path
 
@@ -19,15 +20,9 @@ _log = logging.getLogger(__name__)
 # ── 路径常量 ───────────────────────────────────────
 BOSROUTE_DIR = Path(__file__).resolve().parent.parent / "src" / "ecos" / "ssot" / "mof" / "m1" / "bosroute"
 AGORA_BOS_RESOLVER_PATH = (
-    Path(__file__).resolve().parent.parent.parent / "agora" / "src" / "agora" / "mcp" / "bos_resolver.py"
+    Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+    / "projects" / "agora" / "src" / "agora" / "mcp" / "resolver" / "services.py"
 )
-# Fallback: also check from the user's workspace root
-_ALT_AGORA = Path("/Users/xiamingxing/Workspace/projects/agora/src/agora/mcp/bos_resolver.py")
-if not AGORA_BOS_RESOLVER_PATH.exists() and _ALT_AGORA.exists():
-    AGORA_BOS_RESOLVER_PATH = _ALT_AGORA
-
-# CANONICAL_PERSONA_BRIDGE_URI_PREFIX 的硬编码值 (避免运行时 import)
-_CANONICAL_PERSONA_BRIDGE_URI_PREFIX = "bos://persona/sot-bridge-persona/"
 
 # ── 辅助函数 ────────────────────────────────────────
 
@@ -103,11 +98,11 @@ def _resolve_fstring_uri(expr: str) -> str | None:
     目前仅处理: ``f\"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}recall\"``
     """
     m = re.match(
-        r'''f["']\{CANONICAL_PERSONA_BRIDGE_URI_PREFIX\}(.+?)["']''',
+        r'''f[\"']\\{CANONICAL_PERSONA_BRIDGE_URI_PREFIX\\}(.+?)[\"']''',
         expr,
     )
     if m:
-        return _CANONICAL_PERSONA_BRIDGE_URI_PREFIX + m.group(1)
+        return "bos://persona/sot-bridge-persona/" + m.group(1)
     return None
 
 
@@ -117,10 +112,10 @@ def load_poc_services() -> dict[str, dict]:
 
 
 def load_poc_services_from_file() -> dict[str, dict]:
-    """从 bos_resolver.py 源文件解析 POC_SERVICES 的 key 列表.
+    """从 services.py 源文件解析 POC_SERVICES 的 URI 列表.
 
     避免 import agora 模块 (依赖 aiohttp 等不在 ecos venv 的包).
-    使用正则提取所有 dict key。
+    使用正则提取所有 uri 字符串值。
     """
     path = AGORA_BOS_RESOLVER_PATH
     if not path.exists():
@@ -131,22 +126,11 @@ def load_poc_services_from_file() -> dict[str, dict]:
 
     keys: list[str] = []
 
-    # 模式 1: 字符串字面量 key, 如 "bos://memory/kos/search":
-    pattern_literal = re.compile(r'''^\s{4}"(bos://[^"]+)":\s*BosService\(''', re.MULTILINE)
+    # 新模式: BosService(uri="bos://...") 构造函数 (跨行)
+    pattern_list = re.compile(r'''BosService\(\s*\n\s+uri="(bos://[^"]+)"''', re.MULTILINE)
 
-    # 模式 2: f-string key, 如 f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}recall-entity":
-    # 直接匹配 4 空格 + f" + 花括号表达式 + 后缀
-    pattern_fstring = re.compile(
-        r'''^\s{4}f"(?:\{[^}]+\})([^"]+)":\s*BosService\(''',
-        re.MULTILINE,
-    )
-
-    for m in pattern_literal.finditer(source):
+    for m in pattern_list.finditer(source):
         keys.append(m.group(1))
-
-    for m in pattern_fstring.finditer(source):
-        suffix = m.group(1)
-        keys.append(_CANONICAL_PERSONA_BRIDGE_URI_PREFIX + suffix)
 
     return {k: {"uri": k} for k in keys}
 

@@ -254,7 +254,7 @@ def stats(volume: str) -> dict:
             "free_gb": round(st.f_frsize * st.f_bfree / 1e9, 1),
             "used_pct": round((1 - st.f_bfree / st.f_blocks) * 100, 1),
         }
-    except:
+    except Exception:
         disk = {"error": "不可达"}
 
     return {

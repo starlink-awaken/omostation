@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import fnmatch
+import os
 import re
 import sys
 from pathlib import Path
@@ -30,8 +31,9 @@ DIM = "\033[2m"
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 BOSROUTE_DIR = PROJECT_ROOT / "src" / "ecos" / "ssot" / "mof" / "m1" / "bosroute"
+WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
 AGORA_BOS_RESOLVER_PATH = (
-    Path("/Users/xiamingxing/Workspace/projects/agora/src/agora/mcp/bos_resolver.py")
+    WORKSPACE_ROOT / "projects" / "agora" / "src" / "agora" / "mcp" / "bos_resolver.py"
 )
 _CANONICAL_PERSONA_BRIDGE_URI_PREFIX = "bos://persona/sot-bridge-persona/"
 
