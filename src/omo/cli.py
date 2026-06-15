@@ -37,6 +37,7 @@ def main(argv: list[str] | None = None) -> int:
 
         return ledger_main(args[1:])
     if args and args[0] == "bridge":
+        print("⚠️ DEPRECATED: 'omo bridge' 已迁移，建议改用 'workspace compass bet'。")
         from omo.omo_bridge import main as bridge_main
 
         return bridge_main(args[1:])
@@ -200,6 +201,7 @@ def main(argv: list[str] | None = None) -> int:
         return worker_main(args[1:])
 
     if args and args[0] == "strategy":
+        print("⚠️ DEPRECATED: 'omo strategy' 已迁移，建议改用 'workspace compass radar' 或 'workspace compass gc'。")
         from omo.omo_strategy import main as strategy_main
 
         return strategy_main(args[1:])

@@ -75,6 +75,21 @@ goals:
   progress: 100.0
   status: done
   tasks: []
+- id: BET-3d32
+  desc: 'Bet: Pitch-TestBet (Appetite: >  1 Hour)'
+  progress: 0.0
+  status: pending
+  tasks: []
+- id: BET-3a39
+  desc: 'Bet: Pitch-Cybernetic-Strategy (Appetite: >  3 Days (极限压缩的 MVP 周期，防过度工程))'
+  progress: 0.0
+  status: pending
+  tasks: []
+- id: BET-ea47
+  desc: 'Bet: Pitch-Valid (Appetite: Unknown)'
+  progress: 0.0
+  status: pending
+  tasks: []
 health_targets:
   mcp_isolation_score: 100
   overall: 99
