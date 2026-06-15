@@ -327,6 +327,11 @@ def main() -> int:
     wf_p = sub.add_parser("workflow", help="🧠 MetaOS 工作流编排（动态规划 / 执行 / 历史）")
     wf_p.add_argument("workflow_args", nargs="*", help="workflow 子命令和参数")
 
+    # Gap #8: C2G 双擎编排流入口 (Phase 40)
+    iterate_p = sub.add_parser("iterate", help="♻️ C2G 双擎迭代流 (MetaOS 发散 -> Model-Driven 桥接 -> OMO 门控执行)")
+    iterate_p.add_argument("topic", nargs="?", default="未命名探索主题", help="要发起探索的主题")
+    iterate_p.add_argument("--mock", action="store_true", help="是否模拟生成带 TODO 的测试数据以触发门控")
+
     code_p = sub.add_parser("code", help="代码库分析与审查 (基于 codeanalyze)")
     code_sub = code_p.add_subparsers(dest="code_command", parser_class=WorkspaceParser)
 
@@ -520,7 +525,12 @@ def main() -> int:
     if args.command == "workflow":
         from cockpit.commands.workflow import handle_workflow
 
-        return handle_workflow(getattr(args, "workflow_args", []))
+        return handle_workflow(args.workflow_args)
+
+    if args.command == "iterate":
+        from cockpit.commands.iterate import cmd_iterate
+
+        return cmd_iterate(args)
 
     if args.command == "ssb":
         from cockpit.commands.ssb import cmd_ssb
