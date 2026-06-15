@@ -193,13 +193,13 @@ def check_node(node: dict) -> dict:
             }
         )
 
-    # 8. m3_parent 反向追溯
+    # 8. m3_parent 反向追溯 (AGENTS.md 铁律 2 必填)
     if not properties.get("m3_parent"):
         issues.append(
             {
                 "field": "m3_parent",
-                "level": "info",
-                "msg": "m3_parent 缺失 (反向追溯 model-driven, AGENTS.md 铁律 2)",
+                "level": "warning",
+                "msg": "m3_parent 缺失 (反向追溯 model-driven, AGENTS.md 铁律 2 必填)",
             }
         )
 
