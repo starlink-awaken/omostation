@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"rtk grep -n \\\"Decision log\\\" /Users/xiamingxing/Workspace/projects/bus-foundation/GOVERNANCE.md\",\"description\":\"Find decision log line\"}",
-  "error": "Exit code 1\n[rtk] /!\\ No hook installed — run `rtk init -g` for automatic token savings\n0 matches for 'Decision log'",
-  "timestamp": "2026-06-13T11:57:38.608Z",
-  "retry_count": 1
-}
