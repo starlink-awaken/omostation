@@ -21,8 +21,8 @@ SSE_DAEMON_PORT = os.environ.get("OMO_SSE_DAEMON_PORT", "9091")
 
 from omo.omo_self_healing import get_healing_engine, start_http_status_server, start_hot_reload, notify_webhook  # noqa: E402
 
-DAEMON_PID_FILE = OMO_ROOT / ".omo" / "_delivery" / "sse_daemon.pid"
-DAEMON_LOG_FILE = OMO_ROOT / ".omo" / "_delivery" / "sse_daemon.log"
+DAEMON_PID_FILE = OMO_ROOT / "_delivery" / "sse_daemon.pid"
+DAEMON_LOG_FILE = OMO_ROOT / "_delivery" / "sse_daemon.log"
 
 AGORA_SSE_URL = os.environ.get("AGORA_SSE_URL", "http://127.0.0.1:7431/sse")
 ENABLE_SELF_HEALING = os.environ.get("OMO_SELF_HEALING", "1") == "1"
