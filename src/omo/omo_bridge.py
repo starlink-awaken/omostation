@@ -128,6 +128,11 @@ def _import_bmad(file_path: Path, omo_dir: Path, sequential: bool = False):
         if wave is not None:
             task_data["wave"] = wave
 
+        # [DEVIL'S GATEKEEPER]: OMO Pre-Check Before Materialization
+        if "TODO" in task_title or "TBD" in task_title:
+            print(f"  ❌ 预检拦截 (Pre-check Failed): 任务 {task_id} 含有未决议项 ({task_title})，拒绝流入 OMO 稳态区。")
+            continue
+
         task_file = planned_dir / f"{task_id}.yaml"
         task_file.write_text(
             yaml.dump(task_data, allow_unicode=True, sort_keys=False)
