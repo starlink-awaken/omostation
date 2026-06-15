@@ -29,7 +29,7 @@ ALLOWED_PATHS = [
     Path.home() / ".hermes",
     Path.home() / ".workspace",
     Path.home() / ".kos",
-    Path.home() / ".omo",
+    Path.home() / "Workspace" / ".omo",
 ]
 
 # ── 执行日志 ──────────────────────────────────────────────────────────────────

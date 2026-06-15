@@ -176,11 +176,11 @@ protocols:
     category: "self-layer"
     status: "active"
     usage: "active"
-    description: "CLAUDE_COWORK_GLOBAL.md — 身份锚、21域路由、执行纪律、会话行为基线"
-    spec_url: "~/Documents/CLAUDE_COWORK_GLOBAL.md"
+    description: "CLAUDE_GLOBAL.md — 身份锚、21域路由、执行纪律、会话行为基线"
+    spec_url: "~/Documents/CLAUDE_GLOBAL.md"
     transport: ["file", "claude-cowork"]
     implementations:
-      - "~/Documents/CLAUDE_COWORK_GLOBAL.md"
+      - "~/Documents/CLAUDE_GLOBAL.md"
       - "l4-kernel DomainRegistry (21域统一注册 + 路径解析)"
     notes: "L4 自我层含 21 域 (8 Document + 3 Config + 3 Engine + 2 Tool + 2 Model + 1 Workspace + 1 Storage + 1 Obsidian)。30 个定时技能通过 runtime cron-service 调度。l4-kernel 提供统一管理面。"
 
