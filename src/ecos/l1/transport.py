@@ -115,7 +115,7 @@ class TCPNode:
 
     async def start(self) -> int:
         self._server = await asyncio.start_server(
-            self._handle_connection, self.host, self.port,
+            self._create_server_protocol, self.host, self.port,
         )
         if self._server.sockets:
             self.port = self._server.sockets[0].getsockname()[1]
@@ -220,6 +220,10 @@ class TCPNode:
         peer_id = f"{peer[0]}:{peer[1]}" if peer else "unknown"
         self._peers[peer_id] = transport
         self._log("peer_connected", peer_id=peer_id)
+
+    def _create_server_protocol(self) -> MessageProtocol:
+        """为每个入站连接创建协议"""
+        return MessageProtocol(self._on_receive)
 
     def _on_receive(self, msg: WireMessage) -> None:
         if msg.requires_ack:
