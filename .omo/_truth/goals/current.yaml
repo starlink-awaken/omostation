@@ -75,6 +75,11 @@ goals:
   progress: 100.0
   status: done
   tasks: []
+- id: BET-c685
+  desc: 'Bet: TestPitch (Appetite: 1 day)'
+  progress: 0.0
+  status: pending
+  tasks: []
 health_targets:
   mcp_isolation_score: 100
   overall: 99

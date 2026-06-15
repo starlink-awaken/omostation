@@ -1,0 +1,27 @@
+id: IMPORTED-58d3f8
+title: '执行 BET-c685: TestPitch'
+status: candidate
+task_type: feature
+risk_level: L0
+depends_on: []
+source_docs:
+- /Users/xiamingxing/Workspace/runtime/sandbox/pitches/TestPitch.md
+deliverables:
+- 达成 BET-c685
+imported_via: omo_bridge_pitch
+context_uri: bos://memory/sandbox/pitches/TestPitch.md
+evidence_required:
+- 回写 Pitch 并通过 Bet 验收
+test_plan:
+- 依据 Pitch 验收
+allowed_operation_level: L0
+human_approval_required: false
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+entry_gate:
+- BET_APPROVED
