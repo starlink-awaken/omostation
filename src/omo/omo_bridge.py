@@ -272,15 +272,80 @@ def _import_fast_track(source_topic: Path, omo_dir: Path):
     print(f"✅ Fast-Track 成功: 已落盘为 OMO CARDS ({task_id}.yaml)")
 
 
+def _import_pitch(source_file: Path, omo_dir: Path):
+    """[C2G v4] 将 Pitch (提案) 转换为 Bet 并在 OMO 中生成 Planned Task."""
+    from omo.omo_goal import cmd_goal_create
+
+    print(f"🌉 [C2G v4] 正在将 Pitch 转化为 OMO Bet: {source_file.name}")
+    content = source_file.read_text(encoding="utf-8")
+
+    # 提取 Appetite
+    appetite = "Unknown"
+    for line in content.split("\n"):
+        if "**Appetite:**" in line:
+            appetite = line.replace("**Appetite:**", "").strip()
+
+    # 创建 Bet (Goal)
+    bet_id = f"BET-{hashlib.md5(source_file.name.encode()).hexdigest()[:4]}"
+    desc = f"Bet: {source_file.stem} (Appetite: {appetite})"
+
+    # 将 Bet 加入 current.yaml
+    cmd_goal_create(omo_dir, bet_id, desc)
+
+    # 派生 Planned Task
+    planned_dir = omo_dir / "tasks" / "planned"
+    planned_dir.mkdir(parents=True, exist_ok=True)
+
+    task_id = f"IMPORTED-{hashlib.md5(bet_id.encode()).hexdigest()[:6]}"
+    task_data = {
+        "id": task_id,
+        "title": f"执行 {bet_id}: {source_file.stem}",
+        "status": "candidate",
+        "task_type": "feature",
+        "risk_level": "L0",
+        "depends_on": [],
+        "source_docs": [str(source_file.absolute())],
+        "deliverables": [f"达成 {bet_id}"],
+        "imported_via": "omo_bridge_pitch",
+        "context_uri": f"bos://memory/sandbox/pitches/{source_file.name}",
+        "evidence_required": ["回写 Pitch 并通过 Bet 验收"],
+        "test_plan": ["依据 Pitch 验收"],
+        "allowed_operation_level": "L0",
+        "human_approval_required": False,
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "entry_gate": ["BET_APPROVED"],
+    }
+
+    # [MODEL-DRIVEN M2 VALIDATION]
+    from omo.omo_task_schema import validate_task_data
+
+    validation_errors = validate_task_data(task_data, group="planned")
+    if validation_errors:
+        print("  ❌ M2 防腐层拦截 (Schema Validation Failed)")
+        for err in validation_errors:
+            print(f"     - {err}")
+        return
+
+    task_file = planned_dir / f"{task_id}.yaml"
+    task_file.write_text(yaml.dump(task_data, allow_unicode=True, sort_keys=False))
+    print(f"✅ Bet 下注成功: 创建了执行计划 ({task_id}.yaml)")
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(
-        description="OMO Bridge (Connect external tools like BMAD, OpenSpec)"
+        description="OMO Bridge (Connect external tools like BMAD, OpenSpec, Pitches)"
     )
     parser.add_argument("source_file", type=str, help="The file to import from")
     parser.add_argument(
         "--format",
         type=str,
-        choices=["bmad", "openspec", "fast_track"],
+        choices=["bmad", "openspec", "fast_track", "pitch"],
         default="bmad",
         help="Format of the source file",
     )
@@ -305,6 +370,8 @@ def main(argv: list[str]) -> int:
         _import_bmad(source, omo_dir, args.sequential)
     elif args.format == "fast_track":
         _import_fast_track(source, omo_dir)
+    elif args.format == "pitch":
+        _import_pitch(source, omo_dir)
 
     return 0
 
