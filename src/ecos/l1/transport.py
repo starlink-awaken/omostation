@@ -51,6 +51,10 @@ class WireMessage:
 
     @staticmethod
     def decode(data: bytes) -> WireMessage:
+        if len(data) >= 4:
+            declared_len = struct.unpack("!I", data[:4])[0]
+            if declared_len == len(data) - 4:
+                data = data[4:]
         obj = json.loads(data)
         return WireMessage(
             msg_id=obj["msg_id"],

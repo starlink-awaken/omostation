@@ -2989,3 +2989,127 @@ class TestIncrementalGraph:
         assert merged == 3
         assert len(g2.nodes) == 2
         assert len(g2.edges) == 1
+
+
+# ══════════════════════════════════════════════════════════════
+# 性能基准测试
+# ══════════════════════════════════════════════════════════════
+
+class TestPerformanceBenchmarks:
+    """性能基准测试 — 确保算法满足延迟要求"""
+
+    def test_state_sync_latency(self):
+        import time
+        from ecos.l0.governance import StateSyncService, SyncStrategy
+
+        node_a = StateSyncService("a", SyncStrategy.EVENTUAL)
+        node_b = StateSyncService("b", SyncStrategy.EVENTUAL)
+
+        for i in range(100):
+            node_a.set(f"k{i}", i)
+
+        start = time.monotonic()
+        snap = node_a.generate_snapshot()
+        node_b.sync_from_snapshot(snap)
+        elapsed_ms = (time.monotonic() - start) * 1000
+
+        assert elapsed_ms < 10, f"同步延迟 {elapsed_ms:.2f}ms 超过 10ms"
+
+    def test_pagerank_latency_100_nodes(self):
+        import time
+        from ecos.l0.governance import KnowledgeGraphBuilder
+
+        g = KnowledgeGraphBuilder()
+        for i in range(100):
+            g.add_node(f"n{i}")
+        for i in range(99):
+            g.add_edge(f"n{i}", f"n{i+1}", "link")
+        g.add_edge("n99", "n0", "link")
+
+        start = time.monotonic()
+        pr = g.pagerank(iterations=20)
+        elapsed_ms = (time.monotonic() - start) * 1000
+
+        assert elapsed_ms < 50, f"PageRank 延迟 {elapsed_ms:.2f}ms 超过 50ms"
+        assert abs(sum(pr.values()) - 1.0) < 0.01
+
+    def test_recommendation_latency(self):
+        import time
+        from ecos.l0.governance import (
+            PersonalKnowledgeManager, KnowledgeNode, KnowledgeType,
+            PreferenceEngine, RecommendationEngine,
+        )
+
+        km = PersonalKnowledgeManager()
+        pe = PreferenceEngine()
+
+        for i in range(200):
+            km.add_knowledge(KnowledgeNode(
+                node_id=f"doc-{i}", knowledge_type=KnowledgeType.FACT,
+                content={"text": f"document about topic {i % 20}"},
+                tags=[f"tag-{i % 10}"],
+            ))
+
+        pe.learn("user-1", "topic", "topic", 5.0)
+
+        engine = RecommendationEngine(km, pe)
+
+        start = time.monotonic()
+        recs = engine.recommend("user-1", limit=10)
+        elapsed_ms = (time.monotonic() - start) * 1000
+
+        assert elapsed_ms < 50, f"推荐延迟 {elapsed_ms:.2f}ms 超过 50ms"
+        assert len(recs) <= 10
+
+    def test_dag_topological_sort_latency(self):
+        import time
+        from ecos.l0.governance import TaskScheduler, DAGScheduler
+
+        ts = TaskScheduler()
+        dag = DAGScheduler(ts)
+
+        for i in range(100):
+            ts.submit_task(f"t{i}", f"Task {i}")
+
+        for i in range(1, 100):
+            dag.add_dependency(f"t{i}", f"t{i-1}")
+
+        start = time.monotonic()
+        order = dag.get_topological_order()
+        elapsed_ms = (time.monotonic() - start) * 1000
+
+        assert elapsed_ms < 10, f"拓扑排序延迟 {elapsed_ms:.2f}ms 超过 10ms"
+        assert len(order) == 100
+
+    def test_collective_decision_latency(self):
+        import time
+        from ecos.l0.governance import CollectiveDecision, DecisionMethod
+
+        engine = CollectiveDecision()
+        engine.create_proposal("p1", "测试", ["A", "B", "C"], DecisionMethod.MAJORITY_VOTE)
+
+        for i in range(50):
+            engine.vote("p1", f"agent-{i}", "A" if i < 30 else "B")
+
+        start = time.monotonic()
+        result = engine.decide("p1")
+        elapsed_ms = (time.monotonic() - start) * 1000
+
+        assert elapsed_ms < 5, f"决策延迟 {elapsed_ms:.2f}ms 超过 5ms"
+        assert result == "A"
+
+    def test_emergence_detection_latency(self):
+        import time
+        from ecos.l0.governance import SwarmManager, SwarmState
+
+        manager = SwarmManager()
+        for i in range(50):
+            manager.add_agent(f"a{i}", initial_state={"role": "worker"})
+
+        state = SwarmState(agents=manager.agents, agent_states=manager.agent_states, behaviors=[])
+
+        start = time.monotonic()
+        manager.detect_emergence(state)
+        elapsed_ms = (time.monotonic() - start) * 1000
+
+        assert elapsed_ms < 20, f"涌现检测延迟 {elapsed_ms:.2f}ms 超过 20ms"
