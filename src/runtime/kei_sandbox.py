@@ -68,8 +68,8 @@ def record_audit(action: str, extension_id: str, status: str, details: str) -> N
         details:    Human-readable description of the operation.
     """
     global _AUDIT_FILE, _IN_AUDIT
-    if _AUDIT_FILE is None or _IN_AUDIT or status == "pass":
-        return  # Audit not configured, re-entrant, or passing event — skip logging
+    if _AUDIT_FILE is None or _IN_AUDIT:
+        return  # Audit not configured or re-entrant — skip logging
 
     _IN_AUDIT = True
     record = {
@@ -147,6 +147,50 @@ def _audit_hook(event: str, args: tuple):
                     raise PermissionError(f"KEI Sandbox: Read access to {file_path} is blocked.")
             record_audit("validate", "ecos.kernel.sandbox", "pass",
                          f"Read allowed: {file_path}")
+
+    elif event == "os.system":
+        cmd = str(args[0]) if args else "unknown"
+        if not perms.get("execution", {}).get("allow_subprocess", True):
+            record_audit("reject", "ecos.kernel.sandbox", "blocked",
+                         f"os.system blocked: {cmd}")
+            raise PermissionError(f"KEI Sandbox: os.system execution is blocked.")
+        record_audit("execute", "ecos.kernel.sandbox", "pass",
+                     f"os.system allowed: {cmd}")
+
+    elif event == "os.exec":
+        cmd = " ".join(str(a) for a in args) if args else "unknown"
+        if not perms.get("execution", {}).get("allow_subprocess", True):
+            record_audit("reject", "ecos.kernel.sandbox", "blocked",
+                         f"os.exec blocked: {cmd}")
+            raise PermissionError(f"KEI Sandbox: os.exec execution is blocked.")
+        record_audit("execute", "ecos.kernel.sandbox", "pass",
+                     f"os.exec allowed: {cmd}")
+
+    elif event == "urllib.Request":
+        url = str(args[0]) if args else "unknown"
+        allowed_hosts = perms.get("network", {}).get("allow", ["*"])
+        if "*" not in allowed_hosts:
+            from urllib.parse import urlparse
+            parsed = urlparse(url)
+            host = parsed.hostname or url
+            if host not in allowed_hosts:
+                record_audit("reject", "ecos.kernel.sandbox", "blocked",
+                             f"urllib request blocked: {url}")
+                raise PermissionError(f"KEI Sandbox: HTTP request to {url} is blocked.")
+        record_audit("execute", "ecos.kernel.sandbox", "pass",
+                     f"urllib request allowed: {url}")
+
+    elif event == "http.client":
+        # args[0] is (host, port) tuple for http.client connections
+        if args and len(args) >= 1 and isinstance(args[0], tuple) and len(args[0]) >= 2:
+            host = args[0][0]
+            allowed_hosts = perms.get("network", {}).get("allow", ["*"])
+            if "*" not in allowed_hosts and host not in allowed_hosts:
+                record_audit("reject", "ecos.kernel.sandbox", "blocked",
+                             f"http.client blocked: {host}")
+                raise PermissionError(f"KEI Sandbox: HTTP connection to {host} is blocked.")
+            record_audit("execute", "ecos.kernel.sandbox", "pass",
+                         f"http.client allowed: {host}")
 
 
 def enable_sandbox(config_path: str = "kei.yaml", audit_file: str | None = None, role: str = "default") -> None:
