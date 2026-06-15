@@ -40,11 +40,16 @@ class LoadBalancer:
     管理分布式系统中的负载均衡
     """
     
-    def __init__(self, strategy: LoadBalancingStrategy = LoadBalancingStrategy.ROUND_ROBIN, persistence=None):
+    def __init__(self, strategy: LoadBalancingStrategy = LoadBalancingStrategy.ROUND_ROBIN,
+                 persistence=None, config=None):
+        from ecos.common.config import ECOSConfig
+
+        self.config = config or ECOSConfig.get_instance()
         self.strategy = strategy
         self.nodes: dict[str, NodeLoad] = {}
         self._persistence = persistence
         self.current_index: int = 0
+        self.health_check_interval = self.config.get("load_balancer.health_check_interval", 30)
     
     def register_node(self, node_id: str, weight: int = 1) -> NodeLoad:
         """注册节点"""

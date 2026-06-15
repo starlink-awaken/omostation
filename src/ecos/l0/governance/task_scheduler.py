@@ -64,13 +64,18 @@ class TaskScheduler:
     """分布式任务调度器
     
     管理分布式系统中的任务分配、执行和完成
-    支持可选的持久化存储
+    支持可选的持久化存储和配置管理
     """
     
-    def __init__(self, persistence=None):
+    def __init__(self, persistence=None, config=None):
+        from ecos.common.config import ECOSConfig
+
+        self.config = config or ECOSConfig.get_instance()
         self.tasks: dict[str, TaskInfo] = {}
         self.task_queue: list[str] = []
         self._persistence = persistence
+        self.max_tasks = self.config.get("task_scheduler.max_tasks", 1000)
+        self.task_timeout = self.config.get("task_scheduler.timeout", 300)
         if persistence:
             self._load_state()
     

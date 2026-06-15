@@ -42,13 +42,17 @@ class FailoverManager:
     管理分布式系统中的故障转移规则和执行
     """
     
-    def __init__(self, persistence=None):
+    def __init__(self, persistence=None, config=None):
+        from ecos.common.config import ECOSConfig
+
+        self.config = config or ECOSConfig.get_instance()
         self.rules: dict[str, FailoverRule] = {}
         self._persistence = persistence
         self.node_loads: dict[str, int] = {}
         self.node_priorities: dict[str, int] = {}
         self._round_robin_indices: dict[str, int] = {}
         self._failover_history: list[dict[str, Any]] = []
+        self.max_history = self.config.get("failover.max_history", 100)
     
     def add_rule(self, rule: FailoverRule) -> None:
         """添加故障转移规则"""
