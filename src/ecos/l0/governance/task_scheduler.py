@@ -64,11 +64,49 @@ class TaskScheduler:
     """分布式任务调度器
     
     管理分布式系统中的任务分配、执行和完成
+    支持可选的持久化存储
     """
     
-    def __init__(self):
+    def __init__(self, persistence=None):
         self.tasks: dict[str, TaskInfo] = {}
         self.task_queue: list[str] = []
+        self._persistence = persistence
+        if persistence:
+            self._load_state()
+    
+    def _load_state(self):
+        """从持久化加载状态"""
+        try:
+            saved = self._persistence.load("task_scheduler")
+            if saved and "tasks" in saved:
+                for task_id, task_data in saved["tasks"].items():
+                    task = TaskInfo(
+                        task_id=task_data.get("task_id", task_id),
+                        name=task_data.get("name", ""),
+                        description=task_data.get("description", ""),
+                        required_capabilities=task_data.get("required_capabilities", []),
+                        status=TaskStatus(task_data.get("status", "pending")),
+                        assigned_agent=task_data.get("assigned_agent", ""),
+                        priority=task_data.get("priority", 0),
+                    )
+                    self.tasks[task_id] = task
+                self.task_queue = saved.get("queue", [])
+                logger.info("从持久化加载任务: %d 个", len(self.tasks))
+        except Exception as e:
+            logger.error("加载状态失败: %s", str(e))
+    
+    def _save_state(self):
+        """保存状态到持久化"""
+        if self._persistence:
+            try:
+                state = {
+                    "tasks": {k: v.to_dict() for k, v in self.tasks.items()},
+                    "queue": self.task_queue,
+                }
+                self._persistence.save("task_scheduler", state)
+                logger.debug("保存任务状态: %d 个", len(self.tasks))
+            except Exception as e:
+                logger.error("保存状态失败: %s", str(e))
     
     def submit_task(self, task_id: str, name: str, description: str = "",
                     required_capabilities: list[str] | None = None,
@@ -90,6 +128,7 @@ class TaskScheduler:
             self.task_queue.append(task_id)
             self.task_queue.sort(key=lambda t: self.tasks[t].priority, reverse=True)
             logger.info("提交任务: %s, name=%s, priority=%d", task_id, name, priority)
+            self._save_state()
             return task
         except Exception as e:
             logger.error("提交任务失败: %s - %s", task_id, str(e))
@@ -138,6 +177,7 @@ class TaskScheduler:
         if task_id in self.task_queue:
             self.task_queue.remove(task_id)
         
+        self._save_state()
         return True
     
     def fail_task(self, task_id: str) -> bool:

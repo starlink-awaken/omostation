@@ -40,9 +40,10 @@ class LoadBalancer:
     管理分布式系统中的负载均衡
     """
     
-    def __init__(self, strategy: LoadBalancingStrategy = LoadBalancingStrategy.ROUND_ROBIN):
+    def __init__(self, strategy: LoadBalancingStrategy = LoadBalancingStrategy.ROUND_ROBIN, persistence=None):
         self.strategy = strategy
         self.nodes: dict[str, NodeLoad] = {}
+        self._persistence = persistence
         self.current_index: int = 0
     
     def register_node(self, node_id: str, weight: int = 1) -> NodeLoad:
@@ -174,3 +175,24 @@ class LoadBalancer:
             },
             "current_index": self.current_index,
         }
+
+    def _load_state(self):
+        """从持久化加载状态"""
+        if not self._persistence:
+            return
+        try:
+            saved = self._persistence.load("load_balancer")
+            if saved:
+                logger.info("从持久化加载状态: load_balancer")
+        except Exception as e:
+            logger.error("加载状态失败: %s", str(e))
+    
+    def _save_state(self):
+        """保存状态到持久化"""
+        if not self._persistence:
+            return
+        try:
+            self._persistence.save("load_balancer", {"placeholder": True})
+            logger.debug("保存状态: load_balancer")
+        except Exception as e:
+            logger.error("保存状态失败: %s", str(e))

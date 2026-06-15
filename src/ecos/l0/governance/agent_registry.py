@@ -56,8 +56,9 @@ class AgentRegistry:
     管理分布式系统中的 Agent 注册、发现和健康检查
     """
     
-    def __init__(self):
+    def __init__(self, persistence=None):
         self.agents: dict[str, AgentInfo] = {}
+        self._persistence = persistence
         self.heartbeat_interval: int = 30  # 秒
     
     def register(self, agent_id: str, name: str, capabilities: list[str], 
@@ -143,3 +144,24 @@ class AgentRegistry:
             },
             "heartbeat_interval": self.heartbeat_interval,
         }
+
+    def _load_state(self):
+        """从持久化加载状态"""
+        if not self._persistence:
+            return
+        try:
+            saved = self._persistence.load("agent_registry")
+            if saved:
+                logger.info("从持久化加载状态: agent_registry")
+        except Exception as e:
+            logger.error("加载状态失败: %s", str(e))
+    
+    def _save_state(self):
+        """保存状态到持久化"""
+        if not self._persistence:
+            return
+        try:
+            self._persistence.save("agent_registry", {"placeholder": True})
+            logger.debug("保存状态: agent_registry")
+        except Exception as e:
+            logger.error("保存状态失败: %s", str(e))

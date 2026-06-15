@@ -42,8 +42,9 @@ class FailoverManager:
     管理分布式系统中的故障转移规则和执行
     """
     
-    def __init__(self):
+    def __init__(self, persistence=None):
         self.rules: dict[str, FailoverRule] = {}
+        self._persistence = persistence
         self.node_loads: dict[str, int] = {}
         self.node_priorities: dict[str, int] = {}
         self._round_robin_indices: dict[str, int] = {}
@@ -172,3 +173,24 @@ class FailoverManager:
             "failover_count": self.get_failover_count(),
             "history_count": len(self._failover_history),
         }
+
+    def _load_state(self):
+        """从持久化加载状态"""
+        if not self._persistence:
+            return
+        try:
+            saved = self._persistence.load("failover")
+            if saved:
+                logger.info("从持久化加载状态: failover")
+        except Exception as e:
+            logger.error("加载状态失败: %s", str(e))
+    
+    def _save_state(self):
+        """保存状态到持久化"""
+        if not self._persistence:
+            return
+        try:
+            self._persistence.save("failover", {"placeholder": True})
+            logger.debug("保存状态: failover")
+        except Exception as e:
+            logger.error("保存状态失败: %s", str(e))

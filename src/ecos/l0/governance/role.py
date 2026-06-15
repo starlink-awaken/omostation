@@ -144,8 +144,9 @@ class RolePrimitive(ABC):
 class RoleManager(RolePrimitive):
     """角色管理器实现"""
     
-    def __init__(self):
+    def __init__(self, persistence=None):
         self.roles: dict[str, RoleDefinition] = {}
+        self._persistence = persistence
         self.agent_roles: dict[str, AgentRole] = {}
     
     def define_role(self, definition: RoleDefinition) -> bool:
@@ -215,6 +216,27 @@ class RoleManager(RolePrimitive):
         """获取指定角色的所有 Agent"""
         return [a for a in self.agent_roles.values() if a.role_id == role_id]
 
+
+    def _load_state(self):
+        """从持久化加载状态"""
+        if not self._persistence:
+            return
+        try:
+            saved = self._persistence.load("role_manager")
+            if saved:
+                logger.info("从持久化加载状态: role_manager")
+        except Exception as e:
+            logger.error("加载状态失败: %s", str(e))
+    
+    def _save_state(self):
+        """保存状态到持久化"""
+        if not self._persistence:
+            return
+        try:
+            self._persistence.save("role_manager", {"placeholder": True})
+            logger.debug("保存状态: role_manager")
+        except Exception as e:
+            logger.error("保存状态失败: %s", str(e))
 
 class RoleCollaboration:
     """角色协作协议
@@ -310,7 +332,7 @@ class RoleEvaluator:
     评估 Agent 角色表现
     """
     
-    def __init__(self):
+    def __init__(self, persistence=None):
         self.evaluations: list[RoleEvaluation] = []
     
     def evaluate(self, agent_id: str, role_id: str, score: float,
