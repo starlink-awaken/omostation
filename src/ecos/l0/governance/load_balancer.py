@@ -71,33 +71,38 @@ class LoadBalancer:
     
     def select_node(self) -> Optional[str]:
         """选择节点"""
-        healthy_nodes = [n for n in self.nodes.values() if n.healthy]
-        if not healthy_nodes:
+        try:
+            healthy_nodes = [n for n in self.nodes.values() if n.healthy]
+            if not healthy_nodes:
+                logger.warning("无健康节点可用")
+                return None
+            
+            if self.strategy == LoadBalancingStrategy.ROUND_ROBIN:
+                # 轮询
+                node = healthy_nodes[self.current_index % len(healthy_nodes)]
+                self.current_index = (self.current_index + 1) % len(healthy_nodes)
+                return node.node_id
+            
+            elif self.strategy == LoadBalancingStrategy.LEAST_CONNECTIONS:
+                # 最少连接
+                min_connections = float('inf')
+                min_node = None
+                for node in healthy_nodes:
+                    if node.connections < min_connections:
+                        min_connections = node.connections
+                        min_node = node.node_id
+                return min_node
+            
+            elif self.strategy == LoadBalancingStrategy.WEIGHTED_ROUND_ROBIN:
+                return self._weighted_round_robin(healthy_nodes)
+            
+            elif self.strategy == LoadBalancingStrategy.IP_HASH:
+                return self._ip_hash(healthy_nodes)
+            
             return None
-        
-        if self.strategy == LoadBalancingStrategy.ROUND_ROBIN:
-            # 轮询
-            node = healthy_nodes[self.current_index % len(healthy_nodes)]
-            self.current_index = (self.current_index + 1) % len(healthy_nodes)
-            return node.node_id
-        
-        elif self.strategy == LoadBalancingStrategy.LEAST_CONNECTIONS:
-            # 最少连接
-            min_connections = float('inf')
-            min_node = None
-            for node in healthy_nodes:
-                if node.connections < min_connections:
-                    min_connections = node.connections
-                    min_node = node.node_id
-            return min_node
-        
-        elif self.strategy == LoadBalancingStrategy.WEIGHTED_ROUND_ROBIN:
-            return self._weighted_round_robin(healthy_nodes)
-        
-        elif self.strategy == LoadBalancingStrategy.IP_HASH:
-            return self._ip_hash(healthy_nodes)
-        
-        return None
+        except Exception as e:
+            logger.error("选择节点失败: %s", str(e))
+            return None
     
     def _weighted_round_robin(self, healthy_nodes: list[NodeLoad]) -> Optional[str]:
         """Nginx 平滑加权轮询算法"""
