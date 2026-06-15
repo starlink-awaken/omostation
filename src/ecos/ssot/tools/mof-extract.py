@@ -245,6 +245,55 @@ def extract_conventions(claude_root: Path) -> list[dict]:
     return nodes
 
 
+def extract_ssot_writeback(workspace_root: Path):
+    """[C2G v2] Context URI SSOT Write-back 机制
+    当 OMO 任务最终被关闭时（移入 done），顺着 context_uri 将执行结果追加到原始 Markdown 文档底部。
+    """
+    omo_dir = workspace_root / ".omo"
+    done_dir = omo_dir / "tasks" / "done"
+    if not done_dir.exists():
+        return
+        
+    written_count = 0
+    for task_file in done_dir.glob("*.yaml"):
+        try:
+            with open(task_file, "r", encoding="utf-8") as f:
+                task = yaml.safe_load(f)
+        except Exception:
+            continue
+            
+        if not isinstance(task, dict):
+            continue
+            
+        context_uri = task.get("context_uri")
+        source_docs = task.get("source_docs", [])
+        if not context_uri or not source_docs:
+            continue
+            
+        if task.get("ssot_written_back"):
+            continue
+            
+        source_file = Path(source_docs[0])
+        if not source_file.exists():
+            continue
+            
+        try:
+            with open(source_file, "a", encoding="utf-8") as f:
+                f.write(f"\n\n### 🔄 OMO SSOT Write-back: {task['id']}\n")
+                f.write(f"> 任务 `{task['title']}` 已在 OMO 稳态区被标记为 Done。\n")
+                f.write(f"> 原始 context_uri: `{context_uri}`\n")
+                
+            task["ssot_written_back"] = True
+            with open(task_file, "w", encoding="utf-8") as f:
+                yaml.dump(task, f, allow_unicode=True, sort_keys=False)
+            written_count += 1
+        except Exception:
+            pass
+            
+    if written_count > 0:
+        print(f"  🔄 SSOT Write-back: 成功反哺了 {written_count} 个已完成任务的 context_uri")
+
+
 def save_nodes(nodes: list[dict], output_dir: Path):
     """保存 M1 节点到输出目录"""
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -323,6 +372,14 @@ def main():
             )
         )
         return
+
+    # Trigger Context URI SSOT Write-back
+    workspace = os.environ.get("WORKSPACE_ROOT")
+    if workspace:
+        extract_ssot_writeback(Path(workspace))
+    else:
+        # Fallback to current directory assuming run from root
+        extract_ssot_writeback(Path.cwd())
 
     print(format_summary(all_nodes))
 
