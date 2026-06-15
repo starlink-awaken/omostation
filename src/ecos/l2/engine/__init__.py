@@ -1,9 +1,9 @@
 """L2 引擎面 — 协作引擎 + 蜂群引擎 + 个人知识引擎
 
-基于 L0/L1 原语构建的引擎层组件：
-- CollaborationEngine: 协作引擎 (任务编排 + 角色路由 + 超时重试)
-- SwarmEngine: 蜂群引擎 (涌现检测 + 集体决策 + 自适应控制)
-- PersonalEngine: 个人知识引擎 (知识图谱 + 偏好学习 + 智能推荐)
+基于 L0 原语构建的引擎层组件，每个引擎内部委托给对应的 L0 原语：
+- CollaborationEngine → L0 TaskScheduler + RoleManager + AgentRegistry
+- SwarmEngine → L0 SwarmManager + CollectiveDecision + EmergenceDetector
+- PersonalEngine → L0 PersonalKnowledgeManager + KnowledgeGraphBuilder + RecommendationEngine
 """
 
 from __future__ import annotations
@@ -60,17 +60,22 @@ class OrchestrationTask:
 
 
 class CollaborationEngine:
-    """协作引擎 — 任务编排 + 角色路由 + 超时重试 + DAG 依赖
+    """协作引擎 — 委托给 L0 TaskScheduler + RoleManager + AgentRegistry
 
     L2 引擎面: 管理多角色协作的完整运行时
     """
 
     def __init__(self, config: EngineConfig):
+        from ecos.l0.governance import TaskScheduler, RoleManager, AgentRegistry
+
         self.config = config
         self.status = EngineStatus.IDLE
-        self.tasks: dict[str, OrchestrationTask] = {}
-        self._agent_capabilities: dict[str, set[str]] = {}
-        self._agent_load: dict[str, int] = {}
+
+        self._scheduler = TaskScheduler()
+        self._role_manager = RoleManager()
+        self._registry = AgentRegistry()
+
+        self._task_stages: dict[str, TaskStage] = {}
         self._task_dependencies: dict[str, set[str]] = {}
         self._completion_handlers: dict[str, Callable[[OrchestrationTask], None]] = {}
         self._event_log: list[dict[str, Any]] = []
@@ -86,22 +91,31 @@ class CollaborationEngine:
         return True
 
     def register_agent(self, agent_id: str, capabilities: list[str]) -> None:
-        self._agent_capabilities[agent_id] = set(capabilities)
-        self._agent_load.setdefault(agent_id, 0)
+        self._registry.register(agent_id, agent_id, capabilities)
+        self._role_manager.define_role(
+            __import__("ecos.l0.governance", fromlist=["RoleDefinition"]).RoleDefinition(
+                role_id=f"role-{agent_id}",
+                role_type=__import__("ecos.l0.governance", fromlist=["RoleType"]).RoleType.WORKER,
+                capabilities=capabilities,
+                constraints={},
+            )
+        )
 
     def submit_task(self, task_id: str, name: str,
                     required_capabilities: list[str] | None = None,
                     priority: int = 0,
                     dependencies: list[str] | None = None) -> OrchestrationTask:
+        self._scheduler.submit_task(task_id, name, required_capabilities, priority)
+        self._task_stages[task_id] = TaskStage.PENDING
+
+        if dependencies:
+            self._task_dependencies[task_id] = set(dependencies)
+
         task = OrchestrationTask(
-            task_id=task_id,
-            name=name,
+            task_id=task_id, name=name,
             required_capabilities=required_capabilities or [],
             priority=priority,
         )
-        self.tasks[task_id] = task
-        if dependencies:
-            self._task_dependencies[task_id] = set(dependencies)
         self._log_event("task_submitted", task_id=task_id, name=name)
         return task
 
@@ -112,120 +126,100 @@ class CollaborationEngine:
         self._completion_handlers[task_id] = handler
 
     def auto_assign(self) -> list[tuple[str, str]]:
-        """自动分配就绪任务给最佳 Agent"""
         assignments: list[tuple[str, str]] = []
 
-        for task_id, task in self.tasks.items():
-            if task.stage != TaskStage.PENDING:
+        for task_id in list(self._scheduler.task_queue):
+            task_info = self._scheduler.get_task(task_id)
+            if not task_info or task_info.status.value != "pending":
                 continue
 
             deps = self._task_dependencies.get(task_id, set())
-            all_deps_done = all(
-                self.tasks.get(d, OrchestrationTask(task_id=d, name="")).stage == TaskStage.DONE
-                for d in deps
+            all_done = all(
+                self._task_stages.get(d) == TaskStage.DONE for d in deps
             )
-            if not all_deps_done:
+            if not all_done:
                 continue
 
-            agent = self._find_best_agent(task)
-            if agent:
-                task.assigned_agent = agent
-                task.stage = TaskStage.PLANNING
-                self._agent_load[agent] = self._agent_load.get(agent, 0) + 1
-                assignments.append((task_id, agent))
-                self._log_event("task_assigned", task_id=task_id, agent=agent)
+            idle = self._registry.get_idle_agents()
+            if not idle:
+                continue
+
+            required = set(task_info.required_capabilities)
+            best = None
+            for agent in idle:
+                if not required or required.issubset(set(agent.capabilities)):
+                    best = agent
+                    break
+
+            if best:
+                self._scheduler.assign_task(task_id, best.agent_id)
+                self._task_stages[task_id] = TaskStage.PLANNING
+                assignments.append((task_id, best.agent_id))
+                self._log_event("task_assigned", task_id=task_id, agent=best.agent_id)
 
         return assignments
 
     def start_task(self, task_id: str) -> bool:
-        task = self.tasks.get(task_id)
-        if not task or task.stage != TaskStage.PLANNING:
+        if self._task_stages.get(task_id) != TaskStage.PLANNING:
             return False
-        task.stage = TaskStage.EXECUTING
-        task.started_at = datetime.now(timezone.utc)
+        self._scheduler.start_task(task_id)
+        self._task_stages[task_id] = TaskStage.EXECUTING
         self._log_event("task_started", task_id=task_id)
         return True
 
     def complete_task(self, task_id: str, result: Any = None) -> bool:
-        task = self.tasks.get(task_id)
-        if not task or task.stage != TaskStage.EXECUTING:
+        if self._task_stages.get(task_id) != TaskStage.EXECUTING:
             return False
-        task.stage = TaskStage.DONE
-        task.result = result
-        task.completed_at = datetime.now(timezone.utc)
-        self._agent_load[task.assigned_agent] = max(
-            0, self._agent_load.get(task.assigned_agent, 1) - 1
-        )
+        self._scheduler.complete_task(task_id, result)
+        self._task_stages[task_id] = TaskStage.DONE
         self._log_event("task_completed", task_id=task_id)
 
         handler = self._completion_handlers.get(task_id)
         if handler:
+            task = OrchestrationTask(task_id=task_id, name="", stage=TaskStage.DONE, result=result)
             handler(task)
-
         return True
 
     def fail_task(self, task_id: str, error: str = "") -> bool:
-        task = self.tasks.get(task_id)
-        if not task:
+        task_info = self._scheduler.get_task(task_id)
+        if not task_info:
             return False
 
-        task.retry_count += 1
-        if task.retry_count <= self.config.retry_count:
-            task.stage = TaskStage.PENDING
-            task.assigned_agent = ""
-            task.error = error
-            self._log_event("task_retry", task_id=task_id, retry=task.retry_count)
+        task_info.metadata["retry_count"] = task_info.metadata.get("retry_count", 0) + 1
+        if task_info.metadata["retry_count"] <= self.config.retry_count:
+            self._task_stages[task_id] = TaskStage.PENDING
+            self._log_event("task_retry", task_id=task_id, retry=task_info.metadata["retry_count"])
             return True
 
-        task.stage = TaskStage.FAILED
-        task.error = error
-        task.completed_at = datetime.now(timezone.utc)
+        self._scheduler.fail_task(task_id)
+        self._task_stages[task_id] = TaskStage.FAILED
         self._log_event("task_failed", task_id=task_id, error=error)
         return True
 
     def get_task_status(self, task_id: str) -> dict[str, Any] | None:
-        task = self.tasks.get(task_id)
-        if not task:
+        task_info = self._scheduler.get_task(task_id)
+        if not task_info:
             return None
         return {
-            "task_id": task.task_id,
-            "name": task.name,
-            "stage": task.stage.value,
-            "assigned_agent": task.assigned_agent,
-            "retry_count": task.retry_count,
-            "error": task.error,
+            "task_id": task_id,
+            "name": task_info.name,
+            "stage": self._task_stages.get(task_id, TaskStage.PENDING).value,
+            "assigned_agent": task_info.assigned_agent,
+            "priority": task_info.priority,
             "dependencies": list(self._task_dependencies.get(task_id, set())),
         }
 
     def get_pipeline_status(self) -> dict[str, Any]:
         stage_counts: dict[str, int] = {}
-        for task in self.tasks.values():
-            stage_counts[task.stage.value] = stage_counts.get(task.stage.value, 0) + 1
+        for stage in self._task_stages.values():
+            stage_counts[stage.value] = stage_counts.get(stage.value, 0) + 1
 
         return {
             "engine_status": self.status.value,
-            "total_tasks": len(self.tasks),
+            "total_tasks": len(self._task_stages),
             "stage_distribution": stage_counts,
-            "agent_load": dict(self._agent_load),
-            "pending_assignments": sum(
-                1 for t in self.tasks.values() if t.stage == TaskStage.PENDING
-            ),
+            "pending_assignments": stage_counts.get("pending", 0),
         }
-
-    def _find_best_agent(self, task: OrchestrationTask) -> Optional[str]:
-        candidates = []
-        for agent_id, caps in self._agent_capabilities.items():
-            if task.required_capabilities:
-                if set(task.required_capabilities).issubset(caps):
-                    candidates.append(agent_id)
-            else:
-                candidates.append(agent_id)
-
-        if not candidates:
-            return None
-
-        candidates.sort(key=lambda a: self._agent_load.get(a, 0))
-        return candidates[0]
 
     def _log_event(self, event_type: str, **kwargs: Any) -> None:
         self._event_log.append({
@@ -236,17 +230,21 @@ class CollaborationEngine:
 
 
 class SwarmEngine:
-    """蜂群引擎 — 涌现检测 + 集体决策 + 自适应控制
+    """蜂群引擎 — 委托给 L0 SwarmManager + CollectiveDecision + EmergenceDetector
 
     L2 引擎面: 管理蜂群智能的完整运行时
     """
 
     def __init__(self, config: EngineConfig):
+        from ecos.l0.governance import SwarmManager, CollectiveDecision, EmergenceDetector
+
         self.config = config
         self.status = EngineStatus.IDLE
-        self.agents: dict[str, dict[str, Any]] = {}
-        self._behaviors: list[dict[str, Any]] = []
-        self._decisions: list[dict[str, Any]] = []
+
+        self._swarm = SwarmManager()
+        self._decision = CollectiveDecision()
+        self._detector = EmergenceDetector()
+
         self._event_log: list[dict[str, Any]] = []
 
     def start(self) -> bool:
@@ -260,129 +258,61 @@ class SwarmEngine:
         return True
 
     def register_agent(self, agent_id: str, metadata: dict[str, Any] | None = None) -> bool:
-        self.agents[agent_id] = metadata or {}
+        self._swarm.add_agent(agent_id, initial_state=metadata)
         self._log_event("agent_registered", agent_id=agent_id)
         return True
 
     def unregister_agent(self, agent_id: str) -> bool:
-        if agent_id in self.agents:
-            del self.agents[agent_id]
-            self._log_event("agent_unregistered", agent_id=agent_id)
-            return True
-        return False
+        return self._swarm.remove_agent(agent_id)
 
     def update_agent_state(self, agent_id: str, state: dict[str, Any]) -> bool:
-        if agent_id in self.agents:
-            self.agents[agent_id].update(state)
-            return True
-        return False
+        return self._swarm.update_agent_state(agent_id, state)
 
     def detect_emergence(self) -> list[dict[str, Any]]:
-        agent_ids = list(self.agents.keys())
-        detected: list[dict[str, Any]] = []
-
-        if len(agent_ids) >= 3:
-            detected.append({
-                "pattern": "clustering",
-                "agents": agent_ids[:3],
-                "confidence": min(0.5 + len(agent_ids) * 0.05, 0.95),
-            })
-
-        roles: dict[str, list[str]] = {}
-        for aid, state in self.agents.items():
-            role = state.get("role", "general")
-            roles.setdefault(role, []).append(aid)
-
-        if len(roles) >= 2:
-            detected.append({
-                "pattern": "specialization",
-                "agents": agent_ids,
-                "confidence": min(0.4 + len(roles) * 0.15, 0.9),
-                "role_diversity": len(roles),
-            })
-
-        self._behaviors.extend(detected)
+        state = self._swarm.get_swarm_state()
+        l0_behaviors = self._swarm.detect_emergence(state)
+        detected = [b.to_dict() for b in l0_behaviors]
         self._log_event("emergence_detected", patterns=[d["pattern"] for d in detected])
         return detected
 
     def propose_decision(self, proposal_id: str, title: str,
                          options: list[str], method: str = "majority_vote") -> dict[str, Any]:
-        proposal = {
-            "proposal_id": proposal_id,
-            "title": title,
-            "options": options,
-            "method": method,
-            "votes": {},
-            "status": "pending",
-            "result": None,
+        from ecos.l0.governance import DecisionMethod
+
+        method_map = {
+            "majority_vote": DecisionMethod.MAJORITY_VOTE,
+            "weighted_vote": DecisionMethod.WEIGHTED_VOTE,
+            "consensus": DecisionMethod.CONSENSUS,
+            "leader": DecisionMethod.LEADER,
+            "pheromone": DecisionMethod.PHEROMONE,
         }
-        self._decisions.append(proposal)
+        dm = method_map.get(method, DecisionMethod.MAJORITY_VOTE)
+        proposal = self._decision.create_proposal(proposal_id, title, options, dm)
         self._log_event("decision_proposed", proposal_id=proposal_id)
-        return proposal
+        return {"proposal_id": proposal.proposal_id, "title": proposal.title,
+                "options": proposal.options, "method": method,
+                "status": proposal.status}
 
     def vote(self, proposal_id: str, agent_id: str, option: str) -> bool:
-        for proposal in self._decisions:
-            if proposal["proposal_id"] == proposal_id:
-                if option in proposal["options"]:
-                    proposal["votes"][agent_id] = option
-                    return True
-        return False
+        return self._decision.vote(proposal_id, agent_id, option)
 
     def resolve_decision(self, proposal_id: str) -> Optional[str]:
-        for proposal in self._decisions:
-            if proposal["proposal_id"] != proposal_id:
-                continue
-
-            votes = proposal["votes"]
-            if not votes:
-                return None
-
-            if proposal["method"] == "majority_vote":
-                counts: dict[str, int] = {}
-                for vote in votes.values():
-                    counts[vote] = counts.get(vote, 0) + 1
-
-                total = sum(counts.values())
-                winner = max(counts, key=lambda k: counts[k])
-                if counts[winner] > total / 2:
-                    proposal["result"] = winner
-                    proposal["status"] = "resolved"
-                    self._log_event("decision_resolved",
-                                    proposal_id=proposal_id, result=winner)
-                    return winner
-
-            elif proposal["method"] == "consensus":
-                unique = set(votes.values())
-                if len(unique) == 1:
-                    result = unique.pop()
-                    proposal["result"] = result
-                    proposal["status"] = "resolved"
-                    self._log_event("decision_resolved",
-                                    proposal_id=proposal_id, result=result)
-                    return result
-
-        return None
+        result = self._decision.decide(proposal_id)
+        if result:
+            self._log_event("decision_resolved", proposal_id=proposal_id, result=result)
+        return result
 
     def get_swarm_status(self) -> dict[str, Any]:
-        role_dist: dict[str, int] = {}
-        for state in self.agents.values():
-            role = state.get("role", "general")
-            role_dist[role] = role_dist.get(role, 0) + 1
+        metrics = self._swarm.get_metrics()
 
-        pattern_dist: dict[str, int] = {}
-        for b in self._behaviors:
-            p = b["pattern"]
-            pattern_dist[p] = pattern_dist.get(p, 0) + 1
+        pending = len(self._decision.get_pending_proposals())
 
         return {
             "engine_status": self.status.value,
-            "agent_count": len(self.agents),
-            "role_distribution": role_dist,
-            "behavior_count": len(self._behaviors),
-            "pattern_distribution": pattern_dist,
-            "pending_decisions": sum(
-                1 for d in self._decisions if d["status"] == "pending"
-            ),
+            "agent_count": metrics["agent_count"],
+            "behavior_count": metrics["behavior_count"],
+            "pattern_distribution": metrics["pattern_distribution"],
+            "pending_decisions": pending,
         }
 
     def _log_event(self, event_type: str, **kwargs: Any) -> None:
@@ -394,19 +324,31 @@ class SwarmEngine:
 
 
 class PersonalEngine:
-    """个人知识引擎 — 知识图谱 + 偏好学习 + 智能推荐
+    """个人知识引擎 — 委托给 L0 PersonalKnowledgeManager + KnowledgeGraphBuilder + RecommendationEngine
 
     L2 引擎面: 管理个人知识的完整运行时
     """
 
     def __init__(self, config: EngineConfig):
+        from ecos.l0.governance import (
+            PersonalKnowledgeManager,
+            PreferenceEngine, RecommendationEngine, KnowledgeGraphBuilder,
+        )
+
         self.config = config
         self.status = EngineStatus.IDLE
-        self.knowledge: dict[str, dict[str, Any]] = {}
-        self._edges: list[tuple[str, str, str]] = []
-        self._user_preferences: dict[str, dict[str, float]] = {}
-        self._access_log: list[dict[str, Any]] = []
+
+        self._km = PersonalKnowledgeManager()
+        self._pe = PreferenceEngine()
+        self._graph = KnowledgeGraphBuilder()
+        self._rec_engine: Optional[RecommendationEngine] = None
+
         self._event_log: list[dict[str, Any]] = []
+
+    def _ensure_rec_engine(self) -> None:
+        if self._rec_engine is None:
+            from ecos.l0.governance import RecommendationEngine
+            self._rec_engine = RecommendationEngine(self._km, self._pe)
 
     def start(self) -> bool:
         self.status = EngineStatus.RUNNING
@@ -420,112 +362,75 @@ class PersonalEngine:
 
     def add_knowledge(self, key: str, content: dict[str, Any],
                       tags: list[str] | None = None, relations: list[str] | None = None) -> bool:
-        self.knowledge[key] = {
-            "content": content,
-            "tags": tags or [],
-            "access_count": 0,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        }
+        from ecos.l0.governance import KnowledgeNode, KnowledgeType
+
+        node = KnowledgeNode(
+            node_id=key,
+            knowledge_type=KnowledgeType.FACT,
+            content=content,
+            tags=tags or [],
+            relations=relations or [],
+        )
+        self._km.add_knowledge(node)
+        self._graph.add_node(key, content)
         for rel in (relations or []):
-            self._edges.append((key, rel, "related_to"))
+            self._graph.add_edge(key, rel, "related_to")
         self._log_event("knowledge_added", key=key)
         return True
 
     def remove_knowledge(self, key: str) -> bool:
-        if key in self.knowledge:
-            del self.knowledge[key]
-            self._edges = [(s, t, r) for s, t, r in self._edges if s != key and t != key]
-            return True
-        return False
+        removed = self._km.remove_knowledge(key)
+        if removed:
+            self._graph.remove_node(key)
+        return removed
 
     def query_knowledge(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
-        results = []
-        query_lower = query.lower()
-        for key, data in self.knowledge.items():
-            content_text = " ".join(str(v) for v in data["content"].values()).lower()
-            tags_text = " ".join(data.get("tags", [])).lower()
-            combined = f"{key} {content_text} {tags_text}".lower()
-
-            score = 0.0
-            for term in query_lower.split():
-                if term in combined:
-                    score += 1.0
-                    if term in key.lower():
-                        score += 0.5
-
-            if score > 0:
-                results.append({"key": key, "score": score, **data})
-
-        results.sort(key=lambda x: x["score"], reverse=True)
-        return results[:limit]
+        nodes = self._km.query_knowledge(query, limit)
+        return [
+            {"key": n.node_id, "score": 1.0, "content": n.content, "tags": n.tags}
+            for n in nodes
+        ]
 
     def get_related_knowledge(self, key: str) -> list[str]:
-        related = []
-        for src, tgt, _ in self._edges:
-            if src == key:
-                related.append(tgt)
-            elif tgt == key:
-                related.append(src)
-        return list(set(related))
+        return self._km.get_related(key, depth=1)
 
     def add_edge(self, source: str, target: str, relation: str = "related_to") -> None:
-        self._edges.append((source, target, relation))
+        self._graph.add_edge(source, target, relation)
 
     def learn_preference(self, user_id: str, key: str, score: float = 1.0) -> None:
-        if user_id not in self._user_preferences:
-            self._user_preferences[user_id] = {}
-        current = self._user_preferences[user_id].get(key, 0.0)
-        self._user_preferences[user_id][key] = current + score
+        from ecos.l0.governance import UserPreference, PreferenceType
+
+        pref = UserPreference(
+            user_id=user_id,
+            preference_type=PreferenceType.TOPIC,
+            key=key, value=key, weight=score,
+        )
+        self._km.learn_preference(user_id, pref)
+        self._pe.learn(user_id, key, key, score)
 
     def get_recommendations(self, user_id: str, limit: int = 5) -> list[dict[str, Any]]:
-        prefs = self._user_preferences.get(user_id, {})
-        if not prefs:
-            recent = sorted(
-                self.knowledge.items(),
-                key=lambda x: x[1].get("created_at", ""),
-                reverse=True,
-            )
-            return [{"key": k, "score": 0.5, "reason": "recent"} for k, _ in recent[:limit]]
-
-        scored: list[tuple[str, float]] = []
-        for key, data in self.knowledge.items():
-            score = 0.0
-            content_text = " ".join(str(v) for v in data["content"].values()).lower()
-            for pref_key, pref_weight in prefs.items():
-                if pref_key.lower() in content_text:
-                    score += pref_weight
-            if score > 0:
-                scored.append((key, score))
-
-        scored.sort(key=lambda x: x[1], reverse=True)
+        self._ensure_rec_engine()
+        recs = self._rec_engine.recommend(user_id, limit=limit)
         return [
-            {"key": k, "score": s, "reason": "preference_match"}
-            for k, s in scored[:limit]
+            {"key": r.node_id, "score": r.score, "reason": r.reason}
+            for r in recs
         ]
 
     def record_access(self, key: str, user_id: str = "") -> None:
-        if key in self.knowledge:
-            self.knowledge[key]["access_count"] = self.knowledge[key].get("access_count", 0) + 1
-            self._access_log.append({
-                "key": key,
-                "user_id": user_id,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
+        node = self._km.get_knowledge(key)
+        if node:
+            self._log_event("knowledge_accessed", key=key, user_id=user_id)
 
     def get_stats(self) -> dict[str, Any]:
-        total_access = sum(d.get("access_count", 0) for d in self.knowledge.values())
-        tag_counts: dict[str, int] = {}
-        for data in self.knowledge.values():
-            for tag in data.get("tags", []):
-                tag_counts[tag] = tag_counts.get(tag, 0) + 1
+        km_stats = self._km.get_stats()
+        graph_stats = self._graph.get_stats()
 
         return {
             "engine_status": self.status.value,
-            "knowledge_count": len(self.knowledge),
-            "edge_count": len(self._edges),
-            "total_access": total_access,
-            "user_count": len(self._user_preferences),
-            "top_tags": sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:5],
+            "knowledge_count": km_stats["node_count"],
+            "edge_count": graph_stats["edge_count"],
+            "total_tags": km_stats["total_tags"],
+            "user_count": km_stats["user_count"],
         }
 
     def _log_event(self, event_type: str, **kwargs: Any) -> None:

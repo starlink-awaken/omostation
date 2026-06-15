@@ -186,7 +186,7 @@ class PersonalKnowledgeManager(PersonalKnowledgePrimitive):
             scores[node_id] *= (1.0 + 0.2 * recency)
 
         ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-        return [self.knowledge[nid] for nid, _ in ranked[:limit]]
+        return [self.knowledge[nid] for nid, score in ranked[:limit] if score > 0]
 
     def query_by_tags(self, tags: list[str], match_all: bool = False) -> list[KnowledgeNode]:
         """按标签查询"""
@@ -296,7 +296,8 @@ class PersonalKnowledgeManager(PersonalKnowledgePrimitive):
 
     @staticmethod
     def _node_to_text(node: KnowledgeNode) -> str:
-        parts = [str(v) for v in node.content.values()]
+        parts = [node.node_id]
+        parts.extend(str(v) for v in node.content.values())
         parts.extend(node.tags)
         return " ".join(parts)
 
