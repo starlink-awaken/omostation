@@ -8,11 +8,16 @@
 
 from __future__ import annotations
 
+from ecos.common.logger import get_logger
+
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Callable, Optional
 
+
+
+logger = get_logger("engine")
 
 class EngineStatus(Enum):
     """引擎状态"""

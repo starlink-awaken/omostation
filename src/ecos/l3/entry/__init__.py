@@ -7,8 +7,13 @@
 
 from __future__ import annotations
 
+from ecos.common.logger import get_logger
+
 from dataclasses import dataclass
 from typing import Any
+
+
+logger = get_logger("entry")
 
 
 @dataclass

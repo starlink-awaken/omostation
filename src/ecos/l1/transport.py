@@ -8,6 +8,8 @@
 
 from __future__ import annotations
 
+from ecos.common.logger import get_logger
+
 import asyncio
 import json
 import struct
@@ -16,6 +18,9 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Callable, Optional
 
+
+
+logger = get_logger("transport")
 
 class ChannelState(Enum):
     """通道状态"""
