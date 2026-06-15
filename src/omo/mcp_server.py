@@ -20,6 +20,10 @@ class ReclaimRequest(BaseModel):
     task_id: str
     worker_id: str
 
+class YieldRequest(BaseModel):
+    task_id: str
+    reason: str
+
 class DebtListRequest(BaseModel):
     omo_dir: str = ".omo"
     status: Optional[str] = None  # filter: open, closed, or None for all
@@ -66,6 +70,18 @@ async def omo_worker_reclaim(req: ReclaimRequest) -> str:
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error reclaiming task: {e.stderr}"
+
+@mcp.tool()
+async def omo_yield_task(req: YieldRequest) -> str:
+    """[C2G v2] Abort and yield an active OMO task back to the ideation sandbox."""
+    try:
+        result = subprocess.run(
+            ["python3", "-m", "omo.cli", "worker", "yield", req.task_id, "--reason", req.reason],
+            capture_output=True, text=True, check=True
+        )
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f"Error yielding task: {e.stderr}"
 
 @mcp.tool()
 async def omo_gc() -> str:

@@ -346,7 +346,7 @@ class TestTail:
         log = AppendOnlyLog(tmp_path / "tiny.jsonl")
         for i in range(100):
             log.append({"i": i})
-        result = log.tail(5, chunk_size=1)
+        result = log.tail(5, max_chunk_size=1)
         assert [r["i"] for r in result] == [95, 96, 97, 98, 99]
 
     def test_tail_reverse_seek_unicode(self, tmp_path):
@@ -354,7 +354,7 @@ class TestTail:
         log = AppendOnlyLog(tmp_path / "unicode.jsonl")
         for i in range(100):
             log.append({"i": i, "name": f"中文_{i}_emoji_{'🎉' * (i % 5)}"})
-        result = log.tail(3, chunk_size=128)  # 故意小 chunk
+        result = log.tail(3, max_chunk_size=128)  # 故意小 chunk
         assert len(result) == 3
         assert all("name" in r for r in result)
         # 验证 unicode 完整
@@ -372,7 +372,7 @@ class TestTail:
         for i in range(100):
             log.append({"i": i})
         # 故意用 16 字节 chunk_size (每条记录 ~10 字节, 边界容易落在 \n)
-        result = log.tail(5, chunk_size=16)
+        result = log.tail(5, max_chunk_size=16)
         assert len(result) == 5
         assert [r["i"] for r in result] == [95, 96, 97, 98, 99]
 

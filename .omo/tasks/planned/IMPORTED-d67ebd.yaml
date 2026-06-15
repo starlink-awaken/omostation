@@ -1,0 +1,29 @@
+id: IMPORTED-d67ebd
+title: 'P0-W0-C2G-SSOT-WRITEBACK: 在 `omo worker reclaim` 或 `mof-extract` 中植入钩子，解析
+  `context_uri`，将结果追加到原始 Markdown 文档底部。'
+status: candidate
+task_type: feature
+risk_level: L0
+depends_on: []
+source_docs:
+- /Users/xiamingxing/Workspace/runtime/sandbox/OpenSpec-Implement_Context_URI_SSOT_Write-back.md
+deliverables:
+- 执行记录与源码修改
+imported_via: omo_bridge
+context_uri: bos://memory/openspecs/OpenSpec-Implement_Context_URI_SSOT_Write-back.md#IMPORTED-d67ebd
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+entry_gate: []
+evidence_required:
+- '[Fallback] Default evidence'
+test_plan:
+- '[Fallback] Default test plan'
+allowed_operation_level: L0
+human_approval_required: false
+phase: 0
+wave: W0

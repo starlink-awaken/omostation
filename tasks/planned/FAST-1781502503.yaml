@@ -1,0 +1,17 @@
+id: FAST-1781502503
+title: Fix typo in README
+status: candidate
+task_type: feature
+risk_level: L0
+depends_on: []
+source_docs: []
+deliverables:
+- 直接代码修改
+imported_via: fast_track_cli
+context_uri: bos://memory/fast-track/FAST-1781502503
+evidence_required:
+- 代码修改自证
+test_plan:
+- 冒烟测试
+allowed_operation_level: L0
+human_approval_required: false

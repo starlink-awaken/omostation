@@ -408,6 +408,39 @@ def reclaim_task(
     return successor
 
 
+def yield_task(
+    root: Path, task_id: str, reason: str, omo_dir: str | Path = ".omo"
+) -> int:
+    """[C2G v2] Agent Autonomous Yielding Mechanism"""
+    omo_path = _omo_path(root, omo_dir)
+    active_dir = omo_path / "tasks" / "active"
+    planned_dir = omo_path / "tasks" / "planned"
+    
+    task_file = _find_task_file(active_dir, task_id)
+    if not task_file:
+        raise ValueError(f"Task {task_id} not found in active tasks.")
+        
+    task = _load_yaml(task_file)
+    task["status"] = "yield_to_ideation"
+    
+    run_ref = task.get("run_ref")
+    if run_ref:
+        dispatch_path = root / run_ref
+        if dispatch_path.exists():
+            dispatch = _load_yaml(dispatch_path)
+            dispatch["dispatch_state"] = "yielded"
+            dispatch["reclaim"] = dispatch.get("reclaim", {})
+            dispatch["reclaim"]["required"] = True
+            dispatch["reclaim"]["reason"] = f"Yielded to ideation: {reason}"
+            _write_yaml(dispatch_path, dispatch)
+            
+    _write_yaml(planned_dir / f"{task_id}.yaml", task)
+    task_file.unlink()
+    print(f"✅ 战术撤退成功: 任务 {task_id} 已退回沙箱 (yield_to_ideation)。原因: {reason}")
+    return 0
+
+
+
 def _worker_gc(
     root: Path, dry_run: bool = False, retain: int = 50, omo_dir: str | Path = ".omo"
 ) -> int:
@@ -479,6 +512,56 @@ def _worker_gc(
         f"GC complete: retained {retain} dispatch runs, "
         f"cleaned {len(to_delete)} old runs ({total_files} files)"
     )
+    
+    if not dry_run:
+        _fast_track_compaction(root, omo_dir=omo_dir)
+        
     return 0
+
+def _fast_track_compaction(root: Path, omo_dir: str | Path = ".omo"):
+    """[C2G v2] Fast-Track 碎片聚变机制
+    收集 done 目录下的 FAST-* 任务，聚变成 Markdown 报告，并将原始 yaml 归档。
+    """
+    omo_path = _omo_path(root, omo_dir)
+    done_dir = omo_path / "tasks" / "done"
+    archive_dir = omo_path / "tasks" / "archived"
+    audit_dir = omo_path / "_knowledge" / "audits"
+    
+    if not done_dir.exists():
+        return
+        
+    fast_tasks = list(done_dir.glob("FAST-*.yaml"))
+    if len(fast_tasks) < 5:
+        # 数量不够，暂不聚变
+        return
+        
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    audit_dir.mkdir(parents=True, exist_ok=True)
+    
+    compaction_time = _timestamp_slug(_utc_now())
+    report_path = audit_dir / f"Fast-Track-Compaction-{compaction_time}.md"
+    
+    report_lines = [
+        f"# 微小价值交付聚变报告 ({compaction_time})",
+        "",
+        "| Task ID | 标题 | 锚点 | 归档时间 |",
+        "|---|---|---|---|"
+    ]
+    
+    for task_file in fast_tasks:
+        try:
+            task = _load_yaml(task_file)
+            title = task.get("title", "Unknown")
+            context_uri = task.get("context_uri", "N/A")
+            report_lines.append(f"| {task_file.stem} | {title} | `{context_uri}` | {_utc_now()} |")
+            
+            # 物理归档
+            task_file.rename(archive_dir / task_file.name)
+        except Exception as e:
+            print(f"Failed to compact {task_file}: {e}")
+            
+    if len(report_lines) > 4:
+        report_path.write_text("\n".join(report_lines) + "\n", encoding="utf-8")
+        print(f"✅ Fast-Track 微观碎片已聚变: 归档了 {len(fast_tasks)} 个任务，生成报告 {report_path.name}")
 
 

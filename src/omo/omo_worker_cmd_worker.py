@@ -19,6 +19,7 @@ from .omo_worker_status import (
 from .omo_worker_dispatch import (
     dispatch_task,
     reclaim_task,
+    yield_task,
     _worker_gc,
 )
 
@@ -134,6 +135,11 @@ def setup_worker_parser(subparsers: Any) -> None:
     reclaim_parser.add_argument("--transport", default="cli_prompt")
     reclaim_parser.add_argument("--omo-dir", default=".omo")
 
+    yield_parser = worker_sub.add_parser("yield")
+    yield_parser.add_argument("task_id")
+    yield_parser.add_argument("--reason", required=True)
+    yield_parser.add_argument("--omo-dir", default=".omo")
+
     gc_parser = worker_sub.add_parser("gc")
     gc_parser.add_argument(
         "--dry-run", action="store_true", help="Just list, don't delete"
@@ -196,6 +202,14 @@ def execute_worker_command(args: argparse.Namespace) -> int:
             omo_dir=args.omo_dir,
         )
         return 0
+
+    if args.worker_command == "yield":
+        return yield_task(
+            Path.cwd(),
+            task_id=args.task_id,
+            reason=args.reason,
+            omo_dir=args.omo_dir,
+        )
 
     if args.worker_command == "gc":
         return _worker_gc(

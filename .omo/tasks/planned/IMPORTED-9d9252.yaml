@@ -1,0 +1,28 @@
+id: IMPORTED-9d9252
+title: 'P0-W0-C2G-AGENT-YIELD: 开发 abort_and_yield_task MCP 工具，注册于 I0 Agora 或 MetaOS，支持传入失败现场快照。'
+status: candidate
+task_type: feature
+risk_level: L0
+depends_on: []
+source_docs:
+- /Users/xiamingxing/Workspace/runtime/sandbox/OpenSpec-Implement_Agent_Autonomous_Yielding_Tool.md
+deliverables:
+- 执行记录与源码修改
+imported_via: omo_bridge
+context_uri: bos://memory/openspecs/OpenSpec-Implement_Agent_Autonomous_Yielding_Tool.md#IMPORTED-9d9252
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+entry_gate: []
+evidence_required:
+- '[Fallback] Default evidence'
+test_plan:
+- '[Fallback] Default test plan'
+allowed_operation_level: L0
+human_approval_required: false
+phase: 0
+wave: W0
