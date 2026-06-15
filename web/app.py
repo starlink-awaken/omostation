@@ -21,11 +21,6 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from fastapi import FastAPI, Form, Request, WebSocket
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
-from prometheus_client import REGISTRY, Gauge, generate_latest  # type: ignore[import-not-found]
-
 from agora.agent_card import service_to_agent_card  # type: ignore[import-not-found]
 from agora.audit_subscriber import AuditSubscriber  # type: ignore[import-not-found]
 from agora.core.discovery import DiscoveryEngine  # type: ignore[import-not-found]
@@ -38,6 +33,10 @@ from agora.core.service_base import (  # type: ignore[import-not-found]
 from agora.core.state import get_event_bus, get_registry, get_router  # type: ignore[import-not-found]
 from agora.pipeline import Pipeline  # type: ignore[import-not-found]
 from agora.web import workspace_research  # type: ignore[import-not-found]
+from fastapi import FastAPI, Form, Request, WebSocket
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse
+from prometheus_client import REGISTRY, Gauge, generate_latest  # type: ignore[import-not-found]
 
 logger = logging.getLogger(__name__)
 
@@ -146,8 +145,9 @@ _proxy_manager = None
 async def get_proxy_manager():
     global _proxy_manager
     if _proxy_manager is None:
-        from agora.mcp_proxy.manager import ProxyManager
         import os
+
+        from agora.mcp_proxy.manager import ProxyManager
         _proxy_manager = ProxyManager()
         workspace_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
         gbrain_svc = {
@@ -466,10 +466,10 @@ async def api_sandbox_execute(request_data: dict):
     code = request_data.get("code", "")
     if not code:
         return _error_resp("Code is required", 400)
-    
+
     try:
-        from runtime.kei_sandbox import enable_sandbox
         from runtime.executor.sandbox import Sandbox
+        from runtime.kei_sandbox import enable_sandbox
         # Enable sandbox (idempotent hook registration)
         enable_sandbox()
         # Execute the untrusted code
@@ -493,14 +493,14 @@ async def api_knowledge_put(request_data: dict):
     content = request_data.get("content")
     if not slug or not title or not content:
         return _error_resp("slug, title, and content are required", 400)
-    
+
     args = {
         "slug": slug,
         "title": title,
         "content": content,
         "tags": request_data.get("tags", [])
     }
-    
+
     try:
         res = await pm.dispatch("gbrain.put_page", args)
         return {"status": "ok", "result": res}
@@ -514,7 +514,7 @@ async def api_knowledge_search(request_data: dict):
     query = request_data.get("query")
     if not query:
         return _error_resp("query is required", 400)
-    
+
     try:
         res = await pm.dispatch("gbrain.search", {"query": query})
         return {"status": "ok", "result": res}

@@ -42,6 +42,7 @@ from .commands.data import cmd_data_gc, cmd_data_index, cmd_data_types
 from .commands.governance import cmd_governance
 from .commands.importer import cmd_import
 from .commands.mcp import cmd_mcp
+from .commands.monitor import cmd_monitor
 from .commands.profile import cmd_profile
 from .commands.quickstart import cmd_quickstart
 from .commands.research import (
@@ -81,8 +82,6 @@ from .commands.status import (
     cmd_help,
     cmd_status,
 )
-from .commands.monitor import cmd_monitor
-
 
 
 def main() -> int:
@@ -334,7 +333,7 @@ def main() -> int:
     iterate_p.add_argument("topic", nargs="?", default="未命名探索主题", help="要发起探索的主题")
     iterate_p.add_argument("--mock", action="store_true", help="是否模拟生成带 TODO 的测试数据以触发门控")
 
-    monitor_p = sub.add_parser("monitor", help="📊 实时终端大盘 (C2G Pipeline 监控仪)")
+    sub.add_parser("monitor", help="📊 实时终端大盘 (C2G Pipeline 监控仪)")
 
 
     code_p = sub.add_parser("code", help="代码库分析与审查 (基于 codeanalyze)")

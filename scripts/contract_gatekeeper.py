@@ -24,7 +24,6 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
 
 # Paths that shall never be touched directly by non-omo code
 FORBIDDEN_PREFIXES = (".omo/", "spaces/", ".omo\\", "spaces\\")
@@ -77,7 +76,7 @@ class _GatekeeperVisitor(ast.NodeVisitor):
                 self._add(arg, f"forbidden path in call arg: {arg.value!r}")
 
     # ── open(...) ──────────────────────────────────────────────
-    def visit_Call(self, node: ast.Call) -> None:  # noqa: N802
+    def visit_Call(self, node: ast.Call) -> None:
         func = node.func
 
         # open(".omo/...", ...)
@@ -112,7 +111,7 @@ class _GatekeeperVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     # ── with open(".omo/...") as f: ─────────────────────────────
-    def visit_With(self, node: ast.With) -> None:  # noqa: N802
+    def visit_With(self, node: ast.With) -> None:
         for item in node.items:
             ctx_expr = item.context_expr
             if isinstance(ctx_expr, ast.Call):
@@ -120,7 +119,7 @@ class _GatekeeperVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     # ── Assign to a path-like name using forbidden literal ──────
-    def visit_Assign(self, node: ast.Assign) -> None:  # noqa: N802
+    def visit_Assign(self, node: ast.Assign) -> None:
         for target in node.targets:
             if isinstance(target, ast.Name) and "path" in target.id.lower():
                 if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
