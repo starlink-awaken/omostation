@@ -287,6 +287,7 @@ name = "c2g"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "fastmcp" },
     { name = "httpx" },
     { name = "pydantic" },
     { name = "pyyaml" },
@@ -299,6 +300,7 @@ ecos = [
 
 [package.metadata]
 requires-dist = [
+    { name = "fastmcp", specifier = ">=0.1.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "omo", marker = "extra == 'ecos'", directory = "../omo" },
     { name = "pydantic", specifier = ">=2.13.4" },

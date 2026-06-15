@@ -92,7 +92,20 @@ class EcosStorageProvider(IStorageProvider):
             BetSchema(goal_id="BET-2", title="Agent Autonomy", description="", vector="V2", created_at="")
         ]
 
-def get_providers(omo_dir_path):
-    # Dependency Injection point
-    # Could fall back to Local providers if OMO is not installed
-    return EcosGovernanceProvider(), EcosStorageProvider(omo_dir_path)
+def get_providers(base_dir_path: str = None, adapter_type: str = "ecos"):
+    """
+    Dependency Injection point.
+    adapter_type can be 'ecos' (default for eCOS workspace) or 'local' (standalone usage).
+    """
+    if adapter_type == "ecos":
+        try:
+            return EcosGovernanceProvider(), EcosStorageProvider(base_dir_path)
+        except ImportError as e:
+            print(f"⚠️ eCOS Adapter not available ({e}). Falling back to 'local' adapter.")
+            adapter_type = "local"
+    
+    if adapter_type == "local":
+        from .adapters_local import LocalGovernanceProvider, LocalStorageProvider
+        return LocalGovernanceProvider(), LocalStorageProvider(base_dir_path or ".c2g_data")
+    
+    raise ValueError(f"Unknown adapter type: {adapter_type}")
