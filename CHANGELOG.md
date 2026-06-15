@@ -9,6 +9,11 @@
 
 ## [未发布]
 
+### Added
+- **C2G v3 (Cybernetic Solutions)**:
+  - 引入了 Context URI SSOT Write-back 机制 (`mof-extract`)，任务闭环自动回写审计。
+  - `L0-constraints.yaml` 与 `GOV-X1-CONSTRAINT.yaml` 新增 3 条 C2G v3 核心门禁约束 (`CR-C2G-V3-01~03`)。
+
 ### 新增
 - 初始化项目
 
