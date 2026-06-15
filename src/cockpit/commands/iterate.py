@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import subprocess
+import time
 from pathlib import Path
 
+import yaml
 from rich.console import Console
+from rich.prompt import Confirm
 
 console = Console()
 
@@ -15,13 +18,51 @@ def cmd_iterate(args) -> int:
 
     topic = getattr(args, "topic", "未命名探索主题")
 
-    console.print("\n[bold yellow]► Phase 1: 认知发散 (MetaOS Sandbox)[/]")
-    console.print(f"主题: '{topic}'")
-
-    # 强制将发散期的契约隔离在 runtime 沙箱目录
     workspace_root = Path(__file__).resolve().parents[5]
     sandbox_dir = workspace_root / "runtime" / "sandbox"
     sandbox_dir.mkdir(parents=True, exist_ok=True)
+    omo_dir = workspace_root / "projects" / "omo"
+
+    # [C2G v2] 解法二: 架构双轨制与“免签快车道”
+    is_fast_track = Confirm.ask(
+        "\n[bold magenta]❓ 认知复杂度分级 (Cognitive Triage):[/]\n"
+        "这是一项复杂度极低的微观任务吗？(选 y 将触发 Fast-Track 免签快车道，跳过沙箱与架构审查)",
+        default=False,
+    )
+
+    if is_fast_track:
+        console.print("\n[bold yellow]► 🚀 触发 Mode B: Fast-Track 免签快车道[/]")
+        task_id = f"FAST-{int(time.time())}"
+        fast_task = {
+            "id": task_id,
+            "title": topic,
+            "status": "candidate",
+            "task_type": "feature",
+            "risk_level": "L0",
+            "depends_on": [],
+            "source_docs": [],
+            "deliverables": ["直接代码修改"],
+            "imported_via": "fast_track_cli",
+            "context_uri": f"bos://memory/fast-track/{task_id}",
+            "evidence_required": ["代码修改自证"],
+            "test_plan": ["冒烟测试"],
+            "allowed_operation_level": "L0",
+            "human_approval_required": False,
+        }
+        planned_dir = omo_dir / "tasks" / "planned"
+        planned_dir.mkdir(parents=True, exist_ok=True)
+        task_file = planned_dir / f"{task_id}.yaml"
+        task_file.write_text(yaml.dump(fast_task, allow_unicode=True, sort_keys=False))
+
+        console.print(
+            f"[bold green]✅ Fast-Track 成功: 已直接落盘为 OMO CARDS ({task_id}.yaml)，立即进入 GSD 模式。[/]"
+        )
+        return 0
+
+    console.print("\n[bold yellow]► Phase 1: 认知发散 (Mode A: MetaOS Sandbox)[/]")
+    console.print(f"主题: '{topic}'")
+
+    # 强制将发散期的契约隔离在 runtime 沙箱目录
     spec_path = sandbox_dir / f"OpenSpec-{topic.replace(' ', '_')}.md"
 
     if getattr(args, "mock", False):
@@ -95,7 +136,6 @@ def cmd_iterate(args) -> int:
     console.print(f"正在读取 {spec_path}，执行降维拦截与写入 OMO 稳态区...")
 
     # Locate omo project dir relative to cockpit
-    omo_dir = Path(__file__).resolve().parents[5] / "projects" / "omo"
     if not omo_dir.exists():
         console.print(f"[red]错误: 无法定位 OMO 域: {omo_dir}[/]")
         return 1
