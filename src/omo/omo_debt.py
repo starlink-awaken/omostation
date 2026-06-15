@@ -824,7 +824,6 @@ def main() -> int:
     omo_dir = Path(args.omo_dir)
 
     if args.command == "register":
-        from datetime import datetime, timezone
         timestamp = datetime.now(timezone.utc).isoformat()
         payload = register_item(args, timestamp=timestamp)
         item_ref = f".omo/debt/items/{args.id}.yaml"
@@ -938,6 +937,7 @@ def main() -> int:
             "close",
             "Closed debt item.",
             actor=getattr(args, "actor", ""),
+            timestamp=datetime.now(timezone.utc).isoformat(),
         )
         _write_yaml(item_path, payload)
         print(f"closed {args.id}")
@@ -951,6 +951,7 @@ def main() -> int:
             "reopen",
             "Reopened debt item.",
             actor=getattr(args, "actor", ""),
+            timestamp=datetime.now(timezone.utc).isoformat(),
         )
         _write_yaml(item_path, payload)
         print(f"reopened {args.id}")
