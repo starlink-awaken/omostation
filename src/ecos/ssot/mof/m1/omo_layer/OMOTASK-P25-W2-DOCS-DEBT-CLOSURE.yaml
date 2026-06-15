@@ -3,7 +3,7 @@ type: OMOTask
 subtype: Task
 name: 文档终稿+债务关闭+健康分重算
 description: ''
-status: pending
+status: in_progress
 priority: P0
 domain: opc
 properties:

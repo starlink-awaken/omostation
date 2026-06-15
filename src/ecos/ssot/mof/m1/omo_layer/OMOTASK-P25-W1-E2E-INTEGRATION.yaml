@@ -3,7 +3,7 @@ type: OMOTask
 subtype: Task
 name: 'E2E集成测试: 4个接口契约 + 自愈回路完整演练'
 description: ''
-status: pending
+status: in_progress
 priority: P0
 domain: opc
 properties:
