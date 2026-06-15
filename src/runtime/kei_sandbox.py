@@ -108,9 +108,9 @@ def _audit_hook(event: str, args: tuple):
                      f"Subprocess allowed: {cmd}")
 
     elif event == "socket.connect":
-        # args[0] is address (host, port)
-        if isinstance(args[0], tuple) and len(args[0]) >= 2:
-            host = args[0][0]
+        # args[0] is socket, args[1] is address (host, port)
+        if len(args) >= 2 and isinstance(args[1], tuple) and len(args[1]) >= 2:
+            host = args[1][0]
             allowed_hosts = perms.get("network", {}).get("allow", ["*"])
             if "*" not in allowed_hosts and host not in allowed_hosts:
                 record_audit("reject", "ecos.kernel.sandbox", "blocked",
