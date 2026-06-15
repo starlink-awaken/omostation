@@ -10,12 +10,16 @@ Instead, use the `omo-cli` toolchain to interact with it.
 ## 2. Using the OMO MCP Server (Hard Isolation)
 All commands MUST be run using the `omo` MCP server. Direct filesystem manipulation of `.omo/` or direct invocation of the CLI is strictly forbidden to prevent privilege escalation.
 
-- Call the `omo_bridge` MCP tool to import external BMAD/Markdown specs into OMO planned tasks.
+- Call the `omo_bridge` MCP tool to import external BMAD/Markdown specs into OMO planned tasks. (Note: The Devil's Gatekeeper will reject any spec containing TODO/TBD).
 - Call the `omo_worker_dispatch` MCP tool to fetch your next task. This will create `.omo/workers/runs/xxx-prompt.md`.
 - Call the `omo_worker_reclaim` MCP tool to submit your work when done.
 - Call the `omo_gc` MCP tool to snapshot and clean up the workspace state.
 
-## 3. The Execution Loop
+## 3. The C2G (Creative-to-Governance) Pipeline
+- When you need to brainstorm, do **not** write to `.omo/tasks/`. Use the MetaOS Sandbox (via `workspace iterate` macro) to generate an `OpenSpec.md` in the `runtime/sandbox/` directory.
+- Only when the design is completely resolved and free of `TODO` placeholders, use the `omo_bridge` tool to solidify it into OMO. This ensures chaos remains in the mind and order remains in the database.
+
+## 4. The Execution Loop
 1. When you enter the workspace, check `.omo/goals/current.yaml` to understand the overarching Phase and Wave.
 2. Look in `.omo/workers/runs/` for any `*-prompt.md` files assigned to you.
 3. Execute the work in the specified `allowed_paths`.
