@@ -11,16 +11,19 @@ omo_task:
       transitions: [in_progress, archived]
     in_progress:
       description: 进行中·WIP
-      transitions: [review, blocked, archived]
+      transitions: [review, blocked, archived, yield_to_ideation]
     review:
       description: 评审·接受审计
-      transitions: [done, in_progress, archived]
+      transitions: [done, in_progress, archived, yield_to_ideation]
     done:
       description: 已完成·经验沉淀
       transitions: [archived]
     blocked:
       description: 阻塞·等待依赖
-      transitions: [in_progress, archived]
+      transitions: [in_progress, archived, yield_to_ideation]
+    yield_to_ideation:
+      description: 柔性回滚·挂起并退回沙箱 (C2G v2)
+      transitions: [in_progress, archived, proposed]
     archived:
       description: 归档
       transitions: []
@@ -88,6 +91,9 @@ omo_task:
     gate_note:
       type: string
       description: Gate 备注
+    context_uri:
+      type: string
+      description: 柔性降维上下文锚点 (bos:// URI)
   validationRules:
     - rule: status != null and gate != null
       level: error
