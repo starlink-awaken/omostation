@@ -298,88 +298,65 @@ class CommunicationProtocol:
 
 
 class StateSyncService:
-    """状态同步服务 — 版本化状态 + 冲突检测 + 增量同步
+    """状态同步服务 — 委托 L0 StateSyncService
 
     L1 运行时: 基于 L0 原语构建的完整状态同步运行时
     """
 
     def __init__(self, node_id: str):
+        from ecos.l0.governance import StateSyncService as L0StateSync, SyncStrategy
+
         self.node_id = node_id
-        self._state: dict[str, tuple[Any, int, datetime]] = {}
-        self._version: int = 0
+        self._l0 = L0StateSync(node_id, SyncStrategy.EVENTUAL)
         self._sync_log: list[dict[str, Any]] = []
         self._conflict_log: list[dict[str, Any]] = []
 
     def set(self, key: str, value: Any) -> int:
-        self._version += 1
-        self._state[key] = (value, self._version, datetime.now(timezone.utc))
-        return self._version
+        self._l0.set(key, value)
+        return self._l0.vector_clock.get(self.node_id, 0)
 
     def get(self, key: str) -> Any | None:
-        entry = self._state.get(key)
-        return entry[0] if entry else None
+        return self._l0.get(key)
 
     def get_version(self, key: str) -> int:
-        entry = self._state.get(key)
-        return entry[1] if entry else 0
+        return self._l0.vector_clock.get(self.node_id, 0)
 
     def get_global_version(self) -> int:
-        return self._version
+        return self._l0.vector_clock.get(self.node_id, 0)
 
     def get_all(self) -> dict[str, Any]:
-        return {k: v[0] for k, v in self._state.items()}
+        return self._l0.get_all()
 
     def get_all_with_versions(self) -> dict[str, tuple[Any, int]]:
-        return {k: (v[0], v[1]) for k, v in self._state.items()}
+        return {k: (v, self._l0.vector_clock.get(self.node_id, 0))
+                for k, v in self._l0.get_all().items()}
 
     def sync_from(self, remote_state: dict[str, tuple[Any, int]]) -> dict[str, Any]:
-        changes: dict[str, Any] = {}
-        conflicts: list[dict[str, Any]] = []
-
-        for key, (remote_value, remote_version) in remote_state.items():
-            local_entry = self._state.get(key)
-            if local_entry:
-                local_value, local_version, _ = local_entry
-                if remote_version > local_version:
-                    self._state[key] = (remote_value, remote_version, datetime.now(timezone.utc))
-                    changes[key] = remote_value
-                elif remote_version == local_version and remote_value != local_value:
-                    conflicts.append({
-                        "key": key,
-                        "local_value": local_value,
-                        "remote_value": remote_value,
-                        "resolution": "keep_local",
-                    })
-            else:
-                self._state[key] = (remote_value, remote_version, datetime.now(timezone.utc))
-                changes[key] = remote_value
+        remote_clock = {self.node_id: max((v for _, v in remote_state.values()), default=0)}
+        result = self._l0.merge_state(
+            {k: v for k, (v, _) in remote_state.items()},
+            remote_clock,
+        )
 
         self._sync_log.append({
             "type": "sync_from",
-            "changes": list(changes.keys()),
-            "conflicts": len(conflicts),
+            "changes": list(result.conflicts) if hasattr(result, 'conflicts') else [],
             "timestamp": datetime.now(timezone.utc).isoformat(),
         })
 
-        if conflicts:
-            self._conflict_log.extend(conflicts)
-
-        return changes
+        return self._l0.get_all()
 
     def get_delta(self, since_version: int) -> dict[str, tuple[Any, int]]:
-        delta = {}
-        for key, (value, version, _) in self._state.items():
-            if version > since_version:
-                delta[key] = (value, version)
-        return delta
+        return self._l0.get_delta_since({self.node_id: since_version})
 
     def to_dict(self) -> dict[str, Any]:
+        l0_dict = self._l0.to_dict()
         return {
-            "node_id": self.node_id,
-            "key_count": len(self._state),
-            "global_version": self._version,
-            "sync_count": len(self._sync_log),
-            "conflict_count": len(self._conflict_log),
+            "node_id": l0_dict["node_id"],
+            "key_count": l0_dict["state_count"],
+            "global_version": l0_dict["vector_clock"].get(self.node_id, 0),
+            "sync_count": l0_dict["sync_count"],
+            "conflict_count": l0_dict["conflict_count"],
         }
 
 

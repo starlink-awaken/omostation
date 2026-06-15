@@ -2555,3 +2555,213 @@ class TestEdgeCases:
         result = mcp.call_tool("nonexistent_tool")
         assert "error" in result
         assert "available" in result
+
+
+# ══════════════════════════════════════════════════════════════
+# 端到端验证 — 蜂群式AI超级大脑全链路工作流
+# ══════════════════════════════════════════════════════════════
+
+class TestEndToEndWorkflow:
+    """端到端验证 — 证明蜂群式AI超级大脑能真正工作"""
+
+    def test_multi_node_state_sync_workflow(self):
+        """多节点状态同步完整工作流"""
+        from ecos.l0.governance import StateSyncService, SyncStrategy
+
+        nodes = [StateSyncService(f"node-{i}", SyncStrategy.EVENTUAL) for i in range(4)]
+
+        nodes[0].set("config", "v1")
+        nodes[0].set("status", "active")
+
+        snap0 = nodes[0].generate_snapshot()
+        for n in nodes[1:]:
+            n.sync_from_snapshot(snap0)
+
+        nodes[1].set("counter", 100)
+        nodes[2].set("counter", 200)
+
+        snap1 = nodes[1].generate_snapshot()
+        snap2 = nodes[2].generate_snapshot()
+        nodes[0].sync_from_snapshot(snap1)
+        nodes[0].sync_from_snapshot(snap2)
+
+        assert nodes[0].get("config") == "v1"
+        assert nodes[0].get("status") == "active"
+        assert nodes[0].get("counter") == 200
+
+        for n in nodes:
+            assert n.get("config") == "v1"
+
+    def test_swarm_decision_workflow(self):
+        """蜂群集体决策完整工作流"""
+        from ecos.l0.governance import SwarmManager, CollectiveDecision, DecisionMethod
+
+        manager = SwarmManager()
+        for i in range(8):
+            manager.add_agent(f"agent-{i}", weight=1.0 + i * 0.5,
+                              initial_state={"role": "worker"})
+
+        decision = CollectiveDecision()
+        weights = {f"agent-{i}": 1.0 + i * 0.5 for i in range(8)}
+        decision.create_proposal(
+            "deploy", "选择部署策略",
+            ["blue-green", "canary", "rolling"],
+            DecisionMethod.WEIGHTED_VOTE, agent_weights=weights,
+        )
+
+        decision.vote("deploy", "agent-0", "canary")
+        decision.vote("deploy", "agent-1", "canary")
+        decision.vote("deploy", "agent-2", "canary")
+        decision.vote("deploy", "agent-3", "blue-green")
+        decision.vote("deploy", "agent-4", "rolling")
+        decision.vote("deploy", "agent-5", "canary")
+        decision.vote("deploy", "agent-6", "blue-green")
+        decision.vote("deploy", "agent-7", "canary")
+
+        result = decision.decide("deploy")
+        assert result == "canary"
+
+        state = manager.get_swarm_state()
+        behaviors = manager.detect_emergence(state)
+        assert len(behaviors) >= 1
+
+    def test_knowledge_recommendation_workflow(self):
+        """知识推荐完整工作流"""
+        from ecos.l0.governance import (
+            PersonalKnowledgeManager, KnowledgeNode, KnowledgeType,
+            KnowledgeGraphBuilder, PreferenceEngine, RecommendationEngine,
+        )
+
+        km = PersonalKnowledgeManager()
+        graph = KnowledgeGraphBuilder()
+        pe = PreferenceEngine()
+
+        docs = [
+            ("python-basics", "Python programming language fundamentals", ["python", "programming"]),
+            ("ml-algorithms", "Machine learning algorithms and models", ["ml", "algorithms"]),
+            ("deep-learning", "Deep learning neural networks", ["dl", "neural"]),
+            ("cooking-101", "Basic cooking recipes and techniques", ["cooking", "recipes"]),
+            ("data-science", "Data science with Python and statistics", ["data", "science"]),
+        ]
+
+        for doc_id, text, tags in docs:
+            km.add_knowledge(KnowledgeNode(
+                node_id=doc_id, knowledge_type=KnowledgeType.FACT,
+                content={"text": text}, tags=tags,
+            ))
+            graph.add_node(doc_id, {"text": text})
+
+        graph.add_edge("python-basics", "ml-algorithms", "prerequisite")
+        graph.add_edge("ml-algorithms", "deep-learning", "prerequisite")
+        graph.add_edge("python-basics", "data-science", "prerequisite")
+        graph.add_edge("ml-algorithms", "data-science", "related")
+
+        pe.learn("user-1", "python", "topic", 5.0)
+        pe.learn("user-1", "machine", "topic", 3.0)
+
+        rec_engine = RecommendationEngine(km, pe)
+        recs = rec_engine.recommend("user-1", limit=3)
+        assert len(recs) >= 1
+        assert recs[0].node_id in ("python-basics", "ml-algorithms", "data-science")
+
+        pr = graph.pagerank()
+        assert pr["python-basics"] > 0.15
+
+        similar = rec_engine.recommend_similar("ml-algorithms")
+        assert len(similar) >= 1
+
+    def test_role_collaboration_workflow(self):
+        """角色协作完整工作流"""
+        from ecos.l0.governance import (
+            RoleManager, RoleDefinition, RoleType, RoleCollaboration,
+            RoleEvaluator, CollaborationMode,
+        )
+
+        rm = RoleManager()
+        rm.define_role(RoleDefinition(role_id="analyst", role_type=RoleType.WORKER, capabilities=["analyze"], constraints={}))
+        rm.define_role(RoleDefinition(role_id="developer", role_type=RoleType.WORKER, capabilities=["code"], constraints={}))
+        rm.define_role(RoleDefinition(role_id="reviewer", role_type=RoleType.SPECIALIST, capabilities=["review"], constraints={}))
+        rm.define_role(RoleDefinition(role_id="lead", role_type=RoleType.COORDINATOR, capabilities=["manage"], constraints={}))
+
+        collab = RoleCollaboration(rm)
+        evaluator = RoleEvaluator()
+
+        collab.create_task(
+            "project-1", "开发新功能",
+            ["analyst", "developer", "reviewer", "lead"],
+            CollaborationMode.PIPELINE,
+        )
+        assignments = {
+            "analyst": "alice", "developer": "bob",
+            "reviewer": "carol", "lead": "dave",
+        }
+        collab.assign_roles_to_task("project-1", assignments)
+        collab.start_task("project-1")
+        collab.complete_task("project-1", {"result": "shipped"})
+
+        evaluator.evaluate("alice", "analyst", 92.0, {"speed": 0.9, "quality": 0.95})
+        evaluator.evaluate("bob", "developer", 88.0, {"speed": 0.85, "quality": 0.9})
+        evaluator.evaluate("carol", "reviewer", 95.0, {"catch_rate": 0.98})
+        evaluator.evaluate("dave", "lead", 90.0, {"coordination": 0.92})
+
+        avg = evaluator.get_average_score("analyst")
+        assert avg == 92.0
+
+        top = evaluator.get_top_agents("reviewer")
+        assert len(top) == 1
+        assert top[0].score == 95.0
+
+    def test_fault_tolerance_workflow(self):
+        """故障容错完整工作流"""
+        from ecos.l0.governance import (
+            FailoverManager, FailoverRule, FailoverStrategy,
+            LoadBalancer, LoadBalancingStrategy, NodeManager, NodeStatus,
+        )
+
+        nm = NodeManager()
+        for i in range(4):
+            nm.register(f"node-{i}")
+
+        fm = FailoverManager()
+        fm.add_rule(FailoverRule(
+            rule_id="rule-1", source_node="node-0",
+            target_nodes=["node-1", "node-2", "node-3"],
+            strategy=FailoverStrategy.ROUND_ROBIN,
+        ))
+
+        lb = LoadBalancer(LoadBalancingStrategy.LEAST_CONNECTIONS)
+        for i in range(4):
+            lb.register_node(f"node-{i}", weight=1)
+
+        health = nm.check_health()
+        healthy_count = sum(1 for s in health.values() if s in (NodeStatus.ONLINE, NodeStatus.HEALTHY))
+        assert healthy_count == 4
+
+        target1 = fm.execute_failover("node-0")
+        target2 = fm.execute_failover("node-0")
+        assert target1 != target2
+
+        lb.update_connections("node-0", 15)
+        lb.update_connections("node-1", 10)
+        lb.update_connections("node-2", 3)
+        lb.update_connections("node-3", 8)
+        best = lb.select_node()
+        assert best == "node-2"
+
+    def test_l3_full_system_check(self):
+        """L3 全系统检查"""
+        from ecos.l3.entry import GovernanceCLI, GovernanceMCP
+
+        cli = GovernanceCLI()
+        for cmd in ["check", "status", "cluster", "swarm", "knowledge", "help"]:
+            result = cli.run([cmd])
+            assert result == 0, f"命令 {cmd} 失败"
+
+        mcp = GovernanceMCP()
+        tools = mcp.list_tools()
+        assert len(tools) == 14
+
+        for tool in ["governance_check", "governance_status", "cluster_list",
+                      "swarm_status", "knowledge_stats", "task_submit"]:
+            result = mcp.call_tool(tool)
+            assert result["status"] == "ok", f"工具 {tool} 失败"
