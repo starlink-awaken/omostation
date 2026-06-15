@@ -1,0 +1,25 @@
+id: "OMO-C2G-PIPELINE"
+type: "Pattern"
+name: "C2G (Creative-to-Governance) Pipeline 模式"
+description: "将敏捷认知（BMAD/Superpower）与稳态执行（OMO/GSD）解耦的双擎流水线模式"
+status: "documented"
+domain: "meta"
+layer: "L0"
+created: "2026-06-15"
+version: "1.0.0"
+properties:
+  problem: "OMO 强依赖的治理机制（反乐观、严格审计）与敏捷探索期间（如BMAD发散、脑暴）的无状态要求存在冲突，导致创新工作流滞涩。"
+  context: "适用于所有需要前期头脑风暴（Ideation）、后期强制落地（GSD/Execution）的复杂演进任务。"
+  solution: "四阶段隔离管线: 1. 认知发散 (MetaOS 内存沙箱) -> 2. 契约固化 (Model-Driven 的 OpenSpec) -> 3. 降维握手 (OMO 门控预检) -> 4. 刚性执行 (OMO AppendOnlyLog 与 Debt 防线)。"
+  domain_field: "meta"
+  lifecycle: "active"
+  anti_pattern: "将草稿阶段的 TODO/TBD 项强行塞入 OMO tasks，污染 SSOT 状态；或将 OMO 的审计要求提前压至 BMAD 发散期。"
+  forces:
+    - "创造力发散的无政府状态 vs 系统防腐的极权治理"
+  related_patterns:
+    - "OMO-SELF-CORRECTION-PATTERN"
+  relations:
+    - "c2g_pipeline_spec: .omo/_knowledge/design/plans/C2G-Pipeline-Design.md"
+  references:
+    - "GOV-X4-CONSISTENCY.yaml: CS-11"
+source: "model-driven/mof/ontology_extended.py"
