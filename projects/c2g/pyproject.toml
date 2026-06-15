@@ -9,10 +9,12 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "httpx>=0.28.1",
-    "omo",
     "pydantic>=2.13.4",
     "pyyaml>=6.0.3",
 ]
+
+[project.optional-dependencies]
+ecos = ["omo"]
 
 [build-system]
 requires = ["uv_build>=0.11.19,<0.12.0"]

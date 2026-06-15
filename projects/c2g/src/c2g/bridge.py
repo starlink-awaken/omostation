@@ -180,16 +180,14 @@ def _import_bmad(file_path: Path, omo_dir: Path, sequential: bool = False):
             continue
 
         # [MODEL-DRIVEN M2 VALIDATION & X1-X4 Governance Checks]
-        from omo.omo_task_schema import validate_task_data
-
-        # [C2G v2] 解法四: Schema 逆向推导引擎与 Retry Loop 保护
-        max_retries = 3
-        attempt = 0
-        validation_passed = False
-
-        while attempt < max_retries and not validation_passed:
-            attempt += 1
-            validation_errors = validate_task_data(task_data, group="planned")
+        from .adapters import get_providers
+    gov, store = get_providers(omo_dir)
+    from .domain import TaskSchema
+    t = TaskSchema(**task_data)
+    if not gov.validate_task(t):
+        validation_errors = ["M2 validation failed"]
+    else:
+        validation_errors = []
             if validation_errors:
                 print(
                     f"  [Attempt {attempt}] ⚠️ 逆向推导引擎拦截幻觉 (Schema Validation Failed): 任务 {task_id}"
@@ -258,9 +256,14 @@ def _import_fast_track(source_topic: Path, omo_dir: Path):
     }
 
     # [MODEL-DRIVEN M2 VALIDATION]
-    from omo.omo_task_schema import validate_task_data
-
-    validation_errors = validate_task_data(task_data, group="planned")
+    from .adapters import get_providers
+    gov, store = get_providers(omo_dir)
+    from .domain import TaskSchema
+    t = TaskSchema(**task_data)
+    if not gov.validate_task(t):
+        validation_errors = ["M2 validation failed"]
+    else:
+        validation_errors = []
     if validation_errors:
         print("  ❌ M2 防腐层拦截 (Schema Validation Failed)")
         for err in validation_errors:
@@ -274,8 +277,8 @@ def _import_fast_track(source_topic: Path, omo_dir: Path):
 
 def _import_pitch(source_file: Path, omo_dir: Path):
     """[C2G v4] 将 Pitch (提案) 转换为 Bet 并在 OMO 中生成 Planned Task."""
-    from omo.omo_goal import cmd_goal_create
-
+    from .adapters import get_providers
+    gov, store = get_providers(omo_dir)
     print(f"🌉 [C2G v4] 正在将 Pitch 转化为 OMO Bet: {source_file.name}")
     content = source_file.read_text(encoding="utf-8")
 
@@ -297,7 +300,8 @@ def _import_pitch(source_file: Path, omo_dir: Path):
     desc = f"Bet: {source_file.stem} (Appetite: {appetite})"
 
     # 将 Bet 加入 current.yaml
-    cmd_goal_create(omo_dir, bet_id, desc)
+    from .domain import BetSchema
+    store.save_bet(BetSchema(goal_id=bet_id, title=source_file.stem, description=desc, appetite=appetite, created_at=""))
 
     # 派生 Planned Task
     planned_dir = omo_dir / "tasks" / "planned"
@@ -330,9 +334,14 @@ def _import_pitch(source_file: Path, omo_dir: Path):
     }
 
     # [MODEL-DRIVEN M2 VALIDATION]
-    from omo.omo_task_schema import validate_task_data
-
-    validation_errors = validate_task_data(task_data, group="planned")
+    from .adapters import get_providers
+    gov, store = get_providers(omo_dir)
+    from .domain import TaskSchema
+    t = TaskSchema(**task_data)
+    if not gov.validate_task(t):
+        validation_errors = ["M2 validation failed"]
+    else:
+        validation_errors = []
     if validation_errors:
         print("  ❌ M2 防腐层拦截 (Schema Validation Failed)")
         for err in validation_errors:

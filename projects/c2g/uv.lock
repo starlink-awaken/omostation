@@ -288,18 +288,23 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
-    { name = "omo" },
     { name = "pydantic" },
     { name = "pyyaml" },
+]
+
+[package.optional-dependencies]
+ecos = [
+    { name = "omo" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
-    { name = "omo", directory = "../omo" },
+    { name = "omo", marker = "extra == 'ecos'", directory = "../omo" },
     { name = "pydantic", specifier = ">=2.13.4" },
     { name = "pyyaml", specifier = ">=6.0.3" },
 ]
+provides-extras = ["ecos"]
 
 [[package]]
 name = "cachetools"
