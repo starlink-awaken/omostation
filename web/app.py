@@ -21,22 +21,25 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from agora.agent_card import service_to_agent_card  # type: ignore[import-not-found]
-from agora.audit_subscriber import AuditSubscriber  # type: ignore[import-not-found]
-from agora.core.discovery import DiscoveryEngine  # type: ignore[import-not-found]
-from agora.core.service_base import (  # type: ignore[import-not-found]
-    Service,
-    is_safe_url,
-    parse_protocol_config,
-    parse_tags,
-)
-from agora.core.state import get_event_bus, get_registry, get_router  # type: ignore[import-not-found]
-from agora.pipeline import Pipeline  # type: ignore[import-not-found]
-from agora.web import workspace_research  # type: ignore[import-not-found]
 from fastapi import FastAPI, Form, Request, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from prometheus_client import REGISTRY, Gauge, generate_latest  # type: ignore[import-not-found]
+
+from web.compat import (  # type: ignore[import-not-found]  # type: ignore[import-not-found]
+    AuditSubscriber,  # type: ignore[import-not-found]
+    DiscoveryEngine,  # type: ignore[import-not-found]
+    Pipeline,  # type: ignore[import-not-found]
+    Service,
+    get_event_bus,
+    get_registry,
+    get_router,
+    is_safe_url,
+    parse_protocol_config,
+    parse_tags,
+    service_to_agent_card,  # type: ignore[import-not-found]
+    workspace_research,  # type: ignore[import-not-found]
+)
 
 logger = logging.getLogger(__name__)
 
