@@ -278,6 +278,28 @@ textarea.mono-input:focus{outline:none;border-color:var(--border-active)}
     <div class="card-stat"><div class="label">估算成本</div><div class="value" id="compute-total-cost">—</div></div>
     <div class="card-stat"><div class="label">剩余额度</div><div class="value" id="compute-remaining-ratio">—</div></div>
   </div>
+  <div class="grid" style="grid-template-columns:repeat(4,minmax(0,1fr));gap:0.75rem;margin-bottom:1rem">
+    <div class="output-panel">
+      <div class="text-dim" style="font-size:0.72rem">实时拦截</div>
+      <div style="font-size:1.25rem;color:var(--text-bright);font-weight:600" id="compute-intercepted-calls">—</div>
+      <div class="text-dim" style="font-size:0.74rem" id="compute-intercepted-rate">—</div>
+    </div>
+    <div class="output-panel">
+      <div class="text-dim" style="font-size:0.72rem">本地节省</div>
+      <div style="font-size:1.25rem;color:var(--success);font-weight:600" id="compute-saved-cost">—</div>
+      <div class="text-dim" style="font-size:0.74rem" id="compute-cloud-equivalent">—</div>
+    </div>
+    <div class="output-panel">
+      <div class="text-dim" style="font-size:0.72rem">云上实际</div>
+      <div style="font-size:1.25rem;color:var(--warning);font-weight:600" id="compute-cloud-cost">—</div>
+      <div class="text-dim" style="font-size:0.74rem" id="compute-local-cost">—</div>
+    </div>
+    <div class="output-panel">
+      <div class="text-dim" style="font-size:0.72rem">Codex 额度</div>
+      <div style="font-size:1.25rem;color:var(--accent);font-weight:600" id="compute-codex-credits">—</div>
+      <div class="text-dim" style="font-size:0.74rem" id="compute-codex-used">—</div>
+    </div>
+  </div>
   <div class="grid" style="grid-template-columns:1.2fr 1fr;gap:1rem">
     <div>
       <div class="text-dim" style="margin-bottom:0.5rem;font-size:0.82rem">节点拓扑</div>
@@ -484,6 +506,7 @@ function renderCompute(data){
   const summary = data.summary || {};
   const provider = data.provider || {};
   const observations = data.observations || {};
+  const costBoard = data.cost_board || {};
   const totalTokens = Number(summary.total_input_tokens || 0) + Number(summary.total_output_tokens || 0);
 
   document.getElementById('compute-total-calls').textContent = formatNumber(summary.total_calls || 0);
@@ -491,6 +514,22 @@ function renderCompute(data){
   document.getElementById('compute-total-cost').textContent = formatUsd(summary.total_estimated_cost_usd || 0);
   document.getElementById('compute-remaining-ratio').textContent =
     summary.remaining_ratio === null || summary.remaining_ratio === undefined ? '—' : Math.round(summary.remaining_ratio * 100) + '%';
+  document.getElementById('compute-intercepted-calls').textContent = formatNumber(costBoard.intercepted_calls || 0);
+  document.getElementById('compute-intercepted-rate').textContent =
+    `rate ${Math.round(Number(costBoard.interception_rate || 0) * 100)}% · ${formatNumber(costBoard.intercepted_tokens || 0)} tokens`;
+  document.getElementById('compute-saved-cost').textContent = formatUsd(costBoard.saved_vs_cloud_usd || 0);
+  document.getElementById('compute-cloud-equivalent').textContent =
+    `all-cloud ${formatUsd(costBoard.cloud_equivalent_cost_usd || 0)} · route ${escapeHtml(costBoard.selected_cloud_model || '—')}`;
+  document.getElementById('compute-cloud-cost').textContent = formatUsd(costBoard.actual_cloud_cost_usd || 0);
+  document.getElementById('compute-local-cost').textContent = `local ${formatUsd(costBoard.actual_local_cost_usd || 0)}`;
+  document.getElementById('compute-codex-credits').textContent =
+    costBoard.codex_remaining_credits === null || costBoard.codex_remaining_credits === undefined
+      ? '—'
+      : String(costBoard.codex_remaining_credits);
+  document.getElementById('compute-codex-used').textContent =
+    costBoard.codex_secondary_used_percent === null || costBoard.codex_secondary_used_percent === undefined
+      ? (costBoard.codex_summary || '—')
+      : `secondary ${Math.round(Number(costBoard.codex_secondary_used_percent))}%`;
 
   const badge = document.getElementById('compute-badge');
   const quotaLow = !!summary.quota_low;
@@ -510,11 +549,11 @@ function renderCompute(data){
   const trafficSummary = (data.traffic_by_node || []).map(item => `
     <div style="display:flex;justify-content:space-between;gap:1rem;padding:0.45rem 0;border-bottom:1px solid rgba(255,255,255,0.06)">
       <div><span style="color:var(--text-bright)">${escapeHtml(item.node_label)}</span><div class="text-dim" style="font-size:0.74rem">${escapeHtml(item.route_type)}</div></div>
-      <div style="text-align:right">
-        <div>${formatNumber(item.calls)} calls</div>
-        <div class="text-dim" style="font-size:0.74rem">${formatNumber(item.tokens)} tokens · ${formatUsd(item.estimated_cost_usd)}</div>
+        <div style="text-align:right">
+          <div>${formatNumber(item.calls)} calls</div>
+          <div class="text-dim" style="font-size:0.74rem">${formatNumber(item.tokens)} tokens · ${formatUsd(item.estimated_cost_usd)} · save ${formatUsd(item.saved_vs_cloud_usd || 0)}</div>
+        </div>
       </div>
-    </div>
   `).join('') || '<span class="text-dim">暂无节点流量</span>';
   document.getElementById('compute-traffic-summary').innerHTML =
     trafficSummary +

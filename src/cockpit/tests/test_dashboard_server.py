@@ -107,6 +107,12 @@ quota_summary:
         assert result["summary"]["remaining_ratio"] == 0.42
         assert result["summary"]["avg_latency_ms"] == 1025.25
         assert result["summary"]["avg_tokens_per_second"] == 716.55
+        assert result["cost_board"]["selected_cloud_model"] == "gpt-4o"
+        assert result["cost_board"]["intercepted_calls"] == 1
+        assert result["cost_board"]["interception_rate"] == 0.5
+        assert result["cost_board"]["actual_cloud_cost_usd"] == 0.025
+        assert result["cost_board"]["saved_vs_cloud_usd"] == 0.0025
+        assert result["cost_board"]["codex_remaining_credits"] is None
         assert result["provider"]["name"] == "DeepSeek"
         assert result["provider"]["quota_provider_count"] == 1
         assert result["observations"]["cross_day"] is True
@@ -169,8 +175,14 @@ class TestDashboardComputeApi:
     def test_api_compute_endpoint(self, test_client, monkeypatch):
         monkeypatch.setattr(
             "cockpit.dashboard_server._load_compute",
-            lambda: {"summary": {"total_calls": 3}, "recent_traffic": [], "traffic_by_node": []},
+            lambda: {
+                "summary": {"total_calls": 3},
+                "recent_traffic": [],
+                "traffic_by_node": [],
+                "cost_board": {"saved_vs_cloud_usd": 1.23},
+            },
         )
         resp = test_client.get("/api/compute")
         assert resp.status_code == 200
         assert resp.json()["summary"]["total_calls"] == 3
+        assert resp.json()["cost_board"]["saved_vs_cloud_usd"] == 1.23

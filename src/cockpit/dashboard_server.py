@@ -606,23 +606,23 @@ def _parse_timestamp(raw: str | None) -> datetime | None:
 def _estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
     model_lower = (model or "unknown").lower()
     cost_map = {
-        "gpt-4": {"input": 0.03, "output": 0.06},
-        "gpt-4o": {"input": 0.01, "output": 0.03},
         "gpt-4o-mini": {"input": 0.0015, "output": 0.006},
+        "gpt-4o": {"input": 0.01, "output": 0.03},
+        "gpt-4": {"input": 0.03, "output": 0.06},
         "claude-3-opus": {"input": 0.015, "output": 0.075},
         "claude-3-sonnet": {"input": 0.003, "output": 0.015},
         "claude-3-haiku": {"input": 0.00025, "output": 0.00125},
-        "deepseek-v4": {"input": 0.002, "output": 0.008},
         "deepseek-v4-flash": {"input": 0.0005, "output": 0.002},
+        "deepseek-v4": {"input": 0.002, "output": 0.008},
         "gemini-1.5-pro": {"input": 0.0035, "output": 0.0105},
         "ollama": {"input": 0.0, "output": 0.0},
         "lmstudio": {"input": 0.0, "output": 0.0},
         "mock-model": {"input": 0.0, "output": 0.0},
     }
     rates = None
-    for key, candidate in cost_map.items():
+    for key in sorted(cost_map, key=len, reverse=True):
         if model_lower.startswith(key):
-            rates = candidate
+            rates = cost_map[key]
             break
     if rates is None:
         rates = {"input": 0.002, "output": 0.008}
@@ -649,6 +649,7 @@ def _load_compute() -> dict:
 
     selected_provider = provider_plane.get("selected_provider") or {}
     provider_name = selected_provider.get("name")
+    selected_cloud_model = selected_provider.get("model") or "gpt-4o"
 
     records = []
     if LLM_COST_LOG_PATH.exists():
@@ -674,6 +675,9 @@ def _load_compute() -> dict:
                 or entry.get("cost")
                 or _estimate_cost(model, input_tokens, output_tokens)
             )
+            total_tokens = input_tokens + output_tokens
+            route_type = entry.get("route_type") or inferred_node["route_type"]
+            equivalent_cloud_cost = _estimate_cost(selected_cloud_model, input_tokens, output_tokens)
             records.append(
                 {
                     "timestamp": ts.isoformat() if ts else raw_ts,
@@ -681,13 +685,15 @@ def _load_compute() -> dict:
                     "provider_hint": provider_hint,
                     "input_tokens": input_tokens,
                     "output_tokens": output_tokens,
-                    "total_tokens": input_tokens + output_tokens,
+                    "total_tokens": total_tokens,
                     "estimated_cost_usd": round(estimated_cost, 6),
+                    "equivalent_cloud_cost_usd": round(equivalent_cloud_cost, 6),
+                    "saved_vs_cloud_usd": round(max(equivalent_cloud_cost - estimated_cost, 0.0), 6),
                     "latency_ms": float(latency_ms) if latency_ms is not None else None,
                     "tokens_per_second": float(tokens_per_second) if tokens_per_second is not None else None,
                     "node_id": entry.get("node_id") or inferred_node["node_id"],
                     "node_label": entry.get("node_label") or inferred_node["node_label"],
-                    "route_type": entry.get("route_type") or inferred_node["route_type"],
+                    "route_type": route_type,
                 }
             )
 
@@ -712,6 +718,8 @@ def _load_compute() -> dict:
                 "calls": 0,
                 "tokens": 0,
                 "estimated_cost_usd": 0.0,
+                "equivalent_cloud_cost_usd": 0.0,
+                "saved_vs_cloud_usd": 0.0,
                 "latency_samples": 0,
                 "latency_ms_avg": None,
                 "tokens_per_second_avg": None,
@@ -723,6 +731,10 @@ def _load_compute() -> dict:
         bucket["calls"] += 1
         bucket["tokens"] += record["total_tokens"]
         bucket["estimated_cost_usd"] = round(bucket["estimated_cost_usd"] + record["estimated_cost_usd"], 6)
+        bucket["equivalent_cloud_cost_usd"] = round(
+            bucket["equivalent_cloud_cost_usd"] + record["equivalent_cloud_cost_usd"], 6
+        )
+        bucket["saved_vs_cloud_usd"] = round(bucket["saved_vs_cloud_usd"] + record["saved_vs_cloud_usd"], 6)
         if record["latency_ms"] is not None:
             bucket["latency_samples"] += 1
             bucket["_latency_total"] += record["latency_ms"]
@@ -761,18 +773,30 @@ def _load_compute() -> dict:
                 "available": bool(details.get("available", False)),
                 "summary": details.get("summary"),
                 "balance": details.get("balance"),
+                "remaining": details.get("remaining"),
                 "used_percent": details.get("used_percent"),
             }
         )
 
     latency_values = [item["latency_ms"] for item in records if item["latency_ms"] is not None]
     throughput_values = [item["tokens_per_second"] for item in records if item["tokens_per_second"] is not None]
+    total_calls = len(records)
+    local_records = [item for item in records if item["route_type"] != "cloud"]
+    cloud_records = [item for item in records if item["route_type"] == "cloud"]
+    intercepted_calls = len(local_records)
+    intercepted_tokens = sum(item["total_tokens"] for item in local_records)
+    actual_local_cost = round(sum(item["estimated_cost_usd"] for item in local_records), 6)
+    actual_cloud_cost = round(sum(item["estimated_cost_usd"] for item in cloud_records), 6)
+    cloud_equivalent_cost = round(sum(item["equivalent_cloud_cost_usd"] for item in records), 6)
+    intercepted_equivalent_cloud_cost = round(sum(item["equivalent_cloud_cost_usd"] for item in local_records), 6)
+    saved_vs_cloud = round(sum(item["saved_vs_cloud_usd"] for item in local_records), 6)
+    codex_provider = (provider_plane.get("quota_summary", {}).get("providers", {}) or {}).get("codex", {})
 
     return {
         "summary": {
             "generated_at": quota_summary.get("generated_at"),
             "entry_count": quota_summary.get("entry_count", len(records)),
-            "total_calls": len(records),
+            "total_calls": total_calls,
             "recent_calls": len(records[:10]),
             "total_input_tokens": sum(item["input_tokens"] for item in records),
             "total_output_tokens": sum(item["output_tokens"] for item in records),
@@ -804,6 +828,22 @@ def _load_compute() -> dict:
         "topology": topology,
         "traffic_by_node": sorted(traffic_by_node.values(), key=lambda item: item["calls"], reverse=True),
         "recent_traffic": records[:10],
+        "cost_board": {
+            "selected_cloud_model": selected_cloud_model,
+            "intercepted_calls": intercepted_calls,
+            "intercepted_tokens": intercepted_tokens,
+            "interception_rate": round(intercepted_calls / total_calls, 4) if total_calls else 0.0,
+            "actual_cloud_cost_usd": actual_cloud_cost,
+            "actual_local_cost_usd": actual_local_cost,
+            "actual_total_cost_usd": round(actual_cloud_cost + actual_local_cost, 6),
+            "cloud_equivalent_cost_usd": cloud_equivalent_cost,
+            "intercepted_equivalent_cloud_cost_usd": intercepted_equivalent_cloud_cost,
+            "saved_vs_cloud_usd": saved_vs_cloud,
+            "codex_remaining_credits": codex_provider.get("remaining"),
+            "codex_secondary_used_percent": codex_provider.get("used_percent"),
+            "codex_available": bool(codex_provider.get("available", False)),
+            "codex_summary": codex_provider.get("summary"),
+        },
         "observations": {
             "cross_day": bool(latest_dt and earliest_dt and latest_dt.date() != earliest_dt.date()),
             "cross_week": bool(
