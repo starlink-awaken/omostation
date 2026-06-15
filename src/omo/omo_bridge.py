@@ -78,8 +78,32 @@ def _import_bmad(file_path: Path, omo_dir: Path, sequential: bool = False):
     planned_dir = omo_dir / "tasks" / "planned"
     planned_dir.mkdir(parents=True, exist_ok=True)
 
-    # Pass 1: 收集所有 - [ ] 行的 title, 算好 title → IMPORTED id 映射.
-    # Pass 2: 写文件时 depends_on 用映射回查, 避免断链.
+    # Pass 1: 解析 QA 质量保障模块 (Test Plan & Evidence Required)
+    test_plan_parsed = []
+    evidence_parsed = []
+    in_test, in_evid = False, False
+    for line in content.split("\n"):
+        if line.startswith("### 7.1"):
+            in_test, in_evid = True, False
+            continue
+        elif line.startswith("### 7.2"):
+            in_test, in_evid = False, True
+            continue
+        elif line.startswith("#"):
+            in_test, in_evid = False, False
+            continue
+        if in_test and line.strip().startswith("- "):
+            test_plan_parsed.append(line.split("- ", 1)[1].strip())
+        elif in_evid and line.strip().startswith("- "):
+            evidence_parsed.append(line.split("- ", 1)[1].strip())
+
+    if not test_plan_parsed:
+        test_plan_parsed = ["[Fallback] Default test plan"]
+    if not evidence_parsed:
+        evidence_parsed = ["[Fallback] Default evidence"]
+
+    # Pass 2: 收集所有 - [ ] 行的 title, 算好 title → IMPORTED id 映射.
+    # Pass 3: 写文件时 depends_on 用映射回查, 避免断链.
     title_to_imported: dict[str, str] = {}
     parsed_tasks: list[
         tuple[str, list[str]]
@@ -137,10 +161,8 @@ def _import_bmad(file_path: Path, omo_dir: Path, sequential: bool = False):
             "knowledge_refs": [],
             "handoff_refs": [],
             "entry_gate": [],
-            "evidence_required": ["X1-X4 治理合规自证", "单测覆盖率"],
-            "test_plan": [
-                "[X1-X4 Governance] 必须在代码实现前完成治理与架构依赖的白盒分析。"
-            ],
+            "evidence_required": evidence_parsed,
+            "test_plan": test_plan_parsed,
             "allowed_operation_level": "L0",
             "human_approval_required": False,
         }

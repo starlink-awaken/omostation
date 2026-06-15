@@ -138,13 +138,32 @@ def validate_task_data(task: dict, group: str | None = None) -> list[str]:
         for field in ("assigned_to", "dispatch_id", "run_ref", "review_ref"):
             if not task.get(field):
                 errors.append(f"{field} must be set when status=review")
+    if not planned_context and task.get("status") == "done":
+        evidence_req = task.get("evidence_required", [])
+        evidence_paths = task.get("evidence_paths", [])
+        if evidence_req and not evidence_paths:
+            errors.append("status=done requires physical 'evidence_paths' to satisfy 'evidence_required'")
 
     return errors
 
 
 def validate_task_file(path: Path) -> list[str]:
     task = _load_yaml(path)
-    return validate_task_data(task, group=path.parent.name)
+    errors = validate_task_data(task, group=path.parent.name)
+
+    # [DEVIL'S GATEKEEPER] 物理探活：如果处于 done 状态且定义了 evidence_paths，必须物理存在
+    if task.get("status") == "done" and "evidence_paths" in task:
+        try:
+            # path is typically ROOT/.omo/tasks/active/xxx.yaml
+            root_dir = path.parents[3]
+            for ev_path in task["evidence_paths"]:
+                full_path = root_dir / ev_path
+                if not full_path.exists():
+                    errors.append(f"physical evidence_path missing: {ev_path}")
+        except Exception:
+            pass
+
+    return errors
 
 
 def validate_task_group(root: Path, group: str) -> dict[str, list[str]]:

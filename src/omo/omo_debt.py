@@ -824,7 +824,9 @@ def main() -> int:
     omo_dir = Path(args.omo_dir)
 
     if args.command == "register":
-        payload = register_item(args)
+        from datetime import datetime, timezone
+        timestamp = datetime.now(timezone.utc).isoformat()
+        payload = register_item(args, timestamp=timestamp)
         item_ref = f".omo/debt/items/{args.id}.yaml"
         item_path = omo_dir / "debt" / "items" / f"{args.id}.yaml"
         _write_yaml(item_path, payload)
