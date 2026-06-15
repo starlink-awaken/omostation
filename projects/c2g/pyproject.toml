@@ -11,6 +11,7 @@ dependencies = [
     "httpx>=0.28.1",
     "pydantic>=2.13.4",
     "pyyaml>=6.0.3",
+    "fastmcp>=0.1.0",
 ]
 
 [project.optional-dependencies]
@@ -25,3 +26,4 @@ omo = { path = "../omo" }
 
 [project.scripts]
 c2g = "c2g.cli:main"
+c2g-mcp = "c2g.mcp_server:mcp.run"
