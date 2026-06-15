@@ -467,3 +467,39 @@ c2g_v3_constraints:
       - "projects/omo/src/omo/omo_worker_dispatch.py:yield_task"
       - "projects/omo/src/omo/mcp_server.py:omo_yield_task"
 
+
+# ── C2G v4 约束 (CR-STRATEGY-*) ──
+# 2026-06-15 C2G v4 落地控制论战略引擎 (Cybernetic Strategy Engine)
+
+c2g_v4_constraints:
+  - id: CR-STRATEGY-01
+    name: "C2G v4 Pitch 孤儿拦截约束"
+    description: "所有的 Pitch 下注转化为 Task 时，必须声明 Upstream 锚点 (如 Target Milestone)。omo_bridge 必须进行解析，无 Upstream 的需求直接阻断。"
+    rule: "pitch.upstream != null"
+    type: required
+    severity: error
+    violation: "需求没有挂载战略锚点，沦为孤儿，破坏战略引力链"
+    introduced: '2026-06-15'
+    value_tier: 1
+    references:
+      - "projects/omo/src/omo/omo_bridge.py:_import_pitch"
+
+  - id: CR-STRATEGY-02
+    name: "C2G v4 向量打分约束"
+    description: "愿景必须提供 3 个维度的 Vector，所有的 Pitch 下注时，必须携带 Vector 权重。以对抗偏离。"
+    rule: "pitch.vectors != null"
+    type: required
+    severity: error
+    violation: "缺乏向量打分，无法衡量战略对齐度"
+    introduced: '2026-06-15'
+    value_tier: 1
+
+  - id: CR-STRATEGY-03
+    name: "C2G v4 熵减代谢约束 (GC Decay)"
+    description: "Sandbox 中的 Pitch 超过 4 周未被端上下注桌 (Bet)，将由 daemon 或 cron 自动挪入 decayed/ 归档。"
+    rule: "pitch.age_days > 28 and pitch.status == 'Draft' implies pitch.decayed == true"
+    type: required
+    severity: error
+    violation: "沙箱未定期清理，违背熵减原则"
+    introduced: '2026-06-15'
+    value_tier: 2
