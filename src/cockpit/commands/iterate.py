@@ -18,16 +18,66 @@ def cmd_iterate(args) -> int:
     console.print("\n[bold yellow]► Phase 1: 认知发散 (MetaOS Sandbox)[/]")
     console.print(f"主题: '{topic}'")
 
-    spec_path = Path("OpenSpec.md")
-
+    # 强制将发散期的契约隔离在 runtime 沙箱目录
+    workspace_root = Path(__file__).resolve().parents[5]
+    sandbox_dir = workspace_root / "runtime" / "sandbox"
+    sandbox_dir.mkdir(parents=True, exist_ok=True)
+    spec_path = sandbox_dir / f"OpenSpec-{topic.replace(' ', '_')}.md"
+    
     if getattr(args, "mock", False):
-        console.print("[dim]Mock 模式: 自动生成含 TODO 的示例 OpenSpec.md...[/]")
+        console.print(f"[dim]Mock 模式: 自动生成含 TODO 的示例 {spec_path.name}...[/]")
         spec_path.write_text(f"# {topic}\n- [ ] TODO: 补充详细需求\n- [ ] 实现核心模块")
     else:
         if not spec_path.exists():
-            console.print("[dim]创建空白 OpenSpec.md 契约草案...[/]")
-            spec_path.write_text(f"# {topic}\n\n## 目标\n\n## 任务拆解\n- [ ] 设计模块A\n")
-        console.print("提示: 您的草稿必须包含 '- [ ] 任务名' 列表，且不得包含 TODO/TBD 等未决项。")
+            console.print(f"[dim]创建 5-Stage 深度审查契约草案: {spec_path.name}...[/]")
+            template = f"""# {topic}
+
+## 0.1 竞品与现状调研 (Research & Benchmarking)
+> [强制要求] AI 必须在此处填写真实调研：
+> 1. 系统内部是否已有现成代码/组件？
+> 2. 开源界/工业界是否有成熟对标物？
+> 3. 证明“为什么必须自研或二次开发”？
+
+## 0.2 关键决策对齐 (Critical Decisions)
+> [强制要求] AI 必须抛出至少 3 个影响全局架构的关键选择题，并给出推荐意见。用户需在此作答。
+> 1. [决策点1] ? 
+>    - AI推荐: 
+>    - 您的选择: 
+> 2. [决策点2] ? 
+>    - AI推荐: 
+>    - 您的选择: 
+> 3. [决策点3] ? 
+>    - AI推荐: 
+>    - 您的选择: 
+
+---
+
+## 1. 方案细化与定型 (Solution Refinement)
+> 基于上方决策，明确最终的 What (具体做什么) 和 Why (核心逻辑)。
+
+## 2. 可行性与必要性审查 (Feasibility & Necessity)
+> 真的需要造这个轮子吗？现有的 5+4+1+1 机制不能满足吗？ROI 如何？
+
+## 3. 架构审查 (Architecture Review)
+> 放在哪一层最合理？是否跨层调用？BOS 域映射对吗？
+
+## 4. 治理审查 (Governance Review)
+> 是否违反 X1-X4 约束？是否会引入新的 OMO Debt？如何平滑演进？
+
+## 5. 红队分析 (Red Team Analysis - Devil's Advocate)
+> 强制写出 3 种最糟糕的失败场景、并发冲突或极端边界情况。
+
+## 6. 用户视角审查 (User Perspective)
+> 从最终使用者（如 Indie Dev）角度，抓手好用吗？概念容易理解吗？
+
+---
+
+## 🎯 任务拆解 (GSD Action Items)
+> 警告：下方列表不得包含 TODO/TBD。必须是可以直接由 OMO 领卡执行的确定性原子指令。
+- [ ] 任务1: 
+"""
+            spec_path.write_text(template)
+        console.print("提示: 请完成 5 级深度审查，并确保最后只剩下确定的 '- [ ]' 任务列表。")
 
     console.print("\n[bold yellow]► Phase 2/3: Model-Driven 桥接与 OMO 预检 (Devil's Gatekeeper)[/]")
     if not spec_path.exists():

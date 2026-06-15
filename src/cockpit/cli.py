@@ -81,6 +81,8 @@ from .commands.status import (
     cmd_help,
     cmd_status,
 )
+from .commands.monitor import cmd_monitor
+
 
 
 def main() -> int:
@@ -332,6 +334,9 @@ def main() -> int:
     iterate_p.add_argument("topic", nargs="?", default="未命名探索主题", help="要发起探索的主题")
     iterate_p.add_argument("--mock", action="store_true", help="是否模拟生成带 TODO 的测试数据以触发门控")
 
+    monitor_p = sub.add_parser("monitor", help="📊 实时终端大盘 (C2G Pipeline 监控仪)")
+
+
     code_p = sub.add_parser("code", help="代码库分析与审查 (基于 codeanalyze)")
     code_sub = code_p.add_subparsers(dest="code_command", parser_class=WorkspaceParser)
 
@@ -531,6 +536,10 @@ def main() -> int:
         from cockpit.commands.iterate import cmd_iterate
 
         return cmd_iterate(args)
+
+    if args.command == "monitor":
+        return cmd_monitor(args)
+
 
     if args.command == "ssb":
         from cockpit.commands.ssb import cmd_ssb
