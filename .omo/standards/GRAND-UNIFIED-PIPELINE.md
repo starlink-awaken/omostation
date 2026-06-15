@@ -84,16 +84,16 @@ C2G v4 解决的是 **“如何做对的事情 (Do the right things)”** ——
 
 这不是替代，而是**加冕**。
 
-## 🏷️ 附录：全链路方法论抓手 (The Cybernetic Handles)
+## 附录：全链路方法论流程抽象 (Process Abstractions)
 
-为了便于沟通和记忆，我们将整条管线的每个关键节点提炼为了“抓手级”缩略语：
+为提升跨系统组件交互的规范性，将核心链路节点抽象为以下标准术语：
 
-| 链路环节 | 动作转化 | 核心抓手 (Acronym) | 全称与赛博释义 |
+| 链路环节 | 动作转化 | 节点命名 (Acronym) | 工程学释义 |
 | :--- | :--- | :--- | :--- |
-| **环节一** | 愿景 ➡️ 提案 | **V2P** | **Vision-to-Pitch (意图降维)**：将宏大的北极星愿景，压缩为沙箱里带有 Appetite 和 No-Gos 边界的具体提案。 |
-| **环节二** | 提案 ➡️ 目标 | **C2G** | **Concept-to-Goal (门禁下注)**：OMO Bridge 拦截无锚点的孤儿需求，将合法提案正式落库为强契约目标 (Bet)。 |
-| **环节三** | 目标 ➡️ 语境 | **BMAD** | **Beads-Memory-Anchor (全知铺展)**：顺着 `context_uri` 锚点，将庞杂的背景知识一瞬间扁平化展开，赋予执行者上帝视角。 |
-| **环节四** | 语境 ➡️ 图纸 | **OSC** | **OpenSpec-Constraint (架构画线)**：在底层 M1/M2 模型驱动的约束下，产出最克制的 API 与业务流转设计。 |
-| **环节五** | 图纸 ➡️ 落地 | **GSD + TTY**| **Get-Shit-Done & Tactical-Yield (极速突击与战术退让)**：微观层面的生死看淡，干就完了。但一旦越过预算红线，强制触发 TTY 熔断白旗。 |
-| **环节六** | 落地 ➡️ 进化 | **OPC + SWR**| **Op-Control & SSOT-Write-back (死神门禁与结案反哺)**：硬抗 5 条上线红线；通过后，代码残骸和经验被反向抽吸（SWR）回最初的 Pitch。 |
-| **全局** | 系统 ➡️ 稳态 | **AGC** | **Audit & Garbage-Collection (防漂移与熵减)**：战略雷达监控偏差，28天未下注的垃圾被无情代谢。 |
+| **01** | 愿景 ➡️ 提案 | **V2P** (Vision-to-Pitch) | **需求转化 (Requirement Translation)**：将抽象愿景解构为具备投入上限 (Appetite) 和范围禁区 (No-Gos) 的结构化提案。 |
+| **02** | 提案 ➡️ 目标 | **C2G** (Concept-to-Goal) | **准入与定标 (Admission & Baselining)**：通过 OMO Bridge 拦截缺乏上游锚点 (Upstream) 的提案，将合规提案实例化为系统目标 (Bet)。 |
+| **03** | 目标 ➡️ 语境 | **BMAD** (Beads-Memory-Anchor) | **语境扁平化 (Context Flattening)**：基于 `context_uri` 将层级化的背景知识降维为扁平上下文，保障执行单元的信息对齐。 |
+| **04** | 语境 ➡️ 图纸 | **OSC** (OpenSpec-Constraint) | **模型约束设计 (Model-Constrained Design)**：在 M1/M2 数据架构强校验下，产出符合接口契约与状态流转规范的技术设计。 |
+| **05** | 图纸 ➡️ 落地 | **GSD & TTY** (Get-Shit-Done & Tactical-Yield) | **迭代执行与超限熔断 (Iterative Execution & Threshold Yield)**：TDD 模式编码；当执行开销预估突破 Appetite 阈值时，强制触发 TTY 交出控制权，防范资源死锁。 |
+| **06** | 落地 ➡️ 进化 | **OPC & SWR** (Op-Control & SSOT-Write-back) | **合规检查与状态回写 (Compliance Check & State Write-back)**：执行上线基线检查；流转结束时，将增量执行日志结构化追加至原始提案文档。 |
+| **全局** | 系统 ➡️ 稳态 | **AGC** (Audit & Garbage-Collection) | **审计与回收 (Auditing & Reclaiming)**：通过基线审计评估战略向量偏离度，并依 28 天 TTL 阈值自动清理 Sandbox 闲置资源。 |
