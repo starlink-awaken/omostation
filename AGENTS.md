@@ -10,7 +10,7 @@
 
 ## Project Overview
 
-This root directory is a **multi-project workspace** organized in the 5+3+1+1 (eCOS v6) architecture:
+This root directory is a **multi-project workspace** organized in the 5+4+1+1 (eCOS v6) architecture:
 
 | Layer | Project | Stack | Location | Status |
 |-------|---------|-------|----------|--------|
