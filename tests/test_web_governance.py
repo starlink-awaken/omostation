@@ -243,3 +243,30 @@ class TestLoadL4kernelStatus:
     def test_unavailable(self):
         result = gov.load_l4kernel_status()
         assert "status" in result
+
+
+class TestLoadSwarmRadar:
+    def test_unavailable(self):
+        result = gov.load_swarm_radar()
+        assert "status" in result or "node_id" in result
+
+
+class TestCacheEdgeCases:
+    def test_cache_different_keys(self):
+        gov._cache.clear()
+        a = gov._cached("key_a", lambda: {"a": 1}, ttl=60)
+        b = gov._cached("key_b", lambda: {"b": 2}, ttl=60)
+        assert a != b
+
+    def test_cache_ttl_zero(self):
+        gov._cache.clear()
+        call_count = 0
+
+        def loader():
+            nonlocal call_count
+            call_count += 1
+            return {"count": call_count}
+
+        gov._cached("ttl_test", loader, ttl=0)
+        gov._cached("ttl_test", loader, ttl=0)
+        assert call_count == 2
