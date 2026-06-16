@@ -1,35 +1,45 @@
 id: P42-W2-COMBO
 phase: 42
 wave: W2
-title: "agora 跨进程 URI 派发闭环 (修 agora_unavailable)"
+title: agora 跨进程 URI 派发闭环 (修 agora_unavailable)
 status: completed
 task_type: feature
 priority: P0
 assigned_to: null
 human_approval_required: false
 entry_gate:
-  - "P42-W0-W1-COMBO completed"
+- P42-W0-W1-COMBO completed
 depends_on:
-  - P42-W0-W1-COMBO
+- P42-W0-W1-COMBO
 deliverables:
-  - "projects/omo/src/omo/omo_llm_bos_bridge.py"
-  - ".omo/_delivery/phase42-w2-agora-subprocess.md"
-  - ".omo/tasks/planned/P42-W2-COMBO.yaml"
+- projects/omo/src/omo/omo_llm_bos_bridge.py
+- .omo/_delivery/phase42-w2-agora-subprocess.md
+- .omo/tasks/planned/P42-W2-COMBO.yaml
 risk_level: L1
 allowed_operation_level: L1
 source_docs:
-  - ".omo/_knowledge/management/retrospective-2026-06-16-p41.md"
-  - ".omo/_delivery/phase41-w0-ollama-llm.md"
+- .omo/_knowledge/management/retrospective-2026-06-16-p41.md
+- .omo/_delivery/phase41-w0-ollama-llm.md
 knowledge_refs:
-  - "ADR-0008"
-description: |
-  P42-W2 agora 跨进程 URI 派发闭环.
-  修 omo_llm_bos_bridge.invoke_bos_uri_tool: 把 in-process import (P41 失败因为 websockets 缺)
+- ADR-0008
+description: 'P42-W2 agora 跨进程 URI 派发闭环.
+
+  修 omo_llm_bos_bridge.invoke_bos_uri_tool: 把 in-process import (P41 失败因为 websockets
+  缺)
+
   改为 subprocess 调 agora venv (P32 跨进程架构本来设计).
+
   验证 6 URI 全 resolved + LLM tool_use resolved.
+
   守 P32-P41 + P42-W0/W1 修复.
+
   audit 100.0 (A+) 维持.
+
+  '
 started_at: '2026-06-16T01:00:00Z'
 completed_at: '2026-06-16T01:00:00Z'
 blocked_by: null
 retry_count: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.394366+00:00'
+routed_by: omo-debt route

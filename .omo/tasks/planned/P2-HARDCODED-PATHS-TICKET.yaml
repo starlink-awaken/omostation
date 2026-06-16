@@ -30,3 +30,6 @@ evidence_required:
 - At least 5 paths fixed as proof of pattern
 - Remaining paths filed as follow-up ticket
 test_plan: []
+owner: team-lead
+routed_at: '2026-06-16T05:03:41.433549+00:00'
+routed_by: omo-debt route

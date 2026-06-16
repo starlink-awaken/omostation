@@ -1,21 +1,31 @@
 id: OPC-P15-KAI-01
-title: "kairon JSONL write path audit and schema check hardening"
+title: kairon JSONL write path audit and schema check hardening
 status: completed
 priority: P1
 domain: kairon
-created: "2026-06-11"
-completed: "2026-06-13"
+created: '2026-06-11'
+completed: '2026-06-13'
 prerequisite_for: OPC-P2
-description: |
-  kairon 多包工作区(16 packages) 的 JSONL 写入路径审计。替换直接
+description: 'kairon 多包工作区(16 packages) 的 JSONL 写入路径审计。替换直接
+
   json.dumps+open("a") 为 schema-checked AppendOnlyLog 或等效原子写。
+
   R48 探路报告确认存在高风险直接 JSONL 追加路径。
-verification: |
-  ✅ 审计所有 json.dumps + open("a") JSONL 写入点
+
+  '
+verification: '✅ 审计所有 json.dumps + open("a") JSONL 写入点
+
   ✅ kairon-utils 已实现 atomic_write_json/atomic_write_text
+
   ✅ eidos 已使用 atomic_write_json (schema.py, memory_manager.py)
+
   ✅ minerva executor.py 已添加 atomic_write 导入
+
+  '
 tasks:
-  - audit: 查找所有 json.dumps + open("a") JSONL 写入点 ✅
-  - replace: 替换为 AppendOnlyLog 或带 schema 校验的写入 ✅
-  - verify: 确保写入有 fsync + atomic rename ✅
+- audit: 查找所有 json.dumps + open("a") JSONL 写入点 ✅
+- replace: 替换为 AppendOnlyLog 或带 schema 校验的写入 ✅
+- verify: 确保写入有 fsync + atomic rename ✅
+owner: omo-team
+routed_at: '2026-06-16T05:03:41.418173+00:00'
+routed_by: omo-debt route

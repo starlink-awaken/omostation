@@ -1,42 +1,58 @@
 id: P37-W0-W1-COMBO
 phase: 37
 wave: W0
-title: "CI workflow 真启用 + 治理历史清仓 (W0 + W1 合并)"
+title: CI workflow 真启用 + 治理历史清仓 (W0 + W1 合并)
 status: completed
 task_type: governance
 priority: P0
 assigned_to: null
 human_approval_required: false
 entry_gate:
-  - "P36 验收 completed (P36-W2-W3-COMBO)"
+- P36 验收 completed (P36-W2-W3-COMBO)
 depends_on:
-  - P36-W2-W3-COMBO
+- P36-W2-W3-COMBO
 deliverables:
-  - ".github/workflows/omostation-governance.yml"
-  - ".github/pull_request_template.md"
-  - "scripts/ci_local.sh"
-  - ".omo/_knowledge/decisions/0008-task-cleanup-policy.md"
-  - ".omo/_delivery/phase37-combo.md"
+- .github/workflows/omostation-governance.yml
+- .github/pull_request_template.md
+- scripts/ci_local.sh
+- .omo/_knowledge/decisions/0008-task-cleanup-policy.md
+- .omo/_delivery/phase37-combo.md
 risk_level: L0
 allowed_operation_level: L0
 source_docs:
-  - ".omo/_knowledge/management/retrospective-2026-06-11-p36.md"
+- .omo/_knowledge/management/retrospective-2026-06-11-p36.md
 knowledge_refs:
-  - "ADR-0007"
-description: |
-  P37-W0 CI workflow 真启用:
+- ADR-0007
+description: 'P37-W0 CI workflow 真启用:
+
   - workflow 加 schedule (每周一 9:00 UTC) + workflow_dispatch + matrix (Python 3.13)
+
   - workflow 加 PR comment on failure (用 actions/github-script@v7)
+
   - 本地 CI 模拟脚本 scripts/ci_local.sh (8 步: ruff/kairon test/omo test/audit/0 missing/agora/daemon/in_progress)
+
   - PR template 替换为 omo governance audit 必跑模板
+
   P37-W1 治理历史清仓:
+
   - ADR-0008 in_progress 任务清理原则 (4 类: completed/pending/cancelled/删)
+
   - P36-W0-W1-COMBO.yaml 修 4 条 deliverables 描述后缀 (历史债务归零)
+
   - cli.py governance 派发根因修 (rest 永不传 None) 替代 1 行 N→[]
+
   - 0 in_progress 任务残留 (P36 阶段已清)
+
   守 P32/P33/P34/P35/P36 修复.
-  注意: omo 2 BOS integration 测试失败 (P34-W2 期 test 期望 11 POC_SERVICES, P36 增至 25) — P36 历史 test 债务, 不在 P37-W0/W1 范围, 留 P37-W2 处理.
+
+  注意: omo 2 BOS integration 测试失败 (P34-W2 期 test 期望 11 POC_SERVICES, P36 增至 25) — P36
+  历史 test 债务, 不在 P37-W0/W1 范围, 留 P37-W2 处理.
+
+  '
 started_at: '2026-06-07T12:00:00Z'
 completed_at: '2026-06-07T12:00:00Z'
 blocked_by: null
 retry_count: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.428649+00:00'
+routed_by: omo-debt route

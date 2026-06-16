@@ -1,37 +1,48 @@
 id: P39-W2-W3-COMBO
 phase: 39
 wave: W2
-title: "dashboard 真服务化 + P39 验收 (W2 + W3 合并)"
+title: dashboard 真服务化 + P39 验收 (W2 + W3 合并)
 status: completed
 task_type: infra
 priority: P0
 assigned_to: null
 human_approval_required: false
 entry_gate:
-  - "P39-W0-W1-COMBO completed"
+- P39-W0-W1-COMBO completed
 depends_on:
-  - P39-W0-W1-COMBO
+- P39-W0-W1-COMBO
 deliverables:
-  - "projects/omo/scripts/com.omo.dashboard.plist"
-  - "projects/omo/scripts/dashboard_stop.sh"
-  - "projects/omo/scripts/dashboard_health.sh"
-  - ".omo/_knowledge/management/retrospective-2026-06-14-p39.md"
+- projects/omo/scripts/com.omo.dashboard.plist
+- projects/omo/scripts/dashboard_stop.sh
+- projects/omo/scripts/dashboard_health.sh
+- .omo/_knowledge/management/retrospective-2026-06-14-p39.md
 risk_level: L1
 allowed_operation_level: L1
 source_docs:
-  - ".omo/_knowledge/management/retrospective-2026-06-13-p38.md"
+- .omo/_knowledge/management/retrospective-2026-06-13-p38.md
 knowledge_refs:
-  - "ADR-0008"
-description: |
-  P39-W2 dashboard 真服务化 (launchd plist + stop + health check).
+- ADR-0008
+description: 'P39-W2 dashboard 真服务化 (launchd plist + stop + health check).
+
   P39-W3 P39 整体验收.
+
   守 P32-P38 修复.
+
   不修改 .omo/state/system.yaml / .omo/goals/current.yaml / .omo/INDEX.md (W3 验收时才动).
+
   不修改 CLI 路由 (避开 omo dashboard 既有命令冲突).
+
   dashboard 仅 spawn 一次验证 + 立即 kill.
+
   plist 仅装一次 + 立即 unload (POC 阶段).
+
   实测真命令: omo dashboard serve --port 9090 (subparser 模式, 非 omo dashboard --port).
+
+  '
 started_at: '2026-06-07T17:00:00Z'
 completed_at: '2026-06-07T17:00:00Z'
 blocked_by: null
 retry_count: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.424978+00:00'
+routed_by: omo-debt route

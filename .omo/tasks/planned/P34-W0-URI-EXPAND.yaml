@@ -1,31 +1,37 @@
 id: P34-W0-URI-EXPAND
 phase: 34
 wave: W0
-title: "战役 2 扩展 — 21 → 40 URI (5 Domain 细分)"
+title: 战役 2 扩展 — 21 → 40 URI (5 Domain 细分)
 status: completed
 task_type: feature
 priority: P0
 assigned_to: null
 human_approval_required: false
 entry_gate:
-  - "P33-VERIFY completed"
+- P33-VERIFY completed
 depends_on:
-  - P33-VERIFY
+- P33-VERIFY
 deliverables:
-  - ".omo/_knowledge/bos-registry.json"
-  - ".omo/_delivery/phase34-uri-expand.md"
-  - "projects/omo/src/omo/omo_bos.py"
-  - "projects/omo/tests/test_omo_bos.py"
+- .omo/_knowledge/bos-registry.json
+- .omo/_delivery/phase34-uri-expand.md
+- projects/omo/src/omo/omo_bos.py
+- projects/omo/tests/test_omo_bos.py
 risk_level: L0
 allowed_operation_level: L0
 source_docs:
-  - ".omo/_knowledge/management/p33-north-star.md"
+- .omo/_knowledge/management/p33-north-star.md
 knowledge_refs: []
-description: |
-  P34-W0 战役 2 细分: 21 → 40 URI.
+description: 'P34-W0 战役 2 细分: 21 → 40 URI.
+
   memory 5 / governance 8 / analysis 12 / persona 7 / capability 8.
+
   守 P32/P33 修复 (audit 100 / agora 12/12 / kairon 0 ruff).
+
+  '
 started_at: '2026-06-07T01:00:00Z'
 completed_at: '2026-06-07T01:00:00Z'
 blocked_by: null
 retry_count: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.434848+00:00'
+routed_by: omo-debt route

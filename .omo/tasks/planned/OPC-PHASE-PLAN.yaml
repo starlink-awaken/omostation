@@ -2,172 +2,184 @@ id: OPC-PHASE-PLAN
 title: OPC personal swarm AI brain roadmap
 status: planned
 priority: P0
-created_at: "2026-06-11T00:00:00Z"
-owner: omo
+created_at: '2026-06-11T00:00:00Z'
+owner: cockpit-team
 scope: workspace
 kind: roadmap
-vision: "OPC as a personal swarm AI brain: memory, governance, swarm execution, model/compute routing, product scenarios, and self-evolution."
-revision_note: "Revised after entry convergence implementation claims and R46-R50 governance probe reports."
+vision: 'OPC as a personal swarm AI brain: memory, governance, swarm execution, model/compute
+  routing, product scenarios, and self-evolution.'
+revision_note: Revised after entry convergence implementation claims and R46-R50 governance
+  probe reports.
 source_documents:
-  - docs/OPC-ROADMAP.md
-  - docs/OPC-ARCHITECTURE-GAPS.md
-  - .omo/_knowledge/management/opc-roadmap-omo-plan.md
+- docs/OPC-ROADMAP.md
+- docs/OPC-ARCHITECTURE-GAPS.md
+- .omo/_knowledge/management/opc-roadmap-omo-plan.md
 constraints:
-  - "Do not bypass Agora for cross-layer agent calls."
-  - "Do not add new external agent entry points."
-  - "Do not hand-edit .omo/state/system.yaml as a shortcut."
-  - "Do not mark phases complete without validation evidence and retrospective."
-  - "Self-evolution tasks may enter planned state only; human approval is required for active execution."
-  - "Do not keep direct internal MCP journey probes as primary Agent paths after entry convergence."
-  - "Do not build trusted memory on untracked raw JSONL or non-atomic writes."
+- Do not bypass Agora for cross-layer agent calls.
+- Do not add new external agent entry points.
+- Do not hand-edit .omo/state/system.yaml as a shortcut.
+- Do not mark phases complete without validation evidence and retrospective.
+- Self-evolution tasks may enter planned state only; human approval is required for
+  active execution.
+- Do not keep direct internal MCP journey probes as primary Agent paths after entry
+  convergence.
+- Do not build trusted memory on untracked raw JSONL or non-atomic writes.
 phases:
-  - id: OPC-P0
-    title: Fact baseline
-    goal: "Freeze current Workspace/eCOS v5 factual baseline for OPC planning."
-    tasks:
-      - OPC-P0-T1-project-inventory
-      - OPC-P0-T2-doc-drift-audit
-      - OPC-P0-T3-capability-map
-      - OPC-P0-T4-debt-register
-      - OPC-P0-T5-recent-change-digest
-    gate:
-      - "Project inventory matches git submodule status."
-      - "Every core project has one primary OPC role."
-      - "Stale/current/conflicting facts are listed."
-      - "Recent entry convergence status is classified as verified, unverified, or debt."
-      - "R46-R50 probe findings are captured before later phases start."
-    signal: opc_phase0_baseline_ready
-  - id: OPC-P1
-    title: Entry convergence verification and hardening
-    goal: "Verify and harden cockpit, Agora, and cockpit HTTP as the three external entry points after recent convergence work."
-    tasks:
-      - OPC-P1-T1-entry-contract-verify
-      - OPC-P1-T2-agora-mcp-route-verify
-      - OPC-P1-T3-bos-entry-routes-verify
-      - OPC-P1-T4-deprecated-path-cleanup
-      - OPC-P1-T5-journey-probes-update
-    gate:
-      - "Agent docs default to Agora MCP."
-      - "Internal MCP services are implementation details."
-      - "Entry journey probes exist."
-      - "Direct cockpit/l4-kernel/runtime MCP probes are deprecated or rewritten as Agora-routed probes."
-      - "Route behavior is validated, not only documented."
-    signal: opc_phase1_entry_contract_ready
-  - id: OPC-P1.5
-    title: Cross-repo governance baseline
-    goal: "Promote R46-R50 governance work into mandatory gates for later OPC phases."
-    tasks:
-      - OPC-P15-T1-r46-metrics-baseline
-      - OPC-P15-T2-r47-trend-baseline
-      - OPC-P15-T3-r48-kairon-probe-actions
-      - OPC-P15-T4-r49-metaos-probe-actions
-      - OPC-P15-T5-r50-gbrain-probe-actions
-    gate:
-      - "R46-R50 findings are referenced from the OPC task plan."
-      - "kairon is classified as a real multi-package workspace."
-      - "metaos and gbrain missing .omo planes are explicit debt or tasks."
-      - "Cross-repo metrics expectations are attached to later phase gates."
-    signal: opc_phase15_cross_repo_governance_baseline_ready
-  - id: OPC-P2
-    title: Memory spine
-    goal: "Create governed personal memory for ingest, search, recall, attribution, and archive."
-    tasks:
-      - OPC-P2-T1-memory-boundary
-      - OPC-P2-T2-memory-uri
-      - OPC-P2-T3-recall-flow
-      - OPC-P2-T4-source-map
-      - OPC-P2-T5-memory-metrics
-      - OPC-P2-T0-persistence-prerequisites
-    gate:
-      - "One real question moves through collect, ingest, search, output, and archive."
-      - "Search responses declare scope."
-      - "Outputs include source metadata."
-      - "kairon/gbrain/metaos persistence risks are resolved or explicitly blocking."
-    signal: opc_phase2_memory_spine_ready
-  - id: OPC-P3
-    title: Swarm execution spine
-    goal: "Convert high-level goals into governed multi-agent execution."
-    tasks:
-      - OPC-P3-T1-task-object
-      - OPC-P3-T2-swarm-boundary
-      - OPC-P3-T3-agent-roles
-      - OPC-P3-T4-worker-dispatch
-      - OPC-P3-T5-min-demo
-    gate:
-      - "A goal decomposes into at least three worker tasks."
-      - "Worker tasks have owner, status, input, output, and audit."
-      - "Failure creates retry or debt."
-    signal: opc_phase3_swarm_spine_ready
-  - id: OPC-P4
-    title: Model gateway and compute mesh
-    goal: "Centralize model and compute selection through governed infrastructure."
-    tasks:
-      - OPC-P4-T1-llm-gateway-contract
-      - OPC-P4-T2-model-registry
-      - OPC-P4-T3-budget-policy
-      - OPC-P4-T4-compute-mesh-contract
-      - OPC-P4-T5-metrics
-    gate:
-      - "Model selection supports cost, speed, capability, and balanced strategies."
-      - "Provider failure has fallback."
-      - "Cost and latency are attributable to task and phase."
-    signal: opc_phase4_model_compute_ready
-  - id: OPC-P5
-    title: North Star scenarios
-    goal: "Prove OPC through repeatable product scenarios."
-    tasks:
-      - OPC-P5-T1-tech-radar
-      - OPC-P5-T2-work-assistant
-      - OPC-P5-T3-family-health
-      - OPC-P5-T4-product-entry
-      - OPC-P5-T5-journey-validation
-    gate:
-      - "At least two scenarios run repeatedly."
-      - "Outputs include source, timestamp, and next action."
-      - "Results write back to memory."
-    signal: opc_phase5_north_star_ready
-  - id: OPC-P6
-    title: Self-evolution loop
-    goal: "Make improvement discovery and execution a governed recurring loop."
-    tasks:
-      - OPC-P6-T1-evolution-loop
-      - OPC-P6-T2-upgrade-scoring
-      - OPC-P6-T3-weekly-report
-      - OPC-P6-T4-drift-detector
-      - OPC-P6-T5-human-approval
-    gate:
-      - "Weekly report has at least three upgrade candidates."
-      - "At least one candidate becomes planned task."
-      - "Drift detector catches stale docs or bypass entries."
-    signal: opc_phase6_evolution_loop_ready
-  - id: OPC-P7
-    title: Governance hardening
-    goal: "Establish release train, gates, and long-term maintenance rhythm."
-    tasks:
-      - OPC-P7-T1-release-train
-      - OPC-P7-T2-phase-gates
-      - OPC-P7-T3-cross-repo-audit-hardening
-      - OPC-P7-T4-doc-sync-policy
-      - OPC-P7-T5-review-template
-    gate:
-      - "Every release has summary, validation, and remaining debt."
-      - "Every phase has retrospective."
-      - "Dashboard can show phase, milestone, blockers, and debt health."
-      - "Cross-repo metrics are actively consumed by gates, not merely documented."
-    signal: opc_phase7_governance_hardened
+- id: OPC-P0
+  title: Fact baseline
+  goal: Freeze current Workspace/eCOS v5 factual baseline for OPC planning.
+  tasks:
+  - OPC-P0-T1-project-inventory
+  - OPC-P0-T2-doc-drift-audit
+  - OPC-P0-T3-capability-map
+  - OPC-P0-T4-debt-register
+  - OPC-P0-T5-recent-change-digest
+  gate:
+  - Project inventory matches git submodule status.
+  - Every core project has one primary OPC role.
+  - Stale/current/conflicting facts are listed.
+  - Recent entry convergence status is classified as verified, unverified, or debt.
+  - R46-R50 probe findings are captured before later phases start.
+  signal: opc_phase0_baseline_ready
+- id: OPC-P1
+  title: Entry convergence verification and hardening
+  goal: Verify and harden cockpit, Agora, and cockpit HTTP as the three external entry
+    points after recent convergence work.
+  tasks:
+  - OPC-P1-T1-entry-contract-verify
+  - OPC-P1-T2-agora-mcp-route-verify
+  - OPC-P1-T3-bos-entry-routes-verify
+  - OPC-P1-T4-deprecated-path-cleanup
+  - OPC-P1-T5-journey-probes-update
+  gate:
+  - Agent docs default to Agora MCP.
+  - Internal MCP services are implementation details.
+  - Entry journey probes exist.
+  - Direct cockpit/l4-kernel/runtime MCP probes are deprecated or rewritten as Agora-routed
+    probes.
+  - Route behavior is validated, not only documented.
+  signal: opc_phase1_entry_contract_ready
+- id: OPC-P1.5
+  title: Cross-repo governance baseline
+  goal: Promote R46-R50 governance work into mandatory gates for later OPC phases.
+  tasks:
+  - OPC-P15-T1-r46-metrics-baseline
+  - OPC-P15-T2-r47-trend-baseline
+  - OPC-P15-T3-r48-kairon-probe-actions
+  - OPC-P15-T4-r49-metaos-probe-actions
+  - OPC-P15-T5-r50-gbrain-probe-actions
+  gate:
+  - R46-R50 findings are referenced from the OPC task plan.
+  - kairon is classified as a real multi-package workspace.
+  - metaos and gbrain missing .omo planes are explicit debt or tasks.
+  - Cross-repo metrics expectations are attached to later phase gates.
+  signal: opc_phase15_cross_repo_governance_baseline_ready
+- id: OPC-P2
+  title: Memory spine
+  goal: Create governed personal memory for ingest, search, recall, attribution, and
+    archive.
+  tasks:
+  - OPC-P2-T1-memory-boundary
+  - OPC-P2-T2-memory-uri
+  - OPC-P2-T3-recall-flow
+  - OPC-P2-T4-source-map
+  - OPC-P2-T5-memory-metrics
+  - OPC-P2-T0-persistence-prerequisites
+  gate:
+  - One real question moves through collect, ingest, search, output, and archive.
+  - Search responses declare scope.
+  - Outputs include source metadata.
+  - kairon/gbrain/metaos persistence risks are resolved or explicitly blocking.
+  signal: opc_phase2_memory_spine_ready
+- id: OPC-P3
+  title: Swarm execution spine
+  goal: Convert high-level goals into governed multi-agent execution.
+  tasks:
+  - OPC-P3-T1-task-object
+  - OPC-P3-T2-swarm-boundary
+  - OPC-P3-T3-agent-roles
+  - OPC-P3-T4-worker-dispatch
+  - OPC-P3-T5-min-demo
+  gate:
+  - A goal decomposes into at least three worker tasks.
+  - Worker tasks have owner, status, input, output, and audit.
+  - Failure creates retry or debt.
+  signal: opc_phase3_swarm_spine_ready
+- id: OPC-P4
+  title: Model gateway and compute mesh
+  goal: Centralize model and compute selection through governed infrastructure.
+  tasks:
+  - OPC-P4-T1-llm-gateway-contract
+  - OPC-P4-T2-model-registry
+  - OPC-P4-T3-budget-policy
+  - OPC-P4-T4-compute-mesh-contract
+  - OPC-P4-T5-metrics
+  gate:
+  - Model selection supports cost, speed, capability, and balanced strategies.
+  - Provider failure has fallback.
+  - Cost and latency are attributable to task and phase.
+  signal: opc_phase4_model_compute_ready
+- id: OPC-P5
+  title: North Star scenarios
+  goal: Prove OPC through repeatable product scenarios.
+  tasks:
+  - OPC-P5-T1-tech-radar
+  - OPC-P5-T2-work-assistant
+  - OPC-P5-T3-family-health
+  - OPC-P5-T4-product-entry
+  - OPC-P5-T5-journey-validation
+  gate:
+  - At least two scenarios run repeatedly.
+  - Outputs include source, timestamp, and next action.
+  - Results write back to memory.
+  signal: opc_phase5_north_star_ready
+- id: OPC-P6
+  title: Self-evolution loop
+  goal: Make improvement discovery and execution a governed recurring loop.
+  tasks:
+  - OPC-P6-T1-evolution-loop
+  - OPC-P6-T2-upgrade-scoring
+  - OPC-P6-T3-weekly-report
+  - OPC-P6-T4-drift-detector
+  - OPC-P6-T5-human-approval
+  gate:
+  - Weekly report has at least three upgrade candidates.
+  - At least one candidate becomes planned task.
+  - Drift detector catches stale docs or bypass entries.
+  signal: opc_phase6_evolution_loop_ready
+- id: OPC-P7
+  title: Governance hardening
+  goal: Establish release train, gates, and long-term maintenance rhythm.
+  tasks:
+  - OPC-P7-T1-release-train
+  - OPC-P7-T2-phase-gates
+  - OPC-P7-T3-cross-repo-audit-hardening
+  - OPC-P7-T4-doc-sync-policy
+  - OPC-P7-T5-review-template
+  gate:
+  - Every release has summary, validation, and remaining debt.
+  - Every phase has retrospective.
+  - Dashboard can show phase, milestone, blockers, and debt health.
+  - Cross-repo metrics are actively consumed by gates, not merely documented.
+  signal: opc_phase7_governance_hardened
 validation:
   required:
-    - "All phases must include goal, tasks, gate, audit, debt, signal, and retrospective in .omo/_knowledge/management/opc-roadmap-omo-plan.md."
-    - "Human-facing roadmap must stay in docs/OPC-ROADMAP.md."
-    - "Gap analysis must stay in docs/OPC-ARCHITECTURE-GAPS.md."
-    - "Entry convergence must be reviewed as verification and hardening, not as greenfield work."
-    - "R46-R50 governance probe findings must be absorbed before Phase 2 trusted memory work."
+  - All phases must include goal, tasks, gate, audit, debt, signal, and retrospective
+    in .omo/_knowledge/management/opc-roadmap-omo-plan.md.
+  - Human-facing roadmap must stay in docs/OPC-ROADMAP.md.
+  - Gap analysis must stay in docs/OPC-ARCHITECTURE-GAPS.md.
+  - Entry convergence must be reviewed as verification and hardening, not as greenfield
+    work.
+  - R46-R50 governance probe findings must be absorbed before Phase 2 trusted memory
+    work.
 review_gates:
-  - Gate A: after OPC-P0
-  - Gate B: after OPC-P1
-  - Gate B2: after OPC-P1.5
-  - Gate C: after OPC-P2
-  - Gate D: after OPC-P3 and OPC-P4
-  - Gate E: after OPC-P5
-  - Gate F: after OPC-P6
-  - Gate G: after OPC-P7
+- Gate A: after OPC-P0
+- Gate B: after OPC-P1
+- Gate B2: after OPC-P1.5
+- Gate C: after OPC-P2
+- Gate D: after OPC-P3 and OPC-P4
+- Gate E: after OPC-P5
+- Gate F: after OPC-P6
+- Gate G: after OPC-P7
+routed_at: '2026-06-16T05:03:41.412849+00:00'
+routed_by: omo-debt route

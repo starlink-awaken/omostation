@@ -1,33 +1,39 @@
 id: P35-W1-W2-COMBO
 phase: 35
 wave: W1
-title: "战役 4 spawn 真替代 + CI 集成 omo audit (W1 + W2 合并)"
+title: 战役 4 spawn 真替代 + CI 集成 omo audit (W1 + W2 合并)
 status: completed
 task_type: infra
 priority: P0
 assigned_to: null
 human_approval_required: false
 entry_gate:
-  - "P34-VERIFY completed"
+- P34-VERIFY completed
 depends_on:
-  - P34-VERIFY
+- P34-VERIFY
 deliverables:
-  - "projects/agora/src/agora/mcp/bos_resolver.py"
-  - "projects/agora/tests/unit/test_bos_resolver.py"
-  - ".github/workflows/omostation-governance.yml"
-  - ".github/workflows/README.md"
-  - ".omo/_delivery/phase35-w1-w2-combo.md"
+- projects/agora/src/agora/mcp/bos_resolver.py
+- projects/agora/tests/unit/test_bos_resolver.py
+- .github/workflows/omostation-governance.yml
+- .github/workflows/README.md
+- .omo/_delivery/phase35-w1-w2-combo.md
 risk_level: L2
 allowed_operation_level: L2
 source_docs:
-  - ".omo/_delivery/phase34-verify.md"
+- .omo/_delivery/phase34-verify.md
 knowledge_refs:
-  - "ADR-0007"
-description: |
-  P35-W1 战役 4: agora spawn 真替代 (自动 respawn 死进程).
+- ADR-0007
+description: 'P35-W1 战役 4: agora spawn 真替代 (自动 respawn 死进程).
+
   P35-W2 CI 集成: PR 改 omo YAML 触发 audit, 防 P34-W4 描述式回归.
+
   守 P32/P33/P34 修复.
+
+  '
 started_at: '2026-06-07T08:00:00Z'
 completed_at: '2026-06-07T08:00:00Z'
 blocked_by: null
 retry_count: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.391249+00:00'
+routed_by: omo-debt route

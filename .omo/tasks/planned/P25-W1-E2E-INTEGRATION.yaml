@@ -33,3 +33,6 @@ test_plan:
 - 完成 E2E 演练后验证 4 个接口契约与自愈回路闭环
 accepted: null
 opened_at: '2026-06-02T23:17:32Z'
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.385753+00:00'
+routed_by: omo-debt route

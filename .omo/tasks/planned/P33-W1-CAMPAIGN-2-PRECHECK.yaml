@@ -1,62 +1,87 @@
 id: P33-W1-CAMPAIGN-2-PRECHECK
 phase: 33
 wave: W1
-title: "战役 2 前置: 5 Domain 边界 + BOS URI 命名约定 (ADR-0007)"
+title: '战役 2 前置: 5 Domain 边界 + BOS URI 命名约定 (ADR-0007)'
 status: completed
 task_type: analysis
 priority: P0
 assigned_to: omo-engineer
 human_approval_required: false
 entry_gate:
-  - "P33-W0-NORTH-STAR completed"
-  - "P33-W0-FOLD completed"
+- P33-W0-NORTH-STAR completed
+- P33-W0-FOLD completed
 depends_on:
-  - P33-W0-NORTH-STAR
-  - P33-W0-FOLD
+- P33-W0-NORTH-STAR
+- P33-W0-FOLD
 deliverables:
-  - ".omo/_knowledge/bos-registry.json"  # 6 SEED URI 本地注册表 (战役 2 起步 PoC)
-  - "projects/omo/src/omo/omo_bos.py"    # BOS CLI 模块 (本地 JSON 持久化)
-  - "projects/omo/tests/test_omo_bos.py" # 15 个单元测试
-  - ".omo/_delivery/phase33-campaign-2-precheck.md"
-  # 注: ADR-0007 完整文档 (.omo/_knowledge/decisions/0007-5-domain-boundaries.md +
-  #      p33-domain-mapping.md) 属 P33-W2+ (5 Domain 完整映射), 不在 W1 起步范围
+- .omo/_knowledge/bos-registry.json
+- projects/omo/src/omo/omo_bos.py
+- projects/omo/tests/test_omo_bos.py
+- .omo/_delivery/phase33-campaign-2-precheck.md
 risk_level: L0
 allowed_operation_level: L0
 source_docs:
-  - ".omo/_knowledge/management/plan-phase33-bos-mesh-unification.md"
-  - ".omo/_knowledge/management/p33-north-star.md"
-  - ".omo/_delivery/phase33-startup-eval.md"
+- .omo/_knowledge/management/plan-phase33-bos-mesh-unification.md
+- .omo/_knowledge/management/p33-north-star.md
+- .omo/_delivery/phase33-startup-eval.md
 knowledge_refs:
-  - "ADR-0006"
-description: |
-  战役 2 前置: 定义 5 Domain (Memory/Governance/Analysis/Persona/Capability) 与 kairon 19 个活跃包
+- ADR-0006
+description: '战役 2 前置: 定义 5 Domain (Memory/Governance/Analysis/Persona/Capability)
+  与 kairon 19 个活跃包
+
   (P31 合并后) 的精确映射, 产出 ADR-0007。
 
+
   5 Domain 边界:
+
   - Memory: kos, kronos, kairon-observability, kairon-pipeline
-  - Governance: eidos, protocols-layer, ssot, kairon-lib-events, governance-layer (待确认)
+
+  - Governance: eidos, protocols-layer, ssot, kairon-lib-events, governance-layer
+  (待确认)
+
   - Analysis: ontoderive, minerva, codeanalyze, sophia
+
   - Persona: sharedbrain-bridge, core-models, iris
+
   - Capability: forge, engine-core, llm-gateway, llm-gateway-kernel, kairon-plugin-sdk
 
+
   BOS URI 命名约定: bos://<domain>/<package>/<action>
+
   例: bos://memory/kos/search, bos://governance/eidos/schemas
 
+
   W1 实施 (P33-W1 战役 2 起步, 2026-06-06):
+
   - 6 SEED URI 已注册到本地 JSON (.omo/_knowledge/bos-registry.json)
+
   - 持久化走本地 JSON (避开 KOS 写入复杂), 战役 1 agora 接入时再迁 KOS
+
   - omo_bos.py 模块 + 15 单元测试
+
   - audit 总分 100.0 (A+) 守住, agora health 12/12 保持
 
+
   产 ADR-0007 包含:
+
   - 5 Domain 边界 + 19 包映射表
+
   - URI 命名语法 (严格 kebab-case)
+
   - 注册协议 (HTTP/SSE/stdio 任选)
+
   - 反向引用 (战役 1 动态注册时使用)
+
   - 战役 2 各 Domain 拆任务建议
 
+
   战役 2 子任务 (P33-W2-DOMAIN-*) 由本任务驱动派生。
+
+  '
 started_at: '2026-06-06T13:30:00Z'
 completed_at: '2026-06-06T13:50:00Z'
 blocked_by: null
 retry_count: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.395910+00:00'
+routed_by: omo-debt route

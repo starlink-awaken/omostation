@@ -33,3 +33,6 @@ test_plan:
 - 替换 Nucleus 引用后验证 Agora 事件总线与 pathlib 迁移闭合
 accepted: null
 opened_at: '2026-06-02T23:17:32Z'
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.378935+00:00'
+routed_by: omo-debt route

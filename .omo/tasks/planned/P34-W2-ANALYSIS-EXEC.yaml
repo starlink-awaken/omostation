@@ -1,46 +1,60 @@
 id: P34-W2-ANALYSIS-EXEC
 phase: 34
 wave: W2
-title: "Analysis 域 12 URI 实战化验证 — 真实 stdio 串联"
+title: Analysis 域 12 URI 实战化验证 — 真实 stdio 串联
 status: completed
 task_type: test
 priority: P0
 assigned_to: null
 human_approval_required: false
 entry_gate:
-  - "P34-W0-URI-EXPAND completed"
-  - "P34-W1-AGORA-W4-UPGRADE completed"
+- P34-W0-URI-EXPAND completed
+- P34-W1-AGORA-W4-UPGRADE completed
 depends_on:
-  - P34-W0-URI-EXPAND
-  - P34-W1-AGORA-W4-UPGRADE
+- P34-W0-URI-EXPAND
+- P34-W1-AGORA-W4-UPGRADE
 deliverables:
-  - "/Users/xiamingxing/Workspace/projects/agora/tests/integration/test_analysis_workflow.py"
-  - "/Users/xiamingxing/Workspace/projects/omo/tests/integration/test_bos_agora_integration.py"
-  - "/Users/xiamingxing/Workspace/projects/omo/tests/integration/test_real_scenario.py"
-  - "/Users/xiamingxing/Workspace/.omo/_delivery/phase34-analysis-exec.md"
+- /Users/xiamingxing/Workspace/projects/agora/tests/integration/test_analysis_workflow.py
+- /Users/xiamingxing/Workspace/projects/omo/tests/integration/test_bos_agora_integration.py
+- /Users/xiamingxing/Workspace/projects/omo/tests/integration/test_real_scenario.py
+- /Users/xiamingxing/Workspace/.omo/_delivery/phase34-analysis-exec.md
 risk_level: L1
 allowed_operation_level: L1
 source_docs:
-  - "/Users/xiamingxing/Workspace/.omo/_knowledge/management/p33-north-star.md"
+- /Users/xiamingxing/Workspace/.omo/_knowledge/management/p33-north-star.md
 knowledge_refs: []
-description: |
-  P34-W2 实战化: 12 Analysis URI 真实 stdio 验证 + 5 URI 真实场景串联.
+description: 'P34-W2 实战化: 12 Analysis URI 真实 stdio 验证 + 5 URI 真实场景串联.
+
 
   状态总结 (P34-W2 收官时):
+
   - registry: 12 条 Analysis URI 全注册 (P34-W0 战役 2 拓展)
+
   - resolver: 3 条 Analysis URI 真实可调 (P33-W4 战役 1 落地)
+
   - 缺: 9 条 Analysis URI 缺 kairon 基础设施, W4.5+ 补
 
+
   真实 stdio 串联 (5 URI 场景):
+
   - ✓ minerva.research  (P33-W4 __main__ POC 真活)
+
   - ✓ codeanalyze.scan  (P33-W4 __main__ POC 真活)
+
   - ✗ ontoderive.derive  (kairon engine 包名问题, 模块加载失败)
+
   - ✗ minerva.audit     (P34-W2 未在 resolver 注册)
+
   - ✗ iris.transform    (P34-W2 未在 resolver 注册)
+
 
   守 P32/P33/P34 修复 (audit / agora 12/12 / kairon 0 ruff / 40 URI).
 
+  '
 started_at: '2026-06-07T01:30:00Z'
 completed_at: '2026-06-07T02:00:00Z'
 blocked_by: null
 retry_count: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.426169+00:00'
+routed_by: omo-debt route

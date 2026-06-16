@@ -2,24 +2,28 @@ apiVersion: omo.ecos.dev/v1alpha1
 kind: Task
 metadata:
   name: c2g-v2-evolution
-  description: "Upgrade C2G workflow to v2 Cybernetic Architecture"
+  description: Upgrade C2G workflow to v2 Cybernetic Architecture
   owner: metaos
-  created_at: "2026-06-15T13:40:00Z"
+  created_at: '2026-06-15T13:40:00Z'
   tags:
-    - architecture
-    - governance
-    - c2g
+  - architecture
+  - governance
+  - c2g
 spec:
-  context_uri: "bos://memory/openspecs/C2G-v2-Cybernetic-Spec.md"
+  context_uri: bos://memory/openspecs/C2G-v2-Cybernetic-Spec.md
   gate_status: not_yet_passed
   phase: execution
   steps:
-    - name: "Update C2G Design Doc"
-      action: "Modify C2G-Pipeline-Design.md to reflect v2 changes"
-      expected_outcome: "C2G-Pipeline-Design.md updated with context_uri, fast-track, yield_to_ideation, and schema validation concepts."
-    - name: "Schema Review"
-      action: "Validate feasibility of adding yield_to_ideation to OMO task schemas"
-      expected_outcome: "Schema upgrade path established"
+  - name: Update C2G Design Doc
+    action: Modify C2G-Pipeline-Design.md to reflect v2 changes
+    expected_outcome: C2G-Pipeline-Design.md updated with context_uri, fast-track,
+      yield_to_ideation, and schema validation concepts.
+  - name: Schema Review
+    action: Validate feasibility of adding yield_to_ideation to OMO task schemas
+    expected_outcome: Schema upgrade path established
   constraints:
-    - "Must not break existing X4 SSOT rules"
-    - "Must maintain OMO pre-check rigor"
+  - Must not break existing X4 SSOT rules
+  - Must maintain OMO pre-check rigor
+owner: team-lead
+routed_at: '2026-06-16T05:03:41.443320+00:00'
+routed_by: omo-debt route

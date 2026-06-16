@@ -1,41 +1,47 @@
 id: P33-VERIFY
 phase: 33
 wave: W6
-title: "P33 验收 — 6 wave 全完成，21 BOS URI 真活"
+title: P33 验收 — 6 wave 全完成，21 BOS URI 真活
 status: completed
 task_type: governance
 priority: P0
 assigned_to: null
 human_approval_required: false
 entry_gate:
-  - "P33-W5-FORGE-MARKET completed"
+- P33-W5-FORGE-MARKET completed
 depends_on:
-  - P33-W5-FORGE-MARKET
+- P33-W5-FORGE-MARKET
 deliverables:
-  - ".omo/_knowledge/management/retrospective-2026-06-08-p33.md"
-  - ".omo/state/system.yaml"
-  - ".omo/INDEX.md"
-  - ".omo/tasks/planned/P33-VERIFY.yaml"
-  - ".omo/_delivery/phase33-verify.md"
+- .omo/_knowledge/management/retrospective-2026-06-08-p33.md
+- .omo/state/system.yaml
+- .omo/INDEX.md
+- .omo/tasks/planned/P33-VERIFY.yaml
+- .omo/_delivery/phase33-verify.md
 risk_level: L0
 allowed_operation_level: L0
 source_docs: []
 knowledge_refs:
-  - "ADR-0005"
-  - "ADR-0006"
-description: |
-  P33 整体收官: 6 wave (北极星/战役2起步/战役2余下/修3高严重度/战役1/战役3) 全完成.
+- ADR-0005
+- ADR-0006
+description: 'P33 整体收官: 6 wave (北极星/战役2起步/战役2余下/修3高严重度/战役1/战役3) 全完成.
+
   21 BOS URI 真活, agora 12/12 健康, kairon 0 ruff, audit 100.
+
   写整体复盘 + 更新 system.yaml + INDEX.md.
+
+  '
 started_at: '2026-06-08T00:00:00Z'
 completed_at: '2026-06-08T00:00:00Z'
 blocked_by: null
 retry_count: 0
 verification:
   omo_audit: 100.0
-  omo_health: "12/12"
+  omo_health: 12/12
   omo_daemon_pid: 47826
   bos_uri_count: 21
   forge_tool_count: 6
   kairon_ruff: 0
   agora_ruff: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.449768+00:00'
+routed_by: omo-debt route

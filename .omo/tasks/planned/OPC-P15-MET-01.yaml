@@ -13,13 +13,21 @@ description: 'metaos 缺少 .omo/ 治理平面，无法参与 OMO phase/task/deb
   需要填充完整状态并注册到跨仓雷达。
 
   '
-verification: |
-  ✅ .omo/state/system.yaml 已创建完整骨架
+verification: '✅ .omo/state/system.yaml 已创建完整骨架
+
   ✅ .omo/debt/ 目录已创建
+
   ✅ .omo/goals/ 目录已创建
+
   ✅ .omo/standards/ 目录已创建
+
   ✅ metaos 可参与 OMO 治理流程
+
+  '
 tasks:
 - populate: 填充 .omo/state/system.yaml 为完整骨架 ✅
 - register: 注册 metaos 到 OMO debt 跨仓雷达 ✅
 - connect: 连接 metaos daemon/events 到 OMO 审计 ✅
+owner: omo-team
+routed_at: '2026-06-16T05:03:41.442211+00:00'
+routed_by: omo-debt route

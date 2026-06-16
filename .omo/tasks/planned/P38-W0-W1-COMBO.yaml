@@ -1,32 +1,41 @@
 id: P38-W0-W1-COMBO
 phase: 38
 wave: W0
-title: "CI 真触发 + 跨域 LLM 真调用 (W0 + W1 合并)"
+title: CI 真触发 + 跨域 LLM 真调用 (W0 + W1 合并)
 status: completed
 task_type: governance
 priority: P0
 assigned_to: null
 human_approval_required: false
 entry_gate:
-  - "P37 验收 completed (P37-W2-W3-COMBO)"
+- P37 验收 completed (P37-W2-W3-COMBO)
 depends_on:
-  - P37-W2-W3-COMBO
+- P37-W2-W3-COMBO
 deliverables:
-  - ".omo/_delivery/phase38-w0-ci-trigger.md"
-  - ".omo/_delivery/phase38-w1-llm-real.md"
+- .omo/_delivery/phase38-w0-ci-trigger.md
+- .omo/_delivery/phase38-w1-llm-real.md
 risk_level: L0
 allowed_operation_level: L0
 source_docs:
-  - ".omo/_knowledge/management/retrospective-2026-06-12-p37.md"
+- .omo/_knowledge/management/retrospective-2026-06-12-p37.md
 knowledge_refs:
-  - "ADR-0008"
-description: |
-  P38-W0 CI 真触发 (ci_local.sh 模拟; act 未装).
+- ADR-0008
+description: 'P38-W0 CI 真触发 (ci_local.sh 模拟; act 未装).
+
   P38-W1 跨域 LLM 真调用 (mock 模式; ANTHROPIC_API_KEY 未配, POC 阶段).
+
   守 P32-P37 修复.
-  CI 8 步: ruff/kairon-318/omo-302/audit-96.7/0-missing/agora-12/daemon/0-in_progress 全过.
+
+  CI 8 步: ruff/kairon-318/omo-302/audit-96.7/0-missing/agora-12/daemon/0-in_progress
+  全过.
+
   llm_bos_demo 5 URI 派发闭环验证通过.
+
+  '
 started_at: '2026-06-07T14:00:00Z'
 completed_at: '2026-06-07T14:00:00Z'
 blocked_by: null
 retry_count: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.435830+00:00'
+routed_by: omo-debt route

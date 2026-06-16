@@ -39,3 +39,6 @@ test_plan:
 - 完成文档终稿与债务关闭后核对健康分重算和验收标准
 accepted: null
 opened_at: '2026-06-02T23:17:32Z'
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.427436+00:00'
+routed_by: omo-debt route

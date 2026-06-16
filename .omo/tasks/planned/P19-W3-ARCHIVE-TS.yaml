@@ -33,3 +33,6 @@ test_plan:
 - 归档 TypeScript 代码后执行交叉清单核对确保无遗漏
 accepted: null
 opened_at: '2026-06-02T23:17:32Z'
+owner: omo-team
+routed_at: '2026-06-16T05:03:41.452281+00:00'
+routed_by: omo-debt route
