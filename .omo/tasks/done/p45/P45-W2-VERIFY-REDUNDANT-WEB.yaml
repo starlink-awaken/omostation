@@ -1,0 +1,39 @@
+id: P45-W2-VERIFY-REDUNDANT-WEB
+title: P45 W2 删冗余 web 服务验证 (24→5 HTTP 收敛)
+status: done
+task_type: verify
+risk_level: L0
+depends_on:
+- P45-W1-VERIFY-STDIO-29
+source_docs:
+- protocols/port-registry.yaml
+- e22d84da commit message (HTTP-MCP 收敛 5 阶段)
+- P45 W1 验证 (29/29 stdio)
+deliverables:
+- .omc/_knowledge/management/retrospective-2026-06-16-p45-w2.md
+- .omo/_knowledge/management/strategic-governance-p42.md
+imported_via: c2g bet
+context_uri: bos://memory/p45-w2-redundant-web-verify
+allowed_operation_level: L0
+human_approval_required: false
+assigned_to: team-lead
+entry_gate: []
+evidence_required:
+- 'port-registry.yaml ports 段 12 active 端口 (5 保留: 8090/7431/7422/9190/7456)'
+- 注释中 5 端口已释放/待收敛 (8080/9090/8765/7430/9091)
+- 0 active 端口冲突 (conflicts_pending 段仅 8765 + 9090 2 个待 P3 收敛)
+test_plan:
+- grep -c '^[0-9]' protocols/port-registry.yaml
+- grep 'conflicts_pending' 段验证
+metadata:
+  c2g_mechanism: radar + bet
+  phase: 45
+  wave: W2
+  category: governance-convergence
+closed_at: '2026-06-16T05:59:35Z'
+closed_by: team-lead
+evidence: 'P45 W2 状态验证. port-registry 12 active 端口 (5 保留: cockpit 8090 / agora-sse
+  7431 / agora-http 7422 / omo-dashboard 9190 / l4-kernel-sse 7456). 注释 5 端口已释放/待收敛
+  (8080/9090/8765/7430/9091). conflicts_pending 段仅 8765 (minerva 待 P3 收敛) + 9090 (ecos
+  待收敛). 0 active 冲突. 24→5 HTTP 收敛实际 12 active 端口 (含 stdio 4 + http 8), 真正待删冗余少. OMC
+  已在 e22d84da 期间预完成大部分.'
