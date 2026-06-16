@@ -1,6 +1,6 @@
 id: IMPORTED-58d3f8
 title: '执行 BET-c685: TestPitch'
-status: candidate
+status: archived
 task_type: feature
 risk_level: L0
 depends_on: []
@@ -28,3 +28,6 @@ entry_gate:
 owner: team-lead
 routed_at: '2026-06-16T05:03:41.454167+00:00'
 routed_by: omo-debt route
+archived_at: '2026-06-16T05:30:00Z'
+archived_by: p44-w4-pilot
+archive_reason: imported task no longer actionable (pitch executed via BET-c685)

@@ -4,7 +4,7 @@ milestone: M2.6
 priority: P2
 title: Document and batch-fix ~25 hardcoded /Users/xiamingxing paths across active
   source
-status: review
+status: archived
 assigned_to: reasonix-code
 dispatch_id: null
 run_ref: null
@@ -33,3 +33,6 @@ test_plan: []
 owner: team-lead
 routed_at: '2026-06-16T05:03:41.433549+00:00'
 routed_by: omo-debt route
+archived_at: '2026-06-16T05:30:00Z'
+archived_by: p44-w4-pilot
+archive_reason: follow-up documented (21 remaining paths deferred, initial inventory completed)

@@ -24,6 +24,10 @@ spec:
   constraints:
   - Must not break existing X4 SSOT rules
   - Must maintain OMO pre-check rigor
+status: archived
 owner: team-lead
 routed_at: '2026-06-16T05:03:41.443320+00:00'
 routed_by: omo-debt route
+archived_at: '2026-06-16T05:30:00Z'
+archived_by: p44-w4-pilot
+archive_reason: spec upgrade path deferred (c2g-v2 evolution handled via separate P44 workflow)

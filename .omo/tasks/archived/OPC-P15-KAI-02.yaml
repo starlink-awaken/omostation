@@ -1,6 +1,6 @@
 id: OPC-P15-KAI-02
 title: kairon 16-package workspace governance registration
-status: completed
+status: archived
 priority: P2
 domain: kairon
 created: '2026-06-11'
@@ -23,3 +23,6 @@ tasks:
 owner: team-lead
 routed_at: '2026-06-16T05:03:41.432678+00:00'
 routed_by: omo-debt route
+archived_at: '2026-06-16T05:30:00Z'
+archived_by: p44-w4-pilot
+archive_reason: governance registration completed (kairon 16-package registry established)
