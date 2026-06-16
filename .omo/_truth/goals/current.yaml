@@ -90,12 +90,17 @@ goals:
   progress: 100.0
   status: done
   tasks:
-    - OPC-P43-LLM-MERGE-CODE
-    - OPC-P43-LLM-MERGE-MOF
-    - OPC-P43-LLM-MERGE-GOV
-    - OPC-P43-LLM-MERGE-CONFIG
-    - OPC-P43-LLM-MERGE-DOCS
-    - OPC-P43-LLM-MERGE-ARCHIVE
+  - OPC-P43-LLM-MERGE-CODE
+  - OPC-P43-LLM-MERGE-MOF
+  - OPC-P43-LLM-MERGE-GOV
+  - OPC-P43-LLM-MERGE-CONFIG
+  - OPC-P43-LLM-MERGE-DOCS
+  - OPC-P43-LLM-MERGE-ARCHIVE
+- id: BET-c87a
+  desc: 'Bet: http-mcp-convergence-optimization (Appetite: >  2 weeks)'
+  progress: 0.0
+  status: pending
+  tasks: []
 health_targets:
   mcp_isolation_score: 100
   overall: 99

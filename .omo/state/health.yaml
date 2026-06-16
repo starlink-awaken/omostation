@@ -1,38 +1,40 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-06-16T05:25:33Z
+# generated_at: 2026-06-16T06:31:53Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 
-generated_at: "2026-06-16T05:25:33Z"
+generated_at: "2026-06-16T06:31:53Z"
 source: "c2g.strategy (real audit, no mock)"
-health_score: 55
-anomaly_count: 3
-total_tasks: 79
+health_score: 70
+anomaly_count: 2
+total_tasks: 85
 done: 30
-planned: 49
+planned: 55
 
 anomalies:
-  - "[WARN]  P0 任务 59 个, 超过阈值 5 (战略优先级可能失衡)"
+  - "[WARN]  P0 任务 61 个, 超过阈值 5 (战略优先级可能失衡)"
   - "[WARN]  L3 高风险任务 1 个, 需重点 review"
-  - "[WARN]  Owner 集中度: cockpit-team 持有 52% 任务 (单点故障风险, 知识/能力集中)"
 
 distributions:
   priority_dist:
-    P0: 59
-    P1: 14
+    P0: 61
+    P1: 17
     P2: 1
     unassigned: 5
   risk_dist:
     L0: 19
-    L1: 26
-    L2: 8
+    L1: 28
+    L2: 11
     L3: 1
     unassigned: 25
   owner_dist:
     agent-runtime: 2
+    architecture-team: 2
     claude-code: 1
     cockpit-team: 41
     codebuddy: 1
+    docs-team: 1
+    governance-team: 2
     iris: 1
     kos: 1
     metaos: 1
@@ -59,7 +61,7 @@ distributions:
     40: 2
     41: 1
     42: 2
-    43: 1
+    43: 6
     44: 1
     45: 1
     unphased: 25
@@ -67,6 +69,6 @@ distributions:
     DONE: 2
     candidate: 1
     completed: 57
-    done: 14
+    done: 19
     pending: 4
     planned: 1

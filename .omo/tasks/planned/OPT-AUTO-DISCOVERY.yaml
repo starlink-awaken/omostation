@@ -1,5 +1,5 @@
 id: OPT-AUTO-DISCOVERY
-title: 自动发现: cockpit 启动时扫描注册 workspace 服务
+title: "自动发现: cockpit 启动时扫描注册 workspace 服务"
 status: candidate
 task_type: feature
 risk_level: L3

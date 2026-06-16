@@ -29,7 +29,7 @@ evidence_required:
 - agora bos resolve 测试通过
 acceptance_criteria:
 - 外部调用 `bos://kairon/llm-gateway` 仍可解析（deprecated alias）
-- `bos://capability/forge/*` 成为主入口
+- "`bos://capability/forge/*` 成为主入口"
 - 无项目直接依赖 llm-gateway 包
 test_plan:
 - cd projects/agora && uv run pytest tests/ -k bos -q

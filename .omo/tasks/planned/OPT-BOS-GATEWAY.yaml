@@ -1,5 +1,5 @@
 id: OPT-BOS-GATEWAY
-title: BOS URI 网关: cockpit 成为人类访问 BOS URI 入口
+title: "BOS URI 网关: cockpit 成为人类访问 BOS URI 入口"
 status: candidate
 task_type: feature
 risk_level: L3
