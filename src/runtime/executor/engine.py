@@ -110,7 +110,10 @@ def _maybe_enforce_budget(
     from llm_gateway.budget import check_budget_limit, BudgetExhausted
 
     context = request_context or {}
-    raw_budget = context.get("llm_budget_usd", os.environ.get("RUNTIME_LLM_BUDGET_USD", "")).strip() if isinstance(context.get("llm_budget_usd", ""), str) else context.get("llm_budget_usd", os.environ.get("RUNTIME_LLM_BUDGET_USD", ""))
+    
+    # Extract budget from context or environment
+    raw_val = context.get("llm_budget_usd") or os.environ.get("RUNTIME_LLM_BUDGET_USD", "")
+    raw_budget = raw_val.strip() if isinstance(raw_val, str) else raw_val
     
     task_id = str(context.get("task_id") or "runtime-task")
     model_name = requested_model or getattr(provider, "default_model", "unknown")
