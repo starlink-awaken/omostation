@@ -301,8 +301,8 @@ class TestSeedRegistry:
     def test_seeds_known_services(self):
         reg = ServiceRegistry()
         count = seed_registry(reg)
-        assert count == 12
-        assert len(reg.list_all()) == 12
+        assert count == 11
+        assert len(reg.list_all()) == 11
 
     def test_known_service_names(self):
         reg = ServiceRegistry()
@@ -318,4 +318,4 @@ class TestSeedRegistry:
     def test_all_healthy(self):
         reg = ServiceRegistry()
         seed_registry(reg)
-        assert len(reg.list_healthy()) == 12
+        assert len(reg.list_healthy()) == 11

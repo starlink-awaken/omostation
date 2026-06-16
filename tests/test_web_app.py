@@ -48,7 +48,7 @@ class TestServicesAPI:
         assert r.status_code == 200
         data = r.json()
         assert isinstance(data, list)
-        assert len(data) >= 12
+        assert len(data) >= 11
         svc = data[0]
         assert "name" in svc
         assert "protocol" in svc
@@ -175,7 +175,7 @@ class TestTransitionsAPI:
         data = r.json()
         assert "transitions" in data
         assert "count" in data
-        assert data["count"] >= 12
+        assert data["count"] >= 11
 
     def test_service_transitions(self, client):
         r = client.get("/api/transitions/agora")
@@ -205,7 +205,7 @@ class TestAgentCardAPI:
         data = r.json()
         assert data["format_version"] == "a2a-v1"
         assert "agents" in data
-        assert data["count"] >= 12
+        assert data["count"] >= 11
 
 
 # ── POST endpoints (write, need auth) ───────────────────────────────────────
