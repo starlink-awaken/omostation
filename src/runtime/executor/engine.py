@@ -99,90 +99,6 @@ def _estimate_tokens(text: str) -> int:
     return max(1, (len(text) + 3) // 4)
 
 
-def _sanitize_debt_suffix(value: str) -> str:
-    cleaned = re.sub(r"[^A-Za-z0-9]+", "-", value).strip("-").upper()
-    return cleaned[:48] or "UNNAMED"
-
-
-def _register_budget_debt(task_id: str, role: str, model: str, budget_usd: float, estimated_cost_usd: float) -> Path:
-    """Register (or refresh) a budget-rejection debt.
-
-    Reuse policy: the same task_id always maps to the same debt file. Repeated
-    triggers do not accumulate new debt entries; instead the existing file is
-    refreshed in place and ``last_seen_at`` / ``occurrence_count`` are bumped.
-    This prevents the items/ directory from filling with redundant entries when
-    audit demos or steady-state traffic keep hitting the same reject path.
-
-    Concurrency: the read-modify-write loop is wrapped in ``fcntl.flock`` on a
-    sidecar lock file. Without this, two runtime agents racing on the same
-    task_id could each read occurrence_count=N and both write N+1, losing one
-    increment. The lock file lives next to the debt yaml and is created on
-    demand. The same ``_append_jsonl`` pattern (acquire before mutate, release
-    after fsync) is the established convention in this codebase.
-
-    Safety: the YAML body is constructed via ``yaml.safe_dump`` instead of
-    string concatenation so that task_id / role / model values containing
-    YAML metacharacters (``:``, ``#``, newlines, leading ``-``) cannot break
-    the file. This is the same hardening as the LLM audit trail in
-    ``llm_gateway.audit``.
-    """
-    import fcntl
-
-    import yaml
-
-    debt_id = f"DEBT-OPC-P4-BUDGET-{_sanitize_debt_suffix(task_id)}"
-    debt_path = OMO_DEBT_DIR / f"{debt_id}.yaml"
-    lock_path = debt_path.with_suffix(".lock")
-    debt_path.parent.mkdir(parents=True, exist_ok=True)
-    now_iso = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
-    occurrence_count = 1
-    first_seen_at = now_iso
-    with open(lock_path, "w", encoding="utf-8") as lock_handle:
-        fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
-        try:
-            if debt_path.exists():
-                try:
-                    existing = yaml.safe_load(debt_path.read_text(encoding="utf-8")) or {}
-                    if isinstance(existing, dict):
-                        if "occurrence_count" in existing:
-                            try:
-                                occurrence_count = int(existing["occurrence_count"]) + 1
-                            except (TypeError, ValueError):
-                                pass
-                        if "first_seen_at" in existing:
-                            first_seen_at = str(existing["first_seen_at"]).strip('"')
-                except (OSError, ValueError, yaml.YAMLError):
-                    pass
-            payload = {
-                "id": debt_id,
-                "title": "OPC P4 budget policy rejected an LLM execution path",
-                "description": (
-                    f"Runtime executor blocked task `{task_id}` before provider call because\n"
-                    f"  estimated cost {estimated_cost_usd:.6f} USD exceeded budget {budget_usd:.6f} USD.\n"
-                    f"  role={role}, model={model}."
-                ),
-                "severity": "medium",
-                "source": "runtime",
-                "first_seen_at": first_seen_at,
-                "registered_at": first_seen_at,
-                "last_seen_at": now_iso,
-                "occurrence_count": occurrence_count,
-                "status": "open",
-                "prerequisite_for": "OPC-P4",
-                "remediation": (
-                    "1. Increase the task budget or select a cheaper route.\n"
-                    "2. Re-run after confirming the selected model aligns with policy."
-                ),
-            }
-            debt_path.write_text(
-                yaml.safe_dump(payload, allow_unicode=True, sort_keys=False) + "\n",
-                encoding="utf-8",
-            )
-        finally:
-            fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
-    return debt_path
-
-
 def _maybe_enforce_budget(
     *,
     request_context: dict[str, Any] | None,
@@ -191,47 +107,43 @@ def _maybe_enforce_budget(
     route_info: dict[str, Any],
     messages: list[dict],
 ) -> dict[str, Any] | None:
-    from llm_gateway.registry_data_loader import estimate_model_cost
+    from llm_gateway.budget import check_budget_limit, BudgetExhausted
 
     context = request_context or {}
     raw_budget = context.get("llm_budget_usd", os.environ.get("RUNTIME_LLM_BUDGET_USD", "")).strip() if isinstance(context.get("llm_budget_usd", ""), str) else context.get("llm_budget_usd", os.environ.get("RUNTIME_LLM_BUDGET_USD", ""))
-    if raw_budget in ("", None):
-        return None
-
-    budget_usd = float(raw_budget)
+    
     task_id = str(context.get("task_id") or "runtime-task")
-    role = route_info.get("role", "operator")
     model_name = requested_model or getattr(provider, "default_model", "unknown")
     provider_name = getattr(provider, "provider_name", "")
     registry_model_id = f"{provider_name}/{model_name}" if provider_name else model_name
 
     prompt_text = "\n".join(str(message.get("content", "")) for message in messages)
-    estimated_input_tokens = _estimate_tokens(prompt_text)
-    estimated_output_tokens = int(context.get("llm_max_output_tokens", 512))
-    estimated_cost_usd = estimate_model_cost(registry_model_id, estimated_input_tokens, estimated_output_tokens)
+    input_tokens = _estimate_tokens(prompt_text)
+    max_output_tokens = int(context.get("llm_max_output_tokens", 512))
 
-    route_info["budget_policy"] = {
-        "task_id": task_id,
-        "budget_usd": budget_usd,
-        "estimated_cost_usd": estimated_cost_usd,
-        "model": registry_model_id,
-    }
-    if estimated_cost_usd <= budget_usd:
-        return None
+    try:
+        check_budget_limit(
+            model_id=registry_model_id,
+            input_tokens=input_tokens,
+            max_output_tokens=max_output_tokens,
+            task_id=task_id,
+            local_budget_limit=float(raw_budget) if raw_budget not in ("", None) else None
+        )
+    except BudgetExhausted as e:
+        return {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [],
+            "finish_reason": "error",
+            "error": (
+                f"Budget policy blocked task {task_id}: {str(e)}"
+            ),
+            "route": route_info,
+        }
+    except Exception as e:
+        log.warning(f"Budget check bypassed due to error: {e}")
 
-    debt_path = _register_budget_debt(task_id, role, registry_model_id, budget_usd, estimated_cost_usd)
-    route_info["budget_policy"]["debt_path"] = str(debt_path)
-    return {
-        "role": "assistant",
-        "content": "",
-        "tool_calls": [],
-        "finish_reason": "error",
-        "error": (
-            f"Budget policy blocked task {task_id}: estimated {estimated_cost_usd:.6f} USD "
-            f"> budget {budget_usd:.6f} USD ({registry_model_id})"
-        ),
-        "route": route_info,
-    }
+    return None
 
 
 def _log_execution(task_id: str, status: str, summary: str, result: dict, duration_sec: float):
