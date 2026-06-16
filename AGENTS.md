@@ -11,12 +11,13 @@
 
 ```
 L4 自我层  ── l4-kernel (43 MCP tools · 250 tests)
-L3 入口层  ── cockpit (CLI 27子命令 · MCP 37工具 · Web FastAPI :8090)
-              agora-dashboard (Next.js Web 可视化大盘 — cockpit 的 Web 视图扩展)
+L3 入口层  ── cockpit (CLI 27子命令 · MCP 37工具 · Web FastAPI :8090 — 59 路由, 唯一 Web 入口)
+              hermes-console (React UI, 挂载在 /hermes/*)
+              dashboard_server (治理数据, 挂载在 /dash/*)
 I0 织层    ── agora (MCP Hub · 42+ tools · BOS 路由 · SSE :7431)
 L2 引擎面  ── kairon (19包 · 4157 tests) + gbrain (67 MCP · 9700 tests)
               omo (治理面) + metaos (编排 · 188 tests)
-L1 运行时  ── runtime (KEI沙箱 · Matrix调度 · cron-service :7450)
+L1 运行时  ── runtime (KEI沙箱 · Matrix调度 · cron-service 默认 stdio)
 L0 协议层  ── ecos (SSB签名链 · MOF元模型 · 472 tests)
 X 横切框架 ── aetherforge (LLM网关) + compute-mesh + swarm-engine
               model-driven (7阶段引擎 · 190 tests) + llm-gateway
@@ -43,7 +44,7 @@ bos://capability/ ← forge/runtime                  — 能力与生态
 
 | 决策 | 结论 |
 |:----|:-----|
-| L3 分裂 | cockpit (CLI+MCP) + agora-dashboard (Web) 同层并存。agora-dashboard 是 cockpit 的 Web 视图扩展，不合并（480MB Next.js 迁移成本 > 收益） |
+| L3 收敛 | cockpit 是唯一 Web 入口 (:8090, 59 路由)。agora-dashboard 已删除，hermes-console 已集成，dashboard_server 已挂载为子应用。|
 | CLI 收敛 | cockpit = 唯一人类 CLI 入口。其他 CLI (agora/runtime/ecos-ssb/omo/metaos) 保留为程序接口 |
 | 子模块 | 22 子模块，各自独立 git 仓库。根仓库只追踪元配置和子模块指针 |
 
@@ -55,7 +56,7 @@ This root directory is a **multi-project workspace** organized in the 5+4+1+1 (e
 |-------|---------|-------|----------|--------|
 | L4 | `l4-kernel` | Python (uv, pytest) | `projects/l4-kernel/` | 🟢 Active — 自我层管理面 · 21域 · 250 tests · 43 MCP tools |
 | L3 | `cockpit` | Python (uv, pytest) | `projects/cockpit/` | 🟢 Active — 统一入口 (CLI 27 + MCP 37 + Web) · 562 tests |
-| L3 | `agora-dashboard` | Next.js (npm) | `projects/agora-dashboard/` | 🟢 Active — Web 可视化大盘 (cockpit 视图扩展) |
+| L3 | `cockpit` | Python (uv, pytest) | `projects/cockpit/` | 🟢 Active — 统一入口 (CLI 27 + MCP 37 + Web 59 routes) |
 | I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · BOS 路由 · 75+ services · SSE :7431 |
 | L2 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 知识引擎 · 19 packages · 4157 tests |
 | L2 | `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — 知识数据库 · 67 MCP · 9700 tests |
@@ -229,7 +230,7 @@ L0 协议   ── ecos ── SSB 协议层，承载系统决策的 Immutable L
 | runtime | `runtime`, `ecos-matrix-scheduler` | 30 | FastAPI | fastmcp, apscheduler |
 | omo | `omo`, `cards`, `omo-debt` | 10 | — | httpx, pyyaml |
 | metaos | `metaos` | 11 | — | structlog |
-| ecos | `ecos-ssb`, `ecos-dashboard` | — | :9090 | requests, jinja2 |
+| ecos | `ecos-ssb`, `ecos-dashboard` | — | — | requests, jinja2 |
 | gbrain | `gbrain` | 67 | — | bun |
 
 ### Key Dependencies
