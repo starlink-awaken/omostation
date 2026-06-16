@@ -1243,25 +1243,26 @@ async def api_bos_discover():
 @app.post("/api/discover/auto")
 async def api_auto_discover():
     """Auto-discover workspace services."""
-    import subprocess
 
     discovered = []
-    workspace_root = Path(__file__).resolve().parent.parent.parent.parent
+    workspace_root = Path(os.environ.get("WORKSPACE_ROOT", Path(__file__).resolve().parents[3]))
 
-    # Check known service locations
+    # Check known service locations (L0-L4)
     services_to_check = [
-        ("agora", workspace_root / "agora" / ".venv"),
-        ("kairon", workspace_root / "kairon" / ".venv"),
-        ("runtime", workspace_root / "runtime" / ".venv"),
-        ("ecos", workspace_root / "ecos" / ".venv"),
-        ("omo", workspace_root / "omo" / ".venv"),
-        ("metaos", workspace_root / "metaos" / ".venv"),
-        ("l4-kernel", workspace_root / "l4-kernel" / ".venv"),
-        ("gbrain", workspace_root / "gbrain" / "node_modules"),
+        ("agora", workspace_root / "projects" / "agora"),
+        ("kairon", workspace_root / "projects" / "kairon"),
+        ("runtime", workspace_root / "projects" / "runtime"),
+        ("ecos", workspace_root / "projects" / "ecos"),
+        ("omo", workspace_root / "projects" / "omo"),
+        ("metaos", workspace_root / "projects" / "metaos"),
+        ("l4-kernel", workspace_root / "projects" / "l4-kernel"),
+        ("gbrain", workspace_root / "projects" / "gbrain"),
     ]
 
     for name, path in services_to_check:
-        if path.exists():
+        v_path = path / ".venv"
+        n_path = path / "node_modules"
+        if v_path.exists() or n_path.exists() or (path / "pyproject.toml").exists():
             discovered.append({"name": name, "status": "available", "path": str(path)})
 
     return {"discovered": len(discovered), "services": discovered}

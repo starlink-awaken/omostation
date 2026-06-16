@@ -643,3 +643,6 @@ class TestAutoDiscovery:
         data = r.json()
         assert "discovered" in data
         assert "services" in data
+        # Phase 7 reinforcement
+        assert any(s["name"] == "agora" for s in data["services"])
+        assert all("status" in s for s in data["services"])
