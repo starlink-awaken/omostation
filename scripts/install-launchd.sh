@@ -1,0 +1,111 @@
+#!/bin/bash
+# install-launchd.sh — Install Agora launchd plists for crash recovery
+# Run: bash scripts/install-launchd.sh
+
+set -euo pipefail
+
+AGORA_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+LAUNCH_DIR="$HOME/Library/LaunchAgents"
+LOG_DIR="$HOME/.agora/logs"
+
+mkdir -p "$LOG_DIR"
+
+# ── SSE Server (:7431) ──
+cat > "$LAUNCH_DIR/com.agora.sse.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.agora.sse</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__AGORA_PYTHON__</string>
+        <string>-m</string>
+        <string>agora.server.mcp</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__AGORA_DIR__</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>__AGORA_DIR__/.venv/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+        <key>Crashed</key>
+        <true/>
+    </dict>
+    <key>ThrottleInterval</key>
+    <integer>5</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>__LOG_DIR__/sse-stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>__LOG_DIR__/sse-stderr.log</string>
+    <key>Nice</key>
+    <integer>-5</integer>
+</dict>
+</plist>
+PLIST
+
+# ── Gateway (:7422) ──
+cat > "$LAUNCH_DIR/com.agora.gateway.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.agora.gateway</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__AGORA_PYTHON__</string>
+        <string>-m</string>
+        <string>agora.auth.mcp_gateway</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__AGORA_DIR__</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>__AGORA_DIR__/.venv/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+        <key>Crashed</key>
+        <true/>
+    </dict>
+    <key>ThrottleInterval</key>
+    <integer>5</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>__LOG_DIR__/gateway-stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>__LOG_DIR__/gateway-stderr.log</string>
+</dict>
+</plist>
+PLIST
+
+# Substitute placeholders
+sed -i '' "s|__AGORA_PYTHON__|$AGORA_DIR/.venv/bin/python|g" "$LAUNCH_DIR/com.agora.sse.plist"
+sed -i '' "s|__AGORA_DIR__|$AGORA_DIR|g" "$LAUNCH_DIR/com.agora.sse.plist"
+sed -i '' "s|__LOG_DIR__|$LOG_DIR|g" "$LAUNCH_DIR/com.agora.sse.plist"
+
+sed -i '' "s|__AGORA_PYTHON__|$AGORA_DIR/.venv/bin/python|g" "$LAUNCH_DIR/com.agora.gateway.plist"
+sed -i '' "s|__AGORA_DIR__|$AGORA_DIR|g" "$LAUNCH_DIR/com.agora.gateway.plist"
+sed -i '' "s|__LOG_DIR__|$LOG_DIR|g" "$LAUNCH_DIR/com.agora.gateway.plist"
+
+# Load (unload first to avoid duplicates)
+launchctl unload "$LAUNCH_DIR/com.agora.sse.plist" 2>/dev/null || true
+launchctl unload "$LAUNCH_DIR/com.agora.gateway.plist" 2>/dev/null || true
+launchctl load "$LAUNCH_DIR/com.agora.sse.plist"
+launchctl load "$LAUNCH_DIR/com.agora.gateway.plist"
+
+echo "✅ Agora launchd services installed:"
+launchctl list | grep com.agora
