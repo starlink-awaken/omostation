@@ -415,3 +415,151 @@ class TestKnowledgeProxyError:
             json={"query": "test"},
         )
         assert r.status_code in (200, 500)
+
+
+# ── Research POST with actual data ──────────────────────────────────────────
+
+
+class TestResearchWriteWithData:
+    def test_tag_with_data(self, auth_client):
+        c, key = auth_client
+        r = c.post(
+            "/api/research/1/tag?tags=ai,ml",
+            headers={"X-API-Key": key},
+        )
+        assert r.status_code == 200
+
+    def test_rename_with_data(self, auth_client):
+        c, key = auth_client
+        r = c.post(
+            "/api/research/1/rename?title=New%20Title",
+            headers={"X-API-Key": key},
+        )
+        assert r.status_code == 200
+
+
+# ── Governance routes ────────────────────────────────────────────────────────
+
+
+class TestGovernanceRoutes:
+    def test_omo_status(self, client):
+        r = client.get("/api/omo/status")
+        assert r.status_code == 200
+        data = r.json()
+        assert "phase" in data
+        assert "health_score" in data
+
+    def test_omo_debt(self, client):
+        r = client.get("/api/omo/debt")
+        assert r.status_code == 200
+
+    def test_omo_report(self, client):
+        r = client.get("/api/omo/report")
+        assert r.status_code == 200
+        data = r.json()
+        assert "phase" in data
+
+    def test_ecos_status(self, client):
+        r = client.get("/api/ecos/status")
+        assert r.status_code == 200
+        data = r.json()
+        assert "m0_snapshot" in data
+
+    def test_e2e(self, client):
+        r = client.get("/api/e2e")
+        assert r.status_code == 200
+
+
+# ── Runtime/MetaOS/L4 routes ────────────────────────────────────────────────
+
+
+class TestLayerStatusRoutes:
+    def test_runtime_status(self, client):
+        r = client.get("/api/runtime/status")
+        assert r.status_code == 200
+
+    def test_metaos_status(self, client):
+        r = client.get("/api/metaos/status")
+        assert r.status_code == 200
+
+    def test_l4kernel_status(self, client):
+        r = client.get("/api/l4kernel/status")
+        assert r.status_code == 200
+
+
+# ── API v1 routes ────────────────────────────────────────────────────────────
+
+
+class TestAPIv1:
+    def test_v1_status(self, client):
+        r = client.get("/api/v1/status")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["version"] == "v1"
+        assert "services" in data
+
+    def test_v1_governance(self, client):
+        r = client.get("/api/v1/governance")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["version"] == "v1"
+        assert "omo" in data
+        assert "ecos" in data
+
+
+# ── Dev routes ────────────────────────────────────────────────────────────────
+
+
+class TestDevRoutes:
+    def test_kos_search_empty(self, client):
+        r = client.get("/dev/kos/api/search")
+        assert r.status_code == 200
+        assert r.json()["results"] == []
+
+    def test_kos_search_with_query(self, client):
+        r = client.get("/dev/kos/api/search?q=test")
+        assert r.status_code == 200
+
+    def test_minerva_status(self, client):
+        r = client.get("/dev/minerva/api/status")
+        assert r.status_code == 200
+
+    def test_ontoderive_status(self, client):
+        r = client.get("/dev/ontoderive/api/status")
+        assert r.status_code == 200
+
+    def test_forge_status(self, client):
+        r = client.get("/dev/forge/api/status")
+        assert r.status_code == 200
+
+
+# ── eCOS detailed routes ────────────────────────────────────────────────────
+
+
+class TestEcosDetailedRoutes:
+    def test_ecos_ssb(self, client):
+        r = client.get("/api/ecos/ssb")
+        assert r.status_code == 200
+
+    def test_ecos_watchdog(self, client):
+        r = client.get("/api/ecos/watchdog")
+        assert r.status_code == 200
+
+
+# ── OMO healing routes ──────────────────────────────────────────────────────
+
+
+class TestOmoHealingRoutes:
+    def test_healing_status(self, client):
+        r = client.get("/api/omo/healing/status")
+        assert r.status_code == 200
+
+    def test_healing_fixes(self, client):
+        r = client.get("/api/omo/healing/fixes")
+        assert r.status_code == 200
+        data = r.json()
+        assert "fixes" in data
+
+    def test_healing_trends(self, client):
+        r = client.get("/api/omo/healing/trends")
+        assert r.status_code == 200
