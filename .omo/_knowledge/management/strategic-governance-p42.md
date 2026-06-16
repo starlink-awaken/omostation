@@ -47,7 +47,7 @@ $ python3 bin/compass_radar.py
 | **BET-COMPASS-01** | cockpit `compass` 命名空间落地 | V1 效率 | 1 周 | 本规划 | ✅ P44 W3 |
 | **BET-RADAR-CRON** | radar 每日 cron + 健康分 SSOT | V1 效率 | 3 天 | BET-COMPASS-01 | ✅ P44 W0 |
 | **BET-GC-CRON** | gc 每周 cron + 债务路由 | V2 自治 | 3 天 | BET-RADAR-CRON | ✅ P44 W1 |
-| **BET-PLANNED-CLEANUP** | 60 planned → 30 | V1 效率 | 2 周 | BET-GC-CRON | ✅ P44 W2 (流转 6 keep_active, planned 60→55) |
+| **BET-PLANNED-CLEANUP** | 60 planned → 30 | V1 效率 | 2 周 | BET-GC-CRON | ✅ P44 W4 (6 archive + 5 review-queue, planned 60→55, archived 6) |
 | **BET-COMPASS-STANDALONE** | c2g 独立化为 `projects/compass` | V2 自治 | 1 月 | 全部前置 | 📋 P45 |
 
 **已完成**:
@@ -108,7 +108,21 @@ $ python3 bin/compass_radar.py
 
 **radar owner 分布变化**: unassigned 70 → 18 (52 路由掉), cockpit-team 41, omo-team 7, team-lead 7
 
-## 7. P44 W4 计划 (下周)
+## 7. P44 W4 状态 (2026-06-16 完成)
+
+**W4 收口**: 3 目标全部完成 (6 archive + 5 review-queue + c2g eCOS 独立化)
+
+| 项 | 状态 | 关键 evidence |
+|----|:----:|------|
+| 6 archive 真归档 | ✅ | 主仓 `c721971d` (planned → archived) |
+| omo-debt review-queue + dispatch | ✅ | omo-debt `56d4ada` (5 review-queue + 9 dispatch) |
+| c2g eCOS 独立化 | ✅ | c2g `b19f801` + omo `ac35943` (BOS URI 调 omo, 删 [ecos] optional) |
+| 端口 SSOT (X1) | ✅ | port-registry 9190 omo-dashboard |
+| 治理打分 (X1-X4) | ✅ | 综合 95/100 (W3 95, 保持) |
+
+**关键变化**: c2g 从硬编码 import omo → 改走 BOS URI 调 omo validate_task 端点, 这是 Decoupling-Audit 中期方案落地。
+
+## 8. P44 W5 计划 (下周)
 
 | 任务 | 目标 | 风险 |
 |------|------|------|
