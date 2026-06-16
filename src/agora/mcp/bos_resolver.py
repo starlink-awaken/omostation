@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
+from typing import Any
 
 from agora.mcp.resolver.adapter import StdioAdapter, get_stdio_adapter
 from agora.mcp.resolver.api import (
@@ -64,8 +65,10 @@ OMOSTATION_ROOT = Path(_WS)
 # ── Internal Service Implementations (Memory Spine) ──
 
 
-async def _memory_all_search(args: dict | None = None) -> dict:
-    """[Phase 2] 记忆脊聚合搜索: 同时检索 KOS、gbrain 与 Vault."""
+async def _memory_all_search(
+    args: dict | None = None, proxy_manager: Any | None = None
+) -> dict:
+    """[Phase 2] 记忆脊聚合搜索: 同时检索 KOS、gbrain 与 Vault (Swarm 增强版)。"""
     args = args or {}
     query = args.get("query", "")
     limit = args.get("limit", 10)
@@ -73,7 +76,7 @@ async def _memory_all_search(args: dict | None = None) -> dict:
     if not query:
         return {"status": "error", "error": "missing_query"}
 
-    _log.info("[MemorySpine] Aggregating search for: %s", query)
+    _log.info("[MemorySpine] Aggregating search for: %s (Swarm: %s)", query, bool(proxy_manager))
 
     # 待检索的子目标
     targets = [
@@ -86,7 +89,10 @@ async def _memory_all_search(args: dict | None = None) -> dict:
 
     async def _safe_call(uri: str) -> dict:
         try:
-            res = await resolve_bos_uri(uri, {"query": query, "limit": limit})
+            # 传递 proxy_manager 以支持跨节点路由
+            res = await resolve_bos_uri(
+                uri, {"query": query, "limit": limit}, proxy_manager=proxy_manager
+            )
             return {"uri": uri, "data": res}
         except Exception as e:
             return {"uri": uri, "error": str(e)}

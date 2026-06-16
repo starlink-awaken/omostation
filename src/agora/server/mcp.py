@@ -165,6 +165,7 @@ async def _proxy_lifespan(server: FastMCP):
                 os.environ.get("AGORA_SWARM_PORT", str(SWARM_DEFAULT_PORT))
             )
             _swarm = get_swarm(role=swarm_role, port=swarm_port)
+            _swarm.set_proxy_manager(_proxy_manager)
             _swarm.start()
             logger.info("swarm_started", role=swarm_role, port=swarm_port)
     except Exception:

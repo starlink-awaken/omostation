@@ -122,6 +122,11 @@ class SwarmOrchestrator:
         self._discovery_thread: threading.Thread | None = None
         self._heartbeat_thread: threading.Thread | None = None
         self._socket: socket.socket | None = None
+        self._proxy_manager: Any | None = None
+
+    def set_proxy_manager(self, pm: Any) -> None:
+        """注入 ProxyManager 实例以支持远程节点代理。"""
+        self._proxy_manager = pm
 
     # ── 生命周期 ──
 
@@ -158,6 +163,55 @@ class SwarmOrchestrator:
             node.role,
             len(node.bos_uris),
         )
+
+        # ── Phase 3: 自动代理远程节点 ──
+        if node.node_id != self.node_id and self._proxy_manager:
+            self._setup_node_proxy(node)
+
+    def _setup_node_proxy(self, node: SwarmNode) -> None:
+        """为远程节点设置 MCP 代理及 BOS 路由。"""
+        if not self._proxy_manager:
+            return
+
+        # 1. 在 ProxyManager 中注册远程节点作为后端
+        svc_name = f"swarm-node-{node.node_id}"
+        mcp_url = f"http://{node.host}:8080/api/v1/mcp"
+
+        import asyncio
+
+        async def _add():
+            try:
+                await self._proxy_manager.add_service(
+                    {
+                        "name": svc_name,
+                        "mcp_endpoint": mcp_url,
+                        "description": f"Swarm Remote Node: {node.node_id}",
+                    },
+                    lazy=True,
+                )
+                _log.info("Swarm: proxy registered for remote node %s", node.node_id)
+            except Exception as e:
+                _log.error("Swarm: failed to register proxy for %s: %s", node.node_id, e)
+
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(_add())
+        except RuntimeError:
+            pass
+
+        # 2. 将节点的 BOS URIs 注册到本地 Router
+        from agora.mcp.bos_router import bos_router
+
+        for uri in node.bos_uris:
+            bos_router.register(
+                uri,
+                adapter="proxy",
+                config={
+                    "node_id": node.node_id,
+                    "service_name": svc_name,
+                    "source": "swarm_discovery",
+                },
+            )
 
     def unregister_node(self, node_id: str) -> None:
         """注销节点。"""

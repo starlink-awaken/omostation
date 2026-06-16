@@ -113,7 +113,7 @@ async def _resolve_with_router(
     if route is not None:
         adapter = route.get("adapter", "")
         if adapter == "poc":
-            result = await _resolve_bos_uri(uri, **kwargs)
+            result = await _resolve_bos_uri(uri, proxy_manager=proxy_manager, **kwargs)
             if isinstance(result, dict) and result.get("status") == "error":
                 config = route.get("config", {})
                 return {
@@ -133,7 +133,7 @@ async def _resolve_with_router(
             except Exception:
                 pass
         elif adapter in ("http", "internal"):
-            result = await _resolve_bos_uri(uri, **kwargs)
+            result = await _resolve_bos_uri(uri, proxy_manager=proxy_manager, **kwargs)
             if isinstance(result, dict) and result.get("status") != "error":
                 return result, "bos_router_fallback"
             return {
@@ -146,7 +146,7 @@ async def _resolve_with_router(
             }, "bos_router_metadata"
 
     # Step 2: POC_SERVICES 直查（兼容旧版）
-    result = await _resolve_bos_uri(uri, **kwargs)
+    result = await _resolve_bos_uri(uri, proxy_manager=proxy_manager, **kwargs)
     return result, "poc_services"
 
 

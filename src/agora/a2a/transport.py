@@ -34,17 +34,7 @@ _log = logging.getLogger(__name__)
 
 
 class A2ATransport:
-    """In-process A2A (Agent-to-Agent) transport layer.
-
-    Provides thread-safe message passing between agents using per-agent inbox
-    queues backed by :class:`queue.Queue`. Each agent has its own inbox; callers
-    ``send_message`` to put a message into the target's queue and
-    ``receive_message`` to pop from a given agent's inbox.
-
-    EventBus events (``a2a.message.sent``, ``a2a.message.received``) are
-    emitted best-effort via the shared-lib global EventBus registry so this
-    module has no hard dependency on D-Execution.
-    """
+    """In-process A2A (Agent-to-Agent) transport layer."""
 
     def __init__(self) -> None:
         self._queue_lock = threading.Lock()
@@ -52,7 +42,8 @@ class A2ATransport:
         self._counter = 0
         self._counter_lock = threading.Lock()
 
-    # ── Internal helpers ──────────────────────────────────────────────────────
+    # ... (existing methods: _inbox, _next_msg_id, _emit, send_message, receive_message, broadcast)
+    # Note: keeping the original structure for backward compat.
 
     def _inbox(self, agent_id: str) -> queue.Queue[dict[str, Any]]:
         """Return (lazily creating) the inbox queue for *agent_id*."""
@@ -85,20 +76,12 @@ class A2ATransport:
             return False
         return True
 
-    # ── Public API ────────────────────────────────────────────────────────────
-
     def send_message(
         self,
         target_agent_id: str,
         message: dict,
-        timeout: float = 30.0,  # reserved for future network transport tiers
+        timeout: float = 30.0,
     ) -> dict:
-        """Place *message* into *target_agent_id*'s inbox.
-
-        Returns a delivery receipt containing ``msg_id``, ``status``, and
-        ``target``.  The *timeout* parameter is reserved for future network-
-        transport tiers and is not used for in-process delivery.
-        """
         msg_id = self._next_msg_id()
         envelope: dict[str, Any] = {
             "msg_id": msg_id,
@@ -115,11 +98,6 @@ class A2ATransport:
         source_agent_id: str,
         timeout: float = 30.0,
     ) -> dict | None:
-        """Pop and return the next message from *source_agent_id*'s inbox.
-
-        Blocks for up to *timeout* seconds.  Returns ``None`` if the inbox
-        is empty when the timeout expires.
-        """
         try:
             envelope = self._inbox(source_agent_id).get(timeout=timeout)
         except queue.Empty:
@@ -140,9 +118,66 @@ class A2ATransport:
         message: dict,
         agent_ids: list[str],
     ) -> list[dict]:
-        """Send *message* to every agent in *agent_ids*.
-
-        Returns the list of delivery receipts in the same order as
-        *agent_ids*.
-        """
         return [self.send_message(agent_id, message) for agent_id in agent_ids]
+
+
+class A2ANetworkTransport(A2ATransport):
+    """Network-aware A2A transport layer for Swarm Spine (Phase 3).
+
+    Extends A2ATransport to support cross-node message routing.
+    If target_agent_id is "node_id/agent_id" and node_id is remote,
+    the message is forwarded via HTTP to the remote node's Agora API.
+    """
+
+    async def send_message_async(
+        self,
+        target_agent_id: str,
+        message: dict,
+        timeout: float = 30.0,
+    ) -> dict:
+        """Asynchronously send a message, with swarm routing support."""
+        if "/" not in target_agent_id:
+            # In-process fallback
+            return self.send_message(target_agent_id, message, timeout)
+
+        node_id, agent_id = target_agent_id.split("/", 1)
+        from agora.mcp.swarm import get_swarm
+
+        swarm = get_swarm()
+        if node_id == swarm.node_id:
+            # Local node but specified with node_id
+            return self.send_message(agent_id, message, timeout)
+
+        # Remote node lookup
+        node = swarm._nodes.get(node_id)
+        if not node or not node.is_online:
+            return {
+                "status": "error",
+                "error": f"target_node_offline: {node_id}",
+                "target": target_agent_id,
+            }
+
+        # HTTP Forwarding
+        import httpx
+
+        # TODO: use secure token or internal swarm key
+        url = f"http://{node.host}:8080/api/v1/a2a/send"
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                resp = await client.post(
+                    url,
+                    json={
+                        "target_agent_id": agent_id,
+                        "message": message,
+                    },
+                )
+                resp.raise_for_status()
+                return resp.json()
+        except Exception as e:
+            _log.error("[A2ANetworkTransport] forward_failed to %s: %s", url, e)
+            return {
+                "status": "error",
+                "error": f"forward_failed: {e}",
+                "target": target_agent_id,
+            }
+

@@ -93,8 +93,32 @@ def protocol_self_check() -> dict:
     }
 
 
-async def resolve_bos_uri(uri: str, *args: Any, **kwargs: Any) -> dict:
-    """异步 BOS URI 解析 — 兼容旧接口."""
+async def resolve_bos_uri(
+    uri: str, *args: Any, proxy_manager: Any | None = None, **kwargs: Any
+) -> dict:
+    """异步 BOS URI 解析 — Swarm 路由感知版本 (Phase 3)."""
+    # ── Step 1: 尝试通过 BOSRouter 路由 (支持远程代理) ──
+    try:
+        from agora.mcp.bos_router import bos_router
+
+        route = bos_router.resolve(uri)
+        if route and route.get("adapter") == "proxy" and proxy_manager:
+            _log.info("[Resolver] Routing %s via ProxyManager (Swarm)", uri)
+            # 通过代理层执行
+            # 如果是 tools/call 风格参数
+            arguments = kwargs.get("arguments", kwargs)
+            if isinstance(arguments, str):
+                import json
+                arguments = json.loads(arguments)
+                
+            res = await proxy_manager.dispatch(uri, arguments)
+            if res.get("status") == "ok":
+                return res
+            # 如果 proxy dispatch 失败，继续尝试本地回退
+    except Exception as e:
+        _log.debug("[Resolver] Router lookup failed: %s", e)
+
+    # ── Step 2: 本地执行逻辑 (POC / Internal) ──
     service = get_service(uri)
     if not service:
         return {"status": "error", "error": f"unknown_bos_uri: {uri}"}
@@ -107,7 +131,14 @@ async def resolve_bos_uri(uri: str, *args: Any, **kwargs: Any) -> dict:
             import inspect
             mod = importlib.import_module(service.module_path)
             func = getattr(mod, service.func_name)
-            raw = func(*args, **kwargs)
+
+            # 尝试传递 proxy_manager (Phase 3)
+            sig = inspect.signature(func)
+            if "proxy_manager" in sig.parameters:
+                raw = func(*args, proxy_manager=proxy_manager, **kwargs)
+            else:
+                raw = func(*args, **kwargs)
+
             if inspect.isawaitable(raw):
                 raw = await raw
             result = {"status": "ok", "result": raw}
