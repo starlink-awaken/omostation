@@ -1,0 +1,14 @@
+id: DEBT-C2G-20260616034031
+title: 'ecos adapter 架构脱节: venv 缺 omo 模块, bridge_import.py 硬编码 import'
+description: 'P43 W0 试点发现: c2g 拆为独立 git repo 后 venv 没装 [ecos] extras, 导致 c2g --adapter
+  ecos bet 走不通. bridge_import.py:191 (_import_pitch) 走 ecos 路径时调 _validate_ecos_task
+  硬编码 import omo.omo_task_schema, 无 adapter fallback, ModuleNotFoundError 崩溃. 影响:
+  走 eCOS 真实路径断裂, 只能走 local adapter (写 .c2g_data/bets.json, 不入 .omo/tasks/). 修复路径 (二选一):
+  (A) c2g venv 装 [ecos] extras + workspace pip install -e ../omo; (B) c2g 走 BOS URI
+  调 omo (Decoupling-Audit 中期方案). 关联: Plans/c2g-enchanted-coral.md §3.1'
+severity: high
+source: c2g
+registered_at: '2026-06-16T03:40:31.298592+00:00'
+status: closed
+closed_at: '2026-06-16T03:52:06Z'
+evidence: "ecos adapter end-to-end verified: bet created BET-ea47, IMPORTED-c4b2d7.yaml created, git SHA be7d6c273077d6ba524180a923b8ef70e43a8298"
