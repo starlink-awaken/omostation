@@ -426,17 +426,10 @@ _KNOWN_SERVICES = [
         healthy=True,
     ),
     Service(
-        name="compute-mesh",
-        description="算力发现/聚合/调度",
+        name="aetherforge-swarm",
+        description="群体智能引擎 — 已并入 aetherforge/packages/swarm",
         protocol="mcp",
-        tags=["x", "compute"],
-        healthy=True,
-    ),
-    Service(
-        name="swarm-engine",
-        description="多智能体任务编排",
-        protocol="mcp",
-        tags=["x", "multi-agent"],
+        tags=["x", "multi-agent", "swarm"],
         healthy=True,
     ),
     Service(
