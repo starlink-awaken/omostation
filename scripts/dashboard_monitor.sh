@@ -14,7 +14,7 @@ WORKSPACE="${WORKSPACE:-/Users/xiamingxing/Workspace}"
 # Round 20 P0: 默认路径 = omo-health.jsonl (新), 旧 governance-history.jsonl 不再被本脚本写入
 HISTORY="${HISTORY:-$WORKSPACE/.omo/_knowledge/omo-health.jsonl}"
 PLIST_NAME="com.omo.dashboard"
-PORT="${PORT:-9090}"
+PORT="${PORT:-9190}"
 DASHBOARD_URL="http://localhost:${PORT}/"
 
 # 1. launchd 状态 (可 override 便于测试)

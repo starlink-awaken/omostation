@@ -141,7 +141,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="omo dashboard", description="eCOS Dashboard server")
     sub = parser.add_subparsers(dest="command")
     ds = sub.add_parser("serve", help="Start HTTP dashboard server")
-    ds.add_argument("--port", "-p", type=int, default=9090, help="Port (default: 9090)")
+    ds.add_argument("--port", "-p", type=int, default=9190, help="Port (default: 9190)")
     args = parser.parse_args(argv)
     if args.command == "serve":
         return cmd_dashboard_serve(args.port)

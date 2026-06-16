@@ -15,7 +15,7 @@
         <string>dashboard</string>
         <string>serve</string>
         <string>--port</string>
-        <string>9090</string>
+        <string>9190</string>
     </array>
 
     <key>RunAtLoad</key>

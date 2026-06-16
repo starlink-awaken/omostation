@@ -2,7 +2,7 @@
 """omostation 观测性 dashboard — P38-W2 真正落地.
 
 基于 .omo/_knowledge/governance-history.jsonl 生成单页 HTML dashboard.
-可被 ``python -m omo.omo_observability_dashboard`` 启动 HTTP 服务 (默认 :9090).
+可被 ``python -m omo.omo_observability_dashboard`` 启动 HTTP 服务 (默认 :9190).
 
 设计目标:
     * 零外部依赖 (无 JS / 无 React / 无 Vue)
@@ -245,7 +245,7 @@ class _ReusableTCPServer(socketserver.TCPServer):
     allow_reuse_address = True
 
 
-def run_dashboard_server(port: int = 9090, daemon: bool = True) -> int:
+def run_dashboard_server(port: int = 9190, daemon: bool = True) -> int:
     """启 dashboard HTTP server.
 
     Args:
@@ -274,7 +274,7 @@ def main(argv: list[str] | None = None) -> int:
         prog="omo-observability-dashboard",
         description="omostation 观测性 dashboard (基于 governance-history.jsonl)",
     )
-    parser.add_argument("--port", type=int, default=9090, help="监听端口 (默认 9090)")
+    parser.add_argument("--port", type=int, default=9190, help="监听端口 (默认 9190)")
     parser.add_argument(
         "--once",
         action="store_true",
