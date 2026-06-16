@@ -47,7 +47,7 @@ $ python3 bin/compass_radar.py
 | **BET-COMPASS-01** | cockpit `compass` 命名空间落地 | V1 效率 | 1 周 | 本规划 | ✅ P44 W3 |
 | **BET-RADAR-CRON** | radar 每日 cron + 健康分 SSOT | V1 效率 | 3 天 | BET-COMPASS-01 | ✅ P44 W0 |
 | **BET-GC-CRON** | gc 每周 cron + 债务路由 | V2 自治 | 3 天 | BET-RADAR-CRON | ✅ P44 W1 |
-| **BET-PLANNED-CLEANUP** | 60 planned → 30 | V1 效率 | 2 周 | BET-GC-CRON | ✅ P44 W5 (review-queue 闭环: 3 approved + 1 needs-changes) |
+| **BET-PLANNED-CLEANUP** | 60 planned → 30 | V1 效率 | 2 周 | BET-GC-CRON | ✅ P44 W6 (review-queue 闭环 + 最后 1 债务 close, 0 已知真债务) |
 | **BET-COMPASS-STANDALONE** | c2g 独立化为 `projects/compass` | V2 自治 | 1 月 | 全部前置 | 📋 P45 |
 
 **已完成**:

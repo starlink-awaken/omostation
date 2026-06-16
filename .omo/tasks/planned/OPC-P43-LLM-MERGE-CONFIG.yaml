@@ -3,7 +3,7 @@ phase: 43
 milestone: M43.4
 priority: P1
 title: 更新 BOS 路由、依赖、CI 与 Makefile 移除 llm-gateway 独立入口
-status: proposed
+status: done
 assigned_to: null
 dispatch_id: null
 run_ref: null

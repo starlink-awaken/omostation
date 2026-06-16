@@ -3,7 +3,7 @@ phase: 43
 milestone: M43.3
 priority: P1
 title: 更新 X1-X4 治理规则记录 llm-gateway 合并
-status: proposed
+status: done
 assigned_to: null
 dispatch_id: null
 run_ref: null

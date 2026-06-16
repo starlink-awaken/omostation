@@ -3,7 +3,7 @@ phase: 43
 milestone: M43.1
 priority: P0
 title: 合并 llm-gateway 代码到 aetherforge/packages/gateway/
-status: proposed
+status: done
 assigned_to: null
 dispatch_id: null
 run_ref: null

@@ -3,7 +3,7 @@ phase: 43
 milestone: M43.5
 priority: P1
 title: 更新所有架构文档与交叉引用反映 llm-gateway 合并
-status: proposed
+status: done
 assigned_to: null
 dispatch_id: null
 run_ref: null

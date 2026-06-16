@@ -3,7 +3,7 @@ phase: 43
 milestone: M43.2
 priority: P0
 title: 更新 L0 MOF 模型反映 llm-gateway 并入 aetherforge
-status: proposed
+status: done
 assigned_to: null
 dispatch_id: null
 run_ref: null

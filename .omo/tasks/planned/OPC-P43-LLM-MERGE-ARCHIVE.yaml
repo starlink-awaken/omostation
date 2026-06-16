@@ -3,7 +3,7 @@ phase: 43
 milestone: M43.6
 priority: P1
 title: 归档并冻结 projects/llm-gateway
-status: proposed
+status: done
 assigned_to: null
 dispatch_id: null
 run_ref: null
