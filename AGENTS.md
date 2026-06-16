@@ -39,7 +39,16 @@ L3 Cockpit
 ├── MCP Server      ← scripts/cockpit_mcp.py + l0_mcp_tools.py (37 tools, stdio)
 ├── Agent Runtime   ← agent_runtime_mcp_server.py (2 tools, stdio)
 ├── Legacy Runtime  ← _runtime_mcp_server_legacy.py (7 tools, stdio, deprecated)
-├── Web Dashboard   ← dashboard_server.py (FastAPI, :8090) — 16 REST APIs
+├── Web Dashboard   ← web/app.py (FastAPI, :8090) — 59 REST APIs + hermes-console + dashboard_server sub-app
+│   ├── /api/*      ← 38 API routes (services/compute/health/events/research/a2a/knowledge/...)
+│   ├── /api/omo/*  ← 6 OMO governance routes (status/debt/report/healing/*)
+│   ├── /api/ecos/* ← 3 eCOS routes (status/ssb/watchdog)
+│   ├── /api/runtime/status ← L1 runtime matrix state
+│   ├── /api/metaos/status  ← L2 metaos workflow engine
+│   ├── /api/l4kernel/status ← L4 self-layer capabilities
+│   ├── /dev/*      ← 4 kairon debug routes (kos/minerva/ontoderive/forge)
+│   ├── /hermes/*   ← hermes-console React UI (static files)
+│   └── /dash/*     ← dashboard_server.py sub-app (governance data)
 ├── Agent Runtime   ← agent_runtime_cli.py/server.py/mcp_server.py
 └── Storage         ← storage.py (SQLite + IDataAccess Protocol)
 ```
