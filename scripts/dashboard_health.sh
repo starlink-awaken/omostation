@@ -4,7 +4,7 @@
 set -uo pipefail
 
 PLIST_NAME="com.omo.dashboard"
-PORT=9090
+PORT=9190
 DASHBOARD_URL="http://localhost:${PORT}/"
 
 echo "=== Dashboard Health Check ==="

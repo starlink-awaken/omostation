@@ -23,9 +23,10 @@ mcp:
   transport: [stdio]
 
 http:
-  - port: 9091
-    enforcement: env-only   # 默认值不直连,生产 env 注入
-    protocol: http.server (Dashboard)
+  - port: 9190
+    enforcement: env-only
+    protocol: http.server (Dashboard, standalone)
+    note: "Converged to cockpit /api/omo/* routes; standalone only for debugging"
 
 dependencies:
   runtime: [httpx, pyyaml, fastmcp]
