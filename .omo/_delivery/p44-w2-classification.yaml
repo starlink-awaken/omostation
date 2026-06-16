@@ -1,0 +1,467 @@
+summary:
+  total: 60
+  keep_active: 6
+  archive: 6
+  escalate: 48
+keep_active:
+- file: IMPORTED-06fb03
+  priority: unassigned
+  risk: L0
+  phase: 42
+  owner: unassigned
+  subject: IMPORTED-06fb03
+- file: IMPORTED-3384bb
+  priority: unassigned
+  risk: L0
+  phase: 42
+  owner: unassigned
+  subject: IMPORTED-3384bb
+- file: IMPORTED-8bdcf3
+  priority: unassigned
+  risk: L0
+  phase: 42
+  owner: unassigned
+  subject: IMPORTED-8bdcf3
+- file: IMPORTED-a4cfe7
+  priority: unassigned
+  risk: L0
+  phase: 42
+  owner: unassigned
+  subject: IMPORTED-a4cfe7
+- file: IMPORTED-a5a8ea
+  priority: unassigned
+  risk: L0
+  phase: 42
+  owner: unassigned
+  subject: IMPORTED-a5a8ea
+- file: IMPORTED-baf924
+  priority: unassigned
+  risk: L0
+  phase: 42
+  owner: unassigned
+  subject: IMPORTED-baf924
+archive:
+- file: IMPORTED-58d3f8
+  priority: unassigned
+  risk: L0
+  phase: unphased
+  owner: unassigned
+  subject: IMPORTED-58d3f8
+- file: OPC-P15-KAI-02
+  priority: P2
+  risk: unassigned
+  phase: unphased
+  owner: unassigned
+  subject: OPC-P15-KAI-02
+- file: OPC-P6-SELF-EVOLUTION-nop-20260614T114209Z
+  priority: unassigned
+  risk: unassigned
+  phase: unphased
+  owner: unassigned
+  subject: OPC-P6-SELF-EVOLUTION-nop-20260614T114209Z
+- file: P2-HARDCODED-PATHS-TICKET
+  priority: P2
+  risk: L0
+  phase: 2
+  owner: unassigned
+  subject: P2-HARDCODED-PATHS-TICKET
+- file: P35-ROADMAP
+  priority: unassigned
+  risk: unassigned
+  phase: unphased
+  owner: unassigned
+  subject: P35-ROADMAP
+- file: TASK-C2G-V2-EVOLUTION
+  priority: unassigned
+  risk: unassigned
+  phase: unphased
+  owner: unassigned
+  subject: TASK-C2G-V2-EVOLUTION
+escalate:
+- &id001
+  file: OPC-P15-GBR-01
+  priority: P1
+  risk: unassigned
+  phase: unphased
+  owner: unassigned
+  subject: OPC-P15-GBR-01
+- &id002
+  file: OPC-P15-GBR-02
+  priority: P1
+  risk: unassigned
+  phase: unphased
+  owner: unassigned
+  subject: OPC-P15-GBR-02
+- &id003
+  file: OPC-P15-KAI-01
+  priority: P1
+  risk: unassigned
+  phase: unphased
+  owner: unassigned
+  subject: OPC-P15-KAI-01
+- &id004
+  file: OPC-P15-MET-01
+  priority: P1
+  risk: unassigned
+  phase: unphased
+  owner: unassigned
+  subject: OPC-P15-MET-01
+- &id005
+  file: P19-W3-ARCHIVE-TS
+  priority: P1
+  risk: L1
+  phase: 19
+  owner: unassigned
+  subject: P19-W3-ARCHIVE-TS
+- &id006
+  file: P33-W0-FOLD
+  priority: P1
+  risk: L0
+  phase: 33
+  owner: unassigned
+  subject: P33-W0-FOLD
+- &id007
+  file: P34-W3-MULTI-REPO-RELEASE
+  priority: P1
+  risk: L0
+  phase: 34
+  owner: unassigned
+  subject: P34-W3-MULTI-REPO-RELEASE
+- &id008
+  file: OPC-P4-MODEL-COMPUTE
+  priority: P0
+  risk: unassigned
+  phase: unphased
+  owner: unassigned
+  subject: OPC-P4-MODEL-COMPUTE
+- &id009
+  file: OPC-P5
+  priority: P0
+  risk: unassigned
+  phase: unphased
+  owner: unassigned
+  subject: OPC-P5
+- &id010
+  file: OPC-P7
+  priority: P0
+  risk: unassigned
+  phase: unphased
+  owner: unassigned
+  subject: OPC-P7
+- &id011
+  file: OPC-PHASE-PLAN
+  priority: P0
+  risk: unassigned
+  phase: unphased
+  owner: omo
+  subject: OPC-PHASE-PLAN
+- &id012
+  file: P24-W2-NUCLEUS-REPLACE
+  priority: P0
+  risk: L3
+  phase: 24
+  owner: unassigned
+  subject: P24-W2-NUCLEUS-REPLACE
+- &id013
+  file: P25-W1-E2E-INTEGRATION
+  priority: P0
+  risk: L2
+  phase: 25
+  owner: unassigned
+  subject: P25-W1-E2E-INTEGRATION
+- &id014
+  file: P25-W2-DOCS-DEBT-CLOSURE
+  priority: P0
+  risk: L1
+  phase: 25
+  owner: unassigned
+  subject: P25-W2-DOCS-DEBT-CLOSURE
+- &id015
+  file: P33-STARTUP-EVAL
+  priority: P0
+  risk: L0
+  phase: 33
+  owner: unassigned
+  subject: P33-STARTUP-EVAL
+- &id016
+  file: P33-VERIFY
+  priority: P0
+  risk: L0
+  phase: 33
+  owner: unassigned
+  subject: P33-VERIFY
+- &id017
+  file: P33-W0-NORTH-STAR
+  priority: P0
+  risk: L0
+  phase: 33
+  owner: unassigned
+  subject: P33-W0-NORTH-STAR
+- &id018
+  file: P33-W1-CAMPAIGN-2-PRECHECK
+  priority: P0
+  risk: L0
+  phase: 33
+  owner: unassigned
+  subject: P33-W1-CAMPAIGN-2-PRECHECK
+- &id019
+  file: P33-W2-DOMAINS-3
+  priority: P0
+  risk: L0
+  phase: 33
+  owner: unassigned
+  subject: P33-W2-DOMAINS-3
+- &id020
+  file: P33-W3-FIX
+  priority: P0
+  risk: L1
+  phase: 33
+  owner: unassigned
+  subject: P33-W3-FIX
+- &id021
+  file: P33-W4-AGORA-MESH
+  priority: P0
+  risk: L2
+  phase: 33
+  owner: unassigned
+  subject: P33-W4-AGORA-MESH
+- &id022
+  file: P33-W5-FORGE-MARKET
+  priority: P0
+  risk: L1
+  phase: 33
+  owner: unassigned
+  subject: P33-W5-FORGE-MARKET
+- &id023
+  file: P34-VERIFY
+  priority: P0
+  risk: L0
+  phase: 34
+  owner: unassigned
+  subject: P34-VERIFY
+- &id024
+  file: P34-W0-URI-EXPAND
+  priority: P0
+  risk: L0
+  phase: 34
+  owner: unassigned
+  subject: P34-W0-URI-EXPAND
+- &id025
+  file: P34-W1-AGORA-W4-UPGRADE
+  priority: P0
+  risk: L2
+  phase: 34
+  owner: unassigned
+  subject: P34-W1-AGORA-W4-UPGRADE
+- &id026
+  file: P34-W2-ANALYSIS-EXEC
+  priority: P0
+  risk: L1
+  phase: 34
+  owner: unassigned
+  subject: P34-W2-ANALYSIS-EXEC
+- &id027
+  file: P34-W4-FIX-AUDIT
+  priority: P0
+  risk: L0
+  phase: 34
+  owner: unassigned
+  subject: P34-W4-FIX-AUDIT
+- &id028
+  file: P34-W5-REAL-SCENARIO
+  priority: P0
+  risk: L1
+  phase: 34
+  owner: unassigned
+  subject: P34-W5-REAL-SCENARIO
+- &id029
+  file: P35-VERIFY
+  priority: P0
+  risk: L0
+  phase: 35
+  owner: unassigned
+  subject: P35-VERIFY
+- &id030
+  file: P35-W0-DOMAIN-CHAIN
+  priority: P0
+  risk: L1
+  phase: 35
+  owner: unassigned
+  subject: P35-W0-DOMAIN-CHAIN
+- &id031
+  file: P35-W1-W2-COMBO
+  priority: P0
+  risk: L2
+  phase: 35
+  owner: unassigned
+  subject: P35-W1-W2-COMBO
+- &id032
+  file: P35-W3-FIX-AUDIT
+  priority: P0
+  risk: L0
+  phase: 35
+  owner: unassigned
+  subject: P35-W3-FIX-AUDIT
+- &id033
+  file: P36-W0-W1-COMBO
+  priority: P0
+  risk: L1
+  phase: 36
+  owner: unassigned
+  subject: P36-W0-W1-COMBO
+- &id034
+  file: P36-W2-W3-COMBO
+  priority: P0
+  risk: L0
+  phase: 36
+  owner: unassigned
+  subject: P36-W2-W3-COMBO
+- &id035
+  file: P37-W0-W1-COMBO
+  priority: P0
+  risk: L0
+  phase: 37
+  owner: unassigned
+  subject: P37-W0-W1-COMBO
+- &id036
+  file: P37-W2-W3-COMBO
+  priority: P0
+  risk: L1
+  phase: 37
+  owner: unassigned
+  subject: P37-W2-W3-COMBO
+- &id037
+  file: P38-W0-W1-COMBO
+  priority: P0
+  risk: L0
+  phase: 38
+  owner: unassigned
+  subject: P38-W0-W1-COMBO
+- &id038
+  file: P38-W2-W3-COMBO
+  priority: P0
+  risk: L1
+  phase: 38
+  owner: unassigned
+  subject: P38-W2-W3-COMBO
+- &id039
+  file: P39-W0-W1-COMBO
+  priority: P0
+  risk: L0
+  phase: 39
+  owner: unassigned
+  subject: P39-W0-W1-COMBO
+- &id040
+  file: P39-W2-W3-COMBO
+  priority: P0
+  risk: L1
+  phase: 39
+  owner: unassigned
+  subject: P39-W2-W3-COMBO
+- &id041
+  file: P40-W0-W1-COMBO
+  priority: P0
+  risk: L1
+  phase: 40
+  owner: unassigned
+  subject: P40-W0-W1-COMBO
+- &id042
+  file: P40-W2-W3-COMBO
+  priority: P0
+  risk: L1
+  phase: 40
+  owner: unassigned
+  subject: P40-W2-W3-COMBO
+- &id043
+  file: P41-W0-W1-COMBO
+  priority: P0
+  risk: L1
+  phase: 41
+  owner: unassigned
+  subject: P41-W0-W1-COMBO
+- &id044
+  file: P42-W0-W1-COMBO
+  priority: P0
+  risk: L1
+  phase: 42
+  owner: unassigned
+  subject: P42-W0-W1-COMBO
+- &id045
+  file: P42-W2-COMBO
+  priority: P0
+  risk: L1
+  phase: 42
+  owner: unassigned
+  subject: P42-W2-COMBO
+- &id046
+  file: P43-W0-W3-COMBO
+  priority: P0
+  risk: L1
+  phase: 43
+  owner: unassigned
+  subject: P43-W0-W3-COMBO
+- &id047
+  file: P44-W0-W4-COMBO
+  priority: P0
+  risk: L1
+  phase: 44
+  owner: unassigned
+  subject: P44-W0-W4-COMBO
+- &id048
+  file: P45-W0-W3-COMBO
+  priority: P0
+  risk: L1
+  phase: 45
+  owner: unassigned
+  subject: P45-W0-W3-COMBO
+anomaly_detail:
+  orphaned-critical:
+  - *id001
+  - *id002
+  - *id003
+  - *id004
+  - *id005
+  - *id006
+  - *id007
+  P0-overload:
+  - *id008
+  - *id009
+  - *id010
+  - *id011
+  - *id012
+  - *id013
+  - *id014
+  - *id015
+  - *id016
+  - *id017
+  - *id018
+  - *id019
+  - *id020
+  - *id021
+  - *id022
+  - *id023
+  - *id024
+  - *id025
+  - *id026
+  - *id027
+  - *id028
+  - *id029
+  - *id030
+  - *id031
+  - *id032
+  - *id033
+  - *id034
+  - *id035
+  - *id036
+  - *id037
+  - *id038
+  - *id039
+  - *id040
+  - *id041
+  - *id042
+  - *id043
+  - *id044
+  - *id045
+  - *id046
+  - *id047
+  - *id048
