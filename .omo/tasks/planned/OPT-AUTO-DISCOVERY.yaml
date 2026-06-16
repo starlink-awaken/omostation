@@ -1,0 +1,21 @@
+id: OPT-AUTO-DISCOVERY
+title: 自动发现: cockpit 启动时扫描注册 workspace 服务
+status: candidate
+task_type: feature
+risk_level: L3
+depends_on:
+- OPT-BOS-GATEWAY
+source_docs:
+- pitches/http-mcp-convergence-optimization.md
+deliverables:
+- 服务发现模块
+- 自动注册机制
+imported_via: manual
+context_uri: bos://memory/sandbox/pitches/http-mcp-convergence-optimization.md
+entry_gate:
+- BET_APPROVED
+metadata:
+  bet_id: BET-c87a
+  priority: P3
+created_at: '2026-06-16T07:30:00Z'
+updated_at: '2026-06-16T07:30:00Z'

@@ -1,0 +1,21 @@
+id: OPT-UNIFIED-AUTH
+title: 统一认证: cockpit API key 管理所有子服务
+status: candidate
+task_type: feature
+risk_level: L2
+depends_on:
+- OPT-TEST-COVERAGE
+source_docs:
+- pitches/http-mcp-convergence-optimization.md
+deliverables:
+- 统一认证中间件
+- 子服务认证代理
+imported_via: manual
+context_uri: bos://memory/sandbox/pitches/http-mcp-convergence-optimization.md
+entry_gate:
+- BET_APPROVED
+metadata:
+  bet_id: BET-c87a
+  priority: P2
+created_at: '2026-06-16T07:30:00Z'
+updated_at: '2026-06-16T07:30:00Z'

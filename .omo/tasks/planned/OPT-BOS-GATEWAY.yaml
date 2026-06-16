@@ -1,0 +1,21 @@
+id: OPT-BOS-GATEWAY
+title: BOS URI 网关: cockpit 成为人类访问 BOS URI 入口
+status: candidate
+task_type: feature
+risk_level: L3
+depends_on:
+- OPT-UNIFIED-AUTH
+source_docs:
+- pitches/http-mcp-convergence-optimization.md
+deliverables:
+- /api/bos/* 路由
+- BOS URI 代理
+imported_via: manual
+context_uri: bos://memory/sandbox/pitches/http-mcp-convergence-optimization.md
+entry_gate:
+- BET_APPROVED
+metadata:
+  bet_id: BET-c87a
+  priority: P3
+created_at: '2026-06-16T07:30:00Z'
+updated_at: '2026-06-16T07:30:00Z'

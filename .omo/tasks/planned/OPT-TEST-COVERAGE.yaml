@@ -1,0 +1,21 @@
+id: OPT-TEST-COVERAGE
+title: 测试覆盖率提升至 90%+
+status: candidate
+task_type: improvement
+risk_level: L1
+depends_on: []
+source_docs:
+- pitches/http-mcp-convergence-optimization.md
+deliverables:
+- web/app.py 覆盖率 83%→90%+
+- web/governance.py 覆盖率 76%→85%+
+- web/workspace_research.py 覆盖率 61%→75%+
+imported_via: manual
+context_uri: bos://memory/sandbox/pitches/http-mcp-convergence-optimization.md
+entry_gate:
+- BET_APPROVED
+metadata:
+  bet_id: BET-c87a
+  priority: P0
+created_at: '2026-06-16T07:30:00Z'
+updated_at: '2026-06-16T07:30:00Z'
