@@ -134,3 +134,9 @@ data/backups/
 bets.json
 tasks.json
 _archived/
+
+# .omc 治理产物 (autopilot 运行时生成, 不入 git)
+.omc/autopilot/
+.omc/handoffs/
+.omc/plans/
+.omc/state/

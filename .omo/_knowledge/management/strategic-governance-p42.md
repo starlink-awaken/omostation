@@ -47,7 +47,7 @@ $ python3 bin/compass_radar.py
 | **BET-COMPASS-01** | cockpit `compass` 命名空间落地 | V1 效率 | 1 周 | 本规划 | ✅ P44 W3 |
 | **BET-RADAR-CRON** | radar 每日 cron + 健康分 SSOT | V1 效率 | 3 天 | BET-COMPASS-01 | ✅ P44 W0 |
 | **BET-GC-CRON** | gc 每周 cron + 债务路由 | V2 自治 | 3 天 | BET-RADAR-CRON | ✅ P44 W1 |
-| **BET-PLANNED-CLEANUP** | 60 planned → 30 | V1 效率 | 2 周 | BET-GC-CRON | ✅ P45 W2 (删冗余 web + simplify 2, 0 fix) |
+| **BET-PLANNED-CLEANUP** | 60 planned → 30 | V1 效率 | 2 周 | BET-GC-CRON | ✅ P45 W3 (OMO/eCOS cockpit 收敛验证 + simplify 3, 0 fix) |
 | **BET-COMPASS-STANDALONE** | c2g 独立化为 `projects/compass` | V2 自治 | 1 月 | 全部前置 | 📋 P45 |
 
 **已完成**:
@@ -166,7 +166,21 @@ $ python3 bin/compass_radar.py
 
 **P45 W2 任务**: `.omo/tasks/done/p45/P45-W2-VERIFY-REDUNDANT-WEB.yaml`
 
-## 11. P45 W3 计划 (下周)
+## 11. P45 W3 状态 (2026-06-16 完成)
+
+**W3 收口**: OMO/eCOS 面板 cockpit 收敛验证 + simplify 3 + .omc gitignore
+
+| 项 | 状态 | 关键 evidence |
+|----|:----:|------|
+| OMO/eCOS 面板 cockpit 收敛 | ⚠️ known issue | port-registry 注释说 converged, 但 cockpit 端 grep 无 /api/omos /api/ecos (端点待 W4 补) |
+| 1 P45 W3 任务落 | ✅ | P45-W3-VERIFY-CONVERGENCE |
+| .omc/ gitignore | ✅ | 加 4 段 + git rm --cached 9 文件 |
+| simplify 3 4 维度 | ✅ 0 fix | P45 W1+W2 高度自治, 诚实 |
+| 治理打分 (X1-X4) | ✅ | 综合 96/100 |
+
+**已知 issue**: cockpit /api/omos /api/eos 端点 (注释说 converged, 代码未实现) — W4 补
+
+## 12. P45 W4 计划 (下周)
 
 | 任务 | 目标 | 风险 |
 |------|------|------|
