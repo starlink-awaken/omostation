@@ -1,0 +1,73 @@
+# governance health — 治理健康分 SSOT
+# generated_at: 2026-06-16T03:34:11Z
+# source: c2g.strategy (real audit, no mock)
+# range: 0-100, higher = healthier
+
+generated_at: "2026-06-16T03:34:11Z"
+source: "c2g.strategy (real audit, no mock)"
+health_score: 55
+anomaly_count: 3
+total_tasks: 90
+done: 30
+planned: 60
+
+anomalies:
+  - "[WARN]  P0 任务 59 个, 超过阈值 5 (战略优先级可能失衡)"
+  - "[WARN]  L3 高风险任务 1 个, 需重点 review"
+  - "[WARN]  Owner 集中度: unassigned 持有 83% 任务 (单点故障风险, 知识/能力集中)"
+
+distributions:
+  priority_dist:
+    P0: 59
+    P1: 14
+    P2: 3
+    unassigned: 14
+  risk_dist:
+    L0: 27
+    L1: 25
+    L2: 8
+    L3: 1
+    unassigned: 29
+  owner_dist:
+    agent-runtime: 2
+    claude-code: 1
+    codebuddy: 1
+    iris: 1
+    kos: 1
+    metaos: 1
+    omo: 3
+    omo-engineer: 1
+    reasonix-code: 1
+    ssot: 1
+    unassigned: 75
+    workspace: 2
+  phase_dist:
+    17: 3
+    19: 1
+    2: 11
+    24: 1
+    25: 2
+    26: 1
+    33: 9
+    34: 7
+    35: 4
+    36: 2
+    37: 2
+    38: 2
+    39: 2
+    40: 2
+    41: 1
+    42: 8
+    43: 1
+    44: 1
+    45: 1
+    unphased: 29
+  status_dist:
+    DONE: 2
+    candidate: 1
+    completed: 58
+    done: 14
+    pending: 4
+    planned: 9
+    review: 1
+    unknown: 1

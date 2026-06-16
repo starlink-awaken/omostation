@@ -43,3 +43,12 @@ repos:
         # 老 .jsonl 漂移是历史问题, baseline 锚定"已知漂移", pre-commit 只对"增量" fail.
         # 刷新 baseline: uv run --directory projects/omo python -m omo.cli logs audit --baseline-init .omo/_knowledge/_audit_baseline.json
         # Round 12 P0 旧 hook 已被 baseline-check 取代 (删了 files: 过滤, 不再需要).
+      - id: health-ssot-consistency
+        name: health SSOT consistency (P43 W0: 校验 .omo/state/health.yaml 与 system.yaml 一致)
+        entry: python3 bin/check_health_ssot.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        # 触发场景: 修改 .omo/state/system.yaml 或 .omo/state/health.yaml 时
+        # 校验: 引用路径存在 + 数值一致 + 24h 内生成
+        # 刷新: python3 bin/compass_radar.py
