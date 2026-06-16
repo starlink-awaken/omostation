@@ -36,9 +36,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
-from .omo_bos_seeds import SEED_REGISTRATIONS
-
-
 # ── 路径配置 (P33-W3 暴露给外部) ──────────────────────
 # kairon packages 根目录 — kairon 23 个包, 包含 kos 实体存储
 _KAIRON_PACKAGES_SRC = Path(
@@ -112,6 +109,9 @@ class BosRegistration:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+from .omo_bos_seeds import SEED_REGISTRATIONS
 
 
 # ── 验证 + 解析 ────────────────────────────────────────────
