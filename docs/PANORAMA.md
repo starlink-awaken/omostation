@@ -262,4 +262,12 @@ Agent 操作
 
 ---
 
-*最后更新: 2026-06-11 | 全栈 lint 清零 ✅ | 全栈测试 95%+ | 债务健康 98.0 | 入口收敛 7→3 ✅ | Agent 入口: agora MCP :7431*
+---
+
+## 附录：架构可视化与演进
+
+- [ARCHITECTURE-DIAGRAM.md](./ARCHITECTURE-DIAGRAM.md) — eCOS v6 5+4+1+1 Mermaid 全景图
+- [I0-AGORA-CALLCHAIN.md](./I0-AGORA-CALLCHAIN.md) — I0 织层 BOS URI 9 步派发调用链
+- [ARCHITECTURE-EVOLUTION.md](./ARCHITECTURE-EVOLUTION.md) — 2026-05 收敛提案 vs eCOS v6 当前状态
+
+*最后更新: 2026-06-16 | 全栈 lint 清零 ✅ | 全栈测试 95%+ | 债务健康 98.0 | 入口收敛 7→3 ✅ | Agent 入口: agora MCP :7431*
