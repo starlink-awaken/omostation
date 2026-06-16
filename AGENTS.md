@@ -11,7 +11,7 @@
 
 ```
 L4 自我层  ── l4-kernel (43 MCP tools · 250 tests)
-L3 入口层  ── cockpit (CLI 27子命令 · MCP 37工具 · Web FastAPI :8090 — 59 路由, 唯一 Web 入口)
+L3 入口层  ── cockpit (CLI 27子命令 · MCP 37工具 · Web FastAPI :8090 — 61 路由, 唯一 Web 入口)
               hermes-console (React UI, 挂载在 /hermes/*)
               dashboard_server (治理数据, 挂载在 /dash/*)
 I0 织层    ── agora (MCP Hub · 42+ tools · BOS 路由 · SSE :7431)
@@ -26,7 +26,7 @@ X 横切框架 ── aetherforge (LLM网关 + 算力网格 + 群体智能)
               c2g (战略需求引擎) + bus-foundation (pub/sub)
               omo-debt (债务评分) + observability (Langfuse)
               spaces (空间配置) + family-hub (家庭数字枢纽)
-              hermes-console (控制台UI · 待集成至 cockpit)
+              hermes-console (控制台UI · 已集成至 cockpit /hermes/*)
 ```
 
 ### BOS URI 5 域
