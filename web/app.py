@@ -181,6 +181,11 @@ _METRIC_SVC_TOTAL = Gauge("agora_services_total", "Total registered services", r
 _METRIC_SVC_HEALTHY = Gauge("agora_services_healthy", "Healthy services", registry=REGISTRY)
 _METRIC_SVC_DEGRADED = Gauge("agora_services_degraded", "Degraded/offline services", registry=REGISTRY)
 
+# Prometheus counters for governance routes
+_METRIC_GOV_REQUESTS = Gauge("cockpit_governance_requests_total", "Governance route requests", ["route"], registry=REGISTRY)
+_METRIC_GOV_ERRORS = Gauge("cockpit_governance_errors_total", "Governance route errors", ["route"], registry=REGISTRY)
+_METRIC_GOV_LATENCY = Gauge("cockpit_governance_latency_seconds", "Governance route latency", ["route"], registry=REGISTRY)
+
 
 # ── Pages ──────────────────────────────────────────────────────
 
@@ -1096,6 +1101,31 @@ async def dev_forge_status():
         return {"status": "ok" if result.returncode == 0 else "error", "output": result.stdout[:500]}
     except Exception as e:
         return {"status": "error", "error": str(e)}
+
+
+# ── API v1 aliases (versioned routes) ──────────────────────────
+
+@app.get("/api/v1/status")
+async def api_v1_status():
+    """Unified status endpoint (API v1)."""
+    return {
+        "version": "v1",
+        "services": len(registry.list_all()),
+        "healthy": len(registry.list_healthy()),
+        "event_count": len(_bus.get_event_log()),
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+
+
+@app.get("/api/v1/governance")
+async def api_v1_governance():
+    """Unified governance data (API v1)."""
+    return {
+        "version": "v1",
+        "omo": load_omo_status(),
+        "ecos": load_ecos_status(),
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
 
 
 # ── CLI entry ──────────────────────────────────────────────────
