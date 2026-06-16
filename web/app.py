@@ -1013,6 +1013,10 @@ async def api_omo_healing_trends():
 # ── Dev debug routes (kairon panels) ──────────────────────────
 
 
+_KAIRON_DIR = str(Path(__file__).resolve().parent.parent.parent / "kairon")
+_KAIRON_PYTHON = str(Path(__file__).resolve().parent.parent.parent / "kairon" / ".venv" / "bin" / "python")
+
+
 @app.get("/dev/kos/api/search")
 async def dev_kos_search(q: str = ""):
     """KOS knowledge search via subprocess."""
@@ -1021,9 +1025,8 @@ async def dev_kos_search(q: str = ""):
     try:
         import subprocess
         result = subprocess.run(
-            ["uv", "run", "python", "-m", "kos.cli", "search", q],
-            capture_output=True, text=True, timeout=30,
-            cwd=str(Path(__file__).resolve().parent.parent.parent.parent / "kairon"),
+            [_KAIRON_PYTHON, "-m", "kos.cli", "search", q],
+            capture_output=True, text=True, timeout=30, cwd=_KAIRON_DIR,
         )
         return {"results": result.stdout.strip().split("\n") if result.stdout.strip() else [], "query": q}
     except Exception as e:
@@ -1036,9 +1039,8 @@ async def dev_minerva_status():
     try:
         import subprocess
         result = subprocess.run(
-            ["uv", "run", "python", "-m", "minerva.cli", "status"],
-            capture_output=True, text=True, timeout=10,
-            cwd=str(Path(__file__).resolve().parent.parent.parent.parent / "kairon"),
+            [_KAIRON_PYTHON, "-m", "minerva.cli", "status"],
+            capture_output=True, text=True, timeout=10, cwd=_KAIRON_DIR,
         )
         return {"status": "ok" if result.returncode == 0 else "error", "output": result.stdout[:500]}
     except Exception as e:
@@ -1051,9 +1053,8 @@ async def dev_ontoderive_status():
     try:
         import subprocess
         result = subprocess.run(
-            ["uv", "run", "python", "-m", "ontoderive.cli", "status"],
-            capture_output=True, text=True, timeout=10,
-            cwd=str(Path(__file__).resolve().parent.parent.parent.parent / "kairon"),
+            [_KAIRON_PYTHON, "-m", "ontoderive.cli", "status"],
+            capture_output=True, text=True, timeout=10, cwd=_KAIRON_DIR,
         )
         return {"status": "ok" if result.returncode == 0 else "error", "output": result.stdout[:500]}
     except Exception as e:
@@ -1066,9 +1067,8 @@ async def dev_forge_status():
     try:
         import subprocess
         result = subprocess.run(
-            ["uv", "run", "python", "-m", "forge.cli", "status"],
-            capture_output=True, text=True, timeout=10,
-            cwd=str(Path(__file__).resolve().parent.parent.parent.parent / "kairon"),
+            [_KAIRON_PYTHON, "-m", "forge.cli", "status"],
+            capture_output=True, text=True, timeout=10, cwd=_KAIRON_DIR,
         )
         return {"status": "ok" if result.returncode == 0 else "error", "output": result.stdout[:500]}
     except Exception as e:
