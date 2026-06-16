@@ -270,4 +270,34 @@ Agent 操作
 - [I0-AGORA-CALLCHAIN.md](./I0-AGORA-CALLCHAIN.md) — I0 织层 BOS URI 9 步派发调用链
 - [ARCHITECTURE-EVOLUTION.md](./ARCHITECTURE-EVOLUTION.md) — 2026-05 收敛提案 vs eCOS v6 当前状态
 
+## 附录：项目级架构文档索引
+
+每个子项目均包含 `ARCHITECTURE.md`（架构图）、`CALLCHAIN.md`（调用链）、`BOUNDARY.md`（系统边界）：
+
+| 项目 | 层 | 文档入口 |
+|:--|:--|:--|
+| agora | I0 | [ARCHITECTURE.md](../projects/agora/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/agora/CALLCHAIN.md) · [BOUNDARY.md](../projects/agora/BOUNDARY.md) |
+| cockpit | L3 | [ARCHITECTURE.md](../projects/cockpit/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/cockpit/CALLCHAIN.md) · [BOUNDARY.md](../projects/cockpit/BOUNDARY.md) |
+| kairon | L2 | [ARCHITECTURE.md](../projects/kairon/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/kairon/CALLCHAIN.md) · [BOUNDARY.md](../projects/kairon/BOUNDARY.md) |
+| gbrain | L2 | [ARCHITECTURE.md](../projects/gbrain/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/gbrain/CALLCHAIN.md) · [BOUNDARY.md](../projects/gbrain/BOUNDARY.md) |
+| omo | L2 | [ARCHITECTURE.md](../projects/omo/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/omo/CALLCHAIN.md) · [BOUNDARY.md](../projects/omo/BOUNDARY.md) |
+| metaos | L2 | [ARCHITECTURE.md](../projects/metaos/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/metaos/CALLCHAIN.md) · [BOUNDARY.md](../projects/metaos/BOUNDARY.md) |
+| runtime | L1 | [ARCHITECTURE.md](../projects/runtime/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/runtime/CALLCHAIN.md) · [BOUNDARY.md](../projects/runtime/BOUNDARY.md) |
+| ecos | L0 | [ARCHITECTURE.md](../projects/ecos/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/ecos/CALLCHAIN.md) · [BOUNDARY.md](../projects/ecos/BOUNDARY.md) |
+| aetherforge | X | [ARCHITECTURE.md](../projects/aetherforge/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/aetherforge/CALLCHAIN.md) · [BOUNDARY.md](../projects/aetherforge/BOUNDARY.md) |
+| aetherforge-swarm-ext | X | [ARCHITECTURE.md](../projects/aetherforge-swarm-ext/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/aetherforge-swarm-ext/CALLCHAIN.md) · [BOUNDARY.md](../projects/aetherforge-swarm-ext/BOUNDARY.md) |
+| agora-dashboard | L3 | [ARCHITECTURE.md](../projects/agora-dashboard/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/agora-dashboard/CALLCHAIN.md) · [BOUNDARY.md](../projects/agora-dashboard/BOUNDARY.md) |
+| bus-foundation | X | [ARCHITECTURE.md](../projects/bus-foundation/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/bus-foundation/CALLCHAIN.md) · [BOUNDARY.md](../projects/bus-foundation/BOUNDARY.md) |
+| c2g | X | [ARCHITECTURE.md](../projects/c2g/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/c2g/CALLCHAIN.md) · [BOUNDARY.md](../projects/c2g/BOUNDARY.md) |
+| compute-mesh | L1 | [ARCHITECTURE.md](../projects/compute-mesh/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/compute-mesh/CALLCHAIN.md) · [BOUNDARY.md](../projects/compute-mesh/BOUNDARY.md) |
+| family-hub | X | [ARCHITECTURE.md](../projects/family-hub/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/family-hub/CALLCHAIN.md) · [BOUNDARY.md](../projects/family-hub/BOUNDARY.md) |
+| hermes-console | L3 | [ARCHITECTURE.md](../projects/hermes-console/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/hermes-console/CALLCHAIN.md) · [BOUNDARY.md](../projects/hermes-console/BOUNDARY.md) |
+| l4-kernel | L4 | [ARCHITECTURE.md](../projects/l4-kernel/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/l4-kernel/CALLCHAIN.md) · [BOUNDARY.md](../projects/l4-kernel/BOUNDARY.md) |
+| llm-gateway | X | [ARCHITECTURE.md](../projects/llm-gateway/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/llm-gateway/CALLCHAIN.md) · [BOUNDARY.md](../projects/llm-gateway/BOUNDARY.md) |
+| model-driven | M0 | [ARCHITECTURE.md](../projects/model-driven/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/model-driven/CALLCHAIN.md) · [BOUNDARY.md](../projects/model-driven/BOUNDARY.md) |
+| observability | X | [ARCHITECTURE.md](../projects/observability/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/observability/CALLCHAIN.md) · [BOUNDARY.md](../projects/observability/BOUNDARY.md) |
+| omo-debt | L2 | [ARCHITECTURE.md](../projects/omo-debt/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/omo-debt/CALLCHAIN.md) · [BOUNDARY.md](../projects/omo-debt/BOUNDARY.md) |
+| spaces | L0/L1 | [ARCHITECTURE.md](../spaces/ARCHITECTURE.md) · [CALLCHAIN.md](../spaces/CALLCHAIN.md) · [BOUNDARY.md](../spaces/BOUNDARY.md) |
+| swarm-engine | X | [ARCHITECTURE.md](../projects/swarm-engine/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/swarm-engine/CALLCHAIN.md) · [BOUNDARY.md](../projects/swarm-engine/BOUNDARY.md) |
+
 *最后更新: 2026-06-16 | 全栈 lint 清零 ✅ | 全栈测试 95%+ | 债务健康 98.0 | 入口收敛 7→3 ✅ | Agent 入口: agora MCP :7431*

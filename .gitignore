@@ -58,7 +58,10 @@ dist/
 kos/
 
 # ---- 外部工具数据 ----
-spaces/
+spaces/*.yaml
+spaces/*.json
+spaces/*.db
+spaces/_schema/
 _derivation_logs/
 
 # ---- 运行时数据 ----
