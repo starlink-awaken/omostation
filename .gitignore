@@ -17,6 +17,16 @@ agent-runtime/
 runtime/sandbox/pitches/
 runtime/sandbox/decayed/
 
+# ---- OMC 工具运行时状态 (autopilot/handoffs/plans/spec 是治理产物应 add) ----
+.omc/logs/
+.omc/notepads/
+.omc/sessions/
+.omc/state/
+.omc/project-memory.json
+.omc/prd.json
+.omc/progress.txt
+projects/.omc/
+
 # ---- OMO 嵌套目录（OMO_ROOT 解析错导致 daemon log 落到 .omo/.omo/） ----
 .omo/.omo/
 
