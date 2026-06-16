@@ -1,0 +1,15 @@
+id: DEBT-LLM-GATEWAY-20260616043953
+title: 端点 500 (OpenAI key 失效, detection 选 ollama 但 LLM_PROVIDER 没传)
+description: 'P44 W1 known issue. 修复: ollama 装 qwen2.5:0.5b + llama3.2:1b (小模型), plist
+  ~/Library/LaunchAgents/com.llm-gateway.serve.plist 加 LLM_PROVIDER=ollama env, launchctl
+  bootstrap gui/501 重启. 现在 9290 端点返 ''Hello.'' from ollama (provider=ollama, model=llama3.2:1b).
+  但 c2g parser 对 narrative markdown 返 JSON 失败 (新债务).'
+severity: high
+source: llm-gateway
+registered_at: '2026-06-16T04:39:53.590017+00:00'
+status: closed
+lifecycle_state: closed
+closed_at: '2026-06-16T04:40:00Z'
+resolution_evidence: 'ollama 装 qwen2.5:0.5b + llama3.2:1b; plist ~/Library/LaunchAgents/com.llm-gateway.serve.plist
+  加 LLM_PROVIDER=ollama env; launchctl bootstrap gui/501; 9290 端点返真 ollama JSON 数组.
+  已知限制: c2g llm.py parser 对 narrative markdown JSON 失败 (新债务).'
