@@ -95,8 +95,48 @@ _cached_lifecycle_mgr: LifecycleManager | None = None
 
 
 from agora.server.tools_auth import (  # noqa: E402
+    get_access_token as get_access_token,
     require_agora_api_key as _require_agora_api_key,
 )
+
+
+def identity_from_auth_token() -> dict | None:
+    """Backward-compatible identity resolver that respects monkeypatched mcp.get_access_token."""
+    token = get_access_token()
+    if token is None:
+        return None
+
+    claims = getattr(token, "claims", {}) or {}
+    subject_id = claims.get("sub") or claims.get("subject_id") or getattr(token, "client_id", "")
+    if not subject_id:
+        return None
+
+    identity: dict[str, object] = {
+        "subject_id": subject_id,
+        "subject_type": claims.get("subject_type") or "service",
+    }
+    if issuer := claims.get("iss") or claims.get("issuer"):
+        identity["issuer"] = issuer
+    if tenant := claims.get("tenant") or claims.get("org") or getattr(token, "resource", None):
+        identity["tenant"] = tenant
+    return identity
+
+
+def _resolve_caller_identity(caller_identity: str | dict | None) -> str | dict:
+    """Backward-compatible caller identity normalization for tools_registry."""
+    if caller_identity not in (None, ""):
+        if isinstance(caller_identity, str):
+            try:
+                parsed = json.loads(caller_identity)
+            except json.JSONDecodeError:
+                return caller_identity
+            return parsed if isinstance(parsed, dict) else caller_identity
+        return caller_identity
+
+    derived = identity_from_auth_token()
+    if derived is not None:
+        return derived
+    return "anonymous"
 
 
 @asynccontextmanager
