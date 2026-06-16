@@ -875,7 +875,7 @@ def sse_main():
 
 
 if __name__ == "__main__":
-    sse_main()
+    main()
 
 # Re-exports for test imports
 from agora.server.tools_registry import route_call as route_call  # noqa: E402
