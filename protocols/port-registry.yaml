@@ -18,11 +18,13 @@ ports:
 # 8765: minerva/kos/ontoderive/codeanalyze/ecos-gateway — 待 Phase 3 收敛到 cockpit /dev/*
 # 9090: ecos-dashboard — 保留独立，但核心功能已收敛到 cockpit /api/ecos/status
 # 9091: omo-sse-daemon — 保留，独立 SSE 守护进程
+# swarm-engine 无独立端口，能力已并入 aetherforge/packages/swarm
 
 # 收敛后已释放端口 (2026-06-16)
 # 7430: agora-dashboard — 删除，功能收敛至 cockpit :8090
 # 8080: agora-api-gateway — 删除，功能收敛至 cockpit :8090
 # 9090: ecos-dashboard — 待收敛至 cockpit /api/ecos/status
+# swarm-engine 无独立端口，能力已并入 aetherforge/packages/swarm
 
 types:
   7422: env-only
@@ -70,7 +72,6 @@ conflicts_resolved:
   9290:
   - llm-gateway
   - aetherforge
-  - compute-mesh
 
 conflicts_pending:
   8765:

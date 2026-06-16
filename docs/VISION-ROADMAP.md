@@ -133,7 +133,7 @@
 | 任务 | 优先级 | 涉及项目 | 预计时间 |
 |------|--------|----------|----------|
 | Agent 注册中心 | P0 | runtime, agora | 4 周 |
-| 分布式任务调度 | P0 | swarm-engine, runtime | 4 周 |
+| 分布式任务调度 | P0 | aetherforge/packages/swarm, runtime | 4 周 |
 | 状态同步机制 | P0 | omo, runtime | 3 周 |
 | 故障转移机制 | P1 | runtime, aetherforge | 3 周 |
 | 负载均衡 | P1 | aetherforge, runtime | 2 周 |
@@ -150,11 +150,11 @@
 
 | 任务 | 优先级 | 涉及项目 | 预计时间 |
 |------|--------|----------|----------|
-| 角色定义框架 | P0 | swarm-engine | 3 周 |
-| 角色协作协议 | P0 | swarm-engine, runtime | 3 周 |
-| 角色动态切换 | P1 | swarm-engine, metaos | 3 周 |
-| 角色记忆共享 | P1 | gbrain, swarm-engine | 3 周 |
-| 角色评估系统 | P2 | omo, swarm-engine | 2 周 |
+| 角色定义框架 | P0 | aetherforge/packages/swarm | 3 周 |
+| 角色协作协议 | P0 | aetherforge/packages/swarm, runtime | 3 周 |
+| 角色动态切换 | P1 | aetherforge/packages/swarm, metaos | 3 周 |
+| 角色记忆共享 | P1 | gbrain, aetherforge/packages/swarm | 3 周 |
+| 角色评估系统 | P2 | omo, aetherforge/packages/swarm | 2 周 |
 
 **交付物**:
 - 角色定义框架
@@ -168,10 +168,10 @@
 
 | 任务 | 优先级 | 涉及项目 | 预计时间 |
 |------|--------|----------|----------|
-| 涌现行为检测 | P1 | aetherforge-swarm-ext | 3 周 |
-| 集体决策机制 | P1 | swarm-engine, metaos | 3 周 |
-| 自组织能力 | P2 | swarm-engine | 3 周 |
-| 进化适应机制 | P2 | aetherforge-swarm-ext | 3 周 |
+| 涌现行为检测 | P1 | aetherforge/packages/swarm (swarm_engine/ext) | 3 周 |
+| 集体决策机制 | P1 | aetherforge/packages/swarm, metaos | 3 周 |
+| 自组织能力 | P2 | aetherforge/packages/swarm | 3 周 |
+| 进化适应机制 | P2 | aetherforge/packages/swarm (swarm_engine/ext) | 3 周 |
 | 蜂群可视化 | P2 | cockpit | 2 周 |
 
 **交付物**:
@@ -190,7 +190,7 @@
 | 个人偏好学习 | P1 | gbrain, metaos | 3 周 |
 | 个人记忆管理 | P1 | gbrain, omo | 3 周 |
 | 个人AI助手 | P2 | cockpit, gbrain | 3 周 |
-| 个人数字孪生 | P2 | gbrain, swarm-engine | 4 周 |
+| 个人数字孪生 | P2 | gbrain, aetherforge/packages/swarm | 4 周 |
 
 **交付物**:
 - 个人知识图谱服务
@@ -233,10 +233,10 @@
 | 组件 | 说明 | 涉及项目 |
 |------|------|----------|
 | Agent Registry | Agent 注册中心 | runtime, agora |
-| Distributed Scheduler | 分布式任务调度 | swarm-engine, runtime |
+| Distributed Scheduler | 分布式任务调度 | aetherforge/packages/swarm, runtime |
 | State Sync Service | 状态同步服务 | omo, runtime |
-| Role Framework | 角色定义框架 | swarm-engine |
-| Swarm Intelligence | 蜂群智能引擎 | aetherforge-swarm-ext |
+| Role Framework | 角色定义框架 | aetherforge/packages/swarm |
+| Swarm Intelligence | 蜂群智能引擎 | aetherforge/packages/swarm (swarm_engine/ext) |
 | Personal Brain | 个人数字大脑 | gbrain, kos |
 
 ---

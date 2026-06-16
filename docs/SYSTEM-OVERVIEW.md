@@ -336,20 +336,11 @@
 - 对比: 多债务对比
 - 健康度: 项目健康度分析
 
-#### compute-mesh
+#### compute-mesh （已归档）
 
-| 指标 | 值 |
-|------|-----|
-| 版本 | 1.0.0 |
-| 功能 | 算力网格·分布式算力管理 |
-| 测试 | 19 |
-| 能力地图 | ✅ |
-
-**核心能力**:
-- 算力发现: 分布式算力节点发现
-- 资源聚合: 算力资源聚合
-- 任务调度: 任务分配/调度
-- Worker 管理: Worker 生命周期
+> `compute-mesh` 子模块已于 2026-06-16 归档。其 mesh-specific 代码（拓扑、调度、Worker、API）已并入 `projects/aetherforge/packages/mesh/`，`provider/` 层与 `aetherforge-gateway` 合并，不再作为独立子模块维护。
+>
+> 归档快照：`/_archived/compute-mesh/` · 新位置：`projects/aetherforge/packages/mesh/`
 
 #### family-hub
 
@@ -392,20 +383,17 @@
 - 历史代码保留在 `aetherforge/packages/gateway/src/llm_gateway/_legacy/`
 - 新入口: `aetherforge gateway *` CLI / `aetherforge-mcp`
 
-#### swarm-engine
+#### swarm-engine （已归档）
 
-| 指标 | 值 |
-|------|-----|
-| 版本 | 1.0.0 |
-| 功能 | 群体智能引擎·多 Agent 协作 |
-| 测试 | 0 |
-| 能力地图 | ✅ |
+> `swarm-engine` 子模块已于 2026-06-16 归档。其群体智能模块已并入 `projects/aetherforge/packages/swarm/src/swarm_engine/`，不再作为独立子模块维护。
+>
+> 归档快照：`/_archived/swarm-engine/` · 新位置：`projects/aetherforge/packages/swarm/`
 
-**核心能力**:
-- Agent 编排: 多 Agent 协作编排
-- 任务分配: 任务分配/调度
-- 状态同步: Agent 状态同步
-- 结果聚合: 多 Agent 结果聚合
+#### aetherforge-swarm-ext （已归档）
+
+> `aetherforge-swarm-ext` 子模块已于 2026-06-16 归档。14 个唯一扩展模块已并入 `projects/aetherforge/packages/swarm/src/swarm_engine/ext/`，其余模块已由 `swarm-engine` 合并覆盖，不再作为独立子模块维护。
+>
+> 归档快照：`/_archived/aetherforge-swarm-ext/` · 新位置：`projects/aetherforge/packages/swarm/src/swarm_engine/ext/`
 
 ---
 
@@ -615,7 +603,7 @@ Agent → agora MCP (resolve_bos_uri)
 ### 4.8 群体智能协作链路
 
 ```
-任务 → swarm-engine (编排) → aetherforge (算力) → 多 Agent 协作
+任务 → aetherforge/packages/swarm (编排) → aetherforge (算力) → 多 Agent 协作
                 │
                 └→ 结果聚合 → 返回
 ```
@@ -729,11 +717,12 @@ runtime: FastAPI (服务注册)
 | l4-kernel | projects/l4-kernel/CAPABILITY-MAP.md |
 | model-driven | projects/model-driven/CAPABILITY-MAP.md |
 | omo-debt | projects/omo-debt/CAPABILITY-MAP.md |
-| compute-mesh | projects/compute-mesh/CAPABILITY-MAP.md |
+| compute-mesh | **ARCHIVED** — 见 `projects/aetherforge/packages/mesh/` |
 | family-hub | projects/family-hub/CAPABILITY-MAP.md |
 | hermes-console | projects/hermes-console/CAPABILITY-MAP.md |
 | llm-gateway | **ARCHIVED** — 见 [aetherforge/packages/gateway](../projects/aetherforge/packages/gateway/) |
-| swarm-engine | projects/swarm-engine/CAPABILITY-MAP.md |
+| swarm-engine | **ARCHIVED** — 见 [aetherforge/packages/swarm](../projects/aetherforge/packages/swarm/) |
+| aetherforge-swarm-ext | **ARCHIVED** — 见 [aetherforge/packages/swarm/src/swarm_engine/ext](../projects/aetherforge/packages/swarm/src/swarm_engine/ext/) |
 
 ---
 

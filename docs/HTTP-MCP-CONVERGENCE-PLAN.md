@@ -37,8 +37,6 @@
 | aetherforge (unified) | mcp_server.py | stdio | ❌ |
 | aetherforge/gateway | llm_gateway/mcp_server.py | stdio | ❌ |
 | aetherforge/mesh | compute_mesh/mcp_server.py | stdio | ❌ |
-| compute-mesh | mcp_server.py | stdio | ❌ |
-| swarm-engine | 无 MCP | — | — |
 
 ### 1.2 HTTP 服务清单（24 个）
 
@@ -64,7 +62,7 @@
 | 18 | l4-kernel MCP | :7455/:7456 | FastMCP | MCP | ✅ 保留 |
 | 19 | aetherforge/gateway | configurable | stdlib | 1 | ✅ 保留 |
 | 20 | llm-gateway | configurable | stdlib | 1 | ✅ 保留 |
-| 21 | compute-mesh | configurable | stdlib | 1 | ✅ 保留 |
+| 21 | aetherforge/mesh | configurable | stdlib | 1 | ✅ 保留 |
 | 22 | family-hub | :3001 | Express | 4 | ✅ 独立域 |
 | 23 | kairon/codeanalyze | :8765 | FastMCP | MCP | ✅ 保留 |
 | 24 | cockpit MCP SSE | configurable | FastMCP | MCP | ✅ 保留 |
@@ -101,7 +99,7 @@
   runtime cron   :7450  (作业调度)
   gbrain admin   :3131  (知识库管理面板)
   LLM Gateway    :configurable (推理路由)
-  compute-mesh   :configurable (算力调度)
+  aetherforge/mesh :configurable (算力调度)
 ```
 
 ### 目标端口分配（仅 5 个 HTTP 端口）

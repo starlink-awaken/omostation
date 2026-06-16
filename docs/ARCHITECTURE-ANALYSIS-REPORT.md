@@ -41,7 +41,6 @@
 
 | 项目 | 层 | 实际状态 | 风险 |
 |:--|:--|:--|:--|
-| `aetherforge-swarm-ext` | X | 无 `tests/`，CI fallback 为 `echo "No tests yet"` | 扩展功能未验证，无法阻止回归 |
 | `agora-dashboard` | L3 | Next.js 项目，无 test runner | Web 视图回归无保障 |
 | `hermes-console` | L3 | 仅 3 个 `bus_adapter` tests | 组件渲染、视图集成无测试 |
 | `observability` | X | 仅 `docker-compose.yml`，无代码测试 | 可观测性链路实际不可验证 |
@@ -55,9 +54,6 @@
 
 | 项目 | 文档/CAPABILITY-MAP 声明 | 实际 `pyproject.toml`/`package.json` | 差距 |
 |:--|:--|:--|:--|
-| `compute-mesh` | CLI + MCP server | 仅 `worker-demo` 一个 CLI 命令；MCP 入口存在但功能 scaffold | 大部分能力未 wired |
-| `swarm-engine` | CLI `swarm-engine status/orchestrate/sync` | 无 `project.scripts`；仅 library | 文档先行、实现滞后 |
-| `aetherforge-swarm-ext` | 无 | 仅 module-level `__main__` 探测 | 无正式入口 |
 | `llm-gateway` | CLI/MCP/HTTP | HTTP server 存在但无 `project.scripts` 入口 | HTTP 入口隐藏 |
 
 **结论**：部分项目的对外接口在 README/CAPABILITY-MAP 中被放大，实际入口未收敛，易造成使用者困惑。
@@ -108,7 +104,6 @@
 
 | 项目 | 最小补齐项 |
 |:--|:--|
-| `aetherforge-swarm-ext` | import smoke + 1-2 模块功能 smoke tests |
 | `agora-dashboard` | Next.js 渲染测试 或至少将 `npm run build` 纳入 CI |
 | `hermes-console` | 组件渲染测试 + `bus_adapter` 测试扩展 |
 | `observability` | `docker compose up` health check test |
@@ -123,7 +118,8 @@
 建议对各项目 `pyproject.toml` / `package.json` scripts 与 `README.md` / `CAPABILITY-MAP.md` 做一次交叉审计：
 
 - 删除未 wired 的 CLI 命令声明；
-- 为 `compute-mesh`、`swarm-engine` 补齐 console scripts，或明确标注 `library-only`；
+- 为 `aetherforge/packages/mesh` 补齐 console scripts（若需要独立入口），或明确标注 `library-only`；
+- 为 `aetherforge/packages/swarm` 补齐 console scripts（若需要独立入口），或明确标注 `library-only`；
 - 为 `llm-gateway` HTTP server 添加统一入口；
 - 在 `BOUNDARY.md` 中区分“已实现入口”与“规划入口”。
 
