@@ -1,0 +1,45 @@
+id: OPC-P43-LLM-MERGE-CONFIG
+phase: 43
+milestone: M43.4
+priority: P1
+title: 更新 BOS 路由、依赖、CI 与 Makefile 移除 llm-gateway 独立入口
+status: proposed
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../plan/pitches/PITCH-llm-gateway-merge.md
+- projects/agora/src/agora/mcp/resolver/services.py
+depends_on:
+- OPC-P43-LLM-MERGE-CODE
+entry_gate:
+- BET-a15b
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- agora/services.py 中 llm-gateway 独立路由更新为 aetherforge 或 deprecated alias
+- 根 Makefile 中 llm-gateway 独立 target 移除
+- 依赖 llm-gateway 的项目改为 aetherforge-gateway
+- llm-gateway CI workflow 归档到 .github/workflows/_archived/
+- agora bos resolve 测试通过
+acceptance_criteria:
+- 外部调用 `bos://kairon/llm-gateway` 仍可解析（deprecated alias）
+- `bos://capability/forge/*` 成为主入口
+- 无项目直接依赖 llm-gateway 包
+test_plan:
+- cd projects/agora && uv run pytest tests/ -k bos -q
+- grep -r "llm-gateway" projects/*/pyproject.toml 确认仅 aetherforge-gateway
+- make governance-verify
+accepted: null
+opened_at: '2026-06-16T12:00:00Z'
+owner: architecture-team
+m3_parent: OMOTASK
+model_driven_refs:
+- model_driven.lifecycle.stages.STAGE-IMPLEMENT
+signals:
+- task-OPC-P43-LLM-MERGE-CONFIG-running

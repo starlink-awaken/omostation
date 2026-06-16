@@ -1,0 +1,45 @@
+id: OPC-P43-LLM-MERGE-ARCHIVE
+phase: 43
+milestone: M43.6
+priority: P1
+title: 归档并冻结 projects/llm-gateway
+status: proposed
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../plan/pitches/PITCH-llm-gateway-merge.md
+depends_on:
+- OPC-P43-LLM-MERGE-CODE
+- OPC-P43-LLM-MERGE-CONFIG
+- OPC-P43-LLM-MERGE-DOCS
+entry_gate:
+- BET-a15b
+risk_level: L2
+allowed_operation_level: L1
+human_approval_required: true
+evidence_required:
+- projects/llm-gateway/ARCHIVED.md 存在并说明归档原因、迁移目标、最后可用 commit
+- llm-gateway/pyproject.toml 标记 Development Status :: 7 - Inactive
+- llm-gateway 子模块最后一次提交记录归档信息
+- 根 .gitmodules 中 llm-gateway 标记 archived（或移除后保留历史）
+acceptance_criteria:
+- llm-gateway 不再作为活跃项目维护
+- 根仓库可正常 clone 并跳过已归档子模块
+- 无 CI workflow 继续触发 llm-gateway 构建
+test_plan:
+- cat projects/llm-gateway/ARCHIVED.md
+- grep "Inactive" projects/llm-gateway/pyproject.toml
+- ls .github/workflows/_archived/ | grep llm-gateway
+accepted: null
+opened_at: '2026-06-16T12:00:00Z'
+owner: governance-team
+m3_parent: OMOTASK
+model_driven_refs:
+- model_driven.lifecycle.stages.STAGE-HARDENING
+signals:
+- task-OPC-P43-LLM-MERGE-ARCHIVE-running

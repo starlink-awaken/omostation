@@ -1,0 +1,43 @@
+id: OPC-P43-LLM-MERGE-GOV
+phase: 43
+milestone: M43.3
+priority: P1
+title: 更新 X1-X4 治理规则记录 llm-gateway 合并
+status: proposed
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../plan/pitches/PITCH-llm-gateway-merge.md
+- .omo/_truth/x3-value-stack.yaml
+depends_on:
+- OPC-P43-LLM-MERGE-MOF
+entry_gate:
+- BET-a15b
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- x1-governance-policies.yaml 记录合并变更审计策略
+- x2-freshness-rules.yaml 将 llm-gateway 标记 archived
+- x3-value-stack.yaml 中 llm-gateway 成本归零并归入 aetherforge
+- x4-consistency-rules.yaml 检查无独立 llm-gateway 引用
+acceptance_criteria:
+- X1-X4 四维均包含 aetherforge/llm-gateway 合并的治理记录
+- 旧 llm-gateway 在 freshness 和价值栈中状态为 archived
+- 一致性检查通过
+test_plan:
+- 手动检查 .omo/_truth/*.yaml 中 llm-gateway 与 aetherforge 的表述
+- 运行 governance-verify 链
+accepted: null
+opened_at: '2026-06-16T12:00:00Z'
+owner: governance-team
+m3_parent: OMOTASK
+model_driven_refs:
+- model_driven.lifecycle.stages.STAGE-VALIDATE
+signals:
+- task-OPC-P43-LLM-MERGE-GOV-running
