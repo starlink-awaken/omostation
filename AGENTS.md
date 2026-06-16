@@ -99,6 +99,7 @@ pytest tests/integration/ -v
 5. **KEI 沙箱是全局的** — `sys.addaudithook` 影响整个进程
 6. **Executor 是最复杂子系统** — 100+ 文件，修改前先读 `executor/engine.py` 入口
 7. **Cron Service 有独立 MCP** — `cron_service/mcp_server.py` (Hermes 集成)，不同于主 `mcp_server.py`
+   - 默认 stdio 模式，`--http` 启用 HTTP API 服务
 
 ## File Organization
 
