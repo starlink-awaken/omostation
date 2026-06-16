@@ -73,7 +73,7 @@ uv run pytest tests/ --ignore=tests/e2e -q    # 1165/1200 pass
 1. **server/mcp.py 是 God Module** (1,945行) — 拆分计划见 `docs/god-module-split-plan.md`
 2. **ecos/omo 依赖声明但无静态 import** — 通过 subprocess 交互
 3. **CI 忽略 e2e 测试** — `--ignore=tests/e2e`
-4. **端口**: HTTP :7422, Web :7430, SSE :7431, API :8080
+4. **端口**: HTTP :7422 (--http), SSE :7431 (--sse), API :8080. Web dashboard 收敛至 cockpit :8090
 
 ## BOS Services
 
