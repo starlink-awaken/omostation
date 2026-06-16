@@ -1,7 +1,6 @@
 """Tests for ecos OutputFormatter (standalone ANSI implementation)."""
 
 import json
-import sys
 
 import pytest
 
