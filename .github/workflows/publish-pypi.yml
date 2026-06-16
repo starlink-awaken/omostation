@@ -30,7 +30,6 @@ jobs:
           - forge
           - symphony-protocol
           - shared-lib
-          - llm-gateway
           - sshard-brain-bridge
           - engine-core
           - cron-service
