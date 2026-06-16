@@ -970,6 +970,23 @@ async def api_e2e():
     return load_e2e_status()
 
 
+# ── eCOS detailed routes ──────────────────────────────────────
+
+from web.governance import load_ecos_ssb_stats, load_ecos_watchdog
+
+
+@app.get("/api/ecos/ssb")
+async def api_ecos_ssb():
+    """SSB database statistics."""
+    return load_ecos_ssb_stats()
+
+
+@app.get("/api/ecos/watchdog")
+async def api_ecos_watchdog():
+    """Watchdog failure data."""
+    return load_ecos_watchdog()
+
+
 # ── OMO Self-healing routes ───────────────────────────────────
 
 from web.governance import load_healing_fixes, load_healing_status, load_healing_trends

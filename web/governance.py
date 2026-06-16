@@ -114,3 +114,39 @@ def load_healing_trends() -> dict:
         return engine._trends.get_trends()
     except Exception as e:
         return {"error": str(e)}
+
+
+def load_ecos_ssb_stats() -> dict:
+    """Load SSB database statistics."""
+    import sqlite3
+    ssb_db = Path.home() / "Workspace" / "data" / "kos" / "ssb.db"
+    if not ssb_db.exists():
+        return {"error": "DB not found", "total": 0, "signed": 0, "coverage_pct": 0}
+    try:
+        db = sqlite3.connect(str(ssb_db))
+        total = db.execute("SELECT COUNT(*) FROM ssb_events").fetchone()[0]
+        signed = db.execute(
+            "SELECT COUNT(*) FROM ssb_events WHERE agent_signature IS NOT NULL AND agent_signature != ''"
+        ).fetchone()[0]
+        max_seq = db.execute("SELECT MAX(seq) FROM ssb_events").fetchone()[0]
+        db.close()
+        return {
+            "total": total,
+            "signed": signed,
+            "coverage_pct": round(signed / total * 100, 1) if total > 0 else 0,
+            "max_seq": max_seq,
+        }
+    except Exception as e:
+        return {"error": str(e), "total": 0}
+
+
+def load_ecos_watchdog() -> dict:
+    """Load watchdog failure data."""
+    watchdog_file = Path.home() / ".hermes" / "ecos-watchdog" / "failures.json"
+    if not watchdog_file.exists():
+        return {"status": "no_data"}
+    try:
+        import json
+        return json.loads(watchdog_file.read_text(encoding="utf-8"))
+    except Exception as e:
+        return {"error": str(e)}
