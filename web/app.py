@@ -73,8 +73,8 @@ async def _auth_middleware(request: Request, call_next):
     if request.method in ("GET", "OPTIONS"):
         return await call_next(request)
 
-    # Allow login endpoint without auth
-    if request.url.path == "/api/auth/login":
+    # Allow auth endpoints without auth
+    if request.url.path in ("/api/auth/login", "/api/auth/logout"):
         return await call_next(request)
 
     # Check auth using unified module

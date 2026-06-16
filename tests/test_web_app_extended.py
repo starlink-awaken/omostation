@@ -563,3 +563,45 @@ class TestOmoHealingRoutes:
     def test_healing_trends(self, client):
         r = client.get("/api/omo/healing/trends")
         assert r.status_code == 200
+
+
+# ── Auth management routes ───────────────────────────────────────────────────
+
+
+class TestAuthRoutes:
+    def test_auth_status(self, client):
+        r = client.get("/api/auth/status")
+        assert r.status_code == 200
+        data = r.json()
+        assert "api_key_configured" in data
+
+    def test_login(self, client):
+        r = client.post(
+            "/api/auth/login",
+            json={"username": "test-user"},
+        )
+        assert r.status_code == 200
+        data = r.json()
+        assert "token" in data
+        assert "expires_at" in data
+
+    def test_login_no_username(self, client):
+        r = client.post(
+            "/api/auth/login",
+            json={},
+        )
+        assert r.status_code == 400
+
+    def test_logout(self, client):
+        # First login
+        r = client.post("/api/auth/login", json={"username": "test"})
+        token = r.json()["token"]
+
+        # Then logout
+        r = client.post("/api/auth/logout", json={"token": token})
+        assert r.status_code == 200
+
+    def test_logout_invalid_token(self, client):
+        r = client.post("/api/auth/logout", json={"token": "invalid"})
+        assert r.status_code == 200
+        assert r.json()["status"] == "not_found"
