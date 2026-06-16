@@ -1,0 +1,39 @@
+id: P45-W4-KAIRON-DEBUG-PANEL
+title: P45 W4 kairon 调试面板 (INTERFACE.yaml 25 packages) + cockpit 端点 P46 升级
+status: done
+task_type: verify
+risk_level: L0
+depends_on:
+- P45-W3-VERIFY-CONVERGENCE
+source_docs:
+- projects/kairon/INTERFACE.yaml (25 packages CLI)
+- e22d84da (5 阶段 第 4 阶段 kairon 调试面板)
+- P45 W3 retro (cockpit 端点 known issue)
+deliverables:
+- .omo/_knowledge/management/retrospective-2026-06-16-p45-w4.md
+- .omo/_knowledge/management/strategic-governance-p42.md
+imported_via: c2g bet
+context_uri: bos://memory/p45-w4-kairon-debug-panel
+allowed_operation_level: L0
+human_approval_required: false
+assigned_to: team-lead
+entry_gate: []
+evidence_required:
+- kairon INTERFACE.yaml 含 25 packages CLI (eidos/iris/kos/kronos/minerva/ontoderive/forge/codeanalyze/sot-bridge/protocols-layer/sophia/...)
+- 8081 kairon-internal 端口 (服务发现注入)
+- 'P45 W3 known issue 升级: cockpit /api/omos /api/ecos 端点 (注释 vs 代码) → P46 范围'
+test_plan:
+- grep 'name:' projects/kairon/INTERFACE.yaml | wc -l (期望 25)
+- grep 'kairon' protocols/port-registry.yaml | head -3
+metadata:
+  c2g_mechanism: radar + bet
+  phase: 45
+  wave: W4
+  category: governance-convergence
+  cockpit_endpoint_followup: 'P46 (架构级: cockpit 无 FastAPI app, 端点声明未 mount)'
+closed_at: '2026-06-16T06:15:35Z'
+closed_by: team-lead
+evidence: 'P45 W4 状态验证. kairon INTERFACE.yaml 25 packages CLI 完整 (eidos/iris/kos/kronos/minerva/ontoderive/forge/codeanalyze/sot-bridge/protocols-layer/sophia/...).
+  8081 kairon-internal 端口 (服务发现注入). P45 W3 cockpit 端点 known issue 升级: cockpit 无 FastAPI
+  app (grep ''FastAPI()'' 空), /governance/api.py router 没被 include, 端点声明未 mount →
+  P46 范围 (架构级: 需先建 FastAPI app, 然后 mount router).'

@@ -47,7 +47,7 @@ $ python3 bin/compass_radar.py
 | **BET-COMPASS-01** | cockpit `compass` 命名空间落地 | V1 效率 | 1 周 | 本规划 | ✅ P44 W3 |
 | **BET-RADAR-CRON** | radar 每日 cron + 健康分 SSOT | V1 效率 | 3 天 | BET-COMPASS-01 | ✅ P44 W0 |
 | **BET-GC-CRON** | gc 每周 cron + 债务路由 | V2 自治 | 3 天 | BET-RADAR-CRON | ✅ P44 W1 |
-| **BET-PLANNED-CLEANUP** | 60 planned → 30 | V1 效率 | 2 周 | BET-GC-CRON | ✅ P45 W3 (OMO/eCOS cockpit 收敛验证 + simplify 3, 0 fix) |
+| **BET-PLANNED-CLEANUP** | 60 planned → 30 | V1 效率 | 2 周 | BET-GC-CRON | ✅ P45 W4 (kairon 调试面板 + simplify 4, 0 fix) |
 | **BET-COMPASS-STANDALONE** | c2g 独立化为 `projects/compass` | V2 自治 | 1 月 | 全部前置 | 📋 P45 |
 
 **已完成**:
@@ -180,7 +180,26 @@ $ python3 bin/compass_radar.py
 
 **已知 issue**: cockpit /api/omos /api/eos 端点 (注释说 converged, 代码未实现) — W4 补
 
-## 12. P45 W4 计划 (下周)
+## 12. P45 W4 状态 (2026-06-16 完成)
+
+**W4 收口**: kairon 调试面板 (INTERFACE.yaml 25 packages) + simplify 4
+
+| 项 | 状态 | 关键 evidence |
+|----|:----:|------|
+| kairon INTERFACE.yaml 25 packages | ✅ | eidos/iris/kos/kronos/minerva/ontoderive/forge/codeanalyze/sot-bridge/protocols-layer/sophia/... |
+| 8081 kairon-internal 端口 | ✅ | 服务发现注入 |
+| P45 W4 任务落 | ✅ | P45-W4-KAIRON-DEBUG-PANEL |
+| **P45 W3 known issue 升级 P46** | ⚠️ 架构级 | cockpit 无 FastAPI app (grep 'FastAPI()' 空), governance router 未 mount → 需先建 app + mount router |
+| simplify 4 4 维度 | ✅ 0 fix | 第 5 轮连续 0 fix (诚实) |
+| 治理打分 (X1-X4) | ✅ | 综合 96/100 |
+
+**P46 范围 (新)**: cockpit 端点 follow-up
+- 创建 FastAPI app 实例 (dashboard_server.py)
+- mount governance router (prefix /governance)
+- 新增 omos/ecos router (prefix /api/omos, /api/ecos)
+- uvicorn 启动 + 端到端 curl 验证
+
+## 13. P45 W5 计划 (下周)
 
 | 任务 | 目标 | 风险 |
 |------|------|------|
