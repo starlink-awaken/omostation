@@ -1,14 +1,8 @@
 """FastAPI entry point for cron-service.
 
-Starts:
-  - FastAPI HTTP server (health, status, job management)
-  - Cron scheduler loop (in-process asyncio)
-
-MCP server runs separately for Hermes integration (stdio mode).
-
 Usage:
-  python -m runtime.cron_service.server              # HTTP + scheduler
-  python -m runtime.cron_service.server --mcp        # MCP stdio + scheduler (for Hermes)
+  python -m runtime.cron_service.server              # MCP stdio (default)
+  python -m runtime.cron_service.server --http       # HTTP + scheduler
   python -m runtime.cron_service.server --init-db    # Initialize database and exit
 """
 
