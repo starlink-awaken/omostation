@@ -47,7 +47,7 @@ $ python3 bin/compass_radar.py
 | **BET-COMPASS-01** | cockpit `compass` 命名空间落地 | V1 效率 | 1 周 | 本规划 | ✅ P44 W3 |
 | **BET-RADAR-CRON** | radar 每日 cron + 健康分 SSOT | V1 效率 | 3 天 | BET-COMPASS-01 | ✅ P44 W0 |
 | **BET-GC-CRON** | gc 每周 cron + 债务路由 | V2 自治 | 3 天 | BET-RADAR-CRON | ✅ P44 W1 |
-| **BET-PLANNED-CLEANUP** | 60 planned → 30 | V1 效率 | 2 周 | BET-GC-CRON | ✅ P44 W4 (6 archive + 5 review-queue, planned 60→55, archived 6) |
+| **BET-PLANNED-CLEANUP** | 60 planned → 30 | V1 效率 | 2 周 | BET-GC-CRON | ✅ P44 W5 (review-queue 闭环: 3 approved + 1 needs-changes) |
 | **BET-COMPASS-STANDALONE** | c2g 独立化为 `projects/compass` | V2 自治 | 1 月 | 全部前置 | 📋 P45 |
 
 **已完成**:
@@ -122,7 +122,20 @@ $ python3 bin/compass_radar.py
 
 **关键变化**: c2g 从硬编码 import omo → 改走 BOS URI 调 omo validate_task 端点, 这是 Decoupling-Audit 中期方案落地。
 
-## 8. P44 W5 计划 (下周)
+## 8. P44 W5 状态 (2026-06-16 完成)
+
+**W5 收口**: review-queue 闭环 (5 open debts 走 review)
+
+| 项 | 状态 | 关键 evidence |
+|----|:----:|------|
+| 4 review-queue 走 review | ✅ | 3 approved + 1 needs-changes (DEBT-OPC-P4-BUDGET) |
+| 3 approved 与 items closed 一致 | ✅ | X4 一致性 |
+| 1 needs-changes 留 W6 | ✅ | DEBT-OPC-P4-BUDGET (llm-gateway budget policy 修) |
+| 治理打分 (X1-X4) | ✅ | 综合 94/100 |
+
+**关键发现**: 3 approved 实际 items 已 lifecycle_state=closed (历史 close), review-queue 走 review 是状态同步。1 needs-changes 是真待办 (budget policy 没修)。
+
+## 9. P44 W6 计划 (下周)
 
 | 任务 | 目标 | 风险 |
 |------|------|------|

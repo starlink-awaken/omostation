@@ -1,0 +1,16 @@
+debt_id: DEBT-OPC-P4-BUDGET-STRESS-TEST-BUDGET-042303
+task_id: null
+owner: team-lead
+reviewers:
+- cockpit-team
+- omo-team
+status: needs-changes
+created_at: '2026-06-16T05:27:32Z'
+priority: P2
+source_file: /Users/xiamingxing/Workspace/.omo/debt/items/DEBT-OPC-P4-BUDGET-STRESS-TEST-BUDGET-042303.yaml
+severity: medium
+verdict: needs-changes
+reviewer: team-lead
+reviewed_at: '2026-06-16T05:55:00Z'
+reason: items.yaml.lifecycle_state=open. 需 review 后 close
+next_action: '重新评估: Increase budget or select a cheaper model.'
