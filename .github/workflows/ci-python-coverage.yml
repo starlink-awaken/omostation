@@ -1,0 +1,23 @@
+name: python-coverage-ci
+# P47 E: 给 7 个无 CI 的 Python 项目补回归保护 (matrix, 1 文件最 DRY).
+# 首次跑可能暴露历史 test fail / 跨项目依赖问题 (如 omo→runtime) — 诚实暴露非回归.
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: ${{ matrix.pkg }}
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg: [omo, omo-debt, c2g, model-driven, l4-kernel, aetherforge, bus-foundation]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v3
+      - name: pytest
+        run: cd projects/${{ matrix.pkg }} && uv run pytest -q

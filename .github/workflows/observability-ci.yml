@@ -1,0 +1,15 @@
+name: observability-ci
+# P47 E: observability 是纯 docker-compose (Langfuse, 无代码). CI = compose config 语法校验.
+# 不跑容器 (省资源), 只验证 docker-compose.yml 合法.
+on: [push, pull_request]
+
+jobs:
+  validate:
+    name: observability compose config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: docker compose config -q (语法校验)
+        run: cd projects/observability && docker compose config -q

@@ -52,3 +52,12 @@ repos:
         # 触发场景: 修改 .omo/state/system.yaml 或 .omo/state/health.yaml 时
         # 校验: 引用路径存在 + 数值一致 + 24h 内生成
         # 刷新: python3 bin/compass_radar.py
+      - id: port-hardcode-check
+        name: port hardcode check (端口必须在 protocols/port-registry.yaml)
+        entry: python3 scripts/check-vault-paths.py --check-ports
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        # P47: 端口 enforce 从 .git/hooks/pre-commit (shell, 仅本地) 提升到 framework
+        # (pre-commit run + CI + 新 clone 都拦). 复用 scripts/check-vault-paths.py.
+        # 历史已知: kairon minerva 8765 + ontoderive 8080 (baseline 容忍).

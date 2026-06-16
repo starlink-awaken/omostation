@@ -1,0 +1,21 @@
+name: task-schema-enforce
+# P47 A2: 任务 schema enforce (声明/执行鸿沟收口).
+# 复用 omo governance audit (omo/cli.py:122 → omo_audit.governance_main).
+# 检查 .omo/tasks/ YAML 7 规则 (deliverables 文件路径等).
+on: [push, pull_request]
+
+jobs:
+  audit:
+    name: omo governance audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install uv
+        run: pip install --quiet uv
+      - name: Run omo governance audit
+        # 检查任务 YAML: deliverables 必须文件路径, gate_status 单一字段, 等 7 规则.
+        # 注: 首次可能因 baseline 漂移 warning (omo logs audit 有 baseline 机制).
+        run: uv run --directory projects/omo python -m omo.cli governance audit

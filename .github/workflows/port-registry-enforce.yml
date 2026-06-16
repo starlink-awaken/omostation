@@ -1,0 +1,17 @@
+name: port-registry-enforce
+# P47 A1: 端口硬编码 enforce (声明/执行鸿沟收口).
+# 复用 scripts/check-vault-paths.py --check-ports (与本地 pre-commit 同一检查).
+# 任何代码硬编码端口不在 protocols/port-registry.yaml → CI fail.
+on: [push, pull_request]
+
+jobs:
+  check:
+    name: port hardcode check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Run port hardcode check
+        run: python3 scripts/check-vault-paths.py --check-ports

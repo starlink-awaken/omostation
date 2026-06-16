@@ -1,0 +1,19 @@
+name: family-hub-ci
+# P47 E: family-hub 双栈 (TS 前端 App.tsx + Python family_hub 包). CI 跑 Python tests/.
+# TS 前端 vite build 留后续 (需前端构建链配置).
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: family-hub pytest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v3
+      - name: pytest (family_hub Python 包)
+        run: cd projects/family-hub && uv run pytest -q
