@@ -29,6 +29,7 @@ cockpit = "cockpit.cli:main"
 agent-runtime = "cockpit.agent_runtime_cli:main"
 cockpit-mcp = "cockpit.scripts.cockpit_mcp:main"  # MCP stdio server
 cockpit-dashboard = "cockpit.dashboard_server:main"  # Web dashboard
+cockpit-compass = "cockpit.commands.compass:main"
 
 [project.urls]
 Homepage = "https://github.com/starlink-awaken/omostation"
