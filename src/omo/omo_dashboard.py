@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 OMO_DIR = Path(os.environ.get("OMO_DIR", str(Path.home() / "Workspace" / ".omo")))
+_OMO_DASHBOARD_API_KEY = os.environ.get("OMO_DASHBOARD_API_KEY", "")
 
 
 def _load_json(path: Path) -> dict:
@@ -96,7 +97,21 @@ def cmd_dashboard_serve(port: int) -> int:
     from http.server import HTTPServer, BaseHTTPRequestHandler
 
     class DashboardHandler(BaseHTTPRequestHandler):
+        def _check_auth(self) -> bool:
+            if not _OMO_DASHBOARD_API_KEY:
+                return True
+            auth = self.headers.get("Authorization", "")
+            if auth.startswith("Bearer ") and auth[len("Bearer "):] == _OMO_DASHBOARD_API_KEY:
+                return True
+            self.send_response(401)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(b'{"error":"unauthorized"}')
+            return False
+
         def do_GET(self) -> None:
+            if not self._check_auth():
+                return
             if self.path == "/health":
                 self.send_response(200)
                 self.end_headers()
