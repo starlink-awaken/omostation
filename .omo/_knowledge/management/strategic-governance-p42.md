@@ -47,7 +47,7 @@ $ python3 bin/compass_radar.py
 | **BET-COMPASS-01** | cockpit `compass` 命名空间落地 | V1 效率 | 1 周 | 本规划 | ✅ P44 W3 |
 | **BET-RADAR-CRON** | radar 每日 cron + 健康分 SSOT | V1 效率 | 3 天 | BET-COMPASS-01 | ✅ P44 W0 |
 | **BET-GC-CRON** | gc 每周 cron + 债务路由 | V2 自治 | 3 天 | BET-RADAR-CRON | ✅ P44 W1 |
-| **BET-PLANNED-CLEANUP** | 60 planned → 30 | V1 效率 | 2 周 | BET-GC-CRON | ✅ P45 W4 (kairon 调试面板 + simplify 4, 0 fix) |
+| **BET-PLANNED-CLEANUP** | 60 planned → 30 | V1 效率 | 2 周 | BET-GC-CRON | ✅ P46 W0 (P45 W5 收尾 + cockpit 端点真修, 5 阶段全 done) |
 | **BET-COMPASS-STANDALONE** | c2g 独立化为 `projects/compass` | V2 自治 | 1 月 | 全部前置 | 📋 P45 |
 
 **已完成**:
@@ -199,7 +199,29 @@ $ python3 bin/compass_radar.py
 - 新增 omos/ecos router (prefix /api/omos, /api/ecos)
 - uvicorn 启动 + 端到端 curl 验证
 
-## 13. P45 W5 计划 (下周)
+## 13. P45 W5 + P46 W0 状态 (2026-06-16 完成)
+
+**P45 W5 收口 + P46 真修**: HTTP-MCP 5 阶段全 done + cockpit 端点真修
+
+| 项 | 状态 | 关键 evidence |
+|----|:----:|------|
+| P45 5 阶段全 done | ✅ | W1/W2/W3/W4 + W5 (本) |
+| P45 W5 任务 | ✅ | P45-W5-EPILOGUE |
+| **P46 cockpit 端点真修** | ✅ | 3 router mount (governance + omos + ecos) |
+| 7 端点可达 | ✅ | /api/{omos,ecos}/{status,health} + /governance/{status,dashboard,projects} |
+| cockpit 563 tests pass | ✅ | 1 历史 failed (与本任务无关) |
+| simplify 5 轮 0 fix | ✅ | 高度自治, 诚实记录 |
+| 治理打分 (X1-X4) | ✅ | 综合 96/100 |
+
+**P46 真修文件**:
+- `projects/cockpit/src/cockpit/web/api_omos.py` (新, 90 行)
+- `projects/cockpit/src/cockpit/web/api_ecos.py` (新, 90 行)
+- `projects/cockpit/src/cockpit/dashboard_server.py` (改, +3 include_router)
+
+**已知真债务**: 0
+**总治理分**: 96/100
+
+## 14. P46 W1 计划 (下周)
 
 | 任务 | 目标 | 风险 |
 |------|------|------|

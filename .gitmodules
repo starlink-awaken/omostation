@@ -39,9 +39,6 @@
 [submodule "projects/omo-debt"]
 	path = projects/omo-debt
 	url = https://github.com/starlink-awaken/omo-debt.git
-[submodule "projects/swarm-engine"]
-	path = projects/swarm-engine
-	url = https://github.com/starlink-awaken/omostation-swarm-engine.git
 [submodule "projects/aetherforge"]
 	path = projects/aetherforge
 	url = https://github.com/starlink-awaken/omostation-aetherforge.git
