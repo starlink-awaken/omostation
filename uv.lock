@@ -16,14 +16,18 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "click", marker = "extra == 'legacy'", specifier = ">=8.1.0" },
     { name = "fastmcp", specifier = ">=3.4" },
+    { name = "gitpython", marker = "extra == 'legacy'", specifier = ">=3.1.0" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "pydantic", specifier = ">=2.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "pyyaml", specifier = ">=6.0" },
+    { name = "rich", marker = "extra == 'legacy'", specifier = ">=13.0.0" },
     { name = "structlog", specifier = ">=24.0" },
+    { name = "tabulate", marker = "extra == 'legacy'", specifier = ">=0.9.0" },
 ]
-provides-extras = ["dev"]
+provides-extras = ["dev", "legacy"]
 
 [[package]]
 name = "agora"
