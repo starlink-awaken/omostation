@@ -18,6 +18,7 @@ import argparse
 import json
 import os
 import subprocess
+import warnings
 import sys
 from pathlib import Path
 
@@ -288,6 +289,11 @@ def cmd_status() -> int:
 # ─── Main ───────────────────────────────────────────────────────────────────
 
 def main(argv: list[str] | None = None) -> int:
+    warnings.warn(
+        "runtime CLI 为内部程序接口。人类用户请使用 cockpit。",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     parser = argparse.ArgumentParser(
         prog="runtime",
         description="eCOS Runtime Layer — infrastructure management",

@@ -11,7 +11,7 @@ log = logging.getLogger("runtime.executor")
 DEFAULT_MODEL = "deepseek-v4-flash"
 
 # ── 端口 ──────────────────────────────────────────────────────────────────────
-AGENT_RUNTIME_PORT = int(os.environ.get("AGENT_RUNTIME_PORT", "9876"))
+# AGENT_RUNTIME_PORT removed — agent-runtime was archived, replaced by runtime executor
 
 # ── HTTP 认证 ─────────────────────────────────────────────────────────────────
 AUTH_TOKEN = os.environ.get("AGENT_RUNTIME_AUTH_TOKEN") or ""
@@ -29,7 +29,7 @@ ALLOWED_PATHS = [
     Path.home() / ".hermes",
     Path.home() / ".workspace",
     Path.home() / ".kos",
-    Path.home() / ".omo",
+    Path.home() / "Workspace" / ".omo",
 ]
 
 # ── 执行日志 ──────────────────────────────────────────────────────────────────
@@ -89,7 +89,7 @@ def _query_registry_field(known_names: list[str], field: str) -> str | None:
 # ── MCP 端点（优先级：Forge registry > env var > 硬编码默认值）────────────
 _MCP_SERVICE_NAMES = {
     "agora": ["agora-mcp", "agora-dashboard", "agora"],
-    "kos": ["bos-daemon", "kos-mcp", "kos", "sharedbrain-bos"],
+    "kos": ["bos-daemon", "kos-mcp", "kos"],  # sharedbrain-bos移除(废弃)
     "minerva": ["minerva"],
 }
 

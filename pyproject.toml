@@ -48,4 +48,5 @@ asyncio_mode = "auto"
 [dependency-groups]
 dev = [
     "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
 ]

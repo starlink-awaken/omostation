@@ -20,7 +20,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastmcp import FastMCP
 
@@ -57,6 +57,18 @@ async def lifespan(app: FastAPI):
 # ── FastAPI app ────────────────────────────────────────────────────
 
 app = FastAPI(title="cron-service", version="1.0.0", lifespan=lifespan)
+
+_CRON_SERVICE_API_KEY = os.environ.get("CRON_SERVICE_API_KEY", "")
+
+
+@app.middleware("http")
+async def _check_api_key(request: Request, call_next):
+    """Check Bearer token if CRON_SERVICE_API_KEY is set (skip /health)."""
+    if _CRON_SERVICE_API_KEY and request.url.path != "/health":
+        auth = request.headers.get("Authorization", "")
+        if not (auth.startswith("Bearer ") and auth[len("Bearer "):] == _CRON_SERVICE_API_KEY):
+            return JSONResponse({"error": "unauthorized"}, status_code=401)
+    return await call_next(request)
 
 
 @app.get("/health")
