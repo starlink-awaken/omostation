@@ -3,7 +3,7 @@ type: Component
 subtype: BOSRoute
 name: bos://kairon/llm-gateway-kernel
 description: "Kairon \u5B50\u5305: llm-gateway-kernel"
-status: active
+status: archived
 domain: infra
 created: '2026-06-06'
 version: 1.0.0

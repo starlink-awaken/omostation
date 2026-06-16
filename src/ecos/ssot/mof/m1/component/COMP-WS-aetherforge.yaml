@@ -13,8 +13,22 @@ created: '2026-06-15'
 version: 1.0.0
 layer: L-
 properties:
-  layer: L-
+  layer: X
   runtime: active
   has_pyproject: true
   has_package_json: false
   has_tests: true
+  capabilities:
+    - llm_gateway:
+        description: Unified LLM provider abstraction (migrated from llm-gateway)
+        entrypoint: packages/gateway/src/llm_gateway
+        status: active
+        legacy_path: packages/gateway/src/llm_gateway/_legacy
+    - compute_mesh:
+        description: Compute discovery / aggregation / scheduling
+        entrypoint: packages/mesh/src/compute_mesh
+        status: scaffold
+    - swarm:
+        description: Multi-agent task orchestration
+        entrypoint: packages/swarm/src/swarm_engine
+        status: active

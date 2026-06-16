@@ -27,7 +27,7 @@ properties:
     - "CR-MCP-LAZY-01: 所有 Agora ProxyManager 必须按需加载 (lazy=True) 以避免启动死锁"
     - "CS-10: BOS URI 注册必须包含 domain 和 cross_references.realized_by 元数据"
     - "CR-VIBEOPS-01: 混合裁判测试必须使用 @pytest.mark.vibeops 隔离"
-    - "CR-VIBEOPS-02: LLM 裁判发包必须强制路由回 bos://capability/llm-gateway 计费网关"
+    - "CR-VIBEOPS-02: LLM 裁判发包必须强制路由回 bos://capability/forge/gateway 计费网关 (原 bos://capability/llm-gateway 已并入 aetherforge)"
     - "CR-RBAC-01: Generator 角色无权访问 bos://capability/evaluator 裁判域"
     - "CR-ADMISSION-01: Agora 路由注册前必须通过 metaos.evaluate_admission 准入审查"
     - "CR-C2G-01: 所有 OMO Planned Task 必须持有合法的 context_uri，指向设计的不可变契约或 Fast-Track 锚点。"

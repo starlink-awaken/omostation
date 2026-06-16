@@ -1,18 +1,23 @@
-id: BOSROUTE-KAIRON-llm-gateway
+id: BOSROUTE-AETHERFORGE-llm-gateway
 type: Component
 subtype: BOSRoute
-name: bos://kairon/llm-gateway
-description: "Kairon \u5B50\u5305: llm-gateway"
+name: bos://capability/forge/gateway
+description: "AetherForge gateway package: unified LLM provider abstraction"
 status: active
-domain: infra
+domain: capability
 created: '2026-06-06'
-version: 1.0.0
-layer: L2
+updated: '2026-06-16'
+version: 2.0.0
+layer: X
 properties:
-  layer: L2
+  layer: X
   runtime: active
   protocol: BOS_URI
+  deprecated_aliases:
+    - bos://kairon/llm-gateway
 cross_references:
   realized_by:
-    project: kairon
+    project: aetherforge
     entrypoint: packages/gateway/
+  replaces:
+    - BOSROUTE-KAIRON-llm-gateway
