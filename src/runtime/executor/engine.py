@@ -44,8 +44,8 @@ def _runtime_required_capabilities(tools: list[dict] | None = None) -> list[str]
 
 
 def _resolve_llm_provider_and_model(requested_model: str | None, tools: list[dict] | None = None) -> tuple[Any | None, str | None, dict[str, Any]]:
-    from llm_gateway.detection import detect_backends
-    from llm_gateway.registry_data_loader import route_role_request
+    from llm_gateway._legacy.detection import detect_backends
+    from llm_gateway._legacy.registry_data_loader import route_role_request
 
     providers = [provider for provider in detect_backends() if getattr(provider, "provider_name", "") != "none"]
     route_role = _runtime_role_for_llm(tools)
@@ -206,8 +206,8 @@ class AgentRuntime:
         """调用 LLM API。使用 llm_gateway 统一网关。"""
         import asyncio
 
-        from llm_gateway.audit import record_llm_audit
-        from llm_gateway.provider import LLMRequest, ToolSchema
+        from llm_gateway._legacy.audit import record_llm_audit
+        from llm_gateway._legacy.provider import LLMRequest, ToolSchema
 
         provider, requested_model, route_info = _resolve_llm_provider_and_model(self.model, tools=tools)
         if provider is None:
