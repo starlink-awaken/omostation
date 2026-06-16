@@ -1,20 +1,24 @@
 id: "RUNTIME-CRON-SERVICE"
 type: "Component"
 name: "Runtime Cron Service"
-description: "定时任务调度器 — 管理 30+ 定时任务，支持 cron 表达式和间隔语法"
+description: "定时任务调度器 — 管理 30+ 定时任务，支持 cron 表达式和间隔语法。默认 stdio MCP 模式，HTTP 需 --http 标志。"
 status: "active"
 domain: "meta"
 layer: "L1"
 created: "2026-06-09"
-version: "1.0.0"
+updated: "2026-06-16"
+version: "1.1.0"
 properties:
   layer: "L1"
   runtime: "active"
   port: 7450
   protocol: "MCP"
+  transport_default: stdio
+  transport_http: "--http flag, port 7450"
   capabilities:
     - "cron 表达式解析"
     - "定时任务调度 (30+ jobs)"
     - "执行历史追踪"
-    - "MCP 管理接口"
+    - "MCP 管理接口 (stdio)"
+  convergence_note: "Default changed from HTTP to stdio MCP; --http flag for HTTP mode"
 source: "runtime/cron_service/scheduler.py"
