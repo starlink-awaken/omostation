@@ -7,6 +7,7 @@ All CoreService dependencies removed; uses standalone classes.
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
 from typing import Any
 
@@ -18,6 +19,8 @@ from .models import (
     TransitionCondition,
     TransitionResult,
 )
+
+_AGORA_API_URL = os.environ.get("AGORA_API_URL", "http://127.0.0.1:8080")
 
 logger = logging.getLogger(__name__)
 
@@ -226,7 +229,7 @@ class SymphonyStateMachine:
             import httpx
 
             httpx.post(
-                "http://127.0.0.1:8080/v1/tools/call",
+                f"{_AGORA_API_URL}/v1/tools/call",
                 json={
                     "name": "append_ssb_log",
                     "arguments": {
