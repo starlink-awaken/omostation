@@ -37,6 +37,21 @@ class MetacognitionRequest(BaseModel):
     command: str = "baseline"
     lens: Optional[str] = None  # X1, X2, X3, or None/empty for all
 
+class ValidateTaskRequest(BaseModel):
+    task_data: dict
+    group: Optional[str] = "planned"
+
+@mcp.tool()
+async def validate_task(req: ValidateTaskRequest) -> str:
+    """Validate a task data dict against the OMO task schema. Returns {"valid": bool, "errors": [...]}."""
+    try:
+        from .omo_task_schema import validate_task_data
+
+        errors = validate_task_data(req.task_data, group=req.group)
+        return json.dumps({"valid": len(errors) == 0, "errors": errors}, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"valid": False, "errors": [str(e)]}, ensure_ascii=False)
+
 @mcp.tool()
 async def omo_bridge(req: BridgeRequest) -> str:
     """Import a markdown spec into OMO tasks."""

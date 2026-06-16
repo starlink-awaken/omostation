@@ -124,6 +124,45 @@ def cmd_dashboard_serve(port: int) -> int:
             self.end_headers()
             self.wfile.write(html.encode("utf-8"))
 
+        def do_POST(self) -> None:
+            if not self._check_auth():
+                return
+            if self.path == "/omo/validate-task":
+                import json
+
+                content_length = int(self.headers.get("Content-Length", 0))
+                body = self.rfile.read(content_length) if content_length > 0 else b"{}"
+                try:
+                    task_data = json.loads(body)
+                except json.JSONDecodeError:
+                    self.send_response(400)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(b'{"valid":false,"errors":["invalid JSON"]}')
+                    return
+
+                try:
+                    import sys
+                    from pathlib import Path as P2
+                    src_path = str(P2(__file__).resolve().parents[1])
+                    if src_path not in sys.path:
+                        sys.path.insert(0, src_path)
+                    from omo.omo_task_schema import validate_task_data
+                    errors = validate_task_data(task_data, group="planned")
+                    result = json.dumps({"valid": len(errors) == 0, "errors": errors}, ensure_ascii=False)
+                except Exception as e:
+                    result = json.dumps({"valid": False, "errors": [str(e)]}, ensure_ascii=False)
+
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(result.encode("utf-8"))
+                return
+
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write(b'{"error":"not found"}')
+
         def log_message(self, fmt, *args):
             sys.stderr.write(f"[dashboard] {args[0]} {args[1]} {args[2]}\n")
 
