@@ -99,6 +99,16 @@ button:focus-visible,input:focus-visible{border-color:var(--accent);box-shadow:0
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* Phase 7: Spine Visuals */
+.spine-radar { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1.25rem; }
+.node-card { background: rgba(255,255,255,0.02); border-radius: var(--radius-sm); padding: 1rem; border: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; }
+.node-status { width: 10px; height: 10px; border-radius: 50%; }
+.node-online { background: var(--success); box-shadow: 0 0 8px var(--success); }
+.node-offline { background: var(--danger); }
+.memory-result-item { padding: 0.75rem; border-bottom: 1px solid var(--border); }
+.memory-result-item:last-child { border-bottom: none; }
+.source-tag { font-size: 0.65rem; padding: 0.15rem 0.4rem; border-radius: 4px; background: var(--accent-glow); color: var(--accent); margin-right: 0.5rem; }
+
 /* Modal */
 .modal-overlay{
   display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;
@@ -362,6 +372,32 @@ textarea.mono-input:focus{outline:none;border-color:var(--border-active)}
   </div>
 </div>
 
+<!-- 🧠 Memory Spine: Unified Knowledge Explorer -->
+<div class="card" style="grid-column:1/-1">
+  <div class="card-header">
+    <h2>🧠 记忆脊 · 全域知识检索</h2>
+    <span class="card-badge live">Canonical Search</span>
+  </div>
+  <div class="form-inline mb-1">
+    <input type="text" id="memory-query" placeholder="输入关键词检索 KOS + gbrain + Vault..." style="flex:1">
+    <button type="button" class="btn-primary" onclick="knowledgeSearch()">🔍 全域检索</button>
+  </div>
+  <div class="output-panel" id="memory-output" style="max-height:400px">
+    <div class="empty-state">等待检索指令...</div>
+  </div>
+</div>
+
+<!-- 📡 Swarm Spine: Node Radar -->
+<div class="card" style="grid-column:1/-1">
+  <div class="card-header">
+    <h2>📡 蜂群脊 · 分布式雷达</h2>
+    <span class="card-badge" id="swarm-badge">正在探测</span>
+  </div>
+  <div class="spine-radar" id="swarm-nodes">
+    <div class="empty-state">未发现远程节点。</div>
+  </div>
+</div>
+
 <!-- 最近研究 -->
 <div class="card" style="grid-column:1/-1">
   <div class="card-header">
@@ -500,6 +536,82 @@ async function loadCompute(){
     computeSnapshot = data;
     renderCompute(data);
   }catch(e){}
+}
+
+/* Phase 7: Spine Logic */
+async function loadGovernance(){
+  try{
+    const r = await fetch(API+'/v1/governance');
+    const d = await r.json();
+    
+    // 1. Render Swarm Radar
+    const swarm = d.swarm || {};
+    const nodes = swarm.nodes || [];
+    document.getElementById('swarm-badge').textContent = nodes.length > 0 ? `${nodes.length} Nodes Active` : '探测中';
+    document.getElementById('swarm-badge').className = 'card-badge' + (nodes.length > 0 ? ' live' : '');
+    
+    const container = document.getElementById('swarm-nodes');
+    if(!nodes.length){
+      container.innerHTML = '<div class="empty-state">未发现远程节点。</div>';
+    } else {
+      container.innerHTML = nodes.map(n => `
+        <div class="node-card">
+          <div class="node-status node-online"></div>
+          <div style="flex:1">
+            <div style="color:var(--text-bright);font-weight:600">${n.node_id}</div>
+            <div class="text-dim">${n.role} · ${n.host}:${n.port}</div>
+            <div style="font-size:0.7rem;color:var(--accent)">${n.bos_uris.length} URIs</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 2. Sync Compute Telemetry (Live from Quota Ledger)
+    const comp = d.compute || {};
+    if(comp.status === 'ok'){
+      document.getElementById('compute-remaining-ratio').textContent = 
+        comp.remaining_ratio !== null ? Math.round(comp.remaining_ratio * 100) + '%' : '—';
+      document.getElementById('compute-total-cost').textContent = formatUsd(comp.total_spent_usd || 0);
+    }
+  }catch(e){}
+}
+
+async function knowledgeSearch(){
+  const query = document.getElementById('memory-query').value.trim();
+  if(!query) return;
+  
+  const o = document.getElementById('memory-output');
+  o.innerHTML = '<div class="spinner"></div> 正在跨域检索全域知识...';
+  
+  try{
+    const r = await fetch(API+'/knowledge/search', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({query})
+    });
+    const d = await r.json();
+    const res = d.result || {};
+    const hits = res.results || [];
+    
+    if(!hits.length){
+      o.innerHTML = '<div class="empty-state">未找到相关结果。</div>';
+      return;
+    }
+    
+    o.innerHTML = hits.map(h => `
+      <div class="memory-result-item">
+        <div class="mb-1">
+          <span class="source-tag">${h._source || 'unknown'}</span>
+          <strong style="color:var(--text-bright)">${escapeHtml(h.title || h.fact || 'Fact')}</strong>
+        </div>
+        <div class="text-dim" style="font-size:0.8rem">${escapeHtml(h.snippet || h.summary || '')}</div>
+        ${h.path ? `<div style="font-size:0.7rem;color:var(--accent);margin-top:0.25rem">${h.path}</div>` : ''}
+      </div>
+    `).join('');
+    
+  }catch(e){
+    o.innerHTML = `<span class="err">检索失败: ${e.message}</span>`;
+  }
 }
 
 function renderCompute(data){
@@ -858,9 +970,11 @@ async function publishEvent(){
 refresh();
 loadCompute();
 loadEvents();
+loadGovernance();
 let wsTimer = setInterval(refresh, 5000);
 setInterval(loadCompute, 30000);
 setInterval(loadEvents, 10000);
+setInterval(loadGovernance, 10000);
 
 /* ── WebSocket 实时推送 ─────────────────────────────────── */
 const WS_URL = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws';

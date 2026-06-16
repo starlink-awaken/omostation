@@ -48,6 +48,14 @@ if TYPE_CHECKING:
     from agora.a2a.task_manager import TaskManager  # type: ignore[import-not-found]
 
 FORMAT_VERSION = "agora-v1"
+# Auth configuration
+from web.auth import (
+    create_session,
+    extract_auth_from_request,
+    get_auth_status,
+    revoke_session,
+)
+
 API_KEY = os.environ.get("AGORA_API_KEY", "")
 
 
@@ -60,17 +68,29 @@ def _error_resp(message: str, status_code: int = 400) -> JSONResponse:
 
 
 async def _auth_middleware(request: Request, call_next):
-    """Simple API Key auth for write endpoints."""
+    """Unified auth middleware — supports API key, Bearer token, session cookie."""
     # Allow read-only and preflight without auth
     if request.method in ("GET", "OPTIONS"):
         return await call_next(request)
-    # Fail-closed: reject writes when no API key configured
-    if not API_KEY:
-        return _error_resp("Unauthorized: AGORA_API_KEY not configured", 401)
-    key = request.headers.get("X-API-Key", "")
-    if key != API_KEY:
+
+    # Allow login endpoint without auth
+    if request.url.path == "/api/auth/login":
+        return await call_next(request)
+
+    # Check auth using unified module
+    auth_info = extract_auth_from_request(request)
+    if auth_info["valid"]:
+        return await call_next(request)
+
+    # Fallback: check legacy API_KEY (for backward compatibility)
+    if API_KEY:
+        key = request.headers.get("X-API-Key", "")
+        if key == API_KEY:
+            return await call_next(request)
         return _error_resp("Unauthorized", 401)
-    return await call_next(request)
+
+    # Fail-closed: reject writes when no API key configured
+    return _error_resp("Unauthorized: AGORA_API_KEY not configured", 401)
 
 
 @asynccontextmanager
@@ -522,13 +542,19 @@ async def api_knowledge_put(request_data: dict):
 
 @app.post("/api/knowledge/search")
 async def api_knowledge_search(request_data: dict):
-    pm = await get_proxy_manager()
     query = request_data.get("query")
     if not query:
         return _error_resp("query is required", 400)
 
     try:
-        res = await pm.dispatch("gbrain.search", {"query": query})
+        from agora.mcp.bos_resolver import resolve_bos_uri
+
+        # 使用全域聚合搜索 URI
+        uri = "bos://memory/local/all-search"
+        # 传递当前活跃的 ProxyManager 实例以支持跨节点 Swarm 搜索
+        pm = await get_proxy_manager()
+
+        res = await resolve_bos_uri(uri, {"query": query, "limit": 10}, proxy_manager=pm)
         return {"status": "ok", "result": res}
     except Exception as e:
         return _error_resp(str(e), 500)
@@ -1120,12 +1146,50 @@ async def api_v1_status():
 @app.get("/api/v1/governance")
 async def api_v1_governance():
     """Unified governance data (API v1)."""
+    from web.governance import load_compute_telemetry, load_ecos_status, load_omo_status, load_swarm_radar
     return {
         "version": "v1",
         "omo": load_omo_status(),
         "ecos": load_ecos_status(),
+        "swarm": load_swarm_radar(),
+        "compute": load_compute_telemetry(),
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
+
+
+# ── Auth management routes ────────────────────────────────────
+
+
+@app.get("/api/auth/status")
+async def api_auth_status():
+    """Get authentication status."""
+    return get_auth_status()
+
+
+@app.post("/api/auth/login")
+async def api_auth_login(request: Request):
+    """Create a new session (login)."""
+    body = await request.json()
+    username = body.get("username", "")
+
+    # Simple auth check (in production, use proper user management)
+    if not username:
+        return _error_resp("Username required", 400)
+
+    session = create_session(user=username)
+    return {"status": "ok", "token": session["token"], "expires_at": session["expires_at"]}
+
+
+@app.post("/api/auth/logout")
+async def api_auth_logout(request: Request):
+    """Revoke a session (logout)."""
+    body = await request.json()
+    token = body.get("token", "")
+    if not token:
+        return _error_resp("Token required", 400)
+
+    ok = revoke_session(token)
+    return {"status": "ok" if ok else "not_found"}
 
 
 # ── CLI entry ──────────────────────────────────────────────────

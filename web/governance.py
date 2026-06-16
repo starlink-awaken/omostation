@@ -212,3 +212,42 @@ def load_l4kernel_status() -> dict:
         return {"capabilities": reg.list_all(), "status": "ok"}
     except Exception as e:
         return {"status": "unavailable", "error": str(e)}
+
+
+def load_swarm_radar() -> dict:
+    """[Phase 7] Load real-time Swarm topology (cached 10s)."""
+    return _cached("swarm_radar", _load_swarm_radar_impl, ttl=10)
+
+
+def _load_swarm_radar_impl() -> dict:
+    try:
+        from agora.mcp.swarm import get_swarm
+        swarm = get_swarm()
+        return {
+            "node_id": swarm.node_id,
+            "role": swarm.role,
+            "nodes": [n.to_dict() for n in swarm._nodes.values()],
+            "status": "ok",
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+def load_compute_telemetry() -> dict:
+    """[Phase 7] Load real-time LLM budget/quota metrics (cached 30s)."""
+    return _cached("compute_telemetry", _load_compute_telemetry_impl, ttl=30)
+
+
+def _load_compute_telemetry_impl() -> dict:
+    try:
+        # Re-use the existing LLM-GATEWAY logic now in aetherforge
+        from llm_gateway._legacy.quota_ledger import summarize_quota_ledger
+        summary = summarize_quota_ledger({})
+        return {
+            "remaining_usd": summary.get("effective_remaining_budget_usd"),
+            "remaining_ratio": summary.get("effective_remaining_ratio"),
+            "total_spent_usd": summary.get("total_spent_usd", 0.0),
+            "status": "ok",
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
