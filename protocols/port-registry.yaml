@@ -1,5 +1,6 @@
 ports:
   3100: mcp-stdio
+  9290: llm-gateway-http    # LLM 统一算力调度 HTTP (FastAPI, L0) — aetherforge + compute-mesh 共用
   3101: mcp-stdio-alt
   7422: agora-mcp-http
   7431: agora-mcp-sse
