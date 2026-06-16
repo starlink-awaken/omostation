@@ -94,7 +94,7 @@ DEFAULT_FEATURE_GROUPS: dict[str, dict[str, Any]] = {
     },
     "compute": {
         "enabled": True,
-        "services": ["compute-mesh", "llm-gateway", "aetherforge"],
+        "services": ["compute-mesh", "aetherforge"],
         "description": "算力与网关层",
     },
 }

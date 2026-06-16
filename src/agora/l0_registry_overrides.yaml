@@ -41,7 +41,7 @@ routes:
   kronos_subscribe: kronos
   kronos_transition: kronos
   kronos_unsubscribe: kronos
-  llm_generate: llm-gateway
+  llm_generate: aetherforge
   cross_domain_research: minerva
   minerva_ingest: minerva
   minerva_research: minerva
@@ -139,11 +139,11 @@ known_services:
     args: ["run", "--package", "metaos", "python", "-m", "metaos.mcp_server"]
     description: "MetaOS — 编排/治理层，决策门控与系统协同"
     source: metaos
-  llm-gateway:
+  aetherforge:
     command: uv
-    args: ["run", "--package", "llm-gateway", "python", "-m", "llm_gateway.mcp_server"]
-    description: "LLM 网关 — 统一推理接口，支持多后端路由与负载均衡"
-    source: kairon
+    args: ["run", "--package", "aetherforge", "python", "-m", "aetherforge.mcp_server"]
+    description: "AetherForge — 算力网格 + LLM 网关 + 群体智能统一入口"
+    source: aetherforge
   mcp-server-sqlite:
     command: mcp-server-sqlite
     args: []
