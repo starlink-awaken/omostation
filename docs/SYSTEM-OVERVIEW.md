@@ -381,20 +381,16 @@
 - 监控: 实时监控
 - 配置: 系统配置
 
-#### llm-gateway
+#### llm-gateway (已归档)
 
-| 指标 | 值 |
-|------|-----|
-| 版本 | 1.0.0 |
-| 功能 | LLM 网关·模型路由 |
-| 测试 | 20 |
-| 能力地图 | ✅ |
+> **状态**: 已归档 — 能力已并入 [aetherforge/packages/gateway](../projects/aetherforge/packages/gateway/)  
+> **最后版本**: 1.0.0  
+> **归档日期**: 2026-06-16
 
-**核心能力**:
-- 模型路由: LLM 模型路由/代理
-- 负载均衡: 请求负载均衡
-- 降级: 模型降级策略
-- 监控: 调用监控/日志
+**迁移说明**:
+- LLM 网关核心能力迁移至 `aetherforge/packages/gateway/src/llm_gateway/`
+- 历史代码保留在 `aetherforge/packages/gateway/src/llm_gateway/_legacy/`
+- 新入口: `aetherforge gateway *` CLI / `aetherforge-mcp`
 
 #### swarm-engine
 
@@ -736,7 +732,7 @@ runtime: FastAPI (服务注册)
 | compute-mesh | projects/compute-mesh/CAPABILITY-MAP.md |
 | family-hub | projects/family-hub/CAPABILITY-MAP.md |
 | hermes-console | projects/hermes-console/CAPABILITY-MAP.md |
-| llm-gateway | projects/llm-gateway/CAPABILITY-MAP.md |
+| llm-gateway | **ARCHIVED** — 见 [aetherforge/packages/gateway](../projects/aetherforge/packages/gateway/) |
 | swarm-engine | projects/swarm-engine/CAPABILITY-MAP.md |
 
 ---
