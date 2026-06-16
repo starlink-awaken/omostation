@@ -2,38 +2,47 @@ ports:
   3100: mcp-stdio
   3101: mcp-stdio-alt
   7422: agora-mcp-http
-  7430: agora-dashboard
   7431: agora-mcp-sse
   7455: gateway-tls
   7456: l4-kernel-mcp-sse
-  8080: agora-api-gateway
   8090: cockpit-dashboard
   8765: minerva-web
   8888: mcp-stdio-debug
-  9090: ecos-dashboard
   8000: 'aetherforge-web-helm        # aetherforge k8s helm chart Web 端口 (helm 注入)'
   8081: 'kairon-internal            # kairon INTERFACE 内部声明端口 (服务发现注入)'
   9091: 'omo-sse-daemon            # omo SSE 守护 SSE_DAEMON_PORT (env 注入)'
+
+# 收敛后已释放端口 (2026-06-16)
+# 7430: agora-dashboard — 删除，功能收敛至 cockpit :8090
+# 8080: agora-api-gateway — 删除，功能收敛至 cockpit :8090
+# 9090: ecos-dashboard — 待收敛至 cockpit /api/ecos/status
+
 types:
   7422: env-only
-  7430: env-only
   7456: env-only
   8090: env-only
+
+# MCP 默认传输方式 (2026-06-16 收敛)
+# 29/29 MCP 服务默认 stdio，HTTP/SSE 需显式标志
+mcp_transport_defaults:
+  agora: stdio (sse via --sse flag, port 7431)
+  runtime-cron: stdio (http via --http flag, port 7450)
+  l4-kernel: stdio (http via --http, sse via --sse)
+  cockpit-mcp: stdio (sse via --transport sse)
+  gbrain: stdio
+  kairon/*: stdio
+  omo: stdio
+  metaos: stdio
+  ecos: stdio
+  aetherforge: stdio
+
 conflicts_resolved:
-  7430:
-  - agora
-  - runtime
-  - omo
-  - l4-kernel
   7431:
   - agora
   - cockpit
   - l4-kernel
   8080:
-  - agora
-  - omo
-  - kairon
-  - l4-kernel
+  - (resolved: port released, agora-api-gateway removed)
   8765:
   - minerva
   - omo
@@ -55,12 +64,33 @@ conflicts_resolved:
   - llm-gateway
   - aetherforge
   - compute-mesh
+
 conflicts_pending:
   8765:
     owner: minerva
     squatters: []
+    resolution: "Phase 3: 收敛到 cockpit /dev/kos, /dev/minerva, /dev/ontoderive, /dev/forge"
   9090:
     owner: ecos
     squatters: []
-    resolution: llm-gateway/cli.py:111 + http_server.py:90 + compute-mesh/cli.py:111
-      default 9090→9290
+    resolution: "Phase 2: 收敛到 cockpit /api/omo/*, /api/ecos/*"
+
+# Web 面板收敛状态 (2026-06-16)
+web_convergence:
+  cockpit_dashboard:
+    port: 8090
+    status: active
+    routes: 42
+    note: "唯一人类 Web 入口，已挂载 dashboard_server 子应用"
+  agora_extras:
+    status: deleted
+    note: "已删除 extras/web/，功能收敛至 cockpit"
+  agora_bridge:
+    status: simplified
+    note: "简化为重定向到 cockpit :8090"
+  omo_dashboards:
+    status: pending
+    note: "Phase 2: 收敛到 cockpit /api/omo/*"
+  kairon_debug_panels:
+    status: pending
+    note: "Phase 3: 收敛到 cockpit /dev/*"
