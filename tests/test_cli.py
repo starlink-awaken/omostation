@@ -65,6 +65,26 @@ class TestCLISubcommands:
         from cockpit import storage
         assert hasattr(storage, "get_db_path") or hasattr(storage, "IDataAccess")
 
+    def test_compass_routes_to_repo_relative_c2g_project(self, monkeypatch):
+        """compass 必须走 repo-relative 的 c2g 路径, 不能硬编码用户目录。"""
+        from cockpit import cli
+
+        recorded: dict[str, object] = {}
+
+        def fake_call(cmd):
+            recorded["cmd"] = cmd
+            return 0
+
+        monkeypatch.setattr("subprocess.call", fake_call)
+        monkeypatch.setattr(sys, "argv", ["cockpit", "compass", "radar"])
+        rc = cli.main()
+
+        assert rc == 0
+        cmd = recorded["cmd"]
+        assert isinstance(cmd, list)
+        assert cmd[:4] == ["uv", "run", "--project", str((Path(__file__).resolve().parents[2] / "c2g").resolve())]
+        assert cmd[4:] == ["c2g", "radar"]
+
 
 class TestL0MCPTools:
     """Test L0 MCP tools integration."""
@@ -922,4 +942,3 @@ class TestP2CloseoutTraceFullText:
         conn.execute("DELETE FROM research WHERE id = ?", (trace_id,))
         conn.commit()
         conn.close()
-

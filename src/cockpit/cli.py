@@ -553,7 +553,7 @@ def main() -> int:
 
     if args.command == "compass":
         import subprocess
-        c2g_project = str((_SCRIPT_DIR.parent.parent.parent / "c2g").resolve())
+        c2g_project = str((_SCRIPT_DIR.parent.parent.parent.parent / "c2g").resolve())
         cmd = ["uv", "run", "--project", c2g_project, "c2g"] + args.compass_args
         return subprocess.call(cmd)
 
