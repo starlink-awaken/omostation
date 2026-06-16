@@ -45,9 +45,9 @@ $ python3 bin/compass_radar.py
 | ID | Bet | 价值向量 | Appetite | Upstream | 状态 |
 |----|-----|---------|---------|----------|:----:|
 | **BET-COMPASS-01** | cockpit `compass` 命名空间落地 | V1 效率 | 1 周 | 本规划 | 📋 P44 |
-| **BET-RADAR-CRON** | radar 每日 cron + 健康分 SSOT | V1 效率 | 3 天 | BET-COMPASS-01 | ✅ P43 W0 |
-| **BET-GC-CRON** | gc 每周 cron + 债务路由 | V2 自治 | 3 天 | BET-RADAR-CRON | 📋 P43 W1 |
-| **BET-PLANNED-CLEANUP** | 60 planned → 30 | V1 效率 | 2 周 | BET-GC-CRON | 📋 P43 W1-2 |
+| **BET-RADAR-CRON** | radar 每日 cron + 健康分 SSOT | V1 效率 | 3 天 | BET-COMPASS-01 | ✅ P44 W0 |
+| **BET-GC-CRON** | gc 每周 cron + 债务路由 | V2 自治 | 3 天 | BET-RADAR-CRON | ✅ P44 W1 |
+| **BET-PLANNED-CLEANUP** | 60 planned → 30 | V1 效率 | 2 周 | BET-GC-CRON | ✅ P44 W1 (分类完成, planned 60→61 详见 evidence) |
 | **BET-COMPASS-STANDALONE** | c2g 独立化为 `projects/compass` | V2 自治 | 1 月 | 全部前置 | 📋 P45 |
 
 **已完成**:
@@ -78,9 +78,23 @@ $ python3 bin/compass_radar.py
 | system.yaml 引用化 | ✅ | `health_score_ref: .omo/state/health.yaml` |
 | pre-commit hook 阻断 | ✅ | 改坏 system.yaml → exit 1 |
 
+## 5.1 P44 W1 evidence (2026-06-16)
+
+| 项 | 状态 | 证据 |
+|----|:----:|------|
+| c2g [ecos] 装好 | ✅ | `ls projects/c2g/.venv/lib/python3.13/site-packages/omo/` 存在 |
+| c2g eCOS 端到端 | ✅ | `c2g --adapter ecos bet Pitch-Valid.md` 无 "Falling back" 警告 |
+| DEBT-C2G-20260616034031 关闭 | ✅ | commit `cfde2c67` (status: closed + evidence) |
+| llm-gateway 进程 + 端口 | ✅ | PID 84060 监听 :9290 + port-registry.yaml 注册 |
+| llm-gateway 端点 500 | 🟡 known issue | `.omo/_delivery/p44-w1-llm-gateway-known-issue.md` |
+| P44 W2 分类脚本 | ✅ | `bin/classify_planned.py` 108 行 + `p44-w2-classification.yaml` 467 行 |
+| P44 W2 evidence 文档 | ✅ | `p44-w2-planned-cleanup.md` 含 before/after 数字 |
+
+**关联 commits**: `cfde2c67` + `30f0dec1` + `7f61e0c9` (3 个 worker 完成 + 1 个 refactor)
+
 ---
 
-## 6. P43 W1 计划(下周)
+## 6. P44 W2 计划(下周)
 
 | 任务 | 目标 | 风险 |
 |------|------|------|
