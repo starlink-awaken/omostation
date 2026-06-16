@@ -42,7 +42,7 @@ uv run pytest tests/ --ignore=tests/e2e -q    # 1165/1200 pass
 
 - **stdio**: `agora-mcp` (默认)
 - **HTTP**: `agora-web` (:7422)
-- **SSE**: `agora-server` (:7431)
+- **SSE**: `agora-server --sse` (:7431)
 
 ## Key Files
 
