@@ -221,7 +221,21 @@ $ python3 bin/compass_radar.py
 **已知真债务**: 0
 **总治理分**: 96/100
 
-## 14. P46 W1 计划 (下周)
+## 14. P46 W1 状态 (2026-06-16 完成)
+
+**W1 收口**: 7 端点端到端验证 (TestClient 8/8 HTTP 200) + health 55→70
+
+| 项 | 状态 | evidence |
+|----|:----:|------|
+| 8/8 端点 HTTP 200 | ✅ | TestClient ASGI dispatch, /api/omos+ecos/{status,health} 返 converged JSON |
+| P45 W3 known issue 闭环 | ✅ | port-registry 注释 9190/9090 converged → 端点真可达 |
+| health_score 提升 | ✅ | 55→70 (anomalies 3→2, archived 清理后 owner 集中度缓解) |
+| cockpit pointer 对齐 | ✅ | 主仓 6d6ec96c bump → 4b6b5f0 (含 57d3966 P46 mount) |
+| simplify 5 | ✅ 0 fix | 第 6 轮连续 0 fix (诚实) |
+
+**已知真债务: 0** | health_score: 70/100
+
+## 15. P46 W2 计划 (下周)
 
 | 任务 | 目标 | 风险 |
 |------|------|------|
