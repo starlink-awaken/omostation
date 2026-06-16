@@ -970,6 +970,29 @@ async def api_e2e():
     return load_e2e_status()
 
 
+# ── OMO Self-healing routes ───────────────────────────────────
+
+from web.governance import load_healing_fixes, load_healing_status, load_healing_trends
+
+
+@app.get("/api/omo/healing/status")
+async def api_omo_healing_status():
+    """OMO self-healing engine status."""
+    return load_healing_status()
+
+
+@app.get("/api/omo/healing/fixes")
+async def api_omo_healing_fixes():
+    """List available self-healing fixes."""
+    return {"fixes": load_healing_fixes()}
+
+
+@app.get("/api/omo/healing/trends")
+async def api_omo_healing_trends():
+    """Self-healing trend data."""
+    return load_healing_trends()
+
+
 # ── Dev debug routes (kairon panels) ──────────────────────────
 
 

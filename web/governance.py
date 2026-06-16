@@ -85,3 +85,32 @@ def load_omo_report() -> dict:
 def load_e2e_status() -> dict:
     """Load E2E test status (stub)."""
     return {"status": "not_run", "note": "E2E tests require manual trigger via cockpit CLI"}
+
+
+def load_healing_status() -> dict:
+    """Load OMO self-healing engine status."""
+    try:
+        from omo.omo_self_healing import SelfHealingEngine
+        engine = SelfHealingEngine()
+        return engine.get_status()
+    except Exception as e:
+        return {"status": "unavailable", "error": str(e)}
+
+
+def load_healing_fixes() -> list:
+    """List available self-healing fixes."""
+    try:
+        from omo.omo_self_healing_fixes import list_fixes
+        return list_fixes()
+    except Exception:
+        return []
+
+
+def load_healing_trends() -> dict:
+    """Load self-healing trend data."""
+    try:
+        from omo.omo_self_healing import SelfHealingEngine
+        engine = SelfHealingEngine()
+        return engine._trends.get_trends()
+    except Exception as e:
+        return {"error": str(e)}
