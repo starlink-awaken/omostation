@@ -51,7 +51,7 @@ def run_radar(omo_dir: Path) -> dict:
     if c2g_src.is_dir() and str(c2g_src) not in sys.path:
         sys.path.insert(0, str(c2g_src))
 
-    from c2g.strategy import _collect_metrics, _check_anomalies, _list_task_files, strategy_audit  # type: ignore[reportMissingImports]  # noqa: PLC0415, E402
+    from c2g.strategy import _collect_metrics, _check_anomalies, _list_task_files  # type: ignore[reportMissingImports]  # noqa: PLC0415, E402
 
     done_files, planned_files = _list_task_files(omo_dir)
     all_files = done_files + planned_files
@@ -61,9 +61,18 @@ def run_radar(omo_dir: Path) -> dict:
 
     metrics = _collect_metrics(all_files)
     warnings = _check_anomalies(metrics, total) if total else []
-
-    # 跑一次 strategy_audit 让用户看到完整输出 (这函数会 print 到 stdout)
-    strategy_audit(omo_dir, "ecos")
+    # 分布从 metrics 导出 (避免再调 strategy_audit 重复计算)
+    distributions = {
+        "priority": dict(metrics["priority"]),
+        "risk": dict(metrics["risk_level"]),
+        "owner": dict(metrics["owner"]),
+        "phase": dict(metrics["phase"]),
+        "status": dict(metrics["status"]),
+    }
+    for label, dist in distributions.items():
+        print(f"📊 {label.title()} Distribution:")
+        for k, v in sorted(dist.items(), key=lambda x: (-x[1], x[0]))[:10]:
+            print(f"   {k:<24} {v:>3}")
 
     return {
         "total_tasks": total,

@@ -116,3 +116,7 @@ data/backups/
 /patch_scenario4.py
 /patch_test.py
 /patch_test2.py
+
+# c2g 端到端测试临时落盘 (local adapter 写到 workspace 根, 治理证据应走 .omo/_delivery/)
+bets.json
+tasks.json
