@@ -150,3 +150,35 @@ def load_ecos_watchdog() -> dict:
         return json.loads(watchdog_file.read_text(encoding="utf-8"))
     except Exception as e:
         return {"error": str(e)}
+
+
+def load_runtime_status() -> dict:
+    """Load runtime status from matrix state."""
+    matrix_file = Path.home() / "runtime" / "matrix_state.json"
+    if not matrix_file.exists():
+        return {"status": "no_data", "note": "matrix_state.json not found"}
+    try:
+        import json
+        return json.loads(matrix_file.read_text(encoding="utf-8"))
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def load_metaos_status() -> dict:
+    """Load metaos status from workflow store."""
+    try:
+        from metaos.core.workflow_store import WorkflowStore
+        store = WorkflowStore()
+        return {"workflows": store.list_workflows(), "status": "ok"}
+    except Exception as e:
+        return {"status": "unavailable", "error": str(e)}
+
+
+def load_l4kernel_status() -> dict:
+    """Load l4-kernel status from registry."""
+    try:
+        from l4_kernel.registry import get_registry
+        reg = get_registry()
+        return {"capabilities": reg.list_all(), "status": "ok"}
+    except Exception as e:
+        return {"status": "unavailable", "error": str(e)}

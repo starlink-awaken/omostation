@@ -964,6 +964,29 @@ async def api_ecos_status():
     return load_ecos_status()
 
 
+# ── L1/L2(metaos)/L4 status routes ───────────────────────────
+
+from web.governance import load_l4kernel_status, load_metaos_status, load_runtime_status
+
+
+@app.get("/api/runtime/status")
+async def api_runtime_status():
+    """Runtime L1 matrix state."""
+    return load_runtime_status()
+
+
+@app.get("/api/metaos/status")
+async def api_metaos_status():
+    """MetaOS L2 workflow engine status."""
+    return load_metaos_status()
+
+
+@app.get("/api/l4kernel/status")
+async def api_l4kernel_status():
+    """L4-kernel self-layer status."""
+    return load_l4kernel_status()
+
+
 @app.get("/api/e2e")
 async def api_e2e():
     """E2E test status."""
