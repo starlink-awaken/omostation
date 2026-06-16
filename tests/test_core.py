@@ -953,14 +953,14 @@ class TestServerMain:
 
     def test_mcp_mode(self):
         from runtime.cron_service.server import main
-        with patch("sys.argv", ["cron-service", "--mcp"]):
+        with patch("sys.argv", ["cron-service"]):
             with patch("runtime.cron_service.server.run_mcp") as mock_run:
                 main()
                 mock_run.assert_called_once()
 
-    def test_default_http_mode(self):
+    def test_http_mode(self):
         from runtime.cron_service.server import main
-        with patch("sys.argv", ["cron-service"]):
+        with patch("sys.argv", ["cron-service", "--http"]):
             with patch("runtime.cron_service.server.run_http") as mock_run:
                 main()
                 mock_run.assert_called_once()
