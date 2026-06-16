@@ -1,0 +1,30 @@
+# X1 Governance Policies — 变更审计与系统边界治理
+#
+# 记录所有影响系统边界的结构性变更，确保每次合并/归档/入口收敛都可追溯。
+
+policies:
+  - policy_id: X1-ARCH-MERGE-LLMGATEWAY-20260616
+    title: llm-gateway 并入 aetherforge 架构变更审计
+    type: architecture_merge
+    status: active
+    created: '2026-06-16'
+    description: >
+      将独立项目 projects/llm-gateway/ 的代码与能力迁移到
+      projects/aetherforge/packages/gateway/，作为 AetherForge 三位一体
+      （gateway / mesh / swarm）的一部分。
+    scope:
+      - projects/aetherforge/packages/gateway/
+      - projects/llm-gateway/
+      - projects/ecos/src/ecos/ssot/mof/m1/bosroute/BOSROUTE-KAIRON-llm-gateway.yaml
+    audit_requirements:
+      - source: plan/pitches/PITCH-llm-gateway-merge.md
+      - source: .omo/tasks/planned/OPC-P43-LLM-MERGE-*.yaml
+      - source: projects/ecos/src/ecos/ssot/mof/m1/bosroute/BOSROUTE-KAIRON-llm-gateway.yaml
+      - source: projects/aetherforge/packages/gateway/MERGE-CHECKLIST.md
+    evidence:
+      - commit: projects/aetherforge (llm-gateway _legacy migration)
+      - commit: projects/ecos (MOF BOSRoute update)
+    owner: architecture-team
+    review_frequency: once
+    next_review: '2026-06-30'
+    enforcement: log-and-notify

@@ -37,6 +37,31 @@ domains:
       dimensions: [compute, storage, maintenance, network]
       implemented: true
 
+  AetherForge:
+    x1_audit:
+      mechanism: aetherforge audit log + gateway metrics
+      implemented: partial
+    x2_freshness:
+      mechanism: workspace health scans
+      implemented: partial
+    x3_value:
+      mechanism: unified cost tracking for gateway/mesh/swarm
+      dimensions: [compute, storage, maintenance, network]
+      implemented: true
+      note: 自 2026-06-16 起，原 llm-gateway 独立维护成本归零并入 AetherForge
+
+  llm-gateway:
+    x1_audit:
+      mechanism: archived — audit trail migrated to AetherForge
+      implemented: true
+    x2_freshness:
+      mechanism: archived
+      implemented: true
+    x3_value:
+      mechanism: archived — cost consolidated into AetherForge
+      implemented: true
+      note: 项目已于 2026-06-16 归档，不再产生独立维护成本
+
   Kairon:
     x1_audit:
       mechanism: minerva audit log

@@ -1,0 +1,34 @@
+# X4 Consistency Rules — 跨层一致性治理
+#
+# 确保同一事实在文档、代码、MOF、BOS 路由、依赖声明中只有一种表述。
+
+rules:
+  - rule_id: X4-CONS-LLMGATEWAY-ARCHIVED
+    title: llm-gateway 不得再以独立活跃项目形式出现
+    type: cross_reference_consistency
+    status: active
+    created: '2026-06-16'
+    description: >
+      自 2026-06-16 起，llm-gateway 能力已并入 aetherforge/packages/gateway/。
+      所有文档、MOF 节点、BOS 路由、依赖声明必须保持一致。
+    canonical_source:
+      project: aetherforge
+      entrypoint: packages/gateway/
+      mof_node: BOSROUTE-AETHERFORGE-llm-gateway
+    forbidden_patterns:
+      - "projects/llm-gateway/ 作为活跃 LLM 网关入口"
+      - "bos://kairon/llm-gateway 作为主入口（deprecated alias 除外）"
+      - "pyproject.toml 中直接依赖 llm-gateway"
+    allowed_patterns:
+      - "llm-gateway 已归档"
+      - "llm-gateway 能力已迁移至 aetherforge/packages/gateway/"
+      - "bos://kairon/llm-gateway 作为 deprecated alias"
+    check_scope:
+      - docs/*.md
+      - projects/*/ARCHITECTURE.md
+      - projects/*/CALLCHAIN.md
+      - projects/*/BOUNDARY.md
+      - projects/*/pyproject.toml
+      - projects/agora/src/agora/mcp/resolver/services.py
+    owner: architecture-team
+    enforcement: block-write

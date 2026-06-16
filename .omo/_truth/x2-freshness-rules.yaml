@@ -1,0 +1,36 @@
+# X2 Freshness Rules — 抗熵与过期检测
+#
+# 定义哪些组件/项目需要 freshness 检查，以及过期后的处理动作。
+
+rules:
+  - rule_id: X2-FRESH-ARCHIVED-LLMGATEWAY
+    title: llm-gateway 已归档，禁止产生新的活跃任务
+    type: project_archive
+    status: active
+    created: '2026-06-16'
+    target: projects/llm-gateway/
+    freshness:
+      mechanism: git-commit-staleness
+      threshold_days: 90
+      action: warn
+    archived: true
+    replacement:
+      project: aetherforge
+      entrypoint: packages/gateway/
+    notes: >
+      llm-gateway 代码已迁移至 aetherforge/packages/gateway/src/llm_gateway/_legacy/。
+      仅允许消化 _legacy/ 中的能力，不允许在 projects/llm-gateway/ 新增功能。
+
+  - rule_id: X2-FRESH-MERGE-CHECKLIST
+    title: MERGE-CHECKLIST 必须按计划推进
+    type: artifact_review
+    status: active
+    created: '2026-06-16'
+    target: projects/aetherforge/packages/gateway/MERGE-CHECKLIST.md
+    freshness:
+      mechanism: manual-review
+      threshold_days: 30
+      action: escalate
+    owner: architecture-team
+    notes: >
+      _legacy/ 中的能力需在 30 天内逐项消化或明确废弃。
