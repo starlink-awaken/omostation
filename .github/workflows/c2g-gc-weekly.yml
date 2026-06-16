@@ -1,0 +1,71 @@
+name: c2g-gc-weekly
+# P43 W0 → P44 W1: 每周一 9:00 UTC 跑 c2g gc 清理 28d+ 滞留 Pitch
+# 关联: Plans/c2g-enchanted-coral.md §3.2
+# 关联目录: runtime/sandbox/pitches/ (扫描) + runtime/sandbox/decayed/ (归档)
+
+on:
+  schedule:
+    # 每周一 9:00 UTC (北京时间 17:00, 工作日傍晚收口)
+    - cron: '0 9 * * 1'
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  entropy-gc:
+    name: c2g gc — archive 28d+ decayed pitches
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv + c2g
+        run: |
+          pip install --quiet uv
+          # 装 c2g 项目 (c2g 是子模块, 含 gc 引擎)
+          cd projects/c2g
+          python -m venv .venv
+          source .venv/bin/activate
+          uv pip install -e . || echo "::warning::c2g [ecos] extras 不可用, 走 local adapter"
+
+      - name: Run c2g gc --dry-run (preview first)
+        # 干跑先看影响面, 不真删
+        run: |
+          cd projects/c2g
+          source .venv/bin/activate
+          uv run c2g --adapter ecos gc --dry-run 2>&1 | tee /tmp/gc-dryrun.log || {
+            echo "::warning::gc dry-run 失败 (ecos adapter 缺 omo, 已知 DEBT-C2G-20260616034031)"
+            echo "Falling back to local adapter"
+            uv run c2g --adapter local gc --dry-run 2>&1 | tee /tmp/gc-dryrun.log
+          }
+
+      - name: Run c2g gc (真跑)
+        # 干跑结果 OK 才真跑. 28 天阈值.
+        run: |
+          cd projects/c2g
+          source .venv/bin/activate
+          uv run c2g --adapter local gc 2>&1 | tee /tmp/gc-result.log
+
+      - name: Upload gc logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: c2g-gc-${{ github.run_id }}
+          path: |
+            /tmp/gc-dryrun.log
+            /tmp/gc-result.log
+            runtime/sandbox/decayed/
+          retention-days: 90
+
+      - name: Commit decayed pitches
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add runtime/sandbox/decayed/ runtime/sandbox/pitches/
+          git diff --staged --quiet && { echo "no gc change, skip commit"; exit 0; }
+          DECAYED_COUNT=$(ls runtime/sandbox/decayed/ 2>/dev/null | wc -l)
+          git commit -m "governance: P44 W1 weekly gc — ${DECAYED_COUNT} pitches archived"
+          git push

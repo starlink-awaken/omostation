@@ -1,0 +1,53 @@
+name: c2g-radar-daily
+# P43 W0 → P44 W1: 每日 8:00 UTC 跑 c2g radar 真审计 + 写 health.yaml SSOT
+# 关联: Plans/c2g-enchanted-coral.md §3.1
+# 关联 SSOT: .omo/state/health.yaml (生成) + .omo/state/system.yaml (同步)
+
+on:
+  schedule:
+    # 每日 8:00 UTC (北京时间 16:00, 工作日下午心跳)
+    - cron: '0 8 * * *'
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  radar-audit:
+    name: Run c2g radar + write health.yaml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 拉子模块 (c2g 在 projects/c2g 是子模块)
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        run: pip install --quiet uv
+
+      - name: Run c2g radar via compass_radar
+        # 跑 bin/compass_radar.py → 落 .omo/state/health.yaml + 同步 system.yaml
+        # 退出码语义:
+        #   0 = OK (0 异常 或 异常已知)
+        #   1 = 脚本错误 (fail)
+        run: |
+          python3 bin/compass_radar.py
+      - name: Upload health.yaml artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: governance-health-${{ github.run_id }}
+          path: .omo/state/health.yaml
+          retention-days: 30
+
+      - name: Commit health.yaml SSOT
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .omo/state/health.yaml .omo/state/system.yaml
+          git diff --staged --quiet && { echo "no health change, skip commit"; exit 0; }
+          HEALTH_SCORE=$(python3 -c "import yaml; d=yaml.safe_load(open('.omo/state/health.yaml')); print(d['health_score'])")
+          ANOM=$(python3 -c "import yaml; d=yaml.safe_load(open('.omo/state/health.yaml')); print(d['anomaly_count'])")
+          git commit -m "governance: P44 W1 daily radar — health=${HEALTH_SCORE} anomalies=${ANOM}"
+          git push
