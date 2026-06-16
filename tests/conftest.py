@@ -3,9 +3,14 @@
 import sys
 from pathlib import Path
 
+_root = Path(__file__).resolve().parent.parent
+
 # 将 src/ 目录添加到 sys.path，使 `from cockpit import ...` 可工作
-# 当 tests/ 位于 packages/cockpit/tests/ 时，cockpit 包 src 路径为:
-# packages/cockpit/src/
-_src = str(Path(__file__).resolve().parent.parent / "src")
+_src = str(_root / "src")
 if _src not in sys.path:
     sys.path.insert(0, _src)
+
+# 将项目根目录添加到 sys.path，使 `from web import ...` 可工作
+_root_str = str(_root)
+if _root_str not in sys.path:
+    sys.path.insert(0, _root_str)
