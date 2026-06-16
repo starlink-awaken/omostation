@@ -605,3 +605,41 @@ class TestAuthRoutes:
         r = client.post("/api/auth/logout", json={"token": "invalid"})
         assert r.status_code == 200
         assert r.json()["status"] == "not_found"
+
+
+# ── BOS URI Gateway routes ───────────────────────────────────────────────────
+
+
+class TestBosRoutes:
+    def test_bos_status(self, client):
+        r = client.get("/api/bos/status")
+        assert r.status_code == 200
+        data = r.json()
+        assert "domains" in data
+        assert len(data["domains"]) == 5
+
+    def test_bos_domains(self, client):
+        r = client.get("/api/bos/domains")
+        assert r.status_code == 200
+        data = r.json()
+        assert "domains" in data
+        assert len(data["domains"]) == 5
+
+    def test_bos_discover(self, client):
+        r = client.get("/api/bos/discover")
+        assert r.status_code == 200
+        data = r.json()
+        assert "services" in data
+        assert len(data["services"]) >= 5
+
+
+# ── Auto Discovery routes ────────────────────────────────────────────────────
+
+
+class TestAutoDiscovery:
+    def test_auto_discover(self, client):
+        r = client.post("/api/discover/auto")
+        assert r.status_code == 200
+        data = r.json()
+        assert "discovered" in data
+        assert "services" in data

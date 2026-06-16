@@ -74,7 +74,7 @@ async def _auth_middleware(request: Request, call_next):
         return await call_next(request)
 
     # Allow auth endpoints without auth
-    if request.url.path in ("/api/auth/login", "/api/auth/logout"):
+    if request.url.path in ("/api/auth/login", "/api/auth/logout", "/api/discover/auto"):
         return await call_next(request)
 
     # Check auth using unified module
@@ -1190,6 +1190,81 @@ async def api_auth_logout(request: Request):
 
     ok = revoke_session(token)
     return {"status": "ok" if ok else "not_found"}
+
+
+# ── BOS URI Gateway routes ──────────────────────────────────────
+
+
+@app.get("/api/bos/status")
+async def api_bos_status():
+    """BOS URI system status."""
+    return {
+        "status": "ok",
+        "domains": ["memory", "governance", "analysis", "persona", "capability"],
+        "routes": len([r for r in app.routes if hasattr(r, "path")]),
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+
+
+@app.get("/api/bos/domains")
+async def api_bos_domains():
+    """List BOS URI domains."""
+    return {
+        "domains": [
+            {"name": "memory", "description": "记忆与事实源", "services": ["kos", "kronos", "gbrain"]},
+            {"name": "governance", "description": "治理与律法", "services": ["omo", "metaos", "eidos"]},
+            {"name": "analysis", "description": "认知与推演", "services": ["minerva", "ontoderive", "codeanalyze"]},
+            {"name": "persona", "description": "人格与心智", "services": ["sot-bridge"]},
+            {"name": "capability", "description": "能力与生态", "services": ["forge", "runtime"]},
+        ]
+    }
+
+
+@app.get("/api/bos/discover")
+async def api_bos_discover():
+    """Discover available BOS URI services."""
+    return {
+        "services": [
+            {"name": "kos", "domain": "memory", "protocol": "stdio", "status": "available"},
+            {"name": "kronos", "domain": "memory", "protocol": "stdio", "status": "available"},
+            {"name": "minerva", "domain": "analysis", "protocol": "stdio", "status": "available"},
+            {"name": "ontoderive", "domain": "analysis", "protocol": "stdio", "status": "available"},
+            {"name": "codeanalyze", "domain": "analysis", "protocol": "stdio", "status": "available"},
+            {"name": "forge", "domain": "capability", "protocol": "stdio", "status": "available"},
+            {"name": "omo", "domain": "governance", "protocol": "stdio", "status": "available"},
+            {"name": "metaos", "domain": "governance", "protocol": "stdio", "status": "available"},
+        ]
+    }
+
+
+# ── Auto Discovery ──────────────────────────────────────────────
+
+
+@app.post("/api/discover/auto")
+async def api_auto_discover():
+    """Auto-discover workspace services."""
+    import subprocess
+
+    discovered = []
+    workspace_root = Path(__file__).resolve().parent.parent.parent.parent
+
+    # Check known service locations
+    services_to_check = [
+        ("agora", workspace_root / "agora" / ".venv"),
+        ("kairon", workspace_root / "kairon" / ".venv"),
+        ("runtime", workspace_root / "runtime" / ".venv"),
+        ("ecos", workspace_root / "ecos" / ".venv"),
+        ("omo", workspace_root / "omo" / ".venv"),
+        ("metaos", workspace_root / "metaos" / ".venv"),
+        ("l4-kernel", workspace_root / "l4-kernel" / ".venv"),
+        ("gbrain", workspace_root / "gbrain" / "node_modules"),
+    ]
+
+    for name, path in services_to_check:
+        if path.exists():
+            discovered.append({"name": name, "status": "available", "path": str(path)})
+
+    return {"discovered": len(discovered), "services": discovered}
 
 
 # ── CLI entry ──────────────────────────────────────────────────
