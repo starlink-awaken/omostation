@@ -970,6 +970,71 @@ async def api_e2e():
     return load_e2e_status()
 
 
+# ── Dev debug routes (kairon panels) ──────────────────────────
+
+
+@app.get("/dev/kos/api/search")
+async def dev_kos_search(q: str = ""):
+    """KOS knowledge search via subprocess."""
+    if not q:
+        return {"results": [], "query": q}
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["uv", "run", "python", "-m", "kos.cli", "search", q],
+            capture_output=True, text=True, timeout=30,
+            cwd=str(Path(__file__).resolve().parent.parent.parent.parent / "kairon"),
+        )
+        return {"results": result.stdout.strip().split("\n") if result.stdout.strip() else [], "query": q}
+    except Exception as e:
+        return {"error": str(e), "query": q}
+
+
+@app.get("/dev/minerva/api/status")
+async def dev_minerva_status():
+    """Minerva research engine status."""
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["uv", "run", "python", "-m", "minerva.cli", "status"],
+            capture_output=True, text=True, timeout=10,
+            cwd=str(Path(__file__).resolve().parent.parent.parent.parent / "kairon"),
+        )
+        return {"status": "ok" if result.returncode == 0 else "error", "output": result.stdout[:500]}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+@app.get("/dev/ontoderive/api/status")
+async def dev_ontoderive_status():
+    """OntoDerive engine status."""
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["uv", "run", "python", "-m", "ontoderive.cli", "status"],
+            capture_output=True, text=True, timeout=10,
+            cwd=str(Path(__file__).resolve().parent.parent.parent.parent / "kairon"),
+        )
+        return {"status": "ok" if result.returncode == 0 else "error", "output": result.stdout[:500]}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+@app.get("/dev/forge/api/status")
+async def dev_forge_status():
+    """Forge tool marketplace status."""
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["uv", "run", "python", "-m", "forge.cli", "status"],
+            capture_output=True, text=True, timeout=10,
+            cwd=str(Path(__file__).resolve().parent.parent.parent.parent / "kairon"),
+        )
+        return {"status": "ok" if result.returncode == 0 else "error", "output": result.stdout[:500]}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
 # ── CLI entry ──────────────────────────────────────────────────
 
 
