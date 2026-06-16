@@ -1,6 +1,6 @@
 id: IMPORTED-a4cfe7
 title: 'P42-W0-INDEX-REFRESH: 刷新 .omo/INDEX.md 头条 + 表格 (内部表头指向真实 state)'
-status: planned
+status: done
 task_type: feature
 risk_level: L0
 depends_on:
@@ -11,3 +11,6 @@ deliverables: []
 imported_via: omo_bridge
 phase: 42
 wave: W0
+closed_at: '2026-06-16T04:39:21Z'
+evidence: 流转自 planned keep_active (p44-w2-pilot), P42-W0/W1 kickoff tasks
+closed_by: p44-w2-pilot

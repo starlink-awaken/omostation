@@ -1,7 +1,7 @@
 id: IMPORTED-3384bb
 title: 'P42-W0-CONSUME-STASH: 消化 stash@{0} (P59-W0 dispatch bug) + stash@{1} (P46
   W1 声明式注册)'
-status: planned
+status: done
 task_type: feature
 risk_level: L0
 depends_on:
@@ -12,3 +12,6 @@ deliverables: []
 imported_via: omo_bridge
 phase: 42
 wave: W0
+closed_at: '2026-06-16T04:39:21Z'
+evidence: 流转自 planned keep_active (p44-w2-pilot), P42-W0/W1 kickoff tasks
+closed_by: p44-w2-pilot
