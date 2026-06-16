@@ -243,7 +243,7 @@ def run_http():
 
 def main():
     parser = argparse.ArgumentParser(description="cron-service")
-    parser.add_argument("--mcp", action="store_true", help="Run MCP server in stdio mode")
+    parser.add_argument("--http", action="store_true", help="Run HTTP API server (default: stdio MCP)")
     parser.add_argument("--init-db", action="store_true", help="Initialize database and exit")
     args = parser.parse_args()
 
@@ -252,10 +252,10 @@ def main():
         print(f"Database initialized at {svc_config.DATA_DIR}/cron.db")
         return
 
-    if args.mcp:
-        run_mcp()
-    else:
+    if args.http:
         run_http()
+    else:
+        run_mcp()
 
 
 if __name__ == "__main__":
