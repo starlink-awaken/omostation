@@ -196,22 +196,27 @@ class BOSRouter:
         c = Counter(r["adapter"] for r in self._routes.values())
         return dict(c)
 
-    def seed_from_poc(self, poc_services: dict) -> int:
-        """从 POC_SERVICES 字典批量注册路由。
+    def seed_from_poc(self, poc_services: list) -> int:
+        """从 POC_SERVICES 列表批量注册路由。
 
         Args:
-            poc_services: bos_resolver.POC_SERVICES 字典
+            poc_services: bos_resolver.POC_SERVICES 列表
 
         Returns:
             新注册的路由数量
         """
         count = 0
-        for uri, svc in poc_services.items():
+        for svc in poc_services:
+            uri = getattr(svc, "uri", "")
+            if not uri:
+                continue
             self.register(
                 uri,
                 adapter="poc",
                 config={
                     "domain": getattr(svc, "domain", ""),
+                    "package": getattr(svc, "package", ""),
+                    "action": getattr(svc, "action", ""),
                     "transport": getattr(svc, "transport", ""),
                     "description": getattr(svc, "description", ""),
                 },

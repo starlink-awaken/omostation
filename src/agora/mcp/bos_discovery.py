@@ -22,15 +22,13 @@ from pathlib import Path
 _log = logging.getLogger(__name__)
 
 # AGENTS.md 中 BOS 声明行的正则: `bos://domain/package/action` — description (adapter) `command`
+# 支持多种变体，使描述、适配器、命令都可选
 _BOS_DECL_PATTERN = re.compile(
     r"`bos://(?P<domain>[a-z0-9-]+)/(?P<package>[a-z0-9-]+)/(?P<action>[a-z0-9-]+)`"
-    r"\s*[-—]\s*(?P<desc>.+?)\s*\((?P<adapter>[a-z]+)\)\s*`(?P<command>.+?)`",
+    r"(?:\s*[-—]\s*(?P<desc>[^(`\n]+))?"
+    r"(?:\s*\((?P<adapter>[a-z_-]+)\))?"
+    r"(?:\s*`(?P<command>[^`\n]+)`)?",
     re.IGNORECASE,
-)
-
-# 简化版：只匹配 `bos://domain/package/action`
-_SIMPLE_PATTERN = re.compile(
-    r"`bos://(?P<domain>[a-z0-9-]+)/(?P<package>[a-z0-9-]+)/(?P<action>[a-z0-9-]+)`"
 )
 
 # 默认扫描的项目目录（相对于 HOME/Workspace/projects/）
@@ -83,39 +81,23 @@ def discover_from_workspace(workspace_root: str = "") -> int:
 
             for match in _BOS_DECL_PATTERN.finditer(section):
                 uri = f"bos://{match['domain']}/{match['package']}/{match['action']}"
+                
+                # 规范化适配器名称
+                raw_adapter = (match.group("adapter") or "poc").lower()
+                adapter = "proxy" if "proxy" in raw_adapter else raw_adapter
+                
                 bos_router.register(
                     uri,
-                    adapter=match["adapter"],
+                    adapter=adapter,
                     config={
                         "domain": match["domain"],
-                        "description": match["desc"].strip(),
-                        "command": match["command"].strip(),
+                        "description": (match.group("desc") or "").strip(),
+                        "command": (match.group("command") or "").strip(),
                         "project": proj,
                         "source": "AGENTS.md",
                     },
                 )
                 registered += 1
-
-            # 简化版：只有 URI，没有命令（标记为 poc adapter）
-            for match in _SIMPLE_PATTERN.finditer(section):
-                uri = f"bos://{match['domain']}/{match['package']}/{match['action']}"
-                # 检查是否已被上面注册
-                already = False
-                for prefix in bos_router.list_all():
-                    if uri.startswith(prefix["prefix"].rstrip("/")):
-                        already = True
-                        break
-                if not already:
-                    bos_router.register(
-                        uri,
-                        adapter="poc",
-                        config={
-                            "domain": match["domain"],
-                            "project": proj,
-                            "source": "AGENTS.md",
-                        },
-                    )
-                    registered += 1
         except Exception as e:
             _log.warning("Failed to parse %s: %s", agents_md, e)
 

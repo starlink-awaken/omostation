@@ -353,6 +353,10 @@ async def _init_proxy():
     # ── Phase 6 (P46 W0): 配置 BOS 中间件 ──
     import yaml
 
+    # 预种子路由表
+    _bos_router.seed_from_poc(_POC_SERVICES)
+    logger.info("bos_router: seeded from POC_SERVICES")
+
     rates_path = Path(__file__).parent.parent / "agora-bos-rates.yaml"
     if rates_path.exists():
         rates = yaml.safe_load(open(rates_path))

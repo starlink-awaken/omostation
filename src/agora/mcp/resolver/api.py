@@ -104,9 +104,12 @@ async def resolve_bos_uri(uri: str, *args: Any, **kwargs: Any) -> dict:
         # internal transport: 同进程 importlib
         try:
             import importlib
+            import inspect
             mod = importlib.import_module(service.module_path)
             func = getattr(mod, service.func_name)
             raw = func(*args, **kwargs)
+            if inspect.isawaitable(raw):
+                raw = await raw
             result = {"status": "ok", "result": raw}
         except Exception as e:
             result = {"status": "error", "error": str(e)}

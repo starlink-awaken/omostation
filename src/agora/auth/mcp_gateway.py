@@ -121,6 +121,12 @@ KNOWN_BACKENDS: list[dict] = [
         "command": "uv",
         "args": ["run", "--package", "forge", "python", "-m", "forge.mcp_server"],
     },
+    {
+        "name": "gbrain",
+        "mcp_endpoint": "",
+        "command": "bun",
+        "args": ["run", "--cwd", "projects/gbrain", "src/cli.ts", "serve"],
+    },
 ]
 
 # Module-level singleton — reused across start/stop calls.
