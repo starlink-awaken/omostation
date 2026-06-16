@@ -10,7 +10,7 @@ LOG_DIR="$HOME/.agora/logs"
 
 mkdir -p "$LOG_DIR"
 
-# ── SSE Server (:7431) ──
+# ── SSE Server (:7431, requires --sse flag) ──
 cat > "$LAUNCH_DIR/com.agora.sse.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -23,6 +23,7 @@ cat > "$LAUNCH_DIR/com.agora.sse.plist" <<'PLIST'
         <string>__AGORA_PYTHON__</string>
         <string>-m</string>
         <string>agora.server.mcp</string>
+        <string>--sse</string>
     </array>
     <key>WorkingDirectory</key>
     <string>__AGORA_DIR__</string>

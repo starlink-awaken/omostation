@@ -321,16 +321,7 @@ async def _init_proxy():
     _register_proxy_tools(mcp, _proxy_manager)
 
     # ── Phase 4 (P45 W2): Seed BOSRouter from POC_SERVICES ──
-    for uri, svc in _POC_SERVICES.items():
-        _bos_router.register(
-            uri,
-            adapter="poc",
-            config={
-                "domain": getattr(svc, "domain", ""),
-                "transport": getattr(svc, "transport", ""),
-                "description": getattr(svc, "description", ""),
-            },
-        )
+    _bos_router.seed_from_poc(_POC_SERVICES)
     logger.info("bos_router_seeded", poc_count=_bos_router.count())
 
     # ── Phase 5.5 (FeatureGate): 加载 feature_groups + bos_domains ──
@@ -826,14 +817,20 @@ async def agora_execute(query: str, mode: str = "auto") -> dict:
 
 
 def main():
-    """Start the Agora MCP server in stdio mode with proxy initialization.
+    """Start the Agora MCP server. Default: stdio. Use --sse for SSE mode."""
+    import argparse
+    parser = argparse.ArgumentParser(description="Agora MCP Server")
+    parser.add_argument("--sse", action="store_true", help="Start in SSE mode (port 7431)")
+    parser.add_argument("--http", action="store_true", help="Start in HTTP mode (port 7422)")
+    args = parser.parse_args()
 
-    Auto-discovers and launches downstream MCP services via bootstrap when
-    no explicit proxy config is available. Proxy initialization runs inside
-    FastMCP's lifespan context manager to keep subprocesses alive.
-    """
-    sys.stderr.write("Agora MCP Server (stdio) starting...\n")
-    mcp.run()
+    if args.sse:
+        sse_main()
+    elif args.http:
+        http_main()
+    else:
+        sys.stderr.write("Agora MCP Server (stdio) starting...\n")
+        mcp.run()
 
 
 def http_main():

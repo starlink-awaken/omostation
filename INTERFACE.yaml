@@ -25,10 +25,10 @@ mcp:
 http:
   - port: 7422
     protocol: FastMCP HTTP
-  - port: 7430
-    protocol: FastAPI (Web Dashboard)
+    note: "BOS MCP HTTP transport, agent-to-agent"
   - port: 7431
     protocol: FastMCP SSE
+    note: "Remote Agent gateway, requires --sse flag"
   - port: 8080
     protocol: aiohttp (REST API Gateway)
 
