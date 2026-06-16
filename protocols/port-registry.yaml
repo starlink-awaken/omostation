@@ -80,8 +80,8 @@ web_convergence:
   cockpit_dashboard:
     port: 8090
     status: active
-    routes: 42
-    note: "唯一人类 Web 入口，已挂载 dashboard_server 子应用"
+    routes: 51
+    note: "唯一人类 Web 入口，已挂载 dashboard_server 子应用 + 治理路由 + dev 调试路由"
   agora_extras:
     status: deleted
     note: "已删除 extras/web/，功能收敛至 cockpit"
@@ -89,8 +89,14 @@ web_convergence:
     status: simplified
     note: "简化为重定向到 cockpit :8090"
   omo_dashboards:
-    status: pending
-    note: "Phase 2: 收敛到 cockpit /api/omo/*"
+    status: converged
+    routes: "/api/omo/status, /api/omo/debt, /api/omo/report"
+    note: "Phase 2 完成: OMO 面板收敛到 cockpit"
+  ecos_dashboard:
+    status: converged
+    routes: "/api/ecos/status"
+    note: "Phase 2 完成: eCOS 面板收敛到 cockpit"
   kairon_debug_panels:
-    status: pending
-    note: "Phase 3: 收敛到 cockpit /dev/*"
+    status: converged
+    routes: "/dev/kos/api/search, /dev/minerva/api/status, /dev/ontoderive/api/status, /dev/forge/api/status"
+    note: "Phase 3 完成: kairon 调试面板收敛到 cockpit /dev/*"
