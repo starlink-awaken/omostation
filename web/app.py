@@ -929,6 +929,47 @@ async def well_known_agent_card():
     }
 
 
+# ── Governance routes (OMO/eCOS) ──────────────────────────────
+
+from web.governance import (
+    load_debt_data,
+    load_e2e_status,
+    load_ecos_status,
+    load_omo_report,
+    load_omo_status,
+)
+
+
+@app.get("/api/omo/status")
+async def api_omo_status():
+    """OMO system status (phase, health, services, debt, KEI)."""
+    return load_omo_status()
+
+
+@app.get("/api/omo/debt")
+async def api_omo_debt():
+    """OMO debt ledger."""
+    return load_debt_data()
+
+
+@app.get("/api/omo/report")
+async def api_omo_report():
+    """OMO governance report."""
+    return load_omo_report()
+
+
+@app.get("/api/ecos/status")
+async def api_ecos_status():
+    """eCOS L0 protocol layer status."""
+    return load_ecos_status()
+
+
+@app.get("/api/e2e")
+async def api_e2e():
+    """E2E test status."""
+    return load_e2e_status()
+
+
 # ── CLI entry ──────────────────────────────────────────────────
 
 
