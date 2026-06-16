@@ -26,6 +26,7 @@ Usage:
 
 from __future__ import annotations
 
+import importlib
 import json
 import os
 import re
@@ -92,28 +93,20 @@ if HERMES_CONSOLE_DIST.exists():
     app.mount("/hermes", StaticFiles(directory=str(HERMES_CONSOLE_DIST), html=True), name="hermes_console")
 
 # ─── P46 治理面板 mount (P45 W3 known issue 升级真修) ─────────────────────
-# 挂载 3 个 governance + OMO + eCOS router
-# 让 P45 W3 known issue (cockpit /api/omos /api/ecos 端点) 真可达
-try:
-    from cockpit.web.governance.api import router as governance_router
-
-    app.include_router(governance_router)
-except Exception as _e:
-    pass  # fastapi import 失败时, governance router 不挂 (符合原 governance/api.py 模式)
-
-try:
-    from cockpit.web.api_omos import router as omos_router
-
-    app.include_router(omos_router)
-except Exception as _e:
-    pass
-
-try:
-    from cockpit.web.api_ecos import router as ecos_router
-
-    app.include_router(ecos_router)
-except Exception as _e:
-    pass
+# 通用 router 注册: 加新面板 router 只需在 tuple 里加 module 路径.
+# graceful degradation — fastapi/router import 失败时跳过该 router (不阻断 app 启动).
+for _router_module in (
+    "cockpit.web.governance.api",
+    "cockpit.web.api_omos",
+    "cockpit.web.api_ecos",
+):
+    try:
+        _mod = importlib.import_module(_router_module)
+        _router = getattr(_mod, "router", None)
+        if _router is not None:
+            app.include_router(_router)
+    except Exception:
+        pass
 
 # ─── 健康检查 ──────────────────────────────────────────────────
 
