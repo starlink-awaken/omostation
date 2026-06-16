@@ -34,10 +34,6 @@
 [submodule "projects/hermes-console"]
 	path = projects/hermes-console
 	url = https://github.com/starlink-awaken/omostation-hermes-console.git
-[submodule "projects/llm-gateway"]
-	path = projects/llm-gateway
-	url = https://github.com/starlink-awaken/omostation-llm-gateway.git
-[submodule "projects/model-driven"]
 	path = projects/model-driven
 	url = https://github.com/starlink-awaken/omostation-model-driven.git
 [submodule "projects/omo"]

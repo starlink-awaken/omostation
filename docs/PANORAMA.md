@@ -293,7 +293,7 @@ Agent 操作
 | family-hub | X | [ARCHITECTURE.md](../projects/family-hub/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/family-hub/CALLCHAIN.md) · [BOUNDARY.md](../projects/family-hub/BOUNDARY.md) |
 | hermes-console | L3 | [ARCHITECTURE.md](../projects/hermes-console/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/hermes-console/CALLCHAIN.md) · [BOUNDARY.md](../projects/hermes-console/BOUNDARY.md) |
 | l4-kernel | L4 | [ARCHITECTURE.md](../projects/l4-kernel/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/l4-kernel/CALLCHAIN.md) · [BOUNDARY.md](../projects/l4-kernel/BOUNDARY.md) |
-| llm-gateway | X | **ARCHIVED** — 能力已并入 [aetherforge/packages/gateway](../projects/aetherforge/packages/gateway/) |
+| llm-gateway | X | **ARCHIVED** — 快照在 `/_archived/llm-gateway/`，能力已并入 [aetherforge/packages/gateway](../projects/aetherforge/packages/gateway/) |
 | model-driven | M0 | [ARCHITECTURE.md](../projects/model-driven/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/model-driven/CALLCHAIN.md) · [BOUNDARY.md](../projects/model-driven/BOUNDARY.md) |
 | observability | X | [ARCHITECTURE.md](../projects/observability/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/observability/CALLCHAIN.md) · [BOUNDARY.md](../projects/observability/BOUNDARY.md) |
 | omo-debt | L2 | [ARCHITECTURE.md](../projects/omo-debt/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/omo-debt/CALLCHAIN.md) · [BOUNDARY.md](../projects/omo-debt/BOUNDARY.md) |

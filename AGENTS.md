@@ -1,7 +1,7 @@
 # AGENTS.md — Workspace Development Guide
 
 > Multi-project knowledge engineering & research workspace (root directory).
-> 最后更新: 2026-06-15
+> 最后更新: 2026-06-16
 
 > **当前 Phase**: 42 — 治理面 SSOT 同步纪元 (Governance SSOT Catch-up)
 > **健康分**: 95/100
@@ -20,7 +20,7 @@ L2 引擎面  ── kairon (19包 · 4157 tests) + gbrain (67 MCP · 9700 tests
 L1 运行时  ── runtime (KEI沙箱 · Matrix调度 · cron-service 默认 stdio)
 L0 协议层  ── ecos (SSB签名链 · MOF元模型 · 472 tests)
 X 横切框架 ── aetherforge (LLM网关) + compute-mesh + swarm-engine
-              model-driven (7阶段引擎 · 190 tests) + llm-gateway
+              model-driven (7阶段引擎 · 190 tests) + llm-gateway (已归档)
               c2g (战略需求引擎) + bus-foundation (pub/sub)
               omo-debt (债务评分) + observability (Langfuse)
               spaces (空间配置) + family-hub (家庭数字枢纽)
@@ -55,7 +55,6 @@ This root directory is a **multi-project workspace** organized in the 5+4+1+1 (e
 | Layer | Project | Stack | Location | Status |
 |-------|---------|-------|----------|--------|
 | L4 | `l4-kernel` | Python (uv, pytest) | `projects/l4-kernel/` | 🟢 Active — 自我层管理面 · 21域 · 250 tests · 43 MCP tools |
-| L3 | `cockpit` | Python (uv, pytest) | `projects/cockpit/` | 🟢 Active — 统一入口 (CLI 27 + MCP 37 + Web) · 562 tests |
 | L3 | `cockpit` | Python (uv, pytest) | `projects/cockpit/` | 🟢 Active — 统一入口 (CLI 27 + MCP 37 + Web 59 routes) |
 | I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · BOS 路由 · 75+ services · SSE :7431 |
 | L2 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 知识引擎 · 19 packages · 4157 tests |
@@ -68,13 +67,13 @@ This root directory is a **multi-project workspace** organized in the 5+4+1+1 (e
 | X | `compute-mesh` | Python (uv, pytest) | `projects/compute-mesh/` | 🟢 Active — 算力发现/聚合/调度 |
 | X | `swarm-engine` | Python (uv, pytest) | `projects/swarm-engine/` | 🟢 Active — 多智能体任务编排 |
 | X | `model-driven` | Python (uv, pytest) | `projects/model-driven/` | 🟢 Active — 全生命周期模型驱动 · 190 tests |
-| X | `llm-gateway` | Python (uv) | `projects/llm-gateway/` | 🟢 Active — LLM 路由/降级 (待迁移至 aetherforge) |
+| X | `llm-gateway` | Python (uv) | `_archived/llm-gateway/` | ⚫ Archived — 能力已迁移至 `projects/aetherforge/packages/gateway/` |
 | X | `c2g` | Python (uv) | `projects/c2g/` | 🟢 Active — 战略需求引擎 (V2P → C2G) |
 | X | `bus-foundation` | Python (uv, pytest) | `projects/bus-foundation/` | 🟢 Active — pub/sub/schedule 总线 |
 | X | `omo-debt` | Python (uv, pytest) | `projects/omo-debt/` | 🟢 Active — 技术债务评分 CLI |
 | X | `observability` | Docker | `projects/observability/` | 🟢 Active — Langfuse 可观测性 |
 | X | `family-hub` | Python (FastMCP) | `projects/family-hub/` | 🟢 Active — 家庭数字枢纽 |
-| X | `hermes-console` | TypeScript (Vite) | `projects/hermes-console/` | 🟡 待集成至 cockpit |
+| X | `hermes-console` | TypeScript (Vite) | `projects/hermes-console/` | 🟢 Active — 已挂载至 cockpit `/hermes/*` |
 | X | `spaces` | YAML | `projects/spaces/` | 🟢 Active — 空间配置 |
 
 **Also contains:**
@@ -265,7 +264,7 @@ GitHub Actions workflows — **19/20 子模块 + 根仓库全部 CI 覆盖** (sp
 **kairon (3)**: `ci.yml`, `ci.yml.bak`, `publish.yml`
 **omo (2)**: `ci.yml`, `audit-baseline-monthly.yml`
 **现有独立项目 CI (7)**: `cockpit-ci.yml`, `agora-ci.yml`, `ecos-ci.yml`, `metaos-ci.yml`, `runtime-ci.yml`, `gbrain-ci.yml` (4 文件), `aetherforge-ci.yml`
-**新增 CI (2026-06-10 补齐)**: `l4-kernel/ci.yml`, `model-driven/ci.yml`, `llm-gateway/ci.yml`, `omo-debt/ci.yml`, `swarm-engine/ci.yml`, `compute-mesh/ci.yml`, `aetherforge-swarm-ext/ci.yml`, `family-hub/ci.yml`, `hermes-console/ci.yml`
+**新增 CI (2026-06-10 补齐，已移除 llm-gateway/ci.yml)**: `l4-kernel/ci.yml`, `model-driven/ci.yml`, `omo-debt/ci.yml`, `swarm-engine/ci.yml`, `compute-mesh/ci.yml`, `aetherforge-swarm-ext/ci.yml`, `family-hub/ci.yml`, `hermes-console/ci.yml`
 **根仓库 (23)**: `workspace.yml`, `omostation-governance.yml`, 及其他跨项目工作流
 
 ## Gotchas
@@ -380,6 +379,7 @@ git push origin main
 - `spaces/` — User-space / tenant-space manifests and routing boundaries
 - `data/` — Shared data layer (`db/`, `kos/`, `sharedbrain/`, `backups/`)
 - `runtime/` — Ephemeral runtime residue; avoid storing durable truth here
+- `_archived/` — Archived project snapshots (e.g. `llm-gateway`)
 - `tests/integration/` — E2E test scripts
 - `scripts/` — Utility scripts and automation (独立 git 仓库, `omo/` + `shell/`)
 - `bin/` — Executable tools:
