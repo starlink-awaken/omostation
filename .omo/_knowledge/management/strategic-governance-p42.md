@@ -44,7 +44,7 @@ $ python3 bin/compass_radar.py
 
 | ID | Bet | 价值向量 | Appetite | Upstream | 状态 |
 |----|-----|---------|---------|----------|:----:|
-| **BET-COMPASS-01** | cockpit `compass` 命名空间落地 | V1 效率 | 1 周 | 本规划 | 📋 P44 |
+| **BET-COMPASS-01** | cockpit `compass` 命名空间落地 | V1 效率 | 1 周 | 本规划 | ✅ P44 W3 |
 | **BET-RADAR-CRON** | radar 每日 cron + 健康分 SSOT | V1 效率 | 3 天 | BET-COMPASS-01 | ✅ P44 W0 |
 | **BET-GC-CRON** | gc 每周 cron + 债务路由 | V2 自治 | 3 天 | BET-RADAR-CRON | ✅ P44 W1 |
 | **BET-PLANNED-CLEANUP** | 60 planned → 30 | V1 效率 | 2 周 | BET-GC-CRON | ✅ P44 W2 (流转 6 keep_active, planned 60→55) |
@@ -94,7 +94,21 @@ $ python3 bin/compass_radar.py
 
 ---
 
-## 6. P44 W2 计划(下周)
+## 6. P44 W3 状态 (2026-06-16 完成)
+
+**W3 收口**: 3 目标全部完成 (c2g parser + cockpit compass + 48 escalate owner routing)
+
+| 项 | 状态 | 关键 evidence |
+|----|:----:|------|
+| c2g parser 鲁棒化 | ✅ | c2g submodule `0633ab4` + `f1d7b07`, 16 tests passed (5→16) |
+| cockpit `compass` 命名空间 | ✅ | cockpit submodule `ce17f4e`, 5 子命令可用 |
+| omo-debt route + 48 路由 | ✅ | omo-debt `8d23b86` + 主仓 `639ef2a5` (55 planned 路由) |
+| 端口 SSOT (X1) | ✅ | `a0ddc3da` 9290 llm-gateway-http + `f8310773` agora --sse |
+| 治理打分 (X1-X4) | ✅ | 综合 92.5/100 |
+
+**radar owner 分布变化**: unassigned 70 → 18 (52 路由掉), cockpit-team 41, omo-team 7, team-lead 7
+
+## 7. P44 W4 计划 (下周)
 
 | 任务 | 目标 | 风险 |
 |------|------|------|
