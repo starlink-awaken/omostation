@@ -80,6 +80,16 @@ goals:
   progress: 0.0
   status: pending
   tasks: []
+- id: BET-ea47
+  desc: 'Bet: Pitch-Valid (Appetite: Unknown)'
+  progress: 0.0
+  status: pending
+  tasks: []
+- id: BET-a15b
+  desc: 'Bet: PITCH-llm-gateway-merge (Appetite: -  1 Week（中等复杂度，高架构影响）。)'
+  progress: 0.0
+  status: pending
+  tasks: []
 health_targets:
   mcp_isolation_score: 100
   overall: 99

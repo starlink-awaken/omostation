@@ -26,6 +26,9 @@ runtime/sandbox/decayed/
 # ---- 治理审计日志 ----
 .omo/_knowledge/governance-history.jsonl
 
+# ---- ECOS Kernel Sandbox 运行时审计 (199 行 JSONL, 拒绝记录) ----
+runtime/data/kei_audit.jsonl
+
 # ---- 旧归档（2026-02 遗留数据） ----
 .omo/_archive/
 

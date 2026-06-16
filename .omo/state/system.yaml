@@ -11,7 +11,7 @@ next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
 health_score: 55
 health_score_source: c2g_radar_p43_w0
-health_score_generated_at: '2026-06-16T04:16:09Z'
+health_score_generated_at: '2026-06-16T05:25:33Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
