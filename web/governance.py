@@ -2,15 +2,33 @@
 
 Reads OMO state, ecos status, and L4 context from filesystem.
 No external dependencies — pure file reading.
+Includes TTL cache for expensive operations.
 """
 
 from __future__ import annotations
 
 import os
+import time
 from pathlib import Path
 
 OMO_DIR = Path(os.environ.get("OMO_DIR", str(Path.home() / "Workspace" / ".omo")))
 RUNTIME_HOME = Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime")))
+
+# TTL cache for expensive operations
+_cache: dict[str, tuple[float, object]] = {}
+_CACHE_TTL = 30  # seconds
+
+
+def _cached(key: str, loader, ttl: int = _CACHE_TTL):
+    """Return cached value if fresh, otherwise call loader and cache result."""
+    now = time.monotonic()
+    if key in _cache:
+        ts, val = _cache[key]
+        if now - ts < ttl:
+            return val
+    val = loader()
+    _cache[key] = (now, val)
+    return val
 
 
 def _load_yaml(path: Path) -> dict:
@@ -24,7 +42,11 @@ def _load_yaml(path: Path) -> dict:
 
 
 def load_omo_status() -> dict:
-    """Load OMO system status from .omo/state/."""
+    """Load OMO system status from .omo/state/ (cached 30s)."""
+    return _cached("omo_status", _load_omo_status_impl)
+
+
+def _load_omo_status_impl() -> dict:
     system = _load_yaml(OMO_DIR / "state" / "system.yaml")
     health = _load_yaml(OMO_DIR / "state" / "system_health.yaml")
     debt = _load_yaml(OMO_DIR / "debt" / "dashboard" / "current.yaml")
@@ -63,7 +85,11 @@ def load_debt_data() -> dict:
 
 
 def load_ecos_status() -> dict:
-    """Load ecos status from M0 snapshot."""
+    """Load ecos status from M0 snapshot (cached 60s)."""
+    return _cached("ecos_status", _load_ecos_status_impl, ttl=60)
+
+
+def _load_ecos_status_impl() -> dict:
     m0_path = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m0" / "snapshot.yaml"
     m0 = _load_yaml(m0_path)
     return {
@@ -117,7 +143,11 @@ def load_healing_trends() -> dict:
 
 
 def load_ecos_ssb_stats() -> dict:
-    """Load SSB database statistics."""
+    """Load SSB database statistics (cached 30s)."""
+    return _cached("ecos_ssb", _load_ecos_ssb_stats_impl)
+
+
+def _load_ecos_ssb_stats_impl() -> dict:
     import sqlite3
     ssb_db = Path.home() / "Workspace" / "data" / "kos" / "ssb.db"
     if not ssb_db.exists():
