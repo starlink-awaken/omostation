@@ -88,7 +88,32 @@ app.add_middleware(
 
 if HERMES_CONSOLE_DIST.exists():
     from fastapi.staticfiles import StaticFiles
+
     app.mount("/hermes", StaticFiles(directory=str(HERMES_CONSOLE_DIST), html=True), name="hermes_console")
+
+# ─── P46 治理面板 mount (P45 W3 known issue 升级真修) ─────────────────────
+# 挂载 3 个 governance + OMO + eCOS router
+# 让 P45 W3 known issue (cockpit /api/omos /api/ecos 端点) 真可达
+try:
+    from cockpit.web.governance.api import router as governance_router
+
+    app.include_router(governance_router)
+except Exception as _e:
+    pass  # fastapi import 失败时, governance router 不挂 (符合原 governance/api.py 模式)
+
+try:
+    from cockpit.web.api_omos import router as omos_router
+
+    app.include_router(omos_router)
+except Exception as _e:
+    pass
+
+try:
+    from cockpit.web.api_ecos import router as ecos_router
+
+    app.include_router(ecos_router)
+except Exception as _e:
+    pass
 
 # ─── 健康检查 ──────────────────────────────────────────────────
 
@@ -196,6 +221,7 @@ def _fetch_http(source: dict) -> dict:
 
     try:
         from cockpit.commands.base import get_cockpit_jwt
+
         token = get_cockpit_jwt()
         headers = {}
         if token:
@@ -746,9 +772,7 @@ def _load_compute() -> dict:
         if bucket["latency_samples"]:
             bucket["latency_ms_avg"] = round(bucket["_latency_total"] / bucket["latency_samples"], 3)
         if bucket["_throughput_samples"]:
-            bucket["tokens_per_second_avg"] = round(
-                bucket["_throughput_total"] / bucket["_throughput_samples"], 3
-            )
+            bucket["tokens_per_second_avg"] = round(bucket["_throughput_total"] / bucket["_throughput_samples"], 3)
         del bucket["_latency_total"]
         del bucket["_throughput_total"]
         del bucket["_throughput_samples"]
