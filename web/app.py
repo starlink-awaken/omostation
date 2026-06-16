@@ -37,6 +37,7 @@ from web.compat import (  # type: ignore[import-not-found]  # type: ignore[impor
     is_safe_url,
     parse_protocol_config,
     parse_tags,
+    seed_registry,
     service_to_agent_card,  # type: ignore[import-not-found]
     workspace_research,  # type: ignore[import-not-found]
 )
@@ -78,6 +79,9 @@ async def _lifespan(_app: FastAPI):
         logger.warning(
             "AGORA_API_KEY not set — POST/PUT/DELETE requests will be rejected. Set AGORA_API_KEY to enable write access."
         )
+    count = seed_registry(registry)
+    _bus.publish("system:startup", {"services_loaded": count}, "agora-web")
+    logger.info("Agora Web started — %d services seeded", count)
     yield
     await router.close()
 
@@ -560,6 +564,146 @@ async def api_event_log(limit: int = 20):
     return _bus.get_event_log(limit)
 
 
+@app.get("/api/compute")
+async def api_compute():
+    """Return compute cost/routing data from LLM cost logs and provider config."""
+    import json as _json
+    from pathlib import Path as _Path
+
+    try:
+        import yaml as _yaml
+    except ImportError:
+        _yaml = None  # type: ignore[assignment]
+
+    runtime_home = _Path(os.environ.get("RUNTIME_HOME", str(_Path.home() / "runtime")))
+    workspace_root = _Path(os.environ.get("WORKSPACE_ROOT", str(_Path.home() / "Workspace")))
+    cost_log_path = runtime_home / "data" / "llm_cost.jsonl"
+    quota_path = runtime_home / "data" / "llm_quota_summary.json"
+    provider_path = workspace_root / ".omo" / "state" / "provider-plane.yaml"
+
+    def _read_json(p: _Path) -> dict:
+        if not p.exists():
+            return {}
+        try:
+            return _json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            return {}
+
+    def _estimate(model: str, inp: int, out: int) -> float:
+        m = (model or "").lower()
+        rates = {
+            "gpt-4o-mini": (0.0015, 0.006), "gpt-4o": (0.01, 0.03),
+            "gpt-4": (0.03, 0.06), "claude-3-opus": (0.015, 0.075),
+            "claude-3-sonnet": (0.003, 0.015), "claude-3-haiku": (0.00025, 0.00125),
+            "deepseek": (0.0005, 0.002), "gemini": (0.0035, 0.0105),
+            "ollama": (0, 0), "lmstudio": (0, 0),
+        }
+        r = None
+        for k in sorted(rates, key=len, reverse=True):
+            if m.startswith(k):
+                r = rates[k]
+                break
+        r = r or (0.002, 0.008)
+        return round((inp / 1000) * r[0] + (out / 1000) * r[1], 6)
+
+    def _infer(model: str, provider: str | None) -> dict[str, str]:
+        m = (model or "").lower()
+        if "ollama" in m:
+            return {"node_id": "macmini-ollama", "node_label": "MacMini (Ollama)", "route_type": "local"}
+        if "lmstudio" in m:
+            return {"node_id": "y7000p-lmstudio", "node_label": "Y7000P (LMStudio)", "route_type": "local"}
+        if any(k in m for k in ("gpt", "claude", "deepseek", "gemini")):
+            return {"node_id": "cloud-cc-switch", "node_label": "Cloud (cc-switch)", "route_type": "cloud"}
+        return {"node_id": "local-mac", "node_label": "Local-Mac", "route_type": "local"}
+
+    quota_summary = _read_json(quota_path)
+    provider_plane = {}
+    if provider_path.exists() and _yaml:
+        try:
+            provider_plane = _yaml.safe_load(provider_path.read_text(encoding="utf-8")) or {}
+        except Exception:
+            pass
+
+    selected = provider_plane.get("selected_provider") or {}
+    provider_name = selected.get("name")
+    cloud_model = selected.get("model") or "gpt-4o"
+
+    records: list[dict] = []
+    if cost_log_path.exists():
+        for line in cost_log_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = _json.loads(line)
+            except _json.JSONDecodeError:
+                continue
+            model = entry.get("model", "unknown")
+            inp = int(entry.get("input_tokens", 0) or 0)
+            out = int(entry.get("output_tokens", 0) or 0)
+            raw_ts = entry.get("timestamp") or entry.get("ts")
+            ph = entry.get("provider") or provider_name or "unknown"
+            inf = _infer(model, ph)
+            est = float(entry.get("estimated_cost_usd") or entry.get("cost") or _estimate(model, inp, out))
+            records.append({
+                "timestamp": raw_ts, "model": model, "input_tokens": inp, "output_tokens": out,
+                "total_tokens": inp + out, "estimated_cost_usd": round(est, 6),
+                "equivalent_cloud_cost_usd": round(_estimate(cloud_model, inp, out), 6),
+                "route_type": entry.get("route_type") or inf["route_type"],
+                "node_id": inf["node_id"], "node_label": inf["node_label"],
+                "latency_ms": entry.get("latency_ms"),
+                "tokens_per_second": entry.get("tokens_per_second"),
+            })
+    records.sort(key=lambda r: r.get("timestamp") or "", reverse=True)
+
+    total = len(records)
+    local = [r for r in records if r["route_type"] != "cloud"]
+    cloud = [r for r in records if r["route_type"] == "cloud"]
+    intercepted = len(local)
+    intercepted_tokens = sum(r["total_tokens"] for r in local)
+    actual_local = round(sum(r["estimated_cost_usd"] for r in local), 6)
+    actual_cloud = round(sum(r["estimated_cost_usd"] for r in cloud), 6)
+    saved = round(sum(r.get("equivalent_cloud_cost_usd", 0) - r["estimated_cost_usd"] for r in local), 6)
+
+    topology = [
+        {"id": "local-mac", "label": "Local-Mac", "kind": "local", "role": "Cockpit / Agent host"},
+        {"id": "macmini-ollama", "label": "MacMini (Ollama)", "kind": "local", "role": "Local inference"},
+        {"id": "y7000p-lmstudio", "label": "Y7000P (LMStudio)", "kind": "local", "role": "GPU workstation"},
+        {"id": "cloud-cc-switch", "label": "Cloud (cc-switch)", "kind": "cloud", "role": "Remote provider relay"},
+    ]
+
+    return {
+        "summary": {
+            "total_calls": total,
+            "total_input_tokens": sum(r["input_tokens"] for r in records),
+            "total_output_tokens": sum(r["output_tokens"] for r in records),
+            "total_estimated_cost_usd": round(sum(r["estimated_cost_usd"] for r in records), 6),
+            "remaining_ratio": quota_summary.get("remaining_ratio"),
+            "remaining_budget_usd": quota_summary.get("remaining_budget_usd"),
+            "quota_low": bool(quota_summary.get("quota_low", False)),
+        },
+        "provider": {
+            "name": selected.get("name"),
+            "model": selected.get("model"),
+            "base_url": selected.get("base_url"),
+        },
+        "topology": topology,
+        "cost_board": {
+            "selected_cloud_model": cloud_model,
+            "intercepted_calls": intercepted,
+            "intercepted_tokens": intercepted_tokens,
+            "interception_rate": round(intercepted / total, 4) if total else 0.0,
+            "actual_cloud_cost_usd": actual_cloud,
+            "actual_local_cost_usd": actual_local,
+            "actual_total_cost_usd": round(actual_cloud + actual_local, 6),
+            "cloud_equivalent_cost_usd": round(sum(r["equivalent_cloud_cost_usd"] for r in records), 6),
+            "saved_vs_cloud_usd": saved,
+            "codex_remaining_credits": (provider_plane.get("quota_summary", {}).get("providers", {}) or {}).get("codex", {}).get("remaining"),
+        },
+        "recent_traffic": records[:10],
+    }
+
+
 @app.post("/api/event-publish")
 async def api_event_publish(
     event_type: str = Form(...),
@@ -790,6 +934,14 @@ async def well_known_agent_card():
 
 def main():
     import uvicorn
+
+    # Mount cockpit dashboard_server as sub-app for governance routes
+    try:
+        from cockpit.dashboard_server import app as _dash_app
+        app.mount("/dash", _dash_app)
+        logger.info("Mounted cockpit dashboard at /dash/*")
+    except ImportError:
+        logger.warning("cockpit.dashboard_server not available — governance routes disabled")
 
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("COCKPIT_PORT", "8090")), log_level="info")  # noqa: S104
 
