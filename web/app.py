@@ -1072,6 +1072,15 @@ def main():
     except ImportError:
         logger.warning("cockpit.dashboard_server not available — governance routes disabled")
 
+    # Mount hermes-console static files
+    hermes_dist = Path(__file__).resolve().parent.parent.parent / "hermes-console" / "dist"
+    if hermes_dist.exists():
+        from fastapi.staticfiles import StaticFiles
+        app.mount("/hermes", StaticFiles(directory=str(hermes_dist), html=True), name="hermes_console")
+        logger.info("Mounted hermes-console at /hermes/*")
+    else:
+        logger.warning("hermes-console dist not found at %s — /hermes/ disabled", hermes_dist)
+
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("COCKPIT_PORT", "8090")), log_level="info")  # noqa: S104
 
 
