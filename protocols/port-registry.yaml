@@ -1,17 +1,23 @@
 ports:
   3100: mcp-stdio
-  9290: llm-gateway-http    # LLM 统一算力调度 HTTP (FastAPI, L0) — aetherforge + compute-mesh 共用
   3101: mcp-stdio-alt
   7422: agora-mcp-http
   7431: agora-mcp-sse
   7455: gateway-tls
   7456: l4-kernel-mcp-sse
   8090: cockpit-dashboard
-  8765: minerva-web
   8888: mcp-stdio-debug
   8000: 'aetherforge-web-helm        # aetherforge k8s helm chart Web 端口 (helm 注入)'
   8081: 'kairon-internal            # kairon INTERFACE 内部声明端口 (服务发现注入)'
-  9091: 'omo-sse-daemon            # omo SSE 守护 SSE_DAEMON_PORT (env 注入)'
+  9190: 'omo-dashboard              # omo dashboard (converged to cockpit, standalone for debug)'
+  9290: 'llm-gateway                # LLM Gateway HTTP'
+
+# 收敛后已释放端口 (2026-06-16)
+# 7430: agora-dashboard — 删除，功能收敛至 cockpit :8090
+# 8080: agora-api-gateway — 保留，但下游应使用 AGORA_API_URL 环境变量
+# 8765: minerva/kos/ontoderive/codeanalyze/ecos-gateway — 待 Phase 3 收敛到 cockpit /dev/*
+# 9090: ecos-dashboard — 保留独立，但核心功能已收敛到 cockpit /api/ecos/status
+# 9091: omo-sse-daemon — 保留，独立 SSE 守护进程
 
 # 收敛后已释放端口 (2026-06-16)
 # 7430: agora-dashboard — 删除，功能收敛至 cockpit :8090
@@ -26,7 +32,7 @@ types:
 # MCP 默认传输方式 (2026-06-16 收敛)
 # 29/29 MCP 服务默认 stdio，HTTP/SSE 需显式标志
 mcp_transport_defaults:
-  agora: stdio (sse via --sse flag, port 7431)
+  agora: stdio (sse via --sse, http via --http)
   runtime-cron: stdio (http via --http flag, port 7450)
   l4-kernel: stdio (http via --http, sse via --sse)
   cockpit-mcp: stdio (sse via --transport sse)
