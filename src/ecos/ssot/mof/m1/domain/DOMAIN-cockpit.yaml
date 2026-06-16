@@ -1,15 +1,17 @@
 # M1 Node: DOMAIN-cockpit
 # Type: Domain | Subtype: DocumentDomain
 # Generated: 2026-06-07
+# Updated: 2026-06-16 — HTTP/MCP convergence
 
 id: DOMAIN-cockpit
 type: Domain
 name: '@驾驶舱'
-description: 全局控制面 — DASHBOARD·SIGNALS·CARDS SSOT·L0元模型
+description: 全局控制面 — DASHBOARD·SIGNALS·CARDS SSOT·L0元模型。唯一 Web 入口 (:8090)，已收敛 OMO/eCOS 面板。
 status: active
 domain: meta
 created: '2026-06-07'
-version: 1.0.0
+updated: '2026-06-16'
+version: 1.1.0
 layer: L4
 properties:
   bos_uri_pattern: bos://cockpit/**
@@ -29,7 +31,15 @@ properties:
   - knowledge.read
   - knowledge.search
   - cards.query
+  - governance.omo_status
+  - governance.ecos_status
+  - governance.debt
   entry_points:
     cli: ecos health
     mcp: domain_read
+    web: http://localhost:8090
+  convergence:
+    web_routes: 47
+    governance_routes: "/api/omo/*, /api/ecos/*"
+    dashboard_subapp: "/dash/*"
 subtype: DocumentDomain
