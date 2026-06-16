@@ -56,3 +56,5 @@ coverage.xml
 
 # ── Local OMC runtime state ──
 .omc/
+src/agora-services.json
+src/agora.db
