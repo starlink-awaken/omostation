@@ -72,6 +72,9 @@ conflicts_resolved:
   9290:
   - llm-gateway
   - aetherforge
+  7422:
+  - agora
+  - kairon
 
 conflicts_pending:
   8765:

@@ -1,0 +1,14 @@
+id: OPC-P43-LLM-MERGE-CONFIG
+title: 'P43 LLM-MERGE: 合并配置 (port-registry/agora route)'
+status: done
+phase: 43
+task_type: feature
+risk_level: L0
+depends_on: []
+deliverables: []
+source_docs: []
+imported_via: llm-merge-e22d84da
+closed_at: '2026-06-17T01:20:02Z'
+closed_by: x-plane-audit-agent
+evidence: e22d84da commit (LLM-GATEWAY→AETHERFORGE merge). 合并配置 (port-registry/agora
+  route)
