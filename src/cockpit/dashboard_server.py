@@ -84,8 +84,29 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[DASHBOARD_CORS_ORIGIN],
     allow_methods=["GET", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_headers=["Authorization", "Content-Type", "X-Api-Key"],
 )
+
+
+# ─── 统一认证 (OPT-UNIFIED-AUTH) ──────────────────────────────
+from cockpit.web.auth import get_subservice_token, verify_api_key
+
+
+async def _auth_dependency(request: Request) -> None:
+    from fastapi import HTTPException
+
+    try:
+        verify_api_key(dict(request.headers))
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e)) from e
+
+
+try:
+    from fastapi import Depends, Request
+
+    _AUTH_DEPS = [Depends(_auth_dependency)]
+except ImportError:
+    _AUTH_DEPS = []
 
 if HERMES_CONSOLE_DIST.exists():
     from fastapi.staticfiles import StaticFiles
@@ -104,7 +125,7 @@ for _router_module in (
         _mod = importlib.import_module(_router_module)
         _router = getattr(_mod, "router", None)
         if _router is not None:
-            app.include_router(_router)
+            app.include_router(_router, dependencies=_AUTH_DEPS)
     except Exception:
         pass
 
@@ -213,12 +234,11 @@ def _fetch_http(source: dict) -> dict:
     import urllib.request
 
     try:
-        from cockpit.commands.base import get_cockpit_jwt
-
-        token = get_cockpit_jwt()
+        token = get_subservice_token()
         headers = {}
         if token:
             headers["Authorization"] = f"Bearer {token}"
+            headers["X-Api-Key"] = token
         req = urllib.request.Request(source["url"], method="GET", headers=headers)  # noqa: S310
         with urllib.request.urlopen(req, timeout=3) as resp:  # noqa: S310
             data = json.loads(resp.read().decode())
@@ -237,7 +257,7 @@ def _fetch_http(source: dict) -> dict:
         }
 
 
-@app.get("/api/v1/status")
+@app.get("/api/v1/status", dependencies=_AUTH_DEPS)
 async def api_v1_status():
     """Aggregated status from all layers."""
     import concurrent.futures
@@ -286,7 +306,7 @@ async def api_v1_status():
     )
 
 
-@app.get("/api/v1/m0")
+@app.get("/api/v1/m0", dependencies=_AUTH_DEPS)
 async def api_v1_m0():
     """Return M0 runtime snapshot as JSON."""
     try:
@@ -507,7 +527,7 @@ async def dashboard_page():
 # ═══════════════════════════════════════════════════════════════
 
 
-@app.get("/api/status")
+@app.get("/api/status", dependencies=_AUTH_DEPS)
 async def api_status():
     try:
         from runtime.i0 import i0_status
@@ -517,7 +537,7 @@ async def api_status():
         return JSONResponse(content={"error": "runtime.i0 not available"})
 
 
-@app.get("/api/services")
+@app.get("/api/services", dependencies=_AUTH_DEPS)
 async def api_services():
     try:
         from runtime.i0 import i0_services
@@ -527,7 +547,7 @@ async def api_services():
         return JSONResponse(content={"error": "runtime.i0 not available"})
 
 
-@app.get("/api/events")
+@app.get("/api/events", dependencies=_AUTH_DEPS)
 async def api_events():
     try:
         from runtime.i0 import i0_events
@@ -537,7 +557,7 @@ async def api_events():
         return JSONResponse(content={"error": "runtime.i0 not available"})
 
 
-@app.get("/api/protocols")
+@app.get("/api/protocols", dependencies=_AUTH_DEPS)
 async def api_protocols():
     try:
         from runtime.i0 import i0_protocols
@@ -547,41 +567,41 @@ async def api_protocols():
         return JSONResponse(content={"error": "runtime.i0 not available"})
 
 
-@app.get("/api/debt")
+@app.get("/api/debt", dependencies=_AUTH_DEPS)
 async def api_debt():
     return JSONResponse(content=_load_debt())
 
 
-@app.get("/api/compute")
+@app.get("/api/compute", dependencies=_AUTH_DEPS)
 async def api_compute():
     return JSONResponse(content=_load_compute())
 
 
-@app.get("/api/e2e")
+@app.get("/api/e2e", dependencies=_AUTH_DEPS)
 async def api_e2e():
     return JSONResponse(content=_run_e2e())
 
 
-@app.get("/api/omo-report")
+@app.get("/api/omo-report", dependencies=_AUTH_DEPS)
 async def api_omo_report():
     return JSONResponse(content=_omo_report())
 
 
-@app.get("/api/context")
+@app.get("/api/context", dependencies=_AUTH_DEPS)
 async def api_context():
     if not _HAS_L4_BRIDGE:
         return JSONResponse(content={"error": "L4 bridge not available"})
     return JSONResponse(content=json.loads(workspace_context()))
 
 
-@app.get("/api/cards")
+@app.get("/api/cards", dependencies=_AUTH_DEPS)
 async def api_cards():
     if not _HAS_L4_BRIDGE:
         return JSONResponse(content={"error": "L4 bridge not available"})
     return JSONResponse(content=json.loads(cards_status()))
 
 
-@app.get("/api/cards/check")
+@app.get("/api/cards/check", dependencies=_AUTH_DEPS)
 async def api_cards_check():
     if not _HAS_L4_BRIDGE:
         return JSONResponse(content={"error": "L4 bridge not available"})

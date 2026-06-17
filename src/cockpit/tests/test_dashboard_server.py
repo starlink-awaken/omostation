@@ -189,3 +189,78 @@ class TestDashboardComputeApi:
         assert resp.status_code == 200
         assert resp.json()["summary"]["total_calls"] == 3
         assert resp.json()["cost_board"]["saved_vs_cloud_usd"] == 1.23
+
+
+class TestUnifiedAuth:
+    """统一认证中间件测试 (OPT-UNIFIED-AUTH)."""
+
+    def test_auth_disabled_allows_anonymous(self, test_client, monkeypatch):
+        """AUTH_REQUIRED=false (默认) → 匿名访问 /api/* 返回 200."""
+        import cockpit.web.auth as auth_mod
+
+        monkeypatch.setattr(auth_mod, "_AUTH_REQUIRED", False)
+        auth_mod.reload_api_keys()
+        resp = test_client.get("/api/status")
+        assert resp.status_code == 200
+
+    def test_auth_enabled_rejects_no_key(self, test_client, monkeypatch):
+        """AUTH_REQUIRED=true + 无 key → 401."""
+        import cockpit.web.auth as auth_mod
+
+        monkeypatch.setattr(auth_mod, "_AUTH_REQUIRED", True)
+        auth_mod.reload_api_keys()
+        resp = test_client.get("/api/status")
+        assert resp.status_code == 401
+
+    def test_auth_enabled_accepts_valid_key(self, test_client, monkeypatch):
+        """AUTH_REQUIRED=true + 有效 X-Api-Key → 200."""
+        import cockpit.web.auth as auth_mod
+
+        monkeypatch.setattr(auth_mod, "_AUTH_REQUIRED", True)
+        monkeypatch.setenv("COCKPIT_API_KEY", "test-master-key")
+        auth_mod.reload_api_keys()
+        resp = test_client.get("/api/status", headers={"X-Api-Key": "test-master-key"})
+        assert resp.status_code == 200
+
+    def test_auth_enabled_accepts_bearer_token(self, test_client, monkeypatch):
+        """AUTH_REQUIRED=true + 有效 Authorization: Bearer → 200."""
+        import cockpit.web.auth as auth_mod
+
+        monkeypatch.setattr(auth_mod, "_AUTH_REQUIRED", True)
+        monkeypatch.setenv("COCKPIT_API_KEY", "bearer-test-key")
+        auth_mod.reload_api_keys()
+        resp = test_client.get("/api/status", headers={"Authorization": "Bearer bearer-test-key"})
+        assert resp.status_code == 200
+
+    def test_auth_enabled_rejects_invalid_key(self, test_client, monkeypatch):
+        """AUTH_REQUIRED=true + 无效 key → 401."""
+        import cockpit.web.auth as auth_mod
+
+        monkeypatch.setattr(auth_mod, "_AUTH_REQUIRED", True)
+        monkeypatch.setenv("COCKPIT_API_KEY", "correct-key")
+        auth_mod.reload_api_keys()
+        resp = test_client.get("/api/status", headers={"X-Api-Key": "wrong-key"})
+        assert resp.status_code == 401
+
+    def test_healthz_always_public(self, test_client, monkeypatch):
+        """AUTH_REQUIRED=true 时 /healthz 仍然 200 (白名单路由)."""
+        import cockpit.web.auth as auth_mod
+
+        monkeypatch.setattr(auth_mod, "_AUTH_REQUIRED", True)
+        auth_mod.reload_api_keys()
+        resp = test_client.get("/healthz")
+        assert resp.status_code == 200
+
+    def test_subservice_token_from_env(self, monkeypatch):
+        """get_subservice_token() 优先返回 COCKPIT_JWT_TOKEN, 其次 COCKPIT_API_KEY."""
+        import cockpit.web.auth as auth_mod
+
+        monkeypatch.setenv("COCKPIT_JWT_TOKEN", "jwt-abc")
+        monkeypatch.setenv("COCKPIT_API_KEY", "api-xyz")
+        assert auth_mod.get_subservice_token() == "jwt-abc"
+
+        monkeypatch.delenv("COCKPIT_JWT_TOKEN", raising=False)
+        assert auth_mod.get_subservice_token() == "api-xyz"
+
+        monkeypatch.delenv("COCKPIT_API_KEY", raising=False)
+        assert auth_mod.get_subservice_token() == ""

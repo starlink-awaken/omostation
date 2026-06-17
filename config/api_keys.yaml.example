@@ -1,0 +1,12 @@
+# Cockpit API Key 配置
+# 简易模式: 设置 COCKPIT_API_KEY 环境变量即可 (无需此文件)
+# 多 key 模式: 在下方 keys 列表中添加
+#
+# 启用认证: COCKPIT_AUTH_REQUIRED=true cockpit dashboard
+keys:
+  - name: admin
+    key: your-secret-key-here
+    scopes: [admin]
+  - name: readonly
+    key: your-readonly-key-here
+    scopes: [read]
