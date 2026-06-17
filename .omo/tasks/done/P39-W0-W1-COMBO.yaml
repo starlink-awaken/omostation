@@ -1,0 +1,39 @@
+id: P39-W0-W1-COMBO
+phase: 39
+wave: W0
+title: GitHub push 真启用 + 跨域+LLM 真消费卫健委场景 (W0 + W1 合并)
+status: done
+task_type: governance
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+- P38 验收 completed (P38-W2-W3-COMBO)
+depends_on:
+- P38-W2-W3-COMBO
+deliverables:
+- .omo/_delivery/phase39-w0-github-push.md
+- .omo/_delivery/phase39-w1-healthwork-llm.md
+- scripts/llm_healthwork_scenario.py
+risk_level: L0
+allowed_operation_level: L0
+source_docs:
+- .omo/_knowledge/management/retrospective-2026-06-13-p38.md
+knowledge_refs:
+- ADR-0008
+description: "P39-W0 GitHub push 真启用 (git remote 检查 + dry-run):\n- 远端存在 https://github.com/starlink-awaken/omostation.git\n\
+  - 本地 main 比远端多 133 commits\n- scripts/ci_local.sh 在独立 git 仓库 (scripts/.git/), 需独立\
+  \ push\n- POC 阶段不真 push, 写完整 push 步骤供用户执行\n\nP39-W1 跨域+LLM 真消费卫健委场景 (6 URI 跨域串联):\n\
+  - 场景: \"基层医疗机构药品集采政策\" (P28 卫健委 E2E 主题)\n- 6 URI 跨 4 domain: memory/kos/search +\
+  \ analysis/minerva/{research,draft}\n  + analysis/iris/{transform,validate} + governance/omo/inspect\n\
+  - mock 模式 6/6 派发 resolved, 真 API 模式 (anthropic) 需用户配 ANTHROPIC_API_KEY\n- 不引入 anthropic\
+  \ 依赖 (运行时可选 import)\n\n守 P32-P38 修复:\n- 不改 .omo/state/system.yaml / .omo/goals/current.yaml\
+  \ / .omo/INDEX.md\n- 不重启 omo daemon\n- 不引入 anthropic 依赖\n- POC 阶段不真 git push\n-\
+  \ omo health 12/12 (100.0%), audit 98.7 (A+), 3 pre-existing 集成测试失败 (非新增)\n"
+started_at: '2026-06-07T16:00:00Z'
+completed_at: '2026-06-07T16:00:00Z'
+blocked_by: null
+retry_count: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.450923+00:00'
+routed_by: omo-debt route

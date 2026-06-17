@@ -19,3 +19,6 @@ metadata:
   priority: P0
 created_at: '2026-06-16T07:30:00Z'
 updated_at: '2026-06-16T07:30:00Z'
+priority: P1
+priority_note: L1 risk, valuable but non-urgent
+phase: 48

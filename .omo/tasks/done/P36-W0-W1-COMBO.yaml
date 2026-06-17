@@ -1,0 +1,51 @@
+id: P36-W0-W1-COMBO
+phase: 36
+wave: W0
+title: 治理债务永久化 + 跨域 GAP 补 (W0 + W1 合并)
+status: done
+task_type: governance
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+- P35-VERIFY completed
+depends_on:
+- P35-VERIFY
+deliverables:
+- .omo/standards/task-yaml-rules.md
+- projects/omo/src/omo/omo_inspect.py
+- projects/omo/src/omo/cli.py
+- projects/agora/src/agora/mcp/bos_resolver.py
+- projects/kairon/packages/forge/src/forge/__main__.py
+- projects/agora/tests/integration/test_domain_chain.py
+- .omo/tasks/planned/P36-W0-W1-COMBO.yaml
+- .omo/_delivery/phase36-combo.md
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+- .omo/_delivery/phase35-verify.md
+knowledge_refs: []
+description: 'P36-W0 治理债务永久化 (task-yaml-rules.md, 2106 字节).
+
+  P36-W1 跨域 GAP 补: omo_inspect 模块 + 5 POC_SERVICES URI
+
+  (sharedbrain-bridge/recall-entity, health-profile/alert, forge/exec-tool,
+
+  forge/list-tools, omo/inspect) + 3 kairon __main__.py 补.
+
+  跨域 13/13 全 ok (P35-W0 是 9/11, 81.8%).
+
+  10 单元测试 (P36-W1 5 场景 + GAP 验证 + 跨域覆盖度 + transport 验证 + 100% 总结).
+
+  P37-W1 修: 4 条 deliverables 描述后缀被剥, 符合 task-yaml-rules.md 规则 1.
+
+  守 P32/P33/P34/P35 修复.
+
+  '
+started_at: '2026-06-07T10:00:00Z'
+completed_at: '2026-06-07T10:00:00Z'
+blocked_by: null
+retry_count: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.445744+00:00'
+routed_by: omo-debt route

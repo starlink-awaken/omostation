@@ -1,0 +1,46 @@
+id: P25-W2-DOCS-DEBT-CLOSURE
+phase: 25
+milestone: M25.2
+priority: P2
+title: 文档终稿+债务关闭+健康分重算
+status: done
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+source_docs:
+- ../../_knowledge/design/MASTER-BLUEPRINT.md
+depends_on:
+- P25-W1-E2E-INTEGRATION
+entry_gate:
+- phase24_completed
+risk_level: L1
+allowed_operation_level: L1
+human_approval_required: false
+evidence_required:
+- SharedBrain README更新(反映协议层角色)
+- PROJECTS.yaml更新(准确行数)
+- SB_DECOMPOSITION→resolved
+- SB_BRIDGE_FIX→resolved
+- SB_ROOT_CLEANUP→resolved
+- SB_PROJECTS_YAML→resolved
+- SB_PHASE17_PLAN→resolved
+- '健康分重算: 29.1→97.0'
+acceptance_criteria:
+- 5项债务标记resolved
+- PROJECTS.yaml与实际一致
+- 健康分=97.0
+- make test-fast全绿
+- ruff check全绿
+test_plan:
+- 完成文档终稿与债务关闭后核对健康分重算和验收标准
+accepted: null
+opened_at: '2026-06-02T23:17:32Z'
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.427436+00:00'
+routed_by: omo-debt route
+completed_at: '2026-06-17T09:21:48.879707Z'
+closeout_note: 'Superseded: docs+debt closed in P33-P45 phases'

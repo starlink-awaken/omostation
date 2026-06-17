@@ -1,37 +1,39 @@
 id: OPC-P15-MD-01
-title: "Phase 4: Model-Driven 开发流对齐与治理面接入"
-status: completed
+title: 'Phase 4: Model-Driven 开发流对齐与治理面接入'
+status: done
 priority: P0
 domain: opc
-created: "2026-06-13"
-description: |
-  激活 24 M2 模型类型与生命周期审计的准备工作。
+created: '2026-06-13'
+description: '激活 24 M2 模型类型与生命周期审计的准备工作。
+
   为 `projects/model-driven` 仓初始化 OMO 治理面板，并接入全局 audit-rollout 工作流。
+
+  '
 sub_gates:
-  - id: MD-G1
-    title: "Governance Directory Initialization"
-    status: passed
-    criteria:
-      - ".omo/state/system.yaml 落地"
-      - ".omo/debt/registry.yaml 落地"
-    evidence:
-      - "projects/model-driven/.omo/state/system.yaml"
-  - id: MD-G2
-    title: "Cross-repo Audit Integration"
-    status: passed
-    criteria:
-      - "cron 配置更新"
-      - "CI/CD 审计链更新"
-    evidence:
-      - ".omo/cron/opc-closeout-crontab"
-      - ".github/workflows/audit-rollout-monthly.yml"
-  - id: MD-G3
-    title: "Test Execution Verification"
-    status: passed
-    criteria:
-      - "model-driven 测试全部通过"
-    evidence:
-      - "uv run python -m pytest tests/ passed (212 tests)"
+- id: MD-G1
+  title: Governance Directory Initialization
+  status: passed
+  criteria:
+  - .omo/state/system.yaml 落地
+  - .omo/debt/registry.yaml 落地
+  evidence:
+  - projects/model-driven/.omo/state/system.yaml
+- id: MD-G2
+  title: Cross-repo Audit Integration
+  status: passed
+  criteria:
+  - cron 配置更新
+  - CI/CD 审计链更新
+  evidence:
+  - .omo/cron/opc-closeout-crontab
+  - .github/workflows/audit-rollout-monthly.yml
+- id: MD-G3
+  title: Test Execution Verification
+  status: passed
+  criteria:
+  - model-driven 测试全部通过
+  evidence:
+  - uv run python -m pytest tests/ passed (212 tests)
 gate: Gate MD
 gate_status: passed
-gate_closed_at: "2026-06-13T07:30:00Z"
+gate_closed_at: '2026-06-13T07:30:00Z'

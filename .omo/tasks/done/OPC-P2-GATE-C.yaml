@@ -1,177 +1,245 @@
 id: OPC-P2-GATE-C
-title: "OPC-P2 Gate C 实施追踪 (C1→C2→C3→C4→C)"
-status: completed
+title: OPC-P2 Gate C 实施追踪 (C1→C2→C3→C4→C)
+status: done
 priority: P0
 domain: opc
-created: "2026-06-11"
+created: '2026-06-11'
 parent_task: OPC-P2-MEMORY-SPINE
 prerequisites:
-  - opc_p2_t4_completed
-  - opc_p2_route_policy_designed
-description: |
-  Track P2 Gate C implementation sub-gates per OPC-MASTER-EXECUTION-PLAYBOOK §7.
-  Each sub-gate requires real runtime evidence (command output, test results)
-  before being claimed passed. No Gate C-level "passed" until C1-C4 all close.
-
-  Red lines (per Playbook §7):
-    - no fake zone_count
-    - no crash path hidden by docs-only updates
-    - no single subprocess stdout blob counted as a knowledge hit
-    - do not claim ingest/archive from design text alone
-    - do not close Gate C with local-only prose and no trace
-
-  Status (2026-06-11, after docs-tasks-runtime alignment pass):
-    C1 + C2 + C3 + C4 all closed with runtime evidence.
-    Gate C is the canonical pass-state; 21/21 tests pass in projects/cockpit.
-    P2 implementation complete on the C-axis.
+- opc_p2_t4_completed
+- opc_p2_route_policy_designed
+description: "Track P2 Gate C implementation sub-gates per OPC-MASTER-EXECUTION-PLAYBOOK\
+  \ §7.\nEach sub-gate requires real runtime evidence (command output, test results)\n\
+  before being claimed passed. No Gate C-level \"passed\" until C1-C4 all close.\n\
+  \nRed lines (per Playbook §7):\n  - no fake zone_count\n  - no crash path hidden\
+  \ by docs-only updates\n  - no single subprocess stdout blob counted as a knowledge\
+  \ hit\n  - do not claim ingest/archive from design text alone\n  - do not close\
+  \ Gate C with local-only prose and no trace\n\nStatus (2026-06-11, after docs-tasks-runtime\
+  \ alignment pass):\n  C1 + C2 + C3 + C4 all closed with runtime evidence.\n  Gate\
+  \ C is the canonical pass-state; 21/21 tests pass in projects/cockpit.\n  P2 implementation\
+  \ complete on the C-axis.\n"
 sub_gates:
-  - id: OPC-P2-C1
-    title: "Local Contract Hardening"
-    status: passed
-    claimed_verdict: pass
-    closed_at: "2026-06-11"
-    criteria:
-      - "cockpit search --all --json returns valid JSON"
-      - "top-level response fields complete (zone, query, zone_count, results, total)"
-      - "no traceback when KOS is unavailable"
-      - "tests exist and pass for local-only, --all, --json, and empty results"
-    evidence:
-      command: "cd projects/cockpit && uv run pytest tests/test_cli.py::TestP2GateC1LocalContract -v"
-      result: "5/5 tests passed in 0.10s"
-      files_changed:
-        - "projects/cockpit/src/cockpit/cli.py (removed dead 'return 0', replaced hard-coded zone_count.kos=1 + fake result injection with real KOS response parsing via _extract_kos_items(), added text-mode 'query:' field, added _log_kos_skip helper)"
-        - "projects/cockpit/tests/test_cli.py (added TestP2GateC1LocalContract class with 5 tests)"
-      runtime_evidence: |
-        - "cockpit search 'test' --json → {zone:all, query:test, total:2, zone_count:{local:2}, results:[2 items with 8 T4 fields]}"
-        - "cockpit search 'test' --all --json → zone_count:{local:2, kos:0}, total=2, KOS results injected: 0"
-        - "cockpit search 'x' --all (KOS unavailable) → exit 0, no traceback, zone_count:{local:0, kos:0}"
-        - "ruff check cli.py + test_cli.py → All checks passed!"
-      self_check:
-        - "test_local_only_json_contract: PASS"
-        - "test_all_with_kos_unavailable_no_traceback: PASS"
-        - "test_text_and_json_express_same_facts: PASS"
-        - "test_empty_results_returns_well_formed: PASS"
-        - "test_kos_zone_count_is_real_not_fake: PASS (red line guard)"
-      residual_risk: |
-        - "KOS zone still 0 — Gate C2 will activate real KOS query path"
-        - "Vault zone still missing — Gate C3 will add vault source"
-        - "P2-T0 persistence debts (kairon JSONL, gbrain non-atomic) remain open, non-blocking for C1"
-  - id: OPC-P2-C2
-    title: "KOS Activation"
-    status: passed
-    claimed_verdict: pass
-    closed_at: "2026-06-11"
-    criteria:
-      - "one real query returns non-empty local and/or KOS results through unified format"
-      - "KOS output is structured as result items, not raw stdout"
-      - "zone_count.kos matches actual merged items"
-    evidence:
-      command: "cd projects/cockpit && uv run cockpit search 'kairon' --all --json"
-      result: "zone_count={local:0, kos:10}, total=10, 15/15 tests pass"
-      files_changed:
-        - "projects/cockpit/src/cockpit/cli.py: replaced dead 'agora bos resolve' command with real kairon/kos MCP stdio invocation via _invoke_kos_search(); KOS schema→P2 contract mapping (8 KOS fields + 7 P2 fields); _kos_ts_to_iso() and _clean_control_chars() helpers; sys.stdout direct write to bypass rich JSON-breaking console.print"
-        - "projects/cockpit/tests/test_cli.py: rewrote test_kos_zone_count_is_real_not_fake to test real _invoke_kos_search() with monkeypatch on subprocess.Popen"
-      runtime_evidence: |
-        - "KOS subprocess spawn: uv run python -m kos.mcp.server (cwd=projects/kairon)"
-        - "MCP handshake: initialize (id=1) → initialized notification → tools/call search_knowledge (id=2)"
-        - "KOS schema 8 fields mapped to P2 contract: doc_id, title, kind, zone, status, canonical_path, trust_level, updated_at, body_preview"
-        - "q='kairon' returns 10 results; kos[1] (KOS README) has 8/8 T4 + 7/7 P2 fields"
-        - "snippet/body_preview free of 0x0a after _clean_control_chars()"
-        - "JSON parseable (sys.stdout.write bypasses rich console.print that was breaking JSON)"
-      self_check:
-        - "test_local_only_json_contract: PASS"
-        - "test_all_with_kos_unavailable_no_traceback: PASS"
-        - "test_text_and_json_express_same_facts: PASS"
-        - "test_empty_results_returns_well_formed: PASS"
-        - "test_kos_zone_count_is_real_not_fake: PASS (real _invoke_kos_search path)"
-        - "15/15 tests pass in 0.63s"
-        - "ruff check: All checks passed"
-      red_lines_held:
-        - "no fake stdout blob injection (zone_count.kos = len(mapped items), real)"
-        - "KOS unreachable → zone_count.kos=0 (not success)"
-        - "KOS 0 results → [] (not success, not failure)"
-        - "subprocess failure / timeout / JSON error → all except'd silently"
-        - "no multi-zone claim (this C2 only validates KOS, not vault)"
-  - id: OPC-P2-C3
-    title: "Vault Activation"
-    status: passed
-    claimed_verdict: pass
-    closed_at: "2026-06-11"
-    criteria:
-      - "at least one real query hits two zones"
-      - "zone_count shows more than one non-zero zone in at least one acceptance run"
-      - "vault results carry T4 metadata"
-    evidence:
-      command: "cd projects/cockpit && uv run cockpit search 'AGENTS' --all --json"
-      result: "zone_count={local:0, kos:10, vault:10}, total=20, 18/18 tests pass"
-      files_changed:
-        - "projects/cockpit/src/cockpit/cli.py: Zone 3 vault block in _cmd_search; new _invoke_vault_search() function (real bash subprocess + parse + P2 contract mapping); _log_vault_skip, _read_vault_snippet, _vault_file_mtime, _infer_vault_zone helpers"
-        - "projects/cockpit/tests/test_cli.py: test_all_with_kos_unavailable_no_traceback updated to verify all 3 zones=0; new TestP2GateC3VaultActivation class with 3 tests"
-      runtime_evidence: |
-        - "vault-search.sh invocation: bash _control/executors/vault-search.sh 'AGENTS'"
-        - "vault stdout parse: 10 paths, all match path_re ^\\./.+\\.md$"
-        - "q='AGENTS' returns vault=10 items + kos=10 items, total=20"
-        - "vault[0] has 8/8 T4 fields (source=@学习进化, source_path=_archive/..., _zone=document-vault, _type=document, _freshness=unknown, _owner=vault, _reuse_policy=derived-allowed, _retrieved_at=now)"
-        - "vault_zone inferred: _archive/... → archive"
-        - "snippet from file first non-empty line (e.g. '> 📝 **用途**: ...')"
-        - "timestamp from mtime, ISO 8601 UTC"
-        - "text mode: 'query: AGENTS  zone: all  total: 20  zones: {local:0, kos:10, vault:10}'"
-      self_check:
-        - "test_vault_invoke_parses_real_script_output: PASS (vault zone inference + LEARNING_VAULT override → [])"
-        - "test_vault_zone_count_uses_real_items: PASS (3 vault paths → 3 mapped items)"
-        - "test_multi_zone_acceptance_path: PASS (3 zones stubbed → 3-zone verification)"
-        - "15+3 = 18/18 tests pass in 0.40s"
-        - "ruff check: All checks passed"
-      red_lines_held:
-        - "no file listing masquerading as search (real bash subprocess + path_re validation)"
-        - "no empty shell route counted as zone activation (vault invocation must return real paths)"
-        - "vault unreachable → zone_count.vault=0 (not success)"
-        - "vault 0 paths → [] (not success, not failure)"
-        - "subprocess failure / timeout / OSError → all except'd silently"
-        - "vault[0] carries 8/8 T4 metadata (not bare path strings)"
-  - id: OPC-P2-C4
-    title: "Real Trace Closure"
-    status: passed
-    claimed_verdict: pass
-    closed_at: "2026-06-11"
-    criteria:
-      - "at least one query has a trace with input, zones queried, result count, and writeback/archive evidence"
-      - "trace is reproducible by command and file reference"
-    evidence:
-      command_q1: "cd projects/cockpit && uv run cockpit search 'c4 acceptance query one' --all --json"
-      command_q2: "cd projects/cockpit && uv run cockpit search 'c4 acceptance query two' --all --json"
-      result_q1: "trace_id=31, deduped=False, summary.zone_count={local:0,kos:10,vault:0}, summary.timestamp=2026-06-11T08:57:03Z"
-      result_q2: "trace_id=32, deduped=False, summary.zone_count={local:0,kos:10,vault:0}, summary.timestamp=2026-06-11T08:57:10Z"
-      files_changed:
-        - "projects/cockpit/src/cockpit/cli.py: Zone 4 writeback block (real subprocess + dedup + research persistence); _writeback_search_trace() function; _log_trace_skip() helper; response dict refactored to include _trace"
-        - "projects/cockpit/tests/test_cli.py: TestP2GateC4TraceClosure class (3 tests)"
-      runtime_evidence: |
-        - "Q1 → cockpit research table row id=31, topic='search-trace: c4 acceptance query one'"
-        - "Q2 → cockpit research table row id=32, topic='search-trace: c4 acceptance query two'"
-        - "summary JSON: {query, zone_count, total, limit, timestamp}"
-        - "source_count=total, agent='opc-p2-trace'"
-        - "text mode: 'query: ...  trace_id: 33 (new)' or '(deduped)'"
-        - "dedup window: 60s — re-run same query returns same trace_id with deduped=True"
-        - "Trace queryable via research table: SELECT id, topic, summary FROM research WHERE agent='opc-p2-trace'"
-        - "Archive retention: archived_at=None (Cockpit research 永不删除, P2-T1 boundary rule #1)"
-      self_check:
-        - "test_writeback_creates_persistent_trace: PASS (first run write + 60s dedup)"
-        - "test_writeback_silent_on_subprocess_failure: PASS (异常静默返回 {})"
-        - "test_cmd_search_emits_trace_in_response: PASS (response._trace 必现)"
-        - "21/21 tests pass in 0.38s"
-        - "ruff check: All checks passed"
-      red_lines_held:
-        - "do not claim ingest/archive from design text alone (真 trace row in research table, queryable)"
-        - "do not close Gate C with local-only prose and no trace (real writeback to cockpit SQLite)"
-        - "no fake trace_id (deduped=False 时 trace_id 来自真实 INSERT)"
-        - "no duplicate writeback (60s dedup window)"
-        - "no blocking on error (subprocess/timeout 异常静默返回 {})"
-        - "trace reproducible (two queries produce two distinct trace_ids 31 and 32)"
+- id: OPC-P2-C1
+  title: Local Contract Hardening
+  status: passed
+  claimed_verdict: pass
+  closed_at: '2026-06-11'
+  criteria:
+  - cockpit search --all --json returns valid JSON
+  - top-level response fields complete (zone, query, zone_count, results, total)
+  - no traceback when KOS is unavailable
+  - tests exist and pass for local-only, --all, --json, and empty results
+  evidence:
+    command: cd projects/cockpit && uv run pytest tests/test_cli.py::TestP2GateC1LocalContract
+      -v
+    result: 5/5 tests passed in 0.10s
+    files_changed:
+    - projects/cockpit/src/cockpit/cli.py (removed dead 'return 0', replaced hard-coded
+      zone_count.kos=1 + fake result injection with real KOS response parsing via
+      _extract_kos_items(), added text-mode 'query:' field, added _log_kos_skip helper)
+    - projects/cockpit/tests/test_cli.py (added TestP2GateC1LocalContract class with
+      5 tests)
+    runtime_evidence: '- "cockpit search ''test'' --json → {zone:all, query:test,
+      total:2, zone_count:{local:2}, results:[2 items with 8 T4 fields]}"
+
+      - "cockpit search ''test'' --all --json → zone_count:{local:2, kos:0}, total=2,
+      KOS results injected: 0"
+
+      - "cockpit search ''x'' --all (KOS unavailable) → exit 0, no traceback, zone_count:{local:0,
+      kos:0}"
+
+      - "ruff check cli.py + test_cli.py → All checks passed!"
+
+      '
+    self_check:
+    - 'test_local_only_json_contract: PASS'
+    - 'test_all_with_kos_unavailable_no_traceback: PASS'
+    - 'test_text_and_json_express_same_facts: PASS'
+    - 'test_empty_results_returns_well_formed: PASS'
+    - 'test_kos_zone_count_is_real_not_fake: PASS (red line guard)'
+    residual_risk: '- "KOS zone still 0 — Gate C2 will activate real KOS query path"
+
+      - "Vault zone still missing — Gate C3 will add vault source"
+
+      - "P2-T0 persistence debts (kairon JSONL, gbrain non-atomic) remain open, non-blocking
+      for C1"
+
+      '
+- id: OPC-P2-C2
+  title: KOS Activation
+  status: passed
+  claimed_verdict: pass
+  closed_at: '2026-06-11'
+  criteria:
+  - one real query returns non-empty local and/or KOS results through unified format
+  - KOS output is structured as result items, not raw stdout
+  - zone_count.kos matches actual merged items
+  evidence:
+    command: cd projects/cockpit && uv run cockpit search 'kairon' --all --json
+    result: zone_count={local:0, kos:10}, total=10, 15/15 tests pass
+    files_changed:
+    - 'projects/cockpit/src/cockpit/cli.py: replaced dead ''agora bos resolve'' command
+      with real kairon/kos MCP stdio invocation via _invoke_kos_search(); KOS schema→P2
+      contract mapping (8 KOS fields + 7 P2 fields); _kos_ts_to_iso() and _clean_control_chars()
+      helpers; sys.stdout direct write to bypass rich JSON-breaking console.print'
+    - 'projects/cockpit/tests/test_cli.py: rewrote test_kos_zone_count_is_real_not_fake
+      to test real _invoke_kos_search() with monkeypatch on subprocess.Popen'
+    runtime_evidence: '- "KOS subprocess spawn: uv run python -m kos.mcp.server (cwd=projects/kairon)"
+
+      - "MCP handshake: initialize (id=1) → initialized notification → tools/call
+      search_knowledge (id=2)"
+
+      - "KOS schema 8 fields mapped to P2 contract: doc_id, title, kind, zone, status,
+      canonical_path, trust_level, updated_at, body_preview"
+
+      - "q=''kairon'' returns 10 results; kos[1] (KOS README) has 8/8 T4 + 7/7 P2
+      fields"
+
+      - "snippet/body_preview free of 0x0a after _clean_control_chars()"
+
+      - "JSON parseable (sys.stdout.write bypasses rich console.print that was breaking
+      JSON)"
+
+      '
+    self_check:
+    - 'test_local_only_json_contract: PASS'
+    - 'test_all_with_kos_unavailable_no_traceback: PASS'
+    - 'test_text_and_json_express_same_facts: PASS'
+    - 'test_empty_results_returns_well_formed: PASS'
+    - 'test_kos_zone_count_is_real_not_fake: PASS (real _invoke_kos_search path)'
+    - 15/15 tests pass in 0.63s
+    - 'ruff check: All checks passed'
+    red_lines_held:
+    - no fake stdout blob injection (zone_count.kos = len(mapped items), real)
+    - KOS unreachable → zone_count.kos=0 (not success)
+    - KOS 0 results → [] (not success, not failure)
+    - subprocess failure / timeout / JSON error → all except'd silently
+    - no multi-zone claim (this C2 only validates KOS, not vault)
+- id: OPC-P2-C3
+  title: Vault Activation
+  status: passed
+  claimed_verdict: pass
+  closed_at: '2026-06-11'
+  criteria:
+  - at least one real query hits two zones
+  - zone_count shows more than one non-zero zone in at least one acceptance run
+  - vault results carry T4 metadata
+  evidence:
+    command: cd projects/cockpit && uv run cockpit search 'AGENTS' --all --json
+    result: zone_count={local:0, kos:10, vault:10}, total=20, 18/18 tests pass
+    files_changed:
+    - 'projects/cockpit/src/cockpit/cli.py: Zone 3 vault block in _cmd_search; new
+      _invoke_vault_search() function (real bash subprocess + parse + P2 contract
+      mapping); _log_vault_skip, _read_vault_snippet, _vault_file_mtime, _infer_vault_zone
+      helpers'
+    - 'projects/cockpit/tests/test_cli.py: test_all_with_kos_unavailable_no_traceback
+      updated to verify all 3 zones=0; new TestP2GateC3VaultActivation class with
+      3 tests'
+    runtime_evidence: '- "vault-search.sh invocation: bash _control/executors/vault-search.sh
+      ''AGENTS''"
+
+      - "vault stdout parse: 10 paths, all match path_re ^\\./.+\\.md$"
+
+      - "q=''AGENTS'' returns vault=10 items + kos=10 items, total=20"
+
+      - "vault[0] has 8/8 T4 fields (source=@学习进化, source_path=_archive/..., _zone=document-vault,
+      _type=document, _freshness=unknown, _owner=vault, _reuse_policy=derived-allowed,
+      _retrieved_at=now)"
+
+      - "vault_zone inferred: _archive/... → archive"
+
+      - "snippet from file first non-empty line (e.g. ''> 📝 **用途**: ...'')"
+
+      - "timestamp from mtime, ISO 8601 UTC"
+
+      - "text mode: ''query: AGENTS  zone: all  total: 20  zones: {local:0, kos:10,
+      vault:10}''"
+
+      '
+    self_check:
+    - 'test_vault_invoke_parses_real_script_output: PASS (vault zone inference + LEARNING_VAULT
+      override → [])'
+    - 'test_vault_zone_count_uses_real_items: PASS (3 vault paths → 3 mapped items)'
+    - 'test_multi_zone_acceptance_path: PASS (3 zones stubbed → 3-zone verification)'
+    - 15+3 = 18/18 tests pass in 0.40s
+    - 'ruff check: All checks passed'
+    red_lines_held:
+    - no file listing masquerading as search (real bash subprocess + path_re validation)
+    - no empty shell route counted as zone activation (vault invocation must return
+      real paths)
+    - vault unreachable → zone_count.vault=0 (not success)
+    - vault 0 paths → [] (not success, not failure)
+    - subprocess failure / timeout / OSError → all except'd silently
+    - vault[0] carries 8/8 T4 metadata (not bare path strings)
+- id: OPC-P2-C4
+  title: Real Trace Closure
+  status: passed
+  claimed_verdict: pass
+  closed_at: '2026-06-11'
+  criteria:
+  - at least one query has a trace with input, zones queried, result count, and writeback/archive
+    evidence
+  - trace is reproducible by command and file reference
+  evidence:
+    command_q1: cd projects/cockpit && uv run cockpit search 'c4 acceptance query
+      one' --all --json
+    command_q2: cd projects/cockpit && uv run cockpit search 'c4 acceptance query
+      two' --all --json
+    result_q1: trace_id=31, deduped=False, summary.zone_count={local:0,kos:10,vault:0},
+      summary.timestamp=2026-06-11T08:57:03Z
+    result_q2: trace_id=32, deduped=False, summary.zone_count={local:0,kos:10,vault:0},
+      summary.timestamp=2026-06-11T08:57:10Z
+    files_changed:
+    - 'projects/cockpit/src/cockpit/cli.py: Zone 4 writeback block (real subprocess
+      + dedup + research persistence); _writeback_search_trace() function; _log_trace_skip()
+      helper; response dict refactored to include _trace'
+    - 'projects/cockpit/tests/test_cli.py: TestP2GateC4TraceClosure class (3 tests)'
+    runtime_evidence: '- "Q1 → cockpit research table row id=31, topic=''search-trace:
+      c4 acceptance query one''"
+
+      - "Q2 → cockpit research table row id=32, topic=''search-trace: c4 acceptance
+      query two''"
+
+      - "summary JSON: {query, zone_count, total, limit, timestamp}"
+
+      - "source_count=total, agent=''opc-p2-trace''"
+
+      - "text mode: ''query: ...  trace_id: 33 (new)'' or ''(deduped)''"
+
+      - "dedup window: 60s — re-run same query returns same trace_id with deduped=True"
+
+      - "Trace queryable via research table: SELECT id, topic, summary FROM research
+      WHERE agent=''opc-p2-trace''"
+
+      - "Archive retention: archived_at=None (Cockpit research 永不删除, P2-T1 boundary
+      rule #1)"
+
+      '
+    self_check:
+    - 'test_writeback_creates_persistent_trace: PASS (first run write + 60s dedup)'
+    - 'test_writeback_silent_on_subprocess_failure: PASS (异常静默返回 {})'
+    - 'test_cmd_search_emits_trace_in_response: PASS (response._trace 必现)'
+    - 21/21 tests pass in 0.38s
+    - 'ruff check: All checks passed'
+    red_lines_held:
+    - do not claim ingest/archive from design text alone (真 trace row in research
+      table, queryable)
+    - do not close Gate C with local-only prose and no trace (real writeback to cockpit
+      SQLite)
+    - no fake trace_id (deduped=False 时 trace_id 来自真实 INSERT)
+    - no duplicate writeback (60s dedup window)
+    - no blocking on error (subprocess/timeout 异常静默返回 {})
+    - trace reproducible (two queries produce two distinct trace_ids 31 and 32)
 gate: Gate C
 gate_status: passed
-gate_note: |
-  C1 + C2 + C3 + C4 all closed (2026-06-11). 21/21 tests pass.
+gate_note: 'C1 + C2 + C3 + C4 all closed (2026-06-11). 21/21 tests pass.
+
   P2 implementation complete on the C-axis (T1-T5 design + C1-C4 runtime).
-  Multi-zone hit {local:0, kos:10, vault:10} verified for q='AGENTS'.
+
+  Multi-zone hit {local:0, kos:10, vault:10} verified for q=''AGENTS''.
+
   Writeback to cockpit research verified (trace_ids 31 and 32).
+
   P3 ready to open.
+
+  '

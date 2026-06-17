@@ -1,0 +1,45 @@
+id: OPC-P42-OMO-SURFACES-LEGACY-CLEANUP
+title: 清理 OMO governance surfaces 受控遗留面
+status: candidate
+task_type: governance
+risk_level: L1
+depends_on: []
+source_docs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+deliverables:
+- 清理或归档 .omo/.omo/ 嵌套遗留根（已完成后续只防回归）
+- 判定 boulder.json 的最终归宿（已归档，后续只防回归）
+- 逐步将 .omo/evidence/ 残留迁移至 _delivery/ 或 _archive/
+imported_via: omo_governance_surfaces_followup
+context_uri: bos://governance/omo/surfaces/legacy-cleanup
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x3-value-stack.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+entry_gate:
+- OMO_GOVERNANCE_SURFACES_WARN_ONLY
+evidence_required:
+- governance surfaces 巡检中 constrained legacy assets 数量下降
+- legacy 面去向有文档化说明与落盘证据
+test_plan:
+- uv run python -W ignore::DeprecationWarning -m omo.cli governance surfaces --workspace-root
+  /Users/xiamingxing/Workspace --json
+allowed_operation_level: L1
+human_approval_required: false
+metadata:
+  governance_stack: state_plane.kernel_plane.ingress_plane
+  ingress_plane: projects/omo
+phase: 48

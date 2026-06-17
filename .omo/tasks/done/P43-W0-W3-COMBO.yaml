@@ -1,0 +1,46 @@
+id: P43-W0-W3-COMBO
+phase: 43
+wave: W0
+title: P43 4 wave 全面实施 (ProcessPool + 40 URI smoke + audit + 修测试)
+status: done
+task_type: feature
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+- P42-W2-COMBO completed
+depends_on:
+- P42-W2-COMBO
+deliverables:
+- projects/omo/src/omo/omo_llm_bos_bridge.py
+- projects/omo/tests/integration/test_bos_40_uri_smoke.py
+- projects/omo/tests/integration/test_bos_agora_integration.py
+- .omo/_delivery/phase43-4wave-combo.md
+- .omo/tasks/planned/P43-W0-W3-COMBO.yaml
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+- .omo/_knowledge/management/retrospective-2026-06-16-p41.md
+- .omo/_delivery/phase42-w2-agora-subprocess.md
+knowledge_refs:
+- ADR-0008
+description: 'P43-W0 agora 长驻进程池 (75x 加速, 6 URI 0.80s vs P42-W2 60s).
+
+  P43-W1 40 BOS URI smoke test (5 Domain 全覆盖).
+
+  P43-W2 agora 失败 omo-audit 记录 (3 失败类型).
+
+  P43-W3 修 P34 时代 3 固化测试断言 (resolver_total 11→25, analysis 3→12, 9_unregistered→3_gap_samples).
+
+  守 P32-P42 + P42-W0/W1/W2 修复.
+
+  audit 100.0 (A+) 维持.
+
+  '
+started_at: '2026-06-16T02:00:00Z'
+completed_at: '2026-06-16T02:00:00Z'
+blocked_by: null
+retry_count: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.438882+00:00'
+routed_by: omo-debt route

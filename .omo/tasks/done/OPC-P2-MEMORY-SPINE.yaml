@@ -1,42 +1,48 @@
 id: OPC-P2-MEMORY-SPINE
-title: "OPC-P2: Personal Memory Spine"
-status: completed
+title: 'OPC-P2: Personal Memory Spine'
+status: done
 priority: P0
 domain: opc
-created: "2026-06-11"
+created: '2026-06-11'
 prerequisites:
-  - opc_phase1_conditionally_passed
-  - opc_phase15_cross_repo_governance_baseline_ready
-  - persistence_risks_registered
-description: |
-  Design the personal memory spine for OPC. Define memory boundaries,
+- opc_phase1_conditionally_passed
+- opc_phase15_cross_repo_governance_baseline_ready
+- persistence_risks_registered
+description: 'Design the personal memory spine for OPC. Define memory boundaries,
+
   bos://memory/** route policy, recall flow, source metadata schema,
+
   and memory quality metrics.
+
+  '
 tasks:
-  - id: OPC-P2-01
-    title: "Define memory boundaries (5 zones)"
-    status: completed
-    evidence: "docs/OPC-PHASE2-MEMORY-SPINE.md §T1"
-  - id: OPC-P2-02
-    title: "Define bos://memory/** route policy"
-    status: completed
-    evidence: "docs/OPC-PHASE2-MEMORY-SPINE.md §T2"
-  - id: OPC-P2-03
-    title: "Design recall flow (collect→ingest→search→output→archive)"
-    status: completed
-    evidence: "docs/OPC-PHASE2-MEMORY-SPINE.md §T3"
-  - id: OPC-P2-04
-    title: "Implement source metadata on local search output"
-    status: completed
-    evidence: "8/8 T4 fields: _source, _source_path, _zone, _type, _freshness, _owner, _reuse_policy, _retrieved_at in all search results"
-  - id: OPC-P2-05
-    title: "Define memory quality metrics"
-    status: completed
-    evidence: "docs/OPC-PHASE2-MEMORY-SPINE.md §T5"
+- id: OPC-P2-01
+  title: Define memory boundaries (5 zones)
+  status: completed
+  evidence: docs/OPC-PHASE2-MEMORY-SPINE.md §T1
+- id: OPC-P2-02
+  title: Define bos://memory/** route policy
+  status: completed
+  evidence: docs/OPC-PHASE2-MEMORY-SPINE.md §T2
+- id: OPC-P2-03
+  title: Design recall flow (collect→ingest→search→output→archive)
+  status: completed
+  evidence: docs/OPC-PHASE2-MEMORY-SPINE.md §T3
+- id: OPC-P2-04
+  title: Implement source metadata on local search output
+  status: completed
+  evidence: '8/8 T4 fields: _source, _source_path, _zone, _type, _freshness, _owner,
+    _reuse_policy, _retrieved_at in all search results'
+- id: OPC-P2-05
+  title: Define memory quality metrics
+  status: completed
+  evidence: docs/OPC-PHASE2-MEMORY-SPINE.md §T5
 risks:
-  - "kairon JSONL persistence: registered as DEBT-OMC-KAIRON-JSONL"
-  - "gbrain non-atomic writes: registered as DEBT-OMC-GBRAIN-PERSISTENCE"
-  - "metaos .omo/ plane: initialized skeleton, full population deferred"
+- 'kairon JSONL persistence: registered as DEBT-OMC-KAIRON-JSONL'
+- 'gbrain non-atomic writes: registered as DEBT-OMC-GBRAIN-PERSISTENCE'
+- 'metaos .omo/ plane: initialized skeleton, full population deferred'
 gate: Gate C
 gate_status: passed
-gate_note: "Gate C passed (2026-06-11). C1+C2+C3+C4 all closed. 21/21 cockpit tests pass. Multi-zone hit verified ({local:0, kos:10, vault:10}). Writeback to research verified. P2 implementation complete on the C-axis."
+gate_note: Gate C passed (2026-06-11). C1+C2+C3+C4 all closed. 21/21 cockpit tests
+  pass. Multi-zone hit verified ({local:0, kos:10, vault:10}). Writeback to research
+  verified. P2 implementation complete on the C-axis.

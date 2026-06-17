@@ -1,7 +1,7 @@
 id: OPC-PHASE-PLAN
 title: OPC personal swarm AI brain roadmap
 status: planned
-priority: P0
+priority: P3
 created_at: '2026-06-11T00:00:00Z'
 owner: cockpit-team
 scope: workspace
@@ -183,3 +183,6 @@ review_gates:
 - Gate G: after OPC-P7
 routed_at: '2026-06-16T05:03:41.412849+00:00'
 routed_by: omo-debt route
+note: Meta roadmap reference document, not an actionable task. Individual phase plans
+  (P33-P45) supersede.
+phase: 42

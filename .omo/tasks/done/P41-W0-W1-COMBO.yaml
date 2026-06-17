@@ -1,0 +1,50 @@
+id: P41-W0-W1-COMBO
+phase: 41
+wave: W0
+title: LLM 用 ollama + 修 GitHub workflow failure (W0 + W1 合并)
+status: done
+task_type: feature
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+- P40 验收 completed (P40-W2-W3-COMBO)
+depends_on:
+- P40-W2-W3-COMBO
+deliverables:
+- scripts/llm_healthwork_scenario.py
+- projects/omo/pyproject.toml
+- projects/omo/src/omo/omo_worker_promotion.py
+- .github/workflows/*.yml
+- .omo/_delivery/phase41-w0-ollama-llm.md
+- .omo/_delivery/phase41-w1-fix-ci.md
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+- .omo/_knowledge/management/retrospective-2026-06-15-p40.md
+knowledge_refs:
+- ADR-0008
+description: 'P41-W0 LLM 用 ollama 替代 anthropic (本地免费, 不需 API key).
+
+  P41-W1 修 GitHub workflow failure (P40-W0 揭出, 10 个 workflow runs failed).
+
+  4 个根本根因:
+
+  1) projects/kairon/runtime/gbrain 在 .gitignore 隔离
+
+  2) Ruff Check 真实 ruff violations (F401/F821/E402/E722)
+
+  3) eCOS e2e 测试期望 gitignore''d data files
+
+  4) agora 引用 kairon extras 路径解析失败
+
+  守 P32-P40 修复.
+
+  '
+started_at: '2026-06-07T20:00:00Z'
+completed_at: '2026-06-07T20:00:00Z'
+blocked_by: null
+retry_count: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.422415+00:00'
+routed_by: omo-debt route

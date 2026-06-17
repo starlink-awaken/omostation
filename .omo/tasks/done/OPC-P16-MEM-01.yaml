@@ -1,20 +1,22 @@
 id: OPC-P16-MEM-01
-title: "Phase 1.1: 记忆系统现状审计"
-status: completed
+title: 'Phase 1.1: 记忆系统现状审计'
+status: done
 priority: P0
 domain: opc
-created: "2026-06-13"
-description: |
-  执行了 2026-v6.1-strategic-plan.md Phase 1 (记忆系统升级) 的第一项任务：记忆系统现状审计。
+created: '2026-06-13'
+description: '执行了 2026-v6.1-strategic-plan.md Phase 1 (记忆系统升级) 的第一项任务：记忆系统现状审计。
+
   审计了 gbrain 与 kairon/kos 结合的双轨架构隐患，产出了具体的碎片率与退化曲线报告。
+
+  '
 sub_gates:
-  - id: MEM-1.1
-    title: "审计报告输出"
-    status: passed
-    criteria:
-      - "产出包含碎片率、检索命中率、退化曲线的评估分析"
-    evidence:
-      - ".omo/_knowledge/audits/2026-06-13-memory-audit.md"
+- id: MEM-1.1
+  title: 审计报告输出
+  status: passed
+  criteria:
+  - 产出包含碎片率、检索命中率、退化曲线的评估分析
+  evidence:
+  - .omo/_knowledge/audits/2026-06-13-memory-audit.md
 gate: Gate MEM-1
 gate_status: passed
-gate_closed_at: "2026-06-13T07:35:00Z"
+gate_closed_at: '2026-06-13T07:35:00Z'

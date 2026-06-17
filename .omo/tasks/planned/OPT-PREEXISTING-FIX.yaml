@@ -20,3 +20,6 @@ metadata:
   priority: P1
 created_at: '2026-06-16T07:30:00Z'
 updated_at: '2026-06-16T07:30:00Z'
+priority: P2
+priority_note: L2 risk optimization
+phase: 48

@@ -1,23 +1,27 @@
 id: OPC-P16-MEM-03
-title: "Phase 1.3: 双轨写入管线改造"
-status: completed
+title: 'Phase 1.3: 双轨写入管线改造'
+status: done
 priority: P0
 domain: opc
-created: "2026-06-13"
-description: |
-  执行了 2026-v6.1-strategic-plan.md Phase 1 (记忆系统升级) 的第三项任务：双轨写入管线改造。
+created: '2026-06-13'
+description: '执行了 2026-v6.1-strategic-plan.md Phase 1 (记忆系统升级) 的第三项任务：双轨写入管线改造。
+
   为 gbrain 的 schema 追加了 access_count 与 confidence_score。
-  在 kairon/kos 层实现了 memtheta_adapter，完成原文写入 .omo/_log/memory_raw 且能够触发 Update / Merge 的逻辑。
+
+  在 kairon/kos 层实现了 memtheta_adapter，完成原文写入 .omo/_log/memory_raw 且能够触发 Update / Merge
+  的逻辑。
+
+  '
 sub_gates:
-  - id: MEM-1.3
-    title: "双轨引擎接入与 Schema 演进"
-    status: passed
-    criteria:
-      - "gbrain 侧增加指标统计列"
-      - "kos/memory_card.py 切换至 memtheta_adapter.update 触发机制"
-    evidence:
-      - "projects/gbrain/src/schema.sql"
-      - "projects/kairon/packages/kos/src/kos/adapters/memtheta_adapter.py"
+- id: MEM-1.3
+  title: 双轨引擎接入与 Schema 演进
+  status: passed
+  criteria:
+  - gbrain 侧增加指标统计列
+  - kos/memory_card.py 切换至 memtheta_adapter.update 触发机制
+  evidence:
+  - projects/gbrain/src/schema.sql
+  - projects/kairon/packages/kos/src/kos/adapters/memtheta_adapter.py
 gate: Gate MEM-1.3
 gate_status: passed
-gate_closed_at: "2026-06-13T07:45:00Z"
+gate_closed_at: '2026-06-13T07:45:00Z'

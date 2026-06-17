@@ -1,167 +1,164 @@
 id: OPC-P6
-title: "OPC-P6: Self-Evolution Loop"
-status: completed
+title: 'OPC-P6: Self-Evolution Loop'
+status: done
 priority: P0
 domain: opc
-created: "2026-06-11"
-completed: "2026-06-13"
+created: '2026-06-11'
+completed: '2026-06-13'
 prerequisites:
-  - opc_phase3_gate_d_passed
-  - opc_phase4_gate_e_passed
-  - opc_phase5_gate_f_passed
-  - opc_section19_cross_repo_debt_closed
-description: |
-  P6 makes system improvement a governed recurring workflow, not ad-hoc.
+- opc_phase3_gate_d_passed
+- opc_phase4_gate_e_passed
+- opc_phase5_gate_f_passed
+- opc_section19_cross_repo_debt_closed
+description: 'P6 makes system improvement a governed recurring workflow, not ad-hoc.
+
   6-stage loop: radar → gap → task → swarm → audit → retrospective.
 
+
   Key constraint (OPC-ROADMAP §6.2):
+
   > Self-evolution tasks may enter planned state only; human approval is
+
   > required for active execution.
 
+
   Source-of-truth: docs/OPC-PHASE6-EVOLUTION-LOOP.md
+
+  '
 sub_gates:
-  - id: P6-G1
-    title: "evolution loop 闭环"
-    status: passed
-    closed_at: "2026-06-13T12:30:00Z"
-    criteria:
-      - '≥1 周完整闭环 (radar → gap → task → swarm → audit → retro)'
+- id: P6-G1
+  title: evolution loop 闭环
+  status: passed
+  closed_at: '2026-06-13T12:30:00Z'
+  criteria:
+  - ≥1 周完整闭环 (radar → gap → task → swarm → audit → retro)
+  - 6 阶段每个都有 evidence
+  evidence_requirement: 1 周闭环 evidence
+  evidence:
+  - .omo/tasks/registry/done/OPC-P6-G1/evidence-package.md
+  - scripts/opc_p6_weekly_loop_cron.sh
+  - .omo/_control/evolution/loop/trace-index.json
+  - .omo/_control/evolution/loop/2026-W23.json
+  - .omo/_control/evolution/loop/2026-W24.json
+  - .omo/_control/evolution/loop/2026-W25.json
+  - .omo/_control/evolution/loop/2026-W26.json
+  - .omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W23.md
+  - .omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W24.md
+  - .omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W25.md
+  - .omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W26.md
+  assessment: '2026-06-13 验收: 7 个周报证据, 6 阶段闭环完整.
 
-      - '6 阶段每个都有 evidence'
+    cron 已运行 7 周, 验收标准满足.
 
-    evidence_requirement: "1 周闭环 evidence"
-    evidence:
-      - ".omo/tasks/registry/done/OPC-P6-G1/evidence-package.md"
-      - "scripts/opc_p6_weekly_loop_cron.sh"
-      - ".omo/_control/evolution/loop/trace-index.json"
-      - ".omo/_control/evolution/loop/2026-W23.json"
-      - ".omo/_control/evolution/loop/2026-W24.json"
-      - ".omo/_control/evolution/loop/2026-W25.json"
-      - ".omo/_control/evolution/loop/2026-W26.json"
-      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W23.md"
-      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W24.md"
-      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W25.md"
-      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W26.md"
-    assessment: |
-      2026-06-13 验收: 7 个周报证据, 6 阶段闭环完整.
-      cron 已运行 7 周, 验收标准满足.
-  - id: P6-G2
-    title: "周更升级报告"
-    status: passed
-    closed_at: "2026-06-13T12:30:00Z"
-    criteria:
-      - '≥2 周连续周报'
+    '
+- id: P6-G2
+  title: 周更升级报告
+  status: passed
+  closed_at: '2026-06-13T12:30:00Z'
+  criteria:
+  - ≥2 周连续周报
+  - 每份含 ≥3 candidates + score 排序
+  - 含 source + timestamp + next-action + 人工审批栏
+  evidence_requirement: 2 周连续周报 markdown
+  evidence:
+  - .omo/tasks/registry/done/OPC-P6-G2/evidence-package.md
+  - .omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W23.md
+  - .omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W24.md
+  - .omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W25.md
+  - .omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W26.md
+  - .omo/_control/evolution/approval-board/current.json
+  assessment: '2026-06-13 验收: 7 个周报证据, 满足 ≥2 周连续周报要求.
 
-      - '每份含 ≥3 candidates + score 排序'
+    每份含 ≥3 candidates + score 排序 + source + timestamp + next-action.
 
-      - '含 source + timestamp + next-action + 人工审批栏'
+    G2 验收标准已满足.
 
-    evidence_requirement: "2 周连续周报 markdown"
-    evidence:
-      - ".omo/tasks/registry/done/OPC-P6-G2/evidence-package.md"
-      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W23.md"
-      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W24.md"
-      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W25.md"
-      - ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W26.md"
-      - ".omo/_control/evolution/approval-board/current.json"
-    assessment: |
-      2026-06-13 验收: 7 个周报证据, 满足 ≥2 周连续周报要求.
-      每份含 ≥3 candidates + score 排序 + source + timestamp + next-action.
-      G2 验收标准已满足.
-  - id: P6-G3
-    title: "drift detector"
-    status: passed
-    closed_at: "2026-06-13T12:30:00Z"
-    criteria:
-      - '4 类漂移 (entry/doc/duplicate_facts/agora_bypass) 检测器'
+    '
+- id: P6-G3
+  title: drift detector
+  status: passed
+  closed_at: '2026-06-13T12:30:00Z'
+  criteria:
+  - 4 类漂移 (entry/doc/duplicate_facts/agora_bypass) 检测器
+  - 跑 ≥1 周零漂移 OR 全漂移 + 自动 fix 路径
+  evidence_requirement: drift detector 跑 ≥1 周报告
+  evidence:
+  - .omo/tasks/registry/done/OPC-P6-G3/evidence-package.md
+  - scripts/opc_p6_self_evolve_cron.sh
+  - scripts/opc_p6_approval_board.py
+  - .omo/_control/evolution/approval-board/current.json
+  - .omo/_control/evolution/approval-board/current.md
+  - .omo/_control/evolution/drift/2026-06-12T044316.json
+  - .omo/_control/evolution/drift/2026-06-12T050610.json
+  - .omo/_control/evolution/drift/ (17 files total)
+  assessment: '2026-06-13 验收: 4 类检测器已实现, 14 次跑通, 158 个 drift 文件.
 
-      - '跑 ≥1 周零漂移 OR 全漂移 + 自动 fix 路径'
+    满足 "全漂移 + 自动 fix 路径" 验收标准.
 
-    evidence_requirement: "drift detector 跑 ≥1 周报告"
-    evidence:
-      - ".omo/tasks/registry/done/OPC-P6-G3/evidence-package.md"
-      - "scripts/opc_p6_self_evolve_cron.sh"
-      - "scripts/opc_p6_approval_board.py"
-      - ".omo/_control/evolution/approval-board/current.json"
-      - ".omo/_control/evolution/approval-board/current.md"
-      - ".omo/_control/evolution/drift/2026-06-12T044316.json"
-      - ".omo/_control/evolution/drift/2026-06-12T050610.json"
-      - ".omo/_control/evolution/drift/ (17 files total)"
-    assessment: |
-      2026-06-13 验收: 4 类检测器已实现, 14 次跑通, 158 个 drift 文件.
-      满足 "全漂移 + 自动 fix 路径" 验收标准.
-  - id: P6-G4
-    title: "闭环实证"
-    status: passed
-    closed_at: "2026-06-13T12:30:00Z"
-    criteria:
-      - '≥1 candidate 从 radar 跑到 retrospective 闭环实证'
+    '
+- id: P6-G4
+  title: 闭环实证
+  status: passed
+  closed_at: '2026-06-13T12:30:00Z'
+  criteria:
+  - ≥1 candidate 从 radar 跑到 retrospective 闭环实证
+  - ≥3 仓 audit trail 完整
+  evidence_requirement: 1 candidate 端到端追溯
+  evidence:
+  - .omo/tasks/registry/done/OPC-P6-G4/evidence-package.md
+  - .omo/_control/evolution/loop/2026-W23.json
+  - .omo/_control/evolution/loop/trace-index.json
+  - .omo/_delivery/audit-rollout/2026-06-12-5repos.json
+  assessment: '2026-06-13 验收: 4 周全部含 evidence_id=34 候选, 端到端追溯完整.
 
-      - '≥3 仓 audit trail 完整'
+    5 仓 audit trail 完整. G4 验收标准已满足.
 
-    evidence_requirement: "1 candidate 端到端追溯"
-    evidence:
-      - ".omo/tasks/registry/done/OPC-P6-G4/evidence-package.md"
-      - ".omo/_control/evolution/loop/2026-W23.json"
-      - ".omo/_control/evolution/loop/trace-index.json"
-      - ".omo/_delivery/audit-rollout/2026-06-12-5repos.json"
-    assessment: |
-      2026-06-13 验收: 4 周全部含 evidence_id=34 候选, 端到端追溯完整.
-      5 仓 audit trail 完整. G4 验收标准已满足.
-
+    '
 gate: Gate G
 gate_status: passed
-gate_note: |
-  2026-06-13 Gate G 通过.
-  - G1: 7 个周报证据, 6 阶段闭环完整
-  - G2: 7 个周报, 满足 ≥2 周连续周报
-  - G3: 4 类检测器, 14 次跑通, 158 个 drift 文件
-  - G4: 端到端追溯完整, 5 仓 audit trail
-  Gate G 已通过, 可以解锁 P7.
-  - Readiness / Cadence 区分 (2026-06-12 复验):
-    Readiness: loop / report / detector / trace / approval board 全部已落地
-    Cadence: 真实周级运行窗口 (G1/G2/G3/G4 都缺)
-    当前 Readiness 已满足, Cadence 仍未满足.
+gate_note: "2026-06-13 Gate G 通过.\n- G1: 7 个周报证据, 6 阶段闭环完整\n- G2: 7 个周报, 满足 ≥2 周连续周报\n\
+  - G3: 4 类检测器, 14 次跑通, 158 个 drift 文件\n- G4: 端到端追溯完整, 5 仓 audit trail\nGate G 已通过,\
+  \ 可以解锁 P7.\n- Readiness / Cadence 区分 (2026-06-12 复验):\n  Readiness: loop / report\
+  \ / detector / trace / approval board 全部已落地\n  Cadence: 真实周级运行窗口 (G1/G2/G3/G4 都缺)\n\
+  \  当前 Readiness 已满足, Cadence 仍未满足.\n"
 signals:
-  - opc_phase6_gate_g_passed
-  - opc_phase6_subgate_g1_passed
-  - opc_phase6_subgate_g2_passed
-  - opc_phase6_subgate_g3_passed
-  - opc_phase6_subgate_g4_passed
-
+- opc_phase6_gate_g_passed
+- opc_phase6_subgate_g1_passed
+- opc_phase6_subgate_g2_passed
+- opc_phase6_subgate_g3_passed
+- opc_phase6_subgate_g4_passed
 red_lines:
-  - 'self-evolution task 自动 active (无 human approval)'
+- self-evolution task 自动 active (无 human approval)
+- 周报 candidate < 3
+- drift detector 0 漂移就 claim passed (没跑 ≥1 周不算)
+- retrospective 缺失 source
+- retrospective 缺失 next-action
+- candidate 未变 OMO planned task 即算闭环
+phase_open_condition: 'P6 可开始 当且仅当:
 
-  - '周报 candidate < 3'
-
-  - 'drift detector 0 漂移就 claim passed (没跑 ≥1 周不算)'
-
-  - 'retrospective 缺失 source'
-
-  - 'retrospective 缺失 next-action'
-
-  - 'candidate 未变 OMO planned task 即算闭环'
-
-
-phase_open_condition: |
-  P6 可开始 当且仅当:
   ✅ P3 Gate D passed
+
   ✅ P4 Gate E passed
+
   ⏳ P5 Gate F passed (P6 radar 来源依赖 F1; 当前未满足)
+
   ⏳ 至少 1 周 retrospective 模板
-phase_blocked_condition: |
-  ❌ P3/P4/P5 任一 Gate 退到 not_started
+
+  '
+phase_blocked_condition: '❌ P3/P4/P5 任一 Gate 退到 not_started
+
   ❌ 闭环任何阶段缺 evidence
-final_close_condition: |
-  ✅ G1-G4 全部 runtime 实证
+
+  '
+final_close_condition: '✅ G1-G4 全部 runtime 实证
+
   ✅ 验收包 5 项全有 evidence
+
   ✅ 红线 6 项全 hold
 
+  '
 forbidden_claims:
-  - 'evolution loop 跑通" 在 G1 闭环 evidence 缺失时'
-
-  - '周报格式正确" 在 G2 2 周连续周报缺失时'
-
-  - '无 drift" 在 G3 跑 ≥1 周缺失时'
-
-  - '闭环实证" 在 G4 candidate 端到端追溯缺失时'
+- evolution loop 跑通" 在 G1 闭环 evidence 缺失时
+- 周报格式正确" 在 G2 2 周连续周报缺失时
+- 无 drift" 在 G3 跑 ≥1 周缺失时
+- 闭环实证" 在 G4 candidate 端到端追溯缺失时

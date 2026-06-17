@@ -1,0 +1,39 @@
+id: P33-W2-DOMAINS-3
+phase: 33
+wave: W2
+title: 战役 2 余下 3 Domain — Analysis + Persona + Capability
+status: done
+task_type: feature
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+- P33-W1-CAMPAIGN-2-PRECHECK completed
+depends_on:
+- P33-W1-CAMPAIGN-2-PRECHECK
+deliverables:
+- .omo/_knowledge/bos-registry.json
+- projects/omo/tests/test_omo_bos.py
+- .omo/_delivery/phase33-domains-3.md
+risk_level: L0
+allowed_operation_level: L0
+source_docs:
+- .omo/_knowledge/management/p33-north-star.md
+knowledge_refs: []
+description: 'P33-W2 战役 2 余下: Analysis (7) + Persona (4) + Capability (4) 15 条 URI.
+
+  累计 21 URI 覆盖 5 Domain (memory, governance, analysis, persona, capability).
+
+  Capability 列 4 条 (forge × 2 + agent-runtime × 2) — 原任务 spec 标头 "Capability (3)"
+  与列表 4 条不一致, 按实际列表 4 条注册.
+
+  守 audit 100.0 (A+), agora 12/12 健康, omo daemon PID 47826 保持.
+
+  '
+started_at: '2026-06-06T13:50:00Z'
+completed_at: '2026-06-06T14:00:00Z'
+blocked_by: null
+retry_count: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.417271+00:00'
+routed_by: omo-debt route

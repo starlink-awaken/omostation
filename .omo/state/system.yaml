@@ -9,14 +9,14 @@ phase_status: active
 current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
-health_score: 70
+health_score: 88
 health_score_source: c2g_radar_p43_w0
-health_score_generated_at: '2026-06-16T06:31:53Z'
+health_score_generated_at: '2026-06-17T00:00:00Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
-completed_tasks: 30
+completed_tasks: 81
 total_tasks: 89
 active_tasks: 0
 phase39_status: completed

@@ -1,5 +1,5 @@
 id: OPT-BOS-GATEWAY
-title: "BOS URI 网关: cockpit 成为人类访问 BOS URI 入口"
+title: 'BOS URI 网关: cockpit 成为人类访问 BOS URI 入口'
 status: candidate
 task_type: feature
 risk_level: L3
@@ -19,3 +19,6 @@ metadata:
   priority: P3
 created_at: '2026-06-16T07:30:00Z'
 updated_at: '2026-06-16T07:30:00Z'
+priority: P3
+priority_note: L3 risk optimization, non-blocking
+phase: 48

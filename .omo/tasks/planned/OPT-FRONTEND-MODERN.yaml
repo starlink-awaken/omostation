@@ -1,5 +1,5 @@
 id: OPT-FRONTEND-MODERN
-title: "前端现代化: dashboard.html → React"
+title: '前端现代化: dashboard.html → React'
 status: candidate
 task_type: feature
 risk_level: L2
@@ -19,3 +19,6 @@ metadata:
   priority: P2
 created_at: '2026-06-16T07:30:00Z'
 updated_at: '2026-06-16T07:30:00Z'
+priority: P2
+priority_note: L2 risk optimization
+phase: 48

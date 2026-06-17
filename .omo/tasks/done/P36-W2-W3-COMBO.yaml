@@ -1,0 +1,42 @@
+id: P36-W2-W3-COMBO
+phase: 36
+wave: W2
+title: 观测性落地 + P36 验收 (W2 + W3 合并)
+status: done
+task_type: feature
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+- P36-W0-W1-COMBO completed
+depends_on:
+- P36-W0-W1-COMBO
+deliverables:
+- projects/omo/src/omo/cli.py
+- projects/omo/tests/unit/test_observability.py
+- .omo/_knowledge/management/retrospective-2026-06-11-p36.md
+- .omo/_delivery/phase36-w2-w3-combo.md
+risk_level: L0
+allowed_operation_level: L0
+source_docs:
+- .omo/_knowledge/management/plan-phase31-observability.md
+- .omo/_knowledge/management/retrospective-2026-06-10-p35.md
+knowledge_refs: []
+description: 'P36-W2 观测性 plan 真正落地: 验证 omo observability/cost/alert 三件套
+
+  均已存在, 修 cli.py 路由 bug (omo observability metric 此前报
+
+  invalid choice), 加 6 个单元测试覆盖观测三件套.
+
+  P36-W3 P36 整体验收: 写复盘 + 更新 system.yaml 白名单字段 + 更新
+
+  INDEX.md 顶部一段. 守 P32-P35 修复. 不重启 omo daemon.
+
+  '
+started_at: '2026-06-07T11:00:00Z'
+completed_at: '2026-06-11T00:00:00Z'
+blocked_by: null
+retry_count: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.416202+00:00'
+routed_by: omo-debt route

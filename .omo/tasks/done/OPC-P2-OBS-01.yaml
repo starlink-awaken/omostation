@@ -1,14 +1,15 @@
-id: "OPC-P2-OBS-01"
-title: "Phase 2 观测基建与评估飞轮 (T2.1-T2.3)"
-status: "DONE"
-assignee: "antigravity"
-completion_date: "2026-06-13"
-description: >
-  落地了 Langfuse 观测面板及 OTLP 追踪基建，并集成了 DeepEval 的 LLM-as-Judge 裁判引擎，
-  形成完整的 VibeOps (评估飞轮) 闭环。
+id: OPC-P2-OBS-01
+title: Phase 2 观测基建与评估飞轮 (T2.1-T2.3)
+status: done
+assignee: antigravity
+completion_date: '2026-06-13'
+description: '落地了 Langfuse 观测面板及 OTLP 追踪基建，并集成了 DeepEval 的 LLM-as-Judge 裁判引擎， 形成完整的
+  VibeOps (评估飞轮) 闭环。
+
+  '
 deliverables:
-  - "创建 projects/observability/docker-compose.yml 本地运行 Langfuse"
-  - "为 kairon 增加 opentelemetry-sdk，注入 kairon_observability.tracing"
-  - "为 kos/adapters/memtheta_adapter.py 的记忆算子增加 span 和 attribute 埋点"
-  - "集成 deepeval 并在 tests/test_eval_memtheta_merge.py 实现混合裁判模型"
+- 创建 projects/observability/docker-compose.yml 本地运行 Langfuse
+- 为 kairon 增加 opentelemetry-sdk，注入 kairon_observability.tracing
+- 为 kos/adapters/memtheta_adapter.py 的记忆算子增加 span 和 attribute 埋点
+- 集成 deepeval 并在 tests/test_eval_memtheta_merge.py 实现混合裁判模型
 dependencies_resolved: true

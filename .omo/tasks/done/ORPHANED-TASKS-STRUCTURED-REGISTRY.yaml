@@ -3,7 +3,7 @@ phase: 17
 milestone: M17.1
 priority: P1
 title: Orphaned_tasks blob 拆分为结构化 registry
-status: completed
+status: done
 assigned_to: null
 dispatch_id: null
 run_ref: null

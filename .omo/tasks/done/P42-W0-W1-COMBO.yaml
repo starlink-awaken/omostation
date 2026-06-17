@@ -1,0 +1,43 @@
+id: P42-W0-W1-COMBO
+phase: 42
+wave: W0
+title: audit 守回 100.0 + P41 收尾 (W0 + W1 合并)
+status: done
+task_type: governance
+priority: P0
+assigned_to: null
+human_approval_required: false
+entry_gate:
+- P41-W0-W1-COMBO completed
+depends_on:
+- P41-W0-W1-COMBO
+deliverables:
+- .omo/tasks/planned/P41-W0-W1-COMBO.yaml
+- projects/omo/src/omo/omo_audit.py
+- projects/kairon/packages/minerva/src/minerva/sinks/vault_sink.py
+- .omo/_knowledge/management/retrospective-2026-06-16-p41.md
+- .omo/state/system.yaml
+risk_level: L1
+allowed_operation_level: L1
+source_docs:
+- .omo/_knowledge/management/retrospective-2026-06-15-p40.md
+knowledge_refs:
+- ADR-0008
+description: 'P42-W0 audit 守回 100.0 (A+).
+
+  P42-W1 P41 收尾复盘 + system.yaml phase41_status 更新.
+
+  守 P32-P41 修复.
+
+  不修改 .omo/goals/current.yaml (仅人类可改).
+
+  不重启 omo daemon (PID 47826 全程守).
+
+  '
+started_at: '2026-06-07T21:00:00Z'
+completed_at: '2026-06-07T21:00:00Z'
+blocked_by: null
+retry_count: 0
+owner: cockpit-team
+routed_at: '2026-06-16T05:03:41.441163+00:00'
+routed_by: omo-debt route
