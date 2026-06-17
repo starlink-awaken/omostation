@@ -61,3 +61,12 @@ repos:
         # P47: 端口 enforce 从 .git/hooks/pre-commit (shell, 仅本地) 提升到 framework
         # (pre-commit run + CI + 新 clone 都拦). 复用 scripts/check-vault-paths.py.
         # 历史已知: kairon minerva 8765 + ontoderive 8080 (baseline 容忍).
+      - id: cross-deps-check
+        name: cross-layer deps check (跨层 import 违规)
+        entry: python3 scripts/check-cross-deps.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        # P47+: 跨层 enforce (防回归). 规则: cockpit→kairon / agora→cockpit /
+        # ecos→kairon / omo→kairon. 注: cockpit→runtime 是设计依赖 (agent_runtime
+        # 桥接, GPTCHAS #2), 不拦. 复用 scripts/check-cross-deps.py.
