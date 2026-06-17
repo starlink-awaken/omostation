@@ -1,7 +1,9 @@
 name: port-registry-enforce
 # P47 A1: 端口硬编码 enforce (声明/执行鸿沟收口).
 # 复用 scripts/check-vault-paths.py --check-ports (与本地 pre-commit 同一检查).
-# 任何代码硬编码端口不在 protocols/port-registry.yaml → CI fail.
+# 增量 enforce: --check-ports 自动读 protocols/port-hardcode-baseline.yaml,
+#   已知历史 (12 处子模块硬编码) 容忍, 新违规 fail.
+# 刷新 baseline: python3 scripts/check-vault-paths.py --baseline-init
 on: [push, pull_request]
 
 jobs:
