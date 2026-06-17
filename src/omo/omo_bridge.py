@@ -5,14 +5,11 @@ from pathlib import Path
 
 import yaml
 
+from .omo_paths import find_omo_dir
+
 
 def get_omo_dir(base_dir: Path) -> Path:
-    current = base_dir.resolve()
-    while current != current.parent:
-        if (current / ".omo").is_dir():
-            return current / ".omo"
-        current = current.parent
-    return base_dir / ".omo"
+    return find_omo_dir(base_dir)
 
 
 def _generate_task_id(title: str) -> str:
@@ -295,4 +292,3 @@ def main(argv: list[str]) -> int:
         _import_pitch(source, omo_dir)
 
     return 0
-

@@ -3,7 +3,8 @@
 > **Layer**: L2 引擎面  
 > **Role**: 治理中枢 — AI Agent OS / Phase / Task / Debt / Audit  
 > **Stack**: Python 3.13+, uv, FastMCP  
-> **Health**: 530 tests, 57% raw (225 skipped) / 97.4% effective
+> **Health**: See local CI and governance audit outputs
+> **SSOT**: 运行时健康、测试通过率、CLI/MCP 子命令规模以本项目 CI、治理审计和 workspace governance SSOT 为准
 >
 > 系统全景参见：[`docs/ARCHITECTURE-DIAGRAM.md`](../docs/ARCHITECTURE-DIAGRAM.md)
 

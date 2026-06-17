@@ -31,6 +31,7 @@ from omo.omo_standard import cmd_standard_add, cmd_standard_list
 from omo.omo_i0 import cmd_i0_routes, cmd_i0_status
 from omo.omo_task import cmd_task_list
 from omo.omo_evidence import cmd_evidence_list
+from omo.omo_paths import OMO_ROOT, find_omo_dir
 
 
 # -- omo_goal --
@@ -277,6 +278,19 @@ class TestOmoKnowledge:
         captured = capsys.readouterr()
         assert "already exists" in captured.err
 
+    def test_cmd_knowledge_list_skips_missing_symlink(self, capsys, tmp_path: Path) -> None:
+        omo_dir = tmp_path
+        mgmt_dir = omo_dir / "_knowledge" / "management"
+        mgmt_dir.mkdir(parents=True)
+        (mgmt_dir / "broken.md").symlink_to("missing-target.md")
+
+        ret = cmd_knowledge_list(omo_dir, "management")
+
+        assert ret == 0
+        captured = capsys.readouterr()
+        assert "broken.md" in captured.out
+        assert "(missing)" in captured.out
+
 
 # -- omo_delivery --
 
@@ -504,3 +518,25 @@ class TestOmoEvidence:
         captured = capsys.readouterr()
         assert "report.md" in captured.out
         assert "data.md" not in captured.out
+
+    def test_cmd_evidence_list_prefers_legacy_when_modern_empty(self, capsys, tmp_path: Path) -> None:
+        omo_dir = tmp_path
+        modern = omo_dir / "_delivery" / "evidence"
+        modern.mkdir(parents=True)
+        legacy_phase = omo_dir / "_delivery" / "evidence-legacy" / "phase15"
+        legacy_phase.mkdir(parents=True)
+        (legacy_phase / "report.md").write_text("# Legacy Report")
+
+        ret = cmd_evidence_list(omo_dir, "phase15")
+
+        assert ret == 0
+        captured = capsys.readouterr()
+        assert "report.md" in captured.out
+        assert "legacy-alias" in captured.out
+
+
+class TestOmoLocator:
+    def test_find_omo_dir_prefers_workspace_root_over_subrepo_shadow(self) -> None:
+        start = Path(__file__).resolve().parents[1]
+        assert (start / ".omo").is_dir()
+        assert find_omo_dir(start) == OMO_ROOT

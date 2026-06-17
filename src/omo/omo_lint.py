@@ -22,7 +22,11 @@ from __future__ import annotations
 
 import argparse
 import ast
+import subprocess
+import sys
 from pathlib import Path
+
+from .omo_paths import PROJECTS_DIR, WORKSPACE_ROOT
 
 OMO_SRC = Path(__file__).resolve().parent
 
@@ -528,6 +532,36 @@ def cmd_lint_yaml_bypass(omo_dir: Path = Path(".omo")) -> int:
     return 0
 
 
+def cmd_lint_direct_omo_io(paths: list[str] | None = None, *, diff: bool = False) -> int:
+    """Run the cross-repo contract gatekeeper for direct `.omo` mutations."""
+    gatekeeper = PROJECTS_DIR / "ecos" / "scripts" / "contract_gatekeeper.py"
+    if not gatekeeper.exists():
+        print(f"❌ contract_gatekeeper.py not found: {gatekeeper}")
+        return 1
+
+    cmd = [sys.executable, str(gatekeeper)]
+    if diff:
+        cmd.append("--diff")
+    elif paths:
+        cmd.extend(paths)
+    else:
+        cmd.extend(
+            [
+                str(PROJECTS_DIR / "omo" / "src" / "omo"),
+                str(PROJECTS_DIR / "c2g" / "src" / "c2g"),
+                str(WORKSPACE_ROOT / "scripts"),
+                str(WORKSPACE_ROOT / "bin"),
+            ]
+        )
+
+    result = subprocess.run(cmd, cwd=str(WORKSPACE_ROOT), capture_output=True, text=True)
+    if result.stdout:
+        print(result.stdout, end="")
+    if result.stderr:
+        print(result.stderr, end="", file=sys.stderr)
+    return result.returncode
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="omo lint",
@@ -542,12 +576,20 @@ def main(argv: list[str] | None = None) -> int:
         "yaml-bypass",
         help="扫 .omo/debt/items/*.yaml 拦截 status 字段越权写入 (Round 43 P0)",
     )
+    gate = sub.add_parser(
+        "direct-omo-io",
+        help="拦截非 broker 对 `.omo` / `spaces` 的直接文件系统改写",
+    )
+    gate.add_argument("paths", nargs="*", help="要检查的文件/目录；默认扫 omo/c2g/scripts/bin")
+    gate.add_argument("--diff", action="store_true", help="只检查 git diff 中的 Python 文件")
 
     args = parser.parse_args(argv)
     if args.command == "schemas":
         return cmd_lint_schemas()
     if args.command == "yaml-bypass":
         return cmd_lint_yaml_bypass()
+    if args.command == "direct-omo-io":
+        return cmd_lint_direct_omo_io(args.paths, diff=args.diff)
     parser.print_help()
     return 1
 

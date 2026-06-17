@@ -8,24 +8,25 @@ from __future__ import annotations
 
 import uuid
 
-from bus_foundation import BusEnvelope, publish  # bus-foundation 是 omo 显式依赖 (R67 migration)
-
+from bus_foundation.facade import event as bus_event  # X1 规范迁移
 
 def emit_demo_event(task_id: str, dispatch_id: str | None = None) -> str:
-    """Emit a single omo:dispatched event via bus facade.
-
-    Returns event_id.
-    """
-    env = BusEnvelope(
-        type="omo:dispatched",
-        source="omo_worker_dispatch",
-        payload={
-            "task_id": task_id,
-            "dispatch_id": dispatch_id or f"dispatch-{uuid.uuid4().hex[:8]}",
-        },
-        trace_id=f"omo-trace-{uuid.uuid4().hex[:6]}",
+    """Emit a single omo:dispatched event via bus facade."""
+    trace_id = f"omo-trace-{uuid.uuid4().hex[:6]}"
+    payload = {
+        "task_id": task_id,
+        "dispatch_id": dispatch_id or f"dispatch-{uuid.uuid4().hex[:8]}",
+    }
+    
+    # Facade returns None, so we return a dummy ID or trace_id 
+    # to keep the return type as str for this demo
+    bus_event.publish(
+        topic="omo:dispatched",
+        payload=payload,
+        source_uri="bos://governance/omo_worker_dispatch",
+        trace_id=trace_id
     )
-    return publish(env)
+    return trace_id
 
 
 def main() -> int:

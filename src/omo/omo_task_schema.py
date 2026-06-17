@@ -40,6 +40,12 @@ def _require_list(
         errors.append(f"{field} must not be empty")
 
 
+def _validate_optional_governance_refs(task: dict, errors: list[str]) -> None:
+    if "governance_refs" not in task:
+        return
+    _require_list(task, "governance_refs", errors, allow_empty=False)
+
+
 def _require_task_packet(task: dict, errors: list[str]) -> None:
     if "test_plan" not in task:
         errors.append("missing required field: test_plan")
@@ -102,6 +108,8 @@ def validate_task_data(task: dict, group: str | None = None) -> list[str]:
                 errors,
                 allow_empty=field in {"knowledge_refs", "handoff_refs", "entry_gate"},
             )
+
+    _validate_optional_governance_refs(task, errors)
 
     planned_context = group == "planned"
     execution_context = group == "active" or task.get("status") in EXECUTION_STATUSES

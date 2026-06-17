@@ -1,0 +1,139 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import yaml
+
+from omo.omo_governance import main as omo_governance_main
+from omo.omo_governance_surfaces import build_governance_surfaces_report
+
+
+def _write(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def _write_yaml(path: Path, payload: dict) -> None:
+    _write(path, yaml.dump(payload, allow_unicode=True, sort_keys=False))
+
+
+def _seed_workspace(root: Path) -> None:
+    omo = root / ".omo"
+    for rel in [
+        "_truth/registry",
+        "standards",
+        "_control",
+        "_knowledge",
+        "_delivery",
+        "_delivery/evidence-legacy",
+        "_archive",
+        "tasks/planned",
+        "state",
+        "debt",
+        "workers",
+    ]:
+        (omo / rel).mkdir(parents=True, exist_ok=True)
+    (omo / "evidence").symlink_to("_delivery/evidence-legacy")
+
+    _write(
+        omo / "standards" / "omo-governance-surfaces.md",
+        "# OMO Governance Surfaces Standard\n",
+    )
+    _write_yaml(
+        omo / "_truth" / "registry" / "omo-governance-surfaces.yaml",
+        {
+            "assets": [
+                {"ref": ".omo/_truth/", "status": "active"},
+                {"ref": ".omo/_control/", "status": "active"},
+                {"ref": ".omo/_knowledge/", "status": "active"},
+                {"ref": ".omo/_delivery/", "status": "active"},
+                {"ref": ".omo/_archive/", "status": "active"},
+                {"ref": ".omo/tasks/", "status": "active"},
+                {"ref": ".omo/state/", "status": "active"},
+                {"ref": ".omo/debt/", "status": "active"},
+                {"ref": ".omo/workers/", "status": "active"},
+                {"ref": ".omo/standards/", "status": "active"},
+                {"ref": ".omo/evidence/", "status": "active", "asset_type": "compatibility_alias"},
+            ]
+        },
+    )
+
+    c2g_builder = root / "projects" / "c2g" / "src" / "c2g" / "task_builder.py"
+    _write(
+        c2g_builder,
+        """
+def build_ecos_task(*args, **kwargs):
+    return {
+        "governance_refs": [
+            ".omo/standards/omo-governance-surfaces.md",
+            ".omo/_truth/registry/omo-governance-surfaces.yaml",
+        ],
+        "metadata": {"ingress_plane": "projects/c2g"},
+    }
+""".strip()
+        + "\n",
+    )
+    _write(
+        root / ".pre-commit-config.yaml",
+        """
+- repo: local
+  hooks:
+    - id: omo-direct-io-gate
+      entry: uv run --directory projects/omo python -m omo.cli lint direct-omo-io
+""".strip()
+        + "\n",
+    )
+
+
+def test_build_governance_surfaces_report_ok(tmp_path: Path) -> None:
+    _seed_workspace(tmp_path)
+
+    report = build_governance_surfaces_report(tmp_path)
+
+    assert report["status"] == "ok"
+    assert report["unregistered_top_levels"] == []
+    assert report["missing_registered_roots"] == []
+    assert report["c2g_missing_governance_refs"] == []
+    assert report["direct_io_gate_present"] is True
+
+
+def test_build_governance_surfaces_report_flags_unregistered_top_level(tmp_path: Path) -> None:
+    _seed_workspace(tmp_path)
+    (tmp_path / ".omo" / "mystery").mkdir()
+
+    report = build_governance_surfaces_report(tmp_path)
+
+    assert report["status"] == "error"
+    assert "mystery" in report["unregistered_top_levels"]
+
+
+def test_omo_governance_surfaces_cli_json(tmp_path: Path, capsys, monkeypatch: object) -> None:
+    _seed_workspace(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    rc = omo_governance_main(["surfaces", "--workspace-root", ".", "--json"])
+
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["status"] == "ok"
+    assert ".omo/standards/omo-governance-surfaces.md" in payload["c2g_governance_refs"]
+
+
+def test_build_governance_surfaces_report_accepts_evidence_alias(tmp_path: Path) -> None:
+    _seed_workspace(tmp_path)
+
+    report = build_governance_surfaces_report(tmp_path)
+
+    assert report["status"] == "ok"
+    assert report["warnings"] == []
+
+
+def test_build_governance_surfaces_report_requires_direct_io_gate(tmp_path: Path) -> None:
+    _seed_workspace(tmp_path)
+    (tmp_path / ".pre-commit-config.yaml").unlink()
+
+    report = build_governance_surfaces_report(tmp_path)
+
+    assert report["status"] == "error"
+    assert any("pre-commit direct io gate missing" in issue for issue in report["issues"])

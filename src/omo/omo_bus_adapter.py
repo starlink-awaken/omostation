@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Callable
 
-from bus_foundation import subscribe as bus_subscribe
+from bus_foundation.facade import event as bus_event
 
 
 def subscribe_to_governance_events(callback: Callable) -> Callable:
@@ -24,11 +24,11 @@ def subscribe_to_governance_events(callback: Callable) -> Callable:
     Currently subscribes to: pipeline:*, debt:*, node_completed
     (matches omo_sse_daemon's _governance_types filter in listen_to_sse).
     """
-    @bus_subscribe("pipeline:*")
+    @bus_event.subscribe("pipeline:*")
     def on_pipeline(env) -> None:
         callback(env)
 
-    @bus_subscribe("debt:*")
+    @bus_event.subscribe("debt:*")
     def on_debt(env) -> None:
         callback(env)
 

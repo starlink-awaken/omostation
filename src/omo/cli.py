@@ -121,6 +121,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args and args[0] == "governance":
         from omo.omo_audit import governance_main, governance_history_main
+        from omo.omo_governance import main as governance_ops_main
 
         sub = args[1] if len(args) > 1 else "audit"
         # 修 P36 bug: 之前 None 触发 governance_main 用 sys.argv[1:] 重解析, 导致
@@ -128,6 +129,8 @@ def main(argv: list[str] | None = None) -> int:
         rest = args[2:] if len(args) > 2 else []
         if sub == "history":
             return governance_history_main(rest)
+        if sub in {"propose", "approve", "apply", "list", "surfaces"}:
+            return governance_ops_main(args[1:])
         if sub in ("audit", "--help", "-h", None):
             return governance_main(rest)
         # unknown sub: treat as audit args

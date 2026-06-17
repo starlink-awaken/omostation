@@ -10,6 +10,7 @@ import yaml
 
 from .omo_io import write_yaml_atomic
 from .omo_redaction import redact_sensitive_text
+from .omo_governance_surfaces import main as governance_surfaces_main
 
 
 _REQUIRED_FIELDS = {
@@ -150,7 +151,7 @@ def list_truth_mutations(root: Path) -> list[dict[str, str]]:
     return rows
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="omo-governance")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -168,8 +169,11 @@ def main() -> int:
     apply_parser.add_argument("--now")
 
     subparsers.add_parser("list")
+    surfaces_parser = subparsers.add_parser("surfaces")
+    surfaces_parser.add_argument("--workspace-root", default=".")
+    surfaces_parser.add_argument("--json", action="store_true")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     root = Path.cwd()
 
     if args.command == "propose":
@@ -198,6 +202,12 @@ def main() -> int:
                 f"{row['id']} status={row['status']} level={row['operation_level']} target={row['target_ref']}"
             )
         return 0
+
+    if args.command == "surfaces":
+        surface_args = ["--workspace-root", args.workspace_root]
+        if args.json:
+            surface_args.append("--json")
+        return governance_surfaces_main(surface_args)
 
     return 1
 

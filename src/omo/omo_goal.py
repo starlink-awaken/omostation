@@ -11,17 +11,12 @@ import yaml
 
 
 from omo.omo_io import write_yaml_atomic
+from omo.omo_paths import find_omo_dir
 
 
 def _find_omo_dir() -> Path:
-    """Find .omo/ directory by walking up from cwd."""
-    cwd = Path.cwd()
-    for parent in [cwd] + list(cwd.parents):
-        omo = parent / ".omo"
-        if omo.is_dir():
-            return omo
-    print("❌ .omo/ directory not found", file=sys.stderr)
-    sys.exit(1)
+    """Find the authoritative workspace .omo directory."""
+    return find_omo_dir()
 
 
 def cmd_goal_list(omo_dir: Path) -> int:

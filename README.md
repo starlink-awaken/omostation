@@ -28,6 +28,8 @@ omo bos status       # BOS invoke metrics
 omo bos discover     # 注册表
 omo bos health       # 健康报告
 omo governance       # 治理审计
+omo governance surfaces  # `.omo` 顶层治理面巡检
+omo lint direct-omo-io    # 非 broker 直接改 `.omo` / `spaces` 拦截
 omo event emit       # 事件发射
 omo observability    # 可观测性
 ```

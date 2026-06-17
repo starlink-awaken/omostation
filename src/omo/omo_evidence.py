@@ -1,25 +1,46 @@
 #!/usr/bin/env python3
-"""OMO evidence CLI — list and inspect evidence documents from .omo/evidence/."""
+"""OMO evidence CLI — list and inspect evidence documents from OMO evidence storage."""
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
+
+from .omo_paths import find_omo_dir
 
 
 def _find_omo_dir() -> Path:
-    cwd = Path.cwd()
-    for parent in [cwd] + list(cwd.parents):
-        omo = parent / ".omo"
-        if omo.is_dir():
-            return omo
-    print("❌ .omo/ directory not found", file=sys.stderr)
-    sys.exit(1)
+    return find_omo_dir()
+
+
+def _has_files(path: Path) -> bool:
+    return path.exists() and any(child.is_file() for child in path.rglob("*"))
+
+
+def _evidence_base(omo_dir: Path, category: str | None = None) -> Path:
+    modern = omo_dir / "_delivery" / "evidence"
+    legacy = omo_dir / "_delivery" / "evidence-legacy"
+    alias = omo_dir / "evidence"
+    if category:
+        if (modern / category).exists():
+            return modern
+        if (legacy / category).exists():
+            return legacy
+        if (alias / category).exists():
+            return alias
+    if _has_files(modern):
+        return modern
+    if _has_files(legacy):
+        return legacy
+    if modern.exists():
+        return modern
+    if legacy.exists():
+        return legacy
+    return alias
 
 
 def cmd_evidence_list(omo_dir: Path, category: str | None) -> int:
     """List evidence files."""
-    base = omo_dir / "evidence"
+    base = _evidence_base(omo_dir, category)
     if not base.exists():
         print("⚠️  evidence/ directory not found")
         return 0
@@ -34,7 +55,9 @@ def cmd_evidence_list(omo_dir: Path, category: str | None) -> int:
                 rel = f.relative_to(base)
                 print(f"  {rel}  ({size:,} bytes)")
                 total += 1
-    print(f"\nTotal: {total} evidence files")
+    mode = "modern" if base == (omo_dir / "_delivery" / "evidence") else "legacy-alias"
+    print(f"\nBase: {base.relative_to(omo_dir)} [{mode}]")
+    print(f"Total: {total} evidence files")
     return 0
 
 

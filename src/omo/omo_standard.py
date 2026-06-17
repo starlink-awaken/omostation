@@ -6,17 +6,10 @@ import argparse
 import sys
 from pathlib import Path
 
-OMO_HINT = ".omo"
-
+from .omo_paths import find_omo_dir
 
 def _find_omo_dir() -> Path:
-    cwd = Path.cwd()
-    for parent in [cwd] + list(cwd.parents):
-        omo = parent / OMO_HINT
-        if omo.is_dir():
-            return omo
-    print("❌ .omo/ directory not found", file=sys.stderr)
-    sys.exit(1)
+    return find_omo_dir()
 
 
 def cmd_standard_list(omo_dir: Path) -> int:

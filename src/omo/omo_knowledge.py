@@ -6,17 +6,10 @@ import argparse
 import sys
 from pathlib import Path
 
-OMO_HINT = ".omo"
-
+from .omo_paths import find_omo_dir
 
 def _find_omo_dir() -> Path:
-    cwd = Path.cwd()
-    for parent in [cwd] + list(cwd.parents):
-        omo = parent / OMO_HINT
-        if omo.is_dir():
-            return omo
-    print("❌ .omo/ directory not found", file=sys.stderr)
-    sys.exit(1)
+    return find_omo_dir()
 
 
 def cmd_knowledge_list(omo_dir: Path, plane: str | None) -> int:
@@ -41,6 +34,9 @@ def cmd_knowledge_list(omo_dir: Path, plane: str | None) -> int:
             total += len(list(t.rglob("*.md")))
         else:
             for f in files:
+                if not f.exists() or not f.is_file():
+                    print(f"  {f.relative_to(base)}  (missing)")
+                    continue
                 size = len(f.read_text().split("\n"))
                 print(f"  {f.relative_to(base)}  ({size} lines)")
             total += len(files)
