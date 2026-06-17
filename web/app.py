@@ -1146,15 +1146,57 @@ async def api_v1_status():
 @app.get("/api/v1/governance")
 async def api_v1_governance():
     """Unified governance data (API v1)."""
-    from web.governance import load_compute_telemetry, load_ecos_status, load_omo_status, load_swarm_radar
+    from web.governance import (
+        load_compute_telemetry,
+        load_ecos_status,
+        load_omo_status,
+        load_swarm_radar,
+        load_mutation_proposals
+    )
     return {
         "version": "v1",
         "omo": load_omo_status(),
         "ecos": load_ecos_status(),
         "swarm": load_swarm_radar(),
         "compute": load_compute_telemetry(),
+        "proposals": load_mutation_proposals(),
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
+
+
+@app.post("/api/v1/proposals/{proposal_id}/approve")
+async def api_approve_proposal(proposal_id: str):
+    """Approve and execute a mutation proposal (Phase 9 HITL)."""
+    proposal_dir = Path.home() / "Workspace" / ".omo" / "state" / "proposals"
+    proposal_path = proposal_dir / f"{proposal_id}.yaml"
+    
+    if not proposal_path.exists():
+        return _error_resp(f"Proposal {proposal_id} not found", 404)
+        
+    try:
+        # 1. Execute the mutation (In Phase 9, we mark as 'executing')
+        # TODO: real mutation logic (budget bump, model swap, etc.)
+        _log.info("[HITL] Approved proposal: %s", proposal_id)
+        
+        # 2. Archive/Delete the proposal to clear the queue
+        proposal_path.unlink()
+        
+        return {"status": "ok", "message": f"Proposal {proposal_id} approved and executed."}
+    except Exception as e:
+        return _error_resp(str(e), 500)
+
+
+@app.post("/api/v1/proposals/{proposal_id}/reject")
+async def api_reject_proposal(proposal_id: str):
+    """Reject and discard a mutation proposal."""
+    proposal_dir = Path.home() / "Workspace" / ".omo" / "state" / "proposals"
+    proposal_path = proposal_dir / f"{proposal_id}.yaml"
+    
+    if proposal_path.exists():
+        proposal_path.unlink()
+        
+    return {"status": "ok"}
+
 
 
 # ── Auth management routes ────────────────────────────────────

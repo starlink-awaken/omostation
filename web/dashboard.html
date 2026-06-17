@@ -398,6 +398,17 @@ textarea.mono-input:focus{outline:none;border-color:var(--border-active)}
   </div>
 </div>
 
+<!-- ⚖️ OMO Approval Queue: HITL Gate -->
+<div class="card" style="grid-column:1/-1">
+  <div class="card-header">
+    <h2>⚖️ 进化审批 · HITL 闸门</h2>
+    <span class="card-badge live" id="proposal-badge">0 Pending</span>
+  </div>
+  <div id="proposal-queue">
+    <div class="empty-state">当前无待处理的进化提案。</div>
+  </div>
+</div>
+
 <!-- 最近研究 -->
 <div class="card" style="grid-column:1/-1">
   <div class="card-header">
@@ -573,7 +584,48 @@ async function loadGovernance(){
         comp.remaining_ratio !== null ? Math.round(comp.remaining_ratio * 100) + '%' : '—';
       document.getElementById('compute-total-cost').textContent = formatUsd(comp.total_spent_usd || 0);
     }
+
+    // 3. Render Mutation Proposals (Phase 9 HITL)
+    const proposals = d.proposals || [];
+    document.getElementById('proposal-badge').textContent = `${proposals.length} Pending`;
+    document.getElementById('proposal-badge').className = 'card-badge' + (proposals.length > 0 ? ' err' : ' live');
+    
+    const pQueue = document.getElementById('proposal-queue');
+    if(!proposals.length){
+      pQueue.innerHTML = '<div class="empty-state">当前无待处理的进化提案。</div>';
+    } else {
+      pQueue.innerHTML = proposals.map(p => `
+        <div class="memory-result-item" style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.02);margin-bottom:0.5rem;border-radius:8px">
+          <div>
+            <div style="margin-bottom:0.25rem">
+              <span class="source-tag" style="background:var(--warning-glow);color:var(--warning)">${p.type}</span>
+              <strong style="color:var(--text-bright)">${p.title}</strong>
+            </div>
+            <div class="text-dim" style="font-size:0.75rem">建议: ${p.suggestion}</div>
+            <div class="text-dim" style="font-size:0.7rem;margin-top:0.2rem">风险: ${p.risk} | 债务: ${p.debt_id}</div>
+          </div>
+          <div style="display:flex;gap:0.5rem">
+            <button class="btn-ghost" style="padding:0.3rem 0.6rem;font-size:0.7rem;color:var(--success)" onclick="approveProposal('${p.id}')">批准</button>
+            <button class="btn-ghost" style="padding:0.3rem 0.6rem;font-size:0.7rem;color:var(--danger)" onclick="rejectProposal('${p.id}')">拒绝</button>
+          </div>
+        </div>
+      `).join('');
+    }
   }catch(e){}
+}
+
+async function approveProposal(id){
+  try {
+    await fetch(API+'/v1/proposals/'+id+'/approve', {method: 'POST'});
+    loadGovernance();
+  } catch(e) { alert('批准失败: ' + e.message); }
+}
+
+async function rejectProposal(id){
+  try {
+    await fetch(API+'/v1/proposals/'+id+'/reject', {method: 'POST'});
+    loadGovernance();
+  } catch(e) { alert('操作失败: ' + e.message); }
 }
 
 async function knowledgeSearch(){

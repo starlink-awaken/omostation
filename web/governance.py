@@ -251,3 +251,28 @@ def _load_compute_telemetry_impl() -> dict:
         }
     except Exception as e:
         return {"status": "error", "error": str(e)}
+
+
+def load_mutation_proposals() -> list[dict]:
+    """[Phase 9] Load pending mutation proposals from OMO (cached 5s)."""
+    return _cached("mutation_proposals", _load_mutation_proposals_impl, ttl=5)
+
+
+def _load_mutation_proposals_impl() -> list[dict]:
+    proposal_dir = OMO_DIR / "state" / "proposals"
+    if not proposal_dir.exists():
+        return []
+
+    proposals = []
+    for f in proposal_dir.glob("*.yaml"):
+        try:
+            import yaml
+            data = yaml.safe_load(f.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                proposals.append(data)
+        except Exception:
+            continue
+    
+    # Sort by created_at desc
+    proposals.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    return proposals
