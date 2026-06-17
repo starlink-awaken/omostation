@@ -10,8 +10,16 @@ import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
+from pathlib import Path
 
 import croniter
+
+try:
+    from ecos.l0.triggers.yaml_loader import YAMLTriggerRegistry
+    from ecos.l0.triggers.registry import CronTrigger
+except ImportError:
+    YAMLTriggerRegistry = None
+    CronTrigger = None
 
 from . import config, db
 from . import delivery as delivery_module
@@ -253,6 +261,38 @@ class CronScheduler:
         self.start_time = datetime.now(UTC)
         self._tick_task = asyncio.create_task(self._loop())
         logger.info("Cron scheduler started (tick=%ds)", config.TICK_INTERVAL)
+        
+        # Sync triggers from L0 registry
+        self._sync_l0_triggers()
+
+    def _sync_l0_triggers(self):
+        """Load triggers from the L0 BOS YAML registry and inject them."""
+        if YAMLTriggerRegistry is None:
+            return
+            
+        registry = YAMLTriggerRegistry()
+        # Default OMO registry location
+        registry_path = Path(".omo/registry/triggers.yaml")
+        if not registry_path.exists():
+            return
+            
+        try:
+            registry.load_from_yaml(registry_path)
+            triggers = registry.list_triggers()
+            for t in triggers:
+                if isinstance(t, CronTrigger):
+                    # We inject this into the DB so the scheduler picks it up
+                    # We use BOS URI as the script command directly if it's an invoke
+                    # Or we could wrap it. For now, just register the schedule.
+                    db.add_job(
+                        name=f"[L0] {t.name}",
+                        schedule=t.expression,
+                        script=f"agora invoke {t.target_bos_uri}",
+                        description=f"L0 Trigger: {t.name}"
+                    )
+            logger.info("Successfully synced %d triggers from L0 registry", len(triggers))
+        except Exception as e:
+            logger.error("Failed to sync L0 triggers: %s", e)
 
     async def stop(self):
         """Stop the scheduler loop."""
