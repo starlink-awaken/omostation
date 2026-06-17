@@ -3,7 +3,8 @@
 > **Layer**: L1 运行时  
 > **Role**: 运行时基础设施 — Matrix 注册表 / 健康监控 / KEI 沙箱 / Scheduler  
 > **Stack**: Python, FastAPI, FastMCP, APScheduler, Pydantic  
-> **Health**: 171 tests, 97.2% pass
+> **Health**: See local CI and runtime probes
+> **SSOT**: 运行时健康、测试通过率、服务端口/工具计数以本项目 CI、运行时探针和 workspace governance SSOT 为准
 >
 > 系统全景参见：[`docs/ARCHITECTURE-DIAGRAM.md`](../docs/ARCHITECTURE-DIAGRAM.md)
 

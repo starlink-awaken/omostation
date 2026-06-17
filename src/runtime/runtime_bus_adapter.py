@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from typing import Callable
 
-from bus_foundation import schedule as bus_schedule
+from bus_foundation.facade import control as bus_control
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ def register_cron_job(expr: str, callback: Callable) -> Callable:
         from runtime.runtime_bus_adapter import register_cron_job
         register_cron_job("every 5m", my_task)
     """
-    @bus_schedule(expr)
+    @bus_control.schedule_callback(expr)
     def _wrapper() -> None:
         callback()
 

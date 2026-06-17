@@ -153,7 +153,7 @@ def _audit_hook(event: str, args: tuple):
         if not perms.get("execution", {}).get("allow_subprocess", True):
             record_audit("reject", "ecos.kernel.sandbox", "blocked",
                          f"os.system blocked: {cmd}")
-            raise PermissionError(f"KEI Sandbox: os.system execution is blocked.")
+            raise PermissionError("KEI Sandbox: os.system execution is blocked.")
         record_audit("execute", "ecos.kernel.sandbox", "pass",
                      f"os.system allowed: {cmd}")
 
@@ -162,7 +162,7 @@ def _audit_hook(event: str, args: tuple):
         if not perms.get("execution", {}).get("allow_subprocess", True):
             record_audit("reject", "ecos.kernel.sandbox", "blocked",
                          f"os.exec blocked: {cmd}")
-            raise PermissionError(f"KEI Sandbox: os.exec execution is blocked.")
+            raise PermissionError("KEI Sandbox: os.exec execution is blocked.")
         record_audit("execute", "ecos.kernel.sandbox", "pass",
                      f"os.exec allowed: {cmd}")
 
