@@ -509,16 +509,44 @@ class HttpMCPClient(MCPClient):
             )
             return []
 
+    def _get_swarm_headers(self, payload: dict) -> dict[str, str]:
+        """[Phase 9] Generate security headers for cross-node calls."""
+        headers = {}
+        try:
+            from agora.mcp.swarm import get_swarm
+            from agora.auth.node_identity import NodeIdentityManager
+            
+            swarm = get_swarm()
+            nim = NodeIdentityManager()
+            identity = nim.get()
+            private_key = nim.get_private_key_b64()
+            
+            if identity and private_key:
+                headers["X-Swarm-Node-ID"] = swarm.node_id
+                # Inject sender info into payload if not present (to match receiver logic)
+                if isinstance(payload, dict):
+                    payload.setdefault("sender_node_id", swarm.node_id)
+                
+                msg_bytes = json.dumps(payload, sort_keys=True).encode()
+                headers["X-Swarm-Signature"] = identity.sign(msg_bytes, private_key)
+        except Exception:
+            pass
+        return headers
+
     async def call_tool(self, name: str, arguments: dict) -> Any:
         if not self._client:
             return {"status": "error", "error": "Not connected"}
 
+        payload = _make_tool_call_dict(name, arguments)
+        headers = self._get_swarm_headers(payload)
+        headers["Connection"] = "close"
+
         try:
             resp = await self._client.post(
                 self._endpoint,
-                json=_make_tool_call_dict(name, arguments),
+                json=payload,
                 timeout=120,
-                headers={"Connection": "close"},
+                headers=headers,
             )
             data = resp.json()
             if "result" in data:
@@ -535,12 +563,17 @@ class HttpMCPClient(MCPClient):
     async def list_resources(self) -> list[dict]:
         if not self._client:
             return []
+            
+        payload = _make_request_dict("resources/list")
+        headers = self._get_swarm_headers(payload)
+        headers["Connection"] = "close"
+
         try:
             resp = await self._client.post(
                 self._endpoint,
-                json=_make_request_dict("resources/list"),
+                json=payload,
                 timeout=30,
-                headers={"Connection": "close"},
+                headers=headers,
             )
             data = resp.json()
             return data.get("result", {}).get("resources", [])
@@ -555,12 +588,17 @@ class HttpMCPClient(MCPClient):
     async def read_resource(self, uri: str) -> Any:
         if not self._client:
             return {"status": "error", "error": "Not connected"}
+            
+        payload = _make_resource_read_dict(uri)
+        headers = self._get_swarm_headers(payload)
+        headers["Connection"] = "close"
+
         try:
             resp = await self._client.post(
                 self._endpoint,
-                json=_make_resource_read_dict(uri),
+                json=payload,
                 timeout=120,
-                headers={"Connection": "close"},
+                headers=headers,
             )
             data = resp.json()
             if "result" in data:

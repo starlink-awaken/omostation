@@ -138,10 +138,13 @@ async def _memory_all_search(
 
 
 async def _memory_vault_search(args: dict | None = None) -> list[dict]:
-    """L4 Vault 本地知识库搜索 (模拟实现)."""
+    """L4 Vault 本地知识库高性能搜索 (ripgrep 实现)."""
     args = args or {}
-    query = (args.get("query") or "").lower()
+    query = args.get("query")
     limit = args.get("limit", 10)
+
+    if not query:
+        return []
 
     cards_dir = Path(_WS) / "data" / "cards"
     results = []
@@ -149,26 +152,42 @@ async def _memory_vault_search(args: dict | None = None) -> list[dict]:
     if not cards_dir.exists():
         return []
 
-    # 简单全文检索模拟
-    count = 0
-    for f in cards_dir.glob("**/*.md"):
-        if count >= limit:
-            break
-        try:
-            content = f.read_text().lower()
-            if query in content or query in f.name.lower():
-                results.append(
-                    {
-                        "id": f.stem,
-                        "title": f.name,
-                        "path": str(f.relative_to(_WS)),
-                        "score": 0.8 if query in f.name.lower() else 0.5,
-                        "snippet": content[:200] + "...",
-                    }
-                )
+    import subprocess
+    try:
+        # 使用 ripgrep (rg) 进行高性能搜索
+        # -i: 忽略大小写, -l: 只列出文件名, --max-count: 限制每个文件的匹配数
+        cmd = ["rg", "-i", "-l", "--max-count", "1", query, str(cards_dir)]
+        proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        
+        filenames = proc.stdout.strip().split("\n")
+        count = 0
+        for fname in filenames:
+            if not fname or count >= limit:
+                break
+            
+            f = Path(fname)
+            try:
+                content = f.read_text(encoding="utf-8")
+                # 寻找第一个匹配行的片段
+                snippet = ""
+                for line in content.splitlines():
+                    if query.lower() in line.lower():
+                        snippet = line.strip()[:200] + "..."
+                        break
+                
+                results.append({
+                    "id": f.stem,
+                    "title": f.name,
+                    "path": str(f.relative_to(_WS)),
+                    "score": 0.9 if query.lower() in f.name.lower() else 0.7,
+                    "snippet": snippet or (content[:200] + "...")
+                })
                 count += 1
-        except Exception:
-            continue
+            except Exception:
+                continue
+    except Exception as e:
+        _log.error("[VaultSearch] ripgrep failed: %s", e)
+        return []
 
     return results
 

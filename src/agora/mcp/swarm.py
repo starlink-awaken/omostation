@@ -403,6 +403,9 @@ class SwarmOrchestrator:
                                 role=info.get("role", "worker"),
                                 bos_uris=info.get("bos_uris", []),
                                 last_heartbeat=time.time(),
+                                cpu_percent=float(info.get("cpu_pct", 0)),
+                                memory_mb=float(info.get("mem_mb", 0)),
+                                queue_depth=int(info.get("queue_depth", 0)),
                             )
                             self.register_node(node)
                             # 回复: 告知主节点位置
@@ -440,6 +443,16 @@ class SwarmOrchestrator:
 
             while self._running:
                 try:
+                    # ── Phase 9: Real load telemetry ──
+                    cpu_pct = 0.0
+                    mem_mb = 0.0
+                    try:
+                        import psutil
+                        cpu_pct = psutil.cpu_percent()
+                        mem_mb = psutil.virtual_memory().used / (1024 * 1024)
+                    except ImportError:
+                        pass
+
                     msg = (
                         DISCOVERY_MSG
                         + json.dumps(
@@ -448,6 +461,9 @@ class SwarmOrchestrator:
                                 "role": self.role,
                                 "port": self.port,
                                 "bos_uris": getattr(self, "_bos_uris", []),
+                                "cpu_pct": cpu_pct,
+                                "mem_mb": mem_mb,
+                                "queue_depth": getattr(self, "_task_queue_depth", 0),
                             }
                         ).encode()
                     )
