@@ -35,8 +35,8 @@ bos://persona/    ← core-models/sot-bridge         — 人格与心智
 bos://capability/ ← forge/runtime                  — 能力与生态
 ```
 
-**BOS 路由定义位置**: `projects/agora/src/agora/mcp/resolver/services.py` (POC_SERVICES list, 75+ 条目)
-**BOS URI 解析器**: `projects/agora/src/agora/mcp/resolver/` (5 模块: services/pool/adapter/api/__init__)
+**BOS 路由定义位置**: `projects/agora/etc/bos-services.yaml` (声明式 YAML 注册表, 71 条目)
+**BOS URI 解析器**: `projects/agora/src/agora/mcp/resolver/` (6 模块: services/bos_registry/pool/adapter/api/__init__)
 
 ### 架构决策
 
