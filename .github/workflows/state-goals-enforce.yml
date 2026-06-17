@@ -1,12 +1,17 @@
 name: state-goals-enforce
 # P47+: state/goals 对齐 enforce. 复用 scripts/check-state-goals-alignment.py.
+# 脚本只读主仓 .omo/ (state/goals/tasks), 不依赖 projects/ 子模块 — 所以不拉
+# submodules: recursive (会撞 private 子模块导致 checkout 失败). 只 init scripts.
 on: [push, pull_request]
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: {submodules: recursive}
+      - name: Init scripts submodule
+        # 脚本在 scripts 子模块 (public). 不用 recursive — 避开 private 子模块.
+        run: git submodule update --init scripts
       - uses: actions/setup-python@v5
         with: {python-version: "3.13"}
+      - run: pip install pyyaml
       - run: python3 scripts/check-state-goals-alignment.py
