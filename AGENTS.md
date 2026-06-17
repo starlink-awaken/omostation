@@ -72,7 +72,15 @@ CLI / MCP → cli.py / mcp_server.py
 - **httpx** — Agora SSE 客户端
 - **pydantic** — 数据模型定义
 - **pyjwt** — JWT 认证 (Event Bus)
-- **aetherforge-gateway** — LLM 网关
+- **aetherforge-gateway** — LLM 网关 + X2 预算治理拦截
+
+## Governance (X2)
+
+Agent 执行任务（run_task）受全系统 **X2 Budget Policy** 约束：
+1. **事前拦截**: 任务启动前预估 Token 消耗，余额不足时自动熔断。
+2. **实时扣减**: 任务完成后，真实消耗自动写入 `llm_quota_ledger.jsonl`，同步 SSOT 账本。
+3. **自愈信号**: 预算耗尽时自动生成 OMO Debt，触发 Evolution Loop。
+
 
 ## Testing Pattern
 
