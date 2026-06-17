@@ -43,60 +43,40 @@ uv run pytest tests/ --ignore=tests/e2e -q    # 1165/1200 pass
 - **stdio**: `agora-mcp` (默认)
 - **HTTP**: `agora-web` (:7422)
 - **SSE**: `agora-server --sse` (:7431)
+- **Swarm**: 监听 UDP :7455 (发现) + HTTP :7422 (A2A)
 
 ## Key Files
 
 | 文件 | 行数 | 说明 |
 |------|------|------|
-| `server/mcp.py` | 1,945 | MCP 工具注册 (God Module — ⚠️ 待拆分, see docs/god-module-split-plan.md) |
-| `mcp_proxy/client.py` | 559 | MCP 客户端 |
-| `core/router.py` | 542 | 智能路由器 |
-| `mcp/bos_resolver.py` | 831 | BOS URI 解析 |
-| `mcp_tools.py` | 819 | 工具注册 |
-
-## Testing
-
-- 测试目录: `tests/` (51 文件, 1200 tests)
-- 运行: `uv run pytest tests/ --ignore=tests/e2e -q`
-- e2e: `uv run pytest tests/e2e/ -q` (需网络)
-- 标记: `@pytest.mark.network` 用于需要网络的测试
+| `server/mcp.py` | 1,945 | MCP 工具注册 + A2A 签名验证接收端 |
+| `mcp/swarm.py` | 500+ | 蜂群协调器 + 真实硬件遥测 (psutil) |
+| `auth/node_identity.py` | 200+ | Ed25519 节点身份管理 |
 
 ## Security
 
+- **X1 Swarm Trust**: 强制执行 Ed25519 节点签名。跨节点消息必须携带 `X-Swarm-Signature`。
 - **SSRF 防护**: `ssrf_guard.py` — 端点 URL 验证
 - **认证**: `auth/` — OAuth2, HMAC, Tenant
-- **密钥**: 全部通过 `os.environ.get()` 读取
-- **无 eval/pickle**: 安全序列化
 
 ## Gotchas
 
-1. **server/mcp.py 是 God Module** (1,945行) — 拆分计划见 `docs/god-module-split-plan.md`
-2. **ecos/omo 依赖声明但无静态 import** — 通过 subprocess 交互
-3. **CI 忽略 e2e 测试** — `--ignore=tests/e2e`
-4. **端口**: HTTP :7422 (--http), SSE :7431 (--sse), API :8080. Web dashboard 收敛至 cockpit :8090
-5. **BOS 注册表已声明式化**: `etc/bos-services.yaml` 是 SSOT, `AGORA_BOS_REGISTRY=none` 强制回退硬编码
+1. **server/mcp.py 是 God Module**
+2. **端口**: HTTP :7422, SSE :7431, Swarm UDP :7455. **API :8080 已废弃**，迁移至 :7422。
+3. **BOS 注册表**: `etc/bos-services.yaml` 是 SSOT。
 
 ## BOS Services
 
-Agora 对外提供的 BOS URI 服务。总计 **71 路由，5 域，4 传输类型**。
+### 记忆域 — memory (8)
+- `bos://memory/local/all-search` — 全域聚合搜索 (KOS/gbrain/Vault) [Swarm-Aware]
+- `bos://memory/gbrain/search` — gbrain 高性能搜索 (mcp_proxy)
+- `bos://memory/gbrain/query` — gbrain 结构化查询 (mcp_proxy)
+- `bos://memory/kos/search` — KOS 语义搜索 (poc, stdio)
+- `bos://memory/vault/search` — L4 Vault 本地搜索 (ripgrep)
 
-**声明式注册表**: `etc/bos-services.yaml` (YAML, SSOT)
-  - CLI 管理: `agora bos list|info|validate|export`
-  - 加载顺序: `AGORA_BOS_REGISTRY` 环境变量 → `etc/bos-services.yaml` → `POC_SERVICES` 硬编码 fallback
-  - 新增路由请编辑 `etc/bos-services.yaml`，勿改源码
+### 蜂群域 — swarm (1)
+- `bos://swarm/orchestrator/status` — 蜂群拓扑与节点负载监控 (internal)
 
-Agent 通过 `resolve_bos_uri()`、`read_resource()` 或 `list_bos_resources()` 调用。
-
-### 核心路由 (internal)
-- `bos://agora/registry` — Agora 注册表内省 (resource)
-  - 无需参数，直接 `read_resource("bos://agora/registry")`
-
-### 记忆域 — memory (5)
-- `bos://memory/kos/search` — KOS 跨域语义搜索 (poc, stdio)
-- `bos://memory/kos/ingest` — KOS 知识摄取 (poc, stdio)
-- `bos://memory/kronos/ingest` — Kronos 知识摄取 (poc, stdio)
-- `bos://memory/kronos/query` — Kronos 查询 (poc, stdio)
-- `bos://memory/kronos/schedule` — Kronos 调度 (poc, stdio)
 
 ### 分析域 — analysis (12)
 - `bos://analysis/minerva/research` — Minerva 深度研究 (poc, stdio)

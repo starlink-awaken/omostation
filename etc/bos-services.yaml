@@ -578,3 +578,172 @@ services:
     command: ["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos", "serve", "--action", "register"]
     description: "MetaOS 包注册 (POC stdio)"
 
+  - uri: "bos://capability/bus/data"
+    domain: capability
+    action: "data"
+    transport: internal
+    package: "bus-foundation"
+    module_path: "bus_foundation.facade.data"
+    func_name: "emit"
+    description: "Omni-Bus 数据面路由 (日志/遥测)"
+
+  - uri: "bos://capability/bus/event"
+    domain: capability
+    action: "event"
+    transport: internal
+    package: "bus-foundation"
+    module_path: "bus_foundation.facade.event"
+    func_name: "publish"
+    description: "Omni-Bus 事件面路由 (Pub/Sub)"
+
+  - uri: "bos://capability/bus/control"
+    domain: capability
+    action: "control"
+    transport: internal
+    package: "bus-foundation"
+    module_path: "bus_foundation.facade.control"
+    func_name: "submit_task"
+    description: "Omni-Bus 控制面路由 (异步/定时任务)"
+
+  - uri: "bos://memory/gbrain/search"
+    domain: memory
+    action: "search"
+    transport: mcp_proxy
+    package: "gbrain"
+    description: "gbrain 知识库全文搜索 (高性能 Postgres)"
+
+  - uri: "bos://memory/gbrain/query"
+    domain: memory
+    action: "query"
+    transport: mcp_proxy
+    package: "gbrain"
+    description: "gbrain 知识库结构化查询"
+
+  - uri: "bos://memory/gbrain/sync"
+    domain: memory
+    action: "sync"
+    transport: mcp_proxy
+    package: "gbrain"
+    description: "gbrain 知识库增量同步"
+
+  - uri: "bos://swarm/orchestrator/status"
+    domain: swarm
+    action: "status"
+    transport: internal
+    module_path: "agora.mcp.swarm"
+    func_name: "get_swarm_status"
+    description: "获取分布式蜂群实时拓扑与负载状态"
+
+  - uri: "bos://governance/evolution/loop"
+    domain: governance
+    action: "loop"
+    transport: internal
+    module_path: "omo.omo_evolution_loop"
+    func_name: "get_loop_status"
+    description: "OMO 自动进化循环监控"
+
+  - uri: "bos://capability/agent-runtime/chat"
+    domain: capability
+    action: "chat"
+    transport: stdio
+    package: "agent-runtime"
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "chat"]
+    description: "Agent 交互式对话接口"
+
+  - uri: "bos://capability/agent-runtime/run-task"
+    domain: capability
+    action: "run-task"
+    transport: stdio
+    package: "agent-runtime"
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "execute"]
+    description: "Agent 任务执行接口"
+
+  - uri: "bos://capability/agent-runtime/task-status"
+    domain: capability
+    action: "task-status"
+    transport: stdio
+    package: "agent-runtime"
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "status"]
+    description: "Agent 任务状态查询"
+
+  - uri: "bos://capability/agent-runtime/agent-list"
+    domain: capability
+    action: "agent-list"
+    transport: stdio
+    package: "agent-runtime"
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "list"]
+    description: "列出所有可用 Agent 实例"
+
+  - uri: "bos://persona/sot-bridge-persona/recall"
+    domain: persona
+    action: "recall"
+    transport: stdio
+    package: "sharedbrain-bridge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "recall"]
+    description: "SSOT 人格召回"
+
+  - uri: "bos://persona/sot-bridge-persona/recall-entity"
+    domain: persona
+    action: "recall-entity"
+    transport: stdio
+    package: "sharedbrain-bridge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "recall-entity"]
+    description: "SSOT 实体召回"
+
+  - uri: "bos://persona/sot-bridge-persona/sync"
+    domain: persona
+    action: "sync"
+    transport: stdio
+    package: "sharedbrain-bridge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "sync"]
+    description: "SSOT 人格同步"
+
+  - uri: "bos://governance/sot-bridge/register"
+    domain: governance
+    action: "register"
+    transport: stdio
+    package: "sharedbrain-bridge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "register"]
+    description: "SSOT 桥接器注册"
+
+  - uri: "bos://governance/sot-bridge/query"
+    domain: governance
+    action: "query"
+    transport: stdio
+    package: "sharedbrain-bridge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "query"]
+    description: "SSOT 桥接器查询"
+
+  - uri: "bos://analysis/eidos/validate"
+    domain: analysis
+    action: "validate"
+    transport: stdio
+    package: "eidos"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "eidos.cli", "validate"]
+    description: "Eidos 数据模型校验"
+
+  - uri: "bos://memory/kos/query"
+    domain: memory
+    action: "query"
+    transport: stdio
+    package: "kos"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kos.cli", "query"]
+    description: "KOS 知识查询"
+
+  - uri: "bos://analysis/ontoderive/align"
+    domain: analysis
+    action: "align"
+    transport: stdio
+    package: "ontoderive"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.cli", "align"]
+    description: "OntoDerive 语义对齐"
+
+  - uri: "bos://omo/eidos/pipeline"
+    domain: omo
+    action: "pipeline"
+    transport: stdio
+    package: "eidos"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "eidos.cli", "pipeline"]
+    description: "Eidos 治理管线调度"
+
+
