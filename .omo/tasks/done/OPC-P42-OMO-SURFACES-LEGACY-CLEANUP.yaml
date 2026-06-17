@@ -1,6 +1,6 @@
 id: OPC-P42-OMO-SURFACES-LEGACY-CLEANUP
 title: 清理 OMO governance surfaces 受控遗留面
-status: candidate
+status: done
 task_type: governance
 risk_level: L1
 depends_on: []
@@ -43,3 +43,6 @@ metadata:
   governance_stack: state_plane.kernel_plane.ingress_plane
   ingress_plane: projects/omo
 phase: 48
+completed_at: '2026-06-17T09:47:02.099598Z'
+closeout_note: 'Governance surfaces check: 0 issues, warn only for .omo/evidence/
+  (3 files). boulder.json deleted, .omo/.omo/ nesting cleared.'

@@ -23,3 +23,5 @@ updated_at: '2026-06-16T07:30:00Z'
 priority: P2
 priority_note: L2 risk optimization
 phase: 48
+progress_note: 'Partial: agora 9 failed, cockpit 9 failed, ecos 2 failed. Total ~20,
+  target <=10. ~50% from baseline ~60.'

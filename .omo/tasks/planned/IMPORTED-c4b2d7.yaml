@@ -32,6 +32,9 @@ updated_at: '2026-06-16T04:28:15Z'
 metadata:
   bet_id: BET-ea47
   cognitive_cartridge: ''
+  merged_from:
+  - IMPORTED-2af406
+  dedup_note: Merged duplicate from BET-c87a (same title/deliverables as BET-ea47)
 owner: team-lead
 routed_at: '2026-06-16T05:03:41.402367+00:00'
 routed_by: omo-debt route
