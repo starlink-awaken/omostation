@@ -1,6 +1,6 @@
 id: OPT-UNIFIED-AUTH
 title: '统一认证: cockpit API key 管理所有子服务'
-status: candidate
+status: done
 task_type: feature
 risk_level: L2
 depends_on: []
