@@ -3,13 +3,12 @@ title: 修复 pre-existing 测试失败 (60→≤10)
 status: candidate
 task_type: improvement
 risk_level: L2
-depends_on:
-- OPT-TEST-COVERAGE
+depends_on: []
 source_docs:
 - pitches/http-mcp-convergence-optimization.md
 deliverables:
-- agora bos_resolver 测试修复 (40→≤5)
-- runtime executor 测试修复 (18→≤3)
+- agora 测试失败修复 (9→≤5)
+- cockpit 测试失败修复 (9→≤3)
 - ecos transport 测试修复 (2→0)
 imported_via: manual
 context_uri: bos://memory/sandbox/pitches/http-mcp-convergence-optimization.md
@@ -23,5 +22,5 @@ updated_at: '2026-06-16T07:30:00Z'
 priority: P2
 priority_note: L2 risk optimization
 phase: 48
-progress_note: 'Partial: agora 9 failed, cockpit 9 failed, ecos 2 failed. Total ~20,
-  target <=10. ~50% from baseline ~60.'
+progress_note: 'Current: agora 9 failed, cockpit 9 failed, ecos 2 failed. Target:
+  total ≤10.'

@@ -1,6 +1,6 @@
 id: OPT-TEST-COVERAGE
 title: 测试覆盖率提升至 90%+
-status: candidate
+status: archived
 task_type: improvement
 risk_level: L1
 depends_on: []
@@ -22,3 +22,7 @@ updated_at: '2026-06-16T07:30:00Z'
 priority: P1
 priority_note: L1 risk, valuable but non-urgent
 phase: 48
+archived_at: '2026-06-17T09:51:41.140745Z'
+archive_reason: 'Deliverables reference nonexistent file paths (web/app.py, web/governance.py,
+  web/workspace_research.py). Actual cockpit structure: api_ecos.py, api_omos.py,
+  governance/.'

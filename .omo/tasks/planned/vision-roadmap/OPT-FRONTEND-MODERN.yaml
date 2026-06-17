@@ -1,6 +1,6 @@
 id: OPT-FRONTEND-MODERN
 title: '前端现代化: dashboard.html → React'
-status: candidate
+status: archived
 task_type: feature
 risk_level: L2
 depends_on:
@@ -22,3 +22,6 @@ updated_at: '2026-06-16T07:30:00Z'
 priority: P2
 priority_note: L2 risk optimization
 phase: 48
+archived_at: '2026-06-17T09:51:41.140745Z'
+archive_reason: Target dashboard.html no longer exists. hermes-console is already
+  React+Vite. Goal is obsolete.

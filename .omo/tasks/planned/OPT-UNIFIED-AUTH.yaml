@@ -3,8 +3,7 @@ title: '统一认证: cockpit API key 管理所有子服务'
 status: candidate
 task_type: feature
 risk_level: L2
-depends_on:
-- OPT-TEST-COVERAGE
+depends_on: []
 source_docs:
 - pitches/http-mcp-convergence-optimization.md
 deliverables:

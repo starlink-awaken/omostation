@@ -1,6 +1,6 @@
 id: IMPORTED-c4b2d7
 title: 设计并验证 Cognitive Cartridges (认知卡带) 挂载机制
-status: candidate
+status: archived
 task_type: feature
 risk_level: L1
 depends_on: []
@@ -39,3 +39,6 @@ owner: team-lead
 routed_at: '2026-06-16T05:03:41.402367+00:00'
 routed_by: omo-debt route
 phase: 48
+archived_at: '2026-06-17T09:51:41.140745Z'
+archive_reason: BET-ea47 pending/0%/unknown appetite. Placeholder with no implementation,
+  no approval. Duplicate of archived IMPORTED-2af406.
