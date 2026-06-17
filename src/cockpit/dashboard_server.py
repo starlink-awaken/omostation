@@ -612,11 +612,20 @@ async def api_cards_check():
 # BOS URI Gateway  (OPT-BOS-GATEWAY, Phase 42)
 # ═══════════════════════════════════════════════════════════════
 
+_AGORA_SRC = WORKSPACE_ROOT / "projects" / "agora" / "src"
+
+
+def _ensure_agora_src() -> None:
+    """确保 agora 源码路径在 sys.path 中，优先于安装版。"""
+    if str(_AGORA_SRC) not in sys.path:
+        sys.path.insert(0, str(_AGORA_SRC))
+
 
 @app.get("/api/bos/services", dependencies=_AUTH_DEPS)
 async def api_bos_services(domain: str = ""):
     """列出所有 BOS URI 服务，可按 domain 过滤。"""
     try:
+        _ensure_agora_src()
         from agora.mcp.resolver.services import POC_SERVICES
 
         services = []
@@ -636,28 +645,44 @@ async def api_bos_services(domain: str = ""):
 
 @app.get("/api/bos/resolve", dependencies=_AUTH_DEPS)
 async def api_bos_resolve(uri: str = "", arguments: str = "{}"):
-    """解析一个 BOS URI——通过 subprocess 调用 agora CLI。"""
+    """解析一个 BOS URI——返回路由表中的服务信息。"""
     if not uri:
         return JSONResponse(content={"error": "uri 参数必填"}, status_code=400)
     if not uri.startswith("bos://"):
         return JSONResponse(content={"error": "URI 必须是 bos:// 格式"}, status_code=400)
 
     try:
-        import subprocess as sp
-        agora_cli = WORKSPACE_ROOT / "projects" / "agora" / ".venv" / "bin" / "agora"
-        if not agora_cli.exists():
-            # fallback: uv run
-            cmd = ["uv", "run", "--directory", str(WORKSPACE_ROOT / "projects/agora"),
-                   "python", "-m", "agora.cli", "bos", "list"]
-        else:
-            cmd = [str(agora_cli), "bos", "list"]
+        _ensure_agora_src()
+        from agora.mcp.resolver.services import POC_SERVICES
+        from agora.mcp.resolver.api import parse_bos_uri
 
-        result = sp.run(cmd, capture_output=True, text=True, timeout=30)
+        # 1. 解析 URI
+        parsed = parse_bos_uri(uri)
+        if "error" in parsed:
+            return JSONResponse(content={"error": parsed["error"]}, status_code=400)
+
+        # 2. 查找匹配服务
+        matched = [s for s in POC_SERVICES if s.uri == uri]
+        if not matched:
+            return JSONResponse(content={
+                "uri": uri,
+                "parsed": parsed,
+                "matched": False,
+                "message": "URI 在注册表中未匹配到服务",
+            })
+
+        svc = matched[0]
         return JSONResponse(content={
             "uri": uri,
-            "stdout": result.stdout[:2000],
-            "stderr": result.stderr[:500],
-            "exit_code": result.returncode,
+            "parsed": parsed,
+            "matched": True,
+            "service": {
+                "domain": svc.domain,
+                "package": svc.package,
+                "action": svc.action,
+                "transport": svc.transport,
+                "description": svc.description,
+            },
         })
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
@@ -667,11 +692,7 @@ async def api_bos_resolve(uri: str = "", arguments: str = "{}"):
 async def api_bos_health():
     """BOS 系统健康检查。"""
     try:
-        # Ensure latest agora source is used
-        _agora_src = WORKSPACE_ROOT / "projects" / "agora" / "src"
-        if str(_agora_src) not in sys.path:
-            sys.path.insert(0, str(_agora_src))
-
+        _ensure_agora_src()
         from agora.mcp.bos_metrics import bos_metrics
         from agora.mcp.resolver.services import POC_SERVICES
 
@@ -694,6 +715,7 @@ async def api_bos_health():
 async def api_bos_metrics(prefix: str = ""):
     """BOS 调用指标。"""
     try:
+        _ensure_agora_src()
         from agora.mcp.bos_metrics import bos_metrics
 
         if prefix:
