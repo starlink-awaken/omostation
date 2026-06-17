@@ -20,6 +20,7 @@ _log = logging.getLogger("omo.evolution")
 # ── Paths ──────────────────────────────────────────────────────────────────
 _WS = os.environ.get("WORKSPACE") or str(Path.home() / "Workspace")
 DEBT_DIR = Path(_WS) / ".omo" / "debt" / "items"
+PROPOSAL_DIR = Path(_WS) / ".omo" / "state" / "proposals"
 
 
 class EvolutionLoop:
@@ -28,6 +29,7 @@ class EvolutionLoop:
     def __init__(self, interval_sec: int = 60):
         self.interval = interval_sec
         self._processed_debts: set[str] = set()
+        PROPOSAL_DIR.mkdir(parents=True, exist_ok=True)
 
     def run_once(self) -> int:
         """Scan debt directory and return number of remediation triggered."""
@@ -69,22 +71,46 @@ class EvolutionLoop:
         return False
 
     def _dispatch_remediation(self, debt: dict[str, Any]) -> None:
-        """Trigger a MetaOS workflow to propose a fix."""
+        """[Phase 9] Generate a MutationProposal for human review."""
         debt_id = debt.get("id", "unknown")
-        _log.info("[EvolutionLoop] Dispatching remediation for: %s", debt_id)
+        _log.info("[EvolutionLoop] Generating MutationProposal for: %s", debt_id)
         
-        # Real dispatch via MetaOS CLI (Phase 6 implementation)
-        import subprocess
+        from datetime import UTC, datetime
+        now_iso = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+        
+        # ── 1. Create the Proposal Envelope ──
+        proposal_id = f"PROP-{debt_id.replace('DEBT-', '')}"
+        proposal_path = PROPOSAL_DIR / f"{proposal_id}.yaml"
+        
+        # Define automated fix logic (Mapping debt type to suggested action)
+        remediation_type = "config_change"
+        target_file = ""
+        suggestion = "Manual review required."
+        
+        if "BUDGET" in debt_id.upper():
+            remediation_type = "budget_increase"
+            suggestion = "Increase RUNTIME_LLM_BUDGET_USD by 20% or downgrade to deepseek-chat."
+            
+        payload = {
+            "id": proposal_id,
+            "title": f"Auto-remediation for {debt_id}",
+            "type": remediation_type,
+            "status": "pending",
+            "debt_id": debt_id,
+            "created_at": now_iso,
+            "target": target_file,
+            "suggestion": suggestion,
+            "risk": debt.get("severity", "medium"),
+            "impact": debt.get("description", "")
+        }
+        
+        # ── 2. Persist to State Plane ──
         try:
-            # We assume metaos is available in the environment as a CLI tool
-            cmd = ["uv", "run", "--package", "metaos", "python", "-m", "metaos.cli", "remediate", debt_id]
-            subprocess.run(cmd, check=False, capture_output=True)
-            _log.info("[EvolutionLoop] Successfully dispatched to MetaOS: %s", debt_id)
+            proposal_path.write_text(yaml.safe_dump(payload, allow_unicode=True, sort_keys=False) + "\n")
+            _log.info("[EvolutionLoop] Proposal created: %s", proposal_path)
+            print(f"📦  Evolution Loop: Generated MutationProposal {proposal_id} (Awaiting Cockpit Approval)")
         except Exception as e:
-            _log.error("[EvolutionLoop] Failed to dispatch remediation: %s", e)
-        
-        # Keep the log for visibility in non-interactive mode
-        print(f"🛠️  Evolution Loop: Dispatched remediation for debt {debt_id}")
+            _log.error("[EvolutionLoop] Failed to save proposal: %s", e)
 
 
 if __name__ == "__main__":
