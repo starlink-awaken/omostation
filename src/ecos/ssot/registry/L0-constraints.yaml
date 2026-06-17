@@ -83,6 +83,45 @@ constraints:
   type: required
   violation: 'E-L0-003: 未经 Agora 的写操作'
 - applies_to:
+  - L2
+  - L3
+  - L4
+  description: "`.omo` 顶层治理资产必须登记到 omo governance surfaces registry"
+  dimension: X1
+  id: CR-OMO-SURFACE-01
+  rule: omo.top_level_asset in registry('.omo/_truth/registry/omo-governance-surfaces.yaml')
+  type: required
+  violation: "E-L0-017: `.omo` 顶层治理资产未登记"
+- applies_to:
+  - L2
+  - L3
+  - L4
+  description: "`.omo` 只能被视为治理状态面，不得替代 `projects/omo` 治理内核"
+  dimension: X1
+  id: CR-OMO-SURFACE-02
+  rule: omo.role == 'state_plane' and projects.omo.role == 'governance_kernel'
+  type: required
+  violation: "E-L0-018: `.omo` 与 `projects/omo` 边界混淆"
+- applies_to:
+  - L2
+  - L3
+  description: "`projects/c2g` 只能向 `.omo/tasks/planned/` 物化任务，不得直写 active/done"
+  dimension: X1
+  id: CR-C2G-INGRESS-01
+  rule: c2g.write_scope subset_of ['.omo/tasks/planned/', '.omo/_truth/goals/current.yaml']
+  type: required
+  violation: 'E-L0-019: C2G 绕过治理入口直接改写执行态'
+- applies_to:
+  - L2
+  - L3
+  - L4
+  description: "非 broker 不得直接以文件系统方式改写 `.omo/` 或 `spaces/`"
+  dimension: X1
+  id: CR-OMO-DIRECT-IO-01
+  rule: non_broker.python_mutation(target in ['.omo/', 'spaces/']) == false
+  type: required
+  violation: 'E-L0-020: 非 broker 直接改写治理状态面'
+- applies_to:
   - L0
   description: 协议版本必须声明——未版本化协议不可进入注册表
   dimension: X2
@@ -115,6 +154,16 @@ constraints:
   type: preferred
   violation: 'W-L0-005: 协议超过半衰期'
 - applies_to:
+  - L2
+  - L3
+  - L4
+  description: omo governance surfaces registry 超过 14 天未复核应触发保鲜告警
+  dimension: X2
+  id: X2-C05
+  rule: registry('omo-governance-surfaces').age_days <= 14
+  type: preferred
+  violation: "W-L0-006: `.omo` 治理面注册表保鲜告警"
+- applies_to:
   - L4
   description: 每个功能域应声明 value_tier
   dimension: X3
@@ -130,6 +179,34 @@ constraints:
   rule: domain.value_tier == 1 implies domain.cost_attribution != 'none'
   type: preferred
   violation: 'W-L0-004: 核心域无成本归因'
+- applies_to:
+  - L2
+  - L3
+  description: "`.omo` 状态面、`projects/omo` 内核、`projects/c2g` 入口应具备分层价值归因"
+  dimension: X3
+  id: X3-C03
+  rule: governance_stack.value_attribution includes ['state_plane', 'kernel_plane', 'ingress_plane']
+  type: preferred
+  violation: 'W-L0-007: 治理三层价值归因缺失'
+- applies_to:
+  - L2
+  - L3
+  - L4
+  description: "`.omo` INDEX、governance standard、registry、`projects/omo` 路径常量必须口径一致"
+  dimension: X4
+  id: X4-C01
+  rule: omo.surface_classification == kernel.surface_classification == registry.surface_classification
+  type: required
+  violation: "E-L0-020: `.omo` 三层治理口径不一致"
+- applies_to:
+  - L2
+  - L3
+  description: "由 `projects/c2g` 物化的 planned task 应携带 governance_refs"
+  dimension: X4
+  id: X4-C02
+  rule: task.imported_via startswith 'omo_bridge' implies len(task.governance_refs) > 0
+  type: preferred
+  violation: 'W-L0-008: C2G 产物缺少治理引用'
 execution:
   last_run: null
   mode: warn
@@ -503,3 +580,43 @@ c2g_v4_constraints:
     violation: "沙箱未定期清理，违背熵减原则"
     introduced: '2026-06-15'
     value_tier: 2
+
+# ── Omni-Bus 约束 (CR-OMNIBUS-*) ──
+# 2026-06-17 Omni-Bus 三大平面 (Data, Event, Control) 落地的治理约束
+
+omni_bus_constraints:
+  - id: CR-OMNIBUS-01
+    name: "OmniEnvelope 统一协议约束"
+    description: "所有基于 bus-foundation 的跨域消息必须使用统一的 OmniEnvelope 格式，禁止隐式投递和私有格式。"
+    rule: "envelope.plane in ['DATA', 'EVENT', 'CONTROL'] and envelope.topic != null and envelope.source_uri != null"
+    type: required
+    severity: error
+    violation: "违规私有 Envelope，导致下游协议解析断裂"
+    introduced: '2026-06-17'
+    value_tier: 1
+    references:
+      - "projects/bus-foundation/src/bus_foundation/envelope.py"
+
+  - id: CR-OMNIBUS-02
+    name: "Control Plane 持久化与 ACK 约束"
+    description: "Control Plane 的所有执行任务必须落入 SQLite WAL 持久化队列表 (control_tasks)，并要求显式 ACK/NACK，达到重试上限进入 DLQ。"
+    rule: "control_task.persisted == true and (control_task.acked == true or control_task.nacked == true) and control_task.retry_count <= MAX_RETRIES"
+    type: required
+    severity: error
+    violation: "Control Plane 任务未持久化或丢失了 ACK/NACK 状态回路"
+    introduced: '2026-06-17'
+    value_tier: 1
+    references:
+      - "projects/bus-foundation/src/bus_foundation/backends/control_plane.py"
+
+  - id: CR-OMNIBUS-03
+    name: "Data Plane 非阻塞内存约束"
+    description: "Data Plane (日志、遥测、观测) 必须采用无锁异步内存队列 (Ring Buffer) 分发，满载时 Drop-Tail，绝对禁止阻塞主业务逻辑。"
+    rule: "data_plane.is_async == true and data_plane.blocking == false"
+    type: required
+    severity: error
+    violation: "Data Plane 导致主业务发生 IO 阻塞"
+    introduced: '2026-06-17'
+    value_tier: 2
+    references:
+      - "projects/bus-foundation/src/bus_foundation/backends/data_plane.py"
