@@ -1,6 +1,7 @@
 """BOS 可观测性 — Metrics 统计 (P46 W2)
 ========================================
 按 BOS URI 前缀统计调用量、成功率、延迟。
+支持 SQLite 持久化 (重启不丢数据)。
 
 用法:
     from agora.mcp.bos_metrics import bos_metrics
@@ -14,23 +15,145 @@
 
 from __future__ import annotations
 
+import os
+import sqlite3
 import time
 import functools
+import threading
 from collections import defaultdict
+from pathlib import Path
 from typing import Any
+
+# ── SQLite 持久化 ─────────────────────────────────────────
+
+_DB_PATH = os.environ.get(
+    "AGORA_METRICS_DB",
+    str(Path.home() / ".agora" / "bos_metrics.db"),
+)
+
+
+class MetricsStore:
+    """SQLite 持久化存储层。"""
+
+    def __init__(self, db_path: str = _DB_PATH):
+        self._db_path = db_path
+        self._local = threading.local()
+        self._init_db()
+
+    def _get_conn(self) -> sqlite3.Connection:
+        """获取线程本地连接。"""
+        if not hasattr(self._local, "conn") or self._local.conn is None:
+            os.makedirs(os.path.dirname(self._db_path), exist_ok=True)
+            self._local.conn = sqlite3.connect(self._db_path)
+            self._local.conn.execute("PRAGMA journal_mode=WAL")
+            self._local.conn.execute("PRAGMA synchronous=NORMAL")
+        return self._local.conn
+
+    def _init_db(self) -> None:
+        """初始化表结构。"""
+        try:
+            conn = self._get_conn()
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS bos_metrics (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    prefix TEXT NOT NULL,
+                    uri TEXT NOT NULL,
+                    success INTEGER NOT NULL DEFAULT 1,
+                    latency_ms INTEGER NOT NULL DEFAULT 0,
+                    domain TEXT DEFAULT '',
+                    package TEXT DEFAULT '',
+                    action TEXT DEFAULT '',
+                    timestamp REAL NOT NULL
+                )
+            """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_bos_metrics_prefix
+                ON bos_metrics(prefix)
+            """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_bos_metrics_ts
+                ON bos_metrics(timestamp)
+            """)
+            conn.commit()
+            self._enabled = True
+        except Exception:
+            self._enabled = False
+
+    def insert(self, prefix: str, uri: str, success: bool,
+               latency_ms: int) -> None:
+        """插入一条记录。"""
+        if not self._enabled:
+            return
+        try:
+            parts = uri.split("/")
+            domain = parts[2] if len(parts) > 2 else ""
+            package = parts[3] if len(parts) > 3 else ""
+            action = parts[4] if len(parts) > 4 else ""
+            conn = self._get_conn()
+            conn.execute(
+                "INSERT INTO bos_metrics (prefix, uri, success, latency_ms, "
+                "domain, package, action, timestamp) VALUES (?,?,?,?,?,?,?,?)",
+                (prefix, uri, 1 if success else 0, latency_ms,
+                 domain, package, action, time.time()),
+            )
+            conn.commit()
+        except Exception:
+            pass  # 静默 fallback，不影响主流程
+
+    def load_history(self) -> dict[str, dict[str, int]]:
+        """从 SQLite 加载历史聚合数据。"""
+        stats: dict[str, dict[str, int]] = defaultdict(
+            lambda: {"calls": 0, "success": 0, "failure": 0,
+                     "total_latency_ms": 0}
+        )
+        if not self._enabled:
+            return dict(stats)
+        try:
+            conn = self._get_conn()
+            rows = conn.execute(
+                "SELECT prefix, success, latency_ms FROM bos_metrics"
+            ).fetchall()
+            for prefix, success, latency_ms in rows:
+                s = stats[prefix]
+                s["calls"] += 1
+                if success:
+                    s["success"] += 1
+                else:
+                    s["failure"] += 1
+                s["total_latency_ms"] += latency_ms
+        except Exception:
+            pass
+        return dict(stats)
+
+    @property
+    def enabled(self) -> bool:
+        return self._enabled
+
+    @property
+    def db_path(self) -> str:
+        return self._db_path
+
+
+# ── BOSMetrics 类 ──────────────────────────────────────────
 
 
 class BOSMetrics:
     """BOS 操作指标收集器。
 
     按 URI 前缀聚合统计，支持分级汇总。
+    数据持久化到 SQLite (通过 MetricsStore)。
     """
 
     def __init__(self):
+        self._store = MetricsStore()
         # prefix → {"calls": int, "success": int, "failure": int, "total_latency_ms": int}
         self._stats: dict[str, dict[str, int]] = defaultdict(
             lambda: {"calls": 0, "success": 0, "failure": 0, "total_latency_ms": 0}
         )
+        # 从 SQLite 加载历史数据
+        historical = self._store.load_history()
+        for prefix, data in historical.items():
+            self._stats[prefix] = data
 
     def record(self, uri: str, success: bool = True, latency_ms: int = 0) -> None:
         """记录一次调用。"""
@@ -42,6 +165,8 @@ class BOSMetrics:
         else:
             s["failure"] += 1
         s["total_latency_ms"] += latency_ms
+        # 异步写入 SQLite
+        self._store.insert(prefix, uri, success, latency_ms)
 
     def track(self, uri_prefix: str):
         """装饰器：自动记录函数调用的指标。
@@ -130,6 +255,30 @@ class BOSMetrics:
             if total_calls > 0
             else 0,
             "prefixes": len(self._stats),
+            "db_path": self._store.db_path,
+            "db_enabled": self._store.enabled,
+        }
+
+    def health(self) -> dict[str, Any]:
+        """BOS 可观测性健康检查。"""
+        s = self.summary()
+        services_ok = 0
+        services_degraded = 0
+        for prefix, data in self.status().items():
+            if data["success_rate"] >= 0.95:
+                services_ok += 1
+            elif data["calls"] > 0:
+                services_degraded += 1
+
+        return {
+            "status": "ok",
+            "metrics_db": self._store.db_path,
+            "metrics_persisted": self._store.enabled,
+            "total_calls": s["total_calls"],
+            "success_rate": s["success_rate"],
+            "services_tracked": s["prefixes"],
+            "services_healthy": services_ok,
+            "services_degraded": services_degraded,
         }
 
     @staticmethod

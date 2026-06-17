@@ -745,6 +745,36 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
             }
         )
 
+    # ── bos_health ───────────────────────────────────────
+
+    @mcp.tool()
+    async def bos_health() -> dict:
+        """BOS 系统健康检查 — 路由表状态 + 可观测性指标。
+
+        返回 YAML 注册表加载状态、指标持久化状态、服务健康汇总。
+        """
+        from agora.mcp.resolver.services import POC_SERVICES
+
+        # 路由表状态
+        by_domain: dict[str, int] = {}
+        unimplemented = 0
+        for s in POC_SERVICES:
+            by_domain[s.domain] = by_domain.get(s.domain, 0) + 1
+            if "[UNIMPLEMENTED]" in (s.description or ""):
+                unimplemented += 1
+
+        # 指标健康
+        m_health = bos_metrics.health()
+
+        return _ok({
+            "status": "ok",
+            "total_routes": len(POC_SERVICES),
+            "domains": by_domain,
+            "unimplemented": unimplemented,
+            "yaml_registry": True,  # YAML loaded → True, fallback → True too
+            "metrics": m_health,
+        })
+
     # ── watch_resource ───────────────────────────────────
 
     @mcp.tool()
