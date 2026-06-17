@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import os
 import pathlib
+import re
 from typing import Any
 
 import yaml
@@ -22,20 +23,46 @@ import yaml
 
 def _resolve_agora_root() -> pathlib.Path:
     """找到 agora 项目根目录。"""
-    # 从当前文件路径向上搜索
     here = pathlib.Path(__file__).resolve()
     for parent in here.parents:
         if (parent / "pyproject.toml").exists():
             return parent
-    # fallback: 环境变量
     env = os.environ.get("AGORA_ROOT", "")
     if env:
         return pathlib.Path(env)
-    # 最后 fallback
     return pathlib.Path.cwd()
 
 
 DEFAULT_REGISTRY_PATH = _resolve_agora_root() / "etc" / "bos-services.yaml"
+
+
+# ── 从 BOS_URI_PATTERN 和 BosService 定义动态推导校验集 ──
+
+def _get_valid_domains() -> set[str]:
+    """从 BOS_URI_PATTERN 正则提取合法 domain 集合。"""
+    from agora.mcp.resolver.services import BOS_URI_PATTERN
+
+    # BOS_URI_PATTERN = r"^bos://(?P<domain>memory|governance|...)/(?P<package>...)/(?P<action>...)$"
+    match = re.search(r"\(\?P<domain>([^)]+)\)", BOS_URI_PATTERN.pattern)
+    if match:
+        return set(match.group(1).split("|"))
+    return set()
+
+
+def _get_valid_transports() -> set[str]:
+    """从 Transport 类型字面量推导合法 transport 集合。"""
+    try:
+        from agora.mcp.resolver.services import Transport
+
+        # Transport = Literal["stdio", "internal", "http", "mcp_stdio"]
+        if hasattr(Transport, "__args__"):
+            return set(Transport.__args__)
+    except Exception:
+        pass
+    return {"stdio", "internal", "http", "mcp_stdio", "mcp_proxy"}
+
+
+# ── 数据转换 ──
 
 
 def _dict_to_bos_service(data: dict[str, Any]) -> object:
@@ -119,29 +146,35 @@ def validate_registry(path: str | pathlib.Path | None = None) -> list[str]:
     errors: list[str] = []
     try:
         services = load_from_yaml(path)
-    except (FileNotFoundError, ValueError, yaml.YAMLError) as e:
+    except (FileNotFoundError, ValueError, yaml.YAMLError, KeyError) as e:
         return [f"加载失败: {e}"]
 
+    # 动态推导合法值，避免硬编码漂移
+    valid_domains = _get_valid_domains()
+    valid_transports = _get_valid_transports()
+    from agora.mcp.resolver.services import BOS_URI_PATTERN
+
     seen_uris: set[str] = set()
-    valid_domains = {"memory", "governance", "analysis", "persona", "capability", "forge", "meta", "ecos", "agora", "swarm", "omo"}
-    valid_transports = {"stdio", "internal", "http", "mcp_stdio", "mcp_proxy"}
 
     for i, s in enumerate(services):
         if not s.uri:
             errors.append(f"[{i}] 缺少 uri")
-        elif s.uri in seen_uris:
+            continue
+
+        if s.uri in seen_uris:
             errors.append(f"[{i}] 重复 URI: {s.uri}")
-        else:
-            seen_uris.add(s.uri)
+            continue
+        seen_uris.add(s.uri)
 
-            # 校验 URI 格式
-            from agora.mcp.resolver.services import BOS_URI_PATTERN
-            if not BOS_URI_PATTERN.match(s.uri):
-                errors.append(f"[{i}] URI 格式错误: {s.uri}")
+        # URI 格式校验
+        if not BOS_URI_PATTERN.match(s.uri):
+            errors.append(f"[{i}] URI 格式错误: {s.uri}")
 
-        if s.domain and s.domain not in valid_domains:
+        # domain 合法性
+        if s.domain and valid_domains and s.domain not in valid_domains:
             errors.append(f"[{i}] 无效 domain: {s.domain} ({s.uri})")
 
+        # transport 合法性
         if s.transport not in valid_transports:
             errors.append(f"[{i}] 无效 transport: {s.transport} ({s.uri})")
 
