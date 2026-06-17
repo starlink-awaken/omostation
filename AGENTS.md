@@ -74,10 +74,18 @@ uv run pytest tests/ --ignore=tests/e2e -q    # 1165/1200 pass
 2. **ecos/omo 依赖声明但无静态 import** — 通过 subprocess 交互
 3. **CI 忽略 e2e 测试** — `--ignore=tests/e2e`
 4. **端口**: HTTP :7422 (--http), SSE :7431 (--sse), API :8080. Web dashboard 收敛至 cockpit :8090
+5. **BOS 注册表已声明式化**: `etc/bos-services.yaml` 是 SSOT, `AGORA_BOS_REGISTRY=none` 强制回退硬编码
 
 ## BOS Services
 
-Agora 对外提供的 BOS URI 服务。总计 **40 路由，5 域**. Agent 通过 `resolve_bos_uri()` 或 `read_resource()` 调用。
+Agora 对外提供的 BOS URI 服务。总计 **71 路由，5 域，4 传输类型**。
+
+**声明式注册表**: `etc/bos-services.yaml` (YAML, SSOT)
+  - CLI 管理: `agora bos list|info|validate|export`
+  - 加载顺序: `AGORA_BOS_REGISTRY` 环境变量 → `etc/bos-services.yaml` → `POC_SERVICES` 硬编码 fallback
+  - 新增路由请编辑 `etc/bos-services.yaml`，勿改源码
+
+Agent 通过 `resolve_bos_uri()`、`read_resource()` 或 `list_bos_resources()` 调用。
 
 ### 核心路由 (internal)
 - `bos://agora/registry` — Agora 注册表内省 (resource)

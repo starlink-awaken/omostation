@@ -391,6 +391,16 @@ For more: https://github.com/starlink-awaken/agora#readme""",
         help="Check specific services (comma-separated)",
     )
 
+    # bos
+    bos = sub.add_parser("bos", help="BOS URI 注册表管理")
+    bos_sub = bos.add_subparsers(dest="bos_cmd")
+    bos_sub.add_parser("list", help="列出所有 BOS URI 路由")
+    bos_info = bos_sub.add_parser("info", help="BOS 注册表统计信息")
+    bos_info.add_argument("--json", action="store_true", help="JSON output")
+    bos_sub.add_parser("validate", help="校验 YAML 注册表完整性")
+    bos_export = bos_sub.add_parser("export", help="导出注册表为 JSON")
+    bos_export.add_argument("--pretty", action="store_true", help="Pretty print")
+
     # route
     rt = sub.add_parser("route", help="Add a tool route")
     rt.add_argument("tool", help="Tool name")

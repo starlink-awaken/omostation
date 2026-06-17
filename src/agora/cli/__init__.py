@@ -231,9 +231,29 @@ def main():
         return cmd_identity(args)
 
     elif args.command == "grant":
-        from agora.cli.commands_grant import cmd_grant  # type: ignore[import-not-found]
+        from agora.cli.commands_grant import cmd_grant
 
         return cmd_grant(args)
+
+    elif args.command == "bos":
+        from agora.cli.commands_bos import cmd_bos_list, cmd_bos_info, cmd_bos_validate, cmd_bos_export
+
+        sub = getattr(args, "bos_cmd", None)
+        if sub == "list":
+            return cmd_bos_list(args)
+        elif sub == "info":
+            return cmd_bos_info(args)
+        elif sub == "validate":
+            return cmd_bos_validate(args)
+        elif sub == "export":
+            return cmd_bos_export(args)
+        else:
+            print("用法: agora bos {list|info|validate|export}")
+            print("  list     列出所有 BOS URI 路由")
+            print("  info     注册表统计信息")
+            print("  validate 校验 YAML 注册表")
+            print("  export   导出为 JSON")
+            return 0
 
     return 0
 

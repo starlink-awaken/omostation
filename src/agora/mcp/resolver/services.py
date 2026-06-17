@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 
+import os
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -46,9 +47,12 @@ def _with_uv_package(service: BosService) -> list[str]:
     return ["uv", "run", "--package", service.package, *cmd[2:]]
 
 
-# ── POC_SERVICES: 34 条 BOS URI 路由 ──────────────────────
-# 5 Domain: memory(5) / governance(8) / analysis(12) / persona(7) / capability(8)
-POC_SERVICES: list[BosService] = [
+# ── POC_SERVICES: 声明式加载 (YAML > 硬编码 fallback) ─────────
+# 1. 加载顺序: AGORA_BOS_REGISTRY 环境变量 → etc/bos-services.yaml → 硬编码 fallback
+# 2. `AGORA_BOS_REGISTRY=none` 强制使用硬编码 fallback
+# 3. 新增路由请编辑 etc/bos-services.yaml, 勿改本文件
+
+_FALLBACK_SERVICES: list[BosService] = [
     # ════════════════════════════════════════════════════════════════
     # Domain: memory (5)
     # ════════════════════════════════════════════════════════════════
@@ -713,3 +717,45 @@ POC_SERVICES: list[BosService] = [
         description="MetaOS 包注册 (POC stdio)",
     ),
 ]
+
+# ── POC_SERVICES: YAML 驱动加载器 ──────────────────────────
+# 向后兼容：所有 from .services import POC_SERVICES 继续工作
+
+def _load_services() -> list[BosService]:
+    """加载 BOS 服务注册表，优先 YAML 声明式，fallback 到硬编码。
+
+    加载顺序:
+    1. AGORA_BOS_REGISTRY 环境变量指定的 YAML 路径
+    2. etc/bos-services.yaml (项目默认)
+    3. _FALLBACK_SERVICES (硬编码，零依赖)
+    """
+    # env=none → 强制 fallback
+    if os.environ.get("AGORA_BOS_REGISTRY", "").lower() == "none":
+        return list(_FALLBACK_SERVICES)
+
+    candidates = []
+    env_path = os.environ.get("AGORA_BOS_REGISTRY", "")
+    if env_path:
+        candidates.append(env_path)
+
+    # 项目默认路径
+    here = os.path.dirname(os.path.abspath(__file__))
+    default_yaml = os.path.join(here, "..", "..", "..", "..", "etc", "bos-services.yaml")
+    candidates.append(os.path.normpath(default_yaml))
+
+    for path in candidates:
+        if os.path.exists(path):
+            try:
+                from agora.mcp.resolver.bos_registry import load_from_yaml
+                return load_from_yaml(path)
+            except Exception as exc:
+                import logging
+                logging.getLogger(__name__).warning(
+                    "BOS YAML 加载失败 (%s), 使用 fallback: %s", path, exc
+                )
+                break
+
+    return list(_FALLBACK_SERVICES)
+
+
+POC_SERVICES: list[BosService] = _load_services()

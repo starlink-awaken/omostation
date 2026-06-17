@@ -1,0 +1,580 @@
+# BOS 服务注册表 — 声明式 YAML
+# SSOT: 所有 BOS URI 路由在此定义，替代硬编码 POC_SERVICES
+# 版本: 1.0
+# 自动生成自 services.py POC_SERVICES, 之后手动维护
+# 加载顺序: AGORA_BOS_REGISTRY 环境变量 → 本文件 → POC_SERVICES fallback
+
+services:
+  - uri: "bos://memory/kos/search"
+    domain: memory
+    action: "search"
+    transport: stdio
+    package: "kos"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kos.cli", "search"]
+    description: "KOS 知识图谱检索入口 (P33-W1 战役 2 起步)"
+
+  - uri: "bos://memory/kos/ingest"
+    domain: memory
+    action: "ingest"
+    transport: stdio
+    package: "kos"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kos.cli", "ingest"]
+    description: "KOS 知识摄取入口"
+
+  - uri: "bos://memory/kos/schema"
+    domain: memory
+    action: "schema"
+    transport: stdio
+    package: "kos"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kos.cli", "schema"]
+    description: "KOS Schema 查询"
+
+  - uri: "bos://memory/kronos/ingest"
+    domain: memory
+    action: "ingest"
+    transport: stdio
+    package: "kronos"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos.cli", "ingest"]
+    description: "Kronos 知识摄取管线入口"
+
+  - uri: "bos://memory/kronos/scan"
+    domain: memory
+    action: "scan"
+    transport: stdio
+    package: "kronos"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos.cli", "scan"]
+    description: "Kronos 扫描入口"
+
+  - uri: "bos://governance/metaos/decide"
+    domain: governance
+    action: "decide"
+    transport: stdio
+    package: "metaos"
+    command: ["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos.cli", "decide"]
+    description: "MetaOS 决策门控"
+
+  - uri: "bos://governance/metaos/immune"
+    domain: governance
+    action: "immune"
+    transport: stdio
+    package: "metaos"
+    command: ["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos.cli", "immune"]
+    description: "MetaOS 免疫响应"
+
+  - uri: "bos://governance/metaos/route"
+    domain: governance
+    action: "route"
+    transport: stdio
+    package: "metaos"
+    command: ["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos.cli", "route"]
+    description: "MetaOS 路由决策"
+
+  - uri: "bos://governance/omo/state"
+    domain: governance
+    action: "state"
+    transport: stdio
+    package: "omo"
+    command: ["uv", "run", "--directory", "projects/omo", "python", "-m", "omo.cli", "state"]
+    description: "OMO 状态查询"
+
+  - uri: "bos://governance/omo/debt"
+    domain: governance
+    action: "debt"
+    transport: stdio
+    package: "omo"
+    command: ["uv", "run", "--directory", "projects/omo", "python", "-m", "omo.cli", "debt"]
+    description: "OMO 债务查询"
+
+  - uri: "bos://governance/eidos/validate"
+    domain: governance
+    action: "validate"
+    transport: stdio
+    package: "eidos"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "eidos.cli", "validate"]
+    description: "Eidos Schema 约束校验"
+
+  - uri: "bos://governance/protocols-layer/trigger"
+    domain: governance
+    action: "trigger"
+    transport: stdio
+    package: "protocols-layer"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "protocols_layer.cli", "trigger"]
+    description: "Protocols Layer 触发器规则 (P33-W1 战役 2 起步)"
+
+  - uri: "bos://analysis/minerva/research"
+    domain: analysis
+    action: "research"
+    transport: stdio
+    package: "minerva"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva.cli", "research"]
+    description: "Minerva 深度研究入口"
+
+  - uri: "bos://analysis/minerva/ask"
+    domain: analysis
+    action: "ask"
+    transport: stdio
+    package: "minerva"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva.cli", "ask"]
+    description: "Minerva 追问入口"
+
+  - uri: "bos://analysis/minerva/summarize"
+    domain: analysis
+    action: "summarize"
+    transport: stdio
+    package: "minerva"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva.cli", "summarize"]
+    description: "Minerva 摘要入口"
+
+  - uri: "bos://analysis/ontoderive/derive"
+    domain: analysis
+    action: "derive"
+    transport: stdio
+    package: "ontoderive"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.cli", "derive"]
+    description: "OntoDerive 本体推导入口"
+
+  - uri: "bos://analysis/ontoderive/validate"
+    domain: analysis
+    action: "validate"
+    transport: stdio
+    package: "ontoderive"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.cli", "validate"]
+    description: "OntoDerive 推导验证"
+
+  - uri: "bos://analysis/ontoderive/explain"
+    domain: analysis
+    action: "explain"
+    transport: stdio
+    package: "ontoderive"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive.cli", "explain"]
+    description: "OntoDerive 推导解释"
+
+  - uri: "bos://analysis/codeanalyze/scan"
+    domain: analysis
+    action: "scan"
+    transport: stdio
+    package: "codeanalyze"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze.cli", "scan"]
+    description: "CodeAnalyze AST 扫描入口"
+
+  - uri: "bos://analysis/codeanalyze/analyze"
+    domain: analysis
+    action: "analyze"
+    transport: stdio
+    package: "codeanalyze"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze.cli", "analyze"]
+    description: "CodeAnalyze 深度分析"
+
+  - uri: "bos://analysis/codeanalyze/metrics"
+    domain: analysis
+    action: "metrics"
+    transport: stdio
+    package: "codeanalyze"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze.cli", "metrics"]
+    description: "CodeAnalyze 代码度量"
+
+  - uri: "bos://analysis/iris/discover"
+    domain: analysis
+    action: "discover"
+    transport: stdio
+    package: "iris"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris.cli", "discover"]
+    description: "Iris 发现入口"
+
+  - uri: "bos://analysis/iris/scan"
+    domain: analysis
+    action: "scan"
+    transport: stdio
+    package: "iris"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris.cli", "scan"]
+    description: "Iris 扫描入口"
+
+  - uri: "bos://analysis/iris/recall"
+    domain: analysis
+    action: "recall"
+    transport: stdio
+    package: "iris"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris.cli", "recall"]
+    description: "Iris 召回入口"
+
+  - uri: "bos://persona/core-models/schema"
+    domain: persona
+    action: "schema"
+    transport: stdio
+    package: "core-models"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "core_models.cli", "schema"]
+    description: "Core Models Schema 查询"
+
+  - uri: "bos://persona/core-models/validate"
+    domain: persona
+    action: "validate"
+    transport: stdio
+    package: "core-models"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "core_models.cli", "validate"]
+    description: "Core Models 校验"
+
+  - uri: "bos://persona/sharedbrain-bridge/recall-entity"
+    domain: persona
+    action: "recall-entity"
+    transport: stdio
+    package: "sharedbrain-bridge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "recall-entity"]
+    description: "SharedBrain Bridge 实体召回"
+
+  - uri: "bos://persona/sharedbrain-bridge/recall"
+    domain: persona
+    action: "recall"
+    transport: stdio
+    package: "sharedbrain-bridge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "recall"]
+    description: "SharedBrain Bridge 通用召回"
+
+  - uri: "bos://persona/sharedbrain-bridge/sync"
+    domain: persona
+    action: "sync"
+    transport: stdio
+    package: "sharedbrain-bridge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "sharedbrain_bridge.cli", "sync"]
+    description: "SharedBrain Bridge 同步"
+
+  - uri: "bos://persona/health-profile/query"
+    domain: persona
+    action: "query"
+    transport: stdio
+    package: "health-profile"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "health_profile.cli", "query"]
+    description: "Health Profile 查询"
+
+  - uri: "bos://persona/health-profile/update"
+    domain: persona
+    action: "update"
+    transport: stdio
+    package: "health-profile"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "health_profile.cli", "update"]
+    description: "Health Profile 更新"
+
+  - uri: "bos://capability/agent-runtime/execute"
+    domain: capability
+    action: "execute"
+    transport: stdio
+    package: "agent-runtime"
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "execute"]
+    description: "Agent Runtime 执行入口"
+
+  - uri: "bos://capability/agent-runtime/list-tools"
+    domain: capability
+    action: "list-tools"
+    transport: stdio
+    package: "agent-runtime"
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "list-tools"]
+    description: "Agent Runtime 工具列表"
+
+  - uri: "bos://capability/agent-runtime/status"
+    domain: capability
+    action: "status"
+    transport: stdio
+    package: "agent-runtime"
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "status"]
+    description: "Agent Runtime 状态"
+
+  - uri: "bos://capability/forge/agent-list"
+    domain: capability
+    action: "agent-list"
+    transport: stdio
+    package: "forge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "agent-list"]
+    description: "Forge 集市 Agent 列表"
+
+  - uri: "bos://capability/forge/agent-install"
+    domain: capability
+    action: "agent-install"
+    transport: stdio
+    package: "forge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "agent-install"]
+    description: "Forge 集市 Agent 安装"
+
+  - uri: "bos://capability/forge/registry"
+    domain: capability
+    action: "registry"
+    transport: stdio
+    package: "forge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "registry"]
+    description: "Forge 注册表查询"
+
+  - uri: "bos://capability/forge/publish"
+    domain: capability
+    action: "publish"
+    transport: stdio
+    package: "forge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "publish"]
+    description: "Forge 发布入口"
+
+  - uri: "bos://capability/forge/lint"
+    domain: capability
+    action: "lint"
+    transport: stdio
+    package: "forge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "lint"]
+    description: "Forge Lint 检查"
+
+  - uri: "bos://memory/local/all-search"
+    domain: memory
+    action: "all-search"
+    transport: internal
+    package: "memory"
+    module_path: "agora.mcp.bos_resolver"
+    func_name: "_memory_all_search"
+    description: "P2 多区聚合搜索 — cockpit local + KOS + vault"
+
+  - uri: "bos://persona/family-hub/health"
+    domain: persona
+    action: "health"
+    transport: mcp_stdio
+    package: "family-hub"
+    command: ["uv", "run", "python", "projects/family-hub/mcp_server.py"]
+    description: "Family Hub local MCP Server"
+
+  - uri: "bos://governance/omo/audit"
+    domain: governance
+    action: "audit"
+    transport: internal
+    package: "omo"
+    module_path: "omo.omo_audit"
+    func_name: "run_governance_audit"
+    description: "OMO 治理审计 (internal — 同进程 importlib)"
+
+  - uri: "bos://governance/omo/inspect"
+    domain: governance
+    action: "inspect"
+    transport: internal
+    package: "omo"
+    module_path: "omo.omo_inspect"
+    func_name: "run_full_inspection"
+    description: "OMO 系统检查 (internal 同进程)"
+
+  - uri: "bos://governance/omo/sync"
+    domain: governance
+    action: "sync"
+    transport: mcp_stdio
+    package: "omo"
+    command: ["uv", "run", "--directory", "projects/omo", "python", "-m", "omo", "serve"]
+    description: "OMO 状态同步 (mcp_stdio transport 跨进程)"
+
+  - uri: "bos://governance/cockpit/context"
+    domain: governance
+    action: "mcp"
+    transport: mcp_stdio
+    package: "cockpit"
+    command: ["uv", "run", "--package", "cockpit", "python", "-m", "cockpit.scripts.cockpit_mcp"]
+    description: "Cockpit MCP Server — 20 工具"
+
+  - uri: "bos://cockpit/context"
+    domain: governance
+    action: "mcp"
+    transport: mcp_stdio
+    package: "cockpit"
+    command: ["uv", "run", "--package", "cockpit", "python", "-m", "cockpit.scripts.cockpit_mcp"]
+    description: "Cockpit MCP (短路径别名)"
+
+  - uri: "bos://governance/l4-kernel/domains"
+    domain: governance
+    action: "mcp"
+    transport: mcp_stdio
+    package: "l4-kernel"
+    command: ["uv", "run", "--directory", "projects/l4-kernel", "python", "-m", "l4_kernel.mcp_server"]
+    description: "L4 Domain Kernel MCP — 24域管理"
+
+  - uri: "bos://l4-kernel/domains"
+    domain: governance
+    action: "mcp"
+    transport: mcp_stdio
+    package: "l4-kernel"
+    command: ["uv", "run", "--directory", "projects/l4-kernel", "python", "-m", "l4_kernel.mcp_server"]
+    description: "L4 Kernel MCP (短路径别名)"
+
+  - uri: "bos://capability/runtime/health"
+    domain: capability
+    action: "mcp"
+    transport: mcp_stdio
+    package: "runtime"
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
+    description: "Runtime MCP — 服务注册表/健康/协议/KEI"
+
+  - uri: "bos://runtime/health"
+    domain: capability
+    action: "mcp"
+    transport: mcp_stdio
+    package: "runtime"
+    command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "runtime.mcp_server"]
+    description: "Runtime MCP (短路径别名)"
+
+  - uri: "bos://meta/discover"
+    domain: governance
+    action: "discover"
+    transport: internal
+    package: "meta"
+    module_path: "agora.mcp.bos_resolver"
+    func_name: "_meta_discover"
+    description: "发现所有可用 BOS 资源和入口"
+
+  - uri: "bos://memory/vault/search"
+    domain: memory
+    action: "vault-search"
+    transport: internal
+    package: "memory"
+    module_path: "agora.mcp.bos_resolver"
+    func_name: "_memory_vault_search"
+    description: "L4 Vault 知识库搜索"
+
+  - uri: "bos://analysis/minerva/draft"
+    domain: analysis
+    action: "draft"
+    transport: mcp_stdio
+    package: "minerva"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva", "serve", "--action", "draft"]
+    description: "[UNIMPLEMENTED] Minerva 草稿生成 (POC stdio)"
+
+  - uri: "bos://analysis/minerva/audit"
+    domain: analysis
+    action: "audit"
+    transport: mcp_stdio
+    package: "minerva"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "minerva", "serve", "--action", "audit"]
+    description: "[UNIMPLEMENTED] Minerva 审计 (POC stdio)"
+
+  - uri: "bos://analysis/ontoderive/audit"
+    domain: analysis
+    action: "audit"
+    transport: mcp_stdio
+    package: "ontoderive"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive", "serve", "--action", "audit"]
+    description: "[UNIMPLEMENTED] Ontoderive 审计 (POC stdio)"
+
+  - uri: "bos://analysis/ontoderive/fact-check"
+    domain: analysis
+    action: "fact-check"
+    transport: mcp_stdio
+    package: "ontoderive"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "ontoderive", "serve", "--action", "fact-check"]
+    description: "[UNIMPLEMENTED] Ontoderive 事实校验 (POC stdio)"
+
+  - uri: "bos://analysis/codeanalyze/report"
+    domain: analysis
+    action: "report"
+    transport: mcp_stdio
+    package: "codeanalyze"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze", "serve", "--action", "report"]
+    description: "[UNIMPLEMENTED] CodeAnalyze 分析报告 (POC stdio)"
+
+  - uri: "bos://analysis/codeanalyze/lint"
+    domain: analysis
+    action: "lint"
+    transport: mcp_stdio
+    package: "codeanalyze"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "codeanalyze", "serve", "--action", "lint"]
+    description: "[UNIMPLEMENTED] CodeAnalyze Lint (POC stdio)"
+
+  - uri: "bos://analysis/iris/connect"
+    domain: analysis
+    action: "connect"
+    transport: mcp_stdio
+    package: "iris"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris", "serve", "--action", "connect"]
+    description: "[UNIMPLEMENTED] Iris 连接 (POC stdio)"
+
+  - uri: "bos://analysis/iris/transform"
+    domain: analysis
+    action: "transform"
+    transport: mcp_stdio
+    package: "iris"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris", "serve", "--action", "transform"]
+    description: "[UNIMPLEMENTED] Iris 数据转换 (POC stdio)"
+
+  - uri: "bos://analysis/iris/validate"
+    domain: analysis
+    action: "validate"
+    transport: mcp_stdio
+    package: "iris"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "iris", "serve", "--action", "validate"]
+    description: "[UNIMPLEMENTED] Iris 数据校验 (POC stdio)"
+
+  - uri: "bos://persona/health-profile/summary"
+    domain: persona
+    action: "summary"
+    transport: mcp_stdio
+    package: "health-profile"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "health_profile", "serve", "--action", "summary"]
+    description: "[UNIMPLEMENTED] Health-Profile 健康摘要 (POC stdio)"
+
+  - uri: "bos://persona/health-profile/alert"
+    domain: persona
+    action: "alert"
+    transport: mcp_stdio
+    package: "health-profile"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "health_profile", "serve", "--action", "alert"]
+    description: "[UNIMPLEMENTED] Health-Profile 健康告警 (POC stdio)"
+
+  - uri: "bos://capability/forge/discover"
+    domain: capability
+    action: "discover"
+    transport: mcp_stdio
+    package: "forge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "discover"]
+    description: "[UNIMPLEMENTED] Forge 工具发现 (POC stdio)"
+
+  - uri: "bos://capability/forge/exec-tool"
+    domain: capability
+    action: "exec-tool"
+    transport: mcp_stdio
+    package: "forge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "exec-tool"]
+    description: "[UNIMPLEMENTED] Forge 工具执行 (POC stdio)"
+
+  - uri: "bos://capability/forge/list-tools"
+    domain: capability
+    action: "list-tools"
+    transport: mcp_stdio
+    package: "forge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "list-tools"]
+    description: "[UNIMPLEMENTED] Forge 工具列表 (POC stdio)"
+
+  - uri: "bos://capability/forge/register-tool"
+    domain: capability
+    action: "register-tool"
+    transport: mcp_stdio
+    package: "forge"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge", "serve", "--action", "register-tool"]
+    description: "[UNIMPLEMENTED] Forge 工具注册 (POC stdio)"
+
+  - uri: "bos://memory/kronos/query"
+    domain: memory
+    action: "query"
+    transport: mcp_stdio
+    package: "kronos"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos", "serve", "--action", "query"]
+    description: "[UNIMPLEMENTED] KRONOS 时间序列查询 (POC stdio)"
+
+  - uri: "bos://memory/kronos/schedule"
+    domain: memory
+    action: "schedule"
+    transport: mcp_stdio
+    package: "kronos"
+    command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "kronos", "serve", "--action", "schedule"]
+    description: "[UNIMPLEMENTED] KRONOS 调度任务 (POC stdio)"
+
+  - uri: "bos://governance/metaos/gate"
+    domain: governance
+    action: "gate"
+    transport: mcp_stdio
+    package: "metaos"
+    command: ["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos", "serve", "--action", "gate"]
+    description: "MetaOS 门控检查 (POC stdio)"
+
+  - uri: "bos://governance/metaos/register"
+    domain: governance
+    action: "register"
+    transport: mcp_stdio
+    package: "metaos"
+    command: ["uv", "run", "--directory", "projects/metaos", "python", "-m", "metaos", "serve", "--action", "register"]
+    description: "MetaOS 包注册 (POC stdio)"
+

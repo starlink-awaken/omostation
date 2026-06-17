@@ -1,0 +1,159 @@
+"""BOS YAML 注册表加载器 — 声明式替代 POC_SERVICES 硬编码。
+
+用法:
+    from agora.mcp.resolver.bos_registry import load_from_yaml, DEFAULT_REGISTRY_PATH
+
+    services = load_from_yaml("/path/to/bos-services.yaml")
+    或
+    services = load_from_yaml()  # 使用环境变量 AGORA_BOS_REGISTRY 或默认路径
+
+环境变量:
+    AGORA_BOS_REGISTRY — 覆盖 YAML 注册表路径（默认: <agora_root>/etc/bos-services.yaml）
+"""
+
+from __future__ import annotations
+
+import os
+import pathlib
+from typing import Any
+
+import yaml
+
+
+def _resolve_agora_root() -> pathlib.Path:
+    """找到 agora 项目根目录。"""
+    # 从当前文件路径向上搜索
+    here = pathlib.Path(__file__).resolve()
+    for parent in here.parents:
+        if (parent / "pyproject.toml").exists():
+            return parent
+    # fallback: 环境变量
+    env = os.environ.get("AGORA_ROOT", "")
+    if env:
+        return pathlib.Path(env)
+    # 最后 fallback
+    return pathlib.Path.cwd()
+
+
+DEFAULT_REGISTRY_PATH = _resolve_agora_root() / "etc" / "bos-services.yaml"
+
+
+def _dict_to_bos_service(data: dict[str, Any]) -> object:
+    """将 YAML dict 转换为 BosService 对象。"""
+    from agora.mcp.resolver.services import BosService
+
+    return BosService(
+        uri=data["uri"],
+        domain=data["domain"],
+        package=data.get("package", ""),
+        action=data["action"],
+        transport=data.get("transport", "stdio"),
+        command=data.get("command", []),
+        module_path=data.get("module_path", ""),
+        func_name=data.get("func_name", ""),
+        http_url=data.get("http_url", ""),
+        description=data.get("description", ""),
+    )
+
+
+def load_from_yaml(path: str | pathlib.Path | None = None) -> list:
+    """从 YAML 文件加载 BOS 服务注册表。
+
+    Args:
+        path: YAML 文件路径。None 则使用环境变量 AGORA_BOS_REGISTRY 或默认路径。
+
+    Returns:
+        list[BosService]: 解析后的服务列表。
+
+    Raises:
+        FileNotFoundError: 指定路径不存在。
+        yaml.YAMLError: YAML 格式错误。
+    """
+    if path is None:
+        env_path = os.environ.get("AGORA_BOS_REGISTRY", "")
+        path = pathlib.Path(env_path) if env_path else DEFAULT_REGISTRY_PATH
+    else:
+        path = pathlib.Path(path)
+
+    if not path.exists():
+        raise FileNotFoundError(f"BOS 注册表文件不存在: {path}")
+
+    raw = path.read_text(encoding="utf-8")
+    data = yaml.safe_load(raw)
+
+    if not data or "services" not in data:
+        raise ValueError(f"YAML 注册表缺少 'services' 根键: {path}")
+
+    services = []
+    for entry in data["services"]:
+        svc = _dict_to_bos_service(entry)
+        services.append(svc)
+
+    return services
+
+
+def registry_info(path: str | pathlib.Path | None = None) -> dict[str, Any]:
+    """获取注册表统计信息。"""
+    services = load_from_yaml(path)
+    domains: dict[str, int] = {}
+    transports: dict[str, int] = {}
+    unimplemented: list[str] = []
+
+    for s in services:
+        domains[s.domain] = domains.get(s.domain, 0) + 1
+        transports[s.transport] = transports.get(s.transport, 0) + 1
+        if s.description.startswith("[UNIMPLEMENTED]"):
+            unimplemented.append(s.uri)
+
+    return {
+        "total": len(services),
+        "domains": domains,
+        "transports": transports,
+        "unimplemented": unimplemented,
+        "unimplemented_count": len(unimplemented),
+    }
+
+
+def validate_registry(path: str | pathlib.Path | None = None) -> list[str]:
+    """校验注册表的完整性，返回错误列表（空 = 全通过）。"""
+    errors: list[str] = []
+    try:
+        services = load_from_yaml(path)
+    except (FileNotFoundError, ValueError, yaml.YAMLError) as e:
+        return [f"加载失败: {e}"]
+
+    seen_uris: set[str] = set()
+    valid_domains = {"memory", "governance", "analysis", "persona", "capability", "forge", "meta", "ecos", "agora"}
+    valid_transports = {"stdio", "internal", "http", "mcp_stdio"}
+
+    for i, s in enumerate(services):
+        if not s.uri:
+            errors.append(f"[{i}] 缺少 uri")
+        elif s.uri in seen_uris:
+            errors.append(f"[{i}] 重复 URI: {s.uri}")
+        else:
+            seen_uris.add(s.uri)
+
+            # 校验 URI 格式
+            from agora.mcp.resolver.services import BOS_URI_PATTERN
+            if not BOS_URI_PATTERN.match(s.uri):
+                errors.append(f"[{i}] URI 格式错误: {s.uri}")
+
+        if s.domain and s.domain not in valid_domains:
+            errors.append(f"[{i}] 无效 domain: {s.domain} ({s.uri})")
+
+        if s.transport not in valid_transports:
+            errors.append(f"[{i}] 无效 transport: {s.transport} ({s.uri})")
+
+        # stdio 必须有 command
+        if s.transport in ("stdio", "mcp_stdio") and not s.command:
+            errors.append(f"[{i}] stdio 传输缺少 command: {s.uri}")
+
+        # http 必须有 http_url
+        if s.transport == "http" and not s.http_url:
+            errors.append(f"[{i}] http 传输缺少 http_url: {s.uri}")
+
+    if not errors:
+        errors.append("✅ 注册表校验通过 — 0 错误")
+
+    return errors
