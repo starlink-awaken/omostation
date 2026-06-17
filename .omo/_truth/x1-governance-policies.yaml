@@ -2,7 +2,65 @@
 #
 # 记录所有影响系统边界的结构性变更，确保每次合并/归档/入口收敛都可追溯。
 
+documentation_contract:
+  ssot_role: authoritative_policy_source
+  derived_consumers:
+    - AGENTS.md
+    - .omo/INDEX.md
+    - .omo/standards/omo-governance-surfaces.md
+
 policies:
+  - policy_id: X1-OMO-GOVERNANCE-SURFACES-20260616
+    title: OMO 三层治理面约束
+    type: governance_stack
+    status: active
+    created: '2026-06-16'
+    description: >
+      `.omo/` 只能被视为治理状态面；`projects/omo/` 是治理执行内核；
+      `projects/c2g/` 是战略入口。所有 `.omo` 顶层资产必须登记，
+      所有上游任务导入必须通过 c2g/omo 契约收口。
+    scope:
+      - .omo/
+      - projects/omo/
+      - projects/c2g/
+    audit_requirements:
+      - source: .omo/standards/omo-governance-surfaces.md
+      - source: .omo/_truth/registry/omo-governance-surfaces.yaml
+      - source: projects/omo/src/omo/omo_paths.py
+      - source: projects/c2g/src/c2g/task_builder.py
+    evidence:
+      - standard: omo-governance-surfaces
+      - registry: omo-governance-surfaces
+    owner: governance-team
+    review_frequency: weekly
+    next_review: '2026-06-23'
+    enforcement: block-write
+
+  - policy_id: X1-OMO-DIRECT-MUTATION-GATE-20260617
+    title: 非 broker 禁止直接改写 `.omo`
+    type: write_gate
+    status: active
+    created: '2026-06-17'
+    description: >
+      `.omo/` 与 `spaces/` 的文件系统改写必须通过 OMO 内核、C2G ingress
+      或等价受审计 broker 完成。非 broker Python 代码不得直接 write_text、
+      open(..., "w")、unlink、mkdir 等改写这些治理面。
+    scope:
+      - projects/omo/src/omo/
+      - projects/c2g/src/c2g/
+      - scripts/
+      - bin/
+    audit_requirements:
+      - source: projects/ecos/scripts/contract_gatekeeper.py
+      - source: .pre-commit-config.yaml
+      - source: .omo/standards/omo-governance-surfaces.md
+    evidence:
+      - command: uv run --directory projects/omo python -m omo.cli lint direct-omo-io --diff
+    owner: governance-team
+    review_frequency: weekly
+    next_review: '2026-06-24'
+    enforcement: block-write
+
   - policy_id: X1-ARCH-MERGE-LLMGATEWAY-20260616
     title: llm-gateway 并入 aetherforge 架构变更审计
     type: architecture_merge

@@ -1,0 +1,308 @@
+version: "1.1"
+status: active
+updated_at: "2026-06-17T00:00:00Z"
+owner: governance
+scope:
+  workspace_root: /Users/xiamingxing/Workspace
+  applies_to:
+    - .omo
+    - projects/omo
+    - projects/c2g
+standards_ref:
+  - .omo/standards/omo-governance-surfaces.md
+ssot_refs:
+  x1_policy: .omo/_truth/x1-governance-policies.yaml
+  x2_freshness: .omo/_truth/x2-freshness-rules.yaml
+  x3_value: .omo/_truth/x3-value-stack.yaml
+  x4_consistency: .omo/_truth/x4-consistency-rules.yaml
+  l0_constraints: projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml
+documentation_contract:
+  ssot_role: authoritative_governance_surface_registry
+  derived_consumers:
+    - AGENTS.md
+    - .omo/INDEX.md
+    - docs/PANORAMA.md
+    - .omo/standards/omo-governance-surfaces.md
+governance_stack:
+  - id: state_plane
+    ref: .omo/
+    role: governance_state_plane
+    write_via:
+      - projects/omo
+      - projects/c2g
+    notes: carries workspace governance state and evidence
+  - id: kernel_plane
+    ref: projects/omo/
+    role: governance_kernel
+    write_targets:
+      - .omo/_truth/
+      - .omo/_control/
+      - .omo/tasks/
+      - .omo/workers/
+      - .omo/debt/
+    notes: executes task schema, governance overlay, truth mutation, sync, audit
+  - id: ingress_plane
+    ref: projects/c2g/
+    role: strategic_ingress
+    write_targets:
+      - .omo/tasks/planned/
+      - .omo/_truth/goals/current.yaml
+    notes: materializes pitch, openspec and fast-track into governed tasks
+assets:
+  - id: OMO-TRUTH
+    ref: .omo/_truth/
+    plane: state_plane
+    asset_type: authority
+    truth_owner: governance
+    write_via:
+      - projects/omo/omo_governance.py
+      - human_review
+    consumed_by:
+      - projects/omo
+      - projects/ecos
+      - projects/c2g
+    status: active
+  - id: OMO-CONTROL
+    ref: .omo/_control/
+    plane: state_plane
+    asset_type: control_state
+    truth_owner: governance
+    write_via:
+      - projects/omo
+      - approved_automation
+    consumed_by:
+      - projects/omo
+      - cockpit
+    status: active
+  - id: OMO-KNOWLEDGE
+    ref: .omo/_knowledge/
+    plane: state_plane
+    asset_type: knowledge_state
+    truth_owner: mixed
+    write_via:
+      - agents
+      - humans
+    consumed_by:
+      - agents
+      - projects/ecos
+      - projects/omo
+    status: active
+  - id: OMO-DELIVERY
+    ref: .omo/_delivery/
+    plane: state_plane
+    asset_type: delivery_state
+    truth_owner: governance
+    write_via:
+      - projects/omo
+      - agents
+    consumed_by:
+      - reviewers
+      - cockpit
+      - projects/ecos
+    status: active
+  - id: OMO-ARCHIVE
+    ref: .omo/_archive/
+    plane: state_plane
+    asset_type: archived_state
+    truth_owner: governance
+    write_via:
+      - humans
+      - approved_gc
+    consumed_by:
+      - auditors
+    status: active
+  - id: OMO-TASKS
+    ref: .omo/tasks/
+    plane: state_plane
+    asset_type: workflow_state
+    truth_owner: governance
+    write_via:
+      - projects/omo
+      - projects/c2g
+    consumed_by:
+      - cockpit
+      - projects/omo
+      - projects/c2g
+      - projects/ecos
+    status: active
+  - id: OMO-STATE
+    ref: .omo/state/
+    plane: state_plane
+    asset_type: runtime_ssot
+    truth_owner: aggregator
+    write_via:
+      - projects/omo
+      - approved_sync
+    consumed_by:
+      - cockpit
+      - projects/c2g
+      - projects/ecos
+    status: active
+  - id: OMO-DEBT
+    ref: .omo/debt/
+    plane: state_plane
+    asset_type: governance_program
+    truth_owner: governance
+    write_via:
+      - projects/omo
+      - debt_pipeline
+    consumed_by:
+      - reviewers
+      - cockpit
+    status: active
+  - id: OMO-WORKERS
+    ref: .omo/workers/
+    plane: state_plane
+    asset_type: execution_runtime
+    truth_owner: projects/omo
+    write_via:
+      - projects/omo
+    consumed_by:
+      - workers
+      - reviewers
+    status: active
+  - id: OMO-STANDARDS
+    ref: .omo/standards/
+    plane: state_plane
+    asset_type: rule_docs
+    truth_owner: governance
+    write_via:
+      - humans
+      - governance
+    consumed_by:
+      - projects/omo
+      - projects/c2g
+      - agents
+    status: active
+  - id: OMO-CRON
+    ref: .omo/cron/
+    plane: state_plane
+    asset_type: control_contract
+    truth_owner: governance
+    write_via:
+      - governance
+      - humans
+    consumed_by:
+      - operators
+      - automation
+    status: active
+  - id: OMO-LOG
+    ref: .omo/_log/
+    plane: state_plane
+    asset_type: runtime_logs
+    truth_owner: automation
+    write_via:
+      - automation
+      - projects/omo
+    consumed_by:
+      - auditors
+      - operators
+    status: active
+  - id: OMO-GOALS
+    ref: .omo/goals/
+    plane: state_plane
+    asset_type: goal_state
+    truth_owner: governance
+    write_via:
+      - governance
+      - projects/c2g
+    consumed_by:
+      - projects/omo
+      - projects/c2g
+      - agents
+    status: active
+  - id: OMO-PITCHES
+    ref: .omo/pitches/
+    plane: state_plane
+    asset_type: strategic_input
+    truth_owner: governance
+    write_via:
+      - projects/c2g
+      - humans
+    consumed_by:
+      - projects/c2g
+      - reviewers
+    status: active
+  - id: OMO-TESTS
+    ref: .omo/tests/
+    plane: state_plane
+    asset_type: governance_test_surface
+    truth_owner: governance
+    write_via:
+      - test_agents
+      - humans
+    consumed_by:
+      - projects/omo
+      - CI
+    status: active
+  - id: OMO-CAPABILITIES
+    ref: .omo/capabilities/
+    plane: state_plane
+    asset_type: capability_market
+    truth_owner: governance
+    write_via:
+      - governance
+    consumed_by:
+      - agents
+      - cockpit
+    status: active
+  - id: OMO-CHANGE-LOG
+    ref: .omo/change-log/
+    plane: state_plane
+    asset_type: change_history
+    truth_owner: governance
+    write_via:
+      - governance
+      - automation
+    consumed_by:
+      - auditors
+      - reviewers
+    status: active
+  - id: OMO-PROJECTS-REGISTRY
+    ref: .omo/PROJECTS.yaml
+    plane: state_plane
+    asset_type: root_registry
+    truth_owner: governance
+    write_via:
+      - governance
+    consumed_by:
+      - agents
+      - projects/omo
+    status: active
+  - id: OMO-ROOT-INDEX
+    ref: .omo/INDEX.md
+    plane: state_plane
+    asset_type: root_index
+    truth_owner: governance
+    write_via:
+      - governance
+    consumed_by:
+      - humans
+      - agents
+    status: active
+  - id: OMO-EVIDENCE-LEGACY
+    ref: .omo/evidence/
+    plane: state_plane
+    asset_type: compatibility_alias
+    truth_owner: governance
+    write_via:
+      - humans
+      - agents
+    consumed_by:
+      - auditors
+      - legacy_readers
+    status: active
+    alias_target: .omo/_delivery/evidence-legacy/
+    note: compatibility alias only; real storage must live under .omo/_delivery/
+policies:
+  top_level_asset_registration_required: true
+  nested_omo_forbidden_for_new_writes: true
+  c2g_write_scope:
+    allowed:
+      - .omo/tasks/planned/
+      - .omo/_truth/goals/current.yaml
+  omo_kernel_expected_consumers:
+    - standards_registry
+    - task_schema
+    - truth_mutation
+    - governance_overlay

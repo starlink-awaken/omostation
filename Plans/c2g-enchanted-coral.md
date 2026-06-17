@@ -449,3 +449,174 @@ gh workflow run c2g-gc-weekly.yml
 
 *规划者:老王(老王暴躁技术流) · 2026-06-16 · 状态:DRAFT*
 *基于 c2g 5 机制 · 试点 P43 W0 · 失败熔断 · 复用 0 造轮*
+
+---
+
+# §ENFORCE-CI 架构债收口计划(P47,2026-06-16 追加)
+
+## Context — 为什么做
+
+架构债务探测发现 **A 声明/执行鸿沟(21:1)** 和 **E CI 半覆盖(8/18,44%)** 是最高杠杆的深度债务。用户决定:gbrain/kairon 单体拆分**暂不动**,优先 **A(enforce)+ E(CI 补覆盖)**,用 c2g 机制。
+
+**两条关键事实(纠正了之前的猜测)**:
+1. 端口 enforce **工具已存在**(`scripts/check-vault-paths.py --check-ports`,已挂 `.git/hooks/pre-commit` L42),但**只在本地 shell hook** —— `.pre-commit-config.yaml`(framework)没有,CI 不跑,新 clone 不自动安装。**真 gap = 把它从 shell hook 提升到 framework + CI**。
+2. 任务 schema enforce **已实现**(`omo governance audit` → `omo/cli.py:122` → `omo_audit.governance_main`),但**没挂 CI**。
+
+所以这不是"造新 enforcer",是"把已有 enforcer 接到 CI"—— DRY,0 造轮。
+
+## 现状(基于只读探测事实)
+
+| 项 | 现状 | gap |
+|----|------|-----|
+| 端口硬编码检查 | `scripts/check-vault-paths.py --check-ports` 在 `.git/hooks/pre-commit`(shell) | `.pre-commit-config.yaml` 无 + 无 CI |
+| 任务 schema 检查 | `omo governance audit`(`omo/cli.py:122`)已实现 | 无 CI gate |
+| CI 覆盖 | 8/18:agora/agora-dashboard/cockpit/ecos/gbrain/metaos/phase11/runtime | **11 个无 CI** |
+| 11 无 CI 栈 | 6 Python+uv+pytest(omo-debt/c2g/model-driven/l4-kernel/aetherforge/bus-foundation)+ kairon(make test)+ hermes-console(bun test)+ omo + observability(纯 docker-compose)+ family-hub(双栈) | — |
+
+## 目标
+
+- **A1**:端口 enforce 从 shell hook 提升到 `.pre-commit-config.yaml` + CI(本地 `pre-commit run` + CI + 新 clone 都拦)
+- **A2**:任务 schema enforce 挂 CI
+- **E**:CI 覆盖 8/18 → **18/18 全覆盖**(observability 特殊:compose config validate)
+
+## 实施(c2g 5 机制横切:先 bet 落 1 个任务,再改)
+
+### Step 0 — c2g bet 落任务
+`c2g --adapter local bet` 一个 Pitch → `.omo/tasks/planned/P47-ENFORCE-CI-COVERAGE.yaml`(7 规则全字段,deliverables 为本计划列的文件路径)。M2 防腐层通过。
+
+### Step 1 — A1 端口 enforce 提升(20min)
+**改 `.pre-commit-config.yaml`**(local repo 加 1 hook):
+```yaml
+- id: port-hardcode-check
+  name: port hardcode check (端口必须在 protocols/port-registry.yaml)
+  entry: python3 scripts/check-vault-paths.py --check-ports
+  language: system
+  pass_filenames: false
+  stages: [pre-commit]
+```
+**新 `.github/workflows/port-registry-enforce.yml`**:
+```yaml
+name: port-registry-enforce
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - run: python3 scripts/check-vault-paths.py --check-ports
+```
+**复用**:`scripts/check-vault-paths.py`(已存在,0 造轮)。
+
+### Step 2 — A2 任务 schema enforce CI(15min)
+**新 `.github/workflows/task-schema-enforce.yml`**:
+```yaml
+name: task-schema-enforce
+on: [push, pull_request]
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - run: pip install uv
+      - run: uv run --directory projects/omo python -m omo.cli governance audit
+```
+**复用**:`omo governance audit`(`omo/cli.py:122`,已检查 deliverables 文件路径等 7 规则)。
+
+### Step 3 — E CI 补覆盖(1.5h)
+
+**3a. `ci-python-coverage.yml`**(matrix,1 文件覆盖 7 Python 项目,最 DRY):
+```yaml
+name: python-coverage-ci
+on: [push, pull_request]
+jobs:
+  test:
+    strategy:
+      matrix:
+        pkg: [omo, omo-debt, c2g, model-driven, l4-kernel, aetherforge, bus-foundation]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {submodules: recursive}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - uses: astral-sh/setup-uv@v3
+      - run: cd projects/${{ matrix.pkg }} && uv run pytest -q
+```
+**复用**:`cockpit-ci.yml` 的 uv+pytest 模式。
+
+**3b. `kairon-ci.yml`**:`cd projects/kairon && make test`(monorepo Makefile,31 包循环 pytest)。
+
+**3c. `hermes-console-ci.yml`**:`cd projects/hermes-console && bun install && bun test`(复用已加的 `"test": "bun test"`)。
+
+**3d. `observability-ci.yml`**:`cd projects/observability && docker compose config -q`(纯 compose,无代码 → 验证 config 语法,不跑容器省资源)。
+
+**3e. `family-hub-ci.yml`**:执行时先确认栈(package.json vs pyproject.toml 谁为主 —— 探测显示**双栈**),按主栈选 bun test 或 uv run pytest。
+
+## 关键文件清单
+
+### 新建(10 files)
+- `.github/workflows/port-registry-enforce.yml`(A1)
+- `.github/workflows/task-schema-enforce.yml`(A2)
+- `.github/workflows/ci-python-coverage.yml`(E 3a)
+- `.github/workflows/kairon-ci.yml`(E 3b)
+- `.github/workflows/hermes-console-ci.yml`(E 3c)
+- `.github/workflows/observability-ci.yml`(E 3d)
+- `.github/workflows/family-hub-ci.yml`(E 3e)
+- `.omo/tasks/planned/P47-ENFORCE-CI-COVERAGE.yaml`(c2g bet 落)
+- runtime/sandbox/pitches/Pitch-P47-enforce-ci.md(c2g brainstorm 产物)
+
+### 修改(1 file)
+- `.pre-commit-config.yaml`(加 port-hardcode-check local hook)
+
+### 复用(0 造轮)
+- `scripts/check-vault-paths.py --check-ports`(端口检查)
+- `omo governance audit`(`omo/cli.py:122`,任务 schema)
+- `cockpit-ci.yml`(uv+pytest CI 模板)
+- c2g 5 机制(brainstorm/bet)
+
+## 验证(端到端)
+
+```bash
+# A1: 端口 enforce 本地
+echo 'PORT=99999' >> projects/c2g/src/c2g/llm.py  # 99999 不在 registry
+git add -A && pre-commit run port-hardcode-check  # 期望 fail
+git checkout -- .  # 还原
+
+# A1: 端口 enforce CI(推分支)
+gh workflow run port-registry-enforce.yml  # 或推 PR 看 Actions
+
+# A2: 任务 schema enforce
+# 故意写非文件路径 deliverables 到某 planned task → omo governance audit 应报
+uv run --directory projects/omo python -m omo.cli governance audit
+
+# E: 每个新 CI
+gh workflow list  # 确认 7 新 workflow 出现
+# 推分支触发, 看 GH Actions 全绿
+```
+
+## 成本与风险
+
+| 项 | 成本 | 风险 |
+|----|------|------|
+| A1 | 20min | 低(check-vault-paths.py 已验证可用) |
+| A2 | 15min | 中(omo governance audit 可能因 baseline 漂移首次 fail,已有 baseline 机制兜底) |
+| E | 1.5h | 中(matrix 首次跑可能暴露历史 test fail,如 cockpit 的 `test_days_since_ge_7` —— **诚实暴露非债**) |
+
+## 预期收益(对应架构债)
+
+- **A 声明/执行鸿沟**:端口 + 任务 schema 两条**真 runtime enforce**,声明/执行比 21:1 开始收口(影响 1089 MOF 声明的可信度范式)
+- **E CI 半覆盖**:8/18 → 18/18,回归盲区消除(Tragedy of the Commons 解)
+- **c2g 5 机制**:brainstorm + bet 落任务,闭环(非治理通胀,是真工程 + c2g 横切)
+
+## 不做(Out of Scope)
+
+- gbrain/kairon 单体拆分(用户明确暂不动)
+- C submodule-sync CI(用户没选,留下一轮)
+- B-1 cockpit dashboard_server 拆分(用户没选)
+- MOF 1089 声明全量 enforce(月级,A 只收口端口+任务 2 条)
+- family-hub 栈判定前不写它的 CI test 步骤(执行时确认)
+

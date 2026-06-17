@@ -2,8 +2,11 @@ name: Governance Check
 on:
   push:
     paths:
+      - ".pre-commit-config.yaml"
+      - ".omo/**"
       - "projects/*/pyproject.toml"
       - "projects/*/src/**"
+      - "projects/ecos/scripts/contract_gatekeeper.py"
       - "scripts/check-*.py"
       - "CLAUDE.md"
       - "LAYER-INDEX.md"
@@ -19,10 +22,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
       - name: Run governance checks
         run: |
           python3 scripts/check-interfaces.py
           python3 scripts/check-cross-deps.py
+          python3 scripts/check-doc-ssot-snapshots.py
+          python3 scripts/check-panorama-arch-links.py
+          python3 scripts/check-ssot-reference-integrity.py
+          python3 scripts/check-truth-m1-governance-mapping.py
+          uv run --directory projects/omo python -m omo.cli lint direct-omo-io
 
   doc-freshness:
     runs-on: ubuntu-latest

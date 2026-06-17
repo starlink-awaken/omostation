@@ -1,32 +1,28 @@
 # AGENTS.md — Workspace Development Guide
 
 > Multi-project knowledge engineering & research workspace (root directory).
-> 最后更新: 2026-06-16
+> 最后更新: 2026-06-17
 
-> **当前 Phase**: 42 — 治理面 SSOT 同步纪元 (Governance SSOT Catch-up)
-> **健康分**: 95/100
-> **SSOT**: `.omo/goals/current.yaml` · `.omo/state/system.yaml`
+> **运行时 SSOT**: `.omo/state/system.yaml` · `.omo/goals/current.yaml`
+> **治理面 SSOT**: `.omo/standards/omo-governance-surfaces.md` · `.omo/_truth/registry/omo-governance-surfaces.yaml`
+> **L0/X1-X4 SSOT**: `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` · `.omo/_truth/x1-governance-policies.yaml` · `.omo/_truth/x2-freshness-rules.yaml` · `.omo/_truth/x3-value-stack.yaml` · `.omo/_truth/x4-consistency-rules.yaml`
 
 ## 架构总览 (5+4+1+1)
 
+> 说明: 本节只保留稳定分层骨架，不维护易漂移的路由数、测试数、健康分、phase 值。
+> 变动事实以 `.omo/state/system.yaml`、`.omo/_truth/*`、`docs/PANORAMA.md` 为准。
+
 ```
-L4 自我层  ── l4-kernel (43 MCP tools · 250 tests)
-L3 入口层  ── cockpit (CLI 27子命令 · MCP 37工具 · Web FastAPI :8090 — 61 路由, 唯一 Web 入口)
-              hermes-console (React UI, 挂载在 /hermes/*)
-              dashboard_server (治理数据, 挂载在 /dash/*)
-I0 织层    ── agora (MCP Hub · 42+ tools · BOS 路由 · SSE :7431)
-L2 引擎面  ── kairon (19包 · 4157 tests) + gbrain (67 MCP · 9700 tests)
-              omo (治理面) + metaos (编排 · 188 tests)
-L1 运行时  ── runtime (KEI沙箱 · Matrix调度 · cron-service 默认 stdio)
-L0 协议层  ── ecos (SSB签名链 · MOF元模型 · 472 tests)
-X 横切框架 ── aetherforge (LLM网关 + 算力网格 + 群体智能)
-              model-driven (7阶段引擎 · 190 tests)
-              llm-gateway (已归档) + compute-mesh (已归档) + swarm-engine (已归档) + aetherforge-swarm-ext (已归档)
-              c2g (战略需求引擎) + bus-foundation (pub/sub)
-              c2g (战略需求引擎) + bus-foundation (pub/sub)
-              omo-debt (债务评分) + observability (Langfuse)
-              spaces (空间配置) + family-hub (家庭数字枢纽)
-              hermes-console (控制台UI · 已集成至 cockpit /hermes/*)
+L4 自我层  ── l4-kernel
+L3 入口层  ── cockpit (唯一人类 CLI / Web 入口)
+              hermes-console (挂载到 cockpit /hermes/*)
+              dashboard_server (挂载到 cockpit /dash/*)
+I0 织层    ── agora (BOS URI 路由与 MCP Hub)
+L2 引擎面  ── kairon + gbrain + omo + metaos
+L1 运行时  ── runtime
+L0 协议层  ── ecos
+X 横切框架 ── aetherforge + model-driven + c2g + bus-foundation + omo-debt + observability + spaces + family-hub
+归档能力    ── llm-gateway / compute-mesh / swarm-engine / aetherforge-swarm-ext（能力已并入现有框架）
 ```
 
 ### BOS URI 5 域
@@ -46,30 +42,44 @@ bos://capability/ ← forge/runtime                  — 能力与生态
 
 | 决策 | 结论 |
 |:----|:-----|
-| L3 收敛 | cockpit 是唯一 Web 入口 (:8090, 59 路由)。agora-dashboard 已删除，hermes-console 已集成，dashboard_server 已挂载为子应用。|
+| L3 收敛 | cockpit 是唯一 Web 入口；agora-dashboard 已删除，hermes-console 与 dashboard_server 作为子应用挂载。 |
 | CLI 收敛 | cockpit = 唯一人类 CLI 入口。其他 CLI (agora/runtime/ecos-ssb/omo/metaos) 保留为程序接口 |
 | 子模块 | 22 子模块，各自独立 git 仓库。根仓库只追踪元配置和子模块指针 |
+| 治理收敛 | `.omo/` = state plane；`projects/omo/` = governance kernel；`projects/c2g/` = strategic ingress |
+
+### X1-X4 SSOT 链
+
+| 维度 | 权威读源 | 派生消费文档 |
+|:----|:---------|:-------------|
+| X1 Audit / Boundary | `.omo/_truth/x1-governance-policies.yaml` | `AGENTS.md`, `.omo/INDEX.md`, `.omo/standards/omo-governance-surfaces.md` |
+| X2 Freshness | `.omo/_truth/x2-freshness-rules.yaml` | `AGENTS.md`, `.omo/_truth/INDEX.md` |
+| X3 Value / Cost | `.omo/_truth/x3-value-stack.yaml` | `AGENTS.md`, `docs/PANORAMA.md` |
+| X4 Consistency | `.omo/_truth/x4-consistency-rules.yaml` | `AGENTS.md`, `.omo/standards/omo-governance-surfaces.md` |
+| L0 Enforcement | `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` | 所有上层文档只引用，不复制规则正文 |
 
 ## Project Overview
+
+> 本节是工作区清单，不是运行时事实源。项目测试数、路由数、工具数若与实际不一致，
+> 以各子项目自身 README / pyproject / CI / 运行时探针为准。
 
 This root directory is a **multi-project workspace** organized in the 5+4+1+1 (eCOS v6) architecture:
 
 | Layer | Project | Stack | Location | Status |
 |-------|---------|-------|----------|--------|
-| L4 | `l4-kernel` | Python (uv, pytest) | `projects/l4-kernel/` | 🟢 Active — 自我层管理面 · 21域 · 250 tests · 43 MCP tools |
-| L3 | `cockpit` | Python (uv, pytest) | `projects/cockpit/` | 🟢 Active — 统一入口 (CLI 27 + MCP 37 + Web 59 routes) |
-| I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · BOS 路由 · 75+ services · SSE :7431 |
-| L2 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 知识引擎 · 19 packages · 4157 tests |
-| L2 | `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — 知识数据库 · 67 MCP · 9700 tests |
-| L2 | `omo` | Python (uv, pytest) | `projects/omo/` | 🟢 Active — 治理面 · 302/530 tests |
-| L2 | `metaos` | Python (uv, pytest) | `projects/metaos/` | 🟢 Active — 编排引擎 · 188 tests · 决策门控/免疫/路由 |
-| L1 | `runtime` | Python (uv, pytest) | `projects/runtime/` | 🟢 Active — 运行时 · 171 tests · KEI沙箱 · Matrix调度 |
-| L0 | `ecos` | Python (uv, pytest) | `projects/ecos/` | 🟢 Active — L0 协议层 · 472 tests · SSB签名链 · MOF元模型 |
-| X | `aetherforge` | Python (uv, pytest) | `projects/aetherforge/` | 🟢 Active — 算力网格 + LLM 网关 + 群体智能 |
+| L4 | `l4-kernel` | Python (uv, pytest) | `projects/l4-kernel/` | 🟢 Active — 自我层管理面 |
+| L3 | `cockpit` | Python (uv, pytest) | `projects/cockpit/` | 🟢 Active — 统一入口 |
+| I0 | `agora` | Python (uv, pytest) | `projects/agora/` | 🟢 Active — MCP Hub · BOS 路由 |
+| L2 | `kairon` | Python (uv, pytest) | `projects/kairon/` | 🟢 Active — 知识引擎 |
+| L2 | `gbrain` | TypeScript (bun) | `projects/gbrain/` | 🟢 Active — 知识数据库 |
+| L2 | `omo` | Python (uv, pytest) | `projects/omo/` | 🟢 Active — 治理面 |
+| L2 | `metaos` | Python (uv, pytest) | `projects/metaos/` | 🟢 Active — 编排引擎 |
+| L1 | `runtime` | Python (uv, pytest) | `projects/runtime/` | 🟢 Active — 运行时 |
+| L0 | `ecos` | Python (uv, pytest) | `projects/ecos/` | 🟢 Active — 协议层 |
+| X | `aetherforge` | Python (uv, pytest) | `projects/aetherforge/` | 🟢 Active — 能力与算力框架 |
 | X | `swarm-engine` | Python (uv) | `_archived/swarm-engine/` | ⚫ Archived — 群体智能能力已迁移至 `projects/aetherforge/packages/swarm/` |
 | X | `compute-mesh` | Python (uv) | `_archived/compute-mesh/` | ⚫ Archived — 算力网格能力已迁移至 `projects/aetherforge/packages/mesh/` |
 | X | `aetherforge-swarm-ext` | Python (uv) | `_archived/aetherforge-swarm-ext/` | ⚫ Archived — 扩展能力已迁移至 `projects/aetherforge/packages/swarm/src/swarm_engine/ext/` |
-| X | `model-driven` | Python (uv, pytest) | `projects/model-driven/` | 🟢 Active — 全生命周期模型驱动 · 190 tests |
+| X | `model-driven` | Python (uv, pytest) | `projects/model-driven/` | 🟢 Active — 全生命周期模型驱动 |
 | X | `llm-gateway` | Python (uv) | `_archived/llm-gateway/` | ⚫ Archived — 能力已迁移至 `projects/aetherforge/packages/gateway/` |
 | X | `c2g` | Python (uv) | `projects/c2g/` | 🟢 Active — 战略需求引擎 (V2P → C2G) |
 | X | `bus-foundation` | Python (uv, pytest) | `projects/bus-foundation/` | 🟢 Active — pub/sub/schedule 总线 |
@@ -143,11 +153,11 @@ cd projects/kairon/packages/kos && uv run pytest tests/test_xxx.py -q
 cd projects/kairon/packages/kos && uv run pytest tests/ -k "keyword" -q
 
 # agora (projects/agora/)
-cd projects/agora && uv run pytest tests/ -q            # 1165/1371 pass
+cd projects/agora && uv run pytest tests/ -q
 cd projects/agora && uv run pytest tests/ -k "keyword" -q
 
 # cockpit (projects/cockpit/)
-cd projects/cockpit && uv run pytest tests/ -q          # 498/514 pass
+cd projects/cockpit && uv run pytest tests/ -q
 cd projects/cockpit && uv run pytest tests/ -k "keyword" -q
 
 # workspace iterate (C2G 双擎编排流宏入口)
@@ -156,13 +166,13 @@ workspace iterate "设计缓存层"
 workspace iterate "测试隔离区" --mock
 
 # runtime (projects/runtime/)
-cd projects/runtime && uv run pytest tests/ -q          # 171/176 pass
+cd projects/runtime && uv run pytest tests/ -q
 cd projects/runtime && make sync-state                  # 同步状态到 ~/runtime/
 cd projects/runtime && make shellcheck                  # Shell 脚本检查
 cd projects/runtime && make fmt                         # Ruff format
 
 # omo (projects/omo/)
-cd projects/omo && uv run pytest tests/ -q               # 100+ tests (AppendOnlyLog 5 轮收口后)
+cd projects/omo && uv run pytest tests/ -q
 
 # AppendOnlyLog 5 个 consumer (Round 1-5 收尾):
 #   omo_audit, omo_bos_metrics, omo_sync, omo_alert, omo_event
@@ -177,10 +187,10 @@ omo event emit --type X --source Y --payload '...'      # 用户面向样板
 omo governance          # 6 项治理审计 (期望 100.0 A+)
 
 # metaos (projects/metaos/)
-cd projects/metaos && uv run pytest tests/ -q            # 188/188 pass
+cd projects/metaos && uv run pytest tests/ -q
 
 # ecos (projects/ecos/)
-cd projects/ecos && uv run pytest tests/ -q              # 112/122 pass
+cd projects/ecos && uv run pytest tests/ -q
 
 # gbrain (projects/gbrain/)
 cd projects/gbrain && bun test
@@ -189,51 +199,42 @@ cd projects/gbrain && bun run ci:local
 
 ## Architecture
 
-### 5+3+1 分层快照与 BOS URI 挂载图谱 (Phase 33 · 2026-06-06 确立)
+### BOS URI 挂载骨架
 
-eCOS v5 已进入大一统阶段。通过 `agora` 作为服务网格 (Mesh) 动态反向代理，所有的项目和包都被抽象为 5 大 BOS URI 命名空间：
+> 这里只保留稳定域划分。具体服务映射以 `projects/agora/src/agora/mcp/resolver/services.py`
+> 与 `docs/PANORAMA.md` 为准。
 
 *   **域 1：记忆与事实源 `bos://memory`** ── `kos` (跨域搜索)、`kronos` (摄取管线)、`gbrain` (TS知识库)、`sot-bridge` (SSOT 桥接)
-*   **域 2：治理与律法 `bos://omo`** ── `metaos` (决策/免疫/认知沙箱)、`eidos` (Schema约束)、`protocols-layer` (触发器规则)、`omo` (治理引擎/C2G门控)
+*   **域 2：治理与律法 `bos://governance`** ── `omo`、`metaos`、`eidos`、`cockpit`
 *   **域 3：认知与推演 `bos://analysis`** ── `ontoderive` (推导)、`minerva` (深度研究)、`codeanalyze` (AST理解)
 *   **域 4：人格与心智 `bos://persona`** ── `sot-bridge` (SharedBrain 桥接)
-*   **域 5：能力与生态 `bos://forge`** ── `forge` (集市与注册表)、`runtime` (KEI 沙箱执行)
+*   **域 5：能力与生态 `bos://capability`** ── `aetherforge`、`runtime`
 
 ```
-L4 自我层 ── ~/Documents/驾驶舱/CARDS/ (SQLite) + ~/Documents/学习进化/ (MD)
-L3 入口层 ── cockpit (CLI 13 + MCP + Web) ── 终端消费 BOS URI
-I0 织层   ── agora (动态反向代理 Mesh) ── 拦截并路由 bos:// 流量，触发 eidos 校验与 metaos 免疫
-L2 引擎面 ── kairon 19 packages / gbrain / omo / metaos ── 以后台 Daemon 提供 MCP 资源
-L1 运行时 ── runtime ── 受控沙箱，随 protocols 规则产生 Ephemeral Agents
-L0 协议   ── ecos ── SSB 协议层，承载系统决策的 Immutable Log 上链与涌现计算
+L4 自我层 ── l4-kernel
+L3 入口层 ── cockpit
+I0 织层   ── agora
+L2 引擎面 ── kairon / gbrain / omo / metaos
+L1 运行时 ── runtime
+L0 协议   ── ecos
 ```
 
-### 项目测试健康度
+### 项目测试状态
 
-| 项目 | 总测试 | 通过 | 通过率 |
-|------|--------|------|--------|
-| agora | 1371 | 1165 | 85.0% |
-| cockpit | 514 | 498 | 96.9% |
-| kairon | 4199 | 4157 | 99.8% |
-| runtime | 176 | 171 | 97.2% |
-| omo | 530 | 302 | 57%* |
-| metaos | 188 | 188 | 100% |
-| ecos | 122 | 112 | 91.8% |
-| gbrain | ~9,737 | ~9,700 | ~99.6% |
-
-*OMO: 225 skipped (需要完整环境), 有效通过率 97.4%
+> 测试数量与通过率高度漂移，不在此处维护。
+> 以各项目本地 `pytest` / `bun test` / CI 结果为准。
 
 ### 对外接入能力
 
 | 项目 | CLI 入口 | MCP 工具 | HTTP 端口 | 依赖 |
 |------|---------|---------|-----------|------|
-| agora | `agora` | 42+ tools | :7422/:7431/:8080 | fastmcp, httpx, aiohttp |
-| cockpit | `cockpit`, `workspace` | 15 | stdlib http | runtime |
-| runtime | `runtime`, `ecos-matrix-scheduler` | 30 | FastAPI | fastmcp, apscheduler |
-| omo | `omo`, `cards`, `omo-debt` | 10 | — | httpx, pyyaml |
-| metaos | `metaos` | 11 | — | structlog |
-| ecos | `ecos-ssb`, `ecos-dashboard` | — | — | requests, jinja2 |
-| gbrain | `gbrain` | 67 | — | bun |
+| agora | `agora` | MCP Hub | `:7422/:7431/:8080` | fastmcp, httpx, aiohttp |
+| cockpit | `cockpit`, `workspace` | 统一入口 | stdlib http | runtime |
+| runtime | `runtime`, `ecos-matrix-scheduler` | runtime MCP | FastAPI | fastmcp, apscheduler |
+| omo | `omo`, `cards`, `omo-debt` | governance CLI | — | httpx, pyyaml |
+| metaos | `metaos` | orchestration CLI | — | structlog |
+| ecos | `ecos-ssb`, `ecos-dashboard` | protocol tooling | — | requests, jinja2 |
+| gbrain | `gbrain` | knowledge database MCP | — | bun |
 
 ### Key Dependencies
 
@@ -247,7 +248,7 @@ L0 协议   ── ecos ── SSB 协议层，承载系统决策的 Immutable L
 
 ### Integration Tests
 
-Located at `tests/integration/` in root (4 active scripts, 简化为当前可运行集合):
+Located at `tests/integration/` in root:
 
 ```bash
 # Run all integration tests
@@ -262,13 +263,12 @@ python3 tests/integration/test_runtime_e2e.py
 
 ### CI Configuration
 
-GitHub Actions workflows — **19/20 子模块 + 根仓库全部 CI 覆盖** (spaces 为纯 YAML 配置仓，不包括测试):
+> CI 覆盖范围会持续变化，不在此处维护数量快照。
+> 以 `.github/workflows/` 与各子项目仓库自身 workflow 为准。
 
-**kairon (3)**: `ci.yml`, `ci.yml.bak`, `publish.yml`
-**omo (2)**: `ci.yml`, `audit-baseline-monthly.yml`
-**现有独立项目 CI (7)**: `cockpit-ci.yml`, `agora-ci.yml`, `ecos-ci.yml`, `metaos-ci.yml`, `runtime-ci.yml`, `gbrain-ci.yml` (4 文件), `aetherforge-ci.yml`
-**新增 CI (2026-06-10 补齐，已移除 llm-gateway/ci.yml、compute-mesh/ci.yml、swarm-engine/ci.yml、aetherforge-swarm-ext/ci.yml)**: `l4-kernel/ci.yml`, `model-driven/ci.yml`, `omo-debt/ci.yml`, `family-hub/ci.yml`, `hermes-console/ci.yml`
-**根仓库 (23)**: `workspace.yml`, `omostation-governance.yml`, 及其他跨项目工作流
+- 根仓库工作流入口: `.github/workflows/`
+- 子模块 CI: 各项目仓库内 `.github/workflows/ci.yml` 及同类 workflow
+- 治理门禁: `governance-check.yml`, `quality.yml`, `workspace.yml`
 
 ## Gotchas
 
@@ -333,7 +333,7 @@ git push origin main
 
 ### 关键约束
 
-- **根仓库 `.gitmodules` 是 SSOT** — 20 个子模块的版本锁定在这里
+- **根仓库 `.gitmodules` 是 SSOT** — 子模块版本锁定在这里
 - **子模块指针不自动推进** — 每次更新需手动 `git add + commit`，保证可追溯
 - **推送顺序**：先推送子模块 → 再推送根仓库（否则别人看到的是指向不存在 commit 的指针）
 - **子模块脏状态**：`git submodule status` 带 `+` 前缀表示指针已落后于实际 HEAD，需更新
@@ -349,6 +349,8 @@ git push origin main
 | 系统状态 | `.omo/state/system.yaml` | 从旧快照文件取状态 |
 | 目标 | `.omo/goals/current.yaml` | 直接修改 goals (仅人类可改) |
 | 标准 | `.omo/standards/` | 从计划文档读标准 |
+| X1-X4 规则 | `.omo/_truth/x1-*.yaml` ~ `x4-*.yaml` | 在 `AGENTS.md`、README、计划文档里复制规则正文 |
+| L0 约束 | `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` | 在上层文档里另写一套 gate/constraint |
 
 ## 路由规则
 
@@ -393,20 +395,31 @@ git push origin main
   - `bin/git-safe` — Git 安全操作包装
   - `bin/scan_hardcoded.sh` — 硬编码路径扫描
   - `bin/arcnode-validate` — ArcNode 验证
-- `.github/workflows/` — CI configurations (20 workflows, 9/9 项目覆盖)
+- `.github/workflows/` — CI configurations
 - `.hermes/` — Hermes-related scripts and adapters
 
 ## 🤖 Agentic Protocols & BOS URIs (eCOS v5 Mandatory Rules)
 
 **All AI Agents operating in this workspace MUST follow these architectural constraints:**
 
-1. **NO RAW CONFIG EDITS**: Do not manually edit configuration files in `.omo/` or database files to change system state.
+1. **NO RAW STATE MUTATION**: 不要绕过 broker 直接改写 `.omo/` 或 `spaces/`。治理状态写入必须走 `projects/omo`、`projects/c2g` 或受审计入口。
 2. **USE AGORA MESH**: All cross-layer operations must go through the Agora Service Mesh (`agora`).
 3. **BOS URI ABSTRACTION**: State mutations and reads must use `bos://` URIs instead of direct file I/O where applicable.
 4. **INTROSPECTION**: If you don't know what tools or resources are available, invoke `read_resource("bos://agora/registry")` to dump the current Mesh state.
-5. **MUTATION**: To change the state of an object managed by the mesh, use the `mutate_resource(uri, payload, action)` tool instead of ad-hoc tools.
+5. **MUTATION**: To change governed state, 优先走 `bos://` 资源入口；涉及 `.omo` 落盘时，优先走 `omo CLI` / `projects/omo` / `projects/c2g` broker，而不是 ad-hoc file I/O。
 6. **COGNITIVE FRAMEWORKS**: MetaOS dynamically loads cognitive frameworks (like BDSK or Six Hats) from the L0 MOF model (`ecos/src/ecos/ssot/mof/m1/cognitive_framework/`). When executing complex planning, adhere strictly to the injected framework personas.
 7. **MANDATORY ATOMIC COMMITS**: All agents MUST immediately run `git commit` after making logical changes, especially to documentation or `.omo` files. The system relies on Git post-commit hooks for knowledge extraction (`mof-extract`). Failing to commit will break the system's memory loop and is a critical failure.
+
+### `.omo` 三层治理边界
+
+| 平面 | 位置 | 规则 |
+|:----|:-----|:-----|
+| state_plane | `.omo/` | 只承载治理状态、证据、知识、交付，不承载长期执行代码 |
+| kernel_plane | `projects/omo/` | 唯一治理执行内核，负责 schema、audit、sync、promotion、truth mutation |
+| ingress_plane | `projects/c2g/` | 唯一战略入口，只能向 `.omo/tasks/planned/` 和 `goals/current.yaml` 物化 |
+
+唯一标准: `.omo/standards/omo-governance-surfaces.md`  
+唯一注册表: `.omo/_truth/registry/omo-governance-surfaces.yaml`
 
 ## 🏛️ OMO 强制流程 (eCOS v5 Governance Mandatory)
 
@@ -452,6 +465,9 @@ git push origin main
 ## 🛡️ OPC Self-Correction Discipline (2026-06-13 确立)
 
 OPC 路线图 P5-P7 收口阶段建立的 self-correction 闭环, 任何 Phase / Sub-gate / Self-correction 报告必须按此标准产出。
+
+> 说明: 本节是历史收口阶段沉淀下来的治理规范与红线，不是当前运行时状态面。
+> 其中出现的阶段编号、轮次、样例报告、收口数据，只作为规范来源和审计证据，不作为实时事实源。
 
 ### SSOT 引用链
 
@@ -535,6 +551,9 @@ OPC 路线图 P5-P7 收口阶段建立的 self-correction 闭环, 任何 Phase /
 
 ### 当前桥接状态 (2026-06-15 收口)
 
+> 说明: 以下是 model-driven bridge 收口时的历史证据快照。
+> 当前真实状态若需确认，以对应工具实跑、M1/M2/M3 实际文件和最新 audit 为准。
+
 - 1031 M1 节点 / 45 M2 schema / 100% type coverage / 0 orphan
 - 83/83 OMOTask 配对成功 (m1_only=0, 字段漂移 0)
 - 6 工具综合 (validate/derive/bridge-sync/state-bridge/fields-completeness + auto-backfill-v2)
@@ -554,4 +573,4 @@ OPC 路线图 P5-P7 收口阶段建立的 self-correction 闭环, 任何 Phase /
 
 ## Panoramic View
 
-- **Full feature map / architecture / core flows / module deps / user journeys / integration surfaces**: See [`docs/PANORAMA.md`](./docs/PANORAMA.md) (6-section overview with Mermaid diagrams, P58-P71 14 phase steady state snapshot).
+- **Full feature map / architecture / core flows / module deps / user journeys / integration surfaces**: See [`docs/PANORAMA.md`](./docs/PANORAMA.md) for the current panorama skeleton and authoritative links.

@@ -14,6 +14,7 @@
 | `pilot-contract.yaml` | Selected Phase 12 pilot interface contract |
 | `article-samples.yaml` | Article ingestion policy samples |
 | `package-baseline.yaml` | Package dry-run baseline |
+| `omo-governance-surfaces.yaml` | `.omo` 顶层资产分类 + `projects/omo`/`projects/c2g` 联动治理注册表 |
 
 ## Rule
 

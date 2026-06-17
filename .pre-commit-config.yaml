@@ -44,7 +44,7 @@ repos:
         # 刷新 baseline: uv run --directory projects/omo python -m omo.cli logs audit --baseline-init .omo/_knowledge/_audit_baseline.json
         # Round 12 P0 旧 hook 已被 baseline-check 取代 (删了 files: 过滤, 不再需要).
       - id: health-ssot-consistency
-        name: health SSOT consistency (P43 W0: 校验 .omo/state/health.yaml 与 system.yaml 一致)
+        name: health SSOT consistency
         entry: python3 bin/check_health_ssot.py
         language: system
         pass_filenames: false
@@ -70,3 +70,17 @@ repos:
         # P47+: 跨层 enforce (防回归). 规则: cockpit→kairon / agora→cockpit /
         # ecos→kairon / omo→kairon. 注: cockpit→runtime 是设计依赖 (agent_runtime
         # 桥接, GPTCHAS #2), 不拦. 复用 scripts/check-cross-deps.py.
+      - id: omo-direct-io-gate
+        name: omo direct io gate (非 broker 禁止直接改 .omo / spaces)
+        entry: uv run --directory projects/omo python -m omo.cli lint direct-omo-io
+        language: system
+        files: ^(projects/|scripts/|bin/).+\.py$
+        pass_filenames: true
+        stages: [pre-commit]
+        # P48+: 把 `.omo` / `spaces` 直接写入约束固化到 pre-commit.
+        # 允许 broker:
+        #   - projects/omo/src/omo/*
+        #   - projects/c2g/src/c2g/adapters.py
+        #   - projects/c2g/src/c2g/bridge_import.py
+        # 其余 Python 改动若直接 write_text/open(...,"w")/unlink/mkdir 到 `.omo`
+        # 一律拒绝提交, 强制改走 omo CLI / c2g ingress / 授权 broker.

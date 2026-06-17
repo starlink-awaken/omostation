@@ -10,6 +10,13 @@
 #
 # 每个功能域支柱必须在三维上声明自己的实现方式。
 
+documentation_contract:
+  ssot_role: authoritative_value_source
+  derived_consumers:
+    - AGENTS.md
+    - docs/PANORAMA.md
+    - .omo/standards/omo-governance-surfaces.md
+
 domains:
   CARDS:
     x1_audit:
@@ -36,6 +43,42 @@ domains:
       mechanism: omo_cost.py + cost-tracking.jsonl
       dimensions: [compute, storage, maintenance, network]
       implemented: true
+
+  OMO_State:
+    x1_audit:
+      mechanism: "_truth/registry/omo-governance-surfaces.yaml + delivery evidence"
+      implemented: true
+    x2_freshness:
+      mechanism: governance surface registry review + stale legacy surface watch
+      implemented: true
+    x3_value:
+      mechanism: 按 state/control/knowledge/delivery 分层归因治理复杂度
+      dimensions: [state_entropy, audit_load, evidence_storage, cleanup_cost]
+      implemented: partial
+
+  OMO_Kernel:
+    x1_audit:
+      mechanism: omo governance / task schema / sync / trail
+      implemented: true
+    x2_freshness:
+      mechanism: standards + path constants + schema validator drift review
+      implemented: partial
+    x3_value:
+      mechanism: kernel-side governance execution cost
+      dimensions: [validation, orchestration, audit, promotion]
+      implemented: true
+
+  C2G_Ingress:
+    x1_audit:
+      mechanism: Pitch -> Bet -> Planned Task conversion trail
+      implemented: partial
+    x2_freshness:
+      mechanism: sandbox pitch GC + phase-aware strategic audit
+      implemented: partial
+    x3_value:
+      mechanism: 战略入口到执行任务的转化收益归因
+      dimensions: [idea_quality, planning_latency, task_materialization]
+      implemented: partial
 
   AetherForge:
     x1_audit:
@@ -97,3 +140,4 @@ domains:
 
 principles:
   ssot_cascade: "X 轴治理维度应贯穿全部功能域支柱。当前缺口：Vault X1·Kairon X3·CARDS X3。"
+  governance_stack: "治理价值不是只看 `.omo/`，而是看 `.omo` 状态面、`projects/omo` 内核、`projects/c2g` 入口三层协同成本。"

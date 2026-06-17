@@ -1,7 +1,21 @@
-# PANORAMA.md — eCOS v5 系统全景架构
+# PANORAMA.md — eCOS 系统全景架构
 
-> 2026-06-10 | 8 层 5+4+1+1 · 10 项目 · 24 域 · 10k+ tests · 全栈 lint 0
-> 配套: [JOURNEY-PROBES.md](./JOURNEY-PROBES.md) (6 条核心旅程白盒分析)
+> 本文是全景骨架与导航，不是运行时快照。
+> 任何会漂移的测试数、路由数、健康分、Phase、端口状态，以各自 SSOT 与运行时探针为准。
+> 配套: [JOURNEY-PROBES.md](./JOURNEY-PROBES.md)
+
+## 全景 SSOT
+
+| 主题 | 权威读源 |
+|------|----------|
+| Workspace 运行时状态 | `/.omo/state/system.yaml` |
+| Workspace 当前目标 | `/.omo/goals/current.yaml` |
+| `.omo` 三层治理契约 | `/.omo/standards/omo-governance-surfaces.md` |
+| `.omo` 治理面注册表 | `/.omo/_truth/registry/omo-governance-surfaces.yaml` |
+| X1-X4 治理规则 | `/.omo/_truth/x1-governance-policies.yaml` ~ `x4-consistency-rules.yaml` |
+| L0 强制约束 | `/projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` |
+| BOS 路由实现 | `/projects/agora/src/agora/mcp/resolver/services.py` |
+| 项目边界与调用链 | 各项目 `ARCHITECTURE.md` / `CALLCHAIN.md` / `BOUNDARY.md` |
 
 ---
 
@@ -10,53 +24,47 @@
 ```
 ┌────────────────────────────────────────────────────────────────────┐
 │  L4 自我层 (Documents + l4-kernel)                                 │
-│  ├── @驾驶舱 — 24 域 (7类型) · git:5d98dcc · DASHBOARD v6.4        │
-│  ├── l4-kernel — 统一管理面 · 24 域注册表 · 43 MCP                  │
-│  ├── _runtime/ — 6 治理脚本 (X1-X3 全维健康)                       │
-│  └── CARDS — 61 活跃卡片 (文件系统 + l4-kernel CardsPlane)          │
+│  ├── 个人知识与自我层状态                                           │
+│  ├── l4-kernel — 自我层管理面                                       │
+│  ├── 文档运行时与治理脚本                                            │
+│  └── CARDS / dashboard / personal state                            │
 ├────────────────────────────────────────────────────────────────────┤
-│  L3 入口层 (cockpit & agora-dashboard)                             │
-│  ├── CLI (cockpit) — 25 子命令 (research/status/cards/health/...)   │
-│  ├── MCP Server — 38 工具【已通过 agora :7431 代理 — stdio deprecated】│
-│  ├── Web Dashboard (agora-dashboard) — Next.js 15+ 多模态观察视界  │
-│  └── 测试: 564 collected / 544 passed                                │
+│  L3 入口层 (cockpit + mounted apps)                                │
+│  ├── CLI / Web / mounted dashboard                                 │
+│  ├── 人类唯一入口: cockpit                                          │
+│  └── 其他入口通过 I0 收敛                                           │
 ├────────────────────────────────────────────────────────────────────┤
 │  I0 织层 (agora)                                                   │
-│  ├── MCP Mesh — 42 工具 · 40 BOS 路由 · 三层路由链                  │
+│  ├── MCP Mesh / BOS URI Router                                      │
 │  ├── BOS URI — 5 域 (memory/governance/analysis/persona/capability) │
-│  ├── Proxy Manager — 限流(20 QPS) / 熔断器 / 缓存 / L0 审计         │
-│  ├── KNOWN_SERVICES — 21 代理启动服务                               │
-│  └── 测试: 1371 passed, 0 lint                                      │
+│  ├── Proxy / cache / circuit breaker / L0 audit                    │
+│  └── 跨层统一路由                                                    │
 ├────────────────────────────────────────────────────────────────────┤
 │  L2 引擎面                                                          │
-│  ├── kairon — 19+6 packages, ~4000 tests                           │
-│  ├── gbrain — TS 知识库, 67 MCP, ~9700 tests                       │
-│  ├── omo — 治理面, AppendOnlyLog, fcntl 跨进程锁, 100+ tests        │
-│  └── metaos — 编排引擎, 11 MCP, 189 tests, 0 lint                  │
+│  ├── kairon / gbrain — 记忆与知识引擎                               │
+│  ├── omo — 治理内核                                                 │
+│  └── metaos — 编排与决策门控                                        │
 ├────────────────────────────────────────────────────────────────────┤
 │  L1 运行时 (runtime)                                               │
 │  ├── Matrix Scheduler — 服务注册表 + 健康监控                       │
 │  ├── KEI — 沙箱执行 + Ephemeral Agents                             │
-│  ├── MCP — 30 工具, 171 tests                                      │
 │  └── 跨仓: ecos-matrix-scheduler/runtime-cli 入口                   │
 ├────────────────────────────────────────────────────────────────────┤
 │  L0 协议层 (ecos)                                                  │
 │  ├── SSB 签名链 — 不可变日志 + 认知操作记录                          │
-│  ├── MOF 元模型 — 984 M1 YAML 节点 + 24 M2 类型                     │
-│  ├── BOS URI 路由 — 25 mof-* 工具链                                │
-│  └── 测试: 195 passed, 0 lint                                       │
+│  ├── MOF 元模型 / L0 约束 / 治理规则                                 │
+│  └── BOS URI / protocol registry                                   │
 ├────────────────────────────────────────────────────────────────────┤
 │  M0 横切框架 (model-driven)                                        │
-│  ├── 7 阶段引擎 (OKR→Spec→ADR→Dev→Deploy→Ops→BizOps)               │
-│  ├── 12 工具链 (推导/触发/OKR/管道/自反验证)                        │
-│  ├── 24 M2 类型, 190 tests, 0 lint                                  │
-│  └── 被 L0/I0/L3/L4 四层消费, 零内部依赖                             │
+│  ├── 生命周期阶段引擎                                                │
+│  ├── M3→M2→M1 桥接与推导                                             │
+│  └── 被 L0/I0/L3/L4 四层消费                                          │
 ├────────────────────────────────────────────────────────────────────┤
 │  X1-X4 治理维                                                      │
-│  ├── X1 审计 — facts.md 变更追踪                                    │
-│  ├── X2 保鲜 — CLAUDE.md 版本/审查日期检查                           │
-│  ├── X3 价值 — 22 域活跃度评分 (平均 32 分)                          │
-│  └── X4 一致性 — 域注册表契约 (24域 100% ID 对齐)                    │
+│  ├── X1 审计 / 边界 / 写入 gate                                      │
+│  ├── X2 保鲜 / 抗熵                                                  │
+│  ├── X3 价值 / 成本归因                                              │
+│  └── X4 一致性 / SSOT 收敛                                           │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -74,23 +82,24 @@ bos://capability/    ← forge + agora + family-hub                — 能力与
 
 ## 二、项目全景
 
-### 2.1 项目健康度
+### 2.1 项目分层
 
-| 项目 | 层 | 栈 | 测试 | Lint | 域管理 | MCP |
-|:----:|:--:|:--:|:----:|:----:|:------:|:---:|
-| agora-dashboard | L3 | Next.js/React | 待定 | 0 | - | - |
-| l4-kernel | L4 | Python | 250+ | 0 | 24 域 | 43 |
-| cockpit | L3 | Python | 542/562 | 0 | — | 37 |
-| agora | I0 | Python | 1371 | 0 | 40 BOS | 42 |
-| kairon | L2 | Python | ~4000 | 0 | — | stdio |
-| gbrain | L2 | TS | ~9700 | — | — | 67 |
-| omo | L2 | Python | 100+ | 0 | — | — |
-| metaos | L2 | Python | 189 | 0 | — | 11 |
-| runtime | L1 | Python | 171 | 0 | — | 30 |
-| ecos | L0 | Python | 195 | 0 | — | 25 |
-| model-driven | M0 | Python | 190 | 0 | — | 12 |
+| 项目 | 层 | 角色 |
+|:----:|:--:|------|
+| l4-kernel | L4 | 自我层管理面 |
+| cockpit | L3 | 人类 CLI / Web 统一入口 |
+| agora | I0 | MCP Mesh 与 BOS 路由 |
+| kairon | L2 | 知识与搜索引擎 |
+| gbrain | L2 | TS 知识数据库 |
+| omo | L2 | 治理内核 |
+| metaos | L2 | 编排与门控 |
+| runtime | L1 | 沙箱与调度 |
+| ecos | L0 | 协议、MOF、约束 |
+| model-driven | M0 | 生命周期横切框架 |
+| aetherforge | X | 能力与算力横切框架 |
+| c2g | X | 战略需求入口 |
 
-### 2.2 L4 域注册表 (24 域 · 7 类型)
+### 2.2 L4 域注册表
 
 | 类型 | 域数 | SSOT | 注册位置 |
 |:----:|:----:|------|---------|
@@ -102,21 +111,21 @@ bos://capability/    ← forge + agora + family-hub                — 能力与
 | storage | 1 | 同上 | shareddisk |
 | model | 2 | 同上 | model-volume, sharedmodel |
 
-### 2.3 BOS 路由表 (40 条 · 5 域)
+### 2.3 BOS 路由域
 
-| 域 | 路由数 | 示例 |
-|:--:|:------:|------|
-| memory | 5 | `bos://memory/kos/search`, `bos://memory/kos/embed` |
-| governance | 8 | `bos://governance/omo/debt-registry`, `bos://governance/omo/health` |
-| analysis | 12 | `bos://analysis/minerva/research`, `bos://analysis/ontoderive/derive` |
-| persona | 7 | `bos://persona/runtime/matrix`, `bos://persona/runtime/chat` |
-| capability | 8 | `bos://capability/forge/tools`, `bos://capability/forge/integrate` |
+| 域 | 职责 | 示例 |
+|:--:|------|------|
+| memory | 记忆与事实 | `bos://memory/...` |
+| governance | 治理与律法 | `bos://governance/...` |
+| analysis | 认知与推演 | `bos://analysis/...` |
+| persona | 人格与心智 | `bos://persona/...` |
+| capability | 能力与生态 | `bos://capability/...` |
 
 ---
 
 ## 三、核心流程
 
-### 3.1 BOS URI 派发 (9 步路由链)
+### 3.1 BOS URI 派发
 
 ```
 LLM / Agent
@@ -151,13 +160,13 @@ Agent 操作
   → Signal 发射 (l4-kernel SignalBus)
 ```
 
-### 3.3 L4 健康检查 (双路径)
+### 3.3 L4 健康检查
 
 ```
 路径 A: cockpit health --full
-  → L4 Context (l4-kernel bridge)          → 24 域存在性
+  → L4 Context (l4-kernel bridge)          → 域存在性
   → L4 域健康 (l4-kernel DomainHealth)     → 聚合 dashboard
-  → L4 文档域 (@驾驶舱/_runtime/子进程)    → 22 域 KEMS 健康
+  → L4 文档域 (@驾驶舱/_runtime/子进程)    → KEMS 健康
   → L3 Cockpit Status (内部状态)
   → I0 Agora Stats (agora stats subprocess)
   → L1 Runtime Matrix (matrix_state.json)
@@ -176,7 +185,7 @@ Agent 操作
 | 入口 | 协议 | 端口 | 用途 | 鉴权 | 状态 |
 |:----:|:----:|:----:|------|:----:|:----:|
 | **cockpit CLI** | subprocess | — | 终端入口（人类唯一） | shell | 🟢 |
-| **agora MCP** | SSE | **:7431** | 统一 MCP 入口（135 工具） | API key | 🟢 已收敛 |
+| **agora MCP** | SSE | `:7431` | 统一 MCP 入口 | API key | 🟢 已收敛 |
 | **cockpit HTTP** | FastAPI | :8090 | Web Dashboard / REST | API key | 🟢 |
 
 **已下线入口**:
@@ -191,20 +200,22 @@ Agent 操作
 
 ## 五、集成验证
 
+> 这一节只保留验证点类型，不记录会漂移的通过数/版本号。
+
 | 集成点 | 详情 | 状态 |
 |--------|------|:----:|
 | cockpit MCP `workspace_context` | cocktail_mcp.py:473 | ✅ |
 | cockpit HTTP `/api/context` | dashboard_server.py → delegation | ✅ |
 | cockpit MCP `cards_status`, `cards_check` | cocktail_mcp.py:514,541 | ✅ |
 | cockpit CLI `cards --check` | cli.py:432 → l4bridge.py | ✅ |
-| l4-kernel ↔ DOMAIN-INDEX ID | 24 域 100% 对齐 | ✅ |
+| l4-kernel ↔ DOMAIN-INDEX ID | 域注册表对齐 | ✅ |
 | l4-kernel ↔ DOMAIN-INDEX 路径 | `expanduser()` 一致 | ✅ |
-| `_runtime/` 治理脚本 | 6 脚本 + 共享库, git commit | ✅ |
+| `_runtime/` 治理脚本 | 有共享治理脚本链路 | ✅ |
 | `cockpit health --full` L4 | 新增 L4 文档域子进程 | ✅ |
-| 架构版本 | 统一 5+4+1+1 | ✅ |
-| Phase 映射 | §3 双系统标注 | ✅ |
-| @驾驶舱 git 跟踪 | 368 文件初始 commit | ✅ |
-| DASHBOARD 刷新 | v6.4, 2026-06-10 | ✅ |
+| 架构版本 | 统一 5+4+1+1 口径 | ✅ |
+| Phase 映射 | 双系统映射存在 | ✅ |
+| @驾驶舱跟踪 | 受版本控制 | ✅ |
+| Dashboard 刷新 | 有独立状态面与刷新链路 | ✅ |
 | 子模块指针 | ecos/l4-kernel 同步 | ✅ |
 
 ---
@@ -213,14 +224,14 @@ Agent 操作
 
 | 数据 | 唯一读源 | 回退机制 |
 |------|---------|---------|
-| L4 域注册表 | `@驾驶舱/_control/DOMAIN-INDEX.md` | l4-kernel registry.py 24 域硬编码 |
+| L4 域注册表 | `@驾驶舱/_control/DOMAIN-INDEX.md` | l4-kernel registry |
 | Workspace Phase | `.omo/state/system.yaml` | — |
-| Documents Phase | `@驾驶舱/_control/DASHBOARD.md` v6.4 | — |
-| MOF M1 | `projects/ecos/src/ecos/ssot/mof/m1/` (984 YAML) | — |
-| BOS 路由 | `projects/agora/src/agora-events.json` | POC_SERVICES 40 条 |
+| Documents Phase | `@驾驶舱/_control/DASHBOARD.md` | — |
+| MOF M1 | `projects/ecos/src/ecos/ssot/mof/m1/` | — |
+| BOS 路由 | `projects/agora/src/agora/mcp/resolver/services.py` | Agora resolver |
 | 任务 | `.omo/tasks/active/` YAML | — |
 | CARDS | `@驾驶舱/CARDS/` (文件) / `data/cards/cards.db` (SQLite) | 双系统 |
-| 治理策略 | `.omo/_truth/x1-governance-policies.yaml` | 4 条硬编码 |
+| 治理策略 | `.omo/_truth/x1-governance-policies.yaml` | X1-X4 链 |
 | OMO 目标 | `.omo/_truth/goals/current.yaml` | — |
 
 ---
@@ -236,14 +247,11 @@ Agent 操作
 
 ## 八、债务与熵
 
-| 指标 | 数值 | 说明 |
-|------|:----:|------|
-| health_score | 98.0 | 接近完美 |
-| debt_health | 98.0 | 0 活跃债务 |
-| xplane_score | 85.0 | 跨层感知良好 |
-| backlog_pressure | 0.0 | 无积压 |
-| 活跃债务 | 0 | 3 个噪音已归档 |
-| 已归档 debt | 95 | 2026-06-08 + 2026-06-10 |
+| 指标 | 权威读源 |
+|------|----------|
+| health_score / debt_health / xplane_score | `.omo/state/system.yaml` 或治理报表 |
+| 活跃债务 / 已归档 debt | `.omo/debt/` |
+| backlog_pressure | 当前任务与治理报表 |
 
 ---
 
@@ -300,4 +308,4 @@ Agent 操作
 | spaces | L0/L1 | [ARCHITECTURE.md](../spaces/ARCHITECTURE.md) · [CALLCHAIN.md](../spaces/CALLCHAIN.md) · [BOUNDARY.md](../spaces/BOUNDARY.md) |
 | swarm-engine | X | **ARCHIVED** — 快照在 `/_archived/swarm-engine/`，能力已并入 [aetherforge/packages/swarm](../projects/aetherforge/packages/swarm/) |
 
-*最后更新: 2026-06-16 | 全栈 lint 清零 ✅ | 全栈测试 95%+ | 债务健康 98.0 | 入口收敛 7→3 ✅ | Agent 入口: agora MCP :7431*
+*最后更新: 2026-06-17 · 本文只保留全景骨架与指针，不再维护运行时快照*

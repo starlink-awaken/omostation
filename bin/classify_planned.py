@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 """P44 W2: 分类 60 planned 任务 → keep-active / archive / escalate 三桶"""
-import yaml, sys
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
+import sys
 
-PLANNED_DIR = Path("/Users/xiamingxing/Workspace/.omo/tasks/planned")
-OUTPUT = Path("/Users/xiamingxing/Workspace/.omo/_delivery/p44-w2-classification.yaml")
+import yaml
+
+WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(WORKSPACE_ROOT / "projects" / "omo" / "src"))
+
+from omo.omo_io import write_yaml_atomic
+
+PLANNED_DIR = WORKSPACE_ROOT / ".omo" / "tasks" / "planned"
+OUTPUT = WORKSPACE_ROOT / ".omo" / "_delivery" / "p44-w2-classification.yaml"
 
 # 维度阈值
 HIGH_PRIORITY = {"P0", "P1"}
@@ -93,9 +100,7 @@ def classify():
         "anomaly_detail": dict(anomaly_buckets),
     }
 
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    with open(OUTPUT, "w") as f:
-        yaml.dump(result, f, allow_unicode=True, sort_keys=False)
+    write_yaml_atomic(OUTPUT, result)
 
     print(f"✅ 分类完成 → {OUTPUT}")
     print(f"   keep-active: {len(keep_active)} / archive: {len(archive)} / escalate: {len(escalate)}")

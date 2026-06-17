@@ -17,6 +17,7 @@
 | `mcp-tool-and-transport-standard.md` | MCP 工具返回契约 + 传输约束 |
 | `phase2-full-execution-go-no-go.md` | 当前 phase 执行门禁标准 |
 | `ssot-7-domain-schema.md` | SSOT 7 域 schema 规范 |
+| `omo-governance-surfaces.md` | `.omo` 状态面 + `projects/omo` 内核 + `projects/c2g` 入口三层治理契约 |
 
 ## Supporting references
 
@@ -39,3 +40,4 @@
 1. `tasks/README.md` 与 `plans/README.md` 只能引用 active standards。
 2. legacy / historical 文档可作为证据或背景，不再作为新的执行入口。
 3. 若新增 standard，必须同时更新本注册表与 `.omo/INDEX.md`。
+4. X1-X4 规则真相源位于 `../_truth/x1-*.yaml` ~ `x4-*.yaml`；`standards/` 只定义解释性标准，不再复制治理规则正文。

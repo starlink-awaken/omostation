@@ -140,3 +140,10 @@ _archived/
 .omc/handoffs/
 .omc/plans/
 .omc/state/
+
+# ---- 本地工具/节点配置 (含私钥，务必 ignore) ----
+.qoder/
+config/
+
+# ---- 证据目录已改为软链到 _delivery/evidence-legacy ----
+.omo/evidence

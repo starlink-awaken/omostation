@@ -2,7 +2,44 @@
 #
 # 确保同一事实在文档、代码、MOF、BOS 路由、依赖声明中只有一种表述。
 
+documentation_contract:
+  ssot_role: authoritative_consistency_source
+  derived_consumers:
+    - AGENTS.md
+    - .omo/INDEX.md
+    - .omo/standards/omo-governance-surfaces.md
+
 rules:
+  - rule_id: X4-CONS-OMO-GOVERNANCE-SURFACES
+    title: OMO 三层治理面必须口径一致
+    type: governance_surface_consistency
+    status: active
+    created: '2026-06-16'
+    description: >
+      `.omo` 顶层目录分类、`projects/omo` 路径常量、`projects/c2g` 产物治理引用
+      必须共享同一套目录治理口径，禁止文档、内核、入口三套说法。
+    canonical_source:
+      standard: .omo/standards/omo-governance-surfaces.md
+      registry: .omo/_truth/registry/omo-governance-surfaces.yaml
+      kernel_path_constants: projects/omo/src/omo/omo_paths.py
+    forbidden_patterns:
+      - "新增 .omo 顶层资产但未登记到 registry"
+      - "projects/c2g 产物不携带 governance_refs"
+      - "将 `.omo` 本身表述为完整治理执行内核"
+    allowed_patterns:
+      - "`.omo` = state plane"
+      - "`projects/omo` = governance kernel"
+      - "`projects/c2g` = strategic ingress"
+    check_scope:
+      - .omo/INDEX.md
+      - .omo/standards/*.md
+      - .omo/_truth/*.yaml
+      - .omo/_truth/registry/*.yaml
+      - projects/omo/src/omo/*.py
+      - projects/c2g/src/c2g/*.py
+    owner: governance-team
+    enforcement: block-write
+
   - rule_id: X4-CONS-LLMGATEWAY-ARCHIVED
     title: llm-gateway 不得再以独立活跃项目形式出现
     type: cross_reference_consistency

@@ -2,7 +2,44 @@
 #
 # 定义哪些组件/项目需要 freshness 检查，以及过期后的处理动作。
 
+documentation_contract:
+  ssot_role: authoritative_freshness_source
+  derived_consumers:
+    - AGENTS.md
+    - .omo/_truth/INDEX.md
+    - .omo/standards/omo-governance-surfaces.md
+
 rules:
+  - rule_id: X2-FRESH-OMO-GOVERNANCE-SURFACES
+    title: OMO 三层治理契约必须持续保鲜
+    type: governance_surface_freshness
+    status: active
+    created: '2026-06-16'
+    target: .omo/_truth/registry/omo-governance-surfaces.yaml
+    freshness:
+      mechanism: registry-review
+      threshold_days: 14
+      action: escalate
+    owner: governance-team
+    notes: >
+      `.omo` 顶层资产、`projects/omo` 路径常量、`projects/c2g` 入口元数据
+      只要任一发生显著变化，14 天内必须同步更新标准与注册表。
+
+  - rule_id: X2-FRESH-EVIDENCE-ALIAS
+    title: evidence 兼容别名必须持续收敛
+    type: compatibility_alias_watch
+    status: active
+    created: '2026-06-17'
+    target: .omo/evidence/
+    freshness:
+      mechanism: alias-backlog-review
+      threshold_days: 30
+      action: warn
+    owner: governance-team
+    notes: >
+      `.omo/evidence/` 仅允许作为 `_delivery` 下真实证据目录的兼容别名存在；
+      若 30 天内没有继续消化历史引用与迁移计划，需显式登记为治理债务。
+
   - rule_id: X2-FRESH-ARCHIVED-LLMGATEWAY
     title: llm-gateway 已归档，禁止产生新的活跃任务
     type: project_archive

@@ -1,0 +1,16 @@
+comment: '端口硬编码 baseline (历史已知, 增量 file:port 才 fail). 刷新: python3 scripts/check-vault-paths.py
+  --baseline-init'
+count: 12
+entries:
+- projects/agora/INTERFACE.yaml:8080
+- projects/agora/src/agora/cli/parser.py:8080
+- projects/cockpit/web/compat.py:3000
+- projects/cockpit/web/compat.py:7450
+- projects/ecos/src/ecos/ssot/mof/m1/runtime_layer/RUNTIME-CRON-SERVICE.yaml:7450
+- projects/kairon/INTERFACE.yaml:8765
+- projects/kairon/INTERFACE.yaml:8766
+- projects/kairon/packages/codeanalyze/src/codeanalyze/commands/serve_cmd.py:8765
+- projects/kairon/packages/codeanalyze/src/codeanalyze/mcp.py:8765
+- projects/kairon/packages/codeanalyze/src/codeanalyze/tools_template.py:8765
+- projects/kairon/packages/minerva/src/minerva/cli.py:8765
+- projects/kairon/packages/ontoderive/engine/cli.py:8080
