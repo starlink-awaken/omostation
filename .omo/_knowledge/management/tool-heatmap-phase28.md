@@ -2,6 +2,8 @@
 
 > 生成: 2026-06-05 · 数据源: agora-routes.json + trace_log.jsonl
 > 任务: P28-W0-TOOL-HEATMAP
+> 历史工具热力图审计 / reference only。本文记录 Phase 28 时点的注册与调用样本，不是当前 Agora 路由覆盖、当前工具可达性或当前调用热度 SSOT。
+> 当前事实请回看 `/.omo/PROJECTS.yaml`、`/docs/PANORAMA.md`、当前路由/测试/治理证据。
 
 ---
 

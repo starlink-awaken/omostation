@@ -11,6 +11,8 @@ maintainer: auto
 > **Assumption**: 用户未在线确认边界，因此默认采用最稳妥方案：**Phase 5 先做设计与进入条件定义，实际实现只收口 Phase 4 的剩余 Wave 2 任务。**
 >
 > **Inputs**: `phase5-requirements.md` v0.1、`task-center-requirements.md` v0.2.1、Phase 4 roadmap/Wave 2 plan、最新 convergence audit。
+> 本文档属于历史阶段的入口设计分析，保留当时的 entry gate 判断、Wave 拆分和推进边界，不是当前阶段状态、当前任务许可或当前系统事实 SSOT。
+> 当前执行面一律以 `/.omo/goals/current.yaml`、`/.omo/state/system.yaml`、`/.omo/tasks/active/`、`/.omo/PROJECTS.yaml` 为准。
 
 ## 1. Executive judgment
 

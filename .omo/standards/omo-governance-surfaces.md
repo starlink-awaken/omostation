@@ -91,7 +91,7 @@
 | `tests/` | governance_test_surface | 工作区级治理与门禁测试资产 | test agents / humans |
 | `capabilities/` | capability_market | 治理面能力/市场清单等轻量注册物 | governance |
 | `change-log/` | change_history | 紧凑型变更历史摘要 | governance / automation |
-| `PROJECTS.yaml` | root_registry | 全系统项目注册表 | governance |
+| `PROJECTS.yaml` | root_registry | 全系统项目注册表（只记录稳定身份/状态/路径，不记录运行时计数） | governance |
 | `INDEX.md` | root_index | `.omo` 根导航文档 | governance |
 | `evidence/` | compatibility_alias | 兼容别名，真实存储应落 `_delivery/evidence-legacy/` 或 `_delivery/evidence/` | agents / humans |
 

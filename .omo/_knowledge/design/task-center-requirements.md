@@ -9,6 +9,8 @@
 > - [运维可靠性审阅](./reviews/review-ops-reliability.md) — 3 CRITICAL, 4 HIGH
 > - **三路审阅结论已吸收到当前约束；剩余架构取舍以本版正文为准**
 > **关联文档**: [MASTER-BLUEPRINT.md](MASTER-BLUEPRINT.md) | [四平面架构 DOC-ARCH.md](../../DOC-ARCH.md) | [治理任务规范](../../tasks/README.md) | [arcnode schema](https://github.com/xiamingxing/arcnode) | [scheduling-cleanup-2026-05-31.md](../management/scheduling-cleanup-2026-05-31.md)
+> 本文档是历史阶段的需求与设计输入，保留当时的调度断裂审计、Task Center 目标、架构约束与路线图，不是当前调度状态、当前 registry 真相或当前执行许可 SSOT。
+> 当前执行与状态以 `/.omo/goals/current.yaml`、`/.omo/state/system.yaml`、`/.omo/tasks/active/` 以及当前 owner-plane 实体为准。
 
 ---
 

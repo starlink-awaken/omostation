@@ -5,6 +5,8 @@
 > **定位**: OPC-P2 (Memory spine) T1 — 5 仓记忆边界设计
 > **目的**: 给后续 T2 memory-uri + T3 recall-flow + T4 source-map 提供边界基线
 > **链接**: OPC-PHASE-PLAN.yaml OPC-P2-T1 / §19 治理 / M1.5 Gate B2 收口
+> **属性**: 历史 OPC 设计输入 / reference only。本文记录 OPC-P2-T1 当时的 5 仓边界设计，不是当前记忆边界实现状态、当前 owner 分配或当前系统事实 SSOT。
+> **当前事实**: 请回看 `/.omo/PROJECTS.yaml`、`/docs/PANORAMA.md`、当前 OPC 审计/交付证据与治理检查结果。
 
 ---
 

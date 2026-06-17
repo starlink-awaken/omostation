@@ -2,6 +2,8 @@
 
 > 2026-06-07 | 基于: 全量依赖分析 + 四个包深度解剖 + gbrain交互验证
 > 修正: v1.0 误判 4 个包为废弃, 实际都有活跃功能
+> 历史最终态修订提案 / reference only。本文记录当时的修正设计，不是当前项目数量、当前包边界、当前依赖真相或当前实施状态 SSOT。
+> 当前架构与项目事实请回看 `/.omo/PROJECTS.yaml`、`/docs/PANORAMA.md`、`/.omo/standards/eCOS-v6-Architecture-Alignment.md`。
 
 ---
 

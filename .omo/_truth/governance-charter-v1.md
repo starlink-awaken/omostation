@@ -1,6 +1,8 @@
 # 5+3+1 架构治理宪章 v1.0
 
 > **全系统架构宪法** · 2026-06-06 · 人类审批后生效
+> 本文保留治理原则与边界约束，不再维护项目计数、测试数、MCP/CLI 数、端口活跃状态、阶段完成度等运行时快照。
+> 当前系统拓扑、项目状态与入口收敛口径以 `/.omo/PROJECTS.yaml`、`/docs/PANORAMA.md`、`/AGENTS.md`、`/.omo/_truth/x4-consistency-rules.yaml` 为准。
 
 ---
 
@@ -20,22 +22,22 @@ L3 入口层 · 工具面 · 主动
   └─ 唯一对外暴露 MCP 的生产者
 
 I0 织层 · 路由面 · 中枢
-  └─ agora (MCP Hub, 66 tools)
+  └─ agora (MCP Hub / BOS 路由)
   └─ 所有跨层通信的唯一通道
-  └─ 端口: 7422(MCP HTTP), 7431(MCP SSE), 7430(Web), 8080(API Gateway)
+  └─ 端口与入口状态以 `protocols/port-registry.yaml` 与运行时探针为准
 
 L2 内核三平面 · 引擎面
-  ├─ 治理面: omo (CLI 28, MCP 10)
-  ├─ 引擎面: kairon (25 packages, 92 MCP tools)
-  ├─ 记忆面: gbrain (TS, 75 MCP tools)
-  └─ 编排: metaos (MCP 11)
+  ├─ 治理面: omo
+  ├─ 引擎面: kairon
+  ├─ 记忆面: gbrain
+  └─ 编排: metaos
 
 L1 运行时 · 基础设施
-  └─ runtime (Matrix + Scheduler + KEI, MCP 30)
+  └─ runtime (Matrix + Scheduler + KEI)
 
 L0 协议编织 · 数据定义
-  ├─ protocols/ (16 YAML, 5/6 有运行时实现)
-  └─ ecos (SSB + emergence, 122 tests)
+  ├─ protocols/ (协议注册与端口 SSOT)
+  └─ ecos (SSB + emergence)
 ```
 
 ### §1.2 三横切面
@@ -81,17 +83,8 @@ L0 协议编织 · 数据定义
 
 ### §2.3 HTTP 端口分配 (SSOT)
 
-| 端口 | 归属 | 用途 | 框架 |
-|------|------|------|------|
-| **7422** | agora (I0) | MCP HTTP | FastMCP |
-| **7430** | agora (I0) | Web Dashboard | FastAPI |
-| **7431** | agora (I0) | MCP SSE | FastMCP |
-| **8080** | agora (I0) | API Gateway | aiohttp |
-| **8090** | cockpit (L3) | Web Dashboard | http.server |
-| **8765** | minerva (L2) | Web 服务 | FastAPI |
-| **9090** | ecos (L0) | Dashboard | http.server + jinja2 |
-
-> **端口冲突规则**: 按 L3 > I0 > L2 > L1 > L0 优先级, 低优项目必须使用环境变量覆盖。新项目默认端口必须在本宪章注册。
+> 端口分配属于运行时事实，权威源是 `protocols/port-registry.yaml`。
+> 本宪章只保留约束：所有端口必须先登记再使用，冲突裁决按层优先级执行。
 
 ### §2.4 命名规范
 
@@ -189,18 +182,8 @@ L0 协议编织 · 数据定义
 
 ### §5.2 当前覆盖
 
-```
-9/9 项目 CI 覆盖 (100%)
-  kairon:   7 workflows
-  omo:      3 workflows
-  agora:    1 workflow (agora-ci)      [2026-06-06 新增]
-  cockpit:  1 workflow (cockpit-ci)    [2026-06-06 新增]
-  metaos:   1 workflow (metaos-ci)     [2026-06-06 新增]
-  ecos:     1 workflow (ecos-ci)       [2026-06-06 新增]
-  gbrain:   1 workflow (gbrain-ci)     [2026-06-06 新增]
-  runtime:  1 workflow
-  protocols: 0 (via meta-model)
-```
+> 具体 CI 覆盖数量、workflow 数、通过率属于运行时事实。
+> 以各项目仓库下的 `.github/workflows/` 与 workspace `governance-check` 为准。
 
 ---
 
@@ -236,19 +219,8 @@ Agent 启动:
 
 ## 第七章 · 实施路线
 
-| 阶段 | 任务 | 状态 |
-|------|------|------|
-| M0 已完成 | shared-lib 拆出 5 子包 | ✅ |
-| M1 已完成 | agora 拆出 I0 独立项目 | ✅ |
-| M2 已完成 | metaos/ecos/wksp 搬家 | ✅ |
-| M3 已完成 | CI 补齐 9/9 | ✅ |
-| M4 已完成 | 全量接口审计 (CLI 21 + MCP 286) | ✅ |
-| M5 已完成 | L4 bridge cockpit MCP 工具 | ✅ |
-| M6 进行中 | cockpit web 独立化 | 🟡 |
-| M7 进行中 | ports 冲突清理 (8080✅, 9090待) | 🟡 |
-| M8 待做 | protocols-layer CLI 修复 | ⬜ |
-| M9 待做 | sophia/sb-bridge SHIM 清理 | ⬜ |
-| M10 待做 | X1/X2/X3 横向切面闭环 | ⬜ |
+> 本章只保留“宪章存在于一个演进语境中”的事实，不再维护当前阶段跟踪表。
+> 当前路线、阶段、gate 与 closeout 证据以 `/.omo/goals/current.yaml`、`/.omo/state/system.yaml`、`/.omo/_delivery/` 为准。
 
 ---
 

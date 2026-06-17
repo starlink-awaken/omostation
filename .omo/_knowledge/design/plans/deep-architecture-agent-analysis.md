@@ -3,6 +3,8 @@
 > 日期: 2026-05-29 | 版本: v1.1 | 审计: agent-architecture-audit-redteam.md
 > 主题: Agent协作集成 · 本体Agent选型 · 第一性原理优化 · 分层控制面 · Agent-as-Kernel
 > 修订: v1.1 — 增加安全机制(操作分级/Agent沙箱/死锁检测/检查点)、NATS推迟、AI-Scientist-v2仅取BFTS、控制器滞回、跨层反馈、全局熵度量
+> 本文档是历史架构分析输入，保留当时的多 Agent 协作设想、组件分工与控制面设计，不是当前 Agent 实现状态、工具计数或当前入口拓扑 SSOT。
+> 当前事实请以 `/.omo/PROJECTS.yaml`、`AGENTS.md`、`docs/PANORAMA.md` 和当前代码为准。
 
 ---
 

@@ -3,6 +3,8 @@
 > 日期: 2026-05-29 | 版本: v1.0 | 状态: 愿景草案
 > 输入: Workspace 5项目 (omostation) + SharedWork 90+项目 (R&D厨房)
 > 受众: 架构决策者、未来开发者、AI Agent 接入者
+> 本文档保留历史愿景、终态假设和当时的项目版图认知，属于长期参考输入，不是当前项目清单、当前入口拓扑、当前能力计数或当前健康度 SSOT。
+> 当前事实请回到 `/.omo/PROJECTS.yaml`、`AGENTS.md`、`docs/PANORAMA.md`、`/.omo/goals/current.yaml`、`/.omo/state/system.yaml`。
 
 ---
 

@@ -5,6 +5,8 @@
 > **定位**: OPC-P6 (Self-Evolution loop) 5 任务设计 — radar→gap→task→swarm→audit→retrospective 闭环
 > **目的**: 让系统改进成为治理的循环工作流, 满足 Gate F "weekly report ≥ 3 candidates / ≥ 1 active / drift detector"
 > **链接**: OPC-P5 North Star (T1 tech-radar) / P3 Swarm (T4 worker dispatch) / §19 治理
+> **属性**: 历史 OPC 自演进设计输入 / reference only。本文记录 OPC-P6 当时的 self-evolution 设计，不是当前 radar/gap/task/swarm/audit/retrospective 实施状态或当前 Gate F 结论 SSOT。
+> **当前事实**: 请回看当前 OPC 审计/交付证据、`/.omo/state/system.yaml` 与相关治理检查结果。
 
 ---
 

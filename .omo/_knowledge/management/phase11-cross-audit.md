@@ -4,6 +4,8 @@
 > 审计对象: Phase 11 规划文档（pre_planning 阶段）
 > 审计日期: 2026-06-01
 > 审计方法: 7 检查点交叉对比（参照 Phase 10 C1-C4 经验）
+> 历史交叉审计基线 / reference only。本文记录 Phase 11 pre-planning 时点的基线判断，不是当前计划注册表、当前控制面或当前健康轨迹 SSOT。
+> 当前事实请回看 `/.omo/state/system.yaml`、`/.omo/goals/current.yaml`、`/.omo/_delivery/` 与当前治理检查结果。
 
 ---
 

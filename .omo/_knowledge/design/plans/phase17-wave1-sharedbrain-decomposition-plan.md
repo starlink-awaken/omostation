@@ -4,6 +4,8 @@
 > **Scope:** Wave 0 (治理门禁 + 健康分) + Wave 1 (小器官迁移 + 废弃确认)
 > **Method:** TDD + .omo governance, task-gate-model
 > **Source:** `.omo/_knowledge/design/sharedbrain-decomposition-architecture.md`
+> 本文档是历史阶段的实施计划输入，保留当时的 Wave 切分、健康分门禁和任务建议，不是当前 active task、当前阶段状态或当前 SharedBrain 处理策略 SSOT。
+> 当前执行与状态以 `/.omo/goals/current.yaml`、`/.omo/tasks/active/`、`/.omo/state/system.yaml` 和当前审计结果为准。
 
 ---
 

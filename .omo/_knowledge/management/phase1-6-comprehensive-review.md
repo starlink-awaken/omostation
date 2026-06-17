@@ -3,6 +3,8 @@
 > 日期: 2026-05-31 | 状态: 最终稿
 > 范围: OMO 系统 Phase 1 至 Phase 6 的全面审阅
 > 评估维度: 整体架构、应用场景、功能模块、使用方式、核心流程
+> 历史阶段综合评审 / reference only。本文记录 Phase 1-6 当时的阶段结论，不是当前架构拓扑、当前工具数量、当前测试状态或当前阶段门禁 SSOT。
+> 当前事实请回看 `/.omo/PROJECTS.yaml`、`/docs/PANORAMA.md`、`/.omo/state/system.yaml`、`/.omo/goals/current.yaml`。
 
 ---
 

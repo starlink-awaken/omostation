@@ -2,6 +2,8 @@
 
 > 战略 × 战术 × 执行三层面，整合 5+3+1 架构
 > 2026-06-06 | 状态: design-locked
+> 历史扩展架构提案 / reference only。本文记录当时的 OMO 扩展设计，不是当前 OMO/runtime/Agora 集成状态、当前 CLI 覆盖或当前治理能力 SSOT。
+> 当前事实请回看 `/.omo/PROJECTS.yaml`、`/docs/PANORAMA.md`、`/.omo/standards/omo-governance-surfaces.md`。
 
 ---
 

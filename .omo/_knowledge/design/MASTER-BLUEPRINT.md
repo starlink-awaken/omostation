@@ -1,7 +1,9 @@
 # omostation 全景蓝图：架构·路线图·里程碑
 
-> 日期: 2026-05-30 | 版本: v1.2 | 状态: 主蓝图 / Phase 2 full_execution
+> 日期: 2026-05-30 | 版本: v1.2 | 状态: 历史主蓝图 / reference
 > 综合: architecture-final-vision · evolution-roadmap · beyond-phase4 · comprehensive-audit · tech-intelligence · phase1-4 task-specs · post-phase1 governance
+> 本文档保留当时的全景规划假设、阶段拆分、数量级预估与路线图表达，属于历史设计输入，不是当前运行时 Phase、项目清单、能力计数或健康分 SSOT。
+> 当前事实与执行许可以 `/.omo/goals/current.yaml`、`/.omo/state/system.yaml`、`/.omo/tasks/active/`、`/.omo/PROJECTS.yaml` 为准；端口、依赖与入口收敛以 `AGENTS.md`、`docs/PANORAMA.md`、`protocols/port-registry.yaml` 为准。
 
 ---
 

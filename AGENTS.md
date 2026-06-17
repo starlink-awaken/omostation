@@ -6,6 +6,7 @@
 > **运行时 SSOT**: `.omo/state/system.yaml` · `.omo/goals/current.yaml`
 > **治理面 SSOT**: `.omo/standards/omo-governance-surfaces.md` · `.omo/_truth/registry/omo-governance-surfaces.yaml`
 > **L0/X1-X4 SSOT**: `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` · `.omo/_truth/x1-governance-policies.yaml` · `.omo/_truth/x2-freshness-rules.yaml` · `.omo/_truth/x3-value-stack.yaml` · `.omo/_truth/x4-consistency-rules.yaml`
+> **项目架构文档契约**: `projects/*/ARCHITECTURE.md` / `CALLCHAIN.md` / `BOUNDARY.md` 只保留骨架、入口、边界与 SSOT 指针，不回填运行时快照
 
 ## 架构总览 (5+4+1+1)
 
@@ -42,7 +43,7 @@ bos://capability/ ← forge/runtime                  — 能力与生态
 
 | 决策 | 结论 |
 |:----|:-----|
-| L3 收敛 | cockpit 是唯一 Web 入口；agora-dashboard 已删除，hermes-console 与 dashboard_server 作为子应用挂载。 |
+| L3 收敛 | cockpit 是唯一 Web 入口；agora-dashboard 独立入口已收敛，仓库仅保留历史快照；hermes-console 与 dashboard_server 作为子应用挂载。 |
 | CLI 收敛 | cockpit = 唯一人类 CLI 入口。其他 CLI (agora/runtime/ecos-ssb/omo/metaos) 保留为程序接口 |
 | 子模块 | 22 子模块，各自独立 git 仓库。根仓库只追踪元配置和子模块指针 |
 | 治理收敛 | `.omo/` = state plane；`projects/omo/` = governance kernel；`projects/c2g/` = strategic ingress |
@@ -82,7 +83,7 @@ This root directory is a **multi-project workspace** organized in the 5+4+1+1 (e
 | X | `model-driven` | Python (uv, pytest) | `projects/model-driven/` | 🟢 Active — 全生命周期模型驱动 |
 | X | `llm-gateway` | Python (uv) | `_archived/llm-gateway/` | ⚫ Archived — 能力已迁移至 `projects/aetherforge/packages/gateway/` |
 | X | `c2g` | Python (uv) | `projects/c2g/` | 🟢 Active — 战略需求引擎 (V2P → C2G) |
-| X | `bus-foundation` | Python (uv, pytest) | `projects/bus-foundation/` | 🟢 Active — pub/sub/schedule 总线 |
+| X | `bus-foundation` | Python (uv, pytest) | `projects/bus-foundation/` | 🟢 Active — Omni-Bus (Data/Event/Control) |
 | X | `omo-debt` | Python (uv, pytest) | `projects/omo-debt/` | 🟢 Active — 技术债务评分 CLI |
 | X | `observability` | Docker | `projects/observability/` | 🟢 Active — Langfuse 可观测性 |
 | X | `family-hub` | Python (FastMCP) | `projects/family-hub/` | 🟢 Active — 家庭数字枢纽 |
@@ -208,7 +209,7 @@ cd projects/gbrain && bun run ci:local
 *   **域 2：治理与律法 `bos://governance`** ── `omo`、`metaos`、`eidos`、`cockpit`
 *   **域 3：认知与推演 `bos://analysis`** ── `ontoderive` (推导)、`minerva` (深度研究)、`codeanalyze` (AST理解)
 *   **域 4：人格与心智 `bos://persona`** ── `sot-bridge` (SharedBrain 桥接)
-*   **域 5：能力与生态 `bos://capability`** ── `aetherforge`、`runtime`
+*   **域 5：能力与生态 `bos://capability`** ── `aetherforge`、`runtime`、`bus` (Omni-Bus: data/event/control)
 
 ```
 L4 自我层 ── l4-kernel

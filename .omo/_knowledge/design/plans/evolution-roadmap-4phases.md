@@ -3,6 +3,8 @@
 > 日期: 2026-05-29 | 版本: v1.1 | 状态: 红队已修订
 > 蓝图依据: `architecture-final-vision.md`
 > 涉及: kairon, SharedBrain, agentmesh, gbrain, ops, SharedWork(10项目)
+> 本文档是历史路线图输入，保留当时的阶段切分、包数增长、健康目标和 SharedWork 融合设想，不是当前项目清单、当前能力计数或当前健康分 SSOT。
+> 当前事实请回到 `/.omo/PROJECTS.yaml`、`AGENTS.md`、`docs/PANORAMA.md`、`/.omo/goals/current.yaml`、`/.omo/state/system.yaml`。
 
 ---
 

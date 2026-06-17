@@ -1,5 +1,7 @@
 # ADR — Phase 11 Wave 2 — Minerva Relation MetaRelationType
 
+> Historical ADR reference. It records the decision made in that wave; current runtime status and current implementation ownership must be verified from the codebase and current SSOT surfaces.
+
 ## Context
 
 `minerva.knowledge.store.Relation` normalized `predicate`, but exposed no explicit `meta_relation` contract aligned with the canonical Eidos relation taxonomy.

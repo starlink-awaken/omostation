@@ -1,8 +1,8 @@
 # 5+3+1 全局治理宪章 (Architecture Governance Charter)
 
-> **宪法级文档** · 2026-06-06 颁布 · 覆盖 9 项目 · 不允变更核心原则
+> **宪法级文档** · 2026-06-06 颁布 · 保留核心原则，不维护项目数、包数、测试数、阶段完成度等运行时快照
 > **审查周期**: 每次会话启动检查 §0 · 每月全面审查
-> **生效范围**: 所有 9 个项目 · 所有 Agent · 所有人类开发者
+> **生效范围**: 全工作区项目 · 所有 Agent · 所有人类开发者
 
 ---
 
@@ -14,9 +14,9 @@
 L4 自我层   — 纯文档 · 被动 (CARDS SQLite + Vault Markdown)
 L3 入口层   — Cockpit (CLI + MCP + Web) · 统一 Agent 桥接
 I0 织层    — Agora (MCP Hub · 服务发现/路由/代理) · 所有跨层通信唯一通道
-L2 内核    — OMO(治理) + Kairon(25包引擎) + gbrain(163K TS 记忆) + MetaOS(编排)
+L2 内核    — OMO(治理) + Kairon + gbrain + MetaOS
 L1 运行时   — Runtime (Matrix 注册表 + 健康监控 + KEI 沙箱 + Scheduler)
-L0 协议    — Protocols(16 YAML) + eCOS(SSB 签名链 + 涌现计算)
+L0 协议    — Protocols + eCOS(SSB 签名链 + 涌现计算)
 
 X1 审计链 · X2 抗熵进化 · X3 价值堆栈 · X4 治理一致性 ← 横向贯穿所有层
 
@@ -36,7 +36,7 @@ X1 审计链 · X2 抗熵进化 · X3 价值堆栈 · X4 治理一致性 ← 横
 7. **协议先于实现**: 跨边界通信走 L0 协议注册 → I0 路由
 8. **修改后立即 git commit**: 任何代码/配置修改后立即提交
 9. **禁止直接改写 .omo 目录**: 通过 OMO CLI 或 cockpit MCP 工具操作
-10. **测试门禁**: 修改包后必须运行对应测试, 通过率 ≥ 95%
+10. **测试门禁**: 修改包后必须运行对应验证；具体门禁以项目 CI 和 workspace 治理检查为准
 
 ---
 
@@ -220,7 +220,7 @@ make test — 遍历所有的 packages/*/tests/
 CI gate: fail_under 70% (coverage)
 
 已知豁免:
-  kos (300 tests, 需运行中服务)
+  kos (依赖运行中服务)
   minerva (需 Ollama + SearXNG)
   ontoderive (需 LLM backend)
 ```
@@ -241,7 +241,7 @@ CI gate: fail_under 70% (coverage)
 
 ```
 {cli} (无参数) → 显示默认面板:
-  ┌─ 上下文 ─── 当前状态摘要 ──────────┐
+  ┌─ 上下文 ─── 运行时事实摘要(引用) ───┐
   ├─ 快速入口 ── 常用命令 3-5 条 ──────┤
   ├─ 工具 ───── 功能分组 ──────────────┤
   └─ 帮助 ───── {cli} help ─────────────┘
@@ -281,20 +281,10 @@ CI gate: fail_under 70% (coverage)
   tests/benchmarks (性能依赖)
 ```
 
-### 6.2 当前状态
+### 6.2 运行时事实引用
 
-```
-9/9 项目 CI 覆盖 (2026-06-06 补齐)
-  kairon: 7 workflows ✅
-  omo:    3 workflows ✅
-  agora:  1 workflow (agora-ci) ✅
-  cockpit: 1 workflow (cockpit-ci) ✅
-  metaos: 1 workflow (metaos-ci) ✅
-  ecos:   1 workflow (ecos-ci) ✅
-  gbrain: 1 workflow (gbrain-ci) ✅
-  runtime: 1 workflow (meta-model-check) ✅
-  protocols: 0 (纯数据层, via meta-model) ✅
-```
+> 具体 CI 覆盖数量、workflow 数与通过率属于运行时事实。
+> 以各项目仓库下的 `.github/workflows/` 与 workspace 治理检查为准。
 
 ---
 

@@ -2,6 +2,7 @@
 
 **时间**: 2026-05-21  
 **范围**: Workspace 全部 12 个活跃项目 + 基础设施
+**属性**: 历史架构审计记录 / reference only，不是当前项目清单、当前测试状态、当前 Git 健康或当前架构结论 SSOT。当前事实请回看 `/.omo/PROJECTS.yaml`、`/docs/PANORAMA.md` 与当前治理审计证据。
 
 ---
 

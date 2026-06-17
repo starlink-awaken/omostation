@@ -3,6 +3,7 @@
 > **状态**: 探查报告 (Round 19 P1 落地)
 > **动机**: §11.6 P2 跨仓推广剩余 1 债 (runtime / metaos 探查)
 > **结论**: 2 仓**均未用 JSONL 模式** — 正是 Rollout Guide 推广目标
+> **属性**: 历史跨仓探查记录 / reference only。本文记录当时探查样本，不是当前 runtime/metaos 能力面、当前 MCP/CLI 数量或当前落地状态 SSOT。
 
 ---
 

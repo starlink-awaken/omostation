@@ -2,6 +2,8 @@
 
 > 记录于 2026-05-23，基于 5 天全链路建设的经验。
 > 本文档为永久记录，不应删除。
+> 本文档保留当时的经验洞察和阶段性路线图假设，属于历史认知输入，不是当前项目状态、当前技术债或当前版本路线图 SSOT。
+> 当前治理与执行以 `/.omo/goals/current.yaml`、`/.omo/state/system.yaml`、`/.omo/tasks/active/`、`/.omo/PROJECTS.yaml` 为准。
 
 ---
 

@@ -3,6 +3,8 @@
 > 2026-06-06 | 用户已审批 A1 方案
 > 前置: P32 收官 (audit 100.0 A+ 极限, agora 12/12 满分级, ruff 0 errors)
 > Phase 33 唯一的 P0 决策任务
+> 历史北极星决策输入 / reference only。本文记录 P33 时点的域划分与起步判断，不是当前 BOS 域实现状态、当前健康分或当前审批结论 SSOT。
+> 当前事实请回看 `/.omo/PROJECTS.yaml`、`/docs/PANORAMA.md`、当前治理审计与交付证据。
 
 ---
 

@@ -4,6 +4,8 @@
 > 基线: Phase 8 已完成 (health 90, 93/95 tasks)
 > 当前系统状态: phase_status: completed, next_milestone: Phase 9 planning gate
 > 创建日期: 2026-05-31
+> 历史债务规划输入 / reference only。本文记录 Phase 9 规划时的债务盘点与判断，不是当前债务账本、当前阶段状态或当前健康分 SSOT。
+> 当前事实请回看 `/.omo/debt/registry.yaml`、`/.omo/state/system.yaml`、`/.omo/goals/current.yaml`。
 
 ---
 

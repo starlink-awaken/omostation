@@ -2,6 +2,8 @@
 
 > 日期: 2026-05-29 | 版本: v1.0 | 审查对象: deep-architecture-agent-analysis.md + ../_knowledge/design/MASTER-BLUEPRINT.md
 > 审查类型: 架构审计 + 红队攻击 + 缺口分析
+> 本文档是历史审计与红队分析输入，保留当时的风险判断、架构缺口和修订建议，不是当前 Agent 拓扑、当前协作面或当前运行状态 SSOT。
+> 当前事实请回到 `/.omo/PROJECTS.yaml`、`AGENTS.md`、`docs/PANORAMA.md`、`/.omo/goals/current.yaml`、`/.omo/state/system.yaml`。
 
 ---
 

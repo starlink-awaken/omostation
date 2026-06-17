@@ -1,5 +1,7 @@
 # ADR — Phase 11 Wave 4 — Eidos Protocol Contract Surface
 
+> Historical ADR reference. It records the decision made in that wave; current runtime status and current implementation ownership must be verified from the codebase and current SSOT surfaces.
+
 ## Context
 
 `eidos.protocols` already provided runtime `Protocol` interfaces, but Wave 4 still lacked an explicit serialized contract surface that other packages could validate against. That meant interface reuse was implicit at the Python object layer and weak at the payload/API boundary.

@@ -2,6 +2,7 @@
 
 > **状态**: implemented (schema doc + 自动校验测试)
 > **目的**: 锁住 6 个 consumer 的 record 形状, 防 schema 漂移 (Round 4 教训: omo_sync.details 字符串拍扁)
+> **属性**: 历史 schema 治理记录 / reference only。本文保留当轮 consumer 设计与示例，不是当前运行频率、当前治理健康分或当前所有 consumer 实装真相 SSOT。
 
 ---
 

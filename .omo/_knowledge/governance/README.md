@@ -1,6 +1,8 @@
 # 治理流程指南
 
 > eCOS v5 治理流程标准化文档
+> 本页只保留稳定治理原则，不维护健康度阈值、实时状态、工具覆盖率或阶段性命令清单。
+> 当前治理面 SSOT 以 `/.omo/standards/omo-governance-surfaces.md`、`/.omo/state/system.yaml`、`/.omo/goals/current.yaml`、`/.omo/debt/` 为准。
 
 ---
 
@@ -30,10 +32,10 @@ omo-debt register --source metaos --title "缺少.omo平面" --severity medium -
 
 | 级别 | 权重 | 响应时间 |
 |------|------|----------|
-| critical | 0.3 | 立即 |
-| high | 0.2 | 24小时 |
-| medium | 0.1 | 1周 |
-| low | 0.05 | 1月 |
+| critical | 0.3 | 立即响应 |
+| high | 0.2 | 优先处理 |
+| medium | 0.1 | 按周期处理 |
+| low | 0.05 | 纳入 backlog |
 
 ---
 
@@ -46,7 +48,7 @@ omo-debt register --source metaos --title "缺少.omo平面" --severity medium -
 ```yaml
 # 在文档头部添加
 version: 1.0
-last_updated: 2026-06-11
+last_updated: YYYY-MM-DD
 change_summary: "初始版本"
 ```
 
@@ -106,4 +108,4 @@ renameSync(tmp, path);
 
 ---
 
-*最后更新: 2026-06-11*
+*维护: 2026-06-17 · 运行时指标与阈值请回看 control/truth SSOT*

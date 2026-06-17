@@ -45,7 +45,7 @@
 | X4/K1 | CLI 入口注册验证 | `scripts/check-interfaces.py` | CI push → 未注册 RED |
 | X4/K2 | 端口冲突检测 | `check-interfaces.py` + `agora/registry.py` | CI + runtime 双重阻断 |
 | X4/K3 | 跨层 import 检查 | `scripts/check-cross-deps.py` | CI push → 违规 RED |
-| X4/K4 | 接口注册表 | `INTERFACE.yaml` × 7 项目 | 声明式 + CI 一致性验证 |
+| X4/K4 | 接口注册表 | `INTERFACE.yaml`（按项目分布） | 声明式 + CI 一致性验证 |
 | X4/K5 | 端口注册表 | `protocols/port-registry.yaml` | 先注册后使用, CI 检查 |
 | X4/K6 | Agent 启动契约 | `CLAUDE.md §0` + `workspace_context` | Agent 对话即读 |
 | X4/K7 | Phase 门禁 | `.omo/_truth/goals/current.yaml` + X4 score | score ≥ 90 |

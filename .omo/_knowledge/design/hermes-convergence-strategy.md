@@ -4,6 +4,8 @@
 >
 > 研究范围：Workspace 内所有 hermes 相关文件（~19 个命名文件 + ~120 个内容匹配文件）
 > 研究日期：2026-05-31
+> 本文档是历史阶段输入，保留当时对 Hermes 的收敛分析、方向比较与验收建议；不代表当前入口拓扑、调度现状或治理决议。
+> 当前入口与架构收敛以 `AGENTS.md`、`docs/PANORAMA.md`、`/.omo/PROJECTS.yaml`、`/.omo/goals/current.yaml` 为准。
 
 ---
 

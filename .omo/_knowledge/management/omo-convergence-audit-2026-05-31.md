@@ -8,6 +8,9 @@ maintainer: auto
 
 # OMO convergence audit
 
+> Historical convergence audit / reference only. This audit records a 2026-05-31 convergence assessment and is not the current status/goal/index truth SSOT.
+> Current runtime truth should be read from `/.omo/state/system.yaml`, `/.omo/goals/current.yaml`, `/.omo/_truth/`, and current governance checks.
+
 ## Scope
 
 本轮审计覆盖三组输入：

@@ -3,6 +3,8 @@
 > Date: 2026-06-02 | Version: 1.0 | Status: Draft for Phase 17 Planning Gate
 > Authority: Derived from MASTER-BLUEPRINT.md v1.2, system.yaml, debt registry, and decomposition architecture analysis
 > References: sharedbrain-decomposition-architecture.md, organ-migration-master-plan.md, organ-salvage-final-report.md, remaining-modules-architecture-plan.md, debt-cleanup-plan.md
+> This document is a historical governance-planning artifact for the earlier SharedBrain transition. It may describe then-current debt, health, counts, or target waves, but it is not the live authority for current architecture, project status, or debt posture.
+> Live truth now belongs to `/.omo/PROJECTS.yaml`, `/.omo/debt/registry.yaml`, `/.omo/debt/items/*.yaml`, `/.omo/goals/current.yaml`, and the current project docs.
 
 ---
 
@@ -641,4 +643,4 @@ This plan complies with the 10 immutable architectural laws defined in MASTER-BL
 
 *Maintained by: Architect Agent (Serena Blackwood) for SharedBrain Governance*
 *Next review: After Wave 1 completion (target Day 3)*
-*Canonical location: `.omo/_knowledge/design/sharedbrain-architecture-governance-plan.md`*
+*Historical location: `.omo/_knowledge/design/sharedbrain-architecture-governance-plan.md` (reference artifact, not live SSOT)*

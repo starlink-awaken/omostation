@@ -2,6 +2,7 @@
 
 > 战役 2 扩展 (40 URI) + agora spawn 升级 + 多仓库版本发布
 > 6 wave 全收官, audit 100.0 (A+) 连续守住 12 wave (P32 + P33 + P34)
+> 历史 retrospective / reference only。本文记录该时点复盘与健康分观察，不是当前系统状态、当前健康分或当前治理结论 SSOT。
 
 ## 一、6 wave 战果
 

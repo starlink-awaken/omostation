@@ -2,6 +2,7 @@
 
 > 跨 Domain 串联 + agora spawn 真替代 + CI 集成 omo audit
 > 4 wave 全收官, audit 100.0 (A+) 连续守 12+ wave (P32 + P33 + P34 + P35)
+> 历史 retrospective / reference only。本文记录该时点复盘与健康分观察，不是当前系统状态、当前健康分或当前治理结论 SSOT。
 
 ## 一、4 wave 战果
 

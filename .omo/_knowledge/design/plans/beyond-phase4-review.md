@@ -2,6 +2,8 @@
 
 > 日期: 2026-05-29 | 版本: v1.0 | 审查对象: `beyond-phase4-vision.md`
 > 审查类型: 红队对抗 + 战略评估 + 安全审计
+> 本文档是历史远景审查输入，保留当时对 Phase ∞ 的反驳、护栏和风险推演，不是当前能力边界、当前系统现状或当前路线图 SSOT。
+> 当前阶段与事实以 `/.omo/goals/current.yaml`、`/.omo/state/system.yaml`、`/.omo/PROJECTS.yaml` 为准。
 
 ---
 

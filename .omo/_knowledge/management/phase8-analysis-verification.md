@@ -4,6 +4,8 @@
 > 基线: Phase 8 已完成 (health 90, 93/95 tasks, phase_status: completed)
 > 验证日期: 2026-05-31
 > 前置文档: [Phase 1-6 全面 Review](phase1-6-comprehensive-review.md), [Phase 7 规划分析需求](../plans/phase7-planning-analysis-requirements.md)
+> 历史阶段分析与验证 / reference only。本文记录 Phase 8 收口时的完成度、健康分和验证判断，不是当前任务状态、当前健康分或当前治理结论 SSOT。
+> 当前事实请回看 `/.omo/state/system.yaml`、`/.omo/goals/current.yaml`、`/.omo/debt/` 与当前交付/审计证据。
 
 ---
 

@@ -8,6 +8,8 @@
 > - 整合现状(aspirational) → `x-axis-consolidation-v1.md`
 > - 强制五层防线(偏 X4) → `governance-enforcement-v1.md`
 > - 一致性检查 → `x4-governance-consistency-design.md`
+> **属性**: 历史控制平面设计提案 / reference only，不是当前 X1-X4 实装状态、当前健康分构成或当前控制面执行真相 SSOT。
+> **当前事实**: 请回看 `/.omo/standards/omo-governance-surfaces.md`、`/.omo/state/system.yaml`、`/.omo/_truth/` 与当前治理检查结果。
 
 ---
 

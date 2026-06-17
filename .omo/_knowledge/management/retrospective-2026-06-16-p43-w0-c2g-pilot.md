@@ -6,6 +6,7 @@
 > **关联规划**: [c2g-enchanted-coral](../../../Plans/c2g-enchanted-coral.md)
 > **关联战略 SSOT**: [strategic-governance-p42](strategic-governance-p42.md)
 > **状态**: ✅ 试点完成, 决策扩展(P44 进入 W1-W3)
+> **属性**: 历史 retrospective / reference only。本文记录该时点复盘与健康分观察，不是当前系统状态、当前健康分或当前治理结论 SSOT。
 
 ---
 

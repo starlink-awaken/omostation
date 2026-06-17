@@ -5,6 +5,8 @@
 # 4+1+3 架构全映射
 
 > 日期: 2026-05-28 | 数据来源: 全会话（~10h 扫描 + 实施 + 诊断）
+> 历史架构映射参考 / reference only。本文记录旧阶段 4+1+3 架构分析，不是当前项目清单、当前能力计数、当前入口拓扑或当前健康状态 SSOT。
+> 当前架构与项目事实请回看 `/.omo/PROJECTS.yaml`、`/docs/PANORAMA.md`、`/.omo/standards/eCOS-v6-Architecture-Alignment.md`。
 
 ---
 

@@ -1,0 +1,12 @@
+id: P2-HARDCODED-PATHS-TICKET
+title: Document and batch-fix ~25 hardcoded /Users/xiamingxing paths across active
+  source
+status: review
+priority: P2
+domain: opc
+signals:
+- task-P2-HARDCODED-PATHS-TICKET-running
+evidence:
+- 'Inventory: .omo/standards/hardcoded-paths-inventory.md'
+- 2 paths fixed (sync.py, test_phase2_integration.py)
+- Remaining 21 paths documented for follow-up

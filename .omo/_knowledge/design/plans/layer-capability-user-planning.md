@@ -2,6 +2,7 @@
 
 > 日期: 2026-05-31 | 状态: v2 (补充遗漏文档审计结果)
 > 输入: MASTER-BLUEPRINT、PROJECTS.yaml、Phase 5-10 系列文档、architecture-final-vision、scenario-analysis、PRODUCT-ARCH-JOURNEY、ARCH-AUDIT-2026-05、DEBT-ANALYSIS、Phase1-6 Review、Phase10 Cross Audit、Phase9 Debt Cleanup、data-flow、INSIGHTS-AND-ROADMAP、INVENTORY、provider-plane、control/current、freshness/current、GOVERNANCE_PLAN、ARCH-AUDIT-v2、AUDIT、P1_PROJECT_HEALTH、KNOWLEDGE_ARCH、KOS_MIGRATION_IMPACT
+> 说明: 本文是历史分析输入，不是当前项目拓扑或运行时事实源。当前项目身份/状态/路径以 `/.omo/PROJECTS.yaml` 为准；架构边界以 `/docs/PANORAMA.md` 与各项目 `ARCHITECTURE.md` / `CALLCHAIN.md` / `BOUNDARY.md` 为准；运行时阶段以 `/.omo/goals/current.yaml` / `/.omo/state/system.yaml` 为准。
 
 ---
 

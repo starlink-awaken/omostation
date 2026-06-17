@@ -5,6 +5,8 @@
 > **作者**: worker-3 (omo-federation-wave-research)
 > **领域**: I0 — 集成层 · 联邦治理
 > **上游依赖**: Agora `federation.py` FederationManager, `peers` 表, `agent_cards` 表, KOS 健康监控
+> 本文档是历史提案草案，保留当时对联邦预算、健康信号与减载策略的设计思路，不是当前联邦运行时、当前预算配置或当前治理状态 SSOT。
+> 当前实现与治理状态请以相关项目代码、`/.omo/goals/current.yaml`、`/.omo/state/system.yaml` 和当前审计结果为准。
 
 ---
 

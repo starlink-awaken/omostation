@@ -5,6 +5,9 @@
 > 基于: [Phase 1-6 全面 Review](../_knowledge/management/phase1-6-comprehensive-review.md)
 > 现存程序计划: [phase7-program-plan.md](archive/phase7-program-plan.md) (简版, 3 Waves + sequencing)
 > 现存任务: `P7-W1-USER-JOURNEY-ENABLEMENT` (execution-ready)
+>
+> 本文档是历史阶段的规划分析输入，保留当时的 Phase 7 假设、旅程拆分、债务映射和目标值，不是当前 phase 状态、当前 active task 或当前健康分 SSOT。
+> 当前执行与状态请回到 `/.omo/goals/current.yaml`、`/.omo/state/system.yaml`、`/.omo/tasks/active/`、`/.omo/debt/`。
 
 ---
 

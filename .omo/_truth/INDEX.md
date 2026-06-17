@@ -21,7 +21,7 @@
 | `_truth/04-omo-architecture-and-governance.md` | OMO 双核联邦分形架构与治理总纲 |
 | `_truth/05-omo-v4-evolutionary-architecture.md` | OMO v4.0 超越四平面与动态演化机制 |
 | `../standards/omo-governance-surfaces.md` | `.omo` 状态面、`projects/omo`、`projects/c2g` 三层治理标准 |
-| `_truth/INVENTORY.md` | 资产清单 |
+| `_truth/INVENTORY.md` | 项目资产索引（路由文档，不是运行时快照） |
 | `_truth/task-center/proposals/` | 提案注册表（元数据） |
 
 ## 写入规则

@@ -1,0 +1,7 @@
+id: IMPORTED-a4cfe7
+title: 'P42-W0-INDEX-REFRESH: 刷新 .omo/INDEX.md 头条 + 表格 (内部表头指向真实 state)'
+status: proposed
+priority: P2
+domain: opc
+signals:
+- task-IMPORTED-a4cfe7-running

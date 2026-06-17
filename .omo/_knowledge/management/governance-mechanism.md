@@ -1,6 +1,8 @@
 # OMO 治理体系 — 全流程机制
 
 > 2026-06-06 | 版本: v1.0 (治理首次运行完成)
+> 本文说明治理机制，不维护当前 Phase、下次审查时间、服务数量、债务数量、交付物数量等运行时快照。
+> 当前运行时事实请回看 `/.omo/state/system.yaml`、`/.omo/goals/current.yaml`、`/.omo/debt/`、`/.omo/_delivery/`。
 
 ---
 
@@ -45,28 +47,26 @@ OMO 治理体系是一个**数据驱动**的闭环系统，围绕"观测 → 决
 
 ### 当前周期状态
 
-```
-Phase: 28 W4
-上次治理: 2026-06-06
-下次审查: 2026-06-13 (周五 9:17)
-```
+> 当前 Phase、上次治理时间、下次审查节奏属于运行时事实，
+> 不在本文手工维护；以 `/.omo/state/system.yaml`、`/.omo/goals/current.yaml`
+> 和自动化调度/审计证据为准。
 
 ---
 
 ## 三、工具链
 
-### 观测工具 (omo CLI — 9 个平面)
+### 观测工具
 
 ```bash
 omo state show          # 系统状态: Phase / Health / Agents
-omo state health        # 12 服务健康聚合
+omo state health        # 服务健康聚合
 omo goal list           # Phase 目标列表
 omo goal status --json  # 完成度 JSON
 omo knowledge list      # 知识面文档总览
 omo delivery list       # 交付物列表
-omo standard list       # 23 个标准文件
+omo standard list       # 标准文件列表
 omo i0 status           # Agora Hub 状态
-omo i0 routes           # Agora 路由表
+omo i0 routes           # Agora 路由与入口状态
 ```
 
 ### 决策工具
@@ -119,18 +119,18 @@ KEI Audit (kei_audit.jsonl)   →  omo kei dashboard    →  (查询, 不存储)
 ```
 .omo/ 目录 (单一数据源 SSOT)
 ├── state/system.yaml           ← 系统状态 (Health/Phase/Agents)
-├── state/system_health.yaml    ← 服务健康 (12 服务的实时状态)
-├── goals/current.yaml          ← Phase 目标 (id/desc/progress/status)
-├── debt/registry.yaml          ← 债务台账索引 (96 项)
-├── debt/items/*.yaml           ← 每项债务的详情 (73+6 个文件)
+├── state/system_health.yaml    ← 服务健康（实时聚合状态）
+├── goals/current.yaml          ← Phase 目标（权威目标状态）
+├── debt/registry.yaml          ← 债务台账索引
+├── debt/items/*.yaml           ← 每项债务的详情
 ├── debt/reviews/current.md     ← 审查队列 (Due/Unscheduled/Identified)
 ├── debt/review-queue/*.yaml    ← 分发队列 (owner/schedule/approve)
 ├── debt/dispatch/current.yaml  ← 分发记录 (18 项 schedule_now)
 ├── debt/reporting/current.yaml ← 债务报告
 ├── debt/dashboard/current.yaml ← 债务仪表盘数据
-├── standards/                  ← 23 个架构标准
-├── _knowledge/                 ← 30+ 知识文档
-├── _delivery/                  ← 71+ 交付物
+├── standards/                  ← 架构与治理标准
+├── _knowledge/                 ← 知识文档
+├── _delivery/                  ← 交付物
 └── _archive/                   ← 历史归档
 ```
 
@@ -164,9 +164,8 @@ review-queue/ 按优先级排序:
   watch_only:    仅监控项
 
 当前状态:
-  unscheduled:   0 (全部已处理)
-  scheduled:     7 open 项 (06-13 ~ 07-04)
-  resolved:      89 项
+  以 `/.omo/debt/` 下的 registry/items/reviews/dispatch/reporting/dashboard 为准，
+  不在本文静态维护 open/resolved 数量。
 ```
 
 ---
@@ -186,17 +185,17 @@ review-queue/ 按优先级排序:
 
 | 指标 | 当前 | 目标 |
 |------|------|------|
-| CLI 覆盖 | 9/10 平面可读, 6/10 平面可写 | 10/10 全平面覆盖 |
-| 债务追踪 | 96 项, 7 open (全排期) | 0 open 或合理 backlog |
+| CLI 覆盖 | 以治理检查与接口注册表实测为准 | 全平面覆盖 |
+| 债务追踪 | 以 `/.omo/debt/` 实际状态为准 | 0 open 或合理 backlog |
 | 审查节奏 | 每周五 9:17 | 已建立 |
 | 状态刷新 | 手动运行 `omo state refresh` | 自动化 cron |
-| Phase 目标 | 4/4 done (需新目标) | 每个 Phase 有活跃目标 |
-| 交付报告 | 1 份 (2026-06-06) | 每周 1 份 |
+| Phase 目标 | 以 `/.omo/goals/current.yaml` 为准 | 每个 Phase 有活跃目标 |
+| 交付报告 | 以 `/.omo/_delivery/` 为准 | 每周 1 份 |
 
 ---
 
 ## 八、一句话总结
 
-> **OMO 治理 = 观测(10 CLI 命令) → 决策(debt/9 states) → 执行(15+ 写入命令) → 验证(交付报告)**
-> 
-> 数据在 `.omo/` 中流转，工具链覆盖 90% 平面，审查节奏已建立，当前债务 96 项中 89 项已解决。
+> **OMO 治理 = 观测 → 决策 → 执行 → 验证**
+>
+> 数据在 `.omo/` 中流转；覆盖率、数量与实时进度一律回看 control/truth/delivery SSOT。

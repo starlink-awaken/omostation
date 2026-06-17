@@ -6,6 +6,7 @@
 > **Spec**: `.omc/autopilot/spec.md`
 > **Plan**: `.omc/plans/autopilot-impl.md`
 > **关联 P43 W0**: [retrospective-p43-w0-c2g-pilot](retrospective-2026-06-16-p43-w0-c2g-pilot.md)
+> **属性**: 历史 retrospective / reference only。本文记录该时点复盘与健康分观察，不是当前系统状态、当前健康分或当前治理结论 SSOT。
 > **关联 P44 W1**: [retrospective-p44-w1](retrospective-2026-06-16-p44-w1.md)
 > **关联 P44 W2**: [retrospective-p44-w2](retrospective-2026-06-16-p44-w2.md)
 > **状态**: 🟢 W3 收口完成, c2g parser 鲁棒 + cockpit L3 入口 + 48 owner 路由

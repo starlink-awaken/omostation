@@ -2,6 +2,8 @@
 
 > 日期: 2026-05-29 | 版本: v1.0→v1.1 | 审查: 红队 (shrill-teal-dragonfly)
 > 适用: phase1/2/3/4-task-specs.md
+> 本文档是历史红队修订补丁，保留当时对 phase1-4 任务规格书的修订意见与补丁建议，不是当前任务状态、当前工具计数或当前安全面 SSOT。
+> 当前阶段、当前任务与当前实现状态请以 `/.omo/goals/current.yaml`、`/.omo/tasks/active/`、`/.omo/state/system.yaml` 和当前代码为准。
 
 ---
 

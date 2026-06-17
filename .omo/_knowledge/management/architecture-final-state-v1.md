@@ -3,6 +3,8 @@
 > 2026-06-06 | 版本: v1.0-final-state
 > 范围: 467K 行 → 7 个项目 · 5+3+1 严格分层
 > 原则: 不保留历史包袱，从干净状态重新设计
+> 历史最终态设计提案 / reference only。本文是阶段性目标架构草案，不是当前项目布局、当前代码规模、当前层间归属或当前执行真相 SSOT。
+> 当前架构与项目事实请回看 `/.omo/PROJECTS.yaml`、`/docs/PANORAMA.md`、`/.omo/standards/eCOS-v6-Architecture-Alignment.md`。
 
 ---
 

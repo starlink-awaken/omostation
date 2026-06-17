@@ -3,6 +3,8 @@
 > 日期: 2026-06-03
 > 范围: kairon 33 包
 > 工具: ruff 0.15.15 (target-version: py313, line-length: 120)
+> 历史代码质量基线 / reference only。本文记录 Phase 16 收口时的质量快照，不是当前包数量、当前 lint 状态、当前测试分布或当前硬编码风险 SSOT。
+> 当前质量与项目事实请回看 `/.omo/PROJECTS.yaml`、对应项目 CI/测试结果与当前治理审计证据。
 
 ---
 

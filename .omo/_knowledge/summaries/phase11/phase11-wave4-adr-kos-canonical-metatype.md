@@ -1,5 +1,7 @@
 # ADR — Phase 11 Wave 4 — KOS Canonical MetaType Calibration
 
+> Historical ADR reference. It records the decision made in that wave; current runtime status and current implementation ownership must be verified from the codebase and current SSOT surfaces.
+
 ## Context
 
 KOS CLI 已公开 `domain/fact/document/relation/inference/state/constraint/processor` 这组 MetaType 过滤语义，但 ingest 入库阶段此前只会写入 `document/constraint/unknown`，导致用户可见过滤面和真实存储语义不一致。

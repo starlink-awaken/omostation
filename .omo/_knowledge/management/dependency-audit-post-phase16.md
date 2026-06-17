@@ -3,6 +3,8 @@
 > 日期: 2026-06-03
 > 范围: kairon 33 包、agentmesh、gbrain、SharedBrain
 > 基线: `ARCH-AUDIT-2026-05.md` 历史发现
+> 历史依赖审计记录 / reference only。本文记录 Phase 16 后的依赖判断，不是当前依赖拓扑、当前消费者数量或当前运行验证状态 SSOT。
+> 当前架构与依赖事实请回看 `/.omo/PROJECTS.yaml`、`/docs/PANORAMA.md`、当前项目测试/审计证据。
 
 ---
 

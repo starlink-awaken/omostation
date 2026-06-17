@@ -3,6 +3,8 @@
 > Date: 2026-06-03
 > Phase: 17
 > Status: GO
+> Historical closeout record / reference only. This document records the Phase 17 closeout snapshot and is not the current phase/system/debt SSOT.
+> Current runtime truth should be read from `/.omo/state/system.yaml`, `/.omo/goals/current.yaml`, `/.omo/debt/`, and `/.omo/_delivery/`.
 
 ## 已完成工作
 
@@ -45,7 +47,7 @@
 | gc-engine | 36 | ✅ passed |
 | metaos lint | — | ✅ 0 errors |
 
-## 当前状态
+## 历史收口状态快照
 - `current_phase: 17`
 - `phase_status: completed`
 - `health_score: 97.0`

@@ -3,6 +3,8 @@
 > 日期: 2026-06-02 | 基于 omostation-strategic-architecture-v2.1
 > 治理框架: OMO 4-plane (control/truth/knowledge/delivery)
 > 红队审计: 已完成并采纳修正
+> 本文档是历史阶段的多 Phase 执行规划输入，保留当时的 SharedBrain 收敛假设、Phase 节奏、健康分目标与任务冻结策略，不是当前 phase 状态、当前债务状态或当前项目事实 SSOT。
+> 当前事实请回到 `/.omo/goals/current.yaml`、`/.omo/state/system.yaml`、`/.omo/debt/`、`/.omo/PROJECTS.yaml` 以及当前代码与文档 SSOT。
 
 ---
 

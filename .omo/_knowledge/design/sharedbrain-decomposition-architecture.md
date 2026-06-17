@@ -2,6 +2,8 @@
 
 > 2026-06-01 · 基于 projects/SharedBrain (824K 行) 与 projects/kairon (111K 行) 深度扫描
 > 方法论：SystemsThinking (Iceberg + Archetype + Leverage) + FirstPrinciples
+> 本文档是历史拆解分析输入，保留当时的代码规模、端口状态、桥接失效、健康分批判与拆分判断，不是当前 SharedBrain / kairon 边界、当前项目状态或当前债务 SSOT。
+> 当前事实请回到 `/.omo/PROJECTS.yaml`、`docs/PANORAMA.md`、`AGENTS.md`、`/.omo/debt/`、`/.omo/state/system.yaml`。
 
 ---
 

@@ -2,6 +2,7 @@
 
 > 战役 2 (BOS URI 5 Domain) + 战役 1 (Agora Mesh) + 战役 3 (Forge 集市) 全部完成
 > 6 wave 全收官, audit 100.0 (A+ 极限) 连续守住
+> 历史 retrospective / reference only。本文记录该时点复盘与健康分观察，不是当前系统状态、当前健康分或当前治理结论 SSOT。
 
 ## 一、6 wave 战果
 

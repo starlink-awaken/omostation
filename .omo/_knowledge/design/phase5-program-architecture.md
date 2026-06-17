@@ -11,6 +11,9 @@ maintainer: auto
 > **Positioning**: This document is the Phase 5 planning packet that refines `phase5-requirements.md` v0.1 into an OMO-aligned program architecture. It keeps the strategic direction, but changes the execution shape from a single large phase spec into a gated multi-wave program.
 >
 > **Decision**: Use **one master program + detailed Wave 0 / Wave 1 + gated Wave 2 / Wave 3**, rather than either a single overstuffed spec or five disconnected subsystem specs.
+>
+> This file is now a historical program-architecture reference for an earlier phase. It may still describe valid design principles, but it is not the live authority for current phase state, active goals, or execution permission.
+> Live execution truth remains `/.omo/goals/current.yaml`, `/.omo/state/system.yaml`, `/.omo/tasks/active/`, and the current project SSOT docs.
 
 ## 1. Executive judgment
 

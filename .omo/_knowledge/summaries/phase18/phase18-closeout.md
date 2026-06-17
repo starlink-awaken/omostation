@@ -3,6 +3,8 @@
 > Date: 2026-06-03
 > Phase: 18
 > Status: GO
+> Historical closeout record / reference only. This document records the Phase 18 closeout snapshot and is not the current phase/system/debt SSOT.
+> Current runtime truth should be read from `/.omo/state/system.yaml`, `/.omo/goals/current.yaml`, `/.omo/debt/`, and `/.omo/_delivery/`.
 
 ## 已完成工作
 
@@ -22,7 +24,7 @@
 | core-models | 61 | ✅ passed |
 | sharedbrain-standalone | 20 | ✅ passed |
 
-## 当前状态
+## 历史收口状态快照
 - `current_phase: 18`
 - `phase_status: completed`
 - `next_milestone: Phase 19 planning gate`

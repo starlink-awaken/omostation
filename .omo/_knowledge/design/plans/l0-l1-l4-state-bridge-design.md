@@ -4,6 +4,8 @@
 > 日期: 2026-06-05
 > 范围: `projects/runtime/protocols/*`, `projects/runtime/src/runtime/scheduler.py`, `.omo/state/*`, `scripts/sync_omo_state.py`
 > 目标: 消除协议、运行时、治理状态三套事实互相漂移的问题
+> 本文档是历史设计提案，保留当时对状态桥分层与写入边界的设计判断，不是当前 runtime/治理状态分工的唯一实现真相。
+> 当前实现仍需以相关代码、`/.omo/state/`、`/.omo/goals/current.yaml` 及最新治理标准为准。
 
 ---
 

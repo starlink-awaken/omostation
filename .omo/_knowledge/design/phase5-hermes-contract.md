@@ -15,6 +15,8 @@ maintainer: codebuddy
 > **Rationale**: See `hermes-convergence-strategy.md` §4 and §6. Direction B (full absorption) is deferred to Phase 6+ evaluation.
 >
 > **Ownership**: This contract governs what Hermes may and may not do during Phase 5. Violations must be escalated to the Phase 5 coordinator.
+> 本文档是历史阶段的兼容性契约记录，保留当时的 Hermes 收敛边界、迁移约束和保留项，不是当前调度 ownership、当前入口拓扑或当前执行许可 SSOT。
+> 当前事实与执行请回到 `/.omo/goals/current.yaml`、`/.omo/state/system.yaml`、`/.omo/tasks/active/`、`/.omo/PROJECTS.yaml` 以及当前架构文档。
 
 ---
 

@@ -5,6 +5,8 @@
 > **定位**: OPC-P2 (Memory spine) T3 — collect→ingest→search→output→archive 端到端
 > **目的**: 给 Gate C acceptance "one real question flows collect→ingest→search→output→archive" 提供端到端 trace
 > **链接**: OPC-P2-T1 memory-boundary / T2 memory-uri / §19 治理
+> **属性**: 历史 OPC 流程设计输入 / reference only。本文记录 OPC-P2-T3 当时的 recall-flow 设计，不是当前 collect/ingest/search/output/archive 落地真相或当前验收结果 SSOT。
+> **当前事实**: 请回看当前 OPC 审计/交付证据、`/.omo/state/system.yaml` 以及相关治理检查结果。
 
 ---
 

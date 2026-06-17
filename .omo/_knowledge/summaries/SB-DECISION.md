@@ -3,6 +3,7 @@
 > Scope: `projects/SharedBrain/`
 > Phase 11 task: T2.4
 > Decision posture: long-term optimal
+> This is a historical decision record. It preserves the decision rationale and retained-core policy at that time, but it is not the live source for current project topology, active migration scope, or present-day governance status.
 
 ## Executive decision
 

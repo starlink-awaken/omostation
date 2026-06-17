@@ -1,10 +1,11 @@
 # OMO system design baseline
 
 > Date: 2026-06-01
-> Status: active baseline
+> Status: reference baseline
 > Canonical role: post-Phase-14 architecture baseline for planning, review, and roadmap convergence
 > Converges inputs from: `../../MASTER-BLUEPRINT.md`, `../../PRODUCT-ARCH-JOURNEY.md`, `phase12-14-architecture-design.md`, `../../standards/ARCHITECTURE_CONVERGENCE.md`, `../../standards/ssot-7-domain-schema.md`, `../../standards/capability-metamodel.md`
 > Live SSOT remains: `../../goals/current.yaml`, `../../state/system.yaml`, `../../tasks/active/`
+> This document keeps the post-Phase-14 planning frame and roadmap boundary as historical architecture guidance. Phase labels, sequencing, and packet names here are planning-era anchors, not current execution truth.
 
 ---
 

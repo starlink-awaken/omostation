@@ -1,5 +1,7 @@
 # ADR — Phase 11 Wave 2 — OntoDerive Scheme MetaType
 
+> Historical ADR reference. It records the decision made in that wave; current runtime status and current implementation ownership must be verified from the codebase and current SSOT surfaces.
+
 ## Context
 
 `ontoderive.engine.foundation.models.Scheme` had no explicit `meta_type`, even though scheme artifacts function as document-like planning/specification objects.

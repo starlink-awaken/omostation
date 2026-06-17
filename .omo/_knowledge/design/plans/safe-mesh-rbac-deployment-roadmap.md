@@ -4,6 +4,8 @@
 > 里程碑: M2.6 | 优先级: P2 | 风险级别: L0
 > 依据: `.omo/standards/operation-levels.md`, `.omo/standards/agent-registry-heartbeat.md`
 > 本文件定义 Safe Mesh 的全量部署路线图，包含 RBAC 模型设计及其与已有组件的集成点。
+> 本文档是历史阶段的部署路线图输入。文中“当前状态基线”、波次与里程碑描述仅代表当时的规划判断，不是当前实现状态、当前权限面或当前 Mesh 事实 SSOT。
+> 当前治理与实现请以 `/.omo/standards/`、`/.omo/goals/current.yaml`、`/.omo/state/system.yaml`、相关项目代码与当前审计结果为准。
 
 ---
 

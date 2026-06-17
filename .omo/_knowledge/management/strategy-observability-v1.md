@@ -2,6 +2,8 @@
 
 > 2026-06-06 | 战略级方案
 > 目标：将日志/事件/监控/Dashboard 统一到 OMO 治理体系中，不建独立可观测性系统
+> 历史可观测性战略方案 / reference only。本文记录当时的整合思路，不是当前日志/事件/指标/状态链路的实时实现真相 SSOT。
+> 当前事实请回看 `/.omo/standards/omo-governance-surfaces.md`、`/.omo/state/system.yaml`、当前 observability/runtime/omo 证据。
 
 ---
 

@@ -1,5 +1,6 @@
 # PROJECTS.yaml — 全系统项目注册表
-# 基于 eCOS v5 5+4+1+1 架构（2026-06-13 更新）
+# 只记录稳定项目身份、分层、状态与技术栈；运行时计数/测试统计以项目本地验证与 workspace SSOT 为准。
+# 更新: 2026-06-17
 
 embedded:
   l4-kernel:
@@ -7,91 +8,90 @@ embedded:
     status: active
     type: python
     tech: uv, pytest
-    desc: "L4 自我层管理面 · 21域 · 250 tests · 43 MCP tools"
+    desc: "L4 自我层管理面"
   
   model-driven:
     path: projects/model-driven
     status: active
     type: python
     tech: uv, pytest
-    desc: "M0 全生命周期模型驱动平台 · 24 M2类型 · 7阶段"
+    desc: "M0 全生命周期模型驱动平台"
 
   cockpit:
     path: projects/cockpit
     status: active
     type: python
     tech: uv, pytest, FastAPI
-    desc: "L3 统一入口层 (CLI + MCP + Web) · 治理 MCP 工具"
+    desc: "L3 统一入口层"
 
   agora-dashboard:
     path: projects/agora-dashboard
-    status: active
+    status: archived
     type: typescript-react
     tech: Next.js, React 19, Tailwind
-    desc: "L3 多模态观察视界 · eCOS v5 Observatory"
+    desc: "L3 历史快照仓；独立入口已收敛"
 
   agora:
     path: projects/agora
     status: active
     type: python
     tech: uv, pytest, fastmcp
-    desc: "I0 织层 / MCP Hub · 服务网格"
+    desc: "I0 织层 / MCP Hub"
 
   kairon:
     path: projects/kairon
     status: active
     type: python-monorepo
-    packages: 19
     tech: uv, ruff, pytest
-    desc: "L2 知识引擎面 · 能力地图"
+    desc: "L2 知识引擎面"
 
   gbrain:
     path: projects/gbrain
     status: active
     type: typescript
     tech: bun, Postgres
-    desc: "L2 知识数据库 · TS知识库"
+    desc: "L2 知识数据库"
 
   omo:
     path: projects/omo
     status: active
     type: python
     tech: uv, pytest
-    desc: "L2 治理面 · 债务与任务管理"
+    desc: "L2 治理内核"
 
   metaos:
     path: projects/metaos
     status: active
     type: python
     tech: uv, pytest
-    desc: "L2 编排引擎 · 决策门控/免疫/路由"
+    desc: "L2 编排引擎"
 
   runtime:
     path: projects/runtime
     status: active
     type: python
     tech: uv, pytest
-    desc: "L1 运行时 · 服务注册/健康/协议沙箱"
+    desc: "L1 运行时"
 
   ecos:
     path: projects/ecos
     status: active
     type: python
     tech: uv, pytest
-    desc: "L0 协议层 · X1-X4 治理框架 · MOF"
+    desc: "L0 协议层"
 
   aetherforge:
     path: projects/aetherforge
     status: active
     type: python
     tech: uv, pytest
-    desc: "算力网格 + LLM 网关 + 群体智能"
+    desc: "X 横切能力与算力框架"
 
   hermes-console:
     path: projects/hermes-console
-    status: archived
+    status: active
     type: typescript-react
-    desc: "旧控制台，待集成或归档"
+    desc: "L3 控制台前端；挂载到 cockpit /hermes/*"
 
   _archived:
     path: projects/_archived
@@ -104,7 +104,7 @@ root:
     path: .
     status: active
     type: root-repo
-    desc: "统一入口 + 治理 + CI/CD"
+    desc: "工作区根仓；统一入口与治理编排"
     remote: starlink-awaken/omostation
 
 workspace_roots:

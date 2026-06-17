@@ -2,6 +2,8 @@
 
 > 日期: 2026-05-28 | 版本: v3.1 | 评分: 8.8/10
 > 全会话 ~18h 迭代成果
+> 历史架构总览参考 / reference only。本文保留当时的收口视图，不是当前项目矩阵、当前 MCP/CLI 数量、当前测试状态或当前健康度 SSOT。
+> 当前架构与事实请回看 `/.omo/PROJECTS.yaml`、`/docs/PANORAMA.md`、`/.omo/state/system.yaml`。
 
 ---
 

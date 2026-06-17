@@ -2,6 +2,8 @@
 
 > 生成时间: 2026-06-03
 > 基于: gentle-toasting-mango.md + 实际代码检查
+> 历史遗留分析记录 / reference only。本文记录 Phase 20-25 当时的残留判断，不是当前遗留工作、当前健康分或当前完成度 SSOT。
+> 当前事实请回看 `/.omo/state/system.yaml`、`/.omo/goals/current.yaml`、`/.omo/debt/` 与当前项目/测试证据。
 
 ## 执行状态总览
 

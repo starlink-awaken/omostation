@@ -13,7 +13,7 @@
 
 ### 5 大运行物理分层 (L0-L4) —— 动作在哪里发生？
 1. **L4 自我层 (`l4-kernel`)**: 系统意志的最高法庭。存放着 `current.yaml` (CARDS) 与您的北极星愿景。
-2. **L3 入口层 (`cockpit` / `agora-dashboard`)**: 人机/机机交互的唯一控制面板。对外暴露宏观抓手指令 `workspace iterate`。
+2. **L3 入口层 (`cockpit` + mounted apps)**: 人机/机机交互的唯一控制面板。`cockpit` 是唯一人类 CLI / Web 入口；`hermes-console`、`dashboard_server` 作为挂载子应用提供界面扩展；`agora-dashboard` 仅保留历史快照，不再作为独立入口。
 3. **L2 引擎面 (`omo`, `metaos`, `kairon`, `gbrain`)**: 系统的职能部门。负责治理门控、编排发散、知识记忆的推演。
 4. **L1 运行时 (`runtime`)**: 沙箱执行区 (Sandbox)。未经审批的 Pitch 草稿、Agent 正在浴血奋战的测试环境，皆被隔离于此。
 5. **L0 协议层 (`ecos`)**: 系统的核心底座。存放所有不可篡改的律法、契约和边界定义。

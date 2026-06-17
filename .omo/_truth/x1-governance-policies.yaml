@@ -10,6 +10,29 @@ documentation_contract:
     - .omo/standards/omo-governance-surfaces.md
 
 policies:
+  - policy_id: X1-OMNI-BUS-ROUTING-20260617
+    title: Omni-Bus 全能总线强制路由策略
+    type: governance_stack
+    status: active
+    created: '2026-06-17'
+    description: >
+      全系统内异步任务、事件派发、日志埋点必须通过 Omni-Bus (bos://capability/bus/*) 进行投递。
+      所有旧式的自定义消息队列、直接文件写入日志、硬编码定时器应逐步废弃并迁移至三大 Facade 切面 (data, event, control)。
+      所有通过 Omni-Bus 流转的 Payload 必须遵守 M2 OmniEnvelope 契约。
+    scope:
+      - projects/bus-foundation/src/bus_foundation/facade/
+      - projects/agora/etc/bos-services.yaml
+      - projects/ecos/src/ecos/ssot/mof/m2/omni_envelope.yaml
+    audit_requirements:
+      - source: .omo/standards/omo-governance-surfaces.md
+      - source: projects/ecos/src/ecos/ssot/tools/mof-verify.py
+    evidence:
+      - standard: omni-bus-architecture
+    owner: architecture-team
+    review_frequency: weekly
+    next_review: '2026-06-24'
+    enforcement: block-write
+
   - policy_id: X1-OMO-GOVERNANCE-SURFACES-20260616
     title: OMO 三层治理面约束
     type: governance_stack

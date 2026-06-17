@@ -1,5 +1,7 @@
 # ADR — Phase 11 Wave 2 — OntoDerive Inference MetaType
 
+> Historical ADR reference. It records the decision made in that wave; current runtime status and current implementation ownership must be verified from the codebase and current SSOT surfaces.
+
 ## Context
 
 `ontoderive.engine.foundation.models.Inference` carried no explicit `meta_type`, while Eidos already defines the canonical lowercase `MetaType` contract.

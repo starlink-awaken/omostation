@@ -1,7 +1,7 @@
 # 5+3+1 治理体系总览 (Governance Master Index)
 
-> 2026-06-06 · 全量整理 · 所有治理策略和机制的 SSOT  
-> 最后更新: X4 治理一致性已整合
+> 2026-06-06 起稿 · 当前作为治理文档导航与路由入口，不维护运行时计数/健康分快照。
+> 当前治理面 SSOT 见 `/.omo/standards/omo-governance-surfaces.md`、`/.omo/_truth/registry/omo-governance-surfaces.yaml`、`/.omo/_truth/x1-governance-policies.yaml` ~ `x4-consistency-rules.yaml`。
 
 ---
 
@@ -10,18 +10,18 @@
 ### 宪法级 (不可变)
 | 文档 | 说明 |
 |------|------|
-| 全局治理宪章 v1 (governance-charter-v1.md) | 10 条不可变原则 + 8 章 |
+| 全局治理宪章 v1 (governance-charter-v1.md) | 治理原则与边界约束；运行时事实需回看 control/truth SSOT |
 | L4-L3-Agent 桥接协议 (l4-l3-agent-bridge-canon.md) | L4被动/L3桥接/Agent执行器 |
-| 5+3+1 分层索引 (LAYER-INDEX.md) | 9项目 + 5层 + X1-X4 |
+| 5+3+1 分层索引 (LAYER-INDEX.md) | 分层骨架与 X1-X4 路由 |
 
 ### 策略级 (可变, 需审查)
 | 文档 | 说明 |
 |------|------|
 | 强制执行机制 (governance-enforcement-v1.md) | 5层防御体系设计 |
 | X4 治理一致性设计 (x4-governance-consistency-design.md) | 第四横切面 + 元规则 |
-| 接口架构治理 (interface-governance-2026-06-06.md) | CLI 21/MCP 285/HTTP 9 |
+| 接口架构治理 (interface-governance-2026-06-06.md) | 接口治理原则与约束 |
 | 统一接口层设计 (unified-interface-design-v1.md) | Interface Registry 方案 |
-| 全量审计报告 (5+3+1-full-audit-2026-06-06.md) | 9项目 + 21债务 |
+| 全量审计报告 (5+3+1-full-audit-2026-06-06.md) | 历史审计基线与问题发现 |
 | 架构全局方案 (architecture-complete-plan.md) | 0→9项目路线 |
 
 ### 操作级
@@ -50,7 +50,7 @@
 ```
 X4 = "规则是否被遵守"
   7项检查: CLI注册/端口冲突/跨层依赖/文档保鲜/CI覆盖/Phase门禁/Agent启动链
-  度量化: X4 Score (0-100), critical violations, trend
+  度量化: 以治理门禁与审计结果为准，不在本页维护静态分数
   门禁: score≥90 且 0 critical → Phase可迁移
   定位: 横向切面 (非L0), L0协议定义规则, X4检查执行
 ```
@@ -70,10 +70,14 @@ X4 = "规则是否被遵守"
 
 ## 四、当前状态
 
-```
-9 项目 · X1-X4 全面 · 285 MCP · 18 CI · 22 原则
-21 债务→0 · 端口冲突 2 (遗留) · X4 Score 71/100
-```
+> 本页不再维护“当前状态”数字播报。
+> 实时项目状态、健康分、任务进度、债务与 gate 结论请回看：
+>
+> - `/.omo/PROJECTS.yaml`
+> - `/.omo/state/system.yaml`
+> - `/.omo/goals/current.yaml`
+> - `/.omo/debt/`
+> - `/.omo/_delivery/`
 
 ## 五、快速导航
 
@@ -81,10 +85,10 @@ X4 = "规则是否被遵守"
 宪章 → governance-charter-v1.md
 原则 → governance-charter-v1.md §0-§7
 检查 → python3 scripts/check-interfaces.py
-现状 → 本文档 §4
+现状 → `/.omo/state/system.yaml` + `/.omo/goals/current.yaml`
 X4  → x4-governance-consistency-design.md
 ```
 
 ---
 
-*整理完成: 2026-06-06*
+*整理完成: 2026-06-06 · 2026-06-17 起仅维护导航与原则，不维护运行时快照*

@@ -6,6 +6,7 @@
 > **关联规划**: [`/Plans/c2g-enchanted-coral.md`](../../../Plans/c2g-enchanted-coral.md)
 > **关联战略 SSOT**: [strategic-governance-p42](strategic-governance-p42.md)
 > **关联 P43 试点**: [retrospective-p43-w0-c2g-pilot](retrospective-2026-06-16-p43-w0-c2g-pilot.md)
+> **属性**: 历史 retrospective / reference only。本文记录该时点复盘与健康分观察，不是当前系统状态、当前健康分或当前治理结论 SSOT。
 > **状态**: 🟢 W1 收口完成, 进入 W2 分类/gc 推进
 
 ---

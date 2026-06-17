@@ -4,6 +4,8 @@
 > 审计对象: Phase 10 规划文档及相关 OMO 文件
 > 审计日期: 2026-05-31
 > 审计方法: 7 文件交叉对比（规划/状态/目标/注册表/索引/债务源/交付证据）
+> 历史交叉审计记录 / reference only。本文记录 Phase 10 时点的交叉审计发现，不是当前 system/goals/control 状态或当前审计结论 SSOT。
+> 当前事实请回看 `/.omo/state/system.yaml`、`/.omo/goals/current.yaml`、`/.omo/_delivery/` 与当前治理检查结果。
 
 ---
 

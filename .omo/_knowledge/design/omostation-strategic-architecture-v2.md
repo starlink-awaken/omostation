@@ -3,6 +3,8 @@
 > 日期: 2026-06-02 | 基于系统思考+红队分析 | Phase 17-25 路线图
 > 作者: omostation Architecture Council | 状态: 已采纳 | 红队审计: 已完成
 > v2.1变更: 红队分析集成、SharedBrain双模架构、器官提取vs重写区分、P17代码优先承诺
+> 本文档是历史阶段的战略规划输入，保留当时的路线图、规模估算、健康分口径和项目收敛假设；它不是当前项目清单、当前架构事实或当前执行许可 SSOT。
+> 当前事实以 `/.omo/PROJECTS.yaml`、`AGENTS.md`、`docs/PANORAMA.md`、`/.omo/goals/current.yaml`、`/.omo/state/system.yaml` 为准。
 
 ---
 
