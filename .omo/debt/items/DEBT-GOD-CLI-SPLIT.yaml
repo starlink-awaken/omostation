@@ -1,0 +1,7 @@
+id: DEBT-GOD-CLI-SPLIT
+title: 'G3: cockpit/cli.py 1530 行 God Module 拆分'
+severity: high
+phase: '48'
+status: open
+description: 'cli.py 混杂参数解析+27子命令分发+命令默认实现, 应拆分到 cli/dispatch.py + cli/parser.py'
+

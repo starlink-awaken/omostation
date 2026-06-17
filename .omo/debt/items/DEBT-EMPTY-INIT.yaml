@@ -1,0 +1,7 @@
+id: DEBT-EMPTY-INIT
+title: 'T1: 11 个空 __init__.py 缺少模块文档'
+severity: low
+phase: '48'
+status: open
+description: 'agora/src/agora/{core,auth,plugins,mcp,extensions} 下 11 个 __init__.py 为空, 缺少模块职责文档'
+

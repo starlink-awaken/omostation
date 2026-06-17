@@ -1,0 +1,46 @@
+id: DEBT-OMC-METAOS-OMO-PLANE
+title: metaos 缺少 .omo/ 治理平面
+description: 'metaos 项目缺少 .omo/ 治理平面，无法参与 OMO phase/task/debt/audit 流程。
+
+  - 无法生成审计记录
+
+  - 无法注册债务
+
+  - 无法参与跨仓治理指标
+
+  - 初始化结构已创建，但 YAML 骨架尚需填充
+
+  '
+severity: low
+source: metaos
+registered_at: '2026-06-11T00:00:00Z'
+verified_at: '2026-06-11T16:30:00Z'
+verification: '核实结果：
+
+  - .omo/state/system.yaml 骨架已创建 ✅
+
+  - .omo/debt/ 目录已创建 ✅
+
+  - .omo/goals/ 目录已创建 ✅
+
+  - .omo/standards/ 目录已创建 ✅
+
+  - metaos 可参与 OMO 治理流程
+
+  '
+assigned_to: metaos
+prerequisite_for: OPC-P2
+remediation: '1. .omo/ 目录结构已创建
+
+  2. 后续由 metaos DAEMON 自动更新
+
+  '
+lifecycle_state: closed
+gate_level: none
+history:
+- at: '2026-06-15T07:55:24.408224+00:00'
+  action: close
+  note: 'Closed debt item.
+
+    status=''resolved'' 字段 (历史越权写入) 已清理 (Round 43 P0 lint 修复)'
+  actor: X-Plane-Audit-Agent

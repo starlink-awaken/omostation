@@ -1,0 +1,7 @@
+id: DEBT-GOD-MCPTOOLS-SPLIT
+title: 'G4: agora/mcp_tools.py 893 行 God Module 拆分'
+severity: medium
+phase: '48'
+status: open
+description: 'mcp_tools.py 接近 900 行阈值, 工具注册应拆分到 tools/ 子目录'
+

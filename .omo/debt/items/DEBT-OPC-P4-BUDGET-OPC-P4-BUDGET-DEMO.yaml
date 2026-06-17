@@ -1,0 +1,35 @@
+id: DEBT-OPC-P4-BUDGET-OPC-P4-BUDGET-DEMO
+title: OPC P4 budget policy rejected an LLM execution path
+description: 'Runtime executor blocked task `opc-p4-budget-demo` before provider call
+  because
+
+  estimated cost 0.020000 USD exceeded budget 0.010000 USD.
+
+  role=planner, model=anthropic/claude-sonnet-4.
+
+  '
+severity: medium
+source: runtime
+first_seen_at: '2026-06-12T02:33:55Z'
+registered_at: '2026-06-12T02:33:55Z'
+last_seen_at: '2026-06-12T02:45:58Z'
+occurrence_count: 5
+status: closed
+prerequisite_for: OPC-P4
+remediation: '1. Increase the task budget or select a cheaper route.
+
+  2. Re-run after confirming the selected model aligns with policy.
+
+  '
+resolution: Demo artifact successfully proved budget policy enforcement. No structural
+  issue, marked as closed.
+lifecycle_state: closed
+gate_level: none
+history:
+- at: ''
+  action: close
+  note: Closed debt item.
+  actor: X-Plane-Audit-Agent
+resolution_evidence: Demo artifact successfully proved budget policy enforcement.
+  No structural issue, marked as closed (P5-P7 闭环报告 2026-06-14). Round 43 P0 lint
+  0 issue.

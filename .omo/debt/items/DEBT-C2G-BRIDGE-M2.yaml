@@ -1,0 +1,18 @@
+id: DEBT-C2G-BRIDGE-M2
+title: omo_bridge.py 中 test_plan 与 evidence_required 被全局硬编码
+dimension: Code
+subdimension: Hardcoding
+severity: High
+owner: core-team
+actor: ''
+timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+status: closed
+lifecycle_state: closed
+gate_level: none
+history:
+- at: '2026-06-15T07:55:24.334844+00:00'
+  action: close
+  note: Closed debt item.
+  actor: X-Plane-Audit-Agent
+resolution_evidence: omo_bridge.py 已删 (OMO 钩子 auto-loop 清理). test_plan + evidence_required
+  改由 mcp_server.py + workspace iterate 集成. lint yaml-bypass 0 issue (Round 43 P0 修复).

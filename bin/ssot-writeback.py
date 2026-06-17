@@ -1,3 +1,5 @@
+import json
+import os
 import yaml
 from pathlib import Path
 
@@ -45,4 +47,5 @@ def extract_ssot_writeback(omo_dir: Path):
         except Exception as e:
             print(f"⚠️ Failed to write back SSOT for {task['id']}: {e}")
 
-extract_ssot_writeback(Path("/Users/xiamingxing/Workspace/.omo"))
+omo_base = Path(os.environ.get("OMO_ROOT", str(Path.home() / "Workspace/projects/omo")))
+extract_ssot_writeback(omo_base / ".omo")

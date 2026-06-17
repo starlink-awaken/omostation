@@ -1,0 +1,7 @@
+id: DEBT-GOD-DASHBOARD-SPLIT
+title: 'G2: cockpit/dashboard_server.py 1135 行 God Module 拆分'
+severity: high
+phase: '48'
+status: open
+description: 'dashboard_server.py 混杂 API 路由 + HTML 渲染 + BOS 网关, 应拆分到 web/routes_*.py'
+

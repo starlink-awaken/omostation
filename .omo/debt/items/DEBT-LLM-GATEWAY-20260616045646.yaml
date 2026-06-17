@@ -1,0 +1,11 @@
+id: DEBT-LLM-GATEWAY-20260616045646
+title: 'ollama 端点 500: venv 缺 requests + 默认模型 llama3 不存在'
+description: '根因: llm-gateway venv 缺 requests (OllamaProvider.is_available=False);
+  c2g 传 model=default 被 ollama 拒绝 (llama3 模型不存在)。修复: venv 装 requests; c2g 改 model=None;
+  ollama 默认模型改 qwen2.5:0.5b。'
+severity: high
+source: llm-gateway
+registered_at: '2026-06-16T04:56:46.067645+00:00'
+status: closed
+closed_at: '2026-06-16T04:58:00Z'
+evidence: "c2g bet Pitch-Valid.md → 7 tasks extracted via LLM (no mock); /v1/generate → 200 OK; llm-gateway default_model=qwen2.5:0.5b"

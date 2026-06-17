@@ -1,0 +1,7 @@
+id: DEBT-HARDCODED-PATHS
+title: 'H1: bin/omo-health.py 和 bin/ssot-writeback.py 硬编码 /Users/xiamingxing/ 路径'
+severity: high
+phase: '48'
+status: open
+description: '违反架构原则第14条: 所有路径必须 env-var 驱动, 无硬编码 /Users/xiamingxing/'
+

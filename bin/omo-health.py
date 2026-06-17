@@ -3,9 +3,11 @@ import sys
 import yaml
 import json
 from pathlib import Path
-from datetime import datetime
+import os
+from pathlib import Path
 
-WORKSPACE = Path("/Users/xiamingxing/Workspace")
+WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+WORKSPACE = WORKSPACE_ROOT
 HEALTH_YAML = WORKSPACE / ".omo/state/system_health.yaml"
 DEBT_DIR = WORKSPACE / ".omo/debt/items"
 SYSTEM_YAML = WORKSPACE / ".omo/state/system.yaml"

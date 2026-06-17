@@ -1,0 +1,17 @@
+id: DEBT-SWARM-ENGINE-20260614104223
+title: 生产级 A2A Message Bus
+description: 当前薄绑定为本地模拟，需要引入生产级 Redis/NATS 作为物理传输层
+severity: medium
+source: swarm-engine
+registered_at: '2026-06-14T10:42:23.355551+00:00'
+resolution: Implemented RedisMessageBroker in swarm_engine/redis_message_broker.py
+  using redis-py
+lifecycle_state: closed
+gate_level: none
+history:
+- at: '2026-06-15T07:55:24.484079+00:00'
+  action: close
+  note: 'Closed debt item.
+
+    status=''resolved'' 字段 (历史越权写入) 已清理 (Round 43 P0 lint 修复)'
+  actor: X-Plane-Audit-Agent

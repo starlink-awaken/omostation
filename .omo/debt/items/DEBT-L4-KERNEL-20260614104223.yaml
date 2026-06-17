@@ -1,0 +1,19 @@
+id: DEBT-L4-KERNEL-20260614104223
+title: L4-Kernel CLI 依赖重构
+description: L4 Kernel 调用入口依赖 CLI，缺少开箱即用的 MCP tools
+severity: medium
+source: l4-kernel
+registered_at: '2026-06-14T10:42:23.246519+00:00'
+status: closed
+resolution: All 42 tools implemented in mcp_server.py. Full MCP coverage achieved,
+  CLI kept only for local inspection.
+lifecycle_state: closed
+gate_level: none
+history:
+- at: ''
+  action: close
+  note: Closed debt item.
+  actor: X-Plane-Audit-Agent
+resolution_evidence: All 42 tools (实际 43) implemented in mcp_server.py. Full MCP coverage
+  achieved; CLI kept only for local inspection. Round 43 P0 audit confirms via omo
+  lint yaml-bypass 0 issue + close walk正路.

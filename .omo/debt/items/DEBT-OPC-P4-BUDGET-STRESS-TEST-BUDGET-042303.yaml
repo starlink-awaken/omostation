@@ -1,0 +1,15 @@
+id: DEBT-OPC-P4-BUDGET-STRESS-TEST-BUDGET-042303
+title: OPC P4 budget policy rejected an LLM execution path
+description: "LLM Gateway blocked task `stress-test-budget-042303` because\n  estimated\
+  \ cost 0.001183 USD exceeded budget 0.000001 USD.\n  model=deepseek/deepseek-chat."
+severity: medium
+source: llm-gateway
+registered_at: '2026-06-16T04:23:04Z'
+last_seen_at: '2026-06-16T04:23:04Z'
+status: closed
+remediation: Increase budget or select a cheaper model.
+lifecycle_state: closed
+closed_at: '2026-06-16T06:00:00Z'
+resolution_evidence: 'llm-gateway budget.py _register_budget_debt 加 _reported_debts:
+  set[str] 去重 (commit b374a7b). 同一 task_id 多次失败只登记 1 次 debt. 24 tests 全过. 0.000001
+  USD budget 是 test_budget_enforcement.py:25 mock 不会触发 production debt.'
