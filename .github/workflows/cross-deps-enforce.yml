@@ -12,8 +12,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+      - run: pip install pyyaml
       - name: Run cross-deps check
         run: python3 scripts/check-cross-deps.py
