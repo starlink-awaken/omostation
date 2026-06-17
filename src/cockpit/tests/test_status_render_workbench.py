@@ -330,6 +330,7 @@ def test_days_since_ge_7_shows_archivable_badge(monkeypatch):
     monkeypatch.setattr(S, "_discover_services", lambda: [])
     monkeypatch.setattr(S, "_http_health", lambda url, timeout=3.0: False)
     monkeypatch.setattr(S, "_find_cli", lambda name: None)
+    monkeypatch.setattr(S, "_get_data_access", lambda: _OldTimelineDA())
 
     old_time = time.time() - 10 * 86400  # 10 天前
     records = [_make_research(1, "Old Study", created_at=old_time)]
@@ -342,7 +343,7 @@ def test_days_since_ge_7_shows_archivable_badge(monkeypatch):
             return {
                 "decay": 0.8,
                 "half_life_days": 14,
-                "days_since_active": 2.0,
+                "days_since_active": 8.0,
                 "follow_up_count": 0,
                 "published_count": 0,
             }
