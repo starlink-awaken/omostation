@@ -609,6 +609,103 @@ async def api_cards_check():
 
 
 # ═══════════════════════════════════════════════════════════════
+# BOS URI Gateway  (OPT-BOS-GATEWAY, Phase 42)
+# ═══════════════════════════════════════════════════════════════
+
+
+@app.get("/api/bos/services", dependencies=_AUTH_DEPS)
+async def api_bos_services(domain: str = ""):
+    """列出所有 BOS URI 服务，可按 domain 过滤。"""
+    try:
+        from agora.mcp.resolver.services import POC_SERVICES
+
+        services = []
+        for s in POC_SERVICES:
+            if domain and s.domain != domain:
+                continue
+            services.append({
+                "uri": s.uri,
+                "domain": s.domain,
+                "action": s.action,
+                "transport": s.transport,
+            })
+        return JSONResponse(content={"total": len(services), "services": services})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.get("/api/bos/resolve", dependencies=_AUTH_DEPS)
+async def api_bos_resolve(uri: str = "", arguments: str = "{}"):
+    """解析一个 BOS URI——通过 subprocess 调用 agora CLI。"""
+    if not uri:
+        return JSONResponse(content={"error": "uri 参数必填"}, status_code=400)
+    if not uri.startswith("bos://"):
+        return JSONResponse(content={"error": "URI 必须是 bos:// 格式"}, status_code=400)
+
+    try:
+        import subprocess as sp
+        agora_cli = WORKSPACE_ROOT / "projects" / "agora" / ".venv" / "bin" / "agora"
+        if not agora_cli.exists():
+            # fallback: uv run
+            cmd = ["uv", "run", "--directory", str(WORKSPACE_ROOT / "projects/agora"),
+                   "python", "-m", "agora.cli", "bos", "list"]
+        else:
+            cmd = [str(agora_cli), "bos", "list"]
+
+        result = sp.run(cmd, capture_output=True, text=True, timeout=30)
+        return JSONResponse(content={
+            "uri": uri,
+            "stdout": result.stdout[:2000],
+            "stderr": result.stderr[:500],
+            "exit_code": result.returncode,
+        })
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.get("/api/bos/health", dependencies=_AUTH_DEPS)
+async def api_bos_health():
+    """BOS 系统健康检查。"""
+    try:
+        # Ensure latest agora source is used
+        _agora_src = WORKSPACE_ROOT / "projects" / "agora" / "src"
+        if str(_agora_src) not in sys.path:
+            sys.path.insert(0, str(_agora_src))
+
+        from agora.mcp.bos_metrics import bos_metrics
+        from agora.mcp.resolver.services import POC_SERVICES
+
+        m = bos_metrics.health()
+        by_domain: dict[str, int] = {}
+        for s in POC_SERVICES:
+            by_domain[s.domain] = by_domain.get(s.domain, 0) + 1
+
+        return JSONResponse(content={
+            "status": "ok",
+            "total_routes": len(POC_SERVICES),
+            "domains": by_domain,
+            "metrics": m,
+        })
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.get("/api/bos/metrics", dependencies=_AUTH_DEPS)
+async def api_bos_metrics(prefix: str = ""):
+    """BOS 调用指标。"""
+    try:
+        from agora.mcp.bos_metrics import bos_metrics
+
+        if prefix:
+            data = bos_metrics.status(prefix)
+        else:
+            data = bos_metrics.summary()
+        return JSONResponse(content=data)
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+# ═══════════════════════════════════════════════════════════════
 # 债务加载 / E2E / OMO 报告 (从原 dashboard_server.py 迁移)
 # ═══════════════════════════════════════════════════════════════
 

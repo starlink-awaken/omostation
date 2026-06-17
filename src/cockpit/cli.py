@@ -305,6 +305,13 @@ def main() -> int:
     mof_p = sub.add_parser("mof", help="MOF 元模型操作 (委派 mof CLI)")
     mof_p.add_argument("extra", nargs=argparse.REMAINDER, help="传递给 mof 的参数")
 
+    # ── BOS URI 网关 ─────────────────────────────────────────
+    bos_p = sub.add_parser("bos", help="BOS URI 查询与管理")
+    bos_sub = bos_p.add_subparsers(dest="bos_cmd")
+    bos_sub.add_parser("list", help="列出所有 BOS URI 路由")
+    bos_sub.add_parser("discover", help="扫描 workspace 发现 MCP 服务")
+    bos_sub.add_parser("status", help="BOS 系统状态与蜂群情况")
+
     # OPC P5-F4: 统一 scenario 入口 — 用户无需理解仓边界
     scenario_p = sub.add_parser(
         "scenario",
@@ -570,6 +577,17 @@ def main() -> int:
         from cockpit.commands.mof import cmd_mof
 
         return cmd_mof(args)
+
+    if args.command == "bos":
+        from cockpit.commands.bos import cmd_bos_status, cmd_bos_list, cmd_bos_discover
+
+        sub = getattr(args, "bos_cmd", "")
+        if sub == "list":
+            return cmd_bos_list(args)
+        elif sub == "discover":
+            return cmd_bos_discover(args)
+        else:
+            return cmd_bos_status(args)
 
     if args.command == "scenario":
         from cockpit.commands.scenario import cmd_scenario

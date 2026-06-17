@@ -65,4 +65,60 @@ def cmd_bos_workflow(args):
     )
     print(result.stdout[:2000])
     if result.returncode != 0:
-        print("(output truncated) — 完整输出请使用 'mof workflow ...'")
+        print("(output truncated) — 完整输出请使用 'mof workflow' ...'")
+
+
+def cmd_bos_list(args):
+    """列出所有 BOS URI 路由。"""
+    try:
+        import sys
+
+        sys.path.insert(0, str(Path.home() / "Workspace" / "projects" / "agora" / "src"))
+        from agora.mcp.resolver.services import POC_SERVICES
+
+        by_domain: dict[str, list[str]] = {}
+        for s in POC_SERVICES:
+            by_domain.setdefault(s.domain, []).append(s.uri)
+
+        print(f"\n  BOS URI 路由表 ({len(POC_SERVICES)} 条)")
+        print(f"  {'=' * 40}")
+        for domain in sorted(by_domain):
+            services = by_domain[domain]
+            print(f"\n  {domain} ({len(services)}):")
+            for uri in sorted(services):
+                print(f"    {uri}")
+    except Exception as e:
+        print(f"  BOS 服务不可用: {e}")
+
+
+def cmd_bos_discover(args):
+    """扫描 workspace 项目，发现可注册的 MCP 服务。"""
+    workspace = Path.home() / "Workspace" / "projects"
+    discovered = []
+    for proj_dir in sorted(workspace.iterdir()):
+        pyproject = proj_dir / "pyproject.toml"
+        if not pyproject.exists():
+            continue
+        try:
+            import tomllib
+
+            with open(pyproject, "rb") as f:
+                data = tomllib.load(f)
+        except Exception:
+            continue
+
+        scripts = data.get("project", {}).get("scripts", {})
+        for name, entry in scripts.items():
+            if "mcp" in name.lower() or entry.startswith(name.split("-")[0]):
+                discovered.append({
+                    "project": proj_dir.name,
+                    "script": name,
+                    "entry": entry,
+                })
+
+    print(f"\n  🔍 自动发现: {len(discovered)} 个 MCP 入口")
+    for d in discovered:
+        print(f"    {d['project']:20s} → {d['script']:25s} ({d['entry']})")
+
+    print()
+    print("  💡 将发现的服务注册到: projects/agora/etc/bos-services.yaml")
