@@ -12,6 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Init scripts submodule
+        # port 检查只需 scripts 子模块 (远程 omostation-scripts 存在). 不用
+        # submodules: recursive — 会撞 omo/aetherforge/observability 等缺失远程
+        # 导致整个 checkout 失败 (架构债, 见 cross-deps-enforce failure log).
+        run: git submodule update --init scripts
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
