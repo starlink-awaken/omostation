@@ -1,7 +1,7 @@
 id: OPC-P43-LLM-MERGE-DOCS
 title: 'P43 LLM-MERGE: 合并文档 (PANORAMA/SYSTEM-OVERVIEW mark archived)'
 status: done
-phase: 43
+phase: null
 task_type: feature
 risk_level: L0
 depends_on: []

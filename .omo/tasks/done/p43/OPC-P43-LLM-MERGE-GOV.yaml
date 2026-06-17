@@ -1,7 +1,7 @@
 id: OPC-P43-LLM-MERGE-GOV
 title: 'P43 LLM-MERGE: 治理规则 (X1-X4 update for merge)'
 status: done
-phase: 43
+phase: null
 task_type: feature
 risk_level: L0
 depends_on: []

@@ -1,7 +1,7 @@
 id: OPC-P43-LLM-MERGE-MOF
 title: 'P43 LLM-MERGE: MOF 模型 (BOSRoute/governance updates)'
 status: done
-phase: 43
+phase: null
 task_type: feature
 risk_level: L0
 depends_on: []

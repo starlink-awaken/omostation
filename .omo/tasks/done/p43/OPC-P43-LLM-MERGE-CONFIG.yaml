@@ -1,7 +1,7 @@
 id: OPC-P43-LLM-MERGE-CONFIG
 title: 'P43 LLM-MERGE: 合并配置 (port-registry/agora route)'
 status: done
-phase: 43
+phase: null
 task_type: feature
 risk_level: L0
 depends_on: []

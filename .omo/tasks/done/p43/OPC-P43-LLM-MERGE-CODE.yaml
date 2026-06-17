@@ -1,7 +1,7 @@
 id: OPC-P43-LLM-MERGE-CODE
 title: 'P43 LLM-MERGE: 合并代码 (llm-gateway → aetherforge/packages/gateway/_legacy)'
 status: done
-phase: 43
+phase: null
 task_type: feature
 risk_level: L0
 depends_on: []
