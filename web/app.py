@@ -1164,6 +1164,35 @@ async def api_v1_governance():
     }
 
 
+async def _execute_mutation(proposal: dict) -> bool:
+    """[Phase 9] Perform real side-effects for a proposal."""
+    import json
+    p_type = proposal.get("type")
+    debt_id = proposal.get("debt_id", "unknown")
+    
+    logger.info("[HITL] Executing mutation: %s for %s", p_type, debt_id)
+    
+    # ── 1. Real side-effect logic ──
+    if p_type == "budget_increase":
+        # Simulate updating a dynamic config file that AetherForge watches
+        # In a real setup, this would call an MCP tool like 'llm_gateway.update_quota'
+        config_patch = Path.home() / "Workspace" / ".omo" / "state" / "budget_overrides.jsonl"
+        config_patch.parent.mkdir(parents=True, exist_ok=True)
+        
+        record = {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "debt_id": debt_id,
+            "action": "increase_limit",
+            "amount_usd": 0.10, # default bump
+            "status": "applied"
+        }
+        with open(config_patch, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record) + "\n")
+        return True
+        
+    return False
+
+
 @app.post("/api/v1/proposals/{proposal_id}/approve")
 async def api_approve_proposal(proposal_id: str):
     """Approve and execute a mutation proposal (Phase 9 HITL)."""
@@ -1174,9 +1203,13 @@ async def api_approve_proposal(proposal_id: str):
         return _error_resp(f"Proposal {proposal_id} not found", 404)
         
     try:
-        # 1. Execute the mutation (In Phase 9, we mark as 'executing')
-        # TODO: real mutation logic (budget bump, model swap, etc.)
-        _log.info("[HITL] Approved proposal: %s", proposal_id)
+        import yaml
+        proposal = yaml.safe_load(proposal_path.read_text())
+        
+        # 1. Execute the mutation
+        success = await _execute_mutation(proposal)
+        if not success:
+            logger.warning("[HITL] No execution logic for type: %s", proposal.get("type"))
         
         # 2. Archive/Delete the proposal to clear the queue
         proposal_path.unlink()
