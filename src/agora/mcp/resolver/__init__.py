@@ -1,1 +1,2 @@
-"""BOS URI 解析器包"""
+"""Agora MCP resolver — BOS URI 路由解析 (services/bos_registry/pool/adapter/api)."""
+
