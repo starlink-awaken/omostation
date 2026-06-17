@@ -5,11 +5,11 @@ task_type: feature
 risk_level: L0
 depends_on: []
 source_docs:
-- /Users/xiamingxing/Workspace/runtime/sandbox/OpenSpec-Omni-Bus_L0_模型与注册表落地.md
+- /Users/xiamingxing/Workspace/runtime/sandbox/OpenSpec-沉淀全局触发器注册表与分布式锁机制.md
 deliverables:
 - 执行记录与源码修改
 imported_via: omo_bridge
-context_uri: bos://memory/openspecs/OpenSpec-Omni-Bus_L0_模型与注册表落地.md#IMPORTED-f9b1e2
+context_uri: bos://memory/openspecs/OpenSpec-沉淀全局触发器注册表与分布式锁机制.md#IMPORTED-f9b1e2
 assigned_to: null
 dispatch_id: null
 run_ref: null

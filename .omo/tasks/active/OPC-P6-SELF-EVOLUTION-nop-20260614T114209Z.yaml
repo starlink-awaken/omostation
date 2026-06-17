@@ -1,7 +1,0 @@
-id: OPC-P6-SELF-EVOLUTION-nop-20260614T114209Z
-title: 'No-op: drift detector reported 0 drift; loop continues'
-status: proposed
-priority: P2
-domain: opc
-red_lines:
-- self-evolution task 仅落 planned/, 永不入 active/ 除非 human approval

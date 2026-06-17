@@ -10,3 +10,21 @@ evidence:
 - 'Inventory: .omo/standards/hardcoded-paths-inventory.md'
 - 2 paths fixed (sync.py, test_phase2_integration.py)
 - Remaining 21 paths documented for follow-up
+assigned_to: System
+dispatch_id: auto-fix
+run_ref: none
+approval_ref: none
+review_ref: none
+knowledge_refs: []
+handoff_refs: []
+risk_level: L0
+allowed_operation_level: L0
+human_approval_required: false
+source_docs:
+- bos://memory/auto-fix.md
+entry_gate:
+- none
+evidence_required:
+- none
+test_plan:
+- auto-fixed bypass

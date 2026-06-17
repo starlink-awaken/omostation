@@ -1,10 +1,11 @@
-id: OPC-P15-KAI-02
-title: kairon 16-package workspace governance registration
-status: done
+id: IMPORTED-3384bb
+title: 'P42-W0-CONSUME-STASH: 消化 stash@{0} (P59-W0 dispatch bug) + stash@{1} (P46
+  W1 声明式注册)'
+status: planned
 priority: P2
-domain: kairon
-created: '2026-06-11'
-completed: '2026-06-13'
+domain: opc
+signals:
+- task-IMPORTED-3384bb-running
 assigned_to: System
 dispatch_id: auto-fix
 run_ref: none
@@ -23,5 +24,3 @@ evidence_required:
 - none
 test_plan:
 - auto-fixed bypass
-evidence_paths:
-- AGENTS.md

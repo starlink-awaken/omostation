@@ -1,10 +1,10 @@
-id: OPC-P15-KAI-02
-title: kairon 16-package workspace governance registration
-status: done
+id: IMPORTED-8bdcf3
+title: 'P42-W0-SYNC-OMO-STATE: 跑 sync_omo_state.py 一次性把 system.yaml 字段全刷新'
+status: planned
 priority: P2
-domain: kairon
-created: '2026-06-11'
-completed: '2026-06-13'
+domain: opc
+signals:
+- task-IMPORTED-8bdcf3-running
 assigned_to: System
 dispatch_id: auto-fix
 run_ref: none
@@ -23,5 +23,3 @@ evidence_required:
 - none
 test_plan:
 - auto-fixed bypass
-evidence_paths:
-- AGENTS.md

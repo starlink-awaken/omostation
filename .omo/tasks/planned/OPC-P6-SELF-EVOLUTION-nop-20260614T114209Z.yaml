@@ -1,10 +1,10 @@
-id: OPC-P15-KAI-02
-title: kairon 16-package workspace governance registration
-status: done
+id: OPC-P6-SELF-EVOLUTION-nop-20260614T114209Z
+title: 'No-op: drift detector reported 0 drift; loop continues'
+status: planned
 priority: P2
-domain: kairon
-created: '2026-06-11'
-completed: '2026-06-13'
+domain: opc
+red_lines:
+- self-evolution task 仅落 planned/, 永不入 active/ 除非 human approval
 assigned_to: System
 dispatch_id: auto-fix
 run_ref: none
@@ -23,5 +23,3 @@ evidence_required:
 - none
 test_plan:
 - auto-fixed bypass
-evidence_paths:
-- AGENTS.md

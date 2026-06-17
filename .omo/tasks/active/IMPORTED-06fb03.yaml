@@ -1,8 +1,0 @@
-id: IMPORTED-06fb03
-title: 'P42-W1-KICKOFF: 启动 P42-W1 候选 (按 state 推进). 候选: monitor.sh 挂 crontab / 修 P34
-  时代固化测试 / 清 omo scripts 7 ruff errors'
-status: proposed
-priority: P2
-domain: opc
-signals:
-- task-IMPORTED-06fb03-running

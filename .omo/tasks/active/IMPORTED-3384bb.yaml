@@ -1,8 +1,0 @@
-id: IMPORTED-3384bb
-title: 'P42-W0-CONSUME-STASH: 消化 stash@{0} (P59-W0 dispatch bug) + stash@{1} (P46
-  W1 声明式注册)'
-status: proposed
-priority: P2
-domain: opc
-signals:
-- task-IMPORTED-3384bb-running
