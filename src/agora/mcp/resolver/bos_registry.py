@@ -123,8 +123,8 @@ def validate_registry(path: str | pathlib.Path | None = None) -> list[str]:
         return [f"加载失败: {e}"]
 
     seen_uris: set[str] = set()
-    valid_domains = {"memory", "governance", "analysis", "persona", "capability", "forge", "meta", "ecos", "agora"}
-    valid_transports = {"stdio", "internal", "http", "mcp_stdio"}
+    valid_domains = {"memory", "governance", "analysis", "persona", "capability", "forge", "meta", "ecos", "agora", "swarm", "omo"}
+    valid_transports = {"stdio", "internal", "http", "mcp_stdio", "mcp_proxy"}
 
     for i, s in enumerate(services):
         if not s.uri:

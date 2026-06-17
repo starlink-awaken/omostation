@@ -740,7 +740,13 @@ def _load_services() -> list[BosService]:
 
     # 项目默认路径
     here = os.path.dirname(os.path.abspath(__file__))
-    default_yaml = os.path.join(here, "..", "..", "..", "..", "etc", "bos-services.yaml")
+    # resolver/ → mcp/ → resolver/ → agora/ → src/ → agora/ → projects/ → workspace/
+    # 更健壮的方式：通过 _resolve_agora_root 找到项目根
+    try:
+        from agora.mcp.resolver.bos_registry import DEFAULT_REGISTRY_PATH
+        default_yaml = str(DEFAULT_REGISTRY_PATH)
+    except Exception:
+        default_yaml = os.path.join(here, "..", "..", "..", "..", "etc", "bos-services.yaml")
     candidates.append(os.path.normpath(default_yaml))
 
     for path in candidates:
