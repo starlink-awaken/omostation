@@ -864,8 +864,48 @@ def sse_main():
             }
         )
 
-    # Add /health route alongside the SSE transport
+    async def a2a_send_endpoint(request):
+        """[Phase 9] Network A2A Receiver with Signature Verification."""
+        try:
+            body = await request.json()
+            target_agent_id = body.get("target_agent_id")
+            message = body.get("message")
+            sender_node_id = body.get("sender_node_id")
+            
+            # 1. Identity Check
+            signature = request.headers.get("X-Swarm-Signature")
+            if signature:
+                from agora.mcp.swarm import get_swarm
+                from agora.auth.node_identity import NodeIdentity
+                
+                swarm = get_swarm()
+                sender_node = swarm._nodes.get(sender_node_id)
+                if sender_node and sender_node.public_key:
+                    # Verify signature against sender's public key
+                    # Re-serialize body with sort_keys=True to match signer
+                    is_valid = NodeIdentity.verify(
+                        json.dumps(body, sort_keys=True).encode(),
+                        signature,
+                        sender_node.public_key
+                    )
+                    if not is_valid:
+                        logger.warning("a2a_auth_failed", node_id=sender_node_id)
+                        return JSONResponse({"status": "error", "error": "invalid_signature"}, status_code=401)
+                    
+                    logger.debug("a2a_auth_success", node_id=sender_node_id)
+            
+            # 2. Local Delivery
+            from agora.a2a.transport import A2ATransport
+            transport = A2ATransport()
+            res = transport.send_message(target_agent_id, message)
+            return JSONResponse(res)
+            
+        except Exception as e:
+            return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
+    # Add routes
     mcp._additional_http_routes.append(Route("/health", endpoint=health_endpoint))
+    mcp._additional_http_routes.append(Route("/api/v1/a2a/send", endpoint=a2a_send_endpoint, methods=["POST"]))
 
     sys.stderr.write("Agora MCP Server (SSE) starting on port 7431...\n")
     asyncio.run(mcp.run_http_async(transport="sse", host="0.0.0.0", port=7431))  # noqa: S104 — MCP SSE server intentionally binds all interfaces

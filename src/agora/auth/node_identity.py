@@ -99,6 +99,28 @@ class NodeIdentity:
     def to_dict(self) -> dict:
         return asdict(self)
 
+    def sign(self, message: bytes, private_key_b64: str) -> str:
+        """Sign a message using the node's private key."""
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        
+        sk_bytes = base64.b64decode(private_key_b64)
+        sk = Ed25519PrivateKey.from_private_bytes(sk_bytes)
+        sig = sk.sign(message)
+        return base64.b64encode(sig).decode()
+
+    @staticmethod
+    def verify(message: bytes, signature_b64: str, public_key_b64: str) -> bool:
+        """Verify a signature against a public key."""
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+        try:
+            pk_bytes = base64.b64decode(public_key_b64)
+            sig_bytes = base64.b64decode(signature_b64)
+            pk = Ed25519PublicKey.from_public_bytes(pk_bytes)
+            pk.verify(sig_bytes, message)
+            return True
+        except Exception:
+            return False
+
     @classmethod
     def from_dict(cls, data: dict) -> NodeIdentity:
         return cls(
@@ -161,6 +183,16 @@ class NodeIdentityManager:
     def get(self) -> NodeIdentity | None:
         """Return the cached identity without loading or creating."""
         return self._identity
+
+    def get_private_key_b64(self) -> str | None:
+        """Return the base64-encoded private key for signing."""
+        if not self._path.exists():
+            return None
+        try:
+            raw = json.loads(self._path.read_text(encoding="utf-8"))
+            return raw.get("_private_key")
+        except Exception:
+            return None
 
     # ------------------------------------------------------------------
     # Private helpers

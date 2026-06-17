@@ -159,17 +159,35 @@ class A2ANetworkTransport(A2ATransport):
 
         # HTTP Forwarding
         import httpx
+        from agora.auth.node_identity import NodeIdentityManager
 
-        # TODO: use secure token or internal swarm key
+        # ── Phase 9: Sign the payload ──
+        nim = NodeIdentityManager()
+        identity = nim.load_or_create()
+        private_key = nim.get_private_key_b64()
+        
+        payload = {
+            "target_agent_id": agent_id,
+            "message": message,
+            "sender_node_id": swarm.node_id,
+            "timestamp": time.time()
+        }
+        
+        headers = {
+            "X-Swarm-Node-ID": swarm.node_id,
+        }
+        
+        if private_key:
+            signature = identity.sign(json.dumps(payload, sort_keys=True).encode(), private_key)
+            headers["X-Swarm-Signature"] = signature
+
         url = f"http://{node.host}:8080/api/v1/a2a/send"
         try:
             async with httpx.AsyncClient(timeout=timeout) as client:
                 resp = await client.post(
                     url,
-                    json={
-                        "target_agent_id": agent_id,
-                        "message": message,
-                    },
+                    json=payload,
+                    headers=headers
                 )
                 resp.raise_for_status()
                 return resp.json()
