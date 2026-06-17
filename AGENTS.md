@@ -39,8 +39,10 @@ L3 Cockpit
 ├── MCP Server      ← scripts/cockpit_mcp.py + l0_mcp_tools.py (37 tools, stdio)
 ├── Agent Runtime   ← agent_runtime_mcp_server.py (2 tools, stdio)
 ├── Legacy Runtime  ← _runtime_mcp_server_legacy.py (7 tools, stdio, deprecated)
-├── Web Dashboard   ← web/app.py (FastAPI, :8090) — 59 REST APIs + hermes-console + dashboard_server sub-app
+├── Web Dashboard   ← web/app.py (FastAPI, :8090) — 唯一人机交互入口
 │   ├── /api/*      ← 38 API routes (services/compute/health/events/research/a2a/knowledge/...)
+│   ├── /api/v1/proposals/* ← [Phase 9] HITL 审批队列 (approve/reject)
+│   ├── /api/knowledge/search ← 全域聚合搜索接口 (BOS memory/local/all-search)
 │   ├── /api/omo/*  ← 6 OMO governance routes (status/debt/report/healing/*)
 │   ├── /api/ecos/* ← 3 eCOS routes (status/ssb/watchdog)
 │   ├── /api/runtime/status ← L1 runtime matrix state
