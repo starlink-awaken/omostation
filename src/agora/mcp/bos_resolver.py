@@ -89,9 +89,13 @@ async def _memory_all_search(
 
     async def _safe_call(uri: str) -> dict:
         try:
-            # 传递 proxy_manager 以支持跨节点路由
-            res = await resolve_bos_uri(
-                uri, {"query": query, "limit": limit}, proxy_manager=proxy_manager
+            # 传递 proxy_manager 以支持跨节点路由，增加 5s 超时控制
+            import asyncio
+            res = await asyncio.wait_for(
+                resolve_bos_uri(
+                    uri, {"query": query, "limit": limit}, proxy_manager=proxy_manager
+                ),
+                timeout=5.0
             )
             return {"uri": uri, "data": res}
         except Exception as e:

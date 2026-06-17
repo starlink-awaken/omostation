@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import socket
 import time
 import threading
@@ -60,6 +61,7 @@ class SwarmNode:
     node_id: str
     host: str
     port: int = SWARM_DEFAULT_PORT
+    mcp_port: int = 7422  # [Phase 9] HTTP MCP/A2A port
     role: str = "worker"
     bos_uris: list[str] = field(default_factory=list)
     capabilities: dict[str, Any] = field(default_factory=dict)
@@ -90,6 +92,7 @@ class SwarmNode:
             "node_id": self.node_id,
             "host": self.host,
             "port": self.port,
+            "mcp_port": self.mcp_port,
             "role": self.role,
             "bos_uris": self.bos_uris,
             "status": self.health,
@@ -116,6 +119,7 @@ class SwarmOrchestrator:
     def __init__(self, role: str = "worker", port: int = SWARM_DEFAULT_PORT):
         self.role = role
         self.port = port
+        self.mcp_port = int(os.environ.get("AGORA_HTTP_PORT", "7422"))
         self.node_id = f"{socket.gethostname()}:{port}:{role}"
         self._nodes: dict[str, SwarmNode] = {}
         self._running = False
@@ -175,7 +179,7 @@ class SwarmOrchestrator:
 
         # 1. 在 ProxyManager 中注册远程节点作为后端
         svc_name = f"swarm-node-{node.node_id}"
-        mcp_url = f"http://{node.host}:8080/api/v1/mcp"
+        mcp_url = f"http://{node.host}:{node.port}/api/v1/mcp"
 
         import asyncio
 
@@ -186,6 +190,14 @@ class SwarmOrchestrator:
                         "name": svc_name,
                         "mcp_endpoint": mcp_url,
                         "description": f"Swarm Remote Node: {node.node_id}",
+                        "metaos_admission": {
+                            "level": 1,
+                            "role": "researcher",
+                            "trust_domain": "omostation",
+                            "declared_values": ["human-centric", "objective", "transparent"],
+                            "supports_otlp": True,
+                            "omo_audit_trail_id": f"SWARM-NODE-{node.node_id}-{int(time.time())}"
+                        }
                     },
                     lazy=True,
                 )
@@ -400,6 +412,7 @@ class SwarmOrchestrator:
                                 node_id=info.get("node_id", f"{addr[0]}:unknown"),
                                 host=addr[0],
                                 port=info.get("port", self.port),
+                                mcp_port=info.get("mcp_port", 7422),
                                 role=info.get("role", "worker"),
                                 bos_uris=info.get("bos_uris", []),
                                 last_heartbeat=time.time(),
@@ -416,6 +429,7 @@ class SwarmOrchestrator:
                                         "master_node_id": self.node_id,
                                         "master_host": socket.gethostname(),
                                         "master_port": self.port,
+                                        "master_mcp_port": self.mcp_port,
                                     }
                                 ).encode(),
                                 addr,
@@ -460,6 +474,7 @@ class SwarmOrchestrator:
                                 "node_id": self.node_id,
                                 "role": self.role,
                                 "port": self.port,
+                                "mcp_port": self.mcp_port,
                                 "bos_uris": getattr(self, "_bos_uris", []),
                                 "cpu_pct": cpu_pct,
                                 "mem_mb": mem_mb,

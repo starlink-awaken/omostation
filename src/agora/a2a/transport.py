@@ -181,7 +181,7 @@ class A2ANetworkTransport(A2ATransport):
             signature = identity.sign(json.dumps(payload, sort_keys=True).encode(), private_key)
             headers["X-Swarm-Signature"] = signature
 
-        url = f"http://{node.host}:8080/api/v1/a2a/send"
+        url = f"http://{node.host}:{node.port}/api/v1/a2a/send"
         try:
             async with httpx.AsyncClient(timeout=timeout) as client:
                 resp = await client.post(
