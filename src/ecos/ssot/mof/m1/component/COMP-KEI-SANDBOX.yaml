@@ -1,0 +1,15 @@
+id: COMP-KEI-SANDBOX
+type: Component
+subtype: Organ
+name: KeiSandbox
+description: "KEI (Knowledge Engine Integrity) 沙箱隔离 — 基于 sys.addaudithook 的运行时拦截"
+status: active
+domain: security
+created: '2026-06-17'
+version: 1.0.0
+layer: L1
+properties:
+  mechanism: sys_audit_hook
+  intercept_targets: ["socket.connect", "subprocess.run", "open_write"]
+  policy_source: kei.yaml
+  parent_project: projects/runtime

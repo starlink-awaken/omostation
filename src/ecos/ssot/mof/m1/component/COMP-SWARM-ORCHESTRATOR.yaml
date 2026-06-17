@@ -1,0 +1,17 @@
+id: COMP-SWARM-ORCHESTRATOR
+type: Component
+subtype: Service
+name: SwarmOrchestrator
+description: "分布式蜂群协调器 — UDP发现·Ed25519信任网·负载遥测"
+status: active
+domain: swarm
+created: '2026-06-17'
+version: 1.0.0
+layer: I0
+properties:
+  protocol: UDP/7455
+  auth_method: Ed25519-Signatures
+  telemetry: psutil-enabled
+  parent_project: projects/agora
+  governance_standard: .omo/standards/x1-swarm-trust-protocol.md
+

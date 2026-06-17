@@ -1,0 +1,16 @@
+id: COMP-EVOLUTION-LOOP
+type: Component
+subtype: Daemon
+name: EvolutionLoop
+description: "OMO 自动进化循环 — 监听债务·自动提案·自愈调度"
+status: active
+domain: governance
+created: '2026-06-17'
+version: 1.0.0
+layer: L2
+properties:
+  trigger_source: .omo/debt/items/
+  output: .omo/state/proposals/
+  remediation_engine: MetaOS
+  parent_project: projects/omo
+  governance_standard: .omo/standards/x4-hitl-mutation-standard.md
