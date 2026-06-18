@@ -140,12 +140,11 @@ debt_metrics:
 debt_watchlist_count: 1
 debt_gate_count: 1
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 3
+planned_tasks: 2
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- OPT-AUTO-DISCOVERY (L3 high risk — 需架构决策)
-- OPT-BOS-GATEWAY (L3 high risk — 需架构决策)
-- TASK-8CF4636A (L0 协议抽象重构)
+- OPT-BOS-GATEWAY (L3, candidate, parent BET-c87a pending)
+- TASK-8CF4636A (P1, L0 协议抽象重构)
 phase27_status: active
 phase28_status: active
 phase28_completed_at: '2026-06-05T22:10:00Z'
