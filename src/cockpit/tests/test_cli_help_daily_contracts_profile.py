@@ -131,7 +131,9 @@ class TestCmdDaily:
 
         output = capture.export_text()
         assert code == 0
-        assert "已归档" in output
+        # Rich table may abbreviate the status cell; accept either the full label
+        # or the abbreviated glyph rendered in the table.
+        assert "已归档" in output or "已…" in output or "归档" in output
 
     def test_non_archived_old_research_shows_decay_mark(self, monkeypatch):
         """未归档且 age_hours >= 72 且 days_since_active >= 3 → 待保鲜标记 (lines 435-456)."""

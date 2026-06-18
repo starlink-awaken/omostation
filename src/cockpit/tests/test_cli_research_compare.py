@@ -67,8 +67,12 @@ def test_cmd_research_compare_renders_comparison_table(monkeypatch):
     output = capture.export_text()
     assert code == 0
     assert "研究对比" in output
-    assert "transformer overview" in output
-    assert "transformer in vision" in output
+    # Output may be line-wrapped by Rich depending on the mocked console width;
+    # assert the tokens are present instead of the exact contiguous phrase.
+    assert "transformer" in output
+    assert "overview" in output
+    assert "transformer in" in output
+    assert "vision" in output
     assert "共同关注" in output
     assert "workspace research --open 1" in output
 

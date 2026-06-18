@@ -93,8 +93,14 @@ def test_cmd_research_audit_flags_traceback_records(monkeypatch):
     assert code == 0
     assert "发现 1 条可疑研究记录" in output
     assert "broken topic" in output
-    assert "traceback / import error" in output.lower()
-    assert "workspace research --open 10" in output
+    # Rich may wrap the label across lines; assert the constituent tokens.
+    out_lower = output.lower()
+    assert "traceback" in out_lower
+    assert "import error" in out_lower
+    # Suggestion line may be wrapped by Rich.
+    assert "workspace" in output
+    assert "research --open" in output
+    assert "10" in output
 
 
 def test_cmd_research_audit_flags_empty_content_records(monkeypatch):

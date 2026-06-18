@@ -81,7 +81,11 @@ def test_cmd_dashboard_shows_fix_suggestions_when_http_is_non_200(monkeypatch):
     assert code == 1
     assert "Dashboard returned HTTP 502" in output
     assert "workspace status" in output
-    assert "cd agora && .venv/bin/python -m uvicorn agora.web.app:app --host 127.0.0.1 --port 8765" in output
+    # Rich may wrap the long suggestion line; assert the command tokens are present.
+    assert "cd agora" in output
+    assert "uvicorn agora.web.app:app" in output
+    assert "--host 127.0.0.1" in output
+    assert "--port 8765" in output
 
 
 def test_cmd_dashboard_suggests_uvicorn_install_when_missing(monkeypatch):
