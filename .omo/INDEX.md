@@ -59,20 +59,14 @@
 | 当前任务 | [tasks/active/](tasks/active/) |
 | 当前目标 | [goals/current.yaml](goals/current.yaml) |
 | 系统状态 | [state/system.yaml](state/system.yaml) |
-| 债务仪表盘 | [_control/debt-dashboard/current.yaml](_control/debt-dashboard/current.yaml) |
+| 债务仪表盘 | [debt/dashboard/current.yaml](debt/dashboard/current.yaml) |
 | 质量标准 | [standards/](standards/) |
 | 计划注册表 | [_knowledge/design/plans/README.md](_knowledge/design/plans/README.md) |
-| **Phase 15 治理闭环计划** | [_knowledge/design/plans/phase15-autonomous-governance-preplanning.md](_knowledge/design/plans/phase15-autonomous-governance-preplanning.md) |
-| **Phase 16 产品入口收敛计划** | [_knowledge/design/plans/phase16-product-surface-convergence-preplanning.md](_knowledge/design/plans/phase16-product-surface-convergence-preplanning.md) |
-| **OMO Fusion 蓝图** | [_knowledge/design/plans/omo-fusion-optimization-blueprint.md](_knowledge/design/plans/omo-fusion-optimization-blueprint.md) |
-| **Phase 17-27 多Phase执行计划** | [_knowledge/design/plans/gentle-toasting-mango.md](_knowledge/design/plans/gentle-toasting-mango.md) |
-| **Phase 28 可观测知识工作流** | [_knowledge/design/plans/phase28-observable-knowledge-workflow.md](_knowledge/design/plans/phase28-observable-knowledge-workflow.md) |
-| **Phase 29 工具体系韧性** | [_knowledge/management/plan-phase29-toolchain.md](_knowledge/management/plan-phase29-toolchain.md) |
 | 历史复盘 | [_knowledge/summaries/README.md](_knowledge/summaries/README.md) |
 | 历史任务 | [tasks/done/](tasks/done/) |
-| **治理历史 (JSONL)** | [_knowledge/governance-history.jsonl](_knowledge/governance-history.jsonl) |
 | 架构基线 | [_knowledge/design/system-design-baseline.md](_knowledge/design/system-design-baseline.md) |
-| **AppendOnlyLog 模式 (5 轮收口)** | [_knowledge/management/append-only-log-pattern-2026-06-09.md](_knowledge/management/append-only-log-pattern-2026-06-09.md) |
+| 治理历史 (JSONL) | [_knowledge/governance-history.jsonl](_knowledge/governance-history.jsonl) |
+| AppendOnlyLog 模式 | [_knowledge/management/append-only-log-pattern-2026-06-09.md](_knowledge/management/append-only-log-pattern-2026-06-09.md) |
 
 ---
 
@@ -92,29 +86,16 @@
 
 ## 治理历史
 
-每次 `kairon-governance audit` 跑完会 append 一条到 `_knowledge/governance-history.jsonl` (P29-W2 / ADR-0005 阶段 2)。
+每次 governance audit 跑完会 append 一条到 `_knowledge/governance-history.jsonl`。
 
 查看最近 30 天分数：
 
 ```bash
-kairon-governance history --limit 30
-```
-
-查看 ASCII 趋势图：
-
-```bash
-kairon-governance history --trend
+omo governance
 ```
 
 记录格式：`{date, timestamp, total_score, grade, checks[], watchlist_count}`
 
 ---
 
-## 当前 Phase 蓝图参考
-
-- [_knowledge/design/plans/omo-fusion-optimization-blueprint.md](_knowledge/design/plans/omo-fusion-optimization-blueprint.md) — 四平面融合升级战略蓝图
-- [_knowledge/design/plans/gentle-toasting-mango.md](_knowledge/design/plans/gentle-toasting-mango.md) — Phase 17-27 多Phase执行计划（已完成）
-
----
-
-*维护: 2026-06-17 · 此页只保留导航与指针，不再复制运行时事实*
+*维护: 2026-06-19 · 此页只保留导航与指针，不再复制运行时事实*
