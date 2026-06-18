@@ -1,15 +1,23 @@
 apiVersion: omo/v1
-kind: IdentityAdmissionPolicy
+kind: SpaceIdentityAdmission
+id: runtime-space-identity-admission
 space_ref: spaces/runtime-space.yaml
-default_decision: deny
+identity_anchor: actor_space_membership
+actors:
+  - id: automation-agent
+    actor_type: agent
 memberships:
-  - membership_id: runtime-space-observer-membership
-    actor_id: automation-agent
+  - id: runtime-space-observer-membership
+    actor_ref: automation-agent
+    space_ref: spaces/runtime-space.yaml
     roles:
       - runtime-observer
-    capability_bindings:
+capability_bindings:
+  - id: runtime-observer-binding
+    membership_ref: runtime-space-observer-membership
+    capabilities:
       - runtime.observe
-    admission:
-      mode: explicit_grant
-      approval_required: true
-schema_version: v1
+admission:
+  decision_scope: cross_root_action
+  subject_binding: membership
+  default_mode: explicit_grant

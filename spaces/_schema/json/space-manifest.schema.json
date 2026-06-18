@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind",
+    "id",
+    "display_name",
+    "space_kind",
+    "owners",
+    "roots",
+    "routing"
+  ],
+  "properties": {
+    "apiVersion": { "type": "string" },
+    "kind": { "type": "string" },
+    "id": { "type": "string" },
+    "display_name": { "type": "string" },
+    "space_kind": { "type": "string" },
+    "owners": {
+      "type": "object",
+      "required": ["governance_root", "capability_roots"]
+    },
+    "roots": {
+      "type": "object",
+      "required": ["governance", "spaces", "data", "runtime"]
+    },
+    "routing": {
+      "type": "object",
+      "required": ["default_project"]
+    }
+  }
+}

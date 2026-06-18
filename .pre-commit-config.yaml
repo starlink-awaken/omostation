@@ -101,3 +101,11 @@ repos:
         language: system
         types: [markdown]
         stages: [pre-commit]
+
+      - id: verify-spaces
+        name: Verify Spaces YAML Schema
+        entry: uv run --with jsonschema --with pyyaml python3 bin/verify-spaces.py
+        language: system
+        files: ^spaces/.*\.yaml$
+        pass_filenames: false
+        stages: [pre-commit]

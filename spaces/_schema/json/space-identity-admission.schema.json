@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind",
+    "id",
+    "space_ref",
+    "identity_anchor",
+    "actors",
+    "memberships",
+    "admission"
+  ],
+  "properties": {
+    "apiVersion": { "type": "string" },
+    "kind": { "type": "string" },
+    "id": { "type": "string" },
+    "space_ref": { "type": "string" },
+    "identity_anchor": { "type": "string" },
+    "actors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"]
+      }
+    },
+    "memberships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "actor_ref", "space_ref", "roles"]
+      }
+    },
+    "capability_bindings": {
+      "type": "array"
+    },
+    "admission": {
+      "type": "object",
+      "required": ["decision_scope", "subject_binding", "default_mode"]
+    }
+  }
+}

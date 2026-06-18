@@ -4,18 +4,19 @@ id: runtime-space
 display_name: Runtime Space
 space_kind: runtime
 owners:
-  primary: control-plane
-  operators:
-    - automation-agent
+  governance_root: .omo
+  capability_roots:
+    - projects/runtime
+    - projects/aetherforge
 roots:
   governance: .omo
   spaces: spaces
   data: data
   runtime: runtime
 routing:
-  default_project: projects/agentmesh
+  default_project: projects/runtime
   knowledge_project: projects/gbrain
-  runtime_project: projects/agentmesh
+  runtime_project: projects/runtime
 policy_refs:
   - .omo/_knowledge/design/plans/archive/phase10-program-plan.md
   - .omo/_knowledge/design/plans/archive/phase10-wave4-execution-plan.md
