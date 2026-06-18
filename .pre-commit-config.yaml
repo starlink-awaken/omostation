@@ -86,3 +86,18 @@ repos:
         #   - projects/c2g/src/c2g/bridge_import.py
         # 其余 Python 改动若直接 write_text/open(...,"w")/unlink/mkdir 到 `.omo`
         # 一律拒绝提交, 强制改走 omo CLI / c2g ingress / 授权 broker.
+
+      - id: ruff
+        name: Ruff Linter
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
+        files: ^(projects|scripts|bin)/.*\.py$
+        stages: [pre-commit]
+
+      - id: markdownlint
+        name: MarkdownLint
+        entry: uv run --with pymarkdownlnt pymarkdown scan
+        language: system
+        types: [markdown]
+        stages: [pre-commit]
