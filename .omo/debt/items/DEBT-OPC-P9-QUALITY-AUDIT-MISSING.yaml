@@ -9,7 +9,8 @@ severity: low
 source: agora
 registered_at: '2026-06-17T03:45:00Z'
 last_seen_at: '2026-06-17T03:45:00Z'
-status: open
+status: resolved
 remediation: >
   在 `bos_resolver._memory_all_search` 流程末尾，引入对 `llm_gateway` 
   的轻量级并发调用，基于置信度阈值过滤聚合结果。
+resolution_evidence: 'Injected a lightweight concurrent audit step in agora/mcp/bos_resolver.py (_memory_all_search) that queries bos://persona/core-models/evaluate with a 2-second timeout to filter out results with confidence < 0.3, ensuring high quality aggregation without blocking the core retrieval path.'

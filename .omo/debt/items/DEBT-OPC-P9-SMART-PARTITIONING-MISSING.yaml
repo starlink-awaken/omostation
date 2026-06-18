@@ -9,7 +9,8 @@ severity: medium
 source: agora
 registered_at: '2026-06-17T03:45:00Z'
 last_seen_at: '2026-06-17T03:45:00Z'
-status: open
+status: resolved
 remediation: >
   在 `agora.mcp_proxy.manager` 或 `bos_resolver.py` 中引入负载感知调度算法。
   当存在多个副本节点提供相同 BOS URI 时，优先选择 `load_score` 更低的节点。
+resolution_evidence: 'Updated BOSRouter in projects/agora/src/agora/mcp/bos_router.py to support multiple routes per prefix and implemented smart load-aware partitioning using SwarmOrchestrator load_score when resolving routes.'
