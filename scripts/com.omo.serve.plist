@@ -15,7 +15,10 @@
         <string>serve</string>
     </array>
 
+    <!-- CONVERGED: omo serve HTTP endpoint absorbed into cockpit HTTP :8090 /api/omo/* -->
     <key>RunAtLoad</key>
+    <false/>
+    <key>Disabled</key>
     <true/>
 
     <key>KeepAlive</key>

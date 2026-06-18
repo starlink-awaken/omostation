@@ -18,7 +18,10 @@
         <string>9190</string>
     </array>
 
+    <!-- CONVERGED: omo dashboard absorbed into cockpit HTTP :8090 /api/omo/* and /dash/* -->
     <key>RunAtLoad</key>
+    <false/>
+    <key>Disabled</key>
     <true/>
 
     <key>KeepAlive</key>
