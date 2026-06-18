@@ -12,5 +12,8 @@
 # 新 clone 必跑: make install-hooks
 
 while read -r _ref _local _remote _sha; do :; done  # 消费 pre-push stdin (ref 信息)
-"$(git rev-parse --show-toplevel)/bin/sync-submodules-push.sh" >/dev/null 2>&1 || true
+ROOT="$(git rev-parse --show-toplevel)"
+# sync 子模块, 结果显示到 stderr (失败告警可见, 不阻断 push — best-effort).
+# 之前 >/dev/null 静默 → agora 悬空漏网. 现在显示: push 时能看到哪些子模块 sync 失败.
+"$ROOT/bin/sync-submodules-push.sh" 2>&1 | sed 's/^/[pre-push] /' >&2 || true
 exit 0
