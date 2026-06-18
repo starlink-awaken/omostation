@@ -1,0 +1,31 @@
+apiVersion: omo/v1
+kind: SpaceManifestSchema
+id: space-manifest/v1
+required:
+  - apiVersion
+  - kind
+  - id
+  - display_name
+  - space_kind
+  - owners
+  - roots
+  - routing
+owner_keys:
+  - governance_root
+  - capability_roots
+root_keys:
+  - governance
+  - spaces
+  - data
+  - runtime
+policy_ref_field: policy_refs
+registry_entry_required:
+  - id
+  - display_name
+  - manifest
+  - space_kind
+  - owners
+  - roots
+  - policy_refs
+routing_keys:
+  - default_project

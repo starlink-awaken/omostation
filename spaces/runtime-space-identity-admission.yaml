@@ -1,0 +1,15 @@
+apiVersion: omo/v1
+kind: IdentityAdmissionPolicy
+space_ref: spaces/runtime-space.yaml
+default_decision: deny
+memberships:
+  - membership_id: runtime-space-observer-membership
+    actor_id: automation-agent
+    roles:
+      - runtime-observer
+    capability_bindings:
+      - runtime.observe
+    admission:
+      mode: explicit_grant
+      approval_required: true
+schema_version: v1

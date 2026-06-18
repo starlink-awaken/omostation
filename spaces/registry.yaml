@@ -1,0 +1,49 @@
+apiVersion: omo/v1
+kind: SpaceRegistry
+schema_version: v1
+manifest_root: spaces
+spaces:
+  - id: system-space
+    display_name: System Space
+    manifest: spaces/system-space.yaml
+    space_kind: system
+    status: active
+    owners:
+      governance_root: .omo
+    roots:
+      governance: .omo
+      spaces: spaces
+      data: data
+      runtime: runtime
+    policy_refs:
+      - .omo/_knowledge/design/plans/archive/phase9-program-plan.md
+      - .omo/_knowledge/design/plans/archive/phase9-wave2-execution-plan.md
+      - .omo/_knowledge/design/plans/archive/phase9-wave3-execution-plan.md
+      - .omo/_knowledge/design/plans/archive/phase9-wave4-execution-plan.md
+      - spaces/system-space-identity-admission.yaml
+      - spaces/system-space-capability-taxonomy.yaml
+      - spaces/system-space-admission-matrix.yaml
+      - spaces/system-space-rollout-policy.yaml
+      - spaces/system-space-cross-root-rule-registry.yaml
+      - data/system-data-access-policy.yaml
+  - id: runtime-space
+    display_name: Runtime Space
+    manifest: spaces/runtime-space.yaml
+    space_kind: runtime
+    status: active
+    owners:
+      governance_root: .omo
+    roots:
+      governance: .omo
+      spaces: spaces
+      data: data
+      runtime: runtime
+    policy_refs:
+      - .omo/_knowledge/design/plans/archive/phase10-program-plan.md
+      - .omo/_knowledge/design/plans/archive/phase10-wave4-execution-plan.md
+      - spaces/runtime-space-identity-admission.yaml
+      - spaces/runtime-space-capability-taxonomy.yaml
+      - spaces/runtime-space-admission-matrix.yaml
+      - spaces/runtime-space-rollout-policy.yaml
+      - spaces/runtime-space-cross-root-rule-registry.yaml
+      - data/runtime-space-access-policy.yaml

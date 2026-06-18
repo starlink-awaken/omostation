@@ -1,0 +1,28 @@
+apiVersion: omo/v1
+kind: SpaceManifest
+id: runtime-space
+display_name: Runtime Space
+space_kind: runtime
+owners:
+  primary: control-plane
+  operators:
+    - automation-agent
+roots:
+  governance: .omo
+  spaces: spaces
+  data: data
+  runtime: runtime
+routing:
+  default_project: projects/agentmesh
+  knowledge_project: projects/gbrain
+  runtime_project: projects/agentmesh
+policy_refs:
+  - .omo/_knowledge/design/plans/archive/phase10-program-plan.md
+  - .omo/_knowledge/design/plans/archive/phase10-wave4-execution-plan.md
+  - spaces/runtime-space-identity-admission.yaml
+  - spaces/runtime-space-capability-taxonomy.yaml
+  - spaces/runtime-space-admission-matrix.yaml
+  - spaces/runtime-space-rollout-policy.yaml
+  - spaces/runtime-space-cross-root-rule-registry.yaml
+  - data/runtime-space-access-policy.yaml
+schema_version: v1

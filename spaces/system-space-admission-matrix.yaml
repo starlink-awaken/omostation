@@ -1,0 +1,29 @@
+apiVersion: omo/v1
+kind: SpaceAdmissionMatrix
+id: system-space-admission-matrix
+space_ref: spaces/system-space.yaml
+rules:
+  - action: governance.write
+    required_capabilities:
+      - governance.write
+    decision: allow
+  - action: space.membership.manage
+    required_capabilities:
+      - space.membership.manage
+    decision: allow
+  - action: data.read
+    required_capabilities:
+      - data.read
+    decision: allow
+  - action: runtime.observe
+    required_capabilities:
+      - runtime.observe
+    decision: allow
+  - action: runtime.mutate
+    required_capabilities:
+      - runtime.mutate
+    decision: conditional_approval
+  - action: project.dispatch
+    required_capabilities:
+      - project.dispatch
+    decision: conditional_approval
