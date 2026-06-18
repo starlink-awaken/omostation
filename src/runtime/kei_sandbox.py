@@ -194,6 +194,21 @@ def _audit_hook(event: str, args: tuple):
             record_audit("execute", "ecos.kernel.sandbox", "pass",
                          f"http.client allowed: {host}")
 
+    # ── Phase 15: Deep FS Mutation Interception ──
+    elif event in ("os.remove", "os.unlink", "os.rename", "os.mkdir", "os.rmdir"):
+        file_path = os.path.abspath(str(args[0]))
+        allowed_writes = perms.get("filesystem", {}).get("allow_write", ["*"])
+        if "*" not in allowed_writes:
+            allowed_writes = [os.path.expandvars(p) for p in allowed_writes]
+            allowed = any(file_path.startswith(prefix) for prefix in allowed_writes)
+            if not allowed:
+                record_audit("reject", "ecos.kernel.sandbox", "blocked",
+                             f"FS mutation blocked: {event} on {file_path}")
+                raise PermissionError(f"KEI Sandbox: {event} access to {file_path} is blocked.")
+        record_audit("execute", "ecos.kernel.sandbox", "pass",
+                     f"FS mutation allowed: {event} on {file_path}")
+
+
 
 def enable_sandbox(config_path: str = "kei.yaml", audit_file: str | None = None, role: str = "default") -> None:
     """Enable the KEI Sandbox.
