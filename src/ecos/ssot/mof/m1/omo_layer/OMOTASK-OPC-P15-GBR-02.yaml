@@ -4,6 +4,9 @@ subtype: RoadmapPhase
 name: gbrain .omo/ governance plane initialization
 description: gbrain 缺少 .omo/ 治理平面。在 OPC 跨仓治理审计中确认为缺失。
 status: done
+title: "gbrain .omo/ governance plane initialization"
+gate: none
+gate_status: passed
 priority: P1
 domain: gbrain
 created: '2026-06-11'

@@ -2,7 +2,7 @@ id: "GOV-X4-CONSISTENCY"
 type: "GovernancePolicy"
 name: "X4 一致性维 — SSOT 级联与跨层一致性"
 description: "X4 治理维: M1↔M0 漂移检测 + 跨阶段一致性检查 + `.omo` 状态面 / `projects/omo` / `projects/c2g` 三层 SSOT 一致性"
-status: "active"
+status: active
 domain: "meta"
 layer: "X4"
 created: "2026-06-09"

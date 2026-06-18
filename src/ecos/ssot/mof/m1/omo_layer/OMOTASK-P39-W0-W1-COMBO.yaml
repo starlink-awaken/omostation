@@ -4,6 +4,9 @@ subtype: Task
 name: GitHub push 真启用 + 跨域+LLM 真消费卫健委场景 (W0 + W1 合并)
 description: 'P39-W0 GitHub push 真启用 (git remote 检查 + dry-run):'
 status: done
+title: "GitHub push 真启用 + 跨域+LLM 真消费卫健委场景 (W0 + W1 合并)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

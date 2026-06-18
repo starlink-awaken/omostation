@@ -4,6 +4,9 @@ subtype: Task
 name: 跨域+LLM 实战 + P37 验收 (W2 + W3 合并)
 description: P37-W2 跨域+LLM 实战 (omo.llm_bos_bridge + llm_bos_demo).
 status: done
+title: "跨域+LLM 实战 + P37 验收 (W2 + W3 合并)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

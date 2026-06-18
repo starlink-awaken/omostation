@@ -4,6 +4,9 @@ subtype: Task
 name: Fix all HIGH severity audit findings (H1-H12)
 description: ''
 status: done
+title: "Fix all HIGH severity audit findings (H1-H12)"
+gate: none
+gate_status: passed
 priority: P1
 domain: opc
 properties:

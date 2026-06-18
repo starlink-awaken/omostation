@@ -2,7 +2,7 @@ id: "GOV-CHECK-X1-AUDIT-CHAIN"
 type: "GovernanceCheck"
 name: "X1 审计链检查器"
 description: "X1 审计链检查器 — 检查操作是否安全 (debt-audit.sh / 审计报告 / pre-commit hooks)"
-status: "active"
+status: running
 domain: "meta"
 layer: "X1"
 created: "2026-06-14"

@@ -5,6 +5,9 @@ name: GitHub 真启用 (gh CLI 推 origin main) + LLM 真 anthropic 综合 (mock
 description: P40-W0 GitHub 真启用 (gh CLI 真推 origin main, fast-forward 139 
   commits).
 status: done
+title: "GitHub 真启用 (gh CLI 推 origin main) + LLM 真 anthropic 综合 (mock 模式)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

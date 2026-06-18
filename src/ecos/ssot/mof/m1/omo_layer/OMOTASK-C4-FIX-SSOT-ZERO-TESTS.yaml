@@ -4,6 +4,9 @@ subtype: Task
 name: Fix SSOT package zero test coverage (C4)
 description: ''
 status: done
+title: "Fix SSOT package zero test coverage (C4)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

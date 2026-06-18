@@ -4,6 +4,8 @@ subtype: RoadmapPhase
 name: 'OPC-P3: Swarm Execution Spine'
 description: 'P3 swarm execution spine: design baseline (T1-T5) + full Gate D implementation.'
 status: done
+title: "'OPC-P3: Swarm Execution Spine'"
+gate_status: passed
 priority: P0
 domain: opc
 created: '2026-06-11'

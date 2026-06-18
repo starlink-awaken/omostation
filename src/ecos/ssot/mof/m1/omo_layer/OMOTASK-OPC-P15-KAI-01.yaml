@@ -4,6 +4,9 @@ subtype: RoadmapPhase
 name: kairon JSONL write path audit and schema check hardening
 description: kairon 多包工作区(16 packages) 的 JSONL 写入路径审计。替换直接
 status: done
+title: "kairon JSONL write path audit and schema check hardening"
+gate: none
+gate_status: passed
 priority: P1
 domain: kairon
 created: '2026-06-11'

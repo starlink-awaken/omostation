@@ -4,6 +4,9 @@ subtype: Task
 name: Fix terminal_run shell=True RCE vulnerability (C5)
 description: ''
 status: done
+title: "Fix terminal_run shell=True RCE vulnerability (C5)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

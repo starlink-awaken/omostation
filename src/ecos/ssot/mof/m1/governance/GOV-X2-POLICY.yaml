@@ -2,7 +2,7 @@ id: "GOV-X2-POLICY"
 type: "GovernancePolicy"
 name: "X2 策略维 — 可配置治理策略与自动化规则"
 description: "X2 治理维: 保鲜周期、告警阈值、降级条件等可配置策略，覆盖 `.omo` 目录治理标准、`projects/omo` 内核与 `projects/c2g` 入口"
-status: "active"
+status: active
 domain: "meta"
 layer: "X2"
 created: "2026-06-09"

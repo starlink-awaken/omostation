@@ -4,6 +4,9 @@ subtype: Task
 name: agora 跨进程 URI 派发闭环 (修 agora_unavailable)
 description: P42-W2 agora 跨进程 URI 派发闭环.
 status: done
+title: "agora 跨进程 URI 派发闭环 (修 agora_unavailable)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

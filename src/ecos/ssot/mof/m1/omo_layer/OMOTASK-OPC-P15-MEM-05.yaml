@@ -5,6 +5,9 @@ name: Phase 1.5 存储结构与双路索引提权
 description: 对 gbrain 的搜索引擎注入 MemTheta 的元属性 (confidence_score, access_count)， 在 RRF
   (Reciprocal Rank Fusion) 之后施加知识密度的动态提权 (MemTheta Boost)， 完成了从管线写入到高保真提取的闭环。
 status: done
+title: "Phase 1.5 存储结构与双路索引提权"
+gate: none
+gate_status: passed
 priority: P2
 domain: opc
 properties:

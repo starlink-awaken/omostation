@@ -4,6 +4,9 @@ subtype: Task
 name: Analysis 域 12 URI 实战化验证 — 真实 stdio 串联
 description: 'P34-W2 实战化: 12 Analysis URI 真实 stdio 验证 + 5 URI 真实场景串联.'
 status: done
+title: "Analysis 域 12 URI 实战化验证 — 真实 stdio 串联"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

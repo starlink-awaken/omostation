@@ -4,6 +4,9 @@ subtype: Task
 name: Fix all MEDIUM and LOW severity audit findings (M1-M14, L1-L4)
 description: ''
 status: done
+title: "Fix all MEDIUM and LOW severity audit findings (M1-M14, L1-L4)"
+gate: none
+gate_status: passed
 priority: P2
 domain: opc
 properties:

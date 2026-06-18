@@ -4,6 +4,9 @@ subtype: Task
 name: 战役 4 spawn 真替代 + CI 集成 omo audit (W1 + W2 合并)
 description: 'P35-W1 战役 4: agora spawn 真替代 (自动 respawn 死进程).'
 status: done
+title: "战役 4 spawn 真替代 + CI 集成 omo audit (W1 + W2 合并)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

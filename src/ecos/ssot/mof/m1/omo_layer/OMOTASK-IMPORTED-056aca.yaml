@@ -4,6 +4,9 @@ subtype: Task
 name: 审计所有 L1 包的 MCP 入口，找出非标准的直连调用
 description: ''
 status: done
+title: "审计所有 L1 包的 MCP 入口，找出非标准的直连调用"
+gate: none
+gate_status: passed
 priority: P2
 domain: opc
 properties:

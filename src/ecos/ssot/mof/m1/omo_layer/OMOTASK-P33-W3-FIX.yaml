@@ -4,6 +4,9 @@ subtype: Task
 name: 修 3 高严重度 — KOS 持久化 + 实测可达 + 命名协调
 description: '修 P33-W3 3 高严重度问题 (源自 phase33-review-redundancy.md):'
 status: done
+title: "修 3 高严重度 — KOS 持久化 + 实测可达 + 命名协调"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

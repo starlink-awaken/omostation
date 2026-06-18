@@ -4,6 +4,8 @@ subtype: RoadmapPhase
 name: 'Phase 4: Model-Driven 开发流对齐与治理面接入'
 description: 激活 24 M2 模型类型与生命周期审计的准备工作。
 status: done
+title: "'Phase 4: Model-Driven 开发流对齐与治理面接入'"
+gate_status: passed
 priority: P0
 domain: opc
 created: '2026-06-13'

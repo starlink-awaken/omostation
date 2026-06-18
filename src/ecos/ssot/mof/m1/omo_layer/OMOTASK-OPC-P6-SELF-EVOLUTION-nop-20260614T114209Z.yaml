@@ -4,6 +4,9 @@ subtype: RoadmapPhase
 name: 'No-op: drift detector reported 0 drift; loop continues'
 description: ''
 status: proposed
+title: "'No-op: drift detector reported 0 drift; loop continues'"
+gate: none
+gate_status: not_yet_passed
 priority: P2
 domain: opc
 properties:

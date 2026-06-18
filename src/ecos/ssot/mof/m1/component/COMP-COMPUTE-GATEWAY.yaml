@@ -4,6 +4,7 @@ subtype: Gateway
 name: ComputeGateway
 description: "统一算力网关 — 全局Ledger·预算事前拦截·多级配额管控"
 status: active
+runtime: active
 domain: compute
 created: '2026-06-17'
 version: 1.0.0

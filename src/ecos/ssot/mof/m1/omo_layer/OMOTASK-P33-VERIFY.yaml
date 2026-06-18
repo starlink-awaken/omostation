@@ -4,6 +4,9 @@ subtype: Task
 name: P33 验收 — 6 wave 全完成，21 BOS URI 真活
 description: 'P33 整体收官: 6 wave (北极星/战役2起步/战役2余下/修3高严重度/战役1/战役3) 全完成.'
 status: done
+title: "P33 验收 — 6 wave 全完成，21 BOS URI 真活"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

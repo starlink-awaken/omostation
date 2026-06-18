@@ -2,7 +2,7 @@ id: "GOV-X1-CONSTRAINT"
 type: "GovernancePolicy"
 name: "X1 约束维 — 系统边界与约束治理"
 description: "X1 治理维: 定义 `.omo` 状态面、`projects/omo` 治理内核、`projects/c2g` 战略入口的边界、硬约束和合规规则"
-status: "active"
+status: active
 domain: "meta"
 layer: "X1"
 created: "2026-06-09"

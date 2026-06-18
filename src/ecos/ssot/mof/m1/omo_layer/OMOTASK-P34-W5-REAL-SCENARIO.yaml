@@ -4,6 +4,9 @@ subtype: Task
 name: 真实场景 5/5 ok — 修基础设施让 5 URI 串联全活
 description: '修 P34-W2 揭出的 3 错误:'
 status: done
+title: "真实场景 5/5 ok — 修基础设施让 5 URI 串联全活"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

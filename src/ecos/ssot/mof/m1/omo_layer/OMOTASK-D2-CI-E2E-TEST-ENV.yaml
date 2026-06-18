@@ -4,6 +4,9 @@ subtype: Task
 name: CI E2E 测试环境容器化 (Resolve D2 debt)
 description: ''
 status: done
+title: "CI E2E 测试环境容器化 (Resolve D2 debt)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

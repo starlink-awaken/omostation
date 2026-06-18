@@ -4,6 +4,9 @@ subtype: Task
 name: dashboard 真服务化 + P39 验收 (W2 + W3 合并)
 description: P39-W2 dashboard 真服务化 (launchd plist + stop + health check).
 status: done
+title: "dashboard 真服务化 + P39 验收 (W2 + W3 合并)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

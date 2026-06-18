@@ -4,6 +4,9 @@ subtype: Task
 name: 修任务 YAML 描述债务 — audit 95→100 (A+ 恢复)
 description: 修 P34-W0/W1 任务 YAML deliverables 描述式文本 -> 真实文件路径.
 status: done
+title: "修任务 YAML 描述债务 — audit 95→100 (A+ 恢复)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

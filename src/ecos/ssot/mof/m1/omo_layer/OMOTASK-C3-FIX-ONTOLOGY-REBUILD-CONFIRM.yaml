@@ -4,6 +4,9 @@ subtype: Task
 name: Fix ontology_rebuild missing L2 confirmation check (C3)
 description: ''
 status: done
+title: "Fix ontology_rebuild missing L2 confirmation check (C3)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

@@ -5,6 +5,9 @@ name: 'P42-W0-AUDIT-WORKING-TREE: 审计 11 modified submodules + 2 untracked (a
   + bus-foundation 2 新脚本'
 description: ''
 status: proposed
+title: "'P42-W0-AUDIT-WORKING-TREE: 审计 11 modified submodules + 2 untracked (aetherforge-swarm-ext/cockpit)"
+gate: none
+gate_status: not_yet_passed
 priority: P2
 domain: opc
 properties:

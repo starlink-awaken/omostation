@@ -5,6 +5,9 @@ name: 观测性 dashboard + P38 验收 (W2 + W3 合并)
 description: P38-W2 观测性 dashboard (omo.omo_observability_dashboard + HTTP 
   server).
 status: done
+title: "观测性 dashboard + P38 验收 (W2 + W3 合并)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

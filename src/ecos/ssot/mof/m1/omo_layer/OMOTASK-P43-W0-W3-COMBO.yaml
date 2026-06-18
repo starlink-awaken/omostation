@@ -4,6 +4,9 @@ subtype: Task
 name: P43 4 wave 全面实施 (ProcessPool + 40 URI smoke + audit + 修测试)
 description: P43-W0 agora 长驻进程池 (75x 加速, 6 URI 0.80s vs P42-W2 60s).
 status: done
+title: "P43 4 wave 全面实施 (ProcessPool + 40 URI smoke + audit + 修测试)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

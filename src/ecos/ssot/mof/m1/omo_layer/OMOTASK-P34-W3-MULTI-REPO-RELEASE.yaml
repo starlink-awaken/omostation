@@ -4,6 +4,9 @@ subtype: Task
 name: 多仓库统一版本发布 — release.sh + CHANGELOG + VERSION
 description: 'P34-W3 多仓库统一发布: VERSION + CHANGELOG + release.sh + ADR-0007.'
 status: done
+title: "多仓库统一版本发布 — release.sh + CHANGELOG + VERSION"
+gate: none
+gate_status: passed
 priority: P1
 domain: opc
 properties:

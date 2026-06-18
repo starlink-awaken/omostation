@@ -4,6 +4,7 @@ subtype: Aggregator
 name: MemorySpine
 description: "全域记忆脊椎 — 跨域搜索 (KOS/gbrain/Vault)·Swarm感知"
 status: active
+runtime: active
 domain: memory
 created: '2026-06-17'
 version: 1.0.0

@@ -4,6 +4,9 @@ subtype: Task
 name: agora spawn 升级 — W4 POC 到生产 stdio MCP 协议
 description: 'P34-W1 战役 1 升级: agora stdio 协议从"alive 验证" 到 "真请求/响应".'
 status: done
+title: "agora spawn 升级 — W4 POC 到生产 stdio MCP 协议"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

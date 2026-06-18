@@ -4,6 +4,9 @@ subtype: Task
 name: 归档 P30/P31/P32 — 让 planned/ 平面只剩 P33
 description: 归档 P30/P31/P32 任务到 archived/, 让 planned/ 平面清空为 P33 专用。
 status: done
+title: "归档 P30/P31/P32 — 让 planned/ 平面只剩 P33"
+gate: none
+gate_status: passed
 priority: P1
 domain: opc
 properties:

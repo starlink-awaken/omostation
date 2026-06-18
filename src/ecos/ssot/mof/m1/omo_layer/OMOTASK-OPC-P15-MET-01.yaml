@@ -4,6 +4,9 @@ subtype: RoadmapPhase
 name: metaos .omo/ governance plane initialization and population
 description: metaos 缺少 .omo/ 治理平面，无法参与 OMO phase/task/debt/audit 流程。
 status: done
+title: "metaos .omo/ governance plane initialization and population"
+gate: none
+gate_status: passed
 priority: P1
 domain: metaos
 created: '2026-06-11'

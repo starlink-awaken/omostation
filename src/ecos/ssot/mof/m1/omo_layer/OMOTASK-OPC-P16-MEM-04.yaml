@@ -4,6 +4,8 @@ subtype: RoadmapPhase
 name: 'Phase 1.4: 淘汰机制落地'
 description: 执行了 2026-v6.1-strategic-plan.md Phase 1 (记忆系统升级) 的第四项任务：淘汰机制落地。
 status: done
+title: "'Phase 1.4: 淘汰机制落地'"
+gate_status: passed
 priority: P0
 domain: opc
 created: '2026-06-13'

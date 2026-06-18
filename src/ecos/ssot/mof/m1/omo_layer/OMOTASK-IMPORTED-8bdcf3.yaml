@@ -4,6 +4,9 @@ subtype: Task
 name: 'P42-W0-SYNC-OMO-STATE: 跑 sync_omo_state.py 一次性把 system.yaml 字段全刷新'
 description: ''
 status: proposed
+title: "'P42-W0-SYNC-OMO-STATE: 跑 sync_omo_state.py 一次性把 system.yaml 字段全刷新'"
+gate: none
+gate_status: not_yet_passed
 priority: P2
 domain: opc
 properties:

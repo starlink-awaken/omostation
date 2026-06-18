@@ -4,6 +4,9 @@ subtype: RoadmapPhase
 name: gbrain JSONL writers audit and atomic write remediation
 description: gbrain TypeScript codebase 使用非原子覆盖写入(writeText)及
 status: done
+title: "gbrain JSONL writers audit and atomic write remediation"
+gate: none
+gate_status: passed
 priority: P1
 domain: gbrain
 created: '2026-06-11'

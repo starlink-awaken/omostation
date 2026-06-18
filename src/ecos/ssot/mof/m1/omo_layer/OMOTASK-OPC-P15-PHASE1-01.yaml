@@ -4,6 +4,9 @@ subtype: RoadmapPhase
 name: 'Phase 1: Memory Adapter and Architecture Decoupling'
 description: 'Implementation of eCOS v6.1 Roadmap Phase 1:'
 status: done
+title: "'Phase 1: Memory Adapter and Architecture Decoupling'"
+gate: none
+gate_status: passed
 priority: P0
 domain: kairon
 created: '2026-06-12'

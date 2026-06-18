@@ -4,6 +4,9 @@ subtype: Task
 name: 观测性落地 + P36 验收 (W2 + W3 合并)
 description: 'P36-W2 观测性 plan 真正落地: 验证 omo observability/cost/alert 三件套'
 status: done
+title: "观测性落地 + P36 验收 (W2 + W3 合并)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

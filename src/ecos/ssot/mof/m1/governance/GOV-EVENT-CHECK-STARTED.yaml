@@ -2,7 +2,7 @@ id: "GOV-EVENT-CHECK-STARTED"
 type: "GovernanceEvent"
 name: "治理检查启动事件"
 description: "治理事件 — 检查器执行过程中产生的事件流 (check_started/check_completed/alert_triggered/state_changed)"
-status: "active"
+status: emitted
 domain: "meta"
 layer: "X1"
 created: "2026-06-14"

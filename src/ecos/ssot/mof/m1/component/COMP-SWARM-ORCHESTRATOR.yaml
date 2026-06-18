@@ -4,6 +4,7 @@ subtype: Service
 name: SwarmOrchestrator
 description: "分布式蜂群协调器 — UDP发现·Ed25519信任网·负载遥测"
 status: active
+runtime: active
 domain: swarm
 created: '2026-06-17'
 version: 1.0.0

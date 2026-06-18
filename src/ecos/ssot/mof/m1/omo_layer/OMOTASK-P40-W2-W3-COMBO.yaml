@@ -5,6 +5,9 @@ name: dashboard 持续服务化 + P40 验收 (W2 + W3 合并)
 description: P40-W2 dashboard 持续服务化 (launchctl load -w 长期跑 + monitor + 
   uninstall).
 status: done
+title: "dashboard 持续服务化 + P40 验收 (W2 + W3 合并)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

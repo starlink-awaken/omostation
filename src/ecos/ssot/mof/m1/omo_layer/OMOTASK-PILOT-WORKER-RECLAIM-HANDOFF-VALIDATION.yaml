@@ -4,6 +4,9 @@ subtype: Task
 name: Run reclaim and second-worker handoff validation under OMO framework
 description: ''
 status: done
+title: "Run reclaim and second-worker handoff validation under OMO framework"
+gate: none
+gate_status: passed
 priority: P1
 domain: opc
 properties:

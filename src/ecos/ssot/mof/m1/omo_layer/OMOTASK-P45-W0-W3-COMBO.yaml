@@ -4,6 +4,9 @@ subtype: Task
 name: P45 战役 1 — 10 GAP URI 实施 (4 wave combo)
 description: 'P45 战役 1 — 10 GAP URI 实施 (P44-W2 评估路线图):'
 status: done
+title: "P45 战役 1 — 10 GAP URI 实施 (4 wave combo)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

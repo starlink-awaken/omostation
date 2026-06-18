@@ -4,6 +4,7 @@ subtype: Daemon
 name: EvolutionLoop
 description: "OMO 自动进化循环 — 监听债务·自动提案·自愈调度"
 status: active
+runtime: active
 domain: governance
 created: '2026-06-17'
 version: 1.0.0

@@ -4,6 +4,7 @@ subtype: Organ
 name: KeiSandbox
 description: "KEI (Knowledge Engine Integrity) 沙箱隔离 — 基于 sys.addaudithook 的运行时拦截"
 status: active
+runtime: active
 domain: security
 created: '2026-06-17'
 version: 1.0.0

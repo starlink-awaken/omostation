@@ -4,6 +4,9 @@ subtype: Task
 name: LLM 用 ollama + 修 GitHub workflow failure (W0 + W1 合并)
 description: P41-W0 LLM 用 ollama 替代 anthropic (本地免费, 不需 API key).
 status: done
+title: "LLM 用 ollama + 修 GitHub workflow failure (W0 + W1 合并)"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

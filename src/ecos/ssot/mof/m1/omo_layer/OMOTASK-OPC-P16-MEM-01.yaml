@@ -4,6 +4,8 @@ subtype: RoadmapPhase
 name: 'Phase 1.1: 记忆系统现状审计'
 description: 执行了 2026-v6.1-strategic-plan.md Phase 1 (记忆系统升级) 的第一项任务：记忆系统现状审计。
 status: done
+title: "'Phase 1.1: 记忆系统现状审计'"
+gate_status: passed
 priority: P0
 domain: opc
 created: '2026-06-13'

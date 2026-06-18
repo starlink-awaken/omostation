@@ -5,6 +5,8 @@ name: OPC-P2 Gate C 实施追踪 (C1→C2→C3→C4→C)
 description: Track P2 Gate C implementation sub-gates per OPC-MASTER-EXECUTION-PLAYBOOK
   §7.
 status: done
+title: "OPC-P2 Gate C 实施追踪 (C1→C2→C3→C4→C)"
+gate_status: passed
 priority: P0
 domain: opc
 created: '2026-06-11'

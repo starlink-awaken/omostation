@@ -4,6 +4,9 @@ subtype: Task
 name: '战役 3: forge 集市 + 工具热加载'
 description: 'P33-W5 战役 3: forge 集市 + 工具热加载.'
 status: done
+title: "'战役 3: forge 集市 + 工具热加载'"
+gate: none
+gate_status: passed
 priority: P0
 domain: opc
 properties:

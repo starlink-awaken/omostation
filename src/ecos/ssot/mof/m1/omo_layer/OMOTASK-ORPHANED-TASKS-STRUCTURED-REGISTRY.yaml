@@ -4,6 +4,9 @@ subtype: Task
 name: Orphaned_tasks blob 拆分为结构化 registry
 description: ''
 status: done
+title: "Orphaned_tasks blob 拆分为结构化 registry"
+gate: none
+gate_status: passed
 priority: P1
 domain: opc
 properties:

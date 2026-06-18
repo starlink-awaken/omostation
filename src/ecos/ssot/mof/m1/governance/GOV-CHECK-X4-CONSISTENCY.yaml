@@ -2,7 +2,7 @@ id: "GOV-CHECK-X4-CONSISTENCY"
 type: "GovernanceCheck"
 name: "X4 一致性检查器"
 description: "X4 一致性检查器 — 检查跨项目/跨层 SSOT 一致性 (字段/状态机/引用路径)"
-status: "active"
+status: running
 domain: "meta"
 layer: "X4"
 created: "2026-06-14"

@@ -5,6 +5,9 @@ name: 'P42-W0-CONSUME-STASH: 消化 stash@{0} (P59-W0 dispatch bug) + stash@{1} 
   声明式注册)'
 description: ''
 status: proposed
+title: "'P42-W0-CONSUME-STASH: 消化 stash@{0} (P59-W0 dispatch bug) + stash@{1} (P46 W1"
+gate: none
+gate_status: not_yet_passed
 priority: P2
 domain: opc
 properties:
