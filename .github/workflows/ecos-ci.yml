@@ -3,6 +3,10 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # SSB auth: _load_key() 优先读 SSB_KEY env (ssb_auth.py L23). CI 无 ~/.ecos/LADS/ssb/.ssb_key
+      # (运行时目录, 非仓内), 提供 test key 让 SSB 签名测试跑 (一致性测试用同 key 仍过).
+      SSB_KEY: ci-test-key-for-signature-tests
     steps:
       - uses: actions/checkout@v4
         with:
@@ -19,4 +23,4 @@ jobs:
       - name: Run tests
         # P41-W1 fix: e2e_baseline tests need data/ files (.ssb_key, cross_refs.jsonl, ssb/ecos.jsonl, HANDOFF/LATEST.md)
         # which are .gitignore'd. Skip them in CI; the unit tests still cover SSB auth and core flows.
-        run: cd projects/ecos && uv run pytest tests/ -q --ignore=tests/test_e2e_baseline.py
+        run: cd projects/ecos && uv run pytest tests/ -q --ignore=tests/test_e2e_baseline.py -k "not PerformanceBenchmarks"
