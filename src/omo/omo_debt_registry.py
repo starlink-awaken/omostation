@@ -47,18 +47,39 @@ class DebtLedger:
 
 
 def load_debt_ledger(omo_dir: Path) -> DebtLedger:
-    registry_path = omo_dir / "debt" / "registry.yaml"
+    """Load debt ledger from the authoritative SSOT.
+
+    P42 SSOT 同步纪元: `.omo/_truth/registry/debt.yaml` 是新 SSOT (authority),
+    `.omo/debt/registry.yaml` 是历史兼容 fallback。优先读新 SSOT, fallback 老 SSOT。
+    Missing item files 静默跳过 (不抛 FileNotFoundError),保持 ledger 韧性。
+    """
+    truth_registry = omo_dir / "_truth" / "registry" / "debt.yaml"
+    legacy_registry = omo_dir / "debt" / "registry.yaml"
+
+    if truth_registry.exists():
+        registry_path = truth_registry
+        registry_ref_str = ".omo/_truth/registry/debt.yaml"
+    elif legacy_registry.exists():
+        registry_path = legacy_registry
+        registry_ref_str = ".omo/debt/registry.yaml"
+    else:
+        raise FileNotFoundError(
+            f"No debt registry found at {truth_registry} or {legacy_registry}"
+        )
+
     registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
 
     items: list[DebtItem] = []
-    for item_ref in registry["seed_items"]:
-        payload = yaml.safe_load(
-            (omo_dir.parent / item_ref).read_text(encoding="utf-8")
-        )
+    for item_ref in registry.get("seed_items", []):
+        item_file = omo_dir.parent / item_ref
+        if not item_file.exists():
+            # 历史悬空引用: 跳过, 保持韧性
+            continue
+        payload = yaml.safe_load(item_file.read_text(encoding="utf-8"))
         items.append(_parse_debt_item(payload))
 
     return DebtLedger(
-        registry_ref=".omo/debt/registry.yaml",
+        registry_ref=registry_ref_str,
         dashboard_ref=registry["dashboard_ref"],
         review_pack_ref=registry["review_pack_ref"],
         review_queue_ref=registry["review_queue_ref"],

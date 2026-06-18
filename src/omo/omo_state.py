@@ -29,7 +29,7 @@ def cmd_state_show(omo_dir: Path, fmt: str) -> int:
     print(f"Active agents:  {data.get('active_agents', 0)}")
     print(f"Idle agents:    {data.get('idle_agents', 0)}")
     print(f"Blocked tasks:  {data.get('blocked_tasks', 0)}")
-    print(f"Code freeze:    {data.get('code_freeze', False)}")
+    print(f"Code freeze:    {data.get('governance', {}).get('code_freeze', False)}")
     print(f"Next milestone: {data.get('next_milestone', '?')}")
     return 0
 

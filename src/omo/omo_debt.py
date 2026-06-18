@@ -834,7 +834,14 @@ def main() -> int:
         return 0
 
     if args.command == "schedule":
-        schedule_item(omo_dir, args.id, args.next_review_at)
+        schedule_item(
+            omo_dir,
+            args.id,
+            args.next_review_at,
+            _load_yaml,
+            _write_yaml,
+            datetime.now(timezone.utc).isoformat(),
+        )
         print(f"scheduled {args.id}")
         return 0
 
