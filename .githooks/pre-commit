@@ -61,7 +61,7 @@ validate_yaml_syntax() {
         checked=$((checked + 1))
 
         if command -v python3 &>/dev/null; then
-            if ! python3 -c "
+            if ! uv run --with pyyaml python -c "
 import yaml, sys
 try:
     with open('$full_path') as f:
@@ -101,7 +101,7 @@ validate_kei_yaml() {
         return
     fi
 
-    python3 -c "
+    uv run --with pyyaml python -c "
 import yaml, sys
 
 with open('$kei_file') as f:
@@ -152,7 +152,7 @@ validate_protocol_refs() {
         return
     fi
 
-    python3 -c "
+    uv run --with pyyaml python -c "
 import yaml, sys, os
 from pathlib import Path
 
