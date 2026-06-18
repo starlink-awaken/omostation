@@ -77,13 +77,13 @@ goals:
   tasks: []
 - id: BET-c685
   desc: 'Bet: TestPitch (Appetite: 1 day)'
-  progress: 0.0
-  status: pending
+  progress: 100.0
+  status: done
   tasks: []
 - id: BET-ea47
   desc: 'Bet: Pitch-Valid (Appetite: Unknown)'
   progress: 0.0
-  status: pending
+  status: archived
   tasks: []
 - id: BET-a15b
   desc: 'Bet: PITCH-llm-gateway-merge (Appetite: -  1 Week（中等复杂度，高架构影响）。)'
@@ -98,25 +98,28 @@ goals:
   - OPC-P43-LLM-MERGE-ARCHIVE
 - id: BET-c87a
   desc: 'Bet: http-mcp-convergence-optimization (Appetite: >  2 weeks)'
-  progress: 0.0
+  progress: 60.0
   status: pending
   tasks: []
+  note: '核心收敛已完成 (24→5 HTTP, 29/29 MCP stdio). 剩余: test coverage 提升 + 前端现代化. 建议拆为独立小 bet.'
 - id: BET-9001
   title: 统一持久化 broker
   desc: 'Bet: 统一持久化 broker (Appetite: 1 week)'
   progress: 0.0
-  status: pending
+  status: archived
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-9001
   created_at: '2026-06-18T03:00:00Z'
   vector: V2
   appetite: 1 week
+  bet_status: archived
+  archive_reason: 'full broker 过度工程化; 实际 duplication 仅 AppendOnlyLog, 可接受; 文档化持久化模式即可'
 - id: BET-38c6
   title: 16-p0-task-triage
   desc: 'Bet: 16-p0-task-triage (Appetite: 1 day)'
-  progress: 0.0
-  status: pending
+  progress: 100.0
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-38c6
@@ -127,8 +130,8 @@ goals:
 - id: BET-9cfa
   title: 17-submodule-dirty-cleanup
   desc: 'Bet: 17-submodule-dirty-cleanup (Appetite: 1 day)'
-  progress: 0.0
-  status: pending
+  progress: 100.0
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-9cfa
@@ -139,8 +142,8 @@ goals:
 - id: BET-5433
   title: 18-untracked-files-triage
   desc: 'Bet: 18-untracked-files-triage (Appetite: 0.5 day)'
-  progress: 0.0
-  status: pending
+  progress: 100.0
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-5433
@@ -152,14 +155,15 @@ goals:
   title: 15-deep-defensive-hardening
   desc: 'Bet: 15-deep-defensive-hardening (Appetite: 3 days)'
   progress: 0.0
-  status: pending
+  status: archived
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-f478
   created_at: '2026-06-18T15:08:03Z'
   appetite: 3 days
   vector: V2
-  bet_status: active
+  bet_status: archived
+  archive_reason: '无 spec, OPC-P7 hardening 已完成, 需重新定义范围后再启动'
 health_targets:
   mcp_isolation_score: 100
   overall: 99
