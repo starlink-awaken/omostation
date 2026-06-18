@@ -379,9 +379,8 @@ class SwarmOrchestrator:
         """本节点负载上报 (供 worker heartbeat 使用)。"""
         self_node = self._nodes.get(self.node_id)
         if self_node:
-            self_node.load_score = load_score
-            self_node.queue_depth = queue_depth
             self_node.cpu_percent = cpu_pct
+            self_node.queue_depth = queue_depth
             self_node.memory_mb = memory_mb
 
     def status(self) -> dict:

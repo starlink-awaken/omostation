@@ -143,7 +143,8 @@ class TestSwarmAdvanced:
     def test_health_yellow_on_high_load(self):
         n = make_node()
         n.last_heartbeat = time.time()
-        n.load_score = 85  # > 80 threshold
+        n.cpu_percent = 100  # load_score = 100*0.7 + 5*3 = 85 > 80
+        n.queue_depth = 5
         assert n.health == "yellow"
 
     def test_health_red_offline(self):
@@ -159,8 +160,10 @@ class TestSwarmAdvanced:
         # Two workers with same URI, different load
         w1 = make_node("w1", "worker", ["bos://memory/kos/"])
         w2 = make_node("w2", "worker", ["bos://memory/kos/"])
-        w1.load_score = 20  # low load
-        w2.load_score = 80  # high load
+        w1.cpu_percent = 10  # low load → load_score = 7
+        w1.queue_depth = 0
+        w2.cpu_percent = 100  # high load → load_score = 82
+        w2.queue_depth = 4
         s.register_node(w1)
         s.register_node(w2)
 
@@ -174,8 +177,10 @@ class TestSwarmAdvanced:
 
         w1 = make_node("w1", "worker", ["bos://memory/kos/"])
         w2 = make_node("w2", "worker", ["bos://memory/kos/search"])
-        w1.load_score = 85  # YELLOW
-        w2.load_score = 10  # GREEN
+        w1.cpu_percent = 100  # YELLOW → load_score = 85
+        w1.queue_depth = 5
+        w2.cpu_percent = 10  # GREEN → load_score = 7
+        w2.queue_depth = 0
         s.register_node(w1)
         s.register_node(w2)
 
@@ -198,13 +203,12 @@ class TestSwarmAdvanced:
     def test_report_load(self):
         from agora.mcp.swarm import SwarmOrchestrator
         s = SwarmOrchestrator(role="worker")
-        # Register with the node's own ID to match report_load's lookup
         n = make_node(s.node_id, "worker")
         s.register_node(n)
         s.report_load(load_score=50, queue_depth=5, cpu_pct=60, memory_mb=1024)
         updated = s._nodes.get(s.node_id)
         assert updated is not None
-        assert updated.load_score == 50
+        assert updated.cpu_percent == 60
         assert updated.queue_depth == 5
 
 
