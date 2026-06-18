@@ -620,3 +620,19 @@ omni_bus_constraints:
     value_tier: 2
     references:
       - "projects/bus-foundation/src/bus_foundation/backends/data_plane.py"
+
+debt_constraints:
+  - id: CR-DEBT-GATE-ENUM-01
+    name: "Debt gate_level 合法枚举约束"
+    description: "所有 omo debt item 的 gate_level 字段必须取自合法枚举 {gate, watchlist, none}, 禁止 X1-X4 dimension 名 (x1_audit/x2_freshness/x3_value/x4_consistency) 直接当 gate_level 用"
+    rule: "debt.gate_level in ['gate', 'watchlist', 'none']"
+    type: required
+    severity: error
+    violation: "gate_level 非法值导致 omo_debt_review_queue.GATE_ORDER 排序乱序 (rank=99), compute_debt_metrics 漏算 watchlist/gate, debt_health 失真"
+    introduced: '2026-06-18'
+    value_tier: 1
+    references:
+      - "projects/omo/src/omo/omo_debt_review_queue.py"
+      - "projects/omo/src/omo/omo_debt_metrics.py"
+      - ".omo/standards/debt-gate-level-enum.md"
+      - ".omo/_knowledge/management/2026-06-18-omo-drift-audit.md"
