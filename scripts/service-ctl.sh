@@ -29,8 +29,8 @@ show_usage() {
 # Format: service_name|launchd_label|port|workdir
 LAUNCHD_SERVICES=(
   "hermes-gateway|ai.hermes.gateway|—|$HOME/.hermes/hermes-agent"
-  "agent-runtime|com.agent-runtime|$AGENT_RUNTIME_PORT|$KAIRON_HOME/packages/agent-runtime"
-  "cron-service|com.user.cron-service|$CRON_SERVICE_PORT|$KAIRON_HOME/packages/cron-service"
+  "agent-runtime|com.agent-runtime|$AGENT_RUNTIME_PORT|$WORKSPACE_HOME/projects/cockpit"
+  "cron-service|com.user.cron-service|$CRON_SERVICE_PORT|$WORKSPACE_HOME/projects/runtime"
   "ollama|ollama|$OLLAMA_PORT|—"
 )
 

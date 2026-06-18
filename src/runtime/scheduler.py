@@ -5,13 +5,13 @@ import json
 import subprocess
 from pathlib import Path
 import os
+import sys
 from datetime import datetime, timezone
 
 from runtime.matrix import list_services, health_check_url
 from runtime.state_schema import validate_runtime_health_snapshot
 
 import yaml
-import shutil
 import hashlib
 
 STATE_FILE = Path(os.environ.get("RUNTIME_HOME", Path.home() / "runtime")) / "matrix_state.json"
@@ -20,6 +20,12 @@ _workspace_root = Path(__file__).resolve().parents[4]  # runtime/src/runtime/sch
 OMO_STATE_FILE = Path(
     os.environ.get("OMO_STATE_FILE", str(_workspace_root / ".omo" / "state" / "system_health.yaml"))
 )
+OMO_SRC = _workspace_root / "projects" / "omo" / "src"
+
+if str(OMO_SRC) not in sys.path:
+    sys.path.insert(0, str(OMO_SRC))
+
+from omo.omo_gc import archive_resolved_debt_items
 
 class MatrixScheduler:
     def __init__(self):
@@ -300,25 +306,13 @@ class MatrixScheduler:
     def run_entropy_gc(self):
         print("🧹 [X2 Anti-Entropy] Running Pan-Entropy GC...")
         workspace = _workspace_root
-        # 1. GC debt ledger
-        debt_dir = workspace / ".omo/debt/items"
-        archive_dir = workspace / ".omo/debt/archive"
-        if debt_dir.exists():
-            archive_dir.mkdir(parents=True, exist_ok=True)
-            now = time.time()
-            compacted = 0
-            for item in debt_dir.glob("*.yaml"):
-                try:
-                    with open(item, "r") as f:
-                        data = yaml.safe_load(f)
-                    if data and data.get("resolved") is True:
-                        if now - item.stat().st_mtime > 604800: # 7 days
-                            shutil.move(str(item), str(archive_dir / item.name))
-                            compacted += 1
-                except Exception:
-                    pass
-            if compacted > 0:
-                print(f"📦 [X2 Anti-Entropy] Compacted {compacted} resolved debt items to archive.")
+        compacted = archive_resolved_debt_items(
+            workspace / ".omo",
+            now=time.time(),
+            older_than_seconds=604800,
+        )
+        if compacted > 0:
+            print(f"📦 [X2 Anti-Entropy] Compacted {compacted} resolved debt items to archive.")
 
 
     def _check_stale_services(self):
