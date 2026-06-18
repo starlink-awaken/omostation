@@ -20,7 +20,6 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-from uuid import uuid4
 
 
 def _workspace_root() -> Path:
@@ -56,16 +55,6 @@ def _now_iso() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _slug(value: str) -> str:
-    chars = []
-    for ch in value.lower():
-        if ch.isalnum():
-            chars.append(ch)
-        elif chars and chars[-1] != "-":
-            chars.append("-")
-    return "".join(chars).strip("-") or "query"
-
-
 def _query_tokens(query: str) -> list[str]:
     return [token.lower() for token in query.replace("/", " ").replace("-", " ").split() if token.strip()]
 
@@ -79,14 +68,13 @@ def _score_text_match(*, query: str, parts: list[str]) -> int:
 
 
 def _archive_scenario_receipt(result: dict[str, Any]) -> str:
-    scenario = str(result.get("scenario", "unknown"))
-    out_dir = _workspace_root() / ".omo" / "_delivery" / "scenarios" / scenario
-    out_dir.mkdir(parents=True, exist_ok=True)
-    ts = _now_iso().replace(":", "").replace("-", "")
-    query_hint = _slug(str(result.get("query", scenario)))
-    out_path = out_dir / f"{ts}-{query_hint}-{uuid4().hex[:8]}.json"
-    out_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return str(out_path)
+    workspace_root = _workspace_root()
+    omo_root = workspace_root / "projects" / "omo"
+    if str(omo_root / "src") not in sys.path:
+        sys.path.insert(0, str(omo_root / "src"))
+    from omo.omo_cockpit_bridge import archive_scenario_receipt
+
+    return archive_scenario_receipt(workspace_root / ".omo", result)
 
 
 def _load_recent_research_rows(*, limit: int) -> list[dict]:

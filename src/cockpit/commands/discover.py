@@ -4,6 +4,7 @@ from argparse import Namespace
 
 from rich.console import Console
 
+
 def _cmd_discover(args: Namespace) -> int:
     """发现可用功能和资源。"""
     console = Console()

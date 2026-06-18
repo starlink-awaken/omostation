@@ -6,9 +6,8 @@ import argparse
 import subprocess
 from pathlib import Path
 
-from .base import _get_console
 from ..data_index import resolve_workspace_root
-
+from .base import _get_console
 
 _OMO_GOVERNANCE_SUBCOMMANDS = {"surfaces", "ingress-goal", "ingress-task", "ingress-debt"}
 

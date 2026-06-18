@@ -1,8 +1,9 @@
 """Knowledge API routes."""
-from fastapi import APIRouter, Depends, Request
+
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
-import httpx
-import json
+
+from ..compat import _ensure_agora_src
 
 router = APIRouter()
 

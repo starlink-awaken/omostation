@@ -328,11 +328,11 @@ def cmd_research_ask(args: argparse.Namespace) -> int:
         question = getattr(args, "question", "")
         if isinstance(question, list):
             question = " ".join(str(q) for q in question)
-    
+
     if not research_id or not question:
         _get_err().print("[red]❌ 请提供研究 ID 和问题内容[/red]")
         return 1
-    
+
     research = _get_data_access().get_research(research_id)
     if not research:
         recent = _get_data_access().list_research(limit=3)
@@ -1292,9 +1292,10 @@ def cmd_research_backup_restore(args: argparse.Namespace) -> int:
 
 def _cmd_research_batch(args) -> int:
     import time
+
     from rich.console import Console
     console = Console()
-    
+
     topics = args.topic
     if len(topics) < 2:
         console.print("[red]batch 模式需要至少 2 个研究主题[/]")

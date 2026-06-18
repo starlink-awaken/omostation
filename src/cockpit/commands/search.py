@@ -7,12 +7,13 @@ import select
 import subprocess
 import time
 from argparse import Namespace
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 from rich.console import Console
 
 from ..storage import get_data_access
+
 
 def _cmd_search(args: Namespace) -> int:
     """跨源搜索 — P2 记忆脊统一聚合搜索。"""
@@ -381,7 +382,7 @@ def _vault_file_mtime(abs_path: Path) -> str:
     try:
         import datetime as _dt2
         mtime = abs_path.stat().st_mtime
-        return _dt2.datetime.fromtimestamp(mtime, tz=_dt2.timezone.utc).isoformat()
+        return _dt2.datetime.fromtimestamp(mtime, tz=_dt2.UTC).isoformat()
     except OSError:
         return "unknown"
 

@@ -1,19 +1,11 @@
 """BOS API routes."""
-from fastapi import APIRouter, Depends, Request
+
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-import sys
-from pathlib import Path
-import os
+
+from ..compat import _ensure_agora_src
 
 router = APIRouter()
-
-WORKSPACE_ROOT = Path.home() / "Workspace"
-_AGORA_SRC = WORKSPACE_ROOT / "projects" / "agora" / "src"
-
-def _ensure_agora_src() -> None:
-    """确保 agora 源码路径在 sys.path 中，优先于安装版。"""
-    if str(_AGORA_SRC) not in sys.path:
-        sys.path.insert(0, str(_AGORA_SRC))
 
 
 @router.get("/api/bos/services")

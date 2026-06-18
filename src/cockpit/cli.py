@@ -4,13 +4,8 @@
 from __future__ import annotations
 
 import argparse
-import json
-import os
 import sys
 import time as _time_mod
-from argparse import Namespace
-from datetime import datetime
-from pathlib import Path
 from urllib import request as urlrequest  # noqa: F401
 
 from rich import box
@@ -30,8 +25,8 @@ from .commands.audit import cmd_audit
 from .commands.base import (
     _SCRIPT_DIR,
     _find_cli,  # noqa: F401
-    _panel,
-)
+    )
+from .commands.brief import _cmd_brief
 from .commands.contracts import (
     cmd_contracts_export_event,
     cmd_contracts_export_identity,
@@ -40,13 +35,14 @@ from .commands.contracts import (
     cmd_contracts_validate,
 )
 from .commands.data import cmd_data_gc, cmd_data_index, cmd_data_types
+from .commands.discover import _cmd_discover
 from .commands.governance import cmd_governance
+from .commands.health import _cmd_health
 from .commands.importer import cmd_import
 from .commands.mcp import cmd_mcp
-from .commands.monitor import cmd_monitor
 from .commands.profile import cmd_profile
-from .commands.quickstart import cmd_quickstart
 from .commands.research import (
+    _cmd_research_batch,
     _notify_research_complete,  # noqa: F401
     _research_progress,  # noqa: F401
     cmd_research,
@@ -74,12 +70,8 @@ from .commands.research import (
     cmd_research_tag,
     cmd_research_timeline,
     cmd_research_unarchive,
-    _cmd_research_batch,
 )
 from .commands.search import _cmd_search
-from .commands.health import _cmd_health
-from .commands.brief import _cmd_brief
-from .commands.discover import _cmd_discover
 from .commands.status import (
     _render_workbench,  # noqa: F401
     cmd_daily,
@@ -89,26 +81,34 @@ from .commands.status import (
     cmd_status,
 )
 
+
 def cmd_ssb(a):
-    from cockpit.commands.ssb import cmd_ssb as _c; return _c(a)
-    
+    from cockpit.commands.ssb import cmd_ssb as _c
+    return _c(a)
+
 def cmd_mof(a):
-    from cockpit.commands.mof import cmd_mof as _c; return _c(a)
+    from cockpit.commands.mof import cmd_mof as _c
+    return _c(a)
 
 def _c_context(a):
-    from cockpit.commands.l4bridge import cmd_context as _c; return _c(a)
+    from cockpit.commands.l4bridge import cmd_context as _c
+    return _c(a)
 
 def _c_cards(a):
-    from cockpit.commands.l4bridge import cmd_cards as _c; return _c(a)
+    from cockpit.commands.l4bridge import cmd_cards as _c
+    return _c(a)
 
 def _c_vault(a):
-    from cockpit.commands.l4bridge import cmd_vault as _c; return _c(a)
+    from cockpit.commands.l4bridge import cmd_vault as _c
+    return _c(a)
 
 def _c_domains(a):
-    from cockpit.commands.l4bridge import cmd_domains as _c; return _c(a)
+    from cockpit.commands.l4bridge import cmd_domains as _c
+    return _c(a)
 
 def _c_skill(a):
-    from cockpit.commands.l4bridge import cmd_skill as _c; return _c(a)
+    from cockpit.commands.l4bridge import cmd_skill as _c
+    return _c(a)
 
 def _c_events(a):
     from cockpit.commands.events import run_events_dashboard
@@ -455,32 +455,32 @@ def main() -> int:
         if getattr(a, "batch", False) and getattr(a, "topic", []):
             if len(a.topic) >= 2:
                 return _cmd_research_batch(a)
-        if getattr(a, "search", False): return cmd_research_search(a)
-        if getattr(a, "compare", False): return cmd_research_compare(a)
-        if getattr(a, "merge", False): return cmd_research_merge(a)
-        if getattr(a, "digest", False): return cmd_research_digest(a)
-        if getattr(a, "audit", False): return cmd_research_audit(a)
-        if getattr(a, "quarantine", False): return cmd_research_quarantine(a)
-        if getattr(a, "restore", False): return cmd_research_restore(a)
-        if getattr(a, "heatmap", False): return cmd_research_heatmap(a)
-        if getattr(a, "follow_up", False): return cmd_research_follow_up(a)
-        if getattr(a, "health", False): return cmd_research_health(a)
+        if getattr(a, "search", False): return cmd_research_search(a)  # noqa: E701
+        if getattr(a, "compare", False): return cmd_research_compare(a)  # noqa: E701
+        if getattr(a, "merge", False): return cmd_research_merge(a)  # noqa: E701
+        if getattr(a, "digest", False): return cmd_research_digest(a)  # noqa: E701
+        if getattr(a, "audit", False): return cmd_research_audit(a)  # noqa: E701
+        if getattr(a, "quarantine", False): return cmd_research_quarantine(a)  # noqa: E701
+        if getattr(a, "restore", False): return cmd_research_restore(a)  # noqa: E701
+        if getattr(a, "heatmap", False): return cmd_research_heatmap(a)  # noqa: E701
+        if getattr(a, "follow_up", False): return cmd_research_follow_up(a)  # noqa: E701
+        if getattr(a, "health", False): return cmd_research_health(a)  # noqa: E701
         if getattr(a, "backup", None) is not None:
             a.output = a.backup or None
             return cmd_research_backup(a)
-        if getattr(a, "backup_restore", False): return cmd_research_backup_restore(a)
-        if getattr(a, "agent", False): return cmd_research_agent(a)
-        if getattr(a, "list", False): return cmd_research_list(a)
-        if getattr(a, "dossier", False): return cmd_research_dossier(a)
-        if getattr(a, "timeline", False): return cmd_research_timeline(a)
-        if getattr(a, "tag", False): return cmd_research_tag(a)
-        if getattr(a, "rename", False): return cmd_research_rename(a)
-        if getattr(a, "archive", False) or getattr(a, "all_active", False): return cmd_research_archive(a)
-        if getattr(a, "unarchive", False): return cmd_research_unarchive(a)
-        if getattr(a, "publish", False): return cmd_research_publish(a)
-        if getattr(a, "export", False): return cmd_research_export(a)
-        if getattr(a, "open", False): return cmd_research_open(a)
-        if getattr(a, "ask", False): return cmd_research_ask(a)
+        if getattr(a, "backup_restore", False): return cmd_research_backup_restore(a)  # noqa: E701
+        if getattr(a, "agent", False): return cmd_research_agent(a)  # noqa: E701
+        if getattr(a, "list", False): return cmd_research_list(a)  # noqa: E701
+        if getattr(a, "dossier", False): return cmd_research_dossier(a)  # noqa: E701
+        if getattr(a, "timeline", False): return cmd_research_timeline(a)  # noqa: E701
+        if getattr(a, "tag", False): return cmd_research_tag(a)  # noqa: E701
+        if getattr(a, "rename", False): return cmd_research_rename(a)  # noqa: E701
+        if getattr(a, "archive", False) or getattr(a, "all_active", False): return cmd_research_archive(a)  # noqa: E701
+        if getattr(a, "unarchive", False): return cmd_research_unarchive(a)  # noqa: E701
+        if getattr(a, "publish", False): return cmd_research_publish(a)  # noqa: E701
+        if getattr(a, "export", False): return cmd_research_export(a)  # noqa: E701
+        if getattr(a, "open", False): return cmd_research_open(a)  # noqa: E701
+        if getattr(a, "ask", False): return cmd_research_ask(a)  # noqa: E701
         return cmd_research(a)
 
     def dispatch_code(a):
@@ -494,11 +494,11 @@ def main() -> int:
         return 1
 
     def dispatch_bos(a):
-        from cockpit.commands.bos import cmd_bos_status, cmd_bos_list, cmd_bos_discover
+        from cockpit.commands.bos import cmd_bos_discover, cmd_bos_list, cmd_bos_status
         sub = getattr(a, "bos_cmd", "")
-        if sub == "list": return cmd_bos_list(a)
-        elif sub == "discover": return cmd_bos_discover(a)
-        else: return cmd_bos_status(a)
+        if sub == "list": return cmd_bos_list(a)  # noqa: E701
+        elif sub == "discover": return cmd_bos_discover(a)  # noqa: E701
+        else: return cmd_bos_status(a)  # noqa: E701
 
     def dispatch_scenario(a):
         from cockpit.commands.scenario import cmd_scenario
@@ -510,7 +510,6 @@ def main() -> int:
 
     def dispatch_compass(a):
         import subprocess
-        from .commands.base import _SCRIPT_DIR
         c2g_project = str((_SCRIPT_DIR.parent.parent.parent.parent / "c2g").resolve())
         cmd = ["uv", "run", "--project", c2g_project, "c2g"] + getattr(a, "compass_args", [])
         return subprocess.call(cmd)
@@ -518,61 +517,65 @@ def main() -> int:
     def dispatch_workflow(a):
         from cockpit.commands.workflow import handle_workflow
         return handle_workflow(getattr(a, "workflow_args", []))
-        
+
     def dispatch_monitor(a):
         from cockpit.commands.monitor import cmd_monitor
         return cmd_monitor(a)
 
     def dispatch_data(a):
-        if getattr(a, "data_command", "") == "index": return cmd_data_index(a)
-        if getattr(a, "data_command", "") == "types": return cmd_data_types(a)
-        if getattr(a, "data_command", "") == "gc": return cmd_data_gc(a)
+        if getattr(a, "data_command", "") == "index": return cmd_data_index(a)  # noqa: E701
+        if getattr(a, "data_command", "") == "types": return cmd_data_types(a)  # noqa: E701
+        if getattr(a, "data_command", "") == "gc": return cmd_data_gc(a)  # noqa: E701
         console.print("[yellow]试试: [cyan]cockpit data index[/] 或 [cyan]cockpit data types[/] 或 [cyan]cockpit data gc[/][/]")
         return 1
-        
+
     def dispatch_contracts(a):
-        if getattr(a, "contracts_command", "") == "validate": return cmd_contracts_validate(a)
-        if getattr(a, "contracts_command", "") == "list": return cmd_contracts_list(a)
-        if getattr(a, "contracts_command", "") == "export-research": return cmd_contracts_export_research(a)
+        if getattr(a, "contracts_command", "") == "validate": return cmd_contracts_validate(a)  # noqa: E701
+        if getattr(a, "contracts_command", "") == "list": return cmd_contracts_list(a)  # noqa: E701
+        if getattr(a, "contracts_command", "") == "export-research": return cmd_contracts_export_research(a)  # noqa: E701
         if getattr(a, "contracts_command", "") == "export":
-            if getattr(a, "contracts_export_type", "") == "identity": return cmd_contracts_export_identity(a)
-            elif getattr(a, "contracts_export_type", "") == "event": return cmd_contracts_export_event(a)
+            if getattr(a, "contracts_export_type", "") == "identity": return cmd_contracts_export_identity(a)  # noqa: E701
+            elif getattr(a, "contracts_export_type", "") == "event": return cmd_contracts_export_event(a)  # noqa: E701
         return 1
 
     def cmd_product_health(a):
-        import sys
         import subprocess as _sp
-        from .commands.base import _SCRIPT_DIR
+        import sys
         result = _sp.run([sys.executable, str(_SCRIPT_DIR / "product-health")])
         returncode = getattr(result, "returncode", 0)
         return returncode if isinstance(returncode, int) else 0
 
     def cmd_context(a):
-        from cockpit.commands.l4bridge import cmd_context as _c; return _c(a)
-        
+        from cockpit.commands.l4bridge import cmd_context as _c
+        return _c(a)
+
     def cmd_cards(a):
-        from cockpit.commands.l4bridge import cmd_cards as _c; return _c(a)
-        
+        from cockpit.commands.l4bridge import cmd_cards as _c
+        return _c(a)
+
     def cmd_vault(a):
-        from cockpit.commands.l4bridge import cmd_vault as _c; return _c(a)
-        
+        from cockpit.commands.l4bridge import cmd_vault as _c
+        return _c(a)
+
     def cmd_domains(a):
-        from cockpit.commands.l4bridge import cmd_domains as _c; return _c(a)
-        
+        from cockpit.commands.l4bridge import cmd_domains as _c
+        return _c(a)
+
     def cmd_skill(a):
-        from cockpit.commands.l4bridge import cmd_skill as _c; return _c(a)
-        
+        from cockpit.commands.l4bridge import cmd_skill as _c
+        return _c(a)
+
     def cmd_events(a):
         from cockpit.commands.events import run_events_dashboard
         run_events_dashboard(a.url)
         return 0
-        
+
     def cmd_version(a):
         from cockpit import __version__
         console.print(f"[bold cyan]cockpit[/] v[bold]{__version__}[/]")
         console.print("[dim]L3 统一入口 · 5+3+1 架构[/]")
         return 0
-        
+
     handlers = {
         "import": cmd_import,
         "mcp": cmd_mcp,

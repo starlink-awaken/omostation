@@ -15,7 +15,6 @@ import hmac
 import os
 import secrets
 import time
-from pathlib import Path
 
 # Auth configuration
 AUTH_CONFIG = {

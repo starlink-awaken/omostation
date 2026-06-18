@@ -270,9 +270,9 @@ def _load_mutation_proposals_impl() -> list[dict]:
             data = yaml.safe_load(f.read_text(encoding="utf-8"))
             if isinstance(data, dict):
                 proposals.append(data)
-        except Exception:
+        except Exception:  # noqa: S112
             continue
-    
+
     # Sort by created_at desc
     proposals.sort(key=lambda x: x.get("created_at", ""), reverse=True)
     return proposals
