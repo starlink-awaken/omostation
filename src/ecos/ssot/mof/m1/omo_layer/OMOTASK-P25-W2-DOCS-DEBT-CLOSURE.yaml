@@ -3,8 +3,8 @@ type: OMOTask
 subtype: Task
 name: 文档终稿+债务关闭+健康分重算
 description: ''
-status: in_progress
-priority: P0
+status: done
+priority: P2
 domain: opc
 properties:
   m3_parent: ManagementElement.OMOTask
@@ -12,3 +12,6 @@ properties:
   - .omo/tasks/planned/P25-W2-DOCS-DEBT-CLOSURE.yaml
   signals:
   - task-P25-W2-DOCS-DEBT-CLOSURE-running
+title: 文档终稿+债务关闭+健康分重算
+gate: none
+gate_status: passed

@@ -3,8 +3,8 @@ type: OMOTask
 subtype: Task
 name: 'E2E集成测试: 4个接口契约 + 自愈回路完整演练'
 description: ''
-status: in_progress
-priority: P0
+status: done
+priority: P2
 domain: opc
 properties:
   m3_parent: ManagementElement.OMOTask
@@ -12,3 +12,6 @@ properties:
   - .omo/tasks/planned/P25-W1-E2E-INTEGRATION.yaml
   signals:
   - task-P25-W1-E2E-INTEGRATION-running
+title: 'E2E集成测试: 4个接口契约 + 自愈回路完整演练'
+gate: none
+gate_status: passed

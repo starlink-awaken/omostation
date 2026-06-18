@@ -3,7 +3,7 @@ type: OMOTask
 subtype: Task
 name: agentmesh TypeScript代码归档 + 交叉验证无遗漏
 description: ''
-status: in_progress
+status: done
 priority: P1
 domain: opc
 properties:
@@ -12,3 +12,6 @@ properties:
   - .omo/tasks/planned/P19-W3-ARCHIVE-TS.yaml
   signals:
   - task-P19-W3-ARCHIVE-TS-running
+title: agentmesh TypeScript代码归档 + 交叉验证无遗漏
+gate: none
+gate_status: passed

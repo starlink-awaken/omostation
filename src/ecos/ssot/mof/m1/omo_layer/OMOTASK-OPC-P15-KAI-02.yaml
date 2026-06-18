@@ -14,4 +14,7 @@ properties:
   - lint: 确保跨包 lint gate 就位 ✅
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
-  - .omo/tasks/planned/OPC-P15-KAI-02.yaml
+  - .omo/tasks/completed/OPC-P15-KAI-02.yaml
+title: kairon 16-package workspace governance registration
+gate: none
+gate_status: passed

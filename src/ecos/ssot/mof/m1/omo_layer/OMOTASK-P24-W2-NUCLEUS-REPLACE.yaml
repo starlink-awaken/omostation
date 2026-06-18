@@ -3,8 +3,8 @@ type: OMOTask
 subtype: Task
 name: 'Nucleus替换: 320引用→Agora事件总线+pathlib'
 description: ''
-status: in_progress
-priority: P0
+status: done
+priority: P2
 domain: opc
 properties:
   m3_parent: ManagementElement.OMOTask
@@ -12,3 +12,6 @@ properties:
   - .omo/tasks/planned/P24-W2-NUCLEUS-REPLACE.yaml
   signals:
   - task-P24-W2-NUCLEUS-REPLACE-running
+title: 'Nucleus替换: 320引用→Agora事件总线+pathlib'
+gate: none
+gate_status: passed
