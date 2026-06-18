@@ -27,10 +27,6 @@ export ARCHIVE_HOME="${ARCHIVE_HOME:-$WORKSPACE_HOME/projects/_archived}"
 # ─── Launchd ──────────────────────────────────────────────────────────────────
 export LAUNCHCTL_DIR="${LAUNCHCTL_DIR:-$HOME/Library/LaunchAgents}"
 
-# ─── Agent Runtime ────────────────────────────────────────────────────────────
-export AGENT_RUNTIME_PORT="${AGENT_RUNTIME_PORT:-9876}"
-export AGENT_RUNTIME_HOST="${AGENT_RUNTIME_HOST:-127.0.0.1}"
-export AGENT_RUNTIME_LOG="${AGENT_RUNTIME_LOG:-$HOME/.agent-runtime/server.log}"
 
 # ─── Cron Service ─────────────────────────────────────────────────────────────
 export CRON_SERVICE_PORT="${CRON_SERVICE_PORT:-7450}"

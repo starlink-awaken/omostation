@@ -325,11 +325,11 @@ protocols:
   - name: "Agent Runtime API"
     version: "1"
     category: "orchestration"
-    status: "active"
-    usage: "active"
+    status: "deprecated"
+    usage: "retired"
     description: "Agent lifecycle management HTTP API"
     port_range: "9876"
     transport: ["http"]
     implementations:
-      - "kairon/packages/agent-runtime"
-    notes: "Lifecycle API contract for agent execution and health reporting."
+      - "projects/runtime"
+    notes: "DEPRECATED. Replaced by runtime cron_service. Ports and endpoints retired."
