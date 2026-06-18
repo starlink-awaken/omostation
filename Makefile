@@ -1,4 +1,4 @@
-.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit debt-check doc-lint x1-check x2-check x3-check x4-check x1-x4-check
+.PHONY: help kairon-test kairon-test-fast kairon-test-diff kairon-test-e2e kairon-build kairon-lint governance-check governance-sync governance-validate governance-index-check governance-verify governance-audit debt-check doc-lint x1-check x2-check x3-check x4-check x1-x4-check install-hooks
 
 help:
 	@echo "Workspace 根 Makefile — 委派到 projects/"
@@ -39,7 +39,14 @@ help:
 	@echo "=== 文档 ==="
 	@echo "make doc-lint            检查文档格式"
 	@echo ""
+	@echo "=== 开发环境 ==="
+	@echo "make install-hooks       装 git pre-push 钩子 (子模块自动同步, 防 CI 悬空)"
+	@echo ""
 	@echo "make help                显示本消息"
+
+install-hooks:  ## 装 git pre-push 钩子 (主仓 push 时自动 sync 子模块, 防 CI 悬空). 新 clone 必跑.
+	install -m 755 .githooks/pre-push .git/hooks/pre-push
+	@echo "✅ 已装 .git/hooks/pre-push (主仓 push 时自动 sync 子模块, 防 CI 悬空)"
 
 kairon-test:
 	cd projects/kairon && make test
