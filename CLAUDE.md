@@ -2,7 +2,7 @@
 
 > Personal AI Operating System · Multi-project Knowledge Engineering Workspace
 > 基于 omostation (starlink-awaken/omostation) 根仓库
-> **v2.0** | 2026-06-12 | 架构对齐 5+4+1+1 · SSOT 重构 · 与 ~/Documents/CLAUDE.md 分层协作
+> **version: v2.0** | 最后更新: 2026-06-12 | 架构对齐 5+4+1+1 · SSOT 重构 · 与 ~/Documents/CLAUDE.md 分层协作
 
 ---
 

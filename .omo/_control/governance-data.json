@@ -1,17 +1,17 @@
 {
   "version": "1.0",
-  "generated_at": "2026-06-12T01:35:06.416981+00:00",
+  "generated_at": "2026-06-18T15:23:18.356525+00:00",
   "governance": {
-    "health_score": 82.0,
-    "health_score_raw": 100.0,
+    "health_score": 85,
+    "health_score_raw": 88.0,
     "debt_weight": 1.0,
-    "debt_health": 100.0
+    "debt_health": 90.0
   },
   "debt": {
-    "resolved_count": 9,
+    "resolved_count": 0,
     "unresolved_count": 0,
-    "total_count": 9,
-    "resolution_rate": 1.0
+    "total_count": 0,
+    "resolution_rate": 0
   },
   "categories": {
     "technical": {
