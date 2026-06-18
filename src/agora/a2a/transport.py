@@ -1,4 +1,6 @@
 from __future__ import annotations
+import json
+import time
 
 """
 ---
@@ -178,15 +180,20 @@ class A2ANetworkTransport(A2ATransport):
         }
         
         if private_key:
-            signature = identity.sign(json.dumps(payload, sort_keys=True).encode(), private_key)
+            # Sign exact bytes to prevent serialization drift
+            payload_bytes = json.dumps(payload, separators=(',', ':')).encode('utf-8')
+            signature = identity.sign(payload_bytes, private_key)
             headers["X-Swarm-Signature"] = signature
+        else:
+            payload_bytes = json.dumps(payload).encode('utf-8')
 
-        url = f"http://{node.host}:{node.port}/api/v1/a2a/send"
+        mcp_port = getattr(node, "mcp_port", 7422)
+        url = f"http://{node.host}:{mcp_port}/api/v1/a2a/send"
         try:
             async with httpx.AsyncClient(timeout=timeout) as client:
                 resp = await client.post(
                     url,
-                    json=payload,
+                    content=payload_bytes,
                     headers=headers
                 )
                 resp.raise_for_status()
