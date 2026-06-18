@@ -68,7 +68,6 @@ class SwarmNode:
     last_heartbeat: float = 0.0
     status: str = "unknown"
     # ── P55-W1: 负载感知 (Consul/K8s 风格) ──
-    load_score: float = 0.0  # 0-100, 越低越好
     cpu_percent: float = 0.0
     memory_mb: float = 0.0
     queue_depth: int = 0  # 待处理任务数
@@ -79,11 +78,18 @@ class SwarmNode:
         return time.time() - self.last_heartbeat < HEARTBEAT_TIMEOUT
 
     @property
+    def load_score(self) -> float:
+        """归一化负载分数 (0-100)，越低越好。"""
+        # CPU 权重 70%, 队列权重 30%
+        score = (self.cpu_percent * 0.7) + (min(10, self.queue_depth) * 3.0)
+        return min(100.0, score)
+
+    @property
     def health(self) -> str:
         """节点健康等级 (GREEN/YELLOW/RED)。"""
         if not self.is_online:
             return NodeHealth.RED
-        if self.load_score > 80 or self.queue_depth > 10:
+        if self.load_score > 80:
             return NodeHealth.YELLOW
         return NodeHealth.GREEN
 

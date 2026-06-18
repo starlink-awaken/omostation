@@ -642,6 +642,15 @@ services:
     func_name: "get_loop_status"
     description: "OMO 自动进化循环监控"
 
+  - uri: "bos://governance/quality/audit"
+    domain: governance
+    action: "audit"
+    transport: internal
+    module_path: "agora.mcp.knowledge_quality"
+    func_name: "audit_knowledge_quality"
+    description: "记忆脊知识质量审计与评分"
+
+
   - uri: "bos://capability/agent-runtime/chat"
     domain: capability
     action: "chat"

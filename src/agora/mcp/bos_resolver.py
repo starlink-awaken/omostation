@@ -135,35 +135,49 @@ async def _memory_all_search(
     top_results = aggregated[:limit]
 
     # Phase 9: Quality Audit/Partitioning 
-    # 引入对 llm_gateway/core-models 的轻量级并发调用，基于置信度阈值过滤聚合结果。
-    if proxy_manager and top_results:
-        import asyncio
+    # 引入对质量审计路由的并发调用，基于置信度阈值过滤聚合结果。
+    if top_results:
+        from agora.mcp.resolver.api import resolve_bos_uri
+        
         async def _audit(res: dict) -> dict | None:
             try:
-                # 调用轻量级评价模型或 gateway
-                # 使用 timeout 控制不阻塞核心路径
+                # 调用轻量级评价模型或启发式审计器
                 audit_res = await asyncio.wait_for(
                     resolve_bos_uri(
-                        "bos://persona/core-models/evaluate",
-                        {"text": res.get("snippet", str(res)[:200]), "query": query},
+                        "bos://governance/quality/audit",
+                        {"text": res.get("snippet", str(res)[:500]), "query": query},
                         proxy_manager=proxy_manager
                     ),
                     timeout=2.0
                 )
-                # 假设返回了 confidence 分数
-                if audit_res and audit_res.get("confidence", 1.0) < 0.3:
+                
+                # 提取评分 (支持从 ok 包装中提取)
+                confidence = 1.0
+                if isinstance(audit_res, dict):
+                    inner = audit_res.get("result", audit_res)
+                    confidence = inner.get("confidence", 1.0)
+                
+                # 过滤极低置信度的结果 (如 0.3)
+                if confidence < 0.3:
+                    _log.debug("[MemorySpine] Filtering low confidence hit (%s): %s", confidence, res.get("snippet", "")[:30])
                     return None
-            except Exception:
-                pass
-            return res
+                    
+                res["_audit_score"] = confidence
+                return res
+            except Exception as e:
+                _log.debug("[MemorySpine] Audit failed for hit: %s", e)
+                return res
 
-        audited = await asyncio.gather(*[_audit(r) for r in top_results])
-        top_results = [r for r in audited if r is not None]
+        audited_results = await asyncio.gather(*[_audit(r) for r in top_results])
+        top_results = [r for r in audited_results if r is not None]
+        # 根据审计分数再次微调排序
+        top_results.sort(key=lambda x: x.get("_audit_score", 0), reverse=True)
 
     return {
+        "status": "ok",
         "query": query,
         "total_hits": len(top_results),
-        "results": top_results,
+        "result": top_results,
         "sources_searched": targets,
     }
 
