@@ -33,7 +33,7 @@ class BOSRouter:
     """
 
     def __init__(self):
-        self._routes: dict[str, dict[str, Any]] = {}
+        self._routes: dict[str, list[dict[str, Any]]] = {}
         # Trie: nested dict, 叶子节点含 _ROUTE_MARKER
         self._trie: dict[str, Any] = {}
 
@@ -45,7 +45,7 @@ class BOSRouter:
         node = self._trie
         for seg in segments:
             node = node.setdefault(seg, {})
-        node[_ROUTE_MARKER] = route
+        node.setdefault(_ROUTE_MARKER, []).append(route)
 
     def _trie_remove(self, prefix: str) -> None:
         """从 trie 移除路由 (不清除空节点，简化实现)."""
@@ -57,7 +57,7 @@ class BOSRouter:
             node = node[seg]
         node.pop(_ROUTE_MARKER, None)
 
-    def _trie_lookup(self, uri: str) -> dict[str, Any] | None:
+    def _trie_lookup(self, uri: str) -> list[dict[str, Any]] | None:
         """Trie 最长前缀匹配 — O(k) 遍历，k = URI段数.
 
         返回最深匹配路径上的 __route__ 节点作为最佳 prefix 匹配。
@@ -143,19 +143,19 @@ class BOSRouter:
         """
         if not prefix.endswith("/"):
             prefix += "/"
-        if prefix in self._routes:
-            _log.warning(
-                "[BOSRouter] Skipping duplicate: %s (already %s)",
-                prefix,
-                self._routes[prefix]["adapter"],
-            )
-            return
+        if prefix not in self._routes:
+            self._routes[prefix] = []
+        else:
+            # 避免完全重复的注册
+            for r in self._routes[prefix]:
+                if r["adapter"] == adapter and r.get("config") == (config or {}):
+                    return
         route = {
             "adapter": adapter,
             "prefix": prefix,
             "config": config or {},
         }
-        self._routes[prefix] = route
+        self._routes[prefix].append(route)
         self._trie_insert(prefix, route)
         _log.info("[BOSRouter] Registered: %s → %s", prefix, adapter)
 
@@ -167,22 +167,50 @@ class BOSRouter:
         self._trie_remove(prefix)
 
     def resolve(self, uri: str) -> dict[str, Any] | None:
-        """最长前缀匹配 — 使用 Trie O(k) 索引。"""
-        return self._trie_lookup(uri)
+        """最长前缀匹配 — 支持负载感知调度 (Smart Partitioning)。"""
+        routes = self._trie_lookup(uri)
+        if not routes:
+            return None
+        if len(routes) == 1:
+            return routes[0]
+
+        # 智能负载调度
+        def get_load(r):
+            cfg = r.get("config", {})
+            node_id = cfg.get("node_id")
+            if node_id:
+                try:
+                    from agora.mcp.swarm import get_swarm
+                    orch = get_swarm()
+                    if orch and node_id in orch._nodes:
+                        node = orch._nodes[node_id]
+                        if not node.is_online:
+                            return 9999.0
+                        score = node.load_score
+                        if node.health == "yellow":
+                            score += 50.0
+                        return score
+                except ImportError:
+                    pass
+            return 100.0  # 默认高负载
+
+        best = min(routes, key=get_load)
+        return best
 
     def list_all(self, prefix_filter: str = "") -> list[dict[str, Any]]:
         """列出所有路由，可选前缀过滤。"""
         result = []
-        for prefix, route in self._routes.items():
+        for prefix, route_list in self._routes.items():
             if prefix_filter and not prefix.startswith(prefix_filter):
                 continue
-            result.append(
-                {
-                    "prefix": prefix,
-                    "adapter": route["adapter"],
-                    "config": route.get("config", {}),
-                }
-            )
+            for route in route_list:
+                result.append(
+                    {
+                        "prefix": prefix,
+                        "adapter": route["adapter"],
+                        "config": route.get("config", {}),
+                    }
+                )
         result.sort(key=lambda r: r["prefix"])
         return result
 
@@ -193,7 +221,7 @@ class BOSRouter:
         """按 adapter 类型统计。"""
         from collections import Counter
 
-        c = Counter(r["adapter"] for r in self._routes.values())
+        c = Counter(r["adapter"] for routes in self._routes.values() for r in routes)
         return dict(c)
 
     def seed_from_poc(self, poc_services: list) -> int:
