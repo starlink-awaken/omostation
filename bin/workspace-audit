@@ -46,6 +46,30 @@ DIMENSIONS = [
 
 
 # ── Dimension 1: omo governance ──
+def _run_omo_cli_json(*args: str) -> tuple[int, dict[str, Any] | None, str]:
+    cmd = [
+        str(OMO_VENV / "python"),
+        "-W",
+        "ignore::DeprecationWarning",
+        "-m",
+        "omo.cli",
+        *args,
+    ]
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        cwd=str(WORKSPACE_ROOT),
+    )
+    output = result.stdout + result.stderr
+    try:
+        payload = json.loads(result.stdout) if result.stdout.strip() else None
+    except json.JSONDecodeError:
+        payload = None
+    return result.returncode, payload, output
+
+
 def dim_governance() -> dict[str, Any]:
     """跑 omo governance, 抓总分 + 6 项分数.
 
@@ -96,12 +120,38 @@ def dim_governance() -> dict[str, Any]:
                         })
                     except (ValueError, IndexError):
                         pass
+        surfaces_rc, surfaces_payload, surfaces_output = _run_omo_cli_json(
+            "governance", "surfaces", "--workspace-root", ".", "--json"
+        )
+        ingress_summary = None
+        if isinstance(surfaces_payload, dict):
+            ingress = surfaces_payload.get("ingress_registry", {})
+            if isinstance(ingress, dict):
+                ingress_summary = {
+                    "exists": bool(ingress.get("exists")),
+                    "goal_count": len(ingress.get("goal_ids", [])),
+                    "task_count": len(ingress.get("task_ids", [])),
+                    "goal_source_ref_count": len(ingress.get("goal_source_refs", [])),
+                    "task_source_ref_count": len(ingress.get("task_source_refs", [])),
+                }
         return {
             "dim": "governance",
             "score": score if score is not None else 0,
             "grade": grade or "?",
             "items": items,
             "output": output,
+            "surfaces_status": (
+                surfaces_payload.get("status", "error")
+                if isinstance(surfaces_payload, dict) and surfaces_rc == 0
+                else "error"
+            ),
+            "surfaces_issues": (
+                surfaces_payload.get("issues", [])
+                if isinstance(surfaces_payload, dict)
+                else []
+            ),
+            "ingress_registry": ingress_summary,
+            "surfaces_output": surfaces_output,
         }
     except (subprocess.TimeoutExpired, FileNotFoundError) as exc:
         return {"dim": "governance", "error": str(exc), "score": 0, "grade": "?"}
@@ -244,22 +294,27 @@ def dim_ops(since: str = "7d") -> dict[str, Any]:
     修真修真修真: 修真修真 python3 -m agora.cli ... 修真修真
     """
     try:
-        # 修真修真: 修真修真 uv 修真 python 修真 -m agora.cli
-        import shutil
-        py = shutil.which("python3.13") or shutil.which("python3.12") or "python3"
-        agora_src = WORKSPACE_ROOT / "projects" / "agora" / "src"
-        env = {"PATH": "/usr/bin:/bin:/usr/local/bin", "PYTHONPATH": str(agora_src)}
-        # 修真 v5: 修真修真 python -m agora.cli audit 修真修真修真修真
-        # 修真修真修真: agora audit 修真修真修真 omo daemon 修真修真修真修真, 修真修真修真修真
-        # 修真修真: 修真修真修真 audit log 修真; 修真修真返 修真修真修真
+        agora_root = WORKSPACE_ROOT / "projects" / "agora"
         result = subprocess.run(
-            [py, "-c", f"import sys; sys.path.insert(0, '{agora_src}'); from agora.audit_subscriber import AuditSubscriber; a = AuditSubscriber(None, None); s = a.stats(since='{since}'); print(s)"],
-            capture_output=True, text=True, timeout=30,
+            [
+                "uv",
+                "run",
+                "--directory",
+                str(agora_root),
+                "python",
+                "-c",
+                (
+                    "from agora.audit_subscriber import AuditSubscriber; "
+                    f"a = AuditSubscriber(None, None); print(a.stats(since={since!r}))"
+                ),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
             cwd=str(WORKSPACE_ROOT),
-            env=env,
         )
         output = result.stdout + result.stderr
-        passed = result.returncode == 0 and ("Error" not in output or "Total" in output)
+        passed = result.returncode == 0 and "Traceback" not in output
         return {
             "dim": "ops",
             "since": since,
@@ -274,7 +329,8 @@ def dim_ops(since: str = "7d") -> dict[str, Any]:
 def calc_score(dims: dict[str, dict[str, Any]]) -> tuple[float, str]:
     """加权算总分. 6 维度各 100 分制, 等权平均."""
     scores: list[float] = []
-    for key in DIMENSIONS:
+    selected_keys = [key for key in DIMENSIONS if key in dims]
+    for key in selected_keys:
         d = dims.get(key, {})
         if key == "governance":
             s = d.get("score", 0)
@@ -309,22 +365,33 @@ def calc_score(dims: dict[str, dict[str, Any]]) -> tuple[float, str]:
 
 def render_markdown(dims: dict[str, dict[str, Any]], total: float, grade: str) -> str:
     """输出 markdown 格式报告."""
+    selected_keys = [key for key in DIMENSIONS if key in dims]
     lines = [
         "# Omostation Workspace Audit Report",
         "",
         f"**日期**：{datetime.now(tz=timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
         f"**总分**：{total:.1f} / 100 ({grade})",
         "",
-        "## 6 维度系统化审计",
+        f"## {len(selected_keys)} 维度系统化审计",
         "",
         "| # | 维度 | 状态 | 详情 |",
         "|---|---|---|---|",
     ]
-    for i, key in enumerate(DIMENSIONS, 1):
+    for i, key in enumerate(selected_keys, 1):
         d = dims.get(key, {})
         if key == "governance":
             status = f"**{d.get('score', 0)}** ({d.get('grade', '?')})"
-            detail = f"{len(d.get('items', []))} 项检查"
+            ingress = d.get("ingress_registry") or {}
+            ingress_text = "ingress=none"
+            if isinstance(ingress, dict) and ingress.get("exists"):
+                ingress_text = (
+                    f"ingress goals={ingress.get('goal_count', 0)} "
+                    f"tasks={ingress.get('task_count', 0)}"
+                )
+            detail = (
+                f"{len(d.get('items', []))} 项检查 · "
+                f"surfaces={d.get('surfaces_status', '?')} · {ingress_text}"
+            )
         elif key == "lint":
             status = "✅ pass" if d.get("passed") else f"❌ {d.get('issues', 0)} issue"
             detail = "yaml-bypass 拦截"
@@ -351,13 +418,27 @@ def render_markdown(dims: dict[str, dict[str, Any]], total: float, grade: str) -
     lines.append("")
     lines.append("## 详细发现")
     lines.append("")
-    for key in DIMENSIONS:
+    for key in selected_keys:
         d = dims.get(key, {})
         lines.append(f"### {key}")
         if "output" in d:
             lines.append("```")
             lines.append(d["output"][:2000])  # 截前 2000 字符
             lines.append("```")
+            if key == "governance":
+                lines.append(
+                    f"- governance surfaces: {d.get('surfaces_status', '?')}"
+                )
+                ingress = d.get("ingress_registry") or {}
+                if isinstance(ingress, dict):
+                    lines.append(
+                        "- ingress registry: "
+                        f"exists={ingress.get('exists', False)} "
+                        f"goals={ingress.get('goal_count', 0)} "
+                        f"tasks={ingress.get('task_count', 0)}"
+                    )
+                for issue in (d.get("surfaces_issues") or [])[:5]:
+                    lines.append(f"- surfaces issue: {issue}")
         elif "items" in d:
             for it in d["items"][:6]:
                 lines.append(f"- {it}")

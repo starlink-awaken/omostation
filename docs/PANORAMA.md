@@ -3,6 +3,7 @@
 > 本文是全景骨架与导航，不是运行时快照。
 > 任何会漂移的测试数、路由数、健康分、Phase、端口状态，以各自 SSOT 与运行时探针为准。
 > 配套: [JOURNEY-PROBES.md](./JOURNEY-PROBES.md)
+> 项目级 `ARCHITECTURE.md` / `CALLCHAIN.md` / `BOUNDARY.md` 也只保留骨架与指针，不承担运行时快照职责。
 
 ## 全景 SSOT
 
@@ -294,7 +295,7 @@ Agent 操作
 | ecos | L0 | [ARCHITECTURE.md](../projects/ecos/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/ecos/CALLCHAIN.md) · [BOUNDARY.md](../projects/ecos/BOUNDARY.md) |
 | aetherforge | X | [ARCHITECTURE.md](../projects/aetherforge/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/aetherforge/CALLCHAIN.md) · [BOUNDARY.md](../projects/aetherforge/BOUNDARY.md) |
 | aetherforge-swarm-ext | X | **ARCHIVED** — 快照在 `/_archived/aetherforge-swarm-ext/`，扩展已并入 [aetherforge/packages/swarm/src/swarm_engine/ext](../projects/aetherforge/packages/swarm/src/swarm_engine/ext/) |
-| agora-dashboard | L3 | [ARCHITECTURE.md](../projects/agora-dashboard/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/agora-dashboard/CALLCHAIN.md) · [BOUNDARY.md](../projects/agora-dashboard/BOUNDARY.md) |
+| agora-dashboard | L3 | **LEGACY SNAPSHOT** — 独立入口已收敛；仓库快照仍保留在 `projects/agora-dashboard/` 供历史追溯 |
 | bus-foundation | X | [ARCHITECTURE.md](../projects/bus-foundation/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/bus-foundation/CALLCHAIN.md) · [BOUNDARY.md](../projects/bus-foundation/BOUNDARY.md) |
 | c2g | X | [ARCHITECTURE.md](../projects/c2g/ARCHITECTURE.md) · [CALLCHAIN.md](../projects/c2g/CALLCHAIN.md) · [BOUNDARY.md](../projects/c2g/BOUNDARY.md) |
 | compute-mesh | L1 | **ARCHIVED** — 快照在 `/_archived/compute-mesh/`，能力已并入 [aetherforge/packages/mesh](../projects/aetherforge/packages/mesh/) |

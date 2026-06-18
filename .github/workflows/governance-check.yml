@@ -32,7 +32,23 @@ jobs:
           python3 scripts/check-panorama-arch-links.py
           python3 scripts/check-ssot-reference-integrity.py
           python3 scripts/check-truth-m1-governance-mapping.py
+          python3 scripts/check-governance-surface-paths.py
+          python3 scripts/check-project-arch-doc-contract.py
+          python3 scripts/check-project-arch-doc-ssot.py
+          python3 scripts/check-project-registry-ssot.py
+          python3 scripts/check-truth-inventory-routing.py
+          python3 scripts/check-knowledge-index-ssot.py
+          python3 scripts/check-design-history-ssot.py
+          python3 scripts/check-design-body-ssot.py
+          python3 scripts/check-design-risky-phrases.py
+          python3 scripts/check-plans-readme-ssot.py
+          python3 scripts/check-governance-doc-ssot.py
+          python3 scripts/check-governance-mechanism-ssot.py
+          python3 scripts/check-governance-guides-ssot.py
+          python3 scripts/check-knowledge-history-ssot.py
+          python3 scripts/check-phase-closeout-ssot.py
           uv run --directory projects/omo python -m omo.cli lint direct-omo-io
+          uv run --directory projects/omo python -m omo.cli lint ingress-registry --workspace-root .
 
   doc-freshness:
     runs-on: ubuntu-latest

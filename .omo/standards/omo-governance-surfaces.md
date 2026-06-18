@@ -64,10 +64,10 @@
 | broker | 允许范围 |
 |---|---|
 | `projects/omo/src/omo/*` | OMO 内核对 `.omo` 的治理写入 |
-| `projects/c2g/src/c2g/adapters.py` | 仅写 `.omo/tasks/planned/` 与 `.omo/goals/current.yaml` 对应能力 |
-| `projects/c2g/src/c2g/bridge_import.py` | 仅写 C2G 导入产物到 planned/ |
-| `omo CLI` / `workspace compass` / `c2g` | 面向人类与 agent 的正式入口 |
+| `projects/omo/src/omo/omo_ingress.py` | C2G / 其他 ingress 对 goal/task/debt 的受审计持久化写入 |
+| `omo CLI` / `workspace governance` / `workspace compass` / `c2g` | 面向人类与 agent 的正式入口 |
 
+`projects/c2g` 不再直接写 `.omo/`，而是必须调用 `projects/omo/src/omo/omo_ingress.py` 等受审计 broker。
 禁止新增任何“顺手脚本”直接 `write_text/open(..., "w")/unlink/mkdir` 改 `.omo/`，除非该脚本本身被提升为受审计 broker。
 
 ## 3. `.omo/` 目录分类
@@ -104,6 +104,7 @@
 5. 嵌套 `.omo/.omo/*` 视为遗留异常路径，发现即归档并删除，不得重新生成。
 6. `.omo/evidence` 若仍存在，只允许作为指向 `_delivery/*` 的兼容别名，不得再作为独立真实目录扩写。
 7. 非 broker Python 代码不得直接改写 `.omo/` 或 `spaces/`；pre-commit 与 `omo lint direct-omo-io` 必须拦截。
+8. `.omo/_delivery/ingress/registry.yaml` 若存在，必须保持 `by_id` / `by_source_ref` 双向一致，并且 artifact/task/goal/debt 引用可落到真实状态面。
 
 ## 5. X1-X4 联动
 
@@ -118,6 +119,7 @@
 
 - 存在机器可读注册表：`.omo/_truth/registry/omo-governance-surfaces.yaml`
 - `projects/omo` 能引用该标准或对应 registry 常量
+- `omo lint ingress-registry` 能校验 ingress registry 的结构与反向映射
 - `projects/c2g` 产出的 planned task 携带治理引用
 - `omo lint direct-omo-io` 与 pre-commit hook 能拦截非 broker 直接写 `.omo`
 - X1/X2/X3/X4 与 L0/M1 治理模型中存在对应映射

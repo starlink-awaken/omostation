@@ -6,7 +6,7 @@ from pathlib import Path
 import os
 from pathlib import Path
 
-WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
+WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[1])))
 WORKSPACE = WORKSPACE_ROOT
 HEALTH_YAML = WORKSPACE / ".omo/state/system_health.yaml"
 DEBT_DIR = WORKSPACE / ".omo/debt/items"

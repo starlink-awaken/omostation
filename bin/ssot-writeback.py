@@ -47,5 +47,5 @@ def extract_ssot_writeback(omo_dir: Path):
         except Exception as e:
             print(f"⚠️ Failed to write back SSOT for {task['id']}: {e}")
 
-omo_base = Path(os.environ.get("OMO_ROOT", str(Path.home() / "Workspace/projects/omo")))
+omo_base = Path(os.environ.get("OMO_ROOT", str(Path(__file__).resolve().parents[1] / "projects/omo")))
 extract_ssot_writeback(omo_base / ".omo")

@@ -1,0 +1,82 @@
+{
+  "generated_at": "2026-06-18T05:13:44Z",
+  "workspace_root": "/Users/xiamingxing/Workspace",
+  "registry_ref": "spaces/registry.yaml",
+  "directories": [
+    "data/cards",
+    "data/db",
+    "data/db/organs",
+    "data/db/organs/execution",
+    "data/db/organs/memory",
+    "data/kos",
+    "data/kos/backups",
+    "data/kos/captures",
+    "data/sharedbrain",
+    "data/sharedbrain/.omc",
+    "data/sharedbrain/.omc/state",
+    "data/sharedbrain/data",
+    "data/sharedbrain/data/db",
+    "data/sharedbrain/data/db/backup",
+    "data/sharedbrain/data/db/backup/20260530",
+    "data/sharedbrain/data/db/backup/20260530/core",
+    "data/sharedbrain/data/db/backup/20260530/organs",
+    "data/sharedbrain/data/db/backup/20260530/organs/execution",
+    "data/sharedbrain/data/db/backup/20260531",
+    "data/sharedbrain/data/db/backup/20260531/core",
+    "data/sharedbrain/data/db/backup/20260531/organs",
+    "data/sharedbrain/data/db/backup/20260531/organs/execution",
+    "data/sharedbrain/data/db/backup/20260601",
+    "data/sharedbrain/data/db/backup/20260601/core",
+    "data/sharedbrain/data/db/backup/20260601/organs",
+    "data/sharedbrain/data/db/backup/20260601/organs/execution",
+    "data/sharedbrain/data/db/backup/20260602",
+    "data/sharedbrain/data/db/backup/20260602/core",
+    "data/sharedbrain/data/db/backup/20260602/organs",
+    "data/sharedbrain/data/db/backup/20260602/organs/economy",
+    "data/sharedbrain/data/db/backup/20260602/organs/execution",
+    "data/sharedbrain/data/db/backup/20260603",
+    "data/sharedbrain/data/db/backup/20260603/core",
+    "data/sharedbrain/data/db/backup/20260603/organs",
+    "data/sharedbrain/data/db/backup/20260603/organs/economy",
+    "data/sharedbrain/data/db/backup/20260603/organs/execution",
+    "data/sharedbrain/data/db/backup/20260604",
+    "data/sharedbrain/data/db/backup/20260604/core",
+    "data/sharedbrain/data/db/backup/20260604/organs",
+    "data/sharedbrain/data/db/backup/20260604/organs/economy",
+    "data/sharedbrain/data/db/backup/20260604/organs/execution",
+    "data/sharedbrain/data/db/core",
+    "data/sharedbrain/data/db/organs",
+    "data/sharedbrain/data/db/organs/economy",
+    "data/sharedbrain/data/db/organs/execution",
+    "data/驾驶舱",
+    "data/驾驶舱/CARDS",
+    "data/驾驶舱/CARDS/debts",
+    "data/驾驶舱/CARDS/deliverys",
+    "data/驾驶舱/CARDS/ideas",
+    "data/驾驶舱/CARDS/tasks"
+  ],
+  "spaces": [
+    "system-space",
+    "runtime-space"
+  ],
+  "roots": [
+    {
+      "space_id": "system-space",
+      "roots": {
+        "governance": ".omo",
+        "spaces": "spaces",
+        "data": "data",
+        "runtime": "runtime"
+      }
+    },
+    {
+      "space_id": "runtime-space",
+      "roots": {
+        "governance": ".omo",
+        "spaces": "spaces",
+        "data": "data",
+        "runtime": "runtime"
+      }
+    }
+  ]
+}
