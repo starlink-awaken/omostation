@@ -10,7 +10,6 @@
 
 ports:
   7422: agora-mcp-http       # agora · FastMCP · MCP HTTP 入口
-  7430: agora-dashboard      # agora · FastAPI · Web Dashboard
   7431: agora-mcp-sse        # agora · FastMCP · MCP SSE 入口
   8080: agora-api-gateway    # agora · aiohttp · REST API Gateway
   8090: cockpit-dashboard    # cockpit · http.server · Cockpit Web Dashboard
@@ -19,7 +18,6 @@ ports:
   9090: ecos-dashboard       # ecos · http.server · SSB Dashboard
   9190: omo-dashboard        # omo · http.server · Debt Dashboard [从 9090 迁移]
   9290: llm-gateway-http     # kairon/llm-gateway · http.server · LLM Gateway [从 9090 迁移]
-  9876: forge-dashboard      # kairon/forge · HTTP · Forge Dashboard [保留]
 
 # 注册规则:
 #   1. 端口冲突按优先级: I0 > L3 > L2 > L1 > L0 (高优先得)
