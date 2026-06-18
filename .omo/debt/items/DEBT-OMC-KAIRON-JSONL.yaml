@@ -1,5 +1,5 @@
 id: DEBT-OMC-KAIRON-JSONL
-status: open
+status: closed  # resolution: 核心数据写入已修复 (eidos schema + memory)
 title: kairon JSONL 写入路径缺乏 schema 校验和原子写保障
 description: 'kairon 是多包工作区（16 packages），部分包直接使用 json.dumps + open("a", ...)
 
