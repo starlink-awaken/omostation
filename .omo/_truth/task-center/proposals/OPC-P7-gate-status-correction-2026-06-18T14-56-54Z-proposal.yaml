@@ -1,0 +1,29 @@
+id: OPC-P7-gate-status-correction-2026-06-18T14-56-54Z-proposal
+title: 'Correct OPC-P7.yaml gate_status: passed → not_yet_passed (AGENTS.md 5 红线 1)'
+operation_level: L2
+requested_by: laowang-engineer-drift-audit
+target:
+  ref: .omo/tasks/done/OPC-P7.yaml
+changes:
+  set:
+    gate_status: not_yet_passed
+    gate_note: '2026-06-13 Closeout 报告 reviewer 强制 not_yet_passed。AGENTS.md 5 红线 1:
+      gate_status 不得 passed。Reverted via governance broker 2026-06-18 by drift-audit.'
+change_summary: OPC-P7 gate_status 标 passed 违反 AGENTS.md 5 红线 1 (gate_status 一律 not_yet_passed)
+  与 closeout 报告冲突。改为 not_yet_passed, 与 closeout 一致。
+impact: 修复红线违规; closeout 报告 8 段证据链与 plan.yaml gate_status 字段同步; OPC P5-P7 收口审核可继续。
+verification_plan:
+- 'cat .omo/tasks/done/OPC-P7.yaml | grep gate_status  # expect not_yet_passed'
+- 'python3 scripts/sync_omo_state.py --omo-dir .omo  # divergence_flags 不会新增'
+- PYTHONPATH=projects/omo/src python3 -m omo.cli governance apply <id>
+rollback_plan:
+- '改回 gate_status: passed  # 任何后续 closeout reviewer reject 后回滚'
+- 记录 closeout 报告与 plan.yaml gate_status 冲突, 列入 OPC next-action
+secret_refs: []
+trace_id: trace-OPC-P7-gate-status-correction-2026-06-18T14-56-54Z
+status: verified
+requested_at: '2026-06-18T14:56:58Z'
+approved_at: '2026-06-18T14:57:02Z'
+applied_at: '2026-06-18T14:57:05Z'
+verified_at: '2026-06-18T14:57:05Z'
+approved_by: laowang-engineer

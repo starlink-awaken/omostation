@@ -1,34 +1,74 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-06-18T10:30:00Z
+# generated_at: 2026-06-18T15:03:58Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 
-generated_at: "2026-06-18T10:30:00Z"
+generated_at: "2026-06-18T15:03:58Z"
 source: "c2g.strategy (real audit, no mock)"
-health_score: 88
+health_score: 85
 anomaly_count: 1
-total_tasks: 101
-done: 88
-planned: 13
+total_tasks: 105
+done: 87
+planned: 18
 
 anomalies:
-  - "[WARN]  L3 高风险任务 2 个, 需重点 review"
+  - "[WARN]  L3 高风险任务 3 个, 需重点 review"
 
 distributions:
   priority_dist:
-    P0: 0
     P1: 16
-    P2: 70
+    P2: 72
     P3: 3
-    unassigned: 12
+    unassigned: 14
   risk_dist:
-    L0: 29
-    L1: 28
+    L0: 32
+    L1: 33
     L2: 14
-    L3: 2
-    unassigned: 28
+    L3: 3
+    unassigned: 23
+  owner_dist:
+    System: 9
+    agent-runtime: 2
+    architecture-team: 3
+    claude-code: 1
+    cockpit-team: 41
+    codebuddy: 1
+    docs-team: 1
+    governance-team: 2
+    iris: 1
+    kos: 1
+    metaos: 1
+    omo: 2
+    omo-team: 7
+    ssot: 1
+    team-lead: 1
+    unassigned: 29
+    workspace: 2
+  phase_dist:
+    17: 3
+    19: 1
+    2: 10
+    24: 1
+    25: 2
+    26: 1
+    33: 9
+    34: 7
+    35: 4
+    36: 2
+    37: 2
+    38: 2
+    39: 2
+    40: 2
+    41: 1
+    42: 3
+    43: 7
+    44: 1
+    45: 1
+    47: 1
+    48: 5
+    unphased: 38
   status_dist:
-    done: 88
-    planned: 7
-    candidate: 5
+    candidate: 10
+    done: 86
+    planned: 8
     review: 1

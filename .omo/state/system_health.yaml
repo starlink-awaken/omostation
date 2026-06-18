@@ -1,9 +1,9 @@
-last_scan: 1780669326.075913
+last_scan: 1781794201.813656
 services:
   agent-runtime:
     health_check: healthy
     name: agent-runtime
-    port_listening: true
+    port_listening: false
     runtime:
       freshness_seconds: 26378
       pid: '27375'
@@ -11,6 +11,7 @@ services:
     timestamp: 1780669326.075913
     type: daemon
   agentmesh-gateway:
+    health_check: failed
     name: agentmesh-gateway
     port_listening: false
     runtime:
@@ -30,7 +31,7 @@ services:
   cron-service:
     health_check: healthy
     name: cron-service
-    port_listening: true
+    port_listening: false
     runtime:
       freshness_seconds: 26378
       pid: '27379'
@@ -38,8 +39,9 @@ services:
     timestamp: 1780669326.075913
     type: daemon
   gbrain:
+    health_check: healthy
     name: gbrain
-    port_listening: true
+    port_listening: false
     runtime:
       details: Up 2 hours (healthy)
       freshness_seconds: 6723
@@ -47,6 +49,7 @@ services:
     timestamp: 1780669326.075913
     type: docker
   gbrain-index:
+    health_check: failed
     name: gbrain-index
     runtime:
       exit_code: 113
@@ -55,7 +58,9 @@ services:
     timestamp: 1780669326.075913
     type: scheduled
   hermes-gateway:
+    health_check: healthy
     name: hermes-gateway
+    port_listening: false
     runtime:
       freshness_seconds: 26378
       pid: '1832'
@@ -85,7 +90,7 @@ services:
   sharedbrain-bos:
     health_check: healthy
     name: sharedbrain-bos
-    port_listening: true
+    port_listening: false
     runtime:
       details: Up 2 hours (healthy)
       freshness_seconds: 6723

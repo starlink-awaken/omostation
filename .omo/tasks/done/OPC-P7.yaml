@@ -138,22 +138,9 @@ sub_gates:
     '
   note: H5 模板 + 1 真实 review 是硬基础设施, 已 closeout. H1-H4 因时间性/反证原因回退.
 gate: Gate H
-gate_status: passed
-gate_note: '2026-06-13 Gate H 通过.
-
-  - H1: 5 份 release cycle, retrospective 完整
-
-  - H2: phase-gate checker 已稳定
-
-  - H3: 5 仓 metrics 聚合, 2 次 audit_rollout 跑通
-
-  - H4: doc-lint 零漂移
-
-  - H5: 评审模板 + 1 真实 review
-
-  Gate H 已通过, OPC 路线图全部完成.
-
-  '
+gate_status: not_yet_passed
+gate_note: '2026-06-13 Closeout 报告 reviewer 强制 not_yet_passed。AGENTS.md 5 红线 1: gate_status
+  不得 passed。Reverted via governance broker 2026-06-18 by drift-audit.'
 signals:
 - opc_phase7_gate_h_passed
 - opc_phase7_subgate_h1_passed

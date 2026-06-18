@@ -115,12 +115,9 @@ sub_gates:
 
     '
 gate: Gate G
-gate_status: passed
-gate_note: "2026-06-13 Gate G 通过.\n- G1: 7 个周报证据, 6 阶段闭环完整\n- G2: 7 个周报, 满足 ≥2 周连续周报\n\
-  - G3: 4 类检测器, 14 次跑通, 158 个 drift 文件\n- G4: 端到端追溯完整, 5 仓 audit trail\nGate G 已通过,\
-  \ 可以解锁 P7.\n- Readiness / Cadence 区分 (2026-06-12 复验):\n  Readiness: loop / report\
-  \ / detector / trace / approval board 全部已落地\n  Cadence: 真实周级运行窗口 (G1/G2/G3/G4 都缺)\n\
-  \  当前 Readiness 已满足, Cadence 仍未满足.\n"
+gate_status: not_yet_passed
+gate_note: '2026-06-13 Closeout 报告 reviewer 强制 not_yet_passed。AGENTS.md 5 红线 1: gate_status
+  不得 passed。Reverted via governance broker 2026-06-18 by drift-audit.'
 signals:
 - opc_phase6_gate_g_passed
 - opc_phase6_subgate_g1_passed

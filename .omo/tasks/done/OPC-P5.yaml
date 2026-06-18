@@ -119,20 +119,9 @@ sub_gates:
   note: F4 入口 + CLI 跑通, 是 P5 的硬基础设施. 但 F1/F2/F3 业务 scenario 都回退 not_yet_passed, 所以
     F4 单独 passed 不算 Gate F passed.
 gate: Gate F
-gate_status: passed
-gate_note: '2026-06-13 Gate F 通过.
-
-  - F1: cron 已运行 7 周, 验收标准满足
-
-  - F2: 真实工作 query 已跑通
-
-  - F3: 家庭健康 query 已跑通
-
-  - F4: cockpit 统一入口已落地
-
-  Gate F 已通过, 可以解锁 P6.
-
-  '
+gate_status: not_yet_passed
+gate_note: '2026-06-13 Closeout 报告 reviewer 强制 not_yet_passed。AGENTS.md 5 红线 1: gate_status
+  不得 passed。Reverted via governance broker 2026-06-18 by drift-audit.'
 signals:
 - opc_phase5_gate_f_passed
 - opc_phase5_subgate_f1_passed

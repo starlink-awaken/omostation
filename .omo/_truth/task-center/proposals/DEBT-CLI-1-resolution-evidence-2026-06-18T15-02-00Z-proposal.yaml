@@ -1,0 +1,30 @@
+id: DEBT-CLI-1-resolution-evidence-2026-06-18T15-02-00Z-proposal
+title: Add resolution_evidence to DEBT-CLI-1 (omo debt close doesn't set it)
+operation_level: L1
+requested_by: laowang-engineer-drift-audit
+target:
+  ref: .omo/debt/items/DEBT-CLI-1.yaml
+changes:
+  set:
+    resolution_evidence: 'P42 治理面 SSOT 同步纪元 drift audit (2026-06-18): DEBT-CLI-1 title
+      模糊 (broker debt) 无具体 remediation，注册时未走 broker 完整登记。决定: close + 列入 drift audit
+      closeout 报告 (2026-06-18-omo-drift-audit.md) §7 遗留争议。L1 操作 (metadata 补充)。'
+    last_reviewed_at: '2026-06-18T15:02:00Z'
+change_summary: DEBT-CLI-1 已 close 但 omo debt close 工具未自动设 resolution_evidence 和 last_reviewed_at，需
+  governance broker 补全。
+impact: 修复 watchlist 告警; debt_health 上升; close 闭环完整。
+verification_plan:
+- 'cat .omo/debt/items/DEBT-CLI-1.yaml | grep resolution_evidence  # expect non-empty'
+- 'python3 scripts/sync_omo_state.py --omo-dir .omo  # debt_metrics.debt_health 上升'
+- 'PYTHONPATH=projects/omo/src python3 -m omo.cli governance  # 总分 100.0 A+'
+rollback_plan:
+- 清空 resolution_evidence / last_reviewed_at 字段
+- '重开 DEBT-CLI-1: omo debt reopen --id DEBT-CLI-1'
+secret_refs: []
+trace_id: trace-DEBT-CLI-1-resolution-evidence-2026-06-18T15-02-00Z
+status: verified
+requested_at: '2026-06-18T15:01:53Z'
+approved_at: '2026-06-18T15:01:53Z'
+applied_at: '2026-06-18T15:01:53Z'
+verified_at: '2026-06-18T15:01:53Z'
+approved_by: laowang-engineer
