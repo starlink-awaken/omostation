@@ -17,4 +17,4 @@ jobs:
           python-version: "3.13"
       - uses: astral-sh/setup-uv@v3
       - name: pytest (family_hub Python 包)
-        run: cd projects/family-hub && uv run pytest -q
+        run: cd projects/family-hub && uv run --with pytest pytest -q
