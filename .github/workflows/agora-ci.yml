@@ -5,6 +5,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+      - name: Init agora submodule
+        run: git submodule update --init projects/agora
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
