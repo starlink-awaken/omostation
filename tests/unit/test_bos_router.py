@@ -35,15 +35,15 @@ class TestBOSRouterRegister:
         router.register("bos://memory/kos/search", adapter="poc", config=config)
         route = router._routes.get("bos://memory/kos/search/")
         assert route is not None
-        assert route["adapter"] == "poc"
-        assert route["config"] == config
+        assert route[0]["adapter"] == "poc"
+        assert route[0]["config"] == config
 
     def test_register_default_config(self):
         """config 不传时应为 {}。"""
         router = BOSRouter()
         router.register("bos://memory/kos", adapter="poc")
         route = router._routes.get("bos://memory/kos/")
-        assert route["config"] == {}
+        assert route[0]["config"] == {}
 
     def test_register_duplicate_skips(self):
         """重复注册同一 prefix 应跳过并记录 warning。"""
@@ -51,7 +51,7 @@ class TestBOSRouterRegister:
         router.register("bos://memory/kos", adapter="poc")
         router.register("bos://memory/kos", adapter="proxy")  # duplicate
         route = router._routes.get("bos://memory/kos/")
-        assert route["adapter"] == "poc"  # 仍然保留第一次的
+        assert route[0]["adapter"] == "poc"  # 仍然保留第一次的
 
 
 class TestBOSRouterUnregister:
