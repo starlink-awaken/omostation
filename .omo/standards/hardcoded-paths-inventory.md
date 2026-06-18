@@ -66,3 +66,18 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 # 或环境变量
 WORKSPACE = os.environ.get("OMOSTATION_ROOT", str(Path(__file__).resolve().parents[2]))
 ```
+
+
+## 第二批修复 (2026-06-19, CI 可移植)
+
+| 文件 | 修复方式 |
+|------|----------|
+| `ecos/ssot/tools/mof-workflow.py` | `SSOT_DIR = Path(__file__).resolve().parent.parent` (原 HOME/Workspace) |
+| `ecos/ssot/tools/mof-{enforce,capability,entity,verify,bos,skills,view,generate,events}.py` | 同上 (9 工具, HOME/Workspace/.../ssot → 相对脚本) |
+| `ecos/ssot/tools/l0_mcp_tools.py` | 同上 (9 处) |
+| `model-driven/_paths.py` | `get_workspace_dir` fallback `Path.home()/Workspace` → `parents[4]` (omostation 根) |
+| `ecos/l0/ssb/ssb_integrity.py` | `CHAIN_CHECKPOINT` `parent.parent/LADS/ssb`(错) → `DB_PATH.parent` (和 db 同目录) |
+| `ecos/l0/constraints.yaml` | symlink → ~/Documents → 真文件 (CI 可移植) |
+| `cockpit/commands/cards.py` | CARDS md title 含冒号 → quote 28 个 (YAML 安全) |
+
+> 关联: CI 全红根因(HOME=/home/runner 无 ~/Workspace) → 全相对脚本修复.

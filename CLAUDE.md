@@ -2,7 +2,7 @@
 
 > Personal AI Operating System · Multi-project Knowledge Engineering Workspace
 > 基于 omostation (starlink-awaken/omostation) 根仓库
-> **version: v2.0** | 最后更新: 2026-06-12 | 架构对齐 5+4+1+1 · SSOT 重构 · 与 ~/Documents/CLAUDE.md 分层协作
+> **version: v2.1** | 最后更新: 2026-06-19 · CI 治本机制 + M0/L0 模型驱动一致 + 硬编码清 + debt 全关
 
 ---
 
@@ -260,7 +260,16 @@ bash tests/integration/run-all.sh
 8. ❌ 不要修改 goals/current.yaml（仅人类可改）
 9. ❌ 不要删除旧的运行记录（仅可标记 archived）
 
+## CI 治本机制 (v2.1, 2026-06-19)
+
+- **子模块悬空根治**: `bin/sync-submodules-push.sh` + `.githooks/pre-push`(主仓 push 自动 sync 子模块, 防 gitlink 悬空 → CI 红). 新 clone 跑 `make install-hooks` 持久化.
+- **private 子模块 CI 认证**: `CROSS_REPO_TOKEN` secret (用 OAuth `gh auth token`; **fine-grained PAT 对 submodule 有坑别用**). CI checkout `with: token: ${{ secrets.CROSS_REPO_TOKEN }}` + `submodules: recursive`.
+- **端口 enforce baseline**: `scripts/check-vault-paths.py --check-ports` 自动读 `protocols/port-hardcode-baseline.yaml`(增量才 fail, `--baseline-init` 刷新, `--strict` 全景).
+- **M0/L0 模型驱动**: `mof-validate` 0 错误 + `mof-audit` 0 漂移 + `mof-bridge-sync` Stage/Gate 完美 + `mof-derive` 7 阶段 0 风险 + SSB 765 events Integrity OK + X1-X4 0 错误.
+- **硬编码清(相对脚本)**: ecos L0 9 工具(mof-*/l0_mcp_tools) + M0 `_paths` + SSB `CHAIN_CHECKPOINT` — 全 `Path(__file__).resolve().parents[N]`, CI 可移植.
+- **debt 治理**: 24 items → 0 open(X3 数 open 不数 closed). `.omo/debt/` 在 .gitignore(本地治理状态).
+
 ---
 
-*~Workspace 层网关 v2.0 · 2026-06-12 · 架构对齐 5+4+1+1 · SSOT 重构*
+*~Workspace 层网关 v2.1 · 2026-06-19 · CI 治本 + M0/L0 一致 + 硬编码清 + debt 0*
 *全局入口 → ~/Documents/CLAUDE_GLOBAL.md*
