@@ -14,14 +14,8 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@v3
       - name: Install dependencies
-        # P41-W1 fix: project references `runtime` directory which is .gitignore'd.
-        # Fall back to installing without the workspace directory dep by skipping the project itself.
-        # We install required deps via uv pip into a venv we control.
-        run: |
-          cd projects/cockpit
-          python -m venv .venv
-          source .venv/bin/activate
-          uv pip install "rich>=13.0" "pyyaml>=6.0" pytest pytest-asyncio
+        # recursive checkout 已拉 runtime/aetherforge/l4-kernel 子模块 → uv sync 装全 workspace (含 fastapi)
+        run: cd projects/cockpit && uv sync
       - name: Run tests
-        # P41-W1: skip integration (needs runtime) and benchmarks; run only unit tests in src/cockpit/tests
-        run: cd projects/cockpit && source .venv/bin/activate && PYTHONPATH=src pytest src/cockpit/tests -q
+        # 单元测试 (src/cockpit/tests), 跳 integration (需 runtime 运行时) + benchmark
+        run: cd projects/cockpit && uv run pytest src/cockpit/tests -q
