@@ -76,9 +76,12 @@ def invoke_stdio(uri: str, *args: Any, **kwargs: Any) -> dict:
     """通过 stdio 调用 BOS 服务 (兼容旧接口)."""
     service = get_service(uri)
     if not service:
-        return {"status": "error", "error": f"unknown_bos_uri: {uri}"}
+        return {"uri": uri, "status": "error", "error": f"unknown_bos_uri: {uri}"}
     adapter = get_stdio_adapter()
-    return adapter.call(service, *args, **kwargs)
+    result = adapter.call(service, *args, **kwargs)
+    if isinstance(result, dict) and "uri" not in result:
+        result["uri"] = uri
+    return result
 
 
 def protocol_self_check() -> dict:
@@ -129,6 +132,13 @@ async def resolve_bos_uri(
         try:
             import importlib
             import inspect
+            import sys
+            
+            if service.package and service.package != "agora":
+                pkg_path = str(Path(_WS) / "projects" / service.package / "src")
+                if pkg_path not in sys.path:
+                    sys.path.insert(0, pkg_path)
+                    
             mod = importlib.import_module(service.module_path)
             func = getattr(mod, service.func_name)
 

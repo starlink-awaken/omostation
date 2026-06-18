@@ -3,7 +3,8 @@
 > **Layer**: I0 织层  
 > **Role**: MCP 服务网格 / BOS URI 路由网关 / 动态反向代理  
 > **Stack**: Python 3.13+, uv, FastMCP  
-> **Health**: 1371 passed, 0 lint
+> **Health**: See local CI and runtime probes
+> **SSOT**: 运行时健康、测试通过率、路由/工具计数以本项目 CI、运行时探针和 workspace governance SSOT 为准
 >
 > 系统全景参见：[`docs/ARCHITECTURE-DIAGRAM.md`](../docs/ARCHITECTURE-DIAGRAM.md)
 

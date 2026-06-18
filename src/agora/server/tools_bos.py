@@ -47,10 +47,9 @@ logger = structlog.get_logger(__name__)
 
 
 def _get_proxy_manager():
-    """Lazy import ProxyManager from mcp.py (avoid circular import at module level)."""
-    from agora.server.mcp import _proxy_manager as _pm  # type: ignore[import-not-found]
-
-    return _pm
+    """Lazy-import ProxyManager from dependencies.py."""
+    from agora.server.dependencies import get_proxy_manager
+    return get_proxy_manager()
 
 
 # ── BOS 域鉴权 ──────────────────────────────────────────────

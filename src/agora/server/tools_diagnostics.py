@@ -30,10 +30,9 @@ def _get_lifecycle_manager():
 
 
 def _get_proxy_manager():
-    """Lazy-import ProxyManager from mcp.py."""
-    from agora.server.mcp import _proxy_manager  # type: ignore[import-not-found]
-
-    return _proxy_manager
+    """Lazy-import ProxyManager from dependencies.py."""
+    from agora.server.dependencies import get_proxy_manager
+    return get_proxy_manager()
 
 
 # ═══════════════════════════════════════════════════════════════

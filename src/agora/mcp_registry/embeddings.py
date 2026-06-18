@@ -2,6 +2,10 @@
 
 import struct
 import threading
+import typing
+
+if typing.TYPE_CHECKING:
+    import numpy as np
 
 import structlog
 

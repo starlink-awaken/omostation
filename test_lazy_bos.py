@@ -5,13 +5,11 @@ os.environ["AGORA_BOS_ONLY"] = "1"
 async def main():
     import sys
     sys.path.insert(0, "./src")
-    from agora.server.mcp import _init_proxy, mcp
-    import agora.server.mcp as mcp_module
+    from agora.server.mcp import _init_proxy
     await _init_proxy()
     
     print("\nCalling resolve_bos_uri")
     try:
-        from fastmcp.server.auth.authorization import AuthContext
         
         # we can just call the underlying function
         from agora.server.tools_bos import resolve_bos_uri

@@ -12,7 +12,23 @@ from __future__ import annotations
 
 import pytest
 
-from agora.mcp.bos_metrics import BOSMetrics  # type: ignore[import-not-found]
+from agora.mcp.bos_metrics import BOSMetrics, MetricsStore  # type: ignore[import-not-found]
+
+
+@pytest.fixture(autouse=True)
+def mock_metrics_db(monkeypatch):
+    
+    def mocked_init(self):
+        self._store = MetricsStore(db_path=":memory:")
+        from collections import defaultdict
+        self._stats = defaultdict(
+            lambda: {"calls": 0, "success": 0, "failure": 0, "total_latency_ms": 0}
+        )
+        historical = self._store.load_history()
+        for prefix, data in historical.items():
+            self._stats[prefix] = data
+
+    monkeypatch.setattr("agora.mcp.bos_metrics.BOSMetrics.__init__", mocked_init)
 
 
 class TestBOSMetricsRecord:

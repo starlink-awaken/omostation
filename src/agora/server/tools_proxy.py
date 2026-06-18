@@ -6,11 +6,14 @@ connect, call, status, list, add, remove.
 
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
+from typing import ClassVar
 
 import structlog
 from fastmcp import FastMCP
+from fastmcp.tools import Tool, ToolResult
 
 from agora.core.service_base import is_safe_url  # type: ignore[import-not-found]
 from agora.mcp_proxy.manager import ProxyManager  # type: ignore[import-not-found]
@@ -31,10 +34,9 @@ def _set_constants(proxy_config_path: Path, forge_registry_path: Path) -> None:
 
 
 def _get_proxy_manager() -> ProxyManager | None:
-    """Lazy-import ProxyManager singleton from mcp.py."""
-    from agora.server.mcp import _proxy_manager  # type: ignore[import-not-found]
-
-    return _proxy_manager
+    """Lazy-import ProxyManager singleton from dependencies.py."""
+    from agora.server.dependencies import get_proxy_manager  # type: ignore[import-not-found]
+    return get_proxy_manager()
 
 
 def _load_proxy_services() -> list[dict]:
@@ -129,6 +131,85 @@ def _save_proxy_service(svc: dict) -> None:
     existing.append(svc)
     json_save(_PROXY_CONFIG_PATH, existing)
 
+
+
+
+class ProxyForwardTool(Tool):
+    """FastMCP Tool that forwards calls directly to the proxy dispatch.
+
+    Unlike FunctionTool, this bypasses argument type validation (which cannot
+    handle dynamic downstream JSON Schemas), allowing any downstream service's
+    tools to be exposed as native FastMCP tools.
+    """
+
+    _pm: ClassVar[ProxyManager | None] = None
+    proxy_tool_name: str = ""
+
+    async def run(self, arguments: dict) -> ToolResult:
+        pm = self._pm
+        if pm is None:
+            msg = "Proxy not initialized"
+            return self.convert_result({"status": "error", "error": msg})
+        try:
+            result = await pm.dispatch(self.proxy_tool_name, arguments)
+            return self.convert_result(result)
+        except ValueError as e:
+            return self.convert_result({"status": "error", "error": str(e)})
+        except Exception as e:
+            return self.convert_result(
+                {"status": "error", "error": f"Proxy call failed: {str(e)[:200]}"}
+            )
+
+_registered_proxy_tools: set[str] = set()
+
+def _register_proxy_tools(mcp_server: FastMCP, pm: ProxyManager):
+    ProxyForwardTool._pm = pm
+
+    for entry in pm.registry.entries.values():
+        if entry.tool_name in _registered_proxy_tools:
+            try:
+                mcp_server.remove_tool(entry.tool_name)
+            except Exception:
+                pass
+        mcp_server.add_tool(
+            ProxyForwardTool(
+                name=entry.tool_name,
+                description=entry.description,
+                parameters=entry.parameters,
+                proxy_tool_name=entry.tool_name,
+            )
+        )
+        _registered_proxy_tools.add(entry.tool_name)
+
+def _unregister_proxy_tools(mcp_server: FastMCP, pm: ProxyManager):
+    for entry in pm.registry.entries.values():
+        if entry.tool_name in _registered_proxy_tools:
+            try:
+                mcp_server.remove_tool(entry.tool_name)
+            except Exception:
+                pass
+            _registered_proxy_tools.discard(entry.tool_name)
+
+async def proxy_sync_loop(registry_ref):
+    """Background task: periodically sync ServiceRegistry -> ProxyRegistry.
+    Uses exponential backoff: starts at 10 seconds, doubles up to 120 seconds.
+    """
+    backoff = 10
+    while True:
+        await asyncio.sleep(backoff)
+        pm = _get_proxy_manager()
+        if pm is None:
+            backoff = min(backoff * 2, 120)
+            continue
+        try:
+            proxy_configs = _load_proxy_services()
+            await pm.registry.register_from_registry(
+                registry_ref, proxy_configs
+            )
+            backoff = 10  # reset on success
+        except Exception:
+            logger.exception("proxy_sync_loop_error")
+            backoff = min(backoff * 2, 120)
 
 # ═══════════════════════════════════════════════════════════════
 # Module-level Tool Functions
@@ -239,10 +320,10 @@ def register_proxy_tools(mcp: FastMCP) -> None:
         """
         pm = _get_proxy_manager()
         if pm is None:
-            from agora.server.mcp import _proxy_manager  # noqa: F811
-
-            _proxy_manager = ProxyManager()  # type: ignore[possibly-undefined]
-            pm = _proxy_manager
+            from agora.server.dependencies import set_proxy_manager
+            from agora.mcp_proxy.manager import ProxyManager
+            pm = ProxyManager()
+            set_proxy_manager(pm)
 
         services = _load_proxy_services()
         if not services:
@@ -329,10 +410,10 @@ def register_proxy_tools(mcp: FastMCP) -> None:
         """
         pm = _get_proxy_manager()
         if pm is None:
-            from agora.server.mcp import _proxy_manager  # noqa: F811
-
-            _proxy_manager = ProxyManager()  # type: ignore[possibly-undefined]
-            pm = _proxy_manager
+            from agora.server.dependencies import set_proxy_manager
+            from agora.mcp_proxy.manager import ProxyManager
+            pm = ProxyManager()
+            set_proxy_manager(pm)
 
         svc: dict = {"name": name}
         if mcp_endpoint:

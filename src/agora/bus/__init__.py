@@ -52,12 +52,10 @@ def _ensure_sse_registered() -> None:
     if _sse_registered:
         return
     try:
-        from agora.bus.backends.sse import SSEBackend  # noqa: WPS433
-
+        # We don't need to load SSE or memory since it's lazy anyway.
         _sse_registered = True
-    except Exception as e:  # pragma: no cover
-        logger = logging.getLogger(__name__)
-        logger.warning("bus_sse_register_skipped err=%s", e)
+    except Exception as e:
+        logger.warning(f"Failed to register SSE backend: {e}")  # pragma: no cover
 
 
 logger = logging.getLogger(__name__)

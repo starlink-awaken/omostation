@@ -74,6 +74,11 @@ uv run pytest tests/ --ignore=tests/e2e -q    # 1165/1200 pass
 - `bos://memory/kos/search` — KOS 语义搜索 (poc, stdio)
 - `bos://memory/vault/search` — L4 Vault 本地搜索 (ripgrep)
 
+### 治理域 — governance (1)
+- `bos://governance/quality/audit` — 记忆脊知识质量审计 (internal)
+  - 输入: `{"text": "str", "query": "str"}`
+  - 输出: `{"confidence": float, "reason": "str"}`
+
 ### 蜂群域 — swarm (1)
 - `bos://swarm/orchestrator/status` — 蜂群拓扑与节点负载监控 (internal)
 

@@ -85,7 +85,7 @@ def _run_chain(scenario: dict, timeout_per_call: float = 6.0) -> list[dict]:
             "status": r.get("status", "error"),
             "elapsed": round(elapsed, 2),
             "transport": r.get("transport"),
-            "in_resolver": uri in POC_SERVICES,
+            "in_resolver": uri in [s.uri for s in POC_SERVICES],
             "error": r.get("error") if r.get("status") != "ok" else None,
         })
     return out
@@ -235,7 +235,7 @@ def test_w1_gap_5_uris_all_registered():
         "bos://capability/forge/list-tools",
         "bos://governance/omo/inspect",
     ]
-    missing = [u for u in spec_uris if normalize_bos_uri(u) not in POC_SERVICES]
+    missing = [u for u in spec_uris if normalize_bos_uri(u) not in [s.uri for s in POC_SERVICES]]
     assert not missing, f"P36-W1 GAP 补失败, 仍缺: {missing}"
     print("\nP36-W1 GAP 全补: 5/5 URI 已注册")
 

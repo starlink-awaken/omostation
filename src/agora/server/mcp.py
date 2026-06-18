@@ -26,22 +26,15 @@ import os
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import ClassVar
 
 import structlog
 from fastmcp import FastMCP
 from fastmcp.server.middleware import AuthMiddleware
-from fastmcp.tools import Tool, ToolResult
 
 from agora.audit_subscriber import AuditSubscriber  # type: ignore[import-not-found]
 from agora.core.state import get_event_bus, get_registry, get_router  # type: ignore[import-not-found]
 from agora.mcp import mcp_bootstrap  # type: ignore[import-not-found]
 from agora.mcp_proxy.manager import ProxyManager  # type: ignore[import-not-found]
-from agora.mcp_registry.embeddings import EmbeddingStore  # type: ignore[import-not-found]
-from agora.mcp_registry.lifecycle import LifecycleManager  # type: ignore[import-not-found]
-from agora.mcp_registry.orchestrator import Orchestrator  # type: ignore[import-not-found]
-from agora.mcp_registry.repository import ToolCatalog  # type: ignore[import-not-found]
-from agora.mcp_registry.router import SmartRouter  # type: ignore[import-not-found]
 
 # L0 审计 hook — BOS URI 前置校验 + 后置审计
 import sys as _sys
@@ -85,13 +78,7 @@ logger = structlog.get_logger(__name__)
 
 _AGORA_API_KEY = os.environ.get("AGORA_API_KEY", "")
 
-# Module-level component cache — avoids re-creating ToolCatalog, EmbeddingStore,
-# Orchestrator, SmartRouter, and LifecycleManager on every agora_execute call.
-_cached_catalog: ToolCatalog | None = None
-_cached_embeddings: EmbeddingStore | None = None
-_cached_orchestrator: Orchestrator | None = None
-_cached_router: SmartRouter | None = None
-_cached_lifecycle_mgr: LifecycleManager | None = None
+# Module-level component cache extracted to agora.server.dependencies
 
 
 from agora.server.tools_auth import (  # noqa: E402
@@ -141,20 +128,15 @@ def _resolve_caller_identity(caller_identity: str | dict | None) -> str | dict:
 
 @asynccontextmanager
 async def _proxy_lifespan(server: FastMCP):
-    """Initialize proxy connections within mcp.run()'s event loop.
-
-    This replaces the old ``asyncio.run(_init_proxy())`` pattern which
-    killed subprocesses when the temporary event loop closed. By running
-    inside the lifespan context manager, subprocesses stay alive for the
-    entire server lifetime.
-    """
-    import asyncio
+    """Initialize proxy connections within mcp.run()'s event loop."""
+    from agora.server.dependencies import get_proxy_manager, clear_caches
+    from agora.server.tools_proxy import proxy_sync_loop
 
     _sync_task = None
     _swarm = None
     try:
         await _init_proxy()
-        _sync_task = asyncio.create_task(_proxy_sync_loop())
+        _sync_task = asyncio.create_task(proxy_sync_loop(registry))
 
         # ── Swarm 启动 (P55) ──
         swarm_role = os.environ.get("AGORA_SWARM_ROLE", "")
@@ -165,35 +147,22 @@ async def _proxy_lifespan(server: FastMCP):
                 os.environ.get("AGORA_SWARM_PORT", str(SWARM_DEFAULT_PORT))
             )
             _swarm = get_swarm(role=swarm_role, port=swarm_port)
-            _swarm.set_proxy_manager(_proxy_manager)
+            _swarm.set_proxy_manager(get_proxy_manager())
             _swarm.start()
             logger.info("swarm_started", role=swarm_role, port=swarm_port)
     except Exception:
         logger.exception("proxy_init_in_lifespan")
-    global \
-        _lifecycle_manager, \
-        _cached_catalog, \
-        _cached_embeddings, \
-        _cached_orchestrator, \
-        _cached_router, \
-        _cached_lifecycle_mgr
+    
     yield {}
+    
     if _sync_task is not None:
         _sync_task.cancel()
         try:
             await _sync_task
         except asyncio.CancelledError:
             pass
-    if _cached_embeddings is not None:
-        _cached_embeddings.close()
-    if _lifecycle_manager is not None:
-        await _lifecycle_manager.close()
-    _cached_catalog = None
-    _cached_embeddings = None
-    _cached_orchestrator = None
-    _cached_router = None
-    _cached_lifecycle_mgr = None
-    _lifecycle_manager = None
+            
+    clear_caches()
     if _swarm is not None:
         _swarm.stop()
         logger.info("swarm_stopped")
@@ -249,12 +218,7 @@ def _get_task_manager() -> TaskManager:  # noqa: F821
     return _task_manager
 
 
-# ── MCP Proxy ───────────────────────────────────────────────────────
-
-_proxy_manager: ProxyManager | None = None
-_lifecycle_manager: LifecycleManager | None = (
-    None  # singleton for background watch tasks
-)
+# ── MCP Proxy Configs ───────────────────────────────────────────────────────
 
 # Path to enriched service config (with command/args for stdio services)
 # Resolved relative to project root (same convention as registry.py's agora-services.json)
@@ -285,8 +249,9 @@ async def _init_proxy():
 
     Phase 3 — registers all proxy downstream tools as native FastMCP tools.
     """
-    global _proxy_manager, _lifecycle_manager, _cached_lifecycle_mgr
-    if _proxy_manager is not None:
+    from agora.server.dependencies import get_proxy_manager, set_proxy_manager, get_lifecycle_manager, set_lifecycle_manager
+    pm = get_proxy_manager()
+    if pm is not None:
         return
 
     # ── Phase 0 (BOS-ONLY): 立即裁剪非 BOS 工具，不等 proxy 初始化 ──
@@ -294,11 +259,12 @@ async def _init_proxy():
         await _bos_only_cleanup(mcp)
         logger.info("bos_only_mode: removed non-BOS management tools")
 
-    _proxy_manager = ProxyManager()
-    _lifecycle_manager = _get_lifecycle_manager()
+    pm = ProxyManager()
+    set_proxy_manager(pm)
+    set_lifecycle_manager(get_lifecycle_manager())
 
     # ── Phase 1: Try bootstrap (scan_and_launch internally calls start() with full configs) ──
-    bootstrap_results = await mcp_bootstrap.scan_and_launch(_proxy_manager)
+    bootstrap_results = await mcp_bootstrap.scan_and_launch(pm)
 
     if not bootstrap_results:
         # No bootstrap available — load from proxy config file
@@ -306,19 +272,20 @@ async def _init_proxy():
 
         services = _load_proxy_services()
         if services:
-            await _proxy_manager.start(services)
+            await pm.start(services)
     # else: scan_and_launch already connected services via _build_enabled_services + proxy_manager.start
 
     # ── Phase 2: Register HTTP services from ServiceRegistry ──
     from agora.server.tools_proxy import _load_proxy_services  # type: ignore[import-not-found]
 
     proxy_configs = _load_proxy_services()
-    await _proxy_manager.registry.register_from_registry(
+    await pm.registry.register_from_registry(
         registry, proxy_configs, lazy=True
     )
 
     # ── Phase 3: Register proxy tools ──
-    _register_proxy_tools(mcp, _proxy_manager)
+    from agora.server.tools_proxy import _register_proxy_tools
+    _register_proxy_tools(mcp, pm)
 
     # ── Phase 4 (P45 W2): Seed BOSRouter from POC_SERVICES ──
     _bos_router.seed_from_poc(_POC_SERVICES)
@@ -499,172 +466,7 @@ def _install_signal_handler() -> None:
 # ── 信号处理 (P46 W2) ─────────────────────────────────
 
 
-# ── ProxyForwardTool ──────────────────────────────────────────────
-
-
-class ProxyForwardTool(Tool):
-    """FastMCP Tool that forwards calls directly to the proxy dispatch.
-
-    Unlike FunctionTool, this bypasses argument type validation (which cannot
-    handle dynamic downstream JSON Schemas), allowing any downstream service's
-    tools to be exposed as native FastMCP tools.
-    """
-
-    # Stored as ClassVar to exclude from Pydantic model fields (ProxyManager
-    # is not a Pydantic model and cannot be serialised by pydantic-core).
-    _pm: ClassVar[ProxyManager | None] = None
-    proxy_tool_name: str = ""
-
-    async def run(self, arguments: dict) -> ToolResult:
-        pm = self._pm
-        if pm is None:
-            msg = "Proxy not initialized"
-            return self.convert_result({"status": "error", "error": msg})
-        try:
-            result = await pm.dispatch(self.proxy_tool_name, arguments)
-            return self.convert_result(result)
-        except ValueError as e:
-            return self.convert_result({"status": "error", "error": str(e)})
-        except Exception as e:
-            return self.convert_result(
-                {"status": "error", "error": f"Proxy call failed: {str(e)[:200]}"}
-            )
-
-
-# Track which proxy tools have been registered as FastMCP tools,
-# so we can clean up on re-registration.
-_registered_proxy_tools: set[str] = set()
-
-
-def _register_proxy_tools(mcp_server: FastMCP, pm: ProxyManager):
-    """Register all proxy downstream tools as native FastMCP tools.
-
-    Each downstream tool becomes directly callable via ``tools/call``
-    with ``name: "{service}.{original_tool_name}"``.
-    Re-registration: if a tool was previously registered, it is removed
-    first to avoid FastMCP duplicate-tool errors.
-    """
-    # Set the ClassVar proxy manager reference once for all tools
-    ProxyForwardTool._pm = pm
-
-    for entry in pm.registry.entries.values():
-        # Remove stale version if this is a reconnection
-        if entry.tool_name in _registered_proxy_tools:
-            try:
-                mcp_server.remove_tool(entry.tool_name)
-            except Exception:
-                pass
-        mcp_server.add_tool(
-            ProxyForwardTool(
-                name=entry.tool_name,
-                description=entry.description,
-                parameters=entry.parameters,
-                proxy_tool_name=entry.tool_name,
-            )
-        )
-        _registered_proxy_tools.add(entry.tool_name)
-
-
-def _unregister_proxy_tools(mcp_server: FastMCP, pm: ProxyManager):
-    """Remove all proxy tools previously registered as FastMCP tools."""
-    for entry in pm.registry.entries.values():
-        if entry.tool_name in _registered_proxy_tools:
-            try:
-                mcp_server.remove_tool(entry.tool_name)
-            except Exception:
-                pass
-            _registered_proxy_tools.discard(entry.tool_name)
-
-
-def _get_lifecycle_manager() -> LifecycleManager:
-    """Get or create the global LifecycleManager singleton.
-
-    Ensures all lifecycle tools (start_watch, stop_watch, load_all, unload_all)
-    operate on the same instance so that background watch tasks can be correctly
-    started, stopped, and share state (``_last_used`` timestamps).
-    """
-    global _cached_lifecycle_mgr
-    if _cached_lifecycle_mgr is not None:
-        return _cached_lifecycle_mgr
-    catalog = _get_cached_catalog()
-    _cached_lifecycle_mgr = LifecycleManager(
-        catalog=catalog,
-        proxy_manager=_proxy_manager,
-    )
-    return _cached_lifecycle_mgr
-
-
-def _get_cached_catalog() -> ToolCatalog:
-    """Get or create the module-level cached ToolCatalog instance."""
-    global _cached_catalog
-    if _cached_catalog is None:
-        _cached_catalog = ToolCatalog()
-    return _cached_catalog
-
-
-def _get_cached_embeddings() -> EmbeddingStore:
-    """Get or create the module-level cached EmbeddingStore instance."""
-    global _cached_embeddings
-    if _cached_embeddings is None:
-        catalog = _get_cached_catalog()
-        _cached_embeddings = EmbeddingStore(catalog._db_path)
-    return _cached_embeddings
-
-
-def _get_cached_orchestrator() -> Orchestrator:
-    """Get or create the module-level cached Orchestrator instance."""
-    global _cached_orchestrator
-    if _cached_orchestrator is None:
-        catalog = _get_cached_catalog()
-        lifecycle = _get_lifecycle_manager()
-        _cached_orchestrator = Orchestrator(catalog=catalog, lifecycle=lifecycle)
-    return _cached_orchestrator
-
-
-def _get_cached_router() -> SmartRouter:
-    """Get or create the module-level cached SmartRouter instance."""
-    global _cached_router
-    if _cached_router is None:
-        catalog = _get_cached_catalog()
-        embeddings = _get_cached_embeddings()
-        lifecycle = _get_lifecycle_manager()
-        orchestrator = _get_cached_orchestrator()
-        _cached_router = SmartRouter(
-            catalog=catalog,
-            embeddings=embeddings,
-            lifecycle=lifecycle,
-            orchestrator=orchestrator,
-        )
-    return _cached_router
-
-
-async def _proxy_sync_loop():
-    """Background task: periodically sync ServiceRegistry -> ProxyRegistry.
-
-    Picks up services registered via CLI (discover --register, sync, etc.)
-    that were not added to the proxy at registration time because the proxy
-    runs in a different process.
-
-    Uses exponential backoff: starts at 10 seconds, doubles up to 120 seconds
-    on failure; resets to 10 seconds on success.
-    """
-    backoff = 10
-    while True:
-        await asyncio.sleep(backoff)
-        if _proxy_manager is None:
-            backoff = min(backoff * 2, 120)
-            continue
-        try:
-            from agora.server.tools_proxy import _load_proxy_services  # type: ignore[import-not-found]
-
-            proxy_configs = _load_proxy_services()
-            await _proxy_manager.registry.register_from_registry(
-                registry, proxy_configs
-            )
-            backoff = 10  # reset on success
-        except Exception:
-            logger.exception("proxy_sync_loop_error")
-            backoff = min(backoff * 2, 120)
+# ── Extracted Proxy Tools and Singletons to tools_proxy.py and dependencies.py ──
 
 
 # ── Phase 34: Agora Mesh V2 (Agent Experience Layer) ────────────────
@@ -674,10 +476,12 @@ async def _proxy_sync_loop():
 def agora_registry() -> str:
     """Introspection: returns a JSON dump of all registered tools and resources."""
     import json
+    from agora.server.dependencies import get_proxy_manager
 
-    if _proxy_manager:
-        tools = _proxy_manager.list_tools()
-        resources = _proxy_manager.list_resources()
+    pm = get_proxy_manager()
+    if pm:
+        tools = pm.list_tools()
+        resources = pm.list_resources()
         return json.dumps(
             {
                 "tools": [
@@ -725,6 +529,7 @@ async def bos_universal_resource(domain: str, package: str, action: str) -> str:
     路由优先级: BOSRouter (POC) → ProxyManager (MCP 代理) → 404
     """
     import json
+    from agora.server.dependencies import get_proxy_manager
 
     uri = f"bos://{domain}/{package}/{action}"
     # Step 1: BOSRouter
@@ -752,9 +557,10 @@ async def bos_universal_resource(domain: str, package: str, action: str) -> str:
                     }
                 )
     # Step 2: ProxyManager
-    if _proxy_manager:
+    pm = get_proxy_manager()
+    if pm:
         try:
-            result = await _proxy_manager.read_resource(uri)
+            result = await pm.read_resource(uri)
             if isinstance(result, dict) and "contents" in result:
                 return json.dumps(
                     {
@@ -808,8 +614,9 @@ async def agora_execute(query: str, mode: str = "auto") -> dict:
         mode: Routing mode - 'direct', 'recommend', or 'auto' (default: auto)
     """
     try:
-        router = _get_cached_router()
-        result = await router.route(query, mode=mode)
+        from agora.server.dependencies import get_cached_router
+        router_instance = get_cached_router()
+        result = await router_instance.route(query, mode=mode)
         return _ok({"format_version": FORMAT_VERSION, **result})
     except Exception as e:
         logger.exception("agora_execute_failed", query=query, mode=mode)
@@ -839,7 +646,6 @@ def http_main():
     Proxy connections are initialized inside the lifespan context manager,
     keeping subprocesses alive for the entire server lifetime.
     """
-    import asyncio
 
     asyncio.run(mcp.run_http_async(host="0.0.0.0", port=7422))  # noqa: S104 — MCP server intentionally binds all interfaces
 
@@ -851,7 +657,6 @@ def sse_main():
     keeping subprocesses alive for the entire server lifetime.
     Exposes a /health HTTP endpoint alongside the SSE transport.
     """
-    import asyncio
     from starlette.responses import JSONResponse
     from starlette.routing import Route
 
@@ -864,44 +669,7 @@ def sse_main():
             }
         )
 
-    async def a2a_send_endpoint(request):
-        """[Phase 9] Network A2A Receiver with Signature Verification."""
-        try:
-            body = await request.json()
-            target_agent_id = body.get("target_agent_id")
-            message = body.get("message")
-            sender_node_id = body.get("sender_node_id")
-            
-            # 1. Identity Check
-            signature = request.headers.get("X-Swarm-Signature")
-            if signature:
-                from agora.mcp.swarm import get_swarm
-                from agora.auth.node_identity import NodeIdentity
-                
-                swarm = get_swarm()
-                sender_node = swarm._nodes.get(sender_node_id)
-                if sender_node and sender_node.public_key:
-                    # Verify signature against sender's public key
-                    # Re-serialize body with sort_keys=True to match signer
-                    is_valid = NodeIdentity.verify(
-                        json.dumps(body, sort_keys=True).encode(),
-                        signature,
-                        sender_node.public_key
-                    )
-                    if not is_valid:
-                        logger.warning("a2a_auth_failed", node_id=sender_node_id)
-                        return JSONResponse({"status": "error", "error": "invalid_signature"}, status_code=401)
-                    
-                    logger.debug("a2a_auth_success", node_id=sender_node_id)
-            
-            # 2. Local Delivery
-            from agora.a2a.transport import A2ATransport
-            transport = A2ATransport()
-            res = transport.send_message(target_agent_id, message)
-            return JSONResponse(res)
-            
-        except Exception as e:
-            return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+    from agora.server.a2a import a2a_send_endpoint
 
     # Add routes
     mcp._additional_http_routes.append(Route("/health", endpoint=health_endpoint))

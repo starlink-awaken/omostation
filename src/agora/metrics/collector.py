@@ -181,6 +181,23 @@ class PipelineMetricsCollector:
         # 保存指标
         self._save_metrics()
 
+        # Emit to Omni-Bus Data Plane
+        try:
+            from bus_foundation.facade import data as bus_data
+
+            bus_data.emit(
+                topic="agora:metrics:pipeline_execution",
+                payload={
+                    "pipeline_name": pipeline_name,
+                    "completed": completed,
+                    "total_duration": total_duration,
+                    "steps_count": len(steps),
+                },
+                source_uri="bos://agora/metrics",
+            )
+        except Exception as e:
+            logger.warning("metrics_bus_emit_failed pipeline=%s err=%s", pipeline_name, e)
+
     def get_completion_rate(self, pipeline_name: str | None = None) -> float:
         """
         获取完成率

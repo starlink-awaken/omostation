@@ -87,8 +87,8 @@ class TestInternalTransport:
         # 若 omo 未安装或 import 失败, status=error; 不视为测试失败
         # 但若是 ok, result_type 应是 GovernanceReport
         if result["status"] == "ok":
-            assert "result_type" in result
-            assert "GovernanceReport" in result.get("result_type", "") or "dataclass" in str(result)
+            assert "result" in result
+            assert "GovernanceReport" in str(result)
 
 
 # ── 3. stdio transport (kairon) ─────────────────────
