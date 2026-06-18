@@ -1,0 +1,28 @@
+id: DEBT-COCKPIT-HEALTH-DISTORTION-evidence-repath-2026-06-18T15-35-00Z-proposal
+title: Repath DEBT-COCKPIT-HEALTH-DISTORTION evidence_refs to tracked dir
+operation_level: L1
+requested_by: laowang-engineer-drift-audit
+target:
+  ref: .omo/debt/items/DEBT-COCKPIT-HEALTH-DISTORTION.yaml
+changes:
+  set:
+    evidence_refs:
+    - .omo/_knowledge/audits/evidence/launchctl-list-2026-06-18T15-18-00Z.txt
+    - .omo/_knowledge/audits/evidence/cockpit-health-full-2026-06-18T15-18-00Z.txt
+    mitigation_refs:
+    - .omo/_knowledge/audits/evidence/launchctl-list-2026-06-18T15-18-00Z.txt
+change_summary: evidence_refs 从 .omo/_delivery/evidence/ (gitignored) 挪到 .omo/_knowledge/audits/evidence/
+  (tracked)。
+impact: evidence 文件进 git 可审计; collect_stale_evidence 仍 OK。
+verification_plan:
+- cat .omo/debt/items/DEBT-COCKPIT-HEALTH-DISTORTION.yaml | grep evidence_refs
+rollback_plan:
+- broker 改回 _delivery path
+secret_refs: []
+trace_id: trace-DEBT-COCKPIT-HEALTH-DISTORTION-evidence-repath-2026-06-18T15-35-00Z
+status: verified
+requested_at: '2026-06-18T15:39:28Z'
+approved_at: '2026-06-18T15:39:28Z'
+applied_at: '2026-06-18T15:39:28Z'
+verified_at: '2026-06-18T15:39:28Z'
+approved_by: laowang-engineer
