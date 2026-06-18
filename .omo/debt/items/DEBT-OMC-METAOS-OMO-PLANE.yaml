@@ -1,4 +1,5 @@
 id: DEBT-OMC-METAOS-OMO-PLANE
+status: open
 title: metaos 缺少 .omo/ 治理平面
 description: 'metaos 项目缺少 .omo/ 治理平面，无法参与 OMO phase/task/debt/audit 流程。
 

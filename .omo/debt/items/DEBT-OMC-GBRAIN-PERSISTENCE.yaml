@@ -1,4 +1,5 @@
 id: DEBT-OMC-GBRAIN-PERSISTENCE
+status: open
 title: gbrain JSONL 写入缺乏原子性和 schema 校验
 description: 'gbrain 是 TypeScript 知识数据库，其 JSONL 写入路径使用非原子操作：
 

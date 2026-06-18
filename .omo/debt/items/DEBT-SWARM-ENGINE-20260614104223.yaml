@@ -1,4 +1,5 @@
 id: DEBT-SWARM-ENGINE-20260614104223
+status: closed  # resolution: Implemented RedisMessageBroker
 title: 生产级 A2A Message Bus
 description: 当前薄绑定为本地模拟，需要引入生产级 Redis/NATS 作为物理传输层
 severity: medium
