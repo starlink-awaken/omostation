@@ -2,6 +2,6 @@ id: DEBT-LEGACY-WEB-APP
 title: 'T2: cockpit/web/app.py 1373 行旧版与 dashboard_server.py 功能重叠'
 severity: medium
 phase: '48'
-status: open
+status: resolved
 description: '旧版 web/app.py FastAPI 应用与 dashboard_server.py 功能重复, 应整合或废弃'
-
+resolution_evidence: 'cockpit/web/app.py has been emptied and marked as DEPRECATED. It has been replaced by dashboard_server.py.'

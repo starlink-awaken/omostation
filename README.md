@@ -24,12 +24,18 @@
 
 ```
  L4  Self      ── Personal CARDS + Learning Evolution (SQLite/MD)
- L3  Entry     ── cockpit (CLI 13 commands + MCP + Web Dashboard)
- I0  Weave     ── agora (Dynamic MCP Proxy Mesh, 42+ tools)
- L2  Engine    ── kairon (19 packages) · gbrain (67 MCP tools) · omo · metaos
- L1  Runtime   ── runtime (Matrix + Scheduler + KEI Sandbox)
- L0  Protocol  ── ecos (SSB Protocol Layer + Emergence)
+ L3  Entry     ── cockpit (CLI 18 commands + MCP + FastAPI Web Dashboard)
+ I0  Weave     ── agora (Dynamic MCP Proxy Mesh, 90+ tools)
+ L2  Engine    ── kairon (19 packages) · gbrain (TypeScript) · omo · metaos
+ L1  Runtime   ── runtime (Compute Gateway + Scheduler + KEI Sandbox)
+ L0  Protocol  ── ecos (SSB Protocol Layer + Emergence + M1 MOF Models)
 ```
+
+### Core Spines (Phase 2-9)
+- **🧠 Memory Spine**: Unified cross-domain knowledge aggregation (`bos://memory/local/all-search`) over KOS, gbrain, and local Vaults.
+- **📡 Swarm Spine**: Distributed multi-node agent coordination with A2ANetworkTransport, Auto-Proxying, and **Ed25519 Trust Verification (X1)**.
+- **⚙️ Compute Spine**: Centralized LLM orchestration with **Real-time Atomic Budget Deductions (X2)** and Quota-Low adaptive scheduling.
+- **⚖️ Evolution Loop**: OMO daemon for active debt remediation with **Cockpit HITL Gate (X4)** and **MetaOS Admission Gates (X3)**.
 
 ### Active Projects
 
