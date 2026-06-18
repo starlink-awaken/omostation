@@ -4,7 +4,8 @@ SharedDisk 空间监控 — ecos-daemon 健康检查插件
 
 检查 /Volumes/SharedDisk 使用率, >95% 自动创建 DEBT 卡片。
 """
-import json, sqlite3, subprocess, sys
+import sqlite3
+import subprocess
 from datetime import datetime
 from pathlib import Path
 

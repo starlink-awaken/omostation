@@ -1,0 +1,15 @@
+id: OMOTASK-OPC-P42-OMO-SURFACES-LEGACY-CLEANUP
+type: OMOTask
+subtype: RoadmapPhase
+name: 清理 OMO governance surfaces 受控遗留面
+description: ''
+status: done
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPC-P42-OMO-SURFACES-LEGACY-CLEANUP.yaml
+title: 清理 OMO governance surfaces 受控遗留面
+gate: none
+gate_status: passed

@@ -16,7 +16,6 @@ Phase7.5 / v5 设计能力补全 — L3 各入口的使用频率和价值贡献�
     python3 ecos-entry-logger.py --watch
 """
 
-import sys
 import json
 import argparse
 import hashlib

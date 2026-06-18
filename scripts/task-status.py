@@ -70,7 +70,7 @@ def main():
             continue
         filtered.append(t)
 
-    print(f"\n═══ 定时任务看板 ═══")
+    print("\n═══ 定时任务看板 ═══")
     print(f"总计: {len(tasks)} 个任务 | 筛选: {category or '全部'} | 更新: {index.get('updated', '?')[:19]}")
     print()
 
@@ -90,7 +90,7 @@ def main():
 
     # Stale check
     if "--stale" in args:
-        print(f"\n── 逾期检查 ──")
+        print("\n── 逾期检查 ──")
         stale_count = 0
         for t in tasks:
             mtime = t.get("mtime", "")
@@ -106,7 +106,7 @@ def main():
                     print(f"  🟡 {t['name']}: {days}d 未更新 (weekly任务)")
                     stale_count += 1
         if stale_count == 0:
-            print(f"  ✅ 无逾期任务")
+            print("  ✅ 无逾期任务")
     print()
 
 

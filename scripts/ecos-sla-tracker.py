@@ -10,13 +10,10 @@ eCOS v5 Phase 7.6 — 健康 SLA 追踪器 (ecos-sla-tracker)
     python3 ecos-sla-tracker.py --json
 """
 
-import sys
 import json
 import argparse
-import os
 from datetime import datetime, timezone
 from pathlib import Path
-from collections import deque
 
 
 SLA_DIR = Path.home() / ".ecos" / "sla"
@@ -142,7 +139,7 @@ def format_report(sla: dict) -> str:
     lines.append("")
 
     if sla["last_failure"]:
-        lines.append(f"  最近失败:")
+        lines.append("  最近失败:")
         lines.append(f"    {sla['last_failure']['timestamp'][:19]} "
                      f"[{sla['last_failure']['dimension']}] "
                      f"{sla['last_failure']['detail'][:60]}")

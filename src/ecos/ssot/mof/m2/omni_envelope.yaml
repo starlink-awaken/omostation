@@ -1,0 +1,54 @@
+m2_type: OmniEnvelope
+version: 1.0.0
+created: '2026-06-17'
+OmniEnvelope:
+  m3_parent: GovernanceElement
+  description: Omni-Bus 统一信封协议，定义在数据、事件、控制面流转的全局标准数据结构。
+  requiredProperties:
+    id:
+      type: string
+      description: 消息全局唯一标识 (UUID)
+    trace_id:
+      type: string
+      description: 全链路追踪ID
+    timestamp:
+      type: float
+      description: 产生时间 (Unix Timestamp)
+    version:
+      type: string
+      description: 协议版本 (默认 1.0)
+    plane:
+      type: enum
+      description: 流转平面
+      values: [DATA, EVENT, CONTROL]
+    topic:
+      type: string
+      description: 主题或路由键 (例如 user.created)
+    source_uri:
+      type: string
+      description: 发出源的 BOS URI
+    payload:
+      type: dict
+      description: 业务载荷，需符合 M2 模型中对该 topic 的定义
+  optionalProperties:
+    signature:
+      type: string
+      description: 安全签名/Token校验 (控制面必填)
+    seq_id:
+      type: integer
+      description: 逻辑时钟或单调递增ID，用于幂等和乱序防范
+    retry_count:
+      type: integer
+      description: 重试次数 (控制面使用，默认0)
+  validationRules:
+    - rule: plane == 'CONTROL' implies signature != null
+      level: error
+      message: 控制面消息必须包含签名校验
+    - rule: retry_count >= 0
+      level: error
+      message: 重试次数不能为负
+  relationConstraints:
+    can_be_source_of:
+      - Triggers
+    can_be_target_of:
+      - HandledBy

@@ -18,15 +18,13 @@ Phase 8.2 / v5 能力补全
     python3 ecos-entry-profiler.py --watch           # 连续监听
 """
 
-import sys
 import json
 import argparse
-import subprocess
 import time
 import os
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from collections import Counter, defaultdict
+from collections import Counter
 
 
 SESSION_DIR = Path.home() / ".ecos" / "sessions"
@@ -166,7 +164,7 @@ def generate_report(events: list[dict]) -> str:
     cmd_execs = [e for e in events if e["type"] == "cmd.exec"]
     sessions_ended = [e for e in events if e["type"] == "session.end"]
 
-    lines.append(f"\n  📊 总览")
+    lines.append("\n  📊 总览")
     lines.append(f"  会话: {len(sessions)} 次")
     lines.append(f"  文件读取: {len(file_reads)} 次")
     lines.append(f"  命令执行: {len(cmd_execs)} 次")
@@ -174,7 +172,7 @@ def generate_report(events: list[dict]) -> str:
 
     # 入口文件频率
     if file_reads:
-        lines.append(f"\n  📖 入口文件频率")
+        lines.append("\n  📖 入口文件频率")
         entry_files = [f["file"] for f in file_reads if f.get("entry_type") == "entry_file"]
         by_file = Counter(entry_files)
         for fname, count in by_file.most_common(10):
@@ -183,7 +181,7 @@ def generate_report(events: list[dict]) -> str:
 
     # 启动链顺序分析
     if sessions:
-        lines.append(f"\n  🔗 启动链")
+        lines.append("\n  🔗 启动链")
         for s in sessions[:5]:
             sid = s["session_id"]
             session_reads = [e for e in file_reads if e.get("session_id") == sid]
@@ -193,7 +191,7 @@ def generate_report(events: list[dict]) -> str:
 
     # 命令分布
     if cmd_execs:
-        lines.append(f"\n  ⌨️  常用命令")
+        lines.append("\n  ⌨️  常用命令")
         by_cmd = Counter(c["command"][:30] for c in cmd_execs)
         for cmd_name, count in by_cmd.most_common(8):
             lines.append(f"  {cmd_name:30s} {count:3d} 次")
@@ -227,7 +225,7 @@ def watch_mode():
 
     sid = new_session_id()
     print(f"  L3 入口深度统计 — 监听中 (session={sid[:20]}...)")
-    print(f"  按 Ctrl+C 停止\n")
+    print("  按 Ctrl+C 停止\n")
 
     try:
         while running:
@@ -252,23 +250,23 @@ def main():
 
     if args.session_start:
         r = session_start()
-        if args.json: print(json.dumps(r, indent=2))
+        if args.json: print(json.dumps(r, indent=2))  # noqa: E701
         return
 
     if args.session_end:
         r = session_end()
-        if args.json: print(json.dumps(r, indent=2))
+        if args.json: print(json.dumps(r, indent=2))  # noqa: E701
         return
 
     if args.read:
         r = record_read(args.read)
-        if args.json: print(json.dumps(r, indent=2))
+        if args.json: print(json.dumps(r, indent=2))  # noqa: E701
         return
 
     if args.cmd:
         cmd, duration = args.cmd
         r = record_cmd(cmd, int(duration))
-        if args.json: print(json.dumps(r, indent=2))
+        if args.json: print(json.dumps(r, indent=2))  # noqa: E701
         return
 
     if args.watch:

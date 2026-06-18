@@ -1,0 +1,17 @@
+id: OMOTASK-OPC-P43-LLM-MERGE-CONFIG
+type: OMOTask
+subtype: RoadmapPhase
+name: 更新 BOS 路由、依赖、CI 与 Makefile 移除 llm-gateway 独立入口
+description: ''
+status: done
+priority: P1
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPC-P43-LLM-MERGE-CONFIG.yaml
+  signals:
+  - task-OPC-P43-LLM-MERGE-CONFIG-running
+title: 更新 BOS 路由、依赖、CI 与 Makefile 移除 llm-gateway 独立入口
+gate: none
+gate_status: passed

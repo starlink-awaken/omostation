@@ -3,7 +3,8 @@
 > **Layer**: L0 协议层  
 > **Role**: 协议底座 — SSB 签名链 / MOF 元模型 / 涌现计算 / L0 治理原语  
 > **Stack**: Python 3.13+, uv, fastmcp, pyyaml  
-> **Health**: 195 tests, 91.8% pass
+> **Health**: See local CI and model/runtime validation
+> **SSOT**: 运行时健康、测试通过率、工具链规模以本项目 CI、模型校验和 workspace governance SSOT 为准
 >
 > 系统全景参见：[`docs/ARCHITECTURE-DIAGRAM.md`](../docs/ARCHITECTURE-DIAGRAM.md)
 

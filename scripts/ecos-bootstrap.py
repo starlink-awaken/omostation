@@ -19,14 +19,11 @@ eCOS v5 — 极小骨架引导 (ecos-bootstrap)
 """
 
 import sys
-import os
-import shutil
-import subprocess
 import time
 from datetime import datetime
 from pathlib import Path
 
-G = "\033[92m"; C = "\033[96m"; Y = "\033[93m"; B = "\033[1m"; N = "\033[0m"
+G = "\033[92m"; C = "\033[96m"; Y = "\033[93m"; B = "\033[1m"; N = "\033[0m"  # noqa: E702
 
 
 def ask(prompt: str, default: str = "") -> str:
@@ -257,7 +254,7 @@ def main():
 
     # ── 头部 ──
     print(f"\n{B}  eCOS v5 — 极小骨架引导{N}")
-    print(f"  只搭框架，不填内容。扩展按需安装。\n")
+    print("  只搭框架，不填内容。扩展按需安装。\n")
 
     # ── 交互 ──
     if quick:
@@ -342,12 +339,12 @@ def main():
     print(f"  🛠️   {script_count} 个核心脚本")
     print(f"  📁  {len(dirs)} 个目录")
     print(f"\n  {B}立即开始:{N}")
-    print(f"    python3 驾驶舱/scripts/ecos-brief.py")
-    print(f"    python3 驾驶舱/scripts/ecos-whoami.py")
+    print("    python3 驾驶舱/scripts/ecos-brief.py")
+    print("    python3 驾驶舱/scripts/ecos-whoami.py")
 
     print(f"\n  {C}扩展脚本 (按需安装):{N}")
-    print(f"    从 eCOS 源安装全部治理脚本:")
-    print(f"    python3 ecos-bootstrap.py --from /path/to/full/ecos/scripts --target ~/Documents")
+    print("    从 eCOS 源安装全部治理脚本:")
+    print("    python3 ecos-bootstrap.py --from /path/to/full/ecos/scripts --target ~/Documents")
     print(f"    或: 从 {src} 逐个复制需要的脚本到 ~/Documents/驾驶舱/scripts/")
 
     print(f"\n  {Y}💡 骨架只包含基础治理。需要更高级的功能时，再安装扩展。{N}")

@@ -1,0 +1,17 @@
+id: OMOTASK-OPC-P43-LLM-MERGE-CODE
+type: OMOTask
+subtype: RoadmapPhase
+name: 合并 llm-gateway 代码到 aetherforge/packages/gateway/
+description: ''
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPC-P43-LLM-MERGE-CODE.yaml
+  signals:
+  - task-OPC-P43-LLM-MERGE-CODE-running
+title: 合并 llm-gateway 代码到 aetherforge/packages/gateway/
+gate: none
+gate_status: passed

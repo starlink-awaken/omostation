@@ -1,0 +1,15 @@
+id: OMOTASK-OPT-PREEXISTING-FIX
+type: OMOTask
+subtype: Task
+name: 修复 pre-existing 测试失败 (60→≤10)
+description: ''
+status: proposed
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPT-PREEXISTING-FIX.yaml
+title: 修复 pre-existing 测试失败 (60→≤10)
+gate: pending
+gate_status: open

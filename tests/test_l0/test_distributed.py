@@ -236,6 +236,8 @@ class TestMultiProcessSimulation:
         while not queue.empty():
             results.append(queue.get())
 
+        results.sort(key=lambda x: x["node_id"])
+
         assert len(results) == 2
         assert results[0]["state"]["task"] == "compute"
         assert results[1]["state"]["task"] == "store"

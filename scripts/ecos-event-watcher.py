@@ -103,7 +103,7 @@ def trigger_freshness(changed_file: str):
 def watch_fswatch():
     """使用 fswatch 监听"""
     LOG_DIR.mkdir(parents=True, exist_ok=True)
-    print(f"  L1 事件保鲜 — fswatch 监听中")
+    print("  L1 事件保鲜 — fswatch 监听中")
     print(f"  目录: {DOCS}")
     print(f"  静默: {DEBOUNCE_SECONDS}s\n")
 
@@ -174,7 +174,7 @@ def watch_watchdog():
     observer.schedule(event_handler, str(DOCS), recursive=True)
     observer.start()
 
-    print(f"  L1 事件保鲜 — watchdog 监听中")
+    print("  L1 事件保鲜 — watchdog 监听中")
     print(f"  目录: {DOCS}")
     print(f"  静默: {DEBOUNCE_SECONDS}s\n")
 
@@ -188,7 +188,7 @@ def watch_watchdog():
 
 def once_scan():
     """单次扫描所有文件"""
-    print(f"  L1 事件保鲜 — 单次扫描\n")
+    print("  L1 事件保鲜 — 单次扫描\n")
     fresh_count = 0
     stale_count = 0
 

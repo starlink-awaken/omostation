@@ -1,0 +1,17 @@
+id: OMOTASK-OPC-P43-LLM-MERGE-GOV
+type: OMOTask
+subtype: RoadmapPhase
+name: 更新 X1-X4 治理规则记录 llm-gateway 合并
+description: ''
+status: done
+priority: P1
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPC-P43-LLM-MERGE-GOV.yaml
+  signals:
+  - task-OPC-P43-LLM-MERGE-GOV-running
+title: 更新 X1-X4 治理规则记录 llm-gateway 合并
+gate: none
+gate_status: passed

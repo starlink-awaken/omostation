@@ -10,7 +10,6 @@ eCOS v5 Phase 7.6 — 每周健康摘要 (ecos-weekly-digest)
     python3 ecos-weekly-digest.py --output ~/Documents/驾驶舱/CARDS/health-digest.md
 """
 
-import sys
 import json
 import argparse
 from datetime import datetime, timedelta
@@ -40,11 +39,11 @@ def run_script(name: str, args: list[str] = None) -> str:
 def format_digest(entries: list[dict]) -> str:
     """生成 Markdown 健康摘要"""
     now = datetime.now()
-    week_ago = now - timedelta(days=7)
+    week_ago = now - timedelta(days=7)  # noqa: F841
 
     lines = []
     lines.append(f"# 健康摘要 — {now.strftime('%Y-%m-%d %H:%M')}")
-    lines.append(f"> 自动生成 · eCOS v5 Phase 7.6 · 自治运维")
+    lines.append("> 自动生成 · eCOS v5 Phase 7.6 · 自治运维")
     lines.append("")
 
     # SLA
@@ -60,11 +59,11 @@ def format_digest(entries: list[dict]) -> str:
                 lf = data["last_failure"]
                 lines.append(f"- 😴 最近失败: {lf.get('timestamp','?')[:10]} — {lf.get('detail','?')[:60]}")
             else:
-                lines.append(f"- ✅ 最近失败: 无")
+                lines.append("- ✅ 最近失败: 无")
         except (json.JSONDecodeError, KeyError):
-            lines.append(f"- ⚠️ SLA 数据解析失败")
+            lines.append("- ⚠️ SLA 数据解析失败")
     else:
-        lines.append(f"- ⏳ SLA 数据累积中")
+        lines.append("- ⏳ SLA 数据累积中")
     lines.append("")
 
     # 覆盖率
@@ -75,7 +74,7 @@ def format_digest(entries: list[dict]) -> str:
         try:
             data = json.loads(cov)
             # Parse from depth
-            depth = data.get("depth", {})
+            depth = data.get("depth", {})  # noqa: F841
             dims = data.get("coverage", {})
             for dim in ["X1", "X2", "X3"]:
                 d = dims.get(dim, {})
@@ -93,7 +92,7 @@ def format_digest(entries: list[dict]) -> str:
         try:
             r = subprocess.run(["python3", str(validator), "--json"], capture_output=True, text=True, timeout=30)
             constraint = r.stdout.strip()
-        except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+        except (subprocess.TimeoutExpired, FileNotFoundError):
             constraint = ""
     else:
         constraint = ""
@@ -125,7 +124,7 @@ def format_digest(entries: list[dict]) -> str:
     except (json.JSONDecodeError, KeyError):
         pass
 
-    if not any("半衰期" in l for l in lines[-5:]):
+    if not any("半衰期" in l for l in lines[-5:]):  # noqa: E741
         lines.append("- ✅ 无重大风险")
     lines.append("")
 

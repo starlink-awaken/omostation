@@ -1,7 +1,7 @@
 id: "GOV-X4-CONSISTENCY"
 type: "GovernancePolicy"
 name: "X4 一致性维 — SSOT 级联与跨层一致性"
-description: "X4 治理维: M1↔M0 漂移检测 + 跨阶段一致性检查 (CS-01~05) + SSOT 级联原则"
+description: "X4 治理维: M1↔M0 漂移检测 + 跨阶段一致性检查 + `.omo` 状态面 / `projects/omo` / `projects/c2g` 三层 SSOT 一致性"
 status: "active"
 domain: "meta"
 layer: "X4"
@@ -23,6 +23,8 @@ properties:
     - "CS-10: BOS URI 实现溯源一致性 (BOSRoute 必须通过 cross_references.realized_by 指定明确的上下游归属)"
     - "CS-11: C2G 编排一致性 (OpenSpec 转入 OMO Planned Task 必须通过未决项预检门控)"
     - "CS-12: C2G v2 柔性锚点一致性 (GSD 阶段必须具备可用的 context_uri 降维锚点，挂起任务必须进入 yield_to_ideation 循环)"
+    - "CS-13: `.omo` 目录分类一致性 (INDEX / standard / registry / kernel path constants 口径一致)"
+    - "CS-14: C2G 产物治理引用一致性 (planned task 应携带 governance_refs)"
   scope: "全层"
   thresholds:
     warn_threshold: 0.8
@@ -49,6 +51,8 @@ properties:
     - "CS-10: BOS URI 实现溯源一致性 (BOSRoute 必须通过 cross_references.realized_by 指定明确的上下游归属)"
     - "CS-11: C2G 编排一致性 (OpenSpec 转入 OMO Planned Task 必须通过未决项预检门控)"
     - "CS-12: C2G v2 柔性锚点一致性 (GSD 阶段必须具备可用的 context_uri 降维锚点，挂起任务必须进入 yield_to_ideation 循环)"
-  validator: "model-driven/ssot/lifecycle_ssot.py"
+    - "CS-13: `.omo` 目录分类一致性 (INDEX / standard / registry / kernel path constants 口径一致)"
+    - "CS-14: C2G 产物治理引用一致性 (planned task 应携带 governance_refs)"
+  validator: "model-driven/ssot/lifecycle_ssot.py + .omo/_truth/x4-consistency-rules.yaml + .omo/_truth/registry/omo-governance-surfaces.yaml"
   compliance: "partial"
-source: "model-driven/mof/ontology_extended.py"
+source: "model-driven/mof/ontology_extended.py + .omo/_truth/x4-consistency-rules.yaml + .omo/standards/omo-governance-surfaces.md"

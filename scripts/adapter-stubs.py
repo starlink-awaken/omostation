@@ -11,7 +11,6 @@ WeChat/Web/API/Event 适配器的结构定义和桩实现。
     python3 adapter-stubs.py --test wechat   # 测试 WeChat 适配器
 """
 
-import sys
 import json
 import argparse
 from datetime import datetime, timezone

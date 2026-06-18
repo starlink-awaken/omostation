@@ -1,0 +1,16 @@
+id: OMOTASK-TASK-8CF4636A
+type: OMOTask
+subtype: Task
+name: 'Refactor: 沉淀全局触发器注册表与分布式锁机制在 L0 的协议抽象'
+description: 将分散在 bus-foundation, gbrain, l4-kernel 等处的并发、锁及调度机制，在 ecos L0 协议层进行语义与治理面抽象。内容包括：1.
+  统一的定时/后台任务声明式 Trigger Registry。2. 跨语言一致的分布式锁接口协议（基于 BOS）。3. MetaOS 事件状态机上卷。
+status: proposed
+priority: P1
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/TASK-8CF4636A.yaml
+title: 'Refactor: 沉淀全局触发器注册表与分布式锁机制在 L0 的协议抽象'
+gate: pending
+gate_status: open

@@ -2,6 +2,7 @@ m2_type: availability_check
 version: 1.0.0
 created: '2026-06-08T23:27:00'
 availability_check:
+  m3_parent: GovernanceElement
   description: 服务可用性检查节点(deepseek 第三方依赖等)
   requiredProperties: {}
   optionalProperties:

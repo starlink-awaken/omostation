@@ -4,24 +4,32 @@
 id: MODEL-GOVERNANCE
 type: Model
 name: 治理维度模型
-description: X1审计·X2保鲜·X3价值·X4一致性——四维治理的形式化定义和覆盖矩阵
+description: X1审计·X2保鲜·X3价值·X4一致性——覆盖 `.omo` 状态面、`projects/omo` 内核、`projects/c2g` 入口的四维治理模型
 status: active
 domain: meta
 created: '2026-06-06'
 version: 1.0.0
 layer: multi
 properties:
-  source: X1-X4 治理脚本
-  target: L0 约束·CARDS 卡片
+  source: X1-X4 治理规则 + OMO governance surfaces standard
+  target: L0 约束·`.omo` 状态面·`projects/omo`·`projects/c2g`
   mapping:
-    X1: check-vault-audit·card_history
-    X2: check-claude-freshness·half_life
-    X3: value-attribution·cost
-    X4: mof-audit·cards-state-consistency
+    X1: state-surface-registration·task-schema·audit-chain
+    X2: governance-surface-freshness·half_life·legacy-surface-review
+    X3: value-attribution·kernel-execution-cost·strategic-ingress-yield
+    X4: mof-audit·surface-classification-consistency·c2g-governance-refs
   formality: semiformal
   m3_parent: DescriptiveElement.Model
   model_driven_refs:
+    - .omo/standards/omo-governance-surfaces.md
+    - .omo/_truth/registry/omo-governance-surfaces.yaml
+    - .omo/_truth/x1-governance-policies.yaml
+    - .omo/_truth/x2-freshness-rules.yaml
+    - .omo/_truth/x3-value-stack.yaml
+    - .omo/_truth/x4-consistency-rules.yaml
     - projects/model-driven/src/model_driven/management/hybrid_judge.py:HybridJudge
     - projects/model-driven/src/model_driven/management/evaluator.py:GovernanceEvaluator
     - projects/ecos/src/ecos/ssot/mof/m1/governance/GOV-X1-CONSTRAINT.yaml
+    - projects/ecos/src/ecos/ssot/mof/m1/governance/GOV-X2-POLICY.yaml
+    - projects/ecos/src/ecos/ssot/mof/m1/governance/GOV-X3-VALUE.yaml
     - projects/ecos/src/ecos/ssot/mof/m1/governance/GOV-X4-CONSISTENCY.yaml

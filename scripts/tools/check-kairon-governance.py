@@ -19,7 +19,7 @@ X2 保鲜: 检查各包最近修改时间 + 标记 >60 天未更新的包
 import sys
 import json
 import argparse
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 

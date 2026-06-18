@@ -1,0 +1,15 @@
+id: OMOTASK-OPT-BOS-GATEWAY
+type: OMOTask
+subtype: Task
+name: 'BOS URI 网关: cockpit 成为人类访问 BOS URI 入口'
+description: ''
+status: proposed
+priority: P3
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPT-BOS-GATEWAY.yaml
+title: 'BOS URI 网关: cockpit 成为人类访问 BOS URI 入口'
+gate: pending
+gate_status: open

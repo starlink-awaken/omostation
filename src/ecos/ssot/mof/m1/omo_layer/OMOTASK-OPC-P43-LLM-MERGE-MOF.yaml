@@ -1,0 +1,17 @@
+id: OMOTASK-OPC-P43-LLM-MERGE-MOF
+type: OMOTask
+subtype: RoadmapPhase
+name: 更新 L0 MOF 模型反映 llm-gateway 并入 aetherforge
+description: ''
+status: done
+priority: P0
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPC-P43-LLM-MERGE-MOF.yaml
+  signals:
+  - task-OPC-P43-LLM-MERGE-MOF-running
+title: 更新 L0 MOF 模型反映 llm-gateway 并入 aetherforge
+gate: none
+gate_status: passed

@@ -1,0 +1,15 @@
+id: OMOTASK-OPT-UNIFIED-AUTH
+type: OMOTask
+subtype: Task
+name: '统一认证: cockpit API key 管理所有子服务'
+description: ''
+status: done
+priority: P2
+domain: opc
+properties:
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/OPT-UNIFIED-AUTH.yaml
+title: '统一认证: cockpit API key 管理所有子服务'
+gate: none
+gate_status: passed

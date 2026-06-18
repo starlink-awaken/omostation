@@ -1,8 +1,8 @@
 m2_type: GovernancePolicy
 version: 1.0.0
 created: '2026-06-12'
-governance_policy:
-  m3_parent: GovernanceElement.Policy
+GovernancePolicy:
+  m3_parent: GovernanceElement
   description: 治理策略——定义 X1-X4 的阈值、SLA 和行为规则
   icon: 📋
   stateMachine:

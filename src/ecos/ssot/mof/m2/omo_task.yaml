@@ -1,8 +1,8 @@
 m2_type: OMOTask
 version: 1.0.0
 created: '2026-06-13'
-omo_task:
-  m3_parent: ManagementElement.OMOTask
+OMOTask:
+  m3_parent: GovernanceElement
   description: OMO 任务节点——建模 .omo/tasks/ 目录下 plan/done YAML 的全部字段
   icon: 📋
   stateMachine:

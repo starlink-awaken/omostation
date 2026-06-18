@@ -105,7 +105,7 @@ def format_report(results: dict) -> str:
     lines.append("  " + "-" * 58)
 
     max_files = max((d["files"] for d in results.values()), default=1)
-    max_lines = max((d["lines"] for d in results.values()), default=1)
+    max_lines = max((d["lines"] for d in results.values()), default=1)  # noqa: F841
     max_refs = max((d["refs"] for d in results.values()), default=1)
 
     for subdir in SUBDIRS:

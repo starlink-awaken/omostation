@@ -15,7 +15,6 @@ import sys
 import json
 import subprocess
 import time
-import os
 import signal
 import sqlite3
 import argparse
@@ -299,7 +298,7 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
 def show_status(conn: sqlite3.Connection):
     """显示 daemon 状态"""
     print(f"\n{'='*56}")
-    print(f"  eCOS Daemon — 状态报告")
+    print("  eCOS Daemon — 状态报告")
     print(f"{'='*56}")
 
     cursor = conn.execute("SELECT COUNT(*), COALESCE(SUM(CASE WHEN exit_code=0 THEN 1 ELSE 0 END),0), "
@@ -323,7 +322,7 @@ def show_status(conn: sqlite3.Connection):
                           "created_at > datetime('now', '-24 hours')")
     recent_alerts = cursor.fetchone()[0]
     if recent_alerts == 0:
-        print(f"\n  ✅ 过去 24h 内无告警")
+        print("\n  ✅ 过去 24h 内无告警")
     else:
         print(f"\n  ⚠️  过去 24h 内 {recent_alerts} 条告警")
 
@@ -349,7 +348,7 @@ def main():
         return
 
     if args.watch:
-        print(f"  eCOS Daemon v3.0 — 持续监听模式")
+        print("  eCOS Daemon v3.0 — 持续监听模式")
         print(f"  间隔: {INTERVAL}s (6h)")
         cycle_num = 0
         while running:

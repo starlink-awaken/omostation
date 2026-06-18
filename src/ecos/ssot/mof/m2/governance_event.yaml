@@ -1,8 +1,8 @@
 m2_type: GovernanceEvent
 version: 1.0.0
 created: '2026-06-12'
-governance_event:
-  m3_parent: GovernanceElement.Event
+GovernanceEvent:
+  m3_parent: GovernanceElement
   description: 治理事件——检查器执行过程中产生的事件流
   icon: 📡
   stateMachine:

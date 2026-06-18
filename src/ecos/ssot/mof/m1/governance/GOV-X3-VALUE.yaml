@@ -1,7 +1,7 @@
 id: "GOV-X3-VALUE"
 type: "GovernancePolicy"
 name: "X3 价值维 — 成本归因与价值度量"
-description: "X3 治理维: 协议半衰期价值度量 + 资源成本归因 + ROI 分析"
+description: "X3 治理维: 协议半衰期价值度量 + 资源成本归因 + ROI 分析，覆盖 `.omo` 状态面、`projects/omo` 内核、`projects/c2g` 入口"
 status: "active"
 domain: "meta"
 layer: "X3"
@@ -15,6 +15,7 @@ properties:
     - "Trigger 健康分 (0-100)"
     - "域新鲜度评分"
     - "价值衰减率 ≥ 0.5/180d 触发降级"
+    - "治理价值按 state_plane / kernel_plane / ingress_plane 三层归因"
   scope: "协议层 + 资源层"
   thresholds:
     warn_threshold: 0.5
@@ -32,6 +33,7 @@ properties:
     - "协议半衰期价值衰减 (fresh/aging/deprecated)"
     - "Trigger 健康分 (0-100)"
     - "域新鲜度评分"
-  validator: "ecos/ssot/registry/governance/x3-value-stack.yaml"
+    - "治理价值按 state_plane / kernel_plane / ingress_plane 三层归因"
+  validator: ".omo/_truth/x3-value-stack.yaml + .omo/standards/omo-governance-surfaces.md"
   compliance: "partial"
-source: "ecos/ssot/registry/governance/x3-value-stack.yaml"
+source: ".omo/_truth/x3-value-stack.yaml + .omo/standards/omo-governance-surfaces.md"

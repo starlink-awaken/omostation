@@ -14,7 +14,6 @@ Phase 8.2 — 一次性处理 4 个小型债务:
     python3 fix-debts.py --json    # JSON 输出
 """
 
-import sys
 import json
 import argparse
 from datetime import datetime, timezone
@@ -145,7 +144,7 @@ def main():
         print(json.dumps({"fixes": results}, ensure_ascii=False, indent=2))
     else:
         print(f"\n{'='*56}")
-        print(f"  eCOS v5 — 债务 closeout 批量修复")
+        print("  eCOS v5 — 债务 closeout 批量修复")
         print(f"{'='*56}\n")
         for r in results:
             status = "✅" if r.get("status") in ("fixed", "tracked") else "⚠️"

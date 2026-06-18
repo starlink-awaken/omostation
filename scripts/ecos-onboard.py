@@ -250,8 +250,8 @@ def main():
     else:
         print(f"  {RED}❌ 未接入 — 先确认基础设施{RESET}")
 
-    print(f"\n  详细引导: ~/Documents/驾驶舱/ONBOARD.md")
-    print(f"  能力注册表: ~/Documents/驾驶舱/agent-manifest.yaml")
+    print("\n  详细引导: ~/Documents/驾驶舱/ONBOARD.md")
+    print("  能力注册表: ~/Documents/驾驶舱/agent-manifest.yaml")
 
     if args.json:
         result_data = {
@@ -271,12 +271,11 @@ def main():
     try:
         entry_logger = SCRIPTS / "ecos-entry-logger.py"
         if entry_logger.exists():
-            import subprocess
             subprocess.run(
                 ["python3", str(entry_logger), "--entry", "onboard",
                  "--intent", "governance_check", "--result",
                  "pass" if overall_pass == overall_total else "warn",
-                 "--duration", str(int(time.time() - (time.time() - 30)))],
+                 "--duration", str(int(time.time() - (time.time() - 30)))],  # noqa: F821
                 capture_output=True, timeout=5)
     except Exception:
         pass

@@ -100,7 +100,7 @@ def format_report(all_results: dict) -> str:
         lines.append("  " + "-" * 54)
 
         max_f = max((r["files"] for r in results), default=1)
-        max_l = max((r["lines"] for r in results), default=1)
+        max_l = max((r["lines"] for r in results), default=1)  # noqa: F841
 
         for r in results:
             if not r["exists"]:

@@ -14,7 +14,9 @@ Phase 7.6 — 返回 JSON 格式的系统健康指标。
     1 = 存在失败项
 """
 
-import json, sys, subprocess, os
+import json
+import sys
+import subprocess
 from datetime import datetime
 from pathlib import Path
 

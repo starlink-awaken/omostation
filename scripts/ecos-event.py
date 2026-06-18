@@ -11,7 +11,9 @@ Phase 8.4 / DEBT-I0-001 修复
     python3 ecos-event.py --mcp  # MCP 协议格式输出
 """
 
-import sys, json, argparse
+import sys
+import json
+import argparse
 from datetime import datetime, timezone
 from pathlib import Path
 

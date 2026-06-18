@@ -14,8 +14,6 @@ Designed for launchd or background job.
 from __future__ import annotations
 
 import json
-import os
-import subprocess
 import sys
 import time
 from datetime import datetime
@@ -163,7 +161,7 @@ def main() -> int:
             time.sleep(interval)
             current = max(get_mtime(L0_CONSTRAINTS_SSOT), get_mtime(L0_CONSTRAINTS_L4))
             if current != last_mtime:
-                log(f"Detected change in L0-constraints.yaml")
+                log("Detected change in L0-constraints.yaml")
                 if update_routes():
                     notify_mcp()
                 last_mtime = current

@@ -36,6 +36,12 @@ REPO_ROOT = (
 WORKSPACE_ROOT = (
     TOOL_PATH.parent.parent.parent.parent.parent.parent.parent
 )  # 7 层 = ~/Workspace
+OMO_SRC = WORKSPACE_ROOT / "projects" / "omo" / "src"
+
+if str(OMO_SRC) not in sys.path:
+    sys.path.insert(0, str(OMO_SRC))
+
+from omo.omo_io import write_yaml_atomic  # noqa: E402
 
 M1_OMO_LAYER = REPO_ROOT / "src" / "ecos" / "ssot" / "mof" / "m1" / "omo_layer"
 OMOTASK_SCHEMA = REPO_ROOT / "src" / "ecos" / "ssot" / "mof" / "m2" / "omo_task.yaml"
@@ -376,7 +382,6 @@ def main():
 
     written_files = []
     if args.m1_to_omo:
-        OMO_TASKS_ACTIVE.mkdir(parents=True, exist_ok=True)
         for p in diff["pairs"]:
             if p["omo_exists"]:
                 continue
@@ -395,10 +400,7 @@ def main():
                 )
                 continue
             data = m1_to_omo_yaml(p["m1_data"])
-            path.write_text(
-                yaml.safe_dump(data, allow_unicode=True, sort_keys=False),
-                encoding="utf-8",
-            )
+            write_yaml_atomic(path, data)
             written_files.append(str(path.relative_to(WORKSPACE_ROOT)))
         if written_files:
             print(
@@ -414,17 +416,13 @@ def main():
 
     if args.omo_to_m1:
         # 反向: .omo/tasks/ → M1 OMOTask 节点 (从 OPC-P3-SWARM-SPINE 等历史任务提取 M1 节点)
-        M1_OMO_LAYER.mkdir(parents=True, exist_ok=True)
         for oid, info in omo_tasks.items():
             m1_id = f"OMOTASK-{oid}"
             if m1_id in m1_nodes:
                 continue
             data = omo_to_m1_yaml(info["data"], m1_id)
             path = M1_OMO_LAYER / f"{m1_id}.yaml"
-            path.write_text(
-                yaml.safe_dump(data, allow_unicode=True, sort_keys=False),
-                encoding="utf-8",
-            )
+            write_yaml_atomic(path, data)
             written_files.append(str(path.relative_to(REPO_ROOT)))
         if written_files:
             print(

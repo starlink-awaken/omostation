@@ -1,0 +1,20 @@
+id: OMOTASK-P47-ENFORCE-CI-COVERAGE
+type: OMOTask
+subtype: Task
+name: P47 enforce + CI 补覆盖 (端口/任务schema enforce + 11无CI项目补CI)
+description: ''
+status: done
+priority: P2
+domain: opc
+properties:
+  evidence: P47 收口架构债 A (声明/执行鸿沟) + E (CI 半覆盖). 端口 enforce 从 .git/hooks shell 提升到
+    .pre-commit-config.yaml framework + CI. 任务 schema enforce 挂 omo governance audit
+    CI. CI 覆盖 8/18 → 全覆盖 (matrix python-coverage + kairon + hermes bun + observability
+    compose + family-hub). 复用 check-vault-paths.py / omo governance audit / cockpit-ci
+    模板, 0 造轮.
+  m3_parent: ManagementElement.OMOTask
+  model_driven_ref:
+  - .omo/tasks/planned/P47-ENFORCE-CI-COVERAGE.yaml
+title: P47 enforce + CI 补覆盖 (端口/任务schema enforce + 11无CI项目补CI)
+gate: none
+gate_status: passed

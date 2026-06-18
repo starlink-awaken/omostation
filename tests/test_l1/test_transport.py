@@ -181,14 +181,14 @@ class TestTCPNodeBasic:
             node = TCPNode("test", "127.0.0.1", 0)
             result = await node.send("ghost", "test", {})
             assert result is False
-        asyncio.get_event_loop().run_until_complete(_test())
+        asyncio.run(_test())
 
     def test_connect_to_nonexistent(self):
         async def _test():
             node = TCPNode("test", "127.0.0.1", 0)
             result = await node.connect_to("127.0.0.1", 99999, "ghost")
             assert result is False
-        asyncio.get_event_loop().run_until_complete(_test())
+        asyncio.run(_test())
 
     def test_broadcast_without_peers(self):
         node = TCPNode("test", "127.0.0.1", 0)

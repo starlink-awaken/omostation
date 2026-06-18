@@ -16,7 +16,6 @@ Phase 8.2 / DEBT-L3-001 (🔴)
     - mcp 库 (pip install mcp)
 """
 
-import sys
 import json
 import argparse
 from datetime import datetime
@@ -120,7 +119,6 @@ def handle_protocol_list() -> dict:
 def handle_protocol_get(protocol_id: str) -> dict:
     """runtime_protocol_get: 单个协议详情"""
     import yaml
-    from datetime import datetime
     constraint_file = Path.home() / "Documents" / "学习进化" / "2-knowledge" / \
                       "基建架构" / "L0-constraints.yaml"
     if not constraint_file.exists():
@@ -149,7 +147,6 @@ def handle_ontology() -> dict:
     if meta_file.exists():
         import yaml
         return yaml.safe_load(meta_file.read_text())
-    from pathlib import Path
     return {"error": "元模型文件不可用"}
 
 

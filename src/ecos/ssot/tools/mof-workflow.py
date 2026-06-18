@@ -26,7 +26,7 @@ from collections import Counter
 
 # ── 路径 ──
 HOME = Path.home()
-SSOT_DIR = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot"
+SSOT_DIR = Path(__file__).resolve().parent.parent  # 相对脚本 (tools/ 上上级 = ssot/), 不硬编码 HOME/Workspace (CI HOME=/home/runner 无此路径 → _load_nodes 空 → workflow 全找不到)
 M1_WF_DIR = SSOT_DIR / "mof" / "m1" / "workflow"
 REGISTRY_FILE = SSOT_DIR / "registry" / "workflow-catalog.yaml"
 
