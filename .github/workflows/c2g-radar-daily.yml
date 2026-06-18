@@ -18,7 +18,7 @@ jobs:
         with:
           # 拉子模块 (c2g 在 projects/c2g 是子模块)
           submodules: recursive
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
 
       - uses: actions/setup-python@v5
         with:

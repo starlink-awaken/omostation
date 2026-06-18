@@ -11,5 +11,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
       - name: docker compose config -q (语法校验)
         run: cd projects/observability && docker compose config -q
