@@ -61,3 +61,6 @@ src/ecos/ssot/mof/m0/snapshot.yaml
 *.db
 *.sqlite
 *.sqlite3
+
+# LADS/SSB 运行时链数据
+LADS/
