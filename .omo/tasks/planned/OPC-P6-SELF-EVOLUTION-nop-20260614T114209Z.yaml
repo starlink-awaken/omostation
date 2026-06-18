@@ -14,7 +14,9 @@ knowledge_refs: []
 handoff_refs: []
 risk_level: L0
 allowed_operation_level: L0
-human_approval_required: false
+approval_required: true
+approval_state: awaiting_human
+human_approval_required: true
 source_docs:
 - bos://memory/auto-fix.md
 entry_gate:
