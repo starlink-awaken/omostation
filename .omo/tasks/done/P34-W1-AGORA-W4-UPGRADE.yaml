@@ -4,7 +4,7 @@ wave: W1
 title: agora spawn 升级 — W4 POC 到生产 stdio MCP 协议
 status: done
 task_type: feature
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

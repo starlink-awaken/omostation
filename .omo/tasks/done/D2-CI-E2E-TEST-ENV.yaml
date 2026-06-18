@@ -1,7 +1,7 @@
 id: D2-CI-E2E-TEST-ENV
 phase: 17
 milestone: M17.1
-priority: P0
+priority: P2
 title: CI E2E 测试环境容器化 (Resolve D2 debt)
 status: done
 assigned_to: codebuddy

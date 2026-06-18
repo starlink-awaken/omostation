@@ -4,7 +4,7 @@ wave: W1
 title: 战役 4 spawn 真替代 + CI 集成 omo audit (W1 + W2 合并)
 status: done
 task_type: infra
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

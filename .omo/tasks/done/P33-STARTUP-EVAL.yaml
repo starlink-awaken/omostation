@@ -4,7 +4,7 @@ wave: W0
 title: P33 启动评估 — 3 战役可行性 + 建首批 3 任务
 status: done
 task_type: analysis
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

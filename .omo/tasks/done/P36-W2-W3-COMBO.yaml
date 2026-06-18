@@ -4,7 +4,7 @@ wave: W2
 title: 观测性落地 + P36 验收 (W2 + W3 合并)
 status: done
 task_type: feature
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

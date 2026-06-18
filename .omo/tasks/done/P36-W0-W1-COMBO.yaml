@@ -4,7 +4,7 @@ wave: W0
 title: 治理债务永久化 + 跨域 GAP 补 (W0 + W1 合并)
 status: done
 task_type: governance
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

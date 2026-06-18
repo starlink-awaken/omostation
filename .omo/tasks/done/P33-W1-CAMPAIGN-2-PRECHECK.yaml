@@ -4,7 +4,7 @@ wave: W1
 title: '战役 2 前置: 5 Domain 边界 + BOS URI 命名约定 (ADR-0007)'
 status: done
 task_type: analysis
-priority: P0
+priority: P2
 assigned_to: omo-engineer
 human_approval_required: false
 entry_gate:

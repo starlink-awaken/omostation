@@ -1,7 +1,7 @@
 id: C5-FIX-TERMINAL-RUN-RCE
 phase: 2
 milestone: M2.8-AUDIT-FIX
-priority: P0
+priority: P2
 title: Fix terminal_run shell=True RCE vulnerability (C5)
 status: done
 assigned_to: codebuddy

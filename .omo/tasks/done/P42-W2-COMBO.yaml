@@ -4,7 +4,7 @@ wave: W2
 title: agora 跨进程 URI 派发闭环 (修 agora_unavailable)
 status: done
 task_type: feature
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

@@ -4,7 +4,7 @@ wave: W0
 title: GitHub 真启用 (gh CLI 推 origin main) + LLM 真 anthropic 综合 (mock 模式)
 status: done
 task_type: governance
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

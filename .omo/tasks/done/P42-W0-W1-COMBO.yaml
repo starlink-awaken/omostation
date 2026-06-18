@@ -4,7 +4,7 @@ wave: W0
 title: audit 守回 100.0 + P41 收尾 (W0 + W1 合并)
 status: done
 task_type: governance
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

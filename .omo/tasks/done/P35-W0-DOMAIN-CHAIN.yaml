@@ -4,7 +4,7 @@ wave: W0
 title: 跨 Domain 串联 — 5 场景验证 (memory→analysis→persona→capability→governance)
 status: done
 task_type: test
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

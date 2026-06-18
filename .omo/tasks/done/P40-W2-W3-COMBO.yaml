@@ -4,7 +4,7 @@ wave: W2
 title: dashboard 持续服务化 + P40 验收 (W2 + W3 合并)
 status: done
 task_type: infra
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

@@ -1,7 +1,7 @@
 id: C1-FIX-IMMUNE-NAMEERROR
 phase: 2
 milestone: M2.8-AUDIT-FIX
-priority: P0
+priority: P2
 title: Fix immune.py metacognitive_quality_report NameError (C1)
 status: done
 assigned_to: codebuddy

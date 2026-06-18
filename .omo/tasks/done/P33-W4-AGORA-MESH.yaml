@@ -4,7 +4,7 @@ wave: W4
 title: '战役 1: agora BOS URI 解析器 + kairon stdio MCP server (POC 11)'
 status: done
 task_type: feature
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

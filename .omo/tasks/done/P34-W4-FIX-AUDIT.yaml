@@ -4,7 +4,7 @@ wave: W4
 title: 修任务 YAML 描述债务 — audit 95→100 (A+ 恢复)
 status: done
 task_type: governance
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

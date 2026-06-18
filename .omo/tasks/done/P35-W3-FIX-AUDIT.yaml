@@ -4,7 +4,7 @@ wave: W3
 title: 修 P35 任务 YAML 描述债务 — audit 100 (A+ 守)
 status: done
 task_type: governance
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

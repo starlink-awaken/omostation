@@ -4,7 +4,7 @@ wave: W0
 title: GitHub push 真启用 + 跨域+LLM 真消费卫健委场景 (W0 + W1 合并)
 status: done
 task_type: governance
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

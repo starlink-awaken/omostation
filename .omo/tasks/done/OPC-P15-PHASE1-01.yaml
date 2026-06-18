@@ -1,7 +1,7 @@
 id: OPC-P15-PHASE1-01
 title: "Phase 1: Memory Adapter and Architecture Decoupling"
 status: done
-priority: P0
+priority: P2
 domain: kairon
 created: "2026-06-12"
 description: |

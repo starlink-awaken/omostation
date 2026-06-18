@@ -4,7 +4,7 @@ wave: W5
 title: '战役 3: forge 集市 + 工具热加载'
 status: done
 task_type: feature
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

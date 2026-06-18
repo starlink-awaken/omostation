@@ -4,7 +4,7 @@ wave: W0
 title: P44 5 wave 全面实施 (多连接池 + 僵死检测 + GAP 评估 + audit dedup + marker)
 status: done
 task_type: feature
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

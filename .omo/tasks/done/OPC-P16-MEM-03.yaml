@@ -1,7 +1,7 @@
 id: OPC-P16-MEM-03
 title: 'Phase 1.3: 双轨写入管线改造'
 status: done
-priority: P0
+priority: P2
 domain: opc
 created: '2026-06-13'
 description: '执行了 2026-v6.1-strategic-plan.md Phase 1 (记忆系统升级) 的第三项任务：双轨写入管线改造。

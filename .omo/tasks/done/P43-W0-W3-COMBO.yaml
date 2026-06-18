@@ -4,7 +4,7 @@ wave: W0
 title: P43 4 wave 全面实施 (ProcessPool + 40 URI smoke + audit + 修测试)
 status: done
 task_type: feature
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

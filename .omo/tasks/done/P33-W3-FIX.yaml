@@ -4,7 +4,7 @@ wave: W3
 title: 修 3 高严重度 — KOS 持久化 + 实测可达 + 命名协调
 status: done
 task_type: governance
-priority: P0
+priority: P2
 assigned_to: null
 human_approval_required: false
 entry_gate:

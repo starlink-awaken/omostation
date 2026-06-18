@@ -1,7 +1,7 @@
 id: OPC-P16-MEM-02
 title: 'Phase 1.2: Memθ 算子体系设计'
 status: done
-priority: P0
+priority: P2
 domain: opc
 created: '2026-06-13'
 description: '执行了 2026-v6.1-strategic-plan.md Phase 1 (记忆系统升级) 的第二项任务：Memθ算子体系设计。

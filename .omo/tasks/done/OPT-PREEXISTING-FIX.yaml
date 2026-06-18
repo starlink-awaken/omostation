@@ -1,6 +1,6 @@
 id: OPT-PREEXISTING-FIX
 title: 修复 pre-existing 测试失败 (60→≤10)
-status: candidate
+status: done
 task_type: improvement
 risk_level: L2
 depends_on: []
@@ -22,5 +22,5 @@ updated_at: '2026-06-16T07:30:00Z'
 priority: P2
 priority_note: L2 risk optimization
 phase: 48
-progress_note: 'Current: agora 9 failed, cockpit 9 failed, ecos 2 failed. Target:
-  total ≤10.'
+progress_note: 'Result: agora 0 failed (4 swarm fix), cockpit 0 failed (3 Path fix),
+  ecos 0 failed (transient). Total: 0. Target ≤10 achieved.'

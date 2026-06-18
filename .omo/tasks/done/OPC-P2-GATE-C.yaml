@@ -1,7 +1,7 @@
 id: OPC-P2-GATE-C
 title: OPC-P2 Gate C 实施追踪 (C1→C2→C3→C4→C)
 status: done
-priority: P0
+priority: P2
 domain: opc
 created: '2026-06-11'
 parent_task: OPC-P2-MEMORY-SPINE

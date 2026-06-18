@@ -1,7 +1,7 @@
 id: OPC-P43-LLM-MERGE-CODE
 phase: 43
 milestone: M43.1
-priority: P0
+priority: P2
 title: 合并 llm-gateway 代码到 aetherforge/packages/gateway/
 status: done
 assigned_to: null

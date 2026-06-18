@@ -1,7 +1,7 @@
 id: C4-FIX-SSOT-ZERO-TESTS
 phase: 2
 milestone: M2.8-AUDIT-FIX
-priority: P0
+priority: P2
 title: Fix SSOT package zero test coverage (C4)
 status: done
 assigned_to: codebuddy

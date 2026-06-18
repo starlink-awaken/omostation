@@ -1,7 +1,7 @@
 id: C3-FIX-ONTOLOGY-REBUILD-CONFIRM
 phase: 2
 milestone: M2.8-AUDIT-FIX
-priority: P0
+priority: P2
 title: Fix ontology_rebuild missing L2 confirmation check (C3)
 status: done
 assigned_to: codebuddy

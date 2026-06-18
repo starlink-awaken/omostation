@@ -1,7 +1,7 @@
 id: C6-FIX-AGENT-RUNTIME-AUTH
 phase: 2
 milestone: M2.8-AUDIT-FIX
-priority: P0
+priority: P2
 title: Fix Agent Runtime default auth bypass (C6)
 status: done
 assigned_to: codebuddy

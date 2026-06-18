@@ -1,7 +1,7 @@
 id: SHAREDBRAIN-FORMAL-DECISION
 phase: 17
 milestone: M17.1
-priority: P0
+priority: P2
 title: SharedBrain 正式去留决策与最低测试基线
 status: done
 assigned_to: claude-code

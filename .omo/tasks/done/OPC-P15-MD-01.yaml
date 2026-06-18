@@ -1,7 +1,7 @@
 id: OPC-P15-MD-01
 title: 'Phase 4: Model-Driven 开发流对齐与治理面接入'
 status: done
-priority: P0
+priority: P2
 domain: opc
 created: '2026-06-13'
 description: '激活 24 M2 模型类型与生命周期审计的准备工作。

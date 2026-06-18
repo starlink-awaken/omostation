@@ -1,7 +1,7 @@
 id: C2-FIX-WPSNOTE-HARDCODED-KEY
 phase: 2
 milestone: M2.8-AUDIT-FIX
-priority: P0
+priority: P2
 title: Fix wpsnote.py hardcoded production API key (C2)
 status: done
 assigned_to: codebuddy
