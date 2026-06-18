@@ -5,3 +5,8 @@ bos_metrics.db
 *.db
 *.db-shm
 *.db-wal
+
+# Python runtime artifacts
+__pycache__/
+*.pyc
+*.pyo
