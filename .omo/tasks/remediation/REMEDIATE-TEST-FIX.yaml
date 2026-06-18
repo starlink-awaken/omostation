@@ -1,6 +1,6 @@
 id: REMEDIATE-TEST-FIX
 phase: '17'
-priority: P0
+priority: P2
 title: 测试修复 68%→85%+
 description: 修复agora/ecos/agent-runtime等包的测试失败，区分真/假阴性
 status: completed
@@ -14,3 +14,5 @@ acceptance_criteria:
 - 真阴性测试已修复
 completed_at: '2026-06-03T00:00:00Z'
 resolution: '回归修复: 26→5失败(terminal_run安全机制,真阴性), engine/stale已删除'
+priority_note: status=completed，测试通过率已达标，作为历史 remediate 任务归档。
+updated_at: '2026-06-18T23:54:20.233870+00:00'

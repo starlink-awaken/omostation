@@ -1,6 +1,6 @@
 id: REMEDIATE-KAIRON-ARCH-BASELINE
 phase: '26'
-priority: P0
+priority: P1
 title: kairon架构基线修复与控制面契约收口
 description: 先修复inventory漂移、packages目录污染、agora契约回归、agent-runtime依赖错位，再推进更高层能力建设。
 status: review
@@ -9,14 +9,19 @@ allowed_operation_level: L2
 human_approval_required: true
 depends_on: []
 acceptance_criteria:
-  - kairon repo docs and live package count agree on 16 (✅ 已对齐: README/CLAUDE/AGENTS/live_inventory 一致声明16包)
-  - packages目录不再出现非包成员警告 (✅ 已清理: 无文件级污染, uv sync 无警告)
-  - agora registry/router/event-payload targeted tests pass (⚠️ 98.9% 通过, 15 failed 待修复)
-  - agentmesh migration references match live tree reality (✅ 已更新: 迁移对照表同步为当前项目位置)
-  - SharedBrain migration references match live tree reality (✅ 已确认: 归档目录存在, kairon 中无 live sharedbrain-bridge)
-  - agent-runtime AC 已标记 obsolete (包已迁移至 projects/runtime/ + projects/cockpit/)
+- kairon repo docs and live package count agree on 16 (✅ 已对齐: README/CLAUDE/AGENTS/live_inventory
+    一致声明16包)
+- packages目录不再出现非包成员警告 (✅ 已清理: 无文件级污染, uv sync 无警告)
+- agora registry/router/event-payload targeted tests pass (⚠️ 98.9% 通过, 15 failed
+  待修复)
+- agentmesh migration references match live tree reality (✅ 已更新: 迁移对照表同步为当前项目位置)
+- SharedBrain migration references match live tree reality (✅ 已确认: 归档目录存在, kairon
+    中无 live sharedbrain-bridge)
+- agent-runtime AC 已标记 obsolete (包已迁移至 projects/runtime/ + projects/cockpit/)
 knowledge_refs:
-  - /Users/xiamingxing/Workspace/projects/kairon/docs/architecture_audit.md
-  - /Users/xiamingxing/Workspace/projects/kairon/docs/cross_project_boundary_audit.md
-  - /Users/xiamingxing/Workspace/projects/kairon/docs/governance_plan.md
+- /Users/xiamingxing/Workspace/projects/kairon/docs/architecture_audit.md
+- /Users/xiamingxing/Workspace/projects/kairon/docs/cross_project_boundary_audit.md
+- /Users/xiamingxing/Workspace/projects/kairon/docs/governance_plan.md
 review_note: /Users/xiamingxing/Workspace/.omo/tasks/remediation/REMEDIATE-KAIRON-ARCH-BASELINE-review.md
+priority_note: status=review，L3 risk，剩余 15 个 agora 测试失败待修复；保持关注但不作为全局阻塞 P0。
+updated_at: '2026-06-18T23:54:20.235056+00:00'

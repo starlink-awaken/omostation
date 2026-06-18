@@ -1,6 +1,6 @@
 id: REMEDIATE-AGENTMESH-ARCHIVE
 phase: '17'
-priority: P0
+priority: P2
 title: agentmesh TS源码归档
 description: 将476个TS文件从agentmesh项目归档到_archived/agentmesh/
 status: completed
@@ -13,3 +13,5 @@ acceptance_criteria:
 - README指向_archived
 - 无活动引用
 completed_at: '2026-06-03T00:00:00Z'
+priority_note: status=completed，历史归档动作已完成，不再阻塞任何工作流。
+updated_at: '2026-06-18T23:54:20.231851+00:00'
