@@ -22,7 +22,7 @@ def _load_kei_rules(config_path: str = "kei.yaml", role: str = "default") -> dic
             "role": role,
             "permissions": {
                 "network": {"allow": ["localhost", "127.0.0.1"]},
-                "filesystem": {"allow_read": ["/"], "allow_write": ["/tmp", str(Path.home() / "Workspace")]},
+                "filesystem": {"allow_read": ["/"], "allow_write": ["/tmp", "/private/var/folders", "/var/folders", str(Path.home() / "Workspace")]},
                 "execution": {"allow_subprocess": False}
             }
         }
@@ -96,6 +96,8 @@ def record_audit(action: str, extension_id: str, status: str, details: str) -> N
 
 
 def _audit_hook(event: str, args: tuple):
+    if _IN_AUDIT:
+        return
     perms = _RULES.get("permissions", {})
 
     if event == "subprocess.Popen":

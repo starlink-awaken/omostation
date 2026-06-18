@@ -13,6 +13,7 @@ permissions:
       - "/dev"
       - "/tmp"
       - "/var/folders"
+      - "/private/var/folders"
       - "${HOME}/Workspace"
       - "${HOME}/.runtime"
       - "${HOME}/runtime"
@@ -39,6 +40,8 @@ roles:
       filesystem:
         allow_write:
           - "/tmp"
+          - "/var/folders"
+          - "/private/var/folders"
           - "${HOME}/Workspace/.omo"  # Evaluator writes judgments to OMO
       execution:
         allow_subprocess: false # Evaluator strictly evaluates, no side-effect execution

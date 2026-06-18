@@ -1,7 +1,6 @@
 import os
 import subprocess
 import sys
-from pathlib import Path
 
 def test_sandbox_subprocess_blocked():
     """Verify that subprocess execution is blocked when configured."""

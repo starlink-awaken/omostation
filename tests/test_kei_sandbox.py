@@ -111,22 +111,28 @@ class TestKeiAuditRecords:
 class TestKeiSandboxEnable:
     def test_enable_sandbox_without_crashing(self):
         """enable_sandbox() should not raise when called with valid config."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write("""
+        code = """
+import os
+import tempfile
+from runtime.kei_sandbox import enable_sandbox
+
+with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+    f.write('''
 version: "1.0"
 permissions:
   network: {allow: ["localhost"]}
   filesystem: {allow_read: ["/tmp"], allow_write: ["/tmp"]}
   execution: {allow_subprocess: false}
-""")
-            path = f.name
-        try:
-            # enable_sandbox adds audit hook; this should not raise
-            enable_sandbox(path)
-            assert True
-            # Disable by clearing all audit hooks
-            import sys
-            if hasattr(sys, 'addaudithook'):
-                pass  # Can't remove hooks, but we tested it doesn't crash
-        finally:
-            os.unlink(path)
+''')
+    path = f.name
+
+try:
+    enable_sandbox(path)
+    print('SUCCESS')
+finally:
+    os.unlink(path)
+"""
+        import subprocess
+        import sys
+        result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env={**os.environ, "PYTHONPATH": "src"})
+        assert "SUCCESS" in result.stdout

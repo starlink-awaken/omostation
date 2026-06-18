@@ -24,7 +24,6 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
 
 # Paths that shall never be touched directly by non-omo code
 FORBIDDEN_PREFIXES = (".omo/", "spaces/", ".omo\\", "spaces\\")

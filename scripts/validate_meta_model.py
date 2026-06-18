@@ -140,9 +140,9 @@ def main() -> int:
     else:
         print("✅ ALL CHECKS PASSED")
         print(f"   - {len(protocols)} protocols validated")
-        print(f"   - All have valid usage fields")
-        print(f"   - All have transport fields")
-        print(f"   - No duplicate names")
+        print("   - All have valid usage fields")
+        print("   - All have transport fields")
+        print("   - No duplicate names")
         print()
         print("Protocol summary:")
         print(f"   {'Name':<22} {'Usage':<10} {'Transport':<25}")

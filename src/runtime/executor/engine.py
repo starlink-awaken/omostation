@@ -137,6 +137,15 @@ def _maybe_enforce_budget(
             local_budget_limit=float(raw_budget) if raw_budget not in ("", None) else None
         )
     except BudgetExhausted as e:
+        import re
+        suffix = re.sub(r"[^A-Za-z0-9]+", "-", task_id).strip("-").upper()[:48] or "UNNAMED"
+        route_info["budget_policy"] = {
+            "task_id": e.task_id or task_id,
+            "budget_usd": e.cap,
+            "estimated_cost_usd": e.spent,
+            "model": registry_model_id,
+            "debt_path": str(WORKSPACE / ".omo" / "debt" / "items" / f"DEBT-OPC-P4-BUDGET-{suffix}.yaml")
+        }
         return {
             "role": "assistant",
             "content": "",

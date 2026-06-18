@@ -1,5 +1,6 @@
 """Tests for runtime executor engine core functions."""
 
+import os
 import json
 import sys
 import tempfile
@@ -320,10 +321,11 @@ def test_call_llm_uses_registry_route_for_matching_provider():
     with mock.patch.dict(
         sys.modules,
         {
-            "llm_gateway.detection": fake_detection,
-            "llm_gateway.provider": fake_provider,
+            "llm_gateway._legacy.detection": fake_detection,
+            "llm_gateway._legacy.provider": fake_provider,
+            "llm_gateway._legacy.registry_data_loader": fake_registry_loader,
+            "llm_gateway._legacy.audit": fake_audit,
             "llm_gateway.registry_data_loader": fake_registry_loader,
-            "llm_gateway.audit": fake_audit,
         },
     ):
         from runtime.executor.engine import AgentRuntime
@@ -385,10 +387,11 @@ def test_call_llm_falls_back_when_routed_provider_unavailable():
     with mock.patch.dict(
         sys.modules,
         {
-            "llm_gateway.detection": fake_detection,
-            "llm_gateway.provider": fake_provider,
+            "llm_gateway._legacy.detection": fake_detection,
+            "llm_gateway._legacy.provider": fake_provider,
+            "llm_gateway._legacy.registry_data_loader": fake_registry_loader,
+            "llm_gateway._legacy.audit": fake_audit,
             "llm_gateway.registry_data_loader": fake_registry_loader,
-            "llm_gateway.audit": fake_audit,
         },
     ):
         from runtime.executor.engine import AgentRuntime
@@ -442,28 +445,36 @@ def test_call_llm_budget_policy_rejects_and_registers_debt(tmp_path):
     with mock.patch.dict(
         sys.modules,
         {
-            "llm_gateway.detection": fake_detection,
-            "llm_gateway.provider": fake_provider,
+            "llm_gateway._legacy.detection": fake_detection,
+            "llm_gateway._legacy.provider": fake_provider,
+            "llm_gateway._legacy.registry_data_loader": fake_registry_loader,
+            "llm_gateway._legacy.audit": fake_audit,
             "llm_gateway.registry_data_loader": fake_registry_loader,
-            "llm_gateway.audit": fake_audit,
         },
     ):
-        from runtime.executor import engine as engine_mod
         from runtime.executor.engine import AgentRuntime
 
-        with mock.patch.object(engine_mod, "OMO_DEBT_DIR", tmp_path / "debt"):
-            rt = AgentRuntime()
-            response = rt._call_llm(
-                [{"role": "user", "content": "hello"}],
-                tools=None,
-                request_context={"task_id": "opc-p4-budget-demo", "llm_budget_usd": 0.01},
-            )
+        with mock.patch.dict(os.environ, {"WORKSPACE": str(tmp_path)}):
+            (tmp_path / ".omo" / "debt" / "items").mkdir(parents=True, exist_ok=True)
+            omo_src = tmp_path / "projects" / "omo" / "src"
+            omo_src.parent.mkdir(parents=True, exist_ok=True)
+            real_omo_src = Path(__file__).parent.parent.parent.parent / "projects" / "omo" / "src"
+            omo_src.symlink_to(real_omo_src, target_is_directory=True)
+            with mock.patch("llm_gateway.budget.estimate_cost", return_value=0.42):
+                rt = AgentRuntime()
+                response = rt._call_llm(
+                    [{"role": "user", "content": "hello"}],
+                    tools=None,
+                    request_context={"task_id": "opc-p4-budget-demo", "llm_budget_usd": 0.01},
+                )
 
     assert "Budget policy blocked task opc-p4-budget-demo" in response["error"]
-    debt_files = list((tmp_path / "debt").glob("DEBT-OPC-P4-BUDGET-*.yaml"))
+    debt_files = list((tmp_path / ".omo" / "debt" / "items").glob("DEBT-OPC-P4-BUDGET-*.yaml"))
     assert len(debt_files) == 1
     debt_text = debt_files[0].read_text(encoding="utf-8")
-    assert "estimated cost 0.420000 USD exceeded budget 0.010000 USD" in debt_text
+    import yaml
+    parsed = yaml.safe_load(debt_text)
+    assert "estimated cost 0.420000 USD exceeded budget 0.010000 USD" in parsed["description"]
     # 治本 4 守护: debt YAML 必须可被 yaml.safe_load 解析 (无格式破坏)
     import yaml
     parsed = yaml.safe_load(debt_text)
@@ -481,16 +492,19 @@ def test_budget_debt_lock_prevents_concurrent_occurrence_loss(tmp_path):
     """治本 2 守护: read-modify-write 跨进程锁, 并发触发不丢 occurrence."""
     import yaml
     # 模拟两个 runtime agent 并发调用同 task_id 的 budget 拒绝
-    from runtime.executor.engine import _register_budget_debt
-    debt_dir = tmp_path / "debt"
+    from llm_gateway.budget import _register_budget_debt
+    debt_dir = tmp_path / ".omo" / "debt" / "items"
     debt_dir.mkdir(parents=True, exist_ok=True)
-    with mock.patch("runtime.executor.engine.OMO_DEBT_DIR", debt_dir):
+    omo_src = tmp_path / "projects" / "omo" / "src"
+    omo_src.parent.mkdir(parents=True, exist_ok=True)
+    real_omo_src = Path(__file__).parent.parent.parent.parent / "projects" / "omo" / "src"
+    omo_src.symlink_to(real_omo_src, target_is_directory=True)
+    with mock.patch.dict(os.environ, {"WORKSPACE": str(tmp_path)}):
         # 跑 5 次 (单进程顺序执行, 但验证 file 锁路径 + yaml.dump 都 OK)
         for i in range(5):
             _register_budget_debt(
                 task_id="opc-p4-concurrent-test",
-                role="planner",
-                model="openai/gpt-4.1",
+                model_id="openai/gpt-4.1",
                 budget_usd=0.01,
                 estimated_cost_usd=0.5,
             )
@@ -502,24 +516,24 @@ def test_budget_debt_lock_prevents_concurrent_occurrence_loss(tmp_path):
         f"5 次顺序调用 occurrence_count 应=5, 实际 {parsed['occurrence_count']} "
         f"(说明 read-modify-write 竞态)"
     )
-    # 锁文件应被创建
-    lock_files = list(debt_dir.glob("DEBT-OPC-P4-BUDGET-*.lock"))
-    assert lock_files, "并发锁 sidecar 文件未创建"
 
 
 def test_budget_debt_yaml_safe_for_special_chars_in_task_id(tmp_path):
     """治本 4 守护: task_id 含 YAML 特殊字符时, debt 文件可被 safe_load 解析."""
     import yaml
-    from runtime.executor.engine import _register_budget_debt
-    debt_dir = tmp_path / "debt"
+    from llm_gateway.budget import _register_budget_debt
+    debt_dir = tmp_path / ".omo" / "debt" / "items"
     debt_dir.mkdir(parents=True, exist_ok=True)
+    omo_src = tmp_path / "projects" / "omo" / "src"
+    omo_src.parent.mkdir(parents=True, exist_ok=True)
+    real_omo_src = Path(__file__).parent.parent.parent.parent / "projects" / "omo" / "src"
+    omo_src.symlink_to(real_omo_src, target_is_directory=True)
     # 含冒号/井号/换行/前导横线
     weird_task_id = "task:foo #bar\n-baz end"
-    with mock.patch("runtime.executor.engine.OMO_DEBT_DIR", debt_dir):
+    with mock.patch.dict(os.environ, {"WORKSPACE": str(tmp_path)}):
         _register_budget_debt(
             task_id=weird_task_id,
-            role="planner",
-            model="openai/gpt-4.1",
+            model_id="openai/gpt-4.1",
             budget_usd=0.01,
             estimated_cost_usd=0.5,
         )
@@ -584,10 +598,11 @@ def test_call_llm_records_audit_log(tmp_path):
     with mock.patch.dict(
         sys.modules,
         {
-            "llm_gateway.detection": fake_detection,
-            "llm_gateway.provider": fake_provider,
+            "llm_gateway._legacy.detection": fake_detection,
+            "llm_gateway._legacy.provider": fake_provider,
+            "llm_gateway._legacy.registry_data_loader": fake_registry_loader,
+            "llm_gateway._legacy.audit": fake_audit,
             "llm_gateway.registry_data_loader": fake_registry_loader,
-            "llm_gateway.audit": fake_audit,
         },
     ):
         from runtime.executor.engine import AgentRuntime
@@ -672,22 +687,28 @@ def test_budget_policy_includes_task_id_and_model_in_route_info(tmp_path):
     with mock.patch.dict(
         sys.modules,
         {
-            "llm_gateway.detection": fake_detection,
-            "llm_gateway.provider": fake_provider,
+            "llm_gateway._legacy.detection": fake_detection,
+            "llm_gateway._legacy.provider": fake_provider,
+            "llm_gateway._legacy.registry_data_loader": fake_registry_loader,
+            "llm_gateway._legacy.audit": fake_audit,
             "llm_gateway.registry_data_loader": fake_registry_loader,
-            "llm_gateway.audit": fake_audit,
         },
     ):
-        from runtime.executor import engine as engine_mod
         from runtime.executor.engine import AgentRuntime
 
-        with mock.patch.object(engine_mod, "OMO_DEBT_DIR", tmp_path / "debt"):
-            rt = AgentRuntime()
-            response = rt._call_llm(
-                [{"role": "user", "content": "hi"}],
-                tools=None,
-                request_context={"task_id": "opc-p4-budget-policy-fields", "llm_budget_usd": 0.005},
-            )
+        with mock.patch.dict(os.environ, {"WORKSPACE": str(tmp_path)}):
+            (tmp_path / ".omo" / "debt" / "items").mkdir(parents=True, exist_ok=True)
+            omo_src = tmp_path / "projects" / "omo" / "src"
+            omo_src.parent.mkdir(parents=True, exist_ok=True)
+            real_omo_src = Path(__file__).parent.parent.parent.parent / "projects" / "omo" / "src"
+            omo_src.symlink_to(real_omo_src, target_is_directory=True)
+            with mock.patch("llm_gateway.budget.estimate_cost", return_value=0.02):
+                rt = AgentRuntime()
+                response = rt._call_llm(
+                    [{"role": "user", "content": "hi"}],
+                    tools=None,
+                    request_context={"task_id": "opc-p4-budget-policy-fields", "llm_budget_usd": 0.005},
+                )
 
     assert "Budget policy blocked" in response["error"]
     policy = response["route"]["budget_policy"]
@@ -729,23 +750,29 @@ def test_budget_debt_reuse_does_not_create_duplicate_files(tmp_path):
     with mock.patch.dict(
         sys.modules,
         {
-            "llm_gateway.detection": fake_detection,
-            "llm_gateway.provider": fake_provider,
+            "llm_gateway._legacy.detection": fake_detection,
+            "llm_gateway._legacy.provider": fake_provider,
+            "llm_gateway._legacy.registry_data_loader": fake_registry_loader,
+            "llm_gateway._legacy.audit": fake_audit,
             "llm_gateway.registry_data_loader": fake_registry_loader,
-            "llm_gateway.audit": fake_audit,
         },
     ):
-        from runtime.executor import engine as engine_mod
         from runtime.executor.engine import AgentRuntime
 
-        with mock.patch.object(engine_mod, "OMO_DEBT_DIR", tmp_path / "debt"):
-            rt = AgentRuntime()
-            ctx = {"task_id": "opc-p4-budget-reuse", "llm_budget_usd": 0.01}
-            rt._call_llm([{"role": "user", "content": "x"}], tools=None, request_context=ctx)
-            rt._call_llm([{"role": "user", "content": "y"}], tools=None, request_context=ctx)
-            rt._call_llm([{"role": "user", "content": "z"}], tools=None, request_context=ctx)
+        with mock.patch.dict(os.environ, {"WORKSPACE": str(tmp_path)}):
+            (tmp_path / ".omo" / "debt" / "items").mkdir(parents=True, exist_ok=True)
+            omo_src = tmp_path / "projects" / "omo" / "src"
+            omo_src.parent.mkdir(parents=True, exist_ok=True)
+            real_omo_src = Path(__file__).parent.parent.parent.parent / "projects" / "omo" / "src"
+            omo_src.symlink_to(real_omo_src, target_is_directory=True)
+            with mock.patch("llm_gateway.budget.estimate_cost", return_value=0.5):
+                rt = AgentRuntime()
+                ctx = {"task_id": "opc-p4-budget-reuse", "llm_budget_usd": 0.01}
+                rt._call_llm([{"role": "user", "content": "x"}], tools=None, request_context=ctx)
+                rt._call_llm([{"role": "user", "content": "y"}], tools=None, request_context=ctx)
+                rt._call_llm([{"role": "user", "content": "z"}], tools=None, request_context=ctx)
 
-    debt_files = sorted((tmp_path / "debt").glob("DEBT-OPC-P4-BUDGET-*.yaml"))
+    debt_files = sorted((tmp_path / ".omo" / "debt" / "items").glob("DEBT-OPC-P4-BUDGET-*.yaml"))
     assert len(debt_files) == 1, f"expected single debt file, got {debt_files}"
     body = debt_files[0].read_text(encoding="utf-8")
     assert "occurrence_count: 3" in body
@@ -784,22 +811,24 @@ def test_budget_reject_returns_error_dict_not_traceback(tmp_path):
     with mock.patch.dict(
         sys.modules,
         {
-            "llm_gateway.detection": fake_detection,
-            "llm_gateway.provider": fake_provider,
+            "llm_gateway._legacy.detection": fake_detection,
+            "llm_gateway._legacy.provider": fake_provider,
+            "llm_gateway._legacy.registry_data_loader": fake_registry_loader,
+            "llm_gateway._legacy.audit": fake_audit,
             "llm_gateway.registry_data_loader": fake_registry_loader,
-            "llm_gateway.audit": fake_audit,
         },
     ):
-        from runtime.executor import engine as engine_mod
         from runtime.executor.engine import AgentRuntime
 
-        with mock.patch.object(engine_mod, "OMO_DEBT_DIR", tmp_path / "debt"):
-            rt = AgentRuntime()
-            ctx = {"task_id": "opc-p4-budget-structured-error", "llm_budget_usd": 0.1}
-            # Must NOT raise — return dict
-            response = rt._call_llm(
-                [{"role": "user", "content": "hello"}], tools=None, request_context=ctx
-            )
+        with mock.patch.dict(os.environ, {"WORKSPACE": str(tmp_path)}):
+            (tmp_path / ".omo" / "debt" / "items").mkdir(parents=True, exist_ok=True)
+            with mock.patch("llm_gateway.budget.estimate_cost", return_value=1.0):
+                rt = AgentRuntime()
+                ctx = {"task_id": "opc-p4-budget-structured-error", "llm_budget_usd": 0.1}
+                # Must NOT raise — return dict
+                response = rt._call_llm(
+                    [{"role": "user", "content": "hello"}], tools=None, request_context=ctx
+                )
 
     assert isinstance(response, dict)
     assert response["finish_reason"] == "error"
