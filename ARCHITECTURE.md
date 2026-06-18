@@ -3,7 +3,8 @@
 > **Layer**: L3 入口层  
 > **Role**: 统一人类入口 / Agent 桥接层 / CLI + MCP + Web  
 > **Stack**: Python 3.13+, uv, FastAPI, rich  
-> **Health**: 542/562 passed
+> **Health**: See local CI and runtime probes
+> **SSOT**: 运行时健康、测试通过率、入口/工具计数以本项目 CI、运行时探针和 workspace governance SSOT 为准
 >
 > 系统全景参见：[`docs/ARCHITECTURE-DIAGRAM.md`](../docs/ARCHITECTURE-DIAGRAM.md)
 

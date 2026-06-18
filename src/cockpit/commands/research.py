@@ -274,10 +274,11 @@ def cmd_research_list(args: argparse.Namespace) -> int:
 
 
 def cmd_research_open(args: argparse.Namespace) -> int:
-    result = _get_data_access().get_research(args.research_id)
+    research_id = int(getattr(args, "open", 0) or 0)
+    result = _get_data_access().get_research(research_id)
     if not result:
         recent = _get_data_access().list_research(limit=3)
-        msg = f"[red]Error:[/] 未找到 ID={args.research_id} 的研究记录。"
+        msg = f"[red]Error:[/] 未找到 ID={research_id} 的研究记录。"
         if recent:
             ids = "、".join(f"[cyan][{r['id']}]{r['topic']}[/]" for r in recent)
             msg += f"\n[yellow]最近的研究: {ids}[/]"
@@ -306,10 +307,10 @@ def cmd_research_open(args: argparse.Namespace) -> int:
     _get_console().print(
         _panel(
             "下一步:\n"
-            f'- `workspace research --ask {args.research_id} "继续提问"\n'
-            f"- `workspace research --dossier {args.research_id}`\n"
-            f"- `workspace research --timeline {args.research_id}`\n"
-            f"- `workspace research --publish {args.research_id} --style brief`",
+            f'- `workspace research --ask {research_id} "继续提问"\n'
+            f"- `workspace research --dossier {research_id}`\n"
+            f"- `workspace research --timeline {research_id}`\n"
+            f"- `workspace research --publish {research_id} --style brief`",
             "cyan",
         )
     )
@@ -317,16 +318,31 @@ def cmd_research_open(args: argparse.Namespace) -> int:
 
 
 def cmd_research_ask(args: argparse.Namespace) -> int:
-    research = _get_data_access().get_research(args.research_id)
+    # Support both new list-based args and legacy attribute-based args
+    ask_params = getattr(args, "ask", [])
+    if isinstance(ask_params, list) and len(ask_params) >= 2:
+        research_id = int(ask_params[0])
+        question = str(ask_params[1])
+    else:
+        research_id = getattr(args, "research_id", 0)
+        question = getattr(args, "question", "")
+        if isinstance(question, list):
+            question = " ".join(str(q) for q in question)
+    
+    if not research_id or not question:
+        _get_err().print("[red]❌ 请提供研究 ID 和问题内容[/red]")
+        return 1
+    
+    research = _get_data_access().get_research(research_id)
     if not research:
         recent = _get_data_access().list_research(limit=3)
-        msg = f"[red]Error:[/] 未找到 ID={args.research_id} 的研究记录。"
+        msg = f"[red]Error:[/] 未找到 ID={research_id} 的研究记录。"
         if recent:
             ids = "、".join(f"[cyan][{r['id']}]{r['topic']}[/]" for r in recent)
             msg += f"\n[yellow]最近的研究: {ids}[/]"
         _get_console().print(f"\n{msg}\n")
         return 1
-    question = _topic_text(args.question)
+
     _get_console().print(
         _panel(f"[bold cyan]💬 追问[/bold cyan]\n{question}\n[dim]基于: {research['topic']}[/dim]", "cyan")
     )
@@ -394,15 +410,15 @@ def cmd_research_ask(args: argparse.Namespace) -> int:
                 "yellow",
             )
         )
-    _get_data_access().add_follow_up(args.research_id, question, answer)
+    _get_data_access().add_follow_up(research_id, question, answer)
     _notify_research_complete(research["topic"])
     quality_label = "（真实研究）" if answer_quality == "real" else "（降级回答）"
     style = "green" if answer_quality == "real" else "yellow"
-    _render_markdown_block(f"💬 追问已回答 · ID {args.research_id} {quality_label}", answer, style=style)
+    _render_markdown_block(f"💬 追问已回答 · ID {research_id} {quality_label}", answer, style=style)
     lines = [
-        f"- `workspace research --open {args.research_id}`",
-        f"- `workspace research --dossier {args.research_id}`",
-        f"- `workspace research --timeline {args.research_id}`",
+        f"- `workspace research --open {research_id}`",
+        f"- `workspace research --dossier {research_id}`",
+        f"- `workspace research --timeline {research_id}`",
     ]
     if answer_quality == "degraded":
         lines.append("- `workspace status` 检查系统状态")
@@ -891,11 +907,12 @@ def cmd_research_restore(args: argparse.Namespace) -> int:
 
 
 def cmd_research_export(args: argparse.Namespace) -> int:
-    result = _get_data_access().get_research(args.research_id)
+    research_id = int(getattr(args, "open", 0) or getattr(args, "research_id", 0))
+    result = _get_data_access().get_research(research_id)
     if not result:
-        _get_console().print(f"[red]Error: Research ID {args.research_id} not found[/]")
+        _get_console().print(f"[red]Error: Research ID {research_id} not found[/]")
         return 1
-    fmt = args.export.lower()
+    fmt = str(getattr(args, "export", "markdown")).lower()
     if fmt not in {"markdown", "text", "json"}:
         _get_console().print(f"[red]Error: unsupported export format {args.export!r}（支持: markdown/text/json）[/]")
         return 1
@@ -1271,3 +1288,43 @@ def cmd_research_backup_restore(args: argparse.Namespace) -> int:
         )
     )
     return 0
+
+
+def _cmd_research_batch(args) -> int:
+    import time
+    from rich.console import Console
+    console = Console()
+    
+    topics = args.topic
+    if len(topics) < 2:
+        console.print("[red]batch 模式需要至少 2 个研究主题[/]")
+        return 1
+
+    results = []
+    start = time.time()
+    import copy as _copy
+
+    console.print(f"\n[bold cyan]📚 批量研究: {len(topics)} 个主题[/]\n")
+
+    for i, t in enumerate(topics, 1):
+        console.print(f"[bold yellow]⏳ [{i}/{len(topics)}][/] {t}")
+        batch_args = _copy.copy(args)
+        batch_args.topic = [t]
+        batch_args.batch = False
+        batch_args.stream = False
+        try:
+            ret = cmd_research(batch_args)
+            results.append({"topic": t, "status": "ok" if ret == 0 else "error", "code": ret})
+            status_icon = "[green]✅[/]" if ret == 0 else "[red]❌[/]"
+            console.print(f"  {status_icon} 完成 [{i}/{len(topics)}]")
+        except Exception as e:
+            results.append({"topic": t, "status": "error", "error": str(e)})
+            console.print(f"  [red]❌ 失败: {e}[/]")
+
+    elapsed = time.time() - start
+    ok = sum(1 for r in results if r["status"] == "ok")
+    err = len(results) - ok
+
+    console.print(f"\n[bold]批量研究完成: {ok} 成功, {err} 失败 · 耗时 {elapsed:.1f}s[/]")
+    return 0 if err == 0 else 1
+

@@ -51,6 +51,17 @@ uv run --package cockpit pytest src/cockpit/tests/ -q
 # 498 passed
 ```
 
+## 治理入口
+
+```bash
+workspace governance surfaces --json
+workspace governance ingress-goal BET-001 "标题" "描述" --ingress-plane projects/c2g
+workspace governance ingress-task /abs/path/to/task.yaml --ingress-plane projects/c2g
+workspace governance ingress-debt /abs/path/to/debt.yaml --ingress-plane projects/aetherforge
+```
+
+`workspace governance` 现在会把 `.omo` 治理面巡检与 ingress 持久化写入统一转发到 `projects/omo` 的受审计 broker，而不是让入口层直接改 `.omo/`。
+
 ## 架构位置
 
 ```

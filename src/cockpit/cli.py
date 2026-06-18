@@ -74,7 +74,12 @@ from .commands.research import (
     cmd_research_tag,
     cmd_research_timeline,
     cmd_research_unarchive,
+    _cmd_research_batch,
 )
+from .commands.search import _cmd_search
+from .commands.health import _cmd_health
+from .commands.brief import _cmd_brief
+from .commands.discover import _cmd_discover
 from .commands.status import (
     _render_workbench,  # noqa: F401
     cmd_daily,
@@ -84,6 +89,37 @@ from .commands.status import (
     cmd_status,
 )
 
+def cmd_ssb(a):
+    from cockpit.commands.ssb import cmd_ssb as _c; return _c(a)
+    
+def cmd_mof(a):
+    from cockpit.commands.mof import cmd_mof as _c; return _c(a)
+
+def _c_context(a):
+    from cockpit.commands.l4bridge import cmd_context as _c; return _c(a)
+
+def _c_cards(a):
+    from cockpit.commands.l4bridge import cmd_cards as _c; return _c(a)
+
+def _c_vault(a):
+    from cockpit.commands.l4bridge import cmd_vault as _c; return _c(a)
+
+def _c_domains(a):
+    from cockpit.commands.l4bridge import cmd_domains as _c; return _c(a)
+
+def _c_skill(a):
+    from cockpit.commands.l4bridge import cmd_skill as _c; return _c(a)
+
+def _c_events(a):
+    from cockpit.commands.events import run_events_dashboard
+    run_events_dashboard(a.url)
+    return 0
+
+def _c_version(a):
+    from cockpit import __version__
+    console.print(f"[bold cyan]cockpit[/] v[bold]{__version__}[/]")
+    console.print("[dim]L3 统一入口 · 5+3+1 架构[/]")
+    return 0
 
 def main() -> int:
     try:
@@ -258,7 +294,18 @@ def main() -> int:
     gov_p.add_argument(
         "subcommand",
         nargs="?",
-        choices=["calibrate", "rechain", "evolve", "report", "drift-check", "validate"],
+        choices=[
+            "calibrate",
+            "rechain",
+            "evolve",
+            "report",
+            "drift-check",
+            "validate",
+            "surfaces",
+            "ingress-goal",
+            "ingress-task",
+            "ingress-debt",
+        ],
         help="治理子命令",
     )
     gov_p.add_argument("extra_args", nargs=argparse.REMAINDER, help="传递给 arcnode-* 脚本的额外参数")
@@ -373,1158 +420,203 @@ def main() -> int:
 
     args = parser.parse_args()
 
-    if args.command == "code":
-        if args.code_command == "workflow":
-            from cockpit.commands.code import cmd_code_workflow
-
-            return cmd_code_workflow(args)
-        elif args.code_command:
-            from cockpit.commands.code import cmd_code_base
-
-            return cmd_code_base(args)
-        else:
-            code_p.print_help()
-            return 1
-
-    if args.command == "research":
-        if args.search:
-            return cmd_research_search(args)
-        if args.compare:
-            return cmd_research_compare(args)
-        if args.merge:
-            return cmd_research_merge(args)
-        if args.digest:
-            return cmd_research_digest(args)
-        if args.audit:
-            return cmd_research_audit(args)
-        if args.quarantine:
-            return cmd_research_quarantine(args)
-        if args.restore:
-            return cmd_research_restore(args)
-        if args.heatmap:
-            return cmd_research_heatmap(args)
-        if args.follow_up:
-            return cmd_research_follow_up(args)
-        if args.health:
-            return cmd_research_health(args)
-        if args.backup is not None:
-            args.output = args.backup or None
-            return cmd_research_backup(args)
-        if args.backup_restore:
-            return cmd_research_backup_restore(args)
-        if args.agent:
-            return cmd_research_agent(args)
-        if args.list:
-            return cmd_research_list(args)
-        if args.dossier:
-            return cmd_research_dossier(args)
-        if args.timeline:
-            return cmd_research_timeline(args)
-        if args.tag:
-            return cmd_research_tag(args)
-        if args.rename:
-            return cmd_research_rename(args)
-        if args.archive or args.all_active:
-            return cmd_research_archive(args)
-        if args.unarchive:
-            return cmd_research_unarchive(args)
-        if args.publish:
-            return cmd_research_publish(args)
-        if args.export:
-            if not args.open:
-                console.print("[red]Error: specify --open N to export a research[/]")
-                return 1
-            args.research_id = args.open
-            return cmd_research_export(args)
-        if args.open:
-            args.research_id = args.open
-            return cmd_research_open(args)
-        if args.ask:
-            args.research_id = args.ask
-            args.question = args.topic
-            return cmd_research_ask(args)
-        if args.batch and args.topic:
-            return _cmd_research_batch(args)
-        return cmd_research(args)
-
-    if args.command == "import":
-        return cmd_import(args)
-    if args.command == "status":
-        return cmd_status(args)
-    if args.command == "demo":
-        return cmd_demo(args)
-    if args.command == "daily":
-        return cmd_daily(args)
-    if args.command == "data":
-        if args.data_command == "index":
-            return cmd_data_index(args)
-        if args.data_command == "types":
-            return cmd_data_types(args)
-        if args.data_command == "gc":
-            return cmd_data_gc(args)
+    # ── Registry-Based Dispatch ──
+    if not args.command:
         console.print(
-            "[yellow]试试: [cyan]cockpit data index[/] 或 [cyan]cockpit data types[/] 或 [cyan]cockpit data gc[/][/]"
-        )
-        return 1
-    if args.command == "contracts":
-        if args.contracts_command == "validate":
-            return cmd_contracts_validate(args)
-        if args.contracts_command == "list":
-            return cmd_contracts_list(args)
-        if args.contracts_command == "export-research":
-            return cmd_contracts_export_research(args)
-        if args.contracts_command == "export":
-            if args.contracts_export_type == "identity":
-                return cmd_contracts_export_identity(args)
-            elif args.contracts_export_type == "event":
-                return cmd_contracts_export_event(args)
-            console.print(
-                "[yellow]试试: [cyan]cockpit contracts export identity[/] 或 [cyan]cockpit contracts export event --id 1[/][/]"
+            Panel.fit(
+                "[bold cyan]🛸 Cockpit · L3 统一入口[/bold cyan]\n\n"
+                "[bold]上下文[/]\n"
+                "  [cyan]cockpit context[/]          — 系统上下文 (Phase/P0/约束)\n"
+                "  [cyan]cockpit cards[/]            — CARDS 卡片列表\n"
+                "  [cyan]cockpit cards --check[/]    — 操作合规检查\n"
+                "  [cyan]cockpit vault search KEY[/] — 搜索知识库\n"
+                "  [cyan]cockpit health[/]           — 一键系统健康\n"
+                "  [cyan]cockpit brief[/]            — 会话简报\n\n"
+                "[bold]研究对象[/]\n"
+                '  [cyan]cockpit research "主题"[/]   — 发起研究\n'
+                "  [cyan]cockpit research --list[/]   — 查看历史\n\n"
+                "[bold]工具[/]\n"
+                "  [cyan]cockpit search --all KEY[/]  — 跨源搜索 (本地+BOS)\n"
+                "  [cyan]cockpit discover[/]           — 发现可用功能\n"
+                "  [cyan]cockpit status[/]            — 工作台\n"
+                "  [cyan]cockpit dashboard[/]         — Web 驾驶舱\n"
+                "  [cyan]cockpit mcp[/]               — MCP Server\n"
+                "  [cyan]cockpit demo[/]              — 5 分钟体验\n"
+                "  [cyan]cockpit code analyze[/]      — 代码分析\n"
+                "  [cyan]cockpit version[/]           — 版本信息\n\n"
+                "[dim]快捷键: F1帮助 · Ctrl+C 退出[/]",
+                border_style="cyan",
+                box=box.ROUNDED,
             )
-            return 1
-        console.print(
-            "[yellow]试试: [cyan]cockpit contracts validate[/] 或 [cyan]cockpit contracts list[/] 或 [cyan]cockpit contracts export-research 1[/] 或 [cyan]cockpit contracts export identity[/][/]"
         )
-        return 1
-    if args.command == "dashboard":
-        return cmd_dashboard(args)
-    if args.command == "help":
-        return cmd_help(args)
-    if args.command in ("quickstart", "init"):
-        return cmd_quickstart(args)
-    if args.command == "profile":
-        return cmd_profile(args)
-    if args.command == "product-health":
-        import subprocess as _sp
+        return 0
 
+    def dispatch_research(a):
+        if getattr(a, "batch", False) and getattr(a, "topic", []):
+            if len(a.topic) >= 2:
+                return _cmd_research_batch(a)
+        if getattr(a, "search", False): return cmd_research_search(a)
+        if getattr(a, "compare", False): return cmd_research_compare(a)
+        if getattr(a, "merge", False): return cmd_research_merge(a)
+        if getattr(a, "digest", False): return cmd_research_digest(a)
+        if getattr(a, "audit", False): return cmd_research_audit(a)
+        if getattr(a, "quarantine", False): return cmd_research_quarantine(a)
+        if getattr(a, "restore", False): return cmd_research_restore(a)
+        if getattr(a, "heatmap", False): return cmd_research_heatmap(a)
+        if getattr(a, "follow_up", False): return cmd_research_follow_up(a)
+        if getattr(a, "health", False): return cmd_research_health(a)
+        if getattr(a, "backup", None) is not None:
+            a.output = a.backup or None
+            return cmd_research_backup(a)
+        if getattr(a, "backup_restore", False): return cmd_research_backup_restore(a)
+        if getattr(a, "agent", False): return cmd_research_agent(a)
+        if getattr(a, "list", False): return cmd_research_list(a)
+        if getattr(a, "dossier", False): return cmd_research_dossier(a)
+        if getattr(a, "timeline", False): return cmd_research_timeline(a)
+        if getattr(a, "tag", False): return cmd_research_tag(a)
+        if getattr(a, "rename", False): return cmd_research_rename(a)
+        if getattr(a, "archive", False) or getattr(a, "all_active", False): return cmd_research_archive(a)
+        if getattr(a, "unarchive", False): return cmd_research_unarchive(a)
+        if getattr(a, "publish", False): return cmd_research_publish(a)
+        if getattr(a, "export", False): return cmd_research_export(a)
+        if getattr(a, "open", False): return cmd_research_open(a)
+        if getattr(a, "ask", False): return cmd_research_ask(a)
+        return cmd_research(a)
+
+    def dispatch_code(a):
+        if getattr(a, "code_command", "") == "workflow":
+            from cockpit.commands.code import cmd_code_workflow
+            return cmd_code_workflow(a)
+        elif getattr(a, "code_command", ""):
+            from cockpit.commands.code import cmd_code_base
+            return cmd_code_base(a)
+        code_p.print_help()
+        return 1
+
+    def dispatch_bos(a):
+        from cockpit.commands.bos import cmd_bos_status, cmd_bos_list, cmd_bos_discover
+        sub = getattr(a, "bos_cmd", "")
+        if sub == "list": return cmd_bos_list(a)
+        elif sub == "discover": return cmd_bos_discover(a)
+        else: return cmd_bos_status(a)
+
+    def dispatch_scenario(a):
+        from cockpit.commands.scenario import cmd_scenario
+        return cmd_scenario(a)
+
+    def dispatch_iterate(a):
+        from cockpit.commands.iterate import cmd_iterate
+        return cmd_iterate(a)
+
+    def dispatch_compass(a):
+        import subprocess
+        from .commands.base import _SCRIPT_DIR
+        c2g_project = str((_SCRIPT_DIR.parent.parent.parent.parent / "c2g").resolve())
+        cmd = ["uv", "run", "--project", c2g_project, "c2g"] + getattr(a, "compass_args", [])
+        return subprocess.call(cmd)
+
+    def dispatch_workflow(a):
+        from cockpit.commands.workflow import handle_workflow
+        return handle_workflow(getattr(a, "workflow_args", []))
+        
+    def dispatch_monitor(a):
+        from cockpit.commands.monitor import cmd_monitor
+        return cmd_monitor(a)
+
+    def dispatch_data(a):
+        if getattr(a, "data_command", "") == "index": return cmd_data_index(a)
+        if getattr(a, "data_command", "") == "types": return cmd_data_types(a)
+        if getattr(a, "data_command", "") == "gc": return cmd_data_gc(a)
+        console.print("[yellow]试试: [cyan]cockpit data index[/] 或 [cyan]cockpit data types[/] 或 [cyan]cockpit data gc[/][/]")
+        return 1
+        
+    def dispatch_contracts(a):
+        if getattr(a, "contracts_command", "") == "validate": return cmd_contracts_validate(a)
+        if getattr(a, "contracts_command", "") == "list": return cmd_contracts_list(a)
+        if getattr(a, "contracts_command", "") == "export-research": return cmd_contracts_export_research(a)
+        if getattr(a, "contracts_command", "") == "export":
+            if getattr(a, "contracts_export_type", "") == "identity": return cmd_contracts_export_identity(a)
+            elif getattr(a, "contracts_export_type", "") == "event": return cmd_contracts_export_event(a)
+        return 1
+
+    def cmd_product_health(a):
+        import sys
+        import subprocess as _sp
+        from .commands.base import _SCRIPT_DIR
         result = _sp.run([sys.executable, str(_SCRIPT_DIR / "product-health")])
         returncode = getattr(result, "returncode", 0)
         return returncode if isinstance(returncode, int) else 0
-    if args.command == "governance":
-        return cmd_governance(args)
 
-    # ── Round 43 P1: cockpit audit (调 bin/workspace-audit 6 维度全方位审计) ──
-    if args.command == "audit":
-        return cmd_audit(args)
-    if args.command == "mcp":
-        return cmd_mcp(args)
-    if args.command == "context":
-        from .commands.l4bridge import cmd_context
-
-        return cmd_context(args)
-    if args.command == "cards":
-        from .commands.l4bridge import cmd_cards
-
-        return cmd_cards(args)
-    if args.command == "vault":
-        from .commands.l4bridge import cmd_vault
-
-        return cmd_vault(args)
-    if args.command == "domains":
-        from .commands.l4bridge import cmd_domains
-
-        return cmd_domains(args)
-    if args.command == "skill":
-        from .commands.l4bridge import cmd_skill
-
-        return cmd_skill(args)
-    if args.command == "health":
-        return _cmd_health(args)
-    if args.command == "search":
-        return _cmd_search(args)
-    if args.command == "discover":
-        return _cmd_discover(args)
-    if args.command == "brief":
-        return _cmd_brief(args)
-    if args.command == "events":
-        from .commands.events import run_events_dashboard
-
-        run_events_dashboard(args.url)
+    def cmd_context(a):
+        from cockpit.commands.l4bridge import cmd_context as _c; return _c(a)
+        
+    def cmd_cards(a):
+        from cockpit.commands.l4bridge import cmd_cards as _c; return _c(a)
+        
+    def cmd_vault(a):
+        from cockpit.commands.l4bridge import cmd_vault as _c; return _c(a)
+        
+    def cmd_domains(a):
+        from cockpit.commands.l4bridge import cmd_domains as _c; return _c(a)
+        
+    def cmd_skill(a):
+        from cockpit.commands.l4bridge import cmd_skill as _c; return _c(a)
+        
+    def cmd_events(a):
+        from cockpit.commands.events import run_events_dashboard
+        run_events_dashboard(a.url)
         return 0
-    if args.command == "version":
+        
+    def cmd_version(a):
         from cockpit import __version__
-
         console.print(f"[bold cyan]cockpit[/] v[bold]{__version__}[/]")
         console.print("[dim]L3 统一入口 · 5+3+1 架构[/]")
         return 0
-
-    if args.command == "workflow":
-        from cockpit.commands.workflow import handle_workflow
-
-        return handle_workflow(args.workflow_args)
-
-    if args.command == "iterate":
-        # TODO: This will eventually be deprecated in favor of `compass brainstorm`
-        from .commands.iterate import cmd_iterate
-        return cmd_iterate(args)
-
-    if args.command == "compass":
-        import subprocess
-        c2g_project = str((_SCRIPT_DIR.parent.parent.parent.parent / "c2g").resolve())
-        cmd = ["uv", "run", "--project", c2g_project, "c2g"] + args.compass_args
-        return subprocess.call(cmd)
-
-    if args.command == "monitor":
-        return cmd_monitor(args)
-
-
-    if args.command == "ssb":
-        from cockpit.commands.ssb import cmd_ssb
-
-        return cmd_ssb(args)
-
-    if args.command == "mof":
-        from cockpit.commands.mof import cmd_mof
-
-        return cmd_mof(args)
-
-    if args.command == "bos":
-        from cockpit.commands.bos import cmd_bos_status, cmd_bos_list, cmd_bos_discover
-
-        sub = getattr(args, "bos_cmd", "")
-        if sub == "list":
-            return cmd_bos_list(args)
-        elif sub == "discover":
-            return cmd_bos_discover(args)
-        else:
-            return cmd_bos_status(args)
-
-    if args.command == "scenario":
-        from cockpit.commands.scenario import cmd_scenario
-
-        return cmd_scenario(args)
-
-    console.print(
-        Panel.fit(
-            "[bold cyan]🛸 Cockpit · L3 统一入口[/bold cyan]\n\n"
-            "[bold]上下文[/]\n"
-            "  [cyan]cockpit context[/]          — 系统上下文 (Phase/P0/约束)\n"
-            "  [cyan]cockpit cards[/]            — CARDS 卡片列表\n"
-            "  [cyan]cockpit cards --check[/]    — 操作合规检查\n"
-            "  [cyan]cockpit vault search KEY[/] — 搜索知识库\n"
-            "  [cyan]cockpit health[/]           — 一键系统健康\n"
-            "  [cyan]cockpit brief[/]            — 会话简报\n\n"
-            "[bold]研究对象[/]\n"
-            '  [cyan]cockpit research "主题"[/]   — 发起研究\n'
-            "  [cyan]cockpit research --list[/]   — 查看历史\n\n"
-            "[bold]工具[/]\n"
-            "  [cyan]cockpit search --all KEY[/]  — 跨源搜索 (本地+BOS)\n"
-            "  [cyan]cockpit discover[/]           — 发现可用功能\n"
-            "  [cyan]cockpit status[/]            — 工作台\n"
-            "  [cyan]cockpit dashboard[/]         — Web 驾驶舱\n"
-            "  [cyan]cockpit mcp[/]               — MCP Server\n"
-            "  [cyan]cockpit demo[/]              — 5 分钟体验\n"
-            "  [cyan]cockpit code analyze[/]      — 代码分析\n"
-            "  [cyan]cockpit version[/]           — 版本信息\n\n"
-            "[dim]快捷键: F1帮助 · Ctrl+C 退出[/]",
-            border_style="cyan",
-            box=box.ROUNDED,
-        )
-    )
-    return 0
-
-
-def _cmd_research_batch(args: Namespace) -> int:
-    """批量研究模式 — 逐个处理多个 topic，汇总结果。"""
-    from .commands.research import cmd_research
-
-    topics = args.topic
-    if len(topics) < 2:
-        console.print("[red]batch 模式需要至少 2 个研究主题[/]")
-        return 1
-
-    results: list[dict[str, str | int]] = []
-    start = time.time()
-    import copy as _copy  # lazy to avoid overhead on non-batch path
-
-    console.print(f"\n[bold cyan]📚 批量研究: {len(topics)} 个主题[/]\n")
-
-    for i, t in enumerate(topics, 1):
-        console.print(f"[bold yellow]⏳ [{i}/{len(topics)}][/] {t}")
-        batch_args = _copy.copy(args)
-        batch_args.topic = [t]
-        batch_args.batch = False
-        batch_args.stream = False  # batch 模式禁用流式避免交错
-        try:
-            ret = cmd_research(batch_args)
-            results.append({"topic": t, "status": "ok" if ret == 0 else "error", "code": ret})
-            status_icon = "[green]✅[/]" if ret == 0 else "[red]❌[/]"
-            console.print(f"  {status_icon} 完成 [{i}/{len(topics)}]")
-        except Exception as e:
-            results.append({"topic": t, "status": "error", "error": str(e)})
-            console.print(f"  [red]❌ 失败: {e}[/]")
-
-    elapsed = time.time() - start
-    ok = sum(1 for r in results if r["status"] == "ok")
-    err = len(results) - ok
-
-    console.print(f"\n[bold]批量研究完成: {ok} 成功, {err} 失败 · 耗时 {elapsed:.1f}s[/]")
-    return 0 if err == 0 else 1
-
-
-def _cmd_health(args: Namespace) -> int:
-    """一键系统健康检查 — 聚合 Context + Status + 可选全栈检查。"""
-    return_code = 0
-
-    # ── L4 Context ──────────────────────────────────────────────
-    console.print("\n[bold cyan]═══ L4 上下文 ═══[/]\n")
-    try:
-        from .commands.l4bridge import cmd_context
-
-        cmd_context(args)
-    except Exception:
-        console.print("[yellow]⚠ L4 bridge 不可用[/]")
-        return_code = 1
-
-    # ── L3 Cockpit Status ───────────────────────────────────────
-    console.print("\n[bold cyan]═══ L3 Cockpit ═══[/]\n")
-    try:
-        if args.json:
-            from cockpit.scripts.cockpit_mcp import workspace_context
-
-            print(workspace_context())
-        else:
-            cmd_status(args)
-    except Exception as e:
-        console.print(f"[red]Cockpit status error: {e}[/]")
-        return_code = 1
-
-        # ── Full: I0 Agora + L1 Runtime + L2 OMO ────────────────────
-    if getattr(args, "full", False):
-        console.print("\n[bold cyan]═══ I0 服务网格 ═══[/]\n")
-        try:
-            # Try l4-kernel for domain health first
-            try:
-                from l4_kernel import DomainRegistry
-
-                reg = DomainRegistry()
-                h = reg.aggregate_health()
-                if not args.json:
-                    console.print(
-                        f"  [dim]域总数: {h['total']}  |  存在: {h['existing']}  |  健康率: {h['health_rate']}[/]"
-                    )
-            except ImportError:
-                pass
-
-            # Agora stats via subprocess as fallback
-            import subprocess as _sp
-
-            ws = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[4])))
-            agora_bin = ws / "projects" / "agora" / ".venv" / "bin" / "agora"
-            if agora_bin.exists():
-                result = _sp.run([str(agora_bin), "stats"], capture_output=True, text=True, timeout=15)
-                if not args.json:
-                    for line in result.stdout.split("\n"):
-                        if "总计" in line or "健康" in line or "异常" in line or "健康率" in line:
-                            console.print(f"  [dim]{line.strip()}[/]")
-            else:
-                console.print("[yellow]⚠ agora CLI 未安装[/]")
-        except Exception as e:
-            console.print(f"[yellow]⚠ I0 检查跳过: {e}[/]")
-
-        # ── L4 Domain Health ──────────────────────────────────────
-        console.print("\n[bold cyan]═══ L4 域健康 ═══[/]\n")
-        try:
-            from l4_kernel import DomainRegistry
-            from l4_kernel.health import DomainHealth
-
-            reg = DomainRegistry()
-            dh = DomainHealth(reg)
-            dashboard = dh.generate_dashboard()
-            if not args.json:
-                # Extract summary lines
-                for line in dashboard.split("\n"):
-                    if line.startswith("- **"):
-                        console.print(f"  [dim]{line.strip()}[/]")
-        except ImportError:
-            console.print("[yellow]⚠ l4-kernel 未安装[/]")
-
-        # ── Full: Runtime Matrix ────────────────────────────────
-        console.print("\n[bold cyan]═══ L1 运行时 ═══[/]\n")
-        matrix_path = Path.home() / "runtime" / "matrix_state.json"
-        if not args.json and matrix_path.exists():
-            try:
-                import json as _j
-
-                state = _j.loads(matrix_path.read_text())
-                console.print(f"  [dim]服务注册: {len(state.get('services', {}))} 项[/]")
-                h = sum(1 for s in state.get("services", {}).values() if s.get("healthy"))
-                t = max(len(state.get("services", {})), 1)
-                console.print(f"  [{'green' if h == t else 'yellow'}]健康: {h}/{t}[/]")
-            except Exception:
-                console.print("[yellow]⚠ Matrix state 解析失败[/]")
-        elif not args.json:
-            console.print("[yellow]⚠ Matrix state 未生成 (runtime scheduler 未运行)[/]")
-
-        # ── Full: OMO Debt ───────────────────────────────────────
-        console.print("\n[bold cyan]═══ L2 治理 ═══[/]\n")
-        debt_path = ws / ".omo" / "state" / "system.yaml"
-        if debt_path.exists():
-            try:
-                import yaml
-
-                sys_data = yaml.safe_load(debt_path.read_text())
-                if not args.json:
-                    phase = sys_data.get("current_phase", "?")
-                    health = sys_data.get("health_score", 0)
-                    debt = sys_data.get("debt_weight", 0)
-                    console.print(f"  [dim]Phase: {phase}  |  健康分: {health}  |  债务权重: {debt}[/]")
-            except Exception:
-                console.print("[yellow]⚠ OMO state 解析失败[/]")
-        elif not args.json:
-            console.print("[yellow]⚠ OMO state 未生成[/]")
-
-        # ── Full: L4 文档域健康 ─────────────────────────────────
-        console.print("\n[bold cyan]═══ L4 文档域 ═══[/]\n")
-        l4_health = Path.home() / "Documents" / "@驾驶舱" / "_runtime" / "ecos-health-check.py"
-        if l4_health.exists():
-            try:
-                import subprocess as _l4sp
-                result = _l4sp.run(
-                    [sys.executable, str(l4_health)],
-                    capture_output=True, text=True, timeout=30,
-                )
-                if not args.json:
-                    for line in result.stdout.split("\n"):
-                        stripped = line.strip()
-                        if stripped and not stripped.startswith("L4"):
-                            console.print(f"  [dim]{stripped}[/]")
-            except Exception as e:
-                console.print(f"[yellow]⚠ L4 文档域检查跳过: {e}[/]")
-        elif not args.json:
-            console.print("[yellow]⚠ L4 健康脚本未找到 (创建 _runtime/ecos-health-check.py)[/]")
-
-        console.print("\n[bold green]✅ 全栈健康检查完成[/]\n")
-
-    return return_code
-
-
-def _cmd_brief(args: Namespace) -> int:
-    """生成会话简报。"""
-    from datetime import datetime
-
-    console.print(_panel("[bold cyan]📋 会话简报[/]", "cyan"))
-
-    try:
-        import json
-
-        from cockpit.scripts.cockpit_mcp import cards_status, workspace_context
-
-        ctx = json.loads(workspace_context())
-        cards = json.loads(cards_status())
-
-        console.print(f"Phase {ctx['phase']} · {ctx.get('theme', '')}")
-        console.print(f"活跃卡片: {ctx['cards_summary']['active']} (P0: {ctx['cards_summary']['p0_open']})")
-
-        if cards and args.force:
-            console.print("\n[bold]P0 优先:[/]")
-            for c in [c for c in cards if c["priority"] == "P0"]:
-                console.print(f"  [red]▪[/] {c['title']}")
-
-        console.print(f"\n[dim]生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M')}[/]")
-    except Exception as e:
-        console.print(f"[yellow]⚠ Brief generation limited: {e}[/]")
-
-    return 0
-    return 0
-
-
-def _cmd_search(args: Namespace) -> int:
-    """跨源搜索 — P2 记忆脊统一聚合搜索。"""
-    console = Console()
-    query = getattr(args, "query", "")
-    if not query:
-        console.print("[yellow]请输入搜索关键词[/]")
-        console.print('  [cyan]cockpit search "关键词" --all[/]')
-        return 1
-
-    search_all = getattr(args, "all", False)
-    limit = getattr(args, "limit", 10)
-
-    zone_count: dict[str, int] = {}
-    merged_results: list[dict] = []
-    now = datetime.now().isoformat()
-
-    # Zone 1: cockpit local SQLite FTS5
-    try:
-        from .storage import get_data_access
-        local = get_data_access().search_research(query, limit=limit)
-        zone_count["local"] = len(local)
-        merged_results.extend(local)
-    except Exception as e:
-        zone_count["local"] = 0
-        console.print(f"[dim]⚠ 本地搜索跳过: {e}[/]")
-
-    # Zone 2: KOS (kairon/kos MCP stdio).
-    # Gate C1 contract: zone_count.kos MUST be a real count derived from the
-    # KOS response, not a hard-coded 1. We never inject a fake "stdout blob"
-    # result item — that violates OPC P2.2 red line.
-    #
-    # Gate C2 contract: must actually invoke kairon/kos MCP server
-    # (uv run python -m kos.mcp.server) over JSON-RPC stdio, parse
-    # search_knowledge response, and map KOS schema
-    # (doc_id/title/zone/canonical_path/updated_at/body_preview)
-    # to P2 contract (id/title/snippet/_source/_source_path/_zone/_type/...).
-    if search_all:
-        zone_count["kos"] = 0  # default; updated only on real success
-        try:
-            kos_items = _invoke_kos_search(query, limit=limit)
-            if kos_items:
-                for item in kos_items:
-                    item.setdefault("_source", "kairon-kos")
-                    item.setdefault("_source_path", item.get("canonical_path", "bos://memory/kos/search"))
-                    item.setdefault("_zone", "structured-memory")
-                    item.setdefault("_type", "knowledge")
-                    item.setdefault("_freshness", "unknown")
-                    item.setdefault("_owner", "kairon")
-                    item.setdefault("_reuse_policy", "reference-only")
-                    item.setdefault("_retrieved_at", now)
-                merged_results.extend(kos_items)
-                zone_count["kos"] = len(kos_items)
-        except Exception as e:
-            _log_kos_skip(f"unexpected: {type(e).__name__}: {e}")
-
-    # Zone 3: Vault (@学习进化 markdown 知识库).
-    # Gate C3 contract: at least one real query must hit two zones.
-    # Vault activation invokes the existing vault-search.sh (deterministic
-    # fulltext/concept/tag/filename search) — which is the "确定范围" layer
-    # of KEMS ("确定范围应该是确定性的，推理应该是概率性的").
-    # Real subprocess call, real rg output, no fake file listing.
-    if search_all:
-        zone_count["vault"] = 0
-        try:
-            vault_items = _invoke_vault_search(query, limit=limit)
-            if vault_items:
-                for item in vault_items:
-                    item.setdefault("_source", "@学习进化")
-                    item.setdefault("_source_path", item.get("source_path", "vault://学习进化"))
-                    item.setdefault("_zone", "document-vault")
-                    item.setdefault("_type", "document")
-                    item.setdefault("_freshness", "unknown")
-                    item.setdefault("_owner", "vault")
-                    item.setdefault("_reuse_policy", "derived-allowed")
-                    item.setdefault("_retrieved_at", now)
-                merged_results.extend(vault_items)
-                zone_count["vault"] = len(vault_items)
-        except Exception as e:
-            _log_vault_skip(f"unexpected: {type(e).__name__}: {e}")
-
-    # Zone 4: Trace Closure (Gate C4).
-    # 把本次 search 的 input + zones + counts 持久化到 cockpit research
-    # (writeback), 并把 list_research 命中作为 evidence 返回。
-    # 红线: 不重复 writeback (用 query+now 简单去重), 不阻塞用户响应
-    # (subprocess 静默错误)。
-    trace: dict = {}
-    if search_all:
-        try:
-            trace = _writeback_search_trace(
-                query, zone_count, len(merged_results), limit, merged_results
-            )
-        except Exception as e:
-            _log_trace_skip(f"unexpected: {type(e).__name__}: {e}")
-
-    # ═══ P2 统一响应契约: zone, query, zone_count, results, total ═══
-    # Task 2 (P2 closeout): multi-zone results visibility.
-    # 必须保证每个 non-zero zone 至少 1 条代表项在 results[:limit] 中,
-    # 然后 round-robin 补满. 否则 vault/kos 易被前面 zone 全部挤掉.
-    interleaved = _interleave_by_source(merged_results, limit)
-    response = {
-        "zone": "all",
-        "query": query,
-        "zone_count": zone_count,
-        "results": interleaved,
-        "total": len(merged_results),
-    }
-    if trace.get("trace_id"):
-        response["_trace"] = trace
-
-    if args.json:
-        import json as _json
-        import sys as _sys
-        # Gate C2: 必须 sys.stdout.write 直写, 绕过 rich console.print
-        # (rich 会把 JSON 字符串里的 \\n literal 解释为 ANSI/控制字符,
-        #  破坏 JSON 序列化)
-        _sys.stdout.write(_json.dumps(response, ensure_ascii=False, indent=2))
-        _sys.stdout.write("\n")
-        _sys.stdout.flush()
-    else:
-        # 文本模式必须表达与 JSON 相同的核心事实 (zone / query / total / zone_count)
-        console.print(
-            f"\n[bold cyan]query:[/] {query}  "
-            f"[bold cyan]zone:[/] all  "
-            f"[bold cyan]total:[/] {len(merged_results)}  "
-            f"[bold cyan]zones:[/] {zone_count}"
-        )
-        for item in interleaved:
-            title = str(item.get("topic", item.get("title", str(item)[:80])))[:70]
-            zone = item.get("_zone", "?")
-            src = item.get("_source", "?")
-            console.print(f"  ▸ [{zone}] {title}  [dim]{src}[/dim]")
-        if not search_all:
-            console.print("[dim]提示: 加 --all 搜索 BOS 知识引擎[/]")
-        if trace.get("trace_id"):
-            console.print(f"[dim]trace_id: {trace['trace_id']} ({'deduped' if trace.get('deduped') else 'new'})[/dim]")
-
-    return 0
-
-
-def _interleave_by_source(items: list[dict], limit: int) -> list[dict]:
-    """Task 2 (P2 closeout): multi-zone results visibility.
-
-    Guarantees that every non-zero zone (by _source) gets at least 1
-    representative in the first `limit` results, then fills the remainder
-    round-robin across the zones.
-
-    Without this, a long local-zone prefix would push vault/kos items
-    past the slice boundary even when zone_count shows them as non-zero.
-
-    Strategy: bucket items by _source, then round-robin one item from
-    each bucket per pass, until we hit `limit` or all buckets are empty.
-    Order of zones = first-seen order (preserves caller-intended ordering).
-    """
-    if limit <= 0 or not items:
-        return items[:limit] if limit > 0 else []
-    buckets: dict[str, list[dict]] = {}
-    order: list[str] = []
-    for it in items:
-        src = it.get("_source", "_unknown")
-        if src not in buckets:
-            buckets[src] = []
-            order.append(src)
-        buckets[src].append(it)
-    out: list[dict] = []
-    # Pass 1: ensure every non-empty bucket contributes at least 1
-    for src in order:
-        if buckets[src] and len(out) < limit:
-            out.append(buckets[src].pop(0))
-    # Pass 2: round-robin the remaining until limit or empty
-    while len(out) < limit:
-        progressed = False
-        for src in order:
-            if buckets[src] and len(out) < limit:
-                out.append(buckets[src].pop(0))
-                progressed = True
-        if not progressed:
-            break
-    return out[:limit]
-
-
-def _log_kos_skip(reason: str) -> None:
-    """记录 KOS 跳过原因 (debug-level, 不污染用户输出)。"""
-    import logging as _logging
-    _logging.getLogger("cockpit.cli.kos").debug("KOS skip: %s", reason)
-
-
-def _invoke_kos_search(query: str, limit: int = 10, timeout: float = 60.0) -> list[dict]:
-    """Gate C2 — 真实调用 kairon/kos MCP server (JSON-RPC stdio) 并提取结果。
-
-    流程:
-      1. spawn `uv run python -m kos.mcp.server` (cwd = projects/kairon)
-      2. MCP 握手 (initialize → initialized notification)
-      3. tools/call search_knowledge {query, limit}
-      4. 解析响应: result.content[0].text → JSON {query, results[], count}
-      5. 把 KOS schema 映射到 P2 contract (id/title/snippet/timestamp/source_path)
-      6. 返回 P2 items (空列表 if 任何一步失败)
-
-    设计原则 (OPC P2.2 red lines):
-      - 不重试 fake blob: 任何步骤失败返回 [], 绝不注入假数据
-      - 不修改原始 KOS schema: 仅追加 P2 contract 字段
-      - 完整错误捕获: subprocess / JSON / IO 全部 except
-    """
-    import json as _json
-    import os as _os
-    import select as _sel
-    import subprocess as _sp
-
-    ws_root = Path(_os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
-    kairon_dir = ws_root / "projects" / "kairon"
-    if not kairon_dir.exists():
-        _log_kos_skip(f"kairon dir not found: {kairon_dir}")
-        return []
-
-    try:
-        proc = _sp.Popen(
-            ["uv", "run", "python", "-m", "kos.mcp.server"],
-            stdin=_sp.PIPE, stdout=_sp.PIPE, stderr=_sp.PIPE,
-            text=True, bufsize=1, cwd=str(kairon_dir),
-        )
-    except (OSError, _sp.SubprocessError) as e:
-        _log_kos_skip(f"spawn failed: {type(e).__name__}: {e}")
-        return []
-
-    try:
-        # 1) initialize
-        proc.stdin.write(_json.dumps({
-            "jsonrpc": "2.0", "id": 1, "method": "initialize",
-            "params": {"protocolVersion": "2024-11-05"},
-        }) + "\n")
-        proc.stdin.flush()
-        # 2) initialized notification
-        proc.stdin.write(_json.dumps({
-            "jsonrpc": "2.0", "method": "notifications/initialized",
-        }) + "\n")
-        proc.stdin.flush()
-        # 3) tools/call search_knowledge
-        proc.stdin.write(_json.dumps({
-            "jsonrpc": "2.0", "id": 2, "method": "tools/call",
-            "params": {
-                "name": "search_knowledge",
-                "arguments": {"query": query, "limit": limit},
-            },
-        }) + "\n")
-        proc.stdin.flush()
-        proc.stdin.close()
-
-        # 4) blocking read with timeout, wait for "id": 2 response line
-        buf = ""
-        import time as _time
-        deadline = _time.time() + timeout
-        while _time.time() < deadline:
-            r, _, _ = _sel.select([proc.stdout], [], [], 0.5)
-            if r:
-                chunk = _os.read(proc.stdout.fileno(), 65536).decode("utf-8", errors="replace")
-                if not chunk:
-                    break
-                buf += chunk
-                if '"id": 2' in buf and buf.rstrip().endswith("}"):
-                    break
-        else:
-            _log_kos_skip(f"read timeout after {timeout}s")
-            return []
-
-        # 5) parse JSON-RPC response
-        raw_results: list[dict] = []
-        for line in buf.splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                msg = _json.loads(line)
-            except _json.JSONDecodeError:
-                continue
-            if msg.get("id") != 2:
-                continue
-            if "error" in msg:
-                _log_kos_skip(f"kos error: {msg['error']}")
-                return []
-            content = msg.get("result", {}).get("content", [])
-            for c in content:
-                if c.get("type") == "text":
-                    try:
-                        payload = _json.loads(c["text"])
-                    except _json.JSONDecodeError:
-                        continue
-                    if isinstance(payload, dict) and isinstance(payload.get("results"), list):
-                        raw_results = [r for r in payload["results"] if isinstance(r, dict)]
-                    break
-            break
-
-        if not raw_results:
-            return []  # KOS 真实返回 0 → zone_count.kos=0, 不视为失败
-
-        # 6) map KOS schema → P2 contract
-        mapped: list[dict] = []
-        for r in raw_results:
-            # KOS schema: doc_id, title, kind, zone, status, canonical_path,
-            #             trust_level, updated_at, body_preview
-            title = str(r.get("title", r.get("canonical_path", "?")))
-            updated = str(r.get("updated_at", ""))
-            # 转换 YYYYMMDDHHMMSS → ISO 8601 (best effort)
-            timestamp = _kos_ts_to_iso(updated)
-            body_preview_raw = r.get("body_preview", "")
-            # 控制字符清洗: KOS body_preview 实际含真换行符, 不清洗会破坏 JSON 序列化
-            body_preview = _clean_control_chars(str(body_preview_raw))
-            mapped.append({
-                "id": r.get("doc_id", ""),
-                "title": _clean_control_chars(title),
-                "snippet": body_preview[:200],
-                "source": "kairon-kos",  # P2 contract: producer
-                "source_path": r.get("canonical_path", "bos://memory/kos/search"),
-                "timestamp": timestamp,
-                "type": "knowledge",
-                "relevance": 1.0,
-                # KOS native fields preserved
-                "kind": r.get("kind", ""),
-                "zone": r.get("zone", ""),
-                "status": r.get("status", ""),
-                "trust_level": r.get("trust_level", ""),
-                "updated_at": updated,
-                "body_preview": body_preview,
-            })
-        return mapped
-
-    except Exception as e:
-        _log_kos_skip(f"invoke error: {type(e).__name__}: {e}")
-        return []
-    finally:
-        try:
-            proc.terminate()
-            proc.wait(timeout=3)
-        except Exception:
-            pass
-
-
-def _kos_ts_to_iso(ts: str) -> str:
-    """转换 KOS 时间戳 (YYYYMMDDHHMMSS) → ISO 8601。失败返回原值。"""
-    if not ts or not ts.isdigit() or len(ts) != 14:
-        return ts
-    try:
-        from datetime import datetime as _dt
-        return _dt.strptime(ts, "%Y%m%d%H%M%S").isoformat() + "Z"
-    except ValueError:
-        return ts
-
-
-def _clean_control_chars(s: str) -> str:
-    """把字符串中的控制字符 (\\n \\r \\t 等) 替换为单空格, 保留可读性并避免破坏 JSON 序列化。"""
-    if not s:
-        return s
-    import re as _re
-    # 替换 \n \r \t \v \f 以及其他控制字符为单空格, 合并连续空格
-    cleaned = _re.sub(r"[\x00-\x1f\x7f]+", " ", s)
-    return _re.sub(r"\s+", " ", cleaned).strip()
-
-
-def _log_vault_skip(reason: str) -> None:
-    """记录 Vault 跳过原因 (debug-level)。"""
-    import logging as _logging
-    _logging.getLogger("cockpit.cli.vault").debug("vault skip: %s", reason)
-
-
-def _invoke_vault_search(query: str, limit: int = 10, timeout: float = 30.0) -> list[dict]:
-    """Gate C3 — 真实调用 @学习进化 vault-search.sh 提取结果。
-
-    流程:
-      1. 找到 @学习进化 Vault 根目录 (PATH 优先 / WORKSPACE_ROOT 推导 / 固定 fallback)
-      2. spawn `bash _control/executors/vault-search.sh <query>` (cwd = vault root)
-      3. 解析 stdout: 每个非空行 = 一个相对路径 (rg 命中 .md 文件)
-      4. 把每个 path 映射到 P2 contract (id, title, snippet, source_path, ...)
-      5. 标题: 路径 basename (去除 .md 后缀)
-      6. snippet: 尝试读 file 第一段非 frontmatter 的标题/正文 (best effort)
-      7. 返回 P2 items (空列表 if 任何一步失败)
-
-    设计原则 (OPC P2.2 red lines):
-      - 不重试 fake listing: 任何步骤失败返回 [], 绝不注入假数据
-      - 实际执行真实脚本, 不绕过 rg
-      - 完整错误捕获: subprocess / IO / OSError 全部 except
-      - snippet 截断 200 字符 + 控制字符清洗
-    """
-    import os as _os
-    import re as _re
-    import subprocess as _sp
-
-    # 1) 定位 Vault 根目录
-    candidates = [
-        _os.environ.get("LEARNING_VAULT"),
-        _os.path.expanduser("~/Documents/@学习进化"),
-        str(Path(_os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace"))).parent / "Documents" / "@学习进化"),
-    ]
-    vault_root = None
-    for c in candidates:
-        if c and Path(c).is_dir() and (Path(c) / "_control" / "executors" / "vault-search.sh").is_file():
-            vault_root = c
-            break
-    if vault_root is None:
-        _log_vault_skip("vault root not found")
-        return []
-
-    script = Path(vault_root) / "_control" / "executors" / "vault-search.sh"
-
-    try:
-        proc = _sp.Popen(
-            ["bash", str(script), query],
-            cwd=vault_root,
-            stdout=_sp.PIPE, stderr=_sp.PIPE,
-            text=True, bufsize=1,
-        )
-        try:
-            stdout, _ = proc.communicate(timeout=timeout)
-        except _sp.TimeoutExpired:
-            proc.kill()
-            proc.communicate()
-            _log_vault_skip(f"timeout after {timeout}s")
-            return []
-    except (OSError, _sp.SubprocessError) as e:
-        _log_vault_skip(f"spawn failed: {type(e).__name__}: {e}")
-        return []
-
-    if proc.returncode != 0 or not stdout:
-        return []  # vault 真实返回 0 → zone_count.vault=0
-
-    # 2) 解析输出: 第 1 行是 "🔍 全文搜索: QUERY" 头, 后续每行 = 一个相对路径
-    raw_items: list[dict] = []
-    path_re = _re.compile(r"^\./.+\.md$")
-    for line in stdout.splitlines():
-        line = line.strip()
-        if not line or line.startswith("🔍"):
-            continue
-        if not path_re.match(line):
-            continue  # 跳过非文件路径行
-        raw_items.append({"rel_path": line[2:]})  # strip "./"
-        if len(raw_items) >= limit:
-            break
-
-    if not raw_items:
-        return []
-
-    # 3) 映射到 P2 contract
-    mapped: list[dict] = []
-    for r in raw_items:
-        rel = r["rel_path"]
-        abs_path = Path(vault_root) / rel
-        title = abs_path.stem
-        # 尝试读文件头 (snippet = 第一行非 frontmatter 的内容, 截断 200)
-        snippet = _read_vault_snippet(abs_path)
-        mapped.append({
-            "id": rel,  # 用相对路径作为 ID (在 vault 内唯一)
-            "title": _clean_control_chars(title),
-            "snippet": snippet,
-            "source": "@学习进化",  # P2 contract
-            "source_path": rel,
-            "timestamp": _vault_file_mtime(abs_path),
-            "type": "document",
-            "relevance": 1.0,
-            "vault_zone": _infer_vault_zone(rel),
-        })
-    return mapped
-
-
-def _read_vault_snippet(abs_path: Path) -> str:
-    """读 vault 文件第一段非 frontmatter 内容, 截断 200 字符。失败返回空。"""
-    try:
-        text = abs_path.read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        return ""
-    # 跳过 frontmatter
-    if text.startswith("---"):
-        end = text.find("\n---", 3)
-        if end > 0:
-            text = text[end + 4 :]
-    # 取第一个非空行
-    for line in text.splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        return _clean_control_chars(line)[:200]
-    return ""
-
-
-def _vault_file_mtime(abs_path: Path) -> str:
-    """读文件 mtime, 转 ISO 8601。失败返回 unknown。"""
-    try:
-        import datetime as _dt2
-        mtime = abs_path.stat().st_mtime
-        return _dt2.datetime.fromtimestamp(mtime, tz=_dt2.UTC).isoformat()
-    except OSError:
-        return "unknown"
-
-
-def _infer_vault_zone(rel_path: str) -> str:
-    """从相对路径推导 vault zone (control/entities/knowledge/storage/inbox/archive)。"""
-    parts = rel_path.split("/", 1)
-    if parts and parts[0].startswith("_"):
-        return parts[0].lstrip("_")
-    return "knowledge"
-
-
-def _log_trace_skip(reason: str) -> None:
-    """记录 trace 跳过原因 (debug-level)。"""
-    import logging as _logging
-    _logging.getLogger("cockpit.cli.trace").debug("trace skip: %s", reason)
-
-
-def _writeback_search_trace(
-    query: str,
-    zone_count: dict,
-    total: int,
-    limit: int,
-    merged_results: list[dict] | None = None,
-) -> dict:
-    """Gate C4 — 持久化 search trace 到 cockpit research (writeback)。
-
-    流程:
-      1. 检查 recent 60s 内是否有同 query 的 trace (去重, 避免重复 writeback)
-      2. 调 cockpit storage.save_research, 把 trace 写入 research 表
-        - topic:    "search-trace: <query>" (限长 200)
-        - summary:  zone_count 字典 (JSON) + total + limit + 时间戳
-        - full_text: 可复盘摘要, 每个非零 zone 列出 top-3 项
-                     (source / title / source_path / timestamp)
-        - source_count: total
-        - agent:     "opc-p2-trace"
-      3. 返回 trace dict: {trace_id, query, zone_count, total, timestamp, deduped,
-                            hit_summary:[{zone, count, sample:[{...}]}]}
-
-    设计原则 (OPC P2.2 red lines):
-      - 不重复 writeback: 同 query 在 60s 内已存在则返回已有 trace (deduped=True)
-      - 不阻塞: 任何步骤 except, 静默返回 {}
-      - 不重试: 单次 save 失败 → 返回 {}
-      - full_text 不再是固定占位串, 必须含真实命中摘要
-    """
-    import json as _json
-    import time as _time
-    try:
-        from .storage import get_data_access
-    except ImportError:
-        from cockpit.storage import get_data_access
-    da = get_data_access()
-    now = _time.time()
-
-    # 0) Build hit_summary (per-zone top-3) — used in both summary and full_text
-    hit_summary = _build_hit_summary(merged_results or [], per_zone=3)
-
-    # 1) dedup check: 60s 内同 query 的 trace
-    # 用直接 SQL 查询 (避免 search_research 的 FTS5 特殊字符 bug:
-    #  `search-trace: foo` 的冒号会让 FTS5 MATCH 报 no such column)
-    try:
-        da._ensure_db()
-        _conn = da._connect()
-        _rows = _conn.execute(
-            "SELECT id, created_at FROM research "
-            "WHERE topic LIKE ? AND agent = ? AND created_at > ? "
-            "ORDER BY created_at DESC LIMIT 3",
-            (f"search-trace: {query[:50]}%", "opc-p2-trace", now - 60),
-        ).fetchall()
-        _conn.close()
-        recent = [{"id": r[0], "created_at": r[1]} for r in _rows]
-    except Exception as e:
-        _log_trace_skip(f"dedup check failed: {type(e).__name__}: {e}")
-        recent = []
-
-    for r in recent:
-        created = r.get("created_at", 0)
-        if created and (now - float(created)) < 60:
-            return {
-                "trace_id": r.get("id"),
-                "query": query,
-                "zone_count": zone_count,
-                "total": total,
-                "timestamp": _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime(float(created))),
-                "deduped": True,
-                "hit_summary": hit_summary,
-            }
-
-    # 2) 写入新 trace
-    summary_dict = {
-        "query": query,
-        "zone_count": zone_count,
-        "total": total,
-        "limit": limit,
-        "timestamp": _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime(now)),
-        "hit_summary": hit_summary,
-    }
-    try:
-        trace_id = da.save_research(
-            topic=f"search-trace: {query[:200]}",
-            summary=_json.dumps(summary_dict, ensure_ascii=False),
-            full_text=_format_trace_full_text(query, zone_count, hit_summary),
-            source_count=total,
-            agent="opc-p2-trace",
-        )
-    except Exception as e:
-        _log_trace_skip(f"save failed: {type(e).__name__}: {e}")
-        return {}
-
-    return {
-        "trace_id": trace_id,
-        "query": query,
-        "zone_count": zone_count,
-        "total": total,
-        "timestamp": summary_dict["timestamp"],
-        "deduped": False,
-        "hit_summary": hit_summary,
+        
+    handlers = {
+        "import": cmd_import,
+        "mcp": cmd_mcp,
+        "daily": cmd_daily,
+        "status": cmd_status,
+        "context": _c_context,
+        "version": _c_version,
+        "health": _cmd_health,
+        "brief": _cmd_brief,
+        "discover": _cmd_discover,
+        "profile": cmd_profile,
+        "cards": _c_cards,
+        "audit": cmd_audit,
+        "demo": cmd_demo,
+        "search": _cmd_search,
+        "dashboard": cmd_dashboard,
+        "vault": _c_vault,
+        "bos": dispatch_bos,
+        "code": dispatch_code,
+        "research": dispatch_research,
+        "scenario": dispatch_scenario,
+        "iterate": dispatch_iterate,
+        "compass": dispatch_compass,
+        "workflow": dispatch_workflow,
+        "monitor": dispatch_monitor,
+        "data": dispatch_data,
+        "contracts": dispatch_contracts,
+        "product-health": cmd_product_health,
+        "governance": cmd_governance,
+        "domains": _c_domains,
+        "skill": _c_skill,
+        "events": _c_events,
+        "ssb": cmd_ssb,
+        "mof": cmd_mof,
+        "help": cmd_help,
     }
 
+    handler = handlers.get(args.command)
+    if handler:
+        return handler(args)
 
-def _build_hit_summary(
-    items: list[dict], per_zone: int = 3
-) -> list[dict]:
-    """Build a per-zone hit summary for trace writeback.
-
-    Returns: [{"zone": str, "count": int, "sample": [{id, title, source, source_path, timestamp}, ...]}, ...]
-    Order: first-seen zone order. Sample capped at `per_zone` items.
-    """
-    if not items:
-        return []
-    by_zone: dict[str, list[dict]] = {}
-    order: list[str] = []
-    for it in items:
-        zone = it.get("_zone") or it.get("source") or "_unknown"
-        if zone not in by_zone:
-            by_zone[zone] = []
-            order.append(zone)
-        by_zone[zone].append(it)
-    out: list[dict] = []
-    for zone in order:
-        bucket = by_zone[zone]
-        sample = []
-        for it in bucket[:per_zone]:
-            sample.append(
-                {
-                    "id": it.get("id"),
-                    "title": it.get("title") or it.get("topic") or "",
-                    "source": it.get("source") or it.get("_source") or "",
-                    "source_path": it.get("source_path")
-                    or it.get("_source_path")
-                    or "",
-                    "timestamp": it.get("timestamp") or it.get("_retrieved_at") or "",
-                }
-            )
-        out.append({"zone": zone, "count": len(bucket), "sample": sample})
-    return out
-
-
-def _format_trace_full_text(query: str, zone_count: dict, hit_summary: list[dict]) -> str:
-    """Render trace full_text as a multi-line, human-readable summary.
-
-    Per zone: zone, count, top sample (id / title / source / source_path / timestamp).
-    Not a full blob — only what's needed to recap the recall.
-    """
-    lines: list[str] = []
-    lines.append("P2 C4 search-trace writeback")
-    lines.append(f"query: {query}")
-    lines.append(f"zone_count: {json.dumps(zone_count, ensure_ascii=False, sort_keys=True)}")
-    if not hit_summary:
-        lines.append("hits: <none>")
-        return "\n".join(lines) + "\n"
-    for entry in hit_summary:
-        zone = entry.get("zone", "?")
-        count = entry.get("count", 0)
-        lines.append(f"hits[{zone}]: count={count}")
-        for s in entry.get("sample", []):
-            sid = s.get("id", "")
-            title = s.get("title", "")
-            source = s.get("source", "")
-            spath = s.get("source_path", "")
-            ts = s.get("timestamp", "")
-            lines.append(f"  - id={sid} title={title!r}")
-            lines.append(f"    source={source} source_path={spath}")
-            if ts:
-                lines.append(f"    timestamp={ts}")
-    return "\n".join(lines) + "\n"
-
-
-def _cmd_discover(args: Namespace) -> int:
-    """发现可用功能和资源。"""
-    console = Console()
-    console.print("[bold cyan]🛸 cockpit 可用功能[/bold cyan]\n")
-    console.print("[bold]入口[/]")
-    console.print("  [cyan]cockpit[/]                — 本帮助菜单")
-    console.print("  [cyan]cockpit health --full[/]   — 全栈健康检查")
-    console.print("  [cyan]cockpit search --all KEY[/]— 跨源搜索")
-    console.print("  [cyan]cockpit discover[/]        — 本页面\n")
-    console.print("[bold]BOS 资源域 (通过 agora MCP :7431)[/]")
-    console.print("  [cyan]memory/[/]     — 知识存储 (kairon: kos/kronos/sophia)")
-    console.print("  [cyan]governance/[/] — 治理 (omo + cockpit MCP)")
-    console.print("  [cyan]analysis/[/]   — 分析 (minerva/ontoderive/codeanalyze)")
-    console.print("  [cyan]persona/[/]    — 人格 (runtime)")
-    console.print("  [cyan]capability/[/] — 能力 (forge/agora-proxy)\n")
-    console.print("[bold]文档[/]")
-    console.print("  [cyan]docs/PANORAMA.md[/]           — 系统全景架构")
-    console.print("  [cyan]docs/JOURNEY-PROBES.md[/]     — 用户旅程探针")
-    console.print("  [cyan]docs/ENTRY-CONVERGENCE.md[/]  — 入口收敛方案\n")
-    console.print("[dim]提示: agora MCP 连接后可直接调用 resolve_bos_uri 使用所有功能[/]")
-    return 0
-
+    console.print(f"[red]未知命令: {args.command}[/]")
+    parser.print_help()
+    return 1
 
 if __name__ == "__main__":
     sys.exit(main())

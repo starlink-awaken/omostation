@@ -615,130 +615,6 @@ async def api_cards_check():
 _AGORA_SRC = WORKSPACE_ROOT / "projects" / "agora" / "src"
 
 
-def _ensure_agora_src() -> None:
-    """确保 agora 源码路径在 sys.path 中，优先于安装版。"""
-    if str(_AGORA_SRC) not in sys.path:
-        sys.path.insert(0, str(_AGORA_SRC))
-
-
-@app.get("/api/bos/services", dependencies=_AUTH_DEPS)
-async def api_bos_services(domain: str = ""):
-    """列出所有 BOS URI 服务，可按 domain 过滤。"""
-    try:
-        _ensure_agora_src()
-        from agora.mcp.resolver.services import POC_SERVICES
-
-        services = []
-        for s in POC_SERVICES:
-            if domain and s.domain != domain:
-                continue
-            services.append({
-                "uri": s.uri,
-                "domain": s.domain,
-                "action": s.action,
-                "transport": s.transport,
-            })
-        return JSONResponse(content={"total": len(services), "services": services})
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
-
-
-@app.get("/api/bos/resolve", dependencies=_AUTH_DEPS)
-async def api_bos_resolve(uri: str = "", arguments: str = "{}"):
-    """解析一个 BOS URI——返回路由表中的服务信息。"""
-    if not uri:
-        return JSONResponse(content={"error": "uri 参数必填"}, status_code=400)
-    if not uri.startswith("bos://"):
-        return JSONResponse(content={"error": "URI 必须是 bos:// 格式"}, status_code=400)
-
-    try:
-        _ensure_agora_src()
-        from agora.mcp.resolver.api import parse_bos_uri
-        from agora.mcp.resolver.services import POC_SERVICES
-
-        # 1. 解析 URI
-        parsed = parse_bos_uri(uri)
-        if "error" in parsed:
-            return JSONResponse(content={"error": parsed["error"]}, status_code=400)
-
-        # 2. 查找匹配服务
-        matched = [s for s in POC_SERVICES if s.uri == uri]
-        if not matched:
-            return JSONResponse(content={
-                "uri": uri,
-                "parsed": parsed,
-                "matched": False,
-                "message": "URI 在注册表中未匹配到服务",
-            })
-
-        svc = matched[0]
-        return JSONResponse(content={
-            "uri": uri,
-            "parsed": parsed,
-            "matched": True,
-            "service": {
-                "domain": svc.domain,
-                "package": svc.package,
-                "action": svc.action,
-                "transport": svc.transport,
-                "description": svc.description,
-            },
-        })
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
-
-
-@app.get("/api/bos/health", dependencies=_AUTH_DEPS)
-async def api_bos_health():
-    """BOS 系统健康检查。"""
-    try:
-        _ensure_agora_src()
-        from agora.mcp.bos_metrics import bos_metrics
-        from agora.mcp.resolver.services import POC_SERVICES
-
-        m = bos_metrics.health()
-        by_domain: dict[str, int] = {}
-        for s in POC_SERVICES:
-            by_domain[s.domain] = by_domain.get(s.domain, 0) + 1
-
-        return JSONResponse(content={
-            "status": "ok",
-            "total_routes": len(POC_SERVICES),
-            "domains": by_domain,
-            "metrics": m,
-        })
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
-
-
-@app.get("/api/bos/metrics", dependencies=_AUTH_DEPS)
-async def api_bos_metrics(prefix: str = ""):
-    """BOS 调用指标。"""
-    try:
-        _ensure_agora_src()
-        from agora.mcp.bos_metrics import bos_metrics
-
-        if prefix:
-            data = bos_metrics.status(prefix)
-        else:
-            data = bos_metrics.summary()
-        return JSONResponse(content=data)
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
-
-
-# ═══════════════════════════════════════════════════════════════
-# 债务加载 / E2E / OMO 报告 (从原 dashboard_server.py 迁移)
-# ═══════════════════════════════════════════════════════════════
-
-_DEFAULT_COMPUTE_TOPOLOGY = [
-    {"id": "local-mac", "label": "Local-Mac", "kind": "local", "role": "Cockpit / Agent host"},
-    {"id": "macmini-ollama", "label": "MacMini (Ollama)", "kind": "local", "role": "Local inference"},
-    {"id": "y7000p-lmstudio", "label": "Y7000P (LMStudio)", "kind": "local", "role": "GPU workstation"},
-    {"id": "cloud-cc-switch", "label": "Cloud (cc-switch)", "kind": "cloud", "role": "Remote provider relay"},
-]
-
-
 def _read_json_file(path: Path) -> dict:
     if not path.exists():
         return {}
@@ -797,6 +673,14 @@ def _infer_node(model: str, provider_name: str | None) -> dict[str, str]:
     if any(key in model_lower for key in ("gpt", "claude", "deepseek", "gemini")) or "deepseek" in provider_lower:
         return {"node_id": "cloud-cc-switch", "node_label": "Cloud (cc-switch)", "route_type": "cloud"}
     return {"node_id": "local-mac", "node_label": "Local-Mac", "route_type": "local"}
+
+
+_DEFAULT_COMPUTE_TOPOLOGY = [
+    {"id": "local-mac", "label": "Local-Mac", "kind": "local", "role": "Cockpit / Agent host"},
+    {"id": "macmini-ollama", "label": "MacMini (Ollama)", "kind": "local", "role": "Local inference"},
+    {"id": "y7000p-lmstudio", "label": "Y7000P (LMStudio)", "kind": "local", "role": "GPU workstation"},
+    {"id": "cloud-cc-switch", "label": "Cloud (cc-switch)", "kind": "cloud", "role": "Remote provider relay"},
+]
 
 
 def _load_compute() -> dict:
@@ -1117,109 +1001,15 @@ def _omo_report() -> dict:
 # Memory Spine & HITL Gate (Phase 7 & 9)
 # ═══════════════════════════════════════════════════════════════
 
-@app.post("/api/knowledge/search", dependencies=_AUTH_DEPS)
-async def api_knowledge_search(request: Request):
-    try:
-        body = await request.json()
-        query = body.get("query")
-        if not query:
-            return JSONResponse({"status": "error", "error": "query is required"}, status_code=400)
 
-        _ensure_agora_src()
-        from agora.mcp.bos_resolver import resolve_bos_uri
-
-        # 传递 proxy_manager 是 Phase 3 蜂群感知的关键，但在 cockpit 层面我们直接调用 local resolve 即可，
-        # 真正的 proxy_manager 会由 agora_mcp 守护进程持有。Cockpit 这里作为客户端发起调用。
-        # 最规范的做法是通过 HTTP 调用 Agora 7422 端口，但这里保持与旧版兼容的直接 import 调用。
-        res = await resolve_bos_uri("bos://memory/local/all-search", {"query": query, "limit": 10})
-        return JSONResponse({"status": "ok", "result": res})
-    except Exception as e:
-        return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
-
-
-@app.get("/api/v1/proposals", dependencies=_AUTH_DEPS)
-async def api_list_proposals():
-    proposal_dir = WORKSPACE_ROOT / ".omo" / "state" / "proposals"
-    if not proposal_dir.exists():
-        return JSONResponse({"status": "ok", "proposals": []})
-
-    proposals = []
-    try:
-        import yaml
-        for f in proposal_dir.glob("*.yaml"):
-            data = yaml.safe_load(f.read_text(encoding="utf-8"))
-            if isinstance(data, dict):
-                proposals.append(data)
-        proposals.sort(key=lambda x: x.get("created_at", ""), reverse=True)
-    except Exception:
-        pass
-    return JSONResponse({"status": "ok", "proposals": proposals})
-
-
-async def _execute_mutation(proposal: dict) -> bool:
-    import json
-    import logging
-    import time
-    _log = logging.getLogger("cockpit.hitl")
-
-    p_type = proposal.get("type")
-    debt_id = proposal.get("debt_id", "unknown")
-    _log.info("[HITL] Executing mutation: %s for %s", p_type, debt_id)
-
-    if p_type == "budget_increase":
-        config_patch = WORKSPACE_ROOT / ".omo" / "state" / "budget_overrides.jsonl"
-        config_patch.parent.mkdir(parents=True, exist_ok=True)
-        record = {
-            "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "debt_id": debt_id,
-            "action": "increase_limit",
-            "amount_usd": 0.10,
-            "status": "applied"
-        }
-        with open(config_patch, "a", encoding="utf-8") as f:
-            f.write(json.dumps(record) + "\n")
-        return True
-    return False
-
-
-@app.post("/api/v1/proposals/{proposal_id}/approve", dependencies=_AUTH_DEPS)
-async def api_approve_proposal(proposal_id: str):
-    import logging
-    _log = logging.getLogger("cockpit.hitl")
-
-    proposal_dir = WORKSPACE_ROOT / ".omo" / "state" / "proposals"
-    proposal_path = proposal_dir / f"{proposal_id}.yaml"
-
-    if not proposal_path.exists():
-        return JSONResponse({"status": "error", "error": f"Proposal {proposal_id} not found"}, status_code=404)
-
-    try:
-        import yaml
-        proposal = yaml.safe_load(proposal_path.read_text())
-        success = await _execute_mutation(proposal)
-
-        if not success:
-            _log.warning("[HITL] No execution logic for type: %s", proposal.get("type"))
-
-        proposal_path.unlink()
-        return JSONResponse({"status": "ok", "message": f"Proposal {proposal_id} approved and executed."})
-    except Exception as e:
-        return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
-
-
-@app.post("/api/v1/proposals/{proposal_id}/reject", dependencies=_AUTH_DEPS)
-async def api_reject_proposal(proposal_id: str):
-    proposal_dir = WORKSPACE_ROOT / ".omo" / "state" / "proposals"
-    proposal_path = proposal_dir / f"{proposal_id}.yaml"
-    if proposal_path.exists():
-        proposal_path.unlink()
-    return JSONResponse({"status": "ok"})
-
-
-# ═══════════════════════════════════════════════════════════════
-# Main
-# ═══════════════════════════════════════════════════════════════
-
+# New routers extracted
+try:
+    from cockpit.web import api_bos, api_knowledge, api_proposals
+    app.include_router(api_bos.router, dependencies=_AUTH_DEPS)
+    app.include_router(api_knowledge.router, dependencies=_AUTH_DEPS)
+    app.include_router(api_proposals.router, dependencies=_AUTH_DEPS)
+except Exception as e:
+    print(f"Warning: Failed to load some routers: {e}")
 
 def main():
     """Start the dashboard HTTP server via uvicorn."""

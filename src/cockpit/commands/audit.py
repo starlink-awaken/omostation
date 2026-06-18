@@ -65,8 +65,12 @@ def cmd_audit(args: argparse.Namespace) -> int:
     if args.since:
         cmd.extend(["--since", args.since])
 
-    print(f"🔍 Omostation 6 维度全方位审计 · 调 {WORKSPACE_AUDIT.name} · adapter cockpit (L3 入口)")
-    print("─" * 60)
+    banner_stream = sys.stderr if args.format == "json" else sys.stdout
+    print(
+        f"🔍 Omostation 6 维度全方位审计 · 调 {WORKSPACE_AUDIT.name} · adapter cockpit (L3 入口)",
+        file=banner_stream,
+    )
+    print("─" * 60, file=banner_stream)
 
     try:
         result = subprocess.run(

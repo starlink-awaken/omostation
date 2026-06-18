@@ -16,24 +16,20 @@ import sys
 if str(OMO_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(OMO_ROOT / "src"))
 
+from omo.omo_cockpit_bridge import (
+    append_hitl_override,
+    approve_hitl_proposal_async,
+    list_hitl_proposals,
+    reject_hitl_proposal,
+)
+
 
 @router.get("/api/v1/proposals")
 async def api_list_proposals():
-    proposal_dir = WORKSPACE_ROOT / ".omo" / "state" / "proposals"
-    if not proposal_dir.exists():
-        return JSONResponse({"status": "ok", "proposals": []})
-
-    proposals = []
     try:
-        import yaml
-
-        for f in proposal_dir.glob("*.yaml"):
-            data = yaml.safe_load(f.read_text(encoding="utf-8"))
-            if isinstance(data, dict):
-                proposals.append(data)
-        proposals.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+        proposals = list_hitl_proposals(WORKSPACE_ROOT / ".omo")
     except Exception:
-        pass
+        proposals = []
     return JSONResponse({"status": "ok", "proposals": proposals})
 
 
@@ -47,8 +43,6 @@ async def _execute_mutation(proposal: dict) -> bool:
     _log.info("[HITL] Executing mutation: %s for %s", p_type, debt_id)
 
     if p_type == "budget_increase":
-        config_patch = WORKSPACE_ROOT / ".omo" / "state" / "budget_overrides.jsonl"
-        config_patch.parent.mkdir(parents=True, exist_ok=True)
         record = {
             "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "debt_id": debt_id,
@@ -56,12 +50,9 @@ async def _execute_mutation(proposal: dict) -> bool:
             "amount_usd": 0.10,
             "status": "applied",
         }
-        with open(config_patch, "a", encoding="utf-8") as f:
-            f.write(json.dumps(record) + "\n")
+        append_hitl_override(WORKSPACE_ROOT / ".omo", "budget_overrides.jsonl", record)
         return True
     elif p_type == "model_swap":
-        config_patch = WORKSPACE_ROOT / ".omo" / "state" / "model_overrides.jsonl"
-        config_patch.parent.mkdir(parents=True, exist_ok=True)
         record = {
             "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "debt_id": debt_id,
@@ -69,12 +60,9 @@ async def _execute_mutation(proposal: dict) -> bool:
             "target_model": proposal.get("target_model", "claude-3-haiku"),
             "status": "applied",
         }
-        with open(config_patch, "a", encoding="utf-8") as f:
-            f.write(json.dumps(record) + "\n")
+        append_hitl_override(WORKSPACE_ROOT / ".omo", "model_overrides.jsonl", record)
         return True
     elif p_type == "quota_reset":
-        config_patch = WORKSPACE_ROOT / ".omo" / "state" / "quota_resets.jsonl"
-        config_patch.parent.mkdir(parents=True, exist_ok=True)
         record = {
             "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "debt_id": debt_id,
@@ -82,8 +70,7 @@ async def _execute_mutation(proposal: dict) -> bool:
             "scope": proposal.get("scope", "global"),
             "status": "applied",
         }
-        with open(config_patch, "a", encoding="utf-8") as f:
-            f.write(json.dumps(record) + "\n")
+        append_hitl_override(WORKSPACE_ROOT / ".omo", "quota_resets.jsonl", record)
         return True
 
     # Plugin Mechanism (BOS URI Hook)
@@ -105,49 +92,26 @@ async def api_approve_proposal(proposal_id: str):
 
     _log = logging.getLogger("cockpit.hitl")
 
-    proposal_dir = WORKSPACE_ROOT / ".omo" / "state" / "proposals"
-    proposal_path = proposal_dir / f"{proposal_id}.yaml"
-    processing_path = proposal_dir / f"{proposal_id}.processing"
-
-    if not proposal_path.exists() and not processing_path.exists():
-        return JSONResponse({"status": "error", "error": f"Proposal {proposal_id} not found"}, status_code=404)
-
-    try:
-        if proposal_path.exists():
-            proposal_path.rename(processing_path)
-    except OSError:
-        return JSONResponse(
-            {"status": "error", "error": f"Proposal {proposal_id} is already being processed."}, status_code=409
-        )
-
-    try:
-        import yaml
-
-        proposal = yaml.safe_load(processing_path.read_text())
-        success = await _execute_mutation(proposal)
-
-        if not success:
-            _log.warning("[HITL] No execution logic for type: %s", proposal.get("type"))
-            # Rollback rename
-            processing_path.rename(proposal_path)
-            return JSONResponse(
-                {"status": "error", "error": f"No execution logic for type {proposal.get('type')}"}, status_code=400
-            )
-
-        processing_path.unlink()
+    success, error = await approve_hitl_proposal_async(
+        WORKSPACE_ROOT / ".omo",
+        proposal_id,
+        execute_mutation=_execute_mutation,
+    )
+    if success:
         return JSONResponse({"status": "ok", "message": f"Proposal {proposal_id} approved and executed."})
-    except Exception as e:
-        if processing_path.exists():
-            processing_path.rename(proposal_path)
-        return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+    if error and "not found" in error:
+        return JSONResponse({"status": "error", "error": error}, status_code=404)
+    if error and "already being processed" in error:
+        return JSONResponse({"status": "error", "error": error}, status_code=409)
+    if error and "No execution logic" in error:
+        _log.warning("[HITL] %s", error)
+        return JSONResponse({"status": "error", "error": error}, status_code=400)
+    return JSONResponse({"status": "error", "error": error or "unknown error"}, status_code=500)
 
 
 @router.post("/api/v1/proposals/{proposal_id}/reject")
 async def api_reject_proposal(proposal_id: str):
-    proposal_dir = WORKSPACE_ROOT / ".omo" / "state" / "proposals"
-    proposal_path = proposal_dir / f"{proposal_id}.yaml"
-    if proposal_path.exists():
-        proposal_path.unlink()
+    reject_hitl_proposal(WORKSPACE_ROOT / ".omo", proposal_id)
     return JSONResponse({"status": "ok"})
 
 
