@@ -91,7 +91,8 @@ def test_cmd_dashboard_suggests_uvicorn_install_when_missing(monkeypatch):
     monkeypatch.setitem(sys.modules, "webbrowser", fake_webbrowser)
     monkeypatch.setattr(cli.time, "sleep", lambda _: None)
     _patch_find_cli(monkeypatch, lambda name: None if name == "uvicorn" else "/usr/bin/python3")
-    monkeypatch.setattr(cli.Path, "exists", lambda self: False)
+    from cockpit.commands import status as _status_mod
+    monkeypatch.setattr(_status_mod.Path, "exists", lambda self: False)
     _patch_status_subprocess(monkeypatch)
     monkeypatch.setattr(cli.urlrequest, "urlopen", lambda *args, **kwargs: _HTTPResponse(200))
 
@@ -177,8 +178,8 @@ def test_cmd_dashboard_venv_python_exists(monkeypatch):
     # uvicorn not on PATH → check venv_python.exists
     _patch_find_cli(monkeypatch, lambda name: None)
     # Let Popen work normally, but venv_python.exists returns True
-    _real_exists = cli.Path.exists
-    monkeypatch.setattr(cli.Path, "exists", lambda self: True if ".venv" in str(self) else _real_exists(self))
+    _real_exists = _status_mod.Path.exists
+    monkeypatch.setattr(_status_mod.Path, "exists", lambda self: True if ".venv" in str(self) else _real_exists(self))
     # Popen returns dummy proc that responds to Ctrl-C
     monkeypatch.setattr(_status_mod.subprocess, "Popen", lambda *args, **kwargs: _CtrlCProc())
     monkeypatch.setattr(_status_mod.subprocess, "DEVNULL", -3)

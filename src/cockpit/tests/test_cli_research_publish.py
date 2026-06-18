@@ -51,7 +51,8 @@ def test_cmd_research_publish_writes_brief_report_and_tracks_publication(monkeyp
         "quarantined_at": None,
         "quarantine_reason": None,
     }
-    monkeypatch.setattr(cli.Path, "home", lambda: tmp_path)
+    from cockpit.commands import research as _research_mod
+    monkeypatch.setattr(_research_mod.Path, "home", lambda: tmp_path)
     published: dict[str, object] = {}
     mock.save_published_report = lambda research_id, style, output_path: (
         published.update({"research_id": research_id, "style": style, "output_path": output_path}) or 1
