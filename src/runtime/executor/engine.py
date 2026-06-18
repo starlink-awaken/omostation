@@ -95,7 +95,12 @@ def _resolve_llm_provider_and_model(requested_model: str | None, tools: list[dic
 
 
 def _estimate_tokens(text: str) -> int:
-    return max(1, (len(text) + 3) // 4)
+    try:
+        import tiktoken
+        enc = tiktoken.get_encoding("cl100k_base")
+        return len(enc.encode(text))
+    except ImportError:
+        return max(1, (len(text) + 3) // 4)
 
 
 def _maybe_enforce_budget(
