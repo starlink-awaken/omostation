@@ -168,8 +168,25 @@ async def _memory_all_search(
                 _log.debug("[MemorySpine] Audit failed for hit: %s", e)
                 return res
 
+        # 并行并发审计
         audited_results = await asyncio.gather(*[_audit(r) for r in top_results])
-        top_results = [r for r in audited_results if r is not None]
+        valid_results = [r for r in audited_results if r is not None]
+        
+        # ── Phase 15: Knowledge Deduplication ──
+        seen_hashes = set()
+        deduped = []
+        import hashlib
+        for res in valid_results:
+            snippet = res.get("snippet", str(res))
+            # 针对 snippet 或 content 计算简易哈希
+            content_hash = hashlib.md5(snippet.strip().encode("utf-8")).hexdigest()
+            if content_hash not in seen_hashes:
+                seen_hashes.add(content_hash)
+                deduped.append(res)
+            else:
+                _log.debug("[MemorySpine] Deduplicated hit from %s", res.get("_source", "unknown"))
+        
+        top_results = deduped
         # 根据审计分数再次微调排序
         top_results.sort(key=lambda x: x.get("_audit_score", 0), reverse=True)
 
