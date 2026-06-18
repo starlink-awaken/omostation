@@ -1,0 +1,44 @@
+id: DEBT-COCKPIT-HEALTH-DISTORTION-evidence-path-2026-06-18T15-18-00Z-proposal
+title: Update DEBT-COCKPIT-HEALTH-DISTORTION evidence_refs + close
+operation_level: L1
+requested_by: laowang-engineer-drift-audit
+target:
+  ref: .omo/debt/items/DEBT-COCKPIT-HEALTH-DISTORTION.yaml
+changes:
+  set:
+    evidence_refs:
+    - .omo/_delivery/evidence/launchctl-list-2026-06-18T15-18-00Z.txt
+    - .omo/_delivery/evidence/cockpit-health-full-2026-06-18T15-18-00Z.txt
+    mitigation_refs:
+    - .omo/_delivery/evidence/launchctl-list-2026-06-18T15-18-00Z.txt
+    resolution_evidence: 'P42 drift audit (2026-06-18) root cause 审计: DEBT-COCKPIT-HEALTH-DISTORTION
+      描述的 "launchctl list showing com.agora.sse / com.cockpit.dashboard / com.user.cron-service
+      running" 状态在 2026-06-18T15:18:00Z 实测不存在 (见 launchctl-list-2026-06-18T15-18-00Z.txt)。cockpit
+      health 失真的真实 root cause 是 DEBT-CARDS-FRONTMATTER-PARSE (CARDS frontmatter YAML
+      解析失败, 168 个文件受影响, 见 cockpit-health-full-2026-06-18T15-18-00Z.txt)。本 debt 描述与实际不符,
+      决议: close + reassign 为 DEBT-CARDS-FRONTMATTER-PARSE 的子 issue。L1 操作 (metadata
+      补全 + close)。'
+    last_reviewed_at: '2026-06-18T15:18:00Z'
+    lifecycle_state: closed
+    gate_level: none
+    status: closed
+change_summary: DEBT-COCKPIT-HEALTH-DISTORTION evidence_refs 是描述性文本, 描述与实际 launchctl
+  状态不符。补实际 evidence_refs + 决议 close (描述失真, 真实 root cause 是 DEBT-CARDS-FRONTMATTER-PARSE)。
+impact: cockpit health distortion 的真实 root cause 转到 DEBT-CARDS-FRONTMATTER-PARSE;
+  debt_watchlist 清; debt_health 上升。
+verification_plan:
+- 'cat .omo/debt/items/DEBT-COCKPIT-HEALTH-DISTORTION.yaml | grep -E "lifecycle_state|status"  #
+  expect closed'
+- 'python3 scripts/sync_omo_state.py --omo-dir .omo  # debt_health 上升, watchlist 清'
+- 'PYTHONPATH=projects/omo/src python3 -m omo.cli governance  # 总分 100.0 A+'
+rollback_plan:
+- 'reopen: PYTHONPATH=projects/omo/src python3 -m omo.omo_debt reopen --id DEBT-COCKPIT-HEALTH-DISTORTION'
+- reset evidence_refs / lifecycle_state 字段
+secret_refs: []
+trace_id: trace-DEBT-COCKPIT-HEALTH-DISTORTION-evidence-path-2026-06-18T15-18-00Z
+status: verified
+requested_at: '2026-06-18T15:18:08Z'
+approved_at: '2026-06-18T15:18:13Z'
+applied_at: '2026-06-18T15:18:13Z'
+verified_at: '2026-06-18T15:18:13Z'
+approved_by: laowang-engineer

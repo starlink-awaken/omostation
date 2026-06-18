@@ -1,6 +1,6 @@
 # OPC Phase 4 — Model & Compute Plane
 
-Status: **Gate E passed (2026-06-12)**
+Status: **Gate E closed (narrative passed 2026-06-12; plan.yaml gate_status=not_yet_passed per AGENTS.md 5 红线 1)**
 
 ## Objective
 

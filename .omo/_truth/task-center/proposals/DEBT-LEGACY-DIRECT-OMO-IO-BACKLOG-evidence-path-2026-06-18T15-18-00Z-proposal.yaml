@@ -1,0 +1,30 @@
+id: DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG-evidence-path-2026-06-18T15-18-00Z-proposal
+title: Update DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG evidence + last_reviewed_at
+operation_level: L1
+requested_by: laowang-engineer-drift-audit
+target:
+  ref: .omo/debt/items/DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG.yaml
+changes:
+  set:
+    evidence_refs:
+    - .omo/standards/omo-governance-surfaces.md
+    - .omo/_knowledge/management/2026-06-18-omo-drift-audit.md
+    mitigation_refs:
+    - .omo/_knowledge/management/2026-06-18-omo-drift-audit.md
+    last_reviewed_at: '2026-06-18T15:18:00Z'
+change_summary: DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG evidence_refs 已有 .omo/standards/omo-governance-surfaces.md
+  (是文件路径 OK)。补 drift audit closeout 报告作为 mitigation_refs + last_reviewed_at。
+impact: evidence_refs 完整, 治理面记录更清晰。
+verification_plan:
+- cat .omo/debt/items/DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG.yaml | grep evidence_refs
+- python3 scripts/sync_omo_state.py --omo-dir .omo
+rollback_plan:
+- 清空新增的 evidence_refs / last_reviewed_at 字段
+secret_refs: []
+trace_id: trace-DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG-evidence-path-2026-06-18T15-18-00Z
+status: verified
+requested_at: '2026-06-18T15:18:08Z'
+approved_at: '2026-06-18T15:18:13Z'
+applied_at: '2026-06-18T15:18:13Z'
+verified_at: '2026-06-18T15:18:13Z'
+approved_by: laowang-engineer

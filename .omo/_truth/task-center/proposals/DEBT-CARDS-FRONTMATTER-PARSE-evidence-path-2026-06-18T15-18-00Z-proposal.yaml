@@ -1,0 +1,33 @@
+id: DEBT-CARDS-FRONTMATTER-PARSE-evidence-path-2026-06-18T15-18-00Z-proposal
+title: Update DEBT-CARDS-FRONTMATTER-PARSE evidence_refs to actual ref paths
+operation_level: L1
+requested_by: laowang-engineer-drift-audit
+target:
+  ref: .omo/debt/items/DEBT-CARDS-FRONTMATTER-PARSE.yaml
+changes:
+  set:
+    evidence_refs:
+    - .omo/_delivery/evidence/cockpit-health-full-2026-06-18T15-18-00Z.txt
+    mitigation_refs:
+    - .omo/_delivery/evidence/cockpit-health-full-2026-06-18T15-18-00Z.txt
+    last_reviewed_at: '2026-06-18T15:18:00Z'
+change_summary: DEBT-CARDS-FRONTMATTER-PARSE evidence_refs 是描述性文本"cockpit health --full
+  output (2026-06-18)"，不是 ref 路径。改为实际 cockpit health --full 输出文件。
+impact: evidence_refs 是真实文件路径, collect_stale_evidence_item_ids 不再误报 stale, debt_health
+  上升。
+verification_plan:
+- 'cat .omo/debt/items/DEBT-CARDS-FRONTMATTER-PARSE.yaml | grep evidence_refs  # expect
+  non-empty list of paths'
+- 'python3 scripts/sync_omo_state.py --omo-dir .omo  # debt_health 上升'
+- 'PYTHONPATH=projects/omo/src python3 -m omo.cli governance  # 总分 100.0 A+'
+rollback_plan:
+- 清空 evidence_refs / mitigation_refs 字段
+- 重置 last_reviewed_at 为 None
+secret_refs: []
+trace_id: trace-DEBT-CARDS-FRONTMATTER-PARSE-evidence-path-2026-06-18T15-18-00Z
+status: verified
+requested_at: '2026-06-18T15:18:08Z'
+approved_at: '2026-06-18T15:18:13Z'
+applied_at: '2026-06-18T15:18:13Z'
+verified_at: '2026-06-18T15:18:13Z'
+approved_by: laowang-engineer

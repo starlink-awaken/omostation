@@ -1,6 +1,6 @@
 # OPC Phase 3 — Swarm Spine
 
-Status: **Gate D passed (2026-06-12)**
+Status: **Gate D closed (narrative passed 2026-06-12; plan.yaml gate_status=not_yet_passed per AGENTS.md 5 红线 1)**
 
 ## Objective
 

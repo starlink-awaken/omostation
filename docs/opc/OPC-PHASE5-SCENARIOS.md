@@ -1,6 +1,6 @@
 # OPC Phase 5 — Scenarios
 
-Status: **Gate F passed (2026-06-13)**
+Status: **Gate F closed (narrative passed 2026-06-13; plan.yaml gate_status=not_yet_passed per AGENTS.md 5 红线 1)**
 
 ## Objective
 

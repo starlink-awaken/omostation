@@ -17,11 +17,11 @@ OPC 要形成一套可长期运行的个人蜂群式 AI 脑：
 
 | Phase | Focus | Current status |
 |---|---|---|
-| P3 | Swarm execution spine | Gate D passed |
-| P4 | Model & compute plane | Gate E passed |
-| P5 | North Star scenarios | Gate F passed |
-| P6 | Self-evolution loop | Gate G passed |
-| P7 | Governance hardening & release train | Gate H passed |
+| P3 | Swarm execution spine | Gate D closed (plan.yaml: not_yet_passed) |
+| P4 | Model & compute plane | Gate E closed (plan.yaml: not_yet_passed) |
+| P5 | North Star scenarios | Gate F closed (plan.yaml: not_yet_passed) |
+| P6 | Self-evolution loop | Gate G closed (plan.yaml: not_yet_passed) |
+| P7 | Governance hardening & release train | Gate H closed (plan.yaml: not_yet_passed) |
 
 ## Runtime SSOT
 
