@@ -18,3 +18,5 @@ seed_items:
 - .omo/debt/items/SB_BRIDGE_FIX.yaml
 - .omo/debt/items/SB_PROJECTS_YAML.yaml
 - .omo/debt/items/SB_PHASE17_PLAN.yaml
+- .omo/debt/items/DEBT-CLI-1.yaml
+- .omo/debt/items/DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG.yaml

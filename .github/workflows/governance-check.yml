@@ -2,12 +2,17 @@ name: Governance Check
 on:
   push:
     paths:
+      - ".github/workflows/governance-check.yml"
       - ".pre-commit-config.yaml"
       - ".omo/**"
+      - "docs/OPC-*.md"
       - "projects/*/pyproject.toml"
       - "projects/*/src/**"
+      - "projects/omo/tests/**"
       - "projects/ecos/scripts/contract_gatekeeper.py"
       - "scripts/check-*.py"
+      - "scripts/opc_*.py"
+      - "bin/workspace-audit"
       - "CLAUDE.md"
       - "LAYER-INDEX.md"
   pull_request:
@@ -47,8 +52,20 @@ jobs:
           python3 scripts/check-governance-guides-ssot.py
           python3 scripts/check-knowledge-history-ssot.py
           python3 scripts/check-phase-closeout-ssot.py
+          uv run --directory projects/omo python -m omo.cli governance surfaces --workspace-root . --json > /tmp/omo-governance-surfaces.json
           uv run --directory projects/omo python -m omo.cli lint direct-omo-io
           uv run --directory projects/omo python -m omo.cli lint ingress-registry --workspace-root .
+          uv run --directory projects/omo python -m omo.cli lint self-evolution-approval --workspace-root .
+          uv run --directory projects/omo pytest \
+            tests/test_omo_ingress.py \
+            tests/test_omo_cockpit_bridge.py \
+            tests/test_omo_gc.py \
+            tests/test_omo_governance.py \
+            tests/test_omo_governance_surfaces.py \
+            tests/test_omo_direct_io_gate.py \
+            tests/test_opc_phase_governance_alignment.py \
+            tests/test_opc_p5_p7_runtime.py \
+            -q
 
   doc-freshness:
     runs-on: ubuntu-latest

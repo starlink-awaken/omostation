@@ -131,8 +131,10 @@ def dim_governance() -> dict[str, Any]:
                     "exists": bool(ingress.get("exists")),
                     "goal_count": len(ingress.get("goal_ids", [])),
                     "task_count": len(ingress.get("task_ids", [])),
+                    "debt_count": len(ingress.get("debt_ids", [])),
                     "goal_source_ref_count": len(ingress.get("goal_source_refs", [])),
                     "task_source_ref_count": len(ingress.get("task_source_refs", [])),
+                    "debt_source_ref_count": len(ingress.get("debt_source_refs", [])),
                 }
         return {
             "dim": "governance",
@@ -386,7 +388,8 @@ def render_markdown(dims: dict[str, dict[str, Any]], total: float, grade: str) -
             if isinstance(ingress, dict) and ingress.get("exists"):
                 ingress_text = (
                     f"ingress goals={ingress.get('goal_count', 0)} "
-                    f"tasks={ingress.get('task_count', 0)}"
+                    f"tasks={ingress.get('task_count', 0)} "
+                    f"debts={ingress.get('debt_count', 0)}"
                 )
             detail = (
                 f"{len(d.get('items', []))} 项检查 · "
@@ -435,7 +438,8 @@ def render_markdown(dims: dict[str, dict[str, Any]], total: float, grade: str) -
                         "- ingress registry: "
                         f"exists={ingress.get('exists', False)} "
                         f"goals={ingress.get('goal_count', 0)} "
-                        f"tasks={ingress.get('task_count', 0)}"
+                        f"tasks={ingress.get('task_count', 0)} "
+                        f"debts={ingress.get('debt_count', 0)}"
                     )
                 for issue in (d.get("surfaces_issues") or [])[:5]:
                     lines.append(f"- surfaces issue: {issue}")

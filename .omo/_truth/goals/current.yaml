@@ -101,6 +101,17 @@ goals:
   progress: 0.0
   status: pending
   tasks: []
+- id: BET-9001
+  title: 统一持久化 broker
+  desc: 'Bet: 统一持久化 broker (Appetite: 1 week)'
+  progress: 0.0
+  status: pending
+  tasks: []
+  ingress_plane: projects/c2g
+  source_ref: c2g:bet:BET-9001
+  created_at: '2026-06-18T03:00:00Z'
+  vector: V2
+  appetite: 1 week
 health_targets:
   mcp_isolation_score: 100
   overall: 99
