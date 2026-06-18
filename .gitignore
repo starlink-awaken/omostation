@@ -56,6 +56,7 @@ coverage.xml
 .omc/
 .omo/_delivery/audit-rollout/*.json
 .omo/workers/runs/
+json
 
 # ── Local historical archives (keep on disk, out of VCS) ──
 .omo/_archive/demo-phase29/
