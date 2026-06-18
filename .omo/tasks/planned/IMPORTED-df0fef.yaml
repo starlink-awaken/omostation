@@ -1,0 +1,43 @@
+id: IMPORTED-df0fef
+title: Deep Defensive Hardening & Replay Protection
+status: candidate
+task_type: feature
+risk_level: L1
+depends_on: []
+source_docs:
+- /Users/xiamingxing/Workspace/plan/pitches/15-deep-defensive-hardening.md
+deliverables:
+- 完成 Deep Defensive Hardening & Replay Protection 的目标清单
+imported_via: omo_bridge_pitch
+context_uri: bos://memory/sandbox/pitches/15-deep-defensive-hardening.md
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x3-value-stack.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+entry_gate:
+- BET_APPROVED
+evidence_required:
+- Pitch 目标达成证明
+test_plan:
+- 依据 Pitch 验收标准验证
+allowed_operation_level: L0
+human_approval_required: false
+metadata:
+  governance_stack: state_plane.kernel_plane.ingress_plane
+  ingress_plane: projects/c2g
+  bet_id: BET-f478
+  cognitive_cartridge: ''
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: c2g:bridge-import:IMPORTED-df0fef
+created_at: '2026-06-18T15:08:03Z'
+updated_at: '2026-06-18T15:08:03Z'
