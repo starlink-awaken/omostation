@@ -10,9 +10,9 @@ phase_status: active
 current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
-health_score: 85.0
-health_score_source: c2g_governance_audit_20260618
-health_score_generated_at: '2026-06-18T16:00:00Z'
+health_score: 92.0
+health_score_source: manual_audit_post_cleanup_20260619
+health_score_generated_at: '2026-06-19T00:25:00Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
@@ -106,7 +106,7 @@ phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
 phase32_completed_at: '2026-06-07T00:00:00Z'
-debt_weight: 1.0
+debt_weight: 0.0
 debt_weight_items:
   DEBT-CLI-1:
     resolved: true
