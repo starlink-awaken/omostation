@@ -26,7 +26,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 HOME = Path.home()
-SSOT = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot"
+SSOT = Path(__file__).resolve().parent.parent
 TOOLS = SSOT / "tools"
 M3_FILE = SSOT / "mof" / "m3.yaml"
 M2_DIR = SSOT / "mof" / "m2"

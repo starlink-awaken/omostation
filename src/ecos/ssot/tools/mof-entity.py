@@ -18,8 +18,8 @@ import yaml
 from pathlib import Path
 
 HOME = Path.home()
-L0_M1 = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "entity"
-ONTO_FILE = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "ontology.yaml"
+L0_M1 = Path(__file__).resolve().parent.parent / "mof" / "m1" / "entity"
+ONTO_FILE = Path(__file__).resolve().parent.parent / "mof" / "ontology.yaml"
 
 
 def load_entities() -> list[dict]:

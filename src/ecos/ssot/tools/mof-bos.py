@@ -29,8 +29,8 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 HOME = Path.home()
-L0_M1 = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
-TOPO_FILE = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "registry" / "topology.yaml"
+L0_M1 = Path(__file__).resolve().parent.parent / "mof" / "m1"
+TOPO_FILE = Path(__file__).resolve().parent.parent / "registry" / "topology.yaml"
 CARDS_DB = HOME / "Workspace" / "data" / "cards" / "cards.db"
 AUDIT_LOG = HOME / ".ecos" / "bos-audit.jsonl"
 

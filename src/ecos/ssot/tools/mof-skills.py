@@ -19,7 +19,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 HOME = Path.home()
-L0_M1 = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
+L0_M1 = Path(__file__).resolve().parent.parent / "mof" / "m1"
 
 
 def load_nodes(m2type: str) -> list[dict]:

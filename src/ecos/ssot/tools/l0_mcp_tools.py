@@ -25,9 +25,9 @@ import json
 from pathlib import Path
 
 HOME = Path.home()
-MOF = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof.py"
-MOF_VALIDATE = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-validate.py"
-MOF_AUDIT = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-audit.py"
+MOF = Path(__file__).resolve().parent.parent / "tools" / "mof.py"
+MOF_VALIDATE = Path(__file__).resolve().parent.parent / "tools" / "mof-validate.py"
+MOF_AUDIT = Path(__file__).resolve().parent.parent / "tools" / "mof-audit.py"
 
 
 def _run_tool(tool_path: Path, args: list = None) -> dict:
@@ -48,12 +48,12 @@ def l0_status() -> str:
     _run_tool(MOF, ["status"]) if False else {}
     
     # Direct status computation (bypass subprocess for speed)
-    m1_count = sum(1 for _ in (HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1").rglob("*.yaml"))
-    m2_count = len(list((HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m2").glob("*.yaml")))
+    m1_count = sum(1 for _ in (Path(__file__).resolve().parent.parent / "mof" / "m1").rglob("*.yaml"))
+    m2_count = len(list((Path(__file__).resolve().parent.parent / "mof" / "m2").glob("*.yaml")))
     
     # Get protocol health
     sla_result = _run_tool(
-        HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-sla.py",
+        Path(__file__).resolve().parent.parent / "tools" / "mof-sla.py",
         ["--snapshot-only"]
     )
     
@@ -101,7 +101,7 @@ def l0_audit() -> str:
 def l0_protocols() -> str:
     """协议健康度"""
     sla = _run_tool(
-        HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-sla.py",
+        Path(__file__).resolve().parent.parent / "tools" / "mof-sla.py",
         ["--snapshot-only"]
     )
     lines = ["协议健康度:"]
@@ -117,7 +117,7 @@ def l0_protocols() -> str:
 def l0_adr_list() -> str:
     """ADR 列表"""
     import yaml
-    decisions_dir = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "decision"
+    decisions_dir = Path(__file__).resolve().parent.parent / "mof" / "m1" / "decision"
     if not decisions_dir.exists():
         return "L0 ADR: 无决策记录"
     
@@ -137,7 +137,7 @@ def l0_adr_list() -> str:
 def l0_entity_resolve(query: str) -> str:
     """跨域实体解析"""
     result = _run_tool(
-        HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-entity.py",
+        Path(__file__).resolve().parent.parent / "tools" / "mof-entity.py",
         ["resolve", query]
     )
     entities = result.get("entities", [])

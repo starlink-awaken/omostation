@@ -28,7 +28,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 HOME = Path.home()
-L0_TOOLS = HOME / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools"
+L0_TOOLS = Path(__file__).resolve().parent.parent / "tools"
 EVENTS_LOG = HOME / ".ecos" / "events.jsonl"
 
 
@@ -87,13 +87,7 @@ def collect_events() -> list[dict]:
 
     # 3. Protocol decay (from M0 snapshot)
     m0_file = (
-        HOME
-        / "Workspace"
-        / "projects"
-        / "ecos"
-        / "src"
-        / "ecos"
-        / "ssot"
+        Path(__file__).resolve().parent.parent
         / "mof"
         / "m0"
         / "snapshot.yaml"

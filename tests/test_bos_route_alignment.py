@@ -255,6 +255,10 @@ def test_yaml_routes_loaded(yaml_routes: list[dict]) -> None:
     print(f"\n  已加载 {len(yaml_routes)} 个 YAML BOS 路由")
 
 
+@pytest.mark.skipif(
+    not AGORA_BOS_RESOLVER_PATH.exists(),
+    reason="agora services.py 不存在 — ecos 子模块 CI 只 init ecos 无 agora; 跨子模块对齐该在主仓 CI (全子模块) 跑",
+)
 def test_poc_services_loaded(poc_services: dict[str, dict]) -> None:
     """POC_SERVICES 能正常导入"""
     assert len(poc_services) > 0, "POC_SERVICES 为空或导入失败"
