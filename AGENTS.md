@@ -39,7 +39,7 @@ L3 Cockpit
 ├── MCP Server      ← scripts/cockpit_mcp.py + l0_mcp_tools.py (37 tools, stdio)
 ├── Agent Runtime   ← agent_runtime_mcp_server.py (2 tools, stdio)
 ├── Legacy Runtime  ← _runtime_mcp_server_legacy.py (7 tools, stdio, deprecated)
-├── Web Dashboard   ← web/app.py (FastAPI, :8090) — 唯一人机交互入口
+├── Web Dashboard   ← src/cockpit/dashboard_server.py (FastAPI, :8090) — 唯一人机交互入口 (注意：web/app.py 已废弃)
 │   ├── /api/*      ← 38 API routes (services/compute/health/events/research/a2a/knowledge/...)
 │   ├── /api/v1/proposals/* ← [Phase 9] HITL 审批队列 (approve/reject)
 │   ├── /api/knowledge/search ← 全域聚合搜索接口 (BOS memory/local/all-search)
