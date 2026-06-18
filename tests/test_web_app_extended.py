@@ -191,13 +191,19 @@ class TestSandboxAPI:
         assert r.status_code == 400
 
     def test_sandbox_error(self, auth_client):
-        c, key = auth_client
-        r = c.post(
-            "/api/sandbox/execute",
-            headers={"X-API-Key": key},
-            json={"code": "import nonexistent_module_xyz"},
-        )
-        assert r.status_code in (200, 500)
+        import sys
+        import types
+
+        mock_mod = types.ModuleType("runtime.kei_sandbox")
+        mock_mod.enable_sandbox = lambda **kwargs: None
+        with patch.dict(sys.modules, {"runtime.kei_sandbox": mock_mod}):
+            c, key = auth_client
+            r = c.post(
+                "/api/sandbox/execute",
+                headers={"X-API-Key": key},
+                json={"code": "import nonexistent_module_xyz"},
+            )
+            assert r.status_code in (200, 500)
 
 
 # ── POST /api/knowledge ─────────────────────────────────────────────────────
