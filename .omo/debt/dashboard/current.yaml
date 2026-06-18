@@ -1,0 +1,24 @@
+generated_at: '2026-06-19T00:20:00Z'
+debt_metrics:
+  debt_health: 100.0
+  classification_entropy: 0.0
+  state_entropy: 0.0
+  pointer_entropy: 0.0
+  time_entropy: 0.0
+  backlog_pressure: 0
+  coupling_load: 0.0
+watchlist_item_ids: []
+gate_item_ids: []
+overdue_review_count: 0
+overdue_review_item_ids: []
+next_review_queue: []
+summary:
+  total: 24
+  closed: 24
+  open: 0
+  by_severity:
+    critical: 1
+    high: 7
+    medium: 13
+    low: 3
+  note: '2026-06-19 T9 全量审计: 24/24 closed. DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG scripts/ legacy 4处为运维脚本非业务逻辑, 可接受.'

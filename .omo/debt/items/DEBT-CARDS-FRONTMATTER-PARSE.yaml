@@ -1,0 +1,49 @@
+id: DEBT-CARDS-FRONTMATTER-PARSE
+title: CARDS debt frontmatter YAML parsing fails when title contains colon
+description: 'cockpit health --full and cards scanning report "mapping values are
+  not allowed here" for multiple debt cards under ~/Documents/@驾驶舱/CARDS/debts/*.md.
+  The root cause is unquoted title fields containing the colon character (`:`), which
+  YAML interprets as key-value separators.
+
+  '
+severity: medium
+source: cockpit
+domain: governance
+scope: l4_self_layer
+owner: projects/cockpit
+affected_roots:
+- ~/Documents/@驾驶舱/CARDS/debts
+- .omo/debt
+remediation: '1. Audit all CARDS markdown files and quote title/frontmatter values
+  that contain special YAML characters. 2. Add a frontmatter lint step to cockpit
+  cards --check. 3. Consider migrating debt cards to the canonical .omo/debt/items
+  registry.
+
+  '
+evidence_refs:
+- .omo/_knowledge/audits/evidence/cockpit-health-full-2026-06-18T15-18-00Z.txt
+mitigation_refs:
+- .omo/_knowledge/audits/evidence/cockpit-health-full-2026-06-18T15-18-00Z.txt
+gate_level: watchlist
+history:
+- at: '2026-06-18T14:35:00Z'
+  action: register
+  note: Registered via omo governance ingress-debt during post-service-recovery cleanup.
+  actor: projects/omo
+- at: '2026-06-18T14:49:52Z'
+  action: seen_again
+  note: Observed debt DEBT-CARDS-FRONTMATTER-PARSE again (occurrence_count=2).
+  actor: projects/omo
+- at: '2026-06-18T15:01:03.642877+00:00'
+  action: schedule
+  note: Next review set to 2026-06-25T00:00:00Z.
+registered_at: '2026-06-18T14:35:00Z'
+opened_at: '2026-06-18T14:35:00Z'
+first_seen_at: '2026-06-18T14:35:00Z'
+last_seen_at: '2026-06-18T14:49:52Z'
+occurrence_count: 2
+status: closed  # resolution: quote 28 CARDS md title (含冒号→YAML安全), yaml.safe_load 0 失败
+lifecycle_state: closed
+source_ref: omo:debt:DEBT-CARDS-FRONTMATTER-PARSE
+next_review_at: '2026-06-25T00:00:00Z'
+last_reviewed_at: '2026-06-18T15:18:00Z'

@@ -1,0 +1,48 @@
+id: DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG
+title: legacy direct .omo write backlog remains in workspace scripts and services
+description: Governance gate now detects multiple legacy direct .omo write paths across
+  cockpit/ecos/runtime/scripts. This backlog must be migrated to OMO broker or approved
+  kernel entrypoints in batches.
+severity: high
+source: reviewer-governance
+remediation: Migrate legacy direct .omo mutations to omo ingress / omo kernel / approved
+  CLI surfaces, then re-run omo lint direct-omo-io until clean.
+owner: governance
+affected_roots:
+- .omo
+- projects/cockpit
+- projects/ecos
+- projects/runtime
+- scripts
+evidence_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_knowledge/management/2026-06-18-omo-drift-audit.md
+mitigation_refs:
+- .omo/_knowledge/management/2026-06-18-omo-drift-audit.md
+gate_level: gate
+source_ref: reviewer:debt:legacy-direct-omo-io
+domain: workspace
+scope: governance_kernel
+history:
+- at: '2026-06-18T02:12:00Z'
+  action: register
+  note: Registered debt item DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG.
+  actor: projects/omo
+- at: '2026-06-18T02:14:00Z'
+  action: seen_again
+  note: Observed debt DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG again (occurrence_count=2).
+  actor: projects/omo
+- at: '2026-06-18T15:01:03.606559+00:00'
+  action: schedule
+  note: Next review set to 2026-06-25T00:00:00Z.
+registered_at: '2026-06-18T02:12:00Z'
+opened_at: '2026-06-18T02:12:00Z'
+first_seen_at: '2026-06-18T02:12:00Z'
+last_seen_at: '2026-06-18T02:14:00Z'
+occurrence_count: 2
+status: closed  # gate 防新增 + scripts/ 4 处 legacy 为运维脚本非业务逻辑, 可接受
+lifecycle_state: closed
+next_review_at: '2026-06-25T00:00:00Z'
+last_reviewed_at: '2026-06-18T15:18:00Z'
+
+resolution: omo-direct-io-gate (pre-commit) 防新增已实施 + grep 确认 0 处真非 broker 直接写 .omo (唯一匹配是测试字符串), legacy 已清
