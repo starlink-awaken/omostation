@@ -29,10 +29,22 @@ omo bos discover     # 注册表
 omo bos health       # 健康报告
 omo governance       # 治理审计
 omo governance surfaces  # `.omo` 顶层治理面巡检
-omo lint direct-omo-io    # 非 broker 直接改 `.omo` / `spaces` 拦截
+omo governance ingress-goal BET-001 "标题" "描述" --ingress-plane projects/c2g
+omo governance ingress-task task.yaml --ingress-plane projects/c2g
+omo governance ingress-debt debt.yaml --ingress-plane projects/aetherforge
+omo lint direct-omo-io         # 非 broker 直接改 `.omo` / `spaces` 拦截
+omo lint ingress-registry      # ingress registry 结构 / 反向映射 / 落盘一致性校验
+omo lint self-evolution-approval # OPC P6 self-evolution 审批红线校验
 omo event emit       # 事件发射
 omo observability    # 可观测性
 ```
+
+### 持久化 ingress
+
+- `omo governance ingress-goal`: 受审计写入 `.omo/goals/current.yaml`
+- `omo governance ingress-task`: 受审计写入 `.omo/tasks/planned/<id>.yaml`
+- `omo governance ingress-debt`: 受审计写入 `.omo/debt/items/<id>.yaml`
+- 三者都会同时落审计/交付副产物到 `.omo/_delivery/ingress/`
 
 ## 架构
 

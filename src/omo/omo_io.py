@@ -42,6 +42,11 @@ def write_text_atomic(path: Path, payload: str) -> None:
     _replace_atomic(path, payload)
 
 
+def ensure_parent_dir(path: Path) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
+
 def write_yaml_atomic(path: Path, data: dict[str, Any]) -> None:
     _replace_atomic(path, yaml.safe_dump(data, sort_keys=False, allow_unicode=True))
 
@@ -85,6 +90,7 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
 __all__ = (
     "AppendOnlyLog",
     "fcntl_lock",
+    "ensure_parent_dir",
     "read_jsonl",
     "write_text_atomic",
     "write_yaml_atomic",

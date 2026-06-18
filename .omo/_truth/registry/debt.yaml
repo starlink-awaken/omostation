@@ -28,6 +28,7 @@ seed_items:
 - .omo/debt/items/P2-FAMILY_DEBT_DENSITY.yaml
 - .omo/debt/items/FAMILY-HUB-DEBT-001.yaml
 - .omo/debt/items/FAMILY-HUB-DEBT-002.yaml
+- .omo/debt/items/DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG.yaml
 dashboard_ref: .omo/debt/dashboard/latest.yaml
 review_pack_ref: .omo/debt/review/latest.yaml
 review_queue_ref: .omo/debt/queue/latest.yaml
@@ -36,3 +37,4 @@ owner_routing_ref: .omo/debt/routing/latest.yaml
 dispatch_ref: .omo/debt/dispatch/latest.yaml
 campaign_ref: .omo/debt/campaign/latest.yaml
 reporting_ref: .omo/debt/reporting/latest.yaml
+items_dir: .omo/debt/items

@@ -61,7 +61,6 @@ def _run_logs_metrics(repo_path: Path) -> dict[str, Any]:
 
     失败时返回含 "error" 的 dict, 不阻塞其他仓.
     """
-    import subprocess
 
     omo_project = repo_path / "projects" / "omo"
     if omo_project.exists():

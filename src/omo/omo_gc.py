@@ -3,11 +3,41 @@ import time
 import shutil
 from pathlib import Path
 
+import yaml
+
 from .omo_paths import find_omo_dir
 
 
 def get_omo_dir(base_dir: Path) -> Path:
     return find_omo_dir(base_dir)
+
+
+def archive_resolved_debt_items(
+    omo_dir: Path,
+    *,
+    now: float | None = None,
+    older_than_seconds: float = 7 * 24 * 3600,
+) -> int:
+    debt_dir = omo_dir / "debt" / "items"
+    archive_dir = omo_dir / "debt" / "archive"
+    if not debt_dir.exists():
+        return 0
+
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    current_time = time.time() if now is None else now
+    compacted = 0
+    for item in debt_dir.glob("*.yaml"):
+        try:
+            data = yaml.safe_load(item.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if not (data and data.get("resolved") is True):
+            continue
+        if current_time - item.stat().st_mtime <= older_than_seconds:
+            continue
+        shutil.move(str(item), str(archive_dir / item.name))
+        compacted += 1
+    return compacted
 
 
 def main(argv: list[str]) -> int:

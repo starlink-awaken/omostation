@@ -51,7 +51,7 @@ async def test_4uri_serial_vs_concurrent_speedup():
     for r in results:
         assert r.get("status") in ("resolved", "agora_unavailable")
 
-    print(f"\\nP45-W4 并发 4 URI:")
+    print("\\nP45-W4 并发 4 URI:")
     print(f"  串行: {t_serial:.2f}s")
     print(f"  并发: {t_concurrent:.2f}s")
     if t_concurrent > 0:

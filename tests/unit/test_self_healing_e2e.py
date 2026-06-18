@@ -2,15 +2,12 @@
 
 import asyncio
 import tempfile
-import time
 from pathlib import Path
 
 import pytest
 
 import omo.omo_self_healing as sh
 from omo.omo_self_healing import (
-    DEFAULT_RULES,
-    ErrorEventCounter,
     EventTrend,
     HealingRule,
     SelfHealingEngine,

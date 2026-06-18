@@ -121,7 +121,7 @@ def test_append_with_pydantic_instance_auto_dump(tmp_path):
     assert len(raw) == 1
     assert raw[0]["uri"] == "bos://test"
     # enum 已被 dump 为字符串值 (Pydantic v2 默认)
-    assert raw[0]["status"] == "resolved" or raw[0]["status"] == BosStatus.RESOLVED
+    assert raw[0]["status"] == "resolved" or raw[0]["status"] == BosStatus.RESOLVED  # noqa: F821
 
 
 def test_append_with_pydantic_instance_and_schema(tmp_path):

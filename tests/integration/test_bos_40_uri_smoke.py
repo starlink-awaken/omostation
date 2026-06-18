@@ -106,7 +106,7 @@ def test_smoke_25_resolved_15_gap_single_loop():
     for u, s in results:
         dom = u.replace("bos://", "").split("/")[0]
         by_domain[(dom, s)] += 1
-    print(f"\nP43-W1 40 URI smoke test 结果:")
+    print("\nP43-W1 40 URI smoke test 结果:")
     print(f"  resolved: {by_status.get('resolved', 0)}/40 (POC_SERVICES 25)")
     print(f"  gap:      {by_status.get('gap', 0)}/40 (registry 40 - POC 25)")
     print(f"  by (domain, status): {dict(by_domain)}")

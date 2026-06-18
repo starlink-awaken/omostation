@@ -1,10 +1,7 @@
 """OMO 自愈代谢引擎单元测试。"""
 
 import asyncio
-import json
-import time
 
-import pytest
 
 from omo.omo_self_healing import (
     DEFAULT_RULES,
@@ -266,7 +263,7 @@ class TestDefaultRules:
 
 class TestFixScripts:
     def test_fix_registry_has_all(self):
-        from omo.omo_self_healing_fixes import FIX_REGISTRY, list_fixes
+        from omo.omo_self_healing_fixes import list_fixes
 
         fixes = list_fixes()
         assert len(fixes) == 6

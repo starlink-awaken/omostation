@@ -50,7 +50,7 @@ def test_record_step_writes_seven_fields(tmp_path):
     assert rec["ts"].endswith("Z"), "ts must end with Z (omo_audit convention)"
 
     # 落盘: 1 行 JSONL
-    lines = [l for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [line_ for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
     assert len(lines) == 1
     on_disk = json.loads(lines[0])
     assert on_disk == rec, "落盘内容与返回 record 一致"
@@ -161,7 +161,7 @@ def test_append_only_log_writes_via_schema_rejects_drift(tmp_path):
         log.append(bad, schema=OmoTrailRecord)
 
     # 落盘: 仅 1 条 (good)
-    lines = [l for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [line_ for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
     assert len(lines) == 1
 
 
@@ -188,7 +188,7 @@ def test_cli_record_subprocess(tmp_path):
     assert "✅ trail step recorded" in r.stdout
 
     # 验证 log 写 1 条 7-字段 record
-    lines = [l for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [line_ for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
     assert len(lines) == 1
     rec = json.loads(lines[0])
     assert rec["actor"] == "user"

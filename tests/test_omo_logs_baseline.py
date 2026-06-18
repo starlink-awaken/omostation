@@ -166,7 +166,7 @@ def test_baseline_check_passes_on_improvement(fake_workspace, capsys):
     baseline = fake_workspace / "baseline.json"
 
     # baseline 含 2 drift
-    payload = json.loads(Path(baseline).read_text()) if baseline.exists() else None
+    _payload = json.loads(Path(baseline).read_text()) if baseline.exists() else None
     assert cmd_logs_audit(baseline_init=str(baseline)) == 0
     init_payload = json.loads(baseline.read_text(encoding="utf-8"))
     assert init_payload["drift_by_consumer"]["omo_history"] == 2

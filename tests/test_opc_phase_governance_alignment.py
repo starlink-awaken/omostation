@@ -16,10 +16,23 @@ def _read_yaml(rel_path: str) -> dict:
     return yaml.safe_load(_read(rel_path)) or {}
 
 
+def _read_phase_task(task_id: str) -> dict:
+    for rel_path in [
+        f".omo/tasks/planned/{task_id}.yaml",
+        f".omo/tasks/done/{task_id}.yaml",
+        f".omo/tasks/registry/done/{task_id}.yaml",
+    ]:
+        path = ROOT / rel_path
+        if path.exists():
+            return _read_yaml(rel_path)
+    raise FileNotFoundError(task_id)
+
+
 def test_master_playbook_baseline_reflects_p3_pass_and_p4_open():
     text = _read("docs/OPC-MASTER-EXECUTION-PLAYBOOK.md")
     assert "- P3: implementation complete; Gate D passed (2026-06-12)" in text
     assert "- P4: implementation complete; Gate E passed (2026-06-12, E1-E4 closed)" in text
+    assert "- P7: implementation complete; Gate H passed" in text
     assert "P3 D1: blocked" not in text
 
 
@@ -37,17 +50,17 @@ def test_p3_gate_d_registry_is_fully_closed():
 
 
 def test_p4_to_p7_prerequisites_require_prior_gate_passes():
-    assert _read_yaml(".omo/tasks/planned/OPC-P4-MODEL-COMPUTE.yaml")["prerequisites"][0] == "opc_phase3_gate_d_passed"
-    assert _read_yaml(".omo/tasks/planned/OPC-P5-SCENARIOS.yaml")["prerequisites"][:2] == [
+    assert _read_phase_task("OPC-P4-MODEL-COMPUTE")["prerequisites"][0] == "opc_phase3_gate_d_passed"
+    assert _read_phase_task("OPC-P5")["prerequisites"][:2] == [
         "opc_phase3_gate_d_passed",
         "opc_phase4_gate_e_passed",
     ]
-    assert _read_yaml(".omo/tasks/planned/OPC-P6-EVOLUTION-LOOP.yaml")["prerequisites"][:3] == [
+    assert _read_phase_task("OPC-P6")["prerequisites"][:3] == [
         "opc_phase3_gate_d_passed",
         "opc_phase4_gate_e_passed",
         "opc_phase5_gate_f_passed",
     ]
-    assert _read_yaml(".omo/tasks/planned/OPC-P7-RELEASE-TRAIN.yaml")["prerequisites"][:4] == [
+    assert _read_phase_task("OPC-P7")["prerequisites"][:4] == [
         "opc_phase3_gate_d_passed",
         "opc_phase4_gate_e_passed",
         "opc_phase5_gate_f_passed",
@@ -57,7 +70,7 @@ def test_p4_to_p7_prerequisites_require_prior_gate_passes():
 
 def test_p4_gate_e_three_way_alignment_closed_2026_06_12():
     """A3 closeout: P4 Gate E must be passed consistently across docs/omo-tests/projects."""
-    plan = _read_yaml(".omo/tasks/planned/OPC-P4-MODEL-COMPUTE.yaml")
+    plan = _read_phase_task("OPC-P4-MODEL-COMPUTE")
     phase_doc = _read("docs/OPC-PHASE4-MODEL-COMPUTE.md")
     playbook = _read("docs/OPC-MASTER-EXECUTION-PLAYBOOK.md")
 
@@ -87,63 +100,45 @@ def test_p4_gate_e_three_way_alignment_closed_2026_06_12():
 
 def test_p5_prerequisite_signal_now_satisfied():
     """A3 closeout: P5 prerequisites must reference the now-passed Gate E signal."""
-    p5 = _read_yaml(".omo/tasks/planned/OPC-P5-SCENARIOS.yaml")
+    p5 = _read_phase_task("OPC-P5")
     assert "opc_phase4_gate_e_passed" in p5["prerequisites"]
     assert p5["prerequisites"][1] == "opc_phase4_gate_e_passed"
 
 
 def test_p5_gate_f_alignment_reflects_f1_open_and_f2_f4_closed():
-    plan = _read_yaml(".omo/tasks/planned/OPC-P5-SCENARIOS.yaml")
+    plan = _read_phase_task("OPC-P5")
     phase_doc = _read("docs/OPC-PHASE5-SCENARIOS.md")
     playbook = _read("docs/OPC-MASTER-EXECUTION-PLAYBOOK.md")
 
     statuses = {sg["id"]: sg["status"] for sg in plan["sub_gates"] if sg.get("id", "").startswith("P5-F")}
     assert statuses == {
-        "P5-F1": "not_yet_passed",
+        "P5-F1": "passed",
         "P5-F2": "passed",
         "P5-F3": "passed",
         "P5-F4": "passed",
     }
-    assert plan["gate_status"] == "not_yet_passed"
-    assert any("gate_f_not_yet_passed" in sig for sig in plan["signals"])
+    assert plan["gate_status"] == "passed"
+    assert "opc_phase5_gate_f_passed" in phase_doc
     assert "opc_phase5_subgate_f2_passed" in phase_doc
     assert "opc_phase5_subgate_f3_passed" in phase_doc
     assert "opc_phase5_subgate_f4_passed" in phase_doc
-    assert "P5: opened for implementation; Gate F in progress" in playbook
+    assert "P5: implementation complete; Gate F passed" in playbook
 
 
 def test_p6_gate_g_three_way_alignment_consistent_with_plan():
     """P6 status 必须与 plan yaml 一致; 复验后 not_yet_passed 也要一致."""
-    plan = _read_yaml(".omo/tasks/planned/OPC-P6-EVOLUTION-LOOP.yaml")
+    plan = _read_phase_task("OPC-P6")
     phase_doc = _read("docs/OPC-PHASE6-EVOLUTION-LOOP.md")
     playbook = _read("docs/OPC-MASTER-EXECUTION-PLAYBOOK.md")
 
     g_statuses = {sg["id"]: sg["status"] for sg in plan["sub_gates"] if sg.get("id", "").startswith("P6-G")}
     assert len(g_statuses) == 4, f"应该 4 个 P6-G sub-gate, 实际 {len(g_statuses)}"
 
-    # 无论 plan 是 passed 还是 not_yet_passed, signals 必须一致
-    if plan.get("gate_status") == "not_yet_passed":
-        assert all(
-            s == "not_yet_passed" for s in g_statuses.values()
-        ), f"P6 not_yet_passed 但 sub-gate 状态非全 not_yet_passed: {g_statuses}"
-        # playbook 必须说 P6 仍 in progress, 不假装 passed
-        assert "P6: opened for implementation; Gate G in progress" in playbook, (
-            f"playbook 应反映 P6 not_yet_passed 状态: \n{playbook[:1000]}"
-        )
-        assert "Status: in progress" in phase_doc
-        assert "opc_phase6_gate_g_not_yet_passed" in phase_doc
-        signal_block = phase_doc.split("## Signal", 1)[1]
-        assert "opc_phase6_gate_g_passed\n" not in signal_block
-        # gate_status=not_yet_passed 必须有匹配的 not_yet_passed signal
-        assert any(
-            "gate_g_not_yet_passed" in sig for sig in plan.get("signals", [])
-        ), "P6 not_yet_passed 但缺 gate_g_not_yet_passed signal"
-        return
-
-    # passed 路径 (历史回放, 当前没启用)
     assert plan["gate_status"] == "passed"
     expected = {f"P6-G{i}": "passed" for i in range(1, 5)}
     assert g_statuses == expected
+    assert "Status: **Gate G passed" in phase_doc
+    assert "P6: implementation complete; Gate G passed" in playbook
 
 
 def test_p6_self_evolution_tasks_only_in_planned_directory():
@@ -176,56 +171,39 @@ def test_p6_drift_detector_covers_all_four_kinds():
 
 
 def test_p7_gate_h_three_way_alignment_closed_2026_06_12():
-    """P7 status 必须与 plan yaml + 自身 phase-gate 报告一致.
+    """P7 当前完成态必须与历史 phase-gate 快照分层自洽.
 
-    2026-06-12 复验: H2 closeout 自身 phase-gate 报告反证 (P7 not_yet_passed).
-    防止 task yaml 标 passed 但 phase-gate 报告说不 passed 的自相矛盾.
+    2026-06-12 的 phase-gate 报告是历史快照, 允许在 2026-06-13 Gate H 真正 closeout 后
+    保持 `not_yet_passed`。测试要防的是“同一时间点自相矛盾”, 不是禁止历史快照晚于当前态被保留.
     """
-    plan = _read_yaml(".omo/tasks/planned/OPC-P7-RELEASE-TRAIN.yaml")
+    plan = _read_phase_task("OPC-P7")
     playbook = _read("docs/OPC-MASTER-EXECUTION-PLAYBOOK.md")
 
     h_statuses = {sg["id"]: sg["status"] for sg in plan["sub_gates"] if sg.get("id", "").startswith("P7-H")}
     assert len(h_statuses) == 5, f"应该 5 个 P7-H sub-gate, 实际 {len(h_statuses)}"
 
-    # 自洽: phase-gate 报告里 P7 | Gate H | not_yet_passed,
-    # 则 plan.yaml 的 gate_status 也必须 not_yet_passed
     phase_gate_path = ROOT / ".omo" / "_delivery" / "phase-gate" / "2026-06-12.md"
     if phase_gate_path.exists():
         gate_report = phase_gate_path.read_text(encoding="utf-8")
         report_says_p7_not_passed = "P7 | Gate H | not_yet_passed" in gate_report
         report_says_p7_passed = "P7 | Gate H | passed" in gate_report
-        if report_says_p7_not_passed:
-            # 报告说 P7 没 passed → plan 不能说 passed
+        completed_at = str(plan.get("completed", ""))
+        snapshot_date = "2026-06-12"
+        closed_after_snapshot = bool(completed_at) and completed_at > snapshot_date
+
+        if report_says_p7_not_passed and not closed_after_snapshot:
             assert plan.get("gate_status") != "passed", (
-                "phase-gate 报告说 P7 not_yet_passed, 但 plan.yaml gate_status=passed. 自相矛盾."
+                "phase-gate 历史快照与当前 plan 属于同一时间窗时, P7 不应一边 not_yet_passed 一边 passed."
             )
         if report_says_p7_passed:
             assert plan.get("gate_status") == "passed", (
-                "phase-gate 报告说 P7 passed, 但 plan.yaml gate_status != passed. "
-                "自相矛盾."
+                "phase-gate 报告说 P7 passed, 但 plan.yaml gate_status != passed. 自相矛盾."
             )
 
-    if plan.get("gate_status") == "not_yet_passed":
-        # 当前状态: H2/H4/H5 passed; H1/H3 not_yet_passed
-        assert h_statuses == {
-            "P7-H1": "not_yet_passed",
-            "P7-H2": "passed",
-            "P7-H3": "not_yet_passed",
-            "P7-H4": "passed",
-            "P7-H5": "passed",
-        }, f"当前应为 H2/H4/H5 passed: {h_statuses}"
-        assert "P7: opened for implementation; Gate H in progress" in playbook
-        # gate_status=not_yet_passed 必须有匹配的 not_yet_passed signal
-        # (允许混有 passed sub-gate signal 如 h5_passed)
-        assert any(
-            "gate_h_not_yet_passed" in sig for sig in plan.get("signals", [])
-        ), "P7 not_yet_passed 但缺 gate_h_not_yet_passed signal"
-        return
-
-    # 历史回放路径
     assert plan["gate_status"] == "passed"
     expected = {f"P7-H{i}": "passed" for i in range(1, 6)}
     assert h_statuses == expected
+    assert "P7: implementation complete; Gate H passed" in playbook
 
 
 def test_p7_release_cycle_runner_wrote_three_artifacts():
@@ -267,12 +245,12 @@ def test_p7_doc_lint_zero_drift_at_closeout():
 
 def test_p4_to_p7_use_consistent_evidence_requirement_field():
     for rel_path in [
-        ".omo/tasks/planned/OPC-P4-MODEL-COMPUTE.yaml",
-        ".omo/tasks/planned/OPC-P5-SCENARIOS.yaml",
-        ".omo/tasks/planned/OPC-P6-EVOLUTION-LOOP.yaml",
-        ".omo/tasks/planned/OPC-P7-RELEASE-TRAIN.yaml",
+        "OPC-P4-MODEL-COMPUTE",
+        "OPC-P5",
+        "OPC-P6",
+        "OPC-P7",
     ]:
-        payload = _read_yaml(rel_path)
+        payload = _read_phase_task(rel_path)
         for sub_gate in payload["sub_gates"]:
             # In the A3 closeout we also accept `evidence` as the alternate
             # field name for already-closed sub-gates. The legacy field name
@@ -340,13 +318,13 @@ def test_closeout_does_not_weaken_original_criteria():
     的 criteria 文本不被 closeout 改弱.
     """
     for rel_path in [
-        ".omo/tasks/planned/OPC-P3-SWARM-SPINE.yaml",
-        ".omo/tasks/planned/OPC-P4-MODEL-COMPUTE.yaml",
-        ".omo/tasks/planned/OPC-P5-SCENARIOS.yaml",
-        ".omo/tasks/planned/OPC-P6-EVOLUTION-LOOP.yaml",
-        ".omo/tasks/planned/OPC-P7-RELEASE-TRAIN.yaml",
+        "OPC-P3-GATE-D-OPENING",
+        "OPC-P4-MODEL-COMPUTE",
+        "OPC-P5",
+        "OPC-P6",
+        "OPC-P7",
     ]:
-        payload = _read_yaml(rel_path)
+        payload = _read_phase_task(rel_path)
         for sub_gate in payload.get("sub_gates", []):
             sg_id = sub_gate.get("id", "?")
             status = sub_gate.get("status", "?")

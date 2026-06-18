@@ -4,7 +4,6 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import pytest
 
 OMO_SRC = Path(__file__).resolve().parents[1] / "src"
 if str(OMO_SRC) not in sys.path:
@@ -35,7 +34,7 @@ def test_make_pipeline_tracker_with_log_writes_events(tmp_path):
 
     # 验证 log 文件包含 1 条 event
     assert log_path.exists()
-    lines = [l for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [line_ for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
     assert len(lines) == 1
 
     import json
@@ -61,7 +60,7 @@ def test_wire_pipeline_tracker_attaches_to_existing(tmp_path):
 
     # 触发 → 写 log
     tracker.start_phase(PipelinePhase.COLD_START)
-    lines = [l for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [line_ for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
     assert len(lines) == 1
 
 
@@ -71,7 +70,7 @@ def test_bridge_event_hook_failure_doesnt_break_main(tmp_path, monkeypatch):
     from model_driven.lifecycle.pipeline import PipelineTracker, PipelinePhase
 
     log_path = tmp_path / "failing.jsonl"
-    log = make_pipeline_event_logger(log_path)
+    log = make_pipeline_event_logger(log_path)  # noqa: F841
 
     def broken_hook(event: dict) -> None:
         raise RuntimeError("disk full")

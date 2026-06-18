@@ -26,6 +26,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml
+
 from .omo_paths import PROJECTS_DIR, WORKSPACE_ROOT
 
 OMO_SRC = Path(__file__).resolve().parent
@@ -545,14 +547,23 @@ def cmd_lint_direct_omo_io(paths: list[str] | None = None, *, diff: bool = False
     elif paths:
         cmd.extend(paths)
     else:
-        cmd.extend(
-            [
-                str(PROJECTS_DIR / "omo" / "src" / "omo"),
-                str(PROJECTS_DIR / "c2g" / "src" / "c2g"),
-                str(WORKSPACE_ROOT / "scripts"),
-                str(WORKSPACE_ROOT / "bin"),
-            ]
-        )
+        default_paths = [
+            PROJECTS_DIR / "aetherforge" / "packages",
+            PROJECTS_DIR / "agora" / "src",
+            PROJECTS_DIR / "c2g" / "src",
+            PROJECTS_DIR / "cockpit" / "src",
+            PROJECTS_DIR / "ecos" / "src",
+            PROJECTS_DIR / "ecos" / "scripts",
+            PROJECTS_DIR / "family-hub" / "src",
+            PROJECTS_DIR / "l4-kernel" / "src",
+            PROJECTS_DIR / "metaos" / "src",
+            PROJECTS_DIR / "model-driven" / "src",
+            PROJECTS_DIR / "omo" / "src",
+            PROJECTS_DIR / "runtime" / "src",
+            WORKSPACE_ROOT / "scripts",
+            WORKSPACE_ROOT / "bin",
+        ]
+        cmd.extend(str(path) for path in default_paths if path.exists())
 
     result = subprocess.run(cmd, cwd=str(WORKSPACE_ROOT), capture_output=True, text=True)
     if result.stdout:
@@ -560,6 +571,66 @@ def cmd_lint_direct_omo_io(paths: list[str] | None = None, *, diff: bool = False
     if result.stderr:
         print(result.stderr, end="", file=sys.stderr)
     return result.returncode
+
+
+def _check_self_evolution_approval(planned_dir: Path, active_dir: Path) -> list[str]:
+    issues: list[str] = []
+    for path in sorted(planned_dir.glob("OPC-P6-SELF-EVOLUTION-*.yaml")):
+        payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        if payload.get("approval_required") is not True:
+            issues.append(f"{path.name}: approval_required must be true")
+        if payload.get("human_approval_required") is not True:
+            issues.append(f"{path.name}: human_approval_required must be true")
+        if payload.get("approval_state") != "awaiting_human":
+            issues.append(f"{path.name}: approval_state must be 'awaiting_human'")
+        if payload.get("status") != "planned":
+            issues.append(f"{path.name}: status must remain planned")
+
+    leaked = sorted(active_dir.glob("OPC-P6-SELF-EVOLUTION-*.yaml"))
+    for path in leaked:
+        issues.append(f"{path.name}: self-evolution task leaked into active/")
+    return issues
+
+
+def cmd_lint_self_evolution_approval(workspace_root: str = ".") -> int:
+    root = Path(workspace_root).resolve()
+    planned_dir = root / ".omo" / "tasks" / "planned"
+    active_dir = root / ".omo" / "tasks" / "active"
+    issues = _check_self_evolution_approval(planned_dir, active_dir)
+    if issues:
+        print(f"❌ omo lint self-evolution-approval fail: {len(issues)} issue(s)")
+        for issue in issues:
+            print(f"  - {issue}")
+        return 1
+    count = len(list(planned_dir.glob("OPC-P6-SELF-EVOLUTION-*.yaml"))) if planned_dir.exists() else 0
+    print(f"✅ omo lint self-evolution-approval pass: planned={count} active=0")
+    return 0
+
+
+def cmd_lint_ingress_registry(workspace_root: str = ".") -> int:
+    from omo.omo_governance_surfaces import (
+        _check_ingress_registry,
+        resolve_governance_workspace_root,
+    )
+
+    root = resolve_governance_workspace_root(Path(workspace_root))
+    summary, issues = _check_ingress_registry(root)
+    if issues:
+        print(f"❌ omo lint ingress-registry fail: {len(issues)} issue(s)")
+        for issue in issues:
+            print(f"  - {issue}")
+        return 1
+
+    if summary.get("exists"):
+        print(
+            "✅ omo lint ingress-registry pass: "
+            f"goals={len(summary.get('goal_ids', []))} "
+            f"tasks={len(summary.get('task_ids', []))} "
+            f"debts={len(summary.get('debt_ids', []))}"
+        )
+    else:
+        print("✅ omo lint ingress-registry pass: registry not created yet")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -582,6 +653,20 @@ def main(argv: list[str] | None = None) -> int:
     )
     gate.add_argument("paths", nargs="*", help="要检查的文件/目录；默认扫 omo/c2g/scripts/bin")
     gate.add_argument("--diff", action="store_true", help="只检查 git diff 中的 Python 文件")
+    ingress_registry = sub.add_parser(
+        "ingress-registry",
+        help="校验 .omo/_delivery/ingress/registry.yaml 的结构、反向映射与落盘一致性",
+    )
+    ingress_registry.add_argument(
+        "--workspace-root", default=".", help="显式指定 workspace root"
+    )
+    self_evolution = sub.add_parser(
+        "self-evolution-approval",
+        help="校验 OPC P6 self-evolution task 仅落 planned/ 且审批字段完整",
+    )
+    self_evolution.add_argument(
+        "--workspace-root", default=".", help="显式指定 workspace root"
+    )
 
     args = parser.parse_args(argv)
     if args.command == "schemas":
@@ -590,6 +675,10 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_lint_yaml_bypass()
     if args.command == "direct-omo-io":
         return cmd_lint_direct_omo_io(args.paths, diff=args.diff)
+    if args.command == "ingress-registry":
+        return cmd_lint_ingress_registry(args.workspace_root)
+    if args.command == "self-evolution-approval":
+        return cmd_lint_self_evolution_approval(args.workspace_root)
     parser.print_help()
     return 1
 

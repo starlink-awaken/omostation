@@ -328,3 +328,190 @@ def test_governance_cli_apply_executes_approved_proposal(tmp_path: Path, monkeyp
 
     payload = _load_yaml(target)
     assert payload["next_milestone"] == "Phase 6 Wave 1 runtime core"
+
+
+def test_governance_cli_ingress_goal_writes_goal_and_artifact(
+    tmp_path: Path, monkeypatch, capsys
+):
+    goals_file = tmp_path / ".omo" / "goals" / "current.yaml"
+    goals_file.parent.mkdir(parents=True, exist_ok=True)
+    goals_file.write_text("phase: 44\ngoals: []\n", encoding="utf-8")
+
+    extra_file = tmp_path / "goal-extra.yaml"
+    extra_file.write_text("vector: V2\nappetite: 1 week\n", encoding="utf-8")
+
+    monkeypatch.chdir(tmp_path)
+    rc = omo_governance_main(
+        [
+            "ingress-goal",
+            "BET-9001",
+            "统一持久化 broker",
+            "Bet: 统一持久化 broker (Appetite: 1 week)",
+            "--ingress-plane",
+            "projects/c2g",
+            "--source-ref",
+            "c2g:bet:BET-9001",
+            "--extra-file",
+            str(extra_file),
+            "--now",
+            "2026-06-18T03:00:00Z",
+        ]
+    )
+
+    assert rc == 0
+    captured = capsys.readouterr()
+    assert "ingress goal created BET-9001" in captured.out
+    payload = _load_yaml(goals_file)
+    assert any(goal["id"] == "BET-9001" for goal in payload["goals"])
+    artifact = _load_yaml(
+        tmp_path / ".omo" / "_delivery" / "ingress" / "goals" / "BET-9001.yaml"
+    )
+    assert artifact["ingress_plane"] == "projects/c2g"
+
+
+def test_governance_cli_ingress_task_writes_planned_task_and_artifact(
+    tmp_path: Path, monkeypatch, capsys
+):
+    (tmp_path / ".omo").mkdir(parents=True, exist_ok=True)
+    task_file = tmp_path / "task.yaml"
+    task_file.write_text(
+        yaml.dump(
+            {
+                "id": "IMPORTED-CLI-1",
+                "title": "CLI broker 落任务",
+                "status": "candidate",
+                "task_type": "feature",
+                "risk_level": "L0",
+                "depends_on": [],
+                "source_docs": ["spec.md"],
+                "deliverables": ["代码", "测试"],
+                "imported_via": "projects/c2g",
+                "context_uri": "bos://memory/specs/spec.md#IMPORTED-CLI-1",
+                "assigned_to": None,
+                "dispatch_id": None,
+                "run_ref": None,
+                "approval_ref": None,
+                "review_ref": None,
+                "knowledge_refs": [],
+                "handoff_refs": [],
+                "governance_refs": [
+                    ".omo/standards/omo-governance-surfaces.md",
+                ],
+                "entry_gate": [],
+                "evidence_required": ["pytest"],
+                "test_plan": ["uv run pytest"],
+                "allowed_operation_level": "L0",
+                "human_approval_required": False,
+                "metadata": {},
+            },
+            allow_unicode=True,
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.chdir(tmp_path)
+    rc = omo_governance_main(
+        [
+            "ingress-task",
+            str(task_file),
+            "--ingress-plane",
+            "projects/c2g",
+            "--source-ref",
+            "c2g:bridge-import:IMPORTED-CLI-1",
+            "--now",
+            "2026-06-18T03:01:00Z",
+        ]
+    )
+
+    assert rc == 0
+    captured = capsys.readouterr()
+    assert "ingress task created IMPORTED-CLI-1" in captured.out
+    payload = _load_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "IMPORTED-CLI-1.yaml"
+    )
+    assert payload["metadata"]["broker"] == "projects/omo/src/omo/omo_ingress.py"
+    artifact = _load_yaml(
+        tmp_path / ".omo" / "_delivery" / "ingress" / "tasks" / "IMPORTED-CLI-1.yaml"
+    )
+    assert artifact["task_ref"] == ".omo/tasks/planned/IMPORTED-CLI-1.yaml"
+
+
+def test_governance_cli_ingress_debt_upserts_debt_and_artifact(
+    tmp_path: Path, monkeypatch, capsys
+):
+    (tmp_path / ".omo").mkdir(parents=True, exist_ok=True)
+    debt_file = tmp_path / "debt.yaml"
+    debt_file.write_text(
+        yaml.dump(
+            {
+                "id": "DEBT-CLI-1",
+                "title": "broker debt",
+                "description": "from governance cli",
+                "severity": "medium",
+                "source": "aetherforge-gateway",
+                "remediation": "fix it",
+            },
+            allow_unicode=True,
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.chdir(tmp_path)
+    rc = omo_governance_main(
+        [
+            "ingress-debt",
+            str(debt_file),
+            "--ingress-plane",
+            "projects/aetherforge",
+            "--source-ref",
+            "aetherforge:budget:cli-1",
+            "--now",
+            "2026-06-18T03:02:00Z",
+        ]
+    )
+
+    assert rc == 0
+    captured = capsys.readouterr()
+    assert "ingress debt upserted DEBT-CLI-1" in captured.out
+    payload = _load_yaml(tmp_path / ".omo" / "debt" / "items" / "DEBT-CLI-1.yaml")
+    assert payload["lifecycle_state"] == "identified"
+    assert payload["occurrence_count"] == 1
+    artifact = _load_yaml(
+        tmp_path / ".omo" / "_delivery" / "ingress" / "debts" / "DEBT-CLI-1.yaml"
+    )
+    assert artifact["debt_ref"] == ".omo/debt/items/DEBT-CLI-1.yaml"
+
+
+def test_governance_cli_ingress_uses_workspace_root_not_subrepo_cwd(
+    tmp_path: Path, monkeypatch, capsys
+):
+    goals_file = tmp_path / ".omo" / "goals" / "current.yaml"
+    goals_file.parent.mkdir(parents=True, exist_ok=True)
+    goals_file.write_text("phase: 44\ngoals: []\n", encoding="utf-8")
+    subrepo = tmp_path / "projects" / "omo"
+    subrepo.mkdir(parents=True, exist_ok=True)
+
+    monkeypatch.chdir(subrepo)
+    rc = omo_governance_main(
+        [
+            "ingress-goal",
+            "BET-ROOT-1",
+            "root write",
+            "Bet: write to workspace root",
+            "--ingress-plane",
+            "projects/c2g",
+            "--source-ref",
+            "c2g:bet:BET-ROOT-1",
+            "--now",
+            "2026-06-18T03:03:00Z",
+        ]
+    )
+
+    assert rc == 0
+    captured = capsys.readouterr()
+    assert "ingress goal created BET-ROOT-1" in captured.out
+    payload = _load_yaml(goals_file)
+    assert any(goal["id"] == "BET-ROOT-1" for goal in payload["goals"])
+    assert not (subrepo / ".omo" / "_delivery" / "ingress" / "registry.yaml").exists()

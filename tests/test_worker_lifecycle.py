@@ -11,14 +11,14 @@ _ws_root = Path(__file__).resolve().parents[2]
 if str(_ws_root) not in sys.path:
     sys.path.insert(0, str(_ws_root))
 
-from scripts.sync_omo_state import sync_state
-from omo.omo_handoff_index import write_handoff_index
-from omo.omo_metrics import write_worker_utilization_summary
-from omo.omo_worker import (  # noqa: F401
+from scripts.sync_omo_state import sync_state  # noqa: E402
+from omo.omo_handoff_index import write_handoff_index  # noqa: E402
+from omo.omo_metrics import write_worker_utilization_summary  # noqa: E402
+from omo.omo_worker import (  # noqa: F401, E402
     main as omo_worker_main,
 )
-from omo.omo_worker_dispatch import dispatch_task, reclaim_task
-from omo.omo_worker_status import (
+from omo.omo_worker_dispatch import dispatch_task, reclaim_task  # noqa: E402
+from omo.omo_worker_status import (  # noqa: E402
     collect_worker_status,
     scan_runtime_watchdog,
     update_dispatch_checkpoint,

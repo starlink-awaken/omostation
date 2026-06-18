@@ -1,5 +1,3 @@
-import os
-import sys
 
 def split_omo_worker():
     with open('/Users/xiamingxing/Workspace/projects/omo/src/omo/omo_worker.py', 'r') as f:

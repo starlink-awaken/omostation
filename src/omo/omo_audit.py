@@ -20,7 +20,6 @@ compatibility; the compliance checks follow under a clear section header.
 from __future__ import annotations
 
 import argparse
-import asyncio
 import json
 import os
 import re

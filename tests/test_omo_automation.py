@@ -632,7 +632,7 @@ def test_dispatch_task_launch_redacts_stdout_log(tmp_path: Path):
         },
     )
 
-    result = dispatch_task(
+    result = dispatch_task(  # noqa: F821
         root,
         task_id="TASK-REDACT",
         worker_id="mockworker",
@@ -814,7 +814,7 @@ def test_dispatch_task_and_worker_status_use_custom_omo_root(tmp_path: Path):
         },
     )
 
-    result = dispatch_task(
+    result = dispatch_task(  # noqa: F821
         root,
         task_id="TASK-CUSTOM-OMO",
         worker_id="mockworker",
@@ -824,7 +824,7 @@ def test_dispatch_task_and_worker_status_use_custom_omo_root(tmp_path: Path):
     )
 
     task = _load_yaml(omo / "tasks" / "active" / "custom.yaml")
-    status = collect_worker_status(root, omo_dir=".kos")
+    status = collect_worker_status(root, omo_dir=".kos")  # noqa: F821
 
     assert result["dispatch_path"].startswith(".kos/workers/runs/")
     assert result["review_path"].startswith(".kos/workers/runs/")
@@ -876,7 +876,7 @@ def test_dispatch_task_uses_supplied_now_for_dispatch_identity_and_start_time(tm
         },
     )
 
-    result = dispatch_task(
+    result = dispatch_task(  # noqa: F821
         root,
         "TASK-TIMED",
         "mockworker",
@@ -936,7 +936,7 @@ def test_dispatch_task_launch_marks_dispatch_active_and_updates_lease(tmp_path: 
         },
     )
 
-    result = dispatch_task(
+    result = dispatch_task(  # noqa: F821
         root,
         task_id="TASK-LAUNCH",
         worker_id="mockworker",
@@ -1221,7 +1221,7 @@ def test_dispatch_task_creates_packet_and_preclaims_task(tmp_path: Path):
         },
     )
 
-    result = dispatch_task(
+    result = dispatch_task(  # noqa: F821
         root,
         task_id="TASK-1",
         worker_id="mockworker",

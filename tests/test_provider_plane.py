@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sqlite3
 from pathlib import Path
 
 import yaml
@@ -15,8 +14,8 @@ from omo.omo_provider_plane import (
 _WORKSPACE = Path(__file__).resolve().parents[2]
 
 
-import os
-from unittest.mock import patch
+import os  # noqa: E402
+from unittest.mock import patch  # noqa: E402
 
 def _seed_m1_dir(tmp_path: Path) -> Path:
     m1_dir = tmp_path / "m1" / "compute_engine"

@@ -4,13 +4,18 @@ from __future__ import annotations
 import argparse
 from copy import deepcopy
 from datetime import datetime, timezone
+import json
 from pathlib import Path
 
 import yaml
 
+from .omo_ingress import create_goal, create_planned_task, upsert_debt_item
 from .omo_io import write_yaml_atomic
 from .omo_redaction import redact_sensitive_text
-from .omo_governance_surfaces import main as governance_surfaces_main
+from .omo_governance_surfaces import (
+    main as governance_surfaces_main,
+    resolve_governance_workspace_root,
+)
 
 
 _REQUIRED_FIELDS = {
@@ -151,6 +156,13 @@ def list_truth_mutations(root: Path) -> list[dict[str, str]]:
     return rows
 
 
+def _load_payload_file(path: Path) -> dict:
+    text = path.read_text(encoding="utf-8")
+    if path.suffix.lower() == ".json":
+        return json.loads(text)
+    return yaml.safe_load(text) or {}
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="omo-governance")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -169,12 +181,38 @@ def main(argv: list[str] | None = None) -> int:
     apply_parser.add_argument("--now")
 
     subparsers.add_parser("list")
+
+    ingress_goal_parser = subparsers.add_parser("ingress-goal")
+    ingress_goal_parser.add_argument("goal_id")
+    ingress_goal_parser.add_argument("title")
+    ingress_goal_parser.add_argument("description")
+    ingress_goal_parser.add_argument("--ingress-plane", required=True)
+    ingress_goal_parser.add_argument("--source-ref", default="")
+    ingress_goal_parser.add_argument("--extra-file")
+    ingress_goal_parser.add_argument("--now")
+
+    ingress_task_parser = subparsers.add_parser("ingress-task")
+    ingress_task_parser.add_argument("task_file")
+    ingress_task_parser.add_argument("--ingress-plane", required=True)
+    ingress_task_parser.add_argument("--source-ref", default="")
+    ingress_task_parser.add_argument("--now")
+
+    ingress_debt_parser = subparsers.add_parser("ingress-debt")
+    ingress_debt_parser.add_argument("debt_file")
+    ingress_debt_parser.add_argument("--ingress-plane", required=True)
+    ingress_debt_parser.add_argument("--source-ref", default="")
+    ingress_debt_parser.add_argument("--now")
+
     surfaces_parser = subparsers.add_parser("surfaces")
     surfaces_parser.add_argument("--workspace-root", default=".")
     surfaces_parser.add_argument("--json", action="store_true")
 
     args = parser.parse_args(argv)
-    root = Path.cwd()
+    cwd = Path.cwd().resolve()
+    if (cwd / ".omo").exists() and cwd.parent.name != "projects":
+        root = cwd
+    else:
+        root = resolve_governance_workspace_root(cwd)
 
     if args.command == "propose":
         proposal = _load_yaml(Path(args.proposal_file))
@@ -201,6 +239,47 @@ def main(argv: list[str] | None = None) -> int:
             print(
                 f"{row['id']} status={row['status']} level={row['operation_level']} target={row['target_ref']}"
             )
+        return 0
+
+    if args.command == "ingress-goal":
+        extra_fields = (
+            _load_payload_file(Path(args.extra_file)) if args.extra_file else None
+        )
+        result = create_goal(
+            root / ".omo",
+            goal_id=args.goal_id,
+            title=args.title,
+            description=args.description,
+            ingress_plane=args.ingress_plane,
+            source_ref=args.source_ref,
+            extra_fields=extra_fields,
+            now=args.now or _utc_now(),
+        )
+        print(f"ingress goal created {result['id']}")
+        return 0
+
+    if args.command == "ingress-task":
+        task_data = _load_payload_file(Path(args.task_file))
+        result = create_planned_task(
+            root / ".omo",
+            task_data=task_data,
+            ingress_plane=args.ingress_plane,
+            source_ref=args.source_ref,
+            now=args.now or _utc_now(),
+        )
+        print(f"ingress task created {result['id']}")
+        return 0
+
+    if args.command == "ingress-debt":
+        debt_data = _load_payload_file(Path(args.debt_file))
+        result = upsert_debt_item(
+            root / ".omo",
+            debt_data=debt_data,
+            ingress_plane=args.ingress_plane,
+            source_ref=args.source_ref,
+            now=args.now or _utc_now(),
+        )
+        print(f"ingress debt upserted {result['id']}")
         return 0
 
     if args.command == "surfaces":

@@ -152,7 +152,7 @@ def test_check_schema_registry_integrity_passes_for_real_schemas():
 
 def test_check_schema_registry_integrity_detects_missing_z_timestamp(tmp_path, monkeypatch):
     """故意加 1 个非 ZTimestampModel schema, 应被检测出 'missing-z-timestamp'."""
-    from omo.omo_io_schemas import SCHEMA_REGISTRY, OmoTrailRecord
+    from omo.omo_io_schemas import SCHEMA_REGISTRY
     from pydantic import BaseModel
 
     # 在 SCHEMA_REGISTRY 临时加 1 个不继承 ZTimestampModel 的 schema
@@ -174,7 +174,6 @@ def test_check_schema_registry_integrity_detects_missing_z_timestamp(tmp_path, m
 def test_check_schema_registry_integrity_detects_empty_required(tmp_path, monkeypatch):
     """故意加 1 个全 Optional 的 schema, 应被检测出 'no-required-fields'."""
     from omo.omo_io_schemas import SCHEMA_REGISTRY, ZTimestampModel
-    from pydantic import Field
 
     class FakeEmpty(ZTimestampModel):
         # 全 Optional = 空架子
@@ -220,7 +219,6 @@ def test_check_all_schemas_exported_passes_for_real_schemas():
 
 def test_check_all_schemas_exported_detects_missing_class(monkeypatch):
     """故意从 __all__ 删 1 个 schema class, 应被检测出 'missing-from-all'."""
-    from omo.omo_io_schemas import SCHEMA_REGISTRY
     from omo import omo_io_schemas
 
     # 临时备份 + 删 1 个 class 名
@@ -261,7 +259,7 @@ def test_check_cross_module_srp_whitelist_omo_audit_utility():
     assert len(audit_violations) == 0, f"omo_audit 应在白名单, got violations: {audit_violations}"
 
 
-def test_check_cross_module_srp_passes_for_real_consumers():
+def test_check_cross_module_srp_passes_for_real_consumers():  # noqa: F811
     """7 consumer 互不依赖 (仅依赖底层 SSOT), 0 SRP 违规."""
     from omo.omo_lint import _check_cross_module_srp
 
@@ -269,7 +267,7 @@ def test_check_cross_module_srp_passes_for_real_consumers():
     assert issues == [], f"expected no SRP violations, got {issues}"
 
 
-def test_check_cross_module_srp_whitelist_omo_audit_utility():
+def test_check_cross_module_srp_whitelist_omo_audit_utility():  # noqa: F811
     """白名单 omo_audit 工具 (e.g. _utc_now) 不算 SRP 违规.
 
     实际: omo_history / omo_bos_metrics / omo_sync / omo_trail 等多个 consumer 用了

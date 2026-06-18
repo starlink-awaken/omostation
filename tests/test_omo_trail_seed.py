@@ -101,7 +101,7 @@ def test_cli_trail_seed_subprocess(tmp_path):
     assert "✅ trail seed 写入 5 条 step" in r.stdout
 
     # log 文件 5 条
-    lines = [l for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [line_ for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
     assert len(lines) == 5
     for line in lines:
         rec = json.loads(line)
@@ -114,7 +114,6 @@ def test_cli_trail_seed_subprocess(tmp_path):
 def test_seed_uses_append_only_log_via_omo_trail():
     """seed 走 omo.omo_trail.record_step (复用 AppendOnlyLog + Pydantic 校验), 不直接 open()."""
     from omo.omo_trail_seed import cmd_trail_seed
-    from omo import omo_trail
     import inspect
 
     # cmd_trail_seed 内部用 record_step (走 AppendOnlyLog)

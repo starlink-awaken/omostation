@@ -129,7 +129,16 @@ def main(argv: list[str] | None = None) -> int:
         rest = args[2:] if len(args) > 2 else []
         if sub == "history":
             return governance_history_main(rest)
-        if sub in {"propose", "approve", "apply", "list", "surfaces"}:
+        if sub in {
+            "propose",
+            "approve",
+            "apply",
+            "list",
+            "surfaces",
+            "ingress-goal",
+            "ingress-task",
+            "ingress-debt",
+        }:
             return governance_ops_main(args[1:])
         if sub in ("audit", "--help", "-h", None):
             return governance_main(rest)

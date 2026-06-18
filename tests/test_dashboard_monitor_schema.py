@@ -16,7 +16,6 @@ from __future__ import annotations
 import json
 import os
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -70,7 +69,7 @@ def _run_dashboard_monitor(
 def _read_last_record(tmp_path: Path) -> dict:
     """读 omo-health.jsonl 最后一条 JSON record (Round 20 P0: 新路径)."""
     health = tmp_path / ".omo" / "_knowledge" / "omo-health.jsonl"
-    lines = [l for l in health.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [line_ for line_ in health.read_text(encoding="utf-8").splitlines() if line_.strip()]
     assert len(lines) == 1, f"expected 1 record, got {len(lines)}"
     return json.loads(lines[-1])
 
@@ -166,7 +165,7 @@ def test_dashboard_monitor_writes_to_omo_health_not_governance_history(fake_work
 
     # omo-health.jsonl 必须出现 (1 条)
     assert health_log.exists(), "omo-health.jsonl 必须出现 (Round 20 P0)"
-    health_lines = [l for l in health_log.read_text(encoding="utf-8").splitlines() if l.strip()]
+    health_lines = [line_ for line_ in health_log.read_text(encoding="utf-8").splitlines() if line_.strip()]
     assert len(health_lines) == 1
 
     # governance-history.jsonl 必须 NOT 出现 (本脚本不再写)

@@ -79,7 +79,7 @@ def test_consumer_log_schema_when_exists(consumer_name, schema, tmp_path):
         pytest.skip(f"{consumer_name} log not yet created: {log_path}")
 
     # 抽前 5 + 后 5 条 (避免读 1MB+ 大文件)
-    lines = [l for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [line_ for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
     if not lines:
         pytest.skip(f"{consumer_name} log empty")
 

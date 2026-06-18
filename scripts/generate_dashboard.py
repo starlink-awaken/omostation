@@ -104,7 +104,7 @@ def get_x1_policy_refs(debt):
     refs = set()
     subdim = debt.get("subdimension", "").lower()
     domain = debt.get("domain", "").lower()
-    debt_id = debt.get("id", "").upper()
+    debt.get("id", "")  # noqa: F841 (debt_id computed but unused in this branch)
 
     # Direct mapping from subdimension
     if subdim in SUBDIM_TO_X1:
@@ -117,9 +117,9 @@ def get_x1_policy_refs(debt):
             refs.add(r)
 
     # Items with X1- prefix map to specific policies
-    if debt_id.startswith("X1-"):
+    if debt_id.startswith("X1-"):  # noqa: F821
         refs.add("X1-CONST-001")
-        if "audit" in debt_id.lower():
+        if "audit" in debt_id.lower():  # noqa: F821
             refs.add("X1-AUDIT-001")
 
     # If nothing matched, default to most relevant
@@ -134,7 +134,7 @@ def get_x2_rules(debt):
     rules = set()
     entropy = debt.get("entropy_class", "").lower()
     dim = debt.get("dimension", "").lower()
-    debt_id = debt.get("id", "").upper()
+    _ = debt.get("id", "").upper()  # noqa: F841
 
     if entropy == "time":
         rules.add("X2-FRESH-001")

@@ -111,7 +111,7 @@ class BosRegistration:
         return asdict(self)
 
 
-from .omo_bos_seeds import SEED_REGISTRATIONS
+from .omo_bos_seeds import SEED_REGISTRATIONS  # noqa: E402
 
 
 # ── 验证 + 解析 ────────────────────────────────────────────

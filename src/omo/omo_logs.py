@@ -386,7 +386,7 @@ def cmd_logs_audit(
             "health_grade": grade,
             "consumers": dict(sorted(drift_by_consumer.items())),
         }
-        print(f"\n📊 §17 metrics (Round 40 P0, --exclude-locked 默认 True):")
+        print("\n📊 §17 metrics (Round 40 P0, --exclude-locked 默认 True):")
         print(json.dumps(metrics_payload, indent=2, ensure_ascii=False, sort_keys=True))
         return exit_code
 

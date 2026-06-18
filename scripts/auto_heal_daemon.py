@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import subprocess
 import sys
@@ -273,7 +272,7 @@ def main(argv: list[str] | None = None) -> int:
             if f.suggested_fix:
                 print(f"     💡 {f.suggested_fix}")
             if f.fix_applied:
-                print(f"     🔧 Fix applied")
+                print("     🔧 Fix applied")
 
     if args.report:
         report_data = [asdict(r) for r in results]

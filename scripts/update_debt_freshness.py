@@ -20,7 +20,7 @@ _src = Path(__file__).resolve().parent.parent / "src"
 if str(_src) not in sys.path:
     sys.path.insert(0, str(_src))
 
-from omo.omo_io import write_yaml_atomic
+from omo.omo_io import write_yaml_atomic  # noqa: E402
 
 
 def _utc_now() -> str:

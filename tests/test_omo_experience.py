@@ -11,8 +11,8 @@ _ws_root = Path(__file__).resolve().parents[2]
 if str(_ws_root) not in sys.path:
     sys.path.insert(0, str(_ws_root))
 
-from scripts.cost_track_org import cost_summary_by_org
-from omo.omo_experience import (
+from scripts.cost_track_org import cost_summary_by_org  # noqa: E402
+from omo.omo_experience import (  # noqa: E402
     bridge_request_to_task,
     build_session_bootstrap,
     evaluate_control_gate,
@@ -21,7 +21,7 @@ from omo.omo_experience import (
     write_freshness_report,
     write_resource_accounting_report,
 )
-from omo.omo_task_schema import validate_task_file
+from omo.omo_task_schema import validate_task_file  # noqa: E402
 
 
 def _write_yaml(path: Path, data: dict) -> None:

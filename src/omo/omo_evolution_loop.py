@@ -22,6 +22,8 @@ _WS = os.environ.get("WORKSPACE") or str(Path.home() / "Workspace")
 DEBT_DIR = Path(_WS) / ".omo" / "debt" / "items"
 PROPOSAL_DIR = Path(_WS) / ".omo" / "state" / "proposals"
 
+from omo.omo_io import write_yaml_atomic  # noqa: E402
+
 
 class EvolutionLoop:
     """Watches debt records and triggers evolution workflows."""
@@ -106,7 +108,7 @@ class EvolutionLoop:
         
         # ── 2. Persist to State Plane ──
         try:
-            proposal_path.write_text(yaml.safe_dump(payload, allow_unicode=True, sort_keys=False) + "\n")
+            write_yaml_atomic(proposal_path, payload)
             _log.info("[EvolutionLoop] Proposal created: %s", proposal_path)
             print(f"📦  Evolution Loop: Generated MutationProposal {proposal_id} (Awaiting Cockpit Approval)")
         except Exception as e:

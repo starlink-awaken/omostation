@@ -5,7 +5,6 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
 
 OMO_SRC = Path(__file__).resolve().parents[1] / "src"
 if str(OMO_SRC) not in sys.path:
@@ -24,7 +23,7 @@ def test_append_entry_uses_append_only_log(tmp_path):
     assert result == log_path
 
     # 验证: log 文件 1 条结构化 record
-    records = [json.loads(l) for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    records = [json.loads(line_) for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
     assert len(records) == 1
     rec = records[0]
     assert rec["total_score"] == 99.0
@@ -78,7 +77,7 @@ def test_append_entry_overrides_user_date_timestamp(tmp_path):
         },
         path=log_path,
     )
-    records = [json.loads(l) for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    records = [json.loads(line_) for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
     assert records[0]["date"] != "user-attempt-1900-01-01"
     assert records[0]["timestamp"] != "user-bad-ts"
     # 注入的 date 应是今天

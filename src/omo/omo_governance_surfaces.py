@@ -69,6 +69,170 @@ def _has_direct_io_gate(workspace_root: Path) -> bool:
     return "omo-direct-io-gate" in text and "lint direct-omo-io" in text
 
 
+def _check_ingress_registry(workspace_root: Path) -> tuple[dict[str, object], list[str]]:
+    omo_dir = workspace_root / ".omo"
+    registry_path = omo_dir / "_delivery" / "ingress" / "registry.yaml"
+    if not registry_path.exists():
+        return {
+            "exists": False,
+            "path": str(registry_path),
+            "goal_ids": [],
+            "goal_source_refs": [],
+            "task_ids": [],
+            "task_source_refs": [],
+            "debt_ids": [],
+            "debt_source_refs": [],
+        }, []
+
+    registry = _load_yaml(registry_path)
+    issues: list[str] = []
+    goals = registry.get("goals")
+    tasks = registry.get("tasks")
+    debts = registry.get("debts")
+    if not isinstance(goals, dict):
+        issues.append("ingress registry: goals block missing or not a mapping")
+        goals = {}
+    if not isinstance(tasks, dict):
+        issues.append("ingress registry: tasks block missing or not a mapping")
+        tasks = {}
+    if not isinstance(debts, dict):
+        issues.append("ingress registry: debts block missing or not a mapping")
+        debts = {}
+
+    goals_by_id = goals.get("by_id")
+    goals_by_source_ref = goals.get("by_source_ref")
+    tasks_by_id = tasks.get("by_id")
+    tasks_by_source_ref = tasks.get("by_source_ref")
+    debts_by_id = debts.get("by_id")
+    debts_by_source_ref = debts.get("by_source_ref")
+    for label, bucket in [
+        ("goals.by_id", goals_by_id),
+        ("goals.by_source_ref", goals_by_source_ref),
+        ("tasks.by_id", tasks_by_id),
+        ("tasks.by_source_ref", tasks_by_source_ref),
+        ("debts.by_id", debts_by_id),
+        ("debts.by_source_ref", debts_by_source_ref),
+    ]:
+        if not isinstance(bucket, dict):
+            issues.append(f"ingress registry: {label} missing or not a mapping")
+
+    goals_by_id = goals_by_id if isinstance(goals_by_id, dict) else {}
+    goals_by_source_ref = (
+        goals_by_source_ref if isinstance(goals_by_source_ref, dict) else {}
+    )
+    tasks_by_id = tasks_by_id if isinstance(tasks_by_id, dict) else {}
+    tasks_by_source_ref = (
+        tasks_by_source_ref if isinstance(tasks_by_source_ref, dict) else {}
+    )
+    debts_by_id = debts_by_id if isinstance(debts_by_id, dict) else {}
+    debts_by_source_ref = (
+        debts_by_source_ref if isinstance(debts_by_source_ref, dict) else {}
+    )
+
+    for item_id, meta in goals_by_id.items():
+        if not isinstance(meta, dict):
+            issues.append(f"ingress registry: goals.by_id.{item_id} not a mapping")
+            continue
+        if meta.get("artifact_ref") != f".omo/_delivery/ingress/goals/{item_id}.yaml":
+            issues.append(f"ingress registry: goals.by_id.{item_id} artifact_ref mismatch")
+        if not (omo_dir / "goals" / "current.yaml").exists():
+            issues.append("ingress registry: goals/current.yaml missing")
+        source_ref = meta.get("source_ref", "")
+        if source_ref and goals_by_source_ref.get(source_ref) != item_id:
+            issues.append(
+                f"ingress registry: goals source_ref reverse mapping mismatch for {item_id}"
+            )
+
+    for source_ref, item_id in goals_by_source_ref.items():
+        if item_id not in goals_by_id:
+            issues.append(
+                f"ingress registry: goals.by_source_ref points to missing id {item_id}"
+            )
+
+    for item_id, meta in tasks_by_id.items():
+        if not isinstance(meta, dict):
+            issues.append(f"ingress registry: tasks.by_id.{item_id} not a mapping")
+            continue
+        if meta.get("artifact_ref") != f".omo/_delivery/ingress/tasks/{item_id}.yaml":
+            issues.append(f"ingress registry: tasks.by_id.{item_id} artifact_ref mismatch")
+        if not (omo_dir / "tasks" / "planned" / f"{item_id}.yaml").exists():
+            issues.append(f"ingress registry: planned task missing for {item_id}")
+        source_ref = meta.get("source_ref", "")
+        if source_ref and tasks_by_source_ref.get(source_ref) != item_id:
+            issues.append(
+                f"ingress registry: tasks source_ref reverse mapping mismatch for {item_id}"
+            )
+
+    for source_ref, item_id in tasks_by_source_ref.items():
+        if item_id not in tasks_by_id:
+            issues.append(
+                f"ingress registry: tasks.by_source_ref points to missing id {item_id}"
+            )
+
+    for item_id, meta in debts_by_id.items():
+        if not isinstance(meta, dict):
+            issues.append(f"ingress registry: debts.by_id.{item_id} not a mapping")
+            continue
+        if meta.get("artifact_ref") != f".omo/_delivery/ingress/debts/{item_id}.yaml":
+            issues.append(f"ingress registry: debts.by_id.{item_id} artifact_ref mismatch")
+        if not (omo_dir / "debt" / "items" / f"{item_id}.yaml").exists():
+            issues.append(f"ingress registry: debt item missing for {item_id}")
+        source_ref = meta.get("source_ref", "")
+        if source_ref and debts_by_source_ref.get(source_ref) != item_id:
+            issues.append(
+                f"ingress registry: debts source_ref reverse mapping mismatch for {item_id}"
+            )
+
+    for source_ref, item_id in debts_by_source_ref.items():
+        if item_id not in debts_by_id:
+            issues.append(
+                f"ingress registry: debts.by_source_ref points to missing id {item_id}"
+            )
+
+    return {
+        "exists": True,
+        "path": str(registry_path),
+        "goal_ids": sorted(goals_by_id.keys()),
+        "goal_source_refs": sorted(goals_by_source_ref.keys()),
+        "task_ids": sorted(tasks_by_id.keys()),
+        "task_source_refs": sorted(tasks_by_source_ref.keys()),
+        "debt_ids": sorted(debts_by_id.keys()),
+        "debt_source_refs": sorted(debts_by_source_ref.keys()),
+    }, issues
+
+
+def _candidate_roots(start: Path) -> list[Path]:
+    current = start.resolve()
+    if current.is_file():
+        current = current.parent
+    return [current, *current.parents]
+
+
+def resolve_governance_workspace_root(start: Path | None = None) -> Path:
+    starts: list[Path] = []
+    if start is not None:
+        starts.append(start)
+    starts.append(Path.cwd())
+    starts.append(Path(__file__).resolve())
+
+    seen: set[Path] = set()
+    for origin in starts:
+        for candidate in _candidate_roots(origin):
+            if candidate in seen:
+                continue
+            seen.add(candidate)
+            if (candidate / ".omo").exists() and (
+                (candidate / "projects" / "c2g").exists()
+                or (candidate / "projects" / "omo").exists()
+            ):
+                return candidate
+    for origin in starts:
+        for candidate in _candidate_roots(origin):
+            if (candidate / ".omo").exists():
+                return candidate
+    raise FileNotFoundError("unable to locate workspace root containing .omo/")
+
+
 def build_governance_surfaces_report(workspace_root: Path) -> dict[str, object]:
     omo_dir = workspace_root / ".omo"
     registry_path = omo_dir / "_truth" / "registry" / "omo-governance-surfaces.yaml"
@@ -108,6 +272,7 @@ def build_governance_surfaces_report(workspace_root: Path) -> dict[str, object]:
     ]
     missing_c2g_refs = [ref for ref in expected_refs if ref not in c2g_refs]
     direct_io_gate_present = _has_direct_io_gate(workspace_root)
+    ingress_registry, ingress_registry_issues = _check_ingress_registry(workspace_root)
 
     issues: list[str] = []
     if not standard_path.exists():
@@ -126,6 +291,7 @@ def build_governance_surfaces_report(workspace_root: Path) -> dict[str, object]:
     if not direct_io_gate_present:
         issues.append("pre-commit direct io gate missing: omo-direct-io-gate")
     issues.extend(c2g_issues)
+    issues.extend(ingress_registry_issues)
 
     warnings = [
         f"constrained legacy asset present: {ref}" for ref in constrained_present
@@ -151,6 +317,7 @@ def build_governance_surfaces_report(workspace_root: Path) -> dict[str, object]:
         "c2g_governance_refs": c2g_refs,
         "c2g_missing_governance_refs": missing_c2g_refs,
         "direct_io_gate_present": direct_io_gate_present,
+        "ingress_registry": ingress_registry,
         "issues": issues,
         "warnings": warnings,
         "status": status,
@@ -163,7 +330,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="Print JSON report")
     args = parser.parse_args(argv)
 
-    workspace_root = Path(args.workspace_root).resolve()
+    workspace_root = resolve_governance_workspace_root(Path(args.workspace_root))
     report = build_governance_surfaces_report(workspace_root)
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))

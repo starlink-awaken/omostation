@@ -6,7 +6,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
 
 OMO_SRC = Path(__file__).resolve().parents[1] / "src"
 if str(OMO_SRC) not in sys.path:
@@ -31,7 +30,7 @@ def test_omo_event_emit_subprocess_writes_jsonl(tmp_path):
     assert "✅ event emitted" in r.stdout
 
     # 验证 log 写 1 条结构化 event
-    lines = [l for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [line_ for line_ in log_path.read_text(encoding="utf-8").splitlines() if line_.strip()]
     assert len(lines) == 1
     event = json.loads(lines[0])
     assert event["kind"] == "test_event"
@@ -64,7 +63,6 @@ def test_omo_event_emit_default_log_path():
 def test_omo_event_emit_uses_append_only_log():
     """验证 emit 内部用 AppendOnlyLog (而非直接 open+write)."""
     from omo.omo_event import cmd_event_emit
-    from omo.omo_io import AppendOnlyLog
     import inspect
 
     src = inspect.getsource(cmd_event_emit)
