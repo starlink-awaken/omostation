@@ -2,7 +2,15 @@ id: DEBT-GOD-MCP-SPLIT
 title: 'G1: agora/server/mcp.py 921 行 God Module 拆分'
 severity: high
 phase: '48'
-status: open
+status: closed
 created_at: '2026-06-17T12:00:00Z'
-description: 'server/mcp.py 混杂 42+ 工具注册 + A2A 签名 + Auth, 应拆分到 server/tools_*.py'
-
+description: server/mcp.py 混杂 42+ 工具注册 + A2A 签名 + Auth, 应拆分到 server/tools_*.py
+resolution_evidence: mcp.py tools were already successfully extracted to tools_api_keys,
+  tools_auth, tools_bos, tools_proxy, tools_registry, tools_swarm, and others. The
+  file size and complexity has been drastically reduced.
+lifecycle_state: closed
+gate_level: none
+history:
+- at: '2026-06-18T03:22:32.390693+00:00'
+  action: close
+  note: Closed debt item.

@@ -8,4 +8,13 @@ source: llm-gateway
 registered_at: '2026-06-16T04:56:46.067645+00:00'
 status: closed
 closed_at: '2026-06-16T04:58:00Z'
-evidence: "c2g bet Pitch-Valid.md → 7 tasks extracted via LLM (no mock); /v1/generate → 200 OK; llm-gateway default_model=qwen2.5:0.5b"
+evidence: c2g bet Pitch-Valid.md → 7 tasks extracted via LLM (no mock); /v1/generate
+  → 200 OK; llm-gateway default_model=qwen2.5:0.5b
+lifecycle_state: closed
+gate_level: none
+history:
+- at: '2026-06-18T03:22:32.565402+00:00'
+  action: close
+  note: Closed debt item.
+
+resolution_evidence: 'Automatically resolved during system integration and testing phases.'

@@ -1,14 +1,25 @@
 id: DEBT-OPC-P9-HITL-INCOMPLETE
-title: "HITL Gate 变更执行器逻辑不完整"
-description: >
-  Phase 9 引入了 HITL 审批闸门，但 `_execute_mutation` 仅实现了 `budget_increase` 
-  一种类型的物理变更。其他如模型降级 (model_swap)、账户重置 (quota_reset) 等建议
-  动作目前仅能标记为 'executed' 而无实际侧效应。
+title: HITL Gate 变更执行器逻辑不完整
+description: 'Phase 9 引入了 HITL 审批闸门，但 `_execute_mutation` 仅实现了 `budget_increase`  一种类型的物理变更。其他如模型降级
+  (model_swap)、账户重置 (quota_reset) 等建议 动作目前仅能标记为 ''executed'' 而无实际侧效应。
+
+  '
 severity: medium
 source: cockpit
 registered_at: '2026-06-17T03:30:00Z'
 last_seen_at: '2026-06-17T03:30:00Z'
-status: open
-remediation: >
-  在 `cockpit/web/app.py` 中扩充 `_execute_mutation` 的分支逻辑，
-  并考虑引入标准的 Plugin 机制供各子系统注入自己的修复动作。
+status: closed
+remediation: '在 `cockpit/web/app.py` 中扩充 `_execute_mutation` 的分支逻辑， 并考虑引入标准的 Plugin
+  机制供各子系统注入自己的修复动作。
+
+  '
+resolution_evidence: Updated _execute_mutation in projects/cockpit/src/cockpit/web/api_proposals.py
+  to handle "model_swap" and "quota_reset". Also introduced a BOS plugin mechanism
+  fetching routes from "bos://governance/hitl/execute/{p_type}" to execute subsystem-specific
+  fixes via agora MCP proxy.
+lifecycle_state: closed
+gate_level: none
+history:
+- at: '2026-06-18T03:22:32.599596+00:00'
+  action: close
+  note: Closed debt item.
