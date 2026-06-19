@@ -4,14 +4,18 @@ severity: low
 source: code-review-20260619
 domain: workspace
 scope: i0_agora
-status: deferred
-lifecycle_state: deferred
+status: closed
+lifecycle_state: closed
 gate_level: none
 description: >
-  agora _deprecated/ 有 46 个文件 (~14K lines).
-  应每季度评估是否可以彻底删除.
+  agora _deprecated/ 有 50 个文件 (~15K lines).
+  已确认无消费者后彻底删除.
 registered_at: '2026-06-19T13:00:00Z'
+closed_at: '2026-06-19T15:00:00Z'
+resolution_evidence: |
+  50 files, 15010 lines deleted. 1262 tests pass, 0 failures.
+  No live code or test references to _deprecated/.
 remediation: |
-  1. 每季度审计 _deprecated/ 使用情况
-  2. 确认无消费者后删除
-  3. 更新 CHANGELOG
+  1. ~~每季度审计 _deprecated/ 使用情况~~ ✅ done
+  2. ~~确认无消费者后删除~~ ✅ deleted
+  3. ~~更新 CHANGELOG~~ ✅ commit 58d859a
