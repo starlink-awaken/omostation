@@ -14,6 +14,9 @@
 | `standards/` | 标准与规范 |
 | `registry/` | 注册表（workers, organs 等） |
 | `registry/omo-governance-surfaces.yaml` | `.omo` 顶层资产分类 + `omo/c2g` 联动治理注册表 |
+| `registry/task-policies.yaml` | 特殊任务红线的机器可读注册表（与 `omo_task_policy.py` 对齐） |
+| `registry/mutation-surfaces.yaml` | OMO 人类/桥接 mutation surfaces 的机器可读清单（brokered vs direct） |
+| `goals/` | 目标事实面镜像 / 索引；运行时写入仍以 `../goals/current.yaml` 为准 |
 | `x1-governance-policies.yaml` | X1 边界、审计、写入 gate 的权威策略 |
 | `x2-freshness-rules.yaml` | X2 保鲜与过期处理规则 |
 | `x3-value-stack.yaml` | X3 价值/成本分层归因 |

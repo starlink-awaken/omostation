@@ -104,7 +104,9 @@
 5. 嵌套 `.omo/.omo/*` 视为遗留异常路径，发现即归档并删除，不得重新生成。
 6. `.omo/evidence` 若仍存在，只允许作为指向 `_delivery/*` 的兼容别名，不得再作为独立真实目录扩写。
 7. 非 broker Python 代码不得直接改写 `.omo/` 或 `spaces/`；pre-commit 与 `omo lint direct-omo-io` 必须拦截。
+7.1 已知历史直写若暂时无法一轮消灭，必须登记到 `.omo/_truth/registry/direct-io-baseline.yaml`，只允许“冻结存量”，不得掩护新增违规。
 8. `.omo/_delivery/ingress/registry.yaml` 若存在，必须保持 `by_id` / `by_source_ref` 双向一致，并且 artifact/task/goal/debt 引用可落到真实状态面。
+9. `/.omo/goals` 必须保持为指向 `/.omo/_truth/goals` 的运行时入口符号链接；文档与 broker 一律引用 `/.omo/goals/current.yaml`，不得发明第二写入目标。
 
 ## 5. X1-X4 联动
 
@@ -121,8 +123,23 @@
 - `projects/omo` 能引用该标准或对应 registry 常量
 - CI / 本地治理门禁必须显式执行 `omo.cli governance surfaces --workspace-root . --json`
 - `omo lint ingress-registry` 能校验 ingress registry 的结构与反向映射
+- `omo lint mutation-surfaces` 能把 broker 写入入口清单从“解释性文档”提升为可执行门禁
+- `omo lint internal-write-profiles` 能把 worker/internal 运行时写面从“可观察报表”提升为正式 registry 门禁
 - `omo lint self-evolution-approval` 能拦截 OPC P6 self-evolution task 的审批字段漂移与 active 泄漏
 - `omo lint task-policy <name>` 能承载后续更多特殊任务红线，而不把规则散落到单独脚本
+- `task-policy` 既要有运行时代码注册表，也要有 `.omo/_truth/registry/task-policies.yaml` 机器可读注册表
+- `task-policy` 注册表新增规则后，必须同时纳入 pre-commit 或 CI，避免只在文档层声明
+- OMO 的人类/桥接 mutation surfaces 必须维护运行时快照与 `.omo/_truth/registry/mutation-surfaces.yaml` 对齐，防“入口已收口但没有资产清单”
+- OMO 的 worker/internal 写路径必须维护 `.omo/_truth/registry/internal-write-profiles.yaml`，明确哪些写面属于运行时 scratch、哪些带 promotion 风险
+- `omo governance ingress-goal/task/debt` 与 `projects/c2g` 的持久化适配器都属于正式 mutation surface，不得只登记终端 CLI 而漏掉治理入口/桥接入口
+- `omo governance surfaces --json` 必须暴露 mutation surface registry 漂移，作为 reviewer 判断“还有哪些 mutation 没收口”的机器依据
+- pre-commit / CI / `workspace governance verify` 必须显式执行 `omo lint mutation-surfaces` 与 `omo lint internal-write-profiles`，避免只有 reviewer 看 `surfaces --json` 时才发现 drift
+- 目录语义必须可固化为 policy；例如 `done/` 中的 packet 不得再出现 `status: review/completed`
+- done 态治理要先从“新式 packet”做窄约束，再逐步覆盖历史存量，避免一刀切误伤老票
+- review 态也优先走窄约束；例如 remediation review 先要求审查笔记存在，再逐步补更强的 lifecycle 字段
+- 对新式 done packet，`evidence_paths` 采用“声明即强制存在”的方式落地，先不倒逼所有历史 packet 补齐
+- active review 与 remediation review 分开治理：前者强调 `review_ref` 工件存在，后者强调 `review_note` 收口证据存在
 - `projects/c2g` 产出的 planned task 携带治理引用
 - `omo lint direct-omo-io` 与 pre-commit hook 能拦截非 broker 直接写 `.omo`
+- `contract_gatekeeper.py` 若启用 baseline，只能压住已登记的历史 path+line；任何新违规必须仍然 fail
 - X1/X2/X3/X4 与 L0/M1 治理模型中存在对应映射
