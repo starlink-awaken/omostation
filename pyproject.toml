@@ -11,7 +11,6 @@ dependencies = [
     "httpx>=0.28.1",
     "pydantic>=2.13.4",
     "pyjwt>=2.13.0",
-    "pytest>=8.4.2",
     "pyyaml",
     "requests>=2.32.5",
     "uvicorn>=0.39.0",
@@ -28,11 +27,11 @@ ecos-matrix-scheduler = "runtime.scheduler:main"
 ecos-bus-consumer = "runtime.bus_consumer:main"
 
 [build-system]
-requires = ["setuptools>=75"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/runtime"]
 
 [tool.uv.sources]
 aetherforge-gateway = { path = "../aetherforge/packages/gateway" }
@@ -47,6 +46,7 @@ asyncio_mode = "auto"
 
 [dependency-groups]
 dev = [
+    "pytest>=8.4.2",
     "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
 ]
