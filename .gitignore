@@ -30,6 +30,7 @@ Thumbs.db
 # ── Environment & Secrets ──
 .env
 .env.*
+!.env.example
 *.key
 *.pem
 credentials.json
