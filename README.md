@@ -13,7 +13,7 @@
 
 ## 规模
 
-- **代码行数**: 6,288 行 (src/ecos/ 下 17 顶层 + core 13 + cli 4)
+- **代码行数**: ~47,000 行 (src/ecos/ 下 L0-L3 + services + common + cli, 33 测试文件 748 测试)
 - **测试数**: 10 测试文件 (conftest, test_core, test_core_unit, test_core_extended, test_e2e_baseline, test_imports, test_kos_health_monitor, test_phase9_push, test_redteam_v3, T7/T8 e2e)
 
 ## 快速开始
