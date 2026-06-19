@@ -179,12 +179,6 @@ class ProxyManager:
 
         # Phase 3: MetaOS Admission Gateway (CR-ADMISSION-01)
         try:
-            import sys
-            from pathlib import Path
-
-            _metaos_dir = Path.home() / "Workspace" / "projects" / "metaos" / "src"
-            if str(_metaos_dir) not in sys.path:
-                sys.path.insert(0, str(_metaos_dir))
             from metaos.layers.admission_gateway import AdmissionGateway
 
             admission_meta = svc.get("metaos_admission")

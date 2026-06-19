@@ -30,6 +30,7 @@ dependencies = [
     "aiohttp>=3.14.0",
     "bus-foundation",
     "ecos",
+    "metaos",
 ]
 
 [project.urls]
@@ -86,3 +87,4 @@ eidos = { path = "../kairon/packages/eidos", editable = true }
 minerva = { path = "../kairon/packages/minerva", editable = true }
 core-models = { path = "../kairon/packages/core-models", editable = true }
 ecos = { path = "../ecos" }
+metaos = { path = "../metaos", editable = true }
