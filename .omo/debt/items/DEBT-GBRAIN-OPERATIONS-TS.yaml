@@ -1,11 +1,17 @@
 id: DEBT-GBRAIN-OPERATIONS-TS
-title: gbrain operations.ts 3.8K 行上帝模块 + Bun 锁定风险
-status: partially_resolved
-lifecycle_state: scheduled
+title: gbrain operations.ts 3.8K 行上帝模块
+status: deferred
+lifecycle_state: deferred
 severity: low
 resolution_evidence: |
-  2026-06-19 评估: 3841行, 94 exports, 31 importers.
+  2026-06-19 评估: 3841行, 75 operations, 31 importers.
+  可按领域拆分: pages/tags/links/timeline/search/takes/jobs/files/code/memory/sources.
   拆分需 dedicated session + deep codebase understanding.
-  建议: 按领域拆分 (search/pages/tags/links/admin) 但需保证所有 31 个 import 路径更新.
-  非紧急, 可延后.
+  非紧急, deferred.
 registered_at: '2026-06-19T01:00:00Z'
+remediation: |
+  1. 创建 operations/ 子目录
+  2. 按领域拆分 (pages.ts, tags.ts, links.ts, etc.)
+  3. 创建 barrel operations.ts re-export
+  4. 更新 15+ import sites
+  5. 运行 bun test 验证
