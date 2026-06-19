@@ -1826,7 +1826,6 @@ dependencies = [
     { name = "httpx" },
     { name = "pydantic" },
     { name = "pyjwt" },
-    { name = "pytest" },
     { name = "pyyaml" },
     { name = "requests" },
     { name = "uvicorn" },
@@ -1834,6 +1833,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
 ]
@@ -1850,7 +1850,6 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "pydantic", specifier = ">=2.13.4" },
     { name = "pyjwt", specifier = ">=2.13.0" },
-    { name = "pytest", specifier = ">=8.4.2" },
     { name = "pyyaml" },
     { name = "requests", specifier = ">=2.32.5" },
     { name = "uvicorn", specifier = ">=0.39.0" },
@@ -1858,6 +1857,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "pytest", specifier = ">=8.4.2" },
     { name = "pytest-asyncio", specifier = ">=1.4.0" },
     { name = "pytest-cov", specifier = ">=7.1.0" },
 ]
