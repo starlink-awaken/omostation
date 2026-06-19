@@ -29,7 +29,7 @@ from omo.omo_knowledge import cmd_knowledge_add, cmd_knowledge_list
 from omo.omo_delivery import cmd_delivery_archive, cmd_delivery_list
 from omo.omo_standard import cmd_standard_add, cmd_standard_list
 from omo.omo_i0 import cmd_i0_routes, cmd_i0_status
-from omo.omo_task import cmd_task_list
+from omo.omo_task import cmd_task_create, cmd_task_list
 from omo.omo_evidence import cmd_evidence_list
 from omo.omo_paths import OMO_ROOT, find_omo_dir
 
@@ -479,6 +479,38 @@ class TestOmoTask:
         captured = capsys.readouterr()
         assert "id: T1" in captured.out
         assert "id: T2" not in captured.out
+
+    def test_cmd_task_create_uses_governed_ingress(self, capsys, tmp_path: Path) -> None:
+        omo_dir = tmp_path
+        ret = cmd_task_create(
+            omo_dir,
+            title="治理化创建任务",
+            desc="不要手改 .omo",
+            priority="P1",
+            source_docs=["docs/plan.md"],
+            test_plan=["uv run pytest tests/test_sample.py -q"],
+            deliverables=["代码", "测试"],
+            evidence_required=["pytest"],
+            source_ref="reviewer:task:create-governed",
+        )
+        assert ret == 0
+
+        planned_dir = omo_dir / "tasks" / "planned"
+        task_files = sorted(planned_dir.glob("TASK-*.yaml"))
+        assert len(task_files) == 1
+        payload = yaml.safe_load(task_files[0].read_text(encoding="utf-8"))
+        assert payload["metadata"]["broker"] == "projects/omo/src/omo/omo_ingress.py"
+        assert payload["metadata"]["source_ref"] == "reviewer:task:create-governed"
+
+        artifact = omo_dir / "_delivery" / "ingress" / "tasks" / f"{payload['id']}.yaml"
+        assert artifact.exists()
+        registry = yaml.safe_load(
+            (omo_dir / "_delivery" / "ingress" / "registry.yaml").read_text(encoding="utf-8")
+        )
+        assert registry["tasks"]["by_source_ref"]["reviewer:task:create-governed"] == payload["id"]
+
+        captured = capsys.readouterr()
+        assert "Created governed task:" in captured.out
 
 
 # -- omo_evidence --

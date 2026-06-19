@@ -62,3 +62,18 @@ from bus_foundation import publish, subscribe, schedule, BusEnvelope
 - **修改 bus-foundation**: 提 PR 到 `projects/bus-foundation/`, 改完跑该项目的 `uv run pytest -q` 验证
 
 > 不要直接 import `agora.bus` (那是 backward-compat shim)。新代码用 `from bus_foundation import ...`。
+
+## Task Policy (任务红线)
+
+新增 task policy  checker 位于 `src/omo/omo_task_policy.py`，供 `omo lint task-policy <name>` 调用：
+
+- `self-evolution-approval` — OPC P6 self-evolution 任务必须保留在 `planned/`，且携带 `approval_required` / `human_approval_required` / `approval_state: awaiting_human`
+- `human-approval-ref` — 需要人工审批的任务必须提供指向 `.omo/workers/runs/*.yaml` 的 `approval_ref`
+
+新增 policy 时只需在 `omo_task_policy.py` 的 `TASK_POLICIES` 注册表中添加 `TaskPolicy` 实例，无需修改 `omo_lint.py` 的 CLI 代码（choices 自动从注册表派生）。
+
+CI 调用示例：
+```bash
+uv run python -m omo.cli lint task-policy self-evolution-approval --workspace-root ../../..
+uv run python -m omo.cli lint task-policy human-approval-ref --workspace-root ../../..
+```

@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 from omo.omo_lint import (
+    cmd_lint_all_task_policies,
     cmd_lint_direct_omo_io,
     cmd_lint_self_evolution_approval,
     cmd_lint_task_policy,
@@ -85,14 +86,21 @@ def test_gatekeeper_blocks_dynamic_workspace_join_to_omo(tmp_path: Path) -> None
 def test_cmd_lint_self_evolution_approval_passes_for_planned_only(tmp_path: Path, capsys) -> None:
     planned_dir = tmp_path / ".omo" / "tasks" / "planned"
     active_dir = tmp_path / ".omo" / "tasks" / "active"
+    workers_runs = tmp_path / ".omo" / "workers" / "runs"
     planned_dir.mkdir(parents=True)
     active_dir.mkdir(parents=True)
+    workers_runs.mkdir(parents=True)
     (planned_dir / "OPC-P6-SELF-EVOLUTION-sample.yaml").write_text(
         "id: OPC-P6-SELF-EVOLUTION-sample\n"
         "status: planned\n"
         "approval_required: true\n"
         "human_approval_required: true\n"
-        "approval_state: awaiting_human\n",
+        "approval_state: awaiting_human\n"
+        "approval_ref: .omo/workers/runs/OPC-P6-SELF-EVOLUTION-sample-promotion-approval-2026-06-19T00-00-00Z.yaml\n",
+        encoding="utf-8",
+    )
+    (workers_runs / "OPC-P6-SELF-EVOLUTION-sample-promotion-approval-2026-06-19T00-00-00Z.yaml").write_text(
+        "approval_status: requested\n",
         encoding="utf-8",
     )
 
@@ -106,14 +114,21 @@ def test_cmd_lint_self_evolution_approval_passes_for_planned_only(tmp_path: Path
 def test_cmd_lint_task_policy_matches_self_evolution_alias(tmp_path: Path, capsys) -> None:
     planned_dir = tmp_path / ".omo" / "tasks" / "planned"
     active_dir = tmp_path / ".omo" / "tasks" / "active"
+    workers_runs = tmp_path / ".omo" / "workers" / "runs"
     planned_dir.mkdir(parents=True)
     active_dir.mkdir(parents=True)
+    workers_runs.mkdir(parents=True)
     (planned_dir / "OPC-P6-SELF-EVOLUTION-sample.yaml").write_text(
         "id: OPC-P6-SELF-EVOLUTION-sample\n"
         "status: planned\n"
         "approval_required: true\n"
         "human_approval_required: true\n"
-        "approval_state: awaiting_human\n",
+        "approval_state: awaiting_human\n"
+        "approval_ref: .omo/workers/runs/OPC-P6-SELF-EVOLUTION-sample-promotion-approval-2026-06-19T00-00-00Z.yaml\n",
+        encoding="utf-8",
+    )
+    (workers_runs / "OPC-P6-SELF-EVOLUTION-sample-promotion-approval-2026-06-19T00-00-00Z.yaml").write_text(
+        "approval_status: requested\n",
         encoding="utf-8",
     )
 
@@ -121,6 +136,58 @@ def test_cmd_lint_task_policy_matches_self_evolution_alias(tmp_path: Path, capsy
 
     captured = capsys.readouterr()
     assert rc == 0
+    assert "omo lint self-evolution-approval pass" in captured.out
+    assert "matches=1" in captured.out
+
+
+def test_cmd_lint_all_task_policies_runs_registered_rules(tmp_path: Path, capsys) -> None:
+    planned_dir = tmp_path / ".omo" / "tasks" / "planned"
+    active_dir = tmp_path / ".omo" / "tasks" / "active"
+    remediation_dir = tmp_path / ".omo" / "tasks" / "remediation"
+    workers_runs = tmp_path / ".omo" / "workers" / "runs"
+    review_notes = tmp_path / ".omo" / "tasks" / "remediation-notes"
+    planned_dir.mkdir(parents=True)
+    active_dir.mkdir(parents=True)
+    remediation_dir.mkdir(parents=True)
+    workers_runs.mkdir(parents=True)
+    review_notes.mkdir(parents=True)
+    (planned_dir / "OPC-P6-SELF-EVOLUTION-sample.yaml").write_text(
+        "id: OPC-P6-SELF-EVOLUTION-sample\n"
+        "status: planned\n"
+        "approval_required: true\n"
+        "human_approval_required: true\n"
+        "approval_state: awaiting_human\n"
+        "approval_ref: .omo/workers/runs/OPC-P6-SELF-EVOLUTION-sample-promotion-approval-2026-06-19T00-00-00Z.yaml\n",
+        encoding="utf-8",
+    )
+    (workers_runs / "OPC-P6-SELF-EVOLUTION-sample-promotion-approval-2026-06-19T00-00-00Z.yaml").write_text(
+        "approval_status: requested\n",
+        encoding="utf-8",
+    )
+    (remediation_dir / "TASK-R.yaml").write_text(
+        "id: TASK-R\n"
+        "status: review\n"
+        "human_approval_required: true\n"
+        "approval_ref: .omo/workers/runs/TASK-R-promotion-approval-2026-06-19T00-00-00Z.yaml\n"
+        "review_note: .omo/tasks/remediation-notes/TASK-R-review.md\n",
+        encoding="utf-8",
+    )
+    (workers_runs / "TASK-R-promotion-approval-2026-06-19T00-00-00Z.yaml").write_text(
+        "approval_status: requested\n",
+        encoding="utf-8",
+    )
+    (review_notes / "TASK-R-review.md").write_text(
+        "# review\n",
+        encoding="utf-8",
+    )
+
+    rc = cmd_lint_all_task_policies(str(tmp_path))
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "omo lint active-execution-links pass" in captured.out
+    assert "omo lint human-approval-ref pass" in captured.out
+    assert "omo lint remediation-review-note pass" in captured.out
     assert "omo lint self-evolution-approval pass" in captured.out
 
 

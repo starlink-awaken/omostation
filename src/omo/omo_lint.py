@@ -588,8 +588,16 @@ def cmd_lint_task_policy(policy_name: str, workspace_root: str = ".") -> int:
             print(f"  - {issue}")
         return 1
     count = count_planned_matches(root, policy)
-    print(f"✅ omo lint {policy.name} pass: planned={count} active=0")
+    print(f"✅ omo lint {policy.name} pass: matches={count}")
     return 0
+
+
+def cmd_lint_all_task_policies(workspace_root: str = ".") -> int:
+    root = Path(workspace_root).resolve()
+    failures = 0
+    for policy_name in sorted(TASK_POLICIES):
+        failures += cmd_lint_task_policy(policy_name, str(root))
+    return 0 if failures == 0 else 1
 
 
 def cmd_lint_self_evolution_approval(workspace_root: str = ".") -> int:
@@ -660,7 +668,8 @@ def main(argv: list[str] | None = None) -> int:
         "task-policy",
         help="按注册表执行通用 task policy 校验",
     )
-    task_policy.add_argument("policy_name", choices=sorted(TASK_POLICIES))
+    task_policy.add_argument("policy_name", nargs="?", choices=sorted(TASK_POLICIES))
+    task_policy.add_argument("--all", action="store_true", help="执行全部已注册 task policy")
     task_policy.add_argument(
         "--workspace-root", default=".", help="显式指定 workspace root"
     )
@@ -677,6 +686,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "self-evolution-approval":
         return cmd_lint_self_evolution_approval(args.workspace_root)
     if args.command == "task-policy":
+        if args.all:
+            return cmd_lint_all_task_policies(args.workspace_root)
+        if not args.policy_name:
+            parser.error("task-policy requires policy_name unless --all is used")
         return cmd_lint_task_policy(args.policy_name, args.workspace_root)
     parser.print_help()
     return 1

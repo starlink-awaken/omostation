@@ -8,6 +8,8 @@ from pathlib import Path
 
 import yaml
 
+from .omo_task_policy import task_policy_registry_snapshot
+
 
 def _load_yaml(path: Path) -> dict:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
@@ -67,6 +69,84 @@ def _has_direct_io_gate(workspace_root: Path) -> bool:
         return False
     text = precommit.read_text(encoding="utf-8")
     return "omo-direct-io-gate" in text and "lint direct-omo-io" in text
+
+
+def _has_task_policy_gate(workspace_root: Path) -> bool:
+    precommit = workspace_root / ".pre-commit-config.yaml"
+    if not precommit.exists():
+        return False
+    text = precommit.read_text(encoding="utf-8")
+    return "omo-task-policy-gate" in text and "lint task-policy" in text
+
+
+def _check_task_policy_registry(workspace_root: Path) -> tuple[dict[str, object], list[str]]:
+    registry_path = workspace_root / ".omo" / "_truth" / "registry" / "task-policies.yaml"
+    if not registry_path.exists():
+        return {
+            "exists": False,
+            "path": str(registry_path),
+            "registered_policy_names": [],
+            "runtime_policy_names": [item["name"] for item in task_policy_registry_snapshot()],
+        }, ["task policy registry missing"]
+
+    registry = _load_yaml(registry_path)
+    policies = registry.get("policies")
+    if not isinstance(policies, list):
+        return {
+            "exists": True,
+            "path": str(registry_path),
+            "registered_policy_names": [],
+            "runtime_policy_names": [item["name"] for item in task_policy_registry_snapshot()],
+        }, ["task policy registry: policies block missing or not a list"]
+
+    registered_items = [item for item in policies if isinstance(item, dict)]
+    runtime_items = task_policy_registry_snapshot()
+    registered_by_name = {
+        str(item.get("name")): {
+            "summary": item.get("summary"),
+            "target_roots": list(item.get("target_roots", [])),
+            "file_glob": item.get("file_glob"),
+            "prohibited_roots": list(item.get("prohibited_roots", [])),
+            "required_fields": item.get("required_fields", {}),
+            "required_status": item.get("required_status"),
+            "validator_id": item.get("validator_id"),
+        }
+        for item in registered_items
+        if item.get("name")
+    }
+    runtime_by_name = {
+        item["name"]: {
+            "summary": item.get("summary"),
+            "target_roots": list(item.get("target_roots", [])),
+            "file_glob": item.get("file_glob"),
+            "prohibited_roots": list(item.get("prohibited_roots", [])),
+            "required_fields": item.get("required_fields", {}),
+            "required_status": item.get("required_status"),
+            "validator_id": item.get("validator_id"),
+        }
+        for item in runtime_items
+    }
+
+    issues: list[str] = []
+    registered_names = sorted(registered_by_name)
+    runtime_names = sorted(runtime_by_name)
+    missing_in_registry = sorted(name for name in runtime_names if name not in registered_by_name)
+    stale_in_registry = sorted(name for name in registered_names if name not in runtime_by_name)
+    issues.extend(f"task policy registry missing runtime policy: {name}" for name in missing_in_registry)
+    issues.extend(f"task policy registry contains stale policy: {name}" for name in stale_in_registry)
+
+    for name in sorted(set(registered_by_name).intersection(runtime_by_name)):
+        if registered_by_name[name] != runtime_by_name[name]:
+            issues.append(f"task policy registry drift for {name}")
+
+    return {
+        "exists": True,
+        "path": str(registry_path),
+        "registered_policy_names": registered_names,
+        "runtime_policy_names": runtime_names,
+        "registered_policies": [registered_by_name[name] | {"name": name} for name in registered_names],
+        "runtime_policies": runtime_items,
+    }, issues
 
 
 def _resolve_ingress_task_carrier(omo_dir: Path, item_id: str) -> Path | None:
@@ -297,7 +377,9 @@ def build_governance_surfaces_report(workspace_root: Path) -> dict[str, object]:
     ]
     missing_c2g_refs = [ref for ref in expected_refs if ref not in c2g_refs]
     direct_io_gate_present = _has_direct_io_gate(workspace_root)
+    task_policy_gate_present = _has_task_policy_gate(workspace_root)
     ingress_registry, ingress_registry_issues = _check_ingress_registry(workspace_root)
+    task_policy_registry, task_policy_registry_issues = _check_task_policy_registry(workspace_root)
 
     issues: list[str] = []
     if not standard_path.exists():
@@ -315,8 +397,11 @@ def build_governance_surfaces_report(workspace_root: Path) -> dict[str, object]:
     )
     if not direct_io_gate_present:
         issues.append("pre-commit direct io gate missing: omo-direct-io-gate")
+    if not task_policy_gate_present:
+        issues.append("pre-commit task policy gate missing: omo-task-policy-gate")
     issues.extend(c2g_issues)
     issues.extend(ingress_registry_issues)
+    issues.extend(task_policy_registry_issues)
 
     warnings = [
         f"constrained legacy asset present: {ref}" for ref in constrained_present
@@ -342,7 +427,9 @@ def build_governance_surfaces_report(workspace_root: Path) -> dict[str, object]:
         "c2g_governance_refs": c2g_refs,
         "c2g_missing_governance_refs": missing_c2g_refs,
         "direct_io_gate_present": direct_io_gate_present,
+        "task_policy_gate_present": task_policy_gate_present,
         "ingress_registry": ingress_registry,
+        "task_policy_registry": task_policy_registry,
         "issues": issues,
         "warnings": warnings,
         "status": status,

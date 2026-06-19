@@ -32,10 +32,18 @@ omo governance surfaces  # `.omo` 顶层治理面巡检
 omo governance ingress-goal BET-001 "标题" "描述" --ingress-plane projects/c2g
 omo governance ingress-task task.yaml --ingress-plane projects/c2g
 omo governance ingress-debt debt.yaml --ingress-plane projects/aetherforge
+omo task create --title "治理任务" --source-doc docs/spec.md --test-plan "uv run pytest -q"
 omo lint direct-omo-io         # 非 broker 直接改 `.omo` / `spaces` 拦截
 omo lint ingress-registry      # ingress registry 结构 / 反向映射 / 落盘一致性校验
 omo lint self-evolution-approval # OPC P6 self-evolution 审批红线校验
-omo lint task-policy self-evolution-approval # 通用 task policy 入口
+omo lint task-policy self-evolution-approval # 单条规则校验
+omo lint task-policy human-approval-ref      # 单条规则校验
+omo lint task-policy active-review-ref       # active review 审查工件存在性
+omo lint task-policy done-directory-status   # done/ 目录状态一致性
+omo lint task-policy modern-done-completion-marker # 新式 done packet 完成标记
+omo lint task-policy modern-done-evidence-paths # 新式 done packet 证据文件存在性
+omo lint task-policy remediation-review-note # remediation review 审查笔记
+omo lint task-policy --all                   # 执行全部已注册 task policy
 omo event emit       # 事件发射
 omo observability    # 可观测性
 ```
@@ -45,7 +53,24 @@ omo observability    # 可观测性
 - `omo governance ingress-goal`: 受审计写入 `.omo/goals/current.yaml`
 - `omo governance ingress-task`: 受审计写入 `.omo/tasks/planned/<id>.yaml`
 - `omo governance ingress-debt`: 受审计写入 `.omo/debt/items/<id>.yaml`
+- `omo task create`: 人类友好的低风险 planned-task 脚手架入口，底层仍走 `create_planned_task()` broker
 - 三者都会同时落审计/交付副产物到 `.omo/_delivery/ingress/`
+
+### 持久化治理红线
+
+- 特殊任务红线统一注册在 `src/omo/omo_task_policy.py`
+- 机器可读注册表在 `.omo/_truth/registry/task-policies.yaml`
+- 统一执行入口是 `omo lint task-policy <name>`
+- 全量执行入口是 `omo lint task-policy --all`
+- 当前持久化门禁链:
+  - 本地提交前: `.pre-commit-config.yaml`
+  - CI 合并前: `.github/workflows/governance-check.yml`
+  - 治理巡检: `omo governance surfaces` + `omo lint ingress-registry`
+- 新增红线时只允许:
+  - 在 `TaskPolicy` 注册表加规则
+  - 补对应测试
+  - 补 README / 标准文档
+- 不允许再新增平行的 ad-hoc `.omo` 手工检查脚本
 
 ## 架构
 

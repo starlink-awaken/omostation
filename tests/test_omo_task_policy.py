@@ -5,10 +5,17 @@ from pathlib import Path
 import pytest
 
 from omo.omo_task_policy import (
+    ACTIVE_EXECUTION_LINKS_POLICY,
+    ACTIVE_REVIEW_REF_POLICY,
+    DONE_DIRECTORY_STATUS_POLICY,
+    MODERN_DONE_COMPLETION_MARKER_POLICY,
+    MODERN_DONE_EVIDENCE_PATHS_POLICY,
     OPC_P6_SELF_EVOLUTION_POLICY,
+    REMEDIATION_REVIEW_NOTE_POLICY,
     TASK_POLICIES,
     check_task_policy,
     get_task_policy,
+    task_policy_registry_snapshot,
 )
 
 
@@ -69,3 +76,115 @@ def test_get_task_policy_resolves_registered_policy() -> None:
 def test_get_task_policy_rejects_unknown_policy() -> None:
     with pytest.raises(KeyError, match="unknown task policy"):
         get_task_policy("does-not-exist")
+
+
+def test_task_policy_registry_snapshot_lists_registered_policies() -> None:
+    snapshot = task_policy_registry_snapshot()
+
+    assert [item["name"] for item in snapshot] == sorted(TASK_POLICIES)
+    assert snapshot[0]["summary"]
+    assert "target_roots" in snapshot[0]
+
+
+def test_active_execution_links_policy_flags_missing_fields(tmp_path: Path) -> None:
+    active_dir = tmp_path / ".omo" / "tasks" / "active"
+    active_dir.mkdir(parents=True)
+    (active_dir / "TASK-A.yaml").write_text(
+        "id: TASK-A\n"
+        "status: review\n"
+        "assigned_to: system\n"
+        "dispatch_id: null\n"
+        "run_ref: null\n"
+        "review_ref: null\n",
+        encoding="utf-8",
+    )
+
+    issues = check_task_policy(tmp_path, ACTIVE_EXECUTION_LINKS_POLICY)
+
+    assert any("dispatch_id must be set when status=review" in issue for issue in issues)
+    assert any("run_ref must be set when status=review" in issue for issue in issues)
+    assert any("review_ref must be set when status=review" in issue for issue in issues)
+
+
+def test_active_review_ref_policy_flags_missing_artifact(tmp_path: Path) -> None:
+    active_dir = tmp_path / ".omo" / "tasks" / "active"
+    active_dir.mkdir(parents=True)
+    (active_dir / "TASK-RV.yaml").write_text(
+        "id: TASK-RV\n"
+        "status: review\n"
+        "review_ref: .omo/_delivery/reviews/missing.md\n",
+        encoding="utf-8",
+    )
+
+    issues = check_task_policy(tmp_path, ACTIVE_REVIEW_REF_POLICY)
+
+    assert issues == ["TASK-RV.yaml: review_ref target missing: .omo/_delivery/reviews/missing.md"]
+
+
+def test_done_directory_status_policy_flags_non_done_status(tmp_path: Path) -> None:
+    done_dir = tmp_path / ".omo" / "tasks" / "done"
+    done_dir.mkdir(parents=True)
+    (done_dir / "TASK-D.yaml").write_text(
+        "id: TASK-D\n"
+        "status: review\n",
+        encoding="utf-8",
+    )
+
+    issues = check_task_policy(tmp_path, DONE_DIRECTORY_STATUS_POLICY)
+
+    assert issues == ["TASK-D.yaml: status must remain done"]
+
+
+def test_modern_done_completion_marker_policy_flags_missing_marker(tmp_path: Path) -> None:
+    done_dir = tmp_path / ".omo" / "tasks" / "done"
+    done_dir.mkdir(parents=True)
+    (done_dir / "TASK-M.yaml").write_text(
+        "id: TASK-M\n"
+        "status: done\n"
+        "task_type: governance\n"
+        "source_docs:\n- spec.md\n"
+        "entry_gate:\n- gate-a\n"
+        "evidence_required:\n- pytest\n"
+        "test_plan:\n- uv run pytest\n"
+        "allowed_operation_level: L0\n",
+        encoding="utf-8",
+    )
+
+    issues = check_task_policy(tmp_path, MODERN_DONE_COMPLETION_MARKER_POLICY)
+
+    assert issues == ["TASK-M.yaml: modern done packet must carry completed_at or completed marker"]
+
+
+def test_remediation_review_note_policy_flags_missing_note(tmp_path: Path) -> None:
+    remediation_dir = tmp_path / ".omo" / "tasks" / "remediation"
+    remediation_dir.mkdir(parents=True)
+    (remediation_dir / "TASK-R.yaml").write_text(
+        "id: TASK-R\n"
+        "status: review\n",
+        encoding="utf-8",
+    )
+
+    issues = check_task_policy(tmp_path, REMEDIATION_REVIEW_NOTE_POLICY)
+
+    assert issues == ["TASK-R.yaml: remediation review task must carry review_note"]
+
+
+def test_modern_done_evidence_paths_policy_flags_missing_artifact(tmp_path: Path) -> None:
+    done_dir = tmp_path / ".omo" / "tasks" / "done"
+    done_dir.mkdir(parents=True)
+    (done_dir / "TASK-E.yaml").write_text(
+        "id: TASK-E\n"
+        "status: done\n"
+        "task_type: governance\n"
+        "source_docs:\n- spec.md\n"
+        "entry_gate:\n- gate-a\n"
+        "evidence_required:\n- pytest\n"
+        "test_plan:\n- uv run pytest\n"
+        "allowed_operation_level: L0\n"
+        "evidence_paths:\n- .omo/_delivery/reports/missing.md\n",
+        encoding="utf-8",
+    )
+
+    issues = check_task_policy(tmp_path, MODERN_DONE_EVIDENCE_PATHS_POLICY)
+
+    assert issues == ["TASK-E.yaml: evidence_path target missing: .omo/_delivery/reports/missing.md"]

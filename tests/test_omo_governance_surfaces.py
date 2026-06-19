@@ -58,6 +58,97 @@ def _seed_workspace(root: Path) -> None:
             ]
         },
     )
+    _write_yaml(
+        omo / "_truth" / "registry" / "task-policies.yaml",
+        {
+            "policies": [
+                {
+                    "name": "active-execution-links",
+                    "summary": "active/ 中的 in_progress/review 任务必须具备 dispatch/run/review 等链路字段",
+                    "target_roots": ["active"],
+                    "file_glob": "*.yaml",
+                    "prohibited_roots": [],
+                    "required_fields": {},
+                    "required_status": None,
+                    "validator_id": "active_execution_links",
+                },
+                {
+                    "name": "active-review-ref",
+                    "summary": "active/ 下 review 态任务必须带 review_ref 且指向真实审查工件",
+                    "target_roots": ["active"],
+                    "file_glob": "*.yaml",
+                    "prohibited_roots": [],
+                    "required_fields": {},
+                    "required_status": None,
+                    "validator_id": "active_review_ref",
+                },
+                {
+                    "name": "done-directory-status",
+                    "summary": "done/ 目录中的任务必须显式保持 status=done",
+                    "target_roots": ["done"],
+                    "file_glob": "*.yaml",
+                    "prohibited_roots": [],
+                    "required_fields": {},
+                    "required_status": "done",
+                    "validator_id": None,
+                },
+                {
+                    "name": "modern-done-completion-marker",
+                    "summary": "新式 done packet 必须带 completed_at 或 completed 完成标记",
+                    "target_roots": ["done"],
+                    "file_glob": "*.yaml",
+                    "prohibited_roots": [],
+                    "required_fields": {},
+                    "required_status": None,
+                    "validator_id": "modern_done_completion_marker",
+                },
+                {
+                    "name": "modern-done-evidence-paths",
+                    "summary": "新式 done packet 一旦声明 evidence_paths，其目标文件必须物理存在",
+                    "target_roots": ["done"],
+                    "file_glob": "*.yaml",
+                    "prohibited_roots": [],
+                    "required_fields": {},
+                    "required_status": None,
+                    "validator_id": "modern_done_evidence_paths",
+                },
+                {
+                    "name": "remediation-review-note",
+                    "summary": "remediation/ 下 review 态任务必须带 review_note 且指向真实审查笔记",
+                    "target_roots": ["remediation"],
+                    "file_glob": "*.yaml",
+                    "prohibited_roots": [],
+                    "required_fields": {},
+                    "required_status": None,
+                    "validator_id": "remediation_review_note",
+                },
+                {
+                    "name": "self-evolution-approval",
+                    "summary": "self-evolution 任务只能留在 planned/，且审批字段必须保持人工待批基线",
+                    "target_roots": ["planned"],
+                    "file_glob": "OPC-P6-SELF-EVOLUTION-*.yaml",
+                    "prohibited_roots": ["active"],
+                    "required_fields": {
+                        "approval_required": True,
+                        "human_approval_required": True,
+                        "approval_state": "awaiting_human",
+                    },
+                    "required_status": "planned",
+                    "validator_id": None,
+                },
+                {
+                    "name": "human-approval-ref",
+                    "summary": "human_approval_required 的 planned/review 任务必须绑定 task-specific promotion approval yaml",
+                    "target_roots": ["planned", "remediation"],
+                    "file_glob": "*.yaml",
+                    "prohibited_roots": [],
+                    "required_fields": {},
+                    "required_status": None,
+                    "validator_id": "human_approval_ref",
+                },
+            ]
+        },
+    )
 
     c2g_builder = root / "projects" / "c2g" / "src" / "c2g" / "task_builder.py"
     _write(
@@ -81,6 +172,8 @@ def build_ecos_task(*args, **kwargs):
   hooks:
     - id: omo-direct-io-gate
       entry: uv run --directory projects/omo python -m omo.cli lint direct-omo-io
+    - id: omo-task-policy-gate
+      entry: uv run --directory projects/omo python -m omo.cli lint task-policy --all --workspace-root .
 """.strip()
         + "\n",
     )
@@ -96,6 +189,18 @@ def test_build_governance_surfaces_report_ok(tmp_path: Path) -> None:
     assert report["missing_registered_roots"] == []
     assert report["c2g_missing_governance_refs"] == []
     assert report["direct_io_gate_present"] is True
+    assert report["task_policy_gate_present"] is True
+    assert report["task_policy_registry"]["exists"] is True
+    assert report["task_policy_registry"]["runtime_policy_names"] == [
+        "active-execution-links",
+        "active-review-ref",
+        "done-directory-status",
+        "human-approval-ref",
+        "modern-done-completion-marker",
+        "modern-done-evidence-paths",
+        "remediation-review-note",
+        "self-evolution-approval",
+    ]
     assert report["ingress_registry"]["exists"] is False
     assert report["ingress_registry"]["debt_ids"] == []
 
@@ -155,6 +260,37 @@ def test_build_governance_surfaces_report_requires_direct_io_gate(tmp_path: Path
 
     assert report["status"] == "error"
     assert any("pre-commit direct io gate missing" in issue for issue in report["issues"])
+
+
+def test_build_governance_surfaces_report_flags_task_policy_registry_drift(tmp_path: Path) -> None:
+    _seed_workspace(tmp_path)
+    _write_yaml(
+        tmp_path / ".omo" / "_truth" / "registry" / "task-policies.yaml",
+        {
+            "policies": [
+                {
+                    "name": "self-evolution-approval",
+                    "summary": "drifted",
+                    "target_roots": ["planned"],
+                    "file_glob": "OPC-P6-SELF-EVOLUTION-*.yaml",
+                    "prohibited_roots": ["active"],
+                    "required_fields": {
+                        "approval_required": True,
+                        "human_approval_required": True,
+                        "approval_state": "awaiting_human",
+                    },
+                    "required_status": "planned",
+                    "validator_id": None,
+                }
+            ]
+        },
+    )
+
+    report = build_governance_surfaces_report(tmp_path)
+
+    assert report["status"] == "error"
+    assert any("task policy registry drift for self-evolution-approval" in issue for issue in report["issues"])
+    assert any("task policy registry missing runtime policy: human-approval-ref" in issue for issue in report["issues"])
 
 
 def test_build_governance_surfaces_report_flags_ingress_registry_reverse_mapping_mismatch(

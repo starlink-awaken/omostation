@@ -10,16 +10,19 @@ import yaml
 @dataclass(frozen=True)
 class TaskPolicy:
     name: str
+    summary: str
     target_roots: tuple[str, ...]
     file_glob: str
     prohibited_roots: tuple[str, ...] = ()
     required_fields: dict[str, Any] = field(default_factory=dict)
     required_status: str | None = None
+    validator_id: str | None = None
     custom_validator: Callable[[Path, dict[str, Any]], list[str]] | None = None
 
 
 OPC_P6_SELF_EVOLUTION_POLICY = TaskPolicy(
     name="self-evolution-approval",
+    summary="self-evolution 任务只能留在 planned/，且审批字段必须保持人工待批基线",
     target_roots=("planned",),
     file_glob="OPC-P6-SELF-EVOLUTION-*.yaml",
     prohibited_roots=("active",),
@@ -50,14 +53,178 @@ def _validate_human_approval_ref(task_path: Path, payload: dict[str, Any]) -> li
     return []
 
 
+def _validate_active_execution_links(task_path: Path, payload: dict[str, Any]) -> list[str]:
+    status = payload.get("status")
+    required_fields_by_status = {
+        "in_progress": ("assigned_to", "dispatch_id", "run_ref", "started_at"),
+        "review": ("assigned_to", "dispatch_id", "run_ref", "review_ref"),
+    }
+    required_fields = required_fields_by_status.get(status)
+    if required_fields is None:
+        return []
+    issues: list[str] = []
+    for field_name in required_fields:
+        if not payload.get(field_name):
+            issues.append(f"{task_path.name}: {field_name} must be set when status={status}")
+    return issues
+
+
+def _validate_modern_done_completion_marker(task_path: Path, payload: dict[str, Any]) -> list[str]:
+    if payload.get("status") != "done":
+        return []
+    modern_fields = (
+        "task_type",
+        "source_docs",
+        "entry_gate",
+        "evidence_required",
+        "test_plan",
+        "allowed_operation_level",
+    )
+    is_modern_packet = all(payload.get(field) not in (None, [], "") for field in modern_fields)
+    if not is_modern_packet:
+        return []
+    if payload.get("completed_at") or payload.get("completed"):
+        return []
+    return [f"{task_path.name}: modern done packet must carry completed_at or completed marker"]
+
+
+def _validate_remediation_review_note(task_path: Path, payload: dict[str, Any]) -> list[str]:
+    if payload.get("status") != "review":
+        return []
+    review_note = payload.get("review_note")
+    if not isinstance(review_note, str) or not review_note:
+        return [f"{task_path.name}: remediation review task must carry review_note"]
+    if review_note.startswith("/"):
+        review_note_path = Path(review_note)
+    else:
+        review_note_path = task_path.parents[3] / review_note
+    if not review_note_path.exists():
+        return [f"{task_path.name}: review_note target missing: {review_note}"]
+    return []
+
+
+def _validate_modern_done_evidence_paths(task_path: Path, payload: dict[str, Any]) -> list[str]:
+    if payload.get("status") != "done":
+        return []
+    modern_fields = (
+        "task_type",
+        "source_docs",
+        "entry_gate",
+        "evidence_required",
+        "test_plan",
+        "allowed_operation_level",
+    )
+    is_modern_packet = all(payload.get(field) not in (None, [], "") for field in modern_fields)
+    if not is_modern_packet:
+        return []
+    evidence_paths = payload.get("evidence_paths")
+    if evidence_paths in (None, [], ""):
+        return []
+    if not isinstance(evidence_paths, list):
+        return [f"{task_path.name}: evidence_paths must be a list when declared"]
+    issues: list[str] = []
+    workspace_root = task_path.parents[3]
+    for ref in evidence_paths:
+        if not isinstance(ref, str) or not ref:
+            issues.append(f"{task_path.name}: evidence_paths contains invalid ref {ref!r}")
+            continue
+        target = Path(ref)
+        if not target.is_absolute():
+            target = workspace_root / ref
+        if not target.exists():
+            issues.append(f"{task_path.name}: evidence_path target missing: {ref}")
+    return issues
+
+
+def _validate_active_review_ref(task_path: Path, payload: dict[str, Any]) -> list[str]:
+    if payload.get("status") != "review":
+        return []
+    review_ref = payload.get("review_ref")
+    if not isinstance(review_ref, str) or not review_ref:
+        return [f"{task_path.name}: active review task must carry review_ref"]
+    review_path = Path(review_ref)
+    if not review_path.is_absolute():
+        review_path = task_path.parents[3] / review_ref
+    if not review_path.exists():
+        return [f"{task_path.name}: review_ref target missing: {review_ref}"]
+    return []
+
+
 HUMAN_APPROVAL_REF_POLICY = TaskPolicy(
     name="human-approval-ref",
+    summary="human_approval_required 的 planned/review 任务必须绑定 task-specific promotion approval yaml",
     target_roots=("planned", "remediation"),
     file_glob="*.yaml",
+    validator_id="human_approval_ref",
     custom_validator=_validate_human_approval_ref,
 )
 
+
+ACTIVE_EXECUTION_LINKS_POLICY = TaskPolicy(
+    name="active-execution-links",
+    summary="active/ 中的 in_progress/review 任务必须具备 dispatch/run/review 等链路字段",
+    target_roots=("active",),
+    file_glob="*.yaml",
+    validator_id="active_execution_links",
+    custom_validator=_validate_active_execution_links,
+)
+
+
+DONE_DIRECTORY_STATUS_POLICY = TaskPolicy(
+    name="done-directory-status",
+    summary="done/ 目录中的任务必须显式保持 status=done",
+    target_roots=("done",),
+    file_glob="*.yaml",
+    required_status="done",
+)
+
+
+MODERN_DONE_COMPLETION_MARKER_POLICY = TaskPolicy(
+    name="modern-done-completion-marker",
+    summary="新式 done packet 必须带 completed_at 或 completed 完成标记",
+    target_roots=("done",),
+    file_glob="*.yaml",
+    validator_id="modern_done_completion_marker",
+    custom_validator=_validate_modern_done_completion_marker,
+)
+
+
+REMEDIATION_REVIEW_NOTE_POLICY = TaskPolicy(
+    name="remediation-review-note",
+    summary="remediation/ 下 review 态任务必须带 review_note 且指向真实审查笔记",
+    target_roots=("remediation",),
+    file_glob="*.yaml",
+    validator_id="remediation_review_note",
+    custom_validator=_validate_remediation_review_note,
+)
+
+
+MODERN_DONE_EVIDENCE_PATHS_POLICY = TaskPolicy(
+    name="modern-done-evidence-paths",
+    summary="新式 done packet 一旦声明 evidence_paths，其目标文件必须物理存在",
+    target_roots=("done",),
+    file_glob="*.yaml",
+    validator_id="modern_done_evidence_paths",
+    custom_validator=_validate_modern_done_evidence_paths,
+)
+
+
+ACTIVE_REVIEW_REF_POLICY = TaskPolicy(
+    name="active-review-ref",
+    summary="active/ 下 review 态任务必须带 review_ref 且指向真实审查工件",
+    target_roots=("active",),
+    file_glob="*.yaml",
+    validator_id="active_review_ref",
+    custom_validator=_validate_active_review_ref,
+)
+
 TASK_POLICIES: dict[str, TaskPolicy] = {
+    ACTIVE_EXECUTION_LINKS_POLICY.name: ACTIVE_EXECUTION_LINKS_POLICY,
+    ACTIVE_REVIEW_REF_POLICY.name: ACTIVE_REVIEW_REF_POLICY,
+    DONE_DIRECTORY_STATUS_POLICY.name: DONE_DIRECTORY_STATUS_POLICY,
+    MODERN_DONE_COMPLETION_MARKER_POLICY.name: MODERN_DONE_COMPLETION_MARKER_POLICY,
+    MODERN_DONE_EVIDENCE_PATHS_POLICY.name: MODERN_DONE_EVIDENCE_PATHS_POLICY,
+    REMEDIATION_REVIEW_NOTE_POLICY.name: REMEDIATION_REVIEW_NOTE_POLICY,
     OPC_P6_SELF_EVOLUTION_POLICY.name: OPC_P6_SELF_EVOLUTION_POLICY,
     HUMAN_APPROVAL_REF_POLICY.name: HUMAN_APPROVAL_REF_POLICY,
 }
@@ -69,6 +236,23 @@ def get_task_policy(name: str) -> TaskPolicy:
     except KeyError as exc:
         known = ", ".join(sorted(TASK_POLICIES))
         raise KeyError(f"unknown task policy: {name}. known policies: {known}") from exc
+
+
+def task_policy_snapshot(policy: TaskPolicy) -> dict[str, Any]:
+    return {
+        "name": policy.name,
+        "summary": policy.summary,
+        "target_roots": list(policy.target_roots),
+        "file_glob": policy.file_glob,
+        "prohibited_roots": list(policy.prohibited_roots),
+        "required_fields": dict(policy.required_fields),
+        "required_status": policy.required_status,
+        "validator_id": policy.validator_id,
+    }
+
+
+def task_policy_registry_snapshot() -> list[dict[str, Any]]:
+    return [task_policy_snapshot(TASK_POLICIES[name]) for name in sorted(TASK_POLICIES)]
 
 
 def count_planned_matches(workspace_root: Path, policy: TaskPolicy) -> int:
