@@ -3,7 +3,7 @@
 mof-state-bridge — .omo/tasks/ ↔ M1 OMOTask 双向同步
 =====================================================
 双向桥接:
-- .omo/tasks/active/{id}.yaml  ←→  M1 OMOTASK-{id} 节点
+- .omo/tasks/{active,planned,done}/{id}.yaml  ↔  M1 OMOTASK-{id} 节点 (只读校验)
 - .omo/tasks/planned/{id}.yaml ←→  M1 OMOTASK-{id} 节点 (status=proposed)
 - .omo/tasks/done/{id}.yaml    ←→  M1 OMOTASK-{id} 节点 (status=done)
 
@@ -13,8 +13,8 @@ mof-state-bridge — .omo/tasks/ ↔ M1 OMOTask 双向同步
     cd projects/ecos
     python3 src/ecos/ssot/tools/mof-state-bridge.py              # 状态报告
     python3 src/ecos/ssot/tools/mof-state-bridge.py --diff       # 仅 diff 不写盘
-    python3 src/ecos/ssot/tools/mof-state-bridge.py --m1-to-omo  # M1 → .omo/tasks/active/
-    python3 src/ecos/ssot/tools/mof-state-bridge.py --omo-to-m1  # .omo/tasks/active/ → M1
+    python3 src/ecos/ssot/tools/mof-state-bridge.py --m1-to-omo  # 禁止: 不再允许 ecos 直写 .omo/tasks
+    python3 src/ecos/ssot/tools/mof-state-bridge.py --omo-to-m1  # .omo/tasks/ → M1 OMOTask
     python3 src/ecos/ssot/tools/mof-state-bridge.py --strict    # 失同步退出码 1
 """
 
@@ -191,11 +191,16 @@ def diff_m1_vs_omo(m1_nodes: dict, omo_tasks: dict) -> dict:
     }
 
 
-# ── 写盘: M1 → .omo/tasks/active/ ────────────────────────
+# ── 映射: M1 → .omo/tasks/* (只用于报告; ecos 不再直写) ───────────────
 
 
 def m1_to_omo_yaml(m1_data: dict) -> dict:
-    """M1 OMOTask 数据转 .omo/tasks/active/ YAML 格式."""
+    """M1 OMOTask 数据转 `.omo/tasks/*` YAML 视图.
+
+    注意:
+    - 这里只生成候选 payload, 不再由 ecos 直接写 `.omo/tasks/*`
+    - `.omo` 写入必须走 `projects/omo` broker / governance ingress
+    """
     out = {
         "id": m1_data["id"].replace("OMOTASK-", ""),
         "title": m1_data.get("title") or m1_data.get("name", ""),
@@ -296,6 +301,29 @@ def omo_to_m1_yaml(omo_data: dict, m1_id: str) -> dict:
     return out
 
 
+def _collect_m1_to_omo_candidates(diff: dict) -> list[dict[str, object]]:
+    candidates: list[dict[str, object]] = []
+    for pair in diff["pairs"]:
+        if pair["omo_exists"]:
+            continue
+        omo_id = pair["omo_id"]
+        existing = (
+            list(OMO_TASKS_ACTIVE.glob(f"{omo_id}*.yaml"))
+            + list(OMO_TASKS_PLANNED.glob(f"{omo_id}*.yaml"))
+            + list(OMO_TASKS_DONE.glob(f"{omo_id}*.yaml"))
+        )
+        if existing:
+            continue
+        candidates.append(
+            {
+                "omo_id": omo_id,
+                "target_ref": f".omo/tasks/active/{omo_id}.yaml",
+                "payload": m1_to_omo_yaml(pair["m1_data"]),
+            }
+        )
+    return candidates
+
+
 # ── 报告 ──────────────────────────────────────────────────
 
 
@@ -360,7 +388,7 @@ def format_report(diff) -> str:
 # ── main ──────────────────────────────────────────────────
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description=".omo/tasks/ ↔ M1 OMOTask 双向桥接")
     parser.add_argument("--diff", action="store_true", help="仅 diff 不写盘 (默认)")
     parser.add_argument(
@@ -381,37 +409,34 @@ def main():
     diff = diff_m1_vs_omo(m1_nodes, omo_tasks)
 
     written_files = []
+    blocked_direct_mutation = False
+    pending_m1_to_omo = []
     if args.m1_to_omo:
-        for p in diff["pairs"]:
-            if p["omo_exists"]:
-                continue
-            omo_id = p["omo_id"]
-            path = OMO_TASKS_ACTIVE / f"{omo_id}.yaml"
-            # 跳过已存在的扩展名 (e.g. OPC-P6 vs OPC-P6-EVOLUTION-LOOP)
-            existing = (
-                list(OMO_TASKS_ACTIVE.glob(f"{omo_id}*.yaml"))
-                + list(OMO_TASKS_PLANNED.glob(f"{omo_id}*.yaml"))
-                + list(OMO_TASKS_DONE.glob(f"{omo_id}*.yaml"))
-            )
-            if existing:
-                print(
-                    f"⏭️  跳过 {omo_id} (已存在扩展名: {[f.name for f in existing]})",
-                    file=sys.stderr,
-                )
-                continue
-            data = m1_to_omo_yaml(p["m1_data"])
-            write_yaml_atomic(path, data)
-            written_files.append(str(path.relative_to(WORKSPACE_ROOT)))
-        if written_files:
+        pending_m1_to_omo = _collect_m1_to_omo_candidates(diff)
+        if pending_m1_to_omo:
+            blocked_direct_mutation = True
             print(
-                f"✅ M1 → .omo/tasks/active/ 写入 {len(written_files)} 个:",
+                "❌ 已禁止 `mof-state-bridge --m1-to-omo` 直接写 `.omo/tasks/*`；"
+                "请改走 `projects/omo` broker / governance ingress。",
                 file=sys.stderr,
             )
-            for f in written_files:
-                print(f"   - {f}", file=sys.stderr)
+            print(
+                f"   待收敛候选: {len(pending_m1_to_omo)} 个",
+                file=sys.stderr,
+            )
+            for item in pending_m1_to_omo[:20]:
+                print(
+                    f"   - {item['target_ref']}",
+                    file=sys.stderr,
+                )
+            if len(pending_m1_to_omo) > 20:
+                print(
+                    f"   ... ({len(pending_m1_to_omo) - 20} more)",
+                    file=sys.stderr,
+                )
         else:
             print(
-                "✅ 无需补全, M1 OMOTask ↔ .omo/tasks/active/ 已同步", file=sys.stderr
+                "✅ 无需补全, M1 OMOTask ↔ .omo/tasks/ 已同步", file=sys.stderr
             )
 
     if args.omo_to_m1:
@@ -456,6 +481,8 @@ def main():
                     "paired": len([p for p in diff["pairs"] if p["omo_exists"]]),
                     "diff": out_diff,
                     "written_files": written_files,
+                    "blocked_direct_mutation": blocked_direct_mutation,
+                    "pending_m1_to_omo": pending_m1_to_omo,
                 },
                 ensure_ascii=False,
                 indent=2,
@@ -464,12 +491,18 @@ def main():
         )
     else:
         print(format_report(diff))
-        if args.m1_to_omo and written_files:
-            print(f"\n📝 已写盘: {len(written_files)} 个文件")
+        if args.m1_to_omo and blocked_direct_mutation:
+            print(
+                "\n🛑 已阻断 ecos → .omo/tasks 直接写入；该桥只保留校验/报告，"
+                "`.omo` 持久化必须走 OMO broker。"
+            )
 
     if args.strict and not in_sync:
-        sys.exit(1)
+        return 1
+    if blocked_direct_mutation:
+        return 2
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

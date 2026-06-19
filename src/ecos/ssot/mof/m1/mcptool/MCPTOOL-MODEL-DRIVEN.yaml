@@ -1,0 +1,12 @@
+id: MCPTOOL-MODEL-DRIVEN
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: model-driven framework
+description: Model-Driven 框架 MCP 工具集 — 41 tools (lifecycle/mof/schema/validate)
+project: model-driven
+component: COMP-WS-model-driven
+tool_count: 41
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/model-driven/src/model_driven/mcp_server.py

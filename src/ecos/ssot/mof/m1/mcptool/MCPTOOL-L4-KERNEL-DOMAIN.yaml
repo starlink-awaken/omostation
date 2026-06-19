@@ -1,0 +1,19 @@
+id: MCPTOOL-L4-KERNEL-DOMAIN
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: l4-kernel domain management
+description: L4 域管理工具集 — list/info/create/validate/freeze/unfreeze/migrate
+project: l4-kernel
+component: COMP-WS-l4-kernel
+tools:
+  - l4_domains_list
+  - l4_domain_info
+  - l4_domain_create
+  - l4_domain_validate
+  - l4_domain_freeze
+  - l4_domain_unfreeze
+  - l4_domain_migrate
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/l4-kernel/src/l4_kernel/mcp_server.py

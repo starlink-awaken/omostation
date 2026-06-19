@@ -1,0 +1,12 @@
+id: MCPTOOL-METAOS
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: metaos orchestration
+description: MetaOS 编排引擎 MCP 工具集 — 22 tools (workflow/gate/router/immune/deadlock)
+project: metaos
+component: COMP-WS-metaos
+tool_count: 22
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/metaos/src/metaos/mcp_server.py

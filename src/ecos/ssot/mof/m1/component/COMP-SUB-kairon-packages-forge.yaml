@@ -1,0 +1,12 @@
+id: COMP-SUB-kairon-packages-forge
+type: Component
+m3_parent: StructuralElement.Component
+name: forge
+description: Forge 能力市场 — kairon 子包，Agent 技能注册·发现·同步
+project: kairon
+parent: COMP-WS-kairon
+layer: L2
+version: "1.0.0"
+status: active
+model_driven_refs:
+  source_file: projects/kairon/packages/forge/pyproject.toml

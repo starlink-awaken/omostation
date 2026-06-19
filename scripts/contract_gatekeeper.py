@@ -24,6 +24,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+import yaml
 
 # Paths that shall never be touched directly by non-omo code
 FORBIDDEN_PREFIXES = (".omo/", "spaces/", ".omo\\", "spaces\\")
@@ -51,6 +52,7 @@ MUTATION_METHOD_NAMES = {
     "touch",
 }
 IO_PATHLIB_CTOR = {"Path", "PurePath", "PosixPath", "WindowsPath"}
+MUTATION_HELPER_NAMES = {"write_yaml_atomic", "write_text_atomic"}
 
 
 def _is_exempt(path: Path) -> bool:
@@ -132,6 +134,14 @@ class _GatekeeperVisitor(ast.NodeVisitor):
             if node.args and self._expr_is_forbidden_path(node.args[0]):
                 self._add(node.args[0], "forbidden direct mutation via open(..., mutating mode)")
 
+        # write_yaml_atomic(path, ...), write_text_atomic(path, ...)
+        if isinstance(func, ast.Name) and func.id in MUTATION_HELPER_NAMES:
+            if node.args and self._expr_is_forbidden_path(node.args[0]):
+                self._add(
+                    node.args[0],
+                    f"forbidden direct mutation via {func.id}(...)",
+                )
+
         # Path(".omo/...").write_text(), path_var.unlink(), etc.
         if isinstance(func, ast.Attribute) and func.attr in MUTATION_METHOD_NAMES:
             if self._expr_is_forbidden_path(func.value):
@@ -153,6 +163,30 @@ class _GatekeeperVisitor(ast.NodeVisitor):
             if isinstance(target, ast.Name) and self._expr_is_forbidden_path(node.value):
                 self.forbidden_names.add(target.id)
         self.generic_visit(node)
+
+
+def _load_baseline_entries(path: Path | None) -> set[tuple[str, int]]:
+    if path is None or not path.exists():
+        return set()
+    try:
+        payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return set()
+    entries = payload.get("entries")
+    if not isinstance(entries, list):
+        return set()
+    out: set[tuple[str, int]] = set()
+    for item in entries:
+        if not isinstance(item, dict):
+            continue
+        rel_path = item.get("path")
+        lines = item.get("lines")
+        if not isinstance(rel_path, str) or not isinstance(lines, list):
+            continue
+        for line in lines:
+            if isinstance(line, int):
+                out.add((rel_path, line))
+    return out
 
 
 def check_file(path: Path) -> list[tuple[int, str]]:
@@ -191,6 +225,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="OMO Contract Gatekeeper")
     parser.add_argument("paths", nargs="*", help="Files or directories to check")
     parser.add_argument("--diff", action="store_true", help="Only check Python files in git diff")
+    parser.add_argument(
+        "--baseline-file",
+        help="YAML file listing grandfathered direct-io violations as path+line pairs",
+    )
     args = parser.parse_args(argv)
 
     if args.diff:
@@ -209,13 +247,30 @@ def main(argv: list[str] | None = None) -> int:
     else:
         files = list(Path(".").rglob("*.py"))
 
+    if args.baseline_file:
+        baseline_file = Path(args.baseline_file)
+    else:
+        baseline_file = Path(".omo/_truth/registry/direct-io-baseline.yaml")
+    baseline_entries = _load_baseline_entries(baseline_file)
+
     exit_code = 0
     checked = 0
+    suppressed = 0
     for f in files:
         if _is_exempt(f):
             continue
         checked += 1
-        violations = check_file(f)
+        try:
+            relative_path = str(f.resolve().relative_to(Path.cwd().resolve()))
+        except ValueError:
+            relative_path = str(f)
+        raw_violations = check_file(f)
+        violations = [
+            (lineno, detail)
+            for lineno, detail in raw_violations
+            if (relative_path, lineno) not in baseline_entries
+        ]
+        suppressed += len(raw_violations) - len(violations)
         if violations:
             print(f"\n{f}")
             for lineno, detail in violations:
@@ -223,7 +278,8 @@ def main(argv: list[str] | None = None) -> int:
             exit_code = 1
 
     if exit_code == 0:
-        print(f"Gatekeeper: {checked} files checked — PASS")
+        baseline_note = f", baseline_suppressed={suppressed}" if suppressed else ""
+        print(f"Gatekeeper: {checked} files checked{baseline_note} — PASS")
     else:
         print(f"\nGatekeeper: violations detected in {checked} files checked — FAIL")
         print("Remediation: route mutations through omo CLI / omo core / c2g ingress instead of direct file I/O.")

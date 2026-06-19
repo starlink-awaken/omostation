@@ -1,0 +1,9 @@
+id: SVC-METAOS-MCP
+type: Service
+m3_parent: StructuralElement.Component
+name: metaos-mcp
+description: MetaOS MCP Server — 编排引擎
+project: metaos
+port: stdio
+protocol: stdio
+status: active

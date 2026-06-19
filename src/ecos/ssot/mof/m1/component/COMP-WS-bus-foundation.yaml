@@ -1,0 +1,29 @@
+id: COMP-WS-bus-foundation
+type: Component
+m3_parent: StructuralElement.Component
+name: bus-foundation
+description: X Omni-Bus — Data/Event/Control 三总线统一抽象层
+layer: X
+project: bus-foundation
+version: "0.2.0"
+status: active
+subcomponents:
+  - COMP-SUB-bus-foundation-backends
+  - COMP-SUB-bus-foundation-facade
+dependencies: []
+dependents:
+  - agora
+  - omo
+  - runtime
+  - metaos
+  - l4-kernel
+  - aetherforge
+entry_points:
+  - type: library
+    import: bus_foundation
+    api: [publish, subscribe, schedule, BusEnvelope, EventType]
+model_driven_refs:
+  source_file: projects/bus-foundation/pyproject.toml
+  build_system: hatchling
+  test_count: 56
+  test_pass_rate: 100.0

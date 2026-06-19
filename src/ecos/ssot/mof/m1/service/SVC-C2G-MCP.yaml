@@ -1,0 +1,9 @@
+id: SVC-C2G-MCP
+type: Service
+m3_parent: StructuralElement.Component
+name: c2g-mcp
+description: C2G MCP Server — 战略需求引擎
+project: c2g
+port: stdio
+protocol: stdio
+status: active

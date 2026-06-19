@@ -1,0 +1,18 @@
+id: MCPTOOL-L4-KERNEL-MEMORY
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: l4-kernel memory & signals
+description: L4 记忆与信号工具集 — state/memory/signals/timeline/search/signal_emit
+project: l4-kernel
+component: COMP-WS-l4-kernel
+tools:
+  - l4_state_read
+  - l4_memory_read
+  - l4_signals_list
+  - l4_timeline_list
+  - l4_search
+  - l4_signal_emit
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/l4-kernel/src/l4_kernel/mcp_server.py

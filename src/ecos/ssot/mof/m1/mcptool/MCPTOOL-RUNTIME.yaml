@@ -1,0 +1,12 @@
+id: MCPTOOL-RUNTIME
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: runtime infrastructure
+description: Runtime 运行时 MCP 工具集 — 16 tools (matrix/protocol/service/health/status)
+project: runtime
+component: COMP-WS-runtime
+tool_count: 16
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/runtime/src/runtime/mcp_server.py

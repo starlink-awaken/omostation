@@ -1,0 +1,27 @@
+id: COMP-WS-model-driven
+type: Component
+m3_parent: StructuralElement.Component
+name: model-driven
+description: X 横切面框架 — 全生命周期模型驱动平台 (M3→M2→M1→M0 四层)
+layer: X
+project: model-driven
+version: "1.0.0"
+status: active
+subcomponents:
+  - COMP-SUB-model-driven-lifecycle
+  - COMP-SUB-model-driven-mof
+  - COMP-SUB-model-driven-toolchain
+dependencies: []
+dependents:
+  - l4-kernel
+  - ecos
+entry_points:
+  - type: cli
+    command: model-driven
+    module: model_driven.cli:main
+  - type: mcp
+    command: model-driven-mcp
+    module: model_driven.mcp_server:main
+model_driven_refs:
+  source_file: projects/model-driven/pyproject.toml
+  build_system: hatchling

@@ -1,0 +1,19 @@
+id: COMP-WS-observability
+type: Component
+m3_parent: StructuralElement.Component
+name: observability
+description: X Langfuse 可观测性 — Docker Compose 部署的监控基础设施
+layer: X
+project: observability
+version: "1.0.0"
+status: active
+subcomponents: []
+dependencies: []
+dependents: []
+entry_points:
+  - type: docker
+    compose: docker-compose.yml
+    services: [langfuse, postgres]
+model_driven_refs:
+  source_file: projects/observability/docker-compose.yml
+  build_system: docker

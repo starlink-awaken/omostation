@@ -1,0 +1,12 @@
+id: MCPTOOL-ECOS
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: ecos protocol
+description: eCOS 协议层 MCP 工具集 — 21 tools (ssb/mof/governance/lifecycle)
+project: ecos
+component: COMP-WS-ecos
+tool_count: 21
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/mcp_server.py

@@ -1,0 +1,9 @@
+id: SVC-COCKPIT-DASHBOARD
+type: Service
+m3_parent: StructuralElement.Component
+name: cockpit-dashboard
+description: FastAPI Web Dashboard — 唯一人机交互入口
+project: cockpit
+port: 8090
+protocol: http
+status: active

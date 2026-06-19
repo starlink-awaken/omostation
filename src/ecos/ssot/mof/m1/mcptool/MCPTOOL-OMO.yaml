@@ -1,0 +1,12 @@
+id: MCPTOOL-OMO
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: omo governance
+description: OMO 治理面 MCP 工具集 — 4 tools (audit/status/cards/debt)
+project: omo
+component: COMP-WS-omo
+tool_count: 4
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/omo/src/omo/mcp_server.py

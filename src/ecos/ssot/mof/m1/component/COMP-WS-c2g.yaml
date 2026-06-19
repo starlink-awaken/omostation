@@ -1,0 +1,25 @@
+id: COMP-WS-c2g
+type: Component
+m3_parent: StructuralElement.Component
+name: c2g
+description: X 战略需求引擎 — Creative-to-Governance 双擎编排流入口
+layer: X
+project: c2g
+version: "1.0.0"
+status: active
+subcomponents:
+  - COMP-SUB-c2g-bridge
+  - COMP-SUB-c2g-adapters
+  - COMP-SUB-c2g-strategy
+dependencies: []
+dependents: []
+entry_points:
+  - type: cli
+    command: c2g
+    module: c2g.cli:main
+  - type: mcp
+    command: c2g-mcp
+    module: c2g.mcp_server:main
+model_driven_refs:
+  source_file: projects/c2g/pyproject.toml
+  build_system: hatchling
