@@ -78,10 +78,6 @@ finally:
 
 def _run_sandboxed_subprocess(mutation_code: str) -> str:
     """Run sandboxed mutation code in a subprocess with PYTHONPATH=src."""
-    import os
-    import subprocess
-    import sys
-
     wrapper = f"""
 import os
 import tempfile
