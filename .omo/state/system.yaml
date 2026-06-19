@@ -106,7 +106,7 @@ phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
 phase32_completed_at: '2026-06-07T00:00:00Z'
-debt_weight: 0.0
+debt_weight: 0.5
 debt_weight_items:
   DEBT-CLI-1:
     resolved: true
