@@ -1,0 +1,23 @@
+id: DEBT-KAIRON-ONTODERIVE-PHANTOM
+title: ontoderive engine/ 幽灵目录 — 116 文件未安装，50 tests 依赖
+severity: critical
+source: architecture-analysis-20260619
+domain: workspace
+scope: l2_kairon
+status: open
+lifecycle_state: open
+gate_level: watchlist
+description: >
+  packages/ontoderive/engine/ has 116 Python files (the REAL implementation).
+  packages/ontoderive/src/ontoderive/ has only 21 files (the installed package).
+  All 50 test files import from engine/ via sys.path hacks.
+  The installed package is effectively untested.
+registered_at: '2026-06-19T16:00:00Z'
+remediation: |
+  1. Dedicated session to merge engine/ into src/ontoderive/
+  2. Update all 50 test files to import from installed package
+  3. Remove sys.path hacks
+  4. Verify package builds and tests pass
+  DO NOT delete engine/ — it is the source of truth for tests.
+affected_roots:
+  - projects/kairon/packages/ontoderive
