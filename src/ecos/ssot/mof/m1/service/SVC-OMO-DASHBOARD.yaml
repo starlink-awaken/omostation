@@ -8,4 +8,4 @@ service_name: com.omo.dashboard
 runtime_status: running
 protocol: http
 plist: projects/omo/scripts/com.omo.dashboard.plist
-status: active
+status: running

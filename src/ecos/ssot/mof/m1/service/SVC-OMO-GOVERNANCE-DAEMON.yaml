@@ -8,4 +8,4 @@ service_name: com.omo.governance.daemon
 runtime_status: running
 protocol: stdio
 plist: projects/omo/scripts/com.omo.governance.daemon.plist
-status: active
+status: running

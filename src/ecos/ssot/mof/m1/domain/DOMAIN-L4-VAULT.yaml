@@ -4,6 +4,8 @@ m3_parent: StructuralElement.Component
 name: "@学习进化"
 description: L4 Documents 域 — Vault 知识库·学习笔记
 layer: L4
+domain_type: document
+bos_uri_pattern: "bos://memory/l4-domain/**"
 category: documents
 path: ~/Documents/@学习进化/
 status: active

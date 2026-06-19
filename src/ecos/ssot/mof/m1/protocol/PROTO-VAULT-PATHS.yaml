@@ -6,5 +6,9 @@ description: Vault 路径注册表 — 知识库路径 SSOT
 layer: L4
 path: protocols/vault-paths.yaml
 status: active
+version_spec: "1.0.0"
+introduced: "2026-06-01"
+half_life: 365
+registered: true
 model_driven_refs:
   source_file: protocols/vault-paths.yaml

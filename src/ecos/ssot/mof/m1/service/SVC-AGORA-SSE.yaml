@@ -9,4 +9,4 @@ runtime_status: running
 protocol: sse
 port: 7431
 plist: projects/agora/scripts/com.agora.sse.plist
-status: active
+status: running

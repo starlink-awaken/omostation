@@ -6,3 +6,5 @@ description: Git 安全操作包装 — bin/git-safe
 layer: L4
 path: bin/git-safe
 status: active
+skill: "git-safe"
+trigger: manual

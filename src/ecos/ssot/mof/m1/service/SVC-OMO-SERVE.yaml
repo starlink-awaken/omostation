@@ -8,4 +8,4 @@ service_name: com.omo.serve
 runtime_status: running
 protocol: stdio
 plist: projects/omo/scripts/com.omo.serve.plist
-status: active
+status: running

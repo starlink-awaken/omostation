@@ -4,6 +4,8 @@ m3_parent: StructuralElement.Component
 name: "@工作文档"
 description: L4 Documents 域 — 公文·卫健委·国转中心
 layer: L4
+domain_type: document
+bos_uri_pattern: "bos://memory/l4-domain/**"
 category: documents
 path: ~/Documents/@工作文档/
 status: active

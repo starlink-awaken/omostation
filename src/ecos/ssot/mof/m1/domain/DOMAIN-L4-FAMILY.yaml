@@ -4,6 +4,8 @@ m3_parent: StructuralElement.Component
 name: "@家庭生活"
 description: L4 Documents 域 — 家庭管理·生活记录
 layer: L4
+domain_type: document
+bos_uri_pattern: "bos://memory/l4-domain/**"
 category: documents
 path: ~/Documents/@家庭生活/
 status: active

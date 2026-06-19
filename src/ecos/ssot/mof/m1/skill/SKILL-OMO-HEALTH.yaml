@@ -6,3 +6,5 @@ description: OMO 健康检查 — bin/omo-health.py
 layer: L4
 path: bin/omo-health.py
 status: active
+skill: "omo-health"
+trigger: manual

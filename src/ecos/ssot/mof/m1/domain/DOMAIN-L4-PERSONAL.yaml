@@ -4,6 +4,8 @@ m3_parent: StructuralElement.Component
 name: "@个人"
 description: L4 Documents 域 — 个人事务·健康·财务
 layer: L4
+domain_type: document
+bos_uri_pattern: "bos://memory/l4-domain/**"
 category: documents
 path: ~/Documents/@个人/
 status: active

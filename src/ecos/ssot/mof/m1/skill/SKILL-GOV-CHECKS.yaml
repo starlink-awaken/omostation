@@ -14,3 +14,5 @@ scripts:
   - scripts/check-cross-deps.py
   - scripts/check-ssot-reference-integrity.py
 status: active
+skill: "governance-checks"
+trigger: manual

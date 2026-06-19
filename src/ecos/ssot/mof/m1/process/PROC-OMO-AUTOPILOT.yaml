@@ -9,3 +9,18 @@ scripts:
   - scripts/sync_omo_state.py
 ci: .github/workflows/omo-autopilot.yml
 status: active
+states:
+  - name: pending
+    description: 等待执行
+  - name: running
+    description: 执行中
+  - name: completed
+    description: 已完成
+  - name: failed
+    description: 失败
+steps:
+  - order: 1
+    name: execute
+    action: run_process
+    input: trigger
+    output: result

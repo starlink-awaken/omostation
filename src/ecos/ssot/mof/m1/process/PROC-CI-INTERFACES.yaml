@@ -7,3 +7,18 @@ layer: L0
 ci: .github/workflows/interfaces-enforce.yml
 triggers: [push, pull_request]
 status: active
+states:
+  - name: pending
+    description: 等待执行
+  - name: running
+    description: 执行中
+  - name: completed
+    description: 已完成
+  - name: failed
+    description: 失败
+steps:
+  - order: 1
+    name: execute
+    action: run_process
+    input: trigger
+    output: result

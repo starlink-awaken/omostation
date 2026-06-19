@@ -6,3 +6,5 @@ description: Workspace CLI 入口 — bin/workspace
 layer: L3
 path: bin/workspace
 status: active
+skill: "workspace-cli"
+trigger: manual

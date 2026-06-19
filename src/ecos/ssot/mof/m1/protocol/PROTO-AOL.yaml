@@ -6,5 +6,9 @@ description: Append-Only Log 协议 — 不可变日志写入规范
 layer: L0
 path: protocols/append-only-log-rollout.md
 status: active
+version_spec: "1.0.0"
+introduced: "2026-06-01"
+half_life: 365
+registered: true
 model_driven_refs:
   source_file: protocols/append-only-log-rollout.md
