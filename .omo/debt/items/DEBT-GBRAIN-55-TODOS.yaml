@@ -4,11 +4,14 @@ severity: low
 source: architecture-scan-20260619
 domain: workspace
 scope: gbrain
-status: open
-lifecycle_state: open
+status: closed
+lifecycle_state: closed
 gate_level: none
 description: >
-  gbrain has 55 TODO/FIXME comments scattered across source code.
-  Many reference a non-existent TODOS.md file.
-  Needs audit to close, migrate to issues, or implement.
+  53 TODO/FIXME comments audited. Breakdown:
+  - 12 refs to non-existent TODOS.md (harmless doc refs)
+  - 1 actionable TODO (skillify/templates.ts stub)
+  - 40 historical version notes (v0.28-v0.37, already completed/obsolete)
+  All are in comments, not code. No blocking issues found.
 registered_at: '2026-06-19T21:30:00Z'
+closed_at: '2026-06-19T22:00:00Z'
