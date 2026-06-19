@@ -1,0 +1,31 @@
+id: DEBT-CROSSPROJECT-SYSPATH
+title: 23 处 sys.path.insert 硬编码路径注入
+severity: high
+source: architecture-analysis-20260619
+domain: workspace
+scope: cross-project
+status: open
+lifecycle_state: open
+gate_level: watchlist
+description: >
+  23 sys.path.insert across 4 projects (agora:8, cockpit:10, runtime:3, metaos:2).
+  All hardcode /Users/xiamingxing/Workspace/projects/... paths.
+  Should be replaced with pyproject.toml editable dependencies.
+registered_at: '2026-06-19T16:30:00Z'
+remediation: |
+  Per-project analysis needed:
+  1. cockpit/compat.py → depends on agora source (add editable dep)
+  2. cockpit/commands/bos.py → imports agora.mcp.bos_resolver (add editable dep)
+  3. cockpit/commands/scenario.py → imports omo and agora (add editable deps)
+  4. cockpit/dashboard_server.py → imports runtime and omo (add editable deps)
+  5. cockpit/web/api_proposals.py → imports omo (add editable dep)
+  6. cockpit/tests/* → test harness path setup (keep or move to conftest)
+  7. agora/server/* → imports ecos ssot (add editable dep)
+  8. agora/mcp_proxy/manager.py → imports metaos (add editable dep)
+  9. runtime/scheduler.py → imports omo (add editable dep)
+  10. metaos/* → self-referential path hacks (fix package structure)
+affected_roots:
+  - projects/agora
+  - projects/cockpit
+  - projects/runtime
+  - projects/metaos
