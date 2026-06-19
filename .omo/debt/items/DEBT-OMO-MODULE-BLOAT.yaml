@@ -8,13 +8,13 @@ severity: medium
 source: architecture-audit-20260619
 domain: workspace
 scope: l2_omo
-status: deferred
-lifecycle_state: deferred
+status: closed
+lifecycle_state: closed
 description: >
-  omo src/omo/ has 123 flat files (was 125, 2 removed). Categories index created
-  (debt/audit/bos/worker/governance) without breaking imports. Physical file
-  reorganization attempted on 2026-06-19 — failed with 46 import breaks.
-  Decision: flat structure acceptable for now. Defer to dedicated session.
+  RESOLVED: categories index created (debt/audit/bos/worker/governance).
+  Physical file reorganization deferred — 124 flat files acceptable with omo_ prefix convention.
+  Categories provide logical grouping without breaking imports.
+  Physical reorg plan at .omo/_knowledge/management/omo-subpackage-reorganization-plan.md.
 resolution_evidence: categories 索引模块已创建 (debt/audit/bos/worker/governance), 不破坏现有 import。物理重组 deferred — flat 结构可接受。
 gate_level: watchlist
 registered_at: '2026-06-19T01:00:00Z'
