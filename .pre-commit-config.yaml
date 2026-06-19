@@ -87,9 +87,48 @@ repos:
         # 其余 Python 改动若直接 write_text/open(...,"w")/unlink/mkdir 到 `.omo`
         # 一律拒绝提交, 强制改走 omo CLI / c2g ingress / 授权 broker.
 
+      - id: omo-task-policy-gate
+        name: omo task policy gate (特殊任务红线校验)
+        entry: uv run --directory projects/omo python -m omo.cli lint task-policy --all --workspace-root .
+        language: system
+        files: ^(\.omo/tasks/|\.omo/workers/runs/|projects/omo/src/omo/omo_task_policy\.py|projects/omo/src/omo/omo_lint\.py|projects/omo/tests/test_omo_task_policy\.py|projects/omo/tests/test_omo_direct_io_gate\.py|\.github/workflows/governance-check\.yml|projects/omo/README\.md|\.omo/standards/omo-governance-surfaces\.md).*
+        pass_filenames: false
+        stages: [pre-commit]
+        # P49+: 特殊任务红线统一走 task-policy 注册表, 不再散落 ad-hoc 检查脚本.
+        # 当前强制规则见 `.omo/_truth/registry/task-policies.yaml`
+        # 后续新增红线时, 只增 TaskPolicy 注册与对应测试/文档, 不新增平行脚本.
+
+      - id: omo-mutation-surface-gate
+        name: omo mutation surface gate (brokered write surface registry)
+        entry: uv run --directory projects/omo python -m omo.cli lint mutation-surfaces --workspace-root .
+        language: system
+        files: ^(\.omo/_truth/registry/mutation-surfaces\.yaml|projects/omo/src/omo/omo_governance_surfaces\.py|projects/omo/src/omo/omo_lint\.py|projects/omo/src/omo/omo_ingress\.py|projects/omo/src/omo/omo_goal\.py|projects/omo/src/omo/omo_task\.py|projects/omo/src/omo/omo_bridge\.py|projects/omo/src/omo/omo_knowledge\.py|projects/omo/src/omo/omo_standard\.py|projects/omo/src/omo/omo_state\.py|projects/omo/tests/test_omo_governance_surfaces\.py|projects/omo/tests/test_omo_direct_io_gate\.py|projects/cockpit/src/cockpit/commands/governance\.py|\.github/workflows/governance-check\.yml|projects/omo/README\.md|projects/cockpit/README\.md|\.omo/standards/omo-governance-surfaces\.md).*
+        pass_filenames: false
+        stages: [pre-commit]
+        # P50+: mutation surface 从 surfaces 报告中的顺带检查提升为独立 lint/gate.
+        # 新 broker 入口、直写例外和 registry 变更必须一起过门.
+
+      - id: omo-internal-write-profile-gate
+        name: omo internal write profile gate (worker runtime write registry)
+        entry: uv run --directory projects/omo python -m omo.cli lint internal-write-profiles --workspace-root .
+        language: system
+        files: ^(\.omo/_truth/registry/internal-write-profiles\.yaml|projects/omo/src/omo/omo_governance_surfaces\.py|projects/omo/src/omo/omo_lint\.py|projects/omo/src/omo/omo_worker_.*\.py|projects/omo/src/omo/omo_rollout\.py|projects/omo/src/omo/omo_experience\.py|projects/omo/src/omo/omo_admission\.py|projects/omo/tests/test_omo_governance_surfaces\.py|projects/cockpit/src/cockpit/commands/governance\.py|\.github/workflows/governance-check\.yml|projects/omo/README\.md|projects/cockpit/README\.md|\.omo/standards/omo-governance-surfaces\.md).*
+        pass_filenames: false
+        stages: [pre-commit]
+        # P51+: worker internal 写路径从 surfaces 报表提升为独立 registry + lint gate.
+        # 任何 dispatch/promotion/overlay/experience 写面变更都必须同步 registry.
+
       - id: ruff
         name: Ruff Linter
         entry: uv run ruff check --fix
+        language: system
+        types: [python]
+        files: ^(projects|scripts|bin)/.*\.py$
+        stages: [pre-commit]
+
+      - id: future-annotations
+        name: future annotations check
+        entry: python3 scripts/check-future-annotations.py
         language: system
         types: [python]
         files: ^(projects|scripts|bin)/.*\.py$
