@@ -181,7 +181,7 @@ goals:
 - id: BET-a7c1
   title: batch1-agora-omo-modules
   desc: 'Bet: Batch 1 — agora dead-code audit + omo 子包重组 (Appetite: 1 week)'
-  progress: 50.0
+  progress: 75.0
   status: pending
   tasks: []
   ingress_plane: projects/c2g
@@ -194,7 +194,7 @@ goals:
   scope:
   - DEBT-AGORA-MODULE-BLOAT (agora 230文件→清理未用模块)
   - DEBT-OMO-MODULE-BLOAT (omo 125文件→按子系统分包)
-  note: agora dead-code 完成 (38模块+4目录→_deprecated/); omo 计划已完成待执行
+  note: agora dead-code ✅; omo categories 模块创建 ✅ (不破坏 import)
 - id: BET-b8d2
   title: batch2-kairon-runtime-types
   desc: 'Bet: Batch 2 — kairon mypy 逐步启用 + runtime setuptools→hatchling (Appetite:
