@@ -137,8 +137,6 @@ async def _memory_all_search(
     # Phase 9: Quality Audit/Partitioning 
     # 引入对质量审计路由的并发调用，基于置信度阈值过滤聚合结果。
     if top_results:
-        from agora.mcp.resolver.api import resolve_bos_uri
-        
         async def _audit(res: dict) -> dict | None:
             try:
                 # 调用轻量级评价模型或启发式审计器
