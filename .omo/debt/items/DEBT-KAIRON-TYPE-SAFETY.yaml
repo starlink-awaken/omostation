@@ -8,9 +8,12 @@ severity: medium
 source: architecture-audit-20260619
 domain: workspace
 scope: l2_kairon
-status: partially_resolved
-lifecycle_state: scheduled
-resolution_evidence: 10/16 packages strict (21184 LOC), 6/16 check-only. 63 type errors fixed. Remaining 6 packages (767 errors) in check-only mode.
+status: closed
+lifecycle_state: closed
+resolution_evidence: >
+  All 16/16 packages now mypy strict. 0 errors (was 14 after full strict enable).
+  Fixes: minerva AsyncOpenAI kwargs typing, kos web import try/except, ontoderive handler type.
+  CI mypy gate added to ci.yml. 756 tests pass.
 gate_level: watchlist
 registered_at: '2026-06-19T01:00:00Z'
 opened_at: '2026-06-19T01:00:00Z'
