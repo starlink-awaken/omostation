@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+"""MOF 架构漂移检测 — 检测实际代码 vs 模型描述的差异"""
+
+import subprocess
+import sys
+from pathlib import Path
+
+import yaml
+
+M1_DIR = Path(__file__).parent.parent / "projects/ecos/src/ecos/ssot/mof/m1"
+PROJECTS_DIR = Path(__file__).parent.parent / "projects"
+
+
+def load_all_m1() -> list[dict]:
+    """加载所有 M1 节点"""
+    nodes = []
+    for yaml_file in M1_DIR.rglob("*.yaml"):
+        if yaml_file.name.startswith("_"):
+            continue
+        try:
+            data = yaml.safe_load(yaml_file.read_text())
+            if isinstance(data, dict) and "id" in data:
+                nodes.append(data)
+        except Exception:
+            pass
+    return nodes
+
+
+def count_sys_path_hacks(project_name: str) -> int:
+    """统计项目中的 sys.path.insert 数量"""
+    project_dir = PROJECTS_DIR / project_name
+    if not project_dir.exists():
+        return -1
+    try:
+        result = subprocess.run(
+            ["grep", "-r", "sys.path.insert", str(project_dir / "src"), "--include=*.py"],
+            capture_output=True, text=True, timeout=30
+        )
+        return len(result.stdout.strip().split("\n")) if result.stdout.strip() else 0
+    except Exception:
+        return -1
+
+
+def count_todos(project_name: str) -> int:
+    """统计项目中的 TODO 数量"""
+    project_dir = PROJECTS_DIR / project_name
+    if not project_dir.exists():
+        return -1
+    try:
+        result = subprocess.run(
+            ["grep", "-r", "TODO", str(project_dir / "src"), "--include=*.py", "--include=*.ts"],
+            capture_output=True, text=True, timeout=30
+        )
+        return len(result.stdout.strip().split("\n")) if result.stdout.strip() else 0
+    except Exception:
+        return -1
+
+
+def count_test_files(project_name: str) -> int:
+    """统计项目中的测试文件数量"""
+    project_dir = PROJECTS_DIR / project_name
+    if not project_dir.exists():
+        return -1
+    test_dirs = ["tests", "src/*/tests", "packages/*/tests"]
+    count = 0
+    for pattern in test_dirs:
+        for f in project_dir.glob(pattern + "/**/*.py"):
+            count += 1
+        for f in project_dir.glob(pattern + "/**/*.ts"):
+            count += 1
+    return count
+
+
+def detect_drift(project_name: str = None) -> list[dict]:
+    """检测架构漂移"""
+    nodes = load_all_m1()
+    drifts = []
+    
+    # Get all projects
+    projects = set()
+    for n in nodes:
+        if n.get("project"):
+            projects.add(n["project"])
+    
+    if project_name:
+        projects = {project_name}
+    
+    for proj in sorted(projects):
+        # Check sys.path hacks
+        hacks = count_sys_path_hacks(proj)
+        if hacks > 0:
+            drifts.append({
+                "project": proj,
+                "type": "sys_path_hacks",
+                "severity": "high" if hacks > 5 else "medium",
+                "count": hacks,
+                "message": f"{hacks} sys.path.insert found in {proj}",
+            })
+        
+        # Check TODOs
+        todos = count_todos(proj)
+        if todos > 10:
+            drifts.append({
+                "project": proj,
+                "type": "todo_count",
+                "severity": "low",
+                "count": todos,
+                "message": f"{todos} TODOs found in {proj}",
+            })
+        
+        # Check test coverage
+        tests = count_test_files(proj)
+        if tests == 0:
+            drifts.append({
+                "project": proj,
+                "type": "no_tests",
+                "severity": "high",
+                "count": 0,
+                "message": f"No test files found in {proj}",
+            })
+    
+    return drifts
+
+
+def main():
+    project = sys.argv[1] if len(sys.argv) > 1 else None
+    
+    print("=== MOF Architecture Drift Detection ===\n")
+    
+    drifts = detect_drift(project)
+    
+    if not drifts:
+        print("✅ No drift detected.")
+        return
+    
+    # Group by severity
+    high = [d for d in drifts if d["severity"] == "high"]
+    medium = [d for d in drifts if d["severity"] == "medium"]
+    low = [d for d in drifts if d["severity"] == "low"]
+    
+    if high:
+        print(f"🔴 HIGH ({len(high)}):")
+        for d in high:
+            print(f"  [{d['project']}] {d['message']}")
+        print()
+    
+    if medium:
+        print(f"🟡 MEDIUM ({len(medium)}):")
+        for d in medium:
+            print(f"  [{d['project']}] {d['message']}")
+        print()
+    
+    if low:
+        print(f"🔵 LOW ({len(low)}):")
+        for d in low:
+            print(f"  [{d['project']}] {d['message']}")
+        print()
+    
+    print(f"Total: {len(drifts)} drifts detected")
+
+
+if __name__ == "__main__":
+    main()
