@@ -15,3 +15,11 @@ properties:
   - .omo/tasks/planned/P45-W0-W3-COMBO.yaml
   signals:
   - task-P45-W0-W3-COMBO-running
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: done
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

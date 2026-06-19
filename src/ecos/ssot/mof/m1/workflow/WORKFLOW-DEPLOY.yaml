@@ -13,3 +13,11 @@ properties:
   workflow_name: Deploy 工作流
   steps: 部署工作流——构建→测试→部署→健康检查
   trigger: agent-invoke
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

@@ -18,3 +18,11 @@ properties:
   fallback: 全部失败→P0卡片+ecos-daemon.err
   depends_on:
   - ARTIFACT-SCRIPT-ecos-healer
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

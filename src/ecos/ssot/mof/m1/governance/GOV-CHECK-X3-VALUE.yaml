@@ -1,5 +1,5 @@
 id: "GOV-CHECK-X3-VALUE"
-type: "GovernanceCheck"
+type: GovernanceCheck
 name: "X3 价值检查器"
 description: "X3 价值检查器 — 检查目标/价值归因/ROI 评估 (cards / 价值报告 / 用户反馈)"
 status: running
@@ -21,3 +21,11 @@ properties:
     m1_ssot: "ecos/ssot/mof/m1/governance/GOV-X3-VALUE.yaml"
     m2_schema: "ecos/ssot/mof/m2/governance_check.yaml"
 source: "ecos/l0/governance/checkers.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: running
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

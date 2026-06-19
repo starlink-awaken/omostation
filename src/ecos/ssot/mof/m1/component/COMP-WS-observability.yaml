@@ -18,3 +18,14 @@ entry_points:
 model_driven_refs:
   source_file: projects/observability/docker-compose.yml
   build_system: docker
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling
+
+value_metrics:
+  business_value: high
+  technical_debt: low
+  maintenance_cost: medium
+  strategic_importance: critical

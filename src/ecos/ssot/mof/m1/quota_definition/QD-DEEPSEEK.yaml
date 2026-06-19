@@ -1,6 +1,6 @@
 id: QD-DEEPSEEK
 name: DeepSeek Token 配额
-type: quota_definition
+type: QuotaDefinition
 provider: deepseek
 quota_model: prepaid
 unit: CNY
@@ -9,3 +9,6 @@ check_command: codexbar usage --provider deepseek --format json
 refresh_interval: 300
 cost_per_1k_input: 0.0005
 cost_per_1k_output: 0.0015
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/

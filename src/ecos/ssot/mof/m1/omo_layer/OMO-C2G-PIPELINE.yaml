@@ -1,5 +1,5 @@
 id: "OMO-C2G-PIPELINE"
-type: "Pattern"
+type: Pattern
 name: "C2G (Creative-to-Governance) Pipeline 模式"
 description: "将敏捷认知（BMAD/Superpower）与稳态执行（OMO/GSD）解耦的双擎流水线模式"
 status: "documented"
@@ -23,3 +23,11 @@ properties:
   references:
     - "GOV-X4-CONSISTENCY.yaml: CS-11"
 source: "model-driven/mof/ontology_extended.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "documented"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

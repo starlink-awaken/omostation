@@ -1,5 +1,5 @@
 id: "RUNTIME-MATRIX"
-type: "Component"
+type: Component
 name: "Runtime Matrix"
 description: "运行时矩阵 — 管理所有服务的运行时状态、健康分和依赖关系"
 status: "active"
@@ -17,3 +17,11 @@ properties:
     - "自动修复 (auto_heal)"
     - "OMO 债务注册"
 source: "runtime/matrix.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

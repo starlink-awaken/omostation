@@ -12,3 +12,11 @@ properties:
   action: BOS 配置热加载(需人工补具体执行描述)
   interval: 0
 relations: []
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

@@ -17,3 +17,11 @@ properties:
     omo_debt_id: C1-HERMES_BUILD_BROKEN
   sources:
   - Workspace/.omo/debt/items/C1-HERMES_BUILD_BROKEN.yaml
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

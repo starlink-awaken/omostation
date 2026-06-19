@@ -1,5 +1,5 @@
 id: "PLUGIN-DOCUMENT-KEMS"
-type: "Plugin"
+type: Plugin
 subtype: "DomainPlugin"
 name: "DocumentKemsPlugin"
 description: "L4 Kernel 的文档域 KEMS 插件 — 14 actions + 3 workflows + 4 specs + 3 mechanisms"
@@ -27,3 +27,11 @@ properties:
     - "scan_cards"
     - "search_vault"
 source: "l4-kernel/plugins.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

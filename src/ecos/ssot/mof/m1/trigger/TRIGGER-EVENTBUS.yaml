@@ -1,5 +1,5 @@
 id: "TRIGGER-AGORA-EVENTBUS"
-type: "Trigger"
+type: Trigger
 name: "Agora EventBus"
 description: "核心事件总线 — JSON 持久化 + HTTP POST 推送 + 订阅模式"
 status: "active"
@@ -16,3 +16,11 @@ properties:
     endpoint: "agora-events.json"
     expected_status: "event_count < 1000"
 source: "agora/core/event_bus.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

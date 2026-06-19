@@ -33,3 +33,8 @@ properties:
     - projects/ecos/src/ecos/ssot/mof/m1/governance/GOV-X2-POLICY.yaml
     - projects/ecos/src/ecos/ssot/mof/m1/governance/GOV-X3-VALUE.yaml
     - projects/ecos/src/ecos/ssot/mof/m1/governance/GOV-X4-CONSISTENCY.yaml
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

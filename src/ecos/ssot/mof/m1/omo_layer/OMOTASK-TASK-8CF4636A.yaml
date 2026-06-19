@@ -14,3 +14,11 @@ properties:
 title: 'Refactor: 沉淀全局触发器注册表与分布式锁机制在 L0 的协议抽象'
 gate: pending
 gate_status: open
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: proposed
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

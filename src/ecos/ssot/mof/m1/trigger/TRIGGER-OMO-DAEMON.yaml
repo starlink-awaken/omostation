@@ -1,5 +1,5 @@
 id: "TRIGGER-OMO-DAEMON"
-type: "Trigger"
+type: Trigger
 name: "OMO Governance Daemon"
 description: "OMO 治理守护进程 — 开机自启，崩溃自动重启"
 status: "active"
@@ -16,3 +16,11 @@ properties:
     endpoint: "launchctl list com.omo.governance.daemon"
     expected_status: "running"
 source: "omo/scripts/com.omo.governance.daemon.plist"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

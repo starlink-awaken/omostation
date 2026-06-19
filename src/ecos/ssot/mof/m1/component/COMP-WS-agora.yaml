@@ -18,3 +18,31 @@ properties:
   has_pyproject: true
   has_package_json: false
   has_tests: true
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+relations:
+  depends_on:
+    - bus-foundation
+    - ecos
+    - metaos
+  provides:
+    - SVC-AGORA-SSE
+    - SVC-AGORA-DAEMON
+  uses:
+    - MCPTOOL-AGORA
+  subcomponents:
+    - COMP-SUB-agora-auth
+    - COMP-SUB-agora-bus
+    - COMP-SUB-agora-core
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling
+
+value_metrics:
+  business_value: high
+  technical_debt: low
+  maintenance_cost: medium
+  strategic_importance: critical

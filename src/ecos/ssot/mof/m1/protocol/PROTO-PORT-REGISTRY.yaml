@@ -12,3 +12,8 @@ half_life: 365
 registered: true
 model_driven_refs:
   source_file: protocols/port-registry.yaml
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

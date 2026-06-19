@@ -1,5 +1,5 @@
 id: "GOV-CHECK-X1-AUDIT-CHAIN"
-type: "GovernanceCheck"
+type: GovernanceCheck
 name: "X1 审计链检查器"
 description: "X1 审计链检查器 — 检查操作是否安全 (debt-audit.sh / 审计报告 / pre-commit hooks)"
 status: running
@@ -21,3 +21,11 @@ properties:
     m1_ssot: "ecos/ssot/mof/m1/governance/GOV-X1-CONSTRAINT.yaml"
     m2_schema: "ecos/ssot/mof/m2/governance_check.yaml"
 source: "ecos/l0/governance/checkers.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: running
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

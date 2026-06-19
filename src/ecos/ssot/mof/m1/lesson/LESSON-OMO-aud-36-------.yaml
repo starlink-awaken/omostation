@@ -16,3 +16,11 @@ properties:
   lesson: Workspace CLI 在 4+1+3 中处于什么位置？
   source: Workspace/.omo/_knowledge/summaries/audits/aud-36-目标纠偏审计.md
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: recorded
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

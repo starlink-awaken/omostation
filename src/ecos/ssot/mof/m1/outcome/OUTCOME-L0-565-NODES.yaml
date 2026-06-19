@@ -10,3 +10,11 @@ layer: multi
 properties:
   outcome: 565 M1 节点·17 M2 类型·自举健康
   from_action: ACTION-L0-REFACTOR
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: published
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

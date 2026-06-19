@@ -1,5 +1,5 @@
 id: "OMOTASK-OPC-P6"
-type: "OMOTask"
+type: OMOTask
 subtype: "RoadmapPhase"
 name: "OPC-P6: Evolution Loop 6 阶段流水线"
 description: "P6 closes the loop: radar→gap→task→swarm→audit→retro, 7 阶段每周 1 轮 持续自演进"
@@ -51,3 +51,11 @@ properties:
   assessment: "2026-06-13 Gate G 通过. 4 cycles 闭环, 17 drift 修复, 14 doc_lint"
   gate_note: "P6 全部 sub_gates 通过, evolution loop 真正闭环"
 source: ".omo/tasks/planned/OPC-P6-EVOLUTION-LOOP.yaml"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "done"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

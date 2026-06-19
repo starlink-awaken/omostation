@@ -1,5 +1,5 @@
 id: "CONCURRENCY-OPTIMISTIC"
-type: "ConcurrencyControl"
+type: ConcurrencyControl
 subtype: "OptimisticLock"
 name: "乐观锁并发控制"
 description: "L4 Kernel 的版本号乐观锁并发控制 (read_with_version + write_if_version)"
@@ -14,3 +14,11 @@ properties:
   timeout_seconds: 0
   retry_interval: 0
 source: "l4-kernel/concurrency.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

@@ -15,3 +15,11 @@ properties:
   - .omo/tasks/planned/C6-FIX-AGENT-RUNTIME-AUTH.yaml
   signals:
   - task-C6-FIX-AGENT-RUNTIME-AUTH-running
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: done
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

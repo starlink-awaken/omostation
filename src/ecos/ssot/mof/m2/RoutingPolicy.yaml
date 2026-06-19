@@ -1,4 +1,4 @@
-m2_type: routing_policy
+m2_type: RoutingPolicy
 version: 1.0.0
 created: '2026-06-08T23:27:00'
 routing_policy:

@@ -68,3 +68,11 @@ properties:
     branches:
     - 标记为 candidate_archive
     - 人工审核退役
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

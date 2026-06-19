@@ -8,3 +8,11 @@ path: bin/verify-omo.sh
 status: active
 skill: "verify-omo"
 trigger: manual
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

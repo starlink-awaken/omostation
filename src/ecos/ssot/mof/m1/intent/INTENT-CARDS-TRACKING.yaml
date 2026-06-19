@@ -12,3 +12,11 @@ properties:
   rationale: 消除 Agent 切换后的上下文丢失
   metrics:
     active_cards: 37
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: accepted
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

@@ -1,5 +1,5 @@
 id: "GATE-DEV-TO-DEPLOY"
-type: "Gate"
+type: Gate
 subtype: "StandardGate"
 name: "开发→部署 门禁"
 description: "开发态到部署态的质量门禁检查点 — 跨阶段 3→4 门禁"
@@ -27,3 +27,11 @@ properties:
   required_approvals:
     - "技术负责人"
 source: "model-driven/mof/m3_extended.py:STANDARD_GATES"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

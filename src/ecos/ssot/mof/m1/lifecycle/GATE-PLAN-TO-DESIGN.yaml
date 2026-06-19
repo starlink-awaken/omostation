@@ -1,5 +1,5 @@
 id: "GATE-PLAN-TO-DESIGN"
-type: "Gate"
+type: Gate
 subtype: "StandardGate"
 name: "规划→设计 门禁"
 description: "规划态到设计态的质量门禁检查点"
@@ -25,3 +25,11 @@ properties:
     - "技术负责人"
     - "产品负责人"
 source: "model-driven/mof/m3_extended.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

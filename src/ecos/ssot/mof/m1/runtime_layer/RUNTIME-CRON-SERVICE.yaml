@@ -1,5 +1,5 @@
 id: "RUNTIME-CRON-SERVICE"
-type: "Component"
+type: Component
 name: "Runtime Cron Service"
 description: "定时任务调度器 — 管理 30+ 定时任务，支持 cron 表达式和间隔语法。默认 stdio MCP 模式，HTTP 需 --http 标志。"
 status: "active"
@@ -22,3 +22,11 @@ properties:
     - "MCP 管理接口 (stdio)"
   convergence_note: "Default changed from HTTP to stdio MCP; --http flag for HTTP mode"
 source: "runtime/cron_service/scheduler.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

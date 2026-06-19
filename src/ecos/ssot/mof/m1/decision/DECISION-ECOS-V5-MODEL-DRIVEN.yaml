@@ -1,5 +1,5 @@
 id: "DECISION-ECOS-V5-2026-06-09-001"
-type: "Decision"
+type: Decision
 subtype: "ADR"
 name: "eCOS v5 全生命周期模型驱动架构决策"
 description: "将 model-driven 的模型驱动方法和机制落实到 L0 MOF 体系中"
@@ -18,3 +18,11 @@ properties:
     - "方案 A: 将 model-driven 合并到 ecos — 增加耦合，不符合架构原则"
     - "方案 B: 仅在 model-driven 中建模 — L0 不感知，缺少 SSOT"
 source: "model-driven/management/adr.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "accepted"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

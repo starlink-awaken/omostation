@@ -1,5 +1,5 @@
 id: "TRIGGER-AGORA-LAUNCHD"
-type: "Trigger"
+type: Trigger
 name: "Agora MCP Hub Launchd"
 description: "Agora MCP Hub — 开机自启，SSE 模式需 --sse 标志"
 status: "active"
@@ -18,3 +18,11 @@ properties:
     expected_status: "200"
   convergence_note: "MCP default changed to stdio; SSE requires --sse flag"
 source: "agora/scripts/install-launchd.sh"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

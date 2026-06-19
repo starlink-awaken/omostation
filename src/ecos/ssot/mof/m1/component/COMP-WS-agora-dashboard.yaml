@@ -3,7 +3,7 @@
 # Context: L3 入口层，多模态观察大盘项目
 
 id: COMP-WS-agora-dashboard
-type: "Component"
+type: Component
 name: "agora-dashboard"
 description: 'L3 入口层 Web 大盘 (Next.js)。负责可视化呈现 .omo/ 状态和自我进化数据。'
 status: "active"
@@ -18,3 +18,17 @@ properties:
   has_tests: false
   layer: "L3"
   runtime: "active"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling
+
+value_metrics:
+  business_value: high
+  technical_debt: low
+  maintenance_cost: medium
+  strategic_importance: critical

@@ -18,3 +18,11 @@ properties:
     This closeout does not itself open any Phase 6 active queue.
   source: Workspace/.omo/_knowledge/summaries/phase6/phase6-entry-hardening-closeout.md
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: recorded
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

@@ -21,3 +21,11 @@ title: Document and batch-fix ~25 hardcoded /Users/xiamingxing paths across acti
   source
 gate: none
 gate_status: passed
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: done
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

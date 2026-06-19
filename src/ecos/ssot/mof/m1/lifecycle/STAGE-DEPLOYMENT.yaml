@@ -1,5 +1,5 @@
 id: "STAGE-DEPLOYMENT"
-type: "Stage"
+type: Stage
 subtype: "StandardStage"
 name: "部署态"
 description: "CI/CD、灰度发布、生产部署 — 7 阶段标准生命周期第 4 阶段"
@@ -43,3 +43,11 @@ properties:
     - "技术负责人"
   duration_target_days: 7
 source: "model-driven/mof/m3_extended.py:STANDARD_STAGES"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

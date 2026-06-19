@@ -29,3 +29,11 @@ properties:
     - role: "Keeper (守夜人/观察者)"
       focus: "控制论思维，关注 Process & Memory。闭环与自愈律法，状态机收敛。"
       icon: "👁️"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

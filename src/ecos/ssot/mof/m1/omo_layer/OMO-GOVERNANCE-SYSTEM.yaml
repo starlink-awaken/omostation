@@ -1,5 +1,5 @@
 id: "OMO-GOVERNANCE-SYSTEM"
-type: "Component"
+type: Component
 name: "OMO 治理系统"
 description: "OMO 治理中枢 — Phase/Task/Debt/Audit 全生命周期管理 + Worker 分发 + 治理仪表板"
 status: "active"
@@ -19,3 +19,11 @@ properties:
     - "Worker 协作 (dispatch/approval/promotion)"
     - "治理仪表板"
 source: ".omo/ + projects/omo/"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

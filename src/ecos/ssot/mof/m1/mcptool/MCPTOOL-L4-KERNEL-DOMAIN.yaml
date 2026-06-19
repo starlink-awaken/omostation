@@ -19,3 +19,11 @@ transport: stdio
 status: active
 model_driven_refs:
   source_file: projects/l4-kernel/src/l4_kernel/mcp_server.py
+
+relations:
+  provided_by: COMP-WS-l4-kernel
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

@@ -27,3 +27,11 @@ properties:
   evolution_path:
   - Phase7.6 自治运维
   - Phase8.3 自治愈
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

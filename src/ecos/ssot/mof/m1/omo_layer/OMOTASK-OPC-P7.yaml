@@ -1,5 +1,5 @@
 id: "OMOTASK-OPC-P7"
-type: "OMOTask"
+type: OMOTask
 subtype: "RoadmapPhase"
 name: "OPC-P7: Governance Hardening & Release Train"
 description: "P7 makes OPC maintainable as a long-running personal OS. 5 份 release cycle + retrospective 落盘"
@@ -64,3 +64,11 @@ properties:
   assessment: "2026-06-13 Gate H 通过. 5 份 release cycle 证据, retrospective 全部落盘"
   gate_note: "P7 全部 sub_gates 通过, 6 红线 5 全 hold, 路线图完成"
 source: ".omo/tasks/planned/OPC-P7-RELEASE-TRAIN.yaml"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "done"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

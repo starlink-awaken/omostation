@@ -1,5 +1,5 @@
 id: "STAGE-MODEL-DRIVEN-PLANNING"
-type: "Stage"
+type: Stage
 subtype: "StandardStage"
 name: "规划态"
 description: "目标设定、需求分析、路线图规划 — 7 阶段标准生命周期第 1 阶段"
@@ -30,3 +30,11 @@ properties:
     - "路线图"
   duration_target_days: 14
 source: "model-driven/mof/m3_extended.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

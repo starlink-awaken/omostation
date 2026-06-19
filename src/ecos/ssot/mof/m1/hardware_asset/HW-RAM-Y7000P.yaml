@@ -1,7 +1,15 @@
 id: HW-RAM-Y7000P
-type: hardware_asset
+type: HardwareAsset
 node_ref: NODE-Y7000P
 device_type: memory
 ram_gb: 48.0
 status: active
 description: "Y7000P 搭载的大容量内存，为数据预处理和大型上下文缓存提供空间"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

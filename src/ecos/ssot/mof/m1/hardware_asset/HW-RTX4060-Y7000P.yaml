@@ -1,8 +1,16 @@
 id: HW-RTX4060-Y7000P
-type: hardware_asset
+type: HardwareAsset
 node_ref: NODE-Y7000P
 device_type: gpu
 model: "Nvidia RTX 4060 Laptop"
 vram_gb: 8.0
 status: active
 description: "Y7000P 搭载的独立显卡，适合运行中小规模模型吞吐"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

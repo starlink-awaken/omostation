@@ -1,5 +1,5 @@
 id: "DOMAIN-LIFECYCLE-STANDARD"
-type: "DomainLifecycle"
+type: DomainLifecycle
 name: "标准域生命周期"
 description: "21 域的标准生命周期状态机: proposed→active→degraded→frozen→archived→removed"
 status: "active"
@@ -18,3 +18,11 @@ properties:
     - "frozen → archived"
     - "archived → removed"
 source: "l4-kernel/lifecycle.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

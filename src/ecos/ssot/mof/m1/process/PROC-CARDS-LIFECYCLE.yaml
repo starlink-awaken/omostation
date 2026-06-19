@@ -26,3 +26,11 @@ properties:
   sla:
     incubating_max_days: 14
   owner: 夏明星
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

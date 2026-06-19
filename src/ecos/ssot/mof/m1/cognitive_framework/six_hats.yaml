@@ -33,3 +33,11 @@ properties:
     - role: "Blue Hat (蓝帽/控制与组织)"
       focus: "关注思维过程的控制和组织。我们现在应该戴什么颜色的帽子？"
       icon: "🔵"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

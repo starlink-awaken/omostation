@@ -47,3 +47,16 @@ MCPTool:
     name: 示例 MCPTool
     description: MCP 工具——通过 Model Context Protocol 暴露的可调用端点。如 cockpit tools·agora
       tools。回答"Agent 能调用什么"。
+  relations:
+    provided_by:
+      type: ref
+      target: Component
+      description: 提供此工具的组件
+    used_by:
+      type: list
+      target: Service
+      description: 使用此工具的服务
+    triggers:
+      type: list
+      target: Process
+      description: 触发的流程

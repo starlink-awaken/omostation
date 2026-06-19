@@ -15,3 +15,11 @@ properties:
 title: agentmesh TypeScript代码归档 + 交叉验证无遗漏
 gate: none
 gate_status: passed
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: done
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

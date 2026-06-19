@@ -1,5 +1,5 @@
 id: "WORKFLOW-ROUTER-V1"
-type: "CognitiveFramework"
+type: CognitiveFramework
 name: "Dynamic Workflow Router"
 description: "动态工作流编排引擎卡带。用于根据任务的特征（如紧急程度、复杂度、是否跨域），动态拼装并挂载不同的工作流节点。"
 status: "active"
@@ -19,3 +19,11 @@ properties:
   trigger_conditions:
     - "复合型大任务 (Epic 级别)"
     - "需要同时调用多个 Cognitive Cartridge 的场景"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

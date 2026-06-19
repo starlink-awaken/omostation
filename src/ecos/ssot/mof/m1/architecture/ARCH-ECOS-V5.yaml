@@ -36,3 +36,11 @@ layer: multi
 sources:
 - 驾驶舱/5+4+1架构全景.md
 - 学习进化/2-knowledge/基建架构/eCOS-v5-Architecture-SSOT.md
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

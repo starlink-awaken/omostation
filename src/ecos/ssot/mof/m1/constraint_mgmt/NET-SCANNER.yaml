@@ -27,3 +27,6 @@ scan_methods:
 properties:
   constraint_desc: 网络扫描仪配置约束(check 工具默认端口/范围)
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/

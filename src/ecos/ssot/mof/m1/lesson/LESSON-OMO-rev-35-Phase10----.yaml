@@ -24,3 +24,11 @@ properties:
     > **当前**: Phase 10 ✅ → 全部 Phase 完成'
   source: Workspace/.omo/_knowledge/process/retrospectives/rev-35-Phase10深度复盘.md
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: recorded
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

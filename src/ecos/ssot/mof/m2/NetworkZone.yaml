@@ -1,4 +1,4 @@
-m2_type: network_zone
+m2_type: NetworkZone
 version: 1.0.0
 created: '2026-06-07'
 network_zone:

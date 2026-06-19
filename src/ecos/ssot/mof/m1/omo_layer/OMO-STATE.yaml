@@ -1,5 +1,5 @@
 id: "OMO-STATE"
-type: "Entity"
+type: Entity
 name: "OMO 系统状态"
 description: ".omo/state/system.yaml — 全局系统状态 SSOT"
 status: "active"
@@ -25,3 +25,11 @@ properties:
     - ".omo/_control/evolution/approval-board/ — 审批看板 (human approval gate)"
     - ".omo/_control/evolution/config.yaml — OPC cadence 配置 SSOT (新增 2026-06-13)"
 source: ".omo/state/system.yaml"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

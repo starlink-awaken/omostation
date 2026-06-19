@@ -1,5 +1,5 @@
 id: "GATE-DESIGN-TO-DEV"
-type: "Gate"
+type: Gate
 subtype: "StandardGate"
 name: "设计→开发 门禁"
 description: "设计态到开发态的质量门禁检查点 — 跨阶段 2→3 门禁"
@@ -28,3 +28,11 @@ properties:
     - "架构师"
     - "技术负责人"
 source: "model-driven/mof/m3_extended.py:STANDARD_GATES"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

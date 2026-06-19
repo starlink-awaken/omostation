@@ -16,3 +16,11 @@ properties:
   path: 驾驶舱/scripts/ecos-entry-logger.py
   format: python
   size: 5264
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

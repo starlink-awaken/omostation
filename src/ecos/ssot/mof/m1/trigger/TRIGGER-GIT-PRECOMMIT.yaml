@@ -1,5 +1,5 @@
 id: "TRIGGER-GIT-PRECOMMIT"
-type: "Trigger"
+type: Trigger
 name: "Git Pre-commit Hook"
 description: "代码质量门禁 — 每次 git commit 前检查 Python 文件变更"
 status: "active"
@@ -17,3 +17,11 @@ properties:
     endpoint: ".husky/pre-commit"
     expected_status: "executable"
 source: "ecos/.husky/pre-commit"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

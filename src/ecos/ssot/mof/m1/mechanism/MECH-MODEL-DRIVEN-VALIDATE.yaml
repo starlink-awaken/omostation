@@ -1,5 +1,5 @@
 id: "MECH-MODEL-DRIVEN-VALIDATE"
-type: "Mechanism"
+type: Mechanism
 subtype: "ValidationMechanism"
 name: "model-driven 自反验证机制"
 description: "每次 daemon 循环后，运行 model-driven 的 validate/derive/evolve 工具对 L0 MOF 进行自反验证"
@@ -15,3 +15,11 @@ properties:
   feedback: "验证报告输出到 docs/self-referential-report.yaml"
   fallback: "model-driven 不可用时跳过，不阻塞 daemon"
 source: "model-driven/toolchain/tools.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

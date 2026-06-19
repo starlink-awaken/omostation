@@ -1,4 +1,4 @@
-m2_type: quota_definition
+m2_type: QuotaDefinition
 version: 1.0.0
 created: '2026-06-08T23:27:00'
 quota_definition:

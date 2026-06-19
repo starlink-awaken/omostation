@@ -1,6 +1,14 @@
 id: ZONE-LOCALHOST
-type: network_zone
+type: NetworkZone
 zone_type: localhost
 latency_profile: ultra_low
 status: active
 description: "本机环回网络，用于本机进程间通信"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

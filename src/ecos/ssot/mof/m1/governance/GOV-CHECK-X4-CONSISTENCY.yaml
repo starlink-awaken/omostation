@@ -1,5 +1,5 @@
 id: "GOV-CHECK-X4-CONSISTENCY"
-type: "GovernanceCheck"
+type: GovernanceCheck
 name: "X4 一致性检查器"
 description: "X4 一致性检查器 — 检查跨项目/跨层 SSOT 一致性 (字段/状态机/引用路径)"
 status: running
@@ -21,3 +21,11 @@ properties:
     m1_ssot: "ecos/ssot/mof/m1/governance/GOV-X4-CONSISTENCY.yaml"
     m2_schema: "ecos/ssot/mof/m2/governance_check.yaml"
 source: "ecos/l0/governance/checkers.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: running
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

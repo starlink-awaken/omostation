@@ -32,3 +32,11 @@ properties:
     | **建议修复** | ① 迁移到 SQLit'
   source: Workspace/.omo/_knowledge/summaries/audits/aud-43-架构方案vs实现差距分析.md
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: recorded
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

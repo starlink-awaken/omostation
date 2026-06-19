@@ -1,5 +1,5 @@
 id: "GOAL-ECOS-V5-COMPLETE"
-type: "Goal"
+type: Goal
 subtype: "OKR"
 name: "eCOS v5 全栈交付"
 description: "完成 eCOS v5 全栈架构的完整交付，包括 9 层集成、全量测试、文档同步"
@@ -34,3 +34,11 @@ properties:
   deadline: "2026-07-01"
   owner: "夏明星"
 source: "model-driven/management/okr.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

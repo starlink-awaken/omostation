@@ -1,5 +1,5 @@
 id: ENG-OLLAMA-MACMINI
-type: compute_engine
+type: ComputeEngine
 node_ref: NODE-MACMINI
 engine_type: local_daemon
 base_url: "http://macmini.local:11434/v1"
@@ -7,3 +7,11 @@ supported_protocols: ["openai"]
 cost_multiplier: 0.0001
 status: active
 description: "MacMini 上的 Ollama 常驻服务"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

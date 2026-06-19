@@ -13,3 +13,11 @@ properties:
   workflow_name: Create 工作流
   steps: 创建工作流——脚手架→编码→文档→提交
   trigger: agent-invoke
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

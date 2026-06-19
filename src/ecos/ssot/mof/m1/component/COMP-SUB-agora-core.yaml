@@ -10,3 +10,8 @@ runtime: active
 status: active
 model_driven_refs:
   source_file: projects/agora/src/agora/core/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

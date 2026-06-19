@@ -61,3 +61,24 @@ Component:
   - id: COMP-WS-cockpit
     name: Cockpit Entry Bridge
     description: L3 入口桥接 — 多Agent接入
+  relations:
+    depends_on:
+      type: ref
+      target: Component
+      description: 依赖的组件
+    provides:
+      type: ref
+      target: Service
+      description: 提供的服务
+    uses:
+      type: ref
+      target: MCPTool
+      description: 使用的工具
+    parent:
+      type: ref
+      target: Component
+      description: 父组件
+    subcomponents:
+      type: list
+      target: Component
+      description: 子组件列表

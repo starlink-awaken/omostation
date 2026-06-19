@@ -26,3 +26,8 @@ properties:
 layer: multi
 sources:
 - 驾驶舱/统一架构模型.md
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

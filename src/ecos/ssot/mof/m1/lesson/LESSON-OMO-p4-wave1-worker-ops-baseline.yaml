@@ -24,3 +24,11 @@ properties:
     - `py'
   source: Workspace/.omo/_knowledge/summaries/p4-wave1-worker-ops-baseline.md
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: recorded
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

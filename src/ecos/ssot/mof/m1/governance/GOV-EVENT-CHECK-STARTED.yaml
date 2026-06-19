@@ -1,5 +1,5 @@
 id: "GOV-EVENT-CHECK-STARTED"
-type: "GovernanceEvent"
+type: GovernanceEvent
 name: "治理检查启动事件"
 description: "治理事件 — 检查器执行过程中产生的事件流 (check_started/check_completed/alert_triggered/state_changed)"
 status: emitted
@@ -20,3 +20,11 @@ properties:
     module: "ecos.l0.governance.event_bus"
     m2_schema: "ecos/ssot/mof/m2/governance_event.yaml"
 source: "ecos/l0/governance/event_bus.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: emitted
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

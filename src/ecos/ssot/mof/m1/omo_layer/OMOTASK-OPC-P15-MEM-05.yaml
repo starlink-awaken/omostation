@@ -14,3 +14,11 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/OPC-P15-MEM-05.yaml
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: done
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

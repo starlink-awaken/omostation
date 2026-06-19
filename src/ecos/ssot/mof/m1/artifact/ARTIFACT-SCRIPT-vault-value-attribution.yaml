@@ -17,3 +17,11 @@ properties:
   size: 5024
   mtime: '2026-06-06T13:47:57.069917'
 layer: X3
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

@@ -17,3 +17,11 @@ properties:
   action: python3 check-vault-audit.py
   interval: 0
   feedback: stdout/stderr + daemon-state.db
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

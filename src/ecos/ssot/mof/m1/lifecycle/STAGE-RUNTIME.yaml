@@ -1,5 +1,5 @@
 id: "STAGE-RUNTIME"
-type: "Stage"
+type: Stage
 subtype: "StandardStage"
 name: "运行态"
 description: "线上服务运行、监控、应急响应 — 7 阶段标准生命周期第 5 阶段"
@@ -39,3 +39,11 @@ properties:
     - "产品负责人"
   duration_target_days: 90
 source: "model-driven/mof/m3_extended.py:STANDARD_STAGES"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

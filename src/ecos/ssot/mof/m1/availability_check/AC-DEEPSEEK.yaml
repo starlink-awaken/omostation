@@ -1,8 +1,11 @@
 id: AC-DEEPSEEK
 name: DeepSeek API 可用性检查
-type: availability_check
+type: AvailabilityCheck
 provider: deepseek
 probe_type: https
 probe_url: https://api.deepseek.com/v1/models
 timeout_seconds: 3
 expected_status: 200
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/

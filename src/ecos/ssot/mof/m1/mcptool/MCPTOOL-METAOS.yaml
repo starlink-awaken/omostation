@@ -12,3 +12,11 @@ transport: stdio
 status: active
 model_driven_refs:
   source_file: projects/metaos/src/metaos/mcp_server.py
+
+relations:
+  provided_by: COMP-WS-metaos
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

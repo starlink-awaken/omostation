@@ -1,6 +1,14 @@
 id: ZONE-HOME-LAN
-type: network_zone
+type: NetworkZone
 zone_type: lan
 latency_profile: low
 status: active
 description: "家庭物理局域网，连通 MacMini, Y7000P 和 Local-Mac。前提：只有人（Local-Mac）在家里时才可直连。"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

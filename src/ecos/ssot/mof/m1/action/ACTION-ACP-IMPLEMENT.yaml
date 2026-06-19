@@ -11,3 +11,11 @@ properties:
   action: 实现 Agent 发现·心跳·消息路由——基于 I0 Agora event bus
   intent: INTENT-MULTI-AGENT
   priority: P1
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: planned
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

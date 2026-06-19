@@ -1,5 +1,5 @@
 id: ENG-OMLX-LOCAL
-type: compute_engine
+type: ComputeEngine
 node_ref: NODE-LOCAL-MAC
 engine_type: local_inference
 base_url: "http://127.0.0.1:8080/v1"
@@ -7,3 +7,11 @@ supported_protocols: ["openai"]
 cost_multiplier: 0.0001
 status: active
 description: "本地开发机的 omlx 推理框架"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

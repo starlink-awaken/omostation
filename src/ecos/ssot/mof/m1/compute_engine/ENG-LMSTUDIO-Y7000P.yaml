@@ -1,5 +1,5 @@
 id: ENG-LMSTUDIO-Y7000P
-type: compute_engine
+type: ComputeEngine
 node_ref: NODE-Y7000P
 engine_type: local_server
 base_url: "http://y7000p.local:1234/v1"
@@ -7,3 +7,11 @@ supported_protocols: ["openai"]
 cost_multiplier: 0.0001
 status: active
 description: "Y7000P 上的 LMStudio 高性能推理服务"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

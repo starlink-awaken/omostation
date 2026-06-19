@@ -1,5 +1,5 @@
 id: "TRIGGER-AGORA-WATCHDOG"
-type: "Trigger"
+type: Trigger
 name: "Agora Watchdog"
 description: "Agora 服务健康监控 — 每 10 秒检查，连续 3 次失败自动重启"
 status: "active"
@@ -19,3 +19,11 @@ properties:
     max_retries: 3
     backoff_strategy: "fixed_15s"
 source: "agora/agora_watchdog.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

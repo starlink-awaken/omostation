@@ -11,3 +11,11 @@ properties:
   action: 基于 ACP+A2A 实现多 Agent 并行调度——OMO Worker Dispatch 升级
   intent: INTENT-MULTI-AGENT
   priority: P1
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: planned
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

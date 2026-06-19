@@ -19,3 +19,11 @@ properties:
     storage root in its key worker/sync path, and Hermes bridge bootstrap is no'
   source: Workspace/.omo/_knowledge/summaries/phase8/phase8-wave2-closeout.md
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: recorded
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

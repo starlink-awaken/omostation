@@ -1,5 +1,5 @@
 id: "SPEC-MODEL-DRIVEN-LIFECYCLE"
-type: "Specification"
+type: Specification
 subtype: "ArchitectureSpec"
 name: "全生命周期模型驱动规范"
 description: "定义 eCOS v5 全生命周期模型驱动的标准规范 — 7 阶段 + 24 M2 类型 + 12 工具链 + 管理面"
@@ -18,3 +18,11 @@ properties:
   enforcement: "warn"
   compliance: "partial"
 source: "model-driven/mof/m2_lifecycle.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

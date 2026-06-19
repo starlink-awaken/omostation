@@ -1,5 +1,5 @@
 id: "OPENSPEC-V1"
-type: "CognitiveFramework"
+type: CognitiveFramework
 name: "OpenSpec 契约"
 description: "Model-Driven 的契约固化层。用于在发散期的 Pitch 转化为执行期的 OMO Task 之间，强行拉起一道标准的契约预检程序，确保不含糊、无遗漏。"
 status: "active"
@@ -23,3 +23,11 @@ properties:
     - "Pitch 的风险等级达到 L2 或 L3"
     - "涉及跨域（跨层）交互"
     - "用户要求执行深度系统架构设计"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

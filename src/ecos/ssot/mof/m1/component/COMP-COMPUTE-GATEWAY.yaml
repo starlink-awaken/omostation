@@ -15,3 +15,11 @@ properties:
   parent_project: projects/aetherforge
   mcp_port: 7422
   governance_standard: .omo/standards/x2-budget-integrity-standard.md
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

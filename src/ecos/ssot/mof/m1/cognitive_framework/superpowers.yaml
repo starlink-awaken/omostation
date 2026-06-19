@@ -1,5 +1,5 @@
 id: "SUPERPOWERS-V1"
-type: "CognitiveFramework"
+type: CognitiveFramework
 name: "Superpowers"
 description: "适用于复杂特性开发、核心架构重构或需要严谨验证的任务。默认开启深度规划与自我修正闭环。"
 status: "active"
@@ -22,3 +22,11 @@ properties:
   trigger_conditions:
     - "Tag 包含 `architecture` 或 `core-feature`"
     - "影响范围触及 L0/L1 底层协议"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

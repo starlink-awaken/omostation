@@ -1,5 +1,5 @@
 id: "PLUGIN-CONFIG-DOMAIN"
-type: "Plugin"
+type: Plugin
 subtype: "DomainPlugin"
 name: "ConfigDomainPlugin"
 description: "L4 Kernel 的配置域插件 — 4 actions (read/write/validate/diff)"
@@ -17,3 +17,11 @@ properties:
     - "validate_config"
     - "diff_config"
 source: "l4-kernel/domain_plugins.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

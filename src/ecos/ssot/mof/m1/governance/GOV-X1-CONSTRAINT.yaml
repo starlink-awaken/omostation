@@ -1,5 +1,5 @@
 id: "GOV-X1-CONSTRAINT"
-type: "GovernancePolicy"
+type: GovernancePolicy
 name: "X1 约束维 — 系统边界与约束治理"
 description: "X1 治理维: 定义 `.omo` 状态面、`projects/omo` 治理内核、`projects/c2g` 战略入口的边界、硬约束和合规规则"
 status: active
@@ -54,3 +54,11 @@ properties:
   validator: "ecos/ssot/registry/L0-constraints.yaml + .omo/_truth/x1-governance-policies.yaml + .omo/_truth/registry/omo-governance-surfaces.yaml"
   compliance: "partial"
 source: "ecos/ssot/registry/L0-constraints.yaml + .omo/_truth/x1-governance-policies.yaml + .omo/standards/omo-governance-surfaces.md"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

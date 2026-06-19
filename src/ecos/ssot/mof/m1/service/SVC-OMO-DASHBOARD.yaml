@@ -9,3 +9,19 @@ runtime_status: running
 protocol: http
 plist: projects/omo/scripts/com.omo.dashboard.plist
 status: running
+
+model_driven_refs:
+  source_file: projects/omo/pyproject.toml
+
+relations:
+  provided_by: omo
+
+state_history:
+  - state: running
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling
+
+cost_model:
+  infrastructure: low
+  operational: low
+  development: medium

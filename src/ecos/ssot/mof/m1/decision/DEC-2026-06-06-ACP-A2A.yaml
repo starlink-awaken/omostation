@@ -18,3 +18,11 @@ properties:
   - 仅实现 ACP
   - ACP+A2A 完整实现
   consequences: '预计影响: L3 cockpit(L3入口适配)·I0 Agora(路由)·L2 kairon(Agent编排)'
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: accepted
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

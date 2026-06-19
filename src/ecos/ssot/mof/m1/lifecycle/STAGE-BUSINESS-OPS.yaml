@@ -1,5 +1,5 @@
 id: "STAGE-BUSINESS-OPS"
-type: "Stage"
+type: Stage
 subtype: "StandardStage"
 name: "运营态"
 description: "业务运营、价值度量、ROI 分析 — 7 阶段标准生命周期第 7 阶段"
@@ -38,3 +38,11 @@ properties:
     - "架构师"
   duration_target_days: 365
 source: "model-driven/mof/m3_extended.py:STANDARD_STAGES"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

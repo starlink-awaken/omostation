@@ -15,3 +15,11 @@ properties:
 title: 更新 BOS 路由、依赖、CI 与 Makefile 移除 llm-gateway 独立入口
 gate: none
 gate_status: passed
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: done
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

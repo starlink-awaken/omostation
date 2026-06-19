@@ -14,3 +14,11 @@ properties:
   solution: 详见 .omo/_knowledge/reference/MODEL-BENCHMARK.md
   known_uses:
   - .omo/_knowledge/reference/
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: documented
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

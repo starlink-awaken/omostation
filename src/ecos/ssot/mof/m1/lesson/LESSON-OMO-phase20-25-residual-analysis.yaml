@@ -24,3 +24,11 @@ properties:
     - core-models/protocols/health.py 提供健康协议定'
   source: Workspace/.omo/_knowledge/summaries/phase24/phase20-25-residual-analysis.md
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: recorded
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

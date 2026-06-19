@@ -1,5 +1,5 @@
 id: "OMOTASK-OPC-P5"
-type: "OMOTask"
+type: OMOTask
 subtype: "RoadmapPhase"
 name: "OPC-P5: North Star Scenarios"
 description: "P5 proves OPC value through 3 repeatable real-user product scenarios: technical-radar / work-assistant / family-health"
@@ -50,3 +50,11 @@ properties:
   assessment: "2026-06-13 Gate F 通过. F1-F4 全部 passed"
   gate_note: "P5 全部 sub_gates 通过, 3 场景 1 cockpit 入口均落地"
 source: ".omo/tasks/planned/OPC-P5-SCENARIOS.yaml"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "done"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

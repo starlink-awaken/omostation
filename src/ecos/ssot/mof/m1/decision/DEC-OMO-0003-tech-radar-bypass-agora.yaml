@@ -17,3 +17,11 @@ properties:
   rationale: '来源: .omo/_knowledge/decisions/0003-tech-radar-bypass-agora.md'
   options: []
   consequences: ''
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: accepted
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

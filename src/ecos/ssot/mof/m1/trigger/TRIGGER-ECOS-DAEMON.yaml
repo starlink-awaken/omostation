@@ -1,5 +1,5 @@
 id: "TRIGGER-ECOS-DAEMON"
-type: "Trigger"
+type: Trigger
 name: "eCOS Daemon"
 description: "自治运维守护进程 — 每 6 小时执行健康检查+SLA+约束验证+自反验证"
 status: "active"
@@ -19,3 +19,11 @@ properties:
     endpoint: "~/.ecos/daemon-state.db"
     expected_status: "last_cycle_within_12h"
 source: "ecos/scripts/ecos-daemon.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

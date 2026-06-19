@@ -18,3 +18,11 @@ properties:
     language is explicit, and admission now has a real
   source: Workspace/.omo/_knowledge/summaries/phase9/phase9-wave3-closeout.md
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: recorded
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

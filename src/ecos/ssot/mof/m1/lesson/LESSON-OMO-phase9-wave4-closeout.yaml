@@ -18,3 +18,11 @@ properties:
     correct; it is now governable at rollout time, with explicit delivery e
   source: Workspace/.omo/_knowledge/summaries/phase9/phase9-wave4-closeout.md
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: recorded
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

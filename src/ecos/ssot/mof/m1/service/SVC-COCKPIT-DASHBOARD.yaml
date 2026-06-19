@@ -9,3 +9,19 @@ port: 8090
 protocol: http
 status: running
 runtime_status: running
+
+model_driven_refs:
+  source_file: projects/cockpit/pyproject.toml
+
+relations:
+  provided_by: cockpit
+
+state_history:
+  - state: running
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling
+
+cost_model:
+  infrastructure: low
+  operational: low
+  development: medium

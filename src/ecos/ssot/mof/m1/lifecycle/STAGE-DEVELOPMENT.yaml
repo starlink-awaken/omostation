@@ -1,5 +1,5 @@
 id: "STAGE-DEVELOPMENT"
-type: "Stage"
+type: Stage
 subtype: "StandardStage"
 name: "开发态"
 description: "编码、单元测试、Code Review — 7 阶段标准生命周期第 3 阶段"
@@ -40,3 +40,11 @@ properties:
     - "测试工程师"
   duration_target_days: 30
 source: "model-driven/mof/m3_extended.py:STANDARD_STAGES"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

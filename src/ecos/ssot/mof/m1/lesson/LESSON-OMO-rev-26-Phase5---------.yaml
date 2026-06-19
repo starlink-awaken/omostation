@@ -28,3 +28,11 @@ properties:
     | **systemd** | 半自动 (systemctl) | '
   source: Workspace/.omo/_knowledge/process/retrospectives/rev-26-Phase5深度复盘热插拔审计.md
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: recorded
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

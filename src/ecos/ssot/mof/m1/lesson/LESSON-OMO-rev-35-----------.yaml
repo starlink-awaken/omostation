@@ -16,3 +16,11 @@ properties:
   lesson: 治理是"低反馈路径"
   source: Workspace/.omo/_knowledge/process/retrospectives/rev-35-产品愿景执行偏差复盘.md
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: recorded
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

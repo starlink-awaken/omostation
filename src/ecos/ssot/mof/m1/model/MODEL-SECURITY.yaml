@@ -22,3 +22,8 @@ properties:
   model_driven_refs:
     - projects/model-driven/src/model_driven/toolchain/mof_extract.py
     - projects/ecos/src/ecos/ssot/mof/m1/convention/CONV-EXTRACT-CARDS-ID.yaml
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

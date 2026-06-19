@@ -22,3 +22,8 @@ properties:
   model_driven_refs:
     - projects/model-driven/src/model_driven/lifecycle/pipeline.py:PipelinePhase
     - projects/model-driven/src/model_driven/lifecycle/stages.py:LifecycleTracker
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

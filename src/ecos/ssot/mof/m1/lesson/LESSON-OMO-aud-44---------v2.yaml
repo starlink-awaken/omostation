@@ -16,3 +16,11 @@ properties:
   lesson: 基于 phase1-架构工程/pat-09 和 aud-43 差距分析：
   source: Workspace/.omo/_knowledge/summaries/audits/aud-44-全面架构审计报告v2.md
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: recorded
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

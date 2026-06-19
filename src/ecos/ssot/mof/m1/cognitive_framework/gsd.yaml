@@ -1,5 +1,5 @@
 id: "GSD-V1"
-type: "CognitiveFramework"
+type: CognitiveFramework
 name: "Get Shit Done"
 description: "适用于紧急 Bug 修复、MVP 快速原型验证、或者无需过度设计的脏活累活。以最快速度拿到结果为最高优先级。"
 status: "active"
@@ -20,3 +20,11 @@ properties:
     - "Tag 包含 `hotfix` 或 `dirty-work`"
     - "Appetite 极小 (< 1 小时)"
     - "用户显式要求使用 GSD 模式"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

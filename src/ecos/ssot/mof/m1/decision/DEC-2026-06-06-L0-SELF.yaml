@@ -18,3 +18,11 @@ properties:
   - 外部治理 L0
   - L0 自治理
   consequences: 已执行。见 ssot/mof/ 和 tools/
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: accepted
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

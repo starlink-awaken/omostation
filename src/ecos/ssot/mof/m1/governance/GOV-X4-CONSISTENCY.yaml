@@ -1,5 +1,5 @@
 id: "GOV-X4-CONSISTENCY"
-type: "GovernancePolicy"
+type: GovernancePolicy
 name: "X4 一致性维 — SSOT 级联与跨层一致性"
 description: "X4 治理维: M1↔M0 漂移检测 + 跨阶段一致性检查 + `.omo` 状态面 / `projects/omo` / `projects/c2g` 三层 SSOT 一致性"
 status: active
@@ -56,3 +56,11 @@ properties:
   validator: "model-driven/ssot/lifecycle_ssot.py + .omo/_truth/x4-consistency-rules.yaml + .omo/_truth/registry/omo-governance-surfaces.yaml"
   compliance: "partial"
 source: "model-driven/mof/ontology_extended.py + .omo/_truth/x4-consistency-rules.yaml + .omo/standards/omo-governance-surfaces.md"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

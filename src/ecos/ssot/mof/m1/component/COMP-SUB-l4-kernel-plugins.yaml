@@ -10,3 +10,8 @@ runtime: active
 status: active
 model_driven_refs:
   source_file: projects/l4-kernel/src/l4_kernel/plugins.py
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

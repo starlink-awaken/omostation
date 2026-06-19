@@ -16,3 +16,11 @@ properties:
   problem: '**范式翻转**'
   decision: '"文件是给人读的，但90%的读写是Agent做的。为人的10%牺牲Agent的100%，方向反了。"'
   rationale: '来源: 复盘_2026-06-06_架构一致性全链路.md'
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: accepted
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

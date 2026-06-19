@@ -1,7 +1,15 @@
 id: HW-CPU-Y7000P
-type: hardware_asset
+type: HardwareAsset
 node_ref: NODE-Y7000P
 device_type: cpu
 model: "Intel Core i7-13500H"
 status: active
 description: "Y7000P 主力 CPU，拥有强劲的多核并发计算性能"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

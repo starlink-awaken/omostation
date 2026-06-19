@@ -10,3 +10,19 @@ protocol: http
 port: 7450
 plist: projects/runtime/scripts/com.user.cron-service.plist
 status: running
+
+model_driven_refs:
+  source_file: projects/runtime/pyproject.toml
+
+relations:
+  provided_by: runtime
+
+state_history:
+  - state: running
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling
+
+cost_model:
+  infrastructure: low
+  operational: low
+  development: medium

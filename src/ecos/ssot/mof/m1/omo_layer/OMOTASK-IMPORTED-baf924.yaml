@@ -16,3 +16,11 @@ properties:
   - .omo/tasks/planned/IMPORTED-baf924.yaml
   signals:
   - task-IMPORTED-baf924-running
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: proposed
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

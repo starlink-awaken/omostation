@@ -1,5 +1,5 @@
 id: "VAULT-PATH-DEFAULT"
-type: "vault_path"
+type: VaultPath
 name: "默认 Vault 路径映射"
 description: "Vault 路径与 BOS URI 的映射关系"
 status: "active"
@@ -15,3 +15,11 @@ properties:
     - "~/Documents/@学习进化 → bos://vault/**"
     - "~/Documents/@个人 → bos://personal/**"
 source: "protocols/vault-paths.yaml"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

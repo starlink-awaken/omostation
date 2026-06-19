@@ -1,6 +1,6 @@
 id: RP-BALANCED
 name: RP-BALANCED
-type: routing_policy
+type: RoutingPolicy
 strategy: balanced
 weights:
   cost: 0.35
@@ -15,3 +15,6 @@ fallback:
   enabled: true
   max_retries: 2
   cooldown_seconds: 30
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/

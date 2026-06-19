@@ -1,5 +1,5 @@
 id: "RUNTIME-SCHEDULER"
-type: "Mechanism"
+type: Mechanism
 name: "Runtime Scheduler"
 description: "健康监控调度器 — 每 15 秒检查服务状态，自动修复异常"
 status: "active"
@@ -14,3 +14,11 @@ properties:
   feedback: "matrix_state.json"
   fallback: "launchctl restart"
 source: "runtime/scheduler.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

@@ -9,3 +9,11 @@ item_count: 33
 closed_count: 25
 deferred_count: 3
 status: active
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

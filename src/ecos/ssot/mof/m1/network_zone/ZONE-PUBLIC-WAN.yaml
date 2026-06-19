@@ -1,6 +1,14 @@
 id: ZONE-PUBLIC-WAN
-type: network_zone
+type: NetworkZone
 zone_type: wan
 latency_profile: high
 status: active
 description: "公网，用于访问 Anthropic / OpenAI 等云端接口"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

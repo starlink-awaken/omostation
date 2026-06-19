@@ -1,5 +1,5 @@
 id: ENG-BEDROCK
-type: compute_engine
+type: ComputeEngine
 node_ref: NODE-CLOUD
 engine_type: cloud_api
 base_url: "https://bedrock-runtime.{region}.amazonaws.com/"
@@ -10,3 +10,11 @@ cost_multiplier: 1.2
 status: active
 capabilities: ["chat", "vision"]
 description: "AWS Bedrock"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

@@ -1,4 +1,4 @@
-m2_type: availability_check
+m2_type: AvailabilityCheck
 version: 1.0.0
 created: '2026-06-08T23:27:00'
 availability_check:

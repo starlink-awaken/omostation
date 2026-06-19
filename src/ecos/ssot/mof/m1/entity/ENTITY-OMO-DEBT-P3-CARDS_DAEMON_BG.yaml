@@ -12,3 +12,11 @@ properties:
   entity_type: debt
   identity:
     omo_debt_id: P3-CARDS_DAEMON_BG
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

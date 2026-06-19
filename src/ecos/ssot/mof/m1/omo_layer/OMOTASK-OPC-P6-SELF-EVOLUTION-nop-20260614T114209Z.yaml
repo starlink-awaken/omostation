@@ -15,3 +15,11 @@ properties:
   m3_parent: ManagementElement.OMOTask
   model_driven_ref:
   - .omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260614T114209Z.yaml
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: proposed
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

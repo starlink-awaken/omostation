@@ -89,3 +89,11 @@ maintained_by: kairon/ontoderive
 last_reviewed: '2026-06-07'
 properties:
   workflow_name: Ontoderive D-Logos 文档代码对齐
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

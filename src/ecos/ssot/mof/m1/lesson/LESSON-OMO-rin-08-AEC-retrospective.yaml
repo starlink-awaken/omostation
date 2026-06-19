@@ -16,3 +16,11 @@ properties:
   lesson: AEC S1→S4→S5（问题探索→方案设计→增量验证）
   source: Workspace/.omo/_knowledge/process/retrospectives/rin-08-AEC-retrospective.md
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: recorded
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

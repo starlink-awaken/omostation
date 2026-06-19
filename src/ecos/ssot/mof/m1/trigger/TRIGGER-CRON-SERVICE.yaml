@@ -1,5 +1,5 @@
 id: "TRIGGER-CRON-SERVICE"
-type: "Trigger"
+type: Trigger
 name: "Runtime Cron Service"
 description: "定时任务调度器 — 管理 30+ 定时任务 (日/周/月/季)"
 status: "active"
@@ -19,3 +19,11 @@ properties:
     endpoint: "http://127.0.0.1:7450/health"
     expected_status: "200"
 source: "runtime/cron_service/scheduler.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "active"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

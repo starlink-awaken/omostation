@@ -18,3 +18,11 @@ properties:
     gate for whatever phase or implementation program follows.
   source: Workspace/.omo/_knowledge/summaries/phase5/phase5-closeout-retrospective.md
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: recorded
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

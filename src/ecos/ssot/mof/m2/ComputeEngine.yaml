@@ -1,4 +1,4 @@
-m2_type: compute_engine
+m2_type: ComputeEngine
 version: 1.0.0
 created: '2026-06-07'
 compute_engine:

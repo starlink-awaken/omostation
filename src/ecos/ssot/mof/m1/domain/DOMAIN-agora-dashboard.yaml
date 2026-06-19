@@ -3,7 +3,7 @@
 # Context: L3 入口层，Web 面板已收敛至 cockpit
 
 id: DOMAIN-agora-dashboard
-type: "Domain"
+type: Domain
 name: "agora-dashboard"
 description: "L3 Web 面板域。原 agora/extras/web/dashboard.py 已删除，功能收敛至 cockpit dashboard_server.py (:8090)。MCP 服务默认 stdio 传输。"
 status: "deprecated"
@@ -19,3 +19,11 @@ properties:
   is_entry_layer: false
   domain_type: "workspace"
   convergence_note: "Web 面板已收敛至 cockpit :8090，MCP 默认 stdio，SSE 需显式 --sse 标志"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "deprecated"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

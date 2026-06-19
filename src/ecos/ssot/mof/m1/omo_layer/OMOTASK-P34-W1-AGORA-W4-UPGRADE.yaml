@@ -15,3 +15,11 @@ properties:
   - .omo/tasks/planned/P34-W1-AGORA-W4-UPGRADE.yaml
   signals:
   - task-P34-W1-AGORA-W4-UPGRADE-running
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: done
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

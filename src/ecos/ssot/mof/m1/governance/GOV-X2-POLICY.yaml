@@ -1,5 +1,5 @@
 id: "GOV-X2-POLICY"
-type: "GovernancePolicy"
+type: GovernancePolicy
 name: "X2 策略维 — 可配置治理策略与自动化规则"
 description: "X2 治理维: 保鲜周期、告警阈值、降级条件等可配置策略，覆盖 `.omo` 目录治理标准、`projects/omo` 内核与 `projects/c2g` 入口"
 status: active
@@ -40,3 +40,11 @@ properties:
   validator: "ecos-daemon.py + model-driven DerivationEngine + .omo/_truth/x2-freshness-rules.yaml"
   compliance: "partial"
 source: "ecos/scripts/ecos-daemon.py + .omo/_truth/x2-freshness-rules.yaml + .omo/standards/omo-governance-surfaces.md"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

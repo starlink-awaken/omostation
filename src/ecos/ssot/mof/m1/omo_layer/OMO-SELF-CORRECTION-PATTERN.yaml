@@ -1,5 +1,5 @@
 id: "OMO-SELF-CORRECTION-PATTERN"
-type: "Pattern"
+type: Pattern
 name: "OMO Self-Correction Discipline 模式"
 description: "OMO 路线图 P5-P7 closeout 阶段建立的 self-correction 8 段硬结构 + 5 红线 + 6 遗留争议显式段. 用于所有 OPC Phase / Sub-gate / Self-correction 收口报告."
 status: "documented"
@@ -41,3 +41,11 @@ properties:
   incident_history:
     - "2026-06-13 OPC P5-P7 closeout (8 阶段模拟演练) — reviewer 揭示 4 反模式, 全部闭环"
 source: ".omo/_knowledge/audits/2026-06-13-opc-p5-p7-self-correction-closeout.md"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "documented"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

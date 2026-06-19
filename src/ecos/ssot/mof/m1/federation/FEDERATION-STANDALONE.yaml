@@ -1,5 +1,5 @@
 id: "FEDERATION-STANDALONE"
-type: "Federation"
+type: Federation
 name: "单机联邦模式"
 description: "L4 Kernel 联邦中枢 — standalone 模式，单节点运行"
 status: "standalone"
@@ -13,3 +13,11 @@ properties:
   peers: []
   federated_domains: []
 source: "l4-kernel/federation.py"
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: "standalone"
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

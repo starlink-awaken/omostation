@@ -16,3 +16,11 @@ properties:
   lesson: "**修复**: \n1. 在 Agent Runti"
   source: Workspace/.omo/_knowledge/summaries/audits/rt-15-Hermes解耦深度分析与红队报告.md
   severity: medium
+
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/mof/m1/
+
+state_history:
+  - state: recorded
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling

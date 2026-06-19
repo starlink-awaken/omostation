@@ -21,3 +21,8 @@ properties:
   model_driven_refs:
     - projects/model-driven/src/model_driven/ssot/lifecycle_ssot.py:LifecycleSSOT
     - projects/model-driven/src/model_driven/ssot/lifecycle_ssot.py:SSOTSnapshot
+
+state_history:
+  - state: active
+    timestamp: '2026-06-19T00:00:00Z'
+    reason: initial_modeling
