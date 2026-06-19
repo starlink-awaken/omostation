@@ -180,9 +180,9 @@ goals:
   bet_status: active
 - id: BET-a7c1
   title: batch1-agora-omo-modules
-  desc: 'Bet: Batch 1 — agora dead-code audit + omo 子包重组 (Appetite: 1 week)'
-  progress: 75.0
-  status: pending
+  desc: 'Bet: Batch 1 — agora dead-code audit + omo 分类索引 (Appetite: 1 week)'
+  progress: 100.0
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-a7c1
