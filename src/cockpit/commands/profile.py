@@ -65,9 +65,9 @@ def cmd_profile(args: argparse.Namespace) -> int:
                 '    - "原则1"\n'
                 '    - "原则2"[/]\n\n'
                 "[bold yellow]🎯 快速启动:[/bold yellow]\n"
-                "  [cyan]workspace status[/] — 打开工作台\n"
-                '  [cyan]workspace research "主题"[/] — 开始研究\n'
-                "  [cyan]workspace demo[/] — 体验完整闭环",
+                "  [cyan]cockpit status[/] — 打开工作台\n"
+                '  [cyan]cockpit research "主题"[/] — 开始研究\n'
+                "  [cyan]cockpit demo[/] — 体验完整闭环",
                 "yellow",
             )
         )
@@ -89,9 +89,9 @@ def cmd_profile(args: argparse.Namespace) -> int:
     c.print(
         _panel(
             "下一步:\n"
-            "- [cyan]workspace status[/] 打开工作台\n"
-            "- [cyan]workspace profile --edit[/] 编辑档案\n"
-            '- [cyan]workspace research "主题"[/] 开始研究',
+            "- [cyan]cockpit status[/] 打开工作台\n"
+            "- [cyan]cockpit profile --edit[/] 编辑档案\n"
+            '- [cyan]cockpit research "主题"[/] 开始研究',
             "cyan",
         )
     )

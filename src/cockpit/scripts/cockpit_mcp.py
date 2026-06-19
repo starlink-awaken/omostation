@@ -358,12 +358,25 @@ _CARDS_DIR = Path.home() / "Documents" / "@驾驶舱" / "CARDS"
 if not _CARDS_DIR.exists():
     _log.warning("CARDS 目录不存在: %s. cockpit cards 功能不可用", _CARDS_DIR)
 _VAULT_DIR = Path.home() / "Documents" / "@学习进化"
+_PERSONAL_DIR = Path.home() / "Documents" / "@个人"
+_PUBLIC_DIR = Path.home() / "Documents" / "@公共"
+_CREATIVE_DIR = Path.home() / "Documents" / "@创意创作"
+_FAMILY_DIR = Path.home() / "Documents" / "@家庭生活"
+_WORKDOCS_DIR = Path.home() / "Documents" / "@工作文档"
+_OPC_DIR = Path.home() / "Documents" / "@OPC"
 _WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[4])))
 _OMO_GOALS = _WORKSPACE_ROOT / ".omo" / "_truth" / "goals" / "current.yaml"
 
+# L4 全域注册 (产品走查 v2 #10, 深度核对 2026-06-19: 真实 8 个 @域, 之前只 cards/vault 2 域)
 _L4_DOMAINS: dict[str, Path] = {
     "cards": _CARDS_DIR,
     "vault": _VAULT_DIR,
+    "personal": _PERSONAL_DIR,
+    "public": _PUBLIC_DIR,
+    "creative": _CREATIVE_DIR,
+    "family": _FAMILY_DIR,
+    "workdocs": _WORKDOCS_DIR,
+    "opc": _OPC_DIR,
 }
 
 
