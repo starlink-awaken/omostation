@@ -199,8 +199,8 @@ goals:
   title: batch2-kairon-runtime-types
   desc: 'Bet: Batch 2 — kairon mypy 逐步启用 + runtime setuptools→hatchling (Appetite:
     2 weeks)'
-  progress: 90.0
-  status: pending
+  progress: 100.0
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-b8d2
@@ -212,7 +212,7 @@ goals:
   scope:
   - DEBT-KAIRON-TYPE-SAFETY (kairon 184K LOC mypy strict 逐步启用)
   - DEBT-RUNTIME-BUILD-SYSTEM (runtime setuptools→hatchling + executor 拆分)
-  note: 'kairon mypy: 10/16 strict + 6/16 check-only; runtime hatchling完成'
+  note: 'kairon mypy: 10 strict + 6 check-only (16/16); runtime hatchling; done'
 - id: BET-c9e3
   title: batch3-gbrain-remaining
   desc: 'Bet: Batch 3 — gbrain operations.ts 拆分 + 剩余小项 (Appetite: 1 week)'
