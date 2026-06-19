@@ -6,6 +6,7 @@ description: agora 子模块 — auth
 project: agora
 parent: COMP-WS-agora
 layer: I0
+runtime: active
 status: active
 model_driven_refs:
   source_file: projects/agora/src/agora/auth/

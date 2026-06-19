@@ -6,6 +6,7 @@ description: cockpit 子模块 — web
 project: cockpit
 parent: COMP-WS-cockpit
 layer: L3
+runtime: active
 status: active
 model_driven_refs:
   source_file: projects/cockpit/src/cockpit/web/

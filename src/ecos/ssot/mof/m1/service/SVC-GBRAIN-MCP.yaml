@@ -2,8 +2,10 @@ id: SVC-GBRAIN-MCP
 type: Service
 m3_parent: StructuralElement.Component
 name: gbrain-mcp
+service_name: gbrain-mcp
 description: GBrain MCP Server — 知识数据库
 project: gbrain
 port: stdio
 protocol: stdio
-status: active
+status: running
+runtime_status: running

@@ -2,6 +2,8 @@ id: MCPTOOL-MODEL-DRIVEN
 type: MCPTool
 m3_parent: StructuralElement.Component
 name: model-driven framework
+tool_name: ""
+server: ""
 description: Model-Driven 框架 MCP 工具集 — 41 tools (lifecycle/mof/schema/validate)
 project: model-driven
 component: COMP-WS-model-driven

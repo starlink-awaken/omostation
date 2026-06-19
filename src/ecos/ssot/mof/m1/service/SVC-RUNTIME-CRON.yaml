@@ -2,8 +2,10 @@ id: SVC-RUNTIME-CRON
 type: Service
 m3_parent: StructuralElement.Component
 name: runtime-cron
+service_name: runtime-cron
 description: FastAPI Cron Service — 调度器 HTTP API
 project: runtime
 port: 7450
 protocol: http
-status: active
+status: running
+runtime_status: running

@@ -4,6 +4,7 @@ m3_parent: StructuralElement.Component
 name: model-driven
 description: X 横切面框架 — 全生命周期模型驱动平台 (M3→M2→M1→M0 四层)
 layer: X
+runtime: active
 project: model-driven
 version: "1.0.0"
 status: active

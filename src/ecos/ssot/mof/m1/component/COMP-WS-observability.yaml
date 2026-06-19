@@ -4,6 +4,7 @@ m3_parent: StructuralElement.Component
 name: observability
 description: X Langfuse 可观测性 — Docker Compose 部署的监控基础设施
 layer: X
+runtime: active
 project: observability
 version: "1.0.0"
 status: active

@@ -2,6 +2,8 @@ id: MCPTOOL-METAOS
 type: MCPTool
 m3_parent: StructuralElement.Component
 name: metaos orchestration
+tool_name: ""
+server: ""
 description: MetaOS 编排引擎 MCP 工具集 — 22 tools (workflow/gate/router/immune/deadlock)
 project: metaos
 component: COMP-WS-metaos

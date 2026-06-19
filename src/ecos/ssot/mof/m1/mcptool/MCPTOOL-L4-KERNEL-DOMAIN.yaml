@@ -2,6 +2,8 @@ id: MCPTOOL-L4-KERNEL-DOMAIN
 type: MCPTool
 m3_parent: StructuralElement.Component
 name: l4-kernel domain management
+tool_name: ""
+server: ""
 description: L4 域管理工具集 — list/info/create/validate/freeze/unfreeze/migrate
 project: l4-kernel
 component: COMP-WS-l4-kernel

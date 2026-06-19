@@ -6,6 +6,7 @@ description: l4-kernel 子模块 — signals
 project: l4-kernel
 parent: COMP-WS-l4-kernel
 layer: L4
+runtime: active
 status: active
 model_driven_refs:
   source_file: projects/l4-kernel/src/l4_kernel/signals.py

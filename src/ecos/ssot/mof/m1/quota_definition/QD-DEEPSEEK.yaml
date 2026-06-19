@@ -1,4 +1,5 @@
 id: QD-DEEPSEEK
+name: DeepSeek Token 配额
 type: quota_definition
 provider: deepseek
 quota_model: prepaid

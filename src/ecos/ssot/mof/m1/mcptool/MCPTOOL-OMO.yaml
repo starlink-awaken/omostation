@@ -2,6 +2,8 @@ id: MCPTOOL-OMO
 type: MCPTool
 m3_parent: StructuralElement.Component
 name: omo governance
+tool_name: ""
+server: ""
 description: OMO 治理面 MCP 工具集 — 4 tools (audit/status/cards/debt)
 project: omo
 component: COMP-WS-omo

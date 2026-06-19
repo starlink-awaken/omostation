@@ -2,8 +2,10 @@ id: SVC-L4-KERNEL-MCP
 type: Service
 m3_parent: StructuralElement.Component
 name: l4-kernel-mcp
+service_name: l4-kernel-mcp
 description: L4 Kernel MCP Server — 自我层管理面
 project: l4-kernel
 port: stdio
 protocol: stdio
-status: active
+status: running
+runtime_status: running

@@ -6,6 +6,7 @@ description: model-driven 子模块 — management
 project: model-driven
 parent: COMP-WS-model-driven
 layer: X
+runtime: active
 status: active
 model_driven_refs:
   source_file: projects/model-driven/src/model_driven/management/

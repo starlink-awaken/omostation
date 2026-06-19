@@ -2,6 +2,8 @@ id: MCPTOOL-GBRAIN-TAKES
 type: MCPTool
 m3_parent: StructuralElement.Component
 name: gbrain-takes
+tool_name: ""
+server: ""
 description: GBrain 观点工具集 — 观点列表/搜索/评分/校准/思考
 project: gbrain
 component: COMP-WS-gbrain

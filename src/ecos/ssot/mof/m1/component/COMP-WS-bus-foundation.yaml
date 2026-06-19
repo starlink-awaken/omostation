@@ -4,6 +4,7 @@ m3_parent: StructuralElement.Component
 name: bus-foundation
 description: X Omni-Bus — Data/Event/Control 三总线统一抽象层
 layer: X
+runtime: active
 project: bus-foundation
 version: "0.2.0"
 status: active

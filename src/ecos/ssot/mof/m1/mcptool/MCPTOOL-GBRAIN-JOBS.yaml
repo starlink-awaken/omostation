@@ -2,6 +2,8 @@ id: MCPTOOL-GBRAIN-JOBS
 type: MCPTool
 m3_parent: StructuralElement.Component
 name: gbrain-jobs
+tool_name: ""
+server: ""
 description: GBrain 任务工具集 — 任务提交/Agent/列表/取消/重试/进度/暂停/恢复/重放/消息
 project: gbrain
 component: COMP-WS-gbrain

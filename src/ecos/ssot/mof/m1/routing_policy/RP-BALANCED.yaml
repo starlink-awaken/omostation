@@ -1,4 +1,5 @@
 id: RP-BALANCED
+name: RP-BALANCED
 type: routing_policy
 strategy: balanced
 weights:

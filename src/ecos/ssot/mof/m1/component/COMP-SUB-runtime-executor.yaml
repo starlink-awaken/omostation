@@ -6,6 +6,7 @@ description: runtime 子模块 — executor
 project: runtime
 parent: COMP-WS-runtime
 layer: L1
+runtime: active
 status: active
 model_driven_refs:
   source_file: projects/runtime/src/runtime/executor/

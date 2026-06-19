@@ -6,6 +6,7 @@ description: bus-foundation 子模块 — backends
 project: bus-foundation
 parent: COMP-WS-bus-foundation
 layer: X
+runtime: active
 status: active
 model_driven_refs:
   source_file: projects/bus-foundation/src/bus_foundation/backends/

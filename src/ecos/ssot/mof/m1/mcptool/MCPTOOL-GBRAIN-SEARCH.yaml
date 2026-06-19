@@ -2,6 +2,8 @@ id: MCPTOOL-GBRAIN-SEARCH
 type: MCPTool
 m3_parent: StructuralElement.Component
 name: gbrain-search
+tool_name: ""
+server: ""
 description: GBrain 搜索工具集 — 语义搜索 + 结构化查询
 project: gbrain
 component: COMP-WS-gbrain

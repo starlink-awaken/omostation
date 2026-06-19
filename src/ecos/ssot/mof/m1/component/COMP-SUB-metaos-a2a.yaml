@@ -6,6 +6,7 @@ description: metaos 子模块 — a2a
 project: metaos
 parent: COMP-WS-metaos
 layer: L2
+runtime: active
 status: active
 model_driven_refs:
   source_file: projects/metaos/src/metaos/a2a/

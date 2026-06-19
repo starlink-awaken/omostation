@@ -2,6 +2,8 @@ id: MCPTOOL-GBRAIN-SYSTEM
 type: MCPTool
 m3_parent: StructuralElement.Component
 name: gbrain-system
+tool_name: ""
+server: ""
 description: GBrain 系统工具集 — 统计/健康/身份/诊断/版本/同步/时间线/文件
 project: gbrain
 component: COMP-WS-gbrain

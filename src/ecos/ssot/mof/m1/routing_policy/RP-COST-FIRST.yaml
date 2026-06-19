@@ -1,4 +1,5 @@
 id: RP-COST-FIRST
+name: RP-COST-FIRST
 type: routing_policy
 strategy: cost_first
 weights:

@@ -2,6 +2,8 @@ id: MCPTOOL-GBRAIN-ANALYSIS
 type: MCPTool
 m3_parent: StructuralElement.Component
 name: gbrain-analysis
+tool_name: ""
+server: ""
 description: GBrain 分析工具集 — 异常检测/专家发现/矛盾检测/轨迹分析
 project: gbrain
 component: COMP-WS-gbrain

@@ -2,6 +2,8 @@ id: MCPTOOL-GBRAIN-PAGES
 type: MCPTool
 m3_parent: StructuralElement.Component
 name: gbrain-pages
+tool_name: ""
+server: ""
 description: GBrain 页面管理工具集 — CRUD + 搜索 + 列表
 project: gbrain
 component: COMP-WS-gbrain

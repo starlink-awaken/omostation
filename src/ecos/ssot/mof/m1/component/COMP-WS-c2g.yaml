@@ -4,6 +4,7 @@ m3_parent: StructuralElement.Component
 name: c2g
 description: X 战略需求引擎 — Creative-to-Governance 双擎编排流入口
 layer: X
+runtime: active
 project: c2g
 version: "1.0.0"
 status: active

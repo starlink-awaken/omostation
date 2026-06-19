@@ -2,6 +2,8 @@ id: MCPTOOL-L4-KERNEL-MEMORY
 type: MCPTool
 m3_parent: StructuralElement.Component
 name: l4-kernel memory & signals
+tool_name: ""
+server: ""
 description: L4 记忆与信号工具集 — state/memory/signals/timeline/search/signal_emit
 project: l4-kernel
 component: COMP-WS-l4-kernel

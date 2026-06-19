@@ -2,6 +2,8 @@ id: MCPTOOL-GBRAIN-SOURCES
 type: MCPTool
 m3_parent: StructuralElement.Component
 name: gbrain-sources
+tool_name: ""
+server: ""
 description: GBrain 数据源工具集 — 源添加/列表/删除/状态
 project: gbrain
 component: COMP-WS-gbrain

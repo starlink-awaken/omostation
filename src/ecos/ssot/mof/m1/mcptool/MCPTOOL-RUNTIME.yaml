@@ -2,6 +2,8 @@ id: MCPTOOL-RUNTIME
 type: MCPTool
 m3_parent: StructuralElement.Component
 name: runtime infrastructure
+tool_name: ""
+server: ""
 description: Runtime 运行时 MCP 工具集 — 16 tools (matrix/protocol/service/health/status)
 project: runtime
 component: COMP-WS-runtime

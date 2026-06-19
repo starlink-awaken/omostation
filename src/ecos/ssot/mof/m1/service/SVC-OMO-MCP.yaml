@@ -2,8 +2,10 @@ id: SVC-OMO-MCP
 type: Service
 m3_parent: StructuralElement.Component
 name: omo-mcp
+service_name: omo-mcp
 description: OMO MCP Server — 治理面
 project: omo
 port: stdio
 protocol: stdio
-status: active
+status: running
+runtime_status: running

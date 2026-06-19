@@ -2,6 +2,8 @@ id: MCPTOOL-C2G
 type: MCPTool
 m3_parent: StructuralElement.Component
 name: c2g strategic ingress
+tool_name: ""
+server: ""
 description: C2G 战略需求引擎 MCP 工具集 — 3 tools (bridge/import/strategy)
 project: c2g
 component: COMP-WS-c2g

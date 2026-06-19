@@ -6,6 +6,7 @@ description: kairon monorepo 子包 — ontoderive
 project: kairon
 parent: COMP-WS-kairon
 layer: L2
+runtime: active
 status: active
 model_driven_refs:
   source_file: projects/kairon/packages/ontoderive/pyproject.toml

@@ -2,8 +2,10 @@ id: SVC-AETHERFORGE-MCP
 type: Service
 m3_parent: StructuralElement.Component
 name: aetherforge-mcp
+service_name: aetherforge-mcp
 description: AetherForge MCP Server — 算力框架
 project: aetherforge
 port: stdio
 protocol: stdio
-status: active
+status: running
+runtime_status: running

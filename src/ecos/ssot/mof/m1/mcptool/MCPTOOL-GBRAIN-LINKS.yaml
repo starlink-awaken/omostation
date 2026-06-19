@@ -2,6 +2,8 @@ id: MCPTOOL-GBRAIN-LINKS
 type: MCPTool
 m3_parent: StructuralElement.Component
 name: gbrain-links
+tool_name: ""
+server: ""
 description: GBrain 链接工具集 — 链接管理 + 图遍历
 project: gbrain
 component: COMP-WS-gbrain
