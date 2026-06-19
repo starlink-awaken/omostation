@@ -1,0 +1,16 @@
+id: TASK-MOF-AUTO-DOCS
+title: MOF 自动文档生成
+description: >
+  从 MOF 模型自动生成项目 README、API 文档、架构图。
+  输出格式: markdown + mermaid。
+  优先级: P1 (高 ROI，文档永远不过时)
+status: planned
+priority: P1
+risk_level: L1
+source: mof-analysis-20260620
+scope: mof
+effort: 1 week
+acceptance:
+  - 每个项目可自动生成 README
+  - 67 个 MCP 工具可自动生成 API 文档
+  - 依赖关系可自动生成架构图
