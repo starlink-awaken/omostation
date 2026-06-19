@@ -121,7 +121,7 @@ def test_cmd_lint_self_evolution_approval_blocks_missing_fields_and_active_leak(
 
     captured = capsys.readouterr()
     assert rc == 1
-    assert "approval_required must be true" in captured.out
-    assert "human_approval_required must be true" in captured.out
+    assert "approval_required must be True" in captured.out
+    assert "human_approval_required must be True" in captured.out
     assert "approval_state must be 'awaiting_human'" in captured.out
     assert "leaked into active/" in captured.out

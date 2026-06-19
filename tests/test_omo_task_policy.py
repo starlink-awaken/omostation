@@ -44,6 +44,7 @@ def test_check_task_policy_flags_field_drift_and_active_leak(tmp_path: Path) -> 
 
     issues = check_task_policy(tmp_path, OPC_P6_SELF_EVOLUTION_POLICY)
 
+    assert len(issues) == 5
     assert any("approval_required must be True" in issue for issue in issues)
     assert any("human_approval_required must be True" in issue for issue in issues)
     assert any("approval_state must be 'awaiting_human'" in issue for issue in issues)
