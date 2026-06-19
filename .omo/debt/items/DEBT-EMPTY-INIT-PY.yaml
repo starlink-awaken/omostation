@@ -1,0 +1,13 @@
+id: DEBT-EMPTY-INIT-PY
+title: 5 empty __init__.py files need module docstrings
+severity: low
+source: architecture-scan-20260619
+domain: workspace
+scope: workspace
+status: open
+lifecycle_state: open
+gate_level: none
+description: >
+  5 empty __init__.py files found across projects.
+  Should add module docstrings for documentation.
+registered_at: '2026-06-19T21:30:00Z'

@@ -1,0 +1,14 @@
+id: DEBT-GBRAIN-55-TODOS
+title: gbrain 55 TODO/FIXME comments — needs audit
+severity: low
+source: architecture-scan-20260619
+domain: workspace
+scope: gbrain
+status: open
+lifecycle_state: open
+gate_level: none
+description: >
+  gbrain has 55 TODO/FIXME comments scattered across source code.
+  Many reference a non-existent TODOS.md file.
+  Needs audit to close, migrate to issues, or implement.
+registered_at: '2026-06-19T21:30:00Z'
