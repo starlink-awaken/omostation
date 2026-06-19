@@ -196,17 +196,32 @@ def _audit_hook(event: str, args: tuple):
 
     # ── Phase 15: Deep FS Mutation Interception ──
     elif event in ("os.remove", "os.unlink", "os.rename", "os.mkdir", "os.rmdir"):
-        file_path = os.path.abspath(str(args[0]))
+        # Audit hooks include extra non-path args (mode, dir_fd). Only inspect path args.
+        if event == "os.rename":
+            if len(args) < 2:
+                record_audit("reject", "ecos.kernel.sandbox", "blocked",
+                             f"FS mutation blocked: {event} missing destination")
+                raise PermissionError(f"KEI Sandbox: {event} missing destination argument.")
+            paths = [os.path.abspath(str(args[0])), os.path.abspath(str(args[1]))]
+        else:
+            paths = [os.path.abspath(str(args[0]))]
+
         allowed_writes = perms.get("filesystem", {}).get("allow_write", ["*"])
         if "*" not in allowed_writes:
             allowed_writes = [os.path.expandvars(p) for p in allowed_writes]
-            allowed = any(file_path.startswith(prefix) for prefix in allowed_writes)
-            if not allowed:
+            blocked = [
+                p for p in paths
+                if not any(p.startswith(prefix) for prefix in allowed_writes)
+            ]
+            if blocked:
+                detail = ", ".join(blocked)
                 record_audit("reject", "ecos.kernel.sandbox", "blocked",
-                             f"FS mutation blocked: {event} on {file_path}")
-                raise PermissionError(f"KEI Sandbox: {event} access to {file_path} is blocked.")
+                             f"FS mutation blocked: {event} on {detail}")
+                raise PermissionError(
+                    f"KEI Sandbox: {event} access to {detail} is blocked."
+                )
         record_audit("execute", "ecos.kernel.sandbox", "pass",
-                     f"FS mutation allowed: {event} on {file_path}")
+                     f"FS mutation allowed: {event} on {', '.join(paths)}")
 
 
 

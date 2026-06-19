@@ -74,9 +74,15 @@ finally:
 """
     result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env={**os.environ, "PYTHONPATH": "src"})
     assert "SUCCESS: KEI Sandbox: Write access to /tmp/blocked_file.txt is blocked." in result.stdout
-def test_sandbox_fs_mutations_blocked():
-    """Verify that os.remove/rename/mkdir/rmdir outside allow_write are blocked."""
-    code = """
+
+
+def _run_sandboxed_subprocess(mutation_code: str) -> str:
+    """Run sandboxed mutation code in a subprocess with PYTHONPATH=src."""
+    import os
+    import subprocess
+    import sys
+
+    wrapper = f"""
 import os
 import tempfile
 from runtime.kei_sandbox import enable_sandbox
@@ -87,15 +93,65 @@ with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
 
 try:
     enable_sandbox(config_path=config_path)
-    os.mkdir('/tmp/kei_blocked_dir')
-    print('FAILED: mkdir allowed')
-except PermissionError as e:
-    print(f'SUCCESS mkdir: {e}')
+{mutation_code}
 finally:
     try:
         os.unlink(config_path)
     except Exception:
         pass
 """
-    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env={**os.environ, "PYTHONPATH": "src"})
-    assert "SUCCESS mkdir: KEI Sandbox: os.mkdir access to /tmp/kei_blocked_dir is blocked." in result.stdout
+    result = subprocess.run(
+        [sys.executable, "-c", wrapper],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": "src"},
+    )
+    return result.stdout
+
+
+def test_sandbox_mkdir_blocked():
+    """Verify that os.mkdir outside allow_write is blocked."""
+    stdout = _run_sandboxed_subprocess("""
+    try:
+        os.mkdir('/tmp/kei_blocked_dir')
+        print('FAILED: mkdir allowed')
+    except PermissionError as e:
+        print(f'SUCCESS mkdir: {e}')
+""")
+    assert "SUCCESS mkdir: KEI Sandbox: os.mkdir access to /tmp/kei_blocked_dir is blocked." in stdout
+
+
+def test_sandbox_rmdir_blocked():
+    """Verify that os.rmdir outside allow_write is blocked."""
+    stdout = _run_sandboxed_subprocess("""
+    try:
+        os.rmdir('/tmp/kei_blocked_dir')
+        print('FAILED: rmdir allowed')
+    except PermissionError as e:
+        print(f'SUCCESS rmdir: {e}')
+""")
+    assert "SUCCESS rmdir: KEI Sandbox: os.rmdir access to /tmp/kei_blocked_dir is blocked." in stdout
+
+
+def test_sandbox_remove_blocked():
+    """Verify that os.remove outside allow_write is blocked."""
+    stdout = _run_sandboxed_subprocess("""
+    try:
+        os.remove('/tmp/kei_blocked_file.txt')
+        print('FAILED: remove allowed')
+    except PermissionError as e:
+        print(f'SUCCESS remove: {e}')
+""")
+    assert "SUCCESS remove: KEI Sandbox: os.remove access to /tmp/kei_blocked_file.txt is blocked." in stdout
+
+
+def test_sandbox_rename_blocked_for_destination():
+    """Verify that os.rename to a path outside allow_write is blocked."""
+    stdout = _run_sandboxed_subprocess("""
+    try:
+        os.rename('/tmp/kei_allowed/src.txt', '/tmp/kei_blocked_dest.txt')
+        print('FAILED: rename allowed')
+    except PermissionError as e:
+        print(f'SUCCESS rename: {e}')
+""")
+    assert "SUCCESS rename: KEI Sandbox: os.rename access to /tmp/kei_blocked_dest.txt is blocked." in stdout
