@@ -3,27 +3,27 @@
 # source: manual audit (post cleanup)
 # range: 0-100, higher = healthier
 
-generated_at: "2026-06-19T00:25:00Z"
-source: "manual audit post-governance-cleanup"
+generated_at: "2026-06-19T14:00:00Z"
+source: "manual audit post-code-review-20260619"
 health_score: 92
 anomaly_count: 0
-total_tasks: 106
-done: 92
-planned: 2
+total_tasks: 109
+done: 88
+planned: 9
 archived: 12
 
 anomalies: []
 
 debt_summary:
-  total: 24
+  total: 33
   closed: 24
-  open: 0
-  health: 100.0
+  open: 9
+  health: 72.7
 
 bet_summary:
-  total: 9
-  done: 5
-  pending: 3
+  total: 12
+  done: 9
+  pending: 2
   archived: 1
 
 distributions:
@@ -31,16 +31,16 @@ distributions:
     P1: 16
     P2: 72
     P3: 3
-    unassigned: 15
+    unassigned: 18
   risk_dist:
     L0: 32
     L1: 34
     L2: 14
     L3: 2
-    unassigned: 23
+    unassigned: 27
   status_dist:
-    candidate: 4
-    done: 92
-    planned: 2
+    candidate: 0
+    done: 88
+    planned: 9
     review: 0
     archived: 12

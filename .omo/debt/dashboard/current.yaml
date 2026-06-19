@@ -1,24 +1,34 @@
-generated_at: '2026-06-19T02:30:00Z'
+generated_at: '2026-06-19T14:30:00Z'
 debt_metrics:
-  debt_health: 95.0
+  debt_health: 72.7
   classification_entropy: 0.0
-  state_entropy: 0.0
+  state_entropy: 0.82
   pointer_entropy: 0.0
   time_entropy: 0.0
-  backlog_pressure: 0
+  backlog_pressure: 3
   coupling_load: 2.0
-watchlist_item_ids: []
-gate_item_ids: []
+watchlist_item_ids:
+- DEBT-KAIRON-TYPE-SAFETY
+- DEBT-OMO-MODULE-BLOAT
+- DEBT-GBRAIN-OPERATIONS-TS
+gate_item_ids:
+- DEBT-CI-MYPY-STRICT
 overdue_review_count: 0
 overdue_review_item_ids: []
-next_review_queue: []
+next_review_queue:
+- DEBT-CI-MYPY-STRICT
+- DEBT-DEPRECATED-CLEANUP
+- DEBT-ENV-EXAMPLE-STANDARDIZE
+- DEBT-FUTURE-ANNOTATIONS
 summary:
-  total: 29
+  total: 33
   closed: 24
-  open: 5
+  open: 4
+  partially_resolved: 4
+  scheduled: 1
   by_severity:
     critical: 1
     high: 7
-    medium: 15
-    low: 6
-  note: '2026-06-19 T39 收尾: 24/29 closed, 5 open (全部 medium/low, 有 remediation plan)'
+    medium: 16
+    low: 9
+  note: '2026-06-19 post-code-review: 24 closed, 4 open (new from code review), 4 partially_resolved (agora/omo/kairon/runtime from BET), 1 scheduled (gbrain ops.ts)'

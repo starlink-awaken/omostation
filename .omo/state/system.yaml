@@ -11,14 +11,14 @@ current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
 health_score: 92.0
-health_score_source: manual_audit_post_cleanup_20260619
-health_score_generated_at: '2026-06-19T00:25:00Z'
+health_score_source: manual_audit_post_code_review_20260619
+health_score_generated_at: '2026-06-19T14:00:00Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
-completed_tasks: 87
-total_tasks: 106
+completed_tasks: 88
+total_tasks: 109
 active_tasks: 0
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -124,31 +124,53 @@ debt_weight_items:
     resolved: true
     weight: 0.0
     desc: cockpit health --full reports stale/incorrect service status
+  DEBT-CI-MYPY-STRICT:
+    resolved: false
+    weight: 0.0
+    desc: CI 启用 mypy strict 检查 (kairon 16/16 本地 strict, CI 未启用)
+  DEBT-DEPRECATED-CLEANUP:
+    resolved: false
+    weight: 0.0
+    desc: 定期清理 _deprecated/ 目录
+  DEBT-ENV-EXAMPLE-STANDARDIZE:
+    resolved: false
+    weight: 0.0
+    desc: 统一 .env.example 格式
+  DEBT-FUTURE-ANNOTATIONS:
+    resolved: false
+    weight: 0.0
+    desc: 新文件添加 from __future__ import annotations
 resolved_debt_items:
 - DEBT-CLI-1
 - DEBT-COCKPIT-HEALTH-DISTORTION
+- DEBT-CARDS-FRONTMATTER-PARSE
+- DEBT-AGORA-MODULE-BLOAT
 orphaned_tasks_ref: .omo/tasks/registry/INDEX.md
 debt_registry_ref: .omo/_truth/registry/debt.yaml
 debt_dashboard_ref: .omo/debt/dashboard/current.yaml
 debt_review_pack_ref: .omo/debt/reviews/current.md
 debt_metrics:
-  debt_health: 90.0
+  debt_health: 72.7
   classification_entropy: 0.0
-  state_entropy: 1.0
+  state_entropy: 0.82
   pointer_entropy: 0.0
   time_entropy: 0.0
-  backlog_pressure: 0.0
-  coupling_load: 3.5
-debt_watchlist_count: 1
+  backlog_pressure: 3
+  coupling_load: 2.0
+debt_watchlist_count: 3
 debt_gate_count: 1
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 2
+planned_tasks: 9
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- OPT-BOS-GATEWAY (L3, candidate, parent BET-c87a pending)
-- TASK-8CF4636A (P1, L0 协议抽象重构)
-phase27_status: active
-phase28_status: active
+- TASK-KAIRON-MYPY-STRICT (done, awaiting archive)
+- TASK-GBRAIN-OPS-SPLIT (P2, BET-c9e3)
+- TASK-OMO-PHYSICAL-REORG (P2, BET-a7c1 blocked)
+- TASK-COCKPIT-TEST-COVERAGE (P2)
+- IMPORTED-3268f8 (P2, 从 .omo tasks 导入)
+phase27_status: completed
+phase27_completed_at: '2026-06-10T00:00:00Z'
+phase28_status: completed
 phase28_completed_at: '2026-06-05T22:10:00Z'
 governance:
   code_freeze: true
