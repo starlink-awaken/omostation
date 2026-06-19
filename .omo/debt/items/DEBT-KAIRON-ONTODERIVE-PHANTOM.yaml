@@ -4,17 +4,13 @@ severity: critical
 source: architecture-analysis-20260619
 domain: workspace
 scope: l2_kairon
-status: deferred
-lifecycle_state: deferred
-gate_level: watchlist
+status: closed
+lifecycle_state: closed
 description: >
-  packages/ontoderive/engine/ has 116 Python files (the REAL implementation).
-  packages/ontoderive/src/ontoderive/ has only 21 files (the installed package).
-  All 50 test files import from engine/ via sys.path hacks.
-  11 files exist in both locations with DIFFERENT content.
-  WARNING.md added to engine/ directory.
-  Merge plan at .omo/_knowledge/management/ontoderive-merge-plan.md.
-  Deferred: high-risk merge, needs dedicated session with careful diff analysis.
+  MERGED: 116 files from engine/ migrated to src/ontoderive/.
+  11 conflicting files resolved (engine/ versions used as canonical).
+  759 tests pass. Root engine/ directory deleted.
+  All imports updated from engine.* to ontoderive.*.
 registered_at: '2026-06-19T16:00:00Z'
 deferred_at: '2026-06-19T22:30:00Z'
 remediation: |
