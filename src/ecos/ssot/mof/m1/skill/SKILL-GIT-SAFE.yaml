@@ -1,0 +1,8 @@
+id: SKILL-GIT-SAFE
+type: Skill
+m3_parent: StructuralElement.Component
+name: git-safe
+description: Git 安全操作包装 — bin/git-safe
+layer: L4
+path: bin/git-safe
+status: active

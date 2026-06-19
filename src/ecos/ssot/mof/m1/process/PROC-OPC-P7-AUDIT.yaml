@@ -1,0 +1,15 @@
+id: PROC-OPC-P7-AUDIT
+type: Process
+m3_parent: BehavioralElement.Process
+name: opc-p7-audit
+description: OPC P7 审计滚动 — audit-rollout + release-cycle + phase-gate
+layer: L4
+scripts:
+  - scripts/opc_p7_audit_rollout_cron.sh
+  - scripts/opc_p7_audit_rollout_daemon.py
+  - scripts/opc_p7_doc_lint.py
+  - scripts/opc_p7_phase_gate_check.py
+  - scripts/opc_p7_release_cycle_cron.sh
+  - scripts/opc_p7_release_cycle.py
+schedule: daily
+status: active

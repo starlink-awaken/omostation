@@ -1,0 +1,15 @@
+id: GOV-OMO-TRUTH
+type: GovernancePolicy
+m3_parent: GovernanceElement.Policy
+name: omo-truth
+description: .omo/_truth/ 事实面治理 — INDEX + x1-x4 规则 + registry
+layer: L4
+path: .omo/_truth/
+files:
+  - INDEX.md
+  - x1-governance-policies.yaml
+  - x2-freshness-rules.yaml
+  - x3-value-stack.yaml
+  - x4-consistency-rules.yaml
+  - registry/
+status: active

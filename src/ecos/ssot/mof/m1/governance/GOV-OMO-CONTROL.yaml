@@ -1,0 +1,8 @@
+id: GOV-OMO-CONTROL
+type: GovernancePolicy
+m3_parent: GovernanceElement.Policy
+name: omo-control
+description: .omo/_control/ 控制面治理 — evolution/ + approval-board/
+layer: L4
+path: .omo/_control/
+status: active

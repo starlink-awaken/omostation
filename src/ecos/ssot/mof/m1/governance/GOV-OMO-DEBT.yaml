@@ -1,0 +1,11 @@
+id: GOV-OMO-DEBT
+type: GovernancePolicy
+m3_parent: GovernanceElement.Policy
+name: omo-debt
+description: .omo/debt/ 技术债务治理 — items/ + dashboard/ + registry
+layer: L4
+path: .omo/debt/
+item_count: 33
+closed_count: 25
+deferred_count: 3
+status: active

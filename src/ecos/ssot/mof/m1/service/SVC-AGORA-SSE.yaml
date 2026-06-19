@@ -1,0 +1,12 @@
+id: SVC-AGORA-SSE
+type: Service
+m3_parent: StructuralElement.Component
+name: agora-sse
+description: Agora SSE 服务 — launchd plist
+project: agora
+service_name: com.agora.sse
+runtime_status: running
+protocol: sse
+port: 7431
+plist: projects/agora/scripts/com.agora.sse.plist
+status: active

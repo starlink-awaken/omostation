@@ -1,0 +1,11 @@
+id: SVC-OMO-GOVERNANCE-DAEMON
+type: Service
+m3_parent: StructuralElement.Component
+name: omo-governance-daemon
+description: OMO 治理守护进程 — launchd plist
+project: omo
+service_name: com.omo.governance.daemon
+runtime_status: running
+protocol: stdio
+plist: projects/omo/scripts/com.omo.governance.daemon.plist
+status: active

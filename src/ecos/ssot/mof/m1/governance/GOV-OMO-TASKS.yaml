@@ -1,0 +1,11 @@
+id: GOV-OMO-TASKS
+type: GovernancePolicy
+m3_parent: GovernanceElement.Policy
+name: omo-tasks
+description: .omo/tasks/ 任务治理 — active/ + planned/ + done/
+layer: L4
+path: .omo/tasks/
+planned_count: 9
+active_count: 0
+done_count: 88
+status: active

@@ -1,0 +1,9 @@
+id: DOMAIN-L4-CREATIVE
+type: Domain
+m3_parent: StructuralElement.Component
+name: "@创意创作"
+description: L4 Documents 域 — 创作·写作·设计
+layer: L4
+category: documents
+path: ~/Documents/@创意创作/
+status: active

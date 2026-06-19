@@ -1,0 +1,9 @@
+id: DOMAIN-L4-WORK
+type: Domain
+m3_parent: StructuralElement.Component
+name: "@工作文档"
+description: L4 Documents 域 — 公文·卫健委·国转中心
+layer: L4
+category: documents
+path: ~/Documents/@工作文档/
+status: active

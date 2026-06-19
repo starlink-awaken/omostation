@@ -1,0 +1,12 @@
+id: DOMAIN-L4-COCKPIT
+type: Domain
+m3_parent: StructuralElement.Component
+name: "@驾驶舱"
+description: L4 Documents 域 — 统一入口·CARDS·架构治理
+layer: L4
+category: documents
+path: ~/Documents/@驾驶舱/
+status: active
+has_cards: true
+has_knowledge: true
+has_control: true

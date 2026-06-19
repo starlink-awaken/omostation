@@ -1,0 +1,8 @@
+id: SKILL-WORKSPACE-CLI
+type: Skill
+m3_parent: StructuralElement.Component
+name: workspace-cli
+description: Workspace CLI 入口 — bin/workspace
+layer: L3
+path: bin/workspace
+status: active

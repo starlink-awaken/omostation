@@ -1,0 +1,10 @@
+id: PROTO-VAULT-PATHS
+type: Protocol
+m3_parent: BehavioralElement.Protocol
+name: vault-paths
+description: Vault 路径注册表 — 知识库路径 SSOT
+layer: L4
+path: protocols/vault-paths.yaml
+status: active
+model_driven_refs:
+  source_file: protocols/vault-paths.yaml

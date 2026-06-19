@@ -1,0 +1,10 @@
+id: PROTO-X-AXIS
+type: Protocol
+m3_parent: BehavioralElement.Protocol
+name: x-axis-registry
+description: X 轴注册表 — 横切面框架注册
+layer: X
+path: protocols/x-axis-registry.yaml
+status: active
+model_driven_refs:
+  source_file: protocols/x-axis-registry.yaml

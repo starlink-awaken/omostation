@@ -1,0 +1,12 @@
+id: SVC-RUNTIME-CRON-DAEMON
+type: Service
+m3_parent: StructuralElement.Component
+name: runtime-cron-daemon
+description: Runtime Cron 守护进程 — launchd plist
+project: runtime
+service_name: com.user.cron-service
+runtime_status: running
+protocol: http
+port: 7450
+plist: projects/runtime/scripts/com.user.cron-service.plist
+status: active

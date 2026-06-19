@@ -1,0 +1,11 @@
+id: PROC-OMO-AUTOPILOT
+type: Process
+m3_parent: BehavioralElement.Process
+name: omo-autopilot
+description: OMO 自动驾驶 — governance-check + omo-autopilot CI
+layer: L4
+scripts:
+  - scripts/generate-governance-data.py
+  - scripts/sync_omo_state.py
+ci: .github/workflows/omo-autopilot.yml
+status: active

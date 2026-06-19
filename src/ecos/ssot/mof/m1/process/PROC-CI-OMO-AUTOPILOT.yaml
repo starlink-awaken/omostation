@@ -1,0 +1,9 @@
+id: PROC-CI-OMO-AUTOPILOT
+type: Process
+m3_parent: BehavioralElement.Process
+name: ci-omo-autopilot
+description: CI OMO 自动驾驶 — 治理数据生成 + 状态同步
+layer: L4
+ci: .github/workflows/omo-autopilot.yml
+triggers: [push]
+status: active

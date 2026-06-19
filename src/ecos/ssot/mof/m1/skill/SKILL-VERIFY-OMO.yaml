@@ -1,0 +1,8 @@
+id: SKILL-VERIFY-OMO
+type: Skill
+m3_parent: StructuralElement.Component
+name: verify-omo
+description: OMO 验证链 — bin/verify-omo.sh
+layer: L4
+path: bin/verify-omo.sh
+status: active

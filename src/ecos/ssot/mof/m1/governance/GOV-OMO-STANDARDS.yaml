@@ -1,0 +1,8 @@
+id: GOV-OMO-STANDARDS
+type: GovernancePolicy
+m3_parent: GovernanceElement.Policy
+name: omo-standards
+description: .omo/standards/ 标准治理 — omo-governance-surfaces.md + templates
+layer: L4
+path: .omo/standards/
+status: active

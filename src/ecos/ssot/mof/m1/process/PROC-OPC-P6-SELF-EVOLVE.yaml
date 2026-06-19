@@ -1,0 +1,15 @@
+id: PROC-OPC-P6-SELF-EVOLVE
+type: Process
+m3_parent: BehavioralElement.Process
+name: opc-p6-self-evolve
+description: OPC P6 自演化循环 — cron + approval-board + drift-detector
+layer: L4
+scripts:
+  - scripts/opc_p6_self_evolve.py
+  - scripts/opc_p6_self_evolve_cron.sh
+  - scripts/opc_p6_approval_board.py
+  - scripts/opc_p6_drift_detector.py
+  - scripts/opc_p6_weekly_loop.py
+  - scripts/opc_p6_weekly_loop_cron.sh
+schedule: weekly
+status: active

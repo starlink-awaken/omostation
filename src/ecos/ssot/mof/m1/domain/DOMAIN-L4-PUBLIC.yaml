@@ -1,0 +1,9 @@
+id: DOMAIN-L4-PUBLIC
+type: Domain
+m3_parent: StructuralElement.Component
+name: "@公共"
+description: L4 Documents 域 — 共享资源·公共知识
+layer: L4
+category: documents
+path: ~/Documents/@公共/
+status: active

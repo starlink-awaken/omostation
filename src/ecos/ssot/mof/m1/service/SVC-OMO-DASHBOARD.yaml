@@ -1,0 +1,11 @@
+id: SVC-OMO-DASHBOARD
+type: Service
+m3_parent: StructuralElement.Component
+name: omo-dashboard
+description: OMO Dashboard 服务 — launchd plist
+project: omo
+service_name: com.omo.dashboard
+runtime_status: running
+protocol: http
+plist: projects/omo/scripts/com.omo.dashboard.plist
+status: active

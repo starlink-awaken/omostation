@@ -1,0 +1,8 @@
+id: SKILL-OMO-HEALTH
+type: Skill
+m3_parent: StructuralElement.Component
+name: omo-health
+description: OMO 健康检查 — bin/omo-health.py
+layer: L4
+path: bin/omo-health.py
+status: active

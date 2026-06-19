@@ -1,0 +1,9 @@
+id: PROC-CI-GOVERNANCE-CHECK
+type: Process
+m3_parent: BehavioralElement.Process
+name: ci-governance-check
+description: CI 治理门禁 — .omo 状态校验 + SSOT 一致性
+layer: L4
+ci: .github/workflows/governance-check.yml
+triggers: [push, pull_request]
+status: active

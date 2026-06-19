@@ -1,0 +1,16 @@
+id: SKILL-GOV-CHECKS
+type: Skill
+m3_parent: StructuralElement.Component
+name: governance-checks
+description: 治理检查脚本集 — X1-X4 + SSOT + vault + port
+layer: L4
+scripts:
+  - scripts/x1-audit-check.sh
+  - scripts/x2-staleness-check.sh
+  - scripts/x3-value-check.sh
+  - scripts/x4-consistency-check.sh
+  - scripts/check-vault-paths.py
+  - scripts/check-port-registry.py
+  - scripts/check-cross-deps.py
+  - scripts/check-ssot-reference-integrity.py
+status: active

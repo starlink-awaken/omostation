@@ -1,0 +1,10 @@
+id: PROTO-AOL
+type: Protocol
+m3_parent: BehavioralElement.Protocol
+name: append-only-log
+description: Append-Only Log 协议 — 不可变日志写入规范
+layer: L0
+path: protocols/append-only-log-rollout.md
+status: active
+model_driven_refs:
+  source_file: protocols/append-only-log-rollout.md

@@ -1,0 +1,11 @@
+id: SVC-OMO-SERVE
+type: Service
+m3_parent: StructuralElement.Component
+name: omo-serve
+description: OMO MCP 服务 — launchd plist
+project: omo
+service_name: com.omo.serve
+runtime_status: running
+protocol: stdio
+plist: projects/omo/scripts/com.omo.serve.plist
+status: active

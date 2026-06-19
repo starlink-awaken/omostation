@@ -1,0 +1,13 @@
+id: GOV-OMO-STATE
+type: GovernancePolicy
+m3_parent: GovernanceElement.Policy
+name: omo-state
+description: .omo/state/ 系统状态治理 — system.yaml + health.yaml
+layer: L4
+path: .omo/state/
+files:
+  - system.yaml
+  - health.yaml
+  - system_health.yaml
+  - provider-plane.yaml
+status: active

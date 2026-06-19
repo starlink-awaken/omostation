@@ -1,0 +1,9 @@
+id: DOMAIN-L4-FAMILY
+type: Domain
+m3_parent: StructuralElement.Component
+name: "@家庭生活"
+description: L4 Documents 域 — 家庭管理·生活记录
+layer: L4
+category: documents
+path: ~/Documents/@家庭生活/
+status: active

@@ -1,0 +1,10 @@
+id: PROTO-PORT-REGISTRY
+type: Protocol
+m3_parent: BehavioralElement.Protocol
+name: port-registry
+description: 端口注册表 — 所有服务端口的 SSOT
+layer: L0
+path: protocols/port-registry.yaml
+status: active
+model_driven_refs:
+  source_file: protocols/port-registry.yaml

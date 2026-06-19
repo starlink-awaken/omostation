@@ -1,0 +1,9 @@
+id: PROC-CI-CONSTRAINT
+type: Process
+m3_parent: BehavioralElement.Process
+name: ci-constraint-validation
+description: CI 约束校验 — L0 约束 + X1-X4 规则验证
+layer: L0
+ci: .github/workflows/constraint-validation.yml
+triggers: [push, pull_request]
+status: active

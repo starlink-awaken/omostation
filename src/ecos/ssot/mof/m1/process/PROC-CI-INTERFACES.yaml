@@ -1,0 +1,9 @@
+id: PROC-CI-INTERFACES
+type: Process
+m3_parent: BehavioralElement.Process
+name: ci-interfaces-enforce
+description: CI 接口强制 — CLI/MCP/HTTP 接口一致性检查
+layer: L0
+ci: .github/workflows/interfaces-enforce.yml
+triggers: [push, pull_request]
+status: active

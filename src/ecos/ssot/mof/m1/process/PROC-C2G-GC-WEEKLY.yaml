@@ -1,0 +1,9 @@
+id: PROC-C2G-GC-WEEKLY
+type: Process
+m3_parent: BehavioralElement.Process
+name: c2g-gc-weekly
+description: C2G 周度垃圾回收 — 清理过期 pitches
+layer: X
+ci: .github/workflows/c2g-gc-weekly.yml
+schedule: weekly
+status: active
