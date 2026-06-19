@@ -1,0 +1,1 @@
+"""SSOT tools tests."""
