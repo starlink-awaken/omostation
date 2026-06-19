@@ -184,8 +184,5 @@ runtime_health_summary:
   - gbrain-index
   stale_services: []
   note: '2026-06-18T16:00:00Z 手动校准: cockpit/agora-SSE/cron-service/hermes 运行中; agora-HTTP/llm-gateway/gbrain-index 未加载; 8个 stdio MCP 无需 HTTP listener'
-phase46_status: active
-xplane_score: 0.0
-xplane_coverage: 100.0
 phase42_status: active
 health_score_raw: 88.0
