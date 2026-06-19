@@ -4,8 +4,8 @@ severity: low
 source: code-review-20260619
 domain: workspace
 scope: i0_agora
-status: open
-lifecycle_state: open
+status: deferred
+lifecycle_state: deferred
 gate_level: none
 description: >
   agora _deprecated/ 有 46 个文件 (~14K lines).

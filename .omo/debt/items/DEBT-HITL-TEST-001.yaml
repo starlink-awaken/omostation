@@ -1,0 +1,14 @@
+description: Task 'demo' exceeded $0.05 limit.
+id: DEBT-HITL-TEST-001
+registered_at: '2026-06-18T03:16:41Z'
+severity: medium
+status: closed  # lifecycle_state 已 closed + resolution_evidence (Sim 自动 resolved)
+title: Budget Exhausted (Simulation)
+lifecycle_state: closed
+gate_level: none
+history:
+- at: '2026-06-18T03:22:32.494223+00:00'
+  action: close
+  note: Closed debt item.
+
+resolution_evidence: 'Automatically resolved during system integration and testing phases.'

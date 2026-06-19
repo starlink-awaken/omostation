@@ -4,8 +4,8 @@ severity: low
 source: code-review-20260619
 domain: workspace
 scope: workspace
-status: open
-lifecycle_state: open
+status: deferred
+lifecycle_state: deferred
 gate_level: none
 description: >
   所有新 Python 文件应添加 from __future__ import annotations.

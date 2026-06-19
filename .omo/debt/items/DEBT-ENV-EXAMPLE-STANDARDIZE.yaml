@@ -4,8 +4,8 @@ severity: low
 source: code-review-20260619
 domain: workspace
 scope: workspace
-status: open
-lifecycle_state: open
+status: deferred
+lifecycle_state: deferred
 gate_level: none
 description: >
   family-hub 有 .env.example, 其他项目缺失.

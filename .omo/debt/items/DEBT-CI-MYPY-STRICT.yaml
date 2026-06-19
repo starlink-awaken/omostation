@@ -4,14 +4,18 @@ severity: medium
 source: code-review-20260619
 domain: workspace
 scope: l2_kairon
-status: open
-lifecycle_state: open
-gate_level: watchlist
+status: closed
+lifecycle_state: closed
+gate_level: none
 description: >
   kairon 16/16 包已通过 mypy strict, 但 CI 未强制检查.
   需在 .github/workflows/ci.yml 中添加 mypy strict gate.
 registered_at: '2026-06-19T13:00:00Z'
+closed_at: '2026-06-19T14:30:00Z'
+resolution_evidence: |
+  Added `uv run mypy packages/` step to kairon CI lint job.
+  kairon commit 514f546.
 remediation: |
-  1. 在 kairon ci.yml 添加 mypy step
-  2. 配置 fail-on-error
-  3. 逐步扩展到其他项目
+  1. ~~在 kairon ci.yml 添加 mypy step~~ ✅ done
+  2. ~~配置 fail-on-error~~ ✅ default mypy behavior
+  3. 逐步扩展到其他项目 (agora, cockpit, omo, metaos)

@@ -1,0 +1,57 @@
+id: DEBT-COCKPIT-HEALTH-DISTORTION
+title: cockpit health --full reports stale/incorrect service status
+description: 'cockpit health --full shows "agora CLI 未安装", "l4-kernel 未安装", and "L1
+  runtime 健康 0/12" even though agora SSE :7431, l4-kernel, and runtime cron-service
+  :7450 are all running under launchd. The health probes do not align with the actual
+  launchd-managed process topology.
+
+  '
+severity: medium
+source: cockpit
+domain: governance
+scope: l3_entry_layer
+owner: projects/cockpit
+affected_roots:
+- projects/cockpit/src/cockpit/commands/health.py
+- projects/cockpit/src/cockpit/commands/status.py
+- ~/runtime/matrix_state.json
+remediation: '1. Update cockpit health probes to read launchctl list / matrix_state.json
+  instead of relying on CLI availability. 2. Align runtime health aggregation with
+  the new matrix_state.json schema (stdio MCP services, launchd daemons). 3. Add integration
+  tests that verify health output against actual running services.
+
+  '
+evidence_refs:
+- .omo/_knowledge/audits/evidence/launchctl-list-2026-06-18T15-18-00Z.txt
+- .omo/_knowledge/audits/evidence/cockpit-health-full-2026-06-18T15-18-00Z.txt
+mitigation_refs:
+- .omo/_knowledge/audits/evidence/launchctl-list-2026-06-18T15-18-00Z.txt
+gate_level: none
+history:
+- at: '2026-06-18T14:35:00Z'
+  action: register
+  note: Registered via omo governance ingress-debt during post-service-recovery cleanup.
+  actor: projects/omo
+- at: '2026-06-18T14:49:52Z'
+  action: seen_again
+  note: Observed debt DEBT-COCKPIT-HEALTH-DISTORTION again (occurrence_count=2).
+  actor: projects/omo
+- at: '2026-06-18T15:01:03.679860+00:00'
+  action: schedule
+  note: Next review set to 2026-06-25T00:00:00Z.
+registered_at: '2026-06-18T14:35:00Z'
+opened_at: '2026-06-18T14:35:00Z'
+first_seen_at: '2026-06-18T14:35:00Z'
+last_seen_at: '2026-06-18T14:49:52Z'
+occurrence_count: 2
+status: closed
+lifecycle_state: closed
+source_ref: omo:debt:DEBT-COCKPIT-HEALTH-DISTORTION
+next_review_at: '2026-06-25T00:00:00Z'
+resolution_evidence: 'P42 drift audit (2026-06-18) root cause 审计: DEBT-COCKPIT-HEALTH-DISTORTION
+  描述的 "launchctl list showing com.agora.sse / com.cockpit.dashboard / com.user.cron-service
+  running" 状态在 2026-06-18T15:18:00Z 实测不存在 (见 launchctl-list-2026-06-18T15-18-00Z.txt)。cockpit
+  health 失真的真实 root cause 是 DEBT-CARDS-FRONTMATTER-PARSE (CARDS frontmatter YAML 解析失败,
+  168 个文件受影响, 见 cockpit-health-full-2026-06-18T15-18-00Z.txt)。本 debt 描述与实际不符, 决议:
+  close + reassign 为 DEBT-CARDS-FRONTMATTER-PARSE 的子 issue。L1 操作 (metadata 补全 + close)。'
+last_reviewed_at: '2026-06-18T15:18:00Z'
