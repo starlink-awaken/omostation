@@ -1,0 +1,15 @@
+id: TASK-KAIRON-MYPY-STRICT
+title: kairon mypy strict 全量启用
+status: done
+progress: 100.0
+priority: P2
+risk_level: L1
+description: '16/16 包全部 strict. iris/codeanalyze/eidos/forge/kos/minerva 实际 0 errors.
+
+  '
+created_at: '2026-06-19T12:00:00Z'
+completed_at: '2026-06-19T12:30:00Z'
+owner: kairon-team
+metadata:
+  completed_at: '2026-06-19T13:25:06Z'
+  completed_via: omo task done

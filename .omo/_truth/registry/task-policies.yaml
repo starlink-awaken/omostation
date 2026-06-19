@@ -1,0 +1,86 @@
+version: "1.0"
+status: active
+updated_at: "2026-06-19T00:00:00Z"
+owner: governance
+runtime_ref: projects/omo/src/omo/omo_task_policy.py
+execution_entrypoints:
+  - omo lint task-policy <name>
+  - workspace governance verify
+policies:
+  - name: active-execution-links
+    summary: active/ 中的 in_progress/review 任务必须具备 dispatch/run/review 等链路字段
+    target_roots:
+      - active
+    file_glob: "*.yaml"
+    prohibited_roots: []
+    required_fields: {}
+    required_status: null
+    validator_id: active_execution_links
+  - name: active-review-ref
+    summary: active/ 下 review 态任务必须带 review_ref 且指向真实审查工件
+    target_roots:
+      - active
+    file_glob: "*.yaml"
+    prohibited_roots: []
+    required_fields: {}
+    required_status: null
+    validator_id: active_review_ref
+  - name: done-directory-status
+    summary: done/ 目录中的任务必须显式保持 status=done
+    target_roots:
+      - done
+    file_glob: "*.yaml"
+    prohibited_roots: []
+    required_fields: {}
+    required_status: done
+    validator_id: null
+  - name: modern-done-completion-marker
+    summary: 新式 done packet 必须带 completed_at 或 completed 完成标记
+    target_roots:
+      - done
+    file_glob: "*.yaml"
+    prohibited_roots: []
+    required_fields: {}
+    required_status: null
+    validator_id: modern_done_completion_marker
+  - name: modern-done-evidence-paths
+    summary: 新式 done packet 一旦声明 evidence_paths，其目标文件必须物理存在
+    target_roots:
+      - done
+    file_glob: "*.yaml"
+    prohibited_roots: []
+    required_fields: {}
+    required_status: null
+    validator_id: modern_done_evidence_paths
+  - name: remediation-review-note
+    summary: remediation/ 下 review 态任务必须带 review_note 且指向真实审查笔记
+    target_roots:
+      - remediation
+    file_glob: "*.yaml"
+    prohibited_roots: []
+    required_fields: {}
+    required_status: null
+    validator_id: remediation_review_note
+  - name: self-evolution-approval
+    summary: self-evolution 任务只能留在 planned/，且审批字段必须保持人工待批基线
+    target_roots:
+      - planned
+    file_glob: OPC-P6-SELF-EVOLUTION-*.yaml
+    prohibited_roots:
+      - active
+    required_fields:
+      approval_required: true
+      human_approval_required: true
+      approval_state: awaiting_human
+    required_status: planned
+    validator_id: null
+  - name: human-approval-ref
+    summary: human_approval_required 的 planned/review 任务必须绑定 task-specific promotion approval yaml
+    target_roots:
+      - planned
+      - remediation
+    file_glob: "*.yaml"
+    prohibited_roots: []
+    required_fields: {}
+    required_status: null
+    validator_id: human_approval_ref
