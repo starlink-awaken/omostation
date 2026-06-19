@@ -211,7 +211,7 @@ class Market:
 
             # Try to read the dynamic registry from Agora gateway
             resp = httpx.post(
-                "http://127.0.0.1:8080/v1/resources/read",
+                "http://127.0.0.1:7422/v1/resources/read",
                 json={"uri": "bos://forge/market/list"},
                 timeout=2.0,
             )
