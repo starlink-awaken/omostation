@@ -142,7 +142,7 @@ async def healthz():
 # ═══════════════════════════════════════════════════════════════
 
 _LAYER_SOURCES: list[dict] = [
-    {"layer": "I0", "name": "agora", "url": "http://localhost:8080/v1/health", "port": 8080},
+    {"layer": "I0", "name": "agora", "url": "http://localhost:7431/v1/health", "port": 7431},
     {"layer": "L2", "name": "omo", "url": "http://localhost:9190/api/v1/status", "port": 9190},
     {"layer": "L1", "name": "runtime", "url": "http://localhost:9876/api/v1/status", "port": 9876},
     {"layer": "L0", "name": "ecos", "url": "file://m0_snapshot", "port": None, "source": "m0_snapshot"},

@@ -341,16 +341,26 @@ def main() -> int:
     sub.add_parser("discover", help="发现可用功能和资源")
 
     events_p = sub.add_parser("events", help="实时查看 Agora SSE 事件流 (Phase 34 L3 Dashboard)")
-    events_p.add_argument("--url", default="http://127.0.0.1:8080/v1/events", help="Agora SSE Endpoint")
+    events_p.add_argument("--url", default="http://127.0.0.1:7431/v1/events", help="Agora SSE Endpoint")
 
     sub.add_parser("version", help="版本信息")
 
     # ── CLI 收敛: SSB 签名链 ────────────────────────────────
-    ssb_p = sub.add_parser("ssb", help="SSB 签名链操作 (委派 ecos-ssb)")
+    ssb_p = sub.add_parser(
+        "ssb",
+        help="SSB 签名链操作 (委派 ecos-ssb)",
+        epilog="子命令 (源自 ecos-ssb): verify / append / chain / integrity\n示例: cockpit ssb integrity",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     ssb_p.add_argument("extra", nargs=argparse.REMAINDER, help="传递给 ecos-ssb 的参数")
 
     # ── CLI 收敛: MOF 元模型 ────────────────────────────────
-    mof_p = sub.add_parser("mof", help="MOF 元模型操作 (委派 mof CLI)")
+    mof_p = sub.add_parser(
+        "mof",
+        help="MOF 元模型操作 (委派 mof CLI)",
+        epilog="子命令 (源自 mof 引擎): validate / audit / derive / bridge-sync\n示例: cockpit mof validate",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     mof_p.add_argument("extra", nargs=argparse.REMAINDER, help="传递给 mof 的参数")
 
     # ── BOS URI 网关 ─────────────────────────────────────────
@@ -364,6 +374,13 @@ def main() -> int:
     scenario_p = sub.add_parser(
         "scenario",
         help="P5 统一 scenario 入口 (radar/assistant/health)",
+    )
+    # 产品走查 v5 #V5-13: 默认人类可读面板, --json 输出机器可读原样 (脚本/管道消费)
+    scenario_p.add_argument(
+        "--json",
+        action="store_true",
+        dest="scenario_json",
+        help="输出原始 JSON (脚本/管道消费); 默认人类可读面板",
     )
     scenario_sub = scenario_p.add_subparsers(
         dest="scenario_sub", parser_class=WorkspaceParser
@@ -388,7 +405,12 @@ def main() -> int:
     )
 
     # Gap #7: MetaOS 工作流编排入口
-    wf_p = sub.add_parser("workflow", help="🧠 MetaOS 工作流编排（动态规划 / 执行 / 历史）")
+    wf_p = sub.add_parser(
+        "workflow",
+        help="🧠 MetaOS 工作流编排（动态规划 / 执行 / 历史）",
+        epilog="子命令 (源自 metaos 引擎): plan / run / history / status\n示例: cockpit workflow plan \"目标\"",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     wf_p.add_argument("workflow_args", nargs="*", help="workflow 子命令和参数")
 
     # Gap #8: C2G 双擎编排流入口 (Phase 40)
@@ -396,10 +418,23 @@ def main() -> int:
     iterate_p.add_argument("topic", nargs="?", default="未命名探索主题", help="要发起探索的主题")
     iterate_p.add_argument("--mock", action="store_true", help="是否模拟生成带 TODO 的测试数据以触发门控")
 
-    compass_p = sub.add_parser("compass", help="🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)")
+    compass_p = sub.add_parser(
+        "compass",
+        help="🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)",
+        epilog=(
+            "子命令 (源自 c2g 引擎):\n"
+            "  brainstorm \"主题\"  发散想法生成 Pitch\n"
+            "  draft               交互式起草 Pitch\n"
+            "  bet <pitch.md>      Pitch → 受治理任务\n"
+            "  radar               战略对齐审计\n"
+            "  gc                  清理滞留 Pitch\n"
+            "详细: c2g compass --help"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     compass_p.add_argument("compass_args", nargs=argparse.REMAINDER, help="Arguments passed to c2g compass engine")
 
-    sub.add_parser("monitor", help="📊 实时终端大盘 (C2G Pipeline 监控仪)")
+    sub.add_parser("monitor", help="📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出)")
 
 
     code_p = sub.add_parser("code", help="代码库分析与审查 (基于 codeanalyze)")
@@ -612,6 +647,12 @@ def main() -> int:
         "ssb": cmd_ssb,
         "mof": cmd_mof,
         "help": cmd_help,
+        "quickstart": lambda a: __import__(
+            "cockpit.commands.quickstart", fromlist=["cmd_quickstart"]
+        ).cmd_quickstart(a),
+        "init": lambda a: __import__(
+            "cockpit.commands.quickstart", fromlist=["cmd_quickstart"]
+        ).cmd_quickstart(a),
     }
 
     handler = handlers.get(args.command)

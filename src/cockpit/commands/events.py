@@ -8,7 +8,7 @@ from rich.live import Live
 from rich.table import Table
 
 
-def run_events_dashboard(url: str = "http://127.0.0.1:8080/v1/events"):
+def run_events_dashboard(url: str = "http://127.0.0.1:7431/v1/events"):
     console = Console()
     console.print(f"[bold cyan]🚀 Connecting to Agora SSE Event Stream: {url}[/bold cyan]")
 
