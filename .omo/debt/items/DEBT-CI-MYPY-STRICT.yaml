@@ -1,0 +1,17 @@
+id: DEBT-CI-MYPY-STRICT
+title: CI 启用 mypy strict 检查
+severity: medium
+source: code-review-20260619
+domain: workspace
+scope: l2_kairon
+status: open
+lifecycle_state: open
+gate_level: watchlist
+description: >
+  kairon 16/16 包已通过 mypy strict, 但 CI 未强制检查.
+  需在 .github/workflows/ci.yml 中添加 mypy strict gate.
+registered_at: '2026-06-19T13:00:00Z'
+remediation: |
+  1. 在 kairon ci.yml 添加 mypy step
+  2. 配置 fail-on-error
+  3. 逐步扩展到其他项目

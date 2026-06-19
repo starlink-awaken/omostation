@@ -1,0 +1,17 @@
+id: DEBT-FUTURE-ANNOTATIONS
+title: 新文件添加 from __future__ import annotations
+severity: low
+source: code-review-20260619
+domain: workspace
+scope: workspace
+status: open
+lifecycle_state: open
+gate_level: none
+description: >
+  所有新 Python 文件应添加 from __future__ import annotations.
+  可通过 pre-commit hook 强制执行.
+registered_at: '2026-06-19T13:00:00Z'
+remediation: |
+  1. 添加 pre-commit hook 检查
+  2. 逐步为现有文件添加
+  3. 更新 AGENTS.md 编码规范

@@ -1,0 +1,17 @@
+id: DEBT-ENV-EXAMPLE-STANDARDIZE
+title: 统一 .env.example 格式
+severity: low
+source: code-review-20260619
+domain: workspace
+scope: workspace
+status: open
+lifecycle_state: open
+gate_level: none
+description: >
+  family-hub 有 .env.example, 其他项目缺失.
+  应统一所有有环境变量的项目的 .env.example 格式.
+registered_at: '2026-06-19T13:00:00Z'
+remediation: |
+  1. 审计所有项目的环境变量使用
+  2. 为 observability/family-hub 等创建 .env.example
+  3. 统一注释格式
