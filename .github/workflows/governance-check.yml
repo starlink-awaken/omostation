@@ -63,6 +63,7 @@ jobs:
             tests/test_omo_governance.py \
             tests/test_omo_governance_surfaces.py \
             tests/test_omo_direct_io_gate.py \
+            tests/test_omo_task_policy.py \
             tests/test_opc_phase_governance_alignment.py \
             tests/test_opc_p5_p7_runtime.py \
             -q
