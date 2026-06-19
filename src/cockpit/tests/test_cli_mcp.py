@@ -1,4 +1,4 @@
-"""cmd_mcp 测试 — workspace mcp 命令。"""
+"""cmd_mcp 测试 — cockpit mcp 命令。"""
 
 from __future__ import annotations
 

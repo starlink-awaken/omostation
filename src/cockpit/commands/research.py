@@ -172,16 +172,16 @@ def cmd_research(args: argparse.Namespace) -> int:
     display = (
         cleaned
         if len(cleaned) < 6000
-        else f"{cleaned[:5000]}\n\n---\n*内容过长，已截断前 5000 字符。使用 `workspace research --open {research_id}` 查看完整内容。*"
+        else f"{cleaned[:5000]}\n\n---\n*内容过长，已截断前 5000 字符。使用 `cockpit research --open {research_id}` 查看完整内容。*"
     )
     _render_markdown_block(f"研究内容 · {_short(topic, 60)}", display, style=style)
     _get_console().print(
         _panel(
             "[bold]下一步[/bold]\n"
-            f"- `workspace research --open {research_id}`  — 查看完整研究\n"
-            f'- `workspace research --ask {research_id} "继续提问"`  — 深入追问\n'
-            f"- `workspace research --publish {research_id} --style brief`  — 发布为报告\n"
-            f"- `workspace research --dossier {research_id}`  — 查看关系网络",
+            f"- `cockpit research --open {research_id}`  — 查看完整研究\n"
+            f'- `cockpit research --ask {research_id} "继续提问"`  — 深入追问\n'
+            f"- `cockpit research --publish {research_id} --style brief`  — 发布为报告\n"
+            f"- `cockpit research --dossier {research_id}`  — 查看关系网络",
             "cyan",
         )
     )
@@ -202,8 +202,8 @@ def cmd_research_search(args: argparse.Namespace) -> int:
     if not results:
         _get_console().print(f'\n[yellow]没有找到匹配 "{keyword}" 的研究。[/]')
         _get_console().print("[dim]试试:[/]")
-        _get_console().print('  [cyan]workspace research --search "关键词"[/]  — 换个关键词')
-        _get_console().print("  [cyan]workspace research --list[/]           — 浏览所有研究")
+        _get_console().print('  [cyan]cockpit research --search "关键词"[/]  — 换个关键词')
+        _get_console().print("  [cyan]cockpit research --list[/]           — 浏览所有研究")
         _get_console().print()
         return 0
     table = Table(title=f"研究全文搜索 · {keyword}", box=box.ROUNDED, header_style="bold cyan", show_lines=False)
@@ -234,11 +234,11 @@ def cmd_research_list(args: argparse.Namespace) -> int:
         results = [r for r in results if r.get("archived_at") is not None]
     if not results:
         if status == "active":
-            msg = "[dim]没有活跃的研究记录。试试：[cyan]workspace research --status all[/cyan] 查看全部，或 [cyan]workspace research <主题>[/cyan] 发起新的研究。[/dim]"
+            msg = "[dim]没有活跃的研究记录。试试：[cyan]cockpit research --status all[/cyan] 查看全部，或 [cyan]cockpit research <主题>[/cyan] 发起新的研究。[/dim]"
         elif status == "archived":
             msg = "[dim]没有已归档的研究记录。[/dim]"
         else:
-            msg = "[dim]还没有研究记录。试试：workspace research <主题>[/dim]"
+            msg = "[dim]还没有研究记录。试试：cockpit research <主题>[/dim]"
         _get_console().print(_panel(msg, "yellow"))
         return 0
     output_json = getattr(args, "json", False)
@@ -307,10 +307,10 @@ def cmd_research_open(args: argparse.Namespace) -> int:
     _get_console().print(
         _panel(
             "下一步:\n"
-            f'- `workspace research --ask {research_id} "继续提问"\n'
-            f"- `workspace research --dossier {research_id}`\n"
-            f"- `workspace research --timeline {research_id}`\n"
-            f"- `workspace research --publish {research_id} --style brief`",
+            f'- `cockpit research --ask {research_id} "继续提问"\n'
+            f"- `cockpit research --dossier {research_id}`\n"
+            f"- `cockpit research --timeline {research_id}`\n"
+            f"- `cockpit research --publish {research_id} --style brief`",
             "cyan",
         )
     )
@@ -416,12 +416,12 @@ def cmd_research_ask(args: argparse.Namespace) -> int:
     style = "green" if answer_quality == "real" else "yellow"
     _render_markdown_block(f"💬 追问已回答 · ID {research_id} {quality_label}", answer, style=style)
     lines = [
-        f"- `workspace research --open {research_id}`",
-        f"- `workspace research --dossier {research_id}`",
-        f"- `workspace research --timeline {research_id}`",
+        f"- `cockpit research --open {research_id}`",
+        f"- `cockpit research --dossier {research_id}`",
+        f"- `cockpit research --timeline {research_id}`",
     ]
     if answer_quality == "degraded":
-        lines.append("- `workspace status` 检查系统状态")
+        lines.append("- `cockpit status` 检查系统状态")
     _get_console().print(_panel("下一步:\n" + "\n".join(lines), "cyan"))
     return 0
 
@@ -443,7 +443,7 @@ def cmd_research_publish(args: argparse.Namespace) -> int:
     _get_data_access().save_published_report(research_id, style, str(output_path))
     _get_console().print(
         _panel(
-            f"[bold green]✅ 已发布到[/bold green]\n{output_path}\n\n下一步:\n- `workspace research --open {result['id']}`\n- `workspace research --export markdown --open {result['id']}`",
+            f"[bold green]✅ 已发布到[/bold green]\n{output_path}\n\n下一步:\n- `cockpit research --open {result['id']}`\n- `cockpit research --export markdown --open {result['id']}`",
             "green",
         )
     )
@@ -496,10 +496,10 @@ def cmd_research_dossier(args: argparse.Namespace) -> int:
     _get_console().print(
         _panel(
             "下一步:\n"
-            f"- `workspace research --open {research_id}`\n"
-            f'- `workspace research --ask {research_id} "继续提问"`\n'
-            f"- `workspace research --publish {research_id} --style brief`\n"
-            "- `workspace status`",
+            f"- `cockpit research --open {research_id}`\n"
+            f'- `cockpit research --ask {research_id} "继续提问"`\n'
+            f"- `cockpit research --publish {research_id} --style brief`\n"
+            "- `cockpit status`",
             "cyan",
         )
     )
@@ -529,10 +529,10 @@ def cmd_research_timeline(args: argparse.Namespace) -> int:
     _get_console().print(
         _panel(
             "下一步:\n"
-            f"- `workspace research --open {research_id}`\n"
-            f"- `workspace research --dossier {research_id}`\n"
-            f"- `workspace research --publish {research_id} --style brief`\n"
-            "- `workspace status`",
+            f"- `cockpit research --open {research_id}`\n"
+            f"- `cockpit research --dossier {research_id}`\n"
+            f"- `cockpit research --publish {research_id} --style brief`\n"
+            "- `cockpit status`",
             "cyan",
         )
     )
@@ -555,9 +555,9 @@ def cmd_research_tag(args: argparse.Namespace) -> int:
     _get_console().print(
         _panel(
             "下一步:\n"
-            f"- `workspace research --open {research_id}`\n"
-            f"- `workspace research --dossier {research_id}`\n"
-            "- `workspace research --list`",
+            f"- `cockpit research --open {research_id}`\n"
+            f"- `cockpit research --dossier {research_id}`\n"
+            "- `cockpit research --list`",
             "cyan",
         )
     )
@@ -580,9 +580,9 @@ def cmd_research_rename(args: argparse.Namespace) -> int:
     _get_console().print(
         _panel(
             "下一步:\n"
-            f"- `workspace research --open {research_id}`\n"
-            f"- `workspace research --dossier {research_id}`\n"
-            "- `workspace research --list`",
+            f"- `cockpit research --open {research_id}`\n"
+            f"- `cockpit research --dossier {research_id}`\n"
+            "- `cockpit research --list`",
             "cyan",
         )
     )
@@ -627,8 +627,8 @@ def cmd_research_archive(args: argparse.Namespace) -> int:
         f"ID: {', '.join(str(item) for item in archived)}",
         "",
         "下一步:",
-        "- `workspace research --list`",
-        "- `workspace research --timeline <ID>`",
+        "- `cockpit research --list`",
+        "- `cockpit research --timeline <ID>`",
     ]
     if missing:
         lines.insert(2, f"[yellow]未找到这些研究 ID: {', '.join(str(item) for item in missing)}[/yellow]")
@@ -653,8 +653,8 @@ def cmd_research_unarchive(args: argparse.Namespace) -> int:
         f"ID: {', '.join(str(item) for item in restored)}",
         "",
         "下一步:",
-        "- `workspace research --list`",
-        "- `workspace research --timeline <ID>`",
+        "- `cockpit research --list`",
+        "- `cockpit research --timeline <ID>`",
     ]
     if missing:
         lines.insert(2, f"[yellow]未找到这些研究 ID: {', '.join(str(item) for item in missing)}[/yellow]")
@@ -708,7 +708,7 @@ def cmd_research_compare(args: argparse.Namespace) -> int:
         )
     _get_console().print(table)
     focus = _compare_focus(records)
-    actions = "\n".join(f"- `workspace research --open {record['id']}`" for record in records)
+    actions = "\n".join(f"- `cockpit research --open {record['id']}`" for record in records)
     _get_console().print(_panel(f"[bold]共同关注[/bold]: {focus}\n\n[bold]建议下一步[/bold]:\n{actions}", "green"))
     return 0
 
@@ -757,7 +757,7 @@ def cmd_research_merge(args: argparse.Namespace) -> int:
             f"[bold green]✅ 合并完成[/bold green]\nID {merged_id} · {merged_topic}\n\n"
             f"[bold]共同关注[/bold]: {focus}\n"
             f"[bold]总来源数[/bold]: {total_sources}\n\n"
-            f"下一步:\n- `workspace research --open {merged_id}`\n- `workspace research --compare {' '.join(str(item['id']) for item in records)}`",
+            f"下一步:\n- `cockpit research --open {merged_id}`\n- `cockpit research --compare {' '.join(str(item['id']) for item in records)}`",
             "green",
         )
     )
@@ -797,9 +797,9 @@ def cmd_research_digest(args: argparse.Namespace) -> int:
         for record in records
     )
     next_steps = "\n".join(
-        f"- `workspace research --open {record['id']}` 深入查看《{record['topic']}》" for record in records
+        f"- `cockpit research --open {record['id']}` 深入查看《{record['topic']}》" for record in records
     )
-    next_steps += f"\n- `workspace research --compare {' '.join(str(record['id']) for record in records)}` 查看并列差异"
+    next_steps += f"\n- `cockpit research --compare {' '.join(str(record['id']) for record in records)}` 查看并列差异"
     digest_summary = f"共同关注: {focus}"
     digest_body = (
         f"# {digest_topic}\n\n"
@@ -820,7 +820,7 @@ def cmd_research_digest(args: argparse.Namespace) -> int:
             f"[bold green]✅ Digest 已生成[/bold green]\nID {digest_id} · {digest_topic}\n\n"
             f"[bold]共同关注[/bold]: {focus}\n"
             f"[bold]总来源数[/bold]: {total_sources}\n\n"
-            f"下一步:\n- `workspace research --open {digest_id}`\n- `workspace research --merge {' '.join(str(record['id']) for record in records)}`",
+            f"下一步:\n- `cockpit research --open {digest_id}`\n- `cockpit research --merge {' '.join(str(record['id']) for record in records)}`",
             "green",
         )
     )
@@ -854,7 +854,7 @@ def cmd_research_audit(args: argparse.Namespace) -> int:
             str(record["topic"]),
             _fmt_time(float(record["created_at"])),
             issue,
-            f"workspace research --open {record['id']} / --quarantine {record['id']}",
+            f"cockpit research --open {record['id']} / --quarantine {record['id']}",
         )
     _get_console().print(table)
     return 0
@@ -874,8 +874,8 @@ def cmd_research_quarantine(args: argparse.Namespace) -> int:
         f"ID: {', '.join(str(item) for item in quarantined)}",
         "",
         "下一步:",
-        "- `workspace research --audit`",
-        "- `workspace research --list`",
+        "- `cockpit research --audit`",
+        "- `cockpit research --list`",
     ]
     if missing:
         lines.insert(2, f"[yellow]未找到这些研究 ID: {', '.join(str(item) for item in missing)}[/yellow]")
@@ -897,8 +897,8 @@ def cmd_research_restore(args: argparse.Namespace) -> int:
         f"ID: {', '.join(str(item) for item in restored)}",
         "",
         "下一步:",
-        "- `workspace research --list`",
-        "- `workspace research --audit`",
+        "- `cockpit research --list`",
+        "- `cockpit research --audit`",
     ]
     if missing:
         lines.insert(2, f"[yellow]未找到这些研究 ID: {', '.join(str(item) for item in missing)}[/yellow]")
@@ -1129,8 +1129,8 @@ def cmd_research_health(args: argparse.Namespace) -> int:
             tips.append("- 已衰减研究 → 可发起追问延续活性或归档已无用记录")
         if fair:
             tips.append("- 待关注研究 → 发起新追问保持研究活性")
-        tips.append("- `workspace research --audit` 扫描问题记录")
-        tips.append("- `workspace research --heatmap` 查看活跃度趋势")
+        tips.append("- `cockpit research --audit` 扫描问题记录")
+        tips.append("- `cockpit research --heatmap` 查看活跃度趋势")
         _get_console().print(_panel("\n".join(tips), "yellow"))
     return 0
 
@@ -1205,12 +1205,12 @@ def cmd_research_follow_up(args: argparse.Namespace) -> int:
 
     # 显示快捷操作
     actions = "\n".join(
-        f'- `workspace research --ask {r["id"]} "你的问题"`  [dim]对 #{r["id"]} 发起新追问[/dim]' for r in pending[:5]
+        f'- `cockpit research --ask {r["id"]} "你的问题"`  [dim]对 #{r["id"]} 发起新追问[/dim]' for r in pending[:5]
     )
     _get_console().print(
         _panel(
             f"[bold]快捷操作[/bold]（前 5 条待追问）:\n{actions}\n\n"
-            f"        [dim]全部查看: workspace research --open <ID>[/dim]",
+            f"        [dim]全部查看: cockpit research --open <ID>[/dim]",
             "yellow",
         )
     )

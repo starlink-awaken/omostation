@@ -229,11 +229,13 @@ def _f2_work_assistant(*, query: str) -> dict[str, Any]:
     return draft
 
 
-def _family_cards_sources(limit: int = 5) -> tuple[list[dict[str, Any]], str]:
+def _family_cards_sources(*, query: str = "", limit: int = 5) -> tuple[list[dict[str, Any]], str]:
     _workspace_root() / "data" / "cards" / "cards.db"
 
     cards_dir = _workspace_root() / "data" / "驾驶舱" / "CARDS"
-    sources: list[dict[str, Any]] = []
+    # 语义过滤 (产品走查 v2 #12: 之前只过滤 domain:family 全收, 健康 query 召回车险;
+    # 现按 query tokens 评分 score>0 才收, 同 _f2_work_assistant, 召回精准).
+    ranked: list[tuple[int, dict[str, Any]]] = []
     for path in sorted(cards_dir.rglob("*.md")):
         text = path.read_text(encoding="utf-8")
         if "domain: family" not in text:
@@ -244,19 +246,26 @@ def _family_cards_sources(limit: int = 5) -> tuple[list[dict[str, Any]], str]:
             if line.startswith("title:"):
                 title = line.split(":", 1)[1].strip()
                 break
-        sources.append(
-            {
-                "id": path.stem,
-                "title": title,
-                "source": "cards:family-markdown",
-                "source_path": str(path),
-                "summary": text[:160],
-                "timestamp": datetime.fromtimestamp(path.stat().st_mtime, UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "privacy_class": "confidential",
-            }
+        score = _score_text_match(query=query, parts=[title, text]) if query else 1
+        if score <= 0:
+            continue
+        ranked.append(
+            (
+                score,
+                {
+                    "id": path.stem,
+                    "title": title,
+                    "source": "cards:family-markdown",
+                    "source_path": str(path),
+                    "summary": text[:160],
+                    "timestamp": datetime.fromtimestamp(path.stat().st_mtime, UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "privacy_class": "confidential",
+                    "score": score,
+                },
+            )
         )
-        if len(sources) >= limit:
-            break
+    ranked.sort(key=lambda item: item[0], reverse=True)
+    sources = [src for _, src in ranked[:limit]]
     return sources, str(cards_dir)
 
 
@@ -312,7 +321,7 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
         pass
 
     if not sources:
-        sources, privacy_fallback = _family_cards_sources(limit=5)
+        sources, privacy_fallback = _family_cards_sources(query=query, limit=5)
         if sources:
             Path(privacy_fallback)
 

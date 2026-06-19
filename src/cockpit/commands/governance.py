@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -30,6 +31,23 @@ def _run_omo_governance(args: list[str], workspace_root: Path) -> int:
     return subprocess.run(cmd, cwd=str(workspace_root)).returncode
 
 
+def _run_omo_verify(workspace_root: Path) -> int:
+    omo_project = workspace_root / "projects" / "omo"
+    verify_steps = [
+        ["python", "-W", "ignore::DeprecationWarning", "-m", "omo.cli", "governance", "surfaces", "--workspace-root", "../..", "--json"],
+        ["python", "-W", "ignore::DeprecationWarning", "-m", "omo.cli", "lint", "ingress-registry", "--workspace-root", "../.."],
+        ["python", "-W", "ignore::DeprecationWarning", "-m", "omo.cli", "lint", "task-policy", "--all", "--workspace-root", "../.."],
+    ]
+    for step in verify_steps:
+        cmd = ["uv", "run", "--directory", str(omo_project), *step]
+        rendered = " ".join(shlex.quote(part) for part in cmd)
+        _get_console().print(f"[cyan]$ {rendered}[/]")
+        result = subprocess.run(cmd, cwd=str(workspace_root))
+        if result.returncode != 0:
+            return result.returncode
+    return 0
+
+
 def cmd_governance(args: argparse.Namespace) -> int:
     import shutil
 
@@ -42,21 +60,26 @@ def cmd_governance(args: argparse.Namespace) -> int:
             "report",
             "drift-check",
             "validate",
+            "verify",
             "surfaces",
             "ingress-goal",
             "ingress-task",
             "ingress-debt",
         ]:
-            _get_console().print(f"  workspace governance {cmd}")
+            _get_console().print(f"  cockpit governance {cmd}")
         _get_console().print("\n[yellow]示例:[/]")
-        _get_console().print("  workspace governance calibrate --check")
-        _get_console().print("  workspace governance surfaces --json")
-        _get_console().print("  workspace governance rechain")
+        _get_console().print("  cockpit governance calibrate --check")
+        _get_console().print("  cockpit governance verify")
+        _get_console().print("  cockpit governance surfaces --json")
+        _get_console().print("  cockpit governance rechain")
         return 0
     subcmd = args.subcommand
     if subcmd in _OMO_GOVERNANCE_SUBCOMMANDS:
         workspace_root = resolve_workspace_root()
         return _run_omo_governance([subcmd, *(args.extra_args or [])], workspace_root)
+    if subcmd == "verify":
+        workspace_root = resolve_workspace_root()
+        return _run_omo_verify(workspace_root)
     script_name = f"arcnode-{subcmd}"
     script = shutil.which(script_name)
     if not script:

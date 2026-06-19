@@ -46,7 +46,7 @@ def test_cmd_research_restore_reports_result(monkeypatch):
     assert "已恢复 2 条研究记录" in output
     assert "4, 5" in output
     assert "未找到这些研究 ID: 9" in output
-    assert "workspace research --list" in output
+    assert "cockpit research --list" in output
 
 
 def test_cmd_research_restore_all_missing(monkeypatch):

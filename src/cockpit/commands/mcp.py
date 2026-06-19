@@ -80,5 +80,5 @@ def _list_tools(mcp: Any) -> int:
         table.add_row(name, desc[:120])
     console.print(table)
 
-    console.print("\n[dim]使用 `workspace mcp` 启动 server 后，客户端可通过上述工具交互[/dim]")
+    console.print("\n[dim]使用 `cockpit mcp` 启动 server 后，客户端可通过上述工具交互[/dim]")
     return 0

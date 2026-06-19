@@ -80,7 +80,7 @@ def test_cmd_dashboard_shows_fix_suggestions_when_http_is_non_200(monkeypatch):
     output = capture.export_text()
     assert code == 1
     assert "Dashboard returned HTTP 502" in output
-    assert "workspace status" in output
+    assert "cockpit status" in output
     # Rich may wrap the long suggestion line; assert the command tokens are present.
     assert "cd agora" in output
     assert "uvicorn agora.web.app:app" in output

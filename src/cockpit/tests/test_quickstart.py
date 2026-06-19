@@ -166,7 +166,7 @@ class TestCmdQuickstart:
         assert "Step 4/4" in output
         assert "Python" in output
         assert "minerva" in output
-        assert "workspace research" in output
+        assert "cockpit research" in output
 
     def test_no_tools_and_empty_db(self, monkeypatch):
         """无工具 + 空数据库 → 显示缺失提示和推荐配置"""

@@ -86,7 +86,7 @@ def test_cmd_research_digest_saves_digest_research(monkeypatch):
     assert "## 关键差异" in str(saved["full_text"])
     assert "Digest 已生成" in output
     assert "ID 12" in output
-    assert "workspace research --open 12" in output
+    assert "cockpit research --open 12" in output
 
 
 def test_cmd_research_digest_reports_missing_ids(monkeypatch):

@@ -54,6 +54,7 @@ uv run --package cockpit pytest src/cockpit/tests/ -q
 ## 治理入口
 
 ```bash
+workspace governance verify
 workspace governance surfaces --json
 workspace governance ingress-goal BET-001 "标题" "描述" --ingress-plane projects/c2g
 workspace governance ingress-task /abs/path/to/task.yaml --ingress-plane projects/c2g
@@ -61,6 +62,7 @@ workspace governance ingress-debt /abs/path/to/debt.yaml --ingress-plane project
 ```
 
 `workspace governance` 现在会把 `.omo` 治理面巡检与 ingress 持久化写入统一转发到 `projects/omo` 的受审计 broker，而不是让入口层直接改 `.omo/`。
+其中 `workspace governance verify` 是面向人类与 agent 的统一治理验收入口，默认串行执行 surfaces / ingress-registry / `task-policy --all`；`surfaces` 输出里会带上 `task_policy_registry` 与 gate presence，用来核对代码注册表和 truth registry 是否漂移。
 
 ## 架构位置
 

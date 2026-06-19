@@ -73,5 +73,5 @@ def test_cmd_research_publish_writes_brief_report_and_tracks_publication(monkeyp
     assert published["research_id"] == 12
     assert published["style"] == "brief"
     assert str(files[0]) == published["output_path"]
-    assert "workspace research --open 12" in output
+    assert "cockpit research --open 12" in output
     assert "已发布到" in output

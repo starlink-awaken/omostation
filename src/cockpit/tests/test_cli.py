@@ -84,7 +84,7 @@ def _setup_mock():
 
 
 def test_help_command():
-    """workspace help should return 0."""
+    """cockpit help should return 0."""
     _setup_mock()
     with patch("sys.argv", ["workspace", "help"]):
         rc = main()
@@ -92,7 +92,7 @@ def test_help_command():
 
 
 def test_demo_command():
-    """workspace demo should return 0 with mock data access."""
+    """cockpit demo should return 0 with mock data access."""
     _setup_mock()
     with patch("sys.argv", ["workspace", "demo"]):
         rc = main()
@@ -100,7 +100,7 @@ def test_demo_command():
 
 
 def test_status_command():
-    """workspace status should return 0 with mock."""
+    """cockpit status should return 0 with mock."""
     _setup_mock()
     with patch("sys.argv", ["workspace", "status"]):
         rc = main()
@@ -108,7 +108,7 @@ def test_status_command():
 
 
 def test_daily_command():
-    """workspace daily should return 0 with mock."""
+    """cockpit daily should return 0 with mock."""
     _setup_mock()
     with patch("sys.argv", ["workspace", "daily"]):
         rc = main()
@@ -116,7 +116,7 @@ def test_daily_command():
 
 
 def test_daily_with_days():
-    """workspace daily --days 7 should return 0."""
+    """cockpit daily --days 7 should return 0."""
     _setup_mock()
     with patch("sys.argv", ["workspace", "daily", "--days", "7"]):
         rc = main()
@@ -124,7 +124,7 @@ def test_daily_with_days():
 
 
 def test_research_list_command():
-    """workspace research --list should return 0."""
+    """cockpit research --list should return 0."""
     _setup_mock()
     with patch("sys.argv", ["workspace", "research", "--list"]):
         rc = main()
@@ -132,7 +132,7 @@ def test_research_list_command():
 
 
 def test_research_search_command():
-    """workspace research --search keyword should return 0."""
+    """cockpit research --search keyword should return 0."""
     _setup_mock()
     with patch("sys.argv", ["workspace", "research", "--search", "llm"]):
         rc = main()
@@ -140,7 +140,7 @@ def test_research_search_command():
 
 
 def test_research_health_command():
-    """workspace research --health should return 0."""
+    """cockpit research --health should return 0."""
     _setup_mock()
     with patch("sys.argv", ["workspace", "research", "--health"]):
         rc = main()
@@ -148,7 +148,7 @@ def test_research_health_command():
 
 
 def test_research_follow_up_command():
-    """workspace research --follow-up should return 0."""
+    """cockpit research --follow-up should return 0."""
     _setup_mock()
     with patch("sys.argv", ["workspace", "research", "--follow-up"]):
         rc = main()

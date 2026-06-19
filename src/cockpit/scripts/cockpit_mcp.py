@@ -1,4 +1,4 @@
-"""cockpit MCP server — workspace research and status MCP tools.
+"""cockpit MCP server — cockpit research and status MCP tools.
 
 Provides research lifecycle tools (list, search, create, open, ask, archive,
 restore, tag, rename, dossier, half-life, agent-list) and status tools

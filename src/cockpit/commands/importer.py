@@ -66,11 +66,11 @@ def cmd_import(args: argparse.Namespace) -> int:
     _get_console().print(
         _panel(
             "下一步:\n"
-            f"- `workspace research --open {research_id}`\n"
-            f'- `workspace research --ask {research_id} "继续追问"\n'
-            f"- `workspace research --publish {research_id} --style brief`\n"
-            f"- `workspace research --tag {research_id} --labels 标签1 标签2`\n"
-            "- `workspace research --list`",
+            f"- `cockpit research --open {research_id}`\n"
+            f'- `cockpit research --ask {research_id} "继续追问"\n'
+            f"- `cockpit research --publish {research_id} --style brief`\n"
+            f"- `cockpit research --tag {research_id} --labels 标签1 标签2`\n"
+            "- `cockpit research --list`",
             "cyan",
         )
     )

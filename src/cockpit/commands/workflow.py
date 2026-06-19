@@ -1,11 +1,11 @@
 """cockpit workflow command — L3 驾驶舱接管 MetaOS 工作流编排
 
 用法:
-  workspace workflow plan "研究 RAG 架构"
-  workspace workflow plan "实现缓存层" --dry-run --save my_plan.yaml
-  workspace workflow run my_plan.yaml
-  workspace workflow history
-  workspace workflow history --id <workflow_id>
+  cockpit workflow plan "研究 RAG 架构"
+  cockpit workflow plan "实现缓存层" --dry-run --save my_plan.yaml
+  cockpit workflow run my_plan.yaml
+  cockpit workflow history
+  cockpit workflow history --id <workflow_id>
 """
 
 from __future__ import annotations
@@ -39,13 +39,13 @@ def handle_workflow(args):
 
     if action == "plan":
         if not rest:
-            print('❌ 用法: workspace workflow plan "<任务描述>" [--dry-run] [--no-llm] [--save <file>]')
+            print('❌ 用法: cockpit workflow plan "<任务描述>" [--dry-run] [--no-llm] [--save <file>]')
             return 1
         return _run_metaos("plan", *rest)
 
     elif action == "run":
         if not rest:
-            print("❌ 用法: workspace workflow run <yaml_file>")
+            print("❌ 用法: cockpit workflow run <yaml_file>")
             return 1
         return _run_metaos("run", *rest)
 
@@ -54,7 +54,7 @@ def handle_workflow(args):
 
     elif action == "approve":
         if not rest:
-            print("❌ 用法: workspace workflow approve <workflow_id>")
+            print("❌ 用法: cockpit workflow approve <workflow_id>")
             return 1
         return _run_metaos("approve", *rest)
 
@@ -70,20 +70,20 @@ def handle_workflow(args):
 
 def _print_help():
     print("""
-🧠 MetaOS 工作流编排 (通过 workspace workflow)
+🧠 MetaOS 工作流编排 (通过 cockpit workflow)
 
 用法:
-  workspace workflow plan "<任务>"          动态规划并执行工作流
-  workspace workflow plan "<任务>" --dry-run  仅生成规划，不执行
-  workspace workflow plan "<任务>" --save <文件>  保存规划为 YAML
-  workspace workflow run <yaml_file>         执行 YAML 工作流定义
-  workspace workflow history                 查看工作流执行历史
-  workspace workflow history --id <id>       查看某个工作流详情
-  workspace workflow approve <id>            批准 RED 门控等待中的工作流
+  cockpit workflow plan "<任务>"          动态规划并执行工作流
+  cockpit workflow plan "<任务>" --dry-run  仅生成规划，不执行
+  cockpit workflow plan "<任务>" --save <文件>  保存规划为 YAML
+  cockpit workflow run <yaml_file>         执行 YAML 工作流定义
+  cockpit workflow history                 查看工作流执行历史
+  cockpit workflow history --id <id>       查看某个工作流详情
+  cockpit workflow approve <id>            批准 RED 门控等待中的工作流
 
 示例:
-  workspace workflow plan "研究 Agent-to-Agent 协议的技术实现"
-  workspace workflow plan "实现 Redis 缓存层" --dry-run --save redis_plan.yaml
-  workspace workflow run redis_plan.yaml
-  workspace workflow history
+  cockpit workflow plan "研究 Agent-to-Agent 协议的技术实现"
+  cockpit workflow plan "实现 Redis 缓存层" --dry-run --save redis_plan.yaml
+  cockpit workflow run redis_plan.yaml
+  cockpit workflow history
 """)

@@ -301,6 +301,7 @@ def main() -> int:
             "report",
             "drift-check",
             "validate",
+            "verify",
             "surfaces",
             "ingress-goal",
             "ingress-task",

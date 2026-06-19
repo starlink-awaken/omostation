@@ -86,7 +86,7 @@ def test_cmd_research_merge_saves_new_research(monkeypatch):
     assert "共同关注" in str(saved["summary"])
     assert "合并完成" in output
     assert "ID 11" in output
-    assert "workspace research --open 11" in output
+    assert "cockpit research --open 11" in output
 
 
 def test_cmd_research_merge_reports_missing_ids(monkeypatch):

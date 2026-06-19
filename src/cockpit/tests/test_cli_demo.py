@@ -1,4 +1,4 @@
-"""Test cmd_demo — workspace demo 命令全流程场景测试.
+"""Test cmd_demo — cockpit demo 命令全流程场景测试.
 
 覆盖场景:
   - 两次 ollama 均成功（真实研究 + 真实追问）

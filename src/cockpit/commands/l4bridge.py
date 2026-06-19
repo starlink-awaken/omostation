@@ -102,7 +102,7 @@ def cmd_skill(args: Namespace) -> int:
 
     skill_name = getattr(args, "skill_name", "") or ""
     if not skill_name:
-        _get_err().print("[yellow]用法: cockpit workspace skill run <skill_name>[/]")
+        _get_err().print("[yellow]用法: cockpit cockpit skill run <skill_name>[/]")
         return 1
 
     console.print(f"[cyan]⏳ 执行技能: {skill_name}...[/]")
@@ -193,7 +193,7 @@ def cmd_vault(args: Namespace) -> int:
 
     keyword = getattr(args, "keyword", "") or ""
     if not keyword:
-        _get_err().print("[yellow]用法: workspace vault search <keyword>[/]")
+        _get_err().print("[yellow]用法: cockpit vault search <keyword>[/]")
         return 1
 
     try:

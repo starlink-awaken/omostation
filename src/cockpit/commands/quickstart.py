@@ -67,7 +67,7 @@ def _ensure_workspace_db() -> bool:
         get_data_access().save_research(
             topic="欢迎使用 Workspace",
             summary="这是您的第一条研究记录。Workspace 已准备就绪！",
-            full_text='恭喜您成功初始化 Workspace 环境！\n\n您可以通过以下命令开始使用：\n- `workspace research "主题"` 发起新研究\n- `workspace research --list` 浏览记录\n- `workspace demo` 体验完整闭环',
+            full_text='恭喜您成功初始化 Workspace 环境！\n\n您可以通过以下命令开始使用：\n- `cockpit research "主题"` 发起新研究\n- `cockpit research --list` 浏览记录\n- `cockpit demo` 体验完整闭环',
             source_count=1,
         )
         return True
@@ -175,9 +175,9 @@ def _auto_fix(c: Console, args: argparse.Namespace) -> int:
             _panel(
                 "[bold green]✅ 自动修复完成！所有问题已处理[/bold green]\n\n"
                 "现在可以开始使用:\n"
-                '- [cyan]workspace research "主题"[/]  — 发起研究\n'
-                "- [cyan]workspace status[/]  — 查看工作台\n"
-                "- [cyan]workspace demo[/]  — 体验完整闭环",
+                '- [cyan]cockpit research "主题"[/]  — 发起研究\n'
+                "- [cyan]cockpit status[/]  — 查看工作台\n"
+                "- [cyan]cockpit demo[/]  — 体验完整闭环",
                 "green",
             )
         )
@@ -190,7 +190,7 @@ def _auto_fix(c: Console, args: argparse.Namespace) -> int:
                 f"[bold yellow]⚠️  部分修复完成[/bold yellow]\n\n"
                 f"已处理:\n{fix_list}\n\n"
                 f"未解决:\n{issue_list}\n\n"
-                f"请手动处理上述问题后重试 'workspace quickstart --fix'",
+                f"请手动处理上述问题后重试 'cockpit quickstart --fix'",
                 "yellow",
             )
         )
@@ -269,27 +269,27 @@ def cmd_quickstart(args: argparse.Namespace) -> int:
     guide.add_column("说明", width=40)
     guide.add_row(
         "1",
-        "[cyan]workspace demo[/]",
+        "[cyan]cockpit demo[/]",
         "体验研究闭环（5 分钟）",
     )
     guide.add_row(
         "2",
-        '[cyan]workspace research "主题"[/]',
+        '[cyan]cockpit research "主题"[/]',
         "发起你的第一个研究",
     )
     guide.add_row(
         "3",
-        "[cyan]workspace research --list[/]",
+        "[cyan]cockpit research --list[/]",
         "浏览所有研究记录",
     )
     guide.add_row(
         "4",
-        "[cyan]workspace status[/]",
+        "[cyan]cockpit status[/]",
         "查看工作台仪表板",
     )
     guide.add_row(
         "5",
-        "[cyan]workspace daily[/]",
+        "[cyan]cockpit daily[/]",
         "每日研究简报",
     )
     c.print(guide)
@@ -301,13 +301,13 @@ def cmd_quickstart(args: argparse.Namespace) -> int:
     c.print(r"    import → research → open → ask → publish → dossier → timeline")
     c.print()
     c.print(r"  [bold]学习资源:[/bold]")
-    c.print(r"    [cyan]workspace help[/]     — 产品地图与完整命令列表")
-    c.print(r"    [cyan]workspace demo[/]     — 交互式演示")
+    c.print(r"    [cyan]cockpit help[/]     — 产品地图与完整命令列表")
+    c.print(r"    [cyan]cockpit demo[/]     — 交互式演示")
     c.print()
     c.print(
         _panel(
             "[bold green]🎉 配置完成！现在就开始使用 workspace[/bold green]\n\n"
-            '[cyan]workspace research "你的第一个研究主题"[/]',
+            '[cyan]cockpit research "你的第一个研究主题"[/]',
             "green",
         )
     )

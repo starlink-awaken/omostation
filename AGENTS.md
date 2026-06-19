@@ -34,11 +34,10 @@ uv sync
 
 ```
 L3 Cockpit
-├── CLI 入口        ← cli.py (argparse dispatch → 27 subcommands)
-│   └── commands/   ← research, status, contracts, cards, mcp, ssb, mof, ...
-├── MCP Server      ← scripts/cockpit_mcp.py + l0_mcp_tools.py (37 tools, stdio)
+├── CLI 入口        ← cli.py (argparse dispatch → 30+ subcommands)
+│   └── commands/   ← research, status, contracts, cards, mcp, ssb, mof, iterate, ...
+├── MCP Server      ← scripts/cockpit_mcp.py + l0_mcp_tools.py (37+ tools, stdio)
 ├── Agent Runtime   ← agent_runtime_mcp_server.py (2 tools, stdio)
-├── Legacy Runtime  ← _runtime_mcp_server_legacy.py (7 tools, stdio, deprecated)
 ├── Web Dashboard   ← src/cockpit/dashboard_server.py (FastAPI, :8090) — 唯一人机交互入口 (注意：web/app.py 已废弃)
 │   ├── /api/*      ← 38 API routes (services/compute/health/events/research/a2a/knowledge/...)
 │   ├── /api/v1/proposals/* ← [Phase 9] HITL 审批队列 (approve/reject)
@@ -78,6 +77,7 @@ CLI → cli.py → commands/<cmd>.py → storage.py (SQLite)
 | `cockpit bos` | `cmd_bos()` | commands/bos.py |
 | `cockpit ssb` | `cmd_ssb()` | commands/ssb.py (委派 ecos-ssb) |
 | `cockpit mof` | `cmd_mof()` | commands/mof.py (委派 mof CLI) |
+| `cockpit iterate` | `cmd_iterate()` | commands/iterate.py (C2G 双擎编排流) |
 
 ### CLI Convergence (2026-06-11)
 
@@ -115,10 +115,10 @@ uv run pytest src/cockpit/tests/test_cli_research_*.py -q
 
 ## File Organization
 
-- `src/cockpit/` — 源码 (29 .py 文件)
-- `src/cockpit/commands/` — CLI 子命令 (18 文件)
+- `src/cockpit/` — 源码 (28+ .py 文件)
+- `src/cockpit/commands/` — CLI 子命令 (28 文件)
 - `src/cockpit/scripts/` — MCP Server
-- `src/cockpit/tests/` — 测试 (48 文件, 567 tests)
+- `src/cockpit/tests/` — 测试 (50 文件, 575 tests)
 - `tests/` — 根级测试 (conftest.py + test_basic.py)
 
 ## Gotchas
@@ -128,4 +128,6 @@ uv run pytest src/cockpit/tests/test_cli_research_*.py -q
 3. **runtime 是硬依赖** — agent_runtime_* 模块需要 runtime 可导入
 4. **storage.py IDataAccess Protocol** — 新增存储操作需实现协议接口
 5. **Web Dashboard 认证可选** — AUTH_TOKEN 环境变量控制
-6. **hatchling 构建** — 非 runtime 的 setuptools
+6. **hatchling 构建** — 与 kairon/agora/runtime 一致
+7. **`cockpit iterate` 非交互回退** — 无 TTY 时 `Confirm.ask` 抛 EOFError，默认走标准 C2G 流而非 Fast-Track
+8. **L4 全域 8 域** — cockpit_mcp.py 注册 cards/vault/personal/public/creative/family/workdocs/opc

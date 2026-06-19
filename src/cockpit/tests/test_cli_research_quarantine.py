@@ -46,7 +46,7 @@ def test_cmd_research_quarantine_reports_result(monkeypatch):
     assert "已隔离 2 条研究记录" in output
     assert "4, 5" in output
     assert "未找到这些研究 ID: 9" in output
-    assert "workspace research --audit" in output
+    assert "cockpit research --audit" in output
 
 
 def test_cmd_research_quarantine_all_missing(monkeypatch):

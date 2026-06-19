@@ -74,7 +74,7 @@ def test_cmd_research_compare_renders_comparison_table(monkeypatch):
     assert "transformer in" in output
     assert "vision" in output
     assert "共同关注" in output
-    assert "workspace research --open 1" in output
+    assert "cockpit research --open 1" in output
 
 
 def test_cmd_research_compare_reports_missing_ids(monkeypatch):

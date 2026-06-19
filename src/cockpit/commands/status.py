@@ -145,9 +145,9 @@ def _render_workbench(cycle: int | None = None, interval: float | None = None) -
         c.print(wb_table)
         c.print(
             _panel(
-                "[dim]💡 提示:[/dim] [cyan]workspace research --open <ID>[/] 查看详情  ·  "
-                "[cyan]workspace research --publish <ID> --style brief[/] 发布报告  ·  "
-                "[cyan]workspace research --dossier <ID>[/] 查看关系",
+                "[dim]💡 提示:[/dim] [cyan]cockpit research --open <ID>[/] 查看详情  ·  "
+                "[cyan]cockpit research --publish <ID> --style brief[/] 发布报告  ·  "
+                "[cyan]cockpit research --dossier <ID>[/] 查看关系",
                 "dim",
             )
         )
@@ -155,24 +155,24 @@ def _render_workbench(cycle: int | None = None, interval: float | None = None) -
         c.print(
             _panel(
                 "[dim]📭 工作台空空如也 — 开始你的第一个研究：[/dim]\n"
-                '[cyan]workspace research "你的主题"[/]  或  [cyan]workspace import <路径|URL>[/]  或  [cyan]workspace demo[/]',
+                '[cyan]cockpit research "你的主题"[/]  或  [cyan]cockpit import <路径|URL>[/]  或  [cyan]cockpit demo[/]',
                 "yellow",
             )
         )
     recs: list[str] = []
     if active_count == 0:
-        recs.append('[cyan]workspace research "你的主题"[/] — 发起第一个研究')
-        recs.append("[cyan]workspace import ~/Desktop/note.md[/] — 从材料导入")
-        recs.append("[cyan]workspace demo[/] — 快速体验完整旅程")
+        recs.append('[cyan]cockpit research "你的主题"[/] — 发起第一个研究')
+        recs.append("[cyan]cockpit import ~/Desktop/note.md[/] — 从材料导入")
+        recs.append("[cyan]cockpit demo[/] — 快速体验完整旅程")
     elif active_count == 1 and recent:
         latest = recent[0]
-        recs.append(f"[cyan]workspace research --open {latest['id']}[/] — 继续'{latest['topic']}'")
-        recs.append(f'[cyan]workspace research --ask {latest["id"]} "追问"[/] — 深入挖掘')
-        recs.append(f"[cyan]workspace research --publish {latest['id']} --style brief[/] — 发布为报告")
+        recs.append(f"[cyan]cockpit research --open {latest['id']}[/] — 继续'{latest['topic']}'")
+        recs.append(f'[cyan]cockpit research --ask {latest["id"]} "追问"[/] — 深入挖掘')
+        recs.append(f"[cyan]cockpit research --publish {latest['id']} --style brief[/] — 发布为报告")
     else:
-        recs.append("[cyan]workspace research --list[/] — 浏览所有活跃研究")
-        recs.append("[cyan]workspace daily[/] — 今日研究简报")
-        recs.append("[cyan]workspace research --audit[/] — 治理审计")
+        recs.append("[cyan]cockpit research --list[/] — 浏览所有活跃研究")
+        recs.append("[cyan]cockpit daily[/] — 今日研究简报")
+        recs.append("[cyan]cockpit research --audit[/] — 治理审计")
     if healthy_count < total_services:
         recs.append("[yellow]⚠️ 部分服务离线 — 检查系统状态[/yellow]")
     c.print(_panel("[bold]🎯 推荐操作[/bold]\n" + "\n".join(f"  {r}" for r in recs), "cyan"))
@@ -447,17 +447,17 @@ def cmd_demo(_: argparse.Namespace) -> int:
             f"[bold]这就是 workspace 的产品逻辑：[/bold]\n"
             "  输入 → 研究对象 → 持续追问 → 发布 → 复盘\n\n"
             "[bold cyan]现在就开始用：[/bold cyan]\n"
-            '  · `workspace research "你的研究主题"` — 发起全新研究\n'
-            "  · `workspace import 文章.md` — 从现有材料导入\n"
-            "  · `workspace dashboard` — 在 Web 中浏览研究\n"
-            "  · `workspace daily` — 每日研究简报",
+            '  · `cockpit research "你的研究主题"` — 发起全新研究\n'
+            "  · `cockpit import 文章.md` — 从现有材料导入\n"
+            "  · `cockpit dashboard` — 在 Web 中浏览研究\n"
+            "  · `cockpit daily` — 每日研究简报",
             "green",
         )
     )
     c.print("[dim]演示完成。试试以下命令继续探索：[/dim]")
-    c.print("[dim]  · [cyan]workspace status[/] — 打开工作台[/dim]")
-    c.print("[dim]  · [cyan]workspace daily[/] — 今日站会[/dim]")
-    c.print('[dim]  · [cyan]workspace research "你的主题"[/] — 发起真研究[/dim]')
+    c.print("[dim]  · [cyan]cockpit status[/] — 打开工作台[/dim]")
+    c.print("[dim]  · [cyan]cockpit daily[/] — 今日站会[/dim]")
+    c.print('[dim]  · [cyan]cockpit research "你的主题"[/] — 发起真研究[/dim]')
     return 0
 
 
@@ -469,9 +469,9 @@ def cmd_help(_: argparse.Namespace) -> int:
             "  workspace 是一个研究对象管理系统。你输入内容 → 形成研究对象 → "
             "持续追问 → 发布为产物 → 复盘回顾。一切都有记忆，一切都可追溯。\n\n"
             "[bold]🚀 快速开始[/bold]\n"
-            "  [cyan]workspace demo[/]           — 5 分钟体验完整闭环\n"
-            "  [cyan]workspace status[/]          — 打开工作台\n"
-            '  [cyan]workspace research "主题"[/] — 发起你的第一个研究\n\n'
+            "  [cyan]cockpit demo[/]           — 5 分钟体验完整闭环\n"
+            "  [cyan]cockpit status[/]          — 打开工作台\n"
+            '  [cyan]cockpit research "主题"[/] — 发起你的第一个研究\n\n'
             "[bold]📋 所有命令[/bold]\n"
             "  [cyan]research[/]      深度研究（发起/查看/追问/发布/归档）\n"
             "  [cyan]import[/]        从外部导入（文件/URL）\n"
@@ -487,11 +487,11 @@ def cmd_help(_: argparse.Namespace) -> int:
             "[bold]🔄 完整用户旅程[/bold]\n"
             "  import → research → open → ask → publish → dossier → timeline → daily\n\n"
             "[bold]💡 最佳实践[/bold]\n"
-            "  · 新用户：[cyan]workspace demo[/] 体验全流程\n"
-            "  · 日常：[cyan]workspace daily[/] 查看今日研究\n"
-            "  · 深入：[cyan]workspace research --dossier <ID>[/] 看关系网络\n"
-            "  · 发布：[cyan]workspace research --publish <ID> --style brief[/]\n"
-            "  · 治理：[cyan]workspace governance calibrate[/] 系统健康评分",
+            "  · 新用户：[cyan]cockpit demo[/] 体验全流程\n"
+            "  · 日常：[cyan]cockpit daily[/] 查看今日研究\n"
+            "  · 深入：[cyan]cockpit research --dossier <ID>[/] 看关系网络\n"
+            "  · 发布：[cyan]cockpit research --publish <ID> --style brief[/]\n"
+            "  · 治理：[cyan]cockpit governance calibrate[/] 系统健康评分",
             "cyan",
         )
     )
@@ -544,9 +544,9 @@ def cmd_daily(args: argparse.Namespace) -> int:
                 f"[bold cyan]📅 {date_str} 今日站会[/]\n\n"
                 f"[dim]📭 过去 {args.days} 天没有新研究。[/dim]\n\n"
                 "[bold]🎯 现在可以：[/bold]\n"
-                '  [cyan]workspace research "你的主题"[/] — 发起新研究\n'
-                "  [cyan]workspace import ~/Desktop/note.md[/] — 导入材料\n"
-                "  [cyan]workspace demo[/] — 快速体验",
+                '  [cyan]cockpit research "你的主题"[/] — 发起新研究\n'
+                "  [cyan]cockpit import ~/Desktop/note.md[/] — 导入材料\n"
+                "  [cyan]cockpit demo[/] — 快速体验",
                 "yellow",
             )
         )
@@ -646,12 +646,12 @@ def cmd_daily(args: argparse.Namespace) -> int:
     no_fup = [r for r in unpub if not r.get("follow_ups")]
     recs = []
     if no_fup:
-        recs.append(f'[cyan]workspace research --ask {no_fup[0]["id"]} "追问"[/] — 深入尚未追问的研究')
+        recs.append(f'[cyan]cockpit research --ask {no_fup[0]["id"]} "追问"[/] — 深入尚未追问的研究')
     if unpub:
-        recs.append(f"[cyan]workspace research --publish {unpub[0]['id']} --style brief[/] — 发布重点研究")
-        recs.append(f"[cyan]workspace research --dossier {unpub[0]['id']}[/] — 查看研究关系网")
-    recs.append("[cyan]workspace research --audit[/] — 检查待治理对象")
-    recs.append(f"[cyan]workspace research --open {recent[0]['id']}[/] — 继续最近研究")
+        recs.append(f"[cyan]cockpit research --publish {unpub[0]['id']} --style brief[/] — 发布重点研究")
+        recs.append(f"[cyan]cockpit research --dossier {unpub[0]['id']}[/] — 查看研究关系网")
+    recs.append("[cyan]cockpit research --audit[/] — 检查待治理对象")
+    recs.append(f"[cyan]cockpit research --open {recent[0]['id']}[/] — 继续最近研究")
     c.print(_panel("[bold]🎯 优先级推荐[/bold]\n" + "\n".join(f"  {r}" for r in recs), "cyan"))
     return 0
 
@@ -668,8 +668,8 @@ def cmd_dashboard(args: argparse.Namespace) -> int:
 
     def _print_dashboard_fixes() -> None:
         c.print("[yellow]试试:[/]")
-        c.print("  [cyan]workspace status[/]  — 检查服务状态")
-        c.print("  [cyan]workspace demo[/]    — 在 CLI 中体验")
+        c.print("  [cyan]cockpit status[/]  — 检查服务状态")
+        c.print("  [cyan]cockpit demo[/]    — 在 CLI 中体验")
         c.print(
             "  [cyan]cd agora && .venv/bin/python -m uvicorn agora.web.app:app --host 127.0.0.1 --port 8765[/]  — 手动启动"
         )

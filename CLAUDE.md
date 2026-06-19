@@ -9,7 +9,7 @@
 cockpit 是 eCOS v5 7 层架构的 **L3 入口层**。所有用户和 AI Agent 通过 cockpit 与系统交互。
 
 **核心职责**：
-1. **CLI 驾驶舱** — `cockpit`/`workspace` 26 个子命令
+1. **CLI 驾驶舱** — `cockpit`/`workspace` 30+ 个子命令
 2. **MCP Server** — 38 个工具（主 MCP 21 + Agent Runtime 2 + L0 工具 8 + 遗留 Runtime 7）暴露给 Agora Mesh
 3. **Web Dashboard** — FastAPI + 基础认证 (:8090)
 4. **Agent Runtime 桥接** — 通过 runtime 调度 executor 引擎
@@ -26,18 +26,19 @@ cockpit 是 eCOS v5 7 层架构的 **L3 入口层**。所有用户和 AI Agent �
   ▼
 cockpit CLI ("cockpit research ...")
   │
-  ├─► cli.py (argparse 路由 → 23 子命令)
+  ├─► cli.py (argparse 路由 → 30+ 子命令)
   │     │
-  │     ├─► commands/research.py (1257 行, 最大模块)
+  │     ├─► commands/research.py (最大模块)
   │     │     └─► storage.py (SQLite IDataAccess Protocol)
   │     │
   │     ├─► commands/status.py (健康概览)
   │     ├─► commands/contracts.py (契约管理)
+  │     ├─► commands/iterate.py (C2G 双擎编排流)
   │     ├─► commands/quickstart.py (环境检测)
   │     └─► commands/bos.py (BOS URI 操作, 依赖 agora)
   │
   └─► cockpit-mcp (stdio MCP Server)
-        └─► 20 tools → Agora Mesh
+        └─► 37+ tools → Agora Mesh
 ```
 
 ### 核心模块
@@ -64,7 +65,7 @@ cockpit CLI ("cockpit research ...")
 ```bash
 cd projects/cockpit
 
-# 测试 (567 tests)
+# 测试 (575 tests)
 uv run pytest src/cockpit/tests/ -q
 
 # 单个测试
@@ -95,6 +96,8 @@ uv sync
 | `cockpit code` | 代码分析 |
 | `cockpit workflow` | 工作流管理 |
 | `cockpit scenario` | 场景联动与家庭中枢驱动 (直连 SQLite) |
+| `cockpit iterate` | C2G 双擎编排流 (非 TTY 自动回退标准流) |
+| `cockpit domains` | 列出 L4 所有域及其状态 |
 | `cockpit bos` | BOS URI 操作 |
 | `cockpit events` | 事件流 |
 | `cockpit import` | 数据导入 |
@@ -110,4 +113,6 @@ uv sync
 3. **Web Dashboard 有可选 Bearer 认证** — `cockpit dashboard_server.py` 中的 `AUTH_TOKEN` 环境变量控制
 4. **storage.py 使用 IDataAccess Protocol** — 修改存储层时需更新 `get_data_access()` 实现
 5. **Python 3.13+** — 与 kairon 一致
-6. **hatchling 构建** — 与 kairon/agora 一致，与 runtime 的 setuptools 不同
+6. **hatchling 构建** — 与 kairon/agora/runtime 一致
+7. **`workspace` 已收敛为 `cockpit`** — 命令提示统一使用 `cockpit ...`
+8. **L4 域注册 8 域** — cards / vault / personal / public / creative / family / workdocs / opc

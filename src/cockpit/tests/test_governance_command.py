@@ -114,3 +114,75 @@ def test_cmd_governance_ingress_debt_routes_to_omo_governance(
         "--ingress-plane",
         "projects/aetherforge",
     ]
+
+
+def test_cmd_governance_verify_runs_governance_and_task_policy_chain(
+    monkeypatch, tmp_path: Path
+) -> None:
+    recorded: list[list[str]] = []
+
+    def fake_run(cmd, cwd):
+        recorded.append(cmd)
+        assert cwd == str(tmp_path)
+
+        class _Result:
+            returncode = 0
+
+        return _Result()
+
+    monkeypatch.setattr(governance, "resolve_workspace_root", lambda: tmp_path)
+    monkeypatch.setattr(governance.subprocess, "run", fake_run)
+
+    rc = governance.cmd_governance(argparse.Namespace(subcommand="verify", extra_args=[]))
+
+    assert rc == 0
+    omo_dir = str(tmp_path / "projects" / "omo")
+    assert recorded == [
+        [
+            "uv",
+            "run",
+            "--directory",
+            omo_dir,
+            "python",
+            "-W",
+            "ignore::DeprecationWarning",
+            "-m",
+            "omo.cli",
+            "governance",
+            "surfaces",
+            "--workspace-root",
+            "../..",
+            "--json",
+        ],
+        [
+            "uv",
+            "run",
+            "--directory",
+            omo_dir,
+            "python",
+            "-W",
+            "ignore::DeprecationWarning",
+            "-m",
+            "omo.cli",
+            "lint",
+            "ingress-registry",
+            "--workspace-root",
+            "../..",
+        ],
+        [
+            "uv",
+            "run",
+            "--directory",
+            omo_dir,
+            "python",
+            "-W",
+            "ignore::DeprecationWarning",
+            "-m",
+            "omo.cli",
+            "lint",
+            "task-policy",
+            "--all",
+            "--workspace-root",
+            "../..",
+        ],
+    ]
