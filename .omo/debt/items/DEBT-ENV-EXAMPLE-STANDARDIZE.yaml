@@ -4,14 +4,18 @@ severity: low
 source: code-review-20260619
 domain: workspace
 scope: workspace
-status: deferred
-lifecycle_state: deferred
+status: closed
+lifecycle_state: closed
 gate_level: none
 description: >
-  family-hub 有 .env.example, 其他项目缺失.
-  应统一所有有环境变量的项目的 .env.example 格式.
+  family-hub/observability 有 .env.example, cockpit/runtime 已补充.
+  其他项目 (agora/omo/ecos/metaos) 无 env vars 或使用内部配置.
 registered_at: '2026-06-19T13:00:00Z'
+closed_at: '2026-06-19T21:00:00Z'
+resolution_evidence: >
+  Added .env.example to cockpit and runtime. family-hub and observability already had them.
+  Other projects (agora/omo/ecos/metaos) don't expose user-facing env vars.
 remediation: |
-  1. 审计所有项目的环境变量使用
-  2. 为 observability/family-hub 等创建 .env.example
-  3. 统一注释格式
+  1. ~~审计所有项目的环境变量使用~~ ✅
+  2. ~~为 cockpit/runtime 创建 .env.example~~ ✅
+  3. ~~统一注释格式~~ ✅
