@@ -34,7 +34,7 @@ make info                    # 项目信息摘要
 | MCP | `mcp_server.py` | FastMCP stdio (7 tools) |
 | Runtime Serve | `runtime_serve.py` | BOS URI 派发 (4 actions) |
 | Event Bus | `bus_consumer.py` | Agora SSE 事件消费 + SQLite 持久化 |
-| KEI | `kei.py` + `kei_sandbox.py` | 沙箱权限 + audit hook |
+| KEI | `kei.py` + `kei_sandbox.py` | 沙箱权限 + audit hook；FS mutation hooks (`os.remove`/`os.unlink`/`os.rename`/`os.mkdir`/`os.rmdir`) 受 `allow_write` 前缀约束，`os.rename` 同时校验 source 与 destination |
 | Cron Service | `cron_service/` (13 files) | FastAPI + SQLite 调度 |
 | Executor | `executor/` (100+ files) | AgentRuntime + DAG DSL + Swarm |
 | Tools | `tools/` (6 files) | MCP 工具注册 (5 工具组) |

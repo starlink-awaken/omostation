@@ -9,6 +9,9 @@ permissions:
   filesystem:
     allow_read:
       - "/"
+    # allow_write 同时控制创建/删除/重命名等 FS mutation。
+    # KEI sandbox 会拦截 os.remove/os.unlink/os.mkdir/os.rmdir/os.rename，
+    # 仅当目标路径（rename 时源与目标）全部落在 allow_write 前缀下才放行。
     allow_write:
       - "/dev"
       - "/tmp"

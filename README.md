@@ -23,7 +23,7 @@ L0 协议    ── ecos
 |--------|------|------|
 | **Matrix** | `runtime matrix` | 服务注册表，管理 L0-I0-L1-L2 全层服务 |
 | **Scheduler** | `ecos-matrix-scheduler` | 持续健康监控 (15s 间隔) + 自动愈合 |
-| **KEI Sandbox** | `kei.py` / `kei_sandbox.py` | 运行时沙箱，`sys.addaudithook` 拦截文件/网络/子进程 |
+| **KEI Sandbox** | `kei.py` / `kei_sandbox.py` | 运行时沙箱，`sys.addaudithook` 拦截文件/网络/子进程；新增 FS mutation hook 拦截 `os.remove` / `os.rename` / `os.mkdir` / `os.rmdir` |
 | **MCP Server** | `mcp_server.py` | FastMCP stdio 模式，7 个核心工具 |
 | **Cron Service** | `cron_service/` | FastAPI HTTP 调度服务，SQLite 持久化 |
 | **Executor** | `executor/` | 多 Agent 编排引擎 (DAG + DSL + Swarm) |
