@@ -1,32 +1,24 @@
-generated_at: '2026-06-19T14:45:00Z'
+generated_at: '2026-06-19T15:45:00Z'
 debt_metrics:
-  debt_health: 75.8
+  debt_health: 87.9
   classification_entropy: 0.0
-  state_entropy: 0.75
+  state_entropy: 0.54
   pointer_entropy: 0.0
   time_entropy: 0.0
-  backlog_pressure: 2
+  backlog_pressure: 0
   coupling_load: 2.0
-watchlist_item_ids:
-- DEBT-KAIRON-TYPE-SAFETY
-- DEBT-OMO-MODULE-BLOAT
-- DEBT-GBRAIN-OPERATIONS-TS
+watchlist_item_ids: []
 gate_item_ids: []
 overdue_review_count: 0
 overdue_review_item_ids: []
-next_review_queue:
-- DEBT-DEPRECATED-CLEANUP
-- DEBT-ENV-EXAMPLE-STANDARDIZE
-- DEBT-FUTURE-ANNOTATIONS
+next_review_queue: []
 summary:
   total: 33
-  closed: 25
-  deferred: 3
-  partially_resolved: 4
-  scheduled: 1
+  closed: 29
+  deferred: 4
   by_severity:
     critical: 1
-    high: 7
-    medium: 16
-    low: 9
-  note: '2026-06-19: 25 closed (CI-MYPY-STRICT just closed), 3 deferred (low priority), 4 partially_resolved, 1 scheduled'
+    high: 9
+    medium: 17
+    low: 6
+  note: '2026-06-19 session: 29 closed (RUNTIME-BUILD-SYSTEM just closed), 4 deferred (low/medium priority). 0 open items.'
