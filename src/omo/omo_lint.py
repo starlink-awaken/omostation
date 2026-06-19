@@ -26,9 +26,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-import yaml
-
 from .omo_paths import PROJECTS_DIR, WORKSPACE_ROOT
+from .omo_task_policy import OPC_P6_SELF_EVOLUTION_POLICY, check_task_policy
 
 OMO_SRC = Path(__file__).resolve().parent
 
@@ -573,36 +572,16 @@ def cmd_lint_direct_omo_io(paths: list[str] | None = None, *, diff: bool = False
     return result.returncode
 
 
-def _check_self_evolution_approval(planned_dir: Path, active_dir: Path) -> list[str]:
-    issues: list[str] = []
-    for path in sorted(planned_dir.glob("OPC-P6-SELF-EVOLUTION-*.yaml")):
-        payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        if payload.get("approval_required") is not True:
-            issues.append(f"{path.name}: approval_required must be true")
-        if payload.get("human_approval_required") is not True:
-            issues.append(f"{path.name}: human_approval_required must be true")
-        if payload.get("approval_state") != "awaiting_human":
-            issues.append(f"{path.name}: approval_state must be 'awaiting_human'")
-        if payload.get("status") != "planned":
-            issues.append(f"{path.name}: status must remain planned")
-
-    leaked = sorted(active_dir.glob("OPC-P6-SELF-EVOLUTION-*.yaml"))
-    for path in leaked:
-        issues.append(f"{path.name}: self-evolution task leaked into active/")
-    return issues
-
-
 def cmd_lint_self_evolution_approval(workspace_root: str = ".") -> int:
     root = Path(workspace_root).resolve()
     planned_dir = root / ".omo" / "tasks" / "planned"
-    active_dir = root / ".omo" / "tasks" / "active"
-    issues = _check_self_evolution_approval(planned_dir, active_dir)
+    issues = check_task_policy(root, OPC_P6_SELF_EVOLUTION_POLICY)
     if issues:
         print(f"❌ omo lint self-evolution-approval fail: {len(issues)} issue(s)")
         for issue in issues:
             print(f"  - {issue}")
         return 1
-    count = len(list(planned_dir.glob("OPC-P6-SELF-EVOLUTION-*.yaml"))) if planned_dir.exists() else 0
+    count = len(list(planned_dir.glob(OPC_P6_SELF_EVOLUTION_POLICY.planned_glob))) if planned_dir.exists() else 0
     print(f"✅ omo lint self-evolution-approval pass: planned={count} active=0")
     return 0
 
