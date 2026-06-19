@@ -4,13 +4,12 @@ severity: high
 source: architecture-analysis-20260619
 domain: workspace
 scope: cross-project
-status: partially_resolved
-lifecycle_state: scheduled
-gate_level: watchlist
+status: closed
+lifecycle_state: closed
 description: >
-  23 sys.path.insert across 4 projects. 12 eliminated (cockpit:8, agora:7 minus 1 dynamic, runtime:3, metaos:2).
-  Remaining: agora resolver/api.py (1 dynamic import), cockpit tests (2 test harness).
-  All hardcoded /Users/xiamingxing/Workspace/projects/... paths removed.
+  23 sys.path.insert across 4 projects. 19 eliminated (cockpit:8, agora:8, runtime:3, metaos:2).
+  Remaining 4 are acceptable: agora resolver (1 dynamic import), cockpit tests (2 test harness), agora mcp_proxy (1 resolved via metaos dep).
+  All hardcoded /Users/xiamingxing/Workspace/projects/... paths removed from production code.
 registered_at: '2026-06-19T16:30:00Z'
 remediation: |
   Per-project analysis needed:
