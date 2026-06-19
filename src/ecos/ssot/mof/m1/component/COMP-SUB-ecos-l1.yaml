@@ -1,0 +1,11 @@
+id: COMP-SUB-ecos-l1
+type: Component
+m3_parent: StructuralElement.Component
+name: ecos-l1
+description: ecos 子模块 — l1
+project: ecos
+parent: COMP-WS-ecos
+layer: L0
+status: active
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/l1/

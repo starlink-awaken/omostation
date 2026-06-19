@@ -1,0 +1,11 @@
+id: COMP-SUB-omo-omo_alert
+type: Component
+m3_parent: StructuralElement.Component
+name: omo-omo_alert
+description: omo 子模块 — omo_alert
+project: omo
+parent: COMP-WS-omo
+layer: L2
+status: active
+model_driven_refs:
+  source_file: projects/omo/src/omo/omo_alert.py

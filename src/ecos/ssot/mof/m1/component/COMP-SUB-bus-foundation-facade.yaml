@@ -1,0 +1,11 @@
+id: COMP-SUB-bus-foundation-facade
+type: Component
+m3_parent: StructuralElement.Component
+name: bus-foundation-facade
+description: bus-foundation 子模块 — facade
+project: bus-foundation
+parent: COMP-WS-bus-foundation
+layer: X
+status: active
+model_driven_refs:
+  source_file: projects/bus-foundation/src/bus_foundation/facade/

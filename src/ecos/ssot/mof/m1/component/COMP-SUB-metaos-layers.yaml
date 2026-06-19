@@ -1,0 +1,11 @@
+id: COMP-SUB-metaos-layers
+type: Component
+m3_parent: StructuralElement.Component
+name: metaos-layers
+description: metaos 子模块 — layers
+project: metaos
+parent: COMP-WS-metaos
+layer: L2
+status: active
+model_driven_refs:
+  source_file: projects/metaos/src/metaos/layers/

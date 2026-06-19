@@ -1,13 +1,11 @@
 id: COMP-SUB-cockpit-web
 type: Component
-subtype: SubPackage
-name: web
-description: 'cockpit 子包: web'
-status: active
-domain: infra
-created: '2026-06-06'
-version: 1.0.0
+m3_parent: StructuralElement.Component
+name: cockpit-web
+description: cockpit 子模块 — web
+project: cockpit
+parent: COMP-WS-cockpit
 layer: L3
-properties:
-  layer: L3
-  runtime: active
+status: active
+model_driven_refs:
+  source_file: projects/cockpit/src/cockpit/web/

@@ -1,0 +1,11 @@
+id: COMP-SUB-bus-foundation-backends
+type: Component
+m3_parent: StructuralElement.Component
+name: bus-foundation-backends
+description: bus-foundation 子模块 — backends
+project: bus-foundation
+parent: COMP-WS-bus-foundation
+layer: X
+status: active
+model_driven_refs:
+  source_file: projects/bus-foundation/src/bus_foundation/backends/

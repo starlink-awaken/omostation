@@ -1,0 +1,11 @@
+id: COMP-SUB-aetherforge-packages-mesh
+type: Component
+m3_parent: StructuralElement.Component
+name: mesh
+description: aetherforge monorepo 子包 — mesh
+project: aetherforge
+parent: COMP-WS-aetherforge
+layer: X
+status: active
+model_driven_refs:
+  source_file: projects/aetherforge/packages/mesh/pyproject.toml

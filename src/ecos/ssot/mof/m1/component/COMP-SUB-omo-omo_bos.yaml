@@ -1,0 +1,11 @@
+id: COMP-SUB-omo-omo_bos
+type: Component
+m3_parent: StructuralElement.Component
+name: omo-omo_bos
+description: omo 子模块 — omo_bos
+project: omo
+parent: COMP-WS-omo
+layer: L2
+status: active
+model_driven_refs:
+  source_file: projects/omo/src/omo/omo_bos.py

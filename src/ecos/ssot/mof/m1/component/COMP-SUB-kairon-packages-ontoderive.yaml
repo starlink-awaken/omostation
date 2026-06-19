@@ -1,0 +1,11 @@
+id: COMP-SUB-kairon-packages-ontoderive
+type: Component
+m3_parent: StructuralElement.Component
+name: ontoderive
+description: kairon monorepo 子包 — ontoderive
+project: kairon
+parent: COMP-WS-kairon
+layer: L2
+status: active
+model_driven_refs:
+  source_file: projects/kairon/packages/ontoderive/pyproject.toml

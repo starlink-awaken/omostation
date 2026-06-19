@@ -1,0 +1,11 @@
+id: COMP-SUB-cockpit-governance
+type: Component
+m3_parent: StructuralElement.Component
+name: cockpit-governance
+description: cockpit 子模块 — governance
+project: cockpit
+parent: COMP-WS-cockpit
+layer: L3
+status: active
+model_driven_refs:
+  source_file: projects/cockpit/src/cockpit/governance/

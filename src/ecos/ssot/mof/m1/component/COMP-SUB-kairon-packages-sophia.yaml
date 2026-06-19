@@ -1,0 +1,11 @@
+id: COMP-SUB-kairon-packages-sophia
+type: Component
+m3_parent: StructuralElement.Component
+name: sophia
+description: kairon monorepo 子包 — sophia
+project: kairon
+parent: COMP-WS-kairon
+layer: L2
+status: active
+model_driven_refs:
+  source_file: projects/kairon/packages/sophia/pyproject.toml

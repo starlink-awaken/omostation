@@ -1,0 +1,11 @@
+id: COMP-SUB-aetherforge-packages-swarm
+type: Component
+m3_parent: StructuralElement.Component
+name: swarm
+description: aetherforge monorepo 子包 — swarm
+project: aetherforge
+parent: COMP-WS-aetherforge
+layer: X
+status: active
+model_driven_refs:
+  source_file: projects/aetherforge/packages/swarm/pyproject.toml

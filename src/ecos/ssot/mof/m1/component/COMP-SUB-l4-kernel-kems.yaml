@@ -1,0 +1,11 @@
+id: COMP-SUB-l4-kernel-kems
+type: Component
+m3_parent: StructuralElement.Component
+name: l4-kernel-kems
+description: l4-kernel 子模块 — kems
+project: l4-kernel
+parent: COMP-WS-l4-kernel
+layer: L4
+status: active
+model_driven_refs:
+  source_file: projects/l4-kernel/src/l4_kernel/kems.py

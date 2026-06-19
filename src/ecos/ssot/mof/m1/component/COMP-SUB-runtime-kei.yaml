@@ -1,0 +1,11 @@
+id: COMP-SUB-runtime-kei
+type: Component
+m3_parent: StructuralElement.Component
+name: runtime-kei
+description: runtime 子模块 — kei
+project: runtime
+parent: COMP-WS-runtime
+layer: L1
+status: active
+model_driven_refs:
+  source_file: projects/runtime/src/runtime/kei/

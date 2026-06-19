@@ -1,0 +1,11 @@
+id: COMP-SUB-runtime-cron_service
+type: Component
+m3_parent: StructuralElement.Component
+name: runtime-cron_service
+description: runtime 子模块 — cron_service
+project: runtime
+parent: COMP-WS-runtime
+layer: L1
+status: active
+model_driven_refs:
+  source_file: projects/runtime/src/runtime/cron_service/

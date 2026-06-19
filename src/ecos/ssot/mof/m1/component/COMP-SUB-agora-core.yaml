@@ -1,0 +1,11 @@
+id: COMP-SUB-agora-core
+type: Component
+m3_parent: StructuralElement.Component
+name: agora-core
+description: agora 子模块 — core
+project: agora
+parent: COMP-WS-agora
+layer: I0
+status: active
+model_driven_refs:
+  source_file: projects/agora/src/agora/core/

@@ -1,0 +1,11 @@
+id: COMP-SUB-kairon-packages-codeanalyze
+type: Component
+m3_parent: StructuralElement.Component
+name: codeanalyze
+description: kairon monorepo 子包 — codeanalyze
+project: kairon
+parent: COMP-WS-kairon
+layer: L2
+status: active
+model_driven_refs:
+  source_file: projects/kairon/packages/codeanalyze/pyproject.toml

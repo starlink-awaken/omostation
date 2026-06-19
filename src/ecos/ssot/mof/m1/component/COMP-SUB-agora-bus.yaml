@@ -1,0 +1,11 @@
+id: COMP-SUB-agora-bus
+type: Component
+m3_parent: StructuralElement.Component
+name: agora-bus
+description: agora 子模块 — bus
+project: agora
+parent: COMP-WS-agora
+layer: I0
+status: active
+model_driven_refs:
+  source_file: projects/agora/src/agora/bus/

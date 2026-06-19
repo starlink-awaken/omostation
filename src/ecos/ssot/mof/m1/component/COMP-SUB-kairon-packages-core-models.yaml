@@ -1,0 +1,11 @@
+id: COMP-SUB-kairon-packages-core-models
+type: Component
+m3_parent: StructuralElement.Component
+name: core-models
+description: kairon monorepo 子包 — core-models
+project: kairon
+parent: COMP-WS-kairon
+layer: L2
+status: active
+model_driven_refs:
+  source_file: projects/kairon/packages/core-models/pyproject.toml

@@ -1,0 +1,11 @@
+id: COMP-SUB-kairon-packages-iris
+type: Component
+m3_parent: StructuralElement.Component
+name: iris
+description: kairon monorepo 子包 — iris
+project: kairon
+parent: COMP-WS-kairon
+layer: L2
+status: active
+model_driven_refs:
+  source_file: projects/kairon/packages/iris/pyproject.toml

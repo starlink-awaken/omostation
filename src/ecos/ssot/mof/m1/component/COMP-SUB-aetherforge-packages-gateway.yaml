@@ -1,0 +1,11 @@
+id: COMP-SUB-aetherforge-packages-gateway
+type: Component
+m3_parent: StructuralElement.Component
+name: gateway
+description: aetherforge monorepo 子包 — gateway
+project: aetherforge
+parent: COMP-WS-aetherforge
+layer: X
+status: active
+model_driven_refs:
+  source_file: projects/aetherforge/packages/gateway/pyproject.toml

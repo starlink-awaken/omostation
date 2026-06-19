@@ -1,0 +1,11 @@
+id: COMP-SUB-omo-categories
+type: Component
+m3_parent: StructuralElement.Component
+name: omo-categories
+description: omo 子模块 — categories
+project: omo
+parent: COMP-WS-omo
+layer: L2
+status: active
+model_driven_refs:
+  source_file: projects/omo/src/omo/categories.py

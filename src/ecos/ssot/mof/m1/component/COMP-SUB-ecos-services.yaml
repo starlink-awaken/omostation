@@ -1,0 +1,11 @@
+id: COMP-SUB-ecos-services
+type: Component
+m3_parent: StructuralElement.Component
+name: ecos-services
+description: ecos 子模块 — services
+project: ecos
+parent: COMP-WS-ecos
+layer: L0
+status: active
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/services/

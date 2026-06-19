@@ -1,0 +1,11 @@
+id: COMP-SUB-kairon-packages-eidos
+type: Component
+m3_parent: StructuralElement.Component
+name: eidos
+description: kairon monorepo 子包 — eidos
+project: kairon
+parent: COMP-WS-kairon
+layer: L2
+status: active
+model_driven_refs:
+  source_file: projects/kairon/packages/eidos/pyproject.toml

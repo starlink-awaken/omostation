@@ -1,0 +1,11 @@
+id: COMP-SUB-kairon-packages-kairon-pipeline
+type: Component
+m3_parent: StructuralElement.Component
+name: kairon-pipeline
+description: kairon monorepo 子包 — kairon-pipeline
+project: kairon
+parent: COMP-WS-kairon
+layer: L2
+status: active
+model_driven_refs:
+  source_file: projects/kairon/packages/kairon-pipeline/pyproject.toml

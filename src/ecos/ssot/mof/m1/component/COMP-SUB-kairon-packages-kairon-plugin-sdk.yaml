@@ -1,0 +1,11 @@
+id: COMP-SUB-kairon-packages-kairon-plugin-sdk
+type: Component
+m3_parent: StructuralElement.Component
+name: kairon-plugin-sdk
+description: kairon monorepo 子包 — kairon-plugin-sdk
+project: kairon
+parent: COMP-WS-kairon
+layer: L2
+status: active
+model_driven_refs:
+  source_file: projects/kairon/packages/kairon-plugin-sdk/pyproject.toml

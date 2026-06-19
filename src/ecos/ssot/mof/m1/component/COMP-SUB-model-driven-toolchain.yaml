@@ -1,0 +1,11 @@
+id: COMP-SUB-model-driven-toolchain
+type: Component
+m3_parent: StructuralElement.Component
+name: model-driven-toolchain
+description: model-driven 子模块 — toolchain
+project: model-driven
+parent: COMP-WS-model-driven
+layer: X
+status: active
+model_driven_refs:
+  source_file: projects/model-driven/src/model_driven/toolchain/
