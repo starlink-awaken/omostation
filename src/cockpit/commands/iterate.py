@@ -24,11 +24,17 @@ def cmd_iterate(args) -> int:
     omo_dir = workspace_root / "projects" / "omo"
 
     # [C2G v2] 解法二: 架构双轨制与“免签快车道”
-    is_fast_track = Confirm.ask(
-        "\n[bold magenta]❓ 认知复杂度分级 (Cognitive Triage):[/]\n"
-        "这是一项复杂度极低的微观任务吗？(选 y 将触发 Fast-Track 免签快车道，跳过沙箱与架构审查)",
-        default=False,
-    )
+    # 健壮性 (产品走查 v2 2026-06-19): 非交互环境 (脚本/CI/管道无 TTY) Confirm.ask 抛 EOFError,
+    # 降级默认走标准 C2G 流, 而非 traceback 崩溃, 让 iterate 可在自动化场景运行.
+    try:
+        is_fast_track = Confirm.ask(
+            "\n[bold magenta]❓ 认知复杂度分级 (Cognitive Triage):[/]\n"
+            "这是一项复杂度极低的微观任务吗？(选 y 将触发 Fast-Track 免签快车道，跳过沙箱与架构审查)",
+            default=False,
+        )
+    except EOFError:
+        console.print("\n[yellow]⚠️ 非交互环境 (无 TTY), 默认走标准 C2G 流 (非 Fast-Track)。[/]")
+        is_fast_track = False
 
     if is_fast_track:
         console.print("\n[bold yellow]► 🚀 触发 Mode B: Fast-Track 免签快车道[/]")
