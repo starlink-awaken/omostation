@@ -1,0 +1,14 @@
+id: MCPTOOL-GBRAIN-SEARCH
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: gbrain-search
+description: GBrain 搜索工具集 — 语义搜索 + 结构化查询
+project: gbrain
+component: COMP-WS-gbrain
+tools:
+  - search
+  - query
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/gbrain/src/core/operations.ts

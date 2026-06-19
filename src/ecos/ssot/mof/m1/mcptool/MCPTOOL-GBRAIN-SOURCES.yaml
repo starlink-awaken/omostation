@@ -1,0 +1,16 @@
+id: MCPTOOL-GBRAIN-SOURCES
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: gbrain-sources
+description: GBrain 数据源工具集 — 源添加/列表/删除/状态
+project: gbrain
+component: COMP-WS-gbrain
+tools:
+  - sources_add
+  - sources_list
+  - sources_remove
+  - sources_status
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/gbrain/src/core/operations.ts

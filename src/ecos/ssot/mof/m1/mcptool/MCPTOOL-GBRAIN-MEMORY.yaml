@@ -1,0 +1,16 @@
+id: MCPTOOL-GBRAIN-MEMORY
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: gbrain-memory
+description: GBrain 记忆工具集 — 事实提取/召回/遗忘/记忆树
+project: gbrain
+component: COMP-WS-gbrain
+tools:
+  - extract_facts
+  - recall
+  - forget_fact
+  - memory_tree
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/gbrain/src/core/operations.ts

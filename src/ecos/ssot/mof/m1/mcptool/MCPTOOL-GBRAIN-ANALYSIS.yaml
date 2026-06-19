@@ -1,0 +1,20 @@
+id: MCPTOOL-GBRAIN-ANALYSIS
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: gbrain-analysis
+description: GBrain 分析工具集 — 异常检测/专家发现/矛盾检测/轨迹分析
+project: gbrain
+component: COMP-WS-gbrain
+tools:
+  - find_orphans
+  - get_calibration_profile
+  - get_recent_salience
+  - find_anomalies
+  - find_experts
+  - find_contradictions
+  - find_trajectory
+  - get_recent_transcripts
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/gbrain/src/core/operations.ts

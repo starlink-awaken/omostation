@@ -1,0 +1,23 @@
+id: MCPTOOL-GBRAIN-JOBS
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: gbrain-jobs
+description: GBrain 任务工具集 — 任务提交/Agent/列表/取消/重试/进度/暂停/恢复/重放/消息
+project: gbrain
+component: COMP-WS-gbrain
+tools:
+  - submit_job
+  - submit_agent
+  - get_job
+  - list_jobs
+  - cancel_job
+  - retry_job
+  - get_job_progress
+  - pause_job
+  - resume_job
+  - replay_job
+  - send_job_message
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/gbrain/src/core/operations.ts

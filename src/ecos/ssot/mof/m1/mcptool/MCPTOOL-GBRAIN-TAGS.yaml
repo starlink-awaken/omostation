@@ -1,0 +1,15 @@
+id: MCPTOOL-GBRAIN-TAGS
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: gbrain-tags
+description: GBrain 标签工具集 — 添加/删除/获取标签
+project: gbrain
+component: COMP-WS-gbrain
+tools:
+  - add_tag
+  - remove_tag
+  - get_tags
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/gbrain/src/core/operations.ts

@@ -1,0 +1,32 @@
+id: MCPTOOL-GBRAIN-SYSTEM
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: gbrain-system
+description: GBrain 系统工具集 — 统计/健康/身份/诊断/版本/同步/时间线/文件
+project: gbrain
+component: COMP-WS-gbrain
+tools:
+  - get_stats
+  - get_health
+  - get_brain_identity
+  - run_doctor
+  - get_versions
+  - revert_version
+  - sync_brain
+  - add_timeline_entry
+  - get_timeline
+  - file_list
+  - file_upload
+  - file_url
+  - put_raw_data
+  - get_raw_data
+  - resolve_slugs
+  - get_chunks
+  - log_ingest
+  - get_ingest_log
+  - search_by_image
+  - whoami
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/gbrain/src/core/operations.ts

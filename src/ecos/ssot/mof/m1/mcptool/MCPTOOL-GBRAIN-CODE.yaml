@@ -1,0 +1,19 @@
+id: MCPTOOL-GBRAIN-CODE
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: gbrain-code
+description: GBrain 代码分析工具集 — 调用者/被调用/定义/引用/blast/flow
+project: gbrain
+component: COMP-WS-gbrain
+tools:
+  - code_callers
+  - code_callees
+  - code_def
+  - code_refs
+  - code_blast
+  - code_flow
+  - code_traversal_cache_clear
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/gbrain/src/core/operations.ts

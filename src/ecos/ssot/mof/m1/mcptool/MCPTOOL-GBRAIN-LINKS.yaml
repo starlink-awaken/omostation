@@ -1,0 +1,17 @@
+id: MCPTOOL-GBRAIN-LINKS
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: gbrain-links
+description: GBrain 链接工具集 — 链接管理 + 图遍历
+project: gbrain
+component: COMP-WS-gbrain
+tools:
+  - add_link
+  - remove_link
+  - get_links
+  - get_backlinks
+  - traverse_graph
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/gbrain/src/core/operations.ts

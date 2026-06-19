@@ -1,0 +1,18 @@
+id: MCPTOOL-GBRAIN-PAGES
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: gbrain-pages
+description: GBrain 页面管理工具集 — CRUD + 搜索 + 列表
+project: gbrain
+component: COMP-WS-gbrain
+tools:
+  - get_page
+  - put_page
+  - delete_page
+  - restore_page
+  - purge_deleted_pages
+  - list_pages
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/gbrain/src/core/operations.ts

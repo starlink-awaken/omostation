@@ -1,0 +1,17 @@
+id: MCPTOOL-GBRAIN-TAKES
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: gbrain-takes
+description: GBrain 观点工具集 — 观点列表/搜索/评分/校准/思考
+project: gbrain
+component: COMP-WS-gbrain
+tools:
+  - takes_list
+  - takes_search
+  - takes_scorecard
+  - takes_calibration
+  - think
+transport: stdio
+status: active
+model_driven_refs:
+  source_file: projects/gbrain/src/core/operations.ts
