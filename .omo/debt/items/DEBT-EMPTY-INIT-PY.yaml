@@ -4,8 +4,8 @@ severity: low
 source: architecture-scan-20260619
 domain: workspace
 scope: workspace
-status: open
-lifecycle_state: open
+status: closed
+lifecycle_state: closed
 gate_level: none
 description: >
   5 empty __init__.py files found across projects.
