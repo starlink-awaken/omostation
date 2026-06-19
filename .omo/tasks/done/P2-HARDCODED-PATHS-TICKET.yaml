@@ -1,7 +1,7 @@
 id: P2-HARDCODED-PATHS-TICKET
 title: Document and batch-fix ~25 hardcoded /Users/xiamingxing paths across active
   source
-status: review
+status: done
 priority: P2
 domain: opc
 signals:

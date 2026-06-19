@@ -100,10 +100,9 @@ goals:
   desc: 'Bet: http-mcp-convergence-optimization (Appetite: >  2 weeks)'
   progress: 80.0
   status: done
-  note: '核心收敛完成: 24→5 HTTP, 29/29 MCP stdio, unified auth done, 0 port conflicts. 剩余 test coverage + frontend 可独立 BET.'
-  tasks: []
   note: '核心收敛已完成 (24→5 HTTP, 29/29 MCP stdio). 剩余: test coverage 提升 + 前端现代化. 建议拆为独立小
     bet.'
+  tasks: []
 - id: BET-9001
   title: 统一持久化 broker
   desc: 'Bet: 统一持久化 broker (Appetite: 1 week)'
@@ -219,7 +218,7 @@ goals:
   desc: 'Bet: Batch 3 — gbrain operations.ts 拆分 + 剩余小项 (Appetite: 1 week)'
   progress: 100.0
   status: done
-  note: 'gbrain operations.ts 评估完成: 3841行/94 exports/31 importers. 拆分需 dedicated session, 已记录在 debt registry.'
+  note: 'gbrain operations.ts 评估完成: 3841行/94 exports/31 importers, 拆分需 dedicated session'
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-c9e3
@@ -231,7 +230,6 @@ goals:
   scope:
   - DEBT-GBRAIN-OPERATIONS-TS (gbrain operations.ts 3.8K→拆分)
   - 剩余文档/配置收尾
-  note: 'gbrain operations.ts 评估完成: 3841行/94 exports/31 importers, 拆分需 dedicated session'
 - id: BET-e6bf
   title: Idea-iterate非交互环境EOFError健壮性修复
   desc: 'Bet: Idea-iterate非交互环境EOFError健壮性修复 (Appetite: Unknown)'
@@ -254,6 +252,18 @@ goals:
   source_ref: c2g:bet:BET-71d9
   created_at: '2026-06-19T02:01:25Z'
   appetite: 0.5 day
+  vector: V2
+  bet_status: active
+- id: BET-3b90
+  title: Idea-v5普通用户产品走查followup-补强12中断点-dis
+  desc: 'Bet: Idea-v5普通用户产品走查followup-补强12中断点-dis (Appetite: 1 周)'
+  progress: 0.0
+  status: pending
+  tasks: []
+  ingress_plane: projects/c2g
+  source_ref: c2g:bet:BET-3b90
+  created_at: '2026-06-19T04:31:37Z'
+  appetite: 1 周
   vector: V2
   bet_status: active
 health_targets:
