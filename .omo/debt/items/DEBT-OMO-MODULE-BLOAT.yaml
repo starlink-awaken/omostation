@@ -8,8 +8,9 @@ severity: medium
 source: architecture-audit-20260619
 domain: workspace
 scope: l2_omo
-status: open
-lifecycle_state: open
+status: partially_resolved
+lifecycle_state: scheduled
+resolution_evidence: categories 索引模块创建 (debt/audit/bos/worker/governance), 不破坏现有 import。物理文件重组需 dedicated session。
 gate_level: watchlist
 registered_at: '2026-06-19T01:00:00Z'
 opened_at: '2026-06-19T01:00:00Z'

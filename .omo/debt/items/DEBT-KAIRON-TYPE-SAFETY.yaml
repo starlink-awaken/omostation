@@ -8,8 +8,9 @@ severity: medium
 source: architecture-audit-20260619
 domain: workspace
 scope: l2_kairon
-status: open
-lifecycle_state: open
+status: partially_resolved
+lifecycle_state: scheduled
+resolution_evidence: 10/16 packages strict (21184 LOC), 6/16 check-only. 63 type errors fixed. Remaining 6 packages (767 errors) in check-only mode.
 gate_level: watchlist
 registered_at: '2026-06-19T01:00:00Z'
 opened_at: '2026-06-19T01:00:00Z'

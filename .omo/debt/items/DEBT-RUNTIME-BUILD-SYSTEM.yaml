@@ -8,8 +8,9 @@ severity: medium
 source: architecture-audit-20260619
 domain: workspace
 scope: l1_runtime
-status: open
-lifecycle_state: open
+status: partially_resolved
+lifecycle_state: scheduled
+resolution_evidence: setuptools→hatchling migration completed. pytest moved to dev deps. Executor split deferred (80 files, needs dedicated session).
 gate_level: watchlist
 registered_at: '2026-06-19T01:00:00Z'
 opened_at: '2026-06-19T01:00:00Z'

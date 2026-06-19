@@ -9,8 +9,9 @@ severity: medium
 source: architecture-audit-20260619
 domain: workspace
 scope: i0_agora
-status: open
-lifecycle_state: open
+status: closed
+lifecycle_state: closed
+resolution_evidence: 38 modules + 4 directories (~14K lines) archived to _deprecated/. 1262 tests pass, 0 regressions.
 gate_level: watchlist
 registered_at: '2026-06-19T01:00:00Z'
 opened_at: '2026-06-19T01:00:00Z'
