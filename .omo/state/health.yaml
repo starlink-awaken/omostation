@@ -3,8 +3,8 @@
 # source: manual audit (post cleanup)
 # range: 0-100, higher = healthier
 
-generated_at: "2026-06-19T14:00:00Z"
-source: "manual audit post-code-review-20260619"
+generated_at: "2026-06-19T15:45:00Z"
+source: "manual audit post-session-cleanup-20260619"
 health_score: 92
 anomaly_count: 0
 total_tasks: 109
@@ -16,14 +16,14 @@ anomalies: []
 
 debt_summary:
   total: 33
-  closed: 24
-  open: 9
-  health: 72.7
+  closed: 29
+  deferred: 4
+  health: 87.9
 
 bet_summary:
   total: 12
   done: 9
-  pending: 2
+  deferred: 2
   archived: 1
 
 distributions:
