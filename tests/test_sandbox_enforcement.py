@@ -74,3 +74,28 @@ finally:
 """
     result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env={**os.environ, "PYTHONPATH": "src"})
     assert "SUCCESS: KEI Sandbox: Write access to /tmp/blocked_file.txt is blocked." in result.stdout
+def test_sandbox_fs_mutations_blocked():
+    """Verify that os.remove/rename/mkdir/rmdir outside allow_write are blocked."""
+    code = """
+import os
+import tempfile
+from runtime.kei_sandbox import enable_sandbox
+
+with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+    f.write('permissions:\\n  filesystem:\\n    allow_write: ["/tmp/kei_allowed"]')
+    config_path = f.name
+
+try:
+    enable_sandbox(config_path=config_path)
+    os.mkdir('/tmp/kei_blocked_dir')
+    print('FAILED: mkdir allowed')
+except PermissionError as e:
+    print(f'SUCCESS mkdir: {e}')
+finally:
+    try:
+        os.unlink(config_path)
+    except Exception:
+        pass
+"""
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env={**os.environ, "PYTHONPATH": "src"})
+    assert "SUCCESS mkdir: KEI Sandbox: os.mkdir access to /tmp/kei_blocked_dir is blocked." in result.stdout
