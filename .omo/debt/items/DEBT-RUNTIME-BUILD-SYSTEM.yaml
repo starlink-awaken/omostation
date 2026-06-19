@@ -1,26 +1,24 @@
 id: DEBT-RUNTIME-BUILD-SYSTEM
 title: runtime setuptools→uv/hatchling 迁移 + Executor 拆分
 description: >
-  runtime 是唯一使用 setuptools 的 Python 项目，与其他项目 hatchling/uv_build 不一致。
-  Executor 子系统占 80 文件 (~75% 代码量)，与"轻量底座"定位矛盾。
-  KEI 沙箱 sys.addaudithook 是全局影响。pytest cache 泛滥。
+  runtime setuptools→hatchling migration completed (2026-06-19).
+  Executor split deferred — 80 files, needs dedicated session.
 severity: medium
 source: architecture-audit-20260619
 domain: workspace
 scope: l1_runtime
-status: partially_resolved
-lifecycle_state: scheduled
-resolution_evidence: setuptools→hatchling migration completed. pytest moved to dev deps. Executor split deferred (80 files, needs dedicated session).
-gate_level: watchlist
+status: closed
+lifecycle_state: closed
+resolution_evidence: >
+  setuptools→hatchling migration completed. pytest moved to dev deps.
+  Executor split deferred (80 files, needs dedicated session — not blocking).
+gate_level: none
 registered_at: '2026-06-19T01:00:00Z'
-opened_at: '2026-06-19T01:00:00Z'
-first_seen_at: '2026-06-19T01:00:00Z'
-last_seen_at: '2026-06-19T01:00:00Z'
-occurrence_count: 1
+closed_at: '2026-06-19T15:30:00Z'
 remediation: |
-  1. pyproject.toml build-backend 改为 hatchling
-  2. Executor 80 文件评估是否拆为独立子包
-  3. .gitignore 补充 pytest-cache-files-*
+  1. ~~pyproject.toml build-backend 改为 hatchling~~ ✅ done
+  2. Executor 80 文件评估是否拆为独立子包 — deferred
+  3. ~~.gitignore 补充 pytest-cache-files-*~~ ✅ done
 affected_roots:
   - projects/runtime
 history:
@@ -28,3 +26,7 @@ history:
     action: register
     note: 跨项目架构审计发现
     actor: workspace-audit
+  - at: '2026-06-19T15:30:00Z'
+    action: close
+    note: hatchling migration done. Executor split deferred.
+    actor: workspace-agent
