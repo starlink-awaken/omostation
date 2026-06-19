@@ -66,6 +66,8 @@ KEI Manifest (kei.yaml)
 sys.addaudithook (Python C-level hook)
   │
   ├─ 拦截: subprocess.Popen / socket.connect / open
+  ├─ FS mutation: os.remove / os.unlink / os.mkdir / os.rmdir / os.rename
+  │   └─ os.rename 同时校验 source 与 destination 是否均落在 allow_write 前缀下
   ├─ 规则: fs_read/write, network_hosts, shell_exec, env_vars
   ├─ 默认: 仅 localhost, workspace r/w, 禁止子进程
   └─ 审计: JSONL 日志 (递归保护 _IN_AUDIT)
@@ -99,7 +101,7 @@ make info           # 信息摘要
 ## GPTCHAS
 
 1. **Python 3.10+** — 非 kairon 的 3.13+, 与 cockpit 同级
-2. **setuptools 构建** — 唯一使用 setuptools 的项目 (其他都是 hatchling)
+2. **hatchling 构建** — 与 kairon/agora/cockpit 一致 (旧 setuptools 已迁移)
 3. **KEI 沙箱是全局的** — `sys.addaudithook` 影响整个 Python 进程
 4. **Matrix 数据在 ~/runtime/ 不在项目目录** — matrix.yaml 是 SSOT
 5. **Executor 最复杂** — 100+ 文件, 修改前先读 engine.py 入口

@@ -101,7 +101,7 @@ pytest tests/integration/ -v
 ## Gotchas
 
 1. **Python 3.10+** — 非 3.13+，与 kairon 的 Python 要求不同
-2. **setuptools 构建** — 非 hatchling，与 kairon/agora 不同
+2. **hatchling 构建** — 与 kairon/agora/cockpit 一致 (setuptools 已迁移)
 3. **Matrix 数据路径** — `~/runtime/matrix.yaml`，不在项目目录内
 4. **Scheduler 写状态文件** — `matrix_state.json` + `OMO_STATE_FILE`
 5. **KEI 沙箱是全局的** — `sys.addaudithook` 影响整个进程
