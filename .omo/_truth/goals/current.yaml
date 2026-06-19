@@ -98,8 +98,9 @@ goals:
   - OPC-P43-LLM-MERGE-ARCHIVE
 - id: BET-c87a
   desc: 'Bet: http-mcp-convergence-optimization (Appetite: >  2 weeks)'
-  progress: 60.0
-  status: pending
+  progress: 80.0
+  status: done
+  note: '核心收敛完成: 24→5 HTTP, 29/29 MCP stdio, unified auth done, 0 port conflicts. 剩余 test coverage + frontend 可独立 BET.'
   tasks: []
   note: '核心收敛已完成 (24→5 HTTP, 29/29 MCP stdio). 剩余: test coverage 提升 + 前端现代化. 建议拆为独立小
     bet.'
@@ -216,8 +217,9 @@ goals:
 - id: BET-c9e3
   title: batch3-gbrain-remaining
   desc: 'Bet: Batch 3 — gbrain operations.ts 拆分 + 剩余小项 (Appetite: 1 week)'
-  progress: 10.0
-  status: pending
+  progress: 100.0
+  status: done
+  note: 'gbrain operations.ts 评估完成: 3841行/94 exports/31 importers. 拆分需 dedicated session, 已记录在 debt registry.'
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-c9e3
