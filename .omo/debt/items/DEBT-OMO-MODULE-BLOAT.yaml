@@ -18,10 +18,9 @@ last_seen_at: '2026-06-19T01:00:00Z'
 occurrence_count: 1
 remediation: |
   1. ✅ 计划已完成: .omo/_knowledge/management/omo-subpackage-reorganization-plan.md
-  2. 待执行: 按计划创建子包 (debt/audit/bos/worker/governance)
-  3. 更新 6 处外部 import (cockpit/runtime/ecos)
-  4. __init__.py re-export 旧路径 (向后兼容)
-  5. 修复 skip tests 或标记为 integration (pytest -m)
+  2. ⚠️ 2026-06-19 尝试执行: 内部 import 断裂 46 处, re-export stub 不够, 已回滚
+  3. 结论: 需要 dedicated session 逐文件更新 import, 不能用 stub 取巧
+  4. 修复 skip tests 或标记为 integration (pytest -m)
 affected_roots:
   - projects/omo
 history:
