@@ -1,0 +1,28 @@
+id: DEBT-GBRAIN-OPERATIONS-TS
+title: gbrain operations.ts 3.8K 行上帝模块 + Bun 锁定风险
+description: >
+  gbrain operations.ts 3,841 行定义了 67 个操作，是潜在上帝模块。
+  508 个源文件管理成本高。测试文件数(712)多于源文件数(508)。
+  Bun 运行时锁定不兼容 Node 生态。PGLite WASM pin 到 0.4.3 有升级风险。
+severity: low
+source: architecture-audit-20260619
+domain: workspace
+scope: l2_gbrain
+status: open
+lifecycle_state: open
+gate_level: none
+registered_at: '2026-06-19T01:00:00Z'
+opened_at: '2026-06-19T01:00:00Z'
+first_seen_at: '2026-06-19T01:00:00Z'
+last_seen_at: '2026-06-19T01:00:00Z'
+occurrence_count: 1
+remediation: |
+  1. operations.ts 按领域拆分 (search/ingest/ai/admin)
+  2. 评估 Bun→Node 兼容性 (非紧急)
+affected_roots:
+  - projects/gbrain
+history:
+  - at: '2026-06-19T01:00:00Z'
+    action: register
+    note: 跨项目架构审计发现
+    actor: workspace-audit

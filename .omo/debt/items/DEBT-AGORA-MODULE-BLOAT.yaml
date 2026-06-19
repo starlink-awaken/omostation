@@ -1,0 +1,31 @@
+id: DEBT-AGORA-MODULE-BLOAT
+title: agora 模块膨胀 — 230 文件需 dead-code audit
+description: >
+  agora src/ 有 230 个 Python 文件，其中 DHT routing、edge computing、peer discovery、
+  synapse_link、soul_handshake 等 ~15+ 模块可能未被使用。God Module server/mcp.py
+  虽已从 1945 行重构至 689 行，但仍有职责过重风险。35 个测试失败需分类
+  (flaky/integration/real bug)。
+severity: medium
+source: architecture-audit-20260619
+domain: workspace
+scope: i0_agora
+status: open
+lifecycle_state: open
+gate_level: watchlist
+registered_at: '2026-06-19T01:00:00Z'
+opened_at: '2026-06-19T01:00:00Z'
+first_seen_at: '2026-06-19T01:00:00Z'
+last_seen_at: '2026-06-19T01:00:00Z'
+occurrence_count: 1
+remediation: |
+  1. grep -r "from agora" across workspace 确认实际 import 的模块
+  2. 删除未被 import 的 ~15 个模块
+  3. 修复 35 个 failing tests (分类 flaky vs real)
+  4. 评估 server/mcp.py 是否需进一步拆分
+affected_roots:
+  - projects/agora
+history:
+  - at: '2026-06-19T01:00:00Z'
+    action: register
+    note: 跨项目架构审计发现
+    actor: workspace-audit

@@ -1,0 +1,29 @@
+id: DEBT-RUNTIME-BUILD-SYSTEM
+title: runtime setuptools→uv/hatchling 迁移 + Executor 拆分
+description: >
+  runtime 是唯一使用 setuptools 的 Python 项目，与其他项目 hatchling/uv_build 不一致。
+  Executor 子系统占 80 文件 (~75% 代码量)，与"轻量底座"定位矛盾。
+  KEI 沙箱 sys.addaudithook 是全局影响。pytest cache 泛滥。
+severity: medium
+source: architecture-audit-20260619
+domain: workspace
+scope: l1_runtime
+status: open
+lifecycle_state: open
+gate_level: watchlist
+registered_at: '2026-06-19T01:00:00Z'
+opened_at: '2026-06-19T01:00:00Z'
+first_seen_at: '2026-06-19T01:00:00Z'
+last_seen_at: '2026-06-19T01:00:00Z'
+occurrence_count: 1
+remediation: |
+  1. pyproject.toml build-backend 改为 hatchling
+  2. Executor 80 文件评估是否拆为独立子包
+  3. .gitignore 补充 pytest-cache-files-*
+affected_roots:
+  - projects/runtime
+history:
+  - at: '2026-06-19T01:00:00Z'
+    action: register
+    note: 跨项目架构审计发现
+    actor: workspace-audit

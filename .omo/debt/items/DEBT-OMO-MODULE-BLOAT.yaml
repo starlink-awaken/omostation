@@ -1,0 +1,29 @@
+id: DEBT-OMO-MODULE-BLOAT
+title: omo 模块膨胀 — 125 文件平铺无子包 + 42% 测试 skip
+description: >
+  omo src/omo/ 有 125 个 .py 文件平铺在同一层，缺乏子包组织。
+  omo_debt_*.py 系列 15 个文件高度同质。225/530 测试因环境依赖被 skip
+  (42%)，实际有效测试仅 ~305 个。CI 可能掩盖回归。
+severity: medium
+source: architecture-audit-20260619
+domain: workspace
+scope: l2_omo
+status: open
+lifecycle_state: open
+gate_level: watchlist
+registered_at: '2026-06-19T01:00:00Z'
+opened_at: '2026-06-19T01:00:00Z'
+first_seen_at: '2026-06-19T01:00:00Z'
+last_seen_at: '2026-06-19T01:00:00Z'
+occurrence_count: 1
+remediation: |
+  1. 按子系统分包: omo/{debt,audit,bos,worker,governance,overlay}/
+  2. 修复 skip tests 或标记为 integration (pytest -m)
+  3. 评估 omo_debt_*.py 是否可合并为 omo/debt/ 子包
+affected_roots:
+  - projects/omo
+history:
+  - at: '2026-06-19T01:00:00Z'
+    action: register
+    note: 跨项目架构审计发现
+    actor: workspace-audit
