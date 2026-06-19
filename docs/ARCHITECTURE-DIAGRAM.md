@@ -162,7 +162,7 @@ sequenceDiagram
     U->>C: workspace iterate "宏大构想"
     C->>L4: V2P 意图降维
     L4->>L1: 生成 Pitch.md (L1 沙箱)
-    C->>A: C2G 门禁下注
+    C->>A: C2G 门禁下注 (非 TTY 环境自动回退标准流，避免 EOFError)
     A->>L2: omo + metaos 治理扫描
     L2->>L0: eidos 律法校验
     L0-->>L2: 合规/违规

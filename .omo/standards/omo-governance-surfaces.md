@@ -122,6 +122,7 @@
 - CI / 本地治理门禁必须显式执行 `omo.cli governance surfaces --workspace-root . --json`
 - `omo lint ingress-registry` 能校验 ingress registry 的结构与反向映射
 - `omo lint self-evolution-approval` 能拦截 OPC P6 self-evolution task 的审批字段漂移与 active 泄漏
+- `omo lint task-policy <name>` 能承载后续更多特殊任务红线，而不把规则散落到单独脚本
 - `projects/c2g` 产出的 planned task 携带治理引用
 - `omo lint direct-omo-io` 与 pre-commit hook 能拦截非 broker 直接写 `.omo`
 - X1/X2/X3/X4 与 L0/M1 治理模型中存在对应映射

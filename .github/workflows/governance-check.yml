@@ -52,11 +52,12 @@ jobs:
           python3 scripts/check-governance-guides-ssot.py
           python3 scripts/check-knowledge-history-ssot.py
           python3 scripts/check-phase-closeout-ssot.py
-          uv run --directory projects/omo python -m omo.cli governance surfaces --workspace-root . --json > /tmp/omo-governance-surfaces.json
-          uv run --directory projects/omo python -m omo.cli lint direct-omo-io
-          uv run --directory projects/omo python -m omo.cli lint ingress-registry --workspace-root .
-          uv run --directory projects/omo python -m omo.cli lint self-evolution-approval --workspace-root .
-          uv run --directory projects/omo pytest \
+          cd projects/omo
+          uv run python -m omo.cli governance surfaces --workspace-root ../.. --json > /tmp/omo-governance-surfaces.json
+          uv run python -m omo.cli lint direct-omo-io
+          uv run python -m omo.cli lint ingress-registry --workspace-root ../..
+          uv run python -m omo.cli lint task-policy self-evolution-approval --workspace-root ../..
+          uv run pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_cockpit_bridge.py \
             tests/test_omo_gc.py \

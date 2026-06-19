@@ -178,7 +178,7 @@ projects/runtime/src/runtime/cron_service/
 - Agora 调用有**自动降级**：连续失败 2 次后，5 分钟内直连底层 MCP，绕过 agora proxy。
 - `runtime scheduler` 只写 `.omo/state/system_health.yaml`，并通过 `state_schema.py` 防止混入 governance-only keys。
 - `bus_consumer.py` 是**独立阻塞进程**，不是 asyncio，负责把 Agora 事件推到 gbrain。
-- `kei_sandbox.py` 使用 `sys.addaudithook` 做系统级审计拦截。
+- `kei_sandbox.py` 使用 `sys.addaudithook` 做系统级审计拦截；新增 FS mutation hook 拦截 `os.remove`/`os.unlink`/`os.mkdir`/`os.rmdir`/`os.rename`，其中 `os.rename` 同时校验源路径与目标路径是否均落在 `allow_write` 前缀下。
 
 ### 3.6 常用验证命令
 
