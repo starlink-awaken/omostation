@@ -253,3 +253,41 @@ def test_build_governance_surfaces_report_tracks_debt_ingress(tmp_path: Path) ->
     assert report["status"] == "ok"
     assert report["ingress_registry"]["debt_ids"] == ["DEBT-1"]
     assert report["ingress_registry"]["debt_source_refs"] == ["aetherforge:budget:DEBT-1"]
+
+
+def test_build_governance_surfaces_report_accepts_archived_ingress_task_carrier(
+    tmp_path: Path,
+) -> None:
+    _seed_workspace(tmp_path)
+    ingress_dir = tmp_path / ".omo" / "_delivery" / "ingress"
+    ingress_dir.mkdir(parents=True, exist_ok=True)
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "archive" / "IMPORTED-1.yaml",
+        {
+            "id": "IMPORTED-1",
+            "status": "archived",
+        },
+    )
+    _write_yaml(
+        ingress_dir / "registry.yaml",
+        {
+            "goals": {"by_id": {}, "by_source_ref": {}},
+            "tasks": {
+                "by_id": {
+                    "IMPORTED-1": {
+                        "source_ref": "c2g:bridge-import:IMPORTED-1",
+                        "artifact_ref": ".omo/_delivery/ingress/tasks/IMPORTED-1.yaml",
+                        "fingerprint": {"id": "IMPORTED-1"},
+                        "created_at": "2026-06-18T00:00:00Z",
+                    }
+                },
+                "by_source_ref": {"c2g:bridge-import:IMPORTED-1": "IMPORTED-1"},
+            },
+            "debts": {"by_id": {}, "by_source_ref": {}},
+        },
+    )
+
+    report = build_governance_surfaces_report(tmp_path)
+
+    assert report["status"] == "ok"
+    assert report["issues"] == []

@@ -60,6 +60,8 @@ src/omo/
 ├── omo_self_healing_*.py     # 自愈引擎
 ├── omo_worker_*.py           # Worker 调度
 ├── omo_governance_*.py       # 治理叠加
+├── omo_governance_surfaces.py# 治理面 / ingress registry 校验
+├── omo_task_policy.py        # 可复用 task policy 检查器
 ├── model_driven_bridge.py    # model-driven 桥接
 └── omo_agora_pool.py         # Agora 连接池
 ```

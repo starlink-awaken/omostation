@@ -69,6 +69,30 @@ def _has_direct_io_gate(workspace_root: Path) -> bool:
     return "omo-direct-io-gate" in text and "lint direct-omo-io" in text
 
 
+def _resolve_ingress_task_carrier(omo_dir: Path, item_id: str) -> Path | None:
+    direct_candidates = [
+        omo_dir / "tasks" / "planned" / f"{item_id}.yaml",
+        omo_dir / "tasks" / "done" / f"{item_id}.yaml",
+        omo_dir / "tasks" / "archived" / f"{item_id}.yaml",
+        omo_dir / "tasks" / "archive" / f"{item_id}.yaml",
+        omo_dir / "tasks" / "completed" / f"{item_id}.yaml",
+        omo_dir / "tasks" / "blocked" / f"{item_id}.yaml",
+        omo_dir / "tasks" / "active" / f"{item_id}.yaml",
+        omo_dir / "tasks" / "registry" / "done" / f"{item_id}.yaml",
+    ]
+    for path in direct_candidates:
+        if path.exists():
+            return path
+
+    task_root = omo_dir / "tasks"
+    if not task_root.exists():
+        return None
+    for path in task_root.rglob(f"{item_id}.yaml"):
+        if path.is_file():
+            return path
+    return None
+
+
 def _check_ingress_registry(workspace_root: Path) -> tuple[dict[str, object], list[str]]:
     omo_dir = workspace_root / ".omo"
     registry_path = omo_dir / "_delivery" / "ingress" / "registry.yaml"
@@ -155,8 +179,9 @@ def _check_ingress_registry(workspace_root: Path) -> tuple[dict[str, object], li
             continue
         if meta.get("artifact_ref") != f".omo/_delivery/ingress/tasks/{item_id}.yaml":
             issues.append(f"ingress registry: tasks.by_id.{item_id} artifact_ref mismatch")
-        if not (omo_dir / "tasks" / "planned" / f"{item_id}.yaml").exists():
-            issues.append(f"ingress registry: planned task missing for {item_id}")
+        task_carrier = _resolve_ingress_task_carrier(omo_dir, item_id)
+        if task_carrier is None:
+            issues.append(f"ingress registry: task carrier missing for {item_id}")
         source_ref = meta.get("source_ref", "")
         if source_ref and tasks_by_source_ref.get(source_ref) != item_id:
             issues.append(

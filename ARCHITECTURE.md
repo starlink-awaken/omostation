@@ -56,6 +56,8 @@ graph TB
 | `src/omo/omo_debt_registry.py` | Debt registry |
 | `src/omo/omo_audit*.py` | Audit / sync / rollout |
 | `src/omo/omo_bos_*.py` | BOS registry / metrics / dispatch |
+| `src/omo/omo_governance_surfaces.py` | Governance surface lint + ingress registry checks |
+| `src/omo/omo_task_policy.py` | Reusable task policy checker (planned/active leak detection) |
 | `src/omo/model_driven_bridge.py` | model-driven bridge |
 
 ## 4. 测试
