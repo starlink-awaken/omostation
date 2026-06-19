@@ -34,11 +34,7 @@ from agora.mcp.bos_router import bos_router as _bos_router  # type: ignore[impor
 # L0 审计 hook
 import sys as _sys
 
-_CURRENT_FILE = Path(__file__).resolve()
-_PROJECTS_DIR = _CURRENT_FILE.parents[4]
-_ECOS_SSOT_TOOLS = _PROJECTS_DIR / "ecos" / "src" / "ecos" / "ssot" / "tools"
-_sys.path.insert(0, str(_ECOS_SSOT_TOOLS))
-from mof_agora_hook import (  # type: ignore[import-not-found]  # noqa: E402
+from ecos.ssot.tools.mof_agora_hook import (  # type: ignore[import-not-found]
     post_audit as _bos_post_audit,
     pre_check as _bos_pre_check,
 )

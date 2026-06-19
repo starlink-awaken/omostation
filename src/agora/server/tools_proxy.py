@@ -236,13 +236,7 @@ async def proxy_call(tool_name: str, arguments: str = "{}") -> dict:
         args = {}
 
     # L0 前置校验 — lazy import from ecos hook
-    import sys as _sys
-    from pathlib import Path as _Path
-
-    _CURRENT = _Path(__file__).resolve()
-    _ECOS_SSOT = _CURRENT.parents[4] / "ecos" / "src" / "ecos" / "ssot" / "tools"
-    _sys.path.insert(0, str(_ECOS_SSOT))
-    from mof_agora_hook import (  # type: ignore[import-not-found]
+    from ecos.ssot.tools.mof_agora_hook import (  # type: ignore[import-not-found]
         post_audit as _bos_post_audit,
         pre_check as _bos_pre_check,
     )

@@ -314,27 +314,6 @@ class Router:
         # ── Degrade exit: previously degraded service is now available ──
         if instance and service_name in self._degraded_services:
             self._degraded_services.discard(service_name)
-            import subprocess  # type: ignore[import-untyped]
-
-            try:
-                ops_home = os.path.expanduser("~")
-                reason = f"service {service_name} recovered, tool {tool_name}"
-                subprocess.run(
-                    [
-                        "python3",
-                        "-c",
-                        f"""
-import sys
-sys.path.insert(0, '{ops_home}/Workspace/hermes-ops/src')
-from hermes_ops.events import emit
-emit('AGORA_DEGRADE_EXITED', {{"service": "agora", "reason": "{reason}"}})
-""",
-                    ],
-                    capture_output=True,
-                    timeout=5,
-                )
-            except Exception:
-                pass
         if not instance and use_cache:
             # ── Degrade: fall back to local service cache ──────────────
             logger.info(
@@ -342,28 +321,6 @@ emit('AGORA_DEGRADE_EXITED', {{"service": "agora", "reason": "{reason}"}})
                 tool=tool_name,
                 service=service_name,
             )
-            # 发射 Agora 降级事件 (hermes-ops)
-            import subprocess  # type: ignore[import-untyped]
-
-            try:
-                ops_home = os.path.expanduser("~")
-                reason = f"primary_instance_unavailable for service {service_name}, tool {tool_name}"
-                subprocess.run(
-                    [
-                        "python3",
-                        "-c",
-                        f"""
-import sys
-sys.path.insert(0, '{ops_home}/Workspace/hermes-ops/src')
-from hermes_ops.events import emit
-emit('AGORA_DEGRADE_ENTERED', {{"service": "agora", "reason": "{reason}"}})
-""",
-                    ],
-                    capture_output=True,
-                    timeout=5,
-                )
-            except Exception:
-                pass
             self._degraded_services.add(service_name)
             instance = self._cached_instance(service_name, tool_name)
 

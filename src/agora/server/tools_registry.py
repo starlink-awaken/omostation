@@ -256,13 +256,7 @@ def add_route(tool_name: str, service_name: str) -> dict:
     router = _get_router()
 
     # L0 审计 — 路由变更事件
-    import sys as _sys
-    from pathlib import Path as _Path
-
-    _CURRENT = _Path(__file__).resolve()
-    _ECOS_SSOT = _CURRENT.parents[4] / "ecos" / "src" / "ecos" / "ssot" / "tools"
-    _sys.path.insert(0, str(_ECOS_SSOT))
-    from mof_agora_hook import post_audit as _bos_post_audit  # type: ignore[import-not-found]
+    from ecos.ssot.tools.mof_agora_hook import post_audit as _bos_post_audit  # type: ignore[import-not-found]
 
     _bos_post_audit(f"bos://agora/routes/{tool_name}", 200, 0)
 

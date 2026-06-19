@@ -36,23 +36,6 @@ from agora.core.state import get_event_bus, get_registry, get_router  # type: ig
 from agora.mcp import mcp_bootstrap  # type: ignore[import-not-found]
 from agora.mcp_proxy.manager import ProxyManager  # type: ignore[import-not-found]
 
-# L0 审计 hook — BOS URI 前置校验 + 后置审计
-import sys as _sys
-
-_sys.path.insert(
-    0,
-    str(
-        Path.home()
-        / "Workspace"
-        / "projects"
-        / "ecos"
-        / "src"
-        / "ecos"
-        / "ssot"
-        / "tools"
-    ),
-)
-
 # BOS URI 解析器 (P45 W1) — 统一 POC_SERVICES 路由
 from agora.mcp.bos_resolver import resolve_bos_uri as _resolve_bos_uri  # type: ignore[import-not-found]
 from agora.mcp.bos_resolver import POC_SERVICES as _POC_SERVICES  # type: ignore[import-not-found]
