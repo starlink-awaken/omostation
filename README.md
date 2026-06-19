@@ -35,6 +35,7 @@ omo governance ingress-debt debt.yaml --ingress-plane projects/aetherforge
 omo lint direct-omo-io         # 非 broker 直接改 `.omo` / `spaces` 拦截
 omo lint ingress-registry      # ingress registry 结构 / 反向映射 / 落盘一致性校验
 omo lint self-evolution-approval # OPC P6 self-evolution 审批红线校验
+omo lint task-policy self-evolution-approval # 通用 task policy 入口
 omo event emit       # 事件发射
 omo observability    # 可观测性
 ```

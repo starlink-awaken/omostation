@@ -27,7 +27,13 @@ import sys
 from pathlib import Path
 
 from .omo_paths import PROJECTS_DIR, WORKSPACE_ROOT
-from .omo_task_policy import OPC_P6_SELF_EVOLUTION_POLICY, check_task_policy
+from .omo_task_policy import (
+    OPC_P6_SELF_EVOLUTION_POLICY,
+    TASK_POLICIES,
+    check_task_policy,
+    count_planned_matches,
+    get_task_policy,
+)
 
 OMO_SRC = Path(__file__).resolve().parent
 
@@ -572,18 +578,22 @@ def cmd_lint_direct_omo_io(paths: list[str] | None = None, *, diff: bool = False
     return result.returncode
 
 
-def cmd_lint_self_evolution_approval(workspace_root: str = ".") -> int:
+def cmd_lint_task_policy(policy_name: str, workspace_root: str = ".") -> int:
     root = Path(workspace_root).resolve()
-    planned_dir = root / ".omo" / "tasks" / "planned"
-    issues = check_task_policy(root, OPC_P6_SELF_EVOLUTION_POLICY)
+    policy = get_task_policy(policy_name)
+    issues = check_task_policy(root, policy)
     if issues:
-        print(f"❌ omo lint self-evolution-approval fail: {len(issues)} issue(s)")
+        print(f"❌ omo lint {policy.name} fail: {len(issues)} issue(s)")
         for issue in issues:
             print(f"  - {issue}")
         return 1
-    count = len(list(planned_dir.glob(OPC_P6_SELF_EVOLUTION_POLICY.planned_glob))) if planned_dir.exists() else 0
-    print(f"✅ omo lint self-evolution-approval pass: planned={count} active=0")
+    count = count_planned_matches(root, policy)
+    print(f"✅ omo lint {policy.name} pass: planned={count} active=0")
     return 0
+
+
+def cmd_lint_self_evolution_approval(workspace_root: str = ".") -> int:
+    return cmd_lint_task_policy(OPC_P6_SELF_EVOLUTION_POLICY.name, workspace_root)
 
 
 def cmd_lint_ingress_registry(workspace_root: str = ".") -> int:
@@ -646,6 +656,14 @@ def main(argv: list[str] | None = None) -> int:
     self_evolution.add_argument(
         "--workspace-root", default=".", help="显式指定 workspace root"
     )
+    task_policy = sub.add_parser(
+        "task-policy",
+        help="按注册表执行通用 task policy 校验",
+    )
+    task_policy.add_argument("policy_name", choices=sorted(TASK_POLICIES))
+    task_policy.add_argument(
+        "--workspace-root", default=".", help="显式指定 workspace root"
+    )
 
     args = parser.parse_args(argv)
     if args.command == "schemas":
@@ -658,6 +676,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_lint_ingress_registry(args.workspace_root)
     if args.command == "self-evolution-approval":
         return cmd_lint_self_evolution_approval(args.workspace_root)
+    if args.command == "task-policy":
+        return cmd_lint_task_policy(args.policy_name, args.workspace_root)
     parser.print_help()
     return 1
 

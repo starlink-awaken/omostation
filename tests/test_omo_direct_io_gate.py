@@ -4,7 +4,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-from omo.omo_lint import cmd_lint_direct_omo_io, cmd_lint_self_evolution_approval
+from omo.omo_lint import (
+    cmd_lint_direct_omo_io,
+    cmd_lint_self_evolution_approval,
+    cmd_lint_task_policy,
+)
 from omo.omo_paths import PROJECTS_DIR
 
 
@@ -93,6 +97,27 @@ def test_cmd_lint_self_evolution_approval_passes_for_planned_only(tmp_path: Path
     )
 
     rc = cmd_lint_self_evolution_approval(str(tmp_path))
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "omo lint self-evolution-approval pass" in captured.out
+
+
+def test_cmd_lint_task_policy_matches_self_evolution_alias(tmp_path: Path, capsys) -> None:
+    planned_dir = tmp_path / ".omo" / "tasks" / "planned"
+    active_dir = tmp_path / ".omo" / "tasks" / "active"
+    planned_dir.mkdir(parents=True)
+    active_dir.mkdir(parents=True)
+    (planned_dir / "OPC-P6-SELF-EVOLUTION-sample.yaml").write_text(
+        "id: OPC-P6-SELF-EVOLUTION-sample\n"
+        "status: planned\n"
+        "approval_required: true\n"
+        "human_approval_required: true\n"
+        "approval_state: awaiting_human\n",
+        encoding="utf-8",
+    )
+
+    rc = cmd_lint_task_policy("self-evolution-approval", str(tmp_path))
 
     captured = capsys.readouterr()
     assert rc == 0

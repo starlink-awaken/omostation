@@ -28,6 +28,25 @@ OPC_P6_SELF_EVOLUTION_POLICY = TaskPolicy(
     required_status="planned",
 )
 
+TASK_POLICIES: dict[str, TaskPolicy] = {
+    OPC_P6_SELF_EVOLUTION_POLICY.name: OPC_P6_SELF_EVOLUTION_POLICY,
+}
+
+
+def get_task_policy(name: str) -> TaskPolicy:
+    try:
+        return TASK_POLICIES[name]
+    except KeyError as exc:
+        known = ", ".join(sorted(TASK_POLICIES))
+        raise KeyError(f"unknown task policy: {name}. known policies: {known}") from exc
+
+
+def count_planned_matches(workspace_root: Path, policy: TaskPolicy) -> int:
+    planned_dir = workspace_root / ".omo" / "tasks" / "planned"
+    if not planned_dir.exists():
+        return 0
+    return len(list(planned_dir.glob(policy.planned_glob)))
+
 
 def check_task_policy(workspace_root: Path, policy: TaskPolicy) -> list[str]:
     planned_dir = workspace_root / ".omo" / "tasks" / "planned"

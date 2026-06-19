@@ -2,7 +2,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from omo.omo_task_policy import OPC_P6_SELF_EVOLUTION_POLICY, check_task_policy
+import pytest
+
+from omo.omo_task_policy import (
+    OPC_P6_SELF_EVOLUTION_POLICY,
+    TASK_POLICIES,
+    check_task_policy,
+    get_task_policy,
+)
 
 
 def test_check_task_policy_passes_for_self_evolution_planned_only(tmp_path: Path) -> None:
@@ -50,3 +57,15 @@ def test_check_task_policy_flags_field_drift_and_active_leak(tmp_path: Path) -> 
     assert any("approval_state must be 'awaiting_human'" in issue for issue in issues)
     assert any("status must remain planned" in issue for issue in issues)
     assert any("leaked into active/" in issue for issue in issues)
+
+
+def test_get_task_policy_resolves_registered_policy() -> None:
+    policy = get_task_policy("self-evolution-approval")
+
+    assert policy == OPC_P6_SELF_EVOLUTION_POLICY
+    assert TASK_POLICIES[policy.name] is policy
+
+
+def test_get_task_policy_rejects_unknown_policy() -> None:
+    with pytest.raises(KeyError, match="unknown task policy"):
+        get_task_policy("does-not-exist")
