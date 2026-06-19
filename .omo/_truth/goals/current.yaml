@@ -171,7 +171,7 @@ goals:
   title: Pitch-c2g-brainstorm-derust
   desc: 'Bet: Pitch-c2g-brainstorm-derust (Appetite: 1 day)'
   progress: 0.0
-  status: pending
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-102d
@@ -248,7 +248,7 @@ goals:
   title: Pitch-v3-workspace-naming-ssot
   desc: 'Bet: Pitch-v3-workspace-naming-ssot (Appetite: 0.5 day)'
   progress: 0.0
-  status: pending
+  status: done
   tasks: []
   ingress_plane: projects/c2g
   source_ref: c2g:bet:BET-71d9
