@@ -1,0 +1,77 @@
+# MOF Agent 约束规则 — 所有 Agent 必须遵守
+
+version: "1.0"
+updated_at: "2026-06-20"
+
+constraints:
+  # 1. 修改前必须查询影响
+  - id: AGENT-MOF-IMPACT-CHECK
+    name: 修改前影响分析
+    description: Agent 在修改任何 M1 节点前，必须运行 mof-derive --impact 查询影响链
+    enforcement: pre_operation
+    action: "mof-reason.py impact <node_id>"
+    severity: error
+    applies_to: [Component, Service, MCPTool]
+
+  # 2. 状态转换必须合法
+  - id: AGENT-MOF-STATE-VALID
+    name: 状态转换合法性
+    description: Agent 在修改节点状态前，必须验证转换是否在 stateMachine 中定义
+    enforcement: pre_operation
+    action: "mof-reason.py state <node_id> <target_state>"
+    severity: error
+    applies_to: [all]
+
+  # 3. 新增节点必须通过 schema 校验
+  - id: AGENT-MOF-SCHEMA-VALID
+    name: 新增节点 schema 校验
+    description: Agent 在新增 M1 节点后，必须运行 mof-schema-validate --strict 确保通过
+    enforcement: post_operation
+    action: "mof-schema-validate.py --strict"
+    severity: error
+    applies_to: [all]
+
+  # 4. 变更必须更新 state_history
+  - id: AGENT-MOF-STATE-HISTORY
+    name: 状态历史记录
+    description: Agent 在修改节点状态后，必须在 state_history 中添加新记录
+    enforcement: post_operation
+    action: "append state_history entry"
+    severity: warning
+    applies_to: [all]
+
+  # 5. SSOT 必须完整
+  - id: AGENT-MOF-SSOT-COMPLETE
+    name: SSOT 完整性
+    description: 所有 M1 节点必须有 model_driven_refs 指向源文件
+    enforcement: pre_commit
+    action: "verify model_driven_refs exists"
+    severity: error
+    applies_to: [all]
+
+  # 6. 跨层依赖必须声明
+  - id: AGENT-MOF-DEPENDENCY-DECLARE
+    name: 跨层依赖声明
+    description: 所有跨层依赖必须在 relations.depends_on 中声明
+    enforcement: pre_operation
+    action: "check depends_on completeness"
+    severity: error
+    applies_to: [Component]
+
+  # 7. 命名规范必须统一
+  - id: AGENT-MOF-NAMING-CONVENTION
+    name: 命名规范统一
+    description: 所有 M1 节点的 type 字段必须使用 PascalCase
+    enforcement: pre_commit
+    action: "mof-schema-validate.py --strict"
+    severity: error
+    applies_to: [all]
+
+  # 8. 价值推理必须评估
+  - id: AGENT-MOF-VALUE-EVALUATE
+    name: 价值评估
+    description: Agent 在修改高价值组件前，必须评估 value_metrics 和 cost_model
+    enforcement: pre_operation
+    action: "mof-reason.py value <node_id>"
+    severity: warning
+    applies_to: [Component, Service]

@@ -148,3 +148,13 @@ repos:
         files: ^spaces/.*\.yaml$
         pass_filenames: false
         stages: [pre-commit]
+
+      - id: mof-schema-validate
+        name: MOF schema validation (M1 ↔ M2 校验)
+        entry: uv run --directory projects/ecos python src/ecos/ssot/tools/mof-schema-validate.py --strict
+        language: system
+        files: ^(projects/ecos/src/ecos/ssot/mof/m1/|projects/ecos/src/ecos/ssot/mof/m2/).*\.yaml$
+        pass_filenames: false
+        stages: [pre-commit]
+        # MOF 本体论约束: 所有 M1 节点必须通过 schema 校验
+        # 违反 = 提交被拒绝
