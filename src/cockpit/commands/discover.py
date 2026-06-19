@@ -24,5 +24,14 @@ def _cmd_discover(args: Namespace) -> int:
     console.print("  [cyan]docs/PANORAMA.md[/]           — 系统全景架构")
     console.print("  [cyan]docs/JOURNEY-PROBES.md[/]     — 用户旅程探针")
     console.print("  [cyan]docs/ENTRY-CONVERGENCE.md[/]  — 入口收敛方案\n")
-    console.print("[dim]提示: agora MCP 连接后可直接调用 resolve_bos_uri 使用所有功能[/]")
+    # 产品走查 v5 #V5-05: 同步 help 全量命令地图 (之前 discover 仅列 ~10 入口,
+    # 与 help 矛盾; 现补全 37 命令分 6 组, 两个发现入口一致)
+    console.print("[bold]命令地图 (38 个, 分 6 组)[/]")
+    console.print("  [green]入门导览[/] demo · status · daily · help · quickstart · discover · version")
+    console.print("  [green]知识研究[/] research · import · vault · search · skill")
+    console.print("  [green]个人家庭工作[/] profile · cards · scenario · brief · context · domains · gongwen")
+    console.print("  [green]健康治理[/] health · product-health · audit · governance · monitor")
+    console.print("  [green]战略Agent[/] compass · iterate · workflow · mcp · bos · events · code")
+    console.print("  [green]数据底层[/] data · contracts · dashboard · ssb · mof\n")
+    console.print("[dim]提示: agora MCP 连接后可直接调用 resolve_bos_uri; 完整地图 → cockpit help[/]")
     return 0

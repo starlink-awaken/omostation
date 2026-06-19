@@ -63,10 +63,18 @@ def cmd_context(_args: Namespace) -> int:
     # Guidance
     guidance = ctx.get("next_guidance", "")
     if guidance:
+        # 产品走查 v5 #V5-06: guidance 形如 "1.\\n查看P0...。2.\\n调用...",
+        # 旧版 split(".") 会把编号 "1"/"2" 和正文切成碎片, 每段都加 "→ {line}.",
+        # 渲染成 "→ 1." "→ 查看P0..." 的断行错乱。改用正则按编号/换行切分成干净步骤。
+        import re
+
+        parts = re.split(r"\s*\d+\.\s*|\n+", guidance)
+        steps = [p.strip("。. ") for p in parts if p.strip("。. ")]
+        if not steps:
+            steps = [guidance.strip()]
         console.print("\n[bold blue]🧭 下一步:[/]")
-        for line in guidance.split("."):
-            if line.strip():
-                console.print(f"  [blue]→[/] {line.strip()}.")
+        for i, step in enumerate(steps, 1):
+            console.print(f"  [blue]{i}.[/] {step}")
 
     console.print()
     return 0
@@ -168,14 +176,25 @@ def cmd_cards(args: Namespace) -> int:
         _get_err().print(f"[red]❌ cards_status 失败: {e}[/]")
         return 1
 
-    console.print(_panel(f"[bold cyan]🃏 CARDS ({len(items)} active)[/]", "cyan"))
-
+    # 产品走查 v5 #V5-14: 同 title 重复卡去重合并 (如 "变更门禁:DATA-CARDS-DB" ×N 刷屏)
+    seen: dict[str, dict] = {}
     for card in items:
+        key = str(card.get("title", "")).strip()
+        if key in seen:
+            seen[key]["count"] += 1
+        else:
+            entry = dict(card)
+            entry["count"] = 1
+            seen[key] = entry
+    console.print(_panel(f"[bold cyan]🃏 CARDS ({len(items)} active, {len(seen)} 去重后)[/]", "cyan"))
+
+    for card in seen.values():
         color = {"P0": "red", "P1": "yellow", "P2": "blue", "P3": "dim"}.get(card["priority"], "dim")
         status_color = "green" if card["status"] != "closed" else "dim"
+        dup = f" [yellow](×{card['count']})[/]" if card["count"] > 1 else ""
         console.print(
             f"  [[{color}]{card['priority']}[/]] "
-            f"[{status_color}]{card['title']}[/] "
+            f"[{status_color}]{card['title']}[/]{dup} "
             f"[dim]({card['type']} · {card['domain']})[/]"
         )
 

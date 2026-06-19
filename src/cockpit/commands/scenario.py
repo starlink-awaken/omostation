@@ -69,9 +69,6 @@ def _score_text_match(*, query: str, parts: list[str]) -> int:
 
 def _archive_scenario_receipt(result: dict[str, Any]) -> str:
     workspace_root = _workspace_root()
-    omo_root = workspace_root / "projects" / "omo"
-    if str(omo_root / "src") not in sys.path:
-        sys.path.insert(0, str(omo_root / "src"))
     from omo.omo_cockpit_bridge import archive_scenario_receipt
 
     return archive_scenario_receipt(workspace_root / ".omo", result)
@@ -117,13 +114,24 @@ def _f1_technical_radar(*, limit: int = 10) -> dict[str, Any]:
             ],
         )
         if score > 0:
+            # 产品走查 v5 #V5-17: title/next_action 基于频次分级, 非机械模板
+            agent_label = str(row.get("agent") or "研究").strip() or "研究"
+            if score >= 9:
+                _title = f"🔥 高频复用: {topic} (强烈建议沉淀共享模块)"
+                _na = "立即创建共享模块 + 文档 (高频, 沉淀收益大)"
+            elif score >= 6:
+                _title = f"📈 复用机会: {topic} (多次出现, 值得抽象)"
+                _na = "评估抽象为共享模块 + 关联源研究"
+            else:
+                _title = f"🔍 待观察: {topic} (来自 {agent_label})"
+                _na = "持续追踪, 累积信号后再决策"
             candidates.append(
                 {
-                    "title": f"Platform: consolidate {topic!r} into a shared module",
+                    "title": _title,
                     "source": source,
                     "source_path": f"cockpit:research:{row['id']}",
                     "timestamp": ts_iso,
-                    "next_action": "create OPC follow-up task + link to source research",
+                    "next_action": _na,
                     "evidence_id": row.get("id"),
                     "score": score,
                 }
@@ -232,7 +240,7 @@ def _f2_work_assistant(*, query: str) -> dict[str, Any]:
 def _family_cards_sources(*, query: str = "", limit: int = 5) -> tuple[list[dict[str, Any]], str]:
     _workspace_root() / "data" / "cards" / "cards.db"
 
-    cards_dir = _workspace_root() / "data" / "驾驶舱" / "CARDS"
+    cards_dir = Path.home() / "Documents" / "@驾驶舱" / "CARDS"  # L4 域 SSOT (v3 #24: data/ 仅 7 副本, Documents 67 真源)
     # 语义过滤 (产品走查 v2 #12: 之前只过滤 domain:family 全收, 健康 query 召回车险;
     # 现按 query tokens 评分 score>0 才收, 同 _f2_work_assistant, 召回精准).
     ranked: list[tuple[int, dict[str, Any]]] = []
@@ -287,11 +295,6 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
     hub_data = {}
     try:
         import asyncio
-        import sys
-
-        agora_src = str(_workspace_root() / "projects" / "agora" / "src")
-        if agora_src not in sys.path:
-            sys.path.insert(0, agora_src)
         from agora.mcp.bos_resolver import resolve_bos_uri
 
         result = asyncio.run(resolve_bos_uri("bos://persona/family-hub/health"))
@@ -327,7 +330,12 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
 
     # 三级 next-action — 启发式: query 含"急"字 → 紧急; 含"复查"或"关注" → 关注
     ql = (query or "").lower()
-    if "急" in ql or "urgent" in ql or "高烧" in ql:
+    # 普通用户视角 v4 #27: 发烧/高温数字是急症信号 (之前只匹配"高烧", "发烧38度"误判 normal 危险)
+    import re as _re
+
+    has_fever = "发烧" in ql or "高烧" in ql or "烧" in ql
+    has_high_temp = bool(_re.search(r"(3[89]|4[0-9])\s*度", ql)) or "38" in ql or "39" in ql or "40" in ql
+    if "急" in ql or "urgent" in ql or has_fever or has_high_temp:
         next_action_level = "urgent"
         next_action = "立即联系家庭医生 / 拨打急救电话"
     elif "关注" in ql or "复查" in ql or "follow" in ql:
@@ -380,6 +388,101 @@ def cmd_scenario(args) -> int:
         return 2
 
     result["archive_path"] = _archive_scenario_receipt(result)
+    if getattr(args, "scenario_json", False):
+        json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
+        sys.stdout.write("\n")
+    else:
+        _render_scenario_human(result)
+    return 0
+
+
+def _render_scenario_human(result: dict[str, Any]) -> None:
+    """人类可读面板 (产品走查 v5 #V5-13: 之前裸 JSON 家长/管理者看不懂).
+
+    三类 scenario 各自渲染: health 紧急级别配色 + 大字行动; radar 候选表格;
+    assistant 草稿面板 + 来源表。--json 保留机器可读原样。
+    """
+    from rich import box as rich_box
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+
+    console = Console()
+    sc = result.get("scenario", "")
+    gen = result.get("generated_at", "")
+
+    if sc == "family-health":
+        level = str(result.get("next_action_level", "normal"))
+        action = str(result.get("next_action", ""))
+        style = {"urgent": "red", "attention": "yellow"}.get(level, "green")
+        icon = {"urgent": "🚨", "attention": "⚠️"}.get(level, "✅")
+        query = result.get("query", "")
+        reds = result.get("red_lines_followed", []) or []
+        console.print(
+            Panel(
+                f"[bold {style}]{icon} 健康建议 · {level.upper()}[/]\n\n"
+                f"[bold]查询:[/] {query}\n"
+                f"[bold]建议行动:[/] {action}\n\n"
+                f"[dim]隐私: {result.get('privacy_class','confidential')} · "
+                f"来源: {result.get('source_count',0)} 条 · 红线: {'、'.join(reds)}[/]",
+                title="👨‍👩‍👧 家庭健康",
+                border_style=style,
+            )
+        )
+        if level == "urgent":
+            console.print("[bold red]⚠️ 这是紧急信号, 请立即按建议行动, 切勿延误就医。[/]")
+        return
+
+    if sc == "technical-radar":
+        cands = result.get("candidates", []) or []
+        console.print(
+            Panel(
+                f"[bold cyan]📡 技术雷达 · {len(cands)} 个升级候选[/]\n[dim]{gen}[/]",
+                border_style="cyan",
+            )
+        )
+        table = Table(box=rich_box.ROUNDED, header_style="bold cyan")
+        table.add_column("#", style="dim", width=3)
+        table.add_column("候选", style="bold")
+        table.add_column("来源", style="cyan", no_wrap=False)
+        table.add_column("下一步", style="green", no_wrap=False)
+        for i, c in enumerate(cands, 1):
+            table.add_row(
+                str(i),
+                str(c.get("title", ""))[:50],
+                str(c.get("source_path", ""))[:28],
+                str(c.get("next_action", ""))[:32],
+            )
+        console.print(table)
+        return
+
+    if sc == "work-assistant":
+        draft = result.get("draft", {}) or {}
+        sources = result.get("sources", []) or []
+        console.print(
+            Panel(
+                f"[bold green]💼 工作助理草稿[/]\n"
+                f"[bold]主题:[/] {draft.get('title','')}\n"
+                f"[bold]概要:[/] {draft.get('body','')}\n\n"
+                f"[bold]下一步:[/] {result.get('next_action','')}\n"
+                f"[dim]参考来源: {result.get('source_count',0)} 条[/]",
+                border_style="green",
+            )
+        )
+        if sources:
+            table = Table(box=rich_box.ROUNDED, header_style="bold green")
+            table.add_column("#", width=3)
+            table.add_column("来源", style="cyan", no_wrap=False)
+            table.add_column("摘要", style="dim", no_wrap=False)
+            for i, s in enumerate(sources, 1):
+                table.add_row(
+                    str(i),
+                    str(s.get("title", ""))[:36],
+                    str(s.get("summary", ""))[:54],
+                )
+            console.print(table)
+        return
+
+    # 兜底: 未知 scenario 退回 JSON
     json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
     sys.stdout.write("\n")
-    return 0

@@ -62,7 +62,7 @@ workspace governance ingress-debt /abs/path/to/debt.yaml --ingress-plane project
 ```
 
 `workspace governance` 现在会把 `.omo` 治理面巡检与 ingress 持久化写入统一转发到 `projects/omo` 的受审计 broker，而不是让入口层直接改 `.omo/`。
-其中 `workspace governance verify` 是面向人类与 agent 的统一治理验收入口，默认串行执行 surfaces / ingress-registry / `task-policy --all`；`surfaces` 输出里会带上 `task_policy_registry` 与 gate presence，用来核对代码注册表和 truth registry 是否漂移。
+其中 `workspace governance verify` 是面向人类与 agent 的统一治理验收入口，默认串行执行 surfaces / ingress-registry / mutation-surfaces / internal-write-profiles / `task-policy --all`；`surfaces` 输出里会带上 `task_policy_registry`、`mutation_surface_registry`、`internal_write_profile_registry` 与 gate presence，用来核对代码注册表和 truth registry 是否漂移。
 
 ## 架构位置
 

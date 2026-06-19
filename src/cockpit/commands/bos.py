@@ -14,9 +14,6 @@ def cmd_bos_status(args):
 
     # BOS metrics from core modules
     try:
-        import sys
-
-        sys.path.insert(0, str(Path.home() / "Workspace" / "projects" / "agora" / "src"))
         from agora.mcp.bos_metrics import bos_metrics
         from agora.mcp.bos_middleware import bos_cache
 
@@ -33,9 +30,6 @@ def cmd_bos_status(args):
 
     # Swarm status
     try:
-        import sys
-
-        sys.path.insert(0, str(Path.home() / "Workspace" / "projects" / "agora" / "src"))
         from agora.mcp.swarm import get_swarm
 
         swarm = get_swarm()
@@ -71,9 +65,6 @@ def cmd_bos_workflow(args):
 def cmd_bos_list(args):
     """列出所有 BOS URI 路由。"""
     try:
-        import sys
-
-        sys.path.insert(0, str(Path.home() / "Workspace" / "projects" / "agora" / "src"))
         from agora.mcp.resolver.services import POC_SERVICES
 
         by_domain: dict[str, list[str]] = {}

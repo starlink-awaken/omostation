@@ -19,6 +19,7 @@ dependencies = [
     "fastapi[standard]>=0.115.0",
     "uvicorn[standard]>=0.34.0",
     "agora>=3.0.0",
+    "omo",
 ]
 
 [project.optional-dependencies]
@@ -55,6 +56,8 @@ quote-style = "double"
 
 [tool.uv.sources]
 runtime = { path = "../runtime" }
+agora = { path = "../agora" }
+omo = { path = "../omo", editable = true }
 aetherforge-gateway = { path = "../aetherforge/packages/gateway" }
 l4-kernel = { path = "../l4-kernel", editable = true }
 

@@ -113,7 +113,26 @@ def _render_workbench(cycle: int | None = None, interval: float | None = None) -
     hl_line = (
         f"[bold]半衰期:[/bold] [green]{hl_active}[/] 活跃  [yellow]{hl_stale}[/] 需保鲜  [red]{hl_critical}[/] 荒废"
     )
-    c.print(_panel(f"{status_line}\n{stats_line}\n{hl_line}", "bright_blue"))
+    # 产品走查 v5 #V5-04: workbench 统一显示 SSOT 治理健康分 (health.yaml > system.yaml),
+    # 消除 4 健康指标(status/health/product-health/audit)混淆 — 首页以 SSOT 为准
+    health_line = ""
+    try:
+        import yaml as _yaml
+        from cockpit.data_index import resolve_workspace_root
+        # 产品走查 v5 #V5-04: 复用项目标准根解析器 (governance.py/data.py 同款), 比手写 cwd 向上
+        # 遍历更健壮 — __file__ 锚定不依赖 cwd; 找不到会 raise, 被此处 except 兜底 → health_line 空.
+        ws_root = resolve_workspace_root()
+        for cand in (ws_root / ".omo" / "state" / "health.yaml", ws_root / ".omo" / "state" / "system.yaml"):
+            if cand.exists():
+                _d = _yaml.safe_load(cand.read_text()) or {}
+                _hs = _d.get("health_score")
+                if isinstance(_hs, (int, float)):
+                    tag = "green" if _hs >= 80 else ("yellow" if _hs >= 60 else "red")
+                    health_line = f"\n[bold]治理健康:[/bold] [{tag}]{_hs}[/] [dim](SSOT, 服务健康见系统状态行)[/]"
+                    break
+    except Exception:
+        pass
+    c.print(_panel(f"{status_line}\n{stats_line}\n{hl_line}{health_line}", "bright_blue"))
     recent = _get_data_access().list_research(limit=5)
     if recent:
         wb_table = Table(
@@ -174,7 +193,11 @@ def _render_workbench(cycle: int | None = None, interval: float | None = None) -
         recs.append("[cyan]cockpit daily[/] — 今日研究简报")
         recs.append("[cyan]cockpit research --audit[/] — 治理审计")
     if healthy_count < total_services:
-        recs.append("[yellow]⚠️ 部分服务离线 — 检查系统状态[/yellow]")
+        offline = total_services - healthy_count
+        recs.append(
+            f"[yellow]⚠️ {offline} 个服务离线 — cockpit health --full 看详情; "
+            f"启动: LM Studio(:1234) / agora hub / Minerva[/yellow]"
+        )
     c.print(_panel("[bold]🎯 推荐操作[/bold]\n" + "\n".join(f"  {r}" for r in recs), "cyan"))
 
 
@@ -472,20 +495,29 @@ def cmd_help(_: argparse.Namespace) -> int:
             "  [cyan]cockpit demo[/]           — 5 分钟体验完整闭环\n"
             "  [cyan]cockpit status[/]          — 打开工作台\n"
             '  [cyan]cockpit research "主题"[/] — 发起你的第一个研究\n\n'
-            "[bold]📋 所有命令[/bold]\n"
-            "  [cyan]research[/]      深度研究（发起/查看/追问/发布/归档）\n"
-            "  [cyan]import[/]        从外部导入（文件/URL）\n"
-            "  [cyan]status[/]        工作台仪表盘\n"
-            "  [cyan]daily[/]         今日站会简报\n"
-            "  [cyan]demo[/]          快速体验旅程\n"
-            "  [cyan]quickstart[/]    新用户快速上手向导\n"
-            "  [cyan]init[/]          初始化向导（同 quickstart）\n"
-            "  [cyan]contracts[/]     契约验证（validate/list/export-research）\n"
-            "  [cyan]governance[/]    架构治理（calibrate/rechain/evolve）\n"
-            "  [cyan]dashboard[/]     Web 仪表盘\n"
-            "  [cyan]help[/]          查看产品地图\n\n"
+            "[bold]📋 所有命令 (38 个)[/bold]\n\n"
+            "[bold green]🚀 入门 & 导览[/]\n"
+            "  [cyan]demo[/] 5分钟闭环 · [cyan]status[/] 工作台 · [cyan]daily[/] 站会 · [cyan]help[/] 地图\n"
+            "  [cyan]quickstart[/]/[cyan]init[/] 上手向导 · [cyan]discover[/] 发现功能 · [cyan]version[/] 版本\n\n"
+            "[bold green]📖 知识 & 研究[/]\n"
+            "  [cyan]research[/] 深度研究 · [cyan]import[/] 导入 · [cyan]vault[/] 知识库搜索\n"
+            "  [cyan]search[/] 跨源搜索 · [cyan]skill[/] 定时技能\n\n"
+            "[bold green]👨‍👩‍👧 个人 & 家庭 & 工作[/]\n"
+            "  [cyan]profile[/] 身份档案 · [cyan]cards[/] 卡片状态 · [cyan]scenario[/] 家庭/工作场景 · [cyan]gongwen[/] 公文门户\n"
+            "  [cyan]brief[/] 会话简报 · [cyan]context[/] 上下文 · [cyan]domains[/] 域\n\n"
+            "[bold green]🛠️ 健康 & 治理[/]\n"
+            "  [cyan]health[/] [cyan]product-health[/] [cyan]audit[/] [cyan]governance[/] [cyan]monitor[/]\n\n"
+            "[bold green]🧠 战略 & Agent[/]\n"
+            "  [cyan]compass[/] 战略罗盘 · [cyan]iterate[/] C2G迭代 · [cyan]workflow[/] 工作流\n"
+            "  [cyan]mcp[/] MCP · [cyan]bos[/] BOS · [cyan]events[/] 事件流 · [cyan]code[/] 代码分析\n\n"
+            "[bold green]⚙️ 数据 & 底层[/]\n"
+            "  [cyan]data[/] [cyan]contracts[/] [cyan]dashboard[/] [cyan]ssb[/] [cyan]mof[/]\n\n"
             "[bold]🔄 完整用户旅程[/bold]\n"
             "  import → research → open → ask → publish → dossier → timeline → daily\n\n"
+            "[bold]🔍 搜索怎么选? (v5 #V5-12)[/]\n"
+            "  [cyan]vault \"关键词\"[/] — 搜本地知识库 (笔记/精读, 最快)\n"
+            "  [cyan]search \"关键词\" --all[/] — 跨源搜 (本地+BOS 知识引擎)\n"
+            '  [cyan]research "主题"[/] — 发起新深度研究 (产生新知识)\n\n'
             "[bold]💡 最佳实践[/bold]\n"
             "  · 新用户：[cyan]cockpit demo[/] 体验全流程\n"
             "  · 日常：[cyan]cockpit daily[/] 查看今日研究\n"
@@ -539,10 +571,21 @@ def cmd_daily(args: argparse.Namespace) -> int:
         )
         return 0
     if not recent:
+        # 产品走查 v5 #V5-09: 说明为何"没有" (最近研究时间 + 区分 search-trace 活动),
+        # 消除与 research --list 看到记录却说"没新研究"的不一致感
+        latest_hint = ""
+        if results:
+            latest = max(results, key=lambda r: r.get("created_at", 0))
+            gap = (time.time() - latest.get("created_at", 0)) / 86400
+            kind = "搜索追踪" if "trace" in str(latest.get("agent", "")).lower() else "研究"
+            latest_ts = datetime.fromtimestamp(latest.get("created_at", 0)).strftime("%m-%d %H:%M")
+            latest_hint = (
+                f"\n[dim]最近{kind}: {latest_ts} ({gap:.1f}天前), 超出 {args.days} 天窗口[/dim]"
+            )
         c.print(
             _panel(
                 f"[bold cyan]📅 {date_str} 今日站会[/]\n\n"
-                f"[dim]📭 过去 {args.days} 天没有新研究。[/dim]\n\n"
+                f"[dim]📭 过去 {args.days} 天没有新研究。[/dim]{latest_hint}\n\n"
                 "[bold]🎯 现在可以：[/bold]\n"
                 '  [cyan]cockpit research "你的主题"[/] — 发起新研究\n'
                 "  [cyan]cockpit import ~/Desktop/note.md[/] — 导入材料\n"

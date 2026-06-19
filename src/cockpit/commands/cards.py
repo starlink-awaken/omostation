@@ -89,14 +89,23 @@ def _do_list(c, e) -> int:
         if not cat_dir.exists():
             continue
         c.print(f"\n[bold cyan]── {cat} ({sum(1 for _ in cat_dir.glob('*.md'))} cards) ──[/]")
+        # 产品走查 v5 #V5-14: 同 title 重复 debt 卡去重合并 (如 "变更门禁:DATA-CARDS-DB" ×4 刷屏)
+        seen: dict[str, dict] = {}
         for cat_name, path, fm, _ in _iter_cards():
             if cat_name != cat:
                 continue
             title = fm.get("title", path.stem)
             status = fm.get("status", "?")
             priority = fm.get("priority", "?")
-            c.print(f"  [{priority}] {path.stem[:50]:50s} [dim]({status})[/] {title[:40]}")
-            count += 1
+            key = title.strip()
+            if key in seen:
+                seen[key]["count"] += 1
+                continue
+            seen[key] = {"priority": priority, "stem": path.stem, "status": status, "title": title, "count": 1}
+        for info in seen.values():
+            suffix = f" [yellow](×{info['count']})[/]" if info["count"] > 1 else ""
+            c.print(f"  [{info['priority']}] {info['stem'][:50]:50s} [dim]({info['status']})[/] {info['title'][:40]}{suffix}")
+            count += info["count"]
     c.print(f"\n[green]总计 {count} cards[/]")
     return 0
 

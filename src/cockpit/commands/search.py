@@ -114,6 +114,23 @@ def _cmd_search(args: Namespace) -> int:
             f"[bold cyan]total:[/] {len(merged_results)}  "
             f"[bold cyan]zones:[/] {zone_count}"
         )
+        if len(merged_results) == 0:
+            # 产品走查 v5 #V5-08: total=0 可能是假阴性 (agora 离线致 kos/vault zone
+            # 未覆盖)。明确诊断原因 + 给出路, 避免"搜不到=系统没这知识"的误判。
+            skipped = [z for z, n in zone_count.items() if n == 0]
+            console.print("\n[yellow]⚠️ 未找到结果 — 别急着放弃, 可能是:[/]")
+            if not search_all:
+                console.print(
+                    "  [dim]·[/] 仅搜了本地库, 加 [cyan]--all[/] 同时搜 BOS 知识引擎 (vault/kos)"
+                )
+            if skipped:
+                console.print(
+                    f"  [dim]·[/] 知识源 {', '.join(skipped)} 本次未命中或未连接,"
+                    f" 看 [cyan]cockpit status[/] 服务在线状态"
+                )
+            console.print(
+                f"  [dim]·[/] 换关键词, 或 [cyan]cockpit vault \"{query}\"[/] 直接搜知识库"
+            )
         for item in interleaved:
             title = str(item.get("topic", item.get("title", str(item)[:80])))[:70]
             zone = item.get("_zone", "?")

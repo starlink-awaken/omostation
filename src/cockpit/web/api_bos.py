@@ -3,8 +3,6 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from ..compat import _ensure_agora_src
-
 router = APIRouter()
 
 
@@ -12,7 +10,7 @@ router = APIRouter()
 async def api_bos_services(domain: str = ""):
     """列出所有 BOS URI 服务，可按 domain 过滤。"""
     try:
-        _ensure_agora_src()
+
         from agora.mcp.resolver.services import POC_SERVICES
 
         services = []
@@ -39,7 +37,7 @@ async def api_bos_resolve(uri: str = "", arguments: str = "{}"):
         return JSONResponse(content={"error": "URI 必须是 bos:// 格式"}, status_code=400)
 
     try:
-        _ensure_agora_src()
+
         from agora.mcp.resolver.api import parse_bos_uri
         from agora.mcp.resolver.services import POC_SERVICES
 
@@ -79,7 +77,7 @@ async def api_bos_resolve(uri: str = "", arguments: str = "{}"):
 async def api_bos_health():
     """BOS 系统健康检查。"""
     try:
-        _ensure_agora_src()
+
         from agora.mcp.bos_metrics import bos_metrics
         from agora.mcp.resolver.services import POC_SERVICES
 
@@ -102,7 +100,7 @@ async def api_bos_health():
 async def api_bos_metrics(prefix: str = ""):
     """BOS 调用指标。"""
     try:
-        _ensure_agora_src()
+
         from agora.mcp.bos_metrics import bos_metrics
 
         if prefix:

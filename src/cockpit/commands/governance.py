@@ -36,6 +36,8 @@ def _run_omo_verify(workspace_root: Path) -> int:
     verify_steps = [
         ["python", "-W", "ignore::DeprecationWarning", "-m", "omo.cli", "governance", "surfaces", "--workspace-root", "../..", "--json"],
         ["python", "-W", "ignore::DeprecationWarning", "-m", "omo.cli", "lint", "ingress-registry", "--workspace-root", "../.."],
+        ["python", "-W", "ignore::DeprecationWarning", "-m", "omo.cli", "lint", "mutation-surfaces", "--workspace-root", "../.."],
+        ["python", "-W", "ignore::DeprecationWarning", "-m", "omo.cli", "lint", "internal-write-profiles", "--workspace-root", "../.."],
         ["python", "-W", "ignore::DeprecationWarning", "-m", "omo.cli", "lint", "task-policy", "--all", "--workspace-root", "../.."],
     ]
     for step in verify_steps:
@@ -52,27 +54,15 @@ def cmd_governance(args: argparse.Namespace) -> int:
     import shutil
 
     if not args.subcommand:
-        _get_console().print("[yellow]可用治理子命令:[/]")
-        for cmd in [
-            "calibrate",
-            "rechain",
-            "evolve",
-            "report",
-            "drift-check",
-            "validate",
-            "verify",
-            "surfaces",
-            "ingress-goal",
-            "ingress-task",
-            "ingress-debt",
-        ]:
-            _get_console().print(f"  cockpit governance {cmd}")
-        _get_console().print("\n[yellow]示例:[/]")
-        _get_console().print("  cockpit governance calibrate --check")
-        _get_console().print("  cockpit governance verify")
-        _get_console().print("  cockpit governance surfaces --json")
-        _get_console().print("  cockpit governance rechain")
-        return 0
+        # 产品走查 v3 #18: 无参数显示治理概览(surfaces), 而非裸命令列表 — 用户敲了期待看状态
+        workspace_root = resolve_workspace_root()
+        _get_console().print("[cyan]📋 治理概览:[/]")
+        rc = _run_omo_governance(["surfaces"], workspace_root)
+        _get_console().print(
+            "\n[yellow]更多子命令:[/] cockpit governance "
+            "{report|verify|calibrate|drift-check|surfaces --json|rechain|...}"
+        )
+        return rc
     subcmd = args.subcommand
     if subcmd in _OMO_GOVERNANCE_SUBCOMMANDS:
         workspace_root = resolve_workspace_root()

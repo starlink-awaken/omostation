@@ -8,13 +8,6 @@ from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
-WORKSPACE_ROOT = Path.home() / "Workspace"
-OMO_ROOT = WORKSPACE_ROOT / "projects" / "omo"
-import sys
-
-if str(OMO_ROOT / "src") not in sys.path:
-    sys.path.insert(0, str(OMO_ROOT / "src"))
-
 from omo.omo_cockpit_bridge import (
     append_hitl_override,
     approve_hitl_proposal_async,

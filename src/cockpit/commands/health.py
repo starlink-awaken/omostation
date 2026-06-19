@@ -7,8 +7,6 @@ from pathlib import Path
 
 from rich.console import Console
 
-from .status import cmd_status
-
 console = Console()
 
 def _cmd_health(args: Namespace) -> int:
@@ -31,7 +29,16 @@ def _cmd_health(args: Namespace) -> int:
             from cockpit.scripts.cockpit_mcp import workspace_context
             print(workspace_context())
         else:
-            cmd_status(args)
+            # 产品走查 v5 #V5-02: health 不重复完整 status 工作台 (避免与 cockpit status
+            # 输出冗余); 聚焦健康摘要, 完整工作台引导用户用 cockpit status
+            import json as _json
+            from cockpit.scripts.cockpit_mcp import workspace_context
+
+            ctx = _json.loads(workspace_context())
+            console.print(f"  Phase {ctx.get('phase','?')} · {str(ctx.get('theme',''))[:40]}")
+            cs = ctx.get("cards_summary", {}) or {}
+            console.print(f"  活跃卡片: {cs.get('active',0)} (P0: {cs.get('p0_open',0)})")
+            console.print("  [dim]完整工作台 → [cyan]cockpit status[/][/]")
     except Exception as e:
         console.print(f"[red]Cockpit status error: {e}[/]")
         return_code = 1

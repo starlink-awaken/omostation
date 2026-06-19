@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"git add src/agora/server/tools_workspace_audit.py && git commit -m \\\"feat(audit): agora MCP 工具暴露 6 维度全方位审计 (Round 43 P1)\\n\\n修真前: agora MCP 没审计工具, 用户必须调 bin/workspace-audit 直接\\n修真后: 新增 7 个 ...",
-  "error": "Exit code 128\nwarning: could not open directory 'src/agora/server/': No such file or directory\nfatal: pathspec 'src/agora/server/tools_workspace_audit.py' did not match any files",
-  "timestamp": "2026-06-15T09:47:13.291Z",
-  "retry_count": 2
-}

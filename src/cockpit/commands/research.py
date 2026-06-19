@@ -224,6 +224,25 @@ def cmd_research_search(args: argparse.Namespace) -> int:
     return 0
 
 
+def _human_summary(raw) -> str:
+    """产品走查 v5 #V5-10: 摘要提取人类可读, JSON blob (search-trace) 解析为可读标记."""
+    s = str(raw or "").strip()
+    if not s:
+        return ""
+    if s.startswith("{"):
+        try:
+            import json as _j
+            d = _j.loads(s)
+            q = d.get("query") or d.get("topic") or ""
+            total = d.get("total")
+            if q:
+                return f"🔍 {q}" + (f" ({total}命中)" if total is not None else "")
+            return "[搜索追踪]"
+        except Exception:
+            return "[数据记录]"
+    return _short(s, 80)
+
+
 def cmd_research_list(args: argparse.Namespace) -> int:
     status = getattr(args, "status", "all")
     include_archived = status in ("archived", "all")
@@ -266,7 +285,7 @@ def cmd_research_list(args: argparse.Namespace) -> int:
             str(r["source_count"] or 0),
             str(follow_ups),
             agent,
-            _short(r["summary"], 80),
+            _human_summary(r.get("summary")),
         )
     _get_console().print(table)
     _print_research_help_suggestions()

@@ -53,13 +53,6 @@ PROVIDER_PLANE_PATH = WORKSPACE_ROOT / ".omo" / "state" / "provider-plane.yaml"
 LLM_QUOTA_SUMMARY_PATH = RUNTIME_HOME / "data" / "llm_quota_summary.json"
 LLM_COST_LOG_PATH = RUNTIME_HOME / "data" / "llm_cost.jsonl"
 
-# Ensure both runtime/src and omo/src are on sys.path for imports
-_runtime_src = str(PROJECT_ROOT / "src")
-_omo_src = str(OMO_ROOT / "src")
-for p in [_runtime_src, _omo_src]:
-    if p not in sys.path:
-        sys.path.insert(0, p)
-
 # L4 bridge imports (try/except for graceful degradation)
 try:
     from cockpit.scripts.cockpit_mcp import cards_check, cards_status, workspace_context
