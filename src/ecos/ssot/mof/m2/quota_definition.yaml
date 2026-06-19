@@ -4,7 +4,40 @@ created: '2026-06-08T23:27:00'
 quota_definition:
   m3_parent: GovernanceElement
   description: 配额/限额定义节点(deepseek token quota 等)
-  requiredProperties: {}
+  stateMachine:
+    initial: draft
+    states:
+      - draft
+      - active
+      - exceeded
+      - suspended
+      - archived
+    transitions:
+      - from: draft
+        to: active
+        trigger: approve
+      - from: active
+        to: exceeded
+        trigger: usage_exceeds_limit
+      - from: active
+        to: suspended
+        trigger: manual_suspend
+      - from: exceeded
+        to: active
+        trigger: quota_reset
+      - from: suspended
+        to: active
+        trigger: manual_resume
+      - from: active
+        to: archived
+        trigger: decommission
+  requiredProperties:
+    id:
+      type: string
+      description: 唯一标识
+    name:
+      type: string
+      description: 配额名称
   optionalProperties:
     provider:
       type: string

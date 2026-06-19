@@ -4,6 +4,30 @@ created: '2026-06-17'
 OmniEnvelope:
   m3_parent: GovernanceElement
   description: Omni-Bus 统一信封协议，定义在数据、事件、控制面流转的全局标准数据结构。
+  stateMachine:
+    initial: created
+    states:
+      - created
+      - routed
+      - delivered
+      - failed
+      - dead_letter
+    transitions:
+      - from: created
+        to: routed
+        trigger: route_message
+      - from: routed
+        to: delivered
+        trigger: deliver_success
+      - from: routed
+        to: failed
+        trigger: deliver_failed
+      - from: failed
+        to: routed
+        trigger: retry
+      - from: failed
+        to: dead_letter
+        trigger: max_retries_exceeded
   requiredProperties:
     id:
       type: string

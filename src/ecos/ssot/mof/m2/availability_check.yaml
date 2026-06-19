@@ -4,7 +4,43 @@ created: '2026-06-08T23:27:00'
 availability_check:
   m3_parent: GovernanceElement
   description: 服务可用性检查节点(deepseek 第三方依赖等)
-  requiredProperties: {}
+  stateMachine:
+    initial: draft
+    states:
+      - draft
+      - active
+      - degraded
+      - failed
+      - archived
+    transitions:
+      - from: draft
+        to: active
+        trigger: check_passes
+      - from: active
+        to: degraded
+        trigger: check_warns
+      - from: active
+        to: failed
+        trigger: check_fails
+      - from: degraded
+        to: active
+        trigger: check_passes
+      - from: degraded
+        to: failed
+        trigger: check_fails
+      - from: failed
+        to: active
+        trigger: check_passes
+      - from: active
+        to: archived
+        trigger: decommission
+  requiredProperties:
+    id:
+      type: string
+      description: 唯一标识
+    name:
+      type: string
+      description: 名称
   optionalProperties:
     endpoint:
       type: string
