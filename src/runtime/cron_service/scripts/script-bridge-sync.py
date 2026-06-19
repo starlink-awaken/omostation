@@ -26,7 +26,6 @@ from pathlib import Path
 
 # ── 复用分类逻辑 ──────────────────────────────────────────────
 # ── 脚本分类规则（从 classify.py SSOT 读取）─────────────────
-sys.path.insert(0, str(Path.home() / "Workspace" / "cron-service"))
 from runtime.cron_service.classify import (
     SCRIPT_PREFIX_MAP,
     classify,

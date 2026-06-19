@@ -20,10 +20,6 @@ _workspace_root = Path(__file__).resolve().parents[4]  # runtime/src/runtime/sch
 OMO_STATE_FILE = Path(
     os.environ.get("OMO_STATE_FILE", str(_workspace_root / ".omo" / "state" / "system_health.yaml"))
 )
-OMO_SRC = _workspace_root / "projects" / "omo" / "src"
-
-if str(OMO_SRC) not in sys.path:
-    sys.path.insert(0, str(OMO_SRC))
 
 from omo.omo_gc import archive_resolved_debt_items
 

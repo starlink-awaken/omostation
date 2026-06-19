@@ -220,7 +220,6 @@ def generate_report(results: list[dict[str, Any]]) -> str:
 
 async def main() -> None:
     import sys as _sys
-    _sys.path.insert(0, str(PROJECT_ROOT))
 
     from runtime.executor.workflows.scenario2.detect_conflicts import get_conflict_via_definitions
 

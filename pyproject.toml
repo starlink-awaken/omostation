@@ -19,6 +19,7 @@ dependencies = [
     "aetherforge-gateway",
     "agora",
     "bus-foundation",
+    "omo",
 ]
 
 [project.scripts]
@@ -37,6 +38,7 @@ packages = ["src/runtime"]
 aetherforge-gateway = { path = "../aetherforge/packages/gateway" }
 agora = { path = "../agora" }
 bus-foundation = { path = "../bus-foundation" }
+omo = { path = "../omo", editable = true }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
