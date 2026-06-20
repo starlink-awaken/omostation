@@ -11,8 +11,8 @@ dependencies = [
     "httpx>=0.28.1",
     "pydantic>=2.13.4",
     "pyjwt>=2.13.0",
-    "pyyaml",
-    "requests>=2.32.5",
+    "pyyaml>=6.0.3",
+    "requests>=2.34.2",
     "uvicorn>=0.39.0",
     # LLM Gateway — provided by aetherforge-gateway
     # import: from llm_gateway.detection import detect_backends
