@@ -134,6 +134,14 @@ repos:
         files: ^(projects|scripts|bin)/.*\.py$
         stages: [pre-commit]
 
+      - id: mof-drift-check
+        name: MOF drift detection (架构漂移检测)
+        entry: bin/mof-drift
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        # 检测 sys.path hack / TODO 积累 / 测试缺失
+
       - id: markdownlint
         name: MarkdownLint
         entry: uv run --with pymarkdownlnt pymarkdown scan
