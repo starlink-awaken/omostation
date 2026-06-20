@@ -16,8 +16,8 @@ dependencies = [
     "rich>=13.0",
     "pyyaml>=6.0",
     "runtime",
-    "fastapi[standard]>=0.115.0",
-    "uvicorn[standard]>=0.34.0",
+    "fastapi[standard]>=0.128.8",
+    "uvicorn[standard]>=0.39.0",
     "agora>=3.0.0",
     "omo",
 ]
@@ -58,7 +58,6 @@ quote-style = "double"
 runtime = { path = "../runtime" }
 agora = { path = "../agora" }
 omo = { path = "../omo", editable = true }
-aetherforge-gateway = { path = "../aetherforge/packages/gateway" }
 l4-kernel = { path = "../l4-kernel", editable = true }
 
 [dependency-groups]
