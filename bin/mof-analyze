@@ -1,0 +1,244 @@
+#!/usr/bin/env python3
+"""MOF 统一分析工具 — quality / testing / cost / dashboard"""
+
+import subprocess
+import sys
+from pathlib import Path
+
+import yaml
+
+M1_DIR = Path(__file__).parent.parent / "projects/ecos/src/ecos/ssot/mof/m1"
+PROJECTS_DIR = Path(__file__).parent.parent / "projects"
+
+
+def load_all_m1() -> list[dict]:
+    nodes = []
+    for yaml_file in M1_DIR.rglob("*.yaml"):
+        if yaml_file.name.startswith("_"):
+            continue
+        try:
+            data = yaml.safe_load(yaml_file.read_text())
+            if isinstance(data, dict) and "id" in data:
+                nodes.append(data)
+        except Exception:
+            pass
+    return nodes
+
+
+def analyze_quality(project_name: str = None) -> dict:
+    """分析代码质量，给出重构建议"""
+    nodes = load_all_m1()
+    suggestions = []
+    
+    # Find large components
+    for n in nodes:
+        if n.get("type") == "Component":
+            # Check for known large files
+            desc = n.get("description", "")
+            name = n.get("name", "")
+            project = n.get("project", "")
+            
+            if project_name and project != project_name:
+                continue
+            
+            # Known large files
+            large_files = {
+                "operations.ts": "3841 行，建议拆分为 19 个域文件",
+                "dashboard_server.py": "1028 行，建议拆分 routes/templates/config",
+                "research.py": "1350 行，建议按功能域拆分",
+                "domain_manager.py": "1553 行，建议拆分 lifecycle/cache/audit",
+            }
+            
+            for pattern, suggestion in large_files.items():
+                if pattern in desc or pattern in name:
+                    suggestions.append({
+                        "project": project,
+                        "component": name,
+                        "issue": f"大型文件 {pattern}",
+                        "suggestion": suggestion,
+                        "severity": "medium",
+                    })
+    
+    # Check for known module bloat
+    bloat_projects = {
+        "omo": "125 个扁平文件，建议按子系统分包",
+        "agora": "7 个 bos_*.py 模块碎片化，建议合并为 3 个",
+    }
+    
+    for proj, suggestion in bloat_projects.items():
+        if project_name and proj != project_name:
+            continue
+        suggestions.append({
+            "project": proj,
+            "component": proj,
+            "issue": "模块膨胀",
+            "suggestion": suggestion,
+            "severity": "medium",
+        })
+    
+    return {"suggestions": suggestions}
+
+
+def analyze_testing(project_name: str = None) -> dict:
+    """分析测试覆盖情况"""
+    results = []
+    
+    projects = [project_name] if project_name else [
+        "agora", "cockpit", "runtime", "omo", "metaos", "ecos", "l4-kernel",
+        "kairon", "gbrain", "c2g", "aetherforge", "bus-foundation", "model-driven",
+        "omo-debt", "observability", "family-hub", "hermes-console"
+    ]
+    
+    for proj in projects:
+        project_dir = PROJECTS_DIR / proj
+        if not project_dir.exists():
+            continue
+        
+        # Count test files
+        test_count = 0
+        src_count = 0
+        for ext in ["*.py", "*.ts"]:
+            for f in project_dir.rglob(ext):
+                if "test" in f.name.lower() or "spec" in f.name.lower():
+                    test_count += 1
+                elif "src" in str(f) or "packages" in str(f):
+                    src_count += 1
+        
+        if src_count > 0:
+            coverage_ratio = test_count / src_count if src_count > 0 else 0
+            status = "good" if coverage_ratio > 0.3 else "warning" if coverage_ratio > 0.1 else "poor"
+            results.append({
+                "project": proj,
+                "src_files": src_count,
+                "test_files": test_count,
+                "ratio": f"{coverage_ratio:.2f}",
+                "status": status,
+            })
+    
+    return {"results": results}
+
+
+def analyze_cost(project_name: str = None) -> dict:
+    """分析成本结构"""
+    nodes = load_all_m1()
+    results = []
+    
+    for n in nodes:
+        if n.get("type") == "Component":
+            project = n.get("project", "")
+            if project_name and project != project_name:
+                continue
+            
+            value = n.get("value_metrics", {})
+            cost = n.get("cost_model", {})
+            
+            if value or cost:
+                results.append({
+                    "project": project,
+                    "component": n.get("name", n.get("id", "")),
+                    "value": value.get("strategic_importance", "unknown"),
+                    "cost": cost.get("operational", "unknown"),
+                    "business_value": value.get("business_value", "unknown"),
+                    "maintenance_cost": value.get("maintenance_cost", "unknown"),
+                })
+    
+    return {"results": results}
+
+
+def generate_dashboard() -> dict:
+    """生成系统健康仪表盘"""
+    nodes = load_all_m1()
+    
+    # Count by type
+    type_counts = {}
+    for n in nodes:
+        t = n.get("type", "unknown")
+        type_counts[t] = type_counts.get(t, 0) + 1
+    
+    # Count by status
+    status_counts = {}
+    for n in nodes:
+        s = n.get("status", "unknown")
+        status_counts[s] = status_counts.get(s, 0) + 1
+    
+    # Count by layer
+    layer_counts = {}
+    for n in nodes:
+        l = n.get("layer", "unknown")
+        layer_counts[l] = layer_counts.get(l, 0) + 1
+    
+    # Count services by runtime_status
+    service_status = {}
+    for n in nodes:
+        if n.get("type") == "Service":
+            rs = n.get("runtime_status", "unknown")
+            service_status[rs] = service_status.get(rs, 0) + 1
+    
+    return {
+        "total_nodes": len(nodes),
+        "by_type": type_counts,
+        "by_status": status_counts,
+        "by_layer": layer_counts,
+        "service_status": service_status,
+    }
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: mof-analyze <command> [project]")
+        print("Commands: quality, testing, cost, dashboard")
+        sys.exit(1)
+    
+    command = sys.argv[1]
+    project = sys.argv[2] if len(sys.argv) > 2 else None
+    
+    if command == "quality":
+        result = analyze_quality(project)
+        print("=== Code Quality Analysis ===\n")
+        if not result["suggestions"]:
+            print("✅ No quality issues found.")
+        else:
+            for s in result["suggestions"]:
+                print(f"[{s['project']}] {s['issue']}:")
+                print(f"  → {s['suggestion']}")
+                print()
+    
+    elif command == "testing":
+        result = analyze_testing(project)
+        print("=== Test Coverage Analysis ===\n")
+        for r in result["results"]:
+            icon = "✅" if r["status"] == "good" else "⚠️" if r["status"] == "warning" else "🔴"
+            print(f"{icon} {r['project']}: {r['test_files']} tests / {r['src_files']} src = {r['ratio']}")
+    
+    elif command == "cost":
+        result = analyze_cost(project)
+        print("=== Cost Analysis ===\n")
+        for r in result["results"]:
+            print(f"[{r['project']}] {r['component']}:")
+            print(f"  value={r['value']}, cost={r['cost']}")
+            print()
+    
+    elif command == "dashboard":
+        result = generate_dashboard()
+        print("=== System Health Dashboard ===\n")
+        print(f"Total nodes: {result['total_nodes']}")
+        print(f"\nBy type:")
+        for t, c in sorted(result["by_type"].items(), key=lambda x: -x[1])[:10]:
+            print(f"  {t}: {c}")
+        print(f"\nBy status:")
+        for s, c in sorted(result["by_status"].items(), key=lambda x: -x[1]):
+            print(f"  {s}: {c}")
+        print(f"\nBy layer:")
+        for l, c in sorted(result["by_layer"].items(), key=lambda x: -x[1]):
+            print(f"  {l}: {c}")
+        print(f"\nService status:")
+        for s, c in sorted(result["service_status"].items(), key=lambda x: -x[1]):
+            print(f"  {s}: {c}")
+    
+    else:
+        print(f"Unknown command: {command}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
