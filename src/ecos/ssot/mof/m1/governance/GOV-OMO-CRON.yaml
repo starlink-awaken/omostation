@@ -1,0 +1,15 @@
+id: GOV-OMO-CRON
+type: GovernancePolicy
+m3_parent: GovernanceElement.Policy
+name: omo-cron
+description: .omo/cron/ 定时任务治理 — cron 配置和脚本
+layer: L4
+path: .omo/cron/
+file_count: 2
+status: active
+state_history:
+  - state: active
+    timestamp: '2026-06-20T00:00:00Z'
+    reason: initial_modeling
+model_driven_refs:
+  source_file: .omo/cron/

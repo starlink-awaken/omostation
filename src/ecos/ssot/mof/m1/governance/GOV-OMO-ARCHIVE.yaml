@@ -1,0 +1,22 @@
+id: GOV-OMO-ARCHIVE
+type: GovernancePolicy
+m3_parent: GovernanceElement.Policy
+name: omo-archive
+description: .omo/_archive/ 归档治理 — 历史文档、基础设施历史、遗留主页
+layer: L4
+path: .omo/_archive/
+file_count: 77
+subdirectories:
+  - docs
+  - infrastructure-history
+  - legacy-home-omo-202602
+  - legacy-root-docs
+  - sandbox-2026-06-15
+  - tests
+status: archived
+state_history:
+  - state: archived
+    timestamp: '2026-06-20T00:00:00Z'
+    reason: historical_archive
+model_driven_refs:
+  source_file: .omo/_archive/

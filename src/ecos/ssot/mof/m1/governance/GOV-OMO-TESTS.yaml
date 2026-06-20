@@ -1,0 +1,15 @@
+id: GOV-OMO-TESTS
+type: GovernancePolicy
+m3_parent: GovernanceElement.Policy
+name: omo-tests
+description: .omo/tests/ 测试治理 — 治理测试用例
+layer: L4
+path: .omo/tests/
+file_count: 1
+status: active
+state_history:
+  - state: active
+    timestamp: '2026-06-20T00:00:00Z'
+    reason: initial_modeling
+model_driven_refs:
+  source_file: .omo/tests/

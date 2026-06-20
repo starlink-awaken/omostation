@@ -1,0 +1,15 @@
+id: GOV-OMO-EVIDENCE
+type: GovernancePolicy
+m3_parent: GovernanceElement.Policy
+name: omo-evidence
+description: .omo/evidence/ 证据治理 — 治理证据、审计证据
+layer: L4
+path: .omo/evidence/
+file_count: 8
+status: active
+state_history:
+  - state: active
+    timestamp: '2026-06-20T00:00:00Z'
+    reason: initial_modeling
+model_driven_refs:
+  source_file: .omo/evidence/

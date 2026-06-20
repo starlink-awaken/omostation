@@ -1,0 +1,15 @@
+id: GOV-OMO-CHANGE-LOG
+type: GovernancePolicy
+m3_parent: GovernanceElement.Policy
+name: omo-change-log
+description: .omo/change-log/ 变更日志治理 — 系统变更记录
+layer: L4
+path: .omo/change-log/
+file_count: 1
+status: active
+state_history:
+  - state: active
+    timestamp: '2026-06-20T00:00:00Z'
+    reason: initial_modeling
+model_driven_refs:
+  source_file: .omo/change-log/
