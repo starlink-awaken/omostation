@@ -1,0 +1,26 @@
+id: GOV-OMO-DELIVERY
+type: GovernancePolicy
+m3_parent: GovernanceElement.Policy
+name: omo-delivery
+description: .omo/_delivery/ 交付面治理 — 运行记录、测试、证据
+layer: L4
+path: .omo/_delivery/
+file_count: 119
+subdirectories:
+  - audit-rollout
+  - c2g-pilot-evidence
+  - doc-lint
+  - evidence-legacy
+  - ingress
+  - phase-gate
+  - release
+  - scenarios
+  - systems-thinking
+  - task-center
+status: active
+state_history:
+  - state: active
+    timestamp: '2026-06-20T00:00:00Z'
+    reason: initial_modeling
+model_driven_refs:
+  source_file: .omo/_delivery/

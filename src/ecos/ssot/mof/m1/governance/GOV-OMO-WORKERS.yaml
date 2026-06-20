@@ -1,0 +1,21 @@
+id: GOV-OMO-WORKERS
+type: GovernancePolicy
+m3_parent: GovernanceElement.Policy
+name: omo-workers
+description: .omo/workers/ 工作者治理 — 治理覆盖层、晋升、运行手册、模板
+layer: L4
+path: .omo/workers/
+file_count: 162
+subdirectories:
+  - governance-overlay
+  - promotion
+  - runbooks
+  - runs
+  - templates
+status: active
+state_history:
+  - state: active
+    timestamp: '2026-06-20T00:00:00Z'
+    reason: initial_modeling
+model_driven_refs:
+  source_file: .omo/workers/

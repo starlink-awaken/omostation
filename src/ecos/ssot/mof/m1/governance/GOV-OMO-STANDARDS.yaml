@@ -1,16 +1,21 @@
-id: GOV-OMO-STANDARDS
+id: GOV-OMO-STANDARDS-EXT
 type: GovernancePolicy
 m3_parent: GovernanceElement.Policy
-name: omo-standards
-description: .omo/standards/ 标准治理 — omo-governance-surfaces.md + templates
+name: omo-standards-ext
+description: .omo/standards/ 标准扩展 — omo-governance-surfaces.md + 模板 + 约束
 layer: L4
 path: .omo/standards/
+file_count: 41
+key_files:
+  - omo-governance-surfaces.md
+  - opc-review-template.md
+  - task-yaml-rules.md
+  - health-metrics-semantics.md
+  - mof-agent-constraints.yaml
 status: active
-
-model_driven_refs:
-  source_file: projects/ecos/src/ecos/ssot/mof/m1/
-
 state_history:
   - state: active
-    timestamp: '2026-06-19T00:00:00Z'
+    timestamp: '2026-06-20T00:00:00Z'
     reason: initial_modeling
+model_driven_refs:
+  source_file: .omo/standards/
