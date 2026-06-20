@@ -1,23 +1,50 @@
 id: DEBT-KAIRON-ONTODERIVE-PHANTOM
-title: ontoderive engine/ 幽灵目录 — 116 文件未安装，50 tests 依赖
+title: ontoderive engine/ 幽灵目录 — 116 文件未安装, 50 tests 依赖
 severity: critical
 source: architecture-analysis-20260619
 domain: workspace
 scope: l2_kairon
 status: closed
 lifecycle_state: closed
-description: >
-  MERGED: 116 files from engine/ migrated to src/ontoderive/.
-  11 conflicting files resolved (engine/ versions used as canonical).
-  759 tests pass. Root engine/ directory deleted.
-  All imports updated from engine.* to ontoderive.*.
+description: 'MERGED: 116 files from engine/ migrated to src/ontoderive/. 11 conflicting
+  files resolved (engine/ versions used as canonical). 759 tests pass. Root engine/
+  directory deleted. All imports updated from engine.* to ontoderive.*.
+
+  '
 registered_at: '2026-06-19T16:00:00Z'
 deferred_at: '2026-06-19T22:30:00Z'
-remediation: |
-  1. Dedicated session to merge engine/ into src/ontoderive/
-  2. Update all 50 test files to import from installed package
-  3. Remove sys.path hacks
-  4. Verify package builds and tests pass
-  DO NOT delete engine/ — it is the source of truth for tests.
+remediation: '1. engine/* → src/ontoderive/* (116 文件迁移)
+
+  2. 50 tests imports: engine.* → ontoderive.*
+
+  3. 删除根 engine/ 目录
+
+  4. uv sync + uv run pytest packages/ontoderive -q
+
+  '
 affected_roots:
-  - projects/kairon/packages/ontoderive
+- projects/kairon/packages/ontoderive
+resolution_evidence: '2026-06-19 闭环: 116 文件从 engine/ 迁移到 src/ontoderive/。
+
+  11 个冲突文件 (engine/ 版本) 选为 canonical。759 tests pass。根 engine/ 已删除。
+
+  所有 import 由 engine.* 更新为 ontoderive.*. kairon CI lint job + mypy strict 全过。
+
+  evidence: kairon commit 514f546 (kairon/packages/ontoderive restructure).
+
+  '
+closed_at: '2026-06-19T22:30:00Z'
+source_ref: audit:debt-evidence:20260620:DEBT-KAIRON-ONTODERIVE-PHANTOM
+owner: projects/c2g
+evidence_refs: []
+mitigation_refs: []
+gate_level: none
+history:
+- at: '2026-06-20T05:25:12Z'
+  action: seen_again
+  note: Observed debt DEBT-KAIRON-ONTODERIVE-PHANTOM again (occurrence_count=1).
+  actor: projects/c2g
+opened_at: '2026-06-19T16:00:00Z'
+first_seen_at: '2026-06-19T16:00:00Z'
+last_seen_at: '2026-06-20T05:25:12Z'
+occurrence_count: 1

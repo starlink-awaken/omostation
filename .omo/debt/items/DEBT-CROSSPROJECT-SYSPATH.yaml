@@ -6,25 +6,61 @@ domain: workspace
 scope: cross-project
 status: closed
 lifecycle_state: closed
-description: >
-  23 sys.path.insert across 4 projects. 19 eliminated (cockpit:8, agora:8, runtime:3, metaos:2).
-  Remaining 4 are acceptable: agora resolver (1 dynamic import), cockpit tests (2 test harness), agora mcp_proxy (1 resolved via metaos dep).
-  All hardcoded /Users/xiamingxing/Workspace/projects/... paths removed from production code.
+description: '23 sys.path.insert across 4 projects. 19 eliminated (cockpit:8, agora:8,
+  runtime:3, metaos:2). Remaining 4 are acceptable: agora resolver (1 dynamic import),
+  cockpit tests (2 test harness), agora mcp_proxy (1 resolved via metaos dep). All
+  hardcoded /Users/xiamingxing/Workspace/projects/... paths removed from production
+  code.
+
+  '
 registered_at: '2026-06-19T16:30:00Z'
-remediation: |
-  Per-project analysis needed:
-  1. cockpit/compat.py → depends on agora source (add editable dep)
-  2. cockpit/commands/bos.py → imports agora.mcp.bos_resolver (add editable dep)
-  3. cockpit/commands/scenario.py → imports omo and agora (add editable deps)
-  4. cockpit/dashboard_server.py → imports runtime and omo (add editable deps)
-  5. cockpit/web/api_proposals.py → imports omo (add editable dep)
-  6. cockpit/tests/* → test harness path setup (keep or move to conftest)
-  7. agora/server/* → imports ecos ssot (add editable dep)
-  8. agora/mcp_proxy/manager.py → imports metaos (add editable dep)
-  9. runtime/scheduler.py → imports omo (add editable dep)
-  10. metaos/* → self-referential path hacks (fix package structure)
+remediation: '1. cockpit/compat.py → 加 agora editable dep
+
+  2. cockpit/commands/{bos,scenario}.py + dashboard_server.py + web/api_proposals.py
+  → 加 agora/omo/runtime editable deps
+
+  3. agora/server/* → 加 ecos editable dep
+
+  4. agora/mcp_proxy/manager.py → 加 metaos editable dep
+
+  5. runtime/scheduler.py → 加 omo editable dep
+
+  6. metaos/* self-referential → 修包结构
+
+  7. cockpit/tests/* harness → 迁 conftest (评估后保留)
+
+  '
 affected_roots:
-  - projects/agora
-  - projects/cockpit
-  - projects/runtime
-  - projects/metaos
+- projects/agora
+- projects/cockpit
+- projects/runtime
+- projects/metaos
+resolution_evidence: '2026-06-19 闭环: 23 sys.path.insert 中 19 已消除 (cockpit:8, agora:8,
+  runtime:3, metaos:2)。
+
+  剩余 4 处经评估为可接受 (agora resolver 1 dynamic / cockpit tests 2 harness /
+
+  agora mcp_proxy 1 resolved via metaos dep)。生产代码已无 /Users/... 硬编码路径。
+
+  闭环验证: ruff 全包 0 hit; mof-enforce post-check OK; governance surfaces pass.
+
+  '
+closed_at: '2026-06-19T18:00:00Z'
+source_ref: audit:debt-evidence:20260620:DEBT-CROSSPROJECT-SYSPATH
+owner: projects/c2g
+evidence_refs: []
+mitigation_refs: []
+gate_level: none
+history:
+- at: '2026-06-20T05:25:05Z'
+  action: seen_again
+  note: Observed debt DEBT-CROSSPROJECT-SYSPATH again (occurrence_count=1).
+  actor: projects/c2g
+- at: '2026-06-20T05:25:12Z'
+  action: seen_again
+  note: Observed debt DEBT-CROSSPROJECT-SYSPATH again (occurrence_count=2).
+  actor: projects/c2g
+opened_at: '2026-06-19T16:30:00Z'
+first_seen_at: '2026-06-19T16:30:00Z'
+last_seen_at: '2026-06-20T05:25:12Z'
+occurrence_count: 2

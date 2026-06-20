@@ -22,3 +22,8 @@ seed_items:
 - .omo/debt/items/DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG.yaml
 - .omo/debt/items/DEBT-CARDS-FRONTMATTER-PARSE.yaml
 - .omo/debt/items/DEBT-COCKPIT-HEALTH-DISTORTION.yaml
+- .omo/debt/items/DEBT-CROSSPROJECT-SYSPATH.yaml
+- .omo/debt/items/DEBT-EMPTY-INIT-PY.yaml
+- .omo/debt/items/DEBT-GBRAIN-55-TODOS.yaml
+- .omo/debt/items/DEBT-KAIRON-ONTODERIVE-PHANTOM.yaml
+- .omo/debt/items/DEBT-GBRAIN-OPERATIONS-TS.yaml
