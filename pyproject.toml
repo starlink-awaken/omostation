@@ -9,7 +9,7 @@ dependencies = [
     "aetherforge-gateway",
     "agora",
     "bus-foundation",
-    "openai>=2.41.0",
+    "openai>=2.41.1",
     "pyyaml>=6.0.3",
 ]
 
