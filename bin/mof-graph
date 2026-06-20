@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+"""MOF 跨项目依赖图生成 — Mermaid 格式"""
+
+import sys
+from pathlib import Path
+
+import yaml
+
+M1_DIR = Path(__file__).parent.parent / "projects/ecos/src/ecos/ssot/mof/m1"
+
+
+def load_all_m1() -> list[dict]:
+    nodes = []
+    for yaml_file in M1_DIR.rglob("*.yaml"):
+        if yaml_file.name.startswith("_"):
+            continue
+        try:
+            data = yaml.safe_load(yaml_file.read_text())
+            if isinstance(data, dict) and "id" in data:
+                nodes.append(data)
+        except Exception:
+            pass
+    return nodes
+
+
+def generate_dependency_graph() -> str:
+    nodes = load_all_m1()
+    
+    mermaid = "```mermaid\ngraph LR\n"
+    
+    # Layer colors
+    layer_colors = {
+        "L0": "#ff6b6b",
+        "L1": "#ffa94d",
+        "L2": "#69db7c",
+        "L3": "#4dabf7",
+        "L4": "#9775fa",
+        "I0": "#f06595",
+        "X": "#868e96",
+    }
+    
+    # Find all COMP-WS nodes
+    components = {}
+    for n in nodes:
+        if n.get("type") == "Component" and n.get("id", "").startswith("COMP-WS-"):
+            comp_id = n.get("id", "")
+            name = n.get("name", comp_id.replace("COMP-WS-", ""))
+            layer = n.get("layer", "unknown")
+            components[comp_id] = {"name": name, "layer": layer}
+    
+    # Generate nodes with layer colors
+    for comp_id, info in components.items():
+        color = layer_colors.get(info["layer"], "#868e96")
+        mermaid += f"    {comp_id}[\"{info['name']}<br/>{info['layer']}\"]\n"
+    
+    # Generate edges from relations
+    for n in nodes:
+        if n.get("type") == "Component" and n.get("id", "").startswith("COMP-WS-"):
+            comp_id = n.get("id", "")
+            relations = n.get("relations", {})
+            for dep in relations.get("depends_on", []):
+                dep_id = f"COMP-WS-{dep}" if not dep.startswith("COMP-") else dep
+                if dep_id in components:
+                    mermaid += f"    {comp_id} --> {dep_id}\n"
+    
+    mermaid += "```\n"
+    
+    # Add legend
+    mermaid += "\n**Layer Legend:**\n"
+    for layer, color in layer_colors.items():
+        mermaid += f"- {layer}: {color}\n"
+    
+    return mermaid
+
+
+def find_circular_dependencies() -> list:
+    nodes = load_all_m1()
+    components = {}
+    for n in nodes:
+        if n.get("type") == "Component" and n.get("id", "").startswith("COMP-WS-"):
+            comp_id = n.get("id", "")
+            relations = n.get("relations", {})
+            deps = relations.get("depends_on", [])
+            components[comp_id] = deps
+    
+    # Find cycles using DFS
+    cycles = []
+    visited = set()
+    path = []
+    
+    def dfs(node):
+        if node in path:
+            cycle_start = path.index(node)
+            cycles.append(path[cycle_start:] + [node])
+            return
+        if node in visited:
+            return
+        visited.add(node)
+        path.append(node)
+        for dep in components.get(node, []):
+            dep_id = f"COMP-WS-{dep}" if not dep.startswith("COMP-") else dep
+            if dep_id in components:
+                dfs(dep_id)
+        path.pop()
+    
+    for node in components:
+        dfs(node)
+    
+    return cycles
+
+
+def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "cycles":
+        cycles = find_circular_dependencies()
+        if cycles:
+            print("=== Circular Dependencies Found ===\n")
+            for cycle in cycles:
+                print(" → ".join(cycle))
+        else:
+            print("✅ No circular dependencies found.")
+    else:
+        print(generate_dependency_graph())
+
+
+if __name__ == "__main__":
+    main()

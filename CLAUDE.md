@@ -53,7 +53,7 @@
 
 ## 项目身份
 
-这是 **omostation** 根仓库 —— 一个多项目融合工作区，整合了知识工程、数字生命 OS、Agent SDK 与知识脑四大子系统。**Phase 28 进行中**（5+3+1 全量审计 + X-Plane 治理控制面落地）。
+这是 **omostation** 根仓库 —— 一个多项目融合工作区，整合了知识工程、数字生命 OS、Agent SDK 与知识脑四大子系统。**当前 Phase/健康分/任务状态以 `.omo/state/system.yaml` 为 SSOT**（勿在此硬编码易变数字，会漂移；会话启动第[5]步已读）。
 
 ---
 
@@ -97,7 +97,7 @@ Worker/User → SharedBrain (轻量数据持久层)
 
 ---
 
-## 子项目清单 (10 项目 · 5+4+1+1 架构)
+## 子项目清单 (17 项目 · 5+4+1+1 架构, 全量见 `projects/`)
 
 | 项目 | 层 | 位置 | 栈 | 测试 | 状态 |
 |------|:---:|------|:---:|:----:|:----:|
@@ -139,6 +139,29 @@ make kairon-test         # 运行 kairon 全部测试
 make kairon-lint         # ruff 检查所有包
 make kairon-build        # uv sync 安装依赖
 make governance-check    # 全量治理检查
+```
+
+### MOF 工具 (Agent 必须遵守)
+
+```bash
+# 修改前：查影响/状态/价值
+bin/mof-enforce pre-check <node_id>
+
+# 修改后：校验合规
+bin/mof-enforce post-check
+
+# 推理
+bin/mof-reason.py impact <node_id>    # 影响分析
+bin/mof-reason.py state <node_id>     # 状态推理
+bin/mof-reason.py value <node_id>     # 价值推理
+
+# 分析
+bin/mof-analyze dashboard             # 系统仪表盘
+bin/mof-analyze testing               # 测试覆盖
+
+# 文档
+bin/mof-export readme <project>       # 自动生成 README
+bin/mof-export arch                   # 自动生成架构图
 ```
 
 ### kairon (Python monorepo)
@@ -238,13 +261,13 @@ bash tests/integration/run-all.sh
 
 ---
 
-## Phase 上下文
+## Phase 上下文 (SSOT 指针, 勿硬编码易变值)
 
-- **当前 Phase**: 28 (5+3+1 全量审计纪元 — X-Plane 治理控制面已落地;code_freeze=true)
-- **健康分**: 22.12/100 (2026-06-11 实测)
-- **完成度**: Phase 1-28 已完成; xplane_coverage=100% registry, 沙箱实测 19%
-- **当前活跃任务**: (无; planned/ 47 任务排队中)
-- **关键原则**: OMO MCP 化完成, agora 网关隔离固化, llm-gateway 统一算力调度, gbrain 图谱记忆
+> 运行时数字 (Phase/健康分/任务数/活跃任务) 每会话变化, **禁止在本文件硬编码** — 以 `.omo/state/system.yaml` 为唯一真源, `goals/current.yaml` 为目标源。本段只保留稳定的架构原则 + 实测快照。
+
+- **当前 Phase/健康分/任务状态**: 见 `.omo/state/system.yaml` (会话启动第[5]步已读; 实测 Phase 42 active, health 92, 2026-06-19)
+- **当前目标/Wave**: 见 `.omo/goals/current.yaml` (第[6]步; W1-W4 全 done)
+- **稳定架构原则 (不随 phase 变)**: OMO MCP 化, agora 网关隔离固化, llm-gateway 统一算力调度, gbrain 图谱记忆, 5+4+1+1 分层
 
 ---
 

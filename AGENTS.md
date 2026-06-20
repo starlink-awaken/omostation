@@ -48,6 +48,17 @@ bos://capability/ ← forge/runtime                  — 能力与生态
 | 子模块 | 22 子模块，各自独立 git 仓库。根仓库只追踪元配置和子模块指针 |
 | 治理收敛 | `.omo/` = state plane；`projects/omo/` = governance kernel；`projects/c2g/` = strategic ingress |
 
+### 治理写入收敛
+
+- `.omo/` 只承载状态、证据、知识与交付，不承载新的治理执行逻辑。
+- 持久化写入必须优先走 `projects/omo` 内核能力或 `projects/c2g` 战略入口；脚本层只负责编排，不再直接落盘 `.omo/`。
+- `omo lint direct-omo-io` 是 `.omo` / `spaces` 直写拦截门；当前 `.omo/_truth/registry/direct-io-baseline.yaml` 已清零，必须持续保持 `entries: []`。
+- broker 写入入口、worker/internal 写路径、task policy 机器注册表分别收敛到:
+  - `.omo/_truth/registry/mutation-surfaces.yaml`
+  - `.omo/_truth/registry/internal-write-profiles.yaml`
+  - `.omo/_truth/registry/task-policies.yaml`
+- 新增治理写面时，必须同时补 runtime 实现、truth registry、lint/CI 门禁；只改文档不算落地。
+
 ### X1-X4 SSOT 链
 
 | 维度 | 权威读源 | 派生消费文档 |
@@ -271,6 +282,55 @@ python3 tests/integration/test_runtime_e2e.py
 - 子模块 CI: 各项目仓库内 `.github/workflows/ci.yml` 及同类 workflow
 - 治理门禁: `governance-check.yml`, `quality.yml`, `workspace.yml`
 
+### MOF 工具集 (Model-Driven Framework)
+
+> MOF 是 eCOS 的"活 DNA" — 机器可读的系统描述，每次变更都必须更新、每次提交都自动校验。
+
+**Agent 约束强制:**
+```bash
+# 修改前：查影响/状态/价值
+bin/mof-enforce pre-check COMP-WS-agora
+
+# 修改后：校验合规
+bin/mof-enforce post-check
+```
+
+**推理工具:**
+```bash
+bin/mof-reason.py impact <node_id>    # 影响分析
+bin/mof-reason.py state <node_id>     # 状态推理
+bin/mof-reason.py value <node_id>     # 价值推理
+```
+
+**分析工具:**
+```bash
+bin/mof-analyze dashboard             # 系统仪表盘
+bin/mof-analyze testing               # 测试覆盖分析
+bin/mof-analyze quality               # 代码质量分析
+bin/mof-analyze cost                  # 成本分析
+```
+
+**文档生成:**
+```bash
+bin/mof-export readme <project>       # 自动生成 README
+bin/mof-export api <project>          # 自动生成 API 文档
+bin/mof-export arch                   # 自动生成 Mermaid 架构图
+```
+
+**漂移检测:**
+```bash
+bin/mof-drift                         # 检测架构漂移
+bin/mof-scan                          # 安全扫描
+bin/mof-graph                         # 依赖图生成
+bin/mof-graph cycles                  # 循环依赖检测
+```
+
+**团队协作:**
+```bash
+bin/mof-assign <domain>               # 团队任务分配
+bin/mof-evolution <project>           # 系统演化追踪
+```
+
 ## Gotchas
 
 1. **kairon uses uv** — Not pip/poetry. `uv sync` to install, `uv add <package>` to add deps.
@@ -410,6 +470,7 @@ git push origin main
 5. **MUTATION**: To change governed state, 优先走 `bos://` 资源入口；涉及 `.omo` 落盘时，优先走 `omo CLI` / `projects/omo` / `projects/c2g` broker，而不是 ad-hoc file I/O。
 6. **COGNITIVE FRAMEWORKS**: MetaOS dynamically loads cognitive frameworks (like BDSK or Six Hats) from the L0 MOF model (`ecos/src/ecos/ssot/mof/m1/cognitive_framework/`). When executing complex planning, adhere strictly to the injected framework personas.
 7. **MANDATORY ATOMIC COMMITS**: All agents MUST immediately run `git commit` after making logical changes, especially to documentation or `.omo` files. The system relies on Git post-commit hooks for knowledge extraction (`mof-extract`). Failing to commit will break the system's memory loop and is a critical failure.
+8. **DIRECT-IO BASELINE MUST STAY EMPTY**: `.omo/_truth/registry/direct-io-baseline.yaml` 只能是空基线；任何新增 entry 都视为治理回退，必须先修代码，再过 lint / CI。
 
 ### `.omo` 三层治理边界
 
