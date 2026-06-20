@@ -24,4 +24,8 @@ history:
     ruff auto-fixed (kairon bump), 0 drift'
   timestamp: '2026-06-20T15:32:33.150527'
   version: 0.0.7
-version: 0.0.7
+- description: 'P43 round-2: governance 100 A+ stable, 18 F821 F811 I001 fixed (4
+    real bugs: missing Any/cast/ndarray/dtype)'
+  timestamp: '2026-06-20T18:57:19.467522'
+  version: 0.0.8
+version: 0.0.8
