@@ -1,0 +1,246 @@
+# MOF 能力注册表 — 所有 MOF 工具/约束/流程的唯一注册点
+# 本文件是 MOF 体系的 SSOT，防止遗忘或混乱
+
+version: "2.0"
+updated_at: "2026-06-20"
+
+# ═══════════════════════════════════════════════════════════
+# 四层架构
+# ═══════════════════════════════════════════════════════════
+layers:
+  data_layer:
+    name: 数据层
+    description: 记录系统是什么
+    tools: [mof-io, mof-version]
+    status: complete
+    
+  knowledge_layer:
+    name: 知识层
+    description: 推理系统应该是什么
+    tools: [mof-reason, mof-decide, mof-graph]
+    status: complete
+    
+  decision_layer:
+    name: 决策层
+    description: 建议系统怎么演化
+    tools: [mof-autonomous]
+    status: complete
+    
+  action_layer:
+    name: 行动层
+    description: 自动执行系统演化
+    tools: [mof-act]
+    status: complete
+
+# ═══════════════════════════════════════════════════════════
+# 工具注册表
+# ═══════════════════════════════════════════════════════════
+tools:
+  # --- 数据层 ---
+  mof-io:
+    path: bin/mof-io
+    description: 模型导入/导出 (JSON)
+    commands: [export, import]
+    usage: "bin/mof-io export [file]"
+    
+  mof-version:
+    path: bin/mof-version
+    description: 模型版本管理
+    commands: [show, record, diff]
+    usage: "bin/mof-version record 'description'"
+    
+  # --- 知识层 ---
+  mof-reason:
+    path: projects/ecos/src/ecos/ssot/tools/mof-reason.py
+    description: 三维推理引擎 (impact/state/value)
+    commands: [impact, state, value]
+    usage: "python3 mof-reason.py impact <node_id>"
+    
+  mof-decide:
+    path: bin/mof-decide
+    description: 智能决策支持
+    commands: [<node_id>]
+    usage: "bin/mof-decide COMP-WS-agora"
+    
+  mof-graph:
+    path: bin/mof-graph
+    description: 跨项目依赖图生成
+    commands: [<无参数>, cycles]
+    usage: "bin/mof-graph cycles"
+    
+  # --- 决策层 ---
+  mof-autonomous:
+    path: bin/mof-autonomous
+    description: 自主决策引擎 (异常检测→推理→建议)
+    commands: [detect, decide]
+    usage: "bin/mof-autonomous decide"
+    
+  # --- 行动层 ---
+  mof-act:
+    path: bin/mof-act
+    description: 自主行动引擎 (规划→验证→执行→验证→记录)
+    commands: [fix_test, reduce_drift, improve_coverage, reduce_debt]
+    usage: "bin/mof-act improve_coverage cockpit"
+    
+  # --- 分析工具 ---
+  mof-analyze:
+    path: bin/mof-analyze
+    description: 统一分析工具
+    commands: [dashboard, testing, cost, quality]
+    usage: "bin/mof-analyze dashboard"
+    
+  mof-export:
+    path: bin/mof-export
+    description: 文档生成工具
+    commands: [readme, api, arch]
+    usage: "bin/mof-export readme cockpit"
+    
+  mof-drift:
+    path: bin/mof-drift
+    description: 架构漂移检测
+    commands: [<无参数>]
+    usage: "bin/mof-drift"
+    
+  mof-scan:
+    path: bin/mof-scan
+    description: 依赖安全扫描
+    commands: [<无参数>]
+    usage: "bin/mof-scan"
+    
+  mof-assign:
+    path: bin/mof-assign
+    description: 团队任务分配
+    commands: [<domain>]
+    usage: "bin/mof-assign cockpit"
+    
+  mof-evolution:
+    path: bin/mof-evolution
+    description: 系统演化追踪
+    commands: [<project>]
+    usage: "bin/mof-evolution kairon"
+    
+  mof-enforce:
+    path: bin/mof-enforce
+    description: Agent 约束强制
+    commands: [pre-check, post-check, impact, state, value, validate]
+    usage: "bin/mof-enforce pre-check COMP-WS-agora"
+
+# ═══════════════════════════════════════════════════════════
+# 约束注册表
+# ═══════════════════════════════════════════════════════════
+constraints:
+  - id: AGENT-MOF-IMPACT-CHECK
+    description: 修改前必须查询影响
+    enforcement: pre_operation
+    severity: error
+    
+  - id: AGENT-MOF-STATE-VALID
+    description: 状态转换必须合法
+    enforcement: pre_operation
+    severity: error
+    
+  - id: AGENT-MOF-SCHEMA-VALID
+    description: 新增节点必须通过 schema 校验
+    enforcement: post_operation
+    severity: error
+    
+  - id: AGENT-MOF-STATE-HISTORY
+    description: 变更必须更新 state_history
+    enforcement: post_operation
+    severity: warning
+    
+  - id: AGENT-MOF-SSOT-COMPLETE
+    description: SSOT 必须完整 (model_driven_refs)
+    enforcement: pre_commit
+    severity: error
+    
+  - id: AGENT-MOF-DEPENDENCY-DECLARE
+    description: 跨层依赖必须声明
+    enforcement: pre_operation
+    severity: error
+    
+  - id: AGENT-MOF-NAMING-CONVENTION
+    description: 命名规范必须统一 (PascalCase)
+    enforcement: pre_commit
+    severity: error
+    
+  - id: AGENT-MOF-VALUE-EVALUATE
+    description: 高价值组件必须评估价值
+    enforcement: pre_operation
+    severity: warning
+
+# ═══════════════════════════════════════════════════════════
+# 集成点注册表
+# ═══════════════════════════════════════════════════════════
+integrations:
+  pre_commit:
+    - id: mof-schema-validate
+      description: M1↔M2 schema 校验
+      enabled: true
+      
+    - id: mof-drift-check
+      description: 架构漂移检测
+      enabled: true
+      
+  ci:
+    - id: mof-scan
+      description: 依赖安全扫描
+      workflow: governance-check.yml
+      enabled: true
+      
+  agent_workflow:
+    - id: pre-check
+      description: 修改前完整检查
+      tool: mof-enforce
+      enabled: true
+      
+    - id: post-check
+      description: 修改后完整检查
+      tool: mof-enforce
+      enabled: true
+
+# ═══════════════════════════════════════════════════════════
+# 自主性成长机制
+# ═══════════════════════════════════════════════════════════
+autonomous_growth:
+  feedback_loop:
+    - step: detect
+      description: 检测系统异常
+      tool: mof-autonomous
+      
+    - step: decide
+      description: 自主决策
+      tool: mof-autonomous
+      
+    - step: act
+      description: 自主行动
+      tool: mof-act
+      
+    - step: verify
+      description: 验证结果
+      tool: mof-enforce
+      
+    - step: learn
+      description: 记录经验
+      tool: mof-version
+      
+  evolution_tracking:
+    - tool: mof-evolution
+      description: 追踪系统演化路径
+      
+    - tool: mof-version
+      description: 记录模型版本变更
+
+# ═══════════════════════════════════════════════════════════
+# M1/M2/M3 统计
+# ═══════════════════════════════════════════════════════════
+model_stats:
+  m1_nodes: 1177
+  m2_schemas: 46
+  m3_elements: 8
+  coverage:
+    type_drift: 0
+    required_missing: 0
+    state_machine_invalid: 0
+    ssot_complete: 100%
+    naming_convention: 100%

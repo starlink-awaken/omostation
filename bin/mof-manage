@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+"""MOF 管理工具 — 查看/验证/更新 MOF 能力注册表"""
+
+import sys
+from pathlib import Path
+
+import yaml
+
+REGISTRY_FILE = Path(__file__).parent.parent / ".omo/_truth/registry/mof-capabilities.yaml"
+
+
+def load_registry() -> dict:
+    if not REGISTRY_FILE.exists():
+        return {}
+    return yaml.safe_load(REGISTRY_FILE.read_text())
+
+
+def show_status():
+    """显示 MOF 体系状态"""
+    registry = load_registry()
+    
+    print("╔════════════════════════════════════════════════════════════╗")
+    print("║  MOF 体系状态                                              ║")
+    print("╚════════════════════════════════════════════════════════════╝\n")
+    
+    # Model stats
+    stats = registry.get("model_stats", {})
+    print(f"模型统计:")
+    print(f"  M1 节点: {stats.get('m1_nodes', 0)}")
+    print(f"  M2 Schema: {stats.get('m2_schemas', 0)}")
+    print(f"  M3 元素: {stats.get('m3_elements', 0)}")
+    print()
+    
+    # Layers
+    print("四层架构:")
+    for layer_id, layer in registry.get("layers", {}).items():
+        status_icon = "✅" if layer.get("status") == "complete" else "🔄"
+        tools = ", ".join(layer.get("tools", []))
+        print(f"  {status_icon} {layer.get('name', layer_id)}: {layer.get('description', '')}")
+        print(f"     Tools: {tools}")
+    print()
+    
+    # Tools
+    print(f"工具集 ({len(registry.get('tools', {}))} 个):")
+    for tool_id, tool in registry.get("tools", {}).items():
+        print(f"  • {tool_id}: {tool.get('description', '')}")
+    print()
+    
+    # Constraints
+    print(f"约束规则 ({len(registry.get('constraints', []))} 条):")
+    for c in registry.get("constraints", []):
+        print(f"  • {c.get('id', '')}: {c.get('description', '')}")
+    print()
+    
+    # Integrations
+    print("集成点:")
+    for integration_type, items in registry.get("integrations", {}).items():
+        for item in items:
+            enabled_icon = "✅" if item.get("enabled") else "❌"
+            print(f"  {enabled_icon} [{integration_type}] {item.get('id', '')}: {item.get('description', '')}")
+    print()
+    
+    # Autonomous growth
+    print("自主性成长:")
+    for step in registry.get("autonomous_growth", {}).get("feedback_loop", []):
+        print(f"  → {step.get('step', '')}: {step.get('description', '')} ({step.get('tool', '')})")
+
+
+def list_tools():
+    """列出所有 MOF 工具"""
+    registry = load_registry()
+    
+    print("=== MOF 工具列表 ===\n")
+    for tool_id, tool in registry.get("tools", {}).items():
+        print(f"{tool_id}:")
+        print(f"  Path: {tool.get('path', '')}")
+        print(f"  Description: {tool.get('description', '')}")
+        print(f"  Commands: {', '.join(tool.get('commands', []))}")
+        print(f"  Usage: {tool.get('usage', '')}")
+        print()
+
+
+def list_constraints():
+    """列出所有约束规则"""
+    registry = load_registry()
+    
+    print("=== MOF 约束规则 ===\n")
+    for c in registry.get("constraints", []):
+        print(f"{c.get('id', '')}:")
+        print(f"  Description: {c.get('description', '')}")
+        print(f"  Enforcement: {c.get('enforcement', '')}")
+        print(f"  Severity: {c.get('severity', '')}")
+        print()
+
+
+def list_integrations():
+    """列出所有集成点"""
+    registry = load_registry()
+    
+    print("=== MOF 集成点 ===\n")
+    for integration_type, items in registry.get("integrations", {}).items():
+        print(f"{integration_type}:")
+        for item in items:
+            enabled = "✅" if item.get("enabled") else "❌"
+            print(f"  {enabled} {item.get('id', '')}: {item.get('description', '')}")
+        print()
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: mof-manage <command>")
+        print("Commands: status, tools, constraints, integrations")
+        sys.exit(1)
+    
+    command = sys.argv[1]
+    
+    if command == "status":
+        show_status()
+    elif command == "tools":
+        list_tools()
+    elif command == "constraints":
+        list_constraints()
+    elif command == "integrations":
+        list_integrations()
+    else:
+        print(f"Unknown command: {command}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
