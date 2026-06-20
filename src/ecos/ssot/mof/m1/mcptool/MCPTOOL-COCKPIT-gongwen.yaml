@@ -1,0 +1,21 @@
+id: MCPTOOL-COCKPIT-gongwen
+type: MCPTool
+m3_parent: StructuralElement.Component
+name: cockpit-gongwen
+description: Cockpit 公文管理工具集
+project: cockpit
+component: COMP-WS-cockpit
+tool_name: gongwen
+server: cockpit-mcp
+tools:
+  - gongwen_create
+  - gongwen_list
+  - gongwen_search
+transport: stdio
+status: active
+state_history:
+  - state: active
+    timestamp: '2026-06-20T00:00:00Z'
+    reason: initial_modeling
+model_driven_refs:
+  source_file: projects/cockpit/src/cockpit/commands/gongwen.py
