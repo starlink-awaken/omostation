@@ -244,3 +244,13 @@ model_stats:
     state_machine_invalid: 0
     ssot_complete: 100%
     naming_convention: 100%
+
+# ═══════════════════════════════════════════════════════════
+# OMO 管理工具
+# ═══════════════════════════════════════════════════════════
+omo_tools:
+  omo-manage:
+    path: bin/omo-manage
+    description: OMO 目录管理工具
+    commands: [status, health, tasks]
+    usage: "bin/omo-manage status"
