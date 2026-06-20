@@ -13,7 +13,7 @@ mof-state-bridge — .omo/tasks/ ↔ M1 OMOTask 双向同步
     cd projects/ecos
     python3 src/ecos/ssot/tools/mof-state-bridge.py              # 状态报告
     python3 src/ecos/ssot/tools/mof-state-bridge.py --diff       # 仅 diff 不写盘
-    python3 src/ecos/ssot/tools/mof-state-bridge.py --m1-to-omo  # 禁止: 不再允许 ecos 直写 .omo/tasks
+    python3 src/ecos/ssot/tools/mof-state-bridge.py --m1-to-omo  # 仅 broker 导入 proposed/planned → .omo/tasks/planned
     python3 src/ecos/ssot/tools/mof-state-bridge.py --omo-to-m1  # .omo/tasks/ → M1 OMOTask
     python3 src/ecos/ssot/tools/mof-state-bridge.py --strict    # 失同步退出码 1
 """
@@ -25,6 +25,7 @@ import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -41,6 +42,7 @@ OMO_SRC = WORKSPACE_ROOT / "projects" / "omo" / "src"
 if str(OMO_SRC) not in sys.path:
     sys.path.insert(0, str(OMO_SRC))
 
+from omo.omo_ingress import create_planned_task  # noqa: E402
 from omo.omo_io import write_yaml_atomic  # noqa: E402
 
 M1_OMO_LAYER = REPO_ROOT / "src" / "ecos" / "ssot" / "mof" / "m1" / "omo_layer"
@@ -194,6 +196,17 @@ def diff_m1_vs_omo(m1_nodes: dict, omo_tasks: dict) -> dict:
 # ── 映射: M1 → .omo/tasks/* (只用于报告; ecos 不再直写) ───────────────
 
 
+def _governance_refs() -> list[str]:
+    return [
+        ".omo/standards/omo-governance-surfaces.md",
+        ".omo/_truth/registry/omo-governance-surfaces.yaml",
+        ".omo/_truth/x1-governance-policies.yaml",
+        ".omo/_truth/x2-freshness-rules.yaml",
+        ".omo/_truth/x3-value-stack.yaml",
+        ".omo/_truth/x4-consistency-rules.yaml",
+    ]
+
+
 def m1_to_omo_yaml(m1_data: dict) -> dict:
     """M1 OMOTask 数据转 `.omo/tasks/*` YAML 视图.
 
@@ -235,6 +248,53 @@ def m1_to_omo_yaml(m1_data: dict) -> dict:
         if k in props:
             out[k] = props[k]
     return out
+
+
+def m1_to_planned_task_payload(m1_data: dict, *, source_doc: str) -> dict[str, Any]:
+    """M1 OMOTask 转受治理约束的 planned task payload.
+
+    只用于 brokered import:
+    - M1 status=proposed/planned → .omo/tasks/planned status=candidate
+    - 其余状态不在这里兜底, 由调用方显式阻断
+    """
+    omo_id = m1_data["id"].replace("OMOTASK-", "")
+    props = m1_data.get("properties") or {}
+    evidence = props.get("evidence") if isinstance(props.get("evidence"), list) else []
+    deliverables = evidence or ["Broker import M1 OMOTask into planned backlog"]
+    return {
+        "id": omo_id,
+        "title": m1_data.get("title") or m1_data.get("name", omo_id),
+        "description": (m1_data.get("description") or "").strip(),
+        "status": "candidate",
+        "task_type": "feature",
+        "risk_level": "L0",
+        "depends_on": [],
+        "source_docs": [source_doc],
+        "deliverables": deliverables,
+        "imported_via": "mof_state_bridge",
+        "context_uri": f"bos://governance/mof-state-bridge/{omo_id}",
+        "assigned_to": None,
+        "dispatch_id": None,
+        "run_ref": None,
+        "approval_ref": None,
+        "review_ref": None,
+        "knowledge_refs": [],
+        "handoff_refs": [],
+        "governance_refs": _governance_refs(),
+        "entry_gate": ["M1_OMOTASK_BROKER_IMPORT"],
+        "evidence_required": evidence,
+        "test_plan": [
+            "python3 projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py --strict",
+        ],
+        "allowed_operation_level": "L0",
+        "human_approval_required": False,
+        "metadata": {
+            "priority": m1_data.get("priority") or "P2",
+            "domain": m1_data.get("domain") or "opc",
+            "bridge_origin": "projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py",
+            "m1_ref": source_doc,
+        },
+    }
 
 
 def omo_to_m1_yaml(omo_data: dict, m1_id: str) -> dict:
@@ -317,11 +377,61 @@ def _collect_m1_to_omo_candidates(diff: dict) -> list[dict[str, object]]:
         candidates.append(
             {
                 "omo_id": omo_id,
-                "target_ref": f".omo/tasks/active/{omo_id}.yaml",
+                "target_ref": f".omo/tasks/planned/{omo_id}.yaml",
                 "payload": m1_to_omo_yaml(pair["m1_data"]),
+                "m1_data": pair["m1_data"],
             }
         )
     return candidates
+
+
+def _broker_import_m1_to_omo_candidates(
+    diff: dict,
+    *,
+    omo_dir: Path,
+    ingress_plane: str = "projects/ecos:mof-state-bridge",
+    source_ref_prefix: str = "ecos:mof-state-bridge:m1-to-omo",
+) -> dict[str, list[dict[str, str]]]:
+    """受治理约束的 M1 → .omo/tasks/planned/ 导入.
+
+    当前只接受 M1 中尚未物化到 `.omo/tasks/planned/` 的 proposed/planned 节点。
+    其他状态继续阻断, 避免绕过 promotion/done gate.
+    """
+    imported: list[dict[str, str]] = []
+    blocked: list[dict[str, str]] = []
+    for item in _collect_m1_to_omo_candidates(diff):
+        m1_data = item["m1_data"]
+        m1_status = str(m1_data.get("status") or "")
+        m1_id = str(m1_data["id"])
+        source_doc = str(Path(m1_id.replace("OMOTASK-", "")).with_suffix(".yaml"))
+        source_doc = str(
+            Path("projects/ecos/src/ecos/ssot/mof/m1/omo_layer") / f"{m1_id}.yaml"
+        )
+        if m1_status not in {"proposed", "planned"}:
+            blocked.append(
+                {
+                    "m1_id": m1_id,
+                    "omo_id": str(item["omo_id"]),
+                    "reason": f"unsupported_m1_status:{m1_status or 'missing'}",
+                    "target_ref": str(item["target_ref"]),
+                }
+            )
+            continue
+        payload = m1_to_planned_task_payload(m1_data, source_doc=source_doc)
+        create_planned_task(
+            omo_dir,
+            task_data=payload,
+            ingress_plane=ingress_plane,
+            source_ref=f"{source_ref_prefix}:{m1_id}",
+        )
+        imported.append(
+            {
+                "m1_id": m1_id,
+                "omo_id": payload["id"],
+                "target_ref": f".omo/tasks/planned/{payload['id']}.yaml",
+            }
+        )
+    return {"imported": imported, "blocked": blocked}
 
 
 # ── 报告 ──────────────────────────────────────────────────
@@ -392,7 +502,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=".omo/tasks/ ↔ M1 OMOTask 双向桥接")
     parser.add_argument("--diff", action="store_true", help="仅 diff 不写盘 (默认)")
     parser.add_argument(
-        "--m1-to-omo", action="store_true", help="M1 → .omo/tasks/active/ 写盘"
+        "--m1-to-omo", action="store_true", help="M1 proposed/planned → brokered .omo/tasks/planned/ 导入"
     )
     parser.add_argument(
         "--omo-to-m1", action="store_true", help=".omo/tasks/ → M1 OMOTask 写盘"
@@ -411,22 +521,36 @@ def main() -> int:
     written_files = []
     blocked_direct_mutation = False
     pending_m1_to_omo = []
+    broker_imported = []
     if args.m1_to_omo:
-        pending_m1_to_omo = _collect_m1_to_omo_candidates(diff)
+        broker_result = _broker_import_m1_to_omo_candidates(
+            diff, omo_dir=WORKSPACE_ROOT / ".omo"
+        )
+        broker_imported = broker_result["imported"]
+        pending_m1_to_omo = broker_result["blocked"]
+        if broker_imported:
+            print(
+                f"✅ 已通过 OMO broker 导入 {len(broker_imported)} 个 planned task:",
+                file=sys.stderr,
+            )
+            for item in broker_imported[:20]:
+                print(f"   - {item['target_ref']}", file=sys.stderr)
+            if len(broker_imported) > 20:
+                print(
+                    f"   ... ({len(broker_imported) - 20} more)",
+                    file=sys.stderr,
+                )
         if pending_m1_to_omo:
             blocked_direct_mutation = True
             print(
-                "❌ 已禁止 `mof-state-bridge --m1-to-omo` 直接写 `.omo/tasks/*`；"
-                "请改走 `projects/omo` broker / governance ingress。",
+                "❌ 仍有 M1 节点不能 broker 导入 `.omo/tasks/planned/`；"
+                "这些节点需要 promotion/done 专用链路，继续阻断。",
                 file=sys.stderr,
             )
-            print(
-                f"   待收敛候选: {len(pending_m1_to_omo)} 个",
-                file=sys.stderr,
-            )
+            print(f"   阻断候选: {len(pending_m1_to_omo)} 个", file=sys.stderr)
             for item in pending_m1_to_omo[:20]:
                 print(
-                    f"   - {item['target_ref']}",
+                    f"   - {item['target_ref']} ({item['reason']})",
                     file=sys.stderr,
                 )
             if len(pending_m1_to_omo) > 20:
@@ -434,7 +558,7 @@ def main() -> int:
                     f"   ... ({len(pending_m1_to_omo) - 20} more)",
                     file=sys.stderr,
                 )
-        else:
+        if not broker_imported and not pending_m1_to_omo:
             print(
                 "✅ 无需补全, M1 OMOTask ↔ .omo/tasks/ 已同步", file=sys.stderr
             )
@@ -481,6 +605,7 @@ def main() -> int:
                     "paired": len([p for p in diff["pairs"] if p["omo_exists"]]),
                     "diff": out_diff,
                     "written_files": written_files,
+                    "broker_imported": broker_imported,
                     "blocked_direct_mutation": blocked_direct_mutation,
                     "pending_m1_to_omo": pending_m1_to_omo,
                 },
@@ -493,8 +618,8 @@ def main() -> int:
         print(format_report(diff))
         if args.m1_to_omo and blocked_direct_mutation:
             print(
-                "\n🛑 已阻断 ecos → .omo/tasks 直接写入；该桥只保留校验/报告，"
-                "`.omo` 持久化必须走 OMO broker。"
+                "\n🛑 已阻断非 broker 场景的 ecos → .omo/tasks 直写；"
+                "当前只允许 proposed/planned 节点经 OMO broker 落到 planned backlog。"
             )
 
     if args.strict and not in_sync:

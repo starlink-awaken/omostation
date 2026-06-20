@@ -1,0 +1,47 @@
+id: PROC-MOF-PHASE4-ACTION
+type: Process
+m3_parent: BehavioralElement.Process
+name: mof-phase4-action
+description: MOF Phase 4 行动层 — Agent 自主行动：修复/重构/演化
+layer: L0
+states:
+  - name: planning
+    description: 规划行动
+  - name: validating
+    action: 验证行动合法性
+    description: 验证行动
+  - name: executing
+    description: 执行行动
+  - name: verifying
+    description: 验证行动结果
+  - name: recording
+    description: 记录变更
+steps:
+  - order: 1
+    name: plan_action
+    action: 规划行动方案
+    input: recommendation
+    output: action_plan
+  - order: 2
+    name: validate_action
+    action: 验证行动合法性 (mof-schema-validate)
+    input: action_plan
+    output: validation_result
+  - order: 3
+    name: execute_action
+    action: 执行行动
+    input: action_plan
+    output: execution_result
+  - order: 4
+    name: verify_result
+    action: 验证行动结果 (mof-enforce post-check)
+    input: execution_result
+    output: verification_result
+  - order: 5
+    name: record_change
+    action: 记录变更 (mof-version record)
+    input: verification_result
+    output: version_record
+status: active
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/tools/mof-enforce.py

@@ -1,0 +1,41 @@
+id: PROC-MOF-PHASE3-DECISION
+type: Process
+m3_parent: BehavioralElement.Process
+name: mof-phase3-decision
+description: MOF Phase 3 决策层 — Agent 自主决策：异常检测→推理→建议
+layer: L0
+states:
+  - name: monitoring
+    description: 监控系统状态
+  - name: analyzing
+    description: 分析异常原因
+  - name: reasoning
+    description: 推理影响/成本/收益
+  - name: recommending
+    description: 生成建议
+  - name: executing
+    description: 执行建议
+steps:
+  - order: 1
+    name: detect_anomaly
+    action: 检测系统异常 (test failure, drift, debt accumulation)
+    input: system_state
+    output: anomaly_report
+  - order: 2
+    name: reason_impact
+    action: 推理影响链 (mof-reason impact)
+    input: anomaly_report
+    output: impact_analysis
+  - order: 3
+    name: evaluate_cost_benefit
+    action: 评估成本收益 (mof-decide)
+    input: impact_analysis
+    output: decision_report
+  - order: 4
+    name: generate_recommendation
+    action: 生成行动建议
+    input: decision_report
+    output: recommendation
+status: active
+model_driven_refs:
+  source_file: projects/ecos/src/ecos/ssot/tools/mof-reason.py
