@@ -4,7 +4,7 @@ description: >
   实现 mof-scan --security，扫描所有依赖关系找安全风险。
   例如: 跨层依赖风险、sys.path hack 风险。
   优先级: P2 (中 ROI，安全扫描)
-status: planned
+status: done
 priority: P2
 risk_level: L2
 source: mof-analysis-20260620
@@ -14,3 +14,6 @@ acceptance:
   - mof-scan --security 能输出安全报告
   - 能检测 sys.path hack 安全风险
   - 能检测跨层依赖风险
+
+completed_at: '2026-06-20T00:00:00Z'
+completed_by: mof-session

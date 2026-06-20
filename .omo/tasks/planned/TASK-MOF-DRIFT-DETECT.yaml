@@ -4,7 +4,7 @@ description: >
   实现 mof-diff 工具，检测实际代码 vs 模型描述的差异。
   例如: sys.path hack 数量、TODO 数量、测试覆盖率。
   优先级: P1 (高 ROI，自动发现不一致)
-status: planned
+status: done
 priority: P1
 risk_level: L1
 source: mof-analysis-20260620
@@ -14,3 +14,6 @@ acceptance:
   - mof-diff --project <name> 能输出漂移报告
   - 能检测 sys.path hack 数量差异
   - 能检测 TODO 数量差异
+
+completed_at: '2026-06-20T00:00:00Z'
+completed_by: mof-session

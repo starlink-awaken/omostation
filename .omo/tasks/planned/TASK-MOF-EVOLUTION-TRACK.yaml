@@ -4,7 +4,7 @@ description: >
   实现 mof-evolution，追踪系统演化路径。
   例如: kairon 从 monorepo 演化为 16 个子包。
   优先级: P2 (中 ROI，历史记录)
-status: planned
+status: done
 priority: P2
 risk_level: L2
 source: mof-analysis-20260620
@@ -14,3 +14,6 @@ acceptance:
   - mof-evolution --project <name> 能输出演化报告
   - 能追踪 state_history 变化
   - 能生成时间线
+
+completed_at: '2026-06-20T00:00:00Z'
+completed_by: mof-session
