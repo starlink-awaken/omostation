@@ -1,0 +1,22 @@
+# X2 Freshness Audit Cron (P43 R7)
+#
+> 定时执行 .omo/_truth/x2-freshness-rules.yaml 中定义的 3 条 P43 巡检规则:
+> - X2-FRESH-DEBT-EVIDENCE-INTEGRITY (14 天)
+> - X2-FRESH-CROSS-PROJECT-LINT (7 天)
+> - X2-FRESH-MOF-VERSION-BUMP (30 天)
+>
+> 安装: cat .omo/cron/x2-freshness-crontab | crontab -
+> 查看: crontab -l | grep x2-freshness
+> 输出: .omo/_delivery/freshness-audit/YYYY-MM-DD.json
+
+# 每周一 9:00 — X2-FRESH-CROSS-PROJECT-LINT (7 天巡检)
+0 9 * * 1 cd /Users/xiamingxing/Workspace && INVOCATION_ID=cron OPC_TRIGGER=x2-freshness uv run python scripts/omo/x2_freshness_audit.py --only check_cross_project_lint >> /tmp/x2-freshness.log 2>&1
+
+# 每月 1/15 11:00 — X2-FRESH-DEBT-EVIDENCE-INTEGRITY (14 天巡检)
+0 11 1,15 * * cd /Users/xiamingxing/Workspace && INVOCATION_ID=cron OPC_TRIGGER=x2-freshness uv run python scripts/omo/x2_freshness_audit.py --only check_debt_evidence >> /tmp/x2-freshness.log 2>&1
+
+# 每月 1 号 12:00 — X2-FRESH-MOF-VERSION-BUMP (30 天巡检)
+0 12 1 * * cd /Users/xiamingxing/Workspace && INVOCATION_ID=cron OPC_TRIGGER=x2-freshness uv run python scripts/omo/x2_freshness_audit.py --only check_mof_version_bump >> /tmp/x2-freshness.log 2>&1
+
+# 每日 8:00 — 完整 audit (历史归档)
+0 8 * * * cd /Users/xiamingxing/Workspace && INVOCATION_ID=cron OPC_TRIGGER=x2-freshness uv run python scripts/omo/x2_freshness_audit.py >> /tmp/x2-freshness.log 2>&1

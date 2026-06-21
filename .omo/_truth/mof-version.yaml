@@ -47,4 +47,7 @@ history:
     closed-loop pattern, governance 100 A+ 不变'
   timestamp: '2026-06-21T13:40:23.980306'
   version: 0.0.13
-version: 0.0.13
+- description: 'P43 R7: X2 freshness audit runner 落地, 5 漏 evidence debt 闭环'
+  timestamp: '2026-06-21T13:47:21.496655'
+  version: 0.0.14
+version: 0.0.14
