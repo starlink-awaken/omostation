@@ -28,4 +28,8 @@ history:
     real bugs: missing Any/cast/ndarray/dtype)'
   timestamp: '2026-06-20T18:57:19.467522'
   version: 0.0.8
-version: 0.0.8
+- description: 'P43 round-4: 4 子项目 ruff 全部清零 (cockpit/runtime/omo/metaos), governance
+    100 A+'
+  timestamp: '2026-06-21T13:17:58.272261'
+  version: 0.0.9
+version: 0.0.9
