@@ -32,4 +32,15 @@ history:
     100 A+'
   timestamp: '2026-06-21T13:17:58.272261'
   version: 0.0.9
-version: 0.0.9
+- description: 'P43 round-5: aetherforge + ecos lint 全清 (12 errors), aetherforge e2e
+    26 tests 修复'
+  timestamp: '2026-06-21T13:26:30.413808'
+  version: 0.0.10
+- description: 'P43 round-5 final: 3 子项目 (cockpit/aetherforge/ecos) 全清, 46 lint errors
+    闭环'
+  timestamp: '2026-06-21T13:27:28.738398'
+  version: 0.0.11
+- description: 'P43 round-5 final-2: kairon 6 ruff errors 闭环, governance 100 A+'
+  timestamp: '2026-06-21T13:28:53.169263'
+  version: 0.0.12
+version: 0.0.12
