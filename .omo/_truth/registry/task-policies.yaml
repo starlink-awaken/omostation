@@ -72,7 +72,9 @@ policies:
       approval_required: true
       human_approval_required: true
       approval_state: awaiting_human
-    required_status: planned
+    required_status: null
+    allowed_statuses:
+      - candidate
     validator_id: null
   - name: human-approval-ref
     summary: human_approval_required 的 planned/review 任务必须绑定 task-specific promotion approval yaml

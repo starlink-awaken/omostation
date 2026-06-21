@@ -53,6 +53,8 @@ assets:
     ref: .omo/_truth/
     plane: state_plane
     asset_type: authority
+    persistence_mode: authoritative
+    retention_mode: until_replaced
     truth_owner: governance
     write_via:
       - projects/omo/omo_governance.py
@@ -66,6 +68,8 @@ assets:
     ref: .omo/_control/
     plane: state_plane
     asset_type: control_state
+    persistence_mode: operational
+    retention_mode: rolling_window
     truth_owner: governance
     write_via:
       - projects/omo
@@ -78,6 +82,8 @@ assets:
     ref: .omo/_knowledge/
     plane: state_plane
     asset_type: knowledge_state
+    persistence_mode: durable
+    retention_mode: manual_cleanup
     truth_owner: mixed
     write_via:
       - agents
@@ -91,6 +97,8 @@ assets:
     ref: .omo/_delivery/
     plane: state_plane
     asset_type: delivery_state
+    persistence_mode: append_only
+    retention_mode: manual_archive
     truth_owner: governance
     write_via:
       - projects/omo
@@ -104,6 +112,8 @@ assets:
     ref: .omo/_archive/
     plane: state_plane
     asset_type: archived_state
+    persistence_mode: archival
+    retention_mode: manual_archive
     truth_owner: governance
     write_via:
       - humans
@@ -115,6 +125,8 @@ assets:
     ref: .omo/tasks/
     plane: state_plane
     asset_type: workflow_state
+    persistence_mode: operational
+    retention_mode: manual_archive
     truth_owner: governance
     write_via:
       - projects/omo
@@ -129,6 +141,8 @@ assets:
     ref: .omo/state/
     plane: state_plane
     asset_type: runtime_ssot
+    persistence_mode: operational
+    retention_mode: until_replaced
     truth_owner: aggregator
     write_via:
       - projects/omo
@@ -142,6 +156,8 @@ assets:
     ref: .omo/debt/
     plane: state_plane
     asset_type: governance_program
+    persistence_mode: durable
+    retention_mode: manual_archive
     truth_owner: governance
     write_via:
       - projects/omo
@@ -154,6 +170,8 @@ assets:
     ref: .omo/workers/
     plane: state_plane
     asset_type: execution_runtime
+    persistence_mode: operational
+    retention_mode: rolling_window
     truth_owner: projects/omo
     write_via:
       - projects/omo
@@ -165,6 +183,8 @@ assets:
     ref: .omo/standards/
     plane: state_plane
     asset_type: rule_docs
+    persistence_mode: durable
+    retention_mode: until_replaced
     truth_owner: governance
     write_via:
       - humans
@@ -178,6 +198,8 @@ assets:
     ref: .omo/cron/
     plane: state_plane
     asset_type: control_contract
+    persistence_mode: durable
+    retention_mode: until_replaced
     truth_owner: governance
     write_via:
       - governance
@@ -190,6 +212,8 @@ assets:
     ref: .omo/_log/
     plane: state_plane
     asset_type: runtime_logs
+    persistence_mode: append_only
+    retention_mode: rolling_window
     truth_owner: automation
     write_via:
       - automation
@@ -202,6 +226,8 @@ assets:
     ref: .omo/goals/
     plane: state_plane
     asset_type: goal_state
+    persistence_mode: authoritative
+    retention_mode: until_replaced
     truth_owner: governance
     write_via:
       - governance
@@ -215,6 +241,8 @@ assets:
     ref: .omo/pitches/
     plane: state_plane
     asset_type: strategic_input
+    persistence_mode: durable
+    retention_mode: manual_archive
     truth_owner: governance
     write_via:
       - projects/c2g
@@ -227,6 +255,8 @@ assets:
     ref: .omo/tests/
     plane: state_plane
     asset_type: governance_test_surface
+    persistence_mode: durable
+    retention_mode: manual_cleanup
     truth_owner: governance
     write_via:
       - test_agents
@@ -239,6 +269,8 @@ assets:
     ref: .omo/capabilities/
     plane: state_plane
     asset_type: capability_market
+    persistence_mode: durable
+    retention_mode: until_replaced
     truth_owner: governance
     write_via:
       - governance
@@ -250,6 +282,8 @@ assets:
     ref: .omo/change-log/
     plane: state_plane
     asset_type: change_history
+    persistence_mode: append_only
+    retention_mode: manual_archive
     truth_owner: governance
     write_via:
       - governance
@@ -262,6 +296,8 @@ assets:
     ref: .omo/PROJECTS.yaml
     plane: state_plane
     asset_type: root_registry
+    persistence_mode: authoritative
+    retention_mode: until_replaced
     truth_owner: governance
     write_via:
       - governance
@@ -273,6 +309,8 @@ assets:
     ref: .omo/INDEX.md
     plane: state_plane
     asset_type: root_index
+    persistence_mode: durable
+    retention_mode: until_replaced
     truth_owner: governance
     write_via:
       - governance
@@ -284,6 +322,8 @@ assets:
     ref: .omo/evidence/
     plane: state_plane
     asset_type: compatibility_alias
+    persistence_mode: compatibility_alias
+    retention_mode: alias_only
     truth_owner: governance
     write_via:
       - humans

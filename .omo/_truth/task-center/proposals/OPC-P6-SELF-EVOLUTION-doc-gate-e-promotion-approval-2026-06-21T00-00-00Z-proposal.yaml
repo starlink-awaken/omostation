@@ -1,0 +1,25 @@
+id: OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-21T00-00-00Z-proposal
+title: Grant promotion approval for OPC-P6-SELF-EVOLUTION-doc-gate-e
+operation_level: L2
+requested_by: codex
+target:
+  ref: .omo/workers/runs/OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-21T00-00-00Z.yaml
+changes:
+  set:
+    approval_status: granted
+change_summary: Grant promotion approval for OPC-P6-SELF-EVOLUTION-doc-gate-e
+impact: Releases a planned task into the promotion approval chain.
+verification_plan:
+- python3 scripts/omo_worker.py task promote-eval OPC-P6-SELF-EVOLUTION-doc-gate-e
+  --omo-dir .omo
+rollback_plan:
+- Set .omo/workers/runs/OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-21T00-00-00Z.yaml
+  approval_status back to requested if the release must be withdrawn.
+secret_refs: []
+trace_id: trace-OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-21T00-00-00Z
+status: verified
+requested_at: '2026-06-21T00:00:00Z'
+approved_at: '2026-06-21T00:10:00Z'
+applied_at: '2026-06-21T00:11:00Z'
+verified_at: '2026-06-21T00:11:00Z'
+approved_by: codex

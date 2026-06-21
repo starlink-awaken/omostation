@@ -1,0 +1,55 @@
+id: TASK-DEBT-CLOSURE-EVIDENCE-20260620
+title: 修复 4 项 closure 漂移 + deferred 项挂 Next-Action
+status: pending
+priority: P1
+risk_level: L1
+upstream: P42-W0-W1-COMBO
+appetite: 2h
+owner: governance-agent
+source_ref: c2g:pitch:Idea-修复-4-项-closure-漂移-为-deferred-项
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+started_at: null
+human_approval_required: false
+allowed_operation_level: L1
+source_docs:
+- runtime/sandbox/pitches/Idea-修复-4-项-closure-漂移-为-deferred-项.md
+entry_gate: []
+evidence_required:
+- omo governance score ≥ 90
+- 4 项 debt 全部含 resolution_evidence
+deliverables:
+- DEBT-CROSSPROJECT-SYSPATH.yaml (含 resolution_evidence)
+- DEBT-EMPTY-INIT-PY.yaml (含 resolution_evidence)
+- DEBT-GBRAIN-55-TODOS.yaml (含 resolution_evidence)
+- DEBT-KAIRON-ONTODERIVE-PHANTOM.yaml (含 resolution_evidence)
+- DEBT-GBRAIN-OPERATIONS-TS.yaml (含 next_review_at + gate_level)
+knowledge_refs: []
+handoff_refs: []
+description: 'omo governance 巡检发现 4 项 closed debt 缺 resolution_evidence (DEBT-CROSSPROJECT-SYSPATH/EMPTY-INIT-PY/GBRAIN-55-TODOS/KAIRON-ONTODERIVE-PHANTOM)，
+  治理面 drift 触发 score 85 → 需修复到 ≥ 90。 同步为 DEBT-GBRAIN-OPERATIONS-TS (deferred) 打 next_review_at
+  + gate_level， 防止"沉默延期"。
+
+  '
+test_plan:
+- omo debt list | grep DEBT-CROSSPROJECT-SYSPATH (检查 evidence)
+- omo debt list | grep DEBT-KAIRON-ONTODERIVE-PHANTOM (检查 evidence)
+- omo governance 重跑 score ≥ 90
+- mof-enforce post-check (0 drift)
+remediation: '1. 通过 omo debt update (走 broker, 不绕路) 补齐 4 项 resolution_evidence
+
+  2. DEBT-GBRAIN-OPERATIONS-TS 加 next_review_at: 2026-07-01, gate_level: P3
+
+  3. 重跑 omo governance 验证
+
+  4. mof-version record ''debt closure evidence 全闭环''
+
+  '
+created_at: '2026-06-20T13:25:00Z'
+metadata:
+  ingress_plane: projects/c2g
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: c2g:pitch:Idea-修复-4-项-closure-漂移-为-deferred-项

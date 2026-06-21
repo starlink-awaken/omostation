@@ -27,3 +27,6 @@ seed_items:
 - .omo/debt/items/DEBT-GBRAIN-55-TODOS.yaml
 - .omo/debt/items/DEBT-KAIRON-ONTODERIVE-PHANTOM.yaml
 - .omo/debt/items/DEBT-GBRAIN-OPERATIONS-TS.yaml
+- .omo/debt/items/DEBT-OMC-GBRAIN-PERSISTENCE.yaml
+- .omo/debt/items/DEBT-OMC-METAOS-OMO-PLANE.yaml
+- .omo/debt/items/DEBT-SWARM-ENGINE-20260614104223.yaml

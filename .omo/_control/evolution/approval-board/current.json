@@ -1,35 +1,41 @@
 {
-  "generated_at": "2026-06-13T12:23:18Z",
+  "generated_at": "2026-06-21T00:01:18Z",
   "tasks": [
     {
-      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260613T122240Z",
-      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260613T122240Z.yaml",
-      "status": "planned",
+      "task_id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
+      "task_ref": ".omo/tasks/remediation/OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
+      "task_root": "remediation",
+      "status": "review",
       "approval_required": true,
-      "approval_state": "awaiting_human",
+      "approval_state": "granted",
       "latest_week": "2026-W29",
       "loop_history_ref": ".omo/_control/evolution/loop/history.json",
-      "created_at": "2026-06-13T12:22:40Z",
-      "title": "No-op: drift detector reported 0 drift; loop continues"
-    },
-    {
-      "task_id": "OPC-P6-SELF-EVOLUTION-nop-20260613T122317Z",
-      "task_ref": ".omo/tasks/planned/OPC-P6-SELF-EVOLUTION-nop-20260613T122317Z.yaml",
-      "status": "planned",
-      "approval_required": true,
-      "approval_state": "awaiting_human",
-      "latest_week": "2026-W29",
-      "loop_history_ref": ".omo/_control/evolution/loop/history.json",
-      "created_at": "2026-06-13T12:23:17Z",
-      "title": "No-op: drift detector reported 0 drift; loop continues"
+      "created_at": "2026-06-20T23:31:54Z",
+      "title": "Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml",
+      "review_note": ".omo/tasks/remediation-notes/OPC-P6-SELF-EVOLUTION-doc-gate-e-review.md",
+      "approval_status": "granted",
+      "proposal_status": "verified",
+      "eligible": false,
+      "blockers": [
+        "task_policy_blocked"
+      ],
+      "next_action": "execute_review_lane"
     }
   ],
   "summary": {
-    "task_count": 2,
-    "awaiting_human_count": 2,
-    "approval_required_count": 2,
+    "task_count": 1,
+    "approval_required_count": 1,
+    "awaiting_human_count": 0,
+    "approval_pending_count": 0,
+    "approval_granted_blocked_count": 0,
+    "approval_ready_count": 0,
+    "task_policy_blocked_count": 1,
+    "phase_blocked_count": 0,
+    "remediation_count": 1,
+    "review_lane_count": 1,
     "latest_week": "2026-W29",
     "latest_week_source": "loop_history",
-    "loop_history_ref": ".omo/_control/evolution/loop/history.json"
+    "loop_history_ref": ".omo/_control/evolution/loop/history.json",
+    "approval_queue_ref": ".omo/workers/promotion/approval-queue/current.yaml"
   }
 }

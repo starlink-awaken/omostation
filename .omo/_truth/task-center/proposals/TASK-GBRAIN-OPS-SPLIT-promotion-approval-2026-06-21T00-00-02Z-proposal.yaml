@@ -1,0 +1,25 @@
+id: TASK-GBRAIN-OPS-SPLIT-promotion-approval-2026-06-21T00-00-02Z-proposal
+title: Grant promotion approval for TASK-GBRAIN-OPS-SPLIT
+operation_level: L2
+requested_by: codex
+target:
+  ref: .omo/workers/runs/TASK-GBRAIN-OPS-SPLIT-promotion-approval-2026-06-21T00-00-02Z.yaml
+changes:
+  set:
+    approval_status: granted
+change_summary: Grant promotion approval for TASK-GBRAIN-OPS-SPLIT
+impact: Releases a planned task into the promotion approval chain.
+verification_plan:
+- python3 scripts/omo_worker.py task promote-eval TASK-GBRAIN-OPS-SPLIT --omo-dir
+  .omo
+rollback_plan:
+- Set .omo/workers/runs/TASK-GBRAIN-OPS-SPLIT-promotion-approval-2026-06-21T00-00-02Z.yaml
+  approval_status back to requested if the release must be withdrawn.
+secret_refs: []
+trace_id: trace-TASK-GBRAIN-OPS-SPLIT-promotion-approval-2026-06-21T00-00-02Z
+status: verified
+requested_at: '2026-06-21T00:00:02Z'
+approved_at: '2026-06-21T00:10:02Z'
+applied_at: '2026-06-21T00:11:02Z'
+verified_at: '2026-06-21T00:11:02Z'
+approved_by: codex

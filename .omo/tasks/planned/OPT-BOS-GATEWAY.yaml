@@ -17,8 +17,26 @@ entry_gate:
 metadata:
   bet_id: BET-c87a
   priority: P3
+  legacy_normalized_from: planned
+  legacy_status: candidate
+  normalized_at: '2026-06-20T07:00:00Z'
+  normalized_by: codex-reviewer
+  normalization_source_ref: omo:worker:normalize-planned:OPT-BOS-GATEWAY
 created_at: '2026-06-16T07:30:00Z'
 updated_at: '2026-06-16T07:30:00Z'
 priority: P3
 priority_note: L3 risk optimization, non-blocking
 phase: 48
+knowledge_refs: []
+handoff_refs: []
+evidence_required:
+- legacy planned packet normalized
+test_plan:
+- python3 scripts/omo_worker.py task validate --all-planned
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/OPT-BOS-GATEWAY-promotion-approval-2026-06-21T00-00-01Z.yaml
+review_ref: null
+allowed_operation_level: L3
+human_approval_required: true

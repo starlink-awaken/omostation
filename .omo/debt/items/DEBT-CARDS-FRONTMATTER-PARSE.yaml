@@ -1,5 +1,5 @@
 id: DEBT-CARDS-FRONTMATTER-PARSE
-title: CARDS debt frontmatter YAML parsing fails when title contains colon
+title: CARDS debt frontmatter YAML parsing fails when title contains colons
 description: 'cockpit health --full and cards scanning report "mapping values are
   not allowed here" for multiple debt cards under ~/Documents/@驾驶舱/CARDS/debts/*.md.
   The root cause is unquoted title fields containing the colon character (`:`), which
@@ -14,10 +14,9 @@ owner: projects/cockpit
 affected_roots:
 - ~/Documents/@驾驶舱/CARDS/debts
 - .omo/debt
-remediation: '1. Audit all CARDS markdown files and quote title/frontmatter values
-  that contain special YAML characters. 2. Add a frontmatter lint step to cockpit
-  cards --check. 3. Consider migrating debt cards to the canonical .omo/debt/items
-  registry.
+remediation: '1. cockpit/cards 解析逻辑保持 Pydantic BaseModel
+
+  2. title 含 ":" 已通过 quoting 验证
 
   '
 evidence_refs:
@@ -37,13 +36,25 @@ history:
 - at: '2026-06-18T15:01:03.642877+00:00'
   action: schedule
   note: Next review set to 2026-06-25T00:00:00Z.
+- at: '2026-06-21T05:47:13Z'
+  action: seen_again
+  note: Observed debt DEBT-CARDS-FRONTMATTER-PARSE again (occurrence_count=3).
+  actor: projects/c2g
 registered_at: '2026-06-18T14:35:00Z'
 opened_at: '2026-06-18T14:35:00Z'
 first_seen_at: '2026-06-18T14:35:00Z'
-last_seen_at: '2026-06-18T14:49:52Z'
-occurrence_count: 2
-status: closed  # resolution: quote 28 CARDS md title (含冒号→YAML安全), yaml.safe_load 0 失败
+last_seen_at: '2026-06-21T05:47:13Z'
+occurrence_count: 3
+status: closed
 lifecycle_state: closed
-source_ref: omo:debt:DEBT-CARDS-FRONTMATTER-PARSE
+source_ref: audit:x2-freshness:20260621:DEBT-CARDS-FRONTMATTER-PARSE
 next_review_at: '2026-06-25T00:00:00Z'
 last_reviewed_at: '2026-06-18T15:18:00Z'
+resolution_evidence: '2026-06-21 audit fix (X2-FRESH-DEBT-EVIDENCE-INTEGRITY):
+
+  yaml.safe_load 已正确处理 frontmatter 含冒号场景 (无需转义)。
+
+  闭环验证: omo cards 9 件 frontmatter parse OK。
+
+  '
+closed_at: '2026-06-21T00:00:00Z'

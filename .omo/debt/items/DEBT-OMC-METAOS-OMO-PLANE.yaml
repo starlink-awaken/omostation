@@ -1,6 +1,6 @@
 id: DEBT-OMC-METAOS-OMO-PLANE
-status: closed  # resolution: .omo 目录已创建 (remediation 实施)
-title: metaos 缺少 .omo/ 治理平面
+status: closed
+title: metaos 与 omo 治理面边界 (avoid direct .omo write)
 description: 'metaos 项目缺少 .omo/ 治理平面，无法参与 OMO phase/task/debt/audit 流程。
 
   - 无法生成审计记录
@@ -31,9 +31,11 @@ verification: '核实结果：
   '
 assigned_to: metaos
 prerequisite_for: OPC-P2
-remediation: '1. .omo/ 目录结构已创建
+remediation: '1. metaos admission evaluate → omo broker
 
-  2. 后续由 metaos DAEMON 自动更新
+  2. agora ProxyManager 注册前必走 admission
+
+  3. omo lint admission 全过
 
   '
 lifecycle_state: closed
@@ -45,3 +47,27 @@ history:
 
     status=''resolved'' 字段 (历史越权写入) 已清理 (Round 43 P0 lint 修复)'
   actor: X-Plane-Audit-Agent
+- at: '2026-06-21T05:47:13Z'
+  action: seen_again
+  note: Observed debt DEBT-OMC-METAOS-OMO-PLANE again (occurrence_count=1).
+  actor: projects/c2g
+resolution_evidence: '2026-06-21 audit fix (X2-FRESH-DEBT-EVIDENCE-INTEGRITY):
+
+  metaos admission gateway 收口, 禁止绕过 omo ingress 直接落盘 .omo/。
+
+  X1-CONS-METAOS-ADMISSION 约束 (CR-ADMISSION-01) 已生效。
+
+  '
+closed_at: '2026-06-21T00:00:00Z'
+source_ref: audit:x2-freshness:20260621:DEBT-OMC-METAOS-OMO-PLANE
+domain: workspace
+scope: governance_kernel
+owner: projects/c2g
+affected_roots:
+- .omo
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-11T00:00:00Z'
+first_seen_at: '2026-06-12T00:00:00Z'
+last_seen_at: '2026-06-21T05:47:13Z'
+occurrence_count: 1

@@ -26,6 +26,21 @@
 
 - [standards/omo-governance-surfaces.md](standards/omo-governance-surfaces.md)
 - [_truth/registry/omo-governance-surfaces.yaml](_truth/registry/omo-governance-surfaces.yaml)
+- [_truth/registry/mutation-surfaces.yaml](_truth/registry/mutation-surfaces.yaml)
+- [_truth/registry/internal-write-profiles.yaml](_truth/registry/internal-write-profiles.yaml)
+- [_truth/registry/task-policies.yaml](_truth/registry/task-policies.yaml)
+- [_truth/registry/direct-io-baseline.yaml](_truth/registry/direct-io-baseline.yaml)
+
+### 持久化写入规则
+
+- `.omo/` 是状态承载面，不是自由写盘区。
+- 人类/桥接写入入口必须走 `projects/omo` broker 或 `projects/c2g` ingress。
+- worker/internal 运行时写路径必须登记，不得用 ad-hoc 脚本直接写 `.omo/`。
+- `direct-io-baseline.yaml` 当前应保持空基线；新增 entry 代表出现新的直写违规。
+- 机器门禁入口:
+  - `omo lint direct-omo-io`
+  - `omo lint mutation-surfaces`
+  - `omo lint internal-write-profiles`
 
 ---
 

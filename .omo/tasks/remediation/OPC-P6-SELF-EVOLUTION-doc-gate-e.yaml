@@ -1,0 +1,52 @@
+id: OPC-P6-SELF-EVOLUTION-doc-gate-e
+title: Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml
+status: review
+task_type: governance
+risk_level: L1
+depends_on: []
+source_docs:
+- .omo/_control/evolution/drift/2026-06-20.json
+deliverables:
+- Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml
+imported_via: opc_p6_self_evolve
+context_uri: bos://governance/tasks/planned/OPC-P6-SELF-EVOLUTION-doc-gate-e
+assigned_to: codex
+dispatch_id: self-evolution-remediation-2026-06-21T01-10-00Z
+run_ref: .omo/_delivery/ingress/tasks/OPC-P6-SELF-EVOLUTION-doc-gate-e-route-self-evolution-2026-06-21T01-10-00Z.yaml
+approval_ref: .omo/workers/runs/OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-21T00-00-00Z.yaml
+review_ref: .omo/tasks/remediation-notes/OPC-P6-SELF-EVOLUTION-doc-gate-e-review.md
+knowledge_refs: []
+handoff_refs:
+- .omo/workers/runs/OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-2026-06-21T00-30-00Z.yaml
+entry_gate:
+- P6 drift review accepted
+evidence_required:
+- human approval granted before promotion
+test_plan:
+- python3 scripts/omo/omo_worker.py task promotion-readiness --omo-dir .omo
+allowed_operation_level: L1
+human_approval_required: true
+approval_required: true
+approval_state: granted
+created_at: '2026-06-20T23:31:54Z'
+source: drift:doc_drift
+drift_ref: .omo/_control/evolution/drift/2026-06-20.json
+loop_history_ref: .omo/_control/evolution/loop/history.json
+review_lane: opc-p6-self-evolution-board
+prerequisite_for: OPC-P6
+red_lines:
+- self-evolution task 仅落 planned/, 永不入 active/ 除非 human approval
+next_action: human reviewer approve in OMO audit queue before promoting to active/
+metadata:
+  created_via: opc_p6_self_evolve
+  generated_at: '2026-06-20T23:31:54Z'
+  ingress_plane: scripts/opc_p6_self_evolve.py
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: opc-p6-self-evolve:OPC-P6-SELF-EVOLUTION-doc-gate-e
+  routed_to_remediation_at: '2026-06-21T01:10:00Z'
+  routed_to_remediation_by: codex
+  routed_to_remediation_via: self-evolution-review-lane
+  routed_to_remediation_source_ref: omo:worker:self-evolution-remediation:OPC-P6-SELF-EVOLUTION-doc-gate-e
+latest_week: 2026-W29
+review_note: .omo/tasks/remediation-notes/OPC-P6-SELF-EVOLUTION-doc-gate-e-review.md
+started_at: '2026-06-21T01:10:00Z'

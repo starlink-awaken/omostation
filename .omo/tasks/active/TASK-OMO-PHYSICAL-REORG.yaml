@@ -1,0 +1,40 @@
+id: TASK-OMO-PHYSICAL-REORG
+title: omo 物理文件重组 (125文件→5子包)
+status: candidate
+priority: P3
+risk_level: L2
+description: '已有 categories 索引模块. 物理重组需更新46处内部import. 需 dedicated session + 向后兼容策略.
+
+  '
+created_at: '2026-06-19T12:00:00Z'
+owner: omo-team
+note: categories 已提供逻辑分组, 物理重组非紧急
+metadata:
+  legacy_normalized_from: planned
+  legacy_status: planned
+  normalized_at: '2026-06-20T07:00:00Z'
+  normalized_by: codex-reviewer
+  normalization_source_ref: omo:worker:normalize-planned:TASK-OMO-PHYSICAL-REORG
+  legacy_owner: omo-team
+  priority: P3
+task_type: feature
+depends_on: []
+deliverables:
+- omo 物理文件重组 (125文件→5子包)
+source_docs:
+- .omo/tasks/planned/TASK-OMO-PHYSICAL-REORG.yaml#legacy-normalized
+knowledge_refs: []
+handoff_refs:
+- .omo/workers/runs/TASK-OMO-PHYSICAL-REORG-promotion-2026-06-21T00-30-02Z.yaml
+entry_gate: []
+evidence_required:
+- legacy planned packet normalized
+test_plan:
+- python3 scripts/omo_worker.py task validate --all-planned
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: .omo/workers/runs/TASK-OMO-PHYSICAL-REORG-promotion-approval-2026-06-21T00-00-03Z.yaml
+review_ref: null
+allowed_operation_level: L2
+human_approval_required: true

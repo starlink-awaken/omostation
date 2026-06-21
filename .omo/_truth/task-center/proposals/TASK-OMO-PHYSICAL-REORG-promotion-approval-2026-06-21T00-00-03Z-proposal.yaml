@@ -1,0 +1,25 @@
+id: TASK-OMO-PHYSICAL-REORG-promotion-approval-2026-06-21T00-00-03Z-proposal
+title: Grant promotion approval for TASK-OMO-PHYSICAL-REORG
+operation_level: L2
+requested_by: codex
+target:
+  ref: .omo/workers/runs/TASK-OMO-PHYSICAL-REORG-promotion-approval-2026-06-21T00-00-03Z.yaml
+changes:
+  set:
+    approval_status: granted
+change_summary: Grant promotion approval for TASK-OMO-PHYSICAL-REORG
+impact: Releases a planned task into the promotion approval chain.
+verification_plan:
+- python3 scripts/omo_worker.py task promote-eval TASK-OMO-PHYSICAL-REORG --omo-dir
+  .omo
+rollback_plan:
+- Set .omo/workers/runs/TASK-OMO-PHYSICAL-REORG-promotion-approval-2026-06-21T00-00-03Z.yaml
+  approval_status back to requested if the release must be withdrawn.
+secret_refs: []
+trace_id: trace-TASK-OMO-PHYSICAL-REORG-promotion-approval-2026-06-21T00-00-03Z
+status: verified
+requested_at: '2026-06-21T00:00:03Z'
+approved_at: '2026-06-21T00:10:03Z'
+applied_at: '2026-06-21T00:11:03Z'
+verified_at: '2026-06-21T00:11:03Z'
+approved_by: codex

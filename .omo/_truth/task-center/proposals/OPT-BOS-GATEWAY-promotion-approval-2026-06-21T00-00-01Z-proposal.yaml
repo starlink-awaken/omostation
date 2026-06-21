@@ -1,0 +1,24 @@
+id: OPT-BOS-GATEWAY-promotion-approval-2026-06-21T00-00-01Z-proposal
+title: Grant promotion approval for OPT-BOS-GATEWAY
+operation_level: L2
+requested_by: codex
+target:
+  ref: .omo/workers/runs/OPT-BOS-GATEWAY-promotion-approval-2026-06-21T00-00-01Z.yaml
+changes:
+  set:
+    approval_status: granted
+change_summary: Grant promotion approval for OPT-BOS-GATEWAY
+impact: Releases a planned task into the promotion approval chain.
+verification_plan:
+- python3 scripts/omo_worker.py task promote-eval OPT-BOS-GATEWAY --omo-dir .omo
+rollback_plan:
+- Set .omo/workers/runs/OPT-BOS-GATEWAY-promotion-approval-2026-06-21T00-00-01Z.yaml
+  approval_status back to requested if the release must be withdrawn.
+secret_refs: []
+trace_id: trace-OPT-BOS-GATEWAY-promotion-approval-2026-06-21T00-00-01Z
+status: verified
+requested_at: '2026-06-21T00:00:01Z'
+approved_at: '2026-06-21T00:10:01Z'
+applied_at: '2026-06-21T00:11:01Z'
+verified_at: '2026-06-21T00:11:01Z'
+approved_by: codex

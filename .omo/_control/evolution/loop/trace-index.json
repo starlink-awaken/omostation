@@ -75,11 +75,26 @@
       ],
       "approval_lane": "opc-p6-self-evolution-board",
       "drift_count": 0
+    },
+    {
+      "week": "2026-W25",
+      "generated_at": "2026-06-20T23:55:21Z",
+      "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260620T235521Z-technical-radar-e0d992ff.json",
+      "weekly_json_path": ".omo/_control/evolution/loop/2026-W25.json",
+      "weekly_md_path": ".omo/tasks/registry/done/OPC-P6-G1/weekly-2026-W25.md",
+      "planned_task_ids": [
+        "OPC-P6-LOOP-2026-W25-00",
+        "OPC-P6-LOOP-2026-W25-01",
+        "OPC-P6-LOOP-2026-W25-02",
+        "OPC-P6-LOOP-2026-W25-03"
+      ],
+      "approval_lane": "opc-p6-self-evolution-board",
+      "drift_count": 1
     }
   ],
   "summary": {
-    "week_count": 4,
-    "latest_week": "2026-W24",
-    "latest_radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260614T103642Z-technical-radar-96a5a3b7.json"
+    "week_count": 5,
+    "latest_week": "2026-W25",
+    "latest_radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260620T235521Z-technical-radar-e0d992ff.json"
   }
 }

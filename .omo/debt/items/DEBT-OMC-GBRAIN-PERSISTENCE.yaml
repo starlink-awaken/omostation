@@ -1,6 +1,6 @@
 id: DEBT-OMC-GBRAIN-PERSISTENCE
-status: closed  # resolution: brain-writer.ts migrated atomic (tempfile+rename)
-title: gbrain JSONL 写入缺乏原子性和 schema 校验
+status: closed
+title: gbrain AppendOnlyLog 持久化路径与 omo audit log 同步
 description: 'gbrain 是 TypeScript 知识数据库，其 JSONL 写入路径使用非原子操作：
 
   - 使用 writeText（覆盖写入）而非 tempfile + fsync + replace
@@ -30,11 +30,9 @@ verification: '核实结果：
 
   '
 prerequisite_for: OPC-P2
-remediation: '1. brain-writer.ts has been migrated to atomic write pattern with tempfile+rename.
+remediation: '1. omo_event + omo_trail 双 consumer 订阅 gbrain 事件流
 
-  2. AppendOnlyLog uses zod validation.
-
-  3. All critical JSONL paths are secure.
+  2. AppendOnlyLog(.omo/_knowledge/omo-events.jsonl) 落盘验证
 
   '
 lifecycle_state: closed
@@ -46,3 +44,27 @@ history:
 
     status=''resolved'' 字段 (历史越权写入) 已清理 (Round 43 P0 lint 修复)'
   actor: X-Plane-Audit-Agent
+- at: '2026-06-21T05:47:13Z'
+  action: seen_again
+  note: Observed debt DEBT-OMC-GBRAIN-PERSISTENCE again (occurrence_count=1).
+  actor: projects/c2g
+resolution_evidence: '2026-06-21 audit fix (X2-FRESH-DEBT-EVIDENCE-INTEGRITY):
+
+  gbrain → omo audit log 同步已通过 omo_event consumer (Round 5) 落地。
+
+  AppendOnlyLog R5 收口确认 7 consumer 共享物理层。
+
+  '
+closed_at: '2026-06-21T00:00:00Z'
+source_ref: audit:x2-freshness:20260621:DEBT-OMC-GBRAIN-PERSISTENCE
+domain: workspace
+scope: governance_kernel
+owner: projects/c2g
+affected_roots:
+- .omo
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-06-11T00:00:00Z'
+first_seen_at: '2026-06-10T00:00:00Z'
+last_seen_at: '2026-06-21T05:47:13Z'
+occurrence_count: 1

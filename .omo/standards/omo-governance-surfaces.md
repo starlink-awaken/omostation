@@ -70,6 +70,34 @@
 `projects/c2g` 不再直接写 `.omo/`，而是必须调用 `projects/omo/src/omo/omo_ingress.py` 等受审计 broker。
 禁止新增任何“顺手脚本”直接 `write_text/open(..., "w")/unlink/mkdir` 改 `.omo/`，除非该脚本本身被提升为受审计 broker。
 
+运行时也一样。凡是会改变 `tasks/planned|active|done|archived|remediation` 生命周期状态的链路，即使调用方是 worker/runtime，也必须优先走 ingress broker，而不是在 worker 内部直接 `replace/unlink/write_yaml` 搬运任务文件。当前已收敛的最小集合至少包括：
+
+- `yield_task()` -> `omo_ingress.yield_task_to_planned()`
+- `promote-apply` -> `omo_ingress.promote_task_to_active()`
+- promotion rollback -> `omo_ingress.revert_task_to_planned()`
+- fast-track compaction archive -> `omo_ingress.archive_done_task()`
+- self-evolution review lane -> `omo_ingress.route_self_evolution_to_remediation()`
+- complex request bridge / user confirmation / task-center accounting-control -> `omo_ingress.create_blocked_task()` / `record_task_consensus()` / `write_usage_accounting()` / `write_task_center_freshness()` / `write_task_center_control_decision()`
+- governance overlay roadmap/control mutation -> `omo_ingress.update_governance_overlay_state()`
+- task-center truth helper outputs（例如 skill manifest / discovery registry）-> `omo_ingress.create_skill_manifest()` / `write_discovery_registry()`
+
+任何 helper/factory（例如 skill packet / discovery blueprint instantiation）如果要生成 `.omo/tasks/blocked/*.yaml`，也必须复用 `omo_ingress.create_blocked_task()`，不能各写一套 `write_yaml_atomic()`。
+
+允许继续直写的仅限 runtime scratch / dispatch lease / checkpoint / analytics snapshot 这类非 workflow truth 面，不包括任务主状态迁移。
+
+补充边界约束：
+
+- `projects/c2g` 业务模块不得散弹式直接 import `omo.omo_ingress`、`omo.omo_task_schema` 等内核模块。
+- `projects/c2g` 必须通过本地单一 facade（当前为 `projects/c2g/src/c2g/omo_client.py`）接入 OMO。
+- 这个约束必须由 `omo lint c2g-omo-boundary` 和 pre-commit gate 持续拦截，而不是靠 reviewer 肉眼记忆。
+
+`_delivery/ingress/*` 的 artifact 也不是“写了就算”。至少必须满足：
+
+- registry `artifact_ref` 指向真实文件
+- artifact `kind / created_at / source_ref / ingress_plane` 与 registry 对齐
+- artifact 必须带回指 carrier 的字段（如 `goal_ref / task_ref / debt_ref`）
+- 新生成 artifact 应携带 `broker_ref / retention_mode / lifecycle_state`，让生命周期可追溯
+
 ## 3. `.omo/` 目录分类
 
 | 目录/载体 | 分类 | 说明 | 写入者 |
@@ -95,6 +123,24 @@
 | `INDEX.md` | root_index | `.omo` 根导航文档 | governance |
 | `evidence/` | compatibility_alias | 兼容别名，真实存储应落 `_delivery/evidence-legacy/` 或 `_delivery/evidence/` | agents / humans |
 
+### 3.1 顶层资产持久化语义
+
+每个登记到 `/.omo/_truth/registry/omo-governance-surfaces.yaml:assets` 的 state-plane 资产，必须额外声明两类机器字段：
+
+| 字段 | 含义 | 允许值 |
+|---|---|---|
+| `persistence_mode` | 资产在状态面上的持久化角色 | `authoritative` / `durable` / `operational` / `append_only` / `archival` / `compatibility_alias` |
+| `retention_mode` | 资产保留与清理方式 | `until_replaced` / `manual_cleanup` / `rolling_window` / `append_forever` / `manual_archive` / `alias_only` |
+
+最小约束：
+
+- `authority` / `root_registry` / `goal_state` 必须是 `authoritative + until_replaced`
+- `delivery_state` / `change_history` / `runtime_logs` 必须显式说明是否 `append_only`
+- `archived_state` 必须是 `archival + manual_archive`
+- `compatibility_alias` 必须是 `compatibility_alias + alias_only`，并带 `alias_target`
+
+这不是说明文案字段，而是 lint gate 会检查的治理契约。没有这两个字段，就说明“这个目录要留多久、能不能覆盖、什么时候归档”根本没定义清楚。
+
 ## 4. 红线
 
 1. 不得在 `.omo` 顶层新增未登记资产。
@@ -105,6 +151,7 @@
 6. `.omo/evidence` 若仍存在，只允许作为指向 `_delivery/*` 的兼容别名，不得再作为独立真实目录扩写。
 7. 非 broker Python 代码不得直接改写 `.omo/` 或 `spaces/`；pre-commit 与 `omo lint direct-omo-io` 必须拦截。
 7.1 已知历史直写若暂时无法一轮消灭，必须登记到 `.omo/_truth/registry/direct-io-baseline.yaml`，只允许“冻结存量”，不得掩护新增违规。
+7.2 一旦历史直写清零，`.omo/_truth/registry/direct-io-baseline.yaml` 必须保持 `entries: []`；`omo lint direct-omo-io` / CI / pre-commit 必须把任何新增 baseline entry 视为失败。
 8. `.omo/_delivery/ingress/registry.yaml` 若存在，必须保持 `by_id` / `by_source_ref` 双向一致，并且 artifact/task/goal/debt 引用可落到真实状态面。
 9. `/.omo/goals` 必须保持为指向 `/.omo/_truth/goals` 的运行时入口符号链接；文档与 broker 一律引用 `/.omo/goals/current.yaml`，不得发明第二写入目标。
 
@@ -125,6 +172,9 @@
 - `omo lint ingress-registry` 能校验 ingress registry 的结构与反向映射
 - `omo lint mutation-surfaces` 能把 broker 写入入口清单从“解释性文档”提升为可执行门禁
 - `omo lint internal-write-profiles` 能把 worker/internal 运行时写面从“可观察报表”提升为正式 registry 门禁
+- `omo lint state-plane-assets` 能校验 `.omo` 顶层资产是否带完整的持久化/保留语义，防止 state/control/delivery/knowledge 再次混写
+- `omo lint c2g-omo-boundary` 能校验 `projects/c2g` 只通过单一 facade 接入 OMO，防止跨仓调用再次散开
+- `omo lint ingress-artifacts` 能校验 ingress registry 指向的 artifact 文件存在且元数据与 registry / carrier 对齐
 - `omo lint self-evolution-approval` 能拦截 OPC P6 self-evolution task 的审批字段漂移与 active 泄漏
 - `omo lint task-policy <name>` 能承载后续更多特殊任务红线，而不把规则散落到单独脚本
 - `task-policy` 既要有运行时代码注册表，也要有 `.omo/_truth/registry/task-policies.yaml` 机器可读注册表
@@ -133,7 +183,7 @@
 - OMO 的 worker/internal 写路径必须维护 `.omo/_truth/registry/internal-write-profiles.yaml`，明确哪些写面属于运行时 scratch、哪些带 promotion 风险
 - `omo governance ingress-goal/task/debt` 与 `projects/c2g` 的持久化适配器都属于正式 mutation surface，不得只登记终端 CLI 而漏掉治理入口/桥接入口
 - `omo governance surfaces --json` 必须暴露 mutation surface registry 漂移，作为 reviewer 判断“还有哪些 mutation 没收口”的机器依据
-- pre-commit / CI / `workspace governance verify` 必须显式执行 `omo lint mutation-surfaces` 与 `omo lint internal-write-profiles`，避免只有 reviewer 看 `surfaces --json` 时才发现 drift
+- pre-commit / CI / `workspace governance verify` 必须显式执行 `omo lint mutation-surfaces`、`omo lint internal-write-profiles`、`omo lint state-plane-assets`、`omo lint c2g-omo-boundary` 与 `omo lint ingress-artifacts`，避免只有 reviewer 看 `surfaces --json` 时才发现 drift
 - 目录语义必须可固化为 policy；例如 `done/` 中的 packet 不得再出现 `status: review/completed`
 - done 态治理要先从“新式 packet”做窄约束，再逐步覆盖历史存量，避免一刀切误伤老票
 - review 态也优先走窄约束；例如 remediation review 先要求审查笔记存在，再逐步补更强的 lifecycle 字段
@@ -142,4 +192,5 @@
 - `projects/c2g` 产出的 planned task 携带治理引用
 - `omo lint direct-omo-io` 与 pre-commit hook 能拦截非 broker 直接写 `.omo`
 - `contract_gatekeeper.py` 若启用 baseline，只能压住已登记的历史 path+line；任何新违规必须仍然 fail
+- `direct-io-baseline.yaml` 清零后必须持续为空；新增 grandfather entry 本身就应触发 lint fail
 - X1/X2/X3/X4 与 L0/M1 治理模型中存在对应映射

@@ -1,10 +1,39 @@
 id: TASK-COCKPIT-TEST-COVERAGE
 title: cockpit test coverage 81%→90%
-status: planned
+status: candidate
 priority: P2
 risk_level: L1
-description: >
-  app.py: 83%→90%+, governance.py: 76%→85%+, workspace_research.py: 61%→75%+.
+description: 'app.py: 83%→90%+, governance.py: 76%→85%+, workspace_research.py: 61%→75%+.
   需 CI 配置 + 覆盖率门禁.
+
+  '
 created_at: '2026-06-19T12:00:00Z'
 owner: cockpit-team
+metadata:
+  legacy_normalized_from: planned
+  legacy_status: planned
+  normalized_at: '2026-06-20T07:00:00Z'
+  normalized_by: codex-reviewer
+  normalization_source_ref: omo:worker:normalize-planned:TASK-COCKPIT-TEST-COVERAGE
+  legacy_owner: cockpit-team
+  priority: P2
+task_type: feature
+depends_on: []
+deliverables:
+- cockpit test coverage 81%→90%
+source_docs:
+- .omo/tasks/planned/TASK-COCKPIT-TEST-COVERAGE.yaml#legacy-normalized
+knowledge_refs: []
+handoff_refs: []
+entry_gate: []
+evidence_required:
+- legacy planned packet normalized
+test_plan:
+- python3 scripts/omo_worker.py task validate --all-planned
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+allowed_operation_level: L0
+human_approval_required: false

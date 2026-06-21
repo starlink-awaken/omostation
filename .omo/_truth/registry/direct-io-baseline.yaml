@@ -1,0 +1,7 @@
+version: "1.0"
+status: active
+updated_at: "2026-06-19T00:00:00Z"
+owner: governance
+runtime_ref: projects/ecos/scripts/contract_gatekeeper.py
+policy: grandfather-existing-only
+entries:

@@ -87,7 +87,7 @@ candidate ──→ pending ──→ in_progress ──→ review ──→ don
 12. 接任务前：检查同名任务是否已 `in_progress`，避免重复。
 13. 开始执行：由 **coordinator 预占 lease**，先更新 `status: in_progress`、`assigned_to`、`started_at`、`dispatch_id`、`run_ref`。
 14. 完成实现后：先进入 `review`，补充 `evidence`。
-15. 验收通过：更新 `status: done`、`completed_at`，移到 `done/`。
+15. 验收通过：运行 `omo task done <TASK_ID>`，通过 broker 写 `status: done`、`completed_at` 并归档到 `done/`。
 16. 遇到阻塞：更新 `status: blocked`、`blocked_by`、`next_check_at`，移到 `blocked/`。
 17. 写入方式：只写自己的任务文件，不修改其他 Agent 的文件。
 
@@ -111,6 +111,12 @@ scripts/omo task validate --all-active
 
 ```bash
 python3 scripts/omo_worker.py task validate --all-planned
+```
+
+如需把历史遗留的非规范 planned packet 收敛为合法 packet，或把误落到 planned/ 的 terminal packet 逐出到 `archived/legacy-normalized/`，运行：
+
+```bash
+python3 scripts/omo_worker.py task normalize-planned --actor <ACTOR> --now <ISO8601> --omo-dir .omo
 ```
 
 当前 schema gate 会校验：

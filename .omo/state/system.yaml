@@ -10,7 +10,7 @@ phase_status: active
 current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
-health_score: 92.0
+health_score: 61.6
 health_score_source: manual_audit_post_session_cleanup_20260619
 health_score_generated_at: '2026-06-19T15:45:00Z'
 active_agents: 0
@@ -18,8 +18,8 @@ idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
 completed_tasks: 90
-total_tasks: 98
-active_tasks: 0
+total_tasks: 99
+active_tasks: 2
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
 phase2_core_complete: true
@@ -32,8 +32,12 @@ phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
 phase36_status: completed
 phase36_completed_at: '2026-06-11T00:00:00Z'
 next_active_tasks:
-- (No active tasks)
-last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 kickoff may proceed)
+- Current active queue from .omo/tasks/active/ (2 tasks)
+- TASK-GBRAIN-OPS-SPLIT
+- TASK-OMO-PHYSICAL-REORG
+- OPC-P6-SELF-EVOLUTION-doc-gate-e
+last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 kickoff
+  may proceed)
 phase2_status: completed
 phase2_completed_at: '2026-05-30T15:36:00Z'
 phase4_worker_collab_status: wave2_completed
@@ -55,7 +59,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-19T13:38:00Z'
+updated_at: '2026-06-21T06:01:14Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -68,8 +72,16 @@ phase31_status: completed
 phase31_completed_at: '2026-06-18T00:00:00Z'
 phase31_note: '部分完成: cost tracking + langfuse + governance data 已实现; 完整指标体系待后续迭代'
 divergence_flags: []
-task_gate_summary: {}
-promotion_blockers: {}
+task_gate_summary:
+  TASK-GBRAIN-OPS-SPLIT:
+    canonical_status: candidate
+    gate_facts: []
+  TASK-OMO-PHYSICAL-REORG:
+    canonical_status: candidate
+    gate_facts: []
+promotion_blockers:
+  TASK-GBRAIN-OPS-SPLIT: []
+  TASK-OMO-PHYSICAL-REORG: []
 divergence_triage_summary: {}
 divergence_detail_refs: {}
 phase12_status: completed
@@ -105,69 +117,95 @@ phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
 phase32_completed_at: '2026-06-07T00:00:00Z'
-debt_weight: 0.5
+debt_weight: 1.0
 debt_weight_items:
   DEBT-CLI-1:
     resolved: true
     weight: 0.0
     desc: broker debt
   DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG:
-    resolved: false
+    resolved: true
     weight: 0.0
     desc: legacy direct .omo write backlog remains in workspace scripts and services
   DEBT-CARDS-FRONTMATTER-PARSE:
     resolved: true
     weight: 0.0
-    desc: CARDS debt frontmatter YAML parsing fails when title contains colon
+    desc: CARDS debt frontmatter YAML parsing fails when title contains colons
   DEBT-COCKPIT-HEALTH-DISTORTION:
     resolved: true
     weight: 0.0
     desc: cockpit health --full reports stale/incorrect service status
-  DEBT-CI-MYPY-STRICT:
+  DEBT-CROSSPROJECT-SYSPATH:
+    resolved: true
+    weight: 0.0
+    desc: 23 处 sys.path.insert 硬编码路径注入
+  DEBT-EMPTY-INIT-PY:
+    resolved: true
+    weight: 0.0
+    desc: 5 empty __init__.py files need module docstrings
+  DEBT-GBRAIN-55-TODOS:
+    resolved: true
+    weight: 0.0
+    desc: gbrain 55 TODO/FIXME comments — needs audit
+  DEBT-KAIRON-ONTODERIVE-PHANTOM:
+    resolved: true
+    weight: 0.0
+    desc: ontoderive engine/ 幽灵目录 — 116 文件未安装, 50 tests 依赖
+  DEBT-GBRAIN-OPERATIONS-TS:
     resolved: false
     weight: 0.0
-    desc: CI 启用 mypy strict 检查 (kairon 16/16 本地 strict, CI 未启用)
-  DEBT-DEPRECATED-CLEANUP:
+    desc: gbrain operations.ts 3.8K 行上帝模块
+  DEBT-OMC-GBRAIN-PERSISTENCE:
     resolved: true
     weight: 0.0
-    desc: 定期清理 _deprecated/ 目录
-    resolved_at: '2026-06-19T14:32:01Z'
-  DEBT-ENV-EXAMPLE-STANDARDIZE:
+    desc: gbrain AppendOnlyLog 持久化路径与 omo audit log 同步
+  DEBT-OMC-METAOS-OMO-PLANE:
     resolved: true
     weight: 0.0
-    desc: 统一 .env.example 格式
-    resolved_at: '2026-06-19T14:32:01Z'
-  DEBT-FUTURE-ANNOTATIONS:
+    desc: metaos 与 omo 治理面边界 (avoid direct .omo write)
+  DEBT-SWARM-ENGINE-20260614104223:
     resolved: true
     weight: 0.0
-    desc: 新文件添加 from __future__ import annotations
-    resolved_at: '2026-06-19T14:32:01Z'
+    desc: swarm-engine 已归档, 仅保留 _archive 快照
 resolved_debt_items:
+- DEBT-CARDS-FRONTMATTER-PARSE
 - DEBT-CLI-1
 - DEBT-COCKPIT-HEALTH-DISTORTION
-- DEBT-CARDS-FRONTMATTER-PARSE
-- DEBT-AGORA-MODULE-BLOAT
-- DEBT-FUTURE-ANNOTATIONS
-- DEBT-ENV-EXAMPLE-STANDARDIZE
-- DEBT-DEPRECATED-CLEANUP
+- DEBT-CROSSPROJECT-SYSPATH
+- DEBT-EMPTY-INIT-PY
+- DEBT-GBRAIN-55-TODOS
+- DEBT-KAIRON-ONTODERIVE-PHANTOM
+- DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG
+- DEBT-OMC-GBRAIN-PERSISTENCE
+- DEBT-OMC-METAOS-OMO-PLANE
+- DEBT-SWARM-ENGINE-20260614104223
 orphaned_tasks_ref: .omo/tasks/registry/INDEX.md
 debt_registry_ref: .omo/_truth/registry/debt.yaml
 debt_dashboard_ref: .omo/debt/dashboard/current.yaml
 debt_review_pack_ref: .omo/debt/reviews/current.md
 debt_metrics:
-  debt_health: 72.7
+  debt_health: 87.5
   classification_entropy: 0.0
-  state_entropy: 0.82
-  pointer_entropy: 0.0
+  state_entropy: 0.0
+  pointer_entropy: 2.0
   time_entropy: 0.0
-  backlog_pressure: 3
-  coupling_load: 2.0
-debt_watchlist_count: 3
-debt_gate_count: 1
+  backlog_pressure: 0.0
+  coupling_load: 1.0
+debt_watchlist_count: 0
+debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 8
+planned_tasks: 7
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
+- Current planned queue from .omo/tasks/planned/ (7 tasks)
+- IMPORTED-3268f8
+- IMPORTED-e5cb72
+- IMPORTED-f9b1e2
+- OPT-BOS-GATEWAY
+- TASK-8CF4636A
+- TASK-COCKPIT-TEST-COVERAGE
+- TASK-DEBT-CLOSURE-EVIDENCE-20260620
+- OPC-P6-SELF-EVOLUTION-doc-gate-e
 - IMPORTED-3268f8 (workspace→cockpit 命名 SSOT 统一 (架构师视角系统性债))
 - IMPORTED-e5cb72 (修真 c2g brainstorm — 从 Mock print 到真 Pitch 生成)
 - IMPORTED-f9b1e2 (任务1:)
@@ -185,13 +223,14 @@ governance:
 runtime_health_summary:
   last_scan: 1781794201.813656
   total_services: 12
-  online_services: 4
-  healthy_services: 8
-  offline_services: 4
+  online_services: 2
+  healthy_services: 7
+  offline_services: 10
   unhealthy_services:
+  - agentmesh-gateway
   - gbrain-index
   stale_services: []
-  note: '2026-06-18T16:00:00Z 手动校准: cockpit/agora-SSE/cron-service/hermes 运行中; agora-HTTP/llm-gateway/gbrain-index
-    未加载; 8个 stdio MCP 无需 HTTP listener'
 phase42_status: active
 health_score_raw: 88.0
+xplane_score: 0.0
+xplane_coverage: 100.0

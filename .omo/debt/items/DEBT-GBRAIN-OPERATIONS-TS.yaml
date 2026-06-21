@@ -1,7 +1,7 @@
 id: DEBT-GBRAIN-OPERATIONS-TS
 title: gbrain operations.ts 3.8K 行上帝模块
-status: deferred
-lifecycle_state: deferred
+status: closed
+lifecycle_state: closed
 severity: low
 resolution_evidence: '2026-06-19 评估: 3841行, 75 operations, 31 importers.
 
@@ -45,5 +45,7 @@ history:
   actor: projects/c2g
 opened_at: '2026-06-19T01:00:00Z'
 first_seen_at: '2026-06-19T01:00:00Z'
-last_seen_at: '2026-06-20T05:25:12Z'
+last_seen_at: '2026-06-21T14:00:00Z'
 occurrence_count: 1
+closed_at: '2026-06-21T14:00:00Z'
+resolution_note: 'operations.ts 3841 行已拆分为 21 个 domain 文件 (operations/ 目录) + barrel exports。bun run tsc --noEmit 0 errors。PageType import 已补。'

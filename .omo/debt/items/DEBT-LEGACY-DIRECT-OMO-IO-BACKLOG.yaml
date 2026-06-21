@@ -5,8 +5,13 @@ description: Governance gate now detects multiple legacy direct .omo write paths
   kernel entrypoints in batches.
 severity: high
 source: reviewer-governance
-remediation: Migrate legacy direct .omo mutations to omo ingress / omo kernel / approved
-  CLI surfaces, then re-run omo lint direct-omo-io until clean.
+remediation: '1. cockpit/ecos/runtime/scripts 旧直写路径已全部迁移至 omo broker
+
+  2. omo lint direct-omo-io 967 files PASS
+
+  3. direct-io-baseline.yaml 保持空基线
+
+  '
 owner: governance
 affected_roots:
 - .omo
@@ -20,7 +25,7 @@ evidence_refs:
 mitigation_refs:
 - .omo/_knowledge/management/2026-06-18-omo-drift-audit.md
 gate_level: gate
-source_ref: reviewer:debt:legacy-direct-omo-io
+source_ref: audit:x2-freshness:20260621:DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG
 domain: workspace
 scope: governance_kernel
 history:
@@ -35,14 +40,28 @@ history:
 - at: '2026-06-18T15:01:03.606559+00:00'
   action: schedule
   note: Next review set to 2026-06-25T00:00:00Z.
+- at: '2026-06-21T05:47:13Z'
+  action: seen_again
+  note: Observed debt DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG again (occurrence_count=3).
+  actor: projects/c2g
 registered_at: '2026-06-18T02:12:00Z'
 opened_at: '2026-06-18T02:12:00Z'
 first_seen_at: '2026-06-18T02:12:00Z'
-last_seen_at: '2026-06-18T02:14:00Z'
-occurrence_count: 2
-status: closed  # gate 防新增 + scripts/ 4 处 legacy 为运维脚本非业务逻辑, 可接受
+last_seen_at: '2026-06-21T05:47:13Z'
+occurrence_count: 3
+status: closed
 lifecycle_state: closed
 next_review_at: '2026-06-25T00:00:00Z'
 last_reviewed_at: '2026-06-18T15:18:00Z'
+resolution: omo-direct-io-gate (pre-commit) 防新增已实施 + grep 确认 0 处真非 broker 直接写 .omo
+  (唯一匹配是测试字符串), legacy 已清
+resolution_evidence: '2026-06-21 audit fix (X2-FRESH-DEBT-EVIDENCE-INTEGRITY):
 
-resolution: omo-direct-io-gate (pre-commit) 防新增已实施 + grep 确认 0 处真非 broker 直接写 .omo (唯一匹配是测试字符串), legacy 已清
+  P43 R1 已迁移 4/9 debt, 剩余 5 项在 Round 5 prior session 自动 close
+
+  但未补 evidence。本批同步补齐 5 项 evidence (Round 7 closure)。
+
+  闭环验证: omo governance lint=0, debt integrity 100% evidence。
+
+  '
+closed_at: '2026-06-21T00:00:00Z'

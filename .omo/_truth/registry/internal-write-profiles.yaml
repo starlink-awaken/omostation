@@ -1,0 +1,125 @@
+version: "1.0"
+status: active
+updated_at: "2026-06-19T00:00:00Z"
+owner: governance
+runtime_ref: projects/omo/src/omo/omo_governance_surfaces.py:_worker_internal_write_profiles_snapshot
+execution_entrypoints:
+  - omo governance surfaces --json
+  - omo lint internal-write-profiles
+  - workspace governance verify
+profiles:
+  - name: worker-dispatch
+    runtime_ref: projects/omo/src/omo/omo_worker_dispatch.py:dispatch_task
+    category: worker_internal
+    subtype: dispatch_runtime
+    writes:
+      - .omo/workers/runs/*-dispatch.yaml
+      - .omo/workers/runs/*-envelope.yaml
+      - .omo/workers/runs/*-prompt.md
+      - .omo/workers/runs/*-checkpoint.md
+      - .omo/workers/runs/*-reclaim.md
+      - .omo/workers/runs/*-review.md
+      - .omo/workers/runs/*-stdout.log
+      - .omo/tasks/active/*.yaml
+    promotion_surface: false
+    note: 内部调度运行态；不是人类/bridge 入口
+  - name: worker-task-lifecycle
+    runtime_ref: projects/omo/src/omo/omo_worker_dispatch.py:yield_task + _fast_track_compaction
+    category: worker_internal
+    subtype: task_lifecycle_runtime
+    writes:
+      - .omo/workers/runs/*-dispatch.yaml
+      - .omo/tasks/planned/*.yaml
+      - .omo/tasks/archived/*.yaml
+      - .omo/_knowledge/audits/*.md
+      - .omo/_delivery/ingress/tasks/*-yield-*.yaml
+      - .omo/_delivery/ingress/tasks/*-archive-*.yaml
+      - .omo/_delivery/ingress/audits/*.yaml
+    promotion_surface: false
+    note: 内部任务回退与 Fast-Track 归档链路；通过 broker 持久化
+  - name: worker-self-evolution-remediation
+    runtime_ref: projects/omo/src/omo/omo_worker_promotion.py:_route_self_evolution_packet_to_remediation
+    category: worker_internal
+    subtype: remediation_runtime
+    writes:
+      - .omo/tasks/planned/*.yaml
+      - .omo/tasks/remediation/*.yaml
+      - .omo/tasks/remediation-notes/*.md
+      - .omo/_delivery/ingress/tasks/*-route-self-evolution-*.yaml
+    promotion_surface: false
+    note: self-evolution 专用 review lane；已批但不可入 active 的包转入 remediation
+  - name: worker-promotion
+    runtime_ref: projects/omo/src/omo/omo_worker_promotion.py:_apply_task_promotion
+    category: worker_internal
+    subtype: promotion_runtime
+    writes:
+      - .omo/workers/runs/*-promotion-*.yaml
+      - .omo/_delivery/ingress/tasks/*-promote-*.yaml
+      - .omo/_delivery/ingress/tasks/*-revert-*.yaml
+      - .omo/state/system.yaml (via sync_omo_state.py)
+    promotion_surface: true
+    note: 内部晋升与回滚链路；task 生命周期迁移已通过 ingress broker 持久化
+  - name: worker-status
+    runtime_ref: projects/omo/src/omo/omo_worker_status.py:update_dispatch_checkpoint
+    category: worker_internal
+    subtype: checkpoint_runtime
+    writes:
+      - .omo/workers/runs/*-checkpoint.md
+      - .omo/workers/runs/*-dispatch.yaml
+    promotion_surface: false
+    note: 内部 checkpoint/lease 续写
+  - name: worker-approval-runtime
+    runtime_ref: projects/omo/src/omo/omo_worker_promotion.py:_request_task_promotion_approval_record + projects/omo/src/omo/omo_admission.py:request_conditional_approval
+    category: worker_internal
+    subtype: approval_runtime
+    writes:
+      - .omo/workers/runs/*-promotion-approval-*.yaml
+      - .omo/workers/runs/*-approval.yaml
+      - .omo/_truth/task-center/proposals/*.yaml
+      - .omo/_delivery/ingress/tasks/*-promotion-approval-*.yaml
+      - .omo/_delivery/ingress/tasks/*-contract-request-*.yaml
+    promotion_surface: true
+    note: 内部审批请求与 contract-request 链路；planned/active task 补丁已通过 ingress broker 落盘
+  - name: worker-rollout-runtime
+    runtime_ref: projects/omo/src/omo/omo_rollout.py:accept_rollout_envelope
+    category: worker_internal
+    subtype: rollout_runtime
+    writes:
+      - .omo/workers/runs/*-acceptance.yaml
+      - .omo/workers/runs/*-envelope.yaml
+    promotion_surface: false
+    note: 内部 rollout acceptance 续写
+  - name: worker-experience-runtime
+    runtime_ref: projects/omo/src/omo/omo_experience.py
+    category: worker_internal
+    subtype: experience_runtime
+    writes:
+      - .omo/tasks/blocked/*.yaml
+      - .omo/_delivery/task-center/consensus/*.yaml
+      - .omo/_truth/task-center/usage-accounting.yaml
+      - .omo/_delivery/task-center/freshness/current.yaml
+      - .omo/_delivery/task-center/control/current.yaml
+      - .omo/summaries/*.md
+      - .omo/_delivery/ingress/tasks/*-blocked-*.yaml
+      - .omo/_delivery/ingress/tasks/*-consensus-*.yaml
+      - .omo/_delivery/ingress/task-center/*.yaml
+    promotion_surface: false
+    note: 复杂请求桥接与 task-center truth/control 产物已通过 ingress broker 落盘；summary markdown 保留为运行时写出
+  - name: worker-overlay-runtime
+    runtime_ref: projects/omo/src/omo/omo_worker_promotion.py:_write_task_governance_overlay_* + _write_task_promotion_*
+    category: worker_internal
+    subtype: analytics_runtime
+    writes:
+      - .omo/_truth/governance-overlay/roadmap.yaml
+      - .omo/_control/governance-overlay/current.yaml
+      - .omo/_delivery/ingress/governance-overlay/*.yaml
+      - .omo/workers/promotion/current.yaml
+      - .omo/workers/promotion/current.md
+      - .omo/workers/promotion/readiness.yaml
+      - .omo/workers/promotion/readiness.md
+      - .omo/workers/promotion/approvals/**/current.yaml
+      - .omo/workers/promotion/approvals/**/current.md
+      - .omo/workers/governance-overlay/**/current.yaml
+      - .omo/workers/governance-overlay/**/current.md
+    promotion_surface: false
+    note: governance overlay roadmap/control 已通过 ingress broker 持久化；shell current 与 approval analytics 仍为运行时快照
