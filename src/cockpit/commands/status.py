@@ -118,6 +118,7 @@ def _render_workbench(cycle: int | None = None, interval: float | None = None) -
     health_line = ""
     try:
         import yaml as _yaml
+
         from cockpit.data_index import resolve_workspace_root
         # 产品走查 v5 #V5-04: 复用项目标准根解析器 (governance.py/data.py 同款), 比手写 cwd 向上
         # 遍历更健壮 — __file__ 锚定不依赖 cwd; 找不到会 raise, 被此处 except 兜底 → health_line 空.

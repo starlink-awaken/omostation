@@ -32,6 +32,7 @@ def _cmd_health(args: Namespace) -> int:
             # 产品走查 v5 #V5-02: health 不重复完整 status 工作台 (避免与 cockpit status
             # 输出冗余); 聚焦健康摘要, 完整工作台引导用户用 cockpit status
             import json as _json
+
             from cockpit.scripts.cockpit_mcp import workspace_context
 
             ctx = _json.loads(workspace_context())

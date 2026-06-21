@@ -295,6 +295,7 @@ def _f3_family_health(*, query: str) -> dict[str, Any]:
     hub_data = {}
     try:
         import asyncio
+
         from agora.mcp.bos_resolver import resolve_bos_uri
 
         result = asyncio.run(resolve_bos_uri("bos://persona/family-hub/health"))
