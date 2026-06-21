@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 
 from runtime.matrix import list_services, health_check_url
 from runtime.state_schema import validate_runtime_health_snapshot
+from omo.omo_gc import archive_resolved_debt_items
 
 import yaml
 import hashlib
@@ -20,8 +21,6 @@ _workspace_root = Path(__file__).resolve().parents[4]  # runtime/src/runtime/sch
 OMO_STATE_FILE = Path(
     os.environ.get("OMO_STATE_FILE", str(_workspace_root / ".omo" / "state" / "system_health.yaml"))
 )
-
-from omo.omo_gc import archive_resolved_debt_items
 
 class MatrixScheduler:
     def __init__(self):
@@ -381,7 +380,6 @@ class MatrixScheduler:
 
 def main():
     from runtime.kei_sandbox import enable_sandbox
-    import sys
     enable_sandbox()
     scheduler = MatrixScheduler()
     # P1-AUTO_HEAL: --autoheal (default on) / --no-autoheal
