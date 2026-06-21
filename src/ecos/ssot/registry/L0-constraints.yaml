@@ -636,3 +636,69 @@ debt_constraints:
       - "projects/omo/src/omo/omo_debt_metrics.py"
       - ".omo/standards/debt-gate-level-enum.md"
       - ".omo/_knowledge/management/2026-06-18-omo-drift-audit.md"
+
+  - id: CR-DEBT-CLOSURE-EVIDENCE-01
+    applies_to:
+      - L2
+    description: |
+      lifecycle_state=closed 的 DEBT yaml 必须携带 ≥ 20 字符的 resolution_evidence;
+      lifecycle_state=deferred 的 DEBT yaml 必须携带 next_review_at (ISO 8601) +
+      gate_level (P0/P1/P2/P3)。
+    dimension: X1
+    rule: "debt.lifecycle_state=='closed' implies debt.resolution_evidence | length >= 20"
+    type: required
+    severity: error
+    enforcement: block-write
+    introduced: '2026-06-20'
+    value_tier: 1
+    references:
+      - "projects/omo/src/omo/omo_audit.py (governance_check_debt)"
+      - ".omo/_truth/x1-governance-policies.yaml (X1-DEBT-EVIDENCE-CLOSURE-20260620)"
+      - ".omo/_truth/x2-freshness-rules.yaml (X2-FRESH-DEBT-EVIDENCE-INTEGRITY)"
+      - ".omo/_knowledge/audits/2026-06-20-debt-evidence-closure.md"
+    violation: "omo governance audit debt integrity score 扣分 (每条缺证据 -5); debt_health 失真; omo debt list 不显示 evidence"
+
+  - id: CR-CROSS-PROJECT-LINT-01
+    applies_to:
+      - L0
+      - L1
+      - L2
+      - L3
+    description: |
+      所有子项目 (kairon/agora/cockpit/runtime/omo/metaos/aetherforge/c2g/ecos) 的
+      ruff check 必须保持 0 errors。P43 R5 baseline 已确立。任何回归触发
+      omo governance score 降级。
+    dimension: X2
+    rule: "subproject.ruff_errors == 0"
+    type: required
+    severity: error
+    enforcement: block-write
+    introduced: '2026-06-20'
+    value_tier: 1
+    references:
+      - "projects/omo/src/omo/omo_audit.py (governance_check_lint)"
+      - ".omo/_truth/x1-governance-policies.yaml (X1-CROSS-PROJECT-LINT-ENFORCE-20260620)"
+      - ".omo/_truth/x2-freshness-rules.yaml (X2-FRESH-CROSS-PROJECT-LINT)"
+    violation: "omo governance lint score = 100 - errors * 5, score < 90 降级 B 等级; CI 阻断 push"
+
+  - id: CR-MOF-VERSION-COUPLED-01
+    applies_to:
+      - L0
+      - L2
+    description: |
+      MOF 模型版本变更必须同步 (a) commit message 含 governance_refs (b) mof-version.yaml
+      更新 (c) bin/mof-version record (d) mof-extract post-commit hook 触发审计 log。
+      4 路径缺一即视为漂移。
+    dimension: X4
+    rule: "mof_version_change implies all_4_paths_recorded"
+    type: required
+    severity: error
+    enforcement: block-write
+    introduced: '2026-06-20'
+    value_tier: 1
+    references:
+      - ".omo/_truth/mof-version.yaml"
+      - ".omo/_truth/x4-consistency-rules.yaml (X4-CONS-P43-CLOSED-LOOP-SSOT)"
+      - ".githooks/post-commit (mof-extract)"
+      - "bin/mof-version"
+    violation: "mof-version 与 git history / commit message / 审计 log 漂移; SSOT 失联"
