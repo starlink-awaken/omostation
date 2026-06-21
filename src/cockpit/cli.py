@@ -290,7 +290,7 @@ def main() -> int:
     mcp_p.add_argument("--port", type=int, default=7431, help="SSE 模式监听端口（默认 7431）")
     mcp_p.add_argument("--list-tools", action="store_true", help="列出已注册的工具，不启动 server")
 
-    gongwen_p = sub.add_parser("gongwen", help="📄 公文写作门户引导 (文种/规范/入口, 委派 @公文 域)")
+    sub.add_parser("gongwen", help="📄 公文写作门户引导 (文种/规范/入口, 委派 @公文 域)")
     gov_p = sub.add_parser("governance", help="架构治理 (委派 arcnode-*)")
     gov_p.add_argument(
         "subcommand",

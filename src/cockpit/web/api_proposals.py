@@ -1,10 +1,11 @@
 """Proposals API routes."""
 
 import time
-from pathlib import Path
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
+
+from cockpit.compat import WORKSPACE_ROOT
 
 router = APIRouter()
 
