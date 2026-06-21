@@ -71,3 +71,54 @@ rules:
     owner: architecture-team
     notes: >
       _legacy/ 中的能力需在 30 天内逐项消化或明确废弃。
+
+  - rule_id: X2-FRESH-DEBT-EVIDENCE-INTEGRITY
+    title: DEBT closure evidence 完整性 14 天巡检
+    type: governance_loop_freshness
+    status: active
+    created: '2026-06-20'
+    target: .omo/debt/items/DEBT-*.yaml
+    freshness:
+      mechanism: governance-audit
+      threshold_days: 14
+      action: escalate
+    owner: governance-team
+    notes: >
+      P43 闭环确立 debt closure 必带 resolution_evidence 的强制约束。
+      `omo governance` 每 14 天自动审计: lifecycle_state=closed 的 debt
+      必须有 ≥ 20 字符的 resolution_evidence；lifecycle_state=deferred 的 debt
+      必须有 next_review_at + gate_level。审计失败触发 debt integrity score 扣分。
+      巡检脚本: projects/omo/src/omo/omo_audit.py:governance_check_debt
+
+  - rule_id: X2-FRESH-CROSS-PROJECT-LINT
+    title: 全子项目 ruff 0 errors 7 天巡检
+    type: governance_loop_freshness
+    status: active
+    created: '2026-06-20'
+    target: projects/*/src/**/*.py
+    freshness:
+      mechanism: governance-audit
+      threshold_days: 7
+      action: escalate
+    owner: governance-team
+    notes: >
+      P43 R5 收口确立 9 子项目 ruff 全 0 baseline。每 7 天通过 `omo governance`
+      (governance_check_lint) 自动扫描 kairon packages/，其他子项目走
+      `cd projects/<x> && uv run ruff check src/` 手动验证。
+      任何子项目回归非 0 即触发 lint score 扣分并降级 governance 等级。
+
+  - rule_id: X2-FRESH-MOF-VERSION-BUMP
+    title: MOF 模型版本变更 30 天巡检
+    type: model_drift_freshness
+    status: active
+    created: '2026-06-20'
+    target: .omo/_truth/mof-version.yaml
+    freshness:
+      mechanism: git-commit-staleness
+      threshold_days: 30
+      action: warn
+    owner: architecture-team
+    notes: >
+      MOF 模型版本 (当前 v0.0.12) 超过 30 天无变化时告警, 提示
+      mof-extract 钩子是否失活 / 是否需要新阶段登记。需配合 `bin/mof-version show`
+      与 `.omo/_knowledge/audits/*.md` 联合审计。

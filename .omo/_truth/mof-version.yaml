@@ -43,4 +43,8 @@ history:
 - description: 'P43 round-5 final-2: kairon 6 ruff errors 闭环, governance 100 A+'
   timestamp: '2026-06-21T13:28:53.169263'
   version: 0.0.12
-version: 0.0.12
+- description: 'P43 R6 docs-convergence: X1-X4 + L0 + M3 + AGENTS/INVENTORY 同步 P43
+    closed-loop pattern, governance 100 A+ 不变'
+  timestamp: '2026-06-21T13:40:23.980306'
+  version: 0.0.13
+version: 0.0.13

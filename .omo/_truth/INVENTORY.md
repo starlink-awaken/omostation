@@ -1,9 +1,13 @@
 # Workspace 项目资产索引
 
-> 更新: 2026-06-17
+> 更新: 2026-06-21 (post-P43 R5)
 > 性质: 项目资产导航，不是 live runtime snapshot。
 > 当前项目身份、状态、路径与技术栈以 [../PROJECTS.yaml](../PROJECTS.yaml) 为准；
 > 项目级边界与调用链以各项目 `ARCHITECTURE.md` / `CALLCHAIN.md` / `BOUNDARY.md` 为准。
+>
+> **P43 收口状态**: governance 100 A+, 9 子项目 ruff 全 0,
+> mof-version v0.0.12, c2g→omo→mof 闭环模式文档化
+> (`.omo/_knowledge/patterns/p43-closed-loop-pattern.md`)。
 
 ---
 

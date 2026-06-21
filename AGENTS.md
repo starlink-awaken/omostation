@@ -633,6 +633,50 @@ OPC 路线图 P5-P7 收口阶段建立的 self-correction 闭环, 任何 Phase /
 - `project_model_driven_debt_fix_p0_p1_20260609.md` — 34 源文件, 0 lint, 29/29 验证通过
 - `feedback_mof_schema_governance_rule_registration_20260613.md` — 校验纳入 L0 治理规则 3 步法
 
+## 🌀 P43 Closed-Loop Pattern (2026-06-21 确立)
+
+> P43 是 eCOS 历史上首次完整跑通 c2g → omo → mof 三层联动闭环的阶段。
+> 该模式可作为后续 P44+ 的可复用范式。
+
+### 闭环路径
+
+```
+c2g brainstorm (V2P)                      # 需求侧建模
+   ↓ Pitch (Upstream + Appetite)
+omo governance ingress-task (broker)      # 任务物化
+   ↓ TASK-*.yaml (planned → pending)
+omo governance ingress-debt (broker)      # 债务闭环 (修复型)
+   ↓ DEBT-*.yaml (upsert + audit + history)
+bin/mof-version record '<desc>'           # MOF 版本登记
+   ↓ v0.0.X → v0.0.X+1
+omo governance 重跑 + mof-enforce post-check  # 验证
+   ↓ score 85 → 100 A+ + 0 drift
+git commit + submodule pointer bump       # 落地
+```
+
+### P43 关键产物 (5 Rounds · 12 commits)
+
+| Round | 主题 | 提交 | 治理影响 |
+|-------|------|------|---------|
+| R1 | 5 debt evidence closure | 1 | governance 85 → 88 |
+| R2 | kairon 18 F821 + v0.0.7/8 | 4 | governance 88 → 100 |
+| R3 | c2g +41 tests + SUBSYSTEM_MAP | 2 | c2g ratio 0.02 → 0.07 |
+| R4 | 4 子项目 lint cleanup | 4 | 全 9 子项目 lint=0 |
+| R5 | 3 子项目 + 跨闭环 | 5 | governance 100 A+ + v0.0.12 |
+
+### 模式可复用度
+
+| 环节 | 可复用度 | 复用条件 |
+|------|---------|---------|
+| `c2g brainstorm` | **高** | 任意需求点, 补 Upstream/Appetite |
+| `omo ingress-task` | **高** | broker + fcntl lock 自动 |
+| `omo ingress-debt` | **高** | 任何 debt 项修复/关闭/延期 |
+| `mof-version record` | **高** | 每次 P 阶段完成必跑 |
+| `omo governance` 验证 | **高** | 6 项检查 + score 闭环 |
+| `mof-enforce post-check` | **高** | 0 drift 必保 |
+
+详细模式文档: `.omo/_knowledge/patterns/p43-closed-loop-pattern.md`
+
 ## Panoramic View
 
 - **Full feature map / architecture / core flows / module deps / user journeys / integration surfaces**: See [`docs/PANORAMA.md`](./docs/PANORAMA.md) for the current panorama skeleton and authoritative links.

@@ -69,3 +69,71 @@ rules:
       - projects/agora/src/agora/mcp/resolver/services.py
     owner: architecture-team
     enforcement: block-write
+
+  - rule_id: X4-CONS-P43-CLOSED-LOOP-SSOT
+    title: P43 闭环 c2g→omo→mof 链路必须保持 SSOT 一致
+    type: governance_loop_consistency
+    status: active
+    created: '2026-06-20'
+    description: >
+      P43 (2026-06-20) 收口的 c2g → omo → mof 闭环链路在以下 4 处必须口径一致:
+      (a) Pitch 入口: c2g brainstorm / runtime/sandbox/pitches/*.md
+      (b) Task 物化: omo governance ingress-task (broker) → .omo/tasks/planned/*.yaml
+      (c) Debt 闭环: omo governance ingress-debt (broker + fcntl) → .omo/debt/items/*.yaml
+      (d) 版本记录: bin/mof-version record → .omo/_truth/mof-version.yaml
+      任何变更必须走 broker 入口, 禁止 ad-hoc yaml 直写。
+    canonical_source:
+      standard: .omo/standards/omo-governance-surfaces.md
+      registry: .omo/_truth/registry/omo-governance-surfaces.yaml
+      broker: projects/omo/src/omo/omo_ingress.py (ingress-task/ingress-debt)
+      audit: .omo/_knowledge/audits/2026-06-20-debt-evidence-closure.md
+    forbidden_patterns:
+      - "bypass broker 直接 yaml.dump → .omo/tasks/planned/*.yaml"
+      - "bypass broker 直接 yaml.dump → .omo/debt/items/*.yaml"
+      - "c2g bet 路径绕过 omo governance ingress-task 直接修改 .omo/"
+      - "mof-version record 跳过 commit message 含 governance_refs"
+    allowed_patterns:
+      - "omo governance ingress-task --ingress-plane projects/c2g"
+      - "omo governance ingress-debt --ingress-plane projects/c2g"
+      - "bin/mof-version record '<description>'"
+    check_scope:
+      - .omo/tasks/planned/*.yaml
+      - .omo/debt/items/*.yaml
+      - .omo/_truth/mof-version.yaml
+      - .omo/_knowledge/audits/*.md
+    owner: governance-team
+    enforcement: block-write
+
+  - rule_id: X4-CONS-DEBT-GITIGNORE-BOUNDARY
+    title: .omo/debt/ gitignore 边界必须保持审计可达性
+    type: git_scope_consistency
+    status: active
+    created: '2026-06-20'
+    description: >
+      .omo/debt/ 整目录在 .gitignore 中, yaml 状态不进入 git history;
+      但治理审计必须保持可达。审计留痕路径:
+      (a) OMO runtime: .omo/debt/items/*.yaml (lifecycle_state 单一状态源)
+      (b) Audit log: .omo/_knowledge/audit/*.yaml (omo_audit AppendOnlyLog)
+      (c) Governance history: .omo/_knowledge/governance-history.jsonl
+      (d) Knowledge face: .omo/_knowledge/audits/*.md
+      任何 debt closure 状态变化必须 4 路径全部产生 record, 防止 OMO runtime
+      与 git history 漂移。
+    canonical_source:
+      gitignore: .gitignore (含 .omo/debt/)
+      runtime: projects/omo/src/omo/omo_audit.py (AppendOnlyLog + governance_check_debt)
+      audit_log: .omo/_knowledge/audit/
+      governance_history: .omo/_knowledge/governance-history.jsonl
+      knowledge_face: .omo/_knowledge/audits/
+    forbidden_patterns:
+      - "修改 .gitignore 移除 .omo/debt/ 排除规则"
+      - "只更新 yaml 不 append audit log (违反 Round 13 P0 audit 机制)"
+    allowed_patterns:
+      - "omo governance ingress-debt 走 broker (自动 append audit log + governance history)"
+      - ".omo/_knowledge/audits/*.md 作为知识面留痕"
+    check_scope:
+      - .gitignore
+      - .omo/_knowledge/audit/*.yaml
+      - .omo/_knowledge/governance-history.jsonl
+      - .omo/_knowledge/audits/*.md
+    owner: governance-team
+    enforcement: block-write

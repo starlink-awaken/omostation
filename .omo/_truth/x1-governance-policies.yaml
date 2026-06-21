@@ -30,7 +30,7 @@ policies:
       - standard: omni-bus-architecture
     owner: architecture-team
     review_frequency: weekly
-    next_review: '2026-06-24'
+    next_review: '2026-06-28'
     enforcement: block-write
 
   - policy_id: X1-OMO-GOVERNANCE-SURFACES-20260616
@@ -56,7 +56,7 @@ policies:
       - registry: omo-governance-surfaces
     owner: governance-team
     review_frequency: weekly
-    next_review: '2026-06-23'
+    next_review: '2026-06-28'
     enforcement: block-write
 
   - policy_id: X1-OMO-DIRECT-MUTATION-GATE-20260617
@@ -81,7 +81,7 @@ policies:
       - command: uv run --directory projects/omo python -m omo.cli lint direct-omo-io --diff
     owner: governance-team
     review_frequency: weekly
-    next_review: '2026-06-24'
+    next_review: '2026-06-28'
     enforcement: block-write
 
   - policy_id: X1-ARCH-MERGE-LLMGATEWAY-20260616
@@ -109,3 +109,56 @@ policies:
     review_frequency: once
     next_review: '2026-06-30'
     enforcement: log-and-notify
+
+  - policy_id: X1-DEBT-EVIDENCE-CLOSURE-20260620
+    title: P43 债务证据闭环强制策略
+    type: governance_loop
+    status: active
+    created: '2026-06-20'
+    description: >
+      所有 closed 状态的 DEBT yaml 必须携带 ≥ 20 字符的 resolution_evidence 字段；
+      所有 deferred 状态的 DEBT yaml 必须携带 next_review_at + gate_level 字段，
+      防止"沉默延期"。验证入口: `omo governance` (debt integrity 检查项)
+      + `bin/mof-enforce post-check`。修复路径必须走 `omo governance ingress-debt`
+      broker + fcntl 锁，不允许 ad-hoc yaml 直写。
+    scope:
+      - .omo/debt/items/DEBT-*.yaml
+      - projects/omo/src/omo/omo_ingress.py (upsert_debt_item)
+      - projects/omo/src/omo/omo_audit.py (governance_check_debt)
+    audit_requirements:
+      - source: .omo/_knowledge/audits/2026-06-20-debt-evidence-closure.md
+      - source: .omo/_truth/registry/direct-io-baseline.yaml
+      - source: projects/omo/src/omo/omo_audit.py
+    evidence:
+      - 5 debt ingressed via broker on 2026-06-20 (4 closure + 1 next-action)
+      - score 85.0 → 100.0 (A+) over P43 rounds
+    owner: governance-team
+    review_frequency: monthly
+    next_review: '2026-07-20'
+    enforcement: block-write
+
+  - policy_id: X1-CROSS-PROJECT-LINT-ENFORCE-20260620
+    title: P43 跨子项目 lint 强制策略
+    type: governance_loop
+    status: active
+    created: '2026-06-20'
+    description: >
+      所有子项目 (kairon/agora/cockpit/runtime/omo/metaos/aetherforge/c2g/ecos)
+      的 ruff check 必须保持 0 errors。`omo governance` 通过 kairon ruff check
+      反推 score = 100 - errors*5。修复策略: 优先 `ruff --fix` 自动修复，
+      残留真 bug (F821 missing imports, RUF100 stale noqa, F841 unused var,
+      E402 import order) 走 omo governance ingress-task broker + 验证。
+    scope:
+      - projects/*/src/*/*.py
+      - projects/kairon/packages/*/src/*/*.py
+      - projects/omo/src/omo/omo_audit.py (governance_check_lint)
+    audit_requirements:
+      - source: projects/omo/src/omo/omo_audit.py:governance_check_lint
+      - source: bin/mof-enforce
+    evidence:
+      - P43 R5 final: 9 子项目 ruff 全 0 errors
+      - 46+ errors closed across kairon/cockpit/aetherforge/ecos
+    owner: governance-team
+    review_frequency: weekly
+    next_review: '2026-06-28'
+    enforcement: block-write
