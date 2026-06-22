@@ -34,6 +34,8 @@ def main() -> None:
         "cat": _cmd_describe,
         "backends": _cmd_backends,
         "actions": _cmd_actions,
+        "status": _cmd_status,
+        "st": _cmd_status,
         "logs": _cmd_logs,
         "runs": _cmd_logs,
         "--help": _cmd_help,
@@ -84,15 +86,41 @@ def _cmd_run(args: list[str]) -> None:
     dry_run = "--dry-run" in args or "--dry" in args
     args = [a for a in args if a not in ("--dry-run", "--dry")]
 
+    # 解析 --param/-p key=value
+    params: dict[str, str] = {}
+    remaining: list[str] = []
+    i = 0
+    while i < len(args):
+        if args[i] in ("-p", "--param") and i + 1 < len(args):
+            kv = args[i + 1]
+            if "=" in kv:
+                k, v = kv.split("=", 1)
+                params[k] = v
+            else:
+                params[kv] = "true"
+            i += 2
+        elif args[i].startswith("--param="):
+            kv = args[i][8:]
+            if "=" in kv:
+                k, v = kv.split("=", 1)
+                params[k] = v
+            i += 1
+        else:
+            remaining.append(args[i])
+            i += 1
+    args = remaining
+
     if not args:
-        print("用法: ecos workflow run <name> [--dry-run]")
+        print("用法: ecos workflow run <name> [--dry-run] [-p key=value ...]")
         sys.exit(1)
 
     name = args[0]
     print(f"🚀 执行工作流: {name}" + (" (干跑模式)" if dry_run else ""))
+    if params:
+        print(f"   参数: {params}")
     print()
 
-    result = execute_m1_workflow(name, dry_run=dry_run)
+    result = execute_m1_workflow(name, params=params, dry_run=dry_run)
 
     if "error" in result:
         print(f"❌ {result['error']}")
@@ -188,6 +216,54 @@ def _cmd_actions(_args: list[str]) -> None:
     print("💡 action 在工作流定义的 step.action 字段中使用。外部模块可通过 register_action() 扩展。")
 
 
+def _cmd_status(_args: list[str]) -> None:
+    """ecos workflow status — 工作流引擎全局状态"""
+    from ecos.workflow import list_backends
+    from ecos.workflow.actions import list_actions
+    from ecos.workflow.loader import list_workflows
+    from pathlib import Path
+
+    backends = list_backends()
+    actions = list_actions()
+    wfs = list_workflows()
+    runs_dir = Path.home() / ".omo" / "state" / "workflow-runs"
+    run_count = len(list(runs_dir.glob("*.yaml"))) if runs_dir.exists() else 0
+
+    print("📊 工作流引擎全局状态")
+    print(f"{'=' * 60}")
+    print(f"  后端注册:   {len(backends)} 个")
+    counts: dict[str, int] = {"💤": 0, "✅": 0}
+    for b in backends:
+        counts["✅" if b.get("loaded") else "💤"] += 1
+    print(f"  加载状态:   {counts['✅']} 已加载 / {counts['💤']} 惰性待加载")
+    print(f"  已注册 action: {len(actions)} 个")
+    print(f"  可用工作流: {len(wfs)} 个")
+    print(f"  历史运行记录: {run_count} 条")
+    print()
+
+    try:
+        from ecos.workflow.backend_registry import resolve
+        fn = resolve({"execution": {}})
+        assert callable(fn)
+        print("  ✅  默认后端: 可用")
+    except Exception as e:
+        print(f"  ❌  默认后端: {e}")
+
+    try:
+        from ecos.workflow.actions import resolve_action
+        handler = resolve_action("health_check")
+        if handler:
+            print("  ✅  action 解析: 功能正常")
+    except Exception as e:
+        print(f"  ❌  action 解析: {e}")
+
+    m1_dir = Path(__file__).parent.parent / "ssot" / "mof" / "m1" / "workflow"
+    print(f"  📂  M1 节点目录: {m1_dir}")
+    m1_files = list(m1_dir.glob("WORKFLOW-*.yaml")) if m1_dir.exists() else []
+    print(f"  📄  M1 工作流文件: {len(m1_files)} 个")
+    print(f"{'=' * 60}")
+
+
 def _cmd_logs(args: list[str]) -> None:
     """ecos workflow logs — 委派到 workflow_runs"""
     from ecos.cli.workflow_runs import cmd_runs
@@ -201,8 +277,11 @@ def _cmd_help(_args: list[str] | None = None) -> None:
     print("子命令:")
     print("  list                    列出所有可用工作流")
     print("  run <name> [--dry-run]  执行工作流")
+    print("    [-p key=value ...]    传递参数给工作流")
     print("  describe <name>         查看工作流定义")
     print("  backends                查看后端注册表")
+    print("  actions                 查看已注册 action")
+    print("  status                  查看工作流引擎全局状态")
     print("  logs|runs [选项]        工作流运行历史（同 ecos workflow runs）")
     print()
     print("运行历史选项:")
@@ -215,6 +294,7 @@ def _cmd_help(_args: list[str] | None = None) -> None:
     print("  ecos workflow list")
     print("  ecos workflow run WORKFLOW-ECOS-DAILY-HEALTH")
     print("  ecos workflow run WORKFLOW-ECOS-DAILY-HEALTH --dry-run")
+    print('  ecos workflow run WORKFLOW-ECOS-DAILY-HEALTH -p mode=quick -p verbose=true')
     print("  ecos workflow describe WORKFLOW-ECOS-DAILY-HEALTH")
     print("  ecos workflow backends")
     print("  ecos workflow logs --recent 5")
