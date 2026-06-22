@@ -1,0 +1,17 @@
+kind: planned_task_created
+task_id: P44-SUBMODULE-PIN
+title: P44 R5 — 12 个子模块指针按需 bump (omo-debt 注册 + dirty 锁仓)
+ingress_plane: submodule-governance
+source_ref: P44-R5
+created_at: '2026-06-22T04:09:52Z'
+task_ref: .omo/tasks/planned/P44-SUBMODULE-PIN.yaml
+evidence_required:
+- omo-debt 子模块 gitlink 已 commit
+- 至少 3 个子模块指针更新
+source_docs:
+- .gitmodules
+- bin/sync-submodules-push.sh
+artifact_ref: .omo/_delivery/ingress/tasks/P44-SUBMODULE-PIN.yaml
+broker_ref: projects/omo/src/omo/omo_ingress.py
+retention_mode: manual_archive
+lifecycle_state: active

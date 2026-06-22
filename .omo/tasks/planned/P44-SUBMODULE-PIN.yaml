@@ -1,0 +1,48 @@
+id: P44-SUBMODULE-PIN
+title: P44 R5 — 12 个子模块指针按需 bump (omo-debt 注册 + dirty 锁仓)
+status: candidate
+task_type: submodule-governance
+risk_level: L2
+depends_on:
+- P44-REMEDIATE-WF-CONV-CLOSE
+source_docs:
+- .gitmodules
+- bin/sync-submodules-push.sh
+deliverables:
+- 1 个新子模块 projects/omo-debt 注册
+- 12 个 dirty 子模块评估 + 锁仓
+- 至少 3 个高价值子模块 bump (ecos/agora/kairon)
+imported_via: omo_broker_c2g
+context_uri: bos://governance/submodules/P44
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs:
+- .omo/_knowledge/audits/2026-06-22-m0-m1-bridge-coverage.md
+handoff_refs: []
+governance_refs:
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/standards/omo-governance-surfaces.md
+entry_gate:
+- P44-REMEDIATE-WF-CONV-CLOSE
+evidence_required:
+- omo-debt 子模块 gitlink 已 commit
+- 至少 3 个子模块指针更新
+test_plan:
+- git submodule status 无 dirty 标记
+- pre-commit 不报悬空
+allowed_operation_level: L3
+human_approval_required: false
+priority: P1
+description: 'P44 R1 治理基线 commit 后, 12 个子模块指针 dirty + 1 个新子模块 omo-debt 未注册. 按 P43
+  模式 submodule_state_decoupling 教训: 根仓只 commit 元数据, 不批量 bump; 高价值子模块单独评估, 走 sync-submodules-push.sh;
+  锁定 dirty 子模块为 candidate.'
+phase: '44'
+created_at: '2026-06-22T04:35:00Z'
+updated_at: '2026-06-22T04:35:00Z'
+metadata:
+  ingress_plane: submodule-governance
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: P44-R5
