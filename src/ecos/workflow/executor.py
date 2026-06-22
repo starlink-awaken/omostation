@@ -305,6 +305,25 @@ def _execute_step(action: str, params: dict | None = None) -> dict:
     """执行单个步骤（向后兼容的硬编码 action）"""
     params = params or {}
 
+    # 归一化 action: 剥离已知命名空间前缀
+    for prefix in ("ecos.ecos.", "ecos.", "infra."):
+        if action.startswith(prefix):
+            action = action[len(prefix):]
+            break
+
+    # 别名映射: 不同命名的工作流 action → 标准 action
+    _ALIASES = {
+        "system_health_check": "health_check",
+        "sync_domain_index": "domain_sync",
+        "update_routes": "domain_routes",
+        "kems_validate_all": "domain_validate_all",
+        "drift_detection": "domain_audit",
+        "reference_check": "domain_check_refs",
+        "index_sync": "domain_sync",
+        "routes_update": "domain_routes",
+    }
+    action = _ALIASES.get(action, action)
+
     if action == "health_check":
         r = subprocess.run(
             ["python3", str(H / ".ecos" / "scripts" / "ecos-health-check.py"), "--json"],

@@ -64,7 +64,7 @@ Workflow:
       properties:
         mode:
           type: enum
-          values: [workflow, graph, loop, dynamic, state-machine]
+          values: [workflow, graph, loop, dynamic, state-machine, sequential]
           description: 执行模式 — workflow(顺序DAG), graph(有环图+条件), loop(迭代收敛), dynamic(LLM决策), state-machine(形式化状态转换)
         backend:
           type: string

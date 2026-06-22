@@ -87,7 +87,8 @@ class X1ConstraintChecker:
 
         # WF-V001: 检查 execution.mode 合法性
         mode = execution.get("mode")
-        if mode and mode not in ("workflow", "graph", "loop", "dynamic", "state-machine"):
+        valid_modes = ("workflow", "graph", "loop", "dynamic", "state-machine", "sequential")
+        if mode and mode not in valid_modes:
             violations.append({
                 "id": "WF-V001",
                 "constraint": "X1-C01",

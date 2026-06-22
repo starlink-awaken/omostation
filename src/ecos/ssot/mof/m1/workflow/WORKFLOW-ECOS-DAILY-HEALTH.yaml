@@ -24,7 +24,7 @@ cross_layer:
 steps:
 - order: 1
   name: SystemHealthCheck
-  action: ecos.ecos.system_health_check
+  action: health_check
   description: 检查所有核心服务和节点的健康状态
   input:
   - MECH-DAEMON-CYCLE
@@ -33,7 +33,7 @@ steps:
   depends_on: []
 - order: 2
   name: DomainValidateAll
-  action: ecos.ecos.domain_validate_all
+  action: domain_validate_all
   description: 全量校验各域索引和路由的有效性
   input:
   - health_status[]
@@ -43,7 +43,7 @@ steps:
   - SystemHealthCheck
 - order: 3
   name: IndexSync
-  action: ecos.ecos.index_sync
+  action: domain_sync
   description: 同步域索引，确保注册信息最新
   input:
   - domain_status[]
@@ -53,7 +53,7 @@ steps:
   - DomainValidateAll
 - order: 4
   name: BOSValidate
-  action: ecos.ecos.bos_validate
+  action: bos_validate
   description: 校验所有 BOS URI 引用的有效性
   input:
   - sync_report
@@ -63,7 +63,7 @@ steps:
   - IndexSync
 - order: 5
   name: RoutesUpdate
-  action: ecos.ecos.routes_update
+  action: domain_routes
   description: 更新 Agora Mesh 路由表
   input:
   - bos_validation_report
