@@ -1,0 +1,8 @@
+kind: task_promoted_to_active
+task_id: P44-SUBMODULE-PIN
+task_ref_before: .omo/tasks/planned/P44-SUBMODULE-PIN.yaml
+task_ref_after: .omo/tasks/active/P44-SUBMODULE-PIN.yaml
+handoff_ref: bin/sync-submodules-push.sh
+actor: agent-runtime
+source_ref: ''
+promoted_at: '2026-06-22T06:47:54Z'

@@ -1,0 +1,37 @@
+id: P44-DEFER-GBRAIN-TODOS
+title: P44 Deferred — gbrain 53 个 TS TODO 清理 (按 domain 拆分)
+status: candidate
+task_type: deferred-tracking
+risk_level: L1
+depends_on:
+- P44-DEFER-GBRAIN-OPS-SPLIT
+source_docs:
+- .omo/debt/items/DEBT-GBRAIN-OPERATIONS-TS.yaml
+deliverables:
+- 53 个 TS TODO 评估 + 关闭计划
+imported_via: omo_broker_c2g
+context_uri: bos://governance/drifts/gbrain-todos
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+entry_gate:
+- P44-DEFER-GBRAIN-OPS-SPLIT
+evidence_required:
+- TODO 分类 (keep/fix/close) 报告
+test_plan:
+- mof-drift LOW 项归零
+allowed_operation_level: L1
+human_approval_required: false
+priority: P3
+description: gbrain src/ 内 53 个 TODO 标记, 大部分是 gbrain operations.ts 拆分前的占位符; 拆分后可批量关闭或转化.
+phase: '44'
+created_at: '2026-06-22T05:00:00Z'
+updated_at: '2026-06-22T05:00:00Z'
+metadata:
+  ingress_plane: deferred-tracking
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: mof-drift-LOW-20260622

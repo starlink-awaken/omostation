@@ -1,0 +1,40 @@
+id: P44-BET-3b90-FOLLOWUP
+title: P44 Deferred — v5 普通用户产品走查 followup 12 中断点 (BET-3b90)
+status: candidate
+task_type: user-product-followup
+risk_level: L1
+depends_on: []
+source_docs:
+- .omo/goals/current.yaml:BET-3b90
+deliverables:
+- 12 个中断点逐一修复 + 验证
+- 用户可走查 pass
+imported_via: omo_broker_c2g
+context_uri: bos://product/walkthrough/BET-3b90
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+entry_gate:
+- BET-3b90
+evidence_required:
+- 12 中断点逐项修复
+- 产品走查 100% pass
+test_plan:
+- 用户面向 demo 走查
+- 12/12 中断点 verified
+allowed_operation_level: L1
+human_approval_required: true
+priority: P2
+description: BET-3b90 (c2g) 2026-06-19 立项, appetite 1 周, progress 0%. v5 普通用户产品走查
+  12 中断点 followup. P44 不强制推进, 物化为 PLANNED 跟踪; 优先级 P2 等 human product team 处理.
+phase: '44'
+created_at: '2026-06-22T05:00:00Z'
+updated_at: '2026-06-22T05:00:00Z'
+metadata:
+  ingress_plane: c2g
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: BET-3b90

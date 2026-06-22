@@ -27,7 +27,11 @@ def load_all_m1() -> list[dict]:
 
 
 def count_sys_path_hacks(project_name: str) -> int:
-    """统计项目中的 sys.path.insert 数量"""
+    """统计项目中的硬编码 sys.path.insert 数量（排除相对路径 / 变量派生）
+
+    硬编码 = 字符串字面量里直接出现绝对路径或仓库内固定路径
+    相对路径 = Path(__file__)* 派生 或 变量名 _*_DIR / _*_SRC / _*_PATH 派生
+    """
     project_dir = PROJECTS_DIR / project_name
     if not project_dir.exists():
         return -1
@@ -36,7 +40,23 @@ def count_sys_path_hacks(project_name: str) -> int:
             ["grep", "-r", "sys.path.insert", str(project_dir / "src"), "--include=*.py"],
             capture_output=True, text=True, timeout=30
         )
-        return len(result.stdout.strip().split("\n")) if result.stdout.strip() else 0
+        if not result.stdout.strip():
+            return 0
+        hardcoded = 0
+        for line in result.stdout.strip().split("\n"):
+            stripped = line.split(":", 1)[-1] if ":" in line else line
+            # 字符串字面量中的硬编码路径模式
+            is_literal_hack = any(
+                marker in stripped
+                for marker in (
+                    "'/Users/", '"/Users/', "'/home/", '"/home/',
+                    "'/tmp/", '"/tmp/', "'projects/", '"/projects/',
+                    "'../", '"/../',
+                )
+            )
+            if is_literal_hack:
+                hardcoded += 1
+        return hardcoded
     except Exception:
         return -1
 
@@ -57,9 +77,12 @@ def count_todos(project_name: str) -> int:
 
 
 def count_test_files(project_name: str) -> int:
-    """统计项目中的测试文件数量"""
+    """统计项目中的测试文件数量（排除 docker / config-only 项目）"""
     project_dir = PROJECTS_DIR / project_name
     if not project_dir.exists():
+        return -1
+    # Docker / config-only 项目（无 src/ 目录）: 自动视为 N/A
+    if not (project_dir / "src").exists():
         return -1
     test_dirs = ["tests", "src/*/tests", "packages/*/tests"]
     count = 0

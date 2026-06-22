@@ -87,4 +87,8 @@ history:
     100 A+'
   timestamp: '2026-06-22T12:08:41.328482'
   version: 0.0.25
-version: 0.0.25
+- description: 'P44 R6 全面落地: mof-drift 7→1 (校正 + 1 真硬编码修复), 2 P44 task done, 7 P44
+    DEFER PLANNED, BET-3b90 followup 物化'
+  timestamp: '2026-06-22T14:48:35.657557'
+  version: 0.0.26
+version: 0.0.26

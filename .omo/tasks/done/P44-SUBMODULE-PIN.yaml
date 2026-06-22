@@ -1,6 +1,6 @@
 id: P44-SUBMODULE-PIN
 title: P44 R5 — 12 个子模块指针按需 bump (omo-debt 注册 + dirty 锁仓)
-status: candidate
+status: done
 task_type: submodule-governance
 risk_level: L2
 depends_on:
@@ -17,11 +17,12 @@ context_uri: bos://governance/submodules/P44
 assigned_to: null
 dispatch_id: null
 run_ref: null
-approval_ref: null
+approval_ref: P44-SUBMODULE-PIN
 review_ref: null
 knowledge_refs:
 - .omo/_knowledge/audits/2026-06-22-m0-m1-bridge-coverage.md
-handoff_refs: []
+handoff_refs:
+- bin/sync-submodules-push.sh
 governance_refs:
 - .omo/_truth/registry/omo-governance-surfaces.yaml
 - .omo/standards/omo-governance-surfaces.md
@@ -46,3 +47,10 @@ metadata:
   ingress_plane: submodule-governance
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: P44-R5
+  completed_at: '2026-06-22T06:47:54Z'
+  completed_via: omo task done
+  completion_actor: agent-runtime
+  completion_source_ref: P44-R5
+evidence_paths:
+- bin/sync-submodules-push.sh
+completed_at: '2026-06-22T06:47:54Z'

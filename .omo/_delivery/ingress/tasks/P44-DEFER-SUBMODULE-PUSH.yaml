@@ -1,0 +1,17 @@
+kind: planned_task_created
+task_id: P44-DEFER-SUBMODULE-PUSH
+title: P44 Deferred — 2 个子模块 ahead 待推 (ecos 4 + gbrain 15)
+ingress_plane: submodule-governance
+source_ref: P44-R5-push
+created_at: '2026-06-22T06:42:45Z'
+task_ref: .omo/tasks/planned/P44-DEFER-SUBMODULE-PUSH.yaml
+evidence_required:
+- git push origin main 成功
+- 根仓 bump gitlink (sync-submodules-push.sh 真跑)
+- CI 不报悬空
+source_docs:
+- bin/sync-submodules-push.sh
+artifact_ref: .omo/_delivery/ingress/tasks/P44-DEFER-SUBMODULE-PUSH.yaml
+broker_ref: projects/omo/src/omo/omo_ingress.py
+retention_mode: manual_archive
+lifecycle_state: active
