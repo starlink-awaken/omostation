@@ -980,3 +980,52 @@ class TestCustomCommand:
         # domain_audit 依赖 ~/bin/ecos，但这是已注册 action
         # 所以 command 字段被忽略，走正常 action 路由
         assert "result" not in result or result.get("result", {}).get("stdout", "") != "should_not_run"
+
+
+class TestSubWorkflow:
+    """子工作流 (workflow_run action) 测试"""
+
+    def test_workflow_run_action_registered(self):
+        from ecos.workflow.actions import list_actions, resolve_action
+        names = {a["name"] for a in list_actions()}
+        assert "workflow_run" in names
+
+        handler = resolve_action("workflow_run")
+        assert handler is not None, "workflow_run handler 应可解析"
+
+    def test_workflow_run_no_name(self):
+        from ecos.workflow.actions import resolve_action
+        handler = resolve_action("workflow_run")
+        result = handler({})
+        assert result["passed"] is False
+        assert "未指定" in result.get("summary", "")
+
+    def test_step_workflow_field_merged_to_params(self):
+        """step 中的 workflow 字段应合并到 handler params"""
+        from ecos.workflow.executor import _execute_step
+        result = _execute_step("workflow_run", step={
+            "name": "子工作流",
+            "action": "workflow_run",
+            "workflow": "WORKFLOW-ECOS-DAILY-HEALTH",
+        })
+        # WORKFLOW-ECOS-DAILY-HEALTH 存在，所以不应返回"未指定"
+        summary = result.get("summary", "")
+        assert "未指定" not in summary, f"不应是未指定: {summary}"
+
+    def test_workflow_run_via_default_backend(self, monkeypatch):
+        """通过默认后端执行子工作流"""
+        from ecos.workflow.backend_registry import resolve
+
+        wf = {
+            "execution": {"backend": "default", "mode": "sequential"},
+            "steps": [
+                {"name": "子工作流", "action": "workflow_run",
+                 "workflow": "WORKFLOW-ECOS-DAILY-HEALTH"},
+            ],
+        }
+        fn = resolve(wf)
+        result = fn(wf)
+        assert "steps" in result
+        # 子工作流可能因环境脚本缺失而失败，但不应抛异常
+        assert result["passed"] >= 0
+        assert result["failed"] >= 0

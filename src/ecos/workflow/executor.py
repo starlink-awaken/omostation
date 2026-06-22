@@ -229,7 +229,17 @@ def _execute_step(action: str, params: dict | None = None,
     params = params or {}
     handler = resolve_action(action)
     if handler is not None:
-        return handler(params)
+        # 将 step 级字段（如 workflow、command）合并到 params 以供 handler 使用
+        step_params = dict(params)
+        if step:
+            for key in ("workflow", "command", "timeout", "args", "params"):
+                if key in step:
+                    val = step[key]
+                    if isinstance(val, dict) and key in step_params and isinstance(step_params[key], dict):
+                        step_params[key].update(val)
+                    else:
+                        step_params[key] = val
+        return handler(step_params)
 
     # 自定义命令回退 (step.command)
     if step and step.get("command"):

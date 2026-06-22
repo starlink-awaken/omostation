@@ -153,6 +153,43 @@ def _register_builtins() -> None:
                     description="(别名) 系统健康检查",
                     aliases=[])
 
+    # ── 子工作流: 工作流内调用另一个工作流 ──
+    register_action("workflow_run", _action_workflow_run,
+                    description="执行子工作流 — 在 YAML 中通过 workflow 字段指定",
+                    aliases=["sub_workflow"])
+
+
+def _action_workflow_run(params: dict) -> dict:
+    """执行子工作流
+
+    参数通过 params 传入:
+      params = {"name": "WORKFLOW-ECOS-DAILY-HEALTH", ...}
+    或 step 中定义:
+      step:
+        action: workflow_run
+        workflow: WORKFLOW-ECOS-DAILY-HEALTH
+    """
+    sub_name = params.get("name") or params.get("workflow", "")
+    if not sub_name:
+        return {"passed": False, "summary": "子工作流: 未指定 workflow 名称"}
+
+    try:
+        from ecos.workflow.executor import execute_m1_workflow
+        result = execute_m1_workflow(sub_name)
+        ok = result.get("failed", 0) == 0
+        summary = result.get("error") or f"子工作流 {sub_name}: {result.get('passed', 0)}✅ {result.get('failed', 0)}❌"
+        return {
+            "passed": ok,
+            "summary": summary,
+            "sub_result": {
+                "workflow": sub_name,
+                "passed": result.get("passed", 0),
+                "failed": result.get("failed", 0),
+            },
+        }
+    except Exception as e:
+        return {"passed": False, "summary": f"子工作流执行失败: {e}"}
+
 
 def _action_health_check(params: dict) -> dict:
     r = _run(["python3", str(H / ".ecos" / "scripts" / "ecos-health-check.py"), "--json"])
