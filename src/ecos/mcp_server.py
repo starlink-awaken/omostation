@@ -303,6 +303,124 @@ def workflow_show(name: str) -> str:
             return json.dumps(n, ensure_ascii=False)
     return json.dumps({"error": f"工作流未找到: {name}"})
 
+
+@mcp.tool()
+def workflow_run(name: str, dry_run: bool = False) -> str:
+    """执行 ecos L0 工作流 · 通过 workflow engine 路由到对应后端
+
+    Args:
+        name: 工作流名称 (M1 ID, e.g. WORKFLOW-ECOS-DAILY-HEALTH)
+        dry_run: 干跑模式，只打印不执行
+    """
+    try:
+        from ecos.workflow import execute_m1_workflow
+
+        result = execute_m1_workflow(name, dry_run=dry_run)
+        safe = {}
+        for k, v in result.items():
+            try:
+                json.dumps(v)
+                safe[k] = v
+            except (TypeError, ValueError):
+                safe[k] = str(v)
+        return json.dumps(safe, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"error": str(e), "workflow": name}, ensure_ascii=False)
+
+
+@mcp.tool()
+def workflow_validate(name: str) -> str:
+    """验证工作流定义 · 运行 X1-X4 约束检查"""
+    try:
+        from ecos.workflow import load_workflow
+        from ecos.workflow.validator import validate_workflow
+
+        wf = load_workflow(name)
+        if not wf:
+            return json.dumps({"error": f"工作流不存在: {name}"}, ensure_ascii=False)
+        violations = validate_workflow(wf)
+        errors = [v for v in violations if v.get("severity") == "error"]
+        warnings = [v for v in violations if v.get("severity") != "error"]
+        return json.dumps({
+            "name": name,
+            "valid": len(errors) == 0,
+            "errors": errors,
+            "warnings": warnings,
+            "total_violations": len(violations),
+        }, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+
+@mcp.tool()
+def workflow_backends() -> str:
+    """列出所有已注册 workflow backend · 当前可用的执行后端"""
+    try:
+        from ecos.workflow import list_backends
+
+        return json.dumps({"backends": list_backends()}, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+
+@mcp.tool()
+def workflow_actions() -> str:
+    """列出所有已注册 workflow action · 可用步骤动作"""
+    try:
+        from ecos.workflow.actions import list_actions
+
+        return json.dumps({"actions": list_actions()}, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+
+@mcp.tool()
+def workflow_logs(recent: int = 10, status: str = "") -> str:
+    """查询工作流运行历史 · M0 快照
+
+    Args:
+        recent: 最近 N 条, 默认 10
+        status: 过滤条件 ok/failed, 空=全部
+    """
+    try:
+        from ecos.cli.workflow_runs import SNAPSHOT_DIR, _load_all_runs
+
+        runs = _load_all_runs()
+        if status:
+            runs = [r for r in runs if r.get("status") == status]
+        runs = runs[:recent]
+        safe = []
+        for r in runs:
+            safe.append({
+                k: v for k, v in r.items()
+                if isinstance(v, (str, int, float, bool, list, dict)) or v is None
+            })
+        return json.dumps({
+            "runs": safe, "total": len(safe),
+            "snapshot_dir": str(SNAPSHOT_DIR),
+        }, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+
+@mcp.tool()
+def workflow_test(name: str) -> str:
+    """测试工作流编排（mock action，不执行真实脚本） · 验证步骤/依赖/后端/约束"""
+    try:
+        from ecos.workflow.executor import test_workflow
+
+        result = test_workflow(name)
+        safe = {}
+        for k, v in result.items():
+            try:
+                json.dumps(v)
+                safe[k] = v
+            except (TypeError, ValueError):
+                safe[k] = str(v)
+        return json.dumps(safe, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
 # ── 主入口 ──
 
 def main():
