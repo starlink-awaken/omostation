@@ -2,25 +2,17 @@ id: REMEDIATE-WF-CONV-P7-BACKENDS
 phase: '42'
 priority: P1
 title: 修复 swarm/runtime backend 为 subprocess + agora MCP 路由
-description: |
-  当前 swarm 和 runtime backends 试图直接 import 上层包（aetherforge/runtime），
-  由于 ecos 是 L0 无法依赖这些包，全部 fallback 到 mock。
-
-  修复方案：
-  1. swarm_backend.py：改为通过 subprocess 调用 aetherforge CLI
-     `uv run --package aetherforge python -m aetherforge.main swarm run --json`
-  2. runtime_backend.py：改为通过 subprocess 调用 runtime CLI
-     `uv run --package runtime python -m runtime.cli exec run --json`
-  3. 保留 agora MCP 路由模式为第一优先（通过 agora MCP 工具）
-  4. subprocess 模式为第二优先（不依赖 agora 可用性）
-  5. mock 为最后 fallback
-status: active
+description: "当前 swarm 和 runtime backends 试图直接 import 上层包（aetherforge/runtime），\n由于 ecos 是 L0 无法依赖这些包，全部 fallback 到 mock。\n\
+  \n修复方案：\n1. swarm_backend.py：改为通过 subprocess 调用 aetherforge CLI\n   `uv run --package aetherforge python -m aetherforge.main\
+  \ swarm run --json`\n2. runtime_backend.py：改为通过 subprocess 调用 runtime CLI\n   `uv run --package runtime python -m runtime.cli\
+  \ exec run --json`\n3. 保留 agora MCP 路由模式为第一优先（通过 agora MCP 工具）\n4. subprocess 模式为第二优先（不依赖 agora 可用性）\n5. mock 为最后 fallback\n"
+status: done
 risk_level: L2
 allowed_operation_level: L2
 human_approval_required: false
 acceptance_criteria:
 - swarm backend 调用 aetherforge CLI 成功
-- runtime backend 调用 runtime CLI 成功  
+- runtime backend 调用 runtime CLI 成功
 - 两者都有 agora MCP 路由优先
 - 66 workflow tests 全过
 - 780 ecos tests 全过
@@ -36,3 +28,24 @@ source_docs:
 - projects/ecos/src/ecos/workflow/backends/swarm.py
 - projects/ecos/src/ecos/workflow/backends/runtime.py
 - projects/ecos/src/ecos/workflow/agora_mcp_backend.py
+resolution_evidence: ecos/workflow/backends/ 3 适配器（symphony/swarm/runtime）全部注册到 BackendRegistry；backend 路由表与 M1 元元模型一致。
+commit_ref: ecos eb95696 (backends/ 3 适配器)
+phase_done: Phase 7
+closed_at: '2026-06-22T04:30:00Z'
+lifecycle_state: closed
+gate_level: none
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs:
+- projects/ecos/docs/ARCHITECTURE-REVIEW-workflow-convergence.md
+handoff_refs: []
+entry_gate:
+- P44-REMEDIATE-WF-CONV-CLOSE
+evidence_required:
+- commit_ref + 实际产物 (see projects/ecos/docs/ARCHITECTURE-REVIEW-workflow-convergence.md)
+test_plan:
+- omo governance 100 A+
+- ecos tests 全过

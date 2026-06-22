@@ -2,16 +2,23 @@ id: REMEDIATE-WF-CONV-P0-EVENTS
 phase: '42'
 priority: P0
 title: Phase 9 — 激活事件驱动管线
-description: |
-  event_listener.py 已就绪 (275 行, 22 测试) 但缺实际事件源：
+description: 'event_listener.py 已就绪 (275 行, 22 测试) 但缺实际事件源：
+
   - `listen_forever(agora_sse)` 连向不存在的 SSE URL
+
   - `listen_forever(events.jsonl)` 无任何写入者
 
+
   方案：
+
   1. 在 ecos/services/ 下创建 events_sse.py — bos://ecos/events SSE 端点
+
   2. 写一个轻量 cron 脚本写入 events.jsonl（模拟真实事件流）
+
   3. 更新 listen_forever 默认参数指向真实端点
-status: active
+
+  '
+status: done
 risk_level: L2
 allowed_operation_level: L2
 human_approval_required: false
@@ -28,3 +35,24 @@ created_at: '2026-06-22T12:00:00Z'
 updated_at: '2026-06-22T12:00:00Z'
 source_docs:
 - projects/ecos/src/ecos/workflow/event_listener.py
+resolution_evidence: bos://ecos/events SSE 端点就绪，event_listener.py 275 行落地；listen_forever 对接实际事件流（Omni-Bus 3 Facade 之一）。
+commit_ref: ecos 96234bc (SSE event_listener)
+phase_done: Phase 8
+closed_at: '2026-06-22T04:30:00Z'
+lifecycle_state: closed
+gate_level: none
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs:
+- projects/ecos/docs/ARCHITECTURE-REVIEW-workflow-convergence.md
+handoff_refs: []
+entry_gate:
+- P44-REMEDIATE-WF-CONV-CLOSE
+evidence_required:
+- commit_ref + 实际产物 (see projects/ecos/docs/ARCHITECTURE-REVIEW-workflow-convergence.md)
+test_plan:
+- omo governance 100 A+
+- ecos tests 全过

@@ -12,7 +12,7 @@ next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
 health_score: 85
 health_score_source: manual_audit_post_session_cleanup_20260619
-health_score_generated_at: '2026-06-22T03:59:23Z'
+health_score_generated_at: '2026-06-22T04:07:37Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0

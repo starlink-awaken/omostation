@@ -2,18 +2,27 @@ id: REMEDIATE-WF-CONV-P8-E2E
 phase: '42'
 priority: P1
 title: 端到端集成测试 — 验证收敛真实性
-description: |
-  当前所有测试都在模块内部，无端到端测试证明"收敛"确实在工作：
+description: '当前所有测试都在模块内部，无端到端测试证明"收敛"确实在工作：
+
   - ecos/workflow → agora_mcp_backend → agora → metaos 全链路未验证
+
   - 没有测试确保 metaos 关停后系统仍正常
+
   - 没有测试模拟事件触发工作流
 
+
   方案：
+
   1. 在 ecos/tests/ 下创建 test_workflow_e2e.py
+
   2. 模拟 agora MCP 响应（不用真实 agora）
+
   3. 测试 execute_m1_workflow 通过 agora backend 执行
+
   4. 测试 listen_forever + match_event + execute_matched 全链路
-status: candidate
+
+  '
+status: done
 risk_level: L1
 allowed_operation_level: L2
 human_approval_required: false
@@ -29,3 +38,24 @@ source_docs:
 - projects/ecos/tests/test_workflow.py
 - projects/ecos/src/ecos/workflow/agora_mcp_backend.py
 - projects/ecos/src/ecos/workflow/event_listener.py
+resolution_evidence: E2E 26 个测试全过；白盒全覆盖 16 个测试全过；780 ecos + 196 metaos + 66 workflow 测试套件全绿。
+commit_ref: ecos eb95696 (e2e tests)
+phase_done: Phase 9
+closed_at: '2026-06-22T04:30:00Z'
+lifecycle_state: closed
+gate_level: none
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs:
+- projects/ecos/docs/ARCHITECTURE-REVIEW-workflow-convergence.md
+handoff_refs: []
+entry_gate:
+- P44-REMEDIATE-WF-CONV-CLOSE
+evidence_required:
+- commit_ref + 实际产物 (see projects/ecos/docs/ARCHITECTURE-REVIEW-workflow-convergence.md)
+test_plan:
+- omo governance 100 A+
+- ecos tests 全过

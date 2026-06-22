@@ -2,22 +2,12 @@ id: REMEDIATE-WF-CONV-P0-DISPATCHER
 phase: '42'
 priority: P0
 title: Phase 7 — dispatcher 独立化为 L3 daemon
-description: |
-  核心矛盾：ecos 是 L0 协议层，无法 import L1/L2 项目。
-  当前 ecos/workflow/executor.py 在 try/except 中尝试 import metaos/runtime/aetherforge，
-  但 ecos 的 pyproject.toml 永远不能加这些依赖（否则破坏 L0 约束）。
-
-  方案：
-  1. ecos/workflow 保留：DSL 定义 (M1 YAML) + schema 校验 + X1-X4 治理管线 + 后端注册表定义
-  2. 新建 ecos/workflow/daemon.py (L3 兼容层)：
-     - 继承 backend_registry 注册表定义
-     - 可 import metaos/runtime/aetherforge（因为 L3 可依赖 L2/L1）
-     - 提供 execute_m1_workflow(实际调用后端) 作为对外 API
-  3. ecos/workflow/executor.py 保持不变（纯 subprocess，无新增依赖）
-  
-  更简洁实现：在 ecos 内部用 subprocess 替代 try/except import。
-  因为 swarm 和 runtime 都有 CLI 入口，通过 subprocess 调用比 import 更符合分层原则。
-status: active
+description: "核心矛盾：ecos 是 L0 协议层，无法 import L1/L2 项目。\n当前 ecos/workflow/executor.py 在 try/except 中尝试 import metaos/runtime/aetherforge，\n\
+  但 ecos 的 pyproject.toml 永远不能加这些依赖（否则破坏 L0 约束）。\n\n方案：\n1. ecos/workflow 保留：DSL 定义 (M1 YAML) + schema 校验 + X1-X4 治理管线 + 后端注册表定义\n\
+  2. 新建 ecos/workflow/daemon.py (L3 兼容层)：\n   - 继承 backend_registry 注册表定义\n   - 可 import metaos/runtime/aetherforge（因为 L3\
+  \ 可依赖 L2/L1）\n   - 提供 execute_m1_workflow(实际调用后端) 作为对外 API\n3. ecos/workflow/executor.py 保持不变（纯 subprocess，无新增依赖）\n\n更简洁实现：在\
+  \ ecos 内部用 subprocess 替代 try/except import。\n因为 swarm 和 runtime 都有 CLI 入口，通过 subprocess 调用比 import 更符合分层原则。\n"
+status: done
 risk_level: L2
 allowed_operation_level: L3
 human_approval_required: false
@@ -38,3 +28,25 @@ updated_at: '2026-06-22T12:00:00Z'
 source_docs:
 - projects/ecos/src/ecos/workflow/backends/swarm.py
 - projects/ecos/src/ecos/workflow/backends/runtime.py
+resolution_evidence: ecos/workflow/executor.py 全部改 subprocess 调用 swarm CLI / runtime CLI，不再 try/except import 上层包；66 workflow
+  tests + 780 ecos tests 全过。
+commit_ref: ecos eb95696 (executor subprocess) + a1933de7 (dispatcher daemon)
+phase_done: Phase 7
+closed_at: '2026-06-22T04:30:00Z'
+lifecycle_state: closed
+gate_level: none
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs:
+- projects/ecos/docs/ARCHITECTURE-REVIEW-workflow-convergence.md
+handoff_refs: []
+entry_gate:
+- P44-REMEDIATE-WF-CONV-CLOSE
+evidence_required:
+- commit_ref + 实际产物 (see projects/ecos/docs/ARCHITECTURE-REVIEW-workflow-convergence.md)
+test_plan:
+- omo governance 100 A+
+- ecos tests 全过

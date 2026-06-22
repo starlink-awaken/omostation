@@ -2,19 +2,28 @@ id: REMEDIATE-WF-CONV-P0-CLOSE-METAOS-MCP
 phase: '42'
 priority: P0
 title: Phase 8 — 关闭 metaos MCP 直启入口
-description: |
-  metaos MCP server 仍被 Agora mcp_gateway.py KNOWN_BACKENDS 直接启动：
+description: 'metaos MCP server 仍被 Agora mcp_gateway.py KNOWN_BACKENDS 直接启动：
+
   {"name": "metaos", "command": "uv", "args": ["run", "--package", "metaos", "python", "-m", "metaos.mcp_server"]}
-  
+
+
   这违反了"入口收敛"原则——metaos 的编排能力应通过 ecos/workflow + agora_mcp_backend 路由，
+
   而非作为 Agora 的一等后端直启。
 
+
   方案：
+
   1. 从 agoa mcp_gateway KNOWN_BACKENDS 移除 metaos 条目
+
   2. 保留 metaos src 代码（不删除，只关停入口）
+
   3. 验证 agora 启动后不影响非 metaos 的 MCP 工具
+
   4. 更新 MCPTOOL-METAOS.yaml / SVC-METAOS-MCP.yaml 状态为 not_running
-status: active
+
+  '
+status: done
 risk_level: L3
 allowed_operation_level: L3
 human_approval_required: false
@@ -33,3 +42,25 @@ source_docs:
 - projects/agora/src/agora/auth/mcp_gateway.py
 - projects/ecos/src/ecos/ssot/mof/m1/mcptool/MCPTOOL-METAOS.yaml
 - projects/ecos/src/ecos/ssot/mof/m1/service/SVC-METAOS-MCP.yaml
+resolution_evidence: agora mcp_gateway.py KNOWN_BACKENDS 移除 metaos 条目；MCPTOOL-METAOS.yaml / SVC-METAOS-MCP.yaml 状态置 not_running；agora
+  启动后 metaos 不自动运行。
+commit_ref: agora 0842d4f (KNOWN_BACKENDS 移除 metaos) + metaos 164b677 (MCP 入口关停)
+phase_done: Phase 6
+closed_at: '2026-06-22T04:30:00Z'
+lifecycle_state: closed
+gate_level: none
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs:
+- projects/ecos/docs/ARCHITECTURE-REVIEW-workflow-convergence.md
+handoff_refs: []
+entry_gate:
+- P44-REMEDIATE-WF-CONV-CLOSE
+evidence_required:
+- commit_ref + 实际产物 (see projects/ecos/docs/ARCHITECTURE-REVIEW-workflow-convergence.md)
+test_plan:
+- omo governance 100 A+
+- ecos tests 全过
