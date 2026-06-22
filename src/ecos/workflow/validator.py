@@ -26,6 +26,8 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
+from ecos.common.governed_fs import append_jsonl_record, ensure_text_file, write_yaml_file
+
 logger = logging.getLogger("ecos.workflow.validator")
 
 # M0 快照目录
@@ -143,9 +145,8 @@ class X2BudgetDeducer:
     @classmethod
     def _ensure_ledger(cls) -> None:
         """确保账本文件和目录存在"""
-        cls.LEDGER_PATH.parent.mkdir(parents=True, exist_ok=True)
         if not cls.LEDGER_PATH.exists():
-            cls.LEDGER_PATH.write_text("")
+            ensure_text_file(cls.LEDGER_PATH, "")
 
     @classmethod
     def _read_balance(cls) -> int:
@@ -245,8 +246,7 @@ class X2BudgetDeducer:
         }
 
         try:
-            with open(cls.LEDGER_PATH, "a") as f:
-                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            append_jsonl_record(cls.LEDGER_PATH, entry)
         except OSError as e:
             logger.warning("Failed to write X2 ledger: %s", e)
             return {"ok": False, "error": str(e)}
@@ -286,14 +286,14 @@ class X3CostRecorder:
             "steps_failed": result.get("failed", 0),
         }
         try:
-            with open(cls.LEDGER_PATH, "a") as f:
-                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            append_jsonl_record(cls.LEDGER_PATH, entry)
         except OSError as e:
             logger.warning("Failed to write X3 cost record: %s", e)
 
     @classmethod
     def _ensure_ledger(cls) -> None:
-        cls.LEDGER_PATH.parent.mkdir(parents=True, exist_ok=True)
+        if not cls.LEDGER_PATH.exists():
+            ensure_text_file(cls.LEDGER_PATH, "")
 
 
 # =========================================================================
@@ -381,8 +381,6 @@ def generate_m0_snapshot(workflow_id: str, m1_node: dict,
 
     写入 .omo/state/workflow-runs/{workflow_id}-{timestamp}.yaml
     """
-    import yaml as ymlib
-
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     snapshot = {
         "schema": "M0-v1",
@@ -410,10 +408,8 @@ def generate_m0_snapshot(workflow_id: str, m1_node: dict,
     }
 
     try:
-        M0_SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
         filepath = M0_SNAPSHOT_DIR / f"{workflow_id}-{timestamp}.yaml"
-        with open(filepath, "w") as f:
-            ymlib.dump(snapshot, f, allow_unicode=True, default_flow_style=False)
+        write_yaml_file(filepath, snapshot)
         logger.info("M0 snapshot written: %s", filepath)
         return str(filepath)
     except Exception as e:

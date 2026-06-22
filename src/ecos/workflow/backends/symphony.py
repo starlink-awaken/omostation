@@ -18,7 +18,12 @@ IMPLEMENTATION → POLISHING → COMPLETE)。
 from __future__ import annotations
 
 import logging
+from datetime import datetime
+from pathlib import Path
 from typing import Any
+
+from ecos.common.governed_fs import append_jsonl_record
+
 
 logger = logging.getLogger("ecos.workflow.backends.symphony")
 
@@ -164,20 +169,19 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
                 break
 
     # L0 audit: 写入 X3 信号
-    import json
-    from pathlib import Path
     ledger = Path.home() / ".omo" / "state" / "llm_quota_ledger.jsonl"
     try:
-        ledger.parent.mkdir(parents=True, exist_ok=True)
-        with open(ledger, "a") as f:
-            f.write(json.dumps({
-                "timestamp": __import__("datetime").datetime.now().isoformat(),
+        append_jsonl_record(
+            ledger,
+            {
+                "timestamp": datetime.now().isoformat(),
                 "event": "cost_record",
                 "workflow_id": m1_node.get("id", "symphony-workflow"),
                 "backend": "symphony",
                 "steps_total": results["passed"] + results["failed"],
                 "steps_passed": results["passed"],
-            }, ensure_ascii=False) + "\n")
+            },
+        )
     except OSError:
         pass
 
