@@ -99,17 +99,43 @@ def get_action(name: str) -> dict[str, Any] | None:
 # ── 内部：subprocess 辅助 ──
 
 
-def _run(cmd: list[str], timeout: int = 30) -> subprocess.CompletedProcess:
-    """运行 subprocess 并返回结果"""
-    return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+def _run(cmd: list[str], timeout: int = 30) -> subprocess.CompletedProcess | None:
+    """运行 subprocess 并返回结果，失败时返回 None"""
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    except FileNotFoundError:
+        return None
+    except subprocess.TimeoutExpired:
+        return None
 
 
 def _ok(summary: str = "") -> dict:
     return {"passed": True, "summary": summary or "✅"}
 
 
-def _fail(summary: str = "") -> dict:
-    return {"passed": False, "summary": summary or "❌"}
+def _fail(summary: str = "", details: str = "") -> dict:
+    result = {"passed": False, "summary": summary or "❌"}
+    if details:
+        result["details"] = details
+    return result
+
+
+def _check_run(cmd: list[str], timeout: int = 30) -> dict:
+    """运行 subprocess，成功返回 ok，失败时包含详细错误信息"""
+    path_str = cmd[0] if cmd else "?"
+    r = _run(cmd, timeout=timeout)
+    if r is None:
+        return _fail(
+            summary=f"命令未找到: {path_str}",
+            details=f"请确保脚本已安装: {' '.join(cmd)}",
+        )
+    if r.returncode != 0:
+        details = (r.stderr or r.stdout or "").strip()[:300]
+        return _fail(
+            summary=f"命令失败 (exit={r.returncode})",
+            details=details or f"返回码: {r.returncode}",
+        )
+    return _ok(summary=r.stdout.strip()[:200] or "✅")
 
 
 # ── 内置 action 注册 ──
@@ -193,43 +219,42 @@ def _action_workflow_run(params: dict) -> dict:
 
 def _action_health_check(params: dict) -> dict:
     r = _run(["python3", str(H / ".ecos" / "scripts" / "ecos-health-check.py"), "--json"])
+    if r is None:
+        script_path = H / ".ecos" / "scripts" / "ecos-health-check.py"
+        return _fail(
+            summary="健康检查脚本未安装",
+            details=f"请创建脚本: {script_path} 或使用 step.command 自定义命令",
+        )
     try:
         data = json.loads(r.stdout)
         ok = all(c.get("pass", True) for c in data.get("results", []))
         return {"passed": ok, "summary": f"健康检查: {'✅' if ok else '❌'}"}
     except Exception:
-        return {"passed": False, "summary": "健康检查解析失败"}
+        return _fail(summary="健康检查解析失败", details=r.stderr.strip()[:300] or r.stdout.strip()[:300])
 
 
 def _action_domain_validate_all(params: dict) -> dict:
-    r = _run(["python3", str(H / "bin" / "ecos"), "domain", "validate-all"])
-    ok = "0❌" in r.stdout or "0 failed" in r.stdout.lower()
-    return {"passed": ok, "summary": "域校验完成"}
+    return _check_run(["python3", str(H / "bin" / "ecos"), "domain", "validate-all"])
 
 
 def _action_domain_audit(params: dict) -> dict:
-    r = _run(["python3", str(H / "bin" / "ecos"), "domain", "audit"])
-    return {"passed": r.returncode == 0, "summary": "漂移检测完成"}
+    return _check_run(["python3", str(H / "bin" / "ecos"), "domain", "audit"])
 
 
 def _action_domain_check_refs(params: dict) -> dict:
-    r = _run(["python3", str(H / "bin" / "ecos"), "domain", "check-refs"])
-    return {"passed": r.returncode == 0, "summary": "引用检查完成"}
+    return _check_run(["python3", str(H / "bin" / "ecos"), "domain", "check-refs"])
 
 
 def _action_domain_sync(params: dict) -> dict:
-    r = _run(["python3", str(H / "bin" / "ecos"), "domain", "sync"], timeout=10)
-    return {"passed": r.returncode == 0, "summary": "索引同步完成"}
+    return _check_run(["python3", str(H / "bin" / "ecos"), "domain", "sync"], timeout=10)
 
 
 def _action_bos_validate(params: dict) -> dict:
-    r = _run(["python3", str(H / "bin" / "ecos"), "domain", "bos-validate"])
-    return {"passed": r.returncode == 0, "summary": "BOS校验完成"}
+    return _check_run(["python3", str(H / "bin" / "ecos"), "domain", "bos-validate"])
 
 
 def _action_domain_routes(params: dict) -> dict:
-    r = _run(["python3", str(H / "bin" / "ecos"), "domain", "routes"], timeout=10)
-    return {"passed": r.returncode == 0, "summary": "路由缓存更新"}
+    return _check_run(["python3", str(H / "bin" / "ecos"), "domain", "routes"], timeout=10)
 
 
 # 惰性注册（在 _ensure_builtins_registered() 中触发）

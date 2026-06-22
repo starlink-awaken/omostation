@@ -853,8 +853,9 @@ def _print_result(result: dict[str, Any]) -> None:
         icon = "✅" if status == "ok" else "❌" if status in ("failed", "error") else "➖"
         name = step.get("name", "?")
         result_text = step.get("result", {}).get("summary", "")
+        details = step.get("result", {}).get("details", "")
         error = step.get("error", "")
-        extra = result_text or error
+        extra = details or result_text or error
         print(f"  {icon}  {name:30s}  {extra}" if extra else f"  {icon}  {name}")
 
     print()
