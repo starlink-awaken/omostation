@@ -38,6 +38,10 @@ def main() -> None:
         "st": _cmd_status,
         "logs": _cmd_logs,
         "runs": _cmd_logs,
+        "create": _cmd_create,
+        "new": _cmd_create,
+        "validate": _cmd_validate,
+        "val": _cmd_validate,
         "--help": _cmd_help,
         "-h": _cmd_help,
         "help": _cmd_help,
@@ -271,6 +275,159 @@ def _cmd_logs(args: list[str]) -> None:
     cmd_runs(args)
 
 
+def _cmd_create(args: list[str]) -> None:
+    """ecos workflow create <name> — 创建工作流模板"""
+    from pathlib import Path
+    import yaml
+
+    m1 = "--m1" in args
+    out_path = None
+    rest = [a for a in args if a not in ("--m1",)]
+
+    # 检查是否指定了 --path
+    i = 0
+    while i < len(rest):
+        if rest[i] == "--path" and i + 1 < len(rest):
+            out_path = Path(rest[i + 1])
+            rest = rest[:i] + rest[i + 2:]
+            break
+        i += 1
+
+    if not rest:
+        print("用法: ecos workflow create <name> [--m1] [--path <file>]")
+        sys.exit(1)
+
+    name = rest[0]
+    safe_name = name.upper().replace(" ", "-").replace("_", "-")
+    wf_id = f"WORKFLOW-{safe_name}" if not safe_name.startswith("WORKFLOW-") else safe_name
+
+    if m1:
+        # M1 格式模板（含完整元数据）
+        template = _m1_template(wf_id, name)
+        if out_path is None:
+            from ecos.workflow.loader import M1_WF_DIR
+            M1_WF_DIR.mkdir(parents=True, exist_ok=True)
+            out_path = M1_WF_DIR / f"{wf_id}.yaml"
+    else:
+        # 简化 definition 格式
+        template = _def_template(name)
+        if out_path is None:
+            from ecos.workflow.loader import WF_DIR
+            WF_DIR.mkdir(parents=True, exist_ok=True)
+            out_path = WF_DIR / f"{name}.yaml"
+
+    if out_path.exists():
+        print(f"⚠️ 文件已存在: {out_path}")
+        overwrite = input("  覆盖? [y/N] ").strip().lower()
+        if overwrite not in ("y", "yes"):
+            print("已取消。")
+            return
+
+    with open(out_path, "w") as f:
+        yaml.dump(template, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+
+    print(f"✅ 工作流模板已创建: {out_path}")
+    print(f"   类型: {'M1' if m1 else 'definition'}")
+    print(f"   ID: {wf_id if m1 else name}")
+    print(f"   执行: ecos workflow run {(wf_id if m1 else name)!r}")
+
+
+def _m1_template(wf_id: str, name: str) -> dict:
+    """生成 M1 格式工作流模板"""
+    return {
+        "id": wf_id,
+        "type": "Workflow",
+        "subtype": "CustomWorkflow",
+        "name": name,
+        "description": f"自定义工作流: {name}",
+        "status": "active",
+        "version": "1.0.0",
+        "domain": "meta",
+        "layer": "L0",
+        "created": None,  # 会被 yaml 序列化为 null
+        "bos_uri": f"bos://ecos/workflow/{name.lower().replace(' ', '-')}",
+        "execution": {
+            "backend": "default",
+            "mode": "sequential",
+            "max_retries": 0,
+            "on_failure": "continue",
+        },
+        "steps": [
+            {"order": 1, "name": "Step1", "action": "health_check", "description": "步骤描述"},
+            {"order": 2, "name": "Step2", "action": "domain_audit", "description": "步骤描述",
+             "depends_on": ["Step1"]},
+        ],
+        "relations": [],
+        "sla": {"max_execution_time": 300, "expected_completion_rate": 0.95},
+        "tags": [name.lower(), "custom"],
+        "maintained_by": "user",
+        "last_reviewed": None,
+    }
+
+
+def _def_template(name: str) -> dict:
+    """生成简化 definition 格式工作流模板"""
+    return {
+        "name": name,
+        "description": f"自定义工作流: {name}",
+        "execution": {
+            "backend": "default",
+            "mode": "sequential",
+            "on_failure": "continue",
+        },
+        "steps": [
+            {"name": "Step1", "action": "health_check", "description": "步骤描述"},
+            {"name": "Step2", "action": "domain_audit", "description": "步骤描述"},
+        ],
+    }
+
+
+def _cmd_validate(args: list[str]) -> None:
+    """ecos workflow validate <name> — 验证工作流定义"""
+    from ecos.workflow import load_workflow
+    from ecos.workflow.validator import validate_workflow
+
+    if not args:
+        print("用法: ecos workflow validate <name>")
+        sys.exit(1)
+
+    name = args[0]
+    wf = load_workflow(name)
+    if not wf:
+        print(f"❌ 工作流不存在: {name}")
+        sys.exit(1)
+
+    # 构建 M1 节点结构
+    wf_id = wf.get("id", name)
+    wf_name = wf.get("name", name)
+
+    print(f"🔍 验证工作流: {wf_name} ({wf_id})")
+    print(f"{'=' * 60}")
+
+    violations = validate_workflow(wf)
+    if not violations:
+        print("  ✅  无违规 — 工作流定义正确。")
+        return
+
+    errors = [v for v in violations if v.get("severity") == "error"]
+    warnings = [v for v in violations if v.get("severity") != "error"]
+
+    if errors:
+        print(f"  ❌  错误 ({len(errors)} 项):")
+        for v in errors:
+            print(f"    ❌  [{v.get('id', '?')}] {v.get('message', '')}")
+    if warnings:
+        print(f"  ⚠️  警告 ({len(warnings)} 项):")
+        for v in warnings:
+            print(f"    ⚠️  [{v.get('id', '?')}] {v.get('message', '')}")
+
+    print(f"{'=' * 60}")
+    print(f"  总计: {len(errors)} error(s), {len(warnings)} warning(s)")
+    if errors:
+        sys.exit(1)
+
+
+
 def _cmd_help(_args: list[str] | None = None) -> None:
     print("用法: ecos workflow <子命令> [参数]")
     print()
@@ -282,6 +439,10 @@ def _cmd_help(_args: list[str] | None = None) -> None:
     print("  backends                查看后端注册表")
     print("  actions                 查看已注册 action")
     print("  status                  查看工作流引擎全局状态")
+    print("  create <name>           创建工作流模板")
+    print("    [--m1]                生成 M1 格式（默认是简化 definition）")
+    print("    [--path <file>]       指定输出路径")
+    print("  validate <name>         验证工作流定义")
     print("  logs|runs [选项]        工作流运行历史（同 ecos workflow runs）")
     print()
     print("运行历史选项:")
