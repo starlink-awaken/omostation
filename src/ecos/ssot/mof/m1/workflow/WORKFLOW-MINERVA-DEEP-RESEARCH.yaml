@@ -26,6 +26,7 @@ steps:
 - order: 1
   name: Decompose
   action: decompose
+  agent_role: researcher
   description: 将研究课题分解为多个子问题
   input:
   - research_topic
@@ -35,6 +36,7 @@ steps:
 - order: 2
   name: MultiSourceSearch
   action: multi_source_search
+  agent_role: searcher
   description: 从多个数据源并行搜索相关信息
   input:
   - sub_questions[]
@@ -45,6 +47,7 @@ steps:
 - order: 3
   name: EntityExtraction
   action: entity_extraction
+  agent_role: analyst
   description: 从搜索结果中提取命名实体和关键概念
   input:
   - search_results[]
@@ -56,6 +59,7 @@ steps:
 - order: 4
   name: DeepRead
   action: deep_read
+  agent_role: analyst
   description: 对关键文档进行深度阅读和要点提取
   input:
   - search_results[]
@@ -67,6 +71,7 @@ steps:
 - order: 5
   name: CrossAnalyze
   action: cross_analyze
+  agent_role: analyst
   description: 跨文档交叉分析，发现关联和矛盾
   input:
   - deep_insights[]
@@ -77,6 +82,7 @@ steps:
 - order: 6
   name: CounterArgument
   action: counter_argument
+  agent_role: critic
   description: 生成反驳论证，检验结论健壮性
   input:
   - cross_analysis
@@ -87,6 +93,7 @@ steps:
 - order: 7
   name: MultiModelVoting
   action: multi_model_voting
+  agent_role: evaluator
   description: 多 LLM 模型投票表决，提高结论可靠性
   input:
   - cross_analysis
@@ -98,6 +105,7 @@ steps:
 - order: 8
   name: QualityGate
   action: quality_gate
+  agent_role: reviewer
   description: 质量门校验 — 评估置信度、完整性、一致性
   input:
   - voting_results
@@ -108,6 +116,7 @@ steps:
 - order: 9
   name: Output
   action: output
+  agent_role: researcher
   description: 输出最终研究报告和结论
   input:
   - quality_report
@@ -116,11 +125,21 @@ steps:
   depends_on:
   - QualityGate
 execution:
-  mode: sequential
+  mode: workflow
+  backend: default
   max_retries: 3
   timeout: 1200
   on_failure: abort
   audit_enabled: true
+  budget:
+    token_limit: 100000
+    round_limit: 10
+  governance:
+    preflight:
+      - X1-C01
+      - X2-C01
+    postflight:
+      - X4-C01
 relations:
 - type: triggers
   target: MECH-SCHEDULED-kos-daily-ontology-sync

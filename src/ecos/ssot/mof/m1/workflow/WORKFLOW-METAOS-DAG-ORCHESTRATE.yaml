@@ -73,11 +73,20 @@ steps:
   depends_on:
   - MonitorNodes
 execution:
-  mode: dag
+  mode: workflow
+  backend: metaos
   max_retries: 3
   timeout: 1200
   on_failure: abort
   audit_enabled: true
+  budget:
+    round_limit: 5
+  governance:
+    preflight:
+      - X1-C01
+      - X2-C01
+    postflight:
+      - X4-C01
 relations:
 - type: triggers
   target: bos://omo/task/created

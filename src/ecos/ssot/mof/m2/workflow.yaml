@@ -32,8 +32,8 @@ Workflow:
       type: string
       description: 工作流名称
     steps:
-      type: string
-      description: 步骤序列
+      type: list
+      description: 步骤序列，每步支持 {name, action, agent_role, input, output, depends_on, on_failure}
   optionalProperties:
     # ── v1 原有字段 (保持向后兼容) ──
     trigger:
@@ -60,7 +60,35 @@ Workflow:
       description: 跨层映射信息 {realized_by, invoked_by, triggers, data_flow}
     execution:
       type: map
-      description: 执行配置 {mode, max_retries, timeout, on_failure, audit_enabled}
+      description: 执行配置 {mode, backend, budget, governance, max_retries, timeout, on_failure, audit_enabled}
+      properties:
+        mode:
+          type: enum
+          values: [workflow, graph, loop, dynamic, state-machine]
+          description: 执行模式 — workflow(顺序DAG), graph(有环图+条件), loop(迭代收敛), dynamic(LLM决策), state-machine(形式化状态转换)
+        backend:
+          type: string
+          description: 执行后端 — metaos|agora|symphony|swarm|runtime|default
+        budget:
+          type: map
+          description: 预算控制 {token_limit, round_limit}
+          properties:
+            token_limit:
+              type: integer
+              description: Token 上限
+            round_limit:
+              type: integer
+              description: 轮次上限
+        governance:
+          type: map
+          description: 治理约束引用 {preflight, postflight}
+          properties:
+            preflight:
+              type: list
+              description: 执行前必检的 X 层约束 ID 列表 (如 [X1-C01, X2-C01])
+            postflight:
+              type: list
+              description: 执行后校验的 X 层约束 ID 列表 (如 [X4-C01])
     relations:
       type: list
       description: M3 关系类型实例 [{type, from, to, cardinality, note}]
