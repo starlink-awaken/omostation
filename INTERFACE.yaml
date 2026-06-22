@@ -28,6 +28,8 @@ python_api:
         description: 执行工作流（向后兼容接口，有 backend 时自动委派新路由）
       - name: execute_m1_workflow(name, params, dry_run) -> dict
         description: 新接口，通过 BackendRegistry 路由到对应后端
+      - name: test_workflow(name) -> dict
+        description: 测试工作流编排（mock action，不执行真实脚本）
       - name: register(name, module_path, entrypoint, description)
         description: 注册 workflow backend
       - name: resolve(m1_node) -> Callable
@@ -41,9 +43,23 @@ python_api:
       - name: match_event(event, triggers) -> list
         description: 事件匹配触发器
 
-mcp: []
-
-http: []  # Dashboard converged to cockpit :8090
+mcp:
+  - name: workflow_list
+    description: 列出已注册工作流（按域/层/状态过滤）
+  - name: workflow_show
+    description: 查看工作流完整定义
+  - name: workflow_run
+    description: 执行工作流（支持 dry_run）
+  - name: workflow_validate
+    description: 验证工作流定义（X1-X4 约束检查）
+  - name: workflow_backends
+    description: 列出已注册 workflow backend
+  - name: workflow_actions
+    description: 列出已注册 workflow action
+  - name: workflow_logs
+    description: 查询工作流运行历史（M0 快照）
+  - name: workflow_test
+    description: 测试工作流编排（mock action）
 
 workflow_backends:
   - name: default
