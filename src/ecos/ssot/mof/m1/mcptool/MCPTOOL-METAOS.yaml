@@ -9,7 +9,7 @@ project: metaos
 component: COMP-WS-metaos
 tool_count: 22
 transport: stdio
-status: inactive
+status: deprecated
 note: 独立 MCP 入口已关闭 (2026-06-22)，能力通过 bos://ecos/workflow 经 Agora 路由
 model_driven_refs:
   source_file: projects/metaos/src/metaos/mcp_server.py

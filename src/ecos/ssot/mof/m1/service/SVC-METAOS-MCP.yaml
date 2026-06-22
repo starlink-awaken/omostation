@@ -7,8 +7,8 @@ description: MetaOS MCP Server — 编排引擎
 project: metaos
 transport: none
 protocol: stdio
-status: not_running
-runtime_status: not_running
+status: stopped
+runtime_status: stopped
 
 model_driven_refs:
   source_file: projects/metaos/pyproject.toml
