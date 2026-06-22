@@ -576,6 +576,97 @@ class TestX3CostRecorder:
             X3CostRecorder.LEDGER_PATH = original
 
 
+class TestX2CircuitBreak:
+    """X2 熔断自动化测试: 余额耗尽→阻断执行"""
+
+    def test_circuit_break_on_depleted_budget(self, tmp_path, monkeypatch):
+        """余额不足且有预算配置时→阻断并返回 X2 熔断错误"""
+        from ecos.workflow.executor import execute_m1_workflow
+        from ecos.workflow.validator import X2BudgetDeducer
+        import json
+
+        # 注入有 budget 配置的测试工作流
+        test_wf = {
+            "name": "test-budget-wf",
+            "steps": [{"name": "s1", "action": "health_check"}],
+            "execution": {
+                "backend": "default", "mode": "sequential",
+                "budget": {"token_limit": 500},
+            },
+        }
+        monkeypatch.setattr("ecos.workflow.executor.load_workflow", lambda name: test_wf)
+
+        # 设置余额不足
+        original = X2BudgetDeducer.LEDGER_PATH
+        ledger = tmp_path / "x2_circuit.jsonl"
+        ledger.write_text(json.dumps({"event": "balance", "balance": 10}) + "\n")
+        X2BudgetDeducer.LEDGER_PATH = ledger
+
+        try:
+            result = execute_m1_workflow("test-budget-wf")
+            assert "error" in result, "余额不足时应返回 error"
+            assert "X2 熔断" in result["error"]
+            assert result.get("passed", 0) == 0
+            assert result.get("failed", 0) == 0
+            assert "steps" in result
+            assert len(result["steps"]) == 0, "熔断时不应执行任何步骤"
+        finally:
+            X2BudgetDeducer.LEDGER_PATH = original
+
+    def test_no_circuit_break_without_budget_config(self, tmp_path, monkeypatch):
+        """无预算配置时不阻断（即使余额为 0）"""
+        from ecos.workflow.executor import execute_m1_workflow
+        from ecos.workflow.validator import X2BudgetDeducer
+        import json
+
+        monkeypatch.setattr("ecos.workflow.executor.load_workflow", lambda name: {
+            "name": "test-no-budget",
+            "steps": [{"name": "s1", "action": "health_check"}],
+            "execution": {"backend": "default"},
+        })
+
+        original = X2BudgetDeducer.LEDGER_PATH
+        ledger = tmp_path / "x2_nobudget.jsonl"
+        ledger.write_text(json.dumps({"event": "balance", "balance": 0}) + "\n")
+        X2BudgetDeducer.LEDGER_PATH = ledger
+
+        try:
+            result = execute_m1_workflow("test-no-budget")
+            # 无 budget 配置不应阻断，但 health_check 执行可能需要 ~/.ecos/scripts 等环境
+            # 重点是: 不应有 X2 熔断错误
+            err = result.get("error", "")
+            assert "X2 熔断" not in err, "无 budget 配置不应触发 X2 熔断"
+        finally:
+            X2BudgetDeducer.LEDGER_PATH = original
+
+    def test_circuit_break_uses_check_budget_logic(self, tmp_path):
+        """熔断逻辑直接依赖 X2BudgetDeducer.check_budget"""
+        from ecos.workflow.validator import X2BudgetDeducer
+        import json
+
+        # 验证 check_budget 检测余额不足的正确行为
+        original = X2BudgetDeducer.LEDGER_PATH
+        ledger = tmp_path / "x2_check.jsonl"
+        ledger.write_text(json.dumps({"event": "balance", "balance": 100}) + "\n")
+        X2BudgetDeducer.LEDGER_PATH = ledger
+
+        try:
+            # 余额不足 (100 < 500)
+            status = X2BudgetDeducer.check_budget({
+                "execution": {"budget": {"token_limit": 500}},
+            })
+            assert status["ok"] is False
+            assert any("余额不足" in w for w in status.get("warnings", []))
+
+            # 余额充足
+            status2 = X2BudgetDeducer.check_budget({
+                "execution": {"budget": {"token_limit": 50}},
+            })
+            assert status2["ok"] is True
+        finally:
+            X2BudgetDeducer.LEDGER_PATH = original
+
+
 class TestX4ConsistencyChecker:
     def test_check_result_ok(self):
         from ecos.workflow.validator import X4ConsistencyChecker

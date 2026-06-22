@@ -92,6 +92,7 @@ def resolve(m1_node: dict) -> Callable:
     if backend_name == "default":
         return _default_executor
 
+    _ensure_backends_registered()
     backend_info = _backends.get(backend_name)
     if not backend_info:
         logger.warning("Backend '%s' not registered, falling back to default", backend_name)
@@ -112,6 +113,7 @@ def resolve(m1_node: dict) -> Callable:
 
 def list_backends() -> list[dict[str, str]]:
     """列出所有已注册的后端"""
+    _ensure_backends_registered()
     return [
         {
             "name": name,
@@ -126,49 +128,40 @@ def list_backends() -> list[dict[str, str]]:
 
 def get_backend(name: str) -> dict[str, Any] | None:
     """获取单个后端信息"""
+    _ensure_backends_registered()
     return _backends.get(name)
 
 
-def _auto_register_backends():
-    """自动注册已知可用的 workflow backends
+# ── 惰性后端注册 ──
+_backends_registered = False
 
+
+def _ensure_backends_registered() -> None:
+    """惰性注册已知可用的 workflow backends
+
+    避免 import 时副作用——只在首次查询后端时注册。
     通过 try/except 实现可选依赖——缺失不报错。
-    必须在 register() 和 get_backend() 之后调用。
     """
+    global _backends_registered
+    if _backends_registered:
+        return
+    _backends_registered = True
+
     # metaos backend (可选依赖)
-    try:
-        register("metaos", "metaos.core.workflow", "run",
-                 description="MetaOS DAG workflow engine (asyncio)")
-    except Exception:
-        pass
-
-    # Agora MCP Backend (ecos 内部模块，必注册)
-    try:
-        register("agora", "ecos.workflow.agora_mcp_backend", "execute",
-                 description="Agora MCP routing backend (跨层经 I0)")
-    except Exception:
-        pass
-
-    # Symphony Protocol Backend (ecos 内部模块——状态机编排)
-    try:
-        register("symphony", "ecos.workflow.backends.symphony", "execute",
-                 description="Symphony State Machine — 协议级阶段跃迁编排 (L0)")
-    except Exception:
-        pass
-
-    # Swarm Engine Backend (通过 aetherforge/swarm_engine 可选接入)
-    try:
-        register("swarm", "ecos.workflow.backends.swarm", "execute",
-                 description="Swarm multi-agent task orchestration engine (aetherforge)")
-    except Exception:
-        pass
-
-    # Runtime Executor Backend (通过 runtime.executor 可选接入)
-    try:
-        register("runtime", "ecos.workflow.backends.runtime", "execute",
-                 description="Runtime project lifecycle orchestrator (INIT→DELIVERY)")
-    except Exception:
-        pass
-
-
-_auto_register_backends()
+    for mod_path, entry, name, desc in [
+        ("ecos.workflow.agora_mcp_backend", "execute", "agora",
+         "Agora MCP routing backend (跨层经 I0)"),
+        ("ecos.workflow.backends.symphony", "execute", "symphony",
+         "Symphony State Machine — 协议级阶段跃迁编排 (L0)"),
+        ("ecos.workflow.backends.swarm", "execute", "swarm",
+         "Swarm multi-agent task orchestration engine (aetherforge)"),
+        ("ecos.workflow.backends.runtime", "execute", "runtime",
+         "Runtime project lifecycle orchestrator (INIT→DELIVERY)"),
+        ("metaos.core.workflow", "run", "metaos",
+         "MetaOS DAG workflow engine (asyncio)"),
+    ]:
+        try:
+            register(name, mod_path, entry, description=desc)
+        except Exception:
+            # 可选依赖缺失不报错
+            pass

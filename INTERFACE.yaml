@@ -1,7 +1,7 @@
 # eCOS Interface Registry
 project: ecos
 layer: L0
-description: SSB 签名链 + 涌现计算 + 认知监控
+description: SSB 签名链 + 涌现计算 + 认知监控 + 工作流编排
 
 cli:
   - name: ecos-ssb
@@ -10,13 +10,57 @@ cli:
   - name: ecos-dashboard
     module: ecos.cli.dashboard:main
     description: Web Dashboard (converged to cockpit /api/ecos/status)
+  - name: ecos-workflow
+    module: ecos.cli.workflow:main
+    description: 工作流编排 CLI (list/run/describe/backends/logs)
+  - name: ecos-workflow-runs
+    module: ecos.cli.workflow_runs:cmd_runs
+    description: 工作流运行历史查询
+
+python_api:
+  - module: ecos.workflow
+    exports:
+      - name: load_workflow(name) -> dict
+        description: 加载工作流定义（M1 节点优先 → definitions 回退）
+      - name: list_workflows() -> list[dict]
+        description: 列出所有可用工作流
+      - name: execute_workflow(name, params, dry_run) -> dict
+        description: 执行工作流（向后兼容接口，有 backend 时自动委派新路由）
+      - name: execute_m1_workflow(name, params, dry_run) -> dict
+        description: 新接口，通过 BackendRegistry 路由到对应后端
+      - name: register(name, module_path, entrypoint, description)
+        description: 注册 workflow backend
+      - name: resolve(m1_node) -> Callable
+        description: 根据 M1 节点解析后端执行函数
+      - name: list_backends() -> list[dict]
+        description: 列出所有已注册后端
+      - name: get_backend(name) -> dict | None
+        description: 获取单个后端信息
+      - name: listen_forever(host, port)
+        description: 启动事件监听器（bos://ecos/events SSE）
+      - name: match_event(event, triggers) -> list
+        description: 事件匹配触发器
 
 mcp: []
 
 http: []  # Dashboard converged to cockpit :8090
 
+workflow_backends:
+  - name: default
+    description: 硬编码 subprocess action 执行器（向后兼容）
+  - name: agora
+    description: Agora MCP 路由（跨层经 I0 BOS Mesh）
+  - name: symphony
+    description: Symphony 状态机编排（协议级阶段跃迁）
+  - name: swarm
+    description: Swarm 多 Agent 任务编排（aetherforge）
+  - name: runtime
+    description: Runtime 项目生命周期编排（INIT→DELIVERY）
+  - name: metaos
+    description: MetaOS DAG 工作流引擎（可选依赖）
+
 dependencies:
   runtime: [pyyaml, requests, beautifulsoup4, jinja2]
   dev: [pytest, ruff]
 
-tests: 122
+tests: 791

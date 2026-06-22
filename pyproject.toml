@@ -32,6 +32,10 @@ ecos-dashboard = "ecos.cli.dashboard:main"
 ecos-scheduler = "ecos.cli.scheduler:main"
 ecos-watchdog = "ecos.cli.watchdog:main"
 
+# Workflow engine
+ecos-workflow = "ecos.cli.workflow:main"
+ecos-workflow-runs = "ecos.cli.workflow_runs:cmd_runs"
+
 # MOF 元模型工具链
 mof = "ecos.ssot.tools.mof:main"
 mof-validate = "ecos.ssot.tools.mof-validate:main"

@@ -116,6 +116,11 @@ def execute_m1_workflow(name: str, params: dict | None = None,
         budget_status = X2BudgetDeducer.check_budget(m1_node)
         if not budget_status.get("ok") and budget_status.get("budget"):
             logger.warning("Budget warnings: %s", budget_status.get("warnings"))
+            if budget_status.get("warnings") and any("余额不足" in w for w in budget_status.get("warnings", [])):
+                results["error"] = f"X2 熔断: Token 余额不足 ({budget_status.get('balance', 0)})"
+                results["finished"] = datetime.now().isoformat()
+                logger.info("X2 circuit break triggered for workflow: %s", name)
+                return results
 
         # ── 执行 ──
         backend_fn = resolve(wf)

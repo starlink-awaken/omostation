@@ -231,10 +231,10 @@ def test_all_backends_resolve():
     """所有已注册 backends 能 resolve 并返回可调用的函数"""
     from ecos.workflow import backend_registry
 
-    # 保存原始 backends，清空测试污染后恢复
-    original_backends = dict(backend_registry._backends)
+    # 清空后重新触发惰性注册
     backend_registry._backends.clear()
-    backend_registry._auto_register_backends()
+    backend_registry._backends_registered = False
+    backend_registry._ensure_backends_registered()
 
     try:
         backends = backend_registry.list_backends()
@@ -251,8 +251,7 @@ def test_all_backends_resolve():
             assert "steps" in result, f"{name}: no steps"
             assert "passed" in result and "failed" in result, f"{name}: no passed/failed"
     finally:
-        backend_registry._backends.clear()
-        backend_registry._backends.update(original_backends)
+        pass
 
 
 # =========================================================================

@@ -150,3 +150,119 @@ similar = engine.recommend_similar("doc-1", limit=3)
 | task_submit | task_id: str, name: str, ... | 提交任务 |
 | task_status | task_id: str | 查询任务状态 |
 | role_switch | agent_id: str, new_role: str | 切换角色 |
+
+---
+
+## Workflow 引擎
+
+### 架构
+
+```
+M1 YAML → loader.py → validator.py (X1-X4) → executor.py
+            └── (load workflow)       │
+                                      └──→ backend_registry.py → backend(X)
+```
+
+5 个后端注册:
+- `default` — 硬编码 subprocess action 执行器（向后兼容）
+- `agora` — Agora MCP 路由（跨层经 I0 BOS Mesh）
+- `symphony` — Symphony 状态机编排（协议级阶段跃迁）
+- `swarm` — Swarm 多 Agent 任务编排（aetherforge）
+- `runtime` — Runtime 项目生命周期编排（INIT→DELIVERY）
+- `metaos` — MetaOS DAG 工作流引擎（可选依赖）
+
+### CLI 用法
+
+```bash
+# 列出所有可用工作流
+ecos workflow list
+
+# 执行工作流
+ecos workflow run WORKFLOW-ECOS-DAILY-HEALTH
+ecos workflow run WORKFLOW-ECOS-DAILY-HEALTH --dry-run
+
+# 查看工作流定义
+ecos workflow describe WORKFLOW-ECOS-DAILY-HEALTH
+
+# 查看后端注册状态
+ecos workflow backends
+
+# 查看运行历史
+ecos workflow logs --recent 10
+ecos workflow logs --status failed --verbose
+ecos workflow logs WORKFLOW-ECOS-DAILY-HEALTH
+```
+
+### Python API
+
+```python
+from ecos.workflow import (
+    # 加载
+    load_workflow,      # load_workflow(name) -> dict | None
+    list_workflows,     # list_workflows() -> list[dict]
+    # 执行
+    execute_workflow,   # execute_workflow(name, params, dry_run) -> dict
+    execute_m1_workflow,# execute_m1_workflow(name, params, dry_run) -> dict
+    # 后端
+    register,           # register(name, module_path, entrypoint, description)
+    resolve,            # resolve(m1_node) -> Callable
+    list_backends,      # list_backends() -> list[dict]
+    # 事件
+    listen_forever,     # listen_forever(host="0.0.0.0", port=7432)
+    match_event,        # match_event(event, triggers) -> list
+)
+
+# 示例: 执行工作流
+result = execute_m1_workflow("WORKFLOW-ECOS-DAILY-HEALTH")
+print(result["passed"], "✅", result["failed"], "❌")
+
+# 示例: 注册自定义后端
+register("my-backend", "my_package.my_module", "execute",
+         description="自定义后端")
+```
+
+### 工作流定义格式 (M1)
+
+工作流定义存储在 `ssot/mof/m1/workflow/WORKFLOW-*.yaml`:
+
+```yaml
+type: Workflow
+id: WORKFLOW-ECOS-DAILY-HEALTH
+name: eCOS 日常健康巡检
+domain: governance
+layer: L0
+bos_uri: "bos://governance/workflows/daily-health"
+status: active
+
+execution:
+  backend: default
+  mode: workflow
+  on_failure: continue
+
+steps:
+  - name: 健康检查
+    action: health_check
+  - name: 域漂移检测
+    action: domain_audit
+```
+
+### 运行历史 (M0)
+
+每次执行自动生成 M0 快照在 `~/.omo/state/workflow-runs/`:
+
+```bash
+ecos workflow logs                   # 全部历史
+ecos workflow logs --status failed   # 只查失败的
+ecos workflow logs WORKFLOW-ECOS-DAILY-HEALTH  # 查特定工作流
+```
+
+### 事件驱动
+
+```bash
+# 启动事件监听器（默认 :7432）
+python -m ecos.workflow.event_listener
+
+# 事件格式 (SSE)
+# event: bos://ecos/events/health_check
+# data: {"action": "health_check", "source": "...", "timestamp": "..."}
+```
