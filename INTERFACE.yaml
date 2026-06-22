@@ -17,6 +17,11 @@ cli:
     module: ecos.cli.workflow_runs:cmd_runs
     description: 工作流运行历史查询
 
+  - name: ecos-mcp
+    module: ecos.mcp_server:main
+    description: MCP Server (8 workflow tools + SSOT + domain tools)
+    agoraservice: ecos-workflow  # agora KNOWN_BACKENDS 名称
+
 python_api:
   - module: ecos.workflow
     exports:
