@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 from typing import Any
 
 
@@ -43,6 +44,9 @@ def main() -> None:
         "validate": _cmd_validate,
         "val": _cmd_validate,
         "test": _cmd_test,
+        "edit": _cmd_edit,
+        "export": _cmd_export,
+        "import": _cmd_import,
         "--help": _cmd_help,
         "-h": _cmd_help,
         "help": _cmd_help,
@@ -448,6 +452,169 @@ def _cmd_test(args: list[str]) -> None:
         sys.exit(1)
 
 
+def _cmd_edit(args: list[str]) -> None:
+    """ecos workflow edit <name> — 打开编辑器编辑工作流定义"""
+    import os
+
+    if not args:
+        print("用法: ecos workflow edit <name>")
+        sys.exit(1)
+    name = args[0]
+    from ecos.workflow import load_workflow
+    from ecos.workflow.loader import M1_WF_DIR, WF_DIR
+    wf = load_workflow(name)
+    if not wf:
+        print(f"❌ 工作流不存在: {name}")
+        sys.exit(1)
+
+    # 定位文件路径
+    is_m1 = wf.get("type") == "Workflow"
+    if is_m1:
+        wf_id = wf.get("id", f"WORKFLOW-{name.upper()}")
+        file_path = M1_WF_DIR / f"{wf_id.upper()}.yaml"
+    else:
+        # 匹配 definitions 目录中的文件
+        matched = list(WF_DIR.glob(f"{name}.yaml")) + list(WF_DIR.glob(f"{name}.yml"))
+        file_path = matched[0] if matched else WF_DIR / f"{name}.yaml"
+
+    if not file_path.exists():
+        print(f"❌ 文件不存在: {file_path}")
+        # 尝试模糊搜索
+        candidates = list(WF_DIR.glob("*.yaml")) + list(M1_WF_DIR.glob("WORKFLOW-*.yaml"))
+        for c in candidates:
+            if name.lower() in c.stem.lower():
+                file_path = c
+                break
+        else:
+            sys.exit(1)
+
+    print(f"📝 编辑: {file_path}")
+    editor = os.environ.get("EDITOR", os.environ.get("VISUAL", "vim"))
+    try:
+        import subprocess
+        subprocess.run([editor, str(file_path)], check=False)
+        print(f"✅ 文件已保存: {file_path}")
+    except FileNotFoundError:
+        print(f"❌ 找不到编辑器: {editor}，请设置 EDITOR 环境变量")
+        sys.exit(1)
+
+
+def _cmd_export(args: list[str]) -> None:
+    """ecos workflow export <name> --path <file> — 导出工作流"""
+    import shutil
+    from ecos.workflow import load_workflow
+    from ecos.workflow.loader import M1_WF_DIR, WF_DIR
+
+    if not args:
+        print("用法: ecos workflow export <name> [--path <file>]")
+        sys.exit(1)
+
+    name = args[0]
+    out_path = None
+    rest = args[1:]
+    i = 0
+    while i < len(rest):
+        if rest[i] == "--path" and i + 1 < len(rest):
+            out_path = Path(rest[i + 1])
+            break
+        i += 1
+
+
+    wf = load_workflow(name)
+    if not wf:
+        print(f"❌ 工作流不存在: {name}")
+        sys.exit(1)
+
+    # 找源文件
+    is_m1_type = wf.get("type") == "Workflow"
+    if is_m1_type:
+        wf_id = wf.get("id", f"WORKFLOW-{name.upper()}")
+        src_path = M1_WF_DIR / f"{wf_id.upper()}.yaml"
+    else:
+        matched = list(WF_DIR.glob(f"{name}.yaml")) + list(WF_DIR.glob(f"{name}.yml"))
+        src_path = matched[0] if matched else WF_DIR / f"{name}.yaml"
+
+    if not src_path.exists():
+        print(f"❌ 源文件不存在: {src_path}")
+        sys.exit(1)
+
+    out_path = out_path or Path(f"{name}.yaml")
+    shutil.copy2(src_path, out_path)
+    print(f"✅ 工作流已导出: {src_path} → {out_path}")
+    print(f"   导入: ecos workflow import {out_path}")
+
+
+def _cmd_import(args: list[str]) -> None:
+    """ecos workflow import <file> [--as <name>] [--m1] — 导入工作流定义"""
+    import shutil
+
+    if not args:
+        print("用法: ecos workflow import <file> [--as <name>] [--m1]")
+        sys.exit(1)
+
+    src = Path(args[0])
+    if not src.exists():
+        print(f"❌ 文件不存在: {src}")
+        sys.exit(1)
+
+    # 解析选项
+    import_as = None
+    as_m1 = "--m1" in args
+    rest = [a for a in args if a not in ("--m1",)]
+    i = 1
+    while i < len(rest):
+        if rest[i] == "--as" and i + 1 < len(rest):
+            import_as = rest[i + 1]
+            break
+        i += 1
+
+    # 读取并校验
+    import yaml
+    try:
+        with open(src) as f:
+            wf = yaml.safe_load(f)
+    except Exception as e:
+        print(f"❌ YAML 解析失败: {e}")
+        sys.exit(1)
+
+    if not isinstance(wf, dict):
+        print("❌ 无效的工作流定义")
+        sys.exit(1)
+
+    # 验证内容
+    if import_as:
+        wf_name = import_as
+    elif wf.get("name"):
+        wf_name = wf["name"]
+    else:
+        wf_name = src.stem
+
+    # 确定目标目录
+    if as_m1 or wf.get("type") == "Workflow":
+        from ecos.workflow.loader import M1_WF_DIR
+        M1_WF_DIR.mkdir(parents=True, exist_ok=True)
+        target_id = wf.get("id", f"WORKFLOW-{wf_name.upper().replace(' ', '-')}")
+        dest = M1_WF_DIR / f"{target_id}.yaml"
+        wf_type = "M1"
+    else:
+        from ecos.workflow.loader import WF_DIR
+        WF_DIR.mkdir(parents=True, exist_ok=True)
+        dest = WF_DIR / f"{wf_name}.yaml"
+        wf_type = "definition"
+
+    if dest.exists():
+        print(f"⚠️ 目标文件已存在: {dest}")
+        answer = input("  覆盖? [y/N] ").strip().lower()
+        if answer not in ("y", "yes"):
+            print("已取消。")
+            return
+
+    shutil.copy2(src, dest)
+    print(f"✅ 工作流已导入: {src} → {dest} ({wf_type})")
+    print(f"   执行: ecos workflow run '{wf_name}'")
+    print(f"   验证: ecos workflow validate '{wf_name}'")
+
+
 
 def _cmd_help(_args: list[str] | None = None) -> None:
     print("用法: ecos workflow <子命令> [参数]")
@@ -465,6 +632,9 @@ def _cmd_help(_args: list[str] | None = None) -> None:
     print("    [--path <file>]       指定输出路径")
     print("  validate <name>         验证工作流定义")
     print("  test <name>             测试工作流编排（mock action，验证链路）")
+    print("  edit <name>             打开编辑器编辑工作流定义")
+    print("  export <name> [--path]  导出工作流为独立文件")
+    print("  import <file> [--as]    导入工作流定义")
     print("  logs|runs [选项]        工作流运行历史（同 ecos workflow runs）")
     print()
     print("运行历史选项:")
