@@ -26,6 +26,12 @@ from ecos.workflow.executor import (
     execute_m1_workflow,
     execute_workflow,
 )
+from ecos.workflow.actions import (
+    get_action,
+    list_actions,
+    register_action,
+    resolve_action,
+)
 from ecos.workflow.loader import (
     _load_from_m1,
     list_from_m1,
@@ -53,6 +59,11 @@ __all__ = [
     "execute_workflow",
     "execute_m1_workflow",
     "_execute_step",
+    # actions (声明式注册)
+    "register_action",
+    "resolve_action",
+    "list_actions",
+    "get_action",
     # backend_registry
     "register",
     "resolve",

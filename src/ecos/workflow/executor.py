@@ -3,14 +3,12 @@
 核心函数:
 - execute_workflow(): 旧接口，向后兼容的完整执行器
 - execute_m1_workflow(): 新接口，通过 BackendRegistry 路由
-- execute_step(): 原始硬编码 action 执行器
+- execute_step(): 原始硬编码 action 执行器 (委派 actions.py)
 """
 
 from __future__ import annotations
 
-import json
 import logging
-import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -30,7 +28,6 @@ from ecos.workflow.validator import (  # noqa: E402
 
 logger = logging.getLogger("ecos.workflow.executor")
 
-H = Path.home()
 
 # L0 audit (可选导入)
 try:
@@ -301,82 +298,22 @@ def execute_workflow(name: str, params: dict | None = None,
 
     return results
 
+# =========================================================================
+# 硬编码 action 执行器 — 声明式注册 (actions.py)
+# =========================================================================
 
-# =========================================================================
-# 硬编码 action 执行器 — 向后兼容
-# =========================================================================
 
 def _execute_step(action: str, params: dict | None = None) -> dict:
-    """执行单个步骤（向后兼容的硬编码 action）"""
+    """执行单个步骤（通过 actions.py 注册表路由）
+
+    action 先经过 actions.py 的命名空间剥离和别名映射，
+    然后查找注册的 handler。
+    未注册 action 返回未知动作错误。
+    """
+    from ecos.workflow.actions import resolve_action
+
     params = params or {}
-
-    # 归一化 action: 剥离已知命名空间前缀
-    for prefix in ("ecos.ecos.", "ecos.", "infra."):
-        if action.startswith(prefix):
-            action = action[len(prefix):]
-            break
-
-    # 别名映射: 不同命名的工作流 action → 标准 action
-    _ALIASES = {
-        "system_health_check": "health_check",
-        "sync_domain_index": "domain_sync",
-        "update_routes": "domain_routes",
-        "kems_validate_all": "domain_validate_all",
-        "drift_detection": "domain_audit",
-        "reference_check": "domain_check_refs",
-        "index_sync": "domain_sync",
-        "routes_update": "domain_routes",
-    }
-    action = _ALIASES.get(action, action)
-
-    if action == "health_check":
-        r = subprocess.run(
-            ["python3", str(H / ".ecos" / "scripts" / "ecos-health-check.py"), "--json"],
-            capture_output=True, text=True, timeout=30)
-        try:
-            data = json.loads(r.stdout)
-            ok = all(c.get("pass", True) for c in data.get("results", []))
-            return {"passed": ok, "summary": f"健康检查: {'✅' if ok else '❌'}"}
-        except Exception:
-            return {"passed": False, "summary": "健康检查解析失败"}
-
-    elif action == "domain_validate_all":
-        r = subprocess.run(
-            ["python3", str(H / "bin" / "ecos"), "domain", "validate-all"],
-            capture_output=True, text=True, timeout=30)
-        ok = "0❌" in r.stdout or "0 failed" in r.stdout.lower()
-        return {"passed": ok, "summary": "域校验完成"}
-
-    elif action == "domain_audit":
-        r = subprocess.run(
-            ["python3", str(H / "bin" / "ecos"), "domain", "audit"],
-            capture_output=True, text=True, timeout=30)
-        return {"passed": r.returncode == 0, "summary": "漂移检测完成"}
-
-    elif action == "domain_check_refs":
-        r = subprocess.run(
-            ["python3", str(H / "bin" / "ecos"), "domain", "check-refs"],
-            capture_output=True, text=True, timeout=30)
-        ok = "✅" in r.stdout and "0 个断链" not in r.stdout
-        return {"passed": r.returncode == 0, "summary": "引用检查完成"}
-
-    elif action == "domain_sync":
-        r = subprocess.run(
-            ["python3", str(H / "bin" / "ecos"), "domain", "sync"],
-            capture_output=True, text=True, timeout=10)
-        return {"passed": r.returncode == 0, "summary": "索引同步完成"}
-
-    elif action == "bos_validate":
-        r = subprocess.run(
-            ["python3", str(H / "bin" / "ecos"), "domain", "bos-validate"],
-            capture_output=True, text=True, timeout=30)
-        return {"passed": r.returncode == 0, "summary": "BOS校验完成"}
-
-    elif action == "domain_routes":
-        r = subprocess.run(
-            ["python3", str(H / "bin" / "ecos"), "domain", "routes"],
-            capture_output=True, text=True, timeout=10)
-        return {"passed": r.returncode == 0, "summary": "路由缓存更新"}
-
-    else:
+    handler = resolve_action(action)
+    if handler is None:
         return {"passed": False, "summary": f"未知动作: {action}"}
+    return handler(params)

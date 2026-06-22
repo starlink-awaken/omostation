@@ -223,19 +223,19 @@ class TestListFromM1:
 # =========================================================================
 
 class TestExecuteStep:
-    @patch("ecos.workflow.executor.subprocess.run")
+    @patch("ecos.workflow.actions.subprocess.run")
     def test_health_check_ok(self, mock_run):
         mock_run.return_value.stdout = json.dumps({"results": [{"pass": True}, {"pass": True}]})
         result = _execute_step("health_check")
         assert result["passed"] is True
 
-    @patch("ecos.workflow.executor.subprocess.run")
+    @patch("ecos.workflow.actions.subprocess.run")
     def test_health_check_fail(self, mock_run):
         mock_run.return_value.stdout = json.dumps({"results": [{"pass": False}]})
         result = _execute_step("health_check")
         assert result["passed"] is False
 
-    @patch("ecos.workflow.executor.subprocess.run")
+    @patch("ecos.workflow.actions.subprocess.run")
     def test_health_check_parse_error(self, mock_run):
         mock_run.return_value.stdout = "not json"
         from unittest.mock import MagicMock
@@ -245,52 +245,52 @@ class TestExecuteStep:
         assert result["passed"] is False
         assert "解析失败" in result["summary"]
 
-    @patch("ecos.workflow.executor.subprocess.run")
+    @patch("ecos.workflow.actions.subprocess.run")
     def test_domain_validate_all_ok(self, mock_run):
         mock_run.return_value.stdout = "0❌ all passed"
         mock_run.return_value.returncode = 0
         result = _execute_step("domain_validate_all")
         assert result["passed"] is True
 
-    @patch("ecos.workflow.executor.subprocess.run")
+    @patch("ecos.workflow.actions.subprocess.run")
     def test_domain_validate_all_fail(self, mock_run):
         mock_run.return_value.stdout = "3❌ failed"
         mock_run.return_value.returncode = 1
         result = _execute_step("domain_validate_all")
         assert result["passed"] is False
 
-    @patch("ecos.workflow.executor.subprocess.run")
+    @patch("ecos.workflow.actions.subprocess.run")
     def test_domain_audit_ok(self, mock_run):
         mock_run.return_value.returncode = 0
         result = _execute_step("domain_audit")
         assert result["passed"] is True
 
-    @patch("ecos.workflow.executor.subprocess.run")
+    @patch("ecos.workflow.actions.subprocess.run")
     def test_domain_audit_fail(self, mock_run):
         mock_run.return_value.returncode = 1
         result = _execute_step("domain_audit")
         assert result["passed"] is False
 
-    @patch("ecos.workflow.executor.subprocess.run")
+    @patch("ecos.workflow.actions.subprocess.run")
     def test_domain_check_refs_ok(self, mock_run):
         mock_run.return_value.returncode = 0
         mock_run.return_value.stdout = "✅ 0 个断链"
         result = _execute_step("domain_check_refs")
         assert result["passed"] is True
 
-    @patch("ecos.workflow.executor.subprocess.run")
+    @patch("ecos.workflow.actions.subprocess.run")
     def test_domain_sync_ok(self, mock_run):
         mock_run.return_value.returncode = 0
         result = _execute_step("domain_sync")
         assert result["passed"] is True
 
-    @patch("ecos.workflow.executor.subprocess.run")
+    @patch("ecos.workflow.actions.subprocess.run")
     def test_bos_validate_ok(self, mock_run):
         mock_run.return_value.returncode = 0
         result = _execute_step("bos_validate")
         assert result["passed"] is True
 
-    @patch("ecos.workflow.executor.subprocess.run")
+    @patch("ecos.workflow.actions.subprocess.run")
     def test_domain_routes_ok(self, mock_run):
         mock_run.return_value.returncode = 0
         result = _execute_step("domain_routes")

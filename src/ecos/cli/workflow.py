@@ -33,6 +33,7 @@ def main() -> None:
         "describe": _cmd_describe,
         "cat": _cmd_describe,
         "backends": _cmd_backends,
+        "actions": _cmd_actions,
         "logs": _cmd_logs,
         "runs": _cmd_logs,
         "--help": _cmd_help,
@@ -167,6 +168,24 @@ def _cmd_backends(_args: list[str]) -> None:
         print(f"  {loaded}  {b['name']:15s}  {b['module_path']:30s}  {desc}")
     print(f"{'=' * 80}")
     print("💡 workflow 通过 execution.backend 字段选择后端。")
+
+
+def _cmd_actions(_args: list[str]) -> None:
+    """ecos workflow actions — 列出所有已注册 action"""
+    from ecos.workflow.actions import list_actions
+
+    actions = list_actions()
+    if not actions:
+        print("没有已注册的 action。")
+        return
+
+    print(f"⚡ 已注册 action ({len(actions)} 个)")
+    print(f"{'=' * 60}")
+    for a in actions:
+        desc = a.get("description", "")
+        print(f"  {a['name']:30s}  {desc}")
+    print(f"{'=' * 60}")
+    print("💡 action 在工作流定义的 step.action 字段中使用。外部模块可通过 register_action() 扩展。")
 
 
 def _cmd_logs(args: list[str]) -> None:
