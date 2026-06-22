@@ -1,15 +1,17 @@
 """Workflow Validator — 治理约束校验器
 
-Phase 3:
-- X1ConstraintChecker: 跨层协议检查（复用 L0-constraints.yaml 规则）
-- X2BudgetDeducer: Token 预算检查（记帐模式，暂不真正扣减）
-- X4ConsistencyChecker: 依赖完整性检查
-- X3CostRecorder: 成本归因（Stub，Phase 5 扩展）
+Phase 5 (2026-06-22):
+- X2BudgetDeducer: 对接 runtime X2 Budget Policy — 真实读写 llm_quota_ledger.jsonl
+- X3CostRecorder: 成本归因写入同一账本
 
-验证管线在 execute_m1_workflow() 中的位置:
+Phase 3 (基线):
+- X1ConstraintChecker: 跨层协议检查（复用 L0-constraints.yaml 规则）
+- X4ConsistencyChecker: 依赖完整性检查
+
+验证管线:
   parse_step(M1)
     → X1 check (preflight)
-    → X2 budget check (preflight)
+    → X2 budget check + deduct (preflight)
     → execute (backend)
     → X4 check (postflight)
     → X3 record (postflight)
@@ -119,32 +121,78 @@ class X1ConstraintChecker:
         return violations
 
 
+# 共享账本路径（与 runtime X2 Budget Policy 一致）
+_LLM_QUOTA_LEDGER = Path.home() / ".omo" / "state" / "llm_quota_ledger.jsonl"
+_DEFAULT_TOKEN_BUDGET = 100000  # 默认 Token 上限
+
+
 # =========================================================================
-# X2: 预算检查器
+# X2: 预算检查器（对接 runtime X2 Budget Policy）
 # =========================================================================
 
 class X2BudgetDeducer:
-    """X2 预算检查 — 执行前验证
+    """X2 预算检查 — 对接 llm_quota_ledger.jsonl
 
-    当前为 pass-through 模式（记录预算配置但不真正扣减）。
-    Phase 5 对接 runtime X2 Budget Policy 做实时扣减。
+    与 runtime 共享同一账本:
+    - 事前: 读取 balance，余额不足时熔断
+    - 事后: 写入消耗记录
     """
+
+    LEDGER_PATH = _LLM_QUOTA_LEDGER
+
+    @classmethod
+    def _ensure_ledger(cls) -> None:
+        """确保账本文件和目录存在"""
+        cls.LEDGER_PATH.parent.mkdir(parents=True, exist_ok=True)
+        if not cls.LEDGER_PATH.exists():
+            cls.LEDGER_PATH.write_text("")
+
+    @classmethod
+    def _read_balance(cls) -> int:
+        """读取当前 Token 余额
+
+        从账本中计算最后一条 balance 记录。
+        无记录时返回默认值。
+        """
+        cls._ensure_ledger()
+        if not cls.LEDGER_PATH.exists() or cls.LEDGER_PATH.stat().st_size == 0:
+            return _DEFAULT_TOKEN_BUDGET
+
+        last_balance = _DEFAULT_TOKEN_BUDGET
+        try:
+            with open(cls.LEDGER_PATH) as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        entry = json.loads(line)
+                        if entry.get("event") == "balance":
+                            last_balance = entry.get("balance", last_balance)
+                        elif entry.get("event") in ("deduct", "consume"):
+                            last_balance = entry.get("balance_after", last_balance)
+                    except (json.JSONDecodeError, KeyError):
+                        continue
+        except OSError:
+            pass
+
+        return last_balance
 
     @classmethod
     def check_budget(cls, m1_node: dict) -> dict:
-        """检查预算配置，返回预算状态
+        """检查预算配置并返回余额状态
 
         Returns:
-            {"ok": bool, "budget": dict, "warnings": list}
+            {"ok": bool, "budget": dict, "balance": int, "warnings": list}
         """
         execution = m1_node.get("execution", {})
         budget = execution.get("budget", {})
         warnings: list[str] = []
 
         if not budget:
-            return {"ok": True, "budget": {}, "warnings": ["无预算配置"]}
+            return {"ok": True, "budget": {}, "balance": 0, "warnings": ["无预算配置"]}
 
-        token_limit = budget.get("token_limit")
+        token_limit = budget.get("token_limit", _DEFAULT_TOKEN_BUDGET)
         round_limit = budget.get("round_limit")
 
         if token_limit is not None and token_limit <= 0:
@@ -153,49 +201,99 @@ class X2BudgetDeducer:
         if round_limit is not None and round_limit <= 0:
             warnings.append(f"round_limit 无效: {round_limit}")
 
+        # 读取余额
+        balance = cls._read_balance()
+        if balance < token_limit:
+            warnings.append(f"余额不足: {balance} < {token_limit}")
+
         return {
             "ok": len(warnings) == 0,
             "budget": budget,
+            "balance": balance,
             "warnings": warnings,
         }
 
     @classmethod
-    def record_consumption(cls, workflow_id: str, consumed: dict) -> None:
-        """记录预算消耗（Stub — Phase 5 对接真实扣减）"""
-        ledger_path = Path.home() / ".omo" / "state" / "budget-ledger.jsonl"
-        ledger_path.parent.mkdir(parents=True, exist_ok=True)
+    def deduct(cls, workflow_id: str, m1_node: dict, amount: int = 0) -> dict:
+        """执行 Token 扣减
+
+        写入共享账本，与 runtime X2 Policy 兼容。
+        当余额 < 0 时自动生成 OMO Debt 信号。
+
+        Returns:
+            {"ok": bool, "balance_before": int, "balance_after": int, "debt_generated": bool}
+        """
+        cls._ensure_ledger()
+
+        balance_before = cls._read_balance()
+        execution = m1_node.get("execution", {})
+        budget = execution.get("budget", {})
+        token_limit = budget.get("token_limit", _DEFAULT_TOKEN_BUDGET)
+
+        amount = amount or token_limit
+        balance_after = balance_before - amount
+        debt_generated = balance_after < 0
+
         entry = {
             "timestamp": datetime.now().isoformat(),
+            "event": "deduct",
             "workflow_id": workflow_id,
-            "consumed": consumed,
+            "amount": amount,
+            "balance_before": balance_before,
+            "balance_after": balance_after,
+            "debt_generated": debt_generated,
         }
-        with open(ledger_path, "a") as f:
-            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+        try:
+            with open(cls.LEDGER_PATH, "a") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        except OSError as e:
+            logger.warning("Failed to write X2 ledger: %s", e)
+            return {"ok": False, "error": str(e)}
+
+        if debt_generated:
+            logger.warning("X2 budget depleted for %s: balance=%d",
+                           workflow_id, balance_after)
+
+        return {
+            "ok": True,
+            "balance_before": balance_before,
+            "balance_after": balance_after,
+            "debt_generated": debt_generated,
+        }
 
 
 # =========================================================================
-# X3: 成本归因器
+# X3: 成本归因器（对接 llm_quota_ledger.jsonl）
 # =========================================================================
 
 class X3CostRecorder:
-    """X3 成本归因 — 执行后记录（Stub）
+    """X3 成本归因 — 写入共享账本"""
 
-    Phase 5: 对接 LLM_GATEWAY 的 cost_attribution 做精确归因。
-    """
+    LEDGER_PATH = _LLM_QUOTA_LEDGER
 
     @classmethod
     def record(cls, workflow_id: str, result: dict) -> None:
         """记录成本归因"""
-        ledger_path = Path.home() / ".omo" / "state" / "cost-ledger.jsonl"
-        ledger_path.parent.mkdir(parents=True, exist_ok=True)
+        cls._ensure_ledger()
         entry = {
             "timestamp": datetime.now().isoformat(),
+            "event": "cost_record",
             "workflow_id": workflow_id,
             "passed": result.get("failed", 0) == 0,
-            "steps_count": result.get("passed", 0) + result.get("failed", 0),
+            "steps_total": result.get("passed", 0) + result.get("failed", 0),
+            "steps_passed": result.get("passed", 0),
+            "steps_failed": result.get("failed", 0),
         }
-        with open(ledger_path, "a") as f:
-            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        try:
+            with open(cls.LEDGER_PATH, "a") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        except OSError as e:
+            logger.warning("Failed to write X3 cost record: %s", e)
+
+    @classmethod
+    def _ensure_ledger(cls) -> None:
+        cls.LEDGER_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 
 # =========================================================================

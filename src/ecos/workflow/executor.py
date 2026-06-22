@@ -149,6 +149,9 @@ def execute_m1_workflow(name: str, params: dict | None = None,
     # ── 治理管线: post-flight checks ──
     results["finished"] = datetime.now().isoformat()
 
+    # X2: 真实扣减（写入共享账本）
+    X2BudgetDeducer.deduct(name, m1_node)
+
     # X4: 一致性检查
     if "error" not in results:
         x4_violations = check_execution_result(m1_node, results)
