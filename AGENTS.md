@@ -6,7 +6,7 @@
 
 ```bash
 cd projects/ecos
-uv run pytest tests/ -q          # 472 tests
+uv run pytest tests/ -q          # 780 tests
 uv run ruff check src/           # Lint check
 uv run ruff check --fix src/     # Auto-fix
 uv run ruff format src/          # Format
@@ -34,7 +34,11 @@ src/ecos/
 │   └── entry/       # GovernanceCLI (6 命令), GovernanceMCP (14 工具)
 ├── cli/         # CLI (dashboard, scheduler, watchdog)
 ├── services/    # 服务层 (core, governance, integration, monitoring)
-├── workflow/    # 工作流
+├── workflow/    # 工作流引擎 (7 模块) — 统一编排调度器
+│   │              M1 DSL → loader → validator(X1-X4) → executor → backend_registry
+│   │              后端: metaos(可选) / agora(跨层路由) / default(硬编码)
+│   │              事件驱动: event_listener → bos:// 事件 → 自动触发工作流
+│   │              测试: 66 tests, 白盒全覆盖
 └── ssot/tools/  # MOF 工具链
 ```
 
