@@ -45,6 +45,7 @@ def main() -> None:
         "val": _cmd_validate,
         "test": _cmd_test,
         "edit": _cmd_edit,
+        "fork": _cmd_fork,
         "export": _cmd_export,
         "import": _cmd_import,
         "--help": _cmd_help,
@@ -615,6 +616,85 @@ def _cmd_import(args: list[str]) -> None:
     print(f"   验证: ecos workflow validate '{wf_name}'")
 
 
+def _cmd_fork(args: list[str]) -> None:
+    """ecos workflow fork <name> --as <new> — 派生工作流"""
+    from ecos.workflow import load_workflow
+    from ecos.workflow.loader import M1_WF_DIR, WF_DIR
+
+    if not args:
+        print("用法: ecos workflow fork <name> --as <new_name>")
+        sys.exit(1)
+
+    name = args[0]
+    new_name = None
+    rest = args[1:]
+    i = 0
+    while i < len(rest):
+        if rest[i] == "--as" and i + 1 < len(rest):
+            new_name = rest[i + 1]
+            break
+        i += 1
+
+    if not new_name:
+        print("用法: ecos workflow fork <name> --as <new_name>")
+        sys.exit(1)
+
+    wf = load_workflow(name)
+    if not wf:
+        print(f"❌ 源工作流不存在: {name}")
+        sys.exit(1)
+
+    # 定位源文件
+    is_m1 = wf.get("type") == "Workflow"
+    if is_m1:
+        wf_id = wf.get("id", f"WORKFLOW-{name.upper()}")
+        src_path = M1_WF_DIR / f"{wf_id.upper()}.yaml"
+    else:
+        matched = list(WF_DIR.glob(f"{name}.yaml")) + list(WF_DIR.glob(f"{name}.yml"))
+        src_path = matched[0] if matched else WF_DIR / f"{name}.yaml"
+
+    if not src_path.exists():
+        print(f"❌ 源文件不存在: {src_path}")
+        sys.exit(1)
+
+    # 读取源工作流并修改
+    import yaml
+    with open(src_path) as f:
+        new_wf = yaml.safe_load(f)
+
+    safe_new = new_name.upper().replace(" ", "-").replace("_", "-")
+    new_wf_id = f"WORKFLOW-{safe_new}" if is_m1 and not safe_new.startswith("WORKFLOW-") else safe_new
+    new_wf["id"] = new_wf_id
+    new_wf["name"] = new_name
+    new_wf["description"] = f"从 {wf.get('name', name)} 派生: {new_name}"
+    if new_wf.get("bos_uri"):
+        new_wf["bos_uri"] = f"bos://ecos/workflow/{new_name.lower().replace(' ', '-')}"
+
+    # 写入
+    if is_m1:
+        M1_WF_DIR.mkdir(parents=True, exist_ok=True)
+        dest = M1_WF_DIR / f"{new_wf_id}.yaml"
+    else:
+        WF_DIR.mkdir(parents=True, exist_ok=True)
+        dest = WF_DIR / f"{new_name}.yaml"
+
+    if dest.exists():
+        print(f"⚠️ 目标文件已存在: {dest}")
+        answer = input("  覆盖? [y/N] ").strip().lower()
+        if answer not in ("y", "yes"):
+            print("已取消。")
+            return
+
+    with open(dest, "w") as f:
+        yaml.dump(new_wf, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+
+    print(f"✅ 工作流已派生: {wf.get('name', name)} → {new_name}")
+    print(f"   源: {src_path}")
+    print(f"   目标: {dest}")
+    print(f"   执行: ecos workflow run '{new_wf_id if is_m1 else dest.stem}'")
+    print(f"   验证: ecos workflow validate '{new_wf_id if is_m1 else dest.stem}'")
+
+
 
 def _cmd_help(_args: list[str] | None = None) -> None:
     print("用法: ecos workflow <子命令> [参数]")
@@ -633,6 +713,7 @@ def _cmd_help(_args: list[str] | None = None) -> None:
     print("  validate <name>         验证工作流定义")
     print("  test <name>             测试工作流编排（mock action，验证链路）")
     print("  edit <name>             打开编辑器编辑工作流定义")
+    print("  fork <name> --as <new>  派生工作流（基于已有创建新工作流）")
     print("  export <name> [--path]  导出工作流为独立文件")
     print("  import <file> [--as]    导入工作流定义")
     print("  logs|runs [选项]        工作流运行历史（同 ecos workflow runs）")
