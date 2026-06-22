@@ -66,17 +66,39 @@ def main() -> None:
 # ── 子命令实现 ──
 
 
-def _cmd_list(_args: list[str]) -> None:
-    """ecos workflow list — 列出所有可用工作流"""
+def _cmd_list(args: list[str]) -> None:
+    """ecos workflow list [--with-status|-s] — 列出所有可用工作流"""
     from ecos.workflow import list_workflows
+    from pathlib import Path
+
+    with_status = "--with-status" in args or "-s" in args
 
     wfs = list_workflows()
     if not wfs:
         print("没有可用工作流。")
         return
 
+    # 加载最近一次运行状态
+    latest_status: dict[str, str] = {}
+    if with_status:
+        runs_dir = Path.home() / ".omo" / "state" / "workflow-runs"
+        if runs_dir.exists():
+            import yaml
+            for f in sorted(runs_dir.glob("*.yaml"), reverse=True):
+                try:
+                    with open(f) as fh:
+                        data = yaml.safe_load(fh)
+                    wf_id = data.get("workflow_id", "")
+                    if wf_id and wf_id not in latest_status:
+                        latest_status[wf_id] = data.get("status", "?")
+                except Exception:
+                    pass
+
     print(f"📋 可用工作流 ({len(wfs)} 个)")
-    print(f"{'=' * 80}")
+    if with_status:
+        print(f"{'=' * 95}")
+    else:
+        print(f"{'=' * 80}")
     for wf in wfs:
         src = "📄" if wf.get("source") == "definition" else "📌"
         name = wf.get("name", "?")
@@ -86,8 +108,20 @@ def _cmd_list(_args: list[str]) -> None:
             extra = f"  domain={wf['domain']}"
         if wf.get("layer"):
             extra += f"  layer={wf['layer']}"
-        print(f"  {src}  {display:30s}  [{name}]{extra}")
-    print(f"{'=' * 80}")
+
+        if with_status:
+            wf_key = wf.get("id", wf.get("name", ""))
+            status_icon = latest_status.get(wf_key, "—")
+            status_char = "✅" if status_icon == "ok" else "❌" if status_icon == "failed" else "➖"
+            print(f"  {status_char} {src}  {display:30s}  [{name}]{extra}")
+        else:
+            print(f"  {src}  {display:30s}  [{name}]{extra}")
+
+    if with_status:
+        print(f"{'=' * 95}")
+        print("  ✅=最近成功  ❌=最近失败  ➖=无记录  📌=M1节点  📄=definition")
+    else:
+        print(f"{'=' * 80}")
 
 
 def _cmd_run(args: list[str]) -> None:
@@ -761,7 +795,7 @@ def _cmd_help(_args: list[str] | None = None) -> None:
     print("用法: ecos workflow <子命令> [参数]")
     print()
     print("子命令:")
-    print("  list                    列出所有可用工作流")
+    print("  list [-s]               列出所有可用工作流（-s 显示最近运行状态）")
     print("  run <name> [--dry-run]  执行工作流")
     print("    [-p key=value ...]    传递参数给工作流")
     print("  describe <name>         查看工作流定义")
