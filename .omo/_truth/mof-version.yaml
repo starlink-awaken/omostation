@@ -50,4 +50,13 @@ history:
 - description: 'P43 R7: X2 freshness audit runner 落地, 5 漏 evidence debt 闭环'
   timestamp: '2026-06-21T13:47:21.496655'
   version: 0.0.14
-version: 0.0.14
+- description: 'P43 R7.2: X2 audit 捕获 cockpit 9 + omo 3 真实 lint 漂移, 闭环'
+  timestamp: '2026-06-22T10:01:56.099225'
+  version: 0.0.15
+- description: 'P43 R7.3: X2 audit runner 单元测试 10/10 + kairon packages/ 路径补全'
+  timestamp: '2026-06-22T10:07:11.945348'
+  version: 0.0.16
+- description: 'P43 R7.4: aetherforge packages/gateway 6 真 lint 修复 + ecosystem 全套全清'
+  timestamp: '2026-06-22T10:16:43.719428'
+  version: 0.0.17
+version: 0.0.17
