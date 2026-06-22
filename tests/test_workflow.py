@@ -1029,3 +1029,51 @@ class TestSubWorkflow:
         # 子工作流可能因环境脚本缺失而失败，但不应抛异常
         assert result["passed"] >= 0
         assert result["failed"] >= 0
+
+
+class TestRetryStrategy:
+    """Retry 策略测试"""
+
+    def test_parse_retry_config_empty(self):
+        from ecos.workflow.backend_registry import _parse_retry_config
+        assert _parse_retry_config({}) == {}
+
+    def test_parse_retry_config_legacy(self):
+        from ecos.workflow.backend_registry import _parse_retry_config
+        cfg = _parse_retry_config({"max_retries": 3})
+        assert cfg["max_attempts"] == 3
+        assert cfg["policy"] == "on_failure"
+
+    def test_parse_retry_config_full(self):
+        from ecos.workflow.backend_registry import _parse_retry_config
+        cfg = _parse_retry_config({
+            "retry": {
+                "max_attempts": 5,
+                "policy": "always",
+                "backoff": {"initial_delay": 2.0, "multiplier": 3.0, "max_delay": 120.0},
+            },
+        })
+        assert cfg["max_attempts"] == 5
+        assert cfg["policy"] == "always"
+        assert cfg["backoff"]["initial_delay"] == 2.0
+        assert cfg["backoff"]["multiplier"] == 3.0
+
+    def test_compute_backoff(self):
+        from ecos.workflow.backend_registry import _compute_backoff_delay
+        cfg = {"backoff": {"initial_delay": 1.0, "multiplier": 2.0, "max_delay": 60.0, "jitter": 0.0}}
+        d1 = _compute_backoff_delay(1, cfg)
+        d2 = _compute_backoff_delay(2, cfg)
+        d7 = _compute_backoff_delay(7, cfg)
+        assert d1 == 1.0
+        assert d2 == 2.0
+        assert d7 == 60.0
+
+    def test_should_retry_failure(self):
+        from ecos.workflow.backend_registry import _should_retry
+        assert _should_retry("on_failure", {"passed": False}, None) is True
+        assert _should_retry("on_error", {"passed": False}, None) is False
+
+    def test_should_retry_error(self):
+        from ecos.workflow.backend_registry import _should_retry
+        assert _should_retry("on_error", {}, Exception("boom")) is True
+        assert _should_retry("on_failure", {}, Exception("boom")) is False

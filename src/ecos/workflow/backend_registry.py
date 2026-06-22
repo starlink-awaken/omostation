@@ -17,6 +17,65 @@ _backends: dict[str, dict[str, Any]] = {}
 
 # ── 默认后端：沿用现有的硬编码 action 执行器 ──
 
+def _parse_retry_config(execution: dict) -> dict:
+    """解析 retry 配置
+
+    向后兼容:
+      max_retries: 3              # 简单整数 = 最多 3 次重试
+      retry:
+        max_attempts: 3           # 完整配置
+        policy: on_failure        # on_failure | always
+        backoff:
+          initial_delay: 1.0
+          multiplier: 2.0
+          max_delay: 60.0
+    """
+    retry = execution.get("retry", {})
+    max_retries = execution.get("max_retries", 0)
+
+    if isinstance(retry, dict) and retry.get("max_attempts"):
+        return {
+            "max_attempts": int(retry["max_attempts"]),
+            "policy": retry.get("policy", "on_failure"),
+            "backoff": {
+                "initial_delay": float(retry.get("backoff", {}).get("initial_delay", 1.0)),
+                "multiplier": float(retry.get("backoff", {}).get("multiplier", 2.0)),
+                "max_delay": float(retry.get("backoff", {}).get("max_delay", 60.0)),
+                "jitter": float(retry.get("backoff", {}).get("jitter", 0.1)),
+            },
+        }
+
+    if max_retries and isinstance(max_retries, (int, float)):
+        return {
+            "max_attempts": int(max_retries),
+            "policy": "on_failure",
+            "backoff": {"initial_delay": 1.0, "multiplier": 2.0, "max_delay": 30.0, "jitter": 0.0},
+        }
+
+    return {}
+
+
+def _compute_backoff_delay(attempt: int, config: dict) -> float:
+    """计算退避延迟（秒）"""
+    backoff = config.get("backoff", {})
+    delay = backoff.get("initial_delay", 1.0) * (backoff.get("multiplier", 2.0) ** (attempt - 1))
+    delay = min(delay, backoff.get("max_delay", 60.0))
+    jitter = backoff.get("jitter", 0.0)
+    if jitter > 0:
+        import random
+        delay *= 1 + random.uniform(-jitter, jitter)
+    return delay
+
+
+def _should_retry(policy: str, step_result: dict, exception: Exception | None) -> bool:
+    """判断是否应重试"""
+    if exception:
+        return policy in ("on_error", "always")
+    if not step_result.get("passed", True):
+        return policy in ("on_failure", "always")
+    return False
+
+
 def _default_executor(m1_node: dict, params: dict | None = None) -> dict:
     """默认后端：通过硬编码 subprocess 执行 step action
 
@@ -24,31 +83,82 @@ def _default_executor(m1_node: dict, params: dict | None = None) -> dict:
     新 workflow 通过 execution.backend 字段指定其他后端。
     """
     from ecos.workflow.executor import _execute_step
+    import time
 
     results = {"steps": [], "passed": 0, "failed": 0}
     steps = m1_node.get("steps", [])
     params = params or {}
+    execution_config = m1_node.get("execution", {})
+    retry_config = _parse_retry_config(execution_config)
 
     for i, step in enumerate(steps, 1):
         step_name = step.get("name", f"step-{i}")
         action = step.get("action", "")
-        try:
-            step_result = _execute_step(action, params, step=step)
-            ok = step_result.get("passed", True)
+
+        max_attempts = retry_config.get("max_attempts", 0)
+        policy = retry_config.get("policy", "on_failure")
+        attempt = 0
+        last_error: str | None = None
+        step_result = None
+
+        while attempt < max(max_attempts, 1):
+            attempt += 1
+            try:
+                step_result = _execute_step(action, params, step=step)
+                ok = step_result.get("passed", True)
+                if ok:
+                    break
+                if attempt >= max_attempts or not _should_retry(policy, step_result, None):
+                    break
+                delay = _compute_backoff_delay(attempt, retry_config)
+                logger.info("Retrying step '%s' (attempt %d/%d) after %.1fs",
+                            step_name, attempt, max_attempts, delay)
+                time.sleep(delay)
+            except Exception as e:
+                last_error = str(e)
+                if attempt >= max_attempts or not _should_retry(policy, {}, e):
+                    break
+                delay = _compute_backoff_delay(attempt, retry_config)
+                logger.info("Retrying step '%s' after error (attempt %d/%d): %s",
+                            step_name, attempt, max_attempts, e)
+                time.sleep(delay)
+
+        if step_result is not None:
+            ok = step_result.get("passed", True) and last_error is None
+        else:
+            ok = False
+
+        attempt_info = f" (attempt {attempt}/{max_attempts})" if max_attempts > 1 else ""
+
+        if ok:
             results["steps"].append({
-                "name": step_name,
-                "status": "ok" if ok else "failed",
+                "name": step_name + attempt_info if attempt > 1 else step_name,
+                "status": "ok",
                 "result": step_result,
             })
-            if ok:
-                results["passed"] += 1
-            else:
-                results["failed"] += 1
-        except Exception as e:
-            results["steps"].append({"name": step_name, "status": "error", "error": str(e)})
+            results["passed"] += 1
+        elif step_result is not None:
+            results["steps"].append({
+                "name": step_name + attempt_info if attempt > 1 else step_name,
+                "status": "failed",
+                "result": step_result,
+            })
             results["failed"] += 1
-            on_failure = step.get("on_failure") or \
-                (m1_node.get("execution", {}).get("on_failure")) or "continue"
+            on_failure = (step.get("on_failure")
+                          or execution_config.get("on_failure")
+                          or "continue")
+            if on_failure == "abort":
+                break
+        else:
+            results["steps"].append({
+                "name": step_name + attempt_info if attempt > 1 else step_name,
+                "status": "error",
+                "error": last_error or "未知错误",
+            })
+            results["failed"] += 1
+            on_failure = (step.get("on_failure")
+                          or execution_config.get("on_failure")
+                          or "continue")
             if on_failure == "abort":
                 break
 
