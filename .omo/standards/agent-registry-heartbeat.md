@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # Agent Registry Heartbeat, Cache & Identity Gate — M2.2
 
 > 状态: active | 版本: v1.0 | 关联: M2.2-AGENT-REGISTRY-HEARTBEAT

@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # C2G v4: Strategic Pitch Template
 
 > **使用说明**: 此模板在 Sandbox (发散区) 使用。代替传统的 PRD 和繁琐的 Jira Backlog。

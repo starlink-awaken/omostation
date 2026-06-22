@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # 系统深度缺陷与长期风险分析
 
 > 生成日期: 2026-06-06

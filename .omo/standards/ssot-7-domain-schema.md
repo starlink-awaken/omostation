@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # SSOT 7 Domain Schema — Full Execution Governance Standard
 
 > 日期: 2026-05-30 | 版本: v1.0 | 状态: active

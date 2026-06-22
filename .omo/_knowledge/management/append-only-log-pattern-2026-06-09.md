@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # AppendOnlyLog 模式 (Round 1-5 收尾) — 2026-06-09
 
 > **状态**: implemented (5 轮全景方案落地, 治理审计 100.0 (A+))

@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # kairon 包拆解最终分析报告
 
 > 2026-06-06 | 基于全量调查: 24包依赖分析 + gbrain交互 + workspace规模

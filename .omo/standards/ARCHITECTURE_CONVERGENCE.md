@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # Architecture Convergence Report
 
 > 生成日期: 2026-05-28

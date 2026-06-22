@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # Task gate model
 
 > Wave 2 standard for separating canonical task status from derived lifecycle gate facts.

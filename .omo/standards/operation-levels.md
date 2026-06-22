@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # L0-L3 Operation Levels — Phase 2 Safe Mesh
 
 > 状态: active | 版本: v1.0 | 关联: M2.2-OPERATION-LEVELS

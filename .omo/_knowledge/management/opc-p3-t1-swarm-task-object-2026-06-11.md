@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # OPC-P3-T1 swarm task object 契约
 
 > **状态**: ✅ design (2026-06-11)

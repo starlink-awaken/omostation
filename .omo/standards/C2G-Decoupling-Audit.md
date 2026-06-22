@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # 全链路深度审计与 C2G 独立化可行性评估报告
 
 > **日期**: 2026-06-15

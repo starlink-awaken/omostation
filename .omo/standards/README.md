@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # .omo Standards Registry
 
 > `.omo/standards/` 的入口注册表。

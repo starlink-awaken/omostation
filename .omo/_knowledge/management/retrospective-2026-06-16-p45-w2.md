@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P45 W2 复盘: 删冗余 web 服务 (24→5) + simplify 2 (eCOS v6 4 Spine)
 
 > **日期**: 2026-06-16

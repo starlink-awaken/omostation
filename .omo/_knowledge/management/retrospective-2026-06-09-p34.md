@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P34 收官复盘 — 2026-06-09
 
 > 战役 2 扩展 (40 URI) + agora spawn 升级 + 多仓库版本发布

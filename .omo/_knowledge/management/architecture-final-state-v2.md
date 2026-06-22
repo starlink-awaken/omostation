@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # eCOS 最终态架构 v2.0 (深度调查修正版)
 
 > 2026-06-07 | 基于: 全量依赖分析 + 四个包深度解剖 + gbrain交互验证

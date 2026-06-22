@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # 5+3+1 治理体系总览 (Governance Master Index)
 
 > 2026-06-06 起稿 · 当前作为治理文档导航与路由入口，不维护运行时计数/健康分快照。

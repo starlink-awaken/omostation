@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P45 W1 复盘: HTTP-MCP 收敛 (stdio 化 29/29) + simplify 4 维度
 
 > **日期**: 2026-06-16

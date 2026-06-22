@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # X4: 治理一致性 (Governance Consistency) — 5+3+1 第四横切面设计
 
 > 2026-06-06 · 基于全量审计后治理需求 · 补充 X1-X3

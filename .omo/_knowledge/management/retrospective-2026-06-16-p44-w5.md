@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P44 W5 复盘: review-queue 闭环 (5 open debts 走 review)
 
 > **日期**: 2026-06-16

@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # L4 → L3 → Agent 桥接协议 (Architecture Canon)
 
 > 2026-06-06 · 固化为 5+3+1 架构宪章 · 不允变更

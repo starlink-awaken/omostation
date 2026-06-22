@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # X1 Governance Policies — 变更审计与系统边界治理
 #
 # 记录所有影响系统边界的结构性变更，确保每次合并/归档/入口收敛都可追溯。

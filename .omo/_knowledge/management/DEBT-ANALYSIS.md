@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # 四维债务分析报告
 
 > 历史诊断快照；当前治理判断请结合 `.omo/CONSISTENCY-CHECK.md` 与 `.omo/state/system.yaml`。

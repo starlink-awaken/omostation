@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # 任务 YAML 编写规范
 
 > 治理债务永久化. P32-W0 / P34-W4 / P35-W3 三次教训.

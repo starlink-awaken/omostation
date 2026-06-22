@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Status: planned (P45 审计: 0 引用, 等 P46+ 实现)
 """MOF 自主行动引擎 — Phase 4: 规划→验证→执行→验证→记录"""
 
 import subprocess

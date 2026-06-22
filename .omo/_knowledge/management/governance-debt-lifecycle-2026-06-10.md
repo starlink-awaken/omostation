@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # §15 治理债管理流程 — 债的生命周期 (Round 33 起步)
 
 > **状态**: 起步 (Round 33 P0)

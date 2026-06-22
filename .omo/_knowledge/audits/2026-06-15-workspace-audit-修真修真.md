@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # workspace-audit 修真修真总结 (Round 43 P1 v4-v5)
 
 **日期**: 2026-06-15 10:40 UTC

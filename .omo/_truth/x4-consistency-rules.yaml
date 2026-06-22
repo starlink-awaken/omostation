@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # X4 Consistency Rules — 跨层一致性治理
 #
 # 确保同一事实在文档、代码、MOF、BOS 路由、依赖声明中只有一种表述。

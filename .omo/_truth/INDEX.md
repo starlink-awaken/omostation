@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # Truth Plane — 事实面
 
 > 维护任务、标准、注册表等唯一真相源（SSOT）。

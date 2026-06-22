@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # OPC Phase/Sub-gate Review Template (8 段硬结构)
 
 > 状态: active | 版本: v1.0 | 引入: 2026-06-13

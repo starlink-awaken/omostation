@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # OMO 治理体系 — 全流程机制
 
 > 2026-06-06 | 版本: v1.0 (治理首次运行完成)

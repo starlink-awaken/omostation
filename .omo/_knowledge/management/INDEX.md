@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # 管理文档 — `_knowledge/management/`
 
 > 审计报告、评审记录、影响分析、债务分析。回答"系统的健康状况如何？有哪些风险要管理？"

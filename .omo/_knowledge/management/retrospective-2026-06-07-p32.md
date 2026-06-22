@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P32 收官复盘 — 2026-06-06~07
 
 > 治理满分级 A+ 达成 · 6 个 P32 任务全完成 · audit 100.0 极限

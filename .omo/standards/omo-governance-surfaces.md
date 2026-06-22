@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # OMO Governance Surfaces Standard
 
 > 状态: active
@@ -141,6 +148,7 @@
 - `compatibility_alias` 必须是 `compatibility_alias + alias_only`，并带 `alias_target`
 - `capability_market` 若承载 capability registry，现行写入路径必须是 `.omo/capabilities/*.yaml`，且写入必须通过 `projects/omo/src/omo/omo_ingress.py:write_capability_registry_bundle` / `write_manual_capabilities`；历史 `.omo/registry/*.yaml` 仅允许读兼容，不再新增写入
 - `runtime_ssot` 若存在投影/缓存回写入口，必须在 mutation surface registry 显式登记为 projection/cache 写面；当前 `omo state sync-tasks` 只允许刷新 task counters 与 `next_*` 投影，不得扩成任意字段写口
+- `debt/` 不得只登记总目录；`dashboard` / `review-queue` / `reviews` / `action-packet` / `owner-routing` / `dispatch` / `campaign` / `reporting` 至少要在 state-plane registry 中表达出 review/routing/dispatch/campaign/reporting 这些子面语义
 
 这不是说明文案字段，而是 lint gate 会检查的治理契约。没有这两个字段，就说明“这个目录要留多久、能不能覆盖、什么时候归档”根本没定义清楚。
 

@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # Workspace 级架构诊断 (全系统视角)
 
 > 2026-06-06 | 467K 行 · 5 个项目 · 2 种语言

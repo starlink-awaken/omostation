@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # MOF Agent 约束规则 — 所有 Agent 必须遵守
 
 version: "1.0"

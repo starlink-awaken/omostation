@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # 全量复盘 — 2026-06-05~06
 
 > 时长: 约 20 小时 | 5 个 git 仓库 | 33 次提交

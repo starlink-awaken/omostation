@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P40-W2 + W3 收官复盘 — 2026-06-15
 
 > 范围: P40-W2 dashboard 持续服务化 + P40-W3 W2 验收

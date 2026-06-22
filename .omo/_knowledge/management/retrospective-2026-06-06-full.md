@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # 复盘报告: 5+3+1 架构全量治理 · 2026-06-06
 
 > 历时: 11 小时 · 提交: 35+ · 覆盖: 9 项目 · 产出: 20+ 文档

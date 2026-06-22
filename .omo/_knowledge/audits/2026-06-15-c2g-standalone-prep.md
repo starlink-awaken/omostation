@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # C2G 拆独立 git repo 准备报告 (Round 43 P0 拆分准备)
 
 **日期**：2026-06-15

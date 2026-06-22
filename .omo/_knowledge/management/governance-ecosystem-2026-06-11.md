@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # §19 omo 仓治理债生态圈 (Governance Debt Ecosystem) — Round 56 实质化完成
 
 > **状态**: ✅ 实质化完成 (Round 56 P0, 2026-06-11)

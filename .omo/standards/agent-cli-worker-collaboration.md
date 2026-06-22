@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # Agent CLI Worker Collaboration Standard
 
 > Status: active | Version: v1.0 | Scope: external agent CLI workers

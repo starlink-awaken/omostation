@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P38 收官复盘 — 2026-06-13
 
 > CI 真触发 + 跨域 LLM 真调用 + 观测性 dashboard 真正落地

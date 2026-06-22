@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # 纯架构视角的包归属分析 (不受现状约束)
 
 > 2026-06-07 | 基于 5+3+1 架构

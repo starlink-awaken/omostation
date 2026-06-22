@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # OPC-P3-T5 min-demo 实证 (1 goal 拆 ≥ 3 worker task)
 
 > **状态**: ✅ design (2026-06-11)

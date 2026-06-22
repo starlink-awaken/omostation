@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # eCOS v6 绝对架构对齐白皮书 (Absolute Architecture Alignment)
 
 > **修订状态**: 最终对齐 (Final Alignment)

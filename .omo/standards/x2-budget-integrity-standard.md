@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # X2 Standard: Atomic Budget Ledger & Quota Integrity
 
 > Status: MANDATORY | Applied: Phase 4

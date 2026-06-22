@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # ontoderive engine/ 合并方案
 
 > Created: 2026-06-19 | Status: DEFERRED — 需 dedicated session

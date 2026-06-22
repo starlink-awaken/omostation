@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # Post-Phase1 治理收敛规范与 Phase 2 入场方案
 
 > 状态: historical

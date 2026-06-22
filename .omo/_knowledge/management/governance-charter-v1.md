@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # 5+3+1 全局治理宪章 (Architecture Governance Charter)
 
 > **宪法级文档** · 2026-06-06 颁布 · 保留核心原则，不维护项目数、包数、测试数、阶段完成度等运行时快照

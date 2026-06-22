@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # X 轴实现注册表 (Implementation Registry)
 
 > ⚠️ **已降级为人类可读视图(2026-06-08)**。机器可读 SSOT 迁移至 `protocols/x-axis-registry.yaml`,

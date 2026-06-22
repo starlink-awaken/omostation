@@ -1,3 +1,13 @@
+---
+status: deprecated
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+deprecated-since: 2026-06-22
+superseded-by: ".omo/DOC-LIFECYCLE.md  (P45)"
+note: "P45 审计: 0 引用, 标记 deprecated, 等人工 review"
+---
+
 # 🌌 大一统控制论全景架构 (The Grand Unified Cybernetic Pipeline)
 
 > **Last Updated**: 2026-06-15

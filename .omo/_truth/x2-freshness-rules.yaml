@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # X2 Freshness Rules — 抗熵与过期检测
 #
 # 定义哪些组件/项目需要 freshness 检查，以及过期后的处理动作。
@@ -122,3 +129,22 @@ rules:
       MOF 模型版本 (当前 v0.0.12) 超过 30 天无变化时告警, 提示
       mof-extract 钩子是否失活 / 是否需要新阶段登记。需配合 `bin/mof-version show`
       与 `.omo/_knowledge/audits/*.md` 联合审计。
+
+  - rule_id: X2-FRESH-DOC-LIFECYCLE
+    title: 文档生命周期健康度必须持续维护
+    type: doc_lifecycle_freshness
+    status: active
+    created: '2026-06-22'
+    target: .omo/
+    freshness:
+      mechanism: doc-lifecycle-lint
+      threshold_days: 7
+      action: warn
+    owner: governance-team
+    notes: >
+      P45 R2: 用 `omo lint doc-lifecycle` 检查 .omo/ 全部 .md/.yaml 文件.
+      健康分 < 70 触发告警, 提示:
+      - frontmatter 覆盖率 < 80% (缺 status/lifecycle/owner)
+      - 死文档占比 > 30% (contract/pattern 0 引用)
+      - 矛盾路径 > 0 (代码引用 .omo/_archive/ 或 .omo/_knowledge/management/)
+      治理面: 触发时在 cron 邮件中加 §doc-lifecycle 健康分.

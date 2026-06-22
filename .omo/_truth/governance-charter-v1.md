@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # 5+3+1 架构治理宪章 v1.0
 
 > **全系统架构宪法** · 2026-06-06 · 人类审批后生效

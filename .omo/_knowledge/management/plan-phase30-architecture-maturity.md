@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # Phase 30 — 架构成熟度自动化 (Architecture Maturity Automation)
 
 > **状态**: ✅ 已完成 (P30, 2026-06-06)

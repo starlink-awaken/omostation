@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P30 架构最终决策 — v3.0 实施令
 
 > 2026-06-06 | 决策者: 人类 + 老王架构联合

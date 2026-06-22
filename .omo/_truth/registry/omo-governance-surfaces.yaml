@@ -166,6 +166,118 @@ assets:
       - reviewers
       - cockpit
     status: active
+  - id: OMO-DEBT-DASHBOARD
+    ref: .omo/debt/dashboard/
+    plane: state_plane
+    asset_type: governance_review_surface
+    persistence_mode: durable
+    retention_mode: until_replaced
+    truth_owner: projects/omo
+    write_via:
+      - debt_pipeline
+      - projects/omo
+    consumed_by:
+      - reviewers
+      - cockpit
+    status: active
+  - id: OMO-DEBT-REVIEW-QUEUE
+    ref: .omo/debt/review-queue/
+    plane: state_plane
+    asset_type: governance_review_surface
+    persistence_mode: durable
+    retention_mode: until_replaced
+    truth_owner: projects/omo
+    write_via:
+      - debt_pipeline
+      - projects/omo
+    consumed_by:
+      - reviewers
+      - cockpit
+    status: active
+  - id: OMO-DEBT-REVIEWS
+    ref: .omo/debt/reviews/
+    plane: state_plane
+    asset_type: governance_review_surface
+    persistence_mode: durable
+    retention_mode: until_replaced
+    truth_owner: projects/omo
+    write_via:
+      - debt_pipeline
+      - projects/omo
+    consumed_by:
+      - reviewers
+      - auditors
+    status: active
+  - id: OMO-DEBT-ACTION-PACKET
+    ref: .omo/debt/action-packet/
+    plane: state_plane
+    asset_type: governance_routing_surface
+    persistence_mode: durable
+    retention_mode: until_replaced
+    truth_owner: projects/omo
+    write_via:
+      - debt_pipeline
+      - projects/omo
+    consumed_by:
+      - reviewers
+      - operators
+    status: active
+  - id: OMO-DEBT-OWNER-ROUTING
+    ref: .omo/debt/owner-routing/
+    plane: state_plane
+    asset_type: governance_routing_surface
+    persistence_mode: durable
+    retention_mode: until_replaced
+    truth_owner: projects/omo
+    write_via:
+      - debt_pipeline
+      - projects/omo
+    consumed_by:
+      - reviewers
+      - operators
+    status: active
+  - id: OMO-DEBT-DISPATCH
+    ref: .omo/debt/dispatch/
+    plane: state_plane
+    asset_type: governance_dispatch_surface
+    persistence_mode: durable
+    retention_mode: manual_archive
+    truth_owner: projects/omo
+    write_via:
+      - debt_pipeline
+      - projects/omo
+    consumed_by:
+      - operators
+      - auditors
+    status: active
+  - id: OMO-DEBT-CAMPAIGN
+    ref: .omo/debt/campaign/
+    plane: state_plane
+    asset_type: governance_campaign_surface
+    persistence_mode: durable
+    retention_mode: manual_archive
+    truth_owner: projects/omo
+    write_via:
+      - debt_pipeline
+      - projects/omo
+    consumed_by:
+      - reviewers
+      - operators
+    status: active
+  - id: OMO-DEBT-REPORTING
+    ref: .omo/debt/reporting/
+    plane: state_plane
+    asset_type: governance_reporting_surface
+    persistence_mode: durable
+    retention_mode: manual_archive
+    truth_owner: projects/omo
+    write_via:
+      - debt_pipeline
+      - projects/omo
+    consumed_by:
+      - reviewers
+      - auditors
+    status: active
   - id: OMO-WORKERS
     ref: .omo/workers/
     plane: state_plane

@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # eCOS v6.1 to v7.0 Transition Closeout Report
 
 > 状态: active | 版本: v1.0 | 日期: 2026-06-14

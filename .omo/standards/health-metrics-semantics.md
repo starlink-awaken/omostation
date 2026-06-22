@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # Health 指标语义统一 (产品走查 v3 #19 架构师)
 
 4 个"健康"指标语义不同, 命名易混淆 (用户不知看哪个). 此文档澄清各指标含义 + 权威源.

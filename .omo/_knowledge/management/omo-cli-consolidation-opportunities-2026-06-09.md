@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # omo-cli 固化机会扫描 — 2026-06-09
 
 > 范围: `scripts/` (18 .py = 4044L + 8 .sh) + `omo-cli` 现有 30+ 子命令

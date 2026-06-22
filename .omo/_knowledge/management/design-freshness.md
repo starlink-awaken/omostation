@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P1-FRESHNESS_AUTO + X2-NO_FRESHNESS 方案
 
 > 2026-06-06 | 状态: design-locked

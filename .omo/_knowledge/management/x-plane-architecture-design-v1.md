@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # X-Plane 治理控制平面架构设计 (X-Plane Governance Control Plane)
 
 > **定位**: Phase 28 地基蓝图 · 2026-06-08 起草 · 解决 X1-X4 散落失控问题

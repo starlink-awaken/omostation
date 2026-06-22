@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P33 北极星 — 战役 2 起步 2 Domain（Memory + Governance）
 
 > 2026-06-06 | 用户已审批 A1 方案

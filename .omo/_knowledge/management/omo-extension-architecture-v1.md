@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # OMO 体系扩展架构设计 (v1.0)
 
 > 战略 × 战术 × 执行三层面，整合 5+3+1 架构

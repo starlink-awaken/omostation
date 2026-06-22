@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # 5+3+1 X 轴架构体系融合设计 (X-Axis Architecture Consolidation)
 
 > 2026-06-06 · X1-X4 全面系统化 · 所有保障机制一次性固化

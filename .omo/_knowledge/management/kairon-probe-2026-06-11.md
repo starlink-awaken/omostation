@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # R48 kairon 探路报告 (2026-06-11)
 
 > 探查范围: `/Users/xiamingxing/Workspace/projects/kairon/`

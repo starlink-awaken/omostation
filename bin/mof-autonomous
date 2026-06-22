@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Status: planned (P45 审计: 0 引用, 等 P46+ 实现)
 """MOF 自主决策引擎 — Phase 3: 异常检测→推理→建议"""
 
 import subprocess

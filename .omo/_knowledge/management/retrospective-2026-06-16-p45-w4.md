@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P45 W4 复盘: kairon 调试面板 (INTERFACE.yaml) + simplify 4 + cockpit 端点 P46 升级
 
 > **日期**: 2026-06-16

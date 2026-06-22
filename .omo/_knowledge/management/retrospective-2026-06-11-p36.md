@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P36 收官复盘 — 2026-06-11
 
 > 治理债务永久化 + 跨域 GAP 补 + 观测性落地

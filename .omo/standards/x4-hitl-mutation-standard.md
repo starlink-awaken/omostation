@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # X4 Standard: MutationProposal & HITL Lifecycle
 
 > Status: ACTIVE | Applied: Phase 9

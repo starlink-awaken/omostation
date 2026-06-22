@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # Workspace 项目资产索引
 
 > 更新: 2026-06-21 (post-P43 R5)

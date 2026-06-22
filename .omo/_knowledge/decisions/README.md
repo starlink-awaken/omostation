@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # Architecture Decision Records (ADR)
 
 > 制度化 omostation 的架构决策记录 · 防止隐性知识单点集中

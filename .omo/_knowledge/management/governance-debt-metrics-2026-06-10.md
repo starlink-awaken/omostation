@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # §17 治理债度量 (debt metrics) — 从形式化到可量化 (Round 38 起步)
 
 > **状态**: 起步 (Round 38 P0)

@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # ✅ COMPLETED — Hardcoded Paths — Inventory & Fix Plan
 
 > **状态: 已完成 | 关闭日期: 2026-06-03**

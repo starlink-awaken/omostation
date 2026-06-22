@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 history:
 - description: Initial MOF model with 1177 M1 nodes
   timestamp: '2026-06-20T08:25:32.559455'
@@ -16,35 +23,29 @@ history:
   timestamp: '2026-06-20T13:20:59.789752'
   verified: true
   version: 0.0.5
-- description: 'DEBT-CLOSURE-EVIDENCE-20260620: 5 debts ingressed via omo broker,
-    drift=0'
+- description: 'DEBT-CLOSURE-EVIDENCE-20260620: 5 debts ingressed via omo broker, drift=0'
   timestamp: '2026-06-20T13:25:23.728377'
   version: 0.0.6
-- description: 'P43 closed-loop: governance 85 → 100 A+, 5 debt evidence fixed, 8
-    ruff auto-fixed (kairon bump), 0 drift'
+- description: 'P43 closed-loop: governance 85 → 100 A+, 5 debt evidence fixed, 8 ruff auto-fixed (kairon bump), 0 drift'
   timestamp: '2026-06-20T15:32:33.150527'
   version: 0.0.7
-- description: 'P43 round-2: governance 100 A+ stable, 18 F821 F811 I001 fixed (4
-    real bugs: missing Any/cast/ndarray/dtype)'
+- description: 'P43 round-2: governance 100 A+ stable, 18 F821 F811 I001 fixed (4 real bugs: missing Any/cast/ndarray/dtype)'
   timestamp: '2026-06-20T18:57:19.467522'
   version: 0.0.8
-- description: 'P43 round-4: 4 子项目 ruff 全部清零 (cockpit/runtime/omo/metaos), governance
-    100 A+'
+- description: 'P43 round-4: 4 子项目 ruff 全部清零 (cockpit/runtime/omo/metaos), governance 100 A+'
   timestamp: '2026-06-21T13:17:58.272261'
   version: 0.0.9
-- description: 'P43 round-5: aetherforge + ecos lint 全清 (12 errors), aetherforge e2e
-    26 tests 修复'
+- description: 'P43 round-5: aetherforge + ecos lint 全清 (12 errors), aetherforge e2e 26 tests 修复'
   timestamp: '2026-06-21T13:26:30.413808'
   version: 0.0.10
-- description: 'P43 round-5 final: 3 子项目 (cockpit/aetherforge/ecos) 全清, 46 lint errors
-    闭环'
+- description: 'P43 round-5 final: 3 子项目 (cockpit/aetherforge/ecos) 全清, 46 lint errors 闭环'
   timestamp: '2026-06-21T13:27:28.738398'
   version: 0.0.11
 - description: 'P43 round-5 final-2: kairon 6 ruff errors 闭环, governance 100 A+'
   timestamp: '2026-06-21T13:28:53.169263'
   version: 0.0.12
-- description: 'P43 R6 docs-convergence: X1-X4 + L0 + M3 + AGENTS/INVENTORY 同步 P43
-    closed-loop pattern, governance 100 A+ 不变'
+- description: 'P43 R6 docs-convergence: X1-X4 + L0 + M3 + AGENTS/INVENTORY 同步 P43 closed-loop pattern, governance 100 A+
+    不变'
   timestamp: '2026-06-21T13:40:23.980306'
   version: 0.0.13
 - description: 'P43 R7: X2 freshness audit runner 落地, 5 漏 evidence debt 闭环'
@@ -62,40 +63,39 @@ history:
 - description: 'P43 R8 深度优化: c2g 新增 3 个测试文件 (84 tests), ports/tasks/bridge 全覆盖'
   timestamp: '2026-06-22T10:50:09.308150'
   version: 0.0.18
-- description: 'P44 R0: P0-1 验证 R5 prior session 5 debt evidence 闭环 (X2 audit 0 stale,
-    governance 100 A+)'
+- description: 'P44 R0: P0-1 验证 R5 prior session 5 debt evidence 闭环 (X2 audit 0 stale, governance 100 A+)'
   timestamp: '2026-06-22T10:56:20.480514'
   version: 0.0.19
 - description: 'P44 R0 P1-3: M0/M1 双向追溯 99.6% (1181/1186, 5 缺为 Model meta 自指设计豁免)'
   timestamp: '2026-06-22T11:10:29.731857'
   version: 0.0.20
-- description: 'P44 R0 P2-1: X3 缺口 3→1 — Vault X1 (vault_x1_audit.py) + CARDS X3 (cards_x3_metrics.py)
-    + Domain_Systems X1/X3 (文档化)'
+- description: 'P44 R0 P2-1: X3 缺口 3→1 — Vault X1 (vault_x1_audit.py) + CARDS X3 (cards_x3_metrics.py) + Domain_Systems X1/X3
+    (文档化)'
   timestamp: '2026-06-22T11:19:12.077405'
   version: 0.0.21
 - description: 'P44 R0 P2-2: aetherforge _legacy/ 文档化 (README + X1 引用), 治理清晰度提升'
   timestamp: '2026-06-22T11:20:13.384574'
   version: 0.0.22
-- description: 'P44 R0 P3-1: bin/mof-fix-cross-project.sh 跨子项目并发 ruff --fix (8 项目,
-    aetherforge 排除 _legacy)'
+- description: 'P44 R0 P3-1: bin/mof-fix-cross-project.sh 跨子项目并发 ruff --fix (8 项目, aetherforge 排除 _legacy)'
   timestamp: '2026-06-22T11:21:48.051935'
   version: 0.0.23
 - description: 'P44 R0 P3-1b: 闭环反馈 — X2 audit 捕获 cockpit 5 + kairon 1 真 lint 漂移, 全部修复'
   timestamp: '2026-06-22T11:23:35.730745'
   version: 0.0.24
-- description: 'P44 R3-R4 治理: 关闭 5 REMEDIATE + BET + drift 修复 + 4 deferred 物化, governance
-    100 A+'
+- description: 'P44 R3-R4 治理: 关闭 5 REMEDIATE + BET + drift 修复 + 4 deferred 物化, governance 100 A+'
   timestamp: '2026-06-22T12:08:41.328482'
   version: 0.0.25
-- description: 'P44 R6 全面落地: mof-drift 7→1 (校正 + 1 真硬编码修复), 2 P44 task done, 7 P44
-    DEFER PLANNED, BET-3b90 followup 物化'
+- description: 'P44 R6 全面落地: mof-drift 7→1 (校正 + 1 真硬编码修复), 2 P44 task done, 7 P44 DEFER PLANNED, BET-3b90 followup 物化'
   timestamp: '2026-06-22T14:48:35.657557'
   version: 0.0.26
 - description: P44 R8 模式文档沉淀 (p44-closed-loop-pattern.md)
   timestamp: '2026-06-22T14:54:24.930422'
   version: 0.0.27
-- description: P44 R7 全模块 lint 87→0 (agora F821+aetherforge 50+runtime 25+bus 6+cockpit
-    1+model-driven 1+omo 1); observability AGENTS.md 补齐
+- description: P44 R7 全模块 lint 87→0 (agora F821+aetherforge 50+runtime 25+bus 6+cockpit 1+model-driven 1+omo 1); observability
+    AGENTS.md 补齐
   timestamp: '2026-06-22T15:29:58.840530'
   version: 0.0.28
-version: 0.0.28
+- version: 0.0.29
+  timestamp: '2026-06-22T08:39:36.935044+00:00'
+  description: 'P45 文档生命周期治理: 4 类 frontmatter + omo_lint 第 14/15 维度 + governance 第 7 项 + 187 docs fm'
+version: 0.0.29

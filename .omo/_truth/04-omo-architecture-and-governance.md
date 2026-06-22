@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # OMO 4.0 架构分析、审计与治理报告 (Architecture Audit & Governance)
 
 > **核心摘要**：本文档基于最新实施的 OMO 双核联邦分形架构，对 `OMO 理论体系`、`projects/omo` (底层 OS 引擎)、`projects/omo-debt` (领域扩展工具) 以及 `.omo/` (实例数据湖) 进行了全面的架构审计与边界定义。其核心目标是实现“计算与状态分离”、“理论与工程同频”及“无限联邦扩展”。

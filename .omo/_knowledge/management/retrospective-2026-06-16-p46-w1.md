@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P46 W1 复盘: 7 端点端到端验证 + simplify 5 + cockpit pointer 对齐
 
 > **日期**: 2026-06-16 | **Phase**: 46 · W1

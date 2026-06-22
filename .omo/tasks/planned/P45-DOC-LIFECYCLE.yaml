@@ -1,0 +1,62 @@
+id: P45-DOC-LIFECYCLE
+title: P45 文档生命周期治理 — 死文档识别 + 知识图谱 + 自动归档建议
+status: candidate
+task_type: feature
+risk_level: L2
+depends_on:
+- P44-REMEDIATE-WF-CONV-CLOSE
+source_docs:
+- .omo/_knowledge/patterns/p44-closed-loop-pattern.md
+- .omo/standards/omo-governance-surfaces.md
+- projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml
+deliverables:
+- .omo/DOC-LIFECYCLE.md
+- omo lint doc-lifecycle (R2)
+- omo lint doc-archival-suggestions (R4)
+- pre-commit omo-doc-lifecycle-gate 钩子
+- omo governance 第 7 项 check_doc_lifecycle
+- 30 standards frontmatter + 14 mof 注释
+- AGENTS.md + INDEX.md 扩散同步
+imported_via: omo_broker_c2g
+context_uri: bos://strategy/bets/P45
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: P45-DOC-LIFECYCLE
+review_ref: null
+knowledge_refs:
+- .omo/_knowledge/audits/2026-06-22-p44-closed-loop-closeout.md
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x3-value-stack.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+entry_gate:
+- BET-P45
+evidence_required:
+- .omo/DOC-LIFECYCLE.md 存在
+- omo lint doc-lifecycle 工作
+- pre-commit 钩子工作
+- omo governance 第 7 项可见
+- 30 standards + 14 mof 标注完成
+test_plan:
+- omo lint doc-lifecycle 跑通
+- omo governance ≥ 99 A+
+- mof-schema-validate 0 漂移
+- AGENTS.md 链接全通
+- mcp.py:321 自动发现 + status 字段兼容
+allowed_operation_level: L3
+human_approval_required: false
+priority: P0
+description: 'P45 R1-R4 治理执行: 沿用 omo_lint 框架加第 14 维度, 4 类 frontmatter, 扩散同步 AGENTS.md/INDEX.md/MCP,
+  零路径变更零破坏.'
+phase: '45'
+created_at: '2026-06-22T08:00:00Z'
+updated_at: '2026-06-22T08:00:00Z'
+metadata:
+  ingress_plane: c2g
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: BET-P45

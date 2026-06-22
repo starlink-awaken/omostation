@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # eCOS 最终态架构 v3.0 (依赖分析修正版)
 
 > 2026-06-07 | 基于完整 import 清单的精确分析

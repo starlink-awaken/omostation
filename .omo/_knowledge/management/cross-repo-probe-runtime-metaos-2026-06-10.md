@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # Cross-Repo Probe: runtime / metaos — 2026-06-10
 
 > **状态**: 探查报告 (Round 19 P1 落地)

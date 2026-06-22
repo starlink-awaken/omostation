@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # AppendOnlyLog 6 个 Consumer Schema SSOT (Round 8 P2) — 2026-06-09
 
 > **状态**: implemented (schema doc + 自动校验测试)

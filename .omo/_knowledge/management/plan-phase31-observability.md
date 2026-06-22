@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # Phase 31 — 可观测性与成本追踪 (Observability & Cost Tracking)
 
 > **状态**: 🟡 部分完成 (P29 + P30 部分)

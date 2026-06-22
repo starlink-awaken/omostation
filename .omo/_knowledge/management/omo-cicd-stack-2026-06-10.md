@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # §14 omo 仓 CI/CD 全栈 — 集成 + 自动化 (Round 31 起步)
 
 > **状态**: 起步 (Round 31 P0)

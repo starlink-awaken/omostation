@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P33 收官复盘 — 2026-06-08
 
 > 战役 2 (BOS URI 5 Domain) + 战役 1 (Agora Mesh) + 战役 3 (Forge 集市) 全部完成

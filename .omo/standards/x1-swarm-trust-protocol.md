@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # X1 Standard: Swarm Trust & Node Identity (Ed25519)
 
 > Status: MANDATORY | Applied: Phase 9

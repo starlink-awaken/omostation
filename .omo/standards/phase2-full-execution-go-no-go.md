@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # Phase 2 Full Execution Go/No-Go Standard
 
 > 日期: 2026-05-30 | 版本: v1.2 | 状态: active

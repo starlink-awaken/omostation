@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # KOS Baseline Drift Monitor
 
 > 状态: pending | 版本: v1.0 | 关联: M2.3-KOS-BASELINE-DRIFT-MONITOR

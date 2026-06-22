@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # eCOS v5 全局治理宪章 (Global Governance Charter)
 
 > 版本: 1.0 | 2026-06-06 | 基于 5+3+1 架构 Phase 28 全量审计

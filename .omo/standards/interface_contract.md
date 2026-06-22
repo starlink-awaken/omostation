@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # eCOS v5 Interface Contract
 
 This file is the **Single Source of Truth (SSOT)** for L0 and L3 communication models.

@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P41 收官复盘 — 2026-06-16
 
 > 范围: P41-W0 (LLM 用 ollama) + P41-W1 (修 GitHub workflow failure) + P41-W2 (audit 守回 100.0) + P41-W3 (本复盘)

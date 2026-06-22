@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # MCP 工具开发规范 (v1.0)
 
 > 状态: merged

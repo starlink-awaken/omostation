@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P39 收官复盘 — 2026-06-14
 
 > GitHub push 真启用 + 跨域+LLM 真消费卫健委 + dashboard 真服务化

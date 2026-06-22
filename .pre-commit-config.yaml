@@ -180,6 +180,23 @@ repos:
         stages: [pre-commit]
         # 检测 sys.path hack / TODO 积累 / 测试缺失
 
+      - id: omo-doc-lifecycle-gate
+        name: omo doc-lifecycle gate (P45 R2 第 14 维度 — 文档生命周期)
+        entry: uv run --directory projects/omo python -m omo.cli lint doc-lifecycle --workspace-root .
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        # P45 R2: 扫 .omo/ 全部 .md/.yaml, 4 类分类 + 死文档 + frontmatter 覆盖率
+        # WARN only (不阻塞), 但记录到 governance-history
+
+      - id: omo-doc-archival-suggestions
+        name: omo doc-archival-suggestions (P45 R4 第 15 维度 — 软引导)
+        entry: uv run --directory projects/omo python -m omo.cli lint doc-archival-suggestions --workspace-root .
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        # P45 R4: 软引导 — 建议归档的死文档, WARN only
+
       - id: markdownlint
         name: MarkdownLint
         entry: uv run --with pymarkdownlnt pymarkdown scan

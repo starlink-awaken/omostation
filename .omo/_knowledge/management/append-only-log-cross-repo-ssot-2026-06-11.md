@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # §12 跨仓 SSOT — AppendOnlyLog 5 仓实施指南 (E4 P0 收口)
 
 > **状态**: ✅ 实质化 (E4 P0, 2026-06-11)

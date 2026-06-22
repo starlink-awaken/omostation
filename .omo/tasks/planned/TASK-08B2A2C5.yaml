@@ -1,0 +1,45 @@
+id: TASK-08B2A2C5
+title: P0 全场景门户 (cockpit 6 生活场景一等公民)
+description: 'cockpit 首屏从 research-only → 6 生活场景一等公民 (公文/知识/学习/家庭/健康/财务)。产品核心张力: 系统为代码非为夏这个人。3
+  场景空白 (家庭/健康/财务)。memory product-walkthrough 诊断: 综合分 6.8, BET-6 roadmap。'
+status: candidate
+task_type: feature
+risk_level: L3
+depends_on: []
+source_docs:
+- .omo/_delivery/2026-06-19-product-walkthrough-v5-normal-user-deep.md
+deliverables:
+- 'projects/cockpit: 首屏 6 场景入口 (公文/知识/学习/家庭/健康/财务)'
+- 健康/财务域建立 (bos://health/ bos://finance/)
+- family-hub 健康财务一等公民集成
+imported_via: omo_task_cli
+context_uri: bos://memory/cockpit/scenario-portal
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_truth/x3-value-stack.yaml
+- .omo/_truth/x4-consistency-rules.yaml
+entry_gate: []
+evidence_required:
+- cockpit 首屏 6 场景可见 + 综合分 8.0+ + test 全绿
+test_plan:
+- cd projects/cockpit && uv run pytest tests
+allowed_operation_level: L3
+human_approval_required: false
+metadata:
+  priority: P0
+  created_via: omo task create
+  governance_stack: state_plane.kernel_plane.ingress_plane
+  ingress_plane: projects/omo
+  created_at: '2026-06-22T07:31:40Z'
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: omo:task:create:TASK-08B2A2C5

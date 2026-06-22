@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # OPC-P4 (Model gateway + Compute mesh) T1-T5 设计合集
 
 > **状态**: ✅ design (2026-06-11)

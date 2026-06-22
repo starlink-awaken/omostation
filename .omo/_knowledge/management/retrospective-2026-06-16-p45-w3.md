@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P45 W3 复盘: OMO/eCOS 面板 cockpit 收敛验证 + simplify 3 + .omc gitignore
 
 > **日期**: 2026-06-16

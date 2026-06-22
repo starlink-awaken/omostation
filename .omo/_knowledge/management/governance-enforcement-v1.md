@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # 治理宪章执行机制: 强制约束与长期保鲜
 
 > 补充 governance-charter-v1.md · 2026-06-06

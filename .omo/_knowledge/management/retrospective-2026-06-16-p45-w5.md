@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P45 W5 + P46 收口: HTTP-MCP 收敛 5 阶段全 done + cockpit 端点真修
 
 > **日期**: 2026-06-16

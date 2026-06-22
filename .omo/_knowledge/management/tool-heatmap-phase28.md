@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # 工具使用热力图 — Phase 28 基线审计
 
 > 生成: 2026-06-05 · 数据源: agora-routes.json + trace_log.jsonl

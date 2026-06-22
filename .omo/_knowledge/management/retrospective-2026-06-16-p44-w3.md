@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P44 W3 复盘: ABC 全推 (c2g parser + cockpit compass + 48 escalate routing)
 
 > **日期**: 2026-06-16

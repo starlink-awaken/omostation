@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # Model-Driven Bridge P2 Closeout (Reviewer-Acceptable Edition)
 
 **日期**：2026-06-14

@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # MCP Tool and Transport Standard
 
 > 状态: active | 版本: v1.0

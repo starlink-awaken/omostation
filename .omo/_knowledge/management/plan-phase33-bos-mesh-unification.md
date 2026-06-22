@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # Phase 33: BOS URI & Agora Mesh Unification
 
 > **目标**: 实现 eCOS v5 终态架构大一统，通过 BOS URI 与 Agora Mesh 完成“知、魂、行”的物理层与协议层统一。

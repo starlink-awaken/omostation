@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # P44 W6 复盘: 修最后 1 债务 (DEBT-OPC-P4-BUDGET 闭环)
 
 > **日期**: 2026-06-16

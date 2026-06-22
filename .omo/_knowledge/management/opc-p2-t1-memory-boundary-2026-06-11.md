@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # OPC-P2-T1 memory-boundary 5 仓设计文档
 
 > **状态**: ✅ design (2026-06-11)

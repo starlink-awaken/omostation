@@ -96,6 +96,32 @@
 
 - [_archive/legacy-root-docs/DOC-ARCH.md](_archive/legacy-root-docs/DOC-ARCH.md) — 四平面文档架构定义
 - [AGENT.md](_knowledge/usage/AGENT.md) — Agent 行为规范
+- [DOC-LIFECYCLE.md](DOC-LIFECYCLE.md) — `.omo/` 文档 4 类分类 + frontmatter schema + 引用规则 (P45)
+
+---
+
+## 文档生命周期入口 (P45)
+
+> 4 类文档分类 + 机器校验。详见 [DOC-LIFECYCLE.md](DOC-LIFECYCLE.md)
+
+| 类别 | 路径模式 | 例子 | 机器校验 |
+|------|---------|------|---------|
+| **SSOT** (机器) | `.omo/_truth/*.yaml` | x1-x4, mutation-surfaces, mof-version | `omo lint doc-lifecycle` |
+| **CONTRACT** (人+工具) | `.omo/standards/*.md` | omo-governance-surfaces, task-yaml-rules | `omo lint doc-lifecycle` |
+| **PATTERN** (模板) | `.omo/_knowledge/patterns/*.md` | p43/p44 closed-loop | `omo lint doc-lifecycle` |
+| **ARCHIVE** (历史) | `.omo/_archive/`, `_knowledge/audits/`, `_knowledge/management/` | 31 phase closeout, 142 decisions | (无 lint) |
+
+**frontmatter 模板**:
+```yaml
+---
+status: active | deprecated | archived | experimental
+lifecycle: ssot | contract | pattern | history
+owner: <domain>
+last-reviewed: YYYY-MM-DD
+---
+```
+
+**X2 巡检**: `X2-FRESH-DOC-LIFECYCLE` (7 天) — frontmatter 覆盖率 + 死文档占比 + 矛盾路径
 
 ---
 

@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史决策/phase closeout, 标记 archived"
+---
+
 # OMO 体系全景架构分析 (v1.0)
 
 > 2026-06-06 | 68 个源文件 / 14,481 行代码 / 70 个测试 / 15 CLI 入口
