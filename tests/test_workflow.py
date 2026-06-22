@@ -511,3 +511,174 @@ class TestValidator:
         })
         clean = [v for v in violations if v.get("severity") == "error"]
         assert len(clean) == 0
+
+
+# =========================================================================
+# 白盒补全: X2/X3/X4/M0/Agora 层测试
+# =========================================================================
+
+class TestX2BudgetDeducer:
+    def test_check_budget_no_config(self):
+        from ecos.workflow.validator import X2BudgetDeducer
+        result = X2BudgetDeducer.check_budget({})
+        assert result["ok"] is True
+        assert not result["budget"]
+
+    def test_deduct_creates_ledger(self, tmp_path):
+        from ecos.workflow.validator import X2BudgetDeducer
+        original = X2BudgetDeducer.LEDGER_PATH
+        X2BudgetDeducer.LEDGER_PATH = tmp_path / "test_ledger.jsonl"
+        try:
+            result = X2BudgetDeducer.deduct("wf-test", {"execution": {"budget": {"token_limit": 1000}}})
+            assert result["ok"] is True
+            assert result["balance_before"] == 100000  # default
+            assert result["balance_after"] == 99000
+            assert X2BudgetDeducer.LEDGER_PATH.exists()
+        finally:
+            X2BudgetDeducer.LEDGER_PATH = original
+
+    def test_read_balance_from_ledger(self, tmp_path):
+        from ecos.workflow.validator import X2BudgetDeducer
+        import json
+        ledger = tmp_path / "test_ledger.jsonl"
+        ledger.write_text(json.dumps({"event": "deduct", "balance_after": 50000}) + "\n")
+        original = X2BudgetDeducer.LEDGER_PATH
+        X2BudgetDeducer.LEDGER_PATH = ledger
+        try:
+            result = X2BudgetDeducer.check_budget({"execution": {"budget": {"token_limit": 1000}}})
+            assert result["balance"] == 50000
+        finally:
+            X2BudgetDeducer.LEDGER_PATH = original
+
+    def test_debt_generated_on_negative(self, tmp_path):
+        from ecos.workflow.validator import X2BudgetDeducer
+        original = X2BudgetDeducer.LEDGER_PATH
+        X2BudgetDeducer.LEDGER_PATH = tmp_path / "debt_ledger.jsonl"
+        try:
+            result = X2BudgetDeducer.deduct("wf-debt", {"execution": {"budget": {"token_limit": 200000}}})  # > default 100000
+            assert result["debt_generated"] is True
+            assert result["balance_after"] < 0
+        finally:
+            X2BudgetDeducer.LEDGER_PATH = original
+
+
+class TestX3CostRecorder:
+    def test_record_creates_entry(self, tmp_path):
+        from ecos.workflow.validator import X3CostRecorder
+        original = X3CostRecorder.LEDGER_PATH
+        X3CostRecorder.LEDGER_PATH = tmp_path / "cost_ledger.jsonl"
+        try:
+            X3CostRecorder.record("wf-cost", {"passed": 2, "failed": 0})
+            content = X3CostRecorder.LEDGER_PATH.read_text()
+            assert "wf-cost" in content
+            assert "cost_record" in content
+        finally:
+            X3CostRecorder.LEDGER_PATH = original
+
+
+class TestX4ConsistencyChecker:
+    def test_check_result_ok(self):
+        from ecos.workflow.validator import X4ConsistencyChecker
+        violations = X4ConsistencyChecker.check_result(
+            {"steps": [{"name": "s1"}]},
+            {"passed": 1, "failed": 0, "steps": [{"name": "s1", "status": "ok"}]},
+        )
+        assert len(violations) == 0
+
+    def test_check_result_failed(self):
+        from ecos.workflow.validator import X4ConsistencyChecker
+        violations = X4ConsistencyChecker.check_result(
+            {"steps": [{"name": "s1"}]},
+            {"passed": 0, "failed": 1, "steps": [{"name": "s1", "status": "failed"}]},
+        )
+        assert any(v["id"] == "X4-C01-FAILED" for v in violations)
+
+    def test_check_result_mismatch_count(self):
+        from ecos.workflow.validator import X4ConsistencyChecker
+        violations = X4ConsistencyChecker.check_result(
+            {"steps": [{"name": "s1"}, {"name": "s2"}]},
+            {"passed": 1, "failed": 0, "steps": [{"name": "s1", "status": "ok"}]},
+        )
+        assert any(v["id"] == "X4-C01-STEP-COUNT" for v in violations)
+
+
+class TestM0Snapshot:
+    def test_generate_snapshot(self, tmp_path):
+        from ecos.workflow.validator import generate_m0_snapshot, M0_SNAPSHOT_DIR
+        import yaml
+        original = M0_SNAPSHOT_DIR
+        import ecos.workflow.validator as vmod
+        vmod.M0_SNAPSHOT_DIR = tmp_path / "m0"
+        try:
+            path = generate_m0_snapshot(
+                "wf-m0-test",
+                {"name": "M0 Test", "execution": {"mode": "workflow", "backend": "default"}},
+                {"passed": 1, "failed": 0, "steps": [{"name": "s1", "status": "ok"}]},
+            )
+            assert path is not None
+            with open(path) as f:
+                snap = yaml.safe_load(f)
+            assert snap["schema"] == "M0-v1"
+            assert snap["status"] == "ok"
+            assert snap["workflow_id"] == "wf-m0-test"
+        finally:
+            vmod.M0_SNAPSHOT_DIR = original
+
+    def test_generate_snapshot_failed(self, tmp_path):
+        from ecos.workflow.validator import generate_m0_snapshot, M0_SNAPSHOT_DIR
+        import yaml
+        import ecos.workflow.validator as vmod
+        original = M0_SNAPSHOT_DIR
+        vmod.M0_SNAPSHOT_DIR = tmp_path / "m0-fail"
+        try:
+            path = generate_m0_snapshot(
+                "wf-fail",
+                {"name": "Fail Test", "execution": {}},
+                {"passed": 0, "failed": 2, "steps": [{"name": "s1", "status": "failed"}]},
+            )
+            assert path is not None
+            with open(path) as f:
+                snap = yaml.safe_load(f)
+            assert snap["status"] == "failed"
+        finally:
+            vmod.M0_SNAPSHOT_DIR = original
+
+
+class TestAgoraBackend:
+    def test_step_to_bos_uri_output(self):
+        from ecos.workflow.agora_mcp_backend import _step_to_bos_uri
+        result = _step_to_bos_uri(
+            {"name": "test", "action": "research", "output": ["bos://analysis/minerva/research"]},
+            "research",
+        )
+        assert result == "bos://analysis/minerva/research"
+
+    def test_step_to_bos_uri_action_map(self):
+        from ecos.workflow.agora_mcp_backend import _step_to_bos_uri
+        result = _step_to_bos_uri({"name": "test", "action": "health_check"}, "health_check")
+        assert result == "bos://governance/omo/audit"
+
+    def test_step_to_bos_uri_fallback(self):
+        from ecos.workflow.agora_mcp_backend import _step_to_bos_uri
+        result = _step_to_bos_uri({"name": "test", "action": "custom_thing"}, "custom_thing")
+        assert "bos://" in result
+
+    def test_agora_execute_fallback_on_unreachable(self):
+        from ecos.workflow.agora_mcp_backend import execute
+        result = execute({"steps": [{"name": "s1", "action": "health_check"}]})
+        # Agora is unreachable, should fallback gracefully
+        assert "steps" in result
+
+
+class TestEventTriggerHeal:
+    def test_execute_matched_empty_event(self):
+        from ecos.workflow.event_listener import execute_matched
+        results = execute_matched({"bos_uri": "bos://nonexistent/event"})
+        assert results == []
+
+    def test_trigger_heal_with_default(self):
+        from ecos.workflow.event_listener import _trigger_heal
+        result = _trigger_heal("wf-failed", {"failed": 2, "passed": 0})
+        assert result is not None
+        # Falls back to health check when heal workflow doesn't exist
+        assert isinstance(result, dict)
