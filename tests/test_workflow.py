@@ -33,6 +33,7 @@ from ecos.workflow import (  # noqa: E402
 SAMPLE_WF = {
     "name": "test-workflow",
     "description": "A test workflow",
+    "execution": {"backend": "default", "mode": "sequential"},
     "steps": [
         {"name": "step-1", "action": "health_check"},
         {"name": "step-2", "action": "domain_validate_all"},
@@ -370,6 +371,7 @@ class TestExecuteWorkflow:
     def test_workflow_abort_on_failure(self, mock_log, mock_exec, mock_load):
         wf = {
             "name": "abort-test",
+            "execution": {"backend": "default", "mode": "sequential"},
             "steps": [
                 {"name": "step-1", "action": "ok", "on_failure": "abort"},
                 {"name": "step-2", "action": "never_reached"},
@@ -387,6 +389,7 @@ class TestExecuteWorkflow:
         m1_wf = {
             "name": "m1-workflow",
             "bos_uri": "bos://governance/test",
+            "execution": {"backend": "default", "mode": "sequential"},
             "steps": [{"name": "m1-step", "action": "health_check"}],
         }
         mock_load.return_value = m1_wf

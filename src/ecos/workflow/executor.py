@@ -197,106 +197,12 @@ def _normalize_m1(wf: dict) -> dict:
 
 def execute_workflow(name: str, params: dict | None = None,
                      dry_run: bool = False) -> dict:
-    """执行工作流·每步 L0 审计·向后兼容接口
+    """执行工作流 — 向后兼容接口（全部委派 execute_m1_workflow）
 
-    当 M1 节点有 execution.backend 字段时走新后端路由。
-    没有时保持原有硬编码 action 行为。
+    保持签名和返回值兼容，但所有执行逻辑通过 execute_m1_workflow 统一路由。
+    确保 X2/X3/X4/M0 治理管线在所有路径下都执行。
     """
-    wf = load_workflow(name)
-    if not wf:
-        return {"error": f"工作流不存在: {name}"}
-
-    m1_node = _normalize_m1(wf)
-    wf_name = m1_node.get("name", name)
-    is_m1 = m1_node.get("source") == "m1"
-
-    results = {
-        "workflow": name,
-        "display": wf_name,
-        "source": "m1" if is_m1 else "definition",
-        "started": datetime.now().isoformat(),
-        "steps": [],
-        "passed": 0,
-        "failed": 0,
-    }
-
-    # 如果 M1 节点显式声明了 backend，走新路由
-    if wf.get("execution", {}).get("backend"):
-        return execute_m1_workflow(name, params, dry_run)
-
-    print(f"\n  ═══ Workflow: {wf_name} ═══")
-    if wf.get("description"):
-        print(f"  {wf['description']}")
-    if is_m1:
-        print(f"  BOS URI: {wf.get('bos_uri')} | {wf.get('layer')} | {wf.get('domain')}")
-    print()
-
-    steps = wf.get("steps", [])
-    if not steps:
-        return {**results, "error": "工作流无步骤定义"}
-
-    for i, step in enumerate(steps, 1):
-        step_name = step.get("name", f"step-{i}")
-        action = step.get("action", "")
-
-        # L0 audit: pre-check
-        validate_operation("_workflow", "workflow_step",
-                           f"bos://_workflow/{name}#{step_name}")
-        print(f"  [{i}/{len(steps)}] {step_name}")
-
-        if dry_run:
-            print(f"    📋 (dry-run) {action}")
-            results["steps"].append({
-                "name": step_name, "status": "dry_run", "action": action,
-            })
-            continue
-
-        try:
-            if is_m1:
-                step_result = {
-                    "passed": True,
-                    "summary": f"已路由到 {wf.get('layer')} 层执行",
-                }
-            else:
-                step_result = _execute_step(action, params, step=step)
-            ok = step_result.get("passed", True)
-            results["steps"].append({
-                "name": step_name,
-                "status": "ok" if ok else "failed",
-                "result": step_result,
-            })
-            if ok:
-                results["passed"] += 1
-            else:
-                results["failed"] += 1
-            print(f"    {'✅' if ok else '❌'} {step_result.get('summary', '')}")
-        except Exception as e:
-            results["steps"].append({
-                "name": step_name, "status": "error", "error": str(e),
-            })
-            results["failed"] += 1
-            print(f"    ❌ {e}")
-            on_failure = (step.get("on_failure")
-                          or (wf.get("execution", {}).get("on_failure") if is_m1 else None)
-                          or "continue")
-            if on_failure == "abort":
-                print("    ⚠️ 中止执行")
-                break
-
-    results["finished"] = datetime.now().isoformat()
-    total = results["passed"] + results["failed"]
-    print(f"\n  {results['passed']}✅  {results['failed']}❌  (共{total}步)\n")
-
-    log_operation({
-        "timestamp": datetime.now().isoformat(),
-        "domain": "_workflow",
-        "operation": f"workflow:{name}",
-        "uri": f"bos://_workflow/{name}",
-        "passed": results["failed"] == 0,
-        "violations": [],
-    })
-
-    return results
+    return execute_m1_workflow(name, params=params, dry_run=dry_run)
 
 # =========================================================================
 # 硬编码 action 执行器 — 声明式注册 (actions.py)
