@@ -91,4 +91,7 @@ history:
     DEFER PLANNED, BET-3b90 followup 物化'
   timestamp: '2026-06-22T14:48:35.657557'
   version: 0.0.26
-version: 0.0.26
+- description: P44 R8 模式文档沉淀 (p44-closed-loop-pattern.md)
+  timestamp: '2026-06-22T14:54:24.930422'
+  version: 0.0.27
+version: 0.0.27
