@@ -108,6 +108,16 @@ repos:
         # P50+: mutation surface 从 surfaces 报告中的顺带检查提升为独立 lint/gate.
         # 新 broker 入口、直写例外和 registry 变更必须一起过门.
 
+      - id: omo-sensitive-governed-write-gate
+        name: omo sensitive governed write gate (broker-only)
+        entry: uv run --directory projects/omo python -m omo.cli lint sensitive-governed-writes
+        language: system
+        files: ^(projects/omo/src/omo/.*\.py|projects/omo/tests/test_omo_direct_io_gate\.py|bin/verify-omo\.sh|\.pre-commit-config\.yaml|\.github/workflows/governance-check\.yml|projects/omo/README\.md|\.omo/standards/omo-governance-surfaces\.md).*
+        pass_filenames: false
+        stages: [pre-commit]
+        # system/goals/tasks/capabilities 是高风险治理面.
+        # 允许 OMO ingress broker 写, 禁止在其他内核模块重新长出直写口.
+
       - id: omo-internal-write-profile-gate
         name: omo internal write profile gate (worker runtime write registry)
         entry: uv run --directory projects/omo python -m omo.cli lint internal-write-profiles --workspace-root .

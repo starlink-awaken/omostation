@@ -10,6 +10,7 @@ python3 scripts/sync_omo_state.py --omo-dir .omo
 echo "[2/5] Running governance lint gates"
 pushd projects/omo >/dev/null
 uv run python -m omo.cli lint direct-omo-io
+uv run python -m omo.cli lint sensitive-governed-writes
 uv run python -m omo.cli lint ingress-registry --workspace-root ../..
 uv run python -m omo.cli lint mutation-surfaces --workspace-root ../..
 uv run python -m omo.cli lint internal-write-profiles --workspace-root ../..

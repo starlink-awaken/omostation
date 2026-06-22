@@ -123,3 +123,63 @@ profiles:
       - .omo/workers/governance-overlay/**/current.md
     promotion_surface: false
     note: governance overlay roadmap/control 已通过 ingress broker 持久化；shell current 与 approval analytics 仍为运行时快照
+  - name: debt-review-runtime
+    runtime_ref: projects/omo/src/omo/omo_debt.py:refresh_outputs + write_dashboard + write_review_queue + write_review_pack + projects/omo/src/omo/omo_debt_io.py:write_dashboard + write_review_queue
+    category: kernel_internal
+    subtype: governance_review_runtime
+    writes:
+      - .omo/debt/dashboard/current.yaml
+      - .omo/debt/review-queue/current.yaml
+      - .omo/debt/reviews/current.md
+    promotion_surface: false
+    note: debt review 面板与审查包由 OMO 内核直接生成；属于治理巡检输出
+  - name: debt-routing-runtime
+    runtime_ref: projects/omo/src/omo/omo_debt.py:refresh_outputs + write_action_packet + write_owner_routing + projects/omo/src/omo/omo_debt_io.py:write_action_packet + write_owner_routing
+    category: kernel_internal
+    subtype: governance_routing_runtime
+    writes:
+      - .omo/debt/action-packet/current.yaml
+      - .omo/debt/action-packet/current.md
+      - .omo/debt/owner-routing/current.yaml
+      - .omo/debt/owner-routing/current.md
+    promotion_surface: false
+    note: debt action packet 与 owner routing 由 OMO 内核直接生成；属于治理分发前置产物
+  - name: debt-dispatch-runtime
+    runtime_ref: projects/omo/src/omo/omo_debt.py:dispatch_outputs + write_dispatch_packet + projects/omo/src/omo/omo_debt_io.py:write_dispatch_packet
+    category: kernel_internal
+    subtype: governance_dispatch_runtime
+    writes:
+      - .omo/debt/dispatch/current.yaml
+      - .omo/debt/dispatch/current.md
+      - .omo/debt/dispatch/runs/*.yaml
+      - .omo/debt/dispatch/runs/*.md
+    promotion_surface: false
+    note: debt dispatch current/runs 产物由 OMO 内核直接生成；属于治理派发执行面
+  - name: debt-campaign-runtime
+    runtime_ref: projects/omo/src/omo/omo_debt.py:write_campaign_packet + build_selected_campaign_packet + projects/omo/src/omo/omo_debt_io.py:write_campaign_packet
+    category: kernel_internal
+    subtype: governance_campaign_runtime
+    writes:
+      - .omo/debt/campaign/current.yaml
+      - .omo/debt/campaign/current.md
+      - .omo/debt/campaign/runs/**/current.yaml
+      - .omo/debt/campaign/runs/**/current.md
+    promotion_surface: false
+    note: debt campaign current/runs 产物由 OMO 内核直接生成；属于治理专项推进面
+  - name: debt-reporting-runtime
+    runtime_ref: projects/omo/src/omo/omo_debt.py:write_reporting_* + load_reporting_history_packet + _reporting_history_inputs + projects/omo/src/omo/omo_debt_io.py:write_reporting_*
+    category: kernel_internal
+    subtype: governance_reporting_runtime
+    writes:
+      - .omo/debt/reporting/current.yaml
+      - .omo/debt/reporting/current.md
+      - .omo/debt/reporting/runs/**/current.yaml
+      - .omo/debt/reporting/runs/**/current.md
+      - .omo/debt/reporting/history/current.yaml
+      - .omo/debt/reporting/history/current.md
+      - .omo/debt/reporting/diff/current.yaml
+      - .omo/debt/reporting/diff/current.md
+      - .omo/debt/reporting/trend/current.yaml
+      - .omo/debt/reporting/trend/current.md
+    promotion_surface: false
+    note: debt reporting/history/diff/trend 产物由 OMO 内核直接生成；属于治理报表分析面

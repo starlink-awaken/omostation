@@ -139,7 +139,8 @@
 - `delivery_state` / `change_history` / `runtime_logs` 必须显式说明是否 `append_only`
 - `archived_state` 必须是 `archival + manual_archive`
 - `compatibility_alias` 必须是 `compatibility_alias + alias_only`，并带 `alias_target`
-- `capability_market` 若承载 capability registry，现行写入路径必须是 `.omo/capabilities/*.yaml`；历史 `.omo/registry/*.yaml` 仅允许读兼容，不再新增写入
+- `capability_market` 若承载 capability registry，现行写入路径必须是 `.omo/capabilities/*.yaml`，且写入必须通过 `projects/omo/src/omo/omo_ingress.py:write_capability_registry_bundle` / `write_manual_capabilities`；历史 `.omo/registry/*.yaml` 仅允许读兼容，不再新增写入
+- `runtime_ssot` 若存在投影/缓存回写入口，必须在 mutation surface registry 显式登记为 projection/cache 写面；当前 `omo state sync-tasks` 只允许刷新 task counters 与 `next_*` 投影，不得扩成任意字段写口
 
 这不是说明文案字段，而是 lint gate 会检查的治理契约。没有这两个字段，就说明“这个目录要留多久、能不能覆盖、什么时候归档”根本没定义清楚。
 
@@ -184,6 +185,7 @@
 - OMO 的人类/桥接 mutation surfaces 必须维护运行时快照与 `.omo/_truth/registry/mutation-surfaces.yaml` 对齐，防“入口已收口但没有资产清单”
 - OMO 的 worker/internal 写路径必须维护 `.omo/_truth/registry/internal-write-profiles.yaml`，明确哪些写面属于运行时 scratch、哪些带 promotion 风险
 - `omo governance ingress-goal/task/debt` 与 `projects/c2g` 的持久化适配器都属于正式 mutation surface，不得只登记终端 CLI 而漏掉治理入口/桥接入口
+- `.omo/state/system.yaml` 的投影刷新也必须登记正式 mutation surface；`omo state sync-tasks` 与 `omo_audit_sync --apply` 只能通过 `write_system_projection_fields` 白名单 broker 落盘
 - `omo governance surfaces --json` 必须暴露 mutation surface registry 漂移，作为 reviewer 判断“还有哪些 mutation 没收口”的机器依据
 - pre-commit / CI / `workspace governance verify` 必须显式执行 `omo lint mutation-surfaces`、`omo lint internal-write-profiles`、`omo lint state-plane-assets`、`omo lint c2g-omo-boundary` 与 `omo lint ingress-artifacts`，避免只有 reviewer 看 `surfaces --json` 时才发现 drift
 - 目录语义必须可固化为 policy；例如 `done/` 中的 packet 不得再出现 `status: review/completed`
@@ -193,6 +195,7 @@
 - active review 与 remediation review 分开治理：前者强调 `review_ref` 工件存在，后者强调 `review_note` 收口证据存在
 - `projects/c2g` 产出的 planned task 携带治理引用
 - `omo lint direct-omo-io` 与 pre-commit hook 能拦截非 broker 直接写 `.omo`
+- `omo lint sensitive-governed-writes` 必须继续守住 `system.yaml / goals/current.yaml / tasks/* / capabilities/*` 的 broker-only 落盘约束，但仅针对人类/桥接敏感写面；已登记的 worker/internal 生命周期写口仍由 `internal-write-profiles` registry 单独治理
 - `contract_gatekeeper.py` 若启用 baseline，只能压住已登记的历史 path+line；任何新违规必须仍然 fail
 - `direct-io-baseline.yaml` 清零后必须持续为空；新增 grandfather entry 本身就应触发 lint fail
 - X1/X2/X3/X4 与 L0/M1 治理模型中存在对应映射

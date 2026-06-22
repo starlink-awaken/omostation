@@ -63,6 +63,14 @@ surfaces:
     delivery_artifact_root: .omo/_delivery/ingress/tasks/
     mode: brokered
     category: human_cli
+  - name: omo-task-refresh-evidence
+    entrypoint: omo task refresh-evidence
+    runtime_ref: projects/omo/src/omo/omo_task.py:cmd_task_refresh_evidence
+    mutation_target: .omo/tasks/done/*.yaml (evidence_paths)
+    broker_ref: projects/omo/src/omo/omo_ingress.py:update_done_task_evidence_paths
+    delivery_artifact_root: .omo/_delivery/ingress/tasks/
+    mode: brokered
+    category: human_cli
   - name: omo-worker-task-normalize-planned
     entrypoint: python3 scripts/omo_worker.py task normalize-planned
     runtime_ref: projects/omo/src/omo/omo_worker_cmd_task.py:execute_task_command (task_command=normalize-planned)
@@ -107,17 +115,17 @@ surfaces:
     entrypoint: omo-capability capability scan --write
     runtime_ref: projects/omo/src/omo/omo_capability.py:scan_command
     mutation_target: .omo/capabilities/INDEX.md + .omo/capabilities/projects-capabilities.yaml + .omo/capabilities/sharedwork-sample.yaml + .omo/capabilities/system-packages.yaml + .omo/capabilities/agent-clis.yaml
-    broker_ref:
-    delivery_artifact_root:
-    mode: direct-governance-registry
+    broker_ref: projects/omo/src/omo/omo_ingress.py:write_capability_registry_bundle
+    delivery_artifact_root: .omo/_delivery/ingress/capabilities/
+    mode: brokered
     category: human_cli
   - name: omo-capability-registry-register
     entrypoint: omo-capability capability register <file>
     runtime_ref: projects/omo/src/omo/omo_capability.py:register_command
     mutation_target: .omo/capabilities/manual-capabilities.yaml
-    broker_ref:
-    delivery_artifact_root:
-    mode: direct-governance-registry
+    broker_ref: projects/omo/src/omo/omo_ingress.py:write_manual_capabilities
+    delivery_artifact_root: .omo/_delivery/ingress/capabilities/
+    mode: brokered
     category: human_cli
   - name: omo-task-center-skill-manifest
     entrypoint: projects/omo/src/omo/omo_skill.py:register_skill_manifest
@@ -198,4 +206,20 @@ surfaces:
     broker_ref: null
     delivery_artifact_root: null
     mode: direct-runtime-cache
+    category: runtime_cache
+  - name: omo-state-sync-tasks
+    entrypoint: omo state sync-tasks
+    runtime_ref: projects/omo/src/omo/omo_state.py:cmd_state_sync_tasks
+    mutation_target: .omo/state/system.yaml (task counters + next_* projection)
+    broker_ref: projects/omo/src/omo/omo_ingress.py:write_system_projection_fields
+    delivery_artifact_root: .omo/_delivery/ingress/state/
+    mode: brokered
+    category: governance_ingress
+  - name: omo-audit-sync-system-projection
+    entrypoint: python -m omo.omo_audit_sync --apply
+    runtime_ref: projects/omo/src/omo/omo_audit_sync.py:apply_diff
+    mutation_target: .omo/state/system.yaml (whitelisted audit projection fields)
+    broker_ref: projects/omo/src/omo/omo_ingress.py:write_system_projection_fields
+    delivery_artifact_root: .omo/_delivery/ingress/state/
+    mode: brokered
     category: runtime_cache

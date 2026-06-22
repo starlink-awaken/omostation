@@ -94,4 +94,8 @@ history:
 - description: P44 R8 模式文档沉淀 (p44-closed-loop-pattern.md)
   timestamp: '2026-06-22T14:54:24.930422'
   version: 0.0.27
-version: 0.0.27
+- description: P44 R7 全模块 lint 87→0 (agora F821+aetherforge 50+runtime 25+bus 6+cockpit
+    1+model-driven 1+omo 1); observability AGENTS.md 补齐
+  timestamp: '2026-06-22T15:29:58.840530'
+  version: 0.0.28
+version: 0.0.28
