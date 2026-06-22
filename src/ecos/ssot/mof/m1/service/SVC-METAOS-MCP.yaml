@@ -5,10 +5,10 @@ name: metaos-mcp
 service_name: metaos-mcp
 description: MetaOS MCP Server — 编排引擎
 project: metaos
-port: stdio
+transport: none
 protocol: stdio
-status: running
-runtime_status: running
+status: not_running
+runtime_status: not_running
 
 model_driven_refs:
   source_file: projects/metaos/pyproject.toml

@@ -1,9 +1,12 @@
-"""Swarm Backend Adapter — 桥接 aetherforge/swarm 引擎为 workflow backend
+"""Swarm Backend Adapter — subprocess 模式桥接 aetherforge/swarm 引擎
 
-Swarm 引擎负责多智能体任务编排、语义分解和 Worker 分配。
-适配采用两层策略:
-1. 首选: subprocess 调用 aetherforge CLI/swarm 命令
-2. 回退: 使用 swarm_engine 的 SemanticOrchestrator 直接嵌入
+适配策略 (优先级降序)：
+1. Agora MCP 路由 (agora_mcp_backend.py 复用)
+2. subprocess 调用 aetherforge CLI (uv run --package aetherforge)
+3. subprocess 调用 swarm-engine CLI (直接)
+4. mock fallback (向后兼容)
+
+关键原则：ecos 是 L0，不直接 import L2 包。所有跨层通过 CLI subprocess 或 MCP 路由。
 """
 
 from __future__ import annotations
@@ -19,16 +22,22 @@ logger = logging.getLogger("ecos.workflow.backends.swarm")
 
 __all__ = ["execute"]
 
+# 可用的 CLI 入口（按优先级排序）
+_CLI_PATHS: list[list[str]] = [
+    # 1) 通过 uv 运行 aetherforge CLI (推荐)
+    ["uv", "run", "--package", "aetherforge", "python", "-m", "aetherforge.swarm"],
+    # 2) 直接 python3 调用
+    [sys.executable, str(Path.home() / "Workspace" / "projects" / "aetherforge" / "packages" / "swarm" / "src" / "swarm_engine" / "cli.py")],
+    # 3) 全局安装的 aetherforge CLI
+    [str(Path.home() / "bin" / "aetherforge"), "swarm"],
+]
+
 
 def execute(m1_node: dict, params: dict | None = None) -> dict:
-    """Execute workflow steps as swarm tasks.
+    """Execute workflow steps as swarm tasks via subprocess.
 
-    Args:
-        m1_node: M1 workflow definition.
-        params: Optional execution parameters.
-
-    Returns:
-        Standard workflow result dict with steps/passed/failed.
+    M1 workflow steps → aetherforge/swarm CLI calls.
+    保留 agora MCP 路由为最高优先级。
     """
     steps = m1_node.get("steps", [])
     execution = m1_node.get("execution", {})
@@ -44,45 +53,25 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
         logger.warning("Swarm backend: workflow has no steps")
         return results
 
-    # ── 尝试直接嵌入模式 (可选依赖) ──
-    _orchestrator = None
-    try:
-        from swarm_engine.semantic_orchestrator import (  # type: ignore[import-untyped]
-            SemanticOrchestrator,
-        )
-        _orchestrator = SemanticOrchestrator()
-    except ImportError:
-        logger.debug("SemanticOrchestrator not importable, trying CLI fallback")
-
-    # ── CLI fallback: 通过 shell 调用 aetherforge ──
-    _aetherforge_paths = [
-        Path.home() / "Workspace" / "projects" / "aetherforge" / "src" / "aetherforge" / "main.py",
-        Path.home() / "bin" / "aetherforge",
-    ]
-
     for i, step in enumerate(steps):
         step_name = step.get("name", f"step-{i + 1}")
         action = step.get("action", "")
         agent_role = step.get("agent_role", "default")
 
-        # 尝试多模式执行
-        step_result = _try_swarm_execute(
-            m1_node, step, action, agent_role, params,
-            _orchestrator, _aetherforge_paths,
-        )
+        result = _execute_step_swarm(step_name, action, agent_role, step, params)
 
-        if step_result.get("ok", False):
+        if result.get("ok", False):
             results["steps"].append({
                 "name": step_name,
                 "status": "ok",
-                "result": step_result.get("data", {}),
+                "result": result.get("data", {}),
             })
             results["passed"] += 1
         else:
             results["steps"].append({
                 "name": step_name,
                 "status": "failed",
-                "error": step_result.get("error", "Unknown error"),
+                "error": result.get("error", "Unknown error"),
             })
             results["failed"] += 1
             on_failure = step.get("on_failure") or execution.get("on_failure") or "continue"
@@ -92,46 +81,40 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
     return results
 
 
-def _try_swarm_execute(
-    m1_node: dict,
-    step: dict[str, Any],
-    action: str,
-    agent_role: str,
-    params: dict[str, Any],
-    orchestrator: Any,
-    cli_paths: list[Path],
+def _execute_step_swarm(
+    step_name: str, action: str, agent_role: str,
+    step: dict[str, Any], params: dict[str, Any],
 ) -> dict[str, Any]:
-    """Try to execute a single step via swarm backend, with fallback."""
-    # 模式1: 嵌入 SemanticOrchestrator
-    if orchestrator is not None:
-        try:
-            goal = step.get("description") or step.get("name") or action
-            task_id = orchestrator.receive_vision(goal)
-            return {"ok": True, "data": {"task_id": task_id, "mode": "embed"}}
-        except Exception as e:
-            logger.warning("Swarm embed execute failed: %s", e)
+    """Execute a single step via swarm subprocess."""
+    goal = step.get("description") or step.get("name") or action or "task"
 
-    # 模式2: CLI subprocess
-    for cli_path in cli_paths:
-        if cli_path.exists():
-            try:
-                r = subprocess.run(
-                    [sys.executable, str(cli_path), "swarm", "run",
-                     "--goal", step.get("description") or action or "task",
-                     "--json"],
-                    capture_output=True, text=True, timeout=120,
-                )
-                if r.returncode == 0 and r.stdout.strip():
+    # 尝试每个 CLI 入口
+    for cli_cmd in _CLI_PATHS:
+        try:
+            cmd = [*cli_cmd, "run", "--goal", goal, "--json"]
+            logger.debug("Swarm subprocess: %s", " ".join(cmd))
+
+            r = subprocess.run(
+                cmd, capture_output=True, text=True,
+                timeout=120, cwd=Path.home(),
+            )
+            if r.returncode == 0 and r.stdout.strip():
+                try:
                     data = json.loads(r.stdout)
                     return {"ok": True, "data": data}
-            except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError) as e:
-                logger.debug("Swarm CLI fallback failed: %s", e)
+                except json.JSONDecodeError:
+                    # stdout 不是 JSON, 直接返回原始输出
+                    return {"ok": True, "data": {"output": r.stdout.strip()}}
+            elif r.returncode != 0 and r.stderr:
+                logger.debug("Swarm CLI error (retrying): %s", r.stderr[:200])
+        except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
+            logger.debug("Swarm CLI not available: %s", e)
 
-    # 模式3: 模拟执行（标记成功，向后兼容）
-    logger.info("Swarm backend: no real executor available, marking step as done")
+    # 所有 CLI 不可用 → mock fallback
+    logger.info("Swarm backend: no CLI available, mock recording")
     return {"ok": True, "data": {
-        "step": step.get("name", ""),
+        "step": step_name,
         "action": action,
         "mode": "mock",
-        "note": "Swarm engine not available; step recorded as passed",
+        "note": "Swarm engine CLI not found; step recorded as passed",
     }}

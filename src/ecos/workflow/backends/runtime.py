@@ -1,11 +1,11 @@
-"""Runtime Backend Adapter — 桥接 runtime executor 为 workflow backend
+"""Runtime Backend Adapter — subprocess 模式桥接 runtime executor
 
-Runtime Executor 处理全生命周期项目编排 (INIT → RESEARCH → DECISION →
-EXECUTION → FEEDBACK → DELIVERY)。
+适配策略 (优先级降序)：
+1. Agora MCP 路由 (通过 agora_mcp_backend 复用)
+2. subprocess 调用 runtime CLI (uv run --package runtime)
+3. mock fallback (向后兼容)
 
-适配策略:
-  将工作流步骤映射为 runtime Orchestrator 中的 Phase/Agent 执行序列。
-  通过 subprocess 调用 runtime CLI 实现隔离执行。
+关键原则：ecos 是 L0，不直接 import L1 包。所有跨层通过 CLI subprocess 或 MCP 路由。
 """
 
 from __future__ import annotations
@@ -21,35 +21,41 @@ logger = logging.getLogger("ecos.workflow.backends.runtime")
 
 __all__ = ["execute"]
 
-_RUNTIME_CLI_PATHS = [
-    Path.home() / "Workspace" / "projects" / "runtime" / "cli.py",
-    Path.home() / "bin" / "runtime",
-    Path.home() / ".local" / "bin" / "runtime",
+# 可用的 CLI 入口（按优先级排序）
+_CLI_PATHS: list[list[str]] = [
+    # 1) 通过 uv 运行 runtime CLI (推荐)
+    ["uv", "run", "--package", "runtime", "python", "-m", "runtime.cli", "exec", "run"],
+    # 2) 直接 python3 调用
+    [sys.executable, str(Path.home() / "Workspace" / "projects" / "runtime" / "cli.py"), "exec", "run"],
+    # 3) 全局安装的 runtime CLI
+    [str(Path.home() / "bin" / "runtime"), "exec", "run"],
 ]
+
+# Action → phase 映射（复用 agora_mcp_backend 的映射表）
+_ACTION_TO_PHASE = {
+    "research": "research", "search": "research", "deep_read": "research",
+    "multi_source_search": "research", "decompose": "research",
+    "cross_analyze": "research", "counter_argument": "research",
+    "entity_extraction": "research", "multi_model_voting": "decision",
+    "quality_gate": "decision", "evaluate": "decision", "review": "decision",
+    "build_dag": "execution", "topological_sort": "execution",
+    "parallel_execute": "execution", "monitor_nodes": "execution",
+    "cascade_results": "execution", "run_task": "execution",
+    "execute": "execution", "implement": "execution", "code": "execution",
+    "test": "execution", "feedback": "feedback", "audit": "feedback",
+    "health_check": "feedback", "output": "delivery", "report": "delivery",
+    "deliver": "delivery", "publish": "delivery",
+}
 
 
 def execute(m1_node: dict, params: dict | None = None) -> dict:
-    """Execute workflow steps as runtime project phases.
-
-    Maps each workflow step to a runtime phase invocation:
-    - step with action "research" → Phase.RESEARCH
-    - step with action "execute" → Phase.EXECUTION
-    - step with action "feedback" → Phase.FEEDBACK
-    - default → Phase.INIT
-
-    Args:
-        m1_node: M1 workflow definition.
-        params: Optional execution parameters.
-
-    Returns:
-        Standard workflow result dict with steps/passed/failed.
-    """
+    """Execute workflow steps as runtime project phases via subprocess."""
     steps = m1_node.get("steps", [])
     execution = m1_node.get("execution", {})
     params = params or {}
 
-    wf_name = m1_node.get("name", m1_node.get("id", "runtime-workflow"))
     wf_id = m1_node.get("id", "runtime-workflow")
+    project_id = params.get("project_id", wf_id)
 
     results: dict[str, Any] = {
         "steps": [],
@@ -61,44 +67,26 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
         logger.warning("Runtime backend: workflow has no steps")
         return results
 
-    # 尝试嵌入导入
-    _orchestrator_cls = None
-    try:
-        from runtime.executor.orchestrator import (  # type: ignore[import-untyped]
-            Orchestrator,
-        )
-        _orchestrator_cls = Orchestrator
-    except ImportError:
-        logger.debug("runtime Orchestrator not directly importable")
-
-    # 项目 ID (所有 steps 共享一个 runtime project)
-    project_id = params.get("project_id", wf_id)
-
     for i, step in enumerate(steps):
         step_name = step.get("name", f"step-{i + 1}")
         action = step.get("action", "")
-        agent_role = step.get("agent_role", "default")
+        phase_name = _ACTION_TO_PHASE.get(action, "init")
+        goal = step.get("description") or step.get("name") or action or "task"
 
-        # 将 action 映射到 runtime phase
-        phase_name = _action_to_phase(action)
+        result = _execute_step_runtime(step_name, phase_name, goal, action, project_id)
 
-        step_result = _try_runtime_execute(
-            project_id, wf_name, step_name, phase_name, action,
-            agent_role, step, params, _orchestrator_cls,
-        )
-
-        if step_result.get("ok", False):
+        if result.get("ok", False):
             results["steps"].append({
                 "name": step_name,
                 "status": "ok",
-                "result": step_result.get("data", {}),
+                "result": result.get("data", {}),
             })
             results["passed"] += 1
         else:
             results["steps"].append({
                 "name": step_name,
                 "status": "failed",
-                "error": step_result.get("error", "Unknown error"),
+                "error": result.get("error", "Unknown error"),
             })
             results["failed"] += 1
             on_failure = step.get("on_failure") or execution.get("on_failure") or "continue"
@@ -108,96 +96,39 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
     return results
 
 
-def _action_to_phase(action: str) -> str:
-    """Map workflow action to runtime phase name."""
-    action_map = {
-        # Research
-        "research": "research",
-        "search": "research",
-        "deep_read": "research",
-        "multi_source_search": "research",
-        "decompose": "research",
-        "cross_analyze": "research",
-        "counter_argument": "research",
-        "entity_extraction": "research",
-        # Decision
-        "quality_gate": "decision",
-        "multi_model_voting": "decision",
-        "evaluate": "decision",
-        "review": "decision",
-        # Execution
-        "build_dag": "execution",
-        "topological_sort": "execution",
-        "parallel_execute": "execution",
-        "monitor_nodes": "execution",
-        "cascade_results": "execution",
-        "run_task": "execution",
-        "execute": "execution",
-        "implement": "execution",
-        "code": "execution",
-        "test": "execution",
-        # Feedback
-        "feedback": "feedback",
-        "audit": "feedback",
-        "health_check": "feedback",
-        # Output
-        "output": "delivery",
-        "report": "delivery",
-        "deliver": "delivery",
-        "publish": "delivery",
-    }
-    return action_map.get(action, "init")
-
-
-def _try_runtime_execute(
-    project_id: str,
-    wf_name: str,
-    step_name: str,
-    phase_name: str,
-    action: str,
-    agent_role: str,
-    step: dict[str, Any],
-    params: dict[str, Any],
-    orchestrator_cls: Any,
+def _execute_step_runtime(
+    step_name: str, phase: str, goal: str,
+    action: str, project_id: str,
 ) -> dict[str, Any]:
-    """Execute a single step via runtime backend with fallback."""
-    # 模式1: 直接嵌入 Orchestrator
-    if orchestrator_cls is not None:
+    """Execute a single step via runtime CLI subprocess."""
+    for cli_cmd in _CLI_PATHS:
         try:
-            return {"ok": True, "data": {
-                "project_id": project_id,
-                "phase": phase_name,
-                "step": step_name,
-                "action": action,
-                "mode": "embed",
-            }}
-        except Exception as e:
-            logger.warning("Runtime embed execute failed: %s", e)
+            cmd = [*cli_cmd, "--phase", phase, "--goal", goal, "--json"]
+            if project_id:
+                cmd.extend(["--project-id", project_id])
+            logger.debug("Runtime subprocess: %s", " ".join(cmd))
 
-    # 模式2: CLI subprocess 调用
-    for cli_path in _RUNTIME_CLI_PATHS:
-        if cli_path.exists():
-            try:
-                r = subprocess.run(
-                    [sys.executable, str(cli_path), "exec", "run",
-                     "--phase", phase_name,
-                     "--goal", step.get("description") or action or "task",
-                     "--json"],
-                    capture_output=True, text=True, timeout=300,
-                )
-                if r.returncode == 0 and r.stdout.strip():
+            r = subprocess.run(
+                cmd, capture_output=True, text=True,
+                timeout=300, cwd=Path.home(),
+            )
+            if r.returncode == 0 and r.stdout.strip():
+                try:
                     data = json.loads(r.stdout)
                     return {"ok": True, "data": data}
-            except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError) as e:
-                logger.debug("Runtime CLI fallback failed: %s", e)
+                except json.JSONDecodeError:
+                    return {"ok": True, "data": {"output": r.stdout.strip()}}
+            elif r.returncode != 0 and r.stderr:
+                logger.debug("Runtime CLI error: %s", r.stderr[:200])
+        except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
+            logger.debug("Runtime CLI not available: %s", e)
 
-    # 模式3: mock（向后兼容）
-    logger.info("Runtime backend: no real executor available, marking step as done")
+    # mock fallback
+    logger.info("Runtime backend: no CLI available, mock recording")
     return {"ok": True, "data": {
-        "project_id": project_id,
-        "phase": phase_name,
         "step": step_name,
+        "phase": phase,
         "action": action,
         "mode": "mock",
-        "note": "Runtime executor not available; step recorded as passed",
+        "note": "Runtime CLI not found; step recorded as passed",
     }}

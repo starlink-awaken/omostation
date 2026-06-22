@@ -186,8 +186,8 @@ def load_workflow(name: str) -> dict | None:
 # 后台监听循环
 # =========================================================================
 
-def listen_forever(interval: float = 30.0, source: str = "events.jsonl",
-                   agora_url: str = "http://127.0.0.1:7431",
+def listen_forever(interval: float = 30.0, source: str = "agora_sse",
+                   agora_url: str = "http://127.0.0.1:7432",
                    dry_run: bool = False) -> None:
     """持续监听事件源并触发工作流
 

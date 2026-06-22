@@ -644,6 +644,26 @@ class TestM0Snapshot:
             vmod.M0_SNAPSHOT_DIR = original
 
 
+class TestSymphonyBackend:
+    def test_execute_records_cost_via_governed_helper(self, monkeypatch):
+        from ecos.workflow.backends import symphony
+
+        captured: dict[str, object] = {}
+
+        def fake_append(path, entry):
+            captured["path"] = path
+            captured["entry"] = entry
+
+        monkeypatch.setattr(symphony, "append_jsonl_record", fake_append)
+
+        result = symphony.execute({"id": "wf-symphony", "steps": [{"name": "s1", "action": "health_check"}]})
+
+        assert result["passed"] >= 1
+        assert captured["path"] == Path.home() / ".omo" / "state" / "llm_quota_ledger.jsonl"
+        assert captured["entry"]["event"] == "cost_record"
+        assert captured["entry"]["workflow_id"] == "wf-symphony"
+
+
 class TestAgoraBackend:
     def test_step_to_bos_uri_output(self):
         from ecos.workflow.agora_mcp_backend import _step_to_bos_uri
