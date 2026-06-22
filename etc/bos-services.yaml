@@ -756,3 +756,37 @@ services:
     description: "Eidos 治理管线调度"
 
 
+  # ── ecos workflow (L0 协议层工作流引擎) ──
+  - uri: "bos://ecos/workflow/list"
+    domain: meta
+    action: "list"
+    transport: stdio
+    package: "ecos"
+    command: ["uv", "run", "--package", "ecos", "python", "-m", "ecos.cli.workflow", "list"]
+    description: "eCOS L0 工作流列表"
+
+  - uri: "bos://ecos/workflow/describe"
+    domain: meta
+    action: "describe"
+    transport: stdio
+    package: "ecos"
+    command: ["uv", "run", "--package", "ecos", "python", "-m", "ecos.cli.workflow", "describe"]
+    description: "eCOS L0 工作流定义查询"
+
+  - uri: "bos://ecos/workflow/run"
+    domain: meta
+    action: "run"
+    transport: stdio
+    package: "ecos"
+    command: ["uv", "run", "--package", "ecos", "python", "-m", "ecos.cli.workflow", "run"]
+    description: "eCOS L0 工作流执行"
+
+  - uri: "bos://ecos/workflow/logs"
+    domain: meta
+    action: "logs"
+    transport: stdio
+    package: "ecos"
+    command: ["uv", "run", "--package", "ecos", "python", "-m", "ecos.cli.workflow", "logs"]
+    description: "eCOS L0 工作流运行历史"
+
+

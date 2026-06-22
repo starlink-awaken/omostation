@@ -32,12 +32,13 @@ from agora.mcp.bos_resolver import (  # type: ignore[import-not-found]
 from agora.mcp.bos_router import bos_router as _bos_router  # type: ignore[import-not-found]
 
 # L0 审计 hook
-import sys as _sys
-
 from ecos.ssot.tools.mof_agora_hook import (  # type: ignore[import-not-found]
     post_audit as _bos_post_audit,
     pre_check as _bos_pre_check,
 )
+
+# 根仓 projects/ 目录: .../projects/agora/src/agora/server/tools_bos.py → ../../../../..
+_PROJECTS_DIR = Path(__file__).resolve().parents[4]
 
 logger = structlog.get_logger(__name__)
 
