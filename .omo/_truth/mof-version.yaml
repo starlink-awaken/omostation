@@ -83,4 +83,8 @@ history:
 - description: 'P44 R0 P3-1b: 闭环反馈 — X2 audit 捕获 cockpit 5 + kairon 1 真 lint 漂移, 全部修复'
   timestamp: '2026-06-22T11:23:35.730745'
   version: 0.0.24
-version: 0.0.24
+- description: 'P44 R3-R4 治理: 关闭 5 REMEDIATE + BET + drift 修复 + 4 deferred 物化, governance
+    100 A+'
+  timestamp: '2026-06-22T12:08:41.328482'
+  version: 0.0.25
+version: 0.0.25

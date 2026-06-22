@@ -1,0 +1,15 @@
+kind: planned_task_created
+task_id: P44-DEFER-GBRAIN-OPS-SPLIT
+title: P44 Deferred — gbrain operations.ts 3841 行按领域拆分 (11 域)
+ingress_plane: deferred-tracking
+source_ref: DEBT-GBRAIN-OPERATIONS-TS
+created_at: '2026-06-22T04:08:37Z'
+task_ref: .omo/tasks/planned/P44-DEFER-GBRAIN-OPS-SPLIT.yaml
+evidence_required:
+- 重启评估 + 计划
+source_docs:
+- .omo/debt/items/DEBT-GBRAIN-OPERATIONS-TS.yaml
+artifact_ref: .omo/_delivery/ingress/tasks/P44-DEFER-GBRAIN-OPS-SPLIT.yaml
+broker_ref: projects/omo/src/omo/omo_ingress.py
+retention_mode: manual_archive
+lifecycle_state: active
