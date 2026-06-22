@@ -100,6 +100,7 @@ def _agora_broken():
 class TestOntoDeriveE2E:
     """Verify OntoDerive core functions."""
 
+    @pytest.mark.skip(reason="ontoderive CLI toolforge 命令已移除 (ec90d6c engine/ 合并重构), CLI 只支持 serve")
     def test_ontoderive_toolforge(self):
         rc, out = _run([ONTODERIVE, "toolforge", "分析市场", "--json"], timeout=60)
         assert rc == 0

@@ -19,7 +19,8 @@ class TestKnownBackends:
         assert "eidos" in names
         assert "iris" in names
         assert "kronos" in names
-        assert "metaos" in names
+        # metaos MCP 入口已关闭 (2026-06-22, REMEDIATE-WF-CONV-P0-CLOSE-METAOS-MCP)
+        # 入口收敛: metaos 编排经 bos://ecos/workflow 路由, 不在 KNOWN_BACKENDS
         assert "minerva" in names
         assert "sophia" in names
         assert "cron-service" in names
