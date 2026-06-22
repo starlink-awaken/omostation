@@ -17,6 +17,74 @@ _backends: dict[str, dict[str, Any]] = {}
 
 # ── 默认后端：沿用现有的硬编码 action 执行器 ──
 
+def _topological_sort(steps: list[dict]) -> list[list[dict]]:
+    """拓扑排序 steps，返回分层列表（每层可并行执行）
+
+    如果 steps 没有 depends_on，保持原始顺序（向后兼容）。
+    如果有 depends_on，按依赖关系分层：
+      layer 0: 无依赖的步骤
+      layer 1: 仅依赖 layer 0 的步骤
+      ...
+    """
+    # 检查是否有任何步骤声明了 depends_on
+    has_deps = any(s.get("depends_on") for s in steps)
+    if not has_deps:
+        return [list(steps)]  # 单层，保持原顺序
+
+    # 构建 DAG
+    step_names: set[str] = set()
+    depends: dict[str, set[str]] = {}  # step_name → 依赖的 step 名集合
+    step_map: dict[str, dict] = {}     # step_name → step dict
+
+    for s in steps:
+        name = s.get("name", "")
+        if name:
+            step_names.add(name)
+            step_map[name] = s
+            deps = set(s.get("depends_on", []))
+            depends[name] = {d for d in deps if d in step_names}
+
+    # Kahn 拓扑排序
+    in_degree: dict[str, int] = {n: len(depends[n]) for n in step_names}
+    graph: dict[str, set[str]] = {n: set() for n in step_names}
+    for s in steps:
+        name = s.get("name", "")
+        for dep in s.get("depends_on", []):
+            if dep in step_names and name:
+                graph[dep].add(name)
+
+    layers: list[list[dict]] = []
+    queue: list[str] = [n for n in step_names if in_degree[n] == 0]
+
+    # 让无依赖的步骤保持原始顺序
+    order = {s.get("name", ""): i for i, s in enumerate(steps)}
+    queue.sort(key=lambda n: order.get(n, 0))
+
+    while queue:
+        current_layer_names = list(queue)
+        queue = []
+        current_layer: list[dict] = []
+
+        # 层内按原始顺序
+        current_layer_names.sort(key=lambda n: order.get(n, 0))
+        for name in current_layer_names:
+            current_layer.append(step_map[name])
+            for neighbor in graph[name]:
+                in_degree[neighbor] -= 1
+                if in_degree[neighbor] == 0:
+                    queue.append(neighbor)
+        queue.sort(key=lambda n: order.get(n, 0))
+        layers.append(current_layer)
+
+    # 收集未在 DAG 中的步骤（无名步骤）追加到最后
+    named = set(step_names)
+    orphans = [s for s in steps if s.get("name", "") not in named]
+    if orphans:
+        layers.append(orphans)
+
+    return layers
+
+
 def _parse_retry_config(execution: dict) -> dict:
     """解析 retry 配置
 
@@ -91,7 +159,12 @@ def _default_executor(m1_node: dict, params: dict | None = None) -> dict:
     execution_config = m1_node.get("execution", {})
     retry_config = _parse_retry_config(execution_config)
 
-    for i, step in enumerate(steps, 1):
+    # DAG 拓扑排序: 尊重 depends_on 依赖关系
+    from itertools import chain
+    dag_layers = _topological_sort(steps)
+    sorted_steps = list(chain.from_iterable(dag_layers))
+
+    for i, step in enumerate(sorted_steps, 1):
         step_name = step.get("name", f"step-{i}")
         action = step.get("action", "")
 

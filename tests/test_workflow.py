@@ -1077,3 +1077,70 @@ class TestRetryStrategy:
         from ecos.workflow.backend_registry import _should_retry
         assert _should_retry("on_error", {}, Exception("boom")) is True
         assert _should_retry("on_failure", {}, Exception("boom")) is False
+
+
+class TestDAGExecution:
+    """DAG 拓扑排序执行测试"""
+
+    def test_no_deps_single_layer(self):
+        from ecos.workflow.backend_registry import _topological_sort
+        steps = [
+            {"name": "A", "action": "health_check"},
+            {"name": "B", "action": "domain_audit"},
+        ]
+        layers = _topological_sort(steps)
+        assert len(layers) == 1
+        assert len(layers[0]) == 2
+        assert layers[0][0]["name"] == "A"
+        assert layers[0][1]["name"] == "B"
+
+    def test_with_deps_multi_layer(self):
+        from ecos.workflow.backend_registry import _topological_sort
+        steps = [
+            {"name": "A", "action": "check", "depends_on": []},
+            {"name": "B", "action": "process", "depends_on": ["A"]},
+            {"name": "C", "action": "report", "depends_on": ["B"]},
+        ]
+        layers = _topological_sort(steps)
+        assert len(layers) == 3, f"expected 3 layers, got {len(layers)}"
+        assert layers[0][0]["name"] == "A"
+        assert layers[1][0]["name"] == "B"
+        assert layers[2][0]["name"] == "C"
+
+    def test_diamond_deps(self):
+        from ecos.workflow.backend_registry import _topological_sort
+        steps = [
+            {"name": "A", "action": "start", "depends_on": []},
+            {"name": "B", "action": "parallel_1", "depends_on": ["A"]},
+            {"name": "C", "action": "parallel_2", "depends_on": ["A"]},
+            {"name": "D", "action": "merge", "depends_on": ["B", "C"]},
+        ]
+        layers = _topological_sort(steps)
+        assert len(layers) == 3
+        assert layers[0][0]["name"] == "A"
+        assert {s["name"] for s in layers[1]} == {"B", "C"}
+        assert layers[2][0]["name"] == "D"
+
+    def test_default_executor_respects_deps(self, monkeypatch):
+        from ecos.workflow.backend_registry import resolve
+        executed_order = []
+
+        def mock_execute(m1_node, params=None):
+            nonlocal executed_order
+            for step in m1_node.get("steps", []):
+                executed_order.append(step.get("name", ""))
+            return {"steps": [], "passed": 0, "failed": 0}
+
+        monkeypatch.setattr("ecos.workflow.backend_registry._default_executor", mock_execute)
+
+        wf = {
+            "execution": {"backend": "default", "mode": "sequential"},
+            "steps": [
+                {"name": "A", "action": "echo"},
+                {"name": "B", "action": "echo", "depends_on": ["A"]},
+            ],
+        }
+        fn = resolve(wf)
+        fn(wf)
+        # A 应在 B 之前
+        assert executed_order.index("A") < executed_order.index("B")
