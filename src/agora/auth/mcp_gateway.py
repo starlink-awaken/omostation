@@ -46,12 +46,11 @@ KNOWN_BACKENDS: list[dict] = [
         "command": "uv",
         "args": ["run", "--package", "kronos", "python", "-m", "kronos.mcp_server"],
     },
-    {
-        "name": "metaos",
-        "mcp_endpoint": "",
-        "command": "uv",
-        "args": ["run", "--package", "metaos", "python", "-m", "metaos.mcp_server"],
-    },
+    # !! metaos 独立 MCP 入口已关闭 (2026-06-22) !!
+    # 原因: 入口收敛 — metaos 编排能力已通过 bos://ecos/workflow 经 Agora 路由
+    #        metaos core/workflow 已注册为 ecos/workflow backend (backend_registry)
+    # 手动启动: uv run --package metaos python -m metaos.mcp_server
+    # 参见: .omo/tasks/remediation/REMEDIATE-WF-CONV-P0-CLOSE-METAOS-MCP.yaml
     {
         "name": "minerva",
         "mcp_endpoint": "",
