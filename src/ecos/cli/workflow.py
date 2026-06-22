@@ -37,6 +37,7 @@ def main() -> None:
         "actions": _cmd_actions,
         "status": _cmd_status,
         "st": _cmd_status,
+        "stats": _cmd_stats,
         "logs": _cmd_logs,
         "runs": _cmd_logs,
         "create": _cmd_create,
@@ -695,6 +696,66 @@ def _cmd_fork(args: list[str]) -> None:
     print(f"   验证: ecos workflow validate '{new_wf_id if is_m1 else dest.stem}'")
 
 
+def _cmd_stats(_args: list[str]) -> None:
+    """ecos workflow stats — 运行统计"""
+    from ecos.cli.workflow_runs import SNAPSHOT_DIR, _load_all_runs
+    from collections import Counter
+
+    runs = _load_all_runs()
+    if not runs:
+        print("📊 工作流运行统计")
+        print(f"{'=' * 50}")
+        print("  无运行记录。")
+        return
+
+    total = len(runs)
+    ok_count = sum(1 for r in runs if r.get("status") == "ok")
+    failed_count = sum(1 for r in runs if r.get("status") == "failed")
+    total_passed = sum(r.get("result", {}).get("passed", 0) for r in runs)
+    total_failed = sum(r.get("result", {}).get("failed", 0) for r in runs)
+    success_rate = ok_count / total * 100 if total > 0 else 0
+
+    # 按工作流统计
+    wf_counter: Counter = Counter()
+    for r in runs:
+        wf_id = r.get("workflow_id", "?")
+        wf_counter[wf_id] += 1
+
+    top_workflows = wf_counter.most_common(10)
+
+    # 按状态趋势
+    recent_10 = runs[:10]
+    recent_ok = sum(1 for r in recent_10 if r.get("status") == "ok")
+    recent_fail = sum(1 for r in recent_10 if r.get("status") == "failed")
+
+    # 时间范围
+    timestamps = [
+        r.get("generated_at", "")[:10]
+        for r in runs if r.get("generated_at")
+    ]
+    date_range = f"{timestamps[-1]} ~ {timestamps[0]}" if len(timestamps) >= 2 else timestamps[0] if timestamps else "N/A"
+
+    print("📊 工作流运行统计")
+    print(f"{'=' * 50}")
+    print(f"  总运行次数:    {total}")
+    print(f"  成功率:         {success_rate:.1f}% ({ok_count} ✅ / {failed_count} ❌)")
+    print(f"  步骤总计:        {total_passed} ✅ / {total_failed} ❌")
+    print(f"  时间范围:        {date_range}")
+    print(f"  最近 10 次:      {recent_ok} ✅ / {recent_fail} ❌")
+    print(f"  数据源:          {SNAPSHOT_DIR}")
+    print()
+    if top_workflows:
+        print(f"  最活跃工作流 (Top {len(top_workflows)}):")
+        for wf_id, count in top_workflows:
+            wf_ok = sum(1 for r in runs if r.get("workflow_id") == wf_id and r.get("status") == "ok")
+            wf_total = count
+            pct = wf_ok / wf_total * 100
+            bar = "█" * int(pct / 10) + "░" * (10 - int(pct / 10))
+            bar = bar[:10]
+            print(f"    {bar}  {wf_id:45s}  {wf_ok}/{wf_total} ({pct:.0f}%)")
+    print(f"{'=' * 50}")
+
+
 
 def _cmd_help(_args: list[str] | None = None) -> None:
     print("用法: ecos workflow <子命令> [参数]")
@@ -707,6 +768,7 @@ def _cmd_help(_args: list[str] | None = None) -> None:
     print("  backends                查看后端注册表")
     print("  actions                 查看已注册 action")
     print("  status                  查看工作流引擎全局状态")
+    print("  stats                   查看工作流运行统计")
     print("  create <name>           创建工作流模板")
     print("    [--m1]                生成 M1 格式（默认是简化 definition）")
     print("    [--path <file>]       指定输出路径")
