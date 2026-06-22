@@ -170,6 +170,7 @@ M1 YAML → loader.py → validator.py (X1-X4) → executor.py
 - `swarm` — Swarm 多 Agent 任务编排（aetherforge）
 - `runtime` — Runtime 项目生命周期编排（INIT→DELIVERY）
 - `metaos` — MetaOS DAG 工作流引擎（可选依赖）
+- `dynamic` — LLM 驱动动态编排（mode=dynamic 时启用）
 
 ### CLI 用法
 
@@ -266,3 +267,26 @@ python -m ecos.workflow.event_listener
 # event: bos://ecos/events/health_check
 # data: {"action": "health_check", "source": "...", "timestamp": "..."}
 ```
+
+### Dynamic 模式
+
+`execution.mode: dynamic` 时启用 LLM 驱动动态编排。
+
+```yaml
+execution:
+  mode: dynamic
+  dynamic:
+    objective: "完成系统健康巡检并生成报告"
+    max_steps: 10
+    available_actions:
+      - health_check
+      - domain_validate_all
+      - domain_sync
+    # llm_model: gpt-4o-mini  # 可选，默认从环境变量 DYNAMIC_WF_MODEL 读取
+```
+
+**回退行为**: LLM 不可用时（无 openai 包或未配置模型），自动回退到线性执行——依次执行所有 detected/available actions。
+
+**API**: `cockpit workflow ecos run <name>` 自动检测 mode→路由到对应后端。
+
+**Dashboard**: `GET /api/ecos/workflow/backends` 返回 6 个后端（含 dynamic）。

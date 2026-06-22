@@ -54,22 +54,28 @@ def register_action(
             _aliases[a] = name
 
 
-def resolve_action(action: str) -> ActionHandler | None:
-    """根据 action 名称解析出对应的 handler
+# ── 惰性注册 ──
+_builtins_registered = False
 
-    自动处理:
-    - 命名空间前缀剥离 (ecos.ecos.X → X)
-    - 别名映射 (system_health_check → health_check)
-    """
-    # 剥离命名空间前缀
+
+def _ensure_builtins_registered() -> None:
+    """惰性注册内置 action — 避免 import 时副作用"""
+    global _builtins_registered
+    if _builtins_registered:
+        return
+    _builtins_registered = True
+    _register_builtins()
+
+
+# resolve_action / list_actions / get_action 都先触发惰性注册
+
+def resolve_action(action: str) -> ActionHandler | None:
+    _ensure_builtins_registered()
     for prefix in NAMESPACE_PREFIXES:
         if action.startswith(prefix):
             action = action[len(prefix):]
             break
-
-    # 别名映射
     resolved = _aliases.get(action, action)
-
     entry = _registry.get(resolved)
     if entry is None:
         return None
@@ -77,7 +83,7 @@ def resolve_action(action: str) -> ActionHandler | None:
 
 
 def list_actions() -> list[dict[str, str]]:
-    """列出所有已注册 action"""
+    _ensure_builtins_registered()
     return [
         {"name": name, "description": info["description"]}
         for name, info in _registry.items()
@@ -85,7 +91,7 @@ def list_actions() -> list[dict[str, str]]:
 
 
 def get_action(name: str) -> dict[str, Any] | None:
-    """获取单个 action 信息"""
+    _ensure_builtins_registered()
     resolved = _aliases.get(name, name)
     return _registry.get(resolved)
 
@@ -189,5 +195,4 @@ def _action_domain_routes(params: dict) -> dict:
     return {"passed": r.returncode == 0, "summary": "路由缓存更新"}
 
 
-# ── 启动时注册内置 action ──
-_register_builtins()
+# 惰性注册（在 _ensure_builtins_registered() 中触发）

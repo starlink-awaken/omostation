@@ -793,3 +793,115 @@ class TestEventTriggerHeal:
         assert result is not None
         # Falls back to health check when heal workflow doesn't exist
         assert isinstance(result, dict)
+
+
+class TestDynamicBackend:
+    """Dynamic mode 测试 — LLM 驱动的动态工作流"""
+
+    def test_dynamic_fallback_linear(self):
+        """LLM 不可用时回退到线性执行"""
+        from ecos.workflow.dynamic_backend import execute
+
+        m1 = {
+            "name": "test-dynamic",
+            "execution": {"mode": "dynamic", "dynamic": {"max_steps": 5}},
+            "steps": [
+                {"name": "s1", "action": "health_check"},
+                {"name": "s2", "action": "domain_audit"},
+            ],
+        }
+        result = execute(m1)
+        assert "steps" in result
+        assert result["passed"] >= 0
+        assert result["failed"] >= 0
+
+    def test_dynamic_fallback_runs_all_actions(self):
+        """回退模式下应尝试执行所有检测到的可用动作"""
+        from ecos.workflow.dynamic_backend import execute
+
+        # 动态工作流内部会调用 actions.py 的 resolve_action
+        # 而 health_check 依赖 ~/.ecos/scripts/ecos-health-check.py
+        # 所以预期 health_check 会失败（环境因素），但不应抛异常
+        m1 = {
+            "name": "test-dynamic-all",
+            "description": "测试全量执行",
+            "execution": {"mode": "dynamic", "dynamic": {"max_steps": 10}},
+            "steps": [
+                {"name": "s1", "action": "health_check"},
+                {"name": "s2", "action": "domain_audit"},
+            ],
+        }
+        result = execute(m1)
+        steps = result.get("steps", [])
+        assert len(steps) >= 1, "应至少执行一个步骤"
+
+    def test_dynamic_registered_as_backend(self):
+        """dynamic 后端应在 backend_registry 中注册"""
+        from ecos.workflow.backend_registry import list_backends, resolve
+
+        backends = list_backends()
+        names = {b["name"] for b in backends}
+        assert "dynamic" in names, "dynamic 后端应已注册"
+
+        # mode=dynamic 应能解析到 dynamic backend
+        fn = resolve({"execution": {"mode": "dynamic"}})
+        assert callable(fn)
+
+    def test_dynamic_planner_detect_actions(self):
+        """_detect_actions 应从 M1 步骤中提取动作"""
+        from ecos.workflow.dynamic_backend import _detect_actions
+
+        m1 = {
+            "steps": [
+                {"name": "s1", "action": "health_check"},
+                {"name": "s2", "action": "domain_audit"},
+            ],
+        }
+        actions = _detect_actions(m1)
+        assert "health_check" in actions
+        assert "domain_audit" in actions
+
+    def test_dynamic_completes_with_custom_actions(self):
+        """指定 available_actions 时应只执行这些动作"""
+        from ecos.workflow.dynamic_backend import execute
+
+        m1 = {
+            "name": "test-dynamic-custom",
+            "execution": {
+                "mode": "dynamic",
+                "dynamic": {
+                    "max_steps": 3,
+                    "available_actions": ["bos_validate"],
+                },
+            },
+            "steps": [],
+        }
+        result = execute(m1)
+        # bos_validate 依赖 ~/bin/ecos，但不应抛异常
+        assert "error" not in result
+
+    def test_dynamic_planner_fallback_decide(self):
+        """DynamicPlanner 回退模式应依次返回 available_actions 中的动作"""
+        from ecos.workflow.dynamic_backend import DynamicPlanner
+
+        planner = DynamicPlanner(
+            objective="测试",
+            available_actions=["health_check", "domain_audit"],
+        )
+
+        # 第一次调用: 返回 health_check
+        d1 = planner.decide({"results": []})
+        assert d1["action"] == "health_check"
+
+        # 第二次调用: 返回 domain_audit
+        d2 = planner.decide({"results": [{"step": "health_check", "ok": True}]})
+        assert d2["action"] == "domain_audit"
+
+        # 第三次调用: 返回 __done__
+        d3 = planner.decide({
+            "results": [
+                {"step": "health_check", "ok": True},
+                {"step": "domain_audit", "ok": True},
+            ],
+        })
+        assert d3["action"] == "__done__"

@@ -58,6 +58,8 @@ workflow_backends:
     description: Runtime 项目生命周期编排（INIT→DELIVERY）
   - name: metaos
     description: MetaOS DAG 工作流引擎（可选依赖）
+  - name: dynamic
+    description: Dynamic mode — LLM 驱动动态编排（mode=dynamic 时启用）
 
 dependencies:
   runtime: [pyyaml, requests, beautifulsoup4, jinja2]

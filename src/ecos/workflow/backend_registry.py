@@ -159,6 +159,9 @@ def _ensure_backends_registered() -> None:
          "Runtime project lifecycle orchestrator (INIT→DELIVERY)"),
         ("metaos.core.workflow", "run", "metaos",
          "MetaOS DAG workflow engine (asyncio)"),
+        # Dynamic (LLM-driven) — ecos 内置
+        ("ecos.workflow.dynamic_backend", "execute", "dynamic",
+         "Dynamic mode — LLM 驱动的动态工作流编排"),
     ]:
         try:
             register(name, mod_path, entry, description=desc)
