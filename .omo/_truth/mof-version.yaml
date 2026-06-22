@@ -59,4 +59,7 @@ history:
 - description: 'P43 R7.4: aetherforge packages/gateway 6 真 lint 修复 + ecosystem 全套全清'
   timestamp: '2026-06-22T10:16:43.719428'
   version: 0.0.17
-version: 0.0.17
+- description: 'P43 R8 深度优化: c2g 新增 3 个测试文件 (84 tests), ports/tasks/bridge 全覆盖'
+  timestamp: '2026-06-22T10:50:09.308150'
+  version: 0.0.18
+version: 0.0.18
