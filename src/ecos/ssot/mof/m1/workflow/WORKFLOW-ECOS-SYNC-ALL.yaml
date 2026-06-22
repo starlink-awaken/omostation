@@ -42,6 +42,7 @@ steps:
   depends_on:
   - SyncDomainIndex
 execution:
+  backend: default
   mode: sequential
   max_retries: 3
   timeout: 600

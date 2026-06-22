@@ -62,6 +62,7 @@ steps:
   depends_on:
   - ValidateAlignment
 execution:
+  backend: default
   mode: sequential
   max_retries: 3
   timeout: 1200

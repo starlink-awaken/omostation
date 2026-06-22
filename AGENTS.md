@@ -34,11 +34,14 @@ src/ecos/
 │   └── entry/       # GovernanceCLI (6 命令), GovernanceMCP (14 工具)
 ├── cli/         # CLI (dashboard, scheduler, watchdog)
 ├── services/    # 服务层 (core, governance, integration, monitoring)
-├── workflow/    # 工作流引擎 (7 模块) — 统一编排调度器
-│   │              M1 DSL → loader → validator(X1-X4) → executor → backend_registry
-│   │              后端: metaos(可选) / agora(跨层路由) / default(硬编码)
-│   │              事件驱动: event_listener → bos:// 事件 → 自动触发工作流
-│   │              测试: 66 tests, 白盒全覆盖
+└── workflow/    # 工作流引擎 (7 模块) — 统一编排调度器
+│              M1 DSL → loader → validator(X1-X4) → executor → backend_registry
+│              后端: metaos(可选) / agora(跨层路由) / symphony(状态机) / swarm(多Agent)
+│                    runtime(项目生命周期) / default(硬编码兼容)
+│              事件驱动: event_listener → bos:// 事件 → 自动触发工作流
+│              测试: 66 tests, 白盒全覆盖
+│              收敛状态: 5/5 backends 注册, 26/26 M1 节点带 explicit backend
+│              架构评分: 93/100
 └── ssot/tools/  # MOF 工具链
 ```
 

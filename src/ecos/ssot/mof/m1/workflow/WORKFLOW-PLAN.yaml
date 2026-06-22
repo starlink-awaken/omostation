@@ -14,6 +14,14 @@ properties:
   steps: 规划工作流——需求分析→方案设计→任务分解→分配
   trigger: agent-invoke
 
+execution:
+  mode: workflow
+  backend: default
+  max_retries: 3
+  timeout: 600
+  on_failure: abort
+  audit_enabled: true
+
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m1/
 

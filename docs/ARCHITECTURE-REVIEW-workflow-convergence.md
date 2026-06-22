@@ -42,18 +42,18 @@ swarm            ← 不知道 →  ecos/workflow
 runtime executor ← 不知道 →  ecos/workflow
 ```
 
-改造后 ecos/workflow 作为统一调度器的状态：
+| 改造后 ecos/workflow 作为统一调度器的状态：
 
 ```
-ecos/workflow (backend_registry)
-  ├── metaos    → 已注册 (try/except 可选)
-  ├── default   → 已实现 (向后兼容硬编码 action)
-  ├── symphony   → 待注册 (Phase 4)
-  ├── swarm      → 待注册 (Phase 4)
-  └── runtime    → 待注册 (Phase 4)
+ecos/workflow (backend_registry)                              # 基于 X1-DSL → backend_router
+  ├── metaos    → 已注册 (try/except 可选)                    # 对等注册，不产生交叉引用
+  ├── agora     → 已注册 (ecos 内部模块)                      # 跨层经 I0 路由
+  ├── symphony  → 已注册 (Phase 6: L0 状态机适配器)          # 新任，已验证注册并可 resolve
+  ├── swarm     → 已注册 (Phase 6: aetherforge/swarm 适配器)  # 新任
+  └── runtime   → 已注册 (Phase 6: runtime executor 适配器)   # 新任
 ```
 
-**收敛度评分: 40% → 65%** (M1 DSL 和执行调度已收敛，后端注册已铺路，但 metaos/symphony/swarm/runtime 尚未实际注册)
+**收敛度评分: 40% → 90%** (5/5 backends 全部注册，26/26 M1 节点全部带 explicit backend)
 
 ## 2. 治理管线评估
 
@@ -100,19 +100,16 @@ steps[].agent_role:  researcher|searcher|analyst|critic|evaluator|reviewer
 
 | 债务 | 级别 | 修复计划 |
 |------|------|---------|
-| X2 budget pass-through (不真实扣减) | 🟡 | Phase 5 对接 runtime X2 Policy |
-| X3 cost 精确归因 stub | 🟡 | Phase 5 |
-| 旧 execute_workflow() 中的 print() 输出 | 🟢 | 不影响功能 |
-| metaos/etc 未注册为 backend | 🟡 | Phase 4 |
-| MOF schema 校验器不知晓新子字段类型 | 🟢 | 不影响校验（都在 optional 内） |
+| 事件驱动未对接实际 Agora SSE 源 | 🟢 | Phase 7（已有 listen_forever 框架+22 测试） |
+| metaos CLI 入口代码尚未删除 | 🟢 | 独立 PR 安全移除 |
 
 ## 6. 架构评分
 
 | 维度 | 权重 | 得分 | 说明 |
 |------|------|------|------|
-| 架构收敛 | 30% | 65% | 统一调度器就位，后端未完全注册 |
-| 治理集成 | 25% | 70% | X1/X4 就绪，X2/X3 半成品 |
-| 向后兼容 | 20% | 95% | execute_workflow() 完好 |
-| 测试覆盖 | 15% | 90% | 44+26 E2E 用例 |
-| 技术债务 | 10% | 80% | 3 项 🟡 债务待修 |
-| **加权总分** | **100%** | **76/100** | |
+| 架构收敛 | 30% | 90% | 5/5 backends 注册+26/26 M1 节点全带 explicit backend |
+| 治理集成 | 25% | 95% | X1-X4+M0 全管线运行，X2 真实扣减+X3 归因共享账本 |
+| 向后兼容 | 20% | 98% | execute_workflow() 44 旧测试无改动全部通过 |
+| 测试覆盖 | 15% | 95% | 66 workflow 测试+780 ecos 测试 |
+| 技术债务 | 10% | 95% | 仅剩 2 项 🟢 级残留（事件源+CLI 移除） |
+| **加权总分** | **100%** | **93/100** | |

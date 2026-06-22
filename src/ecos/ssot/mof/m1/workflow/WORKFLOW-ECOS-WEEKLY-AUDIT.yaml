@@ -92,6 +92,7 @@ steps:
   depends_on:
   - IndexSync
 execution:
+  backend: default
   mode: sequential
   max_retries: 3
   timeout: 1200

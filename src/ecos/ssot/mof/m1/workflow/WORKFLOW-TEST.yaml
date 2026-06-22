@@ -14,6 +14,14 @@ properties:
   steps: 测试工作流——单元测试→集成测试→E2E→报告
   trigger: agent-invoke
 
+execution:
+  mode: workflow
+  backend: default
+  max_retries: 3
+  timeout: 600
+  on_failure: abort
+  audit_enabled: true
+
 model_driven_refs:
   source_file: projects/ecos/src/ecos/ssot/mof/m1/
 

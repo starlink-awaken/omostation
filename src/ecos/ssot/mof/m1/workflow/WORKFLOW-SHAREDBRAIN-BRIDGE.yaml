@@ -75,6 +75,7 @@ steps:
   depends_on:
   - SyncBidirectional
 execution:
+  backend: default
   mode: sequential
   max_retries: 3
   timeout: 600

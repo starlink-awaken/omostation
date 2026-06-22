@@ -149,5 +149,26 @@ def _auto_register_backends():
     except Exception:
         pass
 
+    # Symphony Protocol Backend (ecos 内部模块——状态机编排)
+    try:
+        register("symphony", "ecos.workflow.backends.symphony", "execute",
+                 description="Symphony State Machine — 协议级阶段跃迁编排 (L0)")
+    except Exception:
+        pass
+
+    # Swarm Engine Backend (通过 aetherforge/swarm_engine 可选接入)
+    try:
+        register("swarm", "ecos.workflow.backends.swarm", "execute",
+                 description="Swarm multi-agent task orchestration engine (aetherforge)")
+    except Exception:
+        pass
+
+    # Runtime Executor Backend (通过 runtime.executor 可选接入)
+    try:
+        register("runtime", "ecos.workflow.backends.runtime", "execute",
+                 description="Runtime project lifecycle orchestrator (INIT→DELIVERY)")
+    except Exception:
+        pass
+
 
 _auto_register_backends()
