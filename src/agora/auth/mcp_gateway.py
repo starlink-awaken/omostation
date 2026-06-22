@@ -96,6 +96,13 @@ KNOWN_BACKENDS: list[dict] = [
         "args": ["run", "--package", "ecos", "python", "-m", "ecos.mcp_vfs"],
     },
     {
+        "name": "ecos-workflow",
+        "mcp_endpoint": "",
+        "command": "uv",
+        "args": ["run", "--package", "ecos", "python", "-m", "ecos.mcp_server"],
+        "description": "eCOS L0 工作流引擎 MCP (8 workflow tools + SSOT + domain tools)",
+    },
+    {
         "name": "codeanalyze",
         "mcp_endpoint": "",
         "command": "uv",
