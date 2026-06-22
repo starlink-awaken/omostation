@@ -408,8 +408,8 @@ def main() -> int:
     # Gap #7: MetaOS 工作流编排入口
     wf_p = sub.add_parser(
         "workflow",
-        help="🧠 MetaOS 工作流编排（动态规划 / 执行 / 历史）",
-        epilog="子命令 (源自 metaos 引擎): plan / run / history / status\n示例: cockpit workflow plan \"目标\"",
+        help="🧠 工作流编排（MetaOS 动态规划 / ecos L0 M1 引擎）",
+        epilog="子命令: plan / run / history / approve (MetaOS) | ecos (L0 M1 引擎)\n示例:\n  cockpit workflow ecos list\n  cockpit workflow plan \"目标\"\n  cockpit workflow history",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     wf_p.add_argument("workflow_args", nargs="*", help="workflow 子命令和参数")

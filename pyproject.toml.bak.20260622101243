@@ -56,7 +56,7 @@ quote-style = "double"
 
 [tool.uv.sources]
 runtime = { path = "../runtime" }
-agora = { path = "../agora", editable = true }
+agora = { path = "../agora" }
 omo = { path = "../omo", editable = true }
 l4-kernel = { path = "../l4-kernel", editable = true }
 

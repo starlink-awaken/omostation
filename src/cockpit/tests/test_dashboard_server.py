@@ -5,7 +5,11 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from cockpit.dashboard_server import _load_compute, _load_debt, _omo_report, _run_e2e, app
+from cockpit.dashboard.helpers import load_compute as _load_compute
+from cockpit.dashboard.helpers import load_debt as _load_debt
+from cockpit.dashboard.helpers import omo_report as _omo_report
+from cockpit.dashboard.helpers import run_e2e as _run_e2e
+from cockpit.dashboard_server import app
 
 
 @pytest.fixture
@@ -42,11 +46,11 @@ class TestDashboardAuth:
         monkeypatch.setenv("COCKPIT_DASHBOARD_TOKEN", "test-secret")
         import importlib
 
-        import cockpit.dashboard_server as ds
+        import cockpit.dashboard.constants as c
 
-        importlib.reload(ds)
-        assert ds.DASHBOARD_TOKEN == "test-secret"  # noqa: S105
-        assert ds.DASHBOARD_TOKEN != ""
+        importlib.reload(c)
+        assert c.DASHBOARD_TOKEN == "test-secret"  # noqa: S105
+        assert c.DASHBOARD_TOKEN != ""
 
 
 class TestDashboardLoaders:
@@ -98,9 +102,9 @@ quota_summary:
             encoding="utf-8",
         )
 
-        monkeypatch.setattr("cockpit.dashboard_server.LLM_QUOTA_SUMMARY_PATH", quota_path)
-        monkeypatch.setattr("cockpit.dashboard_server.LLM_COST_LOG_PATH", cost_path)
-        monkeypatch.setattr("cockpit.dashboard_server.PROVIDER_PLANE_PATH", provider_plane_path)
+        monkeypatch.setattr("cockpit.dashboard.helpers.LLM_QUOTA_SUMMARY_PATH", quota_path)
+        monkeypatch.setattr("cockpit.dashboard.helpers.LLM_COST_LOG_PATH", cost_path)
+        monkeypatch.setattr("cockpit.dashboard.helpers.PROVIDER_PLANE_PATH", provider_plane_path)
 
         result = _load_compute()
 
@@ -130,7 +134,7 @@ quota_summary:
 
     def test_load_debt_no_omo_dir(self, monkeypatch):
         monkeypatch.setattr(
-            "cockpit.dashboard_server.OMO_ROOT",
+            "cockpit.dashboard.helpers.OMO_ROOT",
             Path("/nonexistent/path"),
         )
         result = _load_debt()
@@ -155,7 +159,7 @@ quota_summary:
         assert result["result"] == "error"
 
     def test_omo_report_empty_dir(self, monkeypatch, tmp_path):
-        monkeypatch.setattr("cockpit.dashboard_server.OMO_ROOT", tmp_path)
+        monkeypatch.setattr("cockpit.dashboard.helpers.OMO_ROOT", tmp_path)
         (tmp_path / ".omo" / "debt" / "items").mkdir(parents=True)
         result = _omo_report()
         assert result["total"] == 0
@@ -168,16 +172,16 @@ class TestDashboardCORS:
         monkeypatch.setenv("COCKPIT_DASHBOARD_CORS_ORIGIN", "http://myapp.local")
         import importlib
 
-        import cockpit.dashboard_server as ds
+        import cockpit.dashboard.constants as c
 
-        importlib.reload(ds)
-        assert ds.DASHBOARD_CORS_ORIGIN == "http://myapp.local"
+        importlib.reload(c)
+        assert c.DASHBOARD_CORS_ORIGIN == "http://myapp.local"
 
 
 class TestDashboardComputeApi:
     def test_api_compute_endpoint(self, test_client, monkeypatch):
         monkeypatch.setattr(
-            "cockpit.dashboard_server._load_compute",
+            "cockpit.dashboard.routes.load_compute",
             lambda: {
                 "summary": {"total_calls": 3},
                 "recent_traffic": [],
