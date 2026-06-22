@@ -258,7 +258,7 @@ def execute_workflow(name: str, params: dict | None = None,
                     "summary": f"已路由到 {wf.get('layer')} 层执行",
                 }
             else:
-                step_result = _execute_step(action, params)
+                step_result = _execute_step(action, params, step=step)
             ok = step_result.get("passed", True)
             results["steps"].append({
                 "name": step_name,
@@ -303,20 +303,68 @@ def execute_workflow(name: str, params: dict | None = None,
 # =========================================================================
 
 
-def _execute_step(action: str, params: dict | None = None) -> dict:
+def _execute_step(action: str, params: dict | None = None,
+                  step: dict | None = None) -> dict:
     """执行单个步骤（通过 actions.py 注册表路由）
 
-    action 先经过 actions.py 的命名空间剥离和别名映射，
-    然后查找注册的 handler。
-    未注册 action 返回未知动作错误。
+    支持自定义命令:
+      当 step 中定义了 command 字段且 action 在 actions.py 中未注册时,
+      将 command 作为 subprocess 命令执行。
+
+    示例 YAML:
+      steps:
+        - name: 自定义检查
+          action: my_custom_check
+          command: python3 /path/to/script.py --flag
+          timeout: 60
     """
     from ecos.workflow.actions import resolve_action
 
     params = params or {}
     handler = resolve_action(action)
-    if handler is None:
-        return {"passed": False, "summary": f"未知动作: {action}"}
-    return handler(params)
+    if handler is not None:
+        return handler(params)
+
+    # 自定义命令回退 (step.command)
+    if step and step.get("command"):
+        return _execute_command(step)
+
+    return {"passed": False, "summary": f"未知动作: {action}"}
+
+
+def _execute_command(step: dict) -> dict:
+    """执行自定义命令 (step.command + step.args)"""
+    import shlex
+    import subprocess
+
+    command = step.get("command", "")
+    if not command:
+        return {"passed": False, "summary": "无 command 定义"}
+
+    # 拆分为 shell 命令
+    if isinstance(command, str):
+        cmd = shlex.split(command)
+    else:
+        cmd = list(command)
+
+    timeout = step.get("timeout", 60)
+    step_name = step.get("name", "?")
+
+    try:
+        logger.info("Executing custom command: %s", " ".join(cmd))
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        ok = r.returncode == 0
+        summary = r.stdout.strip()[:200] or r.stderr.strip()[:200] or ("✅" if ok else "❌")
+        return {"passed": ok, "summary": summary,
+                "stdout": r.stdout[:1000], "stderr": r.stderr[:500]}
+    except subprocess.TimeoutExpired:
+        logger.warning("Custom command timed out (%ss): %s", timeout, step_name)
+        return {"passed": False, "summary": f"命令超时 ({timeout}s)"}
+    except FileNotFoundError:
+        return {"passed": False, "summary": f"命令未找到: {cmd[0] if cmd else ''}"}
+    except Exception as e:
+        logger.error("Custom command failed: %s", e)
+        return {"passed": False, "summary": str(e)}
 
 
 # =========================================================================

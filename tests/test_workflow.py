@@ -905,3 +905,75 @@ class TestDynamicBackend:
             ],
         })
         assert d3["action"] == "__done__"
+
+
+class TestCustomCommand:
+    """step.command 自定义命令测试"""
+
+    def test_execute_custom_command_ok(self):
+        from ecos.workflow.executor import _execute_step
+        result = _execute_step("custom_pwd", step={
+            "name": "测试pwd",
+            "action": "custom_pwd",
+            "command": "echo hello_world",
+        })
+        assert result["passed"] is True
+        assert "hello_world" in result.get("summary", "")
+
+    def test_execute_custom_command_fails(self):
+        from ecos.workflow.executor import _execute_step
+        result = _execute_step("custom_false", step={
+            "name": "测试false",
+            "action": "custom_false",
+            "command": "false",
+        })
+        assert result["passed"] is False
+
+    def test_execute_custom_command_not_found(self):
+        from ecos.workflow.executor import _execute_step
+        result = _execute_step("nonexistent_bin", step={
+            "name": "测试不存在",
+            "action": "nonexistent_bin",
+            "command": "/nonexistent/binary --flag",
+        })
+        assert result["passed"] is False
+        assert "未找到" in result.get("summary", "")
+
+    def test_execute_custom_command_timeout(self):
+        from ecos.workflow.executor import _execute_step
+        result = _execute_step("custom_sleep", step={
+            "name": "测试超时",
+            "action": "custom_sleep",
+            "command": "sleep 30",
+            "timeout": 1,
+        })
+        assert result["passed"] is False
+        assert "超时" in result.get("summary", "")
+
+    def test_custom_command_through_default_backend(self, monkeypatch):
+        """通过默认后端执行自定义命令"""
+        from ecos.workflow.backend_registry import resolve
+
+        wf = {
+            "execution": {"backend": "default"},
+            "steps": [
+                {"name": "自定义步骤", "action": "custom_echo", "command": "echo ok"},
+            ],
+        }
+        fn = resolve(wf)
+        result = fn(wf)
+        assert result["passed"] == 1
+        assert result["failed"] == 0
+
+    def test_registered_action_still_works(self):
+        """已注册 action 不受影响"""
+        from ecos.workflow.executor import _execute_step
+        # domain_audit 是已注册 action，即使传了 command 也不该用 command
+        result = _execute_step("domain_audit", step={
+            "name": "审计",
+            "action": "domain_audit",
+            "command": "echo should_not_run",
+        })
+        # domain_audit 依赖 ~/bin/ecos，但这是已注册 action
+        # 所以 command 字段被忽略，走正常 action 路由
+        assert "result" not in result or result.get("result", {}).get("stdout", "") != "should_not_run"

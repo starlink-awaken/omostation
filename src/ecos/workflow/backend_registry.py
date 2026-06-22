@@ -33,7 +33,7 @@ def _default_executor(m1_node: dict, params: dict | None = None) -> dict:
         step_name = step.get("name", f"step-{i}")
         action = step.get("action", "")
         try:
-            step_result = _execute_step(action, params)
+            step_result = _execute_step(action, params, step=step)
             ok = step_result.get("passed", True)
             results["steps"].append({
                 "name": step_name,
