@@ -253,55 +253,39 @@ def ecos_brief() -> str:
 
 # ── 工作流工具 ──
 
-import yaml as _yaml  # noqa: E402
-_W = ECOS_SRC / "ssot"
-_M1_WF_DIR = _W / "mof" / "m1" / "workflow"
-_WF_CATALOG = _W / "registry" / "workflow-catalog.yaml"
-
-def _load_workflow_nodes():
-    nodes = []
-    if _M1_WF_DIR.exists():
-        for f in sorted(_M1_WF_DIR.glob("WORKFLOW-*.yaml")):
-            try:
-                node = _yaml.safe_load(open(f))
-                if node and node.get("type") == "Workflow":
-                    nodes.append(node)
-            except Exception:
-                pass
-    return nodes
-
 @mcp.tool()
 def workflow_list(domain: str = "", layer: str = "", status: str = "") -> str:
     """列出所有已注册工作流 · 按域/层/状态过滤。domain可选: memory|omo|analysis|persona|forge|meta|infra。layer可选: L0|L1|L2|I0|L3|L4。status可选: defined|active|deprecated|archived"""
-    nodes = _load_workflow_nodes()
-    filtered = []
-    for n in nodes:
-        if domain and n.get("domain") != domain:
-            continue
-        if layer and n.get("layer") != layer:
-            continue
-        if status and n.get("status") != status:
-            continue
-        filtered.append({
-            "id": n.get("id"), "name": n.get("name"),
-            "subtype": n.get("subtype"), "domain": n.get("domain"),
-            "layer": n.get("layer"), "bos_uri": n.get("bos_uri"),
-            "description": n.get("description", ""),
-        })
-    return json.dumps({"workflows": filtered, "total": len(filtered), "filtered_from_total": len(nodes)}, ensure_ascii=False)
+    try:
+        from ecos.workflow import list_from_m1
+
+        nodes = list_from_m1()
+        filtered = []
+        for n in nodes:
+            if domain and n.get("domain") != domain:
+                continue
+            if layer and n.get("layer") != layer:
+                continue
+            if status and n.get("status") != status:
+                continue
+            filtered.append(n)
+        return json.dumps({"workflows": filtered, "total": len(filtered), "filtered_from_total": len(nodes)}, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"error": str(e), "workflows": [], "total": 0})
+
 
 @mcp.tool()
 def workflow_show(name: str) -> str:
     """查看指定工作流完整定义 · 步骤/关系/SLA/跨层映射"""
-    nodes = _load_workflow_nodes()
-    name = name.lower()
-    for n in nodes:
-        nid = n.get("id", "").lower()
-        nname = n.get("name", "").lower()
-        kebab = nid.replace("workflow-", "").replace("_", "-")
-        if name in (nid, nname) or name in nid or name in kebab:
-            return json.dumps(n, ensure_ascii=False)
-    return json.dumps({"error": f"工作流未找到: {name}"})
+    try:
+        from ecos.workflow import load_workflow
+
+        wf = load_workflow(name)
+        if not wf:
+            return json.dumps({"error": f"工作流未找到: {name}"}, ensure_ascii=False)
+        return json.dumps(wf, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 
 @mcp.tool()
