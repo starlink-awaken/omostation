@@ -1144,3 +1144,71 @@ class TestDAGExecution:
         fn(wf)
         # A 应在 B 之前
         assert executed_order.index("A") < executed_order.index("B")
+
+
+class TestConditionalSteps:
+    """条件步骤 (step.when) 测试"""
+
+    def test_no_condition_runs(self):
+        from ecos.workflow.backend_registry import _evaluate_when
+        assert _evaluate_when("", {"steps": []}) is False
+
+    def test_skip_when_passed_is_false(self):
+        from ecos.workflow.backend_registry import _evaluate_when
+        results = {"steps": [{"name": "前置", "status": "failed"}]}
+        assert _evaluate_when("${steps.前置.passed}", results) is True
+
+    def test_run_when_passed_is_true(self):
+        from ecos.workflow.backend_registry import _evaluate_when
+        results = {"steps": [{"name": "前置", "status": "ok"}]}
+        assert _evaluate_when("${steps.前置.passed}", results) is False
+
+    def test_run_when_failed_is_true(self):
+        from ecos.workflow.backend_registry import _evaluate_when
+        results = {"steps": [{"name": "前置", "status": "failed"}]}
+        assert _evaluate_when("${steps.前置.failed}", results) is False  # False=不跳过
+
+    def test_skip_when_failed_is_false(self):
+        from ecos.workflow.backend_registry import _evaluate_when
+        results = {"steps": [{"name": "前置", "status": "ok"}]}
+        assert _evaluate_when("${steps.前置.failed}", results) is True  # True=跳过（条件不满足）
+
+    def test_referenced_step_not_found(self):
+        from ecos.workflow.backend_registry import _evaluate_when
+        assert _evaluate_when("${steps.未知.passed}", {"steps": []}) is False
+
+    def test_skipped_step_in_executor(self, monkeypatch):
+        """通过 executor 验证条件跳过"""
+        from ecos.workflow.backend_registry import resolve
+        executed_steps = []
+
+        def mock_execute(m1_node, params=None):
+            nonlocal executed_steps
+            result = {"steps": [], "passed": 0, "failed": 0}
+            for s in m1_node.get("steps", []):
+                name = s.get("name", "")
+                if name == "前置":
+                    result["steps"].append({"name": name, "status": "failed", "result": {"passed": False}})
+                    result["failed"] += 1
+                else:
+                    result["steps"].append({"name": name, "status": "ok", "result": {"passed": True}})
+                    result["passed"] += 1
+                executed_steps.append(name)
+            return result
+
+        monkeypatch.setattr("ecos.workflow.backend_registry._default_executor", mock_execute)
+
+        # 当 前置 失败时，后置 应被跳过
+        wf = {
+            "execution": {"backend": "default", "mode": "sequential"},
+            "steps": [
+                {"name": "前置", "action": "health_check"},
+                {"name": "后置", "action": "echo", "command": "echo skip",
+                 "when": "${steps.前置.failed}"},
+            ],
+        }
+        fn = resolve(wf)
+        result = fn(wf)
+        step_names = [s["name"] for s in result.get("steps", [])]
+        assert "前置" in step_names
+        assert "后置" in step_names

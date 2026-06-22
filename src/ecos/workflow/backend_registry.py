@@ -144,6 +144,46 @@ def _should_retry(policy: str, step_result: dict, exception: Exception | None) -
     return False
 
 
+def _evaluate_when(condition: str, results: dict) -> bool:
+    """评估 when 条件表达式，返回 True=跳过此步骤
+
+    语法:
+      when: "${steps.step_name.passed}"    # 引用的步骤是否通过
+      when: "${steps.step_name.failed}"    # 引用的步骤是否失败
+
+    示例:
+      steps:
+        - name: 检查
+          action: health_check
+        - name: 报告
+          action: custom_cmd
+          command: echo \"检查失败\"
+          when: \"${steps.检查.failed}\"
+    """
+    if not condition:
+        return False
+
+    import re
+
+    # 解析 ${steps.xxx.yyy} 格式
+    m = re.search(r"\$\{steps\.([^.]+)\.(passed|failed)\}", condition)
+    if not m:
+        return False  # 无法解析的条件不跳过
+
+    ref_step = m.group(1)
+    ref_field = m.group(2)
+
+    for step_result in results.get("steps", []):
+        if step_result.get("name") == ref_step:
+            if ref_field == "passed":
+                return step_result.get("status") != "ok"
+            elif ref_field == "failed":
+                return step_result.get("status") not in ("failed", "error")
+
+    # 引用的步骤不存在 → 不跳过（让执行决定）
+    return False
+
+
 def _default_executor(m1_node: dict, params: dict | None = None) -> dict:
     """默认后端：通过硬编码 subprocess 执行 step action
 
@@ -167,6 +207,20 @@ def _default_executor(m1_node: dict, params: dict | None = None) -> dict:
     for i, step in enumerate(sorted_steps, 1):
         step_name = step.get("name", f"step-{i}")
         action = step.get("action", "")
+
+        # ── 条件跳过: when 字段 ──
+        when_cond = step.get("when", "")
+        if when_cond:
+            skip = _evaluate_when(when_cond, results)
+            if skip:
+                logger.info("Skipping step '%s' (when=%s)", step_name, when_cond)
+                results["steps"].append({
+                    "name": step_name,
+                    "status": "skipped",
+                    "action": action,
+                    "reason": f"条件不满足: {when_cond}",
+                })
+                continue
 
         max_attempts = retry_config.get("max_attempts", 0)
         policy = retry_config.get("policy", "on_failure")
