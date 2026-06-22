@@ -42,6 +42,7 @@ def main() -> None:
         "new": _cmd_create,
         "validate": _cmd_validate,
         "val": _cmd_validate,
+        "test": _cmd_test,
         "--help": _cmd_help,
         "-h": _cmd_help,
         "help": _cmd_help,
@@ -427,6 +428,26 @@ def _cmd_validate(args: list[str]) -> None:
         sys.exit(1)
 
 
+def _cmd_test(args: list[str]) -> None:
+    """ecos workflow test <name> — mock 模式测试工作流编排"""
+    if not args:
+        print("用法: ecos workflow test <name>")
+        sys.exit(1)
+
+    from ecos.workflow.executor import test_workflow
+
+    name = args[0]
+    print()
+    result = test_workflow(name)
+
+    if "error" in result:
+        print(f"❌ {result['error']}")
+        sys.exit(1)
+
+    if result["failed"] > 0:
+        sys.exit(1)
+
+
 
 def _cmd_help(_args: list[str] | None = None) -> None:
     print("用法: ecos workflow <子命令> [参数]")
@@ -443,6 +464,7 @@ def _cmd_help(_args: list[str] | None = None) -> None:
     print("    [--m1]                生成 M1 格式（默认是简化 definition）")
     print("    [--path <file>]       指定输出路径")
     print("  validate <name>         验证工作流定义")
+    print("  test <name>             测试工作流编排（mock action，验证链路）")
     print("  logs|runs [选项]        工作流运行历史（同 ecos workflow runs）")
     print()
     print("运行历史选项:")

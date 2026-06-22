@@ -25,6 +25,7 @@ from ecos.workflow.executor import (
     _execute_step,
     execute_m1_workflow,
     execute_workflow,
+    test_workflow,
 )
 from ecos.workflow.actions import (
     get_action,
@@ -58,6 +59,7 @@ __all__ = [
     # executor
     "execute_workflow",
     "execute_m1_workflow",
+    "test_workflow",
     "_execute_step",
     # actions (声明式注册)
     "register_action",

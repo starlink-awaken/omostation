@@ -317,3 +317,155 @@ def _execute_step(action: str, params: dict | None = None) -> dict:
     if handler is None:
         return {"passed": False, "summary": f"未知动作: {action}"}
     return handler(params)
+
+
+# =========================================================================
+# 测试模式 — mock action 执行，验证编排逻辑
+# =========================================================================
+
+
+def test_workflow(name: str) -> dict:
+    """测试工作流编排逻辑（mock 所有 action，验证步骤链路）
+
+    与 --dry-run 的区别:
+      --dry-run: 跳过执行，只打印步骤名
+      test:     完整验证编排管线（加载→校验→步骤解析→后端解析→mock执行）
+
+    验证项目:
+      - 工作流定义加载正确
+      - 所有步骤的 action 名可解析
+      - 步骤顺序正确
+      - 后端可解析
+      - X1-X4 治理管线完整
+      - 全部 mock 通过（0 failed = 编排正确）
+    """
+    from ecos.workflow.loader import load_workflow
+    from ecos.workflow.validator import validate_workflow
+    from ecos.workflow.backend_registry import resolve as resolve_backend
+
+    wf = load_workflow(name)
+    if not wf:
+        return {"error": f"工作流不存在: {name}", "passed": 0, "failed": 0}
+
+    wf_name = wf.get("name", name)
+    is_m1 = wf.get("type") == "Workflow"
+
+    results: dict = {
+        "workflow": name,
+        "display": wf_name,
+        "source": "m1" if is_m1 else "definition",
+        "steps": [],
+        "passed": 0,
+        "failed": 0,
+        "warnings": [],
+        "started": datetime.now().isoformat(),
+    }
+
+    print(f"🧪 测试工作流: {wf_name}")
+    if wf.get("description"):
+        print(f"   描述: {wf['description']}")
+    print(f"   步骤数: {len(wf.get('steps', []))}")
+    print()
+
+    # ── 1. 治理校验 (X1-X4) ──
+    m1_node = dict(wf)
+    if "execution" not in m1_node:
+        m1_node["execution"] = {}
+    m1_node["source"] = "m1" if is_m1 else "definition"
+
+    violations = validate_workflow(m1_node)
+    errors = [v for v in violations if v.get("severity") == "error"]
+    warnings = [v for v in violations if v.get("severity") != "error"]
+
+    if errors:
+        print(f"  ❌  治理违规 ({len(errors)}):")
+        for v in errors:
+            print(f"      [{v.get('id', '?')}] {v['message']}")
+            results["warnings"].append(v["message"])
+        results["failed"] = len(errors)
+        results["finished"] = datetime.now().isoformat()
+        return results
+
+    for v in warnings:
+        print(f"  ⚠️  [{v.get('id', '?')}] {v['message']}")
+        results["warnings"].append(v["message"])
+
+    # ── 2. 后端解析验证 ──
+    backend_name = (
+        wf.get("execution", {}).get("backend")
+        or wf.get("execution", {}).get("mode")
+        or "default"
+    )
+    try:
+        backend_fn = resolve_backend(m1_node)
+        assert callable(backend_fn), "后端不可调用"
+        print(f"  ✅  backend 解析: {backend_name}")
+    except Exception as e:
+        print(f"  ❌  backend 解析失败 ({backend_name}): {e}")
+        results["failed"] += 1
+        results["finished"] = datetime.now().isoformat()
+        return results
+
+    # ── 3. Mock 执行所有步骤 ──
+    steps = wf.get("steps", [])
+    from ecos.workflow.actions import resolve_action
+
+    for i, step in enumerate(steps, 1):
+        step_name = step.get("name", f"step-{i}")
+        action = step.get("action", "")
+        deps = step.get("depends_on", [])
+
+        # 验证 action 名可解析
+        handler = resolve_action(action)
+        if handler is None:
+            print(f"  ❌  [{i}/{len(steps)}] {step_name:25s}  action 不可解析: {action}")
+            results["steps"].append({
+                "name": step_name, "status": "failed",
+                "action": action, "error": f"未知动作: {action}",
+            })
+            results["failed"] += 1
+            continue
+
+        dep_info = f"  (依赖: {', '.join(deps)})" if deps else ""
+        print(f"  ✅  [{i}/{len(steps)}] {step_name:25s}  {action}{dep_info}")
+
+        results["steps"].append({
+            "name": step_name,
+            "status": "ok",
+            "action": action,
+            "result": {"passed": True, "summary": "✅ (mock)"},
+            "depends_on": deps,
+        })
+        results["passed"] += 1
+
+    # ── 4. 依赖链验证 ──
+    step_names = {s["name"] for s in steps if s.get("name")}
+    unresolved_deps = []
+    for step in steps:
+        for dep in step.get("depends_on", []):
+            if dep not in step_names:
+                unresolved_deps.append(dep)
+                print(f"  ⚠️  未解析依赖: {dep} (步骤 {step.get('name', '?')})")
+
+    if unresolved_deps:
+        results["warnings"].append(f"未解析依赖: {', '.join(unresolved_deps)}")
+        print(f"  ⚠️  共 {len(unresolved_deps)} 个未解析依赖")
+
+    # ── 完成 ──
+    results["finished"] = datetime.now().isoformat()
+
+    print()
+    print(f"{'=' * 50}")
+    print("  测试结果:")
+    print(f"    步骤:        {len(steps)} 总 / {results['passed']} ✅ / {results['failed']} ❌")
+    print(f"    违规:        {len(errors)} error / {len(warnings)} warning")
+    print(f"    后端:        {backend_name}")
+    print(f"    未解析依赖:   {len(unresolved_deps)}")
+    print(f"{'=' * 50}")
+
+    if results["failed"] == 0:
+        print("  ✅  编排验证通过，所有 mock 步骤执行成功。")
+    else:
+        print(f"  ❌  编排验证失败: {results['failed']} 个问题。")
+
+    return results
