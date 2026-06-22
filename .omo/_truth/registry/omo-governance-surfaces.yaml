@@ -273,10 +273,12 @@ assets:
     retention_mode: until_replaced
     truth_owner: governance
     write_via:
+      - projects/omo
       - governance
     consumed_by:
       - agents
       - cockpit
+    notes: canonical capability registry lives under .omo/capabilities/*.yaml; legacy .omo/registry/*.yaml is read-only compatibility
     status: active
   - id: OMO-CHANGE-LOG
     ref: .omo/change-log/

@@ -80,6 +80,7 @@
 - complex request bridge / user confirmation / task-center accounting-control -> `omo_ingress.create_blocked_task()` / `record_task_consensus()` / `write_usage_accounting()` / `write_task_center_freshness()` / `write_task_center_control_decision()`
 - governance overlay roadmap/control mutation -> `omo_ingress.update_governance_overlay_state()`
 - task-center truth helper outputs（例如 skill manifest / discovery registry）-> `omo_ingress.create_skill_manifest()` / `write_discovery_registry()`
+- self-healing 自动 debt 登记 -> `omo_self_healing.SelfHealingEngine._create_debt()` 必须走 `omo_ingress.upsert_debt_item()`
 
 任何 helper/factory（例如 skill packet / discovery blueprint instantiation）如果要生成 `.omo/tasks/blocked/*.yaml`，也必须复用 `omo_ingress.create_blocked_task()`，不能各写一套 `write_yaml_atomic()`。
 
@@ -138,6 +139,7 @@
 - `delivery_state` / `change_history` / `runtime_logs` 必须显式说明是否 `append_only`
 - `archived_state` 必须是 `archival + manual_archive`
 - `compatibility_alias` 必须是 `compatibility_alias + alias_only`，并带 `alias_target`
+- `capability_market` 若承载 capability registry，现行写入路径必须是 `.omo/capabilities/*.yaml`；历史 `.omo/registry/*.yaml` 仅允许读兼容，不再新增写入
 
 这不是说明文案字段，而是 lint gate 会检查的治理契约。没有这两个字段，就说明“这个目录要留多久、能不能覆盖、什么时候归档”根本没定义清楚。
 

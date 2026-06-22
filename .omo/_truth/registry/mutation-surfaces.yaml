@@ -103,6 +103,22 @@ surfaces:
     delivery_artifact_root: .omo/_delivery/ingress/standards/
     mode: brokered
     category: human_cli
+  - name: omo-capability-registry-scan
+    entrypoint: omo-capability capability scan --write
+    runtime_ref: projects/omo/src/omo/omo_capability.py:scan_command
+    mutation_target: .omo/capabilities/INDEX.md + .omo/capabilities/projects-capabilities.yaml + .omo/capabilities/sharedwork-sample.yaml + .omo/capabilities/system-packages.yaml + .omo/capabilities/agent-clis.yaml
+    broker_ref:
+    delivery_artifact_root:
+    mode: direct-governance-registry
+    category: human_cli
+  - name: omo-capability-registry-register
+    entrypoint: omo-capability capability register <file>
+    runtime_ref: projects/omo/src/omo/omo_capability.py:register_command
+    mutation_target: .omo/capabilities/manual-capabilities.yaml
+    broker_ref:
+    delivery_artifact_root:
+    mode: direct-governance-registry
+    category: human_cli
   - name: omo-task-center-skill-manifest
     entrypoint: projects/omo/src/omo/omo_skill.py:register_skill_manifest
     runtime_ref: projects/omo/src/omo/omo_skill.py:register_skill_manifest
@@ -117,6 +133,14 @@ surfaces:
     mutation_target: .omo/_truth/task-center/discovery-registry.yaml
     broker_ref: projects/omo/src/omo/omo_ingress.py:write_discovery_registry
     delivery_artifact_root: .omo/_delivery/ingress/task-center/discovery/
+    mode: brokered
+    category: governance_ingress
+  - name: omo-self-healing-debt
+    entrypoint: projects/omo/src/omo/omo_self_healing.py:SelfHealingEngine._create_debt
+    runtime_ref: projects/omo/src/omo/omo_self_healing.py:SelfHealingEngine._create_debt
+    mutation_target: .omo/debt/items/*.yaml + .omo/_truth/registry/debt.yaml
+    broker_ref: projects/omo/src/omo/omo_ingress.py:upsert_debt_item
+    delivery_artifact_root: .omo/_delivery/ingress/debts/
     mode: brokered
     category: governance_ingress
   - name: omo-bridge-bmad-openspec

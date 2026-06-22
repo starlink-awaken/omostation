@@ -1,16 +1,18 @@
 # Capability registry
 
 > Status: active
-> Owner: Phase 12 capability ecosystem foundation
+> Owner: governance
+> Runtime path: `.omo/capabilities/`
+> Legacy compatibility: `.omo/registry/` is retained only for historical evidence lookup
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `projects-capabilities.yaml` | Core workspace capability records |
-| `sharedwork-sample.yaml` | External/SharedWork sample records for Phase 14 triage |
-| `system-packages.yaml` | Package baseline records |
-| `agent-clis.yaml` | Agent CLI baseline |
+| `.omo/capabilities/projects-capabilities.yaml` | Core workspace capability records |
+| `.omo/capabilities/sharedwork-sample.yaml` | External/SharedWork sample records for Phase 14 triage |
+| `.omo/capabilities/system-packages.yaml` | Package baseline records |
+| `.omo/capabilities/agent-clis.yaml` | Agent CLI baseline |
 | `pilot-contract.yaml` | Selected Phase 12 pilot interface contract |
 | `article-samples.yaml` | Article ingestion policy samples |
 | `package-baseline.yaml` | Package dry-run baseline |

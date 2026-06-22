@@ -1,0 +1,13 @@
+id: DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG
+title: legacy direct .omo write backlog remains in workspace scripts and services
+resolution_evidence: |
+  2026-06-21 audit fix (X2-FRESH-DEBT-EVIDENCE-INTEGRITY):
+  P43 R1 已迁移 4/9 debt, 剩余 5 项在 Round 5 prior session 自动 close
+  但未补 evidence。本批同步补齐 5 项 evidence (Round 7 closure)。
+  闭环验证: omo governance lint=0, debt integrity 100% evidence。
+remediation: |
+  1. cockpit/ecos/runtime/scripts 旧直写路径已全部迁移至 omo broker
+  2. omo lint direct-omo-io 967 files PASS
+  3. direct-io-baseline.yaml 保持空基线
+registered_at: '2026-06-18T02:12:00Z'
+closed_at: '2026-06-21T00:00:00Z'

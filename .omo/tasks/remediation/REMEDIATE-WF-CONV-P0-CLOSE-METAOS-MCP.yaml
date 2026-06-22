@@ -1,0 +1,35 @@
+id: REMEDIATE-WF-CONV-P0-CLOSE-METAOS-MCP
+phase: '42'
+priority: P0
+title: Phase 8 — 关闭 metaos MCP 直启入口
+description: |
+  metaos MCP server 仍被 Agora mcp_gateway.py KNOWN_BACKENDS 直接启动：
+  {"name": "metaos", "command": "uv", "args": ["run", "--package", "metaos", "python", "-m", "metaos.mcp_server"]}
+  
+  这违反了"入口收敛"原则——metaos 的编排能力应通过 ecos/workflow + agora_mcp_backend 路由，
+  而非作为 Agora 的一等后端直启。
+
+  方案：
+  1. 从 agoa mcp_gateway KNOWN_BACKENDS 移除 metaos 条目
+  2. 保留 metaos src 代码（不删除，只关停入口）
+  3. 验证 agora 启动后不影响非 metaos 的 MCP 工具
+  4. 更新 MCPTOOL-METAOS.yaml / SVC-METAOS-MCP.yaml 状态为 not_running
+status: active
+risk_level: L3
+allowed_operation_level: L3
+human_approval_required: false
+acceptance_criteria:
+- metaos 条目从 agoa mcp_gateway KNOWN_BACKENDS 移除
+- agora 启动后 metaos 不自动运行
+- 其他 21 个 KNOWN_BACKENDS 不受影响
+- 780 ecos tests + agora tests 无回归
+deliverables:
+- 修改 agoa mcp_gateway.py
+- 更新 metaos MCP YAML 状态
+depends_on: []
+created_at: '2026-06-22T12:00:00Z'
+updated_at: '2026-06-22T12:00:00Z'
+source_docs:
+- projects/agora/src/agora/auth/mcp_gateway.py
+- projects/ecos/src/ecos/ssot/mof/m1/mcptool/MCPTOOL-METAOS.yaml
+- projects/ecos/src/ecos/ssot/mof/m1/service/SVC-METAOS-MCP.yaml

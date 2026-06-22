@@ -1,5 +1,5 @@
 name: kairon-ci
-# P47 E: kairon monorepo (31 包, 18.9 万行). 用 make test 循环 pytest.
+# kairon monorepo (16 包). make test 循环 pytest + make typecheck-gate mypy 回归门.
 on: [push, pull_request]
 
 jobs:
@@ -15,6 +15,23 @@ jobs:
         with:
           python-version: "3.13"
       - uses: astral-sh/setup-uv@v3
-      - name: make test (31 包循环 pytest)
+      - name: make test (16 包循环 pytest)
         # 注: kairon 是大 monorepo, make test 可能慢 (~分钟级).
         run: cd projects/kairon && make test
+
+  typecheck-gate:
+    name: kairon mypy regression gate (DEBT-CI-MYPY-STRICT)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v3
+      - name: make typecheck-gate (卡增量不卡存量)
+        # 存量 1245 errors (见 projects/kairon/mypy-baseline.yaml); CI 卡回归 (新错误致红).
+        # mypy 版本漂移致误报时: cd projects/kairon && make typecheck-gate-update 刷新 baseline.
+        run: cd projects/kairon && make typecheck-gate

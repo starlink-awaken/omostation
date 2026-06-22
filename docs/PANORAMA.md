@@ -13,6 +13,10 @@
 | Workspace 当前目标 | `/.omo/goals/current.yaml` |
 | `.omo` 三层治理契约 | `/.omo/standards/omo-governance-surfaces.md` |
 | `.omo` 治理面注册表 | `/.omo/_truth/registry/omo-governance-surfaces.yaml` |
+| `.omo` 持久化写入入口清单 | `/.omo/_truth/registry/mutation-surfaces.yaml` |
+| `.omo` internal/runtime 写路径清单 | `/.omo/_truth/registry/internal-write-profiles.yaml` |
+| `.omo` task policy 注册表 | `/.omo/_truth/registry/task-policies.yaml` |
+| `.omo` direct-io 基线 | `/.omo/_truth/registry/direct-io-baseline.yaml` |
 | X1-X4 治理规则 | `/.omo/_truth/x1-governance-policies.yaml` ~ `x4-consistency-rules.yaml` |
 | L0 强制约束 | `/projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` |
 | BOS 路由实现 | `/projects/agora/src/agora/mcp/resolver/services.py` |
@@ -161,6 +165,24 @@ Agent 操作
   → Signal 发射 (l4-kernel SignalBus)
 ```
 
+### 3.2.1 `.omo` 持久化机制
+
+```
+script / wrapper / cron
+  → projects/omo 内核函数 or omo CLI
+    → truth registry / task policy / write profile 校验
+    → 原子写 / 锁 / 审计追加
+    → .omo/ state/control/truth/delivery 落盘
+
+禁止路径:
+  script 直接 open(..., "w") / write_text() / yaml dump 到 .omo/
+```
+
+- 当前治理基线要求 `.omo/_truth/registry/direct-io-baseline.yaml` 保持空基线 `entries: []`。
+- `omo lint direct-omo-io` 先校验空基线，再调用 gatekeeper 扫描脚本直写。
+- `omo lint mutation-surfaces` / `omo lint internal-write-profiles` 用来保证“允许写哪里、谁能写、怎么写”有机器可读注册表，而不是靠 reviewer 记忆。
+- 因此，新机制不是“多写几份文档”，而是“registry + lint + kernel helper + CI”四件套一起落地。
+
 ### 3.3 L4 健康检查
 
 ```
@@ -233,7 +255,7 @@ Agent 操作
 | 任务 | `.omo/tasks/active/` YAML | — |
 | CARDS | `@驾驶舱/CARDS/` (文件) / `data/cards/cards.db` (SQLite) | 双系统 |
 | 治理策略 | `.omo/_truth/x1-governance-policies.yaml` | X1-X4 链 |
-| OMO 目标 | `.omo/_truth/goals/current.yaml` | — |
+| OMO 目标（运行时） | `.omo/goals/current.yaml` | `_truth/goals/` 只作事实面镜像/索引，不作为 broker 写入目标 |
 
 ---
 

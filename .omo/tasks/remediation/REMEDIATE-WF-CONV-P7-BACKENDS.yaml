@@ -1,0 +1,38 @@
+id: REMEDIATE-WF-CONV-P7-BACKENDS
+phase: '42'
+priority: P1
+title: 修复 swarm/runtime backend 为 subprocess + agora MCP 路由
+description: |
+  当前 swarm 和 runtime backends 试图直接 import 上层包（aetherforge/runtime），
+  由于 ecos 是 L0 无法依赖这些包，全部 fallback 到 mock。
+
+  修复方案：
+  1. swarm_backend.py：改为通过 subprocess 调用 aetherforge CLI
+     `uv run --package aetherforge python -m aetherforge.main swarm run --json`
+  2. runtime_backend.py：改为通过 subprocess 调用 runtime CLI
+     `uv run --package runtime python -m runtime.cli exec run --json`
+  3. 保留 agora MCP 路由模式为第一优先（通过 agora MCP 工具）
+  4. subprocess 模式为第二优先（不依赖 agora 可用性）
+  5. mock 为最后 fallback
+status: active
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+acceptance_criteria:
+- swarm backend 调用 aetherforge CLI 成功
+- runtime backend 调用 runtime CLI 成功  
+- 两者都有 agora MCP 路由优先
+- 66 workflow tests 全过
+- 780 ecos tests 全过
+deliverables:
+- 重写 ecos/workflow/backends/swarm.py
+- 重写 ecos/workflow/backends/runtime.py
+- 单元测试覆盖
+depends_on:
+- REMEDIATE-WF-CONV-P0-DISPATCHER
+created_at: '2026-06-22T12:00:00Z'
+updated_at: '2026-06-22T12:00:00Z'
+source_docs:
+- projects/ecos/src/ecos/workflow/backends/swarm.py
+- projects/ecos/src/ecos/workflow/backends/runtime.py
+- projects/ecos/src/ecos/workflow/agora_mcp_backend.py

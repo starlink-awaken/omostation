@@ -1,0 +1,26 @@
+id: TASK-WF-P2-M1-EXTEND
+title: 'Phase 2: M1 DSL 扩展 + 多模式支持'
+status: planned
+task_type: feature
+risk_level: L2
+depends_on:
+  - TASK-WF-P1-BACKEND-ROUTING
+entry_gate:
+  - P1 验证门禁通过
+deliverables:
+  - M2 schema 新增 execution.mode/backend/budget/governance 字段
+  - mof-schema-validate.py 更新校验规则
+  - 1-2 个现有 M1 节点升级新字段做验证
+evidence_required:
+  - mof-schema-validate --strict 通过
+  - 升级后的 M1 被 execute_m1_workflow 正确解析
+  - 旧 M1 节点向后兼容
+test_plan:
+  - cd projects/ecos && uv run pytest tests/ -q
+  - python3 src/ecos/ssot/tools/mof-schema-validate.py --strict
+assigned_to: hermes
+human_approval_required: false
+phase: 2
+estimated_days: 2
+created_at: '2026-06-22'
+updated_at: '2026-06-22'

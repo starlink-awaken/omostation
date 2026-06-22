@@ -1,0 +1,27 @@
+id: TASK-WF-P3-GOVERNANCE
+title: 'Phase 3: 治理管线 + M0 快照'
+status: planned
+task_type: feature
+risk_level: L1
+depends_on:
+  - TASK-WF-P1-BACKEND-ROUTING
+  - TASK-WF-P2-M1-EXTEND
+entry_gate:
+  - P2 验证门禁通过
+deliverables:
+  - validator.py 实现 X1/X2/X4/X3 执行时检查
+  - 治理管线集成到 execute_m1_workflow()
+  - M0 snapshot 自动生成写入 .omo/state/workflow-runs/
+evidence_required:
+  - X1 约束校验能拦截违反 L0-constraints 的 workflow
+  - M0 快照正确写入
+  - 现有 execute_workflow() 不受影响
+test_plan:
+  - cd projects/ecos && uv run pytest tests/ -q
+  - python3 -c "测试 M0 snapshot 写入"
+assigned_to: hermes
+human_approval_required: false
+phase: 3
+estimated_days: 2
+created_at: '2026-06-22'
+updated_at: '2026-06-22'

@@ -10,16 +10,16 @@ phase_status: active
 current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
-health_score: 61.6
+health_score: 85
 health_score_source: manual_audit_post_session_cleanup_20260619
-health_score_generated_at: '2026-06-19T15:45:00Z'
+health_score_generated_at: '2026-06-22T03:59:23Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
 completed_tasks: 90
-total_tasks: 99
-active_tasks: 2
+total_tasks: 98
+active_tasks: 0
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
 phase2_core_complete: true
@@ -32,10 +32,7 @@ phase3_acceptance_completed_at: '2026-05-30T23:05:00Z'
 phase36_status: completed
 phase36_completed_at: '2026-06-11T00:00:00Z'
 next_active_tasks:
-- Current active queue from .omo/tasks/active/ (2 tasks)
-- TASK-GBRAIN-OPS-SPLIT
-- TASK-OMO-PHYSICAL-REORG
-- OPC-P6-SELF-EVOLUTION-doc-gate-e
+- (No active tasks)
 last_go_nogo: Phase 10 GO (closeout retrospective recorded; Phase 11 Wave 1 kickoff
   may proceed)
 phase2_status: completed
@@ -59,7 +56,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-21T06:01:14Z'
+updated_at: '2026-06-22T02:36:43Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -72,16 +69,8 @@ phase31_status: completed
 phase31_completed_at: '2026-06-18T00:00:00Z'
 phase31_note: '部分完成: cost tracking + langfuse + governance data 已实现; 完整指标体系待后续迭代'
 divergence_flags: []
-task_gate_summary:
-  TASK-GBRAIN-OPS-SPLIT:
-    canonical_status: candidate
-    gate_facts: []
-  TASK-OMO-PHYSICAL-REORG:
-    canonical_status: candidate
-    gate_facts: []
-promotion_blockers:
-  TASK-GBRAIN-OPS-SPLIT: []
-  TASK-OMO-PHYSICAL-REORG: []
+task_gate_summary: {}
+promotion_blockers: {}
 divergence_triage_summary: {}
 divergence_detail_refs: {}
 phase12_status: completed
@@ -152,7 +141,7 @@ debt_weight_items:
     weight: 0.0
     desc: ontoderive engine/ 幽灵目录 — 116 文件未安装, 50 tests 依赖
   DEBT-GBRAIN-OPERATIONS-TS:
-    resolved: false
+    resolved: true
     weight: 0.0
     desc: gbrain operations.ts 3.8K 行上帝模块
   DEBT-OMC-GBRAIN-PERSISTENCE:
@@ -174,6 +163,7 @@ resolved_debt_items:
 - DEBT-CROSSPROJECT-SYSPATH
 - DEBT-EMPTY-INIT-PY
 - DEBT-GBRAIN-55-TODOS
+- DEBT-GBRAIN-OPERATIONS-TS
 - DEBT-KAIRON-ONTODERIVE-PHANTOM
 - DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG
 - DEBT-OMC-GBRAIN-PERSISTENCE
@@ -184,20 +174,21 @@ debt_registry_ref: .omo/_truth/registry/debt.yaml
 debt_dashboard_ref: .omo/debt/dashboard/current.yaml
 debt_review_pack_ref: .omo/debt/reviews/current.md
 debt_metrics:
-  debt_health: 87.5
+  debt_health: 100.0
   classification_entropy: 0.0
   state_entropy: 0.0
-  pointer_entropy: 2.0
+  pointer_entropy: 0.0
   time_entropy: 0.0
-  backlog_pressure: 0.0
-  coupling_load: 1.0
+  backlog_pressure: 0
+  coupling_load: 0.0
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 7
+planned_tasks: 8
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- Current planned queue from .omo/tasks/planned/ (7 tasks)
+- Current planned queue from .omo/tasks/planned/ (8 tasks)
+- BET-WF-CONVERGENCE-REAL
 - IMPORTED-3268f8
 - IMPORTED-e5cb72
 - IMPORTED-f9b1e2

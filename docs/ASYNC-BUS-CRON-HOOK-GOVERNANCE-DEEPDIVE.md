@@ -561,7 +561,7 @@ runtime cron_service
 |------|------|
 | `compass_radar.py` | c2g radar，写 health.yaml / system.yaml |
 | `check_health_ssot.py` | health SSOT 一致性校验 |
-| `classify_planned.py` | planned 任务分类 |
+| `classify_planned.py` | planned queue 只读盘点（valid/invalid、approval queue、next actions） |
 | `workspace` | Workspace CLI 入口 |
 | `workspace-audit` | 6 维度统一审计 CLI |
 | `verify-omo.sh` | 治理验证链 |

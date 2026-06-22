@@ -62,4 +62,25 @@ history:
 - description: 'P43 R8 深度优化: c2g 新增 3 个测试文件 (84 tests), ports/tasks/bridge 全覆盖'
   timestamp: '2026-06-22T10:50:09.308150'
   version: 0.0.18
-version: 0.0.18
+- description: 'P44 R0: P0-1 验证 R5 prior session 5 debt evidence 闭环 (X2 audit 0 stale,
+    governance 100 A+)'
+  timestamp: '2026-06-22T10:56:20.480514'
+  version: 0.0.19
+- description: 'P44 R0 P1-3: M0/M1 双向追溯 99.6% (1181/1186, 5 缺为 Model meta 自指设计豁免)'
+  timestamp: '2026-06-22T11:10:29.731857'
+  version: 0.0.20
+- description: 'P44 R0 P2-1: X3 缺口 3→1 — Vault X1 (vault_x1_audit.py) + CARDS X3 (cards_x3_metrics.py)
+    + Domain_Systems X1/X3 (文档化)'
+  timestamp: '2026-06-22T11:19:12.077405'
+  version: 0.0.21
+- description: 'P44 R0 P2-2: aetherforge _legacy/ 文档化 (README + X1 引用), 治理清晰度提升'
+  timestamp: '2026-06-22T11:20:13.384574'
+  version: 0.0.22
+- description: 'P44 R0 P3-1: bin/mof-fix-cross-project.sh 跨子项目并发 ruff --fix (8 项目,
+    aetherforge 排除 _legacy)'
+  timestamp: '2026-06-22T11:21:48.051935'
+  version: 0.0.23
+- description: 'P44 R0 P3-1b: 闭环反馈 — X2 audit 捕获 cockpit 5 + kairon 1 真 lint 漂移, 全部修复'
+  timestamp: '2026-06-22T11:23:35.730745'
+  version: 0.0.24
+version: 0.0.24

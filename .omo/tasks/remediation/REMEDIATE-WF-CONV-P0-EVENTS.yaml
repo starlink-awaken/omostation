@@ -1,0 +1,30 @@
+id: REMEDIATE-WF-CONV-P0-EVENTS
+phase: '42'
+priority: P0
+title: Phase 9 — 激活事件驱动管线
+description: |
+  event_listener.py 已就绪 (275 行, 22 测试) 但缺实际事件源：
+  - `listen_forever(agora_sse)` 连向不存在的 SSE URL
+  - `listen_forever(events.jsonl)` 无任何写入者
+
+  方案：
+  1. 在 ecos/services/ 下创建 events_sse.py — bos://ecos/events SSE 端点
+  2. 写一个轻量 cron 脚本写入 events.jsonl（模拟真实事件流）
+  3. 更新 listen_forever 默认参数指向真实端点
+status: active
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+acceptance_criteria:
+- bos://ecos/events SSE 端点可连接并推送事件
+- listen_forever(agora_sse) 能接收到事件并触发工作流
+- 22 个事件驱动测试全部通过
+deliverables:
+- ecos/services/events_sse.py
+- cron 事件写入脚本
+- 更新 listen_forever 参数
+depends_on: []
+created_at: '2026-06-22T12:00:00Z'
+updated_at: '2026-06-22T12:00:00Z'
+source_docs:
+- projects/ecos/src/ecos/workflow/event_listener.py

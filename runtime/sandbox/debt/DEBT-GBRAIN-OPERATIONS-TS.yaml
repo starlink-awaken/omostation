@@ -1,0 +1,12 @@
+id: DEBT-GBRAIN-OPERATIONS-TS
+title: gbrain operations.ts 3.8K 行上帝模块
+next_review_at: '2026-07-01T00:00:00Z'
+gate_level: P3
+remediation: |
+  1. 创建 operations/ 子目录
+  2. 按领域拆分 (pages/tags/links/timeline/search/takes/jobs/files/code/memory/sources)
+  3. 创建 barrel operations.ts re-export
+  4. 更新 15+ import sites
+  5. 运行 bun test 验证
+  6. 关闭条件: operations.ts < 500 行 + bun test 全过
+registered_at: '2026-06-19T01:00:00Z'

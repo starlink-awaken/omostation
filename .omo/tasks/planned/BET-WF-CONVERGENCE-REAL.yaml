@@ -1,0 +1,56 @@
+id: BET-WF-CONVERGENCE-REAL
+phase: '42'
+priority: P0
+title: 工作流编排收敛真落实 — 关停旧路口 + dispatcher 独立
+description: "当前 ecos/workflow dispatcher 放在 L0 协议层，导致非 default backend \n(symphony/swarm/runtime)\
+  \ 因依赖无法加载实际引擎，全部 fallback 到 mock。\n5 个原始编排系统（metaos workflow / runtime executor\
+  \ / aetherforge swarm \n/ symphony state machine / ecos-legacy）仍然独立可调用，metaos MCP\
+  \ server \n仍在 Agora mcp_gateway 直接启动。\n\n本次 BET 解决收敛的核心矛盾：dispatcher 放错层 + 旧路口未关停。\n"
+status: candidate
+risk_level: L3
+allowed_operation_level: L3
+human_approval_required: false
+acceptance_criteria:
+- ecos/workflow 仅保留 DSL 定义 + 校验 + 治理（L0 职责）
+- 新增 workflow-daemon L3 服务承载真正 dispatch（可 import runtime/metaos/aetherforge）
+- metaos MCP 从 Agora mcp_gateway KNOWN_BACKENDS 移除，改为通过 agora_mcp_backend 路由
+- bos://ecos/events SSE 端点就绪，listen_forever 对接实际事件流
+- 端到端测试：ecos/workflow → agora → metaos 全链路验证
+- 旧 5 个独立入口至少 3 个实际关停
+- 780 ecos tests + 196 metaos tests + 66 workflow tests 全过
+deliverables:
+- dispatcher daemon (L3)
+- 移除 metaos MCP 直启
+- bos://ecos/events SSE 端点
+- 端到端集成测试
+- 更新架构评审文档
+depends_on: []
+created_at: '2026-06-22T12:00:00Z'
+updated_at: '2026-06-22T12:00:00Z'
+source_docs:
+- projects/ecos/docs/ARCHITECTURE-REVIEW-workflow-convergence.md
+knowledge_refs:
+- .omo/tasks/remediation/REMEDIATE-WF-CONV-P0-DISPATCHER.yaml
+- .omo/tasks/remediation/REMEDIATE-WF-CONV-P0-CLOSE-METAOS-MCP.yaml
+- .omo/tasks/remediation/REMEDIATE-WF-CONV-P0-EVENTS.yaml
+- .omo/tasks/remediation/REMEDIATE-WF-CONV-P7-BACKENDS.yaml
+- .omo/tasks/remediation/REMEDIATE-WF-CONV-P8-E2E.yaml
+metadata:
+  legacy_normalized_from: planned
+  legacy_status: active
+  normalized_at: '2026-06-22T02:28:30Z'
+  normalized_by: codex
+  normalization_source_ref: omo:worker:normalize-planned:BET-WF-CONVERGENCE-REAL
+  priority: P0
+task_type: feature
+handoff_refs: []
+entry_gate: []
+evidence_required:
+- legacy planned packet normalized
+test_plan:
+- python3 scripts/omo_worker.py task validate --all-planned
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null

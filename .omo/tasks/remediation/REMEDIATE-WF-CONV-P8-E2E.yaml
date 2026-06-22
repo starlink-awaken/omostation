@@ -1,0 +1,31 @@
+id: REMEDIATE-WF-CONV-P8-E2E
+phase: '42'
+priority: P1
+title: 端到端集成测试 — 验证收敛真实性
+description: |
+  当前所有测试都在模块内部，无端到端测试证明"收敛"确实在工作：
+  - ecos/workflow → agora_mcp_backend → agora → metaos 全链路未验证
+  - 没有测试确保 metaos 关停后系统仍正常
+  - 没有测试模拟事件触发工作流
+
+  方案：
+  1. 在 ecos/tests/ 下创建 test_workflow_e2e.py
+  2. 模拟 agora MCP 响应（不用真实 agora）
+  3. 测试 execute_m1_workflow 通过 agora backend 执行
+  4. 测试 listen_forever + match_event + execute_matched 全链路
+status: candidate
+risk_level: L1
+allowed_operation_level: L2
+human_approval_required: false
+acceptance_criteria:
+- E2E 测试覆盖 agora_mcp_backend 全链路
+- E2E 测试覆盖事件驱动全链路
+- 80 workflow tests 总覆盖
+depends_on:
+- REMEDIATE-WF-CONV-P7-BACKENDS
+created_at: '2026-06-22T12:00:00Z'
+updated_at: '2026-06-22T12:00:00Z'
+source_docs:
+- projects/ecos/tests/test_workflow.py
+- projects/ecos/src/ecos/workflow/agora_mcp_backend.py
+- projects/ecos/src/ecos/workflow/event_listener.py

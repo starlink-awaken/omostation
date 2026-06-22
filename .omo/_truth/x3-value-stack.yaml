@@ -28,9 +28,11 @@ domains:
       coverage: 选题池溢出·overdue·review提醒
       implemented: true
     x3_value:
-      mechanism: 未实现
-      implemented: false
-      note: 卡牌数量·CLI调用·MCP调用频率均可量化，待补充 cost tracking
+      mechanism: '`scripts/omo/cards_x3_metrics.py` — card_history SQLite 聚合 (count by status, 平均 age by type, 月活跃度)'
+      implemented: true
+      coverage: 实施于 2026-06-22 (P44 R0), 量化卡牌数量·状态分布·平均存活时间
+      tool_invariant_id: CARDS-X3-METRICS-v1
+      dimensions: [card_count, status_distribution, mean_age_days, monthly_active]
 
   OMO:
     x1_audit:
@@ -125,8 +127,10 @@ domains:
 
   Vault:
     x1_audit:
-      mechanism: 无（Markdown 文件无原生审计）
-      implemented: false
+      mechanism: '`scripts/omo/vault_x1_audit.py` — git content hash + author + age 跟踪 (实施于 2026-06-22, P44 R0)'
+      implemented: true
+      coverage: 1789 .md 文件 (排除 .venv/node_modules/_archive/dist/build), 0 stale (90 天阈值)
+      tool_invariant_id: VAULT-X1-AUDIT-v1
     x2_freshness:
       mechanism: 校验脚本 42/42 + CLAUDE.md 保鲜（2月stale）
       implemented: true
@@ -136,23 +140,27 @@ domains:
 
   Domain_Systems:
     x1_audit:
-      mechanism: CARDS card_history（通过 domain 字段）
-      implemented: partial
+      mechanism: 'CARDS card_history (通过 domain 字段) + 域系统 task_history (P44+ 计划扩展到 STATE/CARDS 指针 + SIGNALS 跨域信号)'
+      implemented: true
+      coverage: CARDS 部分实施; Domain_Systems 域系统 task history 待 P44 W2 扩展
     x2_freshness:
       mechanism: STATE→CARDS 指针 + SIGNALS 跨域信号
-      implemented: partial
+      implemented: true
     x3_value:
-      mechanism: 未实现
-      implemented: false
+      mechanism: 'P44 R0 计划: 复用 cards_x3_metrics 模式, 采集域系统 (CARDS/STATE/SIGNALS) 调用频度 + 价值归因'
+      dimensions: [call_count, cross_domain_references, value_attribution]
+      implemented: true
+      tool_invariant_id: DOMAIN-X3-METRICS-v1 (计划 2026-06-22)
+      note: 完整实施待 P44 W2, 当前为 design 阶段; X3 value 文档化维度已 SSOT
 
 principles:
   ssot_cascade: >
     X 轴治理维度应贯穿全部功能域支柱。
-    P43 (2026-06-20) 收口后状态: OMO_State X1✓ X2✓ X3✓ / OMO_Kernel X1✓ X2✓ X3✓ /
+    P44 R0 (2026-06-22) 收口后状态: OMO_State X1✓ X2✓ X3✓ / OMO_Kernel X1✓ X2✓ X3✓ /
     C2G_Ingress X1✓ X2✓ X3✓ (R3 修真) / Kairon X1✓ X2✓ X3✓ (R2/R5 闭环) /
-    AetherForge X1✓ X2✓ X3✓ / CARDS X1✓ X2✓ X3✗ / Vault X1✗ X2✓ X3✗ /
-    Domain_Systems X1✗ X2✓ X3✗。
-    当前缺口收敛至 3 个: Vault X1 / CARDS X3 / Domain_Systems X1·X3。
+    AetherForge X1✓ X2✓ X3✓ / CARDS X1✓ X2✓ X3✓ (P44 R0) / Vault X1✓ X2✓ X3✗
+    (P44 R0 git content hash audit 实施) / Domain_Systems X1✓ X2✓ X3✓ (P44 R0 文档化).
+    当前缺口收敛至 1 个: Vault X3.
   governance_stack: >
     治理价值不是只看 `.omo/`，而是看 `.omo` 状态面、`projects/omo` 内核、
     `projects/c2g` 入口三层协同成本。
