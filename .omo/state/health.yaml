@@ -1,9 +1,9 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-06-23T01:38:07Z
+# generated_at: 2026-06-23T01:41:42Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 
-generated_at: "2026-06-23T01:38:07Z"
+generated_at: "2026-06-23T01:41:42Z"
 source: "c2g.strategy (real audit, no mock)"
 health_score: 85
 anomaly_count: 1

@@ -117,4 +117,7 @@ history:
   timestamp: '2026-06-23T01:36:25.578550+00:00'
   description: 'P47 R1-R2: 剩余 9 mof 工具 (mof-act/analyze/assign/autonomous/decide/evolution/export/manage/fix-cross-project.sh)
     Status: planned → implemented, 12/12 mof 全部 active'
-version: 0.0.34
+- version: 0.0.35
+  timestamp: '2026-06-23T01:41:36.938855+00:00'
+  description: 'P47 R3: mof-drift v2 加第 4 维度 stale_planned_tools (排除自指), 7 drifts → 1, governance 100 A+ 持续'
+version: 0.0.35

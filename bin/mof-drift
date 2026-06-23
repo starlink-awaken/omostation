@@ -94,6 +94,29 @@ def count_test_files(project_name: str) -> int:
     return count
 
 
+def count_stale_planned_tools() -> int:
+    """统计 bin/mof-* 工具中仍标 Status=planned 的数量 (P47 增).
+
+    Status=planned 超过 P45+ 阶段应该实施, 不应长期留 planned.
+    """
+    bin_dir = Path(__file__).parent
+    self_path = Path(__file__).resolve()
+    count = 0
+    for tool in bin_dir.glob("mof-*"):
+        if not tool.is_file():
+            continue
+        # 排除自己 (本文件含 "Status: planned" 字符串)
+        if tool.resolve() == self_path:
+            continue
+        try:
+            content = tool.read_text(encoding="utf-8", errors="ignore")
+        except Exception:
+            continue
+        if "Status: planned" in content:
+            count += 1
+    return count
+
+
 def detect_drift(project_name: str = None) -> list[dict]:
     """检测架构漂移"""
     nodes = load_all_m1()
@@ -119,7 +142,7 @@ def detect_drift(project_name: str = None) -> list[dict]:
                 "count": hacks,
                 "message": f"{hacks} sys.path.insert found in {proj}",
             })
-        
+
         # Check TODOs
         todos = count_todos(proj)
         if todos > 10:
@@ -130,7 +153,20 @@ def detect_drift(project_name: str = None) -> list[dict]:
                 "count": todos,
                 "message": f"{todos} TODOs found in {proj}",
             })
-        
+
+    # Check bin/mof-* tools with stale "Status: planned" (P47 增)
+    # 只在 detect_drift() 不带 project_name 时跑一次
+    if not project_name:
+        stale = count_stale_planned_tools()
+        if stale > 0:
+            drifts.append({
+                "project": "mof-tools",
+                "type": "stale_planned_tools",
+                "severity": "medium",
+                "count": stale,
+                "message": f"{stale} bin/mof-* tools still marked 'Status: planned'",
+            })
+
         # Check test coverage
         tests = count_test_files(proj)
         if tests == 0:
