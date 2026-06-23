@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Status: planned (P45 审计: 0 引用, 等 P46+ 实现)
+# Status: implemented (P47 R1: MOF 决策支持 — 多视角推理)
 """MOF 智能决策支持 — 回答"要不要做 X" """
 
 import sys

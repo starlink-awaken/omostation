@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Status: planned (P45 审计: 0 引用, 等 P46+ 实现)
+# Status: implemented (P47 R1: MOF 跨子项目并发 lint 修复 (P44 R0))
 # mof-fix-cross-project.sh - 跨子项目并发 lint 修复 (P44 R0)
 #
 # 对多个子项目并发跑 ruff --fix, 解决 P43 R4 那种跨项目 lint 漂移.

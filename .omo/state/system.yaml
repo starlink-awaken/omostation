@@ -12,13 +12,13 @@ next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
 health_score: 85
 health_score_source: manual_audit_post_session_cleanup_20260619
-health_score_generated_at: '2026-06-23T01:33:18Z'
+health_score_generated_at: '2026-06-23T01:38:07Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
-completed_tasks: 93
-total_tasks: 104
+completed_tasks: 105
+total_tasks: 106
 active_tasks: 0
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -56,7 +56,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-23T01:30:08Z'
+updated_at: '2026-06-23T01:34:23Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -180,21 +180,14 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 11
+planned_tasks: 1
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- Current planned queue from .omo/tasks/planned/ (11 tasks)
-- BET-ARCH-CONVERGENCE
+- Current planned queue from .omo/tasks/planned/ (1 task)
+- TASK-A5378E91
 - IMPORTED-3268f8
 - IMPORTED-e5cb72
 - IMPORTED-f9b1e2
-- OPT-BOS-GATEWAY
-- REMEDIATE-ARC-CONV-P1-CRON
-- TASK-08B2A2C5
-- TASK-1E562797
-- TASK-8CF4636A
-- TASK-COCKPIT-TEST-COVERAGE
-- TASK-DEBT-CLOSURE-EVIDENCE-20260620
 - P44-BET-3b90-FOLLOWUP
 - OPC-P6-SELF-EVOLUTION-doc-gate-e
 - IMPORTED-3268f8 (workspace→cockpit 命名 SSOT 统一 (架构师视角系统性债))

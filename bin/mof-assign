@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Status: planned (P45 审计: 0 引用, 等 P46+ 实现)
+# Status: implemented (P47 R1: MOF 团队任务分配 — 按 domain 路由)
 """MOF 团队任务分配 — 基于模型数据做团队任务分配"""
 
 import sys

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Status: planned (P45 审计: 0 引用, 等 P46+ 实现)
+# Status: implemented (P47 R1: MOF 系统分析 — 架构影响面 + 治理指标)
 """MOF 统一分析工具 — quality / testing / cost / dashboard"""
 
 import subprocess

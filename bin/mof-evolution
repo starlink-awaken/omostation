@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Status: planned (P45 审计: 0 引用, 等 P46+ 实现)
+# Status: implemented (P47 R1: MOF 系统演化追踪 — 跨 phase 变更分析)
 """MOF 系统演化追踪 — 追踪系统演化路径"""
 
 import subprocess
