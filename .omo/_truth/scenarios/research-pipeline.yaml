@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 id: research-pipeline
 description: Phase 12 scenario MVP for dry-run capability binding across collection, derivation, retrieval, and memory.
 capabilities:

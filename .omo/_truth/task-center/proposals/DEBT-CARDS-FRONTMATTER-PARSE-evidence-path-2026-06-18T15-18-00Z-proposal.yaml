@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史提案 (已审批), 标记 archived"
+---
+
 id: DEBT-CARDS-FRONTMATTER-PARSE-evidence-path-2026-06-18T15-18-00Z-proposal
 title: Update DEBT-CARDS-FRONTMATTER-PARSE evidence_refs to actual ref paths
 operation_level: L1

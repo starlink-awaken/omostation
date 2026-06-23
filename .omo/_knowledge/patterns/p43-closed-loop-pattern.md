@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # P43 Closed-Loop Pattern — M3 Lifecycle Instance
 
 > **Generated**: 2026-06-21 (post-P43 R5)

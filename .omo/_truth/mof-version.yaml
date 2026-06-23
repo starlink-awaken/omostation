@@ -98,4 +98,8 @@ history:
 - version: 0.0.29
   timestamp: '2026-06-22T08:39:36.935044+00:00'
   description: 'P45 文档生命周期治理: 4 类 frontmatter + omo_lint 第 14/15 维度 + governance 第 7 项 + 187 docs fm'
-version: 0.0.29
+- version: 0.0.30
+  timestamp: '2026-06-23T01:18:00.085216+00:00'
+  description: 'P45 R6: frontmatter 100% (49 → 100), 19 task-center proposals 补 archived fm + YAML fix, doc-lifecycle 第 7
+    项 → 100, governance 100 A+ 完美'
+version: 0.0.30

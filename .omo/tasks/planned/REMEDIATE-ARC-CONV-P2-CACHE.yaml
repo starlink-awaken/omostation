@@ -1,0 +1,47 @@
+id: REMEDIATE-ARC-CONV-P2-CACHE
+phase: '45'
+priority: P1
+title: Phase 2 — ecos workflow 缓存能力补齐
+description: >
+  ecos workflow 缺少缓存，对标扣 5 分。
+  实现步骤级 cache_ttl 字段 + memory 缓存后端 + executor pipeline 集成。
+status: done
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+acceptance_criteria:
+  - "✅ cache.py 模块创建：WorkflowStepCache 内存缓存 + TTL + 线程安全"
+  - "✅ executor.py 集成：pre-exec 缓存检查 + post-exec 缓存写入"
+  - "✅ M1 DSL 支持 cache_ttl 字段（execution.cache_ttl, 可选, 向后兼容）"
+  - "✅ MCP tools: workflow_cache_status + workflow_cache_invalidate"
+  - "✅ 14 个缓存测试全部通过"
+  - "✅ 全量 847 tests pass, 无回归"
+deliverables:
+- src/ecos/workflow/cache.py (4.7KB, 内存缓存模块)
+- executor.py 修改: 缓存管线集成
+- mcp_server.py 修改: 2 个新 MCP tools
+- INTERFACE.yaml 更新: MCP tools + 测试数
+tests: 847 passed, 3 skipped
+commit_ref: null
+depends_on: []
+created_at: '2026-06-23T00:00:00+08:00'
+updated_at: '2026-06-23T00:00:00+08:00'
+source_docs:
+- projects/ecos/src/ecos/workflow/executor.py
+- projects/ecos/src/ecos/workflow/loader.py
+- projects/ecos/src/ecos/workflow/__init__.py
+- projects/ecos/INTERFACE.yaml
+knowledge_refs:
+- .omo/tasks/planned/BET-ARCH-CONVERGENCE.yaml
+entry_gate:
+- REMEDIATE-ARC-CONV-P1-CRON status=done
+evidence_required:
+- commit_ref
+- 833 tests pass
+- 10+ 缓存 tests pass
+test_plan:
+- uv run pytest tests/ -q (833 pass)
+- uv run pytest tests/test_workflow/ -k "cache" (10+ pass)
+- ecos workflow interface 验证 cache 字段
+lifecycle_state: planned
+gate_level: none

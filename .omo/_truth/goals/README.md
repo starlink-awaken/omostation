@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # .omo/goals/ — 目标管理
 
 > Phase 级别目标定义和进度跟踪。人类设定目标，Agent 执行并报告进度。

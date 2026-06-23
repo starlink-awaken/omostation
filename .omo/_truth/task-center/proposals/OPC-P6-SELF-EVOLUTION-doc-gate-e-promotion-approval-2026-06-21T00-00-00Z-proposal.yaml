@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史提案 (已审批), 标记 archived"
+---
+
 id: OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-21T00-00-00Z-proposal
 title: Grant promotion approval for OPC-P6-SELF-EVOLUTION-doc-gate-e
 operation_level: L2

@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史提案 (已审批), 标记 archived"
+---
+
 id: phase9-wave3-identity-admission-approval-proposal
 title: Grant conditional approval for project.dispatch
 operation_level: L2

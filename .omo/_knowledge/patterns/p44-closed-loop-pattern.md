@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # P44 Closed-Loop Pattern — M3 Lifecycle Instance (Governance Catch-up + Drift 治本)
 
 > **Generated**: 2026-06-22 (post-P44 R7)

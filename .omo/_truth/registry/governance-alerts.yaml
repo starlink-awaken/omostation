@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # 治理告警规则配置
 #
 > 定义 X1-X4 检查失败时的告警规则

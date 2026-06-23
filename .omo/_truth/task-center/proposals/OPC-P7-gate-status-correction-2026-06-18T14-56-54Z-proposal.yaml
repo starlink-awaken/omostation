@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史提案 (已审批), 标记 archived"
+---
+
 id: OPC-P7-gate-status-correction-2026-06-18T14-56-54Z-proposal
 title: 'Correct OPC-P7.yaml gate_status: passed → not_yet_passed (AGENTS.md 5 红线 1)'
 operation_level: L2

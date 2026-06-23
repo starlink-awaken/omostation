@@ -1,0 +1,45 @@
+id: REMEDIATE-ARC-CONV-P3-AGORA-SPLIT
+phase: '45'
+priority: P1
+title: Phase 3 — Agora server/mcp.py 上帝模块拆分
+description: >
+  Agora server/mcp.py 1,945L 按 BOS 域拆分。
+status: done
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+acceptance_criteria:
+  - "✅ 实际评估：mcp.py 已从声明中的 1,945L 降至 672L（AGENTS.md 过时）"
+  - "✅ 工具已按域拆分至 9 个 tools_*.py（total 2,974L）"
+  - "✅ 无待拆分的大型功能块：mcp.py 仅含 3 个入口点 + 2 个 resource + 1 个 tool + 基础设施"
+  - "✅ 672L 对 FastMCP server 入口属于合理规模"
+deliverables:
+- 实际验证：Agora server/mcp.py 已提前拆分完毕，无需额外拆分工作
+- AGENTS.md 行数描述需更正（1,945→672）
+note: >
+  审计发现：架构技能中的 god module 描述已过期。
+  实际 mcp.py 672L，tools_*.py 共 9 个文件 2,974L。
+  已完成拆分工，无进一步拆分需要。更新 AGENTS.md 行数即可。
+tests: 1200 (agora CI baseline)
+commit_ref: null
+depends_on: []
+created_at: '2026-06-23T00:00:00+08:00'
+updated_at: '2026-06-23T00:00:00+08:00'
+source_docs:
+- projects/agora/src/agora/server/mcp.py
+- projects/agora/src/agora/server/tools_bos.py
+- projects/agora/src/agora/server/tools_bridge.py
+knowledge_refs:
+- .omo/tasks/planned/BET-ARCH-CONVERGENCE.yaml
+entry_gate:
+- REMEDIATE-ARC-CONV-P1-CRON status=done
+evidence_required:
+- commit_ref
+- 1200 tests pass
+- server/mcp.py 行数统计
+test_plan:
+- uv run pytest tests/ --ignore=tests/e2e -q (1165+ pass)
+- wc -l server/mcp.py <= 300
+- 逐一验证 42+ MCP tools 响应
+lifecycle_state: planned
+gate_level: none

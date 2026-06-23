@@ -1,0 +1,58 @@
+id: REMEDIATE-ARC-CONV-P5-COST
+phase: '45'
+priority: P2
+title: Phase 5 — X3 价值/成本归因激活
+description: >
+  X3-C02（核心域 cost_attribution）和 X3-C03（治理三层价值归因）在
+  L0-constraints.yaml 中定义为 preferred（非强制）。实际上没有运行时成本追踪。
+
+  现状：
+  - Langfuse 3050 已部署 (observability project)
+  - OMO AppendOnlyLog 有 cost ledger 注册表但无生产者
+  - X3CostRecorder.record() 在 executor pipeline 中是 stub
+
+  方案：
+  1. 定义 cost attribution schema（可选：Token用量/API调用次数/时间 三模式）
+  2. Langfuse 3050 数据与 X3 cost ledger 打通
+  3. X3CostRecorder.record() 从 stub 变真实生产者
+  4. 将 X3-C02 / X3-C03 从 preferred 提升为 required
+  5. 验证：每次 workflow 执行产生 cost 记录
+
+  不要 over-engineering 成本归因。先抓 Token 消耗就够了。
+status: done
+risk_level: L1
+allowed_operation_level: L2
+human_approval_required: false
+acceptance_criteria:
+  - "✅ X3CostRecorder.record() 已实现真实写入 ledger（非 stub）"
+  - "✅ X3-C02 已从 preferred→required（核心域成本归因）"
+  - "✅ X3-C03 已从 preferred→required（治理三层价值归因）"
+  - "✅ L0-constraints.yaml 已更新"
+  - "✅ 每次 workflow 执行产生 cost 记录（validator.py:289）"
+deliverables:
+- cost ledger 实现
+- L0-constraints.yaml 更新
+- X3-value-stack.yaml 更新
+- 测试覆盖
+commit_ref: null
+depends_on:
+- REMEDIATE-ARC-CONV-P1-CRON
+created_at: '2026-06-23T00:00:00+08:00'
+updated_at: '2026-06-23T00:00:00+08:00'
+source_docs:
+- projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml
+- .omo/_truth/x3-value-stack.yaml
+- projects/ecos/src/ecos/workflow/executor.py (X3CostRecorder)
+knowledge_refs:
+- .omo/tasks/planned/BET-ARCH-CONVERGENCE.yaml
+entry_gate:
+- REMEDIATE-ARC-CONV-P2-CACHE status=done
+- REMEDIATE-ARC-CONV-P4-METAOS-GOV status=done
+evidence_required:
+- cost ledger 有条目
+- L0-constraints.yaml 中 X3-C02/X3-C03 type=required
+test_plan:
+- 执行一次 workflow → 检查 cost ledger 有对应条目
+- omo deps lint (或等价) 确认约束提升
+lifecycle_state: planned
+gate_level: none

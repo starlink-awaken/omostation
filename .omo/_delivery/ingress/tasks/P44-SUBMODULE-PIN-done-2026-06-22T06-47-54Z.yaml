@@ -1,8 +1,0 @@
-kind: task_completed
-task_id: P44-SUBMODULE-PIN
-source_group: active
-task_ref_before: .omo/tasks/active/P44-SUBMODULE-PIN.yaml
-task_ref_after: .omo/tasks/done/P44-SUBMODULE-PIN.yaml
-actor: agent-runtime
-source_ref: P44-R5
-completed_at: '2026-06-22T06:47:54Z'

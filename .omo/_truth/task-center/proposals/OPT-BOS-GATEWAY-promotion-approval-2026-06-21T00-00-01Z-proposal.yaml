@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史提案 (已审批), 标记 archived"
+---
+
 id: OPT-BOS-GATEWAY-promotion-approval-2026-06-21T00-00-01Z-proposal
 title: Grant promotion approval for OPT-BOS-GATEWAY
 operation_level: L2

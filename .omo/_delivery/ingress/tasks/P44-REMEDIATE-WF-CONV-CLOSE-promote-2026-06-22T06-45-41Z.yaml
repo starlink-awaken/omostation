@@ -1,8 +1,0 @@
-kind: task_promoted_to_active
-task_id: P44-REMEDIATE-WF-CONV-CLOSE
-task_ref_before: .omo/tasks/planned/P44-REMEDIATE-WF-CONV-CLOSE.yaml
-task_ref_after: .omo/tasks/active/P44-REMEDIATE-WF-CONV-CLOSE.yaml
-handoff_ref: .omo/_knowledge/audits/2026-06-22-p44-closed-loop-closeout.md
-actor: agent-runtime
-source_ref: ''
-promoted_at: '2026-06-22T06:45:41Z'

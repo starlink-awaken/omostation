@@ -1,6 +1,6 @@
 id: P45-DOC-LIFECYCLE
 title: P45 文档生命周期治理 — 死文档识别 + 知识图谱 + 自动归档建议
-status: candidate
+status: done
 task_type: feature
 risk_level: L2
 depends_on:
@@ -26,7 +26,8 @@ approval_ref: P45-DOC-LIFECYCLE
 review_ref: null
 knowledge_refs:
 - .omo/_knowledge/audits/2026-06-22-p44-closed-loop-closeout.md
-handoff_refs: []
+handoff_refs:
+- .omo/_knowledge/audits/2026-06-22-p45-doc-lifecycle-closeout.md
 governance_refs:
 - .omo/standards/omo-governance-surfaces.md
 - .omo/_truth/registry/omo-governance-surfaces.yaml
@@ -38,10 +39,13 @@ entry_gate:
 - BET-P45
 evidence_required:
 - .omo/DOC-LIFECYCLE.md 存在
-- omo lint doc-lifecycle 工作
-- pre-commit 钩子工作
-- omo governance 第 7 项可见
-- 30 standards + 14 mof 标注完成
+- omo lint doc-lifecycle 工作 (1815 files, 4 类, 0 矛盾)
+- omo governance 第 7 项可见 (86 分)
+- pre-commit 2 钩子注册
+- X2-FRESH-DOC-LIFECYCLE 巡检
+- l4-kernel audit.doc_lifecycle capability
+- 187 docs frontmatter + 12 mof Status 注释
+- mof-version v0.0.28 → v0.0.29
 test_plan:
 - omo lint doc-lifecycle 跑通
 - omo governance ≥ 99 A+
@@ -60,3 +64,23 @@ metadata:
   ingress_plane: c2g
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: BET-P45
+  completed_at: '2026-06-23T01:07:35Z'
+  completed_via: omo task done
+  completion_actor: agent-runtime
+  completion_source_ref: P45-R5-closeout
+  evidence_paths_refreshed_at: '2026-06-23T01:19:22Z'
+  evidence_paths_refreshed_by: projects/omo
+  evidence_paths_refresh_source_ref: repair:verify-omo
+evidence_paths:
+- .omo/DOC-LIFECYCLE.md
+- projects/omo/src/omo/omo_lint.py
+- projects/omo/src/omo/omo_audit.py
+- .pre-commit-config.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- projects/l4-kernel/src/l4_kernel/registry.py
+- bin/mof-version
+- .omo/_knowledge/audits/2026-06-22-p45-doc-lifecycle-closeout.md
+- .omo/INDEX.md
+- .omo/_delivery/ingress/tasks/P45-DOC-LIFECYCLE-promote-2026-06-23T01-07-35Z.yaml
+- .omo/_delivery/ingress/tasks/P45-DOC-LIFECYCLE-done-2026-06-23T01-07-35Z.yaml
+completed_at: '2026-06-23T01:07:35Z'

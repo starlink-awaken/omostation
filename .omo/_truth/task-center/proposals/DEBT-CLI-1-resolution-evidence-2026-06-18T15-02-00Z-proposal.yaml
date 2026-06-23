@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史提案 (已审批), 标记 archived"
+---
+
 id: DEBT-CLI-1-resolution-evidence-2026-06-18T15-02-00Z-proposal
 title: Add resolution_evidence to DEBT-CLI-1 (omo debt close doesn't set it)
 operation_level: L1

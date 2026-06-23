@@ -1,0 +1,60 @@
+id: BET-ARCH-CONVERGENCE
+title: 架构整合与收敛 — 6 Phase 全量解决系统断层
+status: candidate
+task_type: strategic-convergence
+risk_level: L3
+depends_on: []
+source_docs:
+- .omo/_knowledge/audits/2026-06-23-architecture-convergence-audit.md
+deliverables:
+- Phase 1: AAMF 9 个治理 cron job 全部注册并首次运行
+- Phase 2: ecos workflow 缓存能力补齐（对标 Temporal/Prefect/Argo）
+- Phase 3: Agora server/mcp.py 1,945L 上帝模块按域拆分
+- Phase 4: MetaOS BOS 3 URI 经过 governance pipeline
+- Phase 5: X3 价值/成本归因从 preferred 提升为 required + 运行时
+- Phase 6: AAMF 28 个 ARCH_NODE 重同步 + calibrate 基线
+imported_via: omo_broker_c2g
+context_uri: bos://governance/convergence/BET-ARCH-CONVERGENCE
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs:
+- .omo/tasks/planned/REMEDIATE-ARC-CONV-P1-CRON.yaml
+- .omo/tasks/planned/REMEDIATE-ARC-CONV-P2-CACHE.yaml
+- .omo/tasks/planned/REMEDIATE-ARC-CONV-P3-AGORA-SPLIT.yaml
+- .omo/tasks/planned/REMEDIATE-ARC-CONV-P4-METAOS-GOV.yaml
+- .omo/tasks/planned/REMEDIATE-ARC-CONV-P5-COST.yaml
+- .omo/tasks/planned/REMEDIATE-ARC-CONV-P6-CALIBRATE.yaml
+handoff_refs: []
+entry_gate:
+- P45 阶段入口（架构收敛为最高优先级）
+evidence_required:
+- 6 个 REMEDIATE 全 status=done
+- exit_gate 门禁全部通过
+test_plan:
+- 退出门禁验证脚本全量 PASS
+- 系统健康分 ≥ 90 分
+allowed_operation_level: L3
+human_approval_required: false
+priority: P0
+phase: '45'
+description: >
+  2026-06-23 架构全景扫描识别 7 个断层域，归并为 6 Phase 收敛计划。
+
+  Phase 1 (P0) — AAMF 治理自动化未能激活，9 个 arcnode-* cron job 全部未调度。
+  Phase 2 (P1) — ecos workflow 缓存缺失，对标扣 5 分。
+  Phase 3 (P1) — Agora server/mcp.py 1,945L 上帝模块待拆分。
+  Phase 4 (P2) — MetaOS BOS 3 URI 直通子进程，未过 governance pipeline。
+  Phase 5 (P2) — X3 成本/价值归因规则定义为 preferred，无运行时实现。
+  Phase 6 (P2) — AAMF 28 节点停摆 28 天，需重同步与校准基线。
+
+  每 Phase 有严格 exit gate，不达门禁不退。cron job 每 6h 验证进度。
+created_at: '2026-06-23T00:00:00+08:00'
+updated_at: '2026-06-23T00:00:00+08:00'
+metadata:
+  ingress_plane: c2g
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: BET-ARCH-CONVERGENCE
+  architecture_audit_ref: session-2026-06-23-architecture-convergence

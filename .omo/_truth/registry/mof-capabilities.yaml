@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # MOF 能力注册表 — 所有 MOF 工具/约束/流程的唯一注册点
 # 本文件是 MOF 体系的 SSOT，防止遗忘或混乱
 

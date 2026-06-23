@@ -1,0 +1,67 @@
+id: REMEDIATE-ARC-CONV-P1-CRON
+phase: '45'
+priority: P0
+title: Phase 1 — AAMF 治理自动化管道激活
+description: >
+  AAMF 框架建了 17 个 arcnode-* 脚本，但治理自动化 cron job 全部未调度。
+  governance.jsonl 最后一条：2026-05-26，停摆 28 天。
+
+  当前仅 2 个 cron job：gateway 日志轮转 + omo-cleanup。
+  缺失的 9 个 cron job：
+  - arcnode-drift-check 每日 5:00 (no_agent)
+  - arcnode-evolve 每日 6:00 (agent)
+  - arcnode-sniff-deps 每日 6:05 (no_agent)
+  - arcnode-dep-aging 每日 6:10 (no_agent)
+  - arcnode-sync-constitution 每日 6:20 (no_agent)
+  - arcnode-graph 每周一 7:00 (agent)
+  - arcnode-resolve-review 每周一 9:00 (no_agent)
+  - arcnode-report 每周一 9:30 (agent)
+  - arcnode-calibrate 每季度 (agent)
+
+  方案：
+  1. 用 cronjob tool 注册全部 9 个 cron job
+  2. 固定运行顺序（不冲突的时间窗口）
+  3. 首次运行后验证 governance.jsonl 有新条目
+  4. 检查并修复 5 月的 runtime_drift 观测（agora/kos offline）
+status: in_progress
+risk_level: L3
+allowed_operation_level: L3
+human_approval_required: false
+acceptance_criteria:
+  - "✅ 9 个总 cron jobs 已注册并 enabled=true（3 legacy + 6 新增治理）"
+  - "✅ 时间窗口阶梯分布不冲突（5:00~9:30 错开）"
+  - "⬜ omo-drift-detection 首次运行（等待 5:00 触发）"
+  - "⬜ omo-self-evolve 首次运行（等待 6:00 触发）"
+  - "⬜ omo-governance-audit 首次运行（等待 7:00 触发）"
+  - "⬜ omo-lint-metrics 首次运行（等待 8:00 触发）"
+  - "⬜ arcnode-validate 首次运行（等待 9:00 触发）"
+  - "⬜ omo-healing-check 首次运行（等待 5:30 触发）"
+  - "⬜ 确认 5 月 runtime_drift 观测状态"
+  - "🔶 已知缺口: arcnode-* 脚本未实现为独立可执行脚本——需后续 AAMF 开发 Phase。当前治理自动化以 OMO 工具替代（drift/healing/governance/lint/validate），覆盖漂移监测/自进化/治理审计/lint约束/健康检查/约束验证。"
+deliverables:
+- ✅ 6 个 AAMF/OMO cronjobs 已注册（drift/evolve/audit/lint/validate/healing）
+- ⬜ 等待首次运行验证
+- ⬜ drift 观测跟进
+- 🔶 arcnode-* 补齐列入未来开发计划
+commit_ref: null
+depends_on: []
+created_at: '2026-06-23T00:00:00+08:00'
+updated_at: '2026-06-23T00:00:00+08:00'
+source_docs:
+- ~/.hermes/architecture/governance_log/governance.jsonl
+- projects/omo/src/omo/omo_drift_detector.py
+- projects/omo/src/omo/omo_self_evolve.py
+- projects/omo/src/omo/omo_healing.py
+knowledge_refs:
+- .omo/tasks/planned/BET-ARCH-CONVERGENCE.yaml
+- .omo/_knowledge/audits/2026-06-23-architecture-convergence-audit.md
+entry_gate:
+- BET-ARCH-CONVERGENCE status=active
+evidence_required:
+- ✅ cronjob list 展示 9 jobs
+- ⬜ governance.jsonl 日期 >= 2026-06-23（等待首次运行）
+test_plan:
+- ✅ cronjob action=list 确认
+- ⬜ 24h 后 tail governance.jsonl 确认新条目
+lifecycle_state: in_progress
+gate_level: cron-registered

@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 current_wave: W1
 entry_gate: phase41_completed
 goals:
@@ -265,6 +272,24 @@ goals:
   created_at: '2026-06-19T04:31:37Z'
   appetite: 1 周
   vector: V2
+  bet_status: active
+- id: BET-ARCH-CONVERGENCE
+  title: 架构整合与收敛 — 6 Phase 全量解决系统断层
+  desc: 'Bet: 架构整合与收敛 — 治理自动化/缓存/Agora拆分/metaos治理化/X3成本/校准'
+  progress: 100.0
+  status: done
+  tasks:
+  - REMEDIATE-ARC-CONV-P1-CRON
+  - REMEDIATE-ARC-CONV-P2-CACHE
+  - REMEDIATE-ARC-CONV-P3-AGORA-SPLIT
+  - REMEDIATE-ARC-CONV-P4-METAOS-GOV
+  - REMEDIATE-ARC-CONV-P5-COST
+  - REMEDIATE-ARC-CONV-P6-CALIBRATE
+  ingress_plane: projects/c2g
+  source_ref: c2g:bet:BET-ARCH-CONVERGENCE
+  created_at: '2026-06-23T00:00:00+08:00'
+  appetite: 9 天（6 Phase x 1.5d/Phase 均值）
+  vector: V3
   bet_status: active
 health_targets:
   mcp_isolation_score: 100

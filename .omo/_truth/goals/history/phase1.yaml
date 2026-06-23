@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # Phase 1 目标归档
 # ⚠️ 此为历史归档 — 反映 Phase 1 关闭时的原始状态，不作为当前执行源
 # 当前执行源: .omo/goals/current.yaml | .omo/state/system.yaml | convergence.yaml

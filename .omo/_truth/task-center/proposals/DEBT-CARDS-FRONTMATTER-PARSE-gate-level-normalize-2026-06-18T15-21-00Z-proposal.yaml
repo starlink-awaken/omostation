@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-22
+archived-since: 2026-06-22
+note: "P45 审计: 历史提案 (已审批), 标记 archived"
+---
+
 id: DEBT-CARDS-FRONTMATTER-PARSE-gate-level-normalize-2026-06-18T15-21-00Z-proposal
 title: Normalize DEBT-CARDS-FRONTMATTER-PARSE gate_level to watchlist (X4 dimension
   → omo enum)

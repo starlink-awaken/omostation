@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+---
+
 # X1-X4 治理检查器注册表
 #
 > 统一管理所有治理检查器，支持动态注册和执行

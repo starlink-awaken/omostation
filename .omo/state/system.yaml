@@ -12,13 +12,13 @@ next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
 health_score: 85
 health_score_source: manual_audit_post_session_cleanup_20260619
-health_score_generated_at: '2026-06-22T08:44:55Z'
+health_score_generated_at: '2026-06-23T01:18:09Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0
 blocked_tasks: 0
-completed_tasks: 92
-total_tasks: 108
+completed_tasks: 93
+total_tasks: 116
 active_tasks: 0
 phase39_status: completed
 phase39_completed_at: '2026-06-14T00:00:00Z'
@@ -56,7 +56,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-22T07:33:25Z'
+updated_at: '2026-06-23T01:14:36Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -68,11 +68,19 @@ phase30_completed_at: '2026-06-06T01:30:00Z'
 phase31_status: completed
 phase31_completed_at: '2026-06-18T00:00:00Z'
 phase31_note: '部分完成: cost tracking + langfuse + governance data 已实现; 完整指标体系待后续迭代'
-divergence_flags: []
+divergence_flags:
+- missing_goal_tasks:6
 task_gate_summary: {}
 promotion_blockers: {}
-divergence_triage_summary: {}
-divergence_detail_refs: {}
+divergence_triage_summary:
+  missing_goal_tasks:6:
+    severity: medium
+    owner: control
+    disposition: must_fix
+divergence_detail_refs:
+  missing_goal_tasks:
+    count: 6
+    ref: .omo/evidence/divergence/missing_goal_tasks.yaml
 phase12_status: completed
 phase12_completed_at: '2026-06-01T00:50:00Z'
 ecosystem_maturity_score: 100
@@ -106,56 +114,44 @@ phase26_entry_gate: phase24_completed
 product_surface_traceability_score: 100
 knowledge_capture_search_readiness_score: 100
 phase32_completed_at: '2026-06-07T00:00:00Z'
-debt_weight: 1.0
+debt_weight: 0.3
 debt_weight_items:
-  DEBT-CLI-1:
-    resolved: true
-    weight: 0.0
-    desc: broker debt
-  DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG:
-    resolved: true
-    weight: 0.0
-    desc: legacy direct .omo write backlog remains in workspace scripts and services
-  DEBT-CARDS-FRONTMATTER-PARSE:
-    resolved: true
-    weight: 0.0
-    desc: CARDS debt frontmatter YAML parsing fails when title contains colons
-  DEBT-COCKPIT-HEALTH-DISTORTION:
-    resolved: true
-    weight: 0.0
-    desc: cockpit health --full reports stale/incorrect service status
-  DEBT-CROSSPROJECT-SYSPATH:
-    resolved: true
-    weight: 0.0
-    desc: 23 处 sys.path.insert 硬编码路径注入
-  DEBT-EMPTY-INIT-PY:
-    resolved: true
-    weight: 0.0
-    desc: 5 empty __init__.py files need module docstrings
-  DEBT-GBRAIN-55-TODOS:
-    resolved: true
-    weight: 0.0
-    desc: gbrain 55 TODO/FIXME comments — needs audit
-  DEBT-KAIRON-ONTODERIVE-PHANTOM:
-    resolved: true
-    weight: 0.0
-    desc: ontoderive engine/ 幽灵目录 — 116 文件未安装, 50 tests 依赖
-  DEBT-GBRAIN-OPERATIONS-TS:
-    resolved: true
-    weight: 0.0
-    desc: gbrain operations.ts 3.8K 行上帝模块
-  DEBT-OMC-GBRAIN-PERSISTENCE:
-    resolved: true
-    weight: 0.0
-    desc: gbrain AppendOnlyLog 持久化路径与 omo audit log 同步
-  DEBT-OMC-METAOS-OMO-PLANE:
-    resolved: true
-    weight: 0.0
-    desc: metaos 与 omo 治理面边界 (avoid direct .omo write)
-  DEBT-SWARM-ENGINE-20260614104223:
-    resolved: true
-    weight: 0.0
-    desc: swarm-engine 已归档, 仅保留 _archive 快照
+  D2_CI_E2E:
+    resolved: false
+    weight: 0.15
+    desc: CI E2E 测试环境容器化
+  D3_EU_PRICING:
+    resolved: false
+    weight: 0.15
+    desc: eu-pricing 独立测试覆盖
+  SB_DECOMPOSITION:
+    resolved: false
+    weight: 0.2
+    desc: SharedBrain 拆解进度 (19器官→核+迁移+废弃)
+  SB_UNTESTED_PKGS:
+    resolved: false
+    weight: 0.15
+    desc: kairon 4个untested包 (core-models, shared-lib, sharedbrain-bridge, wksp)
+  SB_ORPHANED_TASKS:
+    resolved: false
+    weight: 0.1
+    desc: orphaned_tasks 结构化 registry
+  SB_ROOT_CLEANUP:
+    resolved: false
+    weight: 0.05
+    desc: 根目录 SharedBrain/ 空壳清理
+  SB_BRIDGE_FIX:
+    resolved: false
+    weight: 0.1
+    desc: sharedbrain-bridge 死代码清理或重连
+  SB_PROJECTS_YAML:
+    resolved: false
+    weight: 0.05
+    desc: PROJECTS.yaml 行数更新 (71K→824K)
+  SB_PHASE17_PLAN:
+    resolved: false
+    weight: 0.05
+    desc: Phase 17 Wave 1 实施计划创建
 resolved_debt_items:
 - DEBT-CARDS-FRONTMATTER-PARSE
 - DEBT-CLI-1
@@ -184,10 +180,11 @@ debt_metrics:
 debt_watchlist_count: 0
 debt_gate_count: 0
 debt_reporting_ref: .omo/debt/reporting/current.yaml
-planned_tasks: 16
+planned_tasks: 23
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- Current planned queue from .omo/tasks/planned/ (16 tasks)
+- Current planned queue from .omo/tasks/planned/ (23 tasks)
+- BET-ARCH-CONVERGENCE
 - IMPORTED-3268f8
 - IMPORTED-e5cb72
 - IMPORTED-f9b1e2
@@ -199,6 +196,12 @@ next_planned_tasks:
 - P44-DEFER-OMO-SUBPKG
 - P44-DEFER-SUBMODULE-PUSH
 - P44-DEFER-SYS-PATH-INSERT
+- REMEDIATE-ARC-CONV-P1-CRON
+- REMEDIATE-ARC-CONV-P2-CACHE
+- REMEDIATE-ARC-CONV-P3-AGORA-SPLIT
+- REMEDIATE-ARC-CONV-P4-METAOS-GOV
+- REMEDIATE-ARC-CONV-P5-COST
+- REMEDIATE-ARC-CONV-P6-CALIBRATE
 - TASK-08B2A2C5
 - TASK-1E562797
 - TASK-8CF4636A
