@@ -2,20 +2,21 @@ id: REMEDIATE-ARC-CONV-P2-CACHE
 phase: '45'
 priority: P1
 title: Phase 2 — ecos workflow 缓存能力补齐
-description: >
-  ecos workflow 缺少缓存，对标扣 5 分。
-  实现步骤级 cache_ttl 字段 + memory 缓存后端 + executor pipeline 集成。
-status: done
+description: 'ecos workflow 缺少缓存，对标扣 5 分。 实现步骤级 cache_ttl 字段 + memory 缓存后端 + executor
+  pipeline 集成。
+
+  '
+status: archived
 risk_level: L2
 allowed_operation_level: L2
 human_approval_required: false
 acceptance_criteria:
-  - "✅ cache.py 模块创建：WorkflowStepCache 内存缓存 + TTL + 线程安全"
-  - "✅ executor.py 集成：pre-exec 缓存检查 + post-exec 缓存写入"
-  - "✅ M1 DSL 支持 cache_ttl 字段（execution.cache_ttl, 可选, 向后兼容）"
-  - "✅ MCP tools: workflow_cache_status + workflow_cache_invalidate"
-  - "✅ 14 个缓存测试全部通过"
-  - "✅ 全量 847 tests pass, 无回归"
+- ✅ cache.py 模块创建：WorkflowStepCache 内存缓存 + TTL + 线程安全
+- ✅ executor.py 集成：pre-exec 缓存检查 + post-exec 缓存写入
+- ✅ M1 DSL 支持 cache_ttl 字段（execution.cache_ttl, 可选, 向后兼容）
+- '✅ MCP tools: workflow_cache_status + workflow_cache_invalidate'
+- ✅ 14 个缓存测试全部通过
+- ✅ 全量 847 tests pass, 无回归
 deliverables:
 - src/ecos/workflow/cache.py (4.7KB, 内存缓存模块)
 - executor.py 修改: 缓存管线集成
@@ -45,3 +46,12 @@ test_plan:
 - ecos workflow interface 验证 cache 字段
 lifecycle_state: planned
 gate_level: none
+metadata:
+  legacy_normalized_from: planned
+  legacy_status: done
+  normalized_at: '2026-06-23T09:30:00Z'
+  normalized_by: projects/omo
+  normalization_source_ref: repair:verify-omo:legacy-normalize
+  priority: P1
+archived_at: '2026-06-23T09:30:00Z'
+archived_by: projects/omo

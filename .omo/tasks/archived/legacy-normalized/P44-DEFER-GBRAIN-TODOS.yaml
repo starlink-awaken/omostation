@@ -1,6 +1,6 @@
 id: P44-DEFER-GBRAIN-TODOS
 title: P44 Deferred — gbrain 53 个 TS TODO 清理 (按 domain 拆分)
-status: candidate
+status: done
 task_type: deferred-tracking
 risk_level: L1
 depends_on:
@@ -14,7 +14,7 @@ context_uri: bos://governance/drifts/gbrain-todos
 assigned_to: null
 dispatch_id: null
 run_ref: null
-approval_ref: null
+approval_ref: P44-DEFER-GBRAIN-TODOS
 review_ref: null
 knowledge_refs: []
 handoff_refs: []
@@ -35,3 +35,24 @@ metadata:
   ingress_plane: deferred-tracking
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: mof-drift-LOW-20260622
+  legacy_normalized_from: planned
+  legacy_status: done
+  normalized_at: '2026-06-23T09:40:00Z'
+  normalized_by: projects/omo
+  normalization_source_ref: repair:verify-omo:p44-normalize
+  priority: P3
+completed_at: '2026-06-23T01:30:00Z'
+lifecycle_state: closed
+gate_level: none
+resolution_evidence: P45 R6 全面落地 (deferred (P46+ 实施)). P46-DEFER-GBRAIN-TS-REFACTOR (待建)
+superseded_by: P46-DEFER-GBRAIN-TS-REFACTOR (待建)
+outcome: deferred (P46+ 实施)
+closed_by: P45-R6 closeout cascade
+commit_ref: 5d4093c8 (P45-R6)
+archived_at: '2026-06-23T09:40:00Z'
+archived_by: projects/omo
+evidence_paths:
+- .omo/DOC-LIFECYCLE.md
+- .omo/_knowledge/audits/2026-06-22-p45-doc-lifecycle-closeout.md
+- .omo/INDEX.md
+- .omo/_truth/x2-freshness-rules.yaml

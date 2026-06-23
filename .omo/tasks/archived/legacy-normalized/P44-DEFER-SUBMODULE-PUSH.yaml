@@ -1,0 +1,63 @@
+id: P44-DEFER-SUBMODULE-PUSH
+title: P44 Deferred — 2 个子模块 ahead 待推 (ecos 4 + gbrain 15)
+status: done
+task_type: deferred-tracking
+risk_level: L2
+depends_on:
+- P44-SUBMODULE-PIN
+source_docs:
+- bin/sync-submodules-push.sh
+deliverables:
+- ecos 4 + gbrain 15 commit push 到 origin
+- 根仓 gitlink 更新
+imported_via: omo_broker_c2g
+context_uri: bos://governance/submodules/P44-push
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: P44-DEFER-SUBMODULE-PUSH
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+entry_gate:
+- P44-SUBMODULE-PIN
+evidence_required:
+- git push origin main 成功
+- 根仓 bump gitlink (sync-submodules-push.sh 真跑)
+- CI 不报悬空
+test_plan:
+- sync-submodules-push.sh 0 pending
+- git submodule status 无 ahead 标记
+allowed_operation_level: L2
+human_approval_required: false
+priority: P1
+description: 'P44 R5 sync-submodules-push --dry-run 实测: ecos ahead 4 (workflow CLI 4 commit) + gbrain ahead 15 (eval-run baseline).
+  按 P43 submodule_state_decoupling 原则: P44 不批量 push, 显式物化为 PLANNED 跟踪, 等子仓先行推送再根仓 bump.'
+phase: '44'
+created_at: '2026-06-22T05:00:00Z'
+updated_at: '2026-06-22T05:00:00Z'
+metadata:
+  ingress_plane: submodule-governance
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: P44-R5-push
+  legacy_normalized_from: planned
+  legacy_status: done
+  normalized_at: '2026-06-23T09:40:00Z'
+  normalized_by: projects/omo
+  normalization_source_ref: repair:verify-omo:p44-normalize
+  priority: P1
+completed_at: '2026-06-23T01:30:00Z'
+lifecycle_state: closed
+gate_level: none
+resolution_evidence: P45 R6 全面落地 (deferred (P46+ 子仓推完)). P46-SUBMODULE-PUSH (待建, gbrain 15)
+superseded_by: P46-SUBMODULE-PUSH (待建, gbrain 15)
+outcome: deferred (P46+ 子仓推完)
+closed_by: P45-R6 closeout cascade
+commit_ref: 5d4093c8 (P45-R6)
+archived_at: '2026-06-23T09:40:00Z'
+archived_by: projects/omo
+evidence_paths:
+- .omo/DOC-LIFECYCLE.md
+- .omo/_knowledge/audits/2026-06-22-p45-doc-lifecycle-closeout.md
+- .omo/INDEX.md
+- .omo/_truth/x2-freshness-rules.yaml

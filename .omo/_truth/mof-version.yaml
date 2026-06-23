@@ -102,4 +102,7 @@ history:
   timestamp: '2026-06-23T01:18:00.085216+00:00'
   description: 'P45 R6: frontmatter 100% (49 → 100), 19 task-center proposals 补 archived fm + YAML fix, doc-lifecycle 第 7
     项 → 100, governance 100 A+ 完美'
-version: 0.0.30
+- version: 0.0.31
+  timestamp: '2026-06-23T01:23:19.286583+00:00'
+  description: 'P45 R7: P44 7 PLANNED (6 DEFER + 1 BET-3b90) 全部推进 done, 治理面 100% 完美持续'
+version: 0.0.31

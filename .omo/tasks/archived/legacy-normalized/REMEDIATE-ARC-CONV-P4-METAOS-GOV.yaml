@@ -1,0 +1,52 @@
+id: REMEDIATE-ARC-CONV-P4-METAOS-GOV
+phase: '45'
+priority: P2
+title: Phase 4 — MetaOS BOS 治理化
+description: "metaos MCP 直启已在 Phase 8 从 Agora KNOWN_BACKENDS 关闭。 但其 3 条 BOS URI 路由仍在独立子进程直通，未经过\
+  \ governance pipeline： - bos://governance/metaos/decide - bos://governance/metaos/immune\
+  \ - bos://governance/metaos/route\n风险：虽然 mcp_gateway 层收敛了，BOS 层仍是独立直通路径。 X1-C02\
+  \ 要求：跨层 MCP 调用必须经过 I0/Agora 路由且附带治理钩子。\n方案（选其一）： 方案 A（推荐）：通过 ecos workflow backend_registry\
+  \ 的 agora backend\n  即 bos://ecos/workflow/execute → agora_mcp_backend →\n  底层 metaos\
+  \ subprocess。治理管线在 executor 层生效。\n方案 B（轻量）：给 route/decide/immune 加 agora middleware\n\
+  \  pre-check (X1) + post-audit (L0)\n"
+status: archived
+risk_level: L2
+allowed_operation_level: L2
+human_approval_required: false
+acceptance_criteria:
+- ✅ 审计确认：metaos BOS 3 条 URI (decide/immune/route) 已由 Agora BOS resolver 路由
+- ✅ agora mcp_proxy 有 feature_gate + admission gateway + L0 audit 治理钩子
+- ✅ X1-C02（跨层MCP必须经I0/Agora路由）合规：metaos 调用经 agora proxy
+- 🔶 更深层治理（workflow-level X1-X4）是设计 aspiration 非当前缺口
+deliverables:
+- metaos BOS 路由改造（方案 A 或 B）
+- 治理钩子验证
+commit_ref: null
+depends_on:
+- REMEDIATE-ARC-CONV-P1-CRON
+created_at: '2026-06-23T00:00:00+08:00'
+updated_at: '2026-06-23T00:00:00+08:00'
+source_docs:
+- projects/agora/etc/bos-services.yaml (metaos 条目)
+- projects/ecos/src/ecos/workflow/backends/agora.py
+- projects/ecos/src/ecos/workflow/executor.py
+knowledge_refs:
+- .omo/tasks/planned/BET-ARCH-CONVERGENCE.yaml
+entry_gate:
+- REMEDIATE-ARC-CONV-P1-CRON status=done
+evidence_required:
+- metaos 3 条 BOS URI 的 governance audit 条目在 governance.jsonl 中
+test_plan:
+- 调用 bos://governance/metaos/decide → 验证 audit 日志
+- 调用 bos://governance/metaos/immune → 验证 X1 校验
+lifecycle_state: planned
+gate_level: none
+metadata:
+  legacy_normalized_from: planned
+  legacy_status: done
+  normalized_at: '2026-06-23T09:30:00Z'
+  normalized_by: projects/omo
+  normalization_source_ref: repair:verify-omo:legacy-normalize
+  priority: P2
+archived_at: '2026-06-23T09:30:00Z'
+archived_by: projects/omo

@@ -1,0 +1,17 @@
+kind: done_task_evidence_paths_updated
+task_ref: .omo/tasks/done/P45-DOC-LIFECYCLE.yaml
+evidence_paths:
+- .omo/DOC-LIFECYCLE.md
+- projects/omo/src/omo/omo_lint.py
+- projects/omo/src/omo/omo_audit.py
+- .pre-commit-config.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+- projects/l4-kernel/src/l4_kernel/registry.py
+- bin/mof-version
+- .omo/_knowledge/audits/2026-06-22-p45-doc-lifecycle-closeout.md
+- .omo/INDEX.md
+- .omo/_delivery/ingress/tasks/P45-DOC-LIFECYCLE-promote-2026-06-23T01-07-35Z.yaml
+- .omo/_delivery/ingress/tasks/P45-DOC-LIFECYCLE-done-2026-06-23T01-07-35Z.yaml
+actor: projects/omo
+source_ref: repair:verify-omo
+updated_at: '2026-06-23T01:19:22Z'
