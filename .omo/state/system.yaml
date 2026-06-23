@@ -10,9 +10,9 @@ phase_status: active
 current_wave: W3
 next_milestone: BOS URI 声明式注册 + 可观测性
 health_score_ref: .omo/state/health.yaml
-health_score: 18.48
+health_score: 100
 health_score_source: arc-conv-convergence_audit_20260623_p2_cache_p5_x3
-health_score_generated_at: '2026-06-23T06:53:15Z'
+health_score_generated_at: '2026-06-23T09:58:35Z'
 active_agents: 0
 idle_agents: 4
 dead_agents: 0

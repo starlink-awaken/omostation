@@ -1,0 +1,45 @@
+id: OPC-P6-SELF-EVOLUTION-doc-gate-e
+title: Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml
+status: candidate
+task_type: governance
+risk_level: L1
+depends_on: []
+source_docs:
+- .omo/_control/evolution/drift/2026-06-23.json
+deliverables:
+- Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml
+imported_via: opc_p6_self_evolve
+context_uri: bos://governance/tasks/planned/OPC-P6-SELF-EVOLUTION-doc-gate-e
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+entry_gate:
+- P6 drift review accepted
+evidence_required:
+- human approval granted before promotion
+test_plan:
+- python3 scripts/omo/omo_worker.py task promotion-readiness --omo-dir .omo
+allowed_operation_level: L1
+human_approval_required: true
+approval_required: true
+approval_state: awaiting_human
+created_at: '2026-06-23T08:22:42Z'
+source: drift:doc_drift
+drift_ref: .omo/_control/evolution/drift/2026-06-23.json
+loop_history_ref: .omo/_control/evolution/loop/history.json
+review_lane: opc-p6-self-evolution-board
+prerequisite_for: OPC-P6
+red_lines:
+- self-evolution task 仅落 planned/, 永不入 active/ 除非 human approval
+next_action: human reviewer approve in OMO audit queue before promoting to active/
+metadata:
+  created_via: opc_p6_self_evolve
+  generated_at: '2026-06-23T08:22:42Z'
+  ingress_plane: scripts/opc_p6_self_evolve.py
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: opc-p6-self-evolve:OPC-P6-SELF-EVOLUTION-doc-gate-e
+latest_week: 2026-W29
