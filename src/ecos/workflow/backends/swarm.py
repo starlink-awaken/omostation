@@ -85,10 +85,44 @@ def _execute_step_swarm(
     step_name: str, action: str, agent_role: str,
     step: dict[str, Any], params: dict[str, Any],
 ) -> dict[str, Any]:
-    """Execute a single step via swarm subprocess."""
+    """Execute a single step via swarm MCP first, then fallback to subprocess."""
     goal = step.get("description") or step.get("name") or action or "task"
 
-    # 尝试每个 CLI 入口
+    # ── 第一防线：尝试通过 Agora MCP 发起 RPC 路由调用 ──
+    _AGORA_MCP_URL = "http://127.0.0.1:7422"
+    logger.info("Swarm backend: Attempting RPC call via Agora MCP for goal: %s", goal)
+    try:
+        import httpx
+        with httpx.Client(trust_env=False, timeout=120.0) as client:
+            payload = {
+                "name": "resolve_bos_uri",
+                "arguments": {
+                    "uri": "bos://capability/swarm/run",
+                    "arguments": {
+                        "goal": goal,
+                        "params": params,
+                    },
+                },
+            }
+            resp = client.post(f"{_AGORA_MCP_URL}/v1/tools/call", json=payload)
+            if resp.status_code == 200:
+                resp_json = resp.json()
+                if resp_json.get("status") == "ok":
+                    result_data = resp_json.get("result", {})
+                    # 检查是否为 business error
+                    if isinstance(result_data, dict) and result_data.get("status") == "failed":
+                        logger.warning("Agora MCP call returned business error: %s. Falling back to subprocess.", result_data.get("error"))
+                    else:
+                        logger.info("Successfully executed swarm task via Agora MCP RPC")
+                        return {"ok": True, "data": result_data}
+                else:
+                    logger.warning("Agora MCP call failed in gateway: %s. Falling back to subprocess.", resp_json.get("error", "Unknown error"))
+            else:
+                logger.warning("Agora MCP Gateway returned HTTP %d. Falling back to subprocess.", resp.status_code)
+    except Exception as e:
+        logger.warning("[FALLBACK] Agora MCP RPC call failed or unavailable: %s. Falling back to subprocess.", e)
+
+    # ── 第二防线：优雅降级为本地 CLI Subprocess 直调 ──
     for cli_cmd in _CLI_PATHS:
         try:
             cmd = [*cli_cmd, "run", "--goal", goal, "--json"]

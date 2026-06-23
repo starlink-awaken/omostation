@@ -39,11 +39,12 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
 
     # 检查 Agora 是否可达
     try:
-        r = httpx.get(f"{_AGORA_MCP_URL}/health", timeout=2)
-        if r.status_code != 200:
-            logger.warning("Agora MCP unreachable (HTTP %d), falling back to default", r.status_code)
-            return _fallback_default(m1_node, params)
-    except (httpx.ConnectError, httpx.TimeoutException) as e:
+        with httpx.Client(trust_env=False) as client:
+            r = client.get(f"{_AGORA_MCP_URL}/health", timeout=2)
+            if r.status_code != 200:
+                logger.warning("Agora MCP unreachable (HTTP %d), falling back to default", r.status_code)
+                return _fallback_default(m1_node, params)
+    except Exception as e:
         logger.warning("Agora MCP uncontactable: %s, falling back to default", e)
         return _fallback_default(m1_node, params)
 
@@ -61,21 +62,22 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
         logger.info("Routing via Agora: %s → %s", step_name, bos_uri)
 
         try:
-            resp = httpx.post(
-                f"{_AGORA_MCP_URL}/v1/tools/call",
-                json={
-                    "name": "resolve_bos_uri",
-                    "arguments": {
-                        "uri": bos_uri,
+            with httpx.Client(trust_env=False) as client:
+                resp = client.post(
+                    f"{_AGORA_MCP_URL}/v1/tools/call",
+                    json={
+                        "name": "resolve_bos_uri",
                         "arguments": {
-                            "task": params.get("task", ""),
-                            "context": params.get("context", ""),
-                            "agent_role": agent_role,
+                            "uri": bos_uri,
+                            "arguments": {
+                                "task": params.get("task", ""),
+                                "context": params.get("context", ""),
+                                "agent_role": agent_role,
+                            },
                         },
                     },
-                },
-                timeout=timeout,
-            )
+                    timeout=timeout,
+                )
 
             if resp.status_code == 200:
                 data = resp.json()
@@ -104,7 +106,7 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
                     logger.warning("Step %s failed, aborting workflow", step_name)
                     break
 
-        except (httpx.TimeoutException, httpx.RequestError) as e:
+        except Exception as e:
             results["steps"].append({
                 "name": step_name,
                 "status": "error",
