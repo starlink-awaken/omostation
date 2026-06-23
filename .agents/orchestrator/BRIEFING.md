@@ -27,15 +27,15 @@
 - **Work items**:
   1. R1: Agora I0 MCP 跨层通信重构 [pending]
   2. R2: Swarm 底层真实总线替换 [pending]
-  3. R3: Mesh 动态反馈与稳态配置闭环 [pending]
+  3. R3: Mesh 动态反馈与 Omo 稳态落盘闭环 [pending]
   4. Integration: 联合集成与自适应闭环测试验证 [pending]
 - **Current phase**: 1
-- **Current focus**: 派遣 Explorer 进行全局代码探测与重构方案调研 (survey_explorer_1)
+- **Current focus**: 开展 M1 里程碑的 3 个独立 Explorer 方案设计 (m1_explorer_1, m1_explorer_2, m1_explorer_3)
 
 ## 🔒 Key Constraints
 - 严格遵循 AGENTS.md 中的规则与约定，尤其是“修改后立即 git commit”以及“禁止 raw state mutation”。
 - 严禁任何形式的硬编码、dummy 虚假实现、绕过审计。所有实现必须真实且通过 Forensic Auditor 审核。
-- 采用中文进行沟通 and 交付报告。
+- 采用中文进行沟通和交付报告。
 - 任务完成后通过 send_message 向 Sentinel 汇报。
 
 ## Current Parent
@@ -44,16 +44,20 @@
 
 ## Key Decisions Made
 - 派遣 survey_explorer_1 进行初始全局代码分析
+- 派遣 m1_explorer_1, m1_explorer_2, m1_explorer_3 深入分析 M1 里程碑设计细节
 
 ## Team Roster
 | Agent | Type | Work Item | Status | Conv ID |
 |-------|------|-----------|--------|---------|
-| survey_explorer_1 | teamwork_preview_explorer | 全局代码探测与重构方案调研 | in-progress | 39e2b00d-d5ba-46d6-a3fb-7c0739ca7469 |
+| survey_explorer_1 | teamwork_preview_explorer | 全局代码探测与重构方案调研 | completed | 39e2b00d-d5ba-46d6-a3fb-7c0739ca7469 |
+| m1_explorer_1 | teamwork_preview_explorer | M1: ECOS 跨层调用重构设计 | in-progress | 2c6eb80e-6949-4c8d-b7db-101b7d8a7a4f |
+| m1_explorer_2 | teamwork_preview_explorer | M1: Agora 路由与 RPC 实现分析 | in-progress | bc15a50f-a76d-4236-9c02-94e2d0b4eb89 |
+| m1_explorer_3 | teamwork_preview_explorer | M1: 验证机制与降级策略分析 | in-progress | ffa1937b-121f-4ef4-9fd4-1a13b59aafd1 |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 1 / 16
-- Pending subagents: 39e2b00d-d5ba-46d6-a3fb-7c0739ca7469
+- Spawn count: 4 / 16
+- Pending subagents: 2c6eb80e-6949-4c8d-b7db-101b7d8a7a4f, bc15a50f-a76d-4236-9c02-94e2d0b4eb89, ffa1937b-121f-4ef4-9fd4-1a13b59aafd1
 - Predecessor: none
 - Successor: not yet spawned
 
