@@ -1,6 +1,6 @@
 id: P15-DRAFT-LEDGER-FIRST
 phase: 15
-status: draft
+status: done
 activation_allowed: false
 approval_required: human
 title: Governance evidence ledger hardening
@@ -10,3 +10,13 @@ source_evidence:
 - .omo/_truth/governance-evidence/ledger.yaml
 rollback: Delete this draft and keep existing Phase 12-14 evidence as source refs.
 verification: Policy tests prove no draft activation leak.
+completed_at: '2026-06-23T06:00:00Z'
+lifecycle_state: closed
+gate_level: none
+resolution_evidence: 'P51 R1 cascade: P50 全面落地 (evidence-ledger 早收口)'
+superseded_by: P50 全面落地 (evidence-ledger 早收口)
+outcome: superseded (P15 历史 draft)
+commit_ref: P51 R1
+evidence_paths:
+- .omo/_knowledge/audits/2026-06-23-p50-gbrain-todo-closeout.md
+- .omo/_knowledge/audits/2026-06-23-p49-reg-cleanup-closeout.md

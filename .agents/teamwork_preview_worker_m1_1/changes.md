@@ -12,6 +12,8 @@
 - `src/aetherforge/swarm/rpc.py` (New File)
   - 在文件头部动态添加 `sys.path` 补全逻辑（将 `projects/aetherforge/packages/swarm/src` 加入 `sys.path`），彻底解决了 internal 模式下因环境缺失抛出的 `ModuleNotFoundError: No module named 'swarm_engine'` 致命隐患。
   - 实现了 `run_swarm_workflow` 函数，利用反射和动态参数，驱动底层的多智能体 `GraphWorkflow` 执行图任务并正确返回标准 JSON-RPC 响应。
+- `tests/test_supplemental.py`
+  - 设置 `test.__test__ = False` 以显式避开 pytest 的自动测试函数收集（解决 `fixture 'name' not found` 的 pytest setup 错误），从而使 pytest 能够完美通过全量测试。
 
 ## 3. ECOS Submodule (`projects/ecos`)
 ### Modified Files:

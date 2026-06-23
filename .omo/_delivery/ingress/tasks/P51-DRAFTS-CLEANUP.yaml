@@ -1,0 +1,18 @@
+kind: planned_task_created
+task_id: P51-DRAFTS-CLEANUP
+title: P51 drafts 收口 + 4 子仓 ahead 同步 + mof-drift 收口
+ingress_plane: c2g
+source_ref: P51-DRAFTS-CLEANUP
+created_at: '2026-06-23T03:08:57Z'
+task_ref: .omo/tasks/planned/P51-DRAFTS-CLEANUP.yaml
+evidence_required:
+- 2 drafts done
+- drafts 目录 0 文件
+- 4 子仓 ahead verify
+source_docs:
+- .c2g_data/pitches/Idea-P51-drafts-收口-4-子仓-ahead-同步-mo.md
+- bin/sync-submodules-push.sh
+artifact_ref: .omo/_delivery/ingress/tasks/P51-DRAFTS-CLEANUP.yaml
+broker_ref: projects/omo/src/omo/omo_ingress.py
+retention_mode: manual_archive
+lifecycle_state: active
