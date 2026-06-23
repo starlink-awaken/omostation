@@ -6,10 +6,10 @@ Last visited: 2026-06-23T11:00:00+08:00
 - [ ] 里程碑 1 (R1. Agora I0 MCP 跨层通信重构) 开发与校验
   - [x] 3 个独立 Explorer 方案探索 (m1_explorer_1 与 m1_explorer_3 完成，m1_explorer_2 故障中断由 m1_explorer_2_gen2 接替并顺利交付)
   - [x] 方案综合与设计确认
-  - [ ] Worker 执行重构与接口实现 (m1_worker_1 进行中)
-  - [ ] Reviewer 静态与动态审计
-  - [ ] Challenger 压力与降级校验
-  - [ ] Forensic Auditor 终期完整性审计
+  - [x] Worker 执行重构与接口实现 (m1_worker_1)
+  - [ ] Reviewer 静态与动态审计 (m1_reviewer_1, m1_reviewer_2 进行中)
+  - [ ] Challenger 压力与降级校验 (m1_challenger_1, m1_challenger_2 进行中)
+  - [ ] Forensic Auditor 终期完整性审计 (m1_auditor_1 进行中)
 - [ ] 里程碑 2 (R2. Swarm 底层真实总线替换) 开发与校验
 - [ ] 里程碑 3 (R3. Mesh 动态反馈与 Omo 稳态落盘闭环) 开发与校验
 - [ ] 里程碑 4 (E2E Integration) 联合集成与自适应闭环测试校验

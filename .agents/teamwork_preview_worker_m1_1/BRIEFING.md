@@ -14,11 +14,11 @@
 - CODE_ONLY network mode.
 - NO CHEATING.
 - 必须修改后立即 git commit。
-- 遵循最小更改原则。
+- 遵循 minimal-change 原则。
 
 ## Current Parent
 - Conversation ID: d6d08efc-a7bd-44e1-8861-e985ac7a8c92
-- Updated: not yet
+- Updated: completed
 
 ## Task Summary
 - **What to build**: Agora I0 MCP 跨层通信重构
@@ -31,21 +31,27 @@
 - **Code layout**: projects/
 
 ## Key Decisions Made
-- [TBD]
+- 将 `run_swarm_workflow` 定义为同步函数以对齐 Agora resolver 的同进程反射调用。
+- 顺手修复了 `agora_mcp_backend.py` 内部因为缺失 `trust_env=False` 导致的全局代理冲突，从而让 ecos 的 849 个全量测试全部顺利通过。
 
 ## Artifact Index
 - /Users/xiamingxing/Workspace/.agents/teamwork_preview_worker_m1_1/changes.md — Change log
 - /Users/xiamingxing/Workspace/.agents/teamwork_preview_worker_m1_1/handoff.md — Handoff report
 
 ## Change Tracker
-- **Files modified**: None
-- **Build status**: unknown
+- **Files modified**:
+  - `projects/agora/etc/bos-services.yaml` — 注册服务
+  - `projects/aetherforge/src/aetherforge/swarm/rpc.py` — 实现 RPC 桥接
+  - `projects/ecos/src/ecos/workflow/backends/swarm.py` — 重构跨层调用与降级
+  - `projects/ecos/src/ecos/workflow/agora_mcp_backend.py` — 修复代理冲突
+  - `projects/ecos/tests/test_swarm_no_subprocess.py` — 新增单元集成测试
+- **Build status**: PASS
 - **Pending issues**: None
 
 ## Quality Status
-- **Build/test result**: unknown
-- **Lint status**: unknown
-- **Tests added/modified**: None
+- **Build/test result**: All 849 ecos tests and 65 swarm tests passed.
+- **Lint status**: 0 outstanding violations (Pre-commit checks successfully passed).
+- **Tests added/modified**: `tests/test_swarm_no_subprocess.py` (2 integration tests).
 
 ## Loaded Skills
 - None

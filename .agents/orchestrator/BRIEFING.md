@@ -30,7 +30,7 @@
   3. R3: Mesh 动态反馈与 Omo 稳态落盘闭环 [pending]
   4. Integration: 联合集成与自适应闭环测试验证 [pending]
 - **Current phase**: 1
-- **Current focus**: 派遣 Worker 进行 M1 里程碑的重构开发与测试实现 (m1_worker_1)
+- **Current focus**: 开展 M1 里程碑的评审、对抗性验证与取证审计 (5 个验证子智能体)
 
 ## 🔒 Key Constraints
 - 严格遵循 AGENTS.md 中的规则与约定，尤其是“修改后立即 git commit”以及“禁止 raw state mutation”。
@@ -47,6 +47,7 @@
 - 派遣 m1_explorer_1, m1_explorer_2, m1_explorer_3 深入分析 M1 里程碑设计细节
 - 因 m1_explorer_2 故障中断，派遣 m1_explorer_2_gen2 作为继承者接续任务
 - 综合 3 个 Explorer 调研结果并派遣 m1_worker_1 进行 Milestone 1 代码重构
+- 派遣 m1_reviewer_1, m1_reviewer_2, m1_challenger_1, m1_challenger_2, m1_auditor_1 进行 M1 的全面检验
 
 ## Team Roster
 | Agent | Type | Work Item | Status | Conv ID |
@@ -56,12 +57,17 @@
 | m1_explorer_2 | teamwork_preview_explorer | M1: Agora 路由与 RPC 实现分析 | failed | bc15a50f-a76d-4236-9c02-94e2d0b4eb89 |
 | m1_explorer_3 | teamwork_preview_explorer | M1: 验证机制与降级策略分析 | completed | ffa1937b-121f-4ef4-9fd4-1a13b59aafd1 |
 | m1_explorer_2_gen2 | teamwork_preview_explorer | M1: Agora 路由与 RPC 实现分析(继承者) | completed | af61b253-3c15-4dd0-bd82-6a3885eb1ec4 |
-| m1_worker_1 | teamwork_preview_worker | M1: 跨层通信重构代码实现与测试验证 | in-progress | 29a74a75-193d-455b-93f4-95db2dd3a7d1 |
+| m1_worker_1 | teamwork_preview_worker | M1: 跨层通信重构代码实现与测试验证 | completed | 29a74a75-193d-455b-93f4-95db2dd3a7d1 |
+| m1_reviewer_1 | teamwork_preview_reviewer | M1: ECOS 一侧评审与测试运行 | in-progress | 2975e0b8-f355-43d8-9740-ccef1e300baf |
+| m1_reviewer_2 | teamwork_preview_reviewer | M1: Agora 与 AetherForge 侧反射及依赖评审 | in-progress | 3d01354a-fae4-4550-942f-91ce690cc973 |
+| m1_challenger_1 | teamwork_preview_challenger | M1: 降级边界与网络故障注入对抗验证 | in-progress | d76bc49a-329b-461b-8964-28ea19d1272b |
+| m1_challenger_2 | teamwork_preview_challenger | M1: 全局代理与健壮性输入对抗验证 | in-progress | 8124eb14-10ed-4ab9-ad7e-9048df662c5f |
+| m1_auditor_1 | teamwork_preview_auditor | M1: 完整性防作弊与合规取证审计 | in-progress | 130b3b39-b0f1-4b89-9b79-70eb6ae9ffd7 |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 6 / 16
-- Pending subagents: 29a74a75-193d-455b-93f4-95db2dd3a7d1
+- Spawn count: 11 / 16
+- Pending subagents: 2975e0b8-f355-43d8-9740-ccef1e300baf, 3d01354a-fae4-4550-942f-91ce690cc973, d76bc49a-329b-461b-8964-28ea19d1272b, 8124eb14-10ed-4ab9-ad7e-9048df662c5f, 130b3b39-b0f1-4b89-9b79-70eb6ae9ffd7
 - Predecessor: none
 - Successor: not yet spawned
 
