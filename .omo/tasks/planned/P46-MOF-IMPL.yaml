@@ -1,0 +1,49 @@
+id: P46-MOF-IMPL
+title: P46 mof 工具实施 (12 个 planned 工具) + 历史 PLANNED candidate 推进
+status: candidate
+task_type: feature
+risk_level: L2
+depends_on:
+- P45-DOC-LIFECYCLE
+source_docs:
+- .c2g_data/pitches/Idea-P46-mof-工具实施-12-个-planned-工具-历.md
+- .omo/DOC-LIFECYCLE.md
+deliverables:
+- 11 PLANNED candidate/pending 全部推进 done
+- 3 mof 工具实施 (mof-io / mof-graph / mof-scan)
+- P46 收口报告
+imported_via: omo_broker_c2g
+context_uri: bos://strategy/bets/P46
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: P46-MOF-IMPL
+review_ref: null
+knowledge_refs:
+- .omo/_knowledge/audits/2026-06-23-p45-final-closeout.md
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/x1-governance-policies.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+entry_gate:
+- P45-DOC-LIFECYCLE
+evidence_required:
+- 11 PLANNED done
+- '3 mof 工具 Status: implemented'
+- governance 100 A+ 持续
+test_plan:
+- omo governance 100 A+
+- mof-drift ≤ 1
+- mof-audit 0
+allowed_operation_level: L3
+human_approval_required: false
+priority: P1
+description: 'P46 R1-R3: 11 PLANNED 推进 + 3 mof 实施 + 收口'
+phase: '46'
+created_at: '2026-06-23T02:00:00Z'
+updated_at: '2026-06-23T02:00:00Z'
+metadata:
+  ingress_plane: c2g
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: P46-MOF-IMPL

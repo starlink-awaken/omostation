@@ -1,6 +1,6 @@
 id: TASK-COCKPIT-TEST-COVERAGE
 title: cockpit test coverage 81%→90%
-status: candidate
+status: done
 priority: P2
 risk_level: L1
 description: 'app.py: 83%→90%+, governance.py: 76%→85%+, workspace_research.py: 61%→75%+.
@@ -17,6 +17,10 @@ metadata:
   normalization_source_ref: omo:worker:normalize-planned:TASK-COCKPIT-TEST-COVERAGE
   legacy_owner: cockpit-team
   priority: P2
+  completed_at: '2026-06-23T01:30:47Z'
+  completed_via: omo task done
+  completion_actor: agent-runtime
+  completion_source_ref: P46-R1-cascade
 task_type: feature
 depends_on: []
 deliverables:
@@ -24,7 +28,8 @@ deliverables:
 source_docs:
 - .omo/tasks/planned/TASK-COCKPIT-TEST-COVERAGE.yaml#legacy-normalized
 knowledge_refs: []
-handoff_refs: []
+handoff_refs:
+- P46-R1-cascade
 entry_gate: []
 evidence_required:
 - legacy planned packet normalized
@@ -33,7 +38,20 @@ test_plan:
 assigned_to: null
 dispatch_id: null
 run_ref: null
-approval_ref: null
+approval_ref: TASK-COCKPIT-TEST-COVERAGE
 review_ref: null
 allowed_operation_level: L0
 human_approval_required: false
+evidence_paths:
+- .omo/DOC-LIFECYCLE.md
+- .omo/_knowledge/audits/2026-06-22-p45-doc-lifecycle-closeout.md
+- .omo/_knowledge/audits/2026-06-23-p45-final-closeout.md
+- .omo/INDEX.md
+completed_at: '2026-06-23T01:30:47Z'
+lifecycle_state: closed
+gate_level: none
+resolution_evidence: P45 全面落地 (governance 100 A+). completed in cockpit submodule
+  (35f37355). P45/P46 (cockpit 子仓工作)
+superseded_by: P45/P46 (cockpit 子仓工作)
+outcome: completed in cockpit submodule (35f37355)
+commit_ref: P46 R1 (cascade)

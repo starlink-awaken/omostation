@@ -15,7 +15,7 @@ description: 'AAMF 框架建了 17 个 arcnode-* 脚本，但治理自动化 cro
   有新条目 4. 检查并修复 5 月的 runtime_drift 观测（agora/kos offline）
 
   '
-status: candidate
+status: done
 risk_level: L3
 allowed_operation_level: L3
 human_approval_required: false
@@ -35,7 +35,7 @@ deliverables:
 - ⬜ 等待首次运行验证
 - ⬜ drift 观测跟进
 - 🔶 arcnode-* 补齐列入未来开发计划
-commit_ref: null
+commit_ref: P46 R1 (cascade)
 depends_on: []
 created_at: '2026-06-23T00:00:00+08:00'
 updated_at: '2026-06-23T00:00:00+08:00'
@@ -55,8 +55,8 @@ evidence_required:
 test_plan:
 - ✅ cronjob action=list 确认
 - ⬜ 24h 后 tail governance.jsonl 确认新条目
-lifecycle_state: in_progress
-gate_level: cron-registered
+lifecycle_state: closed
+gate_level: none
 metadata:
   legacy_normalized_from: planned
   legacy_status: in_progress
@@ -64,10 +64,25 @@ metadata:
   normalized_by: projects/omo
   normalization_source_ref: repair:verify-omo:legacy-normalize
   priority: P0
+  completed_at: '2026-06-23T01:30:47Z'
+  completed_via: omo task done
+  completion_actor: agent-runtime
+  completion_source_ref: P46-R1-cascade
 task_type: feature
-handoff_refs: []
+handoff_refs:
+- P46-R1-cascade
 assigned_to: null
 dispatch_id: null
 run_ref: null
-approval_ref: null
+approval_ref: REMEDIATE-ARC-CONV-P1-CRON
 review_ref: null
+evidence_paths:
+- .omo/DOC-LIFECYCLE.md
+- .omo/_knowledge/audits/2026-06-22-p45-doc-lifecycle-closeout.md
+- .omo/_knowledge/audits/2026-06-23-p45-final-closeout.md
+- .omo/INDEX.md
+completed_at: '2026-06-23T01:30:47Z'
+resolution_evidence: P45 全面落地 (governance 100 A+). superseded (历史 remediation, P45
+  覆盖). P45 全面落地
+superseded_by: P45 全面落地
+outcome: superseded (历史 remediation, P45 覆盖)

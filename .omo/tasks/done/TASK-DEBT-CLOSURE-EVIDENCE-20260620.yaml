@@ -1,6 +1,6 @@
 id: TASK-DEBT-CLOSURE-EVIDENCE-20260620
 title: 修复 4 项 closure 漂移 + deferred 项挂 Next-Action
-status: pending
+status: done
 priority: P1
 risk_level: L1
 upstream: P42-W0-W1-COMBO
@@ -10,7 +10,7 @@ source_ref: c2g:pitch:Idea-修复-4-项-closure-漂移-为-deferred-项
 assigned_to: null
 dispatch_id: null
 run_ref: null
-approval_ref: null
+approval_ref: TASK-DEBT-CLOSURE-EVIDENCE-20260620
 review_ref: null
 started_at: null
 human_approval_required: false
@@ -28,7 +28,8 @@ deliverables:
 - DEBT-KAIRON-ONTODERIVE-PHANTOM.yaml (含 resolution_evidence)
 - DEBT-GBRAIN-OPERATIONS-TS.yaml (含 next_review_at + gate_level)
 knowledge_refs: []
-handoff_refs: []
+handoff_refs:
+- P46-R1-cascade
 description: 'omo governance 巡检发现 4 项 closed debt 缺 resolution_evidence (DEBT-CROSSPROJECT-SYSPATH/EMPTY-INIT-PY/GBRAIN-55-TODOS/KAIRON-ONTODERIVE-PHANTOM)，
   治理面 drift 触发 score 85 → 需修复到 ≥ 90。 同步为 DEBT-GBRAIN-OPERATIONS-TS (deferred) 打 next_review_at
   + gate_level， 防止"沉默延期"。
@@ -53,3 +54,20 @@ metadata:
   ingress_plane: projects/c2g
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: c2g:pitch:Idea-修复-4-项-closure-漂移-为-deferred-项
+  completed_at: '2026-06-23T01:30:47Z'
+  completed_via: omo task done
+  completion_actor: agent-runtime
+  completion_source_ref: P46-R1-cascade
+evidence_paths:
+- .omo/DOC-LIFECYCLE.md
+- .omo/_knowledge/audits/2026-06-22-p45-doc-lifecycle-closeout.md
+- .omo/_knowledge/audits/2026-06-23-p45-final-closeout.md
+- .omo/INDEX.md
+completed_at: '2026-06-23T01:30:47Z'
+lifecycle_state: closed
+gate_level: none
+resolution_evidence: P45 全面落地 (governance 100 A+). superseded (P43 R5 已闭环). P45 全面落地
+  (P43 R5 debt closure)
+superseded_by: P45 全面落地 (P43 R5 debt closure)
+outcome: superseded (P43 R5 已闭环)
+commit_ref: P46 R1 (cascade)

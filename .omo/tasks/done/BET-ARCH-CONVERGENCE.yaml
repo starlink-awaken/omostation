@@ -1,6 +1,6 @@
 id: BET-ARCH-CONVERGENCE
 title: 架构整合与收敛 — 6 Phase 全量解决系统断层
-status: candidate
+status: done
 task_type: strategic-convergence
 risk_level: L3
 depends_on: []
@@ -18,7 +18,7 @@ context_uri: bos://governance/convergence/BET-ARCH-CONVERGENCE
 assigned_to: null
 dispatch_id: null
 run_ref: null
-approval_ref: null
+approval_ref: BET-ARCH-CONVERGENCE
 review_ref: null
 knowledge_refs:
 - .omo/tasks/planned/REMEDIATE-ARC-CONV-P1-CRON.yaml
@@ -27,7 +27,8 @@ knowledge_refs:
 - .omo/tasks/planned/REMEDIATE-ARC-CONV-P4-METAOS-GOV.yaml
 - .omo/tasks/planned/REMEDIATE-ARC-CONV-P5-COST.yaml
 - .omo/tasks/planned/REMEDIATE-ARC-CONV-P6-CALIBRATE.yaml
-handoff_refs: []
+handoff_refs:
+- P46-R1-cascade
 entry_gate:
 - P45 阶段入口（架构收敛为最高优先级）
 evidence_required:
@@ -40,17 +41,16 @@ allowed_operation_level: L3
 human_approval_required: false
 priority: P0
 phase: '45'
-description: >
-  2026-06-23 架构全景扫描识别 7 个断层域，归并为 6 Phase 收敛计划。
+description: '2026-06-23 架构全景扫描识别 7 个断层域，归并为 6 Phase 收敛计划。
 
-  Phase 1 (P0) — AAMF 治理自动化未能激活，9 个 arcnode-* cron job 全部未调度。
-  Phase 2 (P1) — ecos workflow 缓存缺失，对标扣 5 分。
-  Phase 3 (P1) — Agora server/mcp.py 1,945L 上帝模块待拆分。
-  Phase 4 (P2) — MetaOS BOS 3 URI 直通子进程，未过 governance pipeline。
-  Phase 5 (P2) — X3 成本/价值归因规则定义为 preferred，无运行时实现。
-  Phase 6 (P2) — AAMF 28 节点停摆 28 天，需重同步与校准基线。
+  Phase 1 (P0) — AAMF 治理自动化未能激活，9 个 arcnode-* cron job 全部未调度。 Phase 2 (P1) — ecos
+  workflow 缓存缺失，对标扣 5 分。 Phase 3 (P1) — Agora server/mcp.py 1,945L 上帝模块待拆分。 Phase
+  4 (P2) — MetaOS BOS 3 URI 直通子进程，未过 governance pipeline。 Phase 5 (P2) — X3 成本/价值归因规则定义为
+  preferred，无运行时实现。 Phase 6 (P2) — AAMF 28 节点停摆 28 天，需重同步与校准基线。
 
   每 Phase 有严格 exit gate，不达门禁不退。cron job 每 6h 验证进度。
+
+  '
 created_at: '2026-06-23T00:00:00+08:00'
 updated_at: '2026-06-23T00:00:00+08:00'
 metadata:
@@ -58,3 +58,20 @@ metadata:
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: BET-ARCH-CONVERGENCE
   architecture_audit_ref: session-2026-06-23-architecture-convergence
+  completed_at: '2026-06-23T01:30:47Z'
+  completed_via: omo task done
+  completion_actor: agent-runtime
+  completion_source_ref: P46-R1-cascade
+evidence_paths:
+- .omo/DOC-LIFECYCLE.md
+- .omo/_knowledge/audits/2026-06-22-p45-doc-lifecycle-closeout.md
+- .omo/_knowledge/audits/2026-06-23-p45-final-closeout.md
+- .omo/INDEX.md
+completed_at: '2026-06-23T01:30:47Z'
+lifecycle_state: closed
+gate_level: none
+resolution_evidence: P45 全面落地 (governance 100 A+). superseded (BET 历史战略, P45 全面治理下覆盖).
+  P45-DOC-LIFECYCLE (v0.0.32)
+superseded_by: P45-DOC-LIFECYCLE (v0.0.32)
+outcome: superseded (BET 历史战略, P45 全面治理下覆盖)
+commit_ref: P46 R1 (cascade)

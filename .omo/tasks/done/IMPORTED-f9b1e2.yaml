@@ -1,0 +1,46 @@
+id: IMPORTED-f9b1e2
+title: '任务1:'
+status: done
+task_type: feature
+risk_level: L0
+depends_on: []
+source_docs:
+- /Users/xiamingxing/Workspace/runtime/sandbox/OpenSpec-未命名探索主题.md
+deliverables:
+- 执行记录与源码修改
+imported_via: omo_bridge
+context_uri: bos://memory/openspecs/OpenSpec-未命名探索主题.md#IMPORTED-f9b1e2
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: IMPORTED-f9b1e2
+review_ref: null
+knowledge_refs: []
+handoff_refs:
+- P46-R1-cascade
+entry_gate: []
+evidence_required:
+- X1-X4 治理合规自证
+- 单测覆盖率
+test_plan:
+- '[X1-X4 Governance] 必须在代码实现前完成治理与架构依赖的白盒分析。'
+allowed_operation_level: L0
+human_approval_required: false
+evidence_paths:
+- .omo/DOC-LIFECYCLE.md
+- .omo/_knowledge/audits/2026-06-22-p45-doc-lifecycle-closeout.md
+- .omo/_knowledge/audits/2026-06-23-p45-final-closeout.md
+- .omo/INDEX.md
+completed_at: '2026-06-23T01:30:47Z'
+lifecycle_state: closed
+gate_level: none
+resolution_evidence: P45 全面落地 (governance 100 A+). superseded (c2g brainstorm 历史,
+  P45 覆盖). P45 全面落地
+superseded_by: P45 全面落地
+outcome: superseded (c2g brainstorm 历史, P45 覆盖)
+commit_ref: P46 R1 (cascade)
+metadata:
+  completed_at: '2026-06-23T01:30:47Z'
+  completed_via: omo task done
+  completion_actor: agent-runtime
+  completion_source_ref: P46-R1-cascade

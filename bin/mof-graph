@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Status: planned (P45 审计: 0 引用, 等 P46+ 实现)
+# Status: implemented (P46 R2: MOF 跨项目依赖图生成 — Mermaid 格式)
 """MOF 跨项目依赖图生成 — Mermaid 格式"""
 
 import sys
