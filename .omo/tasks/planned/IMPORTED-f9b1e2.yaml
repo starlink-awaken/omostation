@@ -1,0 +1,34 @@
+id: IMPORTED-f9b1e2
+title: '任务1:'
+status: candidate
+task_type: feature
+risk_level: L0
+depends_on: []
+source_docs:
+- /Users/xiamingxing/Workspace/runtime/sandbox/OpenSpec-全面重构_aetherforge_swarm_与对齐_ecos_workflow.md
+deliverables:
+- 执行记录与源码修改
+imported_via: omo_bridge
+context_uri: bos://memory/openspecs/OpenSpec-全面重构_aetherforge_swarm_与对齐_ecos_workflow.md#IMPORTED-f9b1e2
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: null
+review_ref: null
+knowledge_refs: []
+handoff_refs: []
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+entry_gate: []
+evidence_required:
+- X1-X4 治理合规自证
+- 单测覆盖率
+test_plan:
+- '[X1-X4 Governance] 必须在代码实现前完成治理与架构依赖的白盒分析。'
+allowed_operation_level: L0
+human_approval_required: false
+metadata:
+  ingress_plane: projects/omo
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: omo:bridge:bmad:OpenSpec-全面重构_aetherforge_swarm_与对齐_ecos_workflow.md:IMPORTED-f9b1e2

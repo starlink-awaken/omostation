@@ -5,6 +5,11 @@ owner: governance-team
 last-reviewed: 2026-06-22
 ---
 
+status: active
+lifecycle: ssot
+owner: governance-team
+last-reviewed: 2026-06-22
+
 current_wave: W1
 entry_gate: phase41_completed
 goals:

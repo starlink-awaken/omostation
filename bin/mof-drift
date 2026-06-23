@@ -117,6 +117,75 @@ def count_stale_planned_tools() -> int:
     return count
 
 
+def count_gbrain_ahead_commits() -> int:
+    """统计 gbrain 子仓本地领先 origin/master 的 commit 数 (P48 增).
+
+    返回 0 表示已同步, >0 表示 ahead (待推), <0 表示 behind.
+    """
+    gbrain_dir = PROJECTS_DIR / "gbrain"
+    if not gbrain_dir.exists():
+        return 0
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(gbrain_dir), "rev-list", "--left-right", "--count", "origin/master...HEAD"],
+            capture_output=True, text=True, timeout=15,
+        )
+        if result.returncode != 0:
+            return 0
+        parts = result.stdout.strip().split()
+        if len(parts) >= 1:
+            return int(parts[0])  # ahead
+    except Exception:
+        return 0
+    return 0
+
+
+def count_gbrain_todo_categories() -> dict[str, int]:
+    """分类 gbrain 53 TODOs 为 5 类 (P48 增).
+
+    keep: 引用子仓 tracking (TODOS.md / CLAUDE.md)
+    fix: 引用 fix / bug / FIXME
+    close: 引用 v0.3x / v0.4x (已规划在某个 version)
+    planned: 引用 TODO 跟 version (eg. TODO v0.32)
+    unknown: 其它
+
+    返回: {"keep": N, "fix": N, "close": N, "planned": N, "unknown": N}
+    """
+    gbrain_src = PROJECTS_DIR / "gbrain" / "src"
+    if not gbrain_src.exists():
+        return {"keep": 0, "fix": 0, "close": 0, "planned": 0, "unknown": 0}
+    cats = {"keep": 0, "fix": 0, "close": 0, "planned": 0, "unknown": 0}
+    try:
+        result = subprocess.run(
+            ["grep", "-r", "TODO", str(gbrain_src), "--include=*.ts"],
+            capture_output=True, text=True, timeout=30,
+        )
+        for line in result.stdout.splitlines():
+            # 大小写不敏感
+            upper = line.upper()
+            # keep: 引用子仓 tracking 文件
+            if "TODOS.MD" in upper or "CLAUDE.MD" in upper:
+                cats["keep"] += 1
+                continue
+            # fix: bug/FIXME
+            if "FIX" in upper or "BUG" in upper:
+                cats["fix"] += 1
+                continue
+            # close: 引用 version
+            if "V0.3" in upper or "V0.4" in upper:
+                cats["close"] += 1
+                continue
+            # planned: TODO 跟 version 引用 (eg "TODO v0.32")
+            if "TODO V" in upper or "TODO-FOLLOW" in upper:
+                cats["planned"] += 1
+                continue
+            # unknown: 其它 TODO
+            cats["unknown"] += 1
+    except Exception:
+        pass
+    return cats
+
+
 def detect_drift(project_name: str = None) -> list[dict]:
     """检测架构漂移"""
     nodes = load_all_m1()
@@ -165,6 +234,28 @@ def detect_drift(project_name: str = None) -> list[dict]:
                 "severity": "medium",
                 "count": stale,
                 "message": f"{stale} bin/mof-* tools still marked 'Status: planned'",
+            })
+
+        # Check gbrain submodule ahead commits (P48 增)
+        ahead = count_gbrain_ahead_commits()
+        if ahead > 0:
+            drifts.append({
+                "project": "gbrain",
+                "type": "submodule_ahead",
+                "severity": "low",
+                "count": ahead,
+                "message": f"gbrain submodule {ahead} commits ahead of origin/master (待推)",
+            })
+
+        # Check gbrain 53 TODOs 5 类分类 (P48 增)
+        todo_cats = count_gbrain_todo_categories()
+        if sum(todo_cats.values()) > 0:
+            drifts.append({
+                "project": "gbrain",
+                "type": "todo_categories",
+                "severity": "low",
+                "count": sum(todo_cats.values()),
+                "message": f"gbrain TODOs: keep={todo_cats['keep']}, fix={todo_cats['fix']}, close={todo_cats['close']}, planned={todo_cats['planned']}, unknown={todo_cats['unknown']}",
             })
 
         # Check test coverage

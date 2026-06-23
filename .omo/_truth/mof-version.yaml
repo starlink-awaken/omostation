@@ -120,4 +120,8 @@ history:
 - version: 0.0.35
   timestamp: '2026-06-23T01:41:36.938855+00:00'
   description: 'P47 R3: mof-drift v2 加第 4 维度 stale_planned_tools (排除自指), 7 drifts → 1, governance 100 A+ 持续'
-version: 0.0.35
+- version: 0.0.36
+  timestamp: '2026-06-23T02:05:18.276542+00:00'
+  description: 'P48 R1-R3: mof-drift v3 加 gbrain 2 维度 (ahead + todo 5 类), 17 项目 lint 全过, ecos 5 + omo 2 修, frontmatter 100%
+    恢复, governance 100 A+ 持续'
+version: 0.0.36

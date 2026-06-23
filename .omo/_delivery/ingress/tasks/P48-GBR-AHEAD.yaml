@@ -1,0 +1,18 @@
+kind: planned_task_created
+task_id: P48-GBR-AHEAD
+title: P48 gbrain 53 TODOs 推进 + 全面验证全模块架构收敛
+ingress_plane: c2g
+source_ref: P48-GBR-AHEAD
+created_at: '2026-06-23T01:49:11Z'
+task_ref: .omo/tasks/planned/P48-GBR-AHEAD.yaml
+evidence_required:
+- mof-drift v3 2 新维度工作
+- 17 项目 0 lint
+- governance 100 A+ 持续
+source_docs:
+- .c2g_data/pitches/Idea-P48-gbrain-53-TODOs-推进-全面验证全模块.md
+- projects/gbrain/src/core/operations.ts
+artifact_ref: .omo/_delivery/ingress/tasks/P48-GBR-AHEAD.yaml
+broker_ref: projects/omo/src/omo/omo_ingress.py
+retention_mode: manual_archive
+lifecycle_state: active

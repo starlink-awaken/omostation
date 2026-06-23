@@ -1,0 +1,66 @@
+id: P48-GBR-AHEAD
+title: P48 gbrain 53 TODOs 推进 + 全面验证全模块架构收敛
+status: done
+task_type: feature
+risk_level: L2
+depends_on:
+- P47-DOC-LIFECYCLE
+source_docs:
+- .c2g_data/pitches/Idea-P48-gbrain-53-TODOs-推进-全面验证全模块.md
+- projects/gbrain/src/core/operations.ts
+deliverables:
+- mof-drift v3 加 2 维度 (gbrain_ahead_commits + gbrain_todo_categories)
+- 17 项目 lint 全面验证
+- P48 收口报告
+imported_via: omo_broker_c2g
+context_uri: bos://strategy/bets/P48
+assigned_to: null
+dispatch_id: null
+run_ref: null
+approval_ref: P48-GBR-AHEAD
+review_ref: null
+knowledge_refs:
+- .omo/_knowledge/audits/2026-06-23-p46-mof-impl-closeout.md
+handoff_refs:
+- P48-R3-closeout
+governance_refs:
+- .omo/standards/omo-governance-surfaces.md
+- .omo/_truth/x2-freshness-rules.yaml
+entry_gate:
+- P47-DOC-LIFECYCLE
+evidence_required:
+- mof-drift v3 2 新维度工作
+- 17 项目 0 lint
+- governance 100 A+ 持续
+test_plan:
+- omo governance 100 A+
+- mof-drift ≤ 1 LOW
+allowed_operation_level: L3
+human_approval_required: false
+priority: P1
+description: 'P48 R1-R3: gbrain 53 TODOs 智能识别 (4 类) + 17 项目全验证 + 收口'
+phase: '48'
+created_at: '2026-06-23T03:00:00Z'
+updated_at: '2026-06-23T03:00:00Z'
+metadata:
+  ingress_plane: c2g
+  broker: projects/omo/src/omo/omo_ingress.py
+  source_ref: P48-GBR-AHEAD
+  completed_at: '2026-06-23T02:05:18Z'
+  completed_via: omo task done
+  completion_actor: agent-runtime
+  completion_source_ref: P48-R3
+evidence_paths:
+- bin/mof-drift
+- .omo/_truth/x2-freshness-rules.yaml
+- .omo/_knowledge/audits/2026-06-23-p46-mof-impl-closeout.md
+- projects/ecos/src/ecos/workflow/__init__.py
+- projects/omo/src/omo/omo_audit.py
+- projects/omo/src/omo/omo_lint.py
+completed_at: '2026-06-23T02:05:18Z'
+lifecycle_state: closed
+gate_level: none
+resolution_evidence: 'P48 R1: mof-drift v3 加 2 维度 (gbrain_ahead_commits + gbrain_todo_categories
+  5 类); P48 R2: 17 项目 lint 全清单 (14 Python 0 errors, 3 TS/Docker 跳过); ecos 5 F401 +
+  omo 2 F841 修; frontmatter 100% 恢复'
+commit_ref: P48 R1-R3 (cascade)
