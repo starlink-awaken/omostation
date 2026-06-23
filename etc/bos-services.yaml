@@ -317,6 +317,15 @@ services:
     command: ["uv", "run", "--directory", "projects/kairon", "python", "-m", "forge.cli", "lint"]
     description: "Forge Lint 检查"
 
+  - uri: "bos://capability/swarm/run"
+    domain: capability
+    action: "run"
+    transport: internal
+    package: "aetherforge"
+    module_path: "aetherforge.swarm.rpc"
+    func_name: "run_swarm_workflow"
+    description: "AetherForge Swarm 多智能体任务工作流运行接口 (internal 进程内反射直调)"
+
   - uri: "bos://memory/local/all-search"
     domain: memory
     action: "all-search"
