@@ -124,4 +124,8 @@ history:
   timestamp: '2026-06-23T02:05:18.276542+00:00'
   description: 'P48 R1-R3: mof-drift v3 加 gbrain 2 维度 (ahead + todo 5 类), 17 项目 lint 全过, ecos 5 + omo 2 修, frontmatter 100%
     恢复, governance 100 A+ 持续'
-version: 0.0.36
+- version: 0.0.37
+  timestamp: '2026-06-23T02:13:27.708454+00:00'
+  description: 'P49 R1-R3: registry 已含 3 新资产, cockpit test_no_subcommand PASS, 3 PLANNED 候选 done (PLANNED 清零), governance
+    100 A+ 持续'
+version: 0.0.37

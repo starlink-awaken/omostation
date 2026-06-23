@@ -1,0 +1,8 @@
+kind: task_completed
+task_id: P49-REG-CLEANUP
+source_group: active
+task_ref_before: .omo/tasks/active/P49-REG-CLEANUP.yaml
+task_ref_after: .omo/tasks/done/P49-REG-CLEANUP.yaml
+actor: agent-runtime
+source_ref: P49-R3
+completed_at: '2026-06-23T02:13:27Z'

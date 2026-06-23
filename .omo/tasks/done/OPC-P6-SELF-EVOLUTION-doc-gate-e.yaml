@@ -1,6 +1,6 @@
 id: OPC-P6-SELF-EVOLUTION-doc-gate-e
 title: Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml
-status: candidate
+status: done
 task_type: governance
 risk_level: L1
 depends_on: []
@@ -13,10 +13,11 @@ context_uri: bos://governance/tasks/planned/OPC-P6-SELF-EVOLUTION-doc-gate-e
 assigned_to: null
 dispatch_id: null
 run_ref: null
-approval_ref: null
+approval_ref: OPC-P6-SELF-EVOLUTION-doc-gate-e
 review_ref: null
 knowledge_refs: []
-handoff_refs: []
+handoff_refs:
+- P49-R2-cascade
 entry_gate:
 - P6 drift review accepted
 evidence_required:
@@ -42,4 +43,21 @@ metadata:
   ingress_plane: scripts/opc_p6_self_evolve.py
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: opc-p6-self-evolve:OPC-P6-SELF-EVOLUTION-doc-gate-e
+  completed_at: '2026-06-23T02:13:05Z'
+  completed_via: omo task done
+  completion_actor: agent-runtime
+  completion_source_ref: P49-R2
 latest_week: 2026-W29
+evidence_paths:
+- .omo/DOC-LIFECYCLE.md
+- .omo/_truth/registry/omo-governance-surfaces.yaml
+- .omo/bets.json
+- .omo/tasks.json
+- .omo/_knowledge/audits/2026-06-23-p48-gbrain-drift-closeout.md
+completed_at: '2026-06-23T02:13:05Z'
+lifecycle_state: closed
+gate_level: none
+resolution_evidence: 'P49 R1 收口: P45 R6 frontmatter 100% (OPC phase 6 收口)'
+superseded_by: P45 R6 frontmatter 100% (OPC phase 6 收口)
+outcome: superseded (OPC P6 self-evolution 已闭环)
+commit_ref: P49 R1-R2 (cascade)

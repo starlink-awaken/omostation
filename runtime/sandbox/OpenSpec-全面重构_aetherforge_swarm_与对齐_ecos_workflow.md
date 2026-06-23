@@ -55,9 +55,9 @@
 ---
 
 ## 🎯 任务拆解 (GSD Action Items)
-- [ ] 任务1: 更新 `packages/swarm/src/swarm_engine/_compat.py`，加入 `AgentProfile`、`IntentParticle`、`MetabolicStage`、`VisionParser` 兼容 Stub，定义 `WORKER_REGISTRY` 与 `get_worker_profile`。
-- [ ] 任务2: 创建 `packages/swarm/src/swarm_engine/_events.py`，实现 timeout/poll 常量定义及 `_emit_hatcher_event` 函数。
-- [ ] 任务3: 修改 `packages/swarm/src/swarm_engine/ils_engine.py`，改写 `ShieldMixin` 和 `WitnessMixin` 局部类定义以修复继承 TypeError。
-- [ ] 任务4: 修改 `hatcher_core.py`、`nks_task_planner.py`、`universal_worker.py`、`vision_metabolizer.py`，更新其 `.organs` 及 `._events` 导入指向。
-- [ ] 任务5: 修改 `packages/swarm/tests/test_swarm_engine_imports.py`，把原本不包含的 5 个模块从遗留黑名单中移出并加入 `MERGED_MODULES`，运行测试。
-- [ ] 任务6: 重新实现 `src/aetherforge/cli.py` 里的 `cmd_swarm`，使其打通并支持 `aetherforge swarm run --goal ... --json` 命令行接口。
+- [x] 任务1: 更新 `packages/swarm/src/swarm_engine/_compat.py`，加入 `AgentProfile`、`IntentParticle`、`MetabolicStage`、`VisionParser` 兼容 Stub，定义 `WORKER_REGISTRY` 与 `get_worker_profile`。
+- [x] 任务2: 创建 `packages/swarm/src/swarm_engine/_events.py`，实现 timeout/poll 常量定义及 `_emit_hatcher_event` 函数。
+- [x] 任务3: 修改 `packages/swarm/src/swarm_engine/ils_engine.py`，改写 `ShieldMixin` 和 `WitnessMixin` 局部类定义以修复继承 TypeError。
+- [x] 任务4: 修改 `hatcher_core.py`、`nks_task_planner.py`、`universal_worker.py`、`vision_metabolizer.py`，更新其 `.organs` 及 `._events` 导入指向。
+- [x] 任务5: 修改 `packages/swarm/tests/test_swarm_engine_imports.py`，把原本不包含的 5 个模块从遗留黑名单中移出并加入 `MERGED_MODULES`，运行测试。
+- [x] 任务6: 重新实现 `src/aetherforge/cli.py` 里的 `cmd_swarm`，使其打通并支持 `aetherforge swarm run --goal ... --json` 命令行接口。
