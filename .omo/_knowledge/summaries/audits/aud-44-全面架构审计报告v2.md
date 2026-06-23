@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 全量兜底批量归档, 当前活跃以各面 INDEX/SSOT/PANORAMA.md 为准"
+---
 # 全面架构审计报告 v2
 
 > 审计时间：2026-05-27 | 对比：v1(2026-05-27 08:00) vs v2(2026-05-27 11:35)

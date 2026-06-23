@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P55 R2: phase 子目录历史总结批量归档, 当前阶段以 .omo/state/system.yaml 为准"
+---
 # Phase 20-25 遗留任务分析报告
 
 > 生成时间: 2026-06-03

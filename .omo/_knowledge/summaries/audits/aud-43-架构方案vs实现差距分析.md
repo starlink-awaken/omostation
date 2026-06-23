@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 全量兜底批量归档, 当前活跃以各面 INDEX/SSOT/PANORAMA.md 为准"
+---
 # 差距分析：架构方案 vs 当前实现
 
 > 依据: WF-2 差距分析流程 | 对比源: phase1-架构工程/ 9 篇文档

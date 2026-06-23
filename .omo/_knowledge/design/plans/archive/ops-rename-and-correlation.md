@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P55 R1: Phase 1-13 历史执行计划归档, 当前阶段/状态以 .omo/state/system.yaml + .omo/goals/current.yaml 为准"
+---
 # OPS 解耦与关联推理引擎方案
 
 > 两件事: 1) hermes-ops → ops 完全解耦  2) Correlation Engine 架构设计

@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P55 R2: phase 子目录历史总结批量归档, 当前阶段以 .omo/state/system.yaml 为准"
+---
 # ADR — Phase 11 Wave 2 — OntoDerive Inference MetaType
 
 > Historical ADR reference. It records the decision made in that wave; current runtime status and current implementation ownership must be verified from the codebase and current SSOT surfaces.

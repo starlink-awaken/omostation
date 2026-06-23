@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P55 R2: phase 子目录历史总结批量归档, 当前阶段以 .omo/state/system.yaml 为准"
+---
 # Phase 11 Wave 3 scenario assessment
 
 > Scope: T3.10 — assess the 12 previously blocked user scenarios from `.omo/drafts/scenario-analysis.md` against the Wave 3 MVP baseline.

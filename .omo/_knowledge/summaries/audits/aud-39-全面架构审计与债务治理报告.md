@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 全量兜底批量归档, 当前活跃以各面 INDEX/SSOT/PANORAMA.md 为准"
+---
 # Workspace 全面架构审计与债务治理报告
 
 > 审计时间：2026-05-27 | 方法：并行三层深度审计（代码扫描 + 构建验证 + 测试执行 + 红队分析）

@@ -1,3 +1,12 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+related: process/retrospectives/
+note: "P53 R2 软收敛: retro/summary 命名文件交叉引用 process/retrospectives/, 沿用不动路径原则保留当前位置"
+---
 # Phase 3 full execution retrospective
 
 > 日期: 2026-05-30

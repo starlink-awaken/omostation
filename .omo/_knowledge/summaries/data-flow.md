@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P55 R2: summaries/ 根目录历史快照批量归档, 当前状态以 .omo/state/system.yaml + .omo/tasks/active/ 为准"
+---
 # 数据流向规范
 
 > 定义 Starlink Awaken 生态中知识从**摄取 → 结构化 → 推导 → 研究**的端到端数据流。

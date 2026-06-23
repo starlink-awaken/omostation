@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P55 R1: Phase 1-13 历史执行计划归档, 当前阶段/状态以 .omo/state/system.yaml + .omo/goals/current.yaml 为准"
+---
 # OpenHuman vs Workspace — 全面对标分析与蓝图
 
 > 日期: 2026-05-28 | 参考: OpenHuman v0.53.22 (GPL-3.0) | 我们的架构 v3.1 (8.8/10)

@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P55 R1: Phase 1-13 历史执行计划归档, 当前阶段/状态以 .omo/state/system.yaml + .omo/goals/current.yaml 为准"
+---
 # Phase 9 — 多人多组织 🏢
 
 > **周期**: 8周 (Wave 9.1: 2周, Wave 9.2: 2周, Wave 9.3: 2周, Wave 9.4: 2周)

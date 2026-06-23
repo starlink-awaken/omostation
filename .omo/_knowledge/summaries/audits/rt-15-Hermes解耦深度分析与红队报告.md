@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 全量兜底批量归档, 当前活跃以各面 INDEX/SSOT/PANORAMA.md 为准"
+---
 # 深度分析与红队报告：Hermes 解耦蓝图
 
 > 对《14-Hermes解耦蓝图与Roadmap》的批判性审计。

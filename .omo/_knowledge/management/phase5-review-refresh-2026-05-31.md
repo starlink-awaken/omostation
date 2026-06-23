@@ -1,10 +1,15 @@
 ---
 plane: knowledge
 type: management
-status: active
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
 freshness: 2026-05-31
 maintainer: reasonix
 task_ref: P5-W0-REVIEW-REFRESH-PACKET
+note: "P55 R2: 历史 Phase 5 review refresh (P5-W0 时期), 当前阶段已演进至 P55+"
 ---
 
 # Phase 5 Review Refresh — Wave 0 Reconciliation

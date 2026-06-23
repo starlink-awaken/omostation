@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P55 R1: Phase 1-13 历史执行计划归档, 当前阶段/状态以 .omo/state/system.yaml + .omo/goals/current.yaml 为准"
+---
 # Phase 1 任务规格书 + Agent 执行手册
 
 > 日期: 2026-05-29 | 版本: v1.0 | 职责: Prometheus(规划+检查) → Agent(执行)

@@ -1,9 +1,14 @@
 ---
 plane: knowledge
 type: audit
-status: active
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
 freshness: 2026-05-31
 maintainer: auto
+note: "P55 R2: 历史 OMO convergence 审计快照 (Phase 6 时期), 当前 governance 100 A+ 已远超当时基线"
 ---
 
 # OMO convergence audit
