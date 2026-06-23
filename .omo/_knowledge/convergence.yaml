@@ -2,6 +2,14 @@
 # ⚠️ phase1_status reflects CURRENT GATE STATUS, not historical archive
 # Phase 1 历史运行时证据曾存在冲突，当前已 reconciled_closed
 # Phase 2 limited-go gate 已通过，可作为 full execution Go/No-Go 输入
+# ---
+# P53 R2 收敛标注 (2026-06-23):
+#   status: archived (历史快照, phase1/phase2 已完成, 全 execution 早通过)
+#   lifecycle: history
+#   owner: governance-team
+#   last-reviewed: 2026-06-23
+#   note: 本文件为 phase2 (2026-05-30) 收敛追踪快照。后续 phase3-52 已持续收敛并入 governance history。
+#         当前 phase/状态/任务以 .omo/state/system.yaml + .omo/tasks/active/ 为准, 本文件仅留作历史可追溯。
 last_updated: "2026-05-30T14:00:00Z"
 tracked_projects: 6
 convergence_status: "full_execution"
