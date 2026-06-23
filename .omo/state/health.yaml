@@ -1,14 +1,14 @@
 # governance health — 治理健康分 SSOT
-# generated_at: 2026-06-23T02:13:53Z
+# generated_at: 2026-06-23T02:23:31Z
 # source: c2g.strategy (real audit, no mock)
 # range: 0-100, higher = healthier
 
-generated_at: "2026-06-23T02:13:53Z"
+generated_at: "2026-06-23T02:23:31Z"
 source: "c2g.strategy (real audit, no mock)"
 health_score: 85
 anomaly_count: 1
-total_tasks: 109
-done: 109
+total_tasks: 110
+done: 110
 planned: 0
 
 anomalies:
@@ -17,14 +17,14 @@ anomalies:
 distributions:
   priority_dist:
     P0: 4
-    P1: 21
+    P1: 22
     P2: 67
     P3: 2
     unassigned: 15
   risk_dist:
     L0: 24
     L1: 37
-    L2: 21
+    L2: 22
     L3: 5
     unassigned: 22
   owner_dist:
@@ -45,7 +45,7 @@ distributions:
     omo-team: 7
     ssot: 1
     team-lead: 1
-    unassigned: 37
+    unassigned: 38
     workspace: 2
   phase_dist:
     17: 3
@@ -71,6 +71,7 @@ distributions:
     47: 1
     48: 5
     49: 1
+    50: 1
     unphased: 35
   status_dist:
-    done: 109
+    done: 110

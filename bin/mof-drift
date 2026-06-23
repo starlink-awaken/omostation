@@ -141,7 +141,7 @@ def count_gbrain_ahead_commits() -> int:
 
 
 def count_gbrain_todo_categories() -> dict[str, int]:
-    """分类 gbrain 53 TODOs 为 5 类 (P48 增).
+    """分类 gbrain 53 TODOs 为 5 类 (P48 增, P50 v4 修).
 
     keep: 引用子仓 tracking (TODOS.md / CLAUDE.md)
     fix: 引用 fix / bug / FIXME
@@ -172,18 +172,60 @@ def count_gbrain_todo_categories() -> dict[str, int]:
                 cats["fix"] += 1
                 continue
             # close: 引用 version
-            if "V0.3" in upper or "V0.4" in upper:
+            if "V0.3" in upper or "V0.4" in upper or "FOLDED INTO" in upper:
                 cats["close"] += 1
                 continue
-            # planned: TODO 跟 version 引用 (eg "TODO v0.32")
-            if "TODO V" in upper or "TODO-FOLLOW" in upper:
+            # planned: 引用 version / 引用 TODO-N / "TODO v" / "TODO in v"
+            if ("TODO V" in upper or "TODO-FOLLOW" in upper
+                or "TODO-1" in upper or "TODO-2" in upper or "TODO-3" in upper
+                or "TODO IN V" in upper):
                 cats["planned"] += 1
                 continue
-            # unknown: 其它 TODO
+            # 宽松 planned (P50 v4): 任何 "TODO:" 后面跟动作的默认归 planned
+            # (eg. "TODO: implement", "TODO: generate", "TODO will thread")
+            if ("TODO:" in upper or "TODO WILL" in upper
+                or "TODO TO" in upper or "TODO MITIGATION" in upper):
+                cats["planned"] += 1
+                continue
+            # 真的 unknown: 模糊引用 (eg. "see TODO at the bottom", "TODO-3 folded")
             cats["unknown"] += 1
     except Exception:
         pass
     return cats
+
+
+def count_gbrain_todo_top_files(top_n: int = 5) -> list[tuple[str, int]]:
+    """返回 gbrain 53 TODOs 按文件分布 Top-N (P50 v4 增).
+
+    返回: [(file, count), ...] 按 count 降序
+    """
+    gbrain_src = PROJECTS_DIR / "gbrain" / "src"
+    if not gbrain_src.exists():
+        return []
+    counts: dict[str, int] = {}
+    try:
+        result = subprocess.run(
+            ["grep", "-rc", "TODO", str(gbrain_src), "--include=*.ts"],
+            capture_output=True, text=True, timeout=30,
+        )
+        for line in result.stdout.splitlines():
+            if ":" in line:
+                fpath, cnt = line.rsplit(":", 1)
+                try:
+                    cnt = int(cnt)
+                    if cnt > 0:
+                        # 转相对路径
+                        try:
+                            rel = str(Path(fpath).relative_to(PROJECTS_DIR / "gbrain"))
+                            counts[rel] = counts.get(rel, 0) + cnt
+                        except ValueError:
+                            counts[fpath] = counts.get(fpath, 0) + cnt
+                except ValueError:
+                    pass
+    except Exception:
+        pass
+    sorted_items = sorted(counts.items(), key=lambda x: -x[1])
+    return sorted_items[:top_n]
 
 
 def detect_drift(project_name: str = None) -> list[dict]:
@@ -256,6 +298,18 @@ def detect_drift(project_name: str = None) -> list[dict]:
                 "severity": "low",
                 "count": sum(todo_cats.values()),
                 "message": f"gbrain TODOs: keep={todo_cats['keep']}, fix={todo_cats['fix']}, close={todo_cats['close']}, planned={todo_cats['planned']}, unknown={todo_cats['unknown']}",
+            })
+
+        # Check gbrain 53 TODOs Top-5 文件分布 (P50 v4 增)
+        top_files = count_gbrain_todo_top_files(top_n=5)
+        if top_files:
+            top_str = ", ".join(f"{f}:{c}" for f, c in top_files)
+            drifts.append({
+                "project": "gbrain",
+                "type": "todo_top_files",
+                "severity": "low",
+                "count": sum(c for _, c in top_files),
+                "message": f"gbrain TODOs Top-5 文件: {top_str}",
             })
 
         # Check test coverage

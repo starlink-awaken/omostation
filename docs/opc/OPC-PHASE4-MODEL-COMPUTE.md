@@ -1,19 +1,29 @@
-# OPC Phase 4 — Model & Compute Plane
+# OPC-P4: Model & Compute Plane
 
-Status: **Gate E closed (narrative passed 2026-06-12; plan.yaml gate_status=not_yet_passed per AGENTS.md 5 红线 1)**
+**状态**: ✅ 已完成 | **关闭时间**: 2026-06-13 11:20 CST
+**SSOT**: `.omo/tasks/done/OPC-P4-MODEL-COMPUTE.yaml`
 
-## Objective
+## 目标
 
-把模型路由、预算约束、compute worker discovery 收敛到治理内核和统一入口。
+移除业务模块中的直接模型/供应商耦合。llm-gateway 成为唯一的模型供应商入口；compute-mesh 成为唯一的工作节点发现入口。业务代码永远不开源 `openai` / `anthropic` / `vertexai` 或直接 subprocess 推理调用。
 
-## Runtime carrier
+## 子门禁
 
-- `.omo/tasks/done/OPC-P4-MODEL-COMPUTE.yaml`
+| 门禁 | 描述 | 状态 | 
+|------|------|------|
+| P4-E1 | Model Registry SSOT (models.yaml) | ✅ passed |
+| P4-E2 | Compute Mesh Worker Discovery | ✅ passed |
+| P4-E3 | 任务 budget policy 落地 | ✅ passed |
 
-## Signal
+## 交付物
 
-- `opc_phase4_gate_e_passed`
-- `opc_phase4_subgate_e1_passed`
-- `opc_phase4_subgate_e2_passed`
-- `opc_phase4_subgate_e3_passed`
-- `opc_phase4_subgate_e4_passed`
+- `llm-gateway/src/llm_gateway/registry_data/models.yaml` — ≥10 model, 3+ provider
+- `compute-mesh` — worker注册 + 5s heartbeat + 端到端 dispatch
+- `scripts/opc_p4_budget_audit_demo.py` — budget 拒绝路径实测通过
+- §19 debt register: `DEBT-OPC-P4-BUDGET-DEMO.yaml`
+
+## 验证
+
+- 20/20 executor engine tests pass
+- budget audit demo exit=0
+- agent-mesh/llm-gateway/compute-mesh 三仓无直接 provider import
