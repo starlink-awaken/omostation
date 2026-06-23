@@ -1,6 +1,6 @@
 id: P46-MOF-IMPL
 title: P46 mof 工具实施 (12 个 planned 工具) + 历史 PLANNED candidate 推进
-status: candidate
+status: done
 task_type: feature
 risk_level: L2
 depends_on:
@@ -21,7 +21,8 @@ approval_ref: P46-MOF-IMPL
 review_ref: null
 knowledge_refs:
 - .omo/_knowledge/audits/2026-06-23-p45-final-closeout.md
-handoff_refs: []
+handoff_refs:
+- P46-R3-closeout
 governance_refs:
 - .omo/standards/omo-governance-surfaces.md
 - .omo/_truth/x1-governance-policies.yaml
@@ -47,3 +48,19 @@ metadata:
   ingress_plane: c2g
   broker: projects/omo/src/omo/omo_ingress.py
   source_ref: P46-MOF-IMPL
+  completed_at: '2026-06-23T01:33:48Z'
+  completed_via: omo task done
+  completion_actor: agent-runtime
+  completion_source_ref: P46-R3
+evidence_paths:
+- bin/mof-io
+- bin/mof-graph
+- bin/mof-scan
+- .omo/_knowledge/audits/2026-06-23-p45-final-closeout.md
+- .omo/_truth/mof-version.yaml
+completed_at: '2026-06-23T01:33:48Z'
+lifecycle_state: closed
+gate_level: none
+resolution_evidence: 'P46 R1: 11 PLANNED 全部 done (cascade from P45); R2: 3 mof 工具
+  Status: planned → implemented; governance 100 A+ 持续. mof-version v0.0.32 → v0.0.33'
+commit_ref: 4cd5eb62 (P46 R1-R2)

@@ -167,7 +167,7 @@ last-reviewed: 2026-06-22
 7. 非 broker Python 代码不得直接改写 `.omo/` 或 `spaces/`；pre-commit 与 `omo lint direct-omo-io` 必须拦截。
 7.1 已知历史直写若暂时无法一轮消灭，必须登记到 `.omo/_truth/registry/direct-io-baseline.yaml`，只允许“冻结存量”，不得掩护新增违规。
 7.2 一旦历史直写清零，`.omo/_truth/registry/direct-io-baseline.yaml` 必须保持 `entries: []`；`omo lint direct-omo-io` / CI / pre-commit 必须把任何新增 baseline entry 视为失败。
-8. `.omo/_delivery/ingress/registry.yaml` 若存在，必须保持 `by_id` / `by_source_ref` 双向一致，并且 artifact/task/goal/debt 引用可落到真实状态面。
+8. `.omo/_delivery/ingress/registry.yaml` 必须存在，并保持 `by_id` / `by_source_ref` 双向一致；所有 broker ingress 写入都必须同步维护该注册表，且 artifact/task/goal/debt 引用可落到真实状态面。
 9. `/.omo/goals` 必须保持为指向 `/.omo/_truth/goals` 的运行时入口符号链接；文档与 broker 一律引用 `/.omo/goals/current.yaml`，不得发明第二写入目标。
 
 ## 5. X1-X4 联动
