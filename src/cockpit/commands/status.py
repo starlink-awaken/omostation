@@ -120,6 +120,7 @@ def _render_workbench(cycle: int | None = None, interval: float | None = None) -
         import yaml as _yaml
 
         from cockpit.data_index import resolve_workspace_root
+
         # 产品走查 v5 #V5-04: 复用项目标准根解析器 (governance.py/data.py 同款), 比手写 cwd 向上
         # 遍历更健壮 — __file__ 锚定不依赖 cwd; 找不到会 raise, 被此处 except 兜底 → health_line 空.
         ws_root = resolve_workspace_root()
@@ -503,6 +504,9 @@ def cmd_help(_: argparse.Namespace) -> int:
             "[bold green]📖 知识 & 研究[/]\n"
             "  [cyan]research[/] 深度研究 · [cyan]import[/] 导入 · [cyan]vault[/] 知识库搜索\n"
             "  [cyan]search[/] 跨源搜索 · [cyan]skill[/] 定时技能\n\n"
+            "[bold green]🌿 生活场景 (6 一等公民, 为夏服务) — TASK-08B2A2C5 P0[/]\n"
+            "  [cyan]gongwen[/] 公文 · [cyan]vault[/] 知识 · [cyan]research[/] 学习\n"
+            "  [cyan]scenario[/] 家庭 · [cyan]health[/] 健康 · [cyan]finance[/] 财务(规划中)\n\n"
             "[bold green]👨‍👩‍👧 个人 & 家庭 & 工作[/]\n"
             "  [cyan]profile[/] 身份档案 · [cyan]cards[/] 卡片状态 · [cyan]scenario[/] 家庭/工作场景 · [cyan]gongwen[/] 公文门户\n"
             "  [cyan]brief[/] 会话简报 · [cyan]context[/] 上下文 · [cyan]domains[/] 域\n\n"
@@ -516,8 +520,8 @@ def cmd_help(_: argparse.Namespace) -> int:
             "[bold]🔄 完整用户旅程[/bold]\n"
             "  import → research → open → ask → publish → dossier → timeline → daily\n\n"
             "[bold]🔍 搜索怎么选? (v5 #V5-12)[/]\n"
-            "  [cyan]vault \"关键词\"[/] — 搜本地知识库 (笔记/精读, 最快)\n"
-            "  [cyan]search \"关键词\" --all[/] — 跨源搜 (本地+BOS 知识引擎)\n"
+            '  [cyan]vault "关键词"[/] — 搜本地知识库 (笔记/精读, 最快)\n'
+            '  [cyan]search "关键词" --all[/] — 跨源搜 (本地+BOS 知识引擎)\n'
             '  [cyan]research "主题"[/] — 发起新深度研究 (产生新知识)\n\n'
             "[bold]💡 最佳实践[/bold]\n"
             "  · 新用户：[cyan]cockpit demo[/] 体验全流程\n"
@@ -580,9 +584,7 @@ def cmd_daily(args: argparse.Namespace) -> int:
             gap = (time.time() - latest.get("created_at", 0)) / 86400
             kind = "搜索追踪" if "trace" in str(latest.get("agent", "")).lower() else "研究"
             latest_ts = datetime.fromtimestamp(latest.get("created_at", 0)).strftime("%m-%d %H:%M")
-            latest_hint = (
-                f"\n[dim]最近{kind}: {latest_ts} ({gap:.1f}天前), 超出 {args.days} 天窗口[/dim]"
-            )
+            latest_hint = f"\n[dim]最近{kind}: {latest_ts} ({gap:.1f}天前), 超出 {args.days} 天窗口[/dim]"
         c.print(
             _panel(
                 f"[bold cyan]📅 {date_str} 今日站会[/]\n\n"

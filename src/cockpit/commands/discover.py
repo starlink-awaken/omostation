@@ -29,6 +29,9 @@ def _cmd_discover(args: Namespace) -> int:
     console.print("[bold]命令地图 (38 个, 分 6 组)[/]")
     console.print("  [green]入门导览[/] demo · status · daily · help · quickstart · discover · version")
     console.print("  [green]知识研究[/] research · import · vault · search · skill")
+    console.print(
+        "  [green]生活场景(6一等公民)[/] gongwen公文 · vault知识 · research学习 · scenario家庭 · health健康 · finance(规划中)"
+    )
     console.print("  [green]个人家庭工作[/] profile · cards · scenario · brief · context · domains · gongwen")
     console.print("  [green]健康治理[/] health · product-health · audit · governance · monitor")
     console.print("  [green]战略Agent[/] compass · iterate · workflow · mcp · bos · events · code")
