@@ -1,15 +1,15 @@
 ---
-status: deprecated
-lifecycle: history
-owner: governance-team
+status: active
+lifecycle: contract
+owner: agentmesh-architecture-team
 last-reviewed: 2026-06-23
-deprecated-since: 2026-06-23
-migrated-to: .omo/_knowledge/design/specs/memtheta-operators.md
+migrated-from: .omo/_knowledge/designs/2026-06-13-memtheta-operators.md
 migration-date: 2026-06-23
-migration-reason: "P54 R2: 真迁移到 design/specs/ 统一设计契约区, 本文件保留为历史指针"
+migration-reason: "P54 R2: 解决 designs/ 孤儿单文件命名冲突, 真迁移到 design/specs/ 统一设计契约区"
+original-status: "Approved (Phase 1.2)"
 ---
 
-# Memθ (Mem-Theta) 记忆算子体系与接口规范设计 (DEPRECATED)
+# Memθ (Mem-Theta) 记忆算子体系与接口规范设计
 
 **日期**: 2026-06-13
 **设计方**: 织星 Agent 架构组

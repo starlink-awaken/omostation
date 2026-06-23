@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史设计/历史/评审/图表批量归档, 当前活跃设计以 design/INDEX.md + PANORAMA.md 为准"
+---
 # 设计文档 — `_knowledge/design/`
 
 > 架构设计、蓝图、路线图、规格书。回答"系统的设计是什么？要去哪？"
@@ -127,7 +135,7 @@
 
 | 文件 | 用途 | 状态 |
 |------|------|------|
-| [plans/dbo-archive/](../../plans/dbo-archive/) | Digital Brain OS 历史计划 | archived |
+| [plans/dbo-archive/](../../plans-archive/dbo-archive/) | Digital Brain OS 历史计划 | archived (P54 R1 已迁出到 plans-archive/) |
 
 ---
 
