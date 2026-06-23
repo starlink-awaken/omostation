@@ -265,7 +265,7 @@ bash tests/integration/run-all.sh
 
 > 运行时数字 (Phase/健康分/任务数/活跃任务) 每会话变化, **禁止在本文件硬编码** — 以 `.omo/state/system.yaml` 为唯一真源, `goals/current.yaml` 为目标源。本段只保留稳定的架构原则 + 实测快照。
 
-- **当前 Phase/健康分/任务状态**: 见 `.omo/state/system.yaml` (会话启动第[5]步已读; 实测 Phase 42 active, health 92, 2026-06-19)
+- **当前 Phase/健康分/任务状态**: 见 `.omo/state/system.yaml` (会话启动第[5]步已读; 实测 Phase 42 active, health 100, governance 100 A+, mof-version v0.0.40, 2026-06-23)
 - **当前目标/Wave**: 见 `.omo/goals/current.yaml` (第[6]步; W1-W4 全 done)
 - **稳定架构原则 (不随 phase 变)**: OMO MCP 化, agora 网关隔离固化, llm-gateway 统一算力调度, gbrain 图谱记忆, 5+4+1+1 分层
 

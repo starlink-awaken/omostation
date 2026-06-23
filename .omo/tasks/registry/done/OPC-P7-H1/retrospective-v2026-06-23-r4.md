@@ -1,10 +1,10 @@
-# OPC P7-H1 retrospective — v2026-06-09-r1
+# OPC P7-H1 retrospective — v2026-06-23-r4
 
-Generated: 2026-06-09T23:00:00Z
+Generated: 2026-06-23T08:22:39Z
 
 ## cycle state
 - stage: ship
-- version: v2026-06-09-r1
+- version: v2026-06-23-r4
 - notes: .omo/_delivery/release/CHANGELOG.md
 
 ## 3 字段 (summary/validation/debt)
@@ -17,7 +17,7 @@ Generated: 2026-06-09T23:00:00Z
   "validation": {
     "omo_tests": {
       "returncode": 1,
-      "summary": "1 failed, 17 passed in 0.07s"
+      "summary": "1 failed, 17 passed in 0.08s"
     },
     "drift": {
       "error": "drift parse fail"

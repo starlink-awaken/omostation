@@ -1,6 +1,8 @@
 # OPC-P4: Model & Compute Plane
 
 **状态**: ✅ 已完成 | **关闭时间**: 2026-06-13 11:20 CST
+Status: **Gate E passed**
+Signal: `opc_phase4_gate_e_passed`
 **SSOT**: `.omo/tasks/done/OPC-P4-MODEL-COMPUTE.yaml`
 
 ## 目标

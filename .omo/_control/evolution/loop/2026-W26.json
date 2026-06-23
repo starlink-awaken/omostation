@@ -1,122 +1,94 @@
 {
   "week": "2026-W26",
-  "generated_at": "2026-06-12T05:05:52Z",
+  "generated_at": "2026-06-23T08:22:42Z",
   "radar": {
     "stage": "radar",
-    "ts": "2026-06-12T05:05:52Z",
+    "ts": "2026-06-23T08:22:42Z",
     "output": {
       "scenario": "technical-radar",
-      "generated_at": "2026-06-12T05:05:52Z",
+      "generated_at": "2026-06-23T08:22:42Z",
       "candidates": [
         {
-          "title": "Platform: consolidate 'search-trace: AGENTS' into a shared module",
+          "title": "📈 复用机会: Merged: Dashboard Actions QA + contract export smoke (多次出现, 值得抽象)",
           "source": "cockpit:research",
-          "timestamp": "2026-06-11T09:49:15Z",
-          "next_action": "create OPC follow-up task + link to source research",
-          "evidence_id": 34
+          "source_path": "cockpit:research:12",
+          "timestamp": "2026-05-27T00:22:14Z",
+          "next_action": "评估抽象为共享模块 + 关联源研究",
+          "evidence_id": 12,
+          "score": 6
         },
         {
-          "title": "Manual follow-up #1 — review recent research activity",
-          "source": "cockpit:research (DB unavailable)",
-          "timestamp": "2026-06-12T05:05:52Z",
-          "next_action": "open cockpit research --list to triage",
-          "evidence_id": null
+          "title": "🔍 待观察: 向量数据库选型对比 (来自 研究)",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:18",
+          "timestamp": "2026-05-28T08:06:09Z",
+          "next_action": "持续追踪, 累积信号后再决策",
+          "evidence_id": 18,
+          "score": 3
         },
         {
-          "title": "Manual follow-up #2 — review recent research activity",
-          "source": "cockpit:research (DB unavailable)",
-          "timestamp": "2026-06-12T05:05:52Z",
-          "next_action": "open cockpit research --list to triage",
-          "evidence_id": null
+          "title": "🔍 待观察: good research (来自 研究)",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:8",
+          "timestamp": "2026-05-27T00:01:14Z",
+          "next_action": "持续追踪, 累积信号后再决策",
+          "evidence_id": 8,
+          "score": 3
         }
       ],
       "candidates_count": 3,
-      "source": "cockpit:research"
+      "source": "cockpit:research",
+      "db_path": "/Users/xiamingxing/.workspace/data.db",
+      "trigger_source": "cron",
+      "archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260623T082242Z-technical-radar-1ed9a943.json"
     }
   },
   "drift": {
-    "generated_at": "2026-06-12T05:05:52Z",
-    "kinds": 4,
+    "kinds": 0,
     "drift_count": 0,
-    "results": [
-      {
-        "kind": "entry_drift",
-        "ts": "2026-06-12T05:05:52Z",
-        "expected": [
-          "radar",
-          "assistant",
-          "health"
-        ],
-        "present": [
-          "radar",
-          "assistant",
-          "health"
-        ],
-        "missing": [],
-        "drift": false
-      },
-      {
-        "kind": "doc_drift",
-        "ts": "2026-06-12T05:05:52Z",
-        "plan_gate_status": "passed",
-        "doc_says_passed": true,
-        "consistent": true,
-        "drift": false
-      },
-      {
-        "kind": "duplicate_facts",
-        "ts": "2026-06-12T05:05:52Z",
-        "findings": [],
-        "drift": false
-      },
-      {
-        "kind": "agora_bypass",
-        "ts": "2026-06-12T05:05:52Z",
-        "scanned_files": [
-          "projects/runtime/src/runtime/executor/engine.py",
-          "projects/cockpit/src/cockpit/commands/scenario.py",
-          "projects/runtime/src/runtime/executor/config/__init__.py"
-        ],
-        "bypass_patterns": [],
-        "drift": false
-      }
-    ]
+    "results": []
   },
   "gap": {
     "stage": "gap",
-    "ts": "2026-06-12T05:05:52Z",
+    "ts": "2026-06-23T08:22:42Z",
     "candidates": [
       {
         "candidate": {
-          "title": "Platform: consolidate 'search-trace: AGENTS' into a shared module",
+          "title": "📈 复用机会: Merged: Dashboard Actions QA + contract export smoke (多次出现, 值得抽象)",
           "source": "cockpit:research",
-          "timestamp": "2026-06-11T09:49:15Z",
-          "next_action": "create OPC follow-up task + link to source research",
-          "evidence_id": 34
+          "source_path": "cockpit:research:12",
+          "timestamp": "2026-05-27T00:22:14Z",
+          "next_action": "评估抽象为共享模块 + 关联源研究",
+          "evidence_id": 12,
+          "score": 6
         },
         "score": 1.0,
         "lane": "radar"
       },
       {
         "candidate": {
-          "title": "Manual follow-up #1 — review recent research activity",
-          "source": "cockpit:research (DB unavailable)",
-          "timestamp": "2026-06-12T05:05:52Z",
-          "next_action": "open cockpit research --list to triage",
-          "evidence_id": null
+          "title": "🔍 待观察: 向量数据库选型对比 (来自 研究)",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:18",
+          "timestamp": "2026-05-28T08:06:09Z",
+          "next_action": "持续追踪, 累积信号后再决策",
+          "evidence_id": 18,
+          "score": 3
         },
-        "score": 0.0,
+        "score": 1.0,
         "lane": "radar"
       },
       {
         "candidate": {
-          "title": "Manual follow-up #2 — review recent research activity",
-          "source": "cockpit:research (DB unavailable)",
-          "timestamp": "2026-06-12T05:05:52Z",
-          "next_action": "open cockpit research --list to triage",
-          "evidence_id": null
+          "title": "🔍 待观察: good research (来自 研究)",
+          "source": "cockpit:research",
+          "source_path": "cockpit:research:8",
+          "timestamp": "2026-05-27T00:01:14Z",
+          "next_action": "持续追踪, 累积信号后再决策",
+          "evidence_id": 8,
+          "score": 3
         },
-        "score": 0.0,
+        "score": 1.0,
         "lane": "radar"
       }
     ],
@@ -124,92 +96,126 @@
   },
   "task": {
     "stage": "task",
-    "ts": "2026-06-12T05:05:52Z",
+    "ts": "2026-06-23T08:22:42Z",
     "planned": [
       {
-        "id": "OPC-P6-LOOP-2026-W24-00",
-        "title": "Platform: consolidate 'search-trace: AGENTS' into a shared module",
+        "id": "OPC-P6-LOOP-2026-W26-00",
+        "title": "📈 复用机会: Merged: Dashboard Actions QA + contract export smoke (多次出现, 值得抽象)",
         "source": "cockpit:research",
         "score": 1.0,
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-06-12T05:05:52Z"
+        "ts": "2026-06-23T08:22:42Z"
       },
       {
-        "id": "OPC-P6-LOOP-2026-W24-01",
-        "title": "Manual follow-up #1 — review recent research activity",
-        "source": "cockpit:research (DB unavailable)",
-        "score": 0.0,
+        "id": "OPC-P6-LOOP-2026-W26-01",
+        "title": "🔍 待观察: 向量数据库选型对比 (来自 研究)",
+        "source": "cockpit:research",
+        "score": 1.0,
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-06-12T05:05:52Z"
+        "ts": "2026-06-23T08:22:42Z"
       },
       {
-        "id": "OPC-P6-LOOP-2026-W24-02",
-        "title": "Manual follow-up #2 — review recent research activity",
-        "source": "cockpit:research (DB unavailable)",
-        "score": 0.0,
+        "id": "OPC-P6-LOOP-2026-W26-02",
+        "title": "🔍 待观察: good research (来自 研究)",
+        "source": "cockpit:research",
+        "score": 1.0,
         "lane": "radar",
         "status": "planned",
         "approval_required": true,
-        "ts": "2026-06-12T05:05:52Z"
+        "ts": "2026-06-23T08:22:42Z"
       }
     ],
     "red_line_held": "all tasks status=planned; human approval required for active"
   },
   "swarm": {
     "stage": "swarm",
-    "ts": "2026-06-12T05:05:52Z",
+    "ts": "2026-06-23T08:22:42Z",
     "note": "P6 closeout 范围内只 plan; 实际派发受红线 'self-evolution task 仅落 planned' 约束",
     "planned_dispatch": [
-      "OPC-P6-LOOP-2026-W24-00",
-      "OPC-P6-LOOP-2026-W24-01",
-      "OPC-P6-LOOP-2026-W24-02"
-    ]
+      "OPC-P6-LOOP-2026-W26-00",
+      "OPC-P6-LOOP-2026-W26-01",
+      "OPC-P6-LOOP-2026-W26-02"
+    ],
+    "approval_lane": "opc-p6-self-evolution-board"
   },
   "audit": {
     "stage": "audit",
-    "ts": "2026-06-12T05:05:52Z",
-    "llm_audit_tail": [
+    "ts": "2026-06-23T08:22:42Z",
+    "llm_audit_tail": [],
+    "llm_audit_count": 0
+  },
+  "history": {
+    "runs": [
       {
-        "input_tokens": 120,
-        "latency_ms": 0.251,
-        "metadata": {
-          "tool_count": 10
-        },
-        "model": "claude-sonnet-4",
-        "output_tokens": 40,
-        "provider": "anthropic",
-        "role": "planner",
-        "route": {
-          "fallback_used": false,
-          "required_capabilities": [
-            "chat",
-            "tool_use"
-          ],
-          "role": "planner",
-          "selected_model": "anthropic/claude-sonnet-4",
-          "selected_provider": "anthropic",
-          "selection_mode": "registry_route",
-          "selection_reasoning": "Matched demo route anthropic/claude-sonnet-4"
-        },
-        "task_id": "opc-p4-audit-demo",
-        "total_cost_usd": 0.02,
-        "ts": "2026-06-12T02:45:58Z"
+        "week": "2026-W24",
+        "generated_at": "2026-06-14T10:36:42Z",
+        "candidate_count": 8,
+        "planned_count": 8,
+        "drift_count": 0,
+        "approval_required_all": true
+      },
+      {
+        "week": "2026-W25",
+        "generated_at": "2026-06-20T23:55:21Z",
+        "candidate_count": 4,
+        "planned_count": 4,
+        "drift_count": 1,
+        "approval_required_all": true
+      },
+      {
+        "week": "2026-W26",
+        "generated_at": "2026-06-23T08:22:42Z",
+        "candidate_count": 3,
+        "planned_count": 3,
+        "drift_count": 0,
+        "approval_required_all": true
+      },
+      {
+        "week": "2026-W27",
+        "generated_at": "2026-06-12T07:32:37Z",
+        "candidate_count": 8,
+        "planned_count": 8,
+        "drift_count": 0,
+        "approval_required_all": true
+      },
+      {
+        "week": "2026-W28",
+        "generated_at": "2026-06-12T07:32:41Z",
+        "candidate_count": 8,
+        "planned_count": 8,
+        "drift_count": 0,
+        "approval_required_all": true
+      },
+      {
+        "week": "2026-W29",
+        "generated_at": "2026-06-12T07:32:44Z",
+        "candidate_count": 8,
+        "planned_count": 8,
+        "drift_count": 0,
+        "approval_required_all": true
       }
     ],
-    "llm_audit_count": 1
+    "summary": {
+      "weeks_recorded": 6,
+      "max_consecutive_weeks": 6,
+      "latest_week": "2026-W29"
+    }
   },
   "retro": {
     "stage": "retro",
-    "ts": "2026-06-12T05:05:52Z",
+    "ts": "2026-06-23T08:22:42Z",
     "summary": {
       "radar_candidates": 3,
+      "radar_archive_path": "/Users/xiamingxing/Workspace/.omo/_delivery/scenarios/technical-radar/20260623T082242Z-technical-radar-1ed9a943.json",
       "drift_count": 0,
       "planned_tasks": 3,
-      "audit_records": 1
+      "audit_records": 0,
+      "history_weeks_recorded": 6,
+      "history_max_consecutive_weeks": 6
     },
     "next_action": "next week's loop continues; if drift > 0 trigger self-evolve register",
     "evidence_complete": true

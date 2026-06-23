@@ -17,6 +17,7 @@ uv run python -m omo.cli lint internal-write-profiles --workspace-root ../..
 uv run python -m omo.cli lint state-plane-assets --workspace-root ../..
 uv run python -m omo.cli lint c2g-omo-boundary --workspace-root ../..
 uv run python -m omo.cli lint ingress-artifacts --workspace-root ../..
+uv run python -m omo.cli lint mutation-ledger --workspace-root ../..
 uv run python -m omo.cli lint task-policy --all --workspace-root ../..
 popd >/dev/null
 

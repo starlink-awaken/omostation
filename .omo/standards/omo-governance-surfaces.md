@@ -153,6 +153,7 @@ last-reviewed: 2026-06-22
 - `capability_market` 若承载 capability registry，现行写入路径必须是 `.omo/capabilities/*.yaml`，且写入必须通过 `projects/omo/src/omo/omo_ingress.py:write_capability_registry_bundle` / `write_manual_capabilities`；历史 `.omo/registry/*.yaml` 仅允许读兼容，不再新增写入
 - `runtime_ssot` 若存在投影/缓存回写入口，必须在 mutation surface registry 显式登记为 projection/cache 写面；当前 `omo state sync-tasks` 只允许刷新 task counters 与 `next_*` 投影，不得扩成任意字段写口
 - `debt/` 不得只登记总目录；`dashboard` / `review-queue` / `reviews` / `action-packet` / `owner-routing` / `dispatch` / `campaign` / `reporting` 至少要在 state-plane registry 中表达出 review/routing/dispatch/campaign/reporting 这些子面语义
+- `change-log/` 必须保留 append-only mutation ledger；当前规范载体为 `.omo/change-log/mutations.jsonl`，至少记录 `created_at / actor / action / target / artifact_ref / source_ref / broker_ref / result`
 
 这不是说明文案字段，而是 lint gate 会检查的治理契约。没有这两个字段，就说明“这个目录要留多久、能不能覆盖、什么时候归档”根本没定义清楚。
 
@@ -190,6 +191,7 @@ last-reviewed: 2026-06-22
 - `omo lint state-plane-assets` 能校验 `.omo` 顶层资产是否带完整的持久化/保留语义，防止 state/control/delivery/knowledge 再次混写
 - `omo lint c2g-omo-boundary` 能校验 `projects/c2g` 只通过单一 facade 接入 OMO，防止跨仓调用再次散开
 - `omo lint ingress-artifacts` 能校验 ingress registry 指向的 artifact 文件存在且元数据与 registry / carrier 对齐
+- `omo lint mutation-ledger` 能校验 `.omo/change-log/mutations.jsonl` 至少存在 committed mutation、关键字段完整且 artifact_ref 可回落到真实文件
 - `omo lint self-evolution-approval` 能拦截 OPC P6 self-evolution task 的审批字段漂移与 active 泄漏
 - `omo lint task-policy <name>` 能承载后续更多特殊任务红线，而不把规则散落到单独脚本
 - `task-policy` 既要有运行时代码注册表，也要有 `.omo/_truth/registry/task-policies.yaml` 机器可读注册表
@@ -199,7 +201,8 @@ last-reviewed: 2026-06-22
 - `omo governance ingress-goal/task/debt` 与 `projects/c2g` 的持久化适配器都属于正式 mutation surface，不得只登记终端 CLI 而漏掉治理入口/桥接入口
 - `.omo/state/system.yaml` 的投影刷新也必须登记正式 mutation surface；`omo state sync-tasks` 与 `omo_audit_sync --apply` 只能通过 `write_system_projection_fields` 白名单 broker 落盘
 - `omo governance surfaces --json` 必须暴露 mutation surface registry 漂移，作为 reviewer 判断“还有哪些 mutation 没收口”的机器依据
-- pre-commit / CI / `workspace governance verify` 必须显式执行 `omo lint mutation-surfaces`、`omo lint internal-write-profiles`、`omo lint state-plane-assets`、`omo lint c2g-omo-boundary` 与 `omo lint ingress-artifacts`，避免只有 reviewer 看 `surfaces --json` 时才发现 drift
+- `projects/omo/src/omo/omo_ingress.py` 的核心 broker 写入口至少要同步写入 `.omo/change-log/mutations.jsonl`，避免 reviewer 只能拼 audit + artifact 反推真实 mutation
+- pre-commit / CI / `workspace governance verify` 必须显式执行 `omo lint mutation-surfaces`、`omo lint internal-write-profiles`、`omo lint state-plane-assets`、`omo lint c2g-omo-boundary`、`omo lint ingress-artifacts` 与 `omo lint mutation-ledger`，避免只有 reviewer 看 `surfaces --json` 时才发现 drift
 - 目录语义必须可固化为 policy；例如 `done/` 中的 packet 不得再出现 `status: review/completed`
 - done 态治理要先从“新式 packet”做窄约束，再逐步覆盖历史存量，避免一刀切误伤老票
 - review 态也优先走窄约束；例如 remediation review 先要求审查笔记存在，再逐步补更强的 lifecycle 字段

@@ -17,6 +17,14 @@
       "approval_required_all": true
     },
     {
+      "week": "2026-W26",
+      "generated_at": "2026-06-23T08:22:42Z",
+      "candidate_count": 3,
+      "planned_count": 3,
+      "drift_count": 0,
+      "approval_required_all": true
+    },
+    {
       "week": "2026-W27",
       "generated_at": "2026-06-12T07:32:37Z",
       "candidate_count": 8,
@@ -42,8 +50,8 @@
     }
   ],
   "summary": {
-    "weeks_recorded": 5,
-    "max_consecutive_weeks": 3,
+    "weeks_recorded": 6,
+    "max_consecutive_weeks": 6,
     "latest_week": "2026-W29"
   }
 }

@@ -412,6 +412,7 @@ assets:
     consumed_by:
       - auditors
       - reviewers
+    notes: append-only mutation ledger lives at .omo/change-log/mutations.jsonl and must be written by brokered governance mutations
     status: active
   - id: OMO-PROJECTS-REGISTRY
     ref: .omo/PROJECTS.yaml

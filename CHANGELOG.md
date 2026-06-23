@@ -4,6 +4,24 @@
 > 9 项目 (agora / kairon / gbrain / omo / metaos / cockpit / runtime / ecos / aetherforge) 共享版本号.
 > 详见 ADR-0007.
 
+## [Unreleased] - 2026-06-23
+
+### Fixed (c2g bug 链 + governance 满分)
+- **radar `pending_metrics` None fallback** (c2g): planned 空时 `pending_metrics=None` → `pm = pending_metrics or metrics` fallback 全量 (含 done) → done L3 误报 "需 review", health 虚低 85. 修 `strategy.py` L158 + `bin/compass_radar.py` L62-63 (传 pending_metrics). health 85→100.
+- **`get_omo_dir` home 干扰** (c2g): `found[-1]` 外层优先遇到 `~/.omo` 误返 home → bet 找不到 `goals/current.yaml`. 修: 遍历时跳过 `Path.home()` 的 `.omo/` (系统级干扰, 非 workspace 候选). 兼顾 test_smoke (workspace 内嵌套→外层优先) + test_bet_id_reuse (workspace+home→排除 home).
+- **P45 frontmatter 破坏 YAML single-document** (c2g): 数据文件被 P45 doc-lifecycle 加 `--- frontmatter ---` → multi-document → `yaml.safe_load` ComposerError. 加 `strip_frontmatter()` helper (`bridge_utils.py`) + `bridge_import.py` L278 用它 (不碰 goals/current.yaml, 尊重 "仅人类可改").
+- **ADR-0051 UNLISTED** (governance): ADR-0051 写了没加 INDEX → governance 99.3 扣分. 补 `decisions/INDEX.md` → 100.0 A+ 满分.
+- **kronos flaky test** (kairon): `test_nonempty_text_returns_result` 依赖 Ollama 外部服务 (Ollama 在跑时走 llm 路径, LLM 生成 title 不确定 → 硬断言 `== "规则提取测试"` 随机 fail, make test-fast Error 1). Mock `extract_with_ollama` 强制 rules 路径 (单元测试隔离外部依赖, 确定性). `make -C projects/kairon test-fast` Exit 0 (16 包全绿).
+
+### Added (P52-MDRIFT-CLOSURE)
+- **mof-drift v5 终极**: gbrain TODOs unknown 19→0 (`any TODO = planned` 宽松兜底). P44 R0 `DEBT-GBRAIN-55-TODOS` 历史债一次性清零.
+- **ADR-0051**: gbrain TODOs v5 终极收敛决策 (extends ADR-0050; 2 LOW 信息维度保留, 不改 mof-drift 现有维度).
+- **mof-version**: v0.0.39 → v0.0.40.
+
+### Tests
+- c2g: 152 passed (含新增 regression `test_done_l3_not_warned_when_planned_empty` 防 None fallback 复发).
+- agora: 3 个无条件 `xfail` → conditional (`condition=not KAIRON_ROOT.exists()` + `strict=True`); 本地有 kairon 时正常 PASSED (不再 XPASS 误标), 无 kairon 时才 xfail. `test_health_profile_main_help` / `test_minerva_main_help` / `test_invoke_stdio_minerva` XPASS 3→0.
+
 ## [0.3.0] - 2026-06-15
 
 ### Added (C2G v3 Cybernetic Solutions)

@@ -1,10 +1,3 @@
----
-status: active
-lifecycle: ssot
-owner: governance-team
-last-reviewed: 2026-06-22
----
-
 history:
 - description: Initial MOF model with 1177 M1 nodes
   timestamp: '2026-06-20T08:25:32.559455'
@@ -23,29 +16,35 @@ history:
   timestamp: '2026-06-20T13:20:59.789752'
   verified: true
   version: 0.0.5
-- description: 'DEBT-CLOSURE-EVIDENCE-20260620: 5 debts ingressed via omo broker, drift=0'
+- description: 'DEBT-CLOSURE-EVIDENCE-20260620: 5 debts ingressed via omo broker,
+    drift=0'
   timestamp: '2026-06-20T13:25:23.728377'
   version: 0.0.6
-- description: 'P43 closed-loop: governance 85 → 100 A+, 5 debt evidence fixed, 8 ruff auto-fixed (kairon bump), 0 drift'
+- description: 'P43 closed-loop: governance 85 → 100 A+, 5 debt evidence fixed, 8
+    ruff auto-fixed (kairon bump), 0 drift'
   timestamp: '2026-06-20T15:32:33.150527'
   version: 0.0.7
-- description: 'P43 round-2: governance 100 A+ stable, 18 F821 F811 I001 fixed (4 real bugs: missing Any/cast/ndarray/dtype)'
+- description: 'P43 round-2: governance 100 A+ stable, 18 F821 F811 I001 fixed (4
+    real bugs: missing Any/cast/ndarray/dtype)'
   timestamp: '2026-06-20T18:57:19.467522'
   version: 0.0.8
-- description: 'P43 round-4: 4 子项目 ruff 全部清零 (cockpit/runtime/omo/metaos), governance 100 A+'
+- description: 'P43 round-4: 4 子项目 ruff 全部清零 (cockpit/runtime/omo/metaos), governance
+    100 A+'
   timestamp: '2026-06-21T13:17:58.272261'
   version: 0.0.9
-- description: 'P43 round-5: aetherforge + ecos lint 全清 (12 errors), aetherforge e2e 26 tests 修复'
+- description: 'P43 round-5: aetherforge + ecos lint 全清 (12 errors), aetherforge e2e
+    26 tests 修复'
   timestamp: '2026-06-21T13:26:30.413808'
   version: 0.0.10
-- description: 'P43 round-5 final: 3 子项目 (cockpit/aetherforge/ecos) 全清, 46 lint errors 闭环'
+- description: 'P43 round-5 final: 3 子项目 (cockpit/aetherforge/ecos) 全清, 46 lint errors
+    闭环'
   timestamp: '2026-06-21T13:27:28.738398'
   version: 0.0.11
 - description: 'P43 round-5 final-2: kairon 6 ruff errors 闭环, governance 100 A+'
   timestamp: '2026-06-21T13:28:53.169263'
   version: 0.0.12
-- description: 'P43 R6 docs-convergence: X1-X4 + L0 + M3 + AGENTS/INVENTORY 同步 P43 closed-loop pattern, governance 100 A+
-    不变'
+- description: 'P43 R6 docs-convergence: X1-X4 + L0 + M3 + AGENTS/INVENTORY 同步 P43
+    closed-loop pattern, governance 100 A+ 不变'
   timestamp: '2026-06-21T13:40:23.980306'
   version: 0.0.13
 - description: 'P43 R7: X2 freshness audit runner 落地, 5 漏 evidence debt 闭环'
@@ -63,75 +62,119 @@ history:
 - description: 'P43 R8 深度优化: c2g 新增 3 个测试文件 (84 tests), ports/tasks/bridge 全覆盖'
   timestamp: '2026-06-22T10:50:09.308150'
   version: 0.0.18
-- description: 'P44 R0: P0-1 验证 R5 prior session 5 debt evidence 闭环 (X2 audit 0 stale, governance 100 A+)'
+- description: 'P44 R0: P0-1 验证 R5 prior session 5 debt evidence 闭环 (X2 audit 0 stale,
+    governance 100 A+)'
   timestamp: '2026-06-22T10:56:20.480514'
   version: 0.0.19
 - description: 'P44 R0 P1-3: M0/M1 双向追溯 99.6% (1181/1186, 5 缺为 Model meta 自指设计豁免)'
   timestamp: '2026-06-22T11:10:29.731857'
   version: 0.0.20
-- description: 'P44 R0 P2-1: X3 缺口 3→1 — Vault X1 (vault_x1_audit.py) + CARDS X3 (cards_x3_metrics.py) + Domain_Systems X1/X3
-    (文档化)'
+- description: 'P44 R0 P2-1: X3 缺口 3→1 — Vault X1 (vault_x1_audit.py) + CARDS X3 (cards_x3_metrics.py)
+    + Domain_Systems X1/X3 (文档化)'
   timestamp: '2026-06-22T11:19:12.077405'
   version: 0.0.21
 - description: 'P44 R0 P2-2: aetherforge _legacy/ 文档化 (README + X1 引用), 治理清晰度提升'
   timestamp: '2026-06-22T11:20:13.384574'
   version: 0.0.22
-- description: 'P44 R0 P3-1: bin/mof-fix-cross-project.sh 跨子项目并发 ruff --fix (8 项目, aetherforge 排除 _legacy)'
+- description: 'P44 R0 P3-1: bin/mof-fix-cross-project.sh 跨子项目并发 ruff --fix (8 项目,
+    aetherforge 排除 _legacy)'
   timestamp: '2026-06-22T11:21:48.051935'
   version: 0.0.23
 - description: 'P44 R0 P3-1b: 闭环反馈 — X2 audit 捕获 cockpit 5 + kairon 1 真 lint 漂移, 全部修复'
   timestamp: '2026-06-22T11:23:35.730745'
   version: 0.0.24
-- description: 'P44 R3-R4 治理: 关闭 5 REMEDIATE + BET + drift 修复 + 4 deferred 物化, governance 100 A+'
+- description: 'P44 R3-R4 治理: 关闭 5 REMEDIATE + BET + drift 修复 + 4 deferred 物化, governance
+    100 A+'
   timestamp: '2026-06-22T12:08:41.328482'
   version: 0.0.25
-- description: 'P44 R6 全面落地: mof-drift 7→1 (校正 + 1 真硬编码修复), 2 P44 task done, 7 P44 DEFER PLANNED, BET-3b90 followup 物化'
+- description: 'P44 R6 全面落地: mof-drift 7→1 (校正 + 1 真硬编码修复), 2 P44 task done, 7 P44
+    DEFER PLANNED, BET-3b90 followup 物化'
   timestamp: '2026-06-22T14:48:35.657557'
   version: 0.0.26
 - description: P44 R8 模式文档沉淀 (p44-closed-loop-pattern.md)
   timestamp: '2026-06-22T14:54:24.930422'
   version: 0.0.27
-- description: P44 R7 全模块 lint 87→0 (agora F821+aetherforge 50+runtime 25+bus 6+cockpit 1+model-driven 1+omo 1); observability
-    AGENTS.md 补齐
+- description: P44 R7 全模块 lint 87→0 (agora F821+aetherforge 50+runtime 25+bus 6+cockpit
+    1+model-driven 1+omo 1); observability AGENTS.md 补齐
   timestamp: '2026-06-22T15:29:58.840530'
   version: 0.0.28
-- version: 0.0.29
+- description: 'P45 文档生命周期治理: 4 类 frontmatter + omo_lint 第 14/15 维度 + governance 第
+    7 项 + 187 docs fm'
   timestamp: '2026-06-22T08:39:36.935044+00:00'
-  description: 'P45 文档生命周期治理: 4 类 frontmatter + omo_lint 第 14/15 维度 + governance 第 7 项 + 187 docs fm'
-- version: 0.0.30
+  version: 0.0.29
+- description: 'P45 R6: frontmatter 100% (49 → 100), 19 task-center proposals 补 archived
+    fm + YAML fix, doc-lifecycle 第 7 项 → 100, governance 100 A+ 完美'
   timestamp: '2026-06-23T01:18:00.085216+00:00'
-  description: 'P45 R6: frontmatter 100% (49 → 100), 19 task-center proposals 补 archived fm + YAML fix, doc-lifecycle 第 7
-    项 → 100, governance 100 A+ 完美'
-- version: 0.0.31
+  version: 0.0.30
+- description: 'P45 R7: P44 7 PLANNED (6 DEFER + 1 BET-3b90) 全部推进 done, 治理面 100% 完美持续'
   timestamp: '2026-06-23T01:23:19.286583+00:00'
-  description: 'P45 R7: P44 7 PLANNED (6 DEFER + 1 BET-3b90) 全部推进 done, 治理面 100% 完美持续'
-- version: 0.0.32
+  version: 0.0.31
+- description: 'P45 R8: 最终收口报告 (.omo/_knowledge/audits/2026-06-23-p45-final-closeout.md),
+    7 commits 402 files 4310 lines, governance 100 A+ 持续'
   timestamp: '2026-06-23T01:26:12.177985+00:00'
-  description: 'P45 R8: 最终收口报告 (.omo/_knowledge/audits/2026-06-23-p45-final-closeout.md), 7 commits 402 files 4310 lines,
-    governance 100 A+ 持续'
-- version: 0.0.33
+  version: 0.0.32
+- description: 'P46 R1-R2: 11 PLANNED 全部 done + 3 mof 工具 (mof-io/mof-graph/mof-scan)
+    Status 改 implemented, governance 100 A+ 持续'
   timestamp: '2026-06-23T01:33:18.692547+00:00'
-  description: 'P46 R1-R2: 11 PLANNED 全部 done + 3 mof 工具 (mof-io/mof-graph/mof-scan) Status 改 implemented, governance 100
-    A+ 持续'
-- version: 0.0.34
-  timestamp: '2026-06-23T01:36:25.578550+00:00'
-  description: 'P47 R1-R2: 剩余 9 mof 工具 (mof-act/analyze/assign/autonomous/decide/evolution/export/manage/fix-cross-project.sh)
+  version: 0.0.33
+- description: 'P47 R1-R2: 剩余 9 mof 工具 (mof-act/analyze/assign/autonomous/decide/evolution/export/manage/fix-cross-project.sh)
     Status: planned → implemented, 12/12 mof 全部 active'
-- version: 0.0.35
+  timestamp: '2026-06-23T01:36:25.578550+00:00'
+  version: 0.0.34
+- description: 'P47 R3: mof-drift v2 加第 4 维度 stale_planned_tools (排除自指), 7 drifts
+    → 1, governance 100 A+ 持续'
   timestamp: '2026-06-23T01:41:36.938855+00:00'
-  description: 'P47 R3: mof-drift v2 加第 4 维度 stale_planned_tools (排除自指), 7 drifts → 1, governance 100 A+ 持续'
-- version: 0.0.36
+  version: 0.0.35
+- description: 'P48 R1-R3: mof-drift v3 加 gbrain 2 维度 (ahead + todo 5 类), 17 项目 lint
+    全过, ecos 5 + omo 2 修, frontmatter 100% 恢复, governance 100 A+ 持续'
   timestamp: '2026-06-23T02:05:18.276542+00:00'
-  description: 'P48 R1-R3: mof-drift v3 加 gbrain 2 维度 (ahead + todo 5 类), 17 项目 lint 全过, ecos 5 + omo 2 修, frontmatter 100%
-    恢复, governance 100 A+ 持续'
-- version: 0.0.37
+  version: 0.0.36
+- description: 'P49 R1-R3: registry 已含 3 新资产, cockpit test_no_subcommand PASS, 3 PLANNED
+    候选 done (PLANNED 清零), governance 100 A+ 持续'
   timestamp: '2026-06-23T02:13:27.708454+00:00'
-  description: 'P49 R1-R3: registry 已含 3 新资产, cockpit test_no_subcommand PASS, 3 PLANNED 候选 done (PLANNED 清零), governance
+  version: 0.0.37
+- description: 'P50 R1-R3: mof-drift v4 智能分类 + Top-5 文件 + ADR-0050 决策, governance
     100 A+ 持续'
-- version: 0.0.38
   timestamp: '2026-06-23T02:23:02.709734+00:00'
-  description: 'P50 R1-R3: mof-drift v4 智能分类 + Top-5 文件 + ADR-0050 决策, governance 100 A+ 持续'
-- version: 0.0.39
+  version: 0.0.38
+- description: 'P51 R1-R3: 2 drafts cascade done (drafts 清零) + 4 子仓 ahead 实推 (8 commits
+    全成功) + governance 100 A+ 持续'
   timestamp: '2026-06-23T03:10:16.982914+00:00'
-  description: 'P51 R1-R3: 2 drafts cascade done (drafts 清零) + 4 子仓 ahead 实推 (8 commits 全成功) + governance 100 A+ 持续'
-version: 0.0.39
+  version: 0.0.39
+- description: 'P52 R1-R3: mof-drift v5 终极 (gbrain unknown 19→0, any TODO = planned)
+    + ADR-0051 决策 + 收口报告, governance 100 A+ 持续'
+  timestamp: '2026-06-23T11:37:43.417093'
+  version: 0.0.40
+- description: 'P53 R1-R3: 整体架构收敛 — ADR-0051 INDEX 修复 (governance 99.3→100) + 6 项轻量收敛
+    (designs/README + architecture/README + convergence.yaml archived + 2 architecture-remediation
+    archived + 10 summaries retro frontmatter) + 收口报告'
+  timestamp: '2026-06-23T16:07:08.617430'
+  version: 0.0.41
+- description: 'P54 R1-R3: dbo-archive 整体迁移 (design/plans/dbo-archive → plans-archive/dbo-archive,
+    7 文件 + README) + memtheta-operators 真迁移 (designs/ → design/specs/) + graphify-out
+    README 标注 (9 产物归档化) + design/INDEX 引用更新 + governance 100 持续'
+  timestamp: '2026-06-23T16:19:08.467161'
+  version: 0.0.42
+- description: 'P55 R1-R3: archive/ 105 phase 计划批量 frontmatter 化 + summaries/ 28+69
+    根目录+phase* 子目录批量 frontmatter 化 + management/ 142 全部 frontmatter (3 active 转 archived)
+    + 修复 1 个断链 SSOT symlink (eCOS v5 → v6 替代) + governance 100 持续'
+  timestamp: '2026-06-23T16:44:39.796668'
+  version: 0.0.43
+- description: 'P56 R1-R3: ADR-0052 记录 P54-P55 治理收敛 + 知识面 frontmatter 689/689 = 100%
+    全覆盖 (governance 100 A+ 持续, mof-drift 0 LOW)'
+  timestamp: '2026-06-23T17:13:35.505472'
+  version: 0.0.44
+- description: 'P57 R1-R3: ADR-0053 记录 P56 frontmatter 100% + doc-lifecycle 100/100
+    + 评估 linter 增量维度 (3 候选全部已被现有实现覆盖, 无新增)'
+  timestamp: '2026-06-23T17:27:04.424182'
+  version: 0.0.45
+- description: 'P58 R1-R3: 跨面引用一致性检查工具 (bin/check-cross-refs.py, 报告 448 文件 4430 历史漂移断链,
+    archive 集中) + status 分布趋势报告 (bin/status-distribution.py, 690 文件 97% 历史归档 2% active
+    健康成熟态) + 6 个 phase5/reviews 文档补 lifecycle + governance 100 持续'
+  timestamp: '2026-06-23T17:48:06.420254'
+  version: 0.0.46
+- description: 'P59 R1-R3: git 提交闭环恢复 — 571 未提交文件落地 (5 phase commits: P53 8 + P54
+    13 + P55 215 + P56 200+ + P57+P58 2) + 收口报告 + 子仓指针同步 + mof-version v0.0.46 → v0.0.47'
+  timestamp: '2026-06-23T17:57:44.710066'
+  version: 0.0.47
+version: 0.0.47

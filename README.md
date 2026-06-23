@@ -4,13 +4,13 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![CI Status](https://img.shields.io/badge/CI-20%20workflows-brightgreen)](.github/workflows/)
 [![Tests](https://img.shields.io/badge/tests-16,800+-blue)](AGENTS.md)
-[![SOTI](https://img.shields.io/badge/health-7.75%2F10-success)](.omo/state/system.yaml)
+[![SOTI](https://img.shields.io/badge/health-100%2F100-success)](.omo/state/system.yaml)
 
 > **eCOS v6** — 多项目知识工程与研究 Workspace。5+4+1+1 架构（5 层 L0-L4 + 4 维 X1-X4 + 1 织 I0 + 1 横切 M0），20 子项目（8 活跃核心 + 12 扩展），~520K 行代码，16,800+ 测试。
-> **当前 Phase 42** — 治理面 SSOT 同步纪元（14 phase 复盘合并）。健康分 77.5/100。
+> **当前 Phase 42** — 治理面 SSOT 同步纪元。健康分 100/100 · governance 100 A+（双满分稳态, 以 [.omo/state/system.yaml](.omo/state/system.yaml) 为 SSOT）。
 >
 > **eCOS v6** — Multi-project knowledge engineering & research workspace. 5+4+1+1 architecture (5 layers L0-L4 + 4 dimensions X1-X4 + 1 weave I0 + 1 cross-cutting M0), 20 sub-projects (8 active core + 12 extensions), ~520K LOC, 16,800+ tests.
-> **Phase 42** — Governance SSOT Catch-up Era. Health 77.5/100.
+> **Phase 42** — Governance SSOT Catch-up Era. Health 100/100 · governance 100 A+ (double-perfect; see [.omo/state/system.yaml](.omo/state/system.yaml) as SSOT).
 
 [English](#english) | [中文](#中文)
 

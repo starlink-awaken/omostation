@@ -60,7 +60,12 @@ def run_radar(omo_dir: Path) -> dict:
     total_planned = len(planned_files)
 
     metrics = _collect_metrics(all_files)
-    warnings = _check_anomalies(metrics, total, omo_dir=omo_dir) if total else []
+    pending_metrics = _collect_metrics(planned_files)
+    warnings = (
+        _check_anomalies(metrics, total, omo_dir=omo_dir, pending_metrics=pending_metrics)
+        if total
+        else []
+    )
     # 分布从 metrics 导出 (避免再调 strategy_audit 重复计算)
     distributions = {
         "priority": dict(metrics["priority"]),
