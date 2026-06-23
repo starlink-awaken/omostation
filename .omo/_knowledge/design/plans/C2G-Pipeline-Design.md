@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史设计/历史/评审/图表批量归档, 当前活跃设计以 design/INDEX.md + PANORAMA.md 为准"
+---
 # eCOS v5 迭代编排工作流 (C2G Pipeline v2) 详细设计方案
 
 ## 1. 架构总览 (Architectural Overview)

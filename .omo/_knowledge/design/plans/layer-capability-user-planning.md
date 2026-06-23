@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史设计/历史/评审/图表批量归档, 当前活跃设计以 design/INDEX.md + PANORAMA.md 为准"
+---
 # 系统能力层 + 用户使用层 — 全景梳理与建设规划
 
 > 日期: 2026-05-31 | 状态: v2 (补充遗漏文档审计结果)

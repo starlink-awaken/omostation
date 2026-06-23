@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史设计/历史/评审/图表批量归档, 当前活跃设计以 design/INDEX.md + PANORAMA.md 为准"
+---
 # 10器官全面深度扫描 — 最终评估报告
 
 > 2026-06-02 · 10 并行 agent · 865 Python 文件 · ~214K 行代码

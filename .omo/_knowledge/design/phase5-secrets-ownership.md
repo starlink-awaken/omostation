@@ -5,6 +5,10 @@ status: active
 freshness: 2026-05-31
 maintainer: auto
 ---
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-23
+---
 
 # Phase 5 secrets ownership model
 

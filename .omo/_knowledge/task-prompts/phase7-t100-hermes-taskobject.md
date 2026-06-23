@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 全量兜底批量归档, 当前活跃以各面 INDEX/SSOT/PANORAMA.md 为准"
+---
 # Task Prompt: T100 — Hermes集成TaskObject
 
 > 类型: P8 Task | 预估: 5天 | 前置: T099 (self_inject就绪)

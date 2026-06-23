@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史设计/历史/评审/图表批量归档, 当前活跃设计以 design/INDEX.md + PANORAMA.md 为准"
+---
 # Phase 17 Wave 1 实施计划：SharedBrain 拆解
 
 > **Goal:** 执行 SharedBrain "保留核心 + 能力注入 + 废弃过时"策略的首批任务

@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史能力/过程/治理/参考/愿景文档批量归档, 当前活跃文档以各面 INDEX/SSOT 为准"
+---
 # Agent 必读手册 — `.omo/` 治理知识库
 
 > 你（AI Agent）在 `.omo/` 治理知识库中扮演协作者角色。本文档是你每次会话启动时的必读指南。

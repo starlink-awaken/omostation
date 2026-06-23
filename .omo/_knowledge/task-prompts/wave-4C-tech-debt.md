@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 全量兜底批量归档, 当前活跃以各面 INDEX/SSOT/PANORAMA.md 为准"
+---
 # Task Prompt: Wave 4.C — 技术债清理
 
 > 类型: P9 → P8 Task Prompt | 状态: pending (depends on Phase 3 gate) | 预估: 1.5h

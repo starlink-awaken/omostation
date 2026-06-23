@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史设计/历史/评审/图表批量归档, 当前活跃设计以 design/INDEX.md + PANORAMA.md 为准"
+---
 # 技术情报报告：2026 Q2 行业扫描 × omostation 迭代
 
 > 日期: 2026-05-29 | 输入: 50+ GitHub + 30+ 公众号 + 30+ 知乎

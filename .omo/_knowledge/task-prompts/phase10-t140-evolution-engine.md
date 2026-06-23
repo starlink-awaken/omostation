@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 全量兜底批量归档, 当前活跃以各面 INDEX/SSOT/PANORAMA.md 为准"
+---
 # Task Prompt: T140 — 进化引擎
 
 > 类型: P10 Task | 预估: 3天 | Wave: 10.3 | Phase: 10

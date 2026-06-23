@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史设计/历史/评审/图表批量归档, 当前活跃设计以 design/INDEX.md + PANORAMA.md 为准"
+---
 # OMO 理论框架与工具集全景对标报告 (Framework vs Tooling Benchmark)
 
 本报告旨在从“第一性原理”出发，严格核对 OMO 理论框架（宪法层）与落地工具（`projects/omo`、`projects/omo-debt`）及数据容器（`.omo/`）之间的映射对齐情况。

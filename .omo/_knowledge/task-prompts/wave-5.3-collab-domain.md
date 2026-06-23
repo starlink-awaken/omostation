@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 全量兜底批量归档, 当前活跃以各面 INDEX/SSOT/PANORAMA.md 为准"
+---
 # Task Prompt: Wave 5.3 — L3 Collab Domain
 
 > 类型: P9 → P8 Task Prompt | 状态: backlog | 预估: 180min

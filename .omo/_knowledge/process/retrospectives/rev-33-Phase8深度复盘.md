@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史能力/过程/治理/参考/愿景文档批量归档, 当前活跃文档以各面 INDEX/SSOT 为准"
+---
 # Phase 8 深度复盘 — 跨机器拓扑 + ERROR 状态
 
 > **文档编号**: 33 | **前序**: #32 v4 迭代方案

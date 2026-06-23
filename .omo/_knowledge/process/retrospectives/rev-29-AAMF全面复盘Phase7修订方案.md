@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史能力/过程/治理/参考/愿景文档批量归档, 当前活跃文档以各面 INDEX/SSOT 为准"
+---
 # AAMF 全面复盘 + Phase 7 修订方案
 
 > **文档编号**: 29 | **前序**: #28 Phase 6 | **定位**: 全体系复盘 + Phase 7 方案修订

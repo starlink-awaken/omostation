@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史设计/历史/评审/图表批量归档, 当前活跃设计以 design/INDEX.md + PANORAMA.md 为准"
+---
 # Wave 1 执行计划: 零耦合模块快速收获 + 阻断修复
 
 > 2026-06-02 · 69 零耦合模块 · 目标 1-2 天完成

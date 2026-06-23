@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史设计/历史/评审/图表批量归档, 当前活跃设计以 design/INDEX.md + PANORAMA.md 为准"
+---
 # SharedBrain → kairon 架构系统性分析与拆分策略
 
 > 2026-06-01 · 基于 projects/SharedBrain (824K 行) 与 projects/kairon (111K 行) 深度扫描

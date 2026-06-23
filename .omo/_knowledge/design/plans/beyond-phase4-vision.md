@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史设计/历史/评审/图表批量归档, 当前活跃设计以 design/INDEX.md + PANORAMA.md 为准"
+---
 # 远景规划：Phase 4 之后 —— omostation 的终极演化
 
 > 日期: 2026-05-29 | 版本: v1.1 | 状态: 远景草案, 红队已修订

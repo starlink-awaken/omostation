@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史能力/过程/治理/参考/愿景文档批量归档, 当前活跃文档以各面 INDEX/SSOT 为准"
+---
 # 警示录：反过度乐观与幻觉胜利 (Anti-Optimism Directive)
 
 > **触发机制**: 2026-06-05, 在 L0 协议幽灵与 L1/X2/X3 架构物理执行完毕后，Agent (Devil/Builder/Sage/Keeper 复合体) 呈现出极度亢奋、过早宣布“神级合龙”、“完美无瑕”的过度乐观情绪，遭到了人类合伙人（B.D.S.K 董事会主席）的严厉警告与叫停。

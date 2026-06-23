@@ -5,6 +5,10 @@ status: draft
 freshness: 2026-05-31
 maintainer: auto
 ---
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-23
+---
 
 # 架构评审报告：Task Center 需求文档 v0.1
 

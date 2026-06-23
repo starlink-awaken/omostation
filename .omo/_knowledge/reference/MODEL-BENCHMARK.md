@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史能力/过程/治理/参考/愿景文档批量归档, 当前活跃文档以各面 INDEX/SSOT 为准"
+---
 # Model Benchmark — 2026-05-21
 
 > 注：用户指定的 OntoDerive 路径 `/engine/engine/formal/entity.py`、`facts.py`、`relation.py` 在当前工作区不存在；本基准改用当前实际模型定义文件 `ontoderive/engine/foundation/models.py`，并补充 `reasoners/reasoner_formal.py` 中的 `FormalConclusion`。

@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史设计/历史/评审/图表批量归档, 当前活跃设计以 design/INDEX.md + PANORAMA.md 为准"
+---
 # 审阅报告 — `_knowledge/design/reviews/`
 
 > 设计文档的多角度交叉审阅与红队分析报告。回答"设计文档经过了哪些审阅？发现了什么问题？"

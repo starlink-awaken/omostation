@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史审计快照批量归档, 当前 governance 100 A+ 持续"
+---
 # P45 文档生命周期治理 — 最终收口报告
 
 > 2026-06-23 · mof-version v0.0.31

@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史审计快照批量归档, 当前 governance 100 A+ 持续"
+---
 # 架构整合与收敛审计报告
 
 ## 元信息

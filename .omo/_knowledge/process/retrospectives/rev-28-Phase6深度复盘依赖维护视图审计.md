@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史能力/过程/治理/参考/愿景文档批量归档, 当前活跃文档以各面 INDEX/SSOT 为准"
+---
 # Phase 6 深度复盘 + 依赖自动维护 + 视图完成审计
 
 > **文档编号**: 28 | **前序**: #27 Phase 6 细化方案 | **Phase**: 6 (依赖自动维护 + 视图)

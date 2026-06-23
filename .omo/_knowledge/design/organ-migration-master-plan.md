@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 历史设计/历史/评审/图表批量归档, 当前活跃设计以 design/INDEX.md + PANORAMA.md 为准"
+---
 # 器官全面迁移融合 — 主任务池与执行计划
 
 > 2026-06-02 · 10 器官 7 并行 agent 深度扫描 · 总计未提取 ~370+ 模块

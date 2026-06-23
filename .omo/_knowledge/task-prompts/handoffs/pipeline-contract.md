@@ -1,3 +1,11 @@
+---
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-06-23
+archived-since: 2026-06-23
+note: "P56 R2: 全量兜底批量归档, 当前活跃以各面 INDEX/SSOT/PANORAMA.md 为准"
+---
 # 任务衔接契约
 
 > 定义了 Wave 之间如何衔接。每个 Wave 完成后必须执行 "→ 下一个 Wave" 指定的动作。
