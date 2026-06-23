@@ -78,6 +78,14 @@ surfaces:
     delivery_artifact_root: .omo/_delivery/ingress/tasks/
     mode: brokered
     category: human_cli
+  - name: omo-task-repair-approval
+    entrypoint: omo task repair-approval
+    runtime_ref: projects/omo/src/omo/omo_task.py:cmd_task_repair_approval
+    mutation_target: .omo/tasks/{planned,active,done,remediation}/*.yaml (approval_ref) + .omo/workers/runs/*-promotion-approval-*.yaml
+    broker_ref: projects/omo/src/omo/omo_ingress.py:repair_task_promotion_approval
+    delivery_artifact_root: .omo/_delivery/ingress/tasks/
+    mode: brokered
+    category: human_cli
   - name: omo-worker-task-normalize-planned
     entrypoint: python3 scripts/omo_worker.py task normalize-planned
     runtime_ref: projects/omo/src/omo/omo_worker_cmd_task.py:execute_task_command (task_command=normalize-planned)

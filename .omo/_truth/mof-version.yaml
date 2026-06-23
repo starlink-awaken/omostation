@@ -105,4 +105,8 @@ history:
 - version: 0.0.31
   timestamp: '2026-06-23T01:23:19.286583+00:00'
   description: 'P45 R7: P44 7 PLANNED (6 DEFER + 1 BET-3b90) 全部推进 done, 治理面 100% 完美持续'
-version: 0.0.31
+- version: 0.0.32
+  timestamp: '2026-06-23T01:26:12.177985+00:00'
+  description: 'P45 R8: 最终收口报告 (.omo/_knowledge/audits/2026-06-23-p45-final-closeout.md), 7 commits 402 files 4310 lines,
+    governance 100 A+ 持续'
+version: 0.0.32

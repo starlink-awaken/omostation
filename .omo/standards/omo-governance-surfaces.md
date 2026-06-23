@@ -98,6 +98,10 @@ last-reviewed: 2026-06-22
 - `projects/c2g` 业务模块不得散弹式直接 import `omo.omo_ingress`、`omo.omo_task_schema` 等内核模块。
 - `projects/c2g` 必须通过本地单一 facade（当前为 `projects/c2g/src/c2g/omo_client.py`）接入 OMO。
 - 这个约束必须由 `omo lint c2g-omo-boundary` 和 pre-commit gate 持续拦截，而不是靠 reviewer 肉眼记忆。
+- task packet 历史漂移也必须走 broker 修复，而不是手工补 YAML：
+  - 遗留 planned packet 规范化走 `omo task normalize-planned` / `omo_ingress.normalize_legacy_planned_task()`
+  - task-specific promotion approval 工件回填走 `omo task repair-approval` / `omo_ingress.repair_task_promotion_approval()`
+  - done packet `evidence_paths` 修正走 `omo task refresh-evidence` / `omo_ingress.update_done_task_evidence_paths()`
 
 `_delivery/ingress/*` 的 artifact 也不是“写了就算”。至少必须满足：
 
