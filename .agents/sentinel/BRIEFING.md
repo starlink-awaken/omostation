@@ -1,12 +1,12 @@
-# BRIEFING — 2026-06-23T02:26:00Z
+# BRIEFING — 2026-06-23T02:50:00Z
 
 ## Mission
-对 eCOS 架构进行全局收敛与深度整合，启动并监控 Orchestrator 执行任务。
+对 eCOS 架构进行全局收敛与深度整合，监控并重新拉起崩溃的主协调器执行任务。
 
 ## 🔒 My Identity
 - Archetype: sentinel
 - Working directory: /Users/xiamingxing/Workspace/.agents/sentinel
-- Orchestrator: d6d08efc-a7bd-44e1-8861-e985ac7a8c92
+- Orchestrator: 3ed4fe65-401d-4416-a615-6a937af12911
 - Victory Auditor: TBD
 
 ## 🔒 Key Constraints
