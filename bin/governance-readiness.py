@@ -167,35 +167,17 @@ def write_readiness_snapshot(
     total_doc: int, cov: float, drift_low: int,
     uncommitted: int, unlisted: int, gov_score: float,
 ) -> None:
-    """P63 增: 写历史快照到 .omo/_log/readiness-YYYYMMDD-HHMM.json.
+    """P63 增: 写历史快照到 .omo/_log/readiness-YYYYMMDD-HHMMSS.json.
 
-    用于:
-    1. governance-agent 周期评估记录
-    2. readiness-trend.py 趋势分析
-    3. dashboard 卡片数据源
+    通过 OMO CLI `omo readiness snapshot` 路由写入,避免直接 I/O 到 .omo/_log/.
+    失败只打印警告,不阻断主流程.
     """
-    import datetime as _dt
-    now = _dt.datetime.utcnow()
-    timestamp = now.strftime("%Y%m%d-%H%M%S")
-    iso = now.isoformat() + "Z"
-
-    log_dir = root / ".omo" / "_log"
-    log_dir.mkdir(parents=True, exist_ok=True)
-    snap_path = log_dir / f"readiness-{timestamp}.json"
-
-    # 保留最近 30 个快照, 避免目录膨胀
-    existing = sorted(log_dir.glob("readiness-*.json"), reverse=True)
-    for old in existing[30:]:
-        try:
-            old.unlink()
-        except Exception:
-            pass
+    import json as _json
 
     snapshot = {
-        "timestamp": iso,
         "score": total,
         "grade": grade,
-        "phase": "P60+",  # 当前治理方法论阶段
+        "phase": "P60+",
         "dimensions": {
             "frontmatter": {"score": s1, "metric": total_doc, "coverage": cov, "max": 25},
             "drift_low": {"score": s2, "metric": drift_low, "max": 20},
@@ -210,13 +192,11 @@ def write_readiness_snapshot(
             "C_L1_starting": 60,
         },
     }
-    try:
-        import json as _json
-        with open(snap_path, "w", encoding="utf-8") as f:
-            _json.dump(snapshot, f, indent=2, ensure_ascii=False)
-    except Exception as e:
-        # 快照写入失败不应阻断主流程
-        print(f"⚠️  快照写入失败: {e}")
+    payload = _json.dumps(snapshot, ensure_ascii=False)
+    cmd = f"omo readiness snapshot '{payload}'"
+    rc, out = run(cmd, cwd=root)
+    if rc != 0:
+        print(f"⚠️  快照写入失败 (rc={rc}): {out}")
 
 
 def main() -> int:
