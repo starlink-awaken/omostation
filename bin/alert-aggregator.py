@@ -111,6 +111,53 @@ def aggregate(alerts: list[dict]) -> dict:
     }
 
 
+def emit_notification(root: Path, agg: dict, window_hours: int) -> int:
+    """P66 增: 主动通知 — 告警风暴时调 omo event emit.
+
+    触发条件:
+    - storm_warnings 长度 > 0
+    - 或 total_alerts > threshold (默认 5)
+
+    返回: 0=未触发, 1=触发.
+    """
+    import json as _json
+    from subprocess import run as _run
+    should_notify = bool(agg.get("storm_warnings")) or agg.get("total_alerts", 0) >= 5
+    if not should_notify:
+        return 0
+
+    payload = {
+        "window_hours": window_hours,
+        "total_alerts": agg.get("total_alerts"),
+        "by_type": agg.get("by_type"),
+        "storm_count": len(agg.get("storm_warnings", [])),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+    # 写通知 log
+    notif_log = root / ".omo" / "_log" / "alert-notifications.jsonl"
+    notif_log.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with open(notif_log, "a", encoding="utf-8") as f:
+            f.write(_json.dumps(payload, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+    # 调 omo event (静默失败)
+    try:
+        _run(
+            ["omo", "event", "emit",
+             "--type", "governance_alert_aggregated",
+             "--source", "alert-aggregator",
+             "--payload", _json.dumps(payload, ensure_ascii=False)],
+            timeout=10, capture_output=True,
+        )
+    except Exception:
+        pass
+
+    return 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P65: 告警聚合 — 避免 alert storm"
@@ -119,6 +166,8 @@ def main() -> int:
     parser.add_argument("--window", type=int, default=24, help="时间窗口 (小时, 默认 24)")
     parser.add_argument("--format", choices=["json", "text"], default="text")
     parser.add_argument("--output", help="输出文件")
+    parser.add_argument("--notify", action="store_true",
+                        help="P66: 告警时调 omo event emit + 写 alert-notifications.jsonl")
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
@@ -161,6 +210,10 @@ def main() -> int:
         Path(args.output).write_text(output, encoding="utf-8")
     else:
         print(output)
+
+    # P66 增: --notify 模式触发主动通知
+    if args.notify:
+        return emit_notification(root, agg, args.window)
     return 0
 
 

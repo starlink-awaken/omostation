@@ -210,4 +210,9 @@ history:
     告警聚合 (24h 窗口 + 同小时 > 3 抑制) + ADR-0059 + 9 独立 bin 工具'
   timestamp: '2026-06-24T14:26:24.275362'
   version: 0.0.54
-version: 0.0.54
+- description: 'P66 R1-R3: alert-aggregator --notify 主动通知 (emit_notification 写 alert-notifications.jsonl
+    + omo event emit governance_alert_aggregated, 触发: storm || total>=5) + cockpit
+    调整 (wrapper 保留, dispatcher 重构留 P67+) + ADR-0060 + 20 个 ADR'
+  timestamp: '2026-06-24T14:39:00.038251'
+  version: 0.0.55
+version: 0.0.55
