@@ -18,6 +18,7 @@ from omo.omo_ingress_paths import (
     _delivery_root,
     _load_yaml,
     _lock_path,
+    _timestamp_slug,
     _utc_now,
 )
 from omo.omo_ingress_registry import (
@@ -217,3 +218,91 @@ def create_goal(
             extra={"goal_id": goal_id, "ingress_plane": ingress_plane},
         )
         return new_goal
+
+
+def update_goal_progress(
+    omo_dir: Path,
+    *,
+    goal_id: str,
+    progress: float,
+    actor: str,
+    source_ref: str = "",
+    now: str | None = None,
+) -> dict[str, Any]:
+    """更新 goals/current.yaml 中指定 goal 的 progress."""
+    goal_file = omo_dir / "goals" / "current.yaml"
+    if not goal_file.exists():
+        raise FileNotFoundError(f"missing goals/current.yaml: {goal_file}")
+
+    timestamp = now or _utc_now()
+    with fcntl_lock(_lock_path(omo_dir)):
+        payload = _load_yaml(goal_file)
+        goals = payload.get("goals", [])
+        target_goal: dict[str, Any] | None = None
+        for goal in goals:
+            if goal.get("id") == goal_id:
+                target_goal = goal
+                break
+        if target_goal is None:
+            raise ValueError(f"goal not found: {goal_id}")
+
+        previous_progress = float(target_goal.get("progress", 0.0))
+        previous_status = str(target_goal.get("status", "pending"))
+        target_goal["progress"] = progress
+        if progress >= 100:
+            target_goal["status"] = "done"
+        elif progress > 0:
+            target_goal["status"] = "active"
+        else:
+            target_goal["status"] = "pending"
+        write_yaml_atomic(goal_file, payload)
+
+        artifact = {
+            "kind": "goal_progress_updated",
+            "goal_id": goal_id,
+            "goal_ref": ".omo/goals/current.yaml",
+            "progress": progress,
+            "previous_progress": previous_progress,
+            "status": target_goal["status"],
+            "previous_status": previous_status,
+            "actor": actor,
+            "source_ref": source_ref,
+            "updated_at": timestamp,
+        }
+        artifact_path = (
+            _delivery_root(omo_dir)
+            / "goals"
+            / f"{goal_id}-progress-{_timestamp_slug(timestamp)}.yaml"
+        )
+        write_yaml_atomic(artifact_path, artifact)
+
+        parent_step_id = f"ingress:goal-progress:{goal_id}:{timestamp}"
+        details = (
+            f"goal_id={goal_id} actor={actor} progress={progress} "
+            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+        )
+        record_audit(
+            action="ingress_update_goal_progress",
+            debt_id="",
+            actor=actor,
+            details=details,
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="update_goal_progress",
+            target=f".omo/goals/current.yaml#{goal_id}",
+            parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="update_goal_progress",
+            target=f".omo/goals/current.yaml#{goal_id}",
+            artifact_ref=f".omo/_delivery/ingress/goals/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"goal_id": goal_id, "progress": progress},
+        )
+        return deepcopy(target_goal)
