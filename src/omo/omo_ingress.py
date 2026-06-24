@@ -20,61 +20,17 @@ from omo.omo_ingress_paths import (
     _find_task_path,
     _load_yaml,
     _lock_path,
-    _mutation_log_path,
-    _registry_path,
     _safe_doc_name,
     _timestamp_slug,
     _trail_log_path,
     _utc_now,
 )
-
-
-def _load_registry(omo_dir: Path) -> dict[str, Any]:
-    path = _registry_path(omo_dir)
-    if not path.exists():
-        return {
-            "goals": {"by_id": {}, "by_source_ref": {}},
-            "tasks": {"by_id": {}, "by_source_ref": {}},
-            "debts": {"by_id": {}, "by_source_ref": {}},
-            "capabilities": {"by_id": {}, "by_source_ref": {}},
-        }
-    data = _load_yaml(path)
-    for key in ("goals", "tasks", "debts", "capabilities"):
-        data.setdefault(key, {})
-        data[key].setdefault("by_id", {})
-        data[key].setdefault("by_source_ref", {})
-    return data
-
-
-def _write_registry(omo_dir: Path, registry: dict[str, Any]) -> None:
-    write_yaml_atomic(_registry_path(omo_dir), registry)
-
-
-def _record_mutation(
-    omo_dir: Path,
-    *,
-    actor: str,
-    action: str,
-    target: str,
-    artifact_ref: str,
-    source_ref: str,
-    broker_ref: str = "projects/omo/src/omo/omo_ingress.py",
-    created_at: str | None = None,
-    extra: dict[str, Any] | None = None,
-) -> None:
-    record: dict[str, Any] = {
-        "created_at": created_at or _utc_now(),
-        "actor": actor,
-        "action": action,
-        "target": target,
-        "artifact_ref": artifact_ref,
-        "source_ref": source_ref,
-        "broker_ref": broker_ref,
-        "result": "committed",
-    }
-    if extra:
-        record.update(deepcopy(extra))
-    AppendOnlyLog(_mutation_log_path(omo_dir)).append(record, sort_keys=False)
+from omo.omo_ingress_registry import (
+    _load_registry,
+    _record_mutation,
+    _register_ingress,
+    _write_registry,
+)
 
 
 def _goal_fingerprint(
@@ -143,25 +99,8 @@ def _task_payload_with_metadata(
     return payload
 
 
-def _register_ingress(
-    registry: dict[str, Any],
-    *,
-    kind: str,
-    item_id: str,
-    source_ref: str,
-    artifact_ref: str,
-    fingerprint: dict[str, Any],
-    created_at: str,
-) -> None:
-    bucket = registry[kind]
-    bucket["by_id"][item_id] = {
-        "source_ref": source_ref,
-        "artifact_ref": artifact_ref,
-        "fingerprint": deepcopy(fingerprint),
-        "created_at": created_at,
-    }
-    if source_ref:
-        bucket["by_source_ref"][source_ref] = item_id
+# _register_ingress / _load_registry / _write_registry / _record_mutation
+# → 移至 omo_ingress_registry.py (SRP · P60+ 第二步, 见顶部 import)
 
 
 def _resolve_existing_goal(omo_dir: Path, goal_id: str) -> dict[str, Any] | None:
@@ -707,7 +646,11 @@ def write_manual_capabilities(
             artifact_ref=artifact_ref,
             source_ref=source_ref,
             created_at=timestamp,
-            extra={"capability_count": len(payload.get("capabilities", [])) if isinstance(payload, dict) else 0},
+            extra={
+                "capability_count": len(payload.get("capabilities", []))
+                if isinstance(payload, dict)
+                else 0
+            },
         )
         return deepcopy(payload)
 
@@ -1874,7 +1817,11 @@ def repair_task_promotion_approval(
             artifact_ref=artifact["artifact_ref"],
             source_ref=source_ref,
             created_at=timestamp,
-            extra={"task_id": task_id, "task_group": group, "approval_ref": approval_ref},
+            extra={
+                "task_id": task_id,
+                "task_group": group,
+                "approval_ref": approval_ref,
+            },
         )
         return payload
 
@@ -1965,7 +1912,11 @@ def request_task_promotion_approval(
             artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
-            extra={"task_id": task_id, "approval_ref": approval_ref, "proposal_ref": proposal_ref},
+            extra={
+                "task_id": task_id,
+                "approval_ref": approval_ref,
+                "proposal_ref": proposal_ref,
+            },
         )
         return payload
 
@@ -2137,7 +2088,11 @@ def record_task_contract_request(
             artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
-            extra={"task_id": task_id, "request_ref": request_ref, "proposal_ref": proposal_ref},
+            extra={
+                "task_id": task_id,
+                "request_ref": request_ref,
+                "proposal_ref": proposal_ref,
+            },
         )
         return payload
 
@@ -2572,7 +2527,11 @@ def normalize_legacy_planned_task(
                 artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
                 source_ref=source_ref,
                 created_at=timestamp,
-                extra={"task_id": task_id, "legacy_status": original_status, "result": "archived"},
+                extra={
+                    "task_id": task_id,
+                    "legacy_status": original_status,
+                    "result": "archived",
+                },
             )
             return {"action": "archived", "task": archived_payload}
 
@@ -2661,7 +2620,11 @@ def normalize_legacy_planned_task(
             artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
             source_ref=source_ref,
             created_at=timestamp,
-            extra={"task_id": task_id, "legacy_status": original_status, "normalized_status": normalized["status"]},
+            extra={
+                "task_id": task_id,
+                "legacy_status": original_status,
+                "normalized_status": normalized["status"],
+            },
         )
         return {"action": "normalized", "task": normalized}
 
