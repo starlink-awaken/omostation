@@ -58,16 +58,17 @@
 | m1_explorer_3 | teamwork_preview_explorer | M1: 验证机制与降级策略分析 | completed | ffa1937b-121f-4ef4-9fd4-1a13b59aafd1 |
 | m1_explorer_2_gen2 | teamwork_preview_explorer | M1: Agora 路由与 RPC 实现分析(继承者) | completed | af61b253-3c15-4dd0-bd82-6a3885eb1ec4 |
 | m1_worker_1 | teamwork_preview_worker | M1: 跨层通信重构代码实现与测试验证 | completed | 29a74a75-193d-455b-93f4-95db2dd3a7d1 |
-| m1_reviewer_1 | teamwork_preview_reviewer | M1: 静态与动态审计 | in-progress | 58059fbd-b78b-4161-a643-839c4d053da5 |
-| m1_reviewer_2 | teamwork_preview_reviewer | M1: 静态与动态审计 | in-progress | 28a30291-18b4-45ca-8321-8e91e930faa9 |
-| m1_challenger_1 | teamwork_preview_challenger | M1: 对抗性降级测试 | in-progress | 9a5f3f8a-3c5c-4990-95f1-246a26f6bcea |
-| m1_challenger_2 | teamwork_preview_challenger | M1: 对抗性降级测试 | in-progress | 8599f437-25b0-4a05-8116-5ddadd7fdadf |
-| m1_auditor_1 | teamwork_preview_auditor | M1: 防作弊与完整性审计 | in-progress | 24a95640-f7f9-46c1-adec-e7e4b5a1c499 |
+| m1_reviewer_1 | teamwork_preview_reviewer | M1: 静态与动态审计 | completed | 58059fbd-b78b-4161-a643-839c4d053da5 |
+| m1_reviewer_2 | teamwork_preview_reviewer | M1: 静态与动态审计 | completed | 28a30291-18b4-45ca-8321-8e91e930faa9 |
+| m1_challenger_1 | teamwork_preview_challenger | M1: 对抗性降级测试 | completed | 9a5f3f8a-3c5c-4990-95f1-246a26f6bcea |
+| m1_challenger_2 | teamwork_preview_challenger | M1: 对抗性降级测试 | failed | 8599f437-25b0-4a05-8116-5ddadd7fdadf |
+| m1_auditor_1 | teamwork_preview_auditor | M1: 防作弊与完整性审计 | completed | 24a95640-f7f9-46c1-adec-e7e4b5a1c499 |
+| m1_worker_2 | teamwork_preview_worker | M1: 跨层通信重构代码修复与测试验证 | in-progress | 6b671c45-7e10-408d-9dde-7451f131c718 |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 11 / 16
-- Pending subagents: 58059fbd-b78b-4161-a643-839c4d053da5, 28a30291-18b4-45ca-8321-8e91e930faa9, 9a5f3f8a-3c5c-4990-95f1-246a26f6bcea, 8599f437-25b0-4a05-8116-5ddadd7fdadf, 24a95640-f7f9-46c1-adec-e7e4b5a1c499
+- Spawn count: 12 / 16
+- Pending subagents: 6b671c45-7e10-408d-9dde-7451f131c718
 - Predecessor: none
 - Successor: not yet spawned
 
