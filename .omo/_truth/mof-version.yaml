@@ -244,4 +244,9 @@ history:
     + ADR-0066 + 12 独立 bin 工具 + 26 个 ADR'
   timestamp: '2026-06-24T16:57:05.419954'
   version: 0.0.61
-version: 0.0.61
+- description: 'P73 R1-R3: governance-agent 8 步闭环 (+P0 mock 触发步骤) + alert-aggregator
+    P0 集成 (3 通道 email/sms/slack) + install-governance-agent-cron --test 模式 (运维 dry-run
+    验证) + ADR-0067 + 27 个 ADR (3/4 候选实施)'
+  timestamp: '2026-06-24T17:43:54.798875'
+  version: 0.0.62
+version: 0.0.62
