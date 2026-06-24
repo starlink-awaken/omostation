@@ -4,6 +4,7 @@ from __future__ import annotations
 import warnings
 import sys
 
+
 def main(argv: list[str] | None = None) -> int:
     warnings.warn(
         "omo CLI 为内部程序接口。人类用户请使用 cockpit。",
@@ -203,6 +204,7 @@ def main(argv: list[str] | None = None) -> int:
     if args and args[0] == "lint-metrics":
         # Round 42 P0: omo lint schemas + §17 metrics (单命令跑两者, CI 友好)
         from omo.omo_lint import cmd_lint_schemas
+
         return cmd_lint_schemas(metrics=True)
 
     if args and args[0] == "trail":
@@ -227,7 +229,9 @@ def main(argv: list[str] | None = None) -> int:
         return worker_main(args[1:])
 
     if args and args[0] == "strategy":
-        print("⚠️ DEPRECATED: 'omo strategy' 已迁移，建议改用 'workspace compass radar' 或 'workspace compass gc'。")
+        print(
+            "⚠️ DEPRECATED: 'omo strategy' 已迁移，建议改用 'workspace compass radar' 或 'workspace compass gc'。"
+        )
         from omo.omo_strategy import main as strategy_main
 
         return strategy_main(args[1:])
@@ -259,6 +263,7 @@ def _cmd_healing(args: list[str]) -> int:
     if sub == "status":
         from omo.omo_self_healing import get_healing_engine
         import json
+
         engine = get_healing_engine()
         status = engine.get_status()
         print(json.dumps(status, indent=2, default=str, ensure_ascii=False))
@@ -268,6 +273,7 @@ def _cmd_healing(args: list[str]) -> int:
             print("Usage: omo healing fix-run <name>")
             return 1
         from omo.omo_self_healing_fixes import run_fix
+
         result = run_fix(args[1])
         status_icon = "✅" if result["success"] else "❌"
         print(f"{status_icon} {result['fix_name']}: {result['output']}")
@@ -275,11 +281,13 @@ def _cmd_healing(args: list[str]) -> int:
 
     elif sub == "fix-list":
         from omo.omo_self_healing_fixes import list_fixes
+
         for fix in list_fixes():
             print(f"  - {fix}")
 
     elif sub == "rules":
         from omo.omo_self_healing import get_healing_engine
+
         engine = get_healing_engine()
         for r in engine._rules:
             fixes = f" fixes={r.fix_names}" if r.fix_names else ""
@@ -287,6 +295,7 @@ def _cmd_healing(args: list[str]) -> int:
 
     elif sub == "config":
         from omo.omo_self_healing import get_healing_engine, save_rules
+
         engine = get_healing_engine()
         save_rules(engine._rules)
         print("Rules saved to .omo/self_healing_rules.yaml")
@@ -294,6 +303,7 @@ def _cmd_healing(args: list[str]) -> int:
     elif sub == "history":
         from omo.omo_self_healing import get_history
         import json
+
         data = get_history()
         print(json.dumps(data, indent=2, default=str, ensure_ascii=False))
 
