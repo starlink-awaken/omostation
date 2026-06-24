@@ -56,7 +56,7 @@ phase11_plans_generated:
 - phase11-wave4-execution-plan.md
 phase11_plan_approved: true
 phase11_entry_gate: phase10_completed
-updated_at: '2026-06-24T02:32:10Z'
+updated_at: '2026-06-24T03:24:35Z'
 phase33_status: completed
 phase33_completed_at: '2026-06-08T00:00:00Z'
 phase34_status: completed
@@ -183,20 +183,7 @@ debt_reporting_ref: .omo/debt/reporting/current.yaml
 planned_tasks: 1
 planned_tasks_ref: .omo/tasks/registry/INDEX.md
 next_planned_tasks:
-- Current planned queue from .omo/tasks/planned/ (1 task)
-- OPC-P6-SELF-EVOLUTION-doc-gate-e
-- IMPORTED-3268f8
-- IMPORTED-e5cb72
-- IMPORTED-f9b1e2
-- P44-BET-3b90-FOLLOWUP
-- IMPORTED-3268f8 (workspace→cockpit 命名 SSOT 统一 (架构师视角系统性债))
-- IMPORTED-e5cb72 (修真 c2g brainstorm — 从 Mock print 到真 Pitch 生成)
-- IMPORTED-f9b1e2 (任务1:)
-- 'OPT-BOS-GATEWAY (BOS URI 网关: cockpit 成为人类访问 BOS URI 入口)'
-- 'TASK-8CF4636A (Refactor: 沉淀全局触发器注册表与分布式锁机制在 L0 的协议抽象)'
-- TASK-COCKPIT-TEST-COVERAGE (cockpit test coverage 81%→90%)
-- TASK-GBRAIN-OPS-SPLIT (gbrain operations.ts 拆分 (3841行→领域模块))
-- TASK-OMO-PHYSICAL-REORG (omo 物理文件重组 (125文件→5子包))
+- OPC-P6-SELF-EVOLUTION-doc-gate-e (Reconcile docs/OPC-PHASE4 with OPC-P4 plan yaml)
 phase27_status: completed
 phase27_completed_at: '2026-06-10T00:00:00Z'
 phase28_status: completed
