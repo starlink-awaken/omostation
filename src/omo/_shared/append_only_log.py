@@ -38,6 +38,9 @@ from pathlib import Path
 from typing import Any, ContextManager
 
 
+_thread_local_locks = threading.local()
+
+
 class fcntl_lock:
     """POSIX 文件锁 — 跨进程安全 (Round 4 fcntl 注入样板).
 
@@ -53,37 +56,46 @@ class fcntl_lock:
     """
 
     def __init__(self, lock_path: Path) -> None:
-        self.lock_path = Path(lock_path)
-        self._local = threading.local()
+        self.lock_path = Path(lock_path).resolve()
 
     def __enter__(self) -> "fcntl_lock":
         import fcntl  # POSIX-only; 延迟 import 让 Windows 测试可 import
 
-        if not hasattr(self._local, "depth"):
-            self._local.depth = 0
-            self._local.fd = None
+        if not hasattr(_thread_local_locks, "registry"):
+            _thread_local_locks.registry = {}
 
-        if self._local.depth == 0:
+        key = str(self.lock_path)
+        if key not in _thread_local_locks.registry:
+            _thread_local_locks.registry[key] = [None, 0]
+
+        state = _thread_local_locks.registry[key]
+        if state[1] == 0:
             self.lock_path.parent.mkdir(parents=True, exist_ok=True)
-            self._local.fd = os.open(str(self.lock_path), os.O_CREAT | os.O_RDWR, 0o644)
-            fcntl.flock(self._local.fd, fcntl.LOCK_EX)
+            fd = os.open(str(self.lock_path), os.O_CREAT | os.O_RDWR, 0o644)
+            fcntl.flock(fd, fcntl.LOCK_EX)
+            state[0] = fd
 
-        self._local.depth += 1
+        state[1] += 1
         return self
 
     def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
-        if getattr(self._local, "depth", 0) > 0:
-            self._local.depth -= 1
-            if self._local.depth == 0:
-                fd = getattr(self._local, "fd", None)
-                if fd is not None:
-                    import fcntl
+        key = str(self.lock_path)
+        registry = getattr(_thread_local_locks, "registry", None)
+        if registry and key in registry:
+            state = registry[key]
+            if state[1] > 0:
+                state[1] -= 1
+                if state[1] == 0:
+                    fd = state[0]
+                    if fd is not None:
+                        import fcntl
 
-                    try:
-                        fcntl.flock(fd, fcntl.LOCK_UN)
-                    finally:
-                        os.close(fd)
-                        self._local.fd = None
+                        try:
+                            fcntl.flock(fd, fcntl.LOCK_UN)
+                        finally:
+                            os.close(fd)
+                            state[0] = None
+                    del registry[key]
 
 
 class AppendOnlyLog:
