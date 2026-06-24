@@ -114,8 +114,15 @@ def test_agora_resolver_importable_from_omo_path():
     )
     assert r.returncode == 0, f"Failed: {r.stderr}"
     out = r.stdout
-    assert "services: 40" in out
-    assert "analysis: 12" in out
+    # POC_SERVICES 动态派生 (>= 静态 42/12). 假阳性见 BOS 鸿沟审计文档.
+    _svc = int(
+        [ln for ln in out.splitlines() if ln.startswith("services:")][0].split(":")[1]
+    )
+    _ana = int(
+        [ln for ln in out.splitlines() if ln.startswith("analysis:")][0].split(":")[1]
+    )
+    assert _svc >= 42, f"services: {_svc} (dynamic, >= 42 static)"
+    assert _ana >= 12, f"analysis: {_ana} (dynamic, >= 12 static)"
     assert "bos://analysis/" in out
 
 
