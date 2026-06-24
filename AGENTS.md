@@ -357,6 +357,10 @@ bin/mof-evolution <project>           # 系统演化追踪
 
 14. **BOS URI 是跨层调用的唯一路径**: 所有跨项目、跨层调用必须通过 `bos://` URI 经由 Agora 路由。不要直接调用子进程或内部 MCP。
 
+15. **SSOT Guardian 是 drift 第一道门**: 提交前务必跑 `python3 bin/ssot-guardian.py`，发现 `submodule_pointer_drift` 或 `direct_omo_io_violation` 立即处理。
+
+16. **后台 Agent 竞争**: 若发现子模块指针反复变 dirty，说明多个 agent 在同时写入。先让 competing writer 停下来（按 Agent Mutation Protocol），再 bump 指针，避免无限 chase。
+
 ## 📋 子模块管理 (2026-06-10 确立)
 
 ### 子模块指针更新
@@ -396,6 +400,18 @@ git push origin main
 - **子模块脏状态**：`git submodule status` 带 `+` 前缀表示指针已落后于实际 HEAD，需更新
 - **启用 CI**：每个子模块在 `.github/workflows/ci.yml` 有独立 CI，推 GitHub 自动触发
 
+### 子模块漂移检测 (2026-06-24 确立)
+
+`bin/ssot-guardian.py` 自动检测子模块指针漂移:
+
+```bash
+python3 bin/ssot-guardian.py              # 检测
+python3 bin/ssot-guardian.py --auto-fix   # 修复 task/wave 漂移
+```
+
+- 若输出 `submodule_pointer_drift`, 说明有子仓库提交未 bump 到根仓库
+- **自治 agent 必须遵守**: 批量修改子模块后, 先在子仓库 commit, 再更新根指针, 不得长时间持有 dirty 子模块
+
 ## SSOT 铁律
 
 > **同一事实不在多处写。知识面文档引用事实面数据时，必须使用相对路径指针，不得复制内容。**
@@ -408,6 +424,29 @@ git push origin main
 | 标准 | `.omo/standards/` | 从计划文档读标准 |
 | X1-X4 规则 | `.omo/_truth/x1-*.yaml` ~ `x4-*.yaml` | 在 `AGENTS.md`、README、计划文档里复制规则正文 |
 | L0 约束 | `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` | 在上层文档里另写一套 gate/constraint |
+
+## 🛡️ SSOT Guardian (2026-06-24 确立)
+
+`bin/ssot-guardian.py` 是 SSOT 漂移守门员, 检测并阻止以下漂移:
+
+| 检测项 | 严重性 | 自动修复 |
+|:------|:-----:|:--------|
+| system.yaml task 计数 vs tasks/ 真实文件数 | high | ✅ `omo state sync-tasks` |
+| system.yaml current_wave vs goals/current.yaml | medium | ❌ (需 OMO CLI 支持) |
+| 子模块指针漂移 (`+` 前缀) | high | ❌ (需人工/Agent 提交后 bump) |
+| direct-omo-io 违规 | critical | ❌ (必须改代码) |
+
+**使用方式:**
+```bash
+python3 bin/ssot-guardian.py              # 检测, 有漂移返回 1
+python3 bin/ssot-guardian.py --auto-fix   # 修复白名单字段
+python3 bin/ssot-guardian.py --emit       # 发事件到 OMO event log
+```
+
+**集成点:**
+- pre-commit hook 自动运行
+- cron 可每小时运行
+- `governance-agent.sh` 评估后自动验证
 
 ## 路由规则
 
@@ -478,6 +517,28 @@ git push origin main
 
 唯一标准: `.omo/standards/omo-governance-surfaces.md`  
 唯一注册表: `.omo/_truth/registry/omo-governance-surfaces.yaml`
+
+## 🤝 Agent Mutation Protocol (2026-06-24 确立)
+
+所有自治 AI Agent / cron / daemon 在 workspace 中执行可能产生文件变更的操作时, 必须遵守:
+
+1. **写入前 emit intent**
+   ```bash
+   omo event emit --type agent_mutation_intent \
+     --source "<agent-name>" \
+     --payload '{"planned_surfaces":[".omo/tasks",".omo/state"],"trigger":"cron"}'
+   ```
+2. **禁止 direct-omo-io**: 不得直接 `open()/mkdir()/write_text()` 到 `.omo/` / `spaces/`; 必须走 `omo CLI` / `projects/omo` / `projects/c2g` broker
+3. **立即 commit**: 任何产生变更的自治运行结束后, 必须立即在子仓库 commit, 再更新并提交根仓库指针
+4. **写入后 emit complete**
+   ```bash
+   omo event emit --type agent_mutation_complete \
+     --source "<agent-name>" \
+     --payload '{"committed":true,"commit_sha":"<sha>"}'
+   ```
+
+**参考实现**: `scripts/omo/governance-agent.sh` 已按此协议改造 (P72)。
+**标准文档**: `.omo/standards/agent-mutation-protocol.md`
 
 ## 🏛️ OMO 强制流程 (eCOS v5 Governance Mandatory)
 
