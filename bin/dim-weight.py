@@ -23,37 +23,50 @@ import json
 import sys
 from pathlib import Path
 
-DEFAULT_WEIGHTS = {"frontmatter": 25, "drift_low": 20, "commit_closure": 20, "adr_index": 20, "governance_score": 15}
+DEFAULT_WEIGHTS = {
+    "frontmatter": 25,
+    "drift_low": 20,
+    "commit_closure": 20,
+    "adr_index": 20,
+    "governance_score": 15,
+}
 
 
 def load_snapshots(root: Path) -> list[dict]:
-    """读持久化快照."""
-    log = root / ".omo" / "_log" / "readiness-snapshots.jsonl"
-    if not log.exists():
-        # fallback: readiness-*.json
+    """读持久化快照, 不足时 fallback 到 readiness-*.json."""
+    snaps = []
+    persistent = root / ".omo" / "_log" / "readiness-snapshots.jsonl"
+    if persistent.exists():
+        try:
+            with open(persistent, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        rec = json.loads(line)
+                        if (
+                            isinstance(rec, dict)
+                            and "score" in rec
+                            and "dimensions" in rec
+                        ):
+                            snaps.append(rec)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+    if len(snaps) < 5:
+        # fallback: readiness-*.json (30 快照 rotation 限制)
         log_dir = root / ".omo" / "_log"
-        snaps = []
         for f in sorted(log_dir.glob("readiness-*.json"), reverse=True)[:30]:
             try:
                 with open(f, encoding="utf-8") as fh:
-                    snaps.append(json.load(fh))
+                    rec = json.load(fh)
+                    if isinstance(rec, dict) and "score" in rec and "dimensions" in rec:
+                        snaps.append(rec)
             except Exception:
                 pass
-        return list(reversed(snaps))
-    snaps = []
-    try:
-        with open(log, encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    snaps.append(json.loads(line))
-                except Exception:
-                    pass
-    except Exception:
-        pass
-    return snaps
+    return sorted(snaps, key=lambda s: s.get("timestamp", ""))
 
 
 def compute_weights(snaps):
@@ -66,7 +79,11 @@ def compute_weights(snaps):
 
     # 收集各维度时序
     dim_series: dict[str, list[float]] = {
-        "frontmatter": [], "drift_low": [], "commit_closure": [], "adr_index": [], "governance_score": []
+        "frontmatter": [],
+        "drift_low": [],
+        "commit_closure": [],
+        "adr_index": [],
+        "governance_score": [],
     }
     total_series = []
 
@@ -86,6 +103,7 @@ def compute_weights(snaps):
 
     # 计算各维度 stdev 和与总分相关性
     import statistics
+
     weights = {}
     analysis = {}
     total_weight = sum(DEFAULT_WEIGHTS.values())
@@ -100,15 +118,19 @@ def compute_weights(snaps):
         cov = 0.0
         cnt = 0
         for i in range(1, min(len(series), len(total_series))):
-            d_dim = abs(series[i] - series[i-1])
-            d_total = abs(total_series[i] - total_series[i-1])
+            d_dim = abs(series[i] - series[i - 1])
+            d_total = abs(total_series[i] - total_series[i - 1])
             cov += d_dim * d_total
             cnt += 1
         correlation = cov / cnt if cnt > 0 else 0
 
         # 综合: 相关性 * 波动率
         score = correlation * (1 + stdev)
-        analysis[dim] = {"stdev": round(stdev, 3), "correlation": round(correlation, 3), "score": round(score, 3)}
+        analysis[dim] = {
+            "stdev": round(stdev, 3),
+            "correlation": round(correlation, 3),
+            "score": round(score, 3),
+        }
         weights[dim] = score
 
     # 归一化
@@ -144,7 +166,11 @@ def main() -> int:
             analysis = {"note": analysis}
 
     if args.format == "json":
-        out = {"weights": weights, "default_weights": DEFAULT_WEIGHTS, "analysis": analysis}
+        out = {
+            "weights": weights,
+            "default_weights": DEFAULT_WEIGHTS,
+            "analysis": analysis,
+        }
         print(json.dumps(out, indent=2, ensure_ascii=False))
     else:
         print("=" * 60)
@@ -164,7 +190,9 @@ def main() -> int:
         if "note" not in analysis:
             print("--- 各维度分析 ---")
             for dim, info in analysis.items():
-                print(f"  {dim}: stdev={info['stdev']} correlation={info['correlation']} score={info['score']}")
+                print(
+                    f"  {dim}: stdev={info['stdev']} correlation={info['correlation']} score={info['score']}"
+                )
     return 0
 
 
