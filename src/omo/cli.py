@@ -170,6 +170,11 @@ def main(argv: list[str] | None = None) -> int:
 
         return health_main(args[1:])
 
+    if args and args[0] == "readiness":
+        from omo.omo_readiness import main as readiness_main
+
+        return readiness_main(args[1:])
+
     if args and args[0] in ("x-axis", "xaxis"):
         from omo.omo_xplane import main as xplane_main
 
