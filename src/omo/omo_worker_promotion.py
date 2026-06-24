@@ -131,12 +131,14 @@ def _promotion_eval(
         )
     )
 
+    is_self_evolve = task_id.startswith("OPC-P6-SELF-EVOLUTION-")
     checks = {
         "queue_membership_ok": True,
         "status_ok": task.get("status") in {"candidate", "pending"},
         "phase_ok": task.get("phase") == int(goals["phase"]) + 1,
         "approval_ready": approval_result["approval_ready"],
         "target_path_clear": not active_target.exists(),
+        "task_policy_ready": not is_self_evolve,
     }
 
     active_ready_errors = validate_task_file(task_file)
@@ -155,6 +157,8 @@ def _promotion_eval(
         blockers.append("target_path_exists")
     if not checks["active_schema_ready"]:
         blockers.append("active_schema_invalid")
+    if is_self_evolve:
+        blockers.append("task_policy_blocked")
 
     return {
         "task_id": task_id,
@@ -493,7 +497,7 @@ def _promotion_readiness_entry(
     return {
         "task_id": task["id"],
         "task_ref": eval_result["task_ref"],
-        "phase": task.get("phase", ""),
+        "phase": task.get("phase", None),
         "status": task.get("status", "candidate"),
         "risk_level": task.get("risk_level", "L1"),
         "allowed_operation_level": task.get("allowed_operation_level", "L1"),
