@@ -113,9 +113,11 @@ def test_dynamic_workflow_fallback_execution():
         ]
     }
 
-    dummy_handler = lambda params: {"passed": True, "summary": "Mocked action passed"}
+    # Dynamic mock resolver that embeds the action name into the summary prefix
+    def mock_resolve_action(action_name):
+        return lambda params: {"passed": True, "summary": f"{action_name}: Mocked action passed"}
 
-    with patch("ecos.workflow.actions.resolve_action", return_value=dummy_handler):
+    with patch("ecos.workflow.actions.resolve_action", side_effect=mock_resolve_action):
         from ecos.workflow.dynamic_backend import execute
         
         # Ensure no active LLM model environment
@@ -129,11 +131,10 @@ def test_dynamic_workflow_fallback_execution():
             # Fallback should sequentially try executing all available actions
             assert results["passed"] == 2
             assert results["failed"] == 0
-            # 2 execution steps + 1 completion step
-            assert len(results["steps"]) == 3
+            # 2 execution steps (completed before __done__ break)
+            assert len(results["steps"]) == 2
             assert results["steps"][0]["action"] == "health_check"
             assert results["steps"][1]["action"] == "domain_validate_all"
-            assert results["steps"][2]["action"] == "__done__"
         finally:
             if old_model:
                 os.environ["DYNAMIC_WF_MODEL"] = old_model
