@@ -6,8 +6,7 @@ from typing import Any
 
 
 from omo.omo_audit import record as record_audit
-from omo.omo_io import AppendOnlyLog, fcntl_lock, write_text_atomic, write_yaml_atomic
-from omo.omo_io_schemas import OmoTrailRecord
+from omo.omo_io import fcntl_lock, write_text_atomic, write_yaml_atomic
 from omo.omo_promotion_request import (
     build_promotion_approval_request,
     promotion_approval_ref,
@@ -22,7 +21,6 @@ from omo.omo_ingress_paths import (
     _lock_path,
     _safe_doc_name,
     _timestamp_slug,
-    _trail_log_path,
     _utc_now,
 )
 from omo.omo_ingress_registry import (
@@ -36,6 +34,7 @@ from omo.omo_ingress_goal import (
     _goal_fingerprint,
     _resolve_existing_goal,
 )
+from omo.omo_ingress_trail import _record_trail
 
 
 def _task_payload_with_metadata(
@@ -62,26 +61,7 @@ def _task_payload_with_metadata(
 # → 移至 omo_ingress_goal.py (SRP · P60+ 第四步, 见顶部 import)
 
 
-def _record_trail(
-    omo_dir: Path,
-    *,
-    actor: str,
-    action: str,
-    target: str,
-    parent_step_id: str,
-) -> None:
-    trail_record = OmoTrailRecord(
-        ts=_utc_now(),
-        actor=actor,
-        action=action,
-        target=target,
-        status="ok",
-        duration_ms=0,
-        parent_step_id=parent_step_id,
-    )
-    AppendOnlyLog(_trail_log_path(omo_dir)).append(
-        trail_record.model_dump(), schema=OmoTrailRecord, sort_keys=True
-    )
+# _record_trail → 移至 omo_ingress_trail.py (SRP · P60+ 第三步, 见顶部 import)
 
 
 def create_goal(
