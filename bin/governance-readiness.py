@@ -16,14 +16,16 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml
+
 
 def run(cmd: str, cwd: Path | None = None) -> tuple[int, str]:
-    """Run shell command, return (exit_code, stdout)."""
+    """Run shell command, return (exit_code, stdout+stderr)."""
     try:
         result = subprocess.run(
-            cmd, shell=True, capture_output=True, text=True, cwd=cwd, timeout=30
+            cmd, shell=True, capture_output=True, text=True, cwd=cwd, timeout=60
         )
-        return result.returncode, result.stdout + result.stderr
+        return result.returncode, (result.stdout or "") + (result.stderr or "")
     except Exception as e:
         return 1, str(e)
 
@@ -59,7 +61,7 @@ def score_frontmatter(root: Path) -> tuple[int, int, float]:
 
 def score_drift(root: Path) -> tuple[int, int]:
     """维度 2: drift LOW 计数. 返回 (score, low_count)."""
-    rc, out = run("bin/mof-drift", cwd=root)
+    _, out = run("bin/mof-drift", cwd=root)
     match = re.search(r"Total:\s*(\d+)\s+drifts", out)
     if match:
         total = int(match.group(1))
@@ -80,7 +82,7 @@ def score_drift(root: Path) -> tuple[int, int]:
 
 def score_commit_closure(root: Path) -> tuple[int, int]:
     """维度 3: 工作树累积. 返回 (score, uncommitted_count)."""
-    rc, out = run("git status --short | wc -l", cwd=root)
+    _, out = run("git status --short | wc -l", cwd=root)
     try:
         count = int(out.strip().split("\n")[0])
     except (ValueError, IndexError):
@@ -99,7 +101,7 @@ def score_commit_closure(root: Path) -> tuple[int, int]:
 
 def score_adr_index(root: Path) -> tuple[int, int]:
     """维度 4: ADR INDEX 完整性. 返回 (score, unlisted_count)."""
-    rc, out = run("omo governance", cwd=root)
+    _, out = run("omo governance", cwd=root)
     match = re.search(r"unlisted.*?:\s*(\d+)", out, re.IGNORECASE)
     if match:
         unlisted = int(match.group(1))
@@ -118,14 +120,22 @@ def score_adr_index(root: Path) -> tuple[int, int]:
 
 
 def score_governance(root: Path) -> tuple[int, float]:
-    """维度 5: omo governance 总分. 返回 (score, total)."""
-    rc, out = run("omo governance", cwd=root)
-    match = re.search(r"总分:\s*([\d.]+)", out)
-    if match:
-        total = float(match.group(1))
-    else:
-        total = 0.0
-    # 100 = 15, ≥ 95 = 10, ≥ 90 = 5, < 90 = 0
+    """维度 5: omo governance 总分. 返回 (score, total).
+
+    优化: omo governance 在 subprocess 下耗时 120s+ (omo_audit + lint + health),
+    改读最近一次 audit 产物 .omo/state/health.yaml (governance health SSOT)。
+    """
+    health_path = root / ".omo" / "state" / "health.yaml"
+    total = 0.0
+    if health_path.exists():
+        try:
+            import yaml
+
+            with open(health_path, encoding="utf-8") as f:
+                h = yaml.safe_load(f) or {}
+            total = float(h.get("health_score", 0))
+        except Exception:
+            pass
     if total >= 100:
         score = 15
     elif total >= 95:

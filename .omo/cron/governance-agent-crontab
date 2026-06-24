@@ -1,0 +1,12 @@
+# P61 自治治理代理 Cron (每 6h)
+#
+# 触发 governance-agent.sh, 跑 readiness + drift 7 维度
+# 告警时通过 omo event 发射
+#
+# 安装: ./scripts/omo/install-governance-agent-cron.sh
+# 状态: ./scripts/omo/install-governance-agent-cron.sh --status
+
+# 每 6 小时 (00:00, 06:00, 12:00, 18:00) 跑
+0 */6 * * * /Users/xiamingxing/Workspace/scripts/omo/governance-agent.sh >> /Users/xiamingxing/Workspace/.omo/_log/governance-agent-cron.log 2>&1
+
+# 注: 实际安装用 crontab, 此处为参考配置

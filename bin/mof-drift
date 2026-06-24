@@ -218,6 +218,44 @@ def count_gbrain_todo_top_files(top_n: int = 5) -> list[tuple[str, int]]:
     return sorted_items[:top_n]
 
 
+def count_commit_closure() -> tuple[int, int, int]:
+    """P61 增: commit_closure 维度 — 工作树累积 vs mof-version 增量 vs 最近 commit.
+
+    返回 (working_tree_uncommitted, mof_version_bump_count, last_commit_age_hours)
+    """
+    try:
+        # 工作树累积未提交
+        r1 = subprocess.run(
+            ["git", "status", "--short"],
+            capture_output=True, text=True, cwd=Path(__file__).parent.parent, timeout=10
+        )
+        uncommitted = len([l for l in r1.stdout.splitlines() if l.strip()])
+    except Exception:
+        uncommitted = 0
+    try:
+        # 最近 mof-version bump 数量 (24h)
+        r2 = subprocess.run(
+            ["bin/mof-version", "show"],
+            capture_output=True, text=True, cwd=Path(__file__).parent.parent, timeout=10
+        )
+        # 简化: 数 history 条目
+        bumps_24h = sum(1 for l in r2.stdout.splitlines() if l.startswith("  v0.0."))
+    except Exception:
+        bumps_24h = 0
+    try:
+        # 最近 commit 时间
+        r3 = subprocess.run(
+            ["git", "log", "-1", "--format=%ct"],
+            capture_output=True, text=True, cwd=Path(__file__).parent.parent, timeout=10
+        )
+        import time as _t
+        last_ts = int(r3.stdout.strip()) if r3.stdout.strip().isdigit() else 0
+        last_age_h = (_t.time() - last_ts) / 3600 if last_ts else 999
+    except Exception:
+        last_age_h = 999
+    return uncommitted, bumps_24h, int(last_age_h)
+
+
 def detect_drift(project_name: str = None) -> list[dict]:
     """检测架构漂移"""
     nodes = load_all_m1()
@@ -308,6 +346,54 @@ def detect_drift(project_name: str = None) -> list[dict]:
                 "message": f"gbrain TODOs Top-5 文件: {top_str}",
             })
 
+        # Check commit_closure (P61 增)
+        uncommitted, bumps_24h, last_age_h = count_commit_closure()
+        # 警告阈值: 100 warn, 500 error (L0:CR-GOV-COMMIT-FREQUENCY-01)
+        if uncommitted > 500:
+            drifts.append({
+                "project": "workspace",
+                "type": "commit_closure",
+                "severity": "high",
+                "count": uncommitted,
+                "message": f"工作树累积 {uncommitted} 文件 (超 500 阈值, error 级别, 强制闭环纪律破坏)",
+            })
+        elif uncommitted > 100:
+            drifts.append({
+                "project": "workspace",
+                "type": "commit_closure",
+                "severity": "medium",
+                "count": uncommitted,
+                "message": f"工作树累积 {uncommitted} 文件 (超 100 阈值, warn 级别)",
+            })
+        elif uncommitted > 0:
+            # 低严重度信息, 帮助追踪 P59 类失闭环复发
+            drifts.append({
+                "project": "workspace",
+                "type": "commit_closure",
+                "severity": "low",
+                "count": uncommitted,
+                "message": f"工作树累积 {uncommitted} 文件 (≤100 健康, bumps_24h={bumps_24h}, last_commit={last_age_h}h ago)",
+            })
+
+        # P61 增: governance_score_history — 最近 N 次 audit 趋势
+        gh = analyze_governance_history()
+        if gh["trend"] == "declining":
+            drifts.append({
+                "project": "governance",
+                "type": "governance_score_history",
+                "severity": "medium",
+                "count": gh["declines"],
+                "message": f"governance score 趋势下降: 最近 {gh['window']} 次平均 {gh['recent_avg']:.1f} (前 {gh['window']} 次 {gh['prev_avg']:.1f})",
+            })
+        elif gh["recent_avg"] >= 99.0 and gh["prev_avg"] < 99.0:
+            drifts.append({
+                "project": "governance",
+                "type": "governance_score_history",
+                "severity": "low",
+                "count": 0,
+                "message": f"governance score 稳态: 最近 {gh['window']} 次 {gh['recent_avg']:.1f} (P43-P60 持续提升)",
+            })
+
         # Check test coverage
         tests = count_test_files(proj)
         if tests == 0:
@@ -320,6 +406,45 @@ def detect_drift(project_name: str = None) -> list[dict]:
             })
     
     return drifts
+
+
+def analyze_governance_history(window: int = 20) -> dict:
+    """P61 增: governance score 趋势分析.
+
+    读 .omo/_knowledge/governance-history.jsonl, 比较最近 N 次与前 N 次平均.
+    """
+    import json
+    history_path = Path(__file__).parent.parent / ".omo/_knowledge/governance-history.jsonl"
+    if not history_path.exists():
+        return {"trend": "stable", "recent_avg": 0, "prev_avg": 0, "window": window, "declines": 0}
+    try:
+        scores = []
+        with open(history_path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    d = json.loads(line)
+                    s = d.get("total_score")
+                    if isinstance(s, (int, float)):
+                        scores.append(float(s))
+                except Exception:
+                    continue
+        if len(scores) < window * 2:
+            return {"trend": "stable", "recent_avg": sum(scores)/max(len(scores),1), "prev_avg": 0, "window": window, "declines": 0}
+        recent = scores[-window:]
+        prev = scores[-window*2:-window]
+        recent_avg = sum(recent) / len(recent)
+        prev_avg = sum(prev) / len(prev)
+        trend = "stable"
+        declines = 0
+        if recent_avg < prev_avg - 1.0:
+            trend = "declining"
+            declines = sum(1 for s in recent if s < prev_avg)
+        return {"trend": trend, "recent_avg": recent_avg, "prev_avg": prev_avg, "window": window, "declines": declines}
+    except Exception as e:
+        return {"trend": "stable", "recent_avg": 0, "prev_avg": 0, "window": window, "declines": 0, "error": str(e)}
 
 
 def main():
