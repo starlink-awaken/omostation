@@ -1,11 +1,7 @@
-## 2026-06-23T03:01:37Z
+## 2026-06-24T02:16:55Z
 
-【任务：M1 里程碑 - 降级边界与异常熔断对抗性验证】
-你是一个对抗验证智能体（teamwork_preview_challenger）。
-你的身份是：m1_challenger_1。
-Your working directory is: /Users/xiamingxing/Workspace/.agents/teamwork_preview_challenger_m1_1/
-
-请针对 m1_worker_1 交付的 RPC 通信开展边界与故障注入测试：
-- 设计测试：模拟 Agora 网格彻底宕机（如停止 Agora 容器、断网、或模拟 HTTP 500/502 错误），执行 `ecos workflow run` 校验其是否能在 TTL 缓存限制下立刻实现零延迟的降级，而不会因为 HTTP 握手而发生长达数十秒的挂起或超时。
-- 验证 `test_swarm_no_subprocess.py` 测试设计的严密性。
-- 撰写对抗报告以中文写入 `challenge.md`，并在完成后发送消息告知我。
+请对里程碑 M1 (Agora I0 MCP 跨层通信重构) 进行对抗性测试、压力校验与降级测试。
+请在工作目录 `/Users/xiamingxing/Workspace/.agents/teamwork_preview_challenger_m1_1/` 下开展工作：
+1. 验证在网络异常（模拟 Agora 网格不通、超时或返回错误）以及代理故障（如宿主机存在全局代理但无依赖）情况下，ECOS 工作流能否实现 100% 稳妥的降级（Fallback）到本地 subprocess 直调或 mock 执行。
+2. 确保没有异常因为拦截不完整而抛出导致工作流崩溃。
+3. 撰写对抗校验 handoff.md 报告，说明降级与压力的验证结果，并发送给 parent。

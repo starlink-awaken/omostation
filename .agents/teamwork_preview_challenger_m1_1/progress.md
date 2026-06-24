@@ -1,7 +1,9 @@
-## Current Status
-Last visited: 2026-06-23T11:04:00+08:00
-- [x] 接收任务并开始 M1 代码对抗性验证与降级压力测试
-- [x] 设计并运行对抗性故障注入测试，实证在网格假死时降级时延的线性累加缺陷
-- [x] 深度评审 test_swarm_no_subprocess.py 测试的严密性与 Mock 机制问题
-- [x] 撰写 challenge.md 对抗验证与评审报告
-- [x] 完成 handoff.md 并更新 BRIEFING.md 状态
+# Progress
+
+Last visited: 2026-06-24T10:21:00+08:00
+
+- [x] 探索代码库以定位 I0 Agora MCP 跨层通信及降级（Fallback）机制的实现位置。
+- [x] 编写测试脚本/压测用例，模拟 Agora 网络不通、超时、异常。
+- [x] 模拟代理故障（设置无效代理、无依赖）。
+- [x] 执行验证，收集结果与异常表现。
+- [x] 编写对抗校验 handoff.md 报告，并将结果发送给 parent。
