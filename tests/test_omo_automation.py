@@ -764,7 +764,7 @@ def test_sync_state_updates_counts_health_and_divergence_flags(tmp_path: Path):
     assert state["total_tasks"] == 3
     assert state["health_score_raw"] == 75.0
     assert state["debt_weight"] == 0.3
-    assert state["health_score"] == 22.5
+    assert state["debt_adjusted_health_score"] == 22.5
     assert state["divergence_flags"] == [
         "missing_goal_tasks:1",
         "orphaned_tasks:1",
