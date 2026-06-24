@@ -74,7 +74,9 @@ def detect_doc_drift(workspace_root: Path) -> dict[str, Any]:
         )
     )
     plan = _read_yaml(workspace_root, plan_rel)
-    phase_doc_path = workspace_root / "docs" / "OPC-PHASE4-MODEL-COMPUTE.md"
+    phase_doc_path = workspace_root / "docs" / "opc" / "OPC-PHASE4-MODEL-COMPUTE.md"
+    if not phase_doc_path.exists():
+        phase_doc_path = workspace_root / "docs" / "OPC-PHASE4-MODEL-COMPUTE.md"
     doc_exists = phase_doc_path.exists()
     phase_doc = phase_doc_path.read_text(encoding="utf-8") if doc_exists else ""
     plan_gate_status = plan.get("gate_status")
@@ -82,11 +84,12 @@ def detect_doc_drift(workspace_root: Path) -> dict[str, Any]:
         "Gate E passed" in phase_doc and "opc_phase4_gate_e_passed" in phase_doc
     )
     consistent = doc_exists and plan_gate_status == "passed" and doc_says_passed
+    doc_ref = str(phase_doc_path.relative_to(workspace_root))
     return {
         "kind": "doc_drift",
         "ts": _now_iso(),
         "plan_ref": plan_rel,
-        "doc_ref": "docs/OPC-PHASE4-MODEL-COMPUTE.md",
+        "doc_ref": doc_ref,
         "doc_exists": doc_exists,
         "plan_gate_status": plan_gate_status,
         "doc_says_passed": doc_says_passed,

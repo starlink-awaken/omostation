@@ -16,8 +16,10 @@ API:
 from __future__ import annotations
 
 import os
+import sqlite3
 import time
 from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
@@ -36,6 +38,99 @@ from omo.omo_io_schemas import BosStatus, OmoBosMetricsRecord
 # 复用 omo_bos 的工作区根
 _WORKSPACE = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
 DEFAULT_METRICS_PATH = _WORKSPACE / ".omo" / "_knowledge" / "bos-metrics.jsonl"
+
+# Agora 内部 SQLite metrics 库路径 (与 agora.mcp.bos_metrics 默认值一致)
+_AGORA_METRICS_DB = Path(
+    os.environ.get("AGORA_METRICS_DB", str(Path.home() / ".agora" / "bos_metrics.db"))
+)
+
+
+# ── Agora metrics → OMO metrics 同步桥 ─────────────────────────────────────
+# 问题: cockpit/agora 的 BOS 调用记录到 ~/.agora/bos_metrics.db,
+#       而 OMO 治理面读 .omo/_knowledge/bos-metrics.jsonl.
+# 长期机制: summary() 自动同步上游 Agora SQLite, 让 OMO 成为统一可观测真源.
+
+
+def _watermark_path(path: Path) -> Path:
+    return path.parent / f"{path.name}.agora-sync-watermark"
+
+
+def _read_watermark(path: Path) -> int:
+    wp = _watermark_path(path)
+    try:
+        return int(wp.read_text(encoding="utf-8").strip())
+    except (OSError, ValueError):
+        return 0
+
+
+def _write_watermark(path: Path, watermark: int) -> None:
+    _watermark_path(path).write_text(str(watermark), encoding="utf-8")
+
+
+def _ts_to_iso(ts: float) -> str:
+    return (
+        datetime.fromtimestamp(ts, tz=timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
+
+
+def sync_from_agora_metrics(
+    path: Path | None = None,
+    agora_db: Path | str | None = None,
+) -> int:
+    """把 Agora SQLite metrics 增量同步到 OMO JSONL.
+
+    返回本次同步新增记录数.
+    用 id watermark 去重, 不依赖 Agora 进程.
+    """
+    if path is None:
+        path = DEFAULT_METRICS_PATH
+    db_path = Path(agora_db if agora_db is not None else _AGORA_METRICS_DB)
+    if not db_path.exists():
+        return 0
+
+    last_id = _read_watermark(path)
+    appended = 0
+    try:
+        conn = sqlite3.connect(str(db_path))
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT id, uri, success, latency_ms, timestamp "
+            "FROM bos_metrics WHERE id > ? ORDER BY id ASC",
+            (last_id,),
+        ).fetchall()
+        conn.close()
+    except Exception:
+        return 0
+
+    if not rows:
+        return 0
+
+    log = AppendOnlyLog(path)
+    max_id = last_id
+    for row in rows:
+        max_id = max(max_id, row["id"])
+        status = BosStatus.RESOLVED if row["success"] else BosStatus.ERROR
+        rec = OmoBosMetricsRecord(
+            uri=row["uri"],
+            status=status,
+            elapsed_ms=float(row["latency_ms"]),
+            transport="agora-bridge",
+            error="",
+            recorded_at=_ts_to_iso(row["timestamp"]),
+        )
+        try:
+            log.append(rec.model_dump(), schema=OmoBosMetricsRecord, sort_keys=True)
+            appended += 1
+        except Exception:
+            continue
+
+    if appended:
+        _write_watermark(path, max_id)
+    return appended
+
 
 # 注意: 不在模块级 instantiate log, 让 monkeypatch.DEFAULT_METRICS_PATH 仍生效.
 # AppendOnlyLog 构造轻量 (Path + Lock), per-call 创建开销可忽略.
@@ -166,6 +261,8 @@ def summary(
     """
     if path is None:
         path = DEFAULT_METRICS_PATH
+    # 长期机制: 自动同步 Agora SQLite metrics, 保证 OMO 看到真实 BOS 流量.
+    sync_from_agora_metrics(path)
     recs = _read_all(path)
     by_uri: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for r in recs:
@@ -251,6 +348,7 @@ __all__ = (
     "get_metrics",
     "summary",
     "reset",
+    "sync_from_agora_metrics",  # 长期机制: Agora SQLite → OMO JSONL
 )
 
 

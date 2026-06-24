@@ -105,13 +105,22 @@ def cmd_state_refresh(omo_dir: Path, dry_run: bool) -> int:
 
     updates = 0
     # 1. Query runtime Matrix for service list
+    runtime_root = Path.home() / "Workspace" / "projects" / "runtime"
     try:
         result = subprocess.run(
-            ["python3", "-m", "runtime", "matrix", "list", "--json"],
+            [
+                "uv",
+                "run",
+                "--directory",
+                str(runtime_root),
+                "runtime",
+                "matrix",
+                "list",
+                "--json",
+            ],
             capture_output=True,
             text=True,
-            timeout=10,
-            cwd=str(Path.home() / "Workspace" / "projects" / "runtime"),
+            timeout=30,
         )
         if result.returncode == 0 and result.stdout.strip():
             import json as _json
@@ -134,15 +143,21 @@ def cmd_state_refresh(omo_dir: Path, dry_run: bool) -> int:
         print("⚠️  Runtime Matrix query failed (runtime CLI not available)")
 
     # 2. Update health_check based on runtime status
+    #    running/idle/active  → healthy
+    #    configured           → scheduled
+    #    failed/stopped       → failed
+    #    (missing/unknown)    → unmanaged
     for name, svc in services.items():
         if not isinstance(svc, dict):
             continue
         rt = svc.get("runtime", {})
         if isinstance(rt, dict):
             rst = rt.get("status", "")
-            if rst == "running":
+            if rst in ("running", "idle", "active"):
                 svc["health_check"] = "healthy"
                 svc["port_listening"] = bool(rt.get("port"))
+            elif rst == "configured":
+                svc["health_check"] = "scheduled"
             elif rst in ("failed", "stopped"):
                 svc["health_check"] = "failed"
 
