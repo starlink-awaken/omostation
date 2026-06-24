@@ -206,6 +206,12 @@ def _register_builtins() -> None:
         aliases=["sub_workflow"],
     )
 
+    register_action(
+        "complete_quest",
+        _action_complete_quest,
+        description="家庭任务: 结算 Quest 并累加积分",
+    )
+
 
 def _action_workflow_run(params: dict) -> dict:
     """执行子工作流
@@ -290,6 +296,108 @@ def _action_domain_routes(params: dict) -> dict:
     return _check_run(
         ["python3", str(H / "bin" / "ecos"), "domain", "routes"], timeout=10
     )
+
+
+def _action_complete_quest(params: dict) -> dict:
+    """结算 Quest 并累加积分
+
+    从 trigger_event 中获取 quest_id：
+      params = {"trigger_event": {"payload": {"quest_id": 12, ...}}}
+    或者直接传入：
+      params = {"quest_id": 12, ...}
+    """
+    event = params.get("trigger_event", {})
+    payload = event.get("payload", {}) if isinstance(event, dict) else {}
+
+    quest_id = params.get("quest_id") or payload.get("quest_id")
+    try:
+        quest_id = int(quest_id)
+    except (TypeError, ValueError):
+        return {
+            "passed": False,
+            "summary": f"complete_quest: 无效的 quest_id ({quest_id})",
+        }
+
+    db_path = (
+        Path(__file__).resolve().parents[4]
+        / "projects"
+        / "family-hub"
+        / "family_hub.db"
+    )
+    if not db_path.exists():
+        return {"passed": False, "summary": f"数据库不存在: {db_path}"}
+
+    import sqlite3
+
+    try:
+        conn = sqlite3.connect(str(db_path), timeout=2.0)
+        conn.row_factory = sqlite3.Row
+
+        # 1. 查找 Quest
+        quest = conn.execute(
+            "SELECT reward, assignee, type, title FROM quests WHERE id = ? AND completed = 0",
+            (quest_id,),
+        ).fetchone()
+        if not quest:
+            conn.close()
+            # 如果已经完成了，为了幂等性，我们也判定为成功
+            return {
+                "passed": True,
+                "summary": f"complete_quest: Quest {quest_id} 已在先前完成过",
+            }
+
+        reward = quest["reward"]
+        assignee = quest["assignee"]
+        q_type = quest["type"]
+        title = quest["title"]
+
+        # 2. 标记完成
+        conn.execute("UPDATE quests SET completed = 1 WHERE id = ?", (quest_id,))
+
+        # 3. 积分累加
+        if q_type in ("household", "responsibility"):
+            conn.execute(
+                "UPDATE profiles SET responsibilityPoints = responsibilityPoints + ? WHERE role = ?",
+                (reward, assignee),
+            )
+        elif q_type in ("learning", "wisdom"):
+            conn.execute(
+                "UPDATE profiles SET wisdomPoints = wisdomPoints + ? WHERE role = ?",
+                (reward, assignee),
+            )
+        else:
+            conn.execute(
+                "UPDATE profiles SET responsibilityPoints = responsibilityPoints + ? WHERE role = ?",
+                (reward, assignee),
+            )
+
+        # 4. 等级重算
+        conn.execute(
+            """
+            UPDATE profiles 
+            SET level = 1 + (wisdomPoints + responsibilityPoints) / 100 
+            WHERE role = ?
+        """,
+            (assignee,),
+        )
+
+        # 5. 日志记入
+        conn.execute(
+            "INSERT INTO logs (message, type, timestamp) VALUES (?, ?, datetime('now'))",
+            (
+                f"{assignee} completed quest: {title} (ID={quest_id}) for {reward} points",
+                "quest_completion",
+            ),
+        )
+
+        conn.commit()
+        conn.close()
+        return {
+            "passed": True,
+            "summary": f"complete_quest: 成功结算 Quest {quest_id} ({title})，为 {assignee} 奖励 {reward} 积分",
+        }
+    except Exception as e:
+        return {"passed": False, "summary": f"complete_quest 失败: {str(e)}"}
 
 
 # 惰性注册（在 _ensure_builtins_registered() 中触发）

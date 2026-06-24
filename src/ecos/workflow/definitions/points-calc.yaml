@@ -1,0 +1,9 @@
+# Workflow: 积分清算
+name: points-calc
+description: "家庭积分游戏化清算工作流"
+trigger: "QuestCompleted"
+
+steps:
+  - name: complete-quest
+    action: complete_quest
+    description: "结算积分并更新家庭积分榜"
