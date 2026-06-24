@@ -7,7 +7,11 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 
-from .omo_ingress import create_goal, create_planned_task, upsert_debt_item
+from .omo_ingress_task_lifecycle import (
+    create_goal,
+    create_planned_task,
+    upsert_debt_item,
+)
 from .omo_io import write_yaml_atomic
 from .omo_governance_surfaces import (
     main as governance_surfaces_main,

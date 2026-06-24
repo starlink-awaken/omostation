@@ -18,6 +18,7 @@ from omo.omo_ingress_paths import (
     _artifact_lifecycle_fields,
     _audit_log_path,
     _delivery_root,
+    _find_task_path,
     _load_yaml,
     _lock_path,
     _timestamp_slug,
@@ -232,3 +233,198 @@ def create_blocked_task(
             extra={"task_id": task_id},
         )
         return deepcopy(task_data)
+
+
+def record_task_consensus(
+    omo_dir: Path,
+    *,
+    task_id: str,
+    actor: str,
+    message: str,
+    task_status: str | None = None,
+    source_ref: str = "",
+    now: str | None = None,
+) -> dict[str, Any]:
+    timestamp = now or _utc_now()
+    resolved = _find_task_path(omo_dir, task_id, groups=("active", "blocked", "done"))
+    if resolved is None:
+        raise ValueError(f"task not found in active/blocked/done: {task_id}")
+    group, task_path = resolved
+    evidence_filename = f"{task_id.lower()}-{_timestamp_slug(timestamp)}.yaml"
+    evidence_path = (
+        omo_dir / "_delivery" / "task-center" / "consensus" / evidence_filename
+    )
+
+    with fcntl_lock(_lock_path(omo_dir)):
+        payload = _load_yaml(task_path)
+        evidence = {
+            "task_id": task_id,
+            "classification": "positive_confirmation",
+            "message": message,
+            "confirmed_at": timestamp,
+            "task_status": task_status or payload.get("status"),
+        }
+        evidence_ref = f".omo/_delivery/task-center/consensus/{evidence_filename}"
+        handoff_refs = payload.setdefault("handoff_refs", [])
+        if isinstance(handoff_refs, list) and evidence_ref not in handoff_refs:
+            handoff_refs.append(evidence_ref)
+
+        errors = validate_task_data(payload, group=group)
+        if errors:
+            raise ValueError(
+                "invalid task after consensus update: " + "; ".join(errors)
+            )
+
+        write_yaml_atomic(evidence_path, evidence)
+        write_yaml_atomic(task_path, payload)
+
+        artifact = {
+            "kind": "task_consensus_recorded",
+            "task_id": task_id,
+            "task_ref": f".omo/tasks/{group}/{task_path.name}",
+            "evidence_ref": evidence_ref,
+            "actor": actor,
+            "source_ref": source_ref,
+            "recorded_at": timestamp,
+        }
+        artifact_path = (
+            _delivery_root(omo_dir)
+            / "tasks"
+            / f"{task_id}-consensus-{_timestamp_slug(timestamp)}.yaml"
+        )
+        write_yaml_atomic(artifact_path, artifact)
+
+        parent_step_id = f"ingress:task-consensus:{task_id}:{timestamp}"
+        details = (
+            f"task_id={task_id} actor={actor} evidence_ref={evidence_ref} "
+            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+        )
+        record_audit(
+            action="ingress_record_task_consensus",
+            debt_id="",
+            actor=actor,
+            details=details,
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="record_task_consensus",
+            target=evidence_ref,
+            parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="record_task_consensus",
+            target=evidence_ref,
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id, "task_group": group},
+        )
+        return artifact
+
+
+def complete_task(
+    omo_dir: Path,
+    *,
+    task_id: str,
+    actor: str,
+    source_ref: str = "",
+    now: str | None = None,
+) -> dict[str, Any]:
+    timestamp = now or _utc_now()
+    task_roots = {
+        "active": omo_dir / "tasks" / "active" / f"{task_id}.yaml",
+        "planned": omo_dir / "tasks" / "planned" / f"{task_id}.yaml",
+    }
+    done_path = omo_dir / "tasks" / "done" / f"{task_id}.yaml"
+
+    with fcntl_lock(_lock_path(omo_dir)):
+        src_group: str | None = None
+        src_path: Path | None = None
+        for group, candidate in task_roots.items():
+            if candidate.exists():
+                src_group = group
+                src_path = candidate
+                break
+
+        if src_path is None:
+            if done_path.exists():
+                existing_payload = _load_yaml(done_path)
+                metadata = existing_payload.get("metadata", {})
+                metadata_completed_at = (
+                    metadata.get("completed_at") if isinstance(metadata, dict) else None
+                )
+                if not existing_payload.get("completed_at") and metadata_completed_at:
+                    existing_payload["completed_at"] = metadata_completed_at
+                    write_yaml_atomic(done_path, existing_payload)
+                return existing_payload
+            raise ValueError(f"task not found in active/planned/done: {task_id}")
+
+        payload = _load_yaml(src_path)
+        payload["status"] = "done"
+        payload["completed_at"] = timestamp
+        metadata = payload.setdefault("metadata", {})
+        if isinstance(metadata, dict):
+            metadata["completed_at"] = timestamp
+            metadata["completed_via"] = "omo task done"
+            metadata["completion_actor"] = actor
+            if source_ref:
+                metadata["completion_source_ref"] = source_ref
+
+        errors = validate_task_data(payload, group="done")
+        if errors:
+            raise ValueError("invalid completed task: " + "; ".join(errors))
+
+        write_yaml_atomic(done_path, payload)
+        src_path.unlink()
+
+        artifact = {
+            "kind": "task_completed",
+            "task_id": task_id,
+            "source_group": src_group,
+            "task_ref_before": f".omo/tasks/{src_group}/{task_id}.yaml",
+            "task_ref_after": f".omo/tasks/done/{task_id}.yaml",
+            "actor": actor,
+            "source_ref": source_ref,
+            "completed_at": timestamp,
+        }
+        artifact_path = (
+            _delivery_root(omo_dir)
+            / "tasks"
+            / f"{task_id}-done-{_timestamp_slug(timestamp)}.yaml"
+        )
+        write_yaml_atomic(artifact_path, artifact)
+
+        parent_step_id = f"ingress:task-done:{task_id}:{timestamp}"
+        details = (
+            f"task_id={task_id} actor={actor} from={src_group} "
+            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+        )
+        record_audit(
+            action="ingress_complete_task",
+            debt_id="",
+            actor=actor,
+            details=details,
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="complete_task",
+            target=f".omo/tasks/done/{task_id}.yaml",
+            parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="complete_task",
+            target=f".omo/tasks/done/{task_id}.yaml",
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id, "source_group": src_group},
+        )
+        return payload
