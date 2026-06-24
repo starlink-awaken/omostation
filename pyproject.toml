@@ -58,6 +58,19 @@ mof-capability = "ecos.ssot.tools.mof-capability:main"
 mof-bos-watch = "ecos.ssot.tools.mof-bos-watch:main"
 mof-register-tasks = "ecos.ssot.tools.mof-register-tasks:main"
 
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "N", "RUF"]
+ignore = ["E501", "E402"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/ecos"]
 

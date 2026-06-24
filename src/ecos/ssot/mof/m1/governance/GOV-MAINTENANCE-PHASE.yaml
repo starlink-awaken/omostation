@@ -1,0 +1,112 @@
+id: GOV-MAINTENANCE-PHASE
+type: GovernancePolicy
+m3_parent: LifecycleStage.GOVERNANCE_MAINTENANCE
+name: governance-maintenance-phase
+description: |
+  P60+ 持续治理维护阶段, 沿用 P43-P59 沉淀方法论。
+  核心机制: RISE 循环 + 维度饱和律 + 闭环纪律。
+  适用: 系统进入稳态治理后 (governance=100 A+) 的持续维护。
+phase_range: P60-P99
+introduced_by: P60
+introduced_date: '2026-06-23'
+
+layer: L2
+status: active
+
+objectives:
+  - id: OBJ-MAINT-FRONTMATTER
+    description: "维护 frontmatter 覆盖率 ≥ 95%"
+    metric: "omo lint doc-lifecycle"
+    threshold: "frontmatter_coverage >= 0.95"
+  - id: OBJ-MAINT-DRIFT
+    description: "监控 mof-drift LOW 维度 ≤ 5"
+    metric: "bin/mof-drift"
+    threshold: "drift_low_count <= 5"
+  - id: OBJ-MAINT-CLOSURE
+    description: "强制 git commit 与 mof-version 同步"
+    metric: "git status --short | wc -l"
+    threshold: "uncommitted_count <= 50"
+  - id: OBJ-MAINT-DIMENSION
+    description: "linter 维度饱和预警 (≥ 15 用 bin 工具)"
+    metric: "omo lint --help | grep -c subcommand"
+    threshold: "linter_dimension <= 15"
+  - id: OBJ-MAINT-ADR-INDEX
+    description: "ADR INDEX 完整性 (无 EXISTS-BUT-UNLISTED)"
+    metric: "omo audit (ADR check)"
+    threshold: "unlisted_count == 0"
+
+gates:
+  - id: GATE-MAINT-FRONTMATTER-COVERAGE
+    name: frontmatter 覆盖率门禁
+    type: doc_lifecycle
+    checks:
+      - {name: "knowledge/ frontmatter", threshold: ">=95%"}
+      - {name: "active/contract/pattern 分类正确", threshold: "100%"}
+      - {name: "死文档数", threshold: "=0"}
+    command: "omo lint doc-lifecycle"
+  - id: GATE-MAINT-DRIFT-LOW-COUNT
+    name: drift LOW 计数门禁
+    type: drift
+    checks:
+      - {name: "drift LOW 总数", threshold: "<=5"}
+      - {name: "drift MEDIUM/HIGH", threshold: "=0"}
+    command: "bin/mof-drift"
+  - id: GATE-MAINT-COMMIT-CLOSURE
+    name: 强制闭环门禁
+    type: commit_closure
+    checks:
+      - {name: "工作树未提交", threshold: "<=100 (warn) <=500 (error)"}
+      - {name: "mof-version vs git commit 配对", threshold: "100%"}
+    command: "git status --short | wc -l && git log --oneline -10"
+  - id: GATE-MAINT-DIMENSION-SATURATION
+    name: 维度饱和门禁
+    type: linter_dimension
+    checks:
+      - {name: "omo lint 维度数", threshold: "<=15"}
+      - {name: "新增能力实现形式", threshold: "=独立 bin 工具 (如 >=15)"}
+    command: "omo lint --help"
+  - id: GATE-MAINT-ADR-INDEX
+    name: ADR INDEX 门禁
+    type: adr_integrity
+    checks:
+      - {name: "EXISTS-BUT-UNLISTED ADR", threshold: "=0"}
+      - {name: "ADR 状态分布", threshold: "ACCEPTED >= SUPERSEDED+DEPRECATED"}
+    command: "omo audit"
+
+evidence:
+  - id: EVID-P59-CLOSURE
+    description: "P59 收口: governance 100 A+ 持续, git commit 闭环恢复"
+    reference: ".omo/_knowledge/audits/2026-06-23-p59-git-commit-closure-closeout.md"
+  - id: EVID-P56-FRONTMATTER
+    description: "P56 收口: frontmatter 689/689 = 100% (历史首次)"
+    reference: ".omo/_knowledge/audits/2026-06-23-p56-frontmatter-100-percent-closeout.md"
+  - id: EVID-P57-SATURATION
+    description: "P57 ADR-0053: 维度饱和评估, 3 候选维度全部已被现有覆盖"
+    reference: ".omo/_knowledge/decisions/0053-p56-frontmatter-100-and-doc-lifecycle.md"
+  - id: EVID-P60-PROPOSAL
+    description: "P60 治理方法论内化提案"
+    reference: ".omo/_knowledge/audits/2026-06-23-p60-governance-internalization-proposal.md"
+
+owner_role: governance-agent
+related_constraints:
+  - "L0-constraints.yaml:CR-GOV-CLOSED-LOOP-01"
+  - "L0-constraints.yaml:CR-GOV-FRONTMATTER-SCHEMA-01"
+  - "L0-constraints.yaml:CR-GOV-DOC-CATEGORY-01"
+  - "L0-constraints.yaml:CR-GOV-DIMENSION-SATURATION-01"
+  - "L0-constraints.yaml:CR-GOV-COMMIT-FREQUENCY-01"
+
+related_x_rules:
+  - ".omo/_truth/x1-governance-policies.yaml:X1-AUD-COMMIT-LOOP"
+  - ".omo/_truth/x2-freshness-rules.yaml:X2-FRESH-COMMIT-FATIGUE"
+  - ".omo/_truth/x4-consistency-rules.yaml:X4-CONS-DRIFT-VS-GOVERNANCE"
+
+model_driven_refs:
+  - file: "projects/model-driven/src/model_driven/mof/m3_extended.py"
+    symbol: "LifecycleStage.GOVERNANCE_MAINTENANCE"
+    reference_type: "m3_parent"
+  - file: "projects/model-driven/src/model_driven/mof/m3_extended.py"
+    symbol: "STANDARD_STAGES[LifecycleStage.GOVERNANCE_MAINTENANCE]"
+    reference_type: "m3_stage_definition"
+  - file: "projects/ecos/src/ecos/ssot/mof/m2/governance_decision.yaml"
+    symbol: "GovernanceDecision"
+    reference_type: "m2_schema"
