@@ -66,9 +66,14 @@ SAMPLE_BACKEND_WF = {
 # load_workflow
 # =========================================================================
 
+
 class TestLoadWorkflow:
     @patch("ecos.workflow.loader._load_from_m1")
-    @patch("ecos.workflow.loader.open", new_callable=mock_open, read_data="name: from-definition\nsteps: []")
+    @patch(
+        "ecos.workflow.loader.open",
+        new_callable=mock_open,
+        read_data="name: from-definition\nsteps: []",
+    )
     @patch("ecos.workflow.loader.WF_DIR")
     def test_load_from_definitions(self, mock_wf_dir, mock_file, mock_m1):
         mock_m1.return_value = None
@@ -97,6 +102,7 @@ class TestLoadWorkflow:
 # _load_from_m1
 # =========================================================================
 
+
 class TestLoadFromM1:
     @patch("ecos.workflow.loader.M1_WF_DIR")
     def test_dir_not_exists(self, mock_dir):
@@ -107,7 +113,9 @@ class TestLoadFromM1:
     def test_match_by_id(self, mock_dir):
         mock_dir.exists.return_value = True
         mock_dir.glob.return_value = [Path("WORKFLOW-test.yaml")]
-        with patch("ecos.workflow.loader.open", mock_open(read_data=json.dumps(SAMPLE_M1_WF))):
+        with patch(
+            "ecos.workflow.loader.open", mock_open(read_data=json.dumps(SAMPLE_M1_WF))
+        ):
             result = _load_from_m1("workflow-test-m1")
             assert result is not None
             assert result["id"] == "workflow-test-m1"
@@ -116,7 +124,9 @@ class TestLoadFromM1:
     def test_match_by_kebab(self, mock_dir):
         mock_dir.exists.return_value = True
         mock_dir.glob.return_value = [Path("WORKFLOW-test.yaml")]
-        with patch("ecos.workflow.loader.open", mock_open(read_data=json.dumps(SAMPLE_M1_WF))):
+        with patch(
+            "ecos.workflow.loader.open", mock_open(read_data=json.dumps(SAMPLE_M1_WF))
+        ):
             result = _load_from_m1("test-m1")
             assert result is not None
 
@@ -124,7 +134,9 @@ class TestLoadFromM1:
     def test_match_by_name(self, mock_dir):
         mock_dir.exists.return_value = True
         mock_dir.glob.return_value = [Path("WORKFLOW-test.yaml")]
-        with patch("ecos.workflow.loader.open", mock_open(read_data=json.dumps(SAMPLE_M1_WF))):
+        with patch(
+            "ecos.workflow.loader.open", mock_open(read_data=json.dumps(SAMPLE_M1_WF))
+        ):
             result = _load_from_m1("Test M1 Workflow")
             assert result is not None
 
@@ -132,7 +144,9 @@ class TestLoadFromM1:
     def test_no_match(self, mock_dir):
         mock_dir.exists.return_value = True
         mock_dir.glob.return_value = [Path("WORKFLOW-other.yaml")]
-        with patch("ecos.workflow.loader.open", mock_open(read_data=json.dumps(SAMPLE_M1_WF))):
+        with patch(
+            "ecos.workflow.loader.open", mock_open(read_data=json.dumps(SAMPLE_M1_WF))
+        ):
             result = _load_from_m1("nonexistent")
             assert result is None
 
@@ -140,7 +154,10 @@ class TestLoadFromM1:
     def test_not_a_workflow_type(self, mock_dir):
         mock_dir.exists.return_value = True
         mock_dir.glob.return_value = [Path("WORKFLOW-test.yaml")]
-        with patch("ecos.workflow.loader.open", mock_open(read_data=json.dumps({"type": "Other"}))):
+        with patch(
+            "ecos.workflow.loader.open",
+            mock_open(read_data=json.dumps({"type": "Other"})),
+        ):
             result = _load_from_m1("test")
             assert result is None
 
@@ -148,7 +165,9 @@ class TestLoadFromM1:
     def test_parse_error_skipped(self, mock_dir):
         mock_dir.exists.return_value = True
         mock_dir.glob.return_value = [Path("WORKFLOW-bad.yaml")]
-        with patch("ecos.workflow.loader.open", mock_open(read_data="not valid yaml: {")):
+        with patch(
+            "ecos.workflow.loader.open", mock_open(read_data="not valid yaml: {")
+        ):
             result = _load_from_m1("test")
             assert result is None
 
@@ -156,6 +175,7 @@ class TestLoadFromM1:
 # =========================================================================
 # list_workflows
 # =========================================================================
+
 
 class TestListWorkflows:
     @patch("ecos.workflow.loader.M1_WF_DIR")
@@ -171,7 +191,9 @@ class TestListWorkflows:
         mock_m1.exists.return_value = True
         mock_m1.glob.return_value = [Path("WORKFLOW-test.yaml")]
         mock_wf.exists.return_value = False
-        with patch("ecos.workflow.loader.open", mock_open(read_data=json.dumps(SAMPLE_M1_WF))):
+        with patch(
+            "ecos.workflow.loader.open", mock_open(read_data=json.dumps(SAMPLE_M1_WF))
+        ):
             result = list_workflows()
             assert len(result) == 1
             assert result[0]["source"] == "m1"
@@ -184,7 +206,9 @@ class TestListWorkflows:
         mock_m1.glob.return_value = [Path("WORKFLOW-test.yaml")]
         mock_wf.exists.return_value = True
         mock_wf.glob.return_value = [Path("test-m1.yaml")]
-        with patch("ecos.workflow.loader.open", mock_open(read_data=json.dumps(SAMPLE_M1_WF))):
+        with patch(
+            "ecos.workflow.loader.open", mock_open(read_data=json.dumps(SAMPLE_M1_WF))
+        ):
             result = list_workflows()
             names = [w["name"] for w in result]
             assert names.count("test-m1") == 1
@@ -193,6 +217,7 @@ class TestListWorkflows:
 # =========================================================================
 # list_from_m1
 # =========================================================================
+
 
 class TestListFromM1:
     @patch("ecos.workflow.loader.M1_WF_DIR")
@@ -204,7 +229,9 @@ class TestListFromM1:
     def test_lists_workflows(self, mock_dir):
         mock_dir.exists.return_value = True
         mock_dir.glob.return_value = [Path("WORKFLOW-test.yaml")]
-        with patch("ecos.workflow.loader.open", mock_open(read_data=json.dumps(SAMPLE_M1_WF))):
+        with patch(
+            "ecos.workflow.loader.open", mock_open(read_data=json.dumps(SAMPLE_M1_WF))
+        ):
             result = list_from_m1()
             assert len(result) == 1
             assert result[0]["id"] == "workflow-test-m1"
@@ -215,7 +242,10 @@ class TestListFromM1:
     def test_skips_non_workflow(self, mock_dir):
         mock_dir.exists.return_value = True
         mock_dir.glob.return_value = [Path("WORKFLOW-other.yaml")]
-        with patch("ecos.workflow.loader.open", mock_open(read_data=json.dumps({"type": "Other"}))):
+        with patch(
+            "ecos.workflow.loader.open",
+            mock_open(read_data=json.dumps({"type": "Other"})),
+        ):
             assert list_from_m1() == []
 
 
@@ -223,10 +253,13 @@ class TestListFromM1:
 # _execute_step
 # =========================================================================
 
+
 class TestExecuteStep:
     @patch("ecos.workflow.actions.subprocess.run")
     def test_health_check_ok(self, mock_run):
-        mock_run.return_value.stdout = json.dumps({"results": [{"pass": True}, {"pass": True}]})
+        mock_run.return_value.stdout = json.dumps(
+            {"results": [{"pass": True}, {"pass": True}]}
+        )
         result = _execute_step("health_check")
         assert result["passed"] is True
 
@@ -240,6 +273,7 @@ class TestExecuteStep:
     def test_health_check_parse_error(self, mock_run):
         mock_run.return_value.stdout = "not json"
         from unittest.mock import MagicMock
+
         mock_run.return_value = MagicMock()
         mock_run.return_value.stdout = "not json"
         result = _execute_step("health_check")
@@ -307,6 +341,7 @@ class TestExecuteStep:
 # execute_workflow (向后兼容)
 # =========================================================================
 
+
 class TestExecuteWorkflow:
     @patch("ecos.workflow.executor.load_workflow")
     def test_workflow_not_found(self, mock_load):
@@ -361,7 +396,9 @@ class TestExecuteWorkflow:
     @patch("ecos.workflow.executor.log_operation")
     def test_workflow_step_exception(self, mock_log, mock_load):
         mock_load.return_value = SAMPLE_WF
-        with patch("ecos.workflow.executor._execute_step", side_effect=ValueError("boom")):
+        with patch(
+            "ecos.workflow.executor._execute_step", side_effect=ValueError("boom")
+        ):
             result = execute_workflow("test")
             assert result["failed"] == 2
 
@@ -393,7 +430,10 @@ class TestExecuteWorkflow:
             "steps": [{"name": "m1-step", "action": "health_check"}],
         }
         mock_load.return_value = m1_wf
-        with patch("ecos.workflow.executor._execute_step", return_value={"passed": True, "summary": "routed"}):
+        with patch(
+            "ecos.workflow.executor._execute_step",
+            return_value={"passed": True, "summary": "routed"},
+        ):
             result = execute_workflow("m1-workflow")
             assert result["source"] == "m1"
             assert result["passed"] == 1
@@ -403,14 +443,17 @@ class TestExecuteWorkflow:
 # 新功能: execute_m1_workflow + BackendRegistry
 # =========================================================================
 
+
 class TestExecuteM1Workflow:
     @patch("ecos.workflow.executor.load_workflow")
     def test_backend_routing(self, mock_load):
         wf = {**SAMPLE_BACKEND_WF}
         mock_load.return_value = wf
+
         # 注册一个测试后端
         def _test_backend(m1, params=None):
             return {"passed": True, "summary": "test backend"}
+
         register("test-backend", "tests.test_workflow", "_test_backend")
         result = execute_m1_workflow("test")
         assert result["source"] == "m1"
@@ -438,8 +481,12 @@ class TestBackendRegistry:
         assert callable(fn)
 
     def test_resolve_by_name(self):
-        register("resolve-test", "ecos.workflow.executor", "_execute_step",
-                 description="resolve test")
+        register(
+            "resolve-test",
+            "ecos.workflow.executor",
+            "_execute_step",
+            description="resolve test",
+        )
         wf = {"execution": {"backend": "resolve-test"}}
         fn = resolve(wf)
         assert callable(fn)
@@ -448,6 +495,7 @@ class TestBackendRegistry:
 # =========================================================================
 # 事件监听器
 # =========================================================================
+
 
 class TestEventListener:
     def test_build_trigger_registry(self):
@@ -487,31 +535,37 @@ class TestEventListener:
 
 class TestValidator:
     def test_validate_workflow_unknown_mode(self):
-        violations = validate_workflow({
-            "execution": {"mode": "unknown"},
-            "steps": [{"name": "s1", "action": "test"}],
-        })
+        violations = validate_workflow(
+            {
+                "execution": {"mode": "unknown"},
+                "steps": [{"name": "s1", "action": "test"}],
+            }
+        )
         # X1: mode 未知, 步骤通过
         mode_violations = [v for v in violations if v["id"] == "WF-V001"]
         assert len(mode_violations) == 1
 
     def test_validate_workflow_broken_dep(self):
-        violations = validate_workflow({
-            "steps": [
-                {"name": "step-2", "action": "test", "depends_on": ["step-1"]},
-            ],
-        })
+        violations = validate_workflow(
+            {
+                "steps": [
+                    {"name": "step-2", "action": "test", "depends_on": ["step-1"]},
+                ],
+            }
+        )
         dep_violations = [v for v in violations if v["id"] == "WF-V002"]
         assert len(dep_violations) == 1
 
     def test_validate_workflow_clean(self):
-        violations = validate_workflow({
-            "execution": {"mode": "workflow"},
-            "steps": [
-                {"name": "step-1", "action": "test"},
-                {"name": "step-2", "action": "test", "depends_on": ["step-1"]},
-            ],
-        })
+        violations = validate_workflow(
+            {
+                "execution": {"mode": "workflow"},
+                "steps": [
+                    {"name": "step-1", "action": "test"},
+                    {"name": "step-2", "action": "test", "depends_on": ["step-1"]},
+                ],
+            }
+        )
         clean = [v for v in violations if v.get("severity") == "error"]
         assert len(clean) == 0
 
@@ -520,19 +574,24 @@ class TestValidator:
 # 白盒补全: X2/X3/X4/M0/Agora 层测试
 # =========================================================================
 
+
 class TestX2BudgetDeducer:
     def test_check_budget_no_config(self):
         from ecos.workflow.validator import X2BudgetDeducer
+
         result = X2BudgetDeducer.check_budget({})
         assert result["ok"] is True
         assert not result["budget"]
 
     def test_deduct_creates_ledger(self, tmp_path):
         from ecos.workflow.validator import X2BudgetDeducer
+
         original = X2BudgetDeducer.LEDGER_PATH
         X2BudgetDeducer.LEDGER_PATH = tmp_path / "test_ledger.jsonl"
         try:
-            result = X2BudgetDeducer.deduct("wf-test", {"execution": {"budget": {"token_limit": 1000}}})
+            result = X2BudgetDeducer.deduct(
+                "wf-test", {"execution": {"budget": {"token_limit": 1000}}}
+            )
             assert result["ok"] is True
             assert result["balance_before"] == 100000  # default
             assert result["balance_after"] == 99000
@@ -543,22 +602,30 @@ class TestX2BudgetDeducer:
     def test_read_balance_from_ledger(self, tmp_path):
         from ecos.workflow.validator import X2BudgetDeducer
         import json
+
         ledger = tmp_path / "test_ledger.jsonl"
-        ledger.write_text(json.dumps({"event": "deduct", "balance_after": 50000}) + "\n")
+        ledger.write_text(
+            json.dumps({"event": "deduct", "balance_after": 50000}) + "\n"
+        )
         original = X2BudgetDeducer.LEDGER_PATH
         X2BudgetDeducer.LEDGER_PATH = ledger
         try:
-            result = X2BudgetDeducer.check_budget({"execution": {"budget": {"token_limit": 1000}}})
+            result = X2BudgetDeducer.check_budget(
+                {"execution": {"budget": {"token_limit": 1000}}}
+            )
             assert result["balance"] == 50000
         finally:
             X2BudgetDeducer.LEDGER_PATH = original
 
     def test_debt_generated_on_negative(self, tmp_path):
         from ecos.workflow.validator import X2BudgetDeducer
+
         original = X2BudgetDeducer.LEDGER_PATH
         X2BudgetDeducer.LEDGER_PATH = tmp_path / "debt_ledger.jsonl"
         try:
-            result = X2BudgetDeducer.deduct("wf-debt", {"execution": {"budget": {"token_limit": 200000}}})  # > default 100000
+            result = X2BudgetDeducer.deduct(
+                "wf-debt", {"execution": {"budget": {"token_limit": 200000}}}
+            )  # > default 100000
             assert result["debt_generated"] is True
             assert result["balance_after"] < 0
         finally:
@@ -568,6 +635,7 @@ class TestX2BudgetDeducer:
 class TestX3CostRecorder:
     def test_record_creates_entry(self, tmp_path):
         from ecos.workflow.validator import X3CostRecorder
+
         original = X3CostRecorder.LEDGER_PATH
         X3CostRecorder.LEDGER_PATH = tmp_path / "cost_ledger.jsonl"
         try:
@@ -593,11 +661,14 @@ class TestX2CircuitBreak:
             "name": "test-budget-wf",
             "steps": [{"name": "s1", "action": "health_check"}],
             "execution": {
-                "backend": "default", "mode": "sequential",
+                "backend": "default",
+                "mode": "sequential",
                 "budget": {"token_limit": 500},
             },
         }
-        monkeypatch.setattr("ecos.workflow.executor.load_workflow", lambda name: test_wf)
+        monkeypatch.setattr(
+            "ecos.workflow.executor.load_workflow", lambda name: test_wf
+        )
 
         # 设置余额不足
         original = X2BudgetDeducer.LEDGER_PATH
@@ -622,11 +693,14 @@ class TestX2CircuitBreak:
         from ecos.workflow.validator import X2BudgetDeducer
         import json
 
-        monkeypatch.setattr("ecos.workflow.executor.load_workflow", lambda name: {
-            "name": "test-no-budget",
-            "steps": [{"name": "s1", "action": "health_check"}],
-            "execution": {"backend": "default"},
-        })
+        monkeypatch.setattr(
+            "ecos.workflow.executor.load_workflow",
+            lambda name: {
+                "name": "test-no-budget",
+                "steps": [{"name": "s1", "action": "health_check"}],
+                "execution": {"backend": "default"},
+            },
+        )
 
         original = X2BudgetDeducer.LEDGER_PATH
         ledger = tmp_path / "x2_nobudget.jsonl"
@@ -655,16 +729,20 @@ class TestX2CircuitBreak:
 
         try:
             # 余额不足 (100 < 500)
-            status = X2BudgetDeducer.check_budget({
-                "execution": {"budget": {"token_limit": 500}},
-            })
+            status = X2BudgetDeducer.check_budget(
+                {
+                    "execution": {"budget": {"token_limit": 500}},
+                }
+            )
             assert status["ok"] is False
             assert any("余额不足" in w for w in status.get("warnings", []))
 
             # 余额充足
-            status2 = X2BudgetDeducer.check_budget({
-                "execution": {"budget": {"token_limit": 50}},
-            })
+            status2 = X2BudgetDeducer.check_budget(
+                {
+                    "execution": {"budget": {"token_limit": 50}},
+                }
+            )
             assert status2["ok"] is True
         finally:
             X2BudgetDeducer.LEDGER_PATH = original
@@ -673,6 +751,7 @@ class TestX2CircuitBreak:
 class TestX4ConsistencyChecker:
     def test_check_result_ok(self):
         from ecos.workflow.validator import X4ConsistencyChecker
+
         violations = X4ConsistencyChecker.check_result(
             {"steps": [{"name": "s1"}]},
             {"passed": 1, "failed": 0, "steps": [{"name": "s1", "status": "ok"}]},
@@ -681,6 +760,7 @@ class TestX4ConsistencyChecker:
 
     def test_check_result_failed(self):
         from ecos.workflow.validator import X4ConsistencyChecker
+
         violations = X4ConsistencyChecker.check_result(
             {"steps": [{"name": "s1"}]},
             {"passed": 0, "failed": 1, "steps": [{"name": "s1", "status": "failed"}]},
@@ -689,6 +769,7 @@ class TestX4ConsistencyChecker:
 
     def test_check_result_mismatch_count(self):
         from ecos.workflow.validator import X4ConsistencyChecker
+
         violations = X4ConsistencyChecker.check_result(
             {"steps": [{"name": "s1"}, {"name": "s2"}]},
             {"passed": 1, "failed": 0, "steps": [{"name": "s1", "status": "ok"}]},
@@ -700,13 +781,18 @@ class TestM0Snapshot:
     def test_generate_snapshot(self, tmp_path):
         from ecos.workflow.validator import generate_m0_snapshot, M0_SNAPSHOT_DIR
         import yaml
+
         original = M0_SNAPSHOT_DIR
         import ecos.workflow.validator as vmod
+
         vmod.M0_SNAPSHOT_DIR = tmp_path / "m0"
         try:
             path = generate_m0_snapshot(
                 "wf-m0-test",
-                {"name": "M0 Test", "execution": {"mode": "workflow", "backend": "default"}},
+                {
+                    "name": "M0 Test",
+                    "execution": {"mode": "workflow", "backend": "default"},
+                },
                 {"passed": 1, "failed": 0, "steps": [{"name": "s1", "status": "ok"}]},
             )
             assert path is not None
@@ -722,13 +808,18 @@ class TestM0Snapshot:
         from ecos.workflow.validator import generate_m0_snapshot, M0_SNAPSHOT_DIR
         import yaml
         import ecos.workflow.validator as vmod
+
         original = M0_SNAPSHOT_DIR
         vmod.M0_SNAPSHOT_DIR = tmp_path / "m0-fail"
         try:
             path = generate_m0_snapshot(
                 "wf-fail",
                 {"name": "Fail Test", "execution": {}},
-                {"passed": 0, "failed": 2, "steps": [{"name": "s1", "status": "failed"}]},
+                {
+                    "passed": 0,
+                    "failed": 2,
+                    "steps": [{"name": "s1", "status": "failed"}],
+                },
             )
             assert path is not None
             with open(path) as f:
@@ -750,10 +841,15 @@ class TestSymphonyBackend:
 
         monkeypatch.setattr(symphony, "append_jsonl_record", fake_append)
 
-        result = symphony.execute({"id": "wf-symphony", "steps": [{"name": "s1", "action": "health_check"}]})
+        result = symphony.execute(
+            {"id": "wf-symphony", "steps": [{"name": "s1", "action": "health_check"}]}
+        )
 
         assert result["passed"] >= 1
-        assert captured["path"] == Path.home() / ".omo" / "state" / "llm_quota_ledger.jsonl"
+        assert (
+            captured["path"]
+            == Path.home() / ".omo" / "state" / "llm_quota_ledger.jsonl"
+        )
         assert captured["entry"]["event"] == "cost_record"
         assert captured["entry"]["workflow_id"] == "wf-symphony"
 
@@ -761,24 +857,36 @@ class TestSymphonyBackend:
 class TestAgoraBackend:
     def test_step_to_bos_uri_output(self):
         from ecos.workflow.agora_mcp_backend import _step_to_bos_uri
+
         result = _step_to_bos_uri(
-            {"name": "test", "action": "research", "output": ["bos://analysis/minerva/research"]},
+            {
+                "name": "test",
+                "action": "research",
+                "output": ["bos://analysis/minerva/research"],
+            },
             "research",
         )
         assert result == "bos://analysis/minerva/research"
 
     def test_step_to_bos_uri_action_map(self):
         from ecos.workflow.agora_mcp_backend import _step_to_bos_uri
-        result = _step_to_bos_uri({"name": "test", "action": "health_check"}, "health_check")
+
+        result = _step_to_bos_uri(
+            {"name": "test", "action": "health_check"}, "health_check"
+        )
         assert result == "bos://governance/omo/audit"
 
     def test_step_to_bos_uri_fallback(self):
         from ecos.workflow.agora_mcp_backend import _step_to_bos_uri
-        result = _step_to_bos_uri({"name": "test", "action": "custom_thing"}, "custom_thing")
+
+        result = _step_to_bos_uri(
+            {"name": "test", "action": "custom_thing"}, "custom_thing"
+        )
         assert "bos://" in result
 
     def test_agora_execute_fallback_on_unreachable(self):
         from ecos.workflow.agora_mcp_backend import execute
+
         result = execute({"steps": [{"name": "s1", "action": "health_check"}]})
         # Agora is unreachable, should fallback gracefully
         assert "steps" in result
@@ -787,11 +895,13 @@ class TestAgoraBackend:
 class TestEventTriggerHeal:
     def test_execute_matched_empty_event(self):
         from ecos.workflow.event_listener import execute_matched
+
         results = execute_matched({"bos_uri": "bos://nonexistent/event"})
         assert results == []
 
     def test_trigger_heal_with_default(self):
         from ecos.workflow.event_listener import _trigger_heal
+
         result = _trigger_heal("wf-failed", {"failed": 2, "passed": 0})
         assert result is not None
         # Falls back to health check when heal workflow doesn't exist
@@ -901,12 +1011,14 @@ class TestDynamicBackend:
         assert d2["action"] == "domain_audit"
 
         # 第三次调用: 返回 __done__
-        d3 = planner.decide({
-            "results": [
-                {"step": "health_check", "ok": True},
-                {"step": "domain_audit", "ok": True},
-            ],
-        })
+        d3 = planner.decide(
+            {
+                "results": [
+                    {"step": "health_check", "ok": True},
+                    {"step": "domain_audit", "ok": True},
+                ],
+            }
+        )
         assert d3["action"] == "__done__"
 
 
@@ -915,41 +1027,57 @@ class TestCustomCommand:
 
     def test_execute_custom_command_ok(self):
         from ecos.workflow.executor import _execute_step
-        result = _execute_step("custom_pwd", step={
-            "name": "测试pwd",
-            "action": "custom_pwd",
-            "command": "echo hello_world",
-        })
+
+        result = _execute_step(
+            "custom_pwd",
+            step={
+                "name": "测试pwd",
+                "action": "custom_pwd",
+                "command": "echo hello_world",
+            },
+        )
         assert result["passed"] is True
         assert "hello_world" in result.get("summary", "")
 
     def test_execute_custom_command_fails(self):
         from ecos.workflow.executor import _execute_step
-        result = _execute_step("custom_false", step={
-            "name": "测试false",
-            "action": "custom_false",
-            "command": "false",
-        })
+
+        result = _execute_step(
+            "custom_false",
+            step={
+                "name": "测试false",
+                "action": "custom_false",
+                "command": "false",
+            },
+        )
         assert result["passed"] is False
 
     def test_execute_custom_command_not_found(self):
         from ecos.workflow.executor import _execute_step
-        result = _execute_step("nonexistent_bin", step={
-            "name": "测试不存在",
-            "action": "nonexistent_bin",
-            "command": "/nonexistent/binary --flag",
-        })
+
+        result = _execute_step(
+            "nonexistent_bin",
+            step={
+                "name": "测试不存在",
+                "action": "nonexistent_bin",
+                "command": "/nonexistent/binary --flag",
+            },
+        )
         assert result["passed"] is False
         assert "未找到" in result.get("summary", "")
 
     def test_execute_custom_command_timeout(self):
         from ecos.workflow.executor import _execute_step
-        result = _execute_step("custom_sleep", step={
-            "name": "测试超时",
-            "action": "custom_sleep",
-            "command": "sleep 30",
-            "timeout": 1,
-        })
+
+        result = _execute_step(
+            "custom_sleep",
+            step={
+                "name": "测试超时",
+                "action": "custom_sleep",
+                "command": "sleep 30",
+                "timeout": 1,
+            },
+        )
         assert result["passed"] is False
         assert "超时" in result.get("summary", "")
 
@@ -971,15 +1099,22 @@ class TestCustomCommand:
     def test_registered_action_still_works(self):
         """已注册 action 不受影响"""
         from ecos.workflow.executor import _execute_step
+
         # domain_audit 是已注册 action，即使传了 command 也不该用 command
-        result = _execute_step("domain_audit", step={
-            "name": "审计",
-            "action": "domain_audit",
-            "command": "echo should_not_run",
-        })
+        result = _execute_step(
+            "domain_audit",
+            step={
+                "name": "审计",
+                "action": "domain_audit",
+                "command": "echo should_not_run",
+            },
+        )
         # domain_audit 依赖 ~/bin/ecos，但这是已注册 action
         # 所以 command 字段被忽略，走正常 action 路由
-        assert "result" not in result or result.get("result", {}).get("stdout", "") != "should_not_run"
+        assert (
+            "result" not in result
+            or result.get("result", {}).get("stdout", "") != "should_not_run"
+        )
 
 
 class TestSubWorkflow:
@@ -987,6 +1122,7 @@ class TestSubWorkflow:
 
     def test_workflow_run_action_registered(self):
         from ecos.workflow.actions import list_actions, resolve_action
+
         names = {a["name"] for a in list_actions()}
         assert "workflow_run" in names
 
@@ -995,6 +1131,7 @@ class TestSubWorkflow:
 
     def test_workflow_run_no_name(self):
         from ecos.workflow.actions import resolve_action
+
         handler = resolve_action("workflow_run")
         result = handler({})
         assert result["passed"] is False
@@ -1003,11 +1140,15 @@ class TestSubWorkflow:
     def test_step_workflow_field_merged_to_params(self):
         """step 中的 workflow 字段应合并到 handler params"""
         from ecos.workflow.executor import _execute_step
-        result = _execute_step("workflow_run", step={
-            "name": "子工作流",
-            "action": "workflow_run",
-            "workflow": "WORKFLOW-ECOS-DAILY-HEALTH",
-        })
+
+        result = _execute_step(
+            "workflow_run",
+            step={
+                "name": "子工作流",
+                "action": "workflow_run",
+                "workflow": "WORKFLOW-ECOS-DAILY-HEALTH",
+            },
+        )
         # WORKFLOW-ECOS-DAILY-HEALTH 存在，所以不应返回"未指定"
         summary = result.get("summary", "")
         assert "未指定" not in summary, f"不应是未指定: {summary}"
@@ -1019,8 +1160,11 @@ class TestSubWorkflow:
         wf = {
             "execution": {"backend": "default", "mode": "sequential"},
             "steps": [
-                {"name": "子工作流", "action": "workflow_run",
-                 "workflow": "WORKFLOW-ECOS-DAILY-HEALTH"},
+                {
+                    "name": "子工作流",
+                    "action": "workflow_run",
+                    "workflow": "WORKFLOW-ECOS-DAILY-HEALTH",
+                },
             ],
         }
         fn = resolve(wf)
@@ -1036,23 +1180,32 @@ class TestRetryStrategy:
 
     def test_parse_retry_config_empty(self):
         from ecos.workflow.backend_registry import _parse_retry_config
+
         assert _parse_retry_config({}) == {}
 
     def test_parse_retry_config_legacy(self):
         from ecos.workflow.backend_registry import _parse_retry_config
+
         cfg = _parse_retry_config({"max_retries": 3})
         assert cfg["max_attempts"] == 3
         assert cfg["policy"] == "on_failure"
 
     def test_parse_retry_config_full(self):
         from ecos.workflow.backend_registry import _parse_retry_config
-        cfg = _parse_retry_config({
-            "retry": {
-                "max_attempts": 5,
-                "policy": "always",
-                "backoff": {"initial_delay": 2.0, "multiplier": 3.0, "max_delay": 120.0},
-            },
-        })
+
+        cfg = _parse_retry_config(
+            {
+                "retry": {
+                    "max_attempts": 5,
+                    "policy": "always",
+                    "backoff": {
+                        "initial_delay": 2.0,
+                        "multiplier": 3.0,
+                        "max_delay": 120.0,
+                    },
+                },
+            }
+        )
         assert cfg["max_attempts"] == 5
         assert cfg["policy"] == "always"
         assert cfg["backoff"]["initial_delay"] == 2.0
@@ -1060,7 +1213,15 @@ class TestRetryStrategy:
 
     def test_compute_backoff(self):
         from ecos.workflow.backend_registry import _compute_backoff_delay
-        cfg = {"backoff": {"initial_delay": 1.0, "multiplier": 2.0, "max_delay": 60.0, "jitter": 0.0}}
+
+        cfg = {
+            "backoff": {
+                "initial_delay": 1.0,
+                "multiplier": 2.0,
+                "max_delay": 60.0,
+                "jitter": 0.0,
+            }
+        }
         d1 = _compute_backoff_delay(1, cfg)
         d2 = _compute_backoff_delay(2, cfg)
         d7 = _compute_backoff_delay(7, cfg)
@@ -1070,11 +1231,13 @@ class TestRetryStrategy:
 
     def test_should_retry_failure(self):
         from ecos.workflow.backend_registry import _should_retry
+
         assert _should_retry("on_failure", {"passed": False}, None) is True
         assert _should_retry("on_error", {"passed": False}, None) is False
 
     def test_should_retry_error(self):
         from ecos.workflow.backend_registry import _should_retry
+
         assert _should_retry("on_error", {}, Exception("boom")) is True
         assert _should_retry("on_failure", {}, Exception("boom")) is False
 
@@ -1084,6 +1247,7 @@ class TestDAGExecution:
 
     def test_no_deps_single_layer(self):
         from ecos.workflow.backend_registry import _topological_sort
+
         steps = [
             {"name": "A", "action": "health_check"},
             {"name": "B", "action": "domain_audit"},
@@ -1096,6 +1260,7 @@ class TestDAGExecution:
 
     def test_with_deps_multi_layer(self):
         from ecos.workflow.backend_registry import _topological_sort
+
         steps = [
             {"name": "A", "action": "check", "depends_on": []},
             {"name": "B", "action": "process", "depends_on": ["A"]},
@@ -1109,6 +1274,7 @@ class TestDAGExecution:
 
     def test_diamond_deps(self):
         from ecos.workflow.backend_registry import _topological_sort
+
         steps = [
             {"name": "A", "action": "start", "depends_on": []},
             {"name": "B", "action": "parallel_1", "depends_on": ["A"]},
@@ -1123,6 +1289,7 @@ class TestDAGExecution:
 
     def test_default_executor_respects_deps(self, monkeypatch):
         from ecos.workflow.backend_registry import resolve
+
         executed_order = []
 
         def mock_execute(m1_node, params=None):
@@ -1131,7 +1298,9 @@ class TestDAGExecution:
                 executed_order.append(step.get("name", ""))
             return {"steps": [], "passed": 0, "failed": 0}
 
-        monkeypatch.setattr("ecos.workflow.backend_registry._default_executor", mock_execute)
+        monkeypatch.setattr(
+            "ecos.workflow.backend_registry._default_executor", mock_execute
+        )
 
         wf = {
             "execution": {"backend": "default", "mode": "sequential"},
@@ -1151,35 +1320,44 @@ class TestConditionalSteps:
 
     def test_no_condition_runs(self):
         from ecos.workflow.backend_registry import _evaluate_when
+
         assert _evaluate_when("", {"steps": []}) is False
 
     def test_skip_when_passed_is_false(self):
         from ecos.workflow.backend_registry import _evaluate_when
+
         results = {"steps": [{"name": "前置", "status": "failed"}]}
         assert _evaluate_when("${steps.前置.passed}", results) is True
 
     def test_run_when_passed_is_true(self):
         from ecos.workflow.backend_registry import _evaluate_when
+
         results = {"steps": [{"name": "前置", "status": "ok"}]}
         assert _evaluate_when("${steps.前置.passed}", results) is False
 
     def test_run_when_failed_is_true(self):
         from ecos.workflow.backend_registry import _evaluate_when
+
         results = {"steps": [{"name": "前置", "status": "failed"}]}
         assert _evaluate_when("${steps.前置.failed}", results) is False  # False=不跳过
 
     def test_skip_when_failed_is_false(self):
         from ecos.workflow.backend_registry import _evaluate_when
+
         results = {"steps": [{"name": "前置", "status": "ok"}]}
-        assert _evaluate_when("${steps.前置.failed}", results) is True  # True=跳过（条件不满足）
+        assert (
+            _evaluate_when("${steps.前置.failed}", results) is True
+        )  # True=跳过（条件不满足）
 
     def test_referenced_step_not_found(self):
         from ecos.workflow.backend_registry import _evaluate_when
+
         assert _evaluate_when("${steps.未知.passed}", {"steps": []}) is False
 
     def test_skipped_step_in_executor(self, monkeypatch):
         """通过 executor 验证条件跳过"""
         from ecos.workflow.backend_registry import resolve
+
         executed_steps = []
 
         def mock_execute(m1_node, params=None):
@@ -1188,23 +1366,33 @@ class TestConditionalSteps:
             for s in m1_node.get("steps", []):
                 name = s.get("name", "")
                 if name == "前置":
-                    result["steps"].append({"name": name, "status": "failed", "result": {"passed": False}})
+                    result["steps"].append(
+                        {"name": name, "status": "failed", "result": {"passed": False}}
+                    )
                     result["failed"] += 1
                 else:
-                    result["steps"].append({"name": name, "status": "ok", "result": {"passed": True}})
+                    result["steps"].append(
+                        {"name": name, "status": "ok", "result": {"passed": True}}
+                    )
                     result["passed"] += 1
                 executed_steps.append(name)
             return result
 
-        monkeypatch.setattr("ecos.workflow.backend_registry._default_executor", mock_execute)
+        monkeypatch.setattr(
+            "ecos.workflow.backend_registry._default_executor", mock_execute
+        )
 
         # 当 前置 失败时，后置 应被跳过
         wf = {
             "execution": {"backend": "default", "mode": "sequential"},
             "steps": [
                 {"name": "前置", "action": "health_check"},
-                {"name": "后置", "action": "echo", "command": "echo skip",
-                 "when": "${steps.前置.failed}"},
+                {
+                    "name": "后置",
+                    "action": "echo",
+                    "command": "echo skip",
+                    "when": "${steps.前置.failed}",
+                },
             ],
         }
         fn = resolve(wf)

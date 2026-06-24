@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# ─── ecos pre-push 门禁 ────────────────────────────────
+# 策略: 全量 ruff 检查 + 快速测试子集 (smoke)
+# 跳过: SKIP_GATE=true git push
+# 快速: QUICK_PUSH=true (只走 lint, 跳过测试)
+# ──────────────────────────────────────────────────────
+
+set -eo pipefail
+
+if [ "${SKIP_GATE:-}" = "true" ]; then
+    echo "🔓 SKIP_GATE=true — 跳过 pre-push 检查"
+    exit 0
+fi
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+echo "🔍 Pre-push: $(basename $REPO_ROOT)"
+PASS=true
+
+cd "$REPO_ROOT"
+
+# ── 全量 lint ─────────────────────────────────────────
+echo "  · ruff check src/ ..."
+if ! ruff check src/ 2>/dev/null; then
+    echo "❌ ruff check 失败"
+    PASS=false
+fi
+
+echo "  · ruff format --check src/ ..."
+if ! ruff format --check src/ 2>/dev/null; then
+    echo "❌ ruff format 不符合规范"
+    PASS=false
+fi
+
+# ── 快速测试 (除非 QUICK_PUSH) ────────────────────────
+if [ "${QUICK_PUSH:-}" != "true" ] && [ -d tests ]; then
+    echo "  · pytest smoke (test_workflow_e2e) ..."
+    if ! uv run pytest tests/test_workflow_e2e.py -q --tb=no 2>/dev/null; then
+        echo "❌ smoke test 失败"
+        PASS=false
+    fi
+fi
+
+if [ "$PASS" = "true" ]; then
+    echo "✅ Pre-push check passed"
+else
+    echo ""
+    echo "❌ Pre-push gate rejected — fix and retry (SKIP_GATE=true to bypass)"
+    exit 1
+fi

@@ -23,17 +23,25 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-G = "\033[92m"; C = "\033[96m"; Y = "\033[93m"; B = "\033[1m"; N = "\033[0m"  # noqa: E702
+G = "\033[92m"
+C = "\033[96m"
+Y = "\033[93m"
+B = "\033[1m"
+N = "\033[0m"  # noqa: E702
 
 
 def ask(prompt: str, default: str = "") -> str:
-    val = input(f"  {C}?{N} {prompt}" + (f" [{Y}{default}{N}]" if default else "") + ": ").strip()
+    val = input(
+        f"  {C}?{N} {prompt}" + (f" [{Y}{default}{N}]" if default else "") + ": "
+    ).strip()
     return val if val else default
 
 
 def progress(current: int, total: int, label: str):
     filled = int(current / total * 20)
-    sys.stdout.write(f"\r  {G}{'█' * filled}{'░' * (20 - filled)}{N} {current}/{total}  {label}{' ' * 20}")
+    sys.stdout.write(
+        f"\r  {G}{'█' * filled}{'░' * (20 - filled)}{N} {current}/{total}  {label}{' ' * 20}"
+    )
     sys.stdout.flush()
 
 
@@ -274,12 +282,17 @@ def main():
     # 1. 目录
     progress(1, total, "创建目录")
     dirs = [
-        "驾驶舱/scripts", "驾驶舱/CARDS",
-        "学习进化/1-active/自我剖析", "学习进化/1-active/收件箱",
-        "学习进化/2-knowledge/体系", "学习进化/2-knowledge/基建架构",
+        "驾驶舱/scripts",
+        "驾驶舱/CARDS",
+        "学习进化/1-active/自我剖析",
+        "学习进化/1-active/收件箱",
+        "学习进化/2-knowledge/体系",
+        "学习进化/2-knowledge/基建架构",
         "学习进化/2-knowledge/经验积累/lessons",
-        "学习进化/3-archive/资料库", "学习进化/3-archive/灵感顿悟",
-        "工具箱", "领域知识库",
+        "学习进化/3-archive/资料库",
+        "学习进化/3-archive/灵感顿悟",
+        "工具箱",
+        "领域知识库",
     ]
     if has_work:
         dirs.append("工作文档")
@@ -313,7 +326,9 @@ def main():
         p = target / docpath
         if not p.exists():
             p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_text(f"# {docpath.split('/')[-1]}\n\n> ecos-bootstrap 生成 | {datetime.now().strftime('%Y-%m-%d')}\n\n{doc_content}")
+            p.write_text(
+                f"# {docpath.split('/')[-1]}\n\n> ecos-bootstrap 生成 | {datetime.now().strftime('%Y-%m-%d')}\n\n{doc_content}"
+            )
     (target / "驾驶舱/DASHBOARD.md").write_text(
         f"# DASHBOARD — {name} 的全局状态\n\n"
         f"> ecos-bootstrap 生成 | {datetime.now().strftime('%Y-%m-%d')}\n"
@@ -326,15 +341,16 @@ def main():
     for sub in ["runtime", "events", "sla", "sessions"]:
         (ecos_dir / sub).mkdir(parents=True, exist_ok=True)
     (ecos_dir / "runtime/registry.json").write_text(
-        '{"services":[],"updated_at":"' + datetime.now().isoformat() + '"}')
+        '{"services":[],"updated_at":"' + datetime.now().isoformat() + '"}'
+    )
     time.sleep(0.2)
     progress(5, total, "✅ 运行时目录")
     print()
 
     # ── 完成 ──
-    print(f"\n  {B}{'─'*48}{N}")
+    print(f"\n  {B}{'─' * 48}{N}")
     print(f"  {B}🎉 {name} 的 eCOS 骨架已就绪{N}")
-    print(f"  {B}{'─'*48}{N}")
+    print(f"  {B}{'─' * 48}{N}")
     print(f"  📍  {target}")
     print(f"  🛠️   {script_count} 个核心脚本")
     print(f"  📁  {len(dirs)} 个目录")
@@ -344,11 +360,13 @@ def main():
 
     print(f"\n  {C}扩展脚本 (按需安装):{N}")
     print("    从 eCOS 源安装全部治理脚本:")
-    print("    python3 ecos-bootstrap.py --from /path/to/full/ecos/scripts --target ~/Documents")
+    print(
+        "    python3 ecos-bootstrap.py --from /path/to/full/ecos/scripts --target ~/Documents"
+    )
     print(f"    或: 从 {src} 逐个复制需要的脚本到 ~/Documents/驾驶舱/scripts/")
 
     print(f"\n  {Y}💡 骨架只包含基础治理。需要更高级的功能时，再安装扩展。{N}")
-    print(f"  {'─'*48}\n")
+    print(f"  {'─' * 48}\n")
 
 
 if __name__ == "__main__":

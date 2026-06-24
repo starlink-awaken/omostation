@@ -122,9 +122,22 @@ def scan(volume: str, full: bool = False, max_depth: int = 20) -> dict:
     for root, dirs, files in os.walk(str(base_path)):
         rel_root = os.path.relpath(root, str(base_path))
         # 跳过依赖/构建目录
-        SKIP_DIRS = {'.git', 'node_modules', '__pycache__', '.venv', '.pytest_cache',
-                     '.next', 'dist', 'build', 'target', '.turbo', '.cache',
-                     '.local', '.DS_Store', '.obsidian'}
+        SKIP_DIRS = {
+            ".git",
+            "node_modules",
+            "__pycache__",
+            ".venv",
+            ".pytest_cache",
+            ".next",
+            "dist",
+            "build",
+            "target",
+            ".turbo",
+            ".cache",
+            ".local",
+            ".DS_Store",
+            ".obsidian",
+        }
         dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
 
         if rel_root == ".":
@@ -182,12 +195,17 @@ def scan(volume: str, full: bool = False, max_depth: int = 20) -> dict:
 
     # 更新元数据
     total = conn.execute("SELECT COUNT(*) FROM files").fetchone()[0]
-    conn.execute("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
-                 ("total_files", str(total)))
-    conn.execute("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
-                 ("last_scan", now))
-    conn.execute("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
-                 ("scan_type", "full" if full else "incremental"))
+    conn.execute(
+        "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
+        ("total_files", str(total)),
+    )
+    conn.execute(
+        "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)", ("last_scan", now)
+    )
+    conn.execute(
+        "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
+        ("scan_type", "full" if full else "incremental"),
+    )
     conn.commit()
     conn.close()
 
@@ -214,7 +232,10 @@ def ls(volume: str, subpath: str = "/") -> list[dict]:
             "SELECT path, name, size, type, ext FROM files WHERE depth = 1 ORDER BY type, name"
         ).fetchall()
     conn.close()
-    return [{"path": r[0], "name": r[1], "size": r[2], "type": r[3], "ext": r[4]} for r in rows]
+    return [
+        {"path": r[0], "name": r[1], "size": r[2], "type": r[3], "ext": r[4]}
+        for r in rows
+    ]
 
 
 def search(volume: str, query: str, limit: int = 20) -> list[dict]:
@@ -227,7 +248,17 @@ def search(volume: str, query: str, limit: int = 20) -> list[dict]:
         (like, limit),
     ).fetchall()
     conn.close()
-    return [{"path": r[0], "name": r[1], "size": r[2], "type": r[3], "ext": r[4], "mtime": r[5]} for r in rows]
+    return [
+        {
+            "path": r[0],
+            "name": r[1],
+            "size": r[2],
+            "type": r[3],
+            "ext": r[4],
+            "mtime": r[5],
+        }
+        for r in rows
+    ]
 
 
 def stats(volume: str) -> dict:
@@ -238,8 +269,12 @@ def stats(volume: str) -> dict:
 
     conn = _init_db(volume)
     total = conn.execute("SELECT COUNT(*) FROM files").fetchone()[0]
-    total_size = conn.execute("SELECT COALESCE(SUM(size), 0) FROM files WHERE type='file'").fetchone()[0]
-    by_ext = conn.execute("SELECT ext, COUNT(*) FROM files WHERE type='file' GROUP BY ext ORDER BY COUNT(*) DESC LIMIT 15").fetchall()
+    total_size = conn.execute(
+        "SELECT COALESCE(SUM(size), 0) FROM files WHERE type='file'"
+    ).fetchone()[0]
+    by_ext = conn.execute(
+        "SELECT ext, COUNT(*) FROM files WHERE type='file' GROUP BY ext ORDER BY COUNT(*) DESC LIMIT 15"
+    ).fetchall()
     by_type = conn.execute("SELECT type, COUNT(*) FROM files GROUP BY type").fetchall()
     last_scan = conn.execute("SELECT value FROM meta WHERE key='last_scan'").fetchone()
     conn.close()
@@ -269,13 +304,18 @@ def stats(volume: str) -> dict:
 
 # ── CLI ──
 
+
 def main():
     parser = argparse.ArgumentParser(description="文件目录引擎")
-    parser.add_argument("--scan", metavar="VOLUME", help="全量扫描卷 (bos://catalog/xxx)")
+    parser.add_argument(
+        "--scan", metavar="VOLUME", help="全量扫描卷 (bos://catalog/xxx)"
+    )
     parser.add_argument("--update", metavar="VOLUME", help="增量扫描卷")
     parser.add_argument("--ls", metavar="BOS_URI", help="列出目录")
     parser.add_argument("--search", metavar="QUERY", help="搜索文件")
-    parser.add_argument("--volume", default="shareddisk", help="搜索的卷 (默认 shareddisk)")
+    parser.add_argument(
+        "--volume", default="shareddisk", help="搜索的卷 (默认 shareddisk)"
+    )
     parser.add_argument("--stats", metavar="VOLUME", help="卷统计")
     parser.add_argument("--limit", type=int, default=20, help="结果限制")
     parser.add_argument("--max-depth", type=int, default=15, help="最大扫描深度")
@@ -316,11 +356,11 @@ def main():
                 else:
                     sz = item.get("size", 0)
                     if sz > 1e9:
-                        sz_str = f"{sz/1e9:.1f}GB"
+                        sz_str = f"{sz / 1e9:.1f}GB"
                     elif sz > 1e6:
-                        sz_str = f"{sz/1e6:.1f}MB"
+                        sz_str = f"{sz / 1e6:.1f}MB"
                     else:
-                        sz_str = f"{sz/1e3:.0f}KB"
+                        sz_str = f"{sz / 1e3:.0f}KB"
                     print(f"  📄 {item['name']:30s} {sz_str:>8s}")
     elif isinstance(result, dict):
         if "error" in result:

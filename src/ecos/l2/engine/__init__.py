@@ -17,11 +17,12 @@ from enum import Enum
 from typing import Any, Callable, Optional
 
 
-
 logger = get_logger("engine")
+
 
 class EngineStatus(Enum):
     """引擎状态"""
+
     IDLE = "idle"
     RUNNING = "running"
     STOPPED = "stopped"
@@ -30,6 +31,7 @@ class EngineStatus(Enum):
 
 class TaskStage(Enum):
     """任务阶段"""
+
     PENDING = "pending"
     PLANNING = "planning"
     EXECUTING = "executing"
@@ -41,6 +43,7 @@ class TaskStage(Enum):
 @dataclass
 class EngineConfig:
     """引擎配置"""
+
     engine_id: str
     max_concurrent: int = 10
     timeout_seconds: int = 300
@@ -50,6 +53,7 @@ class EngineConfig:
 @dataclass
 class OrchestrationTask:
     """编排任务"""
+
     task_id: str
     name: str
     stage: TaskStage = TaskStage.PENDING
@@ -111,9 +115,13 @@ class CollaborationEngine:
         try:
             self._registry.register(agent_id, agent_id, capabilities)
             self._role_manager.define_role(
-                __import__("ecos.l0.governance", fromlist=["RoleDefinition"]).RoleDefinition(
+                __import__(
+                    "ecos.l0.governance", fromlist=["RoleDefinition"]
+                ).RoleDefinition(
                     role_id=f"role-{agent_id}",
-                    role_type=__import__("ecos.l0.governance", fromlist=["RoleType"]).RoleType.WORKER,
+                    role_type=__import__(
+                        "ecos.l0.governance", fromlist=["RoleType"]
+                    ).RoleType.WORKER,
                     capabilities=capabilities,
                     constraints={},
                 )
@@ -123,10 +131,14 @@ class CollaborationEngine:
             logger.error("注册 Agent 失败: %s - %s", agent_id, str(e))
             raise ECOSException(f"注册 Agent 失败: {e}")
 
-    def submit_task(self, task_id: str, name: str,
-                    required_capabilities: list[str] | None = None,
-                    priority: int = 0,
-                    dependencies: list[str] | None = None) -> OrchestrationTask:
+    def submit_task(
+        self,
+        task_id: str,
+        name: str,
+        required_capabilities: list[str] | None = None,
+        priority: int = 0,
+        dependencies: list[str] | None = None,
+    ) -> OrchestrationTask:
         try:
             self._scheduler.submit_task(task_id, name, required_capabilities, priority)
             self._task_stages[task_id] = TaskStage.PENDING
@@ -135,7 +147,8 @@ class CollaborationEngine:
                 self._task_dependencies[task_id] = set(dependencies)
 
             task = OrchestrationTask(
-                task_id=task_id, name=name,
+                task_id=task_id,
+                name=name,
                 required_capabilities=required_capabilities or [],
                 priority=priority,
             )
@@ -149,7 +162,9 @@ class CollaborationEngine:
     def set_dependency(self, task_id: str, depends_on: str) -> None:
         self._task_dependencies.setdefault(task_id, set()).add(depends_on)
 
-    def on_complete(self, task_id: str, handler: Callable[[OrchestrationTask], None]) -> None:
+    def on_complete(
+        self, task_id: str, handler: Callable[[OrchestrationTask], None]
+    ) -> None:
         self._completion_handlers[task_id] = handler
 
     def auto_assign(self) -> list[tuple[str, str]]:
@@ -161,9 +176,7 @@ class CollaborationEngine:
                 continue
 
             deps = self._task_dependencies.get(task_id, set())
-            all_done = all(
-                self._task_stages.get(d) == TaskStage.DONE for d in deps
-            )
+            all_done = all(self._task_stages.get(d) == TaskStage.DONE for d in deps)
             if not all_done:
                 continue
 
@@ -203,7 +216,9 @@ class CollaborationEngine:
 
         handler = self._completion_handlers.get(task_id)
         if handler:
-            task = OrchestrationTask(task_id=task_id, name="", stage=TaskStage.DONE, result=result)
+            task = OrchestrationTask(
+                task_id=task_id, name="", stage=TaskStage.DONE, result=result
+            )
             handler(task)
         return True
 
@@ -215,7 +230,9 @@ class CollaborationEngine:
         task_info.metadata["retry_count"] = task_info.metadata.get("retry_count", 0) + 1
         if task_info.metadata["retry_count"] <= self.config.retry_count:
             self._task_stages[task_id] = TaskStage.PENDING
-            self._log_event("task_retry", task_id=task_id, retry=task_info.metadata["retry_count"])
+            self._log_event(
+                "task_retry", task_id=task_id, retry=task_info.metadata["retry_count"]
+            )
             return True
 
         self._scheduler.fail_task(task_id)
@@ -249,11 +266,13 @@ class CollaborationEngine:
         }
 
     def _log_event(self, event_type: str, **kwargs: Any) -> None:
-        self._event_log.append({
-            "type": event_type,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            **kwargs,
-        })
+        self._event_log.append(
+            {
+                "type": event_type,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                **kwargs,
+            }
+        )
 
 
 class SwarmEngine:
@@ -263,7 +282,11 @@ class SwarmEngine:
     """
 
     def __init__(self, config: EngineConfig):
-        from ecos.l0.governance import SwarmManager, CollectiveDecision, EmergenceDetector
+        from ecos.l0.governance import (
+            SwarmManager,
+            CollectiveDecision,
+            EmergenceDetector,
+        )
 
         self.config = config
         self.status = EngineStatus.IDLE
@@ -284,7 +307,9 @@ class SwarmEngine:
         self._log_event("swarm_stopped")
         return True
 
-    def register_agent(self, agent_id: str, metadata: dict[str, Any] | None = None) -> bool:
+    def register_agent(
+        self, agent_id: str, metadata: dict[str, Any] | None = None
+    ) -> bool:
         self._swarm.add_agent(agent_id, initial_state=metadata)
         self._log_event("agent_registered", agent_id=agent_id)
         return True
@@ -302,8 +327,13 @@ class SwarmEngine:
         self._log_event("emergence_detected", patterns=[d["pattern"] for d in detected])
         return detected
 
-    def propose_decision(self, proposal_id: str, title: str,
-                         options: list[str], method: str = "majority_vote") -> dict[str, Any]:
+    def propose_decision(
+        self,
+        proposal_id: str,
+        title: str,
+        options: list[str],
+        method: str = "majority_vote",
+    ) -> dict[str, Any]:
         from ecos.l0.governance import DecisionMethod
 
         method_map = {
@@ -316,9 +346,13 @@ class SwarmEngine:
         dm = method_map.get(method, DecisionMethod.MAJORITY_VOTE)
         proposal = self._decision.create_proposal(proposal_id, title, options, dm)
         self._log_event("decision_proposed", proposal_id=proposal_id)
-        return {"proposal_id": proposal.proposal_id, "title": proposal.title,
-                "options": proposal.options, "method": method,
-                "status": proposal.status}
+        return {
+            "proposal_id": proposal.proposal_id,
+            "title": proposal.title,
+            "options": proposal.options,
+            "method": method,
+            "status": proposal.status,
+        }
 
     def vote(self, proposal_id: str, agent_id: str, option: str) -> bool:
         return self._decision.vote(proposal_id, agent_id, option)
@@ -343,11 +377,13 @@ class SwarmEngine:
         }
 
     def _log_event(self, event_type: str, **kwargs: Any) -> None:
-        self._event_log.append({
-            "type": event_type,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            **kwargs,
-        })
+        self._event_log.append(
+            {
+                "type": event_type,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                **kwargs,
+            }
+        )
 
 
 class PersonalEngine:
@@ -359,7 +395,9 @@ class PersonalEngine:
     def __init__(self, config: EngineConfig):
         from ecos.l0.governance import (
             PersonalKnowledgeManager,
-            PreferenceEngine, RecommendationEngine, KnowledgeGraphBuilder,
+            PreferenceEngine,
+            RecommendationEngine,
+            KnowledgeGraphBuilder,
         )
 
         self.config = config
@@ -375,6 +413,7 @@ class PersonalEngine:
     def _ensure_rec_engine(self) -> None:
         if self._rec_engine is None:
             from ecos.l0.governance import RecommendationEngine
+
             self._rec_engine = RecommendationEngine(self._km, self._pe)
 
     def start(self) -> bool:
@@ -387,8 +426,13 @@ class PersonalEngine:
         self._log_event("engine_stopped")
         return True
 
-    def add_knowledge(self, key: str, content: dict[str, Any],
-                      tags: list[str] | None = None, relations: list[str] | None = None) -> bool:
+    def add_knowledge(
+        self,
+        key: str,
+        content: dict[str, Any],
+        tags: list[str] | None = None,
+        relations: list[str] | None = None,
+    ) -> bool:
         from ecos.l0.governance import KnowledgeNode, KnowledgeType
 
         node = KnowledgeNode(
@@ -400,7 +444,7 @@ class PersonalEngine:
         )
         self._km.add_knowledge(node)
         self._graph.add_node(key, content)
-        for rel in (relations or []):
+        for rel in relations or []:
             self._graph.add_edge(key, rel, "related_to")
         self._log_event("knowledge_added", key=key)
         return True
@@ -430,7 +474,9 @@ class PersonalEngine:
         pref = UserPreference(
             user_id=user_id,
             preference_type=PreferenceType.TOPIC,
-            key=key, value=key, weight=score,
+            key=key,
+            value=key,
+            weight=score,
         )
         self._km.learn_preference(user_id, pref)
         self._pe.learn(user_id, key, key, score)
@@ -438,10 +484,7 @@ class PersonalEngine:
     def get_recommendations(self, user_id: str, limit: int = 5) -> list[dict[str, Any]]:
         self._ensure_rec_engine()
         recs = self._rec_engine.recommend(user_id, limit=limit)
-        return [
-            {"key": r.node_id, "score": r.score, "reason": r.reason}
-            for r in recs
-        ]
+        return [{"key": r.node_id, "score": r.score, "reason": r.reason} for r in recs]
 
     def record_access(self, key: str, user_id: str = "") -> None:
         node = self._km.get_knowledge(key)
@@ -461,8 +504,10 @@ class PersonalEngine:
         }
 
     def _log_event(self, event_type: str, **kwargs: Any) -> None:
-        self._event_log.append({
-            "type": event_type,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            **kwargs,
-        })
+        self._event_log.append(
+            {
+                "type": event_type,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                **kwargs,
+            }
+        )

@@ -14,7 +14,7 @@ MCP Tools:
 
 集成方式 (在 cockpit MCP server 中):
     from l0_mcp_tools import l0_status, l0_validate, l0_audit
-    
+
     @server.tool()
     def l0_status() -> str:
         return l0_status()
@@ -34,7 +34,9 @@ def _run_tool(tool_path: Path, args: list = None) -> dict:
     try:
         result = subprocess.run(
             ["python3", str(tool_path)] + (args or []) + ["--json"],
-            capture_output=True, text=True, timeout=30
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
         if result.returncode == 0 and result.stdout.strip():
             return json.loads(result.stdout)
@@ -46,27 +48,32 @@ def _run_tool(tool_path: Path, args: list = None) -> dict:
 def l0_status() -> str:
     """L0 系统状态摘要 — Agent 启动时调用"""
     _run_tool(MOF, ["status"]) if False else {}
-    
+
     # Direct status computation (bypass subprocess for speed)
-    m1_count = sum(1 for _ in (Path(__file__).resolve().parent.parent / "mof" / "m1").rglob("*.yaml"))
-    m2_count = len(list((Path(__file__).resolve().parent.parent / "mof" / "m2").glob("*.yaml")))
-    
+    m1_count = sum(
+        1
+        for _ in (Path(__file__).resolve().parent.parent / "mof" / "m1").rglob("*.yaml")
+    )
+    m2_count = len(
+        list((Path(__file__).resolve().parent.parent / "mof" / "m2").glob("*.yaml"))
+    )
+
     # Get protocol health
     sla_result = _run_tool(
         Path(__file__).resolve().parent.parent / "tools" / "mof-sla.py",
-        ["--snapshot-only"]
+        ["--snapshot-only"],
     )
-    
+
     lines = [
         "织星 L0 状态:",
         f"  M2 类型: {m2_count}",
         f"  M1 节点: {m1_count}",
         f"  校验: {'✅ 全部通过' if m1_count > 0 else '⚠️'}",
     ]
-    
+
     if sla_result and "protocols" not in str(sla_result):
         pass  # skip error
-    
+
     return "\n".join(lines)
 
 
@@ -75,11 +82,11 @@ def l0_validate() -> str:
     result = _run_tool(MOF_VALIDATE)
     if "error" in result:
         return f"❌ 校验失败: {result['error']}"
-    
+
     node_count = result.get("node_count", "?")
     total = len(result.get("results", []))
     errors = sum(1 for r in result.get("results", []) if r.get("level") == "error")
-    
+
     return f"L0 校验: {node_count} 节点 | 通过: {total - errors}/{total} | {'✅ 全部通过' if errors == 0 else f'❌ {errors} 错误'}"
 
 
@@ -91,7 +98,7 @@ def l0_audit() -> str:
         drift_count = len(drifts)
     else:
         drift_count = drifts
-    
+
     if drift_count == 0:
         return "L0 审计: ✅ 无漂移 — M1 声明与 M0 运行时一致"
     else:
@@ -102,7 +109,7 @@ def l0_protocols() -> str:
     """协议健康度"""
     sla = _run_tool(
         Path(__file__).resolve().parent.parent / "tools" / "mof-sla.py",
-        ["--snapshot-only"]
+        ["--snapshot-only"],
     )
     lines = ["协议健康度:"]
     protocols = sla.get("protocols", {}) if isinstance(sla, dict) else {}
@@ -117,17 +124,20 @@ def l0_protocols() -> str:
 def l0_adr_list() -> str:
     """ADR 列表"""
     import yaml
+
     decisions_dir = Path(__file__).resolve().parent.parent / "mof" / "m1" / "decision"
     if not decisions_dir.exists():
         return "L0 ADR: 无决策记录"
-    
+
     lines = ["架构决策记录 (ADR):"]
     for f in sorted(decisions_dir.glob("*.yaml")):
         try:
             d = yaml.safe_load(open(f))
             status = d.get("status", "?")
             name = d.get("name", f.stem)[:60]
-            icon = {"accepted": "✅", "proposed": "📋", "rejected": "❌"}.get(status, "❓")
+            icon = {"accepted": "✅", "proposed": "📋", "rejected": "❌"}.get(
+                status, "❓"
+            )
             lines.append(f"  {icon} {name}")
         except Exception:
             pass
@@ -138,15 +148,17 @@ def l0_entity_resolve(query: str) -> str:
     """跨域实体解析"""
     result = _run_tool(
         Path(__file__).resolve().parent.parent / "tools" / "mof-entity.py",
-        ["resolve", query]
+        ["resolve", query],
     )
     entities = result.get("entities", [])
     if not entities:
         return f"实体 '{query}': 未找到"
-    
+
     lines = [f"实体 '{query}' ({len(entities)} 处):"]
     for e in entities:
-        lines.append(f"  📍 {e.get('name', '?')} — {e.get('domain', '?')} [{e.get('entity_type', '?')}]")
+        lines.append(
+            f"  📍 {e.get('name', '?')} — {e.get('domain', '?')} [{e.get('entity_type', '?')}]"
+        )
     return "\n".join(lines)
 
 
@@ -189,12 +201,13 @@ MCP_TOOLS = {
 # ── CLI for testing ──
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) < 2:
         print("L0 MCP Tools — 可用工具:")
         for name, info in MCP_TOOLS.items():
             print(f"  {name}: {info['description']}")
         sys.exit(0)
-    
+
     tool = sys.argv[1]
     if tool == "status":
         print(l0_status())

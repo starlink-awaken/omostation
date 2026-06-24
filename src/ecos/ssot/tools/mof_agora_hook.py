@@ -41,9 +41,7 @@ CACHE_TTL = int(
 )  # 5 min default, overridable
 AUDIT_LOG = HOME / ".ecos" / "bos-audit.jsonl"
 CARDS_DB = WORKSPACE_ROOT / "data" / "cards" / "cards.db"
-L0_M1 = (
-    WORKSPACE_ROOT / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
-)
+L0_M1 = WORKSPACE_ROOT / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1"
 
 # ── 性能统计 ──
 stats = {
@@ -64,6 +62,7 @@ def _get_ssb_client():
     if _SSB_CLIENT is None:
         try:
             from ecos.l0.ssb.ssb_client import SSBClient
+
             _SSB_CLIENT = SSBClient(auto_init=False)
         except Exception:
             _SSB_CLIENT = False  # Sentinel: don't retry on every call
@@ -208,7 +207,9 @@ def post_audit(bos_uri: str, status_code: int, duration_ms: int = 0):
                         "confidence": 1.0,
                         "risk_level": "HIGH" if status_code >= 500 else "LOW",
                         "priority": "P1" if status_code >= 500 else "P3",
-                        "action_required": "INVESTIGATE" if status_code >= 500 else "NONE",
+                        "action_required": "INVESTIGATE"
+                        if status_code >= 500
+                        else "NONE",
                     },
                 },
                 write_file=False,

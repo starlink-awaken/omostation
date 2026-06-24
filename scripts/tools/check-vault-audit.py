@@ -37,14 +37,23 @@ def get_git_log(vault_path: str, since: str, max_entries: int = 50) -> list[dict
     try:
         result = subprocess.run(
             [
-                "git", "-C", vault_path, "log",
+                "git",
+                "-C",
+                vault_path,
+                "log",
                 f"--since={since}",
                 "--name-only",
                 "--pretty=format:%H|%ai|%an|%s",
                 f"--max-count={max_entries}",
-                "--", "*.md", "*.yaml", "*.py", "*.sh",
+                "--",
+                "*.md",
+                "*.yaml",
+                "*.py",
+                "*.sh",
             ],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
     except (subprocess.TimeoutExpired, FileNotFoundError):
         return []
@@ -103,21 +112,25 @@ def classify_changes(entries: list[dict]) -> dict:
             classified = False
             for domain, patterns in domain_patterns.items():
                 if any(p in fpath for p in patterns):
-                    domains[domain].append({
-                        "file": fpath,
-                        "commit": entry["hash"],
-                        "date": entry["date"],
-                        "author": entry["author"],
-                        "message": entry["message"],
-                    })
+                    domains[domain].append(
+                        {
+                            "file": fpath,
+                            "commit": entry["hash"],
+                            "date": entry["date"],
+                            "author": entry["author"],
+                            "message": entry["message"],
+                        }
+                    )
                     classified = True
                     break
             if not classified:
-                domains["unknown"].append({
-                    "file": fpath,
-                    "commit": entry["hash"],
-                    "date": entry["date"],
-                })
+                domains["unknown"].append(
+                    {
+                        "file": fpath,
+                        "commit": entry["hash"],
+                        "date": entry["date"],
+                    }
+                )
 
     return domains
 
@@ -176,7 +189,9 @@ def main():
     parser.add_argument("--since", default="7 days ago", help="审计区间")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     parser.add_argument("--max-entries", type=int, default=50)
-    parser.add_argument("--card-db", type=str, help="cards.db 路径（可选，用于写入 card_history）")
+    parser.add_argument(
+        "--card-db", type=str, help="cards.db 路径（可选，用于写入 card_history）"
+    )
     args = parser.parse_args()
 
     vault_path = Path(args.vault)
@@ -187,8 +202,14 @@ def main():
     # 检查是否为 git 仓库
     git_dir = vault_path / ".git"
     if not git_dir.exists():
-        print(f"⚠️  {vault_path} 不是 Git 仓库——Vault 审计需要 Git 追踪文件变更。", file=sys.stderr)
-        print(f"    建议: cd {vault_path} && git init && git add -A && git commit -m 'init'", file=sys.stderr)
+        print(
+            f"⚠️  {vault_path} 不是 Git 仓库——Vault 审计需要 Git 追踪文件变更。",
+            file=sys.stderr,
+        )
+        print(
+            f"    建议: cd {vault_path} && git init && git add -A && git commit -m 'init'",
+            file=sys.stderr,
+        )
         # 非致命——继续运行但生成空报告
     elif not (vault_path / ".git" / "logs").exists():
         print(f"⚠️  {vault_path} 是 Git 仓库但无提交历史。", file=sys.stderr)
@@ -211,7 +232,7 @@ def main():
         print(format_report(entries, domains, args.since))
 
     # 可选: 写入 card_history（需 cards.db 路径）
-    if hasattr(args, 'card_db') and args.card_db:
+    if hasattr(args, "card_db") and args.card_db:
         write_card_history(entries, args.card_db)
 
     sys.exit(0)
@@ -220,6 +241,7 @@ def main():
 def write_card_history(entries: list[dict], db_path: str):
     """将变更记录写入 card_history 表"""
     import sqlite3
+
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
@@ -227,13 +249,19 @@ def write_card_history(entries: list[dict], db_path: str):
             for fpath in entry["files"]:
                 cursor.execute(
                     "INSERT INTO card_history (timestamp, action, detail) VALUES (?, ?, ?)",
-                    (entry["date"], "vault_change",
-                     f"file={fpath} commit={entry['hash']} author={entry['author']} "
-                     f"message={entry['message'][:100]}")
+                    (
+                        entry["date"],
+                        "vault_change",
+                        f"file={fpath} commit={entry['hash']} author={entry['author']} "
+                        f"message={entry['message'][:100]}",
+                    ),
                 )
         conn.commit()
         conn.close()
-        print(f"  ✅ 已写入 card_history: {sum(len(e['files']) for e in entries)} 条记录", file=sys.stderr)
+        print(
+            f"  ✅ 已写入 card_history: {sum(len(e['files']) for e in entries)} 条记录",
+            file=sys.stderr,
+        )
     except Exception as e:
         print(f"  ⚠️ card_history 写入失败: {e}", file=sys.stderr)
 

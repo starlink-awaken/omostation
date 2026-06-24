@@ -20,15 +20,34 @@ from datetime import datetime, timezone
 HOME = Path.home()
 WS = HOME / "Workspace"
 L0_NODES = WS / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "nodes"
-M0_FILE = WS / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m0" / "snapshot.yaml"
+M0_FILE = (
+    WS / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m0" / "snapshot.yaml"
+)
 CARDS_DB = WS / "data" / "cards" / "cards.db"
 DAEMON_DB = HOME / ".ecos" / "daemon-state.db"
-CONSTRAINTS = WS / "projects" / "ecos" / "src" / "ecos" / "ssot" / "registry" / "L0-constraints.yaml"
+CONSTRAINTS = (
+    WS
+    / "projects"
+    / "ecos"
+    / "src"
+    / "ecos"
+    / "ssot"
+    / "registry"
+    / "L0-constraints.yaml"
+)
 if not CONSTRAINTS.exists():
-    CONSTRAINTS = HOME / "Documents" / "学习进化" / "2-knowledge" / "基建架构" / "L0-constraints.yaml"
+    CONSTRAINTS = (
+        HOME
+        / "Documents"
+        / "学习进化"
+        / "2-knowledge"
+        / "基建架构"
+        / "L0-constraints.yaml"
+    )
 
 
-def now(): return datetime.now(timezone.utc)
+def now():
+    return datetime.now(timezone.utc)
 
 
 def check_task_sla() -> list[dict]:
@@ -36,19 +55,19 @@ def check_task_sla() -> list[dict]:
     stale = []
     if not L0_NODES.exists():
         return stale
-    
+
     for f in L0_NODES.glob("MECH-*.yaml"):
         try:
             data = yaml.safe_load(open(f))
         except Exception:
             continue
-        
+
         props = data.get("properties", {}) or {}
         sla = props.get("sla_target", {}) or {}
         max_stale = sla.get("max_stale_hours", 0)
         if max_stale <= 0:
             continue
-        
+
         # Check last modified time as proxy for last run
         mtime = datetime.fromtimestamp(f.stat().st_mtime)
         try:
@@ -57,16 +76,18 @@ def check_task_sla() -> list[dict]:
             hours_since = (now().replace(tzinfo=None) - mtime).total_seconds() / 3600
         except Exception:
             hours_since = 0
-        
+
         if hours_since > max_stale:
-            stale.append({
-                "task": f.stem,
-                "type": data.get("subtype", "?"),
-                "hours_stale": round(hours_since, 1),
-                "max_allowed": max_stale,
-                "severity": "critical" if hours_since > max_stale * 2 else "high",
-            })
-    
+            stale.append(
+                {
+                    "task": f.stem,
+                    "type": data.get("subtype", "?"),
+                    "hours_stale": round(hours_since, 1),
+                    "max_allowed": max_stale,
+                    "severity": "critical" if hours_since > max_stale * 2 else "high",
+                }
+            )
+
     return stale
 
 
@@ -76,19 +97,25 @@ def generate_m0_snapshot() -> dict:
         "generated_at": now().isoformat(),
         "version": "1.0.0",
     }
-    
+
     # Daemon state
     if DAEMON_DB.exists():
         conn = sqlite3.connect(str(DAEMON_DB))
-        cur = conn.execute("SELECT COUNT(*), exit_code FROM cycles ORDER BY id DESC LIMIT 1")
+        cur = conn.execute(
+            "SELECT COUNT(*), exit_code FROM cycles ORDER BY id DESC LIMIT 1"
+        )
         cycles_row = cur.fetchone()
         cycles = cycles_row[0] if cycles_row else 0
         last_exit = cycles_row[1] if cycles_row else None
         conn.close()
-        snap["daemon"] = {"cycles": cycles, "healthy": last_exit == 0 if last_exit is not None else False, "last_exit": last_exit}
+        snap["daemon"] = {
+            "cycles": cycles,
+            "healthy": last_exit == 0 if last_exit is not None else False,
+            "last_exit": last_exit,
+        }
     else:
         snap["daemon"] = {"status": "unknown"}
-    
+
     # Protocol decay
     if CONSTRAINTS.exists():
         with open(CONSTRAINTS) as f:
@@ -106,19 +133,26 @@ def generate_m0_snapshot() -> dict:
                 age = 0
             half = p["half_life_days"]
             decay = min(1.0, age / half) if half > 0 else 1.0
-            protocols[p["id"]] = {"decay": round(decay, 2), "remaining_pct": round(max(0, (1-decay)*100), 1), "age_days": age, "status": "expired" if decay >= 1.0 else ("aging" if decay >= 0.5 else "fresh")}
+            protocols[p["id"]] = {
+                "decay": round(decay, 2),
+                "remaining_pct": round(max(0, (1 - decay) * 100), 1),
+                "age_days": age,
+                "status": "expired"
+                if decay >= 1.0
+                else ("aging" if decay >= 0.5 else "fresh"),
+            }
         snap["protocols"] = protocols
-    
+
     # M1 node count
     if L0_NODES.exists():
         snap["m1_node_count"] = len(list(L0_NODES.glob("*.yaml")))
-    
+
     return snap
 
 
 def save_m0_snapshot(snap: dict):
     M0_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with open(M0_FILE, 'w') as f:
+    with open(M0_FILE, "w") as f:
         f.write("# M0 运行时快照 (自动生成)\n")
         f.write(f"# 更新: {snap['generated_at']}\n\n")
         yaml.dump(snap, f, allow_unicode=True, default_flow_style=False)
@@ -131,13 +165,20 @@ def create_stale_card(task: dict):
         conn = sqlite3.connect(str(CARDS_DB))
         now_dt = now().isoformat()
         debt_id = f"DEBT-STALE-{task['task'][:30]}"
-        conn.execute("""
+        conn.execute(
+            """
             INSERT OR IGNORE INTO cards (id, type, status, title, domain, priority, summary, content, created_at, updated_at)
             VALUES (?, 'debt', 'identified', ?, 'meta', 'P2', ?, ?, ?, ?)
-        """, (debt_id, f"SLA逾期: {task['task'][:60]}",
-              f"逾期 {task['hours_stale']}h (上限 {task['max_allowed']}h)",
-              f"## mof-sla 自动检测\n- 任务: {task['task']}\n- 逾期: {task['hours_stale']}h\n- 上限: {task['max_allowed']}h",
-              now_dt, now_dt))
+        """,
+            (
+                debt_id,
+                f"SLA逾期: {task['task'][:60]}",
+                f"逾期 {task['hours_stale']}h (上限 {task['max_allowed']}h)",
+                f"## mof-sla 自动检测\n- 任务: {task['task']}\n- 逾期: {task['hours_stale']}h\n- 上限: {task['max_allowed']}h",
+                now_dt,
+                now_dt,
+            ),
+        )
         conn.commit()
         conn.close()
     except Exception:
@@ -145,7 +186,11 @@ def create_stale_card(task: dict):
 
 
 def main():
+    import sys
+
+    print("⚠️ MOF SLA 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--snapshot-only", action="store_true")
     parser.add_argument("--json", action="store_true")
@@ -153,13 +198,19 @@ def main():
 
     # SLA check
     stale = check_task_sla() if not args.snapshot_only else []
-    
+
     # M0 snapshot
     snap = generate_m0_snapshot()
     save_m0_snapshot(snap)
 
     if args.json:
-        print(json.dumps({"stale_tasks": len(stale), "items": stale, "m0": snap}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"stale_tasks": len(stale), "items": stale, "m0": snap},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return
 
     print("=" * 56)
@@ -167,16 +218,24 @@ def main():
     print("=" * 56)
     print(f"  时间: {now().isoformat()[:19]}")
     print("\n  ── M0 快照 ──")
-    print(f"  Daemon: {snap.get('daemon',{})}")
+    print(f"  Daemon: {snap.get('daemon', {})}")
     protocols = snap.get("protocols", {})
     for pid, state in protocols.items():
-        icon = "🔴" if state["status"] == "expired" else ("🟡" if state["status"] == "aging" else "🟢")
-        print(f"  {icon} {pid:10s}: {state['remaining_pct']:5.0f}% remaining ({state['age_days']}d)")
+        icon = (
+            "🔴"
+            if state["status"] == "expired"
+            else ("🟡" if state["status"] == "aging" else "🟢")
+        )
+        print(
+            f"  {icon} {pid:10s}: {state['remaining_pct']:5.0f}% remaining ({state['age_days']}d)"
+        )
 
     if stale:
         print(f"\n  ── SLA 逾期 ({len(stale)}) ──")
         for s in stale:
-            print(f"  {'🔴' if s['severity']=='critical' else '🟡'} {s['task'][:40]}: {s['hours_stale']}h (上限 {s['max_allowed']}h)")
+            print(
+                f"  {'🔴' if s['severity'] == 'critical' else '🟡'} {s['task'][:40]}: {s['hours_stale']}h (上限 {s['max_allowed']}h)"
+            )
             create_stale_card(s)
     else:
         print("\n  ✅ 无 SLA 逾期")

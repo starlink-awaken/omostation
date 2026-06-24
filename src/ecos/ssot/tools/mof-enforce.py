@@ -280,6 +280,7 @@ def format_report(violations: list[dict]) -> str:
 
 
 def main():
+    print("⚠️ MOF Enforce 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     parser = argparse.ArgumentParser()
     parser.add_argument("--no-cards", action="store_true", help="不创建 CARDS")
     parser.add_argument("--json", action="store_true")

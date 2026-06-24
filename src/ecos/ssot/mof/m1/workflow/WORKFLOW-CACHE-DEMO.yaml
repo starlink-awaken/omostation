@@ -1,0 +1,26 @@
+id: WORKFLOW-CACHE-DEMO
+type: Workflow
+subtype: PipelineWorkflow
+name: 缓存演示
+description: '缓存 E2E 验证：简单工作流，cache_ttl=60s'
+status: active
+version: 1.0.0
+domain: meta
+layer: L0
+created: '2026-06-23'
+bos_uri: bos://ecos/workflow/cache-demo
+execution:
+  cache_ttl: 60
+  backend: default
+  mode: sequential
+cross_layer:
+  realized_by:
+  - project: ecos
+    package: ecos
+    entrypoint: src/ecos/workflow
+steps:
+- order: 1
+  name: Echo
+  action: health_check
+  input:
+    message: "hello from cache demo"

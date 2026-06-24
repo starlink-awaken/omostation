@@ -12,6 +12,7 @@ from .registry import (
     TriggerType,
 )
 
+
 class YAMLTriggerRegistry(TriggerRegistryFacade):
     """File-backed Trigger Registry."""
 
@@ -32,10 +33,10 @@ class YAMLTriggerRegistry(TriggerRegistryFacade):
         path = Path(path)
         if not path.exists():
             return
-            
-        with open(path, 'r', encoding='utf-8') as f:
+
+        with open(path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
-            
+
         for t_dict in data.get("triggers", []):
             try:
                 t_type = t_dict.get("trigger_type")
@@ -47,4 +48,4 @@ class YAMLTriggerRegistry(TriggerRegistryFacade):
                     # Generic or unknown
                     self.register_trigger(BaseTrigger(**t_dict))
             except Exception:
-                pass # skip invalid trigger
+                pass  # skip invalid trigger

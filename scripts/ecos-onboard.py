@@ -39,10 +39,22 @@ RESET = "\033[0m"
 BOLD = "\033[1m"
 
 
-def ok(msg):    print(f"  {GREEN}✅{RESET} {msg}")
-def warn(msg):  print(f"  {YELLOW}⚠️{RESET} {msg}")
-def fail(msg):  print(f"  {RED}❌{RESET} {msg}")
-def info(msg):  print(f"  {CYAN}ℹ️{RESET} {msg}")
+def ok(msg):
+    print(f"  {GREEN}✅{RESET} {msg}")
+
+
+def warn(msg):
+    print(f"  {YELLOW}⚠️{RESET} {msg}")
+
+
+def fail(msg):
+    print(f"  {RED}❌{RESET} {msg}")
+
+
+def info(msg):
+    print(f"  {CYAN}ℹ️{RESET} {msg}")
+
+
 def section(n, title):
     print(f"\n  {BOLD}─── Level {n}: {title} ───{RESET}\n")
 
@@ -76,9 +88,9 @@ def check_cmd(cmd, name, timeout=15):
 
 def print_header():
     print()
-    print(f"  {BOLD}{'='*56}{RESET}")
+    print(f"  {BOLD}{'=' * 56}{RESET}")
     print(f"  {BOLD}  eCOS v5 — 接入引导向导 (ecos-onboard){RESET}")
-    print(f"  {BOLD}{'='*56}{RESET}")
+    print(f"  {BOLD}{'=' * 56}{RESET}")
     print(f"  时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
 
@@ -106,26 +118,34 @@ def main():
     if check_file(SCRIPTS / "ecos-health-check.py", "健康检查脚本"):
         if check_cmd(
             ["python3", str(SCRIPTS / "ecos-health-check.py"), "--skip", "kairon-gov"],
-            "健康检查可执行"
+            "健康检查可执行",
         ):
             l1_pass += 1
 
     if check_cmd(
-        ["python3", str(SCRIPTS / "x3-coverage-report.py")],
-        "覆盖率报告可执行"
+        ["python3", str(SCRIPTS / "x3-coverage-report.py")], "覆盖率报告可执行"
     ):
         l1_pass += 1
 
     if check_cmd(
-        ["python3", str(SCRIPTS / "check-claude-freshness.py"),
-         "--root", str(DOCS), "--max-age-days", "60"],
-        "保鲜检查可执行"
+        [
+            "python3",
+            str(SCRIPTS / "check-claude-freshness.py"),
+            "--root",
+            str(DOCS),
+            "--max-age-days",
+            "60",
+        ],
+        "保鲜检查可执行",
     ):
         l1_pass += 1
 
     print(f"\n  Level 1: {l1_pass}/{l1_total} 通过")
-    results["L1_read_only"] = {"pass": l1_pass, "total": l1_total,
-                                "status": "passed" if l1_pass == l1_total else "partial"}
+    results["L1_read_only"] = {
+        "pass": l1_pass,
+        "total": l1_total,
+        "status": "passed" if l1_pass == l1_total else "partial",
+    }
 
     # ── Level 2: 域级参与者 ──
     section(2, "域级参与者 (Domain Participant)")
@@ -146,8 +166,11 @@ def main():
             l2_pass += 1
 
     print(f"\n  Level 2: {l2_pass}/{l2_total} 通过")
-    results["L2_domain"] = {"pass": l2_pass, "total": l2_total,
-                             "status": "passed" if l2_pass == l2_total else "partial"}
+    results["L2_domain"] = {
+        "pass": l2_pass,
+        "total": l2_total,
+        "status": "passed" if l2_pass == l2_total else "partial",
+    }
 
     # ── Level 3: 全栈 Agent ──
     section(3, "全栈 Agent (Full-Stack Agent)")
@@ -158,10 +181,15 @@ def main():
         card_count = None
         try:
             r = subprocess.run(
-                ["sqlite3", str(CARDS_DB),
-                 "SELECT COUNT(*) FROM cards WHERE status NOT IN "
-                 "('done','resolved','discarded','archived','cancelled','superseded')"],
-                capture_output=True, text=True, timeout=5
+                [
+                    "sqlite3",
+                    str(CARDS_DB),
+                    "SELECT COUNT(*) FROM cards WHERE status NOT IN "
+                    "('done','resolved','discarded','archived','cancelled','superseded')",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
             card_count = r.stdout.strip()
         except Exception:
@@ -185,8 +213,11 @@ def main():
         l3_pass += 1
 
     print(f"\n  Level 3: {l3_pass}/{l3_total} 通过")
-    results["L3_full_agent"] = {"pass": l3_pass, "total": l3_total,
-                                 "status": "passed" if l3_pass == l3_total else "partial"}
+    results["L3_full_agent"] = {
+        "pass": l3_pass,
+        "total": l3_total,
+        "status": "passed" if l3_pass == l3_total else "partial",
+    }
 
     # ── Level 4: 运行时集成 ──
     section(4, "运行时集成 (Runtime Integration)")
@@ -200,47 +231,57 @@ def main():
     # Register
     if check_file(ECOS / "ecos-register.py", "L1 注册脚本"):
         if check_cmd(
-            ["python3", str(ECOS / "ecos-register.py"), "--health"],
-            "L1 注册服务健康"
+            ["python3", str(ECOS / "ecos-register.py"), "--health"], "L1 注册服务健康"
         ):
             l4_pass += 1
 
     # Event
     if check_file(ECOS / "ecos-event.py", "I0 事件脚本"):
         if check_cmd(
-            ["python3", str(ECOS / "ecos-event.py"), "--tail", "1"],
-            "事件流可读"
+            ["python3", str(ECOS / "ecos-event.py"), "--tail", "1"], "事件流可读"
         ):
             l4_pass += 1
 
     # L0 constraint validator
-    constraint_path = DOCS / "学习进化" / "2-knowledge" / "基建架构" / "ecos-constraint-validator.py"
+    constraint_path = (
+        DOCS / "学习进化" / "2-knowledge" / "基建架构" / "ecos-constraint-validator.py"
+    )
     if constraint_path.exists():
-        if check_cmd(
-            ["python3", str(constraint_path)],
-            "L0 约束校验"
-        ):
+        if check_cmd(["python3", str(constraint_path)], "L0 约束校验"):
             l4_pass += 1
     else:
         fail("L0 约束校验器不存在")
 
     print(f"\n  Level 4: {l4_pass}/{l4_total} 通过")
-    results["L4_runtime"] = {"pass": l4_pass, "total": l4_total,
-                              "status": "passed" if l4_pass == l4_total else "partial"}
+    results["L4_runtime"] = {
+        "pass": l4_pass,
+        "total": l4_total,
+        "status": "passed" if l4_pass == l4_total else "partial",
+    }
 
     overall_pass += l1_pass + l2_pass + l3_pass + l4_pass
     overall_total += l1_total + l2_total + l3_total + l4_total
 
     # ── 汇总 ──
-    print(f"\n  {BOLD}{'='*56}{RESET}")
+    print(f"\n  {BOLD}{'=' * 56}{RESET}")
     print(f"  {BOLD}  接入汇总{RESET}")
-    print(f"  {BOLD}{'='*56}{RESET}")
-    print(f"\n  Level 1 (只读)  : {l1_pass}/{l1_total}  {'✅' if l1_pass==l1_total else '⚠️'}")
-    print(f"  Level 2 (域级)  : {l2_pass}/{l2_total}  {'✅' if l2_pass==l2_total else '⚠️'}")
-    print(f"  Level 3 (全栈)  : {l3_pass}/{l3_total}  {'✅' if l3_pass==l3_total else '⚠️'}")
-    print(f"  Level 4 (运行时) : {l4_pass}/{l4_total}  {'✅' if l4_pass==l4_total else '⚠️'}")
-    print(f"\n  综合: {overall_pass}/{overall_total} 通过  "
-          f"({overall_pass/overall_total*100:.0f}%)")
+    print(f"  {BOLD}{'=' * 56}{RESET}")
+    print(
+        f"\n  Level 1 (只读)  : {l1_pass}/{l1_total}  {'✅' if l1_pass == l1_total else '⚠️'}"
+    )
+    print(
+        f"  Level 2 (域级)  : {l2_pass}/{l2_total}  {'✅' if l2_pass == l2_total else '⚠️'}"
+    )
+    print(
+        f"  Level 3 (全栈)  : {l3_pass}/{l3_total}  {'✅' if l3_pass == l3_total else '⚠️'}"
+    )
+    print(
+        f"  Level 4 (运行时) : {l4_pass}/{l4_total}  {'✅' if l4_pass == l4_total else '⚠️'}"
+    )
+    print(
+        f"\n  综合: {overall_pass}/{overall_total} 通过  "
+        f"({overall_pass / overall_total * 100:.0f}%)"
+    )
     print()
 
     if overall_pass == overall_total:
@@ -262,8 +303,13 @@ def main():
                 "L3_full_agent": results["L3_full_agent"],
                 "L4_runtime": results["L4_runtime"],
             },
-            "summary": {"pass": overall_pass, "total": overall_total,
-                        "ratio": round(overall_pass/overall_total, 4) if overall_total > 0 else 0}
+            "summary": {
+                "pass": overall_pass,
+                "total": overall_total,
+                "ratio": round(overall_pass / overall_total, 4)
+                if overall_total > 0
+                else 0,
+            },
         }
         print(json.dumps(result_data, ensure_ascii=False, indent=2))
 
@@ -272,11 +318,21 @@ def main():
         entry_logger = SCRIPTS / "ecos-entry-logger.py"
         if entry_logger.exists():
             subprocess.run(
-                ["python3", str(entry_logger), "--entry", "onboard",
-                 "--intent", "governance_check", "--result",
-                 "pass" if overall_pass == overall_total else "warn",
-                 "--duration", str(int(time.time() - (time.time() - 30)))],  # noqa: F821
-                capture_output=True, timeout=5)
+                [
+                    "python3",
+                    str(entry_logger),
+                    "--entry",
+                    "onboard",
+                    "--intent",
+                    "governance_check",
+                    "--result",
+                    "pass" if overall_pass == overall_total else "warn",
+                    "--duration",
+                    str(int(time.time() - (time.time() - 30))),
+                ],  # noqa: F821
+                capture_output=True,
+                timeout=5,
+            )
     except Exception:
         pass
 

@@ -28,7 +28,7 @@ from ecos.l0.governance import (
 
 class TestCheckResult:
     """CheckResult 测试"""
-    
+
     def test_create_check_result(self):
         result = CheckResult(
             check_id="test-check",
@@ -39,7 +39,7 @@ class TestCheckResult:
         assert result.check_id == "test-check"
         assert result.dimension == "X1"
         assert result.status == CheckStatus.PASS
-    
+
     def test_to_dict(self):
         result = CheckResult(
             check_id="test-check",
@@ -58,7 +58,7 @@ class TestCheckResult:
 
 class TestGovernanceEvent:
     """GovernanceEvent 测试"""
-    
+
     def test_create_event(self):
         event = GovernanceEvent(
             event_type="check_started",
@@ -67,7 +67,7 @@ class TestGovernanceEvent:
         )
         assert event.event_type == "check_started"
         assert event.dimension == "X1"
-    
+
     def test_to_dict(self):
         event = GovernanceEvent(
             event_type="check_completed",
@@ -81,54 +81,54 @@ class TestGovernanceEvent:
 
 class TestGovernanceEventBus:
     """GovernanceEventBus 测试"""
-    
+
     def test_subscribe_and_publish(self):
         bus = GovernanceEventBus()
         received = []
-        
+
         def handler(event):
             received.append(event)
-        
+
         bus.subscribe("test_event", handler)
-        
+
         event = GovernanceEvent(
             event_type="test_event",
             dimension="X1",
             check_id="test",
         )
         bus.publish(event)
-        
+
         assert len(received) == 1
         assert received[0] == event
-    
+
     def test_emit_check_started(self):
         bus = GovernanceEventBus()
         received = []
         bus.subscribe("check_started", lambda e: received.append(e))
-        
+
         bus.emit_check_started("x1-test", "X1")
         assert len(received) == 1
 
 
 class TestX1AuditChainChecker:
     """X1 审计链检查器测试"""
-    
+
     def test_execute(self, tmp_path):
         # 创建必要的文件结构
         (tmp_path / "scripts").mkdir()
         (tmp_path / "scripts" / "debt-audit.sh").touch()
         (tmp_path / "debt-audit-report.md").touch()
-        
+
         for proj in ["kairon", "agora", "cockpit", "ecos", "omo", "metaos", "runtime"]:
             (tmp_path / "projects" / proj / ".githooks").mkdir(parents=True)
             (tmp_path / "projects" / proj / ".githooks" / "pre-commit").touch()
-        
+
         checker = X1AuditChainChecker(tmp_path)
         result = checker.execute()
-        
+
         assert result.dimension == "X1"
         assert result.status in [CheckStatus.PASS, CheckStatus.WARN, CheckStatus.FAIL]
-    
+
     def test_get_description(self, tmp_path):
         checker = X1AuditChainChecker(tmp_path)
         desc = checker.get_description()
@@ -137,51 +137,53 @@ class TestX1AuditChainChecker:
 
 class TestX2StalenessChecker:
     """X2 抗熵检查器测试"""
-    
+
     def test_execute(self, tmp_path):
         # 创建 system.yaml
         omo_dir = tmp_path / ".omo" / "state"
         omo_dir.mkdir(parents=True)
-        (omo_dir / "system.yaml").write_text("debt_weight: 1.0\ndebt_metrics:\n  debt_health: 100.0\n")
-        
+        (omo_dir / "system.yaml").write_text(
+            "debt_weight: 1.0\ndebt_metrics:\n  debt_health: 100.0\n"
+        )
+
         checker = X2StalenessChecker(tmp_path)
         result = checker.execute()
-        
+
         assert result.dimension == "X2"
         assert result.status in [CheckStatus.PASS, CheckStatus.FAIL]
 
 
 class TestX3ValueChecker:
     """X3 价值栈检查器测试"""
-    
+
     def test_execute(self, tmp_path):
         # 创建 sla.md
         gov_dir = tmp_path / ".omo" / "_knowledge" / "governance"
         gov_dir.mkdir(parents=True)
         (gov_dir / "sla.md").write_text("# SLA\n")
-        
+
         checker = X3ValueChecker(tmp_path)
         result = checker.execute()
-        
+
         assert result.dimension == "X3"
         assert result.status in [CheckStatus.PASS, CheckStatus.WARN]
 
 
 class TestX4ConsistencyChecker:
     """X4 一致性检查器测试"""
-    
+
     def test_execute(self, tmp_path):
         # 创建 CI 和 githooks
         (tmp_path / ".github" / "workflows").mkdir(parents=True)
         for i in range(5):
             (tmp_path / ".github" / "workflows" / f"ci-{i}.yml").touch()
-        
+
         for proj in ["kairon", "agora", "cockpit", "ecos", "omo", "metaos", "runtime"]:
             (tmp_path / "projects" / proj / ".githooks").mkdir(parents=True)
-        
+
         checker = X4ConsistencyChecker(tmp_path)
         result = checker.execute()
-        
+
         assert result.dimension == "X4"
         assert result.status == CheckStatus.PASS
 
@@ -190,9 +192,10 @@ class TestX4ConsistencyChecker:
 # 优化原语测试
 # ══════════════════════════════════════════════════════════════
 
+
 class TestGovernanceAlert:
     """GovernanceAlert 测试"""
-    
+
     def test_create_alert(self):
         alert = GovernanceAlert(
             alert_id="alert-001",
@@ -203,7 +206,7 @@ class TestGovernanceAlert:
         )
         assert alert.alert_id == "alert-001"
         assert alert.severity == AlertSeverity.HIGH
-    
+
     def test_to_dict(self):
         alert = GovernanceAlert(
             alert_id="alert-001",
@@ -220,7 +223,7 @@ class TestGovernanceAlert:
 
 class TestAlertEngine:
     """AlertEngine 测试"""
-    
+
     def test_evaluate_fail(self):
         engine = AlertEngine()
         engine.rules = [
@@ -232,18 +235,18 @@ class TestAlertEngine:
                 channels=[AlertChannel.LOG],
             )
         ]
-        
+
         result = CheckResult(
             check_id="x1-test",
             dimension="X1",
             status=CheckStatus.FAIL,
             message="测试失败",
         )
-        
+
         alerts = engine.evaluate([result])
         assert len(alerts) == 1
         assert alerts[0].severity == AlertSeverity.HIGH
-    
+
     def test_evaluate_pass_no_alert(self):
         engine = AlertEngine()
         engine.rules = [
@@ -255,25 +258,25 @@ class TestAlertEngine:
                 channels=[AlertChannel.LOG],
             )
         ]
-        
+
         result = CheckResult(
             check_id="x1-test",
             dimension="X1",
             status=CheckStatus.PASS,
             message="测试通过",
         )
-        
+
         alerts = engine.evaluate([result])
         assert len(alerts) == 0
 
 
 class TestLogHandler:
     """LogHandler 测试"""
-    
+
     def test_handle(self, tmp_path):
         log_path = tmp_path / "test.log"
         handler = LogHandler(log_path)
-        
+
         alert = GovernanceAlert(
             alert_id="alert-001",
             severity=AlertSeverity.HIGH,
@@ -281,7 +284,7 @@ class TestLogHandler:
             check_id="x1-test",
             message="测试告警",
         )
-        
+
         success = handler.handle(alert)
         assert success
         assert log_path.exists()
@@ -289,7 +292,7 @@ class TestLogHandler:
 
 class TestHealthSnapshot:
     """HealthSnapshot 测试"""
-    
+
     def test_create_snapshot(self):
         snapshot = HealthSnapshot(
             timestamp=datetime.now(timezone.utc),
@@ -301,7 +304,7 @@ class TestHealthSnapshot:
         )
         assert snapshot.health_score == 82.0
         assert snapshot.resolved_count == 9
-    
+
     def test_to_dict(self):
         snapshot = HealthSnapshot(
             timestamp=datetime.now(timezone.utc),
@@ -318,11 +321,11 @@ class TestHealthSnapshot:
 
 class TestSQLiteHistoryStore:
     """SQLiteHistoryStore 测试"""
-    
+
     def test_record_and_query(self, tmp_path):
         db_path = tmp_path / "test.db"
         store = SQLiteHistoryStore(db_path)
-        
+
         snapshot = HealthSnapshot(
             timestamp=datetime.now(timezone.utc),
             health_score=82.0,
@@ -331,17 +334,17 @@ class TestSQLiteHistoryStore:
             resolved_count=9,
             unresolved_count=0,
         )
-        
+
         store.record(snapshot)
         snapshots = store.get_snapshots(days=1)
-        
+
         assert len(snapshots) == 1
         assert snapshots[0].health_score == 82.0
-    
+
     def test_analyze_trend(self, tmp_path):
         db_path = tmp_path / "test.db"
         store = SQLiteHistoryStore(db_path)
-        
+
         # 记录多个快照
         for i in range(5):
             snapshot = HealthSnapshot(
@@ -353,7 +356,7 @@ class TestSQLiteHistoryStore:
                 unresolved_count=0,
             )
             store.record(snapshot)
-        
+
         trend = store.analyze_trend("health_score", days=1)
         assert trend.metric == "health_score"
         assert trend.trend == "improving"
@@ -361,7 +364,7 @@ class TestSQLiteHistoryStore:
 
 class TestTrendAnalysis:
     """TrendAnalysis 测试"""
-    
+
     def test_create_trend(self):
         trend = TrendAnalysis(
             metric="health_score",
@@ -371,7 +374,7 @@ class TestTrendAnalysis:
             trend="improving",
         )
         assert trend.trend == "improving"
-    
+
     def test_to_dict(self):
         trend = TrendAnalysis(
             metric="health_score",
@@ -386,7 +389,7 @@ class TestTrendAnalysis:
 
 class TestPrediction:
     """Prediction 测试"""
-    
+
     def test_create_prediction(self):
         pred = Prediction(
             metric="health_score",
@@ -394,7 +397,7 @@ class TestPrediction:
             predicted_value=90.0,
         )
         assert pred.days == 7
-    
+
     def test_to_dict(self):
         pred = Prediction(
             metric="health_score",
@@ -407,7 +410,7 @@ class TestPrediction:
 
 class TestGovernanceRegistry:
     """GovernanceRegistry 测试"""
-    
+
     def test_load_and_run(self, tmp_path):
         # 创建注册表文件
         registry_yaml = tmp_path / "registry.yaml"
@@ -421,7 +424,7 @@ checkers:
     class: "X1AuditChainChecker"
     enabled: true
 """)
-        
+
         # 创建必要的文件结构
         (tmp_path / "scripts").mkdir()
         (tmp_path / "scripts" / "debt-audit.sh").touch()
@@ -429,13 +432,13 @@ checkers:
         for proj in ["kairon", "agora", "cockpit", "ecos", "omo", "metaos", "runtime"]:
             (tmp_path / "projects" / proj / ".githooks").mkdir(parents=True)
             (tmp_path / "projects" / proj / ".githooks" / "pre-commit").touch()
-        
+
         registry = GovernanceRegistry(registry_yaml)
         registry.load()
-        
+
         assert len(registry.checkers) == 1
         assert registry.checkers[0].id == "x1-test"
-        
+
         results = registry.run_all(tmp_path)
         assert len(results) == 1
 
@@ -444,46 +447,47 @@ checkers:
 # 蜂群式AI超级大脑原语测试
 # ══════════════════════════════════════════════════════════════
 
+
 class TestDistributedPrimitive:
     """分布式原语测试"""
-    
+
     def test_crdt_sync(self):
         from ecos.l0.governance import CRDTSync, StateSnapshot
-        
+
         sync = CRDTSync("node-1")
         snapshot = StateSnapshot(
             node_id="node-2",
             version=1,
             data={"key": "value"},
         )
-        
+
         result = sync.sync(snapshot)
         assert result.success
         assert result.merged_version == 2  # 版本递增
-    
+
     def test_crdt_merge(self):
         from ecos.l0.governance import CRDTSync, StateSnapshot
-        
+
         sync = CRDTSync("node-1")
         local = StateSnapshot(node_id="node-1", version=1, data={"a": 1})
         remote = StateSnapshot(node_id="node-2", version=1, data={"b": 2})
-        
+
         merged = sync.merge(local, remote)
         assert merged.version == 2
         # LWW: remote 时间戳更新（默认），所以 remote 获胜
         assert "b" in merged.data
-    
+
     def test_crdt_sync_lww(self):
         """测试 LWW-Register 冲突解决"""
         from ecos.l0.governance import CRDTSync, StateSnapshot
         from datetime import datetime, timezone, timedelta
-        
+
         sync = CRDTSync("node-1")
-        
+
         # 创建两个有冲突的快照
         local_time = datetime.now(timezone.utc)
         remote_time = local_time + timedelta(seconds=10)
-        
+
         local = StateSnapshot(
             node_id="node-1",
             version=1,
@@ -496,48 +500,48 @@ class TestDistributedPrimitive:
             data={"key": "remote_value"},
             timestamp=remote_time,
         )
-        
+
         # LWW: remote 时间戳更新，应该获胜
         merged = sync.merge(local, remote)
         assert merged.data["key"] == "remote_value"
-    
+
     def test_node_manager(self):
         """测试节点管理器"""
         from ecos.l0.governance import NodeManager, NodeStatus
-        
+
         manager = NodeManager()
-        
+
         # 注册节点
         node = manager.register("node-1", {"role": "worker"})
         assert node.node_id == "node-1"
         assert node.status == NodeStatus.ONLINE
-        
+
         # 获取节点
         retrieved = manager.get_node("node-1")
         assert retrieved is not None
         assert retrieved.node_id == "node-1"
-        
+
         # 更新心跳
         assert manager.update_heartbeat("node-1")
-        
+
         # 获取在线节点
         online = manager.get_online_nodes()
         assert len(online) == 1
-        
+
         # 注销节点
         assert manager.unregister("node-1")
         assert manager.get_node("node-1") is None
-    
+
     def test_node_health_check(self):
         """测试节点健康检查"""
         from ecos.l0.governance import NodeManager, NodeStatus
-        
+
         manager = NodeManager()
         manager.heartbeat_interval = 1  # 1 秒
-        
+
         # 注册节点
         manager.register("node-1")
-        
+
         # 立即检查应该是健康
         health = manager.check_health()
         assert health["node-1"] == NodeStatus.HEALTHY
@@ -559,7 +563,9 @@ class TestDistributedPrimitive:
         healthy = manager.get_healthy_nodes()
         assert [n.node_id for n in healthy] == ["node-1"]
 
-        manager.nodes["node-1"].last_heartbeat = datetime.now(timezone.utc) - timedelta(seconds=10)
+        manager.nodes["node-1"].last_heartbeat = datetime.now(timezone.utc) - timedelta(
+            seconds=10
+        )
         removed = manager.remove_offline_nodes()
         assert removed == ["node-1"]
         assert manager.get_node("node-1") is None
@@ -574,7 +580,9 @@ class TestDistributedPrimitive:
         assert snapshot.node_id == "node-1"
         assert snapshot.checksum
 
-        remote_snapshot = StateSnapshot(node_id="node-2", version=2, data={"key1": "remote", "key2": "new"})
+        remote_snapshot = StateSnapshot(
+            node_id="node-2", version=2, data={"key1": "remote", "key2": "new"}
+        )
         result = service.sync_from_snapshot(remote_snapshot)
 
         assert result.success is True
@@ -584,7 +592,12 @@ class TestDistributedPrimitive:
 
     def test_communication_protocol_send_dispatch_and_dead_letter(self):
         """CommunicationProtocol 应支持连接、发送、分发和死信。"""
-        from ecos.l0.governance import CommunicationProtocol, Message, MessageType, ProtocolType
+        from ecos.l0.governance import (
+            CommunicationProtocol,
+            Message,
+            MessageType,
+            ProtocolType,
+        )
 
         protocol = CommunicationProtocol("node-1", protocol_type=ProtocolType.TCP)
         protocol.connect("node-2")
@@ -599,7 +612,9 @@ class TestDistributedPrimitive:
         assert protocol.send("node-2", message) is True
 
         captured = []
-        protocol.register_handler(MessageType.SYNC, lambda msg: captured.append(msg.payload) or "done")
+        protocol.register_handler(
+            MessageType.SYNC, lambda msg: captured.append(msg.payload) or "done"
+        )
         assert protocol.dispatch(message) == "done"
         assert captured == [{"ok": True}]
 
@@ -616,32 +631,32 @@ class TestDistributedPrimitive:
 
 class TestAgentRegistry:
     """Agent 注册中心测试"""
-    
+
     def test_register_agent(self):
         """测试注册 Agent"""
         from ecos.l0.governance import AgentRegistry, AgentStatus
-        
+
         registry = AgentRegistry()
         agent = registry.register("agent-1", "worker-1", ["task", "compute"])
-        
+
         assert agent.agent_id == "agent-1"
         assert agent.name == "worker-1"
         assert agent.status == AgentStatus.IDLE
         assert "task" in agent.capabilities
-    
+
     def test_discover_agents(self):
         """测试发现 Agent"""
         from ecos.l0.governance import AgentRegistry, AgentStatus
-        
+
         registry = AgentRegistry()
         registry.register("agent-1", "worker-1", ["task", "compute"])
         registry.register("agent-2", "worker-2", ["compute"])
-        
+
         # 按能力查找
         agents = registry.discover_agents("task")
         assert len(agents) == 1
         assert agents[0].agent_id == "agent-1"
-        
+
         # 按状态查找
         registry.update_status("agent-1", AgentStatus.BUSY)
         idle_agents = registry.get_idle_agents()
@@ -651,59 +666,61 @@ class TestAgentRegistry:
 
 class TestTaskScheduler:
     """任务调度器测试"""
-    
+
     def test_submit_and_assign(self):
         """测试提交和分配任务"""
         from ecos.l0.governance import TaskScheduler, TaskStatus
-        
+
         scheduler = TaskScheduler()
-        
+
         # 提交任务
-        task = scheduler.submit_task("task-1", "测试任务", required_capabilities=["task"])
+        task = scheduler.submit_task(
+            "task-1", "测试任务", required_capabilities=["task"]
+        )
         assert task.task_id == "task-1"
         assert task.status == TaskStatus.PENDING
-        
+
         # 分配任务
         assert scheduler.assign_task("task-1", "agent-1")
         assert task.status == TaskStatus.ASSIGNED
         assert task.assigned_agent == "agent-1"
-    
+
     def test_task_lifecycle(self):
         """测试任务生命周期"""
         from ecos.l0.governance import TaskScheduler, TaskStatus
-        
+
         scheduler = TaskScheduler()
-        
+
         # 提交
         task = scheduler.submit_task("task-1", "测试任务")
         assert task.status == TaskStatus.PENDING
-        
+
         # 分配
         scheduler.assign_task("task-1", "agent-1")
         assert task.status == TaskStatus.ASSIGNED
-        
+
         # 开始
         scheduler.start_task("task-1")
         assert task.status == TaskStatus.RUNNING
         assert task.started_at is not None
-        
+
         # 完成
         scheduler.complete_task("task-1", result={"output": "done"})
         assert task.status == TaskStatus.COMPLETED
         assert task.completed_at is not None
         assert task.result == {"output": "done"}
-    
+
     def test_task_priority(self):
         """测试任务优先级"""
         from ecos.l0.governance import TaskScheduler
-        
+
         scheduler = TaskScheduler()
-        
+
         # 提交不同优先级的任务
         scheduler.submit_task("task-1", "低优先级", priority=1)
         scheduler.submit_task("task-2", "高优先级", priority=10)
         scheduler.submit_task("task-3", "中优先级", priority=5)
-        
+
         # 获取下一个任务应该是高优先级
         next_task = scheduler.get_next_task()
         assert next_task is not None
@@ -713,11 +730,11 @@ class TestTaskScheduler:
 
 class TestFailoverManager:
     """故障转移管理器测试"""
-    
+
     def test_add_rule(self):
         """测试添加规则"""
         from ecos.l0.governance import FailoverManager, FailoverRule, FailoverStrategy
-        
+
         manager = FailoverManager()
         rule = FailoverRule(
             rule_id="rule-1",
@@ -725,14 +742,14 @@ class TestFailoverManager:
             target_nodes=["node-2", "node-3"],
             strategy=FailoverStrategy.ROUND_ROBIN,
         )
-        
+
         manager.add_rule(rule)
         assert manager.get_rule("rule-1") is not None
-    
+
     def test_execute_failover(self):
         """测试执行故障转移"""
         from ecos.l0.governance import FailoverManager, FailoverRule, FailoverStrategy
-        
+
         manager = FailoverManager()
         rule = FailoverRule(
             rule_id="rule-1",
@@ -741,7 +758,7 @@ class TestFailoverManager:
             strategy=FailoverStrategy.ROUND_ROBIN,
         )
         manager.add_rule(rule)
-        
+
         # 执行故障转移
         target = manager.execute_failover("node-1")
         assert target in ["node-2", "node-3"]
@@ -749,34 +766,34 @@ class TestFailoverManager:
 
 class TestLoadBalancer:
     """负载均衡器测试"""
-    
+
     def test_register_and_select(self):
         """测试注册和选择节点"""
         from ecos.l0.governance import LoadBalancer, LoadBalancingStrategy
-        
+
         balancer = LoadBalancer(LoadBalancingStrategy.ROUND_ROBIN)
-        
+
         # 注册节点
         balancer.register_node("node-1", weight=1)
         balancer.register_node("node-2", weight=2)
-        
+
         # 选择节点
         node = balancer.select_node()
         assert node in ["node-1", "node-2"]
-    
+
     def test_least_connections(self):
         """测试最少连接策略"""
         from ecos.l0.governance import LoadBalancer, LoadBalancingStrategy
-        
+
         balancer = LoadBalancer(LoadBalancingStrategy.LEAST_CONNECTIONS)
-        
+
         balancer.register_node("node-1", weight=1)
         balancer.register_node("node-2", weight=1)
-        
+
         # 设置连接数
         balancer.update_connections("node-1", 10)
         balancer.update_connections("node-2", 5)
-        
+
         # 选择节点应该是 node-2 (连接数最少)
         node = balancer.select_node()
         assert node == "node-2"
@@ -784,12 +801,12 @@ class TestLoadBalancer:
 
 class TestRolePrimitive:
     """角色原语测试"""
-    
+
     def test_role_manager(self):
         from ecos.l0.governance import RoleManager, RoleDefinition, RoleType
-        
+
         manager = RoleManager()
-        
+
         # 定义角色
         role = RoleDefinition(
             role_id="worker",
@@ -798,68 +815,95 @@ class TestRolePrimitive:
             constraints={},
         )
         assert manager.define_role(role)
-        
+
         # 分配角色
         assert manager.assign_role("agent-1", "worker")
-        
+
         # 获取角色
         retrieved = manager.get_role("agent-1")
         assert retrieved is not None
         assert retrieved.role_id == "worker"
-        
+
         # 列出角色
         roles = manager.list_roles()
         assert len(roles) == 1
-    
+
     def test_role_collaboration(self):
         """测试角色协作"""
-        from ecos.l0.governance import RoleManager, RoleDefinition, RoleType, RoleCollaboration, CollaborationMode
-        
+        from ecos.l0.governance import (
+            RoleManager,
+            RoleDefinition,
+            RoleType,
+            RoleCollaboration,
+            CollaborationMode,
+        )
+
         manager = RoleManager()
         collaboration = RoleCollaboration(manager)
-        
+
         # 定义角色
-        manager.define_role(RoleDefinition(role_id="worker", role_type=RoleType.WORKER, capabilities=["task"], constraints={}))
-        manager.define_role(RoleDefinition(role_id="coordinator", role_type=RoleType.COORDINATOR, capabilities=["manage"], constraints={}))
-        
+        manager.define_role(
+            RoleDefinition(
+                role_id="worker",
+                role_type=RoleType.WORKER,
+                capabilities=["task"],
+                constraints={},
+            )
+        )
+        manager.define_role(
+            RoleDefinition(
+                role_id="coordinator",
+                role_type=RoleType.COORDINATOR,
+                capabilities=["manage"],
+                constraints={},
+            )
+        )
+
         # 创建协作任务
-        task = collaboration.create_task("task-1", "协作任务", ["worker", "coordinator"], CollaborationMode.SEQUENTIAL)
+        task = collaboration.create_task(
+            "task-1",
+            "协作任务",
+            ["worker", "coordinator"],
+            CollaborationMode.SEQUENTIAL,
+        )
         assert task.task_id == "task-1"
-        
+
         # 分配角色
         assignments = {"worker": "agent-1", "coordinator": "agent-2"}
         assert collaboration.assign_roles_to_task("task-1", assignments)
         assert task.status == "assigned"
-        
+
         # 开始任务
         assert collaboration.start_task("task-1")
         assert task.status == "running"
-        
+
         # 完成任务
         assert collaboration.complete_task("task-1", {"output": "done"})
         assert task.status == "completed"
-    
+
     def test_role_evaluator(self):
         """测试角色评估"""
         from ecos.l0.governance import RoleEvaluator
-        
+
         evaluator = RoleEvaluator()
-        
+
         # 评估
-        eval1 = evaluator.evaluate("agent-1", "worker", 85.0, {"speed": 0.9, "quality": 0.8})
+        eval1 = evaluator.evaluate(
+            "agent-1", "worker", 85.0, {"speed": 0.9, "quality": 0.8}
+        )
         assert eval1.score == 85.0
-        
+
         evaluator.evaluate("agent-2", "worker", 92.0, {"speed": 0.95, "quality": 0.9})
-        
+
         # 获取最新评估
         latest = evaluator.get_evaluation("agent-1")
         assert latest is not None
         assert latest.score == 85.0
-        
+
         # 获取平均分
         avg = evaluator.get_average_score("worker")
         assert avg == 88.5  # (85 + 92) / 2
-        
+
         # 获取 top agents
         top = evaluator.get_top_agents("worker", limit=1)
         assert len(top) == 1
@@ -868,18 +912,18 @@ class TestRolePrimitive:
 
 class TestSwarmPrimitive:
     """蜂群原语测试"""
-    
+
     def test_swarm_manager(self):
         from ecos.l0.governance import SwarmManager, SwarmState, EmergencePattern
-        
+
         manager = SwarmManager()
         manager.agents = ["agent-1", "agent-2", "agent-3"]
-        
+
         state = SwarmState(
             agents=manager.agents,
             behaviors=[],
         )
-        
+
         # 检测涌现
         behaviors = manager.detect_emergence(state)
         assert len(behaviors) > 0
@@ -888,7 +932,7 @@ class TestSwarmPrimitive:
 
 class TestPersonalKnowledgePrimitive:
     """个人知识原语测试"""
-    
+
     def test_personal_knowledge_manager(self):
         from ecos.l0.governance import (
             PersonalKnowledgeManager,
@@ -897,9 +941,9 @@ class TestPersonalKnowledgePrimitive:
             UserPreference,
             PreferenceType,
         )
-        
+
         manager = PersonalKnowledgeManager()
-        
+
         # 添加知识
         node = KnowledgeNode(
             node_id="k1",
@@ -907,11 +951,11 @@ class TestPersonalKnowledgePrimitive:
             content={"topic": "AI"},
         )
         assert manager.add_knowledge(node)
-        
+
         # 查询知识
         results = manager.query_knowledge("AI")
         assert len(results) == 1
-        
+
         # 学习偏好
         pref = UserPreference(
             user_id="user-1",
@@ -920,7 +964,7 @@ class TestPersonalKnowledgePrimitive:
             value="AI",
         )
         assert manager.learn_preference("user-1", pref)
-        
+
         # 获取推荐
         recs = manager.get_recommendation("user-1", {})
         assert len(recs) > 0
@@ -930,38 +974,39 @@ class TestPersonalKnowledgePrimitive:
 # 蜂群式AI原语扩展测试 (提升覆盖率)
 # ══════════════════════════════════════════════════════════════
 
+
 class TestDistributedPrimitiveExtended:
     """分布式原语扩展测试"""
-    
+
     def test_crdt_sync_version_conflict(self):
         from ecos.l0.governance import CRDTSync, StateSnapshot
-        
+
         sync = CRDTSync("node-1")
         sync.version = 5
-        
+
         snapshot = StateSnapshot(
             node_id="node-2",
             version=3,  # 旧版本
             data={"key": "value"},
         )
-        
+
         result = sync.sync(snapshot)
         # LWW 策略：远程版本虽然旧，但如果数据不同仍然会合并
         # 这里测试的是版本冲突时的行为
         assert result.local_version == 5
-    
+
     def test_crdt_get_version(self):
         from ecos.l0.governance import CRDTSync
-        
+
         sync = CRDTSync("node-1")
         assert sync.get_version() == 0
-        
+
         sync.version = 10
         assert sync.get_version() == 10
-    
+
     def test_crdt_get_node_status(self):
         from ecos.l0.governance import CRDTSync, NodeStatus
-        
+
         sync = CRDTSync("node-1")
         status = sync.get_node_status("node-2")
         assert status == NodeStatus.OFFLINE
@@ -969,12 +1014,12 @@ class TestDistributedPrimitiveExtended:
 
 class TestRolePrimitiveExtended:
     """角色原语扩展测试"""
-    
+
     def test_role_switch(self):
         from ecos.l0.governance import RoleManager, RoleDefinition, RoleType
-        
+
         manager = RoleManager()
-        
+
         # 定义两个角色
         worker = RoleDefinition(
             role_id="worker",
@@ -984,7 +1029,7 @@ class TestRolePrimitiveExtended:
         )
         manager = RoleManager()
         manager.define_role(worker)
-        
+
         manager = RoleManager()
         manager.define_role(worker)
         specialist = RoleDefinition(
@@ -994,20 +1039,20 @@ class TestRolePrimitiveExtended:
             constraints={},
         )
         manager.define_role(specialist)
-        
+
         # 分配角色
         manager.assign_role("agent-1", "worker")
-        
+
         # 切换角色
         assert manager.switch_role("agent-1", "specialist")
-        
+
         # 验证切换
         retrieved = manager.get_role("agent-1")
         assert retrieved.role_id == "specialist"
-    
+
     def test_role_assign_nonexistent(self):
         from ecos.l0.governance import RoleManager, RoleDefinition, RoleType
-        
+
         manager = RoleManager()
         role = RoleDefinition(
             role_id="worker",
@@ -1016,13 +1061,13 @@ class TestRolePrimitiveExtended:
             constraints={},
         )
         manager.define_role(role)
-        
+
         # 分配不存在的角色
         assert not manager.assign_role("agent-1", "nonexistent")
-    
+
     def test_role_switch_nonexistent_agent(self):
         from ecos.l0.governance import RoleManager, RoleDefinition, RoleType
-        
+
         manager = RoleManager()
         role = RoleDefinition(
             role_id="worker",
@@ -1031,13 +1076,13 @@ class TestRolePrimitiveExtended:
             constraints={},
         )
         manager.define_role(role)
-        
+
         # 切换不存在的 agent
         assert not manager.switch_role("nonexistent", "worker")
-    
+
     def test_role_to_dict(self):
         from ecos.l0.governance import RoleDefinition, RoleType, AgentRole, RoleStatus
-        
+
         role = RoleDefinition(
             role_id="worker",
             role_type=RoleType.WORKER,
@@ -1048,7 +1093,7 @@ class TestRolePrimitiveExtended:
         assert d["role_id"] == "worker"
         assert d["role_type"] == "worker"
         assert "task" in d["capabilities"]
-        
+
         agent_role = AgentRole(
             agent_id="agent-1",
             role_id="worker",
@@ -1061,13 +1106,18 @@ class TestRolePrimitiveExtended:
 
 class TestSwarmPrimitiveExtended:
     """蜂群原语扩展测试"""
-    
+
     def test_swarm_predict_emergence(self):
-        from ecos.l0.governance import SwarmManager, SwarmState, EmergentBehavior, EmergencePattern
-        
+        from ecos.l0.governance import (
+            SwarmManager,
+            SwarmState,
+            EmergentBehavior,
+            EmergencePattern,
+        )
+
         manager = SwarmManager()
         manager.agents = ["agent-1", "agent-2"]
-        
+
         state = SwarmState(
             agents=manager.agents,
             behaviors=[
@@ -1078,25 +1128,25 @@ class TestSwarmPrimitiveExtended:
                 )
             ],
         )
-        
+
         predicted = manager.predict_emergence(state)
         assert len(predicted) > 0
         assert predicted[0].pattern == EmergencePattern.SPECIALIZATION
-    
+
     def test_swarm_control_emergence(self):
         from ecos.l0.governance import SwarmManager, EmergentBehavior, EmergencePattern
-        
+
         manager = SwarmManager()
-        
+
         behavior = EmergentBehavior(
             pattern=EmergencePattern.CASCADE,
             agents=["agent-1", "agent-2"],
             confidence=0.9,
         )
-        
+
         assert manager.control_emergence(behavior, "suppress")
         assert manager.control_emergence(behavior, "amplify")
-    
+
     def test_swarm_get_state(self):
         from ecos.l0.governance import SwarmManager, EmergentBehavior, EmergencePattern
 
@@ -1117,16 +1167,16 @@ class TestSwarmPrimitiveExtended:
 
 class TestPersonalKnowledgePrimitiveExtended:
     """个人知识原语扩展测试"""
-    
+
     def test_knowledge_graph(self):
         from ecos.l0.governance import (
             PersonalKnowledgeManager,
             KnowledgeNode,
             KnowledgeType,
         )
-        
+
         manager = PersonalKnowledgeManager()
-        
+
         node1 = KnowledgeNode(
             node_id="k1",
             knowledge_type=KnowledgeType.CONCEPT,
@@ -1139,87 +1189,87 @@ class TestPersonalKnowledgePrimitiveExtended:
             content={"topic": "ML"},
             relations=["k1"],
         )
-        
+
         manager.add_knowledge(node1)
         manager.add_knowledge(node2)
-        
+
         graph = manager.get_knowledge_graph()
         assert "k1" in graph
         assert "k2" in graph
         assert "k2" in graph["k1"]
-    
+
     def test_query_knowledge_no_match(self):
         from ecos.l0.governance import (
             PersonalKnowledgeManager,
             KnowledgeNode,
             KnowledgeType,
         )
-        
+
         manager = PersonalKnowledgeManager()
-        
+
         node = KnowledgeNode(
             node_id="k1",
             knowledge_type=KnowledgeType.FACT,
             content={"topic": "AI"},
         )
         manager.add_knowledge(node)
-        
+
         results = manager.query_knowledge("quantum")
         assert len(results) == 0
-    
+
     def test_knowledge_node_to_dict(self):
         from ecos.l0.governance import KnowledgeNode, KnowledgeType
-        
+
         node = KnowledgeNode(
             node_id="k1",
             knowledge_type=KnowledgeType.PROCEDURE,
             content={"steps": ["step1", "step2"]},
             relations=["k2"],
         )
-        
+
         d = node.to_dict()
         assert d["node_id"] == "k1"
         assert d["knowledge_type"] == "procedure"
         assert "created_at" in d
-    
+
     def test_knowledge_graph_builder(self):
         """测试知识图谱构建器"""
         from ecos.l0.governance import KnowledgeGraphBuilder
-        
+
         builder = KnowledgeGraphBuilder()
-        
+
         builder.add_node("n1", {"type": "concept"})
         builder.add_node("n2", {"type": "fact"})
         builder.add_edge("n1", "n2", "related_to")
-        
+
         neighbors = builder.get_neighbors("n1")
         assert "n2" in neighbors
-        
+
         paths = builder.find_path("n1", "n2")
         assert len(paths) > 0
         assert paths[0] == ["n1", "n2"]
-        
+
         mermaid = builder.to_mermaid()
         assert "n1" in mermaid
         assert "n2" in mermaid
-    
+
     def test_preference_engine(self):
         """测试偏好学习引擎"""
         from ecos.l0.governance import PreferenceEngine
-        
+
         engine = PreferenceEngine()
-        
+
         engine.learn("user-1", "AI", "topic", 1.0)
         engine.learn("user-1", "ML", "topic", 0.8)
         engine.learn("user-1", "Python", "topic", 0.6)
-        
+
         pref = engine.get_preference("user-1", "AI")
         assert abs(pref - 1.0) < 0.01  # 考虑时间衰减
-        
+
         top = engine.get_top_preferences("user-1", 2)
         assert len(top) == 2
         assert top[0][0] == "AI"
-    
+
     def test_recommendation_engine(self):
         """测试推荐引擎"""
         from ecos.l0.governance import (
@@ -1229,21 +1279,23 @@ class TestPersonalKnowledgePrimitiveExtended:
             PreferenceEngine,
             RecommendationEngine,
         )
-        
+
         km = PersonalKnowledgeManager()
         pe = PreferenceEngine()
         engine = RecommendationEngine(km, pe)
-        
+
         # 添加知识
-        km.add_knowledge(KnowledgeNode(
-            node_id="k1",
-            knowledge_type=KnowledgeType.FACT,
-            content={"topic": "AI"},
-        ))
-        
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k1",
+                knowledge_type=KnowledgeType.FACT,
+                content={"topic": "AI"},
+            )
+        )
+
         # 学习偏好
         pe.learn("user-1", "AI", "topic", 1.0)
-        
+
         # 获取推荐
         recs = engine.recommend("user-1")
         assert len(recs) > 0
@@ -1253,6 +1305,7 @@ class TestPersonalKnowledgePrimitiveExtended:
 # ══════════════════════════════════════════════════════════════
 # 深度集成测试 — 真实算法行为验证
 # ══════════════════════════════════════════════════════════════
+
 
 class TestStateSyncServiceIntegration:
     """StateSyncService 深度集成测试 — 验证向量时钟、冲突检测、增量同步"""
@@ -1372,7 +1425,9 @@ class TestSwarmManagerDeepIntegration:
         state = SwarmState(agents=["a1", "a2"], behaviors=[])
         behaviors = manager.detect_emergence(state)
 
-        oscillation = [b for b in behaviors if b.pattern == EmergencePattern.OSCILLATION]
+        oscillation = [
+            b for b in behaviors if b.pattern == EmergencePattern.OSCILLATION
+        ]
         assert len(oscillation) == 1
         assert "a1" in oscillation[0].agents
 
@@ -1426,8 +1481,13 @@ class TestSwarmManagerDeepIntegration:
         engine = CollectiveDecision()
         weights = {"boss": 5.0, "worker1": 1.0, "worker2": 1.0}
 
-        engine.create_proposal("p1", "选择方案", ["A", "B"],
-                               DecisionMethod.WEIGHTED_VOTE, agent_weights=weights)
+        engine.create_proposal(
+            "p1",
+            "选择方案",
+            ["A", "B"],
+            DecisionMethod.WEIGHTED_VOTE,
+            agent_weights=weights,
+        )
         engine.vote("p1", "boss", "B")
         engine.vote("p1", "worker1", "A")
         engine.vote("p1", "worker2", "A")
@@ -1465,8 +1525,9 @@ class TestSwarmManagerDeepIntegration:
 
         engine = CollectiveDecision()
         weights = {"a1": 3.0, "a2": 2.0, "a3": 1.0}
-        engine.create_proposal("p1", "信息素", ["X", "Y"],
-                               DecisionMethod.PHEROMONE, agent_weights=weights)
+        engine.create_proposal(
+            "p1", "信息素", ["X", "Y"], DecisionMethod.PHEROMONE, agent_weights=weights
+        )
         engine.vote("p1", "a1", "X")
         engine.vote("p1", "a2", "X")
         engine.vote("p1", "a3", "Y")
@@ -1569,12 +1630,26 @@ class TestRoleSwitcherIntegration:
     def test_cooldown_prevents_rapid_switch(self):
         """冷却期内不允许切换角色"""
         from ecos.l0.governance import (
-            RoleManager, RoleDefinition, RoleType, RoleSwitcher,
+            RoleManager,
+            RoleDefinition,
+            RoleType,
+            RoleSwitcher,
         )
 
         rm = RoleManager()
-        rm.define_role(RoleDefinition(role_id="r1", role_type=RoleType.WORKER, capabilities=[], constraints={}))
-        rm.define_role(RoleDefinition(role_id="r2", role_type=RoleType.SPECIALIST, capabilities=[], constraints={}))
+        rm.define_role(
+            RoleDefinition(
+                role_id="r1", role_type=RoleType.WORKER, capabilities=[], constraints={}
+            )
+        )
+        rm.define_role(
+            RoleDefinition(
+                role_id="r2",
+                role_type=RoleType.SPECIALIST,
+                capabilities=[],
+                constraints={},
+            )
+        )
         rm.assign_role("a1", "r1")
 
         switcher = RoleSwitcher(rm, cooldown_seconds=10)
@@ -1588,13 +1663,37 @@ class TestRoleSwitcherIntegration:
     def test_prerequisite_blocks_switch(self):
         """前置角色不满足时阻止切换"""
         from ecos.l0.governance import (
-            RoleManager, RoleDefinition, RoleType, RoleSwitcher,
+            RoleManager,
+            RoleDefinition,
+            RoleType,
+            RoleSwitcher,
         )
 
         rm = RoleManager()
-        rm.define_role(RoleDefinition(role_id="novice", role_type=RoleType.WORKER, capabilities=[], constraints={}))
-        rm.define_role(RoleDefinition(role_id="expert", role_type=RoleType.SPECIALIST, capabilities=[], constraints={}))
-        rm.define_role(RoleDefinition(role_id="outsider", role_type=RoleType.WORKER, capabilities=[], constraints={}))
+        rm.define_role(
+            RoleDefinition(
+                role_id="novice",
+                role_type=RoleType.WORKER,
+                capabilities=[],
+                constraints={},
+            )
+        )
+        rm.define_role(
+            RoleDefinition(
+                role_id="expert",
+                role_type=RoleType.SPECIALIST,
+                capabilities=[],
+                constraints={},
+            )
+        )
+        rm.define_role(
+            RoleDefinition(
+                role_id="outsider",
+                role_type=RoleType.WORKER,
+                capabilities=[],
+                constraints={},
+            )
+        )
         rm.assign_role("a1", "outsider")  # agent has "outsider", not "novice"
 
         switcher = RoleSwitcher(rm, cooldown_seconds=0)
@@ -1607,12 +1706,29 @@ class TestRoleSwitcherIntegration:
     def test_conflict_blocks_switch(self):
         """角色冲突时阻止切换"""
         from ecos.l0.governance import (
-            RoleManager, RoleDefinition, RoleType, RoleSwitcher,
+            RoleManager,
+            RoleDefinition,
+            RoleType,
+            RoleSwitcher,
         )
 
         rm = RoleManager()
-        rm.define_role(RoleDefinition(role_id="worker", role_type=RoleType.WORKER, capabilities=[], constraints={}))
-        rm.define_role(RoleDefinition(role_id="manager", role_type=RoleType.MANAGER, capabilities=[], constraints={}))
+        rm.define_role(
+            RoleDefinition(
+                role_id="worker",
+                role_type=RoleType.WORKER,
+                capabilities=[],
+                constraints={},
+            )
+        )
+        rm.define_role(
+            RoleDefinition(
+                role_id="manager",
+                role_type=RoleType.MANAGER,
+                capabilities=[],
+                constraints={},
+            )
+        )
         rm.assign_role("a1", "worker")
 
         switcher = RoleSwitcher(rm, cooldown_seconds=0)
@@ -1625,12 +1741,26 @@ class TestRoleSwitcherIntegration:
     def test_switch_history_tracked(self):
         """切换历史被正确记录"""
         from ecos.l0.governance import (
-            RoleManager, RoleDefinition, RoleType, RoleSwitcher,
+            RoleManager,
+            RoleDefinition,
+            RoleType,
+            RoleSwitcher,
         )
 
         rm = RoleManager()
-        rm.define_role(RoleDefinition(role_id="r1", role_type=RoleType.WORKER, capabilities=[], constraints={}))
-        rm.define_role(RoleDefinition(role_id="r2", role_type=RoleType.SPECIALIST, capabilities=[], constraints={}))
+        rm.define_role(
+            RoleDefinition(
+                role_id="r1", role_type=RoleType.WORKER, capabilities=[], constraints={}
+            )
+        )
+        rm.define_role(
+            RoleDefinition(
+                role_id="r2",
+                role_type=RoleType.SPECIALIST,
+                capabilities=[],
+                constraints={},
+            )
+        )
         rm.assign_role("a1", "r1")
 
         switcher = RoleSwitcher(rm, cooldown_seconds=0)
@@ -1644,12 +1774,26 @@ class TestRoleSwitcherIntegration:
     def test_role_distribution(self):
         """角色分布统计正确"""
         from ecos.l0.governance import (
-            RoleManager, RoleDefinition, RoleType, RoleSwitcher,
+            RoleManager,
+            RoleDefinition,
+            RoleType,
+            RoleSwitcher,
         )
 
         rm = RoleManager()
-        rm.define_role(RoleDefinition(role_id="r1", role_type=RoleType.WORKER, capabilities=[], constraints={}))
-        rm.define_role(RoleDefinition(role_id="r2", role_type=RoleType.SPECIALIST, capabilities=[], constraints={}))
+        rm.define_role(
+            RoleDefinition(
+                role_id="r1", role_type=RoleType.WORKER, capabilities=[], constraints={}
+            )
+        )
+        rm.define_role(
+            RoleDefinition(
+                role_id="r2",
+                role_type=RoleType.SPECIALIST,
+                capabilities=[],
+                constraints={},
+            )
+        )
         rm.assign_role("a1", "r1")
         rm.assign_role("a2", "r1")
         rm.assign_role("a3", "r2")
@@ -1669,7 +1813,8 @@ class TestFailoverManagerDeepIntegration:
 
         manager = FailoverManager()
         rule = FailoverRule(
-            rule_id="r1", source_node="s1",
+            rule_id="r1",
+            source_node="s1",
             target_nodes=["t1", "t2", "t3"],
             strategy=FailoverStrategy.ROUND_ROBIN,
         )
@@ -1688,7 +1833,8 @@ class TestFailoverManagerDeepIntegration:
 
         manager = FailoverManager()
         rule = FailoverRule(
-            rule_id="r1", source_node="s1",
+            rule_id="r1",
+            source_node="s1",
             target_nodes=["t1", "t2"],
             strategy=FailoverStrategy.ROUND_ROBIN,
         )
@@ -1711,7 +1857,8 @@ class TestFailoverManagerDeepIntegration:
         manager.update_node_load("t3", 5)
 
         rule = FailoverRule(
-            rule_id="r1", source_node="s1",
+            rule_id="r1",
+            source_node="s1",
             target_nodes=["t1", "t2", "t3"],
             strategy=FailoverStrategy.LEAST_LOADED,
         )
@@ -1730,7 +1877,8 @@ class TestFailoverManagerDeepIntegration:
         manager.update_node_priority("t3", 5)
 
         rule = FailoverRule(
-            rule_id="r1", source_node="s1",
+            rule_id="r1",
+            source_node="s1",
             target_nodes=["t1", "t2", "t3"],
             strategy=FailoverStrategy.PRIORITY,
         )
@@ -1745,7 +1893,8 @@ class TestFailoverManagerDeepIntegration:
 
         manager = FailoverManager()
         rule = FailoverRule(
-            rule_id="r1", source_node="s1",
+            rule_id="r1",
+            source_node="s1",
             target_nodes=["t1"],
             strategy=FailoverStrategy.ROUND_ROBIN,
         )
@@ -1764,23 +1913,37 @@ class TestRecommendationEngineDeepIntegration:
     def test_tfidf_relevance_ranking(self):
         """TF-IDF 相关度排名：包含更多相关词的文档排名更高"""
         from ecos.l0.governance import (
-            PersonalKnowledgeManager, KnowledgeNode, KnowledgeType,
-            PreferenceEngine, RecommendationEngine,
+            PersonalKnowledgeManager,
+            KnowledgeNode,
+            KnowledgeType,
+            PreferenceEngine,
+            RecommendationEngine,
         )
 
         km = PersonalKnowledgeManager()
-        km.add_knowledge(KnowledgeNode(
-            node_id="k1", knowledge_type=KnowledgeType.FACT,
-            content={"text": "artificial intelligence machine learning deep learning"},
-        ))
-        km.add_knowledge(KnowledgeNode(
-            node_id="k2", knowledge_type=KnowledgeType.FACT,
-            content={"text": "cooking recipes pasta italian food"},
-        ))
-        km.add_knowledge(KnowledgeNode(
-            node_id="k3", knowledge_type=KnowledgeType.CONCEPT,
-            content={"text": "neural network artificial intelligence training"},
-        ))
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k1",
+                knowledge_type=KnowledgeType.FACT,
+                content={
+                    "text": "artificial intelligence machine learning deep learning"
+                },
+            )
+        )
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k2",
+                knowledge_type=KnowledgeType.FACT,
+                content={"text": "cooking recipes pasta italian food"},
+            )
+        )
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k3",
+                knowledge_type=KnowledgeType.CONCEPT,
+                content={"text": "neural network artificial intelligence training"},
+            )
+        )
 
         pe = PreferenceEngine()
         pe.learn("user-1", "artificial", "topic", 1.0)
@@ -1794,19 +1957,28 @@ class TestRecommendationEngineDeepIntegration:
     def test_preference_boosts_ranking(self):
         """偏好匹配提升排名"""
         from ecos.l0.governance import (
-            PersonalKnowledgeManager, KnowledgeNode, KnowledgeType,
-            PreferenceEngine, RecommendationEngine,
+            PersonalKnowledgeManager,
+            KnowledgeNode,
+            KnowledgeType,
+            PreferenceEngine,
+            RecommendationEngine,
         )
 
         km = PersonalKnowledgeManager()
-        km.add_knowledge(KnowledgeNode(
-            node_id="k1", knowledge_type=KnowledgeType.FACT,
-            content={"text": "python programming language"},
-        ))
-        km.add_knowledge(KnowledgeNode(
-            node_id="k2", knowledge_type=KnowledgeType.FACT,
-            content={"text": "java programming language"},
-        ))
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k1",
+                knowledge_type=KnowledgeType.FACT,
+                content={"text": "python programming language"},
+            )
+        )
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k2",
+                knowledge_type=KnowledgeType.FACT,
+                content={"text": "java programming language"},
+            )
+        )
 
         pe = PreferenceEngine()
         pe.learn("user-1", "python", "topic", 5.0)
@@ -1818,23 +1990,35 @@ class TestRecommendationEngineDeepIntegration:
     def test_similar_content_recommendation(self):
         """相似内容推荐"""
         from ecos.l0.governance import (
-            PersonalKnowledgeManager, KnowledgeNode, KnowledgeType,
-            PreferenceEngine, RecommendationEngine,
+            PersonalKnowledgeManager,
+            KnowledgeNode,
+            KnowledgeType,
+            PreferenceEngine,
+            RecommendationEngine,
         )
 
         km = PersonalKnowledgeManager()
-        km.add_knowledge(KnowledgeNode(
-            node_id="k1", knowledge_type=KnowledgeType.CONCEPT,
-            content={"text": "machine learning algorithms"},
-        ))
-        km.add_knowledge(KnowledgeNode(
-            node_id="k2", knowledge_type=KnowledgeType.CONCEPT,
-            content={"text": "deep learning neural networks"},
-        ))
-        km.add_knowledge(KnowledgeNode(
-            node_id="k3", knowledge_type=KnowledgeType.FACT,
-            content={"text": "cooking italian pasta"},
-        ))
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k1",
+                knowledge_type=KnowledgeType.CONCEPT,
+                content={"text": "machine learning algorithms"},
+            )
+        )
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k2",
+                knowledge_type=KnowledgeType.CONCEPT,
+                content={"text": "deep learning neural networks"},
+            )
+        )
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k3",
+                knowledge_type=KnowledgeType.FACT,
+                content={"text": "cooking italian pasta"},
+            )
+        )
 
         pe = PreferenceEngine()
         engine = RecommendationEngine(km, pe)
@@ -1845,22 +2029,36 @@ class TestRecommendationEngineDeepIntegration:
     def test_tag_based_query(self):
         """标签查询"""
         from ecos.l0.governance import (
-            PersonalKnowledgeManager, KnowledgeNode, KnowledgeType,
+            PersonalKnowledgeManager,
+            KnowledgeNode,
+            KnowledgeType,
         )
 
         km = PersonalKnowledgeManager()
-        km.add_knowledge(KnowledgeNode(
-            node_id="k1", knowledge_type=KnowledgeType.FACT,
-            content={"text": "AI"}, tags=["tech", "ai"],
-        ))
-        km.add_knowledge(KnowledgeNode(
-            node_id="k2", knowledge_type=KnowledgeType.FACT,
-            content={"text": "ML"}, tags=["tech", "ml"],
-        ))
-        km.add_knowledge(KnowledgeNode(
-            node_id="k3", knowledge_type=KnowledgeType.FACT,
-            content={"text": "cooking"}, tags=["food"],
-        ))
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k1",
+                knowledge_type=KnowledgeType.FACT,
+                content={"text": "AI"},
+                tags=["tech", "ai"],
+            )
+        )
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k2",
+                knowledge_type=KnowledgeType.FACT,
+                content={"text": "ML"},
+                tags=["tech", "ml"],
+            )
+        )
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k3",
+                knowledge_type=KnowledgeType.FACT,
+                content={"text": "cooking"},
+                tags=["food"],
+            )
+        )
 
         results = km.query_by_tags(["tech"])
         assert len(results) == 2
@@ -1871,22 +2069,34 @@ class TestRecommendationEngineDeepIntegration:
     def test_related_knowledge(self):
         """关联知识查询"""
         from ecos.l0.governance import (
-            PersonalKnowledgeManager, KnowledgeNode, KnowledgeType,
+            PersonalKnowledgeManager,
+            KnowledgeNode,
+            KnowledgeType,
         )
 
         km = PersonalKnowledgeManager()
-        km.add_knowledge(KnowledgeNode(
-            node_id="k1", knowledge_type=KnowledgeType.CONCEPT,
-            content={"text": "AI"}, relations=["k2", "k3"],
-        ))
-        km.add_knowledge(KnowledgeNode(
-            node_id="k2", knowledge_type=KnowledgeType.FACT,
-            content={"text": "ML"},
-        ))
-        km.add_knowledge(KnowledgeNode(
-            node_id="k3", knowledge_type=KnowledgeType.FACT,
-            content={"text": "DL"},
-        ))
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k1",
+                knowledge_type=KnowledgeType.CONCEPT,
+                content={"text": "AI"},
+                relations=["k2", "k3"],
+            )
+        )
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k2",
+                knowledge_type=KnowledgeType.FACT,
+                content={"text": "ML"},
+            )
+        )
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k3",
+                knowledge_type=KnowledgeType.FACT,
+                content={"text": "DL"},
+            )
+        )
 
         related = km.get_related("k1", depth=1)
         assert len(related) == 2
@@ -1905,6 +2115,7 @@ class TestRecommendationEngineDeepIntegration:
 # ══════════════════════════════════════════════════════════════
 # Phase 1-5 验收标准验证测试
 # ══════════════════════════════════════════════════════════════
+
 
 class TestPhase1Acceptance:
     """Phase 1 验收: 2机状态同步延迟 < 100ms"""
@@ -1959,7 +2170,9 @@ class TestPhase2Acceptance:
         success_count = 0
 
         for i in range(total_tasks):
-            scheduler.submit_task(f"task-{i}", f"任务{i}", required_capabilities=["task"])
+            scheduler.submit_task(
+                f"task-{i}", f"任务{i}", required_capabilities=["task"]
+            )
             idle = registry.get_idle_agents()
             if idle:
                 scheduler.assign_task(f"task-{i}", idle[0].agent_id)
@@ -1987,13 +2200,38 @@ class TestPhase3Acceptance:
 
     def test_three_role_collaboration_success_rate(self):
         from ecos.l0.governance import (
-            RoleManager, RoleDefinition, RoleType, RoleCollaboration, CollaborationMode,
+            RoleManager,
+            RoleDefinition,
+            RoleType,
+            RoleCollaboration,
+            CollaborationMode,
         )
 
         rm = RoleManager()
-        rm.define_role(RoleDefinition(role_id="worker", role_type=RoleType.WORKER, capabilities=["execute"], constraints={}))
-        rm.define_role(RoleDefinition(role_id="reviewer", role_type=RoleType.SPECIALIST, capabilities=["review"], constraints={}))
-        rm.define_role(RoleDefinition(role_id="coordinator", role_type=RoleType.COORDINATOR, capabilities=["manage"], constraints={}))
+        rm.define_role(
+            RoleDefinition(
+                role_id="worker",
+                role_type=RoleType.WORKER,
+                capabilities=["execute"],
+                constraints={},
+            )
+        )
+        rm.define_role(
+            RoleDefinition(
+                role_id="reviewer",
+                role_type=RoleType.SPECIALIST,
+                capabilities=["review"],
+                constraints={},
+            )
+        )
+        rm.define_role(
+            RoleDefinition(
+                role_id="coordinator",
+                role_type=RoleType.COORDINATOR,
+                capabilities=["manage"],
+                constraints={},
+            )
+        )
 
         collab = RoleCollaboration(rm)
 
@@ -2002,11 +2240,16 @@ class TestPhase3Acceptance:
 
         for i in range(total_tasks):
             collab.create_task(
-                f"task-{i}", f"协作任务{i}",
+                f"task-{i}",
+                f"协作任务{i}",
                 ["worker", "reviewer", "coordinator"],
                 CollaborationMode.SEQUENTIAL,
             )
-            assignments = {"worker": f"worker-{i}", "reviewer": f"reviewer-{i}", "coordinator": f"coord-{i}"}
+            assignments = {
+                "worker": f"worker-{i}",
+                "reviewer": f"reviewer-{i}",
+                "coordinator": f"coord-{i}",
+            }
             if collab.assign_roles_to_task(f"task-{i}", assignments):
                 collab.start_task(f"task-{i}")
                 collab.complete_task(f"task-{i}", {"result": "done"})
@@ -2061,7 +2304,9 @@ class TestPhase4Acceptance:
         from ecos.l0.governance import CollectiveDecision, DecisionMethod
 
         engine = CollectiveDecision()
-        engine.create_proposal("p1", "测试", ["A", "B", "C"], DecisionMethod.MAJORITY_VOTE)
+        engine.create_proposal(
+            "p1", "测试", ["A", "B", "C"], DecisionMethod.MAJORITY_VOTE
+        )
 
         for i in range(7):
             engine.vote("p1", f"a{i}", "A")
@@ -2084,7 +2329,7 @@ class TestPhase5Acceptance:
             builder.add_node(n)
 
         for i in range(19):
-            builder.add_edge(f"n{i}", f"n{i+1}", "related")
+            builder.add_edge(f"n{i}", f"n{i + 1}", "related")
 
         coverage = len(builder.nodes) / len(nodes)
         assert coverage > 0.90, f"覆盖率 {coverage:.1%} 低于 90%"
@@ -2106,23 +2351,35 @@ class TestPhase5Acceptance:
 
     def test_recommendation_quality(self):
         from ecos.l0.governance import (
-            PersonalKnowledgeManager, KnowledgeNode, KnowledgeType,
-            PreferenceEngine, RecommendationEngine,
+            PersonalKnowledgeManager,
+            KnowledgeNode,
+            KnowledgeType,
+            PreferenceEngine,
+            RecommendationEngine,
         )
 
         km = PersonalKnowledgeManager()
-        km.add_knowledge(KnowledgeNode(
-            node_id="k1", knowledge_type=KnowledgeType.FACT,
-            content={"text": "python machine learning algorithms"},
-        ))
-        km.add_knowledge(KnowledgeNode(
-            node_id="k2", knowledge_type=KnowledgeType.FACT,
-            content={"text": "cooking italian pasta recipes"},
-        ))
-        km.add_knowledge(KnowledgeNode(
-            node_id="k3", knowledge_type=KnowledgeType.CONCEPT,
-            content={"text": "deep learning neural networks"},
-        ))
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k1",
+                knowledge_type=KnowledgeType.FACT,
+                content={"text": "python machine learning algorithms"},
+            )
+        )
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k2",
+                knowledge_type=KnowledgeType.FACT,
+                content={"text": "cooking italian pasta recipes"},
+            )
+        )
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k3",
+                knowledge_type=KnowledgeType.CONCEPT,
+                content={"text": "deep learning neural networks"},
+            )
+        )
 
         pe = PreferenceEngine()
         pe.learn("user-1", "machine", "topic", 5.0)
@@ -2139,6 +2396,7 @@ class TestPhase5Acceptance:
 # 治理检查器测试
 # ══════════════════════════════════════════════════════════════
 
+
 class TestSwarmBrainStructureChecker:
     """蜂群大脑结构检查器测试"""
 
@@ -2150,12 +2408,24 @@ class TestSwarmBrainStructureChecker:
         (tmp_path / "src" / "ecos" / "l2" / "engine").mkdir(parents=True)
         (tmp_path / "src" / "ecos" / "l3" / "entry").mkdir(parents=True)
 
-        for f in ["distributed.py", "role.py", "swarm.py", "personal.py",
-                   "agent_registry.py", "task_scheduler.py", "failover.py", "load_balancer.py"]:
-            (tmp_path / "src" / "ecos" / "l0" / "governance" / f).write_text("# placeholder\n" * 100)
+        for f in [
+            "distributed.py",
+            "role.py",
+            "swarm.py",
+            "personal.py",
+            "agent_registry.py",
+            "task_scheduler.py",
+            "failover.py",
+            "load_balancer.py",
+        ]:
+            (tmp_path / "src" / "ecos" / "l0" / "governance" / f).write_text(
+                "# placeholder\n" * 100
+            )
 
         for layer in ["l1/runtime", "l2/engine", "l3/entry"]:
-            (tmp_path / "src" / "ecos" / layer / "__init__.py").write_text("# " + "x" * 600)
+            (tmp_path / "src" / "ecos" / layer / "__init__.py").write_text(
+                "# " + "x" * 600
+            )
 
         for d in ["test_l0", "test_l1", "test_l2", "test_l3"]:
             (tmp_path / "tests" / d).mkdir(parents=True)
@@ -2173,8 +2443,16 @@ class TestSwarmBrainStructureChecker:
         (tmp_path / "src" / "ecos" / "l2" / "engine").mkdir(parents=True)
         (tmp_path / "src" / "ecos" / "l3" / "entry").mkdir(parents=True)
 
-        for f in ["distributed.py", "role.py", "swarm.py", "personal.py",
-                   "agent_registry.py", "task_scheduler.py", "failover.py", "load_balancer.py"]:
+        for f in [
+            "distributed.py",
+            "role.py",
+            "swarm.py",
+            "personal.py",
+            "agent_registry.py",
+            "task_scheduler.py",
+            "failover.py",
+            "load_balancer.py",
+        ]:
             (tmp_path / "src" / "ecos" / "l0" / "governance" / f).write_text("x" * 200)
 
         for layer in ["l1/runtime", "l2/engine", "l3/entry"]:
@@ -2198,6 +2476,7 @@ class TestSwarmBrainStructureChecker:
 # ══════════════════════════════════════════════════════════════
 # 跨层集成测试 — L0 → L1 → L2 → L3 全链路
 # ══════════════════════════════════════════════════════════════
+
 
 class TestCrossLayerIntegration:
     """跨层集成测试 — 验证 L0-L3 全链路协作"""
@@ -2229,7 +2508,14 @@ class TestCrossLayerIntegration:
         from ecos.l2.engine import CollaborationEngine, EngineConfig
 
         rm = RoleManager()
-        rm.define_role(RoleDefinition(role_id="worker", role_type=RoleType.WORKER, capabilities=["execute"], constraints={}))
+        rm.define_role(
+            RoleDefinition(
+                role_id="worker",
+                role_type=RoleType.WORKER,
+                capabilities=["execute"],
+                constraints={},
+            )
+        )
 
         l2_engine = CollaborationEngine(EngineConfig(engine_id="collab-l2"))
         l2_engine.start()
@@ -2238,7 +2524,9 @@ class TestCrossLayerIntegration:
             l2_engine.register_agent(f"agent-{i}", ["execute"])
 
         for i in range(10):
-            l2_engine.submit_task(f"task-{i}", f"任务{i}", required_capabilities=["execute"])
+            l2_engine.submit_task(
+                f"task-{i}", f"任务{i}", required_capabilities=["execute"]
+            )
 
         assignments = l2_engine.auto_assign()
         assert len(assignments) == 10
@@ -2253,8 +2541,11 @@ class TestCrossLayerIntegration:
     def test_l0_personal_to_l2_knowledge(self):
         """L0 个人知识原语 → L2 个人引擎 集成"""
         from ecos.l0.governance import (
-            PersonalKnowledgeManager, KnowledgeNode, KnowledgeType,
-            PreferenceEngine, RecommendationEngine,
+            PersonalKnowledgeManager,
+            KnowledgeNode,
+            KnowledgeType,
+            PreferenceEngine,
+            RecommendationEngine,
         )
         from ecos.l2.engine import PersonalEngine, EngineConfig
 
@@ -2266,10 +2557,14 @@ class TestCrossLayerIntegration:
 
         topics = ["AI", "ML", "Python", "Cooking", "Music"]
         for t in topics:
-            l0_km.add_knowledge(KnowledgeNode(
-                node_id=t.lower(), knowledge_type=KnowledgeType.FACT,
-                content={"topic": t}, tags=[t.lower()],
-            ))
+            l0_km.add_knowledge(
+                KnowledgeNode(
+                    node_id=t.lower(),
+                    knowledge_type=KnowledgeType.FACT,
+                    content={"topic": t},
+                    tags=[t.lower()],
+                )
+            )
             l2_engine.add_knowledge(t.lower(), {"topic": t}, tags=[t.lower()])
 
         l0_pe.learn("user-1", "ai", "topic", 5.0)
@@ -2297,9 +2592,7 @@ class TestCrossLayerIntegration:
         snap_a = l0_node_a.generate_snapshot()
         l0_node_b.sync_from_snapshot(snap_a)
 
-        l1_node.sync_from(
-            {k: (v, 1) for k, v in l0_node_a.get_all().items()}
-        )
+        l1_node.sync_from({k: (v, 1) for k, v in l0_node_a.get_all().items()})
 
         assert l0_node_b.get("x") == 1
         assert l0_node_b.get("y") == 2
@@ -2342,6 +2635,7 @@ class TestCrossLayerIntegration:
 # ══════════════════════════════════════════════════════════════
 # 边界情况测试
 # ══════════════════════════════════════════════════════════════
+
 
 class TestEdgeCases:
     """边界情况测试 — 空输入、极端值、异常路径"""
@@ -2487,6 +2781,7 @@ class TestEdgeCases:
 # 端到端验证 — 蜂群式AI超级大脑全链路工作流
 # ══════════════════════════════════════════════════════════════
 
+
 class TestEndToEndWorkflow:
     """端到端验证 — 证明蜂群式AI超级大脑能真正工作"""
 
@@ -2524,15 +2819,18 @@ class TestEndToEndWorkflow:
 
         manager = SwarmManager()
         for i in range(8):
-            manager.add_agent(f"agent-{i}", weight=1.0 + i * 0.5,
-                              initial_state={"role": "worker"})
+            manager.add_agent(
+                f"agent-{i}", weight=1.0 + i * 0.5, initial_state={"role": "worker"}
+            )
 
         decision = CollectiveDecision()
         weights = {f"agent-{i}": 1.0 + i * 0.5 for i in range(8)}
         decision.create_proposal(
-            "deploy", "选择部署策略",
+            "deploy",
+            "选择部署策略",
             ["blue-green", "canary", "rolling"],
-            DecisionMethod.WEIGHTED_VOTE, agent_weights=weights,
+            DecisionMethod.WEIGHTED_VOTE,
+            agent_weights=weights,
         )
 
         decision.vote("deploy", "agent-0", "canary")
@@ -2554,8 +2852,12 @@ class TestEndToEndWorkflow:
     def test_knowledge_recommendation_workflow(self):
         """知识推荐完整工作流"""
         from ecos.l0.governance import (
-            PersonalKnowledgeManager, KnowledgeNode, KnowledgeType,
-            KnowledgeGraphBuilder, PreferenceEngine, RecommendationEngine,
+            PersonalKnowledgeManager,
+            KnowledgeNode,
+            KnowledgeType,
+            KnowledgeGraphBuilder,
+            PreferenceEngine,
+            RecommendationEngine,
         )
 
         km = PersonalKnowledgeManager()
@@ -2563,18 +2865,38 @@ class TestEndToEndWorkflow:
         pe = PreferenceEngine()
 
         docs = [
-            ("python-basics", "Python programming language fundamentals", ["python", "programming"]),
-            ("ml-algorithms", "Machine learning algorithms and models", ["ml", "algorithms"]),
+            (
+                "python-basics",
+                "Python programming language fundamentals",
+                ["python", "programming"],
+            ),
+            (
+                "ml-algorithms",
+                "Machine learning algorithms and models",
+                ["ml", "algorithms"],
+            ),
             ("deep-learning", "Deep learning neural networks", ["dl", "neural"]),
-            ("cooking-101", "Basic cooking recipes and techniques", ["cooking", "recipes"]),
-            ("data-science", "Data science with Python and statistics", ["data", "science"]),
+            (
+                "cooking-101",
+                "Basic cooking recipes and techniques",
+                ["cooking", "recipes"],
+            ),
+            (
+                "data-science",
+                "Data science with Python and statistics",
+                ["data", "science"],
+            ),
         ]
 
         for doc_id, text, tags in docs:
-            km.add_knowledge(KnowledgeNode(
-                node_id=doc_id, knowledge_type=KnowledgeType.FACT,
-                content={"text": text}, tags=tags,
-            ))
+            km.add_knowledge(
+                KnowledgeNode(
+                    node_id=doc_id,
+                    knowledge_type=KnowledgeType.FACT,
+                    content={"text": text},
+                    tags=tags,
+                )
+            )
             graph.add_node(doc_id, {"text": text})
 
         graph.add_edge("python-basics", "ml-algorithms", "prerequisite")
@@ -2599,27 +2921,62 @@ class TestEndToEndWorkflow:
     def test_role_collaboration_workflow(self):
         """角色协作完整工作流"""
         from ecos.l0.governance import (
-            RoleManager, RoleDefinition, RoleType, RoleCollaboration,
-            RoleEvaluator, CollaborationMode,
+            RoleManager,
+            RoleDefinition,
+            RoleType,
+            RoleCollaboration,
+            RoleEvaluator,
+            CollaborationMode,
         )
 
         rm = RoleManager()
-        rm.define_role(RoleDefinition(role_id="analyst", role_type=RoleType.WORKER, capabilities=["analyze"], constraints={}))
-        rm.define_role(RoleDefinition(role_id="developer", role_type=RoleType.WORKER, capabilities=["code"], constraints={}))
-        rm.define_role(RoleDefinition(role_id="reviewer", role_type=RoleType.SPECIALIST, capabilities=["review"], constraints={}))
-        rm.define_role(RoleDefinition(role_id="lead", role_type=RoleType.COORDINATOR, capabilities=["manage"], constraints={}))
+        rm.define_role(
+            RoleDefinition(
+                role_id="analyst",
+                role_type=RoleType.WORKER,
+                capabilities=["analyze"],
+                constraints={},
+            )
+        )
+        rm.define_role(
+            RoleDefinition(
+                role_id="developer",
+                role_type=RoleType.WORKER,
+                capabilities=["code"],
+                constraints={},
+            )
+        )
+        rm.define_role(
+            RoleDefinition(
+                role_id="reviewer",
+                role_type=RoleType.SPECIALIST,
+                capabilities=["review"],
+                constraints={},
+            )
+        )
+        rm.define_role(
+            RoleDefinition(
+                role_id="lead",
+                role_type=RoleType.COORDINATOR,
+                capabilities=["manage"],
+                constraints={},
+            )
+        )
 
         collab = RoleCollaboration(rm)
         evaluator = RoleEvaluator()
 
         collab.create_task(
-            "project-1", "开发新功能",
+            "project-1",
+            "开发新功能",
             ["analyst", "developer", "reviewer", "lead"],
             CollaborationMode.PIPELINE,
         )
         assignments = {
-            "analyst": "alice", "developer": "bob",
-            "reviewer": "carol", "lead": "dave",
+            "analyst": "alice",
+            "developer": "bob",
+            "reviewer": "carol",
+            "lead": "dave",
         }
         collab.assign_roles_to_task("project-1", assignments)
         collab.start_task("project-1")
@@ -2640,8 +2997,13 @@ class TestEndToEndWorkflow:
     def test_fault_tolerance_workflow(self):
         """故障容错完整工作流"""
         from ecos.l0.governance import (
-            FailoverManager, FailoverRule, FailoverStrategy,
-            LoadBalancer, LoadBalancingStrategy, NodeManager, NodeStatus,
+            FailoverManager,
+            FailoverRule,
+            FailoverStrategy,
+            LoadBalancer,
+            LoadBalancingStrategy,
+            NodeManager,
+            NodeStatus,
         )
 
         nm = NodeManager()
@@ -2649,18 +3011,23 @@ class TestEndToEndWorkflow:
             nm.register(f"node-{i}")
 
         fm = FailoverManager()
-        fm.add_rule(FailoverRule(
-            rule_id="rule-1", source_node="node-0",
-            target_nodes=["node-1", "node-2", "node-3"],
-            strategy=FailoverStrategy.ROUND_ROBIN,
-        ))
+        fm.add_rule(
+            FailoverRule(
+                rule_id="rule-1",
+                source_node="node-0",
+                target_nodes=["node-1", "node-2", "node-3"],
+                strategy=FailoverStrategy.ROUND_ROBIN,
+            )
+        )
 
         lb = LoadBalancer(LoadBalancingStrategy.LEAST_CONNECTIONS)
         for i in range(4):
             lb.register_node(f"node-{i}", weight=1)
 
         health = nm.check_health()
-        healthy_count = sum(1 for s in health.values() if s in (NodeStatus.ONLINE, NodeStatus.HEALTHY))
+        healthy_count = sum(
+            1 for s in health.values() if s in (NodeStatus.ONLINE, NodeStatus.HEALTHY)
+        )
         assert healthy_count == 4
 
         target1 = fm.execute_failover("node-0")
@@ -2687,8 +3054,14 @@ class TestEndToEndWorkflow:
         tools = mcp.list_tools()
         assert len(tools) == 14
 
-        for tool in ["governance_check", "governance_status", "cluster_list",
-                      "swarm_status", "knowledge_stats", "task_submit"]:
+        for tool in [
+            "governance_check",
+            "governance_status",
+            "cluster_list",
+            "swarm_status",
+            "knowledge_stats",
+            "task_submit",
+        ]:
             result = mcp.call_tool(tool)
             assert result["status"] == "ok", f"工具 {tool} 失败"
 
@@ -2696,6 +3069,7 @@ class TestEndToEndWorkflow:
 # ══════════════════════════════════════════════════════════════
 # 新功能测试 — DAG 调度 / 涌现控制 / 增量图谱
 # ══════════════════════════════════════════════════════════════
+
 
 class TestDAGScheduler:
     """DAG 任务调度器测试"""
@@ -2820,7 +3194,8 @@ class TestEmergenceControl:
 
         behavior = EmergentBehavior(
             pattern=EmergencePattern.CLUSTERING,
-            agents=["a1", "a2"], confidence=0.9,
+            agents=["a1", "a2"],
+            confidence=0.9,
         )
         manager.control_emergence(behavior, "suppress")
 
@@ -2835,7 +3210,8 @@ class TestEmergenceControl:
 
         behavior = EmergentBehavior(
             pattern=EmergencePattern.CLUSTERING,
-            agents=["a1"], confidence=0.9,
+            agents=["a1"],
+            confidence=0.9,
         )
         manager.control_emergence(behavior, "amplify")
 
@@ -2849,7 +3225,8 @@ class TestEmergenceControl:
 
         behavior = EmergentBehavior(
             pattern=EmergencePattern.OSCILLATION,
-            agents=["a1"], confidence=0.8,
+            agents=["a1"],
+            confidence=0.8,
         )
         manager.control_emergence(behavior, "redirect")
 
@@ -2864,7 +3241,8 @@ class TestEmergenceControl:
 
         behavior = EmergentBehavior(
             pattern=EmergencePattern.CASCADE,
-            agents=["a1"], confidence=0.9,
+            agents=["a1"],
+            confidence=0.9,
         )
         manager.control_emergence(behavior, "isolate")
 
@@ -2878,7 +3256,8 @@ class TestEmergenceControl:
 
         behavior = EmergentBehavior(
             pattern=EmergencePattern.CLUSTERING,
-            agents=["a1", "a2", "a3"], confidence=0.9,
+            agents=["a1", "a2", "a3"],
+            confidence=0.9,
         )
         manager.control_emergence(behavior, "merge")
 
@@ -2892,7 +3271,8 @@ class TestEmergenceControl:
         manager = SwarmManager()
         behavior = EmergentBehavior(
             pattern=EmergencePattern.CLUSTERING,
-            agents=["a1"], confidence=0.9,
+            agents=["a1"],
+            confidence=0.9,
         )
         assert manager.control_emergence(behavior, "invalid") is False
 
@@ -2995,6 +3375,7 @@ class TestIncrementalGraph:
 # 性能基准测试
 # ══════════════════════════════════════════════════════════════
 
+
 class TestPerformanceBenchmarks:
     """性能基准测试 — 确保算法满足延迟要求"""
 
@@ -3023,7 +3404,7 @@ class TestPerformanceBenchmarks:
         for i in range(100):
             g.add_node(f"n{i}")
         for i in range(99):
-            g.add_edge(f"n{i}", f"n{i+1}", "link")
+            g.add_edge(f"n{i}", f"n{i + 1}", "link")
         g.add_edge("n99", "n0", "link")
 
         start = time.monotonic()
@@ -3036,19 +3417,25 @@ class TestPerformanceBenchmarks:
     def test_recommendation_latency(self):
         import time
         from ecos.l0.governance import (
-            PersonalKnowledgeManager, KnowledgeNode, KnowledgeType,
-            PreferenceEngine, RecommendationEngine,
+            PersonalKnowledgeManager,
+            KnowledgeNode,
+            KnowledgeType,
+            PreferenceEngine,
+            RecommendationEngine,
         )
 
         km = PersonalKnowledgeManager()
         pe = PreferenceEngine()
 
         for i in range(200):
-            km.add_knowledge(KnowledgeNode(
-                node_id=f"doc-{i}", knowledge_type=KnowledgeType.FACT,
-                content={"text": f"document about topic {i % 20}"},
-                tags=[f"tag-{i % 10}"],
-            ))
+            km.add_knowledge(
+                KnowledgeNode(
+                    node_id=f"doc-{i}",
+                    knowledge_type=KnowledgeType.FACT,
+                    content={"text": f"document about topic {i % 20}"},
+                    tags=[f"tag-{i % 10}"],
+                )
+            )
 
         pe.learn("user-1", "topic", "topic", 5.0)
 
@@ -3072,7 +3459,7 @@ class TestPerformanceBenchmarks:
             ts.submit_task(f"t{i}", f"Task {i}")
 
         for i in range(1, 100):
-            dag.add_dependency(f"t{i}", f"t{i-1}")
+            dag.add_dependency(f"t{i}", f"t{i - 1}")
 
         start = time.monotonic()
         order = dag.get_topological_order()
@@ -3086,7 +3473,9 @@ class TestPerformanceBenchmarks:
         from ecos.l0.governance import CollectiveDecision, DecisionMethod
 
         engine = CollectiveDecision()
-        engine.create_proposal("p1", "测试", ["A", "B", "C"], DecisionMethod.MAJORITY_VOTE)
+        engine.create_proposal(
+            "p1", "测试", ["A", "B", "C"], DecisionMethod.MAJORITY_VOTE
+        )
 
         for i in range(50):
             engine.vote("p1", f"agent-{i}", "A" if i < 30 else "B")
@@ -3106,7 +3495,9 @@ class TestPerformanceBenchmarks:
         for i in range(50):
             manager.add_agent(f"a{i}", initial_state={"role": "worker"})
 
-        state = SwarmState(agents=manager.agents, agent_states=manager.agent_states, behaviors=[])
+        state = SwarmState(
+            agents=manager.agents, agent_states=manager.agent_states, behaviors=[]
+        )
 
         start = time.monotonic()
         manager.detect_emergence(state)

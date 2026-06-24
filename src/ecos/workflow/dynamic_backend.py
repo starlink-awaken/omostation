@@ -56,8 +56,12 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
     available_actions = dynamic_cfg.get("available_actions", [])
     llm_model = dynamic_cfg.get("llm_model", os.environ.get("DYNAMIC_WF_MODEL", ""))
 
-    logger.info("Dynamic workflow: %s (max_steps=%d, llm=%s)",
-                objective, max_steps, llm_model or "(fallback)")
+    logger.info(
+        "Dynamic workflow: %s (max_steps=%d, llm=%s)",
+        objective,
+        max_steps,
+        llm_model or "(fallback)",
+    )
 
     # 初始化 Planner
     planner = DynamicPlanner(
@@ -90,48 +94,67 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
 
             handler = resolve_action(action_name)
             if handler is None:
-                logger.warning("Unknown action '%s' at step %d", action_name, step_count)
-                results["steps"].append({
-                    "name": step_name,
-                    "status": "failed",
-                    "action": action_name,
-                    "error": f"未知动作: {action_name}",
-                })
+                logger.warning(
+                    "Unknown action '%s' at step %d", action_name, step_count
+                )
+                results["steps"].append(
+                    {
+                        "name": step_name,
+                        "status": "failed",
+                        "action": action_name,
+                        "error": f"未知动作: {action_name}",
+                    }
+                )
                 results["failed"] += 1
                 context["results"].append({"step": step_name, "ok": False})
                 continue
 
-            logger.info("Dynamic step %d: %s → %s (%s)", step_count, step_name, action_name, reason)
+            logger.info(
+                "Dynamic step %d: %s → %s (%s)",
+                step_count,
+                step_name,
+                action_name,
+                reason,
+            )
             step_result = handler(decision.get("params", {}) or {})
             ok = step_result.get("passed", False)
 
-            results["steps"].append({
-                "name": step_name,
-                "status": "ok" if ok else "failed",
-                "action": action_name,
-                "reason": reason,
-                "result": step_result,
-            })
+            results["steps"].append(
+                {
+                    "name": step_name,
+                    "status": "ok" if ok else "failed",
+                    "action": action_name,
+                    "reason": reason,
+                    "result": step_result,
+                }
+            )
             if ok:
                 results["passed"] += 1
             else:
                 results["failed"] += 1
 
-            context["results"].append({"step": step_name, "ok": ok, "summary": step_result.get("summary", "")})
+            context["results"].append(
+                {"step": step_name, "ok": ok, "summary": step_result.get("summary", "")}
+            )
 
         except Exception as e:
             logger.error("Dynamic step %d failed: %s", step_count, e)
-            results["steps"].append({
-                "name": step_name,
-                "status": "error",
-                "action": action_name,
-                "error": str(e),
-            })
+            results["steps"].append(
+                {
+                    "name": step_name,
+                    "status": "error",
+                    "action": action_name,
+                    "error": str(e),
+                }
+            )
             results["failed"] += 1
             context["results"].append({"step": step_name, "ok": False, "error": str(e)})
 
     if step_count >= max_steps and not results["steps"][-1].get("action") == "__done__":
-        logger.warning("Dynamic workflow reached max_steps=%d without explicit completion", max_steps)
+        logger.warning(
+            "Dynamic workflow reached max_steps=%d without explicit completion",
+            max_steps,
+        )
 
     return results
 
@@ -182,7 +205,9 @@ class DynamicPlanner:
                 ),
             )
         except ImportError:
-            logger.warning("openai not installed, dynamic mode falls back to linear execution")
+            logger.warning(
+                "openai not installed, dynamic mode falls back to linear execution"
+            )
             return None
 
     def decide(self, context: dict[str, Any]) -> dict[str, Any]:
@@ -203,12 +228,17 @@ class DynamicPlanner:
         """
         done_count = sum(1 for r in context.get("results", []) if r.get("ok"))
         if done_count >= len(self.available_actions):
-            return {"action": "__done__", "name": "完成", "reason": "所有可用动作已执行完成"}
+            return {
+                "action": "__done__",
+                "name": "完成",
+                "reason": "所有可用动作已执行完成",
+            }
 
         # 找到第一个未执行的动作
         for action in self.available_actions:
             if not any(
-                r.get("summary", "").startswith(action) or r.get("step", "").startswith(action[:5])
+                r.get("summary", "").startswith(action)
+                or r.get("step", "").startswith(action[:5])
                 for r in context.get("results", [])
             ):
                 return {
@@ -219,7 +249,11 @@ class DynamicPlanner:
                 }
 
         # 所有动作都试过了
-        return {"action": "__done__", "name": "完成", "reason": "所有可用动作已尝试执行"}
+        return {
+            "action": "__done__",
+            "name": "完成",
+            "reason": "所有可用动作已尝试执行",
+        }
 
     def _decide_with_llm(self, context: dict[str, Any]) -> dict[str, Any]:
         """调用 LLM 决策下一步"""
@@ -243,9 +277,9 @@ class DynamicPlanner:
                     "content": (
                         "你是一个工作流编排助手。根据目标和当前上下文，"
                         "从可用动作中选择下一步要执行的动作。"
-                        "返回 JSON: {\"action\": \"<动作名>\", \"name\": \"<步骤名>\", "
-                        "\"reason\": \"<选择理由>\", \"params\": {}}"
-                        "当所有必要动作已完成时，返回 {\"action\": \"__done__\", \"name\": \"完成\"}"
+                        '返回 JSON: {"action": "<动作名>", "name": "<步骤名>", '
+                        '"reason": "<选择理由>", "params": {}}'
+                        '当所有必要动作已完成时，返回 {"action": "__done__", "name": "完成"}'
                     ),
                 },
                 {
@@ -267,7 +301,9 @@ class DynamicPlanner:
 
     def _build_prompt(self, context: dict[str, Any]) -> str:
         """构建 LLM prompt"""
-        step_history = json.dumps(context.get("results", []), ensure_ascii=False, indent=2)
+        step_history = json.dumps(
+            context.get("results", []), ensure_ascii=False, indent=2
+        )
         return (
             f"目标: {self.objective}\n\n"
             f"可用动作: {', '.join(self.available_actions)}\n\n"

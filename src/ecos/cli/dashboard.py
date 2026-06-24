@@ -15,12 +15,18 @@ from pathlib import Path
 
 import yaml
 
-ECOS_HOME = Path(os.environ.get("ECOS_HOME", str(Path.home() / "Workspace" / "projects" / "ecos")))
-DATA_DIR = Path(os.environ.get("ECOS_DATA_DIR", str(Path.home() / "Workspace" / "data")))
+ECOS_HOME = Path(
+    os.environ.get("ECOS_HOME", str(Path.home() / "Workspace" / "projects" / "ecos"))
+)
+DATA_DIR = Path(
+    os.environ.get("ECOS_DATA_DIR", str(Path.home() / "Workspace" / "data"))
+)
 STATE_FILE = ECOS_HOME / "STATE.yaml"
 SSB_DB = DATA_DIR / "kos" / "ssb.db"
 WATCHDOG_FILE = Path.home() / ".hermes" / "ecos-watchdog" / "failures.json"
-AGORA_SERVICES_FILE = Path.home() / "Workspace" / "projects" / "agora" / "src" / "agora-services.json"
+AGORA_SERVICES_FILE = (
+    Path.home() / "Workspace" / "projects" / "agora" / "src" / "agora-services.json"
+)
 AGENTMESH_HEALTH_URL = "http://127.0.0.1:3000/v1/health"
 
 
@@ -35,7 +41,13 @@ def load_state() -> dict:
 def get_ssb_stats() -> dict:
     """SSB 数据库统计"""
     if not SSB_DB.exists():
-        return {"error": "DB not found", "total": 0, "signed": 0, "coverage_pct": 0, "max_seq": 0}
+        return {
+            "error": "DB not found",
+            "total": 0,
+            "signed": 0,
+            "coverage_pct": 0,
+            "max_seq": 0,
+        }
     try:
         db = sqlite3.connect(str(SSB_DB))
         total = db.execute("SELECT COUNT(*) FROM ssb_events").fetchone()[0]
@@ -58,17 +70,37 @@ def get_cron_status() -> list:
     """获取 cron 状态"""
     return [
         {"id": "WF-001", "name": "KOS索引", "schedule": "02:00", "status": "active"},
-        {"id": "WF-002", "name": "Minerva研究", "schedule": "周日03:00", "status": "active"},
+        {
+            "id": "WF-002",
+            "name": "Minerva研究",
+            "schedule": "周日03:00",
+            "status": "active",
+        },
         {"id": "WF-003", "name": "健康检查", "schedule": "09:00", "status": "active"},
         {"id": "WF-005", "name": "HANDOFF更新", "schedule": "每2h", "status": "active"},
         {"id": "WF-006", "name": "感知管道", "schedule": "每小时", "status": "active"},
         {"id": "WF-007", "name": "安全检查", "schedule": "每6h", "status": "active"},
-        {"id": "WF-008", "name": "Kanban桥接", "schedule": "每5min", "status": "active"},
-        {"id": "WF-009", "name": "委员会周检", "schedule": "周一09:00", "status": "active"},
+        {
+            "id": "WF-008",
+            "name": "Kanban桥接",
+            "schedule": "每5min",
+            "status": "active",
+        },
+        {
+            "id": "WF-009",
+            "name": "委员会周检",
+            "schedule": "周一09:00",
+            "status": "active",
+        },
         {"id": "WF-010", "name": "宪法执行器", "schedule": "04:00", "status": "active"},
         {"id": "WF-011", "name": "每日摘要", "schedule": "12:00", "status": "active"},
         {"id": "WF-012", "name": "研究推送", "schedule": "12:00", "status": "active"},
-        {"id": "WF-013", "name": "知识缺口检测", "schedule": "每天", "status": "active"},
+        {
+            "id": "WF-013",
+            "name": "知识缺口检测",
+            "schedule": "每天",
+            "status": "active",
+        },
     ]
 
 
@@ -129,6 +161,7 @@ def get_all_data() -> dict:
 
 def main():
     """eCOS Dashboard entry point — outputs JSON data (HTTP server removed)."""
+    print("⚠️ ECOS Dashboard 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     if "--help" in sys.argv or "-h" in sys.argv:
         print("Usage: ecos-dashboard [--json]")
         print()

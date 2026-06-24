@@ -26,7 +26,9 @@ from collections import Counter
 
 # ── 路径 ──
 HOME = Path.home()
-SSOT_DIR = Path(__file__).resolve().parent.parent  # 相对脚本 (tools/ 上上级 = ssot/), 不硬编码 HOME/Workspace (CI HOME=/home/runner 无此路径 → _load_nodes 空 → workflow 全找不到)
+SSOT_DIR = (
+    Path(__file__).resolve().parent.parent
+)  # 相对脚本 (tools/ 上上级 = ssot/), 不硬编码 HOME/Workspace (CI HOME=/home/runner 无此路径 → _load_nodes 空 → workflow 全找不到)
 M1_WF_DIR = SSOT_DIR / "mof" / "m1" / "workflow"
 REGISTRY_FILE = SSOT_DIR / "registry" / "workflow-catalog.yaml"
 
@@ -404,9 +406,7 @@ def cmd_run(args):
 
     if bos_uri:
         out.print_info(f"BOS URI: {bos_uri}")
-        out.print_info(
-            f"提示: 使用 'agora call \"{bos_uri}\"' 执行该工作流"
-        )
+        out.print_info(f"提示: 使用 'agora call \"{bos_uri}\"' 执行该工作流")
     else:
         out.print_warning("该工作流无 BOS URI，需通过 Agora Service Mesh 路由")
         out.print_info(
@@ -874,6 +874,7 @@ def build_parser():
 
 
 def main():
+    print("⚠️ MOF Workflow 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     parser = build_parser()
 
     # 保持向后兼容: 支持不被 argparse 识别的 args 作为 name 传入

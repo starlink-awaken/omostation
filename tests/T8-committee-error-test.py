@@ -54,14 +54,20 @@ with open(IRREV) as f:
     irrev_content = f.read()
 
 ssb_protection = "SSB" in irrev_content or "ssb" in irrev_content
-bulk_delete = "批量删除" in irrev_content or "bulk" in irrev_content.lower() or "所有" in irrev_content
+bulk_delete = (
+    "批量删除" in irrev_content
+    or "bulk" in irrev_content.lower()
+    or "所有" in irrev_content
+)
 print(f"  IRREVERSIBLE-OPS 涵盖 SSB: {ssb_protection}")
 print(f"  IRREVERSIBLE-OPS 涵盖批量删除: {bulk_delete}")
 
 # Check for irreversible category
 irrev_ops = re.findall(r"###\s+(.*)", irrev_content)
 print(f"  不可逆操作类别: {irrev_ops[:5]}")
-print(f"  {'✅ A2: SSB 操作受不可逆审查' if ssb_protection else '⚠️ A2: SSB 不在不可逆列表中'}")
+print(
+    f"  {'✅ A2: SSB 操作受不可逆审查' if ssb_protection else '⚠️ A2: SSB 不在不可逆列表中'}"
+)
 
 # ─── A3: "关闭所有Cron" — should trigger CRITIC ───
 print("\n" + "=" * 60)
@@ -82,7 +88,9 @@ for af in adr_files:
 # Check realtime guard for mass operation detection
 if os.path.exists(GUARD):
     mass_op_patterns = re.findall(r"mass|批量|all|全部", guard_code, re.IGNORECASE)
-    print(f"  realtime_guard 批量操作检测: {bool(mass_op_patterns)} ({len(mass_op_patterns)} 处)")
+    print(
+        f"  realtime_guard 批量操作检测: {bool(mass_op_patterns)} ({len(mass_op_patterns)} 处)"
+    )
 
 print("\n  ℹ️ A3: cronjob 工具本身有确认机制，大操作需人工介入")
 

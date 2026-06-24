@@ -23,7 +23,14 @@ class TestBaseline:
 
     def test_baseline_has_all_zones(self):
         zones = BASELINE["zones"]
-        assert set(zones.keys()) == {"workspace_root", "omo", "kairon", "agentmesh", "gbrain", "sharedbrain"}
+        assert set(zones.keys()) == {
+            "workspace_root",
+            "omo",
+            "kairon",
+            "agentmesh",
+            "gbrain",
+            "sharedbrain",
+        }
         assert sum(zones.values()) == 7327
 
     def test_baseline_has_10_known_docs(self):
@@ -46,7 +53,8 @@ class TestCheckDrift:
         alerts = check_drift(7327 + 879, BASELINE["zones"])
         assert len([a for a in alerts if a["level"] == "critical"]) >= 1
         assert all(
-            a.get("action") == "NO_AUTO_REINDEX" or "HUMAN_INVESTIGATE" in a.get("action", "")
+            a.get("action") == "NO_AUTO_REINDEX"
+            or "HUMAN_INVESTIGATE" in a.get("action", "")
             for a in alerts
             if a["level"] == "critical"
         )
@@ -54,16 +62,33 @@ class TestCheckDrift:
     def test_no_auto_reindex_in_any_alert(self):
         alerts = check_drift(
             7327 + 1000,
-            {"sharedbrain": 0, "kairon": 2000, "gbrain": 500, "omo": 180, "agentmesh": 40, "workspace_root": 10},
+            {
+                "sharedbrain": 0,
+                "kairon": 2000,
+                "gbrain": 500,
+                "omo": 180,
+                "agentmesh": 40,
+                "workspace_root": 10,
+            },
         )
         for a in alerts:
-            assert a.get("action") not in ("REINDEX", "AUTO_REINDEX"), f"AUTO_REINDEX found: {a}"
+            assert a.get("action") not in ("REINDEX", "AUTO_REINDEX"), (
+                f"AUTO_REINDEX found: {a}"
+            )
             # "NO_AUTO_REINDEX" contains 'reindex' but is the correct action — it's explicitly preventing it
 
     def test_missing_zone_raises_critical(self):
         # sharedbrain zone is 0 (missing) — should trigger critical
         alerts = check_drift(
-            7327, {"sharedbrain": 0, "kairon": 1886, "gbrain": 506, "omo": 179, "agentmesh": 38, "workspace_root": 8}
+            7327,
+            {
+                "sharedbrain": 0,
+                "kairon": 1886,
+                "gbrain": 506,
+                "omo": 179,
+                "agentmesh": 38,
+                "workspace_root": 8,
+            },
         )
         sharedbrain_alert = [a for a in alerts if a.get("metric") == "zone_sharedbrain"]
         assert len(sharedbrain_alert) >= 1
@@ -78,7 +103,15 @@ class TestCheckDrift:
 
     def test_negative_drift(self):
         alerts = check_drift(
-            6000, {"sharedbrain": 4000, "kairon": 1500, "gbrain": 400, "omo": 100, "agentmesh": 0, "workspace_root": 0}
+            6000,
+            {
+                "sharedbrain": 4000,
+                "kairon": 1500,
+                "gbrain": 400,
+                "omo": 100,
+                "agentmesh": 0,
+                "workspace_root": 0,
+            },
         )
         assert len(alerts) > 0
 

@@ -14,7 +14,10 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(
-    0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts")
+    0,
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"
+    ),
 )
 
 # ═══════════════════════════════════════════
@@ -116,7 +119,8 @@ class TestSSBAuth:
         # 篡改数据库中的 payload
         db = sqlite3.connect(str(temp_env["db"]))
         db.execute(
-            "UPDATE ssb_events SET payload_json = ? WHERE seq = 1000", ('{"test":"tampered"}',)
+            "UPDATE ssb_events SET payload_json = ? WHERE seq = 1000",
+            ('{"test":"tampered"}',),
         )
         db.commit()
         db.close()
@@ -249,7 +253,8 @@ class TestIntegration:
     def test_cross_refs_exists(self):
         """cross_refs.jsonl 存在且格式正确"""
         cross_refs = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "LADS/cross_refs.jsonl"
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "LADS/cross_refs.jsonl",
         )
         with open(cross_refs) as f:
             refs = [json.loads(line) for line in f if line.strip()]

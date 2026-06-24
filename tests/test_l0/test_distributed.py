@@ -16,24 +16,29 @@ from multiprocessing import Process, Queue
 import pytest
 
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "src"))
 
 
 # ══════════════════════════════════════════════════════════════
 # 多进程 worker 函数 (必须在模块级别定义才能被 pickle)
 # ══════════════════════════════════════════════════════════════
 
+
 def _sync_worker(queue, node_id, data):
     """同步 worker"""
     from ecos.l0.governance import StateSyncService, SyncStrategy
+
     node = StateSyncService(node_id, SyncStrategy.EVENTUAL)
     for k, v in data.items():
         node.set(k, v)
-    queue.put({
-        "node_id": node_id,
-        "state": node.get_all(),
-        "clock": node.get_clock(),
-    })
+    queue.put(
+        {
+            "node_id": node_id,
+            "state": node.get_all(),
+            "clock": node.get_clock(),
+        }
+    )
 
 
 def _sync_worker_with_update(queue, node_id, initial_data, sync_data):
@@ -44,42 +49,50 @@ def _sync_worker_with_update(queue, node_id, initial_data, sync_data):
     for k, v in initial_data.items():
         node.set(k, v)
 
-    queue.put({
-        "type": "initial",
-        "node_id": node_id,
-        "state": node.get_all(),
-        "clock": node.get_clock(),
-    })
+    queue.put(
+        {
+            "type": "initial",
+            "node_id": node_id,
+            "state": node.get_all(),
+            "clock": node.get_clock(),
+        }
+    )
 
     time.sleep(0.05)
 
     for k, v in sync_data.items():
         node.set(k, v)
 
-    queue.put({
-        "type": "updated",
-        "node_id": node_id,
-        "state": node.get_all(),
-        "clock": node.get_clock(),
-    })
+    queue.put(
+        {
+            "type": "updated",
+            "node_id": node_id,
+            "state": node.get_all(),
+            "clock": node.get_clock(),
+        }
+    )
 
 
 def _writer_worker(queue, node_id, key, values):
     """写入 worker"""
     from ecos.l0.governance import StateSyncService, SyncStrategy
+
     node = StateSyncService(node_id, SyncStrategy.EVENTUAL)
     for v in values:
         node.set(key, v)
-    queue.put({
-        "node_id": node_id,
-        "state": node.get_all(),
-        "clock": node.get_clock(),
-    })
+    queue.put(
+        {
+            "node_id": node_id,
+            "state": node.get_all(),
+            "clock": node.get_clock(),
+        }
+    )
 
 
 def _perf_worker(queue, data):
     """性能测试 worker"""
     from ecos.l0.governance import StateSyncService, SyncStrategy
+
     node = StateSyncService("worker", SyncStrategy.EVENTUAL)
     for k, v in data.items():
         node.set(k, v)
@@ -94,17 +107,20 @@ def _multi_worker(queue, node_id, role, load):
     node.set("role", role)
     node.set("load", str(load))
 
-    queue.put({
-        "node_id": node_id,
-        "role": role,
-        "load": load,
-        "clock": node.get_clock(),
-    })
+    queue.put(
+        {
+            "node_id": node_id,
+            "role": role,
+            "load": load,
+            "clock": node.get_clock(),
+        }
+    )
 
 
 # ══════════════════════════════════════════════════════════════
 # 场景 1: 多节点状态同步
 # ══════════════════════════════════════════════════════════════
+
 
 class TestMultiNodeStateSync:
     """多节点状态同步测试"""
@@ -217,6 +233,7 @@ class TestMultiNodeStateSync:
 # 场景 2: 多进程模拟多机通信
 # ══════════════════════════════════════════════════════════════
 
+
 class TestMultiProcessSimulation:
     """多进程模拟多机通信测试"""
 
@@ -224,8 +241,13 @@ class TestMultiProcessSimulation:
         """两进程状态同步"""
         queue = Queue()
 
-        p1 = Process(target=_sync_worker, args=(queue, "worker-1", {"task": "compute", "load": 50}))
-        p2 = Process(target=_sync_worker, args=(queue, "worker-2", {"task": "store", "load": 30}))
+        p1 = Process(
+            target=_sync_worker,
+            args=(queue, "worker-1", {"task": "compute", "load": 50}),
+        )
+        p2 = Process(
+            target=_sync_worker, args=(queue, "worker-2", {"task": "store", "load": 30})
+        )
 
         p1.start()
         p2.start()
@@ -255,7 +277,9 @@ class TestMultiProcessSimulation:
 
         processes = []
         for node_id, initial, sync in configs:
-            p = Process(target=_sync_worker_with_update, args=(queue, node_id, initial, sync))
+            p = Process(
+                target=_sync_worker_with_update, args=(queue, node_id, initial, sync)
+            )
             processes.append(p)
             p.start()
 
@@ -280,8 +304,12 @@ class TestMultiProcessSimulation:
         """并发写入"""
         queue = Queue()
 
-        p1 = Process(target=_writer_worker, args=(queue, "w1", "counter", list(range(10))))
-        p2 = Process(target=_writer_worker, args=(queue, "w2", "counter", list(range(10, 20))))
+        p1 = Process(
+            target=_writer_worker, args=(queue, "w1", "counter", list(range(10)))
+        )
+        p2 = Process(
+            target=_writer_worker, args=(queue, "w2", "counter", list(range(10, 20)))
+        )
 
         p1.start()
         p2.start()
@@ -302,6 +330,7 @@ class TestMultiProcessSimulation:
 # 场景 3: 故障转移模拟
 # ══════════════════════════════════════════════════════════════
 
+
 class TestFailoverSimulation:
     """故障转移模拟测试"""
 
@@ -310,7 +339,11 @@ class TestFailoverSimulation:
         from ecos.l0.governance import FailoverManager, FailoverRule, FailoverStrategy
 
         fm = FailoverManager()
-        fm.add_rule(FailoverRule("r1", "primary", ["s1", "s2", "s3"], FailoverStrategy.ROUND_ROBIN))
+        fm.add_rule(
+            FailoverRule(
+                "r1", "primary", ["s1", "s2", "s3"], FailoverStrategy.ROUND_ROBIN
+            )
+        )
 
         targets = []
         for _ in range(6):
@@ -328,7 +361,11 @@ class TestFailoverSimulation:
         fm.update_node_load("s2", 2)
         fm.update_node_load("s3", 5)
 
-        fm.add_rule(FailoverRule("r1", "primary", ["s1", "s2", "s3"], FailoverStrategy.LEAST_LOADED))
+        fm.add_rule(
+            FailoverRule(
+                "r1", "primary", ["s1", "s2", "s3"], FailoverStrategy.LEAST_LOADED
+            )
+        )
 
         target = fm.execute_failover("primary")
         assert target == "s2"
@@ -342,7 +379,9 @@ class TestFailoverSimulation:
         fm.update_node_priority("s2", 10)
         fm.update_node_priority("s3", 5)
 
-        fm.add_rule(FailoverRule("r1", "primary", ["s1", "s2", "s3"], FailoverStrategy.PRIORITY))
+        fm.add_rule(
+            FailoverRule("r1", "primary", ["s1", "s2", "s3"], FailoverStrategy.PRIORITY)
+        )
 
         target = fm.execute_failover("primary")
         assert target == "s2"
@@ -352,7 +391,9 @@ class TestFailoverSimulation:
         from ecos.l0.governance import FailoverManager, FailoverRule, FailoverStrategy
 
         fm = FailoverManager()
-        fm.add_rule(FailoverRule("r1", "primary", ["s1", "s2"], FailoverStrategy.ROUND_ROBIN))
+        fm.add_rule(
+            FailoverRule("r1", "primary", ["s1", "s2"], FailoverStrategy.ROUND_ROBIN)
+        )
 
         fm.execute_failover("primary")
         fm.execute_failover("primary")
@@ -368,6 +409,7 @@ class TestFailoverSimulation:
 # ══════════════════════════════════════════════════════════════
 # 场景 4: 负载均衡模拟
 # ══════════════════════════════════════════════════════════════
+
 
 class TestLoadBalancingSimulation:
     """负载均衡模拟测试"""
@@ -429,6 +471,7 @@ class TestLoadBalancingSimulation:
 # 场景 5: 蜂群决策模拟
 # ══════════════════════════════════════════════════════════════
 
+
 class TestSwarmDecisionSimulation:
     """蜂群决策模拟测试"""
 
@@ -437,12 +480,17 @@ class TestSwarmDecisionSimulation:
         from ecos.l0.governance import CollectiveDecision, DecisionMethod
 
         cd = CollectiveDecision()
-        cd.create_proposal("p1", "部署策略", ["blue-green", "canary", "rolling"], DecisionMethod.MAJORITY_VOTE)
+        cd.create_proposal(
+            "p1",
+            "部署策略",
+            ["blue-green", "canary", "rolling"],
+            DecisionMethod.MAJORITY_VOTE,
+        )
 
         for i in range(7):
             cd.vote("p1", f"agent-{i}", "canary")
         for i in range(3):
-            cd.vote("p1", f"agent-{i+7}", "blue-green")
+            cd.vote("p1", f"agent-{i + 7}", "blue-green")
 
         result = cd.decide("p1")
         assert result == "canary"
@@ -453,7 +501,13 @@ class TestSwarmDecisionSimulation:
 
         cd = CollectiveDecision()
         weights = {"boss": 10, "dev1": 1, "dev2": 1, "dev3": 1}
-        cd.create_proposal("p1", "技术选型", ["python", "go", "rust"], DecisionMethod.WEIGHTED_VOTE, agent_weights=weights)
+        cd.create_proposal(
+            "p1",
+            "技术选型",
+            ["python", "go", "rust"],
+            DecisionMethod.WEIGHTED_VOTE,
+            agent_weights=weights,
+        )
 
         cd.vote("p1", "boss", "python")
         cd.vote("p1", "dev1", "go")
@@ -495,6 +549,7 @@ class TestSwarmDecisionSimulation:
 # 场景 6: 性能基准
 # ══════════════════════════════════════════════════════════════
 
+
 class TestPerformanceBenchmarks:
     """性能基准测试"""
 
@@ -521,7 +576,7 @@ class TestPerformanceBenchmarks:
         for i in range(100):
             kg.add_node(f"n{i}")
         for i in range(99):
-            kg.add_edge(f"n{i}", f"n{i+1}", "link")
+            kg.add_edge(f"n{i}", f"n{i + 1}", "link")
 
         start = time.monotonic()
         for _ in range(100):
@@ -553,7 +608,9 @@ class TestPerformanceBenchmarks:
         start = time.monotonic()
         processes = []
         for i in range(4):
-            p = Process(target=_perf_worker, args=(queue, {f"k{j}": j for j in range(10)}))
+            p = Process(
+                target=_perf_worker, args=(queue, {f"k{j}": j for j in range(10)})
+            )
             processes.append(p)
             p.start()
 
@@ -574,6 +631,7 @@ class TestPerformanceBenchmarks:
 # 场景 7: 持久化验证
 # ══════════════════════════════════════════════════════════════
 
+
 class TestPersistenceVerification:
     """持久化验证测试"""
 
@@ -581,7 +639,7 @@ class TestPersistenceVerification:
         """状态持久化往返"""
         from ecos.common.persistence import StatePersistence
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
             db_path = f.name
 
         try:
@@ -600,7 +658,7 @@ class TestPersistenceVerification:
         from ecos.common.persistence import StatePersistence
         from ecos.l0.governance import TaskScheduler
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
             db_path = f.name
 
         try:
@@ -621,16 +679,22 @@ class TestPersistenceVerification:
 # 场景 8: 端到端工作流
 # ══════════════════════════════════════════════════════════════
 
+
 class TestEndToEndWorkflow:
     """端到端工作流测试"""
 
     def test_full_workflow(self):
         """完整工作流: 状态同步 + 故障转移 + 负载均衡 + 决策"""
         from ecos.l0.governance import (
-            StateSyncService, SyncStrategy,
-            FailoverManager, FailoverRule, FailoverStrategy,
-            LoadBalancer, LoadBalancingStrategy,
-            CollectiveDecision, DecisionMethod,
+            StateSyncService,
+            SyncStrategy,
+            FailoverManager,
+            FailoverRule,
+            FailoverStrategy,
+            LoadBalancer,
+            LoadBalancingStrategy,
+            CollectiveDecision,
+            DecisionMethod,
         )
 
         nodes = [StateSyncService(f"node-{i}", SyncStrategy.EVENTUAL) for i in range(4)]
@@ -647,7 +711,14 @@ class TestEndToEndWorkflow:
             assert n.get("role") is not None
 
         fm = FailoverManager()
-        fm.add_rule(FailoverRule("r1", "node-0", ["node-1", "node-2", "node-3"], FailoverStrategy.ROUND_ROBIN))
+        fm.add_rule(
+            FailoverRule(
+                "r1",
+                "node-0",
+                ["node-1", "node-2", "node-3"],
+                FailoverStrategy.ROUND_ROBIN,
+            )
+        )
         target = fm.execute_failover("node-0")
         assert target in ["node-1", "node-2", "node-3"]
 
@@ -660,7 +731,9 @@ class TestEndToEndWorkflow:
         assert selected in ["node-2", "node-3"]  # 最少连接的节点
 
         cd = CollectiveDecision()
-        cd.create_proposal("p1", "部署策略", ["canary", "blue-green"], DecisionMethod.MAJORITY_VOTE)
+        cd.create_proposal(
+            "p1", "部署策略", ["canary", "blue-green"], DecisionMethod.MAJORITY_VOTE
+        )
         cd.vote("p1", "node-0", "canary")
         cd.vote("p1", "node-1", "canary")
         cd.vote("p1", "node-2", "blue-green")

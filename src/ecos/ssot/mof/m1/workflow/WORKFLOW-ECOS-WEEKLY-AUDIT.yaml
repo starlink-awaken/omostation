@@ -9,6 +9,8 @@ domain: meta
 layer: L0
 created: '2026-06-07'
 bos_uri: bos://ecos/workflow/weekly-audit
+execution:
+  cache_ttl: 7200
 cross_layer:
   realized_by:
   - project: ecos

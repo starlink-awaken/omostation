@@ -530,7 +530,19 @@ def format_summary(all_nodes: list[dict]) -> str:
 
     lines.append("")
     lines.append("  ── 按层 ──")
-    for layer_name in ["L0", "L1", "L2", "L3", "L4", "I0", "X1", "X2", "X3", "X4", "multi"]:
+    for layer_name in [
+        "L0",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "I0",
+        "X1",
+        "X2",
+        "X3",
+        "X4",
+        "multi",
+    ]:
         if layer_name in by_layer:
             lines.append(f"  {layer_name:6s}: {by_layer[layer_name]:3d}")
 
@@ -539,6 +551,9 @@ def format_summary(all_nodes: list[dict]) -> str:
 
 
 def main():
+    import sys
+
+    print("⚠️ MOF Model 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     parser = argparse.ArgumentParser()
     parser.add_argument("--layer", type=str, default="all")
     parser.add_argument("--summary", action="store_true")

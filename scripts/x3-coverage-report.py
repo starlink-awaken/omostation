@@ -22,20 +22,20 @@ DIMS = ["X1", "X2", "X3"]
 
 # 二值覆盖率 (L1+ 算覆盖)
 COVERAGE = {
-    "CARDS":  {"X1": True,  "X2": True,  "X3": True},
-    "OMO":    {"X1": True,  "X2": True,  "X3": True},
-    "Kairon": {"X1": True,  "X2": True,  "X3": True},
-    "Vault":  {"X1": True,  "X2": True,  "X3": True},
-    "域系统":  {"X1": True,  "X2": True,  "X3": True},
+    "CARDS": {"X1": True, "X2": True, "X3": True},
+    "OMO": {"X1": True, "X2": True, "X3": True},
+    "Kairon": {"X1": True, "X2": True, "X3": True},
+    "Vault": {"X1": True, "X2": True, "X3": True},
+    "域系统": {"X1": True, "X2": True, "X3": True},
 }
 
 # 深度分级 (L0-L3)
 DEPTH = {
-    "CARDS":  {"X1": 2, "X2": 2, "X3": 2},
-    "OMO":    {"X1": 2, "X2": 2, "X3": 2},
+    "CARDS": {"X1": 2, "X2": 2, "X3": 2},
+    "OMO": {"X1": 2, "X2": 2, "X3": 2},
     "Kairon": {"X1": 1, "X2": 2, "X3": 1},
-    "Vault":  {"X1": 1, "X2": 2, "X3": 1},
-    "域系统":  {"X1": 1, "X2": 1, "X3": 1},
+    "Vault": {"X1": 1, "X2": 2, "X3": 1},
+    "域系统": {"X1": 1, "X2": 1, "X3": 1},
 }
 
 # 限制标注
@@ -58,13 +58,20 @@ def compute_coverage() -> dict:
     for dim in DIMS:
         covered = sum(1 for d in DOMAINS if COVERAGE[d][dim])
         results[dim] = {
-            "covered": covered, "total": len(DOMAINS),
+            "covered": covered,
+            "total": len(DOMAINS),
             "ratio": covered / len(DOMAINS),
             "target": TARGETS[dim],
             "pass": covered / len(DOMAINS) >= TARGETS[dim],
         }
-    overall = sum(r["covered"] for r in results.values()) / sum(r["total"] for r in results.values())
-    results["overall"] = {"ratio": overall, "target": TARGETS["overall"], "pass": overall >= TARGETS["overall"]}
+    overall = sum(r["covered"] for r in results.values()) / sum(
+        r["total"] for r in results.values()
+    )
+    results["overall"] = {
+        "ratio": overall,
+        "target": TARGETS["overall"],
+        "pass": overall >= TARGETS["overall"],
+    }
     return results
 
 
@@ -73,14 +80,18 @@ def compute_depth_stats() -> dict:
     for dim in DIMS:
         depths = [DEPTH[d][dim] for d in DOMAINS]
         stats[dim] = {
-            "L0": depths.count(0), "L1": depths.count(1),
-            "L2": depths.count(2), "L3": depths.count(3),
+            "L0": depths.count(0),
+            "L1": depths.count(1),
+            "L2": depths.count(2),
+            "L3": depths.count(3),
             "L2_plus": sum(1 for x in depths if x >= 2),
         }
     all_depths = [DEPTH[d][dim] for d in DOMAINS for dim in DIMS]
     stats["overall"] = {
-        "L0": all_depths.count(0), "L1": all_depths.count(1),
-        "L2": all_depths.count(2), "L3": all_depths.count(3),
+        "L0": all_depths.count(0),
+        "L1": all_depths.count(1),
+        "L2": all_depths.count(2),
+        "L3": all_depths.count(3),
         "L2_plus": sum(1 for x in all_depths if x >= 2),
     }
     return stats
@@ -134,8 +145,10 @@ def format_report(results: dict, depth_stats: dict) -> str:
         total = d["L0"] + d["L1"] + d["L2"] + d["L3"]
         l2_ratio = d["L2_plus"] / total * 100 if total > 0 else 0
         bar = "█" * int(l2_ratio / 10) + "░" * (10 - int(l2_ratio / 10))
-        lines.append(f"  {dim:8s}  L0:{d['L0']} L1:{d['L1']} L2:{d['L2']} L3:{d['L3']}  "
-                     f"L2+:{d['L2_plus']}/{total} [{bar}] {l2_ratio:.0f}%")
+        lines.append(
+            f"  {dim:8s}  L0:{d['L0']} L1:{d['L1']} L2:{d['L2']} L3:{d['L3']}  "
+            f"L2+:{d['L2_plus']}/{total} [{bar}] {l2_ratio:.0f}%"
+        )
 
     lines.append("")
 
@@ -146,7 +159,9 @@ def format_report(results: dict, depth_stats: dict) -> str:
         r = results[dim]
         bar = "█" * int(r["ratio"] * 20) + "░" * (20 - int(r["ratio"] * 20))
         status = "✅" if r["pass"] else "⚠️"
-        lines.append(f"  {dim:8s}  [{bar}]  {r['ratio']:.0%}  → 目标 {r['target']:.0%}  {status}")
+        lines.append(
+            f"  {dim:8s}  [{bar}]  {r['ratio']:.0%}  → 目标 {r['target']:.0%}  {status}"
+        )
 
     lines.append("")
     lines.append("  深度: L0=不存在 L1=脚本存在 L2=功能完整 L3=集成自动")
@@ -163,13 +178,21 @@ def main():
     depth_stats = compute_depth_stats()
 
     if args.json:
-        print(json.dumps({
-            "generated_at": datetime.now().isoformat(),
-            "coverage": results,
-            "depth": DEPTH,
-            "depth_stats": depth_stats,
-            "limitations": {f"{d}[{x}]": n for (d, x), n in LIMITATIONS.items()},
-        }, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "generated_at": datetime.now().isoformat(),
+                    "coverage": results,
+                    "depth": DEPTH,
+                    "depth_stats": depth_stats,
+                    "limitations": {
+                        f"{d}[{x}]": n for (d, x), n in LIMITATIONS.items()
+                    },
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         print(format_report(results, depth_stats))
 

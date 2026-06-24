@@ -23,6 +23,7 @@ from ecos.services.core.brief import (
 
 # ── run_script ──
 
+
 class TestRunScript:
     @patch("ecos.services.core.brief.SCRIPTS")
     @patch("ecos.services.core.brief.subprocess.run")
@@ -48,6 +49,7 @@ class TestRunScript:
     def test_timeout(self, mock_run, mock_scripts):
         mock_scripts.__truediv__.return_value.exists.return_value = True
         from subprocess import TimeoutExpired
+
         mock_run.side_effect = TimeoutExpired("test.py", 1)
         out, code = run_script("test.py", timeout=1)
         assert "超时" in out
@@ -56,10 +58,14 @@ class TestRunScript:
 
 # ── get_sla ──
 
+
 class TestGetSla:
     @patch("ecos.services.core.brief.run_script")
     def test_parses_json(self, mock_run):
-        mock_run.return_value = (json.dumps({"uptime": 95.0, "consecutive_passes": 10, "total": 100}), 0)
+        mock_run.return_value = (
+            json.dumps({"uptime": 95.0, "consecutive_passes": 10, "total": 100}),
+            0,
+        )
         sla = get_sla()
         assert sla["uptime"] == 95.0
         assert sla["consecutive_passes"] == 10
@@ -72,6 +78,7 @@ class TestGetSla:
 
 
 # ── get_top_cards ──
+
 
 class TestGetTopCards:
     @patch("ecos.services.core.brief.CARDS_DB")
@@ -107,6 +114,7 @@ class TestGetTopCards:
 
 
 # ── check_claude_guards ──
+
 
 class TestCheckClaudeGuards:
     @patch("ecos.services.core.brief.DOCS")
@@ -151,6 +159,7 @@ class TestCheckClaudeGuards:
 
 # ── get_protocol_risks ──
 
+
 class TestGetProtocolRisks:
     @patch("ecos.services.core.brief.run_script")
     def test_no_risks(self, mock_run):
@@ -182,6 +191,7 @@ class TestGetProtocolRisks:
 
 # ── get_event_count_since ──
 
+
 class TestGetEventCountSince:
     @patch("ecos.services.core.brief.Path.home")
     def test_file_not_exists(self, mock_home):
@@ -209,6 +219,7 @@ class TestGetEventCountSince:
 
 # ── check_freshness ──
 
+
 class TestCheckFreshness:
     def test_file_not_exists(self):
         with patch("ecos.services.core.brief.Path.exists", return_value=False):
@@ -231,6 +242,7 @@ class TestCheckFreshness:
 
 # ── format_brief ──
 
+
 class TestFormatBrief:
     def test_minimal(self):
         text = format_brief(
@@ -250,13 +262,41 @@ class TestFormatBrief:
 
     def test_with_data(self):
         text = format_brief(
-            sla={"uptime": 95.0, "consecutive_passes": 10, "total": 100, "last_failure": None},
-            cards=[{"id": "C-1", "title": "Fix bug", "status": "active", "domain": "core", "priority": "P0"}],
-            risks=[{"protocol": "SSB", "version": "2.1", "remaining": 15.0, "age_days": 300, "half_life": 365}],
+            sla={
+                "uptime": 95.0,
+                "consecutive_passes": 10,
+                "total": 100,
+                "last_failure": None,
+            },
+            cards=[
+                {
+                    "id": "C-1",
+                    "title": "Fix bug",
+                    "status": "active",
+                    "domain": "core",
+                    "priority": "P0",
+                }
+            ],
+            risks=[
+                {
+                    "protocol": "SSB",
+                    "version": "2.1",
+                    "remaining": 15.0,
+                    "age_days": 300,
+                    "half_life": 365,
+                }
+            ],
             health_pass=True,
             health_output="✅ all good",
             event_count=5,
-            claude_guards={"total": 5, "fresh": 5, "stale": 0, "stale_files": [], "warning": "✅ 全部新鲜", "action_required": False},
+            claude_guards={
+                "total": 5,
+                "fresh": 5,
+                "stale": 0,
+                "stale_files": [],
+                "warning": "✅ 全部新鲜",
+                "action_required": False,
+            },
         )
         assert "95.0%" in text
         assert "Fix bug" in text
@@ -285,7 +325,14 @@ class TestFormatBrief:
             health_pass=True,
             health_output="",
             event_count=0,
-            claude_guards={"total": 3, "fresh": 1, "stale": 2, "stale_files": [{"file": "x/CLAUDE.md", "domain": "x", "age_days": 90}], "warning": "⚠️ 2 个过期", "action_required": True},
+            claude_guards={
+                "total": 3,
+                "fresh": 1,
+                "stale": 2,
+                "stale_files": [{"file": "x/CLAUDE.md", "domain": "x", "age_days": 90}],
+                "warning": "⚠️ 2 个过期",
+                "action_required": True,
+            },
         )
         assert "保鲜告警" in text
         assert "2 个过期" in text
@@ -294,7 +341,15 @@ class TestFormatBrief:
         text = format_brief(
             sla={"uptime": None, "consecutive_passes": 0, "total": 0},
             cards=[],
-            risks=[{"protocol": "OLD", "version": "1.0", "remaining": 5.0, "age_days": 400, "half_life": 365}],
+            risks=[
+                {
+                    "protocol": "OLD",
+                    "version": "1.0",
+                    "remaining": 5.0,
+                    "age_days": 400,
+                    "half_life": 365,
+                }
+            ],
             health_pass=True,
             health_output="",
             event_count=0,
@@ -315,14 +370,19 @@ class TestFormatBrief:
 
 # ── main ──
 
+
 class TestMain:
     @patch("ecos.services.core.brief.argparse.ArgumentParser.parse_args")
     @patch("ecos.services.core.brief.check_freshness")
     @patch("ecos.services.core.brief.Path")
     def test_skip_if_fresh(self, mock_path, mock_freshness, mock_args):
         mock_freshness.return_value = True
-        mock_args.return_value = MagicMock(output="/fake/brief.md", json=False, force=False)
-        mock_path.return_value.stat.return_value = MagicMock(st_mtime=datetime.now().timestamp())
+        mock_args.return_value = MagicMock(
+            output="/fake/brief.md", json=False, force=False
+        )
+        mock_path.return_value.stat.return_value = MagicMock(
+            st_mtime=datetime.now().timestamp()
+        )
         main()  # should not raise
 
     @patch("ecos.services.core.brief.argparse.ArgumentParser.parse_args")
@@ -335,11 +395,29 @@ class TestMain:
     @patch("ecos.services.core.brief.run_script")
     @patch("ecos.services.core.brief.Path.write_text")
     def test_generates_brief(
-        self, mock_write, mock_run, mock_event, mock_risks, mock_cards, mock_sla, mock_claude, mock_freshness, mock_args
+        self,
+        mock_write,
+        mock_run,
+        mock_event,
+        mock_risks,
+        mock_cards,
+        mock_sla,
+        mock_claude,
+        mock_freshness,
+        mock_args,
     ):
         mock_freshness.return_value = False
-        mock_args.return_value = MagicMock(output="/fake/brief.md", json=False, force=False)
-        mock_claude.return_value = {"total": 0, "fresh": 0, "stale": 0, "stale_files": [], "warning": "ok", "action_required": False}
+        mock_args.return_value = MagicMock(
+            output="/fake/brief.md", json=False, force=False
+        )
+        mock_claude.return_value = {
+            "total": 0,
+            "fresh": 0,
+            "stale": 0,
+            "stale_files": [],
+            "warning": "ok",
+            "action_required": False,
+        }
         mock_sla.return_value = {"uptime": None, "consecutive_passes": 0, "total": 0}
         mock_cards.return_value = []
         mock_risks.return_value = []
@@ -357,11 +435,28 @@ class TestMain:
     @patch("ecos.services.core.brief.get_event_count_since")
     @patch("ecos.services.core.brief.run_script")
     def test_json_output(
-        self, mock_run, mock_event, mock_risks, mock_cards, mock_sla, mock_claude, mock_freshness, mock_args
+        self,
+        mock_run,
+        mock_event,
+        mock_risks,
+        mock_cards,
+        mock_sla,
+        mock_claude,
+        mock_freshness,
+        mock_args,
     ):
         mock_freshness.return_value = False
-        mock_args.return_value = MagicMock(output="/fake/brief.md", json=True, force=False)
-        mock_claude.return_value = {"total": 0, "fresh": 0, "stale": 0, "stale_files": [], "warning": "ok", "action_required": False}
+        mock_args.return_value = MagicMock(
+            output="/fake/brief.md", json=True, force=False
+        )
+        mock_claude.return_value = {
+            "total": 0,
+            "fresh": 0,
+            "stale": 0,
+            "stale_files": [],
+            "warning": "ok",
+            "action_required": False,
+        }
         mock_sla.return_value = {"uptime": None, "consecutive_passes": 0, "total": 0}
         mock_cards.return_value = []
         mock_risks.return_value = []

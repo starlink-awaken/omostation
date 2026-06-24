@@ -57,7 +57,9 @@ def format_digest(entries: list[dict]) -> str:
             lines.append(f"- 总检查: {data['total']} 次")
             if data.get("last_failure"):
                 lf = data["last_failure"]
-                lines.append(f"- 😴 最近失败: {lf.get('timestamp','?')[:10]} — {lf.get('detail','?')[:60]}")
+                lines.append(
+                    f"- 😴 最近失败: {lf.get('timestamp', '?')[:10]} — {lf.get('detail', '?')[:60]}"
+                )
             else:
                 lines.append("- ✅ 最近失败: 无")
         except (json.JSONDecodeError, KeyError):
@@ -78,7 +80,7 @@ def format_digest(entries: list[dict]) -> str:
             dims = data.get("coverage", {})
             for dim in ["X1", "X2", "X3"]:
                 d = dims.get(dim, {})
-                lines.append(f"- {dim}: 二值 **{d.get('ratio', 0)*100:.0f}%**")
+                lines.append(f"- {dim}: 二值 **{d.get('ratio', 0) * 100:.0f}%**")
         except (json.JSONDecodeError, KeyError):
             pass
     lines.append("")
@@ -86,11 +88,24 @@ def format_digest(entries: list[dict]) -> str:
     # half_life 协议衰减
     lines.append("## 协议价值衰减")
     lines.append("")
-    validator = DOCS / "@学习进化" / "_knowledge" / "10-systems" / "基建架构" / "ecos-constraint-validator.py"
+    validator = (
+        DOCS
+        / "@学习进化"
+        / "_knowledge"
+        / "10-systems"
+        / "基建架构"
+        / "ecos-constraint-validator.py"
+    )
     if validator.exists():
         import subprocess
+
         try:
-            r = subprocess.run(["python3", str(validator), "--json"], capture_output=True, text=True, timeout=30)
+            r = subprocess.run(
+                ["python3", str(validator), "--json"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
             constraint = r.stdout.strip()
         except (subprocess.TimeoutExpired, FileNotFoundError):
             constraint = ""
@@ -102,11 +117,17 @@ def format_digest(entries: list[dict]) -> str:
             for p in data.get("protocols", []):
                 intro = datetime.strptime(p["introduced"], "%Y-%m-%d")
                 age = (now - intro).days
-                decay = min(1.0, age / p["half_life_days"]) if p["half_life_days"] > 0 else 1.0
+                decay = (
+                    min(1.0, age / p["half_life_days"])
+                    if p["half_life_days"] > 0
+                    else 1.0
+                )
                 remaining = max(0, (1 - decay) * 100)
                 icon = "🟢" if remaining > 50 else ("🟡" if remaining > 10 else "🔴")
-                lines.append(f"- {icon} {p['id']}: 剩余价值 {remaining:.0f}% "
-                             f"(引入 {age}d / 半衰期 {p['half_life_days']}d)")
+                lines.append(
+                    f"- {icon} {p['id']}: 剩余价值 {remaining:.0f}% "
+                    f"(引入 {age}d / 半衰期 {p['half_life_days']}d)"
+                )
         except (json.JSONDecodeError, KeyError):
             pass
     lines.append("")
@@ -118,9 +139,13 @@ def format_digest(entries: list[dict]) -> str:
         for p in constraint_data.get("protocols", []):
             intro = datetime.strptime(p["introduced"], "%Y-%m-%d")
             age = (now - intro).days
-            decay = min(1.0, age / p["half_life_days"]) if p["half_life_days"] > 0 else 1.0
+            decay = (
+                min(1.0, age / p["half_life_days"]) if p["half_life_days"] > 0 else 1.0
+            )
             if decay > 1.0:
-                lines.append(f"- 🔴 {p['id']} 已超半衰期 ({age}d > {p['half_life_days']}d) — 建议审查")
+                lines.append(
+                    f"- 🔴 {p['id']} 已超半衰期 ({age}d > {p['half_life_days']}d) — 建议审查"
+                )
     except (json.JSONDecodeError, KeyError):
         pass
 
@@ -129,15 +154,18 @@ def format_digest(entries: list[dict]) -> str:
     lines.append("")
 
     lines.append("---")
-    lines.append(f"> 生成: {now.isoformat()} · 下次: {(now + timedelta(days=7)).strftime('%Y-%m-%d')}")
+    lines.append(
+        f"> 生成: {now.isoformat()} · 下次: {(now + timedelta(days=7)).strftime('%Y-%m-%d')}"
+    )
     return "\n".join(lines)
 
 
 def main():
     parser = argparse.ArgumentParser(description="eCOS v5 每周健康摘要")
     parser.add_argument("--json", action="store_true")
-    parser.add_argument("--output", type=str, default=None,
-                        help="输出路径 (默认 stdout)")
+    parser.add_argument(
+        "--output", type=str, default=None, help="输出路径 (默认 stdout)"
+    )
     args = parser.parse_args()
 
     # 读 SLA 数据
@@ -156,8 +184,13 @@ def main():
     text = format_digest(entries)
 
     if args.json:
-        print(json.dumps({"generated_at": datetime.now().isoformat(),
-                          "digest": text}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"generated_at": datetime.now().isoformat(), "digest": text},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     elif args.output:
         output_path = Path(args.output)
         output_path.write_text(text)

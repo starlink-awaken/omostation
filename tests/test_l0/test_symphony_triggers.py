@@ -36,6 +36,7 @@ class FakeStageManager:
 
 # ── TriggerEngine ──
 
+
 class TestTriggerEngineInit:
     def test_default_init(self):
         engine = TriggerEngine()
@@ -323,6 +324,7 @@ class TestTriggerEngineMonitoring:
 
 # ── create_default_triggers ──
 
+
 class TestCreateDefaultTriggers:
     def test_creates_four_triggers(self):
         mgr = FakeStageManager()
@@ -352,69 +354,109 @@ class TestCreateDefaultTriggers:
         t = triggers[0]
 
         # Conditions met
-        assert t.condition({
-            "context_completeness": 0.98,
-            "ambiguities": [],
-            "truth_locked": True,
-        }) is True
+        assert (
+            t.condition(
+                {
+                    "context_completeness": 0.98,
+                    "ambiguities": [],
+                    "truth_locked": True,
+                }
+            )
+            is True
+        )
 
         # Conditions not met
-        assert t.condition({
-            "context_completeness": 0.50,
-            "ambiguities": [],
-            "truth_locked": True,
-        }) is False
+        assert (
+            t.condition(
+                {
+                    "context_completeness": 0.50,
+                    "ambiguities": [],
+                    "truth_locked": True,
+                }
+            )
+            is False
+        )
 
     def test_scaffolding_trigger_condition(self):
         mgr = FakeStageManager()
         triggers = create_default_triggers(mgr)
         t = triggers[1]
 
-        assert t.condition({
-            "architecture": {"name": "x"},
-            "contract_signed": True,
-            "dependency_graph": {"a": "b"},
-        }) is True
+        assert (
+            t.condition(
+                {
+                    "architecture": {"name": "x"},
+                    "contract_signed": True,
+                    "dependency_graph": {"a": "b"},
+                }
+            )
+            is True
+        )
 
-        assert t.condition({
-            "architecture": None,
-            "contract_signed": True,
-            "dependency_graph": {"a": "b"},
-        }) is False
+        assert (
+            t.condition(
+                {
+                    "architecture": None,
+                    "contract_signed": True,
+                    "dependency_graph": {"a": "b"},
+                }
+            )
+            is False
+        )
 
     def test_implementation_trigger_condition(self):
         mgr = FakeStageManager()
         triggers = create_default_triggers(mgr)
         t = triggers[2]
 
-        assert t.condition({
-            "code_completion_rate": 0.97,
-            "code_coverage": 0.85,
-            "critical_issues": 0,
-        }) is True
+        assert (
+            t.condition(
+                {
+                    "code_completion_rate": 0.97,
+                    "code_coverage": 0.85,
+                    "critical_issues": 0,
+                }
+            )
+            is True
+        )
 
-        assert t.condition({
-            "code_completion_rate": 0.50,
-            "code_coverage": 0.85,
-            "critical_issues": 0,
-        }) is False
+        assert (
+            t.condition(
+                {
+                    "code_completion_rate": 0.50,
+                    "code_coverage": 0.85,
+                    "critical_issues": 0,
+                }
+            )
+            is False
+        )
 
     def test_polishing_trigger_condition(self):
         mgr = FakeStageManager()
         triggers = create_default_triggers(mgr)
         t = triggers[3]
 
-        assert t.condition({
-            "tests_passed": True,
-            "performance_score": 0.95,
-            "self_review_score": 0.90,
-        }) is True
+        assert (
+            t.condition(
+                {
+                    "tests_passed": True,
+                    "performance_score": 0.95,
+                    "self_review_score": 0.90,
+                }
+            )
+            is True
+        )
 
-        assert t.condition({
-            "tests_passed": False,
-            "performance_score": 0.95,
-            "self_review_score": 0.90,
-        }) is False
+        assert (
+            t.condition(
+                {
+                    "tests_passed": False,
+                    "performance_score": 0.95,
+                    "self_review_score": 0.90,
+                }
+            )
+            is False
+        )
 
     def test_triggers_call_transition(self):
         mgr = FakeStageManager()
@@ -435,6 +477,7 @@ class TestCreateDefaultTriggers:
 
 
 # ── setup_trigger_engine ──
+
 
 class TestSetupTriggerEngine:
     def test_setup_returns_engine(self):

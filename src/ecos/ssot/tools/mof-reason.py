@@ -91,39 +91,47 @@ def reason_impact(node_id: str) -> dict:
     for dep in relations.get("depends_on", []):
         dep_node = load_m1(dep)
         if dep_node:
-            impacts["direct"].append({
-                "id": dep,
-                "name": dep_node.get("name", ""),
-                "layer": dep_node.get("layer", ""),
-            })
+            impacts["direct"].append(
+                {
+                    "id": dep,
+                    "name": dep_node.get("name", ""),
+                    "layer": dep_node.get("layer", ""),
+                }
+            )
 
     # 服务
     for svc in relations.get("provides", []):
         svc_node = load_m1(svc)
         if svc_node:
-            impacts["services"].append({
-                "id": svc,
-                "name": svc_node.get("name", ""),
-                "port": svc_node.get("port", ""),
-            })
+            impacts["services"].append(
+                {
+                    "id": svc,
+                    "name": svc_node.get("name", ""),
+                    "port": svc_node.get("port", ""),
+                }
+            )
 
     # 子组件
     for sub in relations.get("subcomponents", []):
         sub_node = load_m1(sub)
         if sub_node:
-            impacts["subcomponents"].append({
-                "id": sub,
-                "name": sub_node.get("name", ""),
-            })
+            impacts["subcomponents"].append(
+                {
+                    "id": sub,
+                    "name": sub_node.get("name", ""),
+                }
+            )
 
     # 间接依赖（谁依赖我）
     for dep in find_dependents(node_id, project_name):
         if dep.get("id") != node_id:
-            impacts["indirect"].append({
-                "id": dep.get("id", ""),
-                "name": dep.get("name", ""),
-                "type": dep.get("type", ""),
-            })
+            impacts["indirect"].append(
+                {
+                    "id": dep.get("id", ""),
+                    "name": dep.get("name", ""),
+                    "type": dep.get("type", ""),
+                }
+            )
 
     return impacts
 
@@ -147,7 +155,9 @@ def reason_state(node_id: str, target_state: str = None) -> dict:
         if current_status in sm:
             legal_transitions = sm[current_status].get("transitions", [])
             result["legal_transitions"] = legal_transitions
-            result["is_legal"] = target_state in legal_transitions if target_state else None
+            result["is_legal"] = (
+                target_state in legal_transitions if target_state else None
+            )
         else:
             result["legal_transitions"] = []
             result["is_legal"] = False
@@ -164,7 +174,9 @@ def reason_value(node_id: str) -> dict:
     return {
         "value_metrics": node.get("value_metrics", {}),
         "cost_model": node.get("cost_model", {}),
-        "strategic_importance": node.get("value_metrics", {}).get("strategic_importance", "unknown"),
+        "strategic_importance": node.get("value_metrics", {}).get(
+            "strategic_importance", "unknown"
+        ),
     }
 
 

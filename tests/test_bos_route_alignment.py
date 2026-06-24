@@ -4,6 +4,7 @@
     uv run pytest tests/test_bos_route_alignment.py -v
     uv run pytest tests/test_bos_route_alignment.py::test_bos_alignment -v --no-header
 """
+
 from __future__ import annotations
 
 import fnmatch
@@ -18,10 +19,24 @@ import yaml
 _log = logging.getLogger(__name__)
 
 # ── 路径常量 ───────────────────────────────────────
-BOSROUTE_DIR = Path(__file__).resolve().parent.parent / "src" / "ecos" / "ssot" / "mof" / "m1" / "bosroute"
+BOSROUTE_DIR = (
+    Path(__file__).resolve().parent.parent
+    / "src"
+    / "ecos"
+    / "ssot"
+    / "mof"
+    / "m1"
+    / "bosroute"
+)
 AGORA_BOS_RESOLVER_PATH = (
     Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
-    / "projects" / "agora" / "src" / "agora" / "mcp" / "resolver" / "services.py"
+    / "projects"
+    / "agora"
+    / "src"
+    / "agora"
+    / "mcp"
+    / "resolver"
+    / "services.py"
 )
 
 # ── 辅助函数 ────────────────────────────────────────
@@ -98,7 +113,7 @@ def _resolve_fstring_uri(expr: str) -> str | None:
     目前仅处理: ``f\"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}recall\"``
     """
     m = re.match(
-        r'''f[\"']\\{CANONICAL_PERSONA_BRIDGE_URI_PREFIX\\}(.+?)[\"']''',
+        r"""f[\"']\\{CANONICAL_PERSONA_BRIDGE_URI_PREFIX\\}(.+?)[\"']""",
         expr,
     )
     if m:
@@ -127,7 +142,9 @@ def load_poc_services_from_file() -> dict[str, dict]:
     keys: list[str] = []
 
     # 新模式: BosService(uri="bos://...") 构造函数 (跨行)
-    pattern_list = re.compile(r'''BosService\(\s*\n\s+uri="(bos://[^"]+)"''', re.MULTILINE)
+    pattern_list = re.compile(
+        r'''BosService\(\s*\n\s+uri="(bos://[^"]+)"''', re.MULTILINE
+    )
 
     for m in pattern_list.finditer(source):
         keys.append(m.group(1))
@@ -251,7 +268,9 @@ def test_yaml_routes_loaded(yaml_routes: list[dict]) -> None:
     """YAML 路由文件能正常加载"""
     assert len(yaml_routes) > 0, f"未扫描到 BOSROUTE YAML 文件 (dir={BOSROUTE_DIR})"
     uris = [e["uri"] for e in yaml_routes]
-    assert all(uri.startswith("bos://") for uri in uris), f"部分 URI 不以 bos:// 开头: {[u for u in uris if not u.startswith('bos://')]}"
+    assert all(uri.startswith("bos://") for uri in uris), (
+        f"部分 URI 不以 bos:// 开头: {[u for u in uris if not u.startswith('bos://')]}"
+    )
     print(f"\n  已加载 {len(yaml_routes)} 个 YAML BOS 路由")
 
 
@@ -304,10 +323,8 @@ def test_poc_routes_have_yaml_coverage(alignment: dict) -> None:
 
     if poc_only:
         poc_sample = "\n    ".join(poc_only[:10])
-        msg = (
-            f"{len(poc_only)} 条 POC URI 无 YAML 模式覆盖:\n"
-            f"    {poc_sample}"
-            + ("\n    ..." if len(poc_only) > 10 else "")
+        msg = f"{len(poc_only)} 条 POC URI 无 YAML 模式覆盖:\n    {poc_sample}" + (
+            "\n    ..." if len(poc_only) > 10 else ""
         )
         pytest.skip(msg)
     else:

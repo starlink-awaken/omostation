@@ -17,6 +17,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "services"))
 
 from ecos.workflow.backend_registry import resolve  # noqa: E402
+from ecos.workflow.cache import get as cache_get, set as cache_set  # noqa: E402
 from ecos.workflow.loader import load_workflow  # noqa: E402
 from ecos.workflow.validator import (  # noqa: E402
     X2BudgetDeducer,
@@ -41,8 +42,10 @@ except ImportError:
 # 新接口: execute_m1_workflow — 通过 BackendRegistry 路由
 # =========================================================================
 
-def execute_m1_workflow(name: str, params: dict | None = None,
-                        dry_run: bool = False) -> dict:
+
+def execute_m1_workflow(
+    name: str, params: dict | None = None, dry_run: bool = False
+) -> dict:
     """执行 M1 工作流·通过 BackendRegistry 路由到对应后端
 
     Args:
@@ -71,13 +74,18 @@ def execute_m1_workflow(name: str, params: dict | None = None,
         "failed": 0,
     }
 
-    logger.info("Executing workflow: %s (backend=%s, mode=%s)",
-                wf_name,
-                m1_node.get("execution", {}).get("backend", "default"),
-                m1_node.get("execution", {}).get("mode", "workflow"))
+    logger.info(
+        "Executing workflow: %s (backend=%s, mode=%s)",
+        wf_name,
+        m1_node.get("execution", {}).get("backend", "default"),
+        m1_node.get("execution", {}).get("mode", "workflow"),
+    )
 
     if wf.get("description"):
         logger.info("  %s", wf["description"])
+
+    # 读取工作流级缓存配置
+    cache_ttl = m1_node.get("execution", {}).get("cache_ttl", 0)
 
     steps = wf.get("steps", [])
     if not steps:
@@ -89,11 +97,13 @@ def execute_m1_workflow(name: str, params: dict | None = None,
     if dry_run:
         for i, step in enumerate(steps, 1):
             step_name = step.get("name", f"step-{i}")
-            results["steps"].append({
-                "name": step_name,
-                "status": "dry_run",
-                "action": step.get("action", ""),
-            })
+            results["steps"].append(
+                {
+                    "name": step_name,
+                    "status": "dry_run",
+                    "action": step.get("action", ""),
+                }
+            )
         results["finished"] = datetime.now().isoformat()
         return results
 
@@ -104,17 +114,32 @@ def execute_m1_workflow(name: str, params: dict | None = None,
         if violations:
             results["violations"] = violations
             if any(v.get("severity") == "error" for v in violations):
-                logger.warning("Workflow blocked by %d validation violations", len(violations))
+                logger.warning(
+                    "Workflow blocked by %d validation violations", len(violations)
+                )
                 results["error"] = f"治理约束未通过: {len(violations)} 个违规"
                 results["finished"] = datetime.now().isoformat()
                 return results
-            logger.info("Workflow validation: %d warnings (non-blocking)", len(violations))
+            logger.info(
+                "Workflow validation: %d warnings (non-blocking)", len(violations)
+            )
+
+        # ── 缓存检查：如果工作流配置了 cache_ttl，优先返回缓存 ──
+        if cache_ttl > 0 and not dry_run:
+            cached = cache_get(name, 0, params)
+            if cached is not None:
+                logger.info("Cache HIT for workflow: %s (skip budget check)", name)
+                return dict(cached)
 
         budget_status = X2BudgetDeducer.check_budget(m1_node)
         if not budget_status.get("ok") and budget_status.get("budget"):
             logger.warning("Budget warnings: %s", budget_status.get("warnings"))
-            if budget_status.get("warnings") and any("余额不足" in w for w in budget_status.get("warnings", [])):
-                results["error"] = f"X2 熔断: Token 余额不足 ({budget_status.get('balance', 0)})"
+            if budget_status.get("warnings") and any(
+                "余额不足" in w for w in budget_status.get("warnings", [])
+            ):
+                results["error"] = (
+                    f"X2 熔断: Token 余额不足 ({budget_status.get('balance', 0)})"
+                )
                 results["finished"] = datetime.now().isoformat()
                 logger.info("X2 circuit break triggered for workflow: %s", name)
                 return results
@@ -130,11 +155,13 @@ def execute_m1_workflow(name: str, params: dict | None = None,
         else:
             # 后端的简略返回模式
             ok = backend_result.get("passed", True)
-            results["steps"].append({
-                "name": wf_name,
-                "status": "ok" if ok else "failed",
-                "result": backend_result,
-            })
+            results["steps"].append(
+                {
+                    "name": wf_name,
+                    "status": "ok" if ok else "failed",
+                    "result": backend_result,
+                }
+            )
             if ok:
                 results["passed"] += 1
             else:
@@ -142,11 +169,17 @@ def execute_m1_workflow(name: str, params: dict | None = None,
     except Exception as e:
         logger.error("Workflow execution failed: %s", e)
         results["failed"] += 1
-        results["steps"].append({
-            "name": "execute",
-            "status": "error",
-            "error": str(e),
-        })
+        results["steps"].append(
+            {
+                "name": "execute",
+                "status": "error",
+                "error": str(e),
+            }
+        )
+
+    # ── 缓存写入：如果工作流配置了 cache_ttl，将结果写入缓存 ──
+    if cache_ttl > 0 and "error" not in results:
+        cache_set(name, 0, results, ttl=cache_ttl, params=params)
 
     # ── 治理管线: post-flight checks ──
     results["finished"] = datetime.now().isoformat()
@@ -171,14 +204,16 @@ def execute_m1_workflow(name: str, params: dict | None = None,
         results["m0_snapshot"] = m0_path
 
     # Log workflow completion
-    log_operation({
-        "timestamp": datetime.now().isoformat(),
-        "domain": "_workflow",
-        "operation": f"workflow:{name}",
-        "uri": f"bos://_workflow/{name}",
-        "passed": results["failed"] == 0,
-        "violations": [],
-    })
+    log_operation(
+        {
+            "timestamp": datetime.now().isoformat(),
+            "domain": "_workflow",
+            "operation": f"workflow:{name}",
+            "uri": f"bos://_workflow/{name}",
+            "passed": results["failed"] == 0,
+            "violations": [],
+        }
+    )
 
     return results
 
@@ -195,8 +230,10 @@ def _normalize_m1(wf: dict) -> dict:
 # 旧接口: execute_workflow — 向后兼容
 # =========================================================================
 
-def execute_workflow(name: str, params: dict | None = None,
-                     dry_run: bool = False) -> dict:
+
+def execute_workflow(
+    name: str, params: dict | None = None, dry_run: bool = False
+) -> dict:
     """执行工作流 — 向后兼容接口（全部委派 execute_m1_workflow）
 
     保持签名和返回值兼容，但所有执行逻辑通过 execute_m1_workflow 统一路由。
@@ -204,13 +241,15 @@ def execute_workflow(name: str, params: dict | None = None,
     """
     return execute_m1_workflow(name, params=params, dry_run=dry_run)
 
+
 # =========================================================================
 # 硬编码 action 执行器 — 声明式注册 (actions.py)
 # =========================================================================
 
 
-def _execute_step(action: str, params: dict | None = None,
-                  step: dict | None = None) -> dict:
+def _execute_step(
+    action: str, params: dict | None = None, step: dict | None = None
+) -> dict:
     """执行单个步骤（通过 actions.py 注册表路由）
 
     支持自定义命令:
@@ -235,7 +274,11 @@ def _execute_step(action: str, params: dict | None = None,
             for key in ("workflow", "command", "timeout", "args", "params"):
                 if key in step:
                     val = step[key]
-                    if isinstance(val, dict) and key in step_params and isinstance(step_params[key], dict):
+                    if (
+                        isinstance(val, dict)
+                        and key in step_params
+                        and isinstance(step_params[key], dict)
+                    ):
                         step_params[key].update(val)
                     else:
                         step_params[key] = val
@@ -270,9 +313,15 @@ def _execute_command(step: dict) -> dict:
         logger.info("Executing custom command: %s", " ".join(cmd))
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         ok = r.returncode == 0
-        summary = r.stdout.strip()[:200] or r.stderr.strip()[:200] or ("✅" if ok else "❌")
-        return {"passed": ok, "summary": summary,
-                "stdout": r.stdout[:1000], "stderr": r.stderr[:500]}
+        summary = (
+            r.stdout.strip()[:200] or r.stderr.strip()[:200] or ("✅" if ok else "❌")
+        )
+        return {
+            "passed": ok,
+            "summary": summary,
+            "stdout": r.stdout[:1000],
+            "stderr": r.stderr[:500],
+        }
     except subprocess.TimeoutExpired:
         logger.warning("Custom command timed out (%ss): %s", timeout, step_name)
         return {"passed": False, "summary": f"命令超时 ({timeout}s)"}
@@ -382,24 +431,32 @@ def test_workflow(name: str) -> dict:
         # 验证 action 名可解析
         handler = resolve_action(action)
         if handler is None:
-            print(f"  ❌  [{i}/{len(steps)}] {step_name:25s}  action 不可解析: {action}")
-            results["steps"].append({
-                "name": step_name, "status": "failed",
-                "action": action, "error": f"未知动作: {action}",
-            })
+            print(
+                f"  ❌  [{i}/{len(steps)}] {step_name:25s}  action 不可解析: {action}"
+            )
+            results["steps"].append(
+                {
+                    "name": step_name,
+                    "status": "failed",
+                    "action": action,
+                    "error": f"未知动作: {action}",
+                }
+            )
             results["failed"] += 1
             continue
 
         dep_info = f"  (依赖: {', '.join(deps)})" if deps else ""
         print(f"  ✅  [{i}/{len(steps)}] {step_name:25s}  {action}{dep_info}")
 
-        results["steps"].append({
-            "name": step_name,
-            "status": "ok",
-            "action": action,
-            "result": {"passed": True, "summary": "✅ (mock)"},
-            "depends_on": deps,
-        })
+        results["steps"].append(
+            {
+                "name": step_name,
+                "status": "ok",
+                "action": action,
+                "result": {"passed": True, "summary": "✅ (mock)"},
+                "depends_on": deps,
+            }
+        )
         results["passed"] += 1
 
     # ── 4. 依赖链验证 ──
@@ -421,7 +478,9 @@ def test_workflow(name: str) -> dict:
     print()
     print(f"{'=' * 50}")
     print("  测试结果:")
-    print(f"    步骤:        {len(steps)} 总 / {results['passed']} ✅ / {results['failed']} ❌")
+    print(
+        f"    步骤:        {len(steps)} 总 / {results['passed']} ✅ / {results['failed']} ❌"
+    )
     print(f"    违规:        {len(errors)} error / {len(warnings)} warning")
     print(f"    后端:        {backend_name}")
     print(f"    未解析依赖:   {len(unresolved_deps)}")

@@ -162,6 +162,9 @@ def format_report(anomalies: list[dict]):
 
 
 def main():
+    import sys
+
+    print("⚠️ MOF BOS Watch 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     import argparse
 
     parser = argparse.ArgumentParser()

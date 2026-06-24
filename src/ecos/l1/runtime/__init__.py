@@ -18,11 +18,12 @@ from enum import Enum
 from typing import Any, Callable, Optional
 
 
-
 logger = get_logger("runtime")
+
 
 class ProtocolType(Enum):
     """协议类型"""
+
     TCP = "tcp"
     WEBSOCKET = "websocket"
     HTTP = "http"
@@ -31,6 +32,7 @@ class ProtocolType(Enum):
 
 class MessageType(Enum):
     """消息类型"""
+
     SYNC = "sync"
     HEARTBEAT = "heartbeat"
     TASK_ASSIGN = "task_assign"
@@ -44,6 +46,7 @@ class MessageType(Enum):
 
 class MessagePriority(Enum):
     """消息优先级"""
+
     LOW = 0
     NORMAL = 1
     HIGH = 2
@@ -52,6 +55,7 @@ class MessagePriority(Enum):
 
 class NodeHealth(Enum):
     """节点健康状态"""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -61,6 +65,7 @@ class NodeHealth(Enum):
 @dataclass
 class Message:
     """消息"""
+
     message_id: str
     message_type: MessageType
     source: str
@@ -77,8 +82,13 @@ class Message:
         return age > self.ttl_seconds
 
     @staticmethod
-    def create(message_type: MessageType, source: str, target: str,
-               payload: dict[str, Any], priority: MessagePriority = MessagePriority.NORMAL) -> Message:
+    def create(
+        message_type: MessageType,
+        source: str,
+        target: str,
+        payload: dict[str, Any],
+        priority: MessagePriority = MessagePriority.NORMAL,
+    ) -> Message:
         return Message(
             message_id=str(uuid.uuid4())[:8],
             message_type=message_type,
@@ -92,6 +102,7 @@ class Message:
 @dataclass
 class HealthCheckResult:
     """健康检查结果"""
+
     node_id: str
     status: NodeHealth
     latency_ms: float = 0.0
@@ -102,6 +113,7 @@ class HealthCheckResult:
 @dataclass
 class RouteMetrics:
     """路由指标"""
+
     total_requests: int = 0
     successful_requests: int = 0
     failed_requests: int = 0
@@ -156,8 +168,13 @@ class CommunicationProtocol:
     L1 运行时: 基于 L0 原语构建的完整通信运行时
     """
 
-    def __init__(self, node_id: str, protocol_type: ProtocolType = ProtocolType.IN_PROCESS,
-                 max_retries: int = 3, retry_delay: float = 1.0):
+    def __init__(
+        self,
+        node_id: str,
+        protocol_type: ProtocolType = ProtocolType.IN_PROCESS,
+        max_retries: int = 3,
+        retry_delay: float = 1.0,
+    ):
         self.node_id = node_id
         self.protocol_type = protocol_type
         self.max_retries = max_retries
@@ -171,7 +188,9 @@ class CommunicationProtocol:
         self._message_log: list[dict[str, Any]] = []
         self._in_flight: dict[str, Message] = {}
 
-    def register_handler(self, message_type: MessageType, handler: Callable[[Message], Any]) -> None:
+    def register_handler(
+        self, message_type: MessageType, handler: Callable[[Message], Any]
+    ) -> None:
         self.message_handlers[message_type.value] = handler
 
     def connect(self, node_id: str) -> bool:
@@ -191,8 +210,13 @@ class CommunicationProtocol:
         try:
             for attempt in range(message.max_retries + 1):
                 if target not in self.connected_nodes:
-                    self._log("send_retry", message_id=message.message_id,
-                              target=target, attempt=attempt, reason="not_connected")
+                    self._log(
+                        "send_retry",
+                        message_id=message.message_id,
+                        target=target,
+                        attempt=attempt,
+                        reason="not_connected",
+                    )
                     continue
 
                 m = self.metrics.setdefault(target, RouteMetrics())
@@ -200,21 +224,33 @@ class CommunicationProtocol:
                 m.last_used = datetime.now(timezone.utc)
 
                 self._in_flight[message.message_id] = message
-                self._log("send", message_id=message.message_id, target=target, attempt=attempt)
+                self._log(
+                    "send",
+                    message_id=message.message_id,
+                    target=target,
+                    attempt=attempt,
+                )
 
                 m.successful_requests += 1
                 self._in_flight.pop(message.message_id, None)
                 return True
 
-            self.dead_letter_queue.append({
-                "message_id": message.message_id,
-                "target": target,
-                "retries": message.max_retries,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
+            self.dead_letter_queue.append(
+                {
+                    "message_id": message.message_id,
+                    "target": target,
+                    "retries": message.max_retries,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+            )
             m = self.metrics.setdefault(target, RouteMetrics())
             m.failed_requests += 1
-            logger.warning("消息发送失败: %s -> %s (重试 %d 次)", message.message_id, target, message.max_retries)
+            logger.warning(
+                "消息发送失败: %s -> %s (重试 %d 次)",
+                message.message_id,
+                target,
+                message.max_retries,
+            )
             self._log("send_failed", message_id=message.message_id, target=target)
             return False
         except Exception as e:
@@ -228,11 +264,20 @@ class CommunicationProtocol:
         handler = self.message_handlers.get(message.message_type.value)
         if handler:
             result = handler(message)
-            self._log("dispatch", message_id=message.message_id,
-                      handler=message.message_type.value, success=True)
+            self._log(
+                "dispatch",
+                message_id=message.message_id,
+                handler=message.message_type.value,
+                success=True,
+            )
             return result
-        self._log("dispatch", message_id=message.message_id,
-                  handler=message.message_type.value, success=False, error="no_handler")
+        self._log(
+            "dispatch",
+            message_id=message.message_id,
+            handler=message.message_type.value,
+            success=False,
+            error="no_handler",
+        )
         return None
 
     def broadcast(self, message: Message) -> dict[str, bool]:
@@ -300,12 +345,14 @@ class CommunicationProtocol:
         }
 
     def _log(self, event_type: str, **kwargs: Any) -> None:
-        self._message_log.append({
-            "type": event_type,
-            "node_id": self.node_id,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            **kwargs,
-        })
+        self._message_log.append(
+            {
+                "type": event_type,
+                "node_id": self.node_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                **kwargs,
+            }
+        )
 
 
 class StateSyncService:
@@ -339,21 +386,29 @@ class StateSyncService:
         return self._l0.get_all()
 
     def get_all_with_versions(self) -> dict[str, tuple[Any, int]]:
-        return {k: (v, self._l0.vector_clock.get(self.node_id, 0))
-                for k, v in self._l0.get_all().items()}
+        return {
+            k: (v, self._l0.vector_clock.get(self.node_id, 0))
+            for k, v in self._l0.get_all().items()
+        }
 
     def sync_from(self, remote_state: dict[str, tuple[Any, int]]) -> dict[str, Any]:
-        remote_clock = {self.node_id: max((v for _, v in remote_state.values()), default=0)}
+        remote_clock = {
+            self.node_id: max((v for _, v in remote_state.values()), default=0)
+        }
         result = self._l0.merge_state(
             {k: v for k, (v, _) in remote_state.items()},
             remote_clock,
         )
 
-        self._sync_log.append({
-            "type": "sync_from",
-            "changes": list(result.conflicts) if hasattr(result, 'conflicts') else [],
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
+        self._sync_log.append(
+            {
+                "type": "sync_from",
+                "changes": list(result.conflicts)
+                if hasattr(result, "conflicts")
+                else [],
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
 
         return self._l0.get_all()
 
@@ -388,8 +443,13 @@ class FailoverExecutor:
     def register_node(self, node_id: str) -> None:
         self._nm.register(node_id)
 
-    def add_rule(self, rule_id: str, source: str, targets: list[str],
-                 strategy: str = "round_robin") -> None:
+    def add_rule(
+        self,
+        rule_id: str,
+        source: str,
+        targets: list[str],
+        strategy: str = "round_robin",
+    ) -> None:
         from ecos.l0.governance import FailoverRule, FailoverStrategy
 
         strategy_map = {
@@ -398,19 +458,25 @@ class FailoverExecutor:
             "least_loaded": FailoverStrategy.LEAST_LOADED,
             "priority": FailoverStrategy.PRIORITY,
         }
-        self._fm.add_rule(FailoverRule(
-            rule_id=rule_id, source_node=source,
-            target_nodes=targets,
-            strategy=strategy_map.get(strategy, FailoverStrategy.ROUND_ROBIN),
-        ))
+        self._fm.add_rule(
+            FailoverRule(
+                rule_id=rule_id,
+                source_node=source,
+                target_nodes=targets,
+                strategy=strategy_map.get(strategy, FailoverStrategy.ROUND_ROBIN),
+            )
+        )
 
     def execute(self, source: str) -> Optional[str]:
         target = self._fm.execute_failover(source)
         if target:
-            self._failover_log.append({
-                "source": source, "target": target,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
+            self._failover_log.append(
+                {
+                    "source": source,
+                    "target": target,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+            )
             self._nm.update_heartbeat(source)
             self._nm.update_heartbeat(target)
         return target
@@ -425,11 +491,14 @@ class FailoverExecutor:
                 success = callback()
                 if success:
                     self._nm.update_heartbeat(node_id)
-                    self._failover_log.append({
-                        "type": "recovery", "node_id": node_id,
-                        "success": True,
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                    })
+                    self._failover_log.append(
+                        {
+                            "type": "recovery",
+                            "node_id": node_id,
+                            "success": True,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        }
+                    )
                 return success
             except Exception:
                 return False
@@ -485,7 +554,9 @@ class LoadBalancerExecutor:
             "weighted_round_robin": LoadBalancingStrategy.WEIGHTED_ROUND_ROBIN,
             "ip_hash": LoadBalancingStrategy.IP_HASH,
         }
-        self._lb = LoadBalancer(strategy_map.get(strategy, LoadBalancingStrategy.ROUND_ROBIN))
+        self._lb = LoadBalancer(
+            strategy_map.get(strategy, LoadBalancingStrategy.ROUND_ROBIN)
+        )
         self._latencies: dict[str, list[float]] = {}
 
     def register_node(self, node_id: str, weight: int = 1) -> None:
@@ -495,7 +566,16 @@ class LoadBalancerExecutor:
         return self._lb.unregister_node(node_id)
 
     def route(self, target: str) -> str:
-        self._lb.update_connections(target, self._lb.nodes.get(target, __import__("ecos.l0.governance.load_balancer", fromlist=["NodeLoad"]).NodeLoad(node_id=target)).connections + 1)
+        self._lb.update_connections(
+            target,
+            self._lb.nodes.get(
+                target,
+                __import__(
+                    "ecos.l0.governance.load_balancer", fromlist=["NodeLoad"]
+                ).NodeLoad(node_id=target),
+            ).connections
+            + 1,
+        )
         return target
 
     def route_auto(self) -> Optional[str]:

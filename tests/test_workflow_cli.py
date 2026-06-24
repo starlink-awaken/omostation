@@ -6,11 +6,15 @@ import sys
 import subprocess
 from pathlib import Path
 
-WF_CLI = str(Path(__file__).parent.parent / "src" / "ecos" / "ssot" / "tools" / "mof-workflow.py")
+WF_CLI = str(
+    Path(__file__).parent.parent / "src" / "ecos" / "ssot" / "tools" / "mof-workflow.py"
+)
 
 
 def run(*args):
-    return subprocess.run([sys.executable, WF_CLI] + list(args), capture_output=True, text=True)
+    return subprocess.run(
+        [sys.executable, WF_CLI] + list(args), capture_output=True, text=True
+    )
 
 
 class TestWorkflowCLI:
@@ -28,6 +32,7 @@ class TestWorkflowCLI:
         r = run("stats", "--json")
         assert r.returncode == 0
         import json
+
         data = json.loads(r.stdout)
         assert data["total"] >= 26
 
@@ -44,6 +49,7 @@ class TestWorkflowCLI:
         r = run("list", "--json")
         assert r.returncode == 0
         import json
+
         data = json.loads(r.stdout)
         assert "workflows" in data
         assert data["total"] >= 26
@@ -98,6 +104,7 @@ class TestWorkflowCLI:
         r = run("check-refs", "--json")
         assert r.returncode == 0
         import json
+
         data = json.loads(r.stdout)
         assert "total_nodes" in data
 
@@ -110,6 +117,7 @@ class TestWorkflowCLI:
         r = run("schema-report", "--json")
         assert r.returncode == 0
         import json
+
         data = json.loads(r.stdout)
         assert "coverage" in data
 

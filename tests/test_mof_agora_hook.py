@@ -186,7 +186,9 @@ class TestLoadRoutes:
         # Need to re-import the module to pick up env var at module load time
         # But since CACHE_TTL is evaluated at import, we monkeypatch the value
 
-        monkeypatch.setattr(mof, "CACHE_TTL", int(os.environ.get("BOS_ROUTES_CACHE_TTL", "300")))
+        monkeypatch.setattr(
+            mof, "CACHE_TTL", int(os.environ.get("BOS_ROUTES_CACHE_TTL", "300"))
+        )
         assert mof.CACHE_TTL == 600
 
     def test_invalid_yaml_skipped(self, mock_dirs):
@@ -370,7 +372,9 @@ class TestPostAudit:
 
         # Check CARDS db
         conn = sqlite3.connect(str(cards_db))
-        row = conn.execute("SELECT id, type, status, title, priority FROM cards").fetchone()
+        row = conn.execute(
+            "SELECT id, type, status, title, priority FROM cards"
+        ).fetchone()
         assert row is not None
         assert "DEBT-BOS" in row[0]
         assert row[1] == "debt"
@@ -453,8 +457,8 @@ class TestHealthCheck:
             {"name": "bos://a/b", "status": "active"},
         )
 
-        mof.pre_check("bos://a/b")          # 1 check, 0 blocked
-        mof.pre_check("bos://unknown")      # 1 check, 1 blocked
+        mof.pre_check("bos://a/b")  # 1 check, 0 blocked
+        mof.pre_check("bos://unknown")  # 1 check, 1 blocked
         mof.post_audit("bos://a/b", 200, 5)  # 1 audit
         mof.post_audit("bos://a/b", 500, 5)  # 1 audit, 1 anomaly
 

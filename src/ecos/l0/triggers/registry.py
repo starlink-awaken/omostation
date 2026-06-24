@@ -9,28 +9,42 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
+
 class TriggerType(StrEnum):
     CRON = "cron"
     EVENT = "event"
     WEBHOOK = "webhook"
 
+
 class BaseTrigger(BaseModel):
     """Base definition for a declarative trigger."""
+
     name: str = Field(..., description="Unique name of the trigger")
     trigger_type: TriggerType = Field(..., description="Type of the trigger")
-    target_bos_uri: str = Field(..., description="Target BOS URI to invoke when triggered")
-    payload_template: Optional[Dict[str, Any]] = Field(default=None, description="Static payload or template to send")
+    target_bos_uri: str = Field(
+        ..., description="Target BOS URI to invoke when triggered"
+    )
+    payload_template: Optional[Dict[str, Any]] = Field(
+        default=None, description="Static payload or template to send"
+    )
+
 
 class CronTrigger(BaseTrigger):
     """Cron-based trigger."""
+
     trigger_type: TriggerType = TriggerType.CRON
-    expression: str = Field(..., description="Standard cron expression (e.g. '0 * * * *')")
+    expression: str = Field(
+        ..., description="Standard cron expression (e.g. '0 * * * *')"
+    )
     timezone: str = Field(default="UTC", description="Timezone for the cron expression")
+
 
 class EventTrigger(BaseTrigger):
     """Event-based trigger (pub/sub)."""
+
     trigger_type: TriggerType = TriggerType.EVENT
     source_event_type: str = Field(..., description="Event type to subscribe to")
+
 
 class TriggerRegistryFacade(ABC):
     """Protocol for managing and loading declarative triggers."""

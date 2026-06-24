@@ -80,7 +80,9 @@ class TestOutputFormatter:
 
     def test_print_list_with_items(self, fmt, capsys):
         items = [{"name": "foo", "description": "bar"}, {"name": "baz"}]
-        fmt.print_list(items, key_field="name", description_field="description", title="List")
+        fmt.print_list(
+            items, key_field="name", description_field="description", title="List"
+        )
         captured = capsys.readouterr()
         assert "foo" in captured.out
         assert "bar" in captured.out

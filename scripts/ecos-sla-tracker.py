@@ -69,9 +69,14 @@ def compute_sla(entries: list[dict]) -> dict:
     """计算 SLA 指标"""
     if not entries:
         return {
-            "uptime": None, "consecutive_passes": 0,
-            "consecutive_failures": 0, "total": 0, "passes": 0,
-            "failures": 0, "last_failure": None, "last_check": None,
+            "uptime": None,
+            "consecutive_passes": 0,
+            "consecutive_failures": 0,
+            "total": 0,
+            "passes": 0,
+            "failures": 0,
+            "last_failure": None,
+            "last_check": None,
         }
 
     total = len(entries)
@@ -134,25 +139,32 @@ def format_report(sla: dict) -> str:
     lines.append(f"  Uptime: {sla['uptime']}% [{uptime_bar}]")
 
     # 连续通过
-    lines.append(f"  连续通过: {sla['consecutive_passes']} 次  "
-                 f"(最差: {sla['consecutive_failures']} 次连续失败)")
+    lines.append(
+        f"  连续通过: {sla['consecutive_passes']} 次  "
+        f"(最差: {sla['consecutive_failures']} 次连续失败)"
+    )
     lines.append("")
 
     if sla["last_failure"]:
         lines.append("  最近失败:")
-        lines.append(f"    {sla['last_failure']['timestamp'][:19]} "
-                     f"[{sla['last_failure']['dimension']}] "
-                     f"{sla['last_failure']['detail'][:60]}")
+        lines.append(
+            f"    {sla['last_failure']['timestamp'][:19]} "
+            f"[{sla['last_failure']['dimension']}] "
+            f"{sla['last_failure']['detail'][:60]}"
+        )
     else:
         lines.append("  ✅ 最近失败: 无")
 
     if sla["first_check"] and sla["last_check"]:
         from datetime import datetime
+
         try:
             first = datetime.fromisoformat(sla["first_check"])
             last = datetime.fromisoformat(sla["last_check"])
             span = (last - first).total_seconds() / 3600
-            lines.append(f"  追踪时段: {span:.1f} 小时 ({sla['first_check'][:10]} ~ {sla['last_check'][:10]})")
+            lines.append(
+                f"  追踪时段: {span:.1f} 小时 ({sla['first_check'][:10]} ~ {sla['last_check'][:10]})"
+            )
         except (ValueError, TypeError):
             pass
 
@@ -163,8 +175,9 @@ def format_report(sla: dict) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="eCOS v5 健康 SLA 追踪器")
-    parser.add_argument("--log", type=str, choices=["pass", "fail", "warn"],
-                        help="记录一次检查结果")
+    parser.add_argument(
+        "--log", type=str, choices=["pass", "fail", "warn"], help="记录一次检查结果"
+    )
     parser.add_argument("--dim", type=str, default="overall", help="维度")
     parser.add_argument("--detail", type=str, default="", help="详情")
     parser.add_argument("--json", action="store_true")

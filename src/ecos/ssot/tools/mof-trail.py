@@ -208,6 +208,9 @@ def format_trail(events: list[dict]) -> str:
 
 
 def main():
+    import sys
+
+    print("⚠️ MOF Trail 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     import argparse
 
     parser = argparse.ArgumentParser()

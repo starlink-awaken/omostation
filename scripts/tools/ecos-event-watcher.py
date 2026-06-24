@@ -80,9 +80,18 @@ def trigger_freshness(changed_file: str):
         freshness_script = SCRIPTS / "check-claude-freshness.py"
         if freshness_script.exists():
             subprocess.run(
-                ["python3", str(freshness_script),
-                 "--root", str(DOCS), "--max-age-days", "60", "--json"],
-                capture_output=True, text=True, timeout=15,
+                [
+                    "python3",
+                    str(freshness_script),
+                    "--root",
+                    str(DOCS),
+                    "--max-age-days",
+                    "60",
+                    "--json",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=15,
             )
 
     # 3. 更新事件流
@@ -110,9 +119,12 @@ def watch_fswatch():
     try:
         # 构建 fswatch 命令
         cmd = [
-            "fswatch", "-0",
-            "--event", "Updated",
-            "--latency", str(DEBOUNCE_SECONDS),
+            "fswatch",
+            "-0",
+            "--event",
+            "Updated",
+            "--latency",
+            str(DEBOUNCE_SECONDS),
             "--recursive",
             str(DOCS / "驾驶舱"),
             str(DOCS / "学习进化"),
@@ -138,7 +150,9 @@ def watch_fswatch():
                     if not filepath:
                         continue
                     # 过滤感兴趣的文件
-                    if any(p in filepath for p in ["CLAUDE.md", "claude.md", "STATE.md"]):
+                    if any(
+                        p in filepath for p in ["CLAUDE.md", "claude.md", "STATE.md"]
+                    ):
                         trigger_freshness(filepath)
             except (IOError, OSError):
                 break
@@ -209,6 +223,7 @@ def once_scan():
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="eCOS v5 L1 事件驱动保鲜")
     parser.add_argument("--daemon", action="store_true", help="后台 daemon 模式")
     parser.add_argument("--once", action="store_true", help="单次扫描")

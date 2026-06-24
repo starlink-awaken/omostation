@@ -31,7 +31,9 @@ DOCS = Path.home() / "Documents"
 SCRIPTS_DIR = DOCS / "驾驶舱" / "scripts"
 NODES_DIR = DOCS / "驾驶舱" / "元模型" / "nodes"
 M2_FILE = DOCS / "驾驶舱" / "元模型" / "M2-元模型.yaml"
-CONSTRAINTS_FILE = DOCS / "学习进化" / "2-knowledge" / "基建架构" / "L0-constraints.yaml"
+CONSTRAINTS_FILE = (
+    DOCS / "学习进化" / "2-knowledge" / "基建架构" / "L0-constraints.yaml"
+)
 CARDS_DB = Path.home() / "Workspace" / "data" / "cards" / "cards.db"
 ARCH_FILE = DOCS / "驾驶舱" / "5+4+1架构全景.md"
 ENTITY_DIR = DOCS / "领域知识库"
@@ -60,39 +62,55 @@ def scan_scripts() -> list[dict]:
                     break
         if not desc:
             desc = f.name
-        nodes.append({
-            "id": f"ARTIFACT-SCRIPT-{f.stem}",
-            "type": "Artifact",
-            "subtype": "Script",
-            "name": f.stem,
-            "description": desc[:120],
-            "status": "active",
-            "domain": "meta",
-            "created": datetime.fromtimestamp(stat.st_ctime).isoformat(),
-            "version": "1.0.0",
-            "properties": {
-                "path": str(f.relative_to(DOCS)),
-                "format": "python",
-                "size": stat.st_size,
-                "mtime": datetime.fromtimestamp(stat.st_mtime).isoformat(),
-            },
-            "layer": infer_layer(f.stem),
-        })
+        nodes.append(
+            {
+                "id": f"ARTIFACT-SCRIPT-{f.stem}",
+                "type": "Artifact",
+                "subtype": "Script",
+                "name": f.stem,
+                "description": desc[:120],
+                "status": "active",
+                "domain": "meta",
+                "created": datetime.fromtimestamp(stat.st_ctime).isoformat(),
+                "version": "1.0.0",
+                "properties": {
+                    "path": str(f.relative_to(DOCS)),
+                    "format": "python",
+                    "size": stat.st_size,
+                    "mtime": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                },
+                "layer": infer_layer(f.stem),
+            }
+        )
     return nodes
 
 
 def infer_layer(name: str) -> str:
     """根据脚本名推断所属层"""
     mapping = {
-        "ecos-daemon": "L1", "ecos-sla": "L1", "ecos-healer": "L1",
-        "ecos-constraint": "L0", "ecos-brief": "L4", "ecos-health": "L4",
-        "ecos-whoami": "L4", "ecos-onboard": "L4", "ecos-bootstrap": "L4",
-        "ecos-weekly-digest": "L4", "ecos-entry": "L4",
-        "check-claude": "X2", "check-vault": "X1", "check-cards": "X4",
-        "check-kairon": "X1", "kairon-cost": "X3",
-        "vault-value": "X3", "domain-value": "X3", "cards-value": "X3",
-        "x3-coverage": "X3", "task-status": "X4",
-        "runtime-mcp": "L3", "fix-debts": "X4",
+        "ecos-daemon": "L1",
+        "ecos-sla": "L1",
+        "ecos-healer": "L1",
+        "ecos-constraint": "L0",
+        "ecos-brief": "L4",
+        "ecos-health": "L4",
+        "ecos-whoami": "L4",
+        "ecos-onboard": "L4",
+        "ecos-bootstrap": "L4",
+        "ecos-weekly-digest": "L4",
+        "ecos-entry": "L4",
+        "check-claude": "X2",
+        "check-vault": "X1",
+        "check-cards": "X4",
+        "check-kairon": "X1",
+        "kairon-cost": "X3",
+        "vault-value": "X3",
+        "domain-value": "X3",
+        "cards-value": "X3",
+        "x3-coverage": "X3",
+        "task-status": "X4",
+        "runtime-mcp": "L3",
+        "fix-debts": "X4",
     }
     for key, layer in mapping.items():
         if key in name:
@@ -106,45 +124,50 @@ def scan_protocols() -> list[dict]:
     if not CONSTRAINTS_FILE.exists():
         return nodes
     import yaml
+
     with open(CONSTRAINTS_FILE) as f:
         data = yaml.safe_load(f)
     registry = data.get("protocol_registry", [])
     for p in registry:
-        nodes.append({
-            "id": f"PROTOCOL-{p['id']}",
-            "type": "Protocol",
-            "name": p["id"],
-            "description": p.get("description", ""),
-            "status": p.get("status", "active"),
+        nodes.append(
+            {
+                "id": f"PROTOCOL-{p['id']}",
+                "type": "Protocol",
+                "name": p["id"],
+                "description": p.get("description", ""),
+                "status": p.get("status", "active"),
+                "domain": "meta",
+                "created": p.get("introduced", "2026-01-01"),
+                "version": p.get("version", "0.0.0"),
+                "properties": {
+                    "version_spec": p.get("version", ""),
+                    "introduced": p.get("introduced", ""),
+                    "half_life": p.get("half_life_days", 180),
+                    "registered": True,
+                    "value_tier": p.get("value_tier", 3),
+                },
+                "layer": "L0",
+            }
+        )
+    # Also add the Specification itself
+    nodes.append(
+        {
+            "id": "SPEC-L0-CONSTRAINTS",
+            "type": "Specification",
+            "name": "L0 协议约束规范",
+            "description": "9条约束覆盖 X1-X3 治理维度的协议级规则定义",
+            "status": "active",
             "domain": "meta",
-            "created": p.get("introduced", "2026-01-01"),
-            "version": p.get("version", "0.0.0"),
+            "created": "2026-06-06",
+            "version": "1.0.0",
             "properties": {
-                "version_spec": p.get("version", ""),
-                "introduced": p.get("introduced", ""),
-                "half_life": p.get("half_life_days", 180),
-                "registered": True,
-                "value_tier": p.get("value_tier", 3),
+                "constraints": [c["id"] for c in data.get("constraints", [])],
+                "scope": ["L0", "L1", "L2", "L3", "L4", "I0"],
+                "enforcement": data.get("execution", {}).get("mode", "warn"),
             },
             "layer": "L0",
-        })
-    # Also add the Specification itself
-    nodes.append({
-        "id": "SPEC-L0-CONSTRAINTS",
-        "type": "Specification",
-        "name": "L0 协议约束规范",
-        "description": "9条约束覆盖 X1-X3 治理维度的协议级规则定义",
-        "status": "active",
-        "domain": "meta",
-        "created": "2026-06-06",
-        "version": "1.0.0",
-        "properties": {
-            "constraints": [c["id"] for c in data.get("constraints", [])],
-            "scope": ["L0", "L1", "L2", "L3", "L4", "I0"],
-            "enforcement": data.get("execution", {}).get("mode", "warn"),
-        },
-        "layer": "L0",
-    })
+        }
+    )
     return nodes
 
 
@@ -163,24 +186,26 @@ def scan_cards() -> list[dict]:
     """)
     for row in cur.fetchall():
         cid, ctype, title, summary, status, domain, priority, created = row
-        nodes.append({
-            "id": f"ENTITY-CARD-{cid}",
-            "type": "Entity",
-            "subtype": "Card",
-            "name": title[:60] if title else cid,
-            "description": summary[:150] if summary else "",
-            "status": "active",
-            "domain": domain or "meta",
-            "created": created or now(),
-            "version": "1.0.0",
-            "properties": {
-                "card_type": ctype,
-                "card_status": status,
-                "priority": priority,
-                "entity_type": "concept",
-            },
-            "layer": "L4",
-        })
+        nodes.append(
+            {
+                "id": f"ENTITY-CARD-{cid}",
+                "type": "Entity",
+                "subtype": "Card",
+                "name": title[:60] if title else cid,
+                "description": summary[:150] if summary else "",
+                "status": "active",
+                "domain": domain or "meta",
+                "created": created or now(),
+                "version": "1.0.0",
+                "properties": {
+                    "card_type": ctype,
+                    "card_status": status,
+                    "priority": priority,
+                    "entity_type": "concept",
+                },
+                "layer": "L4",
+            }
+        )
     conn.close()
     return nodes
 
@@ -190,46 +215,66 @@ def scan_architecture() -> list[dict]:
     nodes = []
     DOCS / "学习进化" / "2-knowledge" / "基建架构" / "eCOS-v5-Architecture-SSOT.md"
 
-    nodes.append({
-        "id": "ARCH-ECOS-V5",
-        "type": "Architecture",
-        "name": "织星架构 (eCOS v5)",
-        "description": "5层技术栈(L0-L4) + 4维治理(X1-X4) + 1织物(I0) + 1界面(P0)",
-        "status": "active",
-        "domain": "meta",
-        "created": "2026-06-05",
-        "version": "5.3.0",
-        "properties": {
-            "topology": "layered",
-            "components": ["L0-ProtocolWeave", "L1-RuntimeMatrix", "L2-KernelTriPlane",
-                          "L3-EntryBridge", "L4-SelfLayer", "I0-Agora", "P0-Product"],
-            "connectors": ["MCP", "ACP", "A2A", "BOS_URI"],
-            "quality_attrs": {"consistency": "SSOT级联", "auditability": "X1-X4全覆盖"},
-            "evolution_path": ["v4.2(5+3+1)", "v5.0(5+4+1+X4)", "v5.3(织星·MOF基座)"],
-        },
-        "layer": "multi",
-        "sources": [str(ARCH_FILE.relative_to(DOCS)) if ARCH_FILE.exists() else "",
-                     "学习进化/2-knowledge/基建架构/eCOS-v5-Architecture-SSOT.md"],
-    })
+    nodes.append(
+        {
+            "id": "ARCH-ECOS-V5",
+            "type": "Architecture",
+            "name": "织星架构 (eCOS v5)",
+            "description": "5层技术栈(L0-L4) + 4维治理(X1-X4) + 1织物(I0) + 1界面(P0)",
+            "status": "active",
+            "domain": "meta",
+            "created": "2026-06-05",
+            "version": "5.3.0",
+            "properties": {
+                "topology": "layered",
+                "components": [
+                    "L0-ProtocolWeave",
+                    "L1-RuntimeMatrix",
+                    "L2-KernelTriPlane",
+                    "L3-EntryBridge",
+                    "L4-SelfLayer",
+                    "I0-Agora",
+                    "P0-Product",
+                ],
+                "connectors": ["MCP", "ACP", "A2A", "BOS_URI"],
+                "quality_attrs": {
+                    "consistency": "SSOT级联",
+                    "auditability": "X1-X4全覆盖",
+                },
+                "evolution_path": [
+                    "v4.2(5+3+1)",
+                    "v5.0(5+4+1+X4)",
+                    "v5.3(织星·MOF基座)",
+                ],
+            },
+            "layer": "multi",
+            "sources": [
+                str(ARCH_FILE.relative_to(DOCS)) if ARCH_FILE.exists() else "",
+                "学习进化/2-knowledge/基建架构/eCOS-v5-Architecture-SSOT.md",
+            ],
+        }
+    )
 
-    nodes.append({
-        "id": "MODEL-UNIFIED-ARCH",
-        "type": "Model",
-        "name": "统一架构模型",
-        "description": "5+4+1 ↔ L0-L4+X1-X4 双向映射矩阵——三视图统一的 SSOT",
-        "status": "active",
-        "domain": "meta",
-        "created": "2026-06-05",
-        "version": "1.1.0",
-        "properties": {
-            "source": "5+4+1 织星架构",
-            "mapping": {"功能域视图": "5+4+1", "技术栈视图": "L0-L4+X1-X4+I0+P0"},
-            "formality": "semiformal",
-            "projects_to": ["MADF V1-V8"],
-        },
-        "layer": "multi",
-        "sources": ["@驾驶舱/统一架构模型.md"],
-    })
+    nodes.append(
+        {
+            "id": "MODEL-UNIFIED-ARCH",
+            "type": "Model",
+            "name": "统一架构模型",
+            "description": "5+4+1 ↔ L0-L4+X1-X4 双向映射矩阵——三视图统一的 SSOT",
+            "status": "active",
+            "domain": "meta",
+            "created": "2026-06-05",
+            "version": "1.1.0",
+            "properties": {
+                "source": "5+4+1 织星架构",
+                "mapping": {"功能域视图": "5+4+1", "技术栈视图": "L0-L4+X1-X4+I0+P0"},
+                "formality": "semiformal",
+                "projects_to": ["MADF V1-V8"],
+            },
+            "layer": "multi",
+            "sources": ["@驾驶舱/统一架构模型.md"],
+        }
+    )
 
     return nodes
 
@@ -245,7 +290,11 @@ def scan_entities() -> list[dict]:
         stat = md.stat()
         name = md.stem
         entity_type = "concept"
-        domain = str(md.parent.parent.parent.name) if md.parent.parent.parent != ENTITY_DIR else "领域知识库"
+        domain = (
+            str(md.parent.parent.parent.name)
+            if md.parent.parent.parent != ENTITY_DIR
+            else "领域知识库"
+        )
         # Infer entity type from path
         if "人物" in str(md):
             entity_type = "person"
@@ -254,29 +303,32 @@ def scan_entities() -> list[dict]:
         elif "系统" in str(md):
             entity_type = "system"
 
-        nodes.append({
-            "id": f"ENTITY-DOMAIN-{name}",
-            "type": "Entity",
-            "subtype": "DomainEntity",
-            "name": name,
-            "description": f"领域实体: {name}",
-            "status": "active",
-            "domain": domain,
-            "created": datetime.fromtimestamp(stat.st_ctime).isoformat(),
-            "version": "1.0.0",
-            "properties": {
-                "entity_type": entity_type,
-                "sources": [str(md.relative_to(DOCS))],
-                "identity": {"name": name},
-            },
-            "layer": "L4",
-        })
+        nodes.append(
+            {
+                "id": f"ENTITY-DOMAIN-{name}",
+                "type": "Entity",
+                "subtype": "DomainEntity",
+                "name": name,
+                "description": f"领域实体: {name}",
+                "status": "active",
+                "domain": domain,
+                "created": datetime.fromtimestamp(stat.st_ctime).isoformat(),
+                "version": "1.0.0",
+                "properties": {
+                    "entity_type": entity_type,
+                    "sources": [str(md.relative_to(DOCS))],
+                    "identity": {"name": name},
+                },
+                "layer": "L4",
+            }
+        )
     return nodes
 
 
 def save_nodes(nodes: list[dict], node_type: str = "all"):
     """保存节点到 nodes/ 目录（使用 yaml.dump 确保格式正确）"""
     import yaml
+
     NODES_DIR.mkdir(parents=True, exist_ok=True)
     saved = 0
     for n in nodes:
@@ -288,7 +340,9 @@ def save_nodes(nodes: list[dict], node_type: str = "all"):
             f.write(f"# M1 Node: {n['id']}\n")
             f.write(f"# Type: {n['type']}\n")
             f.write(f"# Generated: {now()}\n\n")
-            yaml.dump(n, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+            yaml.dump(
+                n, f, allow_unicode=True, default_flow_style=False, sort_keys=False
+            )
         saved += 1
     return saved
 
@@ -331,7 +385,16 @@ def main():
         for t, c in sorted(type_counts.items()):
             print(f"  {t:20s}: {c:3d}")
         # Check M2 coverage
-        m2_types = ["Model", "Architecture", "Mechanism", "Protocol", "Pattern", "Specification", "Process", "Entity"]
+        m2_types = [
+            "Model",
+            "Architecture",
+            "Mechanism",
+            "Protocol",
+            "Pattern",
+            "Specification",
+            "Process",
+            "Entity",
+        ]
         print("\n── M2 类型覆盖 ──")
         for mt in m2_types:
             count = sum(1 for n in all_nodes if n["type"] == mt)

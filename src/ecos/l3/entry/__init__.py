@@ -21,6 +21,7 @@ logger = get_logger("entry")
 @dataclass
 class CLICommand:
     """CLI 命令"""
+
     name: str
     description: str
     usage: str
@@ -41,42 +42,53 @@ class GovernanceCLI:
 
     def _ensure_l0(self) -> None:
         if self._node_manager is None:
-            from ecos.l0.governance import NodeManager, SwarmManager, PersonalKnowledgeManager
+            from ecos.l0.governance import (
+                NodeManager,
+                SwarmManager,
+                PersonalKnowledgeManager,
+            )
+
             self._node_manager = NodeManager()
             self._swarm_manager = SwarmManager()
             self._km = PersonalKnowledgeManager()
 
     def _register_commands(self) -> None:
         self.commands["check"] = CLICommand(
-            name="check", description="运行 X1-X4 治理检查",
+            name="check",
+            description="运行 X1-X4 治理检查",
             usage="check [--dimension X1|X2|X3|X4|all]",
             handler=self._handle_check,
         )
         self.commands["status"] = CLICommand(
-            name="status", description="查看系统治理状态",
+            name="status",
+            description="查看系统治理状态",
             usage="status [--verbose]",
             handler=self._handle_status,
         )
         self.commands["cluster"] = CLICommand(
-            name="cluster", description="集群管理",
+            name="cluster",
+            description="集群管理",
             usage="cluster <list|add|remove|health>",
             handler=self._handle_cluster,
             subcommands=["list", "add", "remove", "health"],
         )
         self.commands["swarm"] = CLICommand(
-            name="swarm", description="蜂群管理",
+            name="swarm",
+            description="蜂群管理",
             usage="swarm <status|detect|decide>",
             handler=self._handle_swarm,
             subcommands=["status", "detect", "decide"],
         )
         self.commands["knowledge"] = CLICommand(
-            name="knowledge", description="知识管理",
+            name="knowledge",
+            description="知识管理",
             usage="knowledge <stats|query|add>",
             handler=self._handle_knowledge,
             subcommands=["stats", "query", "add"],
         )
         self.commands["help"] = CLICommand(
-            name="help", description="打印帮助信息",
+            name="help",
+            description="打印帮助信息",
             usage="help [command]",
             handler=self._handle_help,
         )
@@ -126,10 +138,14 @@ class GovernanceCLI:
 
         if dimension == "all":
             for dim, result in checks.items():
-                self._output.append(f"  [{result['status'].upper()}] {dim}: {result['message']}")
+                self._output.append(
+                    f"  [{result['status'].upper()}] {dim}: {result['message']}"
+                )
         elif dimension in checks:
             result = checks[dimension]
-            self._output.append(f"  [{result['status'].upper()}] {dimension}: {result['message']}")
+            self._output.append(
+                f"  [{result['status'].upper()}] {dimension}: {result['message']}"
+            )
         else:
             self._output.append(f"  未知维度: {dimension}")
             return 1
@@ -168,7 +184,9 @@ class GovernanceCLI:
                 self._output.append("用法: cluster add <node-id>")
                 return 1
             node = self._node_manager.register(args[1])
-            self._output.append(f"✅ 节点 {args[1]} 已添加到集群 (status: {node.status.value})")
+            self._output.append(
+                f"✅ 节点 {args[1]} 已添加到集群 (status: {node.status.value})"
+            )
             return 0
 
         elif subcmd == "remove":
@@ -184,10 +202,14 @@ class GovernanceCLI:
 
         elif subcmd == "health":
             health = self._node_manager.check_health()
-            healthy = sum(1 for s in health.values() if s.value in ("online", "healthy"))
+            healthy = sum(
+                1 for s in health.values() if s.value in ("online", "healthy")
+            )
             self._output.append("集群健康检查:")
             self._output.append(f"  在线节点: {healthy}/{len(health)}")
-            self._output.append(f"  整体状态: {'healthy' if healthy == len(health) else 'degraded'}")
+            self._output.append(
+                f"  整体状态: {'healthy' if healthy == len(health) else 'degraded'}"
+            )
             return 0
 
         self._output.append(f"未知子命令: {subcmd}")
@@ -211,7 +233,9 @@ class GovernanceCLI:
             self._output.append("涌现检测:")
             if behaviors:
                 for b in behaviors:
-                    self._output.append(f"  [{b.pattern.value.upper()}] agents: {b.agents} confidence: {b.confidence:.2f}")
+                    self._output.append(
+                        f"  [{b.pattern.value.upper()}] agents: {b.agents} confidence: {b.confidence:.2f}"
+                    )
             else:
                 self._output.append("  (未检测到涌现)")
             return 0
@@ -253,8 +277,10 @@ class GovernanceCLI:
                 self._output.append("用法: knowledge add <key> <content>")
                 return 1
             from ecos.l0.governance import KnowledgeNode, KnowledgeType
+
             node = KnowledgeNode(
-                node_id=args[1], knowledge_type=KnowledgeType.FACT,
+                node_id=args[1],
+                knowledge_type=KnowledgeType.FACT,
                 content={"text": " ".join(args[2:])},
             )
             self._km.add_knowledge(node)
@@ -279,6 +305,7 @@ class GovernanceCLI:
 @dataclass
 class MCPToolDef:
     """MCP 工具定义"""
+
     name: str
     description: str
     input_schema: dict[str, Any]
@@ -312,101 +339,178 @@ class GovernanceMCP:
 
     def _ensure_l0(self) -> None:
         if self._node_manager is None:
-            from ecos.l0.governance import NodeManager, SwarmManager, PersonalKnowledgeManager
+            from ecos.l0.governance import (
+                NodeManager,
+                SwarmManager,
+                PersonalKnowledgeManager,
+            )
+
             self._node_manager = NodeManager()
             self._swarm_manager = SwarmManager()
             self._km = PersonalKnowledgeManager()
 
     def _register_tools(self) -> None:
         tool_defs = [
-            MCPToolDef("governance_check", "运行 X1-X4 治理检查", {
-                "type": "object",
-                "properties": {
-                    "dimension": {"type": "string", "description": "X1/X2/X3/X4/all"},
+            MCPToolDef(
+                "governance_check",
+                "运行 X1-X4 治理检查",
+                {
+                    "type": "object",
+                    "properties": {
+                        "dimension": {
+                            "type": "string",
+                            "description": "X1/X2/X3/X4/all",
+                        },
+                    },
                 },
-            }),
-            MCPToolDef("governance_status", "查看治理状态", {
-                "type": "object", "properties": {},
-            }),
-            MCPToolDef("governance_history", "查看历史记录", {
-                "type": "object",
-                "properties": {
-                    "days": {"type": "integer", "description": "查询天数"},
+            ),
+            MCPToolDef(
+                "governance_status",
+                "查看治理状态",
+                {
+                    "type": "object",
+                    "properties": {},
                 },
-            }),
-            MCPToolDef("cluster_list", "列出集群节点", {
-                "type": "object", "properties": {},
-            }),
-            MCPToolDef("cluster_health", "集群健康检查", {
-                "type": "object", "properties": {},
-            }),
-            MCPToolDef("swarm_status", "蜂群状态", {
-                "type": "object", "properties": {},
-            }),
-            MCPToolDef("swarm_detect", "涌现行为检测", {
-                "type": "object", "properties": {},
-            }),
-            MCPToolDef("swarm_decide", "集体决策投票", {
-                "type": "object",
-                "properties": {
-                    "proposal_id": {"type": "string"},
-                    "agent_id": {"type": "string"},
-                    "option": {"type": "string"},
+            ),
+            MCPToolDef(
+                "governance_history",
+                "查看历史记录",
+                {
+                    "type": "object",
+                    "properties": {
+                        "days": {"type": "integer", "description": "查询天数"},
+                    },
                 },
-                "required": ["proposal_id", "agent_id", "option"],
-            }),
-            MCPToolDef("knowledge_stats", "知识库统计", {
-                "type": "object", "properties": {},
-            }),
-            MCPToolDef("knowledge_query", "查询知识", {
-                "type": "object",
-                "properties": {
-                    "query": {"type": "string"},
-                    "limit": {"type": "integer"},
+            ),
+            MCPToolDef(
+                "cluster_list",
+                "列出集群节点",
+                {
+                    "type": "object",
+                    "properties": {},
                 },
-                "required": ["query"],
-            }),
-            MCPToolDef("knowledge_add", "添加知识", {
-                "type": "object",
-                "properties": {
-                    "key": {"type": "string"},
-                    "content": {"type": "object"},
-                    "tags": {"type": "array", "items": {"type": "string"}},
+            ),
+            MCPToolDef(
+                "cluster_health",
+                "集群健康检查",
+                {
+                    "type": "object",
+                    "properties": {},
                 },
-                "required": ["key", "content"],
-            }),
-            MCPToolDef("task_submit", "提交任务", {
-                "type": "object",
-                "properties": {
-                    "task_id": {"type": "string"},
-                    "name": {"type": "string"},
-                    "required_capabilities": {"type": "array", "items": {"type": "string"}},
-                    "priority": {"type": "integer"},
+            ),
+            MCPToolDef(
+                "swarm_status",
+                "蜂群状态",
+                {
+                    "type": "object",
+                    "properties": {},
                 },
-                "required": ["task_id", "name"],
-            }),
-            MCPToolDef("task_status", "查询任务状态", {
-                "type": "object",
-                "properties": {
-                    "task_id": {"type": "string"},
+            ),
+            MCPToolDef(
+                "swarm_detect",
+                "涌现行为检测",
+                {
+                    "type": "object",
+                    "properties": {},
                 },
-                "required": ["task_id"],
-            }),
-            MCPToolDef("role_switch", "切换 Agent 角色", {
-                "type": "object",
-                "properties": {
-                    "agent_id": {"type": "string"},
-                    "new_role": {"type": "string"},
+            ),
+            MCPToolDef(
+                "swarm_decide",
+                "集体决策投票",
+                {
+                    "type": "object",
+                    "properties": {
+                        "proposal_id": {"type": "string"},
+                        "agent_id": {"type": "string"},
+                        "option": {"type": "string"},
+                    },
+                    "required": ["proposal_id", "agent_id", "option"],
                 },
-                "required": ["agent_id", "new_role"],
-            }),
+            ),
+            MCPToolDef(
+                "knowledge_stats",
+                "知识库统计",
+                {
+                    "type": "object",
+                    "properties": {},
+                },
+            ),
+            MCPToolDef(
+                "knowledge_query",
+                "查询知识",
+                {
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string"},
+                        "limit": {"type": "integer"},
+                    },
+                    "required": ["query"],
+                },
+            ),
+            MCPToolDef(
+                "knowledge_add",
+                "添加知识",
+                {
+                    "type": "object",
+                    "properties": {
+                        "key": {"type": "string"},
+                        "content": {"type": "object"},
+                        "tags": {"type": "array", "items": {"type": "string"}},
+                    },
+                    "required": ["key", "content"],
+                },
+            ),
+            MCPToolDef(
+                "task_submit",
+                "提交任务",
+                {
+                    "type": "object",
+                    "properties": {
+                        "task_id": {"type": "string"},
+                        "name": {"type": "string"},
+                        "required_capabilities": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                        "priority": {"type": "integer"},
+                    },
+                    "required": ["task_id", "name"],
+                },
+            ),
+            MCPToolDef(
+                "task_status",
+                "查询任务状态",
+                {
+                    "type": "object",
+                    "properties": {
+                        "task_id": {"type": "string"},
+                    },
+                    "required": ["task_id"],
+                },
+            ),
+            MCPToolDef(
+                "role_switch",
+                "切换 Agent 角色",
+                {
+                    "type": "object",
+                    "properties": {
+                        "agent_id": {"type": "string"},
+                        "new_role": {"type": "string"},
+                    },
+                    "required": ["agent_id", "new_role"],
+                },
+            ),
         ]
 
         for tool in tool_defs:
             self.tools[tool.name] = tool
 
-    def call_tool(self, tool_name: str, parameters: dict[str, Any] | None = None,
-                  token: str | None = None) -> dict[str, Any]:
+    def call_tool(
+        self,
+        tool_name: str,
+        parameters: dict[str, Any] | None = None,
+        token: str | None = None,
+    ) -> dict[str, Any]:
         """调用 MCP 工具 - 带认证、输入校验和错误处理"""
         # Token 认证 (可选)
         if token and not self.authenticate(token):
@@ -414,7 +518,10 @@ class GovernanceMCP:
 
         if tool_name not in self.tools:
             logger.warning("未知工具: %s", tool_name)
-            return {"error": f"未知工具: {tool_name}", "available": list(self.tools.keys())}
+            return {
+                "error": f"未知工具: {tool_name}",
+                "available": list(self.tools.keys()),
+            }
 
         self._ensure_l0()
         params = parameters or {}
@@ -458,7 +565,11 @@ class GovernanceMCP:
 
     def list_tools(self) -> list[dict[str, Any]]:
         return [
-            {"name": t.name, "description": t.description, "input_schema": t.input_schema}
+            {
+                "name": t.name,
+                "description": t.description,
+                "input_schema": t.input_schema,
+            }
             for t in self.tools.values()
         ]
 
@@ -534,22 +645,37 @@ class GovernanceMCP:
 
     def _handle_knowledge_add(self, params: dict[str, Any]) -> dict[str, Any]:
         from ecos.l0.governance import KnowledgeNode, KnowledgeType
+
         key = params.get("key", "")
         content = params.get("content", {})
         tags = params.get("tags", [])
         node = KnowledgeNode(
-            node_id=key, knowledge_type=KnowledgeType.FACT,
-            content=content, tags=tags,
+            node_id=key,
+            knowledge_type=KnowledgeType.FACT,
+            content=content,
+            tags=tags,
         )
         self._km.add_knowledge(node)
         return {"status": "ok", "key": key, "message": "知识已添加"}
 
     def _handle_task_submit(self, params: dict[str, Any]) -> dict[str, Any]:
-        return {"status": "ok", "task_id": params.get("task_id", ""), "message": "任务已提交"}
+        return {
+            "status": "ok",
+            "task_id": params.get("task_id", ""),
+            "message": "任务已提交",
+        }
 
     def _handle_task_status(self, params: dict[str, Any]) -> dict[str, Any]:
-        return {"status": "ok", "task_id": params.get("task_id", ""), "stage": "pending"}
+        return {
+            "status": "ok",
+            "task_id": params.get("task_id", ""),
+            "stage": "pending",
+        }
 
     def _handle_role_switch(self, params: dict[str, Any]) -> dict[str, Any]:
-        return {"status": "ok", "agent_id": params.get("agent_id", ""),
-                "new_role": params.get("new_role", ""), "message": "角色已切换"}
+        return {
+            "status": "ok",
+            "agent_id": params.get("agent_id", ""),
+            "new_role": params.get("new_role", ""),
+            "message": "角色已切换",
+        }

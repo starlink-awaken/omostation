@@ -7,7 +7,9 @@ import sys
 
 from ecos.common.common import SSB_DB_PATH as DB_PATH  # type: ignore[import-not-found]
 
-CHAIN_CHECKPOINT = DB_PATH.parent / ".chain_hash"  # 和 SSB_DB_PATH 同目录 (ecos/LADS/ssb), 之前 parent.parent/LADS/ssb 路径错导致 write crash
+CHAIN_CHECKPOINT = (
+    DB_PATH.parent / ".chain_hash"
+)  # 和 SSB_DB_PATH 同目录 (ecos/LADS/ssb), 之前 parent.parent/LADS/ssb 路径错导致 write crash
 
 
 def compute_chain_hash(db):

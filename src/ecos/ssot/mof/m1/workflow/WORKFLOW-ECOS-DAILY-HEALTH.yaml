@@ -74,6 +74,9 @@ steps:
 execution:
   backend: default
   mode: sequential
+  cache_ttl: 3600
+  budget:
+    token_limit: 100000
   max_retries: 3
   timeout: 600
   on_failure: abort

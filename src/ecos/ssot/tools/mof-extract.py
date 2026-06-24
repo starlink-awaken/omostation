@@ -253,7 +253,7 @@ def extract_ssot_writeback(workspace_root: Path):
     done_dir = omo_dir / "tasks" / "done"
     if not done_dir.exists():
         return
-        
+
     written_count = 0
     for task_file in done_dir.glob("*.yaml"):
         try:
@@ -261,37 +261,39 @@ def extract_ssot_writeback(workspace_root: Path):
                 task = yaml.safe_load(f)
         except Exception:
             continue
-            
+
         if not isinstance(task, dict):
             continue
-            
+
         context_uri = task.get("context_uri")
         source_docs = task.get("source_docs", [])
         if not context_uri or not source_docs:
             continue
-            
+
         if task.get("ssot_written_back"):
             continue
-            
+
         source_file = Path(source_docs[0])
         if not source_file.exists():
             continue
-            
+
         try:
             with open(source_file, "a", encoding="utf-8") as f:
                 f.write(f"\n\n### 🔄 OMO SSOT Write-back: {task['id']}\n")
                 f.write(f"> 任务 `{task['title']}` 已在 OMO 稳态区被标记为 Done。\n")
                 f.write(f"> 原始 context_uri: `{context_uri}`\n")
-                
+
             task["ssot_written_back"] = True
             with open(task_file, "w", encoding="utf-8") as f:
                 yaml.dump(task, f, allow_unicode=True, sort_keys=False)
             written_count += 1
         except Exception:
             pass
-            
+
     if written_count > 0:
-        print(f"  🔄 SSOT Write-back: 成功反哺了 {written_count} 个已完成任务的 context_uri")
+        print(
+            f"  🔄 SSOT Write-back: 成功反哺了 {written_count} 个已完成任务的 context_uri"
+        )
 
 
 def save_nodes(nodes: list[dict], output_dir: Path):

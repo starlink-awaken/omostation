@@ -36,6 +36,7 @@ def generate_brief(json_output: bool = False) -> dict:
     daemon_state = ws / ".ecos" / "daemon-state.db"
     if daemon_state.exists():
         import sqlite3
+
         try:
             conn = sqlite3.connect(str(daemon_state))
             cursor = conn.execute("SELECT COUNT(*) FROM cycles")
@@ -48,9 +49,20 @@ def generate_brief(json_output: bool = False) -> dict:
         brief["sections"]["daemon"] = {"status": "not_initialized"}
 
     # 2. M0 快照
-    m0_path = ws / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m0" / "snapshot.yaml"
+    m0_path = (
+        ws
+        / "projects"
+        / "ecos"
+        / "src"
+        / "ecos"
+        / "ssot"
+        / "mof"
+        / "m0"
+        / "snapshot.yaml"
+    )
     if m0_path.exists():
         import yaml
+
         try:
             with open(m0_path) as f:
                 m0 = yaml.safe_load(f)
@@ -68,16 +80,24 @@ def generate_brief(json_output: bool = False) -> dict:
     if md_dir.exists() and (md_dir / "pyproject.toml").exists():
         try:
             import subprocess
+
             result = subprocess.run(
-                ["uv", "run", "python3", "-c",
-                 "from model_driven.toolchain.tools import tool_validate; "
-                 "import yaml; from pathlib import Path; "
-                 "m1 = Path.home() / 'Workspace/projects/ecos/src/ecos/ssot/mof/m1'; "
-                 "nodes = [yaml.safe_load(open(f)) for d in sorted(m1.iterdir()) if d.is_dir() for f in sorted(d.glob('*.yaml')) if (yaml.safe_load(open(f)) or {}).get('type')]; "
-                 "r = tool_validate(models=nodes); "
-                 "print(r['models_checked'], r['error_count'], r['warning_count'])",
-                 ],
-                cwd=str(md_dir), capture_output=True, text=True, timeout=30
+                [
+                    "uv",
+                    "run",
+                    "python3",
+                    "-c",
+                    "from model_driven.toolchain.tools import tool_validate; "
+                    "import yaml; from pathlib import Path; "
+                    "m1 = Path.home() / 'Workspace/projects/ecos/src/ecos/ssot/mof/m1'; "
+                    "nodes = [yaml.safe_load(open(f)) for d in sorted(m1.iterdir()) if d.is_dir() for f in sorted(d.glob('*.yaml')) if (yaml.safe_load(open(f)) or {}).get('type')]; "
+                    "r = tool_validate(models=nodes); "
+                    "print(r['models_checked'], r['error_count'], r['warning_count'])",
+                ],
+                cwd=str(md_dir),
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
             if result.returncode == 0:
                 parts = result.stdout.strip().split()

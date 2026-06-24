@@ -33,6 +33,13 @@ from ecos.workflow.actions import (
     register_action,
     resolve_action,
 )
+from ecos.workflow.cache import (
+    get as cache_get,
+    set as cache_set,
+    invalidate,
+    invalidate_all,
+    status as cache_status,
+)
 from ecos.workflow.loader import (
     _load_from_m1,
     list_from_m1,
@@ -56,6 +63,12 @@ __all__ = [
     "_load_from_m1",
     "list_workflows",
     "list_from_m1",
+    # cache (P48 R2 增: re-export unused cache import)
+    "cache_get",
+    "cache_set",
+    "invalidate",
+    "invalidate_all",
+    "cache_status",
     # executor
     "execute_workflow",
     "execute_m1_workflow",

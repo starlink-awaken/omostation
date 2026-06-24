@@ -69,11 +69,12 @@ def _ensure_builtins_registered() -> None:
 
 # resolve_action / list_actions / get_action 都先触发惰性注册
 
+
 def resolve_action(action: str) -> ActionHandler | None:
     _ensure_builtins_registered()
     for prefix in NAMESPACE_PREFIXES:
         if action.startswith(prefix):
-            action = action[len(prefix):]
+            action = action[len(prefix) :]
             break
     resolved = _aliases.get(action, action)
     entry = _registry.get(resolved)
@@ -149,40 +150,61 @@ def _register_builtins() -> None:
     因此各自独立注册而非统一模板。
     """
 
-    register_action("health_check", _action_health_check,
-                    description="健康检查: 所有核心服务健康状态")
+    register_action(
+        "health_check",
+        _action_health_check,
+        description="健康检查: 所有核心服务健康状态",
+    )
 
-    register_action("domain_validate_all", _action_domain_validate_all,
-                    description="域全量校验")
+    register_action(
+        "domain_validate_all", _action_domain_validate_all, description="域全量校验"
+    )
 
-    register_action("domain_audit", _action_domain_audit,
-                    description="漂移检测: 域状态漂移扫描",
-                    aliases=["drift_detection"])
+    register_action(
+        "domain_audit",
+        _action_domain_audit,
+        description="漂移检测: 域状态漂移扫描",
+        aliases=["drift_detection"],
+    )
 
-    register_action("domain_check_refs", _action_domain_check_refs,
-                    description="引用检查: 跨域引用完整性",
-                    aliases=["reference_check"])
+    register_action(
+        "domain_check_refs",
+        _action_domain_check_refs,
+        description="引用检查: 跨域引用完整性",
+        aliases=["reference_check"],
+    )
 
-    register_action("domain_sync", _action_domain_sync,
-                    description="域索引同步",
-                    aliases=["sync_domain_index", "index_sync"])
+    register_action(
+        "domain_sync",
+        _action_domain_sync,
+        description="域索引同步",
+        aliases=["sync_domain_index", "index_sync"],
+    )
 
-    register_action("bos_validate", _action_bos_validate,
-                    description="BOS URI 校验")
+    register_action("bos_validate", _action_bos_validate, description="BOS URI 校验")
 
-    register_action("domain_routes", _action_domain_routes,
-                    description="路由缓存更新",
-                    aliases=["update_routes", "routes_update"])
+    register_action(
+        "domain_routes",
+        _action_domain_routes,
+        description="路由缓存更新",
+        aliases=["update_routes", "routes_update"],
+    )
 
     # ── 向后兼容: system_health_check → health_check ──
-    register_action("system_health_check", _action_health_check,
-                    description="(别名) 系统健康检查",
-                    aliases=[])
+    register_action(
+        "system_health_check",
+        _action_health_check,
+        description="(别名) 系统健康检查",
+        aliases=[],
+    )
 
     # ── 子工作流: 工作流内调用另一个工作流 ──
-    register_action("workflow_run", _action_workflow_run,
-                    description="执行子工作流 — 在 YAML 中通过 workflow 字段指定",
-                    aliases=["sub_workflow"])
+    register_action(
+        "workflow_run",
+        _action_workflow_run,
+        description="执行子工作流 — 在 YAML 中通过 workflow 字段指定",
+        aliases=["sub_workflow"],
+    )
 
 
 def _action_workflow_run(params: dict) -> dict:
@@ -201,9 +223,13 @@ def _action_workflow_run(params: dict) -> dict:
 
     try:
         from ecos.workflow.executor import execute_m1_workflow
+
         result = execute_m1_workflow(sub_name)
         ok = result.get("failed", 0) == 0
-        summary = result.get("error") or f"子工作流 {sub_name}: {result.get('passed', 0)}✅ {result.get('failed', 0)}❌"
+        summary = (
+            result.get("error")
+            or f"子工作流 {sub_name}: {result.get('passed', 0)}✅ {result.get('failed', 0)}❌"
+        )
         return {
             "passed": ok,
             "summary": summary,
@@ -218,7 +244,9 @@ def _action_workflow_run(params: dict) -> dict:
 
 
 def _action_health_check(params: dict) -> dict:
-    r = _run(["python3", str(H / ".ecos" / "scripts" / "ecos-health-check.py"), "--json"])
+    r = _run(
+        ["python3", str(H / ".ecos" / "scripts" / "ecos-health-check.py"), "--json"]
+    )
     if r is None:
         script_path = H / ".ecos" / "scripts" / "ecos-health-check.py"
         return _fail(
@@ -230,7 +258,10 @@ def _action_health_check(params: dict) -> dict:
         ok = all(c.get("pass", True) for c in data.get("results", []))
         return {"passed": ok, "summary": f"健康检查: {'✅' if ok else '❌'}"}
     except Exception:
-        return _fail(summary="健康检查解析失败", details=r.stderr.strip()[:300] or r.stdout.strip()[:300])
+        return _fail(
+            summary="健康检查解析失败",
+            details=r.stderr.strip()[:300] or r.stdout.strip()[:300],
+        )
 
 
 def _action_domain_validate_all(params: dict) -> dict:
@@ -246,7 +277,9 @@ def _action_domain_check_refs(params: dict) -> dict:
 
 
 def _action_domain_sync(params: dict) -> dict:
-    return _check_run(["python3", str(H / "bin" / "ecos"), "domain", "sync"], timeout=10)
+    return _check_run(
+        ["python3", str(H / "bin" / "ecos"), "domain", "sync"], timeout=10
+    )
 
 
 def _action_bos_validate(params: dict) -> dict:
@@ -254,7 +287,9 @@ def _action_bos_validate(params: dict) -> dict:
 
 
 def _action_domain_routes(params: dict) -> dict:
-    return _check_run(["python3", str(H / "bin" / "ecos"), "domain", "routes"], timeout=10)
+    return _check_run(
+        ["python3", str(H / "bin" / "ecos"), "domain", "routes"], timeout=10
+    )
 
 
 # 惰性注册（在 _ensure_builtins_registered() 中触发）

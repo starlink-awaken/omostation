@@ -110,7 +110,11 @@ print(f"  损坏行: {corrupt_lines}")
 with open(SSB_DB) as f:
     all_lines = f.readlines()
 # 检查所有 crash 事件
-all_crash_events = [json.loads(line.strip()) for line in all_lines if line.strip() and '"T7_CRASH_TEST"' in line]
+all_crash_events = [
+    json.loads(line.strip())
+    for line in all_lines
+    if line.strip() and '"T7_CRASH_TEST"' in line
+]
 print(f"  最近10个事件中 T7_CRASH_TEST 事件: {len(all_crash_events)}")
 
 # ─── 4. HANDOFF Recovery ───
@@ -133,7 +137,9 @@ print(f"  事件类型: {event_types}")
 
 # Check if HANDOFF can be regenerated from SSB
 handoff_exists = os.path.exists(HANDOFF)
-handoff_age = time.time() - os.path.getmtime(HANDOFF) if handoff_exists else float("inf")
+handoff_age = (
+    time.time() - os.path.getmtime(HANDOFF) if handoff_exists else float("inf")
+)
 print(f"  HANDOFF存在: {handoff_exists}, 距今: {handoff_age / 60:.1f}分钟")
 
 # ─── 5. Recovery Action Verification ───
@@ -180,14 +186,18 @@ if len(all_crash_events) == partial_count:
     checks.append(("崩溃事件可恢复", True, f"全部{partial_count}个事件可读取"))
     passed += 1
 else:
-    checks.append(("崩溃事件可恢复", False, f"只读到{len(all_crash_events)}/{partial_count}"))
+    checks.append(
+        ("崩溃事件可恢复", False, f"只读到{len(all_crash_events)}/{partial_count}")
+    )
 
 # Check 3: Cleanup complete
 if final_count == baseline["ssb_events"]:
     checks.append(("清理完整性", True, "SSB恢复基准状态"))
     passed += 1
 else:
-    checks.append(("清理完整性", False, f"{final_count} vs 基准{baseline['ssb_events']}"))
+    checks.append(
+        ("清理完整性", False, f"{final_count} vs 基准{baseline['ssb_events']}")
+    )
 
 # Check 4: Recovery capability
 if handoff_exists and handoff_age < 3600:

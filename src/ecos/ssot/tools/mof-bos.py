@@ -35,7 +35,8 @@ CARDS_DB = HOME / "Workspace" / "data" / "cards" / "cards.db"
 AUDIT_LOG = HOME / ".ecos" / "bos-audit.jsonl"
 
 
-def now_iso(): return datetime.now(timezone.utc).isoformat()
+def now_iso():
+    return datetime.now(timezone.utc).isoformat()
 
 
 def load_routes() -> dict:
@@ -114,7 +115,7 @@ def check_bos_call(bos_uri: str) -> dict:
 def audit_bos_call(bos_uri: str, status_code: int = 200, duration_ms: int = 0):
     """后置审计: 记录 BOS 调用"""
     check = check_bos_call(bos_uri)
-    
+
     audit_entry = {
         "timestamp": now_iso(),
         "bos_uri": bos_uri,
@@ -123,30 +124,37 @@ def audit_bos_call(bos_uri: str, status_code: int = 200, duration_ms: int = 0):
         "pre_check": check,
         "anomaly": not check["allowed"] or status_code >= 500,
     }
-    
+
     # Append to audit log
     AUDIT_LOG.parent.mkdir(parents=True, exist_ok=True)
     with open(AUDIT_LOG, "a") as f:
         f.write(json.dumps(audit_entry, ensure_ascii=False) + "\n")
-    
+
     # Auto-create CARDS if anomaly
     if audit_entry["anomaly"] and CARDS_DB.exists():
         try:
             conn = sqlite3.connect(str(CARDS_DB))
             now_str = now_iso()
             debt_id = f"DEBT-BOS-{now_str[:10]}-{bos_uri.replace('/', '-')[:30]}"
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT OR IGNORE INTO cards (id, type, status, title, domain, priority, summary, content, created_at, updated_at)
                 VALUES (?, 'debt', 'identified', ?, 'infra', 'P2', ?, ?, ?, ?)
-            """, (debt_id, f"BOS 调用异常: {bos_uri[:60]}",
-                  f"status={status_code} | {check.get('reason', 'unknown')}",
-                  f"## mof-bos 自动检测\n- URI: {bos_uri}\n- Status: {status_code}\n- Pre-check: {json.dumps(check)}",
-                  now_str, now_str))
+            """,
+                (
+                    debt_id,
+                    f"BOS 调用异常: {bos_uri[:60]}",
+                    f"status={status_code} | {check.get('reason', 'unknown')}",
+                    f"## mof-bos 自动检测\n- URI: {bos_uri}\n- Status: {status_code}\n- Pre-check: {json.dumps(check)}",
+                    now_str,
+                    now_str,
+                ),
+            )
             conn.commit()
             conn.close()
         except Exception:
             pass
-    
+
     return audit_entry
 
 
@@ -186,13 +194,14 @@ def cmd_routes():
 
 
 def main():
+    print("⚠️ MOF BOS 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     if len(sys.argv) < 2:
         print("用法: mof bos <check|audit|routes> [args]")
         return
-    
+
     cmd = sys.argv[1]
     args = sys.argv[2:]
-    
+
     if cmd == "check":
         cmd_check(args)
     elif cmd == "audit":

@@ -30,6 +30,7 @@ _HEAL_WORKFLOW = "WORKFLOW-ECOS-DAILY-HEALTH"
 # 触发器注册表构建
 # =========================================================================
 
+
 def build_trigger_registry() -> dict[str, list[str]]:
     """从 M1 节点的 relations.triggers 构建触发器注册表
 
@@ -62,14 +63,18 @@ def build_trigger_registry() -> dict[str, list[str]]:
                 if target:
                     registry.setdefault(target, []).append(wf_id)
 
-    logger.info("Trigger registry built: %d triggers → %d workflows",
-                len(registry), len(m1_workflows))
+    logger.info(
+        "Trigger registry built: %d triggers → %d workflows",
+        len(registry),
+        len(m1_workflows),
+    )
     return registry
 
 
 # =========================================================================
 # 事件匹配引擎
 # =========================================================================
+
 
 def match_event(event: dict, registry: dict[str, list[str]] | None = None) -> list[str]:
     """匹配单条事件到工作流
@@ -88,9 +93,7 @@ def match_event(event: dict, registry: dict[str, list[str]] | None = None) -> li
 
     # 从多种字段提取 BOS URI
     event_uri = (
-        event.get("bos_uri", "")
-        or event.get("uri", "")
-        or event.get("source", "")
+        event.get("bos_uri", "") or event.get("uri", "") or event.get("source", "")
     )
 
     if not event_uri:
@@ -115,6 +118,7 @@ def match_event(event: dict, registry: dict[str, list[str]] | None = None) -> li
 # 事件执行器
 # =========================================================================
 
+
 def execute_matched(event: dict, dry_run: bool = False) -> list[dict]:
     """匹配并执行事件触发的所有工作流
 
@@ -134,10 +138,14 @@ def execute_matched(event: dict, dry_run: bool = False) -> list[dict]:
         return results
 
     for wf_id in wf_ids:
-        logger.info("Event triggered workflow: %s → %s",
-                    event.get("bos_uri", event.get("source", "unknown")), wf_id)
-        result = execute_m1_workflow(wf_id, params={"trigger_event": event},
-                                     dry_run=dry_run)
+        logger.info(
+            "Event triggered workflow: %s → %s",
+            event.get("bos_uri", event.get("source", "unknown")),
+            wf_id,
+        )
+        result = execute_m1_workflow(
+            wf_id, params={"trigger_event": event}, dry_run=dry_run
+        )
         result["triggered_by"] = wf_id
         results.append(result)
 
@@ -151,6 +159,7 @@ def execute_matched(event: dict, dry_run: bool = False) -> list[dict]:
 # =========================================================================
 # 自愈机制
 # =========================================================================
+
 
 def _trigger_heal(failed_workflow_id: str, failed_result: dict) -> dict | None:
     """触发自愈工作流
@@ -167,18 +176,23 @@ def _trigger_heal(failed_workflow_id: str, failed_result: dict) -> dict | None:
         # 如果没有自愈工作流定义，直接跑健康检查步骤
         logger.info("No heal workflow defined, running health check")
         from ecos.workflow.executor import _execute_step
+
         return _execute_step("health_check")
 
-    return execute_m1_workflow(_HEAL_WORKFLOW, params={
-        "heal_target": failed_workflow_id,
-        "heal_reason": f"Workflow {failed_workflow_id} failed: "
-                       f"{failed_result.get('failed', 0)} steps failed",
-    })
+    return execute_m1_workflow(
+        _HEAL_WORKFLOW,
+        params={
+            "heal_target": failed_workflow_id,
+            "heal_reason": f"Workflow {failed_workflow_id} failed: "
+            f"{failed_result.get('failed', 0)} steps failed",
+        },
+    )
 
 
 def load_workflow(name: str) -> dict | None:
     """加载工作流（与 loader 一致）"""
     from ecos.workflow.loader import load_workflow as _load
+
     return _load(name)
 
 
@@ -186,9 +200,13 @@ def load_workflow(name: str) -> dict | None:
 # 后台监听循环
 # =========================================================================
 
-def listen_forever(interval: float = 30.0, source: str = "agora_sse",
-                   agora_url: str = "http://127.0.0.1:7432",
-                   dry_run: bool = False) -> None:
+
+def listen_forever(
+    interval: float = 30.0,
+    source: str = "agora_sse",
+    agora_url: str = "http://127.0.0.1:7432",
+    dry_run: bool = False,
+) -> None:
     """持续监听事件源并触发工作流
 
     Args:
@@ -212,8 +230,9 @@ def listen_forever(interval: float = 30.0, source: str = "agora_sse",
         _poll_jsonl(events_file, registry, interval, dry_run)
 
 
-def _poll_jsonl(events_file: Path, registry: dict[str, list[str]],
-                interval: float, dry_run: bool) -> None:
+def _poll_jsonl(
+    events_file: Path, registry: dict[str, list[str]], interval: float, dry_run: bool
+) -> None:
     """轮询 JSONL 事件文件"""
     last_position = events_file.stat().st_size if events_file.exists() else 0
 
@@ -238,7 +257,9 @@ def _poll_jsonl(events_file: Path, registry: dict[str, list[str]],
                     event = json.loads(line)
                     wf_ids = match_event(event, registry)
                     if wf_ids:
-                        logger.info("Event matched %s: %s", wf_ids, event.get("bos_uri", ""))
+                        logger.info(
+                            "Event matched %s: %s", wf_ids, event.get("bos_uri", "")
+                        )
                         if not dry_run:
                             execute_matched(event)
                 except (json.JSONDecodeError, Exception) as e:
@@ -247,8 +268,9 @@ def _poll_jsonl(events_file: Path, registry: dict[str, list[str]],
         last_position = current_size
 
 
-def _listen_agora_sse(agora_url: str, registry: dict[str, list[str]],
-                      dry_run: bool) -> None:
+def _listen_agora_sse(
+    agora_url: str, registry: dict[str, list[str]], dry_run: bool
+) -> None:
     """监听 Agora SSE 事件流（粘性重连）"""
     import httpx
 
@@ -264,8 +286,11 @@ def _listen_agora_sse(agora_url: str, registry: dict[str, list[str]],
                             event = json.loads(line[6:])
                             wf_ids = match_event(event, registry)
                             if wf_ids:
-                                logger.info("SSE event matched %s: %s",
-                                            wf_ids, event.get("bos_uri", ""))
+                                logger.info(
+                                    "SSE event matched %s: %s",
+                                    wf_ids,
+                                    event.get("bos_uri", ""),
+                                )
                                 if not dry_run:
                                     execute_matched(event)
                         except json.JSONDecodeError:

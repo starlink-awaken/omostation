@@ -52,7 +52,9 @@ def main():
         name = t["name"]
         if "daily" in name:
             cat = "daily"
-        elif "weekly" in name or any(d in name for d in ["monday", "wednesday", "friday"]):
+        elif "weekly" in name or any(
+            d in name for d in ["monday", "wednesday", "friday"]
+        ):
             cat = "weekly"
         elif "monthly" in name or "quarterly" in name:
             cat = "monthly"
@@ -71,7 +73,9 @@ def main():
         filtered.append(t)
 
     print("\n═══ 定时任务看板 ═══")
-    print(f"总计: {len(tasks)} 个任务 | 筛选: {category or '全部'} | 更新: {index.get('updated', '?')[:19]}")
+    print(
+        f"总计: {len(tasks)} 个任务 | 筛选: {category or '全部'} | 更新: {index.get('updated', '?')[:19]}"
+    )
     print()
 
     # Category summary

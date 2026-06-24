@@ -42,8 +42,8 @@ KAIRON_PACKAGES = {
 
 # 成本权重
 COST_WEIGHTS = {
-    "file_count": 0.3,     # 文件数 = 维护复杂度
-    "line_count": 0.4,     # 代码行数 = 开发成本
+    "file_count": 0.3,  # 文件数 = 维护复杂度
+    "line_count": 0.4,  # 代码行数 = 开发成本
     "dependency_count": 0.3,  # 依赖数 = 集成风险
 }
 
@@ -136,21 +136,27 @@ def format_report(packages: dict, costs: dict, total: dict) -> str:
     lines.append("=" * 64)
     lines.append(f"  生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     lines.append(f"  分析包数: {total['analyzed']}/{total['total']}")
-    lines.append(f"  总文件数: {total['total_files']}  "
-                 f"总行数: {total['total_lines']:,}  "
-                 f"总依赖: {total['total_deps']}")
+    lines.append(
+        f"  总文件数: {total['total_files']}  "
+        f"总行数: {total['total_lines']:,}  "
+        f"总依赖: {total['total_deps']}"
+    )
     lines.append("")
 
     lines.append("  按包成本核算:")
     lines.append("  " + "-" * 60)
-    lines.append(f"  {'包':16s} {'文件':>4s} {'测试':>4s} {'行数':>6s} {'依赖':>4s} {'成本分':>6s}")
+    lines.append(
+        f"  {'包':16s} {'文件':>4s} {'测试':>4s} {'行数':>6s} {'依赖':>4s} {'成本分':>6s}"
+    )
     lines.append("  " + "-" * 60)
 
     sorted_costs = sorted(costs.items(), key=lambda x: x[1]["cost_score"], reverse=True)
 
     for pkg_name, c in sorted_costs:
         if c["status"] == "not_found":
-            lines.append(f"  {pkg_name:16s}  {'—':>4s}  {'—':>4s}  {'—':>6s}  {'—':>4s}  {'—':>6s}  ❌")
+            lines.append(
+                f"  {pkg_name:16s}  {'—':>4s}  {'—':>4s}  {'—':>6s}  {'—':>4s}  {'—':>6s}  ❌"
+            )
             continue
 
         bar = "█" * int(c["cost_score"] / 10) + "░" * (10 - int(c["cost_score"] / 10))
@@ -168,7 +174,11 @@ def format_report(packages: dict, costs: dict, total: dict) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="eCOS v5 Kairon 成本核算")
-    parser.add_argument("--workspace", required=True, help="Workspace 路径 (含 projects/kairon/packages/)")
+    parser.add_argument(
+        "--workspace",
+        required=True,
+        help="Workspace 路径 (含 projects/kairon/packages/)",
+    )
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     args = parser.parse_args()
 

@@ -3,6 +3,7 @@
 
 import json
 import sqlite3
+import sys
 from pathlib import Path
 
 DB_PATH = Path(__file__).resolve().parent.parent / "LADS" / "ssb" / "ecos.db"
@@ -39,6 +40,7 @@ def dump():
 
 def cli_main():
     """CLI entry point for ecos-ssb-dump"""
+    print("⚠️ ECOS SSB Dump 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     dump()
 
 

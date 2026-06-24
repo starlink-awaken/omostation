@@ -25,11 +25,21 @@ def now() -> str:
 def load_constraints() -> list[dict]:
     """加载 L0 约束"""
     ws = Path.home() / "Workspace"
-    constraints_path = ws / "projects" / "ecos" / "src" / "ecos" / "ssot" / "registry" / "L0-constraints.yaml"
+    constraints_path = (
+        ws
+        / "projects"
+        / "ecos"
+        / "src"
+        / "ecos"
+        / "ssot"
+        / "registry"
+        / "L0-constraints.yaml"
+    )
     if not constraints_path.exists():
         return []
 
     import yaml
+
     try:
         with open(constraints_path) as f:
             data = yaml.safe_load(f)
@@ -41,28 +51,46 @@ def load_constraints() -> list[dict]:
 def check_protocol_decay() -> list[dict]:
     """检查协议衰减"""
     ws = Path.home() / "Workspace"
-    constraints_path = ws / "projects" / "ecos" / "src" / "ecos" / "ssot" / "registry" / "L0-constraints.yaml"
+    constraints_path = (
+        ws
+        / "projects"
+        / "ecos"
+        / "src"
+        / "ecos"
+        / "ssot"
+        / "registry"
+        / "L0-constraints.yaml"
+    )
     if not constraints_path.exists():
         return [{"name": "protocol_decay", "pass": None, "reason": "约束文件不存在"}]
 
     import yaml
+
     try:
         with open(constraints_path) as f:
             data = yaml.safe_load(f)
         registry = data.get("protocol_registry", [])
         results = []
         for p in registry:
-            introduced = datetime.strptime(p.get("introduced", "2020-01-01"), "%Y-%m-%d")
+            introduced = datetime.strptime(
+                p.get("introduced", "2020-01-01"), "%Y-%m-%d"
+            )
             age = (datetime.now() - introduced).days
             half_life = p.get("half_life_days", 365)
             decay = min(1.0, age / half_life) if half_life > 0 else 1.0
             remaining = (1.0 - decay) * 100
-            status = "fresh" if remaining > 80 else ("aging" if remaining > 50 else "decayed")
-            results.append({
-                "name": f"protocol_decay_{p.get('id', '?')}",
-                "pass": remaining > 50,
-                "reason": f"{p.get('id', '?')}: {remaining:.1f}% ({status})",
-            })
+            status = (
+                "fresh"
+                if remaining > 80
+                else ("aging" if remaining > 50 else "decayed")
+            )
+            results.append(
+                {
+                    "name": f"protocol_decay_{p.get('id', '?')}",
+                    "pass": remaining > 50,
+                    "reason": f"{p.get('id', '?')}: {remaining:.1f}% ({status})",
+                }
+            )
         return results
     except Exception as e:
         return [{"name": "protocol_decay", "pass": False, "reason": str(e)}]
@@ -99,7 +127,11 @@ def main():
         print(json.dumps(report, indent=2, ensure_ascii=False))
     else:
         for r in report["results"]:
-            icon = "✅" if r.get("pass") is True else ("⚠️" if r.get("pass") is False else "❓")
+            icon = (
+                "✅"
+                if r.get("pass") is True
+                else ("⚠️" if r.get("pass") is False else "❓")
+            )
             print(f"  {icon} {r['reason']}")
         s = report["summary"]
         print(f"\n结果: {s['passed']}/{s['total']} 通过")

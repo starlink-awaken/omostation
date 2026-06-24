@@ -17,6 +17,7 @@ _backends: dict[str, dict[str, Any]] = {}
 
 # ── 默认后端：沿用现有的硬编码 action 执行器 ──
 
+
 def _topological_sort(steps: list[dict]) -> list[list[dict]]:
     """拓扑排序 steps，返回分层列表（每层可并行执行）
 
@@ -34,7 +35,7 @@ def _topological_sort(steps: list[dict]) -> list[list[dict]]:
     # 构建 DAG
     step_names: set[str] = set()
     depends: dict[str, set[str]] = {}  # step_name → 依赖的 step 名集合
-    step_map: dict[str, dict] = {}     # step_name → step dict
+    step_map: dict[str, dict] = {}  # step_name → step dict
 
     for s in steps:
         name = s.get("name", "")
@@ -106,7 +107,9 @@ def _parse_retry_config(execution: dict) -> dict:
             "max_attempts": int(retry["max_attempts"]),
             "policy": retry.get("policy", "on_failure"),
             "backoff": {
-                "initial_delay": float(retry.get("backoff", {}).get("initial_delay", 1.0)),
+                "initial_delay": float(
+                    retry.get("backoff", {}).get("initial_delay", 1.0)
+                ),
                 "multiplier": float(retry.get("backoff", {}).get("multiplier", 2.0)),
                 "max_delay": float(retry.get("backoff", {}).get("max_delay", 60.0)),
                 "jitter": float(retry.get("backoff", {}).get("jitter", 0.1)),
@@ -117,7 +120,12 @@ def _parse_retry_config(execution: dict) -> dict:
         return {
             "max_attempts": int(max_retries),
             "policy": "on_failure",
-            "backoff": {"initial_delay": 1.0, "multiplier": 2.0, "max_delay": 30.0, "jitter": 0.0},
+            "backoff": {
+                "initial_delay": 1.0,
+                "multiplier": 2.0,
+                "max_delay": 30.0,
+                "jitter": 0.0,
+            },
         }
 
     return {}
@@ -126,11 +134,14 @@ def _parse_retry_config(execution: dict) -> dict:
 def _compute_backoff_delay(attempt: int, config: dict) -> float:
     """计算退避延迟（秒）"""
     backoff = config.get("backoff", {})
-    delay = backoff.get("initial_delay", 1.0) * (backoff.get("multiplier", 2.0) ** (attempt - 1))
+    delay = backoff.get("initial_delay", 1.0) * (
+        backoff.get("multiplier", 2.0) ** (attempt - 1)
+    )
     delay = min(delay, backoff.get("max_delay", 60.0))
     jitter = backoff.get("jitter", 0.0)
     if jitter > 0:
         import random
+
         delay *= 1 + random.uniform(-jitter, jitter)
     return delay
 
@@ -201,6 +212,7 @@ def _default_executor(m1_node: dict, params: dict | None = None) -> dict:
 
     # DAG 拓扑排序: 尊重 depends_on 依赖关系
     from itertools import chain
+
     dag_layers = _topological_sort(steps)
     sorted_steps = list(chain.from_iterable(dag_layers))
 
@@ -214,12 +226,14 @@ def _default_executor(m1_node: dict, params: dict | None = None) -> dict:
             skip = _evaluate_when(when_cond, results)
             if skip:
                 logger.info("Skipping step '%s' (when=%s)", step_name, when_cond)
-                results["steps"].append({
-                    "name": step_name,
-                    "status": "skipped",
-                    "action": action,
-                    "reason": f"条件不满足: {when_cond}",
-                })
+                results["steps"].append(
+                    {
+                        "name": step_name,
+                        "status": "skipped",
+                        "action": action,
+                        "reason": f"条件不满足: {when_cond}",
+                    }
+                )
                 continue
 
         max_attempts = retry_config.get("max_attempts", 0)
@@ -235,19 +249,31 @@ def _default_executor(m1_node: dict, params: dict | None = None) -> dict:
                 ok = step_result.get("passed", True)
                 if ok:
                     break
-                if attempt >= max_attempts or not _should_retry(policy, step_result, None):
+                if attempt >= max_attempts or not _should_retry(
+                    policy, step_result, None
+                ):
                     break
                 delay = _compute_backoff_delay(attempt, retry_config)
-                logger.info("Retrying step '%s' (attempt %d/%d) after %.1fs",
-                            step_name, attempt, max_attempts, delay)
+                logger.info(
+                    "Retrying step '%s' (attempt %d/%d) after %.1fs",
+                    step_name,
+                    attempt,
+                    max_attempts,
+                    delay,
+                )
                 time.sleep(delay)
             except Exception as e:
                 last_error = str(e)
                 if attempt >= max_attempts or not _should_retry(policy, {}, e):
                     break
                 delay = _compute_backoff_delay(attempt, retry_config)
-                logger.info("Retrying step '%s' after error (attempt %d/%d): %s",
-                            step_name, attempt, max_attempts, e)
+                logger.info(
+                    "Retrying step '%s' after error (attempt %d/%d): %s",
+                    step_name,
+                    attempt,
+                    max_attempts,
+                    e,
+                )
                 time.sleep(delay)
 
         if step_result is not None:
@@ -255,37 +281,49 @@ def _default_executor(m1_node: dict, params: dict | None = None) -> dict:
         else:
             ok = False
 
-        attempt_info = f" (attempt {attempt}/{max_attempts})" if max_attempts > 1 else ""
+        attempt_info = (
+            f" (attempt {attempt}/{max_attempts})" if max_attempts > 1 else ""
+        )
 
         if ok:
-            results["steps"].append({
-                "name": step_name + attempt_info if attempt > 1 else step_name,
-                "status": "ok",
-                "result": step_result,
-            })
+            results["steps"].append(
+                {
+                    "name": step_name + attempt_info if attempt > 1 else step_name,
+                    "status": "ok",
+                    "result": step_result,
+                }
+            )
             results["passed"] += 1
         elif step_result is not None:
-            results["steps"].append({
-                "name": step_name + attempt_info if attempt > 1 else step_name,
-                "status": "failed",
-                "result": step_result,
-            })
+            results["steps"].append(
+                {
+                    "name": step_name + attempt_info if attempt > 1 else step_name,
+                    "status": "failed",
+                    "result": step_result,
+                }
+            )
             results["failed"] += 1
-            on_failure = (step.get("on_failure")
-                          or execution_config.get("on_failure")
-                          or "continue")
+            on_failure = (
+                step.get("on_failure")
+                or execution_config.get("on_failure")
+                or "continue"
+            )
             if on_failure == "abort":
                 break
         else:
-            results["steps"].append({
-                "name": step_name + attempt_info if attempt > 1 else step_name,
-                "status": "error",
-                "error": last_error or "未知错误",
-            })
+            results["steps"].append(
+                {
+                    "name": step_name + attempt_info if attempt > 1 else step_name,
+                    "status": "error",
+                    "error": last_error or "未知错误",
+                }
+            )
             results["failed"] += 1
-            on_failure = (step.get("on_failure")
-                          or execution_config.get("on_failure")
-                          or "continue")
+            on_failure = (
+                step.get("on_failure")
+                or execution_config.get("on_failure")
+                or "continue"
+            )
             if on_failure == "abort":
                 break
 
@@ -294,8 +332,10 @@ def _default_executor(m1_node: dict, params: dict | None = None) -> dict:
 
 # ── 注册/解析 API ──
 
-def register(name: str, module_path: str, entrypoint: str = "execute",
-             description: str = "") -> None:
+
+def register(
+    name: str, module_path: str, entrypoint: str = "execute", description: str = ""
+) -> None:
     """注册一个 workflow backend
 
     Args:
@@ -332,7 +372,9 @@ def resolve(m1_node: dict) -> Callable:
     _ensure_backends_registered()
     backend_info = _backends.get(backend_name)
     if not backend_info:
-        logger.warning("Backend '%s' not registered, falling back to default", backend_name)
+        logger.warning(
+            "Backend '%s' not registered, falling back to default", backend_name
+        )
         return _default_executor
 
     # Lazy load
@@ -386,19 +428,43 @@ def _ensure_backends_registered() -> None:
 
     # metaos backend (可选依赖)
     for mod_path, entry, name, desc in [
-        ("ecos.workflow.agora_mcp_backend", "execute", "agora",
-         "Agora MCP routing backend (跨层经 I0)"),
-        ("ecos.workflow.backends.symphony", "execute", "symphony",
-         "Symphony State Machine — 协议级阶段跃迁编排 (L0)"),
-        ("ecos.workflow.backends.swarm", "execute", "swarm",
-         "Swarm multi-agent task orchestration engine (aetherforge)"),
-        ("ecos.workflow.backends.runtime", "execute", "runtime",
-         "Runtime project lifecycle orchestrator (INIT→DELIVERY)"),
-        ("metaos.core.workflow", "run", "metaos",
-         "MetaOS DAG workflow engine (asyncio)"),
+        (
+            "ecos.workflow.agora_mcp_backend",
+            "execute",
+            "agora",
+            "Agora MCP routing backend (跨层经 I0)",
+        ),
+        (
+            "ecos.workflow.backends.symphony",
+            "execute",
+            "symphony",
+            "Symphony State Machine — 协议级阶段跃迁编排 (L0)",
+        ),
+        (
+            "ecos.workflow.backends.swarm",
+            "execute",
+            "swarm",
+            "Swarm multi-agent task orchestration engine (aetherforge)",
+        ),
+        (
+            "ecos.workflow.backends.runtime",
+            "execute",
+            "runtime",
+            "Runtime project lifecycle orchestrator (INIT→DELIVERY)",
+        ),
+        (
+            "metaos.core.workflow",
+            "run",
+            "metaos",
+            "MetaOS DAG workflow engine (asyncio)",
+        ),
         # Dynamic (LLM-driven) — ecos 内置
-        ("ecos.workflow.dynamic_backend", "execute", "dynamic",
-         "Dynamic mode — LLM 驱动的动态工作流编排"),
+        (
+            "ecos.workflow.dynamic_backend",
+            "execute",
+            "dynamic",
+            "Dynamic mode — LLM 驱动的动态工作流编排",
+        ),
     ]:
         try:
             register(name, mod_path, entry, description=desc)

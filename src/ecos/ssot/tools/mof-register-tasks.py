@@ -209,6 +209,9 @@ def save_nodes(nodes: list[dict], prefix: str):
 
 
 def main():
+    import sys
+
+    print("⚠️ MOF Register Tasks 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     all_nodes = []
     all_nodes.extend(scan_scheduled_tasks())
     all_nodes.extend(scan_governance_scripts())

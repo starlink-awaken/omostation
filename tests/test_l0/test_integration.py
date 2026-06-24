@@ -9,7 +9,8 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "src"))
 
 
 class TestEndToEndIntegration:
@@ -19,11 +20,22 @@ class TestEndToEndIntegration:
         """完整工作流: L0→L1→L2→L3"""
         from ecos.l0.governance import (
             NodeManager,
-            TaskScheduler, RoleManager, RoleDefinition, RoleType,
-            SwarmManager, PersonalKnowledgeManager, KnowledgeNode, KnowledgeType,
+            TaskScheduler,
+            RoleManager,
+            RoleDefinition,
+            RoleType,
+            SwarmManager,
+            PersonalKnowledgeManager,
+            KnowledgeNode,
+            KnowledgeType,
         )
         from ecos.l1.runtime import StateSyncService as L1Sync
-        from ecos.l2.engine import CollaborationEngine, SwarmEngine, PersonalEngine, EngineConfig
+        from ecos.l2.engine import (
+            CollaborationEngine,
+            SwarmEngine,
+            PersonalEngine,
+            EngineConfig,
+        )
         from ecos.l3.entry import GovernanceCLI, GovernanceMCP
 
         # Step 1: L0 原语定义
@@ -37,15 +49,33 @@ class TestEndToEndIntegration:
         ts.submit_task("task-3", "测试验证")
 
         rm = RoleManager()
-        rm.define_role(RoleDefinition(role_id="analyst", role_type=RoleType.WORKER, capabilities=["analyze"], constraints={}))
-        rm.define_role(RoleDefinition(role_id="developer", role_type=RoleType.WORKER, capabilities=["code"], constraints={}))
+        rm.define_role(
+            RoleDefinition(
+                role_id="analyst",
+                role_type=RoleType.WORKER,
+                capabilities=["analyze"],
+                constraints={},
+            )
+        )
+        rm.define_role(
+            RoleDefinition(
+                role_id="developer",
+                role_type=RoleType.WORKER,
+                capabilities=["code"],
+                constraints={},
+            )
+        )
 
         sm = SwarmManager()
         for i in range(5):
             sm.add_agent(f"agent-{i}")
 
         km = PersonalKnowledgeManager()
-        km.add_knowledge(KnowledgeNode(node_id="k1", knowledge_type=KnowledgeType.FACT, content={"text": "AI"}))
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id="k1", knowledge_type=KnowledgeType.FACT, content={"text": "AI"}
+            )
+        )
 
         # Step 2: L1 运行时委托
         l1_sync = L1Sync("l1-node")
@@ -161,8 +191,14 @@ class TestCrossLayerIntegration:
             assert result == 0
 
         mcp = GovernanceMCP()
-        for tool in ["governance_check", "governance_status", "cluster_list",
-                      "swarm_status", "knowledge_stats", "task_submit"]:
+        for tool in [
+            "governance_check",
+            "governance_status",
+            "cluster_list",
+            "swarm_status",
+            "knowledge_stats",
+            "task_submit",
+        ]:
             result = mcp.call_tool(tool)
             assert result["status"] == "ok"
 
@@ -183,8 +219,10 @@ class TestAsyncTCP:
         from ecos.l1.transport import WireMessage
 
         msg = WireMessage(
-            msg_id="test-1", msg_type="sync",
-            source="a", target="b",
+            msg_id="test-1",
+            msg_type="sync",
+            source="a",
+            target="b",
             payload={"key": "value", "nested": {"a": 1}},
         )
         encoded = msg.encode()
@@ -218,8 +256,11 @@ class TestAsyncTCP:
 
         queue = MessageQueue()
         msg = Message(
-            message_id="old", message_type=MessageType.SYNC,
-            source="a", target="b", payload={},
+            message_id="old",
+            message_type=MessageType.SYNC,
+            source="a",
+            target="b",
+            payload={},
             timestamp=datetime.now(timezone.utc) - timedelta(hours=1),
             ttl_seconds=10,
         )
@@ -255,7 +296,7 @@ class TestPerformanceBenchmarks:
         for i in range(50):
             kg.add_node(f"n{i}")
         for i in range(49):
-            kg.add_edge(f"n{i}", f"n{i+1}", "link")
+            kg.add_edge(f"n{i}", f"n{i + 1}", "link")
 
         pr = kg.pagerank()
         total = sum(pr.values())
@@ -290,12 +331,27 @@ class TestDeploymentReadiness:
     def test_all_components_instantiate(self):
         """验证所有组件可实例化"""
         from ecos.l0.governance import (
-            CRDTSync, StateSyncService, DAGScheduler, SwarmManager,
-            CollectiveDecision, KnowledgeGraphBuilder, RecommendationEngine,
-            FailoverManager, LoadBalancer, NodeManager,
-            TaskScheduler, AgentRegistry, PersonalKnowledgeManager, PreferenceEngine,
+            CRDTSync,
+            StateSyncService,
+            DAGScheduler,
+            SwarmManager,
+            CollectiveDecision,
+            KnowledgeGraphBuilder,
+            RecommendationEngine,
+            FailoverManager,
+            LoadBalancer,
+            NodeManager,
+            TaskScheduler,
+            AgentRegistry,
+            PersonalKnowledgeManager,
+            PreferenceEngine,
         )
-        from ecos.l2.engine import CollaborationEngine, SwarmEngine, PersonalEngine, EngineConfig
+        from ecos.l2.engine import (
+            CollaborationEngine,
+            SwarmEngine,
+            PersonalEngine,
+            EngineConfig,
+        )
         from ecos.l3.entry import GovernanceCLI, GovernanceMCP
 
         CRDTSync("test")

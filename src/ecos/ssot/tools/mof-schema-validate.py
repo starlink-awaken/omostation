@@ -27,6 +27,7 @@
     3: 有 state machine 非法
     4: 多种问题混合
 """
+
 import argparse
 import json
 import subprocess
@@ -55,15 +56,12 @@ def load_m2_schemas():
             continue
         # 尝试多种 section 命名
         section = (
-            data.get(mt)
-            or data.get(mt[0].lower() + mt[1:])
-            or data.get(mt.lower())
+            data.get(mt) or data.get(mt[0].lower() + mt[1:]) or data.get(mt.lower())
         )
         if section is None:
             # 顶层其他 keys (description/requiredProperties 等) 即 section
             top_other = [
-                k for k in data
-                if k not in ("m2_type", "version", "created", "updated")
+                k for k in data if k not in ("m2_type", "version", "created", "updated")
             ]
             if top_other:
                 section = {top_other[0]: None}
@@ -85,7 +83,15 @@ def get_m2_type_aliases(m2_schemas):
     return aliases
 
 
-def check_m1_node(data, schema, m2_type, *, check_types=False, check_transitions=False, check_refs=False):
+def check_m1_node(
+    data,
+    schema,
+    m2_type,
+    *,
+    check_types=False,
+    check_transitions=False,
+    check_refs=False,
+):
     """校验单个 M1 节点 vs M2 schema.
 
     双向校验: 字段在 properties 或 top-level 都被接受 (历史 M1 节点字段位置不一致).
@@ -121,7 +127,9 @@ def check_m1_node(data, schema, m2_type, *, check_types=False, check_transitions
             value = props.get(field_name, data.get(field_name))
             if value is None:
                 continue
-            declared_type = field_schema.get("type") if isinstance(field_schema, dict) else None
+            declared_type = (
+                field_schema.get("type") if isinstance(field_schema, dict) else None
+            )
             issue = _check_field_type(field_name, value, declared_type, field_schema)
             if issue:
                 issues.append(f"  - type mismatch: {issue}")
@@ -141,7 +149,11 @@ def check_m1_node(data, schema, m2_type, *, check_types=False, check_transitions
         if m3p and "." in str(m3p):
             # 只检查包含点的引用 (排除 DescriptiveElement.Model 这种纯命名空间)
             pass  # m3_parent 是命名空间, 不需文件存在性检查
-        mdr = props.get("model_driven_refs") or props.get("model_driven_ref") or data.get("model_driven_refs")
+        mdr = (
+            props.get("model_driven_refs")
+            or props.get("model_driven_ref")
+            or data.get("model_driven_refs")
+        )
         if isinstance(mdr, list):
             for p in mdr:
                 if isinstance(p, str) and p.startswith("projects/"):
@@ -191,7 +203,9 @@ def _check_field_type(field_name, value, declared_type, field_schema):
         if not isinstance(value, bool):
             return f"{field_name} 应为 bool, 实际 {type(value).__name__}"
     elif declared_type == "enum":
-        allowed = field_schema.get("values", []) if isinstance(field_schema, dict) else []
+        allowed = (
+            field_schema.get("values", []) if isinstance(field_schema, dict) else []
+        )
         if value not in allowed:
             return f"{field_name}={value!r} 不在 enum {allowed}"
     elif declared_type == "list":
@@ -233,24 +247,61 @@ def _cleanup_orphaned_m2_schemas(m2_dir, skip_list=None):
     for mt in m2_types:
         if mt in skip_list:
             continue
-        if mt not in type_aliases or not (m1_types & {mt, mt.lower(), mt[0].lower() + mt[1:]}):
+        if mt not in type_aliases or not (
+            m1_types & {mt, mt.lower(), mt[0].lower() + mt[1:]}
+        ):
             orphans.append(mt)
     return orphans
 
 
 def main():
     parser = argparse.ArgumentParser(description="M1 vs M2 schema validator")
-    parser.add_argument("--strict", action="store_true", help="退出码非 0 if issues found")
-    parser.add_argument("--focus", help="只校验指定子目录, 逗号分隔 (如 omo_layer,governance)")
-    parser.add_argument("--json", dest="json_output", action="store_true", help="JSON 格式输出 (CI 集成)")
-    parser.add_argument("--staged", action="store_true", help="只校验 git staged M1 文件 (pre-commit 模式)")
-    parser.add_argument("--type-coverage", action="store_true", help="M1 type 覆盖率统计")
-    parser.add_argument("--orphaned", action="store_true", help="找孤儿 M2 schema (无 M1 引用)")
-    parser.add_argument("--no-color", action="store_true", help="禁用 ANSI 颜色 (CI 集成)")
-    parser.add_argument("--check-types", action="store_true", help="Phase 3 增强: 校验 optionalProperties 字段类型")
-    parser.add_argument("--check-transitions", action="store_true", help="Phase 3 增强: 校验 stateMachine 转移合法性")
-    parser.add_argument("--check-refs", action="store_true", help="Phase 3 增强: 校验 m3_parent / model_driven_refs 引用路径")
-    parser.add_argument("--cleanup-orphaned", action="store_true", help="Phase 3 增强: 自动清理孤儿 M2 schema (需 --strict)")
+    parser.add_argument(
+        "--strict", action="store_true", help="退出码非 0 if issues found"
+    )
+    parser.add_argument(
+        "--focus", help="只校验指定子目录, 逗号分隔 (如 omo_layer,governance)"
+    )
+    parser.add_argument(
+        "--json",
+        dest="json_output",
+        action="store_true",
+        help="JSON 格式输出 (CI 集成)",
+    )
+    parser.add_argument(
+        "--staged",
+        action="store_true",
+        help="只校验 git staged M1 文件 (pre-commit 模式)",
+    )
+    parser.add_argument(
+        "--type-coverage", action="store_true", help="M1 type 覆盖率统计"
+    )
+    parser.add_argument(
+        "--orphaned", action="store_true", help="找孤儿 M2 schema (无 M1 引用)"
+    )
+    parser.add_argument(
+        "--no-color", action="store_true", help="禁用 ANSI 颜色 (CI 集成)"
+    )
+    parser.add_argument(
+        "--check-types",
+        action="store_true",
+        help="Phase 3 增强: 校验 optionalProperties 字段类型",
+    )
+    parser.add_argument(
+        "--check-transitions",
+        action="store_true",
+        help="Phase 3 增强: 校验 stateMachine 转移合法性",
+    )
+    parser.add_argument(
+        "--check-refs",
+        action="store_true",
+        help="Phase 3 增强: 校验 m3_parent / model_driven_refs 引用路径",
+    )
+    parser.add_argument(
+        "--cleanup-orphaned",
+        action="store_true",
+        help="Phase 3 增强: 自动清理孤儿 M2 schema (需 --strict)",
+    )
     args = parser.parse_args()
 
     focus_dirs = None
@@ -261,8 +312,18 @@ def main():
     if args.staged:
         try:
             r = subprocess.run(
-                ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM", "--", "src/ecos/ssot/mof/m1/**/*.yaml"],
-                capture_output=True, text=True, check=True,
+                [
+                    "git",
+                    "diff",
+                    "--cached",
+                    "--name-only",
+                    "--diff-filter=ACM",
+                    "--",
+                    "src/ecos/ssot/mof/m1/**/*.yaml",
+                ],
+                capture_output=True,
+                text=True,
+                check=True,
             )
             staged_files = [Path(p) for p in r.stdout.splitlines() if p.strip()]
         except subprocess.CalledProcessError:
@@ -348,19 +409,27 @@ def main():
                 schema = schemas[t]
 
             issues = check_m1_node(
-                data, schema, t,
+                data,
+                schema,
+                t,
                 check_types=args.check_types,
                 check_transitions=args.check_transitions,
                 check_refs=args.check_refs,
             )
             for issue in issues:
                 if "missing required" in issue:
-                    missing_req.append((nid, t, issue.strip(), str(f.relative_to(M1_DIR))))
+                    missing_req.append(
+                        (nid, t, issue.strip(), str(f.relative_to(M1_DIR)))
+                    )
                 if "stateMachine" in issue:
-                    invalid_sm.append((nid, t, issue.strip(), str(f.relative_to(M1_DIR))))
+                    invalid_sm.append(
+                        (nid, t, issue.strip(), str(f.relative_to(M1_DIR)))
+                    )
                 if "type mismatch" in issue or "ref path" in issue:
                     # Phase 3 新校验项, 收集到 invalid_sm
-                    invalid_sm.append((nid, t, issue.strip(), str(f.relative_to(M1_DIR))))
+                    invalid_sm.append(
+                        (nid, t, issue.strip(), str(f.relative_to(M1_DIR)))
+                    )
 
     print(f"=== M1 节点总数: {total} ===")
     print(f"=== Type drift (type 不在 M2): {len(drift)} ===")
@@ -411,10 +480,7 @@ def main():
             "m2_schemas_count": len(schemas),
             "m1_nodes_total": total,
             "type_drift_count": len(drift),
-            "type_drift": [
-                {"id": nid, "type": t, "path": p}
-                for nid, t, p in drift
-            ],
+            "type_drift": [{"id": nid, "type": t, "path": p} for nid, t, p in drift],
             "required_missing_count": len(missing_req),
             "required_missing": [
                 {"id": nid, "type": t, "issue": issue, "path": p}
@@ -485,7 +551,9 @@ def _validate_specific_files(files, args):
                 invalid_sm.append((nid, t, issue.strip(), str(f)))
 
     if drift or missing_req or invalid_sm:
-        print(f"❌ mof-schema-validate 失败: {len(drift)} drift + {len(missing_req)} missing + {len(invalid_sm)} sm_invalid")
+        print(
+            f"❌ mof-schema-validate 失败: {len(drift)} drift + {len(missing_req)} missing + {len(invalid_sm)} sm_invalid"
+        )
         for nid, t, p in drift:
             print(f"  DRIFT: {nid} type={t} ({p})")
         for nid, t, issue, p in missing_req:
@@ -530,7 +598,9 @@ def _type_coverage_report():
     print(f"M2 schema 总数: {len(schemas)} m2_type")
     print(f"M1 type 用法 (unique): {len(m1_types)}")
     if m2_types_set:
-        print(f"M1 引用 M2 (PASS): {len(used_m2)} / {len(schemas)} = {100*len(used_m2)/len(schemas):.1f}%")
+        print(
+            f"M1 引用 M2 (PASS): {len(used_m2)} / {len(schemas)} = {100 * len(used_m2) / len(schemas):.1f}%"
+        )
     else:
         print("M1 引用 M2 (PASS): N/A")
     print(f"M1 type 漂移 (FAIL): {len(drift_m1)}")
@@ -564,7 +634,9 @@ def _orphaned_m2_report():
     type_aliases = get_m2_type_aliases(schemas)
     orphans = []
     for mt in schemas:
-        if mt not in type_aliases or not (m1_types & {mt, mt.lower(), mt[0].lower() + mt[1:]}):
+        if mt not in type_aliases or not (
+            m1_types & {mt, mt.lower(), mt[0].lower() + mt[1:]}
+        ):
             orphans.append(mt)
 
     print("=== 孤儿 M2 schema 报告 (无 M1 引用) ===\n")

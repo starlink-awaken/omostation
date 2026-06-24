@@ -5,7 +5,8 @@
 
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "src"))
 
 
 def example_state_sync():
@@ -63,7 +64,12 @@ def example_collective_decision():
     print("=== 示例 3: 蜂群集体决策 ===")
 
     cd = CollectiveDecision()
-    cd.create_proposal("p1", "选择部署策略", ["canary", "blue-green", "rolling"], DecisionMethod.MAJORITY_VOTE)
+    cd.create_proposal(
+        "p1",
+        "选择部署策略",
+        ["canary", "blue-green", "rolling"],
+        DecisionMethod.MAJORITY_VOTE,
+    )
 
     cd.vote("p1", "agent-1", "canary")
     cd.vote("p1", "agent-2", "canary")
@@ -110,8 +116,11 @@ def example_knowledge_graph():
 def example_recommendation():
     """示例 5: 知识推荐"""
     from ecos.l0.governance import (
-        PersonalKnowledgeManager, KnowledgeNode, KnowledgeType,
-        PreferenceEngine, RecommendationEngine,
+        PersonalKnowledgeManager,
+        KnowledgeNode,
+        KnowledgeType,
+        PreferenceEngine,
+        RecommendationEngine,
     )
 
     print("=== 示例 5: 知识推荐 ===")
@@ -127,10 +136,14 @@ def example_recommendation():
     ]
 
     for doc_id, text, tags in docs:
-        km.add_knowledge(KnowledgeNode(
-            node_id=doc_id, knowledge_type=KnowledgeType.FACT,
-            content={"text": text}, tags=tags,
-        ))
+        km.add_knowledge(
+            KnowledgeNode(
+                node_id=doc_id,
+                knowledge_type=KnowledgeType.FACT,
+                content={"text": text},
+                tags=tags,
+            )
+        )
 
     pe.learn("user-1", "ai", "topic", 5.0)
     pe.learn("user-1", "ml", "topic", 3.0)
@@ -151,9 +164,30 @@ def example_role_switching():
     print("=== 示例 6: 角色切换 ===")
 
     rm = RoleManager()
-    rm.define_role(RoleDefinition(role_id="worker", role_type=RoleType.WORKER, capabilities=["code"], constraints={}))
-    rm.define_role(RoleDefinition(role_id="reviewer", role_type=RoleType.SPECIALIST, capabilities=["review"], constraints={}))
-    rm.define_role(RoleDefinition(role_id="lead", role_type=RoleType.COORDINATOR, capabilities=["manage"], constraints={}))
+    rm.define_role(
+        RoleDefinition(
+            role_id="worker",
+            role_type=RoleType.WORKER,
+            capabilities=["code"],
+            constraints={},
+        )
+    )
+    rm.define_role(
+        RoleDefinition(
+            role_id="reviewer",
+            role_type=RoleType.SPECIALIST,
+            capabilities=["review"],
+            constraints={},
+        )
+    )
+    rm.define_role(
+        RoleDefinition(
+            role_id="lead",
+            role_type=RoleType.COORDINATOR,
+            capabilities=["manage"],
+            constraints={},
+        )
+    )
 
     rm.assign_role("alice", "worker")
 
@@ -178,7 +212,14 @@ def example_fault_tolerance():
     print("=== 示例 7: 故障容错 ===")
 
     fm = FailoverManager()
-    fm.add_rule(FailoverRule("r1", "primary", ["secondary-1", "secondary-2", "secondary-3"], FailoverStrategy.ROUND_ROBIN))
+    fm.add_rule(
+        FailoverRule(
+            "r1",
+            "primary",
+            ["secondary-1", "secondary-2", "secondary-3"],
+            FailoverStrategy.ROUND_ROBIN,
+        )
+    )
 
     targets = []
     for i in range(6):
@@ -186,7 +227,9 @@ def example_fault_tolerance():
         targets.append(target)
 
     print(f"  故障转移序列: {targets}")
-    print(f"  轮询验证: {'正确' if targets == ['secondary-1', 'secondary-2', 'secondary-3', 'secondary-1', 'secondary-2', 'secondary-3'] else '异常'}")
+    print(
+        f"  轮询验证: {'正确' if targets == ['secondary-1', 'secondary-2', 'secondary-3', 'secondary-1', 'secondary-2', 'secondary-3'] else '异常'}"
+    )
     print()
 
 

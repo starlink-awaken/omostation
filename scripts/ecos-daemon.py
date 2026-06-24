@@ -33,7 +33,15 @@ STATE_DB = ECOS / "daemon-state.db"
 BRIEF_SCRIPT = SCRIPTS / "ecos-brief.py"
 HEALTH_SCRIPT = SCRIPTS / "ecos-health-check.py"
 SLA_SCRIPT = SCRIPTS / "ecos-sla-tracker.py"
-CONSTRAINT_SCRIPT = Path.home() / "Documents" / "@学习进化" / "_knowledge" / "10-systems" / "基建架构" / "ecos-constraint-validator.py"
+CONSTRAINT_SCRIPT = (
+    Path.home()
+    / "Documents"
+    / "@学习进化"
+    / "_knowledge"
+    / "10-systems"
+    / "基建架构"
+    / "ecos-constraint-validator.py"
+)
 DIGEST_SCRIPT = SCRIPTS / "ecos-weekly-digest.py"
 DIGEST_OUTPUT = DOCS / "@驾驶舱" / "_generated" / "CARDS" / "health-digest.md"
 BRIEF_OUTPUT = DOCS / "@驾驶舱" / "brief.md"
@@ -101,32 +109,106 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
     cycle_id = cursor.lastrowid
     conn.commit()
 
-    print(f"\n{'='*56}")
+    print(f"\n{'=' * 56}")
     print(f"  周期 #{cycle_num} — {now.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"{'='*56}")
+    print(f"{'=' * 56}")
 
     errors = []
 
     # 0. 变更门禁 (mof-gate) — "动架构必须先改 L0"
-    if (WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-gate.py").exists():
-        run_script(WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-gate.py")
+    if (
+        WORKSPACE
+        / "projects"
+        / "ecos"
+        / "src"
+        / "ecos"
+        / "ssot"
+        / "tools"
+        / "mof-gate.py"
+    ).exists():
+        run_script(
+            WORKSPACE
+            / "projects"
+            / "ecos"
+            / "src"
+            / "ecos"
+            / "ssot"
+            / "tools"
+            / "mof-gate.py"
+        )
 
     # 0.1 L0 自举校验 (mof-bootstrap)
-    if (WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-bootstrap.py").exists():
-        run_script(WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-bootstrap.py")
+    if (
+        WORKSPACE
+        / "projects"
+        / "ecos"
+        / "src"
+        / "ecos"
+        / "ssot"
+        / "tools"
+        / "mof-bootstrap.py"
+    ).exists():
+        run_script(
+            WORKSPACE
+            / "projects"
+            / "ecos"
+            / "src"
+            / "ecos"
+            / "ssot"
+            / "tools"
+            / "mof-bootstrap.py"
+        )
 
     # 0.1 层合规强制扫描 (mof-enforce)
-    if (WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-enforce.py").exists():
-        run_script(WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-enforce.py", ["--no-cards"])
+    if (
+        WORKSPACE
+        / "projects"
+        / "ecos"
+        / "src"
+        / "ecos"
+        / "ssot"
+        / "tools"
+        / "mof-enforce.py"
+    ).exists():
+        run_script(
+            WORKSPACE
+            / "projects"
+            / "ecos"
+            / "src"
+            / "ecos"
+            / "ssot"
+            / "tools"
+            / "mof-enforce.py",
+            ["--no-cards"],
+        )
 
     # 0.2 SLA 执行 + M0 快照 (mof-sla)
-    if (WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-sla.py").exists():
-        run_script(WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "tools" / "mof-sla.py")
+    if (
+        WORKSPACE
+        / "projects"
+        / "ecos"
+        / "src"
+        / "ecos"
+        / "ssot"
+        / "tools"
+        / "mof-sla.py"
+    ).exists():
+        run_script(
+            WORKSPACE
+            / "projects"
+            / "ecos"
+            / "src"
+            / "ecos"
+            / "ssot"
+            / "tools"
+            / "mof-sla.py"
+        )
 
     # 0.3 model-driven 自反验证 (并行验证层, 非关键路径 — 失败不阻塞 daemon)
     print("\n── model-driven 自反验证 ──")
     try:
         import sys as _sys
+
         _sys.path.insert(0, str(WORKSPACE / "projects" / "model-driven" / "src"))
         from model_driven.toolchain.tools import tool_validate
         from model_driven.toolchain.derivation_engine import DerivationEngine
@@ -135,12 +217,16 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
         nodes = load_m1_nodes()
 
         r = tool_validate(models=nodes)
-        print(f"  model-driven validate: passed={r['passed']}, errors={r['error_count']}, warnings={r['warning_count']}")
+        print(
+            f"  model-driven validate: passed={r['passed']}, errors={r['error_count']}, warnings={r['warning_count']}"
+        )
 
         engine = DerivationEngine()
         engine.execute_all(nodes, {"expected_progress": 0.5})
         s = engine.get_summary()
-        print(f"  model-driven derive: rules={s['total_rules']}, triggered={s['triggered']}, high_risks={len(s.get('high_risks', []))}")
+        print(
+            f"  model-driven derive: rules={s['total_rules']}, triggered={s['triggered']}, high_risks={len(s.get('high_risks', []))}"
+        )
 
         if s.get("high_risks"):
             for risk in s["high_risks"][:3]:
@@ -157,15 +243,20 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
     # 0.4 model-driven 三阶段流水线 (追踪 daemon 自身生命周期)
     try:
         import sys as _sys
+
         _sys.path.insert(0, str(WORKSPACE / "projects" / "model-driven" / "src"))
         from model_driven.lifecycle.pipeline import PipelineTracker, PipelinePhase
 
-        pt = PipelineTracker.load("ecos-daemon") or PipelineTracker("ecos-daemon", "daemon")
+        pt = PipelineTracker.load("ecos-daemon") or PipelineTracker(
+            "ecos-daemon", "daemon"
+        )
         if pt.current_phase is None:
             pt.start_phase(PipelinePhase.HARDENING)
         pt.save()
         p = pt.get_progress()
-        print(f"  model-driven pipeline: phase={p['current_phase']}, overall={p['overall_progress']}%")
+        print(
+            f"  model-driven pipeline: phase={p['current_phase']}, overall={p['overall_progress']}%"
+        )
     except ImportError:
         pass
     except Exception:
@@ -206,7 +297,7 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
                 results = data.get("results", [])
                 passed = sum(1 for r in results if r.get("pass") is True)
                 failed = sum(1 for r in results if r.get("pass") is False)
-                print(f"  {passed}/{passed+failed} 通过")
+                print(f"  {passed}/{passed + failed} 通过")
                 if failed > 0:
                     for r in results:
                         if r.get("pass") is False:
@@ -214,7 +305,13 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
                             print(f"  ⚠️  {r['name']}: {reason}")
                             conn.execute(
                                 "INSERT INTO alerts (cycle_id, alert_type, message, created_at) VALUES (?,?,?,?)",
-                                (cycle_id, "health_check", f"{r['name']}: {reason}", started))
+                                (
+                                    cycle_id,
+                                    "health_check",
+                                    f"{r['name']}: {reason}",
+                                    started,
+                                ),
+                            )
                     print(f"  ⚠️ 健康检查: {failed} 项失败 (non-fatal)")
             except (json.JSONDecodeError, KeyError):
                 print(f"  ⚠️ 健康检查输出解析失败, exit={code} (non-fatal)")
@@ -223,8 +320,10 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
 
     # 3. SLA 记录
     sla_result = "pass" if not errors else "fail"
-    run_script(SLA_SCRIPT, ["--log", sla_result, "--dim", "daemon",
-                            "--detail", f"cycle={cycle_num}"])
+    run_script(
+        SLA_SCRIPT,
+        ["--log", sla_result, "--dim", "daemon", "--detail", f"cycle={cycle_num}"],
+    )
 
     # 3.5 存储空间检查 (非关键路径)
     try:
@@ -245,8 +344,12 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
             catalog = Path.home() / ".ecos" / "scripts" / "catalog-daemon.py"
             if catalog.exists():
                 for vol in ["sharedmodel", "model"]:
-                    code, out = run_script(catalog, ["--update", vol, "--max-depth", "10", "--json"], timeout=120)
-                    print(f"  📁 catalog {vol}: {'✅' if code==0 else '⚠️'}")
+                    code, out = run_script(
+                        catalog,
+                        ["--update", vol, "--max-depth", "10", "--json"],
+                        timeout=120,
+                    )
+                    print(f"  📁 catalog {vol}: {'✅' if code == 0 else '⚠️'}")
     except Exception as e:
         print(f"  ⚠️ catalog 扫描异常: {e} (non-fatal)")
 
@@ -265,7 +368,9 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
     # 5. 会话简报更新
     try:
         if BRIEF_SCRIPT.exists():
-            run_script(BRIEF_SCRIPT, ["--force", "--output", str(BRIEF_OUTPUT)], timeout=45)
+            run_script(
+                BRIEF_SCRIPT, ["--force", "--output", str(BRIEF_OUTPUT)], timeout=45
+            )
     except Exception as e:
         print(f"  ⚠️ 简报生成异常: {e} (non-fatal)")
 
@@ -275,7 +380,9 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
             healer_script = SCRIPTS / "ecos-healer.py"
             if healer_script.exists():
                 print("\n── 自治愈 ──")
-                heal_code, heal_out = run_script(healer_script, ["--check-health"], timeout=30)
+                heal_code, heal_out = run_script(
+                    healer_script, ["--check-health"], timeout=30
+                )
                 for line in heal_out.split("\n"):
                     if "→" in line:
                         print(f"  {line.strip()}")
@@ -284,42 +391,48 @@ def run_cycle(conn: sqlite3.Connection, cycle_num: int) -> int:
 
     # 完成
     summary = "; ".join(errors) if errors else "全部通过"
-    conn.execute("UPDATE cycles SET completed_at=?, exit_code=?, summary=? WHERE id=?",
-                 (datetime.now(timezone.utc).isoformat(),
-                  1 if errors else 0, summary, cycle_id))
+    conn.execute(
+        "UPDATE cycles SET completed_at=?, exit_code=?, summary=? WHERE id=?",
+        (datetime.now(timezone.utc).isoformat(), 1 if errors else 0, summary, cycle_id),
+    )
     conn.commit()
 
     print(f"\n  结果: {'✅ 全部通过' if not errors else f'⚠️  {len(errors)} 项告警'}")
-    print(f"{'='*56}")
+    print(f"{'=' * 56}")
 
     return 1 if errors else 0
 
 
 def show_status(conn: sqlite3.Connection):
     """显示 daemon 状态"""
-    print(f"\n{'='*56}")
+    print(f"\n{'=' * 56}")
     print("  eCOS Daemon — 状态报告")
-    print(f"{'='*56}")
+    print(f"{'=' * 56}")
 
-    cursor = conn.execute("SELECT COUNT(*), COALESCE(SUM(CASE WHEN exit_code=0 THEN 1 ELSE 0 END),0), "
-                          "MAX(started_at) FROM cycles")
+    cursor = conn.execute(
+        "SELECT COUNT(*), COALESCE(SUM(CASE WHEN exit_code=0 THEN 1 ELSE 0 END),0), "
+        "MAX(started_at) FROM cycles"
+    )
     total, passed, last = cursor.fetchone()
     print(f"\n  总周期: {total} 次")
-    print(f"  通过: {passed} 次 ({passed/max(total,1)*100:.0f}%)")
+    print(f"  通过: {passed} 次 ({passed / max(total, 1) * 100:.0f}%)")
 
     if last:
         print(f"  最近周期: {last[:19]}")
 
-    cursor = conn.execute("SELECT alert_type, message, created_at FROM alerts "
-                          "ORDER BY created_at DESC LIMIT 5")
+    cursor = conn.execute(
+        "SELECT alert_type, message, created_at FROM alerts "
+        "ORDER BY created_at DESC LIMIT 5"
+    )
     alerts = cursor.fetchall()
     if alerts:
         print(f"\n  最近告警 ({len(alerts)}):")
         for t, m, c in alerts:
             print(f"    {c[:16]} [{t}] {m[:80]}")
 
-    cursor = conn.execute("SELECT COUNT(*) FROM alerts WHERE "
-                          "created_at > datetime('now', '-24 hours')")
+    cursor = conn.execute(
+        "SELECT COUNT(*) FROM alerts WHERE created_at > datetime('now', '-24 hours')"
+    )
     recent_alerts = cursor.fetchone()[0]
     if recent_alerts == 0:
         print("\n  ✅ 过去 24h 内无告警")

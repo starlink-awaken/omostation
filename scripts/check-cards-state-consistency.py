@@ -82,17 +82,19 @@ def find_state_references(state_path: str) -> list[dict]:
     # 匹配模式: CARDS domain 引用、任务ID引用
     # 例: "CARDS: 3 活跃"、"[TASK-xxx]"、domain 字段
     patterns = [
-        (r'CARDS[：:]\s*(\d+)', "count"),
+        (r"CARDS[：:]\s*(\d+)", "count"),
         (r'domain[：:]\s*["\']?(\w+)', "domain"),
     ]
 
     for pattern, ref_type in patterns:
         for match in re.finditer(pattern, content):
-            refs.append({
-                "type": ref_type,
-                "value": match.group(1),
-                "line": content[:match.start()].count("\n") + 1,
-            })
+            refs.append(
+                {
+                    "type": ref_type,
+                    "value": match.group(1),
+                    "line": content[: match.start()].count("\n") + 1,
+                }
+            )
 
     return refs
 
@@ -118,11 +120,13 @@ def check_consistency(cards: dict, vault_root: str) -> dict:
     for domain, state_relpath in DOMAIN_STATE_MAP.items():
         state_path = Path(vault_root) / state_relpath
         if not state_path.exists():
-            results["inconsistencies"].append({
-                "domain": domain,
-                "type": "missing_state",
-                "detail": f"STATE.md 不存在: {state_path}",
-            })
+            results["inconsistencies"].append(
+                {
+                    "domain": domain,
+                    "type": "missing_state",
+                    "detail": f"STATE.md 不存在: {state_path}",
+                }
+            )
             continue
 
         results["domains_checked"] += 1
@@ -137,13 +141,15 @@ def check_consistency(cards: dict, vault_root: str) -> dict:
 
         actual_count = len(domain_cards)
         if declared_count is not None and declared_count != actual_count:
-            results["inconsistencies"].append({
-                "domain": domain,
-                "type": "count_mismatch",
-                "declared": declared_count,
-                "actual": actual_count,
-                "detail": f"STATE.md 声明 {declared_count} 张卡片，实际 {actual_count} 张活跃",
-            })
+            results["inconsistencies"].append(
+                {
+                    "domain": domain,
+                    "type": "count_mismatch",
+                    "declared": declared_count,
+                    "actual": actual_count,
+                    "detail": f"STATE.md 声明 {declared_count} 张卡片，实际 {actual_count} 张活跃",
+                }
+            )
 
     return results
 

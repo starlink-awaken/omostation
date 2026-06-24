@@ -65,6 +65,14 @@ mcp:
     description: 查询工作流运行历史（M0 快照）
   - name: workflow_test
     description: 测试工作流编排（mock action）
+  - name: workflow_cache_status
+    description: 查询工作流缓存状态
+  - name: workflow_cache_invalidate
+    description: 使工作流缓存失效
+  - name: workflow_circuit_breaker_status
+    description: 查询后端熔断器状态
+  - name: workflow_circuit_breaker_reset
+    description: 重置后端熔断器
 
 workflow_backends:
   - name: default
@@ -86,4 +94,4 @@ dependencies:
   runtime: [pyyaml, requests, beautifulsoup4, jinja2]
   dev: [pytest, ruff]
 
-tests: 791
+tests: 859

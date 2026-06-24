@@ -139,10 +139,21 @@ class TestQueryJsonl:
         mock_exists.return_value = True
         now = datetime.now()
         lines = [
-            json.dumps({"timestamp": now.isoformat(), "source": "l0", "event_type": "read"}),
-            json.dumps({"timestamp": (now - timedelta(hours=2)).isoformat(), "source": "l0", "event_type": "write"}),
+            json.dumps(
+                {"timestamp": now.isoformat(), "source": "l0", "event_type": "read"}
+            ),
+            json.dumps(
+                {
+                    "timestamp": (now - timedelta(hours=2)).isoformat(),
+                    "source": "l0",
+                    "event_type": "write",
+                }
+            ),
         ]
-        with patch("ecos.services.governance.audit_unified.open", mock_open(read_data="\n".join(lines))):
+        with patch(
+            "ecos.services.governance.audit_unified.open",
+            mock_open(read_data="\n".join(lines)),
+        ):
             events = _query_jsonl(Path("/fake.jsonl"), hours=24)
             assert len(events) == 2
 
@@ -154,7 +165,10 @@ class TestQueryJsonl:
             json.dumps({"timestamp": now.isoformat(), "source": "l0"}),
             json.dumps({"timestamp": now.isoformat(), "source": "bos"}),
         ]
-        with patch("ecos.services.governance.audit_unified.open", mock_open(read_data="\n".join(lines))):
+        with patch(
+            "ecos.services.governance.audit_unified.open",
+            mock_open(read_data="\n".join(lines)),
+        ):
             events = _query_jsonl(Path("/fake.jsonl"), hours=24, source_filter="l0")
             assert len(events) == 1
             assert events[0]["source"] == "l0"
@@ -165,17 +179,28 @@ class TestQueryJsonl:
         now = datetime.now()
         lines = [
             json.dumps({"timestamp": now.isoformat(), "source": "l0"}),
-            json.dumps({"timestamp": (now - timedelta(hours=48)).isoformat(), "source": "l0"}),
+            json.dumps(
+                {"timestamp": (now - timedelta(hours=48)).isoformat(), "source": "l0"}
+            ),
         ]
-        with patch("ecos.services.governance.audit_unified.open", mock_open(read_data="\n".join(lines))):
+        with patch(
+            "ecos.services.governance.audit_unified.open",
+            mock_open(read_data="\n".join(lines)),
+        ):
             events = _query_jsonl(Path("/fake.jsonl"), hours=24)
             assert len(events) == 1
 
     @patch("ecos.services.governance.audit_unified.Path.exists")
     def test_skips_bad_lines(self, mock_exists):
         mock_exists.return_value = True
-        lines = ["not json", json.dumps({"timestamp": datetime.now().isoformat(), "source": "l0"})]
-        with patch("ecos.services.governance.audit_unified.open", mock_open(read_data="\n".join(lines))):
+        lines = [
+            "not json",
+            json.dumps({"timestamp": datetime.now().isoformat(), "source": "l0"}),
+        ]
+        with patch(
+            "ecos.services.governance.audit_unified.open",
+            mock_open(read_data="\n".join(lines)),
+        ):
             events = _query_jsonl(Path("/fake.jsonl"), hours=24)
             assert len(events) == 1
 
@@ -236,7 +261,12 @@ class TestQueryEvents:
     @patch("ecos.services.governance.audit_unified._query_jsonl")
     def test_query_single_source(self, mock_jsonl):
         mock_jsonl.return_value = [
-            {"timestamp": datetime.now().isoformat(), "source": "l0", "event_type": "read", "passed": True}
+            {
+                "timestamp": datetime.now().isoformat(),
+                "source": "l0",
+                "event_type": "read",
+                "passed": True,
+            }
         ]
         result = query_events(hours=24, source="l0")
         assert result["total"] == 1
@@ -245,8 +275,18 @@ class TestQueryEvents:
     @patch("ecos.services.governance.audit_unified._query_jsonl")
     def test_query_filters_domain(self, mock_jsonl):
         mock_jsonl.return_value = [
-            {"timestamp": datetime.now().isoformat(), "source": "l0", "event_type": "read", "domain": "a"},
-            {"timestamp": datetime.now().isoformat(), "source": "l0", "event_type": "read", "domain": "b"},
+            {
+                "timestamp": datetime.now().isoformat(),
+                "source": "l0",
+                "event_type": "read",
+                "domain": "a",
+            },
+            {
+                "timestamp": datetime.now().isoformat(),
+                "source": "l0",
+                "event_type": "read",
+                "domain": "b",
+            },
         ]
         result = query_events(hours=24, source="l0", domain="a")
         assert result["total"] == 1
@@ -254,9 +294,24 @@ class TestQueryEvents:
     @patch("ecos.services.governance.audit_unified._query_jsonl")
     def test_query_counts_passed_failed(self, mock_jsonl):
         mock_jsonl.return_value = [
-            {"timestamp": datetime.now().isoformat(), "source": "l0", "event_type": "read", "passed": True},
-            {"timestamp": datetime.now().isoformat(), "source": "l0", "event_type": "write", "passed": False},
-            {"timestamp": datetime.now().isoformat(), "source": "l0", "event_type": "delete", "passed": True},
+            {
+                "timestamp": datetime.now().isoformat(),
+                "source": "l0",
+                "event_type": "read",
+                "passed": True,
+            },
+            {
+                "timestamp": datetime.now().isoformat(),
+                "source": "l0",
+                "event_type": "write",
+                "passed": False,
+            },
+            {
+                "timestamp": datetime.now().isoformat(),
+                "source": "l0",
+                "event_type": "delete",
+                "passed": True,
+            },
         ]
         result = query_events(hours=24, source="l0")
         assert result["passed"] == 2
@@ -265,7 +320,12 @@ class TestQueryEvents:
     @patch("ecos.services.governance.audit_unified._query_jsonl")
     def test_query_respects_limit(self, mock_jsonl):
         events = [
-            {"timestamp": datetime.now().isoformat(), "source": "l0", "event_type": f"e{i}", "passed": True}
+            {
+                "timestamp": datetime.now().isoformat(),
+                "source": "l0",
+                "event_type": f"e{i}",
+                "passed": True,
+            }
             for i in range(50)
         ]
         mock_jsonl.return_value = events
@@ -275,22 +335,45 @@ class TestQueryEvents:
 
 class TestPrintAuditReport:
     def test_empty_report(self, capsys):
-        print_audit_report({"sources": {}, "total": 0, "passed": 0, "failed": 0, "anomalies": 0, "events": []})
+        print_audit_report(
+            {
+                "sources": {},
+                "total": 0,
+                "passed": 0,
+                "failed": 0,
+                "anomalies": 0,
+                "events": [],
+            }
+        )
         captured = capsys.readouterr()
         assert "无审计事件" in captured.out
 
     def test_with_events(self, capsys):
-        print_audit_report({
-            "sources": {"l0": 2, "bos": 1},
-            "total": 3,
-            "passed": 2,
-            "failed": 1,
-            "anomalies": 0,
-            "events": [
-                {"timestamp": "2026-06-16T10:00:00", "source": "l0", "event_type": "read", "passed": True, "summary": "ok"},
-                {"timestamp": "2026-06-16T11:00:00", "source": "bos", "event_type": "write", "passed": False, "summary": "fail"},
-            ],
-        })
+        print_audit_report(
+            {
+                "sources": {"l0": 2, "bos": 1},
+                "total": 3,
+                "passed": 2,
+                "failed": 1,
+                "anomalies": 0,
+                "events": [
+                    {
+                        "timestamp": "2026-06-16T10:00:00",
+                        "source": "l0",
+                        "event_type": "read",
+                        "passed": True,
+                        "summary": "ok",
+                    },
+                    {
+                        "timestamp": "2026-06-16T11:00:00",
+                        "source": "bos",
+                        "event_type": "write",
+                        "passed": False,
+                        "summary": "fail",
+                    },
+                ],
+            }
+        )
         captured = capsys.readouterr()
         assert "l0=2" in captured.out
         assert "✅" in captured.out

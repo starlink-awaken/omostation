@@ -8,6 +8,7 @@
     0 = 完全对齐
     1 = 存在差异 (POC-only / YAML-only)
 """
+
 from __future__ import annotations
 
 import fnmatch
@@ -71,15 +72,17 @@ def collect_yaml_uris() -> list[dict]:
         if not raw_name:
             continue
         uri = _extract_uri_from_name(raw_name)
-        results.append({
-            "file": path.name,
-            "uri": uri,
-            "description": data.get("description", ""),
-            "type": data.get("type", ""),
-            "status": data.get("status", ""),
-            "domain": data.get("domain", ""),
-            "layer": data.get("layer", ""),
-        })
+        results.append(
+            {
+                "file": path.name,
+                "uri": uri,
+                "description": data.get("description", ""),
+                "type": data.get("type", ""),
+                "status": data.get("status", ""),
+                "domain": data.get("domain", ""),
+                "layer": data.get("layer", ""),
+            }
+        )
     return results
 
 
@@ -92,11 +95,15 @@ def load_poc_services_from_file() -> dict[str, dict]:
     keys: list[str] = []
 
     # string literal keys: "bos://memory/kos/search":
-    for m in re.finditer(r'''^\s{4}"(bos://[^"]+)":\s*BosService\(''', source, re.MULTILINE):
+    for m in re.finditer(
+        r"""^\s{4}"(bos://[^"]+)":\s*BosService\(""", source, re.MULTILINE
+    ):
         keys.append(m.group(1))
 
     # f-string keys: f"{PREFIX}recall-entity":
-    for m in re.finditer(r'''^\s{4}f"(?:\{[^}]+\})([^"]+)":\s*BosService\(''', source, re.MULTILINE):
+    for m in re.finditer(
+        r"""^\s{4}f"(?:\{[^}]+\})([^"]+)":\s*BosService\(""", source, re.MULTILINE
+    ):
         keys.append(_CANONICAL_PERSONA_BRIDGE_URI_PREFIX + m.group(1))
 
     return {k: {"uri": k} for k in keys}
@@ -144,7 +151,9 @@ def print_header(summary: dict) -> None:
     print(f"  📦 POC 路由:       {CYAN}{summary['poc_total']:>4}{RESET}")
     print(f"  ✅ 匹配:           {GREEN}{summary['matched_count']:>4}{RESET}")
     print(f"  🟡 YAML-only:      {YELLOW}{summary['yaml_only_count']:>4}{RESET}")
-    print(f"  🔴 POC-only:       {RED if summary['poc_only_count'] else GREEN}{summary['poc_only_count']:>4}{RESET}")
+    print(
+        f"  🔴 POC-only:       {RED if summary['poc_only_count'] else GREEN}{summary['poc_only_count']:>4}{RESET}"
+    )
 
 
 def print_poc_only(poc_only: list[str]) -> None:
@@ -166,11 +175,13 @@ def print_yaml_only(yaml_only: list[dict]) -> None:
     print(f"{DIM}  {'─' * 66}{RESET}")
     for i, entry in enumerate(yaml_only, 1):
         tags = " ".join(
-            t for t in [
+            t
+            for t in [
                 f"[{entry['layer']}]" if entry["layer"] else "",
                 f"({entry['domain']})" if entry["domain"] else "",
                 f"<{entry['status']}>" if entry["status"] else "",
-            ] if t
+            ]
+            if t
         )
         print(f"  {YELLOW}  {i:3d}. {entry['uri']:50s}  {DIM}{tags}{RESET}")
         print(f"  {DIM}       └─ {entry['file']}{RESET}")
@@ -197,7 +208,9 @@ def print_verdict(summary: dict) -> bool:
     print(f"{BOLD}{'═' * 70}{RESET}")
     if has_gap:
         print(f"  {YELLOW}{BOLD}⚠️  发现 {gap_total} 处差异{RESET}")
-        print(f"  {DIM}  ℹ  非阻塞告警 — 部分路由是仅 ecos 或仅 agora 的合法状态{RESET}")
+        print(
+            f"  {DIM}  ℹ  非阻塞告警 — 部分路由是仅 ecos 或仅 agora 的合法状态{RESET}"
+        )
     else:
         print(f"  {GREEN}{BOLD}✅  完全对齐 — 零差异{RESET}")
     print(f"{BOLD}{'═' * 70}{RESET}\n")

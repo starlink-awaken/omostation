@@ -27,13 +27,20 @@ ECOS = Path.home() / ".ecos"
 
 def fix_constraint_engine() -> dict:
     """DEBT-L0-001: 升级约束规则引擎（增加规则表达式扩展能力）"""
-    file = DOCS / "学习进化" / "2-knowledge" / "基建架构" / "ecos-constraint-validator.py"
+    file = (
+        DOCS / "学习进化" / "2-knowledge" / "基建架构" / "ecos-constraint-validator.py"
+    )
     upgrades = [
         "简化规则评估已升级为表达式模式",
         "新增协议衰减实时计算",
         "JSON 输出扩展为含 protocol_registry",
     ]
-    return {"debt": "DEBT-L0-001", "status": "fixed", "upgrades": upgrades, "file": str(file)}
+    return {
+        "debt": "DEBT-L0-001",
+        "status": "fixed",
+        "upgrades": upgrades,
+        "file": str(file),
+    }
 
 
 def fix_minerva_audit() -> dict:
@@ -42,12 +49,18 @@ def fix_minerva_audit() -> dict:
     audit_dir.mkdir(parents=True, exist_ok=True)
     log_file = audit_dir / "audit.log"
     if not log_file.exists():
-        log_file.write_text(json.dumps({
-            "created": datetime.now(timezone.utc).isoformat(),
-            "source": "ecos-daemon",
-            "note": "minerva audit log — Phase7 已知缺口，由 ecos-daemon 自动记录",
-            "entries": [],
-        }, ensure_ascii=False, indent=2))
+        log_file.write_text(
+            json.dumps(
+                {
+                    "created": datetime.now(timezone.utc).isoformat(),
+                    "source": "ecos-daemon",
+                    "note": "minerva audit log — Phase7 已知缺口，由 ecos-daemon 自动记录",
+                    "entries": [],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     return {"debt": "DEBT-L2-001", "status": "fixed", "file": str(log_file)}
 
 
@@ -59,6 +72,7 @@ def fix_agora_events() -> dict:
 
     # 追加一条结构化事件标记新格式
     from datetime import datetime
+
     event = {
         "version": "2.0",
         "id": f"evt-upgrade-{datetime.now().strftime('%Y%m%d%H%M%S')}",
@@ -71,29 +85,49 @@ def fix_agora_events() -> dict:
     with open(events_file, "a") as f:
         f.write(json.dumps(event, ensure_ascii=False) + "\n")
 
-    return {"debt": "DEBT-I0-001", "status": "fixed", "events_upgraded": True,
-            "file": str(events_file)}
+    return {
+        "debt": "DEBT-I0-001",
+        "status": "fixed",
+        "events_upgraded": True,
+        "file": str(events_file),
+    }
 
 
 def fix_dashboard_trigger() -> dict:
     """DEBT-L4-002: DASHBOARD 触发器 — 写入 daemon 集成记录"""
     state_file = ECOS / "daemon-state.db"
     if not state_file.exists():
-        return {"debt": "DEBT-L4-002", "status": "note", "detail": "daemon-state 不存在，由 daemon 首次运行时自动创建"}
+        return {
+            "debt": "DEBT-L4-002",
+            "status": "note",
+            "detail": "daemon-state 不存在，由 daemon 首次运行时自动创建",
+        }
     import sqlite3
+
     conn = sqlite3.connect(str(state_file))
-    conn.execute("INSERT INTO cycles (started_at, completed_at, exit_code, summary) VALUES (?,?,?,?)",
-                 (datetime.now(timezone.utc).isoformat(),
-                  datetime.now(timezone.utc).isoformat(), 0,
-                  "DEBT-L4-002: DASHBOARD 触发器已集成"))
+    conn.execute(
+        "INSERT INTO cycles (started_at, completed_at, exit_code, summary) VALUES (?,?,?,?)",
+        (
+            datetime.now(timezone.utc).isoformat(),
+            datetime.now(timezone.utc).isoformat(),
+            0,
+            "DEBT-L4-002: DASHBOARD 触发器已集成",
+        ),
+    )
     conn.commit()
     conn.close()
-    return {"debt": "DEBT-L4-002", "status": "fixed", "trigger": "daemon cycle auto-update"}
+    return {
+        "debt": "DEBT-L4-002",
+        "status": "fixed",
+        "trigger": "daemon cycle auto-update",
+    }
 
 
 def fix_mcp_half_life() -> dict:
     """DEBT-L0-003: MCP 超半衰期 — 更新约束文件标注"""
-    constraint_file = DOCS / "学习进化" / "2-knowledge" / "基建架构" / "L0-constraints.yaml"
+    constraint_file = (
+        DOCS / "学习进化" / "2-knowledge" / "基建架构" / "L0-constraints.yaml"
+    )
     if constraint_file.exists():
         # 读取并更新 MCP 的注释
         content = constraint_file.read_text()
@@ -105,14 +139,22 @@ def fix_mcp_half_life() -> dict:
                     new_lines.append(line)
                     continue
                 if "half_life_days: 365" in line:
-                    new_lines.append(line.replace("half_life_days: 365", "half_life_days: 365  # ⚠️ 协议已超期 437d/365d，建议升级"))
+                    new_lines.append(
+                        line.replace(
+                            "half_life_days: 365",
+                            "half_life_days: 365  # ⚠️ 协议已超期 437d/365d，建议升级",
+                        )
+                    )
                     continue
                 new_lines.append(line)
             constraint_file.write_text("\n".join(new_lines))
 
-    return {"debt": "DEBT-L0-003", "status": "tracked",
-            "message": "MCP 协议 437d/365d 超半衰期 — 标注已更新",
-            "action": "后续升级 MCP 版本后更新 half_life_days"}
+    return {
+        "debt": "DEBT-L0-003",
+        "status": "tracked",
+        "message": "MCP 协议 437d/365d 超半衰期 — 标注已更新",
+        "action": "后续升级 MCP 版本后更新 half_life_days",
+    }
 
 
 def main():
@@ -143,14 +185,19 @@ def main():
     if args.json:
         print(json.dumps({"fixes": results}, ensure_ascii=False, indent=2))
     else:
-        print(f"\n{'='*56}")
+        print(f"\n{'=' * 56}")
         print("  eCOS v5 — 债务 closeout 批量修复")
-        print(f"{'='*56}\n")
+        print(f"{'=' * 56}\n")
         for r in results:
             status = "✅" if r.get("status") in ("fixed", "tracked") else "⚠️"
-            note = r.get("detail") or r.get("message") or r.get("action") or r.get("file", "")
+            note = (
+                r.get("detail")
+                or r.get("message")
+                or r.get("action")
+                or r.get("file", "")
+            )
             print(f"  {status} {r['debt']}: {note}")
-        print(f"\n{'='*56}")
+        print(f"\n{'=' * 56}")
 
 
 if __name__ == "__main__":

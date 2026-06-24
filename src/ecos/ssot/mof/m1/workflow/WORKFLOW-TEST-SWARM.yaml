@@ -1,0 +1,36 @@
+id: WORKFLOW-TEST-SWARM
+type: Workflow
+subtype: PipelineWorkflow
+name: test-swarm
+description: '自定义工作流: test-swarm'
+status: active
+version: 1.0.0
+domain: meta
+layer: L0
+created: null
+bos_uri: bos://ecos/workflow/test-swarm
+execution:
+  backend: swarm
+  mode: sequential
+  max_retries: 0
+  on_failure: continue
+steps:
+- order: 1
+  name: Step1
+  action: health_check
+  description: 步骤描述
+- order: 2
+  name: Step2
+  action: domain_audit
+  description: 步骤描述
+  depends_on:
+  - Step1
+relations: []
+sla:
+  max_execution_time: 300
+  expected_completion_rate: 0.95
+tags:
+- test-swarm
+- custom
+maintained_by: user
+last_reviewed: null

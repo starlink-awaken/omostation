@@ -251,6 +251,7 @@ For more: bos://ecos/workflow/*
 
 
 def main():
+    print("⚠️ MOF 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     if len(sys.argv) < 2:
         print_help()
         return

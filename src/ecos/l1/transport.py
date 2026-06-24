@@ -19,11 +19,12 @@ from enum import Enum
 from typing import Any, Callable, Optional
 
 
-
 logger = get_logger("transport")
+
 
 class ChannelState(Enum):
     """通道状态"""
+
     DISCONNECTED = "disconnected"
     CONNECTING = "connecting"
     CONNECTED = "connected"
@@ -33,6 +34,7 @@ class ChannelState(Enum):
 @dataclass
 class WireMessage:
     """线上传输消息"""
+
     msg_id: str
     msg_type: str
     source: str
@@ -43,15 +45,17 @@ class WireMessage:
 
     def encode(self) -> bytes:
         self.timestamp = datetime.now(timezone.utc).timestamp()
-        data = json.dumps({
-            "msg_id": self.msg_id,
-            "msg_type": self.msg_type,
-            "source": self.source,
-            "target": self.target,
-            "payload": self.payload,
-            "timestamp": self.timestamp,
-            "requires_ack": self.requires_ack,
-        }).encode()
+        data = json.dumps(
+            {
+                "msg_id": self.msg_id,
+                "msg_type": self.msg_type,
+                "source": self.source,
+                "target": self.target,
+                "payload": self.payload,
+                "timestamp": self.timestamp,
+                "requires_ack": self.requires_ack,
+            }
+        ).encode()
         return struct.pack("!I", len(data)) + data
 
     @staticmethod
@@ -73,7 +77,7 @@ class WireMessage:
 
 
 class MessageProtocol(asyncio.Protocol):
-    """ asyncio TCP 协议 — 长度前缀消息帧"""
+    """asyncio TCP 协议 — 长度前缀消息帧"""
 
     def __init__(self, on_message: Callable[[WireMessage], None]):
         self.on_message = on_message
@@ -89,8 +93,8 @@ class MessageProtocol(asyncio.Protocol):
             msg_len = struct.unpack("!I", self._buffer[:4])[0]
             if len(self._buffer) < 4 + msg_len:
                 break
-            msg_data = bytes(self._buffer[4:4 + msg_len])
-            del self._buffer[:4 + msg_len]
+            msg_data = bytes(self._buffer[4 : 4 + msg_len])
+            del self._buffer[: 4 + msg_len]
             try:
                 msg = WireMessage.decode(msg_data)
                 self.on_message(msg)
@@ -120,7 +124,9 @@ class TCPNode:
 
     async def start(self) -> int:
         self._server = await asyncio.start_server(
-            self._create_server_protocol, self.host, self.port,
+            self._create_server_protocol,
+            self.host,
+            self.port,
         )
         if self._server.sockets:
             self.port = self._server.sockets[0].getsockname()[1]
@@ -140,7 +146,8 @@ class TCPNode:
         try:
             transport, protocol = await asyncio.get_running_loop().create_connection(
                 lambda: MessageProtocol(self._on_receive),
-                host, port,
+                host,
+                port,
             )
             self._peers[remote_id] = transport
             self._log("connected", target=remote_id, host=host, port=port)
@@ -149,14 +156,21 @@ class TCPNode:
             self._log("connect_failed", target=remote_id, error=str(e))
             return False
 
-    async def send(self, target: str, msg_type: str, payload: dict[str, Any],
-                   requires_ack: bool = False, timeout: float = 5.0) -> bool:
+    async def send(
+        self,
+        target: str,
+        msg_type: str,
+        payload: dict[str, Any],
+        requires_ack: bool = False,
+        timeout: float = 5.0,
+    ) -> bool:
         transport = self._peers.get(target)
         if not transport:
             self._log("send_failed", target=target, error="not_connected")
             return False
 
         import uuid
+
         msg = WireMessage(
             msg_id=str(uuid.uuid4())[:8],
             msg_type=msg_type,
@@ -191,6 +205,7 @@ class TCPNode:
         results = {}
         for peer_id, transport in self._peers.items():
             import uuid
+
             msg = WireMessage(
                 msg_id=str(uuid.uuid4())[:8],
                 msg_type=msg_type,
@@ -219,8 +234,9 @@ class TCPNode:
             "log_count": len(self._message_log),
         }
 
-    def _handle_connection(self, transport: asyncio.Transport,
-                           protocol: MessageProtocol) -> None:
+    def _handle_connection(
+        self, transport: asyncio.Transport, protocol: MessageProtocol
+    ) -> None:
         peer = transport.get_extra_info("peername")
         peer_id = f"{peer[0]}:{peer[1]}" if peer else "unknown"
         self._peers[peer_id] = transport
@@ -262,9 +278,11 @@ class TCPNode:
         self._log("received", msg_id=msg.msg_id, type=msg.msg_type, source=msg.source)
 
     def _log(self, event_type: str, **kwargs: Any) -> None:
-        self._message_log.append({
-            "type": event_type,
-            "node_id": self.node_id,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            **kwargs,
-        })
+        self._message_log.append(
+            {
+                "type": event_type,
+                "node_id": self.node_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                **kwargs,
+            }
+        )

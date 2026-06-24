@@ -502,7 +502,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=".omo/tasks/ ↔ M1 OMOTask 双向桥接")
     parser.add_argument("--diff", action="store_true", help="仅 diff 不写盘 (默认)")
     parser.add_argument(
-        "--m1-to-omo", action="store_true", help="M1 proposed/planned → brokered .omo/tasks/planned/ 导入"
+        "--m1-to-omo",
+        action="store_true",
+        help="M1 proposed/planned → brokered .omo/tasks/planned/ 导入",
     )
     parser.add_argument(
         "--omo-to-m1", action="store_true", help=".omo/tasks/ → M1 OMOTask 写盘"
@@ -559,9 +561,7 @@ def main() -> int:
                     file=sys.stderr,
                 )
         if not broker_imported and not pending_m1_to_omo:
-            print(
-                "✅ 无需补全, M1 OMOTask ↔ .omo/tasks/ 已同步", file=sys.stderr
-            )
+            print("✅ 无需补全, M1 OMOTask ↔ .omo/tasks/ 已同步", file=sys.stderr)
 
     if args.omo_to_m1:
         # 反向: .omo/tasks/ → M1 OMOTask 节点 (从 OPC-P3-SWARM-SPINE 等历史任务提取 M1 节点)

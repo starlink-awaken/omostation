@@ -26,7 +26,11 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-from ecos.common.governed_fs import append_jsonl_record, ensure_text_file, write_yaml_file
+from ecos.common.governed_fs import (
+    append_jsonl_record,
+    ensure_text_file,
+    write_yaml_file,
+)
 
 logger = logging.getLogger("ecos.workflow.validator")
 
@@ -37,6 +41,7 @@ M0_SNAPSHOT_DIR = Path.home() / ".omo" / "state" / "workflow-runs"
 # =========================================================================
 # X1: 约束检查器
 # =========================================================================
+
 
 class X1ConstraintChecker:
     """X1 约束检查 — 执行前验证
@@ -59,21 +64,25 @@ class X1ConstraintChecker:
 
         # step 必须有 name
         if not step.get("name"):
-            violations.append({
-                "id": "X1-C01-S001",
-                "constraint": "X1-C01",
-                "severity": "error",
-                "message": "Step 缺少 name 字段",
-            })
+            violations.append(
+                {
+                    "id": "X1-C01-S001",
+                    "constraint": "X1-C01",
+                    "severity": "error",
+                    "message": "Step 缺少 name 字段",
+                }
+            )
 
         # action 或 agent_role 至少有一个
         if not step.get("action") and not step.get("agent_role"):
-            violations.append({
-                "id": "X1-C01-S002",
-                "constraint": "X1-C01",
-                "severity": "warning",
-                "message": "Step 缺少 action 或 agent_role",
-            })
+            violations.append(
+                {
+                    "id": "X1-C01-S002",
+                    "constraint": "X1-C01",
+                    "severity": "warning",
+                    "message": "Step 缺少 action 或 agent_role",
+                }
+            )
 
         return violations
 
@@ -87,25 +96,36 @@ class X1ConstraintChecker:
 
         # WF-V001: 检查 execution.mode 合法性
         mode = execution.get("mode")
-        valid_modes = ("workflow", "graph", "loop", "dynamic", "state-machine", "sequential")
+        valid_modes = (
+            "workflow",
+            "graph",
+            "loop",
+            "dynamic",
+            "state-machine",
+            "sequential",
+        )
         if mode and mode not in valid_modes:
-            violations.append({
-                "id": "WF-V001",
-                "constraint": "X1-C01",
-                "severity": "warning",
-                "message": f"未知的 execution.mode: {mode}",
-            })
+            violations.append(
+                {
+                    "id": "WF-V001",
+                    "constraint": "X1-C01",
+                    "severity": "warning",
+                    "message": f"未知的 execution.mode: {mode}",
+                }
+            )
 
         # 检查必填 execution 字段
         required = cls.REQUIRED_EXECUTION_FIELDS.get(subtype, {"mode"})
         for field in required:
             if field not in execution or execution.get(field) is None:
-                violations.append({
-                    "id": f"X1-C01-{field.upper()}",
-                    "constraint": "X1-C01",
-                    "severity": "error",
-                    "message": f"execution.{field} 为必填字段",
-                })
+                violations.append(
+                    {
+                        "id": f"X1-C01-{field.upper()}",
+                        "constraint": "X1-C01",
+                        "severity": "error",
+                        "message": f"execution.{field} 为必填字段",
+                    }
+                )
 
         # 检查步骤级约束
         step_names = {s.get("name") for s in m1_node.get("steps", []) if s.get("name")}
@@ -114,12 +134,14 @@ class X1ConstraintChecker:
             # WF-V002: 检查步骤依赖是否存在
             for dep in step.get("depends_on", []):
                 if dep not in step_names:
-                    violations.append({
-                        "id": "WF-V002",
-                        "constraint": "X1-C01",
-                        "severity": "error",
-                        "message": f"Step '{step.get('name')}' 依赖的 '{dep}' 不存在",
-                    })
+                    violations.append(
+                        {
+                            "id": "WF-V002",
+                            "constraint": "X1-C01",
+                            "severity": "error",
+                            "message": f"Step '{step.get('name')}' 依赖的 '{dep}' 不存在",
+                        }
+                    )
 
         return violations
 
@@ -132,6 +154,7 @@ _DEFAULT_TOKEN_BUDGET = 100000  # 默认 Token 上限
 # =========================================================================
 # X2: 预算检查器（对接 runtime X2 Budget Policy）
 # =========================================================================
+
 
 class X2BudgetDeducer:
     """X2 预算检查 — 对接 llm_quota_ledger.jsonl
@@ -253,8 +276,9 @@ class X2BudgetDeducer:
             return {"ok": False, "error": str(e)}
 
         if debt_generated:
-            logger.warning("X2 budget depleted for %s: balance=%d",
-                           workflow_id, balance_after)
+            logger.warning(
+                "X2 budget depleted for %s: balance=%d", workflow_id, balance_after
+            )
 
         return {
             "ok": True,
@@ -267,6 +291,7 @@ class X2BudgetDeducer:
 # =========================================================================
 # X3: 成本归因器（对接 llm_quota_ledger.jsonl）
 # =========================================================================
+
 
 class X3CostRecorder:
     """X3 成本归因 — 写入共享账本"""
@@ -301,6 +326,7 @@ class X3CostRecorder:
 # X4: 一致性检查器
 # =========================================================================
 
+
 class X4ConsistencyChecker:
     """X4 一致性检查 — 执行后验证
 
@@ -319,21 +345,25 @@ class X4ConsistencyChecker:
 
         # 检查步骤数是否匹配
         if len(steps) != len(result_steps):
-            violations.append({
-                "id": "X4-C01-STEP-COUNT",
-                "constraint": "X4-C01",
-                "severity": "warning",
-                "message": f"预期 {len(steps)} 步，实际执行 {len(result_steps)} 步",
-            })
+            violations.append(
+                {
+                    "id": "X4-C01-STEP-COUNT",
+                    "constraint": "X4-C01",
+                    "severity": "warning",
+                    "message": f"预期 {len(steps)} 步，实际执行 {len(result_steps)} 步",
+                }
+            )
 
         # 检查是否有失败的步骤
         if result.get("failed", 0) > 0:
-            violations.append({
-                "id": "X4-C01-FAILED",
-                "constraint": "X4-C01",
-                "severity": "error",
-                "message": f"执行结果中有 {result['failed']} 步失败",
-            })
+            violations.append(
+                {
+                    "id": "X4-C01-FAILED",
+                    "constraint": "X4-C01",
+                    "severity": "error",
+                    "message": f"执行结果中有 {result['failed']} 步失败",
+                }
+            )
 
         return violations
 
@@ -341,6 +371,7 @@ class X4ConsistencyChecker:
 # =========================================================================
 # 统一校验入口
 # =========================================================================
+
 
 def validate_step(step: dict, context: dict | None = None) -> list[dict]:
     """校验单个 step（外部入口）"""
@@ -357,12 +388,14 @@ def validate_workflow(m1_node: dict) -> list[dict]:
     # X2 budget 检查（警告类, 不阻断）
     budget_result = X2BudgetDeducer.check_budget(m1_node)
     for w in budget_result.get("warnings", []):
-        violations.append({
-            "id": "X2-C01-BUDGET",
-            "constraint": "X2-C01",
-            "severity": "warning",
-            "message": w,
-        })
+        violations.append(
+            {
+                "id": "X2-C01-BUDGET",
+                "constraint": "X2-C01",
+                "severity": "warning",
+                "message": w,
+            }
+        )
 
     return violations
 
@@ -376,8 +409,8 @@ def check_execution_result(m1_node: dict, result: dict) -> list[dict]:
 # M0 快照生成
 # =========================================================================
 
-def generate_m0_snapshot(workflow_id: str, m1_node: dict,
-                         result: dict) -> str | None:
+
+def generate_m0_snapshot(workflow_id: str, m1_node: dict, result: dict) -> str | None:
     """生成 M0 运行时快照
 
     写入 .omo/state/workflow-runs/{workflow_id}-{timestamp}.yaml

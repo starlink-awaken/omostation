@@ -28,7 +28,9 @@ from datetime import datetime, timezone
 
 DOCS = Path.home() / "Documents"
 NODES_DIR = DOCS / "驾驶舱" / "元模型" / "nodes"
-CONSTRAINTS_FILE = DOCS / "学习进化" / "2-knowledge" / "基建架构" / "L0-constraints.yaml"
+CONSTRAINTS_FILE = (
+    DOCS / "学习进化" / "2-knowledge" / "基建架构" / "L0-constraints.yaml"
+)
 CARDS_DB = Path.home() / "Workspace" / "data" / "cards" / "cards.db"
 ECOS_DIR = Path.home() / ".ecos"
 
@@ -66,7 +68,9 @@ def get_m0_protocol_state() -> dict:
             "decay": decay,
             "remaining": max(0, (1 - decay) * 100),
             "age_days": age,
-            "status": "expired" if decay >= 1.0 else ("aging" if decay >= 0.5 else "fresh"),
+            "status": "expired"
+            if decay >= 1.0
+            else ("aging" if decay >= 0.5 else "fresh"),
             "m0_status": p.get("status", "active"),
         }
     return state
@@ -102,18 +106,36 @@ def audit_protocols(m1_nodes: list[dict], m0_state: dict) -> list[dict]:
                 break
 
         if not m0:
-            drifts.append({"id": p["id"], "type": "Protocol", "severity": "high",
-                          "drift": "M0 中未找到对应协议运行时数据"})
+            drifts.append(
+                {
+                    "id": p["id"],
+                    "type": "Protocol",
+                    "severity": "high",
+                    "drift": "M0 中未找到对应协议运行时数据",
+                }
+            )
             continue
 
         # Check decay drift
         if m0["status"] == "expired" and p.get("status") == "active":
-            drifts.append({"id": p["id"], "type": "Protocol", "severity": "medium",
-                          "drift": f"协议已超半衰期({m0['age_days']}d > half_life)但 M1 仍为 active",
-                          "detail": f"decay={m0['decay']:.0%}, remaining={m0['remaining']:.0f}%"})
+            drifts.append(
+                {
+                    "id": p["id"],
+                    "type": "Protocol",
+                    "severity": "medium",
+                    "drift": f"协议已超半衰期({m0['age_days']}d > half_life)但 M1 仍为 active",
+                    "detail": f"decay={m0['decay']:.0%}, remaining={m0['remaining']:.0f}%",
+                }
+            )
         elif m0["status"] == "aging" and p.get("status") == "active":
-            drifts.append({"id": p["id"], "type": "Protocol", "severity": "low",
-                          "drift": f"协议正在老化(decay={m0['decay']:.0%})，建议标记为 aging 或审查"})
+            drifts.append(
+                {
+                    "id": p["id"],
+                    "type": "Protocol",
+                    "severity": "low",
+                    "drift": f"协议正在老化(decay={m0['decay']:.0%})，建议标记为 aging 或审查",
+                }
+            )
 
     return drifts
 
@@ -125,9 +147,15 @@ def audit_mechanisms(m1_nodes: list[dict], m0_daemon: dict) -> list[dict]:
     for m in mechs:
         if "DAEMON" in m["id"]:
             if not m0_daemon["healthy"] and m.get("status") == "active":
-                drifts.append({"id": m["id"], "type": "Mechanism", "severity": "high",
-                              "drift": "Daemon 健康检查未通过但 M1 状态为 active",
-                              "detail": f"cycles={m0_daemon['cycles']}, healthy={m0_daemon['healthy']}"})
+                drifts.append(
+                    {
+                        "id": m["id"],
+                        "type": "Mechanism",
+                        "severity": "high",
+                        "drift": "Daemon 健康检查未通过但 M1 状态为 active",
+                        "detail": f"cycles={m0_daemon['cycles']}, healthy={m0_daemon['healthy']}",
+                    }
+                )
     return drifts
 
 
@@ -138,19 +166,25 @@ def create_debt_card(drift: dict) -> bool:
     try:
         conn = sqlite3.connect(str(CARDS_DB))
         now = datetime.now(timezone.utc).isoformat()
-        debt_id = f"DEBT-AUDIT-{now[:10].replace('-','')}-{drift['id'][:20]}"
+        debt_id = f"DEBT-AUDIT-{now[:10].replace('-', '')}-{drift['id'][:20]}"
         # Check if already exists
         cur = conn.execute("SELECT id FROM cards WHERE id = ?", (debt_id,))
         if cur.fetchone():
             return False
-        conn.execute("""
+        conn.execute(
+            """
             INSERT INTO cards (id, type, status, title, domain, priority, summary, content, created_at, updated_at)
             VALUES (?, 'debt', 'identified', ?, 'meta', 'P2', ?, ?, ?, ?)
-        """, (debt_id,
-              f"MOF审计漂移: {drift['drift'][:60]}",
-              f"{drift['drift']} ({drift.get('detail','')})",
-              f"## MOF 审计自动创建\n- 漂移类型: {drift['type']}\n- 严重度: {drift['severity']}\n- {drift['detail']}",
-              now, now))
+        """,
+            (
+                debt_id,
+                f"MOF审计漂移: {drift['drift'][:60]}",
+                f"{drift['drift']} ({drift.get('detail', '')})",
+                f"## MOF 审计自动创建\n- 漂移类型: {drift['type']}\n- 严重度: {drift['severity']}\n- {drift['detail']}",
+                now,
+                now,
+            ),
+        )
         conn.commit()
         conn.close()
         return True
@@ -184,8 +218,13 @@ def format_report(drifts: list[dict]) -> str:
 
 
 def main():
+    import sys
+
+    print("⚠️ MOF Audit 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     parser = argparse.ArgumentParser()
-    parser.add_argument("--create-cards", action="store_true", help="漂移项自动创建 CARDS DEBT 卡片")
+    parser.add_argument(
+        "--create-cards", action="store_true", help="漂移项自动创建 CARDS DEBT 卡片"
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
@@ -198,10 +237,18 @@ def main():
     drifts.extend(audit_mechanisms(m1_nodes, m0_daemon))
 
     if args.json:
-        print(json.dumps({"generated_at": datetime.now(timezone.utc).isoformat(),
-                          "drift_count": len(drifts), "drifts": drifts,
-                          "m0_snapshot": {"protocols": m0_protocols, "daemon": m0_daemon}},
-                         ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "drift_count": len(drifts),
+                    "drifts": drifts,
+                    "m0_snapshot": {"protocols": m0_protocols, "daemon": m0_daemon},
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         print(format_report(drifts))
 

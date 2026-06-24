@@ -11,8 +11,10 @@ class TestWireMessage:
 
     def test_encode_decode_roundtrip(self):
         msg = WireMessage(
-            msg_id="test-1", msg_type="sync",
-            source="node-a", target="node-b",
+            msg_id="test-1",
+            msg_type="sync",
+            source="node-a",
+            target="node-b",
             payload={"key": "value", "num": 42},
         )
         encoded = msg.encode()
@@ -27,8 +29,11 @@ class TestWireMessage:
 
     def test_encode_length_prefix(self):
         msg = WireMessage(
-            msg_id="t", msg_type="ping",
-            source="a", target="b", payload={},
+            msg_id="t",
+            msg_type="ping",
+            source="a",
+            target="b",
+            payload={},
         )
         encoded = msg.encode()
         length = struct.unpack("!I", encoded[:4])[0]
@@ -37,8 +42,11 @@ class TestWireMessage:
     def test_large_payload(self):
         large_payload = {"data": "x" * 10000}
         msg = WireMessage(
-            msg_id="big", msg_type="data",
-            source="a", target="b", payload=large_payload,
+            msg_id="big",
+            msg_type="data",
+            source="a",
+            target="b",
+            payload=large_payload,
         )
         encoded = msg.encode()
         decoded = WireMessage.decode(encoded)
@@ -46,8 +54,11 @@ class TestWireMessage:
 
     def test_unicode_payload(self):
         msg = WireMessage(
-            msg_id="u", msg_type="text",
-            source="a", target="b", payload={"text": "你好世界"},
+            msg_id="u",
+            msg_type="text",
+            source="a",
+            target="b",
+            payload={"text": "你好世界"},
         )
         encoded = msg.encode()
         decoded = WireMessage.decode(encoded)
@@ -55,8 +66,10 @@ class TestWireMessage:
 
     def test_nested_payload(self):
         msg = WireMessage(
-            msg_id="n", msg_type="complex",
-            source="a", target="b",
+            msg_id="n",
+            msg_type="complex",
+            source="a",
+            target="b",
             payload={"level1": {"level2": [1, 2, 3]}},
         )
         encoded = msg.encode()
@@ -65,8 +78,11 @@ class TestWireMessage:
 
     def test_empty_payload(self):
         msg = WireMessage(
-            msg_id="e", msg_type="empty",
-            source="a", target="b", payload={},
+            msg_id="e",
+            msg_type="empty",
+            source="a",
+            target="b",
+            payload={},
         )
         encoded = msg.encode()
         decoded = WireMessage.decode(encoded)
@@ -76,8 +92,11 @@ class TestWireMessage:
         messages = []
         for i in range(10):
             msg = WireMessage(
-                msg_id=f"m-{i}", msg_type="seq",
-                source="a", target="b", payload={"i": i},
+                msg_id=f"m-{i}",
+                msg_type="seq",
+                source="a",
+                target="b",
+                payload={"i": i},
             )
             encoded = msg.encode()
             decoded = WireMessage.decode(encoded)
@@ -90,8 +109,11 @@ class TestWireMessage:
     def test_binary_data(self):
         binary = bytes(range(256))
         msg = WireMessage(
-            msg_id="bin", msg_type="binary",
-            source="a", target="b", payload={"data": list(binary)},
+            msg_id="bin",
+            msg_type="binary",
+            source="a",
+            target="b",
+            payload={"data": list(binary)},
         )
         encoded = msg.encode()
         decoded = WireMessage.decode(encoded)
@@ -114,8 +136,11 @@ class TestTCPNodeBasic:
         node.on("custom", lambda msg: handled.append(msg))
 
         msg = WireMessage(
-            msg_id="t", msg_type="custom",
-            source="x", target="test", payload={"data": 1},
+            msg_id="t",
+            msg_type="custom",
+            source="x",
+            target="test",
+            payload={"data": 1},
         )
         node._on_receive(msg)
 
@@ -131,8 +156,10 @@ class TestTCPNodeBasic:
         pending_acks["msg-1"] = event
 
         ack_msg = WireMessage(
-            msg_id="ack-1", msg_type="ack",
-            source="server", target="test",
+            msg_id="ack-1",
+            msg_type="ack",
+            source="server",
+            target="test",
             payload={"ack_for": "msg-1"},
         )
         node._on_receive(ack_msg)
@@ -157,8 +184,12 @@ class TestTCPNodeBasic:
         node.on("type_a", lambda msg: results.append("a"))
         node.on("type_b", lambda msg: results.append("b"))
 
-        msg_a = WireMessage(msg_id="1", msg_type="type_a", source="x", target="test", payload={})
-        msg_b = WireMessage(msg_id="2", msg_type="type_b", source="x", target="test", payload={})
+        msg_a = WireMessage(
+            msg_id="1", msg_type="type_a", source="x", target="test", payload={}
+        )
+        msg_b = WireMessage(
+            msg_id="2", msg_type="type_b", source="x", target="test", payload={}
+        )
 
         node._on_receive(msg_a)
         node._on_receive(msg_b)
@@ -167,7 +198,9 @@ class TestTCPNodeBasic:
 
     def test_handler_not_found(self):
         node = TCPNode("test", "127.0.0.1", 0)
-        msg = WireMessage(msg_id="1", msg_type="unknown", source="x", target="test", payload={})
+        msg = WireMessage(
+            msg_id="1", msg_type="unknown", source="x", target="test", payload={}
+        )
         node._on_receive(msg)
         assert len(node._message_log) == 1
 
@@ -181,6 +214,7 @@ class TestTCPNodeBasic:
             node = TCPNode("test", "127.0.0.1", 0)
             result = await node.send("ghost", "test", {})
             assert result is False
+
         asyncio.run(_test())
 
     def test_connect_to_nonexistent(self):
@@ -188,6 +222,7 @@ class TestTCPNodeBasic:
             node = TCPNode("test", "127.0.0.1", 0)
             result = await node.connect_to("127.0.0.1", 99999, "ghost")
             assert result is False
+
         asyncio.run(_test())
 
     def test_broadcast_without_peers(self):

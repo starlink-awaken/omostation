@@ -177,8 +177,8 @@ constraints:
   dimension: X3
   id: X3-C02
   rule: domain.value_tier == 1 implies domain.cost_attribution != 'none'
-  type: preferred
-  violation: 'W-L0-004: 核心域无成本归因'
+  type: required
+  violation: 'E-L0-004: 核心域无成本归因'
 - applies_to:
   - L2
   - L3
@@ -186,8 +186,8 @@ constraints:
   dimension: X3
   id: X3-C03
   rule: governance_stack.value_attribution includes ['state_plane', 'kernel_plane', 'ingress_plane']
-  type: preferred
-  violation: 'W-L0-007: 治理三层价值归因缺失'
+  type: required
+  violation: 'E-L0-007: 治理三层价值归因缺失'
 - applies_to:
   - L2
   - L3
@@ -702,3 +702,266 @@ debt_constraints:
       - ".githooks/post-commit (mof-extract)"
       - "bin/mof-version"
     violation: "mof-version 与 git history / commit message / 审计 log 漂移; SSOT 失联"
+
+# ── Governance Closure 约束 (CR-GOV-CLOSED-LOOP-* / CR-GOV-FRONTMATTER-* / CR-GOV-DOC-CATEGORY-* / CR-GOV-DIMENSION-SATURATION-* / CR-GOV-COMMIT-FREQUENCY-*) ──
+# 2026-06-23 P60 落地 — P43-P59 治理方法论内化
+# SSOT: .omo/_knowledge/audits/2026-06-23-p60-governance-internalization-proposal.md
+# ADR: ADR-0054 (待写)
+governance_closure_constraints:
+  - id: CR-GOV-CLOSED-LOOP-01
+    applies_to:
+      - L0
+      - L2
+      - L3
+    description: |
+      强制闭环原则 (mandatory commit)。
+      P59 暴露的核心问题: mof-version 记录后未 git commit, 导致知识萃取引擎 (mof-extract post-commit hook) 失效, 治理漂移检测空转。
+      规则: bin/mof-version record 必须伴随至少 1 个 git commit 在同一会话内提交。
+      检测: post-commit hook 触发后, 反向校验 mof-version.yaml 最近 1 条 history 是否在最近 N 个 commit 范围内。
+    dimension: X1
+    rule: "mof_version_record implies git_commit_within_same_session"
+    type: required
+    severity: error
+    enforcement: pre-commit + post-commit correlation
+    introduced: '2026-06-23'
+    value_tier: 1
+    references:
+      - ".omo/_knowledge/audits/2026-06-23-p59-git-commit-closure-closeout.md"
+      - "bin/mof-version"
+      - ".githooks/post-commit (mof-extract)"
+    violation: "mof-version 与 git commit 失同步, 强制闭环破坏; 知识萃取引擎空转"
+
+  - id: CR-GOV-FRONTMATTER-SCHEMA-01
+    applies_to:
+      - L0
+      - L2
+    description: |
+      frontmatter 4 字段契约。
+      .omo/_knowledge/ 任何 .md 必须含 status + lifecycle + owner + last-reviewed 4 字段。
+      P56 100% 覆盖是基础, 新文件必须达标。
+      历史快照 (status: archived + lifecycle: history) 必须含 archived-since 字段。
+    dimension: X2
+    rule: "knowledge_doc.frontmatter contains {status, lifecycle, owner, last-reviewed}"
+    type: required
+    severity: warn
+    enforcement: omo lint doc-lifecycle
+    introduced: '2026-06-23'
+    value_tier: 2
+    references:
+      - ".omo/DOC-LIFECYCLE.md (frontmatter schema)"
+      - ".omo/_truth/x2-freshness-rules.yaml (X2-FRESH-DOC-LIFECYCLE)"
+      - "omo lint doc-lifecycle"
+    violation: "frontmatter 缺失或不完整; 文档不可机器识别"
+
+  - id: CR-GOV-DOC-CATEGORY-01
+    applies_to:
+      - L0
+      - L2
+    description: |
+      文档 4 类生命周期 (ssot/contract/pattern/history)。
+      .omo/ 文档必须按 4 类分类, status 必填 (active/deprecated/archived/experimental)。
+      历史文档 status: archived + lifecycle: history 必带。
+      P45 R4 建立的分类标准, P56 100% 落地。
+    dimension: X2
+    rule: "omo_doc.category in {ssot, contract, pattern, history} and omo_doc.status in {active, deprecated, archived, experimental}"
+    type: required
+    severity: warn
+    enforcement: omo lint doc-lifecycle (4 类分类)
+    introduced: '2026-06-23'
+    value_tier: 2
+    references:
+      - ".omo/DOC-LIFECYCLE.md (4 类定义)"
+      - "projects/omo/src/omo/omo_lint.py (cmd_lint_doc_lifecycle)"
+    violation: "文档分类或 status 字段缺失; 4 类语义不清"
+
+  - id: CR-GOV-DIMENSION-SATURATION-01
+    applies_to:
+      - L2
+    description: |
+      linter 维度饱和预警。
+      当 omo lint 维度 ≥ 15 时, 新增能力应以独立 bin 工具形式实现, 不得再增 linter 子命令。
+      P57 ADR-0053 记录此铁律; P58 沿用 (check-cross-refs + status-distribution 都是独立 bin 工具)。
+      目的: 防止 linter 维护成本线性增长, 边际收益递减。
+    dimension: X4
+    rule: "if linter_dimension_count >= 15 then new_capability_implementation == 'independent_bin_tool'"
+    type: advisory
+    severity: warn
+    enforcement: linter-developer-guide (review checklist)
+    introduced: '2026-06-23'
+    value_tier: 2
+    references:
+      - ".omo/_knowledge/decisions/0053-p56-frontmatter-100-and-doc-lifecycle.md"
+      - "bin/check-cross-refs.py"
+      - "bin/status-distribution.py"
+    violation: "linter 维度 ≥ 15 后仍提议新增子命令; 违反维度饱和律"
+
+  - id: CR-GOV-COMMIT-FREQUENCY-01
+    applies_to:
+      - L0
+      - L2
+      - L3
+    description: |
+      commit 频率与文件改动同步。
+      工作树累积未提交 > 100 文件触发警告, > 500 触发 error。
+      防止 P59 类失闭环事件再次发生 (571 文件未提交)。
+      检测: git status --short | wc -l 与最近 commit 时间差。
+    dimension: X1
+    rule: "working_tree_uncommitted_count <= 100 (warn) or <= 500 (error)"
+    type: required
+    severity: warn (100) / error (500)
+    enforcement: pre-commit + health check
+    introduced: '2026-06-23'
+    value_tier: 1
+    references:
+      - ".omo/_knowledge/audits/2026-06-23-p59-git-commit-closure-closeout.md"
+      - "bin/compass_radar.py (health 集成)"
+      - ".omo/state/health.yaml"
+    violation: "工作树累积未提交超阈值; 强制闭环纪律破坏"
+
+  # ── P60+ Agent 工程纪律 (CR-ENG-*) — 近期复盘规律物化 (2026-06-24) ──
+  # 来源: mypy 清零/bug 链/kronos flaky/radar/omo_ingress 拆分等实战提炼.
+  # 目的: 把"人肉经验"变"机器纪律", 未来 agent 自主感知→判断→治本行动.
+
+  - id: CR-ENG-MYPY-TRUTH-01
+    applies_to: [L0, L2]
+    description: |
+      mypy 验证必须用真相调法 MYPYPATH=src (禁裸 mypy src 假绿).
+      假绿机制: 裸 mypy 无 MYPYPATH 时跨包 import 解析不出, 当 Any 静默通过, 退出 0.
+      真相: MYPYPATH=src mypy src 暴露真实 errors. targeted 改动 (-> Any) 必须验证留存
+      (防被批量还原). 复盘案例: kairon 曾虚标 "16/16 strict" 实为 1245 errors 假象.
+    dimension: X1
+    rule: "mypy_invocation.uses_mypypath == true or mypy_invocation == 'make typecheck-report'"
+    type: required
+    severity: error
+    enforcement: CI gate (kairon-ci.yml MYPYPATH) + X1 审计
+    introduced: '2026-06-24'
+    value_tier: 1
+    references:
+      - "projects/kairon/mypy-baseline.yaml"
+      - "scripts/mypy_report.py"
+      - "memory: kairon-mypy-baseline-gate"
+    violation: "用裸 mypy src 验证 (假绿); 或 targeted Any 改动未验证留存"
+
+  - id: CR-ENG-SSOT-POINTER-01
+    applies_to: [L0, L3, L4]
+    description: |
+      易变值 (health_score / phase / task_count) 禁硬编码多处, 必须用 SSOT 指针.
+      真源: .omo/state/system.yaml (health) / goals/current.yaml (phase).
+      文档 (README/CLAUDE/CHANGELOG) 引用用相对指针, 不复制数字.
+      复盘案例: health 曾在 system/CLAUDE/Kim 报告 3 处不同值 (77.5/22/67).
+    dimension: X2
+    rule: "volatile_value.document_count == 1 (SSOT) or uses_pointer == true"
+    type: required
+    severity: warn
+    enforcement: pre-commit (SSOT 全文档扫描) + X2 抗熵
+    introduced: '2026-06-24'
+    value_tier: 1
+    references:
+      - ".omo/state/system.yaml"
+      - "bin/compass_radar.py (health sync)"
+    violation: "易变值 (health/phase) 硬编码在多处文档; SSOT 失序"
+
+  - id: CR-ENG-BUG-CHAIN-01
+    applies_to: [L0, L1, L2, L3]
+    description: |
+      bug 修复必须治本 (消除错误路径), 禁加 fallback/workaround 层 (slop).
+      洋葱模型: bug 互相掩盖 (radar None 掩盖 get_omo_dir home, 后者掩盖 frontmatter),
+      修一个暴露下一个. 修完验证 (import+test+全量) 再扫相关模块 (闭环扫描).
+      治本例: pending_metrics=None → 不加层, 改为始终返回有效 metrics dict (消 None 路径).
+    dimension: X4
+    rule: "bug_fix.eliminates_path == true (not adds_fallback_layer)"
+    type: required
+    severity: warn
+    enforcement: skill (bug-chain-diagnostic) + code review
+    introduced: '2026-06-24'
+    value_tier: 1
+    references:
+      - "复盘: radar/get_omo_dir/frontmatter bug 链 (3 链 ~8 bug)"
+      - "ADR-0051 (gbrain v5 收敛)"
+    violation: "bug 修复加 fallback 层 (治标); 或未做洋葱闭环扫描"
+
+  - id: CR-ENG-CWD-ABSOLUTE-01
+    applies_to: [L3]
+    description: |
+      Bash 工具调用跨项目必须用绝对路径 (防 cwd 漂移).
+      坑: cd projects/X 改 Bash cwd (persists across calls), 后续相对路径 (find/ls projects/Y)
+      相对 X/ 全空. 复盘案例: cd cockpit 后 find agora 返回空, 误判目录不存在.
+    dimension: X4
+    rule: "bash_call.cross_project == true implies uses_absolute_path == true"
+    type: required
+    severity: warn
+    enforcement: Agent 行为规范 (根 CLAUDE.md) + skill 纪律
+    introduced: '2026-06-24'
+    value_tier: 2
+    references:
+      - "复盘: agora 测试定位 cwd 漂移耗时"
+    violation: "Bash 跨项目用相对路径; cwd 漂移导致 find/ls 空返回"
+
+  - id: CR-ENG-TOOL-GREP-01
+    applies_to: [L3]
+    description: |
+      调用不熟悉的 CLI 工具前必须 grep 用法/argparse (防 --help 误触发副作用).
+      坑: bin/mof-version record --help 把 --help 当 description 录入 (无 --help 参数).
+      工具可能有副作用 (record/write/mutate), 盲跑 --help 会误操作.
+    dimension: X4
+    rule: "cli_call.unknown_tool == true implies grep_usage_first == true"
+    type: required
+    severity: warn
+    enforcement: Agent 行为规范 + skill 纪律
+    introduced: '2026-06-24'
+    value_tier: 2
+    references:
+      - "复盘: mof-version record --help 误录 v0.0.40 description"
+    violation: "盲跑未知工具 --help (或任意参数); 触发未预期副作用"
+
+  - id: CR-ENG-SRP-INCREMENTAL-01
+    applies_to: [L0, L2]
+    description: |
+      God Module (>1000 行) 拆分必须渐进: 低风险先 (纯函数/paths/trail), 核心后 (task lifecycle).
+      每步验证 (import + test) 才下一步 — 地基不过别盖楼.
+      拆分蓝图先给 (子模块清单), 执行分多 phase. 复盘案例: omo_ingress 2957 行拆 paths 先.
+    dimension: X3
+    rule: "god_module_split.first_step == 'low_risk_pure_functions' and validates_before_next == true"
+    type: required
+    severity: warn
+    enforcement: skill (governance-phase-orchestrator Strategize) + ADR
+    introduced: '2026-06-24'
+    value_tier: 2
+    references:
+      - "复盘: omo_ingress.py SRP 拆分 (2957→~2890, paths 子模块)"
+    violation: "God Module 一次性大拆 (高风险); 或拆分步骤未验证就下一步"
+
+  - id: CR-ENG-TEST-ISOLATION-01
+    applies_to: [L1, L2]
+    description: |
+      单元测试必须隔离外部依赖 (网络/Ollama/MCP/subprocess), 用 monkeypatch/mock.
+      禁: 测试依赖外部服务是否在跑 (flaky). 禁: 无条件 xfail (该用 conditional + strict).
+      复盘案例: kronos test 依赖 Ollama (flaky); agora 3 无条件 xfail (XPASS 误标).
+    dimension: X1
+    rule: "unit_test.external_dependency == true implies uses_mock == true"
+    type: required
+    severity: warn
+    enforcement: code review + CI (flaky 检测)
+    introduced: '2026-06-24'
+    value_tier: 2
+    references:
+      - "复盘: kronos flaky (Ollama) + agora XPASS (无条件 xfail)"
+    violation: "单元测试依赖外部服务 (flaky); 或无条件 xfail (XPASS 误标)"
+
+  - id: CR-ENG-LOOP-HONESTY-01
+    applies_to: [L3, L4]
+    description: |
+      Agent 元认知纪律: 同一操作反复 3+ 次不执行 → 思维循环, 必须 stop/compact.
+      禁: 装懂/原地反复/想跑不执行. 诚实承认上下文疲劳, 新上下文清爽执行.
+      这是最特殊的 CR — 防"认知坑" (非技术坑), 是"能力的能力" (元能力).
+      复盘案例: 2 次循环 (radar/add-evidence, c2g radar/gc), 各 14+ 轮.
+    dimension: X4
+    rule: "agent.same_op_repeated >= 3 implies triggers_stop_or_compact == true"
+    type: required
+    severity: warn
+    enforcement: Agent 元认知 (skill 循环检测)
+    introduced: '2026-06-24'
+    value_tier: 1
+    references:
+      - "复盘: 2 次思维循环 (compact 疲劳)"
+    violation: "思维循环 (同操作反复不执行); 装懂不承认"

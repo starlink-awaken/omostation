@@ -22,17 +22,45 @@ from pathlib import Path
 # Try to import yaml for fallback parsing
 try:
     import yaml
+
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
 
 # ── Paths ──
 # SSOT (single source of truth) — project repo
-L0_CONSTRAINTS_SSOT = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "l0" / "constraints.yaml"
+L0_CONSTRAINTS_SSOT = (
+    Path.home()
+    / "Workspace"
+    / "projects"
+    / "ecos"
+    / "src"
+    / "ecos"
+    / "l0"
+    / "constraints.yaml"
+)
 # L4 cache copy — synced from SSOT
-L0_CONSTRAINTS_L4 = Path.home() / "Documents" / "@学习进化" / "_knowledge" / "10-systems" / "基建架构" / "L0-constraints.yaml"
+L0_CONSTRAINTS_L4 = (
+    Path.home()
+    / "Documents"
+    / "@学习进化"
+    / "_knowledge"
+    / "10-systems"
+    / "基建架构"
+    / "L0-constraints.yaml"
+)
 ROUTES_JSON = Path.home() / ".ecos" / "bos" / "routes.json"
-DOMAIN_MANAGER = Path.home() / "Workspace" / "projects" / "ecos" / "src" / "ecos" / "services" / "governance" / "domain_manager.py"
+DOMAIN_MANAGER = (
+    Path.home()
+    / "Workspace"
+    / "projects"
+    / "ecos"
+    / "src"
+    / "ecos"
+    / "services"
+    / "governance"
+    / "domain_manager.py"
+)
 LOG_FILE = Path.home() / ".ecos" / "bos" / "daemon.log"
 
 
@@ -54,13 +82,15 @@ def get_mtime(path: Path) -> float:
 
 def update_routes() -> bool:
     """Re-read L0-constraints.yaml and update routes.json.
-    
+
     Returns True if routes.json was updated.
     """
     # Pick best available L0 constraints source (SSOT first, then L4 cache)
     L0_PATH = L0_CONSTRAINTS_SSOT if L0_CONSTRAINTS_SSOT.exists() else L0_CONSTRAINTS_L4
     if not L0_PATH.exists():
-        log(f"⚠️  L0-constraints.yaml not found (SSOT={L0_CONSTRAINTS_SSOT}, L4={L0_CONSTRAINTS_L4})")
+        log(
+            f"⚠️  L0-constraints.yaml not found (SSOT={L0_CONSTRAINTS_SSOT}, L4={L0_CONSTRAINTS_L4})"
+        )
         return False
 
     registry = None
@@ -70,6 +100,7 @@ def update_routes() -> bool:
         # Add governance/ to sys.path so domain_manager can import l0_audit / audit_unified
         sys.path.insert(0, str(DOMAIN_MANAGER.parent))
         from importlib.machinery import SourceFileLoader
+
         dm = SourceFileLoader("dm", str(DOMAIN_MANAGER)).load_module()
         registry = dm.load_registry()
         log("✅ Loaded registry via domain_manager")
@@ -92,7 +123,11 @@ def update_routes() -> bool:
         return False
 
     # Parse domain_registry into routes format
-    routes = {"_generated": datetime.now().isoformat(), "_source": str(L0_PATH), "routes": {}}
+    routes = {
+        "_generated": datetime.now().isoformat(),
+        "_source": str(L0_PATH),
+        "routes": {},
+    }
     for entry in registry:
         domain_id = entry.get("id", entry.get("name", ""))
         if domain_id:
@@ -109,14 +144,16 @@ def update_routes() -> bool:
 
     # Write routes.json
     ROUTES_JSON.parent.mkdir(parents=True, exist_ok=True)
-    ROUTES_JSON.write_text(json.dumps(routes, indent=2, ensure_ascii=False), encoding="utf-8")
+    ROUTES_JSON.write_text(
+        json.dumps(routes, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
     log(f"✅ Updated routes.json: {len(routes['routes'])} domains")
     return True
 
 
 def notify_mcp() -> None:
     """Notify MCP server that routes have changed.
-    
+
     Creates a touch file that the MCP server can watch.
     """
     touch = ROUTES_JSON.parent / ".updated"
@@ -135,17 +172,18 @@ def main() -> int:
             run_once = True
 
     log(f"BOS Registry Daemon starting (interval={interval}s)")
-    
+
     # Warm L2 → L1 cache if domain_manager is available
     try:
         sys.path.insert(0, str(DOMAIN_MANAGER.parent))
         from importlib.machinery import SourceFileLoader
+
         dm = SourceFileLoader("dm", str(DOMAIN_MANAGER)).load_module()
         warm_stats = dm._cache_warm()
         log(f"Cache warm: L2={warm_stats['l2_items']} → L1={warm_stats['warmed']}")
     except Exception:
         log("Cache warm skipped (domain_manager not available)")
-    
+
     if run_once:
         if update_routes():
             notify_mcp()
@@ -167,7 +205,7 @@ def main() -> int:
                 last_mtime = current
     except KeyboardInterrupt:
         log("Daemon stopped")
-    
+
     return 0
 
 

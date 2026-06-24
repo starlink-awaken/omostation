@@ -17,6 +17,7 @@ M1_WF_DIR = Path(__file__).parent.parent / "ssot" / "mof" / "m1" / "workflow"
 
 # ── 主加载函数 ──
 
+
 def load_workflow(name: str) -> dict | None:
     """加载工作流定义·优先从 M1 节点目录加载"""
     # 尝试从 M1 节点目录加载
@@ -46,11 +47,13 @@ def _load_from_m1(name: str) -> dict | None:
             kebab = nid.replace("workflow-", "").replace("_", "-")
             nname = node.get("name", "").lower()
             # 匹配: 精确ID / kebab名称 / 中文名 / 子串
-            if (name_lower == nid
-                    or name_lower == kebab
-                    or name_lower == nname
-                    or name_lower in nid
-                    or name_lower in kebab):
+            if (
+                name_lower == nid
+                or name_lower == kebab
+                or name_lower == nname
+                or name_lower in nid
+                or name_lower in kebab
+            ):
                 return node
         except Exception:
             continue
@@ -58,6 +61,7 @@ def _load_from_m1(name: str) -> dict | None:
 
 
 # ── 列表函数 ──
+
 
 def list_workflows() -> list[dict]:
     """列出所有可用工作流·合并 M1 节点 + definitions"""
@@ -94,11 +98,13 @@ def list_workflows() -> list[dict]:
                 try:
                     with open(f) as fh:
                         wf = yaml.safe_load(fh)
-                    workflows.append({
-                        "name": name,
-                        "display": wf.get("name", name),
-                        "source": "definition",
-                    })
+                    workflows.append(
+                        {
+                            "name": name,
+                            "display": wf.get("name", name),
+                            "source": "definition",
+                        }
+                    )
                     seen_names.add(name)
                 except Exception:
                     continue
@@ -116,16 +122,18 @@ def list_from_m1() -> list[dict]:
             with open(f) as fh:
                 node = yaml.safe_load(fh)
             if node and node.get("type") == "Workflow":
-                result.append({
-                    "id": node.get("id"),
-                    "name": node.get("name"),
-                    "domain": node.get("domain"),
-                    "layer": node.get("layer"),
-                    "subtype": node.get("subtype"),
-                    "bos_uri": node.get("bos_uri"),
-                    "status": node.get("status"),
-                    "steps_count": len(node.get("steps", [])),
-                })
+                result.append(
+                    {
+                        "id": node.get("id"),
+                        "name": node.get("name"),
+                        "domain": node.get("domain"),
+                        "layer": node.get("layer"),
+                        "subtype": node.get("subtype"),
+                        "bos_uri": node.get("bos_uri"),
+                        "status": node.get("status"),
+                        "steps_count": len(node.get("steps", [])),
+                    }
+                )
         except Exception:
             continue
     return result

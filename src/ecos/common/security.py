@@ -13,7 +13,9 @@ class TokenManager:
 
     def generate_token(self, user_id: str, expires_in: int = 3600) -> str:
         payload = f"{user_id}:{expires_in}"
-        signature = hmac.new(self.secret_key, payload.encode(), hashlib.sha256).hexdigest()
+        signature = hmac.new(
+            self.secret_key, payload.encode(), hashlib.sha256
+        ).hexdigest()
         return f"{payload}:{signature}"
 
     def verify_token(self, token: str) -> Optional[str]:
@@ -23,7 +25,9 @@ class TokenManager:
                 return None
             user_id, expires_in, signature = parts
             payload = f"{user_id}:{expires_in}"
-            expected = hmac.new(self.secret_key, payload.encode(), hashlib.sha256).hexdigest()
+            expected = hmac.new(
+                self.secret_key, payload.encode(), hashlib.sha256
+            ).hexdigest()
             if signature == expected:
                 return user_id
         except Exception:
@@ -35,13 +39,17 @@ class InputValidator:
     """输入参数校验器"""
 
     @staticmethod
-    def validate_string(value: Any, min_length: int = 0, max_length: int = 1000) -> bool:
+    def validate_string(
+        value: Any, min_length: int = 0, max_length: int = 1000
+    ) -> bool:
         if not isinstance(value, str):
             return False
         return min_length <= len(value) <= max_length
 
     @staticmethod
-    def validate_number(value: Any, min_val: float = float("-inf"), max_val: float = float("inf")) -> bool:
+    def validate_number(
+        value: Any, min_val: float = float("-inf"), max_val: float = float("inf")
+    ) -> bool:
         if not isinstance(value, (int, float)):
             return False
         return min_val <= value <= max_val

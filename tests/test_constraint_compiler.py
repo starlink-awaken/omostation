@@ -73,7 +73,10 @@ SAMPLE_DATA = {
 
 
 class TestLoadYaml:
-    @patch("ecos.services.governance.constraint_compiler.open", mock_open(read_data=json.dumps(SAMPLE_DATA)))
+    @patch(
+        "ecos.services.governance.constraint_compiler.open",
+        mock_open(read_data=json.dumps(SAMPLE_DATA)),
+    )
     def test_loads_yaml(self):
         data = load_yaml(Path("/fake/path"))
         assert data["version"] == "1.0.0"
@@ -157,7 +160,9 @@ class TestCompileConstraints:
         assert results[0]["protocol"] == "SSB"
 
     def test_empty_data(self):
-        code = compile_constraints({"protocol_registry": [], "constraints": [], "version": "0.0.0"})
+        code = compile_constraints(
+            {"protocol_registry": [], "constraints": [], "version": "0.0.0"}
+        )
         namespace: dict = {}
         exec(code, namespace)
         result = namespace["run"]()
@@ -178,13 +183,17 @@ class TestWriteCompiled:
 
 
 class TestLoadCompiled:
-    @patch("ecos.services.governance.constraint_compiler.importlib.util.spec_from_file_location")
+    @patch(
+        "ecos.services.governance.constraint_compiler.importlib.util.spec_from_file_location"
+    )
     def test_load_nonexistent(self, mock_spec):
         mock_spec.return_value = None
         result = load_compiled(Path("/fake.py"))
         assert result is None
 
-    @patch("ecos.services.governance.constraint_compiler.importlib.util.spec_from_file_location")
+    @patch(
+        "ecos.services.governance.constraint_compiler.importlib.util.spec_from_file_location"
+    )
     def test_spec_none(self, mock_spec):
         mock_spec.return_value = None
         result = load_compiled(Path("/fake.py"))
@@ -215,41 +224,55 @@ class TestFormatReport:
         assert "0/0" in result
 
     def test_format_with_data(self):
-        result = format_report({
-            "decay": [
-                {
-                    "protocol": "SSB",
-                    "version": "2.1.0",
-                    "remaining_value": 75.0,
-                    "status": "fresh",
-                    "age_days": 90,
-                    "half_life_days": 365,
-                }
-            ],
-            "constraints": [
-                {"id": "X4-C01", "passed": True, "type": "required", "description": "test"},
-                {"id": "X4-C02", "passed": False, "type": "required", "description": "fail"},
-            ],
-        })
+        result = format_report(
+            {
+                "decay": [
+                    {
+                        "protocol": "SSB",
+                        "version": "2.1.0",
+                        "remaining_value": 75.0,
+                        "status": "fresh",
+                        "age_days": 90,
+                        "half_life_days": 365,
+                    }
+                ],
+                "constraints": [
+                    {
+                        "id": "X4-C01",
+                        "passed": True,
+                        "type": "required",
+                        "description": "test",
+                    },
+                    {
+                        "id": "X4-C02",
+                        "passed": False,
+                        "type": "required",
+                        "description": "fail",
+                    },
+                ],
+            }
+        )
         assert "SSB" in result
         assert "X4-C01" in result
         assert "X4-C02" in result
         assert "1/2" in result
 
     def test_format_expired(self):
-        result = format_report({
-            "decay": [
-                {
-                    "protocol": "OLD",
-                    "version": "1.0",
-                    "remaining_value": 0.0,
-                    "status": "expired",
-                    "age_days": 400,
-                    "half_life_days": 365,
-                }
-            ],
-            "constraints": [],
-        })
+        result = format_report(
+            {
+                "decay": [
+                    {
+                        "protocol": "OLD",
+                        "version": "1.0",
+                        "remaining_value": 0.0,
+                        "status": "expired",
+                        "age_days": 400,
+                        "half_life_days": 365,
+                    }
+                ],
+                "constraints": [],
+            }
+        )
         assert "已超半衰期" in result
 
 
@@ -301,15 +324,21 @@ class TestWatchAndCompile:
 
 class TestMain:
     @patch("ecos.services.governance.constraint_compiler.CONSTRAINTS_FILE")
-    @patch("ecos.services.governance.constraint_compiler.argparse.ArgumentParser.parse_args")
+    @patch(
+        "ecos.services.governance.constraint_compiler.argparse.ArgumentParser.parse_args"
+    )
     def test_main_file_not_exists(self, mock_args, mock_file):
         mock_file.exists.return_value = False
-        mock_args.return_value = MagicMock(output="/tmp/test.py", watch=False, json=False, interval=60)
+        mock_args.return_value = MagicMock(
+            output="/tmp/test.py", watch=False, json=False, interval=60
+        )
         with pytest.raises(SystemExit):
             main()
 
     @patch("ecos.services.governance.constraint_compiler.CONSTRAINTS_FILE")
-    @patch("ecos.services.governance.constraint_compiler.argparse.ArgumentParser.parse_args")
+    @patch(
+        "ecos.services.governance.constraint_compiler.argparse.ArgumentParser.parse_args"
+    )
     @patch("ecos.services.governance.constraint_compiler.load_yaml")
     @patch("ecos.services.governance.constraint_compiler.compile_constraints")
     @patch("ecos.services.governance.constraint_compiler.write_compiled")
@@ -318,7 +347,9 @@ class TestMain:
         self, mock_run, mock_write, mock_compile, mock_load, mock_args, mock_file
     ):
         mock_file.exists.return_value = True
-        mock_args.return_value = MagicMock(output="/tmp/test.py", watch=False, json=False, interval=60)
+        mock_args.return_value = MagicMock(
+            output="/tmp/test.py", watch=False, json=False, interval=60
+        )
         mock_load.return_value = SAMPLE_DATA
         mock_compile.return_value = "code"
         mock_write.return_value = {"hash": "abc"}
@@ -326,7 +357,9 @@ class TestMain:
         main()  # should not raise
 
     @patch("ecos.services.governance.constraint_compiler.CONSTRAINTS_FILE")
-    @patch("ecos.services.governance.constraint_compiler.argparse.ArgumentParser.parse_args")
+    @patch(
+        "ecos.services.governance.constraint_compiler.argparse.ArgumentParser.parse_args"
+    )
     @patch("ecos.services.governance.constraint_compiler.load_yaml")
     @patch("ecos.services.governance.constraint_compiler.compile_constraints")
     @patch("ecos.services.governance.constraint_compiler.write_compiled")
@@ -335,7 +368,9 @@ class TestMain:
         self, mock_run, mock_write, mock_compile, mock_load, mock_args, mock_file
     ):
         mock_file.exists.return_value = True
-        mock_args.return_value = MagicMock(output="/tmp/test.py", watch=False, json=True, interval=60)
+        mock_args.return_value = MagicMock(
+            output="/tmp/test.py", watch=False, json=True, interval=60
+        )
         mock_load.return_value = SAMPLE_DATA
         mock_compile.return_value = "code"
         mock_write.return_value = {"hash": "abc"}

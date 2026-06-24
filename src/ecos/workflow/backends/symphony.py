@@ -53,9 +53,7 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
     try:
         from ecos.l0.symphony.state_machine import SymphonyStateMachine  # type: ignore[import-untyped]
     except ImportError:
-        raise ImportError(
-            "ecos.l0.symphony.state_machine is not available"
-        )
+        raise ImportError("ecos.l0.symphony.state_machine is not available")
 
     steps = m1_node.get("steps", [])
     execution = m1_node.get("execution", {})
@@ -99,72 +97,87 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
         # 映射 step 索引到阶段
         stage_name = _STAGE_ALIASES.get(i)
         if stage_name is None:
-            results["steps"].append({
-                "name": step_name,
-                "status": "skipped",
-                "reason": f"No stage alias for step index {i} (max: {max(_STAGE_ALIASES)})",
-            })
+            results["steps"].append(
+                {
+                    "name": step_name,
+                    "status": "skipped",
+                    "reason": f"No stage alias for step index {i} (max: {max(_STAGE_ALIASES)})",
+                }
+            )
             results["passed"] += 1  # 不阻塞
             continue
 
         # 通过 to_stage_name 查找 SymphonyStage 枚举
         try:
             from ecos.l0.symphony.models import SymphonyStage  # type: ignore[import-untyped]
+
             target_stage = getattr(SymphonyStage, stage_name)
         except (ImportError, AttributeError) as e:
-            results["steps"].append({
-                "name": step_name,
-                "status": "error",
-                "error": f"Cannot resolve SymphonyStage.{stage_name}: {e}",
-            })
+            results["steps"].append(
+                {
+                    "name": step_name,
+                    "status": "error",
+                    "error": f"Cannot resolve SymphonyStage.{stage_name}: {e}",
+                }
+            )
             results["failed"] += 1
             continue
 
         # 用 step action 更新上下文
         action = step.get("action", "")
         step_params = step.get("input", [])
-        sm.update_context({
-            "current_action": action,
-            "current_step": step_name,
-            "step_params": step_params,
-        })
+        sm.update_context(
+            {
+                "current_action": action,
+                "current_step": step_name,
+                "step_params": step_params,
+            }
+        )
 
         # 检查前置条件 & 执行跃迁
         if not sm.can_transition(target_stage):
             # 条件不满足：检查 invariants 是否允许跳过
-            sm.update_context({
-                "context_completeness": 1.0,
-                "truth_locked": True,
-                "ambiguities": [],
-                "contract_signed": True,
-                "dependency_graph": True,
-                "code_completion_rate": 1.0,
-            })
+            sm.update_context(
+                {
+                    "context_completeness": 1.0,
+                    "truth_locked": True,
+                    "ambiguities": [],
+                    "contract_signed": True,
+                    "dependency_graph": True,
+                    "code_completion_rate": 1.0,
+                }
+            )
             if not sm.can_transition(target_stage):
-                results["steps"].append({
-                    "name": step_name,
-                    "status": "skipped",
-                    "reason": f"Cannot transition to {stage_name} (conditions not met, even after forcing defaults)",
-                })
+                results["steps"].append(
+                    {
+                        "name": step_name,
+                        "status": "skipped",
+                        "reason": f"Cannot transition to {stage_name} (conditions not met, even after forcing defaults)",
+                    }
+                )
                 results["passed"] += 1
                 continue
 
         trans_result = sm.transition(target_stage)
         ok = trans_result.success
 
-        results["steps"].append({
-            "name": step_name,
-            "status": "ok" if ok else "failed",
-            "target_stage": stage_name,
-            "message": trans_result.message,
-            "conditions_met": trans_result.conditions_met or [],
-            "conditions_failed": trans_result.conditions_failed or [],
-        })
+        results["steps"].append(
+            {
+                "name": step_name,
+                "status": "ok" if ok else "failed",
+                "target_stage": stage_name,
+                "message": trans_result.message,
+                "conditions_met": trans_result.conditions_met or [],
+                "conditions_failed": trans_result.conditions_failed or [],
+            }
+        )
         if ok:
             results["passed"] += 1
         else:
             results["failed"] += 1
-            on_failure = step.get("on_failure") or execution.get("on_failure") or "continue"
+            on_failure = (
+                step.get("on_failure") or execution.get("on_failure") or "continue"
+            )
             if on_failure == "abort":
                 break
 

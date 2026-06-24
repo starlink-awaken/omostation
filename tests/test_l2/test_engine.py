@@ -130,7 +130,7 @@ class TestSwarmEngine:
         engine.start()
 
         for i in range(3):
-            engine.register_agent(f"agent-{i+1}")
+            engine.register_agent(f"agent-{i + 1}")
 
         emergence = engine.detect_emergence()
         assert len(emergence) >= 1

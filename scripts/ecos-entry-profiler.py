@@ -31,7 +31,8 @@ SESSION_DIR = Path.home() / ".ecos" / "sessions"
 EVENT_FILE = Path.home() / ".ecos" / "events" / "entry-stream.jsonl"
 ENTRY_PATTERNS = [
     "CLAUDE_COWORK_GLOBAL.md",
-    "CLAUDE.md", "claude.md",
+    "CLAUDE.md",
+    "claude.md",
     "DASHBOARD.md",
     "brief.md",
     "OPS.md",
@@ -121,7 +122,9 @@ def session_end() -> dict:
 def record_read(filepath: str) -> dict:
     """记录文件读取"""
     fname = Path(filepath).name
-    entry_type = "entry_file" if any(p in filepath for p in ENTRY_PATTERNS) else "domain_file"
+    entry_type = (
+        "entry_file" if any(p in filepath for p in ENTRY_PATTERNS) else "domain_file"
+    )
     event = {
         "type": "file.read",
         "session_id": get_session_id() or new_session_id(),
@@ -155,7 +158,9 @@ def generate_report(events: list[dict]) -> str:
     lines.append("=" * 60)
 
     if not events:
-        lines.append("\n 暂无会话数据 — 运行 `ecos-entry-profiler.py --session-start` 开始记录\n")
+        lines.append(
+            "\n 暂无会话数据 — 运行 `ecos-entry-profiler.py --session-start` 开始记录\n"
+        )
         return "\n".join(lines)
 
     # 按类型分类
@@ -173,7 +178,9 @@ def generate_report(events: list[dict]) -> str:
     # 入口文件频率
     if file_reads:
         lines.append("\n  📖 入口文件频率")
-        entry_files = [f["file"] for f in file_reads if f.get("entry_type") == "entry_file"]
+        entry_files = [
+            f["file"] for f in file_reads if f.get("entry_type") == "entry_file"
+        ]
         by_file = Counter(entry_files)
         for fname, count in by_file.most_common(10):
             bar = "█" * count + "░" * (10 - min(count, 10))
@@ -199,7 +206,8 @@ def generate_report(events: list[dict]) -> str:
     # 活跃时段
     timestamps = [
         datetime.fromisoformat(e["timestamp"].replace("Z", "+00:00"))
-        for e in events if e.get("timestamp")
+        for e in events
+        if e.get("timestamp")
     ]
     if timestamps:
         span = (max(timestamps) - min(timestamps)).total_seconds() / 3600
@@ -207,13 +215,14 @@ def generate_report(events: list[dict]) -> str:
         lines.append(f"  最早: {min(timestamps).strftime('%m-%d %H:%M')}")
         lines.append(f"  最晚: {max(timestamps).strftime('%m-%d %H:%M')}")
 
-    lines.append(f"\n{'='*60}")
+    lines.append(f"\n{'=' * 60}")
     return "\n".join(lines)
 
 
 def watch_mode():
     """连续监听并记录"""
     import signal
+
     running = True
 
     def handler(signum, frame):
@@ -242,7 +251,9 @@ def main():
     parser.add_argument("--session-start", action="store_true", help="标记会话开始")
     parser.add_argument("--session-end", action="store_true", help="标记会话结束")
     parser.add_argument("--read", type=str, help="记录文件读取")
-    parser.add_argument("--cmd", type=str, nargs=2, metavar=("CMD", "DURATION_MS"), help="记录命令执行")
+    parser.add_argument(
+        "--cmd", type=str, nargs=2, metavar=("CMD", "DURATION_MS"), help="记录命令执行"
+    )
     parser.add_argument("--report", action="store_true", help="生成深度统计报告")
     parser.add_argument("--watch", action="store_true", help="连续监听")
     parser.add_argument("--json", action="store_true", help="JSON 输出")
@@ -250,23 +261,27 @@ def main():
 
     if args.session_start:
         r = session_start()
-        if args.json: print(json.dumps(r, indent=2))  # noqa: E701
+        if args.json:
+            print(json.dumps(r, indent=2))  # noqa: E701
         return
 
     if args.session_end:
         r = session_end()
-        if args.json: print(json.dumps(r, indent=2))  # noqa: E701
+        if args.json:
+            print(json.dumps(r, indent=2))  # noqa: E701
         return
 
     if args.read:
         r = record_read(args.read)
-        if args.json: print(json.dumps(r, indent=2))  # noqa: E701
+        if args.json:
+            print(json.dumps(r, indent=2))  # noqa: E701
         return
 
     if args.cmd:
         cmd, duration = args.cmd
         r = record_cmd(cmd, int(duration))
-        if args.json: print(json.dumps(r, indent=2))  # noqa: E701
+        if args.json:
+            print(json.dumps(r, indent=2))  # noqa: E701
         return
 
     if args.watch:

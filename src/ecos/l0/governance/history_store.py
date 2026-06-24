@@ -16,12 +16,12 @@ from .optimization import (
 
 class SQLiteHistoryStore(HistoryAnalyzer):
     """SQLite 历史存储"""
-    
+
     def __init__(self, db_path: str | Path):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
-    
+
     def _init_db(self):
         """初始化数据库"""
         with sqlite3.connect(self.db_path) as conn:
@@ -40,7 +40,7 @@ class SQLiteHistoryStore(HistoryAnalyzer):
                 CREATE INDEX IF NOT EXISTS idx_timestamp 
                 ON health_snapshots(timestamp)
             """)
-    
+
     def record(self, snapshot: HealthSnapshot) -> None:
         """记录快照"""
         with sqlite3.connect(self.db_path) as conn:
@@ -59,11 +59,11 @@ class SQLiteHistoryStore(HistoryAnalyzer):
                     snapshot.unresolved_count,
                 ),
             )
-    
+
     def get_snapshots(self, days: int = 30) -> list[HealthSnapshot]:
         """获取最近 N 天的快照"""
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-        
+
         with sqlite3.connect(self.db_path) as conn:
             rows = conn.execute(
                 """
@@ -75,7 +75,7 @@ class SQLiteHistoryStore(HistoryAnalyzer):
                 """,
                 (cutoff.isoformat(),),
             ).fetchall()
-        
+
         return [
             HealthSnapshot(
                 timestamp=datetime.fromisoformat(row[0]),
@@ -87,11 +87,11 @@ class SQLiteHistoryStore(HistoryAnalyzer):
             )
             for row in rows
         ]
-    
+
     def analyze_trend(self, metric: str, days: int = 30) -> TrendAnalysis:
         """分析趋势"""
         snapshots = self.get_snapshots(days)
-        
+
         if len(snapshots) < 2:
             return TrendAnalysis(
                 metric=metric,
@@ -100,18 +100,18 @@ class SQLiteHistoryStore(HistoryAnalyzer):
                 change=0,
                 trend="stable",
             )
-        
+
         current = getattr(snapshots[-1], metric)
         previous = getattr(snapshots[-2], metric)
         change = current - previous
-        
+
         if change > 0.05:
             trend = "improving"
         elif change < -0.05:
             trend = "degrading"
         else:
             trend = "stable"
-        
+
         return TrendAnalysis(
             metric=metric,
             current=current,
@@ -119,25 +119,25 @@ class SQLiteHistoryStore(HistoryAnalyzer):
             change=change,
             trend=trend,
         )
-    
+
     def predict(self, metric: str, days: int = 7) -> list[Prediction]:
         """预测未来"""
         snapshots = self.get_snapshots(30)
-        
+
         if len(snapshots) < 3:
             return []
-        
+
         values = [getattr(s, metric) for s in snapshots]
         n = len(values)
         x_mean = (n - 1) / 2
         y_mean = sum(values) / n
-        
+
         numerator = sum((i - x_mean) * (values[i] - y_mean) for i in range(n))
         denominator = sum((i - x_mean) ** 2 for i in range(n))
-        
+
         slope = numerator / denominator if denominator != 0 else 0
         intercept = y_mean - slope * x_mean
-        
+
         predictions = []
         for i in range(1, days + 1):
             predicted = slope * (n + i - 1) + intercept
@@ -148,5 +148,5 @@ class SQLiteHistoryStore(HistoryAnalyzer):
                     predicted_value=min(max(predicted, 0), 100),
                 )
             )
-        
+
         return predictions

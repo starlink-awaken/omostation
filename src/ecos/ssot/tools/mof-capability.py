@@ -54,11 +54,18 @@ def cmd_list(args: list[str]):
 
     print(f"{'类型':12s} {'状态':10s} {'名称':50s}")
     print("-" * 75)
-    for c in sorted(caps, key=lambda x: (x["_m2type"], x.get("status", ""), x.get("name", ""))):
+    for c in sorted(
+        caps, key=lambda x: (x["_m2type"], x.get("status", ""), x.get("name", ""))
+    ):
         mtype = c["_m2type"]
         status = c.get("status", "?")
         name = (c.get("name", "?"))[:50]
-        icon = {"active": "🟢", "defined": "📋", "deprecated": "⚠️", "archived": "🗄️"}.get(status, "❓")
+        icon = {
+            "active": "🟢",
+            "defined": "📋",
+            "deprecated": "⚠️",
+            "archived": "🗄️",
+        }.get(status, "❓")
         print(f"  {icon} {mtype:10s} {status:10s} {name}")
 
     print(f"\n  总计: {len(caps)} 项")
@@ -67,23 +74,24 @@ def cmd_list(args: list[str]):
 def cmd_health():
     """健康检查 — 检查能力是否在线"""
     caps = load_capabilities()
-    
+
     active = sum(1 for c in caps if c.get("status") == "active")
     deprecated = sum(1 for c in caps if c.get("status") == "deprecated")
     archived = sum(1 for c in caps if c.get("status") == "archived")
     other = len(caps) - active - deprecated - archived
-    
+
     print("═══ 能力健康 ═══")
     print(f"  活跃:     {active}")
     print(f"  废弃:     {deprecated} (需清理)")
     print(f"  归档:     {archived}")
     print(f"  其他:     {other}")
     print(f"  总计:     {len(caps)}")
-    
+
     # Check for capabilities without successor
     deprecated_no_successor = [
-        c for c in caps 
-        if c.get("status") == "deprecated" 
+        c
+        for c in caps
+        if c.get("status") == "deprecated"
         and not (c.get("properties", {}) or {}).get("successor")
     ]
     if deprecated_no_successor:
@@ -94,7 +102,7 @@ def cmd_health():
 
 def cmd_stats():
     caps = load_capabilities()
-    
+
     by_type = {}
     by_status = {}
     for c in caps:
@@ -102,18 +110,23 @@ def cmd_stats():
         s = c.get("status", "?")
         by_type[t] = by_type.get(t, 0) + 1
         by_status[s] = by_status.get(s, 0) + 1
-    
+
     print("═══ 能力统计 ═══")
     print("\n按类型:")
     for t in CAPABILITY_TYPES:
         if t in by_type:
             print(f"  {t:15s}: {by_type[t]:4d}")
-    
+
     print("\n按状态:")
     for s, c in sorted(by_status.items()):
-        icon = {"active": "🟢", "defined": "📋", "deprecated": "⚠️", "archived": "🗄️"}.get(s, "❓")
+        icon = {
+            "active": "🟢",
+            "defined": "📋",
+            "deprecated": "⚠️",
+            "archived": "🗄️",
+        }.get(s, "❓")
         print(f"  {icon} {s:12s}: {c:4d}")
-    
+
     # Coverage: which types have M1 nodes
     print("\n类型覆盖:")
     for t in CAPABILITY_TYPES:
@@ -127,10 +140,10 @@ def cmd_deprecate(args: list[str]):
     if len(args) < 2:
         print("用法: mof capability deprecate <id> <reason>")
         return
-    
+
     cap_id = args[0]
     reason = " ".join(args[1:])
-    
+
     for t in CAPABILITY_TYPES:
         fp = L0_M1 / t / f"{cap_id}.yaml"
         if fp.exists():
@@ -139,23 +152,32 @@ def cmd_deprecate(args: list[str]):
             props = data.get("properties", {}) or {}
             props["deprecation_reason"] = reason
             data["properties"] = props
-            data["description"] = f"[DEPRECATED: {reason}] {data.get('description', '')}"
-            with open(fp, 'w') as f:
-                yaml.dump(data, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+            data["description"] = (
+                f"[DEPRECATED: {reason}] {data.get('description', '')}"
+            )
+            with open(fp, "w") as f:
+                yaml.dump(
+                    data,
+                    f,
+                    allow_unicode=True,
+                    default_flow_style=False,
+                    sort_keys=False,
+                )
             print(f"✅ {cap_id} → deprecated: {reason}")
             return
-    
+
     print(f"❌ 未找到: {cap_id}")
 
 
 def main():
+    print("⚠️ MOF Capability 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     if len(sys.argv) < 2:
         print("用法: mof capability <list|health|stats|deprecate>")
         return
-    
+
     cmd = sys.argv[1]
     args = sys.argv[2:]
-    
+
     if cmd == "list":
         cmd_list(args)
     elif cmd == "health":

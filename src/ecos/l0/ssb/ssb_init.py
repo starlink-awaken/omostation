@@ -195,6 +195,7 @@ def do_reset():
 
 
 def main():
+    print("⚠️ ECOS SSB Init 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     if len(sys.argv) < 2:
         do_init()
         return

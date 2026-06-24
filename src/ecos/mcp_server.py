@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess as _subprocess
+import sys
 from collections import Counter
 from pathlib import Path
 
@@ -31,11 +32,13 @@ mcp = FastMCP("ecos", version="1.0.0")
 
 # ── SSOT 工具 (来自 ssot/mcp_server.py) ──
 
+
 @mcp.tool()
 def ssot_check(domain_dir: str = "domains/guozhuan") -> str:
     """运行 SSOT 规则检查，返回每条规则的执行结果"""
     result = do_check({"domain_dir": domain_dir})
     return result.get("text", json.dumps(result, ensure_ascii=False))
+
 
 @mcp.tool()
 def ssot_derive(domain_dir: str = "domains/guozhuan", rounds: int = 1) -> str:
@@ -43,11 +46,13 @@ def ssot_derive(domain_dir: str = "domains/guozhuan", rounds: int = 1) -> str:
     result = do_derive({"domain_dir": domain_dir, "rounds": rounds})
     return result.get("text", json.dumps(result, ensure_ascii=False))
 
+
 @mcp.tool()
 def ssot_compile(domain_dir: str = "domains/guozhuan") -> str:
     """编译 YAML 为 JSON，含 Schema 校验 + 跨文件引用检查"""
     result = do_compile({"domain_dir": domain_dir})
     return result.get("text", json.dumps(result, ensure_ascii=False))
+
 
 @mcp.tool()
 def ssot_evolve(domain_dir: str = "domains/guozhuan") -> str:
@@ -55,11 +60,13 @@ def ssot_evolve(domain_dir: str = "domains/guozhuan") -> str:
     result = do_evolve({"domain_dir": domain_dir})
     return result.get("text", json.dumps(result, ensure_ascii=False))
 
+
 @mcp.tool()
 def ssot_stats(domain_dir: str = "domains/guozhuan") -> str:
     """输出知识库统计信息（实体/事实/推论分布、引用热度）"""
     result = do_stats({"domain_dir": domain_dir})
     return result.get("text", json.dumps(result, ensure_ascii=False))
+
 
 @mcp.tool()
 def ssot_sync(yaml_dir: str, md_dir: str) -> str:
@@ -67,16 +74,22 @@ def ssot_sync(yaml_dir: str, md_dir: str) -> str:
     result = do_sync({"yaml_dir": yaml_dir, "md_dir": md_dir})
     return result.get("text", json.dumps(result, ensure_ascii=False))
 
+
 @mcp.tool()
-def ssot_extract(file_path: str, domain_dir: str = "", use_llm: bool = False, model: str = "") -> str:
+def ssot_extract(
+    file_path: str, domain_dir: str = "", use_llm: bool = False, model: str = ""
+) -> str:
     """从文件中提取知识结构（实体/事实），支持模板和 LLM"""
-    result = do_extract({
-        "file_path": file_path,
-        "domain_dir": domain_dir,
-        "use_llm": use_llm,
-        "model": model,
-    })
+    result = do_extract(
+        {
+            "file_path": file_path,
+            "domain_dir": domain_dir,
+            "use_llm": use_llm,
+            "model": model,
+        }
+    )
     return result.get("text", json.dumps(result, ensure_ascii=False))
+
 
 # ── 域管理工具 (来自 services/integration/mcp_server.py) ──
 
@@ -84,8 +97,10 @@ ECOS_SRC = Path(__file__).resolve().parent
 
 # 复用 domain-manager 逻辑
 from importlib.machinery import SourceFileLoader as _SFL  # noqa: E402
+
 _DM_PATH = ECOS_SRC / "services" / "governance" / "domain_manager.py"
 dm = _SFL("dm", str(_DM_PATH)).load_module()
+
 
 @mcp.tool()
 def domain_list(type: str = "") -> str:
@@ -95,14 +110,17 @@ def domain_list(type: str = "") -> str:
     for d in r:
         if type and d.get("domain_type") != type:
             continue
-        result.append({
-            "id": d["id"],
-            "name": d.get("name", ""),
-            "type": d.get("domain_type", "document"),
-            "layer": d.get("layer", "L4"),
-            "bos_uri": f"bos://{d['id']}",
-        })
+        result.append(
+            {
+                "id": d["id"],
+                "name": d.get("name", ""),
+                "type": d.get("domain_type", "document"),
+                "layer": d.get("layer", "L4"),
+                "bos_uri": f"bos://{d['id']}",
+            }
+        )
     return json.dumps({"domains": result, "total": len(result)}, ensure_ascii=False)
+
 
 @mcp.tool()
 def domain_stats() -> str:
@@ -110,7 +128,11 @@ def domain_stats() -> str:
     r = dm.load_registry()
     types = Counter(d.get("domain_type", "document") for d in r)
     layers = Counter(d.get("layer", "L4") for d in r)
-    return json.dumps({"total": len(r), "by_type": dict(types), "by_layer": dict(layers)}, ensure_ascii=False)
+    return json.dumps(
+        {"total": len(r), "by_type": dict(types), "by_layer": dict(layers)},
+        ensure_ascii=False,
+    )
+
 
 @mcp.tool()
 def domain_validate(domain: str) -> str:
@@ -122,14 +144,20 @@ def domain_validate(domain: str) -> str:
     p = dm.resolve_path(d)
     if not p.exists():
         return json.dumps({"error": f"路径不存在: {p}"})
-    results = dm.validate_domain(p, d.get("domain_type", "document"), d.get("governance_tier", 1))
-    return json.dumps({
-        "domain": d.get("name", d["id"]),
-        "path": str(p),
-        "checks": [{"name": n, "pass": ok, "detail": dt} for n, ok, dt in results],
-        "passed": sum(1 for _, ok, _ in results if ok),
-        "failed": sum(1 for _, ok, _ in results if not ok),
-    }, ensure_ascii=False)
+    results = dm.validate_domain(
+        p, d.get("domain_type", "document"), d.get("governance_tier", 1)
+    )
+    return json.dumps(
+        {
+            "domain": d.get("name", d["id"]),
+            "path": str(p),
+            "checks": [{"name": n, "pass": ok, "detail": dt} for n, ok, dt in results],
+            "passed": sum(1 for _, ok, _ in results if ok),
+            "failed": sum(1 for _, ok, _ in results if not ok),
+        },
+        ensure_ascii=False,
+    )
+
 
 @mcp.tool()
 def domain_resolve(uri: str) -> str:
@@ -140,13 +168,17 @@ def domain_resolve(uri: str) -> str:
         return json.dumps({"error": f"无法解析: {uri}"})
     p = dm.resolve_path(d)
     full = str(p / s if s else p)
-    return json.dumps({
-        "uri": uri,
-        "physical_path": full,
-        "exists": os.path.exists(full),
-        "domain": d.get("name", d["id"]),
-        "type": d.get("domain_type", "?"),
-    }, ensure_ascii=False)
+    return json.dumps(
+        {
+            "uri": uri,
+            "physical_path": full,
+            "exists": os.path.exists(full),
+            "domain": d.get("name", d["id"]),
+            "type": d.get("domain_type", "?"),
+        },
+        ensure_ascii=False,
+    )
+
 
 @mcp.tool()
 def domain_read(uri: str, max_lines: int = 50) -> str:
@@ -161,15 +193,24 @@ def domain_read(uri: str, max_lines: int = 50) -> str:
         return json.dumps({"error": f"不存在: {full}"})
     if full.is_dir():
         items = sorted(os.listdir(full))
-        return json.dumps({"uri": uri, "type": "directory", "items": items[:50], "total": len(items)}, ensure_ascii=False)
+        return json.dumps(
+            {"uri": uri, "type": "directory", "items": items[:50], "total": len(items)},
+            ensure_ascii=False,
+        )
     content = full.read_text()
     lines = content.split("\n")
-    return json.dumps({
-        "uri": uri, "type": "file", "size": len(content),
-        "lines": len(lines),
-        "content": "\n".join(lines[:max_lines]),
-        "truncated": len(lines) > max_lines,
-    }, ensure_ascii=False)
+    return json.dumps(
+        {
+            "uri": uri,
+            "type": "file",
+            "size": len(content),
+            "lines": len(lines),
+            "content": "\n".join(lines[:max_lines]),
+            "truncated": len(lines) > max_lines,
+        },
+        ensure_ascii=False,
+    )
+
 
 @mcp.tool()
 def domain_search(query: str, max_results: int = 10) -> str:
@@ -186,7 +227,15 @@ def domain_search(query: str, max_results: int = 10) -> str:
             if not sp.exists():
                 continue
             try:
-                cmd = ["grep", "-rn", "--include=*.md", "--include=*.yaml", "-l", query, str(sp)]
+                cmd = [
+                    "grep",
+                    "-rn",
+                    "--include=*.md",
+                    "--include=*.yaml",
+                    "-l",
+                    query,
+                    str(sp),
+                ]
                 rr = _subprocess.run(cmd, capture_output=True, text=True, timeout=10)
                 for line in rr.stdout.strip().split("\n"):
                     if line and len(results) < max_results:
@@ -194,10 +243,13 @@ def domain_search(query: str, max_results: int = 10) -> str:
                             rel = str(Path(line).relative_to(p))
                         except Exception:
                             rel = line
-                        results.append({"uri": f"bos://{did}/{rel}", "domain": did, "file": rel})
+                        results.append(
+                            {"uri": f"bos://{did}/{rel}", "domain": did, "file": rel}
+                        )
             except Exception:
                 pass
     return json.dumps({"results": results, "total": len(results)}, ensure_ascii=False)
+
 
 @mcp.tool()
 def domain_tree(domain: str) -> str:
@@ -214,7 +266,11 @@ def domain_tree(domain: str) -> str:
         if depth > 3:
             return []
         items = sorted(
-            [i for i in dir_path.iterdir() if not i.name.startswith(".") and not i.name.startswith("__")],
+            [
+                i
+                for i in dir_path.iterdir()
+                if not i.name.startswith(".") and not i.name.startswith("__")
+            ],
             key=lambda x: (not x.is_dir(), x.name),
         )
         result = []
@@ -225,33 +281,43 @@ def domain_tree(domain: str) -> str:
             result.append(node)
         return result
 
-    return json.dumps({"domain": d.get("name", d["id"]), "tree": _tree(p)}, ensure_ascii=False)
+    return json.dumps(
+        {"domain": d.get("name", d["id"]), "tree": _tree(p)}, ensure_ascii=False
+    )
+
 
 @mcp.tool()
 def ecos_health() -> str:
     """全系统健康检查 (9项)"""
     r = _subprocess.run(
         ["python3", str(ECOS_SRC / "scripts" / "ecos-health-check.py"), "--json"],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
     try:
         return json.dumps(json.loads(r.stdout), ensure_ascii=False)
     except Exception:
         return r.stdout[:500]
+
 
 @mcp.tool()
 def ecos_brief() -> str:
     """会话简报 · 当前状态快照"""
     r = _subprocess.run(
         ["python3", str(ECOS_SRC / "scripts" / "ecos-brief.py"), "--json"],
-        capture_output=True, text=True, timeout=10,
+        capture_output=True,
+        text=True,
+        timeout=10,
     )
     try:
         return json.dumps(json.loads(r.stdout), ensure_ascii=False)
     except Exception:
         return r.stdout[:500]
 
+
 # ── 工作流工具 ──
+
 
 @mcp.tool()
 def workflow_list(domain: str = "", layer: str = "", status: str = "") -> str:
@@ -269,7 +335,14 @@ def workflow_list(domain: str = "", layer: str = "", status: str = "") -> str:
             if status and n.get("status") != status:
                 continue
             filtered.append(n)
-        return json.dumps({"workflows": filtered, "total": len(filtered), "filtered_from_total": len(nodes)}, ensure_ascii=False)
+        return json.dumps(
+            {
+                "workflows": filtered,
+                "total": len(filtered),
+                "filtered_from_total": len(nodes),
+            },
+            ensure_ascii=False,
+        )
     except Exception as e:
         return json.dumps({"error": str(e), "workflows": [], "total": 0})
 
@@ -325,13 +398,16 @@ def workflow_validate(name: str) -> str:
         violations = validate_workflow(wf)
         errors = [v for v in violations if v.get("severity") == "error"]
         warnings = [v for v in violations if v.get("severity") != "error"]
-        return json.dumps({
-            "name": name,
-            "valid": len(errors) == 0,
-            "errors": errors,
-            "warnings": warnings,
-            "total_violations": len(violations),
-        }, ensure_ascii=False)
+        return json.dumps(
+            {
+                "name": name,
+                "valid": len(errors) == 0,
+                "errors": errors,
+                "warnings": warnings,
+                "total_violations": len(violations),
+            },
+            ensure_ascii=False,
+        )
     except Exception as e:
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
@@ -375,14 +451,21 @@ def workflow_logs(recent: int = 10, status: str = "") -> str:
         runs = runs[:recent]
         safe = []
         for r in runs:
-            safe.append({
-                k: v for k, v in r.items()
-                if isinstance(v, (str, int, float, bool, list, dict)) or v is None
-            })
-        return json.dumps({
-            "runs": safe, "total": len(safe),
-            "snapshot_dir": str(SNAPSHOT_DIR),
-        }, ensure_ascii=False)
+            safe.append(
+                {
+                    k: v
+                    for k, v in r.items()
+                    if isinstance(v, (str, int, float, bool, list, dict)) or v is None
+                }
+            )
+        return json.dumps(
+            {
+                "runs": safe,
+                "total": len(safe),
+                "snapshot_dir": str(SNAPSHOT_DIR),
+            },
+            ensure_ascii=False,
+        )
     except Exception as e:
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
@@ -405,10 +488,92 @@ def workflow_test(name: str) -> str:
     except Exception as e:
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
+
+@mcp.tool()
+def workflow_cache_status() -> str:
+    """查询工作流缓存状态 · 命中数/条目数/缓存条目详情"""
+    try:
+        from ecos.workflow.cache import status
+
+        return json.dumps(status(), ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+
+@mcp.tool()
+def workflow_cache_invalidate(workflow_name: str = "") -> str:
+    """使工作流缓存失效 · 空=全量失效
+
+    Args:
+        workflow_name: 指定工作流名，空字符串=全部清除
+    """
+    try:
+        from ecos.workflow.cache import invalidate, invalidate_all
+
+        if workflow_name:
+            cleared = invalidate(workflow_name)
+            return json.dumps(
+                {
+                    "invalidated": True,
+                    "workflow": workflow_name,
+                    "entries_cleared": cleared,
+                },
+                ensure_ascii=False,
+            )
+        else:
+            cleared = invalidate_all()
+            return json.dumps(
+                {
+                    "invalidated": True,
+                    "all": True,
+                    "entries_cleared": cleared,
+                },
+                ensure_ascii=False,
+            )
+    except Exception as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+
+@mcp.tool()
+def workflow_circuit_breaker_status() -> str:
+    """查询后端熔断器状态 · 当前不可达的后端列表"""
+    try:
+        from ecos.workflow.circuit_breaker import status
+
+        return json.dumps(status(), ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+
+@mcp.tool()
+def workflow_circuit_breaker_reset(backend: str = "") -> str:
+    """重置后端熔断器 · 空=全量重置
+
+    Args:
+        backend: 后端名称（如 agora/swarm/runtime），空=全部清除
+    """
+    try:
+        from ecos.workflow.circuit_breaker import reset, reset_all
+
+        if backend:
+            reset(backend)
+            return json.dumps({"reset": True, "backend": backend}, ensure_ascii=False)
+        else:
+            count = reset_all()
+            return json.dumps(
+                {"reset": True, "all": True, "entries_reset": count}, ensure_ascii=False
+            )
+    except Exception as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+
 # ── 主入口 ──
 
+
 def main():
+    print("⚠️ ECOS MCP 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     mcp.run(transport="stdio")
+
 
 if __name__ == "__main__":
     main()

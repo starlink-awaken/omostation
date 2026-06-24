@@ -86,12 +86,7 @@ def collect_events() -> list[dict]:
         )
 
     # 3. Protocol decay (from M0 snapshot)
-    m0_file = (
-        Path(__file__).resolve().parent.parent
-        / "mof"
-        / "m0"
-        / "snapshot.yaml"
-    )
+    m0_file = Path(__file__).resolve().parent.parent / "mof" / "m0" / "snapshot.yaml"
     if m0_file.exists():
         m0 = yaml.safe_load(open(m0_file))
         protocols = m0.get("protocols", {})

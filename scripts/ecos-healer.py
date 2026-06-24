@@ -67,13 +67,25 @@ def run_script(path: Path, args: list = None, timeout: int = 30) -> tuple[int, s
         return 1, str(e)
 
 
-def record_heal(conn: sqlite3.Connection, check_type: str, issue: str,
-                action: str, result: str, duration_ms: int):
+def record_heal(
+    conn: sqlite3.Connection,
+    check_type: str,
+    issue: str,
+    action: str,
+    result: str,
+    duration_ms: int,
+):
     conn.execute(
         "INSERT INTO heal_attempts (check_type, issue, action, result, duration_ms, timestamp) "
         "VALUES (?, ?, ?, ?, ?, ?)",
-        (check_type, issue, action, result, duration_ms,
-         datetime.now(timezone.utc).isoformat()),
+        (
+            check_type,
+            issue,
+            action,
+            result,
+            duration_ms,
+            datetime.now(timezone.utc).isoformat(),
+        ),
     )
     conn.commit()
 
@@ -85,7 +97,9 @@ def heal_freshness(conn: sqlite3.Connection, dry_run: bool = False) -> dict:
         return {"rule": "freshness", "status": "skipped", "reason": "脚本不存在"}
 
     start = time.time()
-    code, out = run_script(script, ["--root", str(DOCS), "--max-age-days", "60", "--json"])
+    code, out = run_script(
+        script, ["--root", str(DOCS), "--max-age-days", "60", "--json"]
+    )
 
     try:
         data = json.loads(out)
@@ -107,10 +121,15 @@ def heal_freshness(conn: sqlite3.Connection, dry_run: bool = False) -> dict:
             f"```\n{out[:500]}\n```\n"
         )
         duration = int((time.time() - start) * 1000)
-        record_heal(conn, "freshness", f"{stale} 过期文件",
-                    "生成告警报告", "pass", duration)
-        return {"rule": "freshness", "status": "healed",
-                "detail": f"已生成告警报告: {report_path}", "stale": stale}
+        record_heal(
+            conn, "freshness", f"{stale} 过期文件", "生成告警报告", "pass", duration
+        )
+        return {
+            "rule": "freshness",
+            "status": "healed",
+            "detail": f"已生成告警报告: {report_path}",
+            "stale": stale,
+        }
 
     return {"rule": "freshness", "status": "dry-run", "stale": stale}
 
@@ -140,10 +159,12 @@ def heal_consistency(conn: sqlite3.Connection, dry_run: bool = False) -> dict:
             f"# 一致性 DIFF — {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n"
             f"```\n{out[:500]}\n```\n"
         )
-        record_heal(conn, "consistency", "不一致",
-                    "生成 DIFF 报告", "pass", duration)
-        return {"rule": "consistency", "status": "healed",
-                "detail": f"已生成 DIFF: {diff_path}"}
+        record_heal(conn, "consistency", "不一致", "生成 DIFF 报告", "pass", duration)
+        return {
+            "rule": "consistency",
+            "status": "healed",
+            "detail": f"已生成 DIFF: {diff_path}",
+        }
 
     return {"rule": "consistency", "status": "dry-run", "detail": out[:100]}
 
@@ -178,10 +199,15 @@ def heal_protocol(conn: sqlite3.Connection, dry_run: bool = False) -> dict:
             f"以下协议已超半衰期: {', '.join(expired_names)}\n"
             f"建议审查协议版本或更新 half_life 配置。\n"
         )
-        record_heal(conn, "protocol", f"超期: {expired_names}",
-                    "生成审查标记", "pass", duration)
-        return {"rule": "protocol", "status": "healed",
-                "detail": f"已标记: {expired_names}", "protocols": expired}
+        record_heal(
+            conn, "protocol", f"超期: {expired_names}", "生成审查标记", "pass", duration
+        )
+        return {
+            "rule": "protocol",
+            "status": "healed",
+            "detail": f"已标记: {expired_names}",
+            "protocols": expired,
+        }
 
     return {"rule": "protocol", "status": "dry-run", "expired": expired}
 
@@ -204,14 +230,11 @@ def heal_daemon(conn: sqlite3.Connection, dry_run: bool = False) -> dict:
     if not dry_run:
         recover_code, recover_out = run_script(daemon_script, ["--once"])
         if recover_code == 0:
-            record_heal(conn, "daemon", "无响应",
-                        "单次触发恢复", "pass", duration)
+            record_heal(conn, "daemon", "无响应", "单次触发恢复", "pass", duration)
             return {"rule": "daemon", "status": "healed", "detail": "daemon 已恢复"}
         else:
-            record_heal(conn, "daemon", "无响应",
-                        "恢复失败", "fail", duration)
-            return {"rule": "daemon", "status": "failed",
-                    "detail": "daemon 恢复失败"}
+            record_heal(conn, "daemon", "无响应", "恢复失败", "fail", duration)
+            return {"rule": "daemon", "status": "failed", "detail": "daemon 恢复失败"}
 
     return {"rule": "daemon", "status": "dry-run"}
 
@@ -222,11 +245,16 @@ def format_report(results: list[dict]) -> str:
     lines.append("  eCOS v5 — 自治愈报告")
     lines.append("=" * 56)
     for r in results:
-        icon = {"ok": "✅", "healed": "🔄", "skipped": "⏭️",
-                "failed": "❌", "dry-run": "🔍"}.get(r["status"], "?")
+        icon = {
+            "ok": "✅",
+            "healed": "🔄",
+            "skipped": "⏭️",
+            "failed": "❌",
+            "dry-run": "🔍",
+        }.get(r["status"], "?")
         detail = r.get("detail") or r.get("reason") or ""
         lines.append(f"  {icon} {r['rule']:12s} → {r['status']:8s} {detail[:60]}")
-    lines.append(f"\n{'='*56}")
+    lines.append(f"\n{'=' * 56}")
     return "\n".join(lines)
 
 
@@ -236,9 +264,9 @@ def show_status(conn: sqlite3.Connection):
         ORDER BY id DESC LIMIT 10
     """)
     rows = cursor.fetchall()
-    print(f"\n{'='*56}")
+    print(f"\n{'=' * 56}")
     print(f"  自愈历史 (最近 {len(rows)})")
-    print(f"{'='*56}")
+    print(f"{'=' * 56}")
     for check_type, action, result, ts in rows:
         icon = "✅" if result == "pass" else ("🔄" if result == "healed" else "❌")
         print(f"  {icon} [{check_type:12s}] {action[:30]:30s} {ts[:19]}")
@@ -247,7 +275,9 @@ def show_status(conn: sqlite3.Connection):
 
 def main():
     parser = argparse.ArgumentParser(description="eCOS v5 自治愈框架")
-    parser.add_argument("--check-health", action="store_true", help="检查所有项目并自愈")
+    parser.add_argument(
+        "--check-health", action="store_true", help="检查所有项目并自愈"
+    )
     parser.add_argument("--dry-run", action="store_true", help="仅预览，不执行恢复")
     parser.add_argument("--status", action="store_true", help="查看自愈历史")
     parser.add_argument("--json", action="store_true")

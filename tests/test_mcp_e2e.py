@@ -14,6 +14,7 @@ def test_workflow_list_function():
     result = workflow_list()
     assert "workflows" in result, f"缺少 workflows 字段: {result[:100]}"
     import json
+
     data = json.loads(result)
     assert "workflows" in data
     assert data["total"] >= 0
@@ -25,6 +26,7 @@ def test_workflow_backends_function():
 
     result = workflow_backends()
     import json
+
     data = json.loads(result)
     assert "backends" in data
     backend_names = {b["name"] for b in data["backends"]}
@@ -39,6 +41,7 @@ def test_workflow_actions_function():
 
     result = workflow_actions()
     import json
+
     data = json.loads(result)
     assert "actions" in data
     action_names = {a["name"] for a in data["actions"]}
@@ -52,6 +55,7 @@ def test_workflow_show_function():
 
     result = workflow_show("WORKFLOW-ECOS-DAILY-HEALTH")
     import json
+
     data = json.loads(result)
     assert "error" not in data, f"查找失败: {data.get('error')}"
     assert data.get("type") == "Workflow"
@@ -64,6 +68,7 @@ def test_workflow_validate_function():
 
     result = workflow_validate("WORKFLOW-ECOS-DAILY-HEALTH")
     import json
+
     data = json.loads(result)
     assert "valid" in data or "error" in data
 
@@ -74,5 +79,6 @@ def test_workflow_logs_function():
 
     result = workflow_logs(recent=3)
     import json
+
     data = json.loads(result)
     assert "runs" in data

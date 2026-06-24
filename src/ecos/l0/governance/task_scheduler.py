@@ -16,10 +16,12 @@ from enum import Enum
 from typing import Any, Optional
 
 
-
 logger = get_logger("task_scheduler")
+
+
 class TaskStatus(Enum):
     """任务状态"""
+
     PENDING = "pending"
     ASSIGNED = "assigned"
     RUNNING = "running"
@@ -31,6 +33,7 @@ class TaskStatus(Enum):
 @dataclass
 class TaskInfo:
     """任务信息"""
+
     task_id: str
     name: str
     description: str = ""
@@ -43,7 +46,7 @@ class TaskInfo:
     completed_at: Optional[datetime] = None
     result: Any = None
     metadata: dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
@@ -56,17 +59,19 @@ class TaskInfo:
             "priority": self.priority,
             "created_at": self.created_at.isoformat(),
             "started_at": self.started_at.isoformat() if self.started_at else None,
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": self.completed_at.isoformat()
+            if self.completed_at
+            else None,
         }
 
 
 class TaskScheduler:
     """分布式任务调度器
-    
+
     管理分布式系统中的任务分配、执行和完成
     支持可选的持久化存储和配置管理
     """
-    
+
     def __init__(self, persistence=None, config=None):
         from ecos.common.config import ECOSConfig
 
@@ -78,7 +83,7 @@ class TaskScheduler:
         self.task_timeout = self.config.get("task_scheduler.timeout", 300)
         if persistence:
             self._load_state()
-    
+
     def _load_state(self):
         """从持久化加载状态"""
         try:
@@ -89,7 +94,9 @@ class TaskScheduler:
                         task_id=task_data.get("task_id", task_id),
                         name=task_data.get("name", ""),
                         description=task_data.get("description", ""),
-                        required_capabilities=task_data.get("required_capabilities", []),
+                        required_capabilities=task_data.get(
+                            "required_capabilities", []
+                        ),
                         status=TaskStatus(task_data.get("status", "pending")),
                         assigned_agent=task_data.get("assigned_agent", ""),
                         priority=task_data.get("priority", 0),
@@ -99,7 +106,7 @@ class TaskScheduler:
                 logger.info("从持久化加载任务: %d 个", len(self.tasks))
         except Exception as e:
             logger.error("加载状态失败: %s", str(e))
-    
+
     def _save_state(self):
         """保存状态到持久化"""
         if self._persistence:
@@ -112,16 +119,21 @@ class TaskScheduler:
                 logger.debug("保存任务状态: %d 个", len(self.tasks))
             except Exception as e:
                 logger.error("保存状态失败: %s", str(e))
-    
-    def submit_task(self, task_id: str, name: str, description: str = "",
-                    required_capabilities: list[str] | None = None,
-                    priority: int = 0) -> TaskInfo:
+
+    def submit_task(
+        self,
+        task_id: str,
+        name: str,
+        description: str = "",
+        required_capabilities: list[str] | None = None,
+        priority: int = 0,
+    ) -> TaskInfo:
         """提交任务"""
         try:
             if task_id in self.tasks:
                 logger.warning("任务已存在: %s", task_id)
                 return self.tasks[task_id]
-            
+
             task = TaskInfo(
                 task_id=task_id,
                 name=name,
@@ -138,68 +150,68 @@ class TaskScheduler:
         except Exception as e:
             logger.error("提交任务失败: %s - %s", task_id, str(e))
             raise
-    
+
     def assign_task(self, task_id: str, agent_id: str) -> bool:
         """分配任务"""
         if task_id not in self.tasks:
             return False
-        
+
         task = self.tasks[task_id]
         if task.status != TaskStatus.PENDING:
             return False
-        
+
         task.status = TaskStatus.ASSIGNED
         task.assigned_agent = agent_id
         return True
-    
+
     def start_task(self, task_id: str) -> bool:
         """开始任务"""
         if task_id not in self.tasks:
             return False
-        
+
         task = self.tasks[task_id]
         if task.status != TaskStatus.ASSIGNED:
             return False
-        
+
         task.status = TaskStatus.RUNNING
         task.started_at = datetime.now(timezone.utc)
         return True
-    
+
     def complete_task(self, task_id: str, result: Any = None) -> bool:
         """完成任务"""
         if task_id not in self.tasks:
             return False
-        
+
         task = self.tasks[task_id]
         if task.status != TaskStatus.RUNNING:
             return False
-        
+
         task.status = TaskStatus.COMPLETED
         task.completed_at = datetime.now(timezone.utc)
         task.result = result
-        
+
         # 从队列中移除
         if task_id in self.task_queue:
             self.task_queue.remove(task_id)
-        
+
         self._save_state()
         return True
-    
+
     def fail_task(self, task_id: str) -> bool:
         """任务失败"""
         if task_id not in self.tasks:
             return False
-        
+
         task = self.tasks[task_id]
         task.status = TaskStatus.FAILED
         task.completed_at = datetime.now(timezone.utc)
         return True
-    
+
     def cancel_task(self, task_id: str) -> bool:
         """取消任务"""
         if task_id not in self.tasks:
             return False
-        
+
         task = self.tasks[task_id]
         if task.status in [TaskStatus.PENDING, TaskStatus.ASSIGNED]:
             task.status = TaskStatus.CANCELLED
@@ -207,15 +219,19 @@ class TaskScheduler:
                 self.task_queue.remove(task_id)
             return True
         return False
-    
+
     def get_task(self, task_id: str) -> TaskInfo | None:
         """获取任务信息"""
         return self.tasks.get(task_id)
-    
+
     def get_pending_tasks(self) -> list[TaskInfo]:
         """获取待处理任务"""
-        return [self.tasks[tid] for tid in self.task_queue if self.tasks[tid].status == TaskStatus.PENDING]
-    
+        return [
+            self.tasks[tid]
+            for tid in self.task_queue
+            if self.tasks[tid].status == TaskStatus.PENDING
+        ]
+
     def get_next_task(self) -> TaskInfo | None:
         """获取下一个任务"""
         for task_id in self.task_queue:
@@ -223,14 +239,11 @@ class TaskScheduler:
             if task.status == TaskStatus.PENDING:
                 return task
         return None
-    
+
     def to_dict(self) -> dict[str, Any]:
         """转换为字典"""
         return {
-            "tasks": {
-                tid: t.to_dict()
-                for tid, t in self.tasks.items()
-            },
+            "tasks": {tid: t.to_dict() for tid, t in self.tasks.items()},
             "queue": self.task_queue,
         }
 

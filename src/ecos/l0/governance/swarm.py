@@ -27,16 +27,18 @@ class EmergencePattern(Enum):
 
     M1 定义: 蜂群涌现行为分类
     """
-    CLUSTERING = "clustering"          # 聚类 — Agent 自发形成分组
+
+    CLUSTERING = "clustering"  # 聚类 — Agent 自发形成分组
     SPECIALIZATION = "specialization"  # 特化 — Agent 演化出不同职责
-    OSCILLATION = "oscillation"        # 振荡 — 系统状态在两极间摆动
-    CASCADE = "cascade"                # 级联 — 一个 Agent 的行为触发链式反应
-    STIGMERGY = "stigmergy"            # 共振 — Agent 通过环境标记间接协调
-    CONSENSUS = "consensus"            # 共识 — 蜂群达到全局一致状态
+    OSCILLATION = "oscillation"  # 振荡 — 系统状态在两极间摆动
+    CASCADE = "cascade"  # 级联 — 一个 Agent 的行为触发链式反应
+    STIGMERGY = "stigmergy"  # 共振 — Agent 通过环境标记间接协调
+    CONSENSUS = "consensus"  # 共识 — 蜂群达到全局一致状态
 
 
 class EmergenceLevel(Enum):
     """涌现级别"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -45,6 +47,7 @@ class EmergenceLevel(Enum):
 
 class DecisionMethod(Enum):
     """决策方法"""
+
     MAJORITY_VOTE = "majority_vote"
     WEIGHTED_VOTE = "weighted_vote"
     CONSENSUS = "consensus"
@@ -55,6 +58,7 @@ class DecisionMethod(Enum):
 @dataclass
 class EmergentBehavior:
     """涌现行为"""
+
     pattern: EmergencePattern
     agents: list[str]
     confidence: float
@@ -76,6 +80,7 @@ class EmergentBehavior:
 @dataclass
 class SwarmState:
     """蜂群状态"""
+
     agents: list[str]
     behaviors: list[EmergentBehavior]
     agent_weights: dict[str, float] = field(default_factory=dict)
@@ -87,6 +92,7 @@ class SwarmState:
 @dataclass
 class DecisionProposal:
     """决策提案"""
+
     proposal_id: str
     title: str
     options: list[str]
@@ -102,6 +108,7 @@ class DecisionProposal:
 @dataclass
 class SwarmVisualization:
     """蜂群可视化数据"""
+
     agents: list[dict[str, Any]]
     behaviors: list[dict[str, Any]]
     connections: list[dict[str, Any]]
@@ -142,8 +149,12 @@ class SwarmManager(SwarmPrimitive):
         self._lock = threading.RLock()
         logger.debug("SwarmManager 初始化")
 
-    def add_agent(self, agent_id: str, weight: float = 1.0,
-                  initial_state: dict[str, Any] | None = None) -> None:
+    def add_agent(
+        self,
+        agent_id: str,
+        weight: float = 1.0,
+        initial_state: dict[str, Any] | None = None,
+    ) -> None:
         """添加 Agent 到蜂群"""
         with self._lock:
             if agent_id not in self.agents:
@@ -169,12 +180,14 @@ class SwarmManager(SwarmPrimitive):
         with self._lock:
             if agent_id in self.agents:
                 self.agent_states[agent_id] = state
-                self._state_history.append({
-                    "agent_id": agent_id,
-                    "state": state,
-                    "version": self.version,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                })
+                self._state_history.append(
+                    {
+                        "agent_id": agent_id,
+                        "state": state,
+                        "version": self.version,
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    }
+                )
                 return True
             return False
 
@@ -219,7 +232,7 @@ class SwarmManager(SwarmPrimitive):
                 continue
             cluster = [a1]
             s1 = state.agent_states.get(a1, {})
-            for a2 in state.agents[i + 1:]:
+            for a2 in state.agents[i + 1 :]:
                 if a2 in assigned:
                     continue
                 s2 = state.agent_states.get(a2, {})
@@ -232,18 +245,20 @@ class SwarmManager(SwarmPrimitive):
 
         behaviors = []
         for cluster in clusters:
-            avg_weight = sum(
-                state.agent_weights.get(a, 1.0) for a in cluster
-            ) / len(cluster)
+            avg_weight = sum(state.agent_weights.get(a, 1.0) for a in cluster) / len(
+                cluster
+            )
             confidence = min(0.5 + len(cluster) * 0.1, 0.95)
             level = EmergenceLevel.HIGH if len(cluster) >= 4 else EmergenceLevel.MEDIUM
-            behaviors.append(EmergentBehavior(
-                pattern=EmergencePattern.CLUSTERING,
-                agents=cluster,
-                confidence=confidence,
-                level=level,
-                metadata={"cluster_size": len(cluster), "avg_weight": avg_weight},
-            ))
+            behaviors.append(
+                EmergentBehavior(
+                    pattern=EmergencePattern.CLUSTERING,
+                    agents=cluster,
+                    confidence=confidence,
+                    level=level,
+                    metadata={"cluster_size": len(cluster), "avg_weight": avg_weight},
+                )
+            )
         return behaviors
 
     def _detect_specialization(self, state: SwarmState) -> list[EmergentBehavior]:
@@ -262,22 +277,31 @@ class SwarmManager(SwarmPrimitive):
         if len(unique_roles) >= 2:
             total_agents = len(state.agents)
             specialized_agents = [
-                a for r, agents in role_groups.items()
-                for a in agents if r != "general"
+                a for r, agents in role_groups.items() for a in agents if r != "general"
             ]
-            specialization_ratio = len(specialized_agents) / total_agents if total_agents > 0 else 0
+            specialization_ratio = (
+                len(specialized_agents) / total_agents if total_agents > 0 else 0
+            )
             confidence = min(specialization_ratio + 0.3, 0.95)
-            level = EmergenceLevel.HIGH if specialization_ratio > 0.6 else EmergenceLevel.MEDIUM
-            behaviors.append(EmergentBehavior(
-                pattern=EmergencePattern.SPECIALIZATION,
-                agents=specialized_agents if specialized_agents else state.agents[:2],
-                confidence=confidence,
-                level=level,
-                metadata={
-                    "unique_roles": len(unique_roles),
-                    "specialization_ratio": specialization_ratio,
-                },
-            ))
+            level = (
+                EmergenceLevel.HIGH
+                if specialization_ratio > 0.6
+                else EmergenceLevel.MEDIUM
+            )
+            behaviors.append(
+                EmergentBehavior(
+                    pattern=EmergencePattern.SPECIALIZATION,
+                    agents=specialized_agents
+                    if specialized_agents
+                    else state.agents[:2],
+                    confidence=confidence,
+                    level=level,
+                    metadata={
+                        "unique_roles": len(unique_roles),
+                        "specialization_ratio": specialization_ratio,
+                    },
+                )
+            )
         return behaviors
 
     def _detect_oscillation(self, state: SwarmState) -> list[EmergentBehavior]:
@@ -303,8 +327,12 @@ class SwarmManager(SwarmPrimitive):
             for j in range(1, len(values)):
                 if values[j - 1] * values[j] < 0:
                     sign_changes += 1
-                elif abs(values[j] - values[j - 1]) > abs(values[j - 1]) * 0.5 and j >= 2:
-                    if (values[j] - values[j - 1]) * (values[j - 1] - values[j - 2]) < 0:
+                elif (
+                    abs(values[j] - values[j - 1]) > abs(values[j - 1]) * 0.5 and j >= 2
+                ):
+                    if (values[j] - values[j - 1]) * (
+                        values[j - 1] - values[j - 2]
+                    ) < 0:
                         sign_changes += 1
 
             if sign_changes >= 3:
@@ -312,14 +340,20 @@ class SwarmManager(SwarmPrimitive):
 
         if oscillations:
             confidence = min(0.5 + sign_changes * 0.05, 0.9)
-            level = EmergenceLevel.CRITICAL if len(oscillations) > len(state.agents) * 0.5 else EmergenceLevel.HIGH
-            return [EmergentBehavior(
-                pattern=EmergencePattern.OSCILLATION,
-                agents=oscillations,
-                confidence=confidence,
-                level=level,
-                metadata={"oscillating_agents": len(oscillations)},
-            )]
+            level = (
+                EmergenceLevel.CRITICAL
+                if len(oscillations) > len(state.agents) * 0.5
+                else EmergenceLevel.HIGH
+            )
+            return [
+                EmergentBehavior(
+                    pattern=EmergencePattern.OSCILLATION,
+                    agents=oscillations,
+                    confidence=confidence,
+                    level=level,
+                    metadata={"oscillating_agents": len(oscillations)},
+                )
+            ]
         return []
 
     def _detect_cascade(self, state: SwarmState) -> list[EmergentBehavior]:
@@ -349,14 +383,20 @@ class SwarmManager(SwarmPrimitive):
         if cascade_triggers:
             involved = set(cascade_triggers)
             confidence = min(0.6 + len(cascade_triggers) * 0.1, 0.95)
-            level = EmergenceLevel.CRITICAL if len(cascade_triggers) >= 3 else EmergenceLevel.HIGH
-            return [EmergentBehavior(
-                pattern=EmergencePattern.CASCADE,
-                agents=list(involved),
-                confidence=confidence,
-                level=level,
-                metadata={"trigger_count": len(cascade_triggers)},
-            )]
+            level = (
+                EmergenceLevel.CRITICAL
+                if len(cascade_triggers) >= 3
+                else EmergenceLevel.HIGH
+            )
+            return [
+                EmergentBehavior(
+                    pattern=EmergencePattern.CASCADE,
+                    agents=list(involved),
+                    confidence=confidence,
+                    level=level,
+                    metadata={"trigger_count": len(cascade_triggers)},
+                )
+            ]
         return []
 
     def predict_emergence(self, state: SwarmState) -> list[EmergentBehavior]:
@@ -366,45 +406,64 @@ class SwarmManager(SwarmPrimitive):
         if len(state.behaviors) > 0:
             recent_patterns = [b.pattern for b in state.behaviors[-3:]]
             if EmergencePattern.CLUSTERING in recent_patterns:
-                predicted.append(EmergentBehavior(
-                    pattern=EmergencePattern.SPECIALIZATION,
-                    agents=state.agents[:2] if state.agents else [],
-                    confidence=0.6,
-                    level=EmergenceLevel.MEDIUM,
-                    metadata={"prediction": "clustering may lead to specialization"},
-                ))
+                predicted.append(
+                    EmergentBehavior(
+                        pattern=EmergencePattern.SPECIALIZATION,
+                        agents=state.agents[:2] if state.agents else [],
+                        confidence=0.6,
+                        level=EmergenceLevel.MEDIUM,
+                        metadata={
+                            "prediction": "clustering may lead to specialization"
+                        },
+                    )
+                )
 
         if len(state.agents) >= 5:
-            predicted.append(EmergentBehavior(
-                pattern=EmergencePattern.CONSENSUS,
-                agents=state.agents,
-                confidence=0.5,
-                level=EmergenceLevel.LOW,
-                metadata={"prediction": "large swarm may form consensus"},
-            ))
+            predicted.append(
+                EmergentBehavior(
+                    pattern=EmergencePattern.CONSENSUS,
+                    agents=state.agents,
+                    confidence=0.5,
+                    level=EmergenceLevel.LOW,
+                    metadata={"prediction": "large swarm may form consensus"},
+                )
+            )
 
         return predicted
 
     def control_emergence(self, behavior: EmergentBehavior, action: str) -> bool:
         """控制涌现行为"""
-        if action not in ("suppress", "amplify", "redirect", "observe", "isolate", "merge"):
+        if action not in (
+            "suppress",
+            "amplify",
+            "redirect",
+            "observe",
+            "isolate",
+            "merge",
+        ):
             return False
 
-        self._control_log.append({
-            "pattern": behavior.pattern.value,
-            "action": action,
-            "agents": behavior.agents,
-            "confidence": behavior.confidence,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
+        self._control_log.append(
+            {
+                "pattern": behavior.pattern.value,
+                "action": action,
+                "agents": behavior.agents,
+                "confidence": behavior.confidence,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
 
         if action == "suppress":
             for agent_id in behavior.agents:
                 self.agent_states.setdefault(agent_id, {})["controlled"] = True
-                self.agent_states[agent_id]["suppressed_at"] = datetime.now(timezone.utc).isoformat()
+                self.agent_states[agent_id]["suppressed_at"] = datetime.now(
+                    timezone.utc
+                ).isoformat()
         elif action == "amplify":
             for agent_id in behavior.agents:
-                self.agent_weights[agent_id] = self.agent_weights.get(agent_id, 1.0) * 1.5
+                self.agent_weights[agent_id] = (
+                    self.agent_weights.get(agent_id, 1.0) * 1.5
+                )
                 self.agent_states.setdefault(agent_id, {})["amplified"] = True
         elif action == "redirect":
             for agent_id in behavior.agents:
@@ -418,7 +477,9 @@ class SwarmManager(SwarmPrimitive):
             if len(behavior.agents) >= 2:
                 primary = behavior.agents[0]
                 for agent_id in behavior.agents[1:]:
-                    self.agent_states.setdefault(primary, {}).setdefault("merged_agents", [])
+                    self.agent_states.setdefault(primary, {}).setdefault(
+                        "merged_agents", []
+                    )
                     self.agent_states[primary]["merged_agents"].append(agent_id)
 
         return True
@@ -441,7 +502,8 @@ class SwarmManager(SwarmPrimitive):
 
         avg_weight = (
             sum(self.agent_weights.values()) / len(self.agent_weights)
-            if self.agent_weights else 0
+            if self.agent_weights
+            else 0
         )
 
         return {
@@ -454,7 +516,9 @@ class SwarmManager(SwarmPrimitive):
             "control_actions": len(self._control_log),
         }
 
-    def _compute_similarity(self, state_a: dict[str, Any], state_b: dict[str, Any]) -> float:
+    def _compute_similarity(
+        self, state_a: dict[str, Any], state_b: dict[str, Any]
+    ) -> float:
         """计算两个 Agent 状态的相似度"""
         if not state_a and not state_b:
             return 1.0
@@ -492,21 +556,25 @@ class EmergenceDetector:
 
         if len(state.agents) >= 3:
             clustering_confidence = min(0.5 + len(state.agents) * 0.05, 0.95)
-            detected.append(EmergentBehavior(
-                pattern=EmergencePattern.CLUSTERING,
-                agents=state.agents[:3],
-                confidence=clustering_confidence,
-                level=EmergenceLevel.MEDIUM,
-                metadata={"agent_count": len(state.agents)},
-            ))
+            detected.append(
+                EmergentBehavior(
+                    pattern=EmergencePattern.CLUSTERING,
+                    agents=state.agents[:3],
+                    confidence=clustering_confidence,
+                    level=EmergenceLevel.MEDIUM,
+                    metadata={"agent_count": len(state.agents)},
+                )
+            )
 
         if len(state.behaviors) >= 2:
-            detected.append(EmergentBehavior(
-                pattern=EmergencePattern.SPECIALIZATION,
-                agents=state.agents[:2] if state.agents else [],
-                confidence=0.7,
-                level=EmergenceLevel.LOW,
-            ))
+            detected.append(
+                EmergentBehavior(
+                    pattern=EmergencePattern.SPECIALIZATION,
+                    agents=state.agents[:2] if state.agents else [],
+                    confidence=0.7,
+                    level=EmergenceLevel.LOW,
+                )
+            )
 
         role_groups: dict[str, list[str]] = defaultdict(list)
         for agent_id in state.agents:
@@ -515,13 +583,15 @@ class EmergenceDetector:
             role_groups[role].append(agent_id)
 
         if len(role_groups) >= 3:
-            detected.append(EmergentBehavior(
-                pattern=EmergencePattern.STIGMERGY,
-                agents=state.agents,
-                confidence=0.6,
-                level=EmergenceLevel.MEDIUM,
-                metadata={"role_diversity": len(role_groups)},
-            ))
+            detected.append(
+                EmergentBehavior(
+                    pattern=EmergencePattern.STIGMERGY,
+                    agents=state.agents,
+                    confidence=0.6,
+                    level=EmergenceLevel.MEDIUM,
+                    metadata={"role_diversity": len(role_groups)},
+                )
+            )
 
         filtered = [b for b in detected if b.confidence >= self.detection_threshold]
 
@@ -530,7 +600,9 @@ class EmergenceDetector:
         self.history.extend(filtered)
         return filtered
 
-    def get_history(self, pattern: EmergencePattern | None = None) -> list[EmergentBehavior]:
+    def get_history(
+        self, pattern: EmergencePattern | None = None
+    ) -> list[EmergentBehavior]:
         """获取历史，可按模式过滤"""
         if pattern:
             return [b for b in self.history if b.pattern == pattern]
@@ -559,10 +631,15 @@ class CollectiveDecision:
         self.proposals: dict[str, DecisionProposal] = {}
         self._decision_history: list[dict[str, Any]] = []
 
-    def create_proposal(self, proposal_id: str, title: str, options: list[str],
-                        method: DecisionMethod = DecisionMethod.MAJORITY_VOTE,
-                        quorum: float = 0.5,
-                        agent_weights: dict[str, float] | None = None) -> DecisionProposal:
+    def create_proposal(
+        self,
+        proposal_id: str,
+        title: str,
+        options: list[str],
+        method: DecisionMethod = DecisionMethod.MAJORITY_VOTE,
+        quorum: float = 0.5,
+        agent_weights: dict[str, float] | None = None,
+    ) -> DecisionProposal:
         """创建决策提案"""
         proposal = DecisionProposal(
             proposal_id=proposal_id,
@@ -630,14 +707,21 @@ class CollectiveDecision:
             if result:
                 proposal.result = result
                 proposal.status = "decided"
-                self._decision_history.append({
-                    "proposal_id": proposal_id,
-                    "result": result,
-                    "method": proposal.method.value,
-                    "vote_count": total_agents,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                })
-                logger.info("决策完成: %s -> %s (method=%s)", proposal_id, result, proposal.method.value)
+                self._decision_history.append(
+                    {
+                        "proposal_id": proposal_id,
+                        "result": result,
+                        "method": proposal.method.value,
+                        "vote_count": total_agents,
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    }
+                )
+                logger.info(
+                    "决策完成: %s -> %s (method=%s)",
+                    proposal_id,
+                    result,
+                    proposal.method.value,
+                )
 
             return result
         except Exception as e:
@@ -765,28 +849,32 @@ class SwarmVisualizer:
         agents_data = []
         for agent_id in state.agents:
             agent_state = state.agent_states.get(agent_id, {})
-            agents_data.append({
-                "id": agent_id,
-                "status": agent_state.get("status", "active"),
-                "weight": state.agent_weights.get(agent_id, 1.0),
-                "role": agent_state.get("role", "general"),
-                "state": agent_state,
-            })
+            agents_data.append(
+                {
+                    "id": agent_id,
+                    "status": agent_state.get("status", "active"),
+                    "weight": state.agent_weights.get(agent_id, 1.0),
+                    "role": agent_state.get("role", "general"),
+                    "state": agent_state,
+                }
+            )
 
         behaviors_data = [b.to_dict() for b in state.behaviors]
 
         connections = []
         for i, agent1 in enumerate(state.agents):
-            for agent2 in state.agents[i + 1:]:
+            for agent2 in state.agents[i + 1 :]:
                 s1 = state.agent_states.get(agent1, {})
                 s2 = state.agent_states.get(agent2, {})
                 similarity = SwarmVisualizer._quick_similarity(s1, s2)
                 if similarity > 0.3:
-                    connections.append({
-                        "source": agent1,
-                        "target": agent2,
-                        "strength": similarity,
-                    })
+                    connections.append(
+                        {
+                            "source": agent1,
+                            "target": agent2,
+                            "strength": similarity,
+                        }
+                    )
 
         pattern_dist: dict[str, int] = defaultdict(int)
         for b in state.behaviors:
@@ -815,11 +903,11 @@ class SwarmVisualizer:
         for agent_id in state.agents:
             agent_state = state.agent_states.get(agent_id, {})
             role = agent_state.get("role", "general")
-            lines.append(f"    {agent_id}[\"{agent_id}<br/>{role}\"]")
+            lines.append(f'    {agent_id}["{agent_id}<br/>{role}"]')
 
         for i, agent1 in enumerate(state.agents):
             s1 = state.agent_states.get(agent1, {})
-            for agent2 in state.agents[i + 1:]:
+            for agent2 in state.agents[i + 1 :]:
                 s2 = state.agent_states.get(agent2, {})
                 similarity = SwarmVisualizer._quick_similarity(s1, s2)
                 if similarity > 0.5:

@@ -22,53 +22,30 @@ dependencies = [
 dashboard = []  # Dashboard/MOF BOS features use HTTP/MCP or fallback instead of direct agora import
 
 [project.scripts]
-# SSB — 签名链操作
-ecos-ssb = "ecos.l0.ssb.ssb_client:main"
-ecos-ssb-init = "ecos.l0.ssb.ssb_init:main"
-ecos-ssb-dump = "ecos.l0.ssb.ssb_dump:cli_main"
+# SSB — 签名链操作 (通过 cockpit ssb 调用)
+# 入口已收敛: ecoss-ssb → cockpit ssb
 
 # Dashboard / Scheduler
 ecos-dashboard = "ecos.cli.dashboard:main"
 ecos-scheduler = "ecos.cli.scheduler:main"
 ecos-watchdog = "ecos.cli.watchdog:main"
 
-# Workflow engine
-ecos-workflow = "ecos.cli.workflow:main"
-ecos-workflow-runs = "ecos.cli.workflow_runs:cmd_runs"
+# Workflow engine (通过 cockpit workflow 调用)
+# 入口已收敛: ecos-workflow → cockpit workflow
 
-# MCP Server (含 workflow MCP tools)
+# MCP Server (含 workflow MCP tools) — 由 Agora gateway 管理
 ecos-mcp = "ecos.mcp_server:main"
 
-# MOF 元模型工具链
-mof = "ecos.ssot.tools.mof:main"
-mof-validate = "ecos.ssot.tools.mof-validate:main"
-mof-audit = "ecos.ssot.tools.mof-audit:main"
+# MOF 元模型工具链 (通过 cockpit mof 调用)
+# 入口已收敛: mof → cockpit mof
 
-# 新增 MOF 子工具
-mof-workflow = "ecos.ssot.tools.mof-workflow:main"
-mof-entity = "ecos.ssot.tools.mof-entity:main"
-mof-model = "ecos.ssot.tools.mof-model:main"
-mof-verify = "ecos.ssot.tools.mof-verify:main"
-mof-trail = "ecos.ssot.tools.mof-trail:main"
-mof-bos = "ecos.ssot.tools.mof-bos:main"
-mof-enforce = "ecos.ssot.tools.mof-enforce:main"
-mof-sla = "ecos.ssot.tools.mof-sla:main"
-mof-bootstrap = "ecos.ssot.tools.mof-bootstrap:main"
-mof-capability = "ecos.ssot.tools.mof-capability:main"
-mof-bos-watch = "ecos.ssot.tools.mof-bos-watch:main"
-mof-register-tasks = "ecos.ssot.tools.mof-register-tasks:main"
-
-[tool.ruff]
-line-length = 120
-target-version = "py313"
-
+# 稳定 ruff 配置 — 默认规则集 (E/F/W), 不收紧已有代码
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP", "N", "RUF"]
 ignore = ["E501", "E402"]
+per-file-ignores = {"tests/*" = ["N806"]}
 
 [tool.ruff.format]
 quote-style = "double"
-indent-style = "space"
 line-ending = "lf"
 
 [tool.hatch.build.targets.wheel]

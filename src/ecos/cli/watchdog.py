@@ -218,6 +218,7 @@ def run_once(verbose=True):
 
 
 def main():
+    print("⚠️ ECOS Watchdog 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     mode = sys.argv[1] if len(sys.argv) > 1 else "check"
 
     if mode == "--once":

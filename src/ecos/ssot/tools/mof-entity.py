@@ -54,40 +54,40 @@ def build_index(entities: list[dict]) -> dict:
         identity = props.get("identity", {})
         props.get("sources", [])
         domain = e.get("domain", "?")
-        
+
         # Index by name
         if name:
             index.setdefault(name.lower(), []).append(e)
-        
+
         # Index by identity keys
         for k, v in identity.items():
             key = f"{k}:{v}".lower()
             index.setdefault(key, []).append(e)
-        
+
         # Index by domain
         index.setdefault(f"domain:{domain}", []).append(e)
-        
+
         # Index by entity_type
         etype = props.get("entity_type", "")
         if etype:
             index.setdefault(f"type:{etype}", []).append(e)
-    
+
     return index
 
 
 def resolve(query: str, entities: list[dict], index: dict) -> dict:
     """解析实体——查询跨域出现"""
     q = query.lower().strip()
-    
+
     # Direct matches
     matches = index.get(q, [])
-    
+
     # Fuzzy: partial name match
     if not matches:
         for key, ents in index.items():
             if q in key:
                 matches.extend(ents)
-    
+
     # Deduplicate
     seen = set()
     unique = []
@@ -96,20 +96,20 @@ def resolve(query: str, entities: list[dict], index: dict) -> dict:
         if eid not in seen:
             seen.add(eid)
             unique.append(e)
-    
+
     if not unique:
         # Try searching by name substring
         for e in entities:
             name = (e.get("name", "") or "").lower()
             if q in name:
                 unique.append(e)
-    
+
     result = {
         "query": query,
         "found": len(unique),
         "entities": [],
     }
-    
+
     for e in unique:
         props = e.get("properties", {}) or {}
         entity_info = {
@@ -123,20 +123,25 @@ def resolve(query: str, entities: list[dict], index: dict) -> dict:
             "description": e.get("description", "")[:100],
         }
         result["entities"].append(entity_info)
-    
+
     # Add resolution info
     domains = set(e["domain"] for e in result["entities"])
     result["cross_domain"] = len(domains) > 1
     result["domains"] = sorted(domains)
-    
+
     return result
 
 
 def format_resolve(result: dict) -> str:
-    lines = ["=" * 64, f"  实体解析: {result['query']}", "=" * 64,
-             f"  找到: {result['found']} 个实体",
-             f"  跨域: {'是' if result['cross_domain'] else '否'} ({', '.join(result['domains'])})", ""]
-    
+    lines = [
+        "=" * 64,
+        f"  实体解析: {result['query']}",
+        "=" * 64,
+        f"  找到: {result['found']} 个实体",
+        f"  跨域: {'是' if result['cross_domain'] else '否'} ({', '.join(result['domains'])})",
+        "",
+    ]
+
     for e in result["entities"]:
         lines.append(f"  📍 {e['name']} [{e['entity_type']}] — {e['domain']}")
         lines.append(f"     ID: {e['id']}")
@@ -149,18 +154,18 @@ def format_resolve(result: dict) -> str:
         if e.get("status"):
             lines.append(f"     状态: {e['status']}")
         lines.append("")
-    
+
     return "\n".join(lines)
 
 
 def format_list(entities: list[dict]) -> str:
     lines = ["=" * 64, f"  实体清单 ({len(entities)} 个)", "=" * 64, ""]
-    
+
     by_domain = {}
     for e in entities:
         domain = e.get("domain", "?")
         by_domain.setdefault(domain, []).append(e)
-    
+
     for domain in sorted(by_domain.keys()):
         lines.append(f"## {domain} ({len(by_domain[domain])})")
         for e in by_domain[domain][:10]:
@@ -171,13 +176,13 @@ def format_list(entities: list[dict]) -> str:
         if len(by_domain[domain]) > 10:
             lines.append(f"  ... 还有 {len(by_domain[domain]) - 10} 个")
         lines.append("")
-    
+
     return "\n".join(lines)
 
 
 def format_stats(entities: list[dict]) -> str:
     lines = ["=" * 64, "  实体统计", "=" * 64, ""]
-    
+
     by_domain = {}
     by_type = {}
     for e in entities:
@@ -185,24 +190,29 @@ def format_stats(entities: list[dict]) -> str:
         by_domain[domain] = by_domain.get(domain, 0) + 1
         etype = (e.get("properties", {}) or {}).get("entity_type", "?")
         by_type[etype] = by_type.get(etype, 0) + 1
-    
+
     lines.append("按域:")
     for d, c in sorted(by_domain.items(), key=lambda x: -x[1]):
         lines.append(f"  {d:25s}: {c:4d}")
-    
+
     lines.append("\n按类型:")
     for t, c in sorted(by_type.items(), key=lambda x: -x[1]):
         lines.append(f"  {t:25s}: {c:4d}")
-    
+
     lines.append(f"\n总计: {len(entities)} 实体")
     return "\n".join(lines)
 
 
 def main():
+    import sys
+
+    print("⚠️ MOF Entity 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     import argparse
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", nargs="?", default="stats",
-                       choices=["resolve", "list", "stats"])
+    parser.add_argument(
+        "action", nargs="?", default="stats", choices=["resolve", "list", "stats"]
+    )
     parser.add_argument("query", nargs="?", default="")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()

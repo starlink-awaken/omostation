@@ -25,6 +25,7 @@ from ecos.services.governance.validator import REAL
 
 # ── exceptions ──
 
+
 class TestExceptions:
     def test_ecos_exception(self):
         with pytest.raises(ECOSException):
@@ -66,13 +67,20 @@ class TestExceptions:
 
 # ── logger ──
 
+
 class TestECOSFormatter:
     def test_format(self):
         formatter = ECOSFormatter()
         import logging
+
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="/test.py",
-            lineno=42, msg="hello", args=(), exc_info=None,
+            name="test",
+            level=logging.INFO,
+            pathname="/test.py",
+            lineno=42,
+            msg="hello",
+            args=(),
+            exc_info=None,
         )
         output = formatter.format(record)
         parsed = json.loads(output)
@@ -93,6 +101,7 @@ class TestGetLogger:
 
 
 # ── metrics ──
+
 
 class TestMetricsCollector:
     def test_counter(self):
@@ -134,6 +143,7 @@ class TestMetricsCollector:
 
 # ── content_integrity ──
 
+
 class TestCheckIntegrity:
     def test_clean_text(self):
         result = check_integrity("This is a normal text with varied words.")
@@ -159,6 +169,7 @@ class TestCheckIntegrity:
 
 # ── validator ──
 
+
 class TestValidator:
     def test_real_path(self):
         assert "ecos-constraint-validator" in str(REAL)
@@ -170,6 +181,7 @@ class TestValidator:
         mock_call.return_value = 0
         # Simulate __main__ block logic
         import ecos.services.governance.validator as v
+
         if v.REAL.exists():
             v.subprocess.call([v.sys.executable, str(v.REAL)])
         mock_call.assert_called_once()

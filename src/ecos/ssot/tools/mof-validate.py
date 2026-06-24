@@ -30,21 +30,23 @@ def detect_paths() -> tuple[Path, Path]:
     ssot = ws / "projects" / "ecos" / "src" / "ecos" / "ssot"
     ws_m2_dir = ssot / "mof" / "m2"
     ws_m1_dir = ssot / "mof" / "m1"
-    
+
     # New structure
     if ws_m2_dir.exists() and list(ws_m2_dir.glob("*.yaml")):
         return ws_m2_dir, ws_m1_dir
-    
+
     # Old structure (single M2 file + flat nodes/)
     ws_m2_file = ssot / "mof" / "M2-元模型.yaml"
     ws_nodes = ssot / "mof" / "nodes"
     if ws_m2_file.exists():
         return ws_m2_file, ws_nodes
-    
+
     # Fall back
     docs = Path.home() / "Documents"
-    return (docs / "驾驶舱" / "元模型" / "M2-元模型.yaml",
-            docs / "驾驶舱" / "元模型" / "nodes")
+    return (
+        docs / "驾驶舱" / "元模型" / "M2-元模型.yaml",
+        docs / "驾驶舱" / "元模型" / "nodes",
+    )
 
 
 def load_yaml(path: Path) -> dict:
@@ -60,11 +62,11 @@ def load_m2(m2_path: Path) -> dict:
     if m2_path.is_dir():
         # New structure: mof/m2/*.yaml (one per type)
         for f in sorted(m2_path.glob("*.yaml")):
-            if f.name.startswith('.'):
+            if f.name.startswith("."):
                 continue
             data = load_yaml(f)
             for key in data:
-                if key not in ('m2_type', 'version', 'created'):
+                if key not in ("m2_type", "version", "created"):
                     m2[key] = data[key]
     else:
         # Old structure: single M2-元模型.yaml
@@ -79,7 +81,7 @@ def load_all_m1_nodes(m1_dir: Path) -> list[dict]:
     if not m1_dir.exists():
         return nodes
     for f in sorted(m1_dir.rglob("*.yaml")):
-        if f.name.startswith('.'):
+        if f.name.startswith("."):
             continue
         try:
             data = load_yaml(f)
@@ -97,8 +99,15 @@ def validate_node(node: dict, m2: dict) -> list[dict]:
 
     m2_type = m2.get(ntype)
     if not m2_type:
-        results.append({"id": nid, "passed": False, "level": "error",
-                        "rule": "type_exists", "message": f"未知类型: {ntype} (M2 中未定义)"})
+        results.append(
+            {
+                "id": nid,
+                "passed": False,
+                "level": "error",
+                "rule": "type_exists",
+                "message": f"未知类型: {ntype} (M2 中未定义)",
+            }
+        )
         return results
 
     # 1. Required properties
@@ -107,23 +116,42 @@ def validate_node(node: dict, m2: dict) -> list[dict]:
     for prop_name, prop_def in required.items():
         val = node.get(prop_name) or props.get(prop_name)
         if val is None or val == "":
-            results.append({"id": nid, "passed": False, "level": "error",
-                           "rule": f"required.{prop_name}",
-                           "message": f"缺少必填属性: {prop_name}"})
+            results.append(
+                {
+                    "id": nid,
+                    "passed": False,
+                    "level": "error",
+                    "rule": f"required.{prop_name}",
+                    "message": f"缺少必填属性: {prop_name}",
+                }
+            )
 
     # 2. State machine compliance
     sm = m2_type.get("stateMachine", {})
     status = node.get("status", "")
     if sm and status and status not in sm:
-        results.append({"id": nid, "passed": False, "level": "error",
-                       "rule": "stateMachine",
-                       "message": f"无效状态: '{status}' (允许: {list(sm.keys())})"})
+        results.append(
+            {
+                "id": nid,
+                "passed": False,
+                "level": "error",
+                "rule": "stateMachine",
+                "message": f"无效状态: '{status}' (允许: {list(sm.keys())})",
+            }
+        )
 
     # 3. Overall
     errors = [r for r in results if r["level"] == "error"]
     if not errors:
-        results.append({"id": nid, "passed": True, "level": "info",
-                       "rule": "overall", "message": f"✅ {ntype} {nid}"})
+        results.append(
+            {
+                "id": nid,
+                "passed": True,
+                "level": "info",
+                "rule": "overall",
+                "message": f"✅ {ntype} {nid}",
+            }
+        )
 
     return results
 
@@ -154,7 +182,7 @@ def format_report(all_results: list[dict], node_count: int, m2_file: Path) -> st
 
     for t, counts in sorted(type_counts.items()):
         icon = "✅" if counts["err"] == 0 else "⚠️"
-        lines.append(f"  {icon} {t:15s}: {counts['ok']}/{counts['ok']+counts['err']}")
+        lines.append(f"  {icon} {t:15s}: {counts['ok']}/{counts['ok'] + counts['err']}")
 
     if errors > 0:
         lines.append("\n  ── 错误 ──")
@@ -162,11 +190,12 @@ def format_report(all_results: list[dict], node_count: int, m2_file: Path) -> st
             if r.get("level") == "error":
                 lines.append(f"  ❌ {r['id']}: {r['message']}")
 
-    lines.append(f"\n{'='*64}")
+    lines.append(f"\n{'=' * 64}")
     return "\n".join(lines)
 
 
 def main():
+    print("⚠️ MOF Validate 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     parser = argparse.ArgumentParser(description="织星 MOF M1↔M2 校验器")
     parser.add_argument("--m2", type=Path, help="M2 元模型 YAML 路径")
     parser.add_argument("--nodes", type=Path, help="M1 节点目录")
@@ -203,8 +232,13 @@ def main():
         all_results.extend(validate_node(node, m2))
 
     if args.json:
-        print(json.dumps({"node_count": len(nodes), "results": all_results},
-                        ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"node_count": len(nodes), "results": all_results},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         print(format_report(all_results, len(nodes), m2_file))
 

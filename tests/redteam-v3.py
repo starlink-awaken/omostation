@@ -14,6 +14,7 @@ import os
 import time
 
 from pathlib import Path
+
 ECOS = os.environ.get("ECOS_ROOT", str(Path(__file__).resolve().parents[1]))
 
 attacks = [
@@ -112,12 +113,18 @@ print(f"{'✅ 达标' if adjusted >= 82 else f'⚠️ 差{82 - adjusted}%'}")
 
 # Save
 with open(os.path.join(ECOS, "docs/REDTEAM-ANALYSIS-2026-05-15-v3.md"), "w") as f:
-    f.write(f"# Phase 4 红蓝对抗 v3\n\n> {time.strftime('%Y-%m-%d %H:%M')} | Phase 4 | 安全评分: {adjusted}%\n\n")
-    f.write(f"阻断: {blocked}/{total} | 部分缓解: {partial} | 高危未阻断: {high_risk}\n\n")
+    f.write(
+        f"# Phase 4 红蓝对抗 v3\n\n> {time.strftime('%Y-%m-%d %H:%M')} | Phase 4 | 安全评分: {adjusted}%\n\n"
+    )
+    f.write(
+        f"阻断: {blocked}/{total} | 部分缓解: {partial} | 高危未阻断: {high_risk}\n\n"
+    )
     f.write("| ID | 攻击 | 影响 | 阻断 | 状态 |\n")
     f.write("|-----|------|------|------|------|\n")
     for a in attacks:
-        f.write(f"| {a['id']} | {a['name']} | {a['impact']} | {'✅' if a['blocked'] else '❌'} | {a['status']} |\n")
+        f.write(
+            f"| {a['id']} | {a['name']} | {a['impact']} | {'✅' if a['blocked'] else '❌'} | {a['status']} |\n"
+        )
     f.write(f"\n## 对比\n\n- Phase 3: 78%\n- Phase 4: {adjusted}%\n")
     f.write(
         "\n## 待改进\n\n- A1: LLM语义审计 (Phase 4.5)\n- A3: 语义CRITIC触发\n- A5: cross_refs签名\n- A6: 时间戳校验\n"

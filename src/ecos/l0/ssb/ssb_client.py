@@ -681,6 +681,8 @@ def main():
     """CLI entry point for ssb-client."""
     import sys
 
+    print("⚠️ ECOS SSB 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
+
     args = sys.argv[1:]
     if not args or args[0] in ("--help", "-h"):
         print("Usage: ssb-client [publish|query|state|recover|events|stats] [options]")

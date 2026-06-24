@@ -22,12 +22,28 @@ from pathlib import Path
 
 DOMAINS = {
     "工作文档": {
-        "subdirs": ["卫健委", "国转中心", "合同协议", "个人资料", "公文模版", "法律法规", "临时文件"],
+        "subdirs": [
+            "卫健委",
+            "国转中心",
+            "合同协议",
+            "个人资料",
+            "公文模版",
+            "法律法规",
+            "临时文件",
+        ],
         "value_tier": 3,
         "label": "业务价值",
     },
     "家庭生活": {
-        "subdirs": ["00.管理系统", "01.成员档案", "02.医疗健康", "03.育儿成长", "04.家庭日常", "05.资产设备", "99.文件中转"],
+        "subdirs": [
+            "00.管理系统",
+            "01.成员档案",
+            "02.医疗健康",
+            "03.育儿成长",
+            "04.家庭日常",
+            "05.资产设备",
+            "99.文件中转",
+        ],
         "value_tier": 3,
         "label": "业务价值",
     },
@@ -42,7 +58,9 @@ def analyze_subdir(root: Path, subdirs: list[str]) -> list[dict]:
     for sd_name in subdirs:
         sd = root / sd_name
         if not sd.exists():
-            results.append({"name": sd_name, "exists": False, "files": 0, "lines": 0, "max_age": 0})
+            results.append(
+                {"name": sd_name, "exists": False, "files": 0, "lines": 0, "max_age": 0}
+            )
             continue
 
         md_files = []
@@ -63,14 +81,16 @@ def analyze_subdir(root: Path, subdirs: list[str]) -> list[dict]:
             except (OSError, UnicodeDecodeError):
                 pass
 
-        results.append({
-            "name": sd_name,
-            "exists": True,
-            "files": len(md_files),
-            "lines": total_lines,
-            "max_age_days": max_age,
-            "density": round(total_lines / len(md_files), 1) if md_files else 0,
-        })
+        results.append(
+            {
+                "name": sd_name,
+                "exists": True,
+                "files": len(md_files),
+                "lines": total_lines,
+                "max_age_days": max_age,
+                "density": round(total_lines / len(md_files), 1) if md_files else 0,
+            }
+        )
 
     return results
 
@@ -94,9 +114,13 @@ def format_report(all_results: dict) -> str:
         grand_files += total_f
         grand_lines += total_l
 
-        lines.append(f"  ── {domain_name} (value_tier={info['value_tier']}, {info['label']}) ──")
+        lines.append(
+            f"  ── {domain_name} (value_tier={info['value_tier']}, {info['label']}) ──"
+        )
         lines.append(f"  总文件: {total_f}  总行数: {total_l:,}")
-        lines.append(f"  {'子域':20s} {'文件':>5s} {'行数':>7s} {'密度':>5s} {'最旧':>5s}  {'活跃度'}")
+        lines.append(
+            f"  {'子域':20s} {'文件':>5s} {'行数':>7s} {'密度':>5s} {'最旧':>5s}  {'活跃度'}"
+        )
         lines.append("  " + "-" * 54)
 
         max_f = max((r["files"] for r in results), default=1)
@@ -104,7 +128,9 @@ def format_report(all_results: dict) -> str:
 
         for r in results:
             if not r["exists"]:
-                lines.append(f"  {r['name']:20s}  {'—':>5s}  {'—':>7s}  {'—':>5s}  {'—':>5s}")
+                lines.append(
+                    f"  {r['name']:20s}  {'—':>5s}  {'—':>7s}  {'—':>5s}  {'—':>5s}"
+                )
                 continue
 
             # 活跃度得分: 规模 40% + 新鲜度 60%
@@ -123,7 +149,8 @@ def format_report(all_results: dict) -> str:
         # 域价值得分
         avg_activity = sum(
             (r["files"] / max_f) * 40 + max(0, (365 - r["max_age_days"]) / 365) * 60
-            for r in results if r["exists"] and r["files"] > 0
+            for r in results
+            if r["exists"] and r["files"] > 0
         ) / max(1, sum(1 for r in results if r["exists"] and r["files"] > 0))
 
         lines.append(f"  → 域活跃度均值: {avg_activity:.0f}/100")

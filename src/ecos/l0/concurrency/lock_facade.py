@@ -7,9 +7,12 @@ from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import Iterator
 
+
 class LockAcquireError(Exception):
     """Raised when a lock cannot be acquired within the timeout."""
+
     pass
+
 
 class DistributedLock(ABC):
     """Base Protocol for distributed lock implementations."""
@@ -20,13 +23,13 @@ class DistributedLock(ABC):
     @abstractmethod
     def acquire(self, timeout: float | None = None) -> bool:
         """Acquire the lock.
-        
+
         Args:
             timeout: Maximum seconds to wait. None means wait forever.
-            
+
         Returns:
             True if acquired, False otherwise (if implementation supports returning False instead of raising).
-            
+
         Raises:
             LockAcquireError: If the lock cannot be acquired within the timeout.
         """
@@ -40,11 +43,11 @@ class DistributedLock(ABC):
     @abstractmethod
     def check_and_set(self, expected_version: int, new_version: int) -> bool:
         """Optimistic locking. Only update if the current version matches expected_version.
-        
+
         Args:
             expected_version: The version currently expected. 0 means ignore check.
             new_version: The new version to set upon success.
-            
+
         Returns:
             True if successful, False if version conflict.
         """

@@ -25,6 +25,7 @@ from ecos.l0.symphony.state_machine import SymphonyStateMachine
 
 # ── SymphonyStage enum ──
 
+
 class TestSymphonyStage:
     def test_values(self):
         assert SymphonyStage.ANCHORING == "anchoring"
@@ -45,6 +46,7 @@ class TestSymphonyStage:
 
 
 # ── StageTransition ──
+
 
 class TestStageTransition:
     def test_valid_transition(self):
@@ -90,6 +92,7 @@ class TestStageTransition:
 
 # ── TransitionCondition ──
 
+
 class TestTransitionCondition:
     def test_predicate_true(self):
         cond = TransitionCondition(
@@ -109,6 +112,7 @@ class TestTransitionCondition:
 
 
 # ── TransitionResult ──
+
 
 class TestTransitionResult:
     def test_success_result(self):
@@ -139,6 +143,7 @@ class TestTransitionResult:
 
 # ── StageHistoryEntry ──
 
+
 class TestStageHistoryEntry:
     def test_default_entered_at(self):
         entry = StageHistoryEntry(stage=SymphonyStage.ANCHORING)
@@ -155,15 +160,14 @@ class TestStageHistoryEntry:
 
 # ── StageInvariant ──
 
+
 class TestStageInvariant:
     def test_default_predicate(self):
         inv = StageInvariant(name="test")
         assert inv.predicate({}) is True
 
     def test_custom_predicate(self):
-        inv = StageInvariant(
-            name="test", predicate=lambda ctx: ctx.get("x", 0) > 5
-        )
+        inv = StageInvariant(name="test", predicate=lambda ctx: ctx.get("x", 0) > 5)
         assert inv.predicate({"x": 10}) is True
         assert inv.predicate({"x": 3}) is False
 
@@ -173,6 +177,7 @@ class TestStageInvariant:
 
 
 # ── StageOutput ──
+
 
 class TestStageOutput:
     def test_defaults(self):
@@ -191,6 +196,7 @@ class TestStageOutput:
 
 
 # ── AgentCapability / AgentProfile / TaskRequirement / MatchResult ──
+
 
 class TestAgentCapability:
     def test_frozen(self):
@@ -262,6 +268,7 @@ class TestMatchResult:
 
 # ── Trigger / TriggerResult ──
 
+
 class TestTrigger:
     def test_defaults(self):
         t = Trigger(id="t1", name="test")
@@ -293,6 +300,7 @@ class TestTriggerResult:
 
 
 # ── SymphonyStateMachine ──
+
 
 class TestSymphonyStateMachine:
     def test_initial_state(self):
@@ -409,7 +417,11 @@ class TestSymphonyStateMachine:
 
     def test_validate_invariants_anchoring_pass(self):
         sm = SymphonyStateMachine(
-            initial_context={"task": "build", "context_frozen": True, "truth_contradiction": False}
+            initial_context={
+                "task": "build",
+                "context_frozen": True,
+                "truth_contradiction": False,
+            }
         )
         sm.transition(SymphonyStage.ANCHORING)
         assert sm.validate_invariants() == []

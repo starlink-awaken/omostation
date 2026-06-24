@@ -26,6 +26,7 @@ def _load_all_runs() -> list[dict[str, Any]]:
     for f in sorted(SNAPSHOT_DIR.glob("*.yaml"), reverse=True):
         try:
             import yaml
+
             with open(f) as fh:
                 data = yaml.safe_load(fh)
             if data and data.get("schema") == "M0-v1":
@@ -63,6 +64,7 @@ def _format_run(run: dict[str, Any], verbose: bool = False) -> str:
 
 def cmd_runs(args: list[str]) -> None:
     """workflow runs 子命令"""
+    print("⚠️ ECOS Workflow Runs 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     # 解析参数
     status_filter = None
     wf_id_filter = None
@@ -124,7 +126,9 @@ def cmd_runs(args: list[str]) -> None:
     for run in runs:
         print(_format_run(run, verbose))
     print(f"{'=' * 100}")
-    print(f"总计: {total} runs | {ok_count} 成功 {failed_count} 失败 | {total_passed}✅ {total_failed}❌")
+    print(
+        f"总计: {total} runs | {ok_count} 成功 {failed_count} 失败 | {total_passed}✅ {total_failed}❌"
+    )
 
 
 def _show_detail(workflow_id: str) -> None:

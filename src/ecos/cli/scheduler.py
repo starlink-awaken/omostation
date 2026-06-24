@@ -273,6 +273,7 @@ def load_schedule(schedule_id: str) -> dict:
 
 
 def main():
+    print("⚠️ ECOS Scheduler 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     if len(sys.argv) < 2 or sys.argv[1] in ("--help", "-h"):
         print(__doc__)
         print("Available schedules:")

@@ -26,7 +26,9 @@ def test_broker_imports_only_proposed_nodes(monkeypatch, tmp_path: Path) -> None
     module = _load_module()
     calls: list[dict] = []
 
-    def fake_create_planned_task(omo_dir, *, task_data, ingress_plane, source_ref, now=None):
+    def fake_create_planned_task(
+        omo_dir, *, task_data, ingress_plane, source_ref, now=None
+    ):
         calls.append(
             {
                 "omo_dir": omo_dir,
@@ -84,7 +86,9 @@ def test_broker_blocks_non_proposed_nodes(monkeypatch, tmp_path: Path) -> None:
     module = _load_module()
     calls: list[dict] = []
 
-    def fake_create_planned_task(omo_dir, *, task_data, ingress_plane, source_ref, now=None):
+    def fake_create_planned_task(
+        omo_dir, *, task_data, ingress_plane, source_ref, now=None
+    ):
         calls.append(task_data)
         return task_data
 

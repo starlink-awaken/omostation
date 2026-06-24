@@ -29,13 +29,20 @@ class BaseAdapter:
         return "base"
 
     def init(self) -> dict:
-        return {"adapter_id": self.adapter_id, "status": "active", "started_at": self.started_at}
+        return {
+            "adapter_id": self.adapter_id,
+            "status": "active",
+            "started_at": self.started_at,
+        }
 
     def handle(self, request: dict) -> dict:
         raise NotImplementedError
 
     def health(self) -> dict:
-        return {"status": "healthy", "last_check": datetime.now(timezone.utc).isoformat()}
+        return {
+            "status": "healthy",
+            "last_check": datetime.now(timezone.utc).isoformat(),
+        }
 
     def capabilities(self) -> list:
         return []
@@ -43,6 +50,7 @@ class BaseAdapter:
 
 class WeChatAdapter(BaseAdapter):
     """微信入口适配器 — 消息→意图→标准化请求"""
+
     type = "wechat"
     protocol = "WeChat Official API"
     auth = "OAuth2 + Token"
@@ -61,6 +69,7 @@ class WeChatAdapter(BaseAdapter):
 
 class WebDashboardAdapter(BaseAdapter):
     """Web Dashboard 入口适配器 — 可视化操作"""
+
     type = "web"
     protocol = "HTTP REST"
     auth = "Session + JWT"
@@ -77,6 +86,7 @@ class WebDashboardAdapter(BaseAdapter):
 
 class APIGatewayAdapter(BaseAdapter):
     """API Gateway 入口适配器 — 编程调用"""
+
     type = "api"
     protocol = "HTTP/gRPC"
     auth = "API Key"
@@ -93,6 +103,7 @@ class APIGatewayAdapter(BaseAdapter):
 
 class EventBusAdapter(BaseAdapter):
     """Event Bus 入口适配器 — 异步消息处理"""
+
     type = "event"
     protocol = "Pub/Sub"
     auth = "Event Token"
@@ -117,7 +128,9 @@ ADAPTERS = {
 def main():
     parser = argparse.ArgumentParser(description="eCOS v5 L3 适配器桩")
     parser.add_argument("--list", action="store_true", help="列出适配器")
-    parser.add_argument("--test", type=str, choices=list(ADAPTERS.keys()), help="测试适配器")
+    parser.add_argument(
+        "--test", type=str, choices=list(ADAPTERS.keys()), help="测试适配器"
+    )
     parser.add_argument("--config", type=str, default="{}", help="JSON 配置")
     args = parser.parse_args()
 
@@ -137,13 +150,19 @@ def main():
         health_result = adapter.health()
         caps = adapter.capabilities()
         handle_result = adapter.handle({"Content": "测试消息", "MsgType": "text"})
-        print(json.dumps({
-            "adapter": args.test,
-            "init": init_result,
-            "health": health_result,
-            "capabilities": caps,
-            "handle": handle_result,
-        }, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "adapter": args.test,
+                    "init": init_result,
+                    "health": health_result,
+                    "capabilities": caps,
+                    "handle": handle_result,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return
 
     parser.print_help()

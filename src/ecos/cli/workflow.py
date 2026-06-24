@@ -22,6 +22,7 @@ from typing import Any
 
 def main() -> None:
     """CLI 入口"""
+    print("⚠️ ECOS Workflow 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     args = sys.argv[1:] if sys.argv[1:] else ["--help"]
 
     subcmd = args[0] if args else "help"
@@ -49,6 +50,10 @@ def main() -> None:
         "fork": _cmd_fork,
         "export": _cmd_export,
         "import": _cmd_import,
+        "cache-status": _cmd_cache_status,
+        "cache-invalidate": _cmd_cache_invalidate,
+        "cb-status": _cmd_circuit_status,
+        "cb-reset": _cmd_circuit_reset,
         "--help": _cmd_help,
         "-h": _cmd_help,
         "help": _cmd_help,
@@ -84,6 +89,7 @@ def _cmd_list(args: list[str]) -> None:
         runs_dir = Path.home() / ".omo" / "state" / "workflow-runs"
         if runs_dir.exists():
             import yaml
+
             for f in sorted(runs_dir.glob("*.yaml"), reverse=True):
                 try:
                     with open(f) as fh:
@@ -112,7 +118,13 @@ def _cmd_list(args: list[str]) -> None:
         if with_status:
             wf_key = wf.get("id", wf.get("name", ""))
             status_icon = latest_status.get(wf_key, "—")
-            status_char = "✅" if status_icon == "ok" else "❌" if status_icon == "failed" else "➖"
+            status_char = (
+                "✅"
+                if status_icon == "ok"
+                else "❌"
+                if status_icon == "failed"
+                else "➖"
+            )
             print(f"  {status_char} {src}  {display:30s}  [{name}]{extra}")
         else:
             print(f"  {src}  {display:30s}  [{name}]{extra}")
@@ -258,7 +270,9 @@ def _cmd_actions(_args: list[str]) -> None:
         desc = a.get("description", "")
         print(f"  {a['name']:30s}  {desc}")
     print(f"{'=' * 60}")
-    print("💡 action 在工作流定义的 step.action 字段中使用。外部模块可通过 register_action() 扩展。")
+    print(
+        "💡 action 在工作流定义的 step.action 字段中使用。外部模块可通过 register_action() 扩展。"
+    )
 
 
 def _cmd_status(_args: list[str]) -> None:
@@ -288,6 +302,7 @@ def _cmd_status(_args: list[str]) -> None:
 
     try:
         from ecos.workflow.backend_registry import resolve
+
         fn = resolve({"execution": {}})
         assert callable(fn)
         print("  ✅  默认后端: 可用")
@@ -296,6 +311,7 @@ def _cmd_status(_args: list[str]) -> None:
 
     try:
         from ecos.workflow.actions import resolve_action
+
         handler = resolve_action("health_check")
         if handler:
             print("  ✅  action 解析: 功能正常")
@@ -330,7 +346,7 @@ def _cmd_create(args: list[str]) -> None:
     while i < len(rest):
         if rest[i] == "--path" and i + 1 < len(rest):
             out_path = Path(rest[i + 1])
-            rest = rest[:i] + rest[i + 2:]
+            rest = rest[:i] + rest[i + 2 :]
             break
         i += 1
 
@@ -340,13 +356,16 @@ def _cmd_create(args: list[str]) -> None:
 
     name = rest[0]
     safe_name = name.upper().replace(" ", "-").replace("_", "-")
-    wf_id = f"WORKFLOW-{safe_name}" if not safe_name.startswith("WORKFLOW-") else safe_name
+    wf_id = (
+        f"WORKFLOW-{safe_name}" if not safe_name.startswith("WORKFLOW-") else safe_name
+    )
 
     if m1:
         # M1 格式模板（含完整元数据）
         template = _m1_template(wf_id, name)
         if out_path is None:
             from ecos.workflow.loader import M1_WF_DIR
+
             M1_WF_DIR.mkdir(parents=True, exist_ok=True)
             out_path = M1_WF_DIR / f"{wf_id}.yaml"
     else:
@@ -354,6 +373,7 @@ def _cmd_create(args: list[str]) -> None:
         template = _def_template(name)
         if out_path is None:
             from ecos.workflow.loader import WF_DIR
+
             WF_DIR.mkdir(parents=True, exist_ok=True)
             out_path = WF_DIR / f"{name}.yaml"
 
@@ -365,7 +385,9 @@ def _cmd_create(args: list[str]) -> None:
             return
 
     with open(out_path, "w") as f:
-        yaml.dump(template, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+        yaml.dump(
+            template, f, allow_unicode=True, default_flow_style=False, sort_keys=False
+        )
 
     print(f"✅ 工作流模板已创建: {out_path}")
     print(f"   类型: {'M1' if m1 else 'definition'}")
@@ -394,9 +416,19 @@ def _m1_template(wf_id: str, name: str) -> dict:
             "on_failure": "continue",
         },
         "steps": [
-            {"order": 1, "name": "Step1", "action": "health_check", "description": "步骤描述"},
-            {"order": 2, "name": "Step2", "action": "domain_audit", "description": "步骤描述",
-             "depends_on": ["Step1"]},
+            {
+                "order": 1,
+                "name": "Step1",
+                "action": "health_check",
+                "description": "步骤描述",
+            },
+            {
+                "order": 2,
+                "name": "Step2",
+                "action": "domain_audit",
+                "description": "步骤描述",
+                "depends_on": ["Step1"],
+            },
         ],
         "relations": [],
         "sla": {"max_execution_time": 300, "expected_completion_rate": 0.95},
@@ -498,6 +530,7 @@ def _cmd_edit(args: list[str]) -> None:
     name = args[0]
     from ecos.workflow import load_workflow
     from ecos.workflow.loader import M1_WF_DIR, WF_DIR
+
     wf = load_workflow(name)
     if not wf:
         print(f"❌ 工作流不存在: {name}")
@@ -516,7 +549,9 @@ def _cmd_edit(args: list[str]) -> None:
     if not file_path.exists():
         print(f"❌ 文件不存在: {file_path}")
         # 尝试模糊搜索
-        candidates = list(WF_DIR.glob("*.yaml")) + list(M1_WF_DIR.glob("WORKFLOW-*.yaml"))
+        candidates = list(WF_DIR.glob("*.yaml")) + list(
+            M1_WF_DIR.glob("WORKFLOW-*.yaml")
+        )
         for c in candidates:
             if name.lower() in c.stem.lower():
                 file_path = c
@@ -528,6 +563,7 @@ def _cmd_edit(args: list[str]) -> None:
     editor = os.environ.get("EDITOR", os.environ.get("VISUAL", "vim"))
     try:
         import subprocess
+
         subprocess.run([editor, str(file_path)], check=False)
         print(f"✅ 文件已保存: {file_path}")
     except FileNotFoundError:
@@ -554,7 +590,6 @@ def _cmd_export(args: list[str]) -> None:
             out_path = Path(rest[i + 1])
             break
         i += 1
-
 
     wf = load_workflow(name)
     if not wf:
@@ -606,6 +641,7 @@ def _cmd_import(args: list[str]) -> None:
 
     # 读取并校验
     import yaml
+
     try:
         with open(src) as f:
             wf = yaml.safe_load(f)
@@ -628,12 +664,14 @@ def _cmd_import(args: list[str]) -> None:
     # 确定目标目录
     if as_m1 or wf.get("type") == "Workflow":
         from ecos.workflow.loader import M1_WF_DIR
+
         M1_WF_DIR.mkdir(parents=True, exist_ok=True)
         target_id = wf.get("id", f"WORKFLOW-{wf_name.upper().replace(' ', '-')}")
         dest = M1_WF_DIR / f"{target_id}.yaml"
         wf_type = "M1"
     else:
         from ecos.workflow.loader import WF_DIR
+
         WF_DIR.mkdir(parents=True, exist_ok=True)
         dest = WF_DIR / f"{wf_name}.yaml"
         wf_type = "definition"
@@ -694,11 +732,16 @@ def _cmd_fork(args: list[str]) -> None:
 
     # 读取源工作流并修改
     import yaml
+
     with open(src_path) as f:
         new_wf = yaml.safe_load(f)
 
     safe_new = new_name.upper().replace(" ", "-").replace("_", "-")
-    new_wf_id = f"WORKFLOW-{safe_new}" if is_m1 and not safe_new.startswith("WORKFLOW-") else safe_new
+    new_wf_id = (
+        f"WORKFLOW-{safe_new}"
+        if is_m1 and not safe_new.startswith("WORKFLOW-")
+        else safe_new
+    )
     new_wf["id"] = new_wf_id
     new_wf["name"] = new_name
     new_wf["description"] = f"从 {wf.get('name', name)} 派生: {new_name}"
@@ -721,7 +764,9 @@ def _cmd_fork(args: list[str]) -> None:
             return
 
     with open(dest, "w") as f:
-        yaml.dump(new_wf, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+        yaml.dump(
+            new_wf, f, allow_unicode=True, default_flow_style=False, sort_keys=False
+        )
 
     print(f"✅ 工作流已派生: {wf.get('name', name)} → {new_name}")
     print(f"   源: {src_path}")
@@ -763,11 +808,14 @@ def _cmd_stats(_args: list[str]) -> None:
     recent_fail = sum(1 for r in recent_10 if r.get("status") == "failed")
 
     # 时间范围
-    timestamps = [
-        r.get("generated_at", "")[:10]
-        for r in runs if r.get("generated_at")
-    ]
-    date_range = f"{timestamps[-1]} ~ {timestamps[0]}" if len(timestamps) >= 2 else timestamps[0] if timestamps else "N/A"
+    timestamps = [r.get("generated_at", "")[:10] for r in runs if r.get("generated_at")]
+    date_range = (
+        f"{timestamps[-1]} ~ {timestamps[0]}"
+        if len(timestamps) >= 2
+        else timestamps[0]
+        if timestamps
+        else "N/A"
+    )
 
     print("📊 工作流运行统计")
     print(f"{'=' * 50}")
@@ -781,14 +829,17 @@ def _cmd_stats(_args: list[str]) -> None:
     if top_workflows:
         print(f"  最活跃工作流 (Top {len(top_workflows)}):")
         for wf_id, count in top_workflows:
-            wf_ok = sum(1 for r in runs if r.get("workflow_id") == wf_id and r.get("status") == "ok")
+            wf_ok = sum(
+                1
+                for r in runs
+                if r.get("workflow_id") == wf_id and r.get("status") == "ok"
+            )
             wf_total = count
             pct = wf_ok / wf_total * 100
             bar = "█" * int(pct / 10) + "░" * (10 - int(pct / 10))
             bar = bar[:10]
             print(f"    {bar}  {wf_id:45s}  {wf_ok}/{wf_total} ({pct:.0f}%)")
     print(f"{'=' * 50}")
-
 
 
 def _cmd_help(_args: list[str] | None = None) -> None:
@@ -824,7 +875,9 @@ def _cmd_help(_args: list[str] | None = None) -> None:
     print("  ecos workflow list")
     print("  ecos workflow run WORKFLOW-ECOS-DAILY-HEALTH")
     print("  ecos workflow run WORKFLOW-ECOS-DAILY-HEALTH --dry-run")
-    print('  ecos workflow run WORKFLOW-ECOS-DAILY-HEALTH -p mode=quick -p verbose=true')
+    print(
+        "  ecos workflow run WORKFLOW-ECOS-DAILY-HEALTH -p mode=quick -p verbose=true"
+    )
     print("  ecos workflow describe WORKFLOW-ECOS-DAILY-HEALTH")
     print("  ecos workflow backends")
     print("  ecos workflow logs --recent 5")
@@ -850,10 +903,17 @@ def _print_result(result: dict[str, Any]) -> None:
     print()
     for step in steps:
         status = step.get("status", "?")
-        icon = "✅" if status == "ok" else "❌" if status in ("failed", "error") else "➖"
+        icon = (
+            "✅" if status == "ok" else "❌" if status in ("failed", "error") else "➖"
+        )
         name = step.get("name", "?")
-        result_text = step.get("result", {}).get("summary", "")
-        details = step.get("result", {}).get("details", "")
+        res_obj = step.get("result", {})
+        if isinstance(res_obj, str):
+            result_text = res_obj
+            details = ""
+        else:
+            result_text = res_obj.get("summary", "")
+            details = res_obj.get("details", "")
         error = step.get("error", "")
         extra = details or result_text or error
         print(f"  {icon}  {name:30s}  {extra}" if extra else f"  {icon}  {name}")
@@ -867,6 +927,46 @@ def _print_result(result: dict[str, Any]) -> None:
     finished = result.get("finished", "")
     if finished:
         print(f"  完成时间: {finished[:19].replace('T', ' ')}")
+
+
+def _cmd_cache_status(*args: str) -> None:
+    """ecos workflow cache-status — 查看工作流缓存状态"""
+    from ecos.workflow.cache import status
+
+    s = status()
+    print(f"工作流缓存: {s['total_entries']} 条目")
+    for e in s["entries"]:
+        print(f"  {e['key']}: 剩余 {e['remaining_s']}s (TTL {e['ttl_s']}s)")
+
+
+def _cmd_cache_invalidate(*args: str) -> None:
+    """ecos workflow cache-invalidate — 清除全部工作流缓存"""
+    from ecos.workflow.cache import invalidate_all
+
+    cleared = invalidate_all()
+    print(f"已清除 {cleared} 条缓存条目")
+
+
+def _cmd_circuit_status(*args: str) -> None:
+    """ecos workflow cb-status — 查看后端熔断器状态"""
+    from ecos.workflow.circuit_breaker import status
+
+    s = status()
+    if s["total_tripped"] == 0:
+        print("后端熔断器: 无活跃熔断 ✅")
+    else:
+        print(f"后端熔断器: {s['total_tripped']} 个活跃熔断")
+        for c in s["circuits"]:
+            print(f"  {c['key']}: 剩余 {c['remaining_s']}s")
+            print(f"    (TTL {c['ttl_s']}s, 已熔断 {c['unreachable_since_s']}s)")
+
+
+def _cmd_circuit_reset(*args: str) -> None:
+    """ecos workflow cb-reset — 重置全部后端熔断器"""
+    from ecos.workflow.circuit_breaker import reset_all
+
+    count = reset_all()
+    print(f"已重置 {count} 个熔断器")
 
 
 if __name__ == "__main__":

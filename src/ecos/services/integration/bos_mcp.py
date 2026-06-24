@@ -13,7 +13,7 @@ sys.path.insert(0, str(ECOS_SRC))
 
 from importlib.machinery import SourceFileLoader  # noqa: E402
 
-DM_PATH = ECOS_SRC / "services" / "domain_manager.py"
+DM_PATH = ECOS_SRC / "services" / "governance" / "domain_manager.py"
 dm = SourceFileLoader("dm", str(DM_PATH)).load_module()
 
 TOOLS = [

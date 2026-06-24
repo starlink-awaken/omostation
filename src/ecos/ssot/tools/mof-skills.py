@@ -41,12 +41,15 @@ def generate_skills_md() -> str:
     skills = load_nodes("skill")
     mcp_tools = load_nodes("mcptool")
     mechanisms = load_nodes("mechanism")
-    
-    lines = ["# Agent 可用能力清单", "",
-             f"> 自动生成自 L0 M1 节点 | {datetime.now(timezone.utc).isoformat()[:19]}",
-             f"> Skills: {len(skills)} · MCP Tools: {len(mcp_tools)} · Mechanisms: {len(mechanisms)}",
-             ""]
-    
+
+    lines = [
+        "# Agent 可用能力清单",
+        "",
+        f"> 自动生成自 L0 M1 节点 | {datetime.now(timezone.utc).isoformat()[:19]}",
+        f"> Skills: {len(skills)} · MCP Tools: {len(mcp_tools)} · Mechanisms: {len(mechanisms)}",
+        "",
+    ]
+
     # Skills
     lines.append("## 🛠️ Skills (Agent 可调用)")
     lines.append("")
@@ -57,7 +60,7 @@ def generate_skills_md() -> str:
         trigger = (s.get("properties", {}) or {}).get("trigger", "?")
         lines.append(f"- **{name}** `[{trigger}]` — {desc}")
     lines.append("")
-    
+
     # MCP Tools
     lines.append("## 🔧 MCP Tools (Agent 可调用端点)")
     lines.append("")
@@ -65,13 +68,13 @@ def generate_skills_md() -> str:
     for t in mcp_tools:
         server = (t.get("properties", {}) or {}).get("server", "?")
         by_server.setdefault(server, []).append(t.get("name", "?"))
-    
+
     for server, tools in sorted(by_server.items()):
         lines.append(f"### {server} ({len(tools)} tools)")
         for t in tools:
             lines.append(f"- `{t}`")
         lines.append("")
-    
+
     # Mechanisms (scheduled/automated)
     lines.append("## ⚙️ Mechanisms (自动执行)")
     lines.append("")
@@ -84,34 +87,52 @@ def generate_skills_md() -> str:
         else:
             freq = "event-driven"
         freq_map.setdefault(freq, []).append(m.get("name", "?")[:50])
-    
+
     for freq, mechs in sorted(freq_map.items()):
         lines.append(f"### {freq}")
         lines.append("")
         for m in mechs[:5]:
             lines.append(f"- {m}")
         lines.append("")
-    
+
     lines.append("> 完整架构视图: `mof view quick` | 技能注册: `mof-scan`")
     return "\n".join(lines)
 
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
     if args.json:
-        skills = [{"id": s.get("id"), "name": s.get("name"), "trigger": (s.get("properties",{}) or {}).get("trigger","?")} for s in load_nodes("skill")]
-        tools = [{"name": t.get("name"), "server": (t.get("properties",{}) or {}).get("server","?")} for t in load_nodes("mcptool")]
-        print(json.dumps({"skills": skills, "mcptools": tools}, ensure_ascii=False, indent=2))
+        skills = [
+            {
+                "id": s.get("id"),
+                "name": s.get("name"),
+                "trigger": (s.get("properties", {}) or {}).get("trigger", "?"),
+            }
+            for s in load_nodes("skill")
+        ]
+        tools = [
+            {
+                "name": t.get("name"),
+                "server": (t.get("properties", {}) or {}).get("server", "?"),
+            }
+            for t in load_nodes("mcptool")
+        ]
+        print(
+            json.dumps(
+                {"skills": skills, "mcptools": tools}, ensure_ascii=False, indent=2
+            )
+        )
         return
 
     md = generate_skills_md()
     if args.output:
-        args.output.write_text(md, encoding='utf-8')
+        args.output.write_text(md, encoding="utf-8")
         print(f"✅ Agent 技能清单 → {args.output}")
     else:
         print(md)
