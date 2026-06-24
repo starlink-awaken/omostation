@@ -532,6 +532,114 @@ def omo_report() -> dict:
 
 
 # ─── BOS Metrics ─────────────────────────────────────────────
+# (existing load_bos_metrics function stays unchanged above)
+
+
+# ─── Architecture Health ─────────────────────────────────────
+
+
+def load_arch_health() -> dict:
+    """Aggregate architecture health metrics for the /arch dashboard.
+
+    Lightweight read-only aggregation: file reads + fast subprocess only.
+    """
+    workspace = Path.home() / "Workspace"
+
+    # ── Test baseline (read cached ecos pytest result, or quick probe) ──
+    tests: dict[str, dict] = {}
+
+    # ecos test baseline via pyproject
+    test_lock = workspace / "projects" / "ecos" / ".test_baseline_cache.json"
+    if test_lock.exists():
+        try:
+            tests["ecos"] = json.loads(test_lock.read_text())
+        except Exception:
+            pass
+
+    # ── Governance pipeline ───────────────────────────────────
+    gov_log = Path.home() / ".hermes/architecture/governance_log/governance.jsonl"
+    gov: dict = {"last_entry": None, "days_since": None, "health": "unknown"}
+    if gov_log.exists():
+        try:
+            lines = [line for line in gov_log.read_text().splitlines() if line.strip()]
+            if lines:
+                last = json.loads(lines[-1])
+                ts = parse_timestamp(last.get("ts"))
+                gov["last_entry"] = last.get("ts", "")
+                if ts:
+                    delta = (datetime.now(UTC) - ts).days
+                    gov["days_since"] = delta
+                    if delta <= 2:
+                        gov["health"] = "fresh"
+                    elif delta <= 14:
+                        gov["health"] = "aging"
+                    else:
+                        gov["health"] = "stale"
+                gov["total_entries"] = len(lines)
+        except Exception as e:
+            gov["error"] = str(e)
+
+    # ── System health ─────────────────────────────────────────
+    sys_yaml = workspace / ".omo/state/system.yaml"
+    sys_info: dict = {}
+    if sys_yaml.exists():
+        try:
+            sys_info = yaml.safe_load(sys_yaml.read_text(encoding="utf-8")) or {}
+        except Exception:
+            pass
+
+    # ── Git status ────────────────────────────────────────────
+    git: dict = {}
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True, text=True, timeout=5,
+            cwd=str(workspace / "projects" / "ecos"),
+        )
+        changed = [line for line in result.stdout.splitlines() if line.strip()]
+        git["uncommitted"] = len(changed)
+        git["status"] = "clean" if not changed else "dirty"
+    except Exception as e:
+        git["error"] = str(e)
+
+    # ── Ruff status (src/ only, lightweight) ──────────────────
+    ruff: dict = {}
+    try:
+        result = subprocess.run(
+            ["uv", "run", "ruff", "check", "src/", "--statistics"],
+            capture_output=True, text=True, timeout=15,
+            cwd=str(workspace / "projects" / "ecos"),
+        )
+        ruff["check"] = "passed" if result.returncode == 0 else "failed"
+        ruff["errors"] = len(result.stdout.splitlines()) if result.returncode != 0 else 0
+    except Exception as e:
+        ruff["error"] = str(e)
+
+    # ── Audit trail ───────────────────────────────────────────
+    audits_dir = workspace / ".omo/_knowledge/audits"
+    audits: dict = {"total": 0, "latest": None, "recent": []}
+    if audits_dir.exists():
+        try:
+            files = sorted(audits_dir.glob("*.md"), reverse=True)
+            audits["total"] = len(files)
+            if files:
+                audits["latest"] = files[0].stem
+            audits["recent"] = [f.stem for f in files[:5]]
+        except Exception as e:
+            audits["error"] = str(e)
+
+    return {
+        "tests": tests,
+        "governance": gov,
+        "system": {
+            "health_score": sys_info.get("health_score"),
+            "last_updated": sys_info.get("last_updated", {}).get("date"),
+        },
+        "git": git,
+        "ruff": ruff,
+        "audits": audits,
+        "timestamp": datetime.now(UTC).isoformat(),
+    }
 
 
 def load_bos_metrics() -> dict:

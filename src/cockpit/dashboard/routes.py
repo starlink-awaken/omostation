@@ -8,19 +8,16 @@ import time
 
 import yaml
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import JSONResponse
 
 from cockpit.dashboard.constants import (
-    BOS_DASHBOARD_HTML,
-    DASHBOARD_HTML,
     LAYER_SOURCES,
-    LIVE_DATA_JS,
     M0_SNAPSHOT_PATH,
-    OVERVIEW_HTML,
     PORT,
 )
 from cockpit.dashboard.helpers import (
     fetch_layer_status,
+    load_arch_health,
     load_bos_metrics,
     load_compute,
     load_debt,
@@ -128,29 +125,6 @@ async def api_v1_m0():
         return JSONResponse({"error": f"M0 snapshot read error: {e}"}, status_code=500)
 
 
-# ─── Pages ─────────────────────────────────────────────────────
-
-
-@router.get("/overview", response_class=HTMLResponse)
-@router.get("/overview/", response_class=HTMLResponse)
-async def overview_page():
-    return OVERVIEW_HTML
-
-
-@router.get("/", response_class=HTMLResponse)
-async def dashboard_page():
-    """Serve the existing dashboard.html with live-data JS injected."""
-    if not DASHBOARD_HTML.exists():
-        html = f"""<!DOCTYPE html><html><body><h1>Dashboard not found</h1>
-<p>Expected at: {DASHBOARD_HTML}</p>
-<p>Try <a href="/overview">/overview</a> for unified status.</p></body></html>"""
-        return HTMLResponse(content=html, status_code=404)
-
-    html = DASHBOARD_HTML.read_text(encoding="utf-8")
-    html = html.replace("</body>", LIVE_DATA_JS + "\n</body>")
-    return HTMLResponse(content=html)
-
-
 # ─── Legacy API (backward compatible) ─────────────────────────
 
 
@@ -244,8 +218,11 @@ async def api_bos_metrics():
     return JSONResponse(content=load_bos_metrics())
 
 
-@router.get("/bos", response_class=HTMLResponse)
-@router.get("/bos/", response_class=HTMLResponse)
-async def bos_dashboard():
-    """BOS 调用可观测面板。"""
-    return BOS_DASHBOARD_HTML
+# ─── Architecture Health ─────────────────────────────────
+
+
+@router.get("/api/v1/arch-health", dependencies=_AUTH_DEPS)
+async def api_arch_health():
+    """Architecture health aggregation."""
+    return JSONResponse(content=load_arch_health())
+

@@ -650,6 +650,12 @@ def main() -> int:
         "events": _c_events,
         "ssb": cmd_ssb,
         "mof": cmd_mof,
+        "omo": lambda a: __import__(
+            "cockpit.commands.omo", fromlist=["cmd_omo"]
+        ).cmd_omo(a),
+        "runtime": lambda a: __import__(
+            "cockpit.commands.runtime", fromlist=["cmd_runtime"]
+        ).cmd_runtime(a),
         "help": cmd_help,
         "quickstart": lambda a: __import__(
             "cockpit.commands.quickstart", fromlist=["cmd_quickstart"]

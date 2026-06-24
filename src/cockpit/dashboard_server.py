@@ -17,8 +17,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from cockpit.dashboard.constants import (
+    COCKPIT_UI_DIST,
     DASHBOARD_CORS_ORIGIN,
-    HERMES_CONSOLE_DIST,
     PORT,
 )
 from cockpit.dashboard.routes import _auth_dependency as _auth_dep
@@ -44,13 +44,6 @@ try:
 except ImportError:
     _AUTH_DEPS = []
 
-# ─── Static files (Hermes Console) ────────────────────────────
-
-if HERMES_CONSOLE_DIST.exists():
-    from fastapi.staticfiles import StaticFiles
-
-    app.mount("/hermes", StaticFiles(directory=str(HERMES_CONSOLE_DIST), html=True), name="hermes_console")
-
 # ─── Governance routers (graceful degradation) ────────────────
 
 for _router_module in (
@@ -69,6 +62,13 @@ for _router_module in (
 # ─── Main dashboard router ────────────────────────────────────
 
 app.include_router(dashboard_router)
+
+# ─── Static files (Cockpit UI) ────────────────────────────
+
+if COCKPIT_UI_DIST.exists():
+    from fastapi.staticfiles import StaticFiles
+
+    app.mount("/", StaticFiles(directory=str(COCKPIT_UI_DIST), html=True), name="cockpit_ui")
 
 
 # ═══════════════════════════════════════════════════════════════

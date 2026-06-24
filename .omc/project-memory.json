@@ -38,7 +38,7 @@
   },
   "build": {
     "buildCommand": "make build",
-    "testCommand": "cd \"/Users/xiamingxing/Workspace/projects/cockpit\" && uv run pytest src/cockpit/tests/ -q 2>&1 | tail -3",
+    "testCommand": "echo \"=== agora 顶层结构 ===\"; ls projects/agora/ 2>/dev/null\necho \"\"\necho \"=== src/agora/tests ===\"; ls projects/agora/src/agora/tests/unit/test_bos_resolver.py 2>/dev/null && echo \"FOUND src-layout\" || echo \"not in src/agora/tests\"\necho \"\"\necho \"=== find 全域 ===\"; find projects/agora -name \"test_bos_resolver.py\" 2>/dev/null | head -3\necho \"\"\necho \"=== pyproject pytest 配置 ===\"; grep -A8 \"tool.pytest\\|testpaths\" projects/agora/pyproject.toml 2>/dev/null | head -12",
     "lintCommand": "ruff check",
     "devCommand": null,
     "scripts": {}
