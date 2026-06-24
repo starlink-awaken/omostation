@@ -253,6 +253,23 @@ def main() -> int:
     status_p.add_argument("--watch", action="store_true", help="持续监控并自动刷新")
     status_p.add_argument("--interval", type=float, default=5.0, help="监控刷新间隔（秒）")
     status_p.add_argument("--json", action="store_true", help="以 JSON 格式输出")
+
+    # P66 增: readiness dashboard 子命令 (从 P65 wrapper 升级)
+    from cockpit.commands import readiness as _readiness_mod
+
+    readiness_p = sub.add_parser(
+        "readiness",
+        help="P66: governance readiness dashboard 摘要 (4 卡片: summary/dimensions/alerts/history)",
+    )
+    readiness_p.add_argument(
+        "--format",
+        choices=["json", "text"],
+        default="json",
+        help="输出格式 (默认 json, 适合 dashboard 消费)",
+    )
+    readiness_p.add_argument("--output", help="输出文件路径 (默认 stdout)")
+    readiness_p.set_defaults(func=_readiness_mod.cmd_readiness)
+
     sub.add_parser("demo", help="快速演示")
     daily_p = sub.add_parser("daily", help="每日研究简报")
     daily_p.add_argument("--days", type=int, default=1, help="回顾最近 N 天")
