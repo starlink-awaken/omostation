@@ -1,4 +1,4 @@
-# BRIEFING — 2026-06-24T02:20:13Z
+# BRIEFING — 2026-06-24T02:30:13Z
 
 ## Mission
 完成里程碑 M1 (Agora I0 MCP 跨层通信重构) 的代码修复与消改，包含 subprocess 降级、敏感凭证清理、路由重复注册修复及集成测试验证。
@@ -21,7 +21,7 @@
 
 ## Current Parent
 - Conversation ID: 3ed4fe65-401d-4416-a615-6a937af12911
-- Updated: not yet
+- Updated: yes
 
 ## Task Summary
 - **What to build**: 修复 subprocess 降级、敏感凭证清理、唯一路由注册和集成测试验证
@@ -30,7 +30,11 @@
 - **Code layout**: projects/ecos, projects/agora
 
 ## Key Decisions Made
-- [TBD]
+- 对 `test_swarm_no_subprocess.py` 内部使用 `patch.dict(os.environ)` 对全局 `AGORA_API_KEY` 做环境隔离，消除测试断言对于 headers 存在的干扰。
+- 将 `WORKFLOW-SWARM-CODE-AUDIT.yaml` 的 `subtype` 从 invalid `CustomWorkflow` 改为 `AgentWorkflow` 以解决 mof validate 不通过的问题。
+- 对 adversarial test 的断言做出修改以适配正确的 mock fallback 行为。
 
 ## Artifact Index
-- [TBD]
+- `/Users/xiamingxing/Workspace/.agents/teamwork_preview_worker_m1_2/changes.md` - 修改清单及详细说明
+- `/Users/xiamingxing/Workspace/.agents/teamwork_preview_worker_m1_2/handoff.md` - 自包含的 5 段 Handoff 报告
+- `/Users/xiamingxing/Workspace/.agents/teamwork_preview_worker_m1_2/progress.md` - 进度及活性追踪
