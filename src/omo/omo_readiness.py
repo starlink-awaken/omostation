@@ -18,7 +18,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from omo.omo_io import write_text_atomic
+from omo.omo_io import AppendOnlyLog, write_text_atomic
 from omo.omo_paths import find_omo_dir
 
 
@@ -73,6 +73,14 @@ def write_readiness_snapshot(
         "source_ref": source_ref,
     }
     write_text_atomic(snap_path, json.dumps(snapshot, indent=2, ensure_ascii=False))
+
+    # P70: 同时追加到持久化 snapshots.jsonl (不受 30 快照 rotation 限制)
+    persistent_log = log_dir / "readiness-snapshots.jsonl"
+    try:
+        AppendOnlyLog(persistent_log).append(snapshot, sort_keys=True)
+    except Exception:
+        pass
+
     return snap_path
 
 
