@@ -56,8 +56,17 @@ def load_alerts(root: Path, window_hours: int = 24) -> list[dict]:
     return alerts
 
 
-def aggregate(alerts: list[dict]) -> dict:
-    """聚合告警."""
+def aggregate(alerts: list[dict], storm_threshold: int = 3, total_threshold: int = 5) -> dict:
+    """聚合告警.
+
+    P67 增: storm_threshold / total_threshold 参数化, 级别 P0/P1/P2.
+
+    级别判定:
+    - P0 (critical): storm_warnings + total > total_threshold * 2
+    - P1 (high):     storm_warnings + total > total_threshold
+    - P2 (medium):   storm_warnings || total > total_threshold
+    - P3 (low):      其余 (默认 0 告警)
+    """
     by_type: dict[str, list] = defaultdict(list)
     by_hour: dict[str, int] = defaultdict(int)
     storm_warnings = []
@@ -81,9 +90,8 @@ def aggregate(alerts: list[dict]) -> dict:
             except Exception:
                 pass
 
-    # 告警风暴检测: 同 1h 内同类型 > 3
+    # 告警风暴检测: 同 1h 内同类型 > storm_threshold
     for atype, items in by_type.items():
-        # 按小时桶分组
         hour_buckets = defaultdict(int)
         for item in items:
             ts = item.get("ts", "")
@@ -91,7 +99,7 @@ def aggregate(alerts: list[dict]) -> dict:
                 hour = ts[:13]
                 hour_buckets[hour] += 1
         for hour, count in hour_buckets.items():
-            if count > 3:
+            if count > storm_threshold:
                 storm_warnings.append({
                     "type": atype,
                     "hour": hour,
@@ -99,8 +107,30 @@ def aggregate(alerts: list[dict]) -> dict:
                     "message": f"⚠️  {atype} 在 {hour} 触发 {count} 次, 告警风暴",
                 })
 
+    total = sum(len(items) for items in by_type.values())
+
+    # P67: 级别判定
+    level = "P3"
+    level_reason = "no alerts"
+    if total > 0:
+        if storm_warnings and total > total_threshold * 2:
+            level = "P0"
+            level_reason = f"storm + total({total}) > {total_threshold * 2}"
+        elif storm_warnings and total > total_threshold:
+            level = "P1"
+            level_reason = f"storm + total({total}) > {total_threshold}"
+        elif storm_warnings or total > total_threshold:
+            level = "P2"
+            if storm_warnings:
+                level_reason = f"storm detected"
+            else:
+                level_reason = f"total({total}) > {total_threshold}"
+        else:
+            level = "P3"
+            level_reason = f"total({total}) ≤ {total_threshold}"
+
     return {
-        "total_alerts": sum(len(items) for items in by_type.values()),
+        "total_alerts": total,
         "by_type": {k: len(v) for k, v in by_type.items()},
         "by_type_detail": dict(by_type),
         "by_hour": dict(sorted(by_hour.items())),
@@ -108,22 +138,26 @@ def aggregate(alerts: list[dict]) -> dict:
         "alert_count_per_type": dict(Counter(
             item["type"] for alert in alerts for item in alert.get("alerts", [])
         )),
+        "level": level,
+        "level_reason": level_reason,
+        "thresholds": {
+            "storm_threshold": storm_threshold,
+            "total_threshold": total_threshold,
+        },
     }
 
 
 def emit_notification(root: Path, agg: dict, window_hours: int) -> int:
     """P66 增: 主动通知 — 告警风暴时调 omo event emit.
 
-    触发条件:
-    - storm_warnings 长度 > 0
-    - 或 total_alerts > threshold (默认 5)
-
-    返回: 0=未触发, 1=触发.
+    触发条件 (P67 级别判定):
+    - P0/P1/P2 都触发
+    - P3 (默认) 不触发
     """
     import json as _json
     from subprocess import run as _run
-    should_notify = bool(agg.get("storm_warnings")) or agg.get("total_alerts", 0) >= 5
-    if not should_notify:
+    level = agg.get("level", "P3")
+    if level == "P3":
         return 0
 
     payload = {
@@ -131,6 +165,9 @@ def emit_notification(root: Path, agg: dict, window_hours: int) -> int:
         "total_alerts": agg.get("total_alerts"),
         "by_type": agg.get("by_type"),
         "storm_count": len(agg.get("storm_warnings", [])),
+        "level": agg.get("level", "P3"),
+        "level_reason": agg.get("level_reason", ""),
+        "thresholds": agg.get("thresholds", {}),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -164,6 +201,10 @@ def main() -> int:
     )
     parser.add_argument("root", nargs="?", default=".", help="workspace root")
     parser.add_argument("--window", type=int, default=24, help="时间窗口 (小时, 默认 24)")
+    parser.add_argument("--storm-threshold", type=int, default=3,
+                        help="P67: 风暴检测阈值 (同 1h 内同类型, 默认 3)")
+    parser.add_argument("--total-threshold", type=int, default=5,
+                        help="P67: 总告警阈值 (默认 5)")
     parser.add_argument("--format", choices=["json", "text"], default="text")
     parser.add_argument("--output", help="输出文件")
     parser.add_argument("--notify", action="store_true",
@@ -176,7 +217,7 @@ def main() -> int:
         return 1
 
     alerts = load_alerts(root, args.window)
-    agg = aggregate(alerts)
+    agg = aggregate(alerts, args.storm_threshold, args.total_threshold)
 
     if args.format == "json":
         output = json.dumps({

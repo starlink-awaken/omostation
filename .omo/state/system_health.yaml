@@ -1,77 +1,56 @@
-last_scan: 1782271475.6179159
+last_scan: 1782284142.110372
 services:
-  agent-runtime:
-    health_check: healthy
-    name: agent-runtime
-    port_listening: false
-    runtime:
-      freshness_seconds: 26378
-      pid: '27375'
-      status: running
-    timestamp: 1780669326.075913
-    type: daemon
-  agentmesh-gateway:
-    health_check: failed
-    name: agentmesh-gateway
-    port_listening: false
-    runtime:
-      exit_code: 113
-      self_heal_attempted: true
-      status: failed
-    timestamp: 1780669326.075913
-    type: daemon
-  agora:
-    health_check: healthy
-    name: agora
+  agora-gateway:
+    name: agora-gateway
     port_listening: true
     runtime:
       status: unmanaged
-    timestamp: 1780669326.075913
+    timestamp: 1782284142.110372
+    type: daemon
+  agora-sse:
+    health_check: healthy
+    name: agora-sse
+    port_listening: true
+    runtime:
+      status: unmanaged
+    timestamp: 1782284142.110372
     type: daemon
   cron-service:
     health_check: healthy
     name: cron-service
-    port_listening: false
+    port_listening: true
     runtime:
-      freshness_seconds: 26378
-      pid: '27379'
+      freshness_seconds: 1641194
+      pid: '1531'
       status: running
-    timestamp: 1780669326.075913
+    timestamp: 1782284142.110372
     type: daemon
   gbrain:
-    health_check: healthy
     name: gbrain
-    port_listening: false
     runtime:
-      details: Up 2 hours (healthy)
-      freshness_seconds: 6723
-      status: running
-    timestamp: 1780669326.075913
-    type: docker
+      status: unmanaged
+    timestamp: 1782284142.110372
+    type: cli
   gbrain-index:
-    health_check: failed
+    health_check: scheduled
     name: gbrain-index
     runtime:
-      exit_code: 113
-      self_heal_attempted: true
-      status: failed
-    timestamp: 1780669326.075913
+      status: scheduled
+    timestamp: 1782284142.110372
     type: scheduled
   hermes-gateway:
-    health_check: healthy
     name: hermes-gateway
-    port_listening: false
     runtime:
-      freshness_seconds: 26378
-      pid: '1832'
+      freshness_seconds: 1641194
+      pid: '1537'
       status: running
-    timestamp: 1780669326.075913
+    timestamp: 1782284142.110372
     type: daemon
   kos:
     name: kos
     runtime:
       status: unmanaged
-    timestamp: 1780669326.075913
+    timestamp: 1782284142.110372
     type: integrated
   ollama:
     health_check: healthy
@@ -79,28 +58,11 @@ services:
     port_listening: true
     runtime:
       status: unmanaged
-    timestamp: 1780669326.075913
+    timestamp: 1782284142.110372
     type: daemon
   runtime-mcp:
     name: runtime-mcp
     runtime:
       status: unmanaged
-    timestamp: 1780669326.075913
+    timestamp: 1782284142.110372
     type: mcp
-  sharedbrain-bos:
-    health_check: healthy
-    name: sharedbrain-bos
-    port_listening: false
-    runtime:
-      details: Up 2 hours (healthy)
-      freshness_seconds: 6723
-      status: running
-    timestamp: 1780669326.075913
-    type: docker
-  sharedbrain-bos-mcp:
-    name: sharedbrain-bos-mcp
-    port_listening: false
-    runtime:
-      status: unmanaged
-    timestamp: 1780669326.075913
-    type: docker
