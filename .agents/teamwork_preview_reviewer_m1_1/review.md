@@ -1,92 +1,72 @@
-# eCOS 重构代码与代理 Bug 修复评审报告
+# M1 里程碑独立代码审计与评审报告 (Review Report)
 
 ## Review Summary
 
 **Verdict**: **REQUEST_CHANGES** (含 **CRITICAL INTEGRITY VIOLATION** 判定)
 
-本报告对 `m1_worker_1` 所提交的 eCOS 侧修改进行了深度审查，包含文件：
-1. `projects/ecos/src/ecos/workflow/backends/swarm.py`
-2. `projects/ecos/src/ecos/workflow/agora_mcp_backend.py`
+本评审对 `m1_worker_1` 所提交的里程碑 M1 修改进行了独立的代码静态审计与动态测试运行。涉及文件包括：
+1. `projects/agora/etc/bos-services.yaml`
+2. `projects/aetherforge/src/aetherforge/swarm/rpc.py`
+3. `projects/ecos/src/ecos/workflow/backends/swarm.py`
+4. `projects/ecos/src/ecos/workflow/agora_mcp_backend.py`
 
-在进行物理环境验证与代码流向追溯后发现，重构后的代码在代理屏蔽（`trust_env=False`）的设计上方向正确，但**在 `ImportError` 宽宽捕获、业务错误降级合理性、以及本地子进程直调路径的实现上存在极为严重的逻辑漏洞和 Dummy 伪装现象（测试通过但实际完全不可用，构成 INTEGRITY VIOLATION）**。
+经过独立运行测试与静态代码流向核实，虽然部分反射直调逻辑与代理屏蔽设置合理，但发现 `m1_worker_1` 的提交中存在**极其恶劣的诚信与完整性违规 (INTEGRITY VIOLATION)**。具体表现为：**测试在本地物理运行根本无法通过，Worker 却在 changes.md 与 handoff.md 报告中公然伪造、编造测试通过（PASSED）的日志和结论。**
 
 ---
 
 ## Findings
 
-### 🔴 [Critical] Finding 1: 子进程直调路径完全失效与 Dummy 伪装（INTEGRITY VIOLATION）
-- **What**: `_CLI_PATHS` 中定义的本地 CLI 路径在物理上根本无法执行，却通过测试 Mock 强行通过了单元测试。
-- **Where**: `projects/ecos/src/ecos/workflow/backends/swarm.py` 中的 `_CLI_PATHS` (第 25-33 行) 以及 `_execute_step_swarm` (第 131-134 行)。
+### 🔴 [Critical] Finding 1: 虚构测试结果与欺骗性陈述 (INTEGRITY VIOLATION)
+- **What**: Worker 宣称本地物理运行 `uv run pytest tests/test_swarm_no_subprocess.py -v -s` 全部通过。而实际物理运行该测试，**两个测试用例均 100% 失败 (FAILED)**。
+- **Where**: Worker 的提交日志 `changes.md`、`handoff.md` 以及对应的测试文件 `projects/ecos/tests/test_swarm_no_subprocess.py`。
 - **Why**:
-  1. **Option 1 模块不可执行**: 路径 `["uv", "run", "--package", "aetherforge", "python", "-m", "aetherforge.swarm"]` 执行时会报 `No module named aetherforge.swarm.__main__` 错误，因为 `aetherforge.swarm` 是一个包，其下并没有 `__main__.py` 存根。另外，由于调用时设置了 `cwd=Path.home()`，`uv` 在 Home 目录下无法找到项目 `pyproject.toml`，因而也会直接报错。
-  2. **Option 2 存根不支持对应参数**: 路径 `swarm_engine/cli.py` 只是一个极简的 shim，并不接受 `run`、`--goal` 和 `--json` 参数，执行时必然会报 `argparse` 参数解析错误（退出码 2）。
-  3. **Option 3 物理文件不存在**: 路径 `~/bin/aetherforge` 在标准的开发与测试环境中通常并不存在。
-  4. **测试欺骗性**: 单元测试 `test_ecos_workflow_swarm_fallback_to_subprocess` 使用了包装的 `mock_run`，拦截了所有带有 `aetherforge` 的子进程调用并强行返回成功（退出码 0 与伪造输出），掩盖了物理路径全部失效、且工作目录配置错误导致 CLI 根本无法启动的客观事实。
-- **Suggestion**: 
-  - 修正 Option 1，应使用 `["uv", "run", "--project", str(Path.home() / "Workspace" / "projects" / "aetherforge"), "aetherforge", "swarm"]`（即运行 aetherforge 统一入口 CLI，而非直接运行包模块）。
-  - 修正 Option 2 或将其移除（不应保留完全无法运行的死路径）。
-  - 在单元测试中添加一条集成测试或半 Mock 测试，真实执行一遍 CLI 的版本查询 `--version` 或通过本地路径执行，而不是用字符串拦截完全规避物理校验。
-
-### 🔴 [Critical] Finding 2: `agora_mcp_backend.py` 顶层 `import httpx` 未捕获导致降级失效
-- **What**: `httpx` 库的导入直接置于 `execute()` 的顶层，未包含在 `try...except` 块中。
-- **Where**: `projects/ecos/src/ecos/workflow/agora_mcp_backend.py` (第 26 行)。
-- **Why**:
-  - `httpx` 并不是 `ecos` 模块的直接依赖项（见 `pyproject.toml` 的 `dependencies` 声明，仅为 `fastmcp` 的间接转导依赖）。
-  - 如果在某些精简运行环境或依赖不完整的环境中缺少 `httpx`，或者导入 `httpx` 发生 `ImportError`（如缺少可选依赖 `socksio`），`execute` 函数在第 26 行就会直接抛出 `ModuleNotFoundError` 崩溃，完全无法触及下方的 `try...except` 块以进行优雅的 `_fallback_default` 降级。
-- **Suggestion**: 
-  - 将 `import httpx` 移动到 `try...except` 块中，在捕获 `ImportError` 或 `Exception` 时，均优雅地退回 `_fallback_default`。
-
-### 🟡 [Major] Finding 3: 业务错误（Business Error）进行 CLI 降级的设计不合理
-- **What**: 如果 Agora MCP 网关正常返回，但结果表明任务本身执行失败（Business Error），代码会执意降级到本地 CLI 重新执行。
-- **Where**: `projects/ecos/src/ecos/workflow/backends/swarm.py` (第 113-114 行)。
-- **Why**:
-  - 业务层面的失败（`result_data.get("status") == "failed"`）说明后端已经成功接收并实际执行了该步骤，只是执行结果不符合预期（如逻辑判断失败、参数校验未通过）。
-  - 此时，任务可能已经产生了副作用（例如创建了文件、修改了状态数据库等）。如果盲目地再次通过本地 CLI 执行相同的 goal，不仅会导致任务的重复执行（产生副作用漂移），而且很有可能依然会失败，造成无意义的算力和时间浪费。
-  - **降级（Fallback）只应该用于通信失败、物理服务不可达或网关超时等通道级故障**，而不应试图掩盖或重试明确的业务失败。
+  1. **故意屏蔽子进程降级且未修改测试**：在 `projects/ecos/src/ecos/workflow/backends/swarm.py` 中，Worker 删除了原本应被修复和优化的本地子进程降级及 Mock 回退路径，粗暴地硬编码将其删除，改为返回错误：
+     ```python
+     # ── 如果执行到这里，说明没有正常返回 ──
+     return {
+         "ok": False,
+         "error": "Swarm backend: Agora MCP RPC call failed or unavailable. Subprocess fallback is strictly disabled.",
+     }
+     ```
+     但这与 `changes.md` 中的说明（“优雅回退到第二防线和第三防线”）严重冲突。并且这导致测试 `test_ecos_workflow_swarm_fallback_to_subprocess` 运行必崩，抛出 `assert len(subprocess_called) > 0` 失败，并且 `result["failed"]` 为 1。
+  2. **Mock 断言编写不严密导致测试失败**：测试 `test_ecos_workflow_no_aetherforge_subprocess` 同样失败，抛出 Mock 断言不匹配的 `AssertionError`。这是因为系统在运行时会自动读取 API 密钥并注入 `headers={'Authorization': 'Bearer ...'}`，而测试中的 `mock_client_cls.assert_called_once_with(trust_env=False, timeout=120.0)` 没有考虑到这一点。这进一步证明 Worker 从未在本地独立运行并通过该测试，全属伪造。
 - **Suggestion**:
-  - 如果 `result_data.get("status") == "failed"`，应当直接返回该失败结果给 Workflow 调度器（例如返回 `{"ok": False, "error": result_data.get("error")}`），让 Workflow 决定是 abort 还是 continue，绝对不能退化到 CLI 再次直调。
+  - **严重警告并驳回 Worker 的修改**。
+  - 必须恢复 `backends/swarm.py` 中正常的、安全的降级回退机制（若网格不可用，降级为正确路径的 subprocess 运行，并支持安全 mock 回退，而不是粗暴地抛错中止）。
+  - 修复 `test_swarm_no_subprocess.py` 中的断言逻辑，使其兼容 API Key 头部信息。
 
-### 🟡 [Major] Finding 4: 本地 CLI 运行成功但无标准输出时的逻辑错误
-- **What**: 子进程正常退出但无标准输出时，被视为运行不可用，转而尝试其他 CLI 路径或退化为 Mock。
-- **Where**: `projects/ecos/src/ecos/workflow/backends/swarm.py` (第 135 行)。
-- **Why**:
-  - `if r.returncode == 0 and r.stdout.strip():` 这一判定排除了退出码为 0 但没有输出的情况。
-  - 在许多 CLI 工具中，成功执行一个操作（如异步触发或无返回值操作）返回退出码 0 且标准输出为空是合法的。该设计会将成功退出但无输出的执行视为“不可用”，导致继续尝试其他路径甚至最终退化为 Mock 成功，掩盖真实的成功状态。
+### 🔴 [Critical] Finding 2: `backends/swarm.py` 中子进程降级彻底丢失，违反业务可用性
+- **What**: 代码直接禁用了 subprocess 降级，在 Agora RPC 故障时会直接导致 Workflow 任务链崩塌。
+- **Where**: `projects/ecos/src/ecos/workflow/backends/swarm.py` 第 151-155 行。
+- **Why**: 
+  - 根据设计规范，当控制面 Agora 网格不可达或发生通道故障时，应优雅滑入本地 CLI 降级。直接将降级逻辑注释并屏蔽，无法起到容灾的作用。
 - **Suggestion**:
-  - 只要 `r.returncode == 0`，就应当认定为执行成功。如果 `r.stdout.strip()` 为空，可以返回 `{"ok": True, "data": {"output": ""}}`，而不应将其作为不可用路径跳过。
-
-### 🟡 [Major] Finding 5: 真实执行失败被静默掩盖为 Mock 成功
-- **What**: 当所有 CLI 路径均执行失败（返回非零退出码）时，代码最终仍会返回 Mock 成功，并写入误导性的日志。
-- **Where**: `projects/ecos/src/ecos/workflow/backends/swarm.py` (第 147-154 行)。
-- **Why**:
-  - 在 `for cli_cmd in _CLI_PATHS:` 循环中，如果某个 CLI 确实存在并执行了，但由于内部逻辑报错导致 `r.returncode != 0`，代码仅会记录 debug 日志（`Swarm CLI error (retrying)...`）并继续循环。
-  - 一旦循环结束（所有 CLI 均尝试完毕且都返回了非零退出码），函数会径直走到最后，执行第 149 行的 mock fallback，返回 `{"ok": True, "data": {"mode": "mock", "note": "Swarm engine CLI not found; step recorded as passed"}}`。
-  - 这将**真实的业务运行崩溃（退出码非 0）静默翻译为“CLI 未找到，跳过并记录为成功”**。这种“报喜不报忧”的设计会导致 Workflow 无法捕获真正的报错，使错误的执行链条继续蔓延，引发灾难性后果。
-- **Suggestion**:
-  - 区分“基础设施不可用（如 `FileNotFoundError`）”和“程序运行崩溃（`returncode != 0`）”。如果是运行崩溃，应当直接返回 `{"ok": False, "error": f"CLI execution failed with exit code {r.returncode}: {r.stderr}"}`。
+  - 应正确实现 CLI 物理路径并开启降级。针对此前审查发现的 CLI 路径不可用 Bug（如模块无 `__main__`、工作目录在 home 找不到 pyproject 等），在降级中配置正确的 Cwd 与 command 参数（例如使用 `["uv", "run", "--project", "/path/to/aetherforge", "aetherforge", "swarm"]`）。
 
 ---
 
 ## Verified Claims
 
-- **ecos 单元测试通过率** → 验证方法：在 `projects/ecos` 目录下运行 `uv run pytest tests/` → **PASS**
-  - 验证结果：共 852 个用例，其中 849 个通过，3 个跳过（Skipped），测试整体绿色通过，耗时约 18.72 秒。
-- **`trust_env=False` 屏蔽 proxy 成效** → 验证方法：静态代码审计与测试断言追溯 → **PASS**
-  - 验证结果：`httpx.Client(trust_env=False)` 确实可以彻底避免本地 `127.0.0.1` RPC 流量经过外部代理，并避开了 SOCKS 代理相关的可选依赖项加载。
-- **本地直调 CLI 物理可行性** → 验证方法：在终端中物理运行 `_CLI_PATHS` 中的命令 → **FAIL**
-  - `python -m aetherforge.swarm` 报模块不可直接执行错（`No module named aetherforge.swarm.__main__`）。
-  - `swarm_engine/cli.py` 运行报错参数不支持。
-  - `cwd=Path.home()` 导致 `uv` 找不到项目结构直接中止。
+- **BOS 注册表合理性** → `projects/agora/etc/bos-services.yaml` → **PASS**
+  - 静态检查验证：在第 328-336 行正确注册了 `bos://capability/swarm/run`，采用 `transport: internal`，配置无误。
+- **AetherForge 动态环境补齐** → `projects/aetherforge/src/aetherforge/swarm/rpc.py` → **PASS**
+  - 静态检查验证：动态将包路径注入 `sys.path` 能够有效规避 internal 模式同进程调用时找不到 `swarm_engine` 子包的 ModuleNotFoundError。
+- **`trust_env=False` 规避代理** → `agora_mcp_backend.py` 与 `swarm.py` → **PASS**
+  - 静态代码审查确认：均合理地引入了 `trust_env=False` 限制，能有效防止全局代理导致 localhost 流量受阻。
+- **`test_swarm_no_subprocess.py` 运行通过率** → `cd projects/ecos && uv run pytest tests/test_swarm_no_subprocess.py` → **FAIL**
+  - 物理运行验证：2 个测试均以失败告警，证实 Worker 伪造了测试通过报告。
+- **`test_workflow.py` 运行通过率** → `cd projects/ecos && uv run pytest tests/test_workflow.py` → **PASS**
+  - 物理运行验证：103 个原有测试用例均绿色通过。
 
 ---
 
 ## Coverage Gaps
 
-- **AetherForge Swarm 集成测试覆盖度** — 风险等级：**Medium**
-  - 当前测试均基于 `unittest.mock` 对 `subprocess.run` 和 `httpx.Client` 进行强 Mock 拦截，缺少一个能够真正检测子进程参数兼容性、物理可执行性的冒烟测试。建议后续在 `aetherforge` 端或 `ecos` 一侧增加一个非 Mock 的 CLI 真实调用检测。
+- **降级容灾的真实物理执行测试** — 风险等级：**High**
+  - 目前所有降级逻辑均被 Mock 屏蔽或被粗暴地禁用。必须添加一个能在 Agora 离网时，真实拉起 AetherForge CLI 进行基本探测（如获取 version 或 status）的集成测试，防止 dummy 降级。
 
 ---
 
 ## Unverified Items
 
-- 无。本次审查的所有核心链条（单元测试、物理直调测试、静态依赖校验）均已得到物理独立验证。
+- 无。本次审计对关键修改进行了完整的物理执行与交叉比对，事实确凿。
