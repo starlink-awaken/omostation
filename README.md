@@ -32,9 +32,15 @@ omo governance surfaces  # `.omo` 顶层治理面巡检
 omo governance ingress-goal BET-001 "标题" "描述" --ingress-plane projects/c2g
 omo governance ingress-task task.yaml --ingress-plane projects/c2g
 omo governance ingress-debt debt.yaml --ingress-plane projects/aetherforge
+omo goal create --id G44.1 --desc "治理入口收敛" --source-ref reviewer:goal:g44.1
+omo goal progress --id G44.1 --pct 75
 omo task create --title "治理任务" --source-doc docs/spec.md --test-plan "uv run pytest -q"
+omo task done TASK-1234
 omo lint direct-omo-io         # 非 broker 直接改 `.omo` / `spaces` 拦截
-omo lint ingress-registry      # ingress registry 结构 / 反向映射 / 落盘一致性校验
+omo lint sensitive-governed-writes  # system/goals/tasks/capabilities broker-only 落盘拦截
+omo lint ingress-registry      # 强制校验 .omo/_delivery/ingress/registry.yaml 结构 / 反向映射 / 落盘一致性
+omo lint mutation-surfaces     # broker 写入入口清单 vs truth registry 对齐校验
+omo lint internal-write-profiles # worker/internal 运行时写路径 vs truth registry 对齐校验
 omo lint self-evolution-approval # OPC P6 self-evolution 审批红线校验
 omo lint task-policy self-evolution-approval # 单条规则校验
 omo lint task-policy human-approval-ref      # 单条规则校验
@@ -53,8 +59,14 @@ omo observability    # 可观测性
 - `omo governance ingress-goal`: 受审计写入 `.omo/goals/current.yaml`
 - `omo governance ingress-task`: 受审计写入 `.omo/tasks/planned/<id>.yaml`
 - `omo governance ingress-debt`: 受审计写入 `.omo/debt/items/<id>.yaml`
+- `omo goal create`: 人类友好的 goal 脚手架入口，底层改走 `create_goal()` broker
+- `omo goal progress`: 人类友好的 goal 更新入口，底层改走 `update_goal_progress()` broker
 - `omo task create`: 人类友好的低风险 planned-task 脚手架入口，底层仍走 `create_planned_task()` broker
+- `omo task done`: 人类友好的 done 归档入口，底层改走 `complete_task()` broker
+- `omo task refresh-evidence`: done task 证据路径修复入口，底层改走 `update_done_task_evidence_paths()` broker
+- `omo-capability capability scan/register`: capability registry 入口，底层改走 `write_capability_registry_bundle()` / `write_manual_capabilities()` broker
 - 三者都会同时落审计/交付副产物到 `.omo/_delivery/ingress/`
+- `planned -> active` 的 queue move 现在也通过 ingress transition broker 收口；worker 侧只保留 promotion envelope 与 sync/rollback 编排
 
 ### 持久化治理红线
 
@@ -62,10 +74,30 @@ omo observability    # 可观测性
 - 机器可读注册表在 `.omo/_truth/registry/task-policies.yaml`
 - 统一执行入口是 `omo lint task-policy <name>`
 - 全量执行入口是 `omo lint task-policy --all`
+- OMO 人类/桥接 mutation surface 的机器可读注册表在 `.omo/_truth/registry/mutation-surfaces.yaml`
+- OMO worker/internal runtime 写路径的机器可读注册表在 `.omo/_truth/registry/internal-write-profiles.yaml`
+- 历史 direct-io 存量基线在 `.omo/_truth/registry/direct-io-baseline.yaml`
+- 统一执行入口是 `omo lint mutation-surfaces`
+- 统一执行入口是 `omo lint internal-write-profiles`
+- 当前已登记 surface 包括:
+  - `omo goal create/progress`
+  - `omo task done`
+  - `omo governance ingress-goal/task/debt`
+  - `omo bridge --format ...`
+  - `python3 projects/ecos/src/ecos/ssot/tools/mof-state-bridge.py --m1-to-omo`（仅 broker 导入 proposed/planned → `.omo/tasks/planned/`）
+  - `c2g` 的 `save_bet/save_task`
+- 当前已登记 internal write profiles 包括:
+  - `worker-dispatch/status/promotion`
+  - `worker-approval-runtime`
+  - `worker-rollout-runtime`
+  - `worker-experience-runtime`
+  - `worker-overlay-runtime`
 - 当前持久化门禁链:
   - 本地提交前: `.pre-commit-config.yaml`
   - CI 合并前: `.github/workflows/governance-check.yml`
-  - 治理巡检: `omo governance surfaces` + `omo lint ingress-registry`
+- 治理巡检: `omo governance surfaces` + `omo lint ingress-registry` + `omo lint mutation-surfaces` + `omo lint internal-write-profiles`
+- direct-io gate 使用 baseline 仅冻结已知历史脚本债务；新增 `.omo` / `spaces` 直写仍然必须被拦截
+- 当前 baseline 已清零；`omo lint direct-omo-io` 会要求 `direct-io-baseline.yaml` 保持 `entries: []`
 - 新增红线时只允许:
   - 在 `TaskPolicy` 注册表加规则
   - 补对应测试

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
+from .omo_shared import load_yaml
 
 
 PHASE_TASK_IDS = {
@@ -28,4 +28,4 @@ def resolve_opc_phase_task_path(workspace_root: Path, task_id: str) -> Path:
 
 def load_opc_phase_task(workspace_root: Path, task_id: str) -> dict:
     path = resolve_opc_phase_task_path(workspace_root, task_id)
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return load_yaml(path)

@@ -2,16 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
-
 from .omo_governance_overlay import build_governance_overlay_status
 from .omo_governance_overlay_targets import evaluate_governance_overlay_planned_target
+from .omo_shared import load_yaml_required as shared_load_yaml_required
 
 
 def _load_yaml_required(path: Path) -> dict:
-    if not path.exists():
-        raise FileNotFoundError(path.as_posix())
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return shared_load_yaml_required(path)
 
 
 def _roadmap_item(roadmap: dict, roadmap_item_id: str) -> dict:

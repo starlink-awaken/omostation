@@ -3,16 +3,12 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-import yaml
+from omo.omo_shared import load_yaml_required as _load_yaml_required
 
 
-def _load_yaml_required(path: Path) -> dict:
-    if not path.exists():
-        raise FileNotFoundError(path.as_posix())
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-
-
-def _parse_iso8601(value: str) -> datetime:
+def _parse_iso8601(value: str | datetime) -> datetime:
+    if isinstance(value, datetime):
+        return value
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
@@ -73,7 +69,11 @@ def build_governance_overlay_approval_prep_analytics(
 
     for entry in current.get("tasks", []):
         latest_event = latest_event_by_task.get(str(entry["task_id"]), {})
-        age_bucket = _age_bucket(generated_at, latest_event.get("started_at"))
+        latest_started_at = latest_event.get("started_at")
+        age_bucket = _age_bucket(
+            generated_at,
+            str(latest_started_at) if latest_started_at is not None else None,
+        )
         age_buckets[age_bucket] += 1
         blockers = list(entry.get("blockers", []))
         for blocker in blockers:
@@ -120,6 +120,9 @@ def build_governance_overlay_approval_prep_analytics(
         f"Awaiting approval: {yaml_packet['awaiting_approval_count']}",
     ]
     for entry in tasks:
+        blockers = entry.get("blockers", [])
+        if not isinstance(blockers, list):
+            blockers = []
         markdown_lines.extend(
             [
                 "",
@@ -127,7 +130,7 @@ def build_governance_overlay_approval_prep_analytics(
                 "",
                 f"action={entry['action']}",
                 f"age_bucket={entry['age_bucket']}",
-                f"blockers={','.join(entry['blockers']) or 'none'}",
+                f"blockers={','.join(str(blocker) for blocker in blockers) or 'none'}",
             ]
         )
     return {"yaml": yaml_packet, "markdown": "\n".join(markdown_lines) + "\n"}

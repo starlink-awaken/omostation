@@ -223,9 +223,9 @@ def _load_yaml_safely(path: Path) -> dict | None:
     except OSError:
         return None
     try:
-        import yaml  # type: ignore[import-untyped]
+        from .omo_shared import load_yaml_docs
 
-        return yaml.safe_load(text) or {}
+        return load_yaml_docs(text)
     except ImportError:
         pass
     except Exception:
@@ -520,6 +520,116 @@ def governance_check_task_consistency() -> CheckResult:
     )
 
 
+def governance_check_doc_lifecycle() -> CheckResult:
+    """第 7 项: .omo/ 文档生命周期健康度 (P45 R3).
+
+    检查项:
+    - frontmatter 覆盖率 (ssot/contract/pattern) >= 80% 满分
+    - 死文档占比 (contract/pattern 0 引用) < 30% 满分
+    - 矛盾路径 (代码引用 .omo/_archive/) = 0 满分
+    """
+    from omo.omo_lint import (
+        _classify_doc,
+        _parse_frontmatter,
+        _check_doc_referenced,
+        _DOC_LIFECYCLE_NEED_FRONTMATTER,
+    )
+
+    omo = _WORKSPACE_ROOT / ".omo"
+    if not omo.exists():
+        return CheckResult(
+            name="doc lifecycle",
+            category="knowledge",
+            severity="warn",
+            score=50.0,
+            message=".omo/ not found",
+        )
+
+    md_files = [f for f in omo.rglob("*.md")] + [f for f in omo.rglob("*.yaml")]
+    md_files = [f for f in md_files if "_delivery" not in f.parts and "/drafts/" not in str(f)]
+
+    need_fm_total = 0
+    frontmatter_active = 0
+    frontmatter_missing = 0
+    dead_docs = 0
+    contradictory_refs = 0
+
+    for f in md_files:
+        try:
+            rel = str(f.relative_to(_WORKSPACE_ROOT))
+        except ValueError:
+            continue
+        category = _classify_doc(rel)
+        if category in _DOC_LIFECYCLE_NEED_FRONTMATTER:
+            need_fm_total += 1
+            try:
+                content = f.read_text(encoding="utf-8", errors="ignore")
+            except Exception:
+                continue
+            fm = _parse_frontmatter(content)
+            if fm and fm.get("status") in {"active", "deprecated", "archived", "experimental"}:
+                frontmatter_active += 1
+            else:
+                frontmatter_missing += 1
+            if category in {"contract", "pattern"}:
+                has_ref, _ = _check_doc_referenced(rel, _WORKSPACE_ROOT)
+                if not has_ref:
+                    # 如果 frontmatter 标了 deprecated/archived, 不算死
+                    try:
+                        content = f.read_text(encoding="utf-8", errors="ignore")
+                        fm = _parse_frontmatter(content)
+                    except Exception:
+                        fm = None
+                    if fm and fm.get("status") in {"deprecated", "archived"}:
+                        pass  # 已标注, OK
+                    else:
+                        dead_docs += 1
+        # 矛盾路径: 只对 .py/.sh 真实代码引用算
+        if f.suffix in {".py", ".sh"}:
+            try:
+                content = f.read_text(encoding="utf-8", errors="ignore")
+            except Exception:
+                continue
+            if ".omo/_archive/" in content or ".omo/_knowledge/management/" in content:
+                contradictory_refs += 1
+
+    # 评分
+    score = 100.0
+    if need_fm_total > 0:
+        fm_coverage = frontmatter_active / need_fm_total * 100
+        if fm_coverage < 80:
+            score -= int((80 - fm_coverage) * 0.5)
+    if dead_docs > 0:
+        dead_ratio = dead_docs / max(need_fm_total, 1) * 100
+        if dead_ratio > 30:
+            score -= 20
+        elif dead_ratio > 20:
+            score -= 10
+    if contradictory_refs > 0:
+        score -= min(contradictory_refs, 30)  # 每个扣 1, 上限 30
+    score = max(0.0, float(score))
+
+    if score >= 90:
+        severity = "ok"
+    elif score >= 70:
+        severity = "warn"
+    else:
+        severity = "fail"
+
+    message = (
+        f"frontmatter {frontmatter_active}/{need_fm_total} ({frontmatter_active/max(need_fm_total,1)*100:.0f}%), "
+        f"dead docs {dead_docs}, contradictory {contradictory_refs}"
+    )
+
+    return CheckResult(
+        name="doc lifecycle",
+        category="knowledge",
+        severity=severity,
+        score=score,
+        message=message[:120],
+    )
+
+
 def governance_check_agora_health() -> CheckResult:
     """第 6 项: agora 路由 -> 服务真实可达率(>=80% = 满分).
 
@@ -686,6 +796,7 @@ def run_governance_audit(workspace: Path | None = None) -> GovernanceReport:
         governance_check_adr_links(),
         governance_check_task_consistency(),
         governance_check_agora_health(),
+        governance_check_doc_lifecycle(),
     ]
     total = sum(c.score for c in checks) / len(checks)
     return GovernanceReport(

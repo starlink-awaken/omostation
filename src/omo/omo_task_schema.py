@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-import yaml
+from .omo_shared import load_yaml
 
 VALID_STATUSES = {
     "candidate",
@@ -20,7 +20,7 @@ PLANNED_STATUSES = {"candidate", "pending"}
 
 
 def _load_yaml(path: Path) -> dict:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return load_yaml(path)
 
 
 def _require_fields(task: dict, fields: list[str], errors: list[str]) -> None:

@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
+from .omo_shared import load_yaml
 
 
 def _load_yaml(path: Path) -> dict:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return load_yaml(path)
 
 
 def evaluate_promotion_approval(
@@ -24,7 +24,7 @@ def evaluate_promotion_approval(
     approval_path = root / approval_ref
     try:
         approval = _load_yaml(approval_path)
-    except (FileNotFoundError, OSError, yaml.YAMLError):
+    except (FileNotFoundError, OSError):
         return {"approval_ready": False, "blocker": "approval_invalid"}
 
     if approval.get("task_id") != task_id:

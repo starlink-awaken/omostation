@@ -13,7 +13,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-import yaml
+from omo.omo_shared import load_yaml
 
 _log = logging.getLogger("omo.evolution")
 
@@ -48,7 +48,7 @@ class EvolutionLoop:
                 continue
 
             try:
-                debt_data = yaml.safe_load(debt_file.read_text())
+                debt_data = load_yaml(debt_file)
                 if self._should_remediate(debt_data):
                     self._dispatch_remediation(debt_data)
                     triggered += 1

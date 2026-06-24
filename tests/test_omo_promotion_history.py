@@ -57,6 +57,28 @@ def test_build_promotion_history_sorts_promotions_newest_first(tmp_path: Path):
     assert [entry["task_id"] for entry in result["yaml"]["promotions"]] == ["TASK-B", "TASK-A"]
 
 
+def test_build_promotion_history_accepts_unphased_promotions(tmp_path: Path):
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "runs" / "OPT-BOS-GATEWAY-promotion-2026-06-03T00-00-00Z.yaml",
+        {
+            "promotion_id": "OPT-BOS-GATEWAY-promotion-2026-06-03T00-00-00Z",
+            "task_id": "OPT-BOS-GATEWAY",
+            "promoted_at": "2026-06-03T00:00:00Z",
+            "promoted_by": "copilot-cli",
+            "task_ref_before": ".omo/tasks/planned/OPT-BOS-GATEWAY.yaml",
+            "task_ref_after": ".omo/tasks/active/OPT-BOS-GATEWAY.yaml",
+            "approval": {"required": False, "approval_ref": None},
+            "phase_gate": {"target_phase": None},
+        },
+    )
+
+    result = build_promotion_history(tmp_path, omo_dir=".omo", now="2026-06-03T00:10:00Z")
+
+    assert result["yaml"]["promotion_count"] == 1
+    assert result["yaml"]["promotions"][0]["target_phase"] is None
+    assert "target_phase=unphased" in result["markdown"]
+
+
 def test_build_promotion_history_rejects_missing_required_fields(tmp_path: Path):
     _write_yaml(
         tmp_path / ".omo" / "workers" / "runs" / "BROKEN-promotion-2026-06-03T00-00-00Z.yaml",
@@ -92,6 +114,30 @@ def test_build_promotion_history_ignores_promotion_approval_request_artifacts(tm
             "task_id": "TASK-A",
             "approval_status": "requested",
         },
+    )
+
+    result = build_promotion_history(tmp_path, omo_dir=".omo", now="2026-06-03T00:10:00Z")
+
+    assert result["yaml"]["promotion_count"] == 1
+    assert result["yaml"]["latest_promotion_id"] == "TASK-A-promotion-2026-06-03T00-00-00Z"
+
+
+def test_build_promotion_history_accepts_multi_document_promotion_yaml(tmp_path: Path):
+    (tmp_path / ".omo" / "workers" / "runs").mkdir(parents=True, exist_ok=True)
+    (tmp_path / ".omo" / "workers" / "runs" / "TASK-A-promotion-2026-06-03T00-00-00Z.yaml").write_text(
+        "---\nstatus: active\nowner: governance\n---\n---\n"
+        "promotion_id: TASK-A-promotion-2026-06-03T00-00-00Z\n"
+        "task_id: TASK-A\n"
+        "promoted_at: 2026-06-03T00:00:00Z\n"
+        "promoted_by: copilot-cli\n"
+        "task_ref_before: .omo/tasks/planned/TASK-A.yaml\n"
+        "task_ref_after: .omo/tasks/active/TASK-A.yaml\n"
+        "approval:\n"
+        "  required: false\n"
+        "  approval_ref: null\n"
+        "phase_gate:\n"
+        "  target_phase: 17\n",
+        encoding="utf-8",
     )
 
     result = build_promotion_history(tmp_path, omo_dir=".omo", now="2026-06-03T00:10:00Z")

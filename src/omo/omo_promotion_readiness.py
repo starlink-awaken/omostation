@@ -6,7 +6,7 @@ def _ordered_tasks(tasks: tuple[dict[str, object], ...]) -> list[dict[str, objec
         tasks,
         key=lambda entry: (
             0 if entry["eligible"] else 1,
-            entry["phase"],
+            entry["phase"] if isinstance(entry.get("phase"), int) else 10**9,
             entry["task_id"],
         ),
     )
@@ -25,6 +25,7 @@ def build_promotion_readiness_packet(
         "target_phase": current_phase + 1,
         "ready_count": sum(1 for entry in ordered if entry["eligible"]),
         "blocked_count": sum(1 for entry in ordered if not entry["eligible"]),
+        "unphased_count": sum(1 for entry in ordered if entry.get("phase") is None),
         "tasks": ordered,
     }
 
@@ -38,6 +39,7 @@ def render_promotion_readiness_markdown(packet: dict[str, object]) -> str:
         f"Target phase: {packet['target_phase']}",
         f"Ready tasks: {packet['ready_count']}",
         f"Blocked tasks: {packet['blocked_count']}",
+        f"Unphased tasks: {packet.get('unphased_count', 0)}",
         "",
     ]
     for entry in packet["tasks"]:
@@ -46,7 +48,7 @@ def render_promotion_readiness_markdown(packet: dict[str, object]) -> str:
                 f"## {'Ready' if entry['eligible'] else 'Blocked'}: {entry['task_id']}",
                 "",
                 f"task_ref={entry['task_ref']}",
-                f"phase={entry['phase']}",
+                f"phase={entry['phase'] if entry['phase'] is not None else 'n/a'}",
                 f"blockers={','.join(entry['blockers']) or 'none'}",
                 "",
             ]

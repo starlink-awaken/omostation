@@ -1,367 +1,151 @@
-"""omo audit-rollout — 跨仓 baseline 聚合 + §17 metrics 聚合 (Round 27 P0 + R46 P0).
-
-§12.5.1 步骤 1 实质化 (§12.8 候选 3):
-  读各仓 `<repo>/.omo/_knowledge/_audit_baseline.json`,
-  聚合到 `workspace/.omo/_delivery/audit-rollout/<date>.json` + 终端汇总表.
-
-R46 P0 (§19.3):
-  加 --include-metrics flag,跨仓跑 `omo logs audit --metrics`,
-  聚合 §17 health_grade + debt_density 到报告 JSON.
-
-用法:
-  uv run --no-sync python -m omo.cli audit-rollout \\
-    --repos omostation:. --repos kairon:projects/kairon \\
-    --include-metrics \\
-    --output .omo/_delivery/audit-rollout/2026-07-01.json
-
-输出 schema (JSON):
-  {
-    "generated_at": "2026-07-01T00:00:00Z",
-    "repos": {
-      "<name>": {
-        "drift_by_consumer": {"<consumer>": <int>, ...},
-        "total_drift": <int>,
-        "total_records": <int>,
-        "health_grade": "R0",        // R46 P0: --include-metrics 时有
-        "debt_density": 0.0          // R46 P0: --include-metrics 时有
-      }
-    },
-    "summary": {
-      "total_repos": <int>,
-      "total_drift": <int>,
-      "total_records": <int>,
-      "repos_with_drift": <int>,
-      "worst_health_grade": "R0"     // R46 P0: --include-metrics 时有
-    }
-  }
-
-退出码:
-  0 = success (含 0 漂移且 R0)
-  1 = some drift detected (但报告成功生成)
-  2 = error (file not found / parse error)
- 3 = R3+ health grade (健康度危急, 但报告仍生成)
-"""
 from __future__ import annotations
 
-import argparse
+import fcntl
 import json
-import sys
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
-def _run_logs_metrics(repo_path: Path) -> dict[str, Any]:
-    """跑单仓 §17 metrics, 返回 health_grade + debt_density dict.
-
-    E2 P0 改造: dispatcher 模式 — 按子仓类型路由:
-      1. omo 子仓 → `omo logs audit --metrics` (原路径)
-      2. tools/audit.sh → bash 调用拿 §17 R0 JSON
-      3. 无 audit 脚本 → 标记 "n/a" (仓无 §17 metrics 实现)
-
-    失败时返回含 "error" 的 dict, 不阻塞其他仓.
-    """
-
-    omo_project = repo_path / "projects" / "omo"
-    if omo_project.exists():
-        return _run_omo_metrics(omo_project)
-
-    # E2 P0: 子仓有 tools/audit.sh → bash 调用
-    audit_sh = repo_path / "tools" / "audit.sh"
-    if audit_sh.exists():
-        return _run_bash_audit(repo_path, audit_sh)
-
-    # E2 P0: 无 omo + 无 audit.sh → 标记 n/a
-    return {
-        "error": "no §17 metrics source (neither omo/ nor tools/audit.sh)",
-        "health_grade": "n/a",
-        "debt_density": -1.0,
-    }
+from .omo_io import ensure_parent_dir, write_text_atomic
 
 
-def _run_omo_metrics(omo_project: Path) -> dict[str, Any]:
-    """原路径: omo logs audit --metrics (R46 P0 实质化)."""
-    import subprocess
+def history_index_path(workspace_root: Path) -> Path:
+    return workspace_root / ".omo" / "_delivery" / "audit-rollout" / "index.json"
 
-    venv_python = omo_project / ".venv" / "bin" / "python"
-    if venv_python.exists():
-        cmd = [str(venv_python), "-m", "omo.cli", "logs", "audit", "--metrics", "--exclude-locked"]
-    else:
-        cmd = ["uv", "run", "--no-sync", "python", "-m", "omo.cli", "logs", "audit", "--metrics", "--exclude-locked"]
+
+def _locked_write_json(path: Path, payload: dict[str, Any]) -> None:
+    ensure_parent_dir(path)
+    lock_path = path.with_suffix(path.suffix + ".lock")
+    lock_handle = open(lock_path, "w", encoding="utf-8")
     try:
-        result = subprocess.run(
-            cmd, cwd=str(omo_project), capture_output=True, text=True, timeout=60,
-        )
-        stdout = result.stdout
-        start = stdout.find("{\n")
-        end = stdout.rfind("\n}")
-        if start != -1 and end != -1 and end > start:
-            try:
-                payload = json.loads(stdout[start : end + 2])
-                if "health_grade" in payload:
-                    return {
-                        "health_grade": payload["health_grade"],
-                        "debt_density": payload["debt_density"],
-                        "drift_count": payload["drift_count"],
-                        "drift_count_excluding_locked": payload["drift_count_excluding_locked"],
-                        "locked_drift": payload["locked_drift"],
-                        "total_records": payload["total_records"],
-                    }
-            except json.JSONDecodeError:
-                pass
-        return {
-            "error": f"no metrics JSON (exit {result.returncode}): {result.stderr[:120]}",
-            "health_grade": "?",
-            "debt_density": -1.0,
-        }
-    except subprocess.TimeoutExpired:
-        return {"error": "timeout (>60s)", "health_grade": "?", "debt_density": -1.0}
-    except Exception as exc:
-        return {"error": str(exc), "health_grade": "?", "debt_density": -1.0}
-
-
-def _run_bash_audit(repo_path: Path, audit_sh: Path) -> dict[str, Any]:
-    """E2 P0: 跑 tools/audit.sh 拿 §17 metrics JSON.
-
-    适用于 kairon/metaos/runtime 等无 omo 子仓但有 tools/audit.sh 的仓.
-    """
-    import os
-    import subprocess
-
-    # E2 P0: 保留完整 os.environ (PATH/bun/uv 等), 追加 VENV_PYTHON 覆盖
-    env = {**os.environ, "VENV_PYTHON": str(repo_path / ".venv" / "bin" / "python")}
-    try:
-        result = subprocess.run(
-            ["bash", str(audit_sh), str(repo_path)],
-            cwd=str(repo_path), capture_output=True, text=True, timeout=60, env=env,
-        )
-        # audit.sh 输出含 "drift_count" + "health_grade" JSON 段
-        stdout = result.stdout
-        # 找 {"generated_at" 开头的 JSON 段
-        for marker in ('{\n  "generated_at"', '{"generated_at"'):
-            idx = stdout.rfind(marker)
-            if idx != -1:
-                end = stdout.find("}", idx)
-                if end != -1:
-                    try:
-                        payload = json.loads(stdout[idx : end + 1])
-                        if "health_grade" in payload:
-                            return {
-                                "health_grade": payload["health_grade"],
-                                "debt_density": payload["debt_density"],
-                                "drift_count": payload.get("drift_count", 0),
-                                "drift_count_excluding_locked": payload.get("drift_count", 0),
-                                "locked_drift": 0,
-                                "total_records": payload.get("total_records", 0),
-                            }
-                    except json.JSONDecodeError:
-                        pass
-        return {
-            "error": f"no metrics JSON in audit.sh output (exit {result.returncode})",
-            "health_grade": "?",
-            "debt_density": -1.0,
-        }
-    except subprocess.TimeoutExpired:
-        return {"error": "audit.sh timeout (>60s)", "health_grade": "?", "debt_density": -1.0}
-    except Exception as exc:
-        return {"error": str(exc), "health_grade": "?", "debt_density": -1.0}
-
-
-def _read_baseline(repo_path: Path) -> dict[str, Any]:
-    """读单仓 baseline 文件, 返回结构化 dict.
-
-    Raises:
-        FileNotFoundError: baseline 文件不存在
-        json.JSONDecodeError: baseline 文件损坏
-    """
-    baseline_path = repo_path / ".omo" / "_knowledge" / "_audit_baseline.json"
-    if not baseline_path.exists():
-        raise FileNotFoundError(f"baseline not found: {baseline_path}")
-    payload = json.loads(baseline_path.read_text(encoding="utf-8"))
-    return {
-        "drift_by_consumer": payload.get("drift_by_consumer", {}),
-        "total_drift": payload.get("total_drift", 0),
-        "total_records": payload.get("total_records", 0),
-    }
-
-
-def _health_grade_rank(grade: str) -> int:
-    """R0最好 (rank 0), R5 最差 (rank 5). 用于 max() 比较.
-
-    E2 P0: "n/a" (仓无 §17 metrics) 视作 R0 (不影响 worst_grade).
-    """
-    rank_map = {"R0": 0, "R1": 1, "R2": 2, "R3": 3, "R4": 4, "R5": 5, "?": 99, "n/a": 0}
-    return rank_map.get(grade, 99)
-
-
-def aggregate_baselines(repos: list[tuple[str, Path]], *, include_metrics: bool = False) -> dict[str, Any]:
-    """聚合多仓 baseline 到统一 rollout 结构.
-
-    Args:
-        repos: [(name, repo_path), ...] 列表
-
-    Returns:
-        rollout dict 含 generated_at / repos / summary
-    """
-    repos_data: dict[str, dict[str, Any]] = {}
-    total_drift = 0
-    total_records = 0
-    repos_with_drift = 0
-    worst_grade_rank = 0
-    worst_grade = "R0"
-
-    for name, repo_path in repos:
+        fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
         try:
-            data = _read_baseline(repo_path)
-        except (FileNotFoundError, json.JSONDecodeError) as exc:
-            repos_data[name] = {"error": str(exc), "total_drift": -1, "total_records": 0}
-            if include_metrics:
-                repos_data[name]["health_grade"] = "?"
-                repos_data[name]["debt_density"] = -1.0
-            continue
-        repos_data[name] = data
-        total_drift += data["total_drift"]
-        total_records += data["total_records"]
-        if data["total_drift"] > 0:
-            repos_with_drift += 1
-
-        # R46 P0: --include-metrics 时跑 §17 metrics
-        if include_metrics:
-            m = _run_logs_metrics(repo_path)
-            repos_data[name]["health_grade"] = m.get("health_grade", "?")
-            repos_data[name]["debt_density"] = m.get("debt_density", -1.0)
-            if "error" not in m:
-                rank = _health_grade_rank(m["health_grade"])
-                if rank > worst_grade_rank:
-                    worst_grade_rank = rank
-                    worst_grade = m["health_grade"]
-
-    summary: dict[str, Any] = {
-        "total_repos": len(repos),
-        "total_drift": total_drift,
-        "total_records": total_records,
-        "repos_with_drift": repos_with_drift,
-    }
-    if include_metrics:
-        summary["worst_health_grade"] = worst_grade
-
-    return {
-        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "repos": repos_data,
-        "summary": summary,
-    }
+            write_text_atomic(
+                path,
+                json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+            )
+        finally:
+            fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
+    finally:
+        lock_handle.close()
 
 
-def render_rollout_table(rollout: dict[str, Any], include_metrics: bool = False) -> str:
-    """生成终端汇总表 (纯文本, 不依赖 rich)."""
-    lines = []
-    lines.append(f"📊 audit-rollout {rollout['generated_at']} ({rollout['summary']['total_repos']} repos):")
-    for name, data in rollout["repos"].items():
-        if "error" in data:
-            lines.append(f"  ❌ {name:20s}: ERROR ({data['error']})")
-            continue
-        n_consumers = len(data["drift_by_consumer"])
-        base = f"  {name:20s}: {data['total_drift']:>6d} drift / {data['total_records']:>6d} records ({n_consumers} consumers)"
-        if include_metrics:
-            grade = data.get("health_grade", "?")
-            density = data.get("debt_density", -1.0)
-            grade_icon = "✅" if grade == "R0" else ("⚠️" if grade in ("R1", "R2") else "❌")
-            lines.append(f"{base}  {grade_icon} {grade} (density={density:.4f})")
-        else:
-            lines.append(base)
-    s = rollout["summary"]
-    total_line = f"  {'TOTAL':20s}: {s['total_drift']:>6d} drift / {s['total_records']:>6d} records ({s['repos_with_drift']}/{s['total_repos']} with drift)"
-    if include_metrics:
-        worst = s.get("worst_health_grade", "?")
-        total_line += f"  ⚠️ worst={worst}"
-    lines.append("  " + "─" * 50)
-    lines.append(total_line)
-    return "\n".join(lines)
-
-
-def parse_repos_arg(repos_arg: list[str]) -> list[tuple[str, Path]]:
-    """解析 --repos 参数: 'name:path' 格式, 多次出现 → list.
-
-    Example: --repos omostation:. --repos kairon:projects/kairon
-    """
-    out: list[tuple[str, Path]] = []
-    for spec in repos_arg:
-        if ":" not in spec:
-            raise ValueError(f"--repos 格式错误 (期望 name:path): {spec!r}")
-        name, raw_path = spec.split(":", 1)
-        out.append((name, Path(raw_path).resolve()))
-    return out
-
-
-def cmd_audit_rollout(args: argparse.Namespace) -> int:
-    """CLI: omo audit-rollout --repos N:P [--include-metrics] [--output PATH]."""
-    repos = parse_repos_arg(args.repos)
-    include_metrics = getattr(args, "include_metrics", False)
-
-    rollout = aggregate_baselines(repos, include_metrics=include_metrics)
-
-    # 1. 终端汇总表
-    print(render_rollout_table(rollout, include_metrics=include_metrics))
-    print()
-
-    # 2. 写 JSON 文件 (Round 26 §12.5.1 设计)
-    if args.output:
-        out_path = Path(args.output)
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(
-            json.dumps(rollout, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
-        print(f"✅ 写 rollout 报告: {out_path}")
-        print(f"   {rollout['summary']['total_repos']} repos / "
-              f"{rollout['summary']['total_drift']} drift / "
-              f"{rollout['summary']['total_records']} records")
-
-    # 退出码: R46 P0 扩展
-    # R3+ health grade → 3 (危急, 报告仍生成)
-    #   有 drift → 1
-    #   无 drift 且 R0 → 0
-    if include_metrics:
-        worst = rollout["summary"].get("worst_health_grade", "R0")
-        if _health_grade_rank(worst) >= 3:
-            return 3
-    if rollout["summary"]["total_drift"] > 0:
-        return 1
-    return 0
-
-
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        prog="omo audit-rollout",
-        description="跨仓 baseline 聚合 (§12.5.1 — Round 27 P0 实质化)",
-    )
-    parser.add_argument(
-        "--repos",
-        action="append",
-        required=True,
-        help="仓映射, 格式 name:path (可多次指定, e.g. omostation:. kairon:projects/kairon)",
-    )
-    parser.add_argument(
-        "--output",
-        type=str,
-        default=None,
-        help="rollout 报告输出路径 (默认仅打印终端表)",
-    )
-    # R46 P0: --include-metrics 跨仓跑 omo logs audit --metrics 并聚合 §17 health grade
-    parser.add_argument(
-        "--include-metrics",
-        action="store_true",
-        default=False,
-        help="跑各仓 omo logs audit --metrics, 聚合 §17 health_grade + debt_density (R46 P0)",
-    )
-    args = parser.parse_args(argv)
-
+def load_history_index(workspace_root: Path) -> dict[str, Any]:
+    path = history_index_path(workspace_root)
+    if not path.exists():
+        return {"runs": []}
     try:
-        return cmd_audit_rollout(args)
-    except (ValueError, FileNotFoundError) as exc:
-        print(f"❌ {exc}", file=sys.stderr)
-        return 2
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {"runs": []}
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())
+def write_drift_history(
+    workspace_root: Path,
+    mode: str,
+    rollout: dict[str, Any],
+    generated_at: str,
+    today: str,
+) -> Path:
+    out_dir = workspace_root / ".omo" / "_control" / "evolution" / "drift-history"
+    out_path = out_dir / f"{today}.json"
+    summary = {
+        "generated_at": generated_at,
+        "mode": mode,
+        "rollout": {
+            "returncode": rollout.get("returncode"),
+            "fallback_used": rollout.get("fallback_used"),
+            "output_path": rollout.get("output_path"),
+        },
+    }
+    payload = rollout.get("payload")
+    if isinstance(payload, dict) and "repos" in payload:
+        repos = payload["repos"]
+        summary["per_repo"] = {
+            name: {
+                "health_grade": data.get("health_grade"),
+                "drift": data.get("total_drift"),
+                "records": data.get("total_records"),
+            }
+            for name, data in repos.items()
+        }
+    _locked_write_json(out_path, summary)
+    return out_path
+
+
+def update_history_index(
+    workspace_root: Path,
+    mode: str,
+    rollout: dict[str, Any],
+    history_path: Path,
+    generated_at: str,
+    today: str,
+    trigger_source: str,
+) -> dict[str, Any]:
+    path = history_index_path(workspace_root)
+    ensure_parent_dir(path)
+    lock_path = path.with_suffix(".lock")
+    lock_handle = open(lock_path, "w", encoding="utf-8")
+    try:
+        fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
+        try:
+            if path.exists():
+                try:
+                    index = json.loads(path.read_text(encoding="utf-8"))
+                except json.JSONDecodeError:
+                    index = {"runs": []}
+            else:
+                index = {"runs": []}
+            runs = index.setdefault("runs", [])
+            payload = rollout.get("payload") if isinstance(rollout.get("payload"), dict) else {}
+            repos = payload.get("repos", {}) if isinstance(payload, dict) else {}
+            run_entry: dict[str, Any] = {
+                "generated_at": generated_at,
+                "day": today,
+                "mode": mode,
+                "trigger_source": trigger_source,
+                "returncode": rollout.get("returncode"),
+                "fallback_used": rollout.get("fallback_used"),
+                "primary_returncode": rollout.get("primary_returncode"),
+                "fallback_returncode": rollout.get("fallback_returncode"),
+                "output_path": rollout.get("output_path"),
+                "primary_output_path": rollout.get("primary_output_path"),
+                "fallback_output_path": rollout.get("fallback_output_path"),
+                "primary_error": rollout.get("primary_error"),
+                "repo_count": len(repos) if isinstance(repos, dict) else 0,
+                "history_path": str(history_path.relative_to(workspace_root)),
+            }
+            if rollout.get("fallback_error"):
+                run_entry["fallback_error"] = rollout["fallback_error"]
+            runs.append(run_entry)
+            runs.sort(key=lambda item: str(item.get("generated_at", "")))
+            index["runs"] = runs
+            index["summary"] = {
+                "run_count": len(runs),
+                "weekly_runs": sum(1 for item in runs if item.get("mode") == "weekly"),
+                "monthly_runs": sum(1 for item in runs if item.get("mode") == "monthly"),
+                "pre_release_runs": sum(1 for item in runs if item.get("mode") == "pre-release"),
+                "cron_run_count": sum(1 for item in runs if item.get("trigger_source") == "cron"),
+                "manual_run_count": sum(1 for item in runs if item.get("trigger_source") == "manual"),
+                "fallback_used_count": sum(1 for item in runs if item.get("fallback_used")),
+                "failed_count": sum(1 for item in runs if item.get("returncode") not in (0, None)),
+                "latest_output_path": runs[-1]["output_path"] if runs else None,
+                "latest_trigger_source": runs[-1]["trigger_source"] if runs else None,
+            }
+            write_text_atomic(path, json.dumps(index, ensure_ascii=False, indent=2) + "\n")
+        finally:
+            fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
+    finally:
+        lock_handle.close()
+    return index
+
+
+def write_daemon_summary(
+    workspace_root: Path,
+    mode: str,
+    summary: dict[str, Any],
+    today: str,
+) -> Path:
+    out_dir = workspace_root / ".omo" / "_delivery" / "audit-rollout"
+    summary_path = out_dir / f"{today}-{mode}-daemon-summary.json"
+    _locked_write_json(summary_path, summary)
+    return summary_path

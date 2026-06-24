@@ -3,16 +3,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
-
-from .omo_io import write_yaml_atomic
+from .omo_ingress import create_blocked_task, create_skill_manifest
+from .omo_shared import load_yaml
 
 
 def register_skill_manifest(root: Path, manifest: dict) -> dict:
-    path = (
-        root / ".omo" / "_truth" / "task-center" / "skills" / f"{manifest['id']}.yaml"
+    create_skill_manifest(
+        root / ".omo",
+        manifest=manifest,
+        actor="omo_skill.register_skill_manifest",
+        source_ref=f"skill:{manifest['id']}",
     )
-    write_yaml_atomic(path, manifest)
     return manifest
 
 
@@ -22,7 +23,7 @@ def create_skill_task_packet(
     manifest_path = (
         root / ".omo" / "_truth" / "task-center" / "skills" / f"{skill_id}.yaml"
     )
-    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+    manifest = load_yaml(manifest_path)
     task = {
         "id": task_id,
         "phase": 6,
@@ -55,6 +56,11 @@ def create_skill_task_packet(
         "blocked_by": "previous_wave_exit",
         "retry_count": 0,
     }
+    create_blocked_task(
+        root / ".omo",
+        task_data=task,
+        actor="omo_skill.create_skill_task_packet",
+        source_ref=f"skill:{skill_id}",
+    )
     output_path = root / ".omo" / "tasks" / "blocked" / f"{task_id.lower()}.yaml"
-    write_yaml_atomic(output_path, task)
     return {"task_ref": str(output_path.relative_to(root))}

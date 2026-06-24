@@ -12,15 +12,15 @@ import os
 import sys
 from pathlib import Path
 
+from omo.omo_shared import load_yaml
+
 OMO_DIR = Path(os.environ.get("OMO_DIR", str(Path.home() / "Workspace" / ".omo")))
 _OMO_DASHBOARD_API_KEY = os.environ.get("OMO_DASHBOARD_API_KEY", "")
 
 
 def _load_json(path: Path) -> dict:
     try:
-        import yaml
-        data = yaml.safe_load(path.read_text()) or {}
-        return data
+        return load_yaml(path)
     except Exception:
         return {}
 

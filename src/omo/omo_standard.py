@@ -6,6 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from .omo_ingress import create_standard_doc
 from .omo_paths import find_omo_dir
 
 def _find_omo_dir() -> Path:
@@ -30,20 +31,24 @@ def cmd_standard_list(omo_dir: Path) -> int:
 
 
 def cmd_standard_add(omo_dir: Path, title: str, content: str | None, stdin: bool) -> int:
-    """Add a new standard document to standards/."""
-    base = omo_dir / "standards"
-    safe_name = title.lower().replace(" ", "-").replace("/", "-").replace(":", "")[:60] + ".md"
-    std_file = base / safe_name
-    if std_file.exists():
-        print(f"❌ {safe_name} already exists", file=sys.stderr)
-        return 1
+    """Add a new standard document through governed ingress."""
     if stdin:
         content = sys.stdin.read()
     elif not content:
         print("❌ Provide content via --content or --stdin", file=sys.stderr)
         return 1
-    std_file.write_text(f"# {title}\n\n{content}\n")
-    print(f"✅ Created standards/{safe_name}")
+    try:
+        artifact = create_standard_doc(
+            omo_dir,
+            title=title,
+            content=content,
+            actor="projects/omo",
+            source_ref=f"omo:standard:add:{title}",
+        )
+    except ValueError as exc:
+        print(f"❌ {exc}", file=sys.stderr)
+        return 1
+    print(f"✅ Created {artifact['doc_ref'].removeprefix('.omo/')}")
     return 0
 
 

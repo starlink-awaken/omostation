@@ -1,6 +1,7 @@
 """OMO 自愈代谢引擎单元测试。"""
 
 import asyncio
+import yaml
 
 
 from omo.omo_self_healing import (
@@ -179,11 +180,6 @@ class TestSelfHealingEngine:
 
     def test_debt_action_creates_file(self, tmp_path, monkeypatch):
         monkeypatch.setattr("omo.omo_self_healing.OMO_ROOT", tmp_path)
-        monkeypatch.setattr("omo.omo_self_healing.DEBT_ITEMS_DIR", tmp_path / ".omo" / "debt" / "items")
-        monkeypatch.setattr("omo.omo_self_healing.DEBT_REGISTRY", tmp_path / ".omo" / "debt" / "registry.yaml")
-
-        (tmp_path / ".omo" / "debt").mkdir(parents=True)
-        (tmp_path / ".omo" / "debt" / "registry.yaml").write_text("seed_items: []\n")
 
         rules = [HealingRule(name="test", event_types=["ERR"], threshold=1, cooldown_seconds=0, action="debt")]
         engine = SelfHealingEngine(rules=rules, window_seconds=60)
@@ -194,6 +190,13 @@ class TestSelfHealingEngine:
         asyncio.run(_run())
         items = list((tmp_path / ".omo" / "debt" / "items").glob("auto-*.yaml"))
         assert len(items) > 0
+
+        registry = yaml.safe_load((tmp_path / ".omo" / "_truth" / "registry" / "debt.yaml").read_text(encoding="utf-8"))
+        assert any(path.startswith(".omo/debt/items/auto-test-") for path in registry["seed_items"])
+
+        artifact = yaml.safe_load((tmp_path / ".omo" / "_delivery" / "ingress" / "debts" / items[0].name).read_text(encoding="utf-8"))
+        assert artifact["kind"] == "debt_upserted"
+        assert artifact["ingress_plane"] == "projects/omo:self_healing"
 
 
 # ═══════════════════════════════════════════════════════════════════════════

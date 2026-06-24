@@ -330,6 +330,54 @@ def test_governance_cli_apply_executes_approved_proposal(tmp_path: Path, monkeyp
     assert payload["next_milestone"] == "Phase 6 Wave 1 runtime core"
 
 
+def test_governance_cli_propose_accepts_multi_document_yaml_file(
+    tmp_path: Path, monkeypatch
+):
+    target = tmp_path / ".omo" / "state" / "system.yaml"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("next_milestone: planning\n", encoding="utf-8")
+    proposal_file = tmp_path / "proposal.yaml"
+    proposal_file.write_text(
+        "---\nstatus: draft\nowner: governance\n---\n---\n"
+        "id: p-008b\n"
+        "title: CLI multi doc\n"
+        "operation_level: L2\n"
+        "requested_by: copilot-cli\n"
+        "target:\n"
+        "  plane: truth\n"
+        "  kind: yaml_file\n"
+        "  ref: .omo/state/system.yaml\n"
+        "changes:\n"
+        "  set:\n"
+        "    next_milestone: Phase 6 Wave 1 runtime core\n"
+        "change_summary:\n"
+        "  - advance milestone\n"
+        "impact:\n"
+        "  blast_radius: low\n"
+        "  touches:\n"
+        "    - .omo/state/system.yaml\n"
+        "verification_plan:\n"
+        "  - sync state\n"
+        "rollback_plan:\n"
+        "  - restore prior YAML snapshot\n"
+        "secret_refs: []\n"
+        "trace_id: trace-008b\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["omo-governance", "propose", str(proposal_file), "--now", "2026-05-31T07:21:00Z"],
+    )
+
+    assert omo_governance_main() == 0
+    payload = _load_yaml(tmp_path / ".omo" / "_truth" / "task-center" / "proposals" / "p-008b.yaml")
+    assert payload["status"] == "proposed"
+    assert payload["target"]["ref"] == ".omo/state/system.yaml"
+
+
 def test_governance_cli_ingress_goal_writes_goal_and_artifact(
     tmp_path: Path, monkeypatch, capsys
 ):

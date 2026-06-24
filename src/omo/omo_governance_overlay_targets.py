@@ -2,16 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
-
 from .omo_promotion_approval import evaluate_promotion_approval
+from .omo_shared import load_yaml_required
 from .omo_task_schema import validate_task_file
 
 
 def _load_yaml_required(path: Path) -> dict:
-    if not path.exists():
-        raise FileNotFoundError(path.as_posix())
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return load_yaml_required(path)
 
 
 def _task_has_task_specific_promotion_approval(approval_ref: str | None) -> bool:

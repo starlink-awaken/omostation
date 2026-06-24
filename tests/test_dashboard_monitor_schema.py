@@ -96,7 +96,7 @@ def test_dashboard_monitor_writes_valid_omo_health_record(fake_workspace):
     assert validated.launchd_state.value == "running"
     assert validated.http_code == "200"
     assert validated.pid == "12345"
-    assert validated.port == 9090
+    assert validated.port == 9190
 
 
 # ── 2. 必填字段全部就位 (防回归) ──────────────────────────

@@ -1,10 +1,10 @@
 import argparse
 from datetime import datetime, timezone
 from pathlib import Path
-import yaml
 import shutil
 
 from .omo_paths import find_omo_dir
+from .omo_shared import load_yaml, write_yaml
 
 
 def get_omo_dir(base_dir: Path) -> Path:
@@ -49,17 +49,13 @@ def main(argv: list[str]) -> int:
             if (omo_dir / "tasks" / "planned").exists()
             else 0,
         },
-        "system_state": yaml.safe_load(system_yaml.read_text())
-        if system_yaml.exists()
-        else None,
-        "goals": yaml.safe_load(goals_yaml.read_text())
-        if goals_yaml.exists()
-        else None,
-        "debt": yaml.safe_load(debt_yaml.read_text()) if debt_yaml.exists() else None,
+        "system_state": load_yaml(system_yaml) if system_yaml.exists() else None,
+        "goals": load_yaml(goals_yaml) if goals_yaml.exists() else None,
+        "debt": load_yaml(debt_yaml) if debt_yaml.exists() else None,
     }
 
     ledger_file = ledger_dir / f"ledger-{timestamp}.yaml"
-    ledger_file.write_text(yaml.dump(snapshot, allow_unicode=True, sort_keys=False))
+    write_yaml(ledger_file, snapshot)
 
     print(f"✅ 台账记录已生成: {ledger_file}")
 

@@ -182,3 +182,46 @@ def test_request_conditional_approval_creates_approval_record_and_governance_pro
     assert proposal["status"] == "proposed"
     assert proposal["target"]["ref"] == result["approval_ref"]
     assert proposal["changes"]["set"]["approval_status"] == "granted"
+
+
+def test_evaluate_worker_envelope_accepts_multi_document_yaml(tmp_path: Path) -> None:
+    (tmp_path / "spaces").mkdir(parents=True, exist_ok=True)
+    (tmp_path / ".omo" / "workers" / "runs").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "spaces" / "contract.yaml").write_text(
+        "---\nstatus: active\n---\n---\n"
+        "admission_matrix_ref: spaces/matrix.yaml\n"
+        "capability_bindings:\n"
+        "  - membership_ref: governor-membership\n"
+        "    capabilities:\n"
+        "      - project.dispatch\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "spaces" / "matrix.yaml").write_text(
+        "---\nstatus: active\n---\n---\n"
+        "rules:\n"
+        "  - action: project.dispatch\n"
+        "    required_capabilities:\n"
+        "      - project.dispatch\n"
+        "    decision: conditional_approval\n",
+        encoding="utf-8",
+    )
+    (tmp_path / ".omo" / "workers" / "runs" / "example-envelope.yaml").write_text(
+        "---\nstatus: active\n---\n---\n"
+        "execution_context:\n"
+        "  space_ref: spaces/system-space.yaml\n"
+        "  membership_ref: governor-membership\n"
+        "  action: project.dispatch\n"
+        "  admission_contract_ref: spaces/contract.yaml\n"
+        "  required_capabilities:\n"
+        "    - project.dispatch\n",
+        encoding="utf-8",
+    )
+
+    result = evaluate_worker_envelope(
+        tmp_path,
+        Path(".omo/workers/runs/example-envelope.yaml"),
+        matrix_ref=Path("spaces/matrix.yaml"),
+    )
+
+    assert result["decision"] == "conditional_approval"
+    assert result["granted_capabilities"] == ["project.dispatch"]

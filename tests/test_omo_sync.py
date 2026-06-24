@@ -76,6 +76,31 @@ def test_omo_sync_returns_summary_dict(tmp_path):
     assert expected_keys <= set(result.keys())
 
 
+def test_omo_sync_accepts_multi_document_state_yaml(tmp_path, monkeypatch):
+    """system.yaml 支持多文档 YAML, phase/health_score 仍应可读."""
+    import json
+
+    import omo.omo_state as omo_state
+
+    system_yaml = tmp_path / "system.yaml"
+    system_yaml.write_text(
+        "---\nstatus: active\nowner: governance\n---\n---\n"
+        "current_phase: 42\n"
+        "health_score: 97.5\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(omo_state, "STATE_SYSTEM_YAML", system_yaml, raising=False)
+
+    log_path = tmp_path / "omo-sync.jsonl"
+    result = run_sync({"dry_run": False, "log_path": log_path})
+    record = json.loads(log_path.read_text(encoding="utf-8").strip())
+
+    assert result["phase"] == 42
+    assert result["health_score"] == 97.5
+    assert record["phase"] == 42
+    assert record["health_score"] == 97.5
+
+
 def test_omo_sync_default_log_path_in_omo_knowledge():
     """默认 log path 应在 .omo/_knowledge/ (与 bos-metrics.jsonl 一致)."""
     from omo.omo_sync import DEFAULT_SYNC_LOG_PATH

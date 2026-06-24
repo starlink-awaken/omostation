@@ -3,14 +3,16 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-import yaml
+from .omo_shared import load_yaml
 
 
 def _load_yaml(path: Path) -> dict:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return load_yaml(path)
 
 
-def _parse_iso8601(value: str) -> datetime:
+def _parse_iso8601(value: str | datetime) -> datetime:
+    if isinstance(value, datetime):
+        return value
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
@@ -28,7 +30,6 @@ def _history_entry(omo_ref: Path, envelope_path: Path) -> dict[str, object]:
         ("task_ref_before", envelope.get("task_ref_before")),
         ("task_ref_after", envelope.get("task_ref_after")),
         ("approval.required", envelope.get("approval", {}).get("required")),
-        ("phase_gate.target_phase", envelope.get("phase_gate", {}).get("target_phase")),
     ]
     for field_name, field_value in required_fields:
         if field_value is None:
@@ -44,7 +45,7 @@ def _history_entry(omo_ref: Path, envelope_path: Path) -> dict[str, object]:
         "task_ref_after": envelope["task_ref_after"],
         "approval_required": envelope["approval"]["required"],
         "approval_ref": envelope.get("approval", {}).get("approval_ref"),
-        "target_phase": envelope["phase_gate"]["target_phase"],
+        "target_phase": envelope.get("phase_gate", {}).get("target_phase"),
     }
 
 
@@ -88,7 +89,7 @@ def build_promotion_history(
                 f"promotion_ref={entry['promotion_ref']}",
                 f"task_ref_after={entry['task_ref_after']}",
                 f"approval_required={'yes' if entry['approval_required'] else 'no'}",
-                f"target_phase={entry['target_phase']}",
+                f"target_phase={entry['target_phase'] if entry['target_phase'] is not None else 'unphased'}",
             ]
         )
 

@@ -7,9 +7,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import yaml
 
+from .omo_ingress import write_capability_registry_bundle, write_manual_capabilities
 from .omo_io import write_text_atomic, write_yaml_atomic
+from .omo_paths import CAPABILITIES_DIR, OMO_ROOT, WORKSPACE_ROOT
+from .omo_shared import load_yaml_value
 
 
 CAPABILITY_TYPES = {
@@ -35,7 +37,7 @@ def _utc_now() -> str:
 
 
 def _root() -> Path:
-    return Path(__file__).resolve().parents[1]
+    return WORKSPACE_ROOT
 
 
 def _omo(root: Path) -> Path:
@@ -43,7 +45,40 @@ def _omo(root: Path) -> Path:
 
 
 def _load_yaml(path: Path) -> Any:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) if path.exists() else None
+    if not path.exists():
+        return None
+    return load_yaml_value(path)
+
+
+def _capabilities_dir(root: Path) -> Path:
+    if root == WORKSPACE_ROOT and OMO_ROOT == root / ".omo":
+        return CAPABILITIES_DIR
+    return _omo(root) / "capabilities"
+
+
+def _legacy_registry_dir(root: Path) -> Path:
+    return _omo(root) / "registry"
+
+
+def capability_registry_path(root: Path, filename: str) -> Path:
+    primary = _capabilities_dir(root) / filename
+    legacy = _legacy_registry_dir(root) / filename
+    if primary.exists():
+        return primary
+    if legacy.exists():
+        return legacy
+    return primary
+
+
+def load_capability_registry(root: Path, filename: str) -> Any:
+    return _load_yaml(capability_registry_path(root, filename))
+
+
+def write_capability_registry(root: Path, filename: str, payload: dict[str, Any]) -> Path:
+    path = _capabilities_dir(root) / filename
+    path.parent.mkdir(parents=True, exist_ok=True)
+    write_yaml_atomic(path, payload)
+    return path
 
 
 def _capability_record(
@@ -252,10 +287,19 @@ def _agent_clis(root: Path) -> list[dict[str, str]]:
 
 
 def _write_registry_index(root: Path) -> None:
-    index = """# Capability registry
+    index = capability_registry_index_content()
+    path = _capabilities_dir(root) / "INDEX.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    write_text_atomic(path, index)
+
+
+def capability_registry_index_content() -> str:
+    return """# Capability registry
 
 > Status: active
-> Owner: Phase 12 capability ecosystem foundation
+> Owner: governance
+> Runtime path: `.omo/capabilities/`
+> Legacy compatibility: `.omo/registry/` is read-only fallback for historical evidence
 
 ## Files
 
@@ -273,30 +317,30 @@ def _write_registry_index(root: Path) -> None:
 
 Registry records are evidence for discovery and binding. They do not authorize live mutation or external installation.
 """
-    write_text_atomic(_omo(root) / "registry" / "INDEX.md", index)
 
 
 def scan_command(args: argparse.Namespace) -> int:
     root = _root()
-    omo = _omo(root)
     records = _project_capabilities(root)
     sharedwork = _sharedwork_sample()
     packages = _system_packages(root)
     clis = _agent_clis(root)
 
     if args.write:
-        (omo / "registry").mkdir(parents=True, exist_ok=True)
-        _write_registry_index(root)
-        write_yaml_atomic(
-            omo / "registry" / "projects-capabilities.yaml", {"capabilities": records}
+        write_capability_registry_bundle(
+            _omo(root),
+            bundle={
+                "index_content": capability_registry_index_content(),
+                "registries": {
+                    "projects-capabilities.yaml": {"capabilities": records},
+                    "sharedwork-sample.yaml": {"capabilities": sharedwork},
+                    "system-packages.yaml": {"packages": packages},
+                    "agent-clis.yaml": {"clis": clis},
+                },
+            },
+            actor="omo-capability capability scan",
+            source_ref="omo-capability:scan",
         )
-        write_yaml_atomic(
-            omo / "registry" / "sharedwork-sample.yaml", {"capabilities": sharedwork}
-        )
-        write_yaml_atomic(
-            omo / "registry" / "system-packages.yaml", {"packages": packages}
-        )
-        write_yaml_atomic(omo / "registry" / "agent-clis.yaml", {"clis": clis})
 
     print(
         json.dumps(
@@ -316,7 +360,7 @@ def scan_command(args: argparse.Namespace) -> int:
 def _load_all_capabilities(root: Path) -> list[dict[str, Any]]:
     capabilities: list[dict[str, Any]] = []
     for rel in ("projects-capabilities.yaml", "sharedwork-sample.yaml"):
-        payload = _load_yaml(_omo(root) / "registry" / rel) or {}
+        payload = load_capability_registry(root, rel) or {}
         capabilities.extend(payload.get("capabilities", []))
     return capabilities
 
@@ -337,13 +381,15 @@ def register_command(args: argparse.Namespace) -> int:
             json.dumps({"status": "failed", "errors": errors}, ensure_ascii=False)
         )
 
-    target = _omo(root) / "registry" / "manual-capabilities.yaml"
-    existing = _load_yaml(target) or {"capabilities": []}
+    existing = load_capability_registry(root, "manual-capabilities.yaml") or {"capabilities": []}
     by_id = {record["id"]: record for record in existing.get("capabilities", [])}
     for record in records:
         by_id[record["id"]] = record
-    write_yaml_atomic(
-        target, {"capabilities": sorted(by_id.values(), key=lambda item: item["id"])}
+    write_manual_capabilities(
+        _omo(root),
+        payload={"capabilities": sorted(by_id.values(), key=lambda item: item["id"])},
+        actor="omo-capability capability register",
+        source_ref=f"omo-capability:register:{Path(args.file).name}",
     )
     print(
         json.dumps({"status": "registered", "count": len(records)}, ensure_ascii=False)
@@ -446,7 +492,7 @@ def pkg_sync_command(args: argparse.Namespace) -> int:
     if not args.dry_run:
         raise SystemExit("Phase 12 only supports pkg sync --dry-run")
     root = _root()
-    baseline = _load_yaml(_omo(root) / "registry" / "system-packages.yaml") or {
+    baseline = load_capability_registry(root, "system-packages.yaml") or {
         "packages": []
     }
     report = {

@@ -6,6 +6,8 @@ from pathlib import Path
 
 import yaml
 
+from omo.omo_debt_registry import load_debt_ledger
+
 
 # ── helpers ─────────────────────────────────────────────────────────────────
 
@@ -73,3 +75,52 @@ def test_new_seed_items_stay_pointer_based(omo_test_dir: Path) -> None:
     assert item["x1_policy_ref"] == "X1-AUDIT-001"
     assert item["x2_freshness"] == "2026-06-05T06:00:00Z"
     assert item["x3_tier"] == "Framework"
+
+
+def test_load_debt_ledger_accepts_multi_document_truth_registry(tmp_path: Path) -> None:
+    omo_dir = tmp_path / ".omo"
+    (omo_dir / "_truth" / "registry").mkdir(parents=True, exist_ok=True)
+    (omo_dir / "debt" / "items").mkdir(parents=True, exist_ok=True)
+    (omo_dir / "_truth" / "registry" / "debt.yaml").write_text(
+        "---\nstatus: active\nowner: governance\n---\n---\n"
+        "dashboard_ref: .omo/debt/dashboard/current.yaml\n"
+        "review_pack_ref: .omo/debt/reviews/current.md\n"
+        "review_queue_ref: .omo/debt/review-queue/current.yaml\n"
+        "action_packet_ref: .omo/debt/action-packet/current.yaml\n"
+        "owner_routing_ref: .omo/debt/owner-routing/current.yaml\n"
+        "dispatch_ref: .omo/debt/dispatch/current.yaml\n"
+        "campaign_ref: .omo/debt/campaign/current.yaml\n"
+        "reporting_ref: .omo/debt/reporting/current.yaml\n"
+        "seed_items:\n"
+        "  - .omo/debt/items/DEBT-1.yaml\n",
+        encoding="utf-8",
+    )
+    (omo_dir / "debt" / "items" / "DEBT-1.yaml").write_text(
+        "---\nstatus: active\n---\n---\n"
+        "id: DEBT-1\n"
+        "title: test debt\n"
+        "dimension: governance\n"
+        "subdimension: boundary\n"
+        "domain: workspace\n"
+        "scope: cross_project\n"
+        "severity: medium\n"
+        "weight: 0.3\n"
+        "entropy_class: pointer\n"
+        "lifecycle_state: identified\n"
+        "owner: platform-governance\n"
+        "affected_roots:\n"
+        "  - projects/omo\n"
+        "evidence_refs: []\n"
+        "mitigation_refs: []\n"
+        "opened_at: 2026-06-01T00:00:00Z\n"
+        "last_reviewed_at: null\n"
+        "next_review_at: null\n"
+        "gate_level: none\n"
+        "history: []\n",
+        encoding="utf-8",
+    )
+
+    ledger = load_debt_ledger(omo_dir)
+
+    assert ledger.registry_ref == ".omo/_truth/registry/debt.yaml"
+    assert [item.id for item in ledger.items] == ["DEBT-1"]

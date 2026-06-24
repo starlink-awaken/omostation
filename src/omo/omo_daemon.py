@@ -234,6 +234,10 @@ def run_daemon(
     logger = _setup_logging(log_file)
     logger.info(f"omo_daemon_started pid={os.getpid()} interval={interval_seconds}s")
 
+    # R3 闭环: 注册 mesh event handlers
+    from omo.omo_mesh_event_handler import register_mesh_event_handlers
+    register_mesh_event_handlers()
+
     stop_event = threading.Event()
 
     def _handle_signal(signum, _frame) -> None:  # type: ignore[no-untyped-def]
@@ -293,6 +297,7 @@ def daemon_status(pid_file: Path = DAEMON_PID_FILE) -> dict:
 
 
 def main(argv: list[str] | None = None) -> int:
+    print("⚠️ OMO Daemon 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     parser = argparse.ArgumentParser(
         prog="omo daemon",
         description="omo sync daemon — 定期跑 audit + sync (默认 30min tick)",

@@ -132,6 +132,7 @@ async def listen_to_sse(stop_event: asyncio.Event, logger: logging.Logger):
 
 
 def main():
+    print("⚠️ OMO SSE Daemon 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     if DAEMON_PID_FILE.exists():
         try:
             pid = int(DAEMON_PID_FILE.read_text().strip())

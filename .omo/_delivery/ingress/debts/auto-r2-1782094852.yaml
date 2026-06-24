@@ -1,0 +1,13 @@
+kind: debt_upserted
+debt_id: auto-r2-1782094852
+title: '[自动] r2: ERROR × 1'
+ingress_plane: projects/omo:self_healing
+source_ref: self_healing:r2:ERROR
+created_at: '2026-06-22T02:20:52.247535+00:00'
+last_seen_at: '2026-06-22T02:20:52.247535+00:00'
+occurrence_count: 1
+debt_ref: .omo/debt/items/auto-r2-1782094852.yaml
+lifecycle_state: open
+artifact_ref: .omo/_delivery/ingress/debts/auto-r2-1782094852.yaml
+broker_ref: projects/omo/src/omo/omo_ingress.py
+retention_mode: manual_archive

@@ -2,13 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
-
-
-def _load_yaml_required(path: Path) -> dict:
-    if not path.exists():
-        raise FileNotFoundError(path.as_posix())
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+from omo.omo_shared import load_yaml_required as _load_yaml_required
 
 
 def _attention(entry: dict[str, object]) -> tuple[str, str]:
@@ -74,12 +68,14 @@ def build_governance_overlay_approval_prep_aging(
 
     tasks.sort(key=_task_sort_key)
     followup_task_ids = [
-        entry["task_id"]
+        str(entry["task_id"])
         for entry in tasks
         if entry["attention_level"] in {"watch", "escalate"}
     ]
     escalation_task_ids = [
-        entry["task_id"] for entry in tasks if entry["attention_level"] == "escalate"
+        str(entry["task_id"])
+        for entry in tasks
+        if entry["attention_level"] == "escalate"
     ]
 
     yaml_packet = {

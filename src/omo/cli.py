@@ -75,6 +75,10 @@ def main(argv: list[str] | None = None) -> int:
         from omo.omo_state import main as state_main
 
         return state_main(args[1:])
+    if args and args[0] == "debt":
+        from omo.omo_debt_cli import main as debt_main
+
+        return debt_main(args[1:])
     if args and args[0] == "i0":
         from omo.omo_i0 import main as i0_main
 

@@ -1,11 +1,10 @@
 import argparse
-import time
 import shutil
+import time
 from pathlib import Path
 
-import yaml
-
 from .omo_paths import find_omo_dir
+from .omo_shared import load_yaml
 
 
 def get_omo_dir(base_dir: Path) -> Path:
@@ -28,7 +27,7 @@ def archive_resolved_debt_items(
     compacted = 0
     for item in debt_dir.glob("*.yaml"):
         try:
-            data = yaml.safe_load(item.read_text(encoding="utf-8"))
+            data = load_yaml(item)
         except Exception:
             continue
         if not (data and data.get("resolved") is True):
@@ -89,9 +88,9 @@ def main(argv: list[str]) -> int:
         omo_dir.parent / "projects" / "agora" / "src" / "agora.db",
         omo_dir.parent / "projects" / "ecos" / "LADS" / "ssb" / "ecos.db",
         omo_dir.parent / "data" / "cards" / "cards.db",
-        omo_dir.parent / "data" / "sharedbrain" / "data" / "db" / "core" / "event_store.db"
+        omo_dir.parent / "data" / "sharedbrain" / "data" / "db" / "core" / "event_store.db",
     ]
-    
+
     for db_path in dbs_to_vacuum:
         if db_path.exists():
             print(f"  [碎片整理] 压缩数据库空间 (VACUUM): {db_path.name}")

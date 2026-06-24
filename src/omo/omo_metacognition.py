@@ -7,9 +7,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import yaml
-
+from .omo_capability import load_capability_registry
 from .omo_io import write_yaml_atomic
+from .omo_paths import WORKSPACE_ROOT
+from .omo_shared import load_yaml_value
 
 
 def _utc_now() -> str:
@@ -22,7 +23,7 @@ def _utc_now() -> str:
 
 
 def _root() -> Path:
-    return Path(__file__).resolve().parents[2]
+    return WORKSPACE_ROOT
 
 
 def _omo(root: Path) -> Path:
@@ -30,13 +31,15 @@ def _omo(root: Path) -> Path:
 
 
 def _load_yaml(path: Path) -> Any:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) if path.exists() else None
+    if not path.exists():
+        return None
+    return load_yaml_value(path)
 
 
 def _load_registry(root: Path) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for rel_path in ("projects-capabilities.yaml", "sharedwork-sample.yaml"):
-        payload = _load_yaml(_omo(root) / "registry" / rel_path) or {}
+        payload = load_capability_registry(root, rel_path) or {}
         records.extend(payload.get("capabilities", []))
     return records
 

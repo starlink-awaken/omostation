@@ -3,6 +3,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+from .omo_ingress import archive_done_task, create_audit_report, yield_task_to_planned
 from .omo_io import write_text_atomic
 from .omo_redaction import redact_sensitive_text
 from .omo_task_schema import validate_task_file
@@ -414,15 +415,11 @@ def yield_task(
     """[C2G v2] Agent Autonomous Yielding Mechanism"""
     omo_path = _omo_path(root, omo_dir)
     active_dir = omo_path / "tasks" / "active"
-    planned_dir = omo_path / "tasks" / "planned"
-    
     task_file = _find_task_file(active_dir, task_id)
     if not task_file:
         raise ValueError(f"Task {task_id} not found in active tasks.")
-        
+
     task = _load_yaml(task_file)
-    task["status"] = "yield_to_ideation"
-    
     run_ref = task.get("run_ref")
     if run_ref:
         dispatch_path = root / run_ref
@@ -433,10 +430,15 @@ def yield_task(
             dispatch["reclaim"]["required"] = True
             dispatch["reclaim"]["reason"] = f"Yielded to ideation: {reason}"
             _write_yaml(dispatch_path, dispatch)
-            
-    _write_yaml(planned_dir / f"{task_id}.yaml", task)
-    task_file.unlink()
-    print(f"✅ 战术撤退成功: 任务 {task_id} 已退回沙箱 (yield_to_ideation)。原因: {reason}")
+
+    yield_task_to_planned(
+        omo_path,
+        task_id=task_id,
+        actor="projects/omo/src/omo/omo_worker_dispatch.py:yield_task",
+        reason=reason,
+        source_ref=f"omo:worker-dispatch:yield:{task_id}",
+    )
+    print(f"✅ 战术撤退成功: 任务 {task_id} 已退回沙箱 (candidate)。原因: {reason}")
     return 0
 
 
@@ -524,7 +526,6 @@ def _fast_track_compaction(root: Path, omo_dir: str | Path = ".omo"):
     """
     omo_path = _omo_path(root, omo_dir)
     done_dir = omo_path / "tasks" / "done"
-    archive_dir = omo_path / "tasks" / "archived"
     audit_dir = omo_path / "_knowledge" / "audits"
     
     if not done_dir.exists():
@@ -535,11 +536,10 @@ def _fast_track_compaction(root: Path, omo_dir: str | Path = ".omo"):
         # 数量不够，暂不聚变
         return
         
-    archive_dir.mkdir(parents=True, exist_ok=True)
     audit_dir.mkdir(parents=True, exist_ok=True)
     
     compaction_time = _timestamp_slug(_utc_now())
-    report_path = audit_dir / f"Fast-Track-Compaction-{compaction_time}.md"
+    report_name = f"Fast-Track-Compaction-{compaction_time}"
     
     report_lines = [
         f"# 微小价值交付聚变报告 ({compaction_time})",
@@ -554,14 +554,24 @@ def _fast_track_compaction(root: Path, omo_dir: str | Path = ".omo"):
             title = task.get("title", "Unknown")
             context_uri = task.get("context_uri", "N/A")
             report_lines.append(f"| {task_file.stem} | {title} | `{context_uri}` | {_utc_now()} |")
-            
-            # 物理归档
-            task_file.rename(archive_dir / task_file.name)
+
+            archive_done_task(
+                omo_path,
+                task_id=task_file.stem,
+                actor="projects/omo/src/omo/omo_worker_dispatch.py:_fast_track_compaction",
+                source_ref=f"omo:worker-dispatch:fast-track-compaction:{task_file.stem}",
+            )
         except Exception as e:
             print(f"Failed to compact {task_file}: {e}")
-            
-    if len(report_lines) > 4:
-        report_path.write_text("\n".join(report_lines) + "\n", encoding="utf-8")
-        print(f"✅ Fast-Track 微观碎片已聚变: 归档了 {len(fast_tasks)} 个任务，生成报告 {report_path.name}")
 
+    if len(report_lines) > 4:
+        create_audit_report(
+            omo_path,
+            filename=report_name,
+            title=f"微小价值交付聚变报告 ({compaction_time})",
+            content="\n".join(report_lines[2:]),
+            actor="projects/omo/src/omo/omo_worker_dispatch.py:_fast_track_compaction",
+            source_ref="omo:worker-dispatch:fast-track-compaction",
+        )
+        print(f"✅ Fast-Track 微观碎片已聚变: 归档了 {len(fast_tasks)} 个任务，生成报告 {report_name}.md")
 

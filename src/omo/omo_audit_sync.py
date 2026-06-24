@@ -28,6 +28,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from omo.omo_ingress import write_system_projection_fields
 from omo.omo_paths import (
     DECISIONS_DIR,
     DEBT_ITEMS_DIR,
@@ -480,7 +481,14 @@ def apply_diff(
         f".yaml.bak-{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}"
     )
     shutil.copy2(system_path, backup)
-    system_path.write_text(text, encoding="utf-8")
+    omo_dir = system_path.parent.parent
+    write_system_projection_fields(
+        omo_dir,
+        updates={d.field: d.new_value for d in diffs},
+        actor="omo audit-sync --apply",
+        source_ref="omo-audit-sync:apply",
+        allowed_fields=ALLOWED_FIELDS,
+    )
     return text
 
 

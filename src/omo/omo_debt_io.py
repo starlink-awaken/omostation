@@ -31,6 +31,56 @@ def _render_queue_section(
     lines.append("")
     return "\n".join(lines)
 
+
+def _artifact_meta(
+    *,
+    artifact_kind: str,
+    retention_mode: str,
+    lifecycle_state: str = "active",
+) -> dict[str, str | None]:
+    return {
+        "artifact_kind": artifact_kind,
+        "broker_ref": None,
+        "writer_ref": "projects/omo/src/omo/omo_debt_io.py",
+        "retention_mode": retention_mode,
+        "lifecycle_state": lifecycle_state,
+    }
+
+
+def _write_debt_sidecar(
+    omo_dir: Path,
+    *,
+    lane: str,
+    name: str,
+    carrier_ref: str,
+    timestamp: str,
+    retention_mode: str,
+    payload: dict[str, object],
+    _write_yaml,
+) -> None:
+    artifact_path = (
+        omo_dir
+        / "_delivery"
+        / "debt"
+        / lane
+        / f"{name}-{timestamp.replace(':', '-')}.yaml"
+    )
+    sidecar = {
+        "kind": f"debt_{lane}_artifact",
+        "carrier_ref": carrier_ref,
+        "artifact_generated_at": timestamp,
+        "artifact_meta": _artifact_meta(
+            artifact_kind=f"debt_{lane}_artifact",
+            retention_mode=retention_mode,
+        ),
+        "payload_summary": {
+            key: payload.get(key)
+            for key in ("generated_at", "dispatched_at", "latest_run_ref", "summary")
+            if key in payload
+        },
+    }
+    _write_yaml(artifact_path, sidecar)
+
 def write_dashboard(
     omo_dir: Path, metrics, review_queue: dict[str, object], now: str, _write_yaml
 ) -> None:
@@ -77,7 +127,22 @@ def _render_action_packet_section(title: str, entries: list[dict[str, object]]) 
 
 
 def write_action_packet(omo_dir: Path, action_packet: dict[str, object], _write_yaml) -> None:
-    _write_yaml(omo_dir / "debt" / "action-packet" / "current.yaml", action_packet)
+    payload = dict(action_packet)
+    payload["artifact_meta"] = _artifact_meta(
+        artifact_kind="debt_action_packet",
+        retention_mode="until_replaced",
+    )
+    _write_yaml(omo_dir / "debt" / "action-packet" / "current.yaml", payload)
+    _write_debt_sidecar(
+        omo_dir,
+        lane="routing",
+        name="action-packet-current",
+        carrier_ref=".omo/debt/action-packet/current.yaml",
+        timestamp=str(payload["generated_at"]),
+        retention_mode="until_replaced",
+        payload=payload,
+        _write_yaml=_write_yaml,
+    )
 
     lanes = action_packet["lanes"]
     markdown = "\n".join(
@@ -133,7 +198,22 @@ def _render_owner_routing_section(owner_packet: dict[str, object]) -> str:
 
 
 def write_owner_routing(omo_dir: Path, owner_routing: dict[str, object], _write_yaml) -> None:
-    _write_yaml(omo_dir / "debt" / "owner-routing" / "current.yaml", owner_routing)
+    payload = dict(owner_routing)
+    payload["artifact_meta"] = _artifact_meta(
+        artifact_kind="debt_owner_routing",
+        retention_mode="until_replaced",
+    )
+    _write_yaml(omo_dir / "debt" / "owner-routing" / "current.yaml", payload)
+    _write_debt_sidecar(
+        omo_dir,
+        lane="routing",
+        name="owner-routing-current",
+        carrier_ref=".omo/debt/owner-routing/current.yaml",
+        timestamp=str(payload["generated_at"]),
+        retention_mode="until_replaced",
+        payload=payload,
+        _write_yaml=_write_yaml,
+    )
     markdown = "\n".join(
         [
             f"# Debt Owner Routing Packet\n\nGenerated at: {owner_routing['generated_at']}\n",
@@ -174,28 +254,53 @@ def _render_dispatch_owner_section(owner_packet: dict[str, object]) -> str:
 
 
 def write_dispatch_packet(omo_dir: Path, dispatch_packet: dict[str, object], _write_yaml) -> None:
+    payload = dict(dispatch_packet)
+    payload["artifact_meta"] = _artifact_meta(
+        artifact_kind="debt_dispatch_packet",
+        retention_mode="manual_archive",
+    )
     markdown = "\n".join(
         [
             "# Debt Dispatch Packet\n",
-            f"Dispatch timestamp: {dispatch_packet['dispatched_at']}\n",
-            f"Owner count: {dispatch_packet['summary']['owner_count']}\n",
-            f"Total dispatched items: {dispatch_packet['summary']['total_dispatched_items']}\n",
+            f"Dispatch timestamp: {payload['dispatched_at']}\n",
+            f"Owner count: {payload['summary']['owner_count']}\n",
+            f"Total dispatched items: {payload['summary']['total_dispatched_items']}\n",
             *[
                 _render_dispatch_owner_section(owner)
-                for owner in dispatch_packet["owners"]
+                for owner in payload["owners"]
             ],
         ]
     )
-    run_yaml_path = omo_dir.parent / dispatch_packet["latest_run_ref"]
+    run_yaml_path = omo_dir.parent / payload["latest_run_ref"]
     run_md_path = run_yaml_path.with_suffix(".md")
     if run_yaml_path.exists() or run_md_path.exists():
         raise FileExistsError(f"dispatch run already exists: {run_yaml_path}")
 
-    _write_yaml(omo_dir / "debt" / "dispatch" / "current.yaml", dispatch_packet)
+    _write_yaml(omo_dir / "debt" / "dispatch" / "current.yaml", payload)
+    _write_debt_sidecar(
+        omo_dir,
+        lane="dispatch",
+        name="current",
+        carrier_ref=".omo/debt/dispatch/current.yaml",
+        timestamp=str(payload["dispatched_at"]),
+        retention_mode="until_replaced",
+        payload=payload,
+        _write_yaml=_write_yaml,
+    )
     current_md_path = omo_dir / "debt" / "dispatch" / "current.md"
     current_md_path.parent.mkdir(parents=True, exist_ok=True)
     current_md_path.write_text(markdown, encoding="utf-8")
-    _write_yaml(run_yaml_path, dispatch_packet)
+    _write_yaml(run_yaml_path, payload)
+    _write_debt_sidecar(
+        omo_dir,
+        lane="dispatch",
+        name=f"run-{run_yaml_path.stem}",
+        carrier_ref=str(payload["latest_run_ref"]),
+        timestamp=str(payload["dispatched_at"]),
+        retention_mode="manual_archive",
+        payload=payload,
+        _write_yaml=_write_yaml,
+    )
     run_md_path.write_text(markdown, encoding="utf-8")
 
 

@@ -87,6 +87,20 @@ def test_debt_refresh_writes_dashboard_review_queue_and_action_packet(tmp_path: 
         "SB_PHASE17_PLAN",
     ]
     assert [entry["id"] for entry in action_yaml["lanes"]["watch_only"]] == ["SB_UNTESTED_PKGS"]
+    assert action_yaml["artifact_meta"]["artifact_kind"] == "debt_action_packet"
+    assert action_yaml["artifact_meta"]["retention_mode"] == "until_replaced"
+    assert action_yaml["artifact_meta"]["lifecycle_state"] == "active"
+    action_sidecar = yaml.safe_load(
+        (
+            tmp_path
+            / ".omo"
+            / "_delivery"
+            / "debt"
+            / "routing"
+            / "action-packet-current-2026-06-10T00-00-00Z.yaml"
+        ).read_text(encoding="utf-8")
+    )
+    assert action_sidecar["carrier_ref"] == ".omo/debt/action-packet/current.yaml"
     assert "## Revalidate Now" in action_md
     assert "## Schedule Now" in action_md
     assert "## Watch Only" in action_md
@@ -100,6 +114,19 @@ def test_debt_refresh_writes_dashboard_review_queue_and_action_packet(tmp_path: 
         for entry in omo_owner["entries"]
         for flag in entry["priority_flags"]
     }
+    assert owner_yaml["artifact_meta"]["artifact_kind"] == "debt_owner_routing"
+    assert owner_yaml["artifact_meta"]["retention_mode"] == "until_replaced"
+    owner_sidecar = yaml.safe_load(
+        (
+            tmp_path
+            / ".omo"
+            / "_delivery"
+            / "debt"
+            / "routing"
+            / "owner-routing-current-2026-06-10T00-00-00Z.yaml"
+        ).read_text(encoding="utf-8")
+    )
+    assert owner_sidecar["carrier_ref"] == ".omo/debt/owner-routing/current.yaml"
     assert "# Debt Owner Routing Packet" in owner_md
     assert "Owners: 2" in owner_md
     assert "Total routed items: 7" in owner_md
@@ -143,6 +170,32 @@ def test_debt_dispatch_writes_current_and_immutable_run_artifacts(tmp_path: Path
     run_md = run_md_path.read_text(encoding="utf-8")
 
     assert current_yaml == run_yaml
+    assert current_yaml["artifact_meta"]["artifact_kind"] == "debt_dispatch_packet"
+    assert current_yaml["artifact_meta"]["retention_mode"] == "manual_archive"
+    assert current_yaml["artifact_meta"]["lifecycle_state"] == "active"
+    current_sidecar = yaml.safe_load(
+        (
+            tmp_path
+            / ".omo"
+            / "_delivery"
+            / "debt"
+            / "dispatch"
+            / "current-2026-06-10T00-00-00Z.yaml"
+        ).read_text(encoding="utf-8")
+    )
+    run_sidecar = yaml.safe_load(
+        (
+            tmp_path
+            / ".omo"
+            / "_delivery"
+            / "debt"
+            / "dispatch"
+            / "run-2026-06-10T00-00-00Z-2026-06-10T00-00-00Z.yaml"
+        ).read_text(encoding="utf-8")
+    )
+    assert current_sidecar["carrier_ref"] == ".omo/debt/dispatch/current.yaml"
+    assert run_sidecar["carrier_ref"] == ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml"
+    assert run_sidecar["artifact_meta"]["retention_mode"] == "manual_archive"
     assert current_yaml["dispatched_at"] == "2026-06-10T00:00:00Z"
     assert current_yaml["latest_run_ref"] == ".omo/debt/dispatch/runs/2026-06-10T00-00-00Z.yaml"
     assert current_yaml["summary"]["owner_count"] == 2

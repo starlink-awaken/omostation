@@ -29,6 +29,14 @@ seed_items:
 - .omo/debt/items/FAMILY-HUB-DEBT-001.yaml
 - .omo/debt/items/FAMILY-HUB-DEBT-002.yaml
 - .omo/debt/items/DEBT-LEGACY-DIRECT-OMO-IO-BACKLOG.yaml
+- .omo/debt/items/auto-test-1782094852.yaml
+- .omo/debt/items/auto-r1-1782094852.yaml
+- .omo/debt/items/auto-r2-1782094852.yaml
+- .omo/debt/items/auto-test-1782094861.yaml
+- .omo/debt/items/auto-test-error.yaml
+- .omo/debt/items/auto-r1-error.yaml
+- .omo/debt/items/auto-r2-error.yaml
+- .omo/debt/items/auto-test-any.yaml
 dashboard_ref: .omo/debt/dashboard/latest.yaml
 review_pack_ref: .omo/debt/review/latest.yaml
 review_queue_ref: .omo/debt/queue/latest.yaml

@@ -3,13 +3,11 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-import yaml
+from .omo_shared import load_yaml_required
 
 
 def _load_yaml_required(path: Path) -> dict:
-    if not path.exists():
-        raise FileNotFoundError(path.as_posix())
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return load_yaml_required(path)
 
 
 def _parse_iso8601(value: str) -> datetime:

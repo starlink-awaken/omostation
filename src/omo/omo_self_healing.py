@@ -29,6 +29,8 @@ from pathlib import Path
 
 import yaml
 
+from .omo_ingress import upsert_debt_item
+
 logger = logging.getLogger("omo.self_healing")
 
 
@@ -44,6 +46,10 @@ DEBT_REGISTRY = OMO_ROOT / ".omo" / "debt" / "registry.yaml"
 # ═══════════════════════════════════════════════════════════════════════════
 # Error Event Counter
 # ═══════════════════════════════════════════════════════════════════════════
+
+
+def _omo_dir() -> Path:
+    return OMO_ROOT / ".omo"
 
 
 class ErrorEventCounter:
@@ -306,7 +312,8 @@ class SelfHealingEngine:
 
     async def _create_debt(self, rule: HealingRule, event_type: str, count: int) -> str | None:
         """基于规则和事件创建债务条目。"""
-        debt_id = f"auto-{rule.name}-{int(time.time())}"
+        event_slug = str(event_type).strip().lower().replace(" ", "-").replace("/", "-") or "event"
+        debt_id = f"auto-{rule.name}-{event_slug}"
         now = datetime.now(UTC).isoformat()
 
         debt_data = {
@@ -342,36 +349,20 @@ class SelfHealingEngine:
         }
 
         try:
-            DEBT_ITEMS_DIR.mkdir(parents=True, exist_ok=True)
-            item_path = DEBT_ITEMS_DIR / f"{debt_id}.yaml"
-            item_path.write_text(yaml.dump(debt_data, allow_unicode=True, sort_keys=False), encoding="utf-8")
-
-            # 更新 registry
-            self._append_to_registry(item_path)
-            logger.info("self_healing_debt_created debt_id=%s path=%s", debt_id, str(item_path))
-            return debt_id
+            payload = upsert_debt_item(
+                _omo_dir(),
+                debt_data=debt_data,
+                ingress_plane="projects/omo:self_healing",
+                source_ref=f"self_healing:{debt_id}",
+                now=now,
+            )
+            logger.info("self_healing_debt_created debt_id=%s ref=.omo/debt/items/%s.yaml", debt_id, debt_id)
+            return str(payload.get("id") or debt_id)
         except Exception as exc:
             logger.error("self_healing_debt_create_failed error=%s", str(exc))
             return None
 
-    def _append_to_registry(self, item_path: Path) -> None:
-        """将新债务条目追加到 registry.yaml。"""
-        if not DEBT_REGISTRY.exists():
-            return
-
-        try:
-            registry = yaml.safe_load(DEBT_REGISTRY.read_text(encoding="utf-8")) or {}
-            seed_items: list[str] = registry.get("seed_items", [])
-            rel_path = str(item_path.relative_to(OMO_ROOT))
-            if rel_path not in seed_items:
-                seed_items.append(rel_path)
-                registry["seed_items"] = seed_items
-                DEBT_REGISTRY.write_text(
-                    yaml.dump(registry, allow_unicode=True, sort_keys=False),
-                    encoding="utf-8",
-                )
-        except Exception as exc:
-            logger.warning("self_healing_registry_update_failed error=%s", str(exc))
+    
 
     # ── Workflow Trigger ───────────────────────────────────────────────
 
@@ -635,7 +626,11 @@ def load_rules(path: Path | None = None) -> list[HealingRule]:
     target = path or HEALING_CONFIG_PATH
     if not target.exists():
         return []
-    data = yaml.safe_load(target.read_text(encoding="utf-8")) or []
+    from .omo_shared import load_yaml_value
+
+    data = load_yaml_value(target)
+    if not isinstance(data, list):
+        return []
     rules = []
     for d in data:
         rules.append(HealingRule(

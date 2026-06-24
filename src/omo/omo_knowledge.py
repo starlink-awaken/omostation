@@ -6,6 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from .omo_ingress import create_knowledge_doc
 from .omo_paths import find_omo_dir
 
 def _find_omo_dir() -> Path:
@@ -45,24 +46,25 @@ def cmd_knowledge_list(omo_dir: Path, plane: str | None) -> int:
 
 
 def cmd_knowledge_add(omo_dir: Path, plane: str, title: str, content: str | None, stdin: bool) -> int:
-    """Add a document to _knowledge/{plane}/."""
-    base = omo_dir / "_knowledge" / plane
-    if not base.exists():
-        base.mkdir(parents=True)
-        print(f"  Created _knowledge/{plane}/")
+    """Add a document to _knowledge/{plane}/ through governed ingress."""
     if stdin:
         content = sys.stdin.read()
     elif not content:
         print("❌ Provide content via --content or --stdin", file=sys.stderr)
         return 1
-    # Create safe filename from title
-    safe_name = title.lower().replace(" ", "-").replace("/", "-").replace(":", "")[:60]
-    doc_file = base / f"{safe_name}.md"
-    if doc_file.exists():
-        print(f"❌ {doc_file.name} already exists", file=sys.stderr)
+    try:
+        artifact = create_knowledge_doc(
+            omo_dir,
+            plane=plane,
+            title=title,
+            content=content,
+            actor="projects/omo",
+            source_ref=f"omo:knowledge:add:{plane}:{title}",
+        )
+    except ValueError as exc:
+        print(f"❌ {exc}", file=sys.stderr)
         return 1
-    doc_file.write_text(f"# {title}\n\n{content}\n")
-    print(f"✅ Created _knowledge/{plane}/{doc_file.name}")
+    print(f"✅ Created {artifact['doc_ref'].removeprefix('.omo/')}")
     return 0
 
 

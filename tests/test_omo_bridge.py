@@ -105,6 +105,9 @@ def test_import_bmad_writes_task_with_phase_wave(tmp_path):
     data = yaml.safe_load(merge_file.read_text())
     assert data["phase"] == 42
     assert data["wave"] == "W0"
+    assert data["metadata"]["broker"] == "projects/omo/src/omo/omo_ingress.py"
+    artifact = omo / "_delivery" / "ingress" / "tasks" / f"{a_id}.yaml"
+    assert artifact.exists()
 
 
 def test_import_bmad_resolves_depends_on_to_imported_ids(tmp_path):
@@ -243,6 +246,8 @@ def test_import_fast_track_generates_valid_yaml(tmp_path):
     assert data["title"] == "fix-typo.md"
     assert data["context_uri"] == f"bos://memory/fast-track/{task_id}"
     assert data["human_approval_required"] is False
+    assert data["metadata"]["broker"] == "projects/omo/src/omo/omo_ingress.py"
+    assert (omo / "_delivery" / "ingress" / "tasks" / f"{task_id}.yaml").exists()
 
 
 def test_import_bmad_rejects_todo_lines(tmp_path, capfd):
@@ -294,3 +299,48 @@ def test_import_bmad_adds_context_uri(tmp_path):
     data = yaml.safe_load((omo / "tasks" / "planned" / f"{a_id}.yaml").read_text())
     assert "context_uri" in data
     assert data["context_uri"] == f"bos://memory/openspecs/spec.md#{a_id}"
+
+
+def test_import_pitch_uses_governed_goal_and_task_ingress(tmp_path, capfd):
+    import hashlib
+    import yaml
+
+    from omo.omo_bridge import _import_pitch
+
+    pitch = tmp_path / "pitch.md"
+    pitch.write_text(
+        """# Pitch
+> **Upstream**: MS-001
+> **Appetite:** 2 days
+""",
+        encoding="utf-8",
+    )
+    omo = tmp_path / ".omo"
+    goals_dir = omo / "goals"
+    goals_dir.mkdir(parents=True, exist_ok=True)
+    (goals_dir / "current.yaml").write_text("phase: 44\ngoals: []\n", encoding="utf-8")
+
+    _import_pitch(pitch, omo)
+
+    bet_id = f"BET-{hashlib.md5(pitch.name.encode()).hexdigest()[:4]}"
+    task_id = f"IMPORTED-{hashlib.md5(bet_id.encode()).hexdigest()[:6]}"
+    goals_payload = yaml.safe_load((goals_dir / "current.yaml").read_text(encoding="utf-8"))
+    assert any(goal["id"] == bet_id for goal in goals_payload["goals"])
+    task_payload = yaml.safe_load(
+        (omo / "tasks" / "planned" / f"{task_id}.yaml").read_text(encoding="utf-8")
+    )
+    assert task_payload["metadata"]["broker"] == "projects/omo/src/omo/omo_ingress.py"
+    assert (omo / "_delivery" / "ingress" / "goals" / f"{bet_id}.yaml").exists()
+    assert (omo / "_delivery" / "ingress" / "tasks" / f"{task_id}.yaml").exists()
+    registry = yaml.safe_load(
+        (omo / "_delivery" / "ingress" / "registry.yaml").read_text(encoding="utf-8")
+    )
+    assert registry["goals"]["by_source_ref"][
+        f"omo:bridge:pitch-goal:{pitch.name}:{bet_id}"
+    ] == bet_id
+    assert registry["tasks"]["by_source_ref"][
+        f"omo:bridge:pitch-task:{pitch.name}:{task_id}"
+    ] == task_id
+
+    out, _ = capfd.readouterr()
+    assert "Bet 下注成功" in out

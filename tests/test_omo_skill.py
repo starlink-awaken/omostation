@@ -32,6 +32,8 @@ def test_register_skill_manifest_writes_truth_record(tmp_path: Path):
     payload = _load_yaml(manifest_path)
     assert manifest["id"] == "skill.review.refresh"
     assert payload["worker_bridge"] == "mockworker"
+    artifact_path = tmp_path / ".omo" / "_delivery" / "ingress" / "task-center" / "skills" / "skill.review.refresh.yaml"
+    assert artifact_path.exists()
 
 
 def test_create_skill_task_packet_bridges_skill_to_worker_runtime(tmp_path: Path):
@@ -65,4 +67,8 @@ def test_create_skill_task_packet_bridges_skill_to_worker_runtime(tmp_path: Path
         ".omo/_truth/task-center/skills/skill.review.refresh.yaml",
     ]
     assert task["worker_bridge"] == "mockworker"
+    assert any(
+        path.name.startswith("P6-G3-SKILL-FEDERATION-PACKET-blocked-")
+        for path in (tmp_path / ".omo" / "_delivery" / "ingress" / "tasks").glob("*.yaml")
+    )
     assert validate_task_file(task_path) == []

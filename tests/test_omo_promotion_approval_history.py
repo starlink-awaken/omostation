@@ -104,3 +104,30 @@ def test_build_promotion_approval_history_rejects_missing_required_fields(tmp_pa
 
     with pytest.raises(ValueError, match="missing required promotion approval field"):
         build_promotion_approval_history(tmp_path, omo_dir=".omo", now="2026-06-03T00:15:00Z")
+
+
+def test_build_promotion_approval_history_accepts_multi_document_yaml(tmp_path: Path):
+    (tmp_path / ".omo" / "workers" / "runs").mkdir(parents=True, exist_ok=True)
+    (tmp_path / ".omo" / "_truth" / "task-center" / "proposals").mkdir(parents=True, exist_ok=True)
+    (tmp_path / ".omo" / "workers" / "runs" / "TASK-A-promotion-approval-2026-06-03T00-00-00Z.yaml").write_text(
+        "---\nstatus: active\nowner: governance\n---\n---\n"
+        "approval_id: TASK-A-promotion-approval-2026-06-03T00-00-00Z\n"
+        "task_id: TASK-A\n"
+        "approval_status: requested\n"
+        "requested_at: 2026-06-03T00:00:00Z\n"
+        "approved_at: null\n"
+        "approver: null\n"
+        "refs:\n"
+        "  task_ref: .omo/tasks/planned/TASK-A.yaml\n"
+        "  readiness_ref: .omo/workers/promotion/readiness.yaml\n",
+        encoding="utf-8",
+    )
+    (tmp_path / ".omo" / "_truth" / "task-center" / "proposals" / "TASK-A-promotion-approval-2026-06-03T00-00-00Z-proposal.yaml").write_text(
+        "---\nstatus: active\n---\n---\nid: TASK-A-promotion-approval-2026-06-03T00-00-00Z-proposal\nstatus: proposed\n",
+        encoding="utf-8",
+    )
+
+    result = build_promotion_approval_history(tmp_path, omo_dir=".omo", now="2026-06-03T00:15:00Z")
+
+    assert result["yaml"]["approval_count"] == 1
+    assert result["yaml"]["latest_approval_id"] == "TASK-A-promotion-approval-2026-06-03T00-00-00Z"

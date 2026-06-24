@@ -2,18 +2,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
-
-
-def _load_yaml_required(path: Path) -> dict:
-    if not path.exists():
-        raise FileNotFoundError(path.as_posix())
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+from omo.omo_shared import load_yaml_required as _load_yaml_required
 
 
 def _events_by_task(history: dict[str, object]) -> dict[str, list[dict[str, object]]]:
     grouped: dict[str, list[dict[str, object]]] = {}
-    for event in history.get("events", []):
+    events = history.get("events", [])
+    if not isinstance(events, list):
+        return grouped
+    for event in events:
         grouped.setdefault(str(event["task_id"]), []).append(dict(event))
     return grouped
 

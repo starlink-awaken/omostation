@@ -259,7 +259,9 @@ def compute_xplane_score(quick: bool = True) -> dict:
     reg = _find_registry()
     if reg is None:
         return {"xplane_score": 0.0, "xplane_factor": 1.0, "error": "registry not found"}
-    data = yaml.safe_load(reg.read_text(encoding="utf-8")) or {}
+    from .omo_shared import load_yaml
+
+    data = load_yaml(reg)
     mechanisms = data.get("mechanisms", [])
     if not mechanisms:
         return {"xplane_score": 0.0, "xplane_factor": 1.0, "error": "no mechanisms"}

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-import yaml
+from .omo_shared import load_yaml, load_yaml_required
 
 
 @dataclass(frozen=True)
@@ -67,7 +67,7 @@ def load_debt_ledger(omo_dir: Path) -> DebtLedger:
             f"No debt registry found at {truth_registry} or {legacy_registry}"
         )
 
-    registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+    registry = load_yaml_required(registry_path)
 
     items: list[DebtItem] = []
     for item_ref in registry.get("seed_items", []):
@@ -75,7 +75,7 @@ def load_debt_ledger(omo_dir: Path) -> DebtLedger:
         if not item_file.exists():
             # 历史悬空引用: 跳过, 保持韧性
             continue
-        payload = yaml.safe_load(item_file.read_text(encoding="utf-8"))
+        payload = load_yaml(item_file)
         items.append(_parse_debt_item(payload))
 
     return DebtLedger(

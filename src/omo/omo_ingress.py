@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -13,75 +12,21 @@ from omo.omo_promotion_request import (
     build_promotion_approval_request,
     promotion_approval_ref,
 )
-from omo.omo_shared import load_yaml
 from omo.omo_task_schema import validate_task_data
-
-
-def _utc_now() -> str:
-    return (
-        datetime.now(timezone.utc)
-        .replace(microsecond=0)
-        .isoformat()
-        .replace("+00:00", "Z")
-    )
-
-
-def _timestamp_slug(timestamp: str) -> str:
-    return timestamp.replace(":", "-")
-
-
-def _safe_doc_name(title: str) -> str:
-    return title.lower().replace(" ", "-").replace("/", "-").replace(":", "")[:60]
-
-
-def _load_yaml(path: Path) -> dict[str, Any]:
-    return load_yaml(path)
-
-
-def _delivery_root(omo_dir: Path) -> Path:
-    return omo_dir / "_delivery" / "ingress"
-
-
-def _audit_log_path(omo_dir: Path) -> Path:
-    return _delivery_root(omo_dir) / "ingress-audit.jsonl"
-
-
-def _trail_log_path(omo_dir: Path) -> Path:
-    return _delivery_root(omo_dir) / "ingress-trail.jsonl"
-
-
-def _lock_path(omo_dir: Path) -> Path:
-    return _delivery_root(omo_dir) / "ingress.lock"
-
-
-def _registry_path(omo_dir: Path) -> Path:
-    return _delivery_root(omo_dir) / "registry.yaml"
-
-
-def _find_task_path(
-    omo_dir: Path,
-    task_id: str,
-    *,
-    groups: tuple[str, ...] = ("planned", "active", "blocked", "done", "remediation"),
-) -> tuple[str, Path] | None:
-    for group in groups:
-        group_dir = omo_dir / "tasks" / group
-        if not group_dir.exists():
-            continue
-        for task_file in sorted(group_dir.glob("*.yaml")):
-            payload = _load_yaml(task_file)
-            if payload.get("id") == task_id:
-                return group, task_file
-    return None
-
-
-def _artifact_lifecycle_fields(*, artifact_ref: str) -> dict[str, Any]:
-    return {
-        "artifact_ref": artifact_ref,
-        "broker_ref": "projects/omo/src/omo/omo_ingress.py",
-        "retention_mode": "manual_archive",
-        "lifecycle_state": "active",
-    }
+from omo.omo_ingress_paths import (
+    _artifact_lifecycle_fields,
+    _audit_log_path,
+    _delivery_root,
+    _find_task_path,
+    _load_yaml,
+    _lock_path,
+    _mutation_log_path,
+    _registry_path,
+    _safe_doc_name,
+    _timestamp_slug,
+    _trail_log_path,
+    _utc_now,
+)
 
 
 def _load_registry(omo_dir: Path) -> dict[str, Any]:
@@ -103,6 +48,33 @@ def _load_registry(omo_dir: Path) -> dict[str, Any]:
 
 def _write_registry(omo_dir: Path, registry: dict[str, Any]) -> None:
     write_yaml_atomic(_registry_path(omo_dir), registry)
+
+
+def _record_mutation(
+    omo_dir: Path,
+    *,
+    actor: str,
+    action: str,
+    target: str,
+    artifact_ref: str,
+    source_ref: str,
+    broker_ref: str = "projects/omo/src/omo/omo_ingress.py",
+    created_at: str | None = None,
+    extra: dict[str, Any] | None = None,
+) -> None:
+    record: dict[str, Any] = {
+        "created_at": created_at or _utc_now(),
+        "actor": actor,
+        "action": action,
+        "target": target,
+        "artifact_ref": artifact_ref,
+        "source_ref": source_ref,
+        "broker_ref": broker_ref,
+        "result": "committed",
+    }
+    if extra:
+        record.update(deepcopy(extra))
+    AppendOnlyLog(_mutation_log_path(omo_dir)).append(record, sort_keys=False)
 
 
 def _goal_fingerprint(
@@ -340,6 +312,16 @@ def create_goal(
             target=f".omo/goals/current.yaml#{goal_id}",
             parent_step_id=parent_step_id,
         )
+        _record_mutation(
+            omo_dir,
+            actor=ingress_plane,
+            action="create_goal",
+            target=f".omo/goals/current.yaml#{goal_id}",
+            artifact_ref=artifact["artifact_ref"],
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"goal_id": goal_id, "ingress_plane": ingress_plane},
+        )
         return new_goal
 
 
@@ -417,6 +399,16 @@ def update_goal_progress(
             target=f".omo/goals/current.yaml#{goal_id}",
             parent_step_id=parent_step_id,
         )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="update_goal_progress",
+            target=f".omo/goals/current.yaml#{goal_id}",
+            artifact_ref=f".omo/_delivery/ingress/goals/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"goal_id": goal_id, "progress": progress},
+        )
         return deepcopy(target_goal)
 
 
@@ -472,6 +464,16 @@ def create_knowledge_doc(
             target=f".omo/_knowledge/{plane}/{safe_name}.md",
             parent_step_id=parent_step_id,
         )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="create_knowledge_doc",
+            target=f".omo/_knowledge/{plane}/{safe_name}.md",
+            artifact_ref=f".omo/_delivery/ingress/knowledge/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"plane": plane, "title": title},
+        )
         return artifact
 
 
@@ -524,6 +526,16 @@ def create_standard_doc(
             action="create_standard_doc",
             target=f".omo/standards/{safe_name}.md",
             parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="create_standard_doc",
+            target=f".omo/standards/{safe_name}.md",
+            artifact_ref=f".omo/_delivery/ingress/standards/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"title": title},
         )
         return artifact
 
@@ -607,6 +619,16 @@ def write_capability_registry_bundle(
             target=".omo/capabilities/",
             parent_step_id=parent_step_id,
         )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="write_capability_registry_bundle",
+            target=".omo/capabilities/",
+            artifact_ref=artifact_ref,
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"registry_refs": registry_refs},
+        )
         return artifact
 
 
@@ -677,6 +699,16 @@ def write_manual_capabilities(
             target=".omo/capabilities/manual-capabilities.yaml",
             parent_step_id=parent_step_id,
         )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="write_manual_capabilities",
+            target=".omo/capabilities/manual-capabilities.yaml",
+            artifact_ref=artifact_ref,
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"capability_count": len(payload.get("capabilities", [])) if isinstance(payload, dict) else 0},
+        )
         return deepcopy(payload)
 
 
@@ -724,6 +756,16 @@ def create_skill_manifest(
             action="create_skill_manifest",
             target=f".omo/_truth/task-center/skills/{skill_id}.yaml",
             parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="create_skill_manifest",
+            target=f".omo/_truth/task-center/skills/{skill_id}.yaml",
+            artifact_ref=f".omo/_delivery/ingress/task-center/skills/{skill_id}.yaml",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"skill_id": skill_id},
         )
         return deepcopy(manifest)
 
@@ -773,6 +815,15 @@ def write_discovery_registry(
             action="write_discovery_registry",
             target=".omo/_truth/task-center/discovery-registry.yaml",
             parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="write_discovery_registry",
+            target=".omo/_truth/task-center/discovery-registry.yaml",
+            artifact_ref=f".omo/_delivery/ingress/task-center/discovery/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
         )
         return deepcopy(registry)
 
@@ -841,6 +892,16 @@ def write_system_projection_fields(
             action="write_system_projection_fields",
             target=".omo/state/system.yaml",
             parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="write_system_projection_fields",
+            target=".omo/state/system.yaml",
+            artifact_ref=f".omo/_delivery/ingress/state/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"updated_fields": sorted(updates.keys())},
         )
         return deepcopy(payload)
 
@@ -943,6 +1004,16 @@ def create_planned_task(
             target=f".omo/tasks/planned/{task_id}.yaml",
             parent_step_id=parent_step_id,
         )
+        _record_mutation(
+            omo_dir,
+            actor=ingress_plane,
+            action="create_planned_task",
+            target=f".omo/tasks/planned/{task_id}.yaml",
+            artifact_ref=artifact["artifact_ref"],
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id, "ingress_plane": ingress_plane},
+        )
         return payload
 
 
@@ -1007,6 +1078,16 @@ def create_blocked_task(
             action="create_blocked_task",
             target=f".omo/tasks/blocked/{task_filename}",
             parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="create_blocked_task",
+            target=f".omo/tasks/blocked/{task_filename}",
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id},
         )
         return deepcopy(task_data)
 
@@ -1089,6 +1170,16 @@ def record_task_consensus(
             target=evidence_ref,
             parent_step_id=parent_step_id,
         )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="record_task_consensus",
+            target=evidence_ref,
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id, "task_group": group},
+        )
         return artifact
 
 
@@ -1138,6 +1229,15 @@ def write_usage_accounting(
             action="write_usage_accounting",
             target=".omo/_truth/task-center/usage-accounting.yaml",
             parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="write_usage_accounting",
+            target=".omo/_truth/task-center/usage-accounting.yaml",
+            artifact_ref=f".omo/_delivery/ingress/task-center/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
         )
         return artifact
 
@@ -1189,6 +1289,15 @@ def write_task_center_freshness(
             target=".omo/_delivery/task-center/freshness/current.yaml",
             parent_step_id=parent_step_id,
         )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="write_task_center_freshness",
+            target=".omo/_delivery/task-center/freshness/current.yaml",
+            artifact_ref=f".omo/_delivery/ingress/task-center/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+        )
         return artifact
 
 
@@ -1239,6 +1348,16 @@ def write_task_center_control_decision(
             action="write_task_center_control_decision",
             target=".omo/_delivery/task-center/control/current.yaml",
             parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="write_task_center_control_decision",
+            target=".omo/_delivery/task-center/control/current.yaml",
+            artifact_ref=f".omo/_delivery/ingress/task-center/{ingress_artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"decision": artifact.get("decision")},
         )
         return delivery_artifact
 
@@ -1296,6 +1415,16 @@ def update_governance_overlay_state(
             action="update_governance_overlay_state",
             target=".omo/_truth/governance-overlay/roadmap.yaml",
             parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="update_governance_overlay_state",
+            target=".omo/_truth/governance-overlay/roadmap.yaml",
+            artifact_ref=f".omo/_delivery/ingress/governance-overlay/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"control_written": control is not None},
         )
         return artifact
 
@@ -1391,6 +1520,16 @@ def complete_task(
             target=f".omo/tasks/done/{task_id}.yaml",
             parent_step_id=parent_step_id,
         )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="complete_task",
+            target=f".omo/tasks/done/{task_id}.yaml",
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id, "source_group": src_group},
+        )
         return payload
 
 
@@ -1453,6 +1592,16 @@ def update_done_task_evidence_paths(
             action="update_done_task_evidence_paths",
             target=f".omo/tasks/done/{task_id}.yaml",
             parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="update_done_task_evidence_paths",
+            target=f".omo/tasks/done/{task_id}.yaml",
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id},
         )
         return deepcopy(payload)
 
@@ -1526,6 +1675,16 @@ def update_planned_task_evidence_paths(
             target=str(task_path.relative_to(omo_dir)),
             parent_step_id=parent_step_id,
         )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="update_planned_task_evidence_paths",
+            target=str(task_path.relative_to(omo_dir.parent)),
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id},
+        )
         return deepcopy(payload)
 
 
@@ -1596,6 +1755,16 @@ def promote_task_to_active(
             action="promote_task_to_active",
             target=f".omo/tasks/active/{task_id}.yaml",
             parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="promote_task_to_active",
+            target=f".omo/tasks/active/{task_id}.yaml",
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id, "handoff_ref": handoff_ref},
         )
         return payload
 
@@ -1697,6 +1866,16 @@ def repair_task_promotion_approval(
             target=task_ref,
             parent_step_id=parent_step_id,
         )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="repair_task_promotion_approval",
+            target=task_ref,
+            artifact_ref=artifact["artifact_ref"],
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id, "task_group": group, "approval_ref": approval_ref},
+        )
         return payload
 
 
@@ -1778,6 +1957,16 @@ def request_task_promotion_approval(
             target=f".omo/tasks/planned/{task_id}.yaml",
             parent_step_id=parent_step_id,
         )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="request_task_promotion_approval",
+            target=f".omo/tasks/planned/{task_id}.yaml",
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id, "approval_ref": approval_ref, "proposal_ref": proposal_ref},
+        )
         return payload
 
 
@@ -1849,6 +2038,16 @@ def revert_task_to_planned(
             action="revert_task_to_planned",
             target=f".omo/tasks/planned/{task_id}.yaml",
             parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="revert_task_to_planned",
+            target=f".omo/tasks/planned/{task_id}.yaml",
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id},
         )
         return payload
 
@@ -1929,6 +2128,16 @@ def record_task_contract_request(
             action="record_task_contract_request",
             target=f".omo/tasks/active/{task_id}.yaml",
             parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="record_task_contract_request",
+            target=f".omo/tasks/active/{task_id}.yaml",
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id, "request_ref": request_ref, "proposal_ref": proposal_ref},
         )
         return payload
 
@@ -2027,6 +2236,16 @@ def route_self_evolution_to_remediation(
             target=f".omo/tasks/remediation/{task_id}.yaml",
             parent_step_id=parent_step_id,
         )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="route_self_evolution_to_remediation",
+            target=f".omo/tasks/remediation/{task_id}.yaml",
+            artifact_ref=str(artifact_rel),
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id, "review_note_ref": str(review_note_rel)},
+        )
         return payload
 
 
@@ -2109,6 +2328,16 @@ def yield_task_to_planned(
             target=f".omo/tasks/planned/{task_id}.yaml",
             parent_step_id=parent_step_id,
         )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="yield_task_to_planned",
+            target=f".omo/tasks/planned/{task_id}.yaml",
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id, "reason": reason},
+        )
         return payload
 
 
@@ -2183,6 +2412,16 @@ def archive_done_task(
             target=archived_ref,
             parent_step_id=parent_step_id,
         )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="archive_done_task",
+            target=archived_ref,
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id},
+        )
         return payload
 
 
@@ -2235,6 +2474,16 @@ def create_audit_report(
             action="create_audit_report",
             target=f".omo/_knowledge/audits/{filename}.md",
             parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="create_audit_report",
+            target=f".omo/_knowledge/audits/{filename}.md",
+            artifact_ref=f".omo/_delivery/ingress/audits/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"title": title},
         )
         return artifact
 
@@ -2315,6 +2564,16 @@ def normalize_legacy_planned_task(
                 target=f".omo/tasks/archived/legacy-normalized/{task_id}.yaml",
                 parent_step_id=f"ingress:legacy-planned-archive:{task_id}:{timestamp}",
             )
+            _record_mutation(
+                omo_dir,
+                actor=actor,
+                action="normalize_legacy_planned_task",
+                target=f".omo/tasks/archived/legacy-normalized/{task_id}.yaml",
+                artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+                source_ref=source_ref,
+                created_at=timestamp,
+                extra={"task_id": task_id, "legacy_status": original_status, "result": "archived"},
+            )
             return {"action": "archived", "task": archived_payload}
 
         normalized = deepcopy(payload)
@@ -2393,6 +2652,16 @@ def normalize_legacy_planned_task(
             action="normalize_legacy_planned_task",
             target=f".omo/tasks/planned/{task_id}.yaml",
             parent_step_id=f"ingress:legacy-planned-normalize:{task_id}:{timestamp}",
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="normalize_legacy_planned_task",
+            target=f".omo/tasks/planned/{task_id}.yaml",
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id, "legacy_status": original_status, "normalized_status": normalized["status"]},
         )
         return {"action": "normalized", "task": normalized}
 
@@ -2557,6 +2826,16 @@ def upsert_debt_item(
             action="upsert_debt_item",
             target=debt_ref,
             parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=ingress_plane,
+            action="upsert_debt_item",
+            target=debt_ref,
+            artifact_ref=artifact["artifact_ref"],
+            source_ref=effective_source_ref,
+            created_at=timestamp,
+            extra={"debt_id": debt_id, "occurrence_count": occurrence_count},
         )
         return payload
 

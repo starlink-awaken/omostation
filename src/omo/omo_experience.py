@@ -9,6 +9,7 @@ from pathlib import Path
 import yaml
 
 from scripts.cost_track_org import cost_summary_by_org
+from .omo_shared import load_yaml
 from .omo_io import write_text_atomic, write_yaml_atomic
 from .omo_redaction import redact_sensitive_text
 from .omo_task_schema import validate_task_file
@@ -45,7 +46,7 @@ def _parse_iso8601(value: str | None) -> datetime | None:
 
 
 def _load_yaml(path: Path) -> dict:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return load_yaml(path)
 
 
 def _relative_ref(path: Path, root: Path) -> str:

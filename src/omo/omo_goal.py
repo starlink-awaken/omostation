@@ -7,11 +7,9 @@ import json
 import sys
 from pathlib import Path
 
-import yaml
-
-
-from omo.omo_io import write_yaml_atomic
+from omo.omo_ingress import create_goal, update_goal_progress
 from omo.omo_paths import find_omo_dir
+from omo.omo_shared import load_yaml_required
 
 
 def _find_omo_dir() -> Path:
@@ -25,7 +23,7 @@ def cmd_goal_list(omo_dir: Path) -> int:
     if not goal_file.exists():
         print("⚠️  No current goals found (goals/current.yaml)")
         return 0
-    data = yaml.safe_load(goal_file.read_text())
+    data = load_yaml_required(goal_file)
     phase = data.get("phase", "?")
     theme = data.get("theme", "")
     status = data.get("status", "?")
@@ -56,7 +54,7 @@ def cmd_goal_status(omo_dir: Path) -> int:
     if not goal_file.exists():
         print(json.dumps({"error": "no goals file"}))
         return 1
-    data = yaml.safe_load(goal_file.read_text())
+    data = load_yaml_required(goal_file)
     goals = data.get("goals", [])
     done = sum(1 for g in goals if g.get("status") == "done")
     active = sum(1 for g in goals if g.get("status") == "active")
@@ -72,52 +70,50 @@ def cmd_goal_status(omo_dir: Path) -> int:
     return 0
 
 
-def cmd_goal_create(omo_dir: Path, goal_id: str, description: str) -> int:
-    """Add a new goal to goals/current.yaml."""
+def cmd_goal_create(
+    omo_dir: Path, goal_id: str, description: str, source_ref: str = ""
+) -> int:
+    """Create a goal through the governed ingress broker."""
     goal_file = omo_dir / "goals" / "current.yaml"
     if not goal_file.exists():
         print("❌ goals/current.yaml not found", file=sys.stderr)
         return 1
-    data = yaml.safe_load(goal_file.read_text())
-    goals = data.get("goals", [])
-    # Check duplicate
-    for g in goals:
-        if g.get("id") == goal_id:
-            print(f"❌ Goal {goal_id} already exists", file=sys.stderr)
-            return 1
-    new_goal = {
-        "id": goal_id,
-        "desc": description,
-        "progress": 0.0,
-        "status": "pending",
-        "tasks": [],
-    }
-    goals.append(new_goal)
-    data["goals"] = goals
-    write_yaml_atomic(goal_file, data)
-    print(f"✅ Goal {goal_id} created")
+    try:
+        create_goal(
+            omo_dir,
+            goal_id=goal_id,
+            title=goal_id,
+            description=description,
+            ingress_plane="projects/omo",
+            source_ref=source_ref or f"omo:goal:create:{goal_id}",
+        )
+    except ValueError as exc:
+        print(f"❌ {exc}", file=sys.stderr)
+        return 1
+    print(f"✅ Governed goal {goal_id} created")
+    print(f"Artifact: {omo_dir / '_delivery' / 'ingress' / 'goals' / f'{goal_id}.yaml'}")
     return 0
 
 
 def cmd_goal_progress(omo_dir: Path, goal_id: str, progress: float) -> int:
-    """Update progress for a specific goal."""
-    goal_file = omo_dir / "goals" / "current.yaml"
-    if not goal_file.exists():
+    """Update progress for a specific goal through governed ingress."""
+    try:
+        updated = update_goal_progress(
+            omo_dir,
+            goal_id=goal_id,
+            progress=progress,
+            actor="projects/omo",
+            source_ref=f"omo:goal:progress:{goal_id}:{progress}",
+        )
+    except FileNotFoundError:
         print("❌ goals/current.yaml not found", file=sys.stderr)
         return 1
-    data = yaml.safe_load(goal_file.read_text())
-    for g in data.get("goals", []):
-        if g.get("id") == goal_id:
-            g["progress"] = progress
-            if progress >= 100:
-                g["status"] = "done"
-            elif progress > 0:
-                g["status"] = "active"
-            write_yaml_atomic(goal_file, data)
-            print(f"✅ Goal {goal_id}: progress → {progress}%")
-            return 0
-    print(f"❌ Goal {goal_id} not found", file=sys.stderr)
-    return 1
+    except ValueError as exc:
+        print(f"❌ {exc}", file=sys.stderr)
+        return 1
+    print(f"✅ Goal {goal_id}: progress → {updated['progress']}%")
+    print(f"Status: {updated['status']}")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -128,6 +124,7 @@ def main(argv: list[str] | None = None) -> int:
     gc = sub.add_parser("create", help="Create a new goal")
     gc.add_argument("--id", required=True, help="Goal ID (e.g. G29.1)")
     gc.add_argument("--desc", required=True, help="Goal description")
+    gc.add_argument("--source-ref", default="", help="Stable source ref for ingress registry")
     gp = sub.add_parser("progress", help="Update goal progress")
     gp.add_argument("--id", required=True, help="Goal ID")
     gp.add_argument("--pct", type=float, required=True, help="Progress percentage (0-100)")
@@ -138,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "status":
         return cmd_goal_status(omo_dir)
     elif args.command == "create":
-        return cmd_goal_create(omo_dir, args.id, args.desc)
+        return cmd_goal_create(omo_dir, args.id, args.desc, args.source_ref)
     elif args.command == "progress":
         return cmd_goal_progress(omo_dir, args.id, args.pct)
     else:

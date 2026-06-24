@@ -123,3 +123,42 @@ def test_render_promotion_readiness_markdown_labels_ready_and_blocked_entries():
     assert "## Blocked: P18-W1-BLOCKED" in markdown
     assert "blockers=none" in markdown
     assert "blockers=phase_mismatch" in markdown
+
+
+def test_build_promotion_readiness_packet_sorts_unphased_after_phased_ready_items():
+    packet = build_promotion_readiness_packet(
+        generated_at="2026-06-03T00:00:00Z",
+        current_phase=16,
+        tasks=(
+            {
+                "task_id": "UNPHASED-A",
+                "task_ref": ".omo/tasks/planned/UNPHASED-A.yaml",
+                "phase": None,
+                "status": "candidate",
+                "risk_level": "L1",
+                "allowed_operation_level": "L1",
+                "human_approval_required": False,
+                "approval_ref": None,
+                "eligible": True,
+                "blockers": [],
+                "checks": {"phase_ok": True, "phase_declared": False},
+                "errors": [],
+            },
+            {
+                "task_id": "P17-W1-READY",
+                "task_ref": ".omo/tasks/planned/P17-W1-READY.yaml",
+                "phase": 17,
+                "status": "candidate",
+                "risk_level": "L1",
+                "allowed_operation_level": "L1",
+                "human_approval_required": False,
+                "approval_ref": None,
+                "eligible": True,
+                "blockers": [],
+                "checks": {"phase_ok": True, "phase_declared": True},
+                "errors": [],
+            },
+        ),
+    )
+
+    assert [entry["task_id"] for entry in packet["tasks"]] == ["P17-W1-READY", "UNPHASED-A"]

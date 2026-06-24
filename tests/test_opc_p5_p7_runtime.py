@@ -77,6 +77,34 @@ def test_p6_weekly_loop_history_tracks_consecutive_weeks(tmp_path):
     assert trace_index["summary"]["week_count"] == 2
 
 
+def test_p6_weekly_loop_runtime_executes_pipeline(tmp_path):
+    from omo.omo_weekly_loop import run_weekly_loop, write_weekly_evidence
+
+    payload = run_weekly_loop(
+        tmp_path,
+        week="2026-W25",
+        now_iso="2026-06-20T00:00:00Z",
+        radar_fn=lambda: {
+            "scenario": "technical-radar",
+            "candidates": [
+                {
+                    "title": "Runtime candidate",
+                    "source": "cockpit:research",
+                    "timestamp": "2026-06-20T00:00:00Z",
+                    "next_action": "follow up",
+                    "evidence_id": 1,
+                }
+            ],
+        },
+        drift_fn=lambda: {"kinds": 4, "drift_count": 0, "results": []},
+    )
+    md_path, json_path = write_weekly_evidence(tmp_path, "2026-W25", payload)
+    assert payload["history"]["summary"]["latest_week"] == "2026-W25"
+    assert payload["task"]["planned"][0]["id"] == "OPC-P6-LOOP-2026-W25-00"
+    assert md_path.exists()
+    assert json_path.exists()
+
+
 def test_p6_self_evolve_nop_carries_loop_history_ref(tmp_path):
     module = _load_module("opc_p6_self_evolve_test", ROOT / "scripts" / "opc_p6_self_evolve.py")
     module.ROOT = tmp_path
@@ -111,7 +139,7 @@ def test_p6_approval_board_writes_current_board(tmp_path):
             [
                 "id: OPC-P6-SELF-EVOLUTION-sample",
                 "title: 'Sample'",
-                "status: planned",
+                "status: candidate",
                 "approval_required: true",
                 "human_approval_required: true",
                 "approval_state: 'awaiting_human'",

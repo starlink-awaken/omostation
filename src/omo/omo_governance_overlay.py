@@ -2,15 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
-
 from .omo_governance_overlay_targets import evaluate_governance_overlay_planned_target
+from .omo_shared import load_yaml as shared_load_yaml, load_yaml_required as shared_load_yaml_required
 
 
 def _load_yaml_required(path: Path) -> dict:
-    if not path.exists():
-        raise FileNotFoundError(path.as_posix())
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return shared_load_yaml_required(path)
 
 
 def _item_sort_key(item: dict[str, object]) -> tuple[int, str]:
@@ -24,7 +21,7 @@ def _missing_target_refs(root: Path, refs: list[str]) -> list[str]:
 def _load_optional_yaml(path: Path) -> dict[str, object] | None:
     if not path.exists():
         return None
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return shared_load_yaml(path)
 
 
 def _dispatch_payload(root: Path, run_ref: str | None) -> dict[str, object] | None:

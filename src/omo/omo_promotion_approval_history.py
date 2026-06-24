@@ -3,14 +3,16 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-import yaml
+from .omo_shared import load_yaml
 
 
 def _load_yaml(path: Path) -> dict:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return load_yaml(path)
 
 
-def _parse_iso8601(value: str) -> datetime:
+def _parse_iso8601(value: str | datetime) -> datetime:
+    if isinstance(value, datetime):
+        return value
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 

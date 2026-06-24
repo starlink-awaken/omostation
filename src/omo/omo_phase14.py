@@ -5,11 +5,13 @@ import argparse
 import json
 from pathlib import Path
 
-from .omo_shared import utc_now, load_yaml, write_yaml
+from .omo_capability import load_capability_registry
+from .omo_paths import WORKSPACE_ROOT
+from .omo_shared import utc_now, write_yaml
 
 
 def _root() -> Path:
-    return Path(__file__).resolve().parents[2]
+    return WORKSPACE_ROOT
 
 
 def _omo(root: Path) -> Path:
@@ -193,10 +195,10 @@ def patterns_command(args: argparse.Namespace) -> int:
 
 def ecosystem_command(args: argparse.Namespace) -> int:
     root = _root()
-    packages = load_yaml(_omo(root) / "registry" / "system-packages.yaml") or {
+    packages = load_capability_registry(root, "system-packages.yaml") or {
         "packages": []
     }
-    article_samples = load_yaml(_omo(root) / "registry" / "article-samples.yaml") or {
+    article_samples = load_capability_registry(root, "article-samples.yaml") or {
         "samples": []
     }
     payload = {

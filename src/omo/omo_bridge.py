@@ -3,8 +3,8 @@ import hashlib
 import re
 from pathlib import Path
 
-import yaml
 
+from .omo_ingress import create_planned_task
 from .omo_paths import find_omo_dir
 
 
@@ -55,9 +55,6 @@ def _import_bmad(file_path: Path, omo_dir: Path, sequential: bool = False):
     print(f"🌉 正在将 BMAD / OpenSpec 规范转换为 OMO Planned Tasks: {file_path}")
     content = file_path.read_text(encoding="utf-8")
     tasks_created = 0
-
-    planned_dir = omo_dir / "tasks" / "planned"
-    planned_dir.mkdir(parents=True, exist_ok=True)
 
     test_plan_parsed: list[str] = []
     evidence_parsed: list[str] = []
@@ -128,6 +125,10 @@ def _import_bmad(file_path: Path, omo_dir: Path, sequential: bool = False):
             "review_ref": None,
             "knowledge_refs": [],
             "handoff_refs": [],
+            "governance_refs": [
+                ".omo/standards/omo-governance-surfaces.md",
+                ".omo/_truth/registry/omo-governance-surfaces.yaml",
+            ],
             "entry_gate": [],
             "evidence_required": evidence_parsed,
             "test_plan": test_plan_parsed,
@@ -148,8 +149,12 @@ def _import_bmad(file_path: Path, omo_dir: Path, sequential: bool = False):
         if not _validate_planned_task(task_data):
             continue
 
-        task_file = planned_dir / f"{task_id}.yaml"
-        task_file.write_text(yaml.dump(task_data, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        create_planned_task(
+            omo_dir,
+            task_data=task_data,
+            ingress_plane="projects/omo",
+            source_ref=f"omo:bridge:bmad:{file_path.name}:{task_id}",
+        )
         print(f"  -> 创建了任务: {task_id} (依赖: {depends_on}) [M2 Validated]")
         tasks_created += 1
         last_task_id = task_id
@@ -161,9 +166,6 @@ def _import_fast_track(source_topic: Path, omo_dir: Path):
     import time
 
     print(f"🚀 正在触发 Fast-Track 免签降维: {source_topic.name}")
-    planned_dir = omo_dir / "tasks" / "planned"
-    planned_dir.mkdir(parents=True, exist_ok=True)
-
     task_id = f"FAST-{int(time.time())}"
     task_data = {
         "id": task_id,
@@ -187,14 +189,22 @@ def _import_fast_track(source_topic: Path, omo_dir: Path):
         "review_ref": None,
         "knowledge_refs": [],
         "handoff_refs": [],
+        "governance_refs": [
+            ".omo/standards/omo-governance-surfaces.md",
+            ".omo/_truth/registry/omo-governance-surfaces.yaml",
+        ],
         "entry_gate": ["FAST_TRACK_L0"],
     }
 
     if not _validate_planned_task(task_data):
         return
 
-    task_file = planned_dir / f"{task_id}.yaml"
-    task_file.write_text(yaml.dump(task_data, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    create_planned_task(
+        omo_dir,
+        task_data=task_data,
+        ingress_plane="projects/omo",
+        source_ref=f"omo:bridge:fast-track:{source_topic.name}:{task_id}",
+    )
     print(f"✅ Fast-Track 成功: 已落盘为 OMO CARDS ({task_id}.yaml)")
 
 
@@ -218,10 +228,12 @@ def _import_pitch(source_file: Path, omo_dir: Path):
 
     bet_id = f"BET-{hashlib.md5(source_file.name.encode()).hexdigest()[:4]}"
     desc = f"Bet: {source_file.stem} (Appetite: {appetite})"
-    cmd_goal_create(omo_dir, bet_id, desc)
-
-    planned_dir = omo_dir / "tasks" / "planned"
-    planned_dir.mkdir(parents=True, exist_ok=True)
+    cmd_goal_create(
+        omo_dir,
+        bet_id,
+        desc,
+        source_ref=f"omo:bridge:pitch-goal:{source_file.name}:{bet_id}",
+    )
 
     task_id = f"IMPORTED-{hashlib.md5(bet_id.encode()).hexdigest()[:6]}"
     task_data = {
@@ -246,14 +258,22 @@ def _import_pitch(source_file: Path, omo_dir: Path):
         "review_ref": None,
         "knowledge_refs": [],
         "handoff_refs": [],
+        "governance_refs": [
+            ".omo/standards/omo-governance-surfaces.md",
+            ".omo/_truth/registry/omo-governance-surfaces.yaml",
+        ],
         "entry_gate": ["BET_APPROVED"],
     }
 
     if not _validate_planned_task(task_data):
         return
 
-    task_file = planned_dir / f"{task_id}.yaml"
-    task_file.write_text(yaml.dump(task_data, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    create_planned_task(
+        omo_dir,
+        task_data=task_data,
+        ingress_plane="projects/omo",
+        source_ref=f"omo:bridge:pitch-task:{source_file.name}:{task_id}",
+    )
     print(f"✅ Bet 下注成功: 创建了执行计划 ({task_id}.yaml)")
 
 

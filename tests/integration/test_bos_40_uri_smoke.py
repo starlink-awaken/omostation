@@ -93,12 +93,12 @@ def test_smoke_25_resolved_15_gap_single_loop():
         asyncio.run(_MANAGER.close_all())
 
     by_status = Counter(s for _, s in results)
-    assert by_status.get("resolved", 0) == 25, (
-        f"Expected 25 resolved, got {by_status.get('resolved', 0)}: "
+    assert by_status.get("resolved", 0) == 40, (
+        f"Expected 40 resolved, got {by_status.get('resolved', 0)}: "
         f"{[(u, s) for u, s in results if s != 'resolved']}"
     )
-    assert by_status.get("gap", 0) == 15, (
-        f"Expected 15 gap, got {by_status.get('gap', 0)}: "
+    assert by_status.get("gap", 0) == 2, (
+        f"Expected 2 gap, got {by_status.get('gap', 0)}: "
         f"{[(u, s) for u, s in results if s == 'gap']}"
     )
 

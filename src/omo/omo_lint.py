@@ -18,6 +18,7 @@ Round 21 P0 扩展 — 2 个新 schema 完整性规则:
   - 守住 §11 X1 审计: schema 校验 = 写时锁, 跳过 = 失去写时一致性保证
   - CI 自动跑 (计划集成 ci-lint.yml 新 job)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -25,8 +26,11 @@ import ast
 import subprocess
 import sys
 from pathlib import Path
+import yaml
 
+from .omo_io import read_jsonl
 from .omo_paths import PROJECTS_DIR, WORKSPACE_ROOT
+from .omo_shared import load_yaml
 from .omo_task_policy import (
     OPC_P6_SELF_EVOLUTION_POLICY,
     TASK_POLICIES,
@@ -112,22 +116,24 @@ def _check_module_append_has_schema(module_path: Path) -> list[tuple[int, str]]:
 # 跨模块 import 白名单 (§13.3.3 规则 7 — 允许 7 consumer 依赖的底层模块)
 # 设计: 7 consumer 互不依赖, 仅依赖底层 SSOT (omo_io / omo_io_schemas / omo_audit 工具 / omo_history 工具 / _shared)
 _CROSS_MODULE_SRP_ALLOWLIST = {
-    "omo.omo_io",                    # AppendOnlyLog + 原子写 (R24 抽 _shared 后保留 backward compat)
-    "omo.omo_io_schemas",            # Pydantic schema 集中地
-    "omo.omo_audit",                 # _utc_now 工具 (多个 consumer 共用)
-    "omo.omo_history",               # append_entry / read_history 工具
-    "omo.omo_trail",                 # DEFAULT_TRAIL_PATH 路径常量 (omo_lint_seed 共用)
-    "omo._shared.append_only_log",   # §12 跨仓 SSOT (R24+)
-    "omo._shared.z_timestamp_model", # §12 跨仓 SSOT (R25+)
-    "omo.omo_lint",                  # omo_lint_seed 依赖 (Round 19)
+    "omo.omo_io",  # AppendOnlyLog + 原子写 (R24 抽 _shared 后保留 backward compat)
+    "omo.omo_io_schemas",  # Pydantic schema 集中地
+    "omo.omo_audit",  # _utc_now 工具 (多个 consumer 共用)
+    "omo.omo_history",  # append_entry / read_history 工具
+    "omo.omo_trail",  # DEFAULT_TRAIL_PATH 路径常量 (omo_lint_seed 共用)
+    "omo._shared.append_only_log",  # §12 跨仓 SSOT (R24+)
+    "omo._shared.z_timestamp_model",  # §12 跨仓 SSOT (R25+)
+    "omo.omo_lint",  # omo_lint_seed 依赖 (Round 19)
 }
 
 
 # §12.1.4 跨仓不变量豁免: omo_history.append_entry 显式传 sort_keys=True (kairon-governance 字节级兼容)
 # 实施 lint 规则时, 这些模块不应被判违规
-_SORT_KEYS_DEFAULT_EXEMPT_MODULES = frozenset({
-    "omo_history.py",  # Round 7 P2 显式传 sort_keys=True (R30 probe 验证)
-})
+_SORT_KEYS_DEFAULT_EXEMPT_MODULES = frozenset(
+    {
+        "omo_history.py",  # Round 7 P2 显式传 sort_keys=True (R30 probe 验证)
+    }
+)
 
 
 def _check_sort_keys_default() -> list[tuple[str, str, str]]:
@@ -175,7 +181,9 @@ def _check_sort_keys_default() -> list[tuple[str, str, str]]:
 
         # 扫 .append() 调用 (含 immediate chain + 临时变量)
         for node in ast.walk(tree):
-            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
+            if not (
+                isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+            ):
                 continue
             if node.func.attr != "append":
                 continue
@@ -193,24 +201,40 @@ def _check_sort_keys_default() -> list[tuple[str, str, str]]:
             if not (is_immediate_chain or is_temp_var):
                 continue
             # 检查 kwargs: sort_keys= 必须是 True
-            sort_keys_kwarg = next((kw for kw in node.keywords if kw.arg == "sort_keys"), None)
+            sort_keys_kwarg = next(
+                (kw for kw in node.keywords if kw.arg == "sort_keys"), None
+            )
             if sort_keys_kwarg is None:
-                pattern = "immediate chain" if is_immediate_chain else f"temp var '{node.func.value.id}'"
-                issues.append((
-                    module_name,
-                    "missing-sort-keys",
-                    f".append() ({pattern}) 未传 sort_keys=True (违反 §12.1.4 跨仓契约)",
-                ))
+                pattern = (
+                    "immediate chain"
+                    if is_immediate_chain
+                    else f"temp var '{node.func.value.id}'"
+                )
+                issues.append(
+                    (
+                        module_name,
+                        "missing-sort-keys",
+                        f".append() ({pattern}) 未传 sort_keys=True (违反 §12.1.4 跨仓契约)",
+                    )
+                )
             elif sort_keys_kwarg.value is not None:
-                if isinstance(sort_keys_kwarg.value, ast.Constant) and sort_keys_kwarg.value.value is True:
+                if (
+                    isinstance(sort_keys_kwarg.value, ast.Constant)
+                    and sort_keys_kwarg.value.value is True
+                ):
                     continue
-                if isinstance(sort_keys_kwarg.value, ast.Name) and sort_keys_kwarg.value.id == "True":
+                if (
+                    isinstance(sort_keys_kwarg.value, ast.Name)
+                    and sort_keys_kwarg.value.id == "True"
+                ):
                     continue
-                issues.append((
-                    module_name,
-                    "wrong-sort-keys-value",
-                    ".append() 传 sort_keys= 但值不是 True (§12.1.4 跨仓契约)",
-                ))
+                issues.append(
+                    (
+                        module_name,
+                        "wrong-sort-keys-value",
+                        ".append() 传 sort_keys= 但值不是 True (§12.1.4 跨仓契约)",
+                    )
+                )
     return issues
 
 
@@ -237,7 +261,9 @@ def _check_dead_imports() -> list[tuple[str, str, str]]:
         except (SyntaxError, UnicodeDecodeError):
             continue
 
-        imported_names: set[tuple[str, str]] = set()  # (module, name) 配对, 用于识别 __future__
+        imported_names: set[tuple[str, str]] = (
+            set()
+        )  # (module, name) 配对, 用于识别 __future__
         used_names: set[str] = set()
 
         for node in ast.walk(tree):
@@ -261,11 +287,13 @@ def _check_dead_imports() -> list[tuple[str, str, str]]:
                 continue  # 私有 / `from __future__ import annotations` (下划线开头)
             if module == "__future__":
                 continue  # Python 协议级 import
-            issues.append((
-                module_name,
-                "dead-import",
-                f"import '{name}' (from {module!r}) 但模块中未使用 (dead code, 删或加 noqa)",
-            ))
+            issues.append(
+                (
+                    module_name,
+                    "dead-import",
+                    f"import '{name}' (from {module!r}) 但模块中未使用 (dead code, 删或加 noqa)",
+                )
+            )
     return issues
 
 
@@ -301,13 +329,18 @@ def _check_cross_module_srp() -> list[tuple[str, str, str]]:
             # 检查是否 omo.omo_X (X 是 7 consumer 之一)
             if node.module.startswith("omo.omo_"):
                 imported_stem = node.module.removeprefix("omo.omo_")
-                if imported_stem in consumer_stems and imported_stem != Path(module_name).stem:
+                if (
+                    imported_stem in consumer_stems
+                    and imported_stem != Path(module_name).stem
+                ):
                     # 7 consumer 之间互依赖 (非自身)
-                    issues.append((
-                        module_name,
-                        "cross-consumer-import",
-                        f"{module_name} import {node.module!r} (consumer 之间不应互依赖, 白名单仅含底层 SSOT)",
-                    ))
+                    issues.append(
+                        (
+                            module_name,
+                            "cross-consumer-import",
+                            f"{module_name} import {node.module!r} (consumer 之间不应互依赖, 白名单仅含底层 SSOT)",
+                        )
+                    )
     return issues
 
 
@@ -328,11 +361,13 @@ def _check_all_schemas_exported() -> list[tuple[str, str, str]]:
     exported = set(getattr(schemas_module, "__all__", []))
     for schema_name, schema_cls in SCHEMA_REGISTRY.items():
         if schema_cls.__name__ not in exported:
-            issues.append((
-                schema_cls.__name__,
-                "missing-from-all",
-                f"{schema_cls.__name__} (SCHEMA_REGISTRY[{schema_name!r}]) 未在 omo_io_schemas.__all__ 暴露",
-            ))
+            issues.append(
+                (
+                    schema_cls.__name__,
+                    "missing-from-all",
+                    f"{schema_cls.__name__} (SCHEMA_REGISTRY[{schema_name!r}]) 未在 omo_io_schemas.__all__ 暴露",
+                )
+            )
     return issues
 
 
@@ -352,22 +387,27 @@ def _check_schema_registry_integrity() -> list[tuple[str, str, str]]:
     for schema_name, schema_cls in SCHEMA_REGISTRY.items():
         # 规则 1: 继承 ZTimestampModel (Z-suffix 校验自动覆盖)
         if not issubclass(schema_cls, ZTimestampModel):
-            issues.append((
-                schema_name,
-                "missing-z-timestamp",
-                f"{schema_cls.__name__} 未继承 ZTimestampModel (timestamp 字段无 Z 校验)",
-            ))
+            issues.append(
+                (
+                    schema_name,
+                    "missing-z-timestamp",
+                    f"{schema_cls.__name__} 未继承 ZTimestampModel (timestamp 字段无 Z 校验)",
+                )
+            )
         # 规则 2: 至少 1 必填字段 (防空架子)
         required_fields = [
-            name for name, field in schema_cls.model_fields.items()
+            name
+            for name, field in schema_cls.model_fields.items()
             if field.is_required()
         ]
         if not required_fields:
-            issues.append((
-                schema_name,
-                "no-required-fields",
-                f"{schema_cls.__name__} 无必填字段 (空架子, 无实际约束)",
-            ))
+            issues.append(
+                (
+                    schema_name,
+                    "no-required-fields",
+                    f"{schema_cls.__name__} 无必填字段 (空架子, 无实际约束)",
+                )
+            )
     return issues
 
 
@@ -402,7 +442,10 @@ def cmd_lint_schemas(metrics: bool = False) -> int:
             print(f"   - {schema_name} [{issue_type}]: {detail}")
     else:
         from omo.omo_io_schemas import SCHEMA_REGISTRY
-        print(f"✅ SCHEMA_REGISTRY 完整性: {len(SCHEMA_REGISTRY)}/{len(SCHEMA_REGISTRY)} schema 守 Z-suffix + 必填字段")
+
+        print(
+            f"✅ SCHEMA_REGISTRY 完整性: {len(SCHEMA_REGISTRY)}/{len(SCHEMA_REGISTRY)} schema 守 Z-suffix + 必填字段"
+        )
 
     # 规则 3 (Round 29 P0): __all__ 完整性 — 全部 SCHEMA_REGISTRY key 都在 __all__ 暴露
     print()
@@ -414,7 +457,10 @@ def cmd_lint_schemas(metrics: bool = False) -> int:
             print(f"   - {schema_name} [{issue_type}]: {detail}")
     else:
         from omo.omo_io_schemas import SCHEMA_REGISTRY
-        print(f"✅ omo_io_schemas.__all__ 完整性: {len(SCHEMA_REGISTRY)}/{len(SCHEMA_REGISTRY)} schema 全部 export")
+
+        print(
+            f"✅ omo_io_schemas.__all__ 完整性: {len(SCHEMA_REGISTRY)}/{len(SCHEMA_REGISTRY)} schema 全部 export"
+        )
 
     # 规则 4 (Round 30 P0): cross-module-srp — 7 consumer 互不依赖
     print()
@@ -425,7 +471,9 @@ def cmd_lint_schemas(metrics: bool = False) -> int:
         for module_name, issue_type, detail in srp_issues:
             print(f"   - {module_name} [{issue_type}]: {detail}")
     else:
-        print("✅ consumer SRP: 7/7 consumer 互不依赖, 仅依赖底层 SSOT (omo_io/omo_io_schemas/omo_audit/omo_history/_shared)")
+        print(
+            "✅ consumer SRP: 7/7 consumer 互不依赖, 仅依赖底层 SSOT (omo_io/omo_io_schemas/omo_audit/omo_history/_shared)"
+        )
 
     # 规则 5 (Round 32 P0): dead-imports — import 但未用 (dead code)
     print()
@@ -443,7 +491,9 @@ def cmd_lint_schemas(metrics: bool = False) -> int:
     sort_issues = _check_sort_keys_default()
     if sort_issues:
         total_violations += len(sort_issues)
-        print(f"❌ sort_keys default (§12.1.4): {len(sort_issues)} 处 .append() 未传 sort_keys=True")
+        print(
+            f"❌ sort_keys default (§12.1.4): {len(sort_issues)} 处 .append() 未传 sort_keys=True"
+        )
         for module_name, issue_type, detail in sort_issues:
             print(f"   - {module_name} [{issue_type}]: {detail}")
     else:
@@ -453,12 +503,15 @@ def cmd_lint_schemas(metrics: bool = False) -> int:
     if total_violations:
         print(f"❌ omo lint schemas fail: {total_violations} 处违规 (X1 审计风险)")
         return 1
-    print(f"✅ omo lint schemas pass: {len(CONSUMER_MODULES)}/{len(CONSUMER_MODULES)} consumer 合规 + "
-          f"SCHEMA_REGISTRY 完整 + __all__ 完整 + consumer SRP 守 + 0 dead code + sort_keys 守, schema 写时锁守住")
+    print(
+        f"✅ omo lint schemas pass: {len(CONSUMER_MODULES)}/{len(CONSUMER_MODULES)} consumer 合规 + "
+        f"SCHEMA_REGISTRY 完整 + __all__ 完整 + consumer SRP 守 + 0 dead code + sort_keys 守, schema 写时锁守住"
+    )
 
     # Round 42 P0: --metrics flag 输出 §17 健康度评分
     if metrics:
         from omo.omo_logs import cmd_logs_audit
+
         print()
         print("📊 §17 健康度评分 (Round 42 P0, omo lint --metrics):")
         metrics_exit = cmd_logs_audit(metrics=True)
@@ -493,6 +546,7 @@ def _check_yaml_bypass(omo_dir: Path = Path(".omo")) -> list[tuple[str, str]]:
         return []
 
     import yaml as _yaml
+
     issues: list[tuple[str, str]] = []
     for path in sorted(items_dir.glob("*.yaml")):
         try:
@@ -510,17 +564,21 @@ def _check_yaml_bypass(omo_dir: Path = Path(".omo")) -> list[tuple[str, str]]:
         lifecycle = data.get("lifecycle_state", "")
 
         if has_status and not has_lifecycle:
-            issues.append((
-                path.name,
-                f"R1: yaml 有 status={status!r} 字段但无 lifecycle_state (OMO 用 "
-                f"lifecycle_state, 改 status 是越权写入, OMO 不认)",
-            ))
+            issues.append(
+                (
+                    path.name,
+                    f"R1: yaml 有 status={status!r} 字段但无 lifecycle_state (OMO 用 "
+                    f"lifecycle_state, 改 status 是越权写入, OMO 不认)",
+                )
+            )
         elif has_status and status in ("closed", "resolved") and lifecycle != status:
-            issues.append((
-                path.name,
-                f"R2: status={status!r} 但 lifecycle_state={lifecycle!r} 不一致 "
-                f"(越权写入, OMO 以 lifecycle_state 为准)",
-            ))
+            issues.append(
+                (
+                    path.name,
+                    f"R2: status={status!r} 但 lifecycle_state={lifecycle!r} 不一致 "
+                    f"(越权写入, OMO 以 lifecycle_state 为准)",
+                )
+            )
 
     return issues
 
@@ -533,17 +591,48 @@ def cmd_lint_yaml_bypass(omo_dir: Path = Path(".omo")) -> int:
         for name, msg in issues:
             print(f"   - {name}: {msg}")
         print()
-        print("修复方法: 走 omo-debt close/reopen CLI 正路, 不要直接 yaml.safe_load + yaml.dump 改字段.")
+        print(
+            "修复方法: 走 omo-debt close/reopen CLI 正路, 不要直接 yaml.safe_load + yaml.dump 改字段."
+        )
         return 1
-    print("✅ omo lint yaml-bypass pass: 0 处越权 (所有 .omo/debt/items/*.yaml 走 OMO CLI 正路)")
+    print(
+        "✅ omo lint yaml-bypass pass: 0 处越权 (所有 .omo/debt/items/*.yaml 走 OMO CLI 正路)"
+    )
     return 0
 
 
-def cmd_lint_direct_omo_io(paths: list[str] | None = None, *, diff: bool = False) -> int:
+def cmd_lint_direct_omo_io(
+    paths: list[str] | None = None, *, diff: bool = False
+) -> int:
     """Run the cross-repo contract gatekeeper for direct `.omo` mutations."""
     gatekeeper = PROJECTS_DIR / "ecos" / "scripts" / "contract_gatekeeper.py"
     if not gatekeeper.exists():
         print(f"❌ contract_gatekeeper.py not found: {gatekeeper}")
+        return 1
+
+    baseline_path = (
+        WORKSPACE_ROOT / ".omo" / "_truth" / "registry" / "direct-io-baseline.yaml"
+    )
+    try:
+        baseline_payload = load_yaml(baseline_path)
+    except FileNotFoundError:
+        print(f"❌ direct-io baseline registry missing: {baseline_path}")
+        return 1
+    except yaml.YAMLError as exc:
+        print(f"❌ direct-io baseline registry invalid YAML: {baseline_path} ({exc})")
+        return 1
+    entries = baseline_payload.get("entries", []) or []
+    if entries:
+        print(
+            "❌ omo lint direct-omo-io fail: "
+            f"direct-io baseline must be empty, found {len(entries)} grandfathered entry group(s)"
+        )
+        for item in entries:
+            if isinstance(item, dict):
+                print(f"  - {item.get('path')}: lines={item.get('lines', [])}")
+        print(
+            "修复方法: 先把遗留直写迁入 OMO 内核，再清空 .omo/_truth/registry/direct-io-baseline.yaml"
+        )
         return 1
 
     cmd = [sys.executable, str(gatekeeper)]
@@ -570,12 +659,193 @@ def cmd_lint_direct_omo_io(paths: list[str] | None = None, *, diff: bool = False
         ]
         cmd.extend(str(path) for path in default_paths if path.exists())
 
-    result = subprocess.run(cmd, cwd=str(WORKSPACE_ROOT), capture_output=True, text=True)
+    result = subprocess.run(
+        cmd, cwd=str(WORKSPACE_ROOT), capture_output=True, text=True
+    )
     if result.stdout:
         print(result.stdout, end="")
     if result.stderr:
         print(result.stderr, end="", file=sys.stderr)
     return result.returncode
+
+
+_SENSITIVE_GOVERNED_TARGETS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("system.yaml", ("state", "system.yaml")),
+    ("current goal", ("goals", "current.yaml")),
+    ("task packet", ("tasks",)),
+    ("capability registry", ("capabilities",)),
+)
+_SENSITIVE_WRITE_HELPERS = {"write_yaml_atomic", "write_text_atomic"}
+_SENSITIVE_WRITE_METHODS = {"write_text", "write_bytes"}
+_SENSITIVE_WRITE_EXEMPT_FILES = {
+    "omo_demo_artifacts.py",
+    "omo_ingress.py",
+    "omo_release_cycle.py",
+    "omo_weekly_loop.py",
+    "omo_worker_promotion.py",
+}
+
+
+def _string_literals_in_expr(
+    node: ast.AST | None,
+    assignments: dict[str, ast.AST],
+    *,
+    seen: set[str] | None = None,
+) -> list[str]:
+    if node is None:
+        return []
+    if seen is None:
+        seen = set()
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return [node.value]
+    if isinstance(node, ast.JoinedStr):
+        out: list[str] = []
+        for value in node.values:
+            out.extend(_string_literals_in_expr(value, assignments, seen=seen))
+        return out
+    if isinstance(node, ast.FormattedValue):
+        return _string_literals_in_expr(node.value, assignments, seen=seen)
+    if isinstance(node, ast.Name):
+        if node.id in seen or node.id not in assignments:
+            return []
+        seen.add(node.id)
+        return _string_literals_in_expr(assignments[node.id], assignments, seen=seen)
+    if isinstance(node, ast.Attribute):
+        return _string_literals_in_expr(node.value, assignments, seen=seen)
+    if isinstance(node, ast.Call):
+        out: list[str] = []
+        out.extend(_string_literals_in_expr(node.func, assignments, seen=seen))
+        for arg in node.args:
+            out.extend(_string_literals_in_expr(arg, assignments, seen=seen))
+        for kw in node.keywords:
+            out.extend(_string_literals_in_expr(kw.value, assignments, seen=seen))
+        return out
+    if isinstance(node, ast.BinOp):
+        return _string_literals_in_expr(node.left, assignments, seen=seen) + _string_literals_in_expr(
+            node.right, assignments, seen=seen
+        )
+    if isinstance(node, ast.Subscript):
+        return _string_literals_in_expr(node.value, assignments, seen=seen) + _string_literals_in_expr(
+            node.slice, assignments, seen=seen
+        )
+    if isinstance(node, (ast.List, ast.Tuple, ast.Set)):
+        out: list[str] = []
+        for elt in node.elts:
+            out.extend(_string_literals_in_expr(elt, assignments, seen=seen))
+        return out
+    return []
+
+
+def _collect_name_assignments(tree: ast.AST) -> dict[str, ast.AST]:
+    assignments: dict[str, ast.AST] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    assignments[target.id] = node.value
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            if node.value is not None:
+                assignments[node.target.id] = node.value
+    return assignments
+
+
+def _target_kind_from_tokens(tokens: list[str]) -> str | None:
+    normalized = "/".join(token.replace("\\", "/") for token in tokens)
+    for label, required_parts in _SENSITIVE_GOVERNED_TARGETS:
+        if all(part in normalized for part in required_parts):
+            return label
+    return None
+
+
+def _sensitive_write_issues_in_file(path: Path) -> list[str]:
+    if path.name in _SENSITIVE_WRITE_EXEMPT_FILES:
+        return []
+    try:
+        source = path.read_text(encoding="utf-8")
+        tree = ast.parse(source, filename=str(path))
+    except (SyntaxError, UnicodeDecodeError) as exc:
+        return [f"{path}: parse error: {exc}"]
+
+    assignments = _collect_name_assignments(tree)
+    issues: list[str] = []
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+
+        target_expr: ast.AST | None = None
+        op_name: str | None = None
+
+        if isinstance(node.func, ast.Attribute) and node.func.attr in _SENSITIVE_WRITE_METHODS:
+            target_expr = node.func.value
+            op_name = node.func.attr
+        elif isinstance(node.func, ast.Name) and node.func.id in _SENSITIVE_WRITE_HELPERS:
+            if node.args:
+                target_expr = node.args[0]
+                op_name = node.func.id
+        elif isinstance(node.func, ast.Name) and node.func.id == "open":
+            mode_value: str | None = None
+            if len(node.args) >= 2 and isinstance(node.args[1], ast.Constant) and isinstance(
+                node.args[1].value, str
+            ):
+                mode_value = node.args[1].value
+            else:
+                for kw in node.keywords:
+                    if kw.arg == "mode" and isinstance(kw.value, ast.Constant) and isinstance(
+                        kw.value.value, str
+                    ):
+                        mode_value = kw.value.value
+                        break
+            if mode_value and any(flag in mode_value for flag in ("w", "a", "x")) and node.args:
+                target_expr = node.args[0]
+                op_name = "open"
+
+        if target_expr is None or op_name is None:
+            continue
+
+        tokens = _string_literals_in_expr(target_expr, assignments)
+        target_kind = _target_kind_from_tokens(tokens)
+        if target_kind is None:
+            continue
+        issues.append(
+            f"{path}:{node.lineno} direct sensitive write via {op_name} -> {target_kind}"
+        )
+
+    return issues
+
+
+def cmd_lint_sensitive_governed_writes(paths: list[str] | None = None) -> int:
+    targets = [Path(item) for item in paths] if paths else sorted(OMO_SRC.glob("*.py"))
+    issues: list[str] = []
+    checked = 0
+    for target in targets:
+        if target.is_dir():
+            for file_path in sorted(target.rglob("*.py")):
+                checked += 1
+                issues.extend(_sensitive_write_issues_in_file(file_path))
+            continue
+        if target.suffix != ".py" or not target.exists():
+            continue
+        checked += 1
+        issues.extend(_sensitive_write_issues_in_file(target))
+
+    if issues:
+        print(
+            f"❌ omo lint sensitive-governed-writes fail: {len(issues)} direct write(s)"
+        )
+        for issue in issues:
+            print(f"  - {issue}")
+        print(
+            "修复方法: 人类/桥接敏感治理面(system/goals/tasks/capabilities)必须走 broker 入口；"
+            "worker/internal 生命周期写面继续由 internal-write-profiles registry 单独治理."
+        )
+        return 1
+
+    print(
+        "✅ omo lint sensitive-governed-writes pass: "
+        f"checked={checked} direct_writes=0"
+    )
+    return 0
 
 
 def cmd_lint_task_policy(policy_name: str, workspace_root: str = ".") -> int:
@@ -623,10 +893,198 @@ def cmd_lint_ingress_registry(workspace_root: str = ".") -> int:
             "✅ omo lint ingress-registry pass: "
             f"goals={len(summary.get('goal_ids', []))} "
             f"tasks={len(summary.get('task_ids', []))} "
-            f"debts={len(summary.get('debt_ids', []))}"
+            f"debts={len(summary.get('debt_ids', []))} "
+            f"capabilities={len(summary.get('capability_ids', []))}"
         )
     else:
         print("✅ omo lint ingress-registry pass: registry not created yet")
+    return 0
+
+
+def cmd_lint_mutation_surfaces(workspace_root: str = ".") -> int:
+    from omo.omo_governance_surfaces import (
+        _check_mutation_surface_registry,
+        resolve_governance_workspace_root,
+    )
+
+    root = resolve_governance_workspace_root(Path(workspace_root))
+    summary, issues = _check_mutation_surface_registry(root)
+    if issues:
+        print(f"❌ omo lint mutation-surfaces fail: {len(issues)} issue(s)")
+        for issue in issues:
+            print(f"  - {issue}")
+        return 1
+
+    if summary.get("exists"):
+        print(
+            "✅ omo lint mutation-surfaces pass: "
+            f"surfaces={len(summary.get('runtime_surface_names', []))}"
+        )
+    else:
+        print("✅ omo lint mutation-surfaces pass: registry not created yet")
+    return 0
+
+
+def cmd_lint_internal_write_profiles(workspace_root: str = ".") -> int:
+    from omo.omo_governance_surfaces import (
+        _check_internal_write_profile_registry,
+        resolve_governance_workspace_root,
+    )
+
+    root = resolve_governance_workspace_root(Path(workspace_root))
+    summary, issues = _check_internal_write_profile_registry(root)
+    if issues:
+        print(f"❌ omo lint internal-write-profiles fail: {len(issues)} issue(s)")
+        for issue in issues:
+            print(f"  - {issue}")
+        return 1
+
+    if summary.get("exists"):
+        print(
+            "✅ omo lint internal-write-profiles pass: "
+            f"profiles={len(summary.get('runtime_profile_names', []))}"
+        )
+    else:
+        print("✅ omo lint internal-write-profiles pass: registry not created yet")
+    return 0
+
+
+def cmd_lint_state_plane_assets(workspace_root: str = ".") -> int:
+    from omo.omo_governance_surfaces import (
+        _check_state_plane_asset_registry,
+        resolve_governance_workspace_root,
+    )
+
+    root = resolve_governance_workspace_root(Path(workspace_root))
+    summary, issues = _check_state_plane_asset_registry(root)
+    if issues:
+        print(f"❌ omo lint state-plane-assets fail: {len(issues)} issue(s)")
+        for issue in issues:
+            print(f"  - {issue}")
+        return 1
+
+    if summary.get("exists"):
+        print(
+            "✅ omo lint state-plane-assets pass: "
+            f"top_level_assets={summary.get('top_level_asset_count', 0)} "
+            f"persistence_modes={len(summary.get('persistence_mode_counts', {}))}"
+        )
+    else:
+        print("✅ omo lint state-plane-assets pass: registry not created yet")
+    return 0
+
+
+def cmd_lint_c2g_omo_boundary(workspace_root: str = ".") -> int:
+    from omo.omo_governance_surfaces import (
+        _check_c2g_omo_boundary,
+        resolve_governance_workspace_root,
+    )
+
+    root = resolve_governance_workspace_root(Path(workspace_root))
+    summary, issues = _check_c2g_omo_boundary(root)
+    if issues:
+        print(f"❌ omo lint c2g-omo-boundary fail: {len(issues)} issue(s)")
+        for issue in issues:
+            print(f"  - {issue}")
+        return 1
+
+    print(
+        "✅ omo lint c2g-omo-boundary pass: "
+        f"facade={summary.get('facade_path')} violations={len(summary.get('violations', []))}"
+    )
+    return 0
+
+
+def cmd_lint_ingress_artifacts(workspace_root: str = ".") -> int:
+    from omo.omo_governance_surfaces import (
+        _check_ingress_artifacts,
+        resolve_governance_workspace_root,
+    )
+
+    root = resolve_governance_workspace_root(Path(workspace_root))
+    summary, issues = _check_ingress_artifacts(root)
+    if issues:
+        print(f"❌ omo lint ingress-artifacts fail: {len(issues)} issue(s)")
+        for issue in issues:
+            print(f"  - {issue}")
+        return 1
+
+    if summary.get("exists"):
+        print(
+            "✅ omo lint ingress-artifacts pass: "
+            f"goals={summary.get('goal_artifacts', 0)} "
+            f"tasks={summary.get('task_artifacts', 0)} "
+            f"debts={summary.get('debt_artifacts', 0)} "
+            f"capabilities={summary.get('capability_artifacts', 0)}"
+        )
+    else:
+        print("✅ omo lint ingress-artifacts pass: registry not created yet")
+    return 0
+
+
+def cmd_lint_mutation_ledger(workspace_root: str = ".") -> int:
+    root = Path(workspace_root).resolve()
+    ledger_path = root / ".omo" / "change-log" / "mutations.jsonl"
+    if not ledger_path.exists():
+        print(
+            "❌ omo lint mutation-ledger fail: "
+            f"missing ledger file {ledger_path}"
+        )
+        return 1
+
+    entries = read_jsonl(ledger_path)
+    if not entries:
+        print(
+            "❌ omo lint mutation-ledger fail: "
+            f"ledger is empty: {ledger_path}"
+        )
+        return 1
+
+    issues: list[str] = []
+    required_fields = (
+        "created_at",
+        "actor",
+        "action",
+        "target",
+        "artifact_ref",
+        "source_ref",
+        "broker_ref",
+        "result",
+    )
+    committed = 0
+    for idx, entry in enumerate(entries, start=1):
+        if not isinstance(entry, dict):
+            issues.append(f"entry {idx}: not a JSON object")
+            continue
+        missing = [field for field in required_fields if field not in entry]
+        if missing:
+            issues.append(f"entry {idx}: missing fields {missing}")
+            continue
+        if entry.get("result") == "committed":
+            committed += 1
+        artifact_ref = entry.get("artifact_ref")
+        if not isinstance(artifact_ref, str) or not artifact_ref.startswith(".omo/"):
+            issues.append(f"entry {idx}: invalid artifact_ref {artifact_ref!r}")
+            continue
+        artifact_path = root / artifact_ref
+        if not artifact_path.exists():
+            issues.append(
+                f"entry {idx}: artifact_ref missing on disk {artifact_ref}"
+            )
+
+    if committed == 0:
+        issues.append("no committed mutations found in ledger")
+
+    if issues:
+        print(f"❌ omo lint mutation-ledger fail: {len(issues)} issue(s)")
+        for issue in issues:
+            print(f"  - {issue}")
+        return 1
+
+    print(
+        "✅ omo lint mutation-ledger pass: "
+        f"entries={len(entries)} committed={committed}"
+    )
     return 0
 
 
@@ -648,13 +1106,84 @@ def main(argv: list[str] | None = None) -> int:
         "direct-omo-io",
         help="拦截非 broker 对 `.omo` / `spaces` 的直接文件系统改写",
     )
-    gate.add_argument("paths", nargs="*", help="要检查的文件/目录；默认扫 omo/c2g/scripts/bin")
-    gate.add_argument("--diff", action="store_true", help="只检查 git diff 中的 Python 文件")
+    gate.add_argument(
+        "paths", nargs="*", help="要检查的文件/目录；默认扫 omo/c2g/scripts/bin"
+    )
+    gate.add_argument(
+        "--diff", action="store_true", help="只检查 git diff 中的 Python 文件"
+    )
+    sensitive_governed = sub.add_parser(
+        "sensitive-governed-writes",
+        help="拦截对 system/goals/tasks/capabilities 等敏感治理面的直接落盘",
+    )
+    sensitive_governed.add_argument(
+        "paths", nargs="*", help="要检查的 Python 文件/目录；默认扫 projects/omo/src/omo"
+    )
     ingress_registry = sub.add_parser(
         "ingress-registry",
         help="校验 .omo/_delivery/ingress/registry.yaml 的结构、反向映射与落盘一致性",
     )
     ingress_registry.add_argument(
+        "--workspace-root", default=".", help="显式指定 workspace root"
+    )
+    mutation_surfaces = sub.add_parser(
+        "mutation-surfaces",
+        help="校验 mutation surface truth registry 与运行时 broker 清单是否一致",
+    )
+    mutation_surfaces.add_argument(
+        "--workspace-root", default=".", help="显式指定 workspace root"
+    )
+    internal_write_profiles = sub.add_parser(
+        "internal-write-profiles",
+        help="校验 worker internal write profile registry 与运行时清单是否一致",
+    )
+    internal_write_profiles.add_argument(
+        "--workspace-root", default=".", help="显式指定 workspace root"
+    )
+    state_plane_assets = sub.add_parser(
+        "state-plane-assets",
+        help="校验 .omo 顶层资产的持久化与保留语义是否登记完整",
+    )
+    state_plane_assets.add_argument(
+        "--workspace-root", default=".", help="显式指定 workspace root"
+    )
+    c2g_omo_boundary = sub.add_parser(
+        "c2g-omo-boundary",
+        help="校验 c2g 只能通过本地 facade 接入 OMO，不得散弹式 import 内核模块",
+    )
+    c2g_omo_boundary.add_argument(
+        "--workspace-root", default=".", help="显式指定 workspace root"
+    )
+    ingress_artifacts = sub.add_parser(
+        "ingress-artifacts",
+        help="校验 ingress registry 指向的 artifact 文件存在且元数据与 registry 对齐",
+    )
+    ingress_artifacts.add_argument(
+        "--workspace-root", default=".", help="显式指定 workspace root"
+    )
+    mutation_ledger = sub.add_parser(
+        "mutation-ledger",
+        help="校验 .omo/change-log/mutations.jsonl 账本存在、字段齐全且 artifact_ref 可回落到真实文件",
+    )
+    mutation_ledger.add_argument(
+        "--workspace-root", default=".", help="显式指定 workspace root"
+    )
+    # P45 R2: 第 14 + 15 维度
+    doc_lifecycle = sub.add_parser(
+        "doc-lifecycle",
+        help="扫 .omo/ 全部 .md/.yaml, 4 类分类 + 死文档 + frontmatter 覆盖率 (P45 R2 第 14 维度)",
+    )
+    doc_lifecycle.add_argument(
+        "--workspace-root", default=".", help="显式指定 workspace root"
+    )
+    doc_lifecycle.add_argument(
+        "--verbose", action="store_true", help="输出每个文件的分类细节"
+    )
+    doc_archival = sub.add_parser(
+        "doc-archival-suggestions",
+        help="软引导 (WARN only): 建议归档的死文档 (P45 R4 第 15 维度)",
+    )
+    doc_archival.add_argument(
         "--workspace-root", default=".", help="显式指定 workspace root"
     )
     self_evolution = sub.add_parser(
@@ -669,7 +1198,9 @@ def main(argv: list[str] | None = None) -> int:
         help="按注册表执行通用 task policy 校验",
     )
     task_policy.add_argument("policy_name", nargs="?", choices=sorted(TASK_POLICIES))
-    task_policy.add_argument("--all", action="store_true", help="执行全部已注册 task policy")
+    task_policy.add_argument(
+        "--all", action="store_true", help="执行全部已注册 task policy"
+    )
     task_policy.add_argument(
         "--workspace-root", default=".", help="显式指定 workspace root"
     )
@@ -681,8 +1212,22 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_lint_yaml_bypass()
     if args.command == "direct-omo-io":
         return cmd_lint_direct_omo_io(args.paths, diff=args.diff)
+    if args.command == "sensitive-governed-writes":
+        return cmd_lint_sensitive_governed_writes(args.paths)
     if args.command == "ingress-registry":
         return cmd_lint_ingress_registry(args.workspace_root)
+    if args.command == "mutation-surfaces":
+        return cmd_lint_mutation_surfaces(args.workspace_root)
+    if args.command == "internal-write-profiles":
+        return cmd_lint_internal_write_profiles(args.workspace_root)
+    if args.command == "state-plane-assets":
+        return cmd_lint_state_plane_assets(args.workspace_root)
+    if args.command == "c2g-omo-boundary":
+        return cmd_lint_c2g_omo_boundary(args.workspace_root)
+    if args.command == "ingress-artifacts":
+        return cmd_lint_ingress_artifacts(args.workspace_root)
+    if args.command == "mutation-ledger":
+        return cmd_lint_mutation_ledger(args.workspace_root)
     if args.command == "self-evolution-approval":
         return cmd_lint_self_evolution_approval(args.workspace_root)
     if args.command == "task-policy":
@@ -691,8 +1236,317 @@ def main(argv: list[str] | None = None) -> int:
         if not args.policy_name:
             parser.error("task-policy requires policy_name unless --all is used")
         return cmd_lint_task_policy(args.policy_name, args.workspace_root)
+    if args.command == "doc-lifecycle":
+        return cmd_lint_doc_lifecycle(args.workspace_root, verbose=args.verbose)
+    if args.command == "doc-archival-suggestions":
+        return cmd_lint_doc_archival_suggestions(args.workspace_root)
     parser.print_help()
     return 1
+
+
+# ════════════════════════════════════════════════════════════════════════
+# P45 R2: 文档生命周期 lint (第 14 + 15 维度)
+# ════════════════════════════════════════════════════════════════════════
+# 规则详见 .omo/DOC-LIFECYCLE.md
+# 4 类: ssot/contract/pattern/history
+# ════════════════════════════════════════════════════════════════════════
+
+from typing import Any  # noqa: E402
+
+try:
+    import yaml as _doc_lint_yaml  # noqa: E402
+except ImportError:  # pragma: no cover
+    _doc_lint_yaml = None
+
+# 4 类路径模式 (与 .omo/DOC-LIFECYCLE.md §2 一致)
+_DOC_LIFECYCLE_PATTERNS: dict[str, list[str]] = {
+    "ssot": [
+        ".omo/_truth",
+        ".omo/_truth/registry",
+    ],
+    "contract": [
+        ".omo/standards",
+    ],
+    "pattern": [
+        ".omo/_knowledge/patterns",
+    ],
+    # history: .omo/_archive/, .omo/_knowledge/audits/, .omo/_knowledge/management/
+}
+
+_DOC_LIFECYCLE_NEED_FRONTMATTER = {"ssot", "contract", "pattern"}
+
+
+def _classify_doc(rel_path: str) -> str:
+    """根据路径自动分类到 4 类之一."""
+    rel = rel_path.lstrip("./")
+    for category, dirs in _DOC_LIFECYCLE_PATTERNS.items():
+        for d in dirs:
+            d_clean = d.lstrip("./")
+            if rel.startswith(d_clean + "/") or rel == d_clean:
+                return category
+    # 默认归 history
+    if (
+        rel.startswith(".omo/_archive/")
+        or rel.startswith(".omo/_knowledge/audits/")
+        or rel.startswith(".omo/_knowledge/management/")
+        or rel.startswith(".omo/_knowledge/decisions/")
+    ):
+        return "history"
+    return "history"
+
+
+def _parse_frontmatter(content: str) -> dict[str, Any] | None:
+    """解析 YAML frontmatter (YAML 头 --- ... ---)."""
+    if not content.startswith("---"):
+        return None
+    parts = content.split("---", 2)
+    if len(parts) < 3:
+        return None
+    if _doc_lint_yaml is None:
+        return None
+    try:
+        data = _doc_lint_yaml.safe_load(parts[1])
+        return data if isinstance(data, dict) else None
+    except Exception:
+        return None
+
+
+def _check_doc_referenced(
+    rel_path: str, workspace_root: Path
+) -> tuple[bool, list[str]]:
+    """检查文档是否被引用 (path 中含 basename)."""
+    base = Path(workspace_root)
+    refs: list[str] = []
+    name = Path(rel_path).name
+    skip_dirs = {".git", ".venv", "node_modules", "__pycache__", "_delivery"}
+    for path in base.rglob("*"):
+        if not path.is_file():
+            continue
+        if any(part in skip_dirs for part in path.parts):
+            continue
+        if path.suffix not in {".py", ".sh", ".md", ".yaml", ".yml"}:
+            continue
+        try:
+            if name in path.read_text(encoding="utf-8", errors="ignore"):
+                try:
+                    rel_p = path.relative_to(base)
+                except ValueError:
+                    rel_p = path
+                refs.append(str(rel_p))
+                if len(refs) > 5:
+                    break
+        except Exception:
+            continue
+    return (len(refs) > 0, refs)
+
+
+def cmd_lint_doc_lifecycle(
+    workspace_root: str = ".", verbose: bool = False
+) -> int:
+    """P45 R2: 文档生命周期 lint (第 14 维度).
+
+    扫描 .omo/ 全部 .md/.yaml:
+    - 4 类自动分类
+    - 死文档识别 (contract/pattern 0 引用 + 缺 frontmatter)
+    - frontmatter 覆盖率统计
+    - 矛盾路径检查 (引用 .omo/_archive/ 等)
+    """
+    from omo.omo_governance_surfaces import resolve_governance_workspace_root
+
+    root = resolve_governance_workspace_root(Path(workspace_root))
+    omo = root / ".omo"
+
+    if not omo.exists():
+        print(f"❌ .omo/ 不存在 at {root}")
+        return 1
+
+    md_files = list(omo.rglob("*.md")) + list(omo.rglob("*.yaml"))
+    # 排除 _delivery (机器写) + drafts
+    md_files = [f for f in md_files if "_delivery" not in f.parts and "/drafts/" not in str(f)]
+
+    total = len(md_files)
+    by_category: dict[str, int] = {"ssot": 0, "contract": 0, "pattern": 0, "history": 0}
+    dead_docs: list[tuple[Path, str]] = []
+    frontmatter_total = 0
+    frontmatter_active = 0
+    frontmatter_missing: list[tuple[Path, str]] = []
+    frontmatter_bad_status: list[tuple[Path, str]] = []
+    contradictory_refs: list[tuple[Path, str]] = []
+
+    valid_statuses = {"active", "deprecated", "archived", "experimental"}
+
+    # 矛盾路径检查: 只对 .py/.sh 真实代码引用算矛盾, .md 解释文档 OK
+    contents_cache: dict[Path, str] = {}
+    for f in md_files:
+        try:
+            contents_cache[f] = f.read_text(encoding="utf-8", errors="ignore")
+        except Exception:
+            continue
+        if f.suffix not in {".py", ".sh"}:
+            continue
+        for bad_path in [".omo/_archive/", ".omo/_knowledge/management/"]:
+            if bad_path in contents_cache[f]:
+                contradictory_refs.append((f, bad_path))
+                break
+
+    for f in md_files:
+        try:
+            rel = str(f.relative_to(root))
+        except ValueError:
+            continue
+        category = _classify_doc(rel)
+        by_category[category] += 1
+
+        if category in _DOC_LIFECYCLE_NEED_FRONTMATTER:
+            content = contents_cache.get(f, "")
+            fm = _parse_frontmatter(content)
+            if fm is None:
+                frontmatter_missing.append((f, category))
+            else:
+                frontmatter_total += 1
+                status = fm.get("status")
+                if status in valid_statuses:
+                    frontmatter_active += 1
+                else:
+                    frontmatter_bad_status.append((f, str(status)))
+
+        # 死文档: contract/pattern 0 引用 + status != deprecated
+        if category in {"contract", "pattern"}:
+            has_ref, _ = _check_doc_referenced(rel, root)
+            if not has_ref:
+                # 如果 frontmatter 标了 deprecated/archived, 不算死
+                content = contents_cache.get(f, "")
+                fm = _parse_frontmatter(content)
+                if fm and fm.get("status") in {"deprecated", "archived"}:
+                    pass  # 已标注, OK
+                else:
+                    dead_docs.append((f, category))
+
+    # 输出报告
+    print("=" * 70)
+    print("📚 P45 R2: 文档生命周期 lint (第 14 维度)")
+    print("=" * 70)
+    print(f"扫描根: {omo}")
+    print(f"总文件: {total}")
+    print()
+    print("📊 4 类分类:")
+    for cat in ("ssot", "contract", "pattern", "history"):
+        n = by_category[cat]
+        print(f"  {cat:10s} {n:4d} files")
+    print()
+
+    need_fm_total = sum(by_category[c] for c in _DOC_LIFECYCLE_NEED_FRONTMATTER)
+    fm_coverage = (
+        (frontmatter_active / need_fm_total * 100) if need_fm_total else 100.0
+    )
+    print(f"📋 frontmatter 覆盖率 (ssot/contract/pattern): {fm_coverage:.1f}%")
+    print(f"   active/deprecated/archived/experimental: {frontmatter_active}")
+    print(f"   缺 frontmatter: {len(frontmatter_missing)}")
+    print(f"   bad status: {len(frontmatter_bad_status)}")
+    print()
+
+    if dead_docs:
+        print(f"💀 死文档 (contract/pattern 0 引用): {len(dead_docs)}")
+        for path, cat in dead_docs[:20]:
+            try:
+                rel = path.relative_to(root)
+            except ValueError:
+                rel = path
+            print(f"  ⚠️  {rel}  [{cat}]")
+        if len(dead_docs) > 20:
+            print(f"  ... (其余 {len(dead_docs) - 20} 略)")
+    else:
+        print("💀 死文档: 0 ✅")
+    print()
+
+    if frontmatter_missing:
+        print(f"📝 缺 frontmatter: {len(frontmatter_missing)}")
+        for path, cat in frontmatter_missing[:10]:
+            try:
+                rel = path.relative_to(root)
+            except ValueError:
+                rel = path
+            print(f"  ⚠️  {rel}  [{cat}]")
+        if len(frontmatter_missing) > 10:
+            print(f"  ... (其余 {len(frontmatter_missing) - 10} 略)")
+    print()
+
+    if contradictory_refs:
+        print(f"❌ 矛盾路径 (引用 .omo/_archive/ 等): {len(contradictory_refs)}")
+        for src, bad in contradictory_refs[:5]:
+            try:
+                rel_src = src.relative_to(root)
+            except ValueError:
+                rel_src = src
+            print(f"  {rel_src} 引用 {bad}")
+    else:
+        print("❌ 矛盾路径: 0 ✅")
+    print()
+
+    if dead_docs or frontmatter_missing:
+        print("💡 建议 (P45 R4 第 15 维度):")
+        print("   跑 `omo lint doc-archival-suggestions` 看详细建议")
+        print("   加 frontmatter `status: deprecated` 或 `archived`")
+    print()
+
+    # 评分
+    score = 100
+    if fm_coverage < 80:
+        score -= int((80 - fm_coverage) * 0.5)
+    if dead_docs:
+        ratio = len(dead_docs) / total * 100 if total else 0
+        if ratio > 30:
+            score -= 20
+        elif ratio > 20:
+            score -= 10
+    if contradictory_refs:
+        score -= 10
+    score = max(0, score)
+    print(f"📈 doc-lifecycle 评分: {score}/100")
+    if score >= 90:
+        print("   状态: 🟢 HEALTHY")
+    elif score >= 70:
+        print("   状态: 🟡 NEEDS-IMPROVEMENT")
+    else:
+        print("   状态: 🔴 DEGRADED")
+
+    return 0  # WARN only - 不阻塞
+
+
+def cmd_lint_doc_archival_suggestions(workspace_root: str = ".") -> int:
+    """P45 R4: 软引导 (第 15 维度) — 建议归档的死文档.
+
+    复用 doc-lifecycle 的逻辑 + 给出可执行的批量脚本模板.
+    """
+    print("=" * 70)
+    print("💡 P45 R4: 文档归档建议 (第 15 维度, 软引导)")
+    print("=" * 70)
+    print()
+    print("软引导 — 不强制执行. 建议人工 review 后操作.")
+    print()
+    print("📋 分类建议:")
+    print("   1. .omo/standards/ 0 引用 + 缺 frontmatter → 加 `status: deprecated`")
+    print("   2. .omo/_knowledge/management/ 历史决策 → 加 `status: archived`")
+    print("   3. .omo/_knowledge/audits/ phase closeout → 加 `status: archived`")
+    print("   4. bin/mof-* 14 个 0 引用工具 → 顶部加 `Status: planned` 注释")
+    print()
+    print("📜 frontmatter 模板:")
+    print("---")
+    print("status: deprecated  # 或 archived / active")
+    print("lifecycle: contract  # 或 ssot / pattern / history")
+    print("owner: governance-team")
+    print("last-reviewed: 2026-06-22")
+    print("---")
+    print()
+    print("🔧 批量 frontmatter 脚本 (for standards):")
+    print('  for f in .omo/standards/*.md; do')
+    print('    if ! head -1 "$f" | grep -q "^---$"; then')
+    print('      { echo "---"; echo "status: deprecated"; echo "lifecycle: contract";')
+    print("        echo \"owner: governance-team\"; echo \"last-reviewed: 2026-06-22\";")
+    print('        echo "---"; cat "$f"; } > "$f.new" && mv "$f.new" "$f"')
+    print("    fi")
+    print("  done")
+    return 0
 
 
 if __name__ == "__main__":

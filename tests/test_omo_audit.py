@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 
-from omo.omo_audit import governance_check_agora_health
+from omo.omo_audit import _load_yaml_safely, governance_check_agora_health
 
 
 def test_governance_check_agora_health_with_active_event_loop(monkeypatch):
@@ -25,3 +26,22 @@ def test_governance_check_agora_health_with_active_event_loop(monkeypatch):
     assert result.category == "agora"
     assert result.message == "1/2 services healthy"
     assert result.severity == "warn"
+
+
+def test_load_yaml_safely_accepts_multi_document_yaml(tmp_path: Path) -> None:
+    payload = tmp_path / "audit.yaml"
+    payload.write_text(
+        "---\nstatus: active\nowner: governance\n---\n---\n"
+        "current_phase: 42\n"
+        "health_score: 100\n",
+        encoding="utf-8",
+    )
+
+    data = _load_yaml_safely(payload)
+
+    assert data == {
+        "status": "active",
+        "owner": "governance",
+        "current_phase": 42,
+        "health_score": 100,
+    }

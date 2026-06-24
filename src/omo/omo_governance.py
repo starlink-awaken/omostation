@@ -7,15 +7,14 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 
-import yaml
-
 from .omo_ingress import create_goal, create_planned_task, upsert_debt_item
 from .omo_io import write_yaml_atomic
-from .omo_redaction import redact_sensitive_text
 from .omo_governance_surfaces import (
     main as governance_surfaces_main,
     resolve_governance_workspace_root,
 )
+from .omo_redaction import redact_sensitive_text
+from .omo_shared import load_yaml, load_yaml_docs
 
 
 _REQUIRED_FIELDS = {
@@ -67,7 +66,7 @@ def propose_truth_mutation(root: Path, proposal: dict, now: str) -> dict:
 
 
 def _load_yaml(path: Path) -> dict:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return load_yaml(path)
 
 
 def _proposal_path(root: Path, proposal_id: str) -> Path:
@@ -160,7 +159,7 @@ def _load_payload_file(path: Path) -> dict:
     text = path.read_text(encoding="utf-8")
     if path.suffix.lower() == ".json":
         return json.loads(text)
-    return yaml.safe_load(text) or {}
+    return load_yaml_docs(text)
 
 
 def main(argv: list[str] | None = None) -> int:

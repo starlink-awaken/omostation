@@ -19,6 +19,7 @@ from typing import Any
 from omo.omo_audit import _utc_now  # 仍用: synced_at 字段时间戳
 from omo.omo_io import AppendOnlyLog
 from omo.omo_io_schemas import OmoSyncRecord  # Round 15 P0: 写时 Pydantic 校验
+from omo.omo_shared import load_yaml
 
 AUDIT_CHECKS = 6
 
@@ -59,9 +60,7 @@ def run_sync(args: dict[str, Any] | None = None) -> dict[str, Any]:
         try:
             from omo.omo_state import STATE_SYSTEM_YAML  # type: ignore[import-not-found]
 
-            import yaml
-
-            data = yaml.safe_load(STATE_SYSTEM_YAML.read_text(encoding="utf-8")) or {}
+            data = load_yaml(STATE_SYSTEM_YAML)
             phase = data.get("current_phase", 0)
             health_score = data.get("health_score", 0.0)
         except Exception:

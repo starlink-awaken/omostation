@@ -18,6 +18,7 @@ from omo.omo_worker import (  # noqa: F401
     main as omo_worker_main,
 )
 from omo.omo_worker_core import _build_launch_argv
+from omo.omo_worker_dispatch import _fast_track_compaction, yield_task
 from omo.omo_task_schema import validate_task_file
 
 
@@ -407,9 +408,14 @@ def test_sync_state_uses_fixture_root_when_registry_refs_are_current(
         ],
     )
     (omo / "_knowledge" / "design").mkdir(parents=True, exist_ok=True)
-    (omo / "_knowledge" / "design" / "demo.md").write_text("updated evidence\n", encoding="utf-8")
+    evidence_path = omo / "_knowledge" / "design" / "demo.md"
+    evidence_path.write_text("updated evidence\n", encoding="utf-8")
     (omo / "tasks" / "registry").mkdir(parents=True, exist_ok=True)
-    (omo / "tasks" / "registry" / "INDEX.md").write_text("mitigation\n", encoding="utf-8")
+    mitigation_path = omo / "tasks" / "registry" / "INDEX.md"
+    mitigation_path.write_text("mitigation\n", encoding="utf-8")
+    reviewed_ts = 1_749_513_600  # 2025-06-10T00:00:00Z, deterministic < reviewed_at in fixture
+    os.utime(evidence_path, (reviewed_ts, reviewed_ts))
+    os.utime(mitigation_path, (reviewed_ts, reviewed_ts))
     (omo / "state").mkdir(parents=True, exist_ok=True)
     (omo / "goals").mkdir(parents=True, exist_ok=True)
     for group in ("active", "done", "blocked"):
@@ -772,6 +778,44 @@ def test_sync_state_removes_stale_orphaned_task_artifact_when_divergence_is_reso
 
     assert "orphaned_tasks" not in state["divergence_detail_refs"]
     assert stale_artifact.exists() is False
+
+
+def test_sync_state_writes_divergence_artifact_to_legacy_target_when_evidence_is_symlink(tmp_path: Path):
+    omo = tmp_path / ".omo"
+    (omo / "_delivery" / "evidence-legacy").mkdir(parents=True)
+    (omo / "evidence").symlink_to("_delivery/evidence-legacy")
+    _write_yaml(omo / "state" / "system.yaml", {"health_score": 0.0})
+    _write_yaml(
+        omo / "goals" / "current.yaml",
+        {
+            "phase": 8,
+            "goals": [{"id": "G8.2", "status": "in_progress", "tasks": ["TASK-A", "TASK-MISSING"]}],
+        },
+    )
+    _write_yaml(omo / "tasks" / "active" / "a.yaml", {"id": "TASK-A", "phase": 8, "status": "pending"})
+
+    state = sync_state(omo, test_output="1 passed")
+
+    ref = state["divergence_detail_refs"]["missing_goal_tasks"]["ref"]
+    assert ref == ".omo/evidence/divergence/missing_goal_tasks.yaml"
+    assert (omo / "_delivery" / "evidence-legacy" / "divergence" / "missing_goal_tasks.yaml").exists()
+    assert _load_yaml(tmp_path / ref)["task_ids"] == ["TASK-MISSING"]
+
+
+def test_sync_state_reads_multi_document_goals_current_yaml(tmp_path: Path):
+    omo = tmp_path / ".omo"
+    _write_yaml(omo / "state" / "system.yaml", {"health_score": 0.0})
+    (omo / "goals").mkdir(parents=True, exist_ok=True)
+    (omo / "goals" / "current.yaml").write_text(
+        "---\nstatus: active\nowner: governance-team\n---\n---\nphase: 8\ngoals:\n  - id: G8.2\n    status: in_progress\n    tasks:\n      - TASK-A\n      - TASK-MISSING\n",
+        encoding="utf-8",
+    )
+    _write_yaml(omo / "tasks" / "active" / "a.yaml", {"id": "TASK-A", "phase": 8, "status": "pending"})
+
+    state = sync_state(omo, test_output="1 passed")
+
+    assert state["phase_status"] == "active"
+    assert "missing_goal_tasks:1" in state["divergence_flags"]
 
 
 def test_dispatch_task_and_worker_status_use_custom_omo_root(tmp_path: Path):
@@ -1373,6 +1417,54 @@ def test_worker_validate_command_reports_all_planned_errors(tmp_path: Path, monk
     assert "planned tasks must use candidate or pending status" in output
 
 
+def test_worker_normalize_planned_command_repairs_and_archives_invalid_packets(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "TASK-LEGACY-CLI.yaml",
+        {
+            "id": "TASK-LEGACY-CLI",
+            "title": "legacy cli packet",
+            "status": "planned",
+            "priority": "P2",
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "TASK-LEGACY-CLI-DONE.yaml",
+        {
+            "id": "TASK-LEGACY-CLI-DONE",
+            "title": "legacy cli done packet",
+            "status": "done",
+            "completed_at": "2026-06-20T06:00:00Z",
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "omo",
+            "task",
+            "normalize-planned",
+            "--actor",
+            "projects/omo/tests",
+            "--now",
+            "2026-06-20T06:40:00Z",
+            "--omo-dir",
+            ".omo",
+        ],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+
+    assert "TASK-LEGACY-CLI: normalized -> status=candidate" in output
+    assert "TASK-LEGACY-CLI-DONE: archived -> status=archived" in output
+    assert "failed=0" in output
+    assert validate_task_file(tmp_path / ".omo" / "tasks" / "planned" / "TASK-LEGACY-CLI.yaml") == []
+    assert not (tmp_path / ".omo" / "tasks" / "planned" / "TASK-LEGACY-CLI-DONE.yaml").exists()
+    assert (tmp_path / ".omo" / "tasks" / "archived" / "legacy-normalized" / "TASK-LEGACY-CLI-DONE.yaml").exists()
+
+
 def test_task_promote_eval_rejects_phase_beyond_next_wave(tmp_path: Path, monkeypatch, capsys):
     _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
     _write_yaml(
@@ -1528,7 +1620,7 @@ def test_task_promote_apply_moves_task_and_writes_envelope(tmp_path: Path, monke
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(
-        "omo.omo_worker.subprocess.run",
+        "omo.omo_worker_promotion.subprocess.run",
         lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, "", ""),
     )
     monkeypatch.setattr(
@@ -1559,6 +1651,136 @@ def test_task_promote_apply_moves_task_and_writes_envelope(tmp_path: Path, monke
     ]
     assert (tmp_path / ".omo" / "workers" / "runs" / "P17-W1-READY-promotion-2026-06-03T00-00-00Z.yaml").exists()
     assert not (tmp_path / ".omo" / "tasks" / "planned" / "P17-W1-READY.yaml").exists()
+
+
+def test_task_promote_apply_accepts_unphased_candidate_packets(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "OPT-BOS-GATEWAY.yaml",
+        {
+            "id": "OPT-BOS-GATEWAY",
+            "priority": "P1",
+            "title": "Gateway packet",
+            "status": "candidate",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["human_review"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "human_approval_required": False,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        "omo.omo_worker_promotion.subprocess.run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, "", ""),
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "omo",
+            "task",
+            "promote-apply",
+            "OPT-BOS-GATEWAY",
+            "--promoted-by",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T00:00:00Z",
+            "--omo-dir",
+            ".omo",
+        ],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    active_task = _load_yaml(tmp_path / ".omo" / "tasks" / "active" / "OPT-BOS-GATEWAY.yaml")
+    envelope = _load_yaml(
+        tmp_path / ".omo" / "workers" / "runs" / "OPT-BOS-GATEWAY-promotion-2026-06-03T00-00-00Z.yaml"
+    )
+
+    assert "promotion_ref=.omo/workers/runs/OPT-BOS-GATEWAY-promotion-2026-06-03T00-00-00Z.yaml" in output
+    assert active_task["status"] == "candidate"
+    assert active_task["handoff_refs"] == [
+        ".omo/workers/runs/OPT-BOS-GATEWAY-promotion-2026-06-03T00-00-00Z.yaml"
+    ]
+    assert envelope["phase_gate"]["target_phase"] is None
+    assert not (tmp_path / ".omo" / "tasks" / "planned" / "OPT-BOS-GATEWAY.yaml").exists()
+
+
+def test_task_promote_apply_rejects_self_evolution_packet(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
+        {
+            "id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
+            "priority": "P1",
+            "title": "Self evolution packet",
+            "status": "candidate",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": ".omo/workers/runs/OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z.yaml",
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["human_review"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "approval_required": True,
+            "approval_state": "awaiting_human",
+            "human_approval_required": True,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "runs" / "OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z.yaml",
+        {
+            "approval_id": "OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z",
+            "task_id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
+            "approval_status": "granted",
+            "approval_scope": "task_promotion",
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "omo",
+            "task",
+            "promote-apply",
+            "OPC-P6-SELF-EVOLUTION-doc-gate-e",
+            "--promoted-by",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T00:00:00Z",
+            "--omo-dir",
+            ".omo",
+        ],
+    )
+
+    assert omo_worker_main() == 1
+    output = capsys.readouterr().out
+
+    assert "eligible=false" in output
+    assert "task_policy_blocked" in output
+    assert (tmp_path / ".omo" / "tasks" / "planned" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml").exists()
+    assert not (tmp_path / ".omo" / "tasks" / "active" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml").exists()
 
 
 def test_task_promote_apply_rolls_back_when_sync_fails(tmp_path: Path, monkeypatch):
@@ -1809,6 +2031,248 @@ def test_task_promotion_readiness_reports_approval_invalid_for_future_human_appr
     packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "readiness.yaml")
 
     assert packet["tasks"][0]["blockers"] == ["phase_mismatch", "approval_invalid"]
+
+
+def test_task_promotion_readiness_accepts_unphased_candidate_packets(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "OPT-BOS-GATEWAY.yaml",
+        {
+            "id": "OPT-BOS-GATEWAY",
+            "priority": "P1",
+            "title": "Gateway packet",
+            "status": "candidate",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["human_review"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "human_approval_required": False,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "omo",
+            "task",
+            "promotion-readiness",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T00:00:00Z",
+        ],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "readiness.yaml")
+
+    assert "unphased_count=1" in output
+    assert packet["ready_count"] == 1
+    assert packet["blocked_count"] == 0
+    assert packet["tasks"][0]["task_id"] == "OPT-BOS-GATEWAY"
+    assert packet["tasks"][0]["phase"] is None
+    assert packet["tasks"][0]["checks"]["phase_ok"] is True
+
+
+def test_task_promotion_readiness_blocks_self_evolution_packets(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
+        {
+            "id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
+            "priority": "P1",
+            "title": "Self evolution packet",
+            "status": "candidate",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": ".omo/workers/runs/OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z.yaml",
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["human_review"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "approval_required": True,
+            "approval_state": "awaiting_human",
+            "human_approval_required": True,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "runs" / "OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z.yaml",
+        {
+            "approval_id": "OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z",
+            "task_id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
+            "approval_status": "granted",
+            "approval_scope": "task_promotion",
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "omo",
+            "task",
+            "promotion-readiness",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-03T00:00:00Z",
+        ],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "readiness.yaml")
+
+    assert "ready_count=0" in output
+    assert packet["blocked_count"] == 1
+    assert "task_policy_blocked" in packet["tasks"][0]["blockers"]
+    assert packet["tasks"][0]["checks"]["task_policy_ready"] is False
+
+
+def test_task_route_self_evolution_remediation_moves_task_out_of_planned(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 16})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
+        {
+            "id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
+            "title": "Self evolution packet",
+            "status": "candidate",
+            "task_type": "governance",
+            "risk_level": "L1",
+            "depends_on": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "deliverables": ["review note"],
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": ".omo/workers/runs/OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z.yaml",
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "entry_gate": ["human_review"],
+            "evidence_required": ["approval granted"],
+            "test_plan": ["python3 scripts/omo/omo_worker.py task approval-queue-status --omo-dir .omo"],
+            "allowed_operation_level": "L1",
+            "approval_required": True,
+            "approval_state": "awaiting_human",
+            "human_approval_required": True,
+        },
+    )
+    _write_yaml(
+        tmp_path / ".omo" / "workers" / "runs" / "OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z.yaml",
+        {
+            "approval_id": "OPC-P6-SELF-EVOLUTION-doc-gate-e-promotion-approval-2026-06-03T00-00-00Z",
+            "task_id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
+            "approval_status": "granted",
+            "approval_scope": "task_promotion",
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "omo",
+            "task",
+            "route-self-evolution-remediation",
+            "OPC-P6-SELF-EVOLUTION-doc-gate-e",
+            "--actor",
+            "copilot-cli",
+            "--now",
+            "2026-06-03T00:00:00Z",
+            "--omo-dir",
+            ".omo",
+        ],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    remediation_task = _load_yaml(tmp_path / ".omo" / "tasks" / "remediation" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml")
+    review_note = tmp_path / ".omo" / "tasks" / "remediation-notes" / "OPC-P6-SELF-EVOLUTION-doc-gate-e-review.md"
+
+    assert "remediation_ref=.omo/tasks/remediation/OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml" in output
+    assert remediation_task["status"] == "review"
+    assert remediation_task["assigned_to"] == "copilot-cli"
+    assert remediation_task["review_note"] == ".omo/tasks/remediation-notes/OPC-P6-SELF-EVOLUTION-doc-gate-e-review.md"
+    assert review_note.exists()
+    assert not (tmp_path / ".omo" / "tasks" / "planned" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml").exists()
+
+
+def test_task_approval_queue_status_writes_unified_queue_surface(tmp_path: Path, monkeypatch, capsys):
+    _write_yaml(tmp_path / ".omo" / "goals" / "current.yaml", {"phase": 42})
+    _write_yaml(
+        tmp_path / ".omo" / "tasks" / "planned" / "OPC-P6-SELF-EVOLUTION-doc-gate-e.yaml",
+        {
+            "id": "OPC-P6-SELF-EVOLUTION-doc-gate-e",
+            "title": "Doc reconcile",
+            "status": "candidate",
+            "priority": "P1",
+            "assigned_to": None,
+            "dispatch_id": None,
+            "run_ref": None,
+            "approval_ref": None,
+            "review_ref": None,
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "source_docs": ["_knowledge/demo.md"],
+            "depends_on": [],
+            "entry_gate": ["human_review"],
+            "risk_level": "L1",
+            "allowed_operation_level": "L1",
+            "human_approval_required": True,
+            "evidence_required": ["demo"],
+            "test_plan": ["demo"],
+        },
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "omo",
+            "task",
+            "approval-queue-status",
+            "--omo-dir",
+            ".omo",
+            "--now",
+            "2026-06-20T23:40:00Z",
+        ],
+    )
+
+    assert omo_worker_main() == 0
+    output = capsys.readouterr().out
+    packet = _load_yaml(tmp_path / ".omo" / "workers" / "promotion" / "approval-queue" / "current.yaml")
+
+    assert "approval_queue_task_count=1" in output
+    assert packet["approval_missing_count"] == 1
+    assert packet["tasks"][0]["task_id"] == "OPC-P6-SELF-EVOLUTION-doc-gate-e"
+    assert packet["tasks"][0]["next_action"] == "request_approval"
+    assert (
+        tmp_path / ".omo" / "workers" / "promotion" / "approval-queue" / "current.md"
+    ).exists()
 
 
 def test_task_promotion_request_approval_rejects_non_human_approval_task(tmp_path: Path, monkeypatch):
@@ -4064,3 +4528,107 @@ def test_task_governance_overlay_approval_prep_aging_writes_current_surface(tmp_
     assert "aging_status=aging_available" in output
     assert packet["escalation_task_ids"] == ["P30-W1-REQUEST-LONGTAIL"]
     assert (tmp_path / ".omo" / "workers" / "governance-overlay" / "approval-prep" / "aging" / "current.md").exists()
+
+
+def test_yield_task_updates_dispatch_and_brokers_active_task_back_to_planned(tmp_path: Path) -> None:
+    omo = tmp_path / ".omo"
+    dispatch_path = omo / "workers" / "runs" / "dispatch-yield-2.yaml"
+    _write_yaml(
+        dispatch_path,
+        {
+            "dispatch_id": "dispatch-yield-2",
+            "dispatch_state": "active",
+            "reclaim": {"required": False, "reason": None},
+        },
+    )
+    _write_yaml(
+        omo / "tasks" / "active" / "TASK-YIELD-2.yaml",
+        {
+            "id": "TASK-YIELD-2",
+            "title": "worker yield integration",
+            "status": "in_progress",
+            "task_type": "feature",
+            "risk_level": "L0",
+            "depends_on": [],
+            "source_docs": ["spec.md"],
+            "deliverables": ["code"],
+            "assigned_to": "agent:test",
+            "dispatch_id": "dispatch-yield-2",
+            "run_ref": ".omo/workers/runs/dispatch-yield-2.yaml",
+            "approval_ref": None,
+            "review_ref": ".omo/workers/runs/review-yield-2.md",
+            "knowledge_refs": [],
+            "handoff_refs": [],
+            "entry_gate": [],
+            "evidence_required": ["pytest -q"],
+            "test_plan": ["pytest -q"],
+            "allowed_operation_level": "L0",
+            "human_approval_required": False,
+            "metadata": {},
+            "started_at": "2026-06-20T06:00:00Z",
+        },
+    )
+
+    result = yield_task(tmp_path, "TASK-YIELD-2", "need rethink")
+
+    assert result == 0
+    planned = _load_yaml(omo / "tasks" / "planned" / "TASK-YIELD-2.yaml")
+    dispatch = _load_yaml(dispatch_path)
+    assert planned["status"] == "candidate"
+    assert planned["assigned_to"] is None
+    assert planned["dispatch_id"] is None
+    assert planned["run_ref"] is None
+    assert dispatch["dispatch_state"] == "yielded"
+    assert dispatch["reclaim"]["required"] is True
+    assert dispatch["reclaim"]["reason"] == "Yielded to ideation: need rethink"
+    assert not (omo / "tasks" / "active" / "TASK-YIELD-2.yaml").exists()
+
+
+def test_fast_track_compaction_archives_done_tasks_via_broker_and_writes_audit_report(tmp_path: Path) -> None:
+    omo = tmp_path / ".omo"
+    done_dir = omo / "tasks" / "done"
+    for idx in range(1, 6):
+        _write_yaml(
+            done_dir / f"FAST-{idx}.yaml",
+            {
+                "id": f"FAST-{idx}",
+                "title": f"fast task {idx}",
+                "status": "done",
+                "task_type": "feature",
+                "risk_level": "L0",
+                "depends_on": [],
+                "source_docs": ["spec.md"],
+                "deliverables": ["code"],
+                "assigned_to": "agent:test",
+                "dispatch_id": f"dispatch-fast-{idx}",
+                "run_ref": f".omo/workers/runs/dispatch-fast-{idx}.yaml",
+                "approval_ref": None,
+                "review_ref": f".omo/workers/runs/review-fast-{idx}.md",
+                "knowledge_refs": [],
+                "handoff_refs": [],
+                "entry_gate": [],
+                "evidence_required": [],
+                "test_plan": ["pytest -q"],
+                "allowed_operation_level": "L0",
+                "human_approval_required": False,
+                "metadata": {},
+                "completed_at": f"2026-06-20T06:0{idx}:00Z",
+                "context_uri": f"bos://governance/tasks/done/FAST-{idx}",
+            },
+        )
+
+    _fast_track_compaction(tmp_path)
+
+    for idx in range(1, 6):
+        assert not (done_dir / f"FAST-{idx}.yaml").exists()
+        archived = _load_yaml(omo / "tasks" / "archived" / f"FAST-{idx}.yaml")
+        assert archived["status"] == "archived"
+        assert archived["archived_by"] == "projects/omo/src/omo/omo_worker_dispatch.py:_fast_track_compaction"
+
+    reports = sorted((omo / "_knowledge" / "audits").glob("Fast-Track-Compaction-*.md"))
+    assert len(reports) == 1
+    report_text = reports[0].read_text(encoding="utf-8")
+    assert "FAST-1" in report_text
+    assert "FAST-5" in report_text
+    assert len(list((omo / "_delivery" / "ingress" / "tasks").glob("FAST-*-archive-*.yaml"))) == 5
+    assert len(list((omo / "_delivery" / "ingress" / "audits").glob("Fast-Track-Compaction-*.yaml"))) == 1

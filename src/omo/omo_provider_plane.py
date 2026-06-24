@@ -6,9 +6,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import yaml
 
+from .omo_io import write_yaml_atomic
 from .omo_redaction import redact_sensitive_text
+from .omo_shared import load_yaml
 
 
 @dataclass(frozen=True)
@@ -98,7 +99,7 @@ def _litellm_model_name(provider: ProviderRuntime) -> str:
 def apply_provider_to_litellm_config(
     config_path: Path, target_model_name: str, provider: ProviderRuntime
 ) -> None:
-    data = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    data = load_yaml(config_path)
     model_list = data.get("model_list", [])
     for entry in model_list:
         if entry.get("model_name") != target_model_name:
@@ -114,9 +115,7 @@ def apply_provider_to_litellm_config(
             f"Target model not found in LiteLLM config: {target_model_name}"
         )
 
-    config_path.write_text(
-        yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8"
-    )
+    write_yaml_atomic(config_path, data)
 
 
 def summarize_codexbar_usage(raw_json: str) -> dict[str, Any]:
@@ -200,10 +199,7 @@ def write_provider_plane_snapshot(
         "quota_summary": quota_summary,
         "litellm_health": summarized_health,
     }
-    snapshot_path.parent.mkdir(parents=True, exist_ok=True)
-    snapshot_path.write_text(
-        yaml.safe_dump(payload, sort_keys=False, allow_unicode=True), encoding="utf-8"
-    )
+    write_yaml_atomic(snapshot_path, payload)
 
 
 def safe_provider_summary(provider: ProviderRuntime) -> dict[str, Any]:

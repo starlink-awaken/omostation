@@ -3,13 +3,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
-
 from .omo_io import write_yaml_atomic
+from .omo_shared import load_yaml
 
 
 def _load_yaml(path: Path) -> dict:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return load_yaml(path)
 
 
 def _resolve_rollout_rule(policy: dict, action: str) -> dict:

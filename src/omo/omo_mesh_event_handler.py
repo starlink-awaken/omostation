@@ -21,6 +21,9 @@ import time
 from pathlib import Path
 from typing import Any
 
+from .omo_io import write_yaml_atomic
+from .omo_shared import load_yaml
+
 logger = logging.getLogger("omo.mesh_event_handler")
 
 # M1 compute engine YAML 目录
@@ -160,14 +163,11 @@ def _write_to_omo_state(node_id: str, fields: dict[str, Any]) -> None:
 
     omo_audit_sync 会周期性地将此文件的状态同步到 M1 YAML。
     """
-    import yaml  # type: ignore[import]
-
     state_path = Path("~/Workspace/.omo/state/mesh_node_states.yaml").expanduser()
 
     try:
         if state_path.exists():
-            with open(state_path) as f:
-                current = yaml.safe_load(f) or {}
+            current = load_yaml(state_path)
         else:
             current = {}
 
@@ -179,8 +179,7 @@ def _write_to_omo_state(node_id: str, fields: dict[str, Any]) -> None:
         current["last_updated"] = time.time()
 
         state_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(state_path, "w") as f:
-            yaml.dump(current, f, default_flow_style=False, allow_unicode=True)
+        write_yaml_atomic(state_path, current)
 
         logger.info(
             "Mesh state written to .omo/state/mesh_node_states.yaml: node=%s status=%s",

@@ -5,10 +5,9 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
-import yaml
-
 from .omo_io import write_text_atomic, write_yaml_atomic
 from .omo_redaction import redact_sensitive_text
+from .omo_shared import load_yaml
 
 def _timestamp_slug(now: str | None = None) -> str:
     if now:
@@ -32,7 +31,7 @@ def _parse_iso8601(value: str | None) -> datetime | None:
 
 
 def _load_yaml(path: Path) -> dict:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return load_yaml(path)
 
 
 def _write_yaml(path: Path, data: dict) -> None:
@@ -181,5 +180,4 @@ def _build_launch_argv(
         if ";" in arg and arg != ";" and not arg.startswith("-c"):
             raise ValueError(f"unsafe worker command template: {template}")
     return [prompt_text if arg == sentinel else arg for arg in argv]
-
 

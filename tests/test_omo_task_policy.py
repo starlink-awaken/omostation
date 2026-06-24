@@ -26,7 +26,25 @@ def test_check_task_policy_passes_for_self_evolution_planned_only(tmp_path: Path
     active_dir.mkdir(parents=True)
     (planned_dir / "OPC-P6-SELF-EVOLUTION-good.yaml").write_text(
         "id: OPC-P6-SELF-EVOLUTION-good\n"
-        "status: planned\n"
+        "status: candidate\n"
+        "approval_required: true\n"
+        "human_approval_required: true\n"
+        "approval_state: awaiting_human\n",
+        encoding="utf-8",
+    )
+
+    issues = check_task_policy(tmp_path, OPC_P6_SELF_EVOLUTION_POLICY)
+
+    assert issues == []
+
+
+def test_check_task_policy_accepts_multi_document_task_yaml(tmp_path: Path) -> None:
+    planned_dir = tmp_path / ".omo" / "tasks" / "planned"
+    planned_dir.mkdir(parents=True)
+    (planned_dir / "OPC-P6-SELF-EVOLUTION-good.yaml").write_text(
+        "---\nstatus: active\nowner: governance\n---\n---\n"
+        "id: OPC-P6-SELF-EVOLUTION-good\n"
+        "status: candidate\n"
         "approval_required: true\n"
         "human_approval_required: true\n"
         "approval_state: awaiting_human\n",
@@ -45,7 +63,7 @@ def test_check_task_policy_flags_field_drift_and_active_leak(tmp_path: Path) -> 
     active_dir.mkdir(parents=True)
     (planned_dir / "OPC-P6-SELF-EVOLUTION-bad.yaml").write_text(
         "id: OPC-P6-SELF-EVOLUTION-bad\n"
-        "status: active\n"
+        "status: planned\n"
         "approval_required: false\n"
         "human_approval_required: false\n"
         "approval_state: auto\n",
@@ -62,7 +80,7 @@ def test_check_task_policy_flags_field_drift_and_active_leak(tmp_path: Path) -> 
     assert any("approval_required must be True" in issue for issue in issues)
     assert any("human_approval_required must be True" in issue for issue in issues)
     assert any("approval_state must be 'awaiting_human'" in issue for issue in issues)
-    assert any("status must remain planned" in issue for issue in issues)
+    assert any("status must be one of ('candidate',)" in issue for issue in issues)
     assert any("leaked into active/" in issue for issue in issues)
 
 

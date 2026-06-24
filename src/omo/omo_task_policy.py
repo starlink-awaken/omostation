@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-import yaml
+from .omo_shared import load_yaml
 
 
 @dataclass(frozen=True)
@@ -16,6 +16,7 @@ class TaskPolicy:
     prohibited_roots: tuple[str, ...] = ()
     required_fields: dict[str, Any] = field(default_factory=dict)
     required_status: str | None = None
+    allowed_statuses: tuple[str, ...] = ()
     validator_id: str | None = None
     custom_validator: Callable[[Path, dict[str, Any]], list[str]] | None = None
 
@@ -31,7 +32,7 @@ OPC_P6_SELF_EVOLUTION_POLICY = TaskPolicy(
         "human_approval_required": True,
         "approval_state": "awaiting_human",
     },
-    required_status="planned",
+    allowed_statuses=("candidate",),
 )
 
 
@@ -247,6 +248,7 @@ def task_policy_snapshot(policy: TaskPolicy) -> dict[str, Any]:
         "prohibited_roots": list(policy.prohibited_roots),
         "required_fields": dict(policy.required_fields),
         "required_status": policy.required_status,
+        "allowed_statuses": list(policy.allowed_statuses),
         "validator_id": policy.validator_id,
     }
 
@@ -274,12 +276,14 @@ def check_task_policy(workspace_root: Path, policy: TaskPolicy) -> list[str]:
         if not target_dir.exists():
             continue
         for path in sorted(target_dir.glob(policy.file_glob)):
-            payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+            payload = load_yaml(path)
             for field_name, expected in policy.required_fields.items():
                 if payload.get(field_name) != expected:
                     issues.append(f"{path.name}: {field_name} must be {expected!r}")
             if policy.required_status is not None and payload.get("status") != policy.required_status:
                 issues.append(f"{path.name}: status must remain {policy.required_status}")
+            if policy.allowed_statuses and payload.get("status") not in policy.allowed_statuses:
+                issues.append(f"{path.name}: status must be one of {policy.allowed_statuses}")
             if policy.custom_validator is not None:
                 issues.extend(policy.custom_validator(path, payload))
 

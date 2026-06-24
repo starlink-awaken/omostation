@@ -3,18 +3,20 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
-
-from .omo_io import write_yaml_atomic
+from .omo_ingress import create_blocked_task, write_discovery_registry
+from .omo_shared import load_yaml_docs, load_yaml_required
 
 
 def _load_frontmatter(path: Path) -> dict:
     text = path.read_text(encoding="utf-8")
     if not text.startswith("---\n"):
         return {}
-    _, _, tail = text.partition("---\n")
-    frontmatter, _, _ = tail.partition("\n---")
-    return yaml.safe_load(frontmatter) or {}
+    tail = text[len("---\n") :]
+    parts = tail.split("\n---\n")
+    if len(parts) < 2:
+        return {}
+    frontmatter = "\n---\n".join(parts[:-1])
+    return load_yaml_docs(frontmatter)
 
 
 def discover_task_blueprints(root: Path, scan_dir: Path) -> dict:
@@ -42,8 +44,12 @@ def discover_task_blueprints(root: Path, scan_dir: Path) -> dict:
         }
 
     registry = {"entries": entries, "blueprints": blueprints}
-    registry_path = root / ".omo" / "_truth" / "task-center" / "discovery-registry.yaml"
-    write_yaml_atomic(registry_path, registry)
+    write_discovery_registry(
+        root / ".omo",
+        registry=registry,
+        actor="omo_discovery.discover_task_blueprints",
+        source_ref=str(scan_dir.relative_to(root)),
+    )
     return registry
 
 
@@ -51,7 +57,7 @@ def instantiate_task_template(
     root: Path, blueprint_id: str, task_id: str, title: str
 ) -> dict[str, str]:
     registry_path = root / ".omo" / "_truth" / "task-center" / "discovery-registry.yaml"
-    registry = yaml.safe_load(registry_path.read_text(encoding="utf-8")) or {}
+    registry = load_yaml_required(registry_path)
     blueprint = registry["blueprints"][blueprint_id]
 
     task = {
@@ -81,6 +87,11 @@ def instantiate_task_template(
         "blocked_by": "previous_wave_exit",
         "retry_count": 0,
     }
+    create_blocked_task(
+        root / ".omo",
+        task_data=task,
+        actor="omo_discovery.instantiate_task_template",
+        source_ref=f"blueprint:{blueprint_id}",
+    )
     output_path = root / ".omo" / "tasks" / "blocked" / f"{task_id.lower()}.yaml"
-    write_yaml_atomic(output_path, task)
     return {"task_ref": str(output_path.relative_to(root))}

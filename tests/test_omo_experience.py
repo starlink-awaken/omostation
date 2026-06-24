@@ -78,6 +78,50 @@ def test_build_session_bootstrap_reads_live_phase_and_active_packet(tmp_path: Pa
     assert bootstrap["latest_summary_ref"] == ".omo/_knowledge/summaries/phase7/phase7-planning-ratification.md"
 
 
+def test_build_session_bootstrap_accepts_multi_document_yaml(tmp_path: Path):
+    root = tmp_path
+    (root / ".omo" / "state").mkdir(parents=True, exist_ok=True)
+    (root / ".omo" / "_truth" / "goals").mkdir(parents=True, exist_ok=True)
+    (root / ".omo" / "tasks" / "active").mkdir(parents=True, exist_ok=True)
+    (root / ".omo" / "_knowledge" / "summaries" / "phase8").mkdir(parents=True, exist_ok=True)
+    (root / ".omo" / "state" / "system.yaml").write_text(
+        "---\nstatus: active\nowner: governance\n---\n---\n"
+        "current_phase: 8\n"
+        "phase_status: in_progress\n"
+        "current_wave: 2\n"
+        "divergence_flags:\n"
+        "  - backlog_shift:1\n",
+        encoding="utf-8",
+    )
+    (root / ".omo" / "_truth" / "goals" / "current.yaml").write_text(
+        "---\nstatus: active\nowner: governance\n---\n---\n"
+        "phase: 8\n"
+        "current_wave: 2\n"
+        "goals:\n"
+        "  - id: G8.2\n"
+        "    status: in_progress\n"
+        "    tasks:\n"
+        "      - P8-W2-ROLLOUT\n",
+        encoding="utf-8",
+    )
+    _write_yaml(
+        root / ".omo" / "tasks" / "active" / "wave2.yaml",
+        {
+            "id": "P8-W2-ROLLOUT",
+            "title": "Land Phase 8 Wave 2 rollout",
+            "status": "pending",
+        },
+    )
+    _write_text(root / ".omo" / "_knowledge" / "summaries" / "phase8" / "phase8-closeout.md", "# closeout\n")
+
+    bootstrap = build_session_bootstrap(root)
+
+    assert bootstrap["phase"] == 8
+    assert bootstrap["wave"] == 2
+    assert bootstrap["active_task_ids"] == ["P8-W2-ROLLOUT"]
+    assert bootstrap["divergence_flags"] == ["backlog_shift:1"]
+
+
 def test_bridge_request_to_task_creates_governed_blocked_packet(tmp_path: Path):
     root = tmp_path
     _write_yaml(root / ".omo" / "_truth" / "goals" / "current.yaml", {"phase": 7, "current_wave": 1})

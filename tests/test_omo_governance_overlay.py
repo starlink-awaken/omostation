@@ -138,6 +138,51 @@ def test_build_governance_overlay_status_requires_overlay_inputs(tmp_path: Path)
         build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T06:35:00Z")
 
 
+def test_build_governance_overlay_status_accepts_multi_document_yaml(tmp_path: Path):
+    (tmp_path / ".omo" / "_control" / "governance-overlay").mkdir(parents=True, exist_ok=True)
+    (tmp_path / ".omo" / "_truth" / "governance-overlay").mkdir(parents=True, exist_ok=True)
+    (tmp_path / ".omo" / "tasks" / "planned").mkdir(parents=True, exist_ok=True)
+    (tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml").write_text(
+        "---\nstatus: active\nowner: governance\n---\n---\n"
+        "overlay_id: GOV-OVERLAY-2026-06\n"
+        "status: active\n"
+        "autopilot_mode: full_omo_autopilot\n"
+        "intake_scope: future_planned_debt\n"
+        "current_milestone: GOV-M1\n"
+        "next_milestone: null\n"
+        "success_target: future roadmap governed through overlay lane\n"
+        "updated_at: 2026-06-03T06:30:00Z\n",
+        encoding="utf-8",
+    )
+    (tmp_path / ".omo" / "_truth" / "governance-overlay" / "autopilot-policy.yaml").write_text(
+        "---\nstatus: active\n---\n---\nautopilot_mode: full_omo_autopilot\nauto_select: true\n",
+        encoding="utf-8",
+    )
+    (tmp_path / ".omo" / "_truth" / "governance-overlay" / "roadmap.yaml").write_text(
+        "---\nstatus: active\n---\n---\n"
+        "items:\n"
+        "  - id: GOV-M1\n"
+        "    type: task-bundle\n"
+        "    title: E2E debt closure\n"
+        "    priority: P0\n"
+        "    status: pending\n"
+        "    depends_on: []\n"
+        "    source_refs:\n"
+        "      - .omo/MASTER-BLUEPRINT.md\n"
+        "    target_refs:\n"
+        "      - .omo/tasks/planned/TASK-A.yaml\n"
+        "    success_criteria:\n"
+        "      - TASK-A promoted\n",
+        encoding="utf-8",
+    )
+    (tmp_path / ".omo" / "tasks" / "planned" / "TASK-A.yaml").write_text("id: TASK-A\n", encoding="utf-8")
+
+    result = build_governance_overlay_status(tmp_path, omo_dir=".omo", now="2026-06-03T06:35:00Z")
+
+    assert result["yaml"]["eligible_count"] == 1
+    assert result["yaml"]["autopilot_candidates"][0]["id"] == "GOV-M1"
+
+
 def test_build_governance_overlay_status_reports_active_roadmap_item_and_target_states(tmp_path: Path):
     _write_yaml(
         tmp_path / ".omo" / "_control" / "governance-overlay" / "current.yaml",

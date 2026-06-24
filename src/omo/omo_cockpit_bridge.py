@@ -6,9 +6,8 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-import yaml
-
 from omo.omo_io import AppendOnlyLog, fcntl_lock, write_text_atomic
+from omo.omo_shared import load_yaml
 
 
 def _utc_now() -> str:
@@ -21,7 +20,7 @@ def _utc_now() -> str:
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return load_yaml(path)
 
 
 def _proposal_dir(omo_dir: Path) -> Path:
@@ -114,17 +113,17 @@ async def approve_hitl_proposal_async(
     # 2. Execute & Commit/Rollback
     try:
         proposal = _load_yaml(processing_path)
-        
         import inspect
+
         if inspect.iscoroutinefunction(execute_mutation):
             success = await execute_mutation(proposal)
         else:
             success = execute_mutation(proposal)
-            
+
         if not success:
             processing_path.rename(proposal_path)
             return False, f"No execution logic for type {proposal.get('type')}"
-            
+
         processing_path.unlink()
         return True, None
     except Exception as exc:

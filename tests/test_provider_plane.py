@@ -80,6 +80,34 @@ def test_apply_provider_to_litellm_config_updates_target_model_only(tmp_path: Pa
     assert data["model_list"][1]["litellm_params"]["model"] == "anthropic/gpt-4o"
 
 
+def test_apply_provider_to_litellm_config_accepts_multi_document_yaml(tmp_path: Path) -> None:
+    config_path = tmp_path / "litellm_config.yaml"
+    config_path.write_text(
+        "---\nstatus: active\nowner: runtime\n---\n---\n"
+        "model_list:\n"
+        "  - model_name: gpt-4o\n"
+        "    litellm_params:\n"
+        "      model: openai/gpt-4o\n"
+        "      api_key: os.environ/OPENAI_API_KEY\n"
+        "  - model_name: claude-3-5-sonnet\n"
+        "    litellm_params:\n"
+        "      model: anthropic/claude-3-5-sonnet-20241022\n"
+        "      api_key: os.environ/ANTHROPIC_API_KEY\n",
+        encoding="utf-8",
+    )
+    m1_dir = _seed_m1_dir(tmp_path)
+    with patch.dict(os.environ, {"ANTHROPIC_AUTH_TOKEN": "secret-token"}):
+        provider = select_cc_switch_provider(m1_dir=m1_dir, app_type="claude")
+
+    apply_provider_to_litellm_config(
+        config_path, target_model_name="claude-3-5-sonnet", provider=provider
+    )
+
+    data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    assert data["status"] == "active"
+    assert data["model_list"][1]["litellm_params"]["api_key"] == "secret-token"
+
+
 def test_quota_summary_and_snapshot_redact_sensitive_fields(tmp_path: Path) -> None:
     quota_summary = summarize_codexbar_usage(
         """
