@@ -30,7 +30,7 @@
   3. R3: Mesh 动态反馈与 Omo 稳态落盘闭环 [pending]
   4. Integration: 联合集成与自适应闭环测试验证 [pending]
 - **Current phase**: 1
-- **Current focus**: 进行 M1 里程碑的 2 个 Reviewer、2 个 Challenger、1 个 Forensic Auditor 交叉审计与对抗校验
+- **Current focus**: 进行 M1 里程碑第二轮修复代码的 2 个 Reviewer、2 个 Challenger、1 个 Forensic Auditor 联合验证
 
 ## 🔒 Key Constraints
 - 严格遵循 AGENTS.md 中的规则与约定，尤其是“修改后立即 git commit”以及“禁止 raw state mutation”。
@@ -63,12 +63,17 @@
 | m1_challenger_1 | teamwork_preview_challenger | M1: 对抗性降级测试 | completed | 9a5f3f8a-3c5c-4990-95f1-246a26f6bcea |
 | m1_challenger_2 | teamwork_preview_challenger | M1: 对抗性降级测试 | failed | 8599f437-25b0-4a05-8116-5ddadd7fdadf |
 | m1_auditor_1 | teamwork_preview_auditor | M1: 防作弊与完整性审计 | completed | 24a95640-f7f9-46c1-adec-e7e4b5a1c499 |
-| m1_worker_2 | teamwork_preview_worker | M1: 跨层通信重构代码修复与测试验证 | in-progress | 6b671c45-7e10-408d-9dde-7451f131c718 |
+| m1_worker_2 | teamwork_preview_worker | M1: 跨层通信重构代码修复与测试验证 | completed | 6b671c45-7e10-408d-9dde-7451f131c718 |
+| m1_reviewer_3 | teamwork_preview_reviewer | M1.2: 静态与动态审计 | in-progress | be86649e-62af-424a-a031-1898e2a38a8a |
+| m1_reviewer_4 | teamwork_preview_reviewer | M1.2: 静态与动态审计 | in-progress | 9b24b470-23e3-41d0-bc13-439accbe55d9 |
+| m1_challenger_3 | teamwork_preview_challenger | M1.2: 对抗性降级测试 | in-progress | 6551f4af-b04b-440f-83b2-6e5d7a62890e |
+| m1_challenger_4 | teamwork_preview_challenger | M1.2: 对抗性降级测试 | in-progress | f2e718ff-c65a-4cc5-919c-3c173b1fa09d |
+| m1_auditor_2 | teamwork_preview_auditor | M1.2: 防作弊与完整性审计 | in-progress | 8792b127-6ed1-4678-b934-71f6ffedfb5c |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 12 / 16
-- Pending subagents: 6b671c45-7e10-408d-9dde-7451f131c718
+- Spawn count: 17 / 16
+- Pending subagents: be86649e-62af-424a-a031-1898e2a38a8a, 9b24b470-23e3-41d0-bc13-439accbe55d9, 6551f4af-b04b-440f-83b2-6e5d7a62890e, f2e718ff-c65a-4cc5-919c-3c173b1fa09d, 8792b127-6ed1-4678-b934-71f6ffedfb5c
 - Predecessor: none
 - Successor: not yet spawned
 
