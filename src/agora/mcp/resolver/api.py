@@ -16,7 +16,10 @@ _WS = str(Path.home() / "Workspace")
 
 def normalize_bos_uri(uri: str) -> str:
     """Map legacy BOS URIs onto their canonical compatibility URI."""
-    from agora.legacy_compat import CANONICAL_PERSONA_BRIDGE_URI_PREFIX, LEGACY_PERSONA_BRIDGE_URI_PREFIX
+    from agora.legacy_compat import (
+        CANONICAL_PERSONA_BRIDGE_URI_PREFIX,
+        LEGACY_PERSONA_BRIDGE_URI_PREFIX,
+    )
 
     _LEGACY_BOS_URI_ALIASES = {
         f"{LEGACY_PERSONA_BRIDGE_URI_PREFIX}recall-entity": f"{CANONICAL_PERSONA_BRIDGE_URI_PREFIX}recall-entity",
@@ -29,6 +32,7 @@ def normalize_bos_uri(uri: str) -> str:
 def parse_bos_uri(uri: str) -> dict[str, str]:
     """Parse a BOS URI into its components."""
     import re
+
     pattern = re.compile(
         r"^bos://(?P<domain>memory|governance|omo|analysis|persona|capability|forge|meta|ecos|agora)"
         r"/(?P<package>[a-z][a-z0-9-]+)/(?P<action>[a-z][a-z0-9-]+)$"
@@ -87,6 +91,7 @@ def invoke_stdio(uri: str, *args: Any, **kwargs: Any) -> dict:
 def protocol_self_check() -> dict:
     """自检: 验证所有服务定义."""
     from collections import Counter
+
     domains = Counter(s.domain for s in POC_SERVICES)
     return {
         "status": "ok",
@@ -112,8 +117,9 @@ async def resolve_bos_uri(
             arguments = kwargs.get("arguments", kwargs)
             if isinstance(arguments, str):
                 import json
+
                 arguments = json.loads(arguments)
-                
+
             res = await proxy_manager.dispatch(uri, arguments)
             if res.get("status") == "ok":
                 return res
@@ -133,12 +139,12 @@ async def resolve_bos_uri(
             import importlib
             import inspect
             import sys
-            
+
             if service.package and service.package != "agora":
                 pkg_path = str(Path(_WS) / "projects" / service.package / "src")
                 if pkg_path not in sys.path:
                     sys.path.insert(0, pkg_path)
-                    
+
             mod = importlib.import_module(service.module_path)
             func = getattr(mod, service.func_name)
 

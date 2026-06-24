@@ -3,11 +3,10 @@ import json
 import logging
 import re
 import uuid
-from agora.tools.base import (
-    ToolContext, JSONDict
-)
+from agora.tools.base import ToolContext, JSONDict
 
 _log = logging.getLogger(__name__)
+
 
 def tool_memory_query(params: JSONDict, ctx: ToolContext) -> JSONDict:
     query, limit = params.get("query", ""), min(int(params.get("limit", 10)), 50)
@@ -36,7 +35,6 @@ def tool_memory_query(params: JSONDict, ctx: ToolContext) -> JSONDict:
         }
 
 
-
 def tool_execution_submit_task(params: JSONDict, ctx: ToolContext) -> JSONDict:
     try:
         _m = __import__(
@@ -59,7 +57,6 @@ def tool_execution_submit_task(params: JSONDict, ctx: ToolContext) -> JSONDict:
             "priority": params.get("priority", 2),
             "note": str(exc),
         }
-
 
 
 def tool_governance_submit_request(params: JSONDict, ctx: ToolContext) -> JSONDict:
@@ -146,7 +143,6 @@ def tool_governance_submit_request(params: JSONDict, ctx: ToolContext) -> JSONDi
         }
 
 
-
 def tool_evolution_status(params: JSONDict, ctx: ToolContext) -> JSONDict:
     try:
         EvolutionScheduler = __import__(  # noqa: N806
@@ -168,7 +164,6 @@ def tool_evolution_status(params: JSONDict, ctx: ToolContext) -> JSONDict:
         }
 
 
-
 def tool_swarm_dispatch(params: JSONDict, ctx: ToolContext) -> JSONDict:
     try:
         orchestrator_module = __import__(
@@ -186,6 +181,3 @@ def tool_swarm_dispatch(params: JSONDict, ctx: ToolContext) -> JSONDict:
             "worker_count": 0,
             "note": str(exc),
         }
-
-
-

@@ -7,6 +7,7 @@
   4. list_all 前缀过滤
   5. count / stats 统计
 """
+
 from __future__ import annotations
 
 
@@ -80,10 +81,20 @@ class TestBOSRouterResolve:
 
     def setup_method(self):
         self.router = BOSRouter()
-        self.router.register("bos://memory/", adapter="poc", config={"domain": "memory"})
-        self.router.register("bos://memory/kos/", adapter="poc", config={"domain": "memory", "package": "kos"})
-        self.router.register("bos://memory/kos/search", adapter="poc", config={"action": "search"})
-        self.router.register("bos://analysis/", adapter="poc", config={"domain": "analysis"})
+        self.router.register(
+            "bos://memory/", adapter="poc", config={"domain": "memory"}
+        )
+        self.router.register(
+            "bos://memory/kos/",
+            adapter="poc",
+            config={"domain": "memory", "package": "kos"},
+        )
+        self.router.register(
+            "bos://memory/kos/search", adapter="poc", config={"action": "search"}
+        )
+        self.router.register(
+            "bos://analysis/", adapter="poc", config={"domain": "analysis"}
+        )
 
     def test_exact_match(self):
         """完整 URI 最长前缀匹配 — 无尾部斜杠也匹配。"""
@@ -179,10 +190,12 @@ class TestBOSRouterSingleton:
 
     def test_singleton_is_default_instance(self):
         from agora.mcp.bos_router import bos_router
+
         assert isinstance(bos_router, BOSRouter)
 
     def test_singleton_registers_and_resolves(self):
         from agora.mcp.bos_router import bos_router
+
         bos_router.register("bos://test/route", adapter="poc")
         route = bos_router.resolve("bos://test/route/go")
         assert route is not None

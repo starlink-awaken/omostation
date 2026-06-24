@@ -21,7 +21,6 @@ from agora.core.service_cache import (
 )
 
 
-
 # ── Fixtures ────────────────────────────────────────────────────────────────
 
 
@@ -140,7 +139,9 @@ class TestServiceCache:
         clear_service_cache()
         assert is_cache_stale() is True
 
-        save_service_cache([{"name": "test", "mcp_endpoint": "http://localhost:9999/mcp"}])
+        save_service_cache(
+            [{"name": "test", "mcp_endpoint": "http://localhost:9999/mcp"}]
+        )
         assert is_cache_stale() is False
 
     def test_clear(self):
@@ -164,7 +165,9 @@ class TestRouterCacheFallback:
         """When registry is empty, Router falls back to cache."""
         router = Router(registry=mock_registry, event_bus=None)
         router.add_route("research_now", "minerva")
-        result = _async_route(router, "research_now", {"query": "test"}, caller_id="test")
+        result = _async_route(
+            router, "research_now", {"query": "test"}, caller_id="test"
+        )
         # Without cache we'd get "Service temporarily unavailable"
         # With cache we try to dispatch — but since there's no real server,
         # we get an error from the dispatch. The important thing is it
@@ -180,7 +183,9 @@ class TestRouterCacheFallback:
         # Register a route so resolve() can find the service name
         router.add_route("research_now", "minerva")
         # But mock_registry.get() returns None (simulating Agora being down)
-        result = _async_route(router, "research_now", {"query": "test"}, caller_id="test", use_cache=False)
+        result = _async_route(
+            router, "research_now", {"query": "test"}, caller_id="test", use_cache=False
+        )
         assert result["status"] == "error"
         assert "unavailable" in result.get("error", "")
 
@@ -237,7 +242,9 @@ class TestRouterCacheFallback:
 
         router = Router(registry=mock_registry, event_bus=None)
         router.add_route("research_now", "minerva")
-        result = _async_route(router, "research_now", {"query": "test"}, caller_id="test")
+        result = _async_route(
+            router, "research_now", {"query": "test"}, caller_id="test"
+        )
         assert result is not None
         assert result.get("error") != "Service temporarily unavailable"
 
@@ -254,7 +261,9 @@ class TestDegradeIntegration:
         router.add_route("research_now", "minerva")
 
         # Route a call — should fall back to cache and attempt dispatch
-        result = _async_route(router, "research_now", {"query": "test"}, caller_id="degrade-test")
+        result = _async_route(
+            router, "research_now", {"query": "test"}, caller_id="degrade-test"
+        )
         assert result is not None
         # The dispatch may fail (no real server), but it should NOT
         # immediately return "Service temporarily unavailable"

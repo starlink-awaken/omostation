@@ -36,6 +36,7 @@ def _set_constants(proxy_config_path: Path, forge_registry_path: Path) -> None:
 def _get_proxy_manager() -> ProxyManager | None:
     """Lazy-import ProxyManager singleton from dependencies.py."""
     from agora.server.dependencies import get_proxy_manager  # type: ignore[import-not-found]
+
     return get_proxy_manager()
 
 
@@ -132,8 +133,6 @@ def _save_proxy_service(svc: dict) -> None:
     json_save(_PROXY_CONFIG_PATH, existing)
 
 
-
-
 class ProxyForwardTool(Tool):
     """FastMCP Tool that forwards calls directly to the proxy dispatch.
 
@@ -160,7 +159,9 @@ class ProxyForwardTool(Tool):
                 {"status": "error", "error": f"Proxy call failed: {str(e)[:200]}"}
             )
 
+
 _registered_proxy_tools: set[str] = set()
+
 
 def _register_proxy_tools(mcp_server: FastMCP, pm: ProxyManager):
     ProxyForwardTool._pm = pm
@@ -181,6 +182,7 @@ def _register_proxy_tools(mcp_server: FastMCP, pm: ProxyManager):
         )
         _registered_proxy_tools.add(entry.tool_name)
 
+
 def _unregister_proxy_tools(mcp_server: FastMCP, pm: ProxyManager):
     for entry in pm.registry.entries.values():
         if entry.tool_name in _registered_proxy_tools:
@@ -189,6 +191,7 @@ def _unregister_proxy_tools(mcp_server: FastMCP, pm: ProxyManager):
             except Exception:
                 pass
             _registered_proxy_tools.discard(entry.tool_name)
+
 
 async def proxy_sync_loop(registry_ref):
     """Background task: periodically sync ServiceRegistry -> ProxyRegistry.
@@ -203,13 +206,12 @@ async def proxy_sync_loop(registry_ref):
             continue
         try:
             proxy_configs = _load_proxy_services()
-            await pm.registry.register_from_registry(
-                registry_ref, proxy_configs
-            )
+            await pm.registry.register_from_registry(registry_ref, proxy_configs)
             backoff = 10  # reset on success
         except Exception:
             logger.exception("proxy_sync_loop_error")
             backoff = min(backoff * 2, 120)
+
 
 # ═══════════════════════════════════════════════════════════════
 # Module-level Tool Functions
@@ -316,6 +318,7 @@ def register_proxy_tools(mcp: FastMCP) -> None:
         if pm is None:
             from agora.server.dependencies import set_proxy_manager
             from agora.mcp_proxy.manager import ProxyManager
+
             pm = ProxyManager()
             set_proxy_manager(pm)
 
@@ -406,6 +409,7 @@ def register_proxy_tools(mcp: FastMCP) -> None:
         if pm is None:
             from agora.server.dependencies import set_proxy_manager
             from agora.mcp_proxy.manager import ProxyManager
+
             pm = ProxyManager()
             set_proxy_manager(pm)
 
@@ -438,18 +442,22 @@ def register_proxy_tools(mcp: FastMCP) -> None:
         from agora.auth.mcp_gateway import _health_checker
 
         if _health_checker is None:
-            return _ok({
-                "format_version": FORMAT_VERSION,
-                "health_checker": "not_started",
-                "backends": {},
-            })
+            return _ok(
+                {
+                    "format_version": FORMAT_VERSION,
+                    "health_checker": "not_started",
+                    "backends": {},
+                }
+            )
 
         status = _health_checker.get_all_status()
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "health_checker": "running",
-            "backends": status,
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "health_checker": "running",
+                "backends": status,
+            }
+        )
 
     # ── bos_reload_routes ─────────────────────────────────────────
 
@@ -464,8 +472,11 @@ def register_proxy_tools(mcp: FastMCP) -> None:
             Summary of loaded routes including total count and domain breakdown.
         """
         from collections import Counter
-        from agora.mcp.resolver.bos_registry import load_from_yaml, DEFAULT_REGISTRY_PATH
-        from agora.mcp.resolver.services import POC_SERVICES, _FALLBACK_SERVICES
+        from agora.mcp.resolver.bos_registry import (
+            load_from_yaml,
+            DEFAULT_REGISTRY_PATH,
+        )
+        from agora.mcp.resolver.services import POC_SERVICES
 
         path = yaml_path or str(DEFAULT_REGISTRY_PATH)
         try:
@@ -483,15 +494,20 @@ def register_proxy_tools(mcp: FastMCP) -> None:
         domains = Counter(s.domain for s in POC_SERVICES)
         transports = Counter(s.transport for s in POC_SERVICES)
 
-        logger.info("bos_routes_reloaded",
-            path=path, total=len(POC_SERVICES),
-            domains=dict(domains), transports=dict(transports),
+        logger.info(
+            "bos_routes_reloaded",
+            path=path,
+            total=len(POC_SERVICES),
+            domains=dict(domains),
+            transports=dict(transports),
         )
 
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "path": path,
-            "total_routes": len(POC_SERVICES),
-            "domains": dict(domains),
-            "by_transport": dict(transports),
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "path": path,
+                "total_routes": len(POC_SERVICES),
+                "domains": dict(domains),
+                "by_transport": dict(transports),
+            }
+        )

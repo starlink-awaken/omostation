@@ -7,6 +7,7 @@
   4. kebab-case 工具名校验
   5. 边界: 不存在的工具 / 重复加载 / 缺字段
 """
+
 from __future__ import annotations
 
 import sys
@@ -43,9 +44,7 @@ def clean_market(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         tmp_path (含 patched market.json)
     """
     fake = tmp_path / "market.json"
-    monkeypatch.setattr(
-        "agora.mcp.forge_loader.MARKET_REGISTRY", fake
-    )
+    monkeypatch.setattr("agora.mcp.forge_loader.MARKET_REGISTRY", fake)
     # forge.market.install_local_tool 内部用全局 MARKET_REGISTRY
     import forge.market as _fm
 
@@ -214,12 +213,14 @@ class TestForgeLoader:
     ):
         """BOS URI 已被静态注册 (P33-W4) → 跳过."""
         # 注入: 已存在的 POC service URI
-        market = [{
-            "name": "kairon-kos-search",
-            "bos_uri": "bos://memory/kos/search",  # 静态注册过
-            "install_path": "/tmp/fake",
-            "source": "local:/tmp/fake",
-        }]
+        market = [
+            {
+                "name": "kairon-kos-search",
+                "bos_uri": "bos://memory/kos/search",  # 静态注册过
+                "install_path": "/tmp/fake",
+                "source": "local:/tmp/fake",
+            }
+        ]
         r = fresh_loader.load_tool(market[0])
         assert "skipped" in r
         assert "bos_uri_already_registered" in r["reason"]
@@ -344,4 +345,6 @@ class TestW4Integration:
             "bos://persona/health-profile/summary",
             "bos://capability/forge/register-tool",
         ):
-            assert any(s.uri == uri for s in POC_SERVICES), f"P33-W4 static URI disappeared: {uri}"
+            assert any(s.uri == uri for s in POC_SERVICES), (
+                f"P33-W4 static URI disappeared: {uri}"
+            )

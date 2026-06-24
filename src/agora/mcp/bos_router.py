@@ -181,6 +181,7 @@ class BOSRouter:
             if node_id:
                 try:
                     from agora.mcp.swarm import get_swarm
+
                     orch = get_swarm()
                     if orch and node_id in orch._nodes:
                         node = orch._nodes[node_id]

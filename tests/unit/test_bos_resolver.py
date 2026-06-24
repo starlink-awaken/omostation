@@ -7,6 +7,7 @@
   4. ProcessPool 生命周期 (懒加载 + shutdown)
   5. 注册表完整性 (11 POC 覆盖 5 Domain)
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -38,13 +39,29 @@ class TestParseBosUri:
             "bos://memory/kronos/ingest": ("memory", "kronos", "ingest"),
             "bos://governance/omo/audit": ("governance", "omo", "audit"),
             "bos://governance/metaos/gate": ("governance", "metaos", "gate"),
-            "bos://governance/sot-bridge/register": ("governance", "sot-bridge", "register"),
-            "bos://governance/protocols-layer/trigger": ("governance", "protocols-layer", "trigger"),
+            "bos://governance/sot-bridge/register": (
+                "governance",
+                "sot-bridge",
+                "register",
+            ),
+            "bos://governance/protocols-layer/trigger": (
+                "governance",
+                "protocols-layer",
+                "trigger",
+            ),
             "bos://analysis/minerva/research": ("analysis", "minerva", "research"),
             "bos://analysis/ontoderive/derive": ("analysis", "ontoderive", "derive"),
             "bos://analysis/codeanalyze/scan": ("analysis", "codeanalyze", "scan"),
-            "bos://persona/health-profile/summary": ("persona", "health-profile", "summary"),
-            "bos://capability/forge/register-tool": ("capability", "forge", "register-tool"),
+            "bos://persona/health-profile/summary": (
+                "persona",
+                "health-profile",
+                "summary",
+            ),
+            "bos://capability/forge/register-tool": (
+                "capability",
+                "forge",
+                "register-tool",
+            ),
         }
         for uri, (domain, package, action) in expected.items():
             parsed = parse_bos_uri(uri)
@@ -274,7 +291,17 @@ class TestKaironMainEntries:
         import subprocess
 
         result = subprocess.run(
-            ["uv", "run", "--directory", str(KAIRON_ROOT), "python", "-m", "kos", "serve", "--help"],
+            [
+                "uv",
+                "run",
+                "--directory",
+                str(KAIRON_ROOT),
+                "python",
+                "-m",
+                "kos",
+                "serve",
+                "--help",
+            ],
             capture_output=True,
             text=True,
             timeout=60,
@@ -291,8 +318,15 @@ class TestKaironMainEntries:
 
         result = subprocess.run(
             [
-                "uv", "run", "--directory", str(KAIRON_ROOT),
-                "python", "-m", "health_profile", "serve", "--help",
+                "uv",
+                "run",
+                "--directory",
+                str(KAIRON_ROOT),
+                "python",
+                "-m",
+                "health_profile",
+                "serve",
+                "--help",
             ],
             capture_output=True,
             text=True,
@@ -310,8 +344,15 @@ class TestKaironMainEntries:
 
         result = subprocess.run(
             [
-                "uv", "run", "--directory", str(KAIRON_ROOT),
-                "python", "-m", "minerva", "serve", "--help",
+                "uv",
+                "run",
+                "--directory",
+                str(KAIRON_ROOT),
+                "python",
+                "-m",
+                "minerva",
+                "serve",
+                "--help",
             ],
             capture_output=True,
             text=True,
@@ -364,7 +405,9 @@ class TestP34W1StdioProtocol:
     )
     def test_invoke_stdio_minerva(self):
         """W1 验证: minerva mcp_stdio 协议 (analysis domain)."""
-        r = invoke_stdio("bos://analysis/minerva/research", "research", {"topic": "test"})
+        r = invoke_stdio(
+            "bos://analysis/minerva/research", "research", {"topic": "test"}
+        )
         assert r.get("uri") == "bos://analysis/minerva/research"
         # 三种可能: 成功 / 错误 / 超时
         assert r.get("status") in ("ok", "error")
@@ -449,7 +492,9 @@ class TestP35W1Respawn:
         # 第二次调用自动 respawn
         r2 = invoke_stdio(uri, "search", {})
         pid2 = r2.get("pid", 0)
-        assert pid2 > 0 and pid2 != pid1, f"respawn 后 PID 应不同: pid1={pid1}, pid2={pid2}, r2={r2}"
+        assert pid2 > 0 and pid2 != pid1, (
+            f"respawn 后 PID 应不同: pid1={pid1}, pid2={pid2}, r2={r2}"
+        )
 
     @pytest.mark.xfail(reason="需要 kairon 子进程, 仅 CI 完整环境可用")
     def test_respawn_dead_batch_w1(self):
@@ -468,7 +513,9 @@ class TestP35W1Respawn:
                 proc.wait()
         # 批量 respawn
         respawned = _pool.respawn_dead()
-        assert len(respawned) == 2, f"应 respawn 2 个, 实际 {len(respawned)}: {respawned}"
+        assert len(respawned) == 2, (
+            f"应 respawn 2 个, 实际 {len(respawned)}: {respawned}"
+        )
         for uri in uris:
             assert uri in respawned
             assert _pool.is_alive(uri), f"{uri} respawn 后仍 dead"

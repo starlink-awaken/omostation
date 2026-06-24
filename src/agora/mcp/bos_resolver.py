@@ -22,7 +22,12 @@ from agora.mcp.resolver.api import (
     resolve_bos_uri,  # noqa: F401 — re-exported in __all__
 )
 from agora.mcp.resolver.pool import ProcessPool, get_pool as _get_pool  # noqa: F401
-from agora.mcp.resolver.services import BosService, POC_SERVICES, _with_uv_package, BOS_URI_PATTERN  # noqa: F401
+from agora.mcp.resolver.services import (
+    BosService,
+    POC_SERVICES,
+    _with_uv_package,
+    BOS_URI_PATTERN,
+)  # noqa: F401
 
 _pool = _get_pool()
 
@@ -76,7 +81,11 @@ async def _memory_all_search(
     if not query:
         return {"status": "error", "error": "missing_query"}
 
-    _log.info("[MemorySpine] Aggregating search for: %s (Swarm: %s)", query, bool(proxy_manager))
+    _log.info(
+        "[MemorySpine] Aggregating search for: %s (Swarm: %s)",
+        query,
+        bool(proxy_manager),
+    )
 
     # 待检索的子目标
     targets = [
@@ -91,11 +100,12 @@ async def _memory_all_search(
         try:
             # 传递 proxy_manager 以支持跨节点路由，增加 5s 超时控制
             import asyncio
+
             res = await asyncio.wait_for(
                 resolve_bos_uri(
                     uri, {"query": query, "limit": limit}, proxy_manager=proxy_manager
                 ),
-                timeout=5.0
+                timeout=5.0,
             )
             return {"uri": uri, "data": res}
         except Exception as e:
@@ -119,9 +129,7 @@ async def _memory_all_search(
         if uri == "bos://memory/kos/search":
             hits = raw_res if isinstance(raw_res, list) else []
         elif uri == "bos://memory/gbrain/search":
-            hits = (
-                raw_res.get("results", []) if isinstance(raw_res, dict) else raw_res
-            )
+            hits = raw_res.get("results", []) if isinstance(raw_res, dict) else raw_res
         else:
             hits = raw_res if isinstance(raw_res, list) else []
 
@@ -134,9 +142,10 @@ async def _memory_all_search(
     aggregated.sort(key=lambda x: x.get("score", 0), reverse=True)
     top_results = aggregated[:limit]
 
-    # Phase 9: Quality Audit/Partitioning 
+    # Phase 9: Quality Audit/Partitioning
     # 引入对质量审计路由的并发调用，基于置信度阈值过滤聚合结果。
     if top_results:
+
         async def _audit(res: dict) -> dict | None:
             try:
                 # 调用轻量级评价模型或启发式审计器
@@ -144,22 +153,26 @@ async def _memory_all_search(
                     resolve_bos_uri(
                         "bos://governance/quality/audit",
                         {"text": res.get("snippet", str(res)[:500]), "query": query},
-                        proxy_manager=proxy_manager
+                        proxy_manager=proxy_manager,
                     ),
-                    timeout=2.0
+                    timeout=2.0,
                 )
-                
+
                 # 提取评分 (支持从 ok 包装中提取)
                 confidence = 1.0
                 if isinstance(audit_res, dict):
                     inner = audit_res.get("result", audit_res)
                     confidence = inner.get("confidence", 1.0)
-                
+
                 # 过滤极低置信度的结果 (如 0.3)
                 if confidence < 0.3:
-                    _log.debug("[MemorySpine] Filtering low confidence hit (%s): %s", confidence, res.get("snippet", "")[:30])
+                    _log.debug(
+                        "[MemorySpine] Filtering low confidence hit (%s): %s",
+                        confidence,
+                        res.get("snippet", "")[:30],
+                    )
                     return None
-                    
+
                 res["_audit_score"] = confidence
                 return res
             except Exception as e:
@@ -169,11 +182,12 @@ async def _memory_all_search(
         # 并行并发审计
         audited_results = await asyncio.gather(*[_audit(r) for r in top_results])
         valid_results = [r for r in audited_results if r is not None]
-        
+
         # ── Phase 15: Knowledge Deduplication ──
         seen_hashes = set()
         deduped = []
         import hashlib
+
         for res in valid_results:
             snippet = res.get("snippet", str(res))
             # 针对 snippet 或 content 计算简易哈希
@@ -182,8 +196,11 @@ async def _memory_all_search(
                 seen_hashes.add(content_hash)
                 deduped.append(res)
             else:
-                _log.debug("[MemorySpine] Deduplicated hit from %s", res.get("_source", "unknown"))
-        
+                _log.debug(
+                    "[MemorySpine] Deduplicated hit from %s",
+                    res.get("_source", "unknown"),
+                )
+
         top_results = deduped
         # 根据审计分数再次微调排序
         top_results.sort(key=lambda x: x.get("_audit_score", 0), reverse=True)
@@ -213,18 +230,19 @@ async def _memory_vault_search(args: dict | None = None) -> list[dict]:
         return []
 
     import subprocess
+
     try:
         # 使用 ripgrep (rg) 进行高性能搜索
         # -i: 忽略大小写, -l: 只列出文件名, --max-count: 限制每个文件的匹配数
         cmd = ["rg", "-i", "-l", "--max-count", "1", query, str(cards_dir)]
         proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
-        
+
         filenames = proc.stdout.strip().split("\n")
         count = 0
         for fname in filenames:
             if not fname or count >= limit:
                 break
-            
+
             f = Path(fname)
             try:
                 content = f.read_text(encoding="utf-8")
@@ -234,14 +252,16 @@ async def _memory_vault_search(args: dict | None = None) -> list[dict]:
                     if query.lower() in line.lower():
                         snippet = line.strip()[:200] + "..."
                         break
-                
-                results.append({
-                    "id": f.stem,
-                    "title": f.name,
-                    "path": str(f.relative_to(_WS)),
-                    "score": 0.9 if query.lower() in f.name.lower() else 0.7,
-                    "snippet": snippet or (content[:200] + "...")
-                })
+
+                results.append(
+                    {
+                        "id": f.stem,
+                        "title": f.name,
+                        "path": str(f.relative_to(_WS)),
+                        "score": 0.9 if query.lower() in f.name.lower() else 0.7,
+                        "snippet": snippet or (content[:200] + "..."),
+                    }
+                )
                 count += 1
             except Exception:
                 continue

@@ -109,11 +109,15 @@ class TestGitHubSearch:
         results = await search_github(query="mcp-server", min_stars=100, max_results=5)
         for item in results:
             assert item.get("name"), f"Result missing 'name': {item}"
-            assert isinstance(item.get("description"), str), f"Result '{item.get('name')}' missing description"
+            assert isinstance(item.get("description"), str), (
+                f"Result '{item.get('name')}' missing description"
+            )
             assert item.get("repo_url", "").startswith("https://github.com/"), (
                 f"Result '{item.get('name')}' has invalid repo_url"
             )
-            assert isinstance(item.get("stars"), int), f"Result '{item.get('name')}' missing stars"
+            assert isinstance(item.get("stars"), int), (
+                f"Result '{item.get('name')}' missing stars"
+            )
             assert item.get("source") == "github", (
                 f"Result '{item.get('name')}' has source={item.get('source')!r}, expected 'github'"
             )
@@ -125,7 +129,9 @@ class TestGitHubSearch:
         """All returned results should have stars >= 100."""
         results = await search_github(query="mcp-server", min_stars=100, max_results=5)
         for item in results:
-            assert item["stars"] >= 100, f"Result '{item.get('name')}' has {item['stars']} stars, expected >= 100"
+            assert item["stars"] >= 100, (
+                f"Result '{item.get('name')}' has {item['stars']} stars, expected >= 100"
+            )
 
     @pytest.mark.skipif(not _has_network(), reason="No network access to github.com")
     @pytest.mark.network
@@ -142,7 +148,9 @@ class TestGitHubSearch:
         """Each result should have a non-empty tool_type."""
         results = await search_github(query="mcp-server", min_stars=100, max_results=5)
         for item in results:
-            assert item.get("tool_type"), f"Result '{item.get('name')}' has empty tool_type"
+            assert item.get("tool_type"), (
+                f"Result '{item.get('name')}' has empty tool_type"
+            )
             assert item["tool_type"] in ("python", "node", "unknown")
 
 
@@ -159,8 +167,10 @@ class TestDiscoverSavePipeline:
         """Save discovered tools into ToolCatalog and verify they have 'discovered' status."""
         results = []
         if _has_network():
-            results = await search_github(query="mcp-server", min_stars=100, max_results=5)
-        
+            results = await search_github(
+                query="mcp-server", min_stars=100, max_results=5
+            )
+
         if not results:
             raw = _fake_github_response(5)
 
@@ -172,7 +182,12 @@ class TestDiscoverSavePipeline:
                 topics = item.get("topics", []) or []
                 if language.lower() == "python" or "python" in topics:
                     tool_type = "python"
-                elif language.lower() in ("javascript", "typescript", "js", "ts") or any(
+                elif language.lower() in (
+                    "javascript",
+                    "typescript",
+                    "js",
+                    "ts",
+                ) or any(
                     t in topics for t in ("javascript", "typescript", "node", "nodejs")
                 ):
                     tool_type = "node"
@@ -193,7 +208,9 @@ class TestDiscoverSavePipeline:
                             "language": language,
                             "updated_at": item.get("updated_at", ""),
                             "open_issues": item.get("open_issues_count", 0),
-                            "license": item.get("license", {}).get("spdx_id", "") if item.get("license") else "",
+                            "license": item.get("license", {}).get("spdx_id", "")
+                            if item.get("license")
+                            else "",
                         },
                     }
                 )
@@ -207,7 +224,9 @@ class TestDiscoverSavePipeline:
 
         # Verify all tools are in catalog with 'discovered' status
         all_tools = catalog.list_tools()
-        assert len(all_tools) == len(results), f"Catalog has {len(all_tools)} tools, expected {len(results)}"
+        assert len(all_tools) == len(results), (
+            f"Catalog has {len(all_tools)} tools, expected {len(results)}"
+        )
         for tool in all_tools:
             assert tool["status"] == "discovered", (
                 f"Tool '{tool['name']}' has status '{tool['status']}', expected 'discovered'"
@@ -218,15 +237,21 @@ class TestDiscoverSavePipeline:
         """Quality scores should be computed for each discovered tool."""
         results = []
         if _has_network():
-            results = await search_github(query="mcp-server", min_stars=100, max_results=5)
-        
+            results = await search_github(
+                query="mcp-server", min_stars=100, max_results=5
+            )
+
         if not results:
             raw = _fake_github_response(5)
             results = []
             for item in raw["items"]:
                 language = item.get("language", "") or ""
                 topics = item.get("topics", []) or []
-                tool_type = "python" if (language.lower() == "python" or "python" in topics) else "unknown"
+                tool_type = (
+                    "python"
+                    if (language.lower() == "python" or "python" in topics)
+                    else "unknown"
+                )
                 results.append(
                     {
                         "name": item.get("full_name", ""),
@@ -250,7 +275,9 @@ class TestDiscoverSavePipeline:
 
         cat_tools = catalog.list_tools()
         for tool in cat_tools:
-            assert isinstance(tool.get("quality_score"), (int, float)), f"Tool '{tool['name']}' missing quality_score"
+            assert isinstance(tool.get("quality_score"), (int, float)), (
+                f"Tool '{tool['name']}' missing quality_score"
+            )
             assert 0.0 <= tool["quality_score"] <= 1.0, (
                 f"Tool '{tool['name']}' quality_score={tool['quality_score']} out of range [0,1]"
             )
@@ -297,7 +324,9 @@ class TestLifecycleInstall:
     """Install pipeline: discovered → installed via Market.install()."""
 
     @pytest.mark.asyncio
-    async def test_install_transition_discovered_to_installed(self, catalog, sample_tool):
+    async def test_install_transition_discovered_to_installed(
+        self, catalog, sample_tool
+    ):
         """After install, catalog status should change from 'discovered' to 'installed'."""
         # Add tool as discovered
         sample_tool["quality_score"] = QualityScorer.evaluate(sample_tool)
@@ -316,7 +345,10 @@ class TestLifecycleInstall:
             "tags": ["mcp", "python", "server"],
         }
 
-        with patch("agora.plugins.market.market.Market.install", return_value=fake_install_result) as mock_install:
+        with patch(
+            "agora.plugins.market.market.Market.install",
+            return_value=fake_install_result,
+        ) as mock_install:
             # Simulate the install pipeline
             result = mock_install("test-org/mcp-server-0")
 
@@ -332,7 +364,9 @@ class TestLifecycleInstall:
 
         # Verify status transition
         tool = catalog.get_tool(sample_tool["name"])
-        assert tool["status"] == "installed", f"Expected status 'installed', got '{tool['status']}'"
+        assert tool["status"] == "installed", (
+            f"Expected status 'installed', got '{tool['status']}'"
+        )
         assert tool["install_path"] == "/home/user/.agora/market/test-org__mcp-server-0"
 
     @pytest.mark.asyncio
@@ -373,7 +407,10 @@ class TestLifecycleInstall:
             "tags": [],
         }
 
-        with patch("agora.plugins.market.market.Market.install", return_value=fake_install_result) as mock_install:
+        with patch(
+            "agora.plugins.market.market.Market.install",
+            return_value=fake_install_result,
+        ) as mock_install:
             result = mock_install("test-org/mcp-server-0")
 
         # Update catalog with install results
@@ -461,7 +498,9 @@ class TestLifecycleLoad:
         await mgr.close()
 
     @pytest.mark.asyncio
-    async def test_load_without_proxy_updates_status_directly(self, catalog, sample_tool):
+    async def test_load_without_proxy_updates_status_directly(
+        self, catalog, sample_tool
+    ):
         """Without a proxy, load_tool should just update status to 'loaded'."""
         sample_tool["quality_score"] = QualityScorer.evaluate(sample_tool)
         catalog.add_tool(sample_tool)
@@ -491,7 +530,9 @@ class TestLifecycleLoad:
             "port": 0,
             "tags": [],
         }
-        with patch("agora.plugins.market.market.Market.install", return_value=fake_install):
+        with patch(
+            "agora.plugins.market.market.Market.install", return_value=fake_install
+        ):
             from agora.plugins.market.market import Market
 
             result = Market().install("test-org/mcp-server-0")
@@ -546,7 +587,9 @@ class TestNegativeCases:
         with patch("httpx.AsyncClient.get") as mock_get:
             mock_get.side_effect = httpx.HTTPError("Connection refused")
             results = await search_github(query="mcp-server", max_results=5)
-            assert results == [], f"Expected [] on HTTP error, got {len(results)} results"
+            assert results == [], (
+                f"Expected [] on HTTP error, got {len(results)} results"
+            )
 
     @pytest.mark.asyncio
     async def test_search_github_timeout(self):
@@ -571,7 +614,9 @@ class TestNegativeCases:
         """Installing a tool not in the catalog should still be possible (Market handles it)."""
         with patch("agora.plugins.market.market.Market._run_cmd") as mock_run:
             mock_run.return_value = None
-            with patch("agora.plugins.market.market.Market._fetch_repo_metadata") as mock_fetch:
+            with patch(
+                "agora.plugins.market.market.Market._fetch_repo_metadata"
+            ) as mock_fetch:
                 mock_fetch.return_value = {
                     "name": "custom-tool",
                     "description": "Custom tool",

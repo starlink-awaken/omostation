@@ -56,11 +56,13 @@ async def test_a2a_rejects_replayed_signature():
     fake_swarm = MagicMock()
     fake_swarm._nodes = {"node-a": fake_node}
 
-    with patch("agora.mcp.swarm.get_swarm", return_value=fake_swarm), patch(
-        "agora.auth.node_identity.NodeIdentity.verify", return_value=True
-    ), patch(
-        "agora.a2a.transport.A2ATransport.send_message",
-        return_value={"status": "delivered", "msg_id": "m1", "target": "agent-1"},
+    with (
+        patch("agora.mcp.swarm.get_swarm", return_value=fake_swarm),
+        patch("agora.auth.node_identity.NodeIdentity.verify", return_value=True),
+        patch(
+            "agora.a2a.transport.A2ATransport.send_message",
+            return_value={"status": "delivered", "msg_id": "m1", "target": "agent-1"},
+        ),
     ):
         # Manually seed the module-level cache to exercise replay detection
         a2a_mod._SEEN_SIGNATURES.add("sig-replay")

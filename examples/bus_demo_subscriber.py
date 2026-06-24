@@ -1,4 +1,5 @@
 """Bus demo subscriber — registers a callback via agora.bus facade."""
+
 from __future__ import annotations
 
 import time

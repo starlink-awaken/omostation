@@ -204,7 +204,9 @@ class TestParserStructure:
         assert parsed.tenant_cmd == "list"
 
     def test_event_publish(self):
-        parsed = self.parser.parse_args(["event", "publish", "test:event", "--payload", '{"k":"v"}'])
+        parsed = self.parser.parse_args(
+            ["event", "publish", "test:event", "--payload", '{"k":"v"}']
+        )
         assert parsed.type == "test:event"
 
     def test_event_log(self):

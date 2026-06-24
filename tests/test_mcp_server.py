@@ -93,7 +93,9 @@ class TestListServices:
         assert isinstance(result["data"], list)
 
     def test_list_includes_registered(self):
-        asyncio.run(register_service(name="list-test", mcp_endpoint="http://192.0.2.60:8765"))
+        asyncio.run(
+            register_service(name="list-test", mcp_endpoint="http://192.0.2.60:8765")
+        )
         result = list_services()
         names = [s["name"] for s in result["data"]]
         assert "list-test" in names
@@ -150,7 +152,9 @@ class TestRouteCall:
 
         captured = {}
 
-        async def _fake_route(tool_name, arguments, caller_id="unknown", use_cache=True):
+        async def _fake_route(
+            tool_name, arguments, caller_id="unknown", use_cache=True
+        ):
             captured["tool_name"] = tool_name
             captured["arguments"] = arguments
             captured["caller_id"] = caller_id
@@ -184,7 +188,9 @@ class TestRouteCall:
 
         captured = {}
 
-        async def _fake_route(tool_name, arguments, caller_id="unknown", use_cache=True):
+        async def _fake_route(
+            tool_name, arguments, caller_id="unknown", use_cache=True
+        ):
             captured["tool_name"] = tool_name
             captured["arguments"] = arguments
             captured["caller_id"] = caller_id

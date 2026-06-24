@@ -15,8 +15,13 @@ class TestAgoraIntegration:
         # Prevent L0 global routes from leaking into unit test assertions
         self._l0_patch = patch("agora.l0_registry_loader.load_routes", return_value={})
         self._l0_patch.start()
-        self.registry = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json"))
-        self.router = Router(self.registry, routes_path=str(Path(tempfile.mkdtemp()) / "test-routes.json"))
+        self.registry = ServiceRegistry(
+            storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json")
+        )
+        self.router = Router(
+            self.registry,
+            routes_path=str(Path(tempfile.mkdtemp()) / "test-routes.json"),
+        )
 
     def teardown_method(self):
         self._l0_patch.stop()
@@ -84,7 +89,9 @@ class TestAgoraIntegration:
         assert self.registry.get("flaky").is_available
 
     def test_service_to_dict_serialization(self):
-        self.registry.register(Service("minerva", mcp_endpoint="http://192.0.2.1:8765", port=8765))
+        self.registry.register(
+            Service("minerva", mcp_endpoint="http://192.0.2.1:8765", port=8765)
+        )
         self.registry.register(Service("sophia", port=9001))
         d = self.registry.to_dict()
         assert len(d) == 2

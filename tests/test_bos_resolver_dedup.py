@@ -23,16 +23,26 @@ async def test_memory_all_search_deduplicates_snippets():
             return {
                 "result": {
                     "results": [
-                        {"id": "g1", "snippet": "shared knowledge snippet", "score": 0.85},
+                        {
+                            "id": "g1",
+                            "snippet": "shared knowledge snippet",
+                            "score": 0.85,
+                        },
                         {"id": "g2", "snippet": "unique gbrain snippet", "score": 0.75},
                     ]
                 }
             }
         if "vault" in uri:
-            return {"result": [{"id": "v1", "snippet": "shared knowledge snippet", "score": 0.7}]}
+            return {
+                "result": [
+                    {"id": "v1", "snippet": "shared knowledge snippet", "score": 0.7}
+                ]
+            }
         return {"result": []}
 
-    with patch("agora.mcp.bos_resolver.resolve_bos_uri", new_callable=AsyncMock) as mock_resolve:
+    with patch(
+        "agora.mcp.bos_resolver.resolve_bos_uri", new_callable=AsyncMock
+    ) as mock_resolve:
         mock_resolve.side_effect = _fake_resolve
         result = await _memory_all_search({"query": "knowledge", "limit": 10})
 

@@ -10,7 +10,9 @@ from tests.conftest import FakeToolCatalog
 # ── Helpers ────────────────────────────────────────────────────────────
 
 
-def _make_tool(tool_id: str, name: str = "", status: str = "discovered", **kwargs) -> dict:
+def _make_tool(
+    tool_id: str, name: str = "", status: str = "discovered", **kwargs
+) -> dict:
     """Create a minimal tool dict for testing."""
     return {
         "id": tool_id,
@@ -142,7 +144,9 @@ def orchestrator(catalog, lifecycle):
 class TestDiscoverAndSave:
     async def test_discover_and_save(self, orchestrator, catalog):
         """Mock search_all and verify tools are saved to catalog."""
-        with patch("agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock) as mock_search:
+        with patch(
+            "agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock
+        ) as mock_search:
             mock_search.return_value = [
                 _make_tool("tool-a", name="tool-a"),
                 _make_tool("tool-b", name="tool-b"),
@@ -154,30 +158,42 @@ class TestDiscoverAndSave:
             mock_search.assert_called_once_with("test", None)
 
     async def test_discover_and_save_empty(self, orchestrator, catalog):
-        with patch("agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock) as mock_search:
+        with patch(
+            "agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock
+        ) as mock_search:
             mock_search.return_value = []
             results = await orchestrator.discover_and_save(query="nothing")
             assert len(results) == 0
             assert len(catalog.tools) == 0
 
     async def test_discover_and_save_with_sources(self, orchestrator):
-        with patch("agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock) as mock_search:
+        with patch(
+            "agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock
+        ) as mock_search:
             mock_search.return_value = [_make_tool("tool-x", name="tool-x")]
-            results = await orchestrator.discover_and_save(query="test", sources=["github"])
+            results = await orchestrator.discover_and_save(
+                query="test", sources=["github"]
+            )
             assert len(results) == 1
             mock_search.assert_called_once_with("test", ["github"])
 
     async def test_discover_error_handling(self, orchestrator, catalog):
         """If search_all raises, the exception should propagate."""
-        with patch("agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock) as mock_search:
+        with patch(
+            "agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock
+        ) as mock_search:
             mock_search.side_effect = RuntimeError("API failure")
             with pytest.raises(RuntimeError):
                 await orchestrator.discover_and_save(query="test")
 
     async def test_discover_quality_score_added(self, orchestrator):
         """Each discovered tool should get a quality_score field."""
-        with patch("agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock) as mock_search:
-            mock_search.return_value = [{"id": "t1", "name": "tool1", "stars": 100, "description": "desc"}]
+        with patch(
+            "agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock
+        ) as mock_search:
+            mock_search.return_value = [
+                {"id": "t1", "name": "tool1", "stars": 100, "description": "desc"}
+            ]
             results = await orchestrator.discover_and_save(query="test")
             assert len(results) == 1
             assert "quality_score" in results[0]
@@ -189,11 +205,15 @@ class TestDiscoverAndSave:
 class TestDiscoverInstallLoad:
     async def test_full_pipeline(self, orchestrator, catalog):
         """Full discover → install → load pipeline."""
-        with patch("agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock) as mock_search:
+        with patch(
+            "agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock
+        ) as mock_search:
             mock_search.return_value = [
                 _make_tool("t1", name="tool1", description="desc"),
             ]
-            result = await orchestrator.discover_install_load(query="test", auto_load=True)
+            result = await orchestrator.discover_install_load(
+                query="test", auto_load=True
+            )
             assert result["discovered"] == 1
             assert result["installed"] == 1
             assert result["loaded"] == 1
@@ -201,11 +221,15 @@ class TestDiscoverInstallLoad:
 
     async def test_pipeline_no_auto_load(self, orchestrator, catalog):
         """Without auto_load, tools should be installed but not loaded."""
-        with patch("agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock) as mock_search:
+        with patch(
+            "agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock
+        ) as mock_search:
             mock_search.return_value = [
                 _make_tool("t1", name="tool1"),
             ]
-            result = await orchestrator.discover_install_load(query="test", auto_load=False)
+            result = await orchestrator.discover_install_load(
+                query="test", auto_load=False
+            )
             assert result["discovered"] == 1
             assert result["installed"] == 1
             assert result["loaded"] == 0
@@ -214,7 +238,9 @@ class TestDiscoverInstallLoad:
     async def test_pipeline_no_lifecycle(self, catalog):
         """Without LifecycleManager, load should be skipped."""
         orch = Orchestrator(catalog=catalog)
-        with patch("agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock) as mock_search:
+        with patch(
+            "agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock
+        ) as mock_search:
             mock_search.return_value = [_make_tool("t1", name="tool1")]
             result = await orch.discover_install_load(query="test", auto_load=True)
             assert result["discovered"] == 1
@@ -223,7 +249,9 @@ class TestDiscoverInstallLoad:
 
     async def test_pipeline_empty_discovery(self, orchestrator):
         """Empty discovery should return zeros."""
-        with patch("agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock) as mock_search:
+        with patch(
+            "agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock
+        ) as mock_search:
             mock_search.return_value = []
             result = await orchestrator.discover_install_load(query="test")
             assert result["discovered"] == 0
@@ -232,12 +260,16 @@ class TestDiscoverInstallLoad:
 
     async def test_pipeline_returns_tool_names(self, orchestrator):
         """discover_install_load should include tool_names in result."""
-        with patch("agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock) as mock_search:
+        with patch(
+            "agora.mcp_registry.orchestrator.search_all", new_callable=AsyncMock
+        ) as mock_search:
             mock_search.return_value = [
                 _make_tool("t1", name="tool1"),
                 _make_tool("t2", name="tool2"),
             ]
-            result = await orchestrator.discover_install_load(query="test", auto_load=True)
+            result = await orchestrator.discover_install_load(
+                query="test", auto_load=True
+            )
             assert "tool_names" in result
             assert "tool1" in result["tool_names"]
             assert "tool2" in result["tool_names"]

@@ -38,6 +38,7 @@ DEFAULT_REGISTRY_PATH = _resolve_agora_root() / "etc" / "bos-services.yaml"
 
 # ── 从 BOS_URI_PATTERN 和 BosService 定义动态推导校验集 ──
 
+
 def _get_valid_domains() -> set[str]:
     """从 BOS_URI_PATTERN 正则提取合法 domain 集合。"""
     from agora.mcp.resolver.services import BOS_URI_PATTERN

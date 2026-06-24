@@ -7,11 +7,16 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 from agora.tools.base import (
-    ToolContext, JSONDict, _read_json_object, _json_object,
-    _HAS_PSUTIL, _psutil
+    ToolContext,
+    JSONDict,
+    _read_json_object,
+    _json_object,
+    _HAS_PSUTIL,
+    _psutil,
 )
 
 _log = logging.getLogger(__name__)
+
 
 def tool_get_swarm_health(params: JSONDict, ctx: ToolContext) -> JSONDict:
     uptime = time.time() - ctx.start_time
@@ -54,7 +59,6 @@ def tool_get_swarm_health(params: JSONDict, ctx: ToolContext) -> JSONDict:
     }
 
 
-
 def tool_get_system_resources(params: JSONDict, ctx: ToolContext) -> JSONDict:
     uptime = time.time() - ctx.start_time
     if _HAS_PSUTIL and _psutil is not None:
@@ -80,7 +84,6 @@ def tool_get_system_resources(params: JSONDict, ctx: ToolContext) -> JSONDict:
         "disk_used_gb": 0.0,
         "uptime_seconds": round(uptime, 3),
     }
-
 
 
 def tool_get_metrics_snapshot(params: JSONDict, ctx: ToolContext) -> JSONDict:
@@ -126,6 +129,3 @@ def tool_get_metrics_snapshot(params: JSONDict, ctx: ToolContext) -> JSONDict:
         "tasks_success_rate": round(success_rate, 4),
         "p99_latency_ms": round(p99_latency_ms, 3),
     }
-
-
-

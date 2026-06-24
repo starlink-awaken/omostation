@@ -1,4 +1,5 @@
 """Test EventBusBackend — 4 cases covering Protocol + is_available + publish."""
+
 from pathlib import Path
 
 from agora.bus.backends.base import BusBackend
@@ -40,6 +41,5 @@ class TestEventBusBackendProtocol:
         assert len(log) >= 1
         # EventBus generates id internally; verify by type+source
         assert any(
-            e.get("type") == env.type and e.get("source") == env.source
-            for e in log
+            e.get("type") == env.type and e.get("source") == env.source for e in log
         )

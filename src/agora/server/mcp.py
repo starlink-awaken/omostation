@@ -77,7 +77,9 @@ def identity_from_auth_token() -> dict | None:
         return None
 
     claims = getattr(token, "claims", {}) or {}
-    subject_id = claims.get("sub") or claims.get("subject_id") or getattr(token, "client_id", "")
+    subject_id = (
+        claims.get("sub") or claims.get("subject_id") or getattr(token, "client_id", "")
+    )
     if not subject_id:
         return None
 
@@ -87,7 +89,11 @@ def identity_from_auth_token() -> dict | None:
     }
     if issuer := claims.get("iss") or claims.get("issuer"):
         identity["issuer"] = issuer
-    if tenant := claims.get("tenant") or claims.get("org") or getattr(token, "resource", None):
+    if (
+        tenant := claims.get("tenant")
+        or claims.get("org")
+        or getattr(token, "resource", None)
+    ):
         identity["tenant"] = tenant
     return identity
 
@@ -135,16 +141,16 @@ async def _proxy_lifespan(server: FastMCP):
             logger.info("swarm_started", role=swarm_role, port=swarm_port)
     except Exception:
         logger.exception("proxy_init_in_lifespan")
-    
+
     yield {}
-    
+
     if _sync_task is not None:
         _sync_task.cancel()
         try:
             await _sync_task
         except asyncio.CancelledError:
             pass
-            
+
     clear_caches()
     if _swarm is not None:
         _swarm.stop()
@@ -180,7 +186,11 @@ register_swarm_tools(mcp)
 # Phase 1: extracted from God Module (server/mcp.py) into focused modules.
 # NOTE: imports are at module top level; registration calls are deferred
 # until after _PROXY_CONFIG_PATH / _FORGE_REGISTRY_PATH are defined.
-from agora.server.tools_proxy import register_proxy_tools, _set_constants as _set_proxy_constants  # noqa: E402, F811
+# ruff: noqa: E402
+from agora.server.tools_proxy import (
+    register_proxy_tools,
+    _set_constants as _set_proxy_constants,
+)  # noqa: E402, F811
 from agora.server.tools_registry import register_registry_tools  # noqa: E402
 from agora.server.tools_diagnostics import register_diagnostics_tools  # noqa: E402
 from agora.server.tools_governance import register_governance_tools  # noqa: E402
@@ -232,7 +242,13 @@ async def _init_proxy():
 
     Phase 3 — registers all proxy downstream tools as native FastMCP tools.
     """
-    from agora.server.dependencies import get_proxy_manager, set_proxy_manager, get_lifecycle_manager, set_lifecycle_manager
+    from agora.server.dependencies import (
+        get_proxy_manager,
+        set_proxy_manager,
+        get_lifecycle_manager,
+        set_lifecycle_manager,
+    )
+
     pm = get_proxy_manager()
     if pm is not None:
         return
@@ -262,12 +278,11 @@ async def _init_proxy():
     from agora.server.tools_proxy import _load_proxy_services  # type: ignore[import-not-found]
 
     proxy_configs = _load_proxy_services()
-    await pm.registry.register_from_registry(
-        registry, proxy_configs, lazy=True
-    )
+    await pm.registry.register_from_registry(registry, proxy_configs, lazy=True)
 
     # ── Phase 3: Register proxy tools ──
     from agora.server.tools_proxy import _register_proxy_tools
+
     _register_proxy_tools(mcp, pm)
 
     # ── Phase 4 (P45 W2): Seed BOSRouter from POC_SERVICES ──
@@ -598,6 +613,7 @@ async def agora_execute(query: str, mode: str = "auto") -> dict:
     """
     try:
         from agora.server.dependencies import get_cached_router
+
         router_instance = get_cached_router()
         result = await router_instance.route(query, mode=mode)
         return _ok({"format_version": FORMAT_VERSION, **result})
@@ -609,9 +625,14 @@ async def agora_execute(query: str, mode: str = "auto") -> dict:
 def main():
     """Start the Agora MCP server. Default: stdio. Use --sse for SSE mode."""
     import argparse
+
     parser = argparse.ArgumentParser(description="Agora MCP Server")
-    parser.add_argument("--sse", action="store_true", help="Start in SSE mode (port 7431)")
-    parser.add_argument("--http", action="store_true", help="Start in HTTP mode (port 7422)")
+    parser.add_argument(
+        "--sse", action="store_true", help="Start in SSE mode (port 7431)"
+    )
+    parser.add_argument(
+        "--http", action="store_true", help="Start in HTTP mode (port 7422)"
+    )
     args = parser.parse_args()
 
     if args.sse:
@@ -632,7 +653,7 @@ def http_main():
     from starlette.responses import JSONResponse
     from starlette.routing import Route
     from starlette.requests import Request
-    
+
     async def health_endpoint(request):
         return JSONResponse(
             {
@@ -644,7 +665,7 @@ def http_main():
 
     async def tool_call_endpoint(request: Request):
         from fastmcp.server.dependencies import _current_http_request
-        
+
         # FastMCP dependency injection looks at _current_http_request to find the HTTP request
         token = _current_http_request.set(request)
         try:
@@ -657,27 +678,28 @@ def http_main():
             # If AGORA_API_KEY is present in env, FastMCP's AuthMiddleware will look for it
             # It will extract it from the Authorization header of the request object we just set.
             result = await mcp.call_tool(tool_name, arguments)
-            
+
             # FastMCP call_tool returns a CallToolResult object or string
             res_content = ""
-            if hasattr(result, "content") and isinstance(result.content, list) and result.content:
+            if (
+                hasattr(result, "content")
+                and isinstance(result.content, list)
+                and result.content
+            ):
                 res_content = getattr(result.content[0], "text", str(result.content[0]))
             elif isinstance(result, list) and result:
                 res_content = getattr(result[0], "text", str(result[0]))
             else:
                 res_content = str(result)
-            
+
             try:
                 # Try parsing it as JSON so it is returned as an object instead of a string
                 parsed_res = json.loads(res_content)
             except (json.JSONDecodeError, TypeError):
                 parsed_res = res_content
-                
+
             # Format according to what ecos expects
-            return JSONResponse({
-                "status": "ok",
-                "result": parsed_res
-            })
+            return JSONResponse({"status": "ok", "result": parsed_res})
         except Exception as e:
             logger.exception("REST tool call failed")
             return JSONResponse({"error": str(e)}, status_code=500)
@@ -729,10 +751,19 @@ def http_main():
             return JSONResponse({"error": str(e)}, status_code=500)
 
     mcp._additional_http_routes.append(Route("/health", endpoint=health_endpoint))
-    mcp._additional_http_routes.append(Route("/v1/tools/call", endpoint=tool_call_endpoint, methods=["POST"]))
-    mcp._additional_http_routes.append(Route("/v1/backends/register", endpoint=register_backend_endpoint, methods=["POST"]))
+    mcp._additional_http_routes.append(
+        Route("/v1/tools/call", endpoint=tool_call_endpoint, methods=["POST"])
+    )
+    mcp._additional_http_routes.append(
+        Route(
+            "/v1/backends/register",
+            endpoint=register_backend_endpoint,
+            methods=["POST"],
+        )
+    )
 
     asyncio.run(mcp.run_http_async(host="0.0.0.0", port=7422))  # noqa: S104 — MCP server intentionally binds all interfaces
+
 
 def sse_main():
     """Start the Agora MCP server in SSE mode with proxy initialization.
@@ -757,7 +788,9 @@ def sse_main():
 
     # Add routes
     mcp._additional_http_routes.append(Route("/health", endpoint=health_endpoint))
-    mcp._additional_http_routes.append(Route("/api/v1/a2a/send", endpoint=a2a_send_endpoint, methods=["POST"]))
+    mcp._additional_http_routes.append(
+        Route("/api/v1/a2a/send", endpoint=a2a_send_endpoint, methods=["POST"])
+    )
 
     sys.stderr.write("Agora MCP Server (SSE) starting on port 7431...\n")
     asyncio.run(mcp.run_http_async(transport="sse", host="0.0.0.0", port=7431))  # noqa: S104 — MCP SSE server intentionally binds all interfaces

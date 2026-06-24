@@ -17,11 +17,18 @@ class _FakeMCPClient(MCPClient):
     def __init__(self, service_name: str, tools: list[dict] | None = None):
         super().__init__(service_name)
         self._tools = tools or [
-            {"name": "ping", "description": "Ping tool", "inputSchema": {"type": "object", "properties": {}}},
+            {
+                "name": "ping",
+                "description": "Ping tool",
+                "inputSchema": {"type": "object", "properties": {}},
+            },
             {
                 "name": "echo",
                 "description": "Echo tool",
-                "inputSchema": {"type": "object", "properties": {"msg": {"type": "string"}}},
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"msg": {"type": "string"}},
+                },
             },
         ]
         self._connected = False
@@ -360,7 +367,10 @@ class TestProxyRegistryLazyConnect:
         reg = _make_registry()
         reg.save_config("kos", {"mcp_endpoint": "stdio", "command": ""})
 
-        with patch("agora.mcp_proxy.registry.create_client", side_effect=ValueError("bad config")):
+        with patch(
+            "agora.mcp_proxy.registry.create_client",
+            side_effect=ValueError("bad config"),
+        ):
             result = asyncio.run(reg.lazy_connect("kos"))
 
         assert result is False
@@ -383,7 +393,9 @@ class TestProxyRegistryDispatchWithLazyReconnect:
         assert not reg.is_connected("kos")
 
         # Dispatch should try lazy reconnect
-        with patch("agora.mcp_proxy.registry.create_client", return_value=_FakeMCPClient("kos")):
+        with patch(
+            "agora.mcp_proxy.registry.create_client", return_value=_FakeMCPClient("kos")
+        ):
             result = asyncio.run(reg.dispatch("kos.ping", {}))
 
         assert "error" not in result.get("status", ""), f"Unexpected error: {result}"
@@ -398,7 +410,9 @@ class TestProxyRegistryDispatchWithLazyReconnect:
         asyncio.run(fake_client.disconnect())
 
         # Simulate reconnect failure
-        with patch("agora.mcp_proxy.registry.create_client", side_effect=ValueError("fail")):
+        with patch(
+            "agora.mcp_proxy.registry.create_client", side_effect=ValueError("fail")
+        ):
             result = asyncio.run(reg.dispatch("kos.ping", {}))
 
         assert result["status"] == "error"
@@ -453,7 +467,10 @@ class TestProxyManagerDynamic:
                 "command": "uv",
                 "args": ["run", "--package", "kos", "kos-mcp"],
             }
-            with patch("agora.mcp_proxy.manager.create_client", return_value=_FakeMCPClient("kos")):
+            with patch(
+                "agora.mcp_proxy.manager.create_client",
+                return_value=_FakeMCPClient("kos"),
+            ):
                 await pm.add_service(svc)
             assert pm.registry.is_connected("kos")
 
@@ -463,7 +480,10 @@ class TestProxyManagerDynamic:
             assert pm.registry.has_saved_config("kos")  # config preserved
 
             # ensure_connected should re-establish
-            with patch("agora.mcp_proxy.registry.create_client", return_value=_FakeMCPClient("kos")):
+            with patch(
+                "agora.mcp_proxy.registry.create_client",
+                return_value=_FakeMCPClient("kos"),
+            ):
                 result = await pm.ensure_connected("kos")
 
             assert result is True
@@ -474,7 +494,9 @@ class TestProxyManagerDynamic:
     def test_reload_service_reconnects(self):
         pm = _make_manager()
         svc = {"name": "kos", "mcp_endpoint": "stdio", "command": "uv", "args": []}
-        with patch("agora.mcp_proxy.manager.create_client", return_value=_FakeMCPClient("kos")):
+        with patch(
+            "agora.mcp_proxy.manager.create_client", return_value=_FakeMCPClient("kos")
+        ):
             asyncio.run(pm.add_service(svc))
 
         # Disconnect
@@ -482,7 +504,9 @@ class TestProxyManagerDynamic:
         assert not pm.registry.is_connected("kos")
 
         # Reload
-        with patch("agora.mcp_proxy.manager.create_client", return_value=_FakeMCPClient("kos")):
+        with patch(
+            "agora.mcp_proxy.manager.create_client", return_value=_FakeMCPClient("kos")
+        ):
             result = asyncio.run(pm.reload_service("kos"))
 
         assert "ok" in result
@@ -502,7 +526,9 @@ class TestProxyManagerDynamic:
     def test_remove_service_clears_config(self):
         pm = _make_manager()
         svc = {"name": "kos", "mcp_endpoint": "stdio", "command": "uv", "args": []}
-        with patch("agora.mcp_proxy.manager.create_client", return_value=_FakeMCPClient("kos")):
+        with patch(
+            "agora.mcp_proxy.manager.create_client", return_value=_FakeMCPClient("kos")
+        ):
             asyncio.run(pm.add_service(svc))
         assert pm.registry.has_saved_config("kos")
 
@@ -551,7 +577,9 @@ class TestProxyManagerIdleTimeout:
     def test_idle_timeout_status_when_enabled(self):
         async def _run():
             pm = _make_manager()
-            pm.enable_idle_timeout(IdleTimeoutConfig(sweep_interval=9999.0, default_timeout=300.0))
+            pm.enable_idle_timeout(
+                IdleTimeoutConfig(sweep_interval=9999.0, default_timeout=300.0)
+            )
             status = pm.get_idle_timeout_status()
             assert status["enabled"] is True
             assert status["sweep_interval"] == 9999.0
@@ -578,7 +606,9 @@ class TestProxyManagerStatus:
     def test_status_with_known_services(self):
         pm = _make_manager()
         svc = {"name": "kos", "mcp_endpoint": "stdio", "command": "uv", "args": []}
-        with patch("agora.mcp_proxy.manager.create_client", return_value=_FakeMCPClient("kos")):
+        with patch(
+            "agora.mcp_proxy.manager.create_client", return_value=_FakeMCPClient("kos")
+        ):
             asyncio.run(pm.add_service(svc))
 
         status = pm.status()
@@ -592,7 +622,9 @@ class TestProxyManagerStatus:
     def test_status_with_disconnected_service(self):
         pm = _make_manager()
         svc = {"name": "kos", "mcp_endpoint": "stdio", "command": "uv", "args": []}
-        with patch("agora.mcp_proxy.manager.create_client", return_value=_FakeMCPClient("kos")):
+        with patch(
+            "agora.mcp_proxy.manager.create_client", return_value=_FakeMCPClient("kos")
+        ):
             asyncio.run(pm.add_service(svc))
         asyncio.run(pm.registry.unregister_service("kos"))  # disconnect
 
@@ -670,7 +702,10 @@ class TestProxyManagerIdleTimeoutWithServices:
             pm = _make_manager()
             pm.enable_idle_timeout()
             svc = {"name": "kos", "mcp_endpoint": "stdio", "command": "uv", "args": []}
-            with patch("agora.mcp_proxy.manager.create_client", return_value=_FakeMCPClient("kos")):
+            with patch(
+                "agora.mcp_proxy.manager.create_client",
+                return_value=_FakeMCPClient("kos"),
+            ):
                 await pm.add_service(svc)
 
             assert pm.registry.is_connected("kos")
@@ -767,7 +802,9 @@ class TestEdgeCases:
         """Full flow: save config → acquire → ensure_connected → dispatch → release."""
         pm = _make_manager()
         svc = {"name": "kos", "mcp_endpoint": "stdio", "command": "uv", "args": []}
-        with patch("agora.mcp_proxy.manager.create_client", return_value=_FakeMCPClient("kos")):
+        with patch(
+            "agora.mcp_proxy.manager.create_client", return_value=_FakeMCPClient("kos")
+        ):
             asyncio.run(pm.add_service(svc))
 
         # Simulate idle timeout disconnect
@@ -778,7 +815,9 @@ class TestEdgeCases:
         pm.acquire("kos")
 
         # Ensure connected (lazy reconnect)
-        with patch("agora.mcp_proxy.registry.create_client", return_value=_FakeMCPClient("kos")):
+        with patch(
+            "agora.mcp_proxy.registry.create_client", return_value=_FakeMCPClient("kos")
+        ):
             ok = asyncio.run(pm.ensure_connected("kos"))
 
         assert ok is True

@@ -70,11 +70,15 @@ class TestInit:
         """Verify the expected tables and indexes exist."""
         conn = catalog._get_conn()
         # Check tools table exists
-        rows = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='tools'").fetchall()
+        rows = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='tools'"
+        ).fetchall()
         assert len(rows) == 1
 
         # Check indexes
-        idx_rows = conn.execute("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='tools'").fetchall()
+        idx_rows = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='tools'"
+        ).fetchall()
         idx_names = {r["name"] for r in idx_rows}
         assert "idx_tools_status" in idx_names
         assert "idx_tools_name" in idx_names
@@ -124,7 +128,9 @@ class TestAddTool:
     def test_add_duplicate_tool_updates(self, catalog):
         """Adding the same tool_id twice should update fields (UPSERT)."""
         catalog.add_tool(_make_tool_info("dup", description="first"))
-        catalog.add_tool(_make_tool_info("dup", description="second", quality_score=0.9))
+        catalog.add_tool(
+            _make_tool_info("dup", description="second", quality_score=0.9)
+        )
 
         tool = catalog.get_tool("dup")
         assert tool["description"] == "second"
@@ -138,7 +144,9 @@ class TestAddTool:
 
     def test_add_tool_with_dict_metadata(self, catalog):
         """Metadata stored as dict should be serialized to JSON."""
-        catalog.add_tool(_make_tool_info("meta", metadata={"key": "value", "nested": {"x": 1}}))
+        catalog.add_tool(
+            _make_tool_info("meta", metadata={"key": "value", "nested": {"x": 1}})
+        )
         tool = catalog.get_tool("meta")
         assert tool["metadata"] == {"key": "value", "nested": {"x": 1}}
 
@@ -258,7 +266,9 @@ class TestListTools:
 
 class TestSearchTools:
     def test_search_by_name(self, catalog):
-        catalog.add_tool(_make_tool_info("sqlite-tool", description="a SQL database tool"))
+        catalog.add_tool(
+            _make_tool_info("sqlite-tool", description="a SQL database tool")
+        )
         catalog.add_tool(_make_tool_info("redis-tool", description="a cache tool"))
 
         results = catalog.search_tools(query="sqlite")
@@ -266,7 +276,9 @@ class TestSearchTools:
         assert results[0]["id"] == "sqlite-tool"
 
     def test_search_by_description(self, catalog):
-        catalog.add_tool(_make_tool_info("tool1", description="database connector for PostgreSQL"))
+        catalog.add_tool(
+            _make_tool_info("tool1", description="database connector for PostgreSQL")
+        )
         catalog.add_tool(_make_tool_info("tool2", description="file system access"))
 
         results = catalog.search_tools(query="database")
@@ -430,7 +442,9 @@ class TestUpdateInstall:
 
     def test_failed_install_with_error(self, catalog):
         catalog.add_tool(_make_tool_info("failing"))
-        catalog.update_install("failing", install_path="", install_error="permission denied")
+        catalog.update_install(
+            "failing", install_path="", install_error="permission denied"
+        )
 
         tool = catalog.get_tool("failing")
         assert tool["status"] == "installed"
@@ -603,7 +617,9 @@ class TestUpdateEntry:
 
     def test_update_entry_install_path(self, catalog):
         catalog.add_tool(_make_tool_info("path-test", install_path=""))
-        result = catalog.update_entry("path-test", install_path="/usr/local/bin/mcp-tool")
+        result = catalog.update_entry(
+            "path-test", install_path="/usr/local/bin/mcp-tool"
+        )
         assert result is True
 
         tool = catalog.get_tool("path-test")

@@ -61,14 +61,22 @@ class TestProxyManager:
     def test_add_bad_service_returns_error(self):
         import asyncio
 
-        results = asyncio.run(self.manager.start([{"name": "bad-svc", "mcp_endpoint": "http://192.0.2.99:19999"}]))
+        results = asyncio.run(
+            self.manager.start(
+                [{"name": "bad-svc", "mcp_endpoint": "http://192.0.2.99:19999"}]
+            )
+        )
         assert "bad-svc" in results
         assert "error" in results["bad-svc"] or "ok" in results["bad-svc"]
 
     def test_status_after_connect(self):
         import asyncio
 
-        asyncio.run(self.manager.start([{"name": "echo-svc", "mcp_endpoint": "http://192.0.2.99:19999"}]))
+        asyncio.run(
+            self.manager.start(
+                [{"name": "echo-svc", "mcp_endpoint": "http://192.0.2.99:19999"}]
+            )
+        )
         status = self.manager.status()
         assert "status" in status
 

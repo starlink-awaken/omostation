@@ -1,4 +1,5 @@
 """BOS URI 端到端验证 — 测试真实路由流程"""
+
 import sys
 from pathlib import Path
 
@@ -61,13 +62,17 @@ def test_bos_resolver_services():
 
         # 测试 parse_bos_uri
         parsed = parse_bos_uri("bos://memory/kos/search")
-        print(f"  Parse test: {parsed['domain']}/{parsed['package']}/{parsed['action']}")
+        print(
+            f"  Parse test: {parsed['domain']}/{parsed['package']}/{parsed['action']}"
+        )
 
         # 测试 protocol_self_check
         from agora.mcp.bos_resolver import protocol_self_check
 
         info = protocol_self_check()
-        print(f"  Self-check: total={info['total_services']}, domains={info['domains']}")
+        print(
+            f"  Self-check: total={info['total_services']}, domains={info['domains']}"
+        )
 
     except Exception as e:
         print(f"  ⚠️ POC services check failed: {e}")

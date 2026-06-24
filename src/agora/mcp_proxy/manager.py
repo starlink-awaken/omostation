@@ -217,8 +217,15 @@ class ProxyManager:
                 }
                 # Local workspace services are trusted by default (self-hosted / source-controlled).
                 _cmd = " ".join([svc.get("command", ""), *svc.get("args", [])])
-                _is_local_workspace = "/Users/xiamingxing/Workspace/projects/" in _cmd or _cmd.startswith("/Users/xiamingxing/Workspace/")
-                if name not in core_services and not name.startswith("sys-") and not _is_local_workspace:
+                _is_local_workspace = (
+                    "/Users/xiamingxing/Workspace/projects/" in _cmd
+                    or _cmd.startswith("/Users/xiamingxing/Workspace/")
+                )
+                if (
+                    name not in core_services
+                    and not name.startswith("sys-")
+                    and not _is_local_workspace
+                ):
                     raise ValueError("Missing 'metaos_admission' metadata block.")
                 admission_meta = {
                     "role": "evaluator" if name == "kairon" else "generator",

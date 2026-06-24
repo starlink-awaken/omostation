@@ -16,7 +16,11 @@ class TestMarket:
         m = Market()
         results = m.search("research")
         assert len(results) >= 1
-        assert any("research" in r.get("description", "").lower() or "research" in r.get("tags", []) for r in results)
+        assert any(
+            "research" in r.get("description", "").lower()
+            or "research" in r.get("tags", [])
+            for r in results
+        )
 
     def test_search_no_match(self):
         m = Market()
@@ -26,7 +30,11 @@ class TestMarket:
     def test_publish_adds_service(self):
         m = Market()
         result = m.publish(
-            "test-market-svc", repo="example/test", description="A test service", entry="server.py", svc_type="python"
+            "test-market-svc",
+            repo="example/test",
+            description="A test service",
+            entry="server.py",
+            svc_type="python",
         )
         assert result["name"] == "test-market-svc"
         assert result["repo"] == "example/test"

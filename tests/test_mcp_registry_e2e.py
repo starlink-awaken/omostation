@@ -52,7 +52,9 @@ class TestRegistryDiscovery:
     async def test_discover_via_file_uri(self, registry_path):
         """search_registry with file:// URL returns at least 30 services."""
         results = await search_registry(f"file://{registry_path}")
-        assert len(results) >= 30, f"Expected >=30 services from registry, got {len(results)}"
+        assert len(results) >= 30, (
+            f"Expected >=30 services from registry, got {len(results)}"
+        )
 
     @pytest.mark.asyncio
     async def test_discover_via_bare_path(self, registry_path):
@@ -66,29 +68,44 @@ class TestRegistryDiscovery:
         results = await search_registry(f"file://{registry_path}")
         for svc in results:
             assert svc.get("name"), f"Service missing name: {svc}"
-            assert svc.get("description"), f"Service '{svc['name']}' missing description"
+            assert svc.get("description"), (
+                f"Service '{svc['name']}' missing description"
+            )
 
     @pytest.mark.asyncio
     async def test_expected_services_present(self, registry_path):
         """Known services like kronos, codeanalyze, sqlite, docker should be present."""
         results = await search_registry(f"file://{registry_path}")
         names = {s["name"] for s in results}
-        for expected in ("kronos", "codeanalyze", "sqlite", "docker-mcp", "filesystem", "github"):
-            assert expected in names, f"Expected service '{expected}' not found in registry"
+        for expected in (
+            "kronos",
+            "codeanalyze",
+            "sqlite",
+            "docker-mcp",
+            "filesystem",
+            "github",
+        ):
+            assert expected in names, (
+                f"Expected service '{expected}' not found in registry"
+            )
 
     @pytest.mark.asyncio
     async def test_tool_type_populated(self, registry_path):
         """Each service should have a tool_type string."""
         results = await search_registry(f"file://{registry_path}")
         for svc in results:
-            assert isinstance(svc.get("tool_type"), str), f"Service '{svc['name']}' missing tool_type"
+            assert isinstance(svc.get("tool_type"), str), (
+                f"Service '{svc['name']}' missing tool_type"
+            )
 
     @pytest.mark.asyncio
     async def test_tags_present(self, registry_path):
         """Service tags should be a list."""
         results = await search_registry(f"file://{registry_path}")
         for svc in results:
-            assert isinstance(svc.get("tags"), list), f"Service '{svc['name']}' tags is not a list"
+            assert isinstance(svc.get("tags"), list), (
+                f"Service '{svc['name']}' tags is not a list"
+            )
 
     @pytest.mark.asyncio
     async def test_metadata_contains_verified_flag(self, registry_path):
@@ -96,7 +113,9 @@ class TestRegistryDiscovery:
         results = await search_registry(f"file://{registry_path}")
         for svc in results:
             meta = svc.get("metadata", {}) or {}
-            assert isinstance(meta.get("verified"), bool), f"Service '{svc['name']}' metadata.verified is not bool"
+            assert isinstance(meta.get("verified"), bool), (
+                f"Service '{svc['name']}' metadata.verified is not bool"
+            )
 
     @pytest.mark.asyncio
     async def test_source_is_registry(self, registry_path):
@@ -124,7 +143,9 @@ class TestQualityScoringPipeline:
         assert len(scored) == len(results)
 
         scores = [t.get("quality_score", 0) for t in scored]
-        assert scores == sorted(scores, reverse=True), "Tools not sorted by quality_score descending"
+        assert scores == sorted(scores, reverse=True), (
+            "Tools not sorted by quality_score descending"
+        )
 
     @pytest.mark.asyncio
     async def test_high_star_services_score_higher(self, registry_path):
@@ -159,7 +180,9 @@ class TestQualityScoringPipeline:
             if svc["name"] == "kronos":
                 # verified=True should give base score from verified weight (0.10)
                 # even with 0 stars
-                assert svc["quality_score"] > 0, f"Verified service '{svc['name']}' scored 0 despite verified=True"
+                assert svc["quality_score"] > 0, (
+                    f"Verified service '{svc['name']}' scored 0 despite verified=True"
+                )
 
     @pytest.mark.asyncio
     async def test_quality_score_range(self, registry_path):
@@ -168,7 +191,9 @@ class TestQualityScoringPipeline:
         scored = QualityScorer.evaluate_batch(results)
         for svc in scored:
             qs = svc["quality_score"]
-            assert 0.0 <= qs <= 1.0, f"Service '{svc['name']}' quality_score={qs} out of range [0,1]"
+            assert 0.0 <= qs <= 1.0, (
+                f"Service '{svc['name']}' quality_score={qs} out of range [0,1]"
+            )
 
     @pytest.mark.asyncio
     async def test_batch_idempotent(self, registry_path):
@@ -188,9 +213,13 @@ class TestQualityScoringPipeline:
     async def test_quality_score_field_added(self, registry_path):
         """evaluate_batch should add 'quality_score' key to each tool."""
         results = await search_registry(f"file://{registry_path}")
-        assert "quality_score" not in results[0], "quality_score should not exist before evaluate_batch"
+        assert "quality_score" not in results[0], (
+            "quality_score should not exist before evaluate_batch"
+        )
         scored = QualityScorer.evaluate_batch(results)
-        assert "quality_score" in scored[0], "quality_score missing after evaluate_batch"
+        assert "quality_score" in scored[0], (
+            "quality_score missing after evaluate_batch"
+        )
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -211,7 +240,9 @@ class TestFullPipeline:
             catalog.add_tool(svc)
 
         count = len(catalog.list_tools())
-        assert count == len(results), f"Catalog has {count} tools, expected {len(results)}"
+        assert count == len(results), (
+            f"Catalog has {count} tools, expected {len(results)}"
+        )
 
     @pytest.mark.asyncio
     async def test_embeddings_rebuild(self, registry_path, catalog, embeddings):
@@ -226,10 +257,14 @@ class TestFullPipeline:
         if embeddings.available:
             assert saved >= 1, f"Expected >=1 embeddings saved, got {saved}"
         else:
-            pytest.skip("sentence-transformers model not available; skipping embedding count check")
+            pytest.skip(
+                "sentence-transformers model not available; skipping embedding count check"
+            )
 
     @pytest.mark.asyncio
-    async def test_semantic_search_with_embeddings(self, registry_path, catalog, embeddings):
+    async def test_semantic_search_with_embeddings(
+        self, registry_path, catalog, embeddings
+    ):
         """Search similar tools via embedding similarity (if model available)."""
         results = await search_registry(f"file://{registry_path}")
         for svc in results:
@@ -237,10 +272,14 @@ class TestFullPipeline:
 
         embeddings.rebuild_all(catalog)
         if not embeddings.available:
-            pytest.skip("sentence-transformers model not available; skipping semantic search")
+            pytest.skip(
+                "sentence-transformers model not available; skipping semantic search"
+            )
 
         similar = embeddings.search_similar("code analysis and review", top_k=5)
-        assert len(similar) >= 1, "Expected at least 1 similar result for 'code analysis'"
+        assert len(similar) >= 1, (
+            "Expected at least 1 similar result for 'code analysis'"
+        )
         # The top result should be related to code analysis
         top_ids = [t[0] for t in similar]
         assert any("codeanalyze" in tid for tid in top_ids), (
@@ -251,7 +290,9 @@ class TestFullPipeline:
     async def test_router_code_analysis(self, registry_path, catalog, embeddings):
         """Router should route 'code analysis' to codeanalyze tool."""
         if not getattr(embeddings, "model", None):
-            pytest.skip("sentence-transformers model not available; skipping semantic routing")
+            pytest.skip(
+                "sentence-transformers model not available; skipping semantic routing"
+            )
         results = await search_registry(f"file://{registry_path}")
         for svc in results:
             catalog.add_tool(svc)
@@ -275,7 +316,9 @@ class TestFullPipeline:
     async def test_router_sqlite_database(self, registry_path, catalog, embeddings):
         """Router should route database-related queries to sqlite tools."""
         if not getattr(embeddings, "model", None):
-            pytest.skip("sentence-transformers model not available; skipping semantic routing")
+            pytest.skip(
+                "sentence-transformers model not available; skipping semantic routing"
+            )
         results = await search_registry(f"file://{registry_path}")
         for svc in results:
             catalog.add_tool(svc)
@@ -288,13 +331,17 @@ class TestFullPipeline:
         tool_names = [t["name"] for t in tools] if tools else []
         # Should find sqlite-related tools
         sqlite_related = [n for n in tool_names if "sqlite" in n.lower()]
-        assert len(sqlite_related) >= 1, f"Expected sqlite-related tool in route results, got {tool_names}"
+        assert len(sqlite_related) >= 1, (
+            f"Expected sqlite-related tool in route results, got {tool_names}"
+        )
 
     @pytest.mark.asyncio
     async def test_router_docker_container(self, registry_path, catalog, embeddings):
         """Router should route container-related queries to docker tools."""
         if not getattr(embeddings, "model", None):
-            pytest.skip("sentence-transformers model not available; skipping semantic routing")
+            pytest.skip(
+                "sentence-transformers model not available; skipping semantic routing"
+            )
         results = await search_registry(f"file://{registry_path}")
         for svc in results:
             catalog.add_tool(svc)
@@ -310,7 +357,9 @@ class TestFullPipeline:
         tool_names = [t["name"] for t in tools] if tools else []
         # Should find docker-related tools
         docker_related = [n for n in tool_names if "docker" in n.lower()]
-        assert len(docker_related) >= 1, f"Expected docker-related tool in route results, got {tool_names}"
+        assert len(docker_related) >= 1, (
+            f"Expected docker-related tool in route results, got {tool_names}"
+        )
 
     @pytest.mark.asyncio
     async def test_discover_save_count_matches(self, registry_path, catalog):
@@ -325,7 +374,9 @@ class TestFullPipeline:
         # Verify a few specific tools exist in catalog
         cat_names = {t["name"] for t in cat_tools}
         for expected in ("kronos", "codeanalyze", "docker-mcp"):
-            assert expected in cat_names, f"Tool '{expected}' not found in catalog after save"
+            assert expected in cat_names, (
+                f"Tool '{expected}' not found in catalog after save"
+            )
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -340,7 +391,9 @@ class TestNegativeCases:
     async def test_search_registry_nonexistent_file(self):
         """search_registry with a non-existent file should return []."""
         results = await search_registry("file:///tmp/nonexistent_registry_xyz.json")
-        assert results == [], f"Expected empty list for nonexistent file, got {len(results)} results"
+        assert results == [], (
+            f"Expected empty list for nonexistent file, got {len(results)} results"
+        )
 
     @pytest.mark.asyncio
     async def test_embedding_search_empty_catalog(self, embeddings):
@@ -358,7 +411,9 @@ class TestNegativeCases:
         catalog.close()
 
         assert result["status"] == "ok"
-        assert result.get("action") == "no_match", f"Expected no_match for empty catalog, got {result.get('action')}"
+        assert result.get("action") == "no_match", (
+            f"Expected no_match for empty catalog, got {result.get('action')}"
+        )
 
     @pytest.mark.asyncio
     async def test_router_empty_query(self, catalog):

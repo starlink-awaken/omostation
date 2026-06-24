@@ -339,11 +339,17 @@ class TestCacheSnapshot:
         """保存快照后可以完整加载。"""
         cache_file = tmp_path / "service-cache.json"
         r = _new_registry(tmp_path)
-        r.register(_make_service("cached-worker", protocol="stdio", mcp_endpoint="stdio:worker"))
+        r.register(
+            _make_service(
+                "cached-worker", protocol="stdio", mcp_endpoint="stdio:worker"
+            )
+        )
         r.register_heartbeat("cached-worker", {"role": "worker"}, now=123.0)
         r.save_cache_snapshot(str(cache_file))
 
-        restored = ServiceRegistry.load_cache_snapshot(str(cache_file), max_age_seconds=3600.0, now=124.0)
+        restored = ServiceRegistry.load_cache_snapshot(
+            str(cache_file), max_age_seconds=3600.0, now=124.0
+        )
         assert len(restored) == 1
         assert restored[0].name == "cached-worker"
         assert restored[0].provider_info == {"role": "worker"}
@@ -355,7 +361,9 @@ class TestCacheSnapshot:
         r.register(_make_service("old"))
         r.save_cache_snapshot(str(cache_file))
 
-        restored = ServiceRegistry.load_cache_snapshot(str(cache_file), max_age_seconds=10.0, now=9999999999.0)
+        restored = ServiceRegistry.load_cache_snapshot(
+            str(cache_file), max_age_seconds=10.0, now=9999999999.0
+        )
         assert restored == []
 
     def test_snapshot_with_no_services(self, tmp_path: Path):
@@ -364,7 +372,9 @@ class TestCacheSnapshot:
         r = _new_registry(tmp_path)
         r.save_cache_snapshot(str(cache_file))
 
-        restored = ServiceRegistry.load_cache_snapshot(str(cache_file), max_age_seconds=3600.0)
+        restored = ServiceRegistry.load_cache_snapshot(
+            str(cache_file), max_age_seconds=3600.0
+        )
         assert restored == []
 
     def test_snapshot_round_trip_all_fields(self, tmp_path: Path):
@@ -382,7 +392,9 @@ class TestCacheSnapshot:
         )
         r.save_cache_snapshot(str(cache_file))
 
-        restored = ServiceRegistry.load_cache_snapshot(str(cache_file), max_age_seconds=3600.0)
+        restored = ServiceRegistry.load_cache_snapshot(
+            str(cache_file), max_age_seconds=3600.0
+        )
         svc = restored[0]
         assert svc.name == "full-svc"
         assert svc.protocol == "rest"
@@ -390,7 +402,9 @@ class TestCacheSnapshot:
 
     def test_snapshot_missing_file_returns_empty(self):
         """不存在的快照文件返回空列表。"""
-        restored = ServiceRegistry.load_cache_snapshot("/nonexistent/cache.json", max_age_seconds=3600.0)
+        restored = ServiceRegistry.load_cache_snapshot(
+            "/nonexistent/cache.json", max_age_seconds=3600.0
+        )
         assert restored == []
 
 
@@ -632,7 +646,9 @@ class TestAgentRegistry:
         verification = agent_registry.verify_agent_identity("agent-08", sig)
         assert verification["valid"] is True
 
-    def test_identity_verification_fails_for_wrong_agent(self, agent_registry: AgentRegistry):
+    def test_identity_verification_fails_for_wrong_agent(
+        self, agent_registry: AgentRegistry
+    ):
         """使用其他 agent 的签名验证失败。"""
         r1 = agent_registry.register("agent-a")
         agent_registry.register("agent-b")
@@ -645,11 +661,15 @@ class TestAgentRegistry:
         from agora.agent_registry import MAX_AGENTS_PER_KEY
 
         for i in range(MAX_AGENTS_PER_KEY):
-            result = agent_registry.register(f"agent-{i}", metadata={"identity_key": "team-a"})
+            result = agent_registry.register(
+                f"agent-{i}", metadata={"identity_key": "team-a"}
+            )
             assert result["status"] == "registered"
 
         # 第 6 个应该失败
-        result = agent_registry.register("agent-overflow", metadata={"identity_key": "team-a"})
+        result = agent_registry.register(
+            "agent-overflow", metadata={"identity_key": "team-a"}
+        )
         assert result["status"] == "error"
         assert "Max agents per identity" in result["error"]
 
@@ -683,14 +703,18 @@ class TestGrpcHealthEndToEnd:
     def test_grpc_healthy_fallback(self, tmp_path: Path):
         """gRPC 服务 TCP 连接失败时回退到 healthy 标志。"""
         r = _new_registry(tmp_path)
-        svc = _make_service("grpc-svc", protocol="grpc", mcp_endpoint="http://192.0.2.1:50051")
+        svc = _make_service(
+            "grpc-svc", protocol="grpc", mcp_endpoint="http://192.0.2.1:50051"
+        )
         r.register(svc)
         assert r.grpc_health_check("grpc-svc") is True
 
     def test_grpc_unhealthy_fallback(self, tmp_path: Path):
         """gRPC 服务标记为 unhealthy 时返回 False。"""
         r = _new_registry(tmp_path)
-        svc = _make_service("grpc-svc", protocol="grpc", mcp_endpoint="http://192.0.2.1:50051")
+        svc = _make_service(
+            "grpc-svc", protocol="grpc", mcp_endpoint="http://192.0.2.1:50051"
+        )
         r.register(svc)
         svc.healthy = False
         assert r.grpc_health_check("grpc-svc") is False
@@ -764,7 +788,9 @@ class TestMcpBootstrapConfig:
 
     def test_known_services_contains_kairon_services(self):
         """KNOWN_SERVICES 包含所有核心 kairon MCP 服务。"""
-        kairon_services = {k for k, v in KNOWN_SERVICES.items() if v.get("source") == "kairon"}
+        kairon_services = {
+            k for k, v in KNOWN_SERVICES.items() if v.get("source") == "kairon"
+        }
         expected = {
             "kronos",
             "iris",
@@ -780,9 +806,13 @@ class TestMcpBootstrapConfig:
     def test_default_config_contains_all_services(self, monkeypatch, tmp_path: Path):
         """_default_config() 包含所有 KNOWN_SERVICES。"""
         # Mock workspace 以通过 kairon 服务可用性检查
-        monkeypatch.setattr("agora.mcp.mcp_bootstrap._find_workspace_root", lambda: None)
+        monkeypatch.setattr(
+            "agora.mcp.mcp_bootstrap._find_workspace_root", lambda: None
+        )
         # Mock _check_tool_available 返回 False 使所有服务为不可用
-        monkeypatch.setattr("agora.mcp.mcp_bootstrap._check_tool_available", lambda name, info: False)
+        monkeypatch.setattr(
+            "agora.mcp.mcp_bootstrap._check_tool_available", lambda name, info: False
+        )
         config = _default_config(workspace=None)
         assert "services" in config
         assert len(config["services"]) == len(KNOWN_SERVICES)
@@ -811,8 +841,12 @@ class TestMcpBootstrapConfig:
 
         importlib.reload(mcp_bootstrap)
 
-        monkeypatch.setattr("agora.mcp.mcp_bootstrap._find_workspace_root", lambda: None)
-        monkeypatch.setattr("agora.mcp.mcp_bootstrap._check_tool_available", lambda name, info: False)
+        monkeypatch.setattr(
+            "agora.mcp.mcp_bootstrap._find_workspace_root", lambda: None
+        )
+        monkeypatch.setattr(
+            "agora.mcp.mcp_bootstrap._check_tool_available", lambda name, info: False
+        )
 
         services, config_path = mcp_bootstrap.load_or_generate_config()
         assert config_path.exists()
@@ -827,8 +861,12 @@ class TestMcpBootstrapConfig:
         from agora.mcp import mcp_bootstrap
 
         importlib.reload(mcp_bootstrap)
-        monkeypatch.setattr("agora.mcp.mcp_bootstrap._find_workspace_root", lambda: None)
-        monkeypatch.setattr("agora.mcp.mcp_bootstrap._check_tool_available", lambda name, info: False)
+        monkeypatch.setattr(
+            "agora.mcp.mcp_bootstrap._find_workspace_root", lambda: None
+        )
+        monkeypatch.setattr(
+            "agora.mcp.mcp_bootstrap._check_tool_available", lambda name, info: False
+        )
 
         services = mcp_bootstrap.reload_config()
         assert len(services) == len(KNOWN_SERVICES)
@@ -842,8 +880,12 @@ class TestMcpBootstrapConfig:
         from agora.mcp import mcp_bootstrap
 
         importlib.reload(mcp_bootstrap)
-        monkeypatch.setattr("agora.mcp.mcp_bootstrap._find_workspace_root", lambda: None)
-        monkeypatch.setattr("agora.mcp.mcp_bootstrap._check_tool_available", lambda name, info: False)
+        monkeypatch.setattr(
+            "agora.mcp.mcp_bootstrap._find_workspace_root", lambda: None
+        )
+        monkeypatch.setattr(
+            "agora.mcp.mcp_bootstrap._check_tool_available", lambda name, info: False
+        )
 
         status = mcp_bootstrap.get_config_status()
         assert "config_path" in status
@@ -924,7 +966,11 @@ class TestParseHelpers:
         assert parse_tags("research") == ["research"]
 
     def test_parse_tags_multiple(self):
-        assert parse_tags("research, search,knowledge") == ["research", "search", "knowledge"]
+        assert parse_tags("research, search,knowledge") == [
+            "research",
+            "search",
+            "knowledge",
+        ]
 
     def test_parse_tags_empty(self):
         assert parse_tags("") == []

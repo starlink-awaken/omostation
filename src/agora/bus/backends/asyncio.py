@@ -25,7 +25,9 @@ class AsyncioBackend:
     name = "asyncio"
 
     def __init__(self):
-        self._subscribers: dict[str, tuple[str, asyncio.Queue, asyncio.Task | None]] = {}
+        self._subscribers: dict[
+            str, tuple[str, asyncio.Queue, asyncio.Task | None]
+        ] = {}
 
     def __del__(self) -> None:
         # Best-effort teardown for short-lived test instances. The backend

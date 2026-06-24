@@ -13,12 +13,16 @@ from agora.core.router import Router
 
 def _reg():
     """Create isolated ServiceRegistry (no config pollution)."""
-    return ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json"))
+    return ServiceRegistry(
+        storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json")
+    )
 
 
 def _identity_module():
     spec = importlib.util.find_spec("agora.auth.identity")
-    assert spec is not None, "agora.auth.identity module should exist for typed identity support"
+    assert spec is not None, (
+        "agora.auth.identity module should exist for typed identity support"
+    )
     return importlib.import_module("agora.auth.identity")
 
 
@@ -48,10 +52,16 @@ class TestEUMiddleware:
                 sentinel[key] = sys.modules.get(key)
                 sys.modules[key] = val
 
-            registry = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json"))
-            svc = Service("minerva", protocol="mcp", mcp_endpoint="http://192.0.2.1:9999/mcp")
+            registry = ServiceRegistry(
+                storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json")
+            )
+            svc = Service(
+                "minerva", protocol="mcp", mcp_endpoint="http://192.0.2.1:9999/mcp"
+            )
             registry.register(svc)
-            router = Router(registry, routes_path=str(Path(tempfile.mkdtemp()) / "test-routes.json"))
+            router = Router(
+                registry, routes_path=str(Path(tempfile.mkdtemp()) / "test-routes.json")
+            )
             router.add_route("minerva.research", "minerva")
 
             class _MockResp:
@@ -86,7 +96,9 @@ class TestEUMiddleware:
 
 class TestIdentityPropagation:
     @pytest.mark.asyncio
-    async def test_route_normalizes_typed_identity_for_accounting_audit_and_events(self, monkeypatch):
+    async def test_route_normalizes_typed_identity_for_accounting_audit_and_events(
+        self, monkeypatch
+    ):
         from httpx import AsyncClient
 
         identity_mod = _identity_module()
@@ -97,11 +109,19 @@ class TestIdentityPropagation:
             tenant="acme",
         )
 
-        registry = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json"))
-        svc = Service("minerva", protocol="mcp", mcp_endpoint="http://192.0.2.1:9999/mcp")
+        registry = ServiceRegistry(
+            storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json")
+        )
+        svc = Service(
+            "minerva", protocol="mcp", mcp_endpoint="http://192.0.2.1:9999/mcp"
+        )
         registry.register(svc)
         bus = EventBus(registry=registry)
-        router = Router(registry, event_bus=bus, routes_path=str(Path(tempfile.mkdtemp()) / "test-routes.json"))
+        router = Router(
+            registry,
+            event_bus=bus,
+            routes_path=str(Path(tempfile.mkdtemp()) / "test-routes.json"),
+        )
         router.add_route("minerva.research", "minerva")
 
         captured: dict[str, object] = {}
@@ -128,7 +148,15 @@ class TestIdentityPropagation:
                 captured["record"] = record
 
         class _FakeAuditLogger:
-            def log(self, action, actor="anonymous", resource="", result="success", detail="", ip=""):
+            def log(
+                self,
+                action,
+                actor="anonymous",
+                resource="",
+                result="success",
+                detail="",
+                ip="",
+            ):
                 captured["audit"] = {
                     "action": action,
                     "actor": actor,
@@ -152,7 +180,9 @@ class TestIdentityPropagation:
         assert captured["audit"]["actor"] == "user:alice"
 
         events = bus.get_event_log(5)
-        route_event = next(event for event in events if event["type"] == "route:call.succeeded")
+        route_event = next(
+            event for event in events if event["type"] == "route:call.succeeded"
+        )
         assert route_event["payload"]["identity"] == {
             "subject_id": "alice",
             "subject_type": "user",
@@ -182,10 +212,16 @@ class TestIdentityPropagation:
                 sentinel[key] = sys.modules.get(key)
                 sys.modules[key] = val
 
-            registry = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json"))
-            svc = Service("minerva", protocol="mcp", mcp_endpoint="http://192.0.2.1:9999/mcp")
+            registry = ServiceRegistry(
+                storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json")
+            )
+            svc = Service(
+                "minerva", protocol="mcp", mcp_endpoint="http://192.0.2.1:9999/mcp"
+            )
             registry.register(svc)
-            router = Router(registry, routes_path=str(Path(tempfile.mkdtemp()) / "test-routes.json"))
+            router = Router(
+                registry, routes_path=str(Path(tempfile.mkdtemp()) / "test-routes.json")
+            )
             router.add_route("minerva.research", "minerva")
 
             class _ErrClient(AsyncClient):
@@ -218,10 +254,16 @@ class TestIdentityPropagation:
 
         from httpx import AsyncClient
 
-        registry = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json"))
-        svc = Service("minerva", protocol="mcp", mcp_endpoint="http://192.0.2.1:9999/mcp")
+        registry = ServiceRegistry(
+            storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json")
+        )
+        svc = Service(
+            "minerva", protocol="mcp", mcp_endpoint="http://192.0.2.1:9999/mcp"
+        )
         registry.register(svc)
-        router = Router(registry, routes_path=str(Path(tempfile.mkdtemp()) / "test-routes.json"))
+        router = Router(
+            registry, routes_path=str(Path(tempfile.mkdtemp()) / "test-routes.json")
+        )
         router.add_route("minerva.research", "minerva")
 
         class _MockResp:
@@ -253,13 +295,17 @@ class TestRouter:
         from unittest.mock import patch
 
         self.tmpdir = tempfile.mkdtemp()
-        self.registry = ServiceRegistry(storage_path=str(Path(self.tmpdir) / "test-services.json"))
+        self.registry = ServiceRegistry(
+            storage_path=str(Path(self.tmpdir) / "test-services.json")
+        )
         self.registry.register(Service("minerva", mcp_endpoint="http://192.0.2.1:8765"))
         self.registry.register(Service("sophia", mcp_endpoint="http://192.0.2.2:9001"))
         # Prevent L0 global routes from leaking into unit test assertions
         self._l0_patch = patch("agora.l0_registry_loader.load_routes", return_value={})
         self._l0_patch.start()
-        self.router = Router(self.registry, routes_path=str(Path(self.tmpdir) / "test-routes.json"))
+        self.router = Router(
+            self.registry, routes_path=str(Path(self.tmpdir) / "test-routes.json")
+        )
 
     def teardown_method(self):
         self._l0_patch.stop()
@@ -291,7 +337,12 @@ class TestAddInstance:
         registry = _reg()
         router = Router(registry)
         registry.register(
-            Service("api", protocol="rest", mcp_endpoint="http://192.0.2.1:3000", protocol_config={"method": "POST"})
+            Service(
+                "api",
+                protocol="rest",
+                mcp_endpoint="http://192.0.2.1:3000",
+                protocol_config={"method": "POST"},
+            )
         )
         router._add_instance("api", "http://192.0.2.2:3000")
         svc = registry.get("api")
@@ -308,19 +359,28 @@ class TestProtocolDispatch:
 
     def test_rest_reserved_returns_error(self):
         """REST service returns reserved error when target is unreachable."""
-        svc = Service("api", protocol="rest", mcp_endpoint="http://192.0.2.99:3000", protocol_config={"method": "GET"})
+        svc = Service(
+            "api",
+            protocol="rest",
+            mcp_endpoint="http://192.0.2.99:3000",
+            protocol_config={"method": "GET"},
+        )
         self.registry.register(svc)
         self.router.add_route("api", "api")
 
     def test_grpc_reserved_returns_error(self):
         """gRPC protocol returns reserved error."""
-        svc = Service("grpc-svc", protocol="grpc", mcp_endpoint="http://192.0.2.99:50051")
+        svc = Service(
+            "grpc-svc", protocol="grpc", mcp_endpoint="http://192.0.2.99:50051"
+        )
         self.registry.register(svc)
         self.router.add_route("grpc-svc", "grpc-svc")
 
     def test_websocket_reserved_returns_error(self):
         """WebSocket protocol returns reserved error."""
-        svc = Service("ws-svc", protocol="websocket", mcp_endpoint="http://192.0.2.99:8080")
+        svc = Service(
+            "ws-svc", protocol="websocket", mcp_endpoint="http://192.0.2.99:8080"
+        )
         self.registry.register(svc)
         self.router.add_route("ws-svc", "ws-svc")
 
@@ -343,7 +403,10 @@ class TestProtocolDispatch:
     async def test_ws_dispatch_returns_stub_error(self):
         """WebSocket dispatch returns error on connect failure."""
         svc = Service(
-            "ws-svc", protocol="websocket", mcp_endpoint="ws://192.0.2.99:8080", protocol_config={"timeout": 1}
+            "ws-svc",
+            protocol="websocket",
+            mcp_endpoint="ws://192.0.2.99:8080",
+            protocol_config={"timeout": 1},
         )
         self.registry.register(svc)
         self.router.add_route("ws-svc", "ws-svc")
@@ -379,7 +442,9 @@ class TestProtocolDispatch:
     @pytest.mark.asyncio
     async def test_unknown_protocol_dispatch(self):
         """Unknown protocol in instance dict returns error (bypasses registry validation)."""
-        svc = Service("bad-proto", protocol="mcp", mcp_endpoint="http://192.0.2.99:9999")
+        svc = Service(
+            "bad-proto", protocol="mcp", mcp_endpoint="http://192.0.2.99:9999"
+        )
         self.registry.register(svc)
         # Override after registration to simulate corrupt instance state
         svc.protocol = "unknown_proto"
@@ -391,7 +456,9 @@ class TestProtocolDispatch:
     @pytest.mark.asyncio
     async def test_ws_invalid_url_dispatch(self):
         """WebSocket with non-ws URL returns invalid URL error."""
-        svc = Service("bad-ws", protocol="websocket", mcp_endpoint="http://192.0.2.99:8080")
+        svc = Service(
+            "bad-ws", protocol="websocket", mcp_endpoint="http://192.0.2.99:8080"
+        )
         self.registry.register(svc)
         self.router.add_route("bad-ws", "bad-ws")
         result = await self.router.route("bad-ws", {})
@@ -413,7 +480,9 @@ class TestProtocolDispatch:
     @pytest.mark.asyncio
     async def test_route_service_unavailable(self):
         """Routing to a service that's in OPEN state returns unavailable error."""
-        svc = Service("down-svc", protocol="grpc", mcp_endpoint="http://192.0.2.99:9999")
+        svc = Service(
+            "down-svc", protocol="grpc", mcp_endpoint="http://192.0.2.99:9999"
+        )
         self.registry.register(svc)
         svc.healthy = False
         svc.cooldown_until = 9999999999.0
@@ -442,7 +511,9 @@ class TestRouterAdvanced:
 
         registry = _reg()
         router = Router(registry)
-        svc = Service("mcp-svc", protocol="mcp", mcp_endpoint="http://192.0.2.1:9999/mcp")
+        svc = Service(
+            "mcp-svc", protocol="mcp", mcp_endpoint="http://192.0.2.1:9999/mcp"
+        )
         registry.register(svc)
         router.add_route("mcp-svc.tool", "mcp-svc")
 
@@ -514,7 +585,10 @@ class TestRouterAdvanced:
         registry = _reg()
         router = Router(registry)
         svc = Service(
-            "rest-api", protocol="rest", mcp_endpoint="http://192.0.2.1:3000", protocol_config={"method": "POST"}
+            "rest-api",
+            protocol="rest",
+            mcp_endpoint="http://192.0.2.1:3000",
+            protocol_config={"method": "POST"},
         )
         registry.register(svc)
         router.add_route("rest-api.create", "rest-api")
@@ -548,7 +622,10 @@ class TestRouterAdvanced:
         registry = _reg()
         router = Router(registry)
         svc = Service(
-            "rest-ssrf", protocol="rest", mcp_endpoint="http://192.0.2.1:3000", protocol_config={"method": "GET"}
+            "rest-ssrf",
+            protocol="rest",
+            mcp_endpoint="http://192.0.2.1:3000",
+            protocol_config={"method": "GET"},
         )
         registry.register(svc)
         svc.mcp_endpoint = "http://10.0.0.1:3000"
@@ -647,7 +724,10 @@ class TestRouterAdvanced:
         registry = _reg()
         router = Router(registry)
         svc = Service(
-            "bad-req", protocol="rest", mcp_endpoint="http://192.0.2.1:3000", protocol_config={"method": "GET"}
+            "bad-req",
+            protocol="rest",
+            mcp_endpoint="http://192.0.2.1:3000",
+            protocol_config={"method": "GET"},
         )
         registry.register(svc)
         router.add_route("bad-req.get", "bad-req")
@@ -769,7 +849,12 @@ class TestRouterAdvanced:
         """_add_instance promotes single service to multi-instance."""
         registry = _reg()
         router = Router(registry)
-        svc = Service("multi", protocol="rest", mcp_endpoint="http://192.0.2.1:3000", protocol_config={"method": "GET"})
+        svc = Service(
+            "multi",
+            protocol="rest",
+            mcp_endpoint="http://192.0.2.1:3000",
+            protocol_config={"method": "GET"},
+        )
         registry.register(svc)
         router._add_instance("multi", "http://192.0.2.2:3000")
         assert len(svc.instances) == 2
@@ -786,7 +871,12 @@ class TestRouterAdvanced:
         """_next_instance round-robins through multiple instances."""
         registry = _reg()
         router = Router(registry)
-        svc = Service("lb", protocol="rest", mcp_endpoint="http://192.0.2.1:3000", protocol_config={"method": "GET"})
+        svc = Service(
+            "lb",
+            protocol="rest",
+            mcp_endpoint="http://192.0.2.1:3000",
+            protocol_config={"method": "GET"},
+        )
         registry.register(svc)
         router._add_instance("lb", "http://192.0.2.2:3000")
         router._add_instance("lb", "http://192.0.2.3:3000")

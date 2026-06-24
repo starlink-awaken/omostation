@@ -11,7 +11,9 @@ from agora.audit import AuditLogger
 
 def _identity_module():
     spec = importlib.util.find_spec("agora.auth.identity")
-    assert spec is not None, "agora.auth.identity module should exist for typed identity support"
+    assert spec is not None, (
+        "agora.auth.identity module should exist for typed identity support"
+    )
     return importlib.import_module("agora.auth.identity")
 
 

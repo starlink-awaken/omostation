@@ -35,7 +35,9 @@ class TestKnownBackends:
     def test_known_backends_gateway_format(self):
         """Every backend should use stdio transport (empty mcp_endpoint)."""
         for backend in mcp_gateway.KNOWN_BACKENDS:
-            assert backend.get("mcp_endpoint") == "", f"{backend['name']} should use stdio transport"
+            assert backend.get("mcp_endpoint") == "", (
+                f"{backend['name']} should use stdio transport"
+            )
 
 
 @pytest.mark.asyncio

@@ -212,5 +212,3 @@ class MCPToolRegistry:
 
     def methods(self) -> list[str]:
         return list(self._entries.keys())
-
-

@@ -3,6 +3,7 @@
 替换 POC_SERVICES 中缺后端的子进程命令为简单 echo，
 使得跨域路由链测试不依赖真后端也能验证路由层逻辑。
 """
+
 from __future__ import annotations
 
 import json
@@ -15,24 +16,41 @@ _MOCK_RESPONSES: dict[str, dict] = {
     # 场景 1: memory → analysis
     "bos://memory/kos/search": {
         "status": "ok",
-        "result": {"results": [{"id": "doc-001", "title": "mock-kos-result", "score": 0.95}]},
+        "result": {
+            "results": [{"id": "doc-001", "title": "mock-kos-result", "score": 0.95}]
+        },
     },
     "bos://analysis/minerva/research": {
         "status": "ok",
-        "result": {"report": "# Mock Research Report\n\nGenerated for testing.", "depth": "L2", "sources": ["mock-source-1"]},
+        "result": {
+            "report": "# Mock Research Report\n\nGenerated for testing.",
+            "depth": "L2",
+            "sources": ["mock-source-1"],
+        },
     },
     "bos://analysis/minerva/draft": {
         "status": "ok",
-        "result": {"draft": "# Mock Draft\n\nAuto-generated draft for testing.", "status": "draft"},
+        "result": {
+            "draft": "# Mock Draft\n\nAuto-generated draft for testing.",
+            "status": "draft",
+        },
     },
     # 场景 2: analysis → persona
     "bos://persona/health-profile/summary": {
         "status": "ok",
-        "result": {"member_id": "mock-user", "summary": "健康概况 mock 数据", "score": 85},
+        "result": {
+            "member_id": "mock-user",
+            "summary": "健康概况 mock 数据",
+            "score": 85,
+        },
     },
     "bos://persona/health-profile/alert": {
         "status": "ok",
-        "result": {"member_id": "mock-user", "level": "info", "message": "Mock alert - no action needed"},
+        "result": {
+            "member_id": "mock-user",
+            "level": "info",
+            "message": "Mock alert - no action needed",
+        },
     },
     # 场景 3: governance → analysis
     "bos://analysis/minerva/audit": {
@@ -50,11 +68,17 @@ _MOCK_RESPONSES: dict[str, dict] = {
     },
     "bos://capability/forge/list-tools": {
         "status": "ok",
-        "result": {"tools": [{"name": "mock-tool", "description": "A mock tool for testing"}]},
+        "result": {
+            "tools": [{"name": "mock-tool", "description": "A mock tool for testing"}]
+        },
     },
     "bos://capability/forge/exec-tool": {
         "status": "ok",
-        "result": {"tool": "mock-tool", "output": "Mock execution completed", "exit_code": 0},
+        "result": {
+            "tool": "mock-tool",
+            "output": "Mock execution completed",
+            "exit_code": 0,
+        },
     },
     # 场景 5: capability → governance — 只 forge/list-tools 需要 mock，omo/inspect 是 internal
 }

@@ -15,11 +15,13 @@ def cmd_bos_list(args) -> int:
 
     by_domain: dict[str, list[dict]] = {}
     for s in POC_SERVICES:
-        by_domain.setdefault(s.domain, []).append({
-            "uri": s.uri,
-            "transport": s.transport,
-            "unimplemented": "[UNIMPLEMENTED]" in (s.description or ""),
-        })
+        by_domain.setdefault(s.domain, []).append(
+            {
+                "uri": s.uri,
+                "transport": s.transport,
+                "unimplemented": "[UNIMPLEMENTED]" in (s.description or ""),
+            }
+        )
 
     total = len(POC_SERVICES)
     for domain in sorted(by_domain):

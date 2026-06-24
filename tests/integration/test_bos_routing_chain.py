@@ -11,6 +11,7 @@
 注意: _resolve_with_router 和 _bos_uri_to_event_type 已移至 tools_bos.py (God Module 拆分)。
       list_bos_resources 是 register_bos_tools 内部的闭包，测试通过 tools_bos 模块级函数调用。
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -29,12 +30,28 @@ def seeded_router():
     from agora.mcp.bos_router import BOSRouter
 
     r = BOSRouter()
-    r.register("bos://memory/kos/search", adapter="poc", config={"domain": "memory", "package": "kos", "action": "search"})
-    r.register("bos://memory/kos/", adapter="poc", config={"domain": "memory", "package": "kos"})
+    r.register(
+        "bos://memory/kos/search",
+        adapter="poc",
+        config={"domain": "memory", "package": "kos", "action": "search"},
+    )
+    r.register(
+        "bos://memory/kos/",
+        adapter="poc",
+        config={"domain": "memory", "package": "kos"},
+    )
     r.register("bos://memory/", adapter="poc", config={"domain": "memory"})
-    r.register("bos://analysis/minerva/research", adapter="poc", config={"domain": "analysis", "package": "minerva", "action": "research"})
+    r.register(
+        "bos://analysis/minerva/research",
+        adapter="poc",
+        config={"domain": "analysis", "package": "minerva", "action": "research"},
+    )
     r.register("bos://analysis/", adapter="poc", config={"domain": "analysis"})
-    r.register("bos://ecos/workflow/approve", adapter="poc", config={"domain": "ecos", "workflow": "approve-flow"})
+    r.register(
+        "bos://ecos/workflow/approve",
+        adapter="poc",
+        config={"domain": "ecos", "workflow": "approve-flow"},
+    )
     return r
 
 
@@ -81,9 +98,7 @@ class TestResolveWithRouter:
                 "config": {"domain": "capability"},
             }
             # 使用 POC_SERVICES 中已有的 URI 测试回退
-            result, source = await _resolve_with_router(
-                "bos://memory/kos/search"
-            )
+            result, source = await _resolve_with_router("bos://memory/kos/search")
             # BOSRouter 匹配 proxy, 但 _proxy_manager 为 None → 跳过
             # → Step 2 POC_SERVICES: 能找到实际 POC 条目
             assert source == "poc_services"
@@ -116,7 +131,10 @@ class TestResolveWithRouter:
         with patch("agora.server.tools_bos._bos_router") as mock_router:
             mock_router.resolve.return_value = None
             with patch("agora.server.tools_bos._resolve_bos_uri") as mock_resolve:
-                mock_resolve.return_value = {"status": "error", "error": "unknown_bos_uri"}
+                mock_resolve.return_value = {
+                    "status": "error",
+                    "error": "unknown_bos_uri",
+                }
 
                 result, source = await _resolve_with_router(
                     "bos://nonexistent/test/action"
@@ -138,7 +156,10 @@ class TestResolveWithRouter:
                 "config": {"domain": "ecos", "workflow": "approve-flow"},
             }
             with patch("agora.server.tools_bos._resolve_bos_uri") as mock_resolve:
-                mock_resolve.return_value = {"status": "error", "error": "unknown_bos_uri"}
+                mock_resolve.return_value = {
+                    "status": "error",
+                    "error": "unknown_bos_uri",
+                }
 
                 result, source = await _resolve_with_router(
                     "bos://ecos/workflow/approve"
@@ -205,18 +226,27 @@ class TestBOSRouterSeeding:
 
     def test_seeded_deduplication(self, seeded_router):
         """重复注册自动跳过."""
-        seeded_router.register("bos://memory/kos/search", adapter="poc", config=seeded_router._routes["bos://memory/kos/search/"][0]["config"])
+        seeded_router.register(
+            "bos://memory/kos/search",
+            adapter="poc",
+            config=seeded_router._routes["bos://memory/kos/search/"][0]["config"],
+        )
         all_r = seeded_router.list_all()
         prefixes = [r["prefix"] for r in all_r]
-        assert len(prefixes) == len(set(prefixes)), f"重复: {set(p for p in prefixes if prefixes.count(p) > 1)}"
+        assert len(prefixes) == len(set(prefixes)), (
+            f"重复: {set(p for p in prefixes if prefixes.count(p) > 1)}"
+        )
 
     def test_seeded_unregister(self, seeded_router):
         seeded_router.unregister("bos://memory/kos/")
-        assert seeded_router.resolve("bos://memory/kos/ingest") is not None  # 回退到 bos://memory/
+        assert (
+            seeded_router.resolve("bos://memory/kos/ingest") is not None
+        )  # 回退到 bos://memory/
 
     def test_empty_router_returns_none(self):
         """空 BOSRouter 的 resolve → None."""
         from agora.mcp.bos_router import BOSRouter
+
         r = BOSRouter()
         assert r.resolve("bos://memory/kos/search") is None
 
@@ -284,11 +314,13 @@ class TestBOSMiddleware:
 
     def test_rate_limiter_default_status(self):
         from agora.mcp.bos_middleware import bos_rate_limiter
+
         status = bos_rate_limiter.status()
         assert isinstance(status, dict)
 
     def test_circuit_breaker_default_closed(self):
         from agora.mcp.bos_middleware import bos_circuit_breaker
+
         assert bos_circuit_breaker.is_open("bos://memory/kos/search") is False
 
     def test_circuit_breaker_opens_and_recovers(self):
@@ -319,6 +351,7 @@ class TestBOSMiddleware:
 
     def test_bos_metrics_summary(self):
         from agora.mcp.bos_metrics import bos_metrics
+
         s = bos_metrics.summary()
         assert "total_calls" in s
         assert "success_rate" in s
@@ -330,12 +363,19 @@ class TestEventChain:
 
     def test_bos_uri_to_event_type(self):
         from agora.server.tools_bos import _bos_uri_to_event_type
-        assert _bos_uri_to_event_type("bos://memory/kos/search") == "bos:memory:kos:search"
+
+        assert (
+            _bos_uri_to_event_type("bos://memory/kos/search") == "bos:memory:kos:search"
+        )
         assert _bos_uri_to_event_type("bos://memory/kos/*") == "bos:memory:kos:*"
-        assert _bos_uri_to_event_type("bos://analysis/minerva/research") == "bos:analysis:minerva:research"
+        assert (
+            _bos_uri_to_event_type("bos://analysis/minerva/research")
+            == "bos:analysis:minerva:research"
+        )
 
     def test_event_bus_publish_subscribe(self):
         from agora.core.state import get_event_bus
+
         bus = get_event_bus()
         sub_id = bus.subscribe("test-bos", "bos:memory:kos:search")
         assert sub_id is not None

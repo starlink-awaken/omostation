@@ -237,7 +237,12 @@ def main():
         return cmd_grant(args)
 
     elif args.command == "bos":
-        from agora.cli.commands_bos import cmd_bos_list, cmd_bos_info, cmd_bos_validate, cmd_bos_export
+        from agora.cli.commands_bos import (
+            cmd_bos_list,
+            cmd_bos_info,
+            cmd_bos_validate,
+            cmd_bos_export,
+        )
 
         sub = getattr(args, "bos_cmd", None)
         if sub == "list":

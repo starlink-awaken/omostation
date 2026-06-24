@@ -8,6 +8,7 @@ over bus_foundation. This test confirms:
 3. agora.bus.BusEnvelope is the SAME class as bus_foundation.BusEnvelope
    (i.e. the re-export is genuine, not a copy).
 """
+
 from __future__ import annotations
 
 import warnings

@@ -48,7 +48,9 @@ def _make_call(
 
 def _identity_module():
     spec = importlib.util.find_spec("agora.auth.identity")
-    assert spec is not None, "agora.auth.identity module should exist for typed identity support"
+    assert spec is not None, (
+        "agora.auth.identity module should exist for typed identity support"
+    )
     return importlib.import_module("agora.auth.identity")
 
 
@@ -129,7 +131,9 @@ class TestResourceAccountDB:
         tmp_db.record_call(_make_call("alice", "svc", "t2", inp=100, out=50, cost=0.01))
         tmp_db.record_call(_make_call("bob", "svc", "t1", inp=1000, out=500, cost=0.10))
         tmp_db.record_call(_make_call("bob", "svc", "t2", inp=1000, out=500, cost=0.10))
-        tmp_db.record_call(_make_call("charlie", "svc", "t1", inp=50, out=25, cost=0.005))
+        tmp_db.record_call(
+            _make_call("charlie", "svc", "t1", inp=50, out=25, cost=0.005)
+        )
 
         top = tmp_db.get_top_callers(period="all", limit=5)
         assert len(top) >= 3
@@ -177,7 +181,9 @@ class TestResourceAccountDB:
         report = tmp_db.get_report(period="all")
         assert report["total_calls"] == 3
         assert report["unique_callers"] == 2
-        expected_cost = estimate_cost(500, 200) + estimate_cost(1000, 500) + estimate_cost(300, 100)
+        expected_cost = (
+            estimate_cost(500, 200) + estimate_cost(1000, 500) + estimate_cost(300, 100)
+        )
         assert abs(report["total_cost"] - expected_cost) < 1e-9
 
     def test_get_report_by_service(self, tmp_db):

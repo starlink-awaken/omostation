@@ -46,7 +46,8 @@ class TestPipelineEventBusIntegration:
         derive_started = [
             e
             for e in events
-            if e.get("payload", {}).get("pipeline") == "derive-check" and e["type"] == "pipeline:started"
+            if e.get("payload", {}).get("pipeline") == "derive-check"
+            and e["type"] == "pipeline:started"
         ]
         assert len(derive_started) >= 1
 
@@ -56,7 +57,8 @@ class TestPipelineEventBusIntegration:
         started = [
             e
             for e in events
-            if e["type"] == "pipeline:started" and e.get("payload", {}).get("pipeline") == "full-pipeline"
+            if e["type"] == "pipeline:started"
+            and e.get("payload", {}).get("pipeline") == "full-pipeline"
         ]
         assert len(started) > 0
         assert "step_count" in started[0]["payload"]
@@ -67,7 +69,8 @@ class TestPipelineEventBusIntegration:
         derive_completed = [
             e
             for e in events
-            if e.get("payload", {}).get("pipeline") == "derive-check" and e["type"] == "pipeline:completed"
+            if e.get("payload", {}).get("pipeline") == "derive-check"
+            and e["type"] == "pipeline:completed"
         ]
         assert len(derive_completed) >= 1
 

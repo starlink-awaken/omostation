@@ -1,10 +1,9 @@
 from __future__ import annotations
 import logging
-from agora.tools.base import (
-    ToolContext, JSONDict
-)
+from agora.tools.base import ToolContext, JSONDict
 
 _log = logging.getLogger(__name__)
+
 
 def tool_mail_handler(params: JSONDict, ctx: ToolContext) -> JSONDict:
     """MCP handler for all mail_inbox actions — wraps MailTool."""
@@ -39,12 +38,8 @@ def tool_mail_handler(params: JSONDict, ctx: ToolContext) -> JSONDict:
         return {"error": str(exc), "success": False}
 
 
-
 def tool_tasks_list(params: JSONDict, ctx: ToolContext) -> JSONDict:
     """MCP handler for tasks_list — wraps TasksTool via tool_tasks_handler."""
     from organs.D_Gateway.interfaces.tools.tasks_tool import tool_tasks_handler  # type: ignore[import-not-found]
 
     return tool_tasks_handler(params, ctx)
-
-
-

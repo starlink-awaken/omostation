@@ -42,6 +42,7 @@ def _get_auditor():
 def _get_proxy_manager():
     """Lazy-import ProxyManager from dependencies.py."""
     from agora.server.dependencies import get_proxy_manager
+
     return get_proxy_manager()
 
 

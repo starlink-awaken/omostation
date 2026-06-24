@@ -46,6 +46,7 @@ logger = structlog.get_logger(__name__)
 def _get_proxy_manager():
     """Lazy-import ProxyManager from dependencies.py."""
     from agora.server.dependencies import get_proxy_manager
+
     return get_proxy_manager()
 
 
@@ -82,7 +83,7 @@ def _bos_domain_authorized(uri: str, operation: str = "read") -> tuple[bool, str
     routes = _bos_router.list_all(prefix_filter=f"bos://{domain}/")
     if not routes:
         return False, f"Domain '{domain}' is not registered in BOSRouter"
-        
+
     return True, ""
 
 
@@ -762,14 +763,16 @@ def register_bos_tools(mcp: FastMCP, bus: Any) -> None:
         # 指标健康
         m_health = bos_metrics.health()
 
-        return _ok({
-            "status": "ok",
-            "total_routes": len(POC_SERVICES),
-            "domains": by_domain,
-            "unimplemented": unimplemented,
-            "yaml_registry": True,  # YAML loaded → True, fallback → True too
-            "metrics": m_health,
-        })
+        return _ok(
+            {
+                "status": "ok",
+                "total_routes": len(POC_SERVICES),
+                "domains": by_domain,
+                "unimplemented": unimplemented,
+                "yaml_registry": True,  # YAML loaded → True, fallback → True too
+                "metrics": m_health,
+            }
+        )
 
     # ── watch_resource ───────────────────────────────────
 

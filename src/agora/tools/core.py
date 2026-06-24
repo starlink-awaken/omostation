@@ -6,15 +6,21 @@ import time
 import uuid
 from pathlib import Path
 from agora.tools.base import (
-    ToolContext, JSONDict, _require, _read_json_object, _json_object,
-    _HAS_RESULT_BUS, _TaskResult, _ResultBus
+    ToolContext,
+    JSONDict,
+    _require,
+    _read_json_object,
+    _json_object,
+    _HAS_RESULT_BUS,
+    _TaskResult,
+    _ResultBus,
 )
 
 _log = logging.getLogger(__name__)
 
+
 def tool_ping(params: JSONDict, ctx: ToolContext) -> JSONDict:
     return {"pong": True, "worker_id": "server"}
-
 
 
 def tool_post_result(params: JSONDict, ctx: ToolContext) -> JSONDict:
@@ -49,7 +55,6 @@ def tool_post_result(params: JSONDict, ctx: ToolContext) -> JSONDict:
     return {"accepted": True, "task_id": task_id}
 
 
-
 def tool_get_task_info(params: JSONDict, ctx: ToolContext) -> JSONDict:
     worker_id = str(_require(params, "worker_id"))
     registry_path = Path(ctx.data_dir) / "worker_registry.json"
@@ -64,7 +69,6 @@ def tool_get_task_info(params: JSONDict, ctx: ToolContext) -> JSONDict:
     if worker_info is None:
         return {"error": f"Worker '{worker_id}' not found"}
     return worker_info
-
 
 
 def tool_broadcast_event(params: JSONDict, ctx: ToolContext) -> JSONDict:
@@ -85,6 +89,3 @@ def tool_broadcast_event(params: JSONDict, ctx: ToolContext) -> JSONDict:
         with (data_dir / "events.jsonl").open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(record) + "\n")
     return {"event_id": event_id, "timestamp": timestamp}
-
-
-

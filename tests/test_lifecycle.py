@@ -11,7 +11,9 @@ from tests.conftest import FakeToolCatalog
 # ── Helpers ────────────────────────────────────────────────────────────
 
 
-def _make_tool(tool_id: str, name: str = "", status: str = "discovered", **kwargs) -> dict:
+def _make_tool(
+    tool_id: str, name: str = "", status: str = "discovered", **kwargs
+) -> dict:
     """Create a minimal tool dict for testing."""
     return {
         "id": tool_id,
@@ -89,7 +91,9 @@ def proxy():
 
 @pytest.fixture
 def manager(catalog, proxy):
-    return LifecycleManager(catalog=catalog, proxy_manager=proxy, idle_timeout=300.0, check_interval=60.0)
+    return LifecycleManager(
+        catalog=catalog, proxy_manager=proxy, idle_timeout=300.0, check_interval=60.0
+    )
 
 
 # ── Tests: Initialization ──────────────────────────────────────────────
@@ -104,7 +108,9 @@ class TestLifecycleInit:
         assert lm._proxy is None
 
     def test_custom_timeout(self):
-        lm = LifecycleManager(catalog=FakeToolCatalog(), idle_timeout=60.0, check_interval=10.0)
+        lm = LifecycleManager(
+            catalog=FakeToolCatalog(), idle_timeout=60.0, check_interval=10.0
+        )
         assert lm._idle_timeout == 60.0
         assert lm._check_interval == 10.0
 
@@ -114,7 +120,9 @@ class TestLifecycleInit:
 
 class TestLoadTool:
     async def test_load_success_with_proxy(self, catalog, proxy, manager):
-        catalog.tools["sqlite"] = _make_tool("sqlite", name="sqlite", status="idle", tool_type="node")
+        catalog.tools["sqlite"] = _make_tool(
+            "sqlite", name="sqlite", status="idle", tool_type="node"
+        )
         ok = await manager.load_tool("sqlite")
         assert ok is True
         assert catalog.tools["sqlite"]["status"] == "loaded"
@@ -131,7 +139,9 @@ class TestLoadTool:
         assert ok is True  # already loaded is success
 
     async def test_load_proxy_failure(self, catalog, manager):
-        catalog.tools["failing"] = _make_tool("failing", name="failing", status="idle", tool_type="node")
+        catalog.tools["failing"] = _make_tool(
+            "failing", name="failing", status="idle", tool_type="node"
+        )
         manager._proxy.add_results["failing"] = "error: connection refused"
         ok = await manager.load_tool("failing")
         assert ok is False
@@ -208,7 +218,9 @@ class TestBatchOperations:
     async def test_load_by_status(self, catalog, proxy, manager):
         catalog.tools["a"] = _make_tool("a", status="idle")
         catalog.tools["b"] = _make_tool("b", status="idle")
-        catalog.tools["c"] = _make_tool("c", status="discovered")  # should not be loaded
+        catalog.tools["c"] = _make_tool(
+            "c", status="discovered"
+        )  # should not be loaded
 
         count = await manager.load_by_status("idle")
         assert count == 2
@@ -255,7 +267,9 @@ class TestIdleTimeout:
 
     async def test_auto_unload_on_idle_timeout(self, catalog, proxy):
         """Tools idle beyond timeout should be auto-unloaded."""
-        lm = LifecycleManager(catalog=catalog, proxy_manager=proxy, idle_timeout=0.3, check_interval=0.05)
+        lm = LifecycleManager(
+            catalog=catalog, proxy_manager=proxy, idle_timeout=0.3, check_interval=0.05
+        )
 
         catalog.tools["short"] = _make_tool("short", status="loaded")
         catalog.tools["long"] = _make_tool("long", status="loaded")
@@ -269,11 +283,15 @@ class TestIdleTimeout:
         await lm.stop_idle_watch()
 
         assert catalog.tools["short"]["status"] == "idle", "Old tool should be unloaded"
-        assert catalog.tools["long"]["status"] == "loaded", "Recently used tool should remain loaded"
+        assert catalog.tools["long"]["status"] == "loaded", (
+            "Recently used tool should remain loaded"
+        )
 
     async def test_idle_timeout_respected(self, catalog, proxy):
         """Tools with recent usage should NOT be unloaded."""
-        lm = LifecycleManager(catalog=catalog, proxy_manager=proxy, idle_timeout=60.0, check_interval=0.05)
+        lm = LifecycleManager(
+            catalog=catalog, proxy_manager=proxy, idle_timeout=60.0, check_interval=0.05
+        )
 
         catalog.tools["active"] = _make_tool("active", status="loaded")
         lm._last_used["active"] = time.monotonic()  # just used
@@ -293,7 +311,11 @@ class TestBuildServiceConfig:
     """Test the static _build_service_config helper with various inputs."""
 
     def test_from_metadata_command(self):
-        tool = _make_tool("my-tool", name="my-tool", metadata={"command": "my-mcp", "args": ["--port", "8080"]})
+        tool = _make_tool(
+            "my-tool",
+            name="my-tool",
+            metadata={"command": "my-mcp", "args": ["--port", "8080"]},
+        )
         cfg = LifecycleManager._build_service_config(tool)
         assert cfg is not None
         assert cfg["command"] == "my-mcp"
@@ -305,7 +327,14 @@ class TestBuildServiceConfig:
         cfg = LifecycleManager._build_service_config(tool)
         assert cfg is not None
         assert cfg["command"] == "uv"
-        assert cfg["args"] == ["run", "--package", "kos", "python", "-m", "kos.mcp.server"]
+        assert cfg["args"] == [
+            "run",
+            "--package",
+            "kos",
+            "python",
+            "-m",
+            "kos.mcp.server",
+        ]
         assert cfg["mcp_endpoint"] == "stdio"
 
     def test_from_simple_entry(self):
@@ -325,7 +354,9 @@ class TestBuildServiceConfig:
         assert cfg["mcp_endpoint"] == "stdio"
 
     def test_from_node_type(self):
-        tool = _make_tool("mcp-server-sqlite", name="mcp-server-sqlite", tool_type="node")
+        tool = _make_tool(
+            "mcp-server-sqlite", name="mcp-server-sqlite", tool_type="node"
+        )
         cfg = LifecycleManager._build_service_config(tool)
         assert cfg is not None
         assert cfg["command"] == "npx"
@@ -342,7 +373,12 @@ class TestBuildServiceConfig:
 
     def test_repo_only_returns_none(self):
         """Tool with only repo_url and unknown type should return None."""
-        tool = _make_tool("repo-only", name="repo-only", repo_url="https://github.com/org/repo", tool_type="")
+        tool = _make_tool(
+            "repo-only",
+            name="repo-only",
+            repo_url="https://github.com/org/repo",
+            tool_type="",
+        )
         cfg = LifecycleManager._build_service_config(tool)
         assert cfg is None
 
@@ -405,7 +441,9 @@ class TestUsageCallbackIntegration:
 
     async def test_load_wires_usage_callback(self, catalog, proxy, manager):
         """Loading a tool should set the usage callback on the proxy."""
-        catalog.tools["svc1"] = _make_tool("svc1", name="svc1", status="idle", tool_type="node")
+        catalog.tools["svc1"] = _make_tool(
+            "svc1", name="svc1", status="idle", tool_type="node"
+        )
         await manager.load_tool("svc1")
 
         assert len(proxy.registry._usage_callbacks) > 0
@@ -414,7 +452,9 @@ class TestUsageCallbackIntegration:
 
     async def test_unload_last_tool_clears_callback(self, catalog, proxy, manager):
         """Unloading the last loaded tool should clear the usage callback."""
-        catalog.tools["svc1"] = _make_tool("svc1", name="svc1", status="loaded", tool_type="node")
+        catalog.tools["svc1"] = _make_tool(
+            "svc1", name="svc1", status="loaded", tool_type="node"
+        )
         proxy.services["svc1"] = {"name": "svc1"}
 
         await manager.unload_tool("svc1")
@@ -422,7 +462,9 @@ class TestUsageCallbackIntegration:
 
     async def test_callback_refreshes_last_used(self, catalog, proxy, manager):
         """The usage callback should refresh _last_used timestamp."""
-        catalog.tools["svc1"] = _make_tool("svc1", name="svc1", status="loaded", tool_type="node")
+        catalog.tools["svc1"] = _make_tool(
+            "svc1", name="svc1", status="loaded", tool_type="node"
+        )
         proxy.services["svc1"] = {"name": "svc1"}
 
         # Manually set old timestamp and invoke callback
@@ -433,7 +475,9 @@ class TestUsageCallbackIntegration:
 
     async def test_callback_records_usage_in_catalog(self, catalog, proxy, manager):
         """The usage callback should also record usage in the catalog."""
-        catalog.tools["svc1"] = _make_tool("svc1", name="svc1", status="loaded", tool_type="node")
+        catalog.tools["svc1"] = _make_tool(
+            "svc1", name="svc1", status="loaded", tool_type="node"
+        )
 
         await manager._record_usage_from_proxy("svc1", "some_tool", {})
         assert "svc1" in catalog.usage_records
@@ -451,7 +495,9 @@ class TestRetryHandling:
     async def test_load_retry_on_transient_failure(self, catalog, proxy):
         """Load should retry on transient proxy failures."""
         lm = LifecycleManager(catalog=catalog, proxy_manager=proxy, max_load_retries=2)
-        catalog.tools["flaky"] = _make_tool("flaky", name="flaky", status="idle", tool_type="node")
+        catalog.tools["flaky"] = _make_tool(
+            "flaky", name="flaky", status="idle", tool_type="node"
+        )
 
         # First call fails, second succeeds
         proxy.add_results["flaky"] = "error: timeout"
@@ -477,7 +523,9 @@ class TestRetryHandling:
     async def test_load_retry_exhausted_still_fails(self, catalog, proxy):
         """Load should fail after exhausting all retries."""
         lm = LifecycleManager(catalog=catalog, proxy_manager=proxy, max_load_retries=2)
-        catalog.tools["always_fail"] = _make_tool("always_fail", name="always_fail", status="idle", tool_type="node")
+        catalog.tools["always_fail"] = _make_tool(
+            "always_fail", name="always_fail", status="idle", tool_type="node"
+        )
 
         call_count = 0
 
@@ -548,7 +596,9 @@ class TestHealthWatch:
         """Health watch should detect disconnected services and reload."""
         lm = LifecycleManager(catalog=catalog, proxy_manager=proxy, check_interval=0.05)
 
-        catalog.tools["svc1"] = _make_tool("svc1", name="svc1", status="loaded", tool_type="node")
+        catalog.tools["svc1"] = _make_tool(
+            "svc1", name="svc1", status="loaded", tool_type="node"
+        )
         lm._last_used["svc1"] = time.time()
 
         # Simulate: proxy says service is NOT connected
@@ -565,7 +615,9 @@ class TestHealthWatch:
         proxy.registry._clients["svc1"] = object()
         lm = LifecycleManager(catalog=catalog, proxy_manager=proxy, check_interval=0.05)
 
-        catalog.tools["svc1"] = _make_tool("svc1", name="svc1", status="loaded", tool_type="node")
+        catalog.tools["svc1"] = _make_tool(
+            "svc1", name="svc1", status="loaded", tool_type="node"
+        )
         lm._last_used["svc1"] = time.time()
 
         await lm.start_health_watch()
@@ -615,7 +667,9 @@ class TestBuildServiceConfigHttp:
 
     def test_http_endpoint_from_tool(self):
         """Tool with top-level mcp_endpoint should produce HTTP config."""
-        tool = _make_tool("http-tool", name="http-tool", mcp_endpoint="http://localhost:8080/mcp")
+        tool = _make_tool(
+            "http-tool", name="http-tool", mcp_endpoint="http://localhost:8080/mcp"
+        )
         cfg = LifecycleManager._build_service_config(tool)
         assert cfg is not None
         assert cfg["mcp_endpoint"] == "http://localhost:8080/mcp"
@@ -624,7 +678,11 @@ class TestBuildServiceConfigHttp:
 
     def test_http_endpoint_from_metadata(self):
         """Tool with mcp_endpoint in metadata should produce HTTP config."""
-        tool = _make_tool("meta-http", name="meta-http", metadata={"mcp_endpoint": "http://service:9090/sse"})
+        tool = _make_tool(
+            "meta-http",
+            name="meta-http",
+            metadata={"mcp_endpoint": "http://service:9090/sse"},
+        )
         cfg = LifecycleManager._build_service_config(tool)
         assert cfg is not None
         assert cfg["mcp_endpoint"] == "http://service:9090/sse"
@@ -645,7 +703,9 @@ class TestBuildServiceConfigHttp:
 
     def test_https_endpoint(self):
         """HTTPS endpoints are also valid."""
-        tool = _make_tool("secure", name="secure", mcp_endpoint="https://api.example.com/mcp")
+        tool = _make_tool(
+            "secure", name="secure", mcp_endpoint="https://api.example.com/mcp"
+        )
         cfg = LifecycleManager._build_service_config(tool)
         assert cfg is not None
         assert cfg["mcp_endpoint"] == "https://api.example.com/mcp"
@@ -728,8 +788,12 @@ class TestConcurrencySafety:
 
     async def test_concurrent_load_and_watch(self, catalog, proxy):
         """load_tool while idle watch is running should not raise."""
-        lm = LifecycleManager(catalog=catalog, proxy_manager=proxy, idle_timeout=0.1, check_interval=0.05)
-        catalog.tools["t1"] = _make_tool("t1", name="t1", status="idle", tool_type="node")
+        lm = LifecycleManager(
+            catalog=catalog, proxy_manager=proxy, idle_timeout=0.1, check_interval=0.05
+        )
+        catalog.tools["t1"] = _make_tool(
+            "t1", name="t1", status="idle", tool_type="node"
+        )
 
         await lm.start_idle_watch()
         await lm.load_tool("t1")

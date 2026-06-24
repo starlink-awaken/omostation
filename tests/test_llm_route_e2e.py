@@ -34,10 +34,23 @@ def _make_tool(
 
 
 CANDIDATES = [
-    _make_tool("codeanalyze", "Analyze Python code quality", ["python", "static-analysis"], 0.95),
+    _make_tool(
+        "codeanalyze",
+        "Analyze Python code quality",
+        ["python", "static-analysis"],
+        0.95,
+    ),
     _make_tool("dbquery", "Query SQL databases", ["sql", "database"], 0.80),
-    _make_tool("dockerps", "List Docker containers", ["docker", "containers"], 0.70, "discovered"),
-    _make_tool("deploy", "Deploy services to kubernetes", ["k8s", "deploy"], 0.60, "discovered"),
+    _make_tool(
+        "dockerps",
+        "List Docker containers",
+        ["docker", "containers"],
+        0.70,
+        "discovered",
+    ),
+    _make_tool(
+        "deploy", "Deploy services to kubernetes", ["k8s", "deploy"], 0.60, "discovered"
+    ),
     _make_tool("monitor", "Monitor system metrics", ["metrics", "monitoring"], 0.50),
 ]
 
@@ -98,7 +111,9 @@ class TestPromptBuilding:
 
     def test_prompt_contains_user_query(self, router):
         """Prompt should embed the original user request."""
-        prompt = router._build_selection_prompt("deploy to production", CANDIDATES_SHORT)
+        prompt = router._build_selection_prompt(
+            "deploy to production", CANDIDATES_SHORT
+        )
         assert "deploy to production" in prompt or "deploy to production" in prompt
 
     def test_prompt_includes_quality_scores(self, router):
@@ -109,7 +124,9 @@ class TestPromptBuilding:
 
     def test_prompt_includes_tags(self, router):
         """Prompt should include up to 5 tags per tool."""
-        tool = _make_tool("multitag", tags=["tag_a", "tag_b", "tag_c", "tag_d", "tag_e", "tag_f"])
+        tool = _make_tool(
+            "multitag", tags=["tag_a", "tag_b", "tag_c", "tag_d", "tag_e", "tag_f"]
+        )
         prompt = router._build_selection_prompt("test", [tool])
         assert "tag_a, tag_b, tag_c, tag_d, tag_e" in prompt
         assert "tag_f" not in prompt  # only first 5 tags
@@ -140,12 +157,18 @@ class TestPromptBuilding:
         many = [_make_tool(f"tool_{i}", quality_score=0.5) for i in range(15)]
         prompt = router._build_selection_prompt("test", many)
         # Count numbered entries — should be 10
-        [l for l in prompt.splitlines() if l.strip().startswith(tuple(str(i) + "." for i in range(1, 11)))]  # noqa: E741
+        [
+            l
+            for l in prompt.splitlines()
+            if l.strip().startswith(tuple(str(i) + "." for i in range(1, 11)))
+        ]  # noqa: E741
         # A simpler check: "Available tools" section should have at most 10 entries
         entries = [
             l
             for l in prompt.splitlines()  # noqa: E741
-            if l.strip().startswith(("1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10."))
+            if l.strip().startswith(
+                ("1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.")
+            )
         ]
         assert len(entries) <= 10
 
@@ -189,7 +212,9 @@ class TestLLMSelectTool:
     @pytest.mark.asyncio
     async def test_llm_raises_exception(self, router_with_llm):
         """LLM.generate() raises an error → fallback to quality sort."""
-        router_with_llm._llm.generate = AsyncMock(side_effect=RuntimeError("LLM timeout"))
+        router_with_llm._llm.generate = AsyncMock(
+            side_effect=RuntimeError("LLM timeout")
+        )
         result = await router_with_llm._llm_select_tool("analyze code", CANDIDATES)
         assert result["status"] == "ok"
         assert result["mode"] == "llm_fallback"
@@ -389,7 +414,9 @@ def _real_llm_available() -> bool:
         return False
 
 
-@pytest.mark.skipif(not _real_llm_available(), reason="minerva package or local Ollama not available")
+@pytest.mark.skipif(
+    not _real_llm_available(), reason="minerva package or local Ollama not available"
+)
 @pytest.mark.asyncio
 async def test_real_llm_selects_tool():
     """Integration test with actual Ollama — validates real LLM output format."""
@@ -406,7 +433,9 @@ async def test_real_llm_selects_tool():
     router._llm = client
 
     candidates = [
-        _make_tool("codeanalyze", "Analyze Python code for quality issues", ["python"], 0.95),
+        _make_tool(
+            "codeanalyze", "Analyze Python code for quality issues", ["python"], 0.95
+        ),
         _make_tool("dbquery", "Execute SQL queries against a database", ["sql"], 0.80),
     ]
     # Seed catalog so route_recommend can find them

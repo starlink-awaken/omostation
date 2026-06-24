@@ -82,7 +82,16 @@ class TestPipelineMetrics:
         assert m.get_pipeline_completion_rate("p1") == 0.0
 
     def test_get_pipeline_completion_rate_valid(self):
-        m = PipelineMetrics(pipeline_stats={"p1": {"total": 10, "successful": 8, "failed": 2, "total_duration": 50.0}})
+        m = PipelineMetrics(
+            pipeline_stats={
+                "p1": {
+                    "total": 10,
+                    "successful": 8,
+                    "failed": 2,
+                    "total_duration": 50.0,
+                }
+            }
+        )
         assert m.get_pipeline_completion_rate("p1") == 80.0
 
     def test_get_average_duration_no_pipeline_name_empty(self):
@@ -102,7 +111,11 @@ class TestPipelineMetrics:
         assert m.get_average_duration("p1") == 0.0
 
     def test_get_average_duration_specific(self):
-        m = PipelineMetrics(pipeline_stats={"p1": {"total": 4, "total_duration": 20.0, "successful": 0, "failed": 0}})
+        m = PipelineMetrics(
+            pipeline_stats={
+                "p1": {"total": 4, "total_duration": 20.0, "successful": 0, "failed": 0}
+            }
+        )
         assert m.get_average_duration("p1") == 5.0
 
 
@@ -165,7 +178,9 @@ class TestCollectorInit:
 class TestCollectorRecord:
     def test_record_successful(self, tmp_collector):
         c, _ = tmp_collector
-        c.record_pipeline_execution("test-pipe", [{"name": "step1", "duration": 1.0}], completed=True)
+        c.record_pipeline_execution(
+            "test-pipe", [{"name": "step1", "duration": 1.0}], completed=True
+        )
 
         assert c.metrics.total_executions == 1
         assert c.metrics.successful_executions == 1
@@ -174,7 +189,9 @@ class TestCollectorRecord:
 
     def test_record_failed(self, tmp_collector):
         c, _ = tmp_collector
-        c.record_pipeline_execution("fail-pipe", [{"name": "step1", "duration": 0.5}], completed=False)
+        c.record_pipeline_execution(
+            "fail-pipe", [{"name": "step1", "duration": 0.5}], completed=False
+        )
 
         assert c.metrics.total_executions == 1
         assert c.metrics.successful_executions == 0
@@ -352,7 +369,9 @@ class TestGlobalFunctions:
             def record_pipeline_execution(self, name, steps, completed):
                 calls.append((name, steps, completed))
 
-        monkeypatch.setattr("agora.metrics.collector._global_collector", FakeCollector())
+        monkeypatch.setattr(
+            "agora.metrics.collector._global_collector", FakeCollector()
+        )
         record_execution("p1", [{"duration": 1.0}], True)
         assert len(calls) == 1
         assert calls[0] == ("p1", [{"duration": 1.0}], True)
@@ -362,7 +381,9 @@ class TestGlobalFunctions:
             def get_completion_rate(self, name):
                 return 75.0 if name else 50.0
 
-        monkeypatch.setattr("agora.metrics.collector._global_collector", FakeCollector())
+        monkeypatch.setattr(
+            "agora.metrics.collector._global_collector", FakeCollector()
+        )
         assert get_completion_rate("p1") == 75.0
         assert get_completion_rate() == 50.0
 
@@ -371,7 +392,9 @@ class TestGlobalFunctions:
             def get_all_metrics(self):
                 return {"pipeline": {}, "timestamp": "now"}
 
-        monkeypatch.setattr("agora.metrics.collector._global_collector", FakeCollector())
+        monkeypatch.setattr(
+            "agora.metrics.collector._global_collector", FakeCollector()
+        )
         result = get_all_pipeline_metrics()
         assert result["timestamp"] == "now"
 
@@ -389,7 +412,11 @@ class TestEdgeCases:
 
     def test_get_slowest_pipelines_non_div_zero(self):
         """pipeline_stats with total=0 should not cause division by zero."""
-        m = PipelineMetrics(pipeline_stats={"p1": {"total": 0, "successful": 0, "failed": 0, "total_duration": 0.0}})
+        m = PipelineMetrics(
+            pipeline_stats={
+                "p1": {"total": 0, "successful": 0, "failed": 0, "total_duration": 0.0}
+            }
+        )
         # This tests max(stats.get("total", 1), 1) guard in get_slowest_pipelines
         collector = PipelineMetricsCollector(storage_path=tempfile.mkdtemp())
         collector.metrics = m

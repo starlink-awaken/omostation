@@ -7,9 +7,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 
-
 def make_node(node_id="test-node", role="worker", bos_uris=None):
     from agora.mcp.swarm import SwarmNode
+
     n = SwarmNode(node_id=node_id, host="127.0.0.1", port=7455, role=role)
     n.bos_uris = bos_uris or []
     n.last_heartbeat = time.time()
@@ -23,6 +23,7 @@ class TestSwarmNode:
 
     def test_is_offline_after_timeout(self):
         from agora.mcp.swarm import HEARTBEAT_TIMEOUT
+
         n = make_node()
         n.last_heartbeat = time.time() - HEARTBEAT_TIMEOUT - 1
         assert not n.is_online
@@ -39,6 +40,7 @@ class TestSwarmNode:
 class TestSwarmOrchestrator:
     def test_register_and_get_node(self):
         from agora.mcp.swarm import SwarmOrchestrator
+
         s = SwarmOrchestrator(role="master")
         n = make_node()
         s.register_node(n)
@@ -48,6 +50,7 @@ class TestSwarmOrchestrator:
 
     def test_get_node_by_uri(self):
         from agora.mcp.swarm import SwarmOrchestrator
+
         s = SwarmOrchestrator(role="master")
 
         n1 = make_node("worker-1", "worker", ["bos://memory/kos/search"])
@@ -65,11 +68,13 @@ class TestSwarmOrchestrator:
 
     def test_get_node_by_uri_not_found(self):
         from agora.mcp.swarm import SwarmOrchestrator
+
         s = SwarmOrchestrator(role="master")
         assert s.get_node_by_uri("bos://nonexistent/service") is None
 
     def test_unregister_node(self):
         from agora.mcp.swarm import SwarmOrchestrator
+
         s = SwarmOrchestrator(role="master")
         n = make_node()
         s.register_node(n)
@@ -79,6 +84,7 @@ class TestSwarmOrchestrator:
 
     def test_longest_prefix_match(self):
         from agora.mcp.swarm import SwarmOrchestrator
+
         s = SwarmOrchestrator(role="master")
 
         n1 = make_node("general", "worker", ["bos://memory/"])
@@ -92,6 +98,7 @@ class TestSwarmOrchestrator:
 
     def test_filter_by_role(self):
         from agora.mcp.swarm import SwarmOrchestrator
+
         s = SwarmOrchestrator(role="master")
 
         s.register_node(make_node("w1", "worker"))
@@ -104,6 +111,7 @@ class TestSwarmOrchestrator:
 
     def test_status(self):
         from agora.mcp.swarm import SwarmOrchestrator
+
         s = SwarmOrchestrator(role="master")
         s.register_node(make_node("w1", "worker"))
         s.register_node(make_node("w2", "worker"))
@@ -117,6 +125,7 @@ class TestSwarmOrchestrator:
     def test_offline_node_not_in_get_node_by_uri(self):
         from agora.mcp.swarm import HEARTBEAT_TIMEOUT
         from agora.mcp.swarm import SwarmOrchestrator
+
         s = SwarmOrchestrator(role="master")
 
         n = make_node("dead-node", "worker", ["bos://memory/kos/search"])
@@ -127,15 +136,16 @@ class TestSwarmOrchestrator:
 
     def test_global_singleton(self):
         from agora.mcp.swarm import get_swarm
+
         s1 = get_swarm()
         s2 = get_swarm()
         assert s1 is s2  # 单例
 
 
 class TestSwarmAdvanced:
-
     def test_health_grading(self):
         from agora.mcp.swarm import NodeHealth
+
         n = make_node()
         n.last_heartbeat = time.time()
         assert n.health == NodeHealth.GREEN
@@ -149,12 +159,14 @@ class TestSwarmAdvanced:
 
     def test_health_red_offline(self):
         from agora.mcp.swarm import HEARTBEAT_TIMEOUT
+
         n = make_node()
         n.last_heartbeat = time.time() - HEARTBEAT_TIMEOUT - 10
         assert n.health == "red"
 
     def test_load_aware_routing(self):
         from agora.mcp.swarm import SwarmOrchestrator
+
         s = SwarmOrchestrator(role="master")
 
         # Two workers with same URI, different load
@@ -173,6 +185,7 @@ class TestSwarmAdvanced:
 
     def test_yellow_node_deprioritized(self):
         from agora.mcp.swarm import SwarmOrchestrator
+
         s = SwarmOrchestrator(role="master")
 
         w1 = make_node("w1", "worker", ["bos://memory/kos/"])
@@ -190,6 +203,7 @@ class TestSwarmAdvanced:
 
     def test_leader_election_master_wins(self):
         from agora.mcp.swarm import SwarmOrchestrator
+
         s = SwarmOrchestrator(role="master")
         s.register_node(make_node("m1", "master"))
         s.register_node(make_node("w1", "worker"))
@@ -202,6 +216,7 @@ class TestSwarmAdvanced:
 
     def test_report_load(self):
         from agora.mcp.swarm import SwarmOrchestrator
+
         s = SwarmOrchestrator(role="worker")
         n = make_node(s.node_id, "worker")
         s.register_node(n)
@@ -215,21 +230,56 @@ class TestSwarmAdvanced:
 class TestSwarmL0Model:
     def test_mechanism_yaml_created(self):
         import yaml
-        p = Path(__file__).parent.parent.parent.parent / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "mechanism" / "MECH-AGORA-SWARM.yaml"
+
+        p = (
+            Path(__file__).parent.parent.parent.parent
+            / "ecos"
+            / "src"
+            / "ecos"
+            / "ssot"
+            / "mof"
+            / "m1"
+            / "mechanism"
+            / "MECH-AGORA-SWARM.yaml"
+        )
         if not p.exists():
             # Always recreate if missing (git reset issue)
             p.parent.mkdir(parents=True, exist_ok=True)
-            node = {"id": "MECH-AGORA-SWARM", "type": "Mechanism", "name": "Agora Swarm",
-                    "domain": "meta", "layer": "I0", "status": "active",
-                    "version": "1.0.0", "created": "2026-06-08",
-                    "properties": {"roles": ["master","worker","function"]}}
-            with open(p, 'w') as f:
+            node = {
+                "id": "MECH-AGORA-SWARM",
+                "type": "Mechanism",
+                "name": "Agora Swarm",
+                "domain": "meta",
+                "layer": "I0",
+                "status": "active",
+                "version": "1.0.0",
+                "created": "2026-06-08",
+                "properties": {"roles": ["master", "worker", "function"]},
+            }
+            with open(p, "w") as f:
                 f.write("# M1: MECH-AGORA-SWARM\n")
-                yaml.dump(node, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+                yaml.dump(
+                    node,
+                    f,
+                    allow_unicode=True,
+                    default_flow_style=False,
+                    sort_keys=False,
+                )
         assert p.exists()
 
     def test_mechanism_yaml_valid(self):
         import yaml
-        p = Path(__file__).parent.parent.parent.parent / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "mechanism" / "MECH-AGORA-SWARM.yaml"
+
+        p = (
+            Path(__file__).parent.parent.parent.parent
+            / "ecos"
+            / "src"
+            / "ecos"
+            / "ssot"
+            / "mof"
+            / "m1"
+            / "mechanism"
+            / "MECH-AGORA-SWARM.yaml"
+        )
         node = yaml.safe_load(open(p))
         assert node["type"] == "Mechanism"

@@ -46,7 +46,11 @@ class FakeToolCatalog:
     def search_tools(self, query: str = "", limit: int = 20, **filters) -> list[dict]:
         results = []
         for tid, t in self.tools.items():
-            if not query or query.lower() in tid.lower() or query.lower() in t.get("name", "").lower():
+            if (
+                not query
+                or query.lower() in tid.lower()
+                or query.lower() in t.get("name", "").lower()
+            ):
                 if all(t.get(k) == v for k, v in filters.items()):
                     results.append(t)
         return results[:limit]

@@ -102,7 +102,7 @@ class NodeIdentity:
     def sign(self, message: bytes, private_key_b64: str) -> str:
         """Sign a message using the node's private key."""
         from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-        
+
         sk_bytes = base64.b64decode(private_key_b64)
         sk = Ed25519PrivateKey.from_private_bytes(sk_bytes)
         sig = sk.sign(message)
@@ -112,6 +112,7 @@ class NodeIdentity:
     def verify(message: bytes, signature_b64: str, public_key_b64: str) -> bool:
         """Verify a signature against a public key."""
         from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
         try:
             pk_bytes = base64.b64decode(public_key_b64)
             sig_bytes = base64.b64decode(signature_b64)

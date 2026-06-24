@@ -191,7 +191,9 @@ class ForgeLoader:
         if tool.service and tool.service.uri in self.pool.processes:
             self.pool.shutdown(tool.service.uri)
         # 从全局注册表移除
-        idx = next((i for i, s in enumerate(POC_SERVICES) if s.uri == tool.bos_uri), None)
+        idx = next(
+            (i for i, s in enumerate(POC_SERVICES) if s.uri == tool.bos_uri), None
+        )
         if idx is not None:
             POC_SERVICES.pop(idx)
         _log.info("forge.unloaded name=%s uri=%s", name, tool.bos_uri)

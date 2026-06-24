@@ -1,4 +1,5 @@
 """Test AsyncioBackend — 4 cases covering Protocol + publish + subscribe."""
+
 import asyncio
 
 import pytest
@@ -11,6 +12,7 @@ class TestAsyncioBackend:
     def test_implements_protocol(self):
         b = AsyncioBackend()
         from agora.bus.backends.base import BusBackend
+
         assert isinstance(b, BusBackend)
 
     def test_is_available(self):
@@ -26,7 +28,9 @@ class TestAsyncioBackend:
             received.append(env)
 
         b.subscribe("pipeline:*", callback)
-        env = BusEnvelope(type=EventType.PIPELINE_COMPLETED, source="t", payload={"x": 1})
+        env = BusEnvelope(
+            type=EventType.PIPELINE_COMPLETED, source="t", payload={"x": 1}
+        )
         b.publish(env)
 
         # Wait for queue to drain

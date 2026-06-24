@@ -14,6 +14,7 @@ Provides 6 MCP tools that wrap bin/workspace-audit:
   - 通过环境变量 WORKSPACE_AUDIT_ROOT 传入 workspace 根
   - 返回 _ok({"report": ...}) 或 _error("...") 标准格式
 """
+
 from __future__ import annotations
 
 import json
@@ -51,12 +52,22 @@ def _resolve_audit_script(workspace_root: str) -> Path:
 
 
 # ── Core runner ──
-def _run_audit(workspace_root: str, dim: str | None = None,
-               fmt: str = "json", since: str = "7d", timeout: int = 60) -> dict:
+def _run_audit(
+    workspace_root: str,
+    dim: str | None = None,
+    fmt: str = "json",
+    since: str = "7d",
+    timeout: int = 60,
+) -> dict:
     """调 bin/workspace-audit 子进程, 返 stdout/stderr/returncode 字典."""
     script = _resolve_audit_script(workspace_root)
     if not script.exists():
-        return {"error": f"找不到 {script}", "stdout": "", "stderr": "", "returncode": -1}
+        return {
+            "error": f"找不到 {script}",
+            "stdout": "",
+            "stderr": "",
+            "returncode": -1,
+        }
 
     cmd = [os.environ.get("PYTHON", "python3"), str(script)]
     if dim:
@@ -68,8 +79,12 @@ def _run_audit(workspace_root: str, dim: str | None = None,
         env = os.environ.copy()
         env["WORKSPACE_AUDIT_ROOT"] = workspace_root
         result = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=timeout,
-            cwd=workspace_root, env=env,
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=workspace_root,
+            env=env,
         )
         return {
             "stdout": result.stdout,
@@ -77,7 +92,12 @@ def _run_audit(workspace_root: str, dim: str | None = None,
             "returncode": result.returncode,
         }
     except subprocess.TimeoutExpired:
-        return {"error": f"workspace-audit 超时 ({timeout}s)", "stdout": "", "stderr": "", "returncode": -1}
+        return {
+            "error": f"workspace-audit 超时 ({timeout}s)",
+            "stdout": "",
+            "stderr": "",
+            "returncode": -1,
+        }
     except FileNotFoundError as exc:
         return {"error": str(exc), "stdout": "", "stderr": "", "returncode": -1}
 
@@ -95,6 +115,7 @@ def _parse_report(stdout: str, fmt: str) -> dict | str:
 # ═══════════════════════════════════════════════════════════════
 # Tool Registration
 # ═══════════════════════════════════════════════════════════════
+
 
 def register_workspace_audit_tools(mcp: FastMCP) -> None:
     """Register all workspace-audit MCP tools (Round 43 P1 修真)."""
@@ -125,11 +146,13 @@ def register_workspace_audit_tools(mcp: FastMCP) -> None:
                 f"workspace-audit 退出码 {result['returncode']}: "
                 f"{result['stderr'][:500]}"
             )
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "dim": dim,
-            "report": _parse_report(result["stdout"], fmt),
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "dim": dim,
+                "report": _parse_report(result["stdout"], fmt),
+            }
+        )
 
     # ── workspace_audit_governance ──────────────────────────────
 
@@ -140,10 +163,12 @@ def register_workspace_audit_tools(mcp: FastMCP) -> None:
         result = _run_audit(ws_root, dim="governance", fmt="json")
         if "error" in result:
             return _error(result["error"])
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "report": _parse_report(result["stdout"], "json"),
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "report": _parse_report(result["stdout"], "json"),
+            }
+        )
 
     # ── workspace_audit_lint ────────────────────────────────────
 
@@ -154,10 +179,12 @@ def register_workspace_audit_tools(mcp: FastMCP) -> None:
         result = _run_audit(ws_root, dim="lint", fmt="json")
         if "error" in result:
             return _error(result["error"])
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "report": _parse_report(result["stdout"], "json"),
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "report": _parse_report(result["stdout"], "json"),
+            }
+        )
 
     # ── workspace_audit_radar ───────────────────────────────────
 
@@ -168,10 +195,12 @@ def register_workspace_audit_tools(mcp: FastMCP) -> None:
         result = _run_audit(ws_root, dim="radar", fmt="json")
         if "error" in result:
             return _error(result["error"])
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "report": _parse_report(result["stdout"], "json"),
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "report": _parse_report(result["stdout"], "json"),
+            }
+        )
 
     # ── workspace_audit_ssot ────────────────────────────────────
 
@@ -182,10 +211,12 @@ def register_workspace_audit_tools(mcp: FastMCP) -> None:
         result = _run_audit(ws_root, dim="ssot", fmt="json")
         if "error" in result:
             return _error(result["error"])
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "report": _parse_report(result["stdout"], "json"),
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "report": _parse_report(result["stdout"], "json"),
+            }
+        )
 
     # ── workspace_audit_gitlink ─────────────────────────────────
 
@@ -196,10 +227,12 @@ def register_workspace_audit_tools(mcp: FastMCP) -> None:
         result = _run_audit(ws_root, dim="gitlink", fmt="json")
         if "error" in result:
             return _error(result["error"])
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "report": _parse_report(result["stdout"], "json"),
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "report": _parse_report(result["stdout"], "json"),
+            }
+        )
 
     # ── workspace_audit_ops ─────────────────────────────────────
 
@@ -214,8 +247,10 @@ def register_workspace_audit_tools(mcp: FastMCP) -> None:
         result = _run_audit(ws_root, dim="ops", fmt="json", since=since)
         if "error" in result:
             return _error(result["error"])
-        return _ok({
-            "format_version": FORMAT_VERSION,
-            "since": since,
-            "report": _parse_report(result["stdout"], "json"),
-        })
+        return _ok(
+            {
+                "format_version": FORMAT_VERSION,
+                "since": since,
+                "report": _parse_report(result["stdout"], "json"),
+            }
+        )

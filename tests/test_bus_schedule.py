@@ -1,4 +1,5 @@
 """Test schedule() decorator — 3 cases."""
+
 from agora.bus import schedule
 
 

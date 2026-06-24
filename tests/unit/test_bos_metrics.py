@@ -7,6 +7,7 @@
   4. summary — 全量汇总
   5. _prefix — URI 前缀提取
 """
+
 from __future__ import annotations
 
 
@@ -17,10 +18,11 @@ from agora.mcp.bos_metrics import BOSMetrics, MetricsStore  # type: ignore[impor
 
 @pytest.fixture(autouse=True)
 def mock_metrics_db(monkeypatch):
-    
+
     def mocked_init(self):
         self._store = MetricsStore(db_path=":memory:")
         from collections import defaultdict
+
         self._stats = defaultdict(
             lambda: {"calls": 0, "success": 0, "failure": 0, "total_latency_ms": 0}
         )
@@ -112,6 +114,7 @@ class TestBOSMetricsTrack:
             return "ok"
 
         import asyncio
+
         result = asyncio.run(handler("bos://test/svc", key="val"))
         assert result == "ok"
         stats = self.m.status("bos://test")
@@ -127,6 +130,7 @@ class TestBOSMetricsTrack:
             raise ValueError("fail")
 
         import asyncio
+
         with pytest.raises(ValueError):
             asyncio.run(failing_handler("bos://test/svc"))
         stats = self.m.status("bos://test")
@@ -209,6 +213,7 @@ class TestBOSMetricsSummary:
         assert s["total_failure"] == 1
         assert s["prefixes"] == 2
         import pytest as _pt
+
         assert s["success_rate"] == _pt.approx(2 / 3, rel=1e-2)
 
     def test_summary_avg_latency(self):

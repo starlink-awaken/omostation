@@ -101,7 +101,9 @@ class TestVerifySignature:
         raw = __import__("base64").b64decode(sig)
         tampered = bytearray(raw)
         tampered[0] ^= 0xFF
-        assert not verify_signature("test", __import__("base64").b64encode(bytes(tampered)).decode(), vk)
+        assert not verify_signature(
+            "test", __import__("base64").b64encode(bytes(tampered)).decode(), vk
+        )
 
     def test_time_window_flexibility(self):
         vk, sk = generate_key_pair()
@@ -214,7 +216,9 @@ class TestRegister:
         assert result["status"] == "registered"
 
     def test_register_with_capabilities(self, registry):
-        result = registry.register("agent-1", capabilities=["read", "write", "research"])
+        result = registry.register(
+            "agent-1", capabilities=["read", "write", "research"]
+        )
         assert result["status"] == "registered"
 
     def test_register_appears_in_list(self, registry):
@@ -463,7 +467,10 @@ class TestBackupRegistry:
         registry.register("agent-1")
         with open(registry._cache_file, "w") as f:
             f.write("corrupted data")
-        r2 = AgentRegistry(cache_file=registry._cache_file, backup_cache_file=registry._backup_cache_file)
+        r2 = AgentRegistry(
+            cache_file=registry._cache_file,
+            backup_cache_file=registry._backup_cache_file,
+        )
         assert len(r2.list_agents()) == 1
         assert r2.get_status("agent-1") is not None
 
@@ -550,7 +557,9 @@ class TestIntegration:
         assert not os.path.exists(r._cache_file)
         assert r.is_backup_available()
 
-        r2 = AgentRegistry(cache_file=r._cache_file, backup_cache_file=r._backup_cache_file)
+        r2 = AgentRegistry(
+            cache_file=r._cache_file, backup_cache_file=r._backup_cache_file
+        )
         assert len(r2.list_agents()) == 2
 
     def test_re_regeneration_gets_new_key(self, registry):

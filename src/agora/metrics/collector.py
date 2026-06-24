@@ -196,7 +196,9 @@ class PipelineMetricsCollector:
                 source_uri="bos://agora/metrics",
             )
         except Exception as e:
-            logger.warning("metrics_bus_emit_failed pipeline=%s err=%s", pipeline_name, e)
+            logger.warning(
+                "metrics_bus_emit_failed pipeline=%s err=%s", pipeline_name, e
+            )
 
     def get_completion_rate(self, pipeline_name: str | None = None) -> float:
         """

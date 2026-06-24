@@ -1,4 +1,5 @@
 """Bus demo publisher — publishes 3 sample events via agora.bus facade."""
+
 from __future__ import annotations
 
 import time

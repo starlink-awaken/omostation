@@ -13,6 +13,7 @@ P34-W2 状态 (本测试快照):
 
   历史注: P33-W4 时仅 3 条 POC, P34-W2 补全剩余 9 条.
 """
+
 from __future__ import annotations
 
 import json
@@ -53,12 +54,15 @@ ANALYSIS_URIS_IN_RESOLVER = ANALYSIS_URIS  # 所有 12 条
 
 # ── 单元级别 (Registry 层) ──────────────────────────
 
+
 def test_registry_has_12_analysis_uris():
     """W2 验证: bos-registry.json 注册 12 条 Analysis URI."""
     assert REGISTRY_PATH.exists(), f"Registry not found: {REGISTRY_PATH}"
     regs = json.loads(REGISTRY_PATH.read_text())
     analysis_uris = {r["uri"] for r in regs if r.get("domain") == "analysis"}
-    assert len(analysis_uris) == 12, f"Expected 12 analysis URIs, got {len(analysis_uris)}"
+    assert len(analysis_uris) == 12, (
+        f"Expected 12 analysis URIs, got {len(analysis_uris)}"
+    )
     # 全部 URI 必须在 registry 中
     for uri in ANALYSIS_URIS:
         assert uri in analysis_uris, f"Missing from registry: {uri}"
@@ -66,7 +70,9 @@ def test_registry_has_12_analysis_uris():
 
 def test_resolver_has_12_poc_analysis_uris():
     """P34-W2 验证: agora resolver POC_SERVICES 已含全部 analysis URI."""
-    analysis_in_resolver = [u.uri for u in POC_SERVICES if u.uri.startswith("bos://analysis/")]
+    analysis_in_resolver = [
+        u.uri for u in POC_SERVICES if u.uri.startswith("bos://analysis/")
+    ]
     assert len(analysis_in_resolver) >= 12, (
         f"Expected at least 12 analysis URIs in resolver, got {len(analysis_in_resolver)}: "
         f"{analysis_in_resolver}"
@@ -90,7 +96,9 @@ def test_9_analysis_uris_now_in_resolver():
     missing = [u for u in previously_missing if u not in resolver_uris]
     assert not missing, f"Missing from resolver: {missing}"
 
+
 # ── 集成级别 (Stdio 真实调用) ─────────────────────────
+
 
 @pytest.mark.parametrize("uri", ANALYSIS_URIS_IN_RESOLVER)
 def test_3_poc_uris_invoke_stdio(uri):
@@ -134,8 +142,10 @@ def test_minerva_research_real_query():
         assert "result" in result
         r = result["result"]
         # 兼容 POC mock (report/sources) 和实际 (message/action_dispatched, 或者是 result/status 包裹)
-        assert any(k in r for k in ("message", "action_dispatched", "report", "status", "result")), \
-            f"minerva result lacks expected keys: {list(r.keys())}"
+        assert any(
+            k in r
+            for k in ("message", "action_dispatched", "report", "status", "result")
+        ), f"minerva result lacks expected keys: {list(r.keys())}"
     else:
         # 如果失败, 记录但不失败测试 (允许基础设施升级)
         pytest.skip(f"minerva.research infra not ready: {result.get('error')}")
@@ -172,23 +182,27 @@ def test_codeanalyze_scan_stdio_invoke():
         assert "timeout" not in err.lower()
 
 
-@pytest.mark.parametrize("uri", [
-    "bos://analysis/minerva/draft",
-    "bos://analysis/minerva/audit",
-    "bos://analysis/ontoderive/audit",
-    "bos://analysis/ontoderive/fact-check",
-    "bos://analysis/codeanalyze/report",
-    "bos://analysis/codeanalyze/lint",
-    "bos://analysis/iris/connect",
-    "bos://analysis/iris/transform",
-    "bos://analysis/iris/validate",
-])
+@pytest.mark.parametrize(
+    "uri",
+    [
+        "bos://analysis/minerva/draft",
+        "bos://analysis/minerva/audit",
+        "bos://analysis/ontoderive/audit",
+        "bos://analysis/ontoderive/fact-check",
+        "bos://analysis/codeanalyze/report",
+        "bos://analysis/codeanalyze/lint",
+        "bos://analysis/iris/connect",
+        "bos://analysis/iris/transform",
+        "bos://analysis/iris/validate",
+    ],
+)
 def test_9_uris_now_resolvable(uri):
     """P34-W2 验证: 原 9 条 URI 现已可 resolve (P34-W2 已注册到 POC_SERVICES)."""
     assert uri in [s.uri for s in POC_SERVICES], f"P34-W2 应已注册: {uri}"
 
 
 # ── 协议健康自检 ─────────────────────────────────────
+
 
 def test_parse_12_analysis_uris():
     """W2 验证: 12 条 URI 全部可被 parse_bos_uri 正确解析."""
@@ -197,10 +211,17 @@ def test_parse_12_analysis_uris():
         assert parsed["domain"] == "analysis"
         assert parsed["package"] in {"minerva", "ontoderive", "codeanalyze", "iris"}
         assert parsed["action"] in {
-            "research", "draft", "audit",
-            "derive", "fact-check",
-            "scan", "report", "lint",
-            "connect", "transform", "validate",
+            "research",
+            "draft",
+            "audit",
+            "derive",
+            "fact-check",
+            "scan",
+            "report",
+            "lint",
+            "connect",
+            "transform",
+            "validate",
         }
 
 
@@ -210,16 +231,21 @@ def test_list_services_count():
     assert len(services) == len(POC_SERVICES)
     # P34-W2 完成: 12 条 analysis
     analysis_count = sum(1 for s in services if s["domain"] == "analysis")
-    assert analysis_count >= 12, f"Expected at least 12 analysis services, got {analysis_count}"
+    assert analysis_count >= 12, (
+        f"Expected at least 12 analysis services, got {analysis_count}"
+    )
 
 
 # ── 摘要 (W2 报告用) ─────────────────────────────────
+
 
 def test_p34w2_summary():
     """P34-W2 验证: 摘要状态 — registry 12, resolver 12, gap 0."""
     regs = json.loads(REGISTRY_PATH.read_text())
     analysis_in_registry = sum(1 for r in regs if r.get("domain") == "analysis")
-    analysis_in_resolver = sum(1 for u in POC_SERVICES if u.uri.startswith("bos://analysis/"))
+    analysis_in_resolver = sum(
+        1 for u in POC_SERVICES if u.uri.startswith("bos://analysis/")
+    )
     summary = {
         "registry_analysis_count": analysis_in_registry,
         "resolver_analysis_count": analysis_in_resolver,

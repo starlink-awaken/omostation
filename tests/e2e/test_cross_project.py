@@ -17,7 +17,9 @@ import pytest
 
 AGORA = shutil.which("agora")
 ONTODERIVE = shutil.which("ontoderive")
-ZPARK = str(Path(__file__).parent.parent.parent.parent / "ontoderive" / "examples" / "z-park")
+ZPARK = str(
+    Path(__file__).parent.parent.parent.parent / "ontoderive" / "examples" / "z-park"
+)
 
 
 def _run(cmd, timeout=30):
@@ -69,7 +71,18 @@ class TestAgoraE2E:
 
     @pytest.mark.skipif(not AGORA, reason="agora CLI not found on PATH")
     def test_agora_event_publish_and_log(self):
-        _run([AGORA, "event", "publish", "test:e2e", "--payload", '{"ok":true}', "--source", "e2e-test"])
+        _run(
+            [
+                AGORA,
+                "event",
+                "publish",
+                "test:e2e",
+                "--payload",
+                '{"ok":true}',
+                "--source",
+                "e2e-test",
+            ]
+        )
         rc, out = _run([AGORA, "event", "log", "--limit", "200"])
         assert rc == 0
         assert "test:e2e" in out
@@ -96,11 +109,15 @@ def _agora_broken():
     return _cli_broken(AGORA)
 
 
-@pytest.mark.skipif(not ONTODERIVE or _ontoderive_broken(), reason="ontoderive CLI broken or not found")
+@pytest.mark.skipif(
+    not ONTODERIVE or _ontoderive_broken(), reason="ontoderive CLI broken or not found"
+)
 class TestOntoDeriveE2E:
     """Verify OntoDerive core functions."""
 
-    @pytest.mark.skip(reason="ontoderive CLI toolforge 命令已移除 (ec90d6c engine/ 合并重构), CLI 只支持 serve")
+    @pytest.mark.skip(
+        reason="ontoderive CLI toolforge 命令已移除 (ec90d6c engine/ 合并重构), CLI 只支持 serve"
+    )
     def test_ontoderive_toolforge(self):
         rc, out = _run([ONTODERIVE, "toolforge", "分析市场", "--json"], timeout=60)
         assert rc == 0
@@ -129,5 +146,9 @@ class TestPipelineIntegration:
         """All built-in pipelines should have valid step definitions."""
         rc, out = _run([AGORA, "pipelines"])
         assert rc == 0
-        pipeline_names = [line.strip(" •") for line in out.split("\n") if line.strip().startswith("•")]
-        assert len(pipeline_names) >= 3, f"Expected >= 3 pipelines, got {pipeline_names}"
+        pipeline_names = [
+            line.strip(" •") for line in out.split("\n") if line.strip().startswith("•")
+        ]
+        assert len(pipeline_names) >= 3, (
+            f"Expected >= 3 pipelines, got {pipeline_names}"
+        )

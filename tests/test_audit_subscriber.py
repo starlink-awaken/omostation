@@ -12,9 +12,16 @@ from agora.core.registry import ServiceRegistry
 
 
 def test_on_event_uses_identity_payload_as_actor():
-    registry = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json"))
-    bus = EventBus(registry=registry, storage_path=str(Path(tempfile.mkdtemp()) / "test-events.json"))
-    subscriber = AuditSubscriber(bus, db_path=str(Path(tempfile.mkdtemp()) / "test-audit.db"))
+    registry = ServiceRegistry(
+        storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json")
+    )
+    bus = EventBus(
+        registry=registry,
+        storage_path=str(Path(tempfile.mkdtemp()) / "test-events.json"),
+    )
+    subscriber = AuditSubscriber(
+        bus, db_path=str(Path(tempfile.mkdtemp()) / "test-audit.db")
+    )
 
     subscriber.on_event(
         {

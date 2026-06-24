@@ -167,35 +167,31 @@ class A2ANetworkTransport(A2ATransport):
         nim = NodeIdentityManager()
         identity = nim.load_or_create()
         private_key = nim.get_private_key_b64()
-        
+
         payload = {
             "target_agent_id": agent_id,
             "message": message,
             "sender_node_id": swarm.node_id,
-            "timestamp": time.time()
+            "timestamp": time.time(),
         }
-        
+
         headers = {
             "X-Swarm-Node-ID": swarm.node_id,
         }
-        
+
         if private_key:
             # Sign exact bytes to prevent serialization drift
-            payload_bytes = json.dumps(payload, separators=(',', ':')).encode('utf-8')
+            payload_bytes = json.dumps(payload, separators=(",", ":")).encode("utf-8")
             signature = identity.sign(payload_bytes, private_key)
             headers["X-Swarm-Signature"] = signature
         else:
-            payload_bytes = json.dumps(payload).encode('utf-8')
+            payload_bytes = json.dumps(payload).encode("utf-8")
 
         mcp_port = getattr(node, "mcp_port", 7422)
         url = f"http://{node.host}:{mcp_port}/api/v1/a2a/send"
         try:
             async with httpx.AsyncClient(timeout=timeout) as client:
-                resp = await client.post(
-                    url,
-                    content=payload_bytes,
-                    headers=headers
-                )
+                resp = await client.post(url, content=payload_bytes, headers=headers)
                 resp.raise_for_status()
                 return resp.json()
         except Exception as e:
@@ -205,4 +201,3 @@ class A2ANetworkTransport(A2ATransport):
                 "error": f"forward_failed: {e}",
                 "target": target_agent_id,
             }
-

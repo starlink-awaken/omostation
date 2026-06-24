@@ -36,7 +36,10 @@ class StdioAdapter:
             request = json.dumps({"args": args, "kwargs": kwargs})
             stdout, stderr = proc.communicate(input=request, timeout=self.timeout)
             if proc.returncode != 0:
-                return {"status": "error", "error": stderr or f"exit code {proc.returncode}"}
+                return {
+                    "status": "error",
+                    "error": stderr or f"exit code {proc.returncode}",
+                }
             try:
                 result = json.loads(stdout)
             except json.JSONDecodeError:

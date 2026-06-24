@@ -10,7 +10,9 @@ from agora.core.service_base import parse_protocol_config, parse_tags
 
 def _new_registry():
     """Create a fresh registry with temp storage (no persistence cross-contamination)."""
-    return ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json"))
+    return ServiceRegistry(
+        storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json")
+    )
 
 
 class TestParseTags:
@@ -18,7 +20,11 @@ class TestParseTags:
         assert parse_tags("research") == ["research"]
 
     def test_multiple_tags(self):
-        assert parse_tags("research, search,knowledge") == ["research", "search", "knowledge"]
+        assert parse_tags("research, search,knowledge") == [
+            "research",
+            "search",
+            "knowledge",
+        ]
 
     def test_empty(self):
         assert parse_tags("") == []
@@ -141,7 +147,9 @@ class TestServiceRegistry:
 
     def test_register_valid_protocol(self):
         r = _new_registry()
-        r.register(Service("api", protocol="rest", mcp_endpoint="http://192.0.2.1:3000"))
+        r.register(
+            Service("api", protocol="rest", mcp_endpoint="http://192.0.2.1:3000")
+        )
         assert r.get("api").protocol == "rest"
 
     def test_register_invalid_protocol(self):
@@ -171,7 +179,11 @@ class TestServiceRegistry:
         result = r.register_heartbeat("worker-1", {"role": "indexer"}, now=100.0)
 
         svc = r.get("worker-1")
-        assert result == {"name": "worker-1", "status": "heartbeat_registered", "last_heartbeat": 100.0}
+        assert result == {
+            "name": "worker-1",
+            "status": "heartbeat_registered",
+            "last_heartbeat": 100.0,
+        }
         assert svc is not None
         assert svc.healthy is True
         assert svc.last_health_check == 100.0
@@ -192,11 +204,15 @@ class TestServiceRegistry:
     def test_cache_snapshot_restores_services_when_registry_is_unavailable(self):
         cache_path = Path(tempfile.mkdtemp()) / "service-cache.json"
         r = _new_registry()
-        r.register(Service("cached-worker", protocol="stdio", mcp_endpoint="stdio:worker"))
+        r.register(
+            Service("cached-worker", protocol="stdio", mcp_endpoint="stdio:worker")
+        )
         r.register_heartbeat("cached-worker", {"role": "worker"}, now=123.0)
         r.save_cache_snapshot(str(cache_path))
 
-        restored = ServiceRegistry.load_cache_snapshot(str(cache_path), max_age_seconds=3600.0, now=124.0)
+        restored = ServiceRegistry.load_cache_snapshot(
+            str(cache_path), max_age_seconds=3600.0, now=124.0
+        )
 
         assert len(restored) == 1
         assert restored[0].name == "cached-worker"
@@ -207,7 +223,9 @@ class TestGrpcHealthCheck:
     def test_grpc_returns_healthy(self):
         """gRPC protocol service returns True (TCP fails, falls back to healthy=True)."""
         r = _new_registry()
-        svc = Service("grpc-svc", protocol="grpc", mcp_endpoint="http://192.0.2.1:50051")
+        svc = Service(
+            "grpc-svc", protocol="grpc", mcp_endpoint="http://192.0.2.1:50051"
+        )
         r.register(svc)
         # TCP connect to 192.0.2.1 fails; falls back to svc.healthy (True)
         assert r.grpc_health_check("grpc-svc") is True
@@ -215,7 +233,9 @@ class TestGrpcHealthCheck:
     def test_non_grpc_returns_false(self):
         """Non-gRPC service returns False from grpc_health_check."""
         r = _new_registry()
-        r.register(Service("rest-svc", protocol="rest", mcp_endpoint="http://192.0.2.1:3000"))
+        r.register(
+            Service("rest-svc", protocol="rest", mcp_endpoint="http://192.0.2.1:3000")
+        )
         assert r.grpc_health_check("rest-svc") is False
 
     def test_nonexistent_returns_false(self):
@@ -226,7 +246,9 @@ class TestGrpcHealthCheck:
     def test_grpc_health_check_unhealthy(self):
         """gRPC service marked unhealthy returns False (TCP fails, falls back to healthy=False)."""
         r = _new_registry()
-        svc = Service("grpc-svc", protocol="grpc", mcp_endpoint="http://192.0.2.1:50051")
+        svc = Service(
+            "grpc-svc", protocol="grpc", mcp_endpoint="http://192.0.2.1:50051"
+        )
         r.register(svc)
         svc.healthy = False
         assert r.grpc_health_check("grpc-svc") is False

@@ -79,8 +79,7 @@ class MetricsStore:
         except Exception:
             self._enabled = False
 
-    def insert(self, prefix: str, uri: str, success: bool,
-               latency_ms: int) -> None:
+    def insert(self, prefix: str, uri: str, success: bool, latency_ms: int) -> None:
         """插入一条记录。"""
         if not self._enabled:
             return
@@ -93,8 +92,16 @@ class MetricsStore:
             conn.execute(
                 "INSERT INTO bos_metrics (prefix, uri, success, latency_ms, "
                 "domain, package, action, timestamp) VALUES (?,?,?,?,?,?,?,?)",
-                (prefix, uri, 1 if success else 0, latency_ms,
-                 domain, package, action, time.time()),
+                (
+                    prefix,
+                    uri,
+                    1 if success else 0,
+                    latency_ms,
+                    domain,
+                    package,
+                    action,
+                    time.time(),
+                ),
             )
             conn.commit()
         except Exception:
@@ -103,8 +110,7 @@ class MetricsStore:
     def load_history(self) -> dict[str, dict[str, int]]:
         """从 SQLite 加载历史聚合数据。"""
         stats: dict[str, dict[str, int]] = defaultdict(
-            lambda: {"calls": 0, "success": 0, "failure": 0,
-                     "total_latency_ms": 0}
+            lambda: {"calls": 0, "success": 0, "failure": 0, "total_latency_ms": 0}
         )
         if not self._enabled:
             return dict(stats)

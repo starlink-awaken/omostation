@@ -2,11 +2,17 @@ from __future__ import annotations
 import logging
 from typing import Any
 from agora.tools.base import (
-    ToolContext, JSONDict, _mcp_surface_contract,
-    SurfaceIngressKind, SurfaceContractError, _surface_payload, SurfaceContract
+    ToolContext,
+    JSONDict,
+    _mcp_surface_contract,
+    SurfaceIngressKind,
+    SurfaceContractError,
+    _surface_payload,
+    SurfaceContract,
 )
 
 _log = logging.getLogger(__name__)
+
 
 def tool_voice_speak(params: JSONDict, ctx: ToolContext) -> JSONDict:
     """MCP handler for voice/speak — synthesize and play text as speech."""
@@ -58,7 +64,6 @@ def tool_voice_speak(params: JSONDict, ctx: ToolContext) -> JSONDict:
         return {"error": str(exc), "success": False, **_surface_payload(surface)}
 
 
-
 def tool_voice_session_info(params: JSONDict, ctx: ToolContext) -> JSONDict:
     """MCP handler for voice/session_info — return current voice session state."""
     surface: SurfaceContract | None = None
@@ -101,7 +106,6 @@ def tool_voice_session_info(params: JSONDict, ctx: ToolContext) -> JSONDict:
         return {"error": str(exc), "success": False, **_surface_payload(surface)}
 
 
-
 def tool_voice_intent_digest(params: JSONDict, ctx: ToolContext) -> JSONDict:
     """MCP handler for voice/intent_digest — convert transcribed text to intent."""
     surface: SurfaceContract | None = None
@@ -141,6 +145,3 @@ def tool_voice_intent_digest(params: JSONDict, ctx: ToolContext) -> JSONDict:
     except Exception as exc:
         _log.error("[MCPToolRegistry] voice/intent_digest error: %s", exc)
         return {"error": str(exc), "success": False, **_surface_payload(surface)}
-
-
-

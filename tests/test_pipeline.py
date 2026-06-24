@@ -107,7 +107,9 @@ class TestPipelineRunAsync:
 
         from agora.pipeline import Pipeline
 
-        r = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json"))
+        r = ServiceRegistry(
+            storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json")
+        )
         pl = Pipeline(r, Router(r))
 
         async def mock_route(tool, args, **kwargs):
@@ -131,7 +133,9 @@ class TestPipelineRunAsync:
 
         from agora.pipeline import Pipeline
 
-        r = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json"))
+        r = ServiceRegistry(
+            storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json")
+        )
         pl = Pipeline(r, Router(r))
 
         async def mock_route(tool, args, **kwargs):
@@ -150,7 +154,9 @@ class TestPipelineRunAsync:
 
         from agora.pipeline import Pipeline
 
-        r = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json"))
+        r = ServiceRegistry(
+            storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json")
+        )
         pl = Pipeline(r, Router(r))
 
         async def mock_route(tool, args, **kwargs):
@@ -158,7 +164,9 @@ class TestPipelineRunAsync:
 
         monkeypatch.setattr(pl.router, "route", mock_route)
 
-        result = await pl.run_parallel("full-pipeline", {"goal": "test", "context": "test", "project": "."})
+        result = await pl.run_parallel(
+            "full-pipeline", {"goal": "test", "context": "test", "project": "."}
+        )
         assert result["pipeline"] == "full-pipeline"
         assert len(result["results"]) == 4
 
@@ -169,7 +177,9 @@ class TestPipelineRunAsync:
 
         from agora.pipeline import Pipeline
 
-        r = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json"))
+        r = ServiceRegistry(
+            storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json")
+        )
         pl = Pipeline(r, Router(r))
 
         results = []
@@ -185,7 +195,9 @@ class TestPipelineRunAsync:
 
         from agora.pipeline import Pipeline
 
-        r = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json"))
+        r = ServiceRegistry(
+            storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json")
+        )
         pl = Pipeline(r, Router(r))
 
         result = await pl.run_parallel("nonexistent", {})
@@ -198,7 +210,9 @@ class TestPipelineRunAsync:
 
         from agora.pipeline import Pipeline
 
-        r = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json"))
+        r = ServiceRegistry(
+            storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json")
+        )
         pl = Pipeline(r, Router(r))
 
         async def mock_route(tool, args, **kwargs):
@@ -218,15 +232,25 @@ class TestPipelineRunAsync:
 
         from agora.pipeline import Pipeline
 
-        r = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json"))
+        r = ServiceRegistry(
+            storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json")
+        )
         pl = Pipeline(r, Router(r))
 
         # A pipeline with circular/unresolvable deps
         pl.define(
             "deadlock",
             [
-                {"tool": "step1", "depends_on": ["step2_output"], "output_as": "step1_output"},
-                {"tool": "step2", "depends_on": ["step1_output"], "output_as": "step2_output"},
+                {
+                    "tool": "step1",
+                    "depends_on": ["step2_output"],
+                    "output_as": "step1_output",
+                },
+                {
+                    "tool": "step2",
+                    "depends_on": ["step1_output"],
+                    "output_as": "step2_output",
+                },
             ],
         )
 
@@ -249,7 +273,9 @@ class TestPipelineSaveLoad:
         import pytest
         from agora.pipeline import Pipeline
 
-        r = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json"))
+        r = ServiceRegistry(
+            storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json")
+        )
         pl = Pipeline(r, Router(r))
         with pytest.raises(ValueError, match="Pipeline not found"):
             pl.save_definition("nonexistent", "/tmp/test-pipe.json")
@@ -260,7 +286,9 @@ class TestPipelineSaveLoad:
 
         from agora.pipeline import Pipeline
 
-        r = ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json"))
+        r = ServiceRegistry(
+            storage_path=str(Path(tempfile.mkdtemp()) / "test-svc.json")
+        )
         pl = Pipeline(r, Router(r))
         result = pl._render_args(
             {"query": "{{goal}} about {{context}}", "fixed": "val"},

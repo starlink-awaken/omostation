@@ -200,16 +200,22 @@ class SwarmOrchestrator:
                             "level": 1,
                             "role": "researcher",
                             "trust_domain": "omostation",
-                            "declared_values": ["human-centric", "objective", "transparent"],
+                            "declared_values": [
+                                "human-centric",
+                                "objective",
+                                "transparent",
+                            ],
                             "supports_otlp": True,
-                            "omo_audit_trail_id": f"SWARM-NODE-{node.node_id}-{int(time.time())}"
-                        }
+                            "omo_audit_trail_id": f"SWARM-NODE-{node.node_id}-{int(time.time())}",
+                        },
                     },
                     lazy=True,
                 )
                 _log.info("Swarm: proxy registered for remote node %s", node.node_id)
             except Exception as e:
-                _log.error("Swarm: failed to register proxy for %s: %s", node.node_id, e)
+                _log.error(
+                    "Swarm: failed to register proxy for %s: %s", node.node_id, e
+                )
 
         try:
             loop = asyncio.get_running_loop()
@@ -467,6 +473,7 @@ class SwarmOrchestrator:
                     mem_mb = 0.0
                     try:
                         import psutil
+
                         cpu_pct = psutil.cpu_percent()
                         mem_mb = psutil.virtual_memory().used / (1024 * 1024)
                     except ImportError:

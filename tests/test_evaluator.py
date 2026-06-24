@@ -248,8 +248,22 @@ class TestEvaluateBatch:
                 "success_rate": 1.0,
                 "name": "best",
             },
-            {"stars": 0, "version": "", "metadata": {}, "usage_count": 0, "success_rate": 0.0, "name": "worst"},
-            {"stars": 100, "version": "1.0.0", "metadata": {}, "usage_count": 10, "success_rate": 0.5, "name": "mid"},
+            {
+                "stars": 0,
+                "version": "",
+                "metadata": {},
+                "usage_count": 0,
+                "success_rate": 0.0,
+                "name": "worst",
+            },
+            {
+                "stars": 100,
+                "version": "1.0.0",
+                "metadata": {},
+                "usage_count": 10,
+                "success_rate": 0.5,
+                "name": "mid",
+            },
         ]
         result = QualityScorer.evaluate_batch(tools)
         assert len(result) == 3
@@ -261,7 +275,15 @@ class TestEvaluateBatch:
         assert result == []
 
     def test_batch_adds_quality_score(self):
-        tools = [{"name": "t1", "stars": 100, "metadata": {}, "usage_count": 0, "success_rate": 0.5}]
+        tools = [
+            {
+                "name": "t1",
+                "stars": 100,
+                "metadata": {},
+                "usage_count": 0,
+                "success_rate": 0.5,
+            }
+        ]
         result = QualityScorer.evaluate_batch(tools)
         assert "quality_score" in result[0]
         assert isinstance(result[0]["quality_score"], float)

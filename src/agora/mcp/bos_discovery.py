@@ -81,11 +81,11 @@ def discover_from_workspace(workspace_root: str = "") -> int:
 
             for match in _BOS_DECL_PATTERN.finditer(section):
                 uri = f"bos://{match['domain']}/{match['package']}/{match['action']}"
-                
+
                 # 规范化适配器名称
                 raw_adapter = (match.group("adapter") or "poc").lower()
                 adapter = "proxy" if "proxy" in raw_adapter else raw_adapter
-                
+
                 bos_router.register(
                     uri,
                     adapter=adapter,

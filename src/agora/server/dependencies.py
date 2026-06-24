@@ -18,12 +18,15 @@ _cached_orchestrator: Orchestrator | None = None
 _cached_router: SmartRouter | None = None
 _cached_lifecycle_mgr: LifecycleManager | None = None
 
+
 def get_proxy_manager() -> ProxyManager | None:
     return _proxy_manager
+
 
 def set_proxy_manager(pm: ProxyManager | None) -> None:
     global _proxy_manager
     _proxy_manager = pm
+
 
 def get_lifecycle_manager() -> LifecycleManager:
     """Get or create the global LifecycleManager singleton."""
@@ -37,10 +40,12 @@ def get_lifecycle_manager() -> LifecycleManager:
     )
     return _cached_lifecycle_mgr
 
+
 def set_lifecycle_manager(lm: LifecycleManager | None) -> None:
     global _lifecycle_manager, _cached_lifecycle_mgr
     _lifecycle_manager = lm
     _cached_lifecycle_mgr = lm
+
 
 def get_cached_catalog() -> ToolCatalog:
     """Get or create the module-level cached ToolCatalog instance."""
@@ -48,6 +53,7 @@ def get_cached_catalog() -> ToolCatalog:
     if _cached_catalog is None:
         _cached_catalog = ToolCatalog()
     return _cached_catalog
+
 
 def get_cached_embeddings() -> EmbeddingStore:
     """Get or create the module-level cached EmbeddingStore instance."""
@@ -57,6 +63,7 @@ def get_cached_embeddings() -> EmbeddingStore:
         _cached_embeddings = EmbeddingStore(catalog._db_path)
     return _cached_embeddings
 
+
 def get_cached_orchestrator() -> Orchestrator:
     """Get or create the module-level cached Orchestrator instance."""
     global _cached_orchestrator
@@ -65,6 +72,7 @@ def get_cached_orchestrator() -> Orchestrator:
         lifecycle = get_lifecycle_manager()
         _cached_orchestrator = Orchestrator(catalog=catalog, lifecycle=lifecycle)
     return _cached_orchestrator
+
 
 def get_cached_router() -> SmartRouter:
     """Get or create the module-level cached SmartRouter instance."""
@@ -82,9 +90,16 @@ def get_cached_router() -> SmartRouter:
         )
     return _cached_router
 
+
 def clear_caches() -> None:
     """Clear all singletons and components. Primarily used during shutdown."""
-    global _cached_catalog, _cached_embeddings, _cached_orchestrator, _cached_router, _cached_lifecycle_mgr, _lifecycle_manager
+    global \
+        _cached_catalog, \
+        _cached_embeddings, \
+        _cached_orchestrator, \
+        _cached_router, \
+        _cached_lifecycle_mgr, \
+        _lifecycle_manager
     if _cached_embeddings is not None:
         _cached_embeddings.close()
     _cached_catalog = None

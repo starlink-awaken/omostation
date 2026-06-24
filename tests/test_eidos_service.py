@@ -9,7 +9,9 @@ from agora.core.registry import KNOWN_PROTOCOLS, Service, ServiceRegistry
 
 
 def _new_registry() -> ServiceRegistry:
-    return ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json"))
+    return ServiceRegistry(
+        storage_path=str(Path(tempfile.mkdtemp()) / "test-services.json")
+    )
 
 
 def test_eidos_protocol_registration() -> None:

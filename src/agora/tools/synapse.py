@@ -2,12 +2,15 @@ from __future__ import annotations
 import logging
 import time
 from agora.tools.base import (
-    ToolContext, JSONDict, _json_object,
+    ToolContext,
+    JSONDict,
+    _json_object,
     _get_synapse_link,
-    _synapse_hello_handler
+    _synapse_hello_handler,
 )
 
 _log = logging.getLogger(__name__)
+
 
 def tool_synapse_hello(params: JSONDict, ctx: ToolContext) -> JSONDict:
     link = _get_synapse_link()
@@ -21,7 +24,6 @@ def tool_synapse_hello(params: JSONDict, ctx: ToolContext) -> JSONDict:
     return response
 
 
-
 def tool_synapse_ping(params: JSONDict, ctx: ToolContext) -> JSONDict:
     link = _get_synapse_link()
     if link is None:
@@ -33,6 +35,3 @@ def tool_synapse_ping(params: JSONDict, ctx: ToolContext) -> JSONDict:
 
         node.last_seen = datetime.now(UTC)
     return {"pong": True, "node_id": link._identity.node_id, "timestamp": time.time()}
-
-
-

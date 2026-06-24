@@ -1,4 +1,5 @@
 """Test RETRY-OWNERSHIP rule — bus layer must NOT retry on failure."""
+
 from unittest.mock import MagicMock
 
 from agora.bus.backends.base import BusBackend

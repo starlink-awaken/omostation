@@ -1,4 +1,5 @@
 """Tests for SSEBackend (R60, 5th bus backend)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -37,7 +38,9 @@ def test_publish_runs_broadcast_when_no_loop() -> None:
     """When called outside an event loop, broadcast should run inline via asyncio.run."""
     stub = _StubSSEManager()
     backend = SSEBackend(sse_manager=stub)
-    env = BusEnvelope(type="pipeline:started", source="agora.bus.test", payload={"x": 1})
+    env = BusEnvelope(
+        type="pipeline:started", source="agora.bus.test", payload={"x": 1}
+    )
     event_id = backend.publish(env)
     assert event_id == env.id
     assert len(stub.broadcasts) == 1

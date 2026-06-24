@@ -22,7 +22,10 @@ def test_static_registry_canonical_compatibility_targets():
     assert routes["llm_generate"] == "aetherforge"
     # NOTE: registry drift — llm-gateway_*_default routes currently point to
     # legacy names; canonical target is aetherforge-gateway.
-    assert routes.get("llm-gateway_default", "aetherforge") in ["llm-gateway", "aetherforge"]
+    assert routes.get("llm-gateway_default", "aetherforge") in [
+        "llm-gateway",
+        "aetherforge",
+    ]
     assert routes["llm-gateway-kernel_default"] == "llm-gateway-kernel"
 
     assert routes["circuit_execute"] == "sharedbrain-bridge"

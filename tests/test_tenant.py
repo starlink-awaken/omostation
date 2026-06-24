@@ -7,7 +7,12 @@ from agora.auth.tenant import Tenant, TenantManager
 
 
 def test_tenant_dataclass():
-    t = Tenant(name="test", token_hash="pbkdf2:sha256:600000:s:h", services=["minerva"], rate_limit=50)
+    t = Tenant(
+        name="test",
+        token_hash="pbkdf2:sha256:600000:s:h",
+        services=["minerva"],
+        rate_limit=50,
+    )
     assert t.name == "test"
     assert t.token_hash == "pbkdf2:sha256:600000:s:h"
     assert t.services == ["minerva"]
@@ -56,7 +61,9 @@ class TestTenantManager:
         assert tm.check_rate_limit("nonexistent") is False
 
     def test_add_and_remove_tenant(self):
-        path = self._make_config("tenants:\n  - name: test\n    token: sk-test\n    services: []\n    rate_limit: 10\n")
+        path = self._make_config(
+            "tenants:\n  - name: test\n    token: sk-test\n    services: []\n    rate_limit: 10\n"
+        )
         tm = TenantManager(path)
         token = tm.add_tenant("new-team", services=["minerva"])
         assert token.startswith("sk-")
@@ -106,7 +113,9 @@ class TestTenantManager:
             assert tenants[0]["name"] == "default"
 
     def test_remove_tenant_updates_token_map(self):
-        path = self._make_config("tenants:\n  - name: test\n    token: sk-test\n    services: []\n    rate_limit: 10\n")
+        path = self._make_config(
+            "tenants:\n  - name: test\n    token: sk-test\n    services: []\n    rate_limit: 10\n"
+        )
         tm = TenantManager(path)
         token = tm.add_tenant("temp")
         assert tm.authenticate(token) is not None

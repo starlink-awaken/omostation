@@ -142,7 +142,9 @@ class BackendHealthChecker:
             list_t = getattr(client, "list_tools", None)
             if list_t:
                 try:
-                    result = await asyncio.wait_for(list_t(), timeout=self._probe_timeout)
+                    result = await asyncio.wait_for(
+                        list_t(), timeout=self._probe_timeout
+                    )
                     if result is not None:
                         self.mark_alive(name)
                         return
@@ -201,16 +203,24 @@ class BackendHealthChecker:
             unregister = getattr(registry, "unregister_service", None)
             if unregister:
                 for name in to_remove:
-                    logger.warning("heartbeat_auto_remove", service=name, failures=self._status[name].consecutive_failures)
+                    logger.warning(
+                        "heartbeat_auto_remove",
+                        service=name,
+                        failures=self._status[name].consecutive_failures,
+                    )
                     try:
                         await unregister(name)
                     except Exception as e:
-                        logger.error("heartbeat_remove_failed", service=name, error=str(e))
+                        logger.error(
+                            "heartbeat_remove_failed", service=name, error=str(e)
+                        )
                     del self._status[name]
 
         alive = sum(1 for s in self._status.values() if s.alive)
         dead = len(self._status) - alive
         if dead > 0:
-            logger.warning("heartbeat_report", alive=alive, dead=dead, total=len(self._status))
+            logger.warning(
+                "heartbeat_report", alive=alive, dead=dead, total=len(self._status)
+            )
         else:
             logger.debug("heartbeat_report", alive=alive, total=len(self._status))

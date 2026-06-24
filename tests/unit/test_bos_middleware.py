@@ -7,6 +7,7 @@
   4. RetryPolicy — 重试策略、指数退避、状态
   5. ConfigWatcher — polling 文件监听
 """
+
 from __future__ import annotations
 
 import time
@@ -47,7 +48,10 @@ class TestRateLimiter:
         for _ in range(10):
             self.limiter.acquire("bos://test/uri")
         # 模拟窗口过期
-        self.limiter._windows[self.limiter._match_key("bos://test/uri")] = (time.time() - 2, 10)
+        self.limiter._windows[self.limiter._match_key("bos://test/uri")] = (
+            time.time() - 2,
+            10,
+        )
         # 新窗口应放行
         assert self.limiter.acquire("bos://test/uri") is True
 
@@ -239,8 +243,10 @@ class TestCache:
 
     def test_unserializable_params_fall_back(self):
         """不可序列化的参数不应报错，返回 None。"""
+
         class Unserializable:
             pass
+
         result = self.cache.get("bos://test/uri", {"bad": Unserializable()})
         assert result is None
 
@@ -256,6 +262,7 @@ class TestRetryPolicy:
 
     async def test_wrap_success_first_try(self):
         """一次成功不应重试。"""
+
         async def ok_func(*a, **kw):
             return ("success_result", True)
 
@@ -279,6 +286,7 @@ class TestRetryPolicy:
 
     async def test_wrap_exhaust_retries(self):
         """超过最大重试次数应返回失败。"""
+
         async def always_fail(*a, **kw):
             raise RuntimeError("always fails")
 

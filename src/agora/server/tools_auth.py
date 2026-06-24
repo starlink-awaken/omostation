@@ -26,8 +26,9 @@ def require_agora_api_key(ctx: AuthContext) -> bool:
         return True  # permissive mode for local development
 
     import structlog
+
     logger = structlog.get_logger(__name__)
-    
+
     token_str = None
     if ctx.token is not None:
         token_str = ctx.token.token
@@ -35,7 +36,11 @@ def require_agora_api_key(ctx: AuthContext) -> bool:
     else:
         # Fallback to checking HTTP headers directly (for our REST backdoor)
         try:
-            from fastmcp.server.dependencies import get_http_request, _current_http_request
+            from fastmcp.server.dependencies import (
+                get_http_request,
+                _current_http_request,
+            )
+
             try:
                 req = _current_http_request.get()
             except LookupError:
@@ -53,7 +58,7 @@ def require_agora_api_key(ctx: AuthContext) -> bool:
     if not token_str:
         logger.info("auth check failed: no token_str")
         return False
-    
+
     token = token_str
 
     if token.startswith("eyJ"):
@@ -66,7 +71,11 @@ def require_agora_api_key(ctx: AuthContext) -> bool:
         except jwt.InvalidTokenError:
             return False
 
-    logger.info("Comparing token with _AGORA_API_KEY", token_len=len(token), key_len=len(_AGORA_API_KEY))
+    logger.info(
+        "Comparing token with _AGORA_API_KEY",
+        token_len=len(token),
+        key_len=len(_AGORA_API_KEY),
+    )
     if token == _AGORA_API_KEY:
         agora_role_ctx.set("admin")
         return True

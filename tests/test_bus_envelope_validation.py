@@ -1,4 +1,5 @@
 """Test BusEnvelope strict validation (R64)."""
+
 import pytest
 
 from agora.bus.envelope import BusEnvelope, EventType

@@ -126,7 +126,9 @@ class TestOrchestratorDiscoverAndSave:
     """Orchestrator.discover_and_save: discovery → evaluation → catalog storage."""
 
     @pytest.mark.asyncio
-    async def test_discover_and_save_from_local_registry(self, registry_path, orchestrator_no_lifecycle, monkeypatch):
+    async def test_discover_and_save_from_local_registry(
+        self, registry_path, orchestrator_no_lifecycle, monkeypatch
+    ):
         """Discover from local registry, save to catalog, verify counts."""
         monkeypatch.setattr(
             "agora.mcp_registry.orchestrator.search_all",
@@ -140,7 +142,9 @@ class TestOrchestratorDiscoverAndSave:
         assert len(cat_tools) == len(saved)
 
     @pytest.mark.asyncio
-    async def test_discover_and_save_adds_quality_scores(self, registry_path, orchestrator_no_lifecycle, monkeypatch):
+    async def test_discover_and_save_adds_quality_scores(
+        self, registry_path, orchestrator_no_lifecycle, monkeypatch
+    ):
         """Each saved tool should have a quality_score."""
         monkeypatch.setattr(
             "agora.mcp_registry.orchestrator.search_all",
@@ -153,7 +157,9 @@ class TestOrchestratorDiscoverAndSave:
             assert 0.0 <= svc["quality_score"] <= 1.0
 
     @pytest.mark.asyncio
-    async def test_discover_and_save_idempotent(self, registry_path, orchestrator_no_lifecycle, monkeypatch):
+    async def test_discover_and_save_idempotent(
+        self, registry_path, orchestrator_no_lifecycle, monkeypatch
+    ):
         """Running discover_and_save twice should not create duplicates."""
         monkeypatch.setattr(
             "agora.mcp_registry.orchestrator.search_all",
@@ -169,7 +175,9 @@ class TestOrchestratorDiscoverAndSave:
         assert first_count == second_count, "discover_and_save should be idempotent"
 
     @pytest.mark.asyncio
-    async def test_discover_and_save_empty_sources(self, orchestrator_no_lifecycle, monkeypatch):
+    async def test_discover_and_save_empty_sources(
+        self, orchestrator_no_lifecycle, monkeypatch
+    ):
         """With empty sources, discover_and_save returns empty list."""
 
         async def _empty_search(query="", sources=None):
@@ -184,7 +192,9 @@ class TestOrchestratorDiscoverAndSave:
         assert saved == []
 
     @pytest.mark.asyncio
-    async def test_status_after_discover(self, registry_path, orchestrator_no_lifecycle, monkeypatch):
+    async def test_status_after_discover(
+        self, registry_path, orchestrator_no_lifecycle, monkeypatch
+    ):
         """After discover_and_save, tools should have status='discovered'."""
         monkeypatch.setattr(
             "agora.mcp_registry.orchestrator.search_all",
@@ -194,7 +204,9 @@ class TestOrchestratorDiscoverAndSave:
         await orchestrator_no_lifecycle.discover_and_save(query="test")
         tools = orchestrator_no_lifecycle._catalog.list_tools()
         for t in tools:
-            assert t.get("status") == "discovered", f"Expected 'discovered', got '{t.get('status')}' for {t['name']}"
+            assert t.get("status") == "discovered", (
+                f"Expected 'discovered', got '{t.get('status')}' for {t['name']}"
+            )
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -206,7 +218,9 @@ class TestOrchestratorDiscoverInstallLoad:
     """Full orchestrator pipeline: discover → install → load."""
 
     @pytest.mark.asyncio
-    async def test_discover_install_load_basic(self, registry_path, orchestrator, monkeypatch):
+    async def test_discover_install_load_basic(
+        self, registry_path, orchestrator, monkeypatch
+    ):
         """Full pipeline returns correct counts."""
         # Patch search_all to use local registry
         monkeypatch.setattr(
@@ -223,7 +237,9 @@ class TestOrchestratorDiscoverInstallLoad:
         assert len(result["tool_names"]) >= 30
 
     @pytest.mark.asyncio
-    async def test_discover_install_load_no_auto_load(self, registry_path, orchestrator, monkeypatch):
+    async def test_discover_install_load_no_auto_load(
+        self, registry_path, orchestrator, monkeypatch
+    ):
         """With auto_load=False, tools are installed but not loaded."""
         monkeypatch.setattr(
             "agora.mcp_registry.orchestrator.search_all",
@@ -238,24 +254,32 @@ class TestOrchestratorDiscoverInstallLoad:
         # Tools should be in 'installed' status
         tools = orchestrator._catalog.list_tools()
         for t in tools:
-            assert t.get("status") == "installed", f"Expected 'installed', got '{t.get('status')}' for {t['name']}"
+            assert t.get("status") == "installed", (
+                f"Expected 'installed', got '{t.get('status')}' for {t['name']}"
+            )
 
     @pytest.mark.asyncio
-    async def test_discover_install_load_no_lifecycle(self, registry_path, orchestrator_no_lifecycle, monkeypatch):
+    async def test_discover_install_load_no_lifecycle(
+        self, registry_path, orchestrator_no_lifecycle, monkeypatch
+    ):
         """Without lifecycle, auto_load has no effect but pipeline completes."""
         monkeypatch.setattr(
             "agora.mcp_registry.orchestrator.search_all",
             lambda query="", sources=None: search_registry(f"file://{registry_path}"),
         )
 
-        result = await orchestrator_no_lifecycle.discover_install_load(query="test", auto_load=True)
+        result = await orchestrator_no_lifecycle.discover_install_load(
+            query="test", auto_load=True
+        )
 
         assert result["installed"] > 0
         assert result["loaded"] == 0, "Without lifecycle, loaded should be 0"
         assert result["discovered"] > 0
 
     @pytest.mark.asyncio
-    async def test_discover_install_load_tool_names(self, registry_path, orchestrator, monkeypatch):
+    async def test_discover_install_load_tool_names(
+        self, registry_path, orchestrator, monkeypatch
+    ):
         """tool_names list should contain expected tools."""
         monkeypatch.setattr(
             "agora.mcp_registry.orchestrator.search_all",
@@ -270,7 +294,9 @@ class TestOrchestratorDiscoverInstallLoad:
         assert "docker-mcp" in names, "Expected docker-mcp in tool_names"
 
     @pytest.mark.asyncio
-    async def test_discover_install_load_reports_status(self, registry_path, orchestrator, monkeypatch):
+    async def test_discover_install_load_reports_status(
+        self, registry_path, orchestrator, monkeypatch
+    ):
         """get_status after pipeline reflects correct state."""
         monkeypatch.setattr(
             "agora.mcp_registry.orchestrator.search_all",
@@ -296,7 +322,9 @@ class TestOrchestratorToolLifecycle:
     """Orchestrator-level install, load, unload, reload operations."""
 
     @pytest.mark.asyncio
-    async def test_install_tool(self, registry_path, orchestrator_no_lifecycle, monkeypatch):
+    async def test_install_tool(
+        self, registry_path, orchestrator_no_lifecycle, monkeypatch
+    ):
         """Install a discovered tool transitions it to 'installed' status."""
         monkeypatch.setattr(
             "agora.mcp_registry.orchestrator.search_all",
@@ -382,7 +410,9 @@ class TestOrchestratorToolLifecycle:
         assert tool["status"] == "loaded"
 
     @pytest.mark.asyncio
-    async def test_ensure_tool_available_loads_if_needed(self, orchestrator, catalog, mock_proxy_manager):
+    async def test_ensure_tool_available_loads_if_needed(
+        self, orchestrator, catalog, mock_proxy_manager
+    ):
         """ensure_tool_available should load an installed tool."""
         catalog.add_tool(_KNOWN_SERVICE)
         catalog.update_status("test-tool", "installed")
@@ -416,7 +446,9 @@ class TestLifecycleManager:
         assert not ok
 
     @pytest.mark.asyncio
-    async def test_load_tool_already_loaded(self, lifecycle, catalog, mock_proxy_manager):
+    async def test_load_tool_already_loaded(
+        self, lifecycle, catalog, mock_proxy_manager
+    ):
         """Loading an already loaded tool is a no-op returning True."""
         catalog.add_tool(_KNOWN_SERVICE)
         catalog.update_status("test-tool", "loaded")
@@ -699,7 +731,9 @@ class TestToolCatalogExtended:
         """update_install captures install errors."""
         catalog.add_tool(_KNOWN_SERVICE)
 
-        ok = catalog.update_install("test-tool", install_path="", install_error="dep missing")
+        ok = catalog.update_install(
+            "test-tool", install_path="", install_error="dep missing"
+        )
         assert ok
 
         tool = catalog.get_tool("test-tool")
@@ -772,7 +806,9 @@ class TestToolCatalogExtended:
     async def test_search_tools_by_tag(self, catalog_populated):
         """search_tools finds tools by tags (stored as JSON string)."""
         results = catalog_populated.search_tools(query="known_service", limit=10)
-        assert len(results) >= 5, f"Expected >=5 with 'known_service', got {len(results)}"
+        assert len(results) >= 5, (
+            f"Expected >=5 with 'known_service', got {len(results)}"
+        )
 
     @pytest.mark.asyncio
     async def test_search_tools_with_status_filter(self, catalog):
@@ -1090,9 +1126,21 @@ class TestRouterModes:
     @pytest.mark.asyncio
     async def test_route_recommend_keyword_fallback(self, catalog):
         """Recommend mode falls back to keyword search when no embeddings."""
-        catalog.add_tool(dict(_KNOWN_SERVICE, id="kronos", name="kronos", description="Knowledge ingestion pipeline"))
         catalog.add_tool(
-            dict(_KNOWN_SERVICE, id="codeanalyze", name="codeanalyze", description="Code analysis and review tool")
+            dict(
+                _KNOWN_SERVICE,
+                id="kronos",
+                name="kronos",
+                description="Knowledge ingestion pipeline",
+            )
+        )
+        catalog.add_tool(
+            dict(
+                _KNOWN_SERVICE,
+                id="codeanalyze",
+                name="codeanalyze",
+                description="Code analysis and review tool",
+            )
         )
 
         router = SmartRouter(catalog=catalog, embeddings=None)
@@ -1119,7 +1167,14 @@ class TestRouterModes:
     @pytest.mark.asyncio
     async def test_route_auto_recommend_fallback(self, catalog):
         """Auto mode falls back to recommend when direct fails."""
-        catalog.add_tool(dict(_KNOWN_SERVICE, id="codeanalyze", name="codeanalyze", description="Code analysis tool"))
+        catalog.add_tool(
+            dict(
+                _KNOWN_SERVICE,
+                id="codeanalyze",
+                name="codeanalyze",
+                description="Code analysis tool",
+            )
+        )
         catalog.update_status("codeanalyze", "loaded")
 
         router = SmartRouter(catalog=catalog)
@@ -1307,7 +1362,9 @@ class TestOrchestratorUsageRecording:
         assert tool["usage_count"] == 1
 
     @pytest.mark.asyncio
-    async def test_record_usage_without_lifecycle(self, catalog, orchestrator_no_lifecycle):
+    async def test_record_usage_without_lifecycle(
+        self, catalog, orchestrator_no_lifecycle
+    ):
         """record_usage without lifecycle should still update catalog."""
         catalog.add_tool(_KNOWN_SERVICE)
 
@@ -1362,7 +1419,9 @@ class TestOrchestratorBatchOperations:
         await orch.close()
 
     @pytest.mark.asyncio
-    async def test_batch_operations_no_lifecycle(self, catalog, orchestrator_no_lifecycle):
+    async def test_batch_operations_no_lifecycle(
+        self, catalog, orchestrator_no_lifecycle
+    ):
         """Batch operations without lifecycle return 0 without error."""
         count = await orchestrator_no_lifecycle.load_all_idle()
         assert count == 0

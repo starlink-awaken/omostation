@@ -7,7 +7,9 @@ def _new_registry(**kwargs):
     import tempfile
     from pathlib import Path
 
-    return ServiceRegistry(storage_path=str(Path(tempfile.mkdtemp()) / "test-cb.json"), **kwargs)
+    return ServiceRegistry(
+        storage_path=str(Path(tempfile.mkdtemp()) / "test-cb.json"), **kwargs
+    )
 
 
 class TestCircuitBreakerLifecycle:

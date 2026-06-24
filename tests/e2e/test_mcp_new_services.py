@@ -77,7 +77,12 @@ class LineReader:
 
 
 def do_call(
-    reader: LineReader, proc: subprocess.Popen, msg_id: int, tool: str, args: dict, timeout: float = 30.0
+    reader: LineReader,
+    proc: subprocess.Popen,
+    msg_id: int,
+    tool: str,
+    args: dict,
+    timeout: float = 30.0,
 ) -> dict | None:
     call_msg = {
         "jsonrpc": "2.0",
@@ -171,10 +176,14 @@ def main():
     # Most services connect within ~10s, docker-mcp-gateway takes up to 30s.
     # We wait 20s to ensure lifespan completes before sending JSON-RPC,
     # so structlog messages don't interleave with MCP responses.
-    sys.stderr.write("\n[STEP] Waiting 20s for proxy bootstrap + service connections...\n")
+    sys.stderr.write(
+        "\n[STEP] Waiting 20s for proxy bootstrap + service connections...\n"
+    )
     for i in range(20):
         time.sleep(1)
-        drain_stderr(proc, echo=True)  # drain stderr every second to prevent pipe blocking
+        drain_stderr(
+            proc, echo=True
+        )  # drain stderr every second to prevent pipe blocking
         if i % 5 == 4:
             sys.stderr.write(f"  ... waited {i + 1}s\n")
 
@@ -197,7 +206,9 @@ def main():
         sys.stderr.write("[FATAL] No initialize response\n")
         _cleanup(proc)
         sys.exit(1)
-    sys.stderr.write(f"  [OK] Initialize: serverInfo={init_resp.get('result', {}).get('serverInfo', {})}\n")
+    sys.stderr.write(
+        f"  [OK] Initialize: serverInfo={init_resp.get('result', {}).get('serverInfo', {})}\n"
+    )
     send_message(proc, {"jsonrpc": "2.0", "method": "notifications/initialized"})
     sys.stderr.write("  [OK] notifications/initialized sent\n")
 
@@ -205,7 +216,9 @@ def main():
     sys.stderr.write("\n[STEP] Waiting 30s for slow services (docker-mcp-gateway)...\n")
     for i in range(30):
         time.sleep(1)
-        drain_stderr(proc, echo=True)  # drain stderr every second to prevent pipe blocking
+        drain_stderr(
+            proc, echo=True
+        )  # drain stderr every second to prevent pipe blocking
         if i % 10 == 9:
             sys.stderr.write(f"  ... waited {i + 1}s\n")
 
@@ -256,13 +269,19 @@ def main():
         services_info = {}
         total_tools = 0
 
-    sys.stderr.write(f"  Status: {total_tools} total tools across {len(connected)} services\n")
+    sys.stderr.write(
+        f"  Status: {total_tools} total tools across {len(connected)} services\n"
+    )
     for svc_name in sorted(connected):
         info = services_info.get(svc_name, {})
-        sys.stderr.write(f"    {svc_name}: connected={info.get('connected', False)}, tools={info.get('tools', '?')}\n")
+        sys.stderr.write(
+            f"    {svc_name}: connected={info.get('connected', False)}, tools={info.get('tools', '?')}\n"
+        )
 
     all_ok = len(connected) >= 18  # serena may fail occasionally
-    sys.stderr.write(f"\n  Total services: {len(connected)}/19 {'[PASS]' if all_ok else '[FAIL]'}\n")
+    sys.stderr.write(
+        f"\n  Total services: {len(connected)}/19 {'[PASS]' if all_ok else '[FAIL]'}\n"
+    )
 
     new_connected = [s for s in NEW_SERVICES if s in connected]
     new_missing = [s for s in NEW_SERVICES if s not in connected]
@@ -288,7 +307,12 @@ def main():
         full_tool = f"{svc}.{tool}"
         sys.stderr.write(f"\n[TEST] {full_tool}...\n")
         resp = do_call(
-            reader, proc, 100 + tool_tests.index((svc, tool, args, timeout)), full_tool, args, timeout=timeout
+            reader,
+            proc,
+            100 + tool_tests.index((svc, tool, args, timeout)),
+            full_tool,
+            args,
+            timeout=timeout,
         )
         if resp is None:
             sys.stderr.write("  [FAIL] No response (timeout)\n")
