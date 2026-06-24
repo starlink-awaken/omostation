@@ -203,10 +203,11 @@ def _check_direct_omo_io() -> dict:
 
 
 def _check_bos_unimplemented() -> dict:
-    """严格模式 BOS 期房与失效路由检测.
+    """BOS 期房与失效路由检测.
 
-    检测 bos-services.yaml 中标为 [UNIMPLEMENTED] 的服务，
+    检测 bos-services.yaml 中**未**标为 [UNIMPLEMENTED] 的服务，
     验证其 package 是否存在，以及 package 对应的 do_default.py 中是否有分支支持该 action。
+    [UNIMPLEMENTED] 是已知占位状态，不视为漂移。
     """
     import yaml
 
@@ -230,8 +231,13 @@ def _check_bos_unimplemented() -> dict:
         action = s.get("action", "")
 
         if desc and desc.startswith("[UNIMPLEMENTED]"):
-            # 严格模式检测其物理实现是否存在
-            # 1. 检查 package 物理目录
+            # 已知未实现占位符，不视为漂移
+            continue
+
+        if not package:
+            continue
+
+        # 1. 检查 package 物理目录
             pkg_dir = None
             if package:
                 # 优先在 projects/kairon/packages/ 寻找
