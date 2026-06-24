@@ -664,9 +664,7 @@ def _write_task_approval_queue_status(
     task_paths = [
         path
         for path in sorted(planned_dir.glob("*.yaml"))
-        if _task_has_task_specific_promotion_approval(
-            _load_yaml(path).get("approval_ref")
-        )
+        if _load_yaml(path).get("human_approval_required")
     ]
     entries: list[dict[str, object]] = []
     for path in task_paths:
