@@ -425,3 +425,73 @@ def register_proxy_tools(mcp: FastMCP) -> None:
     # ── proxy_remove_service ────────────────────────────────────────
 
     mcp.tool()(proxy_remove_service)
+
+    # ── proxy_backend_health ─────────────────────────────────────────
+
+    @mcp.tool()
+    async def proxy_backend_health() -> dict:
+        """List all downstream backend services with health status.
+
+        Returns alive/dead status per backend, last check timestamps,
+        consecutive failure count, and available tool samples.
+        """
+        from agora.auth.mcp_gateway import _health_checker
+
+        if _health_checker is None:
+            return _ok({
+                "format_version": FORMAT_VERSION,
+                "health_checker": "not_started",
+                "backends": {},
+            })
+
+        status = _health_checker.get_all_status()
+        return _ok({
+            "format_version": FORMAT_VERSION,
+            "health_checker": "running",
+            "backends": status,
+        })
+
+    # ── bos_reload_routes ─────────────────────────────────────────
+
+    @mcp.tool()
+    async def bos_reload_routes(yaml_path: str = "") -> dict:
+        """Reload BOS service routes from YAML at runtime.
+
+        Args:
+            yaml_path: Optional path to bos-services.yaml. If empty, reloads
+                      from the default path (AGORA_BOS_REGISTRY env or default).
+        Returns:
+            Summary of loaded routes including total count and domain breakdown.
+        """
+        from collections import Counter
+        from agora.mcp.resolver.bos_registry import load_from_yaml, DEFAULT_REGISTRY_PATH
+        from agora.mcp.resolver.services import POC_SERVICES, _FALLBACK_SERVICES
+
+        path = yaml_path or str(DEFAULT_REGISTRY_PATH)
+        try:
+            new_services = load_from_yaml(path)
+        except Exception as e:
+            return _error(f"Failed to load routes from {path}: {e}")
+
+        if not new_services:
+            return _error(f"No routes loaded from {path}")
+
+        # Update POC_SERVICES in-place (the api.py reference stays valid)
+        POC_SERVICES.clear()
+        POC_SERVICES.extend(new_services)
+
+        domains = Counter(s.domain for s in POC_SERVICES)
+        transports = Counter(s.transport for s in POC_SERVICES)
+
+        logger.info("bos_routes_reloaded",
+            path=path, total=len(POC_SERVICES),
+            domains=dict(domains), transports=dict(transports),
+        )
+
+        return _ok({
+            "format_version": FORMAT_VERSION,
+            "path": path,
+            "total_routes": len(POC_SERVICES),
+            "domains": dict(domains),
+            "by_transport": dict(transports),
+        })

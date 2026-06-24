@@ -16,6 +16,7 @@ import signal
 
 import structlog
 
+from agora.mcp_proxy.health import BackendHealthChecker
 from agora.mcp_proxy.manager import ProxyManager
 
 logger = structlog.get_logger(__name__)
@@ -180,6 +181,7 @@ KNOWN_BACKENDS: list[dict] = [
 
 # Module-level singleton — reused across start/stop calls.
 _gateway_manager: ProxyManager | None = None
+_health_checker: BackendHealthChecker | None = None
 
 
 async def start_all() -> dict[str, str]:
@@ -188,7 +190,7 @@ async def start_all() -> dict[str, str]:
     Returns a dict mapping service name → result string ("ok: N tools registered"
     or "error: ..."). Each connection is attempted in parallel.
     """
-    global _gateway_manager
+    global _gateway_manager, _health_checker
     if _gateway_manager is None:
         _gateway_manager = ProxyManager()
 
@@ -200,6 +202,13 @@ async def start_all() -> dict[str, str]:
         failed=len(results) - ok_count,
         services=list(results.keys()),
     )
+
+    # Start background health heartbeat
+    if _health_checker is None:
+        _health_checker = BackendHealthChecker(_gateway_manager)
+        await _health_checker.start()
+        logger.info("mcp_gateway_health_checker_started")
+
     return results
 
 
@@ -208,7 +217,11 @@ async def stop_all() -> None:
 
     Safe to call multiple times — subsequent calls are no-ops.
     """
-    global _gateway_manager
+    global _gateway_manager, _health_checker
+    if _health_checker is not None:
+        await _health_checker.stop()
+        _health_checker = None
+        logger.info("mcp_gateway_health_checker_stopped")
     if _gateway_manager is not None:
         await _gateway_manager.shutdown()
         _gateway_manager = None

@@ -684,8 +684,53 @@ def http_main():
         finally:
             _current_http_request.reset(token)
 
+    async def register_backend_endpoint(request: Request):
+        """POST /v1/backends/register — dynamically register a new MCP backend.
+
+        Body:
+        {
+            "name": "my-service",
+            "command": "uv",
+            "args": ["run", "--package", "mypkg", "python", "-m", "mypkg.mcp_server"],
+            "mcp_endpoint": ""  // optional, for HTTP backends
+        }
+        """
+        from agora.server.dependencies import get_proxy_manager, set_proxy_manager
+        from agora.mcp_proxy.manager import ProxyManager
+
+        try:
+            payload = await request.json()
+        except Exception:
+            return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+        name = payload.get("name", "")
+        if not name:
+            return JSONResponse({"error": "Missing 'name' field"}, status_code=400)
+
+        pm = get_proxy_manager()
+        if pm is None:
+            pm = ProxyManager()
+            set_proxy_manager(pm)
+
+        svc: dict = {"name": name}
+        if payload.get("command"):
+            svc["command"] = payload["command"]
+        if payload.get("args"):
+            svc["args"] = payload["args"]
+        if payload.get("mcp_endpoint"):
+            svc["mcp_endpoint"] = payload["mcp_endpoint"]
+
+        try:
+            result = await pm.add_service(svc)
+            logger.info("backend_registered_via_api", name=name, result=result)
+            return JSONResponse({"status": "ok", "name": name, "result": result})
+        except Exception as e:
+            logger.error("backend_register_failed", name=name, error=str(e))
+            return JSONResponse({"error": str(e)}, status_code=500)
+
     mcp._additional_http_routes.append(Route("/health", endpoint=health_endpoint))
     mcp._additional_http_routes.append(Route("/v1/tools/call", endpoint=tool_call_endpoint, methods=["POST"]))
+    mcp._additional_http_routes.append(Route("/v1/backends/register", endpoint=register_backend_endpoint, methods=["POST"]))
 
     asyncio.run(mcp.run_http_async(host="0.0.0.0", port=7422))  # noqa: S104 — MCP server intentionally binds all interfaces
 
