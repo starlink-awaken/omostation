@@ -94,18 +94,15 @@ def analyze_trend(snaps: list[dict]) -> dict:
 
 
 def emit_alert(root: Path, trend: dict, alerts: list) -> int:
-    """P64 增: 异常告警 — 通过 omo event 发射 + 写 .omo/_log/readiness-alerts.jsonl.
+    """P64 增: 异常告警 — 通过 omo event 发射, 不再直接写 .omo/_log/.
 
     返回 0=健康 1=异常告警.
     """
     import json as _json
     import datetime as _dt
     from subprocess import run as _run
-    now = _dt.datetime.utcnow().isoformat() + "Z"
+    now = _dt.datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
-    # 写 alerts log
-    alert_log = root / ".omo" / "_log" / "readiness-alerts.jsonl"
-    alert_log.parent.mkdir(parents=True, exist_ok=True)
     record = {
         "timestamp": now,
         "trend": trend.get("trend"),
@@ -113,13 +110,8 @@ def emit_alert(root: Path, trend: dict, alerts: list) -> int:
         "stdev": trend.get("stdev"),
         "alerts": alerts,
     }
-    try:
-        with open(alert_log, "a", encoding="utf-8") as f:
-            f.write(_json.dumps(record, ensure_ascii=False) + "\n")
-    except Exception as e:
-        print(f"⚠️  alert log 写入失败: {e}")
 
-    # 发射 omo event (如可用)
+    # 发射 omo event, 由 OMO AppendOnlyLog 持久化 (SSOT)
     if alerts:
         try:
             _run(

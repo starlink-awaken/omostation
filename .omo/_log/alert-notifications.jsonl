@@ -1,1 +1,0 @@
-{"window_hours": 24, "total_alerts": 8, "by_type": {"low_mean": 8}, "storm_count": 1, "level": "P1", "level_reason": "storm + total(8) > 5", "thresholds": {"storm_threshold": 3, "total_threshold": 5}, "timestamp": "2026-06-24T07:01:20.468942+00:00"}

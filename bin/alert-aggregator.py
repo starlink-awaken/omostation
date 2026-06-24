@@ -200,23 +200,21 @@ def emit_notification(root: Path, agg: dict, window_hours: int,
 
     # P68 抑制检查
     suppressed, prev_record = is_suppressed(root, level, suppression_minutes)
+    now_iso = datetime.now(timezone.utc).isoformat()
     if suppressed:
-        # P69: 写抑制记录到独立 log (精确统计)
-        suppress_log = root / ".omo" / "_log" / "alert-suppressions.jsonl"
-        suppress_log.parent.mkdir(parents=True, exist_ok=True)
+        # P69: 抑制记录走 OMO event log, 不再直接写 .omo/_log/
         suppress_payload = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": now_iso,
             "level": level,
             "total_alerts": agg.get("total_alerts"),
             "suppression_minutes": suppression_minutes,
             "prev_record_ts": prev_record.get("timestamp") if prev_record else None,
             "storm_count": len(agg.get("storm_warnings", [])),
         }
-        try:
-            with open(suppress_log, "a", encoding="utf-8") as f:
-                f.write(_json.dumps(suppress_payload, ensure_ascii=False) + "\n")
-        except Exception:
-            pass
+        _emit_event(
+            "governance_alert_suppressed",
+            suppress_payload,
+        )
         return 2  # 抑制标记
 
     payload = {
@@ -227,31 +225,30 @@ def emit_notification(root: Path, agg: dict, window_hours: int,
         "level": agg.get("level", "P3"),
         "level_reason": agg.get("level_reason", ""),
         "thresholds": agg.get("thresholds", {}),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": now_iso,
     }
 
-    # 写通知 log
-    notif_log = root / ".omo" / "_log" / "alert-notifications.jsonl"
-    notif_log.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        with open(notif_log, "a", encoding="utf-8") as f:
-            f.write(_json.dumps(payload, ensure_ascii=False) + "\n")
-    except Exception:
-        pass
+    # 通知通过 OMO event 持久化 (SSOT: .omo/_knowledge/omo-events.jsonl)
+    _emit_event("governance_alert_aggregated", payload)
 
-    # 调 omo event (静默失败)
+    return 1
+
+
+def _emit_event(kind: str, payload: dict) -> None:
+    """路由事件到 OMO event log, 避免 direct-omo-io."""
+    import json as _json
+    from subprocess import run as _run
+
     try:
         _run(
             ["omo", "event", "emit",
-             "--type", "governance_alert_aggregated",
+             "--type", kind,
              "--source", "alert-aggregator",
              "--payload", _json.dumps(payload, ensure_ascii=False)],
             timeout=10, capture_output=True,
         )
     except Exception:
         pass
-
-    return 1
 
 
 def main() -> int:

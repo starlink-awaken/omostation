@@ -23,9 +23,12 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
-def load_notifications(root: Path, days: int) -> list[dict]:
-    """读 alert-notifications.jsonl, 过滤最近 N 天."""
-    log_file = root / ".omo" / "_log" / "alert-notifications.jsonl"
+def _load_events(root: Path, days: int, kinds: set[str]) -> list[dict]:
+    """从 OMO event log 读取指定 kind 的 payload, 过滤最近 N 天.
+
+    Round 5 (P3): OMO event log 是事件持久化 SSOT, 替代直接读 .omo/_log/.
+    """
+    log_file = root / ".omo" / "_knowledge" / "omo-events.jsonl"
     if not log_file.exists():
         return []
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
@@ -38,43 +41,31 @@ def load_notifications(root: Path, days: int) -> list[dict]:
                     continue
                 try:
                     d = json.loads(line)
-                    ts = d.get("timestamp", "")
+                    if d.get("kind") not in kinds:
+                        continue
+                    payload = d.get("payload", "{}")
+                    if isinstance(payload, str):
+                        payload = json.loads(payload)
+                    ts = payload.get("timestamp", d.get("ts", ""))
                     if ts:
                         rec_dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
                         if rec_dt >= cutoff:
-                            records.append(d)
+                            records.append(payload)
                 except Exception:
                     pass
     except Exception:
         pass
     return records
+
+
+def load_notifications(root: Path, days: int) -> list[dict]:
+    """读 governance_alert_aggregated 事件 payload, 过滤最近 N 天."""
+    return _load_events(root, days, {"governance_alert_aggregated"})
 
 
 def load_suppressions(root: Path, days: int) -> list[dict]:
-    """P69 增: 读 alert-suppressions.jsonl (P69 新增)."""
-    log_file = root / ".omo" / "_log" / "alert-suppressions.jsonl"
-    if not log_file.exists():
-        return []
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-    records = []
-    try:
-        with open(log_file, encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    d = json.loads(line)
-                    ts = d.get("timestamp", "")
-                    if ts:
-                        rec_dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                        if rec_dt >= cutoff:
-                            records.append(d)
-                except Exception:
-                    pass
-    except Exception:
-        pass
-    return records
+    """P69 增: 读 governance_alert_suppressed 事件 payload."""
+    return _load_events(root, days, {"governance_alert_suppressed"})
 
 
 def render_ascii_bar(value: int, max_value: int, width: int = 40) -> str:
