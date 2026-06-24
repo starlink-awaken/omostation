@@ -1,0 +1,3 @@
+{"timestamp": "2026-06-24T09:19:55.522829+00:00", "level": "P0", "message": "P0 test 12 alerts", "channel": "email", "target": "oncall@omostation.local", "delivered": true}
+{"timestamp": "2026-06-24T09:19:55.522829+00:00", "level": "P0", "message": "P0 test 12 alerts", "channel": "sms", "target": "+86-xxx-xxxx-xxxx", "delivered": true}
+{"timestamp": "2026-06-24T09:19:55.522829+00:00", "level": "P0", "message": "P0 test 12 alerts", "channel": "slack", "target": "#governance-alerts", "delivered": true}
