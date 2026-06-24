@@ -73,12 +73,29 @@ def cmd_health_json() -> int:
     return _run_script("health-scan.sh", "--json")
 
 
-def cmd_matrix_list() -> int:
+def cmd_matrix_list(json_output: bool = False) -> int:
     try:
         services = list_services()
     except FileNotFoundError as e:
         print(f"❌ {e}", file=sys.stderr)
         return 1
+    if json_output:
+        print(
+            json.dumps(
+                [
+                    {
+                        "name": svc.name,
+                        "type": svc.type,
+                        "port": svc.port,
+                        "status": svc.status,
+                    }
+                    for svc in services
+                ],
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
+        return 0
     rows = []
     for svc in services:
         port = str(svc.port) if svc.port else "—"
@@ -326,7 +343,8 @@ def main(argv: list[str] | None = None) -> int:
     # matrix
     matrix_p = sub.add_parser("matrix", help="Query service registry")
     matrix_sub = matrix_p.add_subparsers(dest="matrix_cmd")
-    matrix_sub.add_parser("list", help="List all services")
+    list_p = matrix_sub.add_parser("list", help="List all services")
+    list_p.add_argument("--json", action="store_true", help="JSON output")
     g = matrix_sub.add_parser("get", help="Get service details")
     g.add_argument("name")
     matrix_sub.add_parser("resolve", help="Resolve all env-var paths")
@@ -395,7 +413,7 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_health_json() if args.json else cmd_health()
     elif args.command == "matrix":
         if args.matrix_cmd == "list":
-            return cmd_matrix_list()
+            return cmd_matrix_list(args.json)
         elif args.matrix_cmd == "get":
             return cmd_matrix_get(args.name)
         elif args.matrix_cmd == "resolve":
