@@ -321,3 +321,241 @@ def write_discovery_registry(
             created_at=timestamp,
         )
         return deepcopy(registry)
+
+
+def write_usage_accounting(
+    omo_dir: Path,
+    *,
+    registry: dict[str, Any],
+    actor: str,
+    source_ref: str = "",
+    now: str | None = None,
+) -> dict[str, Any]:
+    timestamp = now or _utc_now()
+    registry_path = omo_dir / "_truth" / "task-center" / "usage-accounting.yaml"
+
+    with fcntl_lock(_lock_path(omo_dir)):
+        write_yaml_atomic(registry_path, registry)
+        artifact = {
+            "kind": "task_center_usage_accounting_written",
+            "registry_ref": ".omo/_truth/task-center/usage-accounting.yaml",
+            "actor": actor,
+            "source_ref": source_ref,
+            "written_at": timestamp,
+        }
+        artifact_path = (
+            _delivery_root(omo_dir)
+            / "task-center"
+            / f"usage-accounting-{_timestamp_slug(timestamp)}.yaml"
+        )
+        write_yaml_atomic(artifact_path, artifact)
+        parent_step_id = f"ingress:usage-accounting:{timestamp}"
+        details = (
+            f"actor={actor} registry_ref=.omo/_truth/task-center/usage-accounting.yaml "
+            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+        )
+        record_audit(
+            action="ingress_write_usage_accounting",
+            debt_id="",
+            actor=actor,
+            details=details,
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="write_usage_accounting",
+            target=".omo/_truth/task-center/usage-accounting.yaml",
+            parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="write_usage_accounting",
+            target=".omo/_truth/task-center/usage-accounting.yaml",
+            artifact_ref=f".omo/_delivery/ingress/task-center/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+        )
+        return artifact
+
+
+def write_task_center_freshness(
+    omo_dir: Path,
+    *,
+    report: dict[str, Any],
+    actor: str,
+    source_ref: str = "",
+    now: str | None = None,
+) -> dict[str, Any]:
+    timestamp = now or _utc_now()
+    report_path = omo_dir / "_delivery" / "task-center" / "freshness" / "current.yaml"
+
+    with fcntl_lock(_lock_path(omo_dir)):
+        write_yaml_atomic(report_path, report)
+        artifact = {
+            "kind": "task_center_freshness_written",
+            "report_ref": ".omo/_delivery/task-center/freshness/current.yaml",
+            "actor": actor,
+            "source_ref": source_ref,
+            "written_at": timestamp,
+        }
+        artifact_path = (
+            _delivery_root(omo_dir)
+            / "task-center"
+            / f"freshness-{_timestamp_slug(timestamp)}.yaml"
+        )
+        write_yaml_atomic(artifact_path, artifact)
+        parent_step_id = f"ingress:freshness:{timestamp}"
+        details = (
+            f"actor={actor} report_ref=.omo/_delivery/task-center/freshness/current.yaml "
+            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+        )
+        record_audit(
+            action="ingress_write_task_center_freshness",
+            debt_id="",
+            actor=actor,
+            details=details,
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="write_task_center_freshness",
+            target=".omo/_delivery/task-center/freshness/current.yaml",
+            parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="write_task_center_freshness",
+            target=".omo/_delivery/task-center/freshness/current.yaml",
+            artifact_ref=f".omo/_delivery/ingress/task-center/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+        )
+        return artifact
+
+
+def write_task_center_control_decision(
+    omo_dir: Path,
+    *,
+    artifact: dict[str, Any],
+    actor: str,
+    source_ref: str = "",
+    now: str | None = None,
+) -> dict[str, Any]:
+    timestamp = now or _utc_now()
+    artifact_path = omo_dir / "_delivery" / "task-center" / "control" / "current.yaml"
+
+    with fcntl_lock(_lock_path(omo_dir)):
+        write_yaml_atomic(artifact_path, artifact)
+        delivery_artifact = {
+            "kind": "task_center_control_decision_written",
+            "decision_ref": ".omo/_delivery/task-center/control/current.yaml",
+            "decision": artifact.get("decision"),
+            "actor": actor,
+            "source_ref": source_ref,
+            "written_at": timestamp,
+        }
+        ingress_artifact_path = (
+            _delivery_root(omo_dir)
+            / "task-center"
+            / f"control-{_timestamp_slug(timestamp)}.yaml"
+        )
+        write_yaml_atomic(ingress_artifact_path, delivery_artifact)
+        parent_step_id = f"ingress:control:{timestamp}"
+        details = (
+            f"actor={actor} decision={artifact.get('decision')} "
+            f"source_ref={source_ref or '-'} artifact={ingress_artifact_path.relative_to(omo_dir.parent)}"
+        )
+        record_audit(
+            action="ingress_write_task_center_control_decision",
+            debt_id="",
+            actor=actor,
+            details=details,
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="write_task_center_control_decision",
+            target=".omo/_delivery/task-center/control/current.yaml",
+            parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="write_task_center_control_decision",
+            target=".omo/_delivery/task-center/control/current.yaml",
+            artifact_ref=f".omo/_delivery/ingress/task-center/{ingress_artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"decision": artifact.get("decision")},
+        )
+        return delivery_artifact
+
+
+def update_governance_overlay_state(
+    omo_dir: Path,
+    *,
+    roadmap: dict[str, Any],
+    actor: str,
+    control: dict[str, Any] | None = None,
+    source_ref: str = "",
+    now: str | None = None,
+) -> dict[str, Any]:
+    timestamp = now or _utc_now()
+    roadmap_path = omo_dir / "_truth" / "governance-overlay" / "roadmap.yaml"
+    control_path = omo_dir / "_control" / "governance-overlay" / "current.yaml"
+
+    with fcntl_lock(_lock_path(omo_dir)):
+        write_yaml_atomic(roadmap_path, roadmap)
+        if control is not None:
+            write_yaml_atomic(control_path, control)
+        artifact = {
+            "kind": "governance_overlay_state_updated",
+            "roadmap_ref": ".omo/_truth/governance-overlay/roadmap.yaml",
+            "control_ref": ".omo/_control/governance-overlay/current.yaml"
+            if control is not None
+            else None,
+            "actor": actor,
+            "source_ref": source_ref,
+            "updated_at": timestamp,
+        }
+        artifact_path = (
+            _delivery_root(omo_dir)
+            / "governance-overlay"
+            / f"state-{_timestamp_slug(timestamp)}.yaml"
+        )
+        write_yaml_atomic(artifact_path, artifact)
+        parent_step_id = f"ingress:governance-overlay:{timestamp}"
+        details = (
+            f"actor={actor} source_ref={source_ref or '-'} "
+            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+        )
+        record_audit(
+            action="ingress_update_governance_overlay_state",
+            debt_id="",
+            actor=actor,
+            details=details,
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="update_governance_overlay_state",
+            target=".omo/_truth/governance-overlay/roadmap.yaml",
+            parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="update_governance_overlay_state",
+            target=".omo/_truth/governance-overlay/roadmap.yaml",
+            artifact_ref=f".omo/_delivery/ingress/governance-overlay/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"control_written": control is not None},
+        )
+        return artifact

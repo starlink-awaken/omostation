@@ -54,25 +54,36 @@ class fcntl_lock:
 
     def __init__(self, lock_path: Path) -> None:
         self.lock_path = Path(lock_path)
-        self._fd: int | None = None
+        self._local = threading.local()
 
     def __enter__(self) -> "fcntl_lock":
         import fcntl  # POSIX-only; 延迟 import 让 Windows 测试可 import
 
-        self.lock_path.parent.mkdir(parents=True, exist_ok=True)
-        self._fd = os.open(str(self.lock_path), os.O_CREAT | os.O_RDWR, 0o644)
-        fcntl.flock(self._fd, fcntl.LOCK_EX)
+        if not hasattr(self._local, "depth"):
+            self._local.depth = 0
+            self._local.fd = None
+
+        if self._local.depth == 0:
+            self.lock_path.parent.mkdir(parents=True, exist_ok=True)
+            self._local.fd = os.open(str(self.lock_path), os.O_CREAT | os.O_RDWR, 0o644)
+            fcntl.flock(self._local.fd, fcntl.LOCK_EX)
+
+        self._local.depth += 1
         return self
 
     def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
-        if self._fd is not None:
-            import fcntl
+        if getattr(self._local, "depth", 0) > 0:
+            self._local.depth -= 1
+            if self._local.depth == 0:
+                fd = getattr(self._local, "fd", None)
+                if fd is not None:
+                    import fcntl
 
-            try:
-                fcntl.flock(self._fd, fcntl.LOCK_UN)
-            finally:
-                os.close(self._fd)
-                self._fd = None
+                    try:
+                        fcntl.flock(fd, fcntl.LOCK_UN)
+                    finally:
+                        os.close(fd)
+                        self._local.fd = None
 
 
 class AppendOnlyLog:
