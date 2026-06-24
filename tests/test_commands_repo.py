@@ -264,8 +264,9 @@ class TestCmdRepoDiscover:
             # structlog may write to stdout; find and parse the JSON array
             lines = captured.out.strip().split("\n")
             json_start = next(
-                (i for i, l in enumerate(lines) if l.strip().startswith("[")), None
-            )  # noqa: E741
+                (i for i, line in enumerate(lines) if line.strip().startswith("[")),
+                None,
+            )
             if json_start is not None:
                 # Collect all lines from json_start to end
                 out = "\n".join(lines[json_start:])

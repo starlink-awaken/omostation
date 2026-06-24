@@ -158,15 +158,15 @@ class TestPromptBuilding:
         prompt = router._build_selection_prompt("test", many)
         # Count numbered entries — should be 10
         [
-            l
-            for l in prompt.splitlines()
-            if l.strip().startswith(tuple(str(i) + "." for i in range(1, 11)))
-        ]  # noqa: E741
+            line
+            for line in prompt.splitlines()
+            if line.strip().startswith(tuple(str(i) + "." for i in range(1, 11)))
+        ]
         # A simpler check: "Available tools" section should have at most 10 entries
         entries = [
-            l
-            for l in prompt.splitlines()  # noqa: E741
-            if l.strip().startswith(
+            line
+            for line in prompt.splitlines()
+            if line.strip().startswith(
                 ("1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.")
             )
         ]
