@@ -215,4 +215,9 @@ history:
     调整 (wrapper 保留, dispatcher 重构留 P67+) + ADR-0060 + 20 个 ADR'
   timestamp: '2026-06-24T14:39:00.038251'
   version: 0.0.55
-version: 0.0.55
+- description: 'P67 R1-R3: alert-aggregator 阈值参数化 (--storm-threshold 3, --total-threshold
+    5) + P0/P1/P2/P3 级别判定 + governance-agent.sh 5 步闭环 (1+2+2.5+2.6+3) + ADR-0061 +
+    21 个 ADR'
+  timestamp: '2026-06-24T15:04:28.366421'
+  version: 0.0.56
+version: 0.0.56
