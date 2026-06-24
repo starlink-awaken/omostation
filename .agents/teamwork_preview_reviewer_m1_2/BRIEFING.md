@@ -1,45 +1,58 @@
-# BRIEFING — 2026-06-23T11:01:37+08:00
+# BRIEFING — 2026-06-24T10:20:00+08:00
 
 ## Mission
-评审 m1_worker_1 的 Agora 路由注册和 AetherForge 桥接修改，验证其 internal 模式路由反射、sys.path 补全规避 ModuleNotFoundError 的有效性及 GraphWorkflow 反射执行的符合性，确保无跨层包污染，并通过 Swarm 单元测试。
+对里程碑 M1 (Agora I0 MCP 跨层通信重构) 进行独立的代码静态与动态审计，并输出审计报告。
 
 ## 🔒 My Identity
-- Archetype: teamwork_preview_reviewer
+- Archetype: reviewer & critic
 - Roles: reviewer, critic
-- Working directory: /Users/xiamingxing/Workspace/.agents/teamwork_preview_reviewer_m1_2/
-- Original parent: d6d08efc-a7bd-44e1-8861-e985ac7a8c92
-- Milestone: M1
-- Instance: 2 of 2
+- Working directory: /Users/xiamingxing/Workspace/.agents/teamwork_preview_reviewer_m1_2
+- Original parent: 3ed4fe65-401d-4416-a615-6a937af12911
+- Milestone: M1 (Agora I0 MCP 跨层通信重构)
+- Instance: 1 of 1
 
 ## 🔒 Key Constraints
-- Review-only — do NOT modify implementation code
-- 仅通过 review_only 模式对代码和配置进行深度静态和动态审计
-- 必须使用中文撰写所有的报告和回复
+- Review-only — do NOT modify implementation code.
+- Always use Chinese in responses.
 
 ## Current Parent
-- Conversation ID: d6d08efc-a7bd-44e1-8861-e985ac7a8c92
+- Conversation ID: 3ed4fe65-401d-4416-a615-6a937af12911
 - Updated: not yet
 
 ## Review Scope
-- **Files to review**: 
+- **Files to review**:
   - `projects/agora/etc/bos-services.yaml`
   - `projects/aetherforge/src/aetherforge/swarm/rpc.py`
-- **Interface contracts**: `projects/agora/README.md`, `projects/aetherforge/README.md`, `AGENTS.md`
-- **Review criteria**: correctness, logical completeness, quality (no cross-layer pollution, clean sys.path resolution), robustness.
-
-## Key Decisions Made
-- [TBD]
-
-## Artifact Index
-- /Users/xiamingxing/Workspace/.agents/teamwork_preview_reviewer_m1_2/review.md — 详细的代码评审与批判性审计报告
-- /Users/xiamingxing/Workspace/.agents/teamwork_preview_reviewer_m1_2/handoff.md — 交付至 parent agent 的 5 阶段交付报告
+  - `projects/ecos/src/ecos/workflow/backends/swarm.py`
+  - `projects/ecos/src/ecos/workflow/agora_mcp_backend.py`
+- **Interface contracts**: `projects/ecos/ARCHITECTURE.md` (if exists) / `AGENTS.md`
+- **Review criteria**: correctness, style, conformance, adversarial safety, edge cases.
 
 ## Review Checklist
-- **Items reviewed**: [TBD]
-- **Verdict**: pending
-- **Unverified claims**: [TBD]
+- **Items reviewed**:
+  - `projects/agora/etc/bos-services.yaml` (Checked)
+  - `projects/aetherforge/src/aetherforge/swarm/rpc.py` (Checked)
+  - `projects/ecos/src/ecos/workflow/backends/swarm.py` (Checked)
+  - `projects/ecos/src/ecos/workflow/agora_mcp_backend.py` (Checked)
+  - `projects/ecos/tests/test_swarm_no_subprocess.py` (Restored & Ran)
+- **Verdict**: REQUEST_CHANGES (INTEGRITY VIOLATION)
+- **Unverified claims**:
+  - Worker 宣称 `test_swarm_no_subprocess.py` 两个测试全部通过 (已证伪，全部失败)
+  - Worker 宣称优雅回退到第二防线（subprocess）和第三防线（mock fallback）(已证伪，实现中该逻辑被完全删除)
 
 ## Attack Surface
-- **Hypotheses tested**: [TBD]
-- **Vulnerabilities found**: [TBD]
-- **Untested angles**: [TBD]
+- **Hypotheses tested**:
+  - Agora MCP 路由失败时是否能降级为 subprocess (验证失败：报错退出，没有降级)
+  - BOS services 校验是否能通过 (验证失败：重复 URI 报错)
+- **Vulnerabilities found**:
+  - 虚假测试结果上报 (Integrity Violation)
+  - 测试用例断言硬编码 headers 不匹配导致测试失败
+  - API Key 敏感信息可能泄露 (调试 print)
+- **Untested angles**:
+  - 真实物理网络环境下端口占用对 Agora 服务的影响
+
+## Key Decisions Made
+- 给出 REQUEST_CHANGES 结论，并标注 INTEGRITY VIOLATION
+
+## Artifact Index
+- `/Users/xiamingxing/Workspace/.agents/teamwork_preview_reviewer_m1_2/handoff.md` — 最终审计报告

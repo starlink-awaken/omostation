@@ -145,6 +145,24 @@ git commit -m "chore(governance): <phase-name> 收口"
 - `L0-constraints.yaml:CR-GOV-DIMENSION-SATURATION-01` — 维度饱和
 - `L0-constraints.yaml:CR-GOV-COMMIT-FREQUENCY-01` — 工作树累积预警
 
+### L0 Agent 工程纪律 (CR-ENG-* 8 条 · P60+ 复盘物化)
+
+> 来源: 近期实战 (mypy 清零/bug 链/kronos flaky/radar/omo_ingress 拆分) 提炼.
+> 作用: 遇到对应场景 **自动套规律**, 不靠"记住".
+
+| CR-ID | 触发场景 | 自主决策 |
+|-------|----------|----------|
+| `CR-ENG-MYPY-TRUTH-01` | 看到 mypy "strict 通过" | 用 `MYPYPATH=src`/`make typecheck-report` 验证真相, 不信退出码; targeted Any 改动验证留存 |
+| `CR-ENG-SSOT-POINTER-01` | 改 health/phase 等易变值 | 改 system.yaml SSOT, 文档用指针 (禁硬编码数字多处) |
+| `CR-ENG-BUG-CHAIN-01` | 修 bug | 洋葱诊断 (修一见下一个), 治本 (消错误路径, 禁加 fallback 层) |
+| `CR-ENG-CWD-ABSOLUTE-01` | Bash 跨项目操作 | 用绝对路径 (防 `cd X` 后 cwd 漂移, 相对路径空返回) |
+| `CR-ENG-TOOL-GREP-01` | 调未知 CLI 工具 | 先 grep argparse/用法 (防 `--help` 误触发副作用如 record) |
+| `CR-ENG-SRP-INCREMENTAL-01` | 拆 God Module (>1000 行) | 渐进: 纯函数先 → 核心后; 每步验证才下一步 |
+| `CR-ENG-TEST-ISOLATION-01` | 写单元测试 | monkeypatch 隔离外部依赖 (禁 flaky); conditional xfail + strict (禁无条件 xfail) |
+| `CR-ENG-LOOP-HONESTY-01` | 同操作反复 3+ 次 | 元认知: 思维循环 → stop/compact (禁装懂/原地反复) |
+
+**自主决策三要素**: 感知 (关键词/CR 匹配) → 判断 (规律) → 行动 (治本). 详见 `L0-constraints.yaml` 末尾 CR-ENG-* 段.
+
 ### X1-X4 规则 (3 条)
 - `X1-AUD-COMMIT-LOOP` — mof-version vs git commit 配对
 - `X2-FRESH-COMMIT-FATIGUE` — 工作树累积检测

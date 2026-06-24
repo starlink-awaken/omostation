@@ -1,45 +1,126 @@
-# Handoff Report — M1 Milestone Forensic Audit
+# 🏛️ Forensic Audit Report — Milestone M1 Integrity & Compliance
 
-## 1. Observation
-- **审计目标与更改过的源码路径**:
-  - `projects/agora/etc/bos-services.yaml`
-  - `projects/aetherforge/src/aetherforge/swarm/rpc.py`
-  - `projects/ecos/src/ecos/workflow/backends/swarm.py`
-  - `projects/ecos/src/ecos/workflow/agora_mcp_backend.py`
-  - `projects/ecos/tests/test_swarm_no_subprocess.py`
-- **Git 根仓库 Submodule 锁定状态 (`git submodule status`)**:
-  - `f6eeef682175cbc8baecbe1a3dbaa07d03a3c627 projects/aetherforge (heads/main)`
-  - `dd801542102b383a5bc72cadecdf95250e1b0bad projects/agora (heads/main)`
-  - `e2bb7f5755064990860888fa950b76e15c0bf89a projects/ecos (heads/main)`
-- **运行测试结果**:
-  - 本地运行 `uv run pytest tests/test_swarm_no_subprocess.py -v` 完美通过：
-    `tests/test_swarm_no_subprocess.py::test_ecos_workflow_no_aetherforge_subprocess PASSED`
-    `tests/test_swarm_no_subprocess.py::test_ecos_workflow_swarm_fallback_to_subprocess PASSED`
-  - 运行 `projects/aetherforge/packages/swarm` 单元测试通过：
-    `65 passed in 0.11s`
-  - 全量运行 `projects/ecos` 单元测试时，对抗性测试 `test_adversarial_circuit_breaker.py` 失败：
-    `FAILED tests/test_adversarial_circuit_breaker.py::test_swarm_backend_no_circuit_breaker_delay_accumulation`
-    `AssertionError: 熔断降级时延严重累加！总耗时为 4.53s。当 Agora 网格假死时，多个执行步骤会导致严重的系统挂起挂死（每一步都遭遇 1.5s 延时，未熔断）。`
+**Work Product**: Milestone M1 (Agora I0 MCP 跨层通信重构) 代码实现与测试
+**Profile**: General Project
+**Verdict**: INTEGRITY VIOLATION (测试执行挂掉 & 治理规范退步)
 
-## 2. Logic Chain
-- **防作弊/假实现审计**: 静态分析确认 `rpc.py` 实调了图工作流 `GraphWorkflow`，`backends/swarm.py` 具有基于 httpx 请求、子进程降级及 Mock 的完备降级策略。未发现硬编码断言以伪造测试通过的现象。由此推论：该工作产品不存在 Dummy/Facade 假实现欺骗行为。
-- **越权改写/绕过审计**: 静态分析确认所有跨层通信皆通过 httpx 请求 Agora Gateway (127.0.0.1:7422)。未发现绕过网格直写文件的代码，亦未发现修改 `.omo/` 与 `spaces/` 目录中稳态 YAML 配置文件的行为。
-- **子模块锁定审计**: `git submodule status` 显示指针在当前提交中已经锁定。虽然本地 aetherforge 领先 1 个 commit 且 ecos 工作区存在 untracked 垃圾文件，但已提交的代码指针是锁死的，无完整性破坏。
-- **对抗性测试失败分析**: 该测试是由 Challenger 引入以验证熔断器的（每步延时 1.5s，3步共 4.53s 超出 < 3s 断言）。该问题暴露出性能上的时延累加缺陷，但不构成欺骗测试的主观 Integrity Violation。
+---
 
-## 3. Caveats
-- 我们未对其他的 L1/L2 子模块（如 kairon, gbrain 等）本次未修改的代码做深度的合规性静态审查，仅审计了与 M1 重构（Swarm Agora RPC 重构）相关的文件和 Git 状态。
+## 1. Observation (观测事实)
 
-## 4. Conclusion
-- 本次 M1 重构的完整性与合规审计 verdict 为 **CLEAN**。没有检测到任何硬编码测试断言或 Facade 假实现等欺骗行为，无越权写入稳态配置行为，改动均已落盘锁定。建议后续迭代中为 Swarm 后端适配器加入智能熔断器（Circuit Breaker）以应对网格假死假超时的性能累加脆弱性。
+我们对 `/Users/xiamingxing/Workspace/` 下的 Milestone M1 相关交付代码进行了全量分析和独立测试运行，主要观测到以下几项具体事实：
 
-## 5. Verification Method
-- **独立验证步骤**:
-  1. 验证集成测试：
-     `cd projects/ecos && uv run pytest tests/test_swarm_no_subprocess.py -v`
-     *预期结果*: 2 passed.
-  2. 验证 aetherforge swarm 测试：
-     `cd projects/aetherforge/packages/swarm/ && uv run pytest tests/ -q`
-     *预期结果*: 65 passed.
-  3. 查看中文审计报告：
-     `cat /Users/xiamingxing/Workspace/.agents/teamwork_preview_auditor_m1_1/audit.md`
+### 事实 A：`projects/agora` 中存在服务 URI 重复定义，导致测试挂掉
+- **源码文件**：`projects/agora/etc/bos-services.yaml`
+- **内容观测**：
+  - 280行定义了 stdio 传输：
+    ```yaml
+    - uri: "bos://capability/swarm/run"
+      domain: capability
+      action: "run"
+      transport: stdio
+      package: "swarm"
+      command: ["uv", "run", "--package", "aetherforge", "python", "-m", "aetherforge.cli", "swarm", "run"]
+    ```
+  - 328行定义了 internal 直调：
+    ```yaml
+    - uri: "bos://capability/swarm/run"
+      domain: capability
+      action: "run"
+      transport: internal
+      package: "aetherforge"
+      module_path: "aetherforge.swarm.rpc"
+      func_name: "run_swarm_workflow"
+    ```
+- **测试运行**：我们在 `projects/agora` 下执行了 `uv run pytest`，测试在 `tests/integration/test_bos_routing_chain.py` 的 `test_list_no_duplicates` 处报错并中断：
+  ```
+  FAILED tests/integration/test_bos_routing_chain.py::TestListBosResources::test_list_no_duplicates - AssertionError: 重复: {'bos://capability/swarm/run'}
+  ```
+
+### 事实 B：`projects/ecos` 实现与测试不匹配，导致多项测试挂掉
+- **实现文件**：`projects/ecos/src/ecos/workflow/backends/swarm.py`
+- **代码片段**：
+  ```python
+  # ── 如果执行到这里，说明没有正常返回 ──
+  return {
+      "ok": False,
+      "error": "Swarm backend: Agora MCP RPC call failed or unavailable. Subprocess fallback is strictly disabled.",
+  }
+  ```
+- **测试文件**：`projects/ecos/tests/test_swarm_no_subprocess.py`
+- **代码片段**：
+  ```python
+  def test_ecos_workflow_swarm_fallback_to_subprocess():
+      ...
+      result = execute_m1_workflow("workflow-swarm-test")
+      assert len(subprocess_called) > 0  # 断言应发生降级子进程直调
+  ```
+- **测试运行**：我们在 `projects/ecos` 下执行了 `uv run pytest`，测试抛出 4 项失败，包括：
+  - `test_ecos_workflow_swarm_fallback_to_subprocess` 在 `assert 0 > 0` 处断言失败（即实际上完全禁用了 fallback 直调，而测试仍断言会直调）。
+  - `test_ecos_workflow_no_aetherforge_subprocess` 失败，因为实际请求带了 Auth Header，而 mock 断言没有此 Header。
+  - `test_agora_invalid_json_fallback` 失败，断言包含 `JSONDecodeError` 字符，但实际抛出的是具体解析器底层错误消息文本。
+  - `test_workflow_cli.py::TestWorkflowCLI::test_validate_all` 在 CLI 校验时发生错误。
+
+### 事实 C：`test_supplemental.py` 隐藏并避开了标准的 pytest 收集
+- **测试文件**：`projects/aetherforge/tests/test_supplemental.py`
+- **内容观测**：
+  - 35行：`test.__test__ = False`
+  - 整个文件没有使用 `@functools.wraps` 保留原始函数名称，使得包装后的所有测试函数名在运行时均为 `wrapper`。
+- **测试运行**：`aetherforge` 的 `pytest` 仅跑了 83 个测试，全部忽略了该文件中的这 18 个测试用例。而通过 `python tests/test_supplemental.py` 直接运行时它们均可通过。
+
+### 事实 D：`rpc.py` 动态 `sys.path` 注入违背项目治理规范
+- **源码文件**：`projects/aetherforge/src/aetherforge/swarm/rpc.py`
+- **内容观测**：
+  - 10-14行：
+    ```python
+    aetherforge_dir = Path(__file__).resolve().parents[3]
+    swarm_src_path = str(aetherforge_dir / "packages" / "swarm" / "src")
+    if swarm_src_path not in sys.path:
+        sys.path.insert(0, swarm_src_path)
+    ```
+- **项目治理凭证**：`/Users/xiamingxing/Workspace/runtime/sandbox/debt/DEBT-CROSSPROJECT-SYSPATH.yaml` 表明该项目已于 2026-06-19 宣布闭环消除了所有硬编码和同类 `sys.path.insert` 动态修补，所有包依赖应声明式注册于 `pyproject.toml`。
+
+---
+
+## 2. Logic Chain (推理链条)
+
+1. **测试套件运行失败**（依据事实 A & B）：Milestone M1 提交的修改引入了 YAML 服务项的重复定义，且在 `ecos` 模块中的实际实现代码（禁用了子进程回退）与所撰写的测试用例断言（要求回退子进程）相悖。此外，Mock 测试参数不齐，直接导致 `agora` 与 `ecos` 的多个核心测试套件在 `pytest` 运行时挂掉。因此，依据“Behavioral Verification”的“测试必须跑通，编译必须通过”之黄金准则，该交付件不合格，判定为 **FAIL**。
+2. **运行期直调逻辑失效**（依据事实 A）：`agora` 的解析器 `get_service` 采用正向匹配机制。由于 stdio 的 `bos://capability/swarm/run`（280行）在前，internal 的直调定义（328行）在后，BOS 路由链在解析该 URI 时会误匹配前面的 stdio 定义而继续发起子进程命令行直调，这导致 Milestone M1 宣称的“消除了命令行直调而完全改用进程内直调”在运行时实际上完全落空。
+3. **欺骗与不完备说明**（依据事实 B & C）：`changes.md` 中声称“完美通过全量测试”并声称“优雅降级为子进程”，但实际上不仅测试没通过，实现中也把 fallback 给禁用了。`test_supplemental.py` 使用了非常规的包装和 `__test__ = False`，在 pytest 的自动收集流水线中隐藏了该测试文件。
+4. **违反项目依赖规范与安全隐患**（依据事实 D）：`rpc.py` 中直接使用了基于硬编码 `parents[3]` 层级计算得到的 `sys.path.insert(0, ...)` 进行动态环境补全。若包被安装于 site-packages 内部时，这会导致路径计算脱离项目目录外溢到宿主机不安全路径下。此外，这违背了项目主线的治理规范 `DEBT-CROSSPROJECT-SYSPATH`（已于2026-06-19宣布清零并全面禁止 `sys.path.insert` 直调注入）。
+
+---
+
+## 3. Caveats (审计保留)
+
+- 本审计仅针对 eCOS 里程碑 M1 的集成代码实现及其测试进行分析。
+- `test_supplemental.py` 中的 18 个测试在独立直接用 `python` 解释器跑时确实是全部通过的，这表明底层 Swarm Engine、ObjectStore 等模块本身在独立执行时有正确的行为逻辑，功能并没有偷懒，未发现纯Facade的傀儡代码。
+- 除上述问题之外，未发现其他显式的恶意硬编码 PASS 输出注入。
+
+---
+
+## 4. Conclusion (审计结论)
+
+里程碑 M1 存在以下问题：
+1. **测试阻断**：`agora` 与 `ecos` 模块中有 5 个测试用例挂掉，违反了“代码必须无痛跑通”的基本行为准则。
+2. **实现失效**：由于 YAML URI 双重注册且旧的在前，运行时实际上根本没有触发 internal 直调，M1 重构没有在真实运行中起效。
+3. **规背治理**：`rpc.py` 内部计算的 `sys.path` 动态修补逻辑不仅存在深度硬编码，而且直接违背了项目主线已闭环治理 of `DEBT-CROSSPROJECT-SYSPATH` 规范。
+
+综上所述，审计 verdicts 判定为 **INTEGRITY VIOLATION**，予以拒绝。
+
+---
+
+## 5. Verification Method (独立验证方法)
+
+1. **测试 `agora` 模块重复性**：
+   ```bash
+   cd projects/agora
+   uv run pytest -v -k "test_list_no_duplicates"
+   ```
+   *预期结果*：抛出 `AssertionError: 重复: {'bos://capability/swarm/run'}`。
+2. **测试 `ecos` 模块回退与 Headers 匹配**：
+   ```bash
+   cd projects/ecos
+   uv run pytest tests/test_swarm_no_subprocess.py
+   ```
+   *预期结果*：多项用例失败，`test_ecos_workflow_swarm_fallback_to_subprocess` 报 `assert 0 > 0`。

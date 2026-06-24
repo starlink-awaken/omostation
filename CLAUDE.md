@@ -84,6 +84,23 @@ python3 bin/governance-readiness.py
 - `git commit`: **代码事实** (原子不可分)
 - **两者必须并行**, mof-version 不替代 commit
 
+### Agent 工程纪律 (CR-ENG-* · P60+ 复盘物化)
+
+> 8 条来自实战复盘 (mypy 清零/bug 链/kronos flaky/radar/omo_ingress 拆分). 触发场景自动套规律, 不靠"记住". 详见 `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml` → `governance_closure_constraints` 段.
+
+| CR | 触发场景 | 自主决策 |
+|----|----------|----------|
+| `CR-ENG-MYPY-TRUTH-01` | 看到 mypy "strict 通过" | 用 `MYPYPATH=src`/`make typecheck-report` 验证真相, 不信退出码 |
+| `CR-ENG-SSOT-POINTER-01` | 改 health/phase 等易变值 | 改 system.yaml SSOT, 文档用指针 (`bin/check_health_ssot.py` 校验全文档) |
+| `CR-ENG-BUG-CHAIN-01` | 修 bug | 洋葱诊断 (修一见下一个), 治本 (消错误路径, 禁加 fallback 层) |
+| `CR-ENG-CWD-ABSOLUTE-01` | Bash 跨项目操作 | 绝对路径 (防 `cd X` 后 cwd 漂移致 find/ls 空返回) |
+| `CR-ENG-TOOL-GREP-01` | 调未知 CLI 工具 | 先 grep argparse/用法 (防 `--help` 误触发副作用如 record) |
+| `CR-ENG-SRP-INCREMENTAL-01` | 拆 God Module (>1000 行) | 渐进 (纯函数先 → 核心后), 每步 import+test 验证才下一步 |
+| `CR-ENG-TEST-ISOLATION-01` | 写单元测试 | monkeypatch 隔离外部依赖 (禁 flaky); conditional xfail + strict |
+| `CR-ENG-LOOP-HONESTY-01` | 同操作反复 3+ 次 | 元认知: 思维循环 → stop/compact (禁装懂/原地反复) |
+
+**skill 激活**: `governance-phase-orchestrator` (workspace 通用 RISE+纪律) + `projects/omo/.claude/skills/omo-srp-refactor` (项目级 God Module 拆分范式).
+
 ---
 
 ## 今日工作记录 (2026-06-12)

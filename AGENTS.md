@@ -44,7 +44,7 @@ bos://capability/ ← forge/runtime                  — 能力与生态
 | 决策 | 结论 |
 |:----|:-----|
 | L3 收敛 | cockpit 是唯一 Web 入口；agora-dashboard 独立入口已收敛，仓库仅保留历史快照；cockpit-ui 与 dashboard_server 作为子应用挂载。 |
-| CLI 收敛 | cockpit = 唯一人类 CLI 入口。其他 CLI (agora/runtime/ecos-ssb/omo/metaos) 保留为程序接口 |
+| CLI 收敛 | cockpit = 唯一人类 CLI 入口。ecos-ssb/mof/workflow 等旧入口已收敛到 cockpit（`cockpit ssb`/`cockpit mof`/`cockpit workflow`）。其他 CLI (agora/runtime/omo/metaos) 保留为程序接口。 |
 | 子模块 | 18 子模块，各自独立 git 仓库。根仓库只追踪元配置和子模块指针 |
 | 治理收敛 | `.omo/` = state plane；`projects/omo/` = governance kernel；`projects/c2g/` = strategic ingress |
 
@@ -241,7 +241,7 @@ L0 协议   ── ecos
 | runtime | `runtime`, `ecos-matrix-scheduler` | runtime MCP | FastAPI | fastmcp, apscheduler |
 | omo | `omo`, `cards`, `omo-debt` | governance CLI | — | httpx, pyyaml |
 | metaos | `metaos` | orchestration CLI | — | structlog |
-| ecos | `ecos-ssb`, `ecos-dashboard` | protocol tooling | — | requests, jinja2 |
+| ecos | `ecos-mcp`, `ecos-dashboard`, `ecos-scheduler`, `ecos-watchdog`; 旧入口(ssb/mof/workflow) → `cockpit *` | protocol tooling | — | requests, jinja2 |
 | gbrain | `gbrain` | knowledge database MCP | — | bun |
 
 ### Key Dependencies

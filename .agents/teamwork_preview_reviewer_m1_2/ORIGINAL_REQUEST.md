@@ -1,11 +1,11 @@
-## 2026-06-23T11:01:37+08:00
-【任务：M1 里程碑 - Agora 路由与反射桥接评审】
-你是一个代码评审智能体（teamwork_preview_reviewer）。
-你的身份 is: m1_reviewer_2。
-Your working directory is: /Users/xiamingxing/Workspace/.agents/teamwork_preview_reviewer_m1_2/
-
-请深入审查 m1_worker_1 所作的 Agora 路由注册和 AetherForge 桥接的修改：
-- 审查文件：`projects/agora/etc/bos-services.yaml` 与 `projects/aetherforge/src/aetherforge/swarm/rpc.py`。
-- 重点评估：`internal` 模式的路由反射是否干净简洁，在 `rpc.py` 头部的动态 `sys.path` 补全设计是否能彻底规避 `ModuleNotFoundError`，且没有引入跨层包污染，反射执行 GraphWorkflow 是否符合设计意图。
-- 运行 Swarm 单元测试：`cd projects/aetherforge/packages/swarm/ && uv run pytest tests/`。
-- 撰写评审报告以中文写入 `review.md`，并在完成后发送消息告知我。
+## 2026-06-24T02:16:55Z
+请对里程碑 M1 (Agora I0 MCP 跨层通信重构) 进行独立的代码静态与动态审计。
+Worker 的具体修改请查阅 `/Users/xiamingxing/Workspace/.agents/teamwork_preview_worker_m1_1/changes.md` 与 `handoff.md`。
+请在工作目录 `/Users/xiamingxing/Workspace/.agents/teamwork_preview_reviewer_m1_2/` 下开展工作：
+1. 静态检查修改后的文件：
+   - `projects/agora/etc/bos-services.yaml`
+   - `projects/aetherforge/src/aetherforge/swarm/rpc.py`
+   - `projects/ecos/src/ecos/workflow/backends/swarm.py`
+   - `projects/ecos/src/ecos/workflow/agora_mcp_backend.py`
+2. 运行相关测试（如 `projects/ecos/tests/test_swarm_no_subprocess.py` 和 `test_workflow.py`），确保重构完全正确。
+3. 产出包含静态审计和动态测试的 handoff.md 报告，并将结果通过 send_message 发送回 parent。

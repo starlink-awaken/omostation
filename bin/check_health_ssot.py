@@ -123,6 +123,32 @@ def main() -> int:
                 f"偏差 {drift:.0f}s, 建议重新跑 compass_radar.py"
             )
 
+    # 7. 全文档 SSOT 扫描 (CR-ENG-SSOT-POINTER-01)
+    # 扫 README/CLAUDE/CHANGELOG 的 health 数字硬编码, 比对 system.yaml.
+    # 防失序 (复盘案例: health 曾在 system/CLAUDE/Kim 报告 3 处不同值 77.5/22/67).
+    import re  # noqa: PLC0415
+
+    doc_files = ["README.md", "CLAUDE.md", "CHANGELOG.md"]
+    health_patterns = [
+        r"health-(\d+(?:\.\d+)?)%2F\d+",      # badge: health-NN%2F100
+        r"health_score[:\s]+(\d+(?:\.\d+)?)",  # health_score: NN
+        r"健康分[:\s]*(\d+(?:\.\d+)?)/100",   # 健康分 NN/100
+        r"Health[:\s]+(\d+(?:\.\d+)?)/100",   # Health NN/100
+    ]
+    for doc_name in doc_files:
+        doc_path = ws / doc_name
+        if not doc_path.is_file():
+            continue
+        content = doc_path.read_text(encoding="utf-8")
+        for pattern in health_patterns:
+            for m in re.finditer(pattern, content):
+                doc_score = float(m.group(1))
+                if sys_score is not None and doc_score != float(sys_score):
+                    warnings.append(
+                        f"{doc_name}: health={doc_score} != system.yaml={sys_score} "
+                        f"(硬编码过期? 改 SSOT 指针或更新, CR-ENG-SSOT-POINTER-01)"
+                    )
+
     return _report(errors, warnings, args.warn_only)
 
 
