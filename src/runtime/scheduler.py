@@ -150,6 +150,14 @@ class MatrixScheduler:
         for svc in ordered_services:
             result = {"type": svc.type, "name": svc.name, "timestamp": current_time}
 
+            # Scheduled (cron-managed) jobs 不走 daemon launchd 健康检查 / self-heal.
+            # 它们由 cron-service 按计划触发, 常驻 alive 检查是误报 (e.g. gbrain-index daily 02:00).
+            if svc.type == "scheduled":
+                result["runtime"] = {"status": "scheduled"}
+                result["health_check"] = "scheduled"
+                scan_results[svc.name] = result
+                continue
+
             # Check dependencies
             deps_healthy = True
             failed_deps = []
