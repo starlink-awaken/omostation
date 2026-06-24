@@ -85,6 +85,39 @@ def record(
     return entry
 
 
+def record_compute_node_state(node_id: str, **fields: dict) -> dict:
+    """Safe audit write-back for M1 compute node state. (R3 Adaptive Feedback)
+    
+    Loads the corresponding YAML file from projects/ecos/src/ecos/ssot/mof/m1/compute_engine/,
+    updates fields (like status, last_seen), and writes back safely.
+    """
+    from omo.omo_shared import load_yaml
+    from omo.omo_io import write_yaml_atomic
+    
+    m1_dir = Path("~/Workspace/projects/ecos/src/ecos/ssot/mof/m1/compute_engine").expanduser()
+    m1_dir.mkdir(parents=True, exist_ok=True)
+    target_file = None
+    
+    for f in m1_dir.glob("*.yaml"):
+        try:
+            data = load_yaml(f)
+            if data.get("node_id") == node_id or f.stem == node_id:
+                target_file = f
+                break
+        except Exception:
+            pass
+            
+    if target_file is None:
+        target_file = m1_dir / f"{node_id}.yaml"
+        data = {"node_id": node_id, "schema_version": 1}
+        
+    for k, v in fields.items():
+        data[k] = v
+        
+    write_yaml_atomic(target_file, data)
+    return record(action="mesh_node_state_update", details=f"Updated M1 YAML for node {node_id}: {fields.get('status')}")
+
+
 def query(limit: int = 50, audit_file: str | Path | None = None) -> list[dict]:
     """Read the most recent audit records."""
     log = AppendOnlyLog(Path(audit_file) if audit_file else _default_audit_file())
