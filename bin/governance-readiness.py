@@ -60,7 +60,10 @@ def score_frontmatter(root: Path) -> tuple[int, int, float]:
 
 
 def score_drift(root: Path) -> tuple[int, int]:
-    """维度 2: drift LOW 计数. 返回 (score, low_count)."""
+    """维度 2: drift LOW 计数. 返回 (score, low_count).
+
+    P62 优化: 5 档细分, 反映治理成熟度梯度.
+    """
     _, out = run("bin/mof-drift", cwd=root)
     match = re.search(r"Total:\s*(\d+)\s+drifts", out)
     if match:
@@ -68,32 +71,41 @@ def score_drift(root: Path) -> tuple[int, int]:
     else:
         match = re.search(r"🔵 LOW \((\d+)\):", out)
         total = int(match.group(1)) if match else 0
-    # ≤ 2 = 20 分, ≤ 5 = 15 分, ≤ 10 = 10 分, > 10 = 0
+    # P62 5 档: ≤2=20, ≤5=18, ≤8=15, ≤12=10, >12=5
     if total <= 2:
         score = 20
     elif total <= 5:
+        score = 18
+    elif total <= 8:
         score = 15
-    elif total <= 10:
+    elif total <= 12:
         score = 10
     else:
-        score = 0
+        score = 5
     return score, total
 
 
 def score_commit_closure(root: Path) -> tuple[int, int]:
-    """维度 3: 工作树累积. 返回 (score, uncommitted_count)."""
+    """维度 3: 工作树累积. 返回 (score, uncommitted_count).
+
+    P62 优化: 5 档细分 (0/30/80/300/500+) + L0:CR-GOV-COMMIT-FREQUENCY-01 双阈值.
+    """
     _, out = run("git status --short | wc -l", cwd=root)
     try:
         count = int(out.strip().split("\n")[0])
     except (ValueError, IndexError):
         count = 0
-    # ≤ 10 = 20, ≤ 50 = 15, ≤ 100 = 10, > 100 = 0
-    if count <= 10:
+    # P62 5 档: ≤5=20, ≤30=18, ≤80=15, ≤300=10, ≤500=5, >500=0
+    if count <= 5:
         score = 20
-    elif count <= 50:
+    elif count <= 30:
+        score = 18
+    elif count <= 80:
         score = 15
-    elif count <= 100:
+    elif count <= 300:
         score = 10
+    elif count <= 500:
+        score = 5
     else:
         score = 0
     return score, count

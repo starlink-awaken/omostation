@@ -256,6 +256,54 @@ def count_commit_closure() -> tuple[int, int, int]:
     return uncommitted, bumps_24h, int(last_age_h)
 
 
+def count_stale_governance() -> dict[str, int]:
+    """P62 增: stale_governance 维度 — 检测 .omo/_control/ 和 .omo/tasks/ 累积.
+
+    返回: {drift_history, planned_tasks, done_tasks, drafts, registry, age_days}
+    """
+    root = Path(__file__).parent.parent
+    omo = root / ".omo"
+    result = {
+        "drift_history": 0,
+        "planned_tasks": 0,
+        "done_tasks": 0,
+        "drafts": 0,
+        "registry_size": 0,
+        "age_days": 0,
+    }
+    # drift-history 累积
+    dh = omo / "_control/evolution/drift-history"
+    if dh.exists():
+        result["drift_history"] = len([f for f in dh.iterdir() if f.is_file() and f.suffix == ".json" and not f.name.endswith(".lock")])
+    # planned tasks 累积
+    planned = omo / "tasks/planned"
+    if planned.exists():
+        result["planned_tasks"] = len(list(planned.glob("*.yaml")))
+    # done tasks 累积
+    done = omo / "tasks/done"
+    if done.exists():
+        result["done_tasks"] = len(list(done.glob("*.yaml")))
+    # drafts 累积
+    drafts = omo / "tasks/drafts"
+    if drafts.exists():
+        result["drafts"] = len(list(drafts.glob("*.yaml")))
+    # registry 目录大小 (M1 nodes 数量)
+    m1_dir = Path(__file__).parent.parent / "projects/ecos/src/ecos/ssot/mof/m1"
+    if m1_dir.exists():
+        result["registry_size"] = len(list(m1_dir.rglob("*.yaml")))
+    # .omo 目录年龄 (天) — 最近文件 mtime
+    try:
+        if omo.exists():
+            all_files = list(omo.rglob("*"))
+            if all_files:
+                latest_mtime = max(f.stat().st_mtime for f in all_files if f.is_file())
+                import time as _t
+                result["age_days"] = int((_t.time() - latest_mtime) / 86400)
+    except Exception:
+        pass
+    return result
+
+
 def detect_drift(project_name: str = None) -> list[dict]:
     """检测架构漂移"""
     nodes = load_all_m1()
@@ -392,6 +440,33 @@ def detect_drift(project_name: str = None) -> list[dict]:
                 "severity": "low",
                 "count": 0,
                 "message": f"governance score 稳态: 最近 {gh['window']} 次 {gh['recent_avg']:.1f} (P43-P60 持续提升)",
+            })
+
+        # P62 增: stale_governance — 治理累积检测
+        sg = count_stale_governance()
+        # 阈值: planned > 5 (P49 历史清零, > 5 = 回退) / drafts > 0 (P51 清零) / drift_history > 50
+        stale_msgs = []
+        if sg["planned_tasks"] > 5:
+            stale_msgs.append(f"planned 任务 {sg['planned_tasks']} (> 5 阈值, 历史 P49 已清零)")
+        if sg["drafts"] > 0:
+            stale_msgs.append(f"drafts {sg['drafts']} (> 0 阈值, 历史 P51 已清零)")
+        if sg["drift_history"] > 30:
+            stale_msgs.append(f"drift-history {sg['drift_history']} (> 30 阈值, 累积待归档)")
+        if stale_msgs:
+            drifts.append({
+                "project": "governance",
+                "type": "stale_governance",
+                "severity": "medium" if sg["planned_tasks"] > 5 or sg["drafts"] > 0 else "low",
+                "count": sg["planned_tasks"] + sg["drafts"] + max(0, sg["drift_history"] - 30),
+                "message": f"治理累积: {'; '.join(stale_msgs)} (done={sg['done_tasks']}, registry={sg['registry_size']})",
+            })
+        elif sg["done_tasks"] > 0:
+            drifts.append({
+                "project": "governance",
+                "type": "stale_governance",
+                "severity": "low",
+                "count": 0,
+                "message": f"治理健康: done={sg['done_tasks']}, planned={sg['planned_tasks']}, drafts={sg['drafts']}, drift_history={sg['drift_history']}, registry={sg['registry_size']}",
             })
 
         # Check test coverage

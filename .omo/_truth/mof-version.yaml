@@ -191,4 +191,9 @@ history:
     + ADR-0055'
   timestamp: '2026-06-24T10:59:47.615601'
   version: 0.0.50
-version: 0.0.50
+- description: 'P62 R1-R3: mof-drift v7 stale_governance 维度 (planned/drafts/drift_history
+    检测) + readiness 5 档优化 (commit_closure + drift LOW) + governance-agent install
+    脚本 (3 命令) + ADR-0056 + readiness 96/100 A+ L4'
+  timestamp: '2026-06-24T11:17:28.155616'
+  version: 0.0.51
+version: 0.0.51
