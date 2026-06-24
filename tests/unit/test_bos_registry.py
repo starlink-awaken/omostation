@@ -220,3 +220,12 @@ class TestDefaultPath:
         with pytest.raises(FileNotFoundError):
             load_from_yaml()
         monkeypatch.delenv("AGORA_BOS_REGISTRY", raising=False)
+
+    def test_default_registry_is_valid(self):
+        """确保主注册表文件 etc/bos-services.yaml 格式和内容全部校验通过。"""
+        from agora.mcp.resolver.bos_registry import validate_registry
+
+        errors = validate_registry()
+        assert len(errors) == 1 and "✅" in errors[0], (
+            f"主注册表 etc/bos-services.yaml 校验失败: {errors}"
+        )
