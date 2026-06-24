@@ -16,7 +16,7 @@
 ```
 L4 自我层  ── l4-kernel
 L3 入口层  ── cockpit (唯一人类 CLI / Web 入口)
-              hermes-console (挂载到 cockpit /hermes/*)
+              cockpit-ui (挂载到 cockpit /hermes/*)
               dashboard_server (挂载到 cockpit /dash/*)
 I0 织层    ── agora (BOS URI 路由与 MCP Hub)
 L2 引擎面  ── kairon + gbrain + omo + metaos
@@ -43,7 +43,7 @@ bos://capability/ ← forge/runtime                  — 能力与生态
 
 | 决策 | 结论 |
 |:----|:-----|
-| L3 收敛 | cockpit 是唯一 Web 入口；agora-dashboard 独立入口已收敛，仓库仅保留历史快照；hermes-console 与 dashboard_server 作为子应用挂载。 |
+| L3 收敛 | cockpit 是唯一 Web 入口；agora-dashboard 独立入口已收敛，仓库仅保留历史快照；cockpit-ui 与 dashboard_server 作为子应用挂载。 |
 | CLI 收敛 | cockpit = 唯一人类 CLI 入口。其他 CLI (agora/runtime/ecos-ssb/omo/metaos) 保留为程序接口 |
 | 子模块 | 18 子模块，各自独立 git 仓库。根仓库只追踪元配置和子模块指针 |
 | 治理收敛 | `.omo/` = state plane；`projects/omo/` = governance kernel；`projects/c2g/` = strategic ingress |
@@ -94,7 +94,7 @@ This root directory is a **multi-project workspace** organized in the 5+4+1+1 (e
 | X | `omo-debt` | Python (uv, pytest) | `projects/omo-debt/` | 🟢 Active — 技术债务评分 CLI |
 | X | `observability` | Docker | `projects/observability/` | 🟢 Active — Langfuse 可观测性 |
 | X | `family-hub` | Python (FastMCP) | `projects/family-hub/` | 🟢 Active — 家庭数字枢纽 |
-| X | `hermes-console` | TypeScript (Vite) | `projects/hermes-console/` | 🟢 Active — 已挂载至 cockpit `/hermes/*` |
+| X | `cockpit-ui` | TypeScript (Vite) | `projects/cockpit-ui/` | 🟢 Active — 已挂载至 cockpit `/hermes/*` |
 | X | `spaces` | YAML | `projects/spaces/` | 🟢 Active — 空间配置 |
 
 **Also contains:**

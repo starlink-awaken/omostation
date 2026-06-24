@@ -23,6 +23,69 @@
 
 ---
 
+## §0.1 治理纪律 (P60+ 内化 — P43-P59 沉淀)
+
+**激活 skill**: 收到 governance / 收敛 / P 阶段 / doc-lifecycle / drift / commit closure / 维度饱和 相关任务时, 自动激活 `.claude/skills/governance-phase-orchestrator/SKILL.md`。
+
+### 5 大核心铁律
+
+| # | 铁律 | 来源 | 关联规则 |
+|---|------|------|----------|
+| 1 | **强制闭环原则** | P59 教训: 571 文件未提交 | `L0:CR-GOV-CLOSED-LOOP-01` |
+| 2 | **frontmatter 4 字段契约** | P56 100% 覆盖 | `L0:CR-GOV-FRONTMATTER-SCHEMA-01` |
+| 3 | **4 类生命周期** | P45 分类标准 | `L0:CR-GOV-DOC-CATEGORY-01` |
+| 4 | **维度饱和律** | P57 ADR-0053 | `L0:CR-GOV-DIMENSION-SATURATION-01` |
+| 5 | **工作树累积预警** | P59 失闭环 | `L0:CR-GOV-COMMIT-FREQUENCY-01` |
+
+### RISE 循环 (P43-P59 方法论)
+
+```
+R (Research): 调研 4 指标 — drift + governance + doc-lifecycle + working tree
+   ↓
+I (Investigate): 异常项 + 优先级排序
+   ↓
+S (Strategize): 3 方案 (轻量/中量/大重构), 选最低风险
+   ↓
+E (Execute): 批量兜底 + README + mof-version + git commit (顺序强制)
+   ↓
+C (Closeout): governance 100 A+ + 收口报告
+```
+
+### 软分层 vs 硬分层
+
+```
+软分层 (优先):
+├─ 物理位置不重要, frontmatter 驱动
+├─ 不动路径 + 双指针可追溯
+└─ 批量 frontmatter 化, 不迁移文件
+
+硬分层 (仅在归档面已存在):
+├─ 真迁移 (e.g. P54 dbo-archive → plans-archive/)
+└─ 原位保留 deprecated 指针
+```
+
+### 治理债务识别 (3 类)
+
+- **结构债**: 目录错位 / 命名冲突 / 断链 symlink → 真迁移 + 双指针
+- **语义债**: frontmatter 缺失 / status 混乱 / lifecycle 不清 → 批量兜底
+- **时序债**: 累积未提交 / 未归档 / 未清理 → git commit 闭环 (P59 教训)
+
+### 治理就绪度评估
+
+```bash
+python3 bin/governance-readiness.py
+# 5 维度评分 (满分 100): 元数据覆盖 / 漂移检测 / 闭环纪律 / 决策可追溯 / 治理评分
+# ≥90 = A+ 稳态 | 80-89 = A 成熟 | 70-79 = B 基础 | 60-69 = C 起步 | <60 = 缺失
+```
+
+### mof-version vs git commit 双轨制
+
+- `bin/mof-version record`: **治理记录** (阶段边界)
+- `git commit`: **代码事实** (原子不可分)
+- **两者必须并行**, mof-version 不替代 commit
+
+---
+
 ## 今日工作记录 (2026-06-12)
 
 ### 完成的工作

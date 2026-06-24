@@ -1,8 +1,1 @@
-kind: task_completed
-task_id: P45-DOC-LIFECYCLE
-source_group: active
-task_ref_before: .omo/tasks/active/P45-DOC-LIFECYCLE.yaml
-task_ref_after: .omo/tasks/done/P45-DOC-LIFECYCLE.yaml
-actor: agent-runtime
-source_ref: P45-R5-closeout
-completed_at: '2026-06-23T01:07:35Z'
+{}

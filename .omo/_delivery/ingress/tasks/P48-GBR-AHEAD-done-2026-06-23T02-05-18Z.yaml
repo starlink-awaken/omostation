@@ -1,8 +1,0 @@
-kind: task_completed
-task_id: P48-GBR-AHEAD
-source_group: active
-task_ref_before: .omo/tasks/active/P48-GBR-AHEAD.yaml
-task_ref_after: .omo/tasks/done/P48-GBR-AHEAD.yaml
-actor: agent-runtime
-source_ref: P48-R3
-completed_at: '2026-06-23T02:05:18Z'

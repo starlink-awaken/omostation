@@ -144,3 +144,4 @@ config/
 
 # ---- 证据目录已改为软链到 _delivery/evidence-legacy ----
 .omo/evidence
+projects/cockpit-ui/

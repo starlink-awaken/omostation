@@ -1,8 +1,0 @@
-kind: task_promoted_to_active
-task_id: P50-GBR-TODO
-task_ref_before: .omo/tasks/planned/P50-GBR-TODO.yaml
-task_ref_after: .omo/tasks/active/P50-GBR-TODO.yaml
-handoff_ref: P50-R3-closeout
-actor: agent-runtime
-source_ref: ''
-promoted_at: '2026-06-23T02:23:02Z'

@@ -144,3 +144,20 @@ rules:
       - .omo/_knowledge/audits/*.md
     owner: governance-team
     enforcement: block-write
+
+  - rule_id: X4-CONS-DRIFT-VS-GOVERNANCE
+    title: 漂移 vs 治理评分一致性
+    type: cross_metric_consistency
+    status: active
+    created: '2026-06-23'
+    target: "bin/mof-drift + omo governance"
+    freshness:
+      mechanism: cross-tool-consistency
+      threshold_days: 1
+      action: warn
+    owner: governance-team
+    notes: >
+      mof-drift LOW 计数应与 governance score 反向相关 (drift 越少, 治理越好)。
+      偏离时报警, 可能存在统计口径不一致或工具 bug。
+      P52 v5 终极后稳态: drift LOW=2, governance=100 A+, 持续健康。
+      实现: bin/check-drift-governance-consistency.py (P60+ 实现)

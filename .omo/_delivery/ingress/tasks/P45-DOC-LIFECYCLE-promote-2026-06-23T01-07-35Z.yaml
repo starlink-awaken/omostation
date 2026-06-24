@@ -1,8 +1,1 @@
-kind: task_promoted_to_active
-task_id: P45-DOC-LIFECYCLE
-task_ref_before: .omo/tasks/planned/P45-DOC-LIFECYCLE.yaml
-task_ref_after: .omo/tasks/active/P45-DOC-LIFECYCLE.yaml
-handoff_ref: .omo/_knowledge/audits/2026-06-22-p45-doc-lifecycle-closeout.md
-actor: agent-runtime
-source_ref: ''
-promoted_at: '2026-06-23T01:07:35Z'
+{}

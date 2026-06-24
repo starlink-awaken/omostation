@@ -1,8 +1,0 @@
-kind: task_promoted_to_active
-task_id: P46-MOF-IMPL
-task_ref_before: .omo/tasks/planned/P46-MOF-IMPL.yaml
-task_ref_after: .omo/tasks/active/P46-MOF-IMPL.yaml
-handoff_ref: P46-R3-closeout
-actor: agent-runtime
-source_ref: ''
-promoted_at: '2026-06-23T01:33:48Z'

@@ -148,3 +148,21 @@ rules:
       - 死文档占比 > 30% (contract/pattern 0 引用)
       - 矛盾路径 > 0 (代码引用 .omo/_archive/ 或 .omo/_knowledge/management/)
       治理面: 触发时在 cron 邮件中加 §doc-lifecycle 健康分.
+
+  - rule_id: X2-FRESH-COMMIT-FATIGUE
+    title: 工作树累积预警 (commit fatigue detector)
+    type: commit_closure_freshness
+    status: active
+    created: '2026-06-23'
+    target: .omo/
+    freshness:
+      mechanism: git-working-tree-accumulation
+      threshold_days: 1
+      threshold_count: 100
+      action: warn (100 files) / escalate (500 files)
+    owner: governance-team
+    notes: >
+      P59 暴露 571 文件未提交的失闭环事件。本规则监控工作树累积,
+      防止 agent 在长会话中累积大量修改而不提交。
+      实现: bin/check-commit-fatigue.py (P60+ 实现) + pre-commit 钩子。
+      参考: L0-constraints.yaml:CR-GOV-COMMIT-FREQUENCY-01

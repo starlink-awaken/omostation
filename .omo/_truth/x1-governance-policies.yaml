@@ -170,3 +170,25 @@ policies:
     review_frequency: weekly
     next_review: '2026-06-28'
     enforcement: block-write
+
+  - policy_id: X1-AUD-COMMIT-LOOP
+    title: 强制闭环审计 (mandatory commit loop)
+    type: commit_closure
+    status: active
+    created: '2026-06-23'
+    description: >
+      mof-version.yaml 中每条 history entry 必须有对应的 git commit 在同一会话内。
+      P59 治理闭环修复后, 此规则持续维护。
+      检测: 反向校验最近 N 个 mof-version history 与 git log commit 的时间窗口配对。
+      失配: 强制闭环破坏, 触发 CR-GOV-CLOSED-LOOP-01 error 级别。
+    scope:
+      - .omo/_truth/mof-version.yaml
+      - bin/mof-version
+      - .githooks/post-commit
+    owner: governance-team
+    references:
+      - "L0-constraints.yaml:CR-GOV-CLOSED-LOOP-01"
+      - ".omo/_knowledge/audits/2026-06-23-p59-git-commit-closure-closeout.md"
+    notes: >
+      P43-P58 期间多次出现 mof-version bump 但 git commit 失同步, P59 一次修复 571 文件落地。
+      此后强制闭环纪律是 L0 级别 error, 不可降级。

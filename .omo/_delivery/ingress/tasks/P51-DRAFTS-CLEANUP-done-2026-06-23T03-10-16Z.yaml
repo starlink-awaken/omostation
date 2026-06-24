@@ -1,8 +1,0 @@
-kind: task_completed
-task_id: P51-DRAFTS-CLEANUP
-source_group: active
-task_ref_before: .omo/tasks/active/P51-DRAFTS-CLEANUP.yaml
-task_ref_after: .omo/tasks/done/P51-DRAFTS-CLEANUP.yaml
-actor: agent-runtime
-source_ref: P51-R3
-completed_at: '2026-06-23T03:10:16Z'
