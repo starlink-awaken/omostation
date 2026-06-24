@@ -649,7 +649,10 @@ def _route_self_evolution_packet_to_remediation(
         source_ref="omo-worker-promotion:route-self-evolution-remediation",
         now=now,
     )
-    print(f"routed task_id={task_id} to remediation")
+    print(
+        f"routed task_id={task_id} to remediation "
+        f"remediation_ref=.omo/tasks/remediation/{task_id}.yaml"
+    )
     return 0
 
 
@@ -700,8 +703,8 @@ def _write_task_approval_queue_status(
     _write_yaml(output_dir / "current.yaml", packet)
     write_text_atomic(output_dir / "current.md", render_approval_queue_markdown(packet))
     print(
-        "task_count="
-        f"{packet['task_count']} "
+        f"approval_queue_task_count={len(packet.get('tasks', []))} "
+        f"task_count={packet['task_count']} "
         f"ready_to_promote={packet['ready_to_promote_count']} "
         f"blocked={packet['blocked_count']}"
     )
