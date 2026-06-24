@@ -9,12 +9,14 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any
 
 logger = logging.getLogger("ecos.workflow.agora_backend")
 
 # Agora MCP Gateway 地址
 _AGORA_MCP_URL = "http://127.0.0.1:7422"
+_AGORA_API_KEY = os.environ.get("AGORA_API_KEY", "")
 
 
 def execute(m1_node: dict, params: dict | None = None) -> dict:
@@ -37,15 +39,30 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
     execution = m1_node.get("execution", {})
     timeout = execution.get("timeout", 120)
 
-    # 检查 Agora 是否可达
-    try:
-        with httpx.Client(trust_env=False) as client:
-            r = client.get(f"{_AGORA_MCP_URL}/health", timeout=2)
-            if r.status_code != 200:
-                logger.warning("Agora MCP unreachable (HTTP %d), falling back to default", r.status_code)
-                return _fallback_default(m1_node, params)
-    except Exception as e:
-        logger.warning("Agora MCP uncontactable: %s, falling back to default", e)
+    from ecos.workflow.circuit_breaker import (
+        is_available as _cb_available,
+        trip as _cb_trip,
+    )
+
+    # ── 熔断检查：如果 Agora MCP 最近不可达，直接降级 ──
+    if _cb_available("agora", "mcp-gateway"):
+        # 检查 Agora 是否可达
+        try:
+            with httpx.Client(trust_env=False) as client:
+                r = client.get(f"{_AGORA_MCP_URL}/health", timeout=2)
+                if r.status_code != 200:
+                    logger.warning(
+                        "Agora MCP unreachable (HTTP %d), falling back to default",
+                        r.status_code,
+                    )
+                    _cb_trip("agora", "mcp-gateway")
+                    return _fallback_default(m1_node, params)
+        except Exception as e:
+            logger.warning("Agora MCP uncontactable: %s, falling back to default", e)
+            _cb_trip("agora", "mcp-gateway")
+            return _fallback_default(m1_node, params)
+    else:
+        logger.info("Agora circuit breaker OPEN, skip health check → fallback directly")
         return _fallback_default(m1_node, params)
 
     # Agora 可用，开始路由
@@ -62,7 +79,10 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
         logger.info("Routing via Agora: %s → %s", step_name, bos_uri)
 
         try:
-            with httpx.Client(trust_env=False) as client:
+            headers = {}
+            if _AGORA_API_KEY:
+                headers["Authorization"] = f"Bearer {_AGORA_API_KEY}"
+            with httpx.Client(trust_env=False, headers=headers) as client:
                 resp = client.post(
                     f"{_AGORA_MCP_URL}/v1/tools/call",
                     json={
@@ -81,37 +101,48 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
 
             if resp.status_code == 200:
                 data = resp.json()
-                ok = data.get("success", True) or data.get("status") in ("ok", "completed")
-                results["steps"].append({
-                    "name": step_name,
-                    "status": "ok" if ok else "failed",
-                    "bos_uri": bos_uri,
-                    "result": data,
-                })
+                ok = data.get("success", True) or data.get("status") in (
+                    "ok",
+                    "completed",
+                )
+                results["steps"].append(
+                    {
+                        "name": step_name,
+                        "status": "ok" if ok else "failed",
+                        "bos_uri": bos_uri,
+                        "result": data,
+                    }
+                )
                 if ok:
                     results["passed"] += 1
                 else:
                     results["failed"] += 1
             else:
-                results["steps"].append({
-                    "name": step_name,
-                    "status": "failed",
-                    "bos_uri": bos_uri,
-                    "error": f"Agora returned HTTP {resp.status_code}",
-                })
+                results["steps"].append(
+                    {
+                        "name": step_name,
+                        "status": "failed",
+                        "bos_uri": bos_uri,
+                        "error": f"Agora returned HTTP {resp.status_code}",
+                    }
+                )
                 results["failed"] += 1
 
-                on_failure = step.get("on_failure") or execution.get("on_failure") or "continue"
+                on_failure = (
+                    step.get("on_failure") or execution.get("on_failure") or "continue"
+                )
                 if on_failure == "abort":
                     logger.warning("Step %s failed, aborting workflow", step_name)
                     break
 
         except Exception as e:
-            results["steps"].append({
-                "name": step_name,
-                "status": "error",
-                "error": f"Agora call failed: {e}",
-            })
+            results["steps"].append(
+                {
+                    "name": step_name,
+                    "status": "error",
+                    "error": f"Agora call failed: {e}",
+                }
+            )
             results["failed"] += 1
 
     return results
@@ -159,5 +190,6 @@ def _step_to_bos_uri(step: dict, action: str) -> str:
 def _fallback_default(m1_node: dict, params: dict | None = None) -> dict:
     """Agora 不可用时的优雅降级"""
     from ecos.workflow.backend_registry import _default_executor
+
     logger.info("Agora unavailable, falling back to default backend")
     return _default_executor(m1_node, params)

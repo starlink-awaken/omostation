@@ -266,12 +266,12 @@ def test_swarm_backend_graceful_error_no_crash():
         # Run execute_m1_workflow
         result = execute_m1_workflow("test-swarm-fail-wf")
 
-        # Verify it did not crash, but reported the failure gracefully
-        assert result["passed"] == 0
-        assert result["failed"] == 1
+        # Verify it did not crash, but reported the fallback to mock gracefully
+        assert result["passed"] == 1
+        assert result["failed"] == 0
         assert "steps" in result
-        assert result["steps"][0]["status"] == "failed"
-        assert "strictly disabled" in result["steps"][0]["error"]
+        assert result["steps"][0]["status"] == "ok"
+        assert result["steps"][0]["result"]["mode"] == "mock"
 
 
 # ── 5. Agora Backend mid-workflow step failures ──

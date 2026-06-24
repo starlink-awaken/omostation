@@ -1,0 +1,51 @@
+id: WORKFLOW-SWARM-CODE-AUDIT
+type: Workflow
+subtype: AgentWorkflow
+name: swarm-code-audit
+description: 'C2G 到 eCOS 工作流: 跑通规划、审查、执行的多智能体代码库审计流程'
+status: active
+version: 1.0.0
+domain: forge
+layer: L0
+bos_uri: bos://ecos/workflow/swarm-code-audit
+execution:
+  backend: swarm
+  mode: sequential
+  max_retries: 0
+  on_failure: abort
+steps:
+- order: 1
+  name: 1-Planning
+  action: swarm
+  description: 抓取代码库结构并规划审计策略
+  params:
+    goal: "解析代码库并生成架构与审查规划"
+    role: "Architect"
+- order: 2
+  name: 2-Reviewing
+  action: swarm
+  description: 针对规划重点进行深度审查
+  depends_on:
+  - 1-Planning
+  params:
+    goal: "针对核心模块进行安全性与逻辑正确性审查"
+    role: "CodeReviewer"
+- order: 3
+  name: 3-Executing
+  action: swarm
+  description: 汇总审查结果并生成可执行报告
+  depends_on:
+  - 2-Reviewing
+  params:
+    goal: "输出最终技术债务报告与优化建议"
+    role: "Reporter"
+relations: []
+sla:
+  max_execution_time: 1200
+  expected_completion_rate: 1.0
+tags:
+- swarm-code-audit
+- custom
+maintained_by: user
+properties:
+  workflow_name: swarm-code-audit

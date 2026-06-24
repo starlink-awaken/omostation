@@ -27,7 +27,20 @@ _CLI_PATHS: list[list[str]] = [
     # 1) 通过 uv 运行 aetherforge CLI (推荐)
     ["uv", "run", "--package", "aetherforge", "python", "-m", "aetherforge.swarm"],
     # 2) 直接 python3 调用
-    [sys.executable, str(Path.home() / "Workspace" / "projects" / "aetherforge" / "packages" / "swarm" / "src" / "swarm_engine" / "cli.py")],
+    [
+        sys.executable,
+        str(
+            Path.home()
+            / "Workspace"
+            / "projects"
+            / "aetherforge"
+            / "packages"
+            / "swarm"
+            / "src"
+            / "swarm_engine"
+            / "cli.py"
+        ),
+    ],
     # 3) 全局安装的 aetherforge CLI
     [str(Path.home() / "bin" / "aetherforge"), "swarm"],
 ]
@@ -61,20 +74,26 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
         result = _execute_step_swarm(step_name, action, agent_role, step, params)
 
         if result.get("ok", False):
-            results["steps"].append({
-                "name": step_name,
-                "status": "ok",
-                "result": result.get("data", {}),
-            })
+            results["steps"].append(
+                {
+                    "name": step_name,
+                    "status": "ok",
+                    "result": result.get("data", {}),
+                }
+            )
             results["passed"] += 1
         else:
-            results["steps"].append({
-                "name": step_name,
-                "status": "failed",
-                "error": result.get("error", "Unknown error"),
-            })
+            results["steps"].append(
+                {
+                    "name": step_name,
+                    "status": "failed",
+                    "error": result.get("error", "Unknown error"),
+                }
+            )
             results["failed"] += 1
-            on_failure = step.get("on_failure") or execution.get("on_failure") or "continue"
+            on_failure = (
+                step.get("on_failure") or execution.get("on_failure") or "continue"
+            )
             if on_failure == "abort":
                 break
 
@@ -82,45 +101,81 @@ def execute(m1_node: dict, params: dict | None = None) -> dict:
 
 
 def _execute_step_swarm(
-    step_name: str, action: str, agent_role: str,
-    step: dict[str, Any], params: dict[str, Any],
+    step_name: str,
+    action: str,
+    agent_role: str,
+    step: dict[str, Any],
+    params: dict[str, Any],
 ) -> dict[str, Any]:
     """Execute a single step via swarm MCP first, then fallback to subprocess."""
     goal = step.get("description") or step.get("name") or action or "task"
 
-    # ── 第一防线：尝试通过 Agora MCP 发起 RPC 路由调用 ──
-    _AGORA_MCP_URL = "http://127.0.0.1:7422"
-    logger.info("Swarm backend: Attempting RPC call via Agora MCP for goal: %s", goal)
-    try:
-        import httpx
-        with httpx.Client(trust_env=False, timeout=120.0) as client:
-            payload = {
-                "name": "resolve_bos_uri",
-                "arguments": {
-                    "uri": "bos://capability/swarm/run",
+    # ── 熔断检查：如果 Agora MCP 已不可达，直接走 subprocess 降级 ──
+    from ecos.workflow.circuit_breaker import is_available as _cb_available
+
+    if _cb_available("swarm", "agora-mcp"):
+        # ── 第一防线：尝试通过 Agora MCP 发起 RPC 路由调用 ──
+        _AGORA_MCP_URL = "http://127.0.0.1:7422"
+        logger.info(
+            "Swarm backend: Attempting RPC call via Agora MCP for goal: %s", goal
+        )
+        try:
+            import httpx
+            import os
+
+            _AGORA_API_KEY = os.environ.get("AGORA_API_KEY", "")
+            headers = {}
+            if _AGORA_API_KEY:
+                headers["Authorization"] = f"Bearer {_AGORA_API_KEY}"
+
+            client_kwargs = {"trust_env": False, "timeout": 120.0}
+            if headers:
+                client_kwargs["headers"] = headers
+
+            with httpx.Client(**client_kwargs) as client:
+                payload = {
+                    "name": "resolve_bos_uri",
                     "arguments": {
-                        "goal": goal,
-                        "params": params,
+                        "uri": "bos://capability/swarm/run",
+                        "arguments": {
+                            "goal": goal,
+                            "params": params,
+                        },
                     },
-                },
-            }
-            resp = client.post(f"{_AGORA_MCP_URL}/v1/tools/call", json=payload)
-            if resp.status_code == 200:
-                resp_json = resp.json()
-                if resp_json.get("status") == "ok":
-                    result_data = resp_json.get("result", {})
-                    # 检查是否为 business error
-                    if isinstance(result_data, dict) and result_data.get("status") == "failed":
-                        logger.warning("Agora MCP call returned business error: %s. Falling back to subprocess.", result_data.get("error"))
+                }
+                resp = client.post(f"{_AGORA_MCP_URL}/v1/tools/call", json=payload)
+                if resp.status_code == 200:
+                    resp_json = resp.json()
+                    if resp_json.get("status") == "ok":
+                        result_data = resp_json.get("result", {})
+                        if (
+                            isinstance(result_data, dict)
+                            and result_data.get("status") == "failed"
+                        ):
+                            logger.warning(
+                                "Agora MCP call returned business error: %s. Falling back to subprocess.",
+                                result_data.get("error"),
+                            )
+                        else:
+                            logger.info(
+                                "Successfully executed swarm task via Agora MCP RPC"
+                            )
+                            return {"ok": True, "data": result_data}
                     else:
-                        logger.info("Successfully executed swarm task via Agora MCP RPC")
-                        return {"ok": True, "data": result_data}
+                        logger.warning(
+                            "Agora MCP call failed in gateway: %s. Falling back to subprocess.",
+                            resp_json.get("error", "Unknown error"),
+                        )
                 else:
-                    logger.warning("Agora MCP call failed in gateway: %s. Falling back to subprocess.", resp_json.get("error", "Unknown error"))
-            else:
-                logger.warning("Agora MCP Gateway returned HTTP %d. Falling back to subprocess.", resp.status_code)
-    except Exception as e:
-        logger.warning("[FALLBACK] Agora MCP RPC call failed or unavailable: %s. Falling back to subprocess.", e)
+                    logger.warning(
+                        "Agora MCP Gateway returned HTTP %d. Falling back to subprocess.",
+                        resp.status_code,
+                    )
+        except Exception as e:
+            logger.warning(
+                "Agora MCP RPC call failed or unavailable: %s. Falling back to subprocess.",
+                e,
+            )
 
     # ── 第二防线：优雅降级为本地 CLI Subprocess 直调 ──
     for cli_cmd in _CLI_PATHS:
@@ -129,8 +184,11 @@ def _execute_step_swarm(
             logger.debug("Swarm subprocess: %s", " ".join(cmd))
 
             r = subprocess.run(
-                cmd, capture_output=True, text=True,
-                timeout=120, cwd=Path.home(),
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=120,
+                cwd=Path.home(),
             )
             if r.returncode == 0 and r.stdout.strip():
                 try:
@@ -146,9 +204,12 @@ def _execute_step_swarm(
 
     # 所有 CLI 不可用 → mock fallback
     logger.info("Swarm backend: no CLI available, mock recording")
-    return {"ok": True, "data": {
-        "step": step_name,
-        "action": action,
-        "mode": "mock",
-        "note": "Swarm engine CLI not found; step recorded as passed",
-    }}
+    return {
+        "ok": True,
+        "data": {
+            "step": step_name,
+            "action": action,
+            "mode": "mock",
+            "note": "Swarm engine CLI not found; step recorded as passed",
+        },
+    }
