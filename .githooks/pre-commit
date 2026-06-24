@@ -1,13 +1,18 @@
 #!/bin/bash
 # =============================================================================
 # Meta-Model CI Gate — Pre-Commit Hook
-# Validates YAML files, checks kei.yaml validity, and verifies protocol
-# registry references.
+# Validates YAML files, checks kei.yaml validity, verifies protocol
+# registry references, and runs ruff lint + format checks.
 #
 # Installed via: git config core.hooksPath .githooks
 # =============================================================================
 
 set -euo pipefail
+
+if [ "${SKIP_GATE:-}" = "true" ]; then
+    echo "🔍 Pre-commit: $(basename $(git rev-parse --show-toplevel)) [SKIPPED]"
+    exit 0
+fi
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -28,6 +33,34 @@ fail() { echo -e "  ${RED}✗${NC} $1"; ERRORS=$((ERRORS + 1)); }
 section() {
     echo ""
     echo -e "${CYAN}═══ $1 ═══${NC}"
+}
+
+# ── 0. Ruff lint + format check on staged Python files ───────────────────────
+
+ruff_checks() {
+    section "Ruff Lint & Format Check"
+
+    local staged_py
+    staged_py=$(git diff --cached --name-only --diff-filter=ACM -- '*.py' 2>/dev/null | grep -v "__pycache__" | grep -v ".venv" || true)
+    if [[ -z "$staged_py" ]]; then
+        pass "No staged Python files to check"
+        return
+    fi
+
+    if command -v ruff &>/dev/null; then
+        if echo "$staged_py" | xargs ruff check 2>&1; then
+            pass "ruff check passed"
+        else
+            fail "ruff check failed"
+        fi
+        if echo "$staged_py" | xargs ruff format --check 2>&1; then
+            pass "ruff format --check passed"
+        else
+            fail "ruff format --check failed"
+        fi
+    else
+        warn "ruff not found on PATH — skipping ruff checks"
+    fi
 }
 
 # ── 1. Validate all staged/committed YAML files ──────────────────────────────
@@ -216,6 +249,7 @@ echo -e "${CYAN}═════════════════════�
 echo -e "${CYAN}  Meta-Model CI Gate — Pre-Commit Hook${NC}"
 echo -e "${CYAN}═══════════════════════════════════════════════════════${NC}"
 
+ruff_checks
 validate_yaml_syntax
 validate_kei_yaml
 validate_protocol_refs

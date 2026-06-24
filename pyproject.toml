@@ -36,7 +36,7 @@ packages = ["src/runtime"]
 
 [tool.uv.sources]
 aetherforge-gateway = { path = "../aetherforge/packages/gateway" }
-agora = { path = "../agora" }
+agora = { path = "../agora", editable = true }
 bus-foundation = { path = "../bus-foundation" }
 omo = { path = "../omo", editable = true }
 

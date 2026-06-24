@@ -107,4 +107,4 @@ make info           # 信息摘要
 5. **Executor 最复杂** — 100+ 文件, 修改前先读 engine.py 入口
 6. **Cron Service 有独立 MCP** — cron_service/mcp_server.py (Hermes), 不同于主 mcp_server.py
 7. **Scheduler 写状态文件** — matrix_state.json + OMO_STATE_FILE, SOTI 健康分
-8. **bus_consumer 需要 JWT** — AGORA_JWT_TOKEN 环境变量
+8. **bus_consumer 需要 JWT** — `AGORA_JWT_SECRET` 环境变量 (`bus_consumer.py:22`)

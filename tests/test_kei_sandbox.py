@@ -16,7 +16,6 @@ import pytest
 from runtime.kei_sandbox import (
     _load_kei_rules,
     record_audit,
-    enable_sandbox,
 )
 
 

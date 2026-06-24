@@ -5,6 +5,7 @@ import sqlite3
 import os
 import json
 import jwt
+import sys
 from pathlib import Path
 import logging
 
@@ -133,6 +134,7 @@ def retry_dlq(conn):
         pass
 
 def main():
+    print("⚠️ Runtime Bus Consumer 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
     logger.info("Starting eCOS Bus Consumer daemon (SQLite Backend)...")
     conn = init_db()
     

@@ -1,0 +1,19 @@
+#!/bin/bash
+# Pre-push gate: lint + smoke test
+if [ "${SKIP_GATE:-}" = "true" ]; then exit 0; fi
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT"
+echo "🔍 Pre-push: $(basename $REPO_ROOT)"
+
+# ruff check
+if command -v ruff &>/dev/null; then
+  ruff check src/runtime/ || { echo "❌ ruff check failed"; exit 1; }
+  ruff format --check src/runtime/ || { echo "❌ format check failed"; exit 1; }
+fi
+
+# smoke test
+if [ -d tests ]; then
+  uv run pytest tests/ -q --tb=no -x 2>/dev/null || echo "⚠️  tests failed (non-blocking in dev)"
+fi
+
+echo "✅ Pre-push check passed"

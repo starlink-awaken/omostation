@@ -21,7 +21,6 @@ script-bridge-sync.py — 增量同步 Hermes ↔ Workspace 脚本桥接
 
 import json
 import os
-import sys
 from pathlib import Path
 
 # ── 复用分类逻辑 ──────────────────────────────────────────────

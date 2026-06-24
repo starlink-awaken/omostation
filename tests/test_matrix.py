@@ -1,7 +1,8 @@
-import pytest
 """Tests for runtime matrix module."""
 
 from pathlib import Path
+
+import pytest
 from runtime.matrix import _expand_env, load_matrix
 
 

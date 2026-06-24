@@ -1,9 +1,7 @@
 """Tests for runtime.runtime_bus_adapter — bridges runtime cron jobs to agora.bus facade."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
 
-import pytest
 
 from runtime.runtime_bus_adapter import register_cron_job
 
