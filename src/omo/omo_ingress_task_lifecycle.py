@@ -1255,3 +1255,273 @@ def yield_task_to_planned(
             extra={"task_id": task_id, "reason": reason},
         )
         return payload
+
+
+def archive_done_task(
+    omo_dir: Path,
+    *,
+    task_id: str,
+    actor: str,
+    archive_subdir: str = "",
+    source_ref: str = "",
+    now: str | None = None,
+) -> dict[str, Any]:
+    timestamp = now or _utc_now()
+    done_path = omo_dir / "tasks" / "done" / f"{task_id}.yaml"
+    archive_root = omo_dir / "tasks" / "archived"
+    archive_dir = archive_root / archive_subdir if archive_subdir else archive_root
+    archive_path = archive_dir / f"{task_id}.yaml"
+
+    with fcntl_lock(_lock_path(omo_dir)):
+        if archive_path.exists() and not done_path.exists():
+            return _load_yaml(archive_path)
+        if not done_path.exists():
+            raise ValueError(f"done task not found: {task_id}")
+
+        payload = _load_yaml(done_path)
+        payload["status"] = "archived"
+        payload["archived_at"] = timestamp
+        payload["archived_by"] = actor
+        if source_ref:
+            payload["archived_source_ref"] = source_ref
+
+        archive_dir.mkdir(parents=True, exist_ok=True)
+        write_yaml_atomic(archive_path, payload)
+        done_path.unlink()
+
+        archived_ref = f".omo/tasks/archived/{task_id}.yaml"
+        if archive_subdir:
+            archived_ref = f".omo/tasks/archived/{archive_subdir}/{task_id}.yaml"
+
+        artifact = {
+            "kind": "task_archived_from_done",
+            "task_id": task_id,
+            "task_ref_before": f".omo/tasks/done/{task_id}.yaml",
+            "task_ref_after": archived_ref,
+            "actor": actor,
+            "source_ref": source_ref,
+            "archived_at": timestamp,
+        }
+        artifact_path = (
+            _delivery_root(omo_dir)
+            / "tasks"
+            / f"{task_id}-archive-{_timestamp_slug(timestamp)}.yaml"
+        )
+        write_yaml_atomic(artifact_path, artifact)
+
+        parent_step_id = f"ingress:task-archive:{task_id}:{timestamp}"
+        details = (
+            f"task_id={task_id} actor={actor} archived_ref={archived_ref} "
+            f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+        )
+        record_audit(
+            action="ingress_archive_done_task",
+            debt_id="",
+            actor=actor,
+            details=details,
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="archive_done_task",
+            target=archived_ref,
+            parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="archive_done_task",
+            target=archived_ref,
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id},
+        )
+        return payload
+
+
+def normalize_legacy_planned_task(
+    omo_dir: Path,
+    *,
+    task_id: str,
+    actor: str,
+    source_ref: str = "",
+    now: str | None = None,
+) -> dict[str, Any]:
+    timestamp = now or _utc_now()
+    planned_path = omo_dir / "tasks" / "planned" / f"{task_id}.yaml"
+    archived_dir = omo_dir / "tasks" / "archived" / "legacy-normalized"
+    archived_path = archived_dir / f"{task_id}.yaml"
+
+    with fcntl_lock(_lock_path(omo_dir)):
+        if not planned_path.exists():
+            raise ValueError(f"planned task not found: {task_id}")
+
+        payload = _load_yaml(planned_path)
+        original_status = str(payload.get("status") or "missing")
+        metadata = payload.setdefault("metadata", {})
+        if isinstance(metadata, dict):
+            metadata.setdefault("legacy_normalized_from", "planned")
+            metadata["legacy_status"] = original_status
+            metadata["normalized_at"] = timestamp
+            metadata["normalized_by"] = actor
+            if source_ref:
+                metadata["normalization_source_ref"] = source_ref
+            if "owner" in payload and payload.get("owner"):
+                metadata.setdefault("legacy_owner", payload.get("owner"))
+            if "priority" in payload and payload.get("priority"):
+                metadata.setdefault("priority", payload.get("priority"))
+
+        if original_status in {"done", "archived", "failed", "blocked"} or payload.get(
+            "completed_at"
+        ):
+            archived_payload = deepcopy(payload)
+            archived_payload["status"] = "archived"
+            archived_payload["archived_at"] = timestamp
+            archived_payload["archived_by"] = actor
+            archived_dir.mkdir(parents=True, exist_ok=True)
+            write_yaml_atomic(archived_path, archived_payload)
+            planned_path.unlink()
+
+            artifact = {
+                "kind": "planned_task_legacy_archived",
+                "task_id": task_id,
+                "legacy_status": original_status,
+                "task_ref_before": f".omo/tasks/planned/{task_id}.yaml",
+                "task_ref_after": f".omo/tasks/archived/legacy-normalized/{task_id}.yaml",
+                "actor": actor,
+                "source_ref": source_ref,
+                "normalized_at": timestamp,
+            }
+            artifact_path = (
+                _delivery_root(omo_dir)
+                / "tasks"
+                / f"{task_id}-legacy-archive-{_timestamp_slug(timestamp)}.yaml"
+            )
+            write_yaml_atomic(artifact_path, artifact)
+            record_audit(
+                action="ingress_archive_legacy_planned_task",
+                debt_id="",
+                actor=actor,
+                details=(
+                    f"task_id={task_id} legacy_status={original_status} source_ref={source_ref or '-'} "
+                    f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+                ),
+                audit_file=_audit_log_path(omo_dir),
+            )
+            _record_trail(
+                omo_dir,
+                actor=f"broker:{actor}",
+                action="normalize_legacy_planned_task",
+                target=f".omo/tasks/archived/legacy-normalized/{task_id}.yaml",
+                parent_step_id=f"ingress:legacy-planned-archive:{task_id}:{timestamp}",
+            )
+            _record_mutation(
+                omo_dir,
+                actor=actor,
+                action="normalize_legacy_planned_task",
+                target=f".omo/tasks/archived/legacy-normalized/{task_id}.yaml",
+                artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+                source_ref=source_ref,
+                created_at=timestamp,
+                extra={
+                    "task_id": task_id,
+                    "legacy_status": original_status,
+                    "result": "archived",
+                },
+            )
+            return {"action": "archived", "task": archived_payload}
+
+        normalized = deepcopy(payload)
+        normalized["status"] = (
+            "pending" if original_status == "pending" else "candidate"
+        )
+        normalized.setdefault("task_type", "feature")
+        normalized.setdefault("risk_level", normalized.get("risk", "L0") or "L0")
+        normalized.setdefault("depends_on", [])
+        normalized.setdefault("deliverables", [normalized.get("title", task_id)])
+        normalized.setdefault(
+            "source_docs", [f".omo/tasks/planned/{task_id}.yaml#legacy-normalized"]
+        )
+        normalized.setdefault("knowledge_refs", [])
+        normalized.setdefault("handoff_refs", [])
+        normalized.setdefault("entry_gate", [])
+        normalized.setdefault("evidence_required", ["legacy planned packet normalized"])
+        normalized.setdefault(
+            "test_plan", ["python3 scripts/omo_worker.py task validate --all-planned"]
+        )
+        normalized["assigned_to"] = None
+        normalized["dispatch_id"] = None
+        normalized["run_ref"] = None
+        normalized["approval_ref"] = None
+        normalized["review_ref"] = None
+        normalized.pop("started_at", None)
+        normalized.pop("completed_at", None)
+        normalized.pop("completed_by", None)
+        normalized.pop("archived_at", None)
+        normalized.pop("archived_by", None)
+
+        risk_level = str(normalized.get("risk_level") or "L0")
+        if not normalized.get("allowed_operation_level"):
+            normalized["allowed_operation_level"] = (
+                risk_level if risk_level in {"L2", "L3"} else "L0"
+            )
+        if "human_approval_required" not in normalized:
+            normalized["human_approval_required"] = normalized.get(
+                "allowed_operation_level"
+            ) in {"L2", "L3"}
+
+        errors = validate_task_data(normalized, group="planned")
+        if errors:
+            raise ValueError("invalid normalized planned task: " + "; ".join(errors))
+
+        write_yaml_atomic(planned_path, normalized)
+        artifact = {
+            "kind": "planned_task_legacy_normalized",
+            "task_id": task_id,
+            "legacy_status": original_status,
+            "task_ref": f".omo/tasks/planned/{task_id}.yaml",
+            "actor": actor,
+            "source_ref": source_ref,
+            "normalized_at": timestamp,
+            "normalized_status": normalized["status"],
+        }
+        artifact_path = (
+            _delivery_root(omo_dir)
+            / "tasks"
+            / f"{task_id}-legacy-normalize-{_timestamp_slug(timestamp)}.yaml"
+        )
+        write_yaml_atomic(artifact_path, artifact)
+        record_audit(
+            action="ingress_normalize_legacy_planned_task",
+            debt_id="",
+            actor=actor,
+            details=(
+                f"task_id={task_id} legacy_status={original_status} normalized_status={normalized['status']} "
+                f"source_ref={source_ref or '-'} artifact={artifact_path.relative_to(omo_dir.parent)}"
+            ),
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="normalize_legacy_planned_task",
+            target=f".omo/tasks/planned/{task_id}.yaml",
+            parent_step_id=f"ingress:legacy-planned-normalize:{task_id}:{timestamp}",
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="normalize_legacy_planned_task",
+            target=f".omo/tasks/planned/{task_id}.yaml",
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={
+                "task_id": task_id,
+                "legacy_status": original_status,
+                "normalized_status": normalized["status"],
+            },
+        )
+        return {"action": "normalized", "task": normalized}
