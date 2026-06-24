@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 """ssot-guardian: SSOT 漂移守门员.
 
-长期机制,防止 system.yaml / goals/current.yaml / tasks/registry/INDEX.md 与真实任务目录
-再次漂移. 可手动跑、pre-commit 跑、cron 跑.
+长期机制,防止 system.yaml / goals/current.yaml / tasks/registry/INDEX.md / 子模块指针 /
+direct-omo-io 约束与真实状态漂移. 可手动跑、pre-commit 跑、cron 跑.
 
 检测项:
   1. system.yaml task 计数 vs tasks/{active,planned,done} 顶层 yaml 文件数
   2. system.yaml current_wave vs goals/current.yaml current_wave
-  3. (future) INDEX.md 计数是否与 system.yaml 一致
+  3. 子模块指针是否落后于子仓库 HEAD (git submodule status '+' 前缀)
+  4. direct-omo-io 红线: 脚本是否直接写入 .omo/
 
 修复项(仅 --auto-fix 时):
   A. 调用 `omo state sync-tasks` 重算 system.yaml task 计数
   B. 如果 goals/current.yaml current_wave 落后 system.yaml, 同步为 system.yaml 的值
+  (子模块漂移和 direct-omo-io 无法自动修复, 必须人工/OMO 处理)
 
 用法:
   python3 bin/ssot-guardian.py              # 检测,有漂移返回 1
@@ -23,6 +25,7 @@
   1 — 检测到未修复漂移
   2 — 运行错误
 """
+
 from __future__ import annotations
 
 import argparse
@@ -166,6 +169,39 @@ def _emit_event(kind: str, payload: dict) -> None:
         pass
 
 
+def _check_submodules() -> dict:
+    """检测子模块指针是否落后于子仓库 HEAD ('+' 前缀).
+
+    '+sha path (heads/main)' 表示子仓库有未 bump 到根仓库的提交.
+    """
+    result = _run(["git", "submodule", "status"], check=False)
+    if result.returncode != 0:
+        return {"error": result.stderr, "dirty": []}
+    dirty: list[dict] = []
+    for line in result.stdout.splitlines():
+        line = line.strip()
+        if not line or not line.startswith("+"):
+            continue
+        # format: +sha path (ref)
+        parts = line[1:].split()
+        if len(parts) >= 2:
+            dirty.append(
+                {"sha": parts[0], "path": parts[1], "ref": " ".join(parts[2:])}
+            )
+    return {"dirty": dirty, "count": len(dirty)}
+
+
+def _check_direct_omo_io() -> dict:
+    """运行 omo lint direct-omo-io, 检测直接 .omo/ 写入."""
+    result = _run(["omo", "lint", "direct-omo-io"], check=False)
+    passed = "PASS" in result.stdout or result.returncode == 0
+    return {
+        "passed": passed,
+        "returncode": result.returncode,
+        "summary": result.stdout.strip().splitlines()[-1] if result.stdout else "",
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="SSOT 漂移守门员")
     parser.add_argument("--auto-fix", action="store_true", help="自动修复白名单字段")
@@ -234,6 +270,32 @@ def main(argv: list[str] | None = None) -> int:
                 issues[-1]["fixed"] = False
                 issues[-1]["fix_error"] = fix_result.get("error", "")
 
+    # 3. 子模块指针漂移 (无法 auto-fix, 必须人工/后台 agent 提交后 bump)
+    submodule_check = _check_submodules()
+    if submodule_check.get("count", 0):
+        issues.append(
+            {
+                "type": "submodule_pointer_drift",
+                "severity": "high",
+                "dirty": submodule_check["dirty"],
+                "auto_fix": False,
+                "note": "子仓库有未 bump 到根仓库的提交; 需先提交子仓库再更新根指针",
+            }
+        )
+
+    # 4. direct-omo-io 红线检查 (无法 auto-fix, 必须修代码)
+    dio_check = _check_direct_omo_io()
+    if not dio_check.get("passed"):
+        issues.append(
+            {
+                "type": "direct_omo_io_violation",
+                "severity": "critical",
+                "summary": dio_check.get("summary", ""),
+                "auto_fix": False,
+                "note": "脚本直接写入 .omo/; 必须改走 omo CLI / omo core / c2g ingress",
+            }
+        )
+
     # 报告
     unresolved = [i for i in issues if not i.get("fixed")]
     fixed = [i for i in issues if i.get("fixed")]
@@ -252,6 +314,11 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"     actual: {i['actual']}")
             elif i["type"] == "current_wave_mismatch":
                 print(f"     system={i['system_wave']} goals={i['goals_wave']}")
+            elif i["type"] == "submodule_pointer_drift":
+                for d in i.get("dirty", []):
+                    print(f"     + {d['path']} ({d['sha']})")
+            elif i["type"] == "direct_omo_io_violation":
+                print(f"     {i.get('summary', '')}")
     else:
         print("✅ SSOT 一致性检查通过")
 

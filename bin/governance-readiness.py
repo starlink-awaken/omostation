@@ -46,7 +46,9 @@ def score_frontmatter(root: Path) -> tuple[int, int, float]:
             end = content.find("\n---", 4)
             if end > 0:
                 fm = content[4:end]
-                if all(k in fm for k in ["status", "lifecycle", "owner", "last-reviewed"]):
+                if all(
+                    k in fm for k in ["status", "lifecycle", "owner", "last-reviewed"]
+                ):
                     with_fm += 1
     coverage = with_fm / total
     # ≥ 95% = 25 分, < 50% = 0 分, 线性插值
@@ -163,9 +165,17 @@ def write_readiness_snapshot(
     root: Path,
     total: int,
     grade: str,
-    s1: int, s2: int, s3: int, s4: int, s5: int,
-    total_doc: int, cov: float, drift_low: int,
-    uncommitted: int, unlisted: int, gov_score: float,
+    s1: int,
+    s2: int,
+    s3: int,
+    s4: int,
+    s5: int,
+    total_doc: int,
+    cov: float,
+    drift_low: int,
+    uncommitted: int,
+    unlisted: int,
+    gov_score: float,
 ) -> None:
     """P63 增: 写历史快照到 .omo/_log/readiness-YYYYMMDD-HHMMSS.json.
 
@@ -179,7 +189,12 @@ def write_readiness_snapshot(
         "grade": grade,
         "phase": "P60+",
         "dimensions": {
-            "frontmatter": {"score": s1, "metric": total_doc, "coverage": cov, "max": 25},
+            "frontmatter": {
+                "score": s1,
+                "metric": total_doc,
+                "coverage": cov,
+                "max": 25,
+            },
             "drift_low": {"score": s2, "metric": drift_low, "max": 20},
             "commit_closure": {"score": s3, "metric": uncommitted, "max": 20},
             "adr_index": {"score": s4, "metric": unlisted, "max": 20},
@@ -197,15 +212,8 @@ def write_readiness_snapshot(
     rc, out = run(cmd, cwd=root)
     if rc != 0:
         print(f"⚠️  快照写入失败 (rc={rc}): {out}")
-
-    # P70 增: 持久化到 snapshots.jsonl (不受 30 快照 rotation 限制)
-    try:
-        persistent_log = root / ".omo" / "_log" / "readiness-snapshots.jsonl"
-        persistent_log.parent.mkdir(parents=True, exist_ok=True)
-        with open(persistent_log, "a", encoding="utf-8") as f:
-            f.write(payload + "\n")
-    except Exception as e:
-        print(f"⚠️  持久化快照失败: {e}")
+    # P70 持久化 snapshots.jsonl 已迁入 OMO 内核 (omo_readiness.write_readiness_snapshot),
+    # 避免脚本层 direct-omo-io.
 
 
 def main() -> int:
@@ -231,11 +239,17 @@ def main() -> int:
     print("─" * 70)
     print(f"{'维度':<28s}{'得分':<8s}{'指标':<15s}{'阈值':<15s}")
     print("─" * 70)
-    print(f"{'1. 元数据覆盖 (frontmatter)':<28s}{s1:>3d}/25  {total_doc} 文档    cov={cov:.1%}     ≥95%")
+    print(
+        f"{'1. 元数据覆盖 (frontmatter)':<28s}{s1:>3d}/25  {total_doc} 文档    cov={cov:.1%}     ≥95%"
+    )
     print(f"{'2. 漂移检测 (drift LOW)':<28s}{s2:>3d}/20  drift={drift_low}        ≤5")
-    print(f"{'3. 闭环纪律 (commit closure)':<28s}{s3:>3d}/20  uncommitted={uncommitted}  ≤50")
+    print(
+        f"{'3. 闭环纪律 (commit closure)':<28s}{s3:>3d}/20  uncommitted={uncommitted}  ≤50"
+    )
     print(f"{'4. 决策可追溯 (ADR INDEX)':<28s}{s4:>3d}/20  unlisted={unlisted}     =0")
-    print(f"{'5. 治理评分 (omo governance)':<28s}{s5:>3d}/15  score={gov_score}      =100")
+    print(
+        f"{'5. 治理评分 (omo governance)':<28s}{s5:>3d}/15  score={gov_score}      =100"
+    )
     print("─" * 70)
     print(f"{'总分':<28s}{total:>3d}/100")
     print("=" * 70)
@@ -282,8 +296,20 @@ def main() -> int:
 
     # P63 增: 写历史快照到 .omo/_log/readiness-YYYYMMDD-HHMM.json
     write_readiness_snapshot(
-        root, total, grade, s1, s2, s3, s4, s5,
-        total_doc, cov, drift_low, uncommitted, unlisted, gov_score,
+        root,
+        total,
+        grade,
+        s1,
+        s2,
+        s3,
+        s4,
+        s5,
+        total_doc,
+        cov,
+        drift_low,
+        uncommitted,
+        unlisted,
+        gov_score,
     )
 
     return 0 if total >= 90 else 1
