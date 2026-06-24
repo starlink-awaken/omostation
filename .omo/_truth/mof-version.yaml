@@ -177,4 +177,8 @@ history:
     13 + P55 215 + P56 200+ + P57+P58 2) + 收口报告 + 子仓指针同步 + mof-version v0.0.46 → v0.0.47'
   timestamp: '2026-06-23T17:57:44.710066'
   version: 0.0.47
-version: 0.0.47
+- description: P60 治理方法论内化提案 — L0/X1-X4 规则增量 8 条 + M0 桥接 3 阶段 + L4 kernel 6 capability
+    + governance-phase-orchestrator workflow skill + cockpit 4 子命令 + CLAUDE.md 注入
+  timestamp: '2026-06-24T09:36:40.237936'
+  version: 0.0.48
+version: 0.0.48
