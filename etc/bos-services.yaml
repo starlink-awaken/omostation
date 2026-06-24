@@ -277,14 +277,6 @@ services:
     command: ["uv", "run", "--directory", "projects/runtime", "python", "-m", "agent_runtime.cli", "status"]
     description: "Agent Runtime 状态"
 
-  - uri: "bos://capability/swarm/run"
-    domain: capability
-    action: "run"
-    transport: stdio
-    package: "swarm"
-    command: ["uv", "run", "--package", "aetherforge", "python", "-m", "aetherforge.cli", "swarm", "run"]
-    description: "AetherForge Swarm 执行入口"
-
   - uri: "bos://capability/forge/agent-list"
     domain: capability
     action: "agent-list"
