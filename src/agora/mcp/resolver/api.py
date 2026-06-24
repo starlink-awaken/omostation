@@ -132,6 +132,14 @@ async def resolve_bos_uri(
     if not service:
         return {"status": "error", "error": f"unknown_bos_uri: {uri}"}
 
+    if service.description.startswith("[UNIMPLEMENTED]"):
+        _log.warning("[Resolver] Invoking unimplemented BOS service: %s", uri)
+        return {
+            "status": "error",
+            "error": f"unimplemented_bos_service: {uri}",
+            "description": service.description,
+        }
+
     result: dict
     if service.transport == "internal":
         # internal transport: 同进程 importlib

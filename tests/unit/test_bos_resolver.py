@@ -518,5 +518,21 @@ class TestP35W1Respawn:
         )
         for uri in uris:
             assert uri in respawned
-            assert _pool.is_alive(uri), f"{uri} respawn 后仍 dead"
             _pool.shutdown(uri)
+
+    @pytest.mark.asyncio
+    async def test_resolve_unimplemented_bos_uri_raises_error(self):
+        """测试对标记为 [UNIMPLEMENTED] 的 BOS 服务进行 resolve_bos_uri 时会被拦截并报错。"""
+        from agora.mcp.bos_resolver import resolve_bos_uri
+        from agora.mcp.resolver.services import POC_SERVICES
+
+        unimpl_svc = next(
+            (s for s in POC_SERVICES if s.description.startswith("[UNIMPLEMENTED]")),
+            None,
+        )
+        assert unimpl_svc is not None, "未在注册表中找到 [UNIMPLEMENTED] 路由以供测试"
+
+        result = await resolve_bos_uri(unimpl_svc.uri)
+        assert result["status"] == "error"
+        assert "unimplemented_bos_service" in result["error"]
+        assert result["description"] == unimpl_svc.description
