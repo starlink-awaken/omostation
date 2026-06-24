@@ -554,19 +554,7 @@ def _promotion_approval_status_entry(
     task = _load_yaml(task_path)
     approval_ref = str(task.get("approval_ref") or "")
     if not _task_has_task_specific_promotion_approval(approval_ref):
-        return {
-            "task_id": task["id"],
-            "task_ref": str(task_path.relative_to(root)),
-            "approval_ref": approval_ref,
-            "approval_id": "",
-            "approval_status": "missing",
-            "proposal_id": "",
-            "proposal_ref": "",
-            "proposal_status": "missing",
-            "human_approval_required": bool(task.get("human_approval_required")),
-            "eligible": False,
-            "blockers": [],
-        }
+        raise ValueError("task does not point to a task-specific promotion approval")
 
     approval = _load_yaml(root / approval_ref)
     approval_id = str(approval.get("approval_id") or Path(approval_ref).stem)
@@ -681,7 +669,17 @@ def _write_task_approval_queue_status(
     entries: list[dict[str, object]] = []
     for path in task_paths:
         task = _load_yaml(path)
-        entry = _promotion_approval_status_entry(root, path, omo_dir=omo_dir)
+        try:
+            entry = _promotion_approval_status_entry(root, path, omo_dir=omo_dir)
+        except ValueError:
+            # approval missing — queue 收集等 approval 的 task (不 reject)
+            entry = {
+                "task_id": task["id"],
+                "task_ref": str(path.relative_to(root)),
+                "approval_status": "missing",
+                "proposal_status": "missing",
+                "blockers": [],
+            }
         blockers = list(entry.get("blockers") or [])
         approval_status = str(entry.get("approval_status") or "missing")
         proposal_status = str(entry.get("proposal_status") or "missing")
