@@ -224,4 +224,9 @@ history:
     趋势报告 (7d 跨天, 按级别/类型, 高峰日 P0+P1>=3) + ADR-0062 + 10 独立 bin 工具'
   timestamp: '2026-06-24T15:27:23.643036'
   version: 0.0.57
-version: 0.0.57
+- description: 'P69 R1-R3: 抑制标记精确统计 (alert-suppressions.jsonl 双 jsonl 分工, prev_record_ts+storm_count
+    字段) + alert-history ASCII 柱状图 (render_ascii_bar 40 字符) + 抑制率真实计算 (50% 实测) + ADR-0063
+    + 23 个 ADR'
+  timestamp: '2026-06-24T15:38:31.837698'
+  version: 0.0.58
+version: 0.0.58

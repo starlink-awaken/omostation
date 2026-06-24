@@ -50,8 +50,43 @@ def load_notifications(root: Path, days: int) -> list[dict]:
     return records
 
 
-def analyze_history(records: list[dict]) -> dict:
-    """分析告警历史."""
+def load_suppressions(root: Path, days: int) -> list[dict]:
+    """P69 增: 读 alert-suppressions.jsonl (P69 新增)."""
+    log_file = root / ".omo" / "_log" / "alert-suppressions.jsonl"
+    if not log_file.exists():
+        return []
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    records = []
+    try:
+        with open(log_file, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    d = json.loads(line)
+                    ts = d.get("timestamp", "")
+                    if ts:
+                        rec_dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                        if rec_dt >= cutoff:
+                            records.append(d)
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    return records
+
+
+def render_ascii_bar(value: int, max_value: int, width: int = 40) -> str:
+    """P69: ASCII 柱状图."""
+    if max_value <= 0:
+        return ""
+    bar_len = int(value / max_value * width)
+    return "█" * bar_len + "░" * (width - bar_len)
+
+
+def analyze_history(records: list[dict], suppressions: list[dict]) -> dict:
+    """分析告警历史 (P69 加 suppressions)."""
     by_day: dict[str, Counter] = defaultdict(Counter)
     by_level: Counter = Counter()
     by_type: Counter = Counter()
@@ -63,26 +98,27 @@ def analyze_history(records: list[dict]) -> dict:
         level = rec.get("level", "P3")
         by_day[day][level] += 1
         by_level[level] += 1
-        # type 在 by_type 中提取
         for bt, count in rec.get("by_type", {}).items():
             by_type[bt] += count
 
-    # 找高峰日 (P0/P1 >= 3)
     for day, counts in by_day.items():
         critical = counts.get("P0", 0) + counts.get("P1", 0)
         if critical >= 3:
             peak_days.append({"day": day, "critical_count": critical, "breakdown": dict(counts)})
 
-    total = sum(by_level.values())
-    suppression_rate = 0.0  # 简化: jsonl 写入即触发, 无抑制标记
+    # P69: 抑制率
+    total_actual = sum(by_level.values())
+    suppress_count = len(suppressions)
+    suppression_rate = suppress_count / (total_actual + suppress_count) if (total_actual + suppress_count) > 0 else 0
 
     return {
-        "total_notifications": total,
+        "total_notifications": total_actual,
         "by_level": dict(by_level),
         "by_type": dict(by_type),
         "by_day": {day: dict(counts) for day, counts in sorted(by_day.items())},
         "peak_days": peak_days,
-        "suppression_rate": suppression_rate,
+        "suppression_count": suppress_count,
+        "suppression_rate": round(suppression_rate, 3),
         "record_count": len(records),
     }
 
@@ -102,7 +138,8 @@ def main() -> int:
         return 1
 
     records = load_notifications(root, args.days)
-    hist = analyze_history(records)
+    suppressions = load_suppressions(root, args.days)
+    hist = analyze_history(records, suppressions)
 
     if args.format == "json":
         output = json.dumps({
@@ -112,10 +149,12 @@ def main() -> int:
     else:
         lines = [
             "=" * 60,
-            f"📊 P68 告警历史趋势报告 (最近 {args.days} 天)",
+            f"📊 P69 告警历史趋势报告 (最近 {args.days} 天)",
             "=" * 60,
             f"📁 通知记录数: {hist['record_count']}",
             f"📈 总通知数: {hist['total_notifications']}",
+            f"🔕 抑制记录: {hist['suppression_count']}",
+            f"📊 抑制率: {hist['suppression_rate'] * 100:.1f}%",
             "",
             "--- 按级别 ---",
         ]
@@ -128,10 +167,13 @@ def main() -> int:
                 lines.append(f"  {atype:<25s} {count:>3d}")
         if hist["by_day"]:
             lines.append("")
-            lines.append(f"--- 按天 (最近 {min(args.days, 7)} 天) ---")
-            for day, counts in sorted(hist["by_day"].items())[-7:]:
+            lines.append("--- 按天 (最近 7d ASCII 柱状图) ---")
+            recent_days = sorted(hist["by_day"].items())[-7:]
+            max_total = max(sum(counts.values()) for _, counts in recent_days) if recent_days else 1
+            for day, counts in recent_days:
                 day_total = sum(counts.values())
-                lines.append(f"  {day}: total={day_total} {dict(counts)}")
+                bar = render_ascii_bar(day_total, max_total)
+                lines.append(f"  {day}  {bar} {day_total} {dict(counts)}")
         if hist["peak_days"]:
             lines.append("")
             lines.append("🚨 高峰日 (P0+P1 >= 3):")

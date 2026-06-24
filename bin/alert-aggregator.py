@@ -201,6 +201,22 @@ def emit_notification(root: Path, agg: dict, window_hours: int,
     # P68 抑制检查
     suppressed, prev_record = is_suppressed(root, level, suppression_minutes)
     if suppressed:
+        # P69: 写抑制记录到独立 log (精确统计)
+        suppress_log = root / ".omo" / "_log" / "alert-suppressions.jsonl"
+        suppress_log.parent.mkdir(parents=True, exist_ok=True)
+        suppress_payload = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "level": level,
+            "total_alerts": agg.get("total_alerts"),
+            "suppression_minutes": suppression_minutes,
+            "prev_record_ts": prev_record.get("timestamp") if prev_record else None,
+            "storm_count": len(agg.get("storm_warnings", [])),
+        }
+        try:
+            with open(suppress_log, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(suppress_payload, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
         return 2  # 抑制标记
 
     payload = {
