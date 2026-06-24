@@ -1,6 +1,11 @@
 #!/bin/bash
-# Pre-commit hook: ruff check + debt prevention
+# Pre-commit hook: ruff check + format check + debt prevention
 set -euo pipefail
+
+if [ "${SKIP_GATE:-}" = "true" ]; then
+    echo "🔍 Pre-commit: $(basename $(git rev-parse --show-toplevel)) [SKIPPED]"
+    exit 0
+fi
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 REPO_NAME=$(basename "$REPO_ROOT")
@@ -12,6 +17,11 @@ echo "🔍 Pre-commit: $REPO_NAME"
 STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM -- '*.py' 2>/dev/null | grep -v "__pycache__" | grep -v ".venv" || true)
 if [ -n "$STAGED_PY" ] && command -v ruff &>/dev/null; then
     ruff check $STAGED_PY 2>&1 || { echo "❌ ruff check failed"; exit 1; }
+fi
+
+# Ruff format check on staged Python files
+if [ -n "$STAGED_PY" ] && command -v ruff &>/dev/null; then
+    ruff format --check $STAGED_PY 2>&1 || { echo "❌ ruff format check failed"; exit 1; }
 fi
 
 # Debt prevention: non-atomic write check

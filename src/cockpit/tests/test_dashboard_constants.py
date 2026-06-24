@@ -25,12 +25,13 @@ class TestConstants:
         assert isinstance(constants.RUNTIME_HOME, Path)
 
     def test_dashboard_html_path(self):
-        assert isinstance(constants.DASHBOARD_HTML, Path)
-        assert constants.DASHBOARD_HTML.name == "dashboard.html"
+        """BOS_DASHBOARD_HTML is an inline HTML template, not a file path."""
+        assert isinstance(constants.BOS_DASHBOARD_HTML, str)
+        assert len(constants.BOS_DASHBOARD_HTML) > 100
 
-    def test_hermes_console_dist_path(self):
-        assert isinstance(constants.HERMES_CONSOLE_DIST, Path)
-        assert constants.HERMES_CONSOLE_DIST.name == "dist"
+    def test_cockpit_ui_dist_path(self):
+        assert isinstance(constants.COCKPIT_UI_DIST, Path)
+        assert constants.COCKPIT_UI_DIST.name == "dist"
 
     def test_provider_plane_path(self):
         assert isinstance(constants.PROVIDER_PLANE_PATH, Path)
@@ -224,8 +225,7 @@ class TestConstantsInvariants:
     def test_all_workspace_paths_under_workspace_root(self):
         """WORKSPACE_ROOT 派生的 paths 都应在它下面"""
         assert str(constants.OMO_ROOT).startswith(str(constants.WORKSPACE_ROOT))
-        assert str(constants.DASHBOARD_HTML).startswith(str(constants.WORKSPACE_ROOT))
-        assert str(constants.HERMES_CONSOLE_DIST).startswith(str(constants.WORKSPACE_ROOT))
+        assert str(constants.COCKPIT_UI_DIST).startswith(str(constants.WORKSPACE_ROOT))
         assert str(constants.BOS_METRICS_PATH).startswith(str(constants.WORKSPACE_ROOT))
 
     def test_runtime_paths_under_runtime_home(self):

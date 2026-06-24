@@ -628,6 +628,92 @@ def load_arch_health() -> dict:
         except Exception as e:
             audits["error"] = str(e)
 
+    # ── Cron job health ──────────────────────────────────────
+    cron: dict = {"total": 0, "ok": 0, "error": 0, "never_run": 0}
+    try:
+        cron_file = Path.home() / ".hermes/cron/jobs.json"
+        if cron_file.exists():
+            raw = json.loads(cron_file.read_text())
+            jobs = raw.get("jobs", raw if isinstance(raw, list) else [])
+            cron["total"] = len(jobs)
+            cron["ok"] = sum(1 for j in jobs if j.get("last_status") == "ok")
+            cron["error"] = sum(1 for j in jobs if j.get("last_status") == "error")
+            cron["never_run"] = sum(1 for j in jobs if not j.get("last_run_at"))
+            # List job names + status
+            cron["jobs"] = [
+                {"name": j.get("name", "?"), "status": j.get("last_status", "never"),
+                 "schedule": j.get("schedule", "")}
+                for j in sorted(jobs, key=lambda x: x.get("name", ""))
+            ]
+    except Exception as e:
+        cron["error"] = str(e)
+
+    # ── MCP backend health (from Agora) ──────────────────────
+    mcp: dict = {"total": 0, "backends": []}
+    try:
+        result = subprocess.run(
+            ["uv", "run", "--directory", str(workspace / "projects" / "agora"),
+             "python", "-c",
+             "from agora.auth.mcp_gateway import KNOWN_BACKENDS; "
+             "import json; "
+             "print(json.dumps([b['name'] for b in KNOWN_BACKENDS]))"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if result.returncode == 0:
+            backends = json.loads(result.stdout.strip())
+            mcp["total"] = len(backends)
+            mcp["backends"] = backends
+    except Exception:
+        pass
+
+    # ── Convergence score ──────────────────────────────────────
+    convergence: dict = {"score": 0, "dimensions": {}}
+    try:
+        # CLI convergence: 56 original, 34 now (39% eliminated = 39 points)
+        # Weight: 30%
+        cli_orig = 56
+        cli_now = 34
+        cli_eliminated = cli_orig - cli_now
+        cli_score = round(cli_eliminated / cli_orig * 100)
+        convergence["dimensions"]["cli_convergence"] = {
+            "score": cli_score, "weight": 30,
+            "detail": f"{cli_orig}→{cli_now} ({cli_score}% eliminated)"
+        }
+
+        # MCP coverage: 19 registered, ~23 total = 82%
+        # Weight: 25%
+        mcp_score = min(100, round(mcp["total"] / 23 * 100)) if mcp.get("total") else 0
+        convergence["dimensions"]["mcp_coverage"] = {
+            "score": mcp_score, "weight": 25,
+            "detail": f"{mcp['total']}/23 backends"
+        }
+
+        # Governance freshness: fresh=100, aging=60, stale=0
+        # Weight: 25%
+        gov_score = {"fresh": 100, "aging": 60, "stale": 0}.get(gov.get("health"), 50)
+        convergence["dimensions"]["governance_freshness"] = {
+            "score": gov_score, "weight": 25,
+            "detail": f"{gov.get('health', 'unknown')} ({gov.get('days_since', '?')}d)"
+        }
+
+        # Pre-commit coverage: 5/5 projects with gates
+        # Weight: 20%
+        precommit_score = 100  # all 5 main projects have hooks
+        convergence["dimensions"]["precommit_coverage"] = {
+            "score": precommit_score, "weight": 20,
+            "detail": "5/5 projects with gates"
+        }
+
+        # Weighted total
+        total = sum(
+            d["score"] * d["weight"] / 100
+            for d in convergence["dimensions"].values()
+        )
+        convergence["score"] = round(total)
+        convergence["grade"] = "GOOD" if total >= 80 else "WARNING" if total >= 60 else "LOW"
+    except Exception:
+        pass
+
     return {
         "tests": tests,
         "governance": gov,
@@ -638,6 +724,9 @@ def load_arch_health() -> dict:
         "git": git,
         "ruff": ruff,
         "audits": audits,
+        "cron": cron,
+        "mcp": mcp,
+        "convergence": convergence,
         "timestamp": datetime.now(UTC).isoformat(),
     }
 

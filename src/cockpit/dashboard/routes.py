@@ -8,11 +8,14 @@ import time
 
 import yaml
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from cockpit.dashboard.constants import (
+    ARCH_HTML,
+    BOS_DASHBOARD_HTML,
     LAYER_SOURCES,
     M0_SNAPSHOT_PATH,
+    OVERVIEW_HTML,
     PORT,
 )
 from cockpit.dashboard.helpers import (
@@ -225,4 +228,34 @@ async def api_bos_metrics():
 async def api_arch_health():
     """Architecture health aggregation."""
     return JSONResponse(content=load_arch_health())
+
+
+# ─── Pages ─────────────────────────────────────────────────
+
+
+@router.get("/overview", response_class=HTMLResponse)
+@router.get("/overview/", response_class=HTMLResponse)
+async def overview_page():
+    return OVERVIEW_HTML
+
+
+@router.get("/", response_class=HTMLResponse)
+async def dashboard_page():
+    """Redirect root to overview page."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/overview")
+
+
+@router.get("/bos", response_class=HTMLResponse)
+@router.get("/bos/", response_class=HTMLResponse)
+async def bos_dashboard():
+    """BOS 调用可观测面板。"""
+    return BOS_DASHBOARD_HTML
+
+
+@router.get("/arch", response_class=HTMLResponse)
+@router.get("/arch/", response_class=HTMLResponse)
+async def arch_dashboard():
+    """Architecture health dashboard."""
+    return ARCH_HTML
 
