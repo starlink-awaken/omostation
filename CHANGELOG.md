@@ -4,6 +4,24 @@
 > 9 项目 (agora / kairon / gbrain / omo / metaos / cockpit / runtime / ecos / aetherforge) 共享版本号.
 > 详见 ADR-0007.
 
+## [Unreleased] - 2026-06-24
+
+### Fixed (P60+ 子模块止血 + scheduler + bos test + CVE)
+- **14 子模块闭环止血** (workspace): 137 文件未提交 (aetherforge 57 删除遗留/gbrain 23 operations.ts 拆分未闭环/scripts 18/runtime 15 等). 6 子模块进内 commit + 14 push + 主仓 bump. ruff 历史格式债清理 (agora 103/runtime 140/omo 224 reformat). gbrain operations.ts BET-c9e3 拆分收口 (3841→23 行 aggregator + operations/ 模块).
+- **scheduler scheduled 分类 bug** (runtime): gbrain-index (daily 02:00 cron job) 有 launchd_label 但 type=scheduled, scan_once 误当 daemon 检查 → 每次 scan 报 failed + self-heal 骚扰. 修 scheduler.py 循环开头加 scheduled 短路 (跳过 launchd alive-check/backoff). runtime failed 服务 12→0. (c051797)
+- **bos test BosService.uri API 误用** (omo): `u.startswith()` 误用 (u 是 BosService dataclass, 该 `.uri.startswith()`). L108-109/220 修. POC_SERVICES 动态派生 services/analysis 改 `>= 静态` (resolver 含声明, 静态真 URI 为下限). test 7 passed.
+- **2 high CVE** (agora deps): cryptography 41→49.0.0 (fix CVE vuln < 48.0.1), starlette→1.3.1 (fix CVE vuln < 1.3.1). 363 测试过无破坏.
+- **bos registry 期望同步** (omo): bos-registry.json 40→42 URI (C2G v4 加 strategy-audit/strategy-gc, 5 domain 完整, 合理增长非假阳性).
+
+### Added (BOS 鸿沟诊断 + SRP 续拆)
+- **BOS 声明/执行鸿沟审计** (C smoke 超额发现): 102 URI 声明 alive, 实际 resolve_bos_uri() 全失败 (`No such file or directory`). 两层根因: (1) 11/16 stdio 包无 mcp_server.py (声明假阳性: agent-runtime/codeanalyze/core-models/ecos/health-profile/kos/metaos/minerva/omo/protocols-layer/sharedbrain-bridge); (2) 5 包有 mcp_server.py 但路径不匹配 (forge: 文件在 src/mcp_server.py 但 pyproject packages=src/forge, resolver 生成 `-m forge.mcp_server` → ModuleNotFoundError). 声明/执行比 102:0 (architecture-optimization 报告估的 21:1 实际更严重). 审计文档 `.omo/_knowledge/audits/bos-declaration-execution-gap-2026-06-24.md`.
+- **omo_ingress SRP 第六步前 4** (omo): registry-writes (write_capability_registry_bundle / write_manual_capabilities / create_skill_manifest / write_discovery_registry) 拆到 `omo_ingress_registry_writes.py` (285 行). omo_ingress.py 2609→2324. re-export + `# noqa: F401` (调用方 `from omo.omo_ingress import` 不变).
+
+### Known Issues (并发干扰, 待专项孤立 session)
+- **D 后 4 + 巨函数 + task lifecycle**: registry-writes 后 4 (task-center/governance-overlay) + write_system_projection_fields (354 行 God Function) + 第七步 task lifecycle (~20 函数) 受并发 governance agent (别的 Claude/cockpit 会话) 抢改 omo_ingress, 4-5 次打断 (策略冲突: 全拆 vs 部分拆). 需停并发后单一 session 孤立.
+- **omo_ingress registry_writes 重复定义**: 老王追加 8 函数 vs 并发 import 6 + 函数体重复, 待统一清理.
+- **dependabot medium/low 11**: aiohttp 多 (分散子模块) / pydantic-settings / postcss (npm). 待批量升.
+
 ## [Unreleased] - 2026-06-23
 
 ### Fixed (c2g bug 链 + governance 满分)

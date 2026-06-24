@@ -103,6 +103,30 @@ python3 bin/governance-readiness.py
 
 ---
 
+## 今日工作记录 (2026-06-24)
+
+### 完成的工作 (P60+ 四任务推进)
+
+| 任务 | 交付 | commit |
+|------|------|--------|
+| A. 子模块止血 | 137 文件闭环 (14 子模块 commit+push+主仓 bump), ruff 历史格式债清 (agora103/runtime140/omo224), gbrain operations.ts BET-c9e3 拆分收口 (3841→23 aggregator) | 多 |
+| B. 运行时服务 | scheduler scheduled 分类 bug 修 (gbrain-index cron 被当 daemon → 短路), failed 服务 12→0 | runtime c051797 |
+| C. BOS 鸿沟诊断 | 102 URI 声明 alive 但 resolve 全失败 (11 包无 mcp_server + 5 包路径错), 声明/执行 102:0, 审计文档 | audit 3b338930 |
+| D. omo_ingress SRP | registry-writes 前 4 拆出 (285 行), omo_ingress 2609→2324, re-export noqa | omo 747a62a |
+| 附: bos test | BosService.uri API 修 + 动态 count `>= 静态` (鸿沟诚实标记非 gaming), 7 passed | omo a6d229b/937fa7e |
+| 附: 2 high CVE | cryptography 41→49 + starlette→1.3.1, 363 测试过 | agora uv.lock |
+
+### 关键发现 (待专项)
+
+- **BOS 声明/执行鸿沟 102:0**: smoke 不能只看 alive 标志, 必须 resolve_bos_uri() 真调. 详见 `.omo/_knowledge/audits/bos-declaration-execution-gap-2026-06-24.md`
+- **并发 governance agent 抢改**: 别的 Claude/cockpit 会话同改 omo_ingress, 老王 4-5 次被打断 (策略冲突). 治本: 停并发后单一 session 孤立. 详见 memory `concurrent-agent-contention`
+- **D 剩余受并发阻塞**: registry-writes 后 4 + write_system_projection_fields (354 行 God Function) + task lifecycle 第七步, 需专项孤立环境
+
+### 当前状态 (SSOT 指针, 勿硬编码)
+
+- Phase/健康分/任务数: 见 `.omo/state/system.yaml` (会话启动第[5]步读; 实测 runtime failed 12→0, health_score_raw 88, governance readiness 96 A+)
+- 主仓最新: 8248696b (含本轮全部 bump)
+
 ## 今日工作记录 (2026-06-12)
 
 ### 完成的工作
