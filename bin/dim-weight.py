@@ -112,13 +112,16 @@ def compute_weights(snaps):
         if not series or len(series) < 2:
             weights[dim] = DEFAULT_WEIGHTS.get(dim, 20)
             continue
-        # P72 调优: 用 IQR (interquartile range) 替代 stdev, 更稳健
+        # P74 调优: percentile + max-min 范围, 比 IQR 更稳健
         sorted_s = sorted(series)
         n = len(sorted_s)
-        q1 = sorted_s[n // 4] if n >= 4 else sorted_s[0]
-        q3 = sorted_s[3 * n // 4] if n >= 4 else sorted_s[-1]
-        iqr = q3 - q1
-        # 简单相关性: 维度变化时总分变化
+        # P75 percentile (90-10) 范围
+        p10 = sorted_s[max(0, int(n * 0.1))] if n >= 5 else sorted_s[0]
+        p90 = sorted_s[min(n - 1, int(n * 0.9))] if n >= 5 else sorted_s[-1]
+        p90_p10_range = p90 - p10
+        # max-min range
+        max_min_range = sorted_s[-1] - sorted_s[0]
+        # 相关性
         cov = 0.0
         cnt = 0
         for i in range(1, min(len(series), len(total_series))):
@@ -127,13 +130,18 @@ def compute_weights(snaps):
             cov += d_dim * d_total
             cnt += 1
         correlation = cov / cnt if cnt > 0 else 0
-        # P72: 用 IQR 替代 stdev, score = correlation * (1 + iqr/100)
-        # 加 IQR>0 保护避免除零
-        iqr_norm = iqr / 100.0  # 归一化 (权重范围 0-1)
-        score = correlation * (1 + iqr_norm) if iqr > 0 else correlation
-        # P72: 加 max 边界保护, 避免某维度权重过大
+        # P74 调优: score = correlation * (1 + percentile_range / 100)
+        # 用 P90-P10 替代 IQR (更稳健)
+        if max_min_range > 0:
+            score = correlation * (1 + p90_p10_range / 100.0)
+        else:
+            score = correlation
+        # 防止过小
+        if score < 0.01:
+            score = 0.01
         analysis[dim] = {
-            "iqr": round(iqr, 3),
+            "p90_p10_range": round(p90_p10_range, 3),
+            "max_min_range": round(max_min_range, 3),
             "correlation": round(correlation, 3),
             "score": round(score, 3),
         }
@@ -193,11 +201,14 @@ def main() -> int:
             arrow = "↑" if change > 0 else ("↓" if change < 0 else "=")
             print(f"  {dim:<22s}{current:<8d}{default:<8d}{arrow}{abs(change):<5d}")
         print()
-        if "note" not in analysis:
+        if isinstance(analysis, dict) and "note" not in analysis:
             print("--- 各维度分析 ---")
             for dim, info in analysis.items():
+                p_range = info.get('p90_p10_range', 0)
+                m_range = info.get('max_min_range', 0)
                 print(
-                    f"  {dim}: iqr={info['iqr']} correlation={info['correlation']} score={info['score']}"
+                    f"  {dim}: p90_p10={p_range} max_min={m_range} "
+                    f"correlation={info['correlation']} score={info['score']}"
                 )
     return 0
 

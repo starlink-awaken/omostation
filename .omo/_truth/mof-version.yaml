@@ -249,4 +249,9 @@ history:
     验证) + ADR-0067 + 27 个 ADR (3/4 候选实施)'
   timestamp: '2026-06-24T17:43:54.798875'
   version: 0.0.62
-version: 0.0.62
+- description: 'P74 R1-R3: p0-event-listener 事件驱动 (替代 polling 监听 omo-events.jsonl)
+    + dim-weight percentile 调优 (P90-P10 range 替代 IQR) + alert-history 多维扩展 (by_level_sup_state
+    + by_time_window + peak_hour) + ADR-0068 + 13 独立 bin 工具 + 28 个 ADR'
+  timestamp: '2026-06-24T18:01:27.385040'
+  version: 0.0.63
+version: 0.0.63

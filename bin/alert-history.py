@@ -76,6 +76,19 @@ def render_ascii_bar(value: int, max_value: int, width: int = 40) -> str:
     return "█" * bar_len + "░" * (width - bar_len)
 
 
+def _within_hours(ts: str, hours: int) -> bool:
+    """P74 增: 判断 ts 是否在最近 N 小时内."""
+    if not ts:
+        return False
+    try:
+        from datetime import datetime, timezone, timedelta
+        rec_dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        return rec_dt >= cutoff
+    except Exception:
+        return False
+
+
 def analyze_history(records: list[dict], suppressions: list[dict]) -> dict:
     """分析告警历史 (P69 + suppressions, P71 + cross_level 维度)."""
     by_day: dict[str, Counter] = defaultdict(Counter)
@@ -122,17 +135,42 @@ def analyze_history(records: list[dict], suppressions: list[dict]) -> dict:
     )
     efficiency = suppressed_total / fired_total if fired_total > 0 else 0.0
 
+    # P74 增: by_level_sup_state (按级别拆分的触发 vs 抑制)
+    by_level_sup_state: dict[str, dict[str, int]] = {}
+    for level in by_level:
+        by_level_sup_state[level] = {
+            "fired": by_cross_level.get(f"{level}_fired", 0),
+            "suppressed": by_cross_level.get(f"{level}_suppressed", 0),
+        }
+
+    # P74 增: by_time_window (1h / 6h / 24h 分桶)
+    by_time_window: dict[str, int] = {
+        "1h": sum(1 for r in records if _within_hours(r.get("timestamp", ""), 1)),
+        "6h": sum(1 for r in records if _within_hours(r.get("timestamp", ""), 6)),
+        "24h": sum(1 for r in records if _within_hours(r.get("timestamp", ""), 24)),
+    }
+    # P74 增: peak_hour (24h 内最频繁的 hour)
+    hour_counter: dict[str, int] = {}
+    for r in records:
+        ts = r.get("timestamp", "")
+        if ts:
+            hour = ts[:13]  # YYYY-MM-DDTHH
+            hour_counter[hour] = hour_counter.get(hour, 0) + 1
+    peak_hour = max(hour_counter, key=lambda k: hour_counter[k]) if hour_counter else "N/A"
+
     return {
         "total_notifications": total,
         "by_level": dict(by_level),
         "by_type": dict(by_type),
         "by_day": {day: dict(counts) for day, counts in sorted(by_day.items())},
         "by_cross_level": by_cross_level,  # P71 新增
-        # P72 增: by_sup_state (触发 vs 抑制分桶)
         "by_sup_state": {
             "fired": fired_total,
             "suppressed": suppressed_total,
         },
+        "by_level_sup_state": by_level_sup_state,  # P74 增
+        "by_time_window": by_time_window,  # P74 增
+        "peak_hour": peak_hour,  # P74 增
         "peak_days": peak_days,
         "suppression_count": suppress_count,
         "suppression_rate": round(suppression_rate, 3),
