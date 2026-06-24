@@ -234,4 +234,9 @@ history:
     + 24 个 ADR (5/9 候选实施)'
   timestamp: '2026-06-24T15:55:33.394326'
   version: 0.0.59
-version: 0.0.59
+- description: 'P71 R1-R3: governance-agent 6 步闭环 (+alert-history 步骤) + alert-history
+    跨级别聚合 (by_cross_level + suppression_efficiency) + dim-weight 动态调整 (新工具 11 独立 bin,
+    13 快照反推) + management/ 142 评估 (4 维度 60% 中等, 暂不实施) + ADR-0065 + 25 个 ADR'
+  timestamp: '2026-06-24T16:39:14.360623'
+  version: 0.0.60
+version: 0.0.60
