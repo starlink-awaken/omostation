@@ -196,4 +196,9 @@ history:
     脚本 (3 命令) + ADR-0056 + readiness 96/100 A+ L4'
   timestamp: '2026-06-24T11:17:28.155616'
   version: 0.0.51
-version: 0.0.51
+- description: 'P63 R1-R3: readiness 历史快照 (write_readiness_snapshot → .omo/_log/readiness-*.json,
+    6 快照) + governance-readiness-trend 报告 (mean=96, stable) + governance-agent 3 flags
+    (--dry-run/--snapshot-only/--include-trend) + ADR-0057'
+  timestamp: '2026-06-24T13:50:43.066701'
+  version: 0.0.52
+version: 0.0.52

@@ -159,6 +159,66 @@ def score_governance(root: Path) -> tuple[int, float]:
     return score, total
 
 
+def write_readiness_snapshot(
+    root: Path,
+    total: int,
+    grade: str,
+    s1: int, s2: int, s3: int, s4: int, s5: int,
+    total_doc: int, cov: float, drift_low: int,
+    uncommitted: int, unlisted: int, gov_score: float,
+) -> None:
+    """P63 增: 写历史快照到 .omo/_log/readiness-YYYYMMDD-HHMM.json.
+
+    用于:
+    1. governance-agent 周期评估记录
+    2. readiness-trend.py 趋势分析
+    3. dashboard 卡片数据源
+    """
+    import datetime as _dt
+    now = _dt.datetime.utcnow()
+    timestamp = now.strftime("%Y%m%d-%H%M%S")
+    iso = now.isoformat() + "Z"
+
+    log_dir = root / ".omo" / "_log"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    snap_path = log_dir / f"readiness-{timestamp}.json"
+
+    # 保留最近 30 个快照, 避免目录膨胀
+    existing = sorted(log_dir.glob("readiness-*.json"), reverse=True)
+    for old in existing[30:]:
+        try:
+            old.unlink()
+        except Exception:
+            pass
+
+    snapshot = {
+        "timestamp": iso,
+        "score": total,
+        "grade": grade,
+        "phase": "P60+",  # 当前治理方法论阶段
+        "dimensions": {
+            "frontmatter": {"score": s1, "metric": total_doc, "coverage": cov, "max": 25},
+            "drift_low": {"score": s2, "metric": drift_low, "max": 20},
+            "commit_closure": {"score": s3, "metric": uncommitted, "max": 20},
+            "adr_index": {"score": s4, "metric": unlisted, "max": 20},
+            "governance_score": {"score": s5, "metric": gov_score, "max": 15},
+        },
+        "thresholds": {
+            "A+_L4_stable": 90,
+            "A_L3_mature": 80,
+            "B_L2_basic": 70,
+            "C_L1_starting": 60,
+        },
+    }
+    try:
+        import json as _json
+        with open(snap_path, "w", encoding="utf-8") as f:
+            _json.dump(snapshot, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        # 快照写入失败不应阻断主流程
+        print(f"⚠️  快照写入失败: {e}")
+
+
 def main() -> int:
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
     if not (root / ".omo").exists():
@@ -230,6 +290,12 @@ def main() -> int:
             print(f"  {s}")
     else:
         print("✅ 全部维度达标, 治理成熟")
+
+    # P63 增: 写历史快照到 .omo/_log/readiness-YYYYMMDD-HHMM.json
+    write_readiness_snapshot(
+        root, total, grade, s1, s2, s3, s4, s5,
+        total_doc, cov, drift_low, uncommitted, unlisted, gov_score,
+    )
 
     return 0 if total >= 90 else 1
 
