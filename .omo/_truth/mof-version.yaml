@@ -239,4 +239,9 @@ history:
     13 快照反推) + management/ 142 评估 (4 维度 60% 中等, 暂不实施) + ADR-0065 + 25 个 ADR'
   timestamp: '2026-06-24T16:39:14.360623'
   version: 0.0.60
-version: 0.0.60
+- description: 'P72 R1-R3: governance-agent 7 步闭环 (+dim-weight) + alert-history sup_state
+    维度扩展 + dim-weight IQR 调优 (替代 stdev 更稳健) + P0 mock 通知 (3 通道 email/sms/slack 本地文件)
+    + ADR-0066 + 12 独立 bin 工具 + 26 个 ADR'
+  timestamp: '2026-06-24T16:57:05.419954'
+  version: 0.0.61
+version: 0.0.61

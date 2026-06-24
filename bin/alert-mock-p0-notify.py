@@ -26,7 +26,7 @@ CHANNELS = ["email", "sms", "slack"]
 def send_mock(root: Path, level: str, message: str, channels: list[str], dry_run: bool = False) -> dict:
     """Mock 发送 P0 通知."""
     timestamp = datetime.now(timezone.utc).isoformat()
-    notif_log = root / ".omo" / "_log" / "p0-notifications.log"
+    notif_log = root / "runtime" / "logs" / "p0-notifications.log"
     results = {}
     for channel in channels:
         # 模拟 channel 特定输出
@@ -91,7 +91,7 @@ def main() -> int:
         print(f"  [{ch:<6s}] → {p['target']:<40s} {status}")
     if not args.dry_run:
         print()
-        print(f"📁 Log: .omo/_log/p0-notifications.log")
+        print(f"📁 Log: runtime/logs/p0-notifications.log")
     return 0
 
 
