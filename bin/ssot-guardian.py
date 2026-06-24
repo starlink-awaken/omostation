@@ -202,6 +202,94 @@ def _check_direct_omo_io() -> dict:
     }
 
 
+def _check_bos_unimplemented() -> dict:
+    """严格模式 BOS 期房与失效路由检测.
+
+    检测 bos-services.yaml 中标为 [UNIMPLEMENTED] 的服务，
+    验证其 package 是否存在，以及 package 对应的 do_default.py 中是否有分支支持该 action。
+    """
+    import yaml
+
+    yaml_path = WORKSPACE_ROOT / "projects" / "agora" / "etc" / "bos-services.yaml"
+    if not yaml_path.exists():
+        return {"passed": True, "note": "bos-services.yaml not found"}
+
+    try:
+        with open(yaml_path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+    except Exception as e:
+        return {"passed": False, "error": f"Failed to parse bos-services.yaml: {e}"}
+
+    services = data.get("services", [])
+    broken: list[dict] = []
+
+    for s in services:
+        uri = s.get("uri", "")
+        desc = s.get("description", "")
+        package = s.get("package", "")
+        action = s.get("action", "")
+
+        if desc and desc.startswith("[UNIMPLEMENTED]"):
+            # 严格模式检测其物理实现是否存在
+            # 1. 检查 package 物理目录
+            pkg_dir = None
+            if package:
+                # 优先在 projects/kairon/packages/ 寻找
+                kairon_pkg = WORKSPACE_ROOT / "projects" / "kairon" / "packages" / package
+                generic_pkg = WORKSPACE_ROOT / "projects" / package
+                if kairon_pkg.exists():
+                    pkg_dir = kairon_pkg
+                elif generic_pkg.exists():
+                    pkg_dir = generic_pkg
+
+            if not pkg_dir:
+                broken.append({
+                    "uri": uri,
+                    "reason": f"Package '{package}' directory not found in workspace",
+                })
+                continue
+
+            # 2. 检查 action 是否有代码分支支持 (针对 kairon 包的 do_default.py)
+            do_default_py = pkg_dir / "src" / package.replace("-", "_") / "do_default.py"
+            main_py = pkg_dir / "src" / package.replace("-", "_") / "__main__.py"
+
+            if do_default_py.exists():
+                code = do_default_py.read_text(encoding="utf-8")
+                pattern = rf'action\s*==\s*[\'"]{action}[\'"]'
+                if not re.search(pattern, code):
+                    has_handler = False
+                    if main_py.exists():
+                        main_code = main_py.read_text(encoding="utf-8")
+                        func_pattern = rf'def\s+do_{action.replace("-", "_")}\s*\('
+                        if re.search(func_pattern, main_code):
+                            has_handler = True
+                    if not has_handler:
+                        broken.append({
+                            "uri": uri,
+                            "reason": f"No code branch found for action '{action}' in do_default.py or __main__.py",
+                        })
+            elif main_py.exists():
+                main_code = main_py.read_text(encoding="utf-8")
+                func_pattern = rf'def\s+do_{action.replace("-", "_")}\s*\('
+                if not re.search(func_pattern, main_code):
+                    broken.append({
+                        "uri": uri,
+                        "reason": f"No handler function 'do_{action}' found in __main__.py",
+                    })
+            else:
+                if s.get("transport") in ("stdio", "mcp_stdio"):
+                    broken.append({
+                        "uri": uri,
+                        "reason": f"Entry file do_default.py or __main__.py not found for stdio transport",
+                    })
+
+    return {
+        "passed": len(broken) == 0,
+        "broken": broken,
+        "count": len(broken)
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="SSOT 漂移守门员")
     parser.add_argument("--auto-fix", action="store_true", help="自动修复白名单字段")
@@ -296,6 +384,19 @@ def main(argv: list[str] | None = None) -> int:
             }
         )
 
+    # 5. BOS 期房与失效路由检查 (无法 auto-fix, 必须修代码/清理配置)
+    bos_check = _check_bos_unimplemented()
+    if not bos_check.get("passed"):
+        issues.append(
+            {
+                "type": "unimplemented_bos_decay",
+                "severity": "high",
+                "broken": bos_check.get("broken", []),
+                "auto_fix": False,
+                "note": "bos-services.yaml 中定义了 [UNIMPLEMENTED] 路由，但未实现对应 CLI 接口/处理逻辑",
+            }
+        )
+
     # 报告
     unresolved = [i for i in issues if not i.get("fixed")]
     fixed = [i for i in issues if i.get("fixed")]
@@ -319,6 +420,9 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"     + {d['path']} ({d['sha']})")
             elif i["type"] == "direct_omo_io_violation":
                 print(f"     {i.get('summary', '')}")
+            elif i["type"] == "unimplemented_bos_decay":
+                for b in i.get("broken", []):
+                    print(f"     + {b['uri']}: {b['reason']}")
     else:
         print("✅ SSOT 一致性检查通过")
 
