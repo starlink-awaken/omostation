@@ -206,4 +206,8 @@ history:
     非 0 exit) + ADR-0058'
   timestamp: '2026-06-24T14:15:30.006728'
   version: 0.0.53
-version: 0.0.53
+- description: 'P65 R1-R3: cockpit-readiness wrapper (P64 dashboard 集成) + alert-aggregator
+    告警聚合 (24h 窗口 + 同小时 > 3 抑制) + ADR-0059 + 9 独立 bin 工具'
+  timestamp: '2026-06-24T14:26:24.275362'
+  version: 0.0.54
+version: 0.0.54
