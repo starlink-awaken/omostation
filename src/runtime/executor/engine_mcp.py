@@ -70,7 +70,13 @@ class MCPError(EngineError):
     """MCP-specific error."""
 
     def __init__(self, message: str, tool: str = "", **kw: Any) -> None:
-        super().__init__(message, ErrorCategory.PLUGIN, ErrorSeverity.RECOVERABLE, False, {"tool": tool, **kw})
+        super().__init__(
+            message,
+            ErrorCategory.PLUGIN,
+            ErrorSeverity.RECOVERABLE,
+            False,
+            {"tool": tool, **kw},
+        )
 
 
 # ====================================================================
@@ -133,7 +139,9 @@ class MCPHandler:
             )
         try:
             content = await tool.handler(**request.arguments)
-            return MCPCallResult(success=True, content=str(content), request_id=request.request_id)
+            return MCPCallResult(
+                success=True, content=str(content), request_id=request.request_id
+            )
         except Exception as e:
             return MCPCallResult(
                 success=False,
@@ -165,7 +173,10 @@ class MCPHandler:
             }
             if tool.parameters:
                 schema["input_schema"]["properties"] = {
-                    k: {"type": v.get("type", "string"), "description": v.get("description", "")}
+                    k: {
+                        "type": v.get("type", "string"),
+                        "description": v.get("description", ""),
+                    }
                     for k, v in tool.parameters.items()
                 }
             schemas.append(schema)

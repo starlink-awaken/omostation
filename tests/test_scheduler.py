@@ -148,13 +148,19 @@ class TestIsDueEdgeCases:
         """Cron job created <60s ago → not due."""
         now = datetime.now(UTC)
         created_at = now - timedelta(seconds=10)
-        assert _is_due("job-1", "0 2 * * *", last_run_at=None, created_at=created_at) is False
+        assert (
+            _is_due("job-1", "0 2 * * *", last_run_at=None, created_at=created_at)
+            is False
+        )
 
     def test_old_job_with_cron_is_due(self):
         """Cron job created >60s ago with no last_run → due."""
         now = datetime.now(UTC)
         created_at = now - timedelta(minutes=10)
-        assert _is_due("job-1", "0 2 * * *", last_run_at=None, created_at=created_at) is True
+        assert (
+            _is_due("job-1", "0 2 * * *", last_run_at=None, created_at=created_at)
+            is True
+        )
 
 
 # ── CronScheduler: non-async surface tests ──────────────────────────

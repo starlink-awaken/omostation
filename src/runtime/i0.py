@@ -52,8 +52,14 @@ _SERVICE_LAYER: dict[str, str] = {
 
 # ─── Helpers ────────────────────────────────────────────────────────────────
 
+
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 def _read_yaml(path: Path) -> dict:
@@ -95,7 +101,9 @@ def _get_pid_for_port(port: int) -> Optional[int]:
     try:
         r = subprocess.run(
             ["lsof", "-ti", f":{port}"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         if r.stdout.strip():
             return int(r.stdout.strip().split("\n")[0])
@@ -129,6 +137,7 @@ def _fetch_events_from_agora(limit: int = 20) -> list[dict]:
 
 
 # ─── Query Functions ────────────────────────────────────────────────────────
+
 
 def i0_status() -> dict:
     """Fabric health overview."""
@@ -199,16 +208,18 @@ def i0_services() -> list[dict]:
         elif has_port:
             health = "unreachable"
 
-        results.append({
-            "name": svc.name,
-            "type": svc.type,
-            "port": svc.port,
-            "status": svc.status,
-            "port_listening": port_listening,
-            "health": health,
-            "pid": pid,
-            "layer": layer,
-        })
+        results.append(
+            {
+                "name": svc.name,
+                "type": svc.type,
+                "port": svc.port,
+                "status": svc.status,
+                "port_listening": port_listening,
+                "health": health,
+                "pid": pid,
+                "layer": layer,
+            }
+        )
 
     return results
 
@@ -271,10 +282,12 @@ def i0_graph() -> dict:
         nodes.append({"name": svc.name, "layer": layer})
         for dep in svc.depends_on:
             if dep:
-                edges.append({
-                    "from": svc.name,
-                    "to": dep,
-                    "type": "HARD",
-                })
+                edges.append(
+                    {
+                        "from": svc.name,
+                        "to": dep,
+                        "type": "HARD",
+                    }
+                )
 
     return {"nodes": nodes, "edges": edges}

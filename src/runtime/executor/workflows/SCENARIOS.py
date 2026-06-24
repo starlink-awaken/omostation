@@ -5,6 +5,7 @@
 # status: active
 # ---
 """Named scenario registry — user-facing workflow combinations."""
+
 from __future__ import annotations
 
 SCENARIOS: dict[str, dict] = {

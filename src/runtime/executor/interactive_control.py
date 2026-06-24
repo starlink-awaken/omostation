@@ -171,7 +171,9 @@ class InteractiveController:
 
     # -- Command Queue ----------------------------------------------------
 
-    def queue_command(self, cmd_type: CommandType, payload: dict | None = None) -> ControlCommand:
+    def queue_command(
+        self, cmd_type: CommandType, payload: dict | None = None
+    ) -> ControlCommand:
         cmd = ControlCommand(
             type=cmd_type,
             payload=payload or {},
@@ -191,7 +193,9 @@ class InteractiveController:
 
     # -- Internal ---------------------------------------------------------
 
-    def _build_cmd(self, cmd_type: CommandType, payload: dict | None = None) -> ControlCommand:
+    def _build_cmd(
+        self, cmd_type: CommandType, payload: dict | None = None
+    ) -> ControlCommand:
         cmd = ControlCommand(
             type=cmd_type,
             payload=payload or {},

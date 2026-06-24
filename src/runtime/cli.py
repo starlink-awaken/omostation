@@ -18,20 +18,22 @@ import argparse
 import json
 import os
 import subprocess
-import warnings
 import sys
 from pathlib import Path
 
 from . import __version__
 from .matrix import (
-    RUNTIME_HOME, RUNTIME_MATRIX,
-    get_service, resolve_path,
+    RUNTIME_HOME,
+    RUNTIME_MATRIX,
+    get_service,
+    resolve_path,
     list_services,
 )
 from .protocol import L0_PROTOCOLS, get_protocol, validate_protocol_message
 
 
 # ─── Helpers ────────────────────────────────────────────────────────────────
+
 
 def _run_script(name: str, *args: str) -> int:
     """Run a shell script from the runtime scripts directory."""
@@ -61,6 +63,7 @@ def _print_table(rows: list[list[str]], headers: list[str]) -> None:
 
 
 # ─── Commands ───────────────────────────────────────────────────────────────
+
 
 def cmd_health() -> int:
     return _run_script("health-scan.sh")
@@ -127,7 +130,12 @@ def cmd_service(name: str, action: str) -> int:
 def cmd_protocol_list() -> int:
     rows = []
     for p in L0_PROTOCOLS:
-        status_icon = {"active": "✅", "draft": "📝", "planned": "🔲", "deprecated": "🗄️"}.get(p.status, "❓")
+        status_icon = {
+            "active": "✅",
+            "draft": "📝",
+            "planned": "🔲",
+            "deprecated": "🗄️",
+        }.get(p.status, "❓")
         rows.append([f"{status_icon} {p.name}", f"v{p.version}", p.category, p.status])
     _print_table(rows, ["PROTOCOL", "VERSION", "CATEGORY", "STATUS"])
     print(f"\nTotal: {len(L0_PROTOCOLS)} protocols")
@@ -174,13 +182,16 @@ def cmd_protocol_validate(name: str, message_json: str) -> int:
 
 def cmd_kei_dashboard() -> int:
     """Show KEI sandbox audit summary."""
-    audit_dir = Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime"))) / "data"
+    audit_dir = (
+        Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime"))) / "data"
+    )
     audit_file = audit_dir / "kei_audit.jsonl"
     if not audit_file.exists():
         print("⚠️  No KEI audit data found (runtime/data/kei_audit.jsonl)")
         return 0
     try:
         import json
+
         total = 0
         actions: dict[str, int] = {}
         statuses: dict[str, int] = {}
@@ -194,7 +205,7 @@ def cmd_kei_dashboard() -> int:
             s = record.get("status", "unknown")
             statuses[s] = statuses.get(s, 0) + 1
         print("KEI Audit Dashboard")
-        print(f"{'='*40}")
+        print(f"{'=' * 40}")
         print(f"Total records:  {total}")
         print(f"File:           {audit_file}")
         print()
@@ -230,7 +241,12 @@ def cmd_dashboard() -> int:
     debt_dir = Path(os.environ.get("OMO_DIR", str(Path.home() / "Workspace" / ".omo")))
     debt_items = list(debt_dir.glob("debt/items/*.yaml")) if debt_dir.exists() else []
     debt_total = len(debt_items)
-    debt_open = sum(1 for f in debt_items if "lifecycle_state: scheduled" in f.read_text() or "lifecycle_state: open" in f.read_text())
+    debt_open = sum(
+        1
+        for f in debt_items
+        if "lifecycle_state: scheduled" in f.read_text()
+        or "lifecycle_state: open" in f.read_text()
+    )
 
     # Phase from system state
     phase = "28-W3"
@@ -241,14 +257,16 @@ def cmd_dashboard() -> int:
                 phase = line.split(":", 1)[1].strip()
                 break
 
-    print(f"+{'-'*56}+")
+    print(f"+{'-' * 56}+")
     print(f"|  eCOS Dashboard{'':>42}|")
     print(f"|  Phase {phase}{'':>37}|")
-    print(f"+{'-'*56}+")
-    print(f"|  Services:   {len(services):3d} total ({active_svc:2d} running, {failed_svc:2d} failed){'':>8}|")
+    print(f"+{'-' * 56}+")
+    print(
+        f"|  Services:   {len(services):3d} total ({active_svc:2d} running, {failed_svc:2d} failed){'':>8}|"
+    )
     print(f"|  Protocols:  {proto_total:3d} total ({proto_active:2d} active){'':>13}|")
     print(f"|  Debts:      {debt_total:3d} total ({debt_open:2d} pending){'':>13}|")
-    print(f"+{'-'*56}+")
+    print(f"+{'-' * 56}+")
     return 0
 
 
@@ -257,6 +275,7 @@ def cmd_taskobject_dispatch(envelope_file: str) -> int:
     try:
         if envelope_file == "-":
             import sys as _sys
+
             payload = json.loads(_sys.stdin.read())
         else:
             payload = json.loads(Path(envelope_file).read_text())
@@ -265,6 +284,7 @@ def cmd_taskobject_dispatch(envelope_file: str) -> int:
         return 1
 
     from .taskobject_adapter import dispatch_taskobject
+
     result = dispatch_taskobject(payload)
     print(json.dumps(result, indent=2, ensure_ascii=False))
     return 0 if result.get("status") == "ok" else 1
@@ -287,6 +307,7 @@ def cmd_status() -> int:
 
 
 # ─── Main ───────────────────────────────────────────────────────────────────
+
 
 def main(argv: list[str] | None = None) -> int:
     print("⚠️ Runtime 独立 CLI 已弃用，请使用 cockpit 替代", file=sys.stderr)
@@ -321,7 +342,9 @@ def main(argv: list[str] | None = None) -> int:
     proto_sub.add_parser("list", help="List all protocols")
     pg = proto_sub.add_parser("get", help="Get protocol details")
     pg.add_argument("name")
-    pv = proto_sub.add_parser("validate", help="Validate a protocol message against registry")
+    pv = proto_sub.add_parser(
+        "validate", help="Validate a protocol message against registry"
+    )
     pv.add_argument("name", help="Protocol name (MCP, ACP, A2A...)")
     pv.add_argument("message", help="JSON message to validate")
 
@@ -329,19 +352,25 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("status", help="Quick system summary")
 
     # dashboard
-    sub.add_parser("dashboard", help="eCOS Dashboard — aggregated system health overview")
+    sub.add_parser(
+        "dashboard", help="eCOS Dashboard — aggregated system health overview"
+    )
 
     # taskobject
     to_p = sub.add_parser("taskobject", help="TaskObject v1 envelope dispatch")
     to_sub = to_p.add_subparsers(dest="to_cmd")
     to_dispatch = to_sub.add_parser("dispatch", help="Dispatch a TaskObject envelope")
-    to_dispatch.add_argument("envelope_file", help="Path to JSON envelope file (use '-' for stdin)")
+    to_dispatch.add_argument(
+        "envelope_file", help="Path to JSON envelope file (use '-' for stdin)"
+    )
 
     # mcp
     sub.add_parser("mcp", help="Run L3 CLIAdapter (MCP Server over stdio)")
 
     # kei
-    kei_p = sub.add_parser("kei", help="Kernel Extension Interface (Sandbox) management")
+    kei_p = sub.add_parser(
+        "kei", help="Kernel Extension Interface (Sandbox) management"
+    )
     kei_sub = kei_p.add_subparsers(dest="kei_cmd")
     kei_val = kei_sub.add_parser("validate", help="Validate a KEI manifest")
     kei_val.add_argument("path", help="Path to kei.yaml")
@@ -349,6 +378,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # i0 fabric
     from .cli_i0 import add_i0_subparser, handle_i0_command
+
     add_i0_subparser(sub)
 
     args = parser.parse_args(argv)
@@ -356,6 +386,7 @@ def main(argv: list[str] | None = None) -> int:
     # Enable KEI Sandbox
     try:
         from runtime.kei_sandbox import enable_sandbox
+
         enable_sandbox()
     except ImportError:
         pass
@@ -396,11 +427,13 @@ def main(argv: list[str] | None = None) -> int:
             return 1
     elif args.command == "mcp":
         from .mcp_server import main as mcp_main
+
         mcp_main()
         return 0
     elif args.command == "kei":
         if args.kei_cmd == "validate":
             from .kei import load_manifest
+
             try:
                 manifest = load_manifest(args.path)
                 print(f"✅ KEI Manifest valid: {manifest.name} v{manifest.version}")

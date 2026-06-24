@@ -14,6 +14,7 @@ class MemoryEntry:
     created_at: float = field(default_factory=time.time)
     access_count: int = 0
 
+
 class WorkingMemory:
     """Volatile, TTL-based memory for active tasks."""
 
@@ -25,8 +26,9 @@ class WorkingMemory:
     def set(self, key: str, value: Any, ttl_seconds: float | None = None):
         if len(self._store) >= self.max_entries:
             self._store.popitem(last=False)
-        self._store[key] = MemoryEntry(key=key, value=value,
-            ttl_seconds=ttl_seconds or self.default_ttl)
+        self._store[key] = MemoryEntry(
+            key=key, value=value, ttl_seconds=ttl_seconds or self.default_ttl
+        )
 
     def get(self, key: str) -> Any | None:
         entry = self._store.get(key)
@@ -42,7 +44,9 @@ class WorkingMemory:
     def cleanup(self) -> int:
         """Remove expired entries. Returns count removed."""
         now = time.time()
-        expired = [k for k, e in self._store.items() if now - e.created_at > e.ttl_seconds]
+        expired = [
+            k for k, e in self._store.items() if now - e.created_at > e.ttl_seconds
+        ]
         for k in expired:
             del self._store[k]
         return len(expired)
@@ -56,19 +60,28 @@ class ProjectMemory:
 
     def __init__(self, db_path: str = ":memory:"):
         import sqlite3
+
         self._conn = sqlite3.connect(db_path, check_same_thread=False)
-        self._conn.execute("CREATE TABLE IF NOT EXISTS memory (key TEXT PRIMARY KEY, value TEXT, updated_at REAL)")
+        self._conn.execute(
+            "CREATE TABLE IF NOT EXISTS memory (key TEXT PRIMARY KEY, value TEXT, updated_at REAL)"
+        )
         self._conn.commit()
 
     def set(self, key: str, value: Any):
         import json
-        self._conn.execute("INSERT OR REPLACE INTO memory VALUES (?, ?, ?)",
-                           (key, json.dumps(value, default=str), time.time()))
+
+        self._conn.execute(
+            "INSERT OR REPLACE INTO memory VALUES (?, ?, ?)",
+            (key, json.dumps(value, default=str), time.time()),
+        )
         self._conn.commit()
 
     def get(self, key: str) -> Any | None:
         import json
-        row = self._conn.execute("SELECT value FROM memory WHERE key = ?", (key,)).fetchone()
+
+        row = self._conn.execute(
+            "SELECT value FROM memory WHERE key = ?", (key,)
+        ).fetchone()
         return json.loads(row[0]) if row else None
 
     def list_keys(self) -> list[str]:
@@ -88,29 +101,42 @@ class OrgMemory:
 
     def __init__(self, db_path: str = ":memory:"):
         import sqlite3
+
         self._conn = sqlite3.connect(db_path, check_same_thread=False)
         self._conn.execute("""CREATE TABLE IF NOT EXISTS org_memory
             (key TEXT PRIMARY KEY, value TEXT, project_id TEXT, tags TEXT, updated_at REAL)""")
         self._conn.commit()
 
-    def set(self, key: str, value: Any, project_id: str = "", tags: list[str] | None = None):
+    def set(
+        self, key: str, value: Any, project_id: str = "", tags: list[str] | None = None
+    ):
         import json
+
         tags_str = ",".join(tags) if tags else ""
-        self._conn.execute("INSERT OR REPLACE INTO org_memory VALUES (?, ?, ?, ?, ?)",
-                           (key, json.dumps(value, default=str), project_id, tags_str, time.time()))
+        self._conn.execute(
+            "INSERT OR REPLACE INTO org_memory VALUES (?, ?, ?, ?, ?)",
+            (key, json.dumps(value, default=str), project_id, tags_str, time.time()),
+        )
         self._conn.commit()
 
     def get(self, key: str) -> Any | None:
         import json
-        row = self._conn.execute("SELECT value FROM org_memory WHERE key = ?", (key,)).fetchone()
+
+        row = self._conn.execute(
+            "SELECT value FROM org_memory WHERE key = ?", (key,)
+        ).fetchone()
         return json.loads(row[0]) if row else None
 
     def search_by_tag(self, tag: str) -> list[str]:
-        rows = self._conn.execute("SELECT key FROM org_memory WHERE tags LIKE ?", (f"%{tag}%",)).fetchall()
+        rows = self._conn.execute(
+            "SELECT key FROM org_memory WHERE tags LIKE ?", (f"%{tag}%",)
+        ).fetchall()
         return [r[0] for r in rows]
 
     def list_by_project(self, project_id: str) -> list[str]:
-        rows = self._conn.execute("SELECT key FROM org_memory WHERE project_id = ?", (project_id,)).fetchall()
+        rows = self._conn.execute(
+            "SELECT key FROM org_memory WHERE project_id = ?", (project_id,)
+        ).fetchall()
         return [r[0] for r in rows]
 
     def close(self):

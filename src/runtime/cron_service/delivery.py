@@ -136,7 +136,9 @@ def _send_weixin(text: str, target: str) -> str | None:
 # ── Delivery ───────────────────────────────────────────────────────
 
 
-def deliver(job_name: str, content: str, target: str, job_id: str | None = None) -> str | None:
+def deliver(
+    job_name: str, content: str, target: str, job_id: str | None = None
+) -> str | None:
     """Deliver job output. Returns error string or None on success.
 
     Args:

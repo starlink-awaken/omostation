@@ -41,12 +41,14 @@ def _generate_usage_sequence(
         inp = tokens_per_agent[0] + (rng % 100)
         out = tokens_per_agent[1] + (rng % 50)
         rng += 1
-        sequence.append({
-            "provider": providers[i % len(providers)],
-            "input": inp,
-            "output": out,
-            "agentName": f"agent-{i}",
-        })
+        sequence.append(
+            {
+                "provider": providers[i % len(providers)],
+                "input": inp,
+                "output": out,
+                "agentName": f"agent-{i}",
+            }
+        )
     return sequence
 
 
@@ -55,18 +57,28 @@ def _generate_usage_sequence(
 # ---------------------------------------------------------------------------
 
 
-async def bench_token_statistics_accuracy(record_count: int = 1000) -> TokenEfficiencyResult:
+async def bench_token_statistics_accuracy(
+    record_count: int = 1000,
+) -> TokenEfficiencyResult:
     tracker = TokenTracker()
 
     async def run() -> int:
         seq = _generate_usage_sequence(record_count, (1000, 500))
         for r in seq:
-            tracker.record(r["provider"], r["input"], r["output"], {"agentName": r["agentName"], "projectId": "test"})
+            tracker.record(
+                r["provider"],
+                r["input"],
+                r["output"],
+                {"agentName": r["agentName"], "projectId": "test"},
+            )
         return tracker.get_total().input + tracker.get_total().output
 
     durations = await _collect_timing_samples_async(run, 50)
     total = tracker.get_total()
-    expected = sum(r["input"] + r["output"] for r in _generate_usage_sequence(record_count, (1000, 500)))
+    expected = sum(
+        r["input"] + r["output"]
+        for r in _generate_usage_sequence(record_count, (1000, 500))
+    )
     accuracy = total.input + total.output
     cost = tracker.estimate_cost()
     avg_ms = statistics.mean(durations) if durations else 0.0
@@ -118,11 +130,17 @@ async def bench_token_budget_control(budget: int = 100_000) -> TokenEfficiencyRe
     )
 
 
-async def bench_multi_provider_separation(providers: list[str] | None = None) -> TokenEfficiencyResult:
+async def bench_multi_provider_separation(
+    providers: list[str] | None = None,
+) -> TokenEfficiencyResult:
     if providers is None:
         providers = ["claude", "openai", "simulation"]
     tracker = TokenTracker()
-    usage_by_provider = {"claude": (1000, 500), "openai": (800, 400), "simulation": (500, 250)}
+    usage_by_provider = {
+        "claude": (1000, 500),
+        "openai": (800, 400),
+        "simulation": (500, 250),
+    }
 
     async def run() -> int:
         for prov in providers:

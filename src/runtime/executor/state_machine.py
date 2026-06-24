@@ -134,8 +134,12 @@ class PhaseRecord:
 class PhaseHooks:
     """Optional callbacks invoked on phase transitions."""
 
-    on_enter: dict[Phase, Callable[[PhaseRecord], None] | None] = field(default_factory=dict)
-    on_exit: dict[Phase, Callable[[PhaseRecord], None] | None] = field(default_factory=dict)
+    on_enter: dict[Phase, Callable[[PhaseRecord], None] | None] = field(
+        default_factory=dict
+    )
+    on_exit: dict[Phase, Callable[[PhaseRecord], None] | None] = field(
+        default_factory=dict
+    )
     on_error: Callable[[Phase, Exception], None] | None = None
 
 
@@ -219,7 +223,9 @@ class PhaseStateMachine:
         on_exit = self._hooks.on_exit.get(from_phase)
         if on_exit:
             try:
-                on_exit(PhaseRecord(from_phase=from_phase, to_phase=target, reason=reason))
+                on_exit(
+                    PhaseRecord(from_phase=from_phase, to_phase=target, reason=reason)
+                )
             except Exception:
                 pass
 
@@ -252,18 +258,28 @@ class PhaseStateMachine:
     def pause(self, reason: str = "Paused") -> PhaseRecord:
         return self.transition_to(Phase.PAUSED, reason)
 
-    def resume(self, target: Phase | None = None, reason: str = "Resumed") -> PhaseRecord:
+    def resume(
+        self, target: Phase | None = None, reason: str = "Resumed"
+    ) -> PhaseRecord:
         if self._current is not Phase.PAUSED:
-            raise ValueError(f"Cannot resume: current is {self._current.value}, not PAUSED")
+            raise ValueError(
+                f"Cannot resume: current is {self._current.value}, not PAUSED"
+            )
         dest = target or self._phase_before_pause
         if dest is None:
-            raise ValueError("Cannot resume: no previous phase recorded and no override")
+            raise ValueError(
+                "Cannot resume: no previous phase recorded and no override"
+            )
         return self.transition_to(dest, reason)
 
-    def fail(self, reason: str = "", metadata: dict[str, Any] | None = None) -> PhaseRecord:
+    def fail(
+        self, reason: str = "", metadata: dict[str, Any] | None = None
+    ) -> PhaseRecord:
         return self.transition_to(Phase.FAILED, reason, metadata)
 
-    def advance(self, reason: str = "", metadata: dict[str, Any] | None = None) -> PhaseRecord:
+    def advance(
+        self, reason: str = "", metadata: dict[str, Any] | None = None
+    ) -> PhaseRecord:
         """Advance to the next phase in the effective sequence."""
         nxt = self._get_next_phase()
         if nxt is None:
@@ -286,7 +302,11 @@ class PhaseStateMachine:
 
     @property
     def available_transitions(self) -> list[Phase]:
-        return [t for t in TRANSITION_TABLE.get(self._current, []) if self.can_transition_to(t)]
+        return [
+            t
+            for t in TRANSITION_TABLE.get(self._current, [])
+            if self.can_transition_to(t)
+        ]
 
     def _get_next_phase(self) -> Phase | None:
         seq = self.effective_sequence
@@ -298,19 +318,47 @@ class PhaseStateMachine:
 
     # -- DF-CEA: Risk Assessment & Path Selection --
 
-    def assess_risk(self, description: str, goals: list[str], file_count: int = 0) -> RiskLevel:
+    def assess_risk(
+        self, description: str, goals: list[str], file_count: int = 0
+    ) -> RiskLevel:
         """Keyword-based risk assessment (matches agentmesh heuristics)."""
         corpus = (description + " " + " ".join(goals)).lower()
 
         security_kw = [
-            "security", "auth", "payment", "encrypt", "credential", "token",
-            "secret", "permission", "rbac", "oauth", "certificate", "ssl", "tls",
-            "firewall", "vulnerability", "compliance", "gdpr", "hipaa", "pci",
+            "security",
+            "auth",
+            "payment",
+            "encrypt",
+            "credential",
+            "token",
+            "secret",
+            "permission",
+            "rbac",
+            "oauth",
+            "certificate",
+            "ssl",
+            "tls",
+            "firewall",
+            "vulnerability",
+            "compliance",
+            "gdpr",
+            "hipaa",
+            "pci",
         ]
         infra_kw = [
-            "database", "migration", "deploy", "production", "infrastructure",
-            "kubernetes", "scaling", "cluster", "replication", "failover",
-            "dns", "load-balancer", "cdn",
+            "database",
+            "migration",
+            "deploy",
+            "production",
+            "infrastructure",
+            "kubernetes",
+            "scaling",
+            "cluster",
+            "replication",
+            "failover",
+            "dns",
+            "load-balancer",
+            "cdn",
         ]
 
         score = 2  # baseline MEDIUM
@@ -357,11 +405,15 @@ class PhaseStateMachine:
             "history": [r.to_dict() for r in self._history],
             "decision_path": self._decision_path.value,
             "risk_level": self._risk_level.value,
-            "phase_before_pause": self._phase_before_pause.value if self._phase_before_pause else None,
+            "phase_before_pause": self._phase_before_pause.value
+            if self._phase_before_pause
+            else None,
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any], hooks: PhaseHooks | None = None) -> PhaseStateMachine:
+    def from_dict(
+        cls, data: dict[str, Any], hooks: PhaseHooks | None = None
+    ) -> PhaseStateMachine:
         sm = cls(
             initial_phase=Phase(data["current_phase"]),
             decision_path=DecisionPath(data.get("decision_path", "standard")),
@@ -395,4 +447,6 @@ def create_state_machine(
     hooks: PhaseHooks | None = None,
 ) -> PhaseStateMachine:
     """Create a new PhaseStateMachine instance."""
-    return PhaseStateMachine(initial_phase=initial_phase, decision_path=decision_path, hooks=hooks)
+    return PhaseStateMachine(
+        initial_phase=initial_phase, decision_path=decision_path, hooks=hooks
+    )

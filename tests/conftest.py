@@ -10,6 +10,7 @@ sys.path so the inner `cron_service/` package becomes importable as a
 top-level module. This is a test-only shim; production code keeps using
 `runtime.cron_service`.
 """
+
 from __future__ import annotations
 
 import sys

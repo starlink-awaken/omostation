@@ -56,9 +56,7 @@ def validate_transport(protocol: dict, errors: list[str]) -> None:
     """Check that protocol has a transport field."""
     transport = protocol.get("transport")
     if transport is None:
-        errors.append(
-            f"  [{protocol['name']}] Missing 'transport' field"
-        )
+        errors.append(f"  [{protocol['name']}] Missing 'transport' field")
     elif isinstance(transport, list) and len(transport) == 0:
         errors.append(
             f"  [{protocol['name']}] 'transport' is empty list — "
@@ -82,9 +80,7 @@ def validate_no_duplicates(protocols: list[dict], errors: list[str]) -> None:
     for name, indices in seen.items():
         if len(indices) > 1:
             positions = ", ".join(f"index {i}" for i in indices)
-            errors.append(
-                f"  [{name}] Duplicate protocol name at {positions}"
-            )
+            errors.append(f"  [{name}] Duplicate protocol name at {positions}")
 
 
 def main() -> int:
@@ -146,7 +142,7 @@ def main() -> int:
         print()
         print("Protocol summary:")
         print(f"   {'Name':<22} {'Usage':<10} {'Transport':<25}")
-        print(f"   {'─'*22} {'─'*10} {'─'*25}")
+        print(f"   {'─' * 22} {'─' * 10} {'─' * 25}")
         for proto in protocols:
             name = proto.get("name", "?")
             usage = proto.get("usage", "?")

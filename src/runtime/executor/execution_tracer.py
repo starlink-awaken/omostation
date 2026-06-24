@@ -38,9 +38,7 @@ class ExecutionTracer:
         self._pending: dict[str, _PendingTrace] = {}
         self._events_enabled = events_enabled
 
-    def start_trace(
-        self, step_name: str, call_type: str, target: str
-    ) -> str:
+    def start_trace(self, step_name: str, call_type: str, target: str) -> str:
         trace_id = uuid.uuid4().hex[:32]
         pending = _PendingTrace(
             trace_id=trace_id,
@@ -73,7 +71,9 @@ class ExecutionTracer:
             error=result.error,
             tokens_used=result.tokens_used,
             retry_count=result.retry_count,
-            input_summary=pending.input_summary if hasattr(pending, "input_summary") else {},
+            input_summary=pending.input_summary
+            if hasattr(pending, "input_summary")
+            else {},
             output_summary=result.outputs or {},
         )
         self._traces[trace_id] = trace

@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from runtime.executor.engine_utils.cache import LRUCache, LRUCacheWithTTL, create_lru_cache, create_lru_cache_with_ttl
+from runtime.executor.engine_utils.cache import (
+    LRUCache,
+    LRUCacheWithTTL,
+    create_lru_cache,
+    create_lru_cache_with_ttl,
+)
 from runtime.executor.engine_utils.pool import ObjectPool
 from runtime.executor.engine_utils.stats import (
     BenchmarkStats,

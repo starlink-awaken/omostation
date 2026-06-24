@@ -1,34 +1,50 @@
 import json
 
+
 def _i0_status() -> str:
     from runtime.i0 import i0_status as _i0_status_fn
+
     try:
         status = _i0_status_fn()
         return json.dumps(status, indent=2, default=str)
     except Exception as e:
         return f"❌ i0_status failed: {e}"
 
+
 def _i0_services() -> str:
     from runtime.i0 import i0_services as _i0_services_fn
+
     try:
         services = _i0_services_fn()
-        parts = [f"{'SERVICE':20s} {'TYPE':12s} {'PORT':6s} {'LIVE':6s} {'HEALTH':12s} {'LAYER':6s}", "-" * 65]
+        parts = [
+            f"{'SERVICE':20s} {'TYPE':12s} {'PORT':6s} {'LIVE':6s} {'HEALTH':12s} {'LAYER':6s}",
+            "-" * 65,
+        ]
         for s in services:
             port = str(s["port"]) if s["port"] else "—"
             live = "✅" if s.get("port_listening") else "⏹️"
-            parts.append(f"{s['name']:20s} {s['type']:12s} {port:6s} {live:6s} {s.get('health','?'):12s} {s.get('layer','?'):6s}")
-        parts.append(f"\nTotal: {len(services)} services ({sum(1 for s in services if s.get('port_listening'))} online)")
+            parts.append(
+                f"{s['name']:20s} {s['type']:12s} {port:6s} {live:6s} {s.get('health', '?'):12s} {s.get('layer', '?'):6s}"
+            )
+        parts.append(
+            f"\nTotal: {len(services)} services ({sum(1 for s in services if s.get('port_listening'))} online)"
+        )
         return "\n".join(parts)
     except Exception as e:
         return f"❌ i0_services failed: {e}"
 
+
 def _i0_events(limit: int = 20) -> str:
     from runtime.i0 import i0_events as _i0_events_fn
+
     try:
         events = _i0_events_fn(limit)
         if not events:
             return "⚠️  No events retrieved. Is Agora running on :7430?"
-        parts = [f"{'ID':6s} {'TIME':22s} {'SOURCE':20s} {'TYPE':20s} {'PAYLOAD':40s}", "-" * 110]
+        parts = [
+            f"{'ID':6s} {'TIME':22s} {'SOURCE':20s} {'TYPE':20s} {'PAYLOAD':40s}",
+            "-" * 110,
+        ]
         for ev in events:
             eid = str(ev.get("id", ""))[:6]
             ts = str(ev.get("time", ev.get("timestamp", "")))[:22]
@@ -41,8 +57,10 @@ def _i0_events(limit: int = 20) -> str:
     except Exception as e:
         return f"❌ i0_events failed: {e}"
 
+
 def _i0_protocols() -> str:
     from runtime.i0 import i0_protocols as _i0_protocols_fn
+
     try:
         protocols = _i0_protocols_fn()
         lines = [f"Total protocols: {protocols['total']}", ""]
@@ -52,16 +70,22 @@ def _i0_protocols() -> str:
             lines.append(f"  {u:12s}: {cnt}")
         lines.append("")
         protos = protocols.get("protocols", [])
-        lines.append(f"{'NAME':25s} {'VERSION':10s} {'CATEGORY':22s} {'STATUS':10s} {'USAGE':10s}")
+        lines.append(
+            f"{'NAME':25s} {'VERSION':10s} {'CATEGORY':22s} {'STATUS':10s} {'USAGE':10s}"
+        )
         lines.append("-" * 85)
         for p in protos:
-            lines.append(f"{p['name']:25s} {p['version']:10s} {p['category']:22s} {p['status']:10s} {p['usage']:10s}")
+            lines.append(
+                f"{p['name']:25s} {p['version']:10s} {p['category']:22s} {p['status']:10s} {p['usage']:10s}"
+            )
         return "\n".join(lines)
     except Exception as e:
         return f"❌ i0_protocols failed: {e}"
 
+
 def _i0_graph() -> str:
     from runtime.i0 import i0_graph as _i0_graph_fn
+
     try:
         graph = _i0_graph_fn()
         nodes = graph.get("nodes", [])
@@ -85,6 +109,7 @@ def _i0_graph() -> str:
     except Exception as e:
         return f"❌ i0_graph failed: {e}"
 
+
 TOOLS = [
     {
         "name": "i0_status",
@@ -104,7 +129,11 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "limit": {"type": "integer", "description": "Number of events to return", "default": 20}
+                "limit": {
+                    "type": "integer",
+                    "description": "Number of events to return",
+                    "default": 20,
+                }
             },
         },
         "handler": lambda args: _i0_events(args.get("limit", 20)),
@@ -120,5 +149,5 @@ TOOLS = [
         "description": "Dependency graph.",
         "inputSchema": {"type": "object", "properties": {}},
         "handler": lambda args: _i0_graph(),
-    }
+    },
 ]

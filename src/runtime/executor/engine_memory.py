@@ -7,7 +7,11 @@ import time
 import uuid
 from typing import Any
 
-from runtime.executor.engine_types import OrgMemoryEntry, ProjectMemoryEntry, WorkingMemoryEntry
+from runtime.executor.engine_types import (
+    OrgMemoryEntry,
+    ProjectMemoryEntry,
+    WorkingMemoryEntry,
+)
 
 
 class WorkingMemory:
@@ -41,7 +45,11 @@ class WorkingMemory:
 
     def prune(self) -> int:
         now_ms = time.time() * 1000
-        expired = [k for k, e in self._store.items() if e.expires_at is not None and now_ms > e.expires_at]
+        expired = [
+            k
+            for k, e in self._store.items()
+            if e.expires_at is not None and now_ms > e.expires_at
+        ]
         for k in expired:
             del self._store[k]
         return len(expired)
@@ -77,23 +85,42 @@ class ProjectMemory:
         self._conn.commit()
 
     def store(
-        self, project_id: str, category: str, key: str, value: str, metadata: dict[str, Any] | None = None
+        self,
+        project_id: str,
+        category: str,
+        key: str,
+        value: str,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         now = time.time()
         self._conn.execute(
             """INSERT INTO project_memory VALUES (?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(project_id, category, key) DO UPDATE SET value=excluded.value, metadata=excluded.metadata, updated_at=excluded.updated_at""",
-            (str(uuid.uuid4()), project_id, category, key, value, json.dumps(metadata or {}), now, now),
+            (
+                str(uuid.uuid4()),
+                project_id,
+                category,
+                key,
+                value,
+                json.dumps(metadata or {}),
+                now,
+                now,
+            ),
         )
         self._conn.commit()
 
-    def retrieve(self, project_id: str, category: str, key: str) -> ProjectMemoryEntry | None:
+    def retrieve(
+        self, project_id: str, category: str, key: str
+    ) -> ProjectMemoryEntry | None:
         row = self._conn.execute(
-            "SELECT * FROM project_memory WHERE project_id=? AND category=? AND key=?", (project_id, category, key)
+            "SELECT * FROM project_memory WHERE project_id=? AND category=? AND key=?",
+            (project_id, category, key),
         ).fetchone()
         return ProjectMemory._row_to_entry(row) if row else None
 
-    def list_by_category(self, project_id: str, category: str) -> list[ProjectMemoryEntry]:
+    def list_by_category(
+        self, project_id: str, category: str
+    ) -> list[ProjectMemoryEntry]:
         rows = self._conn.execute(
             "SELECT * FROM project_memory WHERE project_id=? AND category=? ORDER BY updated_at DESC",
             (project_id, category),
@@ -114,21 +141,30 @@ class ProjectMemory:
                 "SELECT count(*), count(DISTINCT key) FROM project_memory WHERE project_id=? AND category=?",
                 (project_id, category),
             ).fetchone()
-            return {"project_id": project_id, "category": category, "entries": row[0], "unique_keys": row[1]}
+            return {
+                "project_id": project_id,
+                "category": category,
+                "entries": row[0],
+                "unique_keys": row[1],
+            }
         rows = self._conn.execute(
-            "SELECT category, count(*) FROM project_memory WHERE project_id=? GROUP BY category", (project_id,)
+            "SELECT category, count(*) FROM project_memory WHERE project_id=? GROUP BY category",
+            (project_id,),
         ).fetchall()
         return {"project_id": project_id, "categories": {r[0]: r[1] for r in rows}}
 
     def delete(self, project_id: str, category: str, key: str) -> bool:
         c = self._conn.execute(
-            "DELETE FROM project_memory WHERE project_id=? AND category=? AND key=?", (project_id, category, key)
+            "DELETE FROM project_memory WHERE project_id=? AND category=? AND key=?",
+            (project_id, category, key),
         ).rowcount
         self._conn.commit()
         return c > 0
 
     def delete_by_project(self, project_id: str) -> int:
-        c = self._conn.execute("DELETE FROM project_memory WHERE project_id=?", (project_id,)).rowcount
+        c = self._conn.execute(
+            "DELETE FROM project_memory WHERE project_id=?", (project_id,)
+        ).rowcount
         self._conn.commit()
         return c
 
@@ -181,17 +217,30 @@ class OrgMemory:
         self._conn.execute(
             """INSERT INTO org_memory VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(category, key) DO UPDATE SET value=excluded.value, source_project=excluded.source_project, confidence=excluded.confidence, tags=excluded.tags, updated_at=excluded.updated_at""",
-            (str(uuid.uuid4()), category, key, value, source_project, confidence, json.dumps(tags or []), now, now),
+            (
+                str(uuid.uuid4()),
+                category,
+                key,
+                value,
+                source_project,
+                confidence,
+                json.dumps(tags or []),
+                now,
+                now,
+            ),
         )
         self._conn.commit()
 
     def retrieve(self, category: str, key: str) -> OrgMemoryEntry | None:
-        row = self._conn.execute("SELECT * FROM org_memory WHERE category=? AND key=?", (category, key)).fetchone()
+        row = self._conn.execute(
+            "SELECT * FROM org_memory WHERE category=? AND key=?", (category, key)
+        ).fetchone()
         return OrgMemory._row_to_entry(row) if row else None
 
     def list_by_category(self, category: str) -> list[OrgMemoryEntry]:
         rows = self._conn.execute(
-            "SELECT * FROM org_memory WHERE category=? ORDER BY confidence DESC, updated_at DESC", (category,)
+            "SELECT * FROM org_memory WHERE category=? ORDER BY confidence DESC, updated_at DESC",
+            (category,),
         ).fetchall()
         return [OrgMemory._row_to_entry(r) for r in rows]
 
@@ -205,9 +254,12 @@ class OrgMemory:
         ).fetchall()
         return [OrgMemory._row_to_entry(r) for r in rows]
 
-    def get_high_confidence(self, min_confidence: float = 0.7, limit: int = 50) -> list[OrgMemoryEntry]:
+    def get_high_confidence(
+        self, min_confidence: float = 0.7, limit: int = 50
+    ) -> list[OrgMemoryEntry]:
         rows = self._conn.execute(
-            "SELECT * FROM org_memory WHERE confidence >= ? ORDER BY confidence DESC LIMIT ?", (min_confidence, limit)
+            "SELECT * FROM org_memory WHERE confidence >= ? ORDER BY confidence DESC LIMIT ?",
+            (min_confidence, limit),
         ).fetchall()
         return [OrgMemory._row_to_entry(r) for r in rows]
 
@@ -221,7 +273,9 @@ class OrgMemory:
         return c > 0
 
     def delete(self, category: str, key: str) -> bool:
-        c = self._conn.execute("DELETE FROM org_memory WHERE category=? AND key=?", (category, key)).rowcount
+        c = self._conn.execute(
+            "DELETE FROM org_memory WHERE category=? AND key=?", (category, key)
+        ).rowcount
         self._conn.commit()
         return c > 0
 
@@ -230,7 +284,9 @@ class OrgMemory:
             "SELECT category, count(*), avg(confidence) FROM org_memory GROUP BY category ORDER BY count(*) DESC"
         ).fetchall()
         return {
-            "categories": {r[0]: {"count": r[1], "avg_confidence": round(r[2], 3)} for r in rows},
+            "categories": {
+                r[0]: {"count": r[1], "avg_confidence": round(r[2], 3)} for r in rows
+            },
             "total": sum(r[1] for r in rows),
         }
 

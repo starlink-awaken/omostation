@@ -4,6 +4,7 @@
 # status: active
 # ---
 """加权合并 — 将 Council 决议（权重/置信度）写回 FactGraph metadata。"""
+
 from __future__ import annotations
 
 import json
@@ -43,13 +44,15 @@ def load_and_weight(db_path: str | None = None) -> list[dict[str, Any]]:
             meta = json.loads(r[4]) if isinstance(r[4], str) else r[4]
         except (json.JSONDecodeError, TypeError):
             meta = {}
-        groups[key].append({
-            "id": r[0],
-            "sub": r[1],
-            "pred": r[2],
-            "obj": r[3],
-            "metadata": meta,
-        })
+        groups[key].append(
+            {
+                "id": r[0],
+                "sub": r[1],
+                "pred": r[2],
+                "obj": r[3],
+                "metadata": meta,
+            }
+        )
 
     # 每组内计算权重
     results = []
@@ -62,14 +65,16 @@ def load_and_weight(db_path: str | None = None) -> list[dict[str, Any]]:
                 if total_conf > 0
                 else 0.5
             )
-            results.append({
-                "id": f["id"],
-                "sub": sub,
-                "pred": pred,
-                "obj": f["obj"],
-                "weight": weight,
-                "original_confidence": f["metadata"].get("confidence", 0.5),
-            })
+            results.append(
+                {
+                    "id": f["id"],
+                    "sub": sub,
+                    "pred": pred,
+                    "obj": f["obj"],
+                    "weight": weight,
+                    "original_confidence": f["metadata"].get("confidence", 0.5),
+                }
+            )
 
     return results
 

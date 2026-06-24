@@ -73,7 +73,9 @@ def _read_shebang(path: Path) -> str | None:
 class ExecutionResult:
     """Result of a script execution."""
 
-    def __init__(self, success: bool, output: str, error: str = "", timed_out: bool = False):
+    def __init__(
+        self, success: bool, output: str, error: str = "", timed_out: bool = False
+    ):
         self.success = success
         self.output = output
         self.error = error
@@ -84,19 +86,29 @@ class Executor:
     """Compatibility wrapper around module-level execute()."""
 
     def execute(
-        self, script_path_str: str | None, timeout: int = 120, workdir: str | None = None, env: dict | None = None
+        self,
+        script_path_str: str | None,
+        timeout: int = 120,
+        workdir: str | None = None,
+        env: dict | None = None,
     ) -> ExecutionResult:
         return execute(script_path_str, timeout=timeout, workdir=workdir, env=env)
 
 
 def execute_script(
-    script_path_str: str | None, timeout: int = 120, workdir: str | None = None, env: dict | None = None
+    script_path_str: str | None,
+    timeout: int = 120,
+    workdir: str | None = None,
+    env: dict | None = None,
 ) -> ExecutionResult:
     return execute(script_path_str, timeout=timeout, workdir=workdir, env=env)
 
 
 def execute(
-    script_path_str: str | None, timeout: int = 120, workdir: str | None = None, env: dict | None = None
+    script_path_str: str | None,
+    timeout: int = 120,
+    workdir: str | None = None,
+    env: dict | None = None,
 ) -> ExecutionResult:
     """Run a script and return the result.
 
@@ -109,7 +121,9 @@ def execute(
     script_path = _resolve_script(script_path_str)
     if script_path is None:
         return ExecutionResult(
-            False, "", f"Script not found: {script_path_str!r} (resolved under {Path.home() / '.hermes' / 'scripts'})"
+            False,
+            "",
+            f"Script not found: {script_path_str!r} (resolved under {Path.home() / '.hermes' / 'scripts'})",
         )
 
     interpreter = _get_interpreter(script_path)

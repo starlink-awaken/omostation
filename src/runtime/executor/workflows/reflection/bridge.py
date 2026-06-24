@@ -24,6 +24,7 @@ _log = logging.getLogger(__name__)
 _HAS_ORG_MEMORY = False
 try:
     from runtime.executor.engine_memory import OrgMemory
+
     _HAS_ORG_MEMORY = True
 except ImportError:
     pass
@@ -54,23 +55,29 @@ def _fact_graph_db_path() -> str:
 
 def _sql_pattern_fallback(db_path: str, min_frequency: int = 2) -> list[dict[str, Any]]:
     import sqlite3
+
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT sub, COUNT(DISTINCT pred) as pred_count
             FROM fact_triples
             GROUP BY sub
             HAVING pred_count >= ?
-        """, (min_frequency,))
+        """,
+            (min_frequency,),
+        )
         patterns = []
         for row in cursor.fetchall():
-            patterns.append({
-                "pattern_type": "co_occurrence",
-                "entities": [row[0]],
-                "frequency": row[1],
-                "confidence": 0.5,
-            })
+            patterns.append(
+                {
+                    "pattern_type": "co_occurrence",
+                    "entities": [row[0]],
+                    "frequency": row[1],
+                    "confidence": 0.5,
+                }
+            )
         conn.close()
         return patterns
     except Exception as exc:
@@ -78,7 +85,9 @@ def _sql_pattern_fallback(db_path: str, min_frequency: int = 2) -> list[dict[str
         return []
 
 
-def _kairon_org_memory_patterns(db_path: str, min_frequency: int = 2) -> list[dict[str, Any]]:
+def _kairon_org_memory_patterns(
+    db_path: str, min_frequency: int = 2
+) -> list[dict[str, Any]]:
     if not _HAS_ORG_MEMORY:
         return []
     try:
@@ -87,12 +96,14 @@ def _kairon_org_memory_patterns(db_path: str, min_frequency: int = 2) -> list[di
         patterns = []
         for category, info in summary.get("categories", {}).items():
             if info["count"] >= min_frequency:
-                patterns.append({
-                    "pattern_type": "org_category",
-                    "entities": [category],
-                    "frequency": info["count"],
-                    "confidence": info.get("avg_confidence", 0.5),
-                })
+                patterns.append(
+                    {
+                        "pattern_type": "org_category",
+                        "entities": [category],
+                        "frequency": info["count"],
+                        "confidence": info.get("avg_confidence", 0.5),
+                    }
+                )
         om.close()
         return patterns
     except Exception as exc:

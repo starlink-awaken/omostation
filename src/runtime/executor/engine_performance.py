@@ -25,6 +25,7 @@ from typing import Any
 @dataclass
 class BenchmarkResult:
     """Statistics from a single benchmark run."""
+
     name: str
     iterations: int
     total_time_ms: float
@@ -45,6 +46,7 @@ class BenchmarkResult:
 @dataclass
 class ComparisonResult:
     """Result of comparing two benchmark runs."""
+
     result1: BenchmarkResult
     result2: BenchmarkResult
     improvement_pct: float
@@ -55,6 +57,7 @@ class ComparisonResult:
 @dataclass
 class PerformanceBaseline:
     """Historical baseline for regression detection."""
+
     name: str
     version: str
     metrics: dict[str, float]
@@ -65,6 +68,7 @@ class PerformanceBaseline:
 @dataclass
 class RegressionEntry:
     """A single regression or improvement finding."""
+
     metric: str
     baseline: float
     current: float
@@ -74,6 +78,7 @@ class RegressionEntry:
 @dataclass
 class RegressionResult:
     """Result of regression detection."""
+
     has_regression: bool
     regressions: list[RegressionEntry] = field(default_factory=list)
     improvements: list[RegressionEntry] = field(default_factory=list)
@@ -133,7 +138,9 @@ class MetricsAggregator:
     def _percentile(sorted_values: list[float], p: int) -> float:
         if not sorted_values:
             return 0.0
-        idx = max(0, min(math.ceil(p / 100 * len(sorted_values)) - 1, len(sorted_values) - 1))
+        idx = max(
+            0, min(math.ceil(p / 100 * len(sorted_values)) - 1, len(sorted_values) - 1)
+        )
         return sorted_values[idx]
 
 
@@ -241,18 +248,31 @@ class PerformanceBenchmarker:
     ) -> ComparisonResult:
         r1 = self.measure(name1, fn1, iterations, warmup)
         r2 = self.measure(name2, fn2, iterations, warmup)
-        improvement = ((r1.avg_time_ms - r2.avg_time_ms) / r1.avg_time_ms * 100) if r1.avg_time_ms > 0 else 0.0
-        pooled = math.sqrt((r1.std_dev**2 + r2.std_dev**2) / 2) if r1.std_dev > 0 or r2.std_dev > 0 else 1.0
+        improvement = (
+            ((r1.avg_time_ms - r2.avg_time_ms) / r1.avg_time_ms * 100)
+            if r1.avg_time_ms > 0
+            else 0.0
+        )
+        pooled = (
+            math.sqrt((r1.std_dev**2 + r2.std_dev**2) / 2)
+            if r1.std_dev > 0 or r2.std_dev > 0
+            else 1.0
+        )
         significant = abs(r1.avg_time_ms - r2.avg_time_ms) > 2 * pooled
         return ComparisonResult(
-            result1=r1, result2=r2, improvement_pct=improvement, significant=significant,
+            result1=r1,
+            result2=r2,
+            improvement_pct=improvement,
+            significant=significant,
         )
 
     @staticmethod
     def _percentile(sorted_values: list[float], p: int) -> float:
         if not sorted_values:
             return 0.0
-        idx = max(0, min(math.ceil(p / 100 * len(sorted_values)) - 1, len(sorted_values) - 1))
+        idx = max(
+            0, min(math.ceil(p / 100 * len(sorted_values)) - 1, len(sorted_values) - 1)
+        )
         return sorted_values[idx]
 
 
@@ -270,10 +290,16 @@ class PerformanceRegressionDetector:
     def load_baseline(self, baseline: PerformanceBaseline) -> None:
         self._baseline = baseline
 
-    def create_baseline(self, name: str, version: str, metrics: dict[str, float]) -> PerformanceBaseline:
-        return PerformanceBaseline(name=name, version=version, metrics=dict(metrics), timestamp=time.time())
+    def create_baseline(
+        self, name: str, version: str, metrics: dict[str, float]
+    ) -> PerformanceBaseline:
+        return PerformanceBaseline(
+            name=name, version=version, metrics=dict(metrics), timestamp=time.time()
+        )
 
-    def detect_regression(self, current_metrics: dict[str, float], threshold_pct: float = 10.0) -> RegressionResult:
+    def detect_regression(
+        self, current_metrics: dict[str, float], threshold_pct: float = 10.0
+    ) -> RegressionResult:
         if self._baseline is None:
             return RegressionResult(has_regression=False)
 
@@ -290,10 +316,19 @@ class PerformanceRegressionDetector:
                 if metric.endswith(("throughput", "ops_per_second"))
                 else change > threshold_pct
             )
-            entry = RegressionEntry(metric=metric, baseline=base_val, current=current_val, change_pct=abs(change))
+            entry = RegressionEntry(
+                metric=metric,
+                baseline=base_val,
+                current=current_val,
+                change_pct=abs(change),
+            )
             if is_regression:
                 regressions.append(entry)
             elif change > threshold_pct or change < -threshold_pct:
                 improvements.append(entry)
 
-        return RegressionResult(has_regression=len(regressions) > 0, regressions=regressions, improvements=improvements)
+        return RegressionResult(
+            has_regression=len(regressions) > 0,
+            regressions=regressions,
+            improvements=improvements,
+        )

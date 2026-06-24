@@ -89,8 +89,14 @@ class InterventionExecutor:
             confirmed = self._request_confirmation(project_id, action, reason, details)
             if not confirmed:
                 return self._make_result(
-                    exec_id, project_id, action, False, needs_confirm, False,
-                    "Intervention denied by user", start,
+                    exec_id,
+                    project_id,
+                    action,
+                    False,
+                    needs_confirm,
+                    False,
+                    "Intervention denied by user",
+                    start,
                 )
         success = False
         message = ""
@@ -111,7 +117,17 @@ class InterventionExecutor:
             error = str(exc)
             message = f"Execution failed: {error}"
             success = False
-        return self._make_result(exec_id, project_id, action, success, needs_confirm, confirmed, message, start, error)
+        return self._make_result(
+            exec_id,
+            project_id,
+            action,
+            success,
+            needs_confirm,
+            confirmed,
+            message,
+            start,
+            error,
+        )
 
     # -- Internal action methods ------------------------------------------
 
@@ -133,10 +149,14 @@ class InterventionExecutor:
             return ok, "Resources scaled down 50%" if ok else "Scale failed"
         return False, "Scale callback not configured"
 
-    async def _do_alert(self, project_id: str, reason: str, details: dict) -> tuple[bool, str]:
+    async def _do_alert(
+        self, project_id: str, reason: str, details: dict
+    ) -> tuple[bool, str]:
         if self._callbacks.alert:
             severity = details.get("severity", "warning")
-            await _maybe_async(self._callbacks.alert, project_id, severity, reason, details)
+            await _maybe_async(
+                self._callbacks.alert, project_id, severity, reason, details
+            )
             return True, "Alert sent"
         return True, "Alert recorded (no callback)"
 
@@ -159,26 +179,43 @@ class InterventionExecutor:
         details: dict,
     ) -> bool:
         key = f"{project_id}_{action.value}"
-        cb = self._confirmation_callbacks.get(key) or self._confirmation_callbacks.get("*")
+        cb = self._confirmation_callbacks.get(key) or self._confirmation_callbacks.get(
+            "*"
+        )
         if cb:
             return cb(project_id, action, reason, details)
         return False
 
-    def register_confirmation_callback(self, key: str, callback: ConfirmationCallback) -> None:
+    def register_confirmation_callback(
+        self, key: str, callback: ConfirmationCallback
+    ) -> None:
         self._confirmation_callbacks[key] = callback
 
     # -- History ----------------------------------------------------------
 
     def _make_result(
-        self, exec_id: str, project_id: str, action: InterventionAction,
-        success: bool, needs_confirm: bool, confirmed: bool,
-        message: str, start: float, error: str | None = None,
+        self,
+        exec_id: str,
+        project_id: str,
+        action: InterventionAction,
+        success: bool,
+        needs_confirm: bool,
+        confirmed: bool,
+        message: str,
+        start: float,
+        error: str | None = None,
     ) -> InterventionResult:
         result = InterventionResult(
-            execution_id=exec_id, project_id=project_id, action=action,
-            success=success, required_confirmation=needs_confirm,
-            confirmed=confirmed, message=message, error=error,
-            timestamp=time.time(), duration_ms=(time.monotonic() - start) * 1000,
+            execution_id=exec_id,
+            project_id=project_id,
+            action=action,
+            success=success,
+            required_confirmation=needs_confirm,
+            confirmed=confirmed,
+            message=message,
+            error=error,
+            timestamp=time.time(),
+            duration_ms=(time.monotonic() - start) * 1000,
         )
         if self._config.record_history:
             self._history.append(result)
@@ -186,7 +223,9 @@ class InterventionExecutor:
                 self._history.pop(0)
         return result
 
-    def get_history(self, project_id: str | None = None, limit: int | None = None) -> list[InterventionResult]:
+    def get_history(
+        self, project_id: str | None = None, limit: int | None = None
+    ) -> list[InterventionResult]:
         history = list(self._history)
         if project_id:
             history = [r for r in history if r.project_id == project_id]
@@ -206,7 +245,9 @@ class InterventionExecutor:
         for r in self._history:
             by_action[r.action.value] = by_action.get(r.action.value, 0) + 1
             total_duration += r.duration_ms
-        confirmed = sum(1 for r in self._history if r.required_confirmation and r.confirmed)
+        confirmed = sum(
+            1 for r in self._history if r.required_confirmation and r.confirmed
+        )
         needed = sum(1 for r in self._history if r.required_confirmation)
         return {
             "total_executions": total,

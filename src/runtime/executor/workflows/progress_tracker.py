@@ -4,6 +4,7 @@
 # status: active
 # ---
 """Structured pipeline progress tracking — timing and structured logging."""
+
 from __future__ import annotations
 
 import json
@@ -62,9 +63,7 @@ class PipelineRun:
             for s in self.steps
             if s.elapsed_ms > 0
         )
-        return (
-            f"{status_icon} [{self.total_elapsed_ms:.0f}ms] {self.goal[:40]} | {step_summary}"
-        )
+        return f"{status_icon} [{self.total_elapsed_ms:.0f}ms] {self.goal[:40]} | {step_summary}"
 
 
 def create_run(run_id: str, goal: str, step_names: list[str]) -> PipelineRun:

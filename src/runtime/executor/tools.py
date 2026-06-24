@@ -39,7 +39,9 @@ def _check_path_sandbox(path: Path) -> Path:
             break
     if not allowed:
         allowed_names = [str(d) for d in ALLOWED_PATHS]
-        raise PermissionError(f"Access denied: {p} is outside allowed paths ({', '.join(allowed_names)})")
+        raise PermissionError(
+            f"Access denied: {p} is outside allowed paths ({', '.join(allowed_names)})"
+        )
     return p
 
 
@@ -157,7 +159,12 @@ class Tools:
     """Agent Runtime 可用的工具集合。所有文件操作受路径沙箱约束。"""
 
     @staticmethod
-    def terminal_run(command: str, cwd: str | None = None, timeout: int = 120, _confirmed: bool = False) -> dict:
+    def terminal_run(
+        command: str,
+        cwd: str | None = None,
+        timeout: int = 120,
+        _confirmed: bool = False,
+    ) -> dict:
         """执行终端命令。返回 {exit_code, stdout, stderr}
 
         L2 操作: 需要 _confirmed=True 才能执行。
@@ -185,9 +192,17 @@ class Tools:
                 cwd=cwd or str(ECOS_DIR),
                 timeout=timeout,
             )
-            return {"exit_code": r.returncode, "stdout": r.stdout[:5000], "stderr": r.stderr[:2000]}
+            return {
+                "exit_code": r.returncode,
+                "stdout": r.stdout[:5000],
+                "stderr": r.stderr[:2000],
+            }
         except subprocess.TimeoutExpired:
-            return {"exit_code": -1, "stdout": "", "stderr": f"Timed out after {timeout}s"}
+            return {
+                "exit_code": -1,
+                "stdout": "",
+                "stderr": f"Timed out after {timeout}s",
+            }
         except Exception as e:
             return {"exit_code": -1, "stdout": "", "stderr": str(e)}
 
@@ -361,7 +376,10 @@ class Tools:
                         "description": "Shell command to run. Expand ~/ to full path.",
                         "required": True,
                     },
-                    "cwd": {"type": "string", "description": "Working directory (optional)"},
+                    "cwd": {
+                        "type": "string",
+                        "description": "Working directory (optional)",
+                    },
                     "timeout": {"type": "integer", "description": "Timeout in seconds"},
                     "_confirmed": {
                         "type": "boolean",
@@ -373,7 +391,13 @@ class Tools:
             "file_read": {
                 "fn": self.file_read,
                 "description": "Read a file from disk (sandboxed to Workspace/.hermes/.kos/.omo)",
-                "params": {"path": {"type": "string", "description": "File path (use full path)", "required": True}},
+                "params": {
+                    "path": {
+                        "type": "string",
+                        "description": "File path (use full path)",
+                        "required": True,
+                    }
+                },
             },
             "file_write": {
                 "fn": self.file_write,
@@ -404,7 +428,10 @@ class Tools:
             "mcp_kos_research_now": {
                 "fn": lambda **kw: self.mcp_call("kos", "research_now", kw),
                 "description": "Execute deep research via KOS/Minerva",
-                "params": {"query": {"type": "string", "required": True}, "level": {"type": "string"}},
+                "params": {
+                    "query": {"type": "string", "required": True},
+                    "level": {"type": "string"},
+                },
             },
             "http_get": {
                 "fn": self.http_get,
@@ -414,12 +441,18 @@ class Tools:
             "http_post": {
                 "fn": self.http_post,
                 "description": "HTTP POST request",
-                "params": {"url": {"type": "string", "required": True}, "data": {"type": "object"}},
+                "params": {
+                    "url": {"type": "string", "required": True},
+                    "data": {"type": "object"},
+                },
             },
             "send_message": {
                 "fn": self.send_message,
                 "description": "Send a message to the user via WeChat",
-                "params": {"text": {"type": "string", "required": True}, "platform": {"type": "string"}},
+                "params": {
+                    "text": {"type": "string", "required": True},
+                    "platform": {"type": "string"},
+                },
             },
         }
 
@@ -432,7 +465,10 @@ class Tools:
             required_params = []
             for pname, pinfo in info.get("params", {}).items():
                 ptype = pinfo.get("type", "string")
-                props[pname] = {"type": ptype, "description": pinfo.get("description", "")}
+                props[pname] = {
+                    "type": ptype,
+                    "description": pinfo.get("description", ""),
+                }
                 if pinfo.get("required"):
                     required_params.append(pname)
                 if ptype == "object":

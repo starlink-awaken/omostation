@@ -34,7 +34,9 @@ def _estimate_cost(tokens_used: int, model: str = _DEFAULT_MODEL) -> float:
     # Conservative estimate: 75% input, 25% output
     input_tokens = int(tokens_used * 0.75)
     output_tokens = tokens_used - input_tokens
-    cost = (input_tokens / 1000) * rates["input"] + (output_tokens / 1000) * rates["output"]
+    cost = (input_tokens / 1000) * rates["input"] + (output_tokens / 1000) * rates[
+        "output"
+    ]
     return round(cost, 6)
 
 
@@ -44,7 +46,12 @@ def _summarize_executor_costs(log_file: Path | None = None) -> dict:
         # Runtime executor log (same dir as this file's grandparent / executor)
         log_file = Path(__file__).parent.parent / "executor" / "execution_log.jsonl"
     if not log_file.exists():
-        return {"total_calls": 0, "total_tokens": 0, "estimated_cost_usd": 0.0, "model": _DEFAULT_MODEL}
+        return {
+            "total_calls": 0,
+            "total_tokens": 0,
+            "estimated_cost_usd": 0.0,
+            "model": _DEFAULT_MODEL,
+        }
 
     total_calls = 0
     total_tokens = 0
@@ -64,12 +71,16 @@ def _summarize_executor_costs(log_file: Path | None = None) -> dict:
         "model": _DEFAULT_MODEL,
     }
 
+
 def _record_taskobject_envelope(tool_name: str, params: dict, status: str) -> None:
     try:
         envelope = {
             "id": str(uuid.uuid4()),
             "intent": "query",
-            "context": {"source": "runtime-mcp", "description": f"Tool call: {tool_name}"},
+            "context": {
+                "source": "runtime-mcp",
+                "description": f"Tool call: {tool_name}",
+            },
             "target": {"service": "runtime", "tool": tool_name, "params": params},
             "status": status,
             "callback": {"channel": "stdout", "format": "text"},
@@ -79,9 +90,11 @@ def _record_taskobject_envelope(tool_name: str, params: dict, status: str) -> No
         _TASKOBJECT_LOG.parent.mkdir(parents=True, exist_ok=True)
         with open(_TASKOBJECT_LOG, "a") as f:
             import json
+
             f.write(json.dumps(envelope) + "\n")
     except Exception:
         pass
+
 
 def _run_script(script_name: str, *args: str) -> str:
     script = SCRIPTS_DIR / script_name
@@ -90,10 +103,18 @@ def _run_script(script_name: str, *args: str) -> str:
     try:
         r = subprocess.run(
             [str(script), *args],
-            capture_output=True, text=True, timeout=30, env=env,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env=env,
         )
-        return r.stdout.strip() if r.returncode == 0 else (
-            f"❌ Error (exit={r.returncode}): {r.stderr.strip() or r.stdout.strip()}")
+        return (
+            r.stdout.strip()
+            if r.returncode == 0
+            else (
+                f"❌ Error (exit={r.returncode}): {r.stderr.strip() or r.stdout.strip()}"
+            )
+        )
     except subprocess.TimeoutExpired:
         return "❌ Timeout (30s)"
     except FileNotFoundError:

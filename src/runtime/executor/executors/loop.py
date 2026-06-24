@@ -21,7 +21,9 @@ DEFAULT_ENABLE_TRACING = True
 class IStatementExecutor:
     """Interface for executing DSL statements (step, condition, loop, etc.)."""
 
-    async def execute_statement(self, stmt: DSLStatement, context: ExecutionContext) -> ExecutionResult:
+    async def execute_statement(
+        self, stmt: DSLStatement, context: ExecutionContext
+    ) -> ExecutionResult:
         raise NotImplementedError
 
 
@@ -44,7 +46,9 @@ class LoopExecutor:
         self._max_nesting = max_nesting_depth
         self._enable_tracing = enable_tracing
 
-    async def execute(self, loop: DSLLoop, context: ExecutionContext) -> ExecutionResult:
+    async def execute(
+        self, loop: DSLLoop, context: ExecutionContext
+    ) -> ExecutionResult:
         trace: list[TraceEntry] = []
         errors: list[Exception] = []
         try:
@@ -58,13 +62,23 @@ class LoopExecutor:
                 return await self._execute_for(loop, loop_context, trace, errors)
             raise ValueError(f"Unsupported loop type: {loop.loop_type}")
         except Exception as e:
-            return ExecutionResult(success=False, value=None, trace=trace, errors=[*errors, e])
+            return ExecutionResult(
+                success=False, value=None, trace=trace, errors=[*errors, e]
+            )
 
-    async def _execute_while(self, loop: DSLLoop, context: ExecutionContext, trace: list[TraceEntry], errors: list[Exception]) -> ExecutionResult:
+    async def _execute_while(
+        self,
+        loop: DSLLoop,
+        context: ExecutionContext,
+        trace: list[TraceEntry],
+        errors: list[Exception],
+    ) -> ExecutionResult:
         iteration_count = 0
         while True:
             if iteration_count >= self._max_iterations:
-                raise ValueError(f"While loop exceeded max iterations ({self._max_iterations})")
+                raise ValueError(
+                    f"While loop exceeded max iterations ({self._max_iterations})"
+                )
             if not loop.test:
                 raise ValueError("While loop requires a test condition")
             loop_context = self._create_loop_context(context, context.depth)
@@ -78,17 +92,31 @@ class LoopExecutor:
                 break
             iteration_count += 1
         self._add_trace(trace, loop, "while", iteration_count)
-        return ExecutionResult(success=len(errors) == 0, value=None, trace=trace, errors=errors)
+        return ExecutionResult(
+            success=len(errors) == 0, value=None, trace=trace, errors=errors
+        )
 
-    async def _execute_for_each(self, loop: DSLLoop, context: ExecutionContext, trace: list[TraceEntry], errors: list[Exception]) -> ExecutionResult:
+    async def _execute_for_each(
+        self,
+        loop: DSLLoop,
+        context: ExecutionContext,
+        trace: list[TraceEntry],
+        errors: list[Exception],
+    ) -> ExecutionResult:
         if not loop.collection:
             raise ValueError("For_each loop requires a collection expression")
         collection = self._expr_eval.evaluate(loop.collection, context)
-        items = collection if isinstance(collection, (list, tuple)) else list(getattr(collection, "items", lambda: [])())
+        items = (
+            collection
+            if isinstance(collection, (list, tuple))
+            else list(getattr(collection, "items", lambda: [])())
+        )
         iteration_count = 0
         for item in items:
             if iteration_count >= self._max_iterations:
-                raise ValueError(f"For_each loop exceeded max iterations ({self._max_iterations})")
+                raise ValueError(
+                    f"For_each loop exceeded max iterations ({self._max_iterations})"
+                )
             loop_context = self._create_loop_context(context, context.depth)
             if loop.variable:
                 loop_context.locals[loop.variable] = item
@@ -99,9 +127,17 @@ class LoopExecutor:
                 break
             iteration_count += 1
         self._add_trace(trace, loop, "for_each", iteration_count)
-        return ExecutionResult(success=len(errors) == 0, value=None, trace=trace, errors=errors)
+        return ExecutionResult(
+            success=len(errors) == 0, value=None, trace=trace, errors=errors
+        )
 
-    async def _execute_for(self, loop: DSLLoop, context: ExecutionContext, trace: list[TraceEntry], errors: list[Exception]) -> ExecutionResult:
+    async def _execute_for(
+        self,
+        loop: DSLLoop,
+        context: ExecutionContext,
+        trace: list[TraceEntry],
+        errors: list[Exception],
+    ) -> ExecutionResult:
         counter_name = loop.variable or "_i"
         counter = 0
         iteration_count = 0
@@ -121,16 +157,22 @@ class LoopExecutor:
             counter += 1
             iteration_count += 1
         self._add_trace(trace, loop, "for", iteration_count)
-        return ExecutionResult(success=len(errors) == 0, value=None, trace=trace, errors=errors)
+        return ExecutionResult(
+            success=len(errors) == 0, value=None, trace=trace, errors=errors
+        )
 
-    async def _execute_body(self, body: list[DSLStatement], context: ExecutionContext) -> ExecutionResult:
+    async def _execute_body(
+        self, body: list[DSLStatement], context: ExecutionContext
+    ) -> ExecutionResult:
         trace: list[TraceEntry] = []
         errors: list[Exception] = []
         for stmt in body:
             result = await self._stmt_exec.execute_statement(stmt, context)
             trace.extend(getattr(result, "trace", []) or [])
             errors.extend(getattr(result, "errors", []) or [])
-        return ExecutionResult(success=len(errors) == 0, value=None, trace=trace, errors=errors)
+        return ExecutionResult(
+            success=len(errors) == 0, value=None, trace=trace, errors=errors
+        )
 
     def _check_nesting_depth(self, context: ExecutionContext) -> int:
         current = context.depth or 0
@@ -138,7 +180,9 @@ class LoopExecutor:
             raise ValueError(f"Max loop nesting depth ({self._max_nesting}) exceeded")
         return current + 1
 
-    def _create_loop_context(self, parent: ExecutionContext, depth: int) -> ExecutionContext:
+    def _create_loop_context(
+        self, parent: ExecutionContext, depth: int
+    ) -> ExecutionContext:
         stats_cls = type(parent.stats) if hasattr(parent, "stats") else dict
         return ExecutionContext(
             input=parent.input.copy(),
@@ -152,9 +196,22 @@ class LoopExecutor:
             options=parent.options,
         )
 
-    def _add_trace(self, trace: list[TraceEntry], loop: DSLLoop, loop_type: str, iteration_count: int) -> None:
+    def _add_trace(
+        self,
+        trace: list[TraceEntry],
+        loop: DSLLoop,
+        loop_type: str,
+        iteration_count: int,
+    ) -> None:
         if self._enable_tracing:
-            trace.append(TraceEntry(timestamp=time.time(), statement_type="loop", status="success", data={"iterations": iteration_count, "loop_type": loop_type}))
+            trace.append(
+                TraceEntry(
+                    timestamp=time.time(),
+                    statement_type="loop",
+                    status="success",
+                    data={"iterations": iteration_count, "loop_type": loop_type},
+                )
+            )
 
     def _is_fatal(self, error: Exception) -> bool:
         msg = str(error)

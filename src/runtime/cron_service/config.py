@@ -12,7 +12,11 @@ import yaml
 
 # ── Config file discovery ───────────────────────────────────────────
 
-CONFIG_FILE = Path(os.environ.get("CRON_SERVICE_CONFIG", str(Path.home() / ".cron-service" / "config.yaml")))
+CONFIG_FILE = Path(
+    os.environ.get(
+        "CRON_SERVICE_CONFIG", str(Path.home() / ".cron-service" / "config.yaml")
+    )
+)
 
 
 def _load_config() -> dict[str, Any]:
@@ -62,8 +66,12 @@ OUTPUT_DIR = os.environ.get(
 
 # ── Scheduler ──────────────────────────────────────────────────────
 
-TICK_INTERVAL = int(os.environ.get("CRON_SERVICE_TICK_INTERVAL", str(_get("tick_interval", 15))))
-DEFAULT_TIMEOUT = int(os.environ.get("CRON_SERVICE_DEFAULT_TIMEOUT", str(_get("default_timeout", 120))))
+TICK_INTERVAL = int(
+    os.environ.get("CRON_SERVICE_TICK_INTERVAL", str(_get("tick_interval", 15)))
+)
+DEFAULT_TIMEOUT = int(
+    os.environ.get("CRON_SERVICE_DEFAULT_TIMEOUT", str(_get("default_timeout", 120)))
+)
 
 # ── Server ─────────────────────────────────────────────────────────
 

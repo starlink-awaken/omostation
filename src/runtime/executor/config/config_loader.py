@@ -12,7 +12,9 @@ from pathlib import Path
 
 @dataclass
 class RiskThresholds:
-    file_count: dict = field(default_factory=lambda: {"low": 3, "medium": 10, "high": 20})
+    file_count: dict = field(
+        default_factory=lambda: {"low": 3, "medium": 10, "high": 20}
+    )
     security_keywords_enabled: bool = True
     custom_rules: list[dict] = field(default_factory=list)
 
@@ -112,9 +114,17 @@ class ConfigLoader:
         defaults = self._make_default_config()
         rt = partial.get("risk_thresholds", {})
         merged_rt = RiskThresholds(
-            file_count={**defaults.risk_thresholds.file_count, **rt.get("file_count", {})},
-            security_keywords_enabled=rt.get("security_keywords_enabled", defaults.risk_thresholds.security_keywords_enabled),
-            custom_rules=rt.get("custom_rules", list(defaults.risk_thresholds.custom_rules)),
+            file_count={
+                **defaults.risk_thresholds.file_count,
+                **rt.get("file_count", {}),
+            },
+            security_keywords_enabled=rt.get(
+                "security_keywords_enabled",
+                defaults.risk_thresholds.security_keywords_enabled,
+            ),
+            custom_rules=rt.get(
+                "custom_rules", list(defaults.risk_thresholds.custom_rules)
+            ),
         )
         return EngineConfig(
             db_path=partial.get("db_path", defaults.db_path),
@@ -123,13 +133,22 @@ class ConfigLoader:
             output_dir=partial.get("output_dir", defaults.output_dir),
             log_level=partial.get("log_level", defaults.log_level),
             log_file=partial.get("log_file"),
-            default_token_budget=partial.get("default_token_budget", defaults.default_token_budget),
-            max_concurrent_agents=partial.get("max_concurrent_agents", defaults.max_concurrent_agents),
+            default_token_budget=partial.get(
+                "default_token_budget", defaults.default_token_budget
+            ),
+            max_concurrent_agents=partial.get(
+                "max_concurrent_agents", defaults.max_concurrent_agents
+            ),
             auto_checkpoint=partial.get("auto_checkpoint", defaults.auto_checkpoint),
             risk_thresholds=merged_rt,
         )
 
     @staticmethod
     def _bump(level: str) -> str:
-        mapping = {"simple": "standard", "standard": "advanced", "advanced": "enterprise", "enterprise": "enterprise"}
+        mapping = {
+            "simple": "standard",
+            "standard": "advanced",
+            "advanced": "enterprise",
+            "enterprise": "enterprise",
+        }
         return mapping.get(level, "standard")

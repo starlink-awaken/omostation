@@ -171,7 +171,15 @@ def sanitize_for_log(text: str, max_len: int = 200) -> str:
     import re
 
     # 替换常见的 API key 模式
-    sanitized = re.sub(r'(sk-|api_key["\']?\s*[:=]\s*["\']?)[a-zA-Z0-9_-]{20,}', r"\1***SANITIZED***", text)
+    sanitized = re.sub(
+        r'(sk-|api_key["\']?\s*[:=]\s*["\']?)[a-zA-Z0-9_-]{20,}',
+        r"\1***SANITIZED***",
+        text,
+    )
     # 替换 Authorization header
-    sanitized = re.sub(r"Authorization:\s*Bearer\s+\S+", "Authorization: Bearer ***SANITIZED***", sanitized)
+    sanitized = re.sub(
+        r"Authorization:\s*Bearer\s+\S+",
+        "Authorization: Bearer ***SANITIZED***",
+        sanitized,
+    )
     return sanitized[:max_len]

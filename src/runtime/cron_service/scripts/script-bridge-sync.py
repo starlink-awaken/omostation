@@ -122,8 +122,12 @@ def sync_bridge():
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Sync Hermes ↔ Workspace script bridge")
-    parser.add_argument("--check-only", action="store_true", help="Only check, no modifications")
+    parser = argparse.ArgumentParser(
+        description="Sync Hermes ↔ Workspace script bridge"
+    )
+    parser.add_argument(
+        "--check-only", action="store_true", help="Only check, no modifications"
+    )
     parser.add_argument("--report", action="store_true", help="Output JSON report")
     args = parser.parse_args()
 

@@ -33,11 +33,13 @@ def _get_cockpit_dir() -> Path:
 def handle_health() -> dict:
     """runtime_health: 全系统健康"""
     import subprocess
+
     script = _get_cockpit_dir() / "scripts" / "ecos-health-check.py"
     if not script.exists():
         return {"status": "error", "detail": "health-check 脚本不存在"}
-    r = subprocess.run(["python3", str(script), "--json"],
-                       capture_output=True, text=True, timeout=30)
+    r = subprocess.run(
+        ["python3", str(script), "--json"], capture_output=True, text=True, timeout=30
+    )
     try:
         return json.loads(r.stdout)
     except json.JSONDecodeError:
@@ -47,13 +49,18 @@ def handle_health() -> dict:
 def handle_matrix_list() -> dict:
     """runtime_matrix_list: 服务注册表"""
     import subprocess
+
     reg = Path.home() / ".ecos" / "runtime" / "registry.json"
     if reg.exists():
         return json.loads(reg.read_text())
     script = Path.home() / ".ecos" / "scripts" / "ecos-register.py"
     if script.exists():
-        r = subprocess.run(["python3", str(script), "--status"],
-                           capture_output=True, text=True, timeout=10)
+        r = subprocess.run(
+            ["python3", str(script), "--status"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
         try:
             return json.loads(r.stdout)
         except json.JSONDecodeError:
@@ -64,20 +71,36 @@ def handle_matrix_list() -> dict:
 def handle_protocol_list() -> dict:
     """runtime_protocol_list: L0 协议注册表"""
     import yaml
-    constraint_file = Path.home() / "Documents" / "学习进化" / "2-knowledge" / \
-                      "基建架构" / "L0-constraints.yaml"
+
+    constraint_file = (
+        Path.home()
+        / "Documents"
+        / "学习进化"
+        / "2-knowledge"
+        / "基建架构"
+        / "L0-constraints.yaml"
+    )
     if constraint_file.exists():
         data = yaml.safe_load(constraint_file.read_text())
-        return {"protocols": data.get("protocol_registry", []),
-                "last_updated": data.get("generated", "")}
+        return {
+            "protocols": data.get("protocol_registry", []),
+            "last_updated": data.get("generated", ""),
+        }
     return {"protocols": [], "note": "L0 constraints 文件不可读"}
 
 
 def handle_protocol_get(protocol_id: str) -> dict:
     """runtime_protocol_get: 单个协议详情"""
     import yaml
-    constraint_file = Path.home() / "Documents" / "学习进化" / "2-knowledge" / \
-                      "基建架构" / "L0-constraints.yaml"
+
+    constraint_file = (
+        Path.home()
+        / "Documents"
+        / "学习进化"
+        / "2-knowledge"
+        / "基建架构"
+        / "L0-constraints.yaml"
+    )
     if not constraint_file.exists():
         return {"error": "constraints 文件不存在"}
 
@@ -87,13 +110,19 @@ def handle_protocol_get(protocol_id: str) -> dict:
             now = datetime.now()
             intro = datetime.strptime(p["introduced"], "%Y-%m-%d")
             age_days = (now - intro).days
-            decay = min(1.0, age_days / p["half_life_days"]) if p["half_life_days"] > 0 else 1.0
+            decay = (
+                min(1.0, age_days / p["half_life_days"])
+                if p["half_life_days"] > 0
+                else 1.0
+            )
             return {
                 "protocol": p,
                 "age_days": age_days,
                 "decay": round(decay, 2),
                 "remaining_value": max(0, (1 - decay) * 100),
-                "status": "fresh" if decay < 0.5 else ("aging" if decay < 1.0 else "expired"),
+                "status": "fresh"
+                if decay < 0.5
+                else ("aging" if decay < 1.0 else "expired"),
             }
     return {"error": f"协议 {protocol_id} 未找到"}
 
@@ -103,6 +132,7 @@ def handle_ontology() -> dict:
     meta_file = _get_cockpit_dir() / "meta-model-ecos.yaml"
     if meta_file.exists():
         import yaml
+
         return yaml.safe_load(meta_file.read_text())
     return {"error": "元模型文件不可用"}
 
@@ -110,11 +140,13 @@ def handle_ontology() -> dict:
 def handle_brief() -> dict:
     """runtime_brief: 会话简报"""
     import subprocess
+
     script = _get_cockpit_dir() / "scripts" / "ecos-brief.py"
     if not script.exists():
         return {"error": "ecos-brief.py 不存在"}
-    r = subprocess.run(["python3", str(script), "--json"],
-                       capture_output=True, text=True, timeout=45)
+    r = subprocess.run(
+        ["python3", str(script), "--json"], capture_output=True, text=True, timeout=45
+    )
     try:
         return json.loads(r.stdout)
     except json.JSONDecodeError:
@@ -124,6 +156,7 @@ def handle_brief() -> dict:
 def handle_kv_get(key: str) -> dict:
     """runtime_kv_get: daemon-state 查询"""
     import sqlite3
+
     state_db = Path.home() / ".ecos" / "daemon-state.db"
     if not state_db.exists():
         return {"key": key, "value": None, "note": "daemon-state 不存在"}
@@ -132,17 +165,23 @@ def handle_kv_get(key: str) -> dict:
     conn.row_factory = sqlite3.Row
 
     if key == "daemon":
-        cursor = conn.execute("SELECT COUNT(*) as total, COALESCE(SUM(CASE WHEN exit_code=0 THEN 1 ELSE 0 END),0) as passed, MAX(started_at) as last FROM cycles")
+        cursor = conn.execute(
+            "SELECT COUNT(*) as total, COALESCE(SUM(CASE WHEN exit_code=0 THEN 1 ELSE 0 END),0) as passed, MAX(started_at) as last FROM cycles"
+        )
         row = cursor.fetchone()
         result = dict(row) if row else {}
     elif key == "sla":
-        cursor = conn.execute("SELECT COUNT(*) as total, COALESCE(SUM(CASE WHEN exit_code=0 THEN 1 ELSE 0 END),0) as passes FROM cycles")
+        cursor = conn.execute(
+            "SELECT COUNT(*) as total, COALESCE(SUM(CASE WHEN exit_code=0 THEN 1 ELSE 0 END),0) as passes FROM cycles"
+        )
         row = cursor.fetchone()
         result = dict(row) if row else {}
         if result.get("total", 0) > 0:
             result["uptime"] = round(result["passes"] / result["total"] * 100, 1)
     elif key == "health":
-        cursor = conn.execute("SELECT alert_type, message, created_at FROM alerts ORDER BY created_at DESC LIMIT 10")
+        cursor = conn.execute(
+            "SELECT alert_type, message, created_at FROM alerts ORDER BY created_at DESC LIMIT 10"
+        )
         result = {"alerts": [dict(r) for r in cursor.fetchall()]}
     elif key == "protocols":
         result = handle_protocol_list()
@@ -158,6 +197,7 @@ def handle_kv_get(key: str) -> dict:
 
 try:
     from fastmcp import FastMCP
+
     mcp = FastMCP("ecos-runtime")
 
     @mcp.tool()
@@ -202,6 +242,7 @@ def main():
     # Enable KEI Sandbox
     try:
         from runtime.kei_sandbox import enable_sandbox
+
         kei_config = str(Path(__file__).resolve().parent.parent.parent / "kei.yaml")
         enable_sandbox(config_path=kei_config)
     except ImportError:

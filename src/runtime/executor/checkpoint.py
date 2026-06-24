@@ -75,19 +75,29 @@ class CheckpointManager:
     def list_projects(self) -> list[dict[str, Any]]:
         result: list[dict[str, Any]] = []
         for pid, state in self._projects.items():
-            result.append({"project_id": pid, "project_name": state.get("project_name", ""), "updated_at": state.get("updated_at", 0)})
+            result.append(
+                {
+                    "project_id": pid,
+                    "project_name": state.get("project_name", ""),
+                    "updated_at": state.get("updated_at", 0),
+                }
+            )
         result.sort(key=lambda x: x["updated_at"], reverse=True)
         return result
 
     def delete_project(self, project_id: str) -> None:
         self._projects.pop(project_id, None)
-        keys_to_delete = [k for k, cp in self._checkpoints.items() if cp.project_id == project_id]
+        keys_to_delete = [
+            k for k, cp in self._checkpoints.items() if cp.project_id == project_id
+        ]
         for k in keys_to_delete:
             del self._checkpoints[k]
 
     # -- Checkpoint operations -----------------------------------------------
 
-    def create_checkpoint(self, project_id: str, state: dict[str, Any], description: str = "") -> Checkpoint:
+    def create_checkpoint(
+        self, project_id: str, state: dict[str, Any], description: str = ""
+    ) -> Checkpoint:
         self._sequence += 1
         now = time.time()
 
@@ -151,11 +161,19 @@ class CheckpointManager:
         current_artifacts = {a.get("id") for a in current.get("artifacts", [])}
         old_artifacts = {a.get("id") for a in old_state.get("artifacts", [])}
 
-        removed = [a for a in current.get("artifacts", []) if a.get("id") not in old_artifacts]
-        added = [a for a in old_state.get("artifacts", []) if a.get("id") not in current_artifacts]
+        removed = [
+            a for a in current.get("artifacts", []) if a.get("id") not in old_artifacts
+        ]
+        added = [
+            a
+            for a in old_state.get("artifacts", [])
+            if a.get("id") not in current_artifacts
+        ]
 
         risks: list[str] = []
-        decisions_lost = max(0, len(current.get("decisions", [])) - len(old_state.get("decisions", [])))
+        decisions_lost = max(
+            0, len(current.get("decisions", [])) - len(old_state.get("decisions", []))
+        )
         if decisions_lost > 0:
             risks.append(f"{decisions_lost} decisions will be lost")
 
@@ -173,11 +191,17 @@ class CheckpointManager:
             will_be_added=added,
             phase_change={"from": phase_from, "to": phase_to},
             decisions_lost=decisions_lost,
-            token_diff=old_state.get("total_token_usage", 0) - current.get("total_token_usage", 0),
+            token_diff=old_state.get("total_token_usage", 0)
+            - current.get("total_token_usage", 0),
             risks=risks,
         )
 
-    def rollback(self, project_id: str, checkpoint_id: str, options: RollbackOptions | None = None) -> dict[str, Any]:
+    def rollback(
+        self,
+        project_id: str,
+        checkpoint_id: str,
+        options: RollbackOptions | None = None,
+    ) -> dict[str, Any]:
         opts = options or RollbackOptions()
         preview = self.preview_rollback(project_id, checkpoint_id)
         restored = self.restore_checkpoint(checkpoint_id)

@@ -5,7 +5,12 @@ import random
 import time
 from typing import Any
 
-from runtime.executor.dsl_types import CallConfig, CallResult, ExecutionContext, RetryConfig
+from runtime.executor.dsl_types import (
+    CallConfig,
+    CallResult,
+    ExecutionContext,
+    RetryConfig,
+)
 from runtime.executor.step_executor import ExecutionDependencies, ICallExecutor
 
 DEFAULT_TIMEOUT_MS = 30000
@@ -34,14 +39,20 @@ class SkillInvalidInputError(Exception):
     def __init__(self, skill_id: str, validation_errors: list[str]) -> None:
         self.skill_id = skill_id
         self.validation_errors = validation_errors
-        super().__init__(f"Invalid input for skill '{skill_id}': {', '.join(validation_errors)}")
+        super().__init__(
+            f"Invalid input for skill '{skill_id}': {', '.join(validation_errors)}"
+        )
 
 
 class SkillExecutionFailedError(Exception):
     def __init__(self, skill_id: str, original_error: Exception | str) -> None:
         self.skill_id = skill_id
         self.original_error = original_error
-        msg = str(original_error) if isinstance(original_error, Exception) else original_error
+        msg = (
+            str(original_error)
+            if isinstance(original_error, Exception)
+            else original_error
+        )
         super().__init__(f"Skill '{skill_id}' execution failed: {msg}")
 
 
@@ -66,14 +77,23 @@ async def _skill_with_timeout(coro, timeout_ms: int, skill_id: str):
 class SkillCallExecutor(ICallExecutor):
     """Executes skill calls with timeout, retry, and result mapping."""
 
-    def __init__(self, dependencies: ExecutionDependencies, default_timeout_ms: int = DEFAULT_TIMEOUT_MS, max_depth: int = DEFAULT_MAX_DEPTH) -> None:
+    def __init__(
+        self,
+        dependencies: ExecutionDependencies,
+        default_timeout_ms: int = DEFAULT_TIMEOUT_MS,
+        max_depth: int = DEFAULT_MAX_DEPTH,
+    ) -> None:
         self._deps = dependencies
         self._default_timeout = default_timeout_ms
         self._max_depth = max_depth
 
-    async def execute(self, config: CallConfig, context: ExecutionContext) -> CallResult:
+    async def execute(
+        self, config: CallConfig, context: ExecutionContext
+    ) -> CallResult:
         if config.type != "skill":
-            raise ValueError(f"Invalid config type for SkillCallExecutor: {config.type}")
+            raise ValueError(
+                f"Invalid config type for SkillCallExecutor: {config.type}"
+            )
         errors = self.validate(config)
         if errors:
             raise SkillInvalidInputError(config.skill_id, errors)
@@ -104,7 +124,9 @@ class SkillCallExecutor(ICallExecutor):
         context.stats.skill_calls += 1
         context.stats.failed_calls += 1
         context.stats.total_duration_ms += (time.time() - start_time) * 1000
-        raise SkillExecutionFailedError(config.skill_id, last_error or "Execution failed after retries")
+        raise SkillExecutionFailedError(
+            config.skill_id, last_error or "Execution failed after retries"
+        )
 
     def validate(self, config: CallConfig) -> list[str]:
         errors: list[str] = []
@@ -114,7 +136,9 @@ class SkillCallExecutor(ICallExecutor):
             errors.append("skill_id is required and must be a string")
         return errors
 
-    async def _execute_skill(self, config: CallConfig, context: ExecutionContext) -> CallResult:
+    async def _execute_skill(
+        self, config: CallConfig, context: ExecutionContext
+    ) -> CallResult:
         start_time = time.time()
         mgr = self._deps.skills_manager
         if not mgr:
@@ -123,9 +147,15 @@ class SkillCallExecutor(ICallExecutor):
             raise SkillNotFoundError(config.skill_id)
         resolved = await self._resolve_inputs(config.inputs, context)
         timeout_ms = config.timeout or self._default_timeout
-        exec_result = await _skill_with_timeout(mgr.execute_skill(config.skill_id, resolved), timeout_ms, config.skill_id)
+        exec_result = await _skill_with_timeout(
+            mgr.execute_skill(config.skill_id, resolved), timeout_ms, config.skill_id
+        )
         duration_ms = (time.time() - start_time) * 1000
-        outputs = self._apply_output_mapping(exec_result, config.outputs) if hasattr(exec_result, "output") else {}
+        outputs = (
+            self._apply_output_mapping(exec_result, config.outputs)
+            if hasattr(exec_result, "output")
+            else {}
+        )
         result = CallResult(
             success=getattr(exec_result, "status", None) == "completed",
             data=getattr(exec_result, "output", None),
@@ -138,7 +168,9 @@ class SkillCallExecutor(ICallExecutor):
             result.error = str(exec_result.error)
         return result
 
-    async def _resolve_inputs(self, inputs: dict[str, Any], context: ExecutionContext) -> dict[str, Any]:
+    async def _resolve_inputs(
+        self, inputs: dict[str, Any], context: ExecutionContext
+    ) -> dict[str, Any]:
         resolved: dict[str, Any] = {}
         for key, value in inputs.items():
             if isinstance(value, str) and value.startswith("$"):
@@ -151,13 +183,22 @@ class SkillCallExecutor(ICallExecutor):
                 resolved[key] = value
         return resolved
 
-    def _apply_output_mapping(self, result: Any, output_mapping: dict[str, str] | None) -> dict[str, Any]:
+    def _apply_output_mapping(
+        self, result: Any, output_mapping: dict[str, str] | None
+    ) -> dict[str, Any]:
         if not output_mapping:
             return {}
-        output = getattr(result, "output", None) if not isinstance(result, dict) else result.get("output")
+        output = (
+            getattr(result, "output", None)
+            if not isinstance(result, dict)
+            else result.get("output")
+        )
         if not isinstance(output, dict):
             return {}
-        return {target: output.get(source, None) for source, target in output_mapping.items()}
+        return {
+            target: output.get(source, None)
+            for source, target in output_mapping.items()
+        }
 
     def _resolve_variable_value(self, ref: str, context: ExecutionContext) -> Any:
         if ref in context.locals:

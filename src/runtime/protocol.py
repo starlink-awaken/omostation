@@ -72,7 +72,9 @@ def load_protocols(path: Path | None = None) -> list[ProtocolEntry]:
 
     protocols = payload.get("protocols")
     if not isinstance(protocols, list):
-        raise ValueError(f"Invalid L0 protocol registry: missing protocol list in {path}")
+        raise ValueError(
+            f"Invalid L0 protocol registry: missing protocol list in {path}"
+        )
 
     return [_normalize_protocol(raw) for raw in protocols]
 

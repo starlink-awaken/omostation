@@ -9,6 +9,7 @@ R53 P0: 加 --metrics flag，输出 §17 风格健康度 JSON
 
 退出码: 0=全部合规, 1=有错误
 """
+
 from __future__ import annotations
 
 import argparse

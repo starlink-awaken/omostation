@@ -4,6 +4,7 @@
 # status: active
 # ---
 """注入冲突的个人知识事实 — 模拟多来源矛盾信息。"""
+
 from __future__ import annotations
 
 import json
@@ -78,7 +79,12 @@ def inject_conflicts(db_path: str | None = None) -> dict:
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    stats = {"total_pairs": len(CONFLICT_PAIRS), "injected": 0, "skipped": 0, "conflicts": []}
+    stats = {
+        "total_pairs": len(CONFLICT_PAIRS),
+        "injected": 0,
+        "skipped": 0,
+        "conflicts": [],
+    }
 
     for pair in CONFLICT_PAIRS:
         pair_conflicts = []
@@ -93,13 +99,17 @@ def inject_conflicts(db_path: str | None = None) -> dict:
                 continue
 
             fact_id = str(uuid.uuid4())
-            metadata = json.dumps({
-                "source": f["source"],
-                "confidence": f["confidence"],
-                "scenario": SCENARIO_LABEL,
-            }, ensure_ascii=False)
+            metadata = json.dumps(
+                {
+                    "source": f["source"],
+                    "confidence": f["confidence"],
+                    "scenario": SCENARIO_LABEL,
+                },
+                ensure_ascii=False,
+            )
 
             from datetime import datetime
+
             iso_ts = datetime.now(UTC).isoformat()
             cursor.execute(
                 "INSERT INTO fact_triples (id, sub, pred, obj, metadata, source_node_id, timestamp) VALUES (?,?,?,?,?,?,?)",
@@ -109,12 +119,14 @@ def inject_conflicts(db_path: str | None = None) -> dict:
             pair_conflicts.append(fact_id)
 
         if len(pair_conflicts) == 2:
-            stats["conflicts"].append({  # type: ignore[attr-defined]
-                "sub": pair["fact_a"]["sub"],
-                "pred": pair["fact_a"]["pred"],
-                "fact_a_id": pair_conflicts[0],
-                "fact_b_id": pair_conflicts[1],
-            })
+            stats["conflicts"].append(
+                {  # type: ignore[attr-defined]
+                    "sub": pair["fact_a"]["sub"],
+                    "pred": pair["fact_a"]["pred"],
+                    "fact_a_id": pair_conflicts[0],
+                    "fact_b_id": pair_conflicts[1],
+                }
+            )
 
     conn.commit()
     conn.close()
@@ -125,7 +137,9 @@ def main() -> None:
     result = inject_conflicts()
     print(json.dumps(result, ensure_ascii=False, indent=2))
     if result["injected"] > 0:
-        print(f"✅ 成功注入 {result['injected']} 条冲突事实 ({result['total_pairs']} 对)")
+        print(
+            f"✅ 成功注入 {result['injected']} 条冲突事实 ({result['total_pairs']} 对)"
+        )
     else:
         print("ℹ️  所有冲突事实已存在（跳过）")
 

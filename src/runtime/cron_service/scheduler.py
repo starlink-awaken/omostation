@@ -224,7 +224,9 @@ async def _run_job(job_id: str, executor: ThreadPoolExecutor):
         )
         if err_msg:
             logger.error("Delivery failed for job %s: %s", job_id, err_msg)
-            db.record_run(job_id, status, output, f"{error}\n[Delivery failed] {err_msg}")
+            db.record_run(
+                job_id, status, output, f"{error}\n[Delivery failed] {err_msg}"
+            )
     else:
         err_msg = delivery_module.deliver(
             job.name,
@@ -261,7 +263,7 @@ class CronScheduler:
         self.start_time = datetime.now(UTC)
         self._tick_task = asyncio.create_task(self._loop())
         logger.info("Cron scheduler started (tick=%ds)", config.TICK_INTERVAL)
-        
+
         # Sync triggers from L0 registry
         self._sync_l0_triggers()
 
@@ -269,13 +271,13 @@ class CronScheduler:
         """Load triggers from the L0 BOS YAML registry and inject them."""
         if YAMLTriggerRegistry is None:
             return
-            
+
         registry = YAMLTriggerRegistry()
         # Default OMO registry location
         registry_path = Path(".omo/registry/triggers.yaml")
         if not registry_path.exists():
             return
-            
+
         try:
             registry.load_from_yaml(registry_path)
             triggers = registry.list_triggers()
@@ -288,9 +290,11 @@ class CronScheduler:
                         name=f"[L0] {t.name}",
                         schedule=t.expression,
                         script=f"agora invoke {t.target_bos_uri}",
-                        description=f"L0 Trigger: {t.name}"
+                        description=f"L0 Trigger: {t.name}",
                     )
-            logger.info("Successfully synced %d triggers from L0 registry", len(triggers))
+            logger.info(
+                "Successfully synced %d triggers from L0 registry", len(triggers)
+            )
         except Exception as e:
             logger.error("Failed to sync L0 triggers: %s", e)
 

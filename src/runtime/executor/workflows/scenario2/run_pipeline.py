@@ -10,6 +10,7 @@
     python3 -m runtime.executor.workflows.scenario2.run_pipeline              # 交互模式
     python3 -m runtime.executor.workflows.scenario2.run_pipeline --auto       # 自动模式
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -23,7 +24,7 @@ WORKFLOWS_DIR = Path(__file__).resolve().parent
 
 
 def _run(cmd: list[str], desc: str) -> tuple[int, str]:
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  ▶ [{desc}]")
     print(f"  $ {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True, cwd=PROJECT_ROOT)
@@ -35,7 +36,7 @@ def _run(cmd: list[str], desc: str) -> tuple[int, str]:
 
 
 def _hitl(phase: str) -> bool:
-    print(f"\n{'#'*60}")
+    print(f"\n{'#' * 60}")
     print(f"# ⏸️  HITL: {phase}")
     print(f"# 时间: {datetime.now(UTC).isoformat()}")
     try:
@@ -53,6 +54,7 @@ def phase1_inject(auto: bool = False) -> bool:
     )
     if "injected" in out:
         import json as _j
+
         try:
             d = _j.loads(out.strip().split("\n")[0])
             print(f"  注入: {d.get('injected', 0)}, 跳过: {d.get('skipped', 0)}")
@@ -126,6 +128,7 @@ def phase5_verify(auto: bool = False) -> bool:
 
 def main() -> None:
     import argparse
+
     parser = argparse.ArgumentParser(description="场景二：跨会话上下文+事实一致性")
     parser.add_argument("--auto", action="store_true")
     parser.add_argument("--phase", choices=["1", "2", "3", "4", "5"])
@@ -150,7 +153,7 @@ def main() -> None:
             print(f"❌ Phase {pid} 中止")
             sys.exit(1)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("  ✅ 场景二执行完成！")
     print(f"  报告目录: {REPORT_DIR}")
 

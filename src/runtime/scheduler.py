@@ -15,12 +15,19 @@ from omo.omo_gc import archive_resolved_debt_items
 import yaml
 import hashlib
 
-STATE_FILE = Path(os.environ.get("RUNTIME_HOME", Path.home() / "runtime")) / "matrix_state.json"
-# Compute OMO state path from RUNTIME_HOME or workspace root
-_workspace_root = Path(__file__).resolve().parents[4]  # runtime/src/runtime/scheduler.py → workspace root
-OMO_STATE_FILE = Path(
-    os.environ.get("OMO_STATE_FILE", str(_workspace_root / ".omo" / "state" / "system_health.yaml"))
+STATE_FILE = (
+    Path(os.environ.get("RUNTIME_HOME", Path.home() / "runtime")) / "matrix_state.json"
 )
+# Compute OMO state path from RUNTIME_HOME or workspace root
+_workspace_root = (
+    Path(__file__).resolve().parents[4]
+)  # runtime/src/runtime/scheduler.py → workspace root
+OMO_STATE_FILE = Path(
+    os.environ.get(
+        "OMO_STATE_FILE", str(_workspace_root / ".omo" / "state" / "system_health.yaml")
+    )
+)
+
 
 class MatrixScheduler:
     def __init__(self):
@@ -41,20 +48,22 @@ class MatrixScheduler:
         if not label:
             return {"status": "unknown"}
         try:
-            r = subprocess.run(["launchctl", "list", label], capture_output=True, text=True)
+            r = subprocess.run(
+                ["launchctl", "list", label], capture_output=True, text=True
+            )
             if r.returncode != 0:
                 return {"status": "failed", "exit_code": r.returncode}
-            
+
             pid, last_exit = None, None
             for line in r.stdout.splitlines():
                 if '"PID"' in line:
-                    parts = line.split('=')
+                    parts = line.split("=")
                     if len(parts) > 1:
-                        pid = parts[1].strip().strip(';')
+                        pid = parts[1].strip().strip(";")
                 elif '"LastExitStatus"' in line:
-                    parts = line.split('=')
+                    parts = line.split("=")
                     if len(parts) > 1:
-                        last_exit = parts[1].strip().strip(';')
+                        last_exit = parts[1].strip().strip(";")
 
             if pid and pid != "0":
                 return {"status": "running", "pid": pid}
@@ -70,8 +79,16 @@ class MatrixScheduler:
             return {"status": "unknown"}
         try:
             r = subprocess.run(
-                ["docker", "ps", "--filter", f"name={container}", "--format", "{{.Status}}"],
-                capture_output=True, text=True
+                [
+                    "docker",
+                    "ps",
+                    "--filter",
+                    f"name={container}",
+                    "--format",
+                    "{{.Status}}",
+                ],
+                capture_output=True,
+                text=True,
             )
             status = r.stdout.strip()
             if status:
@@ -86,8 +103,7 @@ class MatrixScheduler:
             return False
         try:
             r = subprocess.run(
-                ["lsof", f"-iTCP:{port}", "-sTCP:LISTEN", "-P"],
-                capture_output=True
+                ["lsof", f"-iTCP:{port}", "-sTCP:LISTEN", "-P"], capture_output=True
             )
             return r.returncode == 0
         except Exception:
@@ -95,9 +111,10 @@ class MatrixScheduler:
 
     def scan_once(self):
         from graphlib import TopologicalSorter
+
         services = list_services()
         current_time = time.time()
-        
+
         # Load state for crash-loop tracking
         state_file = STATE_FILE.parent / "scheduler_state.json"
         state = {}
@@ -113,10 +130,10 @@ class MatrixScheduler:
         state["run_count"] = run_count
         state["last_run"] = datetime.now(timezone.utc).astimezone().isoformat()
         state.setdefault("state_transitions", 0)
-        
+
         restart_history = state.get("restart_history", {})
         scan_results = {}
-        
+
         # Build DAG
         ts = TopologicalSorter()
         svc_dict = {s.name: s for s in services}
@@ -127,23 +144,27 @@ class MatrixScheduler:
         except Exception as e:
             print(f"Cycle detected in DAG: {e}")
             order = [s.name for s in services]
-            
+
         ordered_services = [svc_dict[name] for name in order if name in svc_dict]
-        
+
         for svc in ordered_services:
-            result = {
-                "type": svc.type,
-                "name": svc.name,
-                "timestamp": current_time
-            }
-            
+            result = {"type": svc.type, "name": svc.name, "timestamp": current_time}
+
             # Check dependencies
             deps_healthy = True
             failed_deps = []
             for dep in svc.depends_on:
                 dep_res = scan_results.get(dep, {})
                 rt = dep_res.get("runtime", {}).get("status", "")
-                if rt in ("failed", "error", "stopped", "FROZEN_CRASH_LOOP", "WAITING_FOR_DEPENDENCY", "BACKOFF", "unreachable"):
+                if rt in (
+                    "failed",
+                    "error",
+                    "stopped",
+                    "FROZEN_CRASH_LOOP",
+                    "WAITING_FOR_DEPENDENCY",
+                    "BACKOFF",
+                    "unreachable",
+                ):
                     deps_healthy = False
                     failed_deps.append(dep)
                     break
@@ -154,17 +175,23 @@ class MatrixScheduler:
                     break
 
             if not deps_healthy:
-                result["runtime"] = {"status": "WAITING_FOR_DEPENDENCY", "reason": f"Waiting for: {failed_deps}"}
+                result["runtime"] = {
+                    "status": "WAITING_FOR_DEPENDENCY",
+                    "reason": f"Waiting for: {failed_deps}",
+                }
                 scan_results[svc.name] = result
                 continue
-            
+
             svc_history = restart_history.get(svc.name, [])
             # Clean old history (> 5 mins)
             svc_history = [t for t in svc_history if current_time - t < 300]
-            
+
             is_frozen = len(svc_history) >= 5
             if is_frozen:
-                result["runtime"] = {"status": "FROZEN_CRASH_LOOP", "reason": "More than 5 restarts in 5 minutes"}
+                result["runtime"] = {
+                    "status": "FROZEN_CRASH_LOOP",
+                    "reason": "More than 5 restarts in 5 minutes",
+                }
                 # Check port and health anyway to reflect frozen state accurately
                 if svc.port:
                     result["port_listening"] = self._check_port(svc.port)
@@ -173,7 +200,7 @@ class MatrixScheduler:
                 scan_results[svc.name] = result
                 restart_history[svc.name] = svc_history
                 continue
-                
+
             # Check primary runtime
             if svc.launchd_label:
                 rt_status = self._check_launchd(svc.launchd_label)
@@ -183,13 +210,23 @@ class MatrixScheduler:
                     backoff = 5 * (2 ** len(svc_history))
                     last_restart = svc_history[-1] if svc_history else 0
                     if current_time - last_restart >= backoff:
-                        print(f"⚠️ Service {svc.name} is {rt_status.get('status')}. Backoff={backoff}s. Self-healing...")
-                        subprocess.run(["launchctl", "stop", svc.launchd_label], capture_output=True)
-                        subprocess.run(["launchctl", "start", svc.launchd_label], capture_output=True)
+                        print(
+                            f"⚠️ Service {svc.name} is {rt_status.get('status')}. Backoff={backoff}s. Self-healing..."
+                        )
+                        subprocess.run(
+                            ["launchctl", "stop", svc.launchd_label],
+                            capture_output=True,
+                        )
+                        subprocess.run(
+                            ["launchctl", "start", svc.launchd_label],
+                            capture_output=True,
+                        )
                         svc_history.append(current_time)
                         result["runtime"]["self_heal_attempted"] = True
                     else:
-                        print(f"⏳ Service {svc.name} is in backoff ({backoff}s). Waiting...")
+                        print(
+                            f"⏳ Service {svc.name} is in backoff ({backoff}s). Waiting..."
+                        )
                         result["runtime"]["status"] = "BACKOFF"
 
             elif svc.docker_container:
@@ -199,12 +236,19 @@ class MatrixScheduler:
                     backoff = 5 * (2 ** len(svc_history))
                     last_restart = svc_history[-1] if svc_history else 0
                     if current_time - last_restart >= backoff:
-                        print(f"⚠️ Service {svc.name} is {rt_status.get('status')}. Backoff={backoff}s. Self-healing...")
-                        subprocess.run(["docker", "restart", svc.docker_container], capture_output=True)
+                        print(
+                            f"⚠️ Service {svc.name} is {rt_status.get('status')}. Backoff={backoff}s. Self-healing..."
+                        )
+                        subprocess.run(
+                            ["docker", "restart", svc.docker_container],
+                            capture_output=True,
+                        )
                         svc_history.append(current_time)
                         result["runtime"]["self_heal_attempted"] = True
                     else:
-                        print(f"⏳ Service {svc.name} is in backoff ({backoff}s). Waiting...")
+                        print(
+                            f"⏳ Service {svc.name} is in backoff ({backoff}s). Waiting..."
+                        )
                         result["runtime"]["status"] = "BACKOFF"
             else:
                 result["runtime"] = {"status": "unmanaged"}
@@ -226,10 +270,17 @@ class MatrixScheduler:
                 self._freshness[svc.name] = time.monotonic()
                 self._consecutive_failures.pop(svc.name, None)
             else:
-                self._consecutive_failures[svc.name] = self._consecutive_failures.get(svc.name, 0) + 1
+                self._consecutive_failures[svc.name] = (
+                    self._consecutive_failures.get(svc.name, 0) + 1
+                )
                 # P1-AUTO_HEAL: trigger autoheal when consecutive failures exceed threshold
-                if self._autoheal_enabled and self._consecutive_failures[svc.name] >= self._stale_threshold:
-                    print(f"⚠️ [P1-AUTO_HEAL] {svc.name}: {self._consecutive_failures[svc.name]} consecutive failures, triggering autoheal...")
+                if (
+                    self._autoheal_enabled
+                    and self._consecutive_failures[svc.name] >= self._stale_threshold
+                ):
+                    print(
+                        f"⚠️ [P1-AUTO_HEAL] {svc.name}: {self._consecutive_failures[svc.name]} consecutive failures, triggering autoheal..."
+                    )
                     self._autoheal_service(svc.name)
 
             # Freshness seconds for state reporting
@@ -237,21 +288,25 @@ class MatrixScheduler:
             if rt == "running":
                 if svc.name not in running_since:
                     running_since[svc.name] = current_time
-                result["runtime"]["freshness_seconds"] = int(current_time - running_since[svc.name])
+                result["runtime"]["freshness_seconds"] = int(
+                    current_time - running_since[svc.name]
+                )
             else:
                 running_since.pop(svc.name, None)
 
             scan_results[svc.name] = result
-            
+
         # Calculate state hash (excluding last_scan to prevent constant updates)
-        state_hash = hashlib.md5(json.dumps(scan_results, sort_keys=True).encode()).hexdigest()
-        
+        state_hash = hashlib.md5(
+            json.dumps(scan_results, sort_keys=True).encode()
+        ).hexdigest()
+
         # Detect state transition and increment counter
         state_transitioned = state_hash != self.last_state_hash
         if state_transitioned:
             state["state_transitions"] += 1
             self.last_state_hash = state_hash
-        
+
         # Save state back
         state["restart_history"] = restart_history
         state["running_since"] = state.get("running_since", {})
@@ -261,15 +316,12 @@ class MatrixScheduler:
         except Exception:
             pass
 
-        self.state = {
-            "last_scan": current_time,
-            "services": scan_results
-        }
-        
+        self.state = {"last_scan": current_time, "services": scan_results}
+
         # Write local state
         STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
         STATE_FILE.write_text(json.dumps(self.state, indent=2))
-        
+
         # HealthPulse: Only write to OMO SSOT if state transitioned
         if state_transitioned:
             OMO_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -277,22 +329,39 @@ class MatrixScheduler:
                 validate_runtime_health_snapshot(self.state)
                 with open(OMO_STATE_FILE, "w") as f:
                     yaml.safe_dump(self.state, f, default_flow_style=False)
-                print(f"💓 HealthPulse: State transition detected. Updated {OMO_STATE_FILE}")
+                print(
+                    f"💓 HealthPulse: State transition detected. Updated {OMO_STATE_FILE}"
+                )
                 self.last_state_hash = state_hash
             except Exception as e:
                 print(f"Failed to update OMO state: {e}")
 
         # Alert on health transitions: healthy → unreachable
-        notify_script = Path(os.environ.get("RUNTIME_HOME", Path.home() / "runtime")) / "scripts" / "event_driven_notify.py"
+        notify_script = (
+            Path(os.environ.get("RUNTIME_HOME", Path.home() / "runtime"))
+            / "scripts"
+            / "event_driven_notify.py"
+        )
         for svc_name, result in scan_results.items():
             current_hc = result.get("health_check")
             prev_hc = self._prev_health.get(svc_name)
             if prev_hc == "healthy" and current_hc == "unreachable":
-                print(f"🚨 Health alert: {svc_name} went healthy→unreachable. Notifying...")
+                print(
+                    f"🚨 Health alert: {svc_name} went healthy→unreachable. Notifying..."
+                )
                 try:
                     subprocess.run(
-                        ["python3", str(notify_script), "--service", svc_name, "--status", "unreachable"],
-                        capture_output=True, text=True, timeout=10
+                        [
+                            "python3",
+                            str(notify_script),
+                            "--service",
+                            svc_name,
+                            "--status",
+                            "unreachable",
+                        ],
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
                     )
                 except Exception as e:
                     print(f"Failed to run notify script for {svc_name}: {e}")
@@ -307,8 +376,9 @@ class MatrixScheduler:
             older_than_seconds=604800,
         )
         if compacted > 0:
-            print(f"📦 [X2 Anti-Entropy] Compacted {compacted} resolved debt items to archive.")
-
+            print(
+                f"📦 [X2 Anti-Entropy] Compacted {compacted} resolved debt items to archive."
+            )
 
     def _check_stale_services(self):
         """X2-NO_FRESHNESS: Check for services that have gone stale (not seen healthy)."""
@@ -322,10 +392,15 @@ class MatrixScheduler:
             if age > threshold_seconds:
                 self._stale_count[svc_name] = self._stale_count.get(svc_name, 0) + 1
                 if self._stale_count[svc_name] >= self._stale_threshold:
-                    print(f"🧊 [X2-NO_FRESHNESS] Service '{svc_name}' is STALE (age={age:.1f}s, consecutive_scans={self._stale_count[svc_name]})")
+                    print(
+                        f"🧊 [X2-NO_FRESHNESS] Service '{svc_name}' is STALE (age={age:.1f}s, consecutive_scans={self._stale_count[svc_name]})"
+                    )
                     stale_found = True
                     # Trigger autoheal if enabled and not already triggered by consecutive failures
-                    if self._autoheal_enabled and svc_name not in self._consecutive_failures:
+                    if (
+                        self._autoheal_enabled
+                        and svc_name not in self._consecutive_failures
+                    ):
                         self._autoheal_service(svc_name)
             else:
                 self._stale_count.pop(svc_name, None)
@@ -334,19 +409,25 @@ class MatrixScheduler:
 
     def _autoheal_service(self, svc_name: str):
         """P1-AUTO_HEAL: Call autoheal.sh to restart a failing service."""
-        autoheal_script = Path(__file__).parent.parent.parent / "scripts" / "autoheal.sh"
+        autoheal_script = (
+            Path(__file__).parent.parent.parent / "scripts" / "autoheal.sh"
+        )
         if not autoheal_script.exists():
             print(f"⚠️ [P1-AUTO_HEAL] autoheal.sh not found at {autoheal_script}")
             return
         try:
             r = subprocess.run(
                 ["bash", str(autoheal_script), svc_name],
-                capture_output=True, text=True, timeout=30
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
             if r.returncode == 0:
                 print(f"✅ [P1-AUTO_HEAL] {svc_name}: autoheal succeeded")
             else:
-                print(f"❌ [P1-AUTO_HEAL] {svc_name}: autoheal FAILED (exit={r.returncode}): {r.stdout.strip()[-200:]}")
+                print(
+                    f"❌ [P1-AUTO_HEAL] {svc_name}: autoheal FAILED (exit={r.returncode}): {r.stdout.strip()[-200:]}"
+                )
         except subprocess.TimeoutExpired:
             print(f"⚠️ [P1-AUTO_HEAL] {svc_name}: autoheal timed out after 30s")
         except Exception as e:
@@ -362,10 +443,10 @@ class MatrixScheduler:
         print(f"📂 State file: {STATE_FILE}")
         self.running = True
         self._interval = interval
-        
+
         # Run GC on startup
         self.run_entropy_gc()
-        
+
         tick = 0
         while self.running:
             self._run_cycle()
@@ -378,8 +459,10 @@ class MatrixScheduler:
     def stop(self):
         self.running = False
 
+
 def main():
     from runtime.kei_sandbox import enable_sandbox
+
     enable_sandbox()
     scheduler = MatrixScheduler()
     # P1-AUTO_HEAL: --autoheal (default on) / --no-autoheal
@@ -395,6 +478,7 @@ def main():
             scheduler.start()
         except KeyboardInterrupt:
             print("\n🛑 Stopping Matrix Scheduler")
+
 
 if __name__ == "__main__":
     main()

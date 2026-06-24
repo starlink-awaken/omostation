@@ -121,7 +121,9 @@ class ContextShardManager:
         global_summary = self._get_global_summary()
         if global_summary and global_summary.shard_id not in collected:
             collected[global_summary.shard_id] = global_summary
-        shards = sorted(collected.values(), key=lambda s: SCOPE_PRIORITY.get(s.scope, 99))
+        shards = sorted(
+            collected.values(), key=lambda s: SCOPE_PRIORITY.get(s.scope, 99)
+        )
         total_tokens = sum(s.token_count for s in shards)
         return AssembleResult(
             shards=shards,
@@ -196,7 +198,9 @@ class ContextShardManager:
     def prune_stale(self, max_age_ms: float) -> int:
         cutoff = time.time() * 1000 - max_age_ms
         removed = 0
-        stale = [sid for sid, s in self._shards.items() if s.last_updated * 1000 < cutoff]
+        stale = [
+            sid for sid, s in self._shards.items() if s.last_updated * 1000 < cutoff
+        ]
         for sid in stale:
             self._shards.pop(sid, None)
             removed += 1

@@ -59,10 +59,14 @@ def summarize(audit_path: Path) -> int:
 
     print("\n  Last 5 records:")
     for r in records[-5:]:
-        print(f"    [{r.get('ts','?')}] {r.get('action')}/{r.get('status')} "
-              f"— {r.get('extension_id')} — {r.get('details','')[:80]}")
+        print(
+            f"    [{r.get('ts', '?')}] {r.get('action')}/{r.get('status')} "
+            f"— {r.get('extension_id')} — {r.get('details', '')[:80]}"
+        )
 
-    print(f"\n{'✅ All records valid.' if errors == 0 else '⚠️  Some records had parse errors.'}")
+    print(
+        f"\n{'✅ All records valid.' if errors == 0 else '⚠️  Some records had parse errors.'}"
+    )
     return 0 if errors == 0 else 1
 
 

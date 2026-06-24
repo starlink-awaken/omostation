@@ -3,7 +3,12 @@
 from __future__ import annotations
 
 from runtime.cron_service import __version__
-from runtime.cron_service.scheduler import CronScheduler, _is_due, _parse_cron_expr, _parse_every_expr
+from runtime.cron_service.scheduler import (
+    CronScheduler,
+    _is_due,
+    _parse_cron_expr,
+    _parse_every_expr,
+)
 
 
 class TestCronServiceBasic:

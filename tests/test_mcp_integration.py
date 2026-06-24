@@ -4,6 +4,7 @@ NOTE: Skipped — MCP library API changed (mcp 1.27+ / fastmcp 3.4+).
 stdio_server moved to mcp.server.stdio and protocol format changed.
 Re-enable after aligning with new MCP SDK.
 """
+
 import json
 import os
 import subprocess
@@ -11,7 +12,10 @@ import sys
 
 import pytest
 
-pytest.skip("MCP library API incompatible — requires alignment with mcp 1.27+/fastmcp 3.4+", allow_module_level=True)
+pytest.skip(
+    "MCP library API incompatible — requires alignment with mcp 1.27+/fastmcp 3.4+",
+    allow_module_level=True,
+)
 
 SERVER = os.path.expanduser("~/Workspace/projects/runtime/src/runtime/mcp_server.py")
 PYTHON = sys.executable
@@ -57,7 +61,12 @@ def mcp_client():
     )
     # Notification (no response)
     _send(
-        {"jsonrpc": "2.0", "id": 2, "method": "notifications/initialized", "params": {}},
+        {
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "notifications/initialized",
+            "params": {},
+        },
         expect_response=False,
     )
 
@@ -107,7 +116,10 @@ def test_matrix_get_cron_service(mcp_client):
             "jsonrpc": "2.0",
             "id": 5,
             "method": "tools/call",
-            "params": {"name": "runtime_matrix_get", "arguments": {"name": "cron-service"}},
+            "params": {
+                "name": "runtime_matrix_get",
+                "arguments": {"name": "cron-service"},
+            },
         }
     )
     text = r["result"]["content"][0]["text"]

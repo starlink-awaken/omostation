@@ -17,7 +17,10 @@ def test_expand_env_missing():
     """$NONEXISTENT_VAR should remain as-is if not in env."""
     result = _expand_env("/path/$NONEXISTENT_VAR_XYZ123")
     # If var not set, the literal string stays
-    assert "NONEXISTENT_VAR_XYZ123" not in result or result == "/path/$NONEXISTENT_VAR_XYZ123"
+    assert (
+        "NONEXISTENT_VAR_XYZ123" not in result
+        or result == "/path/$NONEXISTENT_VAR_XYZ123"
+    )
 
 
 def test_expand_env_null():

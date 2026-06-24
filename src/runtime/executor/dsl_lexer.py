@@ -99,14 +99,40 @@ KEYWORDS: dict[str, str] = {
 }
 
 TOKEN_TYPES = set(KEYWORDS.values()) | {
-    "IDENTIFIER", "STRING", "NUMBER", "BOOLEAN",
-    "LBRACE", "RBRACE", "LBRACKET", "RBRACKET",
-    "LPAREN", "RPAREN", "COLON", "SEMICOLON",
-    "COMMA", "DOT", "ARROW", "PIPE",
-    "LT", "GT", "LTE", "GTE",
-    "EQ", "NEQ", "AND", "OR", "NOT",
-    "PLUS", "MINUS", "STAR", "SLASH", "PERCENT",
-    "AT", "HASH", "QUERY", "EOF",
+    "IDENTIFIER",
+    "STRING",
+    "NUMBER",
+    "BOOLEAN",
+    "LBRACE",
+    "RBRACE",
+    "LBRACKET",
+    "RBRACKET",
+    "LPAREN",
+    "RPAREN",
+    "COLON",
+    "SEMICOLON",
+    "COMMA",
+    "DOT",
+    "ARROW",
+    "PIPE",
+    "LT",
+    "GT",
+    "LTE",
+    "GTE",
+    "EQ",
+    "NEQ",
+    "AND",
+    "OR",
+    "NOT",
+    "PLUS",
+    "MINUS",
+    "STAR",
+    "SLASH",
+    "PERCENT",
+    "AT",
+    "HASH",
+    "QUERY",
+    "EOF",
 }
 
 
@@ -177,7 +203,8 @@ class Lexer:
             raise ValueError(f"Unterminated string at line {start_line}")
         self._advance()  # skip closing quote
         return Token(
-            type="STRING", value=value,
+            type="STRING",
+            value=value,
             loc=SourceLocation(file=self.filename, line=start_line, column=start_col),
         )
 
@@ -188,7 +215,8 @@ class Lexer:
         while self._current in "0123456789.":
             value += self._advance()
         return Token(
-            type="NUMBER", value=value,
+            type="NUMBER",
+            value=value,
             loc=SourceLocation(file=self.filename, line=start_line, column=start_col),
         )
 
@@ -200,7 +228,8 @@ class Lexer:
             value += self._advance()
         token_type = KEYWORDS.get(value, "IDENTIFIER")
         return Token(
-            type=token_type, value=value,
+            type=token_type,
+            value=value,
             loc=SourceLocation(file=self.filename, line=start_line, column=start_col),
         )
 
@@ -268,30 +297,48 @@ class Lexer:
                 tok_val = "||"
             else:
                 single_map: dict[str, str] = {
-                    "{": "LBRACE", "}": "RBRACE",
-                    "[": "LBRACKET", "]": "RBRACKET",
-                    "(": "LPAREN", ")": "RPAREN",
-                    ":": "COLON", ";": "SEMICOLON",
-                    ",": "COMMA", ".": "DOT",
-                    "|": "PIPE", "<": "LT", ">": "GT",
-                    "!": "NOT", "+": "PLUS", "-": "MINUS",
-                    "*": "STAR", "/": "SLASH", "%": "PERCENT",
-                    "@": "AT", "?": "QUERY",
+                    "{": "LBRACE",
+                    "}": "RBRACE",
+                    "[": "LBRACKET",
+                    "]": "RBRACKET",
+                    "(": "LPAREN",
+                    ")": "RPAREN",
+                    ":": "COLON",
+                    ";": "SEMICOLON",
+                    ",": "COMMA",
+                    ".": "DOT",
+                    "|": "PIPE",
+                    "<": "LT",
+                    ">": "GT",
+                    "!": "NOT",
+                    "+": "PLUS",
+                    "-": "MINUS",
+                    "*": "STAR",
+                    "/": "SLASH",
+                    "%": "PERCENT",
+                    "@": "AT",
+                    "?": "QUERY",
                 }
                 tok_type = single_map.get(ch, "EOF")
                 tok_val = ch
 
             tokens.append(
                 Token(
-                    type=tok_type, value=tok_val,
-                    loc=SourceLocation(file=self.filename, line=start_line, column=start_col),
+                    type=tok_type,
+                    value=tok_val,
+                    loc=SourceLocation(
+                        file=self.filename, line=start_line, column=start_col
+                    ),
                 )
             )
 
         tokens.append(
             Token(
-                type="EOF", value="",
-                loc=SourceLocation(file=self.filename, line=self._line, column=self._col),
+                type="EOF",
+                value="",
+                loc=SourceLocation(
+                    file=self.filename, line=self._line, column=self._col
+                ),
             )
         )
         return tokens

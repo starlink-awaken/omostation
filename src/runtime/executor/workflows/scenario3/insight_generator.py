@@ -4,6 +4,7 @@
 # status: active
 # ---
 """洞察生成器 — 基于检索结果生成结构化洞察 + 图谱更新。"""
+
 from __future__ import annotations
 
 import json
@@ -18,7 +19,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[6]
 DB_PATH = str(PROJECT_ROOT / "data" / "db" / "organs" / "memory" / "fact_graph.db")
 
 
-def analyze_facts(facts: list[dict[str, Any]], original_question: str) -> dict[str, Any]:
+def analyze_facts(
+    facts: list[dict[str, Any]], original_question: str
+) -> dict[str, Any]:
     """分析事实列表，提取洞察。
 
     分析维度:
@@ -61,11 +64,14 @@ def analyze_facts(facts: list[dict[str, Any]], original_question: str) -> dict[s
             e1, e2 = entity_list[i], entity_list[j]
             for f in facts:
                 if f["sub"] == e1 and e2.lower() in f["obj"].lower():
-                    relationships.append({
-                        "source": e1, "target": e2,
-                        "relation": f.get("pred", "related_to"),
-                        "evidence": f["obj"][:60],
-                    })
+                    relationships.append(
+                        {
+                            "source": e1,
+                            "target": e2,
+                            "relation": f.get("pred", "related_to"),
+                            "evidence": f["obj"][:60],
+                        }
+                    )
                     break
 
     # 洞察语句生成
@@ -118,18 +124,28 @@ def update_graph(insight: dict[str, Any], db_path: str | None = None) -> dict:
             continue
 
         fact_id = str(uuid.uuid4())
-        metadata = json.dumps({
-            "source": "scenario3_insight_engine",
-            "relation": rel["relation"],
-            "evidence": rel["evidence"],
-            "generated_at": datetime.now(UTC).isoformat(),
-        }, ensure_ascii=False)
+        metadata = json.dumps(
+            {
+                "source": "scenario3_insight_engine",
+                "relation": rel["relation"],
+                "evidence": rel["evidence"],
+                "generated_at": datetime.now(UTC).isoformat(),
+            },
+            ensure_ascii=False,
+        )
 
         iso_ts = datetime.now(UTC).isoformat()
         cursor.execute(
             "INSERT INTO fact_triples (id, sub, pred, obj, metadata, source_node_id, timestamp) VALUES (?,?,?,?,?,?,?)",
-            (fact_id, rel["source"], f"related_to_{rel['relation']}", rel["target"],
-             metadata, "scenario3_insight", iso_ts),
+            (
+                fact_id,
+                rel["source"],
+                f"related_to_{rel['relation']}",
+                rel["target"],
+                metadata,
+                "scenario3_insight",
+                iso_ts,
+            ),
         )
         stats["relations_added"] += 1
 
@@ -167,28 +183,34 @@ def generate_report(insight: dict[str, Any], graph_stats: dict) -> str:
         lines.append(f"- {topic}")
 
     if insight.get("relationships"):
-        lines.extend([
-            "",
-            "## 新发现关系",
-            "",
-            "| 源实体 | 目标实体 | 关系 | 证据 |",
-            "|--------|---------|------|------|",
-        ])
+        lines.extend(
+            [
+                "",
+                "## 新发现关系",
+                "",
+                "| 源实体 | 目标实体 | 关系 | 证据 |",
+                "|--------|---------|------|------|",
+            ]
+        )
         for rel in insight["relationships"]:
-            lines.append(f"| {rel['source']} | {rel['target']} | {rel['relation']} | {rel['evidence']} |")
+            lines.append(
+                f"| {rel['source']} | {rel['target']} | {rel['relation']} | {rel['evidence']} |"
+            )
 
-    lines.extend([
-        "",
-        "## 洞察总结",
-        "",
-        insight["insights"],
-        "",
-        "## 图谱更新",
-        "",
-        f"- 新增关系: {graph_stats['relations_added']} 条",
-        f"- 跳过重复: {graph_stats['skipped']} 条",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "## 洞察总结",
+            "",
+            insight["insights"],
+            "",
+            "## 图谱更新",
+            "",
+            f"- 新增关系: {graph_stats['relations_added']} 条",
+            f"- 跳过重复: {graph_stats['skipped']} 条",
+            "",
+        ]
+    )
 
     return "\n".join(lines)
 
@@ -205,16 +227,20 @@ def main() -> None:
         print("⚠️ 未找到检索结果文件，尝试直接查询 FactGraph...")
         # 直接查询 FactGraph
         import sqlite3
+
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
         q = question.lower()
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id, sub, pred, obj, metadata, source_node_id
             FROM fact_triples
             WHERE LOWER(sub) LIKE ? OR LOWER(obj) LIKE ? OR LOWER(pred) LIKE ?
             LIMIT 50
-        """, (f"%{q}%", f"%{q}%", f"%{q}%"))
+        """,
+            (f"%{q}%", f"%{q}%", f"%{q}%"),
+        )
         rows = cursor.fetchall()
         graph_results = []
         for r in rows:
@@ -222,11 +248,16 @@ def main() -> None:
                 meta = json.loads(r[4]) if isinstance(r[4], str) else r[4]
             except (json.JSONDecodeError, TypeError):
                 meta = {}
-            graph_results.append({
-                "id": r[0], "sub": r[1], "pred": r[2], "obj": r[3],
-                "source": meta.get("source", "unknown"),
-                "confidence": meta.get("confidence", 0.5),
-            })
+            graph_results.append(
+                {
+                    "id": r[0],
+                    "sub": r[1],
+                    "pred": r[2],
+                    "obj": r[3],
+                    "source": meta.get("source", "unknown"),
+                    "confidence": meta.get("confidence", 0.5),
+                }
+            )
         conn.close()
         retrieval = {"question": question, "graph_results": graph_results}
 

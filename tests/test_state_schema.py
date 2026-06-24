@@ -15,7 +15,9 @@ from runtime.state_schema import validate_runtime_health_snapshot
 
 class TestValidateRuntimeHealthSnapshot:
     def test_valid_payload(self):
-        result = validate_runtime_health_snapshot({"services": {"agora": {"status": "ok"}}})
+        result = validate_runtime_health_snapshot(
+            {"services": {"agora": {"status": "ok"}}}
+        )
         assert result["services"]["agora"]["status"] == "ok"
 
     def test_not_a_dict(self):
@@ -24,10 +26,12 @@ class TestValidateRuntimeHealthSnapshot:
 
     def test_governance_keys_rejected(self):
         with pytest.raises(ValueError, match="governance-only"):
-            validate_runtime_health_snapshot({
-                "services": {"agora": {"status": "ok"}},
-                "current_phase": "34",
-            })
+            validate_runtime_health_snapshot(
+                {
+                    "services": {"agora": {"status": "ok"}},
+                    "current_phase": "34",
+                }
+            )
 
     def test_missing_services(self):
         with pytest.raises(ValueError, match="services must be a mapping"):
@@ -95,27 +99,35 @@ class TestMain:
     @patch("runtime.kei_probe.count_last_24h")
     @patch("runtime.kei_probe.argparse.ArgumentParser.parse_args")
     def test_count_24h(self, mock_args, mock_count):
-        mock_args.return_value = MagicMock(count_24h=True, last_age_hours=False, path="/fake.jsonl")
+        mock_args.return_value = MagicMock(
+            count_24h=True, last_age_hours=False, path="/fake.jsonl"
+        )
         mock_count.return_value = 5
         assert main() == 0
 
     @patch("runtime.kei_probe.count_last_24h")
     @patch("runtime.kei_probe.argparse.ArgumentParser.parse_args")
     def test_count_24h_zero(self, mock_args, mock_count):
-        mock_args.return_value = MagicMock(count_24h=True, last_age_hours=False, path="/fake.jsonl")
+        mock_args.return_value = MagicMock(
+            count_24h=True, last_age_hours=False, path="/fake.jsonl"
+        )
         mock_count.return_value = 0
         assert main() == 1
 
     @patch("runtime.kei_probe.last_age_hours")
     @patch("runtime.kei_probe.argparse.ArgumentParser.parse_args")
     def test_last_age_hours(self, mock_args, mock_age):
-        mock_args.return_value = MagicMock(count_24h=False, last_age_hours=True, path="/fake.jsonl")
+        mock_args.return_value = MagicMock(
+            count_24h=False, last_age_hours=True, path="/fake.jsonl"
+        )
         mock_age.return_value = 2.5
         assert main() == 0
 
     @patch("runtime.kei_probe.last_age_hours")
     @patch("runtime.kei_probe.argparse.ArgumentParser.parse_args")
     def test_last_age_hours_exceeded(self, mock_args, mock_age):
-        mock_args.return_value = MagicMock(count_24h=False, last_age_hours=True, path="/fake.jsonl")
+        mock_args.return_value = MagicMock(
+            count_24h=False, last_age_hours=True, path="/fake.jsonl"
+        )
         mock_age.return_value = 48.0
         assert main() == 1

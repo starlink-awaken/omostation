@@ -4,6 +4,7 @@
 # status: active
 # ---
 """冲突检测 — 扫描 FactGraph 中同一实体+谓词的矛盾断言。"""
+
 from __future__ import annotations
 
 import json
@@ -36,23 +37,33 @@ def get_conflict_via_definitions(conn: sqlite3.Connection) -> list[dict[str, Any
             meta = json.loads(r[4]) if isinstance(r[4], str) else r[4]
         except (json.JSONDecodeError, TypeError):
             meta = {}
-        groups[key].append({
-            "id": r[0], "sub": r[1], "pred": r[2], "obj": r[3],
-            "source": meta.get("source", "unknown"),
-            "confidence": meta.get("confidence", 0.5),
-        })
+        groups[key].append(
+            {
+                "id": r[0],
+                "sub": r[1],
+                "pred": r[2],
+                "obj": r[3],
+                "source": meta.get("source", "unknown"),
+                "confidence": meta.get("confidence", 0.5),
+            }
+        )
 
     conflicts = []
     for key, facts in groups.items():
         sub, pred = key
         unique_objs = {f["obj"] for f in facts}
         if len(unique_objs) >= 2:
-            conflicts.append({
-                "sub": sub, "pred": pred,
-                "fact_count": len(facts),
-                "unique_statements": len(unique_objs),
-                "facts": sorted(facts, key=lambda x: x.get("confidence", 0), reverse=True),
-            })
+            conflicts.append(
+                {
+                    "sub": sub,
+                    "pred": pred,
+                    "fact_count": len(facts),
+                    "unique_statements": len(unique_objs),
+                    "facts": sorted(
+                        facts, key=lambda x: x.get("confidence", 0), reverse=True
+                    ),
+                }
+            )
 
     return conflicts
 
@@ -71,12 +82,15 @@ def get_all_conflicts(conn: sqlite3.Connection) -> list[dict[str, Any]]:
 
     conflicts = []
     for sub, pred, _distinct_count in candidates:
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id, sub, pred, obj, metadata, source_node_id
             FROM fact_triples
             WHERE sub = ? AND pred = ?
             ORDER BY timestamp DESC
-        """, (sub, pred))
+        """,
+            (sub, pred),
+        )
         facts = cursor.fetchall()
         resolved: list[dict] = []
         for f in facts:
@@ -84,25 +98,37 @@ def get_all_conflicts(conn: sqlite3.Connection) -> list[dict[str, Any]]:
                 meta = json.loads(f[4]) if isinstance(f[4], str) else f[4]
             except (json.JSONDecodeError, TypeError):
                 meta = {}
-            resolved.append({
-                "id": f[0], "sub": f[1], "pred": f[2], "obj": f[3],
-                "source": meta.get("source", "unknown"),
-                "confidence": meta.get("confidence", 0.5),
-            })
+            resolved.append(
+                {
+                    "id": f[0],
+                    "sub": f[1],
+                    "pred": f[2],
+                    "obj": f[3],
+                    "source": meta.get("source", "unknown"),
+                    "confidence": meta.get("confidence", 0.5),
+                }
+            )
 
         unique_objs = {f["obj"] for f in resolved}
         if len(unique_objs) >= 2:
-            conflicts.append({
-                "sub": sub, "pred": pred,
-                "fact_count": len(resolved),
-                "unique_statements": len(unique_objs),
-                "facts": sorted(resolved, key=lambda x: x.get("confidence", 0), reverse=True),
-            })
+            conflicts.append(
+                {
+                    "sub": sub,
+                    "pred": pred,
+                    "fact_count": len(resolved),
+                    "unique_statements": len(unique_objs),
+                    "facts": sorted(
+                        resolved, key=lambda x: x.get("confidence", 0), reverse=True
+                    ),
+                }
+            )
 
     return conflicts
 
 
-def generate_report(conflicts: list[dict[str, Any]], report_type: str = "scenario") -> str:
+def generate_report(
+    conflicts: list[dict[str, Any]], report_type: str = "scenario"
+) -> str:
     timestamp = datetime.now(UTC).isoformat()
     lines = [
         "# 冲突检测报告",
@@ -137,6 +163,7 @@ def generate_report(conflicts: list[dict[str, Any]], report_type: str = "scenari
 
 def main() -> None:
     import sys as _sys
+
     mode = _sys.argv[1] if len(_sys.argv) > 1 else "scenario"
 
     conn = sqlite3.connect(DB_PATH)

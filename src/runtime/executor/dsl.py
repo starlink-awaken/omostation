@@ -18,6 +18,7 @@ from typing import Any
 # Errors
 # ============================================================
 
+
 class DSLError(Exception):
     """Base DSL error."""
 
@@ -49,6 +50,7 @@ class StepExecutionError(DSLError):
 # DSL AST node types
 # ============================================================
 
+
 class CallType(StrEnum):
     AGENT = "agent"
     SKILL = "skill"
@@ -64,6 +66,7 @@ class LoopType(StrEnum):
 @dataclass
 class DSLCall:
     """A call to an agent, skill, or tool."""
+
     type: CallType
     target: str
 
@@ -77,6 +80,7 @@ class DSLRetry:
 @dataclass
 class DSLStep:
     """A single step in the workflow body."""
+
     type: str = "step"
     name: str = ""
     call: DSLCall | None = None
@@ -103,6 +107,7 @@ class DSLStep:
 @dataclass
 class DSLDefinition:
     """Top-level DSL definition from YAML/JSON."""
+
     name: str
     description: str = ""
     version: str = "1.0"

@@ -31,7 +31,19 @@ OBSERVABILITY_VERSION = "1.0"
 
 
 class TraceRecord:
-    __slots__ = ("pipeline_id", "step_index", "tool", "action", "started_at", "status", "ended_at", "duration_ms", "input_summary", "output_summary", "collab_task_id")
+    __slots__ = (
+        "pipeline_id",
+        "step_index",
+        "tool",
+        "action",
+        "started_at",
+        "status",
+        "ended_at",
+        "duration_ms",
+        "input_summary",
+        "output_summary",
+        "collab_task_id",
+    )
 
     def __init__(
         self,
@@ -78,7 +90,11 @@ class PipelineTracer:
         self._hermes_url = "http://localhost:9800"
         self._kos_url: str | None = None
 
-    def configure(self, hermes_ops_url: str = "http://localhost:9800", kos_collab_url: str | None = None) -> None:
+    def configure(
+        self,
+        hermes_ops_url: str = "http://localhost:9800",
+        kos_collab_url: str | None = None,
+    ) -> None:
         self._hermes_url = hermes_ops_url
         self._kos_url = kos_collab_url
 
@@ -87,11 +103,24 @@ class PipelineTracer:
         self._metrics.increment("pipeline_steps_total", {"tool": event.tool})
         return event
 
-    def start_step(self, pipeline_id: str, step_index: int, tool: str, action: str, input_summary: str = "") -> TraceRecord:
-        return self.record(TraceRecord(
-            pipeline_id=pipeline_id, step_index=step_index, tool=tool, action=action,
-            started_at=_now(), input_summary=input_summary,
-        ))
+    def start_step(
+        self,
+        pipeline_id: str,
+        step_index: int,
+        tool: str,
+        action: str,
+        input_summary: str = "",
+    ) -> TraceRecord:
+        return self.record(
+            TraceRecord(
+                pipeline_id=pipeline_id,
+                step_index=step_index,
+                tool=tool,
+                action=action,
+                started_at=_now(),
+                input_summary=input_summary,
+            )
+        )
 
     def _find(self, pipeline_id: str, step_index: int) -> TraceRecord | None:
         for s in self._traces.get(pipeline_id, []):
@@ -105,22 +134,48 @@ class PipelineTracer:
         step.status = status
         step.output_summary = output
 
-    def complete_step(self, pipeline_id: str, step_index: int, output_summary: str = "") -> TraceRecord | None:
+    def complete_step(
+        self, pipeline_id: str, step_index: int, output_summary: str = ""
+    ) -> TraceRecord | None:
         step = self._find(pipeline_id, step_index)
         if step is None:
             return None
         self._finalize(step, TraceStatus.COMPLETED, output_summary)
-        self._notify("event", {"type": "PIPELINE_STEP_COMPLETED", "payload": {"pipeline_id": pipeline_id, "step_index": step_index, "output": output_summary}})
-        self._notify_collab(step.collab_task_id, step_index, "completed", output_summary)
+        self._notify(
+            "event",
+            {
+                "type": "PIPELINE_STEP_COMPLETED",
+                "payload": {
+                    "pipeline_id": pipeline_id,
+                    "step_index": step_index,
+                    "output": output_summary,
+                },
+            },
+        )
+        self._notify_collab(
+            step.collab_task_id, step_index, "completed", output_summary
+        )
         self._metrics.increment("pipeline_steps_completed")
         return step
 
-    def fail_step(self, pipeline_id: str, step_index: int, error_summary: str = "") -> TraceRecord | None:
+    def fail_step(
+        self, pipeline_id: str, step_index: int, error_summary: str = ""
+    ) -> TraceRecord | None:
         step = self._find(pipeline_id, step_index)
         if step is None:
             return None
         self._finalize(step, TraceStatus.FAILED, error_summary)
-        self._notify("event", {"type": "PIPELINE_STEP_FAILED", "payload": {"pipeline_id": pipeline_id, "step_index": step_index, "output": error_summary}})
+        self._notify(
+            "event",
+            {
+                "type": "PIPELINE_STEP_FAILED",
+                "payload": {
+                    "pipeline_id": pipeline_id,
+                    "step_index": step_index,
+                    "output": error_summary,
+                },
+            },
+        )
         self._notify_collab(step.collab_task_id, step_index, "failed", error_summary)
         self._metrics.increment("pipeline_steps_failed")
         return step
@@ -144,12 +199,22 @@ class PipelineTracer:
     def _notify(self, path: str, payload: dict[str, object]) -> None:
         asyncio.ensure_future(_async_post(f"{self._hermes_url}/{path}", payload))
 
-    def _notify_collab(self, task_id: str | None, step_index: int, status: str, output: str) -> None:
+    def _notify_collab(
+        self, task_id: str | None, step_index: int, status: str, output: str
+    ) -> None:
         if not task_id or not self._kos_url:
             return
-        asyncio.ensure_future(_async_post(self._kos_url, {
-            "task_id": task_id, "step": step_index, "status": status, "output": output,
-        }))
+        asyncio.ensure_future(
+            _async_post(
+                self._kos_url,
+                {
+                    "task_id": task_id,
+                    "step": step_index,
+                    "status": status,
+                    "output": output,
+                },
+            )
+        )
 
 
 class Observability:
@@ -168,7 +233,9 @@ class Observability:
         return ctx
 
     def add_event(self, message: str, level: str = "info") -> None:
-        self.events.append(DashboardEvent(timestamp=time.time(), level=level, message=message))
+        self.events.append(
+            DashboardEvent(timestamp=time.time(), level=level, message=message)
+        )
         if len(self.events) > self._max_events:
             self.events.pop(0)
 
@@ -182,11 +249,22 @@ class Observability:
                 "histograms": {k: vars(v) for k, v in snap.histograms.items()},
             },
             "pipeline_traces": {
-                pid: [{"step_index": r.step_index, "tool": r.tool, "status": r.status.value, "duration_ms": r.duration_ms} for r in recs[-10:]]
+                pid: [
+                    {
+                        "step_index": r.step_index,
+                        "tool": r.tool,
+                        "status": r.status.value,
+                        "duration_ms": r.duration_ms,
+                    }
+                    for r in recs[-10:]
+                ]
                 for pid, recs in self.pipeline_tracer.get_all_traces().items()
             },
             "active_trace_count": len(self.active_traces),
-            "events": [{"timestamp": e.timestamp, "level": e.level, "message": e.message} for e in self.events[-20:]],
+            "events": [
+                {"timestamp": e.timestamp, "level": e.level, "message": e.message}
+                for e in self.events[-20:]
+            ],
             "timestamp": time.time(),
         }
 
@@ -204,6 +282,7 @@ def _now() -> str:
 async def _async_post(url: str, payload: dict[str, object]) -> None:
     try:
         import httpx  # type: ignore[import-untyped]
+
         async with httpx.AsyncClient(timeout=5.0) as client:
             await client.post(url, json=payload)
     except Exception:

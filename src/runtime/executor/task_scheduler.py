@@ -62,7 +62,9 @@ class TaskScheduler:
 
     def __init__(self, max_concurrent: int = 5) -> None:
         self._tasks: dict[str, TaskDef] = {}
-        self._queue: asyncio.PriorityQueue[tuple[int, int, str]] = asyncio.PriorityQueue()
+        self._queue: asyncio.PriorityQueue[tuple[int, int, str]] = (
+            asyncio.PriorityQueue()
+        )
         self._executor: TaskExecutor | None = None
         self._worker_task: asyncio.Task[None] | None = None
         self._semaphore = asyncio.Semaphore(max_concurrent)
@@ -101,7 +103,9 @@ class TaskScheduler:
             RuntimeError: 若 executor 未设置或调度器未启动。
         """
         if self._executor is None:
-            raise RuntimeError("TaskScheduler executor not set. Call set_executor() first.")
+            raise RuntimeError(
+                "TaskScheduler executor not set. Call set_executor() first."
+            )
         if self._worker_task is None:
             raise RuntimeError("TaskScheduler not started. Call start() first.")
 

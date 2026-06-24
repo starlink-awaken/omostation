@@ -8,13 +8,34 @@ from dataclasses import dataclass
 from typing import Any
 
 SAFE_BUILTINS = {
-    "abs": abs, "all": all, "any": any, "bool": bool, "dict": dict,
-    "enumerate": enumerate, "filter": filter, "float": float, "int": int,
-    "len": len, "list": list, "map": map, "max": max, "min": min,
-    "range": range, "round": round, "set": set, "sorted": sorted,
-    "str": str, "sum": sum, "tuple": tuple, "zip": zip,
-    "print": print, "True": True, "False": False, "None": None,
+    "abs": abs,
+    "all": all,
+    "any": any,
+    "bool": bool,
+    "dict": dict,
+    "enumerate": enumerate,
+    "filter": filter,
+    "float": float,
+    "int": int,
+    "len": len,
+    "list": list,
+    "map": map,
+    "max": max,
+    "min": min,
+    "range": range,
+    "round": round,
+    "set": set,
+    "sorted": sorted,
+    "str": str,
+    "sum": sum,
+    "tuple": tuple,
+    "zip": zip,
+    "print": print,
+    "True": True,
+    "False": False,
+    "None": None,
 }
+
 
 @dataclass
 class SandboxResult:
@@ -24,9 +45,12 @@ class SandboxResult:
     duration_ms: float = 0.0
     stdout: str = ""
 
+
 class TimeoutError(Exception):
     """Raised on sandbox timeout."""
+
     pass
+
 
 class Sandbox:
     """Safely execute Python code with resource limits."""
@@ -67,7 +91,9 @@ class Sandbox:
                 stdout_text = stdout_text[:max_output_len] + "..."
             result_val = g.get("result", None)
             elapsed = (time.time() - t0) * 1000
-            return SandboxResult(success=True, output=result_val, stdout=stdout_text, duration_ms=elapsed)
+            return SandboxResult(
+                success=True, output=result_val, stdout=stdout_text, duration_ms=elapsed
+            )
         except TimeoutError:
             elapsed = (time.time() - t0) * 1000
             return SandboxResult(success=False, error="Timeout", duration_ms=elapsed)

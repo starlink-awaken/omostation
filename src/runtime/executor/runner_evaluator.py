@@ -146,7 +146,10 @@ class AgentRunner:
 
     def cancel(self, agent_name: str) -> bool:
         state = self._states.get(agent_name)
-        if state is None or state.status not in (AgentStatus.RUNNING, AgentStatus.RETRYING):
+        if state is None or state.status not in (
+            AgentStatus.RUNNING,
+            AgentStatus.RETRYING,
+        ):
             return False
         state.status = AgentStatus.FAILED
         state.completed_at = time.time()
@@ -205,7 +208,9 @@ class RunEvaluator:
             criteria_id=criteria.id,
             criteria_name=criteria.name,
             result=EvaluationResult.PASS if passed else EvaluationResult.FAIL,
-            detail="Output is valid" if passed else "Output is empty or missing expected pattern",
+            detail="Output is valid"
+            if passed
+            else "Output is empty or missing expected pattern",
         )
 
     async def _check_criterion(

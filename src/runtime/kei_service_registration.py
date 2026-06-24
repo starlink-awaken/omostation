@@ -139,7 +139,9 @@ def validate_service_entry(entry: dict, source: str = "unknown") -> dict:
     # Warn about missing recommended fields
     for field in RECOMMENDED_SERVICE_FIELDS:
         if field not in entry or entry[field] is None:
-            result["warnings"].append(f"Service '{name}' missing recommended field: {field}")
+            result["warnings"].append(
+                f"Service '{name}' missing recommended field: {field}"
+            )
 
     # Validate port format if provided
     port = entry.get("port")
@@ -314,7 +316,11 @@ def register_service_from_file(filepath: str | Path) -> dict:
 
     if not validation["valid"]:
         result["errors"] = validation["errors"]
-        _audit("execute", "blocked", f"Service registration blocked for {path}: {validation['errors']}")
+        _audit(
+            "execute",
+            "blocked",
+            f"Service registration blocked for {path}: {validation['errors']}",
+        )
         return result
 
     # Extract service name from the first valid entry
@@ -393,6 +399,7 @@ def validate_all() -> dict:
 
 
 # ── CLI Entry Point ───────────────────────────────────────────────────────────
+
 
 def main():
     """CLI entry point for manual validation."""

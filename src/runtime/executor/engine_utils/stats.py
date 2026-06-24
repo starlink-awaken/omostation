@@ -74,7 +74,9 @@ async def measure_time_async(fn: Callable[[], Any]) -> tuple[Any, float]:
     return result, duration_ms
 
 
-def collect_samples(fn: Callable[[], Any], n_samples: int) -> tuple[list[Any], list[float]]:
+def collect_samples(
+    fn: Callable[[], Any], n_samples: int
+) -> tuple[list[Any], list[float]]:
     """Collect duration samples from repeated synchronous execution."""
     warmup = min(5, max(1, n_samples // 10))
     for _ in range(warmup):

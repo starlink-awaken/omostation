@@ -38,8 +38,7 @@ def validate_runtime_health_snapshot(payload: Any) -> dict[str, Any]:
     mixed = sorted(_GOVERNANCE_ONLY_KEYS.intersection(payload))
     if mixed:
         raise ValueError(
-            "runtime health snapshot contains governance-only keys: "
-            + ", ".join(mixed)
+            "runtime health snapshot contains governance-only keys: " + ", ".join(mixed)
         )
     services = payload.get("services")
     if not isinstance(services, dict):

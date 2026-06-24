@@ -5,7 +5,12 @@ import random
 import time
 from typing import Any
 
-from runtime.executor.dsl_types import CallConfig, CallResult, ExecutionContext, RetryConfig
+from runtime.executor.dsl_types import (
+    CallConfig,
+    CallResult,
+    ExecutionContext,
+    RetryConfig,
+)
 from runtime.executor.step_executor import ExecutionDependencies, ICallExecutor
 
 DEFAULT_TIMEOUT_MS = 300000
@@ -47,24 +52,33 @@ class AgentCallExecutor(ICallExecutor):
         self._tracer = dependencies.tracer
         self._logger = dependencies.logger
 
-    async def execute(self, config: CallConfig, context: ExecutionContext) -> CallResult:
+    async def execute(
+        self, config: CallConfig, context: ExecutionContext
+    ) -> CallResult:
         errors = self.validate(config)
         if errors:
             raise AgentCallError(f"Validation failed: {', '.join(errors)}")
         start_time = time.time()
         rc = config.retry or RetryConfig()
-        max_retries = rc.max_retries if rc.max_retries is not None else DEFAULT_MAX_RETRIES
+        max_retries = (
+            rc.max_retries if rc.max_retries is not None else DEFAULT_MAX_RETRIES
+        )
         agent_def = await self._get_agent(config.name)
         resolved_inputs = await self._resolve_inputs(config.inputs, context)
         task_str = f"Execute agent: {config.name}\nInputs: {resolved_inputs}"
         for attempt in range(max_retries + 1):
             try:
                 timeout = config.timeout or DEFAULT_TIMEOUT_MS
-                agent_state = await _agent_with_timeout(self._agent_runner.run_agent(agent_def, task_str, ""), timeout, config.name)
+                agent_state = await _agent_with_timeout(
+                    self._agent_runner.run_agent(agent_def, task_str, ""),
+                    timeout,
+                    config.name,
+                )
                 outputs = self._process_outputs(config.outputs, agent_state)
                 duration_ms = (time.time() - start_time) * 1000
                 result = CallResult(
-                    success=getattr(agent_state, "status", "") in ("completed", "COMPLETED"),
+                    success=getattr(agent_state, "status", "")
+                    in ("completed", "COMPLETED"),
                     data=getattr(agent_state, "output", None),
                     duration_ms=duration_ms,
                     tokens_used=getattr(agent_state, "token_usage", 0) or 0,
@@ -82,7 +96,9 @@ class AgentCallExecutor(ICallExecutor):
                 raise
             except Exception as exc:
                 if attempt >= max_retries:
-                    raise AgentCallError(f"Agent '{config.name}' failed after {max_retries} retries") from exc
+                    raise AgentCallError(
+                        f"Agent '{config.name}' failed after {max_retries} retries"
+                    ) from exc
                 await asyncio.sleep(_calc_agent_backoff(attempt, rc) / 1000)
         raise AgentCallError(f"Agent '{config.name}' failed: unknown error")
 
@@ -100,7 +116,9 @@ class AgentCallExecutor(ICallExecutor):
                 return agent
         raise AgentCallError(f"Agent '{name}' not found")
 
-    async def _resolve_inputs(self, inputs: dict[str, Any], context: ExecutionContext) -> dict[str, Any]:
+    async def _resolve_inputs(
+        self, inputs: dict[str, Any], context: ExecutionContext
+    ) -> dict[str, Any]:
         resolved: dict[str, Any] = {}
         for key, value in inputs.items():
             if isinstance(value, str) and value.startswith("$"):
@@ -123,9 +141,15 @@ class AgentCallExecutor(ICallExecutor):
             return self._resolve_var(name, context.parent)
         raise ValueError(f"Undefined variable: {name}")
 
-    def _process_outputs(self, outputs: dict[str, str] | None, state: Any) -> dict[str, Any]:
+    def _process_outputs(
+        self, outputs: dict[str, str] | None, state: Any
+    ) -> dict[str, Any]:
         result: dict[str, Any] = {}
-        output = getattr(state, "output", None) if not isinstance(state, dict) else state.get("output")
+        output = (
+            getattr(state, "output", None)
+            if not isinstance(state, dict)
+            else state.get("output")
+        )
         if not outputs:
             result["output"] = output
             return result

@@ -16,19 +16,37 @@ from .isc_errors import (
 # ---------------------------------------------------------------------------
 
 PRECEDENCE: dict[str, int] = {
-    "||": 1, "&&": 2,
-    "==": 3, "!=": 3, ">": 3, ">=": 3, "<": 3, "<=": 3,
-    "!": 4, ".": 5, "[": 5,
+    "||": 1,
+    "&&": 2,
+    "==": 3,
+    "!=": 3,
+    ">": 3,
+    ">=": 3,
+    "<": 3,
+    "<=": 3,
+    "!": 4,
+    ".": 5,
+    "[": 5,
 }
 
 
-def _make_token(ttype: str, value: Any, pos: int, line: int, col: int, length: int = 0) -> dict:
-    return {"type": ttype, "value": value, "position": pos, "line": line, "column": col, "length": length}
+def _make_token(
+    ttype: str, value: Any, pos: int, line: int, col: int, length: int = 0
+) -> dict:
+    return {
+        "type": ttype,
+        "value": value,
+        "position": pos,
+        "line": line,
+        "column": col,
+        "length": length,
+    }
 
 
 # ---------------------------------------------------------------------------
 # Lexer
 # ---------------------------------------------------------------------------
+
 
 class ISCLexer:
     """Tokenizes an ISC expression string into a token stream."""
@@ -62,9 +80,12 @@ class ISCLexer:
 
         # Single-char tokens
         mapping: dict[str, str] = {
-            "(": "LPAREN", ")": "RPAREN",
-            "[": "LBRACKET", "]": "RBRACKET",
-            ".": "DOT", "%": "PERCENT",
+            "(": "LPAREN",
+            ")": "RPAREN",
+            "[": "LBRACKET",
+            "]": "RBRACKET",
+            ".": "DOT",
+            "%": "PERCENT",
         }
         if ch in mapping:
             return _make_token(mapping[ch], ch, start_pos, start_line, start_col, 1)
@@ -102,7 +123,9 @@ class ISCLexer:
 
         raise ISCInvalidCharacterError(ch, start_pos)
 
-    def _scan_string(self, quote: str, start_pos: int, start_line: int, start_col: int) -> dict:
+    def _scan_string(
+        self, quote: str, start_pos: int, start_line: int, start_col: int
+    ) -> dict:
         value = ""
         while not self._at_end() and self._peek() != quote:
             ch = self._advance()
@@ -117,10 +140,14 @@ class ISCLexer:
         self._advance()
         return _make_token("STRING", value, start_pos, start_line, start_col)
 
-    def _scan_number(self, first: str, start_pos: int, start_line: int, start_col: int) -> dict:
+    def _scan_number(
+        self, first: str, start_pos: int, start_line: int, start_col: int
+    ) -> dict:
         value = first
         has_dot = False
-        while not self._at_end() and (self._peek().isdigit() or (self._peek() == "." and not has_dot)):
+        while not self._at_end() and (
+            self._peek().isdigit() or (self._peek() == "." and not has_dot)
+        ):
             if self._peek() == ".":
                 has_dot = True
             elif has_dot:
@@ -129,16 +156,30 @@ class ISCLexer:
         num = float(value) if has_dot else int(value)
         return _make_token("NUMBER", num, start_pos, start_line, start_col, len(value))
 
-    def _scan_ident(self, first: str, start_pos: int, start_line: int, start_col: int) -> dict:
+    def _scan_ident(
+        self, first: str, start_pos: int, start_line: int, start_col: int
+    ) -> dict:
         value = first
-        while not self._at_end() and (self._peek().isalnum() or self._peek() in ("_", "-")):
+        while not self._at_end() and (
+            self._peek().isalnum() or self._peek() in ("_", "-")
+        ):
             value += self._advance()
         up = value.upper()
-        kw_map = {"AND": "AND", "OR": "OR", "NOT": "NOT", "TRUE": "BOOLEAN", "FALSE": "BOOLEAN"}
+        kw_map = {
+            "AND": "AND",
+            "OR": "OR",
+            "NOT": "NOT",
+            "TRUE": "BOOLEAN",
+            "FALSE": "BOOLEAN",
+        }
         kw_val = {"AND": "&&", "OR": "||", "NOT": "!", "TRUE": True, "FALSE": False}
         if up in kw_map:
-            return _make_token(kw_map[up], kw_val[up], start_pos, start_line, start_col, len(value))
-        return _make_token("IDENTIFIER", value, start_pos, start_line, start_col, len(value))
+            return _make_token(
+                kw_map[up], kw_val[up], start_pos, start_line, start_col, len(value)
+            )
+        return _make_token(
+            "IDENTIFIER", value, start_pos, start_line, start_col, len(value)
+        )
 
     def _advance(self) -> str:
         ch = self._input[self._pos]
@@ -167,6 +208,7 @@ class ISCLexer:
 # Parser
 # ---------------------------------------------------------------------------
 
+
 class ISCParser:
     """Parses ISC expression tokens into an AST."""
 
@@ -185,7 +227,9 @@ class ISCParser:
         expr = self._parse_or()
         if not self._at_end() and self._peek()["type"] != "EOF":
             t = self._peek()
-            raise ISCUnexpectedTokenError("end of expression", str(t["value"]), t["position"])
+            raise ISCUnexpectedTokenError(
+                "end of expression", str(t["value"]), t["position"]
+            )
         return expr
 
     def _parse_or(self) -> dict:
@@ -206,8 +250,12 @@ class ISCParser:
         left = self._parse_unary()
         while self._match("EQ", "NEQ", "GT", "GTE", "LT", "LTE"):
             op_map = {
-                "EQ": "==", "NEQ": "!=", "GT": ">",
-                "GTE": ">=", "LT": "<", "LTE": "<=",
+                "EQ": "==",
+                "NEQ": "!=",
+                "GT": ">",
+                "GTE": ">=",
+                "LT": "<",
+                "LTE": "<=",
             }
             op = op_map[self._prev()["type"]]
             right = self._parse_unary()
@@ -250,13 +298,29 @@ class ISCParser:
             if self._match("DOT"):
                 if not self._match("IDENTIFIER"):
                     t = self._peek()
-                    raise ISCUnexpectedTokenError("property name", str(t["value"]), t["position"])
+                    raise ISCUnexpectedTokenError(
+                        "property name", str(t["value"]), t["position"]
+                    )
                 prop = self._prev()["value"]
-                expr = self._parse_post({"type": "Member", "object": expr, "property": prop, "computed": False})
+                expr = self._parse_post(
+                    {
+                        "type": "Member",
+                        "object": expr,
+                        "property": prop,
+                        "computed": False,
+                    }
+                )
             elif self._match("LBRACKET"):
                 pt = self._consume("STRING", "Expected string property name")
                 self._consume("RBRACKET", "Expected ']' after property name")
-                expr = self._parse_post({"type": "Member", "object": expr, "property": pt["value"], "computed": True})
+                expr = self._parse_post(
+                    {
+                        "type": "Member",
+                        "object": expr,
+                        "property": pt["value"],
+                        "computed": True,
+                    }
+                )
             else:
                 break
         return expr

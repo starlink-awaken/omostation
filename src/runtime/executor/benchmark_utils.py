@@ -14,6 +14,7 @@ from typing import Any
 # Types
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class StatsMetrics:
     min: float = 0.0
@@ -44,17 +45,20 @@ class BenchmarkReport:
     message_bus: list[dict[str, Any]] = field(default_factory=list)
     checkpoint: list[dict[str, Any]] = field(default_factory=list)
     state_machine: list[dict[str, Any]] = field(default_factory=list)
-    summary: dict[str, Any] = field(default_factory=lambda: {
-        "totalTests": 0,
-        "passedTests": 0,
-        "failedTests": 0,
-        "totalDurationMs": 0.0,
-    })
+    summary: dict[str, Any] = field(
+        default_factory=lambda: {
+            "totalTests": 0,
+            "passedTests": 0,
+            "failedTests": 0,
+            "totalDurationMs": 0.0,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # Time measurement
 # ---------------------------------------------------------------------------
+
 
 def measure_time(fn) -> dict[str, Any]:
     """Measure synchronous function execution time."""
@@ -111,6 +115,7 @@ async def collect_samples_async(fn, samples: int) -> dict[str, Any]:
 # Statistics
 # ---------------------------------------------------------------------------
 
+
 def calculate_stats(values: list[float]) -> StatsMetrics:
     if not values:
         return StatsMetrics()
@@ -152,9 +157,11 @@ def _percentile(sorted_vals: list[float], p: float) -> float:
 # Environment info
 # ---------------------------------------------------------------------------
 
+
 def get_environment_info() -> EnvironmentInfo:
     try:
         import psutil
+
         mem = psutil.virtual_memory()
         total_mb = mem.total // (1024 * 1024)
         cpu_cores = psutil.cpu_count(logical=True) or 4
@@ -178,6 +185,7 @@ def _guess_cpu_cores() -> int:
     except AttributeError:
         try:
             import multiprocessing
+
             return multiprocessing.cpu_count()
         except Exception:
             return 4
@@ -186,6 +194,7 @@ def _guess_cpu_cores() -> int:
 # ---------------------------------------------------------------------------
 # Report generation
 # ---------------------------------------------------------------------------
+
 
 def generate_markdown_report(report: BenchmarkReport) -> str:
     """Generate a Markdown-format benchmark report."""
@@ -199,7 +208,9 @@ def generate_markdown_report(report: BenchmarkReport) -> str:
     lines.append("")
     lines.append("| Item | Value |")
     lines.append("|------|-------|")
-    lines.append(f"| Platform | {report.environment.platform_str} ({report.environment.arch}) |")
+    lines.append(
+        f"| Platform | {report.environment.platform_str} ({report.environment.arch}) |"
+    )
     lines.append(f"| CPU Cores | {report.environment.cpu_cores} |")
     lines.append(f"| Memory | {report.environment.total_memory_mb} MB |")
     lines.append("")
@@ -212,7 +223,9 @@ def generate_markdown_report(report: BenchmarkReport) -> str:
     lines.append(f"- **Total duration**: {s['totalDurationMs']:.2f} ms")
     lines.append("")
 
-    def _render_table(title: str, rows: list[dict], headers: list[str], cols: list[str]) -> None:
+    def _render_table(
+        title: str, rows: list[dict], headers: list[str], cols: list[str]
+    ) -> None:
         if not rows:
             return
         lines.append(f"## {title}")
@@ -231,18 +244,30 @@ def generate_markdown_report(report: BenchmarkReport) -> str:
             lines.append("| " + " | ".join(vals) + " |")
         lines.append("")
 
-    _render_table("Agent Execution", report.agent_execution,
-                  ["Test", "Avg", "Median", "P95", "P99", "Samples", "Status"],
-                  ["name", "avg", "median", "p95", "p99", "samples", "status"])
-    _render_table("Message Bus", report.message_bus,
-                  ["Test", "Avg", "Throughput", "Messages", "Status"],
-                  ["name", "avg", "throughput", "messageCount", "status"])
-    _render_table("Checkpoint", report.checkpoint,
-                  ["Test", "Avg", "P95", "P99", "Checkpoints", "Status"],
-                  ["name", "avg", "p95", "p99", "checkpointCount", "status"])
-    _render_table("State Machine", report.state_machine,
-                  ["Test", "Avg", "P95", "Transitions", "Status"],
-                  ["name", "avg", "p95", "transitionCount", "status"])
+    _render_table(
+        "Agent Execution",
+        report.agent_execution,
+        ["Test", "Avg", "Median", "P95", "P99", "Samples", "Status"],
+        ["name", "avg", "median", "p95", "p99", "samples", "status"],
+    )
+    _render_table(
+        "Message Bus",
+        report.message_bus,
+        ["Test", "Avg", "Throughput", "Messages", "Status"],
+        ["name", "avg", "throughput", "messageCount", "status"],
+    )
+    _render_table(
+        "Checkpoint",
+        report.checkpoint,
+        ["Test", "Avg", "P95", "P99", "Checkpoints", "Status"],
+        ["name", "avg", "p95", "p99", "checkpointCount", "status"],
+    )
+    _render_table(
+        "State Machine",
+        report.state_machine,
+        ["Test", "Avg", "P95", "Transitions", "Status"],
+        ["name", "avg", "p95", "transitionCount", "status"],
+    )
 
     return "\n".join(lines)
 

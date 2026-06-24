@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 
+
 def test_sandbox_subprocess_blocked():
     """Verify that subprocess execution is blocked when configured."""
     code = """
@@ -23,8 +24,14 @@ except PermissionError as e:
 finally:
     os.unlink(config_path)
 """
-    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env={**os.environ, "PYTHONPATH": "src"})
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": "src"},
+    )
     assert "SUCCESS: KEI Sandbox: subprocess execution is blocked." in result.stdout
+
 
 def test_sandbox_network_blocked():
     """Verify that unauthorized network connections are blocked."""
@@ -48,8 +55,17 @@ except PermissionError as e:
 finally:
     os.unlink(config_path)
 """
-    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env={**os.environ, "PYTHONPATH": "src"})
-    assert "SUCCESS: KEI Sandbox: Network connection to 8.8.8.8 is blocked." in result.stdout
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": "src"},
+    )
+    assert (
+        "SUCCESS: KEI Sandbox: Network connection to 8.8.8.8 is blocked."
+        in result.stdout
+    )
+
 
 def test_sandbox_write_blocked():
     """Verify that unauthorized file writes are blocked."""
@@ -72,8 +88,16 @@ except PermissionError as e:
 finally:
     os.unlink(config_path)
 """
-    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env={**os.environ, "PYTHONPATH": "src"})
-    assert "SUCCESS: KEI Sandbox: Write access to /tmp/blocked_file.txt is blocked." in result.stdout
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYTHONPATH": "src"},
+    )
+    assert (
+        "SUCCESS: KEI Sandbox: Write access to /tmp/blocked_file.txt is blocked."
+        in result.stdout
+    )
 
 
 def _run_sandboxed_subprocess(mutation_code: str) -> str:
@@ -114,7 +138,10 @@ def test_sandbox_mkdir_blocked():
     except PermissionError as e:
         print(f'SUCCESS mkdir: {e}')
 """)
-    assert "SUCCESS mkdir: KEI Sandbox: os.mkdir access to /tmp/kei_blocked_dir is blocked." in stdout
+    assert (
+        "SUCCESS mkdir: KEI Sandbox: os.mkdir access to /tmp/kei_blocked_dir is blocked."
+        in stdout
+    )
 
 
 def test_sandbox_rmdir_blocked():
@@ -126,7 +153,10 @@ def test_sandbox_rmdir_blocked():
     except PermissionError as e:
         print(f'SUCCESS rmdir: {e}')
 """)
-    assert "SUCCESS rmdir: KEI Sandbox: os.rmdir access to /tmp/kei_blocked_dir is blocked." in stdout
+    assert (
+        "SUCCESS rmdir: KEI Sandbox: os.rmdir access to /tmp/kei_blocked_dir is blocked."
+        in stdout
+    )
 
 
 def test_sandbox_remove_blocked():
@@ -138,7 +168,10 @@ def test_sandbox_remove_blocked():
     except PermissionError as e:
         print(f'SUCCESS remove: {e}')
 """)
-    assert "SUCCESS remove: KEI Sandbox: os.remove access to /tmp/kei_blocked_file.txt is blocked." in stdout
+    assert (
+        "SUCCESS remove: KEI Sandbox: os.remove access to /tmp/kei_blocked_file.txt is blocked."
+        in stdout
+    )
 
 
 def test_sandbox_rename_blocked_for_destination():
@@ -150,4 +183,7 @@ def test_sandbox_rename_blocked_for_destination():
     except PermissionError as e:
         print(f'SUCCESS rename: {e}')
 """)
-    assert "SUCCESS rename: KEI Sandbox: os.rename access to /tmp/kei_blocked_dest.txt is blocked." in stdout
+    assert (
+        "SUCCESS rename: KEI Sandbox: os.rename access to /tmp/kei_blocked_dest.txt is blocked."
+        in stdout
+    )

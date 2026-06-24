@@ -18,9 +18,7 @@ _log = logging.getLogger(__name__)
 DEFAULT_SHAREDBRAIN_ENDPOINT = os.environ.get(
     "SHAREDBRAIN_ENDPOINT", "http://localhost:7421"
 )
-DEFAULT_AGORA_ENDPOINT = os.environ.get(
-    "AGORA_ENDPOINT", "http://localhost:7430"
-)
+DEFAULT_AGORA_ENDPOINT = os.environ.get("AGORA_ENDPOINT", "http://localhost:7430")
 
 
 class SharedBrainIdentityProvider:

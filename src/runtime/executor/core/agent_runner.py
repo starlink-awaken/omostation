@@ -136,7 +136,9 @@ class AgentRunner:
         best: AgentDefinition | None = None
         best_score = -1
         for definition in self._definitions.values():
-            score = sum(1 for c in required_capabilities if c in definition.capabilities)
+            score = sum(
+                1 for c in required_capabilities if c in definition.capabilities
+            )
             if score > best_score:
                 best_score = score
                 best = definition
@@ -218,7 +220,10 @@ class AgentRunner:
     def cancel_agent(self, agent_name: str) -> bool:
         """Cancel a running or retrying agent."""
         state = self._states.get(agent_name)
-        if state is None or state.status not in (AgentStatus.RUNNING, AgentStatus.RETRYING):
+        if state is None or state.status not in (
+            AgentStatus.RUNNING,
+            AgentStatus.RETRYING,
+        ):
             return False
         state.status = AgentStatus.CANCELLED
         state.completed_at = time.time()
@@ -254,7 +259,9 @@ class AgentRunner:
     ) -> dict[str, Any]:
         """Execute agent via LLM API (requires external LLM client)."""
         self._build_prompt(definition, task, context)
-        msg = f"LLM client set but real integration not implemented for {definition.name}"
+        msg = (
+            f"LLM client set but real integration not implemented for {definition.name}"
+        )
         raise NotImplementedError(msg)
 
     @staticmethod

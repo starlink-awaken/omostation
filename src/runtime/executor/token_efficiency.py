@@ -29,6 +29,7 @@ TOKEN_COST_PER_MILLION: dict[str, dict[str, float]] = {
 @dataclass
 class TokenUsage:
     """Token usage totals."""
+
     input: int = 0
     output: int = 0
 
@@ -36,6 +37,7 @@ class TokenUsage:
 @dataclass
 class TokenUsageRate:
     """Token usage rate within a time window."""
+
     tokens_per_minute: float = 0.0
     input_tokens_per_minute: float = 0.0
     output_tokens_per_minute: float = 0.0
@@ -45,6 +47,7 @@ class TokenUsageRate:
 @dataclass
 class CostEstimate:
     """Estimated cost breakdown."""
+
     input_cost: float = 0.0
     output_cost: float = 0.0
     total_cost: float = 0.0
@@ -54,6 +57,7 @@ class CostEstimate:
 @dataclass
 class TokenSummary:
     """Aggregate token summary."""
+
     total_tokens: int = 0
     total_input: int = 0
     total_output: int = 0
@@ -65,6 +69,7 @@ class TokenSummary:
 @dataclass
 class TokenEfficiencyResult:
     """Result of a token efficiency benchmark."""
+
     name: str
     description: str = ""
     total_tokens: int = 0
@@ -103,13 +108,15 @@ class TokenTracker:
         metadata: dict[str, Any] | None = None,
     ) -> None:
         now = time.time()
-        self._records.append({
-            "provider": provider,
-            "input": input_tokens,
-            "output": output_tokens,
-            "metadata": metadata or {},
-            "timestamp": now,
-        })
+        self._records.append(
+            {
+                "provider": provider,
+                "input": input_tokens,
+                "output": output_tokens,
+                "metadata": metadata or {},
+                "timestamp": now,
+            }
+        )
 
         p_total = self._totals.setdefault(provider, TokenUsage())
         p_total.input += input_tokens
@@ -141,13 +148,21 @@ class TokenTracker:
         input_t = sum(r["input"] for r in recent)
         output_t = sum(r["output"] for r in recent)
         total_t = input_t + output_t
-        window_duration = (now - min((r["timestamp"] for r in recent), default=now)) if recent else 0.0
+        window_duration = (
+            (now - min((r["timestamp"] for r in recent), default=now))
+            if recent
+            else 0.0
+        )
         rate = (total_t / window_duration * 60) if window_duration > 0 else 0.0
 
         return TokenUsageRate(
             tokens_per_minute=rate,
-            input_tokens_per_minute=(input_t / window_duration * 60) if window_duration > 0 else 0.0,
-            output_tokens_per_minute=(output_t / window_duration * 60) if window_duration > 0 else 0.0,
+            input_tokens_per_minute=(input_t / window_duration * 60)
+            if window_duration > 0
+            else 0.0,
+            output_tokens_per_minute=(output_t / window_duration * 60)
+            if window_duration > 0
+            else 0.0,
             window_duration_s=window_duration,
         )
 
@@ -198,8 +213,14 @@ class TokenTracker:
                 "input": self.get_total().input,
                 "output": self.get_total().output,
             },
-            "by_provider": {k: {"input": v.input, "output": v.output} for k, v in self._totals.items()},
-            "by_agent": {k: {"input": v.input, "output": v.output} for k, v in self._agent_usage.items()},
+            "by_provider": {
+                k: {"input": v.input, "output": v.output}
+                for k, v in self._totals.items()
+            },
+            "by_agent": {
+                k: {"input": v.input, "output": v.output}
+                for k, v in self._agent_usage.items()
+            },
             "cost": {"total_cost": self.estimate_cost().total_cost},
         }
 

@@ -13,6 +13,7 @@
 设计: 不依赖 runtime 项目其他模块,只读 JSONL。供 X-Plane probe 在 omo 子项目
 内用 `uv run --package runtime` 调用,跨子项目边界合规。
 """
+
 from __future__ import annotations
 
 import argparse
@@ -23,7 +24,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-DEFAULT_PATH = Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime"))) / "data" / "kei_audit.jsonl"
+DEFAULT_PATH = (
+    Path(os.environ.get("RUNTIME_HOME", str(Path.home() / "runtime")))
+    / "data"
+    / "kei_audit.jsonl"
+)
 
 
 def count_last_24h(path: Path) -> int:
@@ -98,7 +103,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(prog="runtime.kei_probe")
     parser.add_argument("--count-24h", action="store_true", help="数 24h 内事件数")
     parser.add_argument("--last-age-hours", action="store_true", help="最新事件龄(h)")
-    parser.add_argument("--path", type=Path, default=DEFAULT_PATH, help="kei_audit.jsonl 路径")
+    parser.add_argument(
+        "--path", type=Path, default=DEFAULT_PATH, help="kei_audit.jsonl 路径"
+    )
     args = parser.parse_args()
 
     if args.count_24h:

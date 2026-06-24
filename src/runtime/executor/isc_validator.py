@@ -12,6 +12,7 @@ from .isc_parser import ISCParser
 # Result types
 # ---------------------------------------------------------------------------
 
+
 class ValidationError:
     def __init__(
         self,
@@ -68,6 +69,7 @@ class ValidationReport:
 # Conversion rules (natural language -> ISC)
 # ---------------------------------------------------------------------------
 
+
 class _ConversionRule:
     def __init__(self, pattern: str, template_fn) -> None:
         self.pattern = re.compile(pattern)
@@ -122,6 +124,7 @@ _CONVERSION_RULES: list[_ConversionRule] = [
 # Validator
 # ---------------------------------------------------------------------------
 
+
 class ISCValidator:
     """Validates ISC expressions and quality gate configurations."""
 
@@ -147,9 +150,7 @@ class ISCValidator:
                 )
             return ValidationResult(True, [], warnings)
         except Exception as exc:
-            errors.append(
-                ValidationError("$", str(exc), "PARSE_ERROR")
-            )
+            errors.append(ValidationError("$", str(exc), "PARSE_ERROR"))
             return ValidationResult(False, errors, warnings)
 
     def extract_variables(self, expression: str) -> list[str]:
@@ -181,9 +182,7 @@ class ISCValidator:
         traverse(node)
         return list(vars_set)
 
-    def check_undefined_variables(
-        self, criterion: dict[str, Any]
-    ) -> list[str]:
+    def check_undefined_variables(self, criterion: dict[str, Any]) -> list[str]:
         actual_vars = self.extract_variables(criterion.get("expression", ""))
         expected_vars = criterion.get("expected_variables", [])
         return [v for v in actual_vars if v not in expected_vars]
@@ -214,10 +213,19 @@ class ISCValidator:
         name = gate.get("name")
         if not name or not isinstance(name, str):
             errors.append(
-                ValidationError("name", "Quality gate must have a valid name", "MISSING_NAME")
+                ValidationError(
+                    "name", "Quality gate must have a valid name", "MISSING_NAME"
+                )
             )
 
-        valid_phases = ["init", "research", "decision", "execution", "feedback", "delivery"]
+        valid_phases = [
+            "init",
+            "research",
+            "decision",
+            "execution",
+            "feedback",
+            "delivery",
+        ]
         phase = gate.get("phase")
         if not phase or phase not in valid_phases:
             errors.append(
@@ -232,7 +240,9 @@ class ISCValidator:
         criteria = gate.get("criteria")
         if not isinstance(criteria, list):
             errors.append(
-                ValidationError("criteria", "Criteria must be an array", "INVALID_CRITERIA_TYPE")
+                ValidationError(
+                    "criteria", "Criteria must be an array", "INVALID_CRITERIA_TYPE"
+                )
             )
             return ValidationResult(False, errors, warnings)
 
@@ -260,12 +270,20 @@ class ISCValidator:
             return ValidationResult(True, [], warnings)
 
         if not criterion.get("id"):
-            errors.append(ValidationError("id", "Criterion must have an id", "MISSING_ID"))
+            errors.append(
+                ValidationError("id", "Criterion must have an id", "MISSING_ID")
+            )
         if not criterion.get("name"):
-            errors.append(ValidationError("name", "Criterion must have a name", "MISSING_NAME"))
+            errors.append(
+                ValidationError("name", "Criterion must have a name", "MISSING_NAME")
+            )
         if not criterion.get("expression"):
             errors.append(
-                ValidationError("expression", "Criterion must have an expression", "MISSING_EXPRESSION")
+                ValidationError(
+                    "expression",
+                    "Criterion must have an expression",
+                    "MISSING_EXPRESSION",
+                )
             )
         else:
             expr_result = self.validate_expression(criterion["expression"])
@@ -300,12 +318,14 @@ class ISCValidator:
         result: list[dict[str, Any]] = []
         for idx, crit in enumerate(legacy_criteria):
             expr = self.convert_legacy_expression(crit)
-            result.append({
-                "id": f"{base_id}-{idx}" if base_id else f"criterion-{idx}",
-                "name": crit,
-                "expression": expr,
-                "mandatory": True,
-            })
+            result.append(
+                {
+                    "id": f"{base_id}-{idx}" if base_id else f"criterion-{idx}",
+                    "name": crit,
+                    "expression": expr,
+                    "mandatory": True,
+                }
+            )
         return result
 
     # Report generation ---------------------------------------------------
@@ -319,11 +339,13 @@ class ISCValidator:
                     all_vars.add(v)
 
         mandatory = sum(
-            1 for c in gate.get("criteria", [])
+            1
+            for c in gate.get("criteria", [])
             if isinstance(c, dict) and c.get("mandatory")
         )
         optional = sum(
-            1 for c in gate.get("criteria", [])
+            1
+            for c in gate.get("criteria", [])
             if isinstance(c, dict) and not c.get("mandatory")
         )
         return ValidationReport(
@@ -363,6 +385,7 @@ class ISCValidator:
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _extract_raw(node: dict[str, Any]) -> list[str]:
     if node.get("type") == "Identifier":
         return [node["name"]]
@@ -372,6 +395,7 @@ def _extract_raw(node: dict[str, Any]) -> list[str]:
 # ---------------------------------------------------------------------------
 # Factory
 # ---------------------------------------------------------------------------
+
 
 def create_isc_validator() -> ISCValidator:
     return ISCValidator()

@@ -4,6 +4,7 @@
 # status: active
 # ---
 """Cross-session state persistence for workflow-backed autonomous planning."""
+
 from __future__ import annotations
 
 import hashlib
@@ -125,21 +126,31 @@ def checkpoint_step(
                 checkpoint.error_message = error
             break
     state.current_step_index = next(
-        (i for i, checkpoint in enumerate(state.steps) if checkpoint.status == "pending"),
+        (
+            i
+            for i, checkpoint in enumerate(state.steps)
+            if checkpoint.status == "pending"
+        ),
         len(state.steps),
     )
     _save_state(state)
     return state
 
 
-def get_resume_state(goal: str, requested_steps: list[str]) -> tuple[list[str], PipelineState | None]:
+def get_resume_state(
+    goal: str, requested_steps: list[str]
+) -> tuple[list[str], PipelineState | None]:
     state = _load_state()
     if state is None:
         return requested_steps, None
     saved_steps = [checkpoint.step_name for checkpoint in state.steps]
     if state.goal != goal or saved_steps != requested_steps:
         return requested_steps, None
-    passed = {checkpoint.step_name for checkpoint in state.steps if checkpoint.status == "passed"}
+    passed = {
+        checkpoint.step_name
+        for checkpoint in state.steps
+        if checkpoint.status == "passed"
+    }
     remaining = [name for name in requested_steps if name not in passed]
     if len(remaining) == len(requested_steps):
         return requested_steps, None

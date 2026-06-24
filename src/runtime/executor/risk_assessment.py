@@ -20,6 +20,7 @@ from runtime.executor.state_machine import DecisionPath, RiskLevel
 @dataclass
 class RiskAssessmentContext:
     """Context for risk assessment heuristics."""
+
     description: str = ""
     goals: list[str] = field(default_factory=list)
     complexity: str = "standard"
@@ -34,20 +35,49 @@ class RiskAssessmentContext:
 # ====================================================================
 
 SECURITY_KEYWORDS = [
-    "security", "auth", "payment", "encrypt", "credential", "token", "secret",
-    "permission", "rbac", "oauth", "certificate", "ssl", "tls", "firewall",
-    "vulnerability", "compliance", "gdpr", "hipaa", "pci",
+    "security",
+    "auth",
+    "payment",
+    "encrypt",
+    "credential",
+    "token",
+    "secret",
+    "permission",
+    "rbac",
+    "oauth",
+    "certificate",
+    "ssl",
+    "tls",
+    "firewall",
+    "vulnerability",
+    "compliance",
+    "gdpr",
+    "hipaa",
+    "pci",
 ]
 
 INFRA_KEYWORDS = [
-    "database", "migration", "deploy", "production", "infrastructure",
-    "kubernetes", "scaling", "cluster", "replication", "failover", "dns",
-    "load-balancer", "cdn",
+    "database",
+    "migration",
+    "deploy",
+    "production",
+    "infrastructure",
+    "kubernetes",
+    "scaling",
+    "cluster",
+    "replication",
+    "failover",
+    "dns",
+    "load-balancer",
+    "cdn",
 ]
 
 RISK_LEVELS: list[RiskLevel] = [
-    RiskLevel.VERY_LOW, RiskLevel.LOW, RiskLevel.MEDIUM,
-    RiskLevel.HIGH, RiskLevel.CRITICAL,
+    RiskLevel.VERY_LOW,
+    RiskLevel.LOW,
+    RiskLevel.MEDIUM,
+    RiskLevel.HIGH,
+    RiskLevel.CRITICAL,
 ]
 
 RISK_TO_PATH: dict[RiskLevel, DecisionPath] = {
@@ -75,7 +105,9 @@ def assess_risk(context: RiskAssessmentContext) -> RiskLevel:
       5. Explicit security/infra scope flags.
     """
     score = _complexity_score(context.complexity)
-    corpus = " ".join([context.description] + context.goals + context.constraints).lower()
+    corpus = " ".join(
+        [context.description] + context.goals + context.constraints
+    ).lower()
 
     sec_hits = sum(1 for kw in SECURITY_KEYWORDS if kw in corpus)
     score += 2 if sec_hits >= 3 else 1 if sec_hits >= 1 else 0

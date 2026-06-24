@@ -1,6 +1,6 @@
 """Tests for runtime.runtime_bus_adapter — bridges runtime cron jobs to agora.bus facade."""
-from __future__ import annotations
 
+from __future__ import annotations
 
 
 from runtime.runtime_bus_adapter import register_cron_job
@@ -11,6 +11,7 @@ class TestRegisterCronJob:
 
     def test_returns_original_callback(self):
         """返回值必须是原始 callback (保证 cron_service 还能 wire)"""
+
         def my_task():
             return "result"
 
@@ -42,6 +43,7 @@ class TestRegisterCronJob:
 
     def test_callback_with_args_supported(self):
         """callback 带 args/kwargs (签名检查)"""
+
         def my_task(a, b=10):
             return a + b
 
@@ -56,6 +58,7 @@ class TestRegisterCronJob:
         def make_cb(name):
             def cb():
                 callbacks.append(name)
+
             return cb
 
         cb1 = make_cb("task1")
@@ -74,6 +77,7 @@ class TestBusAdapterIntegration:
     def test_schedule_callback_decorator_applied(self):
         """@bus_control.schedule_callback 是 runtime_bus_adapter 模块加载时应用的装饰器"""
         from bus_foundation.facade import control as bus_control
+
         # 检查装饰器本身存在
         assert hasattr(bus_control, "schedule_callback")
         # register_cron_job 必须已装饰 callback (我们用之前的测试间接验证)
@@ -82,6 +86,7 @@ class TestBusAdapterIntegration:
         """register_cron_job 内部必须调用 bus_control.schedule_callback"""
         import inspect
         from runtime import runtime_bus_adapter
+
         source = inspect.getsource(runtime_bus_adapter.register_cron_job)
         assert "schedule_callback" in source
         assert "bus_control" in source
@@ -92,20 +97,26 @@ class TestBusAdapterEdgeCases:
 
     def test_empty_expr(self):
         """空表达式也应注册 (bus_foundation 决定是否拒绝)"""
+
         def cb():
             pass
+
         # 不抛异常即成功
         register_cron_job("", cb)
 
     def test_complex_expr(self):
         """复杂 cron 表达式"""
+
         def cb():
             pass
+
         register_cron_job("0 0 * * 0,6", cb)  # 周末午夜
 
     def test_recognizable_callback(self):
         """callback 应保留 callable 特性"""
+
         def cb():
             return 42
+
         result = register_cron_job("every 1m", cb)
         assert callable(result)

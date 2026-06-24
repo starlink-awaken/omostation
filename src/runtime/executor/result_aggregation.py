@@ -93,7 +93,11 @@ class ResultAggregator:
             total_tasks=self._expected,
             completed_tasks=completed,
             failed_tasks=len(self._errors),
-            results={tid: r.data for tid, r in self._results.items() if r.status in ("completed", "COMPLETED")},
+            results={
+                tid: r.data
+                for tid, r in self._results.items()
+                if r.status in ("completed", "COMPLETED")
+            },
             duration_ms=(end - self._start) * 1000,
         )
 
@@ -115,12 +119,29 @@ async def parallel_run(
     async def _run(task_: ScheduledTask) -> None:
         async with semaphore:
             try:
-                result = await execute_fn(task_) if asyncio.iscoroutinefunction(execute_fn) else execute_fn(task_)
-                pr = result if isinstance(result, PartialResult) else PartialResult(task_id=task_.task_id, agent_name=task_.agent_name, status="completed")
+                result = (
+                    await execute_fn(task_)
+                    if asyncio.iscoroutinefunction(execute_fn)
+                    else execute_fn(task_)
+                )
+                pr = (
+                    result
+                    if isinstance(result, PartialResult)
+                    else PartialResult(
+                        task_id=task_.task_id,
+                        agent_name=task_.agent_name,
+                        status="completed",
+                    )
+                )
                 aggregator.add_result(task_.task_id, pr)
                 scheduler.mark_complete(task_.task_id)
             except Exception as exc:
-                pr = PartialResult(task_id=task_.task_id, agent_name=task_.agent_name, status="failed", data=str(exc))
+                pr = PartialResult(
+                    task_id=task_.task_id,
+                    agent_name=task_.agent_name,
+                    status="failed",
+                    data=str(exc),
+                )
                 aggregator.add_result(task_.task_id, pr)
                 scheduler.mark_failed(task_.task_id)
 

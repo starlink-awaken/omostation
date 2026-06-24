@@ -16,12 +16,15 @@ class SovereigntyLevel(StrEnum):
 
 @dataclass
 class AgentCapability:
-    id: str; description: str = ""  # noqa: E702
+    id: str
+    description: str = ""  # noqa: E702
 
 
 @dataclass
 class AgentIdentity:
-    id: str; name: str; role: str  # noqa: E702
+    id: str
+    name: str
+    role: str  # noqa: E702
     sovereignty_level: SovereigntyLevel = SovereigntyLevel.CONDITIONAL
     capabilities: list[AgentCapability] = field(default_factory=list)
     personality: str | None = None
@@ -31,47 +34,73 @@ class AgentIdentity:
 
 @dataclass
 class IdentityValidationResult:
-    valid: bool; errors: list[str] = field(default_factory=list); warnings: list[str] = field(default_factory=list)  # noqa: E702
+    valid: bool
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)  # noqa: E702
 
 
 @dataclass
 class WorkingMemoryEntry:
-    value: Any; expires_at: float | None = None  # noqa: E702
+    value: Any
+    expires_at: float | None = None  # noqa: E702
     created_at: float = field(default_factory=time.time)
 
 
 @dataclass
 class ProjectMemoryEntry:
-    id: str; project_id: str; category: str; key: str; value: str  # noqa: E702
+    id: str
+    project_id: str
+    category: str
+    key: str
+    value: str  # noqa: E702
     metadata: dict[str, Any] = field(default_factory=dict)
-    created_at: float = 0.0; updated_at: float = 0.0  # noqa: E702
+    created_at: float = 0.0
+    updated_at: float = 0.0  # noqa: E702
 
 
 @dataclass
 class OrgMemoryEntry:
-    id: str; category: str; key: str; value: str  # noqa: E702
-    source_project: str = ""; confidence: float = 0.5  # noqa: E702
+    id: str
+    category: str
+    key: str
+    value: str  # noqa: E702
+    source_project: str = ""
+    confidence: float = 0.5  # noqa: E702
     tags: list[str] = field(default_factory=list)
-    created_at: float = 0.0; updated_at: float = 0.0  # noqa: E702
+    created_at: float = 0.0
+    updated_at: float = 0.0  # noqa: E702
 
 
 class ErrorSeverity(StrEnum):
-    RECOVERABLE = "recoverable"; NON_RECOVERABLE = "non-recoverable"; FATAL = "fatal"  # noqa: E702
+    RECOVERABLE = "recoverable"
+    NON_RECOVERABLE = "non-recoverable"
+    FATAL = "fatal"  # noqa: E702
 
 
 class ErrorCategory(StrEnum):
-    NETWORK = "network"; FILESYSTEM = "filesystem"; DATABASE = "database"  # noqa: E702
-    CONFIGURATION = "configuration"; VALIDATION = "validation"; AGENT_EXECUTION = "agent-execution"  # noqa: E702
-    RESOURCE_EXHAUSTED = "resource-exhausted"; PERMISSION = "permission"; TIMEOUT = "timeout"  # noqa: E702
-    PLUGIN = "plugin"; UNKNOWN = "unknown"  # noqa: E702
+    NETWORK = "network"
+    FILESYSTEM = "filesystem"
+    DATABASE = "database"  # noqa: E702
+    CONFIGURATION = "configuration"
+    VALIDATION = "validation"
+    AGENT_EXECUTION = "agent-execution"  # noqa: E702
+    RESOURCE_EXHAUSTED = "resource-exhausted"
+    PERMISSION = "permission"
+    TIMEOUT = "timeout"  # noqa: E702
+    PLUGIN = "plugin"
+    UNKNOWN = "unknown"  # noqa: E702
 
 
 @dataclass
 class RecoveryStrategy:
     category: ErrorCategory
     severity: ErrorSeverity = ErrorSeverity.RECOVERABLE
-    max_retries: int = 3; base_delay_ms: float = 1000.0; max_delay_ms: float = 10000.0  # noqa: E702
-    use_exponential_backoff: bool = True; jitter_factor: float = 0.1; log_as_warning: bool = True  # noqa: E702
+    max_retries: int = 3
+    base_delay_ms: float = 1000.0
+    max_delay_ms: float = 10000.0  # noqa: E702
+    use_exponential_backoff: bool = True
+    jitter_factor: float = 0.1
+    log_as_warning: bool = True  # noqa: E702
 
 
 # fmt: off
@@ -100,47 +129,83 @@ class EngineError(Exception):
 
 
 class PluginType(StrEnum):
-    PROTOCOL = "protocol"; DECOMPOSER = "decomposer"; CONTRACT = "contract"  # noqa: E702
-    OBSERVABILITY = "observability"; STORAGE = "storage"; NOTIFICATION = "notification"  # noqa: E702
-    AUTH = "auth"; AGENT = "agent"; SKILL = "skill"; INTEGRATION = "integration"; CUSTOM = "custom"  # noqa: E702
+    PROTOCOL = "protocol"
+    DECOMPOSER = "decomposer"
+    CONTRACT = "contract"  # noqa: E702
+    OBSERVABILITY = "observability"
+    STORAGE = "storage"
+    NOTIFICATION = "notification"  # noqa: E702
+    AUTH = "auth"
+    AGENT = "agent"
+    SKILL = "skill"
+    INTEGRATION = "integration"
+    CUSTOM = "custom"  # noqa: E702
+
 
 class PluginStatus(StrEnum):
-    REGISTERED = "registered"; LOADED = "loaded"; ACTIVE = "active"  # noqa: E702
-    INACTIVE = "inactive"; ERROR = "error"; UNLOADED = "unloaded"  # noqa: E702
+    REGISTERED = "registered"
+    LOADED = "loaded"
+    ACTIVE = "active"  # noqa: E702
+    INACTIVE = "inactive"
+    ERROR = "error"
+    UNLOADED = "unloaded"  # noqa: E702
+
 
 PluginPermission = str
 
+
 @dataclass
 class PluginMetadata:
-    plugin_id: str; name: str  # noqa: E702
-    type: PluginType = PluginType.CUSTOM; version: str = "1.0.0"; description: str = ""  # noqa: E702
+    plugin_id: str
+    name: str  # noqa: E702
+    type: PluginType = PluginType.CUSTOM
+    version: str = "1.0.0"
+    description: str = ""  # noqa: E702
     author: str | None = None
     dependencies: list[str] = field(default_factory=list)
     permissions: list[PluginPermission] = field(default_factory=list)
     sandbox_enabled: bool = True
 
+
 @dataclass
 class PluginManifest:
-    metadata: PluginMetadata; main: str = ""  # noqa: E702
+    metadata: PluginMetadata
+    main: str = ""  # noqa: E702
+
 
 @dataclass
 class PluginLoadResult:
-    plugin_id: str; success: bool; error: str | None = None  # noqa: E702
+    plugin_id: str
+    success: bool
+    error: str | None = None  # noqa: E702
+
 
 @dataclass
 class PluginStateInfo:
-    plugin_id: str; status: PluginStatus  # noqa: E702
-    last_state_change: float = 0.0; error: str | None = None; started_at: float | None = None  # noqa: E702
+    plugin_id: str
+    status: PluginStatus  # noqa: E702
+    last_state_change: float = 0.0
+    error: str | None = None
+    started_at: float | None = None  # noqa: E702
+
 
 @dataclass
 class PluginSandboxConfig:
     enabled: bool = True
     allow_read_paths: list[str] = field(default_factory=list)
     allow_write_paths: list[str] = field(default_factory=list)
-    deny_paths: list[str] = field(default_factory=lambda: ["/etc", "/sys", "/proc", "/root"])
-    allow_network: bool = False; allow_domains: list[str] = field(default_factory=list)  # noqa: E702
-    allow_spawn: bool = False; allow_commands: list[str] = field(default_factory=list)  # noqa: E702
-    max_memory_mb: int = 512; max_cpu_percent: int = 50; max_execution_time_ms: int = 30000  # noqa: E702
+    deny_paths: list[str] = field(
+        default_factory=lambda: ["/etc", "/sys", "/proc", "/root"]
+    )
+    allow_network: bool = False
+    allow_domains: list[str] = field(default_factory=list)  # noqa: E702
+    allow_spawn: bool = False
+    allow_commands: list[str] = field(default_factory=list)  # noqa: E702
+    max_memory_mb: int = 512
+    max_cpu_percent: int = 50
+    max_execution_time_ms: int = 30000  # noqa: E702
+
+
 # fmt: on
 
 

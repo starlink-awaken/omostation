@@ -27,23 +27,33 @@ class PluginSandbox:
         self._sandbox_id = f"sandbox-{plugin_id}-{time.time_ns()}"
 
     def check_read_path(self, file_path: str) -> bool:
-        if self._config.deny_paths and any(file_path.startswith(d) or file_path == d for d in self._config.deny_paths):
+        if self._config.deny_paths and any(
+            file_path.startswith(d) or file_path == d for d in self._config.deny_paths
+        ):
             return False
-        if self._config.allow_read_paths and not any(file_path.startswith(a) for a in self._config.allow_read_paths):
+        if self._config.allow_read_paths and not any(
+            file_path.startswith(a) for a in self._config.allow_read_paths
+        ):
             return False
         return True
 
     def check_write_path(self, file_path: str) -> bool:
-        if self._config.deny_paths and any(file_path.startswith(d) or file_path == d for d in self._config.deny_paths):
+        if self._config.deny_paths and any(
+            file_path.startswith(d) or file_path == d for d in self._config.deny_paths
+        ):
             return False
-        if self._config.allow_write_paths and not any(file_path.startswith(a) for a in self._config.allow_write_paths):
+        if self._config.allow_write_paths and not any(
+            file_path.startswith(a) for a in self._config.allow_write_paths
+        ):
             return False
         return True
 
     def check_network(self, url: str) -> bool:
         if not self._config.allow_network:
             return False
-        if self._config.allow_domains and not any(d in url for d in self._config.allow_domains):
+        if self._config.allow_domains and not any(
+            d in url for d in self._config.allow_domains
+        ):
             return False
         return True
 
@@ -61,7 +71,11 @@ class PluginSandbox:
         try:
             return await fn(*args, **kw) if hasattr(fn, "__call__") else fn(*args, **kw)
         except Exception as e:
-            raise EngineError(f"Sandbox error in {self._plugin_id}: {e}", ErrorCategory.PLUGIN, original=e)
+            raise EngineError(
+                f"Sandbox error in {self._plugin_id}: {e}",
+                ErrorCategory.PLUGIN,
+                original=e,
+            )
 
 
 class PluginManager:
@@ -82,7 +96,10 @@ class PluginManager:
         self._statuses[metadata.plugin_id] = PluginStatus.REGISTERED
         self._timestamps[metadata.plugin_id] = {"registered": time.time()}
         self._sandboxes[metadata.plugin_id] = PluginSandbox(
-            PluginSandboxConfig(enabled=metadata.sandbox_enabled, **self._default_sandbox.__dict__), metadata.plugin_id
+            PluginSandboxConfig(
+                enabled=metadata.sandbox_enabled, **self._default_sandbox.__dict__
+            ),
+            metadata.plugin_id,
         )
 
     def batch_register(self, plugins: list[PluginMetadata]) -> list[PluginLoadResult]:
@@ -112,7 +129,9 @@ class PluginManager:
         return PluginStateInfo(
             plugin_id=plugin_id,
             status=self._statuses.get(plugin_id, PluginStatus.REGISTERED),
-            last_state_change=ts.get("started", ts.get("loaded", ts.get("registered", 0.0))),
+            last_state_change=ts.get(
+                "started", ts.get("loaded", ts.get("registered", 0.0))
+            ),
             started_at=ts.get("started"),
         )
 
@@ -155,7 +174,9 @@ class PluginManager:
         self._assert_registered(plugin_id)
         dependents = self._find_dependents(plugin_id)
         if dependents:
-            raise ValueError(f"Cannot unload {plugin_id}: needed by {chr(44).join(dependents)}")
+            raise ValueError(
+                f"Cannot unload {plugin_id}: needed by {chr(44).join(dependents)}"
+            )
         if self._statuses.get(plugin_id) == PluginStatus.ACTIVE:
             await self.stop(plugin_id)
         self._instances.pop(plugin_id, None)
@@ -198,7 +219,9 @@ class PluginManager:
             return False
         return "*" in (meta.permissions or []) or permission in (meta.permissions or [])
 
-    def check_permissions(self, plugin_id: str, required: list[PluginPermission]) -> dict[str, Any]:
+    def check_permissions(
+        self, plugin_id: str, required: list[PluginPermission]
+    ) -> dict[str, Any]:
         meta = self._plugins.get(plugin_id)
         if meta is None:
             return {"granted": False, "error": "Plugin not found"}
@@ -222,7 +245,11 @@ class PluginManager:
             raise ValueError(f"Plugin not found: {plugin_id}")
 
     def _find_dependents(self, plugin_id: str) -> list[str]:
-        return [pid for pid, meta in self._plugins.items() if plugin_id in (meta.dependencies or [])]
+        return [
+            pid
+            for pid, meta in self._plugins.items()
+            if plugin_id in (meta.dependencies or [])
+        ]
 
     def _topological_sort(self, plugin_ids: list[str]) -> list[str]:
         visited: set[str] = set()
@@ -233,7 +260,11 @@ class PluginManager:
             if pid in visited or pid in visiting:
                 return
             visiting.add(pid)
-            for dep in (self._plugins.get(pid).dependencies or []) if pid in self._plugins else []:  # type: ignore[union-attr]
+            for dep in (
+                (self._plugins.get(pid).dependencies or [])
+                if pid in self._plugins
+                else []
+            ):  # type: ignore[union-attr]
                 if dep in plugin_ids:
                     visit(dep)
             visiting.discard(pid)

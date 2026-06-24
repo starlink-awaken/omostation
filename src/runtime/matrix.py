@@ -13,6 +13,7 @@ RUNTIME_MATRIX = Path(os.environ.get("RUNTIME_MATRIX", RUNTIME_HOME / "matrix.ya
 @dataclass
 class ServiceEntry:
     """A single service entry from the matrix."""
+
     name: str
     type: str
     status: str
@@ -46,6 +47,7 @@ def _expand_env(s: str) -> str:
 #   6 spaces: 4th-level (service fields: "type:", "port:", etc.)
 #   8 spaces: continuation text (notes > text)
 
+
 def load_matrix(path: Optional[Path] = None) -> list[ServiceEntry]:
     """Load and parse the runtime matrix YAML.
 
@@ -60,9 +62,9 @@ def load_matrix(path: Optional[Path] = None) -> list[ServiceEntry]:
     current: dict = {}
 
     # States
-    IN_SERVICES = 1     # Inside the 'services:' block
-    IN_GROUPS = 3       # Inside 'groups:' or 'migrations:' block — skip
-    OUTSIDE = 0         # Before 'services:' or after it
+    IN_SERVICES = 1  # Inside the 'services:' block
+    IN_GROUPS = 3  # Inside 'groups:' or 'migrations:' block — skip
+    OUTSIDE = 0  # Before 'services:' or after it
 
     state = OUTSIDE
 
@@ -140,9 +142,13 @@ def load_matrix(path: Optional[Path] = None) -> list[ServiceEntry]:
 def _parse_entry(raw: dict) -> ServiceEntry:
     port_str = raw.get("port", "")
     port = int(port_str) if port_str and port_str not in ("null", "—") else None
-    
+
     depends_raw = raw.get("depends_on", "")
-    depends_on = [d.strip() for d in depends_raw.strip("[]").split(",")] if depends_raw and depends_raw != "null" else []
+    depends_on = (
+        [d.strip() for d in depends_raw.strip("[]").split(",")]
+        if depends_raw and depends_raw != "null"
+        else []
+    )
 
     return ServiceEntry(
         name=raw.get("name", "unknown"),
@@ -187,10 +193,12 @@ def health_check_url(url: Optional[str]) -> str:
     if not url:
         return "—"
     import subprocess
+
     try:
         r = subprocess.run(
             ["curl", "-sf", "-o", "/dev/null", "--max-time", "2", url],
-            capture_output=True, timeout=5
+            capture_output=True,
+            timeout=5,
         )
         return "healthy" if r.returncode == 0 else "unreachable"
     except (subprocess.TimeoutExpired, FileNotFoundError):

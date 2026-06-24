@@ -138,14 +138,18 @@ def _register_tools(fastmcp, sched: scheduler.CronScheduler):
             enabled: Enable/disable the job
             no_agent: Whether to run without agent
         """
-        update_data = {k: v for k, v in locals().items() if k != "job_id" and v is not None}
+        update_data = {
+            k: v for k, v in locals().items() if k != "job_id" and v is not None
+        }
         if not update_data:
             return json.dumps({"error": "No valid fields to update"})
         data = JobUpdate(**update_data)
         job = db.update_job(job_id, data)
         if not job:
             return json.dumps({"error": f"Job {job_id!r} not found"})
-        return json.dumps({"success": True, "job": _fmt_job(job)}, indent=2, ensure_ascii=False)
+        return json.dumps(
+            {"success": True, "job": _fmt_job(job)}, indent=2, ensure_ascii=False
+        )
 
     @fastmcp.tool()
     def cron_delete(job_id: str) -> str:

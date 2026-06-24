@@ -93,9 +93,17 @@ class AgentExecutor:
                     retry_attempt=attempt,
                     state=state,
                 )
-                result = await self._execute_fn(exec_ctx) if asyncio.iscoroutinefunction(self._execute_fn) else self._execute_fn(exec_ctx)
-                state.output = result.get("output") if isinstance(result, dict) else str(result)
-                state.token_usage = result.get("tokens", 0) if isinstance(result, dict) else 0
+                result = (
+                    await self._execute_fn(exec_ctx)
+                    if asyncio.iscoroutinefunction(self._execute_fn)
+                    else self._execute_fn(exec_ctx)
+                )
+                state.output = (
+                    result.get("output") if isinstance(result, dict) else str(result)
+                )
+                state.token_usage = (
+                    result.get("tokens", 0) if isinstance(result, dict) else 0
+                )
                 state.status = AgentExecutionStatus.COMPLETED
                 state.completed_at = time.time()
                 state.error = None
@@ -114,7 +122,10 @@ class AgentExecutor:
         return self._base_backoff_ms * (2 ** (attempt - 1))
 
     def cancel(self, state: AgentExecutionState) -> bool:
-        if state.status not in (AgentExecutionStatus.RUNNING, AgentExecutionStatus.RETRYING):
+        if state.status not in (
+            AgentExecutionStatus.RUNNING,
+            AgentExecutionStatus.RETRYING,
+        ):
             return False
         state.status = AgentExecutionStatus.CANCELLED
         state.completed_at = time.time()

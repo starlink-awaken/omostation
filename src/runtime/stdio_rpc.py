@@ -2,6 +2,7 @@
 
 P49-W1 runtime_serve.py 共用此 helper.
 """
+
 from __future__ import annotations
 
 import json

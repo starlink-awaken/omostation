@@ -74,7 +74,11 @@ class RollbackHistory:
             raise ValueError("Last rollback failed, cannot undo")
         target_checkpoint = last.from_checkpoint
         try:
-            restored = await restore_fn(target_checkpoint) if hasattr(restore_fn, "__call__") else restore_fn(target_checkpoint)
+            restored = (
+                await restore_fn(target_checkpoint)
+                if hasattr(restore_fn, "__call__")
+                else restore_fn(target_checkpoint)
+            )
             records.pop()
             if not records:
                 self._history.pop(project_id, None)

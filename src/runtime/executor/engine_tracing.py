@@ -124,7 +124,11 @@ class TraceContext:
         completed = [s for s in spans if s.end_time is not None]
         root = self.get_root_span()
         total_duration = root.duration if root else 0.0
-        slowest = spans[0] if spans else Span(trace_id="", span_id="", operation_name="", start_time=0)
+        slowest = (
+            spans[0]
+            if spans
+            else Span(trace_id="", span_id="", operation_name="", start_time=0)
+        )
         for s in completed:
             if (s.duration or 0) > (slowest.duration or 0):
                 slowest = s
@@ -182,7 +186,9 @@ class TraceContextManager:
 class TraceExporter:
     """Export TraceContext in multiple formats (JSON, Mermaid, text, markdown)."""
 
-    def export_to_json(self, ctx: TraceContext, include_tags: bool = False, errors_only: bool = False) -> str:
+    def export_to_json(
+        self, ctx: TraceContext, include_tags: bool = False, errors_only: bool = False
+    ) -> str:
         spans = ctx.get_spans()
         if errors_only:
             spans = [s for s in spans if s.status == "error"]
@@ -257,7 +263,9 @@ class TraceExporter:
         lines.append("  Trace Tree:")
         tree = ctx.get_trace_tree()
 
-        def _print_tree(node: TraceTreeNode, prefix: str = "", is_last: bool = True) -> None:
+        def _print_tree(
+            node: TraceTreeNode, prefix: str = "", is_last: bool = True
+        ) -> None:
             conn = "└─" if is_last else "├─"
             dur = f" ({node.span.duration:.0f}ms)" if node.span.duration else ""
             status = ""

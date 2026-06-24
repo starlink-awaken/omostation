@@ -28,7 +28,9 @@ class OutputMappingFailedError(Exception):
         self.target_variable = target_variable
         self.source_path = source_path
         self.original_error = original_error
-        super().__init__(message or f"Failed to map output '{source_path}' to '{target_variable}'")
+        super().__init__(
+            message or f"Failed to map output '{source_path}' to '{target_variable}'"
+        )
 
 
 class IExpressionEvaluator:
@@ -44,7 +46,9 @@ class IStepExecutor:
 
 
 class ICallExecutor:
-    async def execute(self, config: CallConfig, context: ExecutionContext) -> CallResult:
+    async def execute(
+        self, config: CallConfig, context: ExecutionContext
+    ) -> CallResult:
         raise NotImplementedError
 
     def validate(self, config: CallConfig) -> list[str]:
@@ -79,7 +83,9 @@ class StepExecutor:
             return self._default_resolve(name, context.parent)
         raise ValueError(f"Undefined variable: {name}")
 
-    async def execute_step(self, step: Any, context: ExecutionContext) -> ExecutionContext:
+    async def execute_step(
+        self, step: Any, context: ExecutionContext
+    ) -> ExecutionContext:
         step_name = getattr(step, "name", None) or "anonymous"
         start_time = time.time()
 
@@ -136,7 +142,9 @@ class StepExecutor:
                 raise ValueError(f"Failed to resolve input '{key}': {e}") from e
         return resolved
 
-    def _build_call_config(self, step: Any, resolved_inputs: dict[str, Any]) -> CallConfig:
+    def _build_call_config(
+        self, step: Any, resolved_inputs: dict[str, Any]
+    ) -> CallConfig:
         call = step.call
         if not call:
             raise ValueError("Step has no call")
@@ -156,7 +164,9 @@ class StepExecutor:
             )
         return config
 
-    async def _execute_call(self, config: CallConfig, context: ExecutionContext) -> CallResult:
+    async def _execute_call(
+        self, config: CallConfig, context: ExecutionContext
+    ) -> CallResult:
         if config.type == "agent":
             return await self._agent_exec.execute(config, context)
         elif config.type == "skill":
@@ -168,7 +178,10 @@ class StepExecutor:
         raise ValueError(f"Unsupported call type: {config.type}")
 
     async def _map_outputs(
-        self, outputs: dict[str, str], call_result: CallResult, context: ExecutionContext
+        self,
+        outputs: dict[str, str],
+        call_result: CallResult,
+        context: ExecutionContext,
     ) -> None:
         if not call_result.success or call_result.data is None:
             return
@@ -206,7 +219,9 @@ class StepExecutor:
                 raise ValueError(f"Property '{part}' not found")
         return current
 
-    def _update_context(self, context: ExecutionContext, result: CallResult, step_name: str) -> None:
+    def _update_context(
+        self, context: ExecutionContext, result: CallResult, step_name: str
+    ) -> None:
         if result.success:
             context.stats.successful_calls += 1
         else:
@@ -217,8 +232,12 @@ class StepExecutor:
         context.results[step_name] = result
 
     def _record_trace(
-        self, step_name: str, config: CallConfig, result: CallResult,
-        start_time: float, context: ExecutionContext,
+        self,
+        step_name: str,
+        config: CallConfig,
+        result: CallResult,
+        start_time: float,
+        context: ExecutionContext,
     ) -> None:
         _ = TraceEntry(
             timestamp=time.time(),
@@ -227,7 +246,9 @@ class StepExecutor:
             data={"step": step_name, "call_type": config.type},
         )
 
-    def _log_error(self, step: Any, error: Exception, context: ExecutionContext) -> None:
+    def _log_error(
+        self, step: Any, error: Exception, context: ExecutionContext
+    ) -> None:
         step_name = getattr(step, "name", None) or "anonymous"
         logger = getattr(self._deps, "logger", None)
         if logger and hasattr(logger, "error"):

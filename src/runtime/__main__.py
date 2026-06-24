@@ -8,6 +8,7 @@ P61-W1: re-export _call_action + serve from runtime_serve (供跨仓 import).
   python -m runtime serve        # stdio JSON-RPC serve 模式 (BOS URI 派发后端)
   from runtime.__main__ import _call_action, serve  # 跨仓 import (P61-W1 修)
 """
+
 import sys
 
 # P61-W1: re-export 跨仓 import (清账 DEBT-RUNTIME-MAIN-CALL-ACTION-2026-06-08)

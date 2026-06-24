@@ -99,7 +99,10 @@ _DIAGNOSIS_RULES: dict[tuple[AnomalyType, str], list[RepairAction]] = {
         RepairAction.CLEAR_CACHE,
         RepairAction.NOTIFY,
     ],
-    (AnomalyType.RESOURCE_EXHAUSTION, "high"): [RepairAction.CLEAR_CACHE, RepairAction.NOTIFY],
+    (AnomalyType.RESOURCE_EXHAUSTION, "high"): [
+        RepairAction.CLEAR_CACHE,
+        RepairAction.NOTIFY,
+    ],
     (AnomalyType.RESOURCE_EXHAUSTION, "medium"): [RepairAction.CLEAR_CACHE],
     (AnomalyType.UNKNOWN, "critical"): [RepairAction.NOTIFY, RepairAction.RESTART],
     (AnomalyType.UNKNOWN, "high"): [RepairAction.NOTIFY],
@@ -146,7 +149,9 @@ class SelfHealingEngine:
 
     # ── Public API ──────────────────────────────────────────────────────
 
-    def diagnose(self, anomaly_type: AnomalyType, severity: str = "medium") -> RepairAction:
+    def diagnose(
+        self, anomaly_type: AnomalyType, severity: str = "medium"
+    ) -> RepairAction:
         """Diagnose an anomaly and recommend a repair action.
 
         Parameters
@@ -183,7 +188,9 @@ class SelfHealingEngine:
         # All actions in cooldown — fall back to NOOP
         return RepairAction.NOOP
 
-    def execute_repair(self, action: RepairAction, component: str, **params: Any) -> bool:
+    def execute_repair(
+        self, action: RepairAction, component: str, **params: Any
+    ) -> bool:
         """Execute a repair action on the given component.
 
         Parameters
@@ -251,7 +258,9 @@ class SelfHealingEngine:
 
         return result
 
-    def healing_loop(self, stop_event: threading.Event, check_interval: float = 30.0) -> None:
+    def healing_loop(
+        self, stop_event: threading.Event, check_interval: float = 30.0
+    ) -> None:
         """Run the healing loop until stop_event is set.
 
         In each cycle:
@@ -264,7 +273,9 @@ class SelfHealingEngine:
         stop_event: Set this event to stop the loop.
         check_interval: Seconds between health checks (default 30).
         """
-        logger.info("[SelfHealing] Healing loop started (interval=%.1fs)", check_interval)
+        logger.info(
+            "[SelfHealing] Healing loop started (interval=%.1fs)", check_interval
+        )
 
         while not stop_event.is_set():
             try:
@@ -317,5 +328,7 @@ class SelfHealingEngine:
         return True
 
     def _handle_notify(self, component: str, params: dict[str, Any]) -> bool:
-        logger.info("[SelfHealing] NOTIFY — human intervention needed for %s", component)
+        logger.info(
+            "[SelfHealing] NOTIFY — human intervention needed for %s", component
+        )
         return True

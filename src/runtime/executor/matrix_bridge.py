@@ -73,14 +73,16 @@ def report_execution(
     executor = services.setdefault("runtime-executor", {})
 
     executions = executor.setdefault("executions", [])
-    executions.append({
-        "task_id": task_id,
-        "status": status,
-        "tokens_used": tokens_used,
-        "duration_sec": round(duration_sec, 2),
-        "error": error,
-        "at": datetime.now(UTC).isoformat(),
-    })
+    executions.append(
+        {
+            "task_id": task_id,
+            "status": status,
+            "tokens_used": tokens_used,
+            "duration_sec": round(duration_sec, 2),
+            "error": error,
+            "at": datetime.now(UTC).isoformat(),
+        }
+    )
     # 只保留最近 50 条
     if len(executions) > 50:
         executions[:] = executions[-50:]

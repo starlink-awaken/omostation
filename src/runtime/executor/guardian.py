@@ -111,7 +111,9 @@ class Guardian:
 
     # -- Context management --------------------------------------------------
 
-    def init_context(self, project_id: str, data: dict[str, Any] | None = None) -> MonitoringContext:
+    def init_context(
+        self, project_id: str, data: dict[str, Any] | None = None
+    ) -> MonitoringContext:
         data = data or {}
         ctx = MonitoringContext(
             project_id=project_id,
@@ -162,8 +164,21 @@ class Guardian:
 
     # -- Alerts --------------------------------------------------------------
 
-    def raise_alert(self, severity: str, category: str, message: str, details: dict[str, Any] | None = None) -> GuardianAlert:
-        alert = GuardianAlert(id=uuid.uuid4().hex[:12], severity=severity, category=category, message=message, details=details or {}, timestamp=time.time())
+    def raise_alert(
+        self,
+        severity: str,
+        category: str,
+        message: str,
+        details: dict[str, Any] | None = None,
+    ) -> GuardianAlert:
+        alert = GuardianAlert(
+            id=uuid.uuid4().hex[:12],
+            severity=severity,
+            category=category,
+            message=message,
+            details=details or {},
+            timestamp=time.time(),
+        )
         self._record_alert(alert)
         return alert
 
@@ -174,7 +189,9 @@ class Guardian:
                 return True
         return False
 
-    def get_alerts(self, severity: str | None = None, limit: int | None = None) -> list[GuardianAlert]:
+    def get_alerts(
+        self, severity: str | None = None, limit: int | None = None
+    ) -> list[GuardianAlert]:
         result = list(self._alerts)
         if severity is not None:
             result = [a for a in result if a.severity == severity]
@@ -184,7 +201,11 @@ class Guardian:
         return result
 
     def get_unacknowledged(self) -> list[GuardianAlert]:
-        return sorted((a for a in self._alerts if not a.acknowledged), key=lambda x: x.timestamp, reverse=True)
+        return sorted(
+            (a for a in self._alerts if not a.acknowledged),
+            key=lambda x: x.timestamp,
+            reverse=True,
+        )
 
     # -- Periodic checks -----------------------------------------------------
 
@@ -210,29 +231,50 @@ class Guardian:
             by_severity[a.severity] = by_severity.get(a.severity, 0) + 1
             by_category[a.category] = by_category.get(a.category, 0) + 1
 
-        return GuardianStats(total_alerts=len(self._alerts), by_severity=by_severity, by_category=by_category, policies_count=len(self._policies), is_running=self._running)
+        return GuardianStats(
+            total_alerts=len(self._alerts),
+            by_severity=by_severity,
+            by_category=by_category,
+            policies_count=len(self._policies),
+            is_running=self._running,
+        )
 
     # -- Default policies ----------------------------------------------------
 
     def _register_default_policies(self) -> None:
 
-        self.add_policy(GuardianPolicy(
-            name="stuck-phase",
-            check=lambda ctx: self._check_stuck_phase(ctx),
-        ))
-        self.add_policy(GuardianPolicy(
-            name="token-budget",
-            check=lambda ctx: self._check_token_budget(ctx),
-        ))
-        self.add_policy(GuardianPolicy(
-            name="consecutive-failures",
-            check=lambda ctx: self._check_failures(ctx),
-        ))
+        self.add_policy(
+            GuardianPolicy(
+                name="stuck-phase",
+                check=lambda ctx: self._check_stuck_phase(ctx),
+            )
+        )
+        self.add_policy(
+            GuardianPolicy(
+                name="token-budget",
+                check=lambda ctx: self._check_token_budget(ctx),
+            )
+        )
+        self.add_policy(
+            GuardianPolicy(
+                name="consecutive-failures",
+                check=lambda ctx: self._check_failures(ctx),
+            )
+        )
 
     def _check_stuck_phase(self, ctx: MonitoringContext) -> GuardianAlert | None:
         max_dur = self._config.max_phase_duration_ms
         if ctx.phase_duration_ms >= max_dur:
-            return GuardianAlert(severity=AlertSeverity.ERROR, category=AlertCategory.PERFORMANCE, message=f"Phase '{ctx.current_phase}' stuck ({ctx.phase_duration_ms:.0f}ms > {max_dur:.0f}ms)", details={"project_id": ctx.project_id, "duration_ms": ctx.phase_duration_ms}, timestamp=time.time())
+            return GuardianAlert(
+                severity=AlertSeverity.ERROR,
+                category=AlertCategory.PERFORMANCE,
+                message=f"Phase '{ctx.current_phase}' stuck ({ctx.phase_duration_ms:.0f}ms > {max_dur:.0f}ms)",
+                details={
+                    "project_id": ctx.project_id,
+                    "duration_ms": ctx.phase_duration_ms,
+                },
+                timestamp=time.time(),
+            )
         return None
 
     def _check_token_budget(self, ctx: MonitoringContext) -> GuardianAlert | None:
@@ -240,14 +282,32 @@ class Guardian:
             return None
         ratio = ctx.total_token_usage / ctx.token_budget
         if ratio >= 1.0:
-            return GuardianAlert(severity=AlertSeverity.CRITICAL, category=AlertCategory.BUDGET, message=f"Token budget exhausted ({ctx.total_token_usage}/{ctx.token_budget})", details={"project_id": ctx.project_id}, timestamp=time.time())
+            return GuardianAlert(
+                severity=AlertSeverity.CRITICAL,
+                category=AlertCategory.BUDGET,
+                message=f"Token budget exhausted ({ctx.total_token_usage}/{ctx.token_budget})",
+                details={"project_id": ctx.project_id},
+                timestamp=time.time(),
+            )
         if ratio >= self._config.token_budget_warning:
-            return GuardianAlert(severity=AlertSeverity.WARNING, category=AlertCategory.BUDGET, message=f"Token budget at {ratio:.0%}", details={"project_id": ctx.project_id, "ratio": ratio}, timestamp=time.time())
+            return GuardianAlert(
+                severity=AlertSeverity.WARNING,
+                category=AlertCategory.BUDGET,
+                message=f"Token budget at {ratio:.0%}",
+                details={"project_id": ctx.project_id, "ratio": ratio},
+                timestamp=time.time(),
+            )
         return None
 
     def _check_failures(self, ctx: MonitoringContext) -> GuardianAlert | None:
         if ctx.consecutive_failures >= self._config.max_consecutive_failures:
-            return GuardianAlert(severity=AlertSeverity.ERROR, category=AlertCategory.FAILURE, message=f"{ctx.consecutive_failures} consecutive failures", details={"project_id": ctx.project_id}, timestamp=time.time())
+            return GuardianAlert(
+                severity=AlertSeverity.ERROR,
+                category=AlertCategory.FAILURE,
+                message=f"{ctx.consecutive_failures} consecutive failures",
+                details={"project_id": ctx.project_id},
+                timestamp=time.time(),
+            )
         return None
 
     def _record_alert(self, alert: GuardianAlert) -> None:

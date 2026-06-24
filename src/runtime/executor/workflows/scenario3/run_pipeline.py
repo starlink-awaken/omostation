@@ -10,6 +10,7 @@
     python3 workflows/scenario3/run_pipeline.py "分析我对编程语言的学习模式"
     python3 workflows/scenario3/run_pipeline.py --auto "我的Rust和Go学习对比"
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -22,7 +23,7 @@ REPORT_DIR = PROJECT_ROOT / "data" / "scenario3"
 
 
 def _run(cmd: list[str], desc: str) -> tuple[int, str]:
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  ▶ [{desc}]")
     print(f"  $ {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True, cwd=PROJECT_ROOT)
@@ -34,7 +35,7 @@ def _run(cmd: list[str], desc: str) -> tuple[int, str]:
 
 
 def _hitl(phase: str) -> bool:
-    print(f"\n{'#'*60}")
+    print(f"\n{'#' * 60}")
     print(f"# ⏸️  HITL: {phase}")
     print(f"# 时间: {datetime.now(UTC).isoformat()}")
     try:
@@ -83,7 +84,10 @@ def phase4_verify(auto: bool = False) -> bool:
 
     # 1. 检查 FactGraph 是否有新关系
     rc1, out1 = _run(
-        [sys.executable, "-c", """
+        [
+            sys.executable,
+            "-c",
+            """
 import sqlite3, json
 conn = sqlite3.connect('data/db/organs/memory/fact_graph.db')
 rows = conn.execute("SELECT COUNT(*) FROM fact_triples WHERE source_node_id='scenario3_insight'").fetchall()
@@ -92,19 +96,24 @@ rows2 = conn.execute("SELECT sub, pred, obj FROM fact_triples WHERE source_node_
 for r in rows2:
     print(f"  {r[0]} --{r[1]}--> {r[2][:40]}")
 conn.close()
-"""],
+""",
+        ],
         "FactGraph验证",
     )
 
     # 2. 验证可检索到新关系
     rc2, out2 = _run(
-        [sys.executable, "-c", """
+        [
+            sys.executable,
+            "-c",
+            """
 import sqlite3
 conn = sqlite3.connect('data/db/organs/memory/fact_graph.db')
 rows = conn.execute("SELECT COUNT(*) FROM fact_triples WHERE source_node_id LIKE '%scenario3%'").fetchall()
 print(f"场景三相关数据: {rows[0][0]}条")
 conn.close()
-"""],
+""",
+        ],
         "检索验证",
     )
 
@@ -120,9 +129,11 @@ conn.close()
 
 def main() -> None:
     import argparse
+
     parser = argparse.ArgumentParser(description="场景三：自主研究助手闭环")
-    parser.add_argument("question", nargs="?", default="分析我对编程语言的学习模式",
-                        help="要分析的问题")
+    parser.add_argument(
+        "question", nargs="?", default="分析我对编程语言的学习模式", help="要分析的问题"
+    )
     parser.add_argument("--auto", action="store_true")
     parser.add_argument("--phase", choices=["1", "2", "3", "4"])
     args = parser.parse_args()
@@ -131,10 +142,10 @@ def main() -> None:
     question = args.question
     auto = args.auto
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("  场景三: 自主研究助手")
     print(f"  问题: {question}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     phases = [
         ("1", "任务拆解", lambda: phase1_decompose(question, auto)),
@@ -151,7 +162,7 @@ def main() -> None:
             print(f"❌ Phase {pid} 中止")
             sys.exit(1)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("  ✅ 场景三执行完成！")
     print(f"  报告目录: {REPORT_DIR}")
 

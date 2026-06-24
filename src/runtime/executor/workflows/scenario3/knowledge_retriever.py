@@ -4,6 +4,7 @@
 # status: active
 # ---
 """多源知识检索器 — 组合 FactGraph 查询 + 原始数据源重解析。"""
+
 from __future__ import annotations
 
 import json
@@ -21,19 +22,24 @@ PERSONAL_DATA = {
 }
 
 
-def query_factgraph(conn: sqlite3.Connection, topics: list[str], limit: int = 50) -> list[dict[str, Any]]:
+def query_factgraph(
+    conn: sqlite3.Connection, topics: list[str], limit: int = 50
+) -> list[dict[str, Any]]:
     cursor = conn.cursor()
     seen_ids: set[str] = set()
     results = []
 
     for topic in topics:
         q = topic.lower()
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id, sub, pred, obj, metadata, source_node_id
             FROM fact_triples
             WHERE LOWER(sub) LIKE ? OR LOWER(obj) LIKE ? OR LOWER(pred) LIKE ?
             LIMIT ?
-        """, (f"%{q}%", f"%{q}%", f"%{q}%", limit))
+        """,
+            (f"%{q}%", f"%{q}%", f"%{q}%", limit),
+        )
         rows = cursor.fetchall()
 
         for r in rows:
@@ -44,13 +50,18 @@ def query_factgraph(conn: sqlite3.Connection, topics: list[str], limit: int = 50
                 meta = json.loads(r[4]) if isinstance(r[4], str) else r[4]
             except (json.JSONDecodeError, TypeError):
                 meta = {}
-            results.append({
-                "id": r[0], "sub": r[1], "pred": r[2], "obj": r[3],
-                "source": meta.get("source", "unknown"),
-                "confidence": meta.get("confidence", 0.5),
-                "council_weight": meta.get("council_weight"),
-                "source_node": r[5],
-            })
+            results.append(
+                {
+                    "id": r[0],
+                    "sub": r[1],
+                    "pred": r[2],
+                    "obj": r[3],
+                    "source": meta.get("source", "unknown"),
+                    "confidence": meta.get("confidence", 0.5),
+                    "council_weight": meta.get("council_weight"),
+                    "source_node": r[5],
+                }
+            )
 
     return results
 
@@ -58,7 +69,7 @@ def query_factgraph(conn: sqlite3.Connection, topics: list[str], limit: int = 50
 def _char_ngrams(text: str, n: int = 3) -> set[str]:
     """Generate character n-grams from text."""
     text = text.lower()
-    return {text[i:i+n] for i in range(len(text) - n + 1)}
+    return {text[i : i + n] for i in range(len(text) - n + 1)}
 
 
 def _ngram_similarity(a: str, b: str, n: int = 3) -> float:
@@ -131,12 +142,15 @@ def ranked_query(
             like_patterns.append(f"%{ch}%")
 
     for pattern in like_patterns[:5]:  # Limit to 5 patterns max
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id, sub, pred, obj, metadata, source_node_id
             FROM fact_triples
             WHERE LOWER(sub) LIKE ? OR LOWER(obj) LIKE ? OR LOWER(pred) LIKE ?
             LIMIT ?
-        """, (pattern, pattern, pattern, limit * 2))
+        """,
+            (pattern, pattern, pattern, limit * 2),
+        )
 
         for r in cursor.fetchall():
             if r[0] in seen_ids:
@@ -146,12 +160,17 @@ def ranked_query(
                 meta = json.loads(r[4]) if isinstance(r[4], str) else r[4]
             except (json.JSONDecodeError, TypeError):
                 meta = {}
-            candidates.append({
-                "id": r[0], "sub": r[1], "pred": r[2], "obj": r[3],
-                "source": meta.get("source", "unknown"),
-                "confidence": meta.get("confidence", 0.5),
-                "council_weight": meta.get("council_weight"),
-            })
+            candidates.append(
+                {
+                    "id": r[0],
+                    "sub": r[1],
+                    "pred": r[2],
+                    "obj": r[3],
+                    "source": meta.get("source", "unknown"),
+                    "confidence": meta.get("confidence", 0.5),
+                    "council_weight": meta.get("council_weight"),
+                }
+            )
 
     # 2. 排序
     scored = []
@@ -208,9 +227,29 @@ def scan_raw_sources(topics: list[str]) -> dict[str, list[dict]]:
 def retrieve(question: str, topics: list[str] | None = None) -> dict[str, Any]:
     if topics is None:
         import re
-        stop_words = {"分析", "总结", "生成", "查询", "检索", "比较", "我的", "什么", "如何",
-                      "哪些", "这个", "那个", "一个", "可以", "进行", "使用", "需要",
-                      "对", "的", "了"}
+
+        stop_words = {
+            "分析",
+            "总结",
+            "生成",
+            "查询",
+            "检索",
+            "比较",
+            "我的",
+            "什么",
+            "如何",
+            "哪些",
+            "这个",
+            "那个",
+            "一个",
+            "可以",
+            "进行",
+            "使用",
+            "需要",
+            "对",
+            "的",
+            "了",
+        }
         text = re.sub(r"([一-鿿])([和与的在了是对有把被让从到])", r"\1 \2", question)
         words = re.findall(r"[一-鿿]+|[a-zA-Z0-9_]+", text)
         words = [w for w in words if w not in stop_words and len(w) >= 2]
@@ -241,7 +280,12 @@ def retrieve(question: str, topics: list[str] | None = None) -> dict[str, Any]:
     for fact in graph_results:
         sub = fact["sub"]
         if sub not in entities:
-            entities[sub] = {"entity": sub, "facts": [], "sources": set(), "council_weights": []}
+            entities[sub] = {
+                "entity": sub,
+                "facts": [],
+                "sources": set(),
+                "council_weights": [],
+            }
         entities[sub]["facts"].append(fact)
         entities[sub]["sources"].add(fact.get("source", "unknown"))
         if fact.get("council_weight") is not None:
@@ -254,12 +298,15 @@ def retrieve(question: str, topics: list[str] | None = None) -> dict[str, Any]:
         "total_raw_hits": raw_total,
         "graph_results": graph_results,
         "raw_sources": {k: {"count": len(v)} for k, v in raw_results.items()},
-        "entities": {k: {
-            "entity": v["entity"],
-            "fact_count": len(v["facts"]),
-            "sources": list(v["sources"]),
-            "has_council_weights": len(v["council_weights"]) > 0,
-        } for k, v in entities.items()},
+        "entities": {
+            k: {
+                "entity": v["entity"],
+                "fact_count": len(v["facts"]),
+                "sources": list(v["sources"]),
+                "has_council_weights": len(v["council_weights"]) > 0,
+            }
+            for k, v in entities.items()
+        },
     }
 
 
@@ -282,16 +329,20 @@ def format_retrieval(result: dict[str, Any]) -> str:
         sources = ", ".join(ent["sources"][:3])
         lines.append(f"| {name} | {ent['fact_count']} | {sources} | {cw} |")
 
-    lines.extend([
-        "",
-        "## 详细事实 (前15条)",
-        "",
-        "| 实体 | 谓词 | 内容 | 来源 | 置信度 |",
-        "|------|------|------|------|--------|",
-    ])
+    lines.extend(
+        [
+            "",
+            "## 详细事实 (前15条)",
+            "",
+            "| 实体 | 谓词 | 内容 | 来源 | 置信度 |",
+            "|------|------|------|------|--------|",
+        ]
+    )
     for fact in result["graph_results"][:15]:
         obj_short = fact["obj"][:50]
-        lines.append(f"| {fact['sub']} | {fact['pred']} | {obj_short} | {fact['source']} | {fact['confidence']} |")
+        lines.append(
+            f"| {fact['sub']} | {fact['pred']} | {obj_short} | {fact['source']} | {fact['confidence']} |"
+        )
 
     return "\n".join(lines)
 

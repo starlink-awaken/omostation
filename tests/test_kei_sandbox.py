@@ -6,6 +6,7 @@ Verifies:
 - Audit record format
 - Sandbox enable/disable lifecycle
 """
+
 import json
 import os
 import tempfile
@@ -78,6 +79,7 @@ class TestKeiAuditRecords:
         try:
             _KEI_AUDIT_SAVE = None
             import runtime.kei_sandbox as ks
+
             # Save original and patch
             orig = ks._AUDIT_FILE
             ks._AUDIT_FILE = audit_path
@@ -98,6 +100,7 @@ class TestKeiAuditRecords:
     def test_record_audit_non_blocking(self):
         """Audit failure should not raise (non-blocking)."""
         import runtime.kei_sandbox as ks
+
         orig = ks._AUDIT_FILE
         ks._AUDIT_FILE = Path("/nonexistent_dir/audit.jsonl")
         try:
@@ -133,5 +136,11 @@ finally:
 """
         import subprocess
         import sys
-        result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env={**os.environ, "PYTHONPATH": "src"})
+
+        result = subprocess.run(
+            [sys.executable, "-c", code],
+            capture_output=True,
+            text=True,
+            env={**os.environ, "PYTHONPATH": "src"},
+        )
         assert "SUCCESS" in result.stdout

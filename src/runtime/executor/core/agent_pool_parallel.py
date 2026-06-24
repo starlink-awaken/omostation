@@ -70,6 +70,7 @@ class TaskScheduler:
     def _has_cycle(self) -> bool:
         visited: set[str] = set()
         stack: set[str] = set()
+
         def dfs(nid: str) -> bool:
             if nid in stack:
                 return True
@@ -82,6 +83,7 @@ class TaskScheduler:
                     return True
             stack.discard(nid)
             return False
+
         return any(dfs(nid) for nid in self._nodes)
 
     def get_next_batch(self, max_count: int) -> list[ScheduledTask]:
@@ -109,7 +111,11 @@ class TaskScheduler:
         self._running.pop(task_id, None)
         self._completed.add(task_id)
         for nid in self._nodes:
-            if nid not in self._completed and nid not in self._running and nid not in self._failed:
+            if (
+                nid not in self._completed
+                and nid not in self._running
+                and nid not in self._failed
+            ):
                 node = self._nodes[nid]
                 if self._deps_satisfied(node) and node.status != TaskStatus.READY:
                     node.status = TaskStatus.READY

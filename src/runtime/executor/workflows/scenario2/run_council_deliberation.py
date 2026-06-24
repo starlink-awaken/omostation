@@ -4,6 +4,7 @@
 # status: active
 # ---
 """Council 多智能体审议 — @Sage/@Devil/@Builder 辩论解决冲突。"""
+
 from __future__ import annotations
 
 import asyncio
@@ -28,6 +29,7 @@ _HAS_KAIRON_LLM = False
 try:
     from runtime.executor.engine_llm import CompletionOptions
     from runtime.executor.engine_llm import ProviderManager as KaironProviderManager
+
     _HAS_KAIRON_LLM = True
 except ImportError:
     pass
@@ -54,7 +56,9 @@ def _call_lmstudio(prompt: str, timeout: int = 180) -> str | None:
                 msg = data.get("choices", [{}])[0].get("message", {})
                 content = msg.get("content", "")
                 # 空 content 时尝试从 reasoning_content 尾部提取 JSON（推理吃光token预算）
-                if (not content or not content.strip()) and msg.get("reasoning_content"):
+                if (not content or not content.strip()) and msg.get(
+                    "reasoning_content"
+                ):
                     content = msg.get("reasoning_content", "")
                 if content and content.strip():
                     return content
@@ -96,14 +100,18 @@ async def run_llm_council(conflict: dict) -> dict[str, Any]:
         "",
     ]
     for i, f in enumerate(facts, 1):
-        prompt_lines.append(f"  断言 {i}: \"{f['obj']}\" (来源: {f['source']}, 置信度: {f['confidence']})")
-    prompt_lines.extend([
-        "",
-        "请综合评估两个断言的可信度和适用范围，给出每个断言的合理权重（0-1，合计1.0）。",
-        "权重应基于来源可靠性和内容合理性。",
-        "",
-        "以JSON格式回复: {\"resolution\": \"...\", \"weights\": {\"断言1\": 0.0, \"断言2\": 0.0}, \"rationale\": \"...\"}",
-    ])
+        prompt_lines.append(
+            f'  断言 {i}: "{f["obj"]}" (来源: {f["source"]}, 置信度: {f["confidence"]})'
+        )
+    prompt_lines.extend(
+        [
+            "",
+            "请综合评估两个断言的可信度和适用范围，给出每个断言的合理权重（0-1，合计1.0）。",
+            "权重应基于来源可靠性和内容合理性。",
+            "",
+            '以JSON格式回复: {"resolution": "...", "weights": {"断言1": 0.0, "断言2": 0.0}, "rationale": "..."}',
+        ]
+    )
 
     prompt = "\n".join(prompt_lines)
 
@@ -120,6 +128,7 @@ async def run_llm_council(conflict: dict) -> dict[str, Any]:
 
     # 尝试从回复中提取 JSON
     import re
+
     json_match = re.search(r"\{.*\}", content, re.DOTALL)
     if json_match:
         try:
@@ -136,8 +145,12 @@ async def run_llm_council(conflict: dict) -> dict[str, Any]:
             pass
 
     return {
-        "sub": sub, "pred": pred, "method": "llm_council",
-        "resolution": content[:300], "weights": {}, "rationale": content[:200],
+        "sub": sub,
+        "pred": pred,
+        "method": "llm_council",
+        "resolution": content[:300],
+        "weights": {},
+        "rationale": content[:200],
     }
 
 
@@ -148,16 +161,15 @@ def run_deterministic_council(conflict: dict) -> dict[str, Any]:
 
     weights: dict[str, float] = {}
     for i, f in enumerate(facts):
-        label = f"断言{i+1}"
+        label = f"断言{i + 1}"
         weights[label] = round(f.get("confidence", 0.5) / total_confidence, 3)
 
     best = max(facts, key=lambda x: x.get("confidence", 0))
 
-    confidence_details = ", ".join(
-        f'{f["source"]}={f["confidence"]}' for f in facts
-    )
+    confidence_details = ", ".join(f"{f['source']}={f['confidence']}" for f in facts)
     return {
-        "sub": conflict["sub"], "pred": conflict["pred"],
+        "sub": conflict["sub"],
+        "pred": conflict["pred"],
         "method": "deterministic_fallback",
         "resolution": f"基于置信度加权: 最高权重断言为「{best['obj'][:50]}」(来源: {best['source']})",
         "weights": weights,
@@ -172,7 +184,14 @@ async def deliberate_conflicts(conflicts: list[dict]) -> list[dict[str, Any]]:
         result = None
         try:
             result = await run_llm_council(conflict)
-        except (AttributeError, ImportError, OSError, RuntimeError, TypeError, ValueError) as exc:
+        except (
+            AttributeError,
+            ImportError,
+            OSError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+        ) as exc:
             print(f"  ⚠️  LLM 异常: {exc}")
 
         if result is None:
@@ -198,14 +217,16 @@ def generate_report(results: list[dict[str, Any]]) -> str:
     ]
 
     for i, r in enumerate(results, 1):
-        lines.extend([
-            f"## 决议 {i}: {r['sub']} — {r['pred']}",
-            "",
-            f"**方法:** {r['method']}",
-            f"**决议:** {r['resolution']}",
-            "",
-            "**权重分配:**",
-        ])
+        lines.extend(
+            [
+                f"## 决议 {i}: {r['sub']} — {r['pred']}",
+                "",
+                f"**方法:** {r['method']}",
+                f"**决议:** {r['resolution']}",
+                "",
+                "**权重分配:**",
+            ]
+        )
         for label, weight in r.get("weights", {}).items():
             lines.append(f"- {label}: **{weight}**")
         lines.append("")
@@ -221,7 +242,9 @@ def generate_report(results: list[dict[str, Any]]) -> str:
 async def main() -> None:
     import sys as _sys
 
-    from runtime.executor.workflows.scenario2.detect_conflicts import get_conflict_via_definitions
+    from runtime.executor.workflows.scenario2.detect_conflicts import (
+        get_conflict_via_definitions,
+    )
 
     mode = _sys.argv[1] if len(_sys.argv) > 1 else "scenario"
 
@@ -231,7 +254,10 @@ async def main() -> None:
     if mode == "scenario":
         conflicts = get_conflict_via_definitions(conn)
     else:
-        from runtime.executor.workflows.scenario2.detect_conflicts import get_all_conflicts
+        from runtime.executor.workflows.scenario2.detect_conflicts import (
+            get_all_conflicts,
+        )
+
         conflicts = get_all_conflicts(conn)
 
     conn.close()

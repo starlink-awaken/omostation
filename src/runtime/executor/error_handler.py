@@ -121,7 +121,9 @@ class ErrorHandler:
             max_retries=overrides.get("max_retries", base.max_retries),
             base_delay_ms=overrides.get("base_delay_ms", base.base_delay_ms),
             max_delay_ms=overrides.get("max_delay_ms", base.max_delay_ms),
-            use_exponential_backoff=overrides.get("use_exponential_backoff", base.use_exponential_backoff),
+            use_exponential_backoff=overrides.get(
+                "use_exponential_backoff", base.use_exponential_backoff
+            ),
             jitter_factor=overrides.get("jitter_factor", base.jitter_factor),
             log_as_warning=overrides.get("log_as_warning", base.log_as_warning),
         )
@@ -173,7 +175,9 @@ class ErrorHandler:
 
         raise last_error  # type: ignore[misc]
 
-    def handle_error(self, error: Exception, context: dict[str, Any] | None = None) -> EngineError:
+    def handle_error(
+        self, error: Exception, context: dict[str, Any] | None = None
+    ) -> EngineError:
         """Classify and log an error."""
         engine_err = EngineError.from_exception(error, **(context or {}))
         return engine_err

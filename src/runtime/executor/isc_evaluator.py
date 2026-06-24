@@ -24,6 +24,7 @@ type ISCNode = (
 # Type conversion helpers
 # ---------------------------------------------------------------------------
 
+
 def _to_number(value: Any) -> int | float:
     if isinstance(value, (int, float)):
         return value
@@ -67,10 +68,13 @@ def _get_value_type(value: Any) -> str:
 # Evaluator
 # ---------------------------------------------------------------------------
 
+
 class ISCEvaluator:
     """Evaluates ISC expression ASTs against a variable context."""
 
-    def evaluate(self, expr: ISCNode, context: dict[str, Any] | None = None) -> bool | int | float | str:
+    def evaluate(
+        self, expr: ISCNode, context: dict[str, Any] | None = None
+    ) -> bool | int | float | str:
         """Evaluate expression and return primitive result."""
         ctx = context or {}
         try:
@@ -82,10 +86,14 @@ class ISCEvaluator:
                 f"Unexpected error during evaluation: {exc}"
             ) from exc
 
-    def evaluate_to_boolean(self, expr: ISCNode, context: dict[str, Any] | None = None) -> bool:
+    def evaluate_to_boolean(
+        self, expr: ISCNode, context: dict[str, Any] | None = None
+    ) -> bool:
         return _to_boolean(self.evaluate(expr, context))
 
-    def evaluate_detailed(self, expr: ISCNode, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    def evaluate_detailed(
+        self, expr: ISCNode, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         ctx = context or {}
         try:
             value = self.evaluate(expr, ctx)
@@ -136,7 +144,9 @@ class ISCEvaluator:
         if op == ">":
             return self._compare_greater(left, right)
         if op == ">=":
-            return self._compare_greater(left, right) or self._compare_equal(left, right)
+            return self._compare_greater(left, right) or self._compare_equal(
+                left, right
+            )
         if op == "<":
             return self._compare_less(left, right)
         if op == "<=":
@@ -166,7 +176,11 @@ class ISCEvaluator:
             raise ISCPropertyAccessError(obj, expr["property"])
         prop: str = expr["property"]
         if prop not in obj:
-            obj_name = expr["object"].get("name", "...") if expr["object"].get("type") == "Identifier" else "..."
+            obj_name = (
+                expr["object"].get("name", "...")
+                if expr["object"].get("type") == "Identifier"
+                else "..."
+            )
             raise ISCUndefinedVariableError(f"{obj_name}.{prop}")
         return obj[prop]
 
@@ -178,7 +192,9 @@ class ISCEvaluator:
             return True
         lt = _get_value_type(left)
         rt = _get_value_type(right)
-        if (lt in ("int", "float") and rt == "str") or (lt == "str" and rt in ("int", "float")):
+        if (lt in ("int", "float") and rt == "str") or (
+            lt == "str" and rt in ("int", "float")
+        ):
             try:
                 return _to_number(left) == _to_number(right)
             except ISCTypeError:
@@ -199,6 +215,7 @@ class ISCEvaluator:
 # ---------------------------------------------------------------------------
 # Batch evaluation
 # ---------------------------------------------------------------------------
+
 
 def evaluate_batch(
     expressions: list[ISCNode],

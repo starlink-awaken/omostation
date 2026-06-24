@@ -14,14 +14,16 @@ class SwarmNode:
     capabilities: list[str] = field(default_factory=list)
     last_heartbeat: float = field(default_factory=time.time)
 
+
 @dataclass
 class SwarmTask:
     task_id: str
     action: str = ""
     params: dict = field(default_factory=dict)
-    assigned_to: str = "",  # type: ignore[assignment]
+    assigned_to: str = ("",)  # type: ignore[assignment]
     status: str = "pending"
     result: Any = None
+
 
 class SwarmCoordinator:
     """Master node that coordinates worker nodes for parallel execution."""
@@ -51,16 +53,28 @@ class SwarmCoordinator:
 
     def get_available_workers(self) -> list[SwarmNode]:
         now = time.time()
-        return [n for n in self._nodes.values()
-                if n.role == "worker" and n.status == "idle"
-                and (now - n.last_heartbeat) < self.node_timeout]
+        return [
+            n
+            for n in self._nodes.values()
+            if n.role == "worker"
+            and n.status == "idle"
+            and (now - n.last_heartbeat) < self.node_timeout
+        ]
 
-    def assign_task(self, task_id: str, action: str, params: dict | None = None) -> str | None:
+    def assign_task(
+        self, task_id: str, action: str, params: dict | None = None
+    ) -> str | None:
         workers = self.get_available_workers()
         if not workers:
             return None
         worker = workers[0]
-        task = SwarmTask(task_id=task_id, action=action, params=params or {}, assigned_to=worker.node_id, status="running")
+        task = SwarmTask(
+            task_id=task_id,
+            action=action,
+            params=params or {},
+            assigned_to=worker.node_id,
+            status="running",
+        )
         self._tasks[task_id] = task
         worker.status = "busy"
         return worker.node_id
@@ -95,8 +109,21 @@ class SwarmCoordinator:
         return count
 
     def get_status(self) -> dict:
-        nodes = {n.node_id: {"role": n.role, "status": n.status, "capabilities": n.capabilities}
-                 for n in self._nodes.values()}
-        tasks = {t.task_id: {"status": t.status, "assigned_to": t.assigned_to}
-                 for t in self._tasks.values()}
-        return {"nodes": nodes, "tasks": tasks, "total_tasks": len(self._tasks), "total_nodes": len(self._nodes)}
+        nodes = {
+            n.node_id: {
+                "role": n.role,
+                "status": n.status,
+                "capabilities": n.capabilities,
+            }
+            for n in self._nodes.values()
+        }
+        tasks = {
+            t.task_id: {"status": t.status, "assigned_to": t.assigned_to}
+            for t in self._tasks.values()
+        }
+        return {
+            "nodes": nodes,
+            "tasks": tasks,
+            "total_tasks": len(self._tasks),
+            "total_nodes": len(self._nodes),
+        }

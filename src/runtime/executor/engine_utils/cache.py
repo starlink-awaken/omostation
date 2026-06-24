@@ -210,5 +210,7 @@ def create_lru_cache(max_size: int = 100) -> LRUCache:
     return LRUCache(max_size)
 
 
-def create_lru_cache_with_ttl(max_size: int = 100, ttl_ms: float = 60_000) -> LRUCacheWithTTL:
+def create_lru_cache_with_ttl(
+    max_size: int = 100, ttl_ms: float = 60_000
+) -> LRUCacheWithTTL:
     return LRUCacheWithTTL(max_size, ttl_ms)

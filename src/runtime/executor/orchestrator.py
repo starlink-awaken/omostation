@@ -130,7 +130,10 @@ class Orchestrator:
             updated_at=now,
         )
         self._project_state = state
-        self._emit(EngineEvent.PROJECT_CREATED, {"project_id": state.project_id, "name": config.name})
+        self._emit(
+            EngineEvent.PROJECT_CREATED,
+            {"project_id": state.project_id, "name": config.name},
+        )
         return state
 
     async def start_project(self, config: ProjectConfig | None = None) -> None:
@@ -141,7 +144,9 @@ class Orchestrator:
             raise RuntimeError(msg)
 
         self._project_state.updated_at = time.time()
-        self._emit(EngineEvent.PROJECT_STARTED, {"project_id": self._project_state.project_id})
+        self._emit(
+            EngineEvent.PROJECT_STARTED, {"project_id": self._project_state.project_id}
+        )
 
         await self._transition_to(Phase.RESEARCH)
 
@@ -151,14 +156,20 @@ class Orchestrator:
             raise RuntimeError(msg)
 
         phase = Phase(self._project_state.current_phase)
-        self._emit(EngineEvent.PHASE_ENTERED, {"project_id": self._project_state.project_id, "phase": phase.value})
+        self._emit(
+            EngineEvent.PHASE_ENTERED,
+            {"project_id": self._project_state.project_id, "phase": phase.value},
+        )
 
         try:
             layer = self._layer_for_phase(phase)
             if layer:
                 await self._run_agents_for_phase(phase)
 
-            self._emit(EngineEvent.PHASE_COMPLETED, {"project_id": self._project_state.project_id, "phase": phase.value})
+            self._emit(
+                EngineEvent.PHASE_COMPLETED,
+                {"project_id": self._project_state.project_id, "phase": phase.value},
+            )
 
             next_phase = self._next_phase(phase)
             if next_phase and next_phase != Phase.COMPLETED:
@@ -166,12 +177,21 @@ class Orchestrator:
                 await self.run_current_phase()
             elif next_phase == Phase.COMPLETED:
                 self._project_state.current_phase = Phase.COMPLETED.value
-                self._emit(EngineEvent.PROJECT_COMPLETED, {"project_id": self._project_state.project_id})
+                self._emit(
+                    EngineEvent.PROJECT_COMPLETED,
+                    {"project_id": self._project_state.project_id},
+                )
 
         except Exception as exc:
             self._project_state.current_phase = Phase.FAILED.value
-            self._emit(EngineEvent.PHASE_FAILED, {"project_id": self._project_state.project_id, "error": str(exc)})
-            self._emit(EngineEvent.PROJECT_FAILED, {"project_id": self._project_state.project_id})
+            self._emit(
+                EngineEvent.PHASE_FAILED,
+                {"project_id": self._project_state.project_id, "error": str(exc)},
+            )
+            self._emit(
+                EngineEvent.PROJECT_FAILED,
+                {"project_id": self._project_state.project_id},
+            )
 
     def pause_project(self, reason: str = "") -> None:
         if self._project_state is None:
@@ -182,7 +202,10 @@ class Orchestrator:
         self._emit(EngineEvent.PROJECT_PAUSED, {"reason": reason})
 
     def resume_project(self) -> None:
-        if self._project_state is None or self._project_state.current_phase != Phase.PAUSED.value:
+        if (
+            self._project_state is None
+            or self._project_state.current_phase != Phase.PAUSED.value
+        ):
             msg = "Project not paused"
             raise RuntimeError(msg)
         self._project_state.current_phase = Phase.INIT.value
@@ -258,7 +281,13 @@ class Orchestrator:
         if self._project_state is None:
             return
         self._project_state.current_phase = target.value
-        self._project_state.phase_history.append({"from": self._project_state.current_phase, "to": target.value, "timestamp": time.time()})
+        self._project_state.phase_history.append(
+            {
+                "from": self._project_state.current_phase,
+                "to": target.value,
+                "timestamp": time.time(),
+            }
+        )
         self._project_state.updated_at = time.time()
 
     async def _run_agents_for_phase(self, phase: Phase) -> None:
@@ -276,7 +305,9 @@ class Orchestrator:
         max_conc = 4
         for i in range(0, len(layer_agents), max_conc):
             batch = layer_agents[i : i + max_conc]
-            results = await asyncio.gather(*[self._run_single(a) for a in batch], return_exceptions=True)
+            results = await asyncio.gather(
+                *[self._run_single(a) for a in batch], return_exceptions=True
+            )
             for r in results:
                 if isinstance(r, Exception):
                     continue
@@ -290,11 +321,20 @@ class Orchestrator:
             state = await self._runner.run(definition, "Execute current phase")  # type: ignore[attr-defined]
             self._project_state.total_token_usage += state.token_usage
             if state.status.value == "completed":
-                self._emit(EngineEvent.AGENT_COMPLETED, {"agent_name": definition.name, "tokens": state.token_usage})
+                self._emit(
+                    EngineEvent.AGENT_COMPLETED,
+                    {"agent_name": definition.name, "tokens": state.token_usage},
+                )
             else:
-                self._emit(EngineEvent.AGENT_FAILED, {"agent_name": definition.name, "error": state.last_error})
+                self._emit(
+                    EngineEvent.AGENT_FAILED,
+                    {"agent_name": definition.name, "error": state.last_error},
+                )
         except Exception as exc:
-            self._emit(EngineEvent.AGENT_FAILED, {"agent_name": definition.name, "error": str(exc)})
+            self._emit(
+                EngineEvent.AGENT_FAILED,
+                {"agent_name": definition.name, "error": str(exc)},
+            )
 
     @staticmethod
     def _layer_for_phase(phase: Phase) -> str | None:
@@ -326,7 +366,9 @@ class Orchestrator:
     def get_stats(self) -> dict[str, Any]:
         return {
             "phase": self._project_state.current_phase if self._project_state else None,
-            "token_usage": self._project_state.total_token_usage if self._project_state else 0,
+            "token_usage": self._project_state.total_token_usage
+            if self._project_state
+            else 0,
             "tasks": len(self._tasks),
             "active_agents": len(self._agent_pool.list_all()),
         }

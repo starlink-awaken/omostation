@@ -145,7 +145,10 @@ class SwarmProtocol:
         for hc in self._honeycombs.values():
             if hc.status != "pending":
                 continue
-            if all(self._honeycombs.get(d) and self._honeycombs[d].status == "completed" for d in hc.dependencies):
+            if all(
+                self._honeycombs.get(d) and self._honeycombs[d].status == "completed"
+                for d in hc.dependencies
+            ):
                 ready.append(hc)
         return ready
 

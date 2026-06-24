@@ -32,6 +32,7 @@ from runtime.executor.workflow_skills import (
 @dataclass
 class SkillExecutionStats:
     """Aggregate execution statistics across all skills."""
+
     total_executions: int = 0
     successful: int = 0
     failed: int = 0
@@ -42,6 +43,7 @@ class SkillExecutionStats:
 @dataclass
 class SkillCacheEntry:
     """A single cache entry with timestamp for TTL checking."""
+
     result: SkillExecutionResult
     timestamp: float = 0.0
     hash_key: str = ""
@@ -50,10 +52,11 @@ class SkillCacheEntry:
 @dataclass
 class SkillsIntegrationConfig:
     """Configuration for SkillsManager behaviour."""
+
     cache_enabled: bool = True
     cache_max_size: int = 100
-    cache_ttl_ms: int = 300_000       # 5 minutes
-    default_timeout_ms: int = 30_000   # 30 seconds
+    cache_ttl_ms: int = 300_000  # 5 minutes
+    default_timeout_ms: int = 30_000  # 30 seconds
 
 
 # ---------------------------------------------------------------------------
@@ -100,7 +103,9 @@ class SkillsManager:
     # Execution
     # ------------------------------------------------------------------
 
-    async def execute_skill(self, request: SkillExecutionRequest) -> SkillExecutionResult:
+    async def execute_skill(
+        self, request: SkillExecutionRequest
+    ) -> SkillExecutionResult:
         cache_key = self._generate_cache_key(request)
 
         if self._config.cache_enabled:
@@ -131,18 +136,23 @@ class SkillsManager:
             if self._config.cache_enabled and result.status == "completed":
                 self._set_to_cache(cache_key, result)
 
-            self._emit_event("skill:executed", {
-                "skill_id": request.skill_id,
-                "status": result.status,
-                "duration_ms": duration,
-            })
+            self._emit_event(
+                "skill:executed",
+                {
+                    "skill_id": request.skill_id,
+                    "status": result.status,
+                    "duration_ms": duration,
+                },
+            )
 
             return result
         except Exception:
             self._stats.failed += 1
             raise
 
-    async def execute_skill_batch(self, requests: list[SkillExecutionRequest]) -> list[SkillExecutionResult]:
+    async def execute_skill_batch(
+        self, requests: list[SkillExecutionRequest]
+    ) -> list[SkillExecutionResult]:
         return await self._executor.execute_batch(requests)
 
     # ------------------------------------------------------------------
@@ -168,7 +178,9 @@ class SkillsManager:
             first = next(iter(self._cache))
             if first is not None:
                 del self._cache[first]
-        self._cache[key] = SkillCacheEntry(result=result, timestamp=time.time(), hash_key=key)
+        self._cache[key] = SkillCacheEntry(
+            result=result, timestamp=time.time(), hash_key=key
+        )
 
     def clear_cache(self) -> None:
         self._cache.clear()
@@ -187,6 +199,7 @@ class SkillsManager:
 
     def get_execution_stats(self) -> SkillExecutionStats:
         from copy import deepcopy
+
         return deepcopy(self._stats)
 
     def reset_stats(self) -> None:
@@ -228,17 +241,19 @@ class SkillsManager:
         if self._message_bus is None:
             return
         try:
-            self._message_bus.send({
-                "id": uuid.uuid4().hex,
-                "from": "SkillsManager",
-                "to": "*",
-                "type": "event",
-                "priority": 1,
-                "payload": {"event": event, **payload},
-                "context_shards": [],
-                "timestamp": time.time(),
-                "trace_id": self._current_trace_id,
-            })
+            self._message_bus.send(
+                {
+                    "id": uuid.uuid4().hex,
+                    "from": "SkillsManager",
+                    "to": "*",
+                    "type": "event",
+                    "priority": 1,
+                    "payload": {"event": event, **payload},
+                    "context_shards": [],
+                    "timestamp": time.time(),
+                    "trace_id": self._current_trace_id,
+                }
+            )
         except Exception:
             pass  # fire-and-forget
 
@@ -267,6 +282,8 @@ class SkillsManager:
         return len(self._registry._skills) == 0
 
 
-def create_skills_manager(config: SkillsIntegrationConfig | None = None) -> SkillsManager:
+def create_skills_manager(
+    config: SkillsIntegrationConfig | None = None,
+) -> SkillsManager:
     """Factory function matching the TS createSkillsManager export."""
     return SkillsManager(config)

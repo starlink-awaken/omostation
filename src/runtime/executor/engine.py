@@ -42,11 +42,17 @@ def _runtime_required_capabilities(tools: list[dict] | None = None) -> list[str]
     return capabilities
 
 
-def _resolve_llm_provider_and_model(requested_model: str | None, tools: list[dict] | None = None) -> tuple[Any | None, str | None, dict[str, Any]]:
+def _resolve_llm_provider_and_model(
+    requested_model: str | None, tools: list[dict] | None = None
+) -> tuple[Any | None, str | None, dict[str, Any]]:
     from llm_gateway._legacy.detection import detect_backends
     from llm_gateway._legacy.registry_data_loader import route_role_request
 
-    providers = [provider for provider in detect_backends() if getattr(provider, "provider_name", "") != "none"]
+    providers = [
+        provider
+        for provider in detect_backends()
+        if getattr(provider, "provider_name", "") != "none"
+    ]
     route_role = _runtime_role_for_llm(tools)
     required_capabilities = _runtime_required_capabilities(tools)
     route_info: dict[str, Any] = {
@@ -61,7 +67,9 @@ def _resolve_llm_provider_and_model(requested_model: str | None, tools: list[dic
         return None, None, route_info
 
     providers_by_name = {provider.provider_name: provider for provider in providers}
-    selection = route_role_request(route_role, required_capabilities=required_capabilities)
+    selection = route_role_request(
+        route_role, required_capabilities=required_capabilities
+    )
     if selection is not None:
         route_info["selected_provider"] = selection.provider_name
         route_info["selected_model"] = selection.model.id
@@ -81,7 +89,11 @@ def _resolve_llm_provider_and_model(requested_model: str | None, tools: list[dic
         route_info["fallback_provider"] = provider.provider_name
         route_info["fallback_model"] = getattr(provider, "default_model", None)
 
-    explicit_model = requested_model if requested_model and requested_model != DEFAULT_MODEL else None
+    explicit_model = (
+        requested_model
+        if requested_model and requested_model != DEFAULT_MODEL
+        else None
+    )
     if explicit_model:
         route_info["explicit_model_override"] = explicit_model
         if "/" in explicit_model:
@@ -97,6 +109,7 @@ def _resolve_llm_provider_and_model(requested_model: str | None, tools: list[dic
 def _estimate_tokens(text: str) -> int:
     try:
         import tiktoken
+
         enc = tiktoken.get_encoding("cl100k_base")
         return len(enc.encode(text))
     except ImportError:
@@ -114,11 +127,13 @@ def _maybe_enforce_budget(
     from llm_gateway.budget import check_budget_limit, BudgetExhausted
 
     context = request_context or {}
-    
+
     # Extract budget from context or environment
-    raw_val = context.get("llm_budget_usd") or os.environ.get("RUNTIME_LLM_BUDGET_USD", "")
+    raw_val = context.get("llm_budget_usd") or os.environ.get(
+        "RUNTIME_LLM_BUDGET_USD", ""
+    )
     raw_budget = raw_val.strip() if isinstance(raw_val, str) else raw_val
-    
+
     task_id = str(context.get("task_id") or "runtime-task")
     model_name = requested_model or getattr(provider, "default_model", "unknown")
     provider_name = getattr(provider, "provider_name", "")
@@ -134,26 +149,35 @@ def _maybe_enforce_budget(
             input_tokens=input_tokens,
             max_output_tokens=max_output_tokens,
             task_id=task_id,
-            local_budget_limit=float(raw_budget) if raw_budget not in ("", None) else None
+            local_budget_limit=float(raw_budget)
+            if raw_budget not in ("", None)
+            else None,
         )
     except BudgetExhausted as e:
         import re
-        suffix = re.sub(r"[^A-Za-z0-9]+", "-", task_id).strip("-").upper()[:48] or "UNNAMED"
+
+        suffix = (
+            re.sub(r"[^A-Za-z0-9]+", "-", task_id).strip("-").upper()[:48] or "UNNAMED"
+        )
         route_info["budget_policy"] = {
             "task_id": e.task_id or task_id,
             "budget_usd": e.cap,
             "estimated_cost_usd": e.spent,
             "model": registry_model_id,
-            "debt_path": str(WORKSPACE / ".omo" / "debt" / "items" / f"DEBT-OPC-P4-BUDGET-{suffix}.yaml")
+            "debt_path": str(
+                WORKSPACE
+                / ".omo"
+                / "debt"
+                / "items"
+                / f"DEBT-OPC-P4-BUDGET-{suffix}.yaml"
+            ),
         }
         return {
             "role": "assistant",
             "content": "",
             "tool_calls": [],
             "finish_reason": "error",
-            "error": (
-                f"Budget policy blocked task {task_id}: {str(e)}"
-            ),
+            "error": (f"Budget policy blocked task {task_id}: {str(e)}"),
             "route": route_info,
         }
     except Exception as e:
@@ -162,7 +186,9 @@ def _maybe_enforce_budget(
     return None
 
 
-def _log_execution(task_id: str, status: str, summary: str, result: dict, duration_sec: float):
+def _log_execution(
+    task_id: str, status: str, summary: str, result: dict, duration_sec: float
+):
     """写入执行日志到 JSONL 文件。R51 P0: AppendOnlyLog.append() 替换裸 open()"""
     entry = {
         # Python 3.14 isoformat() 返回 +00:00 而非 Z，用 strftime 硬编码 Z
@@ -218,14 +244,21 @@ class AgentRuntime:
         self.tools = Tools()
         self._tool_registry = self.tools.build_tool_registry()
 
-    def _call_llm(self, messages: list[dict], tools: list[dict] | None = None, request_context: dict | None = None) -> dict:
+    def _call_llm(
+        self,
+        messages: list[dict],
+        tools: list[dict] | None = None,
+        request_context: dict | None = None,
+    ) -> dict:
         """调用 LLM API。使用 llm_gateway 统一网关。"""
         import asyncio
 
         from llm_gateway._legacy.audit import record_llm_audit
         from llm_gateway._legacy.provider import LLMRequest, ToolSchema
 
-        provider, requested_model, route_info = _resolve_llm_provider_and_model(self.model, tools=tools)
+        provider, requested_model, route_info = _resolve_llm_provider_and_model(
+            self.model, tools=tools
+        )
         if provider is None:
             return {
                 "role": "assistant",
@@ -252,11 +285,13 @@ class AgentRuntime:
             for t in tools:
                 if "function" in t:
                     f = t["function"]
-                    mapped_tools.append(ToolSchema(
-                        name=f["name"],
-                        description=f.get("description", ""),
-                        parameters=f.get("parameters", {})
-                    ))
+                    mapped_tools.append(
+                        ToolSchema(
+                            name=f["name"],
+                            description=f.get("description", ""),
+                            parameters=f.get("parameters", {}),
+                        )
+                    )
 
         try:
             system_prompt = ""
@@ -291,7 +326,8 @@ class AgentRuntime:
                 usage = {
                     "prompt_tokens": getattr(resp, "input_tokens", 0),
                     "completion_tokens": getattr(resp, "output_tokens", 0),
-                    "total_tokens": getattr(resp, "input_tokens", 0) + getattr(resp, "output_tokens", 0),
+                    "total_tokens": getattr(resp, "input_tokens", 0)
+                    + getattr(resp, "output_tokens", 0),
                 }
 
             model_id = f"{getattr(resp, 'provider', getattr(provider, 'provider_name', ''))}/{getattr(resp, 'model', req.model or '')}"
@@ -311,7 +347,9 @@ class AgentRuntime:
             record_llm_audit(
                 task_id=task_id,
                 role=route_info.get("role", "operator"),
-                provider=getattr(resp, "provider", getattr(provider, "provider_name", "")),
+                provider=getattr(
+                    resp, "provider", getattr(provider, "provider_name", "")
+                ),
                 model=getattr(resp, "model", req.model or ""),
                 input_tokens=int(usage.get("prompt_tokens", 0)),
                 output_tokens=int(usage.get("completion_tokens", 0)),
@@ -327,10 +365,16 @@ class AgentRuntime:
                 "tool_calls": [],
                 "finish_reason": getattr(resp, "finish_reason", "stop") or "stop",
                 "usage": usage,
-                "provider": getattr(resp, "provider", getattr(provider, "provider_name", "")),
+                "provider": getattr(
+                    resp, "provider", getattr(provider, "provider_name", "")
+                ),
                 "model": getattr(resp, "model", req.model or ""),
                 "route": route_info,
-                "audit": {"task_id": task_id, "latency_ms": latency_ms, "total_cost_usd": total_cost_usd},
+                "audit": {
+                    "task_id": task_id,
+                    "latency_ms": latency_ms,
+                    "total_cost_usd": total_cost_usd,
+                },
             }
 
             if tool_calls:
@@ -340,9 +384,10 @@ class AgentRuntime:
                         "type": "function",
                         "function": {
                             "name": tc.name,
-                            "arguments": json.dumps(tc.arguments)
-                        }
-                    } for tc in tool_calls
+                            "arguments": json.dumps(tc.arguments),
+                        },
+                    }
+                    for tc in tool_calls
                 ]
                 result["finish_reason"] = "tool_calls"
 
@@ -367,7 +412,11 @@ class AgentRuntime:
 
         tool_info = self._tool_registry.get(fn_name)
         if not tool_info:
-            return {"role": "tool", "tool_call_id": tool_call.get("id", ""), "content": f"Unknown tool: {fn_name}"}
+            return {
+                "role": "tool",
+                "tool_call_id": tool_call.get("id", ""),
+                "content": f"Unknown tool: {fn_name}",
+            }
 
         log.info(f"  🔧 Tool: {fn_name}")
         result = tool_info["fn"](**args)
@@ -377,7 +426,12 @@ class AgentRuntime:
             "content": json.dumps(result, ensure_ascii=False)[:5000],
         }
 
-    def run_task(self, prompt: str, tools_enabled: list[str] | None = None, context: dict | None = None) -> dict:
+    def run_task(
+        self,
+        prompt: str,
+        tools_enabled: list[str] | None = None,
+        context: dict | None = None,
+    ) -> dict:
         """执行一个任务。返回最终结果。"""
         log.info(f"🎯 Task starting (model={self.model})")
 
@@ -401,7 +455,10 @@ class AgentRuntime:
         messages = [{"role": "system", "content": system_prompt}]
         if context:
             messages.append(
-                {"role": "user", "content": f"Context:\n{json.dumps(context, ensure_ascii=False, indent=2)}"}
+                {
+                    "role": "user",
+                    "content": f"Context:\n{json.dumps(context, ensure_ascii=False, indent=2)}",
+                }
             )
         messages.append({"role": "user", "content": prompt})
 
@@ -433,8 +490,15 @@ class AgentRuntime:
 
             if finish == "stop" or not tcs:
                 result = response.get("content", "")
-                log.info(f"✅ Task done (turn={turn + 1}, tokens={usage.get('total_tokens', '?')})")
-                return {"result": result, "tool_calls": all_tool_calls, "turns": turn + 1, "usage": usage}
+                log.info(
+                    f"✅ Task done (turn={turn + 1}, tokens={usage.get('total_tokens', '?')})"
+                )
+                return {
+                    "result": result,
+                    "tool_calls": all_tool_calls,
+                    "turns": turn + 1,
+                    "usage": usage,
+                }
 
             for tc in tcs:
                 tool_result = self._execute_tool(tc)

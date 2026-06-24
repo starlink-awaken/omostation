@@ -113,7 +113,9 @@ class Decomposer:
         dep_graph = self._build_dependency_graph(sub_projects)
         validation = self._validate_dependencies(sub_projects)
         if not validation.valid:
-            msg = "Dependency validation failed:\n  - " + "\n  - ".join(validation.errors)
+            msg = "Dependency validation failed:\n  - " + "\n  - ".join(
+                validation.errors
+            )
             raise ValueError(msg)
 
         batches = self._topological_sort(sub_projects, dep_graph)
@@ -136,16 +138,22 @@ class Decomposer:
             for dep in sp.dependencies
         ]
 
-    def _validate_dependencies(self, sub_projects: list[SubProject]) -> ValidationResult:
+    def _validate_dependencies(
+        self, sub_projects: list[SubProject]
+    ) -> ValidationResult:
         errors: list[str] = []
         id_set = {sp.id for sp in sub_projects}
 
         for sp in sub_projects:
             for dep_id in sp.dependencies:
                 if dep_id not in id_set:
-                    errors.append(f'Sub-project "{sp.name}" ({sp.id}) references unknown dependency: {dep_id}')
+                    errors.append(
+                        f'Sub-project "{sp.name}" ({sp.id}) references unknown dependency: {dep_id}'
+                    )
                 if dep_id == sp.id:
-                    errors.append(f'Sub-project "{sp.name}" ({sp.id}) depends on itself')
+                    errors.append(
+                        f'Sub-project "{sp.name}" ({sp.id}) depends on itself'
+                    )
 
         if not errors:
             cycle_msg = self._detect_cycles(sub_projects)
@@ -155,7 +163,9 @@ class Decomposer:
         return ValidationResult(valid=len(errors) == 0, errors=errors)
 
     @staticmethod
-    def _topological_sort(sub_projects: list[SubProject], edges: list[DependencyEdge]) -> list[list[str]]:
+    def _topological_sort(
+        sub_projects: list[SubProject], edges: list[DependencyEdge]
+    ) -> list[list[str]]:
         ids = {sp.id for sp in sub_projects}
         name_map = {sp.id: sp.name for sp in sub_projects}
         in_degree: dict[str, int] = {iid: 0 for iid in ids}
@@ -180,14 +190,20 @@ class Decomposer:
                 for dep in dependents.get(mid, []):
                     in_degree[dep] -= 1
             current = sorted(
-                [did for did in ids if in_degree.get(did, 0) == 0 and not any(did in b for b in batches)],
+                [
+                    did
+                    for did in ids
+                    if in_degree.get(did, 0) == 0 and not any(did in b for b in batches)
+                ],
                 key=lambda x: -priority_map.get(x, 0),
             )
 
         remaining = [iid for iid in ids if in_degree.get(iid, 0) > 0]
         if remaining:
             names = [name_map.get(iid, iid) for iid in remaining]
-            raise ValueError(f"Cycle detected in dependency graph involving: {', '.join(names)}")
+            raise ValueError(
+                f"Cycle detected in dependency graph involving: {', '.join(names)}"
+            )
         return batches
 
     @staticmethod
@@ -213,7 +229,9 @@ class Decomposer:
                 nc = color.get(neighbor, 0)
                 if nc == 1:
                     path = " -> ".join(name_map.get(nid, nid) for nid, _ in stack)
-                    return f"Cycle detected: {path} -> {name_map.get(neighbor, neighbor)}"
+                    return (
+                        f"Cycle detected: {path} -> {name_map.get(neighbor, neighbor)}"
+                    )
                 if nc == 0:
                     color[neighbor] = 1
                     stack.append((neighbor, 0))

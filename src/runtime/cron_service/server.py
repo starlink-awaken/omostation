@@ -42,7 +42,11 @@ async def lifespan(app: FastAPI):
     """Start/stop the scheduler with the FastAPI app."""
     db.init_db()
     await sched.start()
-    logger.info("cron-service started (HTTP:%d, DATA:%s)", svc_config.HTTP_PORT, svc_config.DATA_DIR)
+    logger.info(
+        "cron-service started (HTTP:%d, DATA:%s)",
+        svc_config.HTTP_PORT,
+        svc_config.DATA_DIR,
+    )
     yield
     await sched.stop()
     logger.info("cron-service stopped")
@@ -60,7 +64,10 @@ async def _check_api_key(request: Request, call_next):
     """Check Bearer token if CRON_SERVICE_API_KEY is set (skip /health)."""
     if _CRON_SERVICE_API_KEY and request.url.path != "/health":
         auth = request.headers.get("Authorization", "")
-        if not (auth.startswith("Bearer ") and auth[len("Bearer "):] == _CRON_SERVICE_API_KEY):
+        if not (
+            auth.startswith("Bearer ")
+            and auth[len("Bearer ") :] == _CRON_SERVICE_API_KEY
+        ):
             return JSONResponse({"error": "unauthorized"}, status_code=401)
     return await call_next(request)
 
@@ -80,7 +87,9 @@ async def health():
     broken = 0
     if hermes_scripts.is_dir():
         try:
-            broken = sum(1 for f in hermes_scripts.iterdir() if f.is_symlink() and not f.exists())
+            broken = sum(
+                1 for f in hermes_scripts.iterdir() if f.is_symlink() and not f.exists()
+            )
         except Exception:
             pass
 
@@ -94,7 +103,9 @@ async def health():
         "scheduler_running": sched.is_running,
         "uptime_seconds": uptime_secs,
         "ticks": sched.tick_count,
-        "last_tick_at": sched.last_tick_time.isoformat() if sched.last_tick_time else None,
+        "last_tick_at": sched.last_tick_time.isoformat()
+        if sched.last_tick_time
+        else None,
         "jobs": {
             "total": len(all_jobs),
             "enabled": len(db.list_jobs(enabled_only=True)),
@@ -153,7 +164,11 @@ async def run_job(job_id: str):
         return {"success": True, "output": result.output[:2000]}
     else:
         db.record_run(job_id, "error", result.output, result.error)
-        return {"success": False, "output": result.output[:1000], "error": result.error[:1000]}
+        return {
+            "success": False,
+            "output": result.output[:1000],
+            "error": result.error[:1000],
+        }
 
 
 @app.put("/jobs/{job_id}")
@@ -161,7 +176,16 @@ async def update_job_http(job_id: str, data: dict):
     """Update a cron job's fields. Only provided fields are updated."""
     from .models import JobUpdate
 
-    allowed = {"name", "schedule", "script", "deliver", "workdir", "timeout", "enabled", "no_agent"}
+    allowed = {
+        "name",
+        "schedule",
+        "script",
+        "deliver",
+        "workdir",
+        "timeout",
+        "enabled",
+        "no_agent",
+    }
     update_data = {k: v for k, v in data.items() if k in allowed}
     if not update_data:
         return {"error": "No valid fields to update"}
@@ -237,8 +261,12 @@ def run_http():
 
 def main():
     parser = argparse.ArgumentParser(description="cron-service")
-    parser.add_argument("--http", action="store_true", help="Run HTTP API server (default: stdio MCP)")
-    parser.add_argument("--init-db", action="store_true", help="Initialize database and exit")
+    parser.add_argument(
+        "--http", action="store_true", help="Run HTTP API server (default: stdio MCP)"
+    )
+    parser.add_argument(
+        "--init-db", action="store_true", help="Initialize database and exit"
+    )
     args = parser.parse_args()
 
     if args.init_db:

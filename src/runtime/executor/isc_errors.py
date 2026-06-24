@@ -9,6 +9,7 @@ from typing import Any
 # Shared types (ported inline from types.ts to avoid circular deps)
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class SourceLocation:
     start: int = 0
@@ -31,6 +32,7 @@ class Diagnostic:
 # ---------------------------------------------------------------------------
 # Base error
 # ---------------------------------------------------------------------------
+
 
 class ISCError(Exception):
     """Base ISC error with code, location, and suggestion metadata."""
@@ -60,6 +62,7 @@ class ISCError(Exception):
 # ---------------------------------------------------------------------------
 # Lexer errors
 # ---------------------------------------------------------------------------
+
 
 class ISCLexerError(ISCError):
     def __init__(
@@ -103,6 +106,7 @@ class ISCInvalidNumberError(ISCLexerError):
 # ---------------------------------------------------------------------------
 # Parser errors
 # ---------------------------------------------------------------------------
+
 
 class ISCParserError(ISCError):
     def __init__(
@@ -158,6 +162,7 @@ class ISCInvalidOperatorError(ISCParserError):
 # Evaluation errors
 # ---------------------------------------------------------------------------
 
+
 class ISCEvaluationError(ISCError):
     def __init__(
         self,
@@ -169,7 +174,9 @@ class ISCEvaluationError(ISCError):
 
 
 class ISCUndefinedVariableError(ISCEvaluationError):
-    def __init__(self, variable_name: str, location: SourceLocation | None = None) -> None:
+    def __init__(
+        self, variable_name: str, location: SourceLocation | None = None
+    ) -> None:
         super().__init__(
             f"Undefined variable '{variable_name}'",
             location,
@@ -218,6 +225,7 @@ class ISCPropertyAccessError(ISCEvaluationError):
 # Validation errors
 # ---------------------------------------------------------------------------
 
+
 class ISCValidationError(ISCError):
     def __init__(
         self,
@@ -248,6 +256,7 @@ class ISCCircularDependencyError(ISCValidationError):
 # ---------------------------------------------------------------------------
 # Factory helpers
 # ---------------------------------------------------------------------------
+
 
 def create_diagnostic(
     severity: str,

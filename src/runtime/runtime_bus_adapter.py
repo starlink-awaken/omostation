@@ -5,6 +5,7 @@ SQLite job store (sub-second latency, custom delivery). This adapter
 adds the bus-facade scheduling layer for *new* consumers, without
 modifying the legacy cron_service internals.
 """
+
 from __future__ import annotations
 
 import logging
@@ -24,6 +25,7 @@ def register_cron_job(expr: str, callback: Callable) -> Callable:
         from runtime.runtime_bus_adapter import register_cron_job
         register_cron_job("every 5m", my_task)
     """
+
     @bus_control.schedule_callback(expr)
     def _wrapper() -> None:
         callback()

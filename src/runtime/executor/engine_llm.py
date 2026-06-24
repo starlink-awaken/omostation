@@ -33,9 +33,13 @@ class LLMProvider(Protocol):
     name: str
     provider_type: str
 
-    async def complete(self, prompt: str, options: CompletionOptions | None = None) -> CompletionResult: ...
+    async def complete(
+        self, prompt: str, options: CompletionOptions | None = None
+    ) -> CompletionResult: ...
 
-    async def stream(self, prompt: str, options: CompletionOptions | None = None) -> AsyncIterable[CompletionChunk]: ...
+    async def stream(
+        self, prompt: str, options: CompletionOptions | None = None
+    ) -> AsyncIterable[CompletionChunk]: ...
 
     async def is_available(self) -> bool: ...
 
@@ -56,7 +60,9 @@ class ResponseCache:
     def _make_key(self, prompt: str, options: CompletionOptions | None) -> str:
         return f"{hash(prompt)}:{hash(str(options)) if options else ''}"
 
-    def get(self, prompt: str, options: CompletionOptions | None = None) -> CompletionResult | None:
+    def get(
+        self, prompt: str, options: CompletionOptions | None = None
+    ) -> CompletionResult | None:
         if not self._config.enabled or (options and options.skip_cache):
             self._misses += 1
             return None
@@ -85,7 +91,12 @@ class ResponseCache:
         )
         return result
 
-    def set(self, prompt: str, result: CompletionResult, options: CompletionOptions | None = None) -> None:
+    def set(
+        self,
+        prompt: str,
+        result: CompletionResult,
+        options: CompletionOptions | None = None,
+    ) -> None:
         if not self._config.enabled:
             return
         key = self._make_key(prompt, options)
@@ -135,7 +146,9 @@ class RateLimiter:
         now = time.time()
         elapsed = now - self._last_refill
         rate = self._config.requests_per_minute / 60.0
-        self._tokens = min(float(self._config.requests_per_minute), self._tokens + elapsed * rate)
+        self._tokens = min(
+            float(self._config.requests_per_minute), self._tokens + elapsed * rate
+        )
         self._last_refill = now
 
 
@@ -208,17 +221,23 @@ class RequestBatcher:
     def __init__(self, max_batch_size: int = 10, max_wait_ms: int = 100) -> None:
         self._max_batch_size = max_batch_size
         self._max_wait_ms = max_wait_ms
-        self._queue: list[tuple[CompletionRequest, asyncio.Future[CompletionResult]]] = []
+        self._queue: list[
+            tuple[CompletionRequest, asyncio.Future[CompletionResult]]
+        ] = []
         self._timer: asyncio.TimerHandle | None = None
 
     async def submit(self, request: CompletionRequest) -> CompletionResult:
-        future: asyncio.Future[CompletionResult] = asyncio.get_event_loop().create_future()
+        future: asyncio.Future[CompletionResult] = (
+            asyncio.get_event_loop().create_future()
+        )
         self._queue.append((request, future))
         if len(self._queue) >= self._max_batch_size:
             await self._flush()
         elif self._timer is None:
             loop = asyncio.get_event_loop()
-            self._timer = loop.call_later(self._max_wait_ms / 1000.0, lambda: asyncio.ensure_future(self._flush()))
+            self._timer = loop.call_later(
+                self._max_wait_ms / 1000.0, lambda: asyncio.ensure_future(self._flush())
+            )
         return await future
 
     async def _flush(self) -> None:

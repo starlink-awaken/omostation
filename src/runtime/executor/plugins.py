@@ -12,6 +12,7 @@ class PluginState(StrEnum):
     DISABLED = "disabled"
     FAILED = "failed"
 
+
 @dataclass
 class PluginDef:
     name: str
@@ -23,15 +24,18 @@ class PluginDef:
     state: PluginState = PluginState.REGISTERED
     loaded_at: float = 0.0
 
+
 @dataclass
 class PluginSandboxConfig:
     """Sandbox configuration for a plugin."""
+
     allow_filesystem: bool = False
     allow_network: bool = False
     allow_subprocess: bool = False
     allow_imports: list[str] = field(default_factory=list)
     max_memory_mb: int = 128
     timeout_sec: float = 30.0
+
 
 class PluginManager:
     """Manage plugin lifecycle with sandbox isolation."""
@@ -40,10 +44,21 @@ class PluginManager:
         self._plugins: dict[str, PluginDef] = {}  # type: ignore[annotation-unchecked]
         self._sandboxes: dict[str, PluginSandboxConfig] = {}  # type: ignore[annotation-unchecked]
 
-    def register(self, name: str, version: str = "1.0.0", entry_point: str = "",
-                 capabilities: list[str] | None = None, permissions: list[str] | None = None) -> str:
-        plugin = PluginDef(name=name, version=version, entry_point=entry_point,
-                           capabilities=capabilities or [], permissions=permissions or [])
+    def register(
+        self,
+        name: str,
+        version: str = "1.0.0",
+        entry_point: str = "",
+        capabilities: list[str] | None = None,
+        permissions: list[str] | None = None,
+    ) -> str:
+        plugin = PluginDef(
+            name=name,
+            version=version,
+            entry_point=entry_point,
+            capabilities=capabilities or [],
+            permissions=permissions or [],
+        )
         self._plugins[name] = plugin
         return name
 
@@ -52,7 +67,10 @@ class PluginManager:
 
     def load(self, name: str) -> bool:
         plugin = self._plugins.get(name)
-        if not plugin or plugin.state not in (PluginState.REGISTERED, PluginState.DISABLED):
+        if not plugin or plugin.state not in (
+            PluginState.REGISTERED,
+            PluginState.DISABLED,
+        ):
             return False
         plugin.state = PluginState.LOADED
         plugin.loaded_at = time.time()

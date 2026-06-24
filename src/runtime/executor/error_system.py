@@ -97,7 +97,9 @@ class SyntaxError_(DSLError):  # noqa: N801, N818
         unexpected: str, expected: list[str], loc: SourceLocation
     ) -> SyntaxError_:
         msg = f"Unexpected token '{unexpected}', expected {' or '.join(expected)}"
-        err = SyntaxError_(ErrorCode.SYX001_UNEXPECTED_TOKEN, msg, ErrorSeverity.ERROR, loc)  # type: ignore[arg-type]
+        err = SyntaxError_(
+            ErrorCode.SYX001_UNEXPECTED_TOKEN, msg, ErrorSeverity.ERROR, loc
+        )  # type: ignore[arg-type]
         err.add_suggestion(
             FixSuggestion(
                 message=f"Replace '{unexpected}' with one of: {' or '.join(expected)}",
@@ -110,9 +112,7 @@ class SyntaxError_(DSLError):  # noqa: N801, N818
 
     @staticmethod
     def missing_token(missing: str, loc: SourceLocation) -> SyntaxError_:
-        err = SyntaxError_(
-            ErrorCode.SYX002_MISSING_TOKEN, f"Missing '{missing}'", loc
-        )
+        err = SyntaxError_(ErrorCode.SYX002_MISSING_TOKEN, f"Missing '{missing}'", loc)
         err.add_suggestion(
             FixSuggestion(
                 message=f"Add '{missing}' at this position",
@@ -135,7 +135,7 @@ class LexicalError(DSLError):
         )
         err.add_suggestion(
             FixSuggestion(
-                message='Add closing quote (" or \')',
+                message="Add closing quote (\" or ')",
                 action="insert",
                 location=loc,
                 priority=10,
@@ -168,9 +168,7 @@ class TypeError_(DSLError):  # noqa: N801, N818
         super().__init__(code, message, ErrorSeverity.ERROR, loc, context)
 
     @staticmethod
-    def type_mismatch(
-        expected: str, actual: str, loc: SourceLocation
-    ) -> TypeError_:
+    def type_mismatch(expected: str, actual: str, loc: SourceLocation) -> TypeError_:
         err = TypeError_(
             ErrorCode.TYP201_TYPE_MISMATCH,
             f"Type mismatch: expected '{expected}', got '{actual}'",
@@ -239,7 +237,8 @@ class RuntimeError_(DSLError):  # noqa: N801, N818
 
     @staticmethod
     def stack_depth_exceeded(
-        current_depth: int, max_depth: int,
+        current_depth: int,
+        max_depth: int,
         loc: SourceLocation | None = None,
     ) -> RuntimeError_:
         loc = loc or SourceLocation()

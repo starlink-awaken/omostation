@@ -49,9 +49,13 @@ class DSLParser:
         self._pos = 0
         try:
             ast = self._parse_agent()
-            return ParseResult(success=len(self._errors) == 0, ast=ast, errors=self._errors)
+            return ParseResult(
+                success=len(self._errors) == 0, ast=ast, errors=self._errors
+            )
         except Exception as e:
-            self._errors.append({"kind": "syntax", "message": str(e), "loc": self._current().loc})  # type: ignore[attr-defined]
+            self._errors.append(
+                {"kind": "syntax", "message": str(e), "loc": self._current().loc}
+            )  # type: ignore[attr-defined]
             return ParseResult(success=False, errors=self._errors)
 
     def parse_tokens(self, tokens: list[Token]) -> ParseResult:
@@ -60,14 +64,20 @@ class DSLParser:
         self._errors.clear()
         try:
             ast = self._parse_agent()
-            return ParseResult(success=len(self._errors) == 0, ast=ast, errors=self._errors)
+            return ParseResult(
+                success=len(self._errors) == 0, ast=ast, errors=self._errors
+            )
         except Exception as e:
             self._errors.append({"kind": "syntax", "message": str(e)})
             return ParseResult(success=False, errors=self._errors)
 
     @property
     def _current_token(self) -> Token:
-        return self._tokens[self._pos] if self._pos < len(self._tokens) else Token(type="EOF")
+        return (
+            self._tokens[self._pos]
+            if self._pos < len(self._tokens)
+            else Token(type="EOF")
+        )
 
     def _advance(self) -> Token:
         tok = self._current_token
@@ -97,7 +107,9 @@ class DSLParser:
         name_tok = self._expect("IDENTIFIER", "KEYWORD")
         agent = AgentDSL(name=name_tok.value, loc=self._create_loc(name_tok.loc))
         self._expect("LBRACE")
-        while self._current_token.type != "RBRACE" and self._current_token.type != "EOF":
+        while (
+            self._current_token.type != "RBRACE" and self._current_token.type != "EOF"
+        ):
             kw = self._current_token.value
             if kw == "description":
                 self._advance()
@@ -146,7 +158,9 @@ class DSLParser:
         name_tok = self._expect("IDENTIFIER", "KEYWORD")
         inp = DSLInput(name=name_tok.value, loc=self._create_loc(name_tok.loc))
         self._expect("LBRACE")
-        while self._current_token.type != "RBRACE" and self._current_token.type != "EOF":
+        while (
+            self._current_token.type != "RBRACE" and self._current_token.type != "EOF"
+        ):
             kw = self._current_token.value
             if kw == "description":
                 self._advance()
@@ -169,7 +183,9 @@ class DSLParser:
         name_tok = self._expect("IDENTIFIER", "KEYWORD")
         out = DSLOutput(name=name_tok.value, loc=self._create_loc(name_tok.loc))
         self._expect("LBRACE")
-        while self._current_token.type != "RBRACE" and self._current_token.type != "EOF":
+        while (
+            self._current_token.type != "RBRACE" and self._current_token.type != "EOF"
+        ):
             kw = self._current_token.value
             if kw == "description":
                 self._advance()
@@ -400,7 +416,9 @@ class DSLParser:
         tok = self._current_token
         if tok.type == "NUMBER":
             self._advance()
-            return DSLLiteral(value=float(tok.value) if "." in tok.value else int(tok.value))
+            return DSLLiteral(
+                value=float(tok.value) if "." in tok.value else int(tok.value)
+            )
         if tok.type == "BOOLEAN":
             self._advance()
             return DSLLiteral(value=tok.value == "true")
@@ -423,7 +441,9 @@ class DSLParser:
             self._advance()
             if self._current_token.type == "NUMBER":
                 num = self._advance()
-                return DSLLiteral(value=-float(num.value) if "." in num.value else -int(num.value))
+                return DSLLiteral(
+                    value=-float(num.value) if "." in num.value else -int(num.value)
+                )
             return DSLUnaryOp(operator="-", operand=DSLLiteral(value=0))
         self._error(f"Unexpected token: {tok.type} ('{tok.value}')", tok.loc)
         self._advance()
@@ -460,7 +480,9 @@ class DSLParser:
 
     def _parse_conditional_step(self) -> DSLConditionalStep:
         name_tok = self._expect("IDENTIFIER", "KEYWORD")
-        step = DSLConditionalStep(name=name_tok.value, loc=self._create_loc(name_tok.loc))
+        step = DSLConditionalStep(
+            name=name_tok.value, loc=self._create_loc(name_tok.loc)
+        )
         self._expect("LBRACE")
         while self._current_token.type not in ("RBRACE", "EOF"):
             kw = self._current_token.value

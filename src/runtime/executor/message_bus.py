@@ -70,6 +70,7 @@ class BusStats:
 # MessageBus
 # ============================================================
 
+
 class MessageBus:
     """In-memory pub/sub message bus for agent communication.
 
@@ -142,7 +143,9 @@ class MessageBus:
 
     def broadcast(self, message: AgentMessage) -> None:
         """Broadcast a message to ALL agent-name subscribers and matching type subscribers."""
-        msg = AgentMessage(**{**vars(message), "to": "*", "from_agent": message.from_agent})
+        msg = AgentMessage(
+            **{**vars(message), "to": "*", "from_agent": message.from_agent}
+        )
         self._record(msg)
 
         for handlers in self._agent_subscribers.values():
@@ -163,7 +166,9 @@ class MessageBus:
         self._agent_subscribers.setdefault(agent_name, set()).add(handler)
         return lambda: self._unsubscribe(agent_name, handler)
 
-    def subscribe_to_type(self, type_: MessageType, handler: MessageHandler) -> Callable[[], None]:
+    def subscribe_to_type(
+        self, type_: MessageType, handler: MessageHandler
+    ) -> Callable[[], None]:
         """Subscribe to messages of a specific type (across all agents). Returns unsubscribe function."""
         self._type_subscribers.setdefault(type_, set()).add(handler)
         return lambda: self._unsubscribe_type(type_, handler)
@@ -213,11 +218,18 @@ class MessageBus:
             if not future.done():
                 future.set_exception(err)
 
-        timer = loop.call_later(timeout, lambda: reject(
-            TimeoutError(f"MessageBus request timed out after {timeout}s (id={message.id})"),
-        ))
+        timer = loop.call_later(
+            timeout,
+            lambda: reject(
+                TimeoutError(
+                    f"MessageBus request timed out after {timeout}s (id={message.id})"
+                ),
+            ),
+        )
 
-        self._pending_requests[message.id] = _PendingRequest(resolve=resolve, reject=reject, timer=timer)
+        self._pending_requests[message.id] = _PendingRequest(
+            resolve=resolve, reject=reject, timer=timer
+        )
 
         # Send the request (also records history + dispatches)
         self.send(message)
@@ -232,11 +244,15 @@ class MessageBus:
     # History
     # ----------------------------------------------------------
 
-    def get_history(self, agent_name: str | None = None, limit: int | None = None) -> list[AgentMessage]:
+    def get_history(
+        self, agent_name: str | None = None, limit: int | None = None
+    ) -> list[AgentMessage]:
         """Retrieve message history, newest first. Optionally filter by agent or limit."""
         result = self._history
         if agent_name:
-            result = [m for m in result if m.from_agent == agent_name or m.to == agent_name]
+            result = [
+                m for m in result if m.from_agent == agent_name or m.to == agent_name
+            ]
         result = list(reversed(result))
         if limit is not None and limit > 0:
             result = result[:limit]
@@ -285,6 +301,7 @@ class MessageBus:
     @staticmethod
     def _now() -> float:
         import time
+
         return time.time()
 
     def _record(self, message: AgentMessage) -> None:

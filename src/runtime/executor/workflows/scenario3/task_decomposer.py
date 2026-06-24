@@ -8,6 +8,7 @@
 
 复用 VisionParser 的 few-shot 模式，但独立实现避免 CognitiveBus 依赖。
 """
+
 from __future__ import annotations
 
 import json
@@ -20,6 +21,7 @@ HAS_LLM = False
 try:
     from organs.D_Execution.organs.llm.provider import LLMRequest  # type: ignore[import-not-found]
     from organs.D_Execution.organs.llm.provider_factory import LLMProviderFactory  # type: ignore[import-not-found]
+
     HAS_LLM = True
 except ImportError:
     pass
@@ -130,16 +132,20 @@ def _deterministic_decompose(question: str) -> DecompositionResult:
         if i > 0:
             dep_ids.append(tasks[i - 1].task_id)
 
-        tasks.append(DecomposedTask(
-            task_id=f"T-{uuid.uuid4().hex[:8].upper()}",
-            description=text,
-            phase=phase,
-            dependencies=dep_ids,
-            capability_hint=_infer_capability(text),
-        ))
+        tasks.append(
+            DecomposedTask(
+                task_id=f"T-{uuid.uuid4().hex[:8].upper()}",
+                description=text,
+                phase=phase,
+                dependencies=dep_ids,
+                capability_hint=_infer_capability(text),
+            )
+        )
 
     return DecompositionResult(
-        original_question=question, tasks=tasks, method="deterministic",
+        original_question=question,
+        tasks=tasks,
+        method="deterministic",
     )
 
 
@@ -161,18 +167,31 @@ def _llm_decompose(question: str) -> DecompositionResult | None:
                 tid = f"T-{uuid.uuid4().hex[:8].upper()}"
                 id_map[i] = tid
                 dep_ids = [id_map[d] for d in rt.get("dependencies", []) if d in id_map]
-                tasks.append(DecomposedTask(
-                    task_id=tid,
-                    description=str(rt.get("description", "")),
-                    phase=str(rt.get("phase", "P1")),
-                    dependencies=dep_ids,
-                    capability_hint=str(rt.get("capability_hint", "general.task.*")),
-                ))
+                tasks.append(
+                    DecomposedTask(
+                        task_id=tid,
+                        description=str(rt.get("description", "")),
+                        phase=str(rt.get("phase", "P1")),
+                        dependencies=dep_ids,
+                        capability_hint=str(
+                            rt.get("capability_hint", "general.task.*")
+                        ),
+                    )
+                )
             if tasks:
                 return DecompositionResult(
-                    original_question=question, tasks=tasks, method="llm",
+                    original_question=question,
+                    tasks=tasks,
+                    method="llm",
                 )
-    except (AttributeError, ImportError, json.JSONDecodeError, RuntimeError, TypeError, ValueError):
+    except (
+        AttributeError,
+        ImportError,
+        json.JSONDecodeError,
+        RuntimeError,
+        TypeError,
+        ValueError,
+    ):
         pass
     return None
 
@@ -199,13 +218,16 @@ def format_decomposition(result: DecompositionResult) -> str:
     ]
     for t in result.tasks:
         deps = ", ".join(t.dependencies) if t.dependencies else "—"
-        lines.append(f"| {t.task_id} | {t.phase} | {t.description} | {deps} | {t.capability_hint} |")
+        lines.append(
+            f"| {t.task_id} | {t.phase} | {t.description} | {deps} | {t.capability_hint} |"
+        )
 
     return "\n".join(lines)
 
 
 def main() -> None:
     import sys
+
     question = sys.argv[1] if len(sys.argv) > 1 else "分析我对编程语言的学习模式"
     result = decompose(question)
     print(format_decomposition(result))
@@ -227,7 +249,9 @@ class DependencyGraph:
         for task in tasks:
             unknown = [dep for dep in task.dependencies if dep not in task_ids]
             if unknown:
-                raise ValueError(f"Unknown dependency for {task.task_id}: {', '.join(unknown)}")
+                raise ValueError(
+                    f"Unknown dependency for {task.task_id}: {', '.join(unknown)}"
+                )
 
         p0 = [t.task_id for t in tasks if t.phase == "P0"]
         p1 = [t.task_id for t in tasks if t.phase == "P1"]
@@ -299,8 +323,11 @@ class DependencyGraph:
             visited.update(current)
             nxt: list[str] = []
             for node in current:
-                children = [n for n, deps in self.graph.items()
-                            if node in deps and n not in visited and n not in nxt]
+                children = [
+                    n
+                    for n, deps in self.graph.items()
+                    if node in deps and n not in visited and n not in nxt
+                ]
                 nxt.extend(children)
             current = nxt
 
@@ -382,6 +409,7 @@ def _wire_local_planner(goal: str) -> dict | None:
         from organs.D_Execution.organs.local_planner import (  # type: ignore[import-not-found, import-untyped]
             LocalPlanner,
         )
+
         planner = LocalPlanner()
         can_handle, confidence = planner.can_handle(goal)
         if can_handle and confidence > 0.5:
