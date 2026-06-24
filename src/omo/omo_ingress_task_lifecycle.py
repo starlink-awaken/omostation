@@ -782,3 +782,180 @@ def repair_task_promotion_approval(
             },
         )
         return payload
+
+
+def request_task_promotion_approval(
+    omo_dir: Path,
+    *,
+    task_id: str,
+    actor: str,
+    approval_ref: str,
+    approval_record: dict[str, Any],
+    proposal_ref: str = "",
+    source_ref: str = "",
+    now: str | None = None,
+) -> dict[str, Any]:
+    timestamp = now or _utc_now()
+    task_path = omo_dir / "tasks" / "planned" / f"{task_id}.yaml"
+    approval_path = omo_dir.parent / approval_ref
+
+    with fcntl_lock(_lock_path(omo_dir)):
+        if not task_path.exists():
+            raise ValueError(f"planned task not found: {task_id}")
+
+        payload = _load_yaml(task_path)
+        existing_ref = payload.get("approval_ref")
+        if (
+            existing_ref
+            and isinstance(existing_ref, str)
+            and existing_ref.endswith(".yaml")
+            and "-promotion-approval-" in existing_ref
+        ):
+            raise ValueError(
+                "task already points to a task-specific promotion approval"
+            )
+
+        payload["approval_ref"] = approval_ref
+        errors = validate_task_data(payload, group="planned")
+        if errors:
+            raise ValueError(
+                "invalid planned task after approval request: " + "; ".join(errors)
+            )
+
+        write_yaml_atomic(approval_path, approval_record)
+        write_yaml_atomic(task_path, payload)
+
+        artifact = {
+            "kind": "task_promotion_approval_requested",
+            "task_id": task_id,
+            "task_ref": f".omo/tasks/planned/{task_id}.yaml",
+            "approval_ref": approval_ref,
+            "proposal_ref": proposal_ref,
+            "actor": actor,
+            "source_ref": source_ref,
+            "requested_at": timestamp,
+        }
+        artifact_path = (
+            _delivery_root(omo_dir)
+            / "tasks"
+            / f"{task_id}-promotion-approval-{_timestamp_slug(timestamp)}.yaml"
+        )
+        write_yaml_atomic(artifact_path, artifact)
+
+        parent_step_id = f"ingress:task-promotion-approval:{task_id}:{timestamp}"
+        details = (
+            f"task_id={task_id} actor={actor} approval_ref={approval_ref} "
+            f"proposal_ref={proposal_ref or '-'} source_ref={source_ref or '-'} "
+            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+        )
+        record_audit(
+            action="ingress_request_task_promotion_approval",
+            debt_id="",
+            actor=actor,
+            details=details,
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="request_task_promotion_approval",
+            target=f".omo/tasks/planned/{task_id}.yaml",
+            parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="request_task_promotion_approval",
+            target=f".omo/tasks/planned/{task_id}.yaml",
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={
+                "task_id": task_id,
+                "approval_ref": approval_ref,
+                "proposal_ref": proposal_ref,
+            },
+        )
+        return payload
+
+
+def revert_task_to_planned(
+    omo_dir: Path,
+    *,
+    task_id: str,
+    actor: str,
+    source_ref: str = "",
+    handoff_refs_override: list[str] | None = None,
+    now: str | None = None,
+) -> dict[str, Any]:
+    timestamp = now or _utc_now()
+    active_path = omo_dir / "tasks" / "active" / f"{task_id}.yaml"
+    planned_path = omo_dir / "tasks" / "planned" / f"{task_id}.yaml"
+
+    with fcntl_lock(_lock_path(omo_dir)):
+        if planned_path.exists():
+            return _load_yaml(planned_path)
+        if not active_path.exists():
+            raise ValueError(f"active task not found: {task_id}")
+
+        payload = _load_yaml(active_path)
+        if handoff_refs_override is not None:
+            payload["handoff_refs"] = list(handoff_refs_override)
+        payload["assigned_to"] = None
+        payload["dispatch_id"] = None
+        payload["run_ref"] = None
+        payload["review_ref"] = None
+        payload.pop("started_at", None)
+        errors = validate_task_data(payload, group="planned")
+        if errors:
+            raise ValueError("invalid reverted planned task: " + "; ".join(errors))
+
+        write_yaml_atomic(planned_path, payload)
+        active_path.unlink()
+
+        artifact = {
+            "kind": "task_reverted_to_planned",
+            "task_id": task_id,
+            "task_ref_before": f".omo/tasks/active/{task_id}.yaml",
+            "task_ref_after": f".omo/tasks/planned/{task_id}.yaml",
+            "actor": actor,
+            "source_ref": source_ref,
+            "reverted_at": timestamp,
+        }
+        artifact_path = (
+            _delivery_root(omo_dir)
+            / "tasks"
+            / f"{task_id}-revert-{_timestamp_slug(timestamp)}.yaml"
+        )
+        write_yaml_atomic(artifact_path, artifact)
+
+        parent_step_id = f"ingress:task-revert:{task_id}:{timestamp}"
+        details = (
+            f"task_id={task_id} actor={actor} source_ref={source_ref or '-'} "
+            f"artifact={artifact_path.relative_to(omo_dir.parent)}"
+        )
+        record_audit(
+            action="ingress_revert_task",
+            debt_id="",
+            actor=actor,
+            details=details,
+            audit_file=_audit_log_path(omo_dir),
+        )
+        _record_trail(
+            omo_dir,
+            actor=f"broker:{actor}",
+            action="revert_task_to_planned",
+            target=f".omo/tasks/planned/{task_id}.yaml",
+            parent_step_id=parent_step_id,
+        )
+        _record_mutation(
+            omo_dir,
+            actor=actor,
+            action="revert_task_to_planned",
+            target=f".omo/tasks/planned/{task_id}.yaml",
+            artifact_ref=f".omo/_delivery/ingress/tasks/{artifact_path.name}",
+            source_ref=source_ref,
+            created_at=timestamp,
+            extra={"task_id": task_id},
+        )
+        return payload
