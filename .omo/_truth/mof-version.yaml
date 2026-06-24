@@ -229,4 +229,9 @@ history:
     + 23 个 ADR'
   timestamp: '2026-06-24T15:38:31.837698'
   version: 0.0.58
-version: 0.0.58
+- description: 'P70 R1-R3: 跨级别抑制 (LEVEL_RANK 高→低) + rich 库颜色 (P0=bold red) + dashboard
+    6 卡片 (alerts_card) + readiness 快照持久化 (snapshots.jsonl) + mof-drift v8 趋势集成 + ADR-0064
+    + 24 个 ADR (5/9 候选实施)'
+  timestamp: '2026-06-24T15:55:33.394326'
+  version: 0.0.59
+version: 0.0.59

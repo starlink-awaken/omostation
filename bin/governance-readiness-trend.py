@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import statistics
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -154,6 +155,27 @@ def main() -> int:
         print("⚠️  无快照, 请先跑 governance-readiness.py")
         return 0
 
+    # P70 增: 同时跑 mof-drift v8 (集成 readiness)
+    from subprocess import run as _run
+    drift_output = _run(
+        ["bin/mof-drift"], capture_output=True, text=True, timeout=30,
+        cwd=str(root) if (root / "bin" / "mof-drift").exists() else None,
+    )
+    if drift_output.returncode == 0:
+        # 解析 drift LOW 数
+        import re as _re
+        m = _re.search(r"Total:\s*(\d+)\s+drifts", drift_output.stdout)
+        if m:
+            drift_count = int(m.group(1))
+            print(f"📊 mof-drift: {drift_count} 维度 (P62 v7 + P70 v8 趋势集成)")
+            if drift_count > 0:
+                for line in drift_output.stdout.split("\n"):
+                    if "🔵 LOW" in line or "🟡 MEDIUM" in line or "🔴 HIGH" in line:
+                        print(f"  {line.strip()}")
+    else:
+        print(f"⚠️  mof-drift 跑失败: {drift_output.stderr[:100]}")
+
+    print()
     print(f"📊 评分统计: mean={trend['mean']:.1f} median={trend['median']:.0f} "
           f"min={trend['min']} max={trend['max']} stdev={trend['stdev']:.2f}")
     print(f"📊 趋势: {trend['trend']}")
