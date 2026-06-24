@@ -131,3 +131,12 @@ uv run pytest src/cockpit/tests/test_cli_research_*.py -q
 6. **hatchling 构建** — 与 kairon/agora/runtime 一致
 7. **`cockpit iterate` 非交互回退** — 无 TTY 时 `Confirm.ask` 抛 EOFError，默认走标准 C2G 流而非 Fast-Track
 8. **L4 全域 8 域** — cockpit_mcp.py 注册 cards/vault/personal/public/creative/family/workdocs/opc
+
+## Workspace-Wide Governance (2026-06-24)
+
+This project follows the workspace-level governance conventions documented in the root `AGENTS.md`:
+
+- **Agent Mutation Protocol**: Any autonomous agent/cron/daemon that modifies workspace state must emit `agent_mutation_intent`, avoid direct file I/O to `.omo/`/`spaces/`, and commit immediately. See `.omo/standards/agent-mutation-protocol.md` for the full protocol.
+- **SSOT Guardian**: Run `python3 bin/ssot-guardian.py` from the workspace root before committing to detect task-count, current-wave, submodule-pointer, or direct-omo-io drift.
+- **direct-omo-io**: Scripts must route writes to `.omo/` through `omo CLI`, `projects/omo` core, or `projects/c2g` ingress — never via raw `open()/mkdir()/write_text()`.
+- **Submodule Governance**: Commit changes inside the submodule first, then bump the root-repo pointer; `git submodule status` with a `+` prefix indicates pending drift.
