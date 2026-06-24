@@ -740,6 +740,8 @@ def main() -> int:
             a
         ),
         "init": lambda a: __import__("cockpit.commands.quickstart", fromlist=["cmd_quickstart"]).cmd_quickstart(a),
+        # P66 增: readiness dashboard 子命令 (升级自 P65 wrapper)
+        "readiness": lambda a: __import__("cockpit.commands.readiness", fromlist=["cmd_readiness"]).cmd_readiness(a),
     }
 
     handler = handlers.get(args.command)
