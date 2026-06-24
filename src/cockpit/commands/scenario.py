@@ -240,7 +240,9 @@ def _f2_work_assistant(*, query: str) -> dict[str, Any]:
 def _family_cards_sources(*, query: str = "", limit: int = 5) -> tuple[list[dict[str, Any]], str]:
     _workspace_root() / "data" / "cards" / "cards.db"
 
-    cards_dir = Path.home() / "Documents" / "@驾驶舱" / "CARDS"  # L4 域 SSOT (v3 #24: data/ 仅 7 副本, Documents 67 真源)
+    cards_dir = (
+        Path.home() / "Documents" / "@驾驶舱" / "CARDS"
+    )  # L4 域 SSOT (v3 #24: data/ 仅 7 副本, Documents 67 真源)
     # 语义过滤 (产品走查 v2 #12: 之前只过滤 domain:family 全收, 健康 query 召回车险;
     # 现按 query tokens 评分 score>0 才收, 同 _f2_work_assistant, 召回精准).
     ranked: list[tuple[int, dict[str, Any]]] = []
@@ -424,8 +426,8 @@ def _render_scenario_human(result: dict[str, Any]) -> None:
                 f"[bold {style}]{icon} 健康建议 · {level.upper()}[/]\n\n"
                 f"[bold]查询:[/] {query}\n"
                 f"[bold]建议行动:[/] {action}\n\n"
-                f"[dim]隐私: {result.get('privacy_class','confidential')} · "
-                f"来源: {result.get('source_count',0)} 条 · 红线: {'、'.join(reds)}[/]",
+                f"[dim]隐私: {result.get('privacy_class', 'confidential')} · "
+                f"来源: {result.get('source_count', 0)} 条 · 红线: {'、'.join(reds)}[/]",
                 title="👨‍👩‍👧 家庭健康",
                 border_style=style,
             )
@@ -463,10 +465,10 @@ def _render_scenario_human(result: dict[str, Any]) -> None:
         console.print(
             Panel(
                 f"[bold green]💼 工作助理草稿[/]\n"
-                f"[bold]主题:[/] {draft.get('title','')}\n"
-                f"[bold]概要:[/] {draft.get('body','')}\n\n"
-                f"[bold]下一步:[/] {result.get('next_action','')}\n"
-                f"[dim]参考来源: {result.get('source_count',0)} 条[/]",
+                f"[bold]主题:[/] {draft.get('title', '')}\n"
+                f"[bold]概要:[/] {draft.get('body', '')}\n\n"
+                f"[bold]下一步:[/] {result.get('next_action', '')}\n"
+                f"[dim]参考来源: {result.get('source_count', 0)} 条[/]",
                 border_style="green",
             )
         )

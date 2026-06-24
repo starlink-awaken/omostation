@@ -25,7 +25,7 @@ from .commands.audit import cmd_audit
 from .commands.base import (
     _SCRIPT_DIR,
     _find_cli,  # noqa: F401
-    )
+)
 from .commands.brief import _cmd_brief
 from .commands.contracts import (
     cmd_contracts_export_event,
@@ -84,46 +84,65 @@ from .commands.status import (
 
 def cmd_ssb(a):
     from cockpit.commands.ssb import cmd_ssb as _c
+
     return _c(a)
+
 
 def cmd_mof(a):
     from cockpit.commands.mof import cmd_mof as _c
+
     return _c(a)
+
 
 def _c_context(a):
     from cockpit.commands.l4bridge import cmd_context as _c
+
     return _c(a)
+
 
 def _c_cards(a):
     from cockpit.commands.l4bridge import cmd_cards as _c
+
     return _c(a)
+
 
 def _c_vault(a):
     from cockpit.commands.l4bridge import cmd_vault as _c
+
     return _c(a)
+
 
 def _c_domains(a):
     from cockpit.commands.l4bridge import cmd_domains as _c
+
     return _c(a)
+
 
 def _c_skill(a):
     from cockpit.commands.l4bridge import cmd_skill as _c
+
     return _c(a)
+
 
 def _c_events(a):
     from cockpit.commands.events import run_events_dashboard
+
     run_events_dashboard(a.url)
     return 0
 
+
 def _c_version(a):
     from cockpit import __version__
+
     console.print(f"[bold cyan]cockpit[/] v[bold]{__version__}[/]")
     console.print("[dim]L3 统一入口 · 5+3+1 架构[/]")
     return 0
 
+
 def main() -> int:
     try:
         from kairon_observability.tracing import setup_tracing
+
         setup_tracing("cockpit-cli")
     except ImportError:
         pass  # Skip if observability package isn't installed
@@ -280,7 +299,13 @@ def main() -> int:
 
     # ── Round 43 P1: 融合 bin/workspace-audit (6 维度全方位审计) ──
     audit_p = sub.add_parser("audit", help="🔍 6 维度全方位审计 (调 bin/workspace-audit)")
-    audit_p.add_argument("--dim", type=str, choices=["governance", "lint", "radar", "ssot", "gitlink", "ops", "all"], default="all", help="只跑指定维度 (默认 all)")
+    audit_p.add_argument(
+        "--dim",
+        type=str,
+        choices=["governance", "lint", "radar", "ssot", "gitlink", "ops", "all"],
+        default="all",
+        help="只跑指定维度 (默认 all)",
+    )
     audit_p.add_argument("--format", choices=["markdown", "json"], default="markdown", help="输出格式")
     audit_p.add_argument("--output", type=str, default=None, help="写报告到文件")
     audit_p.add_argument("--since", type=str, default="7d", help="agora 维度时间范围 (默认 7d)")
@@ -330,7 +355,7 @@ def main() -> int:
         "--full", action="store_true", help="全栈检查 (含 Agora 服务健康 + Runtime Matrix + OMO 债务)"
     )
 
-    brief_p =     sub.add_parser("brief", help="会话简报")
+    brief_p = sub.add_parser("brief", help="会话简报")
     brief_p.add_argument("--force", action="store_true", help="强制重新生成")
 
     search_p = sub.add_parser("search", help="跨源搜索 (数据库 + BOS 知识引擎)")
@@ -383,33 +408,25 @@ def main() -> int:
         dest="scenario_json",
         help="输出原始 JSON (脚本/管道消费); 默认人类可读面板",
     )
-    scenario_sub = scenario_p.add_subparsers(
-        dest="scenario_sub", parser_class=WorkspaceParser
-    )
+    scenario_sub = scenario_p.add_subparsers(dest="scenario_sub", parser_class=WorkspaceParser)
     scenario_radar = scenario_sub.add_parser(
         "radar", help="P5-F1 technical-radar: 扫描研究活动, 产出 ≥3 upgrade candidates"
     )
-    scenario_radar.add_argument(
-        "--limit", type=int, default=10, help="最多产出多少 candidates (默认 10, 红线 ≥3)"
-    )
+    scenario_radar.add_argument("--limit", type=int, default=10, help="最多产出多少 candidates (默认 10, 红线 ≥3)")
     scenario_assistant = scenario_sub.add_parser(
         "assistant", help="P5-F2 work-assistant: 1 真实工作 query → 结构化草稿"
     )
-    scenario_assistant.add_argument(
-        "--query", type=str, default="OPC P5 progress", help="真实工作 query"
-    )
+    scenario_assistant.add_argument("--query", type=str, default="OPC P5 progress", help="真实工作 query")
     scenario_health = scenario_sub.add_parser(
         "health", help="P5-F3 family-health: 1 真实家庭健康 query → 3 级 next-action (privacy=confidential)"
     )
-    scenario_health.add_argument(
-        "--query", type=str, default="日常家庭健康问询", help="真实家庭健康 query"
-    )
+    scenario_health.add_argument("--query", type=str, default="日常家庭健康问询", help="真实家庭健康 query")
 
     # Gap #7: MetaOS 工作流编排入口
     wf_p = sub.add_parser(
         "workflow",
         help="🧠 工作流编排（MetaOS 动态规划 / ecos L0 M1 引擎）",
-        epilog="子命令: plan / run / history / approve (MetaOS) | ecos (L0 M1 引擎)\n示例:\n  cockpit workflow ecos list\n  cockpit workflow plan \"目标\"\n  cockpit workflow history",
+        epilog='子命令: plan / run / history / approve (MetaOS) | ecos (L0 M1 引擎)\n示例:\n  cockpit workflow ecos list\n  cockpit workflow plan "目标"\n  cockpit workflow history',
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     wf_p.add_argument("workflow_args", nargs="*", help="workflow 子命令和参数")
@@ -424,7 +441,7 @@ def main() -> int:
         help="🧭 C2G 战略罗盘 (V2P -> C2G -> AGC 统一管理)",
         epilog=(
             "子命令 (源自 c2g 引擎):\n"
-            "  brainstorm \"主题\"  发散想法生成 Pitch\n"
+            '  brainstorm "主题"  发散想法生成 Pitch\n'
             "  draft               交互式起草 Pitch\n"
             "  bet <pitch.md>      Pitch → 受治理任务\n"
             "  radar               战略对齐审计\n"
@@ -436,7 +453,6 @@ def main() -> int:
     compass_p.add_argument("compass_args", nargs=argparse.REMAINDER, help="Arguments passed to c2g compass engine")
 
     sub.add_parser("monitor", help="📊 实时终端大盘 (C2G Pipeline 监控仪, 实时刷新 Ctrl+C 退出)")
-
 
     code_p = sub.add_parser("code", help="代码库分析与审查 (基于 codeanalyze)")
     code_sub = code_p.add_subparsers(dest="code_command", parser_class=WorkspaceParser)
@@ -492,123 +508,175 @@ def main() -> int:
         if getattr(a, "batch", False) and getattr(a, "topic", []):
             if len(a.topic) >= 2:
                 return _cmd_research_batch(a)
-        if getattr(a, "search", False): return cmd_research_search(a)  # noqa: E701
-        if getattr(a, "compare", False): return cmd_research_compare(a)  # noqa: E701
-        if getattr(a, "merge", False): return cmd_research_merge(a)  # noqa: E701
-        if getattr(a, "digest", False): return cmd_research_digest(a)  # noqa: E701
-        if getattr(a, "audit", False): return cmd_research_audit(a)  # noqa: E701
-        if getattr(a, "quarantine", False): return cmd_research_quarantine(a)  # noqa: E701
-        if getattr(a, "restore", False): return cmd_research_restore(a)  # noqa: E701
-        if getattr(a, "heatmap", False): return cmd_research_heatmap(a)  # noqa: E701
-        if getattr(a, "follow_up", False): return cmd_research_follow_up(a)  # noqa: E701
-        if getattr(a, "health", False): return cmd_research_health(a)  # noqa: E701
+        if getattr(a, "search", False):
+            return cmd_research_search(a)
+        if getattr(a, "compare", False):
+            return cmd_research_compare(a)
+        if getattr(a, "merge", False):
+            return cmd_research_merge(a)
+        if getattr(a, "digest", False):
+            return cmd_research_digest(a)
+        if getattr(a, "audit", False):
+            return cmd_research_audit(a)
+        if getattr(a, "quarantine", False):
+            return cmd_research_quarantine(a)
+        if getattr(a, "restore", False):
+            return cmd_research_restore(a)
+        if getattr(a, "heatmap", False):
+            return cmd_research_heatmap(a)
+        if getattr(a, "follow_up", False):
+            return cmd_research_follow_up(a)
+        if getattr(a, "health", False):
+            return cmd_research_health(a)
         if getattr(a, "backup", None) is not None:
             a.output = a.backup or None
             return cmd_research_backup(a)
-        if getattr(a, "backup_restore", False): return cmd_research_backup_restore(a)  # noqa: E701
-        if getattr(a, "agent", False): return cmd_research_agent(a)  # noqa: E701
-        if getattr(a, "list", False): return cmd_research_list(a)  # noqa: E701
-        if getattr(a, "dossier", False): return cmd_research_dossier(a)  # noqa: E701
-        if getattr(a, "timeline", False): return cmd_research_timeline(a)  # noqa: E701
-        if getattr(a, "tag", False): return cmd_research_tag(a)  # noqa: E701
-        if getattr(a, "rename", False): return cmd_research_rename(a)  # noqa: E701
-        if getattr(a, "archive", False) or getattr(a, "all_active", False): return cmd_research_archive(a)  # noqa: E701
-        if getattr(a, "unarchive", False): return cmd_research_unarchive(a)  # noqa: E701
-        if getattr(a, "publish", False): return cmd_research_publish(a)  # noqa: E701
-        if getattr(a, "export", False): return cmd_research_export(a)  # noqa: E701
-        if getattr(a, "open", False): return cmd_research_open(a)  # noqa: E701
-        if getattr(a, "ask", False): return cmd_research_ask(a)  # noqa: E701
+        if getattr(a, "backup_restore", False):
+            return cmd_research_backup_restore(a)
+        if getattr(a, "agent", False):
+            return cmd_research_agent(a)
+        if getattr(a, "list", False):
+            return cmd_research_list(a)
+        if getattr(a, "dossier", False):
+            return cmd_research_dossier(a)
+        if getattr(a, "timeline", False):
+            return cmd_research_timeline(a)
+        if getattr(a, "tag", False):
+            return cmd_research_tag(a)
+        if getattr(a, "rename", False):
+            return cmd_research_rename(a)
+        if getattr(a, "archive", False) or getattr(a, "all_active", False):
+            return cmd_research_archive(a)
+        if getattr(a, "unarchive", False):
+            return cmd_research_unarchive(a)
+        if getattr(a, "publish", False):
+            return cmd_research_publish(a)
+        if getattr(a, "export", False):
+            return cmd_research_export(a)
+        if getattr(a, "open", False):
+            return cmd_research_open(a)
+        if getattr(a, "ask", False):
+            return cmd_research_ask(a)
         return cmd_research(a)
 
     def dispatch_code(a):
         if getattr(a, "code_command", "") == "workflow":
             from cockpit.commands.code import cmd_code_workflow
+
             return cmd_code_workflow(a)
         elif getattr(a, "code_command", ""):
             from cockpit.commands.code import cmd_code_base
+
             return cmd_code_base(a)
         code_p.print_help()
         return 1
 
     def dispatch_bos(a):
         from cockpit.commands.bos import cmd_bos_discover, cmd_bos_list, cmd_bos_status
+
         sub = getattr(a, "bos_cmd", "")
-        if sub == "list": return cmd_bos_list(a)  # noqa: E701
-        elif sub == "discover": return cmd_bos_discover(a)  # noqa: E701
-        else: return cmd_bos_status(a)  # noqa: E701
+        if sub == "list":
+            return cmd_bos_list(a)
+        elif sub == "discover":
+            return cmd_bos_discover(a)
+        else:
+            return cmd_bos_status(a)
 
     def dispatch_scenario(a):
         from cockpit.commands.scenario import cmd_scenario
+
         return cmd_scenario(a)
 
     def dispatch_iterate(a):
         from cockpit.commands.iterate import cmd_iterate
+
         return cmd_iterate(a)
 
     def dispatch_compass(a):
         import subprocess
+
         c2g_project = str((_SCRIPT_DIR.parent.parent.parent.parent / "c2g").resolve())
         cmd = ["uv", "run", "--project", c2g_project, "c2g"] + getattr(a, "compass_args", [])
         return subprocess.call(cmd)
 
     def dispatch_workflow(a):
         from cockpit.commands.workflow import handle_workflow
+
         return handle_workflow(getattr(a, "workflow_args", []))
 
     def dispatch_monitor(a):
         from cockpit.commands.monitor import cmd_monitor
+
         return cmd_monitor(a)
 
     def dispatch_data(a):
-        if getattr(a, "data_command", "") == "index": return cmd_data_index(a)  # noqa: E701
-        if getattr(a, "data_command", "") == "types": return cmd_data_types(a)  # noqa: E701
-        if getattr(a, "data_command", "") == "gc": return cmd_data_gc(a)  # noqa: E701
-        console.print("[yellow]试试: [cyan]cockpit data index[/] 或 [cyan]cockpit data types[/] 或 [cyan]cockpit data gc[/][/]")
+        if getattr(a, "data_command", "") == "index":
+            return cmd_data_index(a)
+        if getattr(a, "data_command", "") == "types":
+            return cmd_data_types(a)
+        if getattr(a, "data_command", "") == "gc":
+            return cmd_data_gc(a)
+        console.print(
+            "[yellow]试试: [cyan]cockpit data index[/] 或 [cyan]cockpit data types[/] 或 [cyan]cockpit data gc[/][/]"
+        )
         return 1
 
     def dispatch_contracts(a):
-        if getattr(a, "contracts_command", "") == "validate": return cmd_contracts_validate(a)  # noqa: E701
-        if getattr(a, "contracts_command", "") == "list": return cmd_contracts_list(a)  # noqa: E701
-        if getattr(a, "contracts_command", "") == "export-research": return cmd_contracts_export_research(a)  # noqa: E701
+        if getattr(a, "contracts_command", "") == "validate":
+            return cmd_contracts_validate(a)
+        if getattr(a, "contracts_command", "") == "list":
+            return cmd_contracts_list(a)
+        if getattr(a, "contracts_command", "") == "export-research":
+            return cmd_contracts_export_research(a)
         if getattr(a, "contracts_command", "") == "export":
-            if getattr(a, "contracts_export_type", "") == "identity": return cmd_contracts_export_identity(a)  # noqa: E701
-            elif getattr(a, "contracts_export_type", "") == "event": return cmd_contracts_export_event(a)  # noqa: E701
+            if getattr(a, "contracts_export_type", "") == "identity":
+                return cmd_contracts_export_identity(a)
+            elif getattr(a, "contracts_export_type", "") == "event":
+                return cmd_contracts_export_event(a)
         return 1
 
     def cmd_product_health(a):
         import subprocess as _sp
         import sys
+
         result = _sp.run([sys.executable, str(_SCRIPT_DIR / "product-health")])
         returncode = getattr(result, "returncode", 0)
         return returncode if isinstance(returncode, int) else 0
 
     def cmd_context(a):
         from cockpit.commands.l4bridge import cmd_context as _c
+
         return _c(a)
 
     def cmd_cards(a):
         from cockpit.commands.l4bridge import cmd_cards as _c
+
         return _c(a)
 
     def cmd_vault(a):
         from cockpit.commands.l4bridge import cmd_vault as _c
+
         return _c(a)
 
     def cmd_domains(a):
         from cockpit.commands.l4bridge import cmd_domains as _c
+
         return _c(a)
 
     def cmd_skill(a):
         from cockpit.commands.l4bridge import cmd_skill as _c
+
         return _c(a)
 
     def cmd_events(a):
         from cockpit.commands.events import run_events_dashboard
+
         run_events_dashboard(a.url)
         return 0
 
     def cmd_version(a):
         from cockpit import __version__
+
         console.print(f"[bold cyan]cockpit[/] v[bold]{__version__}[/]")
         console.print("[dim]L3 统一入口 · 5+3+1 架构[/]")
         return 0
@@ -641,28 +709,20 @@ def main() -> int:
         "data": dispatch_data,
         "contracts": dispatch_contracts,
         "product-health": cmd_product_health,
-        "gongwen": lambda a: __import__(
-            "cockpit.commands.gongwen", fromlist=["cmd_gongwen"]
-        ).cmd_gongwen(a),
+        "gongwen": lambda a: __import__("cockpit.commands.gongwen", fromlist=["cmd_gongwen"]).cmd_gongwen(a),
         "governance": cmd_governance,
         "domains": _c_domains,
         "skill": _c_skill,
         "events": _c_events,
         "ssb": cmd_ssb,
         "mof": cmd_mof,
-        "omo": lambda a: __import__(
-            "cockpit.commands.omo", fromlist=["cmd_omo"]
-        ).cmd_omo(a),
-        "runtime": lambda a: __import__(
-            "cockpit.commands.runtime", fromlist=["cmd_runtime"]
-        ).cmd_runtime(a),
+        "omo": lambda a: __import__("cockpit.commands.omo", fromlist=["cmd_omo"]).cmd_omo(a),
+        "runtime": lambda a: __import__("cockpit.commands.runtime", fromlist=["cmd_runtime"]).cmd_runtime(a),
         "help": cmd_help,
-        "quickstart": lambda a: __import__(
-            "cockpit.commands.quickstart", fromlist=["cmd_quickstart"]
-        ).cmd_quickstart(a),
-        "init": lambda a: __import__(
-            "cockpit.commands.quickstart", fromlist=["cmd_quickstart"]
-        ).cmd_quickstart(a),
+        "quickstart": lambda a: __import__("cockpit.commands.quickstart", fromlist=["cmd_quickstart"]).cmd_quickstart(
+            a
+        ),
+        "init": lambda a: __import__("cockpit.commands.quickstart", fromlist=["cmd_quickstart"]).cmd_quickstart(a),
     }
 
     handler = handlers.get(args.command)
@@ -672,6 +732,7 @@ def main() -> int:
     console.print(f"[red]未知命令: {args.command}[/]")
     parser.print_help()
     return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

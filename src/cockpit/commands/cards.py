@@ -104,7 +104,9 @@ def _do_list(c, e) -> int:
             seen[key] = {"priority": priority, "stem": path.stem, "status": status, "title": title, "count": 1}
         for info in seen.values():
             suffix = f" [yellow](×{info['count']})[/]" if info["count"] > 1 else ""
-            c.print(f"  [{info['priority']}] {info['stem'][:50]:50s} [dim]({info['status']})[/] {info['title'][:40]}{suffix}")
+            c.print(
+                f"  [{info['priority']}] {info['stem'][:50]:50s} [dim]({info['status']})[/] {info['title'][:40]}{suffix}"
+            )
             count += info["count"]
     c.print(f"\n[green]总计 {count} cards[/]")
     return 0

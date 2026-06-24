@@ -437,6 +437,7 @@ def get_cockpit_jwt() -> str:
     """获取或生成模拟的 JWT token，用于穿越 Agora/MetaOS 的 RBAC 拦截."""
     return os.environ.get("COCKPIT_JWT_TOKEN", "mock_admin_token_for_cli")
 
+
 def _discover_services() -> list[tuple[str, str, str | None, str, str]]:
     """通过 Agora /api/services 动态发现服务，失败则回退到硬编码列表。"""
     try:

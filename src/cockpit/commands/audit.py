@@ -11,6 +11,7 @@
   cockpit audit --since 30d               # agora 维度时间范围
   cockpit audit --no-color                # 无颜色 (适合 pipe)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -54,6 +55,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
     # 修真 v3: 用 python3.13 (kairon/c2g 需要 3.13+, 不用 sys.executable 因为 venv 可能是 3.9)
     import shutil
+
     py = shutil.which("python3.13") or shutil.which("python3.12") or sys.executable
     cmd = [py, str(WORKSPACE_AUDIT)]
     if args.dim:
@@ -74,7 +76,10 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
     try:
         result = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=60,
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=60,
             cwd=str(WORKSPACE_ROOT),
         )
         # stdout 透传 (主报告)

@@ -6,9 +6,7 @@ from pathlib import Path
 from cockpit.commands import governance
 
 
-def test_cmd_governance_surfaces_routes_to_omo_governance(
-    monkeypatch, tmp_path: Path
-) -> None:
+def test_cmd_governance_surfaces_routes_to_omo_governance(monkeypatch, tmp_path: Path) -> None:
     recorded: dict[str, object] = {}
 
     def fake_run(cmd, cwd):
@@ -23,9 +21,7 @@ def test_cmd_governance_surfaces_routes_to_omo_governance(
     monkeypatch.setattr(governance, "resolve_workspace_root", lambda: tmp_path)
     monkeypatch.setattr(governance.subprocess, "run", fake_run)
 
-    rc = governance.cmd_governance(
-        argparse.Namespace(subcommand="surfaces", extra_args=["--json"])
-    )
+    rc = governance.cmd_governance(argparse.Namespace(subcommand="surfaces", extra_args=["--json"]))
 
     assert rc == 0
     cmd = recorded["cmd"]
@@ -46,9 +42,7 @@ def test_cmd_governance_surfaces_routes_to_omo_governance(
     assert recorded["cwd"] == str(tmp_path)
 
 
-def test_cmd_governance_ingress_task_routes_to_omo_governance(
-    monkeypatch, tmp_path: Path
-) -> None:
+def test_cmd_governance_ingress_task_routes_to_omo_governance(monkeypatch, tmp_path: Path) -> None:
     recorded: dict[str, object] = {}
 
     def fake_run(cmd, cwd):
@@ -81,9 +75,7 @@ def test_cmd_governance_ingress_task_routes_to_omo_governance(
     ]
 
 
-def test_cmd_governance_ingress_debt_routes_to_omo_governance(
-    monkeypatch, tmp_path: Path
-) -> None:
+def test_cmd_governance_ingress_debt_routes_to_omo_governance(monkeypatch, tmp_path: Path) -> None:
     recorded: dict[str, object] = {}
 
     def fake_run(cmd, cwd):
@@ -116,9 +108,7 @@ def test_cmd_governance_ingress_debt_routes_to_omo_governance(
     ]
 
 
-def test_cmd_governance_verify_runs_governance_and_task_policy_chain(
-    monkeypatch, tmp_path: Path
-) -> None:
+def test_cmd_governance_verify_runs_governance_and_task_policy_chain(monkeypatch, tmp_path: Path) -> None:
     recorded: list[list[str]] = []
 
     def fake_run(cmd, cwd):

@@ -6,9 +6,7 @@ from pathlib import Path
 from cockpit.commands import audit
 
 
-def test_cmd_audit_json_keeps_banner_off_stdout(
-    monkeypatch, capsys
-) -> None:
+def test_cmd_audit_json_keeps_banner_off_stdout(monkeypatch, capsys) -> None:
     class _Result:
         returncode = 0
         stdout = '{"total": 100, "grade": "A+", "dims": {}}'

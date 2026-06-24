@@ -16,11 +16,13 @@ _REPO_ROOT = Path(__file__).resolve().parents[4]
 
 
 if router:
+
     @router.get("/status")
     async def get_status():
         """获取治理状态"""
         try:
             import yaml
+
             system_yaml = _REPO_ROOT / ".omo" / "state" / "system.yaml"
             if system_yaml.exists():
                 with open(system_yaml) as f:
@@ -59,9 +61,11 @@ if router:
             proj_dir = _REPO_ROOT / "projects" / proj
             if proj_dir.exists():
                 has_githooks = (proj_dir / ".githooks").exists()
-                result.append({
-                    "name": proj,
-                    "status": "healthy" if has_githooks else "warning",
-                    "has_githooks": has_githooks,
-                })
+                result.append(
+                    {
+                        "name": proj,
+                        "status": "healthy" if has_githooks else "warning",
+                        "has_githooks": has_githooks,
+                    }
+                )
         return {"projects": result, "total": len(result)}

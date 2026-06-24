@@ -90,10 +90,9 @@ if router:
             # 去掉 Python 对象中不可 JSON 序列化的字段
             safe = []
             for w in wfs:
-                safe.append({
-                    k: v for k, v in w.items()
-                    if isinstance(v, (str, int, float, bool, list, dict)) or v is None
-                })
+                safe.append(
+                    {k: v for k, v in w.items() if isinstance(v, (str, int, float, bool, list, dict)) or v is None}
+                )
             return {"workflows": safe, "total": len(safe)}
         except Exception as e:
             return {"error": str(e), "workflows": [], "total": 0}
@@ -115,6 +114,7 @@ if router:
             for k, v in result.items():
                 try:
                     import json
+
                     json.dumps(v)
                     safe[k] = v
                 except (TypeError, ValueError):
@@ -170,8 +170,10 @@ if router:
             errors = [v for v in violations if v.get("severity") == "error"]
             warnings = [v for v in violations if v.get("severity") != "error"]
             return {
-                "name": name, "valid": len(errors) == 0,
-                "errors": errors, "warnings": warnings,
+                "name": name,
+                "valid": len(errors) == 0,
+                "errors": errors,
+                "warnings": warnings,
                 "total_violations": len(violations),
             }
         except Exception as e:
@@ -189,10 +191,9 @@ if router:
             runs = runs[:recent]
             safe = []
             for r in runs:
-                safe.append({
-                    k: v for k, v in r.items()
-                    if isinstance(v, (str, int, float, bool, list, dict)) or v is None
-                })
+                safe.append(
+                    {k: v for k, v in r.items() if isinstance(v, (str, int, float, bool, list, dict)) or v is None}
+                )
             return {"runs": safe, "total": len(safe)}
         except Exception as e:
             return {"error": str(e), "runs": []}
@@ -208,6 +209,7 @@ if router:
             for k, v in result.items():
                 try:
                     import json
+
                     json.dumps(v)
                     safe[k] = v
                 except (TypeError, ValueError):

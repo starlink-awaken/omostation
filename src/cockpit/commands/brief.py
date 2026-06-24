@@ -10,6 +10,7 @@ from .base import _panel
 
 console = Console()
 
+
 def _cmd_brief(args: Namespace) -> int:
     """生成会话简报 (产品走查 v5 #V5-07: 加 P0 待办 + 类型分布 + 建议, 非仅活跃卡片数)."""
     console.print(_panel("[bold cyan]📋 会话简报[/]", "cyan"))
@@ -31,7 +32,7 @@ def _cmd_brief(args: Namespace) -> int:
         if p0:
             console.print("\n[bold]🔴 P0 待办 (前 5):[/]")
             for c in p0:
-                console.print(f"  [red]▪[/] {str(c.get('title',''))[:50]}")
+                console.print(f"  [red]▪[/] {str(c.get('title', ''))[:50]}")
 
         # 按类型聚合 (产品决策支持: idea/task/debt/delivery 分布)
         by_type: dict[str, int] = {}

@@ -84,9 +84,7 @@ def _cmd_search(args: Namespace) -> int:
     trace: dict = {}
     if search_all:
         try:
-            trace = _writeback_search_trace(
-                query, zone_count, len(merged_results), limit, merged_results
-            )
+            trace = _writeback_search_trace(query, zone_count, len(merged_results), limit, merged_results)
         except Exception as e:
             _log_trace_skip(f"unexpected: {type(e).__name__}: {e}")
 
@@ -104,6 +102,7 @@ def _cmd_search(args: Namespace) -> int:
 
     if args.json:
         import sys as _sys
+
         _sys.stdout.write(json.dumps(response, ensure_ascii=False, indent=2))
         _sys.stdout.write("\n")
         _sys.stdout.flush()
@@ -120,17 +119,13 @@ def _cmd_search(args: Namespace) -> int:
             skipped = [z for z, n in zone_count.items() if n == 0]
             console.print("\n[yellow]⚠️ 未找到结果 — 别急着放弃, 可能是:[/]")
             if not search_all:
-                console.print(
-                    "  [dim]·[/] 仅搜了本地库, 加 [cyan]--all[/] 同时搜 BOS 知识引擎 (vault/kos)"
-                )
+                console.print("  [dim]·[/] 仅搜了本地库, 加 [cyan]--all[/] 同时搜 BOS 知识引擎 (vault/kos)")
             if skipped:
                 console.print(
                     f"  [dim]·[/] 知识源 {', '.join(skipped)} 本次未命中或未连接,"
                     f" 看 [cyan]cockpit status[/] 服务在线状态"
                 )
-            console.print(
-                f"  [dim]·[/] 换关键词, 或 [cyan]cockpit vault \"{query}\"[/] 直接搜知识库"
-            )
+            console.print(f'  [dim]·[/] 换关键词, 或 [cyan]cockpit vault "{query}"[/] 直接搜知识库')
         for item in interleaved:
             title = str(item.get("topic", item.get("title", str(item)[:80])))[:70]
             zone = item.get("_zone", "?")
@@ -142,6 +137,7 @@ def _cmd_search(args: Namespace) -> int:
             console.print(f"[dim]trace_id: {trace['trace_id']} ({'deduped' if trace.get('deduped') else 'new'})[/dim]")
 
     return 0
+
 
 def _interleave_by_source(items: list[dict], limit: int) -> list[dict]:
     if limit <= 0 or not items:
@@ -168,9 +164,12 @@ def _interleave_by_source(items: list[dict], limit: int) -> list[dict]:
             break
     return out[:limit]
 
+
 def _log_kos_skip(reason: str) -> None:
     import logging as _logging
+
     _logging.getLogger("cockpit.cli.kos").debug("KOS skip: %s", reason)
+
 
 def _invoke_kos_search(query: str, limit: int = 10, timeout: float = 60.0) -> list[dict]:
     ws_root = Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
@@ -182,30 +181,54 @@ def _invoke_kos_search(query: str, limit: int = 10, timeout: float = 60.0) -> li
     try:
         proc = subprocess.Popen(
             ["uv", "run", "python", "-m", "kos.mcp.server"],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            text=True, bufsize=1, cwd=str(kairon_dir),
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1,
+            cwd=str(kairon_dir),
         )
     except (OSError, subprocess.SubprocessError) as e:
         _log_kos_skip(f"spawn failed: {type(e).__name__}: {e}")
         return []
 
     try:
-        proc.stdin.write(json.dumps({
-            "jsonrpc": "2.0", "id": 1, "method": "initialize",
-            "params": {"protocolVersion": "2024-11-05"},
-        }) + "\n")
+        proc.stdin.write(
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": {"protocolVersion": "2024-11-05"},
+                }
+            )
+            + "\n"
+        )
         proc.stdin.flush()
-        proc.stdin.write(json.dumps({
-            "jsonrpc": "2.0", "method": "notifications/initialized",
-        }) + "\n")
+        proc.stdin.write(
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "method": "notifications/initialized",
+                }
+            )
+            + "\n"
+        )
         proc.stdin.flush()
-        proc.stdin.write(json.dumps({
-            "jsonrpc": "2.0", "id": 2, "method": "tools/call",
-            "params": {
-                "name": "search_knowledge",
-                "arguments": {"query": query, "limit": limit},
-            },
-        }) + "\n")
+        proc.stdin.write(
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "search_knowledge",
+                        "arguments": {"query": query, "limit": limit},
+                    },
+                }
+            )
+            + "\n"
+        )
         proc.stdin.flush()
         proc.stdin.close()
 
@@ -260,22 +283,24 @@ def _invoke_kos_search(query: str, limit: int = 10, timeout: float = 60.0) -> li
             timestamp = _kos_ts_to_iso(updated)
             body_preview_raw = r.get("body_preview", "")
             body_preview = _clean_control_chars(str(body_preview_raw))
-            mapped.append({
-                "id": r.get("doc_id", ""),
-                "title": _clean_control_chars(title),
-                "snippet": body_preview[:200],
-                "source": "kairon-kos",
-                "source_path": r.get("canonical_path", "bos://memory/kos/search"),
-                "timestamp": timestamp,
-                "type": "knowledge",
-                "relevance": 1.0,
-                "kind": r.get("kind", ""),
-                "zone": r.get("zone", ""),
-                "status": r.get("status", ""),
-                "trust_level": r.get("trust_level", ""),
-                "updated_at": updated,
-                "body_preview": body_preview,
-            })
+            mapped.append(
+                {
+                    "id": r.get("doc_id", ""),
+                    "title": _clean_control_chars(title),
+                    "snippet": body_preview[:200],
+                    "source": "kairon-kos",
+                    "source_path": r.get("canonical_path", "bos://memory/kos/search"),
+                    "timestamp": timestamp,
+                    "type": "knowledge",
+                    "relevance": 1.0,
+                    "kind": r.get("kind", ""),
+                    "zone": r.get("zone", ""),
+                    "status": r.get("status", ""),
+                    "trust_level": r.get("trust_level", ""),
+                    "updated_at": updated,
+                    "body_preview": body_preview,
+                }
+            )
         return mapped
 
     except Exception as e:
@@ -288,14 +313,17 @@ def _invoke_kos_search(query: str, limit: int = 10, timeout: float = 60.0) -> li
         except Exception:
             pass
 
+
 def _kos_ts_to_iso(ts: str) -> str:
     if not ts or not ts.isdigit() or len(ts) != 14:
         return ts
     try:
         from datetime import datetime as _dt
+
         return _dt.strptime(ts, "%Y%m%d%H%M%S").isoformat() + "Z"
     except ValueError:
         return ts
+
 
 def _clean_control_chars(s: str) -> str:
     if not s:
@@ -303,9 +331,12 @@ def _clean_control_chars(s: str) -> str:
     cleaned = re.sub(r"[\x00-\x1f\x7f]+", " ", s)
     return re.sub(r"\s+", " ", cleaned).strip()
 
+
 def _log_vault_skip(reason: str) -> None:
     import logging as _logging
+
     _logging.getLogger("cockpit.cli.vault").debug("vault skip: %s", reason)
+
 
 def _invoke_vault_search(query: str, limit: int = 10, timeout: float = 30.0) -> list[dict]:
     candidates = [
@@ -328,8 +359,10 @@ def _invoke_vault_search(query: str, limit: int = 10, timeout: float = 30.0) -> 
         proc = subprocess.Popen(
             ["bash", str(script), query],
             cwd=vault_root,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            text=True, bufsize=1,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1,
         )
         try:
             stdout, _ = proc.communicate(timeout=timeout)
@@ -366,18 +399,21 @@ def _invoke_vault_search(query: str, limit: int = 10, timeout: float = 30.0) -> 
         abs_path = Path(vault_root) / rel
         title = abs_path.stem
         snippet = _read_vault_snippet(abs_path)
-        mapped.append({
-            "id": rel,
-            "title": _clean_control_chars(title),
-            "snippet": snippet,
-            "source": "@学习进化",
-            "source_path": rel,
-            "timestamp": _vault_file_mtime(abs_path),
-            "type": "document",
-            "relevance": 1.0,
-            "vault_zone": _infer_vault_zone(rel),
-        })
+        mapped.append(
+            {
+                "id": rel,
+                "title": _clean_control_chars(title),
+                "snippet": snippet,
+                "source": "@学习进化",
+                "source_path": rel,
+                "timestamp": _vault_file_mtime(abs_path),
+                "type": "document",
+                "relevance": 1.0,
+                "vault_zone": _infer_vault_zone(rel),
+            }
+        )
     return mapped
+
 
 def _read_vault_snippet(abs_path: Path) -> str:
     try:
@@ -395,13 +431,16 @@ def _read_vault_snippet(abs_path: Path) -> str:
         return _clean_control_chars(line)[:200]
     return ""
 
+
 def _vault_file_mtime(abs_path: Path) -> str:
     try:
         import datetime as _dt2
+
         mtime = abs_path.stat().st_mtime
         return _dt2.datetime.fromtimestamp(mtime, tz=_dt2.UTC).isoformat()
     except OSError:
         return "unknown"
+
 
 def _infer_vault_zone(rel_path: str) -> str:
     parts = rel_path.split("/", 1)
@@ -409,9 +448,12 @@ def _infer_vault_zone(rel_path: str) -> str:
         return parts[0].lstrip("_")
     return "knowledge"
 
+
 def _log_trace_skip(reason: str) -> None:
     import logging as _logging
+
     _logging.getLogger("cockpit.cli.trace").debug("trace skip: %s", reason)
+
 
 def _writeback_search_trace(
     query: str,
@@ -483,9 +525,8 @@ def _writeback_search_trace(
         "hit_summary": hit_summary,
     }
 
-def _build_hit_summary(
-    items: list[dict], per_zone: int = 3
-) -> list[dict]:
+
+def _build_hit_summary(items: list[dict], per_zone: int = 3) -> list[dict]:
     if not items:
         return []
     by_zone: dict[str, list[dict]] = {}
@@ -506,14 +547,13 @@ def _build_hit_summary(
                     "id": it.get("id"),
                     "title": it.get("title") or it.get("topic") or "",
                     "source": it.get("source") or it.get("_source") or "",
-                    "source_path": it.get("source_path")
-                    or it.get("_source_path")
-                    or "",
+                    "source_path": it.get("source_path") or it.get("_source_path") or "",
                     "timestamp": it.get("timestamp") or it.get("_retrieved_at") or "",
                 }
             )
         out.append({"zone": zone, "count": len(bucket), "sample": sample})
     return out
+
 
 def _format_trace_full_text(query: str, zone_count: dict, hit_summary: list[dict]) -> str:
     lines: list[str] = []

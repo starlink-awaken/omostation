@@ -10,19 +10,20 @@ router = APIRouter()
 async def api_bos_services(domain: str = ""):
     """列出所有 BOS URI 服务，可按 domain 过滤。"""
     try:
-
         from agora.mcp.resolver.services import POC_SERVICES
 
         services = []
         for s in POC_SERVICES:
             if domain and s.domain != domain:
                 continue
-            services.append({
-                "uri": s.uri,
-                "domain": s.domain,
-                "action": s.action,
-                "transport": s.transport,
-            })
+            services.append(
+                {
+                    "uri": s.uri,
+                    "domain": s.domain,
+                    "action": s.action,
+                    "transport": s.transport,
+                }
+            )
         return JSONResponse(content={"total": len(services), "services": services})
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
@@ -37,7 +38,6 @@ async def api_bos_resolve(uri: str = "", arguments: str = "{}"):
         return JSONResponse(content={"error": "URI 必须是 bos:// 格式"}, status_code=400)
 
     try:
-
         from agora.mcp.resolver.api import parse_bos_uri
         from agora.mcp.resolver.services import POC_SERVICES
 
@@ -49,26 +49,30 @@ async def api_bos_resolve(uri: str = "", arguments: str = "{}"):
         # 2. 查找匹配服务
         matched = [s for s in POC_SERVICES if s.uri == uri]
         if not matched:
-            return JSONResponse(content={
-                "uri": uri,
-                "parsed": parsed,
-                "matched": False,
-                "message": "URI 在注册表中未匹配到服务",
-            })
+            return JSONResponse(
+                content={
+                    "uri": uri,
+                    "parsed": parsed,
+                    "matched": False,
+                    "message": "URI 在注册表中未匹配到服务",
+                }
+            )
 
         svc = matched[0]
-        return JSONResponse(content={
-            "uri": uri,
-            "parsed": parsed,
-            "matched": True,
-            "service": {
-                "domain": svc.domain,
-                "package": svc.package,
-                "action": svc.action,
-                "transport": svc.transport,
-                "description": svc.description,
-            },
-        })
+        return JSONResponse(
+            content={
+                "uri": uri,
+                "parsed": parsed,
+                "matched": True,
+                "service": {
+                    "domain": svc.domain,
+                    "package": svc.package,
+                    "action": svc.action,
+                    "transport": svc.transport,
+                    "description": svc.description,
+                },
+            }
+        )
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
@@ -77,7 +81,6 @@ async def api_bos_resolve(uri: str = "", arguments: str = "{}"):
 async def api_bos_health():
     """BOS 系统健康检查。"""
     try:
-
         from agora.mcp.bos_metrics import bos_metrics
         from agora.mcp.resolver.services import POC_SERVICES
 
@@ -86,12 +89,14 @@ async def api_bos_health():
         for s in POC_SERVICES:
             by_domain[s.domain] = by_domain.get(s.domain, 0) + 1
 
-        return JSONResponse(content={
-            "status": "ok",
-            "total_routes": len(POC_SERVICES),
-            "domains": by_domain,
-            "metrics": m,
-        })
+        return JSONResponse(
+            content={
+                "status": "ok",
+                "total_routes": len(POC_SERVICES),
+                "domains": by_domain,
+                "metrics": m,
+            }
+        )
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
@@ -100,7 +105,6 @@ async def api_bos_health():
 async def api_bos_metrics(prefix: str = ""):
     """BOS 调用指标。"""
     try:
-
         from agora.mcp.bos_metrics import bos_metrics
 
         if prefix:
@@ -122,6 +126,3 @@ _DEFAULT_COMPUTE_TOPOLOGY = [
     {"id": "y7000p-lmstudio", "label": "Y7000P (LMStudio)", "kind": "local", "role": "GPU workstation"},
     {"id": "cloud-cc-switch", "label": "Cloud (cc-switch)", "kind": "cloud", "role": "Remote provider relay"},
 ]
-
-
-

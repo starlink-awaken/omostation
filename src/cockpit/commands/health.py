@@ -9,6 +9,7 @@ from rich.console import Console
 
 console = Console()
 
+
 def _cmd_health(args: Namespace) -> int:
     """一键系统健康检查 — 聚合 Context + Status + 可选全栈检查。"""
     return_code = 0
@@ -17,6 +18,7 @@ def _cmd_health(args: Namespace) -> int:
     console.print("\n[bold cyan]═══ L4 上下文 ═══[/]\n")
     try:
         from .l4bridge import cmd_context
+
         cmd_context(args)
     except Exception:
         console.print("[yellow]⚠ L4 bridge 不可用[/]")
@@ -27,6 +29,7 @@ def _cmd_health(args: Namespace) -> int:
     try:
         if args.json:
             from cockpit.scripts.cockpit_mcp import workspace_context
+
             print(workspace_context())
         else:
             # 产品走查 v5 #V5-02: health 不重复完整 status 工作台 (避免与 cockpit status
@@ -36,9 +39,9 @@ def _cmd_health(args: Namespace) -> int:
             from cockpit.scripts.cockpit_mcp import workspace_context
 
             ctx = _json.loads(workspace_context())
-            console.print(f"  Phase {ctx.get('phase','?')} · {str(ctx.get('theme',''))[:40]}")
+            console.print(f"  Phase {ctx.get('phase', '?')} · {str(ctx.get('theme', ''))[:40]}")
             cs = ctx.get("cards_summary", {}) or {}
-            console.print(f"  活跃卡片: {cs.get('active',0)} (P0: {cs.get('p0_open',0)})")
+            console.print(f"  活跃卡片: {cs.get('active', 0)} (P0: {cs.get('p0_open', 0)})")
             console.print("  [dim]完整工作台 → [cyan]cockpit status[/][/]")
     except Exception as e:
         console.print(f"[red]Cockpit status error: {e}[/]")
@@ -51,6 +54,7 @@ def _cmd_health(args: Namespace) -> int:
             # Try l4-kernel for domain health first
             try:
                 from l4_kernel import DomainRegistry
+
                 reg = DomainRegistry()
                 h = reg.aggregate_health()
                 if not args.json:
@@ -62,6 +66,7 @@ def _cmd_health(args: Namespace) -> int:
 
             # Agora stats via subprocess as fallback
             import subprocess as _sp
+
             ws = Path(os.environ.get("WORKSPACE_ROOT", str(Path(__file__).resolve().parents[4])))
             agora_bin = ws / "projects" / "agora" / ".venv" / "bin" / "agora"
             if agora_bin.exists():
@@ -80,6 +85,7 @@ def _cmd_health(args: Namespace) -> int:
         try:
             from l4_kernel import DomainRegistry
             from l4_kernel.health import DomainHealth
+
             reg = DomainRegistry()
             dh = DomainHealth(reg)
             dashboard = dh.generate_dashboard()
@@ -96,6 +102,7 @@ def _cmd_health(args: Namespace) -> int:
         if not args.json and matrix_path.exists():
             try:
                 import json as _j
+
                 state = _j.loads(matrix_path.read_text())
                 console.print(f"  [dim]服务注册: {len(state.get('services', {}))} 项[/]")
                 h = sum(1 for s in state.get("services", {}).values() if s.get("healthy"))
@@ -113,6 +120,7 @@ def _cmd_health(args: Namespace) -> int:
         if debt_path.exists():
             try:
                 import yaml
+
                 sys_data = yaml.safe_load(debt_path.read_text())
                 if not args.json:
                     phase = sys_data.get("current_phase", "?")
@@ -130,9 +138,12 @@ def _cmd_health(args: Namespace) -> int:
         if l4_health.exists():
             try:
                 import subprocess as _l4sp
+
                 result = _l4sp.run(
                     [sys.executable, str(l4_health)],
-                    capture_output=True, text=True, timeout=30,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
                 )
                 if not args.json:
                     for line in result.stdout.split("\n"):

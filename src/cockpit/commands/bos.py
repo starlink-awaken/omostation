@@ -101,11 +101,13 @@ def cmd_bos_discover(args):
         scripts = data.get("project", {}).get("scripts", {})
         for name, entry in scripts.items():
             if "mcp" in name.lower() or entry.startswith(name.split("-")[0]):
-                discovered.append({
-                    "project": proj_dir.name,
-                    "script": name,
-                    "entry": entry,
-                })
+                discovered.append(
+                    {
+                        "project": proj_dir.name,
+                        "script": name,
+                        "entry": entry,
+                    }
+                )
 
     print(f"\n  🔍 自动发现: {len(discovered)} 个 MCP 入口")
     for d in discovered:
@@ -121,21 +123,29 @@ def cmd_bos_discover(args):
 def _agora_workspace() -> str:
     """Return the agora project directory path for uv commands."""
     from pathlib import Path
+
     return str(Path(__file__).parent.parent.parent.parent.parent / "agora")
 
 
 def cmd_bos_backends(args) -> int:
     """列出所有 MCP backend + 心跳健康状态。"""
+    from rich import box
     from rich.console import Console
     from rich.table import Table
-    from rich import box
 
     console = Console()
     try:
         import subprocess
+
         r = subprocess.run(
-            ["uv", "run", "--directory", _agora_workspace(),
-             "python", "-c", """
+            [
+                "uv",
+                "run",
+                "--directory",
+                _agora_workspace(),
+                "python",
+                "-c",
+                """
 from agora.auth.mcp_gateway import _health_checker
 from agora.auth.mcp_gateway import KNOWN_BACKENDS
 
@@ -153,14 +163,17 @@ if _health_checker is not None:
 else:
     for b in KNOWN_BACKENDS:
         print(f"backend: {b['name']}|alive=unknown|fails=0")
-"""],
-            capture_output=True, text=True, timeout=15,
+""",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=15,
         )
         if r.returncode != 0:
             console.print(f"[red]获取 backend 状态失败:[/] {r.stderr[:200]}")
             return 1
 
-        table = Table(title=f"MCP Backends — 心跳健康状态", box=box.SIMPLE)
+        table = Table(title="MCP Backends — 心跳健康状态", box=box.SIMPLE)
         table.add_column("Backend")
         table.add_column("状态")
         table.add_column("连续失败")
@@ -190,6 +203,7 @@ else:
 def cmd_bos_register(args) -> int:
     """动态注册新的 MCP backend。"""
     from rich.console import Console
+
     console = Console()
 
     svc_name = getattr(args, "name", "")
@@ -204,7 +218,8 @@ def cmd_bos_register(args) -> int:
 
     svc_args = args_str.split() if args_str else []
 
-    import json, subprocess
+    import json
+    import subprocess
 
     py_code = f"""
 import asyncio, json
@@ -234,7 +249,9 @@ asyncio.run(reg())
 """
     r = subprocess.run(
         ["uv", "run", "--directory", _agora_workspace(), "python", "-c", py_code],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
 
     if r.returncode != 0:
@@ -245,7 +262,7 @@ asyncio.run(reg())
         data = json.loads(r.stdout)
         console.print(f"[green]✅ backend '{data['name']}' 注册成功[/]")
         console.print(f"   结果: {data['action']}")
-        console.print(f"\n[dim]💡 通过 'cockpit bos backends' 查看状态[/]")
+        console.print("\n[dim]💡 通过 'cockpit bos backends' 查看状态[/]")
     except json.JSONDecodeError:
         console.print(f"[yellow]响应:[/] {r.stdout[:300]}")
     return 0
@@ -254,12 +271,20 @@ asyncio.run(reg())
 def cmd_bos_reload(args) -> int:
     """热重载 BOS 路由表。"""
     from rich.console import Console
+
     console = Console()
 
-    import subprocess, json
+    import subprocess
+
     r = subprocess.run(
-        ["uv", "run", "--directory", _agora_workspace(),
-         "python", "-c", """
+        [
+            "uv",
+            "run",
+            "--directory",
+            _agora_workspace(),
+            "python",
+            "-c",
+            """
 import asyncio
 from agora.server.tools_proxy import register_proxy_tools
 from fastmcp import FastMCP
@@ -275,33 +300,44 @@ domains = Counter(s.domain for s in POC_SERVICES)
 print(f"ok: {len(POC_SERVICES)} routes ({len(domains)} domains)")
 for d, c in domains.most_common():
     print(f"  {d}: {c}")
-"""],
-        capture_output=True, text=True, timeout=30,
+""",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
 
     if r.returncode != 0:
         console.print(f"[red]重载失败:[/] {r.stderr[:300]}")
         return 1
 
-    console.print(f"[green]✅ BOS 路由重载成功[/]")
+    console.print("[green]✅ BOS 路由重载成功[/]")
     for line in r.stdout.splitlines():
         console.print(f"  {line}")
-    console.print(f"\n[dim]💡 通过 'cockpit bos list' 查看路由表[/]")
+    console.print("\n[dim]💡 通过 'cockpit bos list' 查看路由表[/]")
     return 0
 
 
 def cmd_bos_health(args) -> int:
     """显示心跳健康面板。"""
+    from rich import box
     from rich.console import Console
     from rich.table import Table
-    from rich import box
 
     console = Console()
     try:
-        import subprocess, json
+        import json
+        import subprocess
+
         r = subprocess.run(
-            ["uv", "run", "--directory", _agora_workspace(),
-             "python", "-c", """
+            [
+                "uv",
+                "run",
+                "--directory",
+                _agora_workspace(),
+                "python",
+                "-c",
+                """
 import json
 from agora.auth.mcp_gateway import _health_checker, KNOWN_BACKENDS
 
@@ -330,8 +366,11 @@ else:
         "total_known": len(KNOWN_BACKENDS),
         "note": "心跳探测器未启动 (mcp_gateway 需以 server 模式运行)"
     }))
-"""],
-            capture_output=True, text=True, timeout=15,
+""",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=15,
         )
 
         if r.returncode != 0:
@@ -341,12 +380,12 @@ else:
         data = json.loads(r.stdout)
         running = data.get("running", False)
 
-        console.print(f"\n[bold cyan]💓 BOS 心跳健康面板[/]")
+        console.print("\n[bold cyan]💓 BOS 心跳健康面板[/]")
         console.print(f"  已注册: {data.get('total_known', '?')} backends")
 
         if not running:
             console.print(f"[yellow]  ⚠️  {data.get('note', '心跳未运行')}[/]")
-            console.print(f"\n[dim]提示: mcp_gateway 以 server 模式运行时自动激活心跳[/]")
+            console.print("\n[dim]提示: mcp_gateway 以 server 模式运行时自动激活心跳[/]")
             return 0
 
         console.print(f"  跟踪中: {data.get('tracked', 0)} backends")
@@ -370,6 +409,7 @@ else:
             last_ok = s.get("last_ok", "")
             if last_ok:
                 import datetime
+
                 last_ok = datetime.datetime.fromtimestamp(last_ok).strftime("%H:%M:%S")
             else:
                 last_ok = "—"

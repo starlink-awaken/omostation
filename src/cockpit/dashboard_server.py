@@ -75,6 +75,7 @@ if COCKPIT_UI_DIST.exists():
 # Entry point
 # ═══════════════════════════════════════════════════════════════
 
+
 def main():
     import uvicorn
 

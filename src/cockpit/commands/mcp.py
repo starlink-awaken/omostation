@@ -75,9 +75,7 @@ def _resolve_mcp_tools(mcp: Any) -> list:
         fn = mcp.get_tools
         got = asyncio.run(fn()) if inspect.iscoroutinefunction(fn) else fn()
         return list(got.values()) if isinstance(got, dict) else list(got)
-    raise RuntimeError(
-        "FastMCP 无可用工具列举 API (list_tools/_tool_manager/get_tools 均缺)"
-    )
+    raise RuntimeError("FastMCP 无可用工具列举 API (list_tools/_tool_manager/get_tools 均缺)")
 
 
 def _list_tools(mcp: Any) -> int:

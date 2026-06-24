@@ -40,8 +40,5 @@ def cmd_gongwen(_args: Namespace) -> int:
     console.print("  [cyan]·[/] 工作文档域: ~/Documents/@工作文档/ (卫健委 / 国转中心)")
     console.print("  [cyan]·[/] 写作 skill: content-creator (起草) → wechat-publisher (发布)")
 
-    console.print(
-        "\n[dim]💡 cockpit 只做门户引导; 公文写作能力在 @公文 域独立演进 "
-        "(保持解耦, 专业逻辑留给垂直域)。[/]"
-    )
+    console.print("\n[dim]💡 cockpit 只做门户引导; 公文写作能力在 @公文 域独立演进 (保持解耦, 专业逻辑留给垂直域)。[/]")
     return 0

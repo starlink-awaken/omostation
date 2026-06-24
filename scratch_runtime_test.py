@@ -39,5 +39,6 @@ result = os.environ
     print(f"Bad execution success: {res_bad.success}")
     print(f"Expected Error: {res_bad.error}")
 
+
 if __name__ == "__main__":
     main()

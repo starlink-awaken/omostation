@@ -1,4 +1,5 @@
 """Tests for cockpit.compat — WORKSPACE_ROOT env-var resolution."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -27,6 +28,7 @@ class TestWorkspaceRoot:
         """重新 import + 设置 env 应取新值"""
         monkeypatch.setenv("WORKSPACE", str(tmp_path))
         import importlib
+
         importlib.reload(compat)
         try:
             assert compat.WORKSPACE_ROOT == tmp_path
@@ -49,6 +51,7 @@ class TestCompatEnvironment:
     def test_empty_workspace_env_falls_back_to_default(self, monkeypatch):
         monkeypatch.setenv("WORKSPACE", "")
         import importlib
+
         importlib.reload(compat)
         try:
             # 空字符串是 falsy, Path('') = Path('.'), 而 Path.home() / 'Workspace' 是默认
@@ -64,6 +67,7 @@ class TestCompatEnvironment:
         """WORKSPACE=./relative 应被 Path 转换为绝对"""
         monkeypatch.setenv("WORKSPACE", "./relative_path")
         import importlib
+
         importlib.reload(compat)
         try:
             # 行为: Path('./relative_path') = PosixPath('relative_path')
@@ -77,6 +81,7 @@ class TestCompatEnvironment:
         """WORKSPACE=~/mydir → expanduser"""
         monkeypatch.setenv("WORKSPACE", "~/my_custom_workspace")
         import importlib
+
         importlib.reload(compat)
         try:
             # Path('~/...') 不会自动 expanduser, 保持字面

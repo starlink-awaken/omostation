@@ -190,9 +190,7 @@ def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
             break
     if rates is None:
         rates = {"input": 0.002, "output": 0.008}
-    return round(
-        (input_tokens / 1000) * rates["input"] + (output_tokens / 1000) * rates["output"], 6
-    )
+    return round((input_tokens / 1000) * rates["input"] + (output_tokens / 1000) * rates["output"], 6)
 
 
 def infer_node(model: str, provider_name: str | None) -> dict[str, str]:
@@ -593,7 +591,9 @@ def load_arch_health() -> dict:
     try:
         result = subprocess.run(
             ["git", "status", "--porcelain"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
             cwd=str(workspace / "projects" / "ecos"),
         )
         changed = [line for line in result.stdout.splitlines() if line.strip()]
@@ -607,7 +607,9 @@ def load_arch_health() -> dict:
     try:
         result = subprocess.run(
             ["uv", "run", "ruff", "check", "src/", "--statistics"],
-            capture_output=True, text=True, timeout=15,
+            capture_output=True,
+            text=True,
+            timeout=15,
             cwd=str(workspace / "projects" / "ecos"),
         )
         ruff["check"] = "passed" if result.returncode == 0 else "failed"
@@ -641,8 +643,7 @@ def load_arch_health() -> dict:
             cron["never_run"] = sum(1 for j in jobs if not j.get("last_run_at"))
             # List job names + status
             cron["jobs"] = [
-                {"name": j.get("name", "?"), "status": j.get("last_status", "never"),
-                 "schedule": j.get("schedule", "")}
+                {"name": j.get("name", "?"), "status": j.get("last_status", "never"), "schedule": j.get("schedule", "")}
                 for j in sorted(jobs, key=lambda x: x.get("name", ""))
             ]
     except Exception as e:
@@ -652,12 +653,20 @@ def load_arch_health() -> dict:
     mcp: dict = {"total": 0, "backends": []}
     try:
         result = subprocess.run(
-            ["uv", "run", "--directory", str(workspace / "projects" / "agora"),
-             "python", "-c",
-             "from agora.auth.mcp_gateway import KNOWN_BACKENDS; "
-             "import json; "
-             "print(json.dumps([b['name'] for b in KNOWN_BACKENDS]))"],
-            capture_output=True, text=True, timeout=10,
+            [
+                "uv",
+                "run",
+                "--directory",
+                str(workspace / "projects" / "agora"),
+                "python",
+                "-c",
+                "from agora.auth.mcp_gateway import KNOWN_BACKENDS; "
+                "import json; "
+                "print(json.dumps([b['name'] for b in KNOWN_BACKENDS]))",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         if result.returncode == 0:
             backends = json.loads(result.stdout.strip())
@@ -676,39 +685,40 @@ def load_arch_health() -> dict:
         cli_eliminated = cli_orig - cli_now
         cli_score = round(cli_eliminated / cli_orig * 100)
         convergence["dimensions"]["cli_convergence"] = {
-            "score": cli_score, "weight": 30,
-            "detail": f"{cli_orig}→{cli_now} ({cli_score}% eliminated)"
+            "score": cli_score,
+            "weight": 30,
+            "detail": f"{cli_orig}→{cli_now} ({cli_score}% eliminated)",
         }
 
         # MCP coverage: 19 registered, ~23 total = 82%
         # Weight: 25%
         mcp_score = min(100, round(mcp["total"] / 23 * 100)) if mcp.get("total") else 0
         convergence["dimensions"]["mcp_coverage"] = {
-            "score": mcp_score, "weight": 25,
-            "detail": f"{mcp['total']}/23 backends"
+            "score": mcp_score,
+            "weight": 25,
+            "detail": f"{mcp['total']}/23 backends",
         }
 
         # Governance freshness: fresh=100, aging=60, stale=0
         # Weight: 25%
         gov_score = {"fresh": 100, "aging": 60, "stale": 0}.get(gov.get("health"), 50)
         convergence["dimensions"]["governance_freshness"] = {
-            "score": gov_score, "weight": 25,
-            "detail": f"{gov.get('health', 'unknown')} ({gov.get('days_since', '?')}d)"
+            "score": gov_score,
+            "weight": 25,
+            "detail": f"{gov.get('health', 'unknown')} ({gov.get('days_since', '?')}d)",
         }
 
         # Pre-commit coverage: 5/5 projects with gates
         # Weight: 20%
         precommit_score = 100  # all 5 main projects have hooks
         convergence["dimensions"]["precommit_coverage"] = {
-            "score": precommit_score, "weight": 20,
-            "detail": "5/5 projects with gates"
+            "score": precommit_score,
+            "weight": 20,
+            "detail": "5/5 projects with gates",
         }
 
         # Weighted total
-        total = sum(
-            d["score"] * d["weight"] / 100
-            for d in convergence["dimensions"].values()
-        )
+        total = sum(d["score"] * d["weight"] / 100 for d in convergence["dimensions"].values())
         convergence["score"] = round(total)
         convergence["grade"] = "GOOD" if total >= 80 else "WARNING" if total >= 60 else "LOW"
     except Exception:
@@ -763,13 +773,15 @@ def load_bos_metrics() -> dict:
 
     domain_list = []
     for domain, agg in sorted(domains.items(), key=lambda x: x[1]["total"], reverse=True):
-        domain_list.append({
-            "domain": domain,
-            "total": agg["total"],
-            "success": agg["success"],
-            "error": agg["error"],
-            "avg_latency": round(agg["latency_total"] / agg["total"], 2) if agg["total"] else 0,
-        })
+        domain_list.append(
+            {
+                "domain": domain,
+                "total": agg["total"],
+                "success": agg["success"],
+                "error": agg["error"],
+                "avg_latency": round(agg["latency_total"] / agg["total"], 2) if agg["total"] else 0,
+            }
+        )
 
     total_calls = len(records)
     success_count = sum(1 for r in records if r.get("status") == "resolved")

@@ -232,6 +232,7 @@ def _human_summary(raw) -> str:
     if s.startswith("{"):
         try:
             import json as _j
+
             d = _j.loads(s)
             q = d.get("query") or d.get("topic") or ""
             total = d.get("total")
@@ -1313,6 +1314,7 @@ def _cmd_research_batch(args) -> int:
     import time
 
     from rich.console import Console
+
     console = Console()
 
     topics = args.topic
@@ -1347,4 +1349,3 @@ def _cmd_research_batch(args) -> int:
 
     console.print(f"\n[bold]批量研究完成: {ok} 成功, {err} 失败 · 耗时 {elapsed:.1f}s[/]")
     return 0 if err == 0 else 1
-

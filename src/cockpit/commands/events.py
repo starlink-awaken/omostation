@@ -22,6 +22,7 @@ def run_events_dashboard(url: str = "http://127.0.0.1:7431/v1/events"):
     with Live(table, console=console, refresh_per_second=4) as live:
         try:
             from cockpit.commands.base import get_cockpit_jwt
+
             token = get_cockpit_jwt()
             headers = {}
             if token:

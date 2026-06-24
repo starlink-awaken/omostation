@@ -83,34 +83,37 @@ async def api_v1_status():
                 layers.append(future.result())
             except Exception as e:
                 source = futures[future]
-                layers.append({
-                    "layer": source["layer"],
-                    "name": source["name"],
-                    "status": "down",
-                    "error": str(e),
-                })
+                layers.append(
+                    {
+                        "layer": source["layer"],
+                        "name": source["name"],
+                        "status": "down",
+                        "error": str(e),
+                    }
+                )
 
     layers.sort(key=lambda x: x["layer"])
     total = len(layers)
     ok = sum(1 for layer in layers if layer["status"] == "ok")
     degraded = sum(1 for layer in layers if layer["status"] == "degraded")
 
-    return JSONResponse({
-        "service": "cockpit-dashboard",
-        "version": "2.0.0",
-        "timestamp": time.time(),
-        "layers": layers,
-        "summary": {
-            "total_layers": total,
-            "healthy": ok,
-            "degraded": degraded,
-            "down": total - ok - degraded,
-        },
-        "sources": [
-            {"layer": s["layer"], "name": s["name"], "url": s["url"], "port": s["port"]}
-            for s in LAYER_SOURCES
-        ],
-    })
+    return JSONResponse(
+        {
+            "service": "cockpit-dashboard",
+            "version": "2.0.0",
+            "timestamp": time.time(),
+            "layers": layers,
+            "summary": {
+                "total_layers": total,
+                "healthy": ok,
+                "degraded": degraded,
+                "down": total - ok - degraded,
+            },
+            "sources": [
+                {"layer": s["layer"], "name": s["name"], "url": s["url"], "port": s["port"]} for s in LAYER_SOURCES
+            ],
+        }
+    )
 
 
 @router.get("/api/v1/m0", dependencies=_AUTH_DEPS)
@@ -243,6 +246,7 @@ async def overview_page():
 async def dashboard_page():
     """Redirect root to overview page."""
     from fastapi.responses import RedirectResponse
+
     return RedirectResponse(url="/overview")
 
 
@@ -258,4 +262,3 @@ async def bos_dashboard():
 async def arch_dashboard():
     """Architecture health dashboard."""
     return ARCH_HTML
-

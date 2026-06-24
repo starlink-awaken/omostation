@@ -16,6 +16,7 @@ Usage:
 
 Exit 0 = clean, Exit 1 = violations found.
 """
+
 from __future__ import annotations
 
 import argparse

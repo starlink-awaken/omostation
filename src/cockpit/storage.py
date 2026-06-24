@@ -258,9 +258,10 @@ class SQLiteDataAccess:
         conn.row_factory = sqlite3.Row
         # 转义 FTS5 特殊字符，防止 MATCH 语法错误
         import re as _fts_re
+
         sanitized = keyword
         if _fts_re.search(r'["*()^$:\\]', keyword):
-            sanitized = _fts_re.sub(r'\\\1', keyword)
+            sanitized = _fts_re.sub(r"\\\1", keyword)
         rows = conn.execute(
             "SELECT r.id, r.topic, r.summary, r.created_at, r.source_count, r.tags, r.archived_at, r.archive_reason, r.quarantined_at, r.quarantine_reason, r.agent, "
             "snippet(research_fts, 1, '<mark>', '</mark>', '...', 40) as snippet "

@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
+
 @router.post("/api/knowledge/search")
 async def api_knowledge_search(request: Request):
     try:
@@ -12,7 +13,6 @@ async def api_knowledge_search(request: Request):
         query = body.get("query")
         if not query:
             return JSONResponse({"status": "error", "error": "query is required"}, status_code=400)
-
 
         from agora.mcp.bos_resolver import resolve_bos_uri
 
@@ -23,6 +23,3 @@ async def api_knowledge_search(request: Request):
         return JSONResponse({"status": "ok", "result": res})
     except Exception as e:
         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
-
-
-

@@ -21,6 +21,7 @@ def get_workspace_root() -> Path:
     # 默认 fallback
     return Path(os.environ.get("WORKSPACE_ROOT", str(Path.home() / "Workspace")))
 
+
 def read_sandbox_drafts(root: Path) -> list[str]:
     sandbox_dir = root / "runtime" / "sandbox"
     drafts = []
@@ -28,6 +29,7 @@ def read_sandbox_drafts(root: Path) -> list[str]:
         for f in sandbox_dir.glob("OpenSpec-*.md"):
             drafts.append(f.name)
     return drafts
+
 
 def read_omo_tasks(root: Path, state: str) -> list[dict]:
     target_dir = root / ".omo" / "tasks" / state
@@ -45,12 +47,10 @@ def read_omo_tasks(root: Path, state: str) -> list[dict]:
                 pass
     return tasks
 
+
 def generate_layout(root: Path) -> Layout:
     layout = Layout()
-    layout.split_column(
-        Layout(name="header", size=3),
-        Layout(name="main")
-    )
+    layout.split_column(Layout(name="header", size=3), Layout(name="main"))
     layout["main"].split_row(
         Layout(name="sandbox", ratio=1),
         Layout(name="planned", ratio=1),
@@ -58,10 +58,12 @@ def generate_layout(root: Path) -> Layout:
     )
 
     # 顶部状态栏
-    layout["header"].update(Panel(
-        "[bold cyan]eCOS v5 C2G 双擎编排监控大盘[/] | [bold red][READ-ONLY 严禁在此修改][/] | 轮询间隔: 1.5s",
-        box=box.ROUNDED
-    ))
+    layout["header"].update(
+        Panel(
+            "[bold cyan]eCOS v5 C2G 双擎编排监控大盘[/] | [bold red][READ-ONLY 严禁在此修改][/] | 轮询间隔: 1.5s",
+            box=box.ROUNDED,
+        )
+    )
 
     # 左侧: Sandbox
     drafts = read_sandbox_drafts(root)
@@ -78,7 +80,9 @@ def generate_layout(root: Path) -> Layout:
     planned_table.add_column("任务名称")
     for t in planned:
         planned_table.add_row(t.get("id", "UNK"), t.get("title", "Unknown"))
-    layout["planned"].update(Panel(planned_table, title=f"⏳ Planned (预检/拦截区) [{len(planned)}]", border_style="yellow"))
+    layout["planned"].update(
+        Panel(planned_table, title=f"⏳ Planned (预检/拦截区) [{len(planned)}]", border_style="yellow")
+    )
 
     # 右侧: Active (真正流入执行区的任务)
     active = read_omo_tasks(root, "active")
@@ -90,6 +94,7 @@ def generate_layout(root: Path) -> Layout:
     layout["active"].update(Panel(active_table, title=f"🚀 Active (执行区) [{len(active)}]", border_style="green"))
 
     return layout
+
 
 def cmd_monitor(args):
     console = Console()

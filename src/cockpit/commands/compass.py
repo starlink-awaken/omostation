@@ -12,7 +12,9 @@ import sys
 from pathlib import Path
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
-_WORKSPACE_ROOT = _SCRIPT_DIR.parent.parent.parent  # cockpit/src/cockpit/commands → cockpit/src/cockpit → cockpit/src → cockpit/ → projects/
+_WORKSPACE_ROOT = (
+    _SCRIPT_DIR.parent.parent.parent
+)  # cockpit/src/cockpit/commands → cockpit/src/cockpit → cockpit/src → cockpit/ → projects/
 _C2G_PROJECT = str((_WORKSPACE_ROOT.parent / "c2g").resolve())
 
 
@@ -61,10 +63,13 @@ def main() -> int:
     args = parser.parse_args()
 
     cmd: list[str] = [
-        "uv", "run",
-        "--project", _C2G_PROJECT,
+        "uv",
+        "run",
+        "--project",
+        _C2G_PROJECT,
         "c2g",
-        "--adapter", "ecos",
+        "--adapter",
+        "ecos",
         args.command,
     ]
     # 透传额外参数 (bet source_file, gc --dry-run)

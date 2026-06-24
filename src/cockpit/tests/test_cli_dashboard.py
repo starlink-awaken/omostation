@@ -96,6 +96,7 @@ def test_cmd_dashboard_suggests_uvicorn_install_when_missing(monkeypatch):
     monkeypatch.setattr(cli.time, "sleep", lambda _: None)
     _patch_find_cli(monkeypatch, lambda name: None if name == "uvicorn" else "/usr/bin/python3")
     from cockpit.commands import status as _status_mod
+
     monkeypatch.setattr(_status_mod.Path, "exists", lambda self: False)
     _patch_status_subprocess(monkeypatch)
     monkeypatch.setattr(cli.urlrequest, "urlopen", lambda *args, **kwargs: _HTTPResponse(200))

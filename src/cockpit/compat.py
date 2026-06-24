@@ -1,4 +1,5 @@
 """Compatibility shims for eCOS v5/v6 integration."""
+
 from __future__ import annotations
 
 import os

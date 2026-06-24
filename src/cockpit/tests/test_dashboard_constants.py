@@ -1,4 +1,5 @@
 """Tests for cockpit.dashboard.constants — paths, config, layer sources."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -54,6 +55,7 @@ class TestPort:
         monkeypatch.setenv("COCKPIT_DASHBOARD_PORT", "9999")
         # 重新 import
         import importlib
+
         importlib.reload(constants)
         try:
             assert constants.PORT == 9999
@@ -65,6 +67,7 @@ class TestPort:
         """非数字 PORT env 应抛 ValueError"""
         monkeypatch.setenv("COCKPIT_DASHBOARD_PORT", "not_a_number")
         import importlib
+
         try:
             with pytest.raises(ValueError):
                 importlib.reload(constants)
@@ -85,8 +88,7 @@ class TestLayerSources:
     def test_layer_sources_required_keys(self):
         required = {"layer", "name", "url", "port"}
         for src in constants.LAYER_SOURCES:
-            assert required.issubset(src.keys()), \
-                f"missing {required - src.keys()} in {src}"
+            assert required.issubset(src.keys()), f"missing {required - src.keys()} in {src}"
 
     def test_layer_sources_unique_layers(self):
         layers = [s["layer"] for s in constants.LAYER_SOURCES]
@@ -96,8 +98,7 @@ class TestLayerSources:
         """P43 5+4+1+1 架构: 4 个 layer 必须对应 I0/L2/L1/L0"""
         valid_layers = {"I0", "L2", "L1", "L0", "X", "L3", "L4"}
         for src in constants.LAYER_SOURCES:
-            assert src["layer"] in valid_layers, \
-                f"unknown layer: {src['layer']}"
+            assert src["layer"] in valid_layers, f"unknown layer: {src['layer']}"
 
     def test_agora_is_i0_layer(self):
         """agora 必须是 I0 织层"""
@@ -131,8 +132,7 @@ class TestDefaultComputeTopology:
     def test_required_keys(self):
         required = {"id", "label", "kind", "role"}
         for node in constants.DEFAULT_COMPUTE_TOPOLOGY:
-            assert required.issubset(node.keys()), \
-                f"missing {required - node.keys()} in {node}"
+            assert required.issubset(node.keys()), f"missing {required - node.keys()} in {node}"
 
     def test_unique_ids(self):
         ids = [n["id"] for n in constants.DEFAULT_COMPUTE_TOPOLOGY]
@@ -141,8 +141,7 @@ class TestDefaultComputeTopology:
     def test_known_kinds(self):
         valid = {"local", "remote", "edge", "cloud"}
         for node in constants.DEFAULT_COMPUTE_TOPOLOGY:
-            assert node["kind"] in valid, \
-                f"unknown kind: {node['kind']}"
+            assert node["kind"] in valid, f"unknown kind: {node['kind']}"
 
 
 class TestRateLimit:
@@ -152,6 +151,7 @@ class TestRateLimit:
     def test_rate_limit_from_env(self, monkeypatch):
         monkeypatch.setenv("COCKPIT_DASHBOARD_RATE_LIMIT", "120")
         import importlib
+
         importlib.reload(constants)
         try:
             assert constants.DASHBOARD_RATE_LIMIT == 120
@@ -168,6 +168,7 @@ class TestDashboardToken:
         token_value = "secret123"  # noqa: S105 (test fixture, not real credential)
         monkeypatch.setenv("COCKPIT_DASHBOARD_TOKEN", token_value)
         import importlib
+
         importlib.reload(constants)
         try:
             assert constants.DASHBOARD_TOKEN == token_value
@@ -179,6 +180,7 @@ class TestDashboardToken:
         special = "tok=abc;xyz&"
         monkeypatch.setenv("COCKPIT_DASHBOARD_TOKEN", special)
         import importlib
+
         importlib.reload(constants)
         try:
             assert constants.DASHBOARD_TOKEN == special
@@ -194,6 +196,7 @@ class TestCORSOrigin:
     def test_cors_from_env(self, monkeypatch):
         monkeypatch.setenv("COCKPIT_DASHBOARD_CORS_ORIGIN", "https://myapp.com")
         import importlib
+
         importlib.reload(constants)
         try:
             assert constants.DASHBOARD_CORS_ORIGIN == "https://myapp.com"
