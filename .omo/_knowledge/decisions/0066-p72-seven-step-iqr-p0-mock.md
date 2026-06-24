@@ -1,0 +1,149 @@
+---
+status: active
+lifecycle: contract
+owner: governance-team
+last-reviewed: 2026-06-23
+---
+
+# ADR-0066: P72 governance-agent 7 步 + alert-history sup_state 扩展 + dim-weight IQR 调优 + P0 mock 通知
+
+- **Status**: ACCEPTED
+- **Date**: 2026-06-23
+- **Authors**: omostation P72
+- **Extends**: ADR-0065 (P71 6 步 + 跨级别)
+- **Superseded by**: (无)
+
+## Context and Problem Statement
+
+P71 收口后, P72 调研 7 项候选, 实施 4 项:
+
+1. **governance-agent 7 步** (P71 已 6 步, 缺 dim-weight 评估步骤)
+2. **alert-history 加 sup_state 维度** (P71 by_cross_level, P72 简化为 sup_state)
+3. **dim-weight 调优** (P71 用 stdev 异常, P72 改 IQR 更稳健)
+4. **P0 短信/邮件 mock** (外部依赖, P72 mock 模拟)
+
+跳过 3 项:
+- graphify 重生 (工具限制)
+- management/ 142 实施拆分 (P75+ 太早)
+- 快照 P50 持续 (P70 已落地)
+
+## Decision
+
+### D1: governance-agent 7 步闭环 (P72 R1)
+
+**修改**: `scripts/omo/governance-agent.sh`
+
+**7 步结构**:
+```
+[1/3]   governance-readiness
+[2/3]   mof-drift
+[2.5/3] governance-readiness-trend
+[2.6/3] alert-aggregator
+[2.7/3] alert-history
+[2.8/3] dim-weight              ← P72 增
+[3/3]   评估
+```
+
+**实测**: governance-agent --include-trend --dry-run 跑通 7 步
+
+### D2: alert-history sup_state 维度 (P72 R2)
+
+**修改**: `bin/alert-history.py` `analyze_history()`
+
+**新增**:
+- `by_sup_state` 字段: 按 fired/suppressed 分桶
+  - `fired`: 实际触发的通知数
+  - `suppressed`: 抑制的告警数
+
+**用法**: dashboard 6 卡片可读取 sup_state 显示抑制健康度
+
+### D3: dim-weight IQR 调优 (P72 R3)
+
+**修改**: `bin/dim-weight.py` `compute_weights()`
+
+**算法变更**:
+- 旧: stdev * (1 + correlation) — 13 快照 stdev=0 异常
+- 新: IQR (interquartile range) * (1 + correlation/100) — 更稳健
+
+**保护**:
+- iqr > 0 才计算 score, 否则只用 correlation
+- iqr_norm = iqr/100 归一化, 避免某维度权重过大
+
+### D4: P0 mock 通知 (P72 R4)
+
+**新工具**: `bin/alert-mock-p0-notify.py` (95 行)
+
+**功能**:
+- 模拟 3 通道: email / sms / slack
+- 写 `.omo/_log/p0-notifications.log` (jsonl)
+- `--all-channels` 一次发多通道
+- `--dry-run` 不写日志
+- 实际生产需替换为真实 SMS/email provider
+
+**实测**: 3 通道发送 ✅, 日志写入 ✅
+
+## Consequences
+
+### Positive
+
+- **7 步闭环**: 完整 readiness + drift + trend + alert + history + dim-weight + eval
+- **sup_state 维度**: dashboard 可显示触发 vs 抑制比
+- **IQR 调优**: 算法对历史数据更稳健
+- **P0 mock**: 验证通知流程, 无外部依赖
+
+### Negative
+
+- **IQR 调优需更多历史数据**: 13 快照 stdev/IQR 都接近 0, 需 30+ 快照才能显现
+- **P0 mock 是 mock**: 实际生产需替换真实 provider
+
+### Neutral
+
+- **不增 linter 维度**: 沿用 P58 独立 bin 工具
+- **不增 mof-drift 维度**: 8 维度持续
+
+## Compliance
+
+### 验证指标
+
+| 指标 | P71 末 | **P72 末** | 变化 |
+|------|-------:|-----------:|-----:|
+| mof-version | v0.0.60 | **v0.0.61** | +1 |
+| governance | 100 A+ | **100 A+** | 持平 |
+| 独立 bin 治理工具 | 11 | **12** | +1 (alert-mock-p0-notify) |
+| governance-agent 步骤 | 6 | **7** (+dim-weight) | +1 |
+| alert-history 维度 | 6 | **7** (+by_sup_state) | +1 |
+| P0 mock 通道 | 0 | **3** (email/sms/slack) | +1 |
+| ADR 数量 | 25 | **26** | +1 (0066) |
+
+### 关联 ADR
+
+- **ADR-0065**: P71 6 步 + 跨级别 (P72 直接扩展)
+- **ADR-0064**: P70 跨级别 + rich + 6 卡片
+
+### 关联 L0 规则
+
+- `X2-FRESH-COMMIT-FATIGUE` — 7 步闭环避免漂移
+- `CR-GOV-CLOSED-LOOP-01` — P0 mock 即 commit 闭环
+
+## Notes
+
+本 ADR 记录 P72 4 项候选实施:
+- ✅ governance-agent 7 步 (scripts 子仓)
+- ✅ alert-history sup_state 扩展
+- ✅ dim-weight IQR 调优
+- ✅ P0 mock 通知 (新工具)
+- ⏸ graphify 重生 (P72 跳过)
+- ⏸ management/ 142 实施 (P75+)
+- ⏸ 快照 P50 持续 (P70 已落地)
+
+后续 P73+ 候选:
+- graphify 重生 (需 url 入口)
+- management/ 142 实施拆分 (P75+)
+- dim-weight 真实数据调优 (需 30+ 快照)
+- P0 mock 替换为真实 SMS/email provider
+- 自治治理代理 cron 安装 (P62 + P72 集成)
+- alert-history 加更多维度 (跨日 + 跨类型)
+
+---
+
+*最后更新: 2026-06-23 · P72 · omostation 治理方法论持续深化*

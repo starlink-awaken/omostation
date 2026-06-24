@@ -197,7 +197,7 @@ def main() -> int:
             print("--- 各维度分析 ---")
             for dim, info in analysis.items():
                 print(
-                    f"  {dim}: stdev={info['stdev']} correlation={info['correlation']} score={info['score']}"
+                    f"  {dim}: iqr={info['iqr']} correlation={info['correlation']} score={info['score']}"
                 )
     return 0
 
