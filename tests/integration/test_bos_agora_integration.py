@@ -105,8 +105,8 @@ def test_agora_resolver_importable_from_omo_path():
             "-c",
             "from agora.mcp.bos_resolver import POC_SERVICES, list_services; "
             "print('services:', len(POC_SERVICES)); "
-            "print('analysis:', sum(1 for u in POC_SERVICES if u.startswith('bos://analysis/'))); "
-            "print('first_analysis:', next(u for u in POC_SERVICES if u.startswith('bos://analysis/')))",
+            "print('analysis:', sum(1 for u in POC_SERVICES if u.uri.startswith('bos://analysis/'))); "
+            "print('first_analysis:', next(u.uri for u in POC_SERVICES if u.uri.startswith('bos://analysis/')))",
         ],
         capture_output=True,
         text=True,
@@ -217,7 +217,7 @@ def test_p34w2_cross_process_summary():
         "  'registry_total': len(regs),"
         "  'registry_analysis': sum(1 for r in regs if r.get('domain') == 'analysis'),"
         "  'resolver_total': len(POC_SERVICES),"
-        "  'resolver_analysis': sum(1 for u in POC_SERVICES if u.startswith('bos://analysis/')),"
+        "  'resolver_analysis': sum(1 for u in POC_SERVICES if u.uri.startswith('bos://analysis/')),"
         "}; "
         "print(json.dumps(summary))"
     )
