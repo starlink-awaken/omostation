@@ -62,7 +62,7 @@ def check_all():
     # L1: Runtime services
     print("\nL1 ── Runtime Matrix")
     services = []
-    for name, port in [("Agora", 7430), ("Cron Service", 7450)]:
+    for name, port in [("Agora Hub", 7422), ("Cron Service", 7450), ("Cockpit API", 8090)]:
         ok = _probe("127.0.0.1", port)
         services.append(_fmt(ok, f"{name} :{port}"))
     # runtime-mcp is stdio-based, no port probe needed
@@ -71,10 +71,10 @@ def check_all():
 
     # I0: Fabric
     print("\nI0 ── Integration Fabric")
-    i0_ok = _http_ok("http://127.0.0.1:7430/")
-    results.append(_fmt(i0_ok, "Agora Web UI :7430"))
-    ev_ok = _http_ok("http://127.0.0.1:7430/api/event-log")
-    results.append(_fmt(ev_ok, "Agora Events :7430/api/event-log"))
+    i0_ok = _probe("127.0.0.1", 8090)
+    results.append(_fmt(i0_ok, "Cockpit Dashboard :8090"))
+    ev_ok = _http_ok("http://127.0.0.1:8090/api/events")
+    results.append(_fmt(ev_ok, "Cockpit Events :8090/api/events"))
 
     # L2: OMO debt registry
     print("\nL2 ── Kernel (OMO)")
