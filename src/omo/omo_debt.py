@@ -1045,6 +1045,9 @@ def main() -> int:
 
     if args.command == "close":
         item_path, payload = update_item(omo_dir, args.id, _load_yaml)
+        if not item_path.exists():
+            print(f"❌ 未知 debt_id: {args.id} (不在 .omo/debt/items)")
+            return 1
         payload["lifecycle_state"] = "closed"
         payload["gate_level"] = "none"
         append_history(

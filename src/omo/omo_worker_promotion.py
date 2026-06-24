@@ -288,8 +288,10 @@ def _apply_task_promotion(
         "promoted_by": promoted_by,
         "promoted_at": now,
         "phase_gate": {
-            "current_phase": int(_load_yaml(omo / "goals" / "current.yaml")["phase"]),
-            "target_phase": task["phase"],
+            "current_phase": int(
+                _load_yaml(omo / "state" / "system.yaml").get("current_phase", 0)
+            ),
+            "target_phase": task.get("phase"),
             "allowed_by_rule": True,
         },
         "approval": {

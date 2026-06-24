@@ -337,6 +337,7 @@ def complete_task(
     actor: str,
     source_ref: str = "",
     now: str | None = None,
+    evidence_paths: list[str] | None = None,
 ) -> dict[str, Any]:
     timestamp = now or _utc_now()
     task_roots = {
@@ -370,6 +371,8 @@ def complete_task(
         payload = _load_yaml(src_path)
         payload["status"] = "done"
         payload["completed_at"] = timestamp
+        if evidence_paths is not None:
+            payload["evidence_paths"] = evidence_paths
         metadata = payload.setdefault("metadata", {})
         if isinstance(metadata, dict):
             metadata["completed_at"] = timestamp
