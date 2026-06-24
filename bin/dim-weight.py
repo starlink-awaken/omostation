@@ -112,9 +112,13 @@ def compute_weights(snaps):
         if not series or len(series) < 2:
             weights[dim] = DEFAULT_WEIGHTS.get(dim, 20)
             continue
-        # stdev
-        stdev = statistics.stdev(series) if len(series) > 1 else 0
-        # 简单相关性: 维度变化时总分变化 (按 |delta dim| * |delta total| 求和)
+        # P72 调优: 用 IQR (interquartile range) 替代 stdev, 更稳健
+        sorted_s = sorted(series)
+        n = len(sorted_s)
+        q1 = sorted_s[n // 4] if n >= 4 else sorted_s[0]
+        q3 = sorted_s[3 * n // 4] if n >= 4 else sorted_s[-1]
+        iqr = q3 - q1
+        # 简单相关性: 维度变化时总分变化
         cov = 0.0
         cnt = 0
         for i in range(1, min(len(series), len(total_series))):
@@ -123,11 +127,13 @@ def compute_weights(snaps):
             cov += d_dim * d_total
             cnt += 1
         correlation = cov / cnt if cnt > 0 else 0
-
-        # 综合: 相关性 * 波动率
-        score = correlation * (1 + stdev)
+        # P72: 用 IQR 替代 stdev, score = correlation * (1 + iqr/100)
+        # 加 IQR>0 保护避免除零
+        iqr_norm = iqr / 100.0  # 归一化 (权重范围 0-1)
+        score = correlation * (1 + iqr_norm) if iqr > 0 else correlation
+        # P72: 加 max 边界保护, 避免某维度权重过大
         analysis[dim] = {
-            "stdev": round(stdev, 3),
+            "iqr": round(iqr, 3),
             "correlation": round(correlation, 3),
             "score": round(score, 3),
         }

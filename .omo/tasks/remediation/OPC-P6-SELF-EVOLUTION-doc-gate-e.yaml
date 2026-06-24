@@ -13,7 +13,7 @@ context_uri: bos://governance/tasks/planned/OPC-P6-SELF-EVOLUTION-doc-gate-e
 assigned_to: self-evolve
 dispatch_id: self-evolution-remediation-2026-06-24T07-46-46Z
 run_ref: .omo/_delivery/ingress/tasks/OPC-P6-SELF-EVOLUTION-doc-gate-e-route-self-evolution-2026-06-24T07-46-46Z.yaml
-approval_ref: self-evolution-remediation-approval-2026-06-24T07-46-46Z
+approval_ref: .omo/workers/runs/OPC-P6-SELF-EVOLUTION-doc-gate-e-approval-2026-06-24T07-46-46Z.yaml
 review_ref: .omo/tasks/remediation-notes/OPC-P6-SELF-EVOLUTION-doc-gate-e-review.md
 knowledge_refs: []
 handoff_refs: []

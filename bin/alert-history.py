@@ -128,6 +128,11 @@ def analyze_history(records: list[dict], suppressions: list[dict]) -> dict:
         "by_type": dict(by_type),
         "by_day": {day: dict(counts) for day, counts in sorted(by_day.items())},
         "by_cross_level": by_cross_level,  # P71 新增
+        # P72 增: by_sup_state (触发 vs 抑制分桶)
+        "by_sup_state": {
+            "fired": fired_total,
+            "suppressed": suppressed_total,
+        },
         "peak_days": peak_days,
         "suppression_count": suppress_count,
         "suppression_rate": round(suppression_rate, 3),
