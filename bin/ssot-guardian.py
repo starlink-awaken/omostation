@@ -128,31 +128,22 @@ def _check_wave() -> dict:
 
 
 def _fix_wave() -> dict:
-    """同步 goals/current.yaml current_wave 到 system.yaml 的值."""
+    """current_wave 自动修复占位.
+
+    当前没有 OMO CLI 子命令可以直接更新 goals/current.yaml current_wave.
+    根据 direct-omo-io 约束,禁止在本脚本中直接 write_text() 到 .omo 文件.
+    因此 auto-fix 仅发出事件并给出人工/未来 OMO 命令修复建议.
+    """
     system_wave = _load_system_value("current_wave")
     if not system_wave:
         return {"fixed": False, "error": "cannot read system.yaml current_wave"}
-
-    text = GOALS_YAML.read_text(encoding="utf-8")
-    old_text = text
-    text = re.sub(
-        r"^(current_wave):\s*.*$",
-        rf"\1: {system_wave}",
-        text,
-        flags=re.MULTILINE,
-    )
-    # 同步 last-reviewed
-    today = _utc_now()[:10]
-    text = re.sub(
-        r"^(last-reviewed):\s*\d{4}-\d{2}-\d{2}$",
-        rf"\1: {today}",
-        text,
-        flags=re.MULTILINE,
-    )
-    if text == old_text:
-        return {"fixed": False, "note": "already aligned"}
-    GOALS_YAML.write_text(text, encoding="utf-8")
-    return {"fixed": True, "new_wave": system_wave}
+    return {
+        "fixed": False,
+        "manual_action_required": True,
+        "system_wave": system_wave,
+        "suggested_command": "omo goal sync-wave (待 OMO P63+ 实现)",
+        "fallback_command": "手动编辑 .omo/goals/current.yaml 使 current_wave 与 system.yaml 一致",
+    }
 
 
 def _emit_event(kind: str, payload: dict) -> None:
