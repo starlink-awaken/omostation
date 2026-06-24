@@ -213,6 +213,7 @@ def sync_system_yaml(ws_root: Path, health_score: int, generated_at: str) -> Non
     try:
         data = yaml.safe_load(system_yaml.read_text(encoding="utf-8"))
         data["health_score"] = int(health_score)
+        data["health_score_source"] = "compass_radar"
         data["health_score_generated_at"] = generated_at
         # 原子写
         tmp = system_yaml.with_suffix(".yaml.tmp")
