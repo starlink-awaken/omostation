@@ -147,8 +147,19 @@ def aggregate(alerts: list[dict], storm_threshold: int = 3, total_threshold: int
     }
 
 
+LEVEL_RANK = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
+
+
 def is_suppressed(root: Path, level: str, suppression_minutes: int) -> tuple[bool, dict | None]:
-    """P68 增: 告警抑制 — 检查最近 N 分钟是否已通知同级别.
+    """P68 增: 告警抑制 — P70 增跨级别抑制.
+
+    抑制规则 (P70 升级):
+    - 同级别: 抑制 (P0→P0, P1→P1)
+    - 高级别 → 低级别: 抑制 (P0→P1, P0→P2, P0→P3, P1→P2, P1→P3)
+    - 低级别 → 高级别: 不抑制 (P1→P0, P2→P0, P3→P0, P2→P1, P3→P1, P3→P2)
+
+    工业实践: 高级别告警已通知 → 低级别同窗口不重复, 避免噪音
+                  低级别告警 → 高级别不抑制, 紧急程度更高必须通知
 
     返回: (是否抑制, 最近通知记录)
     """
@@ -158,15 +169,18 @@ def is_suppressed(root: Path, level: str, suppression_minutes: int) -> tuple[boo
     import json as _json
     from datetime import datetime, timezone, timedelta
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=suppression_minutes)
+    current_rank = LEVEL_RANK.get(level, 3)
     try:
         with open(notif_log, encoding="utf-8") as f:
             lines = f.readlines()
-        # 从后向前找最近同级别通知
-        for line in reversed(lines[-50:]):  # 限制 50 行
+        # 从后向前找最近高级别通知
+        for line in reversed(lines[-50:]):
             try:
                 rec = _json.loads(line.strip())
                 rec_level = rec.get("level", "P3")
-                if rec_level != level:
+                rec_rank = LEVEL_RANK.get(rec_level, 3)
+                # P70 跨级别: 只在 rec_level 高级别时抑制
+                if rec_rank > current_rank:
                     continue
                 ts = rec.get("timestamp", "")
                 if ts:

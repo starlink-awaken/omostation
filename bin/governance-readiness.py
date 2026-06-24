@@ -198,6 +198,15 @@ def write_readiness_snapshot(
     if rc != 0:
         print(f"⚠️  快照写入失败 (rc={rc}): {out}")
 
+    # P70 增: 持久化到 snapshots.jsonl (不受 30 快照 rotation 限制)
+    try:
+        persistent_log = root / ".omo" / "_log" / "readiness-snapshots.jsonl"
+        persistent_log.parent.mkdir(parents=True, exist_ok=True)
+        with open(persistent_log, "a", encoding="utf-8") as f:
+            f.write(payload + "\n")
+    except Exception as e:
+        print(f"⚠️  持久化快照失败: {e}")
+
 
 def main() -> int:
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()

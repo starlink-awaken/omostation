@@ -138,39 +138,82 @@ def main() -> int:
             **hist,
         }, indent=2, ensure_ascii=False)
     else:
-        lines = [
-            "=" * 60,
-            f"📊 P69 告警历史趋势报告 (最近 {args.days} 天)",
-            "=" * 60,
-            f"📁 通知记录数: {hist['record_count']}",
-            f"📈 总通知数: {hist['total_notifications']}",
-            f"🔕 抑制记录: {hist['suppression_count']}",
-            f"📊 抑制率: {hist['suppression_rate'] * 100:.1f}%",
-            "",
-            "--- 按级别 ---",
-        ]
-        for level, count in sorted(hist["by_level"].items()):
-            lines.append(f"  {level:<8s} {count:>3d}")
-        if hist["by_type"]:
-            lines.append("")
-            lines.append("--- 按类型 ---")
-            for atype, count in sorted(hist["by_type"].items(), key=lambda x: -x[1]):
-                lines.append(f"  {atype:<25s} {count:>3d}")
-        if hist["by_day"]:
-            lines.append("")
-            lines.append("--- 按天 (最近 7d ASCII 柱状图) ---")
-            recent_days = sorted(hist["by_day"].items())[-7:]
-            max_total = max(sum(counts.values()) for _, counts in recent_days) if recent_days else 1
-            for day, counts in recent_days:
-                day_total = sum(counts.values())
-                bar = render_ascii_bar(day_total, max_total)
-                lines.append(f"  {day}  {bar} {day_total} {dict(counts)}")
-        if hist["peak_days"]:
-            lines.append("")
-            lines.append("🚨 高峰日 (P0+P1 >= 3):")
-            for pd in hist["peak_days"]:
-                lines.append(f"  {pd['day']}: critical={pd['critical_count']} {pd['breakdown']}")
-        output = "\n".join(lines)
+        # P70 增: rich 库颜色 (terminal-friendly)
+        try:
+            from rich.console import Console
+            from rich.table import Table
+            from rich.panel import Panel
+            from rich.text import Text
+
+            console = Console()
+            level_color = {
+                "P0": "bold red",
+                "P1": "red",
+                "P2": "yellow",
+                "P3": "green",
+            }
+
+            # Header panel
+            console.print(Panel(
+                f"[bold cyan]最近 {args.days} 天[/bold cyan]\n"
+                f"通知: {hist['record_count']}  |  总告警: {hist['total_notifications']}\n"
+                f"抑制: {hist['suppression_count']}  |  抑制率: {hist['suppression_rate'] * 100:.1f}%",
+                title="📊 P70 告警历史趋势",
+                border_style="cyan",
+            ))
+
+            # 级别表
+            if hist["by_level"]:
+                table = Table(title="按级别", show_header=True, header_style="bold")
+                table.add_column("级别", style="cyan")
+                table.add_column("次数", justify="right", style="green")
+                for level, count in sorted(hist["by_level"].items()):
+                    color = level_color.get(level, "white")
+                    table.add_row(f"[{color}]{level}[/{color}]", str(count))
+                console.print(table)
+
+            # 按天柱状图 (rich Bar)
+            if hist["by_day"]:
+                recent_days = sorted(hist["by_day"].items())[-7:]
+                max_total = max(sum(counts.values()) for _, counts in recent_days) if recent_days else 1
+                from rich.bar import Bar
+                bar_table = Table(title="按天 (最近 7d)", show_header=True)
+                bar_table.add_column("日期", style="cyan")
+                bar_table.add_column("柱状图")
+                bar_table.add_column("详情", justify="right")
+                for day, counts in recent_days:
+                    day_total = sum(counts.values())
+                    # 富文本条
+                    bar_len = max(1, int(day_total / max_total * 30))
+                    bar_text = Text("█" * bar_len, style="cyan")
+                    detail = " ".join(f"[{level_color.get(k, 'white')}]{k}:{v}[/{level_color.get(k, 'white')}]" for k, v in counts.items())
+                    bar_table.add_row(day, bar_text, detail)
+                console.print(bar_table)
+
+            if hist["peak_days"]:
+                console.print(Panel(
+                    "\n".join(f"  {pd['day']}: critical={pd['critical_count']} {pd['breakdown']}"
+                             for pd in hist["peak_days"]),
+                    title="🚨 高峰日 (P0+P1 >= 3)",
+                    border_style="red",
+                ))
+            output = ""  # rich 自身渲染
+        except ImportError:
+            # fallback: 纯文本
+            lines = [
+                "=" * 60,
+                f"📊 P70 告警历史趋势报告 (最近 {args.days} 天)",
+                "=" * 60,
+                f"📁 通知记录数: {hist['record_count']}",
+                f"📈 总通知数: {hist['total_notifications']}",
+                f"🔕 抑制记录: {hist['suppression_count']}",
+                f"📊 抑制率: {hist['suppression_rate'] * 100:.1f}%",
+                "",
+                "--- 按级别 ---",
+            ]
+            for level, count in sorted(hist["by_level"].items()):
+                lines.append(f"  {level:<8s} {count:>3d}")
+            output = "\n".join(lines)
 
     print(output)
     return 0

@@ -136,6 +136,8 @@ def build_summary(snaps: list[dict], root: Path) -> dict:
         "dimensions_card": dimensions_card,
         "alerts_card": alerts,
         "history_card": history_card,
+        # P70 增: alerts_card (告警历史 24h 聚合)
+        "alerts_card": load_alerts_card(root),
         "stats": {
             "count": len(scores),
             "mean": round(mean, 1),
@@ -144,6 +146,53 @@ def build_summary(snaps: list[dict], root: Path) -> dict:
             "max": max(scores),
             "stdev": round(stdev, 2),
         },
+    }
+
+
+def load_alerts_card(root: Path, hours: int = 24) -> dict:
+    """P70 增: 告警卡片数据 — 24h 通知 + 抑制统计."""
+    from datetime import datetime, timezone, timedelta
+    notif_log = root / ".omo" / "_log" / "alert-notifications.jsonl"
+    supp_log = root / ".omo" / "_log" / "alert-suppressions.jsonl"
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+
+    def load_recent(path: Path) -> list[dict]:
+        records = []
+        if not path.exists():
+            return records
+        try:
+            with open(path, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        rec = json.loads(line)
+                        ts = rec.get("timestamp", "")
+                        if ts:
+                            rec_dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                            if rec_dt >= cutoff:
+                                records.append(rec)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        return records
+
+    notifs = load_recent(notif_log)
+    supps = load_recent(supp_log)
+    total = len(notifs) + len(supps)
+    supp_rate = (len(supps) / total) if total > 0 else 0.0
+    by_level = {}
+    for rec in notifs:
+        level = rec.get("level", "?")
+        by_level[level] = by_level.get(level, 0) + 1
+    return {
+        "window_hours": hours,
+        "notifications": len(notifs),
+        "suppressions": len(supps),
+        "suppression_rate": round(supp_rate, 3),
+        "by_level": by_level,
     }
 
 
@@ -181,6 +230,14 @@ def main() -> int:
         ]
         for name, d in summary["dimensions_card"].items():
             lines.append(f"  {name:<20s} {d['score']:>3d}/{d['max']:<3d} ({d['percent']:.1f}%)  metric={d['metric']}")
+        # P70 增: alerts_card
+        ac = summary["alerts_card"]
+        lines.append("")
+        lines.append(f"--- 告警 (24h) ---")
+        lines.append(f"  通知: {ac['notifications']}  抑制: {ac['suppressions']}  抑制率: {ac['suppression_rate'] * 100:.1f}%")
+        if ac["by_level"]:
+            levels = " ".join(f"{k}={v}" for k, v in sorted(ac["by_level"].items()))
+            lines.append(f"  按级别: {levels}")
         output = "\n".join(lines)
 
     if args.output:
