@@ -239,8 +239,8 @@ def test_p34w2_cross_process_summary():
     out = r.stdout.strip()
     last_line = [ln for ln in out.splitlines() if ln.startswith("{")][-1]
     summary = json.loads(last_line)
-    assert summary["registry_total"] == 40
+    assert summary["registry_total"] == 42
     assert summary["registry_analysis"] == 12
-    assert summary["resolver_total"] == 40
+    assert summary["resolver_total"] == 42
     assert summary["resolver_analysis"] == 12
     print(f"\nP34-W2 跨进程状态: {summary}")
