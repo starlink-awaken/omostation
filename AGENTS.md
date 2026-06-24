@@ -88,11 +88,7 @@ This root directory is a **multi-project workspace** organized in the 5+4+1+1 (e
 | L1 | `runtime` | Python (uv, pytest) | `projects/runtime/` | 🟢 Active — 运行时 |
 | L0 | `ecos` | Python (uv, pytest) | `projects/ecos/` | 🟢 Active — 协议层 |
 | X | `aetherforge` | Python (uv, pytest) | `projects/aetherforge/` | 🟢 Active — 能力与算力框架 |
-| X | `swarm-engine` | Python (uv) | `_archived/swarm-engine/` | ⚫ Archived — 群体智能能力已迁移至 `projects/aetherforge/packages/swarm/` |
-| X | `compute-mesh` | Python (uv) | `_archived/compute-mesh/` | ⚫ Archived — 算力网格能力已迁移至 `projects/aetherforge/packages/mesh/` |
-| X | `aetherforge-swarm-ext` | Python (uv) | `_archived/aetherforge-swarm-ext/` | ⚫ Archived — 扩展能力已迁移至 `projects/aetherforge/packages/swarm/src/swarm_engine/ext/` |
 | X | `model-driven` | Python (uv, pytest) | `projects/model-driven/` | 🟢 Active — 全生命周期模型驱动 |
-| X | `llm-gateway` | Python (uv) | `_archived/llm-gateway/` | ⚫ Archived — 能力已迁移至 `projects/aetherforge/packages/gateway/` |
 | X | `c2g` | Python (uv) | `projects/c2g/` | 🟢 Active — 战略需求引擎 (V2P → C2G) |
 | X | `bus-foundation` | Python (uv, pytest) | `projects/bus-foundation/` | 🟢 Active — Omni-Bus (Data/Event/Control) |
 | X | `omo-debt` | Python (uv, pytest) | `projects/omo-debt/` | 🟢 Active — 技术债务评分 CLI |
@@ -445,7 +441,7 @@ git push origin main
 - `spaces/` — User-space / tenant-space manifests and routing boundaries
 - `data/` — Shared data layer (`db/`, `kos/`, `sharedbrain/`, `backups/`)
 - `runtime/` — Ephemeral runtime residue; avoid storing durable truth here
-- `_archived/` — Archived project snapshots (e.g. `llm-gateway`)
+- `_archived/` — Archived project snapshots (e.g. `SharedBrain-original`)
 - `tests/integration/` — E2E test scripts
 - `scripts/` — Utility scripts and automation (独立 git 仓库, `omo/` + `shell/`)
 - `bin/` — Executable tools:
